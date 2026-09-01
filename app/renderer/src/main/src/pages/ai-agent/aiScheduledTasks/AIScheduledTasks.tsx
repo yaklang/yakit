@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import type { AIScheduledTasksListItemProps, AIScheduledTasksProps, ScheduleQueryType } from './type'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import type { AIReActSchedule } from '../../ai-re-act/hooks/grpcApi'
 import {
   grpcDeleteAIReActSchedule,
+  grpcGetAIReActSchedule,
   grpcQueryAIReActSchedules,
   grpcRunAIReActScheduleNow,
   grpcSetAIReActScheduleEnabled,
@@ -165,17 +166,12 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
   const [isRef, setIsRef] = useState<boolean>(false)
   const [recalculation, setRecalculation] = useState<boolean>(false)
   const [filterVisible, setFilterVisible] = useState<boolean>(false)
-  const [selectedUUID, setSelectedUUID] = useState<string | null>(null)
+  const [selectedSchedule, setSelectedSchedule] = useState<AIReActSchedule | null>(null)
   const [response, setResponse] = useState<QueryAIReActSchedulesResponse>({
     Data: [],
     Pagination: genDefaultPagination(20),
     Total: 0,
   })
-
-  const selectedSchedule = useMemo(
-    () => response.Data.find((schedule) => schedule.UUID === selectedUUID),
-    [response.Data, selectedUUID],
-  )
 
   const listRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(listRef)
@@ -252,6 +248,8 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
       }),
     }))
     setRecalculation((v) => !v)
+    // 选中项与列表解耦后，单条更新（编辑保存、详情自身启停回写）需同步刷新打开中的详情
+    setSelectedSchedule((preV) => (preV?.UUID === item.UUID ? { ...item } : preV))
   })
   const openForm = useMemoizedFn((editing?: AIReActSchedule) => {
     const m = showYakitModal({
@@ -263,7 +261,17 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
           editing={editing}
           onClose={() => m.destroy()}
           onSuccess={() => {
-            getList(1)
+            if (editing?.UUID) {
+              // 编辑成功只拉取该任务最新数据，经 onSetData 原位更新列表行，
+              // 并在 editing.UUID 与选中项一致时同步刷新打开中的详情；不整表刷新以保留分页
+              grpcGetAIReActSchedule({ UUID: editing.UUID }, true)
+                .then((latest) => {
+                  if (latest?.UUID) onSetData(latest)
+                })
+                .catch(() => {})
+            } else {
+              getList(1)
+            }
             m.destroy()
           }}
         />
@@ -310,11 +318,10 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
   })
   return (
     <div className={styles['ai-schedule-list-wrapper']} ref={listRef}>
-      {selectedUUID && selectedSchedule && (
+      {selectedSchedule && (
         <AIScheduledTasksDetail
-          uuid={selectedUUID}
           initialSchedule={selectedSchedule}
-          onClose={() => setSelectedUUID(null)}
+          onClose={() => setSelectedSchedule(null)}
           onDataChange={onSetData}
           onEdit={openForm}
           onRunNow={runScheduleNow}
@@ -380,7 +387,7 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
                       onSetData={onSetData}
                       onRefresh={getList}
                       onEdit={openForm}
-                      onOpenDetail={(detail) => setSelectedUUID(detail.UUID)}
+                      onOpenDetail={(detail) => setSelectedSchedule(detail)}
                       onRunNow={runScheduleNow}
                     />
                   </React.Fragment>

@@ -1,7 +1,6 @@
 import type { AIReActSchedule } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface AIScheduledTasksDetailProps {
-  uuid: string
   initialSchedule: AIReActSchedule
   onClose: () => void
   onDataChange?: (schedule: AIReActSchedule) => void

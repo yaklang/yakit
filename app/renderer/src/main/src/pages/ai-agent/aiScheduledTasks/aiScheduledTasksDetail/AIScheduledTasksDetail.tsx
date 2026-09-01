@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useCreation, useMemoizedFn } from 'ahooks'
+import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import moment from 'moment'
 import type { AISession } from '../../type/aiChat'
 import { grpcQueryAISession } from '../../grpc'
@@ -81,7 +81,7 @@ const DetailRow = ({ label, children, multiline = false }: DetailRowProps) => {
 }
 
 const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo((props) => {
-  const { uuid, initialSchedule, onClose, onDataChange, onEdit, onRunNow, onDeleteAfter } = props
+  const { initialSchedule, onClose, onDataChange, onEdit, onRunNow, onDeleteAfter } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { setSetting, setActiveChat } = useAIAgentDispatcher()
   const [schedule, setSchedule] = useState<AIReActSchedule>(initialSchedule)
@@ -89,21 +89,11 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
   const [toggling, setToggling] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  // 打开详情时按 UUID 拉取最新数据，覆盖列表传入的旧数据
-  useEffect(() => {
-    let cancelled = false
-    grpcGetAIReActSchedule({ UUID: uuid }, true)
-      .then((latest) => {
-        if (!cancelled && latest?.UUID) {
-          setSchedule(latest)
-          onDataChange?.(latest)
-        }
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
-  }, [uuid])
+  // 编辑保存 / 列表行启停后，父组件会传入刷新后的 initialSchedule；
+  // useState 只在挂载时取初值，这里同步 prop 变化，避免详情继续展示旧数据
+  useUpdateEffect(() => {
+    setSchedule(initialSchedule)
+  }, [initialSchedule])
 
   const linkedSessionID = useCreation(() => {
     return schedule.TargetMode === 'continue_session' ? schedule.TargetSessionID || '' : ''
@@ -147,10 +137,9 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
         'success',
         t(schedule.Status === 'active' ? 'AIScheduledTasks.pausedSuccess' : 'AIScheduledTasks.resumedSuccess'),
       )
-      // 2. 启停成功后拉取最新任务数据，同步到详情与列表
+      // 2. 启停成功后拉取最新任务数据，经 onDataChange 由父组件同步列表与选中项，prop 回流刷新详情
       const latest = await grpcGetAIReActSchedule({ UUID: schedule.UUID }, true)
       if (latest?.UUID) {
-        setSchedule(latest)
         onDataChange?.(latest)
       }
     } catch {
@@ -226,7 +215,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
     return (
       Boolean(schedule.OriginalRequest?.trim()) && schedule.OriginalRequest?.trim() !== schedule.Payload.Prompt.trim()
     )
-  }, [schedule.OriginalRequest])
+  }, [schedule.OriginalRequest, schedule.Payload.Prompt])
 
   const relatedSessionTitle = useCreation(() => {
     return (relatedSession && (getSessionDisplayTitle(relatedSession) || relatedSession.question)) || '-'
