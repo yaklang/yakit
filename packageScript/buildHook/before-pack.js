@@ -1,7 +1,7 @@
 const packageJson = require('../../package.json')
 
 module.exports = async function (context) {
-  const isLegacy = process.env.THE_LEGACY == 'true'
+  const isLegacy = process.env.YAKIT_LEGACY == 'true'
 
   const archMap = {
     1: 'x64',

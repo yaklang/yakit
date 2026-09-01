@@ -157,7 +157,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
   const emptyImageTarget = useMemo(() => {
     switch (__PLATFORM__) {
       case 'irify':
-      case 'irify-enterprise':
+      case 'irifyEE':
         return theme === 'dark' ? IrifyDarkEmptyPng : IrifyEmptyPng
       case 'memfit':
         return theme === 'dark' ? MemfitDarkEmptyPng : MemfitEmptyPng

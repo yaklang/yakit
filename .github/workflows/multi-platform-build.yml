@@ -186,42 +186,28 @@ jobs:
               run: echo "SOFTWARE_VERSION=${{ steps.package_version.outputs.value }}" >> $GITHUB_ENV
 
             - name: "Install Dependencies"
-              run: yarn install && yarn install-render && yarn install-link-render
+              run: yarn cli install
               working-directory: ./
             - name: "Install Legacy Electron"
               run: yarn remove electron && yarn add electron@22.3.27 --dev
               if: ${{ inputs.legacy }}
               working-directory: ./
 
-            - name: "Build CE Render"
-              if: ${{ inputs.version == 'ce' }}
-              working-directory: ./
-              run: yarn build${{ inputs.devTool && '-test' || '' }}-renders
+            - name: Resolve CLI edition
+              run: |
+                  case "${{ inputs.version }}" in
+                    ce) echo "CLI_EDITION=yakit" >> $GITHUB_ENV ;;
+                    ee) echo "CLI_EDITION=yakitEE" >> $GITHUB_ENV ;;
+                    se) echo "CLI_EDITION=yakitSE" >> $GITHUB_ENV ;;
+                    irify) echo "CLI_EDITION=irify" >> $GITHUB_ENV ;;
+                    irifyee) echo "CLI_EDITION=irifyEE" >> $GITHUB_ENV ;;
+                    memfit) echo "CLI_EDITION=memfit" >> $GITHUB_ENV ;;
+                    *) echo "未知的输入值: ${{ inputs.version }}" >&2; exit 1 ;;
+                  esac
 
-            - name: "Build EE Render"
-              if: ${{ inputs.version == 'ee' }}
+            - name: "Build Renders"
               working-directory: ./
-              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}${{ inputs.skipEnterpriseLicense && '-enterprise-no-license' || '-enterprise' }}
-
-            - name: "Build SE Render"
-              if: ${{ inputs.version == 'se' }}
-              working-directory: ./
-              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-simple-enterprise
-
-            - name: "Build IRify Render"
-              if: ${{ inputs.version == 'irify' }}
-              working-directory: ./
-              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-irify
-
-            - name: "Build IRifyEE Render"
-              if: ${{ inputs.version == 'irifyee' }}
-              working-directory: ./
-              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-irify-enterprise
-
-            - name: "Build Memfit Render"
-              if: ${{ inputs.version == 'memfit' }}
-              working-directory: ./
-              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-memfit
+              run: yarn cli build -v ${{ env.CLI_EDITION }} ${{ inputs.devTool && '--devtools' || '' }} ${{ inputs.skipEnterpriseLicense && '--no-license' || '' }}
 
             - name: Generate software prefix name
               run: |
@@ -287,127 +273,38 @@ jobs:
               run: |
                   set -e
                   yarn add -D dmg-license
-                  if [ "${{ inputs.version }}" = "ce" ]; then
-                    yarn pack-mac${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-linux${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-win${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "ee" ]; then
-                    yarn pack-mac-ee${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-linux-ee${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-win-ee${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "se" ]; then
-                    yarn pack-mac-se${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-linux-se${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-win-se${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "irify" ]; then
-                    yarn pack-mac-irify${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-linux-irify${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-win-irify${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
-                    yarn pack-mac-irify-ee${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-linux-irify-ee${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-win-irify-ee${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "memfit" ]; then
-                    yarn pack-mac-memfit${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-linux-memfit${{ inputs.legacy && '-legacy' || '' }}
-                    yarn pack-win-memfit${{ inputs.legacy && '-legacy' || '' }}
-                  else
-                    echo "未知的输入值: ${{ inputs.version }}" >&2
-                    exit 1
-                  fi
+                  FLAGS="${{ inputs.legacy && '--legacy' || '' }} ${{ inputs.sign && '--sign' || '' }}"
+                  yarn cli pack -s mac -v ${{ env.CLI_EDITION }} $FLAGS
+                  yarn cli pack -s linux -v ${{ env.CLI_EDITION }} ${{ inputs.legacy && '--legacy' || '' }}
+                  yarn cli pack -s win -v ${{ env.CLI_EDITION }} ${{ inputs.legacy && '--legacy' || '' }}
 
             - name: Build Yakit (MAC)
               if: ${{ inputs.platform == 'darwin' }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
-              run: |
-                  if [ "${{ inputs.version }}" = "ce" ]; then
-                    yarn pack-mac${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "ee" ]; then
-                    yarn pack-mac-ee${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "se" ]; then
-                    yarn pack-mac-se${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "irify" ]; then
-                    yarn pack-mac-irify${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
-                    yarn pack-mac-irify-ee${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "memfit" ]; then
-                    yarn pack-mac-memfit${{ inputs.legacy && '-legacy' || '' }}
-                  else
-                    echo "未知的输入值: ${{ inputs.version }}" >&2
-                    exit 1
-                  fi
+              run: yarn cli pack -s mac -v ${{ env.CLI_EDITION }} ${{ inputs.legacy && '--legacy' || '' }} ${{ inputs.sign && '--sign' || '' }}
 
             - name: Build Yakit (LINUX)
               if: ${{ inputs.platform == 'linux' }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
-              run: |
-                  if [ "${{ inputs.version }}" = "ce" ]; then
-                    yarn pack-linux${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "ee" ]; then
-                    yarn pack-linux-ee${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "se" ]; then
-                    yarn pack-linux-se${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "irify" ]; then
-                    yarn pack-linux-irify${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
-                    yarn pack-linux-irify-ee${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "memfit" ]; then
-                    yarn pack-linux-memfit${{ inputs.legacy && '-legacy' || '' }}
-                  else
-                    echo "未知的输入值: ${{ inputs.version }}" >&2
-                    exit 1
-                  fi
+              run: yarn cli pack -s linux -v ${{ env.CLI_EDITION }} ${{ inputs.legacy && '--legacy' || '' }}
 
             - name: Build Yakit (WIN)
               if: ${{ inputs.platform == 'windows' }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
-              run: |
-                  if [ "${{ inputs.version }}" = "ce" ]; then
-                    yarn pack-win${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "ee" ]; then
-                    yarn pack-win-ee${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "se" ]; then
-                    yarn pack-win-se${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "irify" ]; then
-                    yarn pack-win-irify${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
-                    yarn pack-win-irify-ee${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "memfit" ]; then
-                    yarn pack-win-memfit${{ inputs.legacy && '-legacy' || '' }}
-                  else
-                    echo "未知的输入值: ${{ inputs.version }}" >&2
-                    exit 1
-                  fi
+              run: yarn cli pack -s win -v ${{ env.CLI_EDITION }} ${{ inputs.legacy && '--legacy' || '' }}
 
             - name: Build Yakit (UOS)
               if: ${{ inputs.platform == 'uos' }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
-                  LEGACY_SUFFIX: ${{ inputs.legacy && '-legacy' || '' }} # 处理 legacy 后缀逻辑
               working-directory: ./
-              run: |
-                  if [ "${{ inputs.version }}" = "ce" ]; then
-                    yarn pack-linux${{ env.LEGACY_SUFFIX }}
-                  elif [ "${{ inputs.version }}" = "ee" ]; then
-                    yarn pack-linux-ee${{ env.LEGACY_SUFFIX }}
-                  elif [ "${{ inputs.version }}" = "se" ]; then
-                    yarn pack-linux-se${{ env.LEGACY_SUFFIX }}
-                  elif [ "${{ inputs.version }}" = "irify" ]; then
-                    yarn pack-linux-irify${{ env.LEGACY_SUFFIX }}
-                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
-                    yarn pack-linux-irify-ee${{ env.LEGACY_SUFFIX }}
-                  elif [ "${{ inputs.version }}" = "memfit" ]; then
-                    yarn pack-linux-memfit${{ env.LEGACY_SUFFIX }}
-                  else
-                    echo "未知的输入值: ${{ inputs.version }}" >&2
-                    exit 1
-                  fi
+              run: yarn cli pack -s linux -v ${{ env.CLI_EDITION }} ${{ inputs.legacy && '--legacy' || '' }}
 
             - name: MakeSelf Yakit (UOS)
               if: ${{ inputs.platform == 'uos' }}

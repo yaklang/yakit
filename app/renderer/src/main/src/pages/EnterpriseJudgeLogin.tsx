@@ -13,7 +13,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
 
 /** 构建期配置：默认需要 License 验证；CI 可设为 false 跳过校验流程 */
-const requireEnterpriseLicense = process.env.REACT_APP_REQUIRE_ENTERPRISE_LICENSE !== 'false'
+const requireEnterpriseLicense = process.env.YAKIT_REQUIRE_ENTERPRISE_LICENSE !== 'false'
 
 export interface EnterpriseJudgeLoginProps {
   setJudgeLicense: (v: boolean) => void

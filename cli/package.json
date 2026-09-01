@@ -1,0 +1,11 @@
+{
+  "name": "yakit-cli",
+  "private": true,
+  "dependencies": {
+    "chalk": "5.6.2",
+    "commander": "13.1.0",
+    "concurrently": "6.5.1",
+    "execa": "8.0.0",
+    "inquirer": "12.11.1"
+  }
+}

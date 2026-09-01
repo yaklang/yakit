@@ -43,6 +43,13 @@ function setLocalCache(key, value) {
   kvCache.set(key, value)
   localCacheState.cacheChanged = true
 }
+function deleteLocalCache(key) {
+  if (!kvCache.has(key)) {
+    return
+  }
+  kvCache.delete(key)
+  localCacheState.cacheChanged = true
+}
 function setExtraLocalCache(key, value) {
   if (value === extraKVCache.get(key)) {
     return
@@ -185,6 +192,7 @@ module.exports = {
   setCloeseExtraLocalCache,
   getLocalCacheValue,
   setLocalCache,
+  deleteLocalCache,
   initLocalCache,
   initExtraLocalCache,
   register: (win, getClient) => {

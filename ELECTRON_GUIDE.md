@@ -4,8 +4,16 @@
 
 https://www.electronjs.org/docs/tutorial/installation#%E9%95%9C%E5%83%8F
 
-```go
-source ./electron.env
+```bash
+# macOS
+source scripts/set-electron-mirror-macos.sh
+# Linux
+source scripts/set-electron-mirror-linux.sh
+# Windows PowerShell
+. .\scripts\set-electron-mirror.ps1
+# Windows CMD
+scripts\set-electron-mirror.cmd
+
 npm install --save-dev electron
 ```
 

@@ -1,6 +1,6 @@
 import { yakitNotify } from '@/utils/notification'
 import type { APIFunc, APINoRequestFunc, APIOptionalFunc } from './type'
-import { fetchEnv, getReleaseEditionName } from '@/utils/envfile'
+import { getReleaseEditionName, toEngineHandshakeName } from '@/utils/envfile'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { yakitEngine } from '@/services/electronBridge'
@@ -239,7 +239,7 @@ export const grpcFetchAvaiableProt: APINoRequestFunc<number> = (hiddenError) => 
 export const grpcDetermineAdaptedVersionEngine: APIFunc<number, boolean> = (port, hiddenError) => {
   return new Promise(async (resolve, reject) => {
     yakitEngine
-      .determineAdaptedVersionEngine({ port: port, version: fetchEnv() || 'yakit' })
+      .determineAdaptedVersionEngine({ port: port, version: toEngineHandshakeName() })
       .then(resolve)
       .catch((e) => {
         if (!hiddenError)

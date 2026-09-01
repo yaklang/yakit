@@ -1,9 +1,8 @@
 import { spawn } from 'node:child_process'
 import process from 'node:process'
 
-const yarnCommand = process.platform === 'win32' ? 'yarn.cmd' : 'yarn'
-const spawnYarn = (args) =>
-  spawn(yarnCommand, args, {
+const spawnCli = (args) =>
+  spawn(process.execPath, args, {
     env: {
       ...process.env,
       YAKIT_E2E_BOUNDED_BUILD: '1',
@@ -13,7 +12,7 @@ const spawnYarn = (args) =>
     windowsHide: true,
   })
 
-let child = spawnYarn(['build-test-render'])
+let child = spawnCli(['./cli/cli.mjs', 'build', '--main', '-v', 'yakit', '--devtools'])
 
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.once(signal, () => child?.kill(signal))
@@ -35,7 +34,7 @@ child.once('exit', (code, signal) => {
     return
   }
 
-  child = spawnYarn(['write-test-render-e2e-metadata'])
+  child = spawnCli(['./scripts/write-e2e-renderer-build-metadata.mjs', 'production-unminified'])
   child.once('error', failOnChildError('Renderer build metadata writer'))
   child.once('exit', (metadataCode, metadataSignal) => {
     if (metadataSignal) {

@@ -208,7 +208,7 @@ Driver API 必须：
 - test build 可以在构建期有条件开启 WDIO 所需的调试桥，产物不得进入发布渠道；
 - 正式发布包保持调试参数拦截和安全 fuse，只做不依赖调试桥的外部健康检查；
 - CI 必须用独立命名、独立输出目录和显著水印区分 test build；
-- 测试配置不得改变普通 `yarn start-electron` 和正式打包命令的行为。
+- 测试配置不得改变普通 `yarn cli electron` 和正式打包命令的行为。
 
 ## 12. Flaky 管理
 

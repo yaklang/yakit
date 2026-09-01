@@ -1,54 +1,33 @@
-const { execSync } = require('child_process')
+const { execFileSync } = require('child_process')
+const path = require('path')
 
-/**
- * @synchronize [IDENTIFIER_NAME]
- * 注意：此对象必须全局保持一致。
- * 修改此项时，请务必同步修改另外几处。
- */
-const versionMap = {
-  yakit: 'yakit',
-  yakitEE: 'enterprise',
-  yakitSE: 'simple-enterprise',
-  irify: 'irify',
-  irifyEE: 'irify-enterprise',
-  memfit: 'memfit',
+const edition = process.env.YAKIT_EDITION
+if (!edition) {
+  console.error('未指定 YAKIT_EDITION。请从仓库根目录使用: yarn cli start -v <edition> 或 yarn cli build -v <edition>')
+  process.exit(1)
 }
 
-const resolvedVersion = () => {
-  const cliVersion = process.env.CLIVersion
-  if (!cliVersion || !versionMap[cliVersion]) {
-    console.error('未指定版本号或版本号无效, 请传入正确的版本, 例如: (yakit|yakitEE|yakitSE|irify|irifyEE|memfit)')
-    return null
-  }
-  return versionMap[cliVersion]
-}
+const build = process.argv.includes('--build')
+const cwd = path.join(__dirname, '..')
+const binName = process.platform === 'win32' ? 'vite.cmd' : 'vite'
+const tscName = process.platform === 'win32' ? 'tsc.cmd' : 'tsc'
+const viteBin = path.join(cwd, 'node_modules', '.bin', binName)
 
-const resolvedBuild = () => {
-  const cliBuild = process.env.CLIBuild
-  if (cliBuild === 'true') return true
-  return false
-}
-
-const version = resolvedVersion()
-const build = resolvedBuild()
-
-// 未知参数, 退出命令执行
-if (!version) process.exit(1)
-
-console.log('Link-Render ready to start')
-
-const scriptName = build ? 'tsc --noEmit && vite build' : 'vite'
+console.log(`Link-Render ${build ? 'build' : 'start'} (${edition})`)
 
 try {
-  execSync(scriptName, {
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      VITE_PLATFORM: version,
-    },
-  })
+  if (build) {
+    execFileSync(path.join(cwd, 'node_modules', '.bin', tscName), ['-b'], {
+      stdio: 'inherit',
+      cwd,
+      env: process.env,
+    })
+    execFileSync(viteBin, ['build'], { stdio: 'inherit', cwd, env: process.env })
+  } else {
+    execFileSync(viteBin, [], { stdio: 'inherit', cwd, env: process.env })
+  }
 } catch (error) {
-  console.error(`Failed to execute script: ${scriptName}`)
+  console.error(`Failed to execute Link-Render ${build ? 'build' : 'start'}`)
   console.error(error?.message || error)
   process.exit(1)
 }
