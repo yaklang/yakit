@@ -48,6 +48,12 @@ export interface YakQueryHTTPFlowRequest {
   ProcessName?: string[]
   ExcludeKeywords?: string[]
   AnalyzedIds?: number[]
+  /** 问题类型筛选（占位：待后端对齐） */
+  ProblemType?: string
+  /** 严重程度筛选（占位：待后端对齐） */
+  Severity?: string
+  /** 处置状态筛选（占位：待后端对齐） */
+  DisposalStatus?: string
   /** 与 extracted_data.trace_id 对应的 http_flows.hidden_index */
   HiddenIndex?: string[]
   /** MITM 提取聚合行多选 OR 过滤 */
