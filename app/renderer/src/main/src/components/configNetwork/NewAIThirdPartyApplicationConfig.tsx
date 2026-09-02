@@ -34,7 +34,11 @@ import {
   DEFAULT_AI_API_TYPE,
   normalizeAIAPIType,
 } from '@/pages/ai-agent/aiModelList/aiApiTypeOptions'
-import { grpcGetAIThirdPartyAppConfigTemplate, grpcProbeReasoningEffort } from '@/pages/ai-agent/aiModelList/utils'
+import {
+  grpcGetAIThirdPartyAppConfigTemplate,
+  grpcProbeReasoningEffort,
+  sortMemfitNameFirst,
+} from '@/pages/ai-agent/aiModelList/utils'
 import { cloneDeep } from 'lodash'
 import { InputHTTPHeaderForm } from '@/pages/mitm/MITMRule/MITMRuleFromModal'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
@@ -536,10 +540,13 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
           .invoke('ListAiModel', { Config: JSON.stringify(v) })
           .then((res) => {
             if (!execModelNameOption.current) return
-            const modalNamelist: SelectOptionsProps[] = res.ModelName.map((modelName: string) => ({
-              label: modelName,
-              value: modelName,
-            }))
+            // memfit- 开头的模型名称前置展示（与聊天模型选择器的名称下拉共用排序逻辑）
+            const modalNamelist: SelectOptionsProps[] = sortMemfitNameFirst(res.ModelName || []).map(
+              (modelName: string) => ({
+                label: modelName,
+                value: modelName,
+              }),
+            )
             const name = getModelNameDefaultName()
             // 确保默认值在选项里
             const hasDefault = modalNamelist.some((item) => item.value === name)

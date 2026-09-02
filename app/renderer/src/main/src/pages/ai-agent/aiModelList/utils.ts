@@ -39,6 +39,21 @@ export const isMemfitStart = (name: string) => {
 }
 
 /**
+ * 模型名称列表展示排序：memfit- 开头的名称展示在前面，其余在后（稳定排序，组内保持原相对顺序）。
+ * 供模型编辑表单与聊天模型选择器的模型名称下拉共用。
+ */
+export const sortMemfitNameFirst = (names: string[]): string[] => {
+  // 单趟分拣，memfit 组在前、其余在后，组内保持原相对顺序
+  const memfit: string[] = []
+  const others: string[] = []
+  for (const name of names) {
+    if (isMemfitStart(name)) memfit.push(name)
+    else others.push(name)
+  }
+  return [...memfit, ...others]
+}
+
+/**
  * 模型名称是否为 -free 结尾
  */
 export const isFreeEnd = (name: string) => {
