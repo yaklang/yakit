@@ -139,6 +139,8 @@
   },
   "RiskDisposalLog": {
     "please_login": "Please log in",
+    "no_access_title": "No access permission",
+    "no_access_desc": "Log in to access this page",
     "empty": "No disposal logs yet",
     "dispose_risk": "Dispose Risk",
     "system": "System",

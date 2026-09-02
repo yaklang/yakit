@@ -2,6 +2,10 @@ import type React from 'react'
 import { memo, useEffect, useRef, useState } from 'react'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
+import Login from '@/pages/Login'
 import type { Risk } from '../../schema'
 import { PluginImageTextarea } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea'
 import type {
@@ -22,7 +26,9 @@ export interface RiskDisposalLogProps {
 
 export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
   const { info, isLogin } = props
-  const { t } = useI18nNamespaces(['risk'])
+  const { t } = useI18nNamespaces(['risk', 'yakitUi'])
+  const powerEmptyImage = useEmptyImage('power')
+  const [loginShow, setLoginShow] = useState(false)
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [list, setList] = useState<DisposalLogItem[]>([])
@@ -124,7 +130,18 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
   if (!isLogin) {
     return (
       <div className={styles['risk-disposal-log']}>
-        <div className={styles['risk-disposal-log-empty']}>{t('RiskDisposalLog.please_login')}</div>
+        <div className={styles['risk-disposal-log-login-empty']}>
+          <YakitEmpty
+            image={<img src={powerEmptyImage} alt="" />}
+            imageStyle={{ width: 320, height: 250, marginBottom: 16 }}
+            title={t('RiskDisposalLog.no_access_title')}
+            description={t('RiskDisposalLog.no_access_desc')}
+          />
+          <YakitButton type="outline1" onClick={() => setLoginShow(true)}>
+            {t('YakitButton.loginNow')}
+          </YakitButton>
+        </div>
+        {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)} />}
       </div>
     )
   }
