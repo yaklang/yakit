@@ -29,8 +29,12 @@ import {
   FigmaIcon22849134660Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlinCompileIcon } from '@/assets/icon/bespokeOutline'
-import { YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon } from '@/pages/yakRunner/icon'
+import {
+  OutlinCompileIcon,
+  YakRunnerOpenAuditIcon,
+  YakRunnerOpenFileIcon,
+  SolidIrifyMiniLogoIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import {
   useDebounceEffect,
@@ -92,7 +96,6 @@ import { onSetSelectedSearchVal } from '../AuditSearchModal/AuditSearch'
 import { ConvertAuditStaticAnalyzeErrorToMarker, type IMonacoEditorMarker } from '@/utils/editorMarkers'
 import { getPathParent, grpcFetchCreateFile, grpcFetchSaveFile, monacaLanguageType } from '@/pages/yakRunner/utils'
 import { JSONParseLog } from '@/utils/tool'
-import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
 
 const { ipcRenderer } = window.require('electron')
 

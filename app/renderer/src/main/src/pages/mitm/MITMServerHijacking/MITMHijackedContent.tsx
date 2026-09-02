@@ -20,7 +20,7 @@ import {
   XOutlined,
   ChevronDownOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineConfiguredIcon, OutlineUnConfiguredIcon } from '@/assets/icon/bespokeOutline'
+import { OutlineConfiguredIcon, OutlineUnConfiguredIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
 import { convertLocalMITMFilterRequest, convertMITMFilterUI } from '../MITMServerStartForm/utils'

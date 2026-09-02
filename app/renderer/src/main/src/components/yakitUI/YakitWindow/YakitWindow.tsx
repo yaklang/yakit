@@ -22,7 +22,12 @@ import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
 import { YakitButton } from '../YakitButton/YakitButton'
 import { DotsHorizontalOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { SolidFloatwinIcon, SolidTodownIcon, SolidToleftIcon, SolidTorightIcon } from '@/assets/icon/bespokeSolid'
+import {
+  SolidFloatwinIcon,
+  SolidTodownIcon,
+  SolidToleftIcon,
+  SolidTorightIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { Tooltip } from 'antd'
 import { YakitPopover } from '../YakitPopover/YakitPopover'
 import { Resizable } from 're-resizable'

@@ -1,4 +1,4 @@
-import { PlusSmIcon, ResizerIcon, HollowLightningBoltIcon, EyeIcon } from '@/assets/newIcon'
+import { PlusSmIcon, ResizerIcon, HollowLightningBoltIcon, EyeIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'

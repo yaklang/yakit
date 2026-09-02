@@ -16,7 +16,7 @@ import {
   privateConvertDatabase,
   jsonDataConvertMenus,
 } from './HeardMenuType'
-import { CheckIcon, ChevronUpIcon } from '@/assets/newIcon'
+import { CheckIcon, ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import ReactResizeDetector from 'react-resize-detector'
 import { useGetState, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { Divider, Dropdown, Tabs, Tooltip } from 'antd'

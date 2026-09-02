@@ -29,8 +29,13 @@ import {
 } from '../utils'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { type KnowledgeBaseItem } from '../hooks/useKnowledgeBase'
-import { SolidLightningBoltIcon } from '@/assets/icon/bespokeSolid'
-import { SolidOutlineSearchIcon } from '@/assets/icon/bespokeSolid'
+import {
+  SolidLightningBoltIcon,
+  SolidOutlineSearchIcon,
+  YakitLogoSvgIconFromPagesKnowledgeBaseIconSidebarIcon,
+  YakitSpinLogoSvgIcon,
+  OutlineBotIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { AddKnowledgenBaseDropdownMenu } from './AddKnowledgenBaseDropdownMenu'
 import { OperateKnowledgenBaseItem } from './OperateKnowledgenBaseItem'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -39,7 +44,6 @@ import type useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import { Divider, Tooltip } from 'antd'
-import { YakitLogoSvgIcon, YakitSpinLogoSvgIcon } from '../icon/sidebarIcon'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import type { CreateKnowledgeBaseData, TClearKnowledgeResponse } from '../TKnowledgeBase'
 
@@ -54,7 +58,6 @@ import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableT
 import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { OutlineBotIcon } from '@/assets/icon/colors'
 import { convertBodyLength } from '@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useCheckKnowledgePlugin } from '../hooks/useCheckKnowledgePlugin'
@@ -895,7 +898,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                   {binariesToInstall?.map((it, key) => (
                     <div className={styles['install-content-box']} key={it.InstallPath + key}>
                       <div className={styles['first-box']}>
-                        <YakitLogoSvgIcon />
+                        <YakitLogoSvgIconFromPagesKnowledgeBaseIconSidebarIcon />
                         <YakitSpinLogoSvgIcon className={styles['yakit-svg']} />
                       </div>
                       <div

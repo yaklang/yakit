@@ -23,7 +23,7 @@ import {
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import type { AIEnabledCapability, AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
-import { ColorsChatIcon, ColorsPreViewMDIcon } from '@/assets/icon/colors'
+import { ColorsChatIcon, ColorsPreViewMDIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import {
   grpcGetAIReActRecommendedSkills,
   grpcUpdateAIReActRecommendedSkill,

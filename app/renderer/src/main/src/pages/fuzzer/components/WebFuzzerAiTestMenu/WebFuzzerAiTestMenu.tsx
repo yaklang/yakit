@@ -17,7 +17,7 @@ import {
 import { yakitNotify } from '@/utils/notification'
 
 import { WebFuzzerAiTestTemplateModal } from './WebFuzzerAiTestTemplateModal'
-import { ColorsAIIcon } from '@/assets/icon/colors'
+import { ColorsAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsAIIcon'
 
 export interface WebFuzzerAiTestMenuProps {
   inViewport?: boolean

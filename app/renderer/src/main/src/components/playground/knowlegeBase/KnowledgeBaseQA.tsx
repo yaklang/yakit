@@ -16,7 +16,7 @@ import type {
   KnowledgeBaseEntry,
 } from './types'
 import styles from './KnowledgeBaseQA.module.scss'
-import { PaperAirplaneIcon } from '@/assets/newIcon'
+import { PaperAirplaneIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

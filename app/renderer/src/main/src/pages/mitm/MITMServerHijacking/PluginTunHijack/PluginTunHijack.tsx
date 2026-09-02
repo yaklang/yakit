@@ -16,7 +16,7 @@ import type {
   WatchProcessResponse,
 } from './PluginTunHijackType'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { TraceSvgSvgIcon } from '@/assets/icons/traceSvg'
+import { TraceSvgSvgIcon, QuitIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   ExclamationCircleOutlined,
@@ -25,7 +25,6 @@ import {
   SearchOutlined,
   StethoscopeOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { QuitIcon } from '@/assets/newIcon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'

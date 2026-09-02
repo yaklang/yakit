@@ -58,7 +58,7 @@ import {
 import classNames from 'classnames'
 import _ from 'lodash'
 import { routeConvertKey } from '../publicMenu/utils'
-import { CheckIcon, SolidDocumentTextIcon } from '@/assets/newIcon'
+import { CheckIcon, SolidDocumentTextIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import type { RouteToPageProps } from '../publicMenu/PublicMenu'
 import { type SubscribeCloseType, type YakitSecondaryConfirmProps, useSubscribeClose } from '@/store/tabSubscribe'
 import { YakitModalConfirm, showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'

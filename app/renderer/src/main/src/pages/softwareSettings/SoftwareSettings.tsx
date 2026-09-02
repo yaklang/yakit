@@ -1,10 +1,17 @@
 import type React from 'react'
 import { memo, type ReactNode, useEffect, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { DesktopComputerSvgIcon, YakitLogoSvgIcon } from '@/assets/newIcon'
+import {
+  DesktopComputerSvgIcon,
+  YakitLogoSvgIcon,
+  SoftwareRemoteSvgIcon,
+  SolidIrifyFontLogoIcon,
+  SolidIrifyMiniLogoIcon,
+  SolidMemfitFontLogoIcon,
+  SolidMemfitMiniLogoIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { Typography } from 'antd'
 import { useMemoizedFn } from 'ahooks'
-import { SoftwareRemoteSvgIcon } from './icon'
 import type { YaklangEngineMode } from '@/yakitGVDefine'
 import ProjectManage, { type ProjectManageProp } from './ProjectManage'
 
@@ -16,12 +23,6 @@ import yakitEEProject from '@/assets/yakitFontEE.png'
 import yakitSEProject from '@/assets/yakitFontSE.png'
 import yakitEEMiniProject from '@/assets/yakitEE.png'
 import yakitSEMiniProject from '@/assets/yakitSE.png'
-import {
-  SolidIrifyFontLogoIcon,
-  SolidIrifyMiniLogoIcon,
-  SolidMemfitFontLogoIcon,
-  SolidMemfitMiniLogoIcon,
-} from '@/assets/icon/colors'
 
 const { ipcRenderer } = window.require('electron')
 

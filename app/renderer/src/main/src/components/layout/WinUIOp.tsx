@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { WinUIOpCloseSvgIcon, WinUIOpMaxSvgIcon, WinUIOpRestoreSvgIcon } from './icons'
+import { WinUIOpCloseSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WinUIOpCloseSvgIcon'
+import { WinUIOpMaxSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WinUIOpMaxSvgIcon'
+import { WinUIOpRestoreSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WinUIOpRestoreSvgIcon'
 import { useMemoizedFn } from 'ahooks'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { useRunNodeStore } from '@/store/runNode'

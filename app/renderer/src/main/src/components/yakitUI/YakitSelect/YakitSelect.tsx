@@ -10,7 +10,7 @@ import styles from './YakitSelect.module.scss'
 import classNames from 'classnames'
 import type { BaseOptionType } from 'antd/lib/select'
 import { YakitTag } from '../YakitTag/YakitTag'
-import { ChevronUpIcon } from '@/assets/newIcon'
+import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronUpIcon'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import {
   type CacheDataHistoryProps,

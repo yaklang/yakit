@@ -6,7 +6,16 @@ import cveStyles from '@/pages/cve/CVETable.module.scss'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { IconSolidCodeIcon, RefreshIcon, SMViewGridAddIcon } from '@/assets/newIcon'
+import {
+  IconSolidCodeIcon,
+  RefreshIcon,
+  SMViewGridAddIcon,
+  DragonFailIcon,
+  DragonSuccessIcon,
+  RocketIconFromPagesWebShellIcon,
+  ScorpioFailIcon,
+  ScorpioSuccessIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { Button, Space, Tooltip } from 'antd'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -18,13 +27,6 @@ import { showModal } from '@/utils/showModal'
 import { RemarkDetail, WebShellCreatorForm } from '@/pages/webShell/WebShellComp'
 import { type YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { deleteWebShell, featurePing } from '@/pages/webShell/WebShellManager'
-import {
-  DragonFailIcon,
-  DragonSuccessIcon,
-  RocketIcon,
-  ScorpioFailIcon,
-  ScorpioSuccessIcon,
-} from '@/pages/webShell/icon'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { WebShellDetailOpt } from './WebShellDetailOpt'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
@@ -166,7 +168,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
           <>
             {i.Proxy.length > 0 ? (
               <Space>
-                <Button size={'small'} type="link" icon={<RocketIcon />} />
+                <Button size={'small'} type="link" icon={<RocketIconFromPagesWebShellIcon />} />
                 {i.Url}{' '}
               </Space>
             ) : (

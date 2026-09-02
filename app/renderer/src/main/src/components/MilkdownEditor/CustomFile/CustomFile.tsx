@@ -3,7 +3,9 @@ import styles from './CustomFile.module.scss'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { randomString } from '@/utils/randomUtil'
 import { yakitNotify } from '@/utils/notification'
-import { IconNotepadFileTypeCompress, IconNotepadFileTypePdf, IconNotepadFileTypeExcel } from '../icon/icon'
+import { IconNotepadFileTypeCompress } from '@yakit-libs/yakit-ui-icons/oldicon/IconNotepadFileTypeCompress'
+import { IconNotepadFileTypePdf } from '@yakit-libs/yakit-ui-icons/oldicon/IconNotepadFileTypePdf'
+import { IconNotepadFileTypeExcel } from '@yakit-libs/yakit-ui-icons/oldicon/IconNotepadFileTypeExcel'
 import { Progress, Tooltip } from 'antd'
 import {
   DocumentDuplicateOutlined,
@@ -34,7 +36,7 @@ import { getFileNameByUrl } from '../utils/trackDeletePlugin'
 import { httpDeleteNotepadFile } from '@/apiUtils/http'
 import { useStore } from '@/store'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
+import { SolidYakCattleNoBackColorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidYakCattleNoBackColorIcon'
 import {
   FileLogColorful,
   PowerPointFileTypeColorful,

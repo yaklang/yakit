@@ -8,7 +8,7 @@ import type {
   RuleExportAndImportHandle,
 } from './MITMRuleType'
 import styles from './MITMRule.module.scss'
-import { RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RefreshIcon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { useCreation, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'

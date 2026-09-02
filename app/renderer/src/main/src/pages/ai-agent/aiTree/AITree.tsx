@@ -1,6 +1,9 @@
 import React, { memo, useCallback, useMemo, useState } from 'react'
 import type { AITreeNodeProps, AITreeProps } from './type'
-import { TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon } from './icon'
+import { TaskErrorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskErrorIcon'
+import { TaskSkippedIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskSkippedIcon'
+import { TaskSuccessIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskSuccessIcon'
+import { TaskInProgressIndicator } from './TaskInProgressIndicator'
 import { InformationCircleOutlined, ListTodoOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { useMemoizedFn } from 'ahooks'
@@ -208,7 +211,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
         case 'skipped':
           return [<TaskSkippedIcon key="skipped" />, getWrapper(styles['node-wrapper-skipped'])]
         case 'processing':
-          return [<TaskInProgressIcon key="in-progress" />, getWrapper(styles['node-wrapper-in-progress'])]
+          return [<TaskInProgressIndicator key="in-progress" />, getWrapper(styles['node-wrapper-in-progress'])]
         default:
           return [
             <div key="circle" className={styles['node-circle-icon']} />,

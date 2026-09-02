@@ -42,7 +42,8 @@ import { GetPluginLanguage } from '@/pages/plugins/builtInData'
 import { setEditorContext, YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
 import { SyntaxFlowMonacoSpec } from '@/utils/monacoSpec/syntaxflowEditor'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
-import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
+import { IconSolidAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/IconSolidAIIcon'
+import { IconSolidAIWhiteIcon } from '@yakit-libs/yakit-ui-icons/oldicon/IconSolidAIWhiteIcon'
 import {
   getStorageYakEditorShortcutKeyEvents,
   isYakEditorDefaultShortcut,

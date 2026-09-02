@@ -4,7 +4,10 @@ import { useMemo, type FC } from 'react'
 import { XOutlined, FigmaIcon5237120699Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import classNames from 'classnames'
-import { TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon } from '../aiTree/icon'
+import { TaskErrorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskErrorIcon'
+import { TaskSkippedIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskSkippedIcon'
+import { TaskSuccessIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskSuccessIcon'
+import { TaskInProgressIndicator } from '../aiTree/TaskInProgressIndicator'
 import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 
 interface SuccessStatus {
@@ -53,7 +56,7 @@ const DividerCard: FC<DividerCardProps> = (props) => {
       case AITaskStatus.inProgress:
         return [
           <div className={styles['icon-danger']}>
-            <TaskInProgressIcon />
+            <TaskInProgressIndicator />
           </div>,
           <div className={styles['divider-content-text']}>
             <span>{name}</span>

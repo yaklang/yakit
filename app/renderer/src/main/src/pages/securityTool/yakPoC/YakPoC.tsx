@@ -30,7 +30,7 @@ import {
 import { PluginExecuteProgress } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { CogOutlined, CloudDownloadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
-import { FolderColorIcon, SolidCloudpluginIcon, SolidPrivatepluginIcon } from '@/assets/icon/colors'
+import { FolderColorIcon, SolidCloudpluginIcon, SolidPrivatepluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import { type PageNodeItemProps, type PocPageInfoProps, usePageInfo } from '@/store/pageInfo'

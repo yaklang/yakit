@@ -23,7 +23,7 @@ import {
   AIInputEventHotPatchTypeEnum,
 } from '@/pages/ai-re-act/hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
-import { OutlineViewGridIcon } from '@/components/yakChat/icon'
+import { OutlineViewGridIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineViewGridIcon'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'

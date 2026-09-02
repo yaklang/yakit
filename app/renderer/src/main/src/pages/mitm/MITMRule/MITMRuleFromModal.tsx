@@ -13,7 +13,7 @@ import type {
   RuleContentProps,
 } from './MITMRuleType'
 import { useDebounceEffect, useMemoizedFn } from 'ahooks'
-import { CheckIcon } from '@/assets/newIcon'
+import { CheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckIcon'
 import { type editor } from 'monaco-editor'
 import { StringToUint8Array } from '@/utils/str'
 import { failed } from '@/utils/notification'

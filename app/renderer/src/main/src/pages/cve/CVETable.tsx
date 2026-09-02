@@ -17,7 +17,7 @@ import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtual
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
-import { RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { CheckCircleSolid, RefreshSolid, ShieldExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import classNames from 'classnames'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'

@@ -10,9 +10,9 @@ import type {
 import styles from './YakitInput.module.scss'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
-import { ResizerIcon } from '@/assets/newIcon'
+import { ResizerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ResizerIcon'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
-import { SolidCloseCircleIcon } from '@/assets/icon/colors'
+import { SolidCloseCircleIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidCloseCircleIcon'
 
 /**
  * @description: 输入

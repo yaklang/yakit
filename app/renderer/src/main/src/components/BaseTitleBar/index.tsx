@@ -7,7 +7,7 @@ import {
   WinUIOpCloseSvgIcon,
   WinUIOpMaxSvgIcon,
   WinUIOpRestoreSvgIcon,
-} from '../layout/icons'
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import styles from './index.module.scss'
 import classNames from 'classnames'
 import { yakitChildWindow, yakitSystem } from '@/services/electronBridge'

@@ -1,7 +1,7 @@
 import httpQueryStyles from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig.module.scss'
 import matcherStyles from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtraction.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { HollowLightningBoltIcon } from '@/assets/newIcon'
+import { HollowLightningBoltIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import React, { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { Form, Tooltip } from 'antd'
 import classNames from 'classnames'

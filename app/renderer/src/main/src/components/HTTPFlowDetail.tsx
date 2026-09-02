@@ -31,7 +31,8 @@ import {
   type HTTPFlowExtractedDataTableRefProps,
   type QueryMITMRuleExtractedDataRequest,
 } from '@/components/HTTPFlowExtractedDataTable'
-import { ChevronUpIcon, ChromeSvgIcon } from '@/assets/newIcon'
+import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronUpIcon'
+import { ChromeSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChromeSvgIcon'
 import { YakitEmpty } from './yakitUI/YakitEmpty/YakitEmpty'
 import classNames from 'classnames'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'

@@ -1,6 +1,6 @@
 import { Play2Outlined, WandOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { HomeIcon } from '@/assets/icon/bespokeOutline'
+import { HomeIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import type { Entity } from '@/components/playground/entityRepository'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { randomString } from '@/utils/randomUtil'

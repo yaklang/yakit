@@ -1,14 +1,14 @@
 import type React from 'react'
 import { memo, useMemo } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import Icon from '@ant-design/icons/lib/components/Icon'
-import type { IconProps, PluginLogOptProps } from './PluginLogType'
+import type { PluginLogOptProps } from './PluginLogType'
 import { PluginLogTypeToInfo } from './defaultConstant'
 import { AuthorImg } from '@/pages/plugins/funcTemplate'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PopoverArrowIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PopoverArrowIcon'
 import useAdmin from '@/hook/useAdmin'
 import { useStore } from '@/store'
 import { pluginSupplementJSONConvertToData } from '@/pages/pluginEditor/utils/convert'
@@ -490,14 +490,3 @@ export const PluginLogOpt: React.FC<PluginLogOptProps> = memo((props) => {
     </div>
   )
 })
-
-/** 左侧冒泡框箭头 */
-const PopoverArrow = () => (
-  <svg width="9" height="36" viewBox="0 0 9 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M7.24713 11.7071L1.45424 17.5L7.24713 23.2929L7.24713 17.5L7.24713 11.7071Z" stroke="currentColor" />
-    <path d="M7.74713 23.5L1.74713 17.5L7.74713 11.5L7.74713 17.5L7.74713 23.5Z" fill="currentColor" />
-  </svg>
-)
-export const PopoverArrowIcon = (props: Partial<IconProps>) => {
-  return <Icon component={PopoverArrow} {...props} />
-}

@@ -27,7 +27,8 @@ import {
 
 import classNames from 'classnames'
 import styles from './AIReActChatReview.module.scss'
-import { OutlineHandleColorsIcon, ColorsOutlineWarpIcon } from '@/assets/icon/colors'
+import { OutlineHandleColorsIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineHandleColorsIcon'
+import { ColorsOutlineWarpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsOutlineWarpIcon'
 import { AIChatQSDataTypeEnum, type AIReviewType, type AITaskInfoProps } from '../../../ai-re-act/hooks/aiRender'
 import type { AIForge } from '@/pages/ai-agent/type/forge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

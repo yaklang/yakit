@@ -36,7 +36,7 @@ import {
   FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineAddPayloadIcon, PropertyIcon, PropertyNoAddIcon } from './icon'
+import { OutlineAddPayloadIcon, PropertyIcon, PropertyNoAddIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import {
   DragDropContext,

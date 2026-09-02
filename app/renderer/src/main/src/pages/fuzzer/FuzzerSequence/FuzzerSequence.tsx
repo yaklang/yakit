@@ -88,9 +88,13 @@ import type {
   MatcherActiveKey,
   HTTPResponseMatcher,
 } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
-import { InheritLineIcon, InheritArrowIcon } from './icon'
+import {
+  InheritLineIcon,
+  InheritArrowIcon,
+  ArrowsExpandIcon,
+  ArrowsRetractIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { ArrowsExpandIcon, ArrowsRetractIcon } from '@/assets/newIcon'
 import { WebFuzzerNewEditor } from '../WebFuzzerNewEditor/WebFuzzerNewEditor'
 import { shallow } from 'zustand/shallow'
 import { useFuzzerSequence } from '@/store/fuzzerSequence'
@@ -2008,7 +2012,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
               <div className={styles['plus-sm-icon-body']}>
                 {currentList.length > 0 && (
                   <div className={classNames(styles['inherit-line-icon'])}>
-                    <InheritLineIcon />
+                    <InheritLineIcon className={styles['inherit-line-symbol']} />
                   </div>
                 )}
                 <PlusSmOutlined
@@ -2242,12 +2246,12 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
               [styles['fuzzer-sequence-list-item-footer-line-primary']]: item?.inheritVariables || item?.inheritCookies,
             })}
           >
-            <InheritLineIcon />
+            <InheritLineIcon className={styles['inherit-line-symbol']} />
           </div>
           {(item?.inheritVariables || item?.inheritCookies) && (
             <>
               <div className={styles['fuzzer-sequence-list-item-footer-tag']}>{tipText}</div>
-              <InheritArrowIcon />
+              <InheritArrowIcon className={styles['inherit-arrow-symbol']} />
             </>
           )}
         </div>

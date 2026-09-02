@@ -1,6 +1,9 @@
 import { AITaskStatus, type AITaskStatusType } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { ReactNode } from 'react'
-import { TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon } from '../aiTree/icon'
+import { TaskErrorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskErrorIcon'
+import { TaskSkippedIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskSkippedIcon'
+import { TaskSuccessIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskSuccessIcon'
+import { TaskInProgressIndicator } from '../aiTree/TaskInProgressIndicator'
 
 export interface AIStatusPresentation {
   icon: ReactNode | null
@@ -19,7 +22,7 @@ export const getAIStatusPresentation = (status?: AITaskStatusType): AIStatusPres
       }
     case AITaskStatus.inProgress:
       return {
-        icon: <TaskInProgressIcon />,
+        icon: <TaskInProgressIndicator />,
         bgColor: 'linear-gradient(90deg, var(--Colors-Use-Warning-Border) 0%, var(--Colors-Use-Warning-Bg-Hover) 100%)',
         stripeColor: 'var(--Colors-Use-Warning-Primary)',
       }

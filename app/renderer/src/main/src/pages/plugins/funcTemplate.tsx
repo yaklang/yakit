@@ -51,15 +51,13 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { CheckSolid, ExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
-import {
-  SolidOfficialpluginIcon,
-  SolidYakitPluginIcon,
-  SolidPluginYakMitmIcon,
-  SolidPluginProtScanIcon,
-  SolidSparklesPluginIcon,
-  SolidDocumentSearchPluginIcon,
-  SolidCollectionPluginIcon,
-} from '@/assets/icon/colors'
+import { SolidOfficialpluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidOfficialpluginIcon'
+import { SolidYakitPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidYakitPluginIcon'
+import { SolidPluginYakMitmIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidPluginYakMitmIcon'
+import { SolidPluginProtScanIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidPluginProtScanIcon'
+import { SolidSparklesPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidSparklesPluginIcon'
+import { SolidDocumentSearchPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidDocumentSearchPluginIcon'
+import { SolidCollectionPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidCollectionPluginIcon'
 import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -69,7 +67,9 @@ import { Dropdown, Form, Radio, Tooltip } from 'antd'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { formatDate } from '@/utils/timeUtil'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { PluginTestErrorIcon, PluginTestWarningIcon, PluginsGridCheckIcon } from './icon'
+import { PluginTestErrorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PluginTestErrorIcon'
+import { PluginTestWarningIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PluginTestWarningIcon'
+import { PluginsGridCheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PluginsGridCheckIcon'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitLogo from '@/assets/yakitLogo.png'
 import type { PluginFilterParams, PluginSearchParams } from './baseTemplateType'

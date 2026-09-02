@@ -6,7 +6,7 @@ import type { ColumnsTypeProps, FiltersItemProps } from '@/components/TableVirtu
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { MultipleSelect } from './HTTPFlowTable'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RefreshIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
 import { openABSFileLocated } from '@/utils/openWebsite'

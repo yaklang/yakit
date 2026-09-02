@@ -1,75 +1,73 @@
 import React, { type ReactNode, Suspense } from 'react'
 import type { StartFacadeServerParams } from '../pages/reverseServer/ReverseServer_New'
-import {
-  PrivateOutlineAIAgentIcon,
-  PrivateOutlineAuditCodeIcon,
-  PrivateOutlineAuditHoleIcon,
-  PrivateOutlineBasicCrawlerIcon,
-  PrivateOutlineBatchPluginIcon,
-  PrivateOutlineBruteIcon,
-  PrivateOutlineCVEIcon,
-  PrivateOutlineCodeScanIcon,
-  PrivateOutlineCodecIcon,
-  PrivateOutlineDNSLogIcon,
-  PrivateOutlineDataCompareIcon,
-  PrivateOutlineDefaultPluginIcon,
-  PrivateOutlineDirectoryScanningIcon,
-  PrivateOutlineDomainIcon,
-  PrivateOutlineFingerprintManageIcon,
-  PrivateOutlineHTTPHistoryIcon,
-  PrivateOutlineICMPSizeLogIcon,
-  PrivateOutlineMitmIcon,
-  PrivateOutlinePayloadGeneraterIcon,
-  PrivateOutlinePluginStoreIcon,
-  PrivateOutlinePocIcon,
-  PrivateOutlinePortsIcon,
-  PrivateOutlineProjectManagerIcon,
-  PrivateOutlineReportIcon,
-  PrivateOutlineReverseServerIcon,
-  PrivateOutlineRiskIcon,
-  PrivateOutlineRuleManagementIcon,
-  PrivateOutlineScanPortIcon,
-  PrivateOutlineShellReceiverIcon,
-  PrivateOutlineSpaceEngineIcon,
-  PrivateOutlineSubDomainCollectionIcon,
-  PrivateOutlineTCPPortLogIcon,
-  PrivateOutlineWebFuzzerIcon,
-  PrivateOutlineWebsocketFuzzerIcon,
-  PrivateSolidAuditCodeIcon,
-  PrivateSolidAuditHoleIcon,
-  PrivateSolidBasicCrawlerIcon,
-  PrivateSolidBatchPluginIcon,
-  PrivateSolidBruteIcon,
-  PrivateSolidCVEIcon,
-  PrivateSolidCodeScanIcon,
-  PrivateSolidCodecIcon,
-  PrivateSolidDNSLogIcon,
-  PrivateSolidDataCompareIcon,
-  PrivateSolidDefaultPluginIcon,
-  PrivateSolidDirectoryScanningIcon,
-  PrivateSolidDomainIcon,
-  PrivateSolidFingerprintManageIcon,
-  PrivateSolidHTTPHistoryIcon,
-  PrivateSolidICMPSizeLogIcon,
-  PrivateSolidMitmIcon,
-  PrivateSolidPayloadGeneraterIcon,
-  PrivateSolidPluginStoreIcon,
-  PrivateSolidPocIcon,
-  PrivateSolidPortsIcon,
-  PrivateSolidProjectManagerIcon,
-  PrivateSolidReportIcon,
-  PrivateSolidReverseServerIcon,
-  PrivateSolidRiskIcon,
-  PrivateSolidRuleManagementIcon,
-  PrivateSolidScanPortIcon,
-  PrivateSolidShellReceiverIcon,
-  PrivateSolidSpaceEngineIcon,
-  PrivateSolidSubDomainCollectionIcon,
-  PrivateSolidTCPPortLogIcon,
-  PrivateSolidWebFuzzerIcon,
-  PrivateSolidWebsocketFuzzerIcon,
-  PrivateSolidAIAgentIcon,
-} from './privateIcon'
+import { PrivateOutlineAIAgentIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineAIAgentIcon'
+import { PrivateOutlineAuditCodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineAuditCodeIcon'
+import { PrivateOutlineAuditHoleIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineAuditHoleIcon'
+import { PrivateOutlineBasicCrawlerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineBasicCrawlerIcon'
+import { PrivateOutlineBatchPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineBatchPluginIcon'
+import { PrivateOutlineBruteIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineBruteIcon'
+import { PrivateOutlineCVEIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineCVEIcon'
+import { PrivateOutlineCodeScanIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineCodeScanIcon'
+import { PrivateOutlineCodecIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineCodecIcon'
+import { PrivateOutlineDNSLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineDNSLogIcon'
+import { PrivateOutlineDataCompareIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineDataCompareIcon'
+import { PrivateOutlineDefaultPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineDefaultPluginIcon'
+import { PrivateOutlineDirectoryScanningIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineDirectoryScanningIcon'
+import { PrivateOutlineDomainIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineDomainIcon'
+import { PrivateOutlineFingerprintManageIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineFingerprintManageIcon'
+import { PrivateOutlineHTTPHistoryIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineHTTPHistoryIcon'
+import { PrivateOutlineICMPSizeLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineICMPSizeLogIcon'
+import { PrivateOutlineMitmIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineMitmIcon'
+import { PrivateOutlinePayloadGeneraterIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlinePayloadGeneraterIcon'
+import { PrivateOutlinePluginStoreIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlinePluginStoreIcon'
+import { PrivateOutlinePocIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlinePocIcon'
+import { PrivateOutlinePortsIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlinePortsIcon'
+import { PrivateOutlineProjectManagerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineProjectManagerIcon'
+import { PrivateOutlineReportIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineReportIcon'
+import { PrivateOutlineReverseServerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineReverseServerIcon'
+import { PrivateOutlineRiskIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineRiskIcon'
+import { PrivateOutlineRuleManagementIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineRuleManagementIcon'
+import { PrivateOutlineScanPortIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineScanPortIcon'
+import { PrivateOutlineShellReceiverIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineShellReceiverIcon'
+import { PrivateOutlineSpaceEngineIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineSpaceEngineIcon'
+import { PrivateOutlineSubDomainCollectionIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineSubDomainCollectionIcon'
+import { PrivateOutlineTCPPortLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineTCPPortLogIcon'
+import { PrivateOutlineWebFuzzerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineWebFuzzerIcon'
+import { PrivateOutlineWebsocketFuzzerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineWebsocketFuzzerIcon'
+import { PrivateSolidAuditCodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidAuditCodeIcon'
+import { PrivateSolidAuditHoleIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidAuditHoleIcon'
+import { PrivateSolidBasicCrawlerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidBasicCrawlerIcon'
+import { PrivateSolidBatchPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidBatchPluginIcon'
+import { PrivateSolidBruteIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidBruteIcon'
+import { PrivateSolidCVEIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidCVEIcon'
+import { PrivateSolidCodeScanIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidCodeScanIcon'
+import { PrivateSolidCodecIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidCodecIcon'
+import { PrivateSolidDNSLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidDNSLogIcon'
+import { PrivateSolidDataCompareIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidDataCompareIcon'
+import { PrivateSolidDefaultPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidDefaultPluginIcon'
+import { PrivateSolidDirectoryScanningIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidDirectoryScanningIcon'
+import { PrivateSolidDomainIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidDomainIcon'
+import { PrivateSolidFingerprintManageIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidFingerprintManageIcon'
+import { PrivateSolidHTTPHistoryIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidHTTPHistoryIcon'
+import { PrivateSolidICMPSizeLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidICMPSizeLogIcon'
+import { PrivateSolidMitmIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidMitmIcon'
+import { PrivateSolidPayloadGeneraterIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidPayloadGeneraterIcon'
+import { PrivateSolidPluginStoreIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidPluginStoreIcon'
+import { PrivateSolidPocIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidPocIcon'
+import { PrivateSolidPortsIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidPortsIcon'
+import { PrivateSolidProjectManagerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidProjectManagerIcon'
+import { PrivateSolidReportIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidReportIcon'
+import { PrivateSolidReverseServerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidReverseServerIcon'
+import { PrivateSolidRiskIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidRiskIcon'
+import { PrivateSolidRuleManagementIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidRuleManagementIcon'
+import { PrivateSolidScanPortIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidScanPortIcon'
+import { PrivateSolidShellReceiverIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidShellReceiverIcon'
+import { PrivateSolidSpaceEngineIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidSpaceEngineIcon'
+import { PrivateSolidSubDomainCollectionIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidSubDomainCollectionIcon'
+import { PrivateSolidTCPPortLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidTCPPortLogIcon'
+import { PrivateSolidWebFuzzerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidWebFuzzerIcon'
+import { PrivateSolidWebsocketFuzzerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidWebsocketFuzzerIcon'
+import { PrivateSolidAIAgentIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateSolidAIAgentIcon'
 import type { AdvancedConfigShowProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { ErrorBoundary } from 'react-error-boundary'
 import type { PageItemProps } from '@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType'
@@ -126,7 +124,8 @@ import { YakitRoute } from '../enums/yakitRoute'
 import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import { getNotepadAdd, getNotepadManage, getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
 import { ClipboardListSolid, CodecSolid, TerminalSolid } from '@yakit-libs/yakit-ui-icons/solid'
-import { PublicToolDataCompareIcon, PublicToolVulinboxIcon } from './publicIcon'
+import { PublicToolDataCompareIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolDataCompareIcon'
+import { PublicToolVulinboxIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolVulinboxIcon'
 import { type SoftMode, YakitModeEnum } from '@/store/softMode'
 
 // 页面组件懒加载，避免首屏同步拉入全部页面依赖

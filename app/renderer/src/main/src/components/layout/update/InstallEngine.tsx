@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { MacUIOpCloseSvgIcon, WinUIOpCloseSvgIcon, YakitCopySvgIcon } from '../icons'
+import { MacUIOpCloseSvgIcon, WinUIOpCloseSvgIcon, YakitCopySvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
 import type { YakitSystem } from '@/yakitGVDefine'

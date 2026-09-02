@@ -1,17 +1,15 @@
-import {
-  SolidYakitPluginIcon,
-  SolidPluginYakMitmIcon,
-  SolidPluginProtScanIcon,
-  SolidSparklesPluginIcon,
-  SolidDocumentSearchPluginIcon,
-  SolidCollectionPluginIcon,
-} from '@/assets/icon/colors'
+import { SolidYakitPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidYakitPluginIcon'
+import { SolidPluginYakMitmIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidPluginYakMitmIcon'
+import { SolidPluginProtScanIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidPluginProtScanIcon'
+import { SolidSparklesPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidSparklesPluginIcon'
+import { SolidDocumentSearchPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidDocumentSearchPluginIcon'
+import { SolidCollectionPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidCollectionPluginIcon'
 import type { ReactNode } from 'react'
 import { CodecPluginTemplate } from '../invoker/data/CodecPluginTemplate'
 import { ContextMenuPluginTemplate } from '../invoker/data/ContextMenuPluginTemplate'
 import { MITMPluginTemplate, PortScanPluginTemplate } from '../pluginDebugger/defaultData'
 import { FlagSolid, BadgeCheckSolid, BanSolid } from '@yakit-libs/yakit-ui-icons/solid'
-import { SolidCircleIcon } from '@/assets/icon/bespokeSolid'
+import { SolidCircleIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidCircleIcon'
 import type { TypeSelectOpt } from './funcTemplateType'
 import type { PluginFilterParams, PluginSearchParams } from './baseTemplateType'
 

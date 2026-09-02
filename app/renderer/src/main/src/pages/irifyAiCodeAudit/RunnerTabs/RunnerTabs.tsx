@@ -29,8 +29,7 @@ import {
   FigmaIcon22849134660Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
-import { YakRunnerOpenFolderIcon } from '../../yakRunner/icon'
+import { SolidIrifyMiniLogoIcon, YakRunnerOpenFolderIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { IrifyAiCodeAuditSelectionMenu } from '../IrifyAiCodeAuditSelectionMenu'
 import {

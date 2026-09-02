@@ -7,7 +7,7 @@ import type { DocumentCollectProps, HoleResourceType, HoleTreeNode } from './Doc
 import { DocumentOutlined, Link2Outlined, VariableOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { SSARisksFilter } from '../YakitAuditHoleTable/YakitAuditHoleTableType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { RiskTree } from '@/pages/yakRunnerAuditCode/RunnerFileTree/RunnerFileTree'
 import { JSONParseLog } from '@/utils/tool'

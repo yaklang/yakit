@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
-import { CheckIcon } from '@/assets/newIcon'
+import { CheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckIcon'
 import { BanOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { FooterBottom } from '@/components/TableVirtualResize/TableVirtualResize'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

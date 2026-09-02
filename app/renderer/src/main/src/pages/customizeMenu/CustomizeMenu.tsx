@@ -13,7 +13,12 @@ import type {
   SystemRouteMenuDataItemProps,
 } from './CustomizeMenuType'
 import style from './CustomizeMenu.module.scss'
-import { SolidCloudpluginIcon, SolidOfficialpluginIcon, SolidPrivatepluginIcon } from '@/assets/icon/colors'
+import {
+  SolidCloudpluginIcon,
+  SolidOfficialpluginIcon,
+  SolidPrivatepluginIcon,
+  PrivateOutlineDefaultPluginIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import classNames from 'classnames'
 import {
   DragDropContext,
@@ -60,7 +65,6 @@ import {
 import { CodeGV, RemoteGV } from '@/yakitGV'
 import { isCommunityEdition } from '@/utils/envfile'
 import { publicConvertDatabase, publicExchangeProps, publicUnionMenus } from '../layout/publicMenu/utils'
-import { PrivateOutlineDefaultPluginIcon } from '@/routes/privateIcon'
 import { type EnhancedCustomRouteMenuProps, filterCodeMenus, menusConvertJsonData } from './utils'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitRoute } from '@/enums/yakitRoute'

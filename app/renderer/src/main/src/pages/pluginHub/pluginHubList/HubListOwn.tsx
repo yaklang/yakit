@@ -47,7 +47,7 @@ import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPlugi
 import useGetSetState from '../hooks/useGetSetState'
 import { FilterPopoverBtn } from '@/pages/plugins/funcTemplate'
 import { Tooltip } from 'antd'
-import { SolidPrivatepluginIcon } from '@/assets/icon/colors'
+import { SolidPrivatepluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { statusTag } from '@/pages/plugins/baseTemplate'
 import { DefaultOnlinePlugin, PluginOperateHint } from '../defaultConstant'
 import { grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail } from '../utils/grpc'

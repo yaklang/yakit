@@ -46,7 +46,11 @@ import {
   PublicToolVulinboxIcon,
   PublicToolWebsocketFuzzerIcon,
   PublicWebFuzzerIcon,
-} from '@/routes/publicIcon'
+  OutlineBugIcon,
+  OutlineModScanPortDataIcon,
+  OutlineTrashSecondIcon,
+  SolidBorderDocumentTextIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   CheckSolid,
@@ -66,8 +70,6 @@ import {
   QuestionMarkCircleOutlined,
   CloudDownloadOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineBugIcon } from '@/assets/icon/bespokeOutline'
-import { OutlineModScanPortDataIcon, OutlineTrashSecondIcon } from '@/assets/icon/bespokeOutline'
 import { SequenceAnimationAemonstration } from '../fuzzer/FuzzerSequence/FuzzerSequence'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
@@ -98,7 +100,6 @@ import { getReleaseEditionName, isCommunityYakit, isEnpriTrace, isEnpriTraceAgen
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import ReactResizeDetector from 'react-resize-detector'
-import { SolidBorderDocumentTextIcon } from '@/assets/icon/colors'
 import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN } from '../mitm/MITMPage'
 import type { PluginHubPageInfoProps } from '@/store/pageInfo'
 import { WebsiteGV } from '@/enums/website'

@@ -28,8 +28,14 @@ import {
   OutlineWebFuzzerActiveIcon,
   OutlineChartPieActiveIcon,
   OutlineSparklesActiveIcon,
-} from './icon'
-import { ArrowDownIcon, ArrowsExpandIcon, ArrowsRetractIcon } from '@/assets/newIcon'
+  ArrowDownIcon,
+  ArrowsExpandIcon,
+  ArrowsRetractIcon,
+  SolidCloudpluginIcon,
+  SolidPrivatepluginIcon,
+  SolidYakitPluginGrayIcon,
+  SolidYakitPluginIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { Drawer, Input, Progress, Tooltip } from 'antd'
 import type {
   CacheChatCSProps,
@@ -85,12 +91,6 @@ import classNames from 'classnames'
 import styles from './chatCS.module.scss'
 import { YakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
 
-import {
-  SolidCloudpluginIcon,
-  SolidPrivatepluginIcon,
-  SolidYakitPluginGrayIcon,
-  SolidYakitPluginIcon,
-} from '@/assets/icon/colors'
 import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
 import {
   type HybridScanRequest,

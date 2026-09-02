@@ -16,7 +16,7 @@ import {
 import type { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { genDefaultPagination, type PaginationSchema } from '../invoker/schema'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
-import { OpenAIIcon } from './aiModelList/icon'
+import { OpenAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OpenAIIcon'
 import {
   ChatGlmWithBackgroundAiModelColorful,
   ComateWithBackgroundAiModelColorful,
@@ -39,7 +39,8 @@ import {
   ToolSolid,
 } from '@yakit-libs/yakit-ui-icons/solid'
 import type { MCPServerType } from './type/aiMCP'
-import { ColorsAIIcon, ColorsChatIcon } from '@/assets/icon/colors'
+import { ColorsAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsAIIcon'
+import { ColorsChatIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsChatIcon'
 import type { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
 import type { ExportAIForgeRequest } from './forgeName/type'
 

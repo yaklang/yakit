@@ -77,6 +77,7 @@ import {
   HighRiskColorful,
   LowRiskColorful,
   MediumRiskColorful,
+  ModifiedLogColorful,
 } from '@yakit-libs/yakit-ui-icons/colorful'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
 import { AuditResultCollapse, AuditResultDescribe, SeverityMapTag } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
@@ -87,8 +88,7 @@ import { yakitNotify } from '@/utils/notification'
 import { NoPromptHint } from '@/pages/pluginHub/utilsUI/UtilsTemplate'
 import { RemoteAuditHoleGV } from '@/enums/auditHole'
 import { useStore } from '@/store'
-import { PopoverArrowIcon } from '@/pages/pluginHub/pluginLog/PluginLogOpt'
-import { ModifiedLogColorful } from '@yakit-libs/yakit-ui-icons/colorful'
+import { PopoverArrowIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PopoverArrowIcon'
 import { PaperAirplaneSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'

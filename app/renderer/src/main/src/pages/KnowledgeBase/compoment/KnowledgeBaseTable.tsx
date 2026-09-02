@@ -1,6 +1,6 @@
 import { type Dispatch, type FC, type SetStateAction, useEffect, useMemo } from 'react'
 import { KnowledgeBaseTableHeader } from './KnowledgeBaseTableHeader'
-import { type IconProps } from '@/assets/newIcon'
+import { type IconProps } from '@yakit-libs/yakit-ui-icons/oldicon'
 
 import styles from '../knowledgeBase.module.scss'
 import type useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffec
 import { Button, Space } from 'antd'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 import { AutoCard } from '../../components/AutoCard'
-import { LineConversionIcon } from '../../assets/icons/lineConversion'
+import { LineConversionIcon } from '@yakit-libs/yakit-ui-icons/oldicon/LineConversionIcon'
 import styles from './DataCompare.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useHttpFlowStore } from '@/store/httpFlow'

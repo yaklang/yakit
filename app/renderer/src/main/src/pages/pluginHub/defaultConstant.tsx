@@ -4,7 +4,7 @@ import {
   OutlineOnlinePluginIcon,
   OutlineOwnPluginIcon,
   OutlineTrashSecondIcon,
-} from '@/assets/icon/bespokeOutline'
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import type { YakScript } from '../invoker/schema'
 import type { YakitPluginOnlineDetail } from '../plugins/online/PluginsOnlineType'
 import type { ExportYakScriptStreamRequest } from '../plugins/local/PluginsLocalType'

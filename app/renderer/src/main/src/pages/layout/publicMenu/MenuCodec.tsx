@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ChevronUpIcon } from '@/assets/newIcon'
+import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'

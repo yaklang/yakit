@@ -17,7 +17,7 @@ import AIGroupStreamCardList from './aiGroupStreamCardList/AIGroupStreamCardList
 import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineThoughtIcon } from '@/assets/icon/bespokeOutline'
+import { OutlineThoughtIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineThoughtIcon'
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 import ThoughtDuration from '../thoughtDuration/ThoughtDuration'

@@ -5,7 +5,7 @@ import { ResizeBox } from '@/components/ResizeBox'
 import { CVEDescription, CWEDescription, CWEDescriptionItem } from '@/pages/cve/CVEDescription'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import styles from './CVETable.module.scss'
-import { ArrowsExpandIcon, ArrowsRetractIcon } from '@/assets/newIcon'
+import { ArrowsExpandIcon, ArrowsRetractIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { useCreation } from 'ahooks'
 
 export interface CVEInspectProp {

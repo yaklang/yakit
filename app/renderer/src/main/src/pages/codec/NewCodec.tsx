@@ -17,7 +17,7 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { PlaySolid, StarSolid, FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 
-import { ExclamationIcon } from '@/assets/newIcon'
+import { ExclamationIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import {
   ArrowBigUpOutlined,
   ArrowsExpandOutlined,

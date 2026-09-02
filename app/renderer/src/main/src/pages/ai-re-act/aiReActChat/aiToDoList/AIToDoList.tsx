@@ -6,7 +6,10 @@ import { ChevronDownOutlined, ChevronRightOutlined } from '@yakit-libs/yakit-ui-
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import { useCreation, useHover, useMemoizedFn } from 'ahooks'
-import { AIToDoListDeletedIcon, AIToDoListPendingIcon, AIToDoListDoneIcon, AIToDoListSkippedIcon } from './icon'
+import { AIToDoListDeletedIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIToDoListDeletedIcon'
+import { AIToDoListPendingIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIToDoListPendingIcon'
+import { AIToDoListDoneIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIToDoListDoneIcon'
+import { AIToDoListSkippedIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIToDoListSkippedIcon'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
 import { AIToDoListDetail } from './AIToDoListDetail'
 

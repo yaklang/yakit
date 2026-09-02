@@ -21,7 +21,7 @@ import {
 import classNames from 'classnames'
 import { getPressuresData, getCostData, getThreshold, getContextStatsData } from './utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AIDetailsDashIcon } from '../../aiChatWelcome/icon'
+import { AIDetailsDashIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIDetailsDashIcon'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import ContextTable from './ContextTable/ContextTable'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

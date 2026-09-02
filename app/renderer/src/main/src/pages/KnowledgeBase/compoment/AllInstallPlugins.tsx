@@ -19,7 +19,10 @@ import {
   PuzzleOutlined,
   RefreshOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { YakitLogoSvgIcon, YakitSpinLogoSvgIcon } from '../icon/sidebarIcon'
+import {
+  YakitLogoSvgIconFromPagesKnowledgeBaseIconSidebarIcon,
+  YakitSpinLogoSvgIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import { downloadWithEvents, exclude } from '../utils'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -233,7 +236,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
               return (
                 <div className={styles['install-content-box']} key={it.InstallPath + key}>
                   <div className={styles['first-box']}>
-                    <YakitLogoSvgIcon />
+                    <YakitLogoSvgIconFromPagesKnowledgeBaseIconSidebarIcon />
                     <YakitSpinLogoSvgIcon className={styles['yakit-svg']} />
                   </div>
                   <div

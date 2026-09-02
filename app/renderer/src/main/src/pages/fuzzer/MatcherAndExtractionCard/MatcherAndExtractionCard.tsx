@@ -24,7 +24,7 @@ import type {
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { NewHTTPPacketEditor } from '@/utils/editors'
 import styles from './MatcherAndExtraction.module.scss'
-import { ResizerIcon } from '@/assets/newIcon'
+import { ResizerIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Alert, Descriptions, Divider } from 'antd'

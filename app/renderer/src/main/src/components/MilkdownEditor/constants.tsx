@@ -4,16 +4,14 @@ import {
   PaperClipOutlined,
   ListOrderedOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import {
-  IconHeading1,
-  IconHeading2,
-  IconHeading3,
-  IconCheckSquare,
-  IconCurlyBraces,
-  IconQuote,
-  IconFlipVertical,
-  IconType,
-} from './icon/icon'
+import { IconHeading1 } from '@yakit-libs/yakit-ui-icons/oldicon/IconHeading1'
+import { IconHeading2 } from '@yakit-libs/yakit-ui-icons/oldicon/IconHeading2'
+import { IconHeading3 } from '@yakit-libs/yakit-ui-icons/oldicon/IconHeading3'
+import { IconCheckSquare } from '@yakit-libs/yakit-ui-icons/oldicon/IconCheckSquare'
+import { IconCurlyBraces } from '@yakit-libs/yakit-ui-icons/oldicon/IconCurlyBraces'
+import { IconQuote } from '@yakit-libs/yakit-ui-icons/oldicon/IconQuote'
+import { IconFlipVertical } from '@yakit-libs/yakit-ui-icons/oldicon/IconFlipVertical'
+import { IconType } from '@yakit-libs/yakit-ui-icons/oldicon/IconType'
 import type { ReactNode } from 'react'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 

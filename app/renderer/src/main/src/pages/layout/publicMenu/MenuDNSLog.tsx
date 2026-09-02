@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { ChevronUpIcon, QuitIcon, RefreshIcon } from '@/assets/newIcon'
+import { ChevronUpIcon, QuitIcon, RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { type DNSLogEvent, DNS_LOG_PAGE_UPDATE_TOKEN, type SendMenuDnslogProps } from '@/pages/dnslog/DNSLogPage'

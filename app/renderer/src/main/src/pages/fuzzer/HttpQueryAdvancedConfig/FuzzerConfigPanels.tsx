@@ -4,7 +4,7 @@ import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { Divider, Form } from 'antd'
-import { HollowLightningBoltIcon } from '@/assets/newIcon'
+import { HollowLightningBoltIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import type {
   FilterEmptySubMatcherFunctionProps,
   HTTPResponseMatcher,

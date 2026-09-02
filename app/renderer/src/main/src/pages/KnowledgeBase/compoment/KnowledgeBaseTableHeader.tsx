@@ -1,6 +1,6 @@
 import { type Dispatch, type SetStateAction, useEffect, useMemo, type FC } from 'react'
 import type { KnowledgeBaseTableProps } from './KnowledgeBaseTable'
-import { LightningBoltIcon } from '../icon/sidebarIcon'
+import { LightningBoltIcon, OutlineTimeIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
@@ -13,8 +13,6 @@ import {
   ChevronDownOutlined,
   PlusOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-
-import { OutlineTimeIcon } from '@/assets/icon/bespokeOutline'
 
 import styles from '../knowledgeBase.module.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'

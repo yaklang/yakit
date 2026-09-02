@@ -4,7 +4,7 @@ import { flushSync } from 'react-dom'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon, SelectIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { Pagination, Space, Tooltip } from 'antd'
 import { ClipboardListOutlined, TrashOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
@@ -13,7 +13,6 @@ import { yakitNotify } from '@/utils/notification'
 import type { Report } from './models'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { SelectIcon } from '@/assets/icons/select'
 import classNames from 'classnames'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { useCreation, useMemoizedFn } from 'ahooks'
@@ -315,7 +314,6 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                 >
                   <Tooltip title={t('ReportViewerPage.selectToDelete')}>
                     <SelectIcon
-                      // @ts-expect-error 类型定义不完整，需要忽略此行
                       className={classNames(styles['icon-select'], {
                         [styles['icon-select-active']]: selectedRowKeys.includes(item.Id),
                       })}

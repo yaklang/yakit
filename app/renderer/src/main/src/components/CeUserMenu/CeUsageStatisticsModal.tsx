@@ -20,7 +20,6 @@ import { WebsiteGV } from '@/enums/website'
 import CeApiKeysListModal from './CeApiKeysListModal'
 import { grpcUpdateApiKey, maskApiKey } from './ceApiKey'
 import styles from './CeUsageStatisticsModal.module.scss'
-// import { MetricCaptionFailedIcon, MetricCaptionSuccessIcon } from './icon'
 
 type TokenQuotaLike = {
   tokenUsed?: number

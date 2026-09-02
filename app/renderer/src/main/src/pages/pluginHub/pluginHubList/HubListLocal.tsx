@@ -56,7 +56,11 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { NoPromptHint } from '../utilsUI/UtilsTemplate'
 import { RemotePluginGV } from '@/enums/plugin'
-import { SolidCloudpluginIcon, SolidPrivatepluginIcon, SolidYakOfficialPluginColorIcon } from '@/assets/icon/colors'
+import {
+  SolidCloudpluginIcon,
+  SolidPrivatepluginIcon,
+  SolidYakOfficialPluginColorIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { PluginLocalUpload } from '@/pages/plugins/local/PluginLocalUpload'
 import {

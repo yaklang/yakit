@@ -25,7 +25,7 @@ import {
   XOutlined,
   CloudDownloadOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { PrivateOutlineDefaultPluginIcon } from '@/routes/privateIcon'
+import { PrivateOutlineDefaultPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
 import emiter from '@/utils/eventBus/eventBus'
 import { DROP_AVAILABLE, DROP_SELECTED, getGroupTabByKey, GroupTabList, UpperLimit } from './constants'

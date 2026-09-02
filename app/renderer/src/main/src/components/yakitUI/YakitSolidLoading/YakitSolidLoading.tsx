@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { forwardRef, memo } from 'react'
 import classNames from 'classnames'
-import { ColorsTaskNodesIcon } from '@/assets/icon/colors'
+import { ColorsTaskNodesIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsTaskNodesIcon'
 
 import styles from './YakitSolidLoading.module.scss'
 

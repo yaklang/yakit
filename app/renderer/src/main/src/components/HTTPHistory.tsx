@@ -38,24 +38,22 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitInput } from './yakitUI/YakitInput/YakitInput'
 import { YakitEmpty } from './yakitUI/YakitEmpty/YakitEmpty'
-import {
-  BaiduNetdiskIcon,
-  BashIcon,
-  BurpSuiteCommunityIcon,
-  BurpSuiteProfessionalIcon,
-  ClashIconSvgIcon,
-  Cse360Icon,
-  CursorIcon,
-  FinderIcon,
-  OpenvpnIcon,
-  ProxifierIcon,
-  QqIcon,
-  Se360Icon,
-  TelegramIcon,
-  UToolsIcon,
-  VMwareIcon,
-  ZSHIcon,
-} from '@/assets/commonProcessIcons'
+import { BaiduNetdiskIcon } from '@yakit-libs/yakit-ui-icons/oldicon/BaiduNetdiskIcon'
+import { BashIcon } from '@yakit-libs/yakit-ui-icons/oldicon/BashIcon'
+import { BurpSuiteCommunityIcon } from '@yakit-libs/yakit-ui-icons/oldicon/BurpSuiteCommunityIcon'
+import { BurpSuiteProfessionalIcon } from '@yakit-libs/yakit-ui-icons/oldicon/BurpSuiteProfessionalIcon'
+import { ClashIconSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ClashIconSvgIcon'
+import { Cse360Icon } from '@yakit-libs/yakit-ui-icons/oldicon/Cse360Icon'
+import { CursorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CursorIcon'
+import { FinderIcon } from '@yakit-libs/yakit-ui-icons/oldicon/FinderIcon'
+import { OpenvpnIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OpenvpnIcon'
+import { ProxifierIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ProxifierIcon'
+import { QqIcon } from '@yakit-libs/yakit-ui-icons/oldicon/QqIcon'
+import { Se360Icon } from '@yakit-libs/yakit-ui-icons/oldicon/Se360Icon'
+import { TelegramIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TelegramIcon'
+import { UToolsIcon } from '@yakit-libs/yakit-ui-icons/oldicon/UToolsIcon'
+import { VMwareIcon } from '@yakit-libs/yakit-ui-icons/oldicon/VMwareIcon'
+import { ZSHIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ZSHIcon'
 import {
   ChromeBrowserColorful,
   DingTalkSocialColorful,
@@ -73,7 +71,7 @@ import {
 } from '@yakit-libs/yakit-ui-icons/colorful'
 import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
-import { RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RefreshIcon'
 import { Tooltip } from 'antd'
 import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { YakitCheckbox } from './yakitUI/YakitCheckbox/YakitCheckbox'

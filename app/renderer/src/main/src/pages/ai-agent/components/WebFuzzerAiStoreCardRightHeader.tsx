@@ -12,7 +12,8 @@ import {
 } from '@/pages/fuzzer/webFuzzerAiRequestApplyBridge'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { ColorsPreViewMDIcon, ColorsSourceCodeIcon } from '@/assets/icon/colors'
+import { ColorsPreViewMDIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsPreViewMDIcon'
+import { ColorsSourceCodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsSourceCodeIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 const WebFuzzerAiStoreCardRightHeader: FC<{ content?: string; fuzzerPageId: string }> = ({ content, fuzzerPageId }) => {

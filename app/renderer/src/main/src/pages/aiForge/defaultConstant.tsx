@@ -1,5 +1,9 @@
 import type { ReactNode } from 'react'
-import { SolidCollectionPluginIcon, SolidSparklesPluginIcon, SolidYakitPluginIcon } from '@/assets/icon/colors'
+import {
+  SolidCollectionPluginIcon,
+  SolidSparklesPluginIcon,
+  SolidYakitPluginIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import type { AIForge } from '../ai-agent/type/forge'
 
 /** @name forge-类型 */

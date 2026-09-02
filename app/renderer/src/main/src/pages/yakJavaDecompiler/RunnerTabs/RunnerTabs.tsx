@@ -25,8 +25,11 @@ import {
   FigmaIcon22849134660Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
-import { YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon } from '../icon'
+import {
+  SolidYakCattleNoBackColorIcon,
+  YakRunnerOpenFileIcon,
+  YakRunnerOpenFolderIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect } from 'ahooks'
 import useStore from '../hooks/useStore'

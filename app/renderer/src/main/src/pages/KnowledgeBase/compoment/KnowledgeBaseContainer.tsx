@@ -2,7 +2,7 @@ import { type FC, memo, useEffect, useMemo, useReducer } from 'react'
 
 import KnowledgeBaseTable from './KnowledgeBaseTable'
 import { type KnowledgeBaseItem, useKnowledgeBase } from '../hooks/useKnowledgeBase'
-import { LightningBoltIcon } from '../icon/sidebarIcon'
+import { LightningBoltIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import type useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
 
 import { targetIcon } from '../utils'

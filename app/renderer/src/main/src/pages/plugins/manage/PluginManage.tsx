@@ -76,7 +76,7 @@ import { UpdateGroupList, type UpdateGroupListItem } from '@/pages/pluginHub/gro
 import classNames from 'classnames'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import Dragger from 'antd/lib/upload/Dragger'
-import { PropertyIcon } from '@/pages/payloadManager/icon'
+import { PropertyIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import type { RcFile } from 'antd/lib/upload'
 import { RemoteGV } from '@/yakitGV'
 import { ListDelGroupConfirmPop } from '@/pages/pluginHub/group/PluginOperationGroupList'

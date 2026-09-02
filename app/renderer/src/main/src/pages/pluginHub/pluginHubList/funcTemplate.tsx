@@ -33,7 +33,7 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { pluginTypeToName } from '@/pages/plugins/builtInData'
-import { PluginsGridCheckIcon } from '@/pages/plugins/icon'
+import { PluginsGridCheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { onPluginTagsToName } from '@/pages/plugins/baseTemplate'
 import { formatDate } from '@/utils/timeUtil'
 import type { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'

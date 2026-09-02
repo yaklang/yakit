@@ -8,7 +8,11 @@ import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { ChevronLeftOutlined, CreditCardOutlined, RefreshOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { WeChatSocialColorful } from '@yakit-libs/yakit-ui-icons/colorful'
-import { AlipayIcon, PayFailedIcon, PaySuccessIcon, QrLoadErrorIcon, QrLoadingIcon } from './icon'
+import { AlipayIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AlipayIcon'
+import { PayFailedIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PayFailedIcon'
+import { PaySuccessIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PaySuccessIcon'
+import { QrLoadErrorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/QrLoadErrorIcon'
+import { QrLoadingIcon } from '@yakit-libs/yakit-ui-icons/oldicon/QrLoadingIcon'
 import {
   buildEstimates,
   formatTokenMillions,

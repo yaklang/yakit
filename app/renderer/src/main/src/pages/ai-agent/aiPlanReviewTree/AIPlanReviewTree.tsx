@@ -9,7 +9,7 @@ import type {
 } from './AIPlanReviewTreeType'
 import styles from './AIPlanReviewTree.module.scss'
 import { useControllableValue, useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
-import { ExpandIcon } from './icon'
+import { ExpandIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ExpandIcon'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { PlusSmOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'

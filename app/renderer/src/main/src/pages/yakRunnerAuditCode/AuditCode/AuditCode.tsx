@@ -66,9 +66,8 @@ import {
   XOutlined,
   FigmaIcon22915169930Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineBugIcon } from '@/assets/icon/bespokeOutline'
+import { OutlineBugIcon, OutlineReloadScanIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 
-import { OutlineReloadScanIcon } from '@/assets/icon/bespokeOutline'
 import emiter from '@/utils/eventBus/eventBus'
 import { CloseOutlined, DeleteOutlined, LoadingOutlined, ReloadOutlined } from '@ant-design/icons'
 import { StringToUint8Array } from '@/utils/str'

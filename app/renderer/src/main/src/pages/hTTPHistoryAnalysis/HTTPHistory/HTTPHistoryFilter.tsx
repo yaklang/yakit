@@ -82,7 +82,7 @@ import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableT
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { CheckedSvgIcon } from '@/components/layout/icons'
+import { CheckedSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckedSvgIcon'
 import { Divider, Tooltip } from 'antd'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { WebTree } from '@/components/WebTree/WebTree'

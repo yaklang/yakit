@@ -6,7 +6,7 @@ import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { UISettingSvgIcon } from '@/components/layout/icons'
+import { UISettingSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/UISettingSvgIcon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { type PageNodeItemProps, usePageInfo, type WebsocketFuzzerPageInfoProps } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'

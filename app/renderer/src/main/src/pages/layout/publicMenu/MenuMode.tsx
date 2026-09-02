@@ -34,7 +34,7 @@ import {
   PublicTCPPortLogIcon,
   PublicWebFuzzerIcon,
   PublicWebsocketFuzzerIcon,
-} from '@/routes/publicIcon'
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { useMemoizedFn } from 'ahooks'
 import type { RouteToPageProps } from './PublicMenu'
 import { Tooltip } from 'antd'

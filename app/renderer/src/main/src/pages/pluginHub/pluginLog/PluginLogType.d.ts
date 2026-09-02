@@ -1,14 +1,9 @@
 import { type ForwardedRef, type ReactNode } from 'react'
 import type React from 'react'
-import { type CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
 import { type API } from '@/services/swagger/resposeType'
 import { type YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
 import { type YakitPluginBaseInfo } from '@/pages/pluginEditor/base'
 
-/** ---------- 公共定义 ----------  */
-export interface IconProps extends CustomIconComponentProps {
-  onClick: (e: React.MouseEvent) => void
-}
 /** 日志类型 */
 export type PluginLogType = 'all' | 'check' | 'update' | 'comment'
 /** tab-bar 日志类型信息 */

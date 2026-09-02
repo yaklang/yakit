@@ -1,4 +1,4 @@
-import { ArrowsExpandIcon, ArrowsRetractIcon } from '@/assets/newIcon'
+import { ArrowsExpandIcon, ArrowsRetractIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'

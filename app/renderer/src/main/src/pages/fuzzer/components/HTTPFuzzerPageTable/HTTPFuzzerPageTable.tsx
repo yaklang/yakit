@@ -26,7 +26,7 @@ import {
   onAddOverlayWidget,
 } from '../../HTTPFuzzerPage'
 import styles from './HTTPFuzzerPageTable.module.scss'
-import { HollowLightningBoltIcon } from '@/assets/newIcon'
+import { HollowLightningBoltIcon } from '@yakit-libs/yakit-ui-icons/oldicon/HollowLightningBoltIcon'
 import { Alert, Divider, Tooltip } from 'antd'
 import { ExtractionResultsContent } from '../../MatcherAndExtractionCard/MatcherAndExtractionCardShared'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'

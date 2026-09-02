@@ -10,7 +10,21 @@ import {
   ChevronRightOutlined,
   AIOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineNotebookIcon } from '@/assets/icon/bespokeOutline'
+import {
+  OutlineNotebookIcon,
+  PublicAIAuditCodeIcon,
+  PublicAuditCodeIcon,
+  PublicAuditHoleIcon,
+  PublicCodeScanIcon,
+  PublicProjectManagerIcon,
+  PublicRuleManagementIcon,
+  IRifyHomeGhostIcon,
+  IRifyHomeHighIcon,
+  IRifyHomeLowIcon,
+  IRifyHomeMediumIcon,
+  IRifyHomeSeriousIcon,
+  IRifyQuickAccessJavaDecompilerIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import type {
   GetSSAWorkbenchDashboardRequest,
   GetSSAWorkbenchDashboardResponse,
@@ -19,22 +33,6 @@ import type {
 } from './IRifyHomeType'
 import type { FieldName } from '../risks/RiskTable'
 import styles from './IRifyHome.module.scss'
-import {
-  PublicAIAuditCodeIcon,
-  PublicAuditCodeIcon,
-  PublicAuditHoleIcon,
-  PublicCodeScanIcon,
-  PublicProjectManagerIcon,
-  PublicRuleManagementIcon,
-} from '@/routes/publicIcon'
-import {
-  IRifyHomeGhostIcon,
-  IRifyHomeHighIcon,
-  IRifyHomeLowIcon,
-  IRifyHomeMediumIcon,
-  IRifyHomeSeriousIcon,
-  IRifyQuickAccessJavaDecompilerIcon,
-} from './icon'
 import { getRiskDistributionColors, RiskDistributionChart, RiskGaugeChart, RuleHitsBarChart } from './IRifyHomeEcharts'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 import { IRifyHomeTable } from './IRifyHomeTable'
