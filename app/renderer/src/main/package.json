@@ -37,7 +37,7 @@
     "@viz-js/viz": "^3.7.0",
     "@xterm/addon-fit": "^0.10.0",
     "@yakit-libs/color": "1.4.1",
-    "@yakit-libs/yakit-ui-icons": "^0.2.1",
+    "@yakit-libs/yakit-ui-icons": "0.2.3",
     "ahooks": "3.7.9",
     "ali-react-table": "2.6.1",
     "antd": "4.21.7",
