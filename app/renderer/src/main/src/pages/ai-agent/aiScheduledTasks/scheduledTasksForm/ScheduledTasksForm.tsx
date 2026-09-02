@@ -16,6 +16,7 @@ import { YakitDatePicker } from '@/components/yakitUI/YakitDatePicker/YakitDateP
 import { formatAIAgentSetting } from '../../utils'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { yakitNotify } from '@/utils/notification'
+import { startAtToWallMoment, wallMomentToUnix } from './timezone'
 
 const unixNumber = (value?: number | string) => Number(value || 0)
 
@@ -101,6 +102,23 @@ export const rruleToIntervalMinutes = (rrule: string) => {
   return Math.max(1, Number(matched?.[1] || 5))
 }
 
+/**
+ * 编辑时调度相关字段（频率/间隔/自定义规则/首次运行时间）是否被改动。
+ * 未改动时保存原样保留 editing.Schedule，杜绝墙钟 ↔ Unix 换算引入的跨时区 / DST 漂移
+ * （即使编辑者系统时区与任务时区不同，只改名称/指令也不会改变执行时刻与星期）。
+ */
+export const isScheduleFormDirty = (
+  editing: AIReActSchedule | undefined,
+  current: Pick<ScheduleFormValues, 'Frequency' | 'IntervalMinutes' | 'CustomRRule' | 'StartAt'>,
+  timezone: string,
+): boolean => {
+  if (!editing?.Schedule) return true
+  if (current.Frequency !== rruleToFrequency(editing.Schedule.RRule)) return true
+  if (String(current.IntervalMinutes ?? '') !== String(rruleToIntervalMinutes(editing.Schedule.RRule))) return true
+  if ((current.CustomRRule || '') !== (editing.Schedule.RRule || '')) return true
+  return wallMomentToUnix(current.StartAt, timezone) !== unixNumber(editing.Schedule.StartAt)
+}
+
 const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props) => {
   const { editing, onClose, onSuccess } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -116,7 +134,10 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
   const customRRule = Form.useWatch('CustomRRule', form)
   const startAt = Form.useWatch('StartAt', form)
 
-  const getTimezone = useMemoizedFn(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')
+  // 表单墙钟时间锚定：编辑用任务自身 Schedule.Timezone 解释，新建用编辑者系统时区
+  const anchorTimezone = useMemoizedFn(
+    () => editing?.Schedule?.Timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+  )
 
   useEffect(() => {
     if (editing) {
@@ -125,7 +146,8 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
         Prompt: editing.Payload.Prompt,
         Frequency: rruleToFrequency(editing.Schedule.RRule),
         IntervalMinutes: rruleToIntervalMinutes(editing.Schedule.RRule),
-        StartAt: moment.unix(unixNumber(editing.Schedule.StartAt)),
+        // 按任务原时区还原墙钟组件，避免在另一系统时区编辑时静默改变执行时刻/星期
+        StartAt: startAtToWallMoment(editing.Schedule.StartAt, anchorTimezone()),
         TargetMode: (editing.TargetMode as ScheduleFormValues['TargetMode']) || 'new_session_per_run',
         // 规则解析不到预设（如 FREQ=MONTHLY）时回填原始规则，避免保存时被静默改写
         CustomRRule: editing.Schedule.RRule,
@@ -171,8 +193,8 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
         {
           Schedule: {
             RRule: rrule,
-            Timezone: getTimezone(),
-            StartAt: startAt.unix(),
+            Timezone: anchorTimezone(),
+            StartAt: wallMomentToUnix(startAt, anchorTimezone()),
           },
           Count: 3,
           AfterTimestamp: 0,
@@ -217,11 +239,16 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
           AttachedResourceInfos: editing?.Payload.AttachedResourceInfos || [],
           FocusModeLoop: editing?.Payload.FocusModeLoop || '',
         },
-        Schedule: {
-          RRule: frequencyToRRule(values.Frequency, values.StartAt, values.IntervalMinutes, values.CustomRRule),
-          Timezone: getTimezone(),
-          StartAt: values.StartAt.unix(),
-        },
+        // 未改动调度字段时原样保留原 Schedule（含原时区/原 StartAt/原 RRule），
+        // 改动了才按任务原时区重新生成，避免跨时区/DST 编辑静默漂移
+        Schedule:
+          editing && !isScheduleFormDirty(editing, values, anchorTimezone())
+            ? { ...editing.Schedule }
+            : {
+                RRule: frequencyToRRule(values.Frequency, values.StartAt, values.IntervalMinutes, values.CustomRRule),
+                Timezone: anchorTimezone(),
+                StartAt: wallMomentToUnix(values.StartAt, anchorTimezone()),
+              },
         MisfireGraceSeconds: editing?.MisfireGraceSeconds || 300,
         MaxRuntimeSeconds: editing?.MaxRuntimeSeconds || 7200,
       }
@@ -284,9 +311,14 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
               rules={[
                 { required: true },
                 // 仅一次的任务错过首次运行时间后不会再触发，因此要求晚于当前时间；
+                // 墙钟组件按任务锚定时区换算成真实时刻再比较
                 {
                   validator: (_, value) => {
-                    if (form.getFieldValue('Frequency') === 'once' && value && value.isBefore(moment())) {
+                    if (
+                      form.getFieldValue('Frequency') === 'once' &&
+                      value &&
+                      wallMomentToUnix(value, anchorTimezone()) * 1000 <= Date.now()
+                    ) {
                       return Promise.reject(t('AIScheduledTasks.startAtMustBeFuture'))
                     }
                     return Promise.resolve()
