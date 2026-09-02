@@ -6,7 +6,7 @@ import { showResponseViaHTTPFlowID } from '@/components/ShowInBrowser'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { setClipboardText } from '@/utils/clipboard'
 import emiter from '@/utils/eventBus/eventBus'
-import { isEnpriTrace } from '@/utils/envfile'
+import { isEnpriTrace, isEnterpriseEdition } from '@/utils/envfile'
 import { getGlobalShortcutKeyEvents, GlobalShortcutKey } from '@/utils/globalShortcutKey/events/global'
 import {
   getYakitMultipleShortcutKeyEvents,
@@ -114,6 +114,10 @@ export interface UseHTTPFlowTableContextMenuOptions {
   onBatch: (f: (element: HTTPFlow) => void, number: number, all?: boolean, rows?: HTTPFlow[]) => void
   onViewAttachmentDataRefresh: (id: number) => void
   onClearSelection: () => void
+  /** EE: batch mark edit */
+  onOpenBatchMarkEdit?: (list: HTTPFlow[]) => void
+  /** EE: batch add testers */
+  onOpenBatchTesters?: (list: HTTPFlow[]) => void
 }
 
 export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenuOptions) => {
@@ -158,6 +162,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onBatch,
     onViewAttachmentDataRefresh,
     onClearSelection,
+    onOpenBatchMarkEdit,
+    onOpenBatchTesters,
   } = options
 
   const menuData = useMemo(() => {
@@ -556,6 +562,28 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           },
         ],
       },
+      ...(isEnterpriseEdition()
+        ? [
+            {
+              key: 'modifyMark',
+              label: t('HTTPFlowTable.RowContextMenu.modifyMark'),
+              default: true,
+              webSocket: true,
+              onClickBatch: (list: HTTPFlow[]) => {
+                onOpenBatchMarkEdit?.(list)
+              },
+            },
+            {
+              key: 'addTesters',
+              label: t('HTTPFlowTable.RowContextMenu.addTesters'),
+              default: true,
+              webSocket: true,
+              onClickBatch: (list: HTTPFlow[]) => {
+                onOpenBatchTesters?.(list)
+              },
+            },
+          ]
+        : []),
       {
         key: 'editTag',
         label: t('HTTPFlowTable.RowContextMenu.editTag'),
@@ -598,6 +626,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onlyFavorite,
     getUrlWithoutQuery,
     total,
+    onOpenBatchMarkEdit,
+    onOpenBatchTesters,
   ])
 
   // 右键插件处理
@@ -629,7 +659,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
           return
         }
-        // context-menu 类型走新流式执行接口，legacy-codec-* 保持原 codec 执行链路
+        // context-menu 类型走新流式执行接口，legacy-codec-* 保持�?codec 执行链路
         if (child.executionType === ContextMenuExecutionType.ContextMenu && child.action) {
           const action = child.action
           const httpsValues = new Set(rows.map((item) => !!item.IsHTTPS))
@@ -683,20 +713,17 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         return
       }
 
-      // ----- 获取父菜单及其子项 -----
+      // ----- 获取父菜单及其子�?-----
       const targetMenu = menu.find((item: HistoryMenuData) => item.key === 'pluginExtension')
       if (!targetMenu?.children?.length) {
         return
       }
 
-      // ----- 匹配并执行子菜单项 -----
+      // ----- 匹配并执行子菜单�?-----
       try {
         for (const child of targetMenu.children) {
-          // 点击一级菜单
-          if (menuItemName === 'pluginExtension') {
-            // 执行第一个子项 —— 有三级则执行第二个子项
-            // 全选状态检查
-            // if (isAllSelect) {
+          // 点击一级菜�?          if (menuItemName === 'pluginExtension') {
+            // 执行第一个子�?—�?有三级则执行第二个子�?            // 全选状态检�?            // if (isAllSelect) {
             //   yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
             //   return
             // }
@@ -711,8 +738,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             return
           }
 
-          // 点击带参数的三级菜单，后缀匹配（如 "execCodecPlugin_测试codec" 匹配 key="测试codec"）
-          if (menuItemName.endsWith('_' + getScriptName(child.key))) {
+          // 点击带参数的三级菜单，后缀匹配（如 "execCodecPlugin_测试codec" 匹配 key="测试codec"�?          if (menuItemName.endsWith('_' + getScriptName(child.key))) {
             const prefix = menuItemName.split('_')[0]
             const isExec = prefix !== 'updateCodecParams'
             emitPluginEvent(child, isExec, getScriptName(child.key))
@@ -720,7 +746,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           }
         }
       } catch (error) {
-        yakitNotify('error', `右键插件子菜单匹配失败: ${error}`)
+        yakitNotify('error', `右键插件子菜单匹配失�? ${error}`)
       }
     },
   )
@@ -769,7 +795,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       })
   })
 
-  // 性能优化：提取为 useMemoizedFn，避免每次渲染创建新引用破坏 TableVirtualResize 的 React.memo
+  // 性能优化：提取为 useMemoizedFn，避免每次渲染创建新引用破坏 TableVirtualResize �?React.memo
   const onRowContextMenu = useMemoizedFn((rowData: HTTPFlow, _, event: React.MouseEvent) => {
     if (rowData) {
       setSelected(rowData)
