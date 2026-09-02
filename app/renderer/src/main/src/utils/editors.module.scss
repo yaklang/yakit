@@ -104,6 +104,14 @@
       border-radius: 4px 0 0 4px;
     }
   }
+
+  &.is-right {
+    :global {
+      .flex-card {
+        border: none;
+      }
+    }
+  }
 }
 .type-options-checkable-tag {
   display: flex;

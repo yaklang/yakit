@@ -1034,6 +1034,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
       <NewHTTPCard
         loading={props.loading}
         bordered={props.bordered}
+        isRight={!!isResponse}
         title={
           !props.noHeader && (
             <div style={{ display: 'flex', gap: 2, ...(props.titleStyle || {}) }}>
@@ -1260,15 +1261,16 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 interface NewHTTPCardProps {
   loading?: boolean
   bordered?: boolean
+  isRight?: boolean
   title?: React.ReactNode
   extra?: React.ReactNode
   children?: React.ReactNode
 }
 
 export const NewHTTPCard: React.FC<NewHTTPCardProps> = (props) => {
-  const { loading, bordered, title, extra, children } = props
+  const { loading, bordered, isRight, title, extra, children } = props
   return (
-    <div className={styles['new-http-packet-editor']}>
+    <div className={classNames(styles['new-http-packet-editor'], { [styles['is-right']]: isRight })}>
       <Card
         className={'flex-card'}
         size={'small'}
