@@ -34,12 +34,8 @@ export { usedLocal as ${publicName(family)}, unusedLocal as ${title(family)}Unus
 `
 
 export const consumerCode = `
-import {
-  ${publicName('outline')} as OutlineAlias,
-} from '@yakit-libs/yakit-ui-icons/outline'
-import { ${publicName('solid')} as SolidAlias } from '@yakit-libs/yakit-ui-icons/solid'
-import {
-  ${publicName('colorful')} as ColorfulAlias,
-} from '@yakit-libs/yakit-ui-icons/colorful'
-void [OutlineAlias, SolidAlias, ColorfulAlias]
+import { ${publicName('outline')} } from '@yakit-libs/yakit-ui-icons/outline'
+import { ${publicName('solid')} } from '@yakit-libs/yakit-ui-icons/solid'
+import { ${publicName('colorful')} } from '@yakit-libs/yakit-ui-icons/colorful'
+void [${publicName('outline')}, ${publicName('solid')}, ${publicName('colorful')}]
 `

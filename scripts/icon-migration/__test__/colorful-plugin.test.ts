@@ -13,24 +13,36 @@ import {
   unusedDisplayName,
 } from '../__fixtures__/colorful-plugin-fixtures'
 
-type Plugin = ReturnType<typeof yakitUiIconsPurePlugin>
+type Plugins = ReturnType<typeof yakitUiIconsPurePlugin>
+type Plugin = Plugins[number]
 
 const context = { parse: parseAst }
 
+function pluginByName(plugins: Plugins, name: string): Plugin {
+  const plugin = plugins.find((candidate) => candidate.name === name)
+  if (!plugin) throw new Error(`Missing fixture plugin: ${name}`)
+  return plugin
+}
+
 function transform(plugin: Plugin, code: string, id: string) {
+  if (!('transform' in plugin) || typeof plugin.transform !== 'function') {
+    throw new Error(`Plugin ${plugin.name} does not expose a transform hook`)
+  }
   return plugin.transform.call(context, code, id)
 }
 
 function preparePlugin() {
-  const plugin = yakitUiIconsPurePlugin()
-  transform(plugin, consumerCode, '/fixture/src/consumer.tsx')
+  const plugins = yakitUiIconsPurePlugin()
+  const factoryPlugin = pluginByName(plugins, 'yakit-ui-icons-pure-factories')
+  const consumerPlugin = pluginByName(plugins, 'yakit-ui-icons-consumer-import-guard')
+  transform(consumerPlugin, consumerCode, '/fixture/src/consumer.tsx')
   const transformed = new Map<string, string>()
   for (const family of families) {
-    const result = transform(plugin, factoryCode(family), factoryId(family))
+    const result = transform(factoryPlugin, factoryCode(family), factoryId(family))
     transformed.set(family, result?.code ?? '')
-    transform(plugin, entryCode(family), entryId(family))
+    transform(factoryPlugin, entryCode(family), entryId(family))
   }
-  return { plugin, transformed }
+  return { plugin: factoryPlugin, transformed }
 }
 
 function bundleCode(overrides: Partial<Record<(typeof families)[number], string>> = {}) {
@@ -70,7 +82,7 @@ describe('yakitUiIconsPurePlugin colorful and three-family accounting', () => {
     ['package root', "import { Anything } from '@yakit-libs/yakit-ui-icons'"],
     ['registry', "import { registry } from '@yakit-libs/yakit-ui-icons/registry'"],
   ])('rejects %s imports', (_label, code) => {
-    const plugin = yakitUiIconsPurePlugin()
+    const plugin = pluginByName(yakitUiIconsPurePlugin(), 'yakit-ui-icons-consumer-import-guard')
     expect(() => transform(plugin, code, '/fixture/src/forbidden.ts')).toThrow(/package root\/registry/)
   })
 
@@ -78,27 +90,31 @@ describe('yakitUiIconsPurePlugin colorful and three-family accounting', () => {
     ['namespace', "import * as Icons from '@yakit-libs/yakit-ui-icons/colorful'"],
     ['default', "import Icons from '@yakit-libs/yakit-ui-icons/outline'"],
   ])('rejects %s family imports', (_label, code) => {
-    const plugin = yakitUiIconsPurePlugin()
-    expect(() => transform(plugin, code, '/fixture/src/forbidden.ts')).toThrow(/Only named/)
+    const plugin = pluginByName(yakitUiIconsPurePlugin(), 'yakit-ui-icons-consumer-import-guard')
+    expect(() => transform(plugin, code, '/fixture/src/forbidden.ts')).toThrow(/Only static named/)
   })
 
   it('ignores type-only family imports during runtime retention accounting', () => {
-    const plugin = yakitUiIconsPurePlugin()
+    const plugins = yakitUiIconsPurePlugin()
     transform(
-      plugin,
+      pluginByName(plugins, 'yakit-ui-icons-consumer-import-guard'),
       `import type { ${publicName('outline')} } from '@yakit-libs/yakit-ui-icons/outline'`,
       '/fixture/src/type-only.ts',
     )
 
-    expect(() => plugin.generateBundle({}, {})).not.toThrow()
+    expect(() => pluginByName(plugins, 'yakit-ui-icons-pure-factories').generateBundle({}, {})).not.toThrow()
   })
 
   it('fails closed on mixed and unknown displayName suffixes', () => {
     const mixed = factoryCode('outline').replace(unusedDisplayName('outline'), 'WrongFamilySolid')
     const unknown = factoryCode('outline').replace(displayName('outline'), 'UnknownIcon')
 
-    expect(() => transform(yakitUiIconsPurePlugin(), mixed, factoryId('outline'))).toThrow(/Mixed/)
-    expect(() => transform(yakitUiIconsPurePlugin(), unknown, factoryId('outline'))).toThrow(/Unknown/)
+    expect(() =>
+      transform(pluginByName(yakitUiIconsPurePlugin(), 'yakit-ui-icons-pure-factories'), mixed, factoryId('outline')),
+    ).toThrow(/Mixed/)
+    expect(() =>
+      transform(pluginByName(yakitUiIconsPurePlugin(), 'yakit-ui-icons-pure-factories'), unknown, factoryId('outline')),
+    ).toThrow(/Unknown/)
   })
 
   it('fails closed on missing and ambiguous public/internal/displayName mappings', () => {

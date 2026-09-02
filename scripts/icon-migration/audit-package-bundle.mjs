@@ -9,7 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const SCRIPT_PATH = fileURLToPath(import.meta.url)
 const REPO_ROOT = resolve(dirname(SCRIPT_PATH), '../..')
-const FAMILIES = ['outline', 'solid', 'colorful']
+const FAMILIES = ['outline', 'solid', 'colorful', 'oldicon']
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs'])
 const TOOL_VERSION = '1.1.0'
 
@@ -33,6 +33,15 @@ async function collectFiles(root, predicate) {
 function extension(path) {
   const index = path.lastIndexOf('.')
   return index === -1 ? '' : path.slice(index)
+}
+
+function isRuntimeSourcePath(path) {
+  const normalized = path.replaceAll('\\', '/')
+  const segments = normalized.split('/')
+  const fileName = segments.at(-1) ?? ''
+  if (segments.some((segment) => ['__test__', '__tests__', '__fixtures__', 'fixtures'].includes(segment))) return false
+  if (/\.(?:test|spec)\.[^.]+$/.test(fileName)) return false
+  return fileName !== 'setupVitest.ts'
 }
 
 function loadTypeScript(repoRoot) {
@@ -84,7 +93,9 @@ async function parsePackageLedger({ ts, packageRoot }) {
     for (const statement of entry.statements) {
       if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
         const source = statement.moduleSpecifier.text
-        if (!/^\.\.\/index-[\w-]+\.js$/.test(source)) continue
+        const isFamilyFactory = /^\.\.\/index-[\w-]+\.js$/.test(source)
+        const isOldIconFactory = family === 'oldicon' && /^\.\/icons\/[^/]+\.js$/.test(source)
+        if (!isFamilyFactory && !isOldIconFactory) continue
         const elements = statement.importClause?.namedBindings
         if (!elements || !ts.isNamedImports(elements)) continue
         for (const specifier of elements.elements) {
@@ -115,7 +126,8 @@ async function parsePackageLedger({ ts, packageRoot }) {
 
       for (const statement of file.statements) {
         if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
-          if (!/^\.\/createIcon-[\w-]+\.js$/.test(statement.moduleSpecifier.text)) continue
+          if (!/^(?:\.\.\/)+createIcon-[\w-]+\.js$|^\.\/createIcon-[\w-]+\.js$/.test(statement.moduleSpecifier.text))
+            continue
           const elements = statement.importClause?.namedBindings
           if (!elements || !ts.isNamedImports(elements)) continue
           for (const specifier of elements.elements) {
@@ -150,10 +162,12 @@ async function parsePackageLedger({ ts, packageRoot }) {
             continue
           }
           const detectedFamily = familyForDisplayName(displayArg.text)
-          if (!detectedFamily) {
-            findings.push(`${family}: unknown displayName suffix ${displayArg.text}`)
-          } else if (detectedFamily !== family) {
-            findings.push(`${family}: mixed displayName family ${displayArg.text}`)
+          if (family !== 'oldicon') {
+            if (!detectedFamily) {
+              findings.push(`${family}: unknown displayName suffix ${displayArg.text}`)
+            } else if (detectedFamily !== family) {
+              findings.push(`${family}: mixed displayName family ${displayArg.text}`)
+            }
           }
           if ([...displayByBinding.values()].includes(displayArg.text)) {
             findings.push(`${family}: duplicate displayName ${displayArg.text}`)
@@ -199,6 +213,17 @@ async function parsePackageLedger({ ts, packageRoot }) {
         internal_binding: imported.importedName,
         display_name: displayName,
       })
+      if (family === 'oldicon') {
+        const expectedFile = resolve(packageRoot, 'dist', 'oldicon', 'icons', `${publicName}.js`)
+        if (imported.source !== expectedFile) {
+          findings.push(
+            `${family}: public name ${publicName} is imported from ${relative(packageRoot, imported.source)}`,
+          )
+        }
+        if (displayName !== publicName) {
+          findings.push(`${family}: displayName mismatch for ${publicName}: ${displayName}`)
+        }
+      }
     }
 
     if (mapping[family].length !== imports.size || mapping[family].length !== exports.size) {
@@ -218,7 +243,9 @@ async function scanSourceImports({ ts, roots }) {
   const files = []
 
   for (const root of roots) {
-    files.push(...(await collectFiles(root, (path) => SOURCE_EXTENSIONS.has(extension(path)))))
+    files.push(
+      ...(await collectFiles(root, (path) => SOURCE_EXTENSIONS.has(extension(path)) && isRuntimeSourcePath(path))),
+    )
   }
 
   for (const path of files) {
@@ -228,19 +255,46 @@ async function scanSourceImports({ ts, roots }) {
     function visit(node) {
       if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
         const source = node.moduleSpecifier.text
+        if (source !== '@yakit-libs/yakit-ui-icons' && !source.startsWith('@yakit-libs/yakit-ui-icons/')) {
+          return
+        }
+        if (node.importClause?.isTypeOnly) {
+          return
+        }
         if (source === '@yakit-libs/yakit-ui-icons' || source === '@yakit-libs/yakit-ui-icons/registry') {
           forbidden.push(`${relative(REPO_ROOT, path)}: ${source}`)
         } else {
-          const family = FAMILIES.find((item) => source === `@yakit-libs/yakit-ui-icons/${item}`)
+          const perIconMatch = source.match(/^@yakit-libs\/yakit-ui-icons\/oldicon\/([^/]+)$/)
+          const family = perIconMatch
+            ? 'oldicon'
+            : FAMILIES.find((item) => source === `@yakit-libs/yakit-ui-icons/${item}`)
           if (family) {
             const bindings = node.importClause?.namedBindings
             if (!bindings || !ts.isNamedImports(bindings) || node.importClause?.name) {
               forbidden.push(`${relative(REPO_ROOT, path)}: non-named ${source} import`)
             } else {
-              for (const specifier of bindings.elements) imports[family].add(importedName(ts, specifier))
+              for (const specifier of bindings.elements) {
+                if (specifier.isTypeOnly) continue
+                const name = importedName(ts, specifier)
+                if (specifier.propertyName || (perIconMatch && name !== perIconMatch[1])) {
+                  forbidden.push(`${relative(REPO_ROOT, path)}: unsupported aliased or mismatched ${source} import`)
+                } else {
+                  imports[family].add(name)
+                }
+              }
             }
+          } else {
+            forbidden.push(`${relative(REPO_ROOT, path)}: unsupported ${source} import`)
           }
         }
+      } else if (
+        ts.isExportDeclaration(node) &&
+        node.moduleSpecifier &&
+        ts.isStringLiteral(node.moduleSpecifier) &&
+        (node.moduleSpecifier.text === '@yakit-libs/yakit-ui-icons' ||
+          node.moduleSpecifier.text.startsWith('@yakit-libs/yakit-ui-icons/'))
+      ) {
+        forbidden.push(`${relative(REPO_ROOT, path)}: re-export ${node.moduleSpecifier.text}`)
       } else if (
         ts.isCallExpression(node) &&
         node.expression.kind === ts.SyntaxKind.ImportKeyword &&
@@ -248,7 +302,7 @@ async function scanSourceImports({ ts, roots }) {
         ts.isStringLiteral(node.arguments[0])
       ) {
         const source = node.arguments[0].text
-        if (source === '@yakit-libs/yakit-ui-icons' || source === '@yakit-libs/yakit-ui-icons/registry') {
+        if (source === '@yakit-libs/yakit-ui-icons' || source.startsWith('@yakit-libs/yakit-ui-icons/')) {
           forbidden.push(`${relative(REPO_ROOT, path)}: dynamic ${source}`)
         }
       }
@@ -325,7 +379,7 @@ export async function auditPackageBundle(options) {
   const ts = loadTypeScript(repoRoot)
   const packageLedger = await parsePackageLedger({ ts, packageRoot })
   const sourceLedger = await scanSourceImports({ ts, roots: sourceRoots })
-  const allMappings = FAMILIES.flatMap((family) => packageLedger.mapping[family])
+  const allMappings = FAMILIES.flatMap((family) => packageLedger.mapping[family].map((item) => ({ ...item, family })))
   const byDisplayName = new Map(allMappings.map((item) => [item.display_name, item]))
   const retainedLedger = await scanRetainedDisplayNames({
     ts,
@@ -339,10 +393,13 @@ export async function auditPackageBundle(options) {
     imported_not_retained: [],
     complete_catalog: [],
   }
+  const observations = {
+    source_imported_not_retained: [],
+  }
 
   const retainedByFamily = Object.fromEntries(FAMILIES.map((family) => [family, []]))
   for (const displayName of retainedLedger.retained) {
-    const family = familyForDisplayName(displayName)
+    const family = byDisplayName.get(displayName)?.family
     if (family) retainedByFamily[family].push(displayName)
   }
 
@@ -357,7 +414,11 @@ export async function auditPackageBundle(options) {
       }
       importedDisplays.add(mapping.display_name)
       if (!retainedLedger.retained.has(mapping.display_name)) {
-        findings.imported_not_retained.push(`${family}: ${publicName} -> ${mapping.display_name}`)
+        const message = `${family}: ${publicName} -> ${mapping.display_name}`
+        // oldicon imports are frequently edition-gated; the Vite plugin checks the processed module graph.
+        // The offline audit still rejects retained-unimported oldicons and records this source-superset delta.
+        if (family === 'oldicon') observations.source_imported_not_retained.push(message)
+        else findings.imported_not_retained.push(message)
       }
     }
     for (const displayName of retainedByFamily[family]) {
@@ -397,6 +458,7 @@ export async function auditPackageBundle(options) {
     retained_display_names: retainedByFamily,
     family_totals: Object.fromEntries(FAMILIES.map((family) => [family, packageLedger.mapping[family].length])),
     findings,
+    observations,
     exit_status: passed ? 'pass' : 'fail',
   }
 
