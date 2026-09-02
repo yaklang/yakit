@@ -582,7 +582,7 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
             item.Status !== 'active' && (
               <>
                 <span className={styles['ai-schedule-list-item-footer-status-icon']}>
-                  {item.Status === 'active' ? <OutlinePlayIcon /> : <OutlinePauseIcon />}
+                  <OutlinePauseIcon />
                 </span>
                 <span className={styles['ai-schedule-list-item-footer-status']}>
                   {t(`AIScheduledTasks.${item.Status}`)}
