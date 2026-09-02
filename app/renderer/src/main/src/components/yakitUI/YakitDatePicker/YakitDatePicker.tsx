@@ -1,5 +1,6 @@
 import { DatePicker, type DatePickerProps } from 'antd'
-import React, { useEffect } from 'react'
+import type React from 'react'
+import { useEffect } from 'react'
 import type { YakitDatePickerProps, YakitRangePickerProps } from './YakitDatePickerType'
 import classNames from 'classnames'
 import styles from './YakitDatePicker.module.scss'
