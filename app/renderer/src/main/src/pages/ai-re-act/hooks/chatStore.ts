@@ -5,10 +5,10 @@ import { enableMapSet } from 'immer'
 import cloneDeep from 'lodash/cloneDeep'
 import {
   DefaultAgentChatStatus,
-  DefaultAgentLoadingTitle,
   DefaultAIQuestionQueues,
   DefaultCurrentExecTaskTree,
   DefaultPlanHistoryList,
+  getDefaultAgentLoadingTitle,
 } from './defaultConstant'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -47,7 +47,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       riskTabUpdate: 0,
 
       currentChatStatus: cloneDeep(DefaultAgentChatStatus),
-      currentLoadingTitle: cloneDeep(DefaultAgentLoadingTitle),
+      currentLoadingTitle: getDefaultAgentLoadingTitle(),
       focusMode: '',
       showPlanList: false,
 

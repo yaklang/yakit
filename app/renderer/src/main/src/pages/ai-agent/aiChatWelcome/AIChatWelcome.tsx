@@ -4,7 +4,6 @@ import type {
   AIChatWelcomeProps,
   AIChatWelcomeSettingCardProps,
   AIChatWelcomeSettingCardRef,
-  SideSettingButtonProps,
 } from './type'
 import styles from './AIChatWelcome.module.scss'
 import { AIChatTextarea } from '../template/template'
@@ -33,7 +32,6 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { yakitNotify } from '@/utils/notification'
-import DoomFlameBackground from './DoomFlameBackground'
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
@@ -92,7 +90,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     })
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
-        <DoomFlameBackground />
         <div
           className={classNames(styles['input-wrapper'], {
             [styles['input-wrapper-compact']]: isCompact,

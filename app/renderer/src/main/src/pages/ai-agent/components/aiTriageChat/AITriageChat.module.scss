@@ -1,6 +1,7 @@
 // #region AITriageChatContent
 .triage-chat-content-wrapper {
   display: flex;
+  flex-direction: column;
   gap: 4px;
   overflow: hidden;
   border-radius: 8px;
@@ -9,6 +10,15 @@
       opacity: 1;
     }
   }
+  .scheduled-trigger {
+    font-size: 10px;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  }
+}
+.triage-chat-content-row {
+  display: flex;
+  gap: 4px;
+  overflow: hidden;
 }
 .triage-chat-content {
   display: flex;

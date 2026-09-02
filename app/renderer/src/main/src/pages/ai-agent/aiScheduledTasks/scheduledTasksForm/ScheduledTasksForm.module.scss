@@ -1,0 +1,47 @@
+.alter-notice {
+  border-radius: 0;
+  border: 0;
+  background: var(--Colors-Use-Success-Bg);
+}
+.scheduled-tasks-form {
+  padding: 16px 16px 8px 16px;
+}
+
+.form-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  > * {
+    flex: 1;
+  }
+}
+
+.preview {
+  margin-top: 4px;
+  padding: 10px;
+  border-radius: 4px;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  div {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-weight: 600;
+  }
+}
+
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 16px;
+  border-radius: 0 0 4px 4px;
+}

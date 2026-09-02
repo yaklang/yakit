@@ -409,6 +409,23 @@ module.exports = (win, getClient) => {
   })
   //#endregion
 
+  // #region AI ReAct 定时任务
+  const aiReActScheduleUnaryMethods = [
+    'CreateAIReActSchedule',
+    'UpdateAIReActSchedule',
+    'DeleteAIReActSchedule',
+    'GetAIReActSchedule',
+    'QueryAIReActSchedules',
+    'SetAIReActScheduleEnabled',
+    'PreviewAIReActScheduleTimes',
+    'RunAIReActScheduleNow',
+  ]
+  aiReActScheduleUnaryMethods.forEach((method) => {
+    ipcMain.handle(method, async (e, params) => {
+      return await callRecommendedSkillUnary(method, params || {})
+    })
+  })
+  // #endregion
   //#region ai 首页
   const asyncGetRandomAIMaterials = (params) => {
     return new Promise((resolve, reject) => {

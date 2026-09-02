@@ -1,5 +1,6 @@
 import { DatePicker, type DatePickerProps } from 'antd'
 import type React from 'react'
+import { useEffect } from 'react'
 import type { YakitDatePickerProps, YakitRangePickerProps } from './YakitDatePickerType'
 import classNames from 'classnames'
 import styles from './YakitDatePicker.module.scss'
@@ -66,8 +67,10 @@ const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
   } = props
   const lang = i18n.language
 
-  moment.locale(getMomentLocale(lang))
-  dayjs.locale(getMomentLocale(lang))
+  useEffect(() => {
+    moment.locale(getMomentLocale(lang))
+    dayjs.locale(getMomentLocale(lang))
+  }, [lang])
 
   return (
     <div
@@ -137,8 +140,10 @@ const InternalRangePicker: React.FC<YakitRangePickerProps> = (props) => {
   } = props
   const lang = i18n.language
 
-  moment.locale(getMomentLocale(lang))
-  dayjs.locale(getMomentLocale(lang))
+  useEffect(() => {
+    moment.locale(getMomentLocale(lang))
+    dayjs.locale(getMomentLocale(lang))
+  }, [lang])
 
   const convertedPresets = ranges
     ? Object.entries(ranges).map(([label, item]) => {

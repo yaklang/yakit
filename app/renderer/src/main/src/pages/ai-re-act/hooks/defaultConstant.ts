@@ -10,6 +10,7 @@ import type {
 import { AITaskStatus } from './grpcApi'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
+import i18n from '@/i18n/i18n'
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {
@@ -146,10 +147,11 @@ export const DefaultAgentChatStatus: AgentChatStatus = {
   status: AITaskStatus.created,
 }
 
-export const DefaultAgentLoadingTitle: AgentLoadingTitle = {
-  casualTitle: '会话初始化中...',
+// i18n 资源异步加载，模块加载期直接求值只会拿到 key 本身，因此改为函数延迟到调用时取文案
+export const getDefaultAgentLoadingTitle = (): AgentLoadingTitle => ({
+  casualTitle: i18n.getFixedT(null, 'aiAgent')('AIChatLoading.sessionInitializing'),
   planTitle: '',
-}
+})
 
 /** end_plan_and_execution & react_task_status_changed 齐了才 settle status */
 export const DefaultTaskPlanEndGate: AIAgentChatMetaData['taskPlanEndGate'] = {

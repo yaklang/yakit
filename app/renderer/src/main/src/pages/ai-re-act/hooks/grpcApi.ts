@@ -12,6 +12,7 @@ import type {
   AttachedResourceTypeEnum,
   AIModelTypeEnumType,
 } from '@/pages/ai-agent/defaultConstant'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 
 // #region 双工接口请求和响应结构
 export interface McpConfig {
@@ -861,6 +862,12 @@ export declare namespace AIAgentGrpcApi {
     reason?: string
     /** 前端发送用户问题时，自定义的UUID */
     react_task_user_input_uuid: string
+    /** 输入来源；schedule 表示由定时任务触发 */
+    react_task_input_source?: string
+    react_task_schedule_uuid?: string
+    react_task_schedule_name?: string
+    react_task_scheduled_at?: string
+    react_task_schedule_trigger?: string
     /** 出队前的问题队列长度 */
     queue_len: number
   }
@@ -871,9 +878,16 @@ export declare namespace AIAgentGrpcApi {
     is_recovery: boolean
     status: AITaskStatusType
     user_input: string
+    user_input_uuid?: string
+    input_source?: string
+    schedule_uuid?: string
+    schedule_name?: string
+    scheduled_at?: string
+    schedule_trigger?: string
   }
   /** 问题队列信息 */
   export interface QuestionQueues {
+    current_task?: QuestionQueueItem
     is_processing: boolean
     queue_empty: boolean
     queue_name: string
@@ -1266,5 +1280,110 @@ export interface GetAIReActRecommendedSkillsResponse {
 export interface UpdateAIReActRecommendedSkillRequest {
   Name: string
   Content: string
+}
+// #endregion
+
+//#region AIReActSchedule相关接口  AIReActScheduleSpec ~ RunAIReActScheduleNowRequest
+export interface AIReActScheduleSpec {
+  /** RFC 5545 recurrence rule, for example RRULE:FREQ=DAILY;INTERVAL=1. */
+  RRule: string
+  /** IANA timezone, for example Asia/Shanghai. */
+  Timezone: string
+  /** First eligible occurrence as a Unix timestamp in seconds. */
+  StartAt: number
+}
+
+export interface AIReActSchedulePayload {
+  Prompt: string
+  StartParams: AIStartParams
+  AttachedResourceInfos?: AttachedResourceInfo[]
+  FocusModeLoop?: string
+}
+
+export interface AIReActSchedule {
+  Id?: number
+  UUID: string
+  Name: string
+  /** active | paused | completed */
+  Status: string
+  /** continue_session | new_session_per_run */
+  TargetMode: string
+  TargetSessionID?: string
+  Payload: AIReActSchedulePayload
+  Schedule: AIReActScheduleSpec
+  NextRunAt?: number
+  LastRunAt?: number
+  MisfireGraceSeconds?: number
+  MaxRuntimeSeconds?: number
+  PauseReason?: string
+  LastError?: string
+  CreatedAt?: number
+  UpdatedAt?: number
+  /** The user's original scheduling request before task-prompt normalization. */
+  OriginalRequest?: string
+  /** The chat in which this schedule was created. Informational for isolated runs. */
+  CreatedFromSessionID?: string
+  /** succeeded | failed | skipped | cancelled | interrupted | needs_attention */
+  LastOutcome?: string
+  /** Stable machine-readable reason, e.g. session_busy or scheduler_capacity. */
+  LastSkipReason?: string
+  LastStartedAt?: number
+  LastFinishedAt?: number
+}
+
+export interface CreateAIReActScheduleRequest {
+  Schedule: AIReActSchedule
+}
+
+export interface UpdateAIReActScheduleRequest {
+  Schedule: AIReActSchedule
+}
+
+export interface DeleteAIReActScheduleRequest {
+  UUID: string
+}
+
+export interface GetAIReActScheduleRequest {
+  UUID: string
+}
+
+export interface AIReActScheduleFilter {
+  UUIDs?: string[]
+  Status?: string[]
+  Keyword?: string
+  TargetSessionIDs?: string[]
+  TargetModes?: string[]
+  CreatedFromSessionIDs?: string[]
+}
+
+export interface QueryAIReActSchedulesRequest {
+  Pagination: Paging
+  Filter: AIReActScheduleFilter
+}
+
+export interface QueryAIReActSchedulesResponse {
+  Pagination: Paging
+  Data: AIReActSchedule[]
+  Total: number
+}
+
+export interface SetAIReActScheduleEnabledRequest {
+  UUID: string
+  Enabled: boolean
+}
+
+export interface PreviewAIReActScheduleTimesRequest {
+  Schedule: AIReActScheduleSpec
+  Count: number
+  /** Preview strictly after this Unix timestamp. Zero means now minus one second. */
+  AfterTimestamp: number
+}
+
+export interface PreviewAIReActScheduleTimesResponse {
+  Timestamps: number[]
+}
+
+export interface RunAIReActScheduleNowRequest {
+  UUID: string
 }
 // #endregion

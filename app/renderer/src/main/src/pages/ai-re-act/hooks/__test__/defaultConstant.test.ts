@@ -2,10 +2,13 @@ import { describe, it, expect } from 'vitest'
 import {
   convertNodeIdToVerbose,
   DefaultAgentChatStatus,
-  DefaultAgentLoadingTitle,
   DefaultTaskPlanEndGate,
+  getDefaultAgentLoadingTitle,
 } from '../defaultConstant'
 import { AITaskStatus } from '../grpcApi'
+import i18n from '@/i18n/i18n'
+
+const tAgent = i18n.getFixedT(null, 'aiAgent')
 
 describe('defaultConstant', () => {
   it('B11: convertNodeIdToVerbose known and unknown', () => {
@@ -19,14 +22,15 @@ describe('defaultConstant', () => {
     })
   })
 
-  it('B12: DefaultAgentChatStatus / DefaultAgentLoadingTitle defaults', () => {
+  it('B12: DefaultAgentChatStatus / getDefaultAgentLoadingTitle defaults', () => {
     expect(DefaultAgentChatStatus).toEqual({
       questionID: '',
       coordinatorId: '',
       status: AITaskStatus.created,
     })
-    expect(DefaultAgentLoadingTitle).toEqual({
-      casualTitle: '会话初始化中...',
+    // 测试环境 i18n 资源不加载，t() 返回 key 本身；与实现使用同一翻译源断言
+    expect(getDefaultAgentLoadingTitle()).toEqual({
+      casualTitle: tAgent('AIChatLoading.sessionInitializing'),
       planTitle: '',
     })
     expect(DefaultTaskPlanEndGate).toEqual({ endReceived: false, pendingStatus: undefined })

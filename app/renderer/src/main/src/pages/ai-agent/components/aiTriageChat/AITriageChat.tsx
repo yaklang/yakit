@@ -21,9 +21,11 @@ import type { AIChatTextareaSubmit } from '../../template/type'
 import { getAIReActRequestParams } from '../../utils'
 import { extractDataWithMilkdown } from '../aiMilkdownInput/utils'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((props) => {
   const { isAnswer, contentClassName, chatClassName, itemData, chatDataStoreKey, renderNum } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
 
   const [edit, setEdit] = useState<boolean>(false)
 
@@ -62,31 +64,37 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
         />
       ) : (
         <>
-          <div
-            className={classNames(
-              styles['triage-chat-content'],
-              {
-                [styles['triage-chat-question']]: !isAnswer,
-                [styles['triage-chat-answer']]: !!isAnswer,
-              },
-              chatClassName || '',
-            )}
-          >
-            <div className={classNames(styles['content-wrapper'], contentClassName || '')}>{renderContent()}</div>
-          </div>
-          {!isAnswer && (
-            <div className={styles['triage-chat-content-extra']}>
-              <Tooltip title="复制">
-                <CopyComponents
-                  copyText={`${extraValue?.showQS}` || content || ''}
-                  iconColor="var(--Colors-Use-Neutral-Text-3-Secondary)"
-                  className={styles['copy-btn']}
-                />
-              </Tooltip>
-              <Tooltip title="编辑">
-                <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={() => setEdit(true)} />
-              </Tooltip>
+          <div className={styles['triage-chat-content-row']}>
+            <div
+              className={classNames(
+                styles['triage-chat-content'],
+                {
+                  [styles['triage-chat-question']]: !isAnswer,
+                  [styles['triage-chat-answer']]: !!isAnswer,
+                },
+                chatClassName || '',
+              )}
+            >
+              <div className={classNames(styles['content-wrapper'], contentClassName || '')}>{renderContent()}</div>
             </div>
+
+            {!isAnswer && (
+              <div className={styles['triage-chat-content-extra']}>
+                <Tooltip title="复制">
+                  <CopyComponents
+                    copyText={`${extraValue?.showQS}` || content || ''}
+                    iconColor="var(--Colors-Use-Neutral-Text-3-Secondary)"
+                    className={styles['copy-btn']}
+                  />
+                </Tooltip>
+                <Tooltip title="编辑">
+                  <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={() => setEdit(true)} />
+                </Tooltip>
+              </div>
+            )}
+          </div>
+          {!isAnswer && extraValue?.inputSource === 'schedule' && (
+            <span className={styles['scheduled-trigger']}>{t('AIChatListItem.scheduledTrigger')}</span>
           )}
         </>
       )}
