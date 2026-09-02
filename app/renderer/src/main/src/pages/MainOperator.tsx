@@ -66,6 +66,7 @@ import { parseUrl } from '@/hook/useProxy'
 import { JSONParseLog } from '@/utils/tool'
 import { Trans } from 'react-i18next'
 import aiChatPersistStore from './ai-re-act/hooks/persist/aiChatPersistStore'
+import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -243,6 +244,7 @@ const getDefaultExpand = () => {
   return true
 }
 const Main: React.FC<MainProp> = React.memo((props) => {
+  const colors = useGetColorsByTheme()
   const [showRenderCrash, setShowRenderCrash] = useState(false)
   const [showProxyModal, setShowProxyModal] = useState(false)
   const [ProxyModalLoading, setProxyModalLoading] = useState(false)
@@ -640,6 +642,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     <>
       <Watermark
         content={waterMarkStr()}
+        font={{ color: `${colors['--Colors-Use-Neutral-Text-4-Help-text']}26` }} //26是 15% 不透明度
+        inherit={false}
         style={controlShow ? { display: 'none' } : { overflow: 'hidden', height: '100%' }}
       >
         <Layout
