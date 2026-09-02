@@ -1,6 +1,7 @@
 .risk-disposal-log {
+  flex: 1;
+  overflow: hidden;
   height: 100%;
-  min-height: 280px;
   display: flex;
   flex-direction: column;
   padding: 6px 12px 12px;
@@ -19,6 +20,17 @@
   text-align: center;
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   font-size: 13px;
+}
+
+.risk-disposal-log-login-empty {
+  overflow: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 16px;
+  min-height: 240px;
 }
 
 .risk-disposal-log-footer {
