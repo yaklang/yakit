@@ -79,7 +79,10 @@ const confirmScheduleImpact = async (sessionIds: string[]): Promise<boolean> => 
         resolve(true)
         m.destroy()
       },
-      onCancel: () => resolve(false),
+      onCancel: () => {
+        resolve(false)
+        m.destroy()
+      },
     })
   })
 }

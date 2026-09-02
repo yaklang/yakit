@@ -519,10 +519,12 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
       okButtonProps: { colors: 'danger', size: 'large' },
       cancelButtonProps: { size: 'large' },
       onOk: () => {
-        grpcDeleteAIReActSchedule({ UUID: item.UUID }).then(() => {
-          onRefresh()
-          yakitNotify('success', t('YakitNotification.deleted'))
-        })
+        grpcDeleteAIReActSchedule({ UUID: item.UUID })
+          .then(() => {
+            onRefresh()
+            yakitNotify('success', t('YakitNotification.deleted'))
+          })
+          .catch(() => {})
         m.destroy()
       },
     })
