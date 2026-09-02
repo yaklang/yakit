@@ -25,7 +25,7 @@
     // display: flex;
     .ui-layout-header {
       width: 100%;
-      height: 37px;
+      height: 40px;
       background-color: var(--Colors-Use-Basic-Background);
       -webkit-user-select: none;
       user-select: none;
@@ -64,12 +64,12 @@
 
         .yakit-header-title {
           // width: 100px;
-          height: 36px;
+          height: 40px;
           position: absolute;
           top: 0;
           left: 50%;
           transform: translate(-30px, 0);
-          line-height: 36px;
+          line-height: 40px;
           font-weight: 600;
           color: var(--Colors-Use-Neutral-Text-1-Title);
           text-align: center;
@@ -101,10 +101,19 @@
           padding: 8px 12px;
           border-left: 1px solid var(--Colors-Use-Neutral-Border);
           color: var(--Colors-Use-Neutral-Text-3-Secondary);
+          display: flex;
+          align-items: center;
           svg {
             width: 20px;
             height: 20px;
           }
+        }
+        &.mac-header-body .yakit-mode-icon {
+          border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+        .yakit-mode-icon-reverse {
+          border-left: none;
+          border-right: 1px solid var(--Colors-Use-Neutral-Border);
         }
         .yakit-mode-icon:hover {
           background-color: var(--Colors-Use-Neutral-Bg-Hover);

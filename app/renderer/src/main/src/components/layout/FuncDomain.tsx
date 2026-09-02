@@ -198,6 +198,11 @@ export interface FuncDomainProp {
   system: YakitSystem
 
   onDevToolRefresh: () => void
+  /**
+   * Windows 顶栏为 row-reverse：房子单独渲染，视觉在用户右侧。
+   * 分隔线跟用户区走；房子自身 border-left 充当与用户区的分隔。
+   */
+  homeIcon?: React.ReactNode
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
@@ -215,6 +220,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     system,
     isJudgeLicense,
     onDevToolRefresh,
+    homeIcon,
   } = props
 
   /** 登录用户信息 */
@@ -369,6 +375,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             />
           )}
         </div>
+        {homeIcon}
         {!showProjectManage && !isJudgeLicense && (
           <>
             <div className={styles['divider-wrapper']}></div>
