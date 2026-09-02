@@ -121,7 +121,7 @@ export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = R
   ))
 
   return (
-    <div className={className}>
+    <div className={classNames(styles['reasoning-effort-select'], className)}>
       <AIChatSelect
         getList={ensureEffortProbed}
         dropdownRender={(menu) => {
