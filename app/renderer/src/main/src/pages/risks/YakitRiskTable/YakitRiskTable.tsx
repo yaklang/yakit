@@ -115,6 +115,8 @@ import { getRemoteValue } from '@/utils/kv'
 import { NoPromptHint } from '@/pages/pluginHub/utilsUI/UtilsTemplate'
 import { RemoteRiskGV } from '@/enums/risk'
 import { useStore } from '@/store'
+import { isEnterpriseEdition } from '@/utils/envfile'
+import { RiskDisposalLog } from './RiskDisposalLog'
 import { minWinSendToChildWin, openRiskNewWindow } from '@/utils/openWebsite'
 import type { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
 import type { JumpToAuditEditorProps } from '@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType'
@@ -1559,6 +1561,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
               border={yakitRiskDetailsBorder}
               isShowExtra={!excludeColumnsKey.includes('action')}
               onRetest={onRetest}
+              onDispose={(record) => {
+                if (!userInfo.isLogin) {
+                  yakitNotify('info', t('RiskDisposalLog.please_login'))
+                  return
+                }
+                onOpenRiskEdit(record)
+              }}
             />
           )
         }
@@ -1820,10 +1829,13 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     border = true,
     isShowExtra,
     onRetest,
+    onDispose,
     boxStyle,
     detailClassName = '',
   } = props
   const { t, i18nRefresh } = useI18nNamespaces(['risk', 'yakitUi'])
+  const { userInfo } = useStore()
+  const isEnterprise = isEnterpriseEdition()
   const [isShowCode, setIsShowCode] = useState<boolean>(true)
   const descriptionsRef = useRef<HTMLDivElement>(null)
   const descriptionsDivWidth = useListenWidth(descriptionsRef)
@@ -2037,13 +2049,27 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         label: t('YakitRiskDetails.vulnerability_details'),
         value: 'detail',
       },
-      {
+    ]
+    if (isShowCode) {
+      options.push({
         label: t('YakitRiskDetails.data_packet'),
         value: 'code',
-      },
-    ]
+      })
+    }
+    if (isEnterprise) {
+      options.push({
+        label: t('YakitRiskDetails.disposal_log'),
+        value: 'history',
+      })
+    }
     return options
-  }, [i18nRefresh])
+  }, [i18nRefresh, isShowCode, isEnterprise])
+
+  useEffect(() => {
+    if (!isEnterprise && showType === 'history') {
+      setShowType('detail')
+    }
+  }, [isEnterprise, showType, setShowType])
 
   const extraResizeBoxProps = useCreation(() => {
     const p: YakitResizeBoxProps = {
@@ -2132,17 +2158,26 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             </div>
           )}
         </div>
-        {isShowCode && (
-          <YakitRadioButtons
-            style={{ margin: 6 }}
-            value={showType}
-            onChange={(e) => {
-              const value = e.target.value
-              setShowType(value)
-            }}
-            buttonStyle="solid"
-            options={getOptions}
-          />
+        {(isEnterprise || isShowCode) && (
+          <div className={styles['content-tab-row']}>
+            <YakitRadioButtons
+              value={showType}
+              onChange={(e) => {
+                const value = e.target.value
+                if (value === 'code' && !isShowCode) return
+                setShowType(value)
+              }}
+              buttonStyle="solid"
+              options={getOptions}
+            />
+            {isEnterprise && showType === 'history' && (
+              <div className={styles['content-tab-actions']}>
+                <YakitButton type="primary" onClick={() => onDispose?.(info)}>
+                  {t('YakitRiskDetails.dispose_risk')}
+                </YakitButton>
+              </div>
+            )}
+          </div>
         )}
         {showType === 'detail' && (
           <div className={classNames(styles['content-resize-second'], detailClassName)} ref={descriptionsRef}>
@@ -2205,6 +2240,10 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             firstMinSize={300}
             secondMinSize={300}
           />
+        )}
+
+        {showType === 'history' && isEnterprise && (
+          <RiskDisposalLog info={info} isLogin={userInfo.isLogin} />
         )}
       </div>
     </>
