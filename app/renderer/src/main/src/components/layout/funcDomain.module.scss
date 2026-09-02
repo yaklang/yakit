@@ -6,15 +6,6 @@
     height: 40px;
     display: flex;
     align-items: center;
-    .short-divider-wrapper {
-      width: 1px;
-      height: 100%;
-      padding: 10px 0;
-      .divider-style {
-        height: 100%;
-        border-left: 1px solid var(--Colors-Use-Neutral-Border);
-      }
-    }
     .state-setting-wrapper {
       display: flex;
       height: 40px;

@@ -35,6 +35,7 @@ import {
   isEnpriTrace,
   isEnpriTraceAgent,
   isIRify,
+  isMemfit,
   isYakit,
   showDevTool,
 } from '@/utils/envfile'
@@ -43,7 +44,7 @@ import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
 import { LocalGV } from '@/yakitGV'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
 import { showPcapPermission } from '@/utils/ConfigPcapPermission'
-import { GithubSvgIcon, TerminalIcon } from '@/assets/newIcon'
+import { GithubSvgIcon } from '@/assets/newIcon'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { NetWorkApi } from '@/services/fetch'
@@ -350,7 +351,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           isRecording={screenRecorderInfo.isRecording}
         />
 
-        {!showProjectManage && (
+        {/* {!showProjectManage && (
           <div className={styles['ui-op-btn-wrapper']} onClick={openConsoleNewWindow}>
             <div className={styles['op-btn-body']}>
               <Tooltip placement="bottom" title={t('FuncDomain.engineConsole')}>
@@ -358,11 +359,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
               </Tooltip>
             </div>
           </div>
-        )}
+        )} */}
 
-        <div className={styles['short-divider-wrapper']}>
-          <div className={styles['divider-style']}></div>
-        </div>
         <div className={styles['state-setting-wrapper']}>
           {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
           {!showProjectManage && isIRify() && <UIOpIRifyRisk isEngineLink={isEngineLink} />}
@@ -744,6 +742,23 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
           { label: '调试信息日志', key: 'printLog' },
         ],
       },
+      { type: 'divider' },
+      {
+        key: 'official_website',
+        label: t('HelpDoc.officialWebsite'),
+      },
+      {
+        key: 'Github',
+        label: 'Github',
+        children: [
+          { label: t('HelpDoc.featureRequest'), key: 'feature_request' },
+          { label: 'BUG', key: 'report_bug' },
+        ],
+      },
+      {
+        key: 'aboutUs',
+        label: t('HelpDoc.aboutUs'),
+      },
     ]
   }
 
@@ -803,6 +818,15 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         { key: 'ai-repository', label: '知识库' },
         { key: 'ssa-compile-history', label: 'SSA项目编译历史' },
         { key: 'memory-base', label: '记忆库' },
+      ],
+    },
+    {
+      key: 'logs',
+      label: ' 日志收集',
+      children: [
+        { label: '渲染端日志', key: 'renderLog' },
+        { label: '引擎日志', key: 'engineLog' },
+        { label: '调试信息日志', key: 'printLog' },
       ],
     },
     ModeSwitch(),
@@ -892,13 +916,20 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
     },
     { type: 'divider' },
     {
-      key: 'logs',
-      label: ' 日志收集',
+      key: 'official_website',
+      label: t('HelpDoc.officialWebsite'),
+    },
+    {
+      key: 'Github',
+      label: 'Github',
       children: [
-        { label: '渲染端日志', key: 'renderLog' },
-        { label: '引擎日志', key: 'engineLog' },
-        { label: '调试信息日志', key: 'printLog' },
+        { label: t('HelpDoc.featureRequest'), key: 'feature_request' },
+        { label: 'BUG', key: 'report_bug' },
       ],
+    },
+    {
+      key: 'aboutUs',
+      label: t('HelpDoc.aboutUs'),
     },
   ].filter((item) => item)
 }
@@ -1086,6 +1117,18 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'printLog':
         grpcOpenPrintLogFolder()
+        return
+      case 'report_bug':
+        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=bug_report.yml`)
+        return
+      case 'feature_request':
+        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=feature_request.yml`)
+        return
+      case 'official_website':
+        yakitShell.openExternal(isMemfit() ? WebsiteGV.MemfitWebsite : WebsiteGV.YakHelpDocAddress)
+        return
+      case 'aboutUs':
+        yakitShell.openExternal(WebsiteGV.AboutUsWebsite)
         return
       case 'ai-agent':
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
@@ -3087,6 +3130,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
           label: '崩溃日志收集',
           key: 'crash-log',
         },
+        { type: 'divider' },
         {
           label: isRecording ? (
             <div
@@ -3133,11 +3177,15 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
           key: 'screenshot',
         },
         {
+          label: '录屏管理',
+          key: 'screen-recorder',
+        },
+        {
           type: 'divider',
         },
         {
-          label: '录屏管理',
-          key: 'screen-recorder',
+          label: '引擎 Console',
+          key: 'engine-console',
         },
       ]
     }
@@ -3172,6 +3220,13 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         label: <span>录屏管理</span>,
         key: 'screen-recorder',
       },
+      {
+        type: 'divider',
+      },
+      {
+        label: '引擎 Console',
+        key: 'engine-console',
+      },
     ]
   }, [system, screenshotLoading, isRecording])
   const menuSelect = useMemoizedFn((type: string) => {
@@ -3202,6 +3257,9 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         break
       case 'screen-recorder':
         addToTab('**screen-recorder')
+        break
+      case 'engine-console':
+        openConsoleNewWindow()
         break
       default:
         break

@@ -53,7 +53,6 @@ import emiter from '@/utils/eventBus/eventBus'
 import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
 const DownloadYakit = lazy(() => import('./update/DownloadYakit').then((m) => ({ default: m.DownloadYakit })))
 const DownloadYaklang = lazy(() => import('./update/DownloadYaklang').then((m) => ({ default: m.DownloadYaklang })))
-import { HelpDoc } from './HelpDoc/HelpDoc'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import { SolidCheckCircleIcon, SolidHomeIcon } from '@/assets/icon/solid'
 import { setNowProjectDescription } from '@/pages/globalVariable'
@@ -1777,8 +1776,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                   {stopScreen}
 
-                  <HelpDoc system={system} />
-
                   {engineLink && (
                     <>
                       <FuncDomain
@@ -1851,8 +1848,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                       </div>
                     </>
                   )}
-
-                  <HelpDoc system={system} />
 
                   {stopScreen}
 
