@@ -92,18 +92,18 @@ describe('AITaskQuery 调整方案（原人工介入）', () => {
 
     clickAdjustButton(container)
 
-    expect(onSendMock).toHaveBeenCalledTimes(2)
-    const [removeCall, interventionCall] = onSendMock.mock.calls.map((c) => c[0])
-    // 1. 先发 SYNC_TYPE_REACT_REMOVE_TASK（type ''，携带 task_id）
+    // 1. 先发 SYNC_TYPE_REACT_REMOVE_TASK；2. 再发 SYNC_TYPE_USER_INTERVENTION；3. 补发 QUEUE_INFO 刷新队列
+    expect(onSendMock).toHaveBeenCalledTimes(3)
+    const [removeCall, interventionCall, queueInfoCall] = onSendMock.mock.calls.map((c) => c[0])
     expect(removeCall.token).toBe(SESSION_ID)
     expect(removeCall.type).toBe('')
     expect(removeCall.params.SyncType).toBe('react_remove_task')
     expect(JSON.parse(removeCall.params.SyncJsonInput || '{}')).toEqual({ task_id: 'task-1' })
-    // 2. 再发 SYNC_TYPE_USER_INTERVENTION（type 'task'，content 为该条 user_input）
     expect(interventionCall.token).toBe(SESSION_ID)
     expect(interventionCall.type).toBe('task')
     expect(interventionCall.params.SyncType).toBe('user_intervention')
     expect(JSON.parse(interventionCall.params.SyncJsonInput || '{}')).toEqual({ content: '帮我扫描目标站点' })
+    expect(queueInfoCall.params.SyncType).toBe('queue_info')
   })
 
   it('点击后把介入记录以 USER_MANUAL_INTERVENTION 写入当前会话聊天流', () => {
@@ -139,7 +139,8 @@ describe('AITaskQuery 调整方案（原人工介入）', () => {
     clickAdjustButton(container)
     clickAdjustButton(container)
 
-    expect(onSendMock).toHaveBeenCalledTimes(2)
+    // 双击仍只有一轮信号（remove + intervention + queue_info 各一次）
+    expect(onSendMock).toHaveBeenCalledTimes(3)
   })
 
   it('未执行（execute=false）时整个任务队列不渲染', () => {

@@ -98,7 +98,7 @@ describe('useSyncLoadingState', () => {
     expect(loadingText(container)).toBe('false')
   })
 
-  it('回执快于最短展示时长时，loading 至少保持 200ms', async () => {
+  it('回执快于最短展示时长时，loading 至少保持 300ms（debounce 窗口之上的余量）', async () => {
     const { container } = renderProbe()
     act(() => {
       captured.markSending!('sync-3')
@@ -113,9 +113,9 @@ describe('useSyncLoadingState', () => {
     })
     expect(loadingText(container)).toBe('true')
 
-    // 满 200ms 后关闭
+    // 满 300ms 后关闭
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(160)
+      await vi.advanceTimersByTimeAsync(260)
     })
     expect(loadingText(container)).toBe('false')
   })
@@ -127,9 +127,9 @@ describe('useSyncLoadingState', () => {
       registerPending('sync-4')
     })
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(200)
+      await vi.advanceTimersByTimeAsync(300)
     })
-    // 200ms 宽限结束但后端仍未回执，pending 仍为 true
+    // 300ms 宽限结束但后端仍未回执，pending 仍为 true
     expect(loadingText(container)).toBe('true')
 
     await act(async () => {
@@ -145,7 +145,7 @@ describe('useSyncLoadingState', () => {
       registerPending('sync-5')
     })
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(210)
+      await vi.advanceTimersByTimeAsync(310)
       receiveReceipt('sync-5')
     })
     expect(loadingText(container)).toBe('false')

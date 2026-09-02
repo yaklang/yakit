@@ -159,7 +159,7 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
       }
       onSend({ token: sessionId, type: '', params: queueInfo })
     },
-    { wait: 500, leading: true },
+    { wait: 200, leading: true },
   ).run
   const onTaskRemove = useDebounceFn(
     () => {
@@ -183,9 +183,10 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
       }
       onSend({ token: sessionId, type: '', params: queueInfo })
     },
-    { wait: 500, leading: true },
+    { wait: 200, leading: true },
   ).run
-  /** 调整方案（原人工介入）：先发删除该条队列任务的信号，再把该条 user_input 作为人工介入消息发给后端 */
+  /** 调整方案（原人工介入）：先发删除该条队列任务的信号，再把该条 user_input 作为
+   * 人工介入消息发给后端，最后补发一次队列快照刷新（QUEUE_INFO）让本条立即消失 */
   const onTaskImmediate = useDebounceFn(
     () => {
       if (!execute || immediateLoading) return
@@ -210,9 +211,18 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
       }
       onSend({ token: sessionId, type: 'task', params: interventionInfo })
 
+      // 与置顶/删除一致：补发队列快照刷新，让本条立即从列表消失，不等 5s 轮询
+      const queueInfo: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+        Params: {},
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: '', params: queueInfo })
+
       onAddToList(item.user_input)
     },
-    { wait: 500, leading: true },
+    { wait: 200, leading: true },
   ).run
   const onAddToList = useMemoizedFn((prompt: string) => {
     const chatData: AIChatQSData = {

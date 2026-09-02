@@ -4,13 +4,15 @@ import { useStore } from 'zustand'
 import { useCurrentStore, useCurrentMeta } from './useCurrentDataBySession'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
-/** 操作按钮 loading 的最短展示时长：回执快于该值时延至满 200ms 再关闭，避免闪烁 */
-const MIN_SYNC_LOADING_MS = 200
+/** 按钮最短 loading 展示时长。消费方按钮 loading 时 antd 会使原生 button disabled，
+ * 二次点击无法派发事件、debounce 尾沿不会被武装；该值只需覆盖消费方的 debounce
+ * 窗口（200ms）并留出余量，防止回执过快时 loading 过早结束 */
+const MIN_SYNC_LOADING_MS = 300
 
 /**
  * SyncID 回执驱动的按钮 loading：markSending 记录发送的 SyncID；
- * 后端未回执（syncIDMap 中仍存在）或未满最短展示时长时为 true，与老版
- * AIManualAddition.addAndToContextLoading 的回执机制一致，仅增加最短展示兜底
+ * 后端未回执（syncIDMap 中仍存在）或未满最短展示时长（300ms，为消费方 200ms
+ * debounce 窗口之上的余量，配合按钮 loading 期的原生 disabled 防止二次触发）时为 true。
  */
 export const useSyncLoadingState = () => {
   const meta = useCurrentMeta() as AIAgentChatMetaData
@@ -19,7 +21,7 @@ export const useSyncLoadingState = () => {
 
   const syncIdRef = useRef<string>('')
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
-  /** 最短展示期标记：markSending 置位，200ms 后定时器清除 */
+  /** 最短展示期标记：markSending 置位，满 MIN_SYNC_LOADING_MS 后定时器清除 */
   const [inGrace, setInGrace] = useState(false)
 
   // 后端未回执（syncIDMap 仍存在该 SyncID）时为 true；syncIDUpdate 变化（发出/回执）驱动重算
