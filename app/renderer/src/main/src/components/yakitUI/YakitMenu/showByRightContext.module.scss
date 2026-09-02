@@ -1,5 +1,9 @@
 .show-by-right-context-wrapper {
-  padding: 4px;
+  // padding: 4px;
   max-height: calc(100vh - 10px);
   overflow: hidden auto;
+  background: var(--Colors-Use-Basic-Background);
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 4px;
+  box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
 }
