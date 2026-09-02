@@ -1,25 +1,30 @@
 # AI SenSo 数字员工功能交接
 
-更新时间：2026-08-28
+更新时间：2026-09-02
 
 ## 0. 最新交接摘要（上下文切换先读）
 
-- 当前分支：`master`。
+- 当前分支：`main`，跟踪 GitHub `origin/main`。主仓库已迁移到 `git@github.com:why-2018/AISenso.git`；原 Gitee 地址保留为 `gitee` 备用远端。
 - 2026-08-26 已将业务模型从“员工 1:1 Forge”调整为“固定八个数字员工角色 1:N 智能体”。
 - 八个角色始终来自 `config.ts`；智能体通过内部 Tag `senso-role:<role-id>` 归属角色，禁止再按 Forge 列表顺序套用角色。
 - 首页左侧只切换数字员工角色；聊天欢迎页选择该角色下的智能体后，才显示带锁定 Forge 标签的输入框。
 - Memfit 创建/编辑智能体时角色为必选；旧智能体没有角色标记时显示为“未分配”，需要人工编辑或经过业务确认的一次性迁移。
 - 当前引擎的 `AIForgeFilter.Tag` 查询与返回的 Forge Tag 不兼容；智能体广场角色页签必须分页读取候选集后在前端精确过滤，不能改回直接传 `Filter.Tag`，否则会再次出现角色卡片可见但页签为空。
-- 2026-08-28 新需求已完成分析，但尚未开始编码：按授权项目名签发授权码，一个项目可无限签发，一个授权码只绑定一台客户端；试用项目默认 3 个月且到期停用，正式项目默认 3 年维保且过期后仍可使用、但禁止自动更新；标准/高级/旗舰版需可配置允许的数字员工角色。
+- 2026-08-28 新授权需求已完成分析：按授权项目名签发授权码，一个项目可无限签发，一个授权码只绑定一台客户端；试用项目默认 3 个月且到期停用，正式项目默认 3 年维保且过期后仍可使用、但禁止自动更新；标准/高级/旗舰版需可配置允许的数字员工角色。
 - 授权需求不是纯前端功能。当前仓库可完成客户端授权页、启动拦截、角色过滤和更新限制；授权项目管理、设备绑定签发、私钥签名和完整权益校验必须由后端/引擎配合。
 - 已对照企业版参考仓库 `D:\360MoveData\Users\Titee_G\Desktop\20260708Yakit_edit\yakit-yj-feat-ee-04-30`。当前项目已继承同类 License 前端骨架，禁止整文件覆盖复制；企业版的真正签发在远端 `/api/license/activation`，设备绑定与验签实现在随包 Yak 引擎二进制中，该参考仓库也不包含后端或引擎源码。
-- 最新已推送功能提交：`9ca044e feat: support role-based digital employee agents`；智能体广场角色筛选修复：`0c87a80 fix: make agent role filters engine compatible`。`master` 与 `origin/master` 在 `0c87a80` 一致。
+- 2026-09-02 已打开 AI SenSo / Memfit 原有 License Gate：连接引擎后必须验证授权码，开发环境也不会自动跳过；验证成功后直接进入 AI SenSo，不再进入企业登录。该改动只复用已有 `GetLicense/CheckLicense`，不等于新的项目期限、版本权益和角色授权已经完成。
+- 同事使用申请码签发授权时出现 `decrypt license request failed: crypto/rsa decryption error`。这表示生成申请码的引擎公钥/格式与签发端私钥或协议版本不匹配；更新引擎后仍复现，尚未解决。下一步必须核对双方实际二进制版本、签名/加密版本和密钥对，并在更新后重新生成申请码，不能通过前端改文案规避。
+- 2026-09-02 已隐藏对话中的“ReAct 任务结束 / ReAct task finished”展示行，但事件仍由状态层正常消费；智能体选择区增加固定高度、内部滚动和长文本截断，智能体数量增加时不会挤坏页面。
+- 2026-09-02 已修复 Windows 安装包白屏：旧 `pack-win-memfit` 直接封装了开发态或陈旧渲染资源，主页面 `index.html` 使用 `/static/...` 绝对路径，在 `file://` 下无法加载。当前命令会先生产构建两套渲染端，再执行 Electron Builder。
+- AI SenSo 启动页不再挂载引擎终端日志区域，避免向客户展示 `yak` / `yaklang` 可执行文件路径和命令；引擎启动与日志落盘逻辑不变。
+- 截至本次交接更新前，GitHub 最新功能提交为 `bcb0d23 fix: rebuild Memfit renderers before Windows packaging`；关键前置提交为 `45c5866` 和 `2adac78`。
 - 本地开发统一在仓库根目录执行 `yarn dev`，会启动 Memfit 主渲染器 `3000`、引擎连接页 `5713` 和 Electron。
 - 2026-08-26 数字员工选择页的 6 个快捷导航已经修复，用户完成实际点击测试并确认“可以啦”。
 - 最终根因不是路由映射错误，而是 `MainOperatorContent` 挂载后执行默认标签初始化，把已打开的目标页重新覆盖成 `AI_Agent`。
 - 最终方案：选择页仅保存一次性目标；主菜单完成默认页初始化后，再消费目标并调用实际开页逻辑。不要改回事件监听、`setTimeout` 或 Gate 挂载后立即跳转。
 - 最终功能提交：`e4dbfac fix: apply employee quick route after menu initialization`；对应记录提交：`7983735 docs: record menu initialization navigation fix`。
-- 工作区仍有大量未提交的 AI SenSo 品牌替换和去 Yak/Yaklang 标记修改。这些是用户已有工作，不能执行 `git reset --hard`、`git checkout --` 或批量覆盖。
+- 品牌替换、License Gate、UI 优化和打包修复均已提交。更新本交接文件前工作区是干净的；后续仍禁止使用 `git reset --hard` 或批量覆盖用户改动。
 
 ## 1. 当前结果
 
@@ -46,6 +51,10 @@
 - AI Agent 顶部员工信息区已放大到约 132–168px，并同步放大 Logo、头像、标题、描述和技能标签；720px 以下高度会自动回落到紧凑尺寸。
 - 欢迎页已改为“任务引导 + 技能入口”双列、下方宽输入框的紧凑布局；窄屏和低高度会自动回落为单列或 2×2 技能网格。
 - 窗口标题栏、主菜单栏和页面标签栏新增仅 Memfit 生效的 AI SenSo 浅蓝主题，不影响其他 Yakit / IRify 等产品模式和菜单行为。
+- AI SenSo 连接引擎后会进入已有授权码校验页；授权通过后直接进入数字员工选择流程。
+- “ReAct 任务结束 / ReAct task finished”仅取消展示，不改变 ReAct 事件、任务状态或结束逻辑。
+- 智能体选择列表设置最大高度并在内部纵向滚动，卡片行高稳定，名称、描述和标签过长时不会撑开容器。
+- 启动页在 AI SenSo 模式下隐藏引擎终端日志面板，其他产品模式保持原行为。
 
 ## 2. 最重要的业务逻辑
 
@@ -93,7 +102,9 @@
 
 回归注意：`props.children` 外还有 `Suspense` 懒加载，而且 `MainOperatorContent` 挂载后还会初始化默认标签。仅依赖 `setTimeout`、Gate effect 或“监听器已挂载”都不够；快捷目标必须在默认标签初始化之后消费，否则会复现“无论点哪个入口都只进入数字员工页”的问题。
 
-### 2.4 授权与版本权益新需求（2026-08-28，只完成分析）
+### 2.4 授权与版本权益新需求（需求已分析，原有 Gate 已打开）
+
+状态边界：2026-09-02 已完成的只是让 AI SenSo 进入现有授权校验流程，并在校验成功后跳过企业登录；下面的授权项目、到期策略、版本权益和角色授权仍未实施。
 
 当前确认的业务规则：
 
@@ -106,10 +117,11 @@
 
 现有代码的关键限制：
 
-- `isEnterpriseEdition()` 明确排除 `MEMFIT`，所以 `UILayout.tsx` 中的企业版 License Gate 当前不会对 AI Senso 生效。
+- `UILayout.tsx` 已将 License Gate 条件扩展为 `isEnterpriseEdition() || isMemfit()`；`EnterpriseJudgeLogin.tsx` 在 Memfit 下即使开发环境也要求授权，`CheckLicense` 成功后直接执行 `setJudgeLicense(false)`。
 - `LicensePage.tsx` 已有 `GetLicense` 申请码和授权码输入交互，`EnterpriseJudgeLogin.tsx` 已有授权码缓存和启动复验，应在当前文件上增量改造。
 - 现有 Proto 的 `CheckLicense(CheckLicenseRequest) returns (Empty)` 只能表示成功/失败，无法向客户端下发项目类型、使用期、维保期、产品版本和角色权限，必须由引擎团队新增或扩展权益响应。
 - `LicenseAdminPage.tsx` 当前调用远端 `company/license/config` 和 `license/activation`，字段仍是企业、授权数、用户数、统一到期时间和 `EnpriTrace/EnpriTraceAgent`，不支持本次新的项目类型、维保、产品版本和角色字段。
+- Electron HTTP 层默认使用 `${HttpSetting.httpBaseURL}/api/`，默认公网基址来自 `https://www.yaklang.com`（部分模式为 `https://vip.yaklang.com`），也可被私有域配置覆盖；因此前端相对地址 `license/activation` 的最终形式是当前基址下的 `/api/license/activation`，不能把默认公网地址误认为 AI SenSo 新授权后端已经定稿。
 - Electron 主进程的 `app/main/handlers/misc.js` 只将 `GetLicense/CheckLicense` 转发给引擎，不负责签名或过期校验。当前仓库和企业版参考仓库均无后端源码；参考仓库的 `bins/yak.zip` 也只包含 `yak_windows_amd64.exe`。
 - 现有更新定时检查、指定版本下载和 Electron 下载入口尚与 License 状态无关；维保过期限制不能只隐藏前端按钮。
 
@@ -168,7 +180,7 @@ deviceFingerprintHash, status, signatureVersion
 - 素材用途和尺寸参考：`senso-assets-manifest.json`。
 - 不允许使用整张参考 UI 截图充当页面背景。
 
-### License 与权益参考（尚未实施）
+### License 与权益参考（已有 Gate，新权益尚未实施）
 
 - `app/renderer/src/main/src/pages/EnterpriseJudgeLogin.tsx`
 - `app/renderer/src/main/src/pages/LicensePage.tsx`
@@ -200,6 +212,17 @@ deviceFingerprintHash, status, signatureVersion
 - 顶部主题通过 `isMemfit()` 条件类实现：`ui-layout-wrapper-memfit`、`heard-menu-body-memfit`、`tab-menu-memfit`。不要把这些颜色直接覆盖到通用类。
 
 ## 5. 测试结果
+
+2026-09-02 产品适配、UI 与 Windows 打包：
+
+- `marketplaceRoleFilter.test.ts` 的 `PaginationSchema` 类型错误已修复，测试请求补齐 `OrderBy: 'updated_at'` 和 `Order: 'desc'`。
+- `yarn ci:tsc` 通过；ReAct 完成提示展示策略、智能体选择器及相关定向测试通过。
+- `yarn pack-win-memfit` 完整执行成功，耗时约 424 秒；主渲染端和引擎连接页均先完成生产构建，随后生成 NSIS Windows 安装包。
+- 构建后的主页面资源全部使用 `./static/...` 相对路径；`app.asar` 已确认包含 `app/renderer/pages/main/index.html`、主 JS、`engine-link-startup/dist/index.html` 和启动页 JS/CSS。
+- 已实际启动 `release/win-unpacked/AI Senso.exe`，窗口可访问性树完整显示工作空间、主题、语言、确定并启动等控件，确认不再白屏；树中没有引擎终端日志内容。
+- Windows 截图接口仍会对该 Electron 窗口返回 `SetIsBorderRequired failed (0x80004002)`，因此本次使用实际窗口文本树、进程路径和 Electron 加载日志交叉验证，没有把截图失败误判为应用白屏。
+- 本地安装包：`release/AI Senso-1.4.8-0711-windows-amd64.exe`，约 172.35 MB，SHA256 为 `CD5F5A421FA4190537A420D5020B7E3CB5369E2C358DC5A2E9E78EAABC1BB9A3`。`release/` 是构建产物，不提交 Git。
+- 构建仅有项目原有的 Browserslist、CSS 顺序和大 chunk 警告，没有 TypeScript 或 Electron Builder 错误。
 
 2026-08-28 授权新需求：
 
@@ -271,54 +294,62 @@ yarn dev
 3. 检查本地引擎端口（当前通常为 3333）和连接状态；引擎连接超时与主渲染快捷导航无关。
 4. 完整重启时先结束当前 `yarn dev`，再从仓库根目录重新执行，避免多个 Electron 窗口和旧前端状态混淆。
 
+Windows AI SenSo 打包统一执行：
+
+```powershell
+yarn pack-win-memfit
+```
+
+该脚本现在依次执行 `build-render-memfit`、`build-link-render-memfit` 和 Windows Electron Builder。不要改回直接调用 `electron-builder`，也不要把 `release-render` / `release-link-render` 当成复制构建产物的命令；后两者是创建发布分支和 Tag 的脚本。
+
 ## 7. Git 状态
 
-- 仓库：`https://gitee.com/a1543733438/ai-sense.git`
-- 分支：`master`
-- 2026-08-26 快捷导航功能提交：`9b3e3b4 feat: enable digital employee quick navigation`。
-- 2026-08-26 Gate 时序修复提交：`6217c82 fix: defer quick navigation until menu mount`。
-- 2026-08-26 懒加载回放修复提交：`35e239f fix: replay employee quick navigation after lazy mount`。
-- 2026-08-26 初始化覆盖修复提交：`e4dbfac fix: apply employee quick route after menu initialization`。
-- 2026-08-26 初始化覆盖交接记录：`7983735 docs: record menu initialization navigation fix`。
-- 安全回滚完整快捷导航功能：`git revert e4dbfac 35e239f 6217c82 9b3e3b4`（按新到旧顺序）。该命令会生成反向提交，不会覆盖工作区中的其他未提交改动。
-- 本交接更新前最新已推送提交：`0c87a80 fix: make agent role filters engine compatible`。
-- 2026-08-26 数字员工角色 1:N 智能体提交：`9ca044e feat: support role-based digital employee agents`。
-- 2026-08-26 智能体广场角色筛选兼容修复：`0c87a80 fix: make agent role filters engine compatible`。
-- 已推送的关键提交：
-  - `acaae69 feat: initialize AI SenSo digital employee experience`
-  - `5b74f61 feat: modernize digital employee workspace`
-  - `7804ae2 fix: polish digital employee interactions`
-- 本轮默认员工标签提交请以 `git log -1 --oneline` 的最新结果为准。
-- 本轮员工切换标签重置提交也请以 `git log -1 --oneline` 的最新结果为准。
-- 本轮视觉素材优化提交为 `d368069 fix: sharpen digital employee visual assets`。
-- 本轮工作区与导航主题优化提交标题为 `style: polish digital employee workspace theme`；具体提交哈希请以新窗口运行 `git log -1 --oneline` 的结果为准。
-
-仓库较大，`.gitignore` 已重点忽略依赖、构建产物、缓存、日志、临时文件和本地配置。不要提交 `node_modules`、构建目录或本机缓存。
-
-当前 `git status` 中仍有大量品牌文案、启动页、菜单、国际化资源及构建配置修改。这些修改不属于快捷导航提交，但属于本项目持续进行的 AI SenSo 品牌替换工作。后续提交必须继续按文件精确暂存，避免把不相关改动混入同一个提交，也不要为了得到干净工作区而丢弃它们。
+- GitHub 主仓库：`https://github.com/why-2018/AISenso`。
+- 当前分支：`main`，跟踪 `origin/main`。
+- `origin`：`git@github.com:why-2018/AISenso.git`。
+- `gitee`：`https://gitee.com/a1543733438/ai-sense.git`，仅作为旧仓库/备用远端保留。
+- 仓库迁移时没有删除 `.git`，GitHub 保留了完整提交历史。Gitee 的 `master` 当前停留在 `45c5866`，默认 `git push` 只会推送 GitHub。
+- 最近关键提交：
+  - `bcb0d23 fix: rebuild Memfit renderers before Windows packaging`
+  - `45c5866 fix: refine ReAct completion and agent selector UI`
+  - `2adac78 feat: complete AI SenSo product adaptation`
+  - `0c87a80 fix: make agent role filters engine compatible`
+  - `9ca044e feat: support role-based digital employee agents`
+- 快捷导航关键提交仍为 `9b3e3b4`、`6217c82`、`35e239f`、`e4dbfac`；对应交接记录为 `7983735` 和 `807b326`。
+- 本次交接更新前 `main` 与 `origin/main` 一致且工作区干净。本文件更新后应单独提交并推送 GitHub。
+- `.gitignore` 已忽略依赖、构建产物、缓存、日志、临时文件和本地配置。不要提交 `node_modules`、`app/renderer/pages`、启动页 `dist`、`release` 或本机日志。
 
 ## 8. 新窗口继续时的优先检查
 
-1. 新的授权需求目前只完成分析。开发前先向后端/引擎团队确认接口和 License 载荷，尤其是 `projectType`、`usageExpiresAt`、`maintenanceExpiresAt`、`edition`、`allowedRoleIds` 和设备指纹字段。
-2. 确认业务口径：维保到期是只禁止自动更新，还是也禁止手动安装新版；三个产品版本的默认角色矩阵是什么；单项目是否允许覆盖版本默认角色。
-3. 授权协议确定后，只在当前 AI Senso 仓库增量开发，不要将企业版 `EnterpriseJudgeLogin.tsx`、`LicensePage.tsx` 或 `LicenseAdminPage.tsx` 整文件覆盖进来。
-4. 启动项目确认选择页和首页左侧始终只有固定八个数字员工角色，不随 Forge 数量变化。
-5. 选择角色进入欢迎页，确认只展示带对应 `senso-role:<role-id>` 标记的智能体；未选择智能体前不显示输入框。
-6. 选择智能体后确认输入框出现对应 Forge 标签；用 `@` 再添加一个或多个标签并发送，确认可以正常进入详情页。
-7. 详情页确认智能体默认标签仍存在；连续发送后应自动恢复，不能成倍重复。
-8. 切换员工角色后确认创建新会话、清空智能体并返回智能体选择状态，旧智能体标签不残留。
-9. 在智能体广场创建和编辑智能体，确认数字员工角色必选、分类页签能精确找到新智能体，普通能力 Tag 中不显示 `senso-role:*`。
-10. 检查大屏、小屏下选择页与 AI Agent 工作区，无横向溢出和明显跳动。
-11. 右侧任务进度只能使用后端 todo 字段；完成、执行中、待执行分别检查绿色对号、旋转圆环和灰色圆环。
-12. 后续尽量只改布局和样式；除非定位到真实缺陷，不要重写原版聊天、mention、IPC 或模型发送逻辑。
-13. 人工确认新透明 Logo 在选择页左上角与详情页顶部没有白色矩形、尺寸没有显得过小；检查 8 个员工徽章和 6 个快捷入口在 100%/125% 缩放下边缘清晰。
-14. 在详情页展开/收起左栏各一次，确认左右 chevron 都在按钮中垂直居中；若仍有视觉偏差只调图标盒/按钮布局，不改折叠状态逻辑。
-15. 人工检查选择页默认卡片的渐变描边、光晕和“当前选择”标识，确认 hover 与 selected 层级不同且没有布局跳动。
-16. 在 1920×1080、1280×720 和窄窗口分别检查放大后的员工区、欢迎区双列/单列切换和输入框宽度；确认内容区仍可滚动且没有横向溢出。
-17. 检查标题栏、主菜单栏和标签栏只在 Memfit 下呈浅蓝主题，菜单点击、标签关闭和拖拽逻辑保持原样。
+1. 先运行 `git status --short --branch` 和 `git remote -v`，确认位于 `main`、跟踪 GitHub `origin/main`，不要再按旧交接向 Gitee `master` 提交。
+2. 启动项目验证现有 License Gate：AI SenSo 连接引擎后必须出现授权校验，已有缓存授权必须复验；校验成功后应直接进入数字员工，不出现企业登录。
+3. 优先解决 `crypto/rsa: decryption error`：记录申请码生成端实际引擎版本、签发端服务版本、密钥标识和协议版本；更新双方后重新生成申请码再签发。不要重复使用旧申请码，也不要把问题归因于 React 页面。
+4. 新项目制授权仍需后端/引擎合同，重点确认 `projectType`、`usageExpiresAt`、`maintenanceExpiresAt`、`edition`、`allowedRoleIds`、设备指纹和签名版本字段。
+5. 确认业务口径：维保到期是只禁止自动更新，还是也禁止手动安装新版；三个产品版本的默认角色矩阵是什么；单项目是否允许覆盖版本默认角色。
+6. 授权协议确定后，只在当前 AI SenSo 仓库增量开发，不要将企业版 `EnterpriseJudgeLogin.tsx`、`LicensePage.tsx` 或 `LicenseAdminPage.tsx` 整文件覆盖进来。
+7. 启动项目确认选择页和首页左侧始终只有固定八个数字员工角色，不随 Forge 数量变化。
+8. 选择角色进入欢迎页，确认只展示带对应 `senso-role:<role-id>` 标记的智能体；未选择智能体前不显示输入框。
+9. 构造大量智能体检查选择区域：只允许列表内部滚动，外层卡片和页面布局不能被撑高或横向变形，键盘焦点仍可进入列表。
+10. 选择智能体后确认输入框出现对应 Forge 标签；用 `@` 再添加一个或多个标签并发送，确认可以正常进入详情页。
+11. 详情页确认智能体默认标签仍存在；连续发送后应自动恢复，不能成倍重复。
+12. 切换员工角色后确认创建新会话、清空智能体并返回智能体选择状态，旧智能体标签不残留。
+13. 在智能体广场创建和编辑智能体，确认数字员工角色必选、分类页签能精确找到新智能体，普通能力 Tag 中不显示 `senso-role:*`。
+14. 确认聊天中不显示“ReAct 任务结束 / ReAct task finished”，同时任务状态和后续交互仍正常；不要删除底层 ReAct 完成事件处理。
+15. 右侧任务进度只能使用后端 todo 字段；完成、执行中、待执行分别检查绿色对号、旋转圆环和灰色圆环。
+16. 检查大屏、小屏下选择页与 AI Agent 工作区，无横向溢出和明显跳动。
+17. 人工确认新透明 Logo 在选择页左上角与详情页顶部没有白色矩形、尺寸没有显得过小；检查 8 个员工徽章和 6 个快捷入口在 100%/125% 缩放下边缘清晰。
+18. 在详情页展开/收起左栏各一次，确认左右 chevron 都在按钮中垂直居中；若仍有视觉偏差只调图标盒/按钮布局，不改折叠状态逻辑。
+19. 人工检查选择页默认卡片的渐变描边、光晕和“当前选择”标识，确认 hover 与 selected 层级不同且没有布局跳动。
+20. 在 1920×1080、1280×720 和窄窗口分别检查放大后的员工区、欢迎区双列/单列切换和输入框宽度；确认内容区仍可滚动且没有横向溢出。
+21. 检查标题栏、主菜单栏和标签栏只在 Memfit 下呈浅蓝主题，菜单点击、标签关闭和拖拽逻辑保持原样。
+22. 出 Windows 包只执行 `yarn pack-win-memfit`，并在交付前检查生成的 `index.html` 使用 `./static/...`、`app.asar` 同时包含两套渲染资源；不要直接运行 builder 子命令。
 
 ## 9. 可直接交给新 AI 的指令
 
-请先阅读本文件、`docs/changes/2026-08-26-digital-employee-agent-assignment.md`、`docs/changes/2026-08-26-digital-employee-quick-navigation.md` 和 `docs/DEV_LOG.md`，再查看 `git status` 与最新提交。当前已实施的模型是固定八个数字员工角色 1:N AI Forge，归属由内部 Tag `senso-role:<role-id>` 精确确定；禁止再按 Forge 数量、ID、名称关键词或返回顺序生成员工。首页左侧只切角色，欢迎页选择 `selectedAgent` 后才显示输入框；默认 mention、首次 `ForgeName` 和请求资源兜底全部读取 `selectedAgent`。旧智能体无标记时属于“未分配”，应人工编辑或使用经过业务确认的稳定 ForgeName 做一次性迁移。快捷导航时序已由用户实测通过，不要修改。
+请先阅读本文件、`docs/changes/2026-08-26-digital-employee-agent-assignment.md`、`docs/changes/2026-08-26-digital-employee-quick-navigation.md` 和 `docs/DEV_LOG.md`，再运行 `git status --short --branch`、`git remote -v` 和 `git log -5 --oneline`。当前主仓库是 GitHub `why-2018/AISenso`，分支为 `main`；Gitee 仅是备用远端。项目是 Electron C/S 桌面应用：React 渲染端 + Electron 主进程 + 本地引擎 gRPC，并按需访问远端 HTTP 服务，不是浏览器直接访问的普通 B/S 前端。
 
-授权新需求截至 2026-08-28 只完成分析，尚未编码。当前仓库已有企业版 License 前端骨架，只需在本项目增量开发，不要从 `D:\360MoveData\Users\Titee_G\Desktop\20260708Yakit_edit\yakit-yj-feat-ee-04-30` 整文件复制。但完整实现必须等后端/引擎提供项目、设备绑定、使用期、维保期、版本和 `allowedRoleIds` 权益合同。不要做只存在于前端的假授权，不要将签发私钥包进客户端。接口定稿后，优先实现 Memfit 启动授权拦截和全局 `LicenseEntitlement`，再将权益接入数字员工、智能体和更新链路。每次完成后运行类型检查和定向测试，并更新交接/改动记录后单独提交。
+当前数字员工模型是固定八个角色 1:N AI Forge，归属由内部 Tag `senso-role:<role-id>` 精确确定；禁止按 Forge 数量、ID、名称关键词或返回顺序生成员工。首页左侧只切角色，欢迎页选择 `selectedAgent` 后才显示输入框；默认 mention、首次 `ForgeName` 和请求资源兜底全部读取 `selectedAgent`。快捷导航时序已由用户实测通过，不要修改。ReAct 完成标记只隐藏展示行，不删除事件；智能体列表的高度和内部滚动兜底也应保留。
+
+AI SenSo 的原有 License Gate 已经打开：`UILayout` 将 Memfit 纳入校验，`EnterpriseJudgeLogin` 在 Memfit 下不因开发环境跳过，`CheckLicense` 成功后直接退出 Gate。新的项目类型、使用期、维保期、产品版本和 `allowedRoleIds` 权益仍未实现。当前真实阻塞是申请码在签发端出现 RSA 解密错误，必须由后端/引擎核对密钥对和协议版本；不要用前端伪授权，也不要把私钥包进客户端。后端合同确定后，再建立全局 `LicenseEntitlement` 并接入角色、智能体和更新链路。
+
+开发运行使用 `yarn dev`。Windows 交付只使用 `yarn pack-win-memfit`，它会先构建主渲染端和引擎连接页再封装；直接运行 Electron Builder 会重新引入安装后白屏。每次完成后运行类型检查和定向测试，更新交接记录，按文件精确暂存并推送 GitHub `main`。
