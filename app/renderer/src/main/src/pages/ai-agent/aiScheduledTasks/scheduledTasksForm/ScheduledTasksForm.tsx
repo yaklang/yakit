@@ -58,17 +58,41 @@ export const frequencyToRRule = (
 }
 
 /**
- * 将 rrule 转换为频率类型；解析不到任何预设时返回 custom，
- * 由表单回填原始规则，避免编辑时把规则静默改写成预设
+ * 将 rrule 转换为频率类型；仅当规则与 frequencyToRRule 按预设生成的形式完全等价时才返回该预设
+ * （多天每周、INTERVAL>1 的每天、带 BYMINUTE 的每小时等预设超集一律返回 custom），
+ * 由表单回填原始规则，避免编辑保存时把规则静默改写成预设
  */
 export const rruleToFrequency = (rrule: string): FrequencyPreset => {
-  const normalized = rrule.toUpperCase()
-  if (normalized.includes('COUNT=1')) return 'once'
-  if (normalized.includes('FREQ=MINUTELY')) return 'minutes'
-  if (normalized.includes('FREQ=HOURLY')) return 'hourly'
-  if (normalized.includes('BYDAY=MO,TU,WE,TH,FR')) return 'weekdays'
-  if (normalized.includes('FREQ=WEEKLY')) return 'weekly'
-  if (normalized.includes('FREQ=DAILY')) return 'daily'
+  const normalized = (rrule || '')
+    .trim()
+    .toUpperCase()
+    .replace(/^RRULE:/, '')
+  const parts = new Map<string, string>()
+  normalized
+    .split(';')
+    .filter(Boolean)
+    .forEach((seg) => {
+      const [key, value = ''] = seg.split('=')
+      parts.set(key.trim(), value.trim())
+    })
+  const freq = parts.get('FREQ')
+  const interval = parts.get('INTERVAL')
+  const byday = parts.get('BYDAY')
+  const count = parts.get('COUNT')
+  const extraKeys = [...parts.keys()].filter((key) => key !== 'FREQ')
+  const onlyHas = (...keys: string[]) =>
+    extraKeys.length === keys.length && keys.every((key) => extraKeys.includes(key))
+  const WEEKDAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA']
+
+  if (freq === 'DAILY' && onlyHas('COUNT') && count === '1') return 'once'
+  if (freq === 'MINUTELY' && onlyHas('INTERVAL') && Number(interval) >= 1) return 'minutes'
+  // RRULE 缺省 INTERVAL=1，裸 HOURLY/DAILY 按预设重新生成语义不变；裸 MINUTELY 缺省 1 分钟而表单回填 5，须走 custom
+  if (freq === 'HOURLY' && extraKeys.length === 0) return 'hourly'
+  if (freq === 'HOURLY' && onlyHas('INTERVAL') && interval === '1') return 'hourly'
+  if (freq === 'WEEKLY' && onlyHas('BYDAY') && byday === 'MO,TU,WE,TH,FR') return 'weekdays'
+  if (freq === 'WEEKLY' && onlyHas('BYDAY') && WEEKDAYS.includes(byday || '')) return 'weekly'
+  if (freq === 'DAILY' && extraKeys.length === 0) return 'daily'
+  if (freq === 'DAILY' && onlyHas('INTERVAL') && interval === '1') return 'daily'
   return 'custom'
 }
 

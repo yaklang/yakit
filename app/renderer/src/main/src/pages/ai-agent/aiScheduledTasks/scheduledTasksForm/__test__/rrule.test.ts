@@ -52,6 +52,25 @@ describe('rruleToFrequency', () => {
     expect(rruleToFrequency('RRULE:FREQ=MONTHLY;INTERVAL=2')).toBe('custom')
     expect(rruleToFrequency('RRULE:FREQ=YEARLY')).toBe('custom')
   })
+
+  it('maps preset supersets to custom so editing preserves the raw rule', () => {
+    // 多天每周：按 weekly 预设重新生成只剩 StartAt 单天
+    expect(rruleToFrequency('RRULE:FREQ=WEEKLY;BYDAY=MO,WE')).toBe('custom')
+    // INTERVAL>1 的每天：按 daily 预设重新生成 INTERVAL 归 1
+    expect(rruleToFrequency('RRULE:FREQ=DAILY;INTERVAL=2')).toBe('custom')
+    // 带 BYMINUTE 的每小时：按 hourly 预设重新生成丢 BYMINUTE
+    expect(rruleToFrequency('RRULE:FREQ=HOURLY;BYMINUTE=30')).toBe('custom')
+    // 非 DAILY 的 COUNT=1、以及 once 之外附带额外字段的规则
+    expect(rruleToFrequency('RRULE:FREQ=MONTHLY;COUNT=1')).toBe('custom')
+    expect(rruleToFrequency('RRULE:FREQ=DAILY;COUNT=1;BYHOUR=9')).toBe('custom')
+  })
+
+  it('still maps bare daily/hourly (RRULE default INTERVAL=1) to their presets', () => {
+    expect(rruleToFrequency('RRULE:FREQ=DAILY')).toBe('daily')
+    expect(rruleToFrequency('RRULE:FREQ=HOURLY')).toBe('hourly')
+    // 裸 MINUTELY 缺省 1 分钟，而表单按 minutes 预设回填 INTERVAL=5，须走 custom 保留原规则
+    expect(rruleToFrequency('RRULE:FREQ=MINUTELY')).toBe('custom')
+  })
 })
 
 describe('frequencyToRRule custom', () => {
