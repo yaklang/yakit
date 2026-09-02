@@ -137,6 +137,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         <div className={styles['yakit-option-item-label']}>{copyItem.label}</div>
         <XOutlined
           color="currentColor"
+          size={16}
           style={{ display: mouseEnterItem === item.value && item.value !== props.value ? 'block' : 'none' }}
           className={styles['option-item-close']}
           onClick={(e) => delCatchOptionItem(e, item)}

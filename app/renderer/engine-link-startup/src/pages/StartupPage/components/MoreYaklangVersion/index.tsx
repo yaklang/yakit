@@ -70,7 +70,9 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
         <YakitInput
           value={searchVersionVal}
           size="middle"
-          prefix={<SearchOutlined color="var(--Colors-Use-Neutral-Text-3-Secondary)" className="search-icon" />}
+          prefix={
+            <SearchOutlined color="var(--Colors-Use-Neutral-Text-3-Secondary)" className="search-icon" size={16} />
+          }
           onChange={(e) => onSearchVersion(e.target.value.trim())}
         />
       </div>

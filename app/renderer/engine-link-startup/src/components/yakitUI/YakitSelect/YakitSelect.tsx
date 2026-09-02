@@ -239,6 +239,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         <div className={styles['yakit-option-item-label']}>{copyItem.label}</div>
         <XOutlined
           color="currentColor"
+          size={16}
           style={{
             display: showClose ? 'block' : 'none',
           }}
@@ -247,6 +248,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         />
         <CheckOutlined
           color="currentColor"
+          size={16}
           style={{
             display: showSelectedIcon ? 'block' : 'none',
           }}

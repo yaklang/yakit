@@ -757,7 +757,11 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         }}
                       >
                         {EngineModeVerbose('remote')}{' '}
-                        <ArrowCircleRightOutlined color="currentColor" className={styles['arrow-circle-right-icon']} />
+                        <ArrowCircleRightOutlined
+                          color="currentColor"
+                          className={styles['arrow-circle-right-icon']}
+                          size={16}
+                        />
                       </span>
                     </>
                   )}
