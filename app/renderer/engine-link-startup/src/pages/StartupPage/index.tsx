@@ -1214,9 +1214,11 @@ export const StartupPage: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className={styles['startup-engine-log']} style={{ display: isRemoteEngine ? 'none' : 'block' }}>
-              <EngineLog />
-            </div>
+            {!isMemfit() && (
+              <div className={styles['startup-engine-log']} style={{ display: isRemoteEngine ? 'none' : 'block' }}>
+                <EngineLog />
+              </div>
+            )}
             {!isRemoteEngine ? (
               <div className={styles['startup-content-wrapper']}>
                 <LocalEngine
