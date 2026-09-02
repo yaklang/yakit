@@ -145,7 +145,7 @@
     "testFailed": "Test failed"
   },
   "AIReActTaskChatContent": {
-    "humanIntervention": "Human intervention",
+    "adjustPlan": "Adjust Plan",
     "globalDirective": "Global directive",
     "globalDirectiveDefault": "Custom global AI directive",
     "globalDirectivePlaceholder": "Global directives apply to all sessions...",
@@ -502,6 +502,7 @@
   },
   "AITaskQuery": {
     "taskQueue": "Task Queue",
+    "immediate": "Adjust Plan",
     "focusMode": "Focus Mode: {{mode}}"
   },
   "ForgeName": {

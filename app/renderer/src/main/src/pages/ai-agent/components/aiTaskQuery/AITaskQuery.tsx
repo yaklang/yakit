@@ -16,11 +16,16 @@ import { type AIInputEvent, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/h
 import { Tooltip } from 'antd'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useSyncLoadingState } from '@/pages/ai-re-act/hooks/useSyncLoadingState'
 import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import emiter from '@/utils/eventBus/eventBus'
+import { AIChatQSDataTypeEnum, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import moment from 'moment'
+import { v4 as uuidv4 } from 'uuid'
 
 export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -122,24 +127,27 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {
 const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
   const { item } = props
   const { t } = useI18nNamespaces(['aiAgent'])
-  const [upLoading, setUpLoading] = useState<boolean>(false)
-  const [removeLoading, setRemoveLoading] = useState<boolean>(false)
 
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
   const { onSend } = useAIAgentDispatcher()
 
+  const { loading: upLoading, markSending: markUpSending } = useSyncLoadingState()
+  const { loading: removeLoading, markSending: markRemoveSending } = useSyncLoadingState()
+  const { loading: immediateLoading, markSending: markInterventionSending } = useSyncLoadingState()
+
   const onTaskUp = useDebounceFn(
     () => {
       if (!execute || upLoading) return
-      setUpLoading(true)
+      const syncId = randomString(8)
+      markUpSending(syncId)
       const jumpInfo: AIInputEvent = {
         IsSyncMessage: true,
         SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_JUMP_QUEUE,
         SyncJsonInput: JSON.stringify({ task_id: item.id }),
         Params: {},
-        SyncID: randomString(8),
+        SyncID: syncId,
       }
       onSend({ token: sessionId, type: '', params: jumpInfo })
 
@@ -150,24 +158,20 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
         SyncID: randomString(8),
       }
       onSend({ token: sessionId, type: '', params: queueInfo })
-
-      setTimeout(() => {
-        setUpLoading(false)
-      }, 500)
     },
     { wait: 500, leading: true },
   ).run
   const onTaskRemove = useDebounceFn(
     () => {
       if (!execute || removeLoading) return
-      setRemoveLoading(true)
-
+      const syncId = randomString(8)
+      markRemoveSending(syncId)
       const jumpInfo: AIInputEvent = {
         IsSyncMessage: true,
         SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_REMOVE_TASK,
         SyncJsonInput: JSON.stringify({ task_id: item.id }),
         Params: {},
-        SyncID: randomString(8),
+        SyncID: syncId,
       }
       onSend({ token: sessionId, type: '', params: jumpInfo })
 
@@ -178,13 +182,50 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
         SyncID: randomString(8),
       }
       onSend({ token: sessionId, type: '', params: queueInfo })
-
-      setTimeout(() => {
-        setRemoveLoading(false)
-      }, 500)
     },
     { wait: 500, leading: true },
   ).run
+  /** 调整方案（原人工介入）：先发删除该条队列任务的信号，再把该条 user_input 作为人工介入消息发给后端 */
+  const onTaskImmediate = useDebounceFn(
+    () => {
+      if (!execute || immediateLoading) return
+
+      const removeTaskInfo: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_REMOVE_TASK,
+        SyncJsonInput: JSON.stringify({ task_id: item.id }),
+        Params: {},
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: '', params: removeTaskInfo })
+
+      const syncId = randomString(8)
+      markInterventionSending(syncId)
+      const interventionInfo: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_USER_INTERVENTION,
+        SyncJsonInput: JSON.stringify({ content: item.user_input }),
+        Params: {},
+        SyncID: syncId,
+      }
+      onSend({ token: sessionId, type: 'task', params: interventionInfo })
+
+      onAddToList(item.user_input)
+    },
+    { wait: 500, leading: true },
+  ).run
+  const onAddToList = useMemoizedFn((prompt: string) => {
+    const chatData: AIChatQSData = {
+      id: uuidv4(),
+      chatType: 'reAct',
+      type: AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION,
+      Timestamp: moment().unix(),
+      data: { type: '加入上下文', content: prompt || '' },
+      AIService: '',
+      AIModelName: '',
+    }
+    globalSessionEngine.pushDataToSession(sessionId, chatData)
+  })
   return (
     <div key={item.id} className={styles['task-query-list-item']}>
       <div className={styles['item-left']}>
@@ -204,6 +245,15 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
             <OutlineInformationcircleIcon className={styles['info-icon']} />
           </Tooltip>
         )}
+        <YakitButton
+          size="small"
+          type="outline2"
+          onClick={onTaskImmediate}
+          loading={immediateLoading}
+          disabled={immediateLoading}
+        >
+          {t('AITaskQuery.immediate')}
+        </YakitButton>
         <YakitButton type="text2" icon={<OutlineArrowupIcon />} onClick={onTaskUp} loading={upLoading} />
         <YakitButton type="text2" icon={<OutlineTrashIcon />} onClick={onTaskRemove} loading={removeLoading} />
       </div>

@@ -2,8 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import type {
   AIInputSettingFormProps,
   AIInputSettingPopoverProps,
-  AIManualAdditionPopoverProps,
-  AIManualAdditionProps,
   AIReActTaskChatLeftSideProps,
   AIReActTaskChatProps,
 } from './AIReActTaskChatType'
@@ -14,27 +12,21 @@ import classNames from 'classnames'
 import { ChevrondownButton } from '../aiReActChat/AIReActComponent'
 import { OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { type AIChatQSData, AIChatQSDataTypeEnum } from '../hooks/aiRender'
-import { type AIInputEvent, AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum } from '../hooks/grpcApi'
+import { type AIInputEvent, AIInputEventHotPatchTypeEnum } from '../hooks/grpcApi'
 import { Form, Tooltip } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import emiter from '@/utils/eventBus/eventBus'
-import { randomString } from '@/utils/randomUtil'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import useAIGlobalConfig from '../hooks/useAIGlobalConfig'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { v4 as uuidv4 } from 'uuid'
-import moment from 'moment'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import has from 'lodash/has'
 import { AITaskContent } from '../aiTaskContent/AITaskContent'
-import { useCurrentMeta, useCurrentStore } from '../hooks/useCurrentDataBySession'
-import { useStore } from 'zustand'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
-import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine, onTaskTabsChange } = props
@@ -127,26 +119,6 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 })
 
 export default AIReActTaskChat
-
-export const AIManualAdditionPopover: React.FC<AIManualAdditionPopoverProps> = React.memo((props) => {
-  const { children, chatType } = props
-  const [manualAdditionVisible, setManualAdditionVisible] = useControllableValue<boolean>(props, {
-    defaultValue: false,
-    valuePropName: 'visible',
-    trigger: 'setVisible',
-  })
-
-  return (
-    <YakitPopover
-      open={manualAdditionVisible}
-      content={<AIManualAddition chatType={chatType} onCancel={() => setManualAdditionVisible(false)} />}
-      onOpenChange={setManualAdditionVisible}
-      trigger={'click'}
-    >
-      {children}
-    </YakitPopover>
-  )
-})
 
 export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React.memo((props) => {
   const { children } = props
@@ -298,88 +270,6 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     >
       {children}
     </YakitPopover>
-  )
-})
-
-const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => {
-  const { chatType, onCancel } = props
-
-  const { onSend } = useAIAgentDispatcher()
-
-  const sessionId = useCurrentSessionId()
-  const meta = useCurrentMeta()
-  const store = useCurrentStore()
-  const execute = useStore(store, (state) => state.execute)
-  const syncIDUpdate = useStore(store, (state) => state.syncIDUpdate)
-
-  const [prompt, setPrompt] = useState<string>()
-
-  const syncIdOfAddToContext = useRef<string>('')
-
-  useEffect(() => {
-    if (syncIdOfAddToContext.current && !meta.syncIDMap?.get(syncIdOfAddToContext.current)) {
-      onReset()
-    }
-  }, [syncIDUpdate])
-
-  useEffect(() => {
-    if (execute) return
-    onReset()
-  }, [execute])
-
-  const onReset = useMemoizedFn(() => {
-    onCancel()
-    setPrompt('')
-    if (syncIdOfAddToContext.current) syncIdOfAddToContext.current = ''
-  })
-
-  const onAddToContext = useMemoizedFn(() => {
-    if (!prompt?.trim()) return
-    syncIdOfAddToContext.current = randomString(8)
-    const info: AIInputEvent = {
-      IsSyncMessage: true,
-      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_USER_INTERVENTION,
-      SyncJsonInput: JSON.stringify({ content: prompt }),
-
-      SyncID: randomString(8),
-    }
-    onSend({ token: sessionId, type: 'task', params: info })
-    onAddToList()
-  })
-  const onAddToList = useMemoizedFn(() => {
-    const chatData: AIChatQSData = {
-      id: uuidv4(),
-      chatType,
-      type: AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION,
-      Timestamp: moment().unix(),
-      data: { type: '加入上下文', content: prompt || '' },
-      AIService: '',
-      AIModelName: '',
-    }
-    globalSessionEngine.pushDataToSession(sessionId, chatData)
-  })
-
-  const addAndToContextLoading = useCreation(() => {
-    return !!syncIdOfAddToContext.current && !!meta.syncIDMap?.get(syncIdOfAddToContext.current)
-  }, [syncIDUpdate])
-  return (
-    <div className={styles['ai-manual-addition']} onClick={(e) => e.stopPropagation()}>
-      <div className={styles['ai-manual-addition-heard']}>人工介入</div>
-      <YakitInput.TextArea
-        rows={5}
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        isShowResize={false}
-        placeholder="输入补充内容会加入上下文影响任务执行"
-        maxLength={500}
-        showCount
-      />
-      <div className={styles['ai-manual-addition-footer']}>
-        <YakitButton onClick={onAddToContext} loading={addAndToContextLoading}>
-          加入上下文
-        </YakitButton>
-      </div>
-    </div>
   )
 })
 

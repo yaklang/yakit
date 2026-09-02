@@ -145,7 +145,7 @@
     "testFailed": "测试失败"
   },
   "AIReActTaskChatContent": {
-    "humanIntervention": "人工介入",
+    "adjustPlan": "调整方案",
     "globalDirective": "全局指令",
     "globalDirectiveDefault": "自定义AI全局指令",
     "globalDirectivePlaceholder": "全局命令将对所有会话生效...",
@@ -502,6 +502,7 @@
   },
   "AITaskQuery": {
     "taskQueue": "任务队列",
+    "immediate": "调整方案",
     "focusMode": "场景: {{mode}}"
   },
   "ForgeName": {
