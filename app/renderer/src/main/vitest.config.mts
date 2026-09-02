@@ -28,7 +28,7 @@ export default defineConfig({
       // 组件链路会传递引入它（含 react-monaco-editor 的 esm 子路径），测试统一走轻量 stub
       {
         find: /^monaco-editor(\/.*)?$/,
-        replacement: path.resolve(rootDir, 'src/pages/ai-re-act/hooks/__test__/stubs/monacoEditorStub.ts'),
+        replacement: path.resolve(rootDir, 'src/types/monacoEditorStub.ts'),
       },
     ],
   },

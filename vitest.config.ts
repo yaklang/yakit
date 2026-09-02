@@ -13,10 +13,7 @@ const ELECTRON_BRIDGE_STUB = path.resolve(
   __dirname,
   'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/electronBridgeStub.ts',
 )
-const MONACO_EDITOR_STUB = path.resolve(
-  __dirname,
-  'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/monacoEditorStub.ts',
-)
+const MONACO_EDITOR_STUB = path.resolve(__dirname, 'app/renderer/src/main/src/types/monacoEditorStub.ts')
 const STYLE_STUB = path.resolve(
   __dirname,
   'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/styleStub.ts',
