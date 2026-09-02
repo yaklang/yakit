@@ -251,9 +251,9 @@ const handleAIReviewJudgement: AIMessageHandler = (requestInfo) => {
           // aiReview 没有或者 aiReview 的 seconds 为空时可以赋值
           reviewDetail.data.aiReview = cloneDeep(score)
         }
-        const reviewStore = store.getState().currentReviewDetail
-        reviewStore.renderNum += 1
-        store.getState().updateState({ currentReviewDetail: { ...reviewStore } })
+        store.setState((state) => {
+          state.currentReviewDetail.renderNum += 1
+        })
       }
       break
 

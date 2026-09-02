@@ -582,7 +582,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
       >
         <div className={styles['review-wrapper']}>
           <AIReActChatReview
-            chatType="task"
+            chatType={reviewInfo.chatType}
             info={reviewInfo}
             planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
             renderFooterExtra={renderFooter}

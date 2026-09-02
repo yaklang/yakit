@@ -23,9 +23,14 @@ export interface AIChatIPCStartParams {
 /** 执行流途中发送消息的参数 */
 export interface AIChatSendParams {
   token: string
-  type: 'casual' | 'task' | ''
+  /** 列表侧用 reAct，发送侧历史兼容 casual，二者等价 */
+  type: ChatListRenderType | 'casual' | ''
   params: AIInputEvent
   optionValue?: string
+}
+
+export const toAIChatSendType = (chatType: ChatListRenderType): 'casual' | 'task' => {
+  return chatType === 'task' ? 'task' : 'casual'
 }
 
 // #region AI-Agent相关grpc流数据处理逻辑
