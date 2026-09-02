@@ -37,7 +37,7 @@ export const MOCK_SLASH_COMMANDS: SlashCommandGroup[] = [
     commands: [
       { command: '/scan <目标>', description: '让 agent 扫描目标' },
       { command: '/mitm', description: '让 agent 启动 MITM' },
-      { command: '/run <脚本>', description: '让 agent 执行 yak 脚本' },
+      { command: '/run <脚本>', description: '让 agent 执行内置脚本' },
     ],
   },
 ]

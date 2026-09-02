@@ -11,19 +11,19 @@
       "dnslogSuccess": "Global DNSLog configured successfully",
       "dnslogFailed": "Failed to configure global DNSLog: {{error}}",
       "localReverseIP": "Local reverse IP",
-      "updateYakEngineLocalIP": "Update Yak engine local IP",
+      "updateYakEngineLocalIP": "Update engine local IP",
       "publicReverseConfig": "Public reverse connection config",
       "runOnPublicServer": "Run on a public server",
       "or": "or",
       "configured": "Configured",
-      "yakBridgeAddress": "Yak Bridge address",
+      "yakBridgeAddress": "Engine Bridge address",
       "yakBridgeAddressHelp": "Format: host:port, e.g. cybertunnel.run:64333",
-      "yakBridgePassword": "Yak Bridge password",
-      "yakBridgePasswordHelp": "The --secret value for the yak bridge command",
+      "yakBridgePassword": "Engine Bridge password",
+      "yakBridgePasswordHelp": "The --secret value for the engine bridge command",
       "globalDNSLogConfig": "Global DNSLog config",
-      "reuseYakBridgeConfig": "Reuse Yak Bridge config",
+      "reuseYakBridgeConfig": "Reuse Engine Bridge config",
       "dnslogConfig": "DNSLog config",
-      "dnslogAddressHelp": "DNSLog system address configured in Yak Bridge: [ip]:[port]",
+      "dnslogAddressHelp": "DNSLog system address configured in Engine Bridge: [ip]:[port]",
       "dnslogPassword": "DNSLog password",
       "configureReverseConnection": "Configure reverse connection"
     }
@@ -37,7 +37,7 @@
     "environmentVariableName": "Environment variable name",
     "expiredTime": "Expiration time",
     "deleteThisEnvironmentVariable": "Delete this environment variable",
-    "configYaklangSystemEnvironmentVariable": "Configure Yaklang system environment variable",
+    "configYaklangSystemEnvironmentVariable": "Configure engine system environment variables",
     "newVariableTitle": "Set new variable",
     "editVariableTitle": "Modify variable"
   },
@@ -49,7 +49,7 @@
     "currentSystemProxyStatus": "Current system proxy status:",
     "systemProxy": "System proxy",
     "oneClickConfig": "One-click configure system proxy",
-    "proxyHint": "Due to OS and Yak kernel limitations, the native MacOS OC/Swift interface cannot be used to set the proxy. Yak engine will open an osascript authorization page to change the system proxy. MacOS users can authorize it.",
+    "proxyHint": "Due to OS and engine limitations, the native macOS OC/Swift interface cannot set the proxy. The engine will open an osascript authorization page for this change.",
     "chromeStartPath": "Chrome start path",
     "chromeStartPathHint": "If Chrome cannot start, please configure the Chrome start path",
     "startPath": "Start path",
@@ -72,7 +72,7 @@
   "ConfigEngineProxy": {
     "saveSuccess": "Engine proxy configured successfully",
     "currentProxy": "Current engine proxy:",
-    "hint": "This configuration will automatically apply to most Yak plugins. If a proxy is configured in the scan module, that proxy will generally override this one.",
+    "hint": "This configuration applies automatically to most plugins. A proxy configured in the scan module generally takes precedence.",
     "proxyLabel": "Proxy",
     "proxyHelp": "For example, http://127.0.0.1:7890 or socks://127.0.0.1:7890 are both valid",
     "updateProxy": "Update engine proxy",
@@ -83,7 +83,7 @@
     "tool_name": "Tool Name",
     "enable_tool": "Enable Tool",
     "detailed_config": "Detailed Configuration",
-    "stdio_remote_disabled_tip": "STDIO requires a locally running Yak engine process and is unavailable in remote connection mode",
+    "stdio_remote_disabled_tip": "STDIO requires a locally running engine process and is unavailable in remote connection mode",
     "enable_tool_success": "Tool {{name}} enabled successfully",
     "disable_tool_success": "Tool {{name}} disabled successfully",
     "enable_tool_failed": "Failed to enable tool {{name}}",
@@ -96,7 +96,7 @@
     "source_aitool": "AI Builtin",
     "source_bridge": "Bridge",
     "enable_legacy_mcp_tools": "Legacy MCP Tools",
-    "enable_legacy_mcp_tools_desc": "Expose traditional Yak MCP toolsets such as port_scan and httpflow",
+    "enable_legacy_mcp_tools_desc": "Expose traditional MCP toolsets such as port_scan and httpflow",
     "enable_ai_tool_framework": "AI Tool Framework",
     "enable_ai_tool_framework_desc": "Expose AI built-in tools such as fs, ssa, and yakscript",
     "enable_bridge_external_mcp": "Bridge External MCP",
@@ -240,7 +240,7 @@
     "savePlugin": "Save plugin"
   },
   "YakEditor": {
-    "yakFormat": "Yak code formatting"
+    "yakFormat": "Script code formatting"
   },
   "PrettifyPacket": {
     "lossyBeautifyWarning": "Original data may have issues; beautification lost some content"

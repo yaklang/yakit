@@ -586,9 +586,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         for (const pid of pidsToKill) {
           try {
             await yakitEngine.killYakGrpc(pid)
-            info(`KILL yak PROCESS: ${pid}`)
+            info(`正在关闭引擎进程: ${pid}`)
           } catch (err) {
-            failed(`Kill yak process failed: ${err}`)
+            failed(`关闭引擎进程失败: ${err}`)
           }
         }
 
@@ -911,7 +911,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
               if (pss) pid = pss.pid || 0
             })
             .catch((e) => {
-              failed(`PS | GREP yak failed ${e}`)
+              failed(`查询本地引擎进程失败: ${e}`)
               isFailed = true
             })
             .finally(() => {
@@ -928,13 +928,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
               yakitEngine
                 .killYakGrpc(pid)
                 .then(() => {
-                  info(`KILL yak PROCESS: ${pid}`)
+                  info(`正在关闭引擎进程: ${pid}`)
                   setKillOldEngine(false)
                   setLinkLocalEngine()
                   callback && callback()
                 })
                 .catch((e) => {
-                  failed(`PS | GREP yak failed ${e}`)
+                  failed(`查询本地引擎进程失败: ${e}`)
                 })
                 .finally(() => {
                   setTimeout(() => setKillLoading(false), 100)
@@ -1022,7 +1022,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // #region EE版-license
   // 企业版-连接引擎后验证license=>展示企业登录
-  const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
+  const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition() || isMemfit())
   useEffect(() => {
     // 用户退出 - 验证license=>展示企业登录
     const cleanup = yakitUILayout.onJudgeLicenseLogin(() => {

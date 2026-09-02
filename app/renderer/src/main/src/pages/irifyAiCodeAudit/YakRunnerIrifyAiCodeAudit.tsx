@@ -711,7 +711,7 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
       // 新建临时文件
       const scratchFile: FileDetailInfo = {
         name: params?.name || `Untitle-${unTitleCountRef.current}.yak`,
-        code: params?.code || '# input your yak code\nprintln(`Hello Yak World!`)',
+        code: params?.code || '# input your script code\nprintln(`Hello AI Senso!`)',
         icon: params?.icon || '_f_yak',
         isActive: true,
         openTimestamp: moment().unix(),

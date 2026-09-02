@@ -107,7 +107,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                     </div>
                   )}
                 </div>
-                <span>Yak 核心引擎下载链接</span>
+                <span>核心引擎下载链接</span>
               </div>
             ) : (
               <div
@@ -118,7 +118,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                 onMouseOut={() => setDisabled(true)}
                 onMouseDown={() => setIsTop(2)}
               >
-                <span className={styles['header-title']}>Yak 核心引擎下载链接</span>
+                <span className={styles['header-title']}>核心引擎下载链接</span>
                 <div className={styles['close-wrapper']} onClick={() => setVisible(false)}>
                   <WinUIOpCloseSvgIcon className={styles['icon-style']} />
                 </div>
@@ -128,8 +128,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
               <div className={styles['body-hint']}>
                 <span className={styles['hint-sign']}>如遇网络问题无法下载，可手动下载安装：</span>
                 <br />
-                Windows 用户可以把引擎放在 安装目录(一般为%HOME%)/yakit-projects/yak-engine/yak.exe 即可识别 MacOS /
-                Linux 用户可以把引擎放在 ~/yakit-projects/yak-engine/yak 即可识别
+                下载完成后，将引擎文件放入应用的引擎目录即可自动识别。
               </div>
 
               <div className={styles['body-link']}>
@@ -138,8 +137,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                     Windows(x64)下载
                   </div>
                   <div className={styles['link-style']}>
-                    https://{ossDomain}/yak/{latestVersion || 'latest'}
-                    /yak_windows_amd64.exe
+                    复制 Windows 引擎下载链接
                     <div className={styles['copy-icon']} onClick={() => copyCommand('Windows_NT')}>
                       <YakitCopySvgIcon />
                     </div>
@@ -150,8 +148,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                     MacOS(intel/m1)下载
                   </div>
                   <div className={styles['link-style']}>
-                    https://{ossDomain}/yak/{latestVersion || 'latest'}
-                    /yak_darwin_amd64
+                    复制 MacOS 引擎下载链接
                     <div className={styles['copy-icon']} onClick={() => copyCommand('Darwin')}>
                       <YakitCopySvgIcon />
                     </div>
@@ -162,8 +159,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                     Linux(x64)下载
                   </div>
                   <div className={styles['link-style']}>
-                    https://{ossDomain}/yak/{latestVersion || 'latest'}
-                    /yak_linux_amd64
+                    复制 Linux 引擎下载链接
                     <div className={styles['copy-icon']} onClick={() => copyCommand('Linux')}>
                       <YakitCopySvgIcon />
                     </div>

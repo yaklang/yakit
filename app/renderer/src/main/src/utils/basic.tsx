@@ -228,14 +228,18 @@ export const ConfigGlobalReverse = React.memo(() => {
             message={
               <Space direction={'vertical'}>
                 <div>{t('basic.ConfigGlobalReverse.runOnPublicServer')}</div>
-                <YakitTag enableCopy={true} color="blue" copyText={`yak bridge --secret [your-password]`}></YakitTag>
+                <YakitTag enableCopy={true} color="blue" copyText={`yak bridge --secret [your-password]`}>
+                  复制远程桥接启动命令
+                </YakitTag>
                 <div>{t('basic.ConfigGlobalReverse.or')}</div>
                 <YakitTag
                   enableCopy={true}
                   color="blue"
                   copyText={`docker run -it --rm --net=host v1ll4n/yak-bridge yak bridge --secret
                         [your-password]`}
-                ></YakitTag>
+                >
+                  复制容器启动命令
+                </YakitTag>
                 <div>{t('basic.ConfigGlobalReverse.configured')}</div>
               </Space>
             }

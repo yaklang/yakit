@@ -31,7 +31,7 @@ export const queryYakScriptList = (
       onResult(rsp.Data, rsp.Total)
     })
     .catch((e) => {
-      failed(`Query Yak Plugin failed: ${e}`)
+      failed(`查询插件失败: ${e}`)
       if (onFailed) {
         onFailed(e)
       }

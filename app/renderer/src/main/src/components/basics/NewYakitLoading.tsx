@@ -168,7 +168,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
         return (
           <div className={styles['yakit-loading-icon-wrapper']}>
             <div className={styles['white-icon']}>
-              <img src={memfitCE} alt="AI SenSo" />
+              <img src={memfitCE} alt="AI Senso" />
             </div>
           </div>
         )

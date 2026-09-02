@@ -161,7 +161,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                 image={<img src={networkEmptyImage} alt="" />}
                 imageStyle={{ width: 300, height: 210, marginBottom: 16 }}
                 title="请检查私有域配置与网络连接"
-                description="连网后才可访问 Yakit 插件商店"
+                description="连网后才可访问 AI Senso 插件商店"
               />
               <YakitButton
                 className={styles['refresh-button']}

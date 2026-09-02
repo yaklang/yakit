@@ -3,8 +3,8 @@
     "remoteMode": "遠端模式",
     "connectionHistory": "連線歷史",
     "selectPlaceholder": "請選擇...",
-    "hostLabel": "Yak gRPC 主機地址:",
-    "portLabel": "Yak gRPC 埠:",
+    "hostLabel": "引擎 gRPC 主機地址：",
+    "portLabel": "引擎 gRPC 埠：",
     "tlsLabel": "啟用通訊加密認證 TLS:",
     "pemLabel": "gRPC Root-CA 證書(PEM)",
     "passwordLabel": "密碼",
@@ -15,7 +15,7 @@
   },
   "PEMExample": {
     "pemTitle": "需要 PEM 格式的證書",
-    "pemContent": "在透過 <code>yak grpc --tls</code> 啟動核心伺服器的時候，會把 RootCA 列印到螢幕上，複製到該輸入框即可：",
+    "pemContent": "透過 TLS 啟動核心伺服器時，請將螢幕輸出的 RootCA 複製到此輸入框：",
     "pemExample": "例如如下內容："
   },
   "PEMHint": {

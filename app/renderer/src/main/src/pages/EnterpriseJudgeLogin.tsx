@@ -4,7 +4,7 @@ import { Spin } from 'antd'
 import LicensePage from './LicensePage'
 import { ConfigPrivateDomain } from '@/components/ConfigPrivateDomain/ConfigPrivateDomain'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { isEnpriTrace, isEnpriTraceAgent } from '@/utils/envfile'
+import { isEnpriTrace, isEnpriTraceAgent, isMemfit } from '@/utils/envfile'
 import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { SystemInfo } from '@/constants/hardware'
@@ -23,7 +23,9 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
   const { setJudgeLicense, setJudgeLogin } = props
   // License
   // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
-  const [activateLicense, setActivateLicense] = useState<boolean>(!requireEnterpriseLicense || !!SystemInfo.isDev)
+  const [activateLicense, setActivateLicense] = useState<boolean>(
+    !requireEnterpriseLicense || (!!SystemInfo.isDev && !isMemfit()),
+  )
   const [loading, setLoading] = useState<boolean>(requireEnterpriseLicense)
   const [licensePageLoading, setLicensePageLoading] = useState<boolean>(false)
   useEffect(() => {
@@ -78,6 +80,10 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
       .then((e) => {
         setActivateLicense(true)
         setRemoteValue('LICENSE_ACTIVATION', JSON.stringify(LicenseActivation))
+        if (isMemfit()) {
+          setJudgeLicense(false)
+          return
+        }
         if (isCache) {
           judgeLogin()
         }

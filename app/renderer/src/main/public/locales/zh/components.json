@@ -130,7 +130,7 @@
     "exporting": "导出中...",
     "importDone": "导入完成",
     "importing": "导入中...",
-    "exportHint": "远程模式下导出后请打开~Yakit\\yakit-projects\\projects路径查看导出文件，文件名无需填写后缀",
+    "exportHint": "远程模式下导出后请打开default project directory路径查看导出文件，文件名无需填写后缀",
     "importHint": "导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。"
   },
   "ConfigPrivateDomain": {
@@ -350,7 +350,7 @@
       "knowledgeBase": "知识库"
     },
     "KnowledgeBaseGraphDemo": {
-      "techDocs": "yakit 技术文档"
+      "techDocs": "AI Senso 技术文档"
     },
     "RagEntryTable": {
       "fetchFailed": "获取向量存储条目失败：{{error}}",

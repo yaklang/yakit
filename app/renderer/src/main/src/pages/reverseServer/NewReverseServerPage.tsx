@@ -220,7 +220,9 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
               params.IsRemote && (
                 <div style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }}>
                   {t('SettingReverseServer.publicTunnelHelp')}{' '}
-                  <YakitTag enableCopy={true} color="blue" copyText={`yak bridge --secret [your-pass]`}></YakitTag>{' '}
+                  <YakitTag enableCopy={true} color="blue" copyText={`yak bridge --secret [your-pass]`}>
+                    复制远程桥接启动命令
+                  </YakitTag>{' '}
                   {t('SettingReverseServer.yakBridgeService')} <Divider type={'vertical'} />
                   <Text style={{ color: 'var(--Colors-Use-Neutral-Text-4-Help-text)' }}>
                     {t('SettingReverseServer.yakVersionRequirement')}

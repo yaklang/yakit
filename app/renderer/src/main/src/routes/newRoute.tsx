@@ -323,7 +323,7 @@ export const YakitRouteToPageInfo: Record<
   },
   cve: { label: 'CVE 管理', labelUi: 'YakitRoute.cVEManagement', describeUi: 'YakitRoute.searchAndQueryCVEData' },
   yakScript: {
-    label: 'Yak Runner',
+    label: '脚本执行器',
     labelUi: 'YakitRoute.YakRunner',
     describeUi: 'YakitRoute.yaklangProgramming',
   },

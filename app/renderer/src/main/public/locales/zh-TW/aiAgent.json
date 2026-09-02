@@ -351,7 +351,7 @@
   },
   "ExportAILogsModal": {
     "title": "匯出 AI 日誌",
-    "remoteHint": "遠端模式下匯出後請開啟~memfit\\yakit-projects\\temp路徑檢視匯出檔案",
+    "remoteHint": "遠端模式下匯出後請在預設臨時目錄檢視匯出檔案",
     "exportContent": "匯出內容"
   },
   "FileList": {

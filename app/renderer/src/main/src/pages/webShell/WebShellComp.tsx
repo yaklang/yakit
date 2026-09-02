@@ -314,7 +314,7 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                 setParams({ ...params, Headers: newHeaders })
               }}
               spellCheck={false}
-              placeholder={'自定义请求头,例如: User-Agent: Yakit/1.0.0'}
+              placeholder={'自定义请求头，例如: User-Agent: AI-Senso/1.0.0'}
             />
             <div className={styles['input-textarea-copy']}>
               <CopyComponents

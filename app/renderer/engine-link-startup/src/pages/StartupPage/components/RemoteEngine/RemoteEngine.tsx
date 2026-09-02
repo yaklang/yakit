@@ -168,7 +168,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                 <Form.Item
                   label={
                     <div className={styles.requiredLabel}>
-                      Yak gRPC 主机地址<span className={styles.redStar}>*</span>
+                      引擎 gRPC 主机地址<span className={styles.redStar}>*</span>
                     </div>
                   }
                   required={true}
@@ -186,7 +186,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                 <Form.Item
                   label={
                     <div className={styles.requiredLabel}>
-                      Yak gRPC 端口<span className={styles.redStar}>*</span>
+                      引擎 gRPC 端口<span className={styles.redStar}>*</span>
                     </div>
                   }
                   required={true}
@@ -342,7 +342,7 @@ const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
   const content = (
     <div className={classNames(styles['pem-example'], styles['pem-wrapper'])}>
       <div className={styles['title-style']}>需要 PEM 格式的证书</div>
-      在通过 <div className={styles['content-code']}>yak grpc --tls</div> 启动核心服务器的时候，会把 RootCA
+      在启用 TLS 并启动核心服务器时，会把 RootCA
       打印到屏幕上，复制到该输入框即可：
       <br />
       例如如下内容：

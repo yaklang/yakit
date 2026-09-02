@@ -187,7 +187,7 @@ export function applyYaklangCodeChangeToYakRunnerPage(
 ): void {
   const fn = pageApplyHandlers.get(pageId)
   if (!fn) {
-    yakitFailed('未找到 Yak Runner 工作区，请保持该页已打开。')
+    yakitFailed('未找到脚本执行器工作区，请保持该页已打开。')
     return
   }
   const content = String(data.code?.content ?? '')

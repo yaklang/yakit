@@ -160,7 +160,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
     const handleCheckYakitLatestVersion = useMemoizedFn(() => {
       // 中断连接 后续不执行
       if (yakitStatusRef.current === 'break') {
-        debugToPrintLog(`------ 开始检查yakit是否有版本更新 被阻止 ------`)
+        debugToPrintLog(`------ 开始检查软件是否有版本更新 被阻止 ------`)
         setLog([])
         return
       }

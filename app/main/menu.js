@@ -1,4 +1,4 @@
-const { app, shell } = require('electron')
+const { app } = require('electron')
 const process = require('process')
 
 const isMac = process.platform === 'darwin'
@@ -41,47 +41,12 @@ const devToolMenu = {
   ],
 }
 
-/**
- * @name 帮助菜单项
- * @type {Electron.MenuItemConstructorOptions}
- */
-const helpMenu = {
-  role: 'help',
-  submenu: [
-    {
-      label: 'Learn More',
-      click: async () => {
-        await shell.openExternal('https://www.yaklang.com')
-      },
-    },
-    {
-      label: 'Yakit IDE',
-      click: async () => {
-        await shell.openExternal(`https://www.yaklang.com/products/intro`)
-      },
-    },
-    {
-      label: 'Yaklang Documentation',
-      click: async () => {
-        await shell.openExternal('https://www.yaklang.com/docs/intro')
-      },
-    },
-    {
-      label: 'Search Issues',
-      click: async () => {
-        await shell.openExternal('https://github.com/yaklang/yakit/issues')
-      },
-    },
-  ],
-}
-
 /** @name 软件顶部菜单 */
 const MenuTemplate = [
   ...(isMac ? [macAppMenu] : []),
   { role: 'editMenu' },
   devToolMenu,
   { role: 'windowMenu' },
-  helpMenu,
 ]
 
 module.exports = { MenuTemplate }

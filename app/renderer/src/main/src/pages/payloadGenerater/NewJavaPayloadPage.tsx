@@ -431,20 +431,21 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                           color: 'var(--Colors-Use-Neutral-Text-1-Title)',
                                         }}
                                       >
-                                        在自己的服务器安装 yak 核心引擎，执行{' '}
+                                        在自己的服务器安装核心引擎，然后{' '}
                                         <YakitCopyText
-                                          showText={'yak bridge --secret [your-pass]'}
+                                          showText={'复制远程桥接启动命令'}
+                                          copyText={'yak bridge --secret [your-pass]'}
                                           wrapStyle={{
                                             color: 'var(--Colors-Use-Neutral-Text-1-Title)',
                                           }}
                                         />{' '}
-                                        启动 Yak Bridge 公网服务 <Divider type={'vertical'} />
+                                        启动远程桥接服务 <Divider type={'vertical'} />
                                         <Typography.Text
                                           style={{
                                             color: 'var(--Colors-Use-Neutral-Text-1-Title)',
                                           }}
                                         >
-                                          yak version {`>=`} v1.0.11-sp9
+                                          核心引擎版本 {`>=`} v1.0.11-sp9
                                         </Typography.Text>
                                       </div>
                                     }
@@ -1245,7 +1246,7 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                 type="text"
                 size="small"
                 icon={
-                  <Tooltip title="Yak Runner">
+                  <Tooltip title="脚本执行器">
                     <ThunderboltOutlined />
                   </Tooltip>
                 }
@@ -1298,7 +1299,7 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
                 icon={<ThunderboltOutlined />}
                 onClick={() => codeOperate('yakRunning')}
               >
-                Yak Runner
+                脚本执行器
               </YakitButton>
             ) : (
               <></>

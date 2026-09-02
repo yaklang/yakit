@@ -160,7 +160,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
         )
       })
       .catch((e) => {
-        failed(`PS | GREP yak failed ${e}`)
+        failed(`查询本地引擎进程失败: ${e}`)
       })
       .finally(() => {
         setPSLoading(false)
@@ -196,7 +196,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     ;(process || []).forEach((i) => {
       yakitEngine.killYakGrpc(i.pid).then((val) => {
         if (!val) {
-          info(`KILL yak PROCESS: ${i.pid}`)
+          info(`正在关闭引擎进程: ${i.pid}`)
           if (+i.port === port && isLocal) typeCallback('break')
         }
       })
@@ -259,7 +259,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                         {isLocal && +i.port === port && engineLink && <CheckedSvgIcon style={{ marginLeft: 8 }} />}
                       </YakitTag>
                       <div className={styles['engine-ps-info']}>
-                        {`yak grpc --port ${i.port === 0 ? t('PerformanceDisplay.fetching') : i.port}`}
+                        {`核心引擎 · 端口 ${i.port === 0 ? t('PerformanceDisplay.fetching') : i.port}`}
                         &nbsp;
                         {isLocal && +i.port === port && engineLink && (
                           <span className={styles['current-ps-info']}>{t('PerformanceDisplay.current')}</span>

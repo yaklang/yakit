@@ -830,9 +830,9 @@ export const StartupPage: React.FC = () => {
         for (const pid of pidsToKill) {
           try {
             await yakitEngine.killYakGrpc(pid)
-            yakitNotify('info', `KILL yak PROCESS: ${pid}`)
+            yakitNotify('info', `正在关闭引擎进程: ${pid}`)
           } catch (err) {
-            yakitNotify('error', `Kill yak process failed: ${err}`)
+            yakitNotify('error', `关闭引擎进程失败: ${err}`)
           }
         }
 

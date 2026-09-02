@@ -1473,7 +1473,7 @@ const GetUIOpSettingMenu = () => {
           key: 'webshell-manager',
           label: '网站管理',
         },
-        { key: 'mcp', label: 'Yak Mcp' },
+        { key: 'mcp', label: 'MCP' },
         { key: 'ai-agent', label: 'AI Agent' },
         { key: 'ssa-result-diff', label: 'ssa-result-diff' },
         { key: 'ai-repository', label: '知识库' },
@@ -1554,7 +1554,7 @@ const GetUIOpSettingMenu = () => {
         // { key: "engineVar",label: "引擎环境变量" },
         { key: 'config-network', label: '全局配置' },
         { key: 'setShortcutKey', label: '快捷键设置' },
-        { key: 'configMcp', label: 'Yak Mcp配置' },
+        { key: 'configMcp', label: 'MCP 配置' },
       ],
     },
     {
@@ -2149,7 +2149,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
               width: versionTextMaxWidth,
             }}
           >
-            <div className={styles['update-title']}>{`Yaklang ${lastVersion || version}`}</div>
+            <div className={styles['update-title']}>{`AI Senso Engine ${lastVersion || version}`}</div>
             <div className={styles['update-time']}>{`当前版本: ${version}`}</div>
           </div>
         </div>
@@ -2993,7 +2993,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         title={
           editShow.type === 'yakit'
             ? `${getReleaseEditionName()} ${yakitLastVersion} 更新通知`
-            : `Yaklang ${yaklangLastVersion} 更新通知`
+            : `AI Senso Engine ${yaklangLastVersion} 更新通知`
         }
         centered={true}
         closable={true}
@@ -3846,7 +3846,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
       })
       .catch(() => {
         performanceModalLoading.current = false
-        yakitNotify('info', '找不到Yak 原生插件：核心引擎性能采样')
+        yakitNotify('info', '找不到内置插件：核心引擎性能采样')
       })
   }
   const cancelPerformanceSampling = () => {
@@ -3886,7 +3886,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         setCrashLogVisible(true)
       })
       .catch(() => {
-        yakitNotify('info', '找不到Yak 原生插件：崩溃日志收集')
+        yakitNotify('info', '找不到内置插件：崩溃日志收集')
       })
   }
 

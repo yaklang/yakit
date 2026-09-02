@@ -598,7 +598,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
           >
             {url}
           </a>
-          , 下载后请将文件放在"安装目录/yakit-projects"文件夹下
+          ，下载后请将文件放在应用数据目录下
         </p>
       ),
     [props.latestMode],
@@ -653,7 +653,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
           </>
         )
       case 'done':
-        return <p>需要重启Yakit才能生效，如果重启后还未加载出数据，建议关掉当前页面重新打开。</p>
+        return <p>需要重启 AI Senso 才能生效，如果重启后还未加载出数据，建议关掉当前页面重新打开。</p>
       default:
         break
     }

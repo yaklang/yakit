@@ -61,7 +61,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
         )
       })
       .catch((e) => {
-        yakitNotify('error', `PS | GREP yak failed ${e}`)
+        yakitNotify('error', `查询本地引擎进程失败: ${e}`)
       })
       .finally(() => {
         setPSLoading(false)
@@ -96,7 +96,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     ;(process || []).forEach((i) => {
       yakitEngine.killYakGrpc(i.pid).then((val) => {
         if (!val) {
-          yakitNotify('info', `KILL yak PROCESS: ${i.pid}`)
+          yakitNotify('info', `正在关闭引擎进程: ${i.pid}`)
           if (+i.port === port && isLocal) typeCallback('break')
         }
       })
@@ -117,7 +117,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
         <div ref={listRef} className={styles['ui-engine-list-wrapper']}>
           <div className={styles['ui-engine-list-body']}>
             <div className={styles['engine-list-header']}>
-              本地 Yak 进程管理
+              本地引擎进程管理
               <YakitPopconfirm
                 title={'重置引擎版本会恢复最初引擎出厂版本，同时强制重启'}
                 onConfirm={async () => {
@@ -150,7 +150,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                         {isLocal && +i.port === port && engineLink && <CheckedSvgIcon style={{ marginLeft: 8 }} />}
                       </YakitTag>
                       <div className={styles['engine-ps-info']}>
-                        {`yak grpc --port ${i.port === 0 ? '获取中' : i.port}`}
+                        {`核心引擎 · 端口 ${i.port === 0 ? '获取中' : i.port}`}
                         &nbsp;
                         {isLocal && +i.port === port && engineLink && (
                           <span className={styles['current-ps-info']}>{'(当前)'}</span>

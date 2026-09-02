@@ -8,9 +8,9 @@
   "SettingReverseServer": {
     "getRemoteAddrFailed": "Get Remote Address Failed: ",
     "enablePublicTunnel": "Enable Public Tunnel",
-    "publicTunnelHelp": "Install yak core engine on your own server, execute to",
-    "yakBridgeService": "Start Yak Bridge Public Service",
-    "yakVersionRequirement": "yak version >= v1.0.11-sp9",
+    "publicTunnelHelp": "Install the core engine on your own server, then execute",
+    "yakBridgeService": "Start Engine Bridge Public Service",
+    "yakVersionRequirement": "engine version >= v1.0.11-sp9",
     "publicBridgeAddr": "Public Bridge Address",
     "password": "Password",
     "reverseAddr": "Reverse Address",

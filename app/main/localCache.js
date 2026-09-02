@@ -102,7 +102,7 @@ const initLocalCache = (callback) => {
   localCacheState.cacheInitialized = true
 
   kvCache.clear()
-  kvCache.set('*description*', '该文件内缓存数据如需手动修改，请在关闭 Yakit 之后进行操作')
+  kvCache.set('*description*', '该文件内缓存数据如需手动修改，请在关闭 AI Senso 之后进行操作')
 
   try {
     /** 处理文件不存在的情况 */
@@ -132,7 +132,7 @@ const initExtraLocalCache = (callback) => {
   localCacheState.extraCacheInitialized = true
 
   extraKVCache.clear()
-  kvCache.set('*description*', '该文件内缓存数据如需手动修改，请在关闭 Yakit 之后进行操作')
+  kvCache.set('*description*', '该文件内缓存数据如需手动修改，请在关闭 AI Senso 之后进行操作')
 
   try {
     if (fs.existsSync(getExtraLocalCachePath())) {

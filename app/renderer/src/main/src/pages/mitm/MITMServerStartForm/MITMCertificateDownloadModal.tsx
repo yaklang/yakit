@@ -37,7 +37,7 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
    */
   const onDown = useMemoizedFn(() => {
     if (!caCerts.CaCerts) return
-    const fileName = isGMState ? 'yakit国密证书.crt.pem' : 'yakit证书.crt.pem'
+    const fileName = isGMState ? 'AI-Senso国密证书.crt.pem' : 'AI-Senso证书.crt.pem'
     saveABSFileToOpen(fileName, caCerts.CaCerts)
   })
   return (

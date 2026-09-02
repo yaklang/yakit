@@ -351,7 +351,7 @@
   },
   "ExportAILogsModal": {
     "title": "Export AI Logs",
-    "remoteHint": "After exporting in remote mode, please open the exported file in ~memfit\\yakit-projects\\temp",
+    "remoteHint": "After exporting in remote mode, find the exported file in the default temporary directory",
     "exportContent": "Export Content"
   },
   "FileList": {

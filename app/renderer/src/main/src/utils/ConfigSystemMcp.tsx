@@ -445,7 +445,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     <YakitModal
       visible={true}
       width={800}
-      title={'Yak Mcp'}
+      title={'MCP 配置'}
       footer={null}
       closable={true}
       onCloseX={onCloseModal}

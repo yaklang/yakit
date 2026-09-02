@@ -35,7 +35,7 @@
     "misstatementReminder": "Misstatement Feedback Reminder",
     "misstatementContent": "After confirming feedback, the entire vulnerability information will be uploaded to the backend, and developers will receive it for misstatement fixing. Confirm feedback?",
     "exportAuditRisk": "Export Audit Risks",
-    "exportHint": "After exporting in remote mode, please open the ~Yakit\\yakit-projects\\projects path to view the exported file. No file extension is needed.",
+    "exportHint": "After exporting in remote mode, please open the default project directory path to view the exported file. No file extension is needed.",
     "fileName": "File Name",
     "exportFileNamePlaceholder": "Please enter export file name",
     "exporting": "Exporting...",

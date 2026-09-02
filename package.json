@@ -1,7 +1,7 @@
 {
   "name": "yakit",
   "version": "1.4.8-0711",
-  "description": "Yakit is for yaklang.io Electron GUI Entry",
+  "description": "AI Senso desktop application",
   "main": "app/main/index.js",
   "scripts": {
     "cli": "node ./cli/cli.mjs",
@@ -63,7 +63,7 @@
     "build-renders-test-irify-enterprise": "run-s build-render-test-irify-enterprise build-link-render-irify-enterprise",
     "build-renders-memfit": "run-s build-render-memfit build-link-render-memfit",
     "build-renders-test-memfit": "run-s build-render-test-memfit build-link-render-memfit",
-    "dev": "concurrently -k \"yarn start-render\" \"wait-on tcp:3000 && yarn start-electron \" ",
+    "dev": "concurrently -k \"set NODE_OPTIONS=--max-old-space-size=8192&& set PORT=3000&& yarn start-render-memfit\" \"cd app/renderer/engine-link-startup && yarn electron-render-memfit --host 127.0.0.1 --port 5713\" \"wait-on tcp:3000 tcp:5713 && set YAKIT_DEV_RENDERER_URL=http://127.0.0.1:3000&& set YAKIT_DEV_ENGINE_LINK_URL=http://127.0.0.1:5713&& yarn start-electron\"",
     "postinstall": "electron-builder install-app-deps",
     "pack-win": "env-cmd -e nonSignNormal -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
     "pack-win-legacy": "env-cmd -e nonSignLegacy -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",

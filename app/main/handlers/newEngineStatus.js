@@ -141,7 +141,7 @@ module.exports = {
               const has = (keyword) => reasons.some((r) => r.includes(keyword))
 
               if (has('net.Listen(tcp, addr) failed')) {
-                const msg = `端口 ${params.port} 已被占用，请检查是否已有其他 Yakit 实例或进程正在运行，建议用户手动释放或修改端口。`
+                const msg = `端口 ${params.port} 已被占用，请检查是否已有其他 AI Senso 实例或进程正在运行，建议用户手动释放或修改端口。`
                 engineLogOutputFileAndUI(win, `----- 检查失败: ${msg} -----`)
                 return reject({ status: 'port_occupied', message: msg, json })
               } else if (has('build yak grpc server failed')) {

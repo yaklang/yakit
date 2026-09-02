@@ -23,7 +23,7 @@ describe('marketplace role filter', () => {
     const response = await queryAIForgeByDigitalEmployeeRole(
       query,
       {
-        Pagination: { Page: 1, Limit: 20 },
+        Pagination: { Page: 1, Limit: 20, OrderBy: 'updated_at', Order: 'desc' },
         Filter: { Tag: [createDigitalEmployeeRoleTag('threat-analyst')] },
       },
       'threat-analyst',

@@ -877,7 +877,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
       // 新建临时文件
       const scratchFile: FileDetailInfo = {
         name: `Untitle-${unTitleCountRef.current}.yak`,
-        code: params?.code || '# input your yak code\nprintln(`Hello Yak World!`)',
+        code: params?.code || '# input your script code\nprintln(`Hello AI Senso!`)',
         icon: '_f_yak',
         isActive: true,
         openTimestamp: moment().unix(),

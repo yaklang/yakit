@@ -71,7 +71,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
             )
           })
           .catch((e) => {
-            failed(`PS | GREP yak failed ${e}`)
+            failed(`查询本地引擎进程失败: ${e}`)
           })
           .finally(() => {
             setTimeout(() => {
@@ -103,7 +103,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
           onLoadingToFalse()
           return
         } else {
-          info(`KILL yak PROCESS: ${i.pid}`)
+          info(`正在关闭引擎进程: ${i.pid}`)
         }
       }
     }
@@ -123,7 +123,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
         onLoadingToFalse()
         return
       }
-      info(`KILL yak PROCESS: ${currentPS.pid}`)
+      info(`正在关闭引擎进程: ${currentPS.pid}`)
     }
 
     onSuccess()

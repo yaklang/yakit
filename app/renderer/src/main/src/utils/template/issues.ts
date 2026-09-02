@@ -34,7 +34,7 @@ export const ReportBug = (system_info?: LocalInfoProps): string => {
 - 操作系统: ${system_info?.system}
 - 系统架构: ${system_info?.arch}
 - ${getReleaseEditionName()} 版本: ${system_info?.localYakit}
-- YakLang 版本: ${system_info?.localYaklang}
+- 核心引擎版本: ${system_info?.localYaklang}
 
 ## 补充说明
 

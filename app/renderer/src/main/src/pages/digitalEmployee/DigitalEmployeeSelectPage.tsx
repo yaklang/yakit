@@ -105,7 +105,7 @@ export const DigitalEmployeeSelectPage: React.FC<DigitalEmployeeSelectPageProps>
     <main className={styles['employee-selection']}>
       <div className={styles['selection-stage']}>
         <header className={styles['brand-header']}>
-          <img src={aiSenSoLogo} alt="AI SenSo" />
+          <img src={aiSenSoLogo} alt="AI Senso" />
         </header>
 
         <section className={styles['selection-content']}>

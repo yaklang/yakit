@@ -490,7 +490,7 @@
     "force_sni": "強制SNI",
     "request_config": "請求包配置",
     "fuzztag_helper": "Fuzztag 輔助",
-    "insert_yak_fuzz": "插入 yak.fuzz 語法",
+    "insert_yak_fuzz": "插入內置 fuzz 語法",
     "render_fuzz": "渲染 Fuzz",
     "compat_mode_tip": "相容模式支援巢狀使用時內層大括號省略 {{base64(url(www.example.com))}}，但標準模式不可省略，關閉後Fuzztag將失效。",
     "render_mode": "渲染模式",

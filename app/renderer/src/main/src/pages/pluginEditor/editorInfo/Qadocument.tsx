@@ -161,7 +161,7 @@ const qaDocumentList: QaDocumentInfo[] = [
         </div>
         <div>
           <h2>原因及修复方法</h2>
-          <div>null不是yak的关键字。应该修改为nil。</div>
+          <div>null 不是内置脚本语言的关键字，应修改为 nil。</div>
         </div>
       </div>
     ),

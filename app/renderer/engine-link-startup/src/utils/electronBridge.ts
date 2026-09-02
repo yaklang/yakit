@@ -1,6 +1,6 @@
 const getBridge = (): YakitBridge => {
   if (!window.yakitBridge) {
-    throw new Error('yakit bridge is unavailable')
+    throw new Error('application bridge is unavailable')
   }
 
   return window.yakitBridge

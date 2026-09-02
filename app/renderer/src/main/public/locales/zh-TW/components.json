@@ -130,7 +130,7 @@
     "exporting": "匯出中...",
     "importDone": "匯入完成",
     "importing": "匯入中...",
-    "exportHint": "遠端模式下匯出後請開啟~Yakit\\yakit-projects\\projects路徑檢視匯出檔案，檔名無需填寫字尾",
+    "exportHint": "遠端模式下匯出後請開啟default project directory路徑檢視匯出檔案，檔名無需填寫字尾",
     "importHint": "匯入外部資源存在潛在風險，可能會被植入惡意程式碼或Payload，造成資料洩露、系統被入侵等嚴重後果。請務必謹慎考慮引入外部資源的必要性，並確保資源來源可信、內容安全。如果確實需要使用外部資源，建議優先選擇官方釋出的安全版本，或自行編寫可控的資料來源。同時，請保持系統和軟體的最新版本，及時修復已知漏洞，做好日常安全防護。"
   },
   "ConfigPrivateDomain": {
@@ -350,7 +350,7 @@
       "knowledgeBase": "知識庫"
     },
     "KnowledgeBaseGraphDemo": {
-      "techDocs": "yakit 技術文件"
+      "techDocs": "AI Senso 技術文件"
     },
     "RagEntryTable": {
       "fetchFailed": "獲取向量儲存條目失敗：{{error}}",

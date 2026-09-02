@@ -219,7 +219,7 @@
     "chromePath": "Chrome 启动路径",
     "chromePathDesc": "如无法启动 Chrome，请配置 Chrome 启动路径",
     "configured": "已配置",
-    "mcp": "Yak Mcp",
+    "mcp": "MCP",
     "mcpDesc": "可能会影响部分功能的使用",
     "systemProxy": "系统代理",
     "statusRefreshInterval": "状态刷新间隔时间",
@@ -404,7 +404,7 @@
     "started": "MCP 服务已启动：{{serverUrl}}",
     "error": "MCP 服务错误：{{message}}",
     "stopped": "MCP 服务已停止：{{message}}",
-    "MCPStopped": "Yak Mcp服务已停用",
+    "MCPStopped": "MCP服务已停用",
     "serviceStopped": "服务已停止",
     "urlRequired": "启动地址不能为空",
     "urlFormatError": "启动地址格式错误，例如：127.0.0.1:11432",
@@ -420,7 +420,7 @@
   },
   "DownloadYakit": {
     "downloading": "{{edition}} 软件下载中...",
-    "officialDownloadLink": "Yakit 软件官网下载链接",
+    "officialDownloadLink": "AI Senso 软件下载链接",
     "officialDownloadHint": "如遇网络问题无法下载，可到官网下载安装：",
     "website": "官网地址"
   },
@@ -429,7 +429,7 @@
     "installSuccess": "安装成功，如未生效，重启 {{edition}} 即可",
     "installFailed": "安装失败：{{error}}",
     "closeEngineRetry": "请关闭引擎后重试",
-    "downloading": "Yaklang 引擎下载中..."
+    "downloading": "引擎下载中..."
   },
   "UpdateYakitAndYaklang": {
     "detectedUpdate": "检测到 {{edition}} 版本升级",
@@ -455,7 +455,7 @@
     "exportBeforeExit": "退出前可在设置-项目管理中导出数据"
   },
   "PerformanceDisplay": {
-    "localYakProcessManagement": "本地 Yak 进程管理",
+    "localYakProcessManagement": "本地引擎进程管理",
     "resetEngineVersionNotice": "重置引擎版本会恢复最初引擎出厂版本，同时强制重启",
     "remoteControlClosing": "远程控制关闭中...",
     "restoreEngineSuccess": "恢复引擎成功",

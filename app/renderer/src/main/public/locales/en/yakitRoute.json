@@ -1,7 +1,7 @@
 {
   "YakitRoute": {
-    "YakRunner": "Yak Runner",
-    "yaklangProgramming": "Program using the unique Yaklang, directly invoking the engine's core capabilities for POC types.",
+    "YakRunner": "Script Runner",
+    "yaklangProgramming": "Program with the built-in scripting language and invoke the engine's core capabilities directly.",
     "Codec": "Codec",
     "dataProcessingDescription": "Data can be processed in various ways (including encryption, decryption, deserialization, JSON handling, etc.), and custom data processing methods can also be defined via plugins.",
     "Payload": "Payload",
@@ -40,7 +40,7 @@
     "cVEManagement": "CVE",
     "searchAndQueryCVEData": "Search and Query CVE Data",
     "pluginHub": "Plugin Hub",
-    "massiveYakitPluginsOne-ClickDownload": "Massive Yakit Plugins, One-Click Download",
+    "massiveYakitPluginsOne-ClickDownload": "Massive Plugins, One-Click Download",
     "portListener": "Port Listener",
     "reverseShellTool": "Reverse shell receiver tool that can open a port on the server for listening and interaction.",
     "subdomainCollection": "Subdomain Collection",
@@ -56,7 +56,7 @@
     "codeAudit": "Code Audit",
     "irifyAiCodeAudit": "AI Code Audit",
     "irifyAiCodeAuditDescribe": "Open a local project and use ReAct AI for assisted code audit.",
-    "auditRuleCodeAnalysis": "Analyze code behavior by writing audit rules to identify risky code fragments; supports multiple languages such as Java, PHP, Yaklang, and Go (Golang).",
+    "auditRuleCodeAnalysis": "Analyze code behavior by writing audit rules to identify risky code fragments; supports multiple languages such as Java, PHP, and Go (Golang).",
     "database": "Database",
     "securityTools": "Security Tools",
     "bruteForceAndUnauthorizedCheck": "Brute Force and Unauthorized Detection",

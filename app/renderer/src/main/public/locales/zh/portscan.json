@@ -2,7 +2,7 @@
   "ScanPortForm": {
     "updateConfigSuccess": "更新配置成功",
     "scanMode": "扫描模式",
-    "synNeedRoot": "SYN 扫描需要 yak 启动时具有 root",
+    "synNeedRoot": "SYN 扫描需要引擎以 root 权限启动",
     "scanProto": "扫描协议",
     "networkCardConfig": "网卡配置",
     "networkCardSelect": "网卡选择",

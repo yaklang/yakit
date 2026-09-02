@@ -219,7 +219,7 @@
     "chromePath": "Chrome Startup Path",
     "chromePathDesc": "If Chrome cannot be started, please configure the Chrome startup path",
     "configured": "Configured",
-    "mcp": "Yak Mcp",
+    "mcp": "MCP",
     "mcpDesc": "May affect the use of some features",
     "systemProxy": "System Proxy",
     "statusRefreshInterval": "Status Refresh Interval",
@@ -404,7 +404,7 @@
     "started": "MCP service started: {{serverUrl}}",
     "error": "MCP service error: {{message}}",
     "stopped": "MCP service stopped: {{message}}",
-    "MCPStopped": "Yak Mcp service stopped",
+    "MCPStopped": "MCP service stopped",
     "serviceStopped": "Service stopped",
     "urlRequired": "Startup address cannot be empty",
     "urlFormatError": "Startup address format error, e.g. 127.0.0.1:11432",
@@ -420,7 +420,7 @@
   },
   "DownloadYakit": {
     "downloading": "{{edition}} downloading...",
-    "officialDownloadLink": "Yakit official download link",
+    "officialDownloadLink": "AI Senso software download link",
     "officialDownloadHint": "If the download fails due to network issues, please install from the official website:",
     "website": "Website"
   },
@@ -429,7 +429,7 @@
     "installSuccess": "Installation successful. If it doesn't take effect, restart {{edition}}.",
     "installFailed": "Installation failed: {{error}}",
     "closeEngineRetry": "Please close the engine and try again",
-    "downloading": "Yaklang engine downloading..."
+    "downloading": "Engine downloading..."
   },
   "UpdateYakitAndYaklang": {
     "detectedUpdate": "Detected {{edition}} version upgrade",
@@ -455,7 +455,7 @@
     "exportBeforeExit": "You can export data in Settings > Project Management before exiting"
   },
   "PerformanceDisplay": {
-    "localYakProcessManagement": "Local Yak process management",
+    "localYakProcessManagement": "Local engine process management",
     "resetEngineVersionNotice": "Resetting the engine version will restore the factory engine version and force a restart",
     "remoteControlClosing": "Remote control is closing...",
     "restoreEngineSuccess": "Engine restored successfully",

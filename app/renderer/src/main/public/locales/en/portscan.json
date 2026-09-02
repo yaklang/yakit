@@ -2,7 +2,7 @@
   "ScanPortForm": {
     "updateConfigSuccess": "Config updated successfully",
     "scanMode": "Scan Mode",
-    "synNeedRoot": "SYN scan requires root privileges when yak starts",
+    "synNeedRoot": "SYN scanning requires the engine to start with root privileges",
     "scanProto": "Scan Protocol",
     "networkCardConfig": "Network Card Config",
     "networkCardSelect": "Network Card Select",

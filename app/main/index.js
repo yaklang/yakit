@@ -85,7 +85,7 @@ if (shouldAbortStartupForDebugFlags) {
 
   app.once('ready', () => {
     try {
-      dialog.showErrorBox('Unsupported startup parameters', 'Yakit rejected forbidden debug startup flags.')
+      dialog.showErrorBox('Unsupported startup parameters', 'AI Senso rejected forbidden debug startup flags.')
     } catch (error) {}
     app.exit(1)
   })

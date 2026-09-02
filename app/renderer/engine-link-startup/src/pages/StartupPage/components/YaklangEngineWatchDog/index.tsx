@@ -70,7 +70,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
      * 认证要小心做，拿到准确的信息之后，尝试连接一次，确定连接成功之后才可以开始后续步骤
      * 当然引擎没有启动的时候无法连接成功，要准备根据引擎状态选择合适的方式启动引擎
      */
-    outputToWelcomeConsole('开始尝试连接 Yaklang 核心引擎')
+    outputToWelcomeConsole('开始尝试连接 AI Senso 核心引擎')
     debugToPrintLog(`------ 测试目标引擎是否存在进程存活情况------`)
     yakitEngine
       .connectYaklangEngine(props.credential)

@@ -218,7 +218,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
 
               <div className={styles['hint-right-wrapper']}>
                 <div className={classNames(styles['hint-right-download'], 'yakit-progress-wrapper')}>
-                  <div className={styles['hint-right-title']}>Yaklang 引擎下载中...</div>
+                  <div className={styles['hint-right-title']}>引擎下载中...</div>
                   <Progress
                     strokeColor="var(--Colors-Use-Main-Primary)"
                     trailColor="var(--Colors-Use-Neutral-Bg)"

@@ -8,9 +8,9 @@
   "SettingReverseServer": {
     "getRemoteAddrFailed": "獲取遠端地址失敗: ",
     "enablePublicTunnel": "啟用公網穿透",
-    "publicTunnelHelp": "在自己的伺服器安裝 yak 核心引擎，執行",
-    "yakBridgeService": "啟動 Yak Bridge 公網服務",
-    "yakVersionRequirement": "yak version >= v1.0.11-sp9",
+    "publicTunnelHelp": "在自己的伺服器安裝核心引擎並執行",
+    "yakBridgeService": "啟動引擎橋接公網服務",
+    "yakVersionRequirement": "engine version >= v1.0.11-sp9",
     "publicBridgeAddr": "公網Bridge地址",
     "password": "密碼",
     "reverseAddr": "反連地址",

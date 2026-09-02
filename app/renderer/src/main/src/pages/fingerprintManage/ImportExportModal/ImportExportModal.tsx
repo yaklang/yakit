@@ -177,7 +177,7 @@ const ImportExportModalInner = <T,>(props: ImportExportModalComProps<T>) => {
       case 'export':
         return (
           <div className={styles['export-hint']}>
-            远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
+            远程模式下导出后请打开应用数据目录查看导出文件，文件名无需填写后缀
           </div>
         )
       case 'import':

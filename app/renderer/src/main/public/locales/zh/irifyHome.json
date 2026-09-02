@@ -35,7 +35,7 @@
     "traditionalCodeAudit": "传统代码审计",
     "offline": "离线",
     "traditionalFeature1": "通过编写审计规则对代码行为进行分析，发现代码中的风险片段",
-    "traditionalFeature2": "Java、PHP、Yaklang、Golang",
+    "traditionalFeature2": "Java、PHP、Golang",
     "startAudit": "开始审计",
     "codeScan": "代码扫描",
     "scanFeature1": "内置丰富规则库",

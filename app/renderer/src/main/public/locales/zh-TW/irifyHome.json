@@ -35,7 +35,7 @@
     "traditionalCodeAudit": "傳統程式碼審計",
     "offline": "離線",
     "traditionalFeature1": "透過編寫審計規則對程式碼行為進行分析，發現程式碼中的風險片段",
-    "traditionalFeature2": "Java、PHP、Yaklang、Golang",
+    "traditionalFeature2": "Java、PHP、Golang",
     "startAudit": "開始審計",
     "codeScan": "程式碼掃描",
     "scanFeature1": "內建豐富規則庫",

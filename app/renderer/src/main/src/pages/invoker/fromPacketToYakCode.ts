@@ -25,7 +25,7 @@ export const generateYakCodeByRequest = (
       onResult(new Buffer(r.Code).toString())
     })
     .catch((e) => {
-      failed(`Generate Yak Code Failed：${e}`)
+      failed(`生成脚本代码失败：${e}`)
     })
 }
 

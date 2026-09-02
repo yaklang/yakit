@@ -137,7 +137,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         }
       })
       .catch((e: any) => {
-        failed('Query Local Yak Script failed: ' + `${e}`)
+        failed('查询本地脚本失败: ' + `${e}`)
       })
       .finally(() => {
         setTimeout(() => {

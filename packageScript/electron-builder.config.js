@@ -77,9 +77,9 @@ switch (platform) {
     break
   case 'memfit':
     appInfoOption = {
-      appId: 'io.yaklang.AI SenSo',
-      extraMetadata: { name: 'AI SenSo' },
-      productName: 'AI SenSo',
+      appId: 'com.aisenso.desktop',
+      extraMetadata: { name: 'AI Senso' },
+      productName: 'AI Senso',
       copyright: 'Copyright © 2021 v1ll4n',
     }
     files = ['!app/assets/**/*', 'app/assets/memfit-close.png', 'app/assets/memfitlogo*', ...fixedFile]
@@ -95,7 +95,7 @@ switch (platform) {
     appInfoOption = {
       appId: 'io.yaklang.yakit',
       productName: 'Yakit',
-      copyright: 'Copyright © 2024 yaklang.io',
+      copyright: 'Copyright © 2026 AI Senso',
     }
     files = [
       // 先排除整个目录（后面的规则可以“打破前面的排除”）

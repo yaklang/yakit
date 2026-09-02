@@ -96,7 +96,7 @@ export const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((p
                 <br />
                 3. 禁止对本软件实施逆向工程、反编译、试图破译源代码，植入后门传播恶意软件等行为。
                 <br />
-                4. 如果您需要使用Yakit
+                4. 如果您需要使用 AI Senso
                 <span className={styles['sign-bold-content']}>用于商业化目的</span>，请确保你们已经
                 <span className={styles['sign-bold-content']}>获得官方授权</span>
                 ，否则我们将追究您的相关责任。

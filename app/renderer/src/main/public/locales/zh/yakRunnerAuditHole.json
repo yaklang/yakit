@@ -35,7 +35,7 @@
     "misstatementReminder": "误报反馈提醒",
     "misstatementContent": "确认反馈后，整条漏洞信息将会被上传至后台，开发人员将获取漏洞信息进行误报修复。是否确认反馈？",
     "exportAuditRisk": "导出审计漏洞",
-    "exportHint": "远程模式下导出后请打开~Yakit\\yakit-projects\\projects路径查看导出文件，文件名无需填写后缀",
+    "exportHint": "远程模式下导出后请打开default project directory路径查看导出文件，文件名无需填写后缀",
     "fileName": "文件名",
     "exportFileNamePlaceholder": "请输入导出文件名",
     "exporting": "导出中",

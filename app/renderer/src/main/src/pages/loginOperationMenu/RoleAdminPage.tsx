@@ -342,7 +342,7 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
   const [loading, setLoading] = useState<boolean>(false)
   const [treeLoadedKeys, setTreeLoadedKeys] = useState<any>([])
   const PluginType = {
-    yak: 'YAK 插件',
+    yak: '脚本插件',
     mitm: 'MITM 插件',
     'packet-hack': '数据包扫描',
     'port-scan': '端口扫描插件',

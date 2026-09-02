@@ -3,8 +3,8 @@
     "remoteMode": "Remote Mode",
     "connectionHistory": "Connection History",
     "selectPlaceholder": "Please select...",
-    "hostLabel": "Yak gRPC Host:",
-    "portLabel": "Yak gRPC Port:",
+    "hostLabel": "Engine gRPC Host:",
+    "portLabel": "Engine gRPC Port:",
     "tlsLabel": "Enable TLS:",
     "pemLabel": "gRPC Root-CA Certificate (PEM)",
     "passwordLabel": "Password",
@@ -15,7 +15,7 @@
   },
   "PEMExample": {
     "pemTitle": "PEM format certificate required",
-    "pemContent": "When starting the core server with <code>yak grpc --tls</code>, the RootCA will be printed to the screen. Copy and paste it into this input box:",
+    "pemContent": "When starting the core server with TLS enabled, copy the RootCA printed on screen into this input box:",
     "pemExample": "For example:"
   },
   "PEMHint": {

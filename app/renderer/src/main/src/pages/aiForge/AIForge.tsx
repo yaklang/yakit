@@ -55,6 +55,18 @@ const MEMFIT_AGENT_CATEGORIES = [
   ...DIGITAL_EMPLOYEES.map((employee) => ({ id: employee.id, name: employee.name })),
 ]
 
+/**
+ * 内置智能体的数据来自引擎，部分旧记录仍包含上游品牌字段。
+ * 这里只处理展示文本，不修改 ForgeName、Id 等真实执行数据。
+ */
+const sanitizeAgentDisplayText = (value?: string) => {
+  return (value || '')
+    .replace(/yaklang\.io/gi, 'AI Senso')
+    .replace(/yaklang/gi, 'AI Senso')
+    .replace(/yakit/gi, 'AI Senso')
+    .replace(/\byak\b/gi, 'AI Senso')
+}
+
 const getAgentTypeLabel = (type: AIForge['ForgeType']) => {
   if (type === 'skillmd') return '技能智能体'
   if (type === 'config') return '配置智能体'
@@ -491,7 +503,9 @@ const AIForgeMarketplaceItem: React.FC<AIForgePageItemProps> = React.memo((props
   const { index, data, checked, onCheck, onExport, onRemove } = props
   const [loading, setLoading] = useState<boolean>(false)
   const isBuiltin = !!data.IsBuiltin
-  const displayName = data.ForgeVerboseName || data.ForgeName || '未命名智能体'
+  const displayName = sanitizeAgentDisplayText(data.ForgeVerboseName || data.ForgeName) || '未命名智能体'
+  const displayDescription = sanitizeAgentDisplayText(data.Description) || '为安全运营场景提供专业智能分析与执行能力。'
+  const displayAuthor = sanitizeAgentDisplayText(data.Author)
   const updateTime = Number(data.UpdatedAt || data.CreatedAt || 0)
   const roleId = getDigitalEmployeeRoleId(data)
   const role = DIGITAL_EMPLOYEES.find((employee) => employee.id === roleId)
@@ -521,15 +535,13 @@ const AIForgeMarketplaceItem: React.FC<AIForgePageItemProps> = React.memo((props
             {isBuiltin ? '内测' : '更新'} {updateTime ? formatDate(updateTime) : '暂无日期'}
           </span>
         </div>
-        <p className={styles['agent-description']}>
-          {data.Description || '为安全运营场景提供专业智能分析与执行能力。'}
-        </p>
+        <p className={styles['agent-description']}>{displayDescription}</p>
         <div className={styles['agent-card-footer']}>
           <div className={styles['agent-facts']}>
             <span className={styles['agent-type']}>{getAgentTypeLabel(data.ForgeType)}</span>
             <span>{role?.name || '未分配角色'}</span>
             {capabilityCount > 0 && <span>{capabilityCount} 项关联能力</span>}
-            {!!data.Author && <span>{data.Author}</span>}
+            {!!displayAuthor && <span>{displayAuthor}</span>}
           </div>
           <div className={styles['agent-card-actions']}>
             <label className={styles['agent-select']} onClick={(event) => event.stopPropagation()}>
@@ -611,12 +623,12 @@ const AIForgePageItem: React.FC<AIForgePageItemProps> = React.memo((props) => {
       info={data}
       checked={checked}
       onCheck={onCheck}
-      title={data.ForgeVerboseName || data.ForgeName}
+      title={sanitizeAgentDisplayText(data.ForgeVerboseName || data.ForgeName)}
       type={data.ForgeType}
-      tags={getVisibleAgentTags(data.Tag).join(',')}
-      help={data.Description || ''}
+      tags={sanitizeAgentDisplayText(getVisibleAgentTags(data.Tag).join(','))}
+      help={sanitizeAgentDisplayText(data.Description || '')}
       img={''}
-      user={isBuiltin ? 'yaklang.io' : ''}
+      user={isBuiltin ? 'AI Senso' : ''}
       time={data?.UpdatedAt || 0}
       isCorePlugin={isBuiltin}
       official={isBuiltin}

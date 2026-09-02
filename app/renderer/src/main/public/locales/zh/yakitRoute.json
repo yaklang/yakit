@@ -1,7 +1,7 @@
 {
   "YakitRoute": {
-    "YakRunner": "Yak Runner",
-    "yaklangProgramming": "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类",
+    "YakRunner": "Script Runner",
+    "yaklangProgramming": "使用内置脚本语言进行编程，直接调用引擎底层能力",
     "Codec": "Codec",
     "dataProcessingDescription": "可对数据进行各种处理（包括加密、解密、反序列化、Json 处理等等），还可通过插件自定义数据处理方法",
     "Payload": "字典管理",
@@ -40,7 +40,7 @@
     "cVEManagement": "CVE 管理",
     "searchAndQueryCVEData": "搜索查询CVE数据",
     "pluginHub": "插件仓库",
-    "massiveYakitPluginsOne-ClickDownload": "海量Yakit插件一键下载",
+    "massiveYakitPluginsOne-ClickDownload": "海量插件一键下载",
     "portListener": "端口监听器",
     "reverseShellTool": "反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互",
     "subdomainCollection": "子域名收集",
@@ -56,7 +56,7 @@
     "codeAudit": "代码审计",
     "irifyAiCodeAudit": "AI代码审计",
     "irifyAiCodeAuditDescribe": "本地目录打开项目，使用 ReAct AI 辅助代码审计",
-    "auditRuleCodeAnalysis": "通过编写审计规则对代码行为进行分析，发现代码中的风险片段，支持Java、PHP、Yaklang、Golang等多种语言",
+    "auditRuleCodeAnalysis": "通过编写审计规则对代码行为进行分析，发现代码中的风险片段，支持Java、PHP、Golang等多种语言",
     "database": "数据库",
     "securityTools": "安全工具",
     "bruteForceAndUnauthorizedCheck": "爆破与未授权检测",

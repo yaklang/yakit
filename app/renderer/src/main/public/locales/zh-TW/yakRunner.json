@@ -22,7 +22,7 @@
     "terminalFontSizeHelpPrefix": "控制終端的字型大小，預設為",
     "terminalFontSizeHelpSuffix": "。",
     "selectFileForSyntaxCheck": "請選中具體檔案檢視語法檢查資訊",
-    "selectYakFileForHelp": "請選中yak檔案檢視幫助資訊"
+    "selectYakFileForHelp": "請選擇腳本檔案檢視幫助資訊"
   },
   "YakHelpDoc": {
     "goToOfficialDocs": "跳轉到官方文件",
@@ -157,7 +157,7 @@
     "enterNewName": "請輸入新名稱",
     "binaryNotice": "此檔案是二進位制檔案或使用了不受支援的文字編碼，所以無法在文字編輯器中顯示。",
     "openAnyway": "仍然開啟",
-    "welcomeYak": "歡迎使用 Yak 語言",
+    "welcomeYak": "歡迎使用內置腳本語言",
     "quickCreate": "快捷建立",
     "unsavedTitle": "檔案未儲存",
     "unsavedContent": "是否要儲存{{name}}裡面的內容嗎？",

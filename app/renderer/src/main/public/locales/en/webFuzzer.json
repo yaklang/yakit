@@ -490,7 +490,7 @@
     "force_sni": "Force SNI",
     "request_config": "Request Configuration",
     "fuzztag_helper": "Fuzztag Helper",
-    "insert_yak_fuzz": "Insert yak.fuzz syntax",
+    "insert_yak_fuzz": "Insert built-in fuzz syntax",
     "render_fuzz": "Render Fuzz",
     "compat_mode_tip": "In compatibility mode, inner curly braces can be omitted when nested, e.g., {{base64(url(www.example.com))}}. In standard mode, they cannot be omitted. Fuzztag will be disabled if this is turned off.",
     "render_mode": "Render Mode",

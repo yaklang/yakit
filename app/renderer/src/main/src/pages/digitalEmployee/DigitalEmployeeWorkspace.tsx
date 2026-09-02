@@ -47,7 +47,7 @@ export const DigitalEmployeeSidebar: React.FC<DigitalEmployeeSidebarProps> = ({
         {!collapsed && (
           <div>
             <span>数字员工角色</span>
-            <small>AI SenSo</small>
+            <small>AI Senso</small>
           </div>
         )}
         <button
@@ -105,7 +105,7 @@ export const DigitalEmployeeProfile: React.FC = () => {
   return (
     <section className={styles['employee-profile']}>
       <div className={styles['profile-brand-lockup']}>
-        <img src={aiSenSoLogo} alt="AI SenSo" />
+        <img src={aiSenSoLogo} alt="AI Senso" />
       </div>
       <span className={styles['profile-divider']} aria-hidden="true" />
       <div className={styles['profile-portrait']}>

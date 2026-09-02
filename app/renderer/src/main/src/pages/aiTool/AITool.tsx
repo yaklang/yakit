@@ -307,7 +307,7 @@ const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
       tags={data?.Keywords?.join(',')}
       help={data.Description || ''}
       img={''}
-      user={isBuiltin ? 'yaklang.io' : ''}
+      user={isBuiltin ? 'AI Senso' : ''}
       time={data?.UpdatedAt || 0}
       isCorePlugin={isBuiltin}
       official={isBuiltin}

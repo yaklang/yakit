@@ -1004,10 +1004,8 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             </div>
             <div>
               {t('AILocalModelList.macNotice')}
-              <YakitTag color="purple">sudo xattr -r</YakitTag>
-              <YakitTag color="purple">-d com.apple.quarantine ~/yakit-projects</YakitTag>
               <YakitTag color="purple">
-                /projects/libs/llama-server
+                复制修复命令
                 <CopyComponents copyText={code} className={styles['copy']} />
               </YakitTag>
               {t('AILocalModelList.macNoticeSuffix')}

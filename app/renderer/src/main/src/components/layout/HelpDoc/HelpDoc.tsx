@@ -1,13 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSystem } from '@/yakitGVDefine'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import { ReportBug, FeatureRequest, LocalInfoProps } from '@/utils/template/issues'
 import { useMemoizedFn } from 'ahooks'
 import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
-import { grpcFetchLocalYakitVersion, grpcFetchLocalYakVersion } from '@/apiUtils/grpc'
-import { WebsiteGV } from '@/enums/website'
-import { SystemInfo } from '@/constants/hardware'
 import { yakitShell } from '@/services/electronBridge'
 
 import classNames from 'classnames'
@@ -28,20 +24,12 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
     <YakitMenu
       data={[
         {
-          key: 'official_website',
-          label: t('HelpDoc.officialWebsite'),
-        },
-        {
           key: 'Github',
           label: 'Github',
           children: [
             { label: t('HelpDoc.featureRequest'), key: 'feature_request' },
             { label: 'BUG', key: 'report_bug' },
           ],
-        },
-        {
-          key: 'aboutUs',
-          label: t('HelpDoc.aboutUs'),
         },
       ]}
       onClick={({ key }) => menuSelect(key)}
@@ -55,12 +43,6 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
         return
       case 'feature_request':
         yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=feature_request.yml`)
-        return
-      case 'official_website':
-        yakitShell.openExternal(WebsiteGV.YakHelpDocAddress)
-        return
-      case 'aboutUs':
-        yakitShell.openExternal(WebsiteGV.AboutUsWebsite)
         return
       default:
         return

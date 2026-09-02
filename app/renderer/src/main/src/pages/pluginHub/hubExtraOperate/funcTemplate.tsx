@@ -236,7 +236,7 @@ export const AddPluginMenuContent: React.FC<AddPluginMenuContentProps> = (props)
 
   const onFinsh = useMemoizedFn((values: any) => {
     if (!script) {
-      yakitNotify('error', 'No Yak Modeule Selected')
+      yakitNotify('error', '未选择插件模块')
       return
     }
     if (loading) return

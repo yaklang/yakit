@@ -11,19 +11,19 @@
       "dnslogSuccess": "全域性 DNSLog 配置成功",
       "dnslogFailed": "配置全域性 DNSLog 失敗：{{error}}",
       "localReverseIP": "本地反連 IP",
-      "updateYakEngineLocalIP": "更新 Yak 引擎本地 IP",
+      "updateYakEngineLocalIP": "更新引擎本地 IP",
       "publicReverseConfig": "公網反連配置",
       "runOnPublicServer": "在公網伺服器上執行",
       "or": "或",
       "configured": "已配置",
-      "yakBridgeAddress": "Yak Bridge 地址",
+      "yakBridgeAddress": "引擎桥接地址",
       "yakBridgeAddressHelp": "格式 host:port，例如 cybertunnel.run:64333",
-      "yakBridgePassword": "Yak Bridge 密碼",
-      "yakBridgePasswordHelp": "yak bridge 命令的 --secret 引數值",
+      "yakBridgePassword": "引擎橋接密碼",
+      "yakBridgePasswordHelp": "引擎橋接命令的 --secret 引數值",
       "globalDNSLogConfig": "全域性 DNSLog 配置",
-      "reuseYakBridgeConfig": "複用 Yak Bridge 配置",
+      "reuseYakBridgeConfig": "複用引擎橋接配置",
       "dnslogConfig": "DNSLog 配置",
-      "dnslogAddressHelp": "配置好 Yak Bridge 的 DNSLog 系統的地址：[ip]:[port]",
+      "dnslogAddressHelp": "引擎橋接中配置的 DNSLog 系統地址：[ip]:[port]",
       "dnslogPassword": "DNSLog 密碼",
       "configureReverseConnection": "配置反連"
     }
@@ -37,7 +37,7 @@
     "environmentVariableName": "環境變數名",
     "expiredTime": "失效時間",
     "deleteThisEnvironmentVariable": "刪除本環境變數",
-    "configYaklangSystemEnvironmentVariable": "配置 Yaklang 系統環境變數",
+    "configYaklangSystemEnvironmentVariable": "配置引擎系統環境變數",
     "newVariableTitle": "設定新變數",
     "editVariableTitle": "修改變數"
   },
@@ -49,7 +49,7 @@
     "currentSystemProxyStatus": "當前系統代理狀態：",
     "systemProxy": "系統代理",
     "oneClickConfig": "一鍵配置系統代理",
-    "proxyHint": "由於作業系統與 Yak 核心限制，無法使用原生 MacOS OC/Swift 介面實現設定代理。 Yak 引擎將彈出 osascript 授權頁以改動系統代理，MacOS 使用者認證即可。",
+    "proxyHint": "由於作業系統與引擎限制，無法使用原生 macOS OC/Swift 介面設定代理。引擎將彈出 osascript 授權頁以修改系統代理。",
     "chromeStartPath": "Chrome 啟動路徑",
     "chromeStartPathHint": "如無法啟動 Chrome，請配置 Chrome 啟動路徑",
     "startPath": "啟動路徑",
@@ -72,7 +72,7 @@
   "ConfigEngineProxy": {
     "saveSuccess": "設定引擎代理成功",
     "currentProxy": "當前引擎代理為：",
-    "hint": "本配置將會對絕大部分 Yak 外掛自動生效，如果在掃描模組中配置代理，一般來說，配置的代理將會自動覆蓋這個配置。",
+    "hint": "本配置會對絕大部分外掛自動生效；掃描模組中單獨配置的代理通常具有更高優先級。",
     "proxyLabel": "代理",
     "proxyHelp": "例如 http://127.0.0.1:7890 或 socks://127.0.0.1:7890 等配置均可",
     "updateProxy": "更新引擎代理",
@@ -83,7 +83,7 @@
     "tool_name": "工具名稱",
     "enable_tool": "開啟工具",
     "detailed_config": "詳細配置",
-    "stdio_remote_disabled_tip": "STDIO 需要在本機直接啟動 Yak 引擎進程，遠端連線模式下無法使用",
+    "stdio_remote_disabled_tip": "STDIO 需要在本機直接啟動引擎進程，遠端連線模式下無法使用",
     "enable_tool_success": "開啟工具：{{name}} 成功",
     "disable_tool_success": "關閉工具：{{name}} 成功",
     "enable_tool_failed": "開啟工具：{{name}} 失敗",
@@ -96,7 +96,7 @@
     "source_aitool": "AI內建",
     "source_bridge": "外部橋接",
     "enable_legacy_mcp_tools": "MCP 內建工具",
-    "enable_legacy_mcp_tools_desc": "開放 port_scan、httpflow 等 Yak 傳統 MCP 工具集",
+    "enable_legacy_mcp_tools_desc": "開放 port_scan、httpflow 等傳統 MCP 工具集",
     "enable_ai_tool_framework": "AI Tool Framework",
     "enable_ai_tool_framework_desc": "開放 fs、ssa、yakscript 等 AI 內建工具",
     "enable_bridge_external_mcp": "橋接外部 MCP",
@@ -240,7 +240,7 @@
     "savePlugin": "外掛儲存"
   },
   "YakEditor": {
-    "yakFormat": "Yak 程式碼格式化"
+    "yakFormat": "腳本程式碼格式化"
   },
   "PrettifyPacket": {
     "lossyBeautifyWarning": "原始資料可能存在問題，美化丟失了部分內容"

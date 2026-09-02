@@ -35,7 +35,7 @@
     "traditionalCodeAudit": "Traditional Code Audit",
     "offline": "Offline",
     "traditionalFeature1": "Analyze code behavior through audit rules to find risky code fragments",
-    "traditionalFeature2": "Java, PHP, Yaklang, Golang",
+    "traditionalFeature2": "Java, PHP, Golang",
     "startAudit": "Start Audit",
     "codeScan": "Code Scan",
     "scanFeature1": "Built-in rich rule library",

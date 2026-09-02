@@ -1,6 +1,6 @@
 # AI SenSo 数字员工功能交接
 
-更新时间：2026-08-26
+更新时间：2026-08-28
 
 ## 0. 最新交接摘要（上下文切换先读）
 
@@ -10,6 +10,10 @@
 - 首页左侧只切换数字员工角色；聊天欢迎页选择该角色下的智能体后，才显示带锁定 Forge 标签的输入框。
 - Memfit 创建/编辑智能体时角色为必选；旧智能体没有角色标记时显示为“未分配”，需要人工编辑或经过业务确认的一次性迁移。
 - 当前引擎的 `AIForgeFilter.Tag` 查询与返回的 Forge Tag 不兼容；智能体广场角色页签必须分页读取候选集后在前端精确过滤，不能改回直接传 `Filter.Tag`，否则会再次出现角色卡片可见但页签为空。
+- 2026-08-28 新需求已完成分析，但尚未开始编码：按授权项目名签发授权码，一个项目可无限签发，一个授权码只绑定一台客户端；试用项目默认 3 个月且到期停用，正式项目默认 3 年维保且过期后仍可使用、但禁止自动更新；标准/高级/旗舰版需可配置允许的数字员工角色。
+- 授权需求不是纯前端功能。当前仓库可完成客户端授权页、启动拦截、角色过滤和更新限制；授权项目管理、设备绑定签发、私钥签名和完整权益校验必须由后端/引擎配合。
+- 已对照企业版参考仓库 `D:\360MoveData\Users\Titee_G\Desktop\20260708Yakit_edit\yakit-yj-feat-ee-04-30`。当前项目已继承同类 License 前端骨架，禁止整文件覆盖复制；企业版的真正签发在远端 `/api/license/activation`，设备绑定与验签实现在随包 Yak 引擎二进制中，该参考仓库也不包含后端或引擎源码。
+- 最新已推送功能提交：`9ca044e feat: support role-based digital employee agents`；智能体广场角色筛选修复：`0c87a80 fix: make agent role filters engine compatible`。`master` 与 `origin/master` 在 `0c87a80` 一致。
 - 本地开发统一在仓库根目录执行 `yarn dev`，会启动 Memfit 主渲染器 `3000`、引擎连接页 `5713` 和 Electron。
 - 2026-08-26 数字员工选择页的 6 个快捷导航已经修复，用户完成实际点击测试并确认“可以啦”。
 - 最终根因不是路由映射错误，而是 `MainOperatorContent` 挂载后执行默认标签初始化，把已打开的目标页重新覆盖成 `AI_Agent`。
@@ -89,6 +93,37 @@
 
 回归注意：`props.children` 外还有 `Suspense` 懒加载，而且 `MainOperatorContent` 挂载后还会初始化默认标签。仅依赖 `setTimeout`、Gate effect 或“监听器已挂载”都不够；快捷目标必须在默认标签初始化之后消费，否则会复现“无论点哪个入口都只进入数字员工页”的问题。
 
+### 2.4 授权与版本权益新需求（2026-08-28，只完成分析）
+
+当前确认的业务规则：
+
+1. 授权对象是“授权项目”，建议代码命名为 `LicenseProject`，避免与软件内现有扫描/数据库项目 `ProjectName` 混淆。
+2. 单个授权项目不限授权数量，但每次签发必须保留授权码和设备审计记录。
+3. 授权码与客户端 1:1 绑定。建议沿用企业版“客户端生成申请码 -> 授权端根据申请码签发授权码 -> 引擎校验”的离线友好模式。
+4. 试用项目的 `usageExpiresAt` 默认为项目开始日期加 3 个自然月；项目下后续新签发的授权码必须共用同一到期日，不能每次重置 3 个月。到期后禁止进入软件。
+5. 正式项目默认永久可用，`maintenanceExpiresAt` 默认为项目开始日期加 3 个自然年；维保过期后已安装版本继续使用，但需在 UI 和 Electron 主进程两层禁止客户端与引擎自动更新。
+6. 产品版本为 `standard` / `advanced` / `ultimate`，后端以稳定角色 ID 配置 `allowedRoleIds`。前端只取授权权益与 `DIGITAL_EMPLOYEES` 的交集，不能依赖角色中文名。
+
+现有代码的关键限制：
+
+- `isEnterpriseEdition()` 明确排除 `MEMFIT`，所以 `UILayout.tsx` 中的企业版 License Gate 当前不会对 AI Senso 生效。
+- `LicensePage.tsx` 已有 `GetLicense` 申请码和授权码输入交互，`EnterpriseJudgeLogin.tsx` 已有授权码缓存和启动复验，应在当前文件上增量改造。
+- 现有 Proto 的 `CheckLicense(CheckLicenseRequest) returns (Empty)` 只能表示成功/失败，无法向客户端下发项目类型、使用期、维保期、产品版本和角色权限，必须由引擎团队新增或扩展权益响应。
+- `LicenseAdminPage.tsx` 当前调用远端 `company/license/config` 和 `license/activation`，字段仍是企业、授权数、用户数、统一到期时间和 `EnpriTrace/EnpriTraceAgent`，不支持本次新的项目类型、维保、产品版本和角色字段。
+- Electron 主进程的 `app/main/handlers/misc.js` 只将 `GetLicense/CheckLicense` 转发给引擎，不负责签名或过期校验。当前仓库和企业版参考仓库均无后端源码；参考仓库的 `bins/yak.zip` 也只包含 `yak_windows_amd64.exe`。
+- 现有更新定时检查、指定版本下载和 Electron 下载入口尚与 License 状态无关；维保过期限制不能只隐藏前端按钮。
+
+后端/引擎至少需要提供的权益字段：
+
+```text
+licenseId, projectId, projectName, projectType
+edition, allowedRoleIds
+issuedAt, usageExpiresAt, maintenanceExpiresAt
+deviceFingerprintHash, status, signatureVersion
+```
+
+客户端实施顺序建议：先定稿后端/Proto 合同，再开启 Memfit License Gate，建立全局 `LicenseEntitlement`，然后依次接入数字员工角色、智能体创建/对话和更新下载入口。禁止在后端协议未确定时只做前端假授权，也禁止将签发私钥放进 Electron 安装包。
+
 ## 3. 主要文件
 
 ### 数字员工配置与请求绑定
@@ -133,6 +168,19 @@
 - 素材用途和尺寸参考：`senso-assets-manifest.json`。
 - 不允许使用整张参考 UI 截图充当页面背景。
 
+### License 与权益参考（尚未实施）
+
+- `app/renderer/src/main/src/pages/EnterpriseJudgeLogin.tsx`
+- `app/renderer/src/main/src/pages/LicensePage.tsx`
+- `app/renderer/src/main/src/pages/loginOperationMenu/LicenseAdminPage.tsx`
+- `app/renderer/src/main/src/components/layout/UILayout.tsx`
+- `app/renderer/src/main/src/components/layout/FuncDomain.tsx`
+- `app/renderer/src/main/src/utils/envfile.tsx`
+- `app/main/handlers/misc.js`
+- `app/main/httpServer.js`
+- `app/protos/grpc.proto`
+- 企业版只读参考：`D:\360MoveData\Users\Titee_G\Desktop\20260708Yakit_edit\yakit-yj-feat-ee-04-30`
+
 ## 4. 已确认的交互
 
 - 第一张卡片默认选中，但人物图始终使用普通高清透明人物，不使用完整选中卡图。
@@ -152,6 +200,11 @@
 - 顶部主题通过 `isMemfit()` 条件类实现：`ui-layout-wrapper-memfit`、`heard-menu-body-memfit`、`tab-menu-memfit`。不要把这些颜色直接覆盖到通用类。
 
 ## 5. 测试结果
+
+2026-08-28 授权新需求：
+
+- 本轮只完成需求与企业版代码链路分析，没有实施授权功能，不得在新窗口将其误报为已完成。
+- 已确认企业版前端与当前仓库具有同源 License 骨架；已确认后端签发和引擎验签源码不在两个前端仓库中。
 
 2026-08-26 快捷导航完成后：
 
@@ -228,7 +281,9 @@ yarn dev
 - 2026-08-26 初始化覆盖修复提交：`e4dbfac fix: apply employee quick route after menu initialization`。
 - 2026-08-26 初始化覆盖交接记录：`7983735 docs: record menu initialization navigation fix`。
 - 安全回滚完整快捷导航功能：`git revert e4dbfac 35e239f 6217c82 9b3e3b4`（按新到旧顺序）。该命令会生成反向提交，不会覆盖工作区中的其他未提交改动。
-- 本交接生成前最新已推送提交：`d368069 fix: sharpen digital employee visual assets`。
+- 本交接更新前最新已推送提交：`0c87a80 fix: make agent role filters engine compatible`。
+- 2026-08-26 数字员工角色 1:N 智能体提交：`9ca044e feat: support role-based digital employee agents`。
+- 2026-08-26 智能体广场角色筛选兼容修复：`0c87a80 fix: make agent role filters engine compatible`。
 - 已推送的关键提交：
   - `acaae69 feat: initialize AI SenSo digital employee experience`
   - `5b74f61 feat: modernize digital employee workspace`
@@ -244,21 +299,26 @@ yarn dev
 
 ## 8. 新窗口继续时的优先检查
 
-1. 启动项目确认选择页和首页左侧始终只有固定八个数字员工角色，不随 Forge 数量变化。
-2. 选择角色进入欢迎页，确认只展示带对应 `senso-role:<role-id>` 标记的智能体；未选择智能体前不显示输入框。
-3. 选择智能体后确认输入框出现对应 Forge 标签；用 `@` 再添加一个或多个标签并发送，确认可以正常进入详情页。
-4. 详情页确认智能体默认标签仍存在；连续发送后应自动恢复，不能成倍重复。
-5. 切换员工角色后确认创建新会话、清空智能体并返回智能体选择状态，旧智能体标签不残留。
-6. 在智能体广场创建和编辑智能体，确认数字员工角色必选、分类页签能精确找到新智能体，普通能力 Tag 中不显示 `senso-role:*`。
-7. 检查大屏、小屏下选择页与 AI Agent 工作区，无横向溢出和明显跳动。
-8. 右侧任务进度只能使用后端 todo 字段；完成、执行中、待执行分别检查绿色对号、旋转圆环和灰色圆环。
-9. 后续尽量只改布局和样式；除非定位到真实缺陷，不要重写原版聊天、mention、IPC 或模型发送逻辑。
-10. 人工确认新透明 Logo 在选择页左上角与详情页顶部没有白色矩形、尺寸没有显得过小；检查 8 个员工徽章和 6 个快捷入口在 100%/125% 缩放下边缘清晰。
-11. 在详情页展开/收起左栏各一次，确认左右 chevron 都在按钮中垂直居中；若仍有视觉偏差只调图标盒/按钮布局，不改折叠状态逻辑。
-12. 人工检查选择页默认卡片的渐变描边、光晕和“当前选择”标识，确认 hover 与 selected 层级不同且没有布局跳动。
-13. 在 1920×1080、1280×720 和窄窗口分别检查放大后的员工区、欢迎区双列/单列切换和输入框宽度；确认内容区仍可滚动且没有横向溢出。
-14. 检查标题栏、主菜单栏和标签栏只在 Memfit 下呈浅蓝主题，菜单点击、标签关闭和拖拽逻辑保持原样。
+1. 新的授权需求目前只完成分析。开发前先向后端/引擎团队确认接口和 License 载荷，尤其是 `projectType`、`usageExpiresAt`、`maintenanceExpiresAt`、`edition`、`allowedRoleIds` 和设备指纹字段。
+2. 确认业务口径：维保到期是只禁止自动更新，还是也禁止手动安装新版；三个产品版本的默认角色矩阵是什么；单项目是否允许覆盖版本默认角色。
+3. 授权协议确定后，只在当前 AI Senso 仓库增量开发，不要将企业版 `EnterpriseJudgeLogin.tsx`、`LicensePage.tsx` 或 `LicenseAdminPage.tsx` 整文件覆盖进来。
+4. 启动项目确认选择页和首页左侧始终只有固定八个数字员工角色，不随 Forge 数量变化。
+5. 选择角色进入欢迎页，确认只展示带对应 `senso-role:<role-id>` 标记的智能体；未选择智能体前不显示输入框。
+6. 选择智能体后确认输入框出现对应 Forge 标签；用 `@` 再添加一个或多个标签并发送，确认可以正常进入详情页。
+7. 详情页确认智能体默认标签仍存在；连续发送后应自动恢复，不能成倍重复。
+8. 切换员工角色后确认创建新会话、清空智能体并返回智能体选择状态，旧智能体标签不残留。
+9. 在智能体广场创建和编辑智能体，确认数字员工角色必选、分类页签能精确找到新智能体，普通能力 Tag 中不显示 `senso-role:*`。
+10. 检查大屏、小屏下选择页与 AI Agent 工作区，无横向溢出和明显跳动。
+11. 右侧任务进度只能使用后端 todo 字段；完成、执行中、待执行分别检查绿色对号、旋转圆环和灰色圆环。
+12. 后续尽量只改布局和样式；除非定位到真实缺陷，不要重写原版聊天、mention、IPC 或模型发送逻辑。
+13. 人工确认新透明 Logo 在选择页左上角与详情页顶部没有白色矩形、尺寸没有显得过小；检查 8 个员工徽章和 6 个快捷入口在 100%/125% 缩放下边缘清晰。
+14. 在详情页展开/收起左栏各一次，确认左右 chevron 都在按钮中垂直居中；若仍有视觉偏差只调图标盒/按钮布局，不改折叠状态逻辑。
+15. 人工检查选择页默认卡片的渐变描边、光晕和“当前选择”标识，确认 hover 与 selected 层级不同且没有布局跳动。
+16. 在 1920×1080、1280×720 和窄窗口分别检查放大后的员工区、欢迎区双列/单列切换和输入框宽度；确认内容区仍可滚动且没有横向溢出。
+17. 检查标题栏、主菜单栏和标签栏只在 Memfit 下呈浅蓝主题，菜单点击、标签关闭和拖拽逻辑保持原样。
 
 ## 9. 可直接交给新 AI 的指令
 
-请先阅读本文件、`docs/changes/2026-08-26-digital-employee-agent-assignment.md`、`docs/changes/2026-08-26-digital-employee-quick-navigation.md` 和 `docs/DEV_LOG.md`，再查看 `git status` 与最新提交。当前模型是固定八个数字员工角色 1:N AI Forge，归属由内部 Tag `senso-role:<role-id>` 精确确定；禁止再按 Forge 数量、ID、名称关键词或返回顺序生成员工。首页左侧只切角色，欢迎页选择 `selectedAgent` 后才显示输入框；默认 mention、首次 `ForgeName` 和请求资源兜底全部读取 `selectedAgent`。旧智能体无标记时属于“未分配”，应人工编辑或使用经过业务确认的稳定 ForgeName 做一次性迁移。快捷导航时序已由用户实测通过，不要修改。后续继续复用原聊天、mention、IPC 和模型发送链路，每次完成后运行类型检查和数字员工定向测试，并更新交接/改动记录后单独提交。
+请先阅读本文件、`docs/changes/2026-08-26-digital-employee-agent-assignment.md`、`docs/changes/2026-08-26-digital-employee-quick-navigation.md` 和 `docs/DEV_LOG.md`，再查看 `git status` 与最新提交。当前已实施的模型是固定八个数字员工角色 1:N AI Forge，归属由内部 Tag `senso-role:<role-id>` 精确确定；禁止再按 Forge 数量、ID、名称关键词或返回顺序生成员工。首页左侧只切角色，欢迎页选择 `selectedAgent` 后才显示输入框；默认 mention、首次 `ForgeName` 和请求资源兜底全部读取 `selectedAgent`。旧智能体无标记时属于“未分配”，应人工编辑或使用经过业务确认的稳定 ForgeName 做一次性迁移。快捷导航时序已由用户实测通过，不要修改。
+
+授权新需求截至 2026-08-28 只完成分析，尚未编码。当前仓库已有企业版 License 前端骨架，只需在本项目增量开发，不要从 `D:\360MoveData\Users\Titee_G\Desktop\20260708Yakit_edit\yakit-yj-feat-ee-04-30` 整文件复制。但完整实现必须等后端/引擎提供项目、设备绑定、使用期、维保期、版本和 `allowedRoleIds` 权益合同。不要做只存在于前端的假授权，不要将签发私钥包进客户端。接口定稿后，优先实现 Memfit 启动授权拦截和全局 `LicenseEntitlement`，再将权益接入数字员工、智能体和更新链路。每次完成后运行类型检查和定向测试，并更新交接/改动记录后单独提交。

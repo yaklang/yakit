@@ -1594,7 +1594,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         ],
       },
       {
-        key: '复制为 Yak PoC 模版',
+        key: '复制为 PoC 模版',
         label: t('HTTPFlowTable.RowContextMenu.copyAsYakPoCTemplate'),
         default: true,
         webSocket: false,

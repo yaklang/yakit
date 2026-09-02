@@ -22,7 +22,7 @@
     "terminalFontSizeHelpPrefix": "Control the terminal font size, defaulting to",
     "terminalFontSizeHelpSuffix": ".",
     "selectFileForSyntaxCheck": "Please select a specific file to view syntax check information",
-    "selectYakFileForHelp": "Please select a Yak file to view help information"
+    "selectYakFileForHelp": "Please select a script file to view help information"
   },
   "YakHelpDoc": {
     "goToOfficialDocs": "Go to official docs",
@@ -157,7 +157,7 @@
     "enterNewName": "Please enter a new name",
     "binaryNotice": "This file is binary or uses an unsupported text encoding, so it cannot be displayed in the text editor.",
     "openAnyway": "Open anyway",
-    "welcomeYak": "Welcome to Yak language",
+    "welcomeYak": "Welcome to the built-in scripting language",
     "quickCreate": "Quick create",
     "unsavedTitle": "File not saved",
     "unsavedContent": "Do you want to save the content in {{name}}?",

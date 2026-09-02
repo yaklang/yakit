@@ -35,7 +35,7 @@
     "misstatementReminder": "誤報反饋提醒",
     "misstatementContent": "確認反饋後，整條漏洞資訊將會被上傳至後臺，開發人員將獲取漏洞資訊進行誤報修復。是否確認反饋？",
     "exportAuditRisk": "匯出審計漏洞",
-    "exportHint": "遠端模式下匯出後請開啟~Yakit\\yakit-projects\\projects路徑檢視匯出檔案，檔名無需填寫字尾",
+    "exportHint": "遠端模式下匯出後請開啟default project directory路徑檢視匯出檔案，檔名無需填寫字尾",
     "fileName": "檔名",
     "exportFileNamePlaceholder": "請輸入匯出檔名",
     "exporting": "匯出中",
