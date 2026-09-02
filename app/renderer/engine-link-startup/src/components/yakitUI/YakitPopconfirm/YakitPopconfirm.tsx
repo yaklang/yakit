@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { Popconfirm } from 'antd'
 import classNames from 'classnames'
 import styles from './YakitPopconfirm.module.scss'
@@ -14,12 +14,16 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
     cancelText,
     title,
     onConfirm,
-    onVisibleChange,
+    onOpenChange,
     onCancel,
     placement = 'left',
-    overlayClassName,
+    classNames: popconfirmClassNames,
     okButtonProps,
     cancelButtonProps,
+    overlayClassName,
+    visible: visibleProp,
+    open: openProp,
+    onVisibleChange,
     ...resePopover
   } = props
   const { t } = useI18nNamespaces(['yakitUi'])
@@ -33,23 +37,15 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
     setVisible(false)
     if (onCancel) onCancel(e)
   })
-  const direction = useMemo(() => {
-    if (!placement) return 'top'
-    if (['top', 'topLeft', 'topRight'].includes(placement)) return 'top'
-    if (['left', 'leftTop', 'leftBottom'].includes(placement)) return 'left'
-    if (['right', 'rightTop', 'rightBottom'].includes(placement)) return 'right'
-    if (['bottom', 'bottomLeft', 'bottomRight'].includes(placement)) return 'bottom'
-  }, [placement])
   return (
     <Popconfirm
-      visible={visible}
       {...resePopover}
+      open={openProp ?? visibleProp ?? visible}
       placement={placement}
-      overlayClassName={classNames(
-        styles['yakit-popconfirm-wrapper'],
-        styles[`yakit-popconfirm-${direction}-wrapper`],
-        overlayClassName,
-      )}
+      classNames={{
+        ...popconfirmClassNames,
+        root: classNames(styles['yakit-popconfirm-wrapper'], overlayClassName, popconfirmClassNames?.root),
+      }}
       title={
         <div className={styles['yakit-popconfirm-title']}>
           {title}
@@ -63,9 +59,10 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
           </div>
         </div>
       }
-      onVisibleChange={(v) => {
+      onOpenChange={(v) => {
         setVisible(v)
-        if (onVisibleChange) onVisibleChange(v)
+        onOpenChange?.(v)
+        onVisibleChange?.(v)
       }}
     >
       {children}

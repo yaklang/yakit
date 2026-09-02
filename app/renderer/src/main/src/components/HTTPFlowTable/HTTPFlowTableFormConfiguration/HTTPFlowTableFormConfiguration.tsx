@@ -4,7 +4,7 @@ import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { Form, Modal, Tooltip } from 'antd'
+import { Form, Tooltip, Modal } from 'antd'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -176,8 +176,8 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
 
   return (
     <YakitDrawer
-      className={styles['http-flow-table-form-configuration']}
-      visible={visible}
+      rootClassName={styles['http-flow-table-form-configuration']}
+      open={visible}
       width="max(700px, 40%)"
       onClose={onClose}
       title={

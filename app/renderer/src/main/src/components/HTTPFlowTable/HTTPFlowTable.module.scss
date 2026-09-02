@@ -93,10 +93,6 @@
       border-radius: 4px;
     }
 
-    .ant-select-selector {
-      border-radius: 4px !important;
-    }
-
     .ant-input-group-addon {
       border-radius: 4px;
     }
@@ -269,17 +265,11 @@
 }
 
 .http-history-table-shield-popover {
-  padding-top: 5px;
-
   :global {
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 0;
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
     }
   }
-
   .title-header {
     position: relative;
     max-width: 345px;
@@ -345,14 +335,9 @@
 
 .http-history-table-color-popover {
   width: 140px;
-  padding-top: 5px;
-
   :global {
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 0;
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
     }
   }
 }
@@ -462,14 +447,9 @@
 }
 
 .http-history-table-drop-down-popover {
-  padding-top: 5px;
-
   :global {
-    .ant-popover-inner-content {
-      padding: 4px;
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
+    .ant-popover-inner {
+      padding: 0px;
     }
   }
 }

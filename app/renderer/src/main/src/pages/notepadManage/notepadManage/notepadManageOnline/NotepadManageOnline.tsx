@@ -102,8 +102,8 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                   {(record.collaborator || []).map((ele) => ele.user_name).join(',')}
                 </div>
               }
-              destroyTooltipOnHide={true}
-              overlayClassName={styles['collaborators-popover']}
+              destroyOnHidden={true}
+              classNames={{ root: styles['collaborators-popover'] }}
             >
               <span className="content-ellipsis">
                 {(record.collaborator || []).map((ele) => ele.user_name).join(',')}
@@ -137,8 +137,8 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                 },
               }}
               dropdown={{
-                visible: timeSortVisible,
-                onVisibleChange: setTimeSortVisible,
+                open: timeSortVisible,
+                onOpenChange: setTimeSortVisible,
               }}
             >
               <YakitButton type="text2">
@@ -388,7 +388,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
           ) : (
             <YakitEmpty
               image={emptyImageTarget}
-              imageStyle={{ margin: '96px auto 12px', height: 200 }}
+              styles={{ image: { margin: '96px auto 12px', height: 200 } }}
               title={t('YakitEmpty.searchEmpty')}
             />
           )

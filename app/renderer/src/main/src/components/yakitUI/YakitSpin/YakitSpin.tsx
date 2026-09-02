@@ -15,11 +15,16 @@ import classNames from 'classnames'
  * @augments YakitSpinProps 继承antd的 SpinProps 默认属性
  */
 export const YakitSpin: React.FC<YakitSpinProps> = (props) => {
+  const { children, tip, wrapperClassName, ...rest } = props
+  const nestedChildren = children ?? (tip != null ? <div className={styles['yakit-spin-nest']} /> : children)
   return (
     <Spin
-      {...props}
-      className={classNames(styles['yakit-spin'], props.wrapperClassName)}
-      wrapperClassName={classNames(styles['yakit-spin'], props.wrapperClassName)}
-    ></Spin>
+      {...rest}
+      tip={tip}
+      className={classNames(styles['yakit-spin'], wrapperClassName)}
+      wrapperClassName={classNames(styles['yakit-spin'], wrapperClassName)}
+    >
+      {nestedChildren}
+    </Spin>
   )
 }

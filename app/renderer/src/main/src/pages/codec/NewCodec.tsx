@@ -65,7 +65,7 @@ import {
   NewCodecSelectUI,
   NewCodecTextAreaUI,
 } from './NewCodecUIStore'
-import type { CheckboxValueType } from 'antd/lib/checkbox/Group'
+import type { CheckboxValueType } from '@/utils/antdCompat'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { EnterOutlined } from '@ant-design/icons'
@@ -412,10 +412,10 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                       overlayClassName: styles['codec-input-menu'],
                       trigger: ['click'],
                       placement: 'bottomRight',
-                      onVisibleChange: (v) => {
+                      onOpenChange: (v) => {
                         setInputMenuOpen(v)
                       },
-                      visible: inputMenuOpen,
+                      open: inputMenuOpen,
                     }}
                   >
                     <div className={styles['extra-icon']}>
@@ -538,10 +538,10 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                             overlayClassName: styles['codec-output-menu'],
                             trigger: ['click'],
                             placement: 'bottomRight',
-                            onVisibleChange: (v) => {
+                            onOpenChange: (v) => {
                               setOutputMenuOpen(v)
                             },
-                            visible: outputMenuOpen,
+                            open: outputMenuOpen,
                           }}
                         >
                           <div className={styles['extra-icon']}>
@@ -1470,7 +1470,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
           )}
 
           <YakitPopover
-            overlayClassName={styles['http-history-table-drop-down-popover']}
+            classNames={{ root: styles['http-history-table-drop-down-popover'] }}
             content={
               <CodecRunListHistoryStore
                 onSelect={(v) => onMenuSelect(v)}
@@ -1483,8 +1483,8 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
             }
             trigger="click"
             placement="bottomRight"
-            onVisibleChange={setPopoverVisible}
-            visible={popoverVisible}
+            onOpenChange={setPopoverVisible}
+            open={popoverVisible}
           >
             <Tooltip title={t('CodecRunListHistoryStore.historyStore')}>
               <div className={styles['extra-icon']}>
@@ -1566,7 +1566,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
         </YakitButton>
       </div>
       <YakitModal
-        visible={cacheModal}
+        open={cacheModal}
         bodyStyle={{ padding: 0 }}
         title={t('NewCodecMiddleRunList.saveCodecOrder')}
         width={400}
@@ -1654,7 +1654,7 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
     <YakitPopover
       // visible={true}
       placement="right"
-      overlayClassName={styles['drag-list-item-popover']}
+      classNames={{ root: styles['drag-list-item-popover'] }}
       content={
         <div className={styles['popover-content']}>
           <div className={styles['title']}>{item.CodecName}</div>

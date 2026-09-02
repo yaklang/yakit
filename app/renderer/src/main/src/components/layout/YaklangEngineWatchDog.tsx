@@ -6,7 +6,7 @@ import { failed } from '@/utils/notification'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitDynamicStatus } from '@/store'
 import { remoteOperation } from '@/pages/dynamicControl/remoteOperation'
-import { fetchEnv, getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify } from '@/utils/envfile'
+import { fetchEnv, getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify, toEngineHandshakeName } from '@/utils/envfile'
 import emiter from '@/utils/eventBus/eventBus'
 import { debugToPrintLog } from '@/utils/logCollection'
 import { yakitEngine } from '@/services/electronBridge'
@@ -148,7 +148,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             yakitEngine
               .startLocalYaklangEngine({
                 port: props.credential.Port,
-                version: fetchEnv(),
+                version: toEngineHandshakeName(fetchEnv()),
                 isEnpriTraceAgent: isEnpriTraceAgent(),
                 isIRify: isIRify(),
               })

@@ -80,9 +80,9 @@ const AdvancedSet: React.FC<AdvancedSetProps> = memo((props) => {
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       width="25%"
-      className={styles['history-advanced-set-wrapper']}
+      rootClassName={styles['history-advanced-set-wrapper']}
       onClose={onCancel}
       title={
         <div className={styles['advanced-configuration-drawer-title']}>
@@ -186,11 +186,11 @@ const AdvancedSetV2: React.FC<AdvancedSetV2Props> = memo((props) => {
   return (
     <YakitPopover
       title={t('AdvancedSet.advancedConfig')}
-      onVisibleChange={(visible) => !visible && onCancel()}
+      onOpenChange={(visible) => !visible && onCancel()}
       trigger="click"
-      overlayInnerStyle={{ width: 350 }}
-      overlayClassName={styles['history-advanced-set-wrapper']}
-      visible={visible}
+      styles={{ body: { width: 350 } }}
+      classNames={{ root: styles['history-advanced-set-wrapper'] }}
+      open={visible}
       placement="right"
       content={
         <>
@@ -355,7 +355,7 @@ const ConcurrencyItem: React.FC<SequenceItemProps> = memo((props) => {
               onChange={(v) => onUpdateItemPage({ ...item, pageId: v.value, pageName: v.label })}
               getPopupContainer={(dom) => dom}
               disabled={disabled}
-              onDropdownVisibleChange={(v) => setSelectVisible(v)}
+              onOpenChange={(v) => setSelectVisible(v)}
               open={selectVisible && !isDragging}
               options={options}
             />

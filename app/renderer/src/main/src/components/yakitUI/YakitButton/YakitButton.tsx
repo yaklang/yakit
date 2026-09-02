@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Button, type ButtonProps, ConfigProvider } from 'antd'
+import { Button, type ButtonProps } from 'antd'
 
 import styles from './yakitButton.module.scss'
 import classNames from 'classnames'
@@ -57,25 +57,24 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
   }, [radius])
 
   return (
-    <ConfigProvider autoInsertSpaceInButton={false}>
-      <Button
-        {...resePopover}
-        size="middle"
-        type="default"
-        className={classNames(
-          styles['yakit-button'],
-          styles[typeClass],
-          styles[colorClass || ''],
-          styles[sizeClass],
-          { [styles['yakit-hover-button']]: !!isHover },
-          { [styles['yakit-active-button']]: !!isActive },
-          { [styles['yakit-border-radius-button']]: !!radius },
-          className || '',
-        )}
-        style={{ ...style, ...(props.style || {}) }}
-      >
-        {children}
-      </Button>
-    </ConfigProvider>
+    <Button
+      {...resePopover}
+      autoInsertSpace={false}
+      size="middle"
+      type="default"
+      className={classNames(
+        styles['yakit-button'],
+        styles[typeClass],
+        styles[colorClass || ''],
+        styles[sizeClass],
+        { [styles['yakit-hover-button']]: !!isHover },
+        { [styles['yakit-active-button']]: !!isActive },
+        { [styles['yakit-border-radius-button']]: !!radius },
+        className || '',
+      )}
+      style={{ ...style, ...(props.style || {}) }}
+    >
+      {children}
+    </Button>
   )
 })

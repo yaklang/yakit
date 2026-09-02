@@ -453,11 +453,11 @@ const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
   return (
     <YakitModal
       wrapClassName={styles['recharge-modal']}
-      visible={visible}
+      open={visible}
       type="white"
       width={860}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       centered
       hiddenHeader
       bodyStyle={{ padding: 0 }}

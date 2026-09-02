@@ -14,11 +14,12 @@ import { FolderOpenSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/FolderOpen
 import ReactResizeDetector from 'react-resize-detector'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { formatTimestamp } from '@/utils/timeUtil'
-import { Cascader, Divider, Dropdown, type DropdownProps, Form, Progress, Tooltip, Upload } from 'antd'
+import { Divider, Dropdown, type DropdownProps, Form, Progress, Tooltip, Upload } from 'antd'
 import { YakitMenu, type YakitMenuProp } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { randomString } from '@/utils/randomUtil'
+import { normalizeDropdownProps } from '@/utils/antdCompat'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import type { YaklangEngineMode } from '@/yakitGVDefine'
@@ -49,6 +50,7 @@ import type { API } from '@/services/swagger/resposeType'
 import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Trans } from 'react-i18next'
+import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -260,7 +262,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               dropdown={{
                 trigger: ['click'],
                 overlayClassName: styles['dropdown-menu-filter-wrapper'],
-                onVisibleChange: (open) => setTypeShow(open),
+                onOpenChange: (open) => setTypeShow(open),
               }}
               menu={{
                 data: typeFilter,
@@ -416,7 +418,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               dropdown={{
                 trigger: ['click'],
                 overlayClassName: styles['dropdown-menu-filter-wrapper'],
-                onVisibleChange: (open) => setTimeShow(open),
+                onOpenChange: (open) => setTimeShow(open),
               }}
               menu={{
                 data: timeFilter,
@@ -481,7 +483,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               trigger: ['click'],
               placement: 'bottomRight',
               overlayClassName: styles['dropdown-menu-filter-wrapper'],
-              onVisibleChange: (open) => setOperateShow(open ? +Id : -1),
+              onOpenChange: (open) => setOperateShow(open ? +Id : -1),
             }}
             menu={{
               data: [
@@ -517,7 +519,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               trigger: ['click'],
               placement: 'bottomRight',
               overlayClassName: styles['dropdown-menu-filter-wrapper'],
-              onVisibleChange: (open) => setOperateShow(open ? +Id : -1),
+              onOpenChange: (open) => setOperateShow(open ? +Id : -1),
             }}
             menu={{
               data: [
@@ -1167,7 +1169,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                   dropdown={{
                     placement: 'bottomRight',
                     overlayClassName: styles['dropdown-menu-filter-wrapper'],
-                    onVisibleChange: (open) => setHeaderShow(open),
+                    onOpenChange: (open) => setHeaderShow(open),
                   }}
                   menu={{
                     data: [
@@ -2029,8 +2031,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
       centered={true}
       footer={null}
       width={448}
-      destroyOnClose={true}
-      visible={visible}
+      destroyOnHidden={true}
+      open={visible}
       onCancel={onClose}
       bodyStyle={{ padding: 0 }}
     >
@@ -2077,7 +2079,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                   )
                 }
               >
-                <Cascader
+                <YakitCascader
                   defaultValue={cascaderValue}
                   options={data}
                   fieldNames={{ label: 'ProjectName', value: 'Id', children: 'children' }}
@@ -2085,14 +2087,14 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                   loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
                   onChange={(value, selectedOptions) => {
                     if (value) {
-                      setInfo({ ...info, FolderId: +value[0] || 0, ChildFolderId: +value[1] || 0 })
+                      setInfo({ ...info, FolderId: +(value[0] ?? 0) || 0, ChildFolderId: +(value[1] ?? 0) || 0 })
                     } else {
                       setInfo({ ...info, FolderId: 0, ChildFolderId: 0 })
                     }
                   }}
-                  dropdownClassName={styles['cascader-dropdown-body']}
+                  classNames={{ popup: { root: styles['cascader-dropdown-body'] } }}
                   open={dropShow}
-                  onDropdownVisibleChange={(open: boolean) => setDropShow(open)}
+                  onOpenChange={(open: boolean) => setDropShow(open)}
                   suffixIcon={
                     <ChevronDownOutlined size={16} style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />
                   }
@@ -2307,7 +2309,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             </Form.Item>
             {!parentNode && (
               <Form.Item label={`${t('NewProjectAndFolder.belongToFolder')} :`}>
-                <Cascader
+                <YakitCascader
                   options={data}
                   fieldNames={{ label: 'ProjectName', value: 'Id', children: 'children' }}
                   changeOnSelect={true}
@@ -2316,14 +2318,14 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                     if (value) {
                       setImportInfo({
                         ...importInfo,
-                        FolderId: +value[0] || 0,
-                        ChildFolderId: +value[1] || 0,
+                        FolderId: +(value[0] ?? 0) || 0,
+                        ChildFolderId: +(value[1] ?? 0) || 0,
                       })
                     } else {
                       setImportInfo({ ...importInfo, FolderId: 0, ChildFolderId: 0 })
                     }
                   }}
-                  dropdownClassName={styles['cascader-dropdown-body']}
+                  classNames={{ popup: { root: styles['cascader-dropdown-body'] } }}
                   suffixIcon={
                     <ChevronDownOutlined size={16} style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />
                   }
@@ -2557,13 +2559,14 @@ interface DropdownMenuProps {
 /** 可能准备写成基础组件 */
 const DropdownMenu: React.FC<DropdownMenuProps> = memo((props) => {
   const { dropdown = {}, menu, children } = props
+  const dropdownProps = normalizeDropdownProps(dropdown)
 
   const overlay = useMemo(() => {
     return <YakitMenu {...menu} />
   }, [menu])
 
   return (
-    <Dropdown {...dropdown} overlay={overlay}>
+    <Dropdown {...dropdownProps} popupRender={() => overlay}>
       {children}
     </Dropdown>
   )

@@ -6,7 +6,7 @@ import type { MultipleNodeInfo } from './MainOperatorContentType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { useMemoizedFn } from 'ahooks'
-import type { CheckboxValueType } from 'antd/es/checkbox/Group'
+import type { CheckboxValueType } from '@/utils/antdCompat'
 import { yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 

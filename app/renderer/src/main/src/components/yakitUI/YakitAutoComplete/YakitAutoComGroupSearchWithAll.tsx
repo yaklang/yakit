@@ -90,6 +90,14 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
       allOptionsGroupLabel = '全部',
       filterOption: filterOptionProp,
       onSearch: onSearchFromProp,
+      dropdownRender,
+      popupRender,
+      dropdownMatchSelectWidth,
+      popupMatchSelectWidth,
+      onDropdownVisibleChange,
+      onOpenChange,
+      dropdownClassName,
+      classNames: autoCompleteClassNames,
       ...restProps
     } = props
     const autoCompleteRef = useRef<HTMLDivElement>(null)
@@ -284,7 +292,8 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
         const v = restProps.value
         setDropdownSearchText(v !== undefined && v !== null ? String(v) : String(cacheHistoryData.defaultValue || ''))
       }
-      props.onDropdownVisibleChange?.(open)
+      onOpenChange?.(open)
+      onDropdownVisibleChange?.(open)
     })
 
     return (
@@ -307,14 +316,21 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
             onSearch={mergedOnSearch}
             options={options}
             size="middle"
-            dropdownClassName={classNames(
-              styles['yakit-auto-complete-popup'],
-              {
-                [styles['yakit-auto-complete-popup-y']]: show,
+            classNames={{
+              popup: {
+                root: classNames(
+                  styles['yakit-auto-complete-popup'],
+                  {
+                    [styles['yakit-auto-complete-popup-y']]: show,
+                  },
+                  dropdownClassName,
+                  autoCompleteClassNames?.popup?.root,
+                ),
               },
-              props.dropdownClassName,
-            )}
-            onDropdownVisibleChange={mergedOnDropdownVisibleChange}
+            }}
+            popupRender={popupRender ?? dropdownRender}
+            popupMatchSelectWidth={popupMatchSelectWidth ?? dropdownMatchSelectWidth}
+            onOpenChange={mergedOnDropdownVisibleChange}
           />
         )}
       </div>

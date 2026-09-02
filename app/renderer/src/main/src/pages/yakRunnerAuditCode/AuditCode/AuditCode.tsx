@@ -1768,19 +1768,21 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                     dots
                     min={0}
                     max={3}
-                    tipFormatter={(value) => {
-                      switch (value) {
-                        case 0:
-                          return t('AuditCode.compileSpeedDisabled')
-                        case 1:
-                          return t('AuditCode.compileSpeedSlow')
-                        case 2:
-                          return t('AuditCode.compileSpeedMedium')
-                        case 3:
-                          return t('AuditCode.compileSpeedFast')
-                        default:
-                          return value
-                      }
+                    tooltip={{
+                      formatter: (value) => {
+                        switch (value) {
+                          case 0:
+                            return t('AuditCode.compileSpeedDisabled')
+                          case 1:
+                            return t('AuditCode.compileSpeedSlow')
+                          case 2:
+                            return t('AuditCode.compileSpeedMedium')
+                          case 3:
+                            return t('AuditCode.compileSpeedFast')
+                          default:
+                            return value
+                        }
+                      },
                     }}
                   />
                 </Form.Item>
@@ -2073,7 +2075,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
     <>
       <YakitModal
         getContainer={warrpId || document.getElementById('audit-code') || document.body}
-        visible={isShowCompileModal}
+        open={isShowCompileModal}
         bodyStyle={{ padding: 0 }}
         title={title || t('AuditCode.addProject')}
         footer={null}
@@ -2095,7 +2097,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
       <YakitModal
         centered
         getContainer={warrpId || document.getElementById('audit-code') || document.body}
-        visible={isShowRunAuditModal}
+        open={isShowRunAuditModal}
         title={null}
         footer={null}
         width={520}
@@ -2232,7 +2234,7 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
       <YakitModal
         centered
         getContainer={warrpId || document.body}
-        visible={!!nameOrConfig}
+        open={!!nameOrConfig}
         title={null}
         footer={null}
         width={520}
@@ -2745,7 +2747,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         dataIndex: 'Description',
         render: (text, record) => {
           return (
-            <Tooltip title={text} overlayClassName={styles['tooltip-line-feed']}>
+            <Tooltip title={text} classNames={{ root: styles['tooltip-line-feed'] }}>
               <div className={classNames('yakit-content-single-ellipsis', styles['audit-text'])}>{text}</div>
             </Tooltip>
           )

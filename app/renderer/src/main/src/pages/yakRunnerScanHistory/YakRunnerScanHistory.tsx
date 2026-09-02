@@ -36,7 +36,7 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { genDefaultPagination, type QueryGeneralResponse } from '../invoker/schema'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { Tooltip } from 'antd'
+import { Tooltip, type CheckboxChangeEvent } from 'antd'
 import {
   ArrowCircleRightOutlined,
   ChevronDownOutlined,
@@ -48,7 +48,6 @@ import {
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import type { VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import type { CheckboxChangeEvent } from 'antd/lib/checkbox'
 import { apiQuerySSAPrograms } from './utils'
 import { getGroupNamesTotal } from '../yakRunnerCodeScan/utils'
 import { JSONParseLog } from '@/utils/tool'

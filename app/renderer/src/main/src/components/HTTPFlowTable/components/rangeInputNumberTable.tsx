@@ -1,5 +1,5 @@
 import React from 'react'
-import { Input } from 'antd'
+import { Space } from 'antd'
 import { FooterBottom } from '@/components/TableVirtualResize/TableVirtualResize'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import type { RangeInputNumberProps } from '../HTTPFlowTable.constants'
@@ -9,7 +9,7 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
   const { minNumber, setMinNumber, maxNumber, setMaxNumber, extra, onReset, onSure, showFooter, onChangeValued } = props
   return (
     <div className={style['table-body-length-filter']}>
-      <Input.Group compact size="small" className={style['input-group']}>
+      <Space.Compact size="small" className={style['input-group']}>
         <YakitInputNumber
           className={style['input-left']}
           placeholder="Minimum"
@@ -34,7 +34,7 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
           size="small"
         />
         {extra}
-      </Input.Group>
+      </Space.Compact>
       {showFooter !== false && (
         <FooterBottom
           className={style['input-footer']}

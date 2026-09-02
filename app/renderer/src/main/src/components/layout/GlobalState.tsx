@@ -1358,15 +1358,17 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
   return (
     <>
       <YakitPopover
-        overlayClassName={classNames(
-          styles['global-state-popover'],
-          isChecking ? ShowColorClass['loading'] : ShowColorClass[state],
-        )}
+        classNames={{
+          root: classNames(
+            styles['global-state-popover'],
+            isChecking ? ShowColorClass['loading'] : ShowColorClass[state],
+          ),
+        }}
         placement={system === 'Darwin' ? 'bottomRight' : 'bottomLeft'}
         content={isIRify() ? irifyContent : content}
-        visible={show}
+        open={show}
         trigger="click"
-        onVisibleChange={(visible) => setShow(visible)}
+        onOpenChange={(visible) => setShow(visible)}
       >
         <div
           className={classNames(

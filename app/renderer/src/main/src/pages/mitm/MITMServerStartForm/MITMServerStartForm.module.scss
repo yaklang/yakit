@@ -20,16 +20,29 @@
   padding-bottom: 24px;
 
   :global {
-    .ant-form-item-with-help .ant-form-item-explain {
-      font-size: 12px;
-      color: var(--Colors-Use-Neutral-Text-4-Help-text);
-      line-height: 16px;
-      min-height: 16px;
-      margin-top: 2px;
+    .ant-form-item .ant-form-item-additional {
+      min-height: 0 !important;
     }
 
-    .ant-form-item-control-input {
-      min-height: 28px;
+    .ant-form-item .ant-form-item-control-input {
+      min-height: 28px !important;
+    }
+
+    .ant-form-item .ant-form-item-label > label {
+      height: 28px;
+      line-height: 28px;
+    }
+
+    .ant-form-item-explain,
+    .ant-form-item-extra,
+    .ant-form-item-explain > div,
+    .ant-form-item-extra > div,
+    .ant-form-show-help-item {
+      font-size: 12px !important;
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      line-height: 16px !important;
+      min-height: 0 !important;
+      height: auto !important;
     }
   }
 
@@ -101,10 +114,17 @@
   }
 
   .form-rule-help {
+    display: block;
+    font-size: 12px !important;
+    line-height: 16px;
+    margin: 0;
+    padding: 0;
+
     .form-rule-help-setting {
       margin-left: 8px;
       color: var(--Colors-Use-Main-Primary);
       display: inline-flex;
+      align-items: center;
       cursor: pointer;
 
       svg {
@@ -130,18 +150,73 @@
   }
 }
 
+.mitm-start-antd-form {
+  :global(.ant-form-item-additional),
+  :global(.ant-form-item-explain),
+  :global(.ant-form-item-extra) {
+    --ant-font-size: 12px;
+    --ant-line-height: 1.33334;
+    --ant-font-height: 16px;
+    --ant-control-height-sm: 0px;
+    font-size: 12px !important;
+    line-height: 16px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  }
+
+  :global(.ant-form-item-explain) div,
+  :global(.ant-form-item-extra) div,
+  :global(.ant-form-show-help-item) {
+    font-size: 12px !important;
+    line-height: 16px !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  :global(.ant-form-item-additional) {
+    min-height: 0 !important;
+  }
+}
+
+.form-item-with-desc {
+  :global(.ant-form-item-additional),
+  :global(.ant-form-item-extra),
+  :global(.ant-form-item-explain),
+  :global(.ant-form-item-explain) div,
+  :global(.ant-form-show-help-item) {
+    min-height: 0 !important;
+    height: auto !important;
+    font-size: 12px !important;
+    line-height: 16px !important;
+  }
+}
+
 .advanced-configuration-drawer {
   :global {
-    .ant-form-item-with-help .ant-form-item-explain {
-      font-size: 12px;
-      color: var(--Colors-Use-Neutral-Text-4-Help-text);
-      line-height: 16px;
-      min-height: 16px;
-      margin-top: 2px;
+    .ant-form-item .ant-form-item-additional {
+      min-height: 0 !important;
     }
 
-    .ant-form-item-control-input {
-      min-height: 28px;
+    .ant-form-item .ant-form-item-control-input {
+      min-height: 28px !important;
+    }
+
+    .ant-form-item-explain,
+    .ant-form-item-extra,
+    .ant-form-item-explain > div,
+    .ant-form-item-extra > div,
+    .ant-form-show-help-item {
+      font-size: 12px !important;
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      line-height: 16px !important;
+      min-height: 0 !important;
+      height: auto !important;
+    }
+
+    .ant-form-item-explain,
+    .ant-form-item-extra {
+      margin-top: 2px;
     }
   }
 
@@ -249,16 +324,29 @@
 
 .mitm-filters-modal {
   :global {
-    .ant-form-item-with-help .ant-form-item-explain {
-      font-size: 12px;
-      color: var(--Colors-Use-Neutral-Text-4-Help-text);
-      line-height: 16px;
-      min-height: 16px;
-      margin-top: 2px;
+    .ant-form-item .ant-form-item-additional {
+      min-height: 0 !important;
     }
 
-    .ant-form-item-control-input {
-      min-height: 28px;
+    .ant-form-item .ant-form-item-control-input {
+      min-height: 28px !important;
+    }
+
+    .ant-form-item-explain,
+    .ant-form-item-extra,
+    .ant-form-item-explain > div,
+    .ant-form-item-extra > div,
+    .ant-form-show-help-item {
+      font-size: 12px !important;
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      line-height: 16px !important;
+      min-height: 0 !important;
+      height: auto !important;
+    }
+
+    .ant-form-item-explain,
+    .ant-form-item-extra {
+      margin-top: 2px;
     }
   }
 
@@ -673,12 +761,6 @@
 }
 
 .edit-name-popover {
-  :global {
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
-  }
-
   &-content {
     display: flex;
     flex-direction: column;

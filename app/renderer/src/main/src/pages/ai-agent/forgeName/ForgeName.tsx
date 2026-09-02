@@ -359,7 +359,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
               return (
                 <React.Fragment key={key}>
                   <YakitPopover
-                    overlayClassName={styles['forge-opt-popover']}
+                    classNames={{ root: styles['forge-opt-popover'] }}
                     placement="right"
                     content={
                       <div className={styles['forge-detail']}>
@@ -411,7 +411,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                         <Tooltip
                           title={t('ForgeName.exportForge')}
                           placement="topRight"
-                          overlayClassName={styles['item-extra-tooltip']}
+                          classNames={{ root: styles['item-extra-tooltip'] }}
                         >
                           <YakitButton
                             type="text2"
@@ -429,7 +429,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                         <Tooltip
                           title={t('ForgeName.editForge')}
                           placement="topRight"
-                          overlayClassName={styles['item-extra-tooltip']}
+                          classNames={{ root: styles['item-extra-tooltip'] }}
                         >
                           <YakitButton
                             type="text2"
@@ -443,7 +443,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                         <Tooltip
                           title={t('ForgeName.deleteForge')}
                           placement="topRight"
-                          overlayClassName={styles['item-extra-tooltip']}
+                          classNames={{ root: styles['item-extra-tooltip'] }}
                         >
                           <YakitPopconfirm
                             title={t('ForgeName.deleteForgeConfirm')}
@@ -479,7 +479,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
             )}
             {loading && (
               <div className={styles['forge-list-loading']}>
-                <YakitSpin wrapperClassName={styles['loading-style']} spinning={true} tip="" />
+                <YakitSpin wrapperClassName={styles['loading-style']} spinning={true} />
               </div>
             )}
           </div>
@@ -632,9 +632,9 @@ export const BatchExportAIforge = memo(
                     getAiToolData(aiToolPagination.Page + 1, searchKeyword)
                   }
                 }}
-                dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+                popupRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                 mode="multiple"
-                onDropdownVisibleChange={(open) => {
+                onOpenChange={(open) => {
                   if (open) {
                     getAiToolData(1, searchKeyword)
                   } else {

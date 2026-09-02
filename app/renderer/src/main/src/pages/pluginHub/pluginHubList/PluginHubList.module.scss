@@ -452,30 +452,24 @@
   }
 }
 .hub-outer-list-group-popover {
-  padding-top: 4px;
   :global {
-    .ant-popover-inner {
-      border-radius: 4px;
-    }
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
     .ant-popover-arrow {
       left: 110px;
+    }
+    .ant-popover-inner {
+      border-radius: 4px;
+      padding: 12px;
     }
   }
 }
 .hub-outer-list-filter-popover {
-  padding-top: 4px;
   :global {
-    .ant-popover-inner {
-      border-radius: 4px;
-    }
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
     .ant-popover-arrow {
       left: 6px;
+    }
+    .ant-popover-inner {
+      border-radius: 4px;
+      padding: 12px;
     }
   }
 }
@@ -866,20 +860,12 @@
 // 详情-插件列表单项-源码弹窗
 .terminal-popover {
   width: 429px;
-  padding-bottom: 4px;
-  padding-top: 4px;
   :global {
-    .ant-popover-inner-content {
-      height: 40vh;
-      padding: 4px;
-    }
-
     .ant-popover-inner {
-      border-radius: 4px;
-    }
-
-    .ant-popover-arrow {
-      left: 0;
+      padding: 4px;
+      .ant-popover-inner-content {
+        height: 40vh;
+      }
     }
   }
 }
@@ -963,15 +949,11 @@
 }
 
 .add-group-popover {
-  padding-top: 0px;
-  // border: 1px solid var(--Colors-Use-Neutral-Border);
-  // border-radius: 4px;
-  // overflow: hidden;
   :global {
     .ant-popover-arrow {
       display: none;
     }
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 14px 0 0;
     }
   }

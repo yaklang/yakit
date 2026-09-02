@@ -537,8 +537,8 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                         dropdown={{
                           trigger: ['click'],
                           placement: 'bottom',
-                          visible: sendPopoverVisible,
-                          onVisibleChange: (v) => setSendPopoverVisible(v),
+                          open: sendPopoverVisible,
+                          onOpenChange: (v) => setSendPopoverVisible(v),
                           disabled: selectNum === 0,
                         }}
                       >

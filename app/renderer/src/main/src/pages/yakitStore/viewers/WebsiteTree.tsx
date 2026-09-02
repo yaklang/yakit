@@ -296,29 +296,38 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                         </Button>
                       ) : (
                         <Popover
-                          overlayClassName={style['http-history-table-drop-down-popover']}
+                          classNames={{ root: style['http-history-table-drop-down-popover'] }}
                           content={
-                            <Menu className={style['http-history-table-drop-down-batch']}>
-                              <Menu.Item>
-                                <YakitPopconfirm
-                                  title={'确定删除选择的URL吗？不可恢复'}
-                                  onConfirm={() => {
-                                    delManyReord()
-                                  }}
-                                >
-                                  批量删除
-                                </YakitPopconfirm>
-                              </Menu.Item>
-                              <Menu.Item>
-                                <ExportExcel
-                                  fileName="网站树视角"
-                                  text="批量导出"
-                                  showButton={false}
-                                  getData={getData}
-                                  btnProps={{ size: 'small' }}
-                                />
-                              </Menu.Item>
-                            </Menu>
+                            <Menu
+                              className={style['http-history-table-drop-down-batch']}
+                              items={[
+                                {
+                                  key: 'delete',
+                                  label: (
+                                    <YakitPopconfirm
+                                      title={'确定删除选择的URL吗？不可恢复'}
+                                      onConfirm={() => {
+                                        delManyReord()
+                                      }}
+                                    >
+                                      批量删除
+                                    </YakitPopconfirm>
+                                  ),
+                                },
+                                {
+                                  key: 'export',
+                                  label: (
+                                    <ExportExcel
+                                      fileName="网站树视角"
+                                      text="批量导出"
+                                      showButton={false}
+                                      getData={getData}
+                                      btnProps={{ size: 'small' }}
+                                    />
+                                  ),
+                                },
+                              ]}
+                            />
                           }
                           trigger="click"
                           placement="bottomLeft"
@@ -495,7 +504,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
             size={'small'}
             className={'flex-card'}
             title={'HTTP Flow Record'}
-            bodyStyle={{ padding: 0 }}
+            styles={{ body: { padding: 0 } }}
             style={{ borderTop: 0 }}
             extra={
               <Pagination

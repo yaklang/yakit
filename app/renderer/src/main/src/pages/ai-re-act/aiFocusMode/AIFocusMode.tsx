@@ -125,7 +125,15 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                   {item.label}
                 </span>
                 {!props.disabled && (
-                  <XOutlined className={styles['icon-wrapper']} onClick={onRemove} color="currentColor" />
+                  <XOutlined
+                    className={styles['icon-wrapper']}
+                    color="currentColor"
+                    data-select-clear
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onRemove()
+                    }}
+                  />
                 )}
               </div>
             }

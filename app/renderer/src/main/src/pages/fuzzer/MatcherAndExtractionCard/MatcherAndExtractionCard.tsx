@@ -27,7 +27,7 @@ import styles from './MatcherAndExtraction.module.scss'
 import { ResizerIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { Alert, Descriptions, Divider } from 'antd'
+import { Descriptions, Divider } from 'antd'
 import classNames from 'classnames'
 import { useCreation, useMap, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
@@ -68,6 +68,7 @@ import i18n from '@/i18n/i18n'
 import { ExtractionResultsContent, LabelNodeItem, onFilterEmptySubMatcher } from './MatcherAndExtractionCardShared'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 import {
   AdjustmentsOutlined,
@@ -776,7 +777,7 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
           [styles['matching-extraction-content-hidden']]: type !== 'matchers',
         })}
       >
-        <Alert
+        <YakitAlert
           message={
             pageType === 'webfuzzer'
               ? t('MatcherCollapse.multipleMatchersExplanation')
@@ -865,7 +866,7 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
               </div>
               <YakitCollapse
                 activeKey={getActiveKey(number)}
-                onChange={(key) => setActiveKey(number, key as string)}
+                onChange={(key) => setActiveKey(number, Array.isArray(key) ? key[0] : key)}
                 accordion
                 className={styles['matcher-extraction-collapse']}
               >
@@ -1142,7 +1143,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
     >
       <YakitCollapse
         activeKey={activeKey}
-        onChange={(key) => setActiveKey(key as string)}
+        onChange={(key) => setActiveKey(Array.isArray(key) ? key[0] : key)}
         accordion
         className={styles['matcher-extraction-collapse']}
         style={{ minWidth: i18n.language === 'en' ? 500 : undefined }}
@@ -1154,7 +1155,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                 <span className={classNames(styles['header-id'])}>
                   <span>{extractorItem.Name || `data_${index}`}</span>
                   <YakitPopover
-                    overlayClassName={styles['edit-name-popover']}
+                    classNames={{ root: styles['edit-name-popover'] }}
                     content={
                       <div
                         className={styles['edit-name-popover-content']}
@@ -1179,8 +1180,8 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                     }
                     placement="top"
                     trigger={['click']}
-                    visible={editNameVisible && currentIndex === index}
-                    onVisibleChange={setEditNameVisible}
+                    open={editNameVisible && currentIndex === index}
+                    onOpenChange={setEditNameVisible}
                   >
                     <PencilAltOutlined
                       size={16}
@@ -1403,7 +1404,7 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
   })
   return (
     <YakitPopover
-      overlayClassName={styles['color-select-popover']}
+      classNames={{ root: styles['color-select-popover'] }}
       content={
         <div className={styles['color-select-content']}>
           <span className={styles['hit-color']}>{t('ColorSelect.hit_color')}</span>
@@ -1430,8 +1431,8 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
         </div>
       }
       placement="bottom"
-      visible={isShowColor}
-      onVisibleChange={setIsShowColor}
+      open={isShowColor}
+      onOpenChange={setIsShowColor}
     >
       <div
         className={classNames(styles['color-select-btn'], {
@@ -1476,12 +1477,14 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
   return (
     <YakitDrawer
       mask={false}
-      visible={visibleDrawer}
+      open={visibleDrawer}
       width="100vh"
-      headerStyle={{ display: 'none' }}
+      styles={{
+        wrapper: { height: heightDrawer, boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' },
+        header: { display: 'none' },
+        body: { padding: 0 },
+      }}
       style={{ height: visibleDrawer ? heightDrawer : 0 }}
-      contentWrapperStyle={{ height: heightDrawer, boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' }}
-      bodyStyle={{ padding: 0 }}
       placement="bottom"
     >
       <MatcherAndExtractionCard

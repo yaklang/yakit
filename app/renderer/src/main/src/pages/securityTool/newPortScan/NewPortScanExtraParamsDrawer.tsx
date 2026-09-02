@@ -21,7 +21,7 @@ import { yakitInfo } from '@/utils/notification'
 import { apiGetGlobalNetworkConfig, apiGetPcapMetadata, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import cloneDeep from 'lodash/cloneDeep'
 import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import type { CheckboxValueType } from 'antd/lib/checkbox/Group'
+import type { CheckboxValueType } from '@/utils/antdCompat'
 import { PresetPorts } from '@/pages/portscan/schema'
 import { isEnpriTraceAgent } from '@/utils/envfile'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
@@ -99,7 +99,7 @@ const NewPortScanExtraParamsDrawer: React.FC<NewPortScanExtraParamsDrawerProps> 
   return (
     <YakitDrawer
       className={styles['port-scan-execute-extra-params-drawer']}
-      visible={visible}
+      open={visible}
       onClose={onClose}
       width="max(700px, 65%)"
       title={t('NewPortScanExecuteContent.extraParams')}

@@ -121,7 +121,7 @@ const renderCard = (infoList, type) => {
             <Tooltip
               color="#fff"
               title={<TooltipTitle list={infoList} />}
-              overlayClassName="status-cards-info"
+              classNames={{ root: 'status-cards-info' }}
               placement="topLeft"
             >
               <Statistic
@@ -193,7 +193,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         <Card
           size={'small'}
           hoverable={false}
-          bordered={true}
+          variant="outlined"
           title={`${t('viewers.base.PluginResultUI.taskProgressID')}${v.id}`}
         >
           <Progress
@@ -272,15 +272,17 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 <Col key={card.tag} span={4} style={{ marginBottom: 8 }}>
                   <Card
                     hoverable={true}
-                    bodyStyle={{
-                      paddingTop: 8,
-                      paddingBottom: 4,
-                      paddingLeft: 12,
-                      paddingRight: 12,
-                      height: 100,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
+                    styles={{
+                      body: {
+                        paddingTop: 8,
+                        paddingBottom: 4,
+                        paddingLeft: 12,
+                        paddingRight: 12,
+                        height: 100,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                      },
                     }}
                   >
                     <Tooltip
@@ -670,15 +672,17 @@ export const SimpleCardBox: React.FC<SimpleCardBoxProps> = (props) => {
                 <Col key={card.tag} span={4} style={{ marginBottom: 8 }}>
                   <Card
                     hoverable={true}
-                    bodyStyle={{
-                      paddingTop: 8,
-                      paddingBottom: 4,
-                      paddingLeft: 12,
-                      paddingRight: 12,
-                      height: 80,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
+                    styles={{
+                      body: {
+                        paddingTop: 8,
+                        paddingBottom: 4,
+                        paddingLeft: 12,
+                        paddingRight: 12,
+                        height: 80,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                      },
                     }}
                   >
                     <Tooltip

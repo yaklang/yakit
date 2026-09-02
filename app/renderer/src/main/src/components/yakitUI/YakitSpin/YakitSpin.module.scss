@@ -3,6 +3,11 @@
   height: 100%;
   display: flex;
   flex-flow: column;
+
+  > :global(div) > :global(.ant-spin) {
+    max-height: none;
+  }
+
   :global {
     .ant-spin-container {
       flex-grow: 1;
@@ -23,4 +28,10 @@
       background-color: var(--Colors-Use-Main-Primary);
     }
   }
+}
+
+.yakit-spin-nest {
+  width: 100%;
+  height: 100%;
+  min-height: 32px;
 }

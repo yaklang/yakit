@@ -1,6 +1,6 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import YakitTree, { type TreeKey } from '../yakitUI/YakitTree/YakitTree'
-import type { DataNode } from 'antd/es/tree'
+import type { TreeDataNode as DataNode } from 'antd'
 import { useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import {
   DocumentOutlined,

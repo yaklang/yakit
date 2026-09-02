@@ -1,6 +1,7 @@
 // ========================== ant card yakit-start ==========================
 
-.ant-card-bordered {
+.ant-card-bordered,
+.ant-card-outlined {
   border: 1px solid var(--Colors-Use-Neutral-Border);
   background: var(--Colors-Use-Basic-Background);
   .ant-card-head {

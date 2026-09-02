@@ -493,7 +493,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
               {isEnterpriseEdition() ? (
                 <YakitPopover
                   placement={'bottom'}
-                  arrowPointAtCenter={true}
+                  arrow={{ pointAtCenter: true }}
                   content={
                     <YakitMenu
                       data={batchMenuDataEnterprise(t)}
@@ -503,7 +503,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                     />
                   }
                   trigger="click"
-                  overlayClassName={classNames(styles['popover-remove'])}
+                  classNames={{ root: classNames(styles['popover-remove']) }}
                 >
                   <YakitButton
                     type="outline2"
@@ -782,7 +782,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
         </YakitPopconfirm>
       </div>
       <YakitModal
-        visible={visible}
+        open={visible}
         footer={null}
         closeIcon={<></>}
         centered

@@ -35,7 +35,7 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
   return (
     <YakitModal
       title={t('RuleExportAndImportButton.export_configuration_json')}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       okText={t('YakitButton.save_as')}
       width={960}
@@ -112,7 +112,7 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
           </YakitButton>
         </div>
       }
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       okText={t('YakitButton.import')}
       width={960}

@@ -30,17 +30,29 @@ import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 const showExtraSize: string[] = ['large', 'middle']
 
 export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
-  const { size = 'middle', showInnerText, showInnerIcon, className = '', wrapperClassName = '', ...reset } = props
+  const {
+    size = 'middle',
+    showInnerText,
+    showInnerIcon,
+    className = '',
+    wrapperClassName = '',
+    checkedChildren,
+    unCheckedChildren,
+    ...reset
+  } = props
   const { t } = useI18nNamespaces(['yakitUi'])
-  let children = {}
+  let innerChildren: Pick<YakitSwitchProps, 'checkedChildren' | 'unCheckedChildren'> = {
+    checkedChildren,
+    unCheckedChildren,
+  }
   if (showInnerText && showExtraSize.findIndex((ele) => ele === size) !== -1) {
-    children = {
+    innerChildren = {
       checkedChildren: t('YakitSwitch.on'),
       unCheckedChildren: t('YakitSwitch.off'),
     }
   }
   if (showInnerIcon && showExtraSize.findIndex((ele) => ele === size) !== -1) {
-    children = {
+    innerChildren = {
       checkedChildren: (
         <CheckIcon
           className={classNames({
@@ -60,6 +72,7 @@ export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
       ),
     }
   }
+  const hasInnerChildren = !!(innerChildren.checkedChildren || innerChildren.unCheckedChildren)
   return (
     <div
       className={classNames(
@@ -75,15 +88,19 @@ export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
     >
       <Switch
         {...reset}
-        {...children}
+        {...innerChildren}
         size="default"
-        className={classNames(styles['yakit-switch-item'], {
-          [styles['yakit-switch-max-large']]: size === 'maxLarge',
-          [styles['yakit-switch-large']]: size === 'large',
-          [styles['yakit-switch-middle']]: size === 'middle',
-          [styles['yakit-switch-small']]: size === 'small',
+        className={classNames(
+          styles['yakit-switch-item'],
+          {
+            [styles['yakit-switch-max-large']]: size === 'maxLarge',
+            [styles['yakit-switch-large']]: size === 'large',
+            [styles['yakit-switch-middle']]: size === 'middle',
+            [styles['yakit-switch-small']]: size === 'small',
+            [styles['yakit-switch-has-children']]: hasInnerChildren,
+          },
           className,
-        })}
+        )}
       />
     </div>
   )

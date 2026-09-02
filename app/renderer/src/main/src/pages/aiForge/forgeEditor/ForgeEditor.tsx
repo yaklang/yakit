@@ -858,7 +858,11 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
               >
                 <YakitSelect
                   wrapperClassName={styles['forge-type-select']}
-                  dropdownClassName={styles['forge-type-select-dropdown']}
+                  classNames={{
+                    popup: {
+                      root: styles['forge-type-select-dropdown'],
+                    },
+                  }}
                   onChange={handleTypeChange}
                 >
                   {DefaultForgeTypeList.map((item, index) => {
@@ -1017,7 +1021,7 @@ const PromptAndActiveTextarea: React.FC<PromptAndActiveTextareaProps> = memo((pr
     >
       <div className={styles['textarea-header']}>
         <div className={styles['header-title']}>{title}</div>
-        <Tooltip overlayClassName={styles['textarea-hint-icon-tooltip']} title={hint}>
+        <Tooltip classNames={{ root: styles['textarea-hint-icon-tooltip'] }} title={hint}>
           {!!hint && <InformationCircleOutlined className={styles['header-hint-icon']} color="currentColor" />}
         </Tooltip>
       </div>

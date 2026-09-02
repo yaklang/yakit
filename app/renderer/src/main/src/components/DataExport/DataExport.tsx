@@ -8,7 +8,7 @@ import { genDefaultPagination, type PaginationSchema, type QueryGeneralResponse 
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton, type YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
-import type { CheckboxValueType } from 'antd/lib/checkbox/Group'
+import type { CheckboxValueType } from '@/utils/antdCompat'
 import styles from './DataExport.module.scss'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
@@ -237,7 +237,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
       <YakitModal
         title={t('ExportExcel.dataExport')}
         closable={true}
-        visible={visible}
+        open={visible}
         onCancel={() => setVisible(false)}
         footer={null}
         getContainer={getContainer}
@@ -284,7 +284,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
       <YakitModal
         title={t('ExportExcel.dataExport')}
         closable={true}
-        visible={splitVisible}
+        open={splitVisible}
         onCancel={() => setSplitVisible(false)}
         footer={null}
         getContainer={getContainer}

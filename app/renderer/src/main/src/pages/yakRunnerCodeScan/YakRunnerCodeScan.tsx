@@ -426,8 +426,8 @@ const CodeScanRuleSetting: React.FC<CodeScanRuleSettingProps> = React.memo((prop
             </YakitCheckbox>
           </div>
         }
-        visible={visible}
-        onVisibleChange={setVisible}
+        open={visible}
+        onOpenChange={setVisible}
         placement="bottomRight"
         trigger={'click'}
       >
@@ -621,7 +621,7 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
         <div className={styles['filter-wrapper']}>
           <div className={styles['header-filter-tag']}>
             <YakitPopover
-              overlayClassName={styles['code-scan-rule-group-popover']}
+              classNames={{ root: styles['code-scan-rule-group-popover'] }}
               content={
                 <div className={styles['code-scan-rule-list-filter']}>
                   {groupList.map((item) => {
@@ -641,8 +641,8 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                 </div>
               }
               trigger="hover"
-              visible={groupTagShow}
-              onVisibleChange={setGroupTagShow}
+              open={groupTagShow}
+              onOpenChange={setGroupTagShow}
               placement="bottom"
             >
               <div
@@ -1359,7 +1359,6 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
           <>
             <div className={styles['default-content']}>代码审计只能打开一个项目，请选择项目在代码审计中查看</div>
             <Radio.Group
-              className="plugins-radio-wrapper"
               value={openProject}
               onChange={(e) => {
                 setOpenProject(e.target.value)
@@ -2243,7 +2242,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         <React.Suspense fallback={<>loading...</>}>
           {auditDetailShow && auditInfo.current && (
             <YakitDrawer
-              visible={auditDetailShow}
+              open={auditDetailShow}
               onClose={handleCancelDetail}
               width="90%"
               title="审计详情"
@@ -2256,7 +2255,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                   在代码审计中打开
                 </YakitButton>
               }
-              bodyStyle={{ overflow: 'hidden', padding: 0 }}
+              styles={{ body: { overflow: 'hidden', padding: 0 } }}
             >
               {/* 审计详情 */}
               <div className={classNames(styles['drawer-body'])}>
@@ -2866,19 +2865,21 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                         dots
                         min={0}
                         max={3}
-                        tipFormatter={(value) => {
-                          switch (value) {
-                            case 0:
-                              return '关闭，精度IV'
-                            case 1:
-                              return '慢速，精度III'
-                            case 2:
-                              return '中速，精度II'
-                            case 3:
-                              return '快速，精度I'
-                            default:
-                              return value
-                          }
+                        tooltip={{
+                          formatter: (value) => {
+                            switch (value) {
+                              case 0:
+                                return '关闭，精度IV'
+                              case 1:
+                                return '慢速，精度III'
+                              case 2:
+                                return '中速，精度II'
+                              case 3:
+                                return '快速，精度I'
+                              default:
+                                return value
+                            }
+                          },
                         }}
                       />
                     </Form.Item>
@@ -2944,7 +2945,7 @@ export const FlowRuleDetailsListItem: React.FC<FlowRuleDetailsListItemProps> = R
           <Tooltip
             title={data.Description || 'No Description about it.'}
             placement="topRight"
-            overlayClassName="plugins-tooltip"
+            rootClassName="plugins-tooltip"
           >
             <QuestionMarkCircleOutlined className={styles['flow-rule-item-show-icon-style']} color="currentColor" />
           </Tooltip>

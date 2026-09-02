@@ -150,7 +150,7 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
     <>
       <YakitModal
         wrapClassName={styles['usage-statistics-modal']}
-        visible={visible}
+        open={visible}
         title={t('CeUserMenu.aiUsageTitle')}
         subTitle={t('CeUserMenu.aiUsageSubtitle')}
         headerStyle={{ padding: '16px 24px 4px' }}
@@ -158,7 +158,7 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
         type="white"
         width={480}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         onCancel={onClose}
       >
         <YakitSpin spinning={loading}>

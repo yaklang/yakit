@@ -41,8 +41,8 @@ const BruteExecuteParamsDrawer: React.FC<BruteExecuteParamsDrawerProps> = React.
   })
   return (
     <YakitDrawer
-      className={styles['brute-execute-extra-params-drawer']}
-      visible={visible}
+      rootClassName={styles['brute-execute-extra-params-drawer']}
+      open={visible}
       onClose={onClose}
       width="max(700px, 60%)"
       title={t('BruteExecuteContent.extraParams')}

@@ -1,0 +1,19 @@
+// ========================== ant upload yakit-start ==========================
+.ant-upload-wrapper .ant-upload-drag {
+  background: var(--Colors-Use-Neutral-Bg);
+  border-color: var(--Colors-Use-Neutral-Border);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.ant-upload-wrapper .ant-upload-drag:hover {
+  border-color: var(--Colors-Use-Main-Primary);
+}
+
+.ant-upload-wrapper .ant-upload-drag p.ant-upload-drag-icon .anticon {
+  color: var(--Colors-Use-Main-Primary);
+}
+
+.ant-upload-list .ant-upload-list-item {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+// ========================== ant upload yakit-end ==========================

@@ -18,11 +18,11 @@
     color: var(--Colors-Use-Main-Primary);
     border-color: var(--Colors-Use-Main-Primary);
   }
-}
 
-@container ai-chat-textarea (max-width: 300px) {
-  .mode-btn-label {
-    display: none;
+  @container ai-chat-textarea (max-width: 300px) {
+    .mode-btn-label {
+      display: none;
+    }
   }
 }
 

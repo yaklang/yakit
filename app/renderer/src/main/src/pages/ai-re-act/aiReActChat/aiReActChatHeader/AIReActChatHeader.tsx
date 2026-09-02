@@ -99,7 +99,7 @@ const AIReActSubAgentTask: React.FC<AIReActSubAgentTaskProps> = React.memo((prop
     <>
       {!!casualConcurrentTaskList.length && (
         <YakitPopover
-          overlayClassName={styles['chat-locate-popover']}
+          classNames={{ root: styles['chat-locate-popover'] }}
           content={
             <div className={styles['chat-locate-list']}>
               {casualConcurrentTaskList.map((token) => (
@@ -158,8 +158,8 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
       {rightIcon.history && (
         <Tooltip
           trigger={['click']}
-          destroyTooltipOnHide
-          overlayClassName={styles['history-chat-tooltip']}
+          destroyOnHidden
+          classNames={{ root: styles['history-chat-tooltip'] }}
           title={
             <div className={styles['history-chat-tooltip-content']}>
               <HistoryChat embedded aiSource={aiSource} />

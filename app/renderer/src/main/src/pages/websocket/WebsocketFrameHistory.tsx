@@ -286,7 +286,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
 
               {!initLoading.current && loading && (
                 <div className={styles['table-footer-loading']}>
-                  <YakitSpin wrapperClassName={styles['loading-style']} spinning={true} tip="" />
+                  <YakitSpin wrapperClassName={styles['loading-style']} spinning={true} />
                 </div>
               )}
               {!loading && !hasMore.current && (
@@ -303,7 +303,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
         centered={true}
         width={'60%'}
         footer={null}
-        visible={showDetail}
+        open={showDetail}
         onCancel={handleCancelInfoDetail}
       >
         <div className={styles['websocket-detail-modal']}>

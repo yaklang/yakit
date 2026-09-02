@@ -139,9 +139,9 @@ export const AIManualAdditionPopover: React.FC<AIManualAdditionPopoverProps> = R
 
   return (
     <YakitPopover
-      visible={manualAdditionVisible}
+      open={manualAdditionVisible}
       content={<AIManualAddition chatType={chatType} onCancel={() => setManualAdditionVisible(false)} />}
-      onVisibleChange={setManualAdditionVisible}
+      onOpenChange={setManualAdditionVisible}
       trigger={'click'}
     >
       {children}
@@ -240,7 +240,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
 
   return (
     <YakitPopover
-      visible={visible}
+      open={visible}
       content={
         <Form
           form={form}
@@ -262,7 +262,10 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             label={
               <>
                 同步意图识别
-                <Tooltip overlayClassName={styles['form-info-icon-tooltip']} title={'开启后回答精度更高，但速度会变慢'}>
+                <Tooltip
+                  classNames={{ root: styles['form-info-icon-tooltip'] }}
+                  title={'开启后回答精度更高，但速度会变慢'}
+                >
                   <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                 </Tooltip>
               </>
@@ -290,9 +293,9 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           </Form.Item>
         </Form>
       }
-      onVisibleChange={onVisibleChange}
+      onOpenChange={onVisibleChange}
       trigger={'click'}
-      destroyTooltipOnHide={true}
+      destroyOnHidden={true}
     >
       {children}
     </YakitPopover>

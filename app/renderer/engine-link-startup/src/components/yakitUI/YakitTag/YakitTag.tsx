@@ -27,18 +27,35 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
  * @param {e} onAfterCopy 复制后的回调
  */
 export const YakitTag: React.FC<YakitTagProps> = (props) => {
-  const { color, size, disable, className, enableCopy, iconColor, copyText, border, fullRadius, ...restProps } = props
+  const {
+    color,
+    size,
+    disable,
+    className,
+    enableCopy,
+    iconColor,
+    copyText,
+    border,
+    fullRadius,
+    closable,
+    closeIcon,
+    ...restProps
+  } = props
+  const isClosable = !!(closable || enableCopy)
   const onAfterCopy = useMemoizedFn((e) => {
     if (props.onAfterCopy) props.onAfterCopy(e)
   })
   return (
     <Tag
       {...restProps}
+      closable={isClosable}
       closeIcon={
-        (enableCopy && <CopyComponents copyText={copyText || ''} onAfterCopy={onAfterCopy} iconColor={iconColor} />) ||
-        props.closeIcon || <XOutlined color="currentColor" />
+        enableCopy ? (
+          <CopyComponents copyText={copyText || ''} onAfterCopy={onAfterCopy} iconColor={iconColor} />
+        ) : isClosable ? (
+          (closeIcon ?? <XOutlined color="currentColor" />)
+        ) : undefined
       }
-      closable={props.closable || enableCopy}
       className={classNames(
         styles['yakit-tag-middle'],
         {

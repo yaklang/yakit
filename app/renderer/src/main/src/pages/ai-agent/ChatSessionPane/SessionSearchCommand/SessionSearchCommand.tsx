@@ -65,7 +65,7 @@ export const SessionSearchCommand: React.FC<SessionSearchCommandProps> = memo(({
       <div className={styles['command-input']}>
         <YakitInput
           size="small"
-          bordered={false}
+          variant="borderless"
           autoFocus
           prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
           placeholder={t('YakitInput.searchKeyWordPlaceholder')}

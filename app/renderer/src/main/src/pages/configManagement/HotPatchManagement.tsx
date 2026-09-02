@@ -734,7 +734,7 @@ export const HotPatchManagement: React.FC = () => {
     <Dropdown
       placement="bottomRight"
       trigger={['click']}
-      overlay={
+      popupRender={() => (
         <YakitMenu
           className={styles['hot-patch-menu']}
           popupClassName={styles['hot-patch-menu']}
@@ -757,7 +757,7 @@ export const HotPatchManagement: React.FC = () => {
             if (key === 'create-group') onOpenCreateGroupModal(type)
           }}
         />
-      }
+      )}
     >
       <YakitButton size="small" type="outline1" icon={<PlusOutlined color="currentColor" />} />
     </Dropdown>
@@ -1161,7 +1161,7 @@ export const HotPatchManagement: React.FC = () => {
       </div>
 
       <YakitModal
-        visible={createModalVisible}
+        open={createModalVisible}
         title={t('AddHotCodeTemplate.add_template')}
         onCancel={() => setCreateModalVisible(false)}
         onOk={onConfirmCreate}
@@ -1177,7 +1177,7 @@ export const HotPatchManagement: React.FC = () => {
       </YakitModal>
 
       <YakitModal
-        visible={groupModalVisible}
+        open={groupModalVisible}
         title={t('HotCodeTemplate.create_group')}
         onCancel={() => {
           setGroupModalVisible(false)

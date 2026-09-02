@@ -301,7 +301,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             label={
               <span className="form-label">
                 {t('ConfigPrivateDomain.setProxy')}
-                <Tooltip title={t('ConfigPrivateDomain.proxyHelp')} overlayStyle={{ width: 150 }}>
+                <Tooltip title={t('ConfigPrivateDomain.proxyHelp')} styles={{ root: { width: 150 } }}>
                   <InformationCircleOutlined size={16} className="info-icon" />
                 </Tooltip>
               </span>

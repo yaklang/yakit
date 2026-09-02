@@ -534,12 +534,12 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
           placement="bottom"
           closable={false}
           onClose={onClose}
-          visible={visible && !!inViewport}
+          open={visible && !!inViewport}
           getContainer={cvePageRef.current}
           mask={false}
           style={{ height: visible ? heightDrawer : 0 }}
           className={cveStyles['shell-table-drawer']}
-          contentWrapperStyle={{ boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' }}
+          styles={{ wrapper: { boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' } }}
           title={<div className={cveStyles['heard-title']}>{drawerData?.Url}</div>}
           extra={
             <div className={cveStyles['heard-right-operation']}>

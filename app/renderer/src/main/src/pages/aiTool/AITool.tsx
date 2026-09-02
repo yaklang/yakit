@@ -226,7 +226,7 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
             ) : listTotal > 0 ? (
               <YakitEmpty
                 image={emptyImageTarget}
-                imageStyle={{ margin: '0 auto 24px', width: 274, height: 180 }}
+                styles={{ image: { margin: '0 auto 24px', width: 274, height: 180 } }}
                 title="搜索结果“空”"
                 className={styles['hub-list-empty']}
               />
@@ -341,8 +341,8 @@ const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
             dropdown={{
               trigger: ['click', 'contextMenu'],
               placement: 'bottomLeft',
-              visible: visible,
-              onVisibleChange: setVisible,
+              open: visible,
+              onOpenChange: setVisible,
             }}
           >
             <YakitButton

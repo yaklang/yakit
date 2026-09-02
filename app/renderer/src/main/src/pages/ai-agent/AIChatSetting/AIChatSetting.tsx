@@ -129,7 +129,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <>
                   禁用工具运行时AI审查
                   <Tooltip
-                    overlayClassName={styles['form-info-icon-tooltip']}
+                    classNames={{ root: styles['form-info-icon-tooltip'] }}
                     title={'在工具运行时关掉AI审查，提升工具执行效率'}
                   >
                     <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
@@ -146,7 +146,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <>
                   风险阈值
                   <Tooltip
-                    overlayClassName={styles['form-info-icon-tooltip']}
+                    classNames={{ root: styles['form-info-icon-tooltip'] }}
                     title={'低于这个分数,AI 自动同意,如果高于这个分数,转成手动'}
                   >
                     <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
@@ -195,7 +195,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                   <>
                     plan阶段人机交互次数
                     <Tooltip
-                      overlayClassName={styles['form-info-icon-tooltip']}
+                      classNames={{ root: styles['form-info-icon-tooltip'] }}
                       title={'在任务规划的时候，如果AI允许问用户问题，那么最多问几次'}
                     >
                       <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
@@ -215,7 +215,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <>
                   深度规划任务并发数
                   <Tooltip
-                    overlayClassName={styles['form-info-icon-tooltip']}
+                    classNames={{ root: styles['form-info-icon-tooltip'] }}
                     title={'控制深度搜索或复杂拆解任务时的并行处理能力'}
                   >
                     <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
@@ -264,7 +264,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <>
                   禁用Tools
                   <Tooltip
-                    overlayClassName={styles['form-info-icon-tooltip']}
+                    classNames={{ root: styles['form-info-icon-tooltip'] }}
                     title={'禁用任何外部工具，这就是一个纯聊天机器了'}
                   >
                     <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
@@ -282,7 +282,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <>
                   AI对话重试次数
                   <Tooltip
-                    overlayClassName={styles['form-info-icon-tooltip']}
+                    classNames={{ root: styles['form-info-icon-tooltip'] }}
                     title={'如果远端AI不稳定（网络原因）的时候，某一次对话重试几次'}
                   >
                     <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
@@ -298,7 +298,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <>
                   AI事务重试次数
                   <Tooltip
-                    overlayClassName={styles['form-info-icon-tooltip']}
+                    classNames={{ root: styles['form-info-icon-tooltip'] }}
                     title={'如果回答质量不高的时候，调大可以有效重试回答'}
                   >
                     <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
@@ -349,7 +349,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <>
                   压力token阈值
                   <Tooltip
-                    overlayClassName={styles['form-info-icon-tooltip']}
+                    classNames={{ root: styles['form-info-icon-tooltip'] }}
                     title={'Token pressure limit, 当 AI 对话的 token 数量超过这个限制时，需要警告'}
                   >
                     <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
@@ -371,7 +371,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 <>
                   用户交互测试
                   <Tooltip
-                    overlayClassName={styles['form-info-icon-tooltip']}
+                    classNames={{ root: styles['form-info-icon-tooltip'] }}
                     title={'用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题'}
                   >
                     <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
@@ -397,7 +397,13 @@ export const FormItemSlider: React.FC<FormItemSliderProps> = React.memo((props) 
   return (
     <div className={styles['form-item-slider']}>
       <div className={styles['slider-body']}>
-        <Slider tooltipVisible={false} value={value} {...rest} />
+        <Slider
+          tooltip={{
+            open: false,
+          }}
+          value={value}
+          {...rest}
+        />
       </div>
 
       <div className={styles['slider-value']}>{value}</div>

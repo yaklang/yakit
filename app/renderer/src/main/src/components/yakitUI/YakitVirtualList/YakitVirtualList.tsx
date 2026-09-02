@@ -410,8 +410,8 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
   })
   return (
     <YakitPopover
-      visible={visible}
-      onVisibleChange={onVisibleChange}
+      open={visible}
+      onOpenChange={onVisibleChange}
       placement={placement || 'bottomLeft'}
       content={
         <div className={styles['filter-popover-content']}>
@@ -426,11 +426,11 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
           {option.length > 0 && list.length === 0 && (
             <YakitEmpty
               image={emptyImageTarget}
-              imageStyle={{ margin: '24px auto 12px', width: 160 }}
+              styles={{ image: { margin: '24px auto 12px', width: 160 } }}
               title={t('YakitEmpty.searchEmpty')}
             />
           )}
-          {option.length === 0 && <YakitEmpty imageStyle={{ margin: '24px auto 12px', width: 160 }} />}
+          {option.length === 0 && <YakitEmpty styles={{ image: { margin: '24px auto 12px', width: 160 } }} />}
           <div className={styles['option-list-content']}>
             <div
               ref={containerRef}
@@ -468,7 +468,7 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
           </div>
         </div>
       }
-      overlayClassName={styles['author-filter-popover']}
+      classNames={{ root: styles['author-filter-popover'] }}
     >
       {children}
     </YakitPopover>

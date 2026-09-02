@@ -423,8 +423,8 @@ const MCPHistory: React.FC = React.memo(() => {
                 dropdown={{
                   trigger: ['click'],
                   placement: 'bottomRight',
-                  visible: filterVisible,
-                  onVisibleChange: setFilterVisible,
+                  open: filterVisible,
+                  onOpenChange: setFilterVisible,
                 }}
               >
                 <YakitButton

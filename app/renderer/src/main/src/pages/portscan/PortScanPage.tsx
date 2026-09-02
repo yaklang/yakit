@@ -255,8 +255,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                   onChange={(value) => {
                     let res: string = (value || [])
                       .map((i) => {
-                        // @ts-expect-error 类型定义不完整，需要忽略此行
-                        return PresetPorts[i] || ''
+                        return PresetPorts[String(i)] || ''
                       })
                       .join(',')
                     if (value.includes('all')) {

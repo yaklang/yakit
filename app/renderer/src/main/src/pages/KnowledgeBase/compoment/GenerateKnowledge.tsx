@@ -166,10 +166,10 @@ const GenerateKnowledge: FC<GenerateKnowledgeProps> = ({
           trigger: ['click'],
           placement: 'bottomRight',
           overlayClassName: styles['dropdownMene-data-children'],
-          onVisibleChange: (v) => {
+          onOpenChange: (v) => {
             setDropdownMenuVisible(v)
           },
-          visible: dropdownMenuVisible,
+          open: dropdownMenuVisible,
         }}
       >
         {children ? (
@@ -179,7 +179,7 @@ const GenerateKnowledge: FC<GenerateKnowledgeProps> = ({
         )}
       </YakitDropdownMenu>
       <YakitModal
-        visible={additionalConditionsVisible}
+        open={additionalConditionsVisible}
         title="补充条件"
         onOk={() => {
           if (additionalConditionsValue.trim().length > 0) {

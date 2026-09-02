@@ -173,12 +173,8 @@
 .plugin-list-popover {
   :global {
     .ant-popover-inner {
+      padding: 0;
       border: 0px;
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
-      .ant-popover-inner-content {
-        padding: 0;
-      }
     }
   }
 }

@@ -519,9 +519,9 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
               <Tooltip
                 placement="topLeft"
                 title="展开基础信息"
-                overlayClassName="plugins-tooltip"
-                visible={visible}
-                onVisibleChange={(show) => setVisible(show)}
+                rootClassName="plugins-tooltip"
+                open={visible}
+                onOpenChange={(show) => setVisible(show)}
               >
                 <div className={styles['expand-btn']} onClick={handleExpand}>
                   <OpenOutlined color="currentColor" />

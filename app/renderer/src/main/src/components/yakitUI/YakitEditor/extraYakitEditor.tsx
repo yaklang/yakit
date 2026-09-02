@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { Modal } from 'antd'
 import type {
   ContextMenuPacketEditorConfig,
   OtherMenuListProps,
@@ -13,7 +14,6 @@ import { generateCSRFPocByRequest } from '@/pages/invoker/fromPacketToYakCode'
 import { StringToUint8Array } from '@/utils/str'
 import { showResponseViaResponseRaw } from '@/components/ShowInBrowser'
 import { openExternalWebsite, saveABSFileToOpen } from '@/utils/openWebsite'
-import { Modal } from 'antd'
 import { execAutoDecode, execCodec } from '@/utils/encodec'
 import type { YakitSystem } from '@/yakitGVDefine'
 import { useStore } from '@/store'

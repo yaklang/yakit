@@ -201,12 +201,12 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
   const primaryBg = useMemo(() => {
     switch (fetchEnv()) {
       case 'irify':
-      case 'irify-enterprise':
+      case 'irifyEE':
         return `url(${IRifyPrimaryBg})`
       case 'memfit':
         return `url(${MemfitAIPrimaryBg})`
-      case 'enterprise':
-      case 'simple-enterprise':
+      case 'yakitEE':
+      case 'yakitSE':
       case 'yakit':
         return `url(${YakitPrimaryBg})`
       default:

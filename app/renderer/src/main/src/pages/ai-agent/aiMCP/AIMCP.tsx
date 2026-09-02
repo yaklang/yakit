@@ -571,8 +571,8 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                 title={t('AIMCP.disableConfirm', { name: item.Name })}
                 onConfirm={onStop}
                 onCancel={() => setStopVisible(false)}
-                visible={stopVisible}
-                onVisibleChange={setStopVisible}
+                open={stopVisible}
+                onOpenChange={setStopVisible}
                 trigger={'click'}
                 okButtonProps={{ loading: stopLoading }}
               >
@@ -594,8 +594,8 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                 dropdown={{
                   trigger: ['click', 'contextMenu'],
                   placement: 'bottomLeft',
-                  visible: visible,
-                  onVisibleChange: setVisible,
+                  open: visible,
+                  onOpenChange: setVisible,
                 }}
               >
                 <YakitButton

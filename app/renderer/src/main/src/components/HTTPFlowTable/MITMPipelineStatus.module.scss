@@ -52,7 +52,7 @@
 }
 
 .pipeline-popover-overlay {
-  :global(.ant-popover-inner-content) {
+  :global(.ant-popover-inner) {
     padding: 0;
   }
 }

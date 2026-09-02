@@ -66,7 +66,7 @@ export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<Text
         {...rest}
         ref={ref}
         className={classNames(styles['qs-input-textarea'], className)}
-        bordered={false}
+        variant="borderless"
         autoSize={true}
       />
     )
@@ -115,9 +115,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 case AIInputInnerFeatureEnum.AIModelSelect:
                   node = { type: AIInputInnerFeatureEnum.AIModelSelect, props: { isOpen } }
                   break
-                case AIInputInnerFeatureEnum.AIReasoningEffortSelect:
-                  node = { type: AIInputInnerFeatureEnum.AIReasoningEffortSelect }
-                  break
                 default:
                   break
               }
@@ -132,7 +129,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return [
         { type: AIInputInnerFeatureEnum.AIReviewRuleSelect },
         { type: AIInputInnerFeatureEnum.AIModelSelect, props: { isOpen } },
-        { type: AIInputInnerFeatureEnum.AIReasoningEffortSelect },
       ]
     }, [props.footerLeftTypes, isOpen])
 
@@ -321,17 +317,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
               ),
             )
             break
-          case AIInputInnerFeatureEnum.AIReasoningEffortSelect:
-            node.push(
-              item.component || (
-                <AIReasoningEffortSelect
-                  key={item.type}
-                  {...item.props}
-                  className={classNames(styles['reasoning-effort-self-adaptive'], item.props?.className)}
-                />
-              ),
-            )
-            break
 
           default:
             break
@@ -402,6 +387,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             {inputFooterLeft ?? (
               <div className={styles['footer-left']}>
                 <AIRunModeSelect />
+                <AIReasoningEffortSelect />
 
                 <OpenFileDropdown cb={onSetFileMention} onSelectImage={onSelectImage}>
                   <UploadFileButton title={t('YakitButton.openFolder')} className={styles['btn-base']} />

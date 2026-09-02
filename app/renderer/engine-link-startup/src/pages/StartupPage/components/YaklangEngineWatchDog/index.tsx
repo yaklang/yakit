@@ -3,7 +3,7 @@ import type { YakitStatusType, YaklangEngineWatchDogCredential } from '../../typ
 import { useDebounceEffect, useMemoizedFn } from 'ahooks'
 import { debugToPrintLog } from '@/utils/logCollection'
 import { yakitNotify } from '@/utils/notification'
-import { __PLATFORM__, FetchSoftwareVersion, isEnpriTraceAgent } from '@/utils/envfile'
+import { __PLATFORM__, FetchSoftwareVersion, isEnpriTraceAgent, toEngineHandshakeName } from '@/utils/envfile'
 import emiter from '@/utils/eventBus/eventBus'
 import { grpcStartLocalEngine, isEngineConnectionAlive } from '../../grpc'
 import { outputToWelcomeConsole } from '../../utils'
@@ -126,7 +126,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
           grpcStartLocalEngine({
             port: props.credential.Port,
             password: props.credential.Password,
-            version: __PLATFORM__,
+            version: toEngineHandshakeName(__PLATFORM__),
             isEnpriTraceAgent: isEnpriTraceAgent(),
             softwareVersion: FetchSoftwareVersion(),
           })

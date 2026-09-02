@@ -170,11 +170,11 @@ export const WebFuzzerAiTestMenu: React.FC<WebFuzzerAiTestMenuProps> = React.mem
   return (
     <>
       <Dropdown
-        overlay={overlay}
+        popupRender={() => overlay}
         trigger={['click']}
         placement="bottomLeft"
-        visible={dropdownVisible}
-        onVisibleChange={(visible) => {
+        open={dropdownVisible}
+        onOpenChange={(visible) => {
           if (loading) {
             yakitNotify('info', t('HTTPFuzzerPage.loadData'))
             return
@@ -184,7 +184,7 @@ export const WebFuzzerAiTestMenu: React.FC<WebFuzzerAiTestMenuProps> = React.mem
             refreshTemplates()
           }
         }}
-        overlayClassName={styles['web-fuzzer-ai-test-menu-overlay']}
+        rootClassName={styles['web-fuzzer-ai-test-menu-overlay']}
       >
         <Tooltip title={t('HTTPFuzzerPage.aiTest')}>
           <div className={styles['ai-button']}>

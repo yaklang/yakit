@@ -59,7 +59,7 @@ const HybridScanTaskListDrawer: React.FC<HybridScanTaskListDrawerProps> = React.
   })
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       onClose={onClose}
       width="45%"
       title="任务列表"
@@ -80,7 +80,7 @@ const HybridScanTaskListDrawer: React.FC<HybridScanTaskListDrawerProps> = React.
           )}
         </>
       }
-      bodyStyle={{ overflow: 'hidden' }}
+      styles={{ body: { overflow: 'hidden' } }}
     >
       <HybridScanTaskList
         visible={visible}

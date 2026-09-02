@@ -6,7 +6,7 @@ const _sudoPrompt = require('sudo-prompt')
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
-const { setLocalCache } = require('../localCache')
+const { setLocalCache, deleteLocalCache } = require('../localCache')
 const { getYakitHome } = require('../filePath')
 const { assertTrustedAppSender, normalizePid } = require('../security')
 const isWindows = process.platform === 'win32'
@@ -260,8 +260,9 @@ module.exports = {
   clearing: () => {},
   register: (win, getClient) => {
     ipcMain.handle('set-release-edition-raw', (e, type) => {
-      setLocalCache('REACT_APP_PLATFORM', type)
-      dbFile = type === 'enterprise' ? 'company-default-yakit.db' : 'default-yakit.db'
+      deleteLocalCache('REACT_APP_PLATFORM')
+      setLocalCache('YAKIT_EDITION', type)
+      dbFile = type === 'yakitEE' ? 'company-default-yakit.db' : 'default-yakit.db'
       return ''
     })
 

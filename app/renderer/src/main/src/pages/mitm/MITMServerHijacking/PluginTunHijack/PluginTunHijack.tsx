@@ -297,7 +297,7 @@ const ConnectivityCheckAction: React.FC = React.memo(() => {
       </Tooltip>
       <YakitModal
         maskClosable={false}
-        visible={connectivityVisible}
+        open={connectivityVisible}
         title={t('PluginTunHijack.connectivityCheck')}
         footer={
           <div className={styles['connectivity-check-footer']}>
@@ -606,10 +606,10 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
           </div>
         </div>
         <YakitModal
-          visible={visible}
+          open={visible}
           title={t('PluginTunHijack.addRoute')}
           width={600}
-          destroyOnClose={true}
+          destroyOnHidden={true}
           onCancel={onCancel}
           onOk={handleRouteOk}
           okText={t('YakitButton.start_execution')}
@@ -1106,7 +1106,7 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
 
   return (
     <YakitModal
-      visible={!!hijackProcessInfo}
+      open={!!hijackProcessInfo}
       title={
         <>
           {t('PluginTunHijack.infoDetail')}
@@ -1116,7 +1116,7 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
         </>
       }
       width={800}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       onCancel={() => setHijackProcessInfo(undefined)}
       footer={null}
     >

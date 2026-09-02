@@ -1,0 +1,55 @@
+// ========================== ant badge yakit-start ==========================
+.ant-badge {
+  --ant-badge-color: var(--Colors-Use-Error-Primary);
+  --ant-badge-color-hover: var(--Colors-Use-Error-Hover);
+  --ant-badge-text-color: var(--Colors-Use-Error-On-Primary);
+  --ant-color-error: var(--Colors-Use-Error-Primary);
+  --ant-color-success: var(--Colors-Use-Success-Primary);
+  --ant-color-warning: var(--Colors-Use-Warning-Primary);
+  --ant-color-info: var(--Colors-Use-Blue-Primary);
+  --ant-color-text-light-solid: var(--Colors-Use-Error-On-Primary);
+}
+
+.ant-badge .ant-badge-count,
+.ant-badge .ant-badge-dot {
+  background: var(--Colors-Use-Error-Primary);
+}
+
+.ant-badge .ant-badge-count {
+  color: var(--Colors-Use-Error-On-Primary);
+}
+
+.ant-badge .ant-badge-count a,
+.ant-badge .ant-badge-count a:hover {
+  color: var(--Colors-Use-Error-On-Primary);
+}
+
+a:hover .ant-badge .ant-badge-count {
+  background: var(--Colors-Use-Error-Hover);
+}
+
+.ant-badge.ant-badge-status .ant-badge-status-success {
+  background-color: var(--Colors-Use-Success-Primary);
+}
+
+.ant-badge.ant-badge-status .ant-badge-status-error {
+  background-color: var(--Colors-Use-Error-Primary);
+}
+
+.ant-badge.ant-badge-status .ant-badge-status-warning {
+  background-color: var(--Colors-Use-Warning-Primary);
+}
+
+.ant-badge.ant-badge-status .ant-badge-status-processing {
+  color: var(--Colors-Use-Blue-Primary);
+  background-color: var(--Colors-Use-Blue-Primary);
+}
+
+.ant-badge.ant-badge-status .ant-badge-status-default {
+  background-color: var(--Colors-Use-Neutral-Disable);
+}
+
+.ant-badge.ant-badge-status .ant-badge-status-text {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+// ========================== ant badge yakit-end ==========================

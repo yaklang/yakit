@@ -2,7 +2,9 @@
  * AI 专用第三方应用配置表单组件。
  */
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Collapse, Form } from 'antd'
+import { Form, type FormInstance, type FormProps } from 'antd'
+
+type FormLayout = NonNullable<FormProps['layout']>
 import type { KVPair } from '@/models/kv'
 import { YakitAutoComGroupSearchWithAll } from '../yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
@@ -16,7 +18,6 @@ import { yakitNotify } from '@/utils/notification'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import styles from './ConfigNetworkPage.module.scss'
 import { isMemfit } from '@/utils/envfile'
-import type { FormInstance, FormLayout } from 'antd/lib/form/Form'
 import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
 import type { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
@@ -72,11 +73,11 @@ const ReasoningEffortSelect: React.FC<{
         value={value}
         onChange={onChange}
         options={options}
-        onDropdownVisibleChange={(nextOpen) => {
+        onOpenChange={(nextOpen) => {
           setOpen(nextOpen)
           onDropdownVisibleChange?.(nextOpen)
         }}
-        dropdownRender={(menu) => (
+        popupRender={(menu) => (
           <div>
             {menu}
             {loading && (
@@ -348,7 +349,7 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
         bordered={false}
         className={styles['ai-third-party-application-config-collapse']}
       >
-        <Collapse.Panel
+        <YakitCollapse.YakitPanel
           header={
             <div className={styles['panel-heard']}>
               <span className={styles['title']}>{t('ConfigNetworkPage.advancedConfigTitle')}</span>
@@ -360,7 +361,7 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
         >
           {optionalItems.map((item) => renderFieldByTemplate(item))}
           {renderCopyRow('Headers', 'Header', headersPack.display, headersPack.copy)}
-        </Collapse.Panel>
+        </YakitCollapse.YakitPanel>
       </YakitCollapse>
     </div>
   )
@@ -679,7 +680,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                     execModelNameOption.current = true
                     getModelNameOption()
                   }}
-                  dropdownRender={(menu) => {
+                  popupRender={(menu) => {
                     return (
                       <>
                         <YakitSpin spinning={modelOptionLoading}>{menu}</YakitSpin>

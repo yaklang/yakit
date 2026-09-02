@@ -227,8 +227,8 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
             </div>
           }
           trigger={['hover', 'click']}
-          visible={visible}
-          onVisibleChange={onVisibleChange}
+          open={visible}
+          onOpenChange={onVisibleChange}
         >
           <YakitButton
             type="text2"
@@ -285,12 +285,12 @@ export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
   return (
     <div ref={selectWrapperRef} className={classNames(styles['ai-chat-select-wrapper'])} onClick={onSelectWrapperClick}>
       <YakitSelect
-        dropdownMatchSelectWidth={false}
+        {...rest}
+        popupMatchSelectWidth={false}
         size="small"
-        dropdownRender={onDropdownRender}
+        popupRender={onDropdownRender}
         open={open}
         disabled={disabled}
-        {...rest}
       >
         {children}
       </YakitSelect>

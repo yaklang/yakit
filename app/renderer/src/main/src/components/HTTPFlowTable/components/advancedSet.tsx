@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Modal, Tooltip } from 'antd'
+import { Tooltip, Modal } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { useMemoizedFn } from 'ahooks'
@@ -138,9 +138,9 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
 
   return (
     <YakitDrawer
-      visible={true}
+      open={true}
       width="max(700px, 40%)"
-      className={style['history-advanced-set-wrapper']}
+      rootClassName={style['history-advanced-set-wrapper']}
       onClose={handleClose}
       title={
         <div className={style['advanced-configuration-drawer-title']}>

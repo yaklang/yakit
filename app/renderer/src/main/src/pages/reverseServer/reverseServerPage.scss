@@ -10,18 +10,11 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    .ant-page-header-content {
+    padding-left: 16px;
+    .setting-reverse-server-wrapper {
       flex: 1;
-      // overflow: hidden;
       overflow-y: auto;
-      display: flex;
-      justify-content: center;
-      .setting-reverse-server-wrapper {
-        margin-top: 40px;
-      }
-    }
-    .ant-page-header-heading-left {
-      flex-wrap: wrap;
+      margin-top: 40px;
     }
   }
 }
@@ -30,6 +23,7 @@
   max-width: 678px;
   width: 100%;
   padding: 0 24px;
+  margin: 0 auto;
   .setting-isremote-hint {
     margin: 10px 0 24px 0;
   }

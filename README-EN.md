@@ -129,36 +129,27 @@ For more technical content, you can check:
 
 Prerequisites:
 
-- Node.js 18.x (recommended) and Yarn 1.x
+- Node.js 22.22.x (recommended) and Yarn 1.x
 - Git
 - Windows, macOS, or Linux
 
 Steps:
 
-1. Install dependencies at repo root
+1. Install all three packages (root Electron + both renderers)
 
      ```bash
-     yarn
+     yarn cli install
      ```
 
-2. Install renderer dependencies
+2. Start development (start both renderers, then Electron)
 
      ```bash
-     yarn install-render
+     yarn cli start -v yakit   # starts both renderers (:3000 + :5173)
+     yarn cli electron         # after both ports are ready
+     # or: yarn cli dev -v yakit
      ```
 
-3. Start development (start both renderers, then Electron)
-
-     ```bash
-     yarn start-renders   # starts both renderers (:3000 + :5173)
-     yarn start-electron  # after both ports are ready
-     ```
-
-Useful scripts (from package.json):
-
-- Build renderer only: `yarn build-render`
-- Start Electron only (after renderer runs on 3000): `yarn start-electron`
-- Package (Windows example): `yarn pack-win`
+See [`cli/README.md`](cli/README.md) for the full command list (`install` / `start` / `build` / `pack` / `electron` / `dev`), edition flags, and npm/pnpm equivalents.
 
 ## Community
 

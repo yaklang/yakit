@@ -33,16 +33,6 @@
     color: fetch-color($type, 'color-7');
     border-color: fetch-color($type, 'color-6');
   }
-  &[disabled] {
-    background: var(--Colors-Use-Main-Border);
-    color: var(--Colors-Use-Basic-Background);
-    border-color: var(--Colors-Use-Main-Border);
-  }
-  &[disabled]:hover {
-    background: var(--Colors-Use-Main-Border);
-    color: var(--Colors-Use-Basic-Background);
-    border-color: var(--Colors-Use-Main-Border);
-  }
 }
 
 @mixin generateSecondary2($type) {
@@ -96,22 +86,6 @@
       color: fetch-color($type, 'color-6');
     }
   }
-  &[disabled] {
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-    color: var(--Colors-Use-Neutral-Disable);
-    border-color: var(--Colors-Use-Neutral-Border);
-    svg {
-      color: var(--Colors-Use-Neutral-Disable);
-    }
-  }
-  &[disabled]:hover {
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-    color: var(--Colors-Use-Neutral-Disable);
-    border-color: var(--Colors-Use-Neutral-Border);
-    svg {
-      color: var(--Colors-Use-Neutral-Disable);
-    }
-  }
 }
 
 @mixin generateOutline1($type) {
@@ -146,16 +120,6 @@
     background: fetch-color($type, 'color-1');
     color: fetch-color($type, 'color-6');
     border-color: fetch-color($type, 'color-6');
-  }
-  &[disabled] {
-    background: var(--Colors-Use-Neutral-Bg);
-    color: var(--Colors-Use-Neutral-Disable);
-    border-color: var(--Colors-Use-Neutral-Border);
-  }
-  &[disabled]:hover {
-    background: var(--Colors-Use-Neutral-Bg);
-    color: var(--Colors-Use-Neutral-Disable);
-    border-color: var(--Colors-Use-Neutral-Border);
   }
 }
 
@@ -215,22 +179,6 @@
       color: fetch-color($type, 'color-6');
     }
   }
-  &[disabled] {
-    background: var(--Colors-Use-Basic-Background);
-    color: var(--Colors-Use-Neutral-Disable);
-    border-color: var(--Colors-Use-Neutral-Border);
-    svg {
-      color: var(--Colors-Use-Neutral-Disable);
-    }
-  }
-  &[disabled]:hover {
-    background: var(--Colors-Use-Basic-Background);
-    color: var(--Colors-Use-Neutral-Disable);
-    border-color: var(--Colors-Use-Neutral-Border);
-    svg {
-      color: var(--Colors-Use-Neutral-Disable);
-    }
-  }
 }
 
 @mixin generateText($type) {
@@ -264,16 +212,6 @@
   &:active {
     background: transparent;
     color: fetch-color($type, 'color-6');
-    border-color: transparent;
-  }
-  &[disabled] {
-    background: transparent;
-    color: var(--Colors-Use-Neutral-Disable);
-    border-color: transparent;
-  }
-  &[disabled]:hover {
-    background: transparent;
-    color: var(--Colors-Use-Neutral-Disable);
     border-color: transparent;
   }
 }
@@ -329,22 +267,6 @@
       color: fetch-color($type, 'color-5');
     }
   }
-  &[disabled] {
-    background: transparent;
-    color: var(--Colors-Use-Neutral-Disable);
-    border-color: transparent;
-    svg {
-      color: var(--Colors-Use-Neutral-Disable);
-    }
-  }
-  &[disabled]:hover {
-    background: transparent;
-    color: var(--Colors-Use-Neutral-Disable);
-    border-color: transparent;
-    svg {
-      color: var(--Colors-Use-Neutral-Disable);
-    }
-  }
 }
 
 .yakit-button-small-size {
@@ -352,9 +274,13 @@
   padding: 3px 6px;
   font-weight: 500;
   font-size: 11px;
+  gap: 2px;
   & > :global(.anticon + span),
-  & > :global(span + .anticon) {
-    margin-left: 2px;
+  & > :global(span + .anticon),
+  & > :global(.ant-btn-icon + span),
+  & > :global(span + .ant-btn-icon) {
+    margin-inline-start: 0;
+    margin-left: 0;
   }
 
   svg {
@@ -375,9 +301,13 @@
   padding: 3px 8px;
   font-weight: 500;
   font-size: 12px;
+  gap: 4px;
   & > :global(.anticon + span),
-  & > :global(span + .anticon) {
-    margin-left: 4px;
+  & > :global(span + .anticon),
+  & > :global(.ant-btn-icon + span),
+  & > :global(span + .ant-btn-icon) {
+    margin-inline-start: 0;
+    margin-left: 0;
   }
 
   svg {
@@ -394,9 +324,13 @@
   padding: 4px 12px;
   font-weight: 600;
   font-size: 14px;
+  gap: 4px;
   & > :global(.anticon + span),
-  & > :global(span + .anticon) {
-    margin-left: 4px;
+  & > :global(span + .anticon),
+  & > :global(.ant-btn-icon + span),
+  & > :global(span + .ant-btn-icon) {
+    margin-inline-start: 0;
+    margin-left: 0;
   }
 
   svg {
@@ -417,9 +351,13 @@
   padding: 5px 12px;
   font-weight: 500;
   font-size: 14px;
+  gap: 4px;
   & > :global(.anticon + span),
-  & > :global(span + .anticon) {
-    margin-left: 4px;
+  & > :global(span + .anticon),
+  & > :global(.ant-btn-icon + span),
+  & > :global(span + .ant-btn-icon) {
+    margin-inline-start: 0;
+    margin-left: 0;
   }
 
   svg {
@@ -436,6 +374,7 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
+  gap: 4px;
   box-shadow: none;
   border-radius: var(--yakit-button-border-radius);
   border: 1px solid transparent;
@@ -455,7 +394,7 @@
   }
 }
 
-.yakit-button-primary {
+.yakit-button.yakit-button-primary:global(.yakit) {
   @include generatePrimary('primary');
   &.yakit-button-success {
     @include generatePrimary('success');
@@ -466,8 +405,14 @@
   &.yakit-button-infoBlue {
     @include generatePrimary('infoBlue');
   }
+  &[disabled],
+  &[disabled]:hover {
+    background: var(--Colors-Use-Main-Border);
+    color: var(--Colors-Use-Basic-Background);
+    border-color: var(--Colors-Use-Main-Border);
+  }
 }
-.yakit-button-secondary2 {
+.yakit-button.yakit-button-secondary2:global(.yakit) {
   @include generateSecondary2('primary');
   &.yakit-button-success {
     @include generateSecondary2('success');
@@ -478,8 +423,17 @@
   &.yakit-button-infoBlue {
     @include generateSecondary2('infoBlue');
   }
+  &[disabled],
+  &[disabled]:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    color: var(--Colors-Use-Neutral-Disable);
+    border-color: var(--Colors-Use-Neutral-Border);
+    svg {
+      color: var(--Colors-Use-Neutral-Disable);
+    }
+  }
 }
-.yakit-button-outline1 {
+.yakit-button.yakit-button-outline1:global(.yakit) {
   @include generateOutline1('primary');
   &.yakit-button-success {
     @include generateOutline1('success');
@@ -490,11 +444,26 @@
   &.yakit-button-infoBlue {
     @include generateOutline1('infoBlue');
   }
+  &[disabled],
+  &[disabled]:hover {
+    background: var(--Colors-Use-Neutral-Bg);
+    color: var(--Colors-Use-Neutral-Disable);
+    border-color: var(--Colors-Use-Neutral-Border);
+  }
 }
-.yakit-button-outline2 {
+.yakit-button.yakit-button-outline2:global(.yakit) {
   @include generateOutline2('primary');
+  &[disabled],
+  &[disabled]:hover {
+    background: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Neutral-Disable);
+    border-color: var(--Colors-Use-Neutral-Border);
+    svg {
+      color: var(--Colors-Use-Neutral-Disable);
+    }
+  }
 }
-.yakit-button-text {
+.yakit-button.yakit-button-text:global(.yakit) {
   @include generateText('primary');
   &.yakit-button-success {
     @include generateText('success');
@@ -505,9 +474,24 @@
   &.yakit-button-infoBlue {
     @include generateText('infoBlue');
   }
+  &[disabled],
+  &[disabled]:hover {
+    background: transparent;
+    color: var(--Colors-Use-Neutral-Disable);
+    border-color: transparent;
+  }
 }
-.yakit-button-text2 {
+.yakit-button.yakit-button-text2:global(.yakit) {
   @include generateText2('primary');
+  &[disabled],
+  &[disabled]:hover {
+    background: transparent;
+    color: var(--Colors-Use-Neutral-Disable);
+    border-color: transparent;
+    svg {
+      color: var(--Colors-Use-Neutral-Disable);
+    }
+  }
 }
 
 .yakit-border-radius-button {

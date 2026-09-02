@@ -163,10 +163,10 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
         dropdown={{
           trigger: ['click'],
           placement: 'bottomRight',
-          onVisibleChange: (v) => {
+          onOpenChange: (v) => {
             setMenuOpen(v)
           },
-          visible: menuOpen,
+          open: menuOpen,
         }}
       >
         <DotsVerticalSolid
@@ -362,10 +362,10 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
   return (
     <YakitModal
       title={'修改基础信息'}
-      visible={visible}
+      open={visible}
       onCancel={onClose}
       width={600}
-      destroyOnClose
+      destroyOnHidden
       maskClosable={false}
       footer={
         <div className={styles['delete-yakit-hint']}>

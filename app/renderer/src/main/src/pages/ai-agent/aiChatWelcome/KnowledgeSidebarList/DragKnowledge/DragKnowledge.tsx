@@ -1,6 +1,6 @@
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import styles from '../knowledgeSidebarList.module.scss'
-import Dragger from 'antd/lib/upload/Dragger'
+import { Upload } from 'antd'
 import { failed, success } from '@/utils/notification'
 import { useDebounceFn, useRequest, useUpdateEffect } from 'ahooks'
 import { useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
@@ -217,7 +217,7 @@ const DragKnowledge: FC<{ setAddMode: Dispatch<SetStateAction<string[]>> }> = ({
   return (
     <div className={styles['upload-dragger-box']}>
       <YakitSpin spinning={loading}>
-        <Dragger
+        <Upload.Dragger
           className={styles['upload-dragger']}
           multiple={true}
           style={{ borderRadius: 8, backgroundColor: 'var(--Colors-Use-Neutral-Bg)' }}
@@ -251,7 +251,7 @@ const DragKnowledge: FC<{ setAddMode: Dispatch<SetStateAction<string[]>> }> = ({
               <div className={styles['sub-title']}>{t('DragKnowledge.dragSubHint')}</div>
             </div>
           </div>
-        </Dragger>
+        </Upload.Dragger>
       </YakitSpin>
       <YakitButton
         className={styles['download-btn']}

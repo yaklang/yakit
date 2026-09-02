@@ -1,0 +1,73 @@
+.yakit-page-header {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 16px 24px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 14px;
+  line-height: 1.5715;
+  background-color: var(--Colors-Use-Basic-Background);
+}
+
+.yakit-page-header-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.yakit-page-header-heading-left {
+  display: flex;
+  align-items: center;
+  margin: 4px 0;
+  overflow: hidden;
+  min-width: 0;
+  flex: 1;
+}
+
+.yakit-page-header-back {
+  margin-right: 16px;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.yakit-page-header-title {
+  margin-right: 12px;
+  margin-bottom: 0;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 32px;
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.yakit-page-header-sub-title {
+  margin-right: 12px;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  font-size: 14px;
+  line-height: 1.5715;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.yakit-page-header-extra {
+  margin: 4px 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  > * {
+    white-space: unset;
+  }
+
+  > * + * {
+    margin-left: 8px;
+  }
+}
+
+.yakit-page-header-content {
+  padding-top: 12px;
+}

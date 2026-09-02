@@ -2,10 +2,14 @@
 .yakit-combination-search {
   width: 100%;
   :global {
+    .ant-space-compact {
+      width: 100%;
+    }
     .ant-input {
       border-top-left-radius: 0;
       border-bottom-left-radius: 0;
     }
+    .ant-space-compact-item:first-child,
     .ant-input-group > .ant-input:first-child,
     .ant-input-group-addon:first-child {
       border-radius: 0;

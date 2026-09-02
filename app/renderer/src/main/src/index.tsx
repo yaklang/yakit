@@ -1,8 +1,11 @@
 import ReactDOM from 'react-dom'
 /** 该样式必须放在APP组件的前面，因为里面有antd样式，放后面会把APP组件内的样式覆盖 */
-import 'antd/dist/antd.css'
+import 'antd/dist/reset.css'
 import './styles/index.css'
 import NewApp from './newApp/NewApp'
+import { ConfigProvider } from 'antd'
+import { YakitAntdProvider } from './theme/antdTheme'
+import { NotificationProvider } from './utils/notification'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { DndProvider } from 'react-dnd'
 // import {createRoot} from "react-dom/client"
@@ -10,6 +13,7 @@ import './theme/yakit.scss'
 import './assets/global.scss'
 import './theme/scrollbar.scss'
 import './pages/GlobalClass.scss'
+import './theme/componentsTheme/formItemHelp.css'
 import { Suspense, lazy, useEffect, useState } from 'react'
 const ChildNewApp = lazy(() => import('./newApp/ChildNewApp'))
 const MarkdownPdfPrintPage = lazy(() => import('./pages/irifyAiCodeAudit/MarkdownPdfPrint/MarkdownPdfPrintPage'))
@@ -111,12 +115,21 @@ if (window.location.search.includes('window=child') || window.location.search.in
 
 registerAppSyncHandlers()
 
+// antd 5 静态 Modal.confirm / info / error 不吃 React 树上的 ConfigProvider
+ConfigProvider.config({
+  holderRender: (node) => <YakitAntdProvider>{node}</YakitAntdProvider>,
+})
+
 ReactDOM.render(
   // <React.StrictMode>
   <DndProvider backend={HTML5Backend}>
-    <Suspense fallback={<div>loading...</div>}>
-      <App />
-    </Suspense>
+    <YakitAntdProvider>
+      <NotificationProvider>
+        <Suspense fallback={<div>loading...</div>}>
+          <App />
+        </Suspense>
+      </NotificationProvider>
+    </YakitAntdProvider>
   </DndProvider>,
   // </React.StrictMode>,
   document.getElementById('root'),

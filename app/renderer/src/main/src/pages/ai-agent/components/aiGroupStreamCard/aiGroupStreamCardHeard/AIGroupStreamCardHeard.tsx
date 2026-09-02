@@ -18,7 +18,7 @@ const AIGroupStreamCardHeard: React.FC<AIGroupStreamCardHeardProps> = memo((prop
     return !expand && childrenTokensLength > 1 ? `折叠${childrenTokensLength}条信息` : ''
   }, [expand, childrenTokensLength])
   return (
-    <Tooltip title={collapseTooltip} mouseEnterDelay={0.3} destroyTooltipOnHide>
+    <Tooltip title={collapseTooltip} mouseEnterDelay={0.3} destroyOnHidden>
       <div
         className={styles['title']}
         onClick={() => {

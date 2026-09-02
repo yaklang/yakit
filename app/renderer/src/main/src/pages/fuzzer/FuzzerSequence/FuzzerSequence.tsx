@@ -1829,10 +1829,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         mask={false}
         keyboard={false}
         height={showHeight}
-        visible={true}
+        open={true}
         onClose={() => setTrafficAnalysisVisible(false)}
-        className={styles['http-traffic-analysis-overlay']}
-        destroyOnClose
+        rootClassName={styles['http-traffic-analysis-overlay']}
+        destroyOnHidden
       >
         <React.Suspense fallback={<YakitSpin spinning={true} />}>
           <HTTPHistoryAnalysis pageId={currentItem?.pageId || ''} params={params} closable={false} />
@@ -1883,7 +1883,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                   content: <SequenceAnimationAemonstration></SequenceAnimationAemonstration>,
                   footer: null,
                   centered: true,
-                  destroyOnClose: true,
+                  destroyOnHidden: true,
                 })
               }}
             >
@@ -2285,7 +2285,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                 <span className="content-ellipsis">{item.name}</span>
               </Tooltip>
               <YakitPopover
-                overlayClassName={styles['edit-name-popover']}
+                classNames={{ root: styles['edit-name-popover'] }}
                 content={
                   <div
                     className={styles['edit-name-popover-content']}
@@ -2320,8 +2320,8 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                 }
                 placement="top"
                 trigger={['click']}
-                visible={editNameVisible}
-                onVisibleChange={setEditNameVisible}
+                open={editNameVisible}
+                onOpenChange={setEditNameVisible}
               >
                 <YakitButton
                   icon={<PencilAltOutlined color="currentColor" />}
@@ -2401,13 +2401,13 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                         </LabelNodeItem>
                       </div>
                     }
-                    visible={visible}
-                    onVisibleChange={(v) => {
+                    open={visible}
+                    onOpenChange={(v) => {
                       if (disabled) return
                       if (!item.pageId) return
                       setVisible(v)
                     }}
-                    overlayClassName={styles['cog-popover']}
+                    classNames={{ root: styles['cog-popover'] }}
                   >
                     <YakitButton
                       icon={<SwitchSolid color="currentColor" />}
@@ -2454,7 +2454,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
               }}
               getPopupContainer={(dom) => dom}
               disabled={disabled}
-              onDropdownVisibleChange={(v) => {
+              onOpenChange={(v) => {
                 setSelectVisible(v)
               }}
               open={selectVisible && !isDragging}

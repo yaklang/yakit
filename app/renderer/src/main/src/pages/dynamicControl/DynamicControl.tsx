@@ -353,8 +353,8 @@ export const DynamicControl: React.FC<DynamicControlProps> = (props) => {
   const { isShow, onCancel, children, mainTitle, secondTitle, width } = props
   return (
     <YakitModal
-      visible={isShow}
-      destroyOnClose={true}
+      open={isShow}
+      destroyOnHidden={true}
       maskClosable={false}
       bodyStyle={{ padding: '18px 24px 24px 24px' }}
       width={width || 448}

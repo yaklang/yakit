@@ -1080,10 +1080,10 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
     return (
       <div onClick={(e) => e.stopPropagation()}>
         <YakitPopover
-          overlayClassName={styles['history-process-popover']}
+          classNames={{ root: styles['history-process-popover'] }}
           trigger="click"
           content={
-            <div onKeyPress={(e) => e.stopPropagation()}>
+            <div onKeyDown={(e) => e.stopPropagation()}>
               <YakitInput
                 placeholder={t('YakitInput.searchKeyWordPlaceholder')}
                 value={searchValues[key]}
@@ -1095,7 +1095,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
               />
             </div>
           }
-          onVisibleChange={(visible) => !visible && onSearch(key)}
+          onOpenChange={(visible) => !visible && onSearch(key)}
         >
           <YakitButton icon={<SearchOutlined color="currentColor" />} type={hasActiveSearch ? 'text' : 'text2'} />
         </YakitPopover>

@@ -5,6 +5,7 @@ import type { YaklangEngineWatchDogProps } from '../index'
 import emiter from '@/utils/eventBus/eventBus'
 import { yakitEngine } from '@/utils/electronBridge'
 import { grpcStartLocalEngine, isEngineConnectionAlive } from '../../../grpc'
+import { toEngineHandshakeName } from '@/utils/envfile'
 import type { YaklangEngineMode } from '@/pages/StartupPage/types'
 
 // Mock 外部依赖
@@ -59,6 +60,18 @@ vi.mock('@/utils/envfile', () => ({
   __PLATFORM__: 'yakit',
   FetchSoftwareVersion: vi.fn(() => 'yakit'),
   isEnpriTraceAgent: vi.fn(() => false),
+  toEngineHandshakeName: vi.fn((edition = 'yakit') => {
+    switch (edition) {
+      case 'yakitEE':
+        return 'enterprise'
+      case 'yakitSE':
+        return 'simple-enterprise'
+      case 'irifyEE':
+        return 'irify-enterprise'
+      default:
+        return edition || 'yakit'
+    }
+  }),
 }))
 
 describe('YaklangEngineWatchDog 组件测试', () => {
@@ -125,13 +138,39 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       })
     })
 
-    it('连接失败且 mode = "local" 时，应触发自动启动本地引擎', async () => {
+    it('连接失败且 mode = "local" 时，应触发自动启动本地引擎，并把版本映射为 Handshake 旧名', async () => {
       render(<YaklangEngineWatchDog {...props} />)
       triggerEngineTest()
 
       await waitFor(
         () => {
-          expect(grpcStartLocalEngine).toHaveBeenCalled()
+          expect(toEngineHandshakeName).toHaveBeenCalledWith('yakit')
+          expect(grpcStartLocalEngine).toHaveBeenCalledWith(
+            expect.objectContaining({
+              port: 9011,
+              password: 'test-password',
+              version: 'yakit',
+              isEnpriTraceAgent: false,
+              softwareVersion: 'yakit',
+            }),
+          )
+        },
+        { timeout: 2000 },
+      )
+    })
+
+    it('启动本地引擎时，应将 yakitEE 映射为 enterprise 传给引擎', async () => {
+      vi.mocked(toEngineHandshakeName).mockReturnValueOnce('enterprise')
+      render(<YaklangEngineWatchDog {...props} />)
+      triggerEngineTest()
+
+      await waitFor(
+        () => {
+          expect(grpcStartLocalEngine).toHaveBeenCalledWith(
+            expect.objectContaining({
+              version: 'enterprise',
+            }),
+          )
         },
         { timeout: 2000 },
       )

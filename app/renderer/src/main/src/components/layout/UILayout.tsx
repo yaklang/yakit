@@ -1475,7 +1475,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           <>
             {performanceSamplingInfo.log.length ? (
               <YakitPopover
-                overlayClassName={styles['sampling-popover']}
+                classNames={{ root: styles['sampling-popover'] }}
                 content={
                   <div
                     onBlur={() => {
@@ -1533,8 +1533,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
                 trigger="click"
                 placement="bottom"
-                visible={isShowSamplingInfo}
-                onVisibleChange={(visible) => {
+                open={isShowSamplingInfo}
+                onOpenChange={(visible) => {
                   if (!visible) setIsShowSamplingInfo(false)
                 }}
               >

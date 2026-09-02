@@ -201,7 +201,7 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
         size={size}
         step={step}
         value={value}
-        bordered={false}
+        variant={'borderless'}
         type="vertical"
         className={classNames(styles['yakit-input-number-wrapper'], {
           [styles['yakit-input-number-wrapper-disabled']]: !!props.disabled,

@@ -121,7 +121,7 @@ export const IRifyUpdateProjectManagerModal: React.FC<IRifyUpdateProjectManagerM
     <YakitModal
       centered
       getContainer={document.body}
-      visible={visible}
+      open={visible}
       title={null}
       footer={null}
       width={520}

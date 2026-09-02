@@ -84,17 +84,9 @@
   }
 }
 .ellipsis-type-select-popover {
-  padding-top: 4px;
   :global {
     .ant-popover-inner {
-      border-radius: 4px;
-      box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
-    }
-    .ant-popover-inner-content {
       padding: 0;
-    }
-    .ant-popover-arrow {
-      right: 1px;
     }
   }
 }
@@ -182,14 +174,7 @@
   }
 }
 .func-search-popver {
-  padding-top: 4px;
   :global {
-    .ant-popover-inner {
-      border-radius: 4px;
-    }
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
     .ant-popover-arrow {
       right: 6px;
     }
@@ -380,14 +365,7 @@
   }
 }
 .plugins-list-tag-total-popover {
-  padding-top: 4px;
   :global {
-    .ant-popover-inner {
-      border-radius: 4px;
-    }
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
     .ant-popover-arrow {
       left: 6px;
     }
@@ -926,16 +904,9 @@
 }
 // -------------------- FilterPopoverBtn ↓↓↓ --------------------
 .filter-popover-btn {
-  padding-top: 4px;
   :global {
     .ant-popover-inner {
-      border-radius: 4px;
-    }
-    .ant-popover-inner-content {
       padding: 0;
-    }
-    .ant-popover-arrow {
-      left: 1px;
     }
   }
 }

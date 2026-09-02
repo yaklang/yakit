@@ -11,7 +11,7 @@ import { AuthorIcon, AuthorImg, CodeScoreModule, FuncFilterPopover, FuncSearch }
 import type { TagShowOpt } from '@/pages/plugins/funcTemplateType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { Tooltip } from 'antd'
+import { Tooltip, type CheckboxChangeEvent } from 'antd'
 import has from 'lodash/has'
 import {
   CalendarOutlined,
@@ -49,7 +49,6 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import { useStore } from '@/store'
 import { RollingLoadList, type RollingLoadListProps } from '@/components/RollingLoadList/RollingLoadList'
 import { YakEditor } from '@/utils/editors'
-import type { CheckboxChangeEvent } from 'antd/lib/checkbox'
 import { CloudUploadSolid, ThumbUpSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakScript } from '@/pages/invoker/schema'
 import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
@@ -68,7 +67,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
-const { TabPane } = PluginTabs
 
 interface HubListFilterProps {
   wrapperClassName?: string
@@ -309,17 +307,12 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                   })
                 ) : (
                   <YakitPopover
-                    overlayClassName={styles['hub-outer-list-filter-popover']}
+                    classNames={{ root: styles['hub-outer-list-filter-popover'] }}
                     content={
                       <div className={styles['hub-outer-list-filter']}>
                         {showTagList.map((item) => {
                           return (
-                            <Tooltip
-                              title={item.label}
-                              placement="top"
-                              overlayClassName="plugins-tooltip"
-                              key={item.value}
-                            >
+                            <Tooltip title={item.label} placement="top" key={item.value}>
                               <YakitTag closable onClose={() => onDelTag(item)}>
                                 {item.label}
                               </YakitTag>
@@ -329,7 +322,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                       </div>
                     }
                     trigger="hover"
-                    onVisibleChange={setTagShow}
+                    onOpenChange={setTagShow}
                     placement="bottomLeft"
                   >
                     <div
@@ -375,13 +368,8 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
           wrapperClassName={styles['hub-outer-list-tab']}
           activeKey={listTabActive}
           onChange={onListTabActiveChange}
-        >
-          {listTabs.map((item) => (
-            <TabPane key={item.key} tab={item.tab}>
-              {listBody(item.key)}
-            </TabPane>
-          ))}
-        </PluginTabs>
+          items={listTabs.map((item) => ({ key: item.key, label: item.tab, children: listBody(item.key) }))}
+        ></PluginTabs>
       ) : (
         <>{listBody('')}</>
       )}
@@ -933,7 +921,7 @@ export const HubDetailListOpt: <T>(props: HubDetailListOptProps<T>) => any = mem
         </div>
         <div className={styles['plugin-details-item-show']}>
           {extraNode()}
-          <Tooltip title={help || 'No Description about it.'} placement="topRight" overlayClassName="plugins-tooltip">
+          <Tooltip title={help || 'No Description about it.'} placement="topRight">
             <QuestionMarkCircleOutlined
               className={styles['plugin-details-item-show-icon-style']}
               color="currentColor"
@@ -941,7 +929,7 @@ export const HubDetailListOpt: <T>(props: HubDetailListOptProps<T>) => any = mem
           </Tooltip>
           <YakitPopover
             placement="topRight"
-            overlayClassName={styles['terminal-popover']}
+            classNames={{ root: styles['terminal-popover'] }}
             content={<YakEditor type={pluginType} value={content} readOnly={true} />}
           >
             <TerminalOutlined className={styles['plugin-details-item-show-icon-style']} color="currentColor" />
@@ -1147,7 +1135,7 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
         closable: true,
         footer: null,
         mask: false,
-        destroyOnClose: true,
+        destroyOnHidden: true,
         bodyStyle: { padding: 0 },
         content: (
           <CodeScoreModule
@@ -1422,7 +1410,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
     <div className={styles['local-opt-footer-extra']}>
       {isShowUpload && (
         <>
-          <Tooltip title="上传" visible={uploadTipShow} onVisibleChange={(val) => setUploadTipShow(val)}>
+          <Tooltip title="上传" open={uploadTipShow} onOpenChange={(val) => setUploadTipShow(val)}>
             <YakitButton
               type="text2"
               icon={<CloudUploadOutlined color="currentColor" />}

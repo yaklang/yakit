@@ -1,5 +1,5 @@
 import React, { useEffect, useImperativeHandle, useMemo, useState } from 'react'
-import { Form, Spin } from 'antd'
+import { Form } from 'antd'
 import { useControllableValue, useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '../../../utils/notification'
 import styles from './MITMServerStartForm.module.scss'
@@ -22,6 +22,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 const { YakitPanel } = YakitCollapse
 const { ipcRenderer } = window.require('electron')
@@ -67,7 +68,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
   const { t, i18n } = useI18nNamespaces(['mitm'])
 
   return (
-    <Spin spinning={loading}>
+    <YakitSpin spinning={loading}>
       <Form
         labelCol={{ span: 6 }}
         wrapperCol={{ span: 16 }}
@@ -158,7 +159,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
           ></YakitSelect>
         </Form.Item>
       </Form>
-    </Spin>
+    </YakitSpin>
   )
 })
 
@@ -340,7 +341,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                     <span className={classNames(styles['header-id'])}>
                       <span>{displayName}</span>
                       <YakitPopover
-                        overlayClassName={styles['edit-name-popover']}
+                        classNames={{ root: styles['edit-name-popover'] }}
                         content={
                           <div className={styles['edit-name-popover-content']} onClick={(e) => e.stopPropagation()}>
                             <div className={styles['edit-name-popover-content-title']}>
@@ -361,8 +362,8 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                         }
                         placement="top"
                         trigger={['click']}
-                        visible={editNameVisible && currentIndex === index}
-                        onVisibleChange={(visible) => {
+                        open={editNameVisible && currentIndex === index}
+                        onOpenChange={(visible) => {
                           setEditNameVisible(visible)
                           if (!visible) {
                             onCloseEditName()

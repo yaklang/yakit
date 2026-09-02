@@ -1,62 +1,129 @@
-// ========================== antd input-group select - yakit start ==========================
-.yakit-input-group {
-  display: flex !important;
+// ========================== antd input ==========================
+.ant-input,
+.ant-input-outlined,
+.ant-input-affix-wrapper,
+.ant-input-affix-wrapper-outlined,
+textarea.ant-input {
+  --ant-color-text-placeholder: var(--Colors-Use-Neutral-Disable);
+  --ant-color-icon: var(--Colors-Use-Neutral-Text-3-Secondary);
+  --ant-color-text-quaternary: var(--Colors-Use-Neutral-Text-4-Help-text);
+  --ant-color-primary: var(--Colors-Use-Main-Primary);
+  --ant-color-primary-hover: var(--Colors-Use-Main-Hover);
 
-  .ant-input-affix-wrapper {
-    border-radius: 0;
-  }
-  > :first-child {
-    .ant-input-affix-wrapper {
-      border-radius: 4px 0 0 4px;
-    }
-    .ant-input {
-      border-radius: 4px 0 0 4px;
-    }
-  }
-  > :last-child {
-    .ant-input-affix-wrapper {
-      border-radius: 0 4px 4px 0;
-    }
-    .ant-input {
-      border-radius: 0 4px 4px 0;
-    }
-  }
-  > *:not(:last-child) {
-    margin-right: 0 !important;
-  }
-  .ant-select-arrow {
-    // z-index: 1;
-  }
-  .ant-select-selector {
-    border-left-width: 0 !important;
-    border-top-left-radius: 0 !important;
-    border-bottom-left-radius: 0 !important;
-    &:hover,
-    &:focus,
-    &:active {
-      border-left-width: 1px !important;
-      border-top-left-radius: 4px !important;
-      border-bottom-left-radius: 4px !important;
-    }
-  }
-  .ant-select-focused {
-    .ant-select-selector {
-      // z-index: 1;
-      border-left-width: 1px !important;
-      border-top-left-radius: 4px !important;
-      border-bottom-left-radius: 4px !important;
-    }
-  }
-  .ant-select-open {
-    .ant-select-selector {
-      // z-index: 1;
-      border-left-width: 1px !important;
-      border-top-left-radius: 4px !important;
-      border-bottom-left-radius: 4px !important;
-    }
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  background: var(--Colors-Use-Basic-Background);
+  border-color: var(--Colors-Use-Neutral-Border);
+}
+
+.ant-input::placeholder,
+.ant-input-outlined::placeholder,
+.ant-input-affix-wrapper > input.ant-input::placeholder,
+textarea.ant-input::placeholder {
+  color: var(--Colors-Use-Neutral-Disable);
+  opacity: 1;
+}
+
+.ant-input::-webkit-input-placeholder,
+.ant-input-outlined::-webkit-input-placeholder,
+.ant-input-affix-wrapper > input.ant-input::-webkit-input-placeholder,
+textarea.ant-input::-webkit-input-placeholder {
+  color: var(--Colors-Use-Neutral-Disable);
+  opacity: 1;
+}
+
+.ant-input::-moz-placeholder,
+.ant-input-outlined::-moz-placeholder,
+.ant-input-affix-wrapper > input.ant-input::-moz-placeholder,
+textarea.ant-input::-moz-placeholder {
+  color: var(--Colors-Use-Neutral-Disable);
+  opacity: 1;
+}
+
+.ant-input-affix-wrapper > input.ant-input {
+  background: transparent;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.ant-input-prefix,
+.ant-input-suffix {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.ant-input-prefix .anticon,
+.ant-input-suffix .anticon,
+.ant-input-prefix svg,
+.ant-input-suffix svg {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.ant-input-clear-icon {
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+}
+
+.ant-input:hover,
+.ant-input-outlined:hover,
+.ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover {
+  border-color: var(--Colors-Use-Main-Hover);
+}
+
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-outlined:focus,
+.ant-input-affix-wrapper-focused,
+.ant-input-affix-wrapper:focus {
+  border-color: var(--Colors-Use-Main-Hover);
+  box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+}
+
+.ant-input-disabled,
+.ant-input-affix-wrapper-disabled {
+  color: var(--Colors-Use-Neutral-Disable);
+  background: var(--Colors-Use-Neutral-Bg);
+}
+
+.ant-input-group-addon {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  background: var(--Colors-Use-Neutral-Bg);
+  border-color: var(--Colors-Use-Neutral-Border);
+  vertical-align: middle;
+  text-align: center;
+  line-height: 1;
+}
+
+input[type='search']::-webkit-search-decoration,
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-results-button,
+input[type='search']::-webkit-search-results-decoration {
+  display: none;
+  appearance: none;
+}
+
+.ant-input-search .ant-input-search-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--Colors-Use-Main-On-Primary);
+  background: var(--Colors-Use-Main-Primary);
+  border-color: var(--Colors-Use-Main-Primary);
+
+  .ant-btn-icon,
+  .anticon,
+  .anticon-search,
+  svg {
+    color: var(--Colors-Use-Main-On-Primary);
   }
 }
-// ========================== antd input-group select - yakit end ==========================
-.ant-input {
-  color: var(--Colors-Use-Neutral-Text-1-Title);
+
+.ant-input-search .ant-input-search-button:not(:disabled):hover {
+  color: var(--Colors-Use-Main-On-Primary);
+  background: var(--Colors-Use-Main-Hover);
+  border-color: var(--Colors-Use-Main-Hover);
+
+  .ant-btn-icon,
+  .anticon,
+  .anticon-search,
+  svg {
+    color: var(--Colors-Use-Main-On-Primary);
+  }
 }

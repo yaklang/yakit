@@ -38,6 +38,7 @@ import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { randomString } from '@/utils/randomUtil'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { toAIChatSendType } from '@/pages/ai-re-act/hooks/type'
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
   const { info, planReviewTreeKeywordsMap, isEmbedded, renderFooterExtra, expand, className, chatType, renderNum } =
@@ -209,7 +210,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             <div className={styles['summary-content']}>{short_summary}</div>
             <div className={styles['summary-detail']}>
               <YakitPopover
-                overlayClassName={styles['task-review-summary-popover']}
+                classNames={{ root: styles['task-review-summary-popover'] }}
                 content={
                   <div className={styles['task-long-summary']}>
                     <div className={styles['summary-header']}>
@@ -487,7 +488,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         </div>
         <div className={styles['ai-require-input']}>
           <Input.TextArea
-            bordered={false}
+            variant="borderless"
             placeholder={t('AIReActChatReview.tellMeMore')}
             autoSize={{ minRows: 4, maxRows: 4 }}
             value={requireQS}
@@ -515,7 +516,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       InteractiveId: (info.data as AIReviewType).id,
       InteractiveJSONInput: value,
     }
-    onSend({ token: sessionId, type: chatType, params, optionValue })
+    onSend({ token: sessionId, type: toAIChatSendType(chatType), params, optionValue })
   })
   const footerNode = useCreation(() => {
     const renderFooterRightExtra = () => {
@@ -661,7 +662,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                   (editShow ? (
                     <div className={styles['review-input']}>
                       <Input.TextArea
-                        bordered={false}
+                        variant="borderless"
                         placeholder={editInfo.current?.prompt || t('YakitInput.please_enter')}
                         value={reviewQS}
                         autoSize={{ minRows: 4, maxRows: 4 }}

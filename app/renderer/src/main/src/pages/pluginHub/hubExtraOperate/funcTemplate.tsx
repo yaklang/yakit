@@ -63,7 +63,7 @@ export const HubButton: React.FC<HubButtonProps> = memo((props) => {
   }, [size])
 
   return (
-    <Tooltip overlayClassName="plugins-tooltip" title={tooltipHint}>
+    <Tooltip title={tooltipHint}>
       <YakitButton
         {...rest}
         className={classNames(className, { [styles[paddingClass]]: isIcon })}
@@ -412,7 +412,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
               {pluginName || '-'}
             </div>
             <div className={styles['subtitle-wrapper']}>
-              <Tooltip title={help || 'No Description about it.'} overlayClassName="plugins-tooltip">
+              <Tooltip title={help || 'No Description about it.'}>
                 <QuestionMarkCircleOutlined className={styles['help-icon']} color="currentColor" />
               </Tooltip>
             </div>
@@ -445,7 +445,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
               <>
                 <div style={{ marginRight: 8 }} className={styles['divider-style']}></div>
                 <YakitPopover
-                  overlayClassName={styles['contributes-popover']}
+                  classNames={{ root: styles['contributes-popover'] }}
                   placement="bottom"
                   content={
                     <div className={styles['contributes-list']}>
@@ -459,7 +459,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                       ))}
                     </div>
                   }
-                  onVisibleChange={setPrShow}
+                  onOpenChange={setPrShow}
                 >
                   <YakitButton type="text2" isActive={prShow}>
                     {t('HubExtraOperate.contributors', { count: contributes.length })}
@@ -474,10 +474,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
               <div className={styles['divider-style']} />
               <div className={styles['copy-wrapper']}>
                 <span className={styles['text-style']}>{t('HubExtraOperate.source')}</span>
-                <Tooltip
-                  title={t('HubExtraOperate.copyPlugin', { basePluginName, pluginName })}
-                  overlayClassName="plugins-tooltip"
-                >
+                <Tooltip title={t('HubExtraOperate.copyPlugin', { basePluginName, pluginName })}>
                   <YakitTag style={{ marginRight: 0, cursor: 'pointer' }}>{t('YakitButton.copy')}</YakitTag>
                 </Tooltip>
               </div>

@@ -141,10 +141,10 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
             }}
             placeholder="请选择..."
           >
-            <YakitSelect value="All">All</YakitSelect>
-            <YakitSelect value="Linux">Linux</YakitSelect>
-            <YakitSelect value="Windows">Windows</YakitSelect>
-            <YakitSelect value="Mac">Mac</YakitSelect>
+            <YakitSelect.Option value="All">All</YakitSelect.Option>
+            <YakitSelect.Option value="Linux">Linux</YakitSelect.Option>
+            <YakitSelect.Option value="Windows">Windows</YakitSelect.Option>
+            <YakitSelect.Option value="Mac">Mac</YakitSelect.Option>
           </YakitSelect>
         </div>
         <div className={styles['input-box']}>
@@ -171,10 +171,10 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
                 content={
                   <ShellReceiverMiddleItem receiverDetail={receiverDetail} setReceiverDetail={setReceiverDetail} />
                 }
-                destroyTooltipOnHide={true}
+                destroyOnHidden={true}
                 trigger="click"
-                overlayClassName={styles['popover-shell-receiver']}
-                onVisibleChange={onVisibleChange}
+                classNames={{ root: styles['popover-shell-receiver'] }}
+                onOpenChange={onVisibleChange}
               >
                 <div
                   className={classNames(styles['item-box'], {
@@ -301,9 +301,9 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
               placeholder="请选择..."
             >
               {shellList.map((ele) => (
-                <YakitSelect value={ele} key={ele}>
+                <YakitSelect.Option value={ele} key={ele}>
                   {ele}
-                </YakitSelect>
+                </YakitSelect.Option>
               ))}
             </YakitSelect>
           </div>
@@ -317,10 +317,10 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
               }}
               placeholder="请选择..."
             >
-              <YakitSelect value="None">None</YakitSelect>
-              <YakitSelect value="Url">Url</YakitSelect>
-              <YakitSelect value="DoubleUrl">DoubleUrl</YakitSelect>
-              <YakitSelect value="Base64">Base64</YakitSelect>
+              <YakitSelect.Option value="None">None</YakitSelect.Option>
+              <YakitSelect.Option value="Url">Url</YakitSelect.Option>
+              <YakitSelect.Option value="DoubleUrl">DoubleUrl</YakitSelect.Option>
+              <YakitSelect.Option value="Base64">Base64</YakitSelect.Option>
             </YakitSelect>
           </div>
           <div className={styles['select-item']}>

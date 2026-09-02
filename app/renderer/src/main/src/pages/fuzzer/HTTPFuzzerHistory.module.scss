@@ -18,6 +18,25 @@
       }
     }
   }
+  .history-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .history-toolbar-label,
+  .history-toolbar-all {
+    flex-shrink: 0;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .history-toolbar-search {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
   .history-item {
     display: flex;
     justify-content: space-between;

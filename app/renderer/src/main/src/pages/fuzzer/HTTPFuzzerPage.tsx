@@ -2775,7 +2775,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         mask={false}
         keyboard={false}
         height={showHeight}
-        visible={true}
+        open={true}
         onClose={() => setTrafficAnalysisVisible(false)}
         className={styles['http-traffic-analysis-overlay']}
       >
@@ -3118,8 +3118,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     <YakitPopover
                       trigger={'click'}
                       placement={'leftTop'}
-                      destroyTooltipOnHide={true}
-                      onVisibleChange={setHistorySelectorOpen}
+                      destroyOnHidden={true}
+                      onOpenChange={setHistorySelectorOpen}
                       content={
                         <div style={{ width: 400 }}>
                           {historySelectorOpen && (
@@ -3169,7 +3169,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                         content: <BlastingAnimationAemonstration></BlastingAnimationAemonstration>,
                         footer: null,
                         centered: true,
-                        destroyOnClose: true,
+                        destroyOnHidden: true,
                       })
                     }}
                   >
@@ -4058,7 +4058,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
           <YakitPopover
             trigger={'click'}
             content={searchNode}
-            onVisibleChange={(b) => {
+            onOpenChange={(b) => {
               if (!b) {
                 setQuery({
                   ...query,
@@ -4128,7 +4128,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
               </div>
             </div>
           }
-          onVisibleChange={(b) => {
+          onOpenChange={(b) => {
             if (!b) {
               const l = bodyLengthRef?.current?.getValue() || {}
               const d = durationMsRef?.current?.getValue() || {}
@@ -4313,8 +4313,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 </Space>
               </>
             }
-            visible={exportDataVisible}
-            onVisibleChange={(visible) => {
+            open={exportDataVisible}
+            onOpenChange={(visible) => {
               setExportDataVisible(visible)
             }}
           >
@@ -4365,8 +4365,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 </Space>
               </>
             }
-            visible={exportDataVisible}
-            onVisibleChange={(visible) => {
+            open={exportDataVisible}
+            onOpenChange={(visible) => {
               setExportDataVisible(visible)
             }}
           >
@@ -4378,7 +4378,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         <YakitModal
           title={t('SecondNodeExtra.extractFromResponsePacket')}
           onCancel={() => setResponseExtractorVisible(false)}
-          visible={responseExtractorVisible}
+          open={responseExtractorVisible}
           width="80%"
           maskClosable={false}
           footer={null}

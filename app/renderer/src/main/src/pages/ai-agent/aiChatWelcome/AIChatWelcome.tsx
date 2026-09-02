@@ -294,7 +294,7 @@ const AIChatWelcomeSettingCard = memo(
           )
         })}
         <YakitModal
-          visible={editVisible}
+          open={editVisible}
           title={title}
           width={700}
           maskClosable={false}
@@ -308,7 +308,7 @@ const AIChatWelcomeSettingCard = memo(
               恢复默认
             </YakitButton>
           }
-          destroyOnClose
+          destroyOnHidden
         >
           <div className={styles['edit-skill-modal']}>
             <YakitEditor type="markdown" value={editContent} setValue={setEditContent} noMiniMap noLineNumber />

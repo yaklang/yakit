@@ -231,7 +231,7 @@
 }
 
 .more-versions-popover {
-  padding-top: 0px;
+  padding-top: 0;
 
   :global {
     .ant-popover-arrow {
@@ -239,6 +239,7 @@
     }
 
     .ant-popover-inner {
+      padding: 12px;
       border-radius: 4px;
     }
   }

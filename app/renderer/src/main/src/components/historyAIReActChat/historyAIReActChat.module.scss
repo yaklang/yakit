@@ -1,16 +1,17 @@
 .ai-re-act-task-popover {
   :global {
     transform-origin: 50% 0px !important;
+
     .ant-popover-arrow {
       display: none;
     }
+
     .ant-popover-content {
       transform: translateY(14px);
     }
-    .ant-popover-inner-content {
-      padding: 0;
-    }
+
     .ant-popover-inner {
+      padding: 0;
       border-radius: 8px;
     }
   }

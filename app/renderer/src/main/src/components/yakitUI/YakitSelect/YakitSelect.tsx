@@ -44,6 +44,14 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     isCacheDefaultValue = true,
     cacheHistoryListLength = 10,
     defaultOptions,
+    dropdownRender,
+    popupRender,
+    dropdownMatchSelectWidth,
+    popupMatchSelectWidth,
+    onDropdownVisibleChange,
+    onOpenChange,
+    dropdownClassName,
+    classNames: selectClassNames,
     ...props
   }: YakitSelectProps<OptionType>,
   ref: React.Ref<YakitBaseSelectRef>,
@@ -287,8 +295,11 @@ export const YakitSelectCustom = <ValueType, OptionType>(
       style={wrapperStyle}
     >
       <Select
+        className={className}
         suffixIcon={
-          showSuffixIcon ? (
+          props.mode === 'tags' || props.mode === 'multiple' ? (
+            (props.suffixIcon ?? null)
+          ) : showSuffixIcon ? (
             <ChevronUpIcon className={styles['yakit-select-icon']} />
           ) : (
             <ChevronDownOutlined size={16} className={styles['yakit-select-icon']} />
@@ -308,17 +319,27 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         {...extraProps}
         menuItemSelectedIcon={supportDelCache ? <></> : props.menuItemSelectedIcon}
         size="middle"
-        dropdownClassName={classNames(
-          styles['yakit-select-popup'],
-          {
-            [styles['yakit-select-wrapper-tags']]: props.mode === 'tags' || props.mode === 'multiple',
-            [styles['yakit-select-popup-y']]: show,
+        classNames={{
+          ...selectClassNames,
+          popup: {
+            ...selectClassNames?.popup,
+            root: classNames(
+              styles['yakit-select-popup'],
+              {
+                [styles['yakit-select-wrapper-tags']]: props.mode === 'tags' || props.mode === 'multiple',
+                [styles['yakit-select-popup-y']]: show,
+              },
+              dropdownClassName,
+              selectClassNames?.popup?.root,
+            ),
           },
-          props.dropdownClassName,
-        )}
-        onDropdownVisibleChange={(open) => {
+        }}
+        popupRender={popupRender ?? dropdownRender}
+        popupMatchSelectWidth={popupMatchSelectWidth ?? dropdownMatchSelectWidth}
+        onOpenChange={(open) => {
           setShow(open)
-          if (props.onDropdownVisibleChange) props.onDropdownVisibleChange(open)
+          onOpenChange?.(open)
+          onDropdownVisibleChange?.(open)
         }}
         notFoundContent={
           <div className={classNames('yakit-select-notFound')}>

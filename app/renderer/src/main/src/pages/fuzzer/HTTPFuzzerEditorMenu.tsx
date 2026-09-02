@@ -880,13 +880,11 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
       )}
       {status === 'many' && (
         <div className={styles['timeline-box']}>
-          <Timeline>
-            {result.map((item, index) => {
-              return (
-                <Timeline.Item
-                  className={styles['timeline-item']}
-                  dot={<TerminalSolid className={styles['solid-terminal-icon']} color="currentColor" />}
-                >
+          <Timeline
+            items={result.map((item, index) => {
+              return {
+                className: styles['timeline-item'],
+                children: (
                   <DecodeCopyReplace
                     item={item}
                     index={index + 1}
@@ -894,10 +892,11 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
                     replace={replace}
                     isReadOnly={isReadOnly}
                   />
-                </Timeline.Item>
-              )
+                ),
+                dot: <TerminalSolid className={styles['solid-terminal-icon']} color="currentColor" />,
+              }
             })}
-          </Timeline>
+          />
         </div>
       )}
       {status === 'none' && <div className={styles['none-decode']}>{t('DecodeComponent.noDecodeInfo')}</div>}

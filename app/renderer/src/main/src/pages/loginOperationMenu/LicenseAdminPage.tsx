@@ -296,9 +296,9 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
         onChange={onTableChange}
       ></TableVirtualResize>
       <YakitModal
-        visible={enterprisesPopShow}
+        open={enterprisesPopShow}
         title={editInfoRef.current ? t('LicenseAdminPage.editCompany') : t('LicenseAdminPage.createCompany')}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         width={600}
         onCancel={() => {
@@ -319,9 +319,9 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
         />
       </YakitModal>
       <YakitModal
-        visible={createLicensePopShow}
+        open={createLicensePopShow}
         title={t('LicenseAdminPage.generateLicense')}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         width={600}
         onCancel={() => {
@@ -697,7 +697,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                 update(pagination.page + 1)
               }
             }}
-            dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+            popupRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
             notFoundContent={<YakitEmpty />}
           />
         </Form.Item>

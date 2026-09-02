@@ -6,7 +6,7 @@ import styles from './NewCodecUIStore.module.scss'
 import classNames from 'classnames'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import type { CheckboxValueType } from 'antd/lib/checkbox/Group'
+import type { CheckboxValueType } from '@/utils/antdCompat'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { ArrowsExpandOutlined, SearchOutlined, ArrowsOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
@@ -482,7 +482,7 @@ export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
           closable={false}
           maskClosable={false}
           hiddenHeader={true}
-          visible={isShowExtend}
+          open={isShowExtend}
           bodyStyle={{ padding: 0 }}
         >
           <NewCodecEditorBody

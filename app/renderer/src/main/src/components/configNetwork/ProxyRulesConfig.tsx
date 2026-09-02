@@ -419,7 +419,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
             ? `ProxyConfig.${editId ? 'edit_point' : 'add_point'}`
             : `ProxyConfig.${editId ? 'edit_rule' : 'add_rule'}`,
         )}
-        visible={modalVisible}
+        open={modalVisible}
         onOk={handleOk}
         maskClosable={false}
         onCancel={handleCancel}
@@ -519,7 +519,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       placement="bottom"
       onClose={onClose}
       height="70%"
@@ -534,7 +534,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         </div>
       }
       maskClosable={false}
-      className={styles['proxy-rules-config-overlay']}
+      rootClassName={styles['proxy-rules-config-overlay']}
     >
       {drawerContent}
     </YakitDrawer>
@@ -624,7 +624,9 @@ export const ProxyTest = memo((props: ProxyTestProps) => {
             size="large"
             tip={t('ProxyConfig.detectionLoading')}
             wrapperClassName={styles['proxy-test-modal-loading']}
-          />
+          >
+            <div style={{ minHeight: 100 }} /> {/* 占位 */}
+          </YakitSpin>
         )
       case 'success':
         return (
@@ -680,7 +682,7 @@ export const ProxyTest = memo((props: ProxyTestProps) => {
       )}
       <YakitModal
         title={t('ProxyConfig.proxyDetection')}
-        visible={visible}
+        open={visible}
         onCancel={onCancel}
         footer={null}
         width={600}

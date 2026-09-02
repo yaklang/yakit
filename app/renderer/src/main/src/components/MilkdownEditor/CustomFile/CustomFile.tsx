@@ -338,7 +338,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                           trailColor="var(--Colors-Use-Neutral-Bg)"
                           type="circle"
                           percent={percent}
-                          width={20}
+                          size={20}
                           format={() => null}
                           strokeWidth={12}
                         />
@@ -396,7 +396,9 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
             spinning={true}
             tip={t('MilkdownEditor.customFile.loadingFile')}
             wrapperClassName={styles['file-spinning']}
-          />
+          >
+            <div style={{ minHeight: 100 }} /> {/* 占位 */}
+          </YakitSpin>
         )}
       </div>
       {downFileInfo && (

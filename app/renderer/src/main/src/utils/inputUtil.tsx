@@ -1,15 +1,27 @@
 import type React from 'react'
 import { type CSSProperties, useEffect, useRef, useState } from 'react'
-import { Button, Checkbox, Col, Form, Input, InputNumber, Row, Spin, Tag, Tooltip, Typography, Upload } from 'antd'
-import '@ant-design/compatible/assets/index.css'
+import {
+  Button,
+  Checkbox,
+  Col,
+  Form,
+  Input,
+  InputNumber,
+  Row,
+  Spin,
+  Tag,
+  Tooltip,
+  Typography,
+  Upload,
+  type FormItemProps,
+  type CheckboxOptionType,
+} from 'antd'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import TimeRange, { TimePoint } from './timeRange'
-import type { CheckboxOptionType } from 'antd/lib/checkbox'
-import type { CheckboxValueType } from 'antd/es/checkbox/Group'
+import type { CheckboxValueType } from '@/utils/antdCompat'
 import './editableTagsGroup.css'
 import { randomColor } from './randomUtil'
 import type { LiteralUnion } from 'antd/lib/_util/type'
-import type { FormItemProps } from '@ant-design/compatible/lib/form'
 import './inputUtil.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -137,7 +149,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
       {props.autoComplete ? (
         <YakitAutoComplete
           style={{ width: props.width || '100%' }}
-          dropdownMatchSelectWidth={400}
+          popupMatchSelectWidth={400}
           disabled={!!props.disable}
           placeholder={props.placeholder}
           allowClear={true}
@@ -297,89 +309,87 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
           {items.map((item, index) => {
             return (
               <Form.Item label={t('InputUtil.parameterIndex', { index })}>
-                <Input.Group>
-                  <Row gutter={10}>
-                    <Col span={6}>
-                      <Input
-                        placeholder={'Key'}
-                        allowClear={true}
-                        value={items[index].key}
-                        onChange={(e) => {
-                          const key = e.target.value
-                          items[index].key = key
-                          setItems([...items])
-                        }}
-                      />
-                    </Col>
-                    <Col span={10}>
-                      {props.valueIsStringArray ? (
-                        <div style={{ width: '100%' }}>
-                          <OneLine>
-                            <YakitSelect
-                              style={{ width: '100%' }}
-                              allowClear={true}
-                              autoClearSearchValue={true}
-                              placeholder={t('InputUtil.splitArrayHint')}
-                              dropdownMatchSelectWidth={200}
-                              mode={'tags'}
-                              value={items[index].value?.split('|') || []}
-                              maxTagTextLength={20}
-                              onChange={(value, _) => {
-                                if (!value) {
-                                  items[index].value = undefined
-                                  setItems([...items])
-                                  return
-                                }
-                                value = value.filter((i) => {
-                                  return !!i
-                                })
-                                items[index].value = value.join('|')
-                                setItems([...items])
-                              }}
-                            />
-                          </OneLine>
-                        </div>
-                      ) : (
-                        <>
-                          <Input
-                            placeholder={'Value'}
+                <Row gutter={10}>
+                  <Col span={6}>
+                    <Input
+                      placeholder={'Key'}
+                      allowClear={true}
+                      value={items[index].key}
+                      onChange={(e) => {
+                        const key = e.target.value
+                        items[index].key = key
+                        setItems([...items])
+                      }}
+                    />
+                  </Col>
+                  <Col span={10}>
+                    {props.valueIsStringArray ? (
+                      <div style={{ width: '100%' }}>
+                        <OneLine>
+                          <YakitSelect
+                            style={{ width: '100%' }}
                             allowClear={true}
-                            value={items[index].value}
-                            onChange={(e) => {
-                              const value = e.target.value
-                              items[index].value = value.trim()
+                            autoClearSearchValue={true}
+                            placeholder={t('InputUtil.splitArrayHint')}
+                            popupMatchSelectWidth={200}
+                            mode={'tags'}
+                            value={items[index].value?.split('|') || []}
+                            maxTagTextLength={20}
+                            onChange={(value, _) => {
+                              if (!value) {
+                                items[index].value = undefined
+                                setItems([...items])
+                                return
+                              }
+                              value = value.filter((i) => {
+                                return !!i
+                              })
+                              items[index].value = value.join('|')
                               setItems([...items])
                             }}
-                            // addonAfter={<>
-                            //     <DeleteOutlined
-                            //         style={{color: "red"}}
-                            //         onClick={() => {
-                            //             if (index > 0) {
-                            //                 items.splice(index, 1)
-                            //                 setItems([...items])
-                            //             }
-                            //         }}/>
-                            // </>}
                           />
-                        </>
-                      )}
-                    </Col>
-                    <Col span={8}>
-                      <Button
-                        type={'dashed'}
-                        onClick={() => {
-                          if (index > 0) {
-                            items.splice(index, 1)
+                        </OneLine>
+                      </div>
+                    ) : (
+                      <>
+                        <Input
+                          placeholder={'Value'}
+                          allowClear={true}
+                          value={items[index].value}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            items[index].value = value.trim()
                             setItems([...items])
-                          }
-                        }}
-                        danger={true}
-                      >
-                        <DeleteOutlined />
-                      </Button>
-                    </Col>
-                  </Row>
-                </Input.Group>
+                          }}
+                          // addonAfter={<>
+                          //     <DeleteOutlined
+                          //         style={{color: "red"}}
+                          //         onClick={() => {
+                          //             if (index > 0) {
+                          //                 items.splice(index, 1)
+                          //                 setItems([...items])
+                          //             }
+                          //         }}/>
+                          // </>}
+                        />
+                      </>
+                    )}
+                  </Col>
+                  <Col span={8}>
+                    <Button
+                      type={'dashed'}
+                      onClick={() => {
+                        if (index > 0) {
+                          items.splice(index, 1)
+                          setItems([...items])
+                        }
+                      }}
+                      danger={true}
+                    >
+                      <DeleteOutlined />
+                    </Button>
+                  </Col>
+                </Row>
               </Form.Item>
             )
           })}
@@ -581,7 +591,7 @@ export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p)
         style={{ width: '200' }}
         allowClear={true}
         autoClearSearchValue={true}
-        dropdownMatchSelectWidth={200}
+        popupMatchSelectWidth={200}
         mode={p.mode || 'multiple'}
         value={value}
         maxTagTextLength={30}
@@ -850,7 +860,7 @@ export const EditableTagsGroup: React.FC<EditableTagsGroupProps> = (p) => {
         return (
           <YakitPopover
             title={'Operations'}
-            visible={p.noOperations ? false : undefined}
+            open={p.noOperations ? false : undefined}
             content={[
               <Button
                 danger={true}

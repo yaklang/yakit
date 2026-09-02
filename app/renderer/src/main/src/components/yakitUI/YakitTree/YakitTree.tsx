@@ -1,6 +1,5 @@
 import React from 'react'
-import { Tree } from 'antd'
-import type { DataNode as TreeNode, TreeProps } from 'antd/es/tree'
+import { Tree, type TreeDataNode as TreeNode, type TreeProps } from 'antd'
 import { YakitEmpty } from '../YakitEmpty/YakitEmpty'
 import styles from './YakitTree.module.scss'
 import classNames from 'classnames'

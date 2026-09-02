@@ -776,7 +776,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             </>
           )}
           {admin.isAdmin && (
-            <Tooltip title={t('PluginManageDetail.deletePlugin')} overlayClassName="plugins-tooltip">
+            <Tooltip title={t('PluginManageDetail.deletePlugin')} rootClassName="plugins-tooltip">
               <YakitButton
                 type="text2"
                 icon={<TrashOutlined color="currentColor" />}
@@ -877,7 +877,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             <div style={{ height: 12 }} className="divider-style"></div>
             <Tooltip
               title={selectNum > 0 ? t('YakitButton.batchDownload') : t('YakitButton.oneClickDownload')}
-              overlayClassName="plugins-tooltip"
+              rootClassName="plugins-tooltip"
             >
               <YakitButton
                 loading={downloadLoading}
@@ -1117,9 +1117,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             centered={true}
             maskClosable={false}
             closable={true}
-            visible={scoreHint}
+            open={scoreHint}
             footer={null}
-            destroyOnClose={true}
+            destroyOnHidden={true}
             onCancel={handleCancelScoreHint}
             bodyStyle={{ padding: 0 }}
           >

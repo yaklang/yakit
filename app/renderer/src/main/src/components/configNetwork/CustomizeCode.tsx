@@ -1,6 +1,5 @@
 import { type FC, useMemo, useRef } from 'react'
 import { Form } from 'antd'
-import { useForm } from 'antd/es/form/Form'
 import { useRequest, useSafeState } from 'ahooks'
 
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
@@ -157,7 +156,7 @@ const LevelOptions = [
 ]
 
 const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({ value }) => {
-  const [form] = useForm()
+  const [form] = Form.useForm()
   const { theme } = useTheme()
   const { t } = useI18nNamespaces(['configNetwork', 'yakitUi'])
 
@@ -331,7 +330,7 @@ const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       width={650}
       title={title}
       onCancel={onCancel}

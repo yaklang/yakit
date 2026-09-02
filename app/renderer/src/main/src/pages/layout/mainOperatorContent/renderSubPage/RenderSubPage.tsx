@@ -1,11 +1,11 @@
 import { NoPaddingRoute } from '@/routes/newRoute'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Spin } from 'antd'
 import { useMap, useMemoizedFn } from 'ahooks'
 import styles from './RenderSubPage.module.scss'
 import type { RenderFuzzerSequenceProps, RenderSubPageProps } from './RenderSubPageType'
 import PageItem from '../PageItem'
 import { useFuzzerSequence } from '@/store/fuzzerSequence'
-import { PageLoading } from '@ant-design/pro-layout'
 import { usePageInfo } from '@/store/pageInfo'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { shallow } from 'zustand/shallow'
@@ -140,7 +140,7 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
               className={styles['fuzzer-sequence-list-item']}
               style={{ display: selectGroupId === ele.groupId ? '' : 'none' }}
             >
-              <React.Suspense fallback={<PageLoading />}>
+              <React.Suspense fallback={<Spin />}>
                 <FuzzerSequenceWrapper type={renderType}>
                   <FuzzerSequence groupId={ele.groupId} setType={setType} type={renderType} />
                 </FuzzerSequenceWrapper>

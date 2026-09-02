@@ -1,7 +1,7 @@
 import React, { type FC } from 'react'
 
 import { useUpdateEffect } from 'ahooks'
-import { Collapse, Form } from 'antd'
+import { Form, type FormInstance } from 'antd'
 
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
@@ -9,7 +9,6 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 
-import type { FormInstance } from 'antd/es/form/Form'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import styles from '../knowledgeBase.module.scss'
 import { extractFileName, knowledgeTypeOptions, ValidatorFilePath } from '../utils'
@@ -165,7 +164,7 @@ const CreateKnowledgeBase: FC<{ form: FormInstance<any>; type?: 'new' }> = ({ fo
         </React.Fragment>
       ) : (
         <YakitCollapse bordered={false} className={styles['create-knowledge-configuration']}>
-          <Collapse.Panel header="高级配置" key="1">
+          <YakitCollapse.YakitPanel header="高级配置" key="1">
             <Form.Item label="补充提示词：" name="prompt">
               <YakitInput placeholder="请输入补充提示词" />
             </Form.Item>
@@ -206,7 +205,7 @@ const CreateKnowledgeBase: FC<{ form: FormInstance<any>; type?: 'new' }> = ({ fo
                 ]}
               />
             </Form.Item>
-          </Collapse.Panel>
+          </YakitCollapse.YakitPanel>
         </YakitCollapse>
       )}
     </Form>

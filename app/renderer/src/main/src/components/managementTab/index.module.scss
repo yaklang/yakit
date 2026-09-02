@@ -1,7 +1,7 @@
 .management-menu-wrapper {
   :global {
-    .ant-popover-inner-content {
-      padding: 6px 4px 0 4px;
+    .ant-popover-inner {
+      padding: 0;
     }
   }
 }

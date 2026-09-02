@@ -183,12 +183,12 @@ const CeApiKeysListModal: React.FC<CeApiKeysListModalProps> = (props) => {
   return (
     <YakitModal
       wrapClassName={styles['api-keys-list-modal']}
-      visible={visible}
+      open={visible}
       title={t('CeUserMenu.allApiKeys')}
       type="white"
       width={520}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       onCancel={onClose}
     >
       <div className={styles['api-keys-list-toolbar']}>

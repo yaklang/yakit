@@ -149,15 +149,16 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
       }
       className={styles['history-card-container']}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span>{t('HTTPFuzzerHistorySelector.quickSearch')}</span>
+      <div className={styles['history-toolbar']}>
+        <span className={styles['history-toolbar-label']}>{t('HTTPFuzzerHistorySelector.quickSearch')}</span>
         <YakitInput.Search
+          wrapperClassName={styles['history-toolbar-search']}
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           onSearch={() => reload(1, limit)}
           onPressEnter={() => reload(1, limit)}
         />
-        <span>
+        <span className={styles['history-toolbar-all']}>
           {t('YakitButton.view_all_button')}
           <YakitSwitch checked={showAll} onChange={onSwitchShowAll} />
         </span>
@@ -217,14 +218,14 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                 <Card
                   size={'small'}
                   style={{ marginBottom: 4, width: '100%' }}
-                  bodyStyle={{ paddingTop: 4, paddingBottom: 4 }}
+                  styles={{ body: { paddingTop: 4, paddingBottom: 4 } }}
                   hoverable={true}
                   onClick={(e) => {
                     e.preventDefault()
                     const newPage = (paging.Page - 1) * paging.Limit + index + 1
                     props.onSelect(i.Id, newPage)
                   }}
-                  bordered={false}
+                  variant="borderless"
                 >
                   <div className={styles['history-item']}>
                     <div

@@ -1158,11 +1158,11 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                           </Form>
                         </>
                       }
-                      onVisibleChange={(v) => {
+                      onOpenChange={(v) => {
                         setPopoverVisible(v)
                       }}
-                      overlayInnerStyle={{ width: 350 }}
-                      visible={popoverVisible}
+                      styles={{ body: { width: 350 } }}
+                      open={popoverVisible}
                     >
                       <YakitButton icon={<SettingOutlined />} type={'text'} size={'small'} />
                     </YakitPopover>
@@ -1273,10 +1273,10 @@ export const NewHTTPCard: React.FC<NewHTTPCardProps> = (props) => {
         className={'flex-card'}
         size={'small'}
         loading={loading}
-        bordered={bordered}
+        variant={bordered === false ? 'borderless' : 'outlined'}
         style={{ height: '100%', width: '100%', backgroundColor: 'var(--Colors-Use-Basic-Background)' }}
         title={title}
-        bodyStyle={{ padding: 0, width: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+        styles={{ body: { padding: 0, width: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } }}
         extra={extra}
       >
         {children}
