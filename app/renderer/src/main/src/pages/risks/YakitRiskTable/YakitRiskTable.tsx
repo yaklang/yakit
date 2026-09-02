@@ -6,6 +6,7 @@ import type {
   YakitRiskDetailContentProps,
   YakitRiskDetailsProps,
   YakitRiskEditFormProps,
+  YakitRiskSelectTagProps,
   YakitRiskTableProps,
   YakURLDataItemProps,
 } from './YakitRiskTableType'
@@ -50,16 +51,20 @@ import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitD
 import {
   type DeleteRiskRequest,
   type ExportHtmlProps,
+  type FieldGroup,
   type SetRiskEditRequest,
+  type SetTagForRiskRequest,
   type UploadRiskToOnlineRequest,
   apiDeleteRisk,
   apiExportHtml,
   apiNewRiskRead,
   apiQueryAvailableRiskType,
+  apiQueryRiskTags,
   apiQueryRisks,
   apiQueryRisksIncrementOrderDesc,
   apiRiskFeedbackToOnline,
   apiSetRiskEdit,
+  apiSetTagForRisk,
 } from './utils'
 import { apiGetUserSearch } from '@/pages/notepadManage/NotepadShareModal/utils'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
@@ -342,6 +347,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   } = props
   const { t, i18n, i18nRefresh } = useI18nNamespaces(['risk', 'yakitUi', 'yakitRoute'])
   const { userInfo } = useStore()
+  const isEnterprise = isEnterpriseEdition()
   const [loading, setLoading] = useState<boolean>(false)
   const exportPageContainerRef = useRef<HTMLElement>()
 
@@ -366,6 +372,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const [exportDataKey, setExportDataKey] = useState<string[]>([])
 
   const [riskTypeVerbose, setRiskTypeVerbose] = useState<FieldName[]>([])
+  const [tag, setTag] = useState<FieldGroup[]>([])
 
   const [interval, setInterval] = useState<number | undefined>(undefined) // 控制 Interval
   const [offsetDataInTop, setOffsetDataInTop] = useState<Risk[]>([])
@@ -395,6 +402,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   useEffect(() => {
     if (inViewport) {
       getRiskType()
+      getRiskTags()
     }
     emiter.on('onRefRiskList', onRefRiskList)
     return () => {
@@ -502,6 +510,27 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       label: item.Verbose,
       total: item.Total,
     }))
+    const tagTable = tag.map((item) => ({
+      value: item.Name,
+      label: item.Name,
+      total: item.Total,
+    }))
+    const severityFilters = isEnterprise
+      ? [
+          { value: 'none', label: t('YakitRiskTable.none') },
+          { value: 'critical', label: t('YakitTag.critical') },
+          { value: 'high', label: t('YakitTag.high') },
+          { value: 'warning', label: t('YakitTag.warning') },
+          { value: 'low', label: t('YakitTag.low') },
+          { value: 'info', label: t('YakitTag.info') },
+        ]
+      : [
+          { value: 'critical', label: t('YakitTag.critical') },
+          { value: 'high', label: t('YakitTag.high') },
+          { value: 'warning', label: t('YakitTag.warning') },
+          { value: 'low', label: t('YakitTag.low') },
+          { value: 'info', label: t('YakitTag.info') },
+        ]
     const columnArr: ColumnsTypeProps[] = [
       {
         title: t('YakitTable.order'),
@@ -534,27 +563,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
           filterMultiple: true,
           filters: riskTypeVerboseTable,
         },
-        render: (text, record: Risk) => (
-          <div
-            className={styles['table-tag']}
-            onClick={(e) => {
-              e.stopPropagation()
-              onOpenRiskEdit(record)
-            }}
-          >
-            <span>{text || record.RiskType || '-'}</span>
-            <OutlineChevrondownIcon className={styles['table-tag-icon']} />
-          </div>
-        ),
-      },
-      {
-        title: t('YakitRiskTable.cvss_score'),
-        dataKey: 'Cvss',
-        width: 100,
-        align: 'center',
-        render: (_text, record: Risk) => {
-          const score = typeof record.Cvss === 'number' ? record.Cvss : undefined
-          return (
+        render: (text, record: Risk) =>
+          isEnterprise ? (
             <div
               className={styles['table-tag']}
               onClick={(e) => {
@@ -562,20 +572,55 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 onOpenRiskEdit(record)
               }}
             >
-              <span>{score !== undefined ? score : '-'}</span>
+              <span>{text || record.RiskType || '-'}</span>
               <OutlineChevrondownIcon className={styles['table-tag-icon']} />
             </div>
-          )
-        },
+          ) : (
+            text || record.RiskType || '-'
+          ),
       },
+      ...(isEnterprise
+        ? [
+            {
+              title: t('YakitRiskTable.cvss_score'),
+              dataKey: 'Cvss',
+              width: 100,
+              align: 'center' as const,
+              render: (_text: unknown, record: Risk) => {
+                const score = typeof record.Cvss === 'number' ? record.Cvss : undefined
+                return (
+                  <div
+                    className={styles['table-tag']}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onOpenRiskEdit(record)
+                    }}
+                  >
+                    <span>{score !== undefined ? score : '-'}</span>
+                    <OutlineChevrondownIcon className={styles['table-tag-icon']} />
+                  </div>
+                )
+              },
+            },
+          ]
+        : []),
       {
         title: t('YakitRiskTable.level'),
         dataKey: 'Severity',
         width: 100,
         align: 'center',
+        sorterProps: {
+          sorter: true,
+          sorterKey: 'severity',
+        },
         render: (_, i: Risk) => {
           const title = SeverityMapTag.filter((item) => item.key.includes(i.Severity || ''))[0]
-          return (
+          const severityTag = (
+            <YakitTag color={title?.tag as YakitTagColor} className={styles['table-severity-tag']}>
+              {title ? t(title.nameUi) : i.Severity || '-'}
+            </YakitTag>
+          )
+          return isEnterprise ? (
             <div
               className={styles['table-tag']}
               onClick={(e) => {
@@ -583,43 +628,18 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 onOpenRiskEdit(i)
               }}
             >
-              <YakitTag color={title?.tag as YakitTagColor} className={styles['table-severity-tag']}>
-                {title ? t(title.nameUi) : i.Severity || '-'}
-              </YakitTag>
+              {severityTag}
               <OutlineChevrondownIcon className={styles['table-tag-icon']} />
             </div>
+          ) : (
+            severityTag
           )
         },
         filterProps: {
           filterKey: 'SeverityList',
           filtersType: 'select',
           filterMultiple: true,
-          filters: [
-            {
-              value: 'none',
-              label: t('YakitRiskTable.none'),
-            },
-            {
-              value: 'critical',
-              label: t('YakitTag.critical'),
-            },
-            {
-              value: 'high',
-              label: t('YakitTag.high'),
-            },
-            {
-              value: 'warning',
-              label: t('YakitTag.warning'),
-            },
-            {
-              value: 'low',
-              label: t('YakitTag.low'),
-            },
-            {
-              value: 'info',
-              label: t('YakitTag.info'),
-            },
-          ],
+          filters: severityFilters,
         },
       },
       {
@@ -643,15 +663,16 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
           filterKey: 'TagList',
           filtersType: 'select',
           filterMultiple: true,
-          filters: DISPOSAL_STATUS_OPTIONS.map((item) => ({
-            value: item.value,
-            label: t(item.labelKey),
-          })),
+          filters: isEnterprise
+            ? DISPOSAL_STATUS_OPTIONS.map((item) => ({
+                value: item.value,
+                label: t(item.labelKey),
+              }))
+            : tagTable,
         },
         minWidth: 120,
-        render: (text, record: Risk) => {
-          const status = formatDisposalStatusDisplay(text, t)
-          return (
+        render: (text, record: Risk) =>
+          isEnterprise ? (
             <div
               className={styles['table-tag']}
               onClick={(e) => {
@@ -659,11 +680,21 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 onOpenRiskEdit(record)
               }}
             >
-              <span>{status}</span>
+              <span>{formatDisposalStatusDisplay(text, t)}</span>
               <OutlineChevrondownIcon className={styles['table-tag-icon']} />
             </div>
-          )
-        },
+          ) : (
+            <div
+              className={styles['table-tag']}
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpenSelect(record)
+              }}
+            >
+              <span>{text ? text.replaceAll('|', ',') : '-'}</span>
+              <OutlineChevrondownIcon className={styles['table-tag-icon']} />
+            </div>
+          ),
       },
       {
         title: t('YakitRiskTable.discovery_time'),
@@ -726,7 +757,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       },
     ]
     return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
-  }, [riskTypeVerbose, excludeColumnsKey, i18nRefresh])
+  }, [riskTypeVerbose, tag, excludeColumnsKey, i18nRefresh, isEnterprise])
 
   /**误报上传 start */
   const [misstatementVisible, setMisstatementVisible] = useState<boolean>(false)
@@ -803,6 +834,44 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   ).run
   const getRiskType = useMemoizedFn(() => {
     apiQueryAvailableRiskType().then(setRiskTypeVerbose)
+  })
+  const getRiskTags = useMemoizedFn(() => {
+    apiQueryRiskTags().then((res) => {
+      setTag(res.RiskTags)
+    })
+  })
+  const onOpenSelect = useMemoizedFn((record: Risk) => {
+    const m = showYakitModal({
+      title: (modalT) => (
+        <div className="content-ellipsis">
+          {modalT('YakitTable.order')}【{record.Id}】- {record.TitleVerbose || record.Title}
+        </div>
+      ),
+      content: <YakitRiskSelectTag info={record} onClose={() => m.destroy()} onSave={onSaveTags} />,
+      footer: null,
+      onCancel: () => {
+        m.destroy()
+      },
+    })
+  })
+  const onSaveTags = useMemoizedFn((info: Risk) => {
+    const params: SetTagForRiskRequest = {
+      Id: info.Id,
+      Hash: info.Hash,
+      Tags: info.Tags ? info.Tags.split('|') : [],
+    }
+    apiSetTagForRisk(params).then(() => {
+      const index = response.Data.findIndex((item) => item.Id === info.Id)
+      if (index === -1) return
+      response.Data[index] = {
+        ...info,
+      }
+      setResponse({
+        ...response,
+        Data: [...response.Data],
+      })
+      getRiskTags()
+    })
   })
   const onOpenRiskEdit = useMemoizedFn((record: Risk) => {
     const m = showYakitModal({
@@ -1581,6 +1650,82 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         cacheKey={RemoteRiskGV.RiskMisstatementNoPrompt}
         onCallback={handleMisstatementHint}
       />
+    </div>
+  )
+})
+const defaultTags = (t: TFunction) => {
+  return [
+    {
+      label: t('YakitRiskSelectTag.false_positive'),
+      value: '误报',
+    },
+    {
+      label: t('YakitRiskSelectTag.ignore'),
+      value: '忽略',
+    },
+    {
+      label: t('YakitRiskSelectTag.processed'),
+      value: '已处理',
+    },
+    {
+      label: t('YakitRiskSelectTag.pending'),
+      value: '待处理',
+    },
+  ]
+}
+const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props) => {
+  const { info, onClose, onSave } = props
+  const { t } = useI18nNamespaces(['risk', 'yakitUi'])
+  const initSelectTags = useCreation(() => {
+    let tagList: { label: string; value: string }[] = []
+    if (info?.Tags) {
+      tagList =
+        (info?.Tags || '').split('|').map((item) => ({
+          label: item,
+          value: item,
+        })) || []
+    }
+    return tagList
+  }, [info.Tags])
+  const tags = useCreation(() => {
+    const list = initSelectTags.filter((item) => {
+      return !defaultTags(t).find((i) => i.value === item.value)
+    })
+    return defaultTags(t).concat(list)
+  }, [info.Tags, initSelectTags])
+  const onFinish = useMemoizedFn((value: { TagList?: string[] }) => {
+    onSave({
+      ...info,
+      Tags: value.TagList ? value.TagList.join('|') : '',
+    })
+    if (onClose) onClose()
+  })
+  return (
+    <div className={styles['yakit-risk-select-tag']}>
+      <Form onFinish={onFinish}>
+        <Form.Item label="Tags" name="TagList" initialValue={initSelectTags}>
+          <YakitSelect mode="tags" allowClear>
+            {tags.map((item) => {
+              return (
+                <YakitSelect.Option key={item.value} value={item.value}>
+                  {item.label}
+                </YakitSelect.Option>
+              )
+            })}
+          </YakitSelect>
+        </Form.Item>
+        <div className={styles['yakit-risk-select-tag-btns']}>
+          <YakitButton
+            type="outline2"
+            onClick={() => {
+              if (onClose) onClose()
+            }}
+          >
+            {t('YakitButton.cancel')}
+          </YakitButton>
+          <YakitButton htmlType="submit">{t('YakitButton.ok')}</YakitButton>
+        </div>
+      </Form>
     </div>
   )
 })

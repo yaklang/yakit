@@ -139,6 +139,8 @@
   },
   "RiskDisposalLog": {
     "please_login": "请登录",
+    "no_access_title": "暂无访问权限",
+    "no_access_desc": "登录后即可访问该页面",
     "empty": "暂无处置日志",
     "dispose_risk": "处置漏洞",
     "system": "系统",

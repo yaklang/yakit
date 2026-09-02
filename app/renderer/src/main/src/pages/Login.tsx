@@ -6,10 +6,9 @@ import { failed } from '@/utils/notification'
 import './Login.scss'
 import { NetWorkApi } from '@/services/fetch'
 import { ConfigPrivateDomain } from '@/components/ConfigPrivateDomain/ConfigPrivateDomain'
-import { showModal } from '../utils/showModal'
 import { isEnterpriseEdition } from '@/utils/envfile'
 import { apiDownloadPluginMine } from './plugins/utils'
-import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { showYakitModal, YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitAuth } from '@/services/electronBridge'
@@ -24,14 +23,17 @@ interface LoginParamsProp {
 }
 
 const Login: React.FC<LoginProp> = (props) => {
-  const { t } = useI18nNamespaces(['core'])
+  const { t, i18n } = useI18nNamespaces(['core'])
   const [loading, setLoading] = useState<boolean>(false)
   // 打开企业登录面板
   const openEnterpriseModal = () => {
     props.onCancel()
-    const m = showModal({
+    const m = showYakitModal({
       title: '',
-      centered: true,
+      type: 'white',
+      footer: null,
+      maskClosable: false,
+      width: i18n.language.startsWith('zh') ? 500 : 650,
       content: <ConfigPrivateDomain onClose={() => m.destroy()} enterpriseLogin={true} />,
     })
     return m
