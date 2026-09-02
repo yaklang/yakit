@@ -156,6 +156,7 @@ export const showYakitDrawer = (props: ShowDrawerProps) => {
         if (yakitDrawerRootDiv) {
           yakitDrawerRootDiv.unmount()
         }
+        div.remove()
       }, 400)
     },
   }

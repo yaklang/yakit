@@ -39,7 +39,7 @@ import type { ModifyPluginCallback } from '@/pages/pluginEditor/pluginEditor/Plu
 import { ModifyYakitPlugin } from '@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { DROP_AVAILABLE, DROP_SELECTED, getGroupTabByKey, GroupTabList, UpperLimit } from './constants'
-import { fetchSceneActions } from './utils'
+import { fetchSceneActions, isSameAction, patchAction } from './utils'
 import { grpcSetContextMenuActionBinding, grpcFetchLocalPluginDetailByUUID } from './api'
 import type { ContextMenuAction } from './types'
 import { ContextMenuResultMode, LEGACY_CONTEXT_MENU_PLUGIN_TYPE, type ContextMenuScene } from './types'
@@ -53,6 +53,14 @@ const reorder = <T,>(list: T[], startIndex: number, endIndex: number) => {
   result.splice(endIndex, 0, removed)
   return result
 }
+
+/** 解绑请求视图：禁用并清空快捷键、结果展示重置为默认 Tab */
+const toUnboundAction = (action: ContextMenuAction): ContextMenuAction => ({
+  ...action,
+  Enabled: false,
+  Shortcut: '',
+  ResultMode: ContextMenuResultMode.Tab,
+})
 
 interface ManageRightClickPluginsProps {}
 const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
@@ -146,33 +154,29 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
   // #endregion
 
   // #region 保存
-  const requestBinding = useMemoizedFn(
-    async (action: ContextMenuAction, enabled: boolean, sort: number, shortcut = action.Shortcut || '') => {
-      try {
-        await grpcSetContextMenuActionBinding({
-          PluginUUID: action.PluginUUID,
-          ActionID: action.ActionID,
-          Enabled: enabled,
-          Sort: sort,
-          Shortcut: shortcut,
-          ResultMode: action.ResultMode,
-          AskBeforeRun: action.AskBeforeRun,
-        })
-        return true
-      } catch {
-        return false
-      }
-    },
-  )
-  const saveBinding = useMemoizedFn(
-    async (action: ContextMenuAction, enabled: boolean, sort: number, shortcut = action.Shortcut || '') => {
-      const ok = await requestBinding(action, enabled, sort, shortcut)
-      if (ok) {
-        emiter.emit('refreshContextMenuActions')
-      }
-      return ok
-    },
-  )
+  const requestBinding = useMemoizedFn(async (action: ContextMenuAction) => {
+    try {
+      await grpcSetContextMenuActionBinding({
+        PluginUUID: action.PluginUUID,
+        ActionID: action.ActionID,
+        Enabled: action.Enabled,
+        Sort: action.Sort,
+        Shortcut: action.Shortcut || '',
+        ResultMode: action.ResultMode,
+        AskBeforeRun: action.AskBeforeRun,
+      })
+      return true
+    } catch {
+      return false
+    }
+  })
+  const saveBinding = useMemoizedFn(async (action: ContextMenuAction) => {
+    const ok = await requestBinding(action)
+    if (ok) {
+      emiter.emit('refreshContextMenuActions')
+    }
+    return ok
+  })
   // #endregion
 
   // #region 已选插件的增删改操作
@@ -191,19 +195,20 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
       yakitNotify('error', t('ManageRightClickPlugins.maxAddLimit', { UpperLimit }))
       return
     }
-    if (currentList.some((i) => i.ActionID === action.ActionID && i.PluginUUID === action.PluginUUID)) return
+    if (currentList.some((i) => isSameAction(i, action))) return
 
     const insertPos = typeof insertIndex === 'number' ? Math.min(insertIndex, currentList.length) : currentList.length
     const next = [...currentList]
     next.splice(insertPos, 0, action)
-    // 新插入项（对象引用相等）必保存；其余仅保存 Sort 与新下标不同的项
-    const normalized = next.map((item, index) => ({ ...item, Sort: index }))
+    // 已选列表项均为启用态：归一 Enabled 与 Sort，只保存「新插入项 + Sort 变化的既有项」
+    const normalized = next.map((item, index) => ({ ...item, Enabled: true, Sort: index }))
     const changed = normalized.filter((_, index) => next[index] === action || next[index].Sort !== index)
     bindingSavingRef.current = true
     try {
       updateActionsByTab((prev) => ({ ...prev, [tabKey]: normalized }))
+      setAvailableActions((prev) => patchAction(prev, action, { Enabled: true }))
       for (const item of changed) {
-        const ok = await saveBinding(item, true, item.Sort)
+        const ok = await saveBinding(item)
         if (!ok) {
           refreshSelectedPlugins()
           return
@@ -226,17 +231,13 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
     const tabKey = currentTabKeyRef.current
     bindingSavingRef.current = true
     try {
-      const ok = await saveBinding({ ...action, ResultMode: mode }, true, action.Sort)
-      if (!ok) {
-        refreshSelectedPlugins()
-        return
-      }
+      const ok = await saveBinding({ ...action, ResultMode: mode })
+      if (!ok) return
       updateActionsByTab((prev) => ({
         ...prev,
-        [tabKey]: (prev[tabKey] || []).map((i) =>
-          i.ActionID === action.ActionID && i.PluginUUID === action.PluginUUID ? { ...i, ResultMode: mode } : i,
-        ),
+        [tabKey]: patchAction(prev[tabKey] || [], action, { ResultMode: mode }),
       }))
+      setAvailableActions((prev) => patchAction(prev, action, { ResultMode: mode }))
     } finally {
       bindingSavingRef.current = false
     }
@@ -248,17 +249,13 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
     const tabKey = currentTabKeyRef.current
     bindingSavingRef.current = true
     try {
-      const ok = await saveBinding(action, true, action.Sort, shortcut)
-      if (!ok) {
-        refreshSelectedPlugins()
-        return
-      }
+      const ok = await saveBinding({ ...action, Shortcut: shortcut })
+      if (!ok) return
       updateActionsByTab((prev) => ({
         ...prev,
-        [tabKey]: (prev[tabKey] || []).map((i) =>
-          i.ActionID === action.ActionID && i.PluginUUID === action.PluginUUID ? { ...i, Shortcut: shortcut } : i,
-        ),
+        [tabKey]: patchAction(prev[tabKey] || [], action, { Shortcut: shortcut }),
       }))
+      setAvailableActions((prev) => patchAction(prev, action, { Shortcut: shortcut }))
     } finally {
       bindingSavingRef.current = false
     }
@@ -271,14 +268,13 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
     const tabKey = currentTabKeyRef.current
     bindingSavingRef.current = true
     try {
-      const ok = await saveBinding(action, false, action.Sort, '')
+      const ok = await saveBinding(toUnboundAction(action))
       if (!ok) return
       updateActionsByTab((prev) => ({
         ...prev,
-        [tabKey]: (prev[tabKey] || []).filter(
-          (i) => !(i.ActionID === action.ActionID && i.PluginUUID === action.PluginUUID),
-        ),
+        [tabKey]: (prev[tabKey] || []).filter((i) => !isSameAction(i, action)),
       }))
+      setAvailableActions((prev) => prev.map((i) => (isSameAction(i, action) ? toUnboundAction(i) : i)))
     } finally {
       bindingSavingRef.current = false
     }
@@ -293,13 +289,19 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
     if (removable.length === 0) return
     bindingSavingRef.current = true
     try {
-      const results = await Promise.all(removable.map((action) => requestBinding(action, false, action.Sort, '')))
+      const results = await Promise.all(removable.map((action) => requestBinding(toUnboundAction(action))))
       emiter.emit('refreshContextMenuActions')
       const failed = removable.filter((_, index) => !results[index])
       updateActionsByTab((prev) => ({
         ...prev,
         [tabKey]: [...currentList.filter((action) => action.Locked || action.IsCorePlugin), ...failed],
       }))
+      const removedKeys = new Set(
+        removable.filter((_, index) => results[index]).map((a) => `${a.PluginUUID}:${a.ActionID}`),
+      )
+      setAvailableActions((prev) =>
+        prev.map((i) => (removedKeys.has(`${i.PluginUUID}:${i.ActionID}`) ? toUnboundAction(i) : i)),
+      )
     } finally {
       bindingSavingRef.current = false
     }
@@ -317,13 +319,14 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
       const tabKey = currentTabKeyRef.current
       const currentList = actionsByTabRef.current[tabKey] || []
       const reordered = reorder(currentList, result.source.index, result.destination.index)
-      const next = reordered.map((item, index) => ({ ...item, Sort: index }))
+      // 已选列表项均为启用态：归一 Enabled 与 Sort
+      const next = reordered.map((item, index) => ({ ...item, Enabled: true, Sort: index }))
       const changed = next.filter((_, index) => reordered[index].Sort !== index)
       bindingSavingRef.current = true
       try {
         updateActionsByTab((prev) => ({ ...prev, [tabKey]: next }))
         for (const item of changed) {
-          const ok = await saveBinding(item, true, item.Sort)
+          const ok = await saveBinding(item)
           if (!ok) {
             refreshSelectedPlugins()
             return
@@ -664,6 +667,21 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
         label: resultModeMenuLabel(ContextMenuResultMode.Drawer, t('ManageRightClickPlugins.resultModeDrawer')),
       },
     ]
+
+    if (isLegacyCodec) {
+      return [
+        {
+          key: 'shortcut',
+          label: (
+            <div className={styles['setting-menu-shortcut-item']}>
+              <span>{t('ManageRightClickPlugins.setShortcutMenu')}</span>
+              <span className={styles['setting-menu-shortcut-keys']}>{shortcutUI}</span>
+            </div>
+          ),
+        },
+      ]
+    }
+
     return [
       {
         key: 'shortcut',
@@ -677,14 +695,7 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
       {
         key: 'result-mode',
         label: t('ManageRightClickPlugins.setResultModeMenu'),
-        children: isLegacyCodec
-          ? [
-              {
-                key: `result-${ContextMenuResultMode.Tab}`,
-                label: resultModeMenuLabel(ContextMenuResultMode.Tab, t('ManageRightClickPlugins.resultModeTab')),
-              },
-            ]
-          : resultChildren,
+        children: resultChildren,
       },
     ]
   }, [shortcutUI, resultMode, isLegacyCodec, i18nRefresh])
@@ -729,12 +740,13 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
           <div className={styles['selected-item-body']}>
             <div className={styles['selected-item-name-row']}>
               <div className={styles['selected-item-name']}>{plugin.PluginName}</div>
+              {shortcutUI && <div className={styles['selected-item-name-shortcut']}>{shortcutUI}</div>}
               <div className={styles['selected-item-name-actions']} onMouseDown={(e) => e.stopPropagation()}>
                 <YakitButton
                   size="small"
-                  type="text2"
+                  type="text"
                   loading={editLoading}
-                  icon={<OutlinePencilaltIcon className={styles['setting-icon']} />}
+                  icon={<OutlinePencilaltIcon />}
                   onClick={handleOpenEdit}
                   style={{ marginRight: 4 }}
                 />
@@ -747,14 +759,16 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
                   dropdown={{
                     trigger: ['click'],
                     placement: 'bottomLeft',
-                    visible: settingMenuOpen,
-                    onVisibleChange: onSettingMenuOpenChange,
+                    open: settingMenuOpen,
+                    onOpenChange: onSettingMenuOpenChange,
                   }}
                 >
                   <YakitButton
                     size="small"
-                    type="text2"
-                    icon={<OutlineCogIcon className={styles['setting-icon']} />}
+                    type="text"
+                    icon={
+                      <OutlineCogIcon className={classNames({ [styles['setting-icon-active']]: settingMenuOpen })} />
+                    }
                     onClick={(e) => {
                       e.stopPropagation()
                     }}
@@ -766,7 +780,7 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
           </div>
           <YakitButton
             size="small"
-            type="text2"
+            type="text"
             disabled={locked}
             icon={
               <OutlineXIcon
@@ -797,8 +811,8 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
         keyboard={false}
         footer={null}
         maskClosable={false}
-        maskStyle={{ backgroundColor: 'transparent' }}
-        visible={keyShow}
+        styles={{ mask: { backgroundColor: 'transparent' } }}
+        open={keyShow}
         width={600}
         onCancel={() => handleCallbackKeyShow(false)}
       >
@@ -857,9 +871,7 @@ const AvailablePluginList: React.FC<AvailablePluginListProps> = React.memo((prop
             )
           ) : (
             availableActions.map((data, index) => {
-              const isAdded = selectedActions.some(
-                (i) => i.ActionID === data.ActionID && i.PluginUUID === data.PluginUUID,
-              )
+              const isAdded = selectedActions.some((i) => isSameAction(i, data))
               return (
                 <Draggable
                   key={`${data.PluginUUID}:${data.ActionID}`}

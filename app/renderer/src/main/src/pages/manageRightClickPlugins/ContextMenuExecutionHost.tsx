@@ -98,12 +98,20 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
   const loadingRef = useRef<boolean>(false)
   const [paramsVisible, setParamsVisible] = useState(false)
   const [paramsModalValue, setParamsModalValue] = useState<ParamsModalValue>(emptyParamsModalValue)
+  /** 当前打开的结果弹窗/抽屉句柄：新开结果窗口前先销毁旧的，避免快捷键连按堆叠多个执行 */
+  const activeResultRef = useRef<{ destroy: () => void }>()
+  const closeActiveResult = useMemoizedFn(() => {
+    const active = activeResultRef.current
+    activeResultRef.current = undefined
+    active?.destroy()
+  })
 
   /**
    * 启动执行：注册到 executionRegistry 拿 executionID，按结果展示方式分发载体
    * - tab：新开「右键插件结果」Tab
    * - drawer：右侧抽屉展示
    * - dialog：弹窗展示
+   * 弹窗/抽屉同一时刻只保留一个，重复触发时销毁旧窗口再开新的
    * 组件卸载（关 Tab / 关弹窗 / 关抽屉）时自清理：取消执行 + 移除注册表
    */
   const launch = useMemoizedFn((options: RunContextMenuActionOptions, params: YakExecutorParam[] = []) => {
@@ -116,7 +124,8 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
     const getContainer = getMainOperatorPageBodyContainer()
 
     switch (options.action.ResultMode) {
-      case ContextMenuResultMode.Drawer:
+      case ContextMenuResultMode.Drawer: {
+        closeActiveResult()
         const m1 = showYakitDrawer({
           title,
           width: '90%',
@@ -125,11 +134,15 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
           bodyStyle: { padding: 0 },
           getContainer,
           onCancel: () => {
+            if (activeResultRef.current === m1) activeResultRef.current = undefined
             m1.destroy()
           },
         })
+        activeResultRef.current = m1
         break
-      case ContextMenuResultMode.Dialog:
+      }
+      case ContextMenuResultMode.Dialog: {
+        closeActiveResult()
         const m2 = showYakitModal({
           title,
           width: '90%',
@@ -138,10 +151,13 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
           content,
           getContainer,
           onCancel: () => {
+            if (activeResultRef.current === m2) activeResultRef.current = undefined
             m2.destroy()
           },
         })
+        activeResultRef.current = m2
         break
+      }
       default:
         emiter.emit(
           'openPage',

@@ -285,6 +285,7 @@ export const showYakitModal = (props: ShowModalV2Props) => {
                 if (yakitModalRootDiv) {
                   yakitModalRootDiv.unmount()
                 }
+                div.remove()
               })
             }}
           >
@@ -318,6 +319,7 @@ export const showYakitModal = (props: ShowModalV2Props) => {
         if (yakitModalRootDiv) {
           yakitModalRootDiv.unmount()
         }
+        div.remove()
       }, 400)
     },
   }

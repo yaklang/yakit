@@ -252,13 +252,36 @@
         min-width: 0;
       }
 
+      .selected-item-name-shortcut {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-size: 12px;
+        line-height: 16px;
+        white-space: nowrap;
+        margin-left: auto;
+        margin-right: 8px;
+        order: 3;
+      }
+
       .selected-item-name-actions {
         display: flex;
         align-items: center;
         flex-shrink: 0;
+        order: 2;
 
         svg {
           margin-right: 0;
+        }
+
+        button:hover {
+          svg {
+            color: var(--Colors-Use-Main-Primary);
+          }
+        }
+      }
+
+      .setting-icon-active {
+        svg {
+          color: var(--Colors-Use-Main-Primary);
         }
       }
 
@@ -266,10 +289,6 @@
         font-size: 11px;
         color: var(--Colors-Use-Neutral-Disable);
         line-height: 16px;
-      }
-
-      .setting-icon {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
       }
 
       .remove-icon {
@@ -469,12 +488,19 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+
+  .setting-menu-shortcut-keys {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+    white-space: nowrap;
+  }
 }
 
-.setting-menu-shortcut-keys {
-  color: var(--Colors-Use-Neutral-Disable);
-  font-size: 12px;
-  white-space: nowrap;
+:global(.ant-dropdown-menu-item-active),
+:global(.ant-dropdown-menu-item-selected) {
+  .setting-menu-shortcut-item .setting-menu-shortcut-keys {
+    color: var(--Colors-Use-Main-On-Primary);
+  }
 }
 
 .setting-menu-result-item {
@@ -502,6 +528,12 @@
 
     .right {
       width: 350px;
+    }
+
+    // 小屏空间不足时隐藏插件快捷键展示
+    .selected-item-name-shortcut,
+    .setting-menu-shortcut-keys {
+      display: none;
     }
   }
 }
