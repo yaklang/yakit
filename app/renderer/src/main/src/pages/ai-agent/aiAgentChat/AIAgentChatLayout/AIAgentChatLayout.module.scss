@@ -9,20 +9,6 @@
     min-width: 0;
     height: 100%;
     overflow: hidden;
-    .chat-workspace {
-      width: 100%;
-      min-width: 0;
-      height: 100%;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      background: var(--Colors-Use-Neutral-Bg);
-    }
-    .chat-content {
-      width: 100%;
-      min-width: 0;
-      height: 100%;
-    }
   }
   .footer-forge-form {
     z-index: 99;
@@ -34,4 +20,20 @@
     align-items: flex-end;
     justify-content: center;
   }
+}
+
+.chat-workspace {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--Colors-Use-Neutral-Bg);
+}
+
+.chat-content {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
 }

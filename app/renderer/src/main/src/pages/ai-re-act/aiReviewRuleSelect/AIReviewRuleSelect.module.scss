@@ -134,6 +134,11 @@
     word-break: break-all;
     line-height: 16px;
   }
+  @container ai-chat-textarea (max-width: 300px) {
+    .select-option-text {
+      display: none;
+    }
+  }
   .icon-wrapper {
     display: flex;
     width: 16px;
@@ -163,12 +168,6 @@
   }
   .select-manual-icon-wrapper {
     background: var(--Colors-Use-Purple-Bg-Hover);
-  }
-}
-
-@container ai-chat-textarea (max-width: 300px) {
-  .select-option-text {
-    display: none;
   }
 }
 
