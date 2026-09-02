@@ -77,6 +77,9 @@ export interface YakitRiskDetailsProps {
   border?: boolean
   isShowExtra?: boolean
   onRetest?: (info: Risk) => void
+  onDispose?: (info: Risk) => void
+  showType?: 'detail' | 'code' | 'history'
+  setShowType?: (v: 'detail' | 'code' | 'history') => void
   boxStyle?: React.CSSProperties
   detailClassName?: string
 }

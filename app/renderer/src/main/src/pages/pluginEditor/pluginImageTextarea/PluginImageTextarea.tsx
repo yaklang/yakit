@@ -19,7 +19,7 @@ export const ImgMaxSize = 1 * 1024 * 1024
 
 export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
   forwardRef((props, ref) => {
-    const { className, loading, type = 'comment', maxLength = 6, onSubmit, quotation, delQuotation } = props
+    const { className, loading, type = 'comment', maxLength = 6, onSubmit, onUploadImage, quotation, delQuotation } = props
 
     useImperativeHandle(
       ref,
@@ -113,11 +113,15 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
         const img = new Image()
         img.onload = () => {
           const { width, height } = img
-          httpUploadImgBase64({
-            base64: base64 as string,
-            imgInfo: { filename: image.name || 'image.png', contentType: image.type || 'image/png' },
-            type: type === 'comment' ? 'comment' : 'plugins',
-          })
+          const imgInfo = { filename: image.name || 'image.png', contentType: image.type || 'image/png' }
+          const uploadPromise = onUploadImage
+            ? onUploadImage({ base64: base64 as string, imgInfo })
+            : httpUploadImgBase64({
+                base64: base64 as string,
+                imgInfo,
+                type: type === 'comment' ? 'comment' : 'plugins',
+              })
+          uploadPromise
             .then((res) => {
               setImgs((arr) => arr.concat([{ url: res, width, height }]))
             })

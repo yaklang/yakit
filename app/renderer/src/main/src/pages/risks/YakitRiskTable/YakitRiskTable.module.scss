@@ -178,6 +178,22 @@ $keyColor: map-keys($tagColor);
   border: 0;
 }
 
+.content-tab-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 6px;
+  flex-shrink: 0;
+}
+
+.content-tab-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .table-renderTitle {
   display: flex;
   align-items: flex-start;
