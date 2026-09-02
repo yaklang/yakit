@@ -702,7 +702,7 @@ export function yakitUiIconsPurePlugin() {
       const violations: string[] = []
       for (const output of Object.values(bundle)) {
         if (output.type !== 'asset' || !output.fileName.endsWith('.html')) continue
-        const html = String(output.source)
+        const html = typeof output.source === 'string' ? output.source : new TextDecoder('utf-8').decode(output.source)
         for (const tag of html.match(/<link\b[^>]*>/gi) ?? []) {
           const attributes = new Map<string, string>()
           for (const match of tag.matchAll(/([^\s=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g)) {

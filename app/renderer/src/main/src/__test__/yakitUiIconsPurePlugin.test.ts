@@ -45,6 +45,50 @@ function collectImports(code: string, names = importedNames()) {
 }
 
 describe('yakitUiIconsPurePlugin consumer import guard', () => {
+  it('decodes Uint8Array HTML assets before checking oldicon modulepreloads', () => {
+    const plugin = yakitUiIconsPurePlugin().find(
+      (candidate) => candidate.name === 'yakit-ui-icons-oldicon-html-preload-gate',
+    )
+    if (!plugin || !('generateBundle' in plugin) || typeof plugin.generateBundle !== 'function') {
+      throw new Error('HTML preload gate plugin is unavailable')
+    }
+
+    const bundle = {
+      'entry.js': {
+        type: 'chunk' as const,
+        fileName: 'entry.js',
+        isEntry: true,
+        imports: [],
+        dynamicImports: ['lazy.js'],
+        code: '',
+        modules: {},
+      },
+      'lazy.js': {
+        type: 'chunk' as const,
+        fileName: 'lazy.js',
+        isEntry: false,
+        imports: [],
+        dynamicImports: [],
+        code: '',
+        modules: {
+          '/fixture/node_modules/@yakit-libs/yakit-ui-icons/dist/oldicon/icons/PopoverArrowIcon.js': {
+            code: '',
+            renderedExports: ['PopoverArrowIcon'],
+          },
+        },
+      },
+      'index.html': {
+        type: 'asset' as const,
+        fileName: 'index.html',
+        source: new TextEncoder().encode('<link rel="modulepreload" href="/lazy.js">'),
+      },
+    }
+
+    expect(() => plugin.generateBundle({}, bundle)).toThrow(
+      /oldicon HTML modulepreload violations:[\s\S]*href=\/lazy\.js/,
+    )
+  })
+
   it('keeps lazy per-icon B outside the HTML entry A static closure and modulepreload', async () => {
     const testDir = path.dirname(fileURLToPath(import.meta.url))
     const fixtureDir = await mkdtemp(path.join(testDir, 'fixtures/yakitUiIconsOldIconPerIcon-'))
