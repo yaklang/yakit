@@ -36,14 +36,14 @@
 .global-state-wrapper {
   box-sizing: border-box;
   width: 44px;
-  height: 36px;
+  height: 40px;
   padding: 4px;
   background-color: var(--global-state-bg-color);
 
   .state-body {
     border-radius: 4px;
     width: 36px;
-    height: 28px;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;

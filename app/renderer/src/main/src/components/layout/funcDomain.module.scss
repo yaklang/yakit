@@ -3,8 +3,9 @@
 .func-domain-wrapper {
   height: 100%;
   .func-domain-body {
-    height: 100%;
+    height: 40px;
     display: flex;
+    align-items: center;
     .short-divider-wrapper {
       width: 1px;
       height: 100%;
@@ -16,6 +17,7 @@
     }
     .state-setting-wrapper {
       display: flex;
+      height: 40px;
     }
     .divider-wrapper {
       width: 1px;
@@ -98,6 +100,7 @@
     .state-setting-wrapper {
       display: flex;
       flex-direction: row-reverse;
+      height: 40px;
     }
   }
 }
@@ -105,17 +108,20 @@
 .ui-op-btn-wrapper {
   box-sizing: border-box;
   width: 44px;
-  height: 36px;
+  height: 100%;
   padding: 4px;
 
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   .icon-loading-wrapper {
     position: absolute;
     top: 0;
     left: 0;
     width: 44px;
-    height: 36px;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -129,7 +135,7 @@
   .op-btn-body {
     border-radius: 4px;
     width: 36px;
-    height: 28px;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;

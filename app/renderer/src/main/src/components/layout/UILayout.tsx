@@ -1821,19 +1821,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                   {engineLink && (
                     <>
                       {!showProjectManage && <GlobalState isEngineLink={engineLink} system={system} mcp={mcp} />}
-
-                      {!isEnpriTraceAgent() && (
-                        <div
-                          className={classNames(styles['yakit-mode-icon'], {
-                            [styles['yakit-mode-selected']]: false && yakitMode === 'soft',
-                          })}
-                          onClick={() => changeYakitMode('soft')}
-                        >
-                          <SolidHomeIcon className={styles['mode-icon-selected']} />
-                        </div>
-                      )}
-
-                      <div className={styles['divider-wrapper']}></div>
                       <div>
                         <FuncDomain
                           isEngineLink={engineLink}
@@ -1848,6 +1835,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           system={system}
                           isJudgeLicense={isJudgeLicense}
                           onDevToolRefresh={onDevToolRefresh}
+                          homeIcon={
+                            !isEnpriTraceAgent() ? (
+                              <div
+                                className={classNames(styles['yakit-mode-icon'], styles['yakit-mode-icon-reverse'], {
+                                  [styles['yakit-mode-selected']]: yakitMode === 'soft',
+                                })}
+                                onClick={() => changeYakitMode('soft')}
+                              >
+                                <SolidHomeIcon className={styles['mode-icon-selected']} />
+                              </div>
+                            ) : null
+                          }
                         />
                       </div>
                     </>
