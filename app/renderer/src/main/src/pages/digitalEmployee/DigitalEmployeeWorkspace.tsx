@@ -157,7 +157,12 @@ export const DigitalEmployeeAgentSelector: React.FC = () => {
           </button>
         </div>
       ) : roleAgents.length ? (
-        <div className={styles['agent-selector-list']}>
+        <div
+          className={styles['agent-selector-list']}
+          role="region"
+          aria-label={`${selectedEmployee.name}的智能体列表，共${roleAgents.length}个`}
+          tabIndex={0}
+        >
           {roleAgents.map((agent) => {
             const active = agent.Id === selectedAgent?.Id
             const tags = getVisibleAgentTags(agent.Tag)
@@ -172,10 +177,15 @@ export const DigitalEmployeeAgentSelector: React.FC = () => {
                 onClick={() => selectAgent(agent.Id)}
               >
                 <span className={styles['agent-selector-item-title']}>
-                  <strong>{agent.ForgeVerboseName || agent.ForgeName}</strong>
+                  <strong title={agent.ForgeVerboseName || agent.ForgeName}>
+                    {agent.ForgeVerboseName || agent.ForgeName}
+                  </strong>
                   {active && <small>当前使用</small>}
                 </span>
-                <span className={styles['agent-selector-item-description']}>
+                <span
+                  className={styles['agent-selector-item-description']}
+                  title={agent.Description || '专业智能分析与执行能力'}
+                >
                   {agent.Description || '专业智能分析与执行能力'}
                 </span>
                 {!!tags.length && (

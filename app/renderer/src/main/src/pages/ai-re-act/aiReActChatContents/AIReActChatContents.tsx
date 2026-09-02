@@ -30,6 +30,7 @@ import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useLoadHistory from '../hooks/useLoadHistory'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import AITextSyntaxFlow from '@/pages/ai-agent/components/aiTextSyntaxFlow/AITextSyntaxFlow'
+import { shouldHideReActFinishedStream } from './displayPolicy'
 
 const getAIReferenceNodeByType = (contentType?: string) => {
   switch (contentType) {
@@ -66,6 +67,9 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     const className = getAIReferenceNodeByType(ContentType)
     return !!reference ? <AIReferenceNode referenceList={reference || []} className={className} /> : <></>
   }, [reference, ContentType])
+
+  if (shouldHideReActFinishedStream(NodeId, NodeIdVerbose)) return null
+
   if (ContentType?.startsWith('code/')) {
     return (
       <AIYaklangCode

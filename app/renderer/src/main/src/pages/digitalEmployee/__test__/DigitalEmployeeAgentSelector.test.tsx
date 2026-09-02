@@ -49,6 +49,7 @@ describe('DigitalEmployeeAgentSelector', () => {
     )
 
     const threatAgent = await screen.findByRole('button', { name: /威胁研判智能体/ })
+    expect(screen.getByRole('region', { name: /智能体列表，共1个/ })).toHaveAttribute('tabindex', '0')
     expect(screen.queryByText('应急处置智能体')).not.toBeInTheDocument()
     expect(screen.getByTestId('selected-agent')).toHaveTextContent('none')
 

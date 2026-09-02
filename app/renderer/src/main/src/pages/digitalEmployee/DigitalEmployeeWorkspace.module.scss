@@ -6,8 +6,8 @@
   display: flex;
   flex-direction: column;
   border-right: 1px solid rgba(76, 123, 183, 0.16);
-  background: linear-gradient(180deg, rgba(247, 251, 255, 0.98), rgba(239, 247, 255, 0.94)),
-    var(--Colors-Use-Basic-Background);
+  background:
+    linear-gradient(180deg, rgba(247, 251, 255, 0.98), rgba(239, 247, 255, 0.94)), var(--Colors-Use-Basic-Background);
   transition:
     width 180ms ease,
     padding 180ms ease;
@@ -227,7 +227,8 @@
   gap: clamp(14px, 1.35vw, 22px);
   overflow: hidden;
   border-bottom: 1px solid rgba(66, 119, 184, 0.15);
-  background: radial-gradient(circle at 18% -40%, rgba(62, 153, 255, 0.16), transparent 38%),
+  background:
+    radial-gradient(circle at 18% -40%, rgba(62, 153, 255, 0.16), transparent 38%),
     linear-gradient(110deg, #fbfdff 0%, #f1f7ff 58%, #f9fcff 100%);
 
   &::after {
@@ -377,7 +378,12 @@
 .agent-selector {
   width: 100%;
   min-width: 0;
+  min-height: 0;
+  max-height: min(430px, calc(100vh - 180px));
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   border: 1px solid rgba(70, 137, 209, 0.16);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.76);
@@ -385,6 +391,7 @@
 }
 
 .agent-selector-header {
+  flex: 0 0 auto;
   margin-bottom: 12px;
   display: flex;
   align-items: flex-start;
@@ -422,21 +429,49 @@
 }
 
 .agent-selector-list {
-  max-height: 250px;
-  overflow: auto;
+  min-height: 0;
+  max-height: clamp(220px, 38vh, 340px);
+  padding-right: 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 112px;
+  align-content: start;
   gap: 10px;
+
+  &:focus-visible {
+    border-radius: 8px;
+    outline: 2px solid rgba(33, 134, 229, 0.28);
+    outline-offset: 2px;
+  }
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(69, 126, 185, 0.28);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
 
 .agent-selector-item {
+  width: 100%;
+  height: 100%;
   min-width: 0;
-  min-height: 104px;
   padding: 12px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 7px;
+  overflow: hidden;
   color: #526b8e;
   text-align: left;
   border: 1px solid rgba(72, 137, 205, 0.15);
@@ -499,6 +534,7 @@
   display: flex;
   gap: 5px;
   overflow: hidden;
+  white-space: nowrap;
 
   small {
     flex: 0 0 auto;
