@@ -88,6 +88,8 @@
   "YakitRiskDetails": {
     "vulnerability_details": "漏洞详情",
     "data_packet": "数据包",
+    "disposal_log": "处置日志",
+    "dispose_risk": "处置漏洞",
     "port_colon": "端口：",
     "discovery_time_colon": "发现时间：",
     "no_data_packet": "无数据包",
@@ -134,5 +136,23 @@
   },
   "AuditResultCollapse": {
     "open_in_code_audit": "在代码审计中打开"
+  },
+  "RiskDisposalLog": {
+    "please_login": "请登录",
+    "empty": "暂无处置日志",
+    "dispose_risk": "处置漏洞",
+    "system": "系统",
+    "publish_comment": "发布评论",
+    "reply_comment": "回复评论",
+    "reply": "回复",
+    "download": "下载",
+    "repair_time": "修复时间：",
+    "repair_department": "修复部门：",
+    "repairer": "修复人：",
+    "reply_prefix": "回复 {{user}} : {{content}}",
+    "image_count": " [图片] * {{count}}",
+    "fetch_logs_failed": "查询处置日志失败",
+    "publish_comment_failed": "发布评论失败",
+    "delete_comment_failed": "删除评论失败"
   }
 }

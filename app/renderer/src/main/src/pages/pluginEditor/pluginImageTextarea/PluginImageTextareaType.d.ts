@@ -19,6 +19,11 @@ export interface QuotationInfoProps {
   imgs: TextareaForImage[]
 }
 
+export interface UploadDisposalImageRequest {
+  base64: string
+  imgInfo: { filename?: string; contentType?: string }
+}
+
 export interface PluginImageTextareaProps {
   ref?: ForwardedRef<PluginImageTextareaRefProps>
   /** 发布按钮的 loading */
@@ -29,6 +34,8 @@ export interface PluginImageTextareaProps {
   /** 图片上传数量(默认为6) */
   maxLength?: number
   onSubmit?: (data: ImageTextareaData) => any
+  /** 自定义图片上传（如处置日志专用接口）；未传则走默认 httpUploadImgBase64 */
+  onUploadImage?: (request: UploadDisposalImageRequest) => Promise<string>
 
   /** 引用内容 */
   quotation?: QuotationInfoProps

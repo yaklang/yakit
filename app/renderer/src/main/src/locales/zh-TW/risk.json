@@ -88,6 +88,8 @@
   "YakitRiskDetails": {
     "vulnerability_details": "漏洞詳情",
     "data_packet": "資料包",
+    "disposal_log": "處置日誌",
+    "dispose_risk": "處置漏洞",
     "port_colon": "port：",
     "discovery_time_colon": "發現時間：",
     "no_data_packet": "無資料包",
@@ -134,5 +136,23 @@
   },
   "AuditResultCollapse": {
     "open_in_code_audit": "在程式碼審計中開啟"
+  },
+  "RiskDisposalLog": {
+    "please_login": "請登入",
+    "empty": "暫無處置日誌",
+    "dispose_risk": "處置漏洞",
+    "system": "系統",
+    "publish_comment": "發布評論",
+    "reply_comment": "回覆評論",
+    "reply": "回覆",
+    "download": "下載",
+    "repair_time": "修復時間：",
+    "repair_department": "修復部門：",
+    "repairer": "修復人：",
+    "reply_prefix": "回覆 {{user}} : {{content}}",
+    "image_count": " [圖片] * {{count}}",
+    "fetch_logs_failed": "查詢處置日誌失敗",
+    "publish_comment_failed": "發布評論失敗",
+    "delete_comment_failed": "刪除評論失敗"
   }
 }
