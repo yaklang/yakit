@@ -241,12 +241,11 @@ function useFileTree(params: UseFileTreeParams) {
     onTriggerUIUpdate()
   })
   const hasChildPath = (parent: FileNodeProps, childPath: string) => {
-    if (nodeDetailMap.current.has(childPath)) return true
     return !!parent.children?.some((item) => item.path === childPath)
   }
   const inflightCreate = useRef<Set<string>>(new Set())
   const beginCreate = (path: string) => {
-    if (!path || inflightCreate.current.has(path) || nodeDetailMap.current.has(path)) return false
+    if (!path || inflightCreate.current.has(path)) return false
     inflightCreate.current.add(path)
     return true
   }
@@ -588,7 +587,7 @@ function useFileTree(params: UseFileTreeParams) {
       depth: parentDepth + 1,
       isLeaf: item.isFolder ? (prev?.isLeaf ?? false) : true,
       children: item.isFolder ? prev?.children : undefined,
-      isCreate: prev?.isCreate,
+      isCreate: undefined,
       isRename: prev?.isRename,
       isDelete: prev?.isDelete,
       isReadOnly: prev?.isReadOnly,
@@ -633,6 +632,7 @@ function useFileTree(params: UseFileTreeParams) {
       const next: FileNodeProps[] = []
       const seenPath = new Set<string>()
       for (const prev of existing) {
+        if (!prev.path || seenPath.has(prev.path)) continue
         const apiItem = apiByPath.get(prev.path)
         next.push(apiItem ? mergeFetchedChild(apiItem, parentDepth, prev) : prev)
         seenPath.add(prev.path)
