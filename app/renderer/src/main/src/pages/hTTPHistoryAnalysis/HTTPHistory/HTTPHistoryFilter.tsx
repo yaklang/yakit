@@ -450,6 +450,10 @@ export const defalutColumnsOrder = [
   'Payloads', // 此字段特殊不参与表格列自定义
   'FromPlugin',
   'Tags',
+  'ProblemType',
+  'Severity',
+  'DisposalStatus',
+  'DisposalNote',
   'IPAddress',
   'BodyLength',
   'HtmlTitle',

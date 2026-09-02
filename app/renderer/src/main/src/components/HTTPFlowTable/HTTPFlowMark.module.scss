@@ -1,0 +1,42 @@
+.flow-mark-edit-form {
+  padding: 24px;
+
+  .flow-mark-edit-form-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+}
+
+.flow-testers-form {
+  padding: 24px;
+
+  .flow-testers-form-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+  }
+}
+
+.table-tag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  cursor: pointer;
+  &:hover {
+    .table-tag-icon {
+      opacity: 1;
+    }
+  }
+  .table-tag-icon {
+    opacity: 0;
+    flex-shrink: 0;
+    color: var(--Colors-Use-Neutral-Disable);
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}

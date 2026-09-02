@@ -6,7 +6,7 @@ import { showResponseViaHTTPFlowID } from '@/components/ShowInBrowser'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { setClipboardText } from '@/utils/clipboard'
 import emiter from '@/utils/eventBus/eventBus'
-import { isEnpriTrace } from '@/utils/envfile'
+import { isEnpriTrace, isEnterpriseEdition } from '@/utils/envfile'
 import { getGlobalShortcutKeyEvents, GlobalShortcutKey } from '@/utils/globalShortcutKey/events/global'
 import {
   getYakitMultipleShortcutKeyEvents,
@@ -112,6 +112,10 @@ export interface UseHTTPFlowTableContextMenuOptions {
   onShieldDomain: (flow: HTTPFlow) => void
   onBatch: (f: (element: HTTPFlow) => void, number: number, all?: boolean, rows?: HTTPFlow[]) => void
   onViewAttachmentDataRefresh: (id: number) => void
+  /** EE：批量修改标记 */
+  onOpenBatchMarkEdit?: (list: HTTPFlow[]) => void
+  /** EE：批量添加测试人员 */
+  onOpenBatchTesters?: (list: HTTPFlow[]) => void
 }
 
 export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenuOptions) => {
@@ -155,6 +159,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onShieldDomain,
     onBatch,
     onViewAttachmentDataRefresh,
+    onOpenBatchMarkEdit,
+    onOpenBatchTesters,
   } = options
 
   const menuData = useMemo(() => {
@@ -553,6 +559,28 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           },
         ],
       },
+      ...(isEnterpriseEdition()
+        ? [
+            {
+              key: 'modifyMark',
+              label: t('HTTPFlowTable.RowContextMenu.modifyMark'),
+              default: true,
+              webSocket: true,
+              onClickBatch: (list: HTTPFlow[]) => {
+                onOpenBatchMarkEdit?.(list)
+              },
+            },
+            {
+              key: 'addTesters',
+              label: t('HTTPFlowTable.RowContextMenu.addTesters'),
+              default: true,
+              webSocket: true,
+              onClickBatch: (list: HTTPFlow[]) => {
+                onOpenBatchTesters?.(list)
+              },
+            },
+          ]
+        : []),
       {
         key: 'editTag',
         label: t('HTTPFlowTable.RowContextMenu.editTag'),
@@ -595,6 +623,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onlyFavorite,
     getUrlWithoutQuery,
     total,
+    onOpenBatchMarkEdit,
+    onOpenBatchTesters,
   ])
 
   // 右键插件处理

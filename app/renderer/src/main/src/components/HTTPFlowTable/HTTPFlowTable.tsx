@@ -89,6 +89,10 @@ import {
 import { useHTTPFlowTableShortcutKeys } from './useHTTPFlowTableShortcutKeys'
 import { useHTTPFlowTableContextMenu } from './useHTTPFlowTableContextMenu'
 import { onSendToTab, toggleHTTPFlowFavorite } from './HTTPFlowTable.actions'
+import { FlowMarkEditForm } from './FlowMarkEditForm'
+import { FlowTestersForm } from './FlowTestersForm'
+import type { SetHTTPFlowMarkRequest, SetHTTPFlowTestersRequest } from './HTTPFlowMark.constants'
+import { isEnterpriseEdition } from '@/utils/envfile'
 import { NowProjectDescription } from '@/pages/globalVariable'
 import { useStore } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -1799,6 +1803,78 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     [downstreamProxyStr, onlyFavorite, pageType, t],
   )
 
+  const isEnterprise = isEnterpriseEdition()
+
+  const patchFlowMark = useMemoizedFn((payload: SetHTTPFlowMarkRequest) => {
+    const idSet = new Set(payload.Ids.map(String))
+    const patchRow = (row: HTTPFlow): HTTPFlow => {
+      if (!idSet.has(String(row.Id))) return row
+      return {
+        ...row,
+        ...(payload.ProblemType !== undefined ? { ProblemType: payload.ProblemType } : {}),
+        ...(payload.Severity !== undefined ? { Severity: payload.Severity } : {}),
+        ...(payload.DisposalStatus !== undefined ? { DisposalStatus: payload.DisposalStatus } : {}),
+        ...(payload.DisposalNote !== undefined ? { DisposalNote: payload.DisposalNote } : {}),
+      }
+    }
+    setData((prev) => prev.map(patchRow))
+    setSelectedRows((prev) => prev.map(patchRow))
+    setSelected((prev) => (prev ? patchRow(prev) : prev))
+  })
+
+  const patchFlowTesters = useMemoizedFn((payload: SetHTTPFlowTestersRequest) => {
+    const idSet = new Set(payload.Ids.map(String))
+    const patchRow = (row: HTTPFlow): HTTPFlow => {
+      if (!idSet.has(String(row.Id))) return row
+      return { ...row, Testers: payload.Testers }
+    }
+    setData((prev) => prev.map(patchRow))
+    setSelectedRows((prev) => prev.map(patchRow))
+    setSelected((prev) => (prev ? patchRow(prev) : prev))
+  })
+
+  const onOpenFlowMarkEdit = useMemoizedFn((record: HTTPFlow) => {
+    const m = showYakitModal({
+      title: `ID: ${record.Id}`,
+      content: (
+        <FlowMarkEditForm
+          info={record}
+          ids={[Number(record.Id)]}
+          onClose={() => m.destroy()}
+          onSuccess={patchFlowMark}
+        />
+      ),
+      footer: null,
+      onCancel: () => m.destroy(),
+    })
+  })
+
+  const onOpenBatchMarkEdit = useMemoizedFn((list: HTTPFlow[]) => {
+    const ids = list.map((item) => Number(item.Id)).filter((id) => !Number.isNaN(id))
+    if (ids.length === 0) return
+    const m = showYakitModal({
+      title: t('HTTPFlowTable.batchModifyMark'),
+      content: (
+        <FlowMarkEditForm batch ids={ids} onClose={() => m.destroy()} onSuccess={patchFlowMark} />
+      ),
+      footer: null,
+      onCancel: () => m.destroy(),
+    })
+  })
+
+  const onOpenBatchTesters = useMemoizedFn((list: HTTPFlow[]) => {
+    const ids = list.map((item) => Number(item.Id)).filter((id) => !Number.isNaN(id))
+    if (ids.length === 0) return
+    const m = showYakitModal({
+      title: t('HTTPFlowTable.testers'),
+      content: (
+        <FlowTestersForm ids={ids} onClose={() => m.destroy()} onSuccess={patchFlowTesters} />
+      ),
+      footer: null,
+      onCancel: () => m.destroy(),
+    })
+  })
+
   const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
     debugToPrintLogs({
       page: 'HTTPFlowTable',
@@ -1827,6 +1903,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       onIncludeIdSearchSure,
       actionHandlers: columnActionHandlers,
       comBuiltinTagList,
+      isEnterprise,
+      onOpenFlowMarkEdit,
     })
     const { columns: realColumns, configColumns } = resolveHTTPFlowTableColumns({
       columnArr,
@@ -1848,6 +1926,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     comSuffixList,
     comBuiltinTagList,
     columnActionHandlers,
+    isEnterprise,
+    onOpenFlowMarkEdit,
   ])
   // #endregion
 
@@ -2700,6 +2780,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onShieldDomain,
     onBatch,
     onViewAttachmentDataRefresh,
+    onOpenBatchMarkEdit,
+    onOpenBatchTesters,
   })
 
   useEffect(() => {

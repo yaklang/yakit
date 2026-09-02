@@ -2,7 +2,7 @@ import type React from 'react'
 import type { DebouncedFunc } from 'lodash'
 import classNames from 'classnames'
 import { CheckCircleIcon, ArrowCircleRightSvgIcon, ChromeFrameSvgIcon } from '@/assets/newIcon'
-import { OutlineSearchIcon, OutlineSelectorIcon, OutlineStarIcon } from '@/assets/icon/outline'
+import { OutlineSearchIcon, OutlineSelectorIcon, OutlineStarIcon, OutlineChevrondownIcon } from '@/assets/icon/outline'
 import { SolidStarIcon } from '@/assets/icon/solid'
 import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import type { ColumnsTypeProps, FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -16,6 +16,12 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import { formatHTTPFlowPathSuffix } from './HTTPFlowPathSuffix'
 import { contentType, HTTP_FLOW_FAVORITE_TAG } from './HTTPFlowTable.constants'
 import type { ColumnAllInfoItem, HTTPFlow } from './HTTPFlowTable.constants'
+import {
+  FLOW_DISPOSAL_STATUS_OPTIONS,
+  FLOW_PROBLEM_TYPE_OPTIONS,
+  FLOW_SEVERITY_OPTIONS,
+} from './HTTPFlowMark.constants'
+import markStyles from './HTTPFlowMark.module.scss'
 import { isHTTPFlowFavorite, onConvertBodySizeByUnit } from './HTTPFlowTable.utils'
 import { RangeInputNumberTableWrapper, SearchInputTableWrapper } from './components'
 import style from './HTTPFlowTable.module.scss'
@@ -62,6 +68,8 @@ export interface BuildHTTPFlowTableColumnsContext {
   onIncludeIdSearchSure: () => void
   actionHandlers: HTTPFlowTableColumnActionHandlers
   comBuiltinTagList: FiltersItemProps[]
+  isEnterprise?: boolean
+  onOpenFlowMarkEdit?: (record: HTTPFlow) => void
 }
 
 export interface ResolveHTTPFlowTableColumnsOptions {
@@ -98,6 +106,8 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
     onIncludeIdSearchSure,
     actionHandlers,
     comBuiltinTagList,
+    isEnterprise,
+    onOpenFlowMarkEdit,
   } = ctx
 
   return [
@@ -215,6 +225,96 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
               .join(', ')
           : '',
     },
+    ...(isEnterprise
+      ? ([
+          {
+            title: t('HTTPFlowTable.problemType'),
+            dataKey: 'ProblemType',
+            width: 140,
+            filterProps: {
+              filterKey: 'ProblemType',
+              filtersType: 'select',
+              filterMultiple: false,
+              filters: FLOW_PROBLEM_TYPE_OPTIONS.map((item) => ({ value: item, label: item })),
+            },
+            render: (text: string, record: HTTPFlow) => (
+              <div
+                className={markStyles['table-tag']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenFlowMarkEdit?.(record)
+                }}
+              >
+                <span>{text || '-'}</span>
+                <OutlineChevrondownIcon className={markStyles['table-tag-icon']} />
+              </div>
+            ),
+          },
+          {
+            title: t('HTTPFlowTable.severity'),
+            dataKey: 'Severity',
+            width: 100,
+            filterProps: {
+              filterKey: 'Severity',
+              filtersType: 'select',
+              filterMultiple: false,
+              filters: FLOW_SEVERITY_OPTIONS.map((item) => ({ value: item, label: item })),
+            },
+            render: (text: string, record: HTTPFlow) => (
+              <div
+                className={markStyles['table-tag']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenFlowMarkEdit?.(record)
+                }}
+              >
+                <span>{text || '-'}</span>
+                <OutlineChevrondownIcon className={markStyles['table-tag-icon']} />
+              </div>
+            ),
+          },
+          {
+            title: t('HTTPFlowTable.disposalStatus'),
+            dataKey: 'DisposalStatus',
+            width: 100,
+            filterProps: {
+              filterKey: 'DisposalStatus',
+              filtersType: 'select',
+              filterMultiple: false,
+              filters: FLOW_DISPOSAL_STATUS_OPTIONS.map((item) => ({ value: item, label: item })),
+            },
+            render: (text: string, record: HTTPFlow) => (
+              <div
+                className={markStyles['table-tag']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenFlowMarkEdit?.(record)
+                }}
+              >
+                <span>{text || '-'}</span>
+                <OutlineChevrondownIcon className={markStyles['table-tag-icon']} />
+              </div>
+            ),
+          },
+          {
+            title: t('HTTPFlowTable.disposalNote'),
+            dataKey: 'DisposalNote',
+            width: 160,
+            render: (text: string, record: HTTPFlow) => (
+              <div
+                className={markStyles['table-tag']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenFlowMarkEdit?.(record)
+                }}
+              >
+                <span>{text || '-'}</span>
+                <OutlineChevrondownIcon className={markStyles['table-tag-icon']} />
+              </div>
+            ),
+          },
+        ] as ColumnsTypeProps[])
+      : []),
     {
       title: 'IP',
       dataKey: 'IPAddress',
