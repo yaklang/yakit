@@ -5,7 +5,7 @@ import styles from './YakitSwitch.module.scss'
 import classNames from 'classnames'
 import './yakitSwitchAnimation.scss'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
-import { CheckIcon } from '@/assets/newIcon'
+import { CheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /**

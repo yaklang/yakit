@@ -14,7 +14,7 @@ import { useInViewport, useMemoizedFn } from 'ahooks'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
 import { CheckOutlined, ChevronDownOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { ChevronUpIcon } from '@/assets/newIcon'
+import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronUpIcon'
 import {
   type CacheDataHistoryProps,
   onGetRemoteValuesBase,

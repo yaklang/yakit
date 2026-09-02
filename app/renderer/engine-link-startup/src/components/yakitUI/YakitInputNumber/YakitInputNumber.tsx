@@ -6,7 +6,8 @@ import styles from './YakitInputNumber.module.scss'
 import classNames from 'classnames'
 import { useMemoizedFn, useMutationObserver } from 'ahooks'
 import { getReleaseEditionName } from '@/utils/envfile'
-import { ChevronLeftIcon, ChevronRightIcon } from '@/assets/newIcon'
+import { ChevronLeftIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronLeftIcon'
+import { ChevronRightIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronRightIcon'
 
 /**
  * @description: 两种方式的数字输入
