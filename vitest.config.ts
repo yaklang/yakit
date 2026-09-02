@@ -115,6 +115,12 @@ export default defineConfig({
       'e2e/**/__test__/**/*.test.{ts,js,mjs}',
       'e2e/**/__test__/**/*.spec.{ts,js,mjs}',
     ],
+    exclude: [
+      'scripts/icon-migration/**',
+      'app/renderer/src/main/src/__test__/yakitUiIconsPurePlugin.test.ts',
+      'app/renderer/engine-link-startup/src/__test__/yakitUiIconsPurePlugin.test.ts',
+      'app/renderer/engine-link-startup/src/__test__/iconMigrationConsumerContract.test.tsx',
+    ],
     // keep JUnit reporter and default reporter
     reporters: [['junit', { outputFile: 'reports/junit.xml' }], 'default'],
     coverage: {

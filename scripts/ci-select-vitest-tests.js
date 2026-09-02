@@ -22,6 +22,11 @@ const path = require('path')
 const SRC_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx'])
 const TEST_SUFFIXES = ['test.ts', 'test.tsx', 'test.js', 'test.jsx', 'spec.ts', 'spec.tsx', 'spec.js', 'spec.jsx']
 const SKIP_DIR_NAMES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage'])
+const DEDICATED_ICON_MIGRATION_TESTS = new Set([
+  'app/renderer/src/main/src/__test__/yakitUiIconsPurePlugin.test.ts',
+  'app/renderer/engine-link-startup/src/__test__/yakitUiIconsPurePlugin.test.ts',
+  'app/renderer/engine-link-startup/src/__test__/iconMigrationConsumerContract.test.tsx',
+])
 
 function isVitestSelectDebug() {
   const v = (process.env.CI_DEBUG_VITEST_SELECT || '').trim().toLowerCase()
@@ -117,6 +122,15 @@ function isTestPath(rel) {
   return /\.(test|spec)\.(ts|tsx|js|jsx)$/.test(rel)
 }
 
+function isGenericVitestPath(rel) {
+  const posix = toPosix(rel)
+  if (DEDICATED_ICON_MIGRATION_TESTS.has(posix)) return false
+  return (
+    PACKAGES.some((pkg) => posix.startsWith(`${toPosix(pkg.src)}/`) && posix.includes('/__test__/')) ||
+    posix.startsWith('e2e/')
+  )
+}
+
 function relNoExtFromSrcPrefix(rel, srcPrefix) {
   const posix = toPosix(rel)
   const pref = toPosix(srcPrefix)
@@ -149,7 +163,7 @@ function walkPackageTestFiles(srcRoot, acc) {
       if (ent.isDirectory()) stack.push(p)
       else if (isTestPath(ent.name)) {
         const rel = toPosix(path.relative(process.cwd(), p))
-        if (rel.includes('/__test__/')) acc.push(rel)
+        if (rel.includes('/__test__/') && !DEDICATED_ICON_MIGRATION_TESTS.has(rel)) acc.push(rel)
       }
     }
   }
@@ -318,7 +332,7 @@ function main() {
   for (const rel of changed) {
     if (!rel || rel.includes('..')) continue
     const posix = toPosix(rel)
-    if (isTestPath(posix) && fs.existsSync(path.join(process.cwd(), posix))) {
+    if (isTestPath(posix) && isGenericVitestPath(posix) && fs.existsSync(path.join(process.cwd(), posix))) {
       results.add(posix)
       if (debugLines) {
         const pid = packageIdForRepoPath(posix)

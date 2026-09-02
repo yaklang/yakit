@@ -17,5 +17,6 @@ export default defineConfig({
     globals: true,
     setupFiles: [],
     include: ['src/**/__test__/**/*.test.{ts,tsx,js,jsx}', 'src/**/__test__/**/*.spec.{ts,tsx,js,jsx}'],
+    exclude: ['src/__test__/yakitUiIconsPurePlugin.test.ts', 'src/__test__/iconMigrationConsumerContract.test.tsx'],
   },
 })

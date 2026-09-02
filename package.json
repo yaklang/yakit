@@ -13,6 +13,7 @@
     "release-memfit": "node scripts/release-memfit.js",
     "release-yakit": "node scripts/prod-pack.js",
     "test:vitest": "vitest",
+    "test:icon-migration": "vitest run --config scripts/icon-migration/vitest.config.mts",
     "perf:mitm": "MITM_PERF_PROFILE=smoke vitest bench app/renderer/src/main/src/pages/mitm/MITMManual/__test__/MITMManual.perf.bench.ts --run --maxWorkers=1",
     "perf:mitm:electron:compare": "node scripts/compare-electron-mitm-performance.mjs",
     "perf:mitm:electron:matrix-compare": "node scripts/compare-electron-mitm-matrices.mjs",

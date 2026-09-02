@@ -29,6 +29,6 @@ export default defineConfig({
     globals: true,
     setupFiles: [path.resolve(rootDir, 'src/setupVitest.ts')],
     include: ['src/**/__test__/**/*.{test,spec}.{ts,tsx}', 'src/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['**/node_modules/**', '**/alibaba/**'],
+    exclude: ['**/node_modules/**', '**/alibaba/**', 'src/__test__/yakitUiIconsPurePlugin.test.ts'],
   },
 })
