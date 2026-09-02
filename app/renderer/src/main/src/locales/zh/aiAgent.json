@@ -442,7 +442,8 @@
     "focusModeTooltip": "复杂场景限定使用框架，限制AI思考范围"
   },
   "AIReasoningEffort": {
-    "tooltip": "off 关闭思考；不设置则跟随模型默认；xhigh / max 为扩展档位，仅探测确认支持后展示"
+    "tooltip": "off 关闭思考；不设置则跟随模型默认；xhigh / max 为扩展档位，仅探测确认支持后展示",
+    "probing": "探测中..."
   },
   "HistoryChat": {
     "title": "历史",

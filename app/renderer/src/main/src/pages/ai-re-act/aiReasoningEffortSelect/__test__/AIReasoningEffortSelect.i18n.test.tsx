@@ -18,11 +18,11 @@ vi.mock('i18next-resources-to-backend', () => {
   const resources: Record<string, Record<string, unknown>> = {
     zh: {
       aiAgent: { AiAgengt: { reasoningEffort: '思考' } },
-      configNetwork: { ConfigNetworkPage: { effortNoSet: '不设置（跟随模型默认）' } },
+      configNetwork: { ConfigNetworkPage: { effortNoSet: '默认' } },
     },
     en: {
       aiAgent: { AiAgengt: { reasoningEffort: 'Thinking' } },
-      configNetwork: { ConfigNetworkPage: { effortNoSet: 'Not set (follow model default)' } },
+      configNetwork: { ConfigNetworkPage: { effortNoSet: 'Default' } },
     },
   }
   return {

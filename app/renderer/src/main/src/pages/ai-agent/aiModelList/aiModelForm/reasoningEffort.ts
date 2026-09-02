@@ -6,13 +6,14 @@ import type { ProbeReasoningEffortResponse } from '../utils'
 /**扩展思考强度档位（部分厂商支持，需探测确认后展示） */
 export const EXTENDED_EFFORTS = ['xhigh', 'max'] as const
 
-/**基础档位（始终展示）；no-set 为表单哨兵值，保存时转 undefined（跟随模型默认） */
+/**基础档位（始终展示）；no-set 为表单哨兵值，保存时转 undefined（跟随模型默认）；
+ * 文案统一走 configNetwork 命名空间的 effort* key */
 export const baseReasoningEffortOptions: (t: TFunction) => SelectOptionsProps[] = (t) => [
   { label: t('ConfigNetworkPage.effortNoSet'), value: 'no-set' },
   { label: t('ConfigNetworkPage.effortOff'), value: 'off' },
-  { label: 'low', value: 'low' },
-  { label: 'medium', value: 'medium' },
-  { label: 'high', value: 'high' },
+  { label: t('ConfigNetworkPage.effortLow'), value: 'low' },
+  { label: t('ConfigNetworkPage.effortMedium'), value: 'medium' },
+  { label: t('ConfigNetworkPage.effortHigh'), value: 'high' },
 ]
 
 /**旧值迁移到新档位语义；空值归一为 no-set */
@@ -32,10 +33,14 @@ export const buildReasoningEffortOptions = (
   const options = [...baseReasoningEffortOptions(t)]
   const values = new Set(options.map((o) => o.value))
   const normalized = normalizeReasoningEffort(currentValue)
+  const effortKeys: Record<string, string> = {
+    xhigh: 'ConfigNetworkPage.effortXhigh',
+    max: 'ConfigNetworkPage.effortMax',
+  }
   EXTENDED_EFFORTS.forEach((effort) => {
     if (values.has(effort)) return
     if (probed?.includes(effort) || normalized === effort) {
-      options.push({ label: effort, value: effort })
+      options.push({ label: t(effortKeys[effort]), value: effort })
     }
   })
   return options

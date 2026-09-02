@@ -20,7 +20,7 @@ import styles from './AIReasoningEffortSelect.module.scss'
 
 export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = React.memo((props) => {
   const { className } = props
-  // configNetwork 命名空间：选项文案（ConfigNetworkPage.effortNoSet/effortOff 等）与表单共用
+  // configNetwork 命名空间：选项文案（ConfigNetworkPage.effortNoSet/effortLow 等）与表单共用
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'configNetwork'])
 
   const [{ aiGlobalConfig }, event] = useAIGlobalConfig()
@@ -100,11 +100,12 @@ export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = R
   })
 
   const pillText = useMemoizedFn((value: string) => {
-    return value === 'no-set' ? t('AiAgengt.reasoningEffort') : value
+    // no-set 选中后收起态按钮显示「思考」占位文案（选项行内仍显示完整「不设置」文案）
+    if (value === 'no-set') return t('AiAgengt.reasoningEffort')
+    // 与下拉列表同源文案，但去掉括号内的描述（如「低（快速）」展示为「低」）
+    const option = reasoningEffortOptions.find((o) => o.value === value)
+    return String(option?.label || value).replace(/（[^）]*）|\([^)]*\)/g, '')
   })
-
-  // 未设置档位时不默认选中第一个选项（no-set），以占位形式展示"思考"
-  const effortUnset = effortValue === 'no-set'
 
   /** 收起态 pill 内容：探测中且下拉未打开时，脑图标位置替换为 loading */
   const renderPill = useMemoizedFn((text: string) => (
@@ -121,30 +122,36 @@ export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = R
   ))
 
   return (
-    <div className={classNames(styles['reasoning-effort-select'], className)}>
+    <div
+      className={classNames(styles['reasoning-effort-select'], className, {
+        [styles['reasoning-effort-select-off']]: effortValue === 'off',
+      })}
+    >
       <AIChatSelect
         getList={ensureEffortProbed}
         dropdownRender={(menu) => {
           return (
             <div className={styles['drop-select-wrapper']}>
               <div className={styles['select-title']}>
-                <OutlineBrainIcon />
-                {t('AiAgengt.reasoningEffort')}
-                <Tooltip title={t('AIReasoningEffort.tooltip')}>
-                  <OutlineQuestionmarkcircleIcon />
-                </Tooltip>
+                <div className={styles['select-title-left']}>
+                  <OutlineBrainIcon />
+                  {t('AiAgengt.reasoningEffort')}
+                  <Tooltip title={t('AIReasoningEffort.tooltip')}>
+                    <OutlineQuestionmarkcircleIcon />
+                  </Tooltip>
+                </div>
+                {effortProbing && (
+                  <div className={styles['select-title-probing']}>
+                    <YakitSolidLoading size={12} inline />
+                    {t('AIReasoningEffort.probing')}
+                  </div>
+                )}
               </div>
               {menu}
-              {effortProbing && (
-                <div className={styles['dropdown-loading']}>
-                  <YakitSolidLoading size={14} inline />
-                  {t('ConfigNetworkPage.reasoningEffortProbing')}
-                </div>
-              )}
             </div>
           )
         }}
-        value={effortUnset ? { label: renderPill(t('AiAgengt.reasoningEffort')), value: '' } : effortValue}
+        value={effortValue}
         onSelect={onEffortSelect}
         optionLabelProp="label"
         open={open}
@@ -157,13 +164,7 @@ export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = R
             value={item.value as string}
             label={renderPill(pillText(item.value as string))}
           >
-            <div
-              className={classNames(styles['select-option-wrapper'], {
-                [styles['select-option-active-wrapper']]: !effortUnset && item.value === effortValue,
-              })}
-            >
-              <div className={styles['text']}>{item.label}</div>
-            </div>
+            <div className={styles['option-text']}>{item.label}</div>
           </YakitSelect.Option>
         ))}
       </AIChatSelect>

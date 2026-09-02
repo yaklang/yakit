@@ -442,7 +442,8 @@
     "focusModeTooltip": "Use a framework for complex scenarios and limit the AI's thinking scope"
   },
   "AIReasoningEffort": {
-    "tooltip": "off disables thinking; unset follows the model default; xhigh / max are extended tiers shown only after probe confirmation"
+    "tooltip": "off disables thinking; unset follows the model default; xhigh / max are extended tiers shown only after probe confirmation",
+    "probing": "Probing..."
   },
   "HistoryChat": {
     "title": "History Chat",
