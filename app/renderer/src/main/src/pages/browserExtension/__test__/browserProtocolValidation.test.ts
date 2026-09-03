@@ -93,11 +93,35 @@ describe('browser protocol runtime validation', () => {
             connectionId: 'connection-a',
             connectedAt: 1,
             managedInstance: { manager: 'ytray', instanceId: 'instance-a', badge: 'A' },
+            capabilityCatalog: {
+              version: 1,
+              schemaDialect: 'http://json-schema.org/draft-07/schema#',
+              hash: '0'.repeat(64),
+              capabilities: [
+                {
+                  method: 'browser.thumbnail',
+                  domain: 'page',
+                  access: 'read',
+                  agentVisible: false,
+                  summary: 'UI preview',
+                  scopes: ['browser.tabs.read'],
+                  targetMode: 'tab',
+                  defaultTimeoutMs: 20_000,
+                  paramsSchema: {},
+                },
+              ],
+            },
           },
         ],
       }),
-    ) as { connections: Array<{ managedInstance?: { manager: string; instanceId: string; badge: string } }> }
+    ) as {
+      connections: Array<{
+        managedInstance?: { manager: string; instanceId: string; badge: string }
+        capabilityCatalog?: { capabilities: Array<{ agentVisible?: boolean }> }
+      }>
+    }
     expect(status.connections[0].managedInstance).toEqual({ manager: 'ytray', instanceId: 'instance-a', badge: 'A' })
+    expect(status.connections[0].capabilityCatalog?.capabilities[0].agentVisible).toBe(false)
   })
 
   it('keeps the managed-browser identity on a pending pairing request', () => {

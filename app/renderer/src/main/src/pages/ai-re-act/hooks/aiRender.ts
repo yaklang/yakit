@@ -332,6 +332,24 @@ export interface HttpFlowFuzzStatusCardData {
   /** working 推送的进度；finish 时保留最后一次 */
   progress?: AIAgentGrpcApi.HttpFlowFuzzStatusProgress
 }
+
+/** UI-only browser handoff metadata. QR pixels are fetched locally and never persisted here. */
+export interface BrowserHandoffCardData {
+  handoffId: string
+  callToolId?: string
+  deviceId: string
+  reason: 'qr_code' | 'mfa' | 'captcha' | 'device_confirmation' | 'other'
+  message?: string
+  state: 'waiting_for_user' | 'completed' | 'cancelled'
+  requestedAt?: number
+  resolvedAt?: number
+  tabId: number
+  frameId: number
+  documentId?: string
+  title?: string
+  url?: string
+  origin?: string
+}
 // #endregion
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)
@@ -384,6 +402,8 @@ export enum AIChatQSDataTypeEnum {
   HTTP_FLOW_FUZZ_STATUS = 'http_flow_fuzz_status',
   /** 报告生成完成（report_finish） */
   REPORT_FINISH = 'report_finish',
+  /** 浏览器本地人工接管卡片（不包含图片数据） */
+  BROWSER_HANDOFF = 'browser_handoff',
   /** 任务规划-未标识组的默认组 */
   TASK_DEFAULT_GROUP = 'task_default_group',
 }
@@ -454,6 +474,7 @@ type ChatUserManualIntervention = AIChatQSDataBase<
 
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
 type ChatReportFinish = AIChatQSDataBase<AIChatQSDataTypeEnum.REPORT_FINISH, ReportFinishCardData>
+export type ChatBrowserHandoff = AIChatQSDataBase<AIChatQSDataTypeEnum.BROWSER_HANDOFF, BrowserHandoffCardData>
 type ChatTaskDefaultGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP, undefined>
 type ChatStreamGroup = AIChatQSDataBase<
   AIChatQSDataTypeEnum.STREAM_GROUP,
@@ -484,6 +505,7 @@ export type AIChatQSData =
   | ChatApiRequestFailed
   | ChatHttpFlowFuzzStatus
   | ChatReportFinish
+  | ChatBrowserHandoff
   | ChatTaskDefaultGroup
   | ChatStreamGroup
 // #endregion

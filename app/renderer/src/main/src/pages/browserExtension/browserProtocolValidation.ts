@@ -155,6 +155,7 @@ function normalizeCapabilityDescriptor(value: JSONObject, schema: string, path: 
       'method',
       'domain',
       'access',
+      'agentVisible',
       'summary',
       'scopes',
       'conditionalScopes',
@@ -168,6 +169,7 @@ function normalizeCapabilityDescriptor(value: JSONObject, schema: string, path: 
   requiredString(value, 'method', schema, path)
   requiredString(value, 'domain', schema, path)
   requiredString(value, 'access', schema, path)
+  if (value.agentVisible !== undefined) requiredBoolean(value, 'agentVisible', schema, path)
   requiredString(value, 'summary', schema, path)
   requiredString(value, 'targetMode', schema, path)
   requiredNumber(value, 'defaultTimeoutMs', schema, path)

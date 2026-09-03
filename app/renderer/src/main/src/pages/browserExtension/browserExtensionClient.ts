@@ -37,6 +37,7 @@ export interface BrowserCapabilityDescriptor {
   method: string
   domain: BrowserCapabilityDomain
   access: BrowserCapabilityAccess
+  agentVisible?: boolean
   summary: string
   scopes: string[]
   conditionalScopes?: BrowserCapabilityScopeCondition[]
