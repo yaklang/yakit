@@ -63,6 +63,9 @@ pr-ci-changed-files-list.txt
 
 # Local development and generated output
 dist/
+# ali-react-table-dist is a patched vendored dependency used as application source.
+!app/renderer/src/main/src/alibaba/ali-react-table-dist/dist/
+!app/renderer/src/main/src/alibaba/ali-react-table-dist/dist/**
 out/
 coverage/
 .cache/
