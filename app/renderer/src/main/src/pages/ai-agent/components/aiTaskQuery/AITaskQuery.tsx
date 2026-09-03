@@ -185,7 +185,7 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
     },
     { wait: 200, leading: true },
   ).run
-  /** 调整方案（原人工介入）：先发删除该条队列任务的信号，再把该条 user_input 作为
+  /** 调整方向（原人工介入）：先发删除该条队列任务的信号，再把该条 user_input 作为
    * 人工介入消息发给后端，最后补发一次队列快照刷新（QUEUE_INFO）让本条立即消失 */
   const onTaskImmediate = useDebounceFn(
     () => {
@@ -257,13 +257,14 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
         )}
         <YakitButton
           size="small"
-          type="outline2"
+          type="text2"
           onClick={onTaskImmediate}
           loading={immediateLoading}
           disabled={immediateLoading}
         >
-          {t('AITaskQuery.immediate')}
+          {t('AITaskQuery.adjustDirection')}
         </YakitButton>
+        <div className={styles['divider-style']} />
         <YakitButton type="text2" icon={<OutlineArrowupIcon />} onClick={onTaskUp} loading={upLoading} />
         <YakitButton type="text2" icon={<OutlineTrashIcon />} onClick={onTaskRemove} loading={removeLoading} />
       </div>

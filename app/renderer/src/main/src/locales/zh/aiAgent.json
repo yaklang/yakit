@@ -145,7 +145,7 @@
     "testFailed": "测试失败"
   },
   "AIReActTaskChatContent": {
-    "adjustPlan": "调整方案",
+    "adjustDirection": "调整方向",
     "globalDirective": "全局指令",
     "globalDirectiveDefault": "自定义AI全局指令",
     "globalDirectivePlaceholder": "全局命令将对所有会话生效...",
@@ -442,7 +442,7 @@
     "focusModeTooltip": "复杂场景限定使用框架，限制AI思考范围"
   },
   "AIReasoningEffort": {
-    "tooltip": "关闭不进行思考；不设置则跟随模型默认；极高 / 最高 为扩展档位，仅探测确认支持后展示",
+    "tooltip": "关闭不进行思考；默认则跟随模型默认；极高 / 最高 为扩展档位，仅探测确认支持后展示",
     "probing": "探测中..."
   },
   "HistoryChat": {
@@ -503,7 +503,7 @@
   },
   "AITaskQuery": {
     "taskQueue": "任务队列",
-    "immediate": "调整方案",
+    "adjustDirection": "调整方向",
     "focusMode": "场景: {{mode}}"
   },
   "ForgeName": {

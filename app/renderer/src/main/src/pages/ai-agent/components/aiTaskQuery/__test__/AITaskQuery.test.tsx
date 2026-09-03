@@ -73,20 +73,20 @@ const setQueue = (execute: boolean, items: AIAgentGrpcApi.QuestionQueueItem[]) =
 
 const clickAdjustButton = (container: HTMLElement, index = 0) => {
   const buttons = container.querySelectorAll('button')
-  const target = [...buttons].filter((b) => b.textContent?.includes('AITaskQuery.immediate'))[index]
+  const target = [...buttons].filter((b) => b.textContent?.includes('AITaskQuery.adjustDirection'))[index]
   expect(target).toBeTruthy()
   act(() => {
     fireEvent.click(target!)
   })
 }
 
-describe('AITaskQuery 调整方案（原人工介入）', () => {
+describe('AITaskQuery 调整方向（原人工介入）', () => {
   beforeEach(() => {
     onSendMock.mockClear()
     pushSpy.mockClear()
   })
 
-  it('点击「调整方案」先发删除单条队列信号，再以该条 user_input 发人工介入信号', () => {
+  it('点击「调整方向」先发删除单条队列信号，再以该条 user_input 发人工介入信号', () => {
     const { container } = renderAITaskQuery()
     setQueue(true, [queueItem('task-1', '帮我扫描目标站点')])
 
@@ -120,7 +120,7 @@ describe('AITaskQuery 调整方案（原人工介入）', () => {
     expect(chatData.data).toMatchObject({ type: '加入上下文', content: '补充上下文内容' })
   })
 
-  it('多条排队任务各自有独立的「调整方案」按钮，作用于自己的 task_id/user_input', () => {
+  it('多条排队任务各自有独立的「调整方向」按钮，作用于自己的 task_id/user_input', () => {
     const { container } = renderAITaskQuery()
     setQueue(true, [queueItem('task-a', '问题A'), queueItem('task-b', '问题B')])
 

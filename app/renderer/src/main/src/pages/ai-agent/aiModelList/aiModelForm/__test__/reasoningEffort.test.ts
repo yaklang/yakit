@@ -59,7 +59,7 @@ describe('buildReasoningEffortOptions', () => {
 
   it('基础档位 label 经由 t 翻译', () => {
     const options = buildReasoningEffortOptions(t)
-    expect(options[0].label).toBe('ConfigNetworkPage.effortNoSet')
+    expect(options[0].label).toBe('ConfigNetworkPage.effortDefault')
     expect(options[1].label).toBe('ConfigNetworkPage.effortOff')
     expect(options[2].label).toBe('ConfigNetworkPage.effortLow')
     expect(options[3].label).toBe('ConfigNetworkPage.effortMedium')

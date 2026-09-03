@@ -20,7 +20,7 @@ import styles from './AIReasoningEffortSelect.module.scss'
 
 export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = React.memo((props) => {
   const { className } = props
-  // configNetwork 命名空间：选项文案（ConfigNetworkPage.effortNoSet/effortLow 等）与表单共用
+  // configNetwork 命名空间：选项文案（ConfigNetworkPage.effortDefault/effortLow 等）与表单共用
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'configNetwork'])
 
   const [{ aiGlobalConfig }, event] = useAIGlobalConfig()
@@ -100,9 +100,7 @@ export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = R
   })
 
   const pillText = useMemoizedFn((value: string) => {
-    // no-set 选中后收起态按钮显示「思考」占位文案（选项行内仍显示完整「不设置」文案）
-    if (value === 'no-set') return t('AiAgengt.reasoningEffort')
-    // 与下拉列表同源文案，但去掉括号内的描述（如「低（快速）」展示为「低」）
+    // 与下拉列表同源文案，但去掉括号内的描述（如「低（快速）」展示为「低」、「默认（跟随模型默认）」展示为「默认」）
     const option = reasoningEffortOptions.find((o) => o.value === value)
     return String(option?.label || value).replace(/（[^）]*）|\([^)]*\)/g, '')
   })

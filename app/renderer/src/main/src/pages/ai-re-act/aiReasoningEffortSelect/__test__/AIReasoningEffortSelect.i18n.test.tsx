@@ -18,11 +18,11 @@ vi.mock('i18next-resources-to-backend', () => {
   const resources: Record<string, Record<string, unknown>> = {
     zh: {
       aiAgent: { AiAgengt: { reasoningEffort: '思考' } },
-      configNetwork: { ConfigNetworkPage: { effortNoSet: '默认' } },
+      configNetwork: { ConfigNetworkPage: { effortDefault: '默认' } },
     },
     en: {
       aiAgent: { AiAgengt: { reasoningEffort: 'Thinking' } },
-      configNetwork: { ConfigNetworkPage: { effortNoSet: 'Default' } },
+      configNetwork: { ConfigNetworkPage: { effortDefault: 'Default' } },
     },
   }
   return {
@@ -62,13 +62,13 @@ describe('AIReasoningEffortSelect 语言切换', () => {
       )
       const pill = () => container.querySelector('.ant-select-selection-item')?.textContent || ''
 
-      // 懒加载 configNetwork 与防抖刷新完成后，pill 显示中文占位
-      await waitFor(() => expect(pill()).toContain('思考'), { timeout: 5000 })
+      // 懒加载 configNetwork 与防抖刷新完成后，pill 显示 no-set 选项文案（去括号后为「默认」）
+      await waitFor(() => expect(pill()).toContain('默认'), { timeout: 5000 })
 
       await act(async () => {
         await captured.i18n?.changeLanguage('en')
       })
-      await waitFor(() => expect(pill()).toContain('Thinking'), { timeout: 5000 })
+      await waitFor(() => expect(pill()).toContain('Default'), { timeout: 5000 })
     },
   )
 })

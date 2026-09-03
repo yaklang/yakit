@@ -9,7 +9,7 @@ export const EXTENDED_EFFORTS = ['xhigh', 'max'] as const
 /**基础档位（始终展示）；no-set 为表单哨兵值，保存时转 undefined（跟随模型默认）；
  * 文案统一走 configNetwork 命名空间的 effort* key */
 export const baseReasoningEffortOptions: (t: TFunction) => SelectOptionsProps[] = (t) => [
-  { label: t('ConfigNetworkPage.effortNoSet'), value: 'no-set' },
+  { label: t('ConfigNetworkPage.effortDefault'), value: 'no-set' },
   { label: t('ConfigNetworkPage.effortOff'), value: 'off' },
   { label: t('ConfigNetworkPage.effortLow'), value: 'low' },
   { label: t('ConfigNetworkPage.effortMedium'), value: 'medium' },
