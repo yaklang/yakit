@@ -17,6 +17,7 @@ import { AIModelErrorPrompt } from '../aiModelErrorPrompt/AIModelErrorPrompt'
 import AIStreamCardWrapper from '../../aiChatListItemWrapper/aiStreamCardWrapper/aiStreamCardWrapper'
 import AIToolInvokerCardWrapper from '../../aiChatListItemWrapper/aiToolInvokerCardWrapper/AIToolInvokerCardWrapper'
 import AIGroupStreamNodeWrapper from '../../aiChatListItemWrapper/aiGroupStreamNodeWrapper/AIGroupStreamNodeWrapper'
+import { AIBrowserHandoffCard } from '../../aiBrowserHandoffCard/AIBrowserHandoffCard'
 
 const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
   const { itemData, renderNum, groupIndex } = props
@@ -43,6 +44,9 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
 
     case AIChatQSDataTypeEnum.REPORT_FINISH:
       return <AIReportFinishCard item={itemData} renderNum={renderNum} isChildWindow={false} />
+
+    case AIChatQSDataTypeEnum.BROWSER_HANDOFF:
+      return <AIBrowserHandoffCard item={itemData} renderNum={renderNum} />
 
     case AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION:
       return (
