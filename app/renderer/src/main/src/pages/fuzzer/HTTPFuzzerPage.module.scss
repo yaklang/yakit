@@ -28,6 +28,11 @@
       border: 1px solid var(--Colors-Use-Main-Primary);
     }
   }
+  .resize-card-second {
+    :global(.flex-card) {
+      border: none;
+    }
+  }
   .fuzzer-heard {
     display: flex;
     justify-content: space-between;
