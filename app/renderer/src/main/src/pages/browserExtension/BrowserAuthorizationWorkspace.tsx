@@ -234,6 +234,7 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
   defaultDeviceId,
   initialWorkspaceId,
   initialDeviceId,
+  initialTargetDeviceId,
   initialTabId,
   initialMode,
   onInitialWorkspaceLoaded,
@@ -654,7 +655,7 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
       initialTargetLoadedRef.current = ''
       return
     }
-    const key = `${requestedDeviceId}:${requestedTabId}`
+    const key = `${requestedDeviceId}:${requestedTabId}:${initialTargetDeviceId || ''}`
     if (
       initialWorkspaceId ||
       initialTargetLoadedRef.current === key ||
@@ -663,8 +664,16 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
       return
 
     const requestedMode = initialMode || 'horizontal'
-    if (left.deviceId !== requestedDeviceId || mode !== requestedMode) {
-      const secondDevice = devices.find((device) => device.id !== requestedDeviceId)
+    const requestedTargetDeviceId = initialTargetDeviceId?.trim()
+    const secondDevice = requestedTargetDeviceId
+      ? devices.find((device) => device.id !== requestedDeviceId && device.id === requestedTargetDeviceId)
+      : devices.find((device) => device.id !== requestedDeviceId)
+    if (requestedTargetDeviceId && !secondDevice) return
+    if (
+      left.deviceId !== requestedDeviceId ||
+      mode !== requestedMode ||
+      (secondDevice && right.deviceId !== secondDevice.id)
+    ) {
       dispatchWorkspace({
         type: 'selection.change',
         mode: requestedMode,
@@ -684,18 +693,22 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
     initialTargetLoadedRef.current = key
     changeIdentitySelection('left', (current) => ({ ...current, tabId: requestedTabId }))
     onInitialWorkspaceLoaded?.()
-    success('已带入浏览器当前页面，请选择另一个在线实例作为对照账号')
+    success(
+      requestedTargetDeviceId ? '已带入指定的两个浏览器实例' : '已带入浏览器当前页面，请选择另一个在线实例作为对照账号',
+    )
   }, [
     changeIdentitySelection,
     devices,
     initialDeviceId,
     initialMode,
     initialTabId,
+    initialTargetDeviceId,
     initialWorkspaceId,
     left.deviceId,
     leftInspection?.tabs,
     mode,
     onInitialWorkspaceLoaded,
+    right.deviceId,
   ])
 
   const dynamicBaselinePaths = useMemo(() => {
