@@ -35,6 +35,7 @@ const YakitAutoCompleteOptionLabel = React.memo<{
       <div className={styles['yakit-option-item-label']}>{item.label}</div>
       {deletable ? (
         <XOutlined
+          size={16}
           style={{ display: showClose ? 'block' : 'none' }}
           className={styles['option-item-close']}
           onClick={(e) => onDelete(e, item)}
