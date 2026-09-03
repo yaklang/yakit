@@ -1,6 +1,6 @@
 import { yakitBrowserExtension, yakitStream } from '@/services/electronBridge'
 import { randomString } from '@/utils/randomUtil'
-import { Uint8ArrayToString } from '@/utils/str'
+import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import { browserAuthorizationLifecycleError } from './browserAuthorizationLifecycle'
 import {
   browserSnapshotResources,
@@ -55,6 +55,11 @@ export interface BrowserCapabilityCatalog {
 export interface BrowserBridgeConnection {
   deviceId: string
   installationId: string
+  managedInstance?: {
+    manager: 'ytray' | 'yakit'
+    instanceId: string
+    badge: string
+  }
   client: string
   clientVersion: string
   capabilities: string[]
@@ -90,8 +95,22 @@ export interface PairedBrowserDevice {
   lastSeenAt: number
 }
 
+export interface BrowserPairingRequest {
+  id: string
+  installationId: string
+  managedInstance?: BrowserBridgeConnection['managedInstance']
+  extensionId: string
+  client: string
+  clientVersion: string
+  origin: string
+  code: string
+  createdAt: number
+  expiresAt: number
+}
+
 export interface BrowserExtensionSnapshot {
   status?: BrowserBridgeStatus
+  pending: BrowserPairingRequest[]
   devices: PairedBrowserDevice[]
 }
 
@@ -129,12 +148,17 @@ function browserTaskError(event: BrowserTaskEvent): Error {
   return browserAuthorizationLifecycleError(event.Data, event.Message || '浏览器任务失败')
 }
 
-export async function getBrowserExtensionSnapshot(): Promise<BrowserExtensionSnapshot> {
+async function requestBrowserExtensionSnapshot(
+  method: string,
+  path: string,
+  body?: unknown,
+): Promise<BrowserExtensionSnapshot> {
   const response = await yakitBrowserExtension.requestYakURL({
-    Method: 'GET',
-    Url: { Schema: 'browser-extension', Location: 'local', Path: '/snapshot', Query: [] },
+    Method: method,
+    Url: { Schema: 'browser-extension', Location: 'local', Path: path, Query: [] },
+    Body: body === undefined ? undefined : StringToUint8Array(JSON.stringify(body)),
   })
-  const snapshot: BrowserExtensionSnapshot = { devices: [] }
+  const snapshot: BrowserExtensionSnapshot = { pending: [], devices: [] }
   for (const resource of browserSnapshotResources(response)) {
     const extras = Array.isArray(resource.Extra) ? resource.Extra : []
     const encoded = extras.find(
@@ -148,10 +172,21 @@ export async function getBrowserExtensionSnapshot(): Promise<BrowserExtensionSna
     if (resourceType === 'status') {
       snapshot.status = value as unknown as BrowserBridgeStatus
     }
+    if (resourceType === 'pairing-request') snapshot.pending.push(value as unknown as BrowserPairingRequest)
     if (resourceType === 'paired-device') snapshot.devices.push(value as unknown as PairedBrowserDevice)
   }
   return snapshot
 }
+
+export const getBrowserExtensionSnapshot = () => requestBrowserExtensionSnapshot('GET', '/snapshot')
+
+export const approveBrowserExtensionPairing = (request: BrowserPairingRequest) =>
+  requestBrowserExtensionSnapshot('POST', `/pairings/${request.id}/approve`, {
+    name: request.managedInstance?.badge ? `浏览器 ${request.managedInstance.badge}` : 'Browser Extension',
+  })
+
+export const rejectBrowserExtensionPairing = (request: BrowserPairingRequest) =>
+  requestBrowserExtensionSnapshot('DELETE', `/pairings/${request.id}`, { message: 'Pairing rejected in Yakit' })
 
 export function executeBrowserExtensionTask<T>(
   deviceId: string,
