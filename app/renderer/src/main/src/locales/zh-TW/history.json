@@ -254,6 +254,15 @@
     "object": "物件",
     "rule": "規則",
     "codec": "編解碼",
+    "log": "日誌",
+    "logEmpty": "暫無處置日誌",
+    "logSystem": "系統",
+    "logUpdateMark": "更新標記",
+    "logReplyComment": "回覆評論",
+    "logPublishComment": "發佈評論",
+    "logReply": "回覆",
+    "logNone": "無",
+    "logDownload": "下載",
     "more": "更多"
   },
   "CodingPopover": {
