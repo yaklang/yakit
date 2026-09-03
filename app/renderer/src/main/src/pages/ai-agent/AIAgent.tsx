@@ -112,7 +112,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         ...newCache,
         SyncPerceptionTrigger: false,
         EnablePlan: false,
-        DisableMemoryTriage: newCache?.DisableMemoryTriage ?? AIAgentSettingDefault.DisableMemoryTriage,
+        DisableMemoryTriage: AIAgentSettingDefault.DisableMemoryTriage,
         Strategy: {
           EnableMultiAgent: false,
           EnableGoalMode: false,
