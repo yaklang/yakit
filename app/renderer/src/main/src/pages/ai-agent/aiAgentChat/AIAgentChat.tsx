@@ -144,6 +144,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             ...old,
             SyncPerceptionTrigger: false,
             EnablePlan: false,
+            DisableMemoryTriage: AIAgentSettingDefault.DisableMemoryTriage,
             Strategy: {
               EnableMultiAgent: false,
               EnableGoalMode: false,
