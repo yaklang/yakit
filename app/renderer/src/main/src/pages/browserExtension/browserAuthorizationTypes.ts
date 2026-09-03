@@ -531,6 +531,7 @@ export interface BrowserAuthorizationWorkspaceProps {
   defaultDeviceId: string
   initialWorkspaceId?: string
   initialDeviceId?: string
+  initialTargetDeviceId?: string
   initialTabId?: number
   initialMode?: BrowserAuthorizationMode
   onInitialWorkspaceLoaded?: () => void
