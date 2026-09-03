@@ -296,14 +296,12 @@ export interface ColumnAllInfoItem {
 
 export interface AdvancedSetSaveItem {
   backgroundRefresh: boolean
-  dragSelectEnabled: boolean
   binaryDisplayEnabled: boolean
   configColumnsAll: ColumnAllInfoItem[]
 }
 
 export interface AdvancedSetProps {
   showBackgroundRefresh?: boolean
-  dragSelectEnabled?: boolean
   binaryDisplayEnabled?: boolean
   columnsAllStr: string
   onCancel: () => void
