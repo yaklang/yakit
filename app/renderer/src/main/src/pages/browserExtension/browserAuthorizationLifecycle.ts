@@ -29,6 +29,11 @@ export class BrowserAuthorizationWorkspaceLifecycleError extends Error {
   }
 }
 
+export function canRefreshBrowserAuthorizationContext(error: unknown, hasBaselines: boolean): boolean {
+  const message = error instanceof Error ? error.message : `${error}`
+  return !hasBaselines && message.includes('auth_context_stale')
+}
+
 export function browserAuthorizationLifecycleError(data: Uint8Array | undefined, fallbackMessage: string): Error {
   if (data?.length) {
     try {
