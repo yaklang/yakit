@@ -141,3 +141,34 @@ ${JSON.stringify(data.param || {}, null, 2)}
 export const getAIImageSuffix = () => {
   return imgTypes.map((ext) => ext.slice(1))
 }
+
+/**
+ * 反转义 getMarkdown() 输出中被 remark-stringify 错误转义的下划线 `\_` → `_`。
+ *
+ * 仅对「路径上下文」的文本片段生效：Windows 盘符路径（D:\\...）、UNC 路径（\\\\server\\...）、
+ * Unix 绝对路径（/...）或包含反斜杠路径分隔符（\\ 后跟非下划线字符）的 token。
+ * 非路径文本（如变量名 hello_world、防强调转义 a\_b）中的 `\_` 保持不变。
+ */
+const isPathLikeToken = (token: string): boolean => {
+  // Windows drive path: D:\... or C:\...
+  if (/^[A-Za-z]:[\\/]/.test(token)) return true
+  // UNC path: \\server\...
+  if (/^\\\\/.test(token)) return true
+  // Unix absolute path: /...
+  if (/^\//.test(token)) return true
+  // Contains backslash path separator: \ followed by non-underscore
+  if (/\\[^_]/.test(token)) return true
+  return false
+}
+
+export const unescapeUnderscoreInPath = (markdown: string): string =>
+  markdown
+    .split(/(\s+)/)
+    .map((part) => {
+      if (/^\s*$/.test(part)) return part
+      if (isPathLikeToken(part)) {
+        return part.replace(/\\_/g, '_')
+      }
+      return part
+    })
+    .join('')
