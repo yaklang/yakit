@@ -66,6 +66,87 @@
   @include ai-chat-mention-body('focus-mode');
   outline: none;
 }
+.browser-list-of-mention {
+  height: 300px;
+  max-height: 300px;
+  padding: 0 2px;
+  overflow-y: auto;
+}
+
+.browser-mention-row {
+  min-height: 42px;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  gap: 7px;
+  align-items: center;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+}
+
+.browser-mention-icon {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--Colors-Use-Main-Primary);
+  background: var(--Colors-Use-Main-Bg);
+
+  img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+  }
+}
+
+.browser-mention-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  > span,
+  > small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  > span {
+    font-size: 12px;
+    line-height: 17px;
+    font-weight: 500;
+  }
+
+  > small {
+    font-size: 10px;
+    line-height: 14px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+}
+
+.browser-mention-status {
+  font-size: 10px;
+  color: var(--Colors-Use-Success-Primary);
+}
+
+.browser-mention-offline {
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+}
+
+.browser-list-empty {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+}
 .file-system-tree-of-mention {
   padding: 0 2px;
   height: 340px;

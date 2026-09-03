@@ -68,8 +68,55 @@ describe('browser protocol runtime validation', () => {
         engineInstanceId: 'engine-1',
         connections: null,
       }),
-    )
+    ) as { connections: Array<{ managedInstance?: { manager: string; instanceId: string; badge: string } }> }
     expect(status.connections).toEqual([])
+  })
+
+  it('keeps the authenticated managed-browser identity in the connection snapshot', () => {
+    const status = decodeBrowserSnapshotResource(
+      'status',
+      JSON.stringify({
+        revision: 1,
+        running: true,
+        connected: true,
+        protocolVersion: 3,
+        engineIdentityId: 'identity-1',
+        engineInstanceId: 'engine-1',
+        connections: [
+          {
+            deviceId: 'device-a',
+            installationId: 'installation-a',
+            client: 'extension',
+            clientVersion: '1',
+            capabilities: [],
+            sessionId: 'session-a',
+            connectionId: 'connection-a',
+            connectedAt: 1,
+            managedInstance: { manager: 'ytray', instanceId: 'instance-a', badge: 'A' },
+          },
+        ],
+      }),
+    ) as { connections: Array<{ managedInstance?: { manager: string; instanceId: string; badge: string } }> }
+    expect(status.connections[0].managedInstance).toEqual({ manager: 'ytray', instanceId: 'instance-a', badge: 'A' })
+  })
+
+  it('keeps the managed-browser identity on a pending pairing request', () => {
+    const request = decodeBrowserSnapshotResource(
+      'pairing-request',
+      JSON.stringify({
+        id: 'pairing-a',
+        installationId: 'installation-a',
+        managedInstance: { manager: 'ytray', instanceId: 'instance-a', badge: 'A' },
+        extensionId: 'extension-a',
+        client: 'extension',
+        clientVersion: '1',
+        origin: 'chrome-extension://extension-a',
+        code: '123456',
+        createdAt: 1,
+        expiresAt: 2,
+      }),
+    ) as { managedInstance?: { badge: string } }
+    expect(request.managedInstance?.badge).toBe('A')
   })
 
   it('rejects old protocols, invalid catalog hashes, and extra top-level fields with paths', () => {
@@ -107,6 +154,7 @@ describe('browser protocol runtime validation', () => {
               capabilities: [],
               sessionId: 'session-1',
               connectionId: 'connection-1',
+              managedInstance: { manager: 'ytray', instanceId: 'instance-a', badge: 'A' },
               connectedAt: 1,
               capabilityCatalog: {
                 version: 1,

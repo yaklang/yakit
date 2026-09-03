@@ -5,6 +5,7 @@ import {
   BookOpenTextOutlined,
   BotOutlined,
   CalendarOutlined,
+  ChromeOutlined,
   DocumentTextOutlined,
   EarOffOutlined,
   FolderOpenOutlined,
@@ -50,6 +51,7 @@ export enum AIAgentTabListEnum {
   Session = 'session',
   MCP = 'mcp',
   Scheduled = 'scheduled',
+  Browser = 'browser',
 }
 export const AiAgentTabList: YakitTabsProps[] = [
   {
@@ -61,6 +63,11 @@ export const AiAgentTabList: YakitTabsProps[] = [
     value: AIAgentTabListEnum.Scheduled,
     label: 'AIAgentTabs.scheduled',
     icon: <CalendarOutlined color="currentColor" />,
+  },
+  {
+    value: AIAgentTabListEnum.Browser,
+    label: 'AIAgentTabs.browser',
+    icon: <ChromeOutlined color="currentColor" />,
   },
   { value: AIAgentTabListEnum.MCP, label: 'MCP', icon: <MCPOutlined color="currentColor" /> },
 ]
@@ -75,9 +82,12 @@ export enum AIMentionTabsEnum {
   File_System = 'fileSystem',
   /** 场景 */
   FocusMode = 'focusMode',
+  /** 浏览器实例 */
+  Browser = 'browser',
 }
 export const AIMentionTabs: YakitSideTabProps['yakitTabs'] = [
   { value: AIMentionTabsEnum.Forge_Name, label: 'AIMentionTabs.skill' },
+  { value: AIMentionTabsEnum.Browser, label: 'AIMentionTabs.browser' },
   { value: AIMentionTabsEnum.Tool, label: 'AIMentionTabs.tool' },
   { value: AIMentionTabsEnum.KnowledgeBase, label: 'AIMentionTabs.knowledgeBase' },
   { value: AIMentionTabsEnum.File_System, label: 'AIMentionTabs.fileSystem' },
@@ -289,6 +299,7 @@ export const iconMap = {
   tool: <Wrench1Outlined color="currentColor" />,
   knowledgeBase: <BookOpenTextOutlined color="currentColor" />,
   focusMode: <BookOpenTextOutlined color="currentColor" />,
+  browser: <ChromeOutlined color="currentColor" />,
 }
 
 export enum AttachedResourceTypeEnum {
@@ -301,6 +312,7 @@ export enum AttachedResourceTypeEnum {
   CONTEXT_PROVIDER_TYPE_HTTP_FLOW = 'http_flow',
   CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File = 'file',
   CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content = 'selected',
+  CONTEXT_PROVIDER_TYPE_BROWSER = 'browser',
   USER_FREE_INPUT_UUID = 'user_free_input_uuid',
 }
 
@@ -313,6 +325,7 @@ export enum AttachedResourceKeyEnum {
   CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID = 'directory_path',
   CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID = 'file_path',
   CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content = 'content',
+  CONTEXT_PROVIDER_KEY_BROWSER_DEVICE_ID = 'device_id',
   CONTEXT_PROVIDER_KEY_DEFAULT = 'default',
 }
 
