@@ -1,19 +1,35 @@
 ---
 name: commit-msg
-description: 基于当前 git 暂存区（若为空则询问是否改用工作区 diff）生成一行 commit message，保持与 Yakit 仓库已有提交习惯一致。当用户要求写 commit message、提到"提交信息""commit msg""写个提交"等语境时触发。
+description: 为 Yakit 仓库完成一次完整的本地提交：确定提交范围（暂存区优先，空则弹框确认）、基于 diff 归纳一行符合仓库风格的 message、commit 前弹窗确认、执行 git commit（不推送）；只要 message 时仅输出文本。
 ---
 
 # commit-msg
 
-为 Yakit 仓库生成一行 commit message，对齐项目已有的提交风格。
+为 Yakit 仓库生成**完整的 commit**：确定提交内容 → 归纳意图生成一行 message → 弹窗确认 → 执行 `git commit`。
 
 > 核心原则：**commit message 不是对 diff 的逐文件罗列，而是对这次提交意图的压缩表达。**
 
-## 输出要求
+## 调用与边界
 
-- **默认只输出最终一行 message**，不要输出多行分析、不要解释理由。
-- 除非用户明确要求解释，否则不要附带任何说明文字。
-- 若暂存区为空，先明确说明当前没有 staged changes，再用 `AskUserQuestion` 询问是否基于工作区 diff（`git diff`）生成；未获同意前不要凭空生成，也不要擅自改用工作区 diff。
+**本 skill 支持语义触发**：用户用自然语言要求提交（「提交」「帮我提交一下」「commit 代码」）、输入 `/commit-msg`，或被其他 skill（如 `create-pr`）通过 Skill 工具调用时执行。
+
+| 调用方式 | 行为 |
+| --- | --- |
+| 任意方式触发（语义触发、`/commit-msg`、被其他 skill 调用） | 走完整流程：确定提交范围 → 生成 message → 弹窗确认 → 执行 commit |
+| 触发且说明「仅要 message」 | 只生成一行 message 输出给用户，**不执行任何 git 命令改动仓库** |
+| 触发且提供了 message 内容（如「用 fix: xxx 提交」） | 不再生成，直接进入弹窗确认按给定 message 执行 commit |
+
+## 提交流程
+
+1. **读取暂存区**：通过 `git status --short` 与 `git diff --cached` 获取实际提交内容，不能只靠文件名猜测。
+   - 暂存区**非空**：直接基于暂存区内容提交（**不要顺手 `git add` 工作区其它未暂存改动**）。
+   - 暂存区**为空**、工作区有改动：先用 `AskUserQuestion` 弹框询问——「暂存全部改动并提交」（`git add -A`）／「取消，不提交」；未获同意前不要擅自 `git add` 或凭空生成。
+   - 暂存区与工作区都为空：说明没有可提交的改动，停止。
+2. **检查仓库风格**：通过 `git log --oneline -10` 查看最近的提交风格、语言和习惯。
+3. **归纳主语义**：找出本次提交的主要目的和影响范围，用一个更高层级的概括覆盖全部改动。
+4. **弹窗确认**：执行 commit 前用 `AskUserQuestion` 向用户展示**生成的 message 与本次提交的文件清单**，选项：「确认提交」／「取消」；用户通过 Other 输入新 message 时，改用新 message 提交。**未获用户确认前不得执行 `git commit`**。
+5. **执行提交**：`git commit -m "<确认后的 message>"`。提交后如实报告结果；commit 失败（如 pre-commit hook 拒绝）时原样展示报错，不隐藏、不重试掩盖。
+6. **禁止推送**：本 skill 只到 commit 为止，**不执行 `git push`**（推送由用户或 `create-pr` skill 决定）。
 
 ## 格式规范
 
@@ -54,27 +70,22 @@ description: 基于当前 git 暂存区（若为空则询问是否改用工作�
 - 改动集中在某类构建/工具时，用 `renderer`、`electron`、`scripts` 等。
 - **若没有明确 scope，允许省略**（Yakit 多数提交无 scope）。
 
-## 执行步骤
-
-1. **读取暂存区**：必须通过 `git diff --cached` 获取实际提交内容，不能只靠文件名猜测。若暂存区为空，先说明没有 staged changes，再用 `AskUserQuestion` 询问是否基于工作区 diff（`git diff`）生成；用户同意后再读工作区 diff，未同意则停止。
-2. **检查仓库风格**：通过 `git log --oneline -10` 查看最近的提交风格、语言和习惯。
-3. **归纳主语义**：找出本次提交的主要目的和影响范围，用一个更高层级的概括覆盖全部改动。
-4. **对齐风格**：生成时贴合仓库已有 type/scope/语言习惯，而非机械套用 Conventional Commits。生成新提交时优先 `type: subject`，不要去改写历史里的其它格式。
-
 ## 边界情况
 
 - **多类改动混在一起**：优先找主目的；若无单一主目的，则用更上层的概括（如 `refactor: 重构 XX 模块状态管理`）。
 - **提交内容过于分散**：仍给出一个尽量诚实的一行 message，可使用较宽的概括。
-- **暂存区为空**：先明确说明当前没有 staged changes，再用 `AskUserQuestion` 询问是否基于工作区 diff 生成。用户同意后基于 `git diff` 生成；未同意则停止，不要凭空生成。
+- **只描述部分已 stage 文件而忽略其它**：不允许——message 必须覆盖暂存区全部改动。
 
 ## 禁止事项
 
 - 不读 diff 就写 message。
 - 只描述部分已 stage 文件而忽略其它。
-- 输出多行分析说明（除非用户要求）。
+- 用户只要 message 时擅自执行 commit。
+- **未经弹窗确认就执行 `git commit`**。
 - 为了套格式而违背仓库已有风格。
 - 写超过 72 字符的冗长标题（除非很难避免）。
 - 手写 `(#PR号)` 后缀——该后缀由 GitHub 合并 PR 时自动生成，本地 commit 不应包含。
+- 执行 `git push` 或任何超出「确定范围 → 生成 message → commit」之外的仓库改动。
 
 ## 示例
 

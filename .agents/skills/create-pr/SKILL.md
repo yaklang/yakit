@@ -1,13 +1,13 @@
 ---
 name: create-pr
-description: 检查当前分支工作区，有未提交改动时弹框让用户选择提交为一个 commit（message 优先调用 commit-msg skill 生成）或 stash 暂存后不带入本次 PR，随后推送远端，并调用 code-review skill 评审后在 yaklang/yakit 创建或更新 PR（评审为强制步骤：必须调用 code-review skill 审查分支对比远端 master 的改动，会话中不存在该 skill 时停止；其合并结论（不通过/需要修复/可以合并）与统计以「代码评审结论」小节单独写入 PR 描述；PR 标题基于分支全部 commit 归纳为 type: subject 风格（不使用分支名），更新已有 PR 时旧标题若仍是分支名则替换为本次总结标题、人工改过的标题保留不覆盖；该分支已有开放（OPEN）状态的 PR 时不再新建、仅更新 PR 描述，已有 PR 处于关闭（CLOSED/MERGED）状态时则新建 PR；PR 描述按仓库 PR 模板 .github/PULL_REQUEST_TEMPLATE.md 结构生成，基于分支实际改动与 code review 结果填写，评审中所有建议合并前修复的问题都以 markdown task list 复选框格式记入 PR 描述并跨更新累积保留（未修复 `- [ ]`、已修复 `- [x]`），再次评审确认已修复的条目标注为已修复而不删除；关联信息（本仓库 issue 编号、其它项目/仓库的 PR 链接，含 yaklang 引擎 PR）仅在用户输入中明确提供时写入「关联 Issue / PR」小节；合并方式由输入指定，未指定时按 commit 数量/作者数自动选 merge/squash/rebase（更新已有 OPEN 状态 PR 时优先沿用旧 PR 描述中已勾选的合并方式，不用自动规则覆盖重置）；本机 gh 未安装或未登录时不直接停止，而是弹框让用户选择安装登录 gh 或手动创建——手动模式将 PR 标题与完整描述写入 PR-BODY.md 并给出 compare 创建链接供用户复制）。当用户要求提 PR、提交 PR（提交pr）、创建 PR、发 PR、发起 PR、raise/submit/open PR、"create PR"、更新已有 PR，或使用 /create-pr 时触发。
+description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改动、推送远端、调用 code-review skill 评审后在 yaklang/yakit 创建或更新 PR。当用户要求提 PR、提交 PR、创建 PR、发 PR、raise/submit/open PR、"create PR"、更新已有 PR，或使用 /create-pr 时触发。
 ---
 
 # create-pr
 
 为 Yakit 仓库一站式完成：**commit 工作区改动 → 推送远端 → code review → 创建/更新 PR**。
 
-> 本 skill 的调用本身就是授权：commit、push、创建 PR 均直接执行，不再逐步向用户确认。但**不要**做超出此流程的动作（整理历史 commit、改写远端、合并 PR 等）。
+> 本 skill 的调用本身就是授权：push、创建 PR 均直接执行，不再逐步向用户确认；commit 环节沿用 `commit-msg` skill 的弹窗确认（展示 message 与文件清单，确认后才执行）。但**不要**做超出此流程的动作（整理历史 commit、改写远端、合并 PR 等）。
 
 ## 输入信息（均可选，均可同时出现）
 
@@ -41,7 +41,7 @@ description: 检查当前分支工作区，有未提交改动时弹框让用户�
 
 - `git status` 检查工作区（含未跟踪文件）。**有未提交改动时不要直接提交**，先用 `AskUserQuestion` 弹框让用户选择处理方式（question 中概述改动情况，如「工作区有 3 个已修改 + 1 个未跟踪文件」）：
 
-  - **「提交为一个 commit」**：`git add -A` 暂存全部改动，生成**一个** commit。message 优先通过 Skill 工具调用 `commit-msg` skill 生成（该 skill 基于暂存区 diff 归纳）；会话中不存在该 skill 时，按其规范自行生成（`type: subject`、中文为主、72 字符内、不带 `(#PR号)` 后缀），必须基于实际 diff 归纳，不逐文件罗列。
+  - **「提交为一个 commit」**：`git add -A` 暂存全部改动，生成**一个** commit。提交优先通过 Skill 工具调用 `commit-msg` skill 完成（该 skill 会确定提交范围、基于暂存区 diff 归纳 message，并在 commit 前弹窗展示 message 与文件清单供用户确认，确认后才执行 `git commit`）；会话中不存在该 skill 时，按其规范自行完成（`git commit -m` 前同样弹窗确认，message 为 `type: subject`、中文为主、72 字符内、不带 `(#PR号)` 后缀），必须基于实际 diff 归纳，不逐文件罗列。
   - **「stash 暂存」**：`git stash push -u -m "create-pr: 暂存未提交改动"`（`-u` 连未跟踪文件一起暂存），后续流程基于干净工作区继续，本次 PR **不包含**这些改动。向用户报告 stash 已创建，何时 `git stash pop` 由用户自行决定，**不要自动恢复**。
 
   用户拒绝两个选项（选 Other 取消）则停止。
@@ -154,8 +154,10 @@ gh pr view <当前分支> --repo yaklang/yakit --json number,url,state
   gh pr edit <PR number> --repo yaklang/yakit --title "<最终标题>" --body "<描述>"
   ```
 
-  更新前先 `gh pr view <PR number> --repo yaklang/yakit --json body --jq '.body'` 获取旧描述全文，作为以下两处同步的依据：
+  更新前先 `gh pr view <PR number> --repo yaklang/yakit --json body --jq '.body'` 获取旧描述全文，作为以下各处同步的依据：
 
+  - **改动类型复选**：旧描述「改动类型」小节已有勾选项（`- [x]`）时，沿用旧勾选原样迁移（可能是用户或维护者手动改过，与合并方式沿用旧勾选同理）；无有效勾选（全 `- [ ]` 或无该小节）才按第 5 步基于本次 diff 重新判断。
+  - **关联 Issue / PR**：旧描述该小节有实际内容（非 `None`）时保留旧内容，本次用户输入又明确提供了新关联则与旧内容合并去重后写入；旧内容为 `None` 且本次用户未提供时才填 `None`。旧关联可能是用户手动维护的，不得因重新生成描述而丢失。
   - **合并方式**：按第 6 步优先级 2 保留旧描述中已勾选的方式；旧描述「## 合并方式」小节的勾选原样迁移到新描述（无有效勾选才回退自动规则）。
   - **「建议合并前修复的问题」**：更新描述前必须重新执行第 4 步评审，并按下述规则同步：
 
@@ -181,14 +183,15 @@ gh pr view <当前分支> --repo yaklang/yakit --json number,url,state
 
 ### 手动模式（gh 降级流程中用户选择「手动创建 PR」时）
 
-用户在第 1 步选择手动创建后，前 6 步（commit、push、评审、描述生成、合并方式选择）**全部正常执行**，本步不执行任何 `gh` 命令，改为：
+用户在第 1 步选择手动创建后，前 6 步（commit、push、评审、描述生成、合并方式选择）**全部正常执行**，本步不执行任何 `gh` 命令、**不生成任何文件**，标题与描述直接在对话框中展示供用户复制：
 
-1. 把 PR 标题与完整描述写入仓库根目录的 `PR-BODY.md`（标题单独一行，空一行后接描述全文），便于用户整体复制。
-2. 向用户输出并说明：
-   - **PR 标题**（第 5 步 commit 总结标题）与**描述**全文（或告知已写入 `PR-BODY.md`，展示全文）；
-   - **创建入口链接**：`https://github.com/yaklang/yakit/compare/master...<当前分支>?expand=1`，浏览器打开后标题粘贴 `PR-BODY.md` 首行、描述粘贴其余内容；
+1. **PR 标题**（第 5 步 commit 总结标题）：单独用一个代码块展示，便于复制到创建页的 Title 输入框。
+2. **描述全文**：用代码块完整展示（包裹 markdown 源码，保证复制到的是源码而非渲染后文本），便于整体复制到创建页的 Description 输入框；描述较长也不截断。
+3. 向用户说明：
+   - **创建入口链接**：`https://github.com/yaklang/yakit/compare/master...<当前分支>?expand=1`，浏览器打开后分别粘贴上面两块内容；
    - **查重提示**：无法自动查重，提醒用户打开链接后先看页面上是否提示该分支已有 PR，已有则改在该 PR 页面编辑描述。
-3. 用户手动创建 PR 之前，**任务到此结束**——PR 创建结果、后续更新均由用户自行处理，agent 不再介入。
+   - **旧 PR 内容同步**：手动模式不执行 `gh` 命令、读不到已有 PR 的旧描述，生成的内容默认**不含**旧 PR 的改动类型勾选、关联 Issue / PR、合并方式勾选与累积的「建议合并前修复的问题」。若用户把旧 PR 描述全文（从网页复制）粘贴给 agent，则按第 7 步同样的同步规则合并生成完整描述；未提供时，提醒用户在网页编辑器中自行把上述旧内容合并进新描述。
+4. 用户手动创建 PR 之前，**任务到此结束**——PR 创建结果、后续更新均由用户自行处理，agent 不再介入。
 
 ## 边界情况
 
