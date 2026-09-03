@@ -1,6 +1,6 @@
 # AI SenSo 数字员工功能交接
 
-更新时间：2026-09-02
+更新时间：2026-09-03
 
 ## 0. 最新交接摘要（上下文切换先读）
 
@@ -18,7 +18,13 @@
 - 2026-09-02 已隐藏对话中的“ReAct 任务结束 / ReAct task finished”展示行，但事件仍由状态层正常消费；智能体选择区增加固定高度、内部滚动和长文本截断，智能体数量增加时不会挤坏页面。
 - 2026-09-02 已修复 Windows 安装包白屏：旧 `pack-win-memfit` 直接封装了开发态或陈旧渲染资源，主页面 `index.html` 使用 `/static/...` 绝对路径，在 `file://` 下无法加载。当前命令会先生产构建两套渲染端，再执行 Electron Builder。
 - AI SenSo 启动页不再挂载引擎终端日志区域，避免向客户展示 `yak` / `yaklang` 可执行文件路径和命令；引擎启动与日志落盘逻辑不变。
-- 截至本次交接更新前，GitHub 最新功能提交为 `bcb0d23 fix: rebuild Memfit renderers before Windows packaging`；关键前置提交为 `45c5866` 和 `2adac78`。
+- 2026-09-03 已将根目录、主渲染端和引擎连接页共 3 份 `yarn.lock` 纳入 Git，提交为 `ced24ef build: track Yarn lockfiles for CI`；三处均使用 `yarn install --frozen-lockfile --ignore-scripts --non-interactive` 验证通过。
+- GitHub Actions 的 `Build Memfit Render` 曾因 `../alibaba/ali-react-table-dist` 找不到而失败。根因是通用 `.gitignore` 规则 `dist/` 误忽略了项目内补丁依赖的源码目录，导致本机残留文件可构建、干净的 CI 检出却缺少文件。
+- 已在 `.gitignore` 中仅放行 `app/renderer/src/main/src/alibaba/ali-react-table-dist/dist/**`，并提交该目录 89 个文件；修复提交 `6caa4bda6 fix: include vendored ali react table files` 已推送 GitHub `main`。本地执行与 CI 相同的 `yarn build-renders-memfit` 成功，退出码 0、总耗时约 444 秒。
+- `Multi-Platform Build Develop` 只配置了 `workflow_dispatch`，推送不会自动重跑，仍需在 GitHub Actions 手动选择最新 `main` 验证完整流水线。上一次失败后面的 Electron 打包、Artifact 上传和 Windows 签名并未执行，不能把本地渲染构建成功误报为远端整条流水线已通过。
+- Windows 流水线还有一个明确风险：`sign_windows` 当前只判断平台，不判断 `inputs.sign`。即使选择 `sign=false`，Windows/MWL 仍会进入 Azure Key Vault 签名；若新 GitHub 仓库未配置 6 个 Azure 签名 Secret，该 job 必然失败。未签名测试包应将条件改为 `inputs.sign && contains(...)`，正式签名包则必须配置 Secrets。
+- 2026-09-03 已评估与 `yaklang/yakit` 最新 `master` 持续同步：双方无共同祖先，当前约为本地 38 个独立提交、上游 8878 个提交，tip 级差异约 2511 个文件，不能直接 rebase 或合并 unrelated histories。推荐一次性从上游 `master` 建新基线并选择性迁移 AI SenSo 定制，之后用周期 merge 同步；初步工作量约 23–38 人日。
+- 截至本次交接更新前，GitHub `main` 最新提交为 `6caa4bda6`；关键前置提交为 `ced24ef`、`bcb0d23`、`45c5866` 和 `2adac78`。
 - 本地开发统一在仓库根目录执行 `yarn dev`，会启动 Memfit 主渲染器 `3000`、引擎连接页 `5713` 和 Electron。
 - 2026-08-26 数字员工选择页的 6 个快捷导航已经修复，用户完成实际点击测试并确认“可以啦”。
 - 最终根因不是路由映射错误，而是 `MainOperatorContent` 挂载后执行默认标签初始化，把已打开的目标页重新覆盖成 `AI_Agent`。
@@ -213,6 +219,14 @@ deviceFingerprintHash, status, signatureVersion
 
 ## 5. 测试结果
 
+2026-09-03 GitHub Actions 依赖修复：
+
+- 已确认失败日志的唯一致命错误为 `Can't resolve '../alibaba/ali-react-table-dist'`；Node.js 20、`set-output` 和 Browserslist 均为警告，不是该次失败原因。
+- 修复前 Git 只跟踪补丁包的两个 `package.json`，`dist` 下 89 个实际运行文件全部被根目录 `dist/` 规则忽略；上游仓库本身跟踪这些文件，因此它们属于 vendored 应用源码，不是本地临时构建产物。
+- 修复后本地 `yarn build-renders-memfit` 完整通过：CRA 主渲染端 `Compiled with warnings`，Vite 引擎连接页构建完成，最终退出码为 0。保留的 CSS 顺序、大 chunk 和 Browserslist 提示不阻塞构建。
+- 修复提交已由 `git ls-remote origin refs/heads/main` 确认位于 GitHub `main`；工作区在更新本交接文档前干净。
+- 远端 `Multi-Platform Build Develop` 尚待手动运行；若 Windows 打包成功但 `sign_windows` 报缺少输入，按签名条件/Secrets 问题处理，不要回退本次 vendored 文件修复。
+
 2026-09-02 产品适配、UI 与 Windows 打包：
 
 - `marketplaceRoleFilter.test.ts` 的 `PaginationSchema` 类型错误已修复，测试请求补齐 `OrderBy: 'updated_at'` 和 `Order: 'desc'`。
@@ -310,6 +324,9 @@ yarn pack-win-memfit
 - `gitee`：`https://gitee.com/a1543733438/ai-sense.git`，仅作为旧仓库/备用远端保留。
 - 仓库迁移时没有删除 `.git`，GitHub 保留了完整提交历史。Gitee 的 `master` 当前停留在 `45c5866`，默认 `git push` 只会推送 GitHub。
 - 最近关键提交：
+  - `6caa4bda6 fix: include vendored ali react table files`
+  - `ced24ef build: track Yarn lockfiles for CI`
+  - `80e51b4 docs: refresh AI Senso handoff for GitHub migration`
   - `bcb0d23 fix: rebuild Memfit renderers before Windows packaging`
   - `45c5866 fix: refine ReAct completion and agent selector UI`
   - `2adac78 feat: complete AI SenSo product adaptation`
@@ -317,7 +334,7 @@ yarn pack-win-memfit
   - `9ca044e feat: support role-based digital employee agents`
 - 快捷导航关键提交仍为 `9b3e3b4`、`6217c82`、`35e239f`、`e4dbfac`；对应交接记录为 `7983735` 和 `807b326`。
 - 本次交接更新前 `main` 与 `origin/main` 一致且工作区干净。本文件更新后应单独提交并推送 GitHub。
-- `.gitignore` 已忽略依赖、构建产物、缓存、日志、临时文件和本地配置。不要提交 `node_modules`、`app/renderer/pages`、启动页 `dist`、`release` 或本机日志。
+- `.gitignore` 已忽略依赖、构建产物、缓存、日志、临时文件和本地配置。不要提交 `node_modules`、`app/renderer/pages`、启动页 `dist`、`release` 或本机日志；唯一例外是已明确放行并必须跟踪的 `app/renderer/src/main/src/alibaba/ali-react-table-dist/dist/**`，它是补丁依赖源码，不能再次删除或忽略。
 
 ## 8. 新窗口继续时的优先检查
 
@@ -343,6 +360,9 @@ yarn pack-win-memfit
 20. 在 1920×1080、1280×720 和窄窗口分别检查放大后的员工区、欢迎区双列/单列切换和输入框宽度；确认内容区仍可滚动且没有横向溢出。
 21. 检查标题栏、主菜单栏和标签栏只在 Memfit 下呈浅蓝主题，菜单点击、标签关闭和拖拽逻辑保持原样。
 22. 出 Windows 包只执行 `yarn pack-win-memfit`，并在交付前检查生成的 `index.html` 使用 `./static/...`、`app.asar` 同时包含两套渲染资源；不要直接运行 builder 子命令。
+23. 在 GitHub Actions 手动运行 `Multi-Platform Build Develop`，选择最新 `main`、目标平台和 `memfit`；先确认 `Build Memfit Render` 不再报 `ali-react-table-dist`，再继续观察打包和 Artifact 上传。
+24. Windows 测试包若不签名，应先让 `sign_windows` 的 job 条件同时判断 `inputs.sign`；正式签名则检查新仓库是否已配置全部 Azure Key Vault Secrets。不要把签名失败与前端构建失败混为一谈。
+25. 若启动上游同步改造，禁止在当前 `main` 上直接 rebase `yaklang/yakit/master`。应先建立独立迁移分支和新上游基线，按模块迁移 AI SenSo 定制并逐阶段回归。
 
 ## 9. 可直接交给新 AI 的指令
 
@@ -352,4 +372,4 @@ yarn pack-win-memfit
 
 AI SenSo 的原有 License Gate 已经打开：`UILayout` 将 Memfit 纳入校验，`EnterpriseJudgeLogin` 在 Memfit 下不因开发环境跳过，`CheckLicense` 成功后直接退出 Gate。新的项目类型、使用期、维保期、产品版本和 `allowedRoleIds` 权益仍未实现。当前真实阻塞是申请码在签发端出现 RSA 解密错误，必须由后端/引擎核对密钥对和协议版本；不要用前端伪授权，也不要把私钥包进客户端。后端合同确定后，再建立全局 `LicenseEntitlement` 并接入角色、智能体和更新链路。
 
-开发运行使用 `yarn dev`。Windows 交付只使用 `yarn pack-win-memfit`，它会先构建主渲染端和引擎连接页再封装；直接运行 Electron Builder 会重新引入安装后白屏。每次完成后运行类型检查和定向测试，更新交接记录，按文件精确暂存并推送 GitHub `main`。
+开发运行使用 `yarn dev`。Windows 交付只使用 `yarn pack-win-memfit`，它会先构建主渲染端和引擎连接页再封装；直接运行 Electron Builder 会重新引入安装后白屏。CI 必须保留三份 `yarn.lock` 和 vendored `ali-react-table-dist/dist` 源码。当前最新代码提交是 `6caa4bda6`，本地 `yarn build-renders-memfit` 已通过，但 GitHub 的手动工作流仍需远端复跑，并需处理 `sign_windows` 未尊重 `inputs.sign` 的问题。每次完成后运行类型检查和定向测试，更新交接记录，按文件精确暂存并推送 GitHub `main`。
