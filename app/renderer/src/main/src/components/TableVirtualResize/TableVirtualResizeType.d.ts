@@ -90,8 +90,6 @@ export interface TableVirtualResizeProps<T> {
   lineHighlight?: boolean
   // 禁用表格反选
   disableDeselect?: boolean
-  /** 禁用框选功能 */
-  enableDragSelection?: boolean
 }
 
 export interface SortProps {
