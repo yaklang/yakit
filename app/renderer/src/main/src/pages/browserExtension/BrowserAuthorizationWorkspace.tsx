@@ -234,6 +234,8 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
   defaultDeviceId,
   initialWorkspaceId,
   initialDeviceId,
+  initialTabId,
+  initialMode,
   onInitialWorkspaceLoaded,
   onAnalyzeWithAI,
   onPreparePairing,
@@ -341,6 +343,7 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
   )
   const canaryConfiguration = useMemo(() => parseAuthorizationCanaryPaths(canaryPathText), [canaryPathText])
   const initialWorkspaceLoadedRef = useRef('')
+  const initialTargetLoadedRef = useRef('')
   const focusRestoredExecutionRef = useRef(false)
   const executionResultRef = useRef<HTMLDivElement>(null)
   const activeBaselineCaptureRef = useRef<{
@@ -372,11 +375,11 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
         mode: nextMode,
         left: (current) => ({
           ...current,
-          accountLabel: nextMode === 'horizontal' ? '身份 A' : '低权限身份',
+          accountLabel: nextMode === 'horizontal' ? '资源所有者' : '低权限身份',
         }),
         right: (current) => ({
           ...current,
-          accountLabel: nextMode === 'horizontal' ? '身份 B' : '高权限身份',
+          accountLabel: nextMode === 'horizontal' ? '对照账号' : '高权限身份',
         }),
       })
     },
@@ -590,7 +593,7 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
     () =>
       devices.map((device) => ({
         value: device.id,
-        label: `${device.name} · ${shortIdentity(device.installationId)}`,
+        label: device.managedInstance?.badge ? `浏览器 ${device.managedInstance.badge}` : device.name,
       })),
     [devices],
   )
@@ -626,12 +629,12 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
           left: {
             deviceId: next.left.deviceId,
             tabId: next.left.target.tabId,
-            accountLabel: next.left.accountLabel || '身份 A',
+            accountLabel: next.left.accountLabel || (next.mode === 'vertical' ? '低权限身份' : '资源所有者'),
           },
           right: {
             deviceId: next.right.deviceId,
             tabId: next.right.target.tabId,
-            accountLabel: next.right.accountLabel || '身份 B',
+            accountLabel: next.right.accountLabel || (next.mode === 'vertical' ? '高权限身份' : '对照账号'),
           },
         })
         onInitialWorkspaceLoaded?.()
@@ -643,6 +646,57 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
       })
       .finally(() => setChecking(false))
   }, [applyWorkspaceResult, defaultDeviceId, devices, initialDeviceId, initialWorkspaceId, onInitialWorkspaceLoaded])
+
+  useEffect(() => {
+    const requestedDeviceId = initialDeviceId?.trim()
+    const requestedTabId = initialTabId
+    if (!requestedDeviceId || !requestedTabId) {
+      initialTargetLoadedRef.current = ''
+      return
+    }
+    const key = `${requestedDeviceId}:${requestedTabId}`
+    if (
+      initialWorkspaceId ||
+      initialTargetLoadedRef.current === key ||
+      !devices.some((device) => device.id === requestedDeviceId)
+    )
+      return
+
+    const requestedMode = initialMode || 'horizontal'
+    if (left.deviceId !== requestedDeviceId || mode !== requestedMode) {
+      const secondDevice = devices.find((device) => device.id !== requestedDeviceId)
+      dispatchWorkspace({
+        type: 'selection.change',
+        mode: requestedMode,
+        left: {
+          deviceId: requestedDeviceId,
+          accountLabel: requestedMode === 'vertical' ? '低权限身份' : '资源所有者',
+        },
+        right: {
+          deviceId: secondDevice?.id || requestedDeviceId,
+          accountLabel: requestedMode === 'vertical' ? '高权限身份' : '对照账号',
+        },
+      })
+      return
+    }
+    if (!leftInspection?.tabs.some((tab) => tab.id === requestedTabId)) return
+
+    initialTargetLoadedRef.current = key
+    changeIdentitySelection('left', (current) => ({ ...current, tabId: requestedTabId }))
+    onInitialWorkspaceLoaded?.()
+    success('已带入浏览器当前页面，请选择另一个在线实例作为对照账号')
+  }, [
+    changeIdentitySelection,
+    devices,
+    initialDeviceId,
+    initialMode,
+    initialTabId,
+    initialWorkspaceId,
+    left.deviceId,
+    leftInspection?.tabs,
+    mode,
+    onInitialWorkspaceLoaded,
+  ])
 
   const dynamicBaselinePaths = useMemo(() => {
     if (workspace?.mode === 'vertical') return []
@@ -1000,9 +1054,9 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
     return (
       <section className={styles['identity-lane']} data-side={side}>
         <header>
-          <span className={styles['identity-letter']}>{side === 'left' ? 'A' : 'B'}</span>
+          <span className={styles['identity-letter']}>{side === 'left' ? '1' : '2'}</span>
           <div>
-            <strong>{slot.accountLabel || (side === 'left' ? '身份 A' : '身份 B')}</strong>
+            <strong>{slot.accountLabel || (side === 'left' ? '资源所有者' : '对照账号')}</strong>
             <small>{selectedTab ? identityKind(context) : '选择一个已共享页面'}</small>
           </div>
           <span className={`${styles['level']} ${styles[context?.level || 'pending']}`}>

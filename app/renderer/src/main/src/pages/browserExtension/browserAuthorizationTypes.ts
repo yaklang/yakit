@@ -509,6 +509,9 @@ export interface BrowserAuthorizationDevice {
   id: string
   name: string
   installationId: string
+  managedInstance?: {
+    badge: string
+  }
   client: string
   clientVersion: string
   capabilities: string[]
@@ -528,6 +531,8 @@ export interface BrowserAuthorizationWorkspaceProps {
   defaultDeviceId: string
   initialWorkspaceId?: string
   initialDeviceId?: string
+  initialTabId?: number
+  initialMode?: BrowserAuthorizationMode
   onInitialWorkspaceLoaded?: () => void
   onAnalyzeWithAI: (request: BrowserAuthorizationAnalysisRequest) => void
   onPreparePairing?: () => void | Promise<void>

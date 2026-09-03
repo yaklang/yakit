@@ -64,8 +64,8 @@ export function createBrowserAuthorizationWorkspaceState(
 ): BrowserAuthorizationWorkspaceState {
   return {
     mode: 'horizontal',
-    left: { deviceId: leftDeviceId, accountLabel: '身份 A' },
-    right: { deviceId: rightDeviceId, accountLabel: '身份 B' },
+    left: { deviceId: leftDeviceId, accountLabel: '资源所有者' },
+    right: { deviceId: rightDeviceId, accountLabel: '对照账号' },
     inspections: {},
     workspaceId: '',
     checking: false,
