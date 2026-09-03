@@ -142,7 +142,7 @@ export const httpDeleteNotepadFile: APIFunc<API.DeleteOssResource, API.ActionSuc
     // console.log("method:delete|api:oss/resource\n", JSON.stringify(info))
     NetWorkApi<API.DeleteOssResource, API.ActionSucceeded>({
       method: 'delete',
-      url: 'notepad/file',
+      url: 'company/file',
       data: info,
     })
       .then(resolve)
