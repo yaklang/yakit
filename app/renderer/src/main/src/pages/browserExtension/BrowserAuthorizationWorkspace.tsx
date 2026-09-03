@@ -41,6 +41,7 @@ import type {
   BrowserFirefoxContainerIdentityResult,
   BrowserFirefoxManagedContainer,
 } from './browserAuthorizationTypes'
+import { canRefreshBrowserAuthorizationContext } from './browserAuthorizationLifecycle'
 import {
   browserAuthorizationWorkspaceReducer,
   createBrowserAuthorizationWorkspaceState,
@@ -1294,20 +1295,54 @@ export const BrowserAuthorizationWorkspace: React.FC<BrowserAuthorizationWorkspa
   const loadBaselineCandidates = async () => {
     const side = baselineCapture.side
     if (!workspace || !side || !['recording', 'selecting'].includes(baselineCapture.phase)) return
-    const identity = workspace[side === 'verification' ? 'right' : side]
     setBaselineCapture({ phase: 'loading', side, candidates: [] })
     try {
-      const candidates = await callBrowserExtensionCapability<BrowserAuthorizationBaselineCandidate[]>(
-        identity.deviceId,
-        'browser.authorization.baseline.candidates',
-        {
-          ...identity.target,
-          authContextKind: identity.contextReference.kind,
-          authContextId: identity.contextReference.id,
-          limit: 100,
-        },
-        30_000,
-      )
+      const queryCandidates = (currentWorkspace: BrowserAuthorizationWorkspaceResult) => {
+        const identity = currentWorkspace[side === 'verification' ? 'right' : side]
+        return callBrowserExtensionCapability<BrowserAuthorizationBaselineCandidate[]>(
+          identity.deviceId,
+          'browser.authorization.baseline.candidates',
+          {
+            ...identity.target,
+            authContextKind: identity.contextReference.kind,
+            authContextId: identity.contextReference.id,
+            limit: 100,
+          },
+          30_000,
+        )
+      }
+      let candidates: BrowserAuthorizationBaselineCandidate[]
+      try {
+        candidates = await queryCandidates(workspace)
+      } catch (error) {
+        const hasBaselines = Boolean(
+          workspace.baselines.left || workspace.baselines.right || workspace.baselines.verification,
+        )
+        if (!canRefreshBrowserAuthorizationContext(error, hasBaselines)) throw error
+        const refreshedWorkspace = await executeBrowserExtensionTask<BrowserAuthorizationWorkspaceResult>(
+          workspace.left.deviceId,
+          'authorization.workspace.create',
+          {
+            mode: workspace.mode,
+            left: {
+              deviceId: workspace.left.deviceId,
+              tabId: workspace.left.target.tabId,
+              frameId: workspace.left.target.frameId,
+              accountLabel: workspace.left.accountLabel,
+            },
+            right: {
+              deviceId: workspace.right.deviceId,
+              tabId: workspace.right.target.tabId,
+              frameId: workspace.right.target.frameId,
+              accountLabel: workspace.right.accountLabel,
+            },
+          },
+          60_000,
+        )
+        applyWorkspaceResult(refreshedWorkspace)
+        candidates = await queryCandidates(refreshedWorkspace)
+        info('浏览器共享会话已变化，已重新确认 A/B 登录态并继续读取请求')
+      }
       const visibleCandidates =
         side === 'verification'
           ? candidates.filter((candidate) => ['GET', 'HEAD', 'OPTIONS'].includes(candidate.method.toUpperCase()))

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   browserAuthorizationLifecycleError,
   BrowserAuthorizationWorkspaceLifecycleError,
+  canRefreshBrowserAuthorizationContext,
 } from '../browserAuthorizationLifecycle'
 
 const encode = (input: unknown) => new TextEncoder().encode(JSON.stringify(input))
@@ -32,5 +33,12 @@ describe('browser authorization workspace lifecycle', () => {
     const error = browserAuthorizationLifecycleError(encode({ reason: 'expired' }), 'fallback')
     expect(error).not.toBeInstanceOf(BrowserAuthorizationWorkspaceLifecycleError)
     expect(error.message).toBe('fallback')
+  })
+
+  it('refreshes a stale context only before evidence has been bound', () => {
+    const stale = new Error('extension call failed (auth_context_stale)')
+    expect(canRefreshBrowserAuthorizationContext(stale, false)).toBe(true)
+    expect(canRefreshBrowserAuthorizationContext(stale, true)).toBe(false)
+    expect(canRefreshBrowserAuthorizationContext(new Error('target_unavailable'), false)).toBe(false)
   })
 })
