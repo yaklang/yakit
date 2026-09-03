@@ -254,6 +254,15 @@
     "object": "对象",
     "rule": "规则",
     "codec": "编解码",
+    "log": "日志",
+    "logEmpty": "暂无处置日志",
+    "logSystem": "系统",
+    "logUpdateMark": "更新标记",
+    "logReplyComment": "回复评论",
+    "logPublishComment": "发布评论",
+    "logReply": "回复",
+    "logNone": "无",
+    "logDownload": "下载",
     "more": "更多"
   },
   "CodingPopover": {

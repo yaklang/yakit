@@ -254,6 +254,15 @@
     "object": "Object",
     "rule": "Rule",
     "codec": "Codec",
+    "log": "Log",
+    "logEmpty": "No disposal logs yet",
+    "logSystem": "System",
+    "logUpdateMark": "Updated mark",
+    "logReplyComment": "Replied to comment",
+    "logPublishComment": "Published comment",
+    "logReply": "Reply",
+    "logNone": "None",
+    "logDownload": "Download",
     "more": "More"
   },
   "CodingPopover": {
