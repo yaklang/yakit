@@ -59,9 +59,6 @@ export const refreshContextMenuShortcutCache = async (): Promise<number> => {
   return cachedEnabledShortcuts.length
 }
 
-/** 当前缓存快照（供录制比对前判断缓存是否已就绪，避免用空缓存漏报冲突） */
-export const getEnabledContextMenuShortcuts = (): CachedContextMenuShortcut[] => cachedEnabledShortcuts
-
 /** 原快捷键设置页与右键插件场景的运行时重叠（空数组表示无重叠、不比对） */
 const SHORTCUT_PAGE_CONTEXT_MENU_SCENES: Record<ShortcutKeyPageName, ContextMenuSceneType[]> = {
   // 全局快捷键到处生效，与所有右键场景都可能冲突
