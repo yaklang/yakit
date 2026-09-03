@@ -3,6 +3,12 @@
   background: var(--Colors-Use-Basic-Background);
 }
 
+.execution[data-mode='dialog'] {
+  height: 70vh;
+  overflow-y: overlay;
+  background: var(--Colors-Use-Basic-Background);
+}
+
 // 头部右侧操作区（执行/停止 + 进度条 + 刷新 + 编辑），对齐 LocalPluginExecuteDetailHeard 的布局
 .plugin-head-executing {
   display: flex;

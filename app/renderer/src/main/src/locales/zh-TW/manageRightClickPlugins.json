@@ -15,7 +15,16 @@
     "maxAddLimit": "最多新增 {{UpperLimit}} 個外掛",
     "added": "已新增",
     "searchPlaceholder": "搜尋外掛名稱、說明或 Hook",
-    "noMatchedPlugins": "沒有匹配的外掛"
+    "noMatchedPlugins": "沒有匹配的外掛",
+    "resultModeLabel": "結果展示",
+    "resultModeDialog": "彈窗",
+    "resultModeDrawer": "右側抽屜",
+    "resultModeTab": "新頁簽",
+    "shortcutLabel": "快捷鍵",
+    "setShortcutMenu": "設定快捷鍵",
+    "setResultModeMenu": "設定結果展示",
+    "pluginShortcutConflict": "右鍵外掛衝突：{{name}} - 此快捷鍵已被同場景其他外掛佔用",
+    "systemShortcutConflict": "系統快捷鍵衝突：{{name}} - 請重新設定，避免與既有快捷鍵衝突"
   },
   "ContextMenuExecutionHost": {
     "executeFailed": "右鍵外掛執行失敗: {{error}}",
@@ -40,12 +49,16 @@
     "contextMenuSaveBeforeRun": "右鍵外掛需要儲存後，從對應的 History 或 HTTP 資料包場景觸發",
     "contextMenuRunFromScene": "右鍵外掛需要從對應的 History 或 HTTP 資料包場景觸發",
     "contextMenuSaveAndTrigger": "儲存外掛後，從對應的 History 或 HTTP 資料包右鍵選單觸發執行",
+    "contextMenuSaveAndTriggerShort": "儲存後從右鍵選單觸發執行",
+    "executeFromRightClickMenu": "從右鍵選單執行",
     "contextMenuEnableAndTrigger": "儲存並在右鍵外掛管理中啟用後，從對應的 History 或 HTTP 資料包場景觸發執行"
   },
   "grpc": {
     "queryContextMenuActionsFailed": "查詢右鍵外掛失敗: {{error}}",
     "setContextMenuActionBindingFailed": "儲存右鍵外掛配置失敗: {{error}}",
-    "cancelContextMenuActionFailed": "取消右鍵外掛失敗: {{error}}"
+    "cancelContextMenuActionFailed": "取消右鍵外掛失敗: {{error}}",
+    "fetchPluginDetailFailed": "查詢本地外掛詳情失敗: {{error}}",
+    "fetchPluginDetailFailedNoUUID": "查詢外掛的UUID不能為空"
   },
   "utils": {
     "engineVersionTooLow": "引擎版本過低，請更新到高於 {{version}} 的版本"

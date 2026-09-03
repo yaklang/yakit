@@ -20,6 +20,8 @@ export interface codecHistoryPluginProps {
   /** 动作执行链路，context-menu 为新流式执行 */
   executionType?: ContextMenuAction['ExecutionType']
   action?: ContextMenuAction
+  /** 引擎 Shortcut 原始字符串 */
+  shortcut?: string
 }
 
 export interface HTTPHeaderItem {

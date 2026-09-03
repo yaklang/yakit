@@ -34,6 +34,7 @@ import {
 } from './HTTPFlowTable.actions'
 import type { HistoryMenuData, HTTPFlow } from './HTTPFlowTable.constants'
 import { hydrateHTTPFlowRequest, hydrateHTTPFlowRequests } from './HTTPFlowTable.packet'
+import { resolveHTTPFlowTableBatchSelection, HTTP_FLOW_TABLE_BATCH_MAX_ROWS } from './HTTPFlowTable.utils'
 import { isHTTPFlowFavorite } from './HTTPFlowTable.utils'
 import style from './HTTPFlowTable.module.scss'
 import { PLUGIN_PREFIX, PLUGIN_RIGHT_MAG } from '../yakitUI/YakitEditor/YakitEditor'
@@ -112,6 +113,7 @@ export interface UseHTTPFlowTableContextMenuOptions {
   onShieldDomain: (flow: HTTPFlow) => void
   onBatch: (f: (element: HTTPFlow) => void, number: number, all?: boolean, rows?: HTTPFlow[]) => void
   onViewAttachmentDataRefresh: (id: number) => void
+  onClearSelection: () => void
 }
 
 export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenuOptions) => {
@@ -155,6 +157,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onShieldDomain,
     onBatch,
     onViewAttachmentDataRefresh,
+    onClearSelection,
   } = options
 
   const menuData = useMemo(() => {
@@ -614,6 +617,13 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     }) => {
       const menuItemName = keyPath[0]
 
+      const emitGetPluginEvent = () => {
+        emiter.emit(
+          'onOpenFuzzerModal',
+          JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin', pluginType: ['codec', 'context-menu'] }),
+        )
+      }
+
       const emitPluginEvent = (child: HistoryMenuData, isExec: boolean, scriptName: string) => {
         if (!rows.length) {
           yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
@@ -664,6 +674,12 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           const tab = key.split('_')[1]
           emiter.emit('openPage', JSON.stringify({ route: YakitRoute.ManageRightClickPlugins, params: { tab } }))
         })
+        return
+      }
+
+      // ----- 点击获取插件 -----
+      if (key === 'Get*plug-in') {
+        emitGetPluginEvent()
         return
       }
 
@@ -928,6 +944,20 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       })
   })
 
+  const resolveBatchSelectionOrNotify = useMemoizedFn(() => {
+    const resolved = resolveHTTPFlowTableBatchSelection({
+      selectedRowKeys: isAllSelect ? data.map((item) => String(item.Id)) : selectedRowKeys,
+      selectedRows: isAllSelect ? data : selectedRows,
+      isAllSelect,
+      total,
+    })
+    if (!resolved.ok) {
+      yakitNotify('warning', t('HTTPFlowTable.maxSendData', { number: HTTP_FLOW_TABLE_BATCH_MAX_ROWS }))
+      return null
+    }
+    return resolved
+  })
+
   const onMultipleClick = useMemoizedFn(async (key: string, keyPath: string[]) => {
     const batchContextMenu = getBatchContextMenu()
     const menuName = keyPath[keyPath.length - 1]
@@ -937,46 +967,22 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         onPluginExtensionHandle({ key, keyPath, id: [], rows: [], menu: batchContextMenu })
         return
       }
-      let sendIds: string[] = selectedRowKeys
-      let sendRows: HTTPFlow[] = selectedRows
-      if (isAllSelect) {
-        if (total > 200) {
-          yakitNotify('warning', t('HTTPFlowTable.maxSendData', { number: 200 }))
-          return
-        }
-        sendIds = data.map((item) => item.Id + '')
-        sendRows = data
-      } else if (sendIds.length > 200) {
-        yakitNotify('warning', t('HTTPFlowTable.maxSendData', { number: 200 }))
-        return
-      }
-      onPluginExtensionHandle({ key, keyPath, id: sendIds, rows: sendRows, menu: batchContextMenu })
-      setSelectedRowKeys([])
-      setSelectedRows([])
+      const resolved = resolveBatchSelectionOrNotify()
+      if (!resolved) return
+      onPluginExtensionHandle({ key, keyPath, id: resolved.ids, rows: resolved.rows, menu: batchContextMenu })
+      onClearSelection()
       return
     }
 
     if (keyPath.includes('packetScan')) {
-      let sendIds: string[] = selectedRowKeys
-      if (isAllSelect) {
-        if (total > 200) {
-          yakitNotify('warning', t('HTTPFlowTable.maxSendData', { number: 200 }))
-          return
-        } else {
-          sendIds = data.map((item) => item.Id + '')
-        }
-      } else {
-        if (sendIds.length > 200) {
-          yakitNotify('warning', t('HTTPFlowTable.maxSendData', { number: 200 }))
-          return
-        }
-      }
+      const resolved = resolveBatchSelectionOrNotify()
+      if (!resolved) return
       const currentItemScan = menuData.find((f) => f.onClickBatch && f.key === 'packetScan')
       const currentItemPacketScan = packetScanDefaultValue.find((f) => f.Verbose === key || f.VerboseUi === key)
       if (!currentItemScan || !currentItemPacketScan) return
 
       onBatchExecPacketScan({
-        httpFlowIds: sendIds,
+        httpFlowIds: resolved.ids,
         maxLength: currentItemScan.number || 0,
         currentPacketScan: currentItemPacketScan,
       })

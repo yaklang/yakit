@@ -1,6 +1,7 @@
 import i18n from '@/i18n/i18n'
 import type { APIFunc, APIOptionalFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
+import type { YakScript } from '@/pages/invoker/schema'
 import type {
   ContextMenuAction,
   ExecuteContextMenuActionRequest,
@@ -49,6 +50,30 @@ export const grpcSetContextMenuActionBinding: APIFunc<SetContextMenuActionBindin
       .catch((e) => {
         if (!hiddenError)
           yakitNotify('error', tOriginal('grpc.setContextMenuActionBindingFailed', { error: String(e) }))
+        reject(e)
+      })
+  })
+}
+
+interface FetchLocalPluginDetailByUUIDRequest {
+  UUID: string
+}
+/** @name 通过 UUID 查询本地插件详情 */
+export const grpcFetchLocalPluginDetailByUUID: APIFunc<FetchLocalPluginDetailByUUIDRequest, YakScript> = (
+  request,
+  hiddenError,
+) => {
+  return new Promise(async (resolve, reject) => {
+    if (!request?.UUID) {
+      if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchPluginDetailFailedNoUUID'))
+      reject(tOriginal('grpc.fetchPluginDetailFailedNoUUID'))
+      return
+    }
+    ipcRenderer
+      .invoke('GetYakScriptByOnlineID', { UUID: request.UUID })
+      .then(resolve)
+      .catch((e) => {
+        if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchPluginDetailFailed', { error: String(e) }))
         reject(e)
       })
   })

@@ -143,6 +143,7 @@ export interface OpenFuzzerModal extends Omit<CodecParamsProps, 'isAiPlugin'> {
   isAiPlugin: string | boolean
   params?: YakParamProps[]
   isExec?: boolean
+  pluginType?: string[]
 }
 
 /** 将 new Date 转换为日期 */

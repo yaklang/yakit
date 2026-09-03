@@ -171,6 +171,7 @@
   },
   "ShortcutKey": {
     "editorConflict": "编辑器冲突：{{name}} - 此快捷键设置将会在编辑器中被覆盖",
+    "contextMenuPluginConflict": "右键插件冲突：{{name}} - 请重新设置，避免与右键插件快捷键冲突",
     "screenshot": "截图",
     "closeCurrentPage": "关闭当前页面",
     "addSubPage": "新增二级页面",

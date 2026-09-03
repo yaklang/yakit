@@ -1108,7 +1108,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       const pageInfo = params?.contextMenuResultPageInfo
       return pageInfo?.executionID ? (
         <Suspense fallback={<PageLoading />}>
-          <ContextMenuActionExecution pageId={params?.id || ''} mode="tab" />
+          <ContextMenuActionExecution executionID={pageInfo.executionID} mode="tab" />
         </Suspense>
       ) : (
         <div />
