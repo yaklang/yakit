@@ -170,6 +170,9 @@ export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
       case 'tool':
         c = 'lakeBlue'
         break
+      case 'browser':
+        c = 'blue'
+        break
       default:
         break
     }

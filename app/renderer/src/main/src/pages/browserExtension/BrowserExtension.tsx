@@ -93,6 +93,7 @@ interface BrowserBridgeStatus {
 interface BrowserPairingRequest {
   id: string
   installationId: string
+  managedInstance?: BrowserBridgeConnection['managedInstance']
   extensionId: string
   client: string
   clientVersion: string
@@ -939,11 +940,11 @@ const BrowserExtensionContent: React.FC<BrowserExtensionContentProps> = ({
                         <ChromeOutlined />
                       </div>
                       <div className={styles['request-identity']}>
-                        <strong>{request.client}</strong>
-                        <span>{request.extensionId}</span>
-                        <small>
-                          插件 {request.clientVersion} · {shortIdentity(request.installationId, 24)}
-                        </small>
+                        <strong>
+                          {request.managedInstance?.badge ? `浏览器 ${request.managedInstance.badge}` : '新浏览器实例'}
+                        </strong>
+                        <span>{request.managedInstance ? '由 YTray 启动' : '浏览器插件请求连接'}</span>
+                        <small>插件版本 {request.clientVersion}</small>
                       </div>
                       <div className={styles['verification-code']}>
                         <span>验证码</span>
@@ -993,7 +994,11 @@ const BrowserExtensionContent: React.FC<BrowserExtensionContentProps> = ({
                               'POST',
                               `/pairings/${request.id}/approve`,
                               {
-                                name: replacementDevice?.name || 'Chrome Browser',
+                                name:
+                                  replacementDevice?.name ||
+                                  (request.managedInstance?.badge
+                                    ? `浏览器 ${request.managedInstance.badge}`
+                                    : 'Browser Extension'),
                                 ...(replacementDevice ? { replaceDeviceId: replacementDevice.id } : {}),
                               },
                               replacementDevice ? '原浏览器身份已更新' : '浏览器配对已批准',

@@ -4,7 +4,6 @@ import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnu
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
 import type { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
 import type { HandleStartParams } from '../aiAgentChat/type'
-import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { omit } from 'lodash'
 import { randomString } from '@/utils/randomUtil'
 import { isIRify } from '@/utils/envfile'
@@ -13,6 +12,7 @@ import type { AISession } from '../type/aiChat'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { DeleteSessionsAISourceEnum, type DeleteSessionsAISourceType } from '../historyChat/utils'
 import { isYaklangScriptDeliveryPath } from '@/pages/yakRunner/utils'
+import { getResourceInfoByMention } from './mentionResources'
 
 export const getPlanTaskLevel = (task: Pick<AITaskInfoProps, 'level'>) => task.level
 
@@ -144,46 +144,6 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
   return { ...data }
 }
 
-const getResourceInfoByMention = (mention: AIMentionCommandParams): AttachedResourceInfo | null => {
-  switch (mention.mentionType) {
-    case 'file':
-    case 'folder':
-      return {
-        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
-        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
-        Value: mention.mentionName,
-      }
-    case 'forge':
-      return {
-        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AIFORGE,
-        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
-        Value: mention.mentionName,
-      }
-    case 'tool':
-      return {
-        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AITOOL,
-        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
-        Value: mention.mentionName,
-      }
-    case 'knowledgeBase':
-      if (mention.mentionId === '@所有知识库') {
-        return {
-          Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE,
-          Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_SYSTEM_FLAG,
-          Value: 'all_knowledge_base',
-        }
-      } else {
-        return {
-          Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE,
-          Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
-          Value: mention.mentionName,
-        }
-      }
-
-    default:
-      return null
-  }
-}
 /** @name 将前端的结构转化为符合定义的结构 */
 export const getAIReActRequestParams = (value: HandleStartParams) => {
   const { mentionList = [], imageList = [], httpFlowList = [], codeBlockList = [] } = value

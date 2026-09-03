@@ -3,6 +3,7 @@ import type { AIForge } from '../../type/forge'
 import { type AIMentionTabsEnum, type iconMap } from '../../defaultConstant'
 import type { AIMentionCommandParams } from '../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
+import type { AIBrowserInstance } from '../../browserInstances/browserInstanceStore'
 
 export type AIMentionTypeItem = AIMentionCommandParams['mentionType']
 export type iconMapType = keyof typeof iconMap
@@ -48,4 +49,8 @@ export interface FileSystemTreeOfMentionProps {
 
 export interface FocusModeOfMentionProps extends AIChatMention, AIChatMentionRef {
   onSelect: (v) => void
+}
+
+export interface BrowserListOfMentionProps extends AIChatMention, AIChatMentionRef {
+  onSelect: (instance: AIBrowserInstance) => void
 }

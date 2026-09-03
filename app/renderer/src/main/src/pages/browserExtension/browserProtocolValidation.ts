@@ -187,6 +187,7 @@ function normalizeConnection(value: JSONObject, schema: string, path: string): J
     [
       'deviceId',
       'installationId',
+      'managedInstance',
       'client',
       'clientVersion',
       'capabilities',
@@ -206,6 +207,20 @@ function normalizeConnection(value: JSONObject, schema: string, path: string): J
   optionalString(value, 'taskId', schema, path)
   optionalString(value, 'grantId', schema, path)
   requiredNumber(value, 'connectedAt', schema, path)
+  let managedInstance = value.managedInstance
+  if (managedInstance !== undefined && managedInstance !== null) {
+    const managed = objectValue(managedInstance, schema, `${path}.managedInstance`)
+    strictKeys(managed, ['manager', 'instanceId', 'badge'], schema, `${path}.managedInstance`)
+    const manager = requiredString(managed, 'manager', schema, `${path}.managedInstance`)
+    const instanceId = requiredString(managed, 'instanceId', schema, `${path}.managedInstance`)
+    const badge = requiredString(managed, 'badge', schema, `${path}.managedInstance`)
+    if (!['ytray', 'yakit'].includes(manager)) fail(schema, `${path}.managedInstance.manager`, 'ytray 或 yakit')
+    if (!/^[A-Za-z0-9-]{1,160}$/.test(instanceId)) {
+      fail(schema, `${path}.managedInstance.instanceId`, '安全的实例 ID')
+    }
+    if (!/^[A-Z]{1,2}$/.test(badge)) fail(schema, `${path}.managedInstance.badge`, '一至两个大写字母')
+    managedInstance = { manager, instanceId, badge }
+  }
   let capabilityCatalog = value.capabilityCatalog
   if (capabilityCatalog !== undefined && capabilityCatalog !== null) {
     const catalog = objectValue(capabilityCatalog, schema, `${path}.capabilityCatalog`)
@@ -228,7 +243,12 @@ function normalizeConnection(value: JSONObject, schema: string, path: string): J
       ),
     }
   }
-  return { ...value, capabilities: stringCollection(value, 'capabilities', schema, path), capabilityCatalog }
+  return {
+    ...value,
+    managedInstance,
+    capabilities: stringCollection(value, 'capabilities', schema, path),
+    capabilityCatalog,
+  }
 }
 
 function normalizeBridgeStatus(value: JSONObject, schema: string): JSONObject {
@@ -269,7 +289,18 @@ function normalizeBridgeStatus(value: JSONObject, schema: string): JSONObject {
 function normalizePairingRequest(value: JSONObject, schema: string): JSONObject {
   strictKeys(
     value,
-    ['id', 'installationId', 'extensionId', 'client', 'clientVersion', 'origin', 'code', 'createdAt', 'expiresAt'],
+    [
+      'id',
+      'installationId',
+      'managedInstance',
+      'extensionId',
+      'client',
+      'clientVersion',
+      'origin',
+      'code',
+      'createdAt',
+      'expiresAt',
+    ],
     schema,
     '$',
   )
@@ -278,7 +309,19 @@ function normalizePairingRequest(value: JSONObject, schema: string): JSONObject 
   }
   requiredNumber(value, 'createdAt', schema, '$')
   requiredNumber(value, 'expiresAt', schema, '$')
-  return value
+  let managedInstance = value.managedInstance
+  if (managedInstance !== undefined && managedInstance !== null) {
+    const managed = objectValue(managedInstance, schema, '$.managedInstance')
+    strictKeys(managed, ['manager', 'instanceId', 'badge'], schema, '$.managedInstance')
+    const manager = requiredString(managed, 'manager', schema, '$.managedInstance')
+    const instanceId = requiredString(managed, 'instanceId', schema, '$.managedInstance')
+    const badge = requiredString(managed, 'badge', schema, '$.managedInstance')
+    if (!['ytray', 'yakit'].includes(manager)) fail(schema, '$.managedInstance.manager', 'ytray 或 yakit')
+    if (!/^[A-Za-z0-9-]{1,160}$/.test(instanceId)) fail(schema, '$.managedInstance.instanceId', '安全的实例 ID')
+    if (!/^[A-Z]{1,2}$/.test(badge)) fail(schema, '$.managedInstance.badge', '一至两个大写字母')
+    managedInstance = { manager, instanceId, badge }
+  }
+  return { ...value, managedInstance }
 }
 
 function normalizeDevice(value: JSONObject, schema: string): JSONObject {

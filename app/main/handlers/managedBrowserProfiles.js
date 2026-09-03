@@ -10,6 +10,7 @@ const MAX_PROFILE_STORE_BYTES = 1024 * 1024
 const PROFILE_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PROFILE_NAME_CONTROL_PATTERN = /[\u0000-\u001f\u007f]/g
 const PROFILE_NAME_CONTROL_TEST_PATTERN = /[\u0000-\u001f\u007f]/
+const YAKIT_BROWSER_AGENT_EXTENSION_ID = 'mcnaombmlombekhbonfndagbcfhmoail'
 
 const IPC_CHANNELS = {
   defaults: 'GetManagedBrowserProfileDefaults',
@@ -150,6 +151,13 @@ function waitForSpawn(child) {
 }
 
 function buildManagedChromeArguments(record, userDataDir, showExtensionPage) {
+  const badge = record.slotHint === 'right' ? 'B' : 'A'
+  const bootstrap = new URL(`chrome-extension://${YAKIT_BROWSER_AGENT_EXTENSION_ID}/ytray-bootstrap.html`)
+  bootstrap.searchParams.set('manager', 'yakit')
+  bootstrap.searchParams.set('instanceId', record.id)
+  bootstrap.searchParams.set('badge', badge)
+  bootstrap.searchParams.set('target', record.startingUrl)
+  bootstrap.searchParams.set('restore', '0')
   const args = [
     `--user-data-dir=${userDataDir}`,
     '--no-first-run',
@@ -157,9 +165,9 @@ function buildManagedChromeArguments(record, userDataDir, showExtensionPage) {
     '--disable-sync',
     '--new-window',
     `--load-extension=${record.extensionPath}`,
+    bootstrap.toString(),
   ]
   if (showExtensionPage || !record.lastStartedAt) args.push('chrome://extensions/')
-  args.push(record.startingUrl)
   return args
 }
 

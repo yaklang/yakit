@@ -105,9 +105,12 @@ describe('managed Chromium profile lifecycle', () => {
       expect.arrayContaining([
         `--user-data-dir=${launched.userDataDir}`,
         `--load-extension=${fs.realpathSync(extensionPath)}`,
+        expect.stringContaining('ytray-bootstrap.html?manager=yakit'),
         'chrome://extensions/',
-        'https://example.test/account/42',
       ]),
+    )
+    expect(harness.calls[0].args.find((arg) => arg.includes('ytray-bootstrap.html'))).toContain(
+      'target=https%3A%2F%2Fexample.test%2Faccount%2F42',
     )
 
     await manager.stop(profile.id)
