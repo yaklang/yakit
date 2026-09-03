@@ -36,7 +36,7 @@ export const AIManualIntervention: React.FC<AIManualInterventionProps> = memo((p
     <ChatCard
       titleText={
         <div className={styles['title-wrapper']}>
-          <span className={styles['title']}>{t('AIReActTaskChatContent.humanIntervention')}</span>
+          <span className={styles['title']}>{t('AIReActTaskChatContent.adjustDirection')}</span>
           <span className={styles['time']}>{formatTimestamp(timestamp)}</span>
         </div>
       }

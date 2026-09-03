@@ -22,7 +22,7 @@ import {
 } from './type'
 import { Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ArrowUpOutlined, CogOutlined, HandOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ArrowUpOutlined, CogOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
@@ -48,13 +48,11 @@ import { AIReasoningEffortSelect } from '@/pages/ai-re-act/aiReasoningEffortSele
 import { isString } from 'lodash'
 import OpenFileDropdown, { type OpenFileDropdownItem } from '../aiChatWelcome/OpenFileDropdown/OpenFileDropdown'
 import { UploadFileButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
-import { AIInputSettingPopover, AIManualAdditionPopover } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
+import { AIInputSettingPopover } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
-import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import { useStore } from 'zustand'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -94,11 +92,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       onHttpFlowRemove,
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-
-    const store = useCurrentStore()
-    const execute = useStore(store, (state) => state.execute)
-
-    const [manualAdditionVisible, setManualAdditionVisible] = useState<boolean>(false)
 
     const [inputSettingVisible, setInputSettingVisible] = useState<boolean>(false)
 
@@ -402,25 +395,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                     isHover={inputSettingVisible}
                   />
                 </AIInputSettingPopover>
-                {execute && (
-                  <AIManualAdditionPopover
-                    chatType="reAct"
-                    visible={manualAdditionVisible}
-                    setVisible={setManualAdditionVisible}
-                  >
-                    <YakitButton
-                      type="outline2"
-                      radius="28px"
-                      isHover={manualAdditionVisible}
-                      icon={<HandOutlined color="currentColor" />}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                      }}
-                    >
-                      {t('AIReActTaskChatContent.humanIntervention')}
-                    </YakitButton>
-                  </AIManualAdditionPopover>
-                )}
               </div>
             )}
 

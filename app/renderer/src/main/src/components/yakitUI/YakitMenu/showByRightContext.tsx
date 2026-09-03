@@ -1,5 +1,6 @@
 import ReactDOM from 'react-dom'
 import React, { memo, type ReactNode, useEffect, useRef } from 'react'
+import classNames from 'classnames'
 import { coordinate } from '@/pages/globalVariable'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitMenu, type YakitMenuProp } from './YakitMenu'
@@ -138,9 +139,18 @@ const RightContext: React.FC<RightContextProp> = memo((props) => {
     }
   }, [wrapperRef])
 
+  const menuProps = data as YakitMenuProp
+
   return (
     <div className={styles['show-by-right-context-wrapper']} ref={wrapperRef}>
-      {React.isValidElement(data) ? data : <YakitMenu {...(data as YakitMenuProp)} />}
+      {React.isValidElement(data) ? (
+        data
+      ) : (
+        <YakitMenu
+          {...menuProps}
+          popupClassName={classNames(styles['show-by-right-context-submenu'], menuProps.popupClassName)}
+        />
+      )}
     </div>
   )
 })

@@ -20,6 +20,7 @@ import {
   isForcedSetAIModal,
   isFreeEnd,
   isMemfitStart,
+  sortMemfitNameFirst,
 } from '../utils'
 import { normalizeReasoningEffort } from '../aiModelForm/reasoningEffort'
 import styles from './AIModelSelect.module.scss'
@@ -569,7 +570,8 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
       }
       grpcListAiModel({ Config: JSON.stringify(params) })
         .then(({ ModelName }) => {
-          modelNames = ModelName
+          // memfit- 开头的模型名称前置展示（与模型编辑表单的名称下拉共用排序逻辑）
+          modelNames = sortMemfitNameFirst(ModelName || [])
         })
         .finally(() => {
           setTimeout(() => {

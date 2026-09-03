@@ -4,6 +4,9 @@ import { AIInputEventSyncTypeEnum, AITaskStatus } from '../grpcApi'
 import { DefaultCurrentExecTaskTree, DefaultTaskPlanEndGate } from '../defaultConstant'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 import { AIChatQSDataTypeEnum } from '../aiRender'
+import i18n from '@/i18n/i18n'
+
+const tAgent = i18n.getFixedT(null, 'aiAgent')
 
 vi.mock('../persist/contentPersistHelper', () => ({
   persistIndependentItem: vi.fn(),
@@ -180,7 +183,8 @@ describe('aiOther task plan gate', () => {
       coordinatorId: '',
       status: AITaskStatus.inProgress,
     })
-    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('问题执行中...')
+    // i18n stub 的 t 直接返回 key 本身；与实现使用同一翻译源断言
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe(tAgent('AIChatLoading.questionExecuting'))
     expect(req.store.getState().focusMode).toBe('focus-a')
     expect(req.store.getState().currentPlan).toEqual(DefaultCurrentExecTaskTree)
     expect(req.store.getState().chatTodoListUpdate).toBe(1)

@@ -1,16 +1,17 @@
 import type { ReactNode } from 'react'
 import type { AIAgentSetting } from './aiAgentType'
 import {
-  ChipOutlined,
-  CogOutlined,
-  MCPOutlined,
+  AIOutlined,
   BookOpenTextOutlined,
   BotOutlined,
+  CalendarOutlined,
+  ChipOutlined,
+  CogOutlined,
   DocumentTextOutlined,
-  FolderOpenOutlined,
-  PointerOutlined,
   EarOffOutlined,
-  AIOutlined,
+  FolderOpenOutlined,
+  MCPOutlined,
+  PointerOutlined,
   Wrench1Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
@@ -55,6 +56,7 @@ export enum AIAgentTabListEnum {
   AI_Model = 'AIModel',
   MCP = 'mcp',
   KnowledgeBase = 'knowledgeBase',
+  Scheduled = 'scheduled',
 }
 export const AiAgentTabList: YakitTabsProps[] = [
   {
@@ -63,6 +65,11 @@ export const AiAgentTabList: YakitTabsProps[] = [
     icon: <ColorsChatIcon className="ai-agent-session-tab-icon" />,
   },
   { value: AIAgentTabListEnum.Setting, label: 'AIAgentTabs.config', icon: <CogOutlined color="currentColor" /> },
+  {
+    value: AIAgentTabListEnum.Scheduled,
+    label: 'AIAgentTabs.scheduled',
+    icon: <CalendarOutlined color="currentColor" />,
+  },
   // {value: AIAgentTabListEnum.Forge_Name, label: "AIAgentTabs.skill", icon: <OutlineTemplateIcon />},
   // {value: AIAgentTabListEnum.Tool, label: "AIAgentTabs.tool", icon: <OutlineWrenchIcon />},
   { value: AIAgentTabListEnum.AI_Model, label: 'AiAgengt.aiModel', icon: <ChipOutlined color="currentColor" /> },

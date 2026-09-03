@@ -59,8 +59,17 @@ describe('buildReasoningEffortOptions', () => {
 
   it('基础档位 label 经由 t 翻译', () => {
     const options = buildReasoningEffortOptions(t)
-    expect(options[0].label).toBe('ConfigNetworkPage.effortNoSet')
+    expect(options[0].label).toBe('ConfigNetworkPage.effortDefault')
     expect(options[1].label).toBe('ConfigNetworkPage.effortOff')
+    expect(options[2].label).toBe('ConfigNetworkPage.effortLow')
+    expect(options[3].label).toBe('ConfigNetworkPage.effortMedium')
+    expect(options[4].label).toBe('ConfigNetworkPage.effortHigh')
+  })
+
+  it('扩展档位 label 经由 t 翻译', () => {
+    const options = buildReasoningEffortOptions(t, ['xhigh', 'max'])
+    expect(options[5].label).toBe('ConfigNetworkPage.effortXhigh')
+    expect(options[6].label).toBe('ConfigNetworkPage.effortMax')
   })
 })
 

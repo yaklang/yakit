@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createChatStore } from '../chatStore'
-import { DefaultAgentChatStatus, DefaultAgentLoadingTitle, DefaultCurrentExecTaskTree } from '../defaultConstant'
+import { DefaultAgentChatStatus, DefaultCurrentExecTaskTree, getDefaultAgentLoadingTitle } from '../defaultConstant'
 import { AITaskStatus } from '../grpcApi'
 
 describe('chatStore basics', () => {
@@ -8,7 +8,7 @@ describe('chatStore basics', () => {
     const store = createChatStore()
     expect(store.getState().execute).toBe(false)
     expect(store.getState().currentChatStatus).toEqual(DefaultAgentChatStatus)
-    expect(store.getState().currentLoadingTitle).toEqual(DefaultAgentLoadingTitle)
+    expect(store.getState().currentLoadingTitle).toEqual(getDefaultAgentLoadingTitle())
     expect(store.getState().currentReviewDetail).toEqual({ token: '', renderNum: 0 })
     expect(store.getState().skipSubtaskTaskIDs).toEqual([])
     expect(store.getState().showPlanList).toBe(false)

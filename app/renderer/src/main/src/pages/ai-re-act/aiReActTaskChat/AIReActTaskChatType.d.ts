@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import type { ChatListRenderType } from '../hooks/aiRender'
 
 export interface AIReActTaskChatProps {
   setShowFreeChat: (show: boolean) => void
@@ -24,16 +23,4 @@ export interface AIInputSettingFormProps {
   AIPresetPrompt: string
   /** 规划提示词 */
   AIPlanPrompt: string
-}
-
-export interface AIManualAdditionPopoverProps {
-  children?: ReactNode
-  visible?: boolean
-  setVisible?: (v: boolean) => void
-  chatType: AIManualAdditionProps['chatType']
-}
-
-export interface AIManualAdditionProps {
-  chatType: ChatListRenderType
-  onCancel: () => void
 }

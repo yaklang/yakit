@@ -13,6 +13,9 @@ import {
 } from '../persist/contentPersistHelper'
 import { ensureToolResultOnUI } from './aiToolResult'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
+import i18n from '@/i18n/i18n'
+
+const tAgent = i18n.getFixedT(null, 'aiAgent')
 
 const handleHttpFuzzRequestChange: AIMessageHandler = (request) => {
   const { res, store, rawData } = request
@@ -204,7 +207,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
         coordinatorId: '',
         status: AITaskStatus.inProgress,
       },
-      currentLoadingTitle: { casualTitle: '问题执行中...', planTitle: '' },
+      currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.questionExecuting'), planTitle: '' },
       focusMode: data.focus_mode ? data.focus_mode : '',
     })
     // 重置当前任务树详情
@@ -223,7 +226,14 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
     AIService: '',
     AIModelName: '',
     // showQS为了UI渲染方便，重新构建的字段
-    extraValue: { showQS: data.react_task_input || '' },
+    extraValue: {
+      showQS: data.react_task_input || '',
+      inputSource: data.react_task_input_source || '',
+      scheduleUUID: data.react_task_schedule_uuid || '',
+      scheduleName: data.react_task_schedule_name || '',
+      scheduledAt: data.react_task_scheduled_at || '',
+      scheduleTrigger: data.react_task_schedule_trigger || '',
+    },
   }
   rawData.contents.set(chatData.id, chatData)
 
@@ -318,7 +328,24 @@ const handleQueueInfo: AIMessageHandler = (request) => {
   if (chatType === 'task') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
-  const { tasks, total_tasks } = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueues
+  const { tasks = [], total_tasks, current_task } = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueues
+  const currentChat = store.getState().currentChatStatus
+  const focusMode = store.getState().focusMode
+  if (current_task?.id) {
+    const canHydrateCurrentTask = !currentChat.questionID || currentChat.questionID === current_task.id
+    if (canHydrateCurrentTask) {
+      store.getState().updateState({
+        currentChatStatus: {
+          questionID: current_task.id,
+          coordinatorId: currentChat.coordinatorId || '',
+          status: currentChat.status || AITaskStatus.inProgress,
+        },
+        currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.questionExecuting'), planTitle: '' },
+        focusMode: current_task.focus_mode || focusMode || '',
+      })
+    }
+  }
+
   // 记录最新问题队列的数量，4次为空，则关闭轮询器
   if (tasks.length === 0) meta.queuePollingEmptyCount += 1
   else meta.queuePollingEmptyCount = 0

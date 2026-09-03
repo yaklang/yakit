@@ -113,6 +113,7 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
         keyboard={false}
         height={showHeight}
         open={visible}
+        forceRender
         rootClassName={classNames(styles['plugin-debug-drawer'])}
       >
         {visible && (
