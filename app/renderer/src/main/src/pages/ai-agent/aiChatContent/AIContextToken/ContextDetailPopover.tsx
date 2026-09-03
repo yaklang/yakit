@@ -80,6 +80,9 @@ const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ buttonProps
       classNames={{ root: styles['echarts-details-popover'] }}
       open={visible}
       onOpenChange={setVisible}
+      arrow={false}
+      align={{ offset: [0, 0] }}
+      forceRender
     >
       <Tooltip title={t('YakitButton.viewDetail')}>
         <YakitButton isHover={visible} icon={<OutlinePresentationchartlineIcon />} type="text2" {...buttonProps} />

@@ -675,6 +675,24 @@
   }
 }
 
+// antd5 Popover inner 自带 padding，拆到 title/content 以免和下游代理标题叠在一起
+.proxy-configuration-popover {
+  :global {
+    .ant-popover-inner {
+      padding: 0;
+    }
+
+    .ant-popover-title {
+      margin-bottom: 0;
+      padding: 8px 16px;
+    }
+
+    .ant-popover-inner-content {
+      padding: 8px 16px;
+    }
+  }
+}
+
 .proxy_configuration_top {
   text-align: center;
   height: 33px;

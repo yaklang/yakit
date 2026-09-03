@@ -19,6 +19,10 @@
   }
 }
 
+.ant-tree .ant-tree-switcher:before {
+  visibility: hidden;
+}
+
 .ant-tree .ant-tree-node-content-wrapper,
 .ant-select-tree .ant-select-tree-node-content-wrapper {
   padding-inline-start: 0;
@@ -27,6 +31,11 @@
 .ant-tree .ant-tree-checkbox,
 .ant-select-tree .ant-select-tree-checkbox {
   margin-inline-end: 8px;
+}
+
+.ant-tree .ant-tree-checkbox + span,
+.ant-select-tree .ant-select-tree-checkbox + span {
+  padding-inline-start: 0;
 }
 
 .ant-tree .ant-tree-node-content-wrapper:hover,
