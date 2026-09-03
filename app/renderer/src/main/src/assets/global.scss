@@ -62,3 +62,8 @@ $colors: (
     fontWeight: normal,
   ),
 );
+
+// 保持迁移后的图标颜色不依赖 @ant-design/icons 的运行时样式注入
+.yakit-icon {
+  color: inherit;
+}
