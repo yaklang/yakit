@@ -203,7 +203,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
     next.splice(insertPos, 0, action)
     // 已选列表项均为启用态：归一 Enabled 与 Sort，只保存「新插入项 + Sort 变化的既有项」
     const normalized = next.map((item, index) => ({ ...item, Enabled: true, Sort: index }))
-    const changed = normalized.filter((_, index) => next[index] === action || next[index].Sort !== index)
+    const changed = normalized.filter((_, index) => next[index] === action || next[index].Sort != index)
     bindingSavingRef.current = true
     try {
       updateActionsByTab((prev) => ({ ...prev, [tabKey]: normalized }))
@@ -290,20 +290,10 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
     if (removable.length === 0) return
     bindingSavingRef.current = true
     try {
-      const results = await Promise.all(removable.map((action) => requestBinding(toUnboundAction(action))))
-      emiter.emit('refreshContextMenuActions')
-      const failed = removable.filter((_, index) => !results[index])
-      updateActionsByTab((prev) => ({
-        ...prev,
-        [tabKey]: [...currentList.filter((action) => action.Locked || action.IsCorePlugin), ...failed],
-      }))
-      const removedKeys = new Set(
-        removable.filter((_, index) => results[index]).map((a) => `${a.PluginUUID}:${a.ActionID}`),
-      )
-      setAvailableActions((prev) =>
-        prev.map((i) => (removedKeys.has(`${i.PluginUUID}:${i.ActionID}`) ? toUnboundAction(i) : i)),
-      )
+      await Promise.allSettled(removable.map((action) => requestBinding(toUnboundAction(action))))
     } finally {
+      await refreshSelectedPlugins()
+      emiter.emit('refreshContextMenuActions')
       bindingSavingRef.current = false
     }
   })
@@ -322,7 +312,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
       const reordered = reorder(currentList, result.source.index, result.destination.index)
       // 已选列表项均为启用态：归一 Enabled 与 Sort
       const next = reordered.map((item, index) => ({ ...item, Enabled: true, Sort: index }))
-      const changed = next.filter((_, index) => reordered[index].Sort !== index)
+      const changed = next.filter((_, index) => reordered[index].Sort != index)
       bindingSavingRef.current = true
       try {
         updateActionsByTab((prev) => ({ ...prev, [tabKey]: next }))

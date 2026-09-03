@@ -27,7 +27,7 @@ import { HTTP_FLOW_TABLE_BATCH_MAX_ROWS, resolveHTTPFlowTableBatchSelection } fr
 const isMonacoFocused = (focus?: string[] | null) =>
   (focus || []).some((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
 
-/** 焦点在输入框/文本域/富文本等可编辑元素时，不拦截插件快捷键 */
+/** 焦点在输入框/文本域/富文本等可编辑元素时 */
 const isEditableTarget = (target: EventTarget | null) => {
   if (!target) return false
   const el = target as HTMLElement
@@ -94,7 +94,7 @@ export const useHTTPFlowTableShortcutKeys = (options: UseHTTPFlowTableShortcutKe
   }
 
   const runPluginByShortcut = useMemoizedFn((plugin: codecHistoryPluginProps, rows: HTTPFlow[]) => {
-    const ids = rows.map((item) => item.Id)
+    const ids = rows.map((item) => Number(item.Id))
     if (plugin.executionType === ContextMenuExecutionType.ContextMenu && plugin.action) {
       const httpsValues = new Set(rows.map((item) => !!item.IsHTTPS))
       let httpsState: ContextMenuHttpsState = 'unknown'
@@ -108,7 +108,7 @@ export const useHTTPFlowTableShortcutKeys = (options: UseHTTPFlowTableShortcutKe
           Source: pageType || 'History',
           Trigger: 'shortcut',
           HttpsState: httpsState,
-          HTTPFlowIDs: ids.map((item) => Number(item)),
+          HTTPFlowIDs: ids,
           HasRequest: false,
           HasResponse: false,
           PacketRevision: '',
