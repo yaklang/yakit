@@ -27,7 +27,7 @@
   .left-panel {
     margin-right: -2px;
     height: 100%;
-    display: flex;
+    display: none;
     flex-direction: column;
     background-color: var(--Colors-Use-Neutral-Bg);
     border-right: 1px solid var(--Colors-Use-Neutral-Border);

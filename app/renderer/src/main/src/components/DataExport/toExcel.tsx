@@ -84,13 +84,14 @@ export async function export_json_to_excel({
 }: ExcelJsonProps) {
   // 调用方多为 fire-and-forget；import / 写文件失败须在函数内消化，避免 unhandled rejection
   try {
-    const [{ default: XLSX }, { default: XLSXStyle }, { saveAs }, { default: moment }] = await Promise.all([
+    // xlsx 0.18 ESM 只有 named export（无 default）
+    const [xlsxMod, { default: XLSXStyle }, { saveAs }, { default: moment }] = await Promise.all([
       import('xlsx'),
       import('xlsx-js-style'),
       import('file-saver'),
       import('moment'),
     ])
-
+    const XLSX = xlsxMod.default ?? xlsxMod
     /* original data */
     filename = filename || 'excel-list'
     data = [...data]
