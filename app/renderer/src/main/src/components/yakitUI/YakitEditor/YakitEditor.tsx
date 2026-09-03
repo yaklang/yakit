@@ -453,7 +453,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
 
     keyToOnRunRef.current = { ...keyToRun }
-  }, [contextMenu, customHTTPMutatePlugin, contextMenuPlugin, extraMenuListsObj, baseMenuListsObj])
+  }, [contextMenu, customHTTPMutatePlugin, contextMenuPlugin, extraMenuListsObj, baseMenuListsObj, isGetPlugin])
 
   /** 数据包内容版本（FNV-1a hash），插件执行回来后校验内容是否变化 */
   const packetRevision = (request: string | undefined, response: string | undefined) => {
