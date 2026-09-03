@@ -105,6 +105,11 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
     activeResultRef.current = undefined
     active?.destroy()
   })
+  useEffect(() => {
+    return () => {
+      closeActiveResult()
+    }
+  }, [closeActiveResult])
 
   /**
    * 启动执行：注册到 executionRegistry 拿 executionID，按结果展示方式分发载体

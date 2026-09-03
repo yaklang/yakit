@@ -38,6 +38,7 @@ const isEditableTarget = (target: EventTarget | null) => {
 export interface UseHTTPFlowTableShortcutKeysOptions {
   inViewport: boolean
   getSelected: () => HTTPFlow | undefined
+  getData: () => HTTPFlow[]
   getSelectedRows: () => HTTPFlow[]
   getSelectedRowKeys: () => (string | number)[]
   getIsAllSelect: () => boolean
@@ -66,6 +67,7 @@ export const useHTTPFlowTableShortcutKeys = (options: UseHTTPFlowTableShortcutKe
   const {
     inViewport,
     getSelected,
+    getData,
     getSelectedRows,
     getSelectedRowKeys,
     getIsAllSelect,
@@ -147,9 +149,10 @@ export const useHTTPFlowTableShortcutKeys = (options: UseHTTPFlowTableShortcutKe
 
     let rows: HTTPFlow[] = []
     if (isMultiple) {
+      const data = getData()
       const resolved = resolveHTTPFlowTableBatchSelection({
-        selectedRowKeys: selectedKeys.map(String),
-        selectedRows: getSelectedRows(),
+        selectedRowKeys: isAllSelect ? data.map((item) => String(item.Id)) : selectedKeys.map(String),
+        selectedRows: isAllSelect ? data : getSelectedRows(),
         isAllSelect,
         total: getTotal(),
       })
@@ -162,7 +165,10 @@ export const useHTTPFlowTableShortcutKeys = (options: UseHTTPFlowTableShortcutKe
       const selected = getSelected()
       if (selected) rows = [selected]
     }
-    if (!rows.length) return
+    if (!rows.length) {
+      yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
+      return
+    }
     runPluginByShortcut(hit, rows)
     if (isAllSelect || isMultiple) onClearSelection()
   })

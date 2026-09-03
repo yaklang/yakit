@@ -2533,6 +2533,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   useHTTPFlowTableShortcutKeys({
     inViewport,
     getSelected,
+    getData: () => data,
     getSelectedRows: () => selectedRows,
     getSelectedRowKeys: () => selectedRowKeys,
     getIsAllSelect: () => isAllSelect,

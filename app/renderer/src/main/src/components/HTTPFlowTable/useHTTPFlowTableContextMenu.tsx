@@ -946,8 +946,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
 
   const resolveBatchSelectionOrNotify = useMemoizedFn(() => {
     const resolved = resolveHTTPFlowTableBatchSelection({
-      selectedRowKeys,
-      selectedRows,
+      selectedRowKeys: isAllSelect ? data.map((item) => String(item.Id)) : selectedRowKeys,
+      selectedRows: isAllSelect ? data : selectedRows,
       isAllSelect,
       total,
     })
