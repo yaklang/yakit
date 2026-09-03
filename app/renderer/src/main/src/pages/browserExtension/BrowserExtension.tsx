@@ -140,6 +140,7 @@ interface BrowserAuthorizationHandoff {
   event: 'authorization.workspace.open'
   workspaceId?: string
   deviceId: string
+  targetDeviceId?: string
   tabId?: number
   mode?: 'horizontal' | 'vertical'
 }
@@ -150,6 +151,7 @@ function readBrowserAuthorizationHandoff(raw?: string | null): BrowserAuthorizat
     if (
       value?.event === 'authorization.workspace.open' &&
       typeof value.deviceId === 'string' &&
+      (value.targetDeviceId === undefined || typeof value.targetDeviceId === 'string') &&
       (typeof value.workspaceId === 'string' || (Number.isSafeInteger(value.tabId) && value.tabId > 0))
     )
       return value as BrowserAuthorizationHandoff
@@ -1214,6 +1216,7 @@ const BrowserExtensionContent: React.FC<BrowserExtensionContentProps> = ({
                     defaultDeviceId={selectedDeviceID}
                     initialWorkspaceId={authorizationHandoff?.workspaceId}
                     initialDeviceId={authorizationHandoff?.deviceId}
+                    initialTargetDeviceId={authorizationHandoff?.targetDeviceId}
                     initialTabId={authorizationHandoff?.tabId}
                     initialMode={authorizationHandoff?.mode}
                     onInitialWorkspaceLoaded={() => {
