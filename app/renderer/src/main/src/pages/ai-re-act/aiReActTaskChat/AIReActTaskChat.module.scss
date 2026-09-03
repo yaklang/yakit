@@ -56,32 +56,6 @@
   }
 }
 
-// #region AIManualAddition
-.ai-manual-addition {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 300px;
-  &-heard {
-    display: flex;
-    align-items: center;
-
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 20px; /* 142.857% */
-    letter-spacing: 0.1px;
-  }
-  &-footer {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    padding-top: 4px;
-  }
-}
-// #endregion
-
 // #region AIInputSettingPopover
 .ai-input-setting-form {
   width: 320px;

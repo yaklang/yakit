@@ -145,7 +145,7 @@
     "testFailed": "測試失敗"
   },
   "AIReActTaskChatContent": {
-    "humanIntervention": "人工介入",
+    "adjustDirection": "調整方向",
     "globalDirective": "全域性指令",
     "globalDirectiveDefault": "自訂AI全域指令",
     "globalDirectivePlaceholder": "全域命令將對所有會話生效...",
@@ -559,7 +559,8 @@
     "focusModeTooltip": "複雜場景限定使用框架，限制AI思考範圍"
   },
   "AIReasoningEffort": {
-    "tooltip": "off 關閉思考；不設置則跟隨模型默認；xhigh / max 為擴展檔位，僅探測確認支援後展示"
+    "tooltip": "關閉不進行思考；默認則跟隨模型默認；極高 / 最高 為擴展檔位，僅探測確認支援後展示",
+    "probing": "探測中..."
   },
   "HistoryChat": {
     "title": "歷史會話",
@@ -619,6 +620,7 @@
   },
   "AITaskQuery": {
     "taskQueue": "任務佇列",
+    "adjustDirection": "調整方向",
     "focusMode": "場景: {{mode}}"
   },
   "ForgeName": {

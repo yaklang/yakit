@@ -89,7 +89,7 @@
 
   .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
     color: var(--Colors-Use-Main-Primary);
-    background-color: var(--Colors-Use-Main-Focus);
+    background-color: var(--Colors-Use-Main-Bg);
     font-weight: 400;
 
     &:hover {

@@ -94,6 +94,10 @@ export function getYakitAntdTheme(theme?: Parameters<typeof getAllYakitColorVars
         activeBorderColor: 'var(--Colors-Use-Main-Hover)',
         addonBg: 'var(--Colors-Use-Neutral-Bg)',
       },
+      Select: {
+        optionSelectedBg: 'var(--Colors-Use-Main-Bg)',
+        optionSelectedColor: 'var(--Colors-Use-Main-Primary)',
+      },
       Tree: {
         // 对齐 antd 4：缩进 18px，节点高度 24px（antd 5 默认 indentSize = titleHeight = 24）
         indentSize: 18,

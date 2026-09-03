@@ -145,7 +145,7 @@
     "testFailed": "Test failed"
   },
   "AIReActTaskChatContent": {
-    "humanIntervention": "Human intervention",
+    "adjustDirection": "Adjust Direction",
     "globalDirective": "Global directive",
     "globalDirectiveDefault": "Custom global AI directive",
     "globalDirectivePlaceholder": "Global directives apply to all sessions...",
@@ -559,7 +559,8 @@
     "focusModeTooltip": "Use a framework for complex scenarios and limit the AI's thinking scope"
   },
   "AIReasoningEffort": {
-    "tooltip": "off disables thinking; unset follows the model default; xhigh / max are extended tiers shown only after probe confirmation"
+    "tooltip": "Off disables thinking; default follows the model default; Very High / Maximum are extended tiers shown only after probe confirmation",
+    "probing": "Probing..."
   },
   "HistoryChat": {
     "title": "History Chat",
@@ -619,6 +620,7 @@
   },
   "AITaskQuery": {
     "taskQueue": "Task Queue",
+    "adjustDirection": "Adjust Direction",
     "focusMode": "Focus Mode: {{mode}}"
   },
   "ForgeName": {
