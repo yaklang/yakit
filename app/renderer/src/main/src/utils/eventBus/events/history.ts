@@ -8,4 +8,6 @@ export type HistoryEventProps = {
   onRefreshImportHistoryTable?: string
   onGetAdvancedSearchDataEvent: string
   onGetOtherPageAdvancedSearchDataEvent: string
+  /** History 高级设置变更框选开关 */
+  onTableDragSelectEnabledChange: string
 }

@@ -358,7 +358,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   /** ---------- 后台刷新 Start ---------- */
   const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
-  const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(true)
   const binaryDisplayEnabled = useBinaryDisplayEnabled()
   const isBackgroundRefresh = useMemo(() => {
     return backgroundRefresh && pageType !== 'MITM'
@@ -1499,11 +1498,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     getRemoteValue(RemoteHistoryGV.BackgroundRefresh)
       .then((value) => {
         setBackgroundRefresh(!!value)
-      })
-      .catch(() => {})
-    getRemoteValue(RemoteHistoryGV.DragSelectEnabled)
-      .then((value) => {
-        setDragSelectEnabled(value !== 'false')
       })
       .catch(() => {})
   }, [inViewport])
@@ -3351,17 +3345,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setAdvancedSetVisible(false)
     const {
       backgroundRefresh: newBackgroundRefresh,
-      dragSelectEnabled: newDragSelectEnabled,
       binaryDisplayEnabled: newBinaryDisplayEnabled,
       configColumnsAll,
     } = setting
     // 后台刷新
     if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
-    // 框选配置
-    if (newDragSelectEnabled !== dragSelectEnabled) {
-      setDragSelectEnabled(newDragSelectEnabled)
-      setRemoteValue(RemoteHistoryGV.DragSelectEnabled, newDragSelectEnabled ? 'true' : 'false')
-    }
     // 二进制展示配置
     if (newBinaryDisplayEnabled !== binaryDisplayEnabled) {
       binaryDisplayEnabledStore.setEnabled(newBinaryDisplayEnabled)
@@ -3413,7 +3401,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           rowSelection={tableRowSelection}
           loading={loading}
           enableDrag={true}
-          enableDragSelection={dragSelectEnabled}
           columns={columns}
           onRowContextMenu={onRowContextMenu}
           pagination={tablePagination}
@@ -3449,7 +3436,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       )}
       {advancedSetVisible && (
         <AdvancedSet
-          dragSelectEnabled={dragSelectEnabled}
           binaryDisplayEnabled={binaryDisplayEnabled}
           columnsAllStr={JSON.stringify(configColumnRef.current.filter((item) => !specialCustoms(item.dataKey)))}
           onCancel={onAdvancedSetCancel}

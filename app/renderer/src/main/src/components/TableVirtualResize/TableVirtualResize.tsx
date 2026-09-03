@@ -60,6 +60,9 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { shouldRenderVirtualTableCellForHover } from './TableVirtualResize.memo'
 import { FilterOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { getRemoteValue } from '@/utils/kv'
+import { RemoteHistoryGV } from '@/enums/history'
+import emiter from '@/utils/eventBus/eventBus'
 const { RangePicker } = YakitDatePicker
 
 /**
@@ -204,7 +207,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     onRowDoubleClick,
     lineHighlight,
     disableDeselect,
-    enableDragSelection = true,
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
   const defItemHeight = useCreation(() => {
@@ -245,6 +247,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   const dragSelectionAutoScrollRef = useRef<number>()
   const dragSelectionBoxRef = useRef<DragSelectionBox | null>(null)
   const dragSelectionOverlayRef = useRef<HTMLDivElement>(null)
+  const dragSelectEnabledRef = useRef(true)
   const dragSelectionUserSelectRef = useRef<string | null>(null)
   const skipRowClickAfterDragRef = useRef<boolean>(false)
   const tablePosition = useRef<tablePosition>({
@@ -293,6 +296,20 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   // 性能优化：Shift 多选/框选 batchActive 高亮，替代每 cell findIndex selectedRows
   const selectedRowsKeySet = useMemo(() => new Set(selectedRows.map((r) => r[renderKey])), [selectedRows, renderKey])
 
+  useEffect(() => {
+    getRemoteValue(RemoteHistoryGV.DragSelectEnabled)
+      .then((v) => {
+        dragSelectEnabledRef.current = v !== 'false'
+      })
+      .catch(() => {})
+    const onChange = (v: string) => {
+      dragSelectEnabledRef.current = v !== 'false'
+    }
+    emiter.on('onTableDragSelectEnabledChange', onChange)
+    return () => {
+      emiter.off('onTableDragSelectEnabledChange', onChange)
+    }
+  }, [])
   useEffect(() => {
     setCurrentRow(currentSelectItem)
   }, [currentSelectItem])
@@ -1041,7 +1058,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   })
 
   const onMouseDownDragSelection = useMemoizedFn((event: React.MouseEvent<HTMLDivElement>) => {
-    if (!enableDragSelection) return
+    if (!dragSelectEnabledRef.current) return
 
     // 聚焦真实滚动容器，避免焦点在包装层时滚轮边界落到外层
     const focusTarget = (containerRef.current || shortcutFocusRef.current) as HTMLElement | null

@@ -13,6 +13,7 @@ import { RemoteHistoryGV } from '@/enums/history'
 import { yakitNotify } from '@/utils/notification'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import emiter from '@/utils/eventBus/eventBus'
 import type { AdvancedSetProps, ColumnAllInfoItem } from '../HTTPFlowTable.constants'
 import style from '../HTTPFlowTable.module.scss'
 import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
@@ -20,7 +21,6 @@ import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
   const {
     showBackgroundRefresh = true,
-    dragSelectEnabled: propDragSelectEnabled = true,
     binaryDisplayEnabled: propBinaryDisplayEnabled = true,
     columnsAllStr,
     onCancel,
@@ -40,7 +40,17 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
   /** ---------- 后台刷新 End ---------- */
 
   /** ---------- 框选配置 Start ---------- */
-  const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(propDragSelectEnabled)
+  const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(true)
+  const oldDragSelectEnabled = useRef<boolean>(true)
+  useEffect(() => {
+    getRemoteValue(RemoteHistoryGV.DragSelectEnabled)
+      .then((e) => {
+        const enabled = e !== 'false'
+        oldDragSelectEnabled.current = enabled
+        setDragSelectEnabled(enabled)
+      })
+      .catch(() => {})
+  }, [])
   /** ---------- 框选配置 End ---------- */
 
   /** ---------- 二进制展示配置 Start ---------- */
@@ -81,7 +91,11 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
     if (oldBackgroundRefresh.current !== backgroundRefresh) {
       setRemoteValue(RemoteHistoryGV.BackgroundRefresh, backgroundRefresh ? 'true' : '')
     }
-    onSave({ backgroundRefresh, dragSelectEnabled, binaryDisplayEnabled, configColumnsAll: curColumnsAll })
+    if (oldDragSelectEnabled.current !== dragSelectEnabled) {
+      setRemoteValue(RemoteHistoryGV.DragSelectEnabled, dragSelectEnabled ? 'true' : 'false')
+      emiter.emit('onTableDragSelectEnabledChange', dragSelectEnabled ? 'true' : 'false')
+    }
+    onSave({ backgroundRefresh, binaryDisplayEnabled, configColumnsAll: curColumnsAll })
   })
 
   // 判断是否有修改
@@ -91,7 +105,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
       let isModify: boolean = false
       if (
         oldBackgroundRefresh.current !== backgroundRefresh ||
-        propDragSelectEnabled !== dragSelectEnabled ||
+        oldDragSelectEnabled.current !== dragSelectEnabled ||
         propBinaryDisplayEnabled !== binaryDisplayEnabled ||
         columnsAllStr !== JSON.stringify(curColumnsAll)
       ) {
