@@ -241,6 +241,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     UseDefaultAIConfig: AIAgentSettingDefault.UseDefaultAIConfig,
                     EnableAISearchTool: AIAgentSettingDefault.EnableAISearchTool,
                     DisableToolUse: AIAgentSettingDefault.DisableToolUse,
+                    DisableMemoryTriage: AIAgentSettingDefault.DisableMemoryTriage,
                     AICallAutoRetry: AIAgentSettingDefault.AICallAutoRetry,
                     AITransactionRetry: AIAgentSettingDefault.AITransactionRetry,
                   }
@@ -272,6 +273,24 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 </>
               }
               name="DisableToolUse"
+              valuePropName="checked"
+            >
+              <YakitSwitch />
+            </Form.Item>
+
+            <Form.Item
+              label={
+                <>
+                  禁用智能记忆处理
+                  <Tooltip
+                    classNames={{ root: styles['form-info-icon-tooltip'] }}
+                    title={'开启后不创建 AIMemory 实例，跳过 embedding/DB/AI 调用，适用于轻量级或无状态会话'}
+                  >
+                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                  </Tooltip>
+                </>
+              }
+              name="DisableMemoryTriage"
               valuePropName="checked"
             >
               <YakitSwitch />

@@ -2320,6 +2320,10 @@ message AIStartParams {
 
   // 执行策略集合。用于承载 multi-agent / goal mode 等顶层运行策略。
   AIExecutionStrategy Strategy = 48;
+
+  // 为 true 时禁用 Memory Triage（智能记忆处理），不创建 AIMemory 实例，
+  // 跳过 embedding/DB/AI 调用。适用于轻量级或无状态会话。
+  bool DisableMemoryTriage = 49;
 }
 
 message AIExecutionStrategy {

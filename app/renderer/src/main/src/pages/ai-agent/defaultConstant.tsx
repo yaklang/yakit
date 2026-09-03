@@ -122,6 +122,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     GoalMinIterations: 0,
     MaxSubAgents: 0,
   },
+  DisableMemoryTriage: false,
   Source: AISourceEnum.aiAgent,
 }
 

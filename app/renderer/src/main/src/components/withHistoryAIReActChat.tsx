@@ -447,6 +447,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       TimelineSessionID: createActiveChatSessionId(),
       SyncPerceptionTrigger: false,
       EnablePlan: false,
+      DisableMemoryTriage: AIAgentSettingDefault.DisableMemoryTriage,
       Strategy: {
         EnableMultiAgent: false,
         EnableGoalMode: false,
