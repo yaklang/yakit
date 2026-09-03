@@ -19,7 +19,7 @@ import useAIAgentStore from '../../useContext/useStore'
 import type { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { AIChatTextareaSubmit } from '../../template/type'
 import { getAIReActRequestParams } from '../../utils'
-import { extractDataWithMilkdown } from '../aiMilkdownInput/utils'
+import { extractDataWithMilkdown, unescapeUnderscoreInPath } from '../aiMilkdownInput/utils'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -178,7 +178,9 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
   })
   const getMarkdownValue = useMemoizedFn(() => {
     const value = editorMilkdown.current?.action(getMarkdown()) || ''
-    return value.replace(/\n+$/, '')
+    // remark-stringify 会将下划线 _ 转义为 \_（强调字符），
+    // 导致路径等含下划线的纯文本被破坏，此处仅对路径上下文反转义还原
+    return unescapeUnderscoreInPath(value.replace(/\n+$/, ''))
   })
   const handleTextareaKeyDown = useMemoizedFn((e) => {
     const keys = convertKeyEventToKeyCombination(e)
