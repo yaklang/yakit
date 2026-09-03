@@ -34,6 +34,7 @@ i18n
       'aiAgent',
       'projectManage',
       'irifyHome',
+      'apiUtils',
     ] satisfies I18nNamespace[], // 这几个需要预加载
     load: 'currentOnly',
     defaultNS: '',
