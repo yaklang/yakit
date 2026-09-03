@@ -488,19 +488,6 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-
-  .setting-menu-shortcut-keys {
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    font-size: 12px;
-    white-space: nowrap;
-  }
-}
-
-:global(.ant-dropdown-menu-item-active),
-:global(.ant-dropdown-menu-item-selected) {
-  .setting-menu-shortcut-item .setting-menu-shortcut-keys {
-    color: var(--Colors-Use-Main-On-Primary);
-  }
 }
 
 .setting-menu-result-item {
@@ -531,8 +518,7 @@
     }
 
     // 小屏空间不足时隐藏插件快捷键展示
-    .selected-item-name-shortcut,
-    .setting-menu-shortcut-keys {
+    .selected-item-name-shortcut {
       display: none;
     }
   }

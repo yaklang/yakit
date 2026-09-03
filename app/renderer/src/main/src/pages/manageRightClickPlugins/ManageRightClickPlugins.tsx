@@ -675,7 +675,6 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
           label: (
             <div className={styles['setting-menu-shortcut-item']}>
               <span>{t('ManageRightClickPlugins.setShortcutMenu')}</span>
-              <span className={styles['setting-menu-shortcut-keys']}>{shortcutUI}</span>
             </div>
           ),
         },
@@ -688,7 +687,6 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
         label: (
           <div className={styles['setting-menu-shortcut-item']}>
             <span>{t('ManageRightClickPlugins.setShortcutMenu')}</span>
-            <span className={styles['setting-menu-shortcut-keys']}>{shortcutUI}</span>
           </div>
         ),
       },
@@ -698,7 +696,7 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
         children: resultChildren,
       },
     ]
-  }, [shortcutUI, resultMode, isLegacyCodec, i18nRefresh])
+  }, [resultMode, isLegacyCodec, i18nRefresh])
 
   const onSettingMenuClick = useMemoizedFn(({ key }: { key: string }) => {
     if (key === 'shortcut') {
