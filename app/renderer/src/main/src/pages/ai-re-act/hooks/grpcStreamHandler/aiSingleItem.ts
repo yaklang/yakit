@@ -2,7 +2,12 @@ import type { AIMessageHandler } from '../type'
 import { AIInputEventSyncTypeEnum, AITaskStatus, type AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, generateTaskNodeDataID } from '../utils'
-import { type AIChatQSData, AIChatQSDataTypeEnum, type ReportFinishCardData } from '../aiRender'
+import {
+  type AIChatQSData,
+  AIChatQSDataTypeEnum,
+  type BrowserHandoffCardData,
+  type ReportFinishCardData,
+} from '../aiRender'
 import { convertNodeIdToVerbose } from '../defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import { persistIndependentItem } from '../persist/contentPersistHelper'
@@ -322,6 +327,76 @@ const handleReportFinish: AIMessageHandler = (requestInfo) => {
   })
 }
 
+const handleBrowserHandoff: AIMessageHandler = (requestInfo) => {
+  const { res, chatType, store, rawData } = requestInfo
+  if (res.Type !== 'browser_handoff') return
+  const payload = JSON.parse(Uint8ArrayToString(res.Content) || '{}') as Partial<BrowserHandoffCardData>
+  const states = ['waiting_for_user', 'completed', 'cancelled'] as const
+  const reasons = ['qr_code', 'mfa', 'captcha', 'device_confirmation', 'other'] as const
+  if (
+    !payload.handoffId ||
+    !payload.deviceId ||
+    !states.includes(payload.state as (typeof states)[number]) ||
+    !reasons.includes(payload.reason as (typeof reasons)[number])
+  ) {
+    requestInfo.pushLog({ level: 'error', message: 'browser_handoff 数据缺少必要字段' })
+    return
+  }
+  // Deliberately whitelist metadata: local QR data must never reach IndexedDB/history.
+  const data: BrowserHandoffCardData = {
+    handoffId: payload.handoffId,
+    callToolId: payload.callToolId,
+    deviceId: payload.deviceId,
+    reason: payload.reason as BrowserHandoffCardData['reason'],
+    message: payload.message,
+    state: payload.state as BrowserHandoffCardData['state'],
+    requestedAt: payload.requestedAt,
+    resolvedAt: payload.resolvedAt,
+    tabId: Number(payload.tabId) || 0,
+    frameId: Number(payload.frameId) || 0,
+    documentId: payload.documentId,
+    title: payload.title,
+    url: payload.url,
+    origin: payload.origin,
+  }
+
+  const existing = rawData.contents.get(data.handoffId)
+  if (existing?.type === AIChatQSDataTypeEnum.BROWSER_HANDOFF) {
+    existing.data = { ...existing.data, ...data }
+    existing.stageSettled = data.state !== 'waiting_for_user'
+    store.getState().incrementNodeVersion(existing.id, 'item')
+    persistIndependentItem(requestInfo.sessionId, existing)
+    return
+  }
+
+  const chatData: AIChatQSData = {
+    ...genBaseAIChatData(res),
+    id: data.handoffId,
+    chatType,
+    type: AIChatQSDataTypeEnum.BROWSER_HANDOFF,
+    data,
+    TaskId: generateTaskNodeDataID({
+      chatType,
+      planID: store.getState().currentChatStatus.questionID,
+      taskID: res.TaskId,
+      isExist: (key) => rawData.contents.has(key),
+    }),
+    stageSettled: data.state !== 'waiting_for_user',
+  }
+  rawData.contents.set(chatData.id, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData)
+  store.getState().dispatchStreamingNode({
+    chatType,
+    parentTaskId: chatData.TaskId,
+    node: {
+      token: chatData.id,
+      kind: 'item',
+      type: chatData.type,
+      isHistory: res.IsSync,
+    },
+  })
+}
+
 const handlePushTask: AIMessageHandler = (requestInfo) => {
   const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'system') return
@@ -419,6 +494,7 @@ export const aiSingleItemDataHandlers = {
   ai_call_failure: handleApiRequestFailed,
   http_flow_fuzz_status: handleHttpFlowFuzzStatus,
   'report-finish': handleReportFinish,
+  browser_handoff: handleBrowserHandoff,
   push_task: handlePushTask,
   pop_task: handlePopTask,
 } as const
