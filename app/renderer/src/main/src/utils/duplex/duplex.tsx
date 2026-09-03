@@ -219,8 +219,8 @@ export const startupDuplexConn = () => {
             obj &&
             typeof obj === 'object' &&
             obj.event === 'authorization.workspace.open' &&
-            typeof obj.workspaceId === 'string' &&
-            typeof obj.deviceId === 'string'
+            typeof obj.deviceId === 'string' &&
+            (typeof obj.workspaceId === 'string' || (typeof obj.tabId === 'number' && obj.tabId > 0))
           ) {
             window.sessionStorage.setItem('browser.authorization.workspace.handoff.v1', JSON.stringify(obj))
             emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.BrowserExtension }))

@@ -138,8 +138,9 @@ const BROWSER_AUTHORIZATION_HANDOFF_STORAGE_KEY = 'browser.authorization.workspa
 
 interface BrowserAuthorizationHandoff {
   event: 'authorization.workspace.open'
-  workspaceId: string
+  workspaceId?: string
   deviceId: string
+  tabId?: number
   mode?: 'horizontal' | 'vertical'
 }
 
@@ -148,8 +149,8 @@ function readBrowserAuthorizationHandoff(raw?: string | null): BrowserAuthorizat
     const value = JSON.parse(raw || window.sessionStorage.getItem(BROWSER_AUTHORIZATION_HANDOFF_STORAGE_KEY) || 'null')
     if (
       value?.event === 'authorization.workspace.open' &&
-      typeof value.workspaceId === 'string' &&
-      typeof value.deviceId === 'string'
+      typeof value.deviceId === 'string' &&
+      (typeof value.workspaceId === 'string' || (Number.isSafeInteger(value.tabId) && value.tabId > 0))
     )
       return value as BrowserAuthorizationHandoff
   } catch {
@@ -451,6 +452,7 @@ const BrowserExtensionContent: React.FC<BrowserExtensionContentProps> = ({
           client: device.client,
           clientVersion: device.clientVersion,
           capabilities: connection.capabilities,
+          managedInstance: connection.managedInstance ? { badge: connection.managedInstance.badge } : undefined,
         },
       ]
     })
@@ -1212,6 +1214,8 @@ const BrowserExtensionContent: React.FC<BrowserExtensionContentProps> = ({
                     defaultDeviceId={selectedDeviceID}
                     initialWorkspaceId={authorizationHandoff?.workspaceId}
                     initialDeviceId={authorizationHandoff?.deviceId}
+                    initialTabId={authorizationHandoff?.tabId}
+                    initialMode={authorizationHandoff?.mode}
                     onInitialWorkspaceLoaded={() => {
                       window.sessionStorage.removeItem(BROWSER_AUTHORIZATION_HANDOFF_STORAGE_KEY)
                       setAuthorizationHandoff(undefined)
