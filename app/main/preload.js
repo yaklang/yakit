@@ -76,6 +76,7 @@ process.on('loaded', function () {
       onSync: (callback) => subscribe('aux-window:app-sync', callback),
       getYakitHomeConfig: () => invoke('get-yakit-home-config'),
       setYakitHomeConfig: (key, value) => invoke('set-yakit-home-config', key, value),
+      getDirSize: (dirPath) => invoke('get-dir-size', dirPath),
       relaunchApp: () => invoke('relaunch-app'),
       isMITMDebugHooksEnabled: () => mitmDebugHooksEnabled,
     },

@@ -726,6 +726,7 @@ declare global {
       onSync: (callback: (message: AppSyncMessage) => void) => BridgeCleanup
       getYakitHomeConfig: () => Promise<YakitHomeConfig>
       setYakitHomeConfig: (key: string, value: any) => Promise<{ success: boolean }>
+      getDirSize: (dirPath: string) => Promise<number>
       /** Synchronous build/runtime gate for MITM diagnostic globals; false in packaged builds. */
       isMITMDebugHooksEnabled?: () => boolean
     }

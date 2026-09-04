@@ -34,6 +34,18 @@
       "ai-model": "模型",
       "yak-mcp": "Yak MCP"
     },
+    "general": {
+      "workspace": "工作空间",
+      "usedSpace": "占用空间：{{size}}",
+      "calculating": "计算中...",
+      "openDirectory": "打开目录",
+      "pluginSource": "插件源",
+      "privateDomain": "私有域地址",
+      "required": "必填",
+      "setProxy": "设置代理",
+      "proxyHint": "特殊情况无法访问插件商店时，可设置代理进行访问",
+      "proxyPlaceholder": "设置代理"
+    },
     "appearance": {
       "theme": "主题",
       "followSystem": "跟随系统",

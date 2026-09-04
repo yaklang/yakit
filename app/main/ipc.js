@@ -26,6 +26,34 @@ const global = {
 
 let _client
 
+async function calcDirSize(dirPath) {
+  const walk = async (dir) => {
+    let size = 0
+    try {
+      const entries = await fs.promises.readdir(dir, { withFileTypes: true })
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name)
+        if (entry.isFile()) {
+          try {
+            const stat = await fs.promises.stat(fullPath)
+            size += stat.size
+          } catch (_) {}
+        } else if (entry.isDirectory()) {
+          size += await walk(fullPath)
+        }
+      }
+    } catch (_) {}
+    return size
+  }
+  if (!dirPath) return 0
+  try {
+    await fs.promises.access(dirPath)
+  } catch (_) {
+    return 0
+  }
+  return walk(dirPath)
+}
+
 function createGrpcInterceptor() {
   return (options, nextCall) => {
     const requester = {
@@ -214,6 +242,10 @@ module.exports = {
     ipcMain.handle('relaunch-app', async () => {
       app.relaunch()
       app.exit(0)
+    })
+
+    ipcMain.handle('get-dir-size', async (e, dirPath) => {
+      return calcDirSize(dirPath)
     })
 
     ipcMain.handle('yakit-connect-status', () => {
@@ -453,31 +485,7 @@ module.exports = {
     })
 
     ipcMain.handle(ipcEventPre + 'get-dir-size', async (e, dirPath) => {
-      const calcSize = async (dir) => {
-        let size = 0
-        try {
-          const entries = await fs.promises.readdir(dir, { withFileTypes: true })
-          for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name)
-            if (entry.isFile()) {
-              try {
-                const stat = await fs.promises.stat(fullPath)
-                size += stat.size
-              } catch (_) {}
-            } else if (entry.isDirectory()) {
-              size += await calcSize(fullPath)
-            }
-          }
-        } catch (_) {}
-        return size
-      }
-      if (!dirPath) return 0
-      try {
-        await fs.promises.access(dirPath)
-      } catch (_) {
-        return 0
-      }
-      return calcSize(dirPath)
+      return calcDirSize(dirPath)
     })
 
     // 软件启动后判断是 CE 版本还是 EE 版本

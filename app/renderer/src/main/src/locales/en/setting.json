@@ -34,6 +34,18 @@
       "ai-model": "Models",
       "yak-mcp": "Yak MCP"
     },
+    "general": {
+      "workspace": "Workspace",
+      "usedSpace": "Used: {{size}}",
+      "calculating": "Calculating...",
+      "openDirectory": "Open Directory",
+      "pluginSource": "Plugin Source",
+      "privateDomain": "Private Domain",
+      "required": "Required",
+      "setProxy": "Proxy",
+      "proxyHint": "Set a proxy when the plugin store is unreachable",
+      "proxyPlaceholder": "Set proxy"
+    },
     "appearance": {
       "theme": "Theme",
       "followSystem": "System",
