@@ -15,6 +15,12 @@ import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitAntdProvider } from '@/theme/antdTheme'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
 
+/** 对齐 YakitModalConfirm 的 YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET：
+ * 命令式 Modal zIndex = zIndexPopupBase(1000) + 1000 = 2000，
+ * Drawer 走 antd5 useZIndex 默认只有 1100，同屏会被命令式 Modal 盖住，需对齐抬高。
+ */
+const YAKIT_IMPERATIVE_DRAWER_Z_INDEX = 2000
+
 /**
  * @description:YakitDrawer  抽屉 placement === "bottom" heard有背景色
  * @augments DrawerProps 继承antd的 DrawerProps 默认属性
@@ -60,6 +66,7 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
       style={isVertical ? restStyle : style}
       styles={mergedStyles}
       {...restProps}
+      zIndex={props.zIndex ?? YAKIT_IMPERATIVE_DRAWER_Z_INDEX}
       closeIcon={
         <div className={styles['yakit-drawer-icon']}>
           {props.closeIcon || <XSolid size={12} className={styles['yakit-drawer-remove-icon']} />}

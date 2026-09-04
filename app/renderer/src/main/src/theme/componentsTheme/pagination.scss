@@ -76,13 +76,12 @@
 /* size-changer 下拉 portal 挂 body，不能写在 .ant-pagination 内。背景由 dropdown.scss 兜底 */
 .ant-select-dropdown {
   .ant-select-item {
-    margin: 2px 4px;
+    margin: 0 4px;
     padding: 4px 8px;
     color: var(--Colors-Use-Neutral-Text-1-Title);
     border-radius: 4px;
 
     &:hover {
-      color: var(--Colors-Use-Main-Primary);
       background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
   }

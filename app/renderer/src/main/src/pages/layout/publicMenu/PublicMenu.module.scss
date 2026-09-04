@@ -186,9 +186,13 @@
 .child-menu-popover {
   :global {
     .ant-popover-inner {
-      padding: 6px 4px 4px 4px;
+      padding: 0;
     }
   }
+}
+
+.child-menu-submenu.child-menu-submenu:global(.ant-menu-submenu-popup) {
+  padding: 0 6px;
 }
 
 .modal-content {

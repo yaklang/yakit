@@ -6,10 +6,13 @@
 .ui-op-setting-dropdown {
   :global {
     .ant-popover-inner {
-      padding: 6px 4px 8px 4px;
-      padding-bottom: 0;
+      padding: 0;
     }
   }
+}
+
+.ui-op-submenu.ui-op-submenu:global(.ant-menu-submenu-popup) {
+  padding: 0 6px;
 }
 
 .ui-op-btn-wrapper {

@@ -8,6 +8,8 @@
   box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
 }
 
-.show-by-right-context-submenu:global(.ant-menu-submenu-popup) {
+.show-by-right-context-submenu.show-by-right-context-submenu:global(.ant-menu-submenu-popup) {
   padding: 0 6px;
+  // 二级菜单 portal 到 body，不继承 #yakit-right-context 的 z-index: 9999，需对齐避免被页面高层级元素遮挡
+  z-index: 9999;
 }

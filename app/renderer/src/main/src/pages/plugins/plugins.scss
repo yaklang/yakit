@@ -36,52 +36,6 @@
     cursor: text;
   }
 }
-.plugins-tooltip.ant-tooltip-placement-top {
-  padding-bottom: 4px;
-  .ant-tooltip-arrow {
-    bottom: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-topLeft {
-  padding-bottom: 4px;
-  .ant-tooltip-arrow {
-    bottom: 1px;
-    left: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-topRight {
-  padding-bottom: 4px;
-  .ant-tooltip-arrow {
-    right: 1px;
-    bottom: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-bottom {
-  padding-top: 4px;
-  .ant-tooltip-arrow {
-    top: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-bottomLeft {
-  padding-top: 4px;
-  .ant-tooltip-arrow {
-    top: 1px;
-    left: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-bottomRight {
-  padding-top: 4px;
-  .ant-tooltip-arrow {
-    right: 1px;
-    top: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-right {
-  padding-left: 4px;
-  .ant-tooltip-arrow {
-    left: 1px;
-  }
-}
 // -------------------- form组件样式 ↓↓↓ --------------------
 .plugins-form {
   width: 100%;
