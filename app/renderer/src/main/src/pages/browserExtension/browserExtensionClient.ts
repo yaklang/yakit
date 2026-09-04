@@ -1,7 +1,6 @@
 import { yakitBrowserExtension, yakitStream } from '@/services/electronBridge'
 import { randomString } from '@/utils/randomUtil'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
-import { browserAuthorizationLifecycleError } from './browserAuthorizationLifecycle'
 import {
   browserSnapshotResources,
   decodeBrowserSnapshotResource,
@@ -9,9 +8,6 @@ import {
   encodeBrowserTaskPayload,
   validateBrowserTaskEvent,
 } from './browserProtocolValidation'
-import { normalizeBrowserTransformAdapterStatus, type BrowserTransformAdapterStatus } from './browserTransformAdapter'
-
-export type { BrowserTransformAdapterStatus } from './browserTransformAdapter'
 
 export type BrowserCapabilityDomain =
   | 'system'
@@ -115,30 +111,6 @@ export interface BrowserExtensionSnapshot {
   devices: PairedBrowserDevice[]
 }
 
-export async function startBrowserTransformAdapter(input: {
-  deviceId: string
-  profileId: string
-  port?: number
-  timeoutMilliseconds?: number
-}): Promise<BrowserTransformAdapterStatus> {
-  const value = await yakitBrowserExtension.startTransformAdapter({
-    DeviceId: input.deviceId,
-    ProfileId: input.profileId,
-    Host: '127.0.0.1',
-    Port: input.port || 0,
-    TimeoutMilliseconds: input.timeoutMilliseconds || 10_000,
-  })
-  return normalizeBrowserTransformAdapterStatus(value)
-}
-
-export async function getBrowserTransformAdapterStatus(): Promise<BrowserTransformAdapterStatus> {
-  return normalizeBrowserTransformAdapterStatus(await yakitBrowserExtension.getTransformAdapterStatus())
-}
-
-export async function stopBrowserTransformAdapter(): Promise<BrowserTransformAdapterStatus> {
-  return normalizeBrowserTransformAdapterStatus(await yakitBrowserExtension.stopTransformAdapter())
-}
-
 interface BrowserTaskEvent {
   Type: 'queued' | 'running' | 'log' | 'result' | 'warning' | 'error' | 'cancelled' | 'completed'
   Message?: string
@@ -146,10 +118,10 @@ interface BrowserTaskEvent {
 }
 
 function browserTaskError(event: BrowserTaskEvent): Error {
-  return browserAuthorizationLifecycleError(event.Data, event.Message || '浏览器任务失败')
+  return new Error(event.Message || '浏览器任务失败')
 }
 
-async function requestBrowserExtensionSnapshot(
+export async function requestBrowserExtensionSnapshot(
   method: string,
   path: string,
   body?: unknown,
@@ -204,14 +176,13 @@ export function executeBrowserExtensionTask<T>(
   }
   return new Promise<T>((resolve, reject) => {
     let settled = false
-    let timer: number | undefined
     let offData = () => {}
     let offError = () => {}
     let offEnd = () => {}
     const finish = (handler: () => void) => {
       if (settled) return
       settled = true
-      if (timer !== undefined) window.clearTimeout(timer)
+      window.clearTimeout(timer)
       offData()
       offError()
       offEnd()
@@ -240,7 +211,7 @@ export function executeBrowserExtensionTask<T>(
     })
     offError = yakitStream.onError(token, (error) => finish(() => reject(new Error(`${error}`))))
     offEnd = yakitStream.onEnd(token, () => finish(() => reject(new Error('浏览器任务结束但没有返回结果'))))
-    timer = window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       void yakitBrowserExtension.cancelTask(token)
       finish(() => reject(new Error(`浏览器任务调用超时: ${schema}`)))
     }, timeoutMilliseconds + 1_000)
