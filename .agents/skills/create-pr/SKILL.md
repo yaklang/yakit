@@ -118,7 +118,7 @@ gh 可用时按本步；用户选了「手动创建 PR」则跳到文末「手�
 gh pr view <当前分支> --repo yaklang/yakit --json number,url,state
 ```
 
-动态文本（正文 / 标题）**禁止内插进 shell**：先写 `/tmp/pr-body.md`，用 `--body-file`，用完删除。title 用单引号包裹并对内部单引号转义。
+动态文本（正文 / 标题）**禁止内插进 shell**：先写入系统临时目录下的临时文件（下文用 `<pr-body-file>` 代指），用 `--body-file`，用完删除。title 用单引号包裹并对内部单引号转义。
 
 - **已有 OPEN PR**：**不新建**，`gh pr edit` 更新描述，且**每次都必须带 `--title`**（第 5 步智能替换后的最终标题；省略 `--title` 可能改掉标题）：
 
