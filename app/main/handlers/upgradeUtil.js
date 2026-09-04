@@ -10,7 +10,14 @@ const https = require('https')
 const EventEmitter = require('events')
 const zip = require('node-stream-zip')
 const crypto = require('crypto')
-const { assertTrustedAppSender, validateOpenPath } = require('../security')
+const {
+  assertApplicationWindowSender,
+  assertExpectedWindowSender,
+  assertTrustedAppSender,
+  validateOpenPath,
+} = require('../security')
+const { grantFileAccess } = require('../fileAccessPolicy')
+const { installYakEngineFile, normalizeYakEngineVersion, resolveYakEnginePaths } = require('../yakEngineInstaller')
 
 const {
   getYakitHome,
@@ -138,6 +145,14 @@ const getLatestYakLocalEngine = () => {
   }
 }
 
+const installYakEngine = (version) => {
+  return installYakEngineFile({
+    version,
+    engineDir: getYaklangEngineDir(),
+    destination: getLatestYakLocalEngine(),
+  })
+}
+
 // 获取Yakit所处平台
 const getYakitPlatform = () => {
   const suffix = getSuffix()
@@ -242,13 +257,14 @@ const diagnosingYakVersion = () => {
 
 // 判断历史引擎版本是否存在以及正确性
 const asyncYakEngineVersionExistsAndCorrectness = (version) => {
-  const dest = path.join(
-    getYaklangEngineDir(),
-    version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-  )
+  const { normalizedVersion, sourcePath: dest } = resolveYakEnginePaths({
+    version,
+    engineDir: getYaklangEngineDir(),
+    destination: getLatestYakLocalEngine(),
+  })
   return new Promise(async (resolve, reject) => {
     try {
-      const url = await getCheckTextUrl(version)
+      const url = await getCheckTextUrl(normalizedVersion)
       if (url === '') {
         reject(`Unsupported platform: ${process.platform}`)
         return
@@ -444,15 +460,16 @@ module.exports = {
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
-        const dest = path.join(
-          getYaklangEngineDir(),
-          version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-        )
+        const { normalizedVersion, sourcePath: dest } = resolveYakEnginePaths({
+          version,
+          engineDir: getYaklangEngineDir(),
+          destination: getLatestYakLocalEngine(),
+        })
         try {
           fs.unlinkSync(dest)
         } catch (e) {}
         await downloadYakEngine(
-          version,
+          normalizedVersion,
           dest,
           (state) => {
             win.webContents.send('download-yak-engine-progress', state)
@@ -463,6 +480,7 @@ module.exports = {
       })
     }
     ipcMain.handle('download-latest-yak', async (e, version) => {
+      assertExpectedWindowSender(e, win, 'download-latest-yak')
       return await asyncDownloadLatestYak(version)
     })
 
@@ -477,7 +495,7 @@ module.exports = {
             }
             // macOS下正常下载引擎时注入
             if (version) {
-              const hashData = await fetchSpecifiedYakVersionHash(version, { timeout: 2000 })
+              const hashData = await fetchSpecifiedYakVersionHash(normalizeYakEngineVersion(version), { timeout: 2000 })
               fs.writeFileSync(yakKeyFile, hashData)
             }
             // macOS下解压内置引擎时注入
@@ -501,13 +519,16 @@ module.exports = {
     }
 
     ipcMain.handle('write-engine-key-to-yakit-projects', async (e, version) => {
+      assertExpectedWindowSender(e, win, 'write-engine-key-to-yakit-projects')
       return await asyncWriteEngineKeyToYakitProjects(version)
     })
 
     ipcMain.handle('yak-engine-version-exists-and-correctness', async (e, version) => {
+      assertExpectedWindowSender(e, win, 'yak-engine-version-exists-and-correctness')
       return await asyncYakEngineVersionExistsAndCorrectness(version)
     })
     ipcMain.handle('cancel-download-yak-engine-version', async (e, version) => {
+      assertExpectedWindowSender(e, win, 'cancel-download-yak-engine-version')
       return await engineCancelRequestWithProgress(version)
     })
 
@@ -650,62 +671,15 @@ module.exports = {
       // return getWindowsInstallPath();
     })
 
-    const installYakEngine = (version) => {
-      return new Promise((resolve, reject) => {
-        let origin = path.join(
-          getYaklangEngineDir(),
-          version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-        )
-        origin = origin.replaceAll(`"`, `\"`)
-
-        let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
-        dest = dest.replaceAll(`"`, `\"`)
-        // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
-        let flag = false
-        function tryUnlink(retriesLeft) {
-          if (flag) return
-          try {
-            fs.unlinkSync(dest)
-          } catch (err) {
-            if (err.message.indexOf('operation not permitted') > -1) {
-              if (retriesLeft > 0) {
-                setTimeout(() => tryUnlink(retriesLeft - 1), 500)
-              } else {
-                reject('operation not permitted')
-              }
-            }
-          }
-        }
-        tryUnlink(2)
-        childProcess.exec(
-          isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
-          (err) => {
-            flag = true
-            if (err) {
-              if (
-                err.message.indexOf(
-                  'The process cannot access the file because it is being used by another process',
-                ) !== -1
-              ) {
-                reject('operation not permitted')
-              } else {
-                reject(err)
-              }
-              return
-            }
-            resolve()
-          },
-        )
-      })
-    }
-
     ipcMain.handle('install-yak-engine', async (e, version) => {
+      assertExpectedWindowSender(e, win, 'install-yak-engine')
       return await installYakEngine(version)
     })
 
     // 获取yak code文件根目录路径
-    ipcMain.handle('fetch-code-path', () => {
-      return getCodeDir()
+    ipcMain.handle('fetch-code-path', (e) => {
+      assertApplicationWindowSender(e, 'fetch-code-path')
+      return grantFileAccess(e, getCodeDir(), ['read', 'write', 'delete', 'rename', 'probe'], { recursive: true })
     })
 
     // 打开指定路径文件
@@ -1211,15 +1185,16 @@ module.exports = {
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
-        const dest = path.join(
-          getYaklangEngineDir(),
-          version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-        )
+        const { normalizedVersion, sourcePath: dest } = resolveYakEnginePaths({
+          version,
+          engineDir: getYaklangEngineDir(),
+          destination: getLatestYakLocalEngine(),
+        })
         try {
           fs.unlinkSync(dest)
         } catch (e) {}
         await downloadYakEngine(
-          version,
+          normalizedVersion,
           dest,
           (state) => {
             win.webContents.send('download-yak-engine-progress', state)
@@ -1230,6 +1205,7 @@ module.exports = {
       })
     }
     ipcMain.handle(ipcEventPre + 'download-latest-yak', async (e, version) => {
+      assertExpectedWindowSender(e, win, ipcEventPre + 'download-latest-yak')
       return await asyncDownloadLatestYak(version)
     })
 
@@ -1249,7 +1225,7 @@ module.exports = {
             }
             // macOS下正常下载引擎时注入
             if (version) {
-              const hashData = await fetchSpecifiedYakVersionHash(version, { timeout: 2000 })
+              const hashData = await fetchSpecifiedYakVersionHash(normalizeYakEngineVersion(version), { timeout: 2000 })
               fs.writeFileSync(yakKeyFile, hashData)
             }
             // macOS下解压内置引擎时注入
@@ -1273,63 +1249,17 @@ module.exports = {
     }
 
     ipcMain.handle(ipcEventPre + 'write-engine-key-to-yakit-projects', async (e, version) => {
+      assertExpectedWindowSender(e, win, ipcEventPre + 'write-engine-key-to-yakit-projects')
       return await asyncWriteEngineKeyToYakitProjects(version)
     })
 
-    const installYakEngine = (version) => {
-      return new Promise((resolve, reject) => {
-        let origin = path.join(
-          getYaklangEngineDir(),
-          version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-        )
-        origin = origin.replaceAll(`"`, `\"`)
-
-        let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
-        dest = dest.replaceAll(`"`, `\"`)
-        // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
-        let flag = false
-        function tryUnlink(retriesLeft) {
-          if (flag) return
-          try {
-            fs.unlinkSync(dest)
-          } catch (err) {
-            if (err.message.indexOf('operation not permitted') > -1) {
-              if (retriesLeft > 0) {
-                setTimeout(() => tryUnlink(retriesLeft - 1), 500)
-              } else {
-                reject('operation not permitted')
-              }
-            }
-          }
-        }
-        tryUnlink(2)
-        childProcess.exec(
-          isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
-          (err) => {
-            flag = true
-            if (err) {
-              if (
-                err.message.indexOf(
-                  'The process cannot access the file because it is being used by another process',
-                ) !== -1
-              ) {
-                reject('operation not permitted')
-              } else {
-                reject(err)
-              }
-              return
-            }
-            resolve()
-          },
-        )
-      })
-    }
-
     ipcMain.handle(ipcEventPre + 'install-yak-engine', async (e, version) => {
+      assertExpectedWindowSender(e, win, ipcEventPre + 'install-yak-engine')
       return await installYakEngine(version)
     })
 
     ipcMain.handle(ipcEventPre + 'cancel-download-yak-engine-version', async (e, version) => {
+      assertExpectedWindowSender(e, win, ipcEventPre + 'cancel-download-yak-engine-version')
       return await engineCancelRequestWithProgress(version)
     })
 
@@ -1554,6 +1484,7 @@ module.exports = {
     })
 
     ipcMain.handle(ipcEventPre + 'yak-engine-version-exists-and-correctness', async (e, version) => {
+      assertExpectedWindowSender(e, win, ipcEventPre + 'yak-engine-version-exists-and-correctness')
       return await asyncYakEngineVersionExistsAndCorrectness(version)
     })
   },

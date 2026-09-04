@@ -3,6 +3,8 @@ const { getLocalYaklangEngine, loadExtraFilePath, getYakitHome } = require('../f
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
+const { assertTrustedAppSender } = require('../security')
+const { activateMemfitLicense, getMemfitLicenseRequest, verifyCachedMemfitLicense } = require('../memfitLicense')
 
 module.exports = {
   registerNewIPC: (win, getClient, ipcEventPre) => {
@@ -36,6 +38,21 @@ module.exports = {
     }
     ipcMain.handle(ipcEventPre + 'SetKey', async (e, params) => {
       return await asyncSetKey(params)
+    })
+
+    ipcMain.handle(ipcEventPre + 'GetMemfitLicenseRequest', async (event) => {
+      assertTrustedAppSender(event, ipcEventPre + 'GetMemfitLicenseRequest')
+      return await getMemfitLicenseRequest(getClient)
+    })
+
+    ipcMain.handle(ipcEventPre + 'VerifyCachedMemfitLicense', async (event) => {
+      assertTrustedAppSender(event, ipcEventPre + 'VerifyCachedMemfitLicense')
+      return await verifyCachedMemfitLicense(getClient)
+    })
+
+    ipcMain.handle(ipcEventPre + 'ActivateMemfitLicense', async (event, licenseActivation) => {
+      assertTrustedAppSender(event, ipcEventPre + 'ActivateMemfitLicense')
+      return await activateMemfitLicense(getClient, licenseActivation)
     })
 
     ipcMain.handle(ipcEventPre + 'CalcEngineSha265', async (e, params) => {

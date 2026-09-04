@@ -1,4 +1,5 @@
 const { ipcMain } = require('electron')
+const isDev = require('electron-is-dev')
 
 module.exports = (win, getClient) => {
   ipcMain.handle('UIOperate', (e, params) => {
@@ -55,11 +56,13 @@ module.exports = (win, getClient) => {
     win.webContents.send('callback-is-maximize-screen', win.isMaximized())
   })
 
-  /** 打开/关闭 devtool */
-  ipcMain.handle('trigger-devtool', () => {
-    const flag = win.webContents.isDevToolsOpened()
-    if (flag) win.webContents.closeDevTools()
-    else win.webContents.openDevTools()
-    return
-  })
+  /** 开发环境打开/关闭 devtool；生产包不注册该入口 */
+  if (isDev) {
+    ipcMain.handle('trigger-devtool', () => {
+      const flag = win.webContents.isDevToolsOpened()
+      if (flag) win.webContents.closeDevTools()
+      else win.webContents.openDevTools()
+      return
+    })
+  }
 }

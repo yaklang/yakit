@@ -12,6 +12,29 @@
 
 ---
 
+## 2026-09-04
+
+### AI SenSo 授权入口与安装包信息泄露加固
+
+- **主进程门禁**：Memfit 主业务窗口启动时保持空白且隐藏；引擎连接完成后，由独立启动渲染器展示授权申请码和授权码输入，Electron 主进程再次校验引擎缓存授权，成功后才加载主业务 HTML
+- **兼容原授权**：复用已有 `GetLicense/CheckLicense/GetKey/SetKey` 协议及 `LICENSE_ACTIVATION` 缓存格式，主渲染器原 `EnterpriseJudgeLogin` 保留为二次校验；非 Memfit 产品不改变启动流程
+- **开发工具限制**：生产环境不注册 `trigger-devtool`，菜单移除 DevTools，辅助窗口忽略生产环境的 `openDevTools` 请求；开发调试入口保留
+- **安装包清理**：Electron Builder 排除 `docs/`、`packageScript/`、测试、报告和覆盖率目录，避免交接文档、开发日志和测试代码进入 `app.asar`
+- **防篡改**：Electron 由 `27.0.0` 升级为 `30.5.1` 以获得 Windows ASAR Integrity 支持；启用 `EnableEmbeddedAsarIntegrityValidation` 与 `OnlyLoadAppFromAsar`，并关闭 `NODE_OPTIONS`、Node CLI inspect Fuse
+- **验证**：主进程授权服务 5 项定向测试通过；Memfit 引擎连接页生产构建、主渲染端 TypeScript、主进程 JavaScript语法和 `git diff --check` 通过；Windows 目录包成功写入 ASAR 完整性资源，Fuse 实读确认生效，包内容审计确认无 `docs/`、`packageScript/` 和主渲染 source map
+- **安全边界**：客户端门禁和完整性校验用于阻止普通绕过与篡改，不作为核心能力授权；AI 对话等实际能力仍必须由引擎拒绝未授权调用
+
+### 安全测试报告第一阶段 P0 整改
+
+- **命令注入修复**：`install-yak-engine` 删除 `childProcess.exec` 和 `cp/copy/chmod` 字符串拼接，改用 `fs.promises.copyFile` 与 `chmod`；普通主窗口和 `EngineLink:` 两套下载、校验、安装流程统一校验版本字符集和引擎目录边界，并绑定正确发送窗口
+- **文件能力授权**：系统打开/保存对话框按发送方 `webContents` 发放 30 分钟临时文件能力；`fetch-file-content`、`write-file`、`delelte-code-file`、`rename-file`、`is-exists-file` 必须命中同一发送方已选择的文件或目录，保存写入限制 64 MiB，重命名禁止覆盖已有文件
+- **sender 收紧**：敏感 IPC 拒绝 iframe 和错误窗口；`file://` 仅信任应用目录内渲染文件，不再信任任意本地 HTML。应用管理的 YakRunner 代码目录通过 `fetch-code-path` 显式授权，保留正常编辑流程
+- **安装包清理补漏**：新增排除根 `scripts/`、`*.log`、`.codex-*`、`.codex-run/`、`.env*`、`*.map`、Markdown、依赖 docs/examples；修复上一轮目录包仍携带本地 `.codex` 调试日志的问题
+- **报告覆盖**：生产 DevTools 和前端 Hook License 绕过由上一节修复；本节完成任意文件读写与引擎安装命令注入整改，覆盖报告现有四项复现问题
+- **验证**：授权门禁、sender、文件能力与引擎安装 4 个测试文件共 21 项通过；主进程语法、主渲染 TypeScript、Memfit 启动页生产构建和 Windows 打包通过；`app.asar` 审计确认 docs、构建脚本、测试、日志、环境文件、source map、Markdown 数量均为 0，包内引擎安装使用文件 API 且 Fuse 保持生效
+- **交付物**：`release/AI Senso-1.4.8-0711-windows-amd64.exe`，`181962957` 字节，SHA256 `3B175AC93B67FA133168E34D8AFA1D312E46C72684E6E14F4885309CBB38D5E5`
+- **后续边界**：`nodeIntegration/contextIsolation`、原始 `ipcRenderer`、Terminal 和全量高权限 IPC 审计不在第一阶段 P0 内，必须作为第二阶段继续处理
+
 ## 2026-08-26
 
 ### 数字员工角色与智能体调整为一对多

@@ -1,6 +1,16 @@
 const { ipcMain, dialog } = require('electron')
 const FS = require('fs')
 const PATH = require('path')
+const { assertApplicationWindowSender } = require('../security')
+const { assertFileAccess, assertRenameAccess, grantSaveDialogResult } = require('../fileAccessPolicy')
+
+const MAX_RENDERER_FILE_WRITE_BYTES = 64 * 1024 * 1024
+
+const getWritableDataSize = (data) => {
+  if (typeof data === 'string') return Buffer.byteLength(data)
+  if (Buffer.isBuffer(data) || ArrayBuffer.isView(data)) return data.byteLength
+  throw new Error('file data must be text or binary data')
+}
 
 module.exports = (win, getClient) => {
   const handlerHelper = require('./handleStreamWithContext')
@@ -79,14 +89,17 @@ module.exports = (win, getClient) => {
           defaultPath: params,
         })
         .then((res) => {
-          const params = res
-          params.name = PATH.basename(res.filePath)
-          resolve(params)
+          resolve({
+            ...res,
+            name: res.filePath ? PATH.basename(res.filePath) : '',
+          })
         })
+        .catch(reject)
     })
   }
   ipcMain.handle('show-save-dialog', async (e, params) => {
-    return await asyncSaveFileDialog(params)
+    assertApplicationWindowSender(e, 'show-save-dialog')
+    return grantSaveDialogResult(e, await asyncSaveFileDialog(params))
   })
 
   // 删除文件
@@ -99,7 +112,8 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('delelte-code-file', async (e, params) => {
-    return await asyncDeleteCodeFile(params)
+    assertApplicationWindowSender(e, 'delelte-code-file')
+    return await asyncDeleteCodeFile(assertFileAccess(e, params, 'delete'))
   })
 
   //判断文件是否存在
@@ -112,7 +126,8 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('is-exists-file', async (e, params) => {
-    return await asyncIsExistsFile(params)
+    assertApplicationWindowSender(e, 'is-exists-file')
+    return await asyncIsExistsFile(assertFileAccess(e, params, 'probe', { allowMissing: true }))
   })
 
   //文件重命名
@@ -126,7 +141,8 @@ module.exports = (win, getClient) => {
   }
   ipcMain.handle('rename-file', async (e, params) => {
     if (!params.old || !params.new) return 'fail'
-    return await asyncRenameFile(params)
+    assertApplicationWindowSender(e, 'rename-file')
+    return await asyncRenameFile(assertRenameAccess(e, params.old, params.new))
   })
 
   // 将内容写入文件,文件未存在则新建文件后再进行写入
@@ -139,8 +155,15 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('write-file', async (e, params) => {
-    if (!params.route || !params.data) return 'fail'
-    return await asyncWriteFile(params)
+    if (!params?.route || params.data === undefined || params.data === null) return 'fail'
+    assertApplicationWindowSender(e, 'write-file')
+    if (getWritableDataSize(params.data) > MAX_RENDERER_FILE_WRITE_BYTES) {
+      throw new Error('renderer file write exceeds the 64 MiB limit')
+    }
+    return await asyncWriteFile({
+      route: assertFileAccess(e, params.route, 'write', { allowMissing: true }),
+      data: params.data,
+    })
   })
 
   // 批量执行脚本的新接口：通过一个短 Filter 执行

@@ -70,6 +70,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { SoftwareBasics } from './components/SoftwareBasics'
 import { yakitApp, yakitEngine } from '@/utils/electronBridge'
 import { useYakitStatus } from '@/hooks/useYakitStatus'
+import { MemfitLicenseGate } from './components/MemfitLicenseGate'
 import styles from './index.module.scss'
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
@@ -115,6 +116,8 @@ export const StartupPage: React.FC = () => {
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null)
   /** 当前引擎连接状态 */
   const [engineLink, setEngineLink, getEngineLink] = useGetSetState<boolean>(false)
+  /** Memfit 在独立启动窗口完成授权前，不加载主业务渲染器 */
+  const [showMemfitLicenseGate, setShowMemfitLicenseGate] = useState(false)
   /** 是否阻止发送打开主窗口 */
   const isStopSend = useRef<boolean>(false)
   /** 是否初始启动连接 */
@@ -970,10 +973,27 @@ export const StartupPage: React.FC = () => {
     }
   }, [])
 
-  // 引擎连接成功发送数据到主界面
+  const completeEngineLink = useMemoizedFn(async () => {
+    if (isStopSend.current) return
+    isStopSend.current = true
+    try {
+      await yakitApp.completeEngineLink({ credential: getCredential() })
+    } catch (error) {
+      isStopSend.current = false
+      throw error
+    }
+  })
+
+  // 引擎连接成功后，Memfit 先在独立启动窗口验证授权；其他版本保持原流程。
   useEffect(() => {
     if (engineLink && getYakitStatus() === 'link' && getCredential().Port && !isStopSend.current) {
-      yakitApp.completeEngineLink({ credential: getCredential() })
+      if (isMemfit()) {
+        setShowMemfitLicenseGate(true)
+      } else {
+        completeEngineLink().catch((error) => {
+          yakitNotify('error', `打开主窗口失败：${error instanceof Error ? error.message : String(error)}`)
+        })
+      }
     }
   }, [engineLink, yakitStatus])
 
@@ -1184,6 +1204,7 @@ export const StartupPage: React.FC = () => {
   return (
     <div className={styles['startup-wrapper']}>
       <div className={styles['startup-header-drap']} style={{ height: DragHeaderHeight }}></div>
+      {showMemfitLicenseGate && <MemfitLicenseGate onVerified={completeEngineLink} />}
       <div className={styles['startup-wrapper-left']}>
         <div className={styles['startup-title']}>
           <div className={styles['startup-logo']}>

@@ -1,4 +1,5 @@
 const { app } = require('electron')
+const isDev = require('electron-is-dev')
 const process = require('process')
 
 const isMac = process.platform === 'darwin'
@@ -45,7 +46,7 @@ const devToolMenu = {
 const MenuTemplate = [
   ...(isMac ? [macAppMenu] : []),
   { role: 'editMenu' },
-  devToolMenu,
+  ...(isDev ? [devToolMenu] : []),
   { role: 'windowMenu' },
 ]
 

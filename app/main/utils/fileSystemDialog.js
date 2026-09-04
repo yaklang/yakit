@@ -1,5 +1,7 @@
 const { ipcMain, dialog, app } = require('electron')
 const path = require('path')
+const { assertApplicationWindowSender, assertExpectedWindowSender } = require('../security')
+const { grantOpenDialogResult, grantSaveDialogResult } = require('../fileAccessPolicy')
 
 /**
  * @name 选择文件-打开系统文件弹窗
@@ -44,16 +46,19 @@ module.exports = {
   handleSaveFileSystem: handleSaveFileSystem,
   register: (win, getClient) => {
     ipcMain.handle('open-file-system-dialog', async (event, params) => {
-      return await handleOpenFileSystem(params)
+      assertApplicationWindowSender(event, 'open-file-system-dialog')
+      return grantOpenDialogResult(event, await handleOpenFileSystem(params))
     })
 
     ipcMain.handle('save-file-system-dialog', async (event, params) => {
-      return await handleSaveFileSystem(params)
+      assertApplicationWindowSender(event, 'save-file-system-dialog')
+      return grantSaveDialogResult(event, await handleSaveFileSystem(params))
     })
   },
   registerNewIPC: (win, getClient, ipcEventPre) => {
     ipcMain.handle(ipcEventPre + 'open-file-system-dialog', async (event, params) => {
-      return await handleOpenFileSystem(params)
+      assertExpectedWindowSender(event, win, ipcEventPre + 'open-file-system-dialog')
+      return grantOpenDialogResult(event, await handleOpenFileSystem(params))
     })
   },
 }

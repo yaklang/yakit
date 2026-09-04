@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const { fileURLToPath } = require('url')
 
 const TRUSTED_DEV_HOSTS = new Set(['127.0.0.1', 'localhost'])
 const TRUSTED_DEV_PORTS = new Set(['3000', '2800', '5173'])
@@ -64,10 +65,23 @@ const getSenderUrl = (event) => {
   return event?.senderFrame?.url || event?.sender?.getURL?.() || ''
 }
 
+const isPathWithin = (rootPath, candidatePath) => {
+  const relative = path.relative(rootPath, candidatePath)
+  return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative))
+}
+
 const isTrustedAppSender = (event) => {
   const senderUrl = getSenderUrl(event)
   if (!senderUrl) return false
-  if (senderUrl.startsWith('file://')) return true
+  if (senderUrl.startsWith('file://')) {
+    try {
+      const rendererPath = path.resolve(fileURLToPath(senderUrl))
+      const packagedAppPath = path.resolve(__dirname, '..')
+      return isPathWithin(packagedAppPath, rendererPath)
+    } catch (error) {
+      return false
+    }
+  }
 
   try {
     const parsed = new URL(senderUrl)
@@ -81,6 +95,32 @@ const assertTrustedAppSender = (event, action) => {
   if (!isTrustedAppSender(event)) {
     throw new Error(`untrusted IPC sender for ${action}`)
   }
+}
+
+const assertExpectedWindowSender = (event, expectedWindow, action) => {
+  const expectedWebContents = expectedWindow?.webContents
+  if (
+    !expectedWebContents ||
+    expectedWebContents.isDestroyed?.() ||
+    event?.sender !== expectedWebContents ||
+    (event?.senderFrame && expectedWebContents.mainFrame && event.senderFrame !== expectedWebContents.mainFrame)
+  ) {
+    throw new Error(`unexpected IPC sender for ${action}`)
+  }
+}
+
+const assertApplicationWindowSender = (event, action) => {
+  const electron = require('electron')
+  const sourceWindow = electron.BrowserWindow?.fromWebContents?.(event?.sender)
+  if (
+    !sourceWindow ||
+    sourceWindow.isDestroyed?.() ||
+    (event?.senderFrame && event?.sender?.mainFrame && event.senderFrame !== event.sender.mainFrame)
+  ) {
+    throw new Error(`unexpected IPC sender for ${action}`)
+  }
+  assertTrustedAppSender(event, action)
+  return sourceWindow
 }
 
 const isAllowedHostname = (hostname, allowedHosts = []) => {
@@ -196,6 +236,8 @@ const normalizePid = (value) => {
 }
 
 module.exports = {
+  assertApplicationWindowSender,
+  assertExpectedWindowSender,
   assertTrustedAppSender,
   isTrustedAppSender,
   normalizeHttpBaseUrl,

@@ -69,6 +69,11 @@ contextBridge.exposeInMainWorld('yakitBridge', {
     setRemoteKey: (key, value) => invokePrefixed('SetKey', { Key: key, Value: value }),
     setRemoteKeyWithTTL: (key, value, ttl) => invokePrefixed('SetKey', { Key: key, Value: value, TTL: ttl }),
   },
+  license: {
+    getRequestCode: () => invokePrefixed('GetMemfitLicenseRequest'),
+    verifyCached: () => invokePrefixed('VerifyCachedMemfitLicense'),
+    activate: (licenseActivation) => invokePrefixed('ActivateMemfitLicense', licenseActivation),
+  },
   system: {
     fetchSystemName: () => invokePrefixed('fetch-system-name'),
     fetchCpuArch: () => invokePrefixed('fetch-cpu-arch'),

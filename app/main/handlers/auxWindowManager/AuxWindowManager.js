@@ -1,7 +1,7 @@
 const { BrowserWindow } = require('electron')
+const isDev = require('electron-is-dev')
 const path = require('path')
 const crypto = require('crypto')
-const isDev = require('electron-is-dev')
 const { CHANNEL_INIT, CHANNEL_PUSH, CHANNEL_OPENED, CHANNEL_CLOSED, CHANNEL_APP_SYNC } = require('./channels')
 
 const AUX_APP_HTML = path.resolve(__dirname, '../../../renderer/pages/main/yakit-aux.html')
@@ -173,7 +173,7 @@ class AuxWindowManager {
     auxWin.webContents.once('did-finish-load', () => {
       if (auxWin.isDestroyed()) return
       auxWin.show()
-      if (openDevTools) {
+      if (isDev && openDevTools) {
         auxWin.webContents.openDevTools({ mode: 'detach' })
       }
       const openedPayload = { windowId, route, singletonKey, title }

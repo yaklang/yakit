@@ -7,6 +7,7 @@ const grpc = require('@grpc/grpc-js')
 const protoLoader = require('@grpc/proto-loader')
 const { printLogOutputFile } = require('./logFile')
 const { assertTrustedAppSender, normalizeHttpBaseUrl } = require('./security')
+const { verifyCachedMemfitLicense } = require('./memfitLicense')
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
   longs: String,
@@ -193,6 +194,7 @@ function testEngineAvaiableVersion(params) {
 }
 
 module.exports = {
+  verifyCachedMemfitLicense: () => verifyCachedMemfitLicense(getClient),
   testRemoteClient,
   testEngineAvaiableVersion,
   clearing: () => {

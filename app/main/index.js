@@ -3,9 +3,17 @@ const isDev = require('electron-is-dev')
 const path = require('path')
 const os = require('os')
 const url = require('url')
-const { registerIPC, registerNewIPC } = require('./ipc')
+const { registerIPC, registerNewIPC, verifyCachedMemfitLicense } = require('./ipc')
 const process = require('process')
 const shouldOpenDevTools = isDev && process.env.YAKIT_OPEN_DEVTOOLS === 'true'
+
+const isMemfitRuntime = () => {
+  return (
+    process.env.YAKIT_APP_PLATFORM === 'memfit' ||
+    process.env.PLATFORM === 'memfit' ||
+    (app.isPackaged && app.getName() === 'AI Senso')
+  )
+}
 
 // Dev: avoid env/system proxy breaking localhost renderer loads (white screen / network service crash)
 if (isDev) {
@@ -97,6 +105,8 @@ const UICloseFlag = 'windows-close-flag'
 /** 窗口对象 */
 let win = null
 let engineLinkWin = null
+let mainWindowLoaded = false
+let mainWindowLoadPromise = null
 
 process.on('uncaughtException', (error) => {
   try {
@@ -221,6 +231,26 @@ function createEngineLinkWindow() {
  * ---------------- 创建主窗口 ----------------
  */
 let readyWinShow = false
+function loadMainWindow() {
+  if (mainWindowLoaded) return Promise.resolve()
+  if (mainWindowLoadPromise) return mainWindowLoadPromise
+  if (!win || win.isDestroyed()) return Promise.reject(new Error('main window is unavailable'))
+
+  const loadPromise = isDev
+    ? win.loadURL(process.env.YAKIT_DEV_RENDERER_URL || 'http://127.0.0.1:3000')
+    : win.loadFile(path.resolve(__dirname, '../renderer/pages/main/index.html'))
+
+  mainWindowLoadPromise = loadPromise
+    .then(() => {
+      mainWindowLoaded = true
+    })
+    .finally(() => {
+      mainWindowLoadPromise = null
+    })
+
+  return mainWindowLoadPromise
+}
+
 function createWindow() {
   const minWidth = 900
   const minHeight = 650
@@ -254,8 +284,11 @@ function createWindow() {
     skipTaskbar: true,
   })
 
-  if (isDev) win.loadURL(process.env.YAKIT_DEV_RENDERER_URL || 'http://127.0.0.1:3000')
-  else win.loadFile(path.resolve(__dirname, '../renderer/pages/main/index.html'))
+  if (!isMemfitRuntime()) {
+    loadMainWindow().catch((error) => {
+      printLogOutputFile(`[mainWin] initial load failed: ${error?.message || error}`)
+    })
+  }
 
   if (shouldOpenDevTools) win.webContents.openDevTools({ mode: 'detach' })
 
@@ -329,6 +362,8 @@ function createWindow() {
 
   win.on('closed', () => {
     win = null
+    mainWindowLoaded = false
+    mainWindowLoadPromise = null
   })
 }
 
@@ -548,9 +583,20 @@ function registerGlobalIPC() {
   // ------------------- 窗口发送数据操作 -------------------
   // engineLink 完成操作
   ipcMain.handle('engineLinkWin-done', async (event, data) => {
+    if (!engineLinkWin || engineLinkWin.isDestroyed() || event.sender !== engineLinkWin.webContents) {
+      throw new Error('engine link completion rejected for an unexpected sender')
+    }
+
+    if (isMemfitRuntime()) {
+      const verified = await verifyCachedMemfitLicense()
+      if (!verified) throw new Error('a valid AI Senso license is required')
+      await loadMainWindow()
+    }
+
     winHide(engineLinkWin)
     winShow(win, readyWinShow)
     safeSend(win, 'from-engineLinkWin', data)
+    return { success: true }
   })
 
   // win 完成操作

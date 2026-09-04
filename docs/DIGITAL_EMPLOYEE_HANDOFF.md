@@ -1,9 +1,20 @@
 # AI SenSo 数字员工功能交接
 
-更新时间：2026-09-03
+更新时间：2026-09-04
 
 ## 0. 最新交接摘要（上下文切换先读）
 
+- 2026-09-04 已完成 AI SenSo 客户端授权入口加固：Memfit 连接引擎后先在独立启动窗口展示授权页，Electron 主进程会再次调用引擎校验缓存授权；只有校验成功才加载并显示主业务渲染器，不再依赖首页 React 状态作为第一道门禁。
+- 新授权入口复用现有 `GetLicense/CheckLicense/GetKey/SetKey`，授权码仍由引擎验证并缓存在引擎键值存储中；主业务渲染器原有 `EnterpriseJudgeLogin` 保留为二次校验兜底。非 Memfit 产品保持原窗口切换流程。
+- 生产环境不再注册 `trigger-devtool`，应用菜单不再包含 DevTools，辅助窗口也只允许开发环境显式打开 DevTools；开发环境仍可通过 `YAKIT_OPEN_DEVTOOLS=true` 调试。
+- Electron Builder 已排除 `docs/`、`packageScript/`、测试目录/文件、`reports/` 和 `coverage/`；本地目录包审计确认交接文档和构建脚本均未进入 `app.asar`，主渲染器无 source map。
+- Windows ASAR Integrity 从 Electron 30 才受支持，因此根 Electron 已由 `27.0.0` 升级至 `30.5.1`；打包启用 `EnableEmbeddedAsarIntegrityValidation`、`OnlyLoadAppFromAsar`，同时关闭 `NODE_OPTIONS` 与 Node CLI inspect Fuse。目录包日志确认写入完整性资源，Fuse 实读均符合预期。
+- 2026-09-04 已完成安全测试报告第一阶段 P0：`install-yak-engine` 不再拼接并执行 `cp/copy/chmod` Shell 命令，统一使用 Node 文件复制；版本只允许 `dev/` 可选前缀与字母、数字、点、下划线、连字符，并校验源文件和目标文件都位于引擎目录。下载、完整性检查、安装两套普通/`EngineLink:` IPC 共用同一校验。
+- 任意文件 IPC 已改为系统文件选择框授权模型：打开/保存对话框按 `webContents` 临时授予精确文件或目录能力，读取、写入、删除、重命名、存在性探测必须来自应用内部主 frame 且命中授权路径；保存写入限制 64 MiB，重命名禁止覆盖已有文件。`fetch-code-path` 只授权应用管理的代码目录。
+- `file://` sender 不再全部视为可信，仅允许应用安装目录内的渲染文件；引擎更新与授权前文件读取等高权限 IPC 进一步绑定对应窗口。报告中的 `/etc/hosts`、`/tmp` 任意路径 PoC 与恶意版本命令替换字符串已加入回归测试。
+- 打包规则进一步排除根 `scripts/`、所有 `*.log`、`.codex-*`、`.codex-run/`、`.env*`、source map、Markdown、依赖内 docs/examples；Windows 解包包审计上述项目数量均为 0。授权、文件能力、sender 与引擎安装共 21 项定向测试通过。
+- P0 最终 Windows 安装包已于 2026-09-04 生成：`release/AI Senso-1.4.8-0711-windows-amd64.exe`，大小 `181962957` 字节，SHA256 为 `3B175AC93B67FA133168E34D8AFA1D312E46C72684E6E14F4885309CBB38D5E5`。最终包再次通过 ASAR 排除项审计与 Fuse 实读；`release/` 仍只作为本地构建产物，不提交 Git。
+- P0 覆盖报告当前四项复现问题，但不等于 Electron 权限模型整体完成整改。主窗口/辅助窗口/子窗口的 `nodeIntegration:true`、`contextIsolation:false`、原始 `ipcRenderer` 暴露及 Terminal 等高权限通道仍属于第二阶段，后续必须单独迁移与回归。
 - 当前分支：`main`，跟踪 GitHub `origin/main`。主仓库已迁移到 `git@github.com:why-2018/AISenso.git`；原 Gitee 地址保留为 `gitee` 备用远端。
 - 2026-08-26 已将业务模型从“员工 1:1 Forge”调整为“固定八个数字员工角色 1:N 智能体”。
 - 八个角色始终来自 `config.ts`；智能体通过内部 Tag `senso-role:<role-id>` 归属角色，禁止再按 Forge 列表顺序套用角色。
@@ -26,6 +37,7 @@
 - 2026-09-03 已评估与 `yaklang/yakit` 最新 `master` 持续同步：双方无共同祖先，当前约为本地 38 个独立提交、上游 8878 个提交，tip 级差异约 2511 个文件，不能直接 rebase 或合并 unrelated histories。推荐一次性从上游 `master` 建新基线并选择性迁移 AI SenSo 定制，之后用周期 merge 同步；初步工作量约 23–38 人日。
 - 截至本次交接更新前，GitHub `main` 最新提交为 `6caa4bda6`；关键前置提交为 `ced24ef`、`bcb0d23`、`45c5866` 和 `2adac78`。
 - 本地开发统一在仓库根目录执行 `yarn dev`，会启动 Memfit 主渲染器 `3000`、引擎连接页 `5713` 和 Electron。
+- 根 `yarn dev` 已显式传入 `YAKIT_APP_PLATFORM=memfit`，保证开发态 Electron 主进程也启用“授权成功后才加载主窗口”的 Memfit 时序；不要删除该变量。
 - 2026-08-26 数字员工选择页的 6 个快捷导航已经修复，用户完成实际点击测试并确认“可以啦”。
 - 最终根因不是路由映射错误，而是 `MainOperatorContent` 挂载后执行默认标签初始化，把已打开的目标页重新覆盖成 `AI_Agent`。
 - 最终方案：选择页仅保存一次性目标；主菜单完成默认页初始化后，再消费目标并调用实际开页逻辑。不要改回事件监听、`setTimeout` 或 Gate 挂载后立即跳转。

@@ -1,6 +1,8 @@
 const { ipcMain } = require('electron')
 const FS = require('fs')
 const { parseXlsx } = require('./portScan')
+const { assertExpectedWindowSender } = require('../security')
+const { assertFileAccess } = require('../fileAccessPolicy')
 
 module.exports = {
   registerNewIPC: (win, getClient, ipcEventPre) => {
@@ -56,7 +58,8 @@ module.exports = {
 
     // 获取URL的IP地址
     ipcMain.handle(ipcEventPre + 'fetch-file-content', async (e, params) => {
-      return await asyncFetchFileContent(params)
+      assertExpectedWindowSender(e, win, ipcEventPre + 'fetch-file-content')
+      return await asyncFetchFileContent(assertFileAccess(e, params, 'read'))
     })
   },
 }

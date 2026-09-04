@@ -11,6 +11,7 @@ export const yakitTheme = getBridge().theme
 export const yakitShell = getBridge().shell
 export const yakitClipboard = getBridge().clipboard
 export const yakitCache = getBridge().cache
+export const yakitLicense = getBridge().license
 export const yakitSystem = getBridge().system
 export const yakitLogs = getBridge().logs
 export const yakitPerf = getBridge().perf

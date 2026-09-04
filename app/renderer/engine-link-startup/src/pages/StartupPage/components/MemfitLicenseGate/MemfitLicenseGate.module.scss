@@ -1,0 +1,76 @@
+.license-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background:
+    radial-gradient(circle at 18% 18%, rgb(20 120 255 / 12%), transparent 38%),
+    linear-gradient(145deg, #f4f9ff 0%, #ffffff 48%, #eef7ff 100%);
+}
+
+.license-panel {
+  width: min(620px, 100%);
+  padding: 28px 32px 30px;
+  border: 1px solid rgb(20 120 255 / 18%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 20px 60px rgb(26 82 140 / 15%);
+}
+
+.license-logo {
+  display: block;
+  width: 150px;
+  max-height: 46px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.license-heading {
+  margin: 16px 0 18px;
+
+  h1 {
+    margin: 0 0 6px;
+    color: #1f2f43;
+    font-size: 24px;
+    line-height: 32px;
+  }
+
+  p {
+    margin: 0;
+    color: #73849a;
+    font-size: 13px;
+  }
+}
+
+.license-field {
+  margin-top: 14px;
+}
+
+.license-label {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: space-between;
+  color: #34465c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.license-error {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border: 1px solid #ffd2d2;
+  border-radius: 6px;
+  color: #c73a3a;
+  background: #fff5f5;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.license-submit {
+  width: 100%;
+  margin-top: 18px;
+}

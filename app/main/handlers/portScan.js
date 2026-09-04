@@ -2,6 +2,8 @@ const { ipcMain } = require('electron')
 const FS = require('fs')
 const AdmZip = require('adm-zip')
 const { XMLParser } = require('fast-xml-parser')
+const { assertApplicationWindowSender } = require('../security')
+const { assertFileAccess } = require('../fileAccessPolicy')
 const parser = new XMLParser({ ignoreAttributes: false })
 
 // 列名转索引（A → 0, B → 1）
@@ -276,7 +278,8 @@ const register = (win, getClient) => {
 
   // 获取URL的IP地址
   ipcMain.handle('fetch-file-content', async (e, params) => {
-    return await asyncFetchFileContent(params)
+    assertApplicationWindowSender(e, 'fetch-file-content')
+    return await asyncFetchFileContent(assertFileAccess(e, params, 'read'))
   })
 
   // 获取证书内容
