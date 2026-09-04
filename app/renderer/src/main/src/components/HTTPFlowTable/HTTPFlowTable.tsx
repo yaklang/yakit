@@ -99,8 +99,7 @@ import { useHTTPFlowTableShortcutKeys } from './useHTTPFlowTableShortcutKeys'
 import { useHTTPFlowTableContextMenu } from './useHTTPFlowTableContextMenu'
 import { onSendToTab, toggleHTTPFlowFavorite } from './HTTPFlowTable.actions'
 import { FlowMarkEditForm } from './FlowMarkEditForm'
-import { FlowTestersForm } from './FlowTestersForm'
-import type { SetHTTPFlowMarkRequest, SetHTTPFlowTestersRequest } from './HTTPFlowMark.constants'
+import type { SetHTTPFlowMarkRequest } from './HTTPFlowMark.constants'
 import { isEnterpriseEdition } from '@/utils/envfile'
 import { NowProjectDescription } from '@/pages/globalVariable'
 import { useStore } from '@/store'
@@ -1801,17 +1800,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setSelected((prev) => (prev ? patchRow(prev) : prev))
   })
 
-  const patchFlowTesters = useMemoizedFn((payload: SetHTTPFlowTestersRequest) => {
-    const idSet = new Set(payload.Ids.map(String))
-    const patchRow = (row: HTTPFlow): HTTPFlow => {
-      if (!idSet.has(String(row.Id))) return row
-      return { ...row, Testers: payload.Testers }
-    }
-    setData((prev) => prev.map(patchRow))
-    setSelectedRows((prev) => prev.map(patchRow))
-    setSelected((prev) => (prev ? patchRow(prev) : prev))
-  })
-
   const onOpenFlowMarkEdit = useMemoizedFn((record: HTTPFlow) => {
     const m = showYakitModal({
       title: `ID: ${record.Id}`,
@@ -1835,19 +1823,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       title: t('HTTPFlowTable.batchModifyMark'),
       content: (
         <FlowMarkEditForm batch ids={ids} onClose={() => m.destroy()} onSuccess={patchFlowMark} />
-      ),
-      footer: null,
-      onCancel: () => m.destroy(),
-    })
-  })
-
-  const onOpenBatchTesters = useMemoizedFn((list: HTTPFlow[]) => {
-    const ids = list.map((item) => Number(item.Id)).filter((id) => !Number.isNaN(id))
-    if (ids.length === 0) return
-    const m = showYakitModal({
-      title: t('HTTPFlowTable.testers'),
-      content: (
-        <FlowTestersForm ids={ids} onClose={() => m.destroy()} onSuccess={patchFlowTesters} />
       ),
       footer: null,
       onCancel: () => m.destroy(),
@@ -2788,7 +2763,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onViewAttachmentDataRefresh,
     onClearSelection: resetSelected,
     onOpenBatchMarkEdit,
-    onOpenBatchTesters,
   })
 
   useEffect(() => {

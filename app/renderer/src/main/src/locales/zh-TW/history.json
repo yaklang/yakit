@@ -61,9 +61,6 @@
     "selectSeverity": "請選擇嚴重程度",
     "selectDisposalStatus": "請選擇處置狀態",
     "inputDisposalNote": "請輸入處置說明",
-    "testers": "測試人員",
-    "selectTesters": "請選擇測試人員",
-    "searchTesters": "搜尋測試人員",
     "batchModifyMark": "批次修改",
     "RowContextMenu": {
       "sendToWebFuzzer": "傳送到 Web Fuzzer",
@@ -102,7 +99,6 @@
       "exportToExcel": "匯出為Excel",
       "exportToHAR": "匯出為HAR",
       "modifyMark": "修改標記",
-      "addTesters": "新增測試人員",
       "editTag": "編輯tag",
       "openInNewWindow": "新視窗開啟",
       "uploadData": "上傳資料",

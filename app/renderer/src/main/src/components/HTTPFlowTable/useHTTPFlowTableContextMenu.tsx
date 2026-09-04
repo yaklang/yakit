@@ -116,8 +116,6 @@ export interface UseHTTPFlowTableContextMenuOptions {
   onClearSelection: () => void
   /** EE: batch mark edit */
   onOpenBatchMarkEdit?: (list: HTTPFlow[]) => void
-  /** EE: batch add testers */
-  onOpenBatchTesters?: (list: HTTPFlow[]) => void
 }
 
 export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenuOptions) => {
@@ -163,7 +161,6 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onViewAttachmentDataRefresh,
     onClearSelection,
     onOpenBatchMarkEdit,
-    onOpenBatchTesters,
   } = options
 
   const menuData = useMemo(() => {
@@ -573,15 +570,6 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
                 onOpenBatchMarkEdit?.(list)
               },
             },
-            {
-              key: 'addTesters',
-              label: t('HTTPFlowTable.RowContextMenu.addTesters'),
-              default: true,
-              webSocket: true,
-              onClickBatch: (list: HTTPFlow[]) => {
-                onOpenBatchTesters?.(list)
-              },
-            },
           ]
         : []),
       {
@@ -627,7 +615,6 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     getUrlWithoutQuery,
     total,
     onOpenBatchMarkEdit,
-    onOpenBatchTesters,
   ])
 
   // 右键插件处理
