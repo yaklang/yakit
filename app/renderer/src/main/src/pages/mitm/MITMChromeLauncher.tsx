@@ -553,6 +553,8 @@ function setGoogleChromePlugin(parameterName: string, googleChromePluginPath: st
   } as ChromeLauncherParams
 }
 function handleChromeLauncherParams(arr: ChromeLauncherParams[], googleChromePluginPath: string) {
+  // 存量合并：缓存表缺少的新版默认参数按 parameterName 补齐，不覆盖用户已有条目（含已禁用的同名参数）
+  arr.push(...chromeLauncherParamsArr.filter((item) => !arr.some((it) => it.parameterName === item.parameterName)))
   const index = arr.findIndex((item) => item.parameterName === '--load-extension')
   if (index === -1) {
     arr.push(setGoogleChromePlugin('--load-extension', googleChromePluginPath, false))
