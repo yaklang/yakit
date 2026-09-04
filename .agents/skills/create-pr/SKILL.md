@@ -24,7 +24,7 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 
 - `git branch --show-current` 确认当前分支，**在 master 上直接停止并提示**。
 - `git remote -v` 确认 origin 指向 `yaklang/yakit`；不符则**停止并提示**，避免推错仓库。
-- **gh 检查**（`command -v gh` + `gh auth status`）：已安装且已登录则正常继续；**未安装或未登录时不要直接停止**，按「gh 降级流程」（见下方）用 `AskUserQuestion` 弹框让用户选择处理方式。
+- **gh 检查**（`command -v gh` + `gh auth status`；PowerShell 无 `command -v`，等价命令为 `Get-Command gh`）：已安装且已登录则正常继续；**未安装或未登录时不要直接停止**，按「gh 降级流程」（见下方）用 `AskUserQuestion` 弹框让用户选择处理方式。
 - `git fetch origin master` 更新基线；PR 的 base 固定为 `master`。
 - `git status` + `git log origin/master..HEAD --oneline` 摸底：工作区是否有改动、分支已有多少 commit。
 
@@ -32,7 +32,7 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 
 用 `AskUserQuestion` 弹框，选项二选一（question 中说明当前 gh 状态）：
 
-- **「安装并登录 gh」**：执行 `brew install gh`（macOS；Linux 提示参考官方安装方式），装完提示用户在终端执行 `gh auth login` 完成登录（登录是交互式操作，agent 不能代办），登录确认后**回到第 1 步重新检查并正常继续**。安装或登录失败则停止并报告。
+- **「安装并登录 gh」**：按平台执行安装——macOS：`brew install gh`；Windows：`winget install GitHub.cli`（或 `scoop install gh` / `choco install gh`）；Linux：提示参考官方安装方式。装完提示用户在终端执行 `gh auth login` 完成登录（登录是交互式操作，agent 不能代办），登录确认后**回到第 1 步重新检查并正常继续**。安装或登录失败则停止并报告。
 - **「手动创建 PR（输出 title 与 description）」**：commit、push、评审、描述生成等步骤**全部正常执行**，仅第 7 步切换为「手动模式」——不执行任何 `gh` 命令，改为输出 PR 标题与描述供用户复制，详见第 7 步「手动模式」。
 
 用户拒绝两个选项（选 Other 取消）则停止。
