@@ -141,6 +141,9 @@ module.exports = (win, getClient) => {
     // opts:
     //   --no-system-proxy-config-service ⊗	Do not use system proxy configuration service.
     //   --no-proxy-server ⊗	Don't use a proxy server, always make direct connections. Overrides any other proxy server flags that are passed. ↪
+    const debugPortItem = chromeFlags.find((item) => !item.disabled && item.parameterName === '--remote-debugging-port')
+    const debugPort = Number(`${debugPortItem?.variableValues || ''}`)
+
     let launchOpt = {
       startingUrl: disableCACertPage === false ? 'http://mitm' : 'chrome://newtab', // 确保在启动时打开 chrome://newtab 页面。
       logLevel: 'verbose',
@@ -152,7 +155,7 @@ module.exports = (win, getClient) => {
         '--no-first-run', // 跳过首次运行体验（欢迎页/设为默认浏览器弹框）
         '--no-default-browser-check', // 不检查是否为默认浏览器
         ...chromeFlags
-          .filter((item) => !item.disabled)
+          .filter((item) => !item.disabled && item.parameterName !== '--remote-debugging-port')
           .map((item) => {
             if (item.variableValues) {
               return item.parameterName + '=' + item.variableValues
@@ -161,6 +164,14 @@ module.exports = (win, getClient) => {
             }
           }),
       ],
+    }
+    if (debugPortItem) {
+      if (!Number.isInteger(debugPort) || debugPort < 1 || debugPort > 65535) {
+        throw Error(
+          `--remote-debugging-port 的端口值「${debugPortItem.variableValues || ''}」无效，请填写 1-65535 之间的端口号`,
+        )
+      }
+      launchOpt.port = debugPort
     }
     if (userDataDir) {
       launchOpt['userDataDir'] = userDataDir
@@ -193,6 +204,11 @@ module.exports = (win, getClient) => {
       }
     }
     return launch(launchOpt).then((chrome) => {
+      if (!chrome.process) {
+        throw Error(
+          `端口 ${debugPort} 已被占用（--remote-debugging-port），浏览器未启动。请关闭占用该端口的进程，或修改启动参数中的端口后重试`,
+        )
+      }
       chrome.process.on('exit', () => {
         // 在这里执行您想要的操作，当所有chrome实例都关闭时
         startNum -= 1

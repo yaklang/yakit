@@ -3,6 +3,17 @@ import type { MITMAdvancedFilter, MITMFilterData, MITMFilterSchema } from '@/pag
 import { v4 as uuidv4 } from 'uuid'
 import { HotPatchDefaultContent } from '@/defaultConstants/HTTPFuzzerPage'
 
+// 两张启动参数表共用的远程调试端口项；用工厂避免共享对象引用与 id
+const remoteDebuggingPortParam = (): ChromeLauncherParams => ({
+  id: uuidv4(),
+  parameterName: '--remote-debugging-port',
+  variableValues: '9222',
+  variableType: 'input',
+  disabled: false,
+  desc: '远程调试端口，供 Chrome-MCP 等工具连接浏览器',
+  default: true,
+})
+
 // 浏览器启动最小参数配置
 export const chromeLauncherMinParams: ChromeLauncherParams[] = [
   {
@@ -41,6 +52,7 @@ export const chromeLauncherMinParams: ChromeLauncherParams[] = [
     desc: '为代理设置回避列表，不代理回环地址',
     default: true,
   },
+  remoteDebuggingPortParam(),
 ]
 
 export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
@@ -404,6 +416,7 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
     desc: '禁用特定的功能。',
     default: true,
   },
+  remoteDebuggingPortParam(),
 ]
 
 export const defaultMITMAdvancedFilter: MITMAdvancedFilter = {
