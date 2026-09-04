@@ -136,6 +136,8 @@ export enum YakitRoute {
   ManageRightClickPlugins = 'manage-right-click-plugins',
   /** 右键插件执行结果 */
   ContextMenuResult = 'context-menu-result',
+  /** 应用设置 */
+  Settings = 'settings',
 }
 
 export type YakitRouteType = `${YakitRoute}`

@@ -13,5 +13,44 @@
   "SoftwareSettings": {
     "projectManagement": "專案管理",
     "remoteMode": "遠端模式"
+  },
+  "SettingsPage": {
+    "searchPlaceholder": "請輸入關鍵詞搜尋",
+    "placeholder": "錨點：{{anchor}}",
+    "group": {
+      "preference": "偏好設定",
+      "system": "系統設定",
+      "ai": "AI 設定"
+    },
+    "item": {
+      "general": "一般",
+      "appearance": "外觀",
+      "shortcut-key": "鍵盤快捷鍵",
+      "reverse": "全域反連",
+      "system-proxy": "系統代理",
+      "global-config": "全域設定",
+      "right-click-plugins": "右鍵外掛管理",
+      "ai-config": "AI 設定",
+      "ai-model": "模型",
+      "yak-mcp": "Yak MCP"
+    },
+    "appearance": {
+      "theme": "主題",
+      "followSystem": "跟隨系統",
+      "light": "亮色",
+      "dark": "暗色",
+      "mode": "模式",
+      "classic": "經典模式",
+      "classicDesc": "該模式就是之前的選單首頁佈局",
+      "securityExpert": "安全專家模式",
+      "securityExpertDesc": "將選單列和固定頁面調整為滲透常用功能，整體更簡潔明瞭",
+      "scan": "掃描模式",
+      "scanDesc": "將選單列和首頁重點放在掃描性功能上，方便快捷",
+      "language": "語言",
+      "languageSetting": "語言設定",
+      "langZh": "Chinese (Simplified) 簡體中文",
+      "langEn": "English",
+      "langZhTW": "Chinese (Traditional) 繁體中文"
+    }
   }
 }

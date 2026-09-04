@@ -9,13 +9,13 @@ import { ConfigProvider } from 'antd'
 import { YakitAntdProvider } from '@/theme/antdTheme'
 import { NotificationProvider } from '@/utils/notification'
 import AuxWindowApp from './AuxWindowApp'
-import { useTheme } from '@/hook/useTheme'
+import { useTheme, resolveTheme } from '@/hook/useTheme'
 import { applyAuxThemeColors } from '@/auxWindow/utils/applyAuxThemeColors'
 import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
 import { setupMonacoWorkers } from '@/utils/monacoSpec/setupMonacoWorkers'
 
 setupMonacoWorkers()
-applyAuxThemeColors(useTheme.getState().theme)
+applyAuxThemeColors(resolveTheme(useTheme.getState().theme))
 
 const initialLoading = document.getElementById('initial-loading')
 if (initialLoading) {

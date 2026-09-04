@@ -4,29 +4,38 @@ import { yakitTheme } from '@/utils/electronBridge'
 export type Theme = 'light' | 'dark'
 let cleanupThemeListener: (() => void) | null = null
 
-function applyTheme(theme: Theme) {
+function resolveIncoming(theme: string): Theme {
+  if (theme === 'dark' || theme === 'light') return theme
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
+  return 'light'
+}
+
+function applyDocument(theme: Theme) {
   document.documentElement.setAttribute('data-theme', theme)
-  localStorage.setItem('theme', theme)
 }
 
 export const useTheme = create<{
   theme: Theme
   setTheme: (theme: Theme, save: boolean) => void
 }>((set) => {
-  const initialTheme: Theme = (localStorage.getItem('theme') as Theme) || 'light'
-  applyTheme(initialTheme)
+  const initialTheme = resolveIncoming(localStorage.getItem('theme') || 'light')
+  applyDocument(initialTheme)
 
   if (!cleanupThemeListener) {
-    cleanupThemeListener = yakitTheme.onUpdated((theme: Theme) => {
-      applyTheme(theme)
-      set({ theme })
+    cleanupThemeListener = yakitTheme.onUpdated((theme: string) => {
+      const resolved = resolveIncoming(theme)
+      applyDocument(resolved)
+      set({ theme: resolved })
     })
   }
 
   return {
     theme: initialTheme,
     setTheme: (theme: Theme, save: boolean) => {
-      save && applyTheme(theme)
+      applyDocument(theme)
+      if (save) localStorage.setItem('theme', theme)
       set({ theme })
       yakitTheme.setTheme(theme)
     },

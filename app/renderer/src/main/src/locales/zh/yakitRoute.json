@@ -130,6 +130,7 @@
     "ai-tool": "工具库",
     "ai-forge": "技能库",
     "manageRightClickPlugins": "右键插件设置",
-    "contextMenuResult": "右键插件结果"
+    "contextMenuResult": "右键插件结果",
+    "settings": "设置"
   }
 }

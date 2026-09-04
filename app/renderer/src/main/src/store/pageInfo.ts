@@ -114,6 +114,8 @@ interface PageParamsInfoProps {
   manageRightClickPluginsPageInfo?: ManageRightClickPluginsPageInfoProps
   /** 右键插件执行结果页面 */
   contextMenuResultPageInfo?: ContextMenuResultPageInfoProps
+  /** 应用设置页面 */
+  settingsPageInfo?: SettingsPageInfoProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -362,6 +364,11 @@ export interface PluginOpPageInfoProps {
 
 export interface ManageRightClickPluginsPageInfoProps {
   tab: string
+}
+
+export interface SettingsPageInfoProps {
+  /** 定位到某一设置项 */
+  anchor?: string
 }
 
 export interface ContextMenuResultPageInfoProps {

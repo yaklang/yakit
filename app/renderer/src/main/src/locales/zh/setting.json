@@ -13,5 +13,44 @@
   "SoftwareSettings": {
     "projectManagement": "项目管理",
     "remoteMode": "远程模式"
+  },
+  "SettingsPage": {
+    "searchPlaceholder": "请输入关键词搜索",
+    "placeholder": "锚点：{{anchor}}",
+    "group": {
+      "preference": "偏好设置",
+      "system": "系统设置",
+      "ai": "AI 设置"
+    },
+    "item": {
+      "general": "常规",
+      "appearance": "外观",
+      "shortcut-key": "键盘快捷键",
+      "reverse": "全局反连",
+      "system-proxy": "系统代理",
+      "global-config": "全局配置",
+      "right-click-plugins": "右键插件管理",
+      "ai-config": "AI 配置",
+      "ai-model": "模型",
+      "yak-mcp": "Yak MCP"
+    },
+    "appearance": {
+      "theme": "主题",
+      "followSystem": "跟随系统",
+      "light": "亮色",
+      "dark": "暗色",
+      "mode": "模式",
+      "classic": "经典模式",
+      "classicDesc": "该模式就是之前的菜单首页布局",
+      "securityExpert": "安全专家模式",
+      "securityExpertDesc": "将菜单栏和固定页面调整为渗透常用功能，整体更简洁明了",
+      "scan": "扫描模式",
+      "scanDesc": "将菜单栏和首页重点放在扫描性功能上，方便快捷",
+      "language": "语言",
+      "languageSetting": "语言设置",
+      "langZh": "Chinese (Simplified) 简体中文",
+      "langEn": "English",
+      "langZhTW": "Chinese (Traditional) 繁體中文"
+    }
   }
 }

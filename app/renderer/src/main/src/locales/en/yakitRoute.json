@@ -130,6 +130,7 @@
     "ai-tool": "Tool",
     "ai-forge": "Forge",
     "manageRightClickPlugins": "Manage Right-Click Plugins",
-    "contextMenuResult": "Right-Click Plugin Result"
+    "contextMenuResult": "Right-Click Plugin Result",
+    "settings": "Settings"
   }
 }

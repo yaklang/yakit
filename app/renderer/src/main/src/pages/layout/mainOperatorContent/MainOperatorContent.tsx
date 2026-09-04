@@ -963,6 +963,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       case YakitRoute.ContextMenuResult:
         addContextMenuResult(params)
         break
+      case YakitRoute.Settings:
+        addSettingsPage(params)
+        break
       default:
         break
     }
@@ -1310,6 +1313,22 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       {
         pageParams: {
           manageRightClickPluginsPageInfo: { ...data },
+        },
+      },
+    )
+  })
+  const addSettingsPage = useMemoizedFn((data?: { anchor?: string }) => {
+    const isExist = pageCache.filter((item) => item.route === YakitRoute.Settings).length
+    if (isExist && data?.anchor) {
+      emiter.emit('onSettingsAnchor', data.anchor)
+    }
+    openMenuPage(
+      { route: YakitRoute.Settings },
+      {
+        pageParams: {
+          settingsPageInfo: {
+            anchor: data?.anchor || 'general',
+          },
         },
       },
     )
