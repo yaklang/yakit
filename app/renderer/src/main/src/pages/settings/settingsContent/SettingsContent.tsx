@@ -2,12 +2,18 @@ import type { ComponentType } from 'react'
 import { getSettingsLabel, type SettingsAnchor } from '../constants'
 import { AppearanceSettings } from './appearance/AppearanceSettings'
 import { GeneralSettings } from './general/GeneralSettings'
+import { SystemProxySettings } from './systemProxy/SystemProxySettings'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './SettingsContent.module.scss'
 
 const SettingsPanels: Partial<Record<SettingsAnchor, ComponentType>> = {
   general: GeneralSettings,
   appearance: AppearanceSettings,
+  'system-proxy': SystemProxySettings,
+}
+
+const hideOuterTitle: Partial<Record<SettingsAnchor, true>> = {
+  'system-proxy': true,
 }
 
 interface SettingsContentProps {
@@ -23,7 +29,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
   return (
     <div className={styles['settings-content']}>
       <div key={anchor} className={styles['settings-content-body']}>
-        <div className={styles['settings-content-title']}>{title}</div>
+        {!hideOuterTitle[anchor as SettingsAnchor] && <div className={styles['settings-content-title']}>{title}</div>}
         <div className={styles['settings-content-main']}>
           {Panel ? (
             <Panel />
