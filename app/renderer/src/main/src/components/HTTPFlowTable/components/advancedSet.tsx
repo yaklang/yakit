@@ -4,8 +4,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
-import { DragSortIcon } from '@/assets/newIcon'
-import { OutlineBanIcon, OutlineInformationcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { BanOutlined, InformationCircleOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
@@ -17,6 +16,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import emiter from '@/utils/eventBus/eventBus'
 import type { AdvancedSetProps, ColumnAllInfoItem } from '../HTTPFlowTable.constants'
 import style from '../HTTPFlowTable.module.scss'
+import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 
 export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
   const {
@@ -137,7 +137,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
             }}
             className="modal-remove-icon"
           >
-            <OutlineXIcon />
+            <XOutlined color="currentColor" />
           </div>
         ),
         onOk: handleOk,
@@ -185,7 +185,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                 />
                 <span className={style['title-style']}>{t('AdvancedSet.backgroundRefresh')}</span>
                 <Tooltip title={t('AdvancedSet.keepRefreshingTrafficData')}>
-                  <OutlineInformationcircleIcon className={style['hint-style']} />
+                  <InformationCircleOutlined className={style['hint-style']} color="currentColor" />
                 </Tooltip>
               </div>
             </div>
@@ -203,7 +203,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
               />
               <span className={style['title-style']}>{t('AdvancedSet.dragSelectMultiData')}</span>
               <Tooltip title={t('AdvancedSet.dragSelectMultiDataTip')}>
-                <OutlineInformationcircleIcon className={style['hint-style']} />
+                <InformationCircleOutlined className={style['hint-style']} color="currentColor" />
               </Tooltip>
             </div>
           </div>
@@ -221,7 +221,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
               />
               <span className={style['title-style']}>{t('AdvancedSet.binaryDisplayModal')}</span>
               <Tooltip title={t('AdvancedSet.binaryDisplayModalTip')}>
-                <OutlineInformationcircleIcon className={style['hint-style']} />
+                <InformationCircleOutlined className={style['hint-style']} color="currentColor" />
               </Tooltip>
             </div>
           </div>
@@ -251,10 +251,10 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                           >
-                            <DragSortIcon />
+                            <FigmaIcon2281144183Solid size={12} />
                             <div className={style['column-title']}>{item.title}</div>
                             <Tooltip title={item.isShow ? t('YakitButton.disable') : t('YakitButton.enable')}>
-                              <OutlineBanIcon
+                              <BanOutlined
                                 className={classNames(style['ban-icon'])}
                                 onClick={() => {
                                   setCurColumnsAll((prev) => {
@@ -267,6 +267,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                                     return arr
                                   })
                                 }}
+                                color="currentColor"
                               />
                             </Tooltip>
                           </div>

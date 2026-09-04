@@ -1,4 +1,6 @@
-import { CheckCircleOutlineIcon, CloseCircleIcon, ExclamationOutlineIcon } from '@/assets/newIcon'
+import { CheckCircleOutlineIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckCircleOutlineIcon'
+import { CloseCircleIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CloseCircleIcon'
+import { ExclamationOutlineIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ExclamationOutlineIcon'
 import { App, notification as staticNotification } from 'antd'
 import type { ArgsProps, NotificationInstance } from 'antd/es/notification/interface'
 import type React from 'react'

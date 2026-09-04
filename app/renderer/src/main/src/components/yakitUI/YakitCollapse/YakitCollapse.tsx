@@ -3,7 +3,7 @@ import type React from 'react'
 import styles from './YakitCollapse.module.scss'
 import classNames from 'classnames'
 import type { YakitCollapseProps, YakitPanelProps } from './YakitCollapseType'
-import { SolidChevrondownIcon, SolidChevronrightIcon } from '@/assets/icon/solid'
+import { ChevronDownSolid, ChevronRightSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { childrenToCollapseItems } from '@/utils/antdCompat'
 
 const { Panel } = Collapse
@@ -39,7 +39,11 @@ const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
       ghost
       items={convertedItems}
       destroyOnHidden={destroyOnHidden ?? destroyInactivePanel}
-      expandIcon={expandIcon ? expandIcon : (e) => (e.isActive ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />)}
+      expandIcon={
+        expandIcon
+          ? expandIcon
+          : (e) => (e.isActive ? <ChevronDownSolid color="currentColor" /> : <ChevronRightSolid color="currentColor" />)
+      }
     />
   )
 }

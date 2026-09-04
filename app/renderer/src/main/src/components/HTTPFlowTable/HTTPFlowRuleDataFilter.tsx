@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useInViewport, useMemoizedFn, useSize } from 'ahooks'
-import { OutlineSearchIcon } from '@/assets/icon/outline'
+import { SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import type { ColumnsTypeProps, FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { MultipleSelect } from './HTTPFlowTable'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RefreshIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
 import { openABSFileLocated } from '@/utils/openWebsite'
@@ -328,13 +328,13 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
         filterProps: {
           filterKey: 'RuleVerbose',
           filterMultiple: true,
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
           filterRender: (closePopover: () => void) => (
             <MultipleSelect
               filterProps={{
                 filterSearch: true,
                 filterSearchInputProps: {
-                  prefix: <OutlineSearchIcon className={styles['search-icon']} />,
+                  prefix: <SearchOutlined className={styles['search-icon']} color="currentColor" />,
                   allowClear: true,
                 },
               }}
@@ -383,7 +383,7 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
         filterProps: {
           filterKey: 'Keyword',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
       },
       {

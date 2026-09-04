@@ -1,7 +1,6 @@
 import React from 'react'
 import type { AIToolDecisionProps } from './type'
 import { AISingHaveColorText } from '../aiReviewResult/AIReviewResult'
-// import { SolidCursorclickIcon } from '@/assets/icon/solid'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 

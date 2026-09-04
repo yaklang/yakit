@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useMemo, useState } from 'react'
 import { useControllableValue, useCreation, useMemoizedFn, useMount } from 'ahooks'
 import type { AIChatLeftSideProps, AIChatToolDrawerContentProps } from '../aiAgentType'
-import { OutlineChevronrightIcon } from '@/assets/icon/outline'
+import { ChevronRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { grpcQueryAIToolDetails } from '../grpc'
@@ -114,7 +114,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
           <YakitButton
             type="outline2"
             className={styles['side-header-btn']}
-            icon={<OutlineChevronrightIcon />}
+            icon={<ChevronRightOutlined color="currentColor" />}
             onClick={handleCancelExpand}
             size="small"
           />

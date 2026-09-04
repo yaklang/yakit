@@ -3,7 +3,7 @@ import { AIOnlineModelIconMap } from '../defaultConstant'
 import styles from './ModelInfo.module.scss'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { useCreation } from 'ahooks'
-import { AISystemOutputIcon } from '../aiModelList/icon'
+import { SystemOutputWithBackgroundAiModelColorful } from '@yakit-libs/yakit-ui-icons/colorful'
 import { getModelName } from '../aiModelList/modelName'
 
 export interface ModalInfoProps {
@@ -22,7 +22,7 @@ const ModalInfo: FC<ModalInfoProps> = ({ icon, title, time, trailing }) => {
     if (!icon) {
       return (
         <div className={styles['title-icon']}>
-          <AISystemOutputIcon />
+          <SystemOutputWithBackgroundAiModelColorful />
         </div>
       )
     }
@@ -31,7 +31,7 @@ const ModalInfo: FC<ModalInfoProps> = ({ icon, title, time, trailing }) => {
         <div className={styles['title-icon']}>{AIOnlineModelIconMap[icon || '']}</div>
       )) || (
         <div className={styles['title-icon']}>
-          <AISystemOutputIcon />
+          <SystemOutputWithBackgroundAiModelColorful />
         </div>
       )
     )

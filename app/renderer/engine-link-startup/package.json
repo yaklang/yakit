@@ -18,6 +18,7 @@
     "@ant-design/icons": "^5.6.1",
     "@xterm/addon-fit": "^0.10.0",
     "@yakit-libs/color": "1.4.1",
+    "@yakit-libs/yakit-ui-icons": "0.2.3",
     "ahooks": "3.7.9",
     "antd": "5.29.2",
     "buffer": "^6.0.3",

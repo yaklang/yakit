@@ -2,7 +2,7 @@ import type React from 'react'
 import { memo } from 'react'
 import { Progress } from 'antd'
 import styles from './YakitUploadModal.module.scss'
-import { SolidDocumentdownloadIcon } from '@/assets/icon/solid'
+import { DocumentDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
 
@@ -34,7 +34,7 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = me
     <div className={styles['yaklang-engine-hint-wrapper']}>
       <div className={styles['hint-left-wrapper']}>
         <div className={styles['hint-icon']}>
-          <SolidDocumentdownloadIcon />
+          <DocumentDownloadSolid color="currentColor" />
         </div>
       </div>
 

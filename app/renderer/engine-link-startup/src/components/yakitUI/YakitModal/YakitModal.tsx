@@ -8,7 +8,7 @@ import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import styles from './yakitModal.module.scss'
-import { OutlineXIcon } from '@/assets/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 export interface YakitModalProp extends Omit<ModalProps, 'cancelButtonProps' | 'okButtonProps' | 'okType'> {
   headerStyle?: CSSProperties
@@ -118,7 +118,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
               <YakitButton
                 type="text"
                 size={size === 'large' ? 'large' : 'middle'}
-                icon={closeIcon ? closeIcon : <OutlineXIcon />}
+                icon={closeIcon ? closeIcon : <XOutlined color="currentColor" />}
                 onClick={onCancelX}
               />
             )}

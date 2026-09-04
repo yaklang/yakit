@@ -21,8 +21,13 @@ import {
 import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
 import { YakitButton } from '../YakitButton/YakitButton'
-import { OutlineDotshorizontalIcon, OutlineXIcon } from '@/assets/icon/outline'
-import { SolidFloatwinIcon, SolidTodownIcon, SolidToleftIcon, SolidTorightIcon } from '@/assets/icon/solid'
+import { DotsHorizontalOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  SolidFloatwinIcon,
+  SolidTodownIcon,
+  SolidToleftIcon,
+  SolidTorightIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { Tooltip } from 'antd'
 import { YakitPopover } from '../YakitPopover/YakitPopover'
 import { Resizable } from 're-resizable'
@@ -547,7 +552,7 @@ export const WindowPositionOPMenu: React.FC<WindowPositionOPProps> = memo((props
       open={show}
       onOpenChange={(visible) => setShow(visible)}
     >
-      <YakitButton isHover={show} type="text2" icon={<OutlineDotshorizontalIcon />} />
+      <YakitButton isHover={show} type="text2" icon={<DotsHorizontalOutlined color="currentColor" />} />
     </YakitPopover>
   )
 })
@@ -610,7 +615,7 @@ const YakitWindowContent: React.FC<YakitWindowContentProps> = memo((props) => {
               onDockSide={onDockSide}
             />
           )}
-          <YakitButton type="text2" icon={<OutlineXIcon />} onClick={onCancel} />
+          <YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={onCancel} />
         </div>
       </div>
       <div style={contentStyle} className={styles['yakit-window-body-content']}>

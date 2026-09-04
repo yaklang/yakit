@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Tooltip } from 'antd'
 import { useControllableValue, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { OutlineQuestionmarkcircleIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { QuestionMarkCircleOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
@@ -74,14 +74,18 @@ const HistorySearch = React.memo<HistorySearchProps>((props) => {
           open={isHoverSearch}
           onOpenChange={setIsHoverSearch}
         >
-          <YakitButton icon={<OutlineSearchIcon />} type="outline2" isHover={isHoverSearch || !!searchVal} />
+          <YakitButton
+            icon={<SearchOutlined color="currentColor" />}
+            type="outline2"
+            isHover={isHoverSearch || !!searchVal}
+          />
         </YakitPopover>
       ) : (
         searchNode()
       )}
       {hint ? (
         <Tooltip title={t('HistorySearch.fuzzSearchExplanation', { edition: getReleaseEditionName() })}>
-          <OutlineQuestionmarkcircleIcon className={style['http-history-search-question-icon']} />
+          <QuestionMarkCircleOutlined className={style['http-history-search-question-icon']} color="currentColor" />
         </Tooltip>
       ) : null}
     </div>

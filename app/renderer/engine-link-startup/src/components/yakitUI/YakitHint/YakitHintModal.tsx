@@ -5,7 +5,7 @@ import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
 import type { HintModalProps, YakitHintModalProps } from './YakitHintType'
 import { YakitButton } from '../YakitButton/YakitButton'
-import { ShieldExclamationSvgIcon } from '@/assets/newIcon'
+import { ShieldExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 import classNames from 'classnames'
 import styles from './YakitHint.module.scss'
@@ -53,7 +53,9 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
         children={
           <>
             <div className={styles['container-left-wrapper']}>
-              <div className={styles['left-hint-icon']}>{heardIcon ? heardIcon : <ShieldExclamationSvgIcon />}</div>
+              <div className={styles['left-hint-icon']}>
+                {heardIcon ? heardIcon : <ShieldExclamationSolid color="#FFB660" size={32} />}
+              </div>
               <div className={styles['left-hint-icon-extra']}>{extraIcon}</div>
             </div>
 

@@ -1,7 +1,7 @@
 import type React from 'react'
 import { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
 import { useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport, useRequest } from 'ahooks'
-import { OutlineClouddownloadIcon, OutlineClouduploadIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import { CloudDownloadOutlined, CloudUploadOutlined, RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import type {
@@ -44,7 +44,7 @@ import { OnlineJudgment } from '@/pages/plugins/onlineJudgment/OnlineJudgment'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import type { HubListBaseProps } from '../type'
 import type { API } from '@/services/swagger/resposeType'
-import { SolidPluscircleIcon } from '@/assets/icon/solid'
+import { PlusCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
@@ -60,7 +60,7 @@ import useGetSetState from '../hooks/useGetSetState'
 import { getRemoteValue } from '@/utils/kv'
 import { RemotePluginGV } from '@/enums/plugin'
 import { NoPromptHint } from '../utilsUI/UtilsTemplate'
-import { SolidYakOfficialPluginColorIcon } from '@/assets/icon/colors'
+import { SolidYakOfficialPluginColorIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail } from '../utils/grpc'
 import { defaultAddYakitScriptPageInfo } from '@/defaultConstants/AddYakitScript'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
@@ -615,7 +615,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         <HubButton
           width={wrapperWidth}
           iconWidth={900}
-          icon={<OutlineClouddownloadIcon />}
+          icon={<CloudDownloadOutlined color="currentColor" />}
           type="outline2"
           size="large"
           name={selectedNum > 0 ? t('YakitButton.download') : t('YakitButton.oneClickDownload')}
@@ -626,7 +626,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         <HubButton
           width={wrapperWidth}
           iconWidth={900}
-          icon={<SolidPluscircleIcon />}
+          icon={<PlusCircleSolid color="currentColor" />}
           size="large"
           name={t('HubListOnline.newPlugin')}
           onClick={onNewPlugin}
@@ -744,11 +744,15 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                     />
                     <div className={styles['refresh-buttons']}>
                       {showUpload && (
-                        <YakitButton type="outline1" icon={<OutlineClouduploadIcon />} onClick={openUploadAll}>
+                        <YakitButton
+                          type="outline1"
+                          icon={<CloudUploadOutlined color="currentColor" />}
+                          onClick={openUploadAll}
+                        >
                           {t('YakitButton.oneClickUpload')}
                         </YakitButton>
                       )}
-                      <YakitButton type="outline1" icon={<OutlineRefreshIcon />} onClick={onRefresh}>
+                      <YakitButton type="outline1" icon={<RefreshOutlined color="currentColor" />} onClick={onRefresh}>
                         {t('YakitButton.refresh')}
                       </YakitButton>
                     </div>
@@ -793,7 +797,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                       type="text2"
                       loading={batchDownloadLoading}
                       disabled={listTotal === 0}
-                      icon={<OutlineClouddownloadIcon />}
+                      icon={<CloudDownloadOutlined color="currentColor" />}
                       onClick={headerExtraDownload}
                     />
                   </Tooltip>

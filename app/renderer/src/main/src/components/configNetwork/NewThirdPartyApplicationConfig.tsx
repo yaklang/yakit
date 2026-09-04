@@ -11,7 +11,7 @@ import { YakitAutoComGroupSearchWithAll } from '../yakitUI/YakitAutoComplete/Yak
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
 import type { SelectOptionsProps } from '@/demoComponents/itemSelect/ItemSelectType'
 import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
@@ -226,7 +226,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
         name: item.Name,
         tooltip: item.Desc
           ? {
-              icon: <OutlineInformationcircleIcon />,
+              icon: <InformationCircleOutlined color="currentColor" />,
               title: item.Desc,
             }
           : null,

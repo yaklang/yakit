@@ -35,15 +35,10 @@ import ReactResizeDetector from 'react-resize-detector'
 import styles from './TableVirtualResize.module.scss'
 import { Divider, Popover, type RadioChangeEvent, Tooltip } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
-import {
-  FilterIcon,
-  SorterDownIcon,
-  SorterUpIcon,
-  DisableSorterIcon,
-  QuestionMarkCircleIcon,
-  DragSortIcon,
-  CheckIcon,
-} from '@/assets/newIcon'
+import { SorterDownIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SorterDownIcon'
+import { SorterUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SorterUpIcon'
+import { DisableSorterIcon } from '@yakit-libs/yakit-ui-icons/oldicon/DisableSorterIcon'
+import { CheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckIcon'
 import moment, { type Moment } from 'moment'
 // import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import { useDrag, useDrop } from 'react-dnd'
@@ -63,6 +58,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { shouldRenderVirtualTableCellForHover } from './TableVirtualResize.memo'
+import { FilterOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { getRemoteValue } from '@/utils/kv'
 import { RemoteHistoryGV } from '@/enums/history'
 import emiter from '@/utils/eventBus/eventBus'
@@ -1852,7 +1849,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
           </div>
           {columnsItem.tip && (
             <Tooltip title={columnsItem.tip}>
-              <QuestionMarkCircleIcon className={styles['icon-question']} />
+              <QuestionMarkCircleOutlined size={16} className={styles['icon-question']} />
             </Tooltip>
           )}
         </div>
@@ -1919,7 +1916,11 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                     })
                   }}
                 >
-                  {columnsItem.filterProps.filterIcon ? columnsItem.filterProps.filterIcon : <FilterIcon />}
+                  {columnsItem.filterProps.filterIcon ? (
+                    columnsItem.filterProps.filterIcon
+                  ) : (
+                    <FilterOutlined size={16} />
+                  )}
                 </div>
               </Popover>
             </>
@@ -2445,7 +2446,8 @@ const CellRenderDrop = React.memo((props: CellRenderDropProps) => {
         />
       )}
       {enableDragSort && colIndex === 0 && (
-        <DragSortIcon
+        <FigmaIcon2281144183Solid
+          size={12}
           className={classNames(styles['drag-sort-icon'], {
             [styles['drag-sort-icon-active']]: isSelect || isDragging,
           })}

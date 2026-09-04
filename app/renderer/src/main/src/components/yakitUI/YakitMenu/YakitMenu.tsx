@@ -2,7 +2,7 @@ import React, { type ReactNode, useMemo } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { Menu, type MenuProps, Tooltip } from 'antd'
 import type { MenuDividerType } from 'rc-menu/lib/interface'
-import { OutlineChevronrightIcon } from '@/assets/icon/outline'
+import { ChevronRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 type ItemType = NonNullable<MenuProps['items']>[number]
 
@@ -111,7 +111,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                   </div>
                 )}
               </div>
-              <OutlineChevronrightIcon />
+              <ChevronRightOutlined color="currentColor" />
             </div>
           ),
           key: info.key,

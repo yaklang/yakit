@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import ReactResizeDetector from 'react-resize-detector'
 import classNames from 'classnames'
-import { OutlineChevrondoubledownIcon } from '@/assets/icon/outline'
+import { ChevronDoubleDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import styles from './YakitResizeBox.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -506,7 +506,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
               ref={handleRef}
               onClick={onClickHiddenBox}
             >
-              <OutlineChevrondoubledownIcon />
+              <ChevronDoubleDownOutlined color="currentColor" />
               <span className={styles['resize-split-handle-text']}>{t('YakitButton.collapse')}</span>
             </div>
           )}

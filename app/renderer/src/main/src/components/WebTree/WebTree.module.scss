@@ -97,7 +97,7 @@
     }
 
     .ant-tree-node-content-wrapper.ant-tree-node-selected {
-      .ant-tree-iconEle .anticon {
+      .ant-tree-iconEle :is(.anticon, .yakitTreeNode-icon) {
         color: var(--Colors-Use-Main-On-Primary);
       }
       .ant-tree-title {

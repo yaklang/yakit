@@ -4,7 +4,7 @@ import { useGetState, useMemoizedFn } from 'ahooks'
 import type { yakProcess } from './PerformanceDisplay'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
-import { OutlineLoadingIcon } from '@/assets/icon/outline'
+import { FigmaIcon5237120699Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitEngine } from '@/services/electronBridge'
 
 import styles from './AllKillEngineConfirm.module.scss'
@@ -149,7 +149,11 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
   return (
     <YakitHint
       visible={visible}
-      heardIcon={loading ? <OutlineLoadingIcon className={styles['icon-rotate-animation']} /> : undefined}
+      heardIcon={
+        loading ? (
+          <FigmaIcon5237120699Outlined className={styles['icon-rotate-animation']} color="currentColor" />
+        ) : undefined
+      }
       title={loading ? t('AllKillEngineConfirm.closing') : title}
       content={content}
       okButtonText={t('YakitButton.closeNow')}

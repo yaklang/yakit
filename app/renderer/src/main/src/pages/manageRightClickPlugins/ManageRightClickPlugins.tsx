@@ -21,16 +21,16 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import type { YakitMenuItemProps, YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import { CloudDownloadIcon, DragSortIcon } from '@/assets/newIcon'
 import {
-  OutlineBanIcon,
-  OutlineCogIcon,
-  OutlinePencilaltIcon,
-  OutlinePhotographIcon,
-  OutlineRefreshIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
-import { PrivateOutlineDefaultPluginIcon } from '@/routes/privateIcon'
+  BanOutlined,
+  CloudDownloadOutlined,
+  CogOutlined,
+  PencilAltOutlined,
+  PhotographOutlined,
+  RefreshOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { PrivateOutlineDefaultPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import emiter from '@/utils/eventBus/eventBus'
 import { convertKeyboardToUIKey, setIsActiveShortcutKeyPage } from '@/utils/globalShortcutKey/utils'
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
@@ -45,6 +45,7 @@ import type { ContextMenuAction } from './types'
 import { ContextMenuResultMode, LEGACY_CONTEXT_MENU_PLUGIN_TYPE, type ContextMenuScene } from './types'
 import { checkContextMenuShortcutConflict, parseContextMenuShortcut, serializeContextMenuShortcut } from './shortcut'
 import styles from './ManageRightClickPlugins.module.scss'
+import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 
 /** 拖拽排序：将 startIndex 项移动到 endIndex */
 const reorder = <T,>(list: T[], startIndex: number, endIndex: number) => {
@@ -448,7 +449,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
                     ))}
                     {selectedActions.length === 0 && (
                       <div className={styles['selected-empty']}>
-                        <OutlinePhotographIcon className={styles['selected-empty-icon']} />
+                        <PhotographOutlined className={styles['selected-empty-icon']} color="currentColor" />
                         <div>
                           <div
                             className={classNames(styles['selected-empty-text'], styles['selected-empty-text-bold'])}
@@ -476,7 +477,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
               {t('ManageRightClickPlugins.rightClickPlugins')}
               <YakitButton
                 type="text2"
-                icon={<OutlineRefreshIcon />}
+                icon={<RefreshOutlined color="currentColor" />}
                 onClick={(e) => emiter.emit('refreshContextMenuPlugins')}
                 style={{ marginLeft: 2 }}
               />
@@ -725,7 +726,8 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
         })}
       >
         <div className={styles['selected-item-main']}>
-          <DragSortIcon
+          <FigmaIcon2281144183Solid
+            size={12}
             className={classNames({
               [styles['drag-icon-active']]: isDragging,
             })}
@@ -744,7 +746,7 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
                   size="small"
                   type="text"
                   loading={editLoading}
-                  icon={<OutlinePencilaltIcon />}
+                  icon={<PencilAltOutlined />}
                   onClick={handleOpenEdit}
                   style={{ marginRight: 4 }}
                 />
@@ -764,9 +766,7 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
                   <YakitButton
                     size="small"
                     type="text"
-                    icon={
-                      <OutlineCogIcon className={classNames({ [styles['setting-icon-active']]: settingMenuOpen })} />
-                    }
+                    icon={<CogOutlined className={classNames({ [styles['setting-icon-active']]: settingMenuOpen })} />}
                     onClick={(e) => {
                       e.stopPropagation()
                     }}
@@ -781,9 +781,7 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
             type="text"
             disabled={locked}
             icon={
-              <OutlineXIcon
-                className={classNames(styles['remove-icon'], { [styles['remove-icon-disabled']]: locked })}
-              />
+              <XOutlined className={classNames(styles['remove-icon'], { [styles['remove-icon-disabled']]: locked })} />
             }
             onClick={(e) => {
               e.stopPropagation()
@@ -855,7 +853,7 @@ const AvailablePluginList: React.FC<AvailablePluginListProps> = React.memo((prop
               <YakitEmpty title={t('ManageRightClickPlugins.noAvailablePlugins')}>
                 <YakitButton
                   type="outline1"
-                  icon={<CloudDownloadIcon />}
+                  icon={<CloudDownloadOutlined size={16} />}
                   onClick={() => {
                     emiter.emit(
                       'onOpenFuzzerModal',
@@ -971,7 +969,7 @@ const AvailablePluginItem: React.FC<AvailablePluginItemProps> = React.memo((prop
       )}
       {destinationDrag === DROP_AVAILABLE && isDragging && (
         <div className={styles['drag-ban']}>
-          <OutlineBanIcon />
+          <BanOutlined color="currentColor" />
         </div>
       )}
     </div>

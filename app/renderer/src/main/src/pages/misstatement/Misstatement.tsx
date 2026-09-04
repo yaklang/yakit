@@ -8,13 +8,13 @@ import { RemoteMisstatementGV } from '@/enums/misstatement'
 import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineCloseIcon,
-  OutlineFilterIcon,
-  OutlineOpenIcon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  CloseOutlined,
+  FilterOutlined,
+  OpenOutlined,
+  RefreshOutlined,
+  SearchOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
@@ -160,7 +160,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
         filterProps: {
           filterKey: 'title',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
         render: (_, record) => record?.titleVerbose || record.title || '-',
       },
@@ -173,7 +173,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
           filtersType: 'select',
           filterMultiple: true,
           filters: riskTypeVerboseTable,
-          filterIcon: <OutlineFilterIcon className={styles['filter-icon']} onClick={getRiskType} />,
+          filterIcon: <FilterOutlined className={styles['filter-icon']} onClick={getRiskType} color="currentColor" />,
         },
       },
       {
@@ -224,7 +224,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
         filterProps: {
           filterKey: 'net_work',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
       },
       {
@@ -239,7 +239,9 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
           filtersType: 'select',
           filterMultiple: true,
           filters: riskProgramTable,
-          filterIcon: <OutlineFilterIcon className={styles['filter-icon']} onClick={getRiskProject} />,
+          filterIcon: (
+            <FilterOutlined className={styles['filter-icon']} onClick={getRiskProject} color="currentColor" />
+          ),
         },
       },
       {
@@ -251,7 +253,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
           filtersType: 'select',
           filterMultiple: true,
           filters: tagTable,
-          filterIcon: <OutlineFilterIcon className={styles['filter-icon']} onClick={getRiskTags} />,
+          filterIcon: <FilterOutlined className={styles['filter-icon']} onClick={getRiskTags} color="currentColor" />,
         },
         render: (text, record, index) => (
           <>
@@ -288,7 +290,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
                 e.stopPropagation()
                 onRemoveSingle(record)
               }}
-              icon={<OutlineTrashIcon />}
+              icon={<TrashOutlined color="currentColor" />}
             />
           </>
         ),
@@ -551,7 +553,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
                   onClick={() => {
                     onSetQueryShow(true)
                   }}
-                  icon={<OutlineOpenIcon />}
+                  icon={<OpenOutlined color="currentColor" />}
                 ></YakitButton>
               </Tooltip>
             )}
@@ -610,7 +612,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
                 placement: 'bottom',
               }}
             >
-              <YakitButton type="text2" icon={<OutlineRefreshIcon />} />
+              <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} />
             </YakitDropdownMenu>
           </div>
         </div>
@@ -743,7 +745,7 @@ const MisstatementQuery: React.FC<MisstatementQueryProps> = React.forwardRef((pr
       <div className={styles['misstatement-query-heard']}>
         <span>高级查询</span>
         <Tooltip title="收起筛选" placement="top" rootClassName="plugins-tooltip">
-          <YakitButton type="text2" onClick={onClose} icon={<OutlineCloseIcon />}></YakitButton>
+          <YakitButton type="text2" onClick={onClose} icon={<CloseOutlined color="currentColor" />}></YakitButton>
         </Tooltip>
       </div>
       <div className={styles['misstatement-query-body']}>
@@ -779,7 +781,7 @@ const MisstatementList: React.FC<MisstatementListProps> = React.memo((props) => 
         <YakitButton
           type="text2"
           className={styles['btn-padding-right-0']}
-          icon={<OutlineRefreshIcon />}
+          icon={<RefreshOutlined color="currentColor" />}
           onClick={onRefresh}
         />
       </div>

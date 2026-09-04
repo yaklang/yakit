@@ -4,9 +4,9 @@ import { useMemoizedFn } from 'ahooks'
 import type { TextareaForImage, PluginImageTextareaProps } from './PluginImageTextareaType'
 import { failed } from '@/utils/notification'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePhotographIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { PhotographOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Input, Upload } from 'antd'
-import { SolidPaperairplaneIcon } from '@/assets/icon/solid'
+import { PaperAirplaneSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import cloneDeep from 'lodash/cloneDeep'
 import { httpDeleteOSSResource, httpUploadImgBase64 } from '@/apiUtils/http'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
@@ -201,7 +201,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
         {!!quotation && (
           <div className={styles['plugin-image-textarea-quotation']}>
             <div className={styles['del-btn']} onClick={handleDelQuotation}>
-              <OutlineXIcon />
+              <XOutlined color="currentColor" />
             </div>
             <div className={styles['divider-style']}></div>
             <div className={styles['content-style']}>
@@ -261,7 +261,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
             <YakitButton
               disabled={imgsLength >= 6}
               loading={imgLoading}
-              icon={<OutlinePhotographIcon />}
+              icon={<PhotographOutlined color="currentColor" />}
               type="text2"
             />
           </Upload>
@@ -270,7 +270,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
             <div className={styles['content-length']}>{contentLength}/150</div>
             {type === 'comment' && (
               <YakitButton loading={loading} disabled={contentLength === 0 && imgsLength === 0} onClick={onReply}>
-                <SolidPaperairplaneIcon />
+                <PaperAirplaneSolid color="currentColor" />
                 {quotation ? '回复' : '发布评论'}
               </YakitButton>
             )}

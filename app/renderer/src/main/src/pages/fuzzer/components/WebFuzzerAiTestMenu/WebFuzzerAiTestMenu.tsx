@@ -5,7 +5,7 @@ import { Dropdown, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 
-import { OutlinePencilaltIcon, OutlinePluscircleIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { PencilAltOutlined, PlusCircleOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import type { WebFuzzerAiTestTemplate } from '@/defaultConstants/webFuzzerAiTestTemplates'
@@ -17,7 +17,7 @@ import {
 import { yakitNotify } from '@/utils/notification'
 
 import { WebFuzzerAiTestTemplateModal } from './WebFuzzerAiTestTemplateModal'
-import { ColorsAIIcon } from '@/assets/icon/colors'
+import { ColorsAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsAIIcon'
 
 export interface WebFuzzerAiTestMenuProps {
   inViewport?: boolean
@@ -124,7 +124,7 @@ export const WebFuzzerAiTestMenu: React.FC<WebFuzzerAiTestMenuProps> = React.mem
                 <YakitButton
                   type="text2"
                   size="small"
-                  icon={<OutlinePencilaltIcon />}
+                  icon={<PencilAltOutlined color="currentColor" />}
                   className={classNames(
                     styles['web-fuzzer-ai-test-menu-item-action'],
                     styles['web-fuzzer-ai-test-menu-item-action-edit'],
@@ -146,7 +146,7 @@ export const WebFuzzerAiTestMenu: React.FC<WebFuzzerAiTestMenuProps> = React.mem
                     type="text2"
                     size="small"
                     colors="danger"
-                    icon={<OutlineTrashIcon />}
+                    icon={<TrashOutlined color="currentColor" />}
                     className={classNames(
                       styles['web-fuzzer-ai-test-menu-item-action'],
                       styles['web-fuzzer-ai-test-menu-item-action-delete'],
@@ -159,7 +159,7 @@ export const WebFuzzerAiTestMenu: React.FC<WebFuzzerAiTestMenuProps> = React.mem
           ))}
         </div>
         <div className={styles['web-fuzzer-ai-test-menu-footer']} onClick={openAddModal}>
-          <OutlinePluscircleIcon />
+          <PlusCircleOutlined color="currentColor" />
           <span>{t('WebFuzzerAiTestTemplate.add')}</span>
         </div>
       </div>

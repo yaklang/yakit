@@ -3,27 +3,30 @@ import { type FC, memo, useEffect, useRef, useState } from 'react'
 import { Progress, Tooltip } from 'antd'
 import { useInViewport, useRequest, useSafeState } from 'ahooks'
 
-import { CloudDownloadIcon, RemoveIcon } from '@/assets/newIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { success, failed } from '@/utils/notification'
-
 import styles from '../knowledgeBase.module.scss'
 
 import type { AllInstallPluginsProps, ExecResult } from './AllInstallPluginsProps'
+
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import classNames from 'classnames'
 import {
-  OutlineClouddownloadIcon,
-  OutlineFolderopenIcon,
-  OutlinePuzzleIcon,
-  OutlineRefreshIcon,
-} from '@/assets/icon/outline'
-import { YakitLogoSvgIcon, YakitSpinLogoSvgIcon } from '../icon/sidebarIcon'
+  CloudDownloadOutlined,
+  FolderOpenOutlined,
+  PuzzleOutlined,
+  RefreshOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  YakitLogoSvgIconFromPagesKnowledgeBaseIconSidebarIcon,
+  YakitSpinLogoSvgIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import { downloadWithEvents, exclude } from '../utils'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -177,7 +180,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
         <div className={styles['install-button-box']}>
           <YakitButton
             type="outline1"
-            icon={<CloudDownloadIcon />}
+            icon={<CloudDownloadOutlined size={16} />}
             onClick={() => {
               try {
                 runInstallAll()
@@ -204,12 +207,12 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
         >
           <div className={styles['header']}>
             <div className={styles['left']}>
-              <OutlinePuzzleIcon />
+              <PuzzleOutlined color="currentColor" />
               <div>插件下载</div>
               <Tooltip title="刷新插件列表">
                 <YakitButton
                   type="text"
-                  icon={<OutlineRefreshIcon />}
+                  icon={<RefreshOutlined color="currentColor" />}
                   onClick={(e) => {
                     e.stopPropagation()
                     binariesToInstallRefreshAsync?.()
@@ -219,12 +222,12 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
             </div>
             <div className={styles['right']}>
               <YakitButton
-                icon={<OutlineClouddownloadIcon />}
+                icon={<CloudDownloadOutlined color="currentColor" />}
                 type="text2"
                 onClick={() => runInstallAll()}
                 loading={loading}
               />
-              <YakitButton icon={<RemoveIcon />} type="text2" onClick={() => setShowDetailStatus(false)} />
+              <YakitButton icon={<XSolid size={12} />} type="text2" onClick={() => setShowDetailStatus(false)} />
             </div>
           </div>
           {installTokens.length > 0 ? <Progress percent={overallProgress} showInfo={false} /> : null}
@@ -233,7 +236,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
               return (
                 <div className={styles['install-content-box']} key={it.InstallPath + key}>
                   <div className={styles['first-box']}>
-                    <YakitLogoSvgIcon />
+                    <YakitLogoSvgIconFromPagesKnowledgeBaseIconSidebarIcon />
                     <YakitSpinLogoSvgIcon className={styles['yakit-svg']} />
                   </div>
                   <div
@@ -251,7 +254,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
                   </div>
                   <div className={styles['last-box']}>
                     {!it.InstallPath && !eachProgress?.[it.installToken] ? (
-                      <YakitButton icon={<CloudDownloadIcon />} onClick={() => downloadSingle(it)}>
+                      <YakitButton icon={<CloudDownloadOutlined size={16} />} onClick={() => downloadSingle(it)}>
                         下载
                       </YakitButton>
                     ) : eachProgress?.[it.installToken] < 100 ? (
@@ -259,7 +262,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
                     ) : (
                       <YakitButton
                         type="text"
-                        icon={<OutlineFolderopenIcon />}
+                        icon={<FolderOpenOutlined color="currentColor" />}
                         onClick={() => onOpenLocalFileByPath(it.InstallPath)}
                       >
                         打开

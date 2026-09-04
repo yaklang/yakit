@@ -5,13 +5,10 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import styles from './AIMarkdown.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  OutlineChevronsDownUpIcon,
-  OutlineChevronsUpDownIcon,
-  OutlineDownloadIcon,
-  OutlineNotebookIcon,
-} from '@/assets/icon/outline'
-import { ColorsPreViewMDIcon, ColorsSourceCodeIcon } from '@/assets/icon/colors'
+import { ChevronsDownUpOutlined, ChevronsUpDownOutlined, DownloadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineNotebookIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineNotebookIcon'
+import { ColorsPreViewMDIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsPreViewMDIcon'
+import { ColorsSourceCodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsSourceCodeIcon'
 import { Tooltip } from 'antd'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
@@ -95,7 +92,7 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
             </Tooltip>
           )}
           <Tooltip title={t('AIMarkdown.downloadMd')}>
-            <YakitButton size="small" type="text" icon={<OutlineDownloadIcon />} onClick={onDown} />
+            <YakitButton size="small" type="text" icon={<DownloadOutlined color="currentColor" />} onClick={onDown} />
           </Tooltip>
           <Tooltip title={type === 'code' ? t('AIMarkdown.switchToPreview') : t('AIMarkdown.switchToSource')}>
             <YakitButton
@@ -110,7 +107,13 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
               size="small"
               type="text2"
               onClick={() => setExpand((v) => !v)}
-              icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+              icon={
+                expand ? (
+                  <ChevronsDownUpOutlined color="currentColor" />
+                ) : (
+                  <ChevronsUpDownOutlined color="currentColor" />
+                )
+              }
             />
           </Tooltip>
         </div>

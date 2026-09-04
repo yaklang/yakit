@@ -9,7 +9,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { OutlineFilterIcon, OutlineRefreshIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { FilterOutlined, RefreshOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { NewHTTPPacketEditor } from '@/utils/editors'
 import type { MCPToolCallHistory, MCPToolCallHistorySummary, QueryMCPToolCallHistoryRequest } from '../type/aiMCP'
 import {
@@ -386,7 +386,7 @@ const MCPHistory: React.FC = React.memo(() => {
                   type="outline1"
                   size="small"
                   colors="danger"
-                  icon={<OutlineTrashIcon />}
+                  icon={<TrashOutlined color="currentColor" />}
                   title={t('MCPHistory.clearHistoryTitle')}
                   disabled={total === 0 || loading}
                   onClick={onDeleteClick}
@@ -395,7 +395,7 @@ const MCPHistory: React.FC = React.memo(() => {
                 </YakitButton>
                 <YakitButton
                   type="text2"
-                  icon={<OutlineRefreshIcon />}
+                  icon={<RefreshOutlined color="currentColor" />}
                   title={t('YakitButton.refresh')}
                   onClick={() => query(true)}
                   loading={loading}
@@ -429,7 +429,7 @@ const MCPHistory: React.FC = React.memo(() => {
               >
                 <YakitButton
                   type={status ? 'primary' : 'outline2'}
-                  icon={<OutlineFilterIcon />}
+                  icon={<FilterOutlined color="currentColor" />}
                   isActive={filterVisible}
                   title={statusFilterLabel}
                 />

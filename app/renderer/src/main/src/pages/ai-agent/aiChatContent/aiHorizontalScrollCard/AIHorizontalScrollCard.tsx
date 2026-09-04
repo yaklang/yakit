@@ -7,13 +7,15 @@ import styles from './AIHorizontalScrollCard.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import {
-  OutlineNewspaperIcon,
-  OutlineFlagIcon,
-  OutlineExportIcon,
-  OutlineMessageCirclePlusIcon,
-} from '@/assets/icon/outline'
-import { TimelineOutlined, Settings2Outlined, ScrollTextOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { SolidChatalt2Icon } from '@/assets/icon/solid'
+  FigmaIcon2017756Outlined,
+  FlagOutlined,
+  MessageCirclePlusOutlined,
+  NewspaperOutlined,
+  ScrollTextOutlined,
+  Settings2Outlined,
+  TimelineOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { ChatAlt2Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ExpandAndRetract } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import AIContextToken from '../AIContextToken/AIContextToken'
@@ -139,7 +141,7 @@ export const AIHorizontalScrollCard = memo(() => {
         <div className={classNames(styles['expand-retract-content'])}>
           <div className={styles['header']}>
             <div className={styles['title']}>
-              <SolidChatalt2Icon className={styles['chat-alt-icon']} />
+              <ChatAlt2Solid className={styles['chat-alt-icon']} color="currentColor" />
               <div className={styles['chat-title']}>{activeChat?.Title || t('AIChatContent.newChatTitle')}</div>
             </div>
             <div className={styles['extra']}>
@@ -149,12 +151,16 @@ export const AIHorizontalScrollCard = memo(() => {
                 <YakitButton
                   hidden={!currentChatStatusQuestionID}
                   type="text2"
-                  icon={<ScrollTextOutlined />}
+                  icon={<ScrollTextOutlined color="currentColor" />}
                   onClick={onDetails}
                 />
               </Tooltip>
               <Tooltip title={t('AIChatContent.newChat')}>
-                <YakitButton type="text2" icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
+                <YakitButton
+                  type="text2"
+                  icon={<MessageCirclePlusOutlined color="currentColor" />}
+                  onClick={onNewChat}
+                />
               </Tooltip>
               <YakitDropdownMenu
                 menu={{
@@ -162,12 +168,24 @@ export const AIHorizontalScrollCard = memo(() => {
                     {
                       key: 'task-list',
                       label: t('AIAgentChatTemplate.tasklist'),
-                      itemIcon: <OutlineFlagIcon />,
+                      itemIcon: <FlagOutlined color="currentColor" />,
                       disabled: !hasTaskTree,
                     },
-                    { key: 'timeline', label: t('AIAgentChatTemplate.timeline'), itemIcon: <TimelineOutlined /> },
-                    { key: 'export-log', label: t('AIChatContent.exportLog'), itemIcon: <OutlineExportIcon /> },
-                    { key: 'view-log', label: t('AIChatContent.log'), itemIcon: <OutlineNewspaperIcon /> },
+                    {
+                      key: 'timeline',
+                      label: t('AIAgentChatTemplate.timeline'),
+                      itemIcon: <TimelineOutlined color="currentColor" />,
+                    },
+                    {
+                      key: 'export-log',
+                      label: t('AIChatContent.exportLog'),
+                      itemIcon: <FigmaIcon2017756Outlined color="currentColor" />,
+                    },
+                    {
+                      key: 'view-log',
+                      label: t('AIChatContent.log'),
+                      itemIcon: <NewspaperOutlined color="currentColor" />,
+                    },
                   ],
                   onClick: onMenuClick,
                 }}
@@ -182,7 +200,7 @@ export const AIHorizontalScrollCard = memo(() => {
                   <YakitButton
                     type="text2"
                     isActive={multiFuncVisible || dropdownVisible}
-                    icon={<Settings2Outlined />}
+                    icon={<Settings2Outlined color="currentColor" />}
                     onClick={(e) => e.stopPropagation()}
                   />
                 </Tooltip>

@@ -9,7 +9,7 @@ import { KnowledgeEntryTable } from './KnowledgeEntryTable'
 import { KnowledgeBaseQA } from './KnowledgeBaseQA'
 import type { KnowledgeBase, KnowledgeBaseManagerProps } from './types'
 import styles from './KnowledgeBaseManager.module.scss'
-import { OutlineChatalt2Icon } from '@/assets/icon/outline'
+import { ChatAlt2Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
@@ -48,7 +48,7 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
           <YakitButton
             type="primary"
             size="small"
-            icon={<OutlineChatalt2Icon />}
+            icon={<ChatAlt2Outlined color="currentColor" />}
             onClick={() => handleOpenQADrawer(true)}
           >
             {t('playground.KnowledgeBaseManager.aiQa')}

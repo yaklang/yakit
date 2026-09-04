@@ -16,12 +16,12 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitRoute } from '@/enums/yakitRoute'
 import type { CollaboratorInfoProps } from '@/pages/plugins/baseTemplateType'
 import { PluginContributesListItem, onPluginTagsToName } from '@/pages/plugins/baseTemplate'
-import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
+import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { pluginTypeToName } from '@/pages/plugins/builtInData'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AuthorIcon, AuthorImg, TagsListShow } from '@/pages/plugins/funcTemplate'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { SolidChevrondownIcon, SolidChevronupIcon } from '@/assets/icon/solid'
+import { ChevronDownSolid, ChevronUpSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { formatDate } from '@/utils/timeUtil'
 
 import classNames from 'classnames'
@@ -413,7 +413,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
             </div>
             <div className={styles['subtitle-wrapper']}>
               <Tooltip title={help || 'No Description about it.'}>
-                <OutlineQuestionmarkcircleIcon className={styles['help-icon']} />
+                <QuestionMarkCircleOutlined className={styles['help-icon']} color="currentColor" />
               </Tooltip>
             </div>
           </div>
@@ -463,7 +463,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                 >
                   <YakitButton type="text2" isActive={prShow}>
                     {t('HubExtraOperate.contributors', { count: contributes.length })}
-                    {prShow ? <SolidChevronupIcon /> : <SolidChevrondownIcon />}
+                    {prShow ? <ChevronUpSolid color="currentColor" /> : <ChevronDownSolid color="currentColor" />}
                   </YakitButton>
                 </YakitPopover>
               </>

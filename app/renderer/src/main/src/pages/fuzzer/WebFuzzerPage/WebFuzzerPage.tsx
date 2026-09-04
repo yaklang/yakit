@@ -2,14 +2,14 @@ import React, { useEffect, useRef, useState } from 'react'
 import type { WebFuzzerPageProps, WebFuzzerType } from './WebFuzzerPageType'
 import styles from './WebFuzzerPage.module.scss'
 import {
-  OutlineAdjustmentsIcon,
-  OutlineBotIcon,
-  OutlineClipboardlistIcon,
-  OutlineCollectionIcon,
-  OutlineLightningboltIcon,
-  OutlineViewboardsIcon,
-  OutlineBookopenIcon,
-} from '@/assets/icon/outline'
+  AdjustmentsOutlined,
+  BotOutlined,
+  ClipboardListOutlined,
+  CollectionOutlined,
+  LightningBoltOutlined,
+  ViewBoardsOutlined,
+  BookOpenOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -33,37 +33,37 @@ export const webFuzzerTabs = (t: TFunction) => {
     {
       key: 'config',
       label: t('WebFuzzerPage.config'),
-      icon: <OutlineAdjustmentsIcon />,
+      icon: <AdjustmentsOutlined color="currentColor" />,
     },
     {
       key: 'rule',
       label: t('WebFuzzerPage.rule'),
-      icon: <OutlineClipboardlistIcon />,
+      icon: <ClipboardListOutlined color="currentColor" />,
     },
     {
       key: 'hot-patch',
       label: t('HTTPFuzzerPage.hotReload'),
-      icon: <OutlineLightningboltIcon />,
+      icon: <LightningBoltOutlined color="currentColor" />,
     },
     {
       key: 'api-doc',
       label: t('HTTPFuzzerPage.apiDoc'),
-      icon: <OutlineBookopenIcon />,
+      icon: <BookOpenOutlined color="currentColor" />,
     },
     {
       key: 'ai',
       label: t('WebFuzzerPage.AI'),
-      icon: <OutlineBotIcon />,
+      icon: <BotOutlined color="currentColor" />,
     },
     {
       key: 'sequence',
       label: t('WebFuzzerPage.sequence'),
-      icon: <OutlineCollectionIcon />,
+      icon: <CollectionOutlined color="currentColor" />,
     },
     {
       key: 'concurrency',
       label: t('WebFuzzerPage.concurrency'),
-      icon: <OutlineViewboardsIcon />,
+      icon: <ViewBoardsOutlined color="currentColor" />,
     },
   ]
 }

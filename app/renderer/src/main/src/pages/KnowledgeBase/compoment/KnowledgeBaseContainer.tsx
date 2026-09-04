@@ -2,13 +2,13 @@ import { type FC, memo, useEffect, useMemo, useReducer } from 'react'
 
 import KnowledgeBaseTable from './KnowledgeBaseTable'
 import { type KnowledgeBaseItem, useKnowledgeBase } from '../hooks/useKnowledgeBase'
-import { LightningBoltIcon } from '../icon/sidebarIcon'
+import { LightningBoltIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import type useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
 
 import { targetIcon } from '../utils'
 import { renderFileTypeIcon } from '@/components/MilkdownEditor/CustomFile/CustomFile'
 import { RoundedStopButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
-import { OutlineLoadingIcon } from '@/assets/icon/outline'
+import { FigmaIcon5237120699Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
 
 import type { TKnowledgeBaseSidebarProps } from './KnowledgeBaseSidebar'
@@ -188,7 +188,7 @@ const KnowledgeBaseContainer: FC<
               <findKnowledgeBaseItems.icon className={styles['icon']} />
               <div>{findKnowledgeBaseItems.KnowledgeBaseName}</div>
               <div className={styles['tag']}>
-                <OutlineLoadingIcon className={styles['loading-icon']} />
+                <FigmaIcon5237120699Outlined className={styles['loading-icon']} color="currentColor" />
                 知识库生成中，请耐心等待...
               </div>
             </div>

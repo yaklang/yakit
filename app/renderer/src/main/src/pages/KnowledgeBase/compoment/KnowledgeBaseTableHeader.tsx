@@ -1,18 +1,18 @@
 import { type Dispatch, type SetStateAction, useEffect, useMemo, type FC } from 'react'
 import type { KnowledgeBaseTableProps } from './KnowledgeBaseTable'
-import { ChevronDownIcon, PlusIcon } from '@/assets/newIcon'
-import { LightningBoltIcon } from '../icon/sidebarIcon'
+import { LightningBoltIcon, OutlineTimeIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineExportIcon,
-  OutlineExternallinkIcon,
-  OutlineLoadingIcon,
-  OutlinePencilaltIcon,
-  OutlineRefreshIcon,
-  OutlineTimeIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ExternalLinkOutlined,
+  PencilAltOutlined,
+  RefreshOutlined,
+  TrashOutlined,
+  FigmaIcon5237120699Outlined,
+  FigmaIcon2017756Outlined,
+  ChevronDownOutlined,
+  PlusOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 
 import styles from '../knowledgeBase.module.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -112,7 +112,7 @@ const KnowledgeBaseTableHeader: FC<
         className={styles['building-knowledge-items']}
         onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken, 'routine')}
       >
-        <OutlineLoadingIcon className={styles['loading-icon']} />
+        <FigmaIcon5237120699Outlined className={styles['loading-icon']} color="currentColor" />
         构建知识条目中，可点此查看进度
       </div>
     ) : null
@@ -148,7 +148,7 @@ const KnowledgeBaseTableHeader: FC<
               className={styles['build-tag']}
               onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken, 'routine')}
             >
-              <OutlineLoadingIcon className={styles['loading-icon']} />
+              <FigmaIcon5237120699Outlined className={styles['loading-icon']} color="currentColor" />
               知识库生成中，可点此查看进度
             </div>
           ) : null}
@@ -180,13 +180,13 @@ const KnowledgeBaseTableHeader: FC<
                         <div className={styles['content-first']}>
                           <div>{it.name}</div>
                           <div className={styles['tag']}>
-                            <OutlineLoadingIcon className={styles['loading-icon']} />
+                            <FigmaIcon5237120699Outlined className={styles['loading-icon']} color="currentColor" />
                             生成中
                           </div>
                         </div>
                         <div className={styles['content-last']}>
                           <div>{it.date}</div>
-                          <OutlineExternallinkIcon className={styles['external-link-icon']} />
+                          <ExternalLinkOutlined className={styles['external-link-icon']} color="currentColor" />
                         </div>
                       </div>
                     )
@@ -198,7 +198,7 @@ const KnowledgeBaseTableHeader: FC<
             >
               <YakitButton icon={<OutlineTimeIcon />} type="text2">
                 历史
-                <ChevronDownIcon />
+                <ChevronDownOutlined size={16} />
               </YakitButton>
             </YakitPopover>
           ) : null}
@@ -208,7 +208,7 @@ const KnowledgeBaseTableHeader: FC<
           </div>
           <YakitButton
             disabled={!knowledgeBaseItems.streamstep || knowledgeBaseItems.streamstep !== 'success'}
-            icon={<PlusIcon />}
+            icon={<PlusOutlined size={16} />}
             type="secondary2"
             onClick={async () => {
               try {
@@ -228,7 +228,7 @@ const KnowledgeBaseTableHeader: FC<
             添加
           </YakitButton>
           <YakitButton
-            icon={<OutlineExportIcon />}
+            icon={<FigmaIcon2017756Outlined />}
             type="secondary2"
             onClick={async () => {
               knowledgeBaseItems.ID && (await onExportKnowledgeBase?.(knowledgeBaseItems.ID))
@@ -236,10 +236,14 @@ const KnowledgeBaseTableHeader: FC<
           >
             导出
           </YakitButton>
-          <YakitButton icon={<OutlinePencilaltIcon />} type="text2" onClick={() => onEditVisible?.(true)} />
+          <YakitButton
+            icon={<PencilAltOutlined color="currentColor" />}
+            type="text2"
+            onClick={() => onEditVisible?.(true)}
+          />
           <YakitButton
             className={styles['delete']}
-            icon={<OutlineTrashIcon />}
+            icon={<TrashOutlined color="currentColor" />}
             type="text2"
             color="danger"
             onClick={() => onDeleteVisible?.(true)}
@@ -285,7 +289,11 @@ const KnowledgeBaseTableHeader: FC<
               }}
             />
             <Tooltip title="刷新">
-              <YakitButton icon={<OutlineRefreshIcon />} type="text2" onClick={knowledgeBaseIndexRun} />
+              <YakitButton
+                icon={<RefreshOutlined color="currentColor" />}
+                type="text2"
+                onClick={knowledgeBaseIndexRun}
+              />
             </Tooltip>
           </div>
         </div>

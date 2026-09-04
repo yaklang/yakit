@@ -2,15 +2,16 @@ import type React from 'react'
 import { memo, useMemo, useState } from 'react'
 import { Tooltip, Form, Divider, Table, Modal } from 'antd'
 import {
-  OutlinePencilaltIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineTrashIcon,
-  OutlineEyeoffIcon,
-  OutlineEyeIcon,
-  OutlineBanIcon,
-  OutlineEngineIcon,
-} from '@/assets/icon/outline'
-import { SolidCheckCircleIcon, SolidExclamationIcon, SolidXcircleIcon } from '@/assets/icon/solid'
+  PencilAltOutlined,
+  QuestionMarkCircleOutlined,
+  TrashOutlined,
+  EyeOffOutlined,
+  EyeOutlined,
+  BanOutlined,
+  FigmaIcon4866167279Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { CheckCircleSolid, ExclamationSolid, XCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { useMemoizedFn } from 'ahooks'
 import type { ProxyEndpoint, ProxyRoute } from '@/apiUtils/grpc'
@@ -43,7 +44,7 @@ const PasswordDisplay: React.FC<{
       <span className={styles['password_display_icon_text']}>{visible ? password : '•'.repeat(password.length)}</span>
       <YakitButton
         className={styles['password_display_icon_eye']}
-        icon={visible ? <OutlineEyeIcon /> : <OutlineEyeoffIcon />}
+        icon={visible ? <EyeOutlined color="currentColor" /> : <EyeOffOutlined color="currentColor" />}
         type="text2"
         onClick={() => setVisible(!visible)}
       />
@@ -223,18 +224,24 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
             render: (_, record) => (
               <>
                 <YakitButton
-                  icon={<OutlineTrashIcon className={styles['icon-trash']} />}
+                  icon={<TrashOutlined className={styles['icon-trash']} color="currentColor" />}
                   type="text2"
                   size="small"
                   onClick={() => onDelete(record.Id)}
                 />
                 <Divider type="vertical" style={{ margin: '0 12px' }} />
-                <YakitButton icon={<OutlinePencilaltIcon />} type="text2" onClick={() => onEdit(record)} />
+                <YakitButton
+                  icon={<PencilAltOutlined color="currentColor" />}
+                  type="text2"
+                  onClick={() => onEdit(record)}
+                />
                 <Divider type="vertical" style={{ margin: '0 12px' }} />
                 <ProxyTest proxy={[record.Id]} showIcon btnDisabled={record.Disabled} />
                 <Divider type="vertical" style={{ margin: '0 12px' }} />
                 <YakitButton
-                  icon={<OutlineBanIcon className={record.Disabled ? styles['icon-ban-active'] : ''} />}
+                  icon={
+                    <BanOutlined className={record.Disabled ? styles['icon-ban-active'] : ''} color="currentColor" />
+                  }
                   type="text2"
                   onClick={() => onToggleDisable(record.Id)}
                 />
@@ -303,15 +310,21 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
             render: (_, record) => (
               <>
                 <YakitButton
-                  icon={<OutlineTrashIcon className={styles['icon-trash']} />}
+                  icon={<TrashOutlined className={styles['icon-trash']} color="currentColor" />}
                   type="text2"
                   onClick={() => onDelete(record.Id)}
                 />
                 <Divider type="vertical" style={{ margin: '0 12px' }} />
-                <YakitButton icon={<OutlinePencilaltIcon />} type="text2" onClick={() => onEdit(record)} />
+                <YakitButton
+                  icon={<PencilAltOutlined color="currentColor" />}
+                  type="text2"
+                  onClick={() => onEdit(record)}
+                />
                 <Divider type="vertical" style={{ margin: '0 12px' }} />
                 <YakitButton
-                  icon={<OutlineBanIcon className={record.Disabled ? styles['icon-ban-active'] : ''} />}
+                  icon={
+                    <BanOutlined className={record.Disabled ? styles['icon-ban-active'] : ''} color="currentColor" />
+                  }
                   type="text2"
                   onClick={() => onToggleDisable(record.Id)}
                 />
@@ -466,7 +479,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                   <>
                     {t('ProxyConfig.destination_address')}
                     <Tooltip title={t('ProxyConfig.address_tip')}>
-                      <OutlineQuestionmarkcircleIcon className={styles['header-hint-icon']} />
+                      <QuestionMarkCircleOutlined className={styles['header-hint-icon']} color="currentColor" />
                     </Tooltip>
                   </>
                 }
@@ -515,7 +528,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
           <span className={styles['header-title']}>{t('AgentConfigModal.proxy_configuration')}</span>
           {!hideRules && (
             <Tooltip title={t('ProxyConfig.tip')}>
-              <OutlineQuestionmarkcircleIcon className={styles['header-hint-icon']} />
+              <QuestionMarkCircleOutlined className={styles['header-hint-icon']} color="currentColor" />
             </Tooltip>
           )}
         </div>
@@ -619,7 +632,7 @@ export const ProxyTest = memo((props: ProxyTestProps) => {
         return (
           <>
             <div className={styles['proxy-test-modal-success']}>
-              <SolidCheckCircleIcon />
+              <CheckCircleSolid color="currentColor" />
               <span>{t('ProxyConfig.detectionSuccess')}</span>
             </div>
             <YakitButton type="primary" onClick={handleTest}>
@@ -632,10 +645,10 @@ export const ProxyTest = memo((props: ProxyTestProps) => {
         return (
           <>
             <div className={styles['proxy-test-modal-detail']}>
-              <SolidXcircleIcon />
+              <XCircleSolid color="currentColor" />
               {errorMsg}
             </div>
-            <SolidExclamationIcon className={styles['proxy-test-modal-failed']} />
+            <ExclamationSolid className={styles['proxy-test-modal-failed']} color="currentColor" />
             <YakitButton type="primary" onClick={handleTest}>
               {t('ProxyConfig.detectionStart')}
             </YakitButton>
@@ -650,7 +663,12 @@ export const ProxyTest = memo((props: ProxyTestProps) => {
     <>
       {showIcon ? (
         <Tooltip title={t('ProxyConfig.proxyDetection')}>
-          <YakitButton icon={<OutlineEngineIcon />} type="text2" onClick={onShowModal} disabled={btnDisabled} />
+          <YakitButton
+            icon={<FigmaIcon4866167279Outlined color="currentColor" />}
+            type="text2"
+            onClick={onShowModal}
+            disabled={btnDisabled}
+          />
         </Tooltip>
       ) : (
         <span

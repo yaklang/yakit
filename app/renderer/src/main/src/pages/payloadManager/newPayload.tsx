@@ -17,25 +17,26 @@ import classNames from 'classnames'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineArrowscollapseIcon,
-  OutlineArrowsexpandIcon,
-  OutlineClipboardcopyIcon,
-  OutlineCogIcon,
-  OutlineDatabasebackupIcon,
-  OutlineDocumentduplicateIcon,
-  OutlineExportIcon,
-  OutlineFolderaddIcon,
-  OutlineImportIcon,
-  OutlinePaperclipIcon,
-  OutlinePencilaltIcon,
-  OutlinePlusIcon,
-  OutlineRefreshIcon,
-  OutlineSparklesIcon,
-  OutlineTrashIcon,
-  OutlineUploadIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
-import { OutlineAddPayloadIcon, PropertyIcon, PropertyNoAddIcon } from './icon'
+  ArrowsExpandOutlined,
+  ClipboardCopyOutlined,
+  CogOutlined,
+  DatabaseBackupOutlined,
+  DocumentDuplicateOutlined,
+  FolderAddOutlined,
+  PaperClipOutlined,
+  PencilAltOutlined,
+  PlusOutlined,
+  RefreshOutlined,
+  SparklesOutlined,
+  TrashOutlined,
+  UploadOutlined,
+  XOutlined,
+  FigmaIcon6480193584Outlined,
+  ArrowsOutlined,
+  FigmaIcon2017756Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { OutlineAddPayloadIcon, PropertyIcon, PropertyNoAddIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import {
   DragDropContext,
@@ -48,17 +49,18 @@ import {
   type DragUpdate,
 } from '@hello-pangea/dnd'
 import {
-  SolidChevrondownIcon,
-  SolidChevronrightIcon,
-  SolidDatabaseIcon,
-  SolidDocumentdownloadIcon,
-  SolidDocumenttextIcon,
-  SolidDotsverticalIcon,
-  SolidDragsortIcon,
-  SolidFolderopenIcon,
-  SolidStoreIcon,
-  SolidXcircleIcon,
-} from '@/assets/icon/solid'
+  ChevronDownSolid,
+  ChevronRightSolid,
+  DatabaseSolid,
+  DocumentDownloadSolid,
+  DocumentTextSolid,
+  DotsVerticalSolid,
+  FolderOpenSolid,
+  XCircleSolid,
+  FigmaIcon2281144183Solid,
+  FigmaIcon16256302540Solid,
+} from '@yakit-libs/yakit-ui-icons/solid'
+
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { v4 as uuidv4 } from 'uuid'
@@ -128,7 +130,7 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
     <div className={styles['yaklang-engine-hint-wrapper']}>
       <div className={styles['hint-left-wrapper']}>
         <div className={styles['hint-icon']}>
-          <SolidDocumentdownloadIcon />
+          <DocumentDownloadSolid color="currentColor" />
         </div>
       </div>
 
@@ -433,7 +435,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
           <div className={styles['header']}>
             <div className={styles['title']}>{title}</div>
             <div className={styles['extra']} onClick={onClose}>
-              <OutlineXIcon />
+              <XOutlined color="currentColor" />
             </div>
           </div>
           {isDictionaries && (
@@ -551,7 +553,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
               {uploadList.map((item, index) => (
                 <div className={styles['upload-list-item']} key={index}>
                   <div className={styles['link-icon']}>
-                    <OutlinePaperclipIcon />
+                    <PaperClipOutlined color="currentColor" />
                   </div>
                   <div className={styles['text']}>{item.path}</div>
                   <div
@@ -564,7 +566,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                       setUploadList(newUploadList)
                     }}
                   >
-                    <SolidXcircleIcon />
+                    <XCircleSolid color="currentColor" />
                   </div>
                 </div>
               ))}
@@ -579,7 +581,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                       size="large"
                       disabled={isDisabled}
                       type="outline1"
-                      icon={<SolidDatabaseIcon />}
+                      icon={<DatabaseSolid color="currentColor" />}
                       onClick={onSavePayload}
                     >
                       数据库存储
@@ -587,7 +589,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                     <YakitButton
                       size="large"
                       disabled={isDisabled}
-                      icon={<SolidDocumenttextIcon />}
+                      icon={<DocumentTextSolid color="currentColor" />}
                       onClick={onSavePayloadToFile}
                     >
                       {t('CreateDictionaries.saveToFile')}
@@ -597,7 +599,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                   <YakitButton
                     size="large"
                     disabled={isDisabled}
-                    icon={<SolidDocumenttextIcon />}
+                    icon={<DocumentTextSolid color="currentColor" />}
                     onClick={onSavePayloadToFile}
                   >
                     {t('CreateDictionaries.largeFileStorage')}
@@ -1312,7 +1314,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
             {!onlyInsert && (
               <YakitButton
                 type="text2"
-                icon={<OutlineRefreshIcon />}
+                icon={<RefreshOutlined color="currentColor" />}
                 onClick={() => {
                   onQueryGroup()
                 }}
@@ -1325,7 +1327,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                 <Tooltip title={t('NewPayloadLocalList.goToDictionaryManagement')}>
                   <YakitButton
                     type="text2"
-                    icon={<OutlineCogIcon />}
+                    icon={<CogOutlined color="currentColor" />}
                     onClick={() => {
                       onClose && onClose()
                       ipcRenderer.invoke('open-route-page', { route: YakitRoute.PayloadManager })
@@ -1338,7 +1340,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                 <Tooltip title={t('YakitButton.batchExport')}>
                   <YakitButton
                     type="text2"
-                    icon={<OutlineExportIcon />}
+                    icon={<FigmaIcon2017756Outlined />}
                     onClick={() => {
                       if (exportData.length === 0) {
                         warn(t('NewPayloadLocalList.pleaseSelectExportContent'))
@@ -1365,7 +1367,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                         key: 'createFolder',
                         label: (
                           <div className={styles['extra-menu']}>
-                            <OutlineFolderaddIcon />
+                            <FolderAddOutlined color="currentColor" />
                             <div className={styles['menu-name']}>{t('YakitButton.newFolder')}</div>
                           </div>
                         ),
@@ -1424,7 +1426,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                   }}
                 >
                   <Tooltip title={t('YakitButton.add_new')}>
-                    <YakitButton type="secondary2" icon={<OutlinePlusIcon />} />
+                    <YakitButton type="secondary2" icon={<PlusOutlined color="currentColor" />} />
                   </Tooltip>
                 </YakitDropdownMenu>
               </div>
@@ -1625,15 +1627,15 @@ export const FileComponentClone: React.FC<FileComponentCloneProps> = (props) => 
     >
       <div className={styles['file-header']}>
         <div className={styles['drag-icon']}>
-          <SolidDragsortIcon />
+          <FigmaIcon2281144183Solid color="currentColor" />
         </div>
         {file.type === 'DataBase' ? (
           <div className={classNames(styles['file-icon'], styles['file-icon-database'])}>
-            <SolidDatabaseIcon />
+            <DatabaseSolid color="currentColor" />
           </div>
         ) : (
           <div className={classNames(styles['file-icon'], styles['file-icon-document'])}>
-            <SolidDocumenttextIcon />
+            <DocumentTextSolid color="currentColor" />
           </div>
         )}
 
@@ -1652,7 +1654,7 @@ export const FileComponentClone: React.FC<FileComponentCloneProps> = (props) => 
             e.stopPropagation()
           }}
         >
-          <SolidDotsverticalIcon />
+          <DotsVerticalSolid color="currentColor" />
         </div>
       </div>
     </div>
@@ -1850,7 +1852,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         key: 'copyFuzztag',
         label: (
           <div className={styles['extra-menu']}>
-            <OutlineDocumentduplicateIcon />
+            <DocumentDuplicateOutlined color="currentColor" />
             <div className={styles['menu-name']}>{t('FolderComponent.copyFuzztag')}</div>
           </div>
         ),
@@ -1868,7 +1870,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         key: 'rename',
         label: (
           <div className={styles['extra-menu']}>
-            <OutlinePencilaltIcon />
+            <PencilAltOutlined color="currentColor" />
             <div className={styles['menu-name']}>{t('YakitButton.rename')}</div>
           </div>
         ),
@@ -1877,7 +1879,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         key: 'upload',
         label: (
           <div className={styles['extra-menu']}>
-            <OutlineUploadIcon />
+            <UploadOutlined color="currentColor" />
             <div className={styles['menu-name']}>{t('YakitButton.upload')}</div>
           </div>
         ),
@@ -1890,7 +1892,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         key: 'delete',
         label: (
           <div className={styles['extra-menu']}>
-            <OutlineTrashIcon />
+            <TrashOutlined color="currentColor" />
             <div className={styles['menu-name']}>{t('YakitButton.delete')}</div>
           </div>
         ),
@@ -1983,10 +1985,14 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 />
               )}
               <div className={styles['is-fold-icon']}>
-                {expandArr.includes(folder.id) ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />}
+                {expandArr.includes(folder.id) ? (
+                  <ChevronDownSolid color="currentColor" />
+                ) : (
+                  <ChevronRightSolid color="currentColor" />
+                )}
               </div>
               <div className={styles['folder-icon']}>
-                <SolidFolderopenIcon />
+                <FolderOpenSolid color="currentColor" />
               </div>
               <div className={classNames(styles['folder-name'], 'yakit-content-single-ellipsis')}>{inputName}</div>
             </div>
@@ -2058,7 +2064,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                   }}
                 >
                   <div className={styles['extra-icon']}>
-                    <SolidDotsverticalIcon />
+                    <DotsVerticalSolid color="currentColor" />
                   </div>
                 </YakitDropdownMenu>
               )}
@@ -2520,7 +2526,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'copyFuzztag',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineDocumentduplicateIcon />
+                  <DocumentDuplicateOutlined color="currentColor" />
                   <div className={styles['menu-name']}>{t('FolderComponent.copyFuzztag')}</div>
                 </div>
               ),
@@ -2529,7 +2535,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'importPayload',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineImportIcon />
+                  <FigmaIcon6480193584Outlined color="currentColor" />
                   <div className={styles['menu-name']}>{t('FileComponent.extendDictionary')}</div>
                 </div>
               ),
@@ -2538,7 +2544,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'exportCsv',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineExportIcon />
+                  <FigmaIcon2017756Outlined />
                   <div className={styles['menu-name']}>{t('FileComponent.exportDictionary')}</div>
                 </div>
               ),
@@ -2547,7 +2553,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'rename',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlinePencilaltIcon />
+                  <PencilAltOutlined color="currentColor" />
                   <div className={styles['menu-name']}>{t('YakitButton.rename')}</div>
                 </div>
               ),
@@ -2556,7 +2562,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'upload',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineUploadIcon />
+                  <UploadOutlined color="currentColor" />
                   <div className={styles['menu-name']}>{t('YakitButton.upload')}</div>
                 </div>
               ),
@@ -2569,7 +2575,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'delete',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineTrashIcon />
+                  <TrashOutlined color="currentColor" />
                   <div className={styles['menu-name']}>{t('YakitButton.delete')}</div>
                 </div>
               ),
@@ -2581,7 +2587,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'copyFuzztag',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineDocumentduplicateIcon />
+                  <DocumentDuplicateOutlined color="currentColor" />
                   <div className={styles['menu-name']}>{t('FolderComponent.copyFuzztag')}</div>
                 </div>
               ),
@@ -2590,7 +2596,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'exportTxt',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineExportIcon />
+                  <FigmaIcon2017756Outlined />
                   <div className={styles['menu-name']}>{t('FileComponent.exportDictionary')}</div>
                 </div>
               ),
@@ -2599,7 +2605,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'rename',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlinePencilaltIcon />
+                  <PencilAltOutlined color="currentColor" />
                   <div className={styles['menu-name']}>{t('YakitButton.rename')}</div>
                 </div>
               ),
@@ -2608,7 +2614,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'toDatabase',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineDatabasebackupIcon />
+                  <DatabaseBackupOutlined color="currentColor" />
                   <div className={styles['menu-name']}>{t('FileComponent.toDatabase')}</div>
                 </div>
               ),
@@ -2617,7 +2623,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'upload',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineUploadIcon />
+                  <UploadOutlined color="currentColor" />
                   <div className={styles['menu-name']}>{t('YakitButton.upload')}</div>
                 </div>
               ),
@@ -2630,7 +2636,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'delete',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineTrashIcon />
+                  <TrashOutlined color="currentColor" />
                   <div className={styles['menu-name']}>{t('YakitButton.delete')}</div>
                 </div>
               ),
@@ -2732,17 +2738,17 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     onClick={(e) => e.stopPropagation()}
                   />
                   <div className={styles['drag-icon']}>
-                    <SolidDragsortIcon />
+                    <FigmaIcon2281144183Solid color="currentColor" />
                   </div>
                 </>
               )}
               {file.type === 'DataBase' ? (
                 <div className={classNames(styles['file-icon'], styles['file-icon-database'])}>
-                  <SolidDatabaseIcon />
+                  <DatabaseSolid color="currentColor" />
                 </div>
               ) : (
                 <div className={classNames(styles['file-icon'], styles['file-icon-document'])}>
-                  <SolidDocumenttextIcon />
+                  <DocumentTextSolid color="currentColor" />
                 </div>
               )}
 
@@ -2830,7 +2836,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                   }}
                 >
                   <div className={styles['extra-icon']}>
-                    <SolidDotsverticalIcon />
+                    <DotsVerticalSolid color="currentColor" />
                   </div>
                 </YakitDropdownMenu>
               )}
@@ -3036,7 +3042,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
         setExpand && setExpand(!isExpand)
       }}
     >
-      {isExpand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+      {isExpand ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
     </div>
   )
 
@@ -3285,7 +3291,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
             <YakitButton
               type="outline1"
               colors="danger"
-              icon={<OutlineTrashIcon />}
+              icon={<TrashOutlined color="currentColor" />}
               disabled={isNoSelect}
               onClick={() => {
                 if (!isNoSelect) {
@@ -3296,7 +3302,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
             {isNoSelect && (
               <YakitButton
                 type="outline2"
-                icon={<OutlineExportIcon />}
+                icon={<FigmaIcon2017756Outlined />}
                 onClick={() => {
                   setExportType('csv')
                   setExportVisible(true)
@@ -3312,14 +3318,14 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                     <Tooltip title={t('PayloadLocalContent.backupToOther')}>
                       <YakitButton
                         type="outline2"
-                        icon={<OutlineDocumentduplicateIcon />}
+                        icon={<DocumentDuplicateOutlined color="currentColor" />}
                         onClick={() => onCopyToOtherPayload()}
                       />
                     </Tooltip>
                     <Tooltip title={t('PayloadLocalContent.moveToOther')}>
                       <YakitButton
                         type="outline2"
-                        icon={<OutlineClipboardcopyIcon />}
+                        icon={<ClipboardCopyOutlined color="currentColor" />}
                         onClick={() => onMoveToOtherPayload()}
                       />
                     </Tooltip>
@@ -3328,14 +3334,14 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                   <>
                     <YakitButton
                       type="outline2"
-                      icon={<OutlineDocumentduplicateIcon />}
+                      icon={<DocumentDuplicateOutlined color="currentColor" />}
                       onClick={() => onCopyToOtherPayload()}
                     >
                       {t('PayloadLocalContent.backupToOther')}
                     </YakitButton>
                     <YakitButton
                       type="outline2"
-                      icon={<OutlineClipboardcopyIcon />}
+                      icon={<ClipboardCopyOutlined color="currentColor" />}
                       onClick={() => onMoveToOtherPayload()}
                     >
                       {t('PayloadLocalContent.moveToOther')}
@@ -3345,7 +3351,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
               </>
             )}
             <YakitButton
-              icon={<OutlinePlusIcon />}
+              icon={<PlusOutlined color="currentColor" />}
               onClick={() => {
                 const m = showYakitModal({
                   getContainer: document.getElementById('new-payload') || document.body,
@@ -3388,7 +3394,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
             >
               <YakitButton
                 type="outline2"
-                icon={<OutlineXIcon />}
+                icon={<XOutlined color="currentColor" />}
                 onClick={() => {
                   setEditMonaco(false)
                   payloadFileData && setEditorValue(Uint8ArrayToString(payloadFileData.Data))
@@ -3396,7 +3402,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
               >
                 {t('YakitButton.cancel')}
               </YakitButton>
-              <YakitButton icon={<SolidStoreIcon />} onClick={onSaveFileFun}>
+              <YakitButton icon={<FigmaIcon16256302540Solid color="currentColor" />} onClick={onSaveFileFun}>
                 {t('YakitButton.save')}
               </YakitButton>
               {setExpand && Expand()}
@@ -3409,7 +3415,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
             >
               <YakitButton
                 type="outline2"
-                icon={<OutlineExportIcon />}
+                icon={<FigmaIcon2017756Outlined />}
                 onClick={() => {
                   setExportType('file')
                   setExportVisible(true)
@@ -3420,7 +3426,11 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
 
               {payloadFileData?.IsBigFile === false && (
                 <>
-                  <YakitButton type="outline2" icon={<OutlineSparklesIcon />} onClick={onRemoveDuplicate}>
+                  <YakitButton
+                    type="outline2"
+                    icon={<SparklesOutlined color="currentColor" />}
+                    onClick={onRemoveDuplicate}
+                  >
                     {t('PayloadLocalContent.autoRemoveDuplicate')}
                   </YakitButton>
 
@@ -3428,7 +3438,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                     onClick={() => {
                       setEditMonaco(true)
                     }}
-                    icon={<OutlinePencilaltIcon />}
+                    icon={<PencilAltOutlined color="currentColor" />}
                   >
                     {t('YakitButton.edit')}
                   </YakitButton>
@@ -3448,7 +3458,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                 onClose && onClose()
               }}
             >
-              <OutlineXIcon />
+              <XOutlined color="currentColor" />
             </div>
           </div>
         )}
@@ -3593,7 +3603,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
         setExpand && setExpand(!isExpand)
       }}
     >
-      {isExpand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+      {isExpand ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
     </div>
   )
 
@@ -3713,7 +3723,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
             <YakitButton
               type="outline1"
               colors="danger"
-              icon={<OutlineTrashIcon />}
+              icon={<TrashOutlined color="currentColor" />}
               disabled={isNoSelect}
               onClick={() => {
                 if (!isNoSelect) {
@@ -3734,7 +3744,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
             >
               <YakitButton
                 type="outline2"
-                icon={<OutlineXIcon />}
+                icon={<XOutlined color="currentColor" />}
                 onClick={() => {
                   setEditMonaco(false)
                   payloadFileData && setEditorValue(Uint8ArrayToString(payloadFileData.Data))
@@ -3742,7 +3752,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
               >
                 {t('YakitButton.cancel')}
               </YakitButton>
-              <YakitButton icon={<SolidStoreIcon />} onClick={onSaveFileFun}>
+              <YakitButton icon={<FigmaIcon16256302540Solid color="currentColor" />} onClick={onSaveFileFun}>
                 {t('YakitButton.save')}
               </YakitButton>
               {setExpand && Expand()}
@@ -3759,7 +3769,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                     onClick={() => {
                       setEditMonaco(true)
                     }}
-                    icon={<OutlinePencilaltIcon />}
+                    icon={<PencilAltOutlined color="currentColor" />}
                     disabled={!isPayloadOperator(userInfo)}
                   >
                     {t('YakitButton.edit')}
@@ -4567,7 +4577,7 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
               onClose()
             }}
           >
-            <OutlineXIcon />
+            <XOutlined color="currentColor" />
           </div>
           {folder.length !== 0 ? (
             <div className={styles['select-folder']}>

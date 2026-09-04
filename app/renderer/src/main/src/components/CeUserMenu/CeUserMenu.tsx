@@ -11,7 +11,7 @@ import yakitImg from '@/assets/yakit.jpg'
 import { useMemoizedFn } from 'ahooks'
 import type { API } from '@/services/swagger/resposeType'
 import { getTokenLimit, getTokenPercent, getTokenUsed } from './CeUsageStatisticsModal'
-import { OutlineDocumentduplicateIcon } from '@/assets/icon/outline'
+import { DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { maskApiKey } from './ceApiKey'
@@ -154,7 +154,7 @@ export const CeUserInfo: React.FC<CeUserInfoProps> = (props) => {
                 type="text2"
                 size="small"
                 className={styles['ce-user-info-apikey-copy']}
-                icon={<OutlineDocumentduplicateIcon />}
+                icon={<DocumentDuplicateOutlined color="currentColor" />}
                 onClick={handleCopyApiKey}
               />
             </div>

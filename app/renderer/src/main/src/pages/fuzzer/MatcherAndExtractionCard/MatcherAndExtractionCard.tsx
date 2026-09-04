@@ -24,15 +24,7 @@ import type {
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { NewHTTPPacketEditor } from '@/utils/editors'
 import styles from './MatcherAndExtraction.module.scss'
-import {
-  AdjustmentsIcon,
-  ColorSwatchIcon,
-  PencilAltIcon,
-  PlusIcon,
-  RemoveIcon,
-  ResizerIcon,
-  TrashIcon,
-} from '@/assets/newIcon'
+import { ResizerIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Descriptions, Divider } from 'antd'
@@ -77,6 +69,16 @@ import { ExtractionResultsContent, LabelNodeItem, onFilterEmptySubMatcher } from
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
+
+import {
+  AdjustmentsOutlined,
+  ColorSwatchOutlined,
+  PencilAltOutlined,
+  PlusOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -561,7 +563,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                   {type === 'matchers' ? (
                     <YakitButton
                       type="outline1"
-                      icon={<PlusIcon />}
+                      icon={<PlusOutlined size={16} />}
                       onClick={() => onAddCondition('matchers')}
                       size={isSmallMode ? 'small' : undefined}
                     >
@@ -571,7 +573,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                     <>
                       <YakitButton
                         type="outline1"
-                        icon={<PlusIcon />}
+                        icon={<PlusOutlined size={16} />}
                         onClick={() => onAddCondition('extractors')}
                         size={isSmallMode ? 'small' : undefined}
                       >
@@ -601,7 +603,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                 )}
               </div>
             </div>
-            <RemoveIcon className={styles['remove-icon']} onClick={() => onCheckClose()} />
+            <XSolid size={12} className={styles['remove-icon']} onClick={() => onCheckClose()} />
           </div>
           <MatcherCollapse
             ref={matcherCollapseRef}
@@ -839,7 +841,7 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
                   <div className={styles['matching-extraction-condition-right']}>
                     <YakitButton
                       type="outline1"
-                      icon={<PlusIcon />}
+                      icon={<PlusOutlined size={16} />}
                       onClick={() => onAddSubCondition(item, number)}
                       size={isSmallMode ? 'small' : undefined}
                     >
@@ -853,7 +855,11 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
                       {t('MatcherCollapse.debugExecute')}
                     </YakitButton>
                     {number > 0 && (
-                      <TrashIcon className={styles['trash-icon']} onClick={() => onRemoveMatcher(number)} />
+                      <TrashOutlined
+                        size={16}
+                        className={styles['trash-icon']}
+                        onClick={() => onRemoveMatcher(number)}
+                      />
                     )}
                   </div>
                 )}
@@ -881,7 +887,8 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
                     }
                     extra={
                       !notEditable && (
-                        <TrashIcon
+                        <TrashOutlined
+                          size={16}
                           className={styles['trash-icon']}
                           onClick={(e) => {
                             e.stopPropagation()
@@ -1060,10 +1067,11 @@ export const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueLi
                     }}
                     defaultCode={httpResponse}
                   >
-                    <AdjustmentsIcon className={styles['adjustments-icon']} />
+                    <AdjustmentsOutlined size={16} className={styles['adjustments-icon']} />
                   </RuleContent>
                 )}
-                <TrashIcon
+                <TrashOutlined
+                  size={16}
                   className={styles['trash-icon']}
                   onClick={() => {
                     group.splice(number, 1)
@@ -1082,7 +1090,7 @@ export const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueLi
             <YakitButton
               disabled={!!searchValue}
               type="text"
-              icon={<PlusIcon />}
+              icon={<PlusOutlined size={16} />}
               style={{ justifyContent: 'flex-start' }}
               onClick={() => onAddGroup()}
             >
@@ -1175,7 +1183,8 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                     open={editNameVisible && currentIndex === index}
                     onOpenChange={setEditNameVisible}
                   >
-                    <PencilAltIcon
+                    <PencilAltOutlined
+                      size={16}
                       className={classNames({
                         [styles['icon-active']]: editNameVisible && currentIndex === index,
                       })}
@@ -1200,7 +1209,8 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
             }
             extra={
               !notEditable && (
-                <TrashIcon
+                <TrashOutlined
+                  size={16}
                   className={styles['trash-icon']}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -1431,7 +1441,7 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
           [getColorClassName(value)]: !!value && getColorClassName(value),
         })}
       >
-        {!value && <ColorSwatchIcon />}
+        {!value && <ColorSwatchOutlined size={16} />}
       </div>
     </YakitPopover>
   )

@@ -4,13 +4,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { genDefaultPagination, type QueryGeneralRequest, type QueryGeneralResponse } from '../invoker/schema'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { useCreation, useDebounceEffect, useMemoizedFn } from 'ahooks'
-import { OutlineRefreshIcon, OutlineSearchIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { RefreshOutlined, SearchOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { yakitNotify } from '@/utils/notification'
 import { Divider } from 'antd'
 import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { TrashIcon } from '@/assets/newIcon'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { onRemoveToolFC } from '@/utils/deleteTool'
@@ -18,7 +17,7 @@ import { ExportExcel } from '@/components/DataExport/DataExport'
 import { formatJson } from '../yakitStore/viewers/base'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { SolidPaperairplaneIcon } from '@/assets/icon/solid'
+import { PaperAirplaneSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitAsset } from '@/services/electronBridge'
 import styles from './DomainAssetPage.module.scss'
@@ -75,7 +74,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
       filterProps: {
         filterKey: 'DomainKeyword',
         filtersType: 'input',
-        filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+        filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
       },
       render: (text) => text || '-',
     },
@@ -86,7 +85,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
       filterProps: {
         filterKey: 'Network',
         filtersType: 'input',
-        filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+        filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
       },
       render: (text) => text || '-',
     },
@@ -97,7 +96,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
       filterProps: {
         filterKey: 'Title',
         filtersType: 'input',
-        filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+        filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
       },
       render: (text) => text || '-',
     },
@@ -115,7 +114,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
               e.stopPropagation()
               onRemoveSingle(record.DomainName, record.ID)
             }}
-            icon={<OutlineTrashIcon />}
+            icon={<TrashOutlined color="currentColor" />}
           />
         </>
       ),
@@ -378,7 +377,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
                 disabled: selectNum === 0,
               }}
             >
-              <YakitButton type="primary" icon={<SolidPaperairplaneIcon />}>
+              <YakitButton type="primary" icon={<PaperAirplaneSolid color="currentColor" />}>
                 {t('DomainAssetPage.sendTo')}
               </YakitButton>
             </YakitDropdownMenu>
@@ -389,7 +388,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
               }}
               placement="bottomRight"
             >
-              <YakitButton type="outline1" colors="danger" icon={<TrashIcon />}>
+              <YakitButton type="outline1" colors="danger" icon={<TrashOutlined size={16} />}>
                 {selectNum > 0 ? t('YakitButton.delete') : t('YakitButton.clear')}
               </YakitButton>
             </YakitPopconfirm>
@@ -405,7 +404,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
                 placement: 'bottom',
               }}
             >
-              <YakitButton type="text2" icon={<OutlineRefreshIcon />} />
+              <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} />
             </YakitDropdownMenu>
           </div>
         }

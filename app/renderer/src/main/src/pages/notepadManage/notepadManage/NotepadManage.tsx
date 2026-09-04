@@ -2,11 +2,11 @@ import React, { useState } from 'react'
 import type { NotepadActionProps, NotepadManageProps } from './NotepadManageType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineClouddownloadIcon,
-  OutlinePencilaltIcon,
-  OutlineShareIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  CloudDownloadOutlined,
+  PencilAltOutlined,
+  ShareOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { Divider } from 'antd'
 import type { API } from '@/services/swagger/resposeType'
 import { useMemoizedFn } from 'ahooks'
@@ -118,7 +118,7 @@ export const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) =>
     <div>
       <YakitButton
         type="text2"
-        icon={<OutlinePencilaltIcon />}
+        icon={<PencilAltOutlined color="currentColor" />}
         onClick={onEdit}
         loading={editLoading}
         disabled={removeItemLoading}
@@ -126,7 +126,7 @@ export const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) =>
       <Divider type="vertical" style={{ margin: '0 8px' }} />
       <YakitButton
         type="text2"
-        icon={<OutlineClouddownloadIcon />}
+        icon={<CloudDownloadOutlined color="currentColor" />}
         onClick={() => onSingleDown(record)}
         loading={downItemLoading}
         disabled={removeItemLoading}
@@ -136,13 +136,13 @@ export const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) =>
           <Divider type="vertical" style={{ margin: '0 8px' }} />
           <YakitButton
             type="text2"
-            icon={<OutlineShareIcon />}
+            icon={<ShareOutlined color="currentColor" />}
             onClick={() => onShare(record)}
             disabled={removeItemLoading}
           />
           <Divider type="vertical" style={{ margin: '0 8px' }} />
           <YakitPopconfirm title={t('NotepadAction.confirmDelete')} onConfirm={() => onSingleRemove(record)}>
-            <YakitButton danger type="text" icon={<OutlineTrashIcon />} loading={removeItemLoading} />
+            <YakitButton danger type="text" icon={<TrashOutlined color="currentColor" />} loading={removeItemLoading} />
           </YakitPopconfirm>
         </>
       ) : null}

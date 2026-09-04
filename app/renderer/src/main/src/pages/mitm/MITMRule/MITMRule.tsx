@@ -8,18 +8,7 @@ import type {
   RuleExportAndImportHandle,
 } from './MITMRuleType'
 import styles from './MITMRule.module.scss'
-import {
-  BanIcon,
-  ChevronDownIcon,
-  ExportIcon,
-  PencilAltIcon,
-  PlusIcon,
-  QuestionMarkCircleIcon,
-  RefreshIcon,
-  RemoveIcon,
-  SaveIcon,
-  TrashIcon,
-} from '@/assets/newIcon'
+import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RefreshIcon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { useCreation, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -56,11 +45,24 @@ import {
 import MITMContext from '../Context/MITMContext'
 import ReactResizeDetector from 'react-resize-detector'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { OutlineCogIcon, OutlineQuestionmarkcircleIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import {
+  CogOutlined,
+  QuestionMarkCircleOutlined,
+  SearchOutlined,
+  BanOutlined,
+  ChevronDownOutlined,
+  FigmaIcon2017756Outlined,
+  PencilAltOutlined,
+  PlusOutlined,
+  SaveOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { setRemoteValue } from '@/utils/kv'
 import { RemoteMitmGV } from '@/enums/mitm'
+
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -551,14 +553,16 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
           render: (_, record: MITMContentReplacerRule) => {
             return (
               <div className={styles['table-action-icon']}>
-                <TrashIcon
+                <TrashOutlined
+                  size={16}
                   className={styles['icon-trash']}
                   onClick={(e) => {
                     e.stopPropagation()
                     onRemove(record)
                   }}
                 />
-                <PencilAltIcon
+                <PencilAltOutlined
+                  size={16}
                   className={classNames(styles['action-icon'], {
                     [styles['action-icon-edit-disabled']]: record.Disabled,
                   })}
@@ -567,7 +571,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     onOpenAddOrEdit(record)
                   }}
                 />
-                <BanIcon
+                <BanOutlined
+                  size={16}
                   className={classNames(styles['action-icon'], {
                     [styles['action-icon-ban-disabled']]: record.Disabled,
                   })}
@@ -771,7 +776,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 }}
                 className="modal-remove-icon"
               >
-                <RemoveIcon />
+                <XSolid size={12} />
               </div>
             ),
             cancelButtonProps: { size: 'small', className: 'modal-cancel-button' },
@@ -973,7 +978,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
               }}
               className="modal-remove-icon"
             >
-              <RemoveIcon />
+              <XSolid size={12} />
             </div>
           ),
           onOk: () => {
@@ -1007,7 +1012,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
               <label>
                 {t('MITMRule.built_in_rules')}
                 <Tooltip destroyOnHidden title={t('MITMRule.built_in_rules_tip')} placement="top">
-                  <OutlineQuestionmarkcircleIcon />
+                  <QuestionMarkCircleOutlined color="currentColor" />
                 </Tooltip>
                 <YakitSwitch
                   defaultChecked={disableTrafficGuardRef.current}
@@ -1020,7 +1025,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
               <Divider type="vertical" className={styles['heard-right-operation_divider']} />
             </div>
           )}
-          <YakitButton type="text" icon={<OutlineCogIcon />} onClick={() => setWhiteListVisible(true)}>
+          <YakitButton
+            type="text"
+            icon={<CogOutlined color="currentColor" />}
+            onClick={() => setWhiteListVisible(true)}
+          >
             {t('MITMRule.white_list')}
           </YakitButton>
           <Divider type="vertical" className={styles['heard-right-operation_divider']} />
@@ -1055,11 +1064,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                   type="outline2"
                   className={styles['button-question']}
                   onClick={() => openExternalWebsite(WebsiteGV.OfficialWebsite)}
-                  icon={<QuestionMarkCircleIcon />}
+                  icon={<QuestionMarkCircleOutlined size={16} />}
                 ></YakitButton>
               </Tooltip>
               <div onClick={() => onClose()} className={styles['icon-remove']}>
-                <RemoveIcon />
+                <XSolid size={12} />
               </div>
             </>
           )}
@@ -1197,7 +1206,12 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                   <>
                     {tableTitleBodyWidth < 670 && (
                       <YakitPopover content={searchEle}>
-                        <YakitButton icon={<OutlineSearchIcon />} size="small" type="outline2" isHover={searchFlag} />
+                        <YakitButton
+                          icon={<SearchOutlined color="currentColor" />}
+                          size="small"
+                          type="outline2"
+                          isHover={searchFlag}
+                        />
                       </YakitPopover>
                     )}
                   </>
@@ -1235,12 +1249,12 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     className={classNames(styles['button-batch-remove'])}
                   >
                     {t('YakitButton.batchOperation')}
-                    <ChevronDownIcon />
+                    <ChevronDownOutlined size={16} />
                   </YakitButton>
                 </YakitPopover>
                 <YakitButton type="primary" onClick={() => onOpenOrCloseModal(true)}>
                   <div className={styles['button-add-rule']}>
-                    <PlusIcon />
+                    <PlusOutlined size={16} />
                     {t('MITMRule.add_rule')}
                   </div>
                 </YakitButton>
@@ -1390,13 +1404,13 @@ export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps>
   return (
     <>
       {onBeforeNode}
-      <YakitButton type="text" icon={<SaveIcon />} onClick={() => setImportVisible(true)}>
+      <YakitButton type="text" icon={<SaveOutlined size={16} />} onClick={() => setImportVisible(true)}>
         {t('RuleExportAndImportButton.import_configuration')}
       </YakitButton>
       <Divider type="vertical" style={{ margin: '0 4px' }} />
       <YakitButton
         type="text"
-        icon={<ExportIcon />}
+        icon={<FigmaIcon2017756Outlined size={16} />}
         className={styles['button-export']}
         onClick={() => {
           setExportVisible(true)

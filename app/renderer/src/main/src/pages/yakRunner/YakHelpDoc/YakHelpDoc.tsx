@@ -5,7 +5,7 @@ import styles from './YakHelpDoc.module.scss'
 import { loadFromYakURLRaw, requestYakURLList } from '@/pages/yakURLTree/netif'
 import { CollapseList } from '../CollapseList/CollapseList'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { OutlineGlobealtIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { GlobeAltOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
@@ -129,7 +129,7 @@ export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
         <div className={styles['extra']}>
           <Tooltip title={t('YakHelpDoc.goToOfficialDocs')}>
             <YakitButton
-              icon={<OutlineGlobealtIcon />}
+              icon={<GlobeAltOutlined color="currentColor" />}
               type="text2"
               onClick={() => openExternalWebsite(WebsiteGV.YakHelpDocAddress)}
             />
@@ -139,7 +139,7 @@ export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
       <div className={styles['filter-box']}>
         <YakitInput
           placeholder={t('YakHelpDoc.functionKeywordPlaceholder')}
-          prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+          prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
           onChange={onSearch.run}
         />
       </div>

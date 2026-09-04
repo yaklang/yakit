@@ -5,7 +5,7 @@ import styles from './AiFailPlanCard.module.scss'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import { PreWrapper } from '../ToolInvokerCard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
+import { ChevronsDownUpOutlined, ChevronsUpDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
 import { useCreation } from 'ahooks'
@@ -34,7 +34,9 @@ const AiFailPlanCard: FC<{
           <YakitButton
             size="small"
             type="text"
-            icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+            icon={
+              expand ? <ChevronsDownUpOutlined color="currentColor" /> : <ChevronsUpDownOutlined color="currentColor" />
+            }
             onClick={toggle}
             className={styles['expand-btn']}
           />

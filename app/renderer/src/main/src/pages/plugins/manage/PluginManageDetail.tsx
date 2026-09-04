@@ -9,13 +9,13 @@ import {
   PluginModifySetting,
   statusTag,
 } from '../baseTemplate'
-import { SolidBadgecheckIcon, SolidBanIcon } from '@/assets/icon/solid'
+import { BadgeCheckSolid, BanSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import {
-  OutlineClouddownloadIcon,
-  OutlineCodeIcon,
-  OutlineLightbulbIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  CloudDownloadOutlined,
+  CodeOutlined,
+  LightBulbOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import type { API } from '@/services/swagger/resposeType'
 import cloneDeep from 'lodash/cloneDeep'
@@ -779,7 +779,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             <Tooltip title={t('PluginManageDetail.deletePlugin')} rootClassName="plugins-tooltip">
               <YakitButton
                 type="text2"
-                icon={<OutlineTrashIcon />}
+                icon={<TrashOutlined color="currentColor" />}
                 loading={delLoading}
                 onClick={() => {
                   if (delLoading) return
@@ -797,7 +797,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 iconWidth={1100}
                 type="outline1"
                 colors="danger"
-                icon={<SolidBanIcon />}
+                icon={<BanSolid color="currentColor" />}
                 loading={statusLoading}
                 name={t('PluginManageDetail.notPassed')}
                 disabled={isBanOperate.isBan}
@@ -811,7 +811,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 width={wrapperWidth}
                 iconWidth={1100}
                 colors="success"
-                icon={<SolidBadgecheckIcon />}
+                icon={<BadgeCheckSolid color="currentColor" />}
                 loading={statusLoading}
                 name={t('PluginManageDetail.passed')}
                 disabled={isBanOperate.isBan}
@@ -826,7 +826,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 <HubButton
                   width={wrapperWidth}
                   iconWidth={1100}
-                  icon={<OutlineCodeIcon />}
+                  icon={<CodeOutlined color="currentColor" />}
                   name={t('PluginManageDetail.debug')}
                   onClick={onDebug}
                 />
@@ -882,7 +882,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
               <YakitButton
                 loading={downloadLoading}
                 type="text2"
-                icon={<OutlineClouddownloadIcon />}
+                icon={<CloudDownloadOutlined color="currentColor" />}
                 onClick={onDownload}
               />
             </Tooltip>
@@ -958,7 +958,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         {isApply && (
                           <div className={styles['modify-advice']}>
                             <div className={styles['advice-icon']}>
-                              <OutlineLightbulbIcon />
+                              <LightBulbOutlined color="currentColor" />
                             </div>
                             <div className={styles['advice-body']}>
                               <div className={styles['advice-content']}>

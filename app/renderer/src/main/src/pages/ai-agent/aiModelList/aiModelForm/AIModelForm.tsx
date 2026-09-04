@@ -36,7 +36,7 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import styles from './AIModelForm.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { HorizontalScrollCard } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import type { HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { NewHTTPPacketEditor, type RenderTypeOptionVal } from '@/utils/editors'
@@ -623,7 +623,7 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
             </span>
           )}
         </div>
-        <YakitButton type="text2" size={'middle'} icon={<OutlineXIcon />} onClick={onClose} />
+        <YakitButton type="text2" size={'middle'} icon={<XOutlined color="currentColor" />} onClick={onClose} />
       </div>
       <div className={styles['test-result-content']}>
         <HorizontalScrollCard hiddenHeard={true} data={data} />

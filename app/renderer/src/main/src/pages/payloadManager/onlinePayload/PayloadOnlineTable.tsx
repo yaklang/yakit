@@ -9,13 +9,13 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import {
-  OutlineArrowdownIcon,
-  OutlineArrowupIcon,
-  OutlineDocumentduplicateIcon,
-  OutlinePencilaltIcon,
-  OutlineSelectorIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  DocumentDuplicateOutlined,
+  PencilAltOutlined,
+  SelectorOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -329,10 +329,11 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
       width: 102,
       editable: true,
       filterIcon: (filtered) => (
-        <OutlineSelectorIcon
+        <SelectorOutlined
           className={classNames(styles['selector-icon'], {
             [styles['active-selector-icon']]: sortStatus !== undefined,
           })}
+          color="currentColor"
         />
       ),
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
@@ -345,7 +346,7 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
             onClick={() => handleSort('asc')}
           >
             <div className={styles['icon']}>
-              <OutlineArrowupIcon />
+              <ArrowUpOutlined color="currentColor" />
             </div>
             <div className={styles['content']}>升序</div>
           </div>
@@ -357,7 +358,7 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
             onClick={() => handleSort('desc')}
           >
             <div className={styles['icon']}>
-              <OutlineArrowdownIcon />
+              <ArrowDownOutlined color="currentColor" />
             </div>
             <div className={styles['content']}>降序</div>
           </div>
@@ -373,21 +374,23 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
       render: (_, record: API.PayloadDetail) => {
         return (
           <div className={styles['table-operation']}>
-            <OutlineDocumentduplicateIcon
+            <DocumentDuplicateOutlined
               className={styles['copy']}
               onClick={() => {
                 setClipboardText(record.content)
               }}
+              color="currentColor"
             />
             <Divider type="vertical" style={{ top: 1, height: 12, margin: '0px 12px' }} />
-            <OutlineTrashIcon
+            <TrashOutlined
               className={styles['delete']}
               onClick={() => {
                 onDeletePayload && onDeletePayload({ ids: [record.id] })
               }}
+              color="currentColor"
             />
             <Divider type="vertical" style={{ top: 1, height: 12, margin: '0px 12px' }} />
-            <OutlinePencilaltIcon
+            <PencilAltOutlined
               className={styles['edit']}
               onClick={() => {
                 const m = showYakitModal({
@@ -401,6 +404,7 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
                   ),
                 })
               }}
+              color="currentColor"
             />
           </div>
         )

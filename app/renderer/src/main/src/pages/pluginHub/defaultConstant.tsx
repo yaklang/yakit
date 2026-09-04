@@ -1,10 +1,10 @@
+import { AdjustmentsOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import {
-  OutlineAdjustmentsIcon,
   OutlineLocalPluginIcon,
   OutlineOnlinePluginIcon,
   OutlineOwnPluginIcon,
   OutlineTrashSecondIcon,
-} from '@/assets/icon/outline'
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import type { YakScript } from '../invoker/schema'
 import type { YakitPluginOnlineDetail } from '../plugins/online/PluginsOnlineType'
 import type { ExportYakScriptStreamRequest } from '../plugins/local/PluginsLocalType'
@@ -29,7 +29,7 @@ export const HubSideBarList: YakitTabsProps[] = [
   {
     value: 'setting',
     label: 'PluginHubList.setting',
-    icon: <OutlineAdjustmentsIcon />,
+    icon: <AdjustmentsOutlined color="currentColor" />,
     hint: () => '配置',
   },
   {

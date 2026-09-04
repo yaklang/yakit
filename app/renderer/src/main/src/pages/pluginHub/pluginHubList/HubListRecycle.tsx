@@ -1,7 +1,7 @@
 import type React from 'react'
 import { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
 import { useMemoizedFn, useDebounceFn, useInViewport, useUpdateEffect } from 'ahooks'
-import { OutlineTrashIcon, OutlineDatabasebackupIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import { TrashOutlined, DatabaseBackupOutlined, RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { RemotePluginGV } from '@/enums/plugin'
@@ -391,7 +391,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo(() => {
                 <HubButton
                   width={wrapperWidth}
                   iconWidth={900}
-                  icon={<OutlineTrashIcon />}
+                  icon={<TrashOutlined color="currentColor" />}
                   type="outline2"
                   size="large"
                   name={selectedNum > 0 ? t('YakitButton.delete') : t('YakitButton.clear')}
@@ -402,7 +402,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo(() => {
                 <HubButton
                   width={wrapperWidth}
                   iconWidth={900}
-                  icon={<OutlineDatabasebackupIcon />}
+                  icon={<DatabaseBackupOutlined color="currentColor" />}
                   size="large"
                   name={t('HubListRecycle.restore')}
                   disabled={listTotal === 0}
@@ -465,7 +465,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo(() => {
               <div className={styles['hub-list-empty']}>
                 <YakitEmpty title={t('YakitEmpty.noData')} />
                 <div className={styles['refresh-buttons']}>
-                  <YakitButton type="outline1" icon={<OutlineRefreshIcon />} onClick={onRefresh}>
+                  <YakitButton type="outline1" icon={<RefreshOutlined color="currentColor" />} onClick={onRefresh}>
                     {t('YakitButton.refresh')}
                   </YakitButton>
                 </div>

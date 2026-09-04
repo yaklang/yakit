@@ -1,7 +1,7 @@
 import { type FC, memo, useMemo } from 'react'
 import type { AIChildWindowConcurrentStreamCardHeardProps } from './type'
 import styles from './AIChildWindowConcurrentStreamCardHeard.module.scss'
-import { OutlineRefreshIcon } from '@/assets/icon/outline'
+import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { getAIStatusPresentation } from '@/pages/ai-agent/utils/AIStatusUtils'
 import { Tooltip } from 'antd'
@@ -33,7 +33,7 @@ const AIChildWindowConcurrentStreamCardHeard: FC<AIChildWindowConcurrentStreamCa
             <YakitButton
               size="middle"
               type="text"
-              icon={<OutlineRefreshIcon />}
+              icon={<RefreshOutlined color="currentColor" />}
               onClick={onRefresh}
               className={styles['expand-btn']}
             />

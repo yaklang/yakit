@@ -7,15 +7,7 @@ import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import style from './MITMPage.module.scss'
-import {
-  BanIcon,
-  ChromeFrameSvgIcon,
-  ChromeSvgIcon,
-  PencilAltIcon,
-  PlusIcon,
-  RemoveIcon,
-  TrashIcon,
-} from '@/assets/newIcon'
+import { ChromeSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { CacheDropDownGV, RemoteGV } from '@/yakitGV'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -25,11 +17,20 @@ import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoCo
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import classNames from 'classnames'
-import { OutlineChevronupIcon } from '@/assets/icon/outline'
-import { OutlineRefreshIcon } from '@/assets/icon/outline'
+import {
+  ChevronUpOutlined,
+  RefreshOutlined,
+  BanOutlined,
+  ChromeOutlined,
+  PencilAltOutlined,
+  PlusOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { v4 as uuidv4 } from 'uuid'
 import { chromeLauncherMinParams, chromeLauncherParamsArr } from '@/defaultConstants/mitm'
-import { SolidCheckIcon, SolidStoreIcon } from '@/assets/icon/solid'
+import { CheckSolid, FigmaIcon16256302540Solid, XSolid } from '@yakit-libs/yakit-ui-icons/solid'
+
 import { useGoogleChromePluginPath } from '@/store'
 import { RemoteMitmGV } from '@/enums/mitm'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
@@ -311,10 +312,11 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
               style={{ borderRadius: '0 40px 40px 0' }}
               onClick={() => setShowChormeDropdown(!showChormeDropdown)}
             >
-              <OutlineChevronupIcon
+              <ChevronUpOutlined
                 className={classNames(style['title-icon'], {
                   [style['rotate-180']]: !showChormeDropdown,
                 })}
+                color="currentColor"
               />
             </div>
             <div
@@ -336,7 +338,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                   key={item.key}
                 >
                   <span>{item.label}</span>
-                  {chormeCheck === item.key && <SolidCheckIcon className={style['check-icon']} />}
+                  {chormeCheck === item.key && <CheckSolid className={style['check-icon']} color="currentColor" />}
                 </div>
               ))}
             </div>
@@ -449,7 +451,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
             }}
             className="modal-remove-icon"
           >
-            <RemoveIcon />
+            <XSolid size={12} />
           </div>
         ),
         onOk: () => {
@@ -473,7 +475,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
         <>
           <YakitButton type="outline2" onClick={() => onSwitch(!started)}>
             {(started && <ChromeSvgIcon />) || (
-              <ChromeFrameSvgIcon style={{ height: 16, color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />
+              <ChromeOutlined size={16} style={{ height: 16, color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />
             )}
             {t('MITMChromeLauncher.start_no_config_chrome')}
             {started && <CheckOutlined style={{ color: 'var(--Colors-Use-Success-Primary)', marginLeft: 8 }} />}
@@ -493,7 +495,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
         </>
       )) || (
         <YakitButton type="outline2" size="large" onClick={clickChromeLauncher}>
-          <ChromeFrameSvgIcon style={{ height: 16, color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />
+          <ChromeOutlined size={16} style={{ height: 16, color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />
           <span style={{ marginLeft: 4 }}>{t('MITMChromeLauncher.start_no_config_chrome')}</span>
         </YakitButton>
       )}
@@ -622,7 +624,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
           }}
           className="modal-remove-icon"
         >
-          <RemoveIcon />
+          <XSolid size={12} />
         </div>
       ),
       onOk: () => {
@@ -826,16 +828,18 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
             <div className={style['table-action-icon']}>
               {record.cellStyle ? (
                 <Tooltip title={t('YakitButton.save')}>
-                  <SolidStoreIcon
+                  <FigmaIcon16256302540Solid
                     className={classNames(style['action-icon'], style['action-icon-save'])}
                     onClick={(e) => {
                       onSave(record)
                     }}
+                    color="currentColor"
                   />
                 </Tooltip>
               ) : (
                 <Tooltip title={disabledEdit(record) ? '' : t('YakitButton.edit')}>
-                  <PencilAltIcon
+                  <PencilAltOutlined
+                    size={16}
                     className={classNames(style['action-icon'], {
                       [style['action-icon-edit-disabled']]: disabledEdit(record),
                     })}
@@ -853,7 +857,8 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                   disabledBan2(record) ? '' : disabledBan1(record) ? t('YakitButton.enable') : t('YakitButton.disable')
                 }
               >
-                <BanIcon
+                <BanOutlined
+                  size={16}
                   className={classNames(style['action-icon'], {
                     [style['action-icon-ban-disabled']]: disabledBan1(record),
                     [style['action-icon-ban-disabled2']]: disabledBan2(record),
@@ -867,7 +872,8 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                   }}
                 />
               </Tooltip>
-              <TrashIcon
+              <TrashOutlined
+                size={16}
                 className={classNames(style['icon-trash'], {
                   [style['action-icon-trash-disabled']]: disabledTrash(record),
                 })}
@@ -912,7 +918,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
               onSearch={(value) => setSearchVal(value.trim())}
             />
             <YakitButton type="text" onClick={resetToDefault} disabled={tempEditId !== undefined}>
-              <OutlineRefreshIcon style={{ marginRight: 4 }} />
+              <RefreshOutlined style={{ marginRight: 4 }} color="currentColor" />
               {t('MITMChromeLauncher.restore_default_params')}
             </YakitButton>
           </div>
@@ -940,7 +946,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
             }}
           >
             <div className={style['button-add-params']}>
-              <PlusIcon />
+              <PlusOutlined size={16} />
               {t('MITMChromeLauncher.add_new_param')}
             </div>
           </YakitButton>

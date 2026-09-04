@@ -11,7 +11,7 @@ import useAIAgentDispatcher from '../useContext/useDispatcher'
 import cloneDeep from 'lodash/cloneDeep'
 import { AIReActChatReview } from '@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon } from '@/assets/icon/outline'
+import { ChevronDoubleDownOutlined, ChevronDoubleUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { failed, yakitNotify } from '@/utils/notification'
 import { grpcGetAIForge } from '../grpc'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
@@ -279,7 +279,9 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const handleSubmitForge = useMemoizedFn((data: AIForgeFormSubmitParamsProps) => {
     const { request, formValue } = data
     setMode('re-act')
-    const description = `${t('AIAgentChat.useForgeTask', { name: request.ForgeName || '' })}${formValue ? t('AIAgentChat.params') : ''}`
+    const description = `${t('AIAgentChat.useForgeTask', { name: request.ForgeName || '' })}${
+      formValue ? t('AIAgentChat.params') : ''
+    }`
 
     const params: AIInputWithParamsTemplate = {
       description,
@@ -564,7 +566,13 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
       <div className={styles['review-footer-box']}>
         <YakitButton
           type="text2"
-          icon={expand ? <OutlineChevrondoubledownIcon /> : <OutlineChevrondoubleupIcon />}
+          icon={
+            expand ? (
+              <ChevronDoubleDownOutlined color="currentColor" />
+            ) : (
+              <ChevronDoubleUpOutlined color="currentColor" />
+            )
+          }
           onClick={handleExpand}
         >
           {expand ? t('AIReActTaskChatReview.hideReview') : t('AIReActTaskChatReview.expandReview')}

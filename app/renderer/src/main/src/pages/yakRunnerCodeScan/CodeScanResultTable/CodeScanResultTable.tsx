@@ -18,7 +18,7 @@ import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResiz
 import { apiFetchQuerySyntaxFlowResult } from '../utils'
 import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { genDefaultPagination } from '@/pages/invoker/schema'
-import { OutlineArrowcirclerightIcon, OutlineRefreshIcon, OutlineTerminalIcon } from '@/assets/icon/outline'
+import { ArrowCircleRightOutlined, RefreshOutlined, TerminalOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import ReactResizeDetector from 'react-resize-detector'
 import type { Paging } from '@/utils/yakQueryHTTPFlow'
@@ -511,7 +511,7 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
                     }),
                   )
                 }}
-                icon={<OutlineTerminalIcon />}
+                icon={<TerminalOutlined color="currentColor" />}
               />
             </Tooltip>
             <Divider type="vertical" />
@@ -522,7 +522,7 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
                 e.stopPropagation()
                 onDetail && onDetail(rowData)
               }}
-              icon={<OutlineArrowcirclerightIcon />}
+              icon={<ArrowCircleRightOutlined color="currentColor" />}
             />
           </>
         )
@@ -698,7 +698,7 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
                   placement: 'bottom',
                 }}
               >
-                <YakitButton type="text2" icon={<OutlineRefreshIcon />} />
+                <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} />
               </YakitDropdownMenu>
             </div>
           }

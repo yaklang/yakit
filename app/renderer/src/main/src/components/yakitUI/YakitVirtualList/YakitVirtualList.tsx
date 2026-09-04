@@ -21,7 +21,7 @@ import React from 'react'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { AuthorImg } from '@/pages/plugins/funcTemplate'
-import { OutlineChevrondownIcon, OutlineChevronrightIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined, ChevronRightOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -264,7 +264,13 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                             {index === 0 && expandable && (
                               <YakitButton
                                 type={isExpanded ? 'text' : 'text2'}
-                                icon={isExpanded ? <OutlineChevrondownIcon /> : <OutlineChevronrightIcon />}
+                                icon={
+                                  isExpanded ? (
+                                    <ChevronDownOutlined color="currentColor" />
+                                  ) : (
+                                    <ChevronRightOutlined color="currentColor" />
+                                  )
+                                }
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   const isExpanded = expandedRowKeys.includes(rowKey)
@@ -412,7 +418,7 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
           <div className={styles['search-wrapper']}>
             <YakitInput
               placeholder={t('YakitInput.searchKeyWordPlaceholder')}
-              prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+              prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />

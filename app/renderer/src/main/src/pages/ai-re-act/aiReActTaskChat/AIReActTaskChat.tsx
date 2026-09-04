@@ -10,7 +10,8 @@ import { AIChatLeftSide } from '@/pages/ai-agent/chatTemplate/AIAgentChatTemplat
 import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { ChevrondownButton } from '../aiReActChat/AIReActComponent'
-import { OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { ArrowsExpandOutlined, InformationCircleOutlined, ArrowsOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { type AIInputEvent, AIInputEventHotPatchTypeEnum } from '../hooks/grpcApi'
 import { Form, Tooltip } from 'antd'
@@ -107,7 +108,7 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
             tabBarExtraContent={
               <YakitButton
                 type="text2"
-                icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                icon={expand ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
                 onClick={onIsExpand}
               />
             }
@@ -237,7 +238,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
                   classNames={{ root: styles['form-info-icon-tooltip'] }}
                   title={'开启后回答精度更高，但速度会变慢'}
                 >
-                  <OutlineInformationcircleIcon className={styles['info-icon']} />
+                  <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                 </Tooltip>
               </>
             }

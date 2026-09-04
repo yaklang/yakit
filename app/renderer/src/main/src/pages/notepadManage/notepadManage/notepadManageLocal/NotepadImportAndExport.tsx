@@ -5,7 +5,8 @@ import { yakitNotify } from '@/utils/notification'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { Progress } from 'antd'
 import { type NoteFilter, onOpenLocalFileByPath } from '../utils'
-import { OutlineExportIcon, OutlineImportIcon } from '@/assets/icon/outline'
+import { FigmaIcon6480193584Outlined, FigmaIcon2017756Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+
 import { useMemoizedFn } from 'ahooks'
 import moment from 'moment'
 import { handleOpenFileSystemDialog, type OpenDialogOptions } from '@/utils/fileSystemDialog'
@@ -99,7 +100,7 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
     <YakitHint
       visible={visible}
       title="笔记本导入中"
-      heardIcon={<OutlineImportIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
+      heardIcon={<FigmaIcon6480193584Outlined style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       onCancel={() => {
         stopImport()
       }}
@@ -206,7 +207,7 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
     <YakitHint
       visible={visible}
       title="笔记本导出中"
-      heardIcon={<OutlineExportIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
+      heardIcon={<FigmaIcon2017756Outlined style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       onCancel={() => {
         stopExport()
       }}

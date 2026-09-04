@@ -4,7 +4,7 @@ import { useCreation, useDebounceEffect, useInViewport, useMemoizedFn } from 'ah
 import { PluginDetailsTab } from '../local/PluginsLocalDetail'
 import type { YakScript } from '@/pages/invoker/schema'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePencilaltIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import { PencilAltOutlined, RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { apiGetYakScriptByOnlineID, convertLocalPluginsRequestParams } from '../utils'
 import type { PluginFilterParams, PluginSearchParams } from '../baseTemplateType'
 import cloneDeep from 'lodash/cloneDeep'
@@ -182,11 +182,11 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     return (
       <>
         <Tooltip title="刷新插件数据">
-          <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={onRefresh} />
+          <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} onClick={onRefresh} />
         </Tooltip>
         <div className="divider-style" />
         <Tooltip title="编辑">
-          <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={handleOpenEdit} />
+          <YakitButton type="text2" icon={<PencilAltOutlined color="currentColor" />} onClick={handleOpenEdit} />
         </Tooltip>
       </>
     )

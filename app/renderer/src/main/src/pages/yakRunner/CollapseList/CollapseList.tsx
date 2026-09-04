@@ -1,7 +1,7 @@
 import type React from 'react'
 import { type ReactElement, memo, useEffect, useMemo, useState } from 'react'
 import type { CollapseListProp, DefinitionListProps, HelpInfoListProps } from './CollapseListType'
-import { OutlineChevronrightIcon } from '@/assets/icon/outline'
+import { ChevronRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Collapse, Tooltip } from 'antd'
 
 import classNames from 'classnames'
@@ -43,7 +43,12 @@ export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | nul
         className={classNames(styles['collapse-list-base'], containerClassName)}
         expandIcon={(panelProps) => {
           const { isActive } = panelProps
-          return <OutlineChevronrightIcon className={classNames({ 'collapse-expand-arrow': !!isActive })} />
+          return (
+            <ChevronRightOutlined
+              className={classNames({ 'collapse-expand-arrow': !!isActive })}
+              color="currentColor"
+            />
+          )
         }}
         {...collapseProps}
         items={list.map((item, index) => ({

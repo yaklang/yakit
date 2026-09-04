@@ -28,11 +28,10 @@ import {
   type ExpandAndRetractExcessiveState,
 } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import { PluginExecuteProgress } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import { OutlineCogIcon } from '@/assets/icon/outline'
+import { CogOutlined, CloudDownloadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
-import { FolderColorIcon, SolidCloudpluginIcon, SolidPrivatepluginIcon } from '@/assets/icon/colors'
+import { FolderColorIcon, SolidCloudpluginIcon, SolidPrivatepluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { CloudDownloadIcon } from '@/assets/newIcon'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import { type PageNodeItemProps, type PocPageInfoProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
@@ -642,7 +641,11 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
             description={t('PluginGroupByKeyWord.noDataDesc', { edition: getReleaseEditionName() })}
           />
           <div className={styles['yak-poc-buttons']}>
-            <YakitButton type="outline1" icon={<CloudDownloadIcon />} onClick={() => setVisibleOnline(true)}>
+            <YakitButton
+              type="outline1"
+              icon={<CloudDownloadOutlined size={16} />}
+              onClick={() => setVisibleOnline(true)}
+            >
               {t('YakitButton.oneClickDownload')}
             </YakitButton>
           </div>
@@ -818,10 +821,14 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
         <div className={styles['yak-poc-empty']}>
           <YakitEmpty title={t('YakitEmpty.noData')} description={t('PluginGroupGrid.noGroupDataDesc')} />
           <div className={styles['yak-poc-buttons']}>
-            <YakitButton type="outline1" icon={<CloudDownloadIcon />} onClick={() => setVisibleOnline(true)}>
+            <YakitButton
+              type="outline1"
+              icon={<CloudDownloadOutlined size={16} />}
+              onClick={() => setVisibleOnline(true)}
+            >
               {t('YakitButton.oneClickDownload')}
             </YakitButton>
-            <YakitButton icon={<OutlineCogIcon />} onClick={onToManageGroup}>
+            <YakitButton icon={<CogOutlined color="currentColor" />} onClick={onToManageGroup}>
               {t('PluginGroupGrid.manage')}
             </YakitButton>
           </div>

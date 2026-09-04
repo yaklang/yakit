@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from 'react'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { type PluginOperationGroupListRefProps, PluginOperationGroupList } from './PluginOperationGroupList'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { SolidPlusIcon } from '@/assets/icon/solid'
+import { PlusSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { Form, Tooltip } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -158,7 +158,12 @@ export const PluginGroupDrawer: React.FC<PluginFroupMagDrawerProp> = (props) => 
                 <div className="divider-style"></div>
               </>
             )}
-            <YakitButton type="text" icon={<SolidPlusIcon />} onClick={addNewGroup} disabled={resetLoading}>
+            <YakitButton
+              type="text"
+              icon={<PlusSolid color="currentColor" />}
+              onClick={addNewGroup}
+              disabled={resetLoading}
+            >
               新增分组
             </YakitButton>
           </div>

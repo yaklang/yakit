@@ -2,11 +2,14 @@ import React, { useRef } from 'react'
 import classNames from 'classnames'
 import styles from './AIToDoList.module.scss'
 import type { AIToDoListItemProps, AIToDoListProps } from './type'
-import { OutlineChevrondownIcon, OutlineChevronrightIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined, ChevronRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import { useCreation, useHover, useMemoizedFn } from 'ahooks'
-import { AIToDoListDeletedIcon, AIToDoListPendingIcon, AIToDoListDoneIcon, AIToDoListSkippedIcon } from './icon'
+import { AIToDoListDeletedIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIToDoListDeletedIcon'
+import { AIToDoListPendingIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIToDoListPendingIcon'
+import { AIToDoListDoneIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIToDoListDoneIcon'
+import { AIToDoListSkippedIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIToDoListSkippedIcon'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
 import { AIToDoListDetail } from './AIToDoListDetail'
 
@@ -30,9 +33,9 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
                 {!bannedExpand && (
                   <>
                     {!isHover ? (
-                      <OutlineChevronrightIcon className={styles['chevron-icon']} />
+                      <ChevronRightOutlined className={styles['chevron-icon']} color="currentColor" />
                     ) : (
-                      <OutlineChevrondownIcon className={styles['chevron-icon']} />
+                      <ChevronDownOutlined className={styles['chevron-icon']} color="currentColor" />
                     )}
                   </>
                 )}

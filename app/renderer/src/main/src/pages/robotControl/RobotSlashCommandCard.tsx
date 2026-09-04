@@ -1,7 +1,7 @@
 import type React from 'react'
 import { useState } from 'react'
 import classNames from 'classnames'
-import { OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
+import { ChevronsDownUpOutlined, ChevronsUpDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from './RobotControl.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -61,7 +61,9 @@ export const RobotSlashCommandCard: React.FC<RobotSlashCommandCardProps> = (prop
         </div>
         <YakitButton
           type="text2"
-          icon={expanded ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+          icon={
+            expanded ? <ChevronsDownUpOutlined color="currentColor" /> : <ChevronsUpDownOutlined color="currentColor" />
+          }
           onClick={() => setExpanded((prev) => !prev)}
         />
       </div>

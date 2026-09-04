@@ -1,16 +1,15 @@
-import {
-  SolidYakitPluginIcon,
-  SolidPluginYakMitmIcon,
-  SolidPluginProtScanIcon,
-  SolidSparklesPluginIcon,
-  SolidDocumentSearchPluginIcon,
-  SolidCollectionPluginIcon,
-} from '@/assets/icon/colors'
+import { SolidYakitPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidYakitPluginIcon'
+import { SolidPluginYakMitmIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidPluginYakMitmIcon'
+import { SolidPluginProtScanIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidPluginProtScanIcon'
+import { SolidSparklesPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidSparklesPluginIcon'
+import { SolidDocumentSearchPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidDocumentSearchPluginIcon'
+import { SolidCollectionPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidCollectionPluginIcon'
 import type { ReactNode } from 'react'
 import { CodecPluginTemplate } from '../invoker/data/CodecPluginTemplate'
 import { ContextMenuPluginTemplate } from '../invoker/data/ContextMenuPluginTemplate'
 import { MITMPluginTemplate, PortScanPluginTemplate } from '../pluginDebugger/defaultData'
-import { SolidFlagIcon, SolidBadgecheckIcon, SolidBanIcon, SolidCircleIcon } from '@/assets/icon/solid'
+import { FlagSolid, BadgeCheckSolid, BanSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { SolidCircleIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidCircleIcon'
 import type { TypeSelectOpt } from './funcTemplateType'
 import type { PluginFilterParams, PluginSearchParams } from './baseTemplateType'
 
@@ -114,9 +113,12 @@ export const DefaultTypeList: { icon: ReactNode; name: string; description: stri
 /** @name 审核状态对应展示名称 */
 export const aduitStatusToName: Record<string, { name: string; icon: ReactNode }> = {
   '0': { name: '待审核', icon: <SolidCircleIcon className="aduit-status-solid-circle-color" /> },
-  '1': { name: '已通过', icon: <SolidBadgecheckIcon className="aduit-status-badge-check-color" /> },
-  '2': { name: '未通过', icon: <SolidBanIcon className="aduit-status-ban-color" /> },
-  '3': { name: '审核中', icon: <SolidFlagIcon className="aduit-status-flag-color" /> },
+  '1': {
+    name: '已通过',
+    icon: <BadgeCheckSolid className="aduit-status-badge-check-color" color="currentColor" />,
+  },
+  '2': { name: '未通过', icon: <BanSolid className="aduit-status-ban-color" color="currentColor" /> },
+  '3': { name: '审核中', icon: <FlagSolid className="aduit-status-flag-color" color="currentColor" /> },
 }
 /** @name 审核状态选择列表 */
 export const DefaultStatusList: TypeSelectOpt[] = [

@@ -15,19 +15,19 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineDotsverticalIcon,
-  OutlinePencilaltIcon,
-  OutlinePauseIcon,
-  OutlinePlayIcon,
-  OutlineSearchIcon,
-  OutlineTrashIcon,
-  OutlinePlusIcon,
-  OutlineRefreshIcon,
-  OutlinePlussmIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineFilterIcon,
-  OutlineMessageCirclePlusIcon,
-} from '@/assets/icon/outline'
+  DotsVerticalOutlined,
+  FilterOutlined,
+  MessageCirclePlusOutlined,
+  PauseOutlined,
+  PencilAltOutlined,
+  PlayOutlined,
+  PlusOutlined,
+  PlusSmOutlined,
+  QuestionMarkCircleOutlined,
+  RefreshOutlined,
+  SearchOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import styles from './AIScheduledTasks.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
@@ -92,12 +92,12 @@ const scheduleMenu: (t: TFunction) => YakitMenuItemType[] = (t: TFunction) => {
     {
       key: 'edit',
       label: t('YakitButton.edit'),
-      itemIcon: <OutlinePencilaltIcon />,
+      itemIcon: <PencilAltOutlined />,
     },
     {
       key: 'run',
       label: t('AIScheduledTasks.runNow'),
-      itemIcon: <OutlineMessageCirclePlusIcon />,
+      itemIcon: <MessageCirclePlusOutlined />,
     },
     {
       type: 'divider',
@@ -106,7 +106,7 @@ const scheduleMenu: (t: TFunction) => YakitMenuItemType[] = (t: TFunction) => {
       key: 'delete',
       label: t('YakitButton.delete'),
       type: 'danger',
-      itemIcon: <OutlineTrashIcon />,
+      itemIcon: <TrashOutlined />,
     },
   ]
 }
@@ -353,19 +353,19 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
         </div>
         <div className={styles['ai-schedule-list-header-right']}>
           <Tooltip title={t('AIScheduledTasks.maxConcurrentRuns')}>
-            <YakitButton type="text2" icon={<OutlineQuestionmarkcircleIcon />} className={styles['question-icon']} />
+            <YakitButton type="text2" icon={<QuestionMarkCircleOutlined />} className={styles['question-icon']} />
           </Tooltip>
           <Tooltip title={t('YakitButton.add')}>
-            <YakitButton type="text2" icon={<OutlinePlusIcon />} onClick={onAdd} />
+            <YakitButton type="text2" icon={<PlusOutlined />} onClick={onAdd} />
           </Tooltip>
           <Tooltip title={t('YakitButton.refresh')}>
-            <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={() => getList(1)} />
+            <YakitButton type="text2" icon={<RefreshOutlined />} onClick={() => getList(1)} />
           </Tooltip>
         </div>
       </div>
       <div className={styles['ai-schedule-list-search']}>
         <YakitInput
-          prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+          prefix={<SearchOutlined className={styles['search-icon']} />}
           allowClear
           placeholder={t('YakitInput.searchKeyWordPlaceholder')}
           value={keyWord}
@@ -386,7 +386,7 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
         >
           <YakitButton
             type={queryType !== 'all' ? 'outline1' : 'outline2'}
-            icon={<OutlineFilterIcon />}
+            icon={<FilterOutlined />}
             isActive={filterVisible}
           />
         </YakitDropdownMenu>
@@ -450,7 +450,7 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
                 description={t('AIScheduledTasks.emptyDescription')}
               />
               <div className={styles['ai-list-btns-wrapper']}>
-                <YakitButton type="outline1" icon={<OutlinePlussmIcon />} onClick={onAdd}>
+                <YakitButton type="outline1" icon={<PlusSmOutlined />} onClick={onAdd}>
                   {t('AIScheduledTasks.create')}
                 </YakitButton>
               </div>
@@ -546,7 +546,7 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
               <YakitButton
                 type="text2"
                 size="small"
-                icon={item.Status === 'active' ? <OutlinePauseIcon /> : <OutlinePlayIcon />}
+                icon={item.Status === 'active' ? <PauseOutlined /> : <PlayOutlined />}
                 loading={toggling}
                 disabled={toggling}
                 onClick={onToggleEnabled}
@@ -565,7 +565,7 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
               onVisibleChange: setVisible,
             }}
           >
-            <YakitButton isActive={visible} type="text2" size="small" icon={<OutlineDotsverticalIcon />} />
+            <YakitButton isActive={visible} type="text2" size="small" icon={<DotsVerticalOutlined />} />
           </YakitDropdownMenu>
         </div>
       </div>
@@ -582,7 +582,7 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
             item.Status !== 'active' && (
               <>
                 <span className={styles['ai-schedule-list-item-footer-status-icon']}>
-                  <OutlinePauseIcon />
+                  <PauseOutlined />
                 </span>
                 <span className={styles['ai-schedule-list-item-footer-status']}>
                   {t(`AIScheduledTasks.${item.Status}`)}

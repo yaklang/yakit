@@ -1,7 +1,7 @@
 import type React from 'react'
 import { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
 import { useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport } from 'ahooks'
-import { OutlineTrashIcon, OutlineRefreshIcon, OutlineClouddownloadIcon, OutlinePlusIcon } from '@/assets/icon/outline'
+import { TrashOutlined, RefreshOutlined, CloudDownloadOutlined, PlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { RemotePluginGV } from '@/enums/plugin'
@@ -40,14 +40,14 @@ import { OnlineJudgment } from '@/pages/plugins/onlineJudgment/OnlineJudgment'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import type { HubListBaseProps } from '../type'
 import type { API } from '@/services/swagger/resposeType'
-import { SolidPluscircleIcon } from '@/assets/icon/solid'
+import { PlusCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import useGetSetState from '../hooks/useGetSetState'
 import { FilterPopoverBtn } from '@/pages/plugins/funcTemplate'
 import { Tooltip } from 'antd'
-import { SolidPrivatepluginIcon } from '@/assets/icon/colors'
+import { SolidPrivatepluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { statusTag } from '@/pages/plugins/baseTemplate'
 import { DefaultOnlinePlugin, PluginOperateHint } from '../defaultConstant'
 import { grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail } from '../utils/grpc'
@@ -653,7 +653,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
         <HubButton
           width={wrapperWidth}
           iconWidth={900}
-          icon={<OutlineClouddownloadIcon />}
+          icon={<CloudDownloadOutlined color="currentColor" />}
           type="outline2"
           size="large"
           name={selectedNum > 0 ? t('YakitButton.download') : t('YakitButton.oneClickDownload')}
@@ -664,7 +664,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
         <HubButton
           width={wrapperWidth}
           iconWidth={900}
-          icon={<OutlineTrashIcon />}
+          icon={<TrashOutlined color="currentColor" />}
           size="large"
           name={selectedNum > 0 ? t('YakitButton.delete') : t('YakitButton.clear')}
           disabled={listTotal === 0}
@@ -674,7 +674,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
         <HubButton
           width={wrapperWidth}
           iconWidth={900}
-          icon={<SolidPluscircleIcon />}
+          icon={<PlusCircleSolid color="currentColor" />}
           size="large"
           name={t('HubListOwn.newPlugin')}
           onClick={onNewPlugin}
@@ -781,10 +781,10 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                   <div className={styles['hub-list-empty']}>
                     <YakitEmpty title={t('YakitEmpty.noData')} description={t('HubListOwn.noDataDesc')} />
                     <div className={styles['refresh-buttons']}>
-                      <YakitButton type="outline1" icon={<OutlinePlusIcon />} onClick={onNewPlugin}>
+                      <YakitButton type="outline1" icon={<PlusOutlined color="currentColor" />} onClick={onNewPlugin}>
                         {t('HubListOwn.newPlugin')}
                       </YakitButton>
-                      <YakitButton type="outline1" icon={<OutlineRefreshIcon />} onClick={onRefresh}>
+                      <YakitButton type="outline1" icon={<RefreshOutlined color="currentColor" />} onClick={onRefresh}>
                         {t('YakitButton.refresh')}
                       </YakitButton>
                     </div>
@@ -814,7 +814,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                       type="text2"
                       loading={batchDownloadLoading}
                       disabled={listTotal === 0}
-                      icon={<OutlineClouddownloadIcon />}
+                      icon={<CloudDownloadOutlined color="currentColor" />}
                       onClick={onHeaderExtraDownload}
                     />
                   </Tooltip>

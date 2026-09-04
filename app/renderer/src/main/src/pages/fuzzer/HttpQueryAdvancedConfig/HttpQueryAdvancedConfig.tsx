@@ -1,12 +1,4 @@
-import {
-  InformationCircleIcon,
-  PlusSmIcon,
-  PlusIcon,
-  TrashIcon,
-  ResizerIcon,
-  HollowLightningBoltIcon,
-  EyeIcon,
-} from '@/assets/newIcon'
+import { PlusSmIcon, ResizerIcon, HollowLightningBoltIcon, EyeIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -46,7 +38,12 @@ import emiter from '@/utils/eventBus/eventBus'
 import { VariableList } from '@/pages/httpRequestBuilder/HTTPRequestBuilder'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitFormDraggerContent } from '@/components/yakitUI/YakitForm/YakitForm'
-import { OutlineBadgecheckIcon } from '@/assets/icon/outline'
+import {
+  BadgeCheckOutlined,
+  InformationCircleOutlined,
+  PlusOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { ExtractorsPanel, MatchersPanel, type MatchersPanelEditProps, VariablePanel } from './FuzzerConfigPanels'
 import {
   matcherTypeList,
@@ -541,7 +538,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   <span className={styles['advanced-config-form-label']}>
                     {t('HttpQueryAdvancedConfig.real_host')}
                     <Tooltip title={t('HttpQueryAdvancedConfig.host_collision_tip')} styles={{ root: { width: 150 } }}>
-                      <InformationCircleIcon className={styles['info-icon']} />
+                      <InformationCircleOutlined size={16} className={styles['info-icon']} />
                     </Tooltip>
                   </span>
                 }
@@ -554,7 +551,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   <span className={styles['advanced-config-form-label']}>
                     {t('HttpQueryAdvancedConfig.set_proxy')}
                     <Tooltip title={t('HttpQueryAdvancedConfig.multi_proxy_tip')} styles={{ root: { width: 150 } }}>
-                      <InformationCircleIcon className={styles['info-icon']} />
+                      <InformationCircleOutlined size={16} className={styles['info-icon']} />
                     </Tooltip>
                   </span>
                 }
@@ -623,7 +620,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   <span className={styles['advanced-config-form-label']}>
                     {t('HttpQueryAdvancedConfig.frontend_render_count')}
                     <Tooltip title={t('HttpQueryAdvancedConfig.frontend_render_tip')} styles={{ root: { width: 150 } }}>
-                      <InformationCircleIcon className={styles['info-icon']} />
+                      <InformationCircleOutlined size={16} className={styles['info-icon']} />
                     </Tooltip>
                   </span>
                 }
@@ -726,7 +723,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     <span className={styles['advanced-config-form-label']}>
                       {t('HttpQueryAdvancedConfig.render_fuzz')}
                       <Tooltip title={t('HttpQueryAdvancedConfig.compat_mode_tip')} styles={{ root: { width: 150 } }}>
-                        <InformationCircleIcon className={styles['info-icon']} />
+                        <InformationCircleOutlined size={16} className={styles['info-icon']} />
                       </Tooltip>
                     </span>
                   }
@@ -744,7 +741,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     <span className={styles['advanced-config-form-label']}>
                       {t('HttpQueryAdvancedConfig.no_fix_length')}
                       <Tooltip title={t('HttpQueryAdvancedConfig.no_fix_length_tip')} styles={{ root: { width: 220 } }}>
-                        <InformationCircleIcon className={styles['info-icon']} />
+                        <InformationCircleOutlined size={16} className={styles['info-icon']} />
                       </Tooltip>
                     </span>
                   }
@@ -797,7 +794,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     icon={
                       JSON.stringify(advancedConfigValue.batchTarget) !== '{}' ? (
                         Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
-                          <OutlineBadgecheckIcon style={{ color: 'var(--Colors-Use-Green-Primary)' }} />
+                          <BadgeCheckOutlined style={{ color: 'var(--Colors-Use-Green-Primary)' }} />
                         ) : (
                           <PlusSmIcon />
                         )
@@ -948,7 +945,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     <span className={styles['advanced-config-form-label']}>
                       {t('HttpQueryAdvancedConfig.random_delay2')}
                       <Tooltip title={t('HttpQueryAdvancedConfig.multi_proxy_tip')} styles={{ root: { width: 150 } }}>
-                        <InformationCircleIcon className={styles['info-icon']} />
+                        <InformationCircleOutlined size={16} className={styles['info-icon']} />
                       </Tooltip>
                     </span>
                   }
@@ -1256,7 +1253,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                       size="small"
                     >
                       {t('YakitButton.add')}
-                      <PlusIcon />
+                      <PlusOutlined size={16} />
                     </YakitButton>
                   </>
                 }
@@ -1291,7 +1288,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                       size="small"
                     >
                       {t('YakitButton.add')}
-                      <PlusIcon />
+                      <PlusOutlined size={16} />
                     </YakitButton>
                   </>
                 }
@@ -1324,7 +1321,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                       size="small"
                     >
                       {t('YakitButton.add')}
-                      <PlusIcon />
+                      <PlusOutlined size={16} />
                     </YakitButton>
                   </>
                 }
@@ -1357,7 +1354,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                       size="small"
                     >
                       {t('YakitButton.add')}
-                      <PlusIcon />
+                      <PlusOutlined size={16} />
                     </YakitButton>
                   </>
                 }
@@ -1611,7 +1608,7 @@ export const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
           <YakitButton
             type="outline2"
             onClick={() => onAdd()}
-            icon={<PlusIcon />}
+            icon={<PlusOutlined size={16} />}
             className={styles['plus-button-bolck']}
             block
           >
@@ -1672,7 +1669,7 @@ export const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) 
           <YakitButton
             type="outline2"
             onClick={() => onAdd()}
-            icon={<PlusIcon />}
+            icon={<PlusOutlined size={16} />}
             className={styles['plus-button-bolck']}
             block
           >
@@ -1701,8 +1698,7 @@ const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListIt
           [styles['matchersList-item-operate-hover']]: visiblePopover,
         })}
       >
-        <TrashIcon className={styles['trash-icon']} onClick={() => onRemove()} />
-
+        <TrashOutlined size={16} className={styles['trash-icon']} onClick={() => onRemove()} />
         <Tooltip title={t('MatchersAndExtractorsListItemOperate.debug')}>
           <HollowLightningBoltIcon
             className={styles['hollow-lightningBolt-icon']}

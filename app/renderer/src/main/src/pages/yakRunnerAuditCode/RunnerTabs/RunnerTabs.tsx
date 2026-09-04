@@ -22,14 +22,19 @@ import styles from './RunnerTabs.module.scss'
 import { KeyToIcon } from '../../yakRunner/FileTree/icon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
+  ChevronDoubleLeftOutlined,
+  ChevronDoubleRightOutlined,
+  XOutlined,
+  FigmaIcon6480193584Outlined,
+  FigmaIcon22849134660Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import {
   OutlinCompileIcon,
-  OutlineChevrondoubleleftIcon,
-  OutlineChevrondoublerightIcon,
-  OutlineImportIcon,
-  OutlineSplitScreenIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
-import { YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon } from '@/pages/yakRunner/icon'
+  YakRunnerOpenAuditIcon,
+  YakRunnerOpenFileIcon,
+  SolidIrifyMiniLogoIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import {
   useDebounceEffect,
@@ -91,7 +96,6 @@ import { onSetSelectedSearchVal } from '../AuditSearchModal/AuditSearch'
 import { ConvertAuditStaticAnalyzeErrorToMarker, type IMonacoEditorMarker } from '@/utils/editorMarkers'
 import { getPathParent, grpcFetchCreateFile, grpcFetchSaveFile, monacaLanguageType } from '@/pages/yakRunner/utils'
 import { JSONParseLog } from '@/utils/tool'
-import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -302,7 +306,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             placement: 'bottomRight',
           }}
         >
-          <OutlineSplitScreenIcon className={styles['extra-box-icon']} />
+          <FigmaIcon22849134660Outlined size={16} className={styles['extra-box-icon']} />
         </YakitDropdownMenu>
       )
     }
@@ -744,7 +748,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                   })}
                   ref={scrollLeftIconRef}
                 >
-                  <OutlineChevrondoubleleftIcon />
+                  <ChevronDoubleLeftOutlined color="currentColor" />
                 </div>
                 <div
                   className={classNames(styles['bar-container'])}
@@ -774,7 +778,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                   })}
                   ref={scrollRightIconRef}
                 >
-                  <OutlineChevrondoublerightIcon />
+                  <ChevronDoubleRightOutlined color="currentColor" />
                 </div>
                 {/* {pageItem.hideAdd !== true && (
                                     <OutlinePlusIcon
@@ -871,7 +875,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                   className={styles['del-btn']}
                   type="text2"
                   size="small"
-                  icon={<OutlineXIcon />}
+                  icon={<XOutlined color="currentColor" />}
                   onClick={closeTabItem}
                 />
               </div>
@@ -1433,7 +1437,7 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
                 <YakRunnerOpenFileIcon />
                 打开已有项目
               </div>
-              <OutlineImportIcon className={styles['icon-style']} />
+              <FigmaIcon6480193584Outlined className={styles['icon-style']} color="currentColor" />
             </div>
           </div>
         </div>
@@ -1736,7 +1740,7 @@ const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
       <div className={styles['header']}>
         <div className={styles['title']}>这里的代码有点问题</div>
         <div className={styles['extra']} onClick={closeFizzRangeWidget}>
-          <OutlineXIcon />
+          <XOutlined color="currentColor" />
         </div>
       </div>
       <div className={styles['content']}>

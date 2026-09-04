@@ -1,8 +1,8 @@
 import React, { forwardRef, type ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { AIReActChatReviewProps, ForgeReviewFormProps, ForgeReviewFormRefProps } from './AIReActChatReviewType'
-import { OutlineArrowrightIcon, OutlineQuestionmarkcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { ArrowRightOutlined, QuestionMarkCircleOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useCountDown, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { SolidAnnotationIcon, SolidVariableIcon } from '@/assets/icon/solid'
+import { AnnotationSolid, VariableSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { Form, Input, Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { yakitNotify } from '@/utils/notification'
@@ -27,7 +27,8 @@ import {
 
 import classNames from 'classnames'
 import styles from './AIReActChatReview.module.scss'
-import { OutlineHandleColorsIcon, ColorsOutlineWarpIcon } from '@/assets/icon/colors'
+import { OutlineHandleColorsIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineHandleColorsIcon'
+import { ColorsOutlineWarpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsOutlineWarpIcon'
 import { AIChatQSDataTypeEnum, type AIReviewType, type AITaskInfoProps } from '../../../ai-re-act/hooks/aiRender'
 import type { AIForge } from '@/pages/ai-agent/type/forge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -158,7 +159,9 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
               <Tooltip title={tool_description}>
                 <YakitButton
                   type="text2"
-                  icon={<OutlineQuestionmarkcircleIcon className={styles['tool-description-help-icon']} />}
+                  icon={
+                    <QuestionMarkCircleOutlined className={styles['tool-description-help-icon']} color="currentColor" />
+                  }
                 />
               </Tooltip>
             )}
@@ -168,7 +171,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
         <div className={styles['tool-params']}>
           <div className={styles['params-title']}>
-            <SolidVariableIcon /> {t('AIReActChatReview.params')}
+            <VariableSolid color="currentColor" /> {t('AIReActChatReview.params')}
           </div>
           <div className={styles['params-content']}>{paramsValue}</div>
         </div>
@@ -202,7 +205,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
           <div className={styles['task-summary']}>
             <div className={styles['summary-header']}>
-              <SolidAnnotationIcon /> Summary
+              <AnnotationSolid color="currentColor" /> Summary
             </div>
             <div className={styles['summary-content']}>{short_summary}</div>
             <div className={styles['summary-detail']}>
@@ -211,7 +214,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 content={
                   <div className={styles['task-long-summary']}>
                     <div className={styles['summary-header']}>
-                      <SolidAnnotationIcon /> Summary
+                      <AnnotationSolid color="currentColor" /> Summary
                     </div>
                     <div className={styles['summary-content']}>{long_summary}</div>
                   </div>
@@ -671,13 +674,13 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                           <YakitButton
                             className={styles['btn-style']}
                             type="outline2"
-                            icon={<OutlineXIcon />}
+                            icon={<XOutlined color="currentColor" />}
                             onClick={() => handleCallbackEdit(false)}
                             radius={true}
                           />
                           <YakitButton
                             className={styles['btn-style']}
-                            icon={<OutlineArrowrightIcon />}
+                            icon={<ArrowRightOutlined color="currentColor" />}
                             onClick={() => handleCallbackEdit(true)}
                             radius={true}
                           />
@@ -793,7 +796,7 @@ const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo(
           <div className={classNames(styles['forge-form-body'])}>
             {params?.length > 1 && (
               <div className={styles['forge-form-heard']}>
-                <SolidVariableIcon />
+                <VariableSolid color="currentColor" />
                 {t('AIReActChatReview.paramsGroup')}
               </div>
             )}

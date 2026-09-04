@@ -38,13 +38,13 @@ import {
 import { AIModelFreeTag, getTipByType, OutlineAtomIconByStatus, setAIModal } from '../AIModelList'
 import { AIChatSelect } from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
 import {
-  OutlineBrainIcon,
-  OutlineCheckIcon,
-  OutlineCogIcon,
-  OutlineInformationcircleIcon,
-  OutlinePencilaltIcon,
-  OutlineRefreshIcon,
-} from '@/assets/icon/outline'
+  BrainOutlined,
+  CheckOutlined,
+  CogOutlined,
+  InformationCircleOutlined,
+  PencilAltOutlined,
+  RefreshOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { cloneDeep, isEqual, isNil } from 'lodash'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -403,19 +403,24 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                       />
                     )} */}
                     <Tooltip title={getTipByType(policy, t)}>
-                      <OutlineInformationcircleIcon className={styles['icon-info']} />
+                      <InformationCircleOutlined className={styles['icon-info']} color="currentColor" />
                     </Tooltip>
                   </div>
                   <div className={styles['select-title-right']}>
                     <Tooltip title={t('AIModelSelect.openConfigTooltip')}>
-                      <YakitButton size="small" type="text2" icon={<OutlineCogIcon />} onClick={openModelTab} />
+                      <YakitButton
+                        size="small"
+                        type="text2"
+                        icon={<CogOutlined color="currentColor" />}
+                        onClick={openModelTab}
+                      />
                     </Tooltip>
                     {aiType === 'online' && (
                       <Tooltip title={t('YakitButton.refresh')}>
                         <YakitButton
                           size="small"
                           type="text2"
-                          icon={<OutlineRefreshIcon />}
+                          icon={<RefreshOutlined color="currentColor" />}
                           loading={onlineLoading}
                           onClick={() => onRefreshAvailableAIModelList()}
                         />
@@ -665,7 +670,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
         <div className={styles['ai-model-select-list-wrapper-header-title']}>
           {title}
           <Tooltip title={subTitle}>
-            <OutlineInformationcircleIcon className={styles['icon-info']} />
+            <InformationCircleOutlined className={styles['icon-info']} color="currentColor" />
           </Tooltip>
         </div>
       </div>
@@ -773,7 +778,12 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
           title={
             <div className={styles['edit-title']}>
               <span>模型选择</span>
-              <YakitButton type="text2" size="small" icon={<OutlineRefreshIcon />} onClick={onRefresh} />
+              <YakitButton
+                type="text2"
+                size="small"
+                icon={<RefreshOutlined color="currentColor" />}
+                onClick={onRefresh}
+              />
             </div>
           }
           value={modelName}
@@ -827,7 +837,7 @@ const AIModelEditContentItem: React.FC<AIModelEditContentItemProps> = React.memo
             onClick={() => onSelect(option.value)}
           >
             {option.label}
-            {value === option.value && <OutlineCheckIcon className={styles['edit-content-check']} />}
+            {value === option.value && <CheckOutlined className={styles['edit-content-check']} color="currentColor" />}
           </div>
         ))}
         {!options?.length && !!emptyTips && <div className={styles['edit-content-options-empty']}>{emptyTips}</div>}
@@ -875,17 +885,17 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
           </YakitTag>
         ) : null}
         {type === AIModelTypeEnum.TierIntelligent && reasoningEffort !== 'no-set' && reasoningEffort !== 'off' && (
-          <OutlineBrainIcon className={styles['brain-icon']} />
+          <BrainOutlined className={styles['brain-icon']} color="currentColor" />
         )}
       </div>
       <div className={styles['select-option-right']}>
-        {checked && <OutlineCheckIcon className={styles['check-icon']} />}
+        {checked && <CheckOutlined className={styles['check-icon']} color="currentColor" />}
         {type === AIModelTypeEnum.TierIntelligent && (
           <YakitButton
             type="text2"
             size="small"
             className={styles['edit-icon']}
-            icon={<OutlinePencilaltIcon />}
+            icon={<PencilAltOutlined color="currentColor" />}
             onClick={(e) => {
               e.stopPropagation()
             }}

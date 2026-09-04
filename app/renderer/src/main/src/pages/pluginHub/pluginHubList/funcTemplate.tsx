@@ -14,25 +14,26 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { Tooltip, type CheckboxChangeEvent } from 'antd'
 import has from 'lodash/has'
 import {
-  OutlineCalendarIcon,
-  OutlineClouddownloadIcon,
-  OutlineClouduploadIcon,
-  OutlineDatabasebackupIcon,
-  OutlineDotshorizontalIcon,
-  OutlineExportIcon,
-  OutlineLoadingIcon,
-  OutlineLockclosedIcon,
-  OutlineLockopenIcon,
-  OutlinePencilaltIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineShareIcon,
-  OutlineTerminalIcon,
-  OutlineThumbupIcon,
-  OutlineTrashIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  CalendarOutlined,
+  CloudDownloadOutlined,
+  CloudUploadOutlined,
+  DatabaseBackupOutlined,
+  DotsHorizontalOutlined,
+  LockClosedOutlined,
+  LockOpenOutlined,
+  PencilAltOutlined,
+  QuestionMarkCircleOutlined,
+  ShareOutlined,
+  TerminalOutlined,
+  ThumbUpOutlined,
+  TrashOutlined,
+  XOutlined,
+  FigmaIcon5237120699Outlined,
+  FigmaIcon2017756Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { pluginTypeToName } from '@/pages/plugins/builtInData'
-import { PluginsGridCheckIcon } from '@/pages/plugins/icon'
+import { PluginsGridCheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { onPluginTagsToName } from '@/pages/plugins/baseTemplate'
 import { formatDate } from '@/utils/timeUtil'
 import type { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
@@ -48,7 +49,7 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import { useStore } from '@/store'
 import { RollingLoadList, type RollingLoadListProps } from '@/components/RollingLoadList/RollingLoadList'
 import { YakEditor } from '@/utils/editors'
-import { SolidClouduploadIcon, SolidThumbupIcon } from '@/assets/icon/solid'
+import { CloudUploadSolid, ThumbUpSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakScript } from '@/pages/invoker/schema'
 import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
@@ -333,7 +334,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                         {t('HubListOuterList.filterCondition')}{' '}
                         <span className={styles['total-style']}>{tagLength}</span>
                       </span>
-                      <OutlineXIcon onClick={() => onDelAllTag()} />
+                      <XOutlined onClick={() => onDelAllTag()} color="currentColor" />
                     </div>
                   </YakitPopover>
                 )}
@@ -723,7 +724,7 @@ export const HubGridOpt: React.FC<HubGridOptProps> = memo((props) => {
 
         <div className={styles['opt-footer']} onClick={(e) => e.stopPropagation()}>
           <div className={styles['footer-time']}>
-            <OutlineCalendarIcon />
+            <CalendarOutlined color="currentColor" />
             {formatDate(time)}
           </div>
           <div className={styles['extra-footer']}>{extra()}</div>
@@ -921,14 +922,17 @@ export const HubDetailListOpt: <T>(props: HubDetailListOptProps<T>) => any = mem
         <div className={styles['plugin-details-item-show']}>
           {extraNode()}
           <Tooltip title={help || 'No Description about it.'} placement="topRight">
-            <OutlineQuestionmarkcircleIcon className={styles['plugin-details-item-show-icon-style']} />
+            <QuestionMarkCircleOutlined
+              className={styles['plugin-details-item-show-icon-style']}
+              color="currentColor"
+            />
           </Tooltip>
           <YakitPopover
             placement="topRight"
             classNames={{ root: styles['terminal-popover'] }}
             content={<YakEditor type={pluginType} value={content} readOnly={true} />}
           >
-            <OutlineTerminalIcon className={styles['plugin-details-item-show-icon-style']} />
+            <TerminalOutlined className={styles['plugin-details-item-show-icon-style']} color="currentColor" />
           </YakitPopover>
         </div>
       </div>
@@ -954,7 +958,7 @@ export const FooterExtraBtn: React.FC<FooterExtraBtnProps> = memo((props) => {
   return (
     <div className={styles['footer-extra-btn']} onClick={handleClick}>
       {loading ? (
-        <OutlineLoadingIcon className={styles['loading']} />
+        <FigmaIcon5237120699Outlined className={styles['loading']} color="currentColor" />
       ) : (
         <>
           {icon || null}
@@ -1028,14 +1032,20 @@ export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((p
     <div className={styles['hub-opt-footer-extra']}>
       <FooterExtraBtn
         loading={starLoading}
-        icon={info.is_stars ? <SolidThumbupIcon className={styles['stared-icon']} /> : <OutlineThumbupIcon />}
+        icon={
+          info.is_stars ? (
+            <ThumbUpSolid className={styles['stared-icon']} color="currentColor" />
+          ) : (
+            <ThumbUpOutlined color="currentColor" />
+          )
+        }
         title={info.starsCountString || ''}
         onClick={onStar}
       />
       <div className={styles['divider-style']}></div>
       <FooterExtraBtn
         loading={downloadLoading}
-        icon={<OutlineClouddownloadIcon />}
+        icon={<CloudDownloadOutlined color="currentColor" />}
         title={info.downloadedTotalString || ''}
         onClick={handleDownload}
       />
@@ -1191,29 +1201,33 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
     <div className={styles['hub-opt-footer-extra']}>
       <YakitButton
         type="text2"
-        icon={<OutlineClouddownloadIcon />}
+        icon={<CloudDownloadOutlined color="currentColor" />}
         loading={downloadLoading}
         onClick={handleDownload}
       />
       <div className={styles['divider-style']}></div>
-      <YakitButton type="text2" icon={<OutlineShareIcon />} onClick={onShare} />
+      <YakitButton type="text2" icon={<ShareOutlined color="currentColor" />} onClick={onShare} />
       <div className={styles['divider-style']}></div>
       <FuncFilterPopover
-        icon={<OutlineDotshorizontalIcon />}
+        icon={<DotsHorizontalOutlined color="currentColor" />}
         menu={{
           type: 'primary',
           data: [
             {
               key: 'state',
               label: info.is_private ? t('OwnOptFooterExtra.makePublic') : t('OwnOptFooterExtra.makePrivate'),
-              itemIcon: info.is_private ? <OutlineLockopenIcon /> : <OutlineLockclosedIcon />,
+              itemIcon: info.is_private ? (
+                <LockOpenOutlined color="currentColor" />
+              ) : (
+                <LockClosedOutlined color="currentColor" />
+              ),
               disabled: stateLoading,
             },
             {
               key: 'del',
               label: t('OwnOptFooterExtra.deleteOnline'),
               type: 'danger',
-              itemIcon: <OutlineTrashIcon />,
+              itemIcon: <TrashOutlined color="currentColor" />,
               disabled: delLoading,
             },
           ],
@@ -1283,9 +1297,9 @@ export const RecycleOptFooterExtra: React.FC<RecycleOptFooterExtraProps> = memo(
 
   return (
     <div className={styles['hub-opt-footer-extra']}>
-      <YakitButton loading={delLoading} type="text2" icon={<OutlineTrashIcon />} onClick={onRemove} />
+      <YakitButton loading={delLoading} type="text2" icon={<TrashOutlined color="currentColor" />} onClick={onRemove} />
 
-      <YakitButton loading={restoreLoading} icon={<OutlineDatabasebackupIcon />} onClick={onRestore}>
+      <YakitButton loading={restoreLoading} icon={<DatabaseBackupOutlined color="currentColor" />} onClick={onRestore}>
         还原
       </YakitButton>
     </div>
@@ -1372,7 +1386,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
         {
           key: 'export',
           label: t('YakitButton.export'),
-          itemIcon: <OutlineExportIcon />,
+          itemIcon: <FigmaIcon2017756Outlined />,
         },
       ]
     }
@@ -1380,13 +1394,13 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
       {
         key: 'export',
         label: t('YakitButton.export'),
-        itemIcon: <OutlineExportIcon />,
+        itemIcon: <FigmaIcon2017756Outlined />,
       },
       {
         key: 'del',
         label: t('LocalOptFooterExtra.deleteLocal'),
         type: 'danger',
-        itemIcon: <OutlineTrashIcon />,
+        itemIcon: <TrashOutlined color="currentColor" />,
         disabled: delLoading,
       },
     ]
@@ -1399,7 +1413,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
           <Tooltip title="上传" open={uploadTipShow} onOpenChange={(val) => setUploadTipShow(val)}>
             <YakitButton
               type="text2"
-              icon={<OutlineClouduploadIcon />}
+              icon={<CloudUploadOutlined color="currentColor" />}
               loading={uploadLoading}
               onClick={handleUpload}
             />
@@ -1409,13 +1423,13 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
       )}
 
       <Tooltip title="编辑">
-        <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={handleEdit} />
+        <YakitButton type="text2" icon={<PencilAltOutlined color="currentColor" />} onClick={handleEdit} />
       </Tooltip>
 
       <div className={styles['divider-style']}></div>
 
       <FuncFilterPopover
-        icon={<OutlineDotshorizontalIcon />}
+        icon={<DotsHorizontalOutlined color="currentColor" />}
         menu={{
           selectedKeys: [],
           type: 'primary',
@@ -1443,7 +1457,7 @@ export const PluginsUploadHint: React.FC<PluginsUploadHintProps> = React.memo((p
     <YakitHint
       visible={visible}
       title="一键上传"
-      heardIcon={<SolidClouduploadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
+      heardIcon={<CloudUploadSolid style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       footer={null}
       isDrag={true}
       mask={false}

@@ -3,7 +3,7 @@ import { memo, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineDocumentIcon, OutlineDownloadIcon } from '@/assets/icon/outline'
+import { DocumentOutlined, DownloadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
@@ -89,12 +89,17 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
         !isChildWindow && (
           <div className={styles['header-extra']}>
             <Tooltip title={t('AIReportFinishCard.openInAICodeAudit')}>
-              <YakitButton size="small" type="text" icon={<OutlineDocumentIcon />} onClick={handleOpenReport} />
+              <YakitButton
+                size="small"
+                type="text"
+                icon={<DocumentOutlined color="currentColor" />}
+                onClick={handleOpenReport}
+              />
             </Tooltip>
             <YakitButton
               size="small"
               type="text"
-              icon={<OutlineDownloadIcon />}
+              icon={<DownloadOutlined color="currentColor" />}
               onClick={handleDownloadReport}
               loading={downloadLoading}
             />

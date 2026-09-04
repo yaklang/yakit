@@ -18,15 +18,16 @@ import { genDefaultPagination } from '@/pages/invoker/schema'
 import { cloneDeep } from 'lodash'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineChevrondownIcon,
-  OutlineChevronupIcon,
-  OutlineExportIcon,
-  OutlineImportIcon,
-  OutlinePencilaltIcon,
-  OutlinePlusIcon,
-  OutlineSearchIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ChevronDownOutlined,
+  ChevronUpOutlined,
+  PencilAltOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  TrashOutlined,
+  FigmaIcon6480193584Outlined,
+  FigmaIcon2017756Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import styles from './NotepadManageLocal.module.scss'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -55,7 +56,7 @@ const NotepadLocalSearch = React.lazy(() => import('./NotepadLocalSearch'))
 
 const yakitTab: YakitTabsProps[] = [
   {
-    icon: <OutlineSearchIcon />,
+    icon: <SearchOutlined color="currentColor" />,
     label: 'NotepadManageLocal.fullTextSearch',
     value: '全文搜索',
   },
@@ -196,7 +197,11 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
             >
               <YakitButton type="text2">
                 <span style={{ marginRight: 8 }}>{timeMap(t)[sorterKey]}</span>
-                {timeSortVisible ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
+                {timeSortVisible ? (
+                  <ChevronUpOutlined color="currentColor" />
+                ) : (
+                  <ChevronDownOutlined color="currentColor" />
+                )}
               </YakitButton>
             </YakitDropdownMenu>
           ),
@@ -366,7 +371,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
               <YakitButton
                 type="outline2"
                 danger
-                icon={<OutlineTrashIcon />}
+                icon={<TrashOutlined color="currentColor" />}
                 disabled={totalRef.current === 0}
                 loading={pageLoading}
               >
@@ -375,18 +380,22 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
             </YakitPopconfirm>
             <YakitButton
               type="outline2"
-              icon={<OutlineExportIcon />}
+              icon={<FigmaIcon2017756Outlined />}
               disabled={totalRef.current === 0}
               onClick={onBatchExport}
               loading={pageLoading}
             >
               {t('YakitButton.batchExport')}
             </YakitButton>
-            <YakitButton type="outline2" icon={<OutlineImportIcon />} onClick={onBatchImport}>
+            <YakitButton
+              type="outline2"
+              icon={<FigmaIcon6480193584Outlined color="currentColor" />}
+              onClick={onBatchImport}
+            >
               {t('YakitButton.import')}
             </YakitButton>
             <Divider type="vertical" style={{ margin: 0 }} />
-            <YakitButton type="primary" icon={<OutlinePlusIcon />} onClick={() => goAddNotepad()}>
+            <YakitButton type="primary" icon={<PlusOutlined color="currentColor" />} onClick={() => goAddNotepad()}>
               {t('YakitButton.new')}
             </YakitButton>
           </div>
@@ -487,7 +496,7 @@ const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props)
     <div>
       <YakitButton
         type="text2"
-        icon={<OutlinePencilaltIcon />}
+        icon={<PencilAltOutlined color="currentColor" />}
         onClick={onEdit}
         loading={editLoading}
         disabled={removeItemLoading}
@@ -495,11 +504,11 @@ const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props)
 
       <Divider type="vertical" style={{ margin: '0 8px' }} />
 
-      <YakitButton type="text2" icon={<OutlineExportIcon />} onClick={onExport} />
+      <YakitButton type="text2" icon={<FigmaIcon2017756Outlined />} onClick={onExport} />
 
       <Divider type="vertical" style={{ margin: '0 8px' }} />
       <YakitPopconfirm title={t('NotepadAction.confirmDelete')} onConfirm={() => onSingleRemove()}>
-        <YakitButton type="text" danger loading={removeItemLoading} icon={<OutlineTrashIcon />} />
+        <YakitButton type="text" danger loading={removeItemLoading} icon={<TrashOutlined color="currentColor" />} />
       </YakitPopconfirm>
       {exportVisible && (
         <NotepadExport

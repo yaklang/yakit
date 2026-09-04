@@ -7,7 +7,7 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { AIMilkdownInput } from '../aiMilkdownInput/AIMilkdownInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
-import { OutlinePencilaltIcon } from '@/assets/icon/outline'
+import { PencilAltOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tooltip } from 'antd'
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { editorViewCtx } from '@milkdown/kit/core'
@@ -88,7 +88,11 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
                   />
                 </Tooltip>
                 <Tooltip title="编辑">
-                  <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={() => setEdit(true)} />
+                  <YakitButton
+                    type="text2"
+                    icon={<PencilAltOutlined color="currentColor" />}
+                    onClick={() => setEdit(true)}
+                  />
                 </Tooltip>
               </div>
             )}

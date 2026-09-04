@@ -3,19 +3,18 @@ import classNames from 'classnames'
 import { Tooltip } from 'antd'
 import { useStore } from 'zustand'
 import styles from './AIReActChatHeader.module.scss'
-import { ColorsChatIcon } from '@/assets/icon/colors'
+import { ColorsChatIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsChatIcon'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
 import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ClockIcon } from '@/assets/newIcon'
-import { OutlineLandPlotIcon } from '@/assets/icon/outline'
+import { LandPlotOutlined, ClockOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import type { AIReActChatHeaderExternalRightIconProps, AIReActChatHeaderProps, AIReActSubAgentTaskProps } from './type'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import { type AISource, AISourceEnum } from '../../hooks/grpcApi'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { SolidChatIcon } from '@/assets/icon/solid'
+import { ChatSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import useAIItemKind from '../../hooks/useAIItemKind'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
 import { AI_AGENT_HISTORY_AI_SOURCES } from '../../hooks/useGetChatDataStoreKey'
@@ -105,14 +104,14 @@ const AIReActSubAgentTask: React.FC<AIReActSubAgentTaskProps> = React.memo((prop
             <div className={styles['chat-locate-list']}>
               {casualConcurrentTaskList.map((token) => (
                 <div key={token} className={styles['chat-locate-item']} onClick={() => onScrollToConcurrentTask(token)}>
-                  <SolidChatIcon /> {getCasualConcurrentTaskName(token)}
+                  <ChatSolid color="currentColor" /> {getCasualConcurrentTaskName(token)}
                 </div>
               ))}
             </div>
           }
           placement="bottom"
         >
-          <YakitButton type="outline2" radius="28px" icon={<OutlineLandPlotIcon />}>
+          <YakitButton type="outline2" radius="28px" icon={<LandPlotOutlined color="currentColor" />}>
             子Agent任务
           </YakitButton>
         </YakitPopover>
@@ -167,7 +166,7 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
             </div>
           }
         >
-          <YakitButton type="text2" icon={<ClockIcon />} title="" />
+          <YakitButton type="text2" icon={<ClockOutlined size={16} />} title="" />
         </Tooltip>
       )}
       {rightIcon.add}

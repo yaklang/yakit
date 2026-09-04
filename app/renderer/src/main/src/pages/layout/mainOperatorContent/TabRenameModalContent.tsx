@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 import styles from './TabRenameModalContent.module.scss'
-import { RemoveIcon } from '@/assets/newIcon'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
@@ -14,6 +13,7 @@ import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import { yakitNotify } from '@/utils/notification'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 interface TabRenameModalProps {
   title: string
   onClose: () => void
@@ -39,7 +39,7 @@ const TabRenameModalContent: React.FC<TabRenameModalProps> = React.memo((props) 
       <div className={styles['subMenu-edit-modal-heard']}>
         <div className={styles['subMenu-edit-modal-title']}>{title}</div>
         <div className={styles['close-icon']} onClick={() => onClose()}>
-          <RemoveIcon />
+          <XSolid size={12} />
         </div>
       </div>
       <div className={styles['subMenu-edit-modal-body']}>

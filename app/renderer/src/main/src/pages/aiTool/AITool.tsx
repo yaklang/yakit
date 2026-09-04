@@ -9,13 +9,13 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineDotsverticalIcon,
-  OutlinePencilaltIcon,
-  OutlinePlusIcon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineStarIcon,
-} from '@/assets/icon/outline'
+  DotsVerticalOutlined,
+  PencilAltOutlined,
+  PlusOutlined,
+  RefreshOutlined,
+  SearchOutlined,
+  StarOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
@@ -26,7 +26,7 @@ import { grpcDeleteAITool, grpcGetAIToolList, grpcToggleAIToolFavorite } from '.
 import type { ToolQueryType } from '../ai-agent/aiToolList/AIToolListType'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { handleAddAITool, handleModifyAITool, toolMenu, toolTypeOptions } from '../ai-agent/aiToolList/AIToolList'
-import { SolidStarIcon } from '@/assets/icon/solid'
+import { StarSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { setClipboardText } from '@/utils/clipboard'
 import { yakitNotify } from '@/utils/notification'
@@ -174,7 +174,7 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
         <div className={styles['title']}>工具库</div>
         <div className={styles['extra']}>
           <YakitInput.Search
-            prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+            prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
             allowClear
             placeholder="请输入关键词搜索"
             value={keyWord}
@@ -185,7 +185,7 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
           />
           <Divider type="vertical" className={styles['diver-style']} />
 
-          <YakitButton size="large" icon={<OutlinePlusIcon />} onClick={onNewTool}>
+          <YakitButton size="large" icon={<PlusOutlined color="currentColor" />} onClick={onNewTool}>
             新建工具
           </YakitButton>
         </div>
@@ -234,10 +234,14 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
               <div className={styles['hub-list-empty']}>
                 <YakitEmpty title="暂无数据" description="可新建工具,创建属于自己的工具" />
                 <div className={styles['refresh-buttons']}>
-                  <YakitButton type="outline1" icon={<OutlinePlusIcon />} onClick={onNewTool}>
+                  <YakitButton type="outline1" icon={<PlusOutlined color="currentColor" />} onClick={onNewTool}>
                     新建工具
                   </YakitButton>
-                  <YakitButton type="outline1" icon={<OutlineRefreshIcon />} onClick={handleRefreshList}>
+                  <YakitButton
+                    type="outline1"
+                    icon={<RefreshOutlined color="currentColor" />}
+                    onClick={handleRefreshList}
+                  >
                     刷新
                   </YakitButton>
                 </div>
@@ -319,15 +323,15 @@ const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
             loading={favoriteLoading}
             icon={
               data.IsFavorite ? (
-                <SolidStarIcon className={styles['star-icon-active']} />
+                <StarSolid className={styles['star-icon-active']} color="currentColor" />
               ) : (
-                <OutlineStarIcon className={styles['star-icon']} />
+                <StarOutlined className={styles['star-icon']} color="currentColor" />
               )
             }
             onClick={handleFavorite}
           />
           <div className={styles['diver-style']} />
-          <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={onEdit} />
+          <YakitButton type="text2" icon={<PencilAltOutlined color="currentColor" />} onClick={onEdit} />
           <div className={styles['diver-style']} />
           <YakitDropdownMenu
             menu={{
@@ -341,7 +345,12 @@ const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
               onOpenChange: setVisible,
             }}
           >
-            <YakitButton isActive={visible} type="text2" size="small" icon={<OutlineDotsverticalIcon />} />
+            <YakitButton
+              isActive={visible}
+              type="text2"
+              size="small"
+              icon={<DotsVerticalOutlined color="currentColor" />}
+            />
           </YakitDropdownMenu>
         </div>
       )}

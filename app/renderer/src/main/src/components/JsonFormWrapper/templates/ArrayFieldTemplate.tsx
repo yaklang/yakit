@@ -1,13 +1,12 @@
 import type React from 'react'
 import { YakitButton, type YakitButtonProp } from '../../yakitUI/YakitButton/YakitButton'
-import { PlusIcon, TrashIcon } from '@/assets/newIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-// import {SolidArrownarrowdownIcon, SolidArrownarrowupIcon} from "@/assets/icon/solid"
+import { PlusOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const AddButton: React.FC<YakitButtonProp> = (props) => {
   const { t } = useI18nNamespaces(['yakitUi'])
   return (
-    <YakitButton {...props} type="outline1" icon={<PlusIcon />}>
+    <YakitButton {...props} type="outline1" icon={<PlusOutlined size={16} />}>
       {t('YakitButton.add')}
     </YakitButton>
   )
@@ -111,7 +110,7 @@ const DefaultArrayItem: React.FC<any> = (props) => {
               style={btnStyle}
               disabled={disabled || readonly}
               onClick={onDropIndexClick(index)}
-              icon={<TrashIcon />}
+              icon={<TrashOutlined size={16} />}
             />
           )}
         </div>

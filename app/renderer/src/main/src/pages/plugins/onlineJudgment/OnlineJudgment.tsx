@@ -1,4 +1,4 @@
-import { OutlineRefreshIcon } from '@/assets/icon/outline'
+import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -107,7 +107,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
               <YakitButton
                 className={styles['refresh-button']}
                 type="outline1"
-                icon={<OutlineRefreshIcon />}
+                icon={<RefreshOutlined color="currentColor" />}
                 onClick={getNetWork}
               >
                 刷新页面
@@ -166,7 +166,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
               <YakitButton
                 className={styles['refresh-button']}
                 type="outline1"
-                icon={<OutlineRefreshIcon />}
+                icon={<RefreshOutlined color="currentColor" />}
                 onClick={getNetWork}
               >
                 刷新页面

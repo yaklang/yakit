@@ -1,4 +1,4 @@
-import { SolidPaperairplaneIcon } from '@/assets/icon/solid'
+import { PaperAirplaneSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { ExportExcel } from '@/components/DataExport/DataExport'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -25,7 +25,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
-import { OutlineRefreshIcon } from '@/assets/icon/outline'
+import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitAsset } from '@/services/electronBridge'
 
 const { ipcRenderer } = window.require('electron')
@@ -515,7 +515,11 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                 <div className={classNames(styles['table-renderTitle'], tableTitleClassName)}>
                   {tableTitle ? tableTitle : <TableTotalAndSelectNumber total={total} selectNum={selectNum} />}
                   <div className={styles['table-head-extra']}>
-                    <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={() => update(true)} />
+                    <YakitButton
+                      type="text2"
+                      icon={<RefreshOutlined color="currentColor" />}
+                      onClick={() => update(true)}
+                    />
                     <ExportExcel
                       btnProps={{
                         size: btnSize,
@@ -540,7 +544,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                       >
                         <YakitButton
                           onClick={() => {}}
-                          icon={<SolidPaperairplaneIcon />}
+                          icon={<PaperAirplaneSolid color="currentColor" />}
                           type={'primary'}
                           disabled={selectNum === 0}
                           size={btnSize}

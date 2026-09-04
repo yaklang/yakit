@@ -4,10 +4,10 @@ import {} from '@ant-design/icons'
 import { useMemoizedFn } from 'ahooks'
 import styles from './DocumentCollect.module.scss'
 import type { DocumentCollectProps, HoleResourceType, HoleTreeNode } from './DocumentCollectType'
-import { OutlineDocumentIcon, OutlineLink2Icon, OutlineVariableIcon } from '@/assets/icon/outline'
+import { DocumentOutlined, Link2Outlined, VariableOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { SSARisksFilter } from '../YakitAuditHoleTable/YakitAuditHoleTableType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { RiskTree } from '@/pages/yakRunnerAuditCode/RunnerFileTree/RunnerFileTree'
 import { JSONParseLog } from '@/utils/tool'
@@ -15,9 +15,9 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const renderTreeNodeIcon = (treeNodeType: HoleResourceType) => {
   const iconsEle = {
-    function: <OutlineDocumentIcon className="yakitTreeNode-icon" />,
-    program: <OutlineVariableIcon className="yakitTreeNode-icon" />,
-    source: <OutlineLink2Icon className="yakitTreeNode-icon" />,
+    function: <DocumentOutlined className="yakitTreeNode-icon" color="currentColor" />,
+    program: <VariableOutlined className="yakitTreeNode-icon" color="currentColor" />,
+    source: <Link2Outlined className="yakitTreeNode-icon" color="currentColor" />,
   }
   return iconsEle[treeNodeType] || <></>
 }

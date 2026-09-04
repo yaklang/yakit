@@ -32,7 +32,6 @@ import {
 } from '@/utils/envfile'
 import HeardMenu from './layout/HeardMenu/HeardMenu'
 import { CodeGV } from '@/yakitGV'
-import { EnterpriseLoginInfoIcon } from '@/assets/icons/enterprise'
 import CustomizeMenu from './customizeMenu/CustomizeMenu'
 import { ControlOperation } from '@/pages/dynamicControl/DynamicControl'
 import { YakitHintModal } from '@/components/yakitUI/YakitHint/YakitHintModal'
@@ -67,6 +66,8 @@ import { JSONParseLog } from '@/utils/tool'
 import { Trans } from 'react-i18next'
 import aiChatPersistStore from './ai-re-act/hooks/persist/aiChatPersistStore'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
+
+import { UsersSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -195,7 +196,6 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
           <CameraOutlined className="hover-icon" />
         </div>
       </Upload.Dragger>
-
       <div
         className="content-box"
         style={
@@ -209,7 +209,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
           <>
             <div className="permission-show">{t('SetUserInfo.admin')}</div>
             <span className="user-admin-icon">
-              <EnterpriseLoginInfoIcon />
+              <UsersSolid color="#9D9AFB" size={16} />
             </span>
           </>
         )}

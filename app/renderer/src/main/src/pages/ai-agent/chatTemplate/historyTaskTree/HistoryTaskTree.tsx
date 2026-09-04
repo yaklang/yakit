@@ -17,7 +17,13 @@ import { AITree } from '../../aiTree/AITree'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { formatTimestamp } from '@/utils/timeUtil'
-import { OutlineChevrondownIcon, OutlineLoadingIcon, OutlinePlay2Icon, RedoDotIcon } from '@/assets/icon/outline'
+import {
+  ChevronDownOutlined,
+  FigmaIcon5237120699Outlined,
+  Play2Outlined,
+  RedoDotOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import type { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import { Tooltip } from 'antd'
@@ -96,7 +102,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   return (
     <div className={styles['section']}>
       <div className={styles['section-title']} onClick={() => setExpanded((p) => !p)}>
-        <OutlineChevrondownIcon style={{ transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
+        <ChevronDownOutlined color="currentColor" style={{ transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
         <span>{t('HistoryTaskTree.taskList')}</span>
       </div>
       {expanded && (
@@ -268,9 +274,9 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
           size="small"
         >
           {loading ? (
-            <OutlineLoadingIcon className={styles['icon-primary']} />
+            <FigmaIcon5237120699Outlined className={styles['icon-primary']} color="currentColor" />
           ) : (
-            <OutlinePlay2Icon className={styles['play2-icon']} />
+            <Play2Outlined className={styles['play2-icon']} color="currentColor" />
           )}
         </YakitButton>
       </Tooltip>
@@ -320,7 +326,7 @@ export const AIHistorySkipTask: React.FC<{ taskId?: string | null; isTask?: bool
         <Tooltip title="跳过当前任务" destroyOnHidden={true}>
           <YakitButton
             size="small"
-            icon={<RedoDotIcon />}
+            icon={<RedoDotOutlined color="currentColor" />}
             type="text"
             loading={skipLoading}
             onClick={(e) => {

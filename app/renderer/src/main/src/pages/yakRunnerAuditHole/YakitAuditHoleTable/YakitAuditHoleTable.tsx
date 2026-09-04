@@ -17,17 +17,18 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useControllableValue, useCreation, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import {
-  OutlineChevrondownIcon,
-  OutlineEyeIcon,
-  OutlineExportIcon,
-  OutlineImportIcon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineTerminalIcon,
-  OutlineTrashIcon,
-  OutlineUploadIcon,
-  OutlineBotIcon,
-} from '@/assets/icon/outline'
+  ChevronDownOutlined,
+  EyeOutlined,
+  RefreshOutlined,
+  SearchOutlined,
+  TerminalOutlined,
+  TrashOutlined,
+  UploadOutlined,
+  BotOutlined,
+  FigmaIcon6480193584Outlined,
+  FigmaIcon2017756Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -70,13 +71,14 @@ import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AuditCodePageInfoProps } from '@/store/pageInfo'
 import ReactResizeDetector from 'react-resize-detector'
 import {
-  IconSolidDefaultRiskIcon,
-  IconSolidHighRiskIcon,
-  IconSolidInfoRiskIcon,
-  IconSolidLowRiskIcon,
-  IconSolidMediumRiskIcon,
-  IconSolidSeriousIcon,
-} from '@/pages/risks/icon'
+  CriticalRiskColorful,
+  DefaultRiskColorful,
+  FingerprintInfoRiskColorful,
+  HighRiskColorful,
+  LowRiskColorful,
+  MediumRiskColorful,
+  ModifiedLogColorful,
+} from '@yakit-libs/yakit-ui-icons/colorful'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
 import { AuditResultCollapse, AuditResultDescribe, SeverityMapTag } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
 import type { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
@@ -86,9 +88,8 @@ import { yakitNotify } from '@/utils/notification'
 import { NoPromptHint } from '@/pages/pluginHub/utilsUI/UtilsTemplate'
 import { RemoteAuditHoleGV } from '@/enums/auditHole'
 import { useStore } from '@/store'
-import { PopoverArrowIcon } from '@/pages/pluginHub/pluginLog/PluginLogOpt'
-import { LogNodeStatusModifyIcon } from '@/assets/icon/colors'
-import { SolidPaperairplaneIcon } from '@/assets/icon/solid'
+import { PopoverArrowIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PopoverArrowIcon'
+import { PaperAirplaneSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import importExportStyles from '@/pages/fingerprintManage/ImportExportModal/ImportExportModal.module.scss'
@@ -292,7 +293,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         filterProps: {
           filterKey: 'Title',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
         render: (_, record) => record?.TitleVerbose || record.Title || '-',
       },
@@ -377,7 +378,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
               }}
             >
               <span>{text ? getLabelByValue(text) : '-'}</span>
-              <OutlineChevrondownIcon className={styles['table-tag-icon']} />
+              <ChevronDownOutlined className={styles['table-tag-icon']} color="currentColor" />
             </div>
           </>
         ),
@@ -405,13 +406,13 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 e.stopPropagation()
                 onRemoveSingle(record.Id)
               }}
-              icon={<OutlineTrashIcon />}
+              icon={<TrashOutlined color="currentColor" />}
             />
             <Divider type="vertical" />
             <Tooltip title={t('YakitAuditHoleTable.openInAudit')}>
               <YakitButton
                 type="text"
-                icon={<OutlineTerminalIcon />}
+                icon={<TerminalOutlined color="currentColor" />}
                 onClick={(e) => {
                   e.stopPropagation()
                   const params: AuditCodePageInfoProps = {
@@ -443,12 +444,13 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
               styles={{ root: { paddingBottom: 0 } }}
               placement="top"
             >
-              <OutlineUploadIcon
+              <UploadOutlined
                 className={styles['misstatement-icon']}
                 onClick={(e) => {
                   e.stopPropagation()
                   onClickSSARiskFeedbackToOnline(record)
                 }}
+                color="currentColor"
               />
             </Tooltip>
           </>
@@ -1100,7 +1102,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                     <FuncBtn
                       maxWidth={1200}
                       type="outline2"
-                      icon={<OutlineExportIcon />}
+                      icon={<FigmaIcon2017756Outlined />}
                       onClick={onExportSSARisk}
                       disabled={tableTotal === 0}
                       name={t('YakitButton.export')}
@@ -1108,14 +1110,14 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                     <FuncBtn
                       maxWidth={1200}
                       type="outline2"
-                      icon={<OutlineImportIcon />}
+                      icon={<FigmaIcon6480193584Outlined color="currentColor" />}
                       onClick={onImportSSARisk}
                       name={t('YakitButton.import')}
                     />
                     <FuncBtn
                       maxWidth={1200}
                       type="outline2"
-                      icon={<OutlineEyeIcon />}
+                      icon={<EyeOutlined color="currentColor" />}
                       onClick={onAllRead}
                       name={t('YakitAuditHoleTable.allRead')}
                     />
@@ -1131,7 +1133,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                         maxWidth={1200}
                         type="outline1"
                         colors="danger"
-                        icon={<OutlineTrashIcon />}
+                        icon={<TrashOutlined color="currentColor" />}
                         disabled={tableTotal === 0}
                         name={selectNum === 0 ? t('YakitButton.clear') : t('YakitButton.delete')}
                       />
@@ -1149,7 +1151,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                       }}
                     >
                       <Badge dot={offsetData.length > 0} offset={[-5, 4]}>
-                        <YakitButton type="text2" icon={<OutlineRefreshIcon />} />
+                        <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} />
                       </Badge>
                     </YakitDropdownMenu>
                   </div>
@@ -1441,22 +1443,22 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
     let icon = <></>
     switch (severity?.name) {
       case t('YakitTag.info'):
-        icon = <IconSolidInfoRiskIcon />
+        icon = <FingerprintInfoRiskColorful />
         break
       case t('YakitTag.low'):
-        icon = <IconSolidLowRiskIcon />
+        icon = <LowRiskColorful />
         break
       case t('YakitTag.warning'):
-        icon = <IconSolidMediumRiskIcon />
+        icon = <MediumRiskColorful />
         break
       case t('YakitTag.high'):
-        icon = <IconSolidHighRiskIcon />
+        icon = <HighRiskColorful />
         break
       case t('YakitTag.critical'):
-        icon = <IconSolidSeriousIcon />
+        icon = <CriticalRiskColorful />
         break
       default:
-        icon = <IconSolidDefaultRiskIcon />
+        icon = <DefaultRiskColorful />
         break
     }
     return {
@@ -1556,13 +1558,18 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
         </div>
         {isShowExtra && (
           <div className={styles['content-heard-right']} style={{ height: '100%', alignItems: 'center' }}>
-            <YakitButton style={{ marginRight: 8 }} type="outline2" icon={<OutlineBotIcon />} onClick={goAI}>
+            <YakitButton
+              style={{ marginRight: 8 }}
+              type="outline2"
+              icon={<BotOutlined color="currentColor" />}
+              onClick={goAI}
+            >
               {t('YakitAuditHoleTable.openInAIAgent')}
             </YakitButton>
             {isShowCollapse ? (
               <YakitButton
                 type="outline2"
-                icon={<OutlineTerminalIcon />}
+                icon={<TerminalOutlined color="currentColor" />}
                 onClick={(e) => {
                   e.stopPropagation()
                   isExtraClick && isExtraClick()
@@ -1574,7 +1581,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
             ) : (
               <Tooltip title={t('YakitAuditHoleTable.relatedDataDeleted')} placement="topLeft">
                 <div className={styles['disabled-open']}>
-                  <OutlineTerminalIcon />
+                  <TerminalOutlined color="currentColor" />
                   {t('YakitAuditHoleTable.openInAudit')}
                 </div>
               </Tooltip>
@@ -1664,7 +1671,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
         <div className={styles['audit-result-history-opt']}>
           <PopoverArrowIcon className={styles['arrow-icon']} />
           <div className={styles['icon-wrapper']}>
-            <LogNodeStatusModifyIcon />
+            <ModifiedLogColorful />
           </div>
           <div
             className={classNames(styles['line-tail'], {
@@ -1814,7 +1821,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
         />
         <div className={styles['right-footer']}>
           <YakitButton size="small" loading={loading} disabled={disabled} onClick={onSubmit}>
-            <SolidPaperairplaneIcon />
+            <PaperAirplaneSolid color="currentColor" />
             {t('YakitAuditHoleTable.publishDisposal')}
           </YakitButton>
         </div>

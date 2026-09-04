@@ -58,7 +58,7 @@ import {
 import classNames from 'classnames'
 import _ from 'lodash'
 import { routeConvertKey } from '../publicMenu/utils'
-import { CheckIcon, RemoveIcon, SolidDocumentTextIcon } from '@/assets/newIcon'
+import { CheckIcon, SolidDocumentTextIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import type { RouteToPageProps } from '../publicMenu/PublicMenu'
 import { type SubscribeCloseType, type YakitSecondaryConfirmProps, useSubscribeClose } from '@/store/tabSubscribe'
 import { YakitModalConfirm, showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -80,13 +80,13 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import type { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import {
-  OutlineChevrondoubleleftIcon,
-  OutlineChevrondoublerightIcon,
-  OutlinePlusIcon,
-  OutlineSortascendingIcon,
-  OutlineSortdescendingIcon,
-  OutlineStoreIcon,
-} from '@/assets/icon/outline'
+  ChevronDoubleLeftOutlined,
+  ChevronDoubleRightOutlined,
+  PlusOutlined,
+  SortAscendingOutlined,
+  SortDescendingOutlined,
+  FigmaIcon13208172881Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 
 import { getHotPatchCodeInfo } from '@/pages/fuzzer/fuzzerHotPatchUtils'
 import { type FuzzerCacheDataProps, getFuzzerCacheData } from '@/pages/fuzzer/fuzzerCacheData'
@@ -232,7 +232,7 @@ const pageTabItemRightOperation: (t: TFunction) => YakitMenuItemType[] = (t) => 
         // },
         {
           label: t('MainOperatorContent.batchNewGroup'),
-          itemIcon: <OutlinePlusIcon />,
+          itemIcon: <PlusOutlined color="currentColor" />,
           key: 'batchNewGroup',
         },
       ],
@@ -678,6 +678,7 @@ const getSubPageTotal = (subPage) => {
 }
 
 import { setChildWindowHash } from '@/utils/childWindowHash'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 export { getChildWindowHash, setChildWindowHash } from '@/utils/childWindowHash'
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
   const { routeKeyToLabel } = props
@@ -4169,7 +4170,8 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
               >
                 <div className={styles['tab-menu-item-verbose-wrapper']}>
                   <span className="content-ellipsis">{item.verboseKey ? t(item.verboseKey) : item.verbose || ''}</span>
-                  <RemoveIcon
+                  <XSolid
+                    size={12}
                     className={styles['remove-icon']}
                     onClick={(e) => {
                       e.stopPropagation()
@@ -6229,7 +6231,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                   })}
                   ref={scrollLeftIconRef}
                 >
-                  <OutlineChevrondoubleleftIcon />
+                  <ChevronDoubleLeftOutlined color="currentColor" />
                 </div>
                 <div
                   className={classNames(styles['tab-menu-sub'], {
@@ -6299,7 +6301,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                   })}
                   ref={scrollRightIconRef}
                 >
-                  <OutlineChevrondoublerightIcon />
+                  <ChevronDoubleRightOutlined color="currentColor" />
                 </div>
                 <div
                   className={classNames(styles['extra-operate'], {
@@ -6307,10 +6309,18 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                   })}
                 >
                   {isExpand ? (
-                    <OutlineSortascendingIcon className={styles['extra-operate-icon']} onClick={onRetract} />
+                    <SortAscendingOutlined
+                      className={styles['extra-operate-icon']}
+                      onClick={onRetract}
+                      color="currentColor"
+                    />
                   ) : (
                     isShowExpandIcon && (
-                      <OutlineSortdescendingIcon className={styles['extra-operate-icon']} onClick={onExpand} />
+                      <SortDescendingOutlined
+                        className={styles['extra-operate-icon']}
+                        onClick={onExpand}
+                        color="currentColor"
+                      />
                     )
                   )}
                   {isWebFuzzerRoute && (
@@ -6318,15 +6328,20 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                       title={t('MainOperatorContent.save_webfuzzer_history')}
                       placement={isExpand ? 'left' : 'top'}
                     >
-                      <OutlineStoreIcon
+                      <FigmaIcon13208172881Outlined
                         className={styles['extra-operate-icon']}
                         onClick={() => onSaveHistory(pageRouteKey)}
+                        color="currentColor"
                       />
                     </Tooltip>
                   )}
 
                   {pageItem.hideAdd !== true && (
-                    <OutlinePlusIcon className={styles['extra-operate-icon']} onClick={() => onAddSubPage()} />
+                    <PlusOutlined
+                      className={styles['extra-operate-icon']}
+                      onClick={() => onAddSubPage()}
+                      color="currentColor"
+                    />
                   )}
                 </div>
               </div>
@@ -6442,7 +6457,8 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                   <span className="content-ellipsis">{subItem.verbose || ''}</span>
                 </div>
                 {!unShowRemove && (
-                  <RemoveIcon
+                  <XSolid
+                    size={12}
                     className={classNames(styles['remove-icon'], {
                       [styles['remove-show-icon']]: isActive,
                     })}
@@ -6830,7 +6846,8 @@ const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
           <SolidDocumentTextIcon className={styles['document-text-icon']} />
           <span className="content-ellipsis">{item.verbose || ''}</span>
         </div>
-        <RemoveIcon
+        <XSolid
+          size={12}
           className={classNames(styles['remove-icon'], {
             [styles['remove-show-icon']]: isActive,
           })}

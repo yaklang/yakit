@@ -22,3 +22,8 @@ body {
   background: var(--Colors-Use-Neutral-Bg, #fff);
   color: var(--Colors-Use-Neutral-Text-1-Title, #000);
 }
+
+// 保持迁移后的图标颜色不依赖 @ant-design/icons 的运行时样式注入
+.yakit-icon {
+  color: inherit;
+}

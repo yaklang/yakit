@@ -18,14 +18,15 @@ import { useClickAway, useCreation, useMemoizedFn } from 'ahooks'
 import type { AIAgentGrpcApi, AIEventQueryRequest, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { isToolStdoutStream } from '@/pages/ai-re-act/hooks/utils'
 import {
-  OutlineArrownarrowrightIcon,
-  OutlineChevronsDownUpIcon,
-  OutlineChevronsUpDownIcon,
-  OutlineClockIcon,
-  OutlineDocumentduplicateIcon,
-  OutlineRefreshIcon,
-  OutlineWrenchIcon1,
-} from '@/assets/icon/outline'
+  ArrowNarrowRightOutlined,
+  ChevronsDownUpOutlined,
+  ChevronsUpDownOutlined,
+  ClockOutlined,
+  DocumentDuplicateOutlined,
+  RefreshOutlined,
+  Wrench2Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Divider, Tooltip } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -49,7 +50,7 @@ import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionCon
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
-  'enough-cancel': <OutlineArrownarrowrightIcon />,
+  'enough-cancel': <ArrowNarrowRightOutlined color="currentColor" />,
 }
 
 interface ToolInvokerCardProps {
@@ -103,7 +104,7 @@ const ToolLoadingCard: React.FC<Omit<ToolInvokerCardProps, 'fileList'>> = memo((
 
   return (
     <ChatCard
-      titleIcon={<OutlineWrenchIcon1 />}
+      titleIcon={<Wrench2Outlined color="currentColor" />}
       titleText={nodeLabel || data.toolName}
       titleExtra={
         reason ? (
@@ -115,7 +116,7 @@ const ToolLoadingCard: React.FC<Omit<ToolInvokerCardProps, 'fileList'>> = memo((
       titleMore={
         <div className={styles['tool-loading-status']}>
           <span className={styles['tool-loading-status-icon']}>
-            <OutlineRefreshIcon />
+            <RefreshOutlined color="currentColor" />
           </span>
           <span>{t('ToolInvokerCard.paramsGenerating')}</span>
         </div>
@@ -183,7 +184,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   return (
     <ChatCard
       titleText={nodeLabel || data.toolName}
-      titleIcon={<OutlineWrenchIcon1 />}
+      titleIcon={<Wrench2Outlined color="currentColor" />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
           {selectors?.selectors && (
@@ -353,7 +354,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   return (
     <ChatCard
       titleText={nodeLabel || data.toolName}
-      titleIcon={<OutlineWrenchIcon1 />}
+      titleIcon={<Wrench2Outlined color="currentColor" />}
       onClickTitle={expandToggle}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
@@ -385,7 +386,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
               <YakitButton
                 size="small"
                 type="text"
-                icon={<OutlineRefreshIcon />}
+                icon={<RefreshOutlined color="currentColor" />}
                 onClick={(e) => {
                   e.stopPropagation()
                   getListToolList()
@@ -398,7 +399,13 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
             <YakitButton
               size="small"
               type="text"
-              icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+              icon={
+                expand ? (
+                  <ChevronsDownUpOutlined color="currentColor" />
+                ) : (
+                  <ChevronsUpDownOutlined color="currentColor" />
+                )
+              }
               onClick={(e) => {
                 e.stopPropagation()
                 expandToggle()
@@ -420,7 +427,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
           <div className={styles['tool-invoker-card-footer']}>
             {modalInfo?.time && (
               <div className={styles['tool-invoker-card-footer-time']}>
-                <OutlineClockIcon />
+                <ClockOutlined color="currentColor" />
                 {formatTimestamp(modalInfo.time)}
                 {!!duration && (
                   <div>
@@ -500,7 +507,7 @@ const ToolParamsLine: FC<{ params?: Record<string, any> }> = memo(({ params }) =
           <div className={styles['params-modal-json']}>
             {jsonPretty}
             <div className={styles['params-modal-copy']} onClick={onCopyAll}>
-              <OutlineDocumentduplicateIcon />
+              <DocumentDuplicateOutlined color="currentColor" />
             </div>
           </div>
           {Object.entries(params).map(([key, value]) => (
@@ -511,7 +518,7 @@ const ToolParamsLine: FC<{ params?: Record<string, any> }> = memo(({ params }) =
               </span>
               <Tooltip title={t('YakitButton.copy')}>
                 <span className={styles['field-copy']} onClick={() => onCopyField(value)}>
-                  <OutlineDocumentduplicateIcon style={{ width: 12, height: 12 }} />
+                  <DocumentDuplicateOutlined style={{ width: 12, height: 12 }} color="currentColor" />
                 </span>
               </Tooltip>
             </div>

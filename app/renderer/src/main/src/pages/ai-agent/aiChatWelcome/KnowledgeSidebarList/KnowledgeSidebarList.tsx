@@ -10,7 +10,8 @@ import {
   prioritizeProcessingItems,
   targetIcon,
 } from '@/pages/KnowledgeBase/utils'
-import { OutlineLoadingIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { SearchOutlined, FigmaIcon5237120699Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+
 import { OperateKnowledgenBaseItem } from '@/pages/KnowledgeBase/compoment/OperateKnowledgenBaseItem'
 
 import classNames from 'classnames'
@@ -270,7 +271,7 @@ const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: 
       <div className={styles['knowledge-base-info-body']}>
         <div className={styles['knowledge-base-search']}>
           <YakitInput
-            prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+            prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
             allowClear
             placeholder={t('YakitInput.searchKeyWordPlaceholder')}
             value={search}
@@ -327,7 +328,7 @@ const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: 
                                 onViewBuildProcess(e, items.streamToken, 'routine')
                               }}
                             >
-                              <OutlineLoadingIcon className={styles['loading-icon']} />
+                              <FigmaIcon5237120699Outlined className={styles['loading-icon']} color="currentColor" />
                               生成中,点击查看进度
                             </div>
                           ) : items.IsDefault ? (

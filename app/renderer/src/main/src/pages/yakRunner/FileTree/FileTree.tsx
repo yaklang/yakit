@@ -2,7 +2,7 @@ import React, { memo, useEffect, useMemo, useRef, useState, startTransition } fr
 import { useMemoizedFn, useSize } from 'ahooks'
 import type { FileTreeNodeProps, FileTreeProps, FileNodeProps } from './FileTreeType'
 import { Tree } from 'antd'
-import { OutlineChevronrightIcon } from '@/assets/icon/outline'
+import { ChevronRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import type { YakitMenuItemProps, YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { FolderDefault, FolderDefaultExpanded, KeyToIcon } from './icon'
@@ -798,7 +798,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
               [styles['hidden']]: info.isLeaf,
             })}
           >
-            <OutlineChevronrightIcon />
+            <ChevronRightOutlined color="currentColor" />
           </div>
 
           <div className={styles['node-loading']}>

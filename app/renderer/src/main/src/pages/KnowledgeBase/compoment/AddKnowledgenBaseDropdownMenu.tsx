@@ -3,7 +3,6 @@ import { type FC } from 'react'
 
 import { useMemoizedFn, useSafeState } from 'ahooks'
 
-import { PlusIcon } from '@/assets/newIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { KnowledgeBaseFormModal } from './KnowledgeBaseFormModal'
@@ -11,6 +10,7 @@ import { Form } from 'antd'
 import { ImportModal } from './ImportModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '../hooks/useCheckKnowledgePlugin'
 import { InstallPluginModal } from './InstallPluginModal/InstallPluginModal'
+import { PlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const AddKnowledgenBaseDropdownMenu: FC<{
   setKnowledgeBaseID: (id: string) => void
@@ -84,13 +84,12 @@ const AddKnowledgenBaseDropdownMenu: FC<{
       >
         <YakitButton
           type="text2"
-          icon={<PlusIcon />}
+          icon={<PlusOutlined size={16} />}
           size="small"
           style={{ height: '26.85px', width: '26.85px' }}
           className="third-step"
         />
       </YakitDropdownMenu>
-
       <KnowledgeBaseFormModal
         visible={visible}
         title="新增知识库"
@@ -99,7 +98,6 @@ const AddKnowledgenBaseDropdownMenu: FC<{
         form={form}
         setAddMode={setAddMode}
       />
-
       <ImportModal visible={importVisible} onVisible={setImportVisible} setAddMode={setAddMode} />
     </React.Fragment>
   )

@@ -16,10 +16,15 @@ import { usePluginViewContext } from '@prosemirror-adapter/react'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { callCommand } from '@milkdown/kit/utils'
 import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn } from 'ahooks'
-import { IconBold, IconCode2, IconItalic, IconStrikethrough, IconType, IconUnderline } from '../icon/icon'
+import { IconBold } from '@yakit-libs/yakit-ui-icons/oldicon/IconBold'
+import { IconCode2 } from '@yakit-libs/yakit-ui-icons/oldicon/IconCode2'
+import { IconItalic } from '@yakit-libs/yakit-ui-icons/oldicon/IconItalic'
+import { IconStrikethrough } from '@yakit-libs/yakit-ui-icons/oldicon/IconStrikethrough'
+import { IconType } from '@yakit-libs/yakit-ui-icons/oldicon/IconType'
+import { IconUnderline } from '@yakit-libs/yakit-ui-icons/oldicon/IconUnderline'
 import styles from './Tooltip.module.scss'
 import React from 'react'
-import { OutlineChevrondownIcon, OutlineChevronupIcon, OutlineLightbulbIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined, ChevronUpOutlined, LightBulbOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { toggleStrikethroughCommand } from '@milkdown/kit/preset/gfm'
 import classNames from 'classnames'
@@ -432,9 +437,9 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
           <div className={styles['tooltip-t']}>
             <IconType />
             {visibleText ? (
-              <OutlineChevronupIcon className={styles['t-icon']} />
+              <ChevronUpOutlined className={styles['t-icon']} color="currentColor" />
             ) : (
-              <OutlineChevrondownIcon className={styles['t-icon']} />
+              <ChevronDownOutlined className={styles['t-icon']} color="currentColor" />
             )}
           </div>
         </div>
@@ -461,11 +466,11 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
       >
         <div className={styles['tooltip-light-wrapper']}>
           <div className={styles['tooltip-t']}>
-            <OutlineLightbulbIcon />
+            <LightBulbOutlined color="currentColor" />
             {visibleLight ? (
-              <OutlineChevronupIcon className={styles['t-icon']} />
+              <ChevronUpOutlined className={styles['t-icon']} color="currentColor" />
             ) : (
-              <OutlineChevrondownIcon className={styles['t-icon']} />
+              <ChevronDownOutlined className={styles['t-icon']} color="currentColor" />
             )}
           </div>
         </div>

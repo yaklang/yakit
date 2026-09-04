@@ -1,4 +1,4 @@
-import { OutlineChevrondownIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tree } from 'antd'
 import FileTreeSystemItem from '../FileTreeSystemItem/FileTreeSystemIem'
 import { forwardRef, memo, useCallback, useImperativeHandle, useState, useTransition } from 'react'
@@ -161,7 +161,7 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
     <div className={styles['file-tree-system-list']}>
       <Tree.DirectoryTree
         draggable
-        switcherIcon={<OutlineChevrondownIcon />}
+        switcherIcon={<ChevronDownOutlined color="currentColor" />}
         expandedKeys={expandedKeys}
         fieldNames={{ title: 'name', key: 'path', children: 'children' }}
         treeData={data}

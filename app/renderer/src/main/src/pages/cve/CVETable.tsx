@@ -17,13 +17,8 @@ import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtual
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
-import {
-  CheckCircleIcon,
-  CloudDownloadIcon,
-  RefreshIcon,
-  ShieldExclamationIcon,
-  SolidRefreshIcon,
-} from '@/assets/newIcon'
+import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
+import { CheckCircleSolid, RefreshSolid, ShieldExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import classNames from 'classnames'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { failed, info, yakitFailed } from '@/utils/notification'
@@ -39,6 +34,8 @@ import { YakitAutoComplete, defYakitAutoCompleteRef } from '@/components/yakitUI
 import { CacheDropDownGV } from '@/yakitGV'
 import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { YakitRoute } from '@/enums/yakitRoute'
+
+import { CloudDownloadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 export interface CVETableProp {
   available: boolean
@@ -480,7 +477,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
             />
             <YakitButton
               type="outline1"
-              icon={<CloudDownloadIcon />}
+              icon={<CloudDownloadOutlined size={16} />}
               onClick={() => setDataBaseUpdateVisible(true)}
               style={{ marginTop: 16 }}
             >
@@ -665,12 +662,12 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
   })
   const heardIconRender = useMemoizedFn(() => {
     if (status === 'done') {
-      return <CheckCircleIcon style={{ color: 'var(--Colors-Use-Success-Primary)' }} />
+      return <CheckCircleSolid style={{ color: 'var(--Colors-Use-Success-Primary)' }} />
     }
     if (available) {
-      return <SolidRefreshIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />
+      return <RefreshSolid style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />
     } else {
-      return <ShieldExclamationIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />
+      return <ShieldExclamationSolid size={32} style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />
     }
   })
   const titleRender = useMemoizedFn(() => {

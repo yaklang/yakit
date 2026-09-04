@@ -1,0 +1,134 @@
+name: icon migration gate
+
+on:
+  pull_request:
+    branches: [master]
+
+env:
+  HUSKY: '0'
+
+jobs:
+  ci-icon-migration:
+    name: ci-icon-migration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Collect changed files
+        id: collect
+        continue-on-error: true
+        shell: bash
+        run: git diff --name-only -z '${{ github.event.pull_request.base.sha }}' '${{ github.event.pull_request.head.sha }}' > icon-migration-changed-files.txt
+
+      - name: Classify icon migration impact
+        id: classify
+        continue-on-error: true
+        env:
+          CHANGED_FILES_PATH: ${{ github.workspace }}/icon-migration-changed-files.txt
+          ICON_MIGRATION_CLASSIFIER_ARTIFACT: ${{ github.workspace }}/icon-migration-evidence/classification.json
+        run: node scripts/icon-migration/classify-changes.mjs
+
+      - name: Upload classifier evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: icon-migration-classification-pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            icon-migration-changed-files.txt
+            icon-migration-evidence/classification.json
+          if-no-files-found: error
+
+      - uses: ./.github/actions/pr-ci-setup-node-yarn
+        id: setup
+        continue-on-error: true
+        if: always() && steps.classify.outputs.run_full != 'false'
+        with:
+          node-version: '22.22.1'
+
+      - name: Run icon migration contract tests
+        id: contract_tests
+        continue-on-error: true
+        if: always() && steps.classify.outputs.run_full != 'false'
+        shell: bash
+        run: |
+          set -o pipefail
+          yarn test:icon-migration 2>&1 | tee icon-migration-tests.log
+
+      - name: Build renderer icon surfaces
+        id: build
+        continue-on-error: true
+        if: always() && steps.classify.outputs.run_full != 'false'
+        shell: bash
+        run: |
+          set -o pipefail
+          yarn cli build -v yakit 2>&1 | tee icon-migration-build.log
+
+      - name: Audit main renderer bundle
+        id: audit_main
+        continue-on-error: true
+        if: always() && steps.classify.outputs.run_full != 'false'
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/icon-migration/audit-package-bundle.mjs \
+            --run-dir icon-migration-evidence \
+            --mode production \
+            --renderer main \
+            --dist app/renderer/pages/main 2>&1 | tee icon-migration-audit-main.log
+
+      - name: Audit Link renderer bundle
+        id: audit_link
+        continue-on-error: true
+        if: always() && steps.classify.outputs.run_full != 'false'
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/icon-migration/audit-package-bundle.mjs \
+            --run-dir icon-migration-evidence \
+            --mode production \
+            --renderer link \
+            --dist app/renderer/engine-link-startup/dist 2>&1 | tee icon-migration-audit-link.log
+
+      - name: Upload icon migration evidence
+        if: always() && steps.classify.outputs.run_full != 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: icon-migration-evidence-pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            icon-migration-evidence
+            icon-migration-*.log
+          if-no-files-found: error
+
+      - name: Enforce icon migration gate
+        if: always()
+        env:
+          RUN_FULL: ${{ steps.classify.outputs.run_full }}
+          COLLECT_OUTCOME: ${{ steps.collect.outcome }}
+          CLASSIFY_OUTCOME: ${{ steps.classify.outcome }}
+          SETUP_OUTCOME: ${{ steps.setup.outcome }}
+          TEST_OUTCOME: ${{ steps.contract_tests.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          AUDIT_MAIN_OUTCOME: ${{ steps.audit_main.outcome }}
+          AUDIT_LINK_OUTCOME: ${{ steps.audit_link.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$COLLECT_OUTCOME" != 'success' ] || [ "$CLASSIFY_OUTCOME" != 'success' ]; then
+            echo 'Changed-file collection or classification failed closed.'
+            exit 1
+          fi
+          if [ "$RUN_FULL" = 'false' ]; then
+            echo 'Validated noop: icon migration gate not required.'
+            exit 0
+          fi
+          for outcome in "$SETUP_OUTCOME" "$TEST_OUTCOME" "$BUILD_OUTCOME" "$AUDIT_MAIN_OUTCOME" "$AUDIT_LINK_OUTCOME"; do
+            if [ "$outcome" != 'success' ]; then
+              echo "Icon migration gate failed: outcome=$outcome"
+              exit 1
+            fi
+          done

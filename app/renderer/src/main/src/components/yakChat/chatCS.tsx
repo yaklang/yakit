@@ -12,7 +12,6 @@ import {
 } from 'ahooks'
 import { Resizable } from 're-resizable'
 import {
-  ChatAltIcon,
   PaperPlaneRightIcon,
   YakChatBookIcon,
   YakChatLogIcon,
@@ -29,24 +28,14 @@ import {
   OutlineWebFuzzerActiveIcon,
   OutlineChartPieActiveIcon,
   OutlineSparklesActiveIcon,
-  SolidExclamationIcon,
-} from './icon'
-import {
   ArrowDownIcon,
   ArrowsExpandIcon,
   ArrowsRetractIcon,
-  ClockIcon,
-  CogIcon,
-  PencilAltIcon,
-  PlusIcon,
-  QuestionMarkCircleIcon,
-  RemoveIcon,
-  SolidThumbDownIcon,
-  StopIcon,
-  ThumbDownIcon,
-  ThumbUpIcon,
-  TrashIcon,
-} from '@/assets/newIcon'
+  SolidCloudpluginIcon,
+  SolidPrivatepluginIcon,
+  SolidYakitPluginGrayIcon,
+  SolidYakitPluginIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { Drawer, Input, Progress, Tooltip } from 'antd'
 import type {
   CacheChatCSProps,
@@ -66,7 +55,6 @@ import { randomString } from '@/utils/randomUtil'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
-import { UnLoginSvgIcon } from '../layout/icons'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { chatCS, chatCSPlugin, chatGrade, getPromptList } from '@/services/yakChat'
@@ -74,19 +62,35 @@ import { CopyComponents, YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import { useStore } from '@/store'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
-import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
-import { SolidCheckCircleIcon, SolidPlayIcon, SolidThumbupIcon, SolidXcircleIcon } from '@/assets/icon/solid'
+import {
+  InformationCircleOutlined,
+  ClockOutlined,
+  CogOutlined,
+  PencilAltOutlined,
+  PlusOutlined,
+  QuestionMarkCircleOutlined,
+  ThumbDownOutlined,
+  ThumbUpOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  CheckCircleSolid,
+  PlaySolid,
+  ThumbUpSolid,
+  XCircleSolid,
+  PaperAirplaneSolid,
+  StopSolid,
+  ThumbDownSolid,
+  ChatAlt2Solid,
+  ExclamationSolid,
+  XSolid,
+  UserCircleSolid,
+} from '@yakit-libs/yakit-ui-icons/solid'
 import moment from 'moment'
 import classNames from 'classnames'
 import styles from './chatCS.module.scss'
 import { YakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
-import { SolidPaperairplaneIcon } from '@/assets/icon/solid'
-import {
-  SolidCloudpluginIcon,
-  SolidPrivatepluginIcon,
-  SolidYakitPluginGrayIcon,
-  SolidYakitPluginIcon,
-} from '@/assets/icon/colors'
+
 import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
 import {
   type HybridScanRequest,
@@ -1139,7 +1143,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             overlayStyle={{paddingTop: 4}}
                             title={"ChatCS模型参数：6.5b，训练Token: 1.5T 显卡资源：A40*4，使用文心增强知识推理能力"}
                         >
-                            <OutlineInformationcircleIcon className={styles["info-hint"]} />
+                            <InformationCircleOutlined className={styles["info-hint"]} color="currentColor" />
                         </Tooltip> */}
             {/* <YakitRadioButtons
                             value={chatcsType}
@@ -1166,7 +1170,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
           </div>
           <div className={styles['header-extra']}>
             {chatcsType === 'ChatCS' && history.length !== 0 && (
-              <YakitButton disabled={loading} icon={<PlusIcon />} onClick={onAddChat}>
+              <YakitButton disabled={loading} icon={<PlusOutlined size={16} />} onClick={onAddChat}>
                 {(+width || 351) < 350 ? undefined : '新会话'}
               </YakitButton>
             )}
@@ -1183,7 +1187,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         setHistoryShow(true)
                       }}
                     >
-                      <ClockIcon />
+                      <ClockOutlined size={16} />
                     </div>
                   </Tooltip>
                   <div className={styles['divider-style']}></div>
@@ -1198,7 +1202,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         setPluginAIList([])
                       }}
                     >
-                      <TrashIcon />
+                      <TrashOutlined size={16} />
                     </div>
                   </Tooltip>
                   <div className={styles['divider-style']}></div>
@@ -1213,7 +1217,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         setShowOnly(false)
                       }}
                     >
-                      <ClockIcon />
+                      <ClockOutlined size={16} />
                     </div>
                   </Tooltip>
                   <div className={styles['divider-style']}></div>
@@ -1237,7 +1241,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 className={classNames(styles['big-btn'], styles['btn-style'], styles['close-icon'])}
                 onClick={() => setVisible(false)}
               >
-                <RemoveIcon />
+                <XSolid size={12} />
               </div>
             </div>
           </div>
@@ -1266,7 +1270,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     <div className={styles['welcome-preset-list']}>
                       <div className={styles['list-wrapper']}>
                         <div className={styles['info-hint-wrapper']}>
-                          <OutlineInformationcircleIcon />
+                          <InformationCircleOutlined color="currentColor" />
                           ChatCS模型参数：6.5b，训练Token: 1.5T 显卡资源：A40*4，使用文心增强知识推理能力
                         </div>
                       </div>
@@ -1369,7 +1373,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                   classNames={{ root: styles['tooltip-wrapper'] }}
                                   title={'ChatCS 将根据选择的类型回答你的问题'}
                                 >
-                                  <QuestionMarkCircleIcon />
+                                  <QuestionMarkCircleOutlined size={16} />
                                 </Tooltip>
                                 :
                               </div>
@@ -1411,7 +1415,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         }
                       >
                         <div className={styles['footer-type-mini']}>
-                          <CogIcon />
+                          <CogOutlined size={16} />
                         </div>
                       </YakitPopover>
                     ) : (
@@ -1422,7 +1426,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             styles={{ root: { paddingBottom: 5 } }}
                             title={'ChatCS 将根据选择的类型回答你的问题'}
                           >
-                            <QuestionMarkCircleIcon />
+                            <QuestionMarkCircleOutlined size={16} />
                           </Tooltip>
                           :
                         </div>
@@ -1576,7 +1580,7 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
             <img className={styles['img-style']} src={showImg} />
           ) : (
             <div className={styles['user-show']}>
-              <UnLoginSvgIcon />
+              <UserCircleSolid color="#CCD2DE" size={30} />
             </div>
           )}
 
@@ -1587,7 +1591,7 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
         {onDel && (
           <div className={styles['header-right']}>
             <div className={styles['right-btn']} onClick={onDel}>
-              <TrashIcon />
+              <TrashOutlined size={16} />
             </div>
           </div>
         )}
@@ -1681,7 +1685,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
           <div className={classNames(styles['header'], styles['warn'])}>
             <div className={styles['title']}>
               <div className={styles['icon']}>
-                <SolidExclamationIcon />
+                <ExclamationSolid color="white" size={18} />
               </div>
               <div className={styles['text']}>检测到 {(infoList || []).length} 个风险项</div>
             </div>
@@ -1749,7 +1753,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
           <div className={classNames(styles['header'], styles['succee'])}>
             <div className={styles['title']}>
               <div className={styles['icon']}>
-                <SolidCheckCircleIcon />
+                <CheckCircleSolid color="currentColor" />
               </div>
               <div className={styles['text']}>执行完成</div>
             </div>
@@ -1769,7 +1773,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
           <div className={classNames(styles['header'], styles['fail'])}>
             <div className={styles['title']}>
               <div className={styles['icon']}>
-                <SolidXcircleIcon />
+                <XCircleSolid color="currentColor" />
               </div>
               <div className={styles['text']}>执行失败</div>
             </div>
@@ -1929,7 +1933,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
               <div className={styles['extra']}>
                 <YakitButton
                   disabled={checkedList.length === 0}
-                  icon={<SolidPlayIcon />}
+                  icon={<PlaySolid color="currentColor" />}
                   onClick={() => {
                     onStartExecute(checkedList, datsSource.input)
                   }}
@@ -2113,7 +2117,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                 <YakitButton
                   type="primary"
                   colors="danger"
-                  icon={<StopIcon />}
+                  icon={<StopSolid />}
                   onClick={(e) => {
                     onStopExecute(e)
                   }}
@@ -2125,7 +2129,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
             {showType !== 'loading' && (
               <div className={styles['header-right']}>
                 <div className={styles['right-btn']} onClick={onDel}>
-                  <TrashIcon />
+                  <TrashOutlined size={16} />
                 </div>
               </div>
             )}
@@ -2149,7 +2153,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
             </div>
             <div className={showLoading ? styles['header-right-loading'] : styles['header-right']}>
               {showLoading ? (
-                <YakitButton type="primary" colors="danger" icon={<StopIcon />} onClick={onStop}>
+                <YakitButton type="primary" colors="danger" icon={<StopSolid />} onClick={onStop}>
                   停止
                 </YakitButton>
               ) : (
@@ -2163,9 +2167,9 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                       }}
                     >
                       {info.likeType === 'good' ? (
-                        <SolidThumbupIcon className={styles['actived-icon']} />
+                        <ThumbUpSolid className={styles['actived-icon']} color="currentColor" />
                       ) : (
-                        <ThumbUpIcon />
+                        <ThumbUpOutlined size={16} />
                       )}
                     </div>
                   )}
@@ -2178,9 +2182,9 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                       }}
                     >
                       {info.likeType === 'bad' ? (
-                        <SolidThumbDownIcon className={styles['actived-icon']} />
+                        <ThumbDownSolid className={styles['actived-icon']} />
                       ) : (
-                        <ThumbDownIcon />
+                        <ThumbDownOutlined size={16} />
                       )}
                     </div>
                   )}
@@ -2196,7 +2200,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                   )}
 
                   <div className={styles['right-btn']} onClick={onDel}>
-                    <TrashIcon />
+                    <TrashOutlined size={16} />
                   </div>
                 </>
               )}
@@ -2297,7 +2301,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
         <div className={styles['body-header']}>
           <div className={styles['header-title']}>会话历史记录</div>
           <div className={styles['header-close']} onClick={() => setVisible(false)}>
-            <RemoveIcon />
+            <XSolid size={12} />
           </div>
         </div>
 
@@ -2314,7 +2318,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                     onClick={() => onCurrent(item)}
                   >
                     <div className={styles['opt-header']}>
-                      <ChatAltIcon />
+                      <ChatAlt2Solid size={24} />
                       <div className={styles['header-info']}>
                         <div className={styles['info-title']}>{item.name}</div>
                         <div className={styles['info-time']}>{item.time}</div>
@@ -2329,7 +2333,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                             onEdit(item)
                           }}
                         >
-                          <PencilAltIcon />
+                          <PencilAltOutlined size={16} />
                         </div>
                       </Tooltip>
                       <Tooltip classNames={{ root: styles['tooltip-wrapper'] }} title={'删除该对话'}>
@@ -2340,7 +2344,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                             onDel(item)
                           }}
                         >
-                          <TrashIcon />
+                          <TrashOutlined size={16} />
                         </div>
                       </Tooltip>
                     </div>
@@ -2718,7 +2722,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
         <div className={styles['title-box']}>
           <div className={styles['title']}>{selectItem.title}</div>
           <div className={classNames(styles['close-icon'])} onClick={onClose}>
-            <RemoveIcon />
+            <XSolid size={12} />
           </div>
         </div>
       </div>
@@ -2764,7 +2768,12 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
                 </div> */}
         <ExampleCard content={selectItem.eg[0]} background="#F8F8F8" />
       </div>
-      <YakitButton icon={<SolidPaperairplaneIcon />} onClick={onSubmit} className={styles['submit']} size="large">
+      <YakitButton
+        icon={<PaperAirplaneSolid color="currentColor" />}
+        onClick={onSubmit}
+        className={styles['submit']}
+        size="large"
+      >
         发送
       </YakitButton>
     </div>
@@ -2846,7 +2855,7 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
         <div className={styles['name-edit-modal-heard']}>
           <div className={styles['name-edit-modal-title']}>修改对话标题</div>
           <div className={styles['close-icon']} onClick={() => setVisible(false)}>
-            <RemoveIcon />
+            <XSolid size={12} />
           </div>
         </div>
         <div className={styles['name-edit-modal-body']}>
@@ -3284,7 +3293,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
         </div>
         <div className={showLoading ? styles['header-right-loading'] : styles['header-right']}>
           {showLoading ? (
-            <YakitButton type="primary" colors="danger" icon={<StopIcon />} onClick={onStop}>
+            <YakitButton type="primary" colors="danger" icon={<StopSolid />} onClick={onStop}>
               {t('YakitButton.stop')}
             </YakitButton>
           ) : (
@@ -3300,7 +3309,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
               )}
               {onDel && (
                 <div className={styles['right-btn']} onClick={onDel}>
-                  <TrashIcon />
+                  <TrashOutlined size={16} />
                 </div>
               )}
             </>

@@ -6,12 +6,12 @@ import classNames from 'classnames'
 import styles from './PluginDebugDrawer.module.scss'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { SolidStoreIcon } from '@/assets/icon/solid'
+import { FigmaIcon16256302540Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import emiter from '@/utils/eventBus/eventBus'
 import { NucleiPluginTemplate } from '@/pages/pluginDebugger/defaultData'
 import { PluginDebugBody } from '@/pages/plugins/pluginDebug/PluginDebug'
 import type { PluginDataProps } from '@/pages/plugins/pluginsType'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useMenuHeight } from '@/store/menuHeight'
 import yaml from 'js-yaml'
@@ -90,10 +90,14 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
       title={t('PluginDebugDrawer.pluginDebug')}
       extra={
         <div className={styles['header-extra-wrapper']}>
-          <YakitButton type="primary" icon={<SolidStoreIcon />} onClick={handleSkipAddYakitScriptPage}>
+          <YakitButton
+            type="primary"
+            icon={<FigmaIcon16256302540Solid color="currentColor" />}
+            onClick={handleSkipAddYakitScriptPage}
+          >
             {t('PluginDebugDrawer.saveAsPlugin')}
           </YakitButton>
-          <YakitButton type="text2" icon={<OutlineXIcon />} onClick={onClose} />
+          <YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={onClose} />
         </div>
       }
       onClose={onClose}

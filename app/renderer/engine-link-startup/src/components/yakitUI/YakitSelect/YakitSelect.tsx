@@ -13,8 +13,8 @@ import { YakitTag } from '../YakitTag/YakitTag'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
-import { OutlineCheckIcon, OutlineXIcon } from '@/assets/outline'
-import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
+import { CheckOutlined, ChevronDownOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronUpIcon'
 import {
   type CacheDataHistoryProps,
   onGetRemoteValuesBase,
@@ -237,14 +237,18 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         }}
       >
         <div className={styles['yakit-option-item-label']}>{copyItem.label}</div>
-        <OutlineXIcon
+        <XOutlined
+          color="currentColor"
+          size={16}
           style={{
             display: showClose ? 'block' : 'none',
           }}
           className={styles['option-item-close']}
           onClick={(e) => delCatchOptionItem(e, item)}
         />
-        <OutlineCheckIcon
+        <CheckOutlined
+          color="currentColor"
+          size={16}
           style={{
             display: showSelectedIcon ? 'block' : 'none',
           }}
@@ -317,7 +321,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
           ) : show ? (
             <ChevronUpIcon className={styles['yakit-select-icon']} />
           ) : (
-            <ChevronDownIcon className={styles['yakit-select-icon']} />
+            <ChevronDownOutlined className={styles['yakit-select-icon']} color="currentColor" size={16} />
           )
         }
         tagRender={(props) => {

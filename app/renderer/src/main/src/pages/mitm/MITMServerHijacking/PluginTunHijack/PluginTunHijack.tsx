@@ -16,16 +16,15 @@ import type {
   WatchProcessResponse,
 } from './PluginTunHijackType'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { TraceSvgSvgIcon } from '@/assets/icons/traceSvg'
+import { TraceSvgSvgIcon, QuitIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineExclamationcircleIcon,
-  OutlinePlay2Icon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineStethoscopeIcon,
-} from '@/assets/icon/outline'
-import { QuitIcon } from '@/assets/newIcon'
+  ExclamationCircleOutlined,
+  Play2Outlined,
+  RefreshOutlined,
+  SearchOutlined,
+  StethoscopeOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
@@ -137,7 +136,7 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
               ) : (
                 <YakitButton
                   type="primary"
-                  icon={<OutlinePlay2Icon />}
+                  icon={<Play2Outlined color="currentColor" />}
                   onClick={startPluginTunHijack}
                   loading={isExecuting}
                 >
@@ -291,7 +290,7 @@ const ConnectivityCheckAction: React.FC = React.memo(() => {
         <YakitButton
           loading={isConnectivityChecking}
           type="text2"
-          icon={<OutlineStethoscopeIcon />}
+          icon={<StethoscopeOutlined color="currentColor" />}
           className={styles['connectivity-check-button']}
           onClick={handleOpenConnectivityCheck}
         />
@@ -542,7 +541,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
               />
               {tableType === 'route' && (
                 <YakitButton type="text" onClick={() => updatePluginTunHijack()}>
-                  <OutlineRefreshIcon />
+                  <RefreshOutlined color="currentColor" />
                 </YakitButton>
               )}
               <ConnectivityCheckAction />
@@ -687,7 +686,7 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
         width: 120,
         filterProps: {
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
           filterInputProps: {
             placeholder: t('PluginTunHijack.searchProcessPlaceholder'),
           },
@@ -1112,7 +1111,7 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
         <>
           {t('PluginTunHijack.infoDetail')}
           <Tooltip title={t('PluginTunHijack.copyHint')} placement="top">
-            <OutlineExclamationcircleIcon className={styles['exclamationcircleIcon']} />
+            <ExclamationCircleOutlined className={styles['exclamationcircleIcon']} color="currentColor" />
           </Tooltip>
         </>
       }

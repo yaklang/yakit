@@ -2,10 +2,9 @@ import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffec
 import { Space } from 'antd'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 import { AutoCard } from '../../components/AutoCard'
-import { LineConversionIcon } from '../../assets/icons/lineConversion'
+import { LineConversionIcon } from '@yakit-libs/yakit-ui-icons/oldicon/LineConversionIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from './DataCompare.module.scss'
-import { RemoveIcon } from '@/assets/newIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { useTheme } from '@/hook/useTheme'
@@ -15,6 +14,7 @@ import { useEditorFontSize, fontSizeOptions } from '@/store/editorFontSize'
 import { useUpdateEffect, useMemoizedFn } from 'ahooks'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -89,7 +89,7 @@ export const DataCompareModal: React.FC<DataCompareModalProps> = (props) => {
       <div className={styles['header']}>
         <div className={styles['title']}>{t('DataCompareModal.codeCompare')}</div>
         <div className={styles['close']}>
-          <RemoveIcon onClick={() => onClose()} />
+          <XSolid size={12} onClick={() => onClose()} />
         </div>
       </div>
       <div className={styles['content']}>

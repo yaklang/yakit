@@ -42,7 +42,8 @@ import { GetPluginLanguage } from '@/pages/plugins/builtInData'
 import { setEditorContext, YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
 import { SyntaxFlowMonacoSpec } from '@/utils/monacoSpec/syntaxflowEditor'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
-import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
+import { IconSolidAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/IconSolidAIIcon'
+import { IconSolidAIWhiteIcon } from '@yakit-libs/yakit-ui-icons/oldicon/IconSolidAIWhiteIcon'
 import {
   getStorageYakEditorShortcutKeyEvents,
   isYakEditorDefaultShortcut,
@@ -113,7 +114,7 @@ import {
   SmartDecodeFloatPanel,
   snapshotRect,
 } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
-import { OutlineClouddownloadIcon, OutlineCogIcon } from '@/assets/icon/outline'
+import { CloudDownloadOutlined, CogOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ManageRightClickPluginsTabKey } from '@/pages/manageRightClickPlugins/constants'
 import { checkContextMenuVersion } from '@/pages/manageRightClickPlugins/utils'
@@ -415,7 +416,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         key: PLUGIN_RIGHT_MAG + ManageRightClickPluginsTabKey.PacketContextMenu,
         label: (
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <OutlineCogIcon />
+            <CogOutlined color="currentColor" />
             {t('YakitEditor.manageRightClickPlugins')}
           </div>
         ),
@@ -430,7 +431,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                   key: 'Get*plug-in',
                   label: (
                     <>
-                      <OutlineClouddownloadIcon style={{ marginRight: 4 }} />
+                      <CloudDownloadOutlined style={{ marginRight: 4 }} />
                       {t('YakitEditor.getPlugin')}
                     </>
                   ),

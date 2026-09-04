@@ -6,7 +6,7 @@ import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { setRemoteValue } from '@/utils/kv'
 import { Image } from 'antd'
 import type { TextareaForImage } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import useListenWidth from '../hooks/useListenWidth'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -175,7 +175,7 @@ export const ImagePreviewList: React.FC<ImagePreviewListProps> = memo((props) =>
                     handleDel(item.url)
                   }}
                 >
-                  <OutlineXIcon />
+                  <XOutlined color="currentColor" />
                 </div>
               )}
             </div>
@@ -219,7 +219,7 @@ export const ImagePreviewList: React.FC<ImagePreviewListProps> = memo((props) =>
                             handleDel(item.url)
                           }}
                         >
-                          <OutlineXIcon />
+                          <XOutlined color="currentColor" />
                         </div>
                       )}
                     </div>

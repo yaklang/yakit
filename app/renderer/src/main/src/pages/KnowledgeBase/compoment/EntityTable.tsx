@@ -22,12 +22,12 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { EntityDetailDrawer } from './EntityDetailDrawer'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import {
-  OutlineExclamationIcon,
-  OutlinePhotographIcon,
-  OutlinePlay2Icon,
-  OutlineTerminalIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  ExclamationOutlined,
+  PhotographOutlined,
+  Play2Outlined,
+  TerminalOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -35,10 +35,10 @@ import GraphChart from './GraphChart'
 import { GenerateKnowledge } from './GenerateKnowledge'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import React from 'react'
-import { YakitCloseSvgIcon } from '@/components/basics/icon'
 import classNames from 'classnames'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import { HubButton } from '@/pages/pluginHub/hubExtraOperate/funcTemplate'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -430,11 +430,12 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
             <Divider type="vertical" />
             <div className={styles['select-all']}>
               Selected <span>all</span>{' '}
-              <OutlineXIcon
+              <XOutlined
                 onClick={() => {
                   setSelectList([])
                   setAllCheck(false)
                 }}
+                color="currentColor"
               />
             </div>
           </React.Fragment>
@@ -471,11 +472,12 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
                     <span>
                       Selected <span className={styles['total-style']}>{selectList.length}</span>
                     </span>
-                    <OutlineXIcon
+                    <XOutlined
                       onClick={() => {
                         setSelectList([])
                         setAllCheck(false)
                       }}
+                      color="currentColor"
                     />
                   </div>
                 </YakitPopover>
@@ -551,7 +553,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
                     <React.Fragment>
                       <Divider type={'vertical'} />
                       <div className={styles['no-relationship-warning']}>
-                        <OutlineExclamationIcon />
+                        <ExclamationOutlined color="currentColor" />
                         图中只有实体没有关系，生成的知识精度低
                       </div>
                     </React.Fragment>
@@ -578,7 +580,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
                       <HubButton
                         width={wrapperWidth}
                         iconWidth={900}
-                        icon={<OutlinePlay2Icon />}
+                        icon={<Play2Outlined color="currentColor" />}
                         type="outline1"
                         name={'从实体生成知识'}
                       />
@@ -598,12 +600,12 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
                           <div className={styles['radio-buttons-label']}>
                             {wrapperWidth > 900 ? (
                               <React.Fragment>
-                                <OutlinePhotographIcon />
+                                <PhotographOutlined color="currentColor" />
                                 SVG
                               </React.Fragment>
                             ) : (
                               <Tooltip title="SVG">
-                                <OutlinePhotographIcon />
+                                <PhotographOutlined color="currentColor" />
                               </Tooltip>
                             )}
                           </div>
@@ -615,12 +617,12 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
                           <div className={styles['radio-buttons-label']}>
                             {wrapperWidth > 900 ? (
                               <React.Fragment>
-                                <OutlineTerminalIcon />
+                                <TerminalOutlined color="currentColor" />
                                 Code
                               </React.Fragment>
                             ) : (
                               <Tooltip title="Code">
-                                <OutlineTerminalIcon />
+                                <TerminalOutlined color="currentColor" />
                               </Tooltip>
                             )}
                           </div>
@@ -651,7 +653,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
                   <YakitSpin spinning={QueryEntityDetailLoading}>
                     <div className={styles['header']}>
                       <div>实体信息</div>
-                      <YakitCloseSvgIcon onClick={() => setSelectedSubERMId('')} />
+                      <XSolid size="1em" onClick={() => setSelectedSubERMId('')} />
                     </div>
                     <div className={styles['content']}>
                       <div className={styles['inner-box']}>

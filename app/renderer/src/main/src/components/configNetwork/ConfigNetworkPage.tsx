@@ -14,13 +14,13 @@ import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButton
 import { InputCertificateForm } from '@/pages/mitm/MITMServerStartForm/MITMAddTLS'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
-import { RectangleFailIcon, RectangleSucceeIcon, UnionIcon } from './icon'
-import { SolidCheckCircleIcon, SolidLockClosedIcon } from '@/assets/icon/colors'
+import { RectangleFailIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RectangleFailIcon'
+import { RectangleSucceeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RectangleSucceeIcon'
+import { UnionIcon } from '@yakit-libs/yakit-ui-icons/oldicon/UnionIcon'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import classNames from 'classnames'
 import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { BanIcon, CogIcon, DragSortIcon, PencilAltIcon, RemoveIcon, TrashIcon } from '@/assets/newIcon'
 import { YakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
 import { TableVirtualResize } from '../TableVirtualResize/TableVirtualResize'
 import type { ColumnsTypeProps } from '../TableVirtualResize/TableVirtualResizeType'
@@ -41,7 +41,7 @@ import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInp
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import emiter from '@/utils/eventBus/eventBus'
 import { CodeCustomize } from './CustomizeCode'
-import { OutlineCogIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { CogOutlined, TrashOutlined, BanOutlined, PencilAltOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { LIMIT_LOG_NUM_NAME, DEFAULT_LOG_LIMIT } from '@/defaultConstants/HoldGRPCStream'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { checkProxyVersion } from '@/utils/proxyConfigUtil'
@@ -63,6 +63,8 @@ import YakitCollapse from '../yakitUI/YakitCollapse/YakitCollapse'
 import type { AIModelActionProps, AIOnlineModelListProps } from '@/pages/ai-agent/aiModelList/AIModelListType'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { setOpenPerformanceTips } from '@/utils/duplex/duplex'
+
+import { CheckCircleSolid, LockClosedSolid, FigmaIcon2281144183Solid, XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 export interface ConfigNetworkPageProp {}
 
@@ -533,7 +535,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
           <div className={styles['card-hide']}></div>
           <div className={styles['fail-main']}>
             <div className={styles['title']}>{item.name}</div>
-            <SolidLockClosedIcon />
+            <LockClosedSolid color="#F6544A" size={24} />
             <div className={styles['content']}>{t('ConfigNetworkPage.undecrypted')}</div>
             <YakitButton
               type="outline2"
@@ -589,17 +591,19 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
           </div>
         </div>
         <div className={styles['certificate-card-item-footer']}>
-          <OutlineCogIcon
+          <CogOutlined
             className={styles['icon-cog']}
             onClick={() => {
               handleConfigureHost(key, item.Host)
             }}
+            color="currentColor"
           />
-          <OutlineTrashIcon
+          <TrashOutlined
             className={styles['icon-trash']}
             onClick={() => {
               closeCard(item)
             }}
+            color="currentColor"
           />
         </div>
       </div>
@@ -620,23 +624,25 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
           <div className={styles['success-main']}>
             <div className={styles['title']}>{item.name}</div>
-            <SolidCheckCircleIcon />
+            <CheckCircleSolid color="#56C991" size={24} />
             <div className={styles['content']}>{t('ConfigNetworkPage.available')}</div>
             <div className={styles['password']}>******</div>
           </div>
         </div>
         <div className={styles['certificate-card-item-footer']}>
-          <OutlineCogIcon
+          <CogOutlined
             className={styles['icon-cog']}
             onClick={() => {
               handleConfigureHost(key, item.Host)
             }}
+            color="currentColor"
           />
-          <OutlineTrashIcon
+          <TrashOutlined
             className={styles['icon-trash']}
             onClick={() => {
               closeCard(item)
             }}
+            color="currentColor"
           />
         </div>
       </div>
@@ -1068,7 +1074,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         })}
                       </div>
                       <div className={styles['form-rule-icon']}>
-                        <CogIcon />
+                        <CogOutlined size={16} />
                       </div>
                     </div>
                   </div>
@@ -1180,7 +1186,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         {!hideRules ? `,${t('ProxyConfig.recordRoutesCount', { i: Routes.length })}` : null}
                       </div>
                       <div className={styles['form-rule-icon']}>
-                        <OutlineCogIcon />
+                        <CogOutlined color="currentColor" />
                       </div>
                     </div>
                   </div>
@@ -1627,7 +1633,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
             }}
             className="modal-remove-icon"
           >
-            <RemoveIcon />
+            <XSolid size={12} />
           </div>
         ),
         onOk: () => {
@@ -1721,14 +1727,16 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         render: (_, record) => {
           return (
             <div className={styles['table-action-icon']}>
-              <TrashIcon
+              <TrashOutlined
+                size={16}
                 className={styles['icon-trash']}
                 onClick={(e) => {
                   e.stopPropagation()
                   onRemove(record)
                 }}
               />
-              <PencilAltIcon
+              <PencilAltOutlined
+                size={16}
                 className={classNames(styles['action-icon'], {
                   [styles['action-icon-edit-disabled']]: record.Disabled,
                 })}
@@ -1737,7 +1745,8 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                   onOpenAddOrEdit(record)
                 }}
               />
-              <BanIcon
+              <BanOutlined
+                size={16}
                 className={classNames(styles['action-icon'], {
                   [styles['action-icon-ban-disabled']]: record.Disabled,
                 })}
@@ -1819,7 +1828,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
               {t('YakitButton.save')}
             </YakitButton>
             <div onClick={() => onClose()} className={styles['icon-remove']}>
-              <RemoveIcon />
+              <XSolid size={12} />
             </div>
           </div>
         }
@@ -2060,7 +2069,7 @@ export const AISortContent: React.FC<AISortContentProps> = (props) => {
                             })}
                           >
                             <div className={styles['menu-list-item-info']}>
-                              <DragSortIcon className={styles['drag-sort-icon']} />
+                              <FigmaIcon2281144183Solid size={12} className={styles['drag-sort-icon']} />
                               <div className={styles['title']}>{item.Type}</div>
                             </div>
                           </div>

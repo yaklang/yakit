@@ -4,13 +4,27 @@ import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import {
-  OutlineHomeIcon,
-  OutlineArrowsmrightIcon,
-  OutlineCheckIcon,
-  OutlineChevronrightIcon,
+  HomeOutlined,
+  ArrowSmRightOutlined,
+  CheckOutlined,
+  ChevronRightOutlined,
+  AIOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import {
   OutlineNotebookIcon,
-  OutlineAIIcon,
-} from '@/assets/icon/outline'
+  PublicAIAuditCodeIcon,
+  PublicAuditCodeIcon,
+  PublicAuditHoleIcon,
+  PublicCodeScanIcon,
+  PublicProjectManagerIcon,
+  PublicRuleManagementIcon,
+  IRifyHomeGhostIcon,
+  IRifyHomeHighIcon,
+  IRifyHomeLowIcon,
+  IRifyHomeMediumIcon,
+  IRifyHomeSeriousIcon,
+  IRifyQuickAccessJavaDecompilerIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import type {
   GetSSAWorkbenchDashboardRequest,
   GetSSAWorkbenchDashboardResponse,
@@ -19,22 +33,6 @@ import type {
 } from './IRifyHomeType'
 import type { FieldName } from '../risks/RiskTable'
 import styles from './IRifyHome.module.scss'
-import {
-  PublicAIAuditCodeIcon,
-  PublicAuditCodeIcon,
-  PublicAuditHoleIcon,
-  PublicCodeScanIcon,
-  PublicProjectManagerIcon,
-  PublicRuleManagementIcon,
-} from '@/routes/publicIcon'
-import {
-  IRifyHomeGhostIcon,
-  IRifyHomeHighIcon,
-  IRifyHomeLowIcon,
-  IRifyHomeMediumIcon,
-  IRifyHomeSeriousIcon,
-  IRifyQuickAccessJavaDecompilerIcon,
-} from './icon'
 import { getRiskDistributionColors, RiskDistributionChart, RiskGaugeChart, RuleHitsBarChart } from './IRifyHomeEcharts'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 import { IRifyHomeTable } from './IRifyHomeTable'
@@ -190,7 +188,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
               <div className={styles['header-stats']}>
                 <div className={styles['header-stat-card']}>
                   <div className={styles['header-stat-icon']}>
-                    <OutlineHomeIcon />
+                    <HomeOutlined color="currentColor" />
                   </div>
                   <div className={styles['header-stat-info']}>
                     <div className={styles['header-stat-value']}>{responseData?.Summary.ProjectCount || 0}</div>
@@ -208,7 +206,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                 </div>
                 <div className={styles['header-stat-card']}>
                   <div className={styles['header-stat-icon']}>
-                    <OutlineAIIcon />
+                    <AIOutlined color="currentColor" />
                   </div>
                   <div className={styles['header-stat-info']}>
                     <div className={styles['header-stat-value']}>{responseData?.Summary.AIAuditTaskCount || 0}</div>
@@ -240,11 +238,11 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
 
                 <div className={styles['audit-mode-features']}>
                   <div className={styles['audit-mode-feature-item']}>
-                    <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
+                    <CheckOutlined className={styles['audit-mode-feature-icon']} color="currentColor" />
                     <span>{t('AuditMode.aiFeature1')}</span>
                   </div>
                   <div className={styles['audit-mode-feature-item']}>
-                    <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
+                    <CheckOutlined className={styles['audit-mode-feature-icon']} color="currentColor" />
                     <span>{t('AuditMode.aiFeature2')}</span>
                   </div>
                 </div>
@@ -257,7 +255,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                 </div>
                 <div className={styles['audit-mode-button']} onClick={() => onOpenIrifyAiCodeAudit('code')}>
                   {t('AuditMode.startAiAudit')}
-                  <OutlineArrowsmrightIcon />
+                  <ArrowSmRightOutlined color="currentColor" />
                 </div>
               </div>
               <div className={classNames(styles['audit-mode-card'], styles[`audit-mode-card-primary`])}>
@@ -268,7 +266,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                 <div className={styles['audit-mode-card-header']}>
                   <div className={styles['audit-mode-card-title-row']}>
                     <div className={classNames(styles['audit-mode-card-icon'], styles['audit-mode-card-icon-primary'])}>
-                      <OutlineAIIcon />
+                      <AIOutlined color="currentColor" />
                     </div>
                     <span className={styles['audit-mode-card-title']}>{t('AuditMode.aiSkillAudit')}</span>
 
@@ -281,11 +279,11 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
 
                 <div className={styles['audit-mode-features']}>
                   <div className={styles['audit-mode-feature-item']}>
-                    <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
+                    <CheckOutlined className={styles['audit-mode-feature-icon']} color="currentColor" />
                     <span>{t('AuditMode.aiSkillFeature1')}</span>
                   </div>
                   <div className={styles['audit-mode-feature-item']}>
-                    <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
+                    <CheckOutlined className={styles['audit-mode-feature-icon']} color="currentColor" />
                     <span>{t('AuditMode.aiSkillFeature2')}</span>
                   </div>
                 </div>
@@ -298,7 +296,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                 </div>
                 <div className={styles['audit-mode-button']} onClick={() => onOpenIrifyAiCodeAudit('skill')}>
                   {t('AuditMode.startAiSkillAudit')}
-                  <OutlineArrowsmrightIcon />
+                  <ArrowSmRightOutlined color="currentColor" />
                 </div>
               </div>
               <div className={classNames(styles['audit-mode-card'], styles[`audit-mode-card-secondary`])}>
@@ -317,11 +315,11 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
 
                 <div className={styles['audit-mode-features']}>
                   <div className={styles['audit-mode-feature-item']}>
-                    <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
+                    <CheckOutlined className={styles['audit-mode-feature-icon']} color="currentColor" />
                     <span>{t('AuditMode.traditionalFeature1')}</span>
                   </div>
                   <div className={styles['audit-mode-feature-item']}>
-                    <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
+                    <CheckOutlined className={styles['audit-mode-feature-icon']} color="currentColor" />
                     <span>{t('AuditMode.traditionalFeature2')}</span>
                   </div>
                 </div>
@@ -331,7 +329,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                   onClick={() => onOpenPage(YakitRoute.YakRunner_Audit_Code)}
                 >
                   {t('AuditMode.startAudit')}
-                  <OutlineArrowsmrightIcon />
+                  <ArrowSmRightOutlined color="currentColor" />
                 </div>
               </div>
               <div className={classNames(styles['audit-mode-card'], styles[`audit-mode-card-secondary`])}>
@@ -346,22 +344,22 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
 
                 <div className={styles['audit-mode-features']}>
                   <div className={styles['audit-mode-feature-item']}>
-                    <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
+                    <CheckOutlined className={styles['audit-mode-feature-icon']} color="currentColor" />
                     <span>{t('AuditMode.scanFeature1')}</span>
                   </div>
                   <div className={styles['audit-mode-feature-item']}>
-                    <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
+                    <CheckOutlined className={styles['audit-mode-feature-icon']} color="currentColor" />
                     <span>{t('AuditMode.scanFeature2')}</span>
                   </div>
                   <div className={styles['audit-mode-feature-item']}>
-                    <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
+                    <CheckOutlined className={styles['audit-mode-feature-icon']} color="currentColor" />
                     <span>{t('AuditMode.scanFeature3')}</span>
                   </div>
                 </div>
 
                 <div className={styles['audit-mode-button']} onClick={() => onOpenPage(YakitRoute.YakRunner_Code_Scan)}>
                   {t('AuditMode.startScan')}
-                  <OutlineArrowsmrightIcon />
+                  <ArrowSmRightOutlined color="currentColor" />
                 </div>
               </div>
             </div>
@@ -433,7 +431,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                   onClick={() => onOpenPage(YakitRoute.YakRunner_Project_Manager)}
                 >
                   {t('IRifyHome.viewAll')}
-                  <OutlineChevronrightIcon />
+                  <ChevronRightOutlined color="currentColor" />
                 </button>
               </div>
               <div className={styles['projects-table-wrapper']}>

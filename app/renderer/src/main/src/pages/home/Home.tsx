@@ -45,24 +45,31 @@ import {
   PublicToolTCPPortLogIcon,
   PublicToolVulinboxIcon,
   PublicToolWebsocketFuzzerIcon,
-  PublicToolYakScriptIcon,
   PublicWebFuzzerIcon,
-} from '@/routes/publicIcon'
+  OutlineBugIcon,
+  OutlineModScanPortDataIcon,
+  OutlineTrashSecondIcon,
+  SolidBorderDocumentTextIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { SolidCheckIcon, SolidExclamationIcon, SolidPlayIcon } from '@/assets/icon/solid'
+import {
+  CheckSolid,
+  ExclamationSolid,
+  PlaySolid,
+  TerminalSolid,
+  ShieldCheckSolid,
+} from '@yakit-libs/yakit-ui-icons/solid'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { BlastingAnimationAemonstration } from '../fuzzer/HTTPFuzzerPage'
 import {
-  OutlineArrowrightIcon,
-  OutlineBugIcon,
-  OutlineChartbarIcon,
-  OutlineChevronupIcon,
-  OutlineDatabaseIcon,
-  OutlineDesktopcomputerIcon,
-  OutlineModScanPortDataIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineTrashSecondIcon,
-} from '@/assets/icon/outline'
+  ArrowRightOutlined,
+  ChartBarOutlined,
+  ChevronUpOutlined,
+  DatabaseOutlined,
+  DesktopComputerOutlined,
+  QuestionMarkCircleOutlined,
+  CloudDownloadOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { SequenceAnimationAemonstration } from '../fuzzer/FuzzerSequence/FuzzerSequence'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
@@ -80,10 +87,8 @@ import { openABSFileLocated } from '@/utils/openWebsite'
 import { yakitNotify } from '@/utils/notification'
 import type { YakitSystem } from '@/yakitGVDefine'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { ShieldCheckIcon as AllShieldCheckIcon } from '@/components/layout/globalStateIcon'
 import { useScreenRecorder } from '@/store/screenRecorder'
 import numeral from 'numeral'
-import { CloudDownloadIcon } from '@/assets/newIcon'
 import { getEnvTypeByProjects, type ProjectDescription } from '../softwareSettings/projectUtils'
 import type { YakQueryHTTPFlowResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import type { FieldName, Fields } from '../risks/RiskTable'
@@ -95,7 +100,6 @@ import { getReleaseEditionName, isCommunityYakit, isEnpriTrace, isEnpriTraceAgen
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import ReactResizeDetector from 'react-resize-detector'
-import { SolidBorderDocumentTextIcon } from '@/assets/icon/colors'
 import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN } from '../mitm/MITMPage'
 import type { PluginHubPageInfoProps } from '@/store/pageInfo'
 import { WebsiteGV } from '@/enums/website'
@@ -165,38 +169,38 @@ const Home: React.FC<HomeProp> = (props) => {
     return [
       {
         label: t('YakitRoute.YakRunner'),
-        icon: <PublicToolYakScriptIcon />,
+        icon: <TerminalSolid color="var(--Colors-Use-Basic-Background)" size={18} />,
         iconStyle: { backgroundColor: '#8863f7', padding: 1 },
         desc: t('YakitRoute.yaklangProgramming'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.YakScript }),
       },
       {
         label: t('Home.targetRangeVulinbox'),
         icon: <PublicToolVulinboxIcon />,
         desc: t('Home.built-inYakTargetRange'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.Beta_VulinboxManager }),
       },
       {
         label: t('YakitRoute.Payload'),
         icon: <PublicToolPayloadIcon />,
         desc: t('YakitRoute.customPayload'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.PayloadManager }),
       },
       {
         label: t('YakitRoute.dataCompare'),
         icon: <PublicToolDataCompareIcon />,
         desc: t('YakitRoute.quicklyIdentifyDifferencesInData'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.DataCompare }),
       },
       {
         label: t('YakitRoute.cVEManagement'),
         icon: <PublicToolCVEIcon />,
         desc: t('YakitRoute.searchAndQueryCVEData'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.DB_CVE }),
       },
       {
@@ -204,28 +208,28 @@ const Home: React.FC<HomeProp> = (props) => {
         icon: <PublicToolPluginHubIcon />,
         iconStyle: { backgroundColor: '#F4736B', padding: 1 },
         desc: t('YakitRoute.massiveYakitPluginsOne-ClickDownload', { edition: getReleaseEditionName() }),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.Plugin_Hub }),
       },
       {
         label: t('YakitRoute.portListener'),
         icon: <PublicToolShellReceiverIcon />,
         desc: t('YakitRoute.reverseShellTool'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.ShellReceiver }),
       },
       {
         label: t('YakitRoute.Websocket Fuzzer'),
         icon: <PublicToolWebsocketFuzzerIcon />,
         desc: t('YakitRoute.fuzzTestingForWebSocketPackets'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.WebsocketFuzzer }),
       },
       {
         label: t('YakitRoute.subdomainCollection'),
         icon: <PublicToolSubDomainCollectionIcon />,
         desc: t('Home.collectSubdomainsRelatedToTargetAssets'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () =>
           onMenu({
             route: YakitRoute.Plugin_OP,
@@ -237,7 +241,7 @@ const Home: React.FC<HomeProp> = (props) => {
         label: t('YakitRoute.basicCrawler'),
         icon: <PublicToolBasicCrawlerIcon />,
         desc: t('Home.collectAllPageInformationOfTargetAssets'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () =>
           onMenu({
             route: YakitRoute.Plugin_OP,
@@ -249,98 +253,98 @@ const Home: React.FC<HomeProp> = (props) => {
         label: t('YakitRoute.spaceEngine'),
         icon: <PublicToolSpaceEngineIcon />,
         desc: t('Home.integrateMultipleEnginesToCollectAssetInformation'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.Space_Engine }),
       },
       {
         label: t('YakitRoute.ICMP-SizeLog'),
         icon: <PublicToolICMPSizeLogIcon />,
         desc: t('YakitRoute.detectICMPCallbackViaPingWithSpecificPacketSize'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.ICMPSizeLog }),
       },
       {
         label: t('YakitRoute.TCP-PortLog'),
         icon: <PublicToolTCPPortLogIcon />,
         desc: t('YakitRoute.detectTCPCallbackViaRandomClosedPorts'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.TCPPortLog }),
       },
       {
         label: t('YakitRoute.reverseServer'),
         icon: <PublicToolReverseServerIcon />,
         desc: t('YakitRoute.simultaneouslyProvideHTTP/RMI/HTTPSReverseConnectionsOnOnePort'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.ReverseServer_New }),
       },
       {
         label: t('YakitRoute.History'),
         icon: <PublicToolDBHTTPHistoryIcon />,
         desc: t('YakitRoute.viewAndManageAllHistoricalTrafficFromMITMPluginsAndFuzzing'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.DB_HTTPHistory }),
       },
       {
         label: t('YakitRoute.report'),
         icon: <PublicToolDBReportIcon />,
         desc: t('YakitRoute.viewAndManageReportsGeneratedDuringScanning'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.DB_Report }),
       },
       {
         label: t('Home.vulnerabilityRiskStatistics'),
         icon: <PublicToolDBRiskIcon />,
         desc: t('YakitRoute.manageAllDetectedVulnerabilitiesAndRisks'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.DB_Risk }),
       },
       {
         label: t('YakitRoute.portAssets'),
         icon: <PublicToolModScanPortIcon />,
         desc: t('YakitRoute.manageAllDiscoveredPortAssets'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.DB_Ports }),
       },
       {
         label: t('YakitRoute.domainAssets'),
         icon: <PublicToolDBDomainIcon />,
         desc: t('YakitRoute.manageAllDiscoveredDomainAssets'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.DB_Domain }),
       },
       {
         label: getNotepadManage(),
         icon: <PublicNotepadIcon />,
         desc: t('YakitRoute.penetrationRecordDescription'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.Notepad_Manage }),
       },
       {
         label: getNotepadAdd(),
         icon: <PublicNotepadIcon />,
         desc: t('YakitRoute.penetrationRecordDescription'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.Modify_Notepad }),
       },
       {
         label: t('Home.screenRecording'),
         icon: <PublicToolScreenRecordingIcon />,
         desc: t('Home.recordScreenActivities'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => !screenRecorderInfo.isRecording && ipcRenderer.invoke('send-open-screenCap-modal'),
       },
       {
         label: t('Home.screenshot'),
         icon: <PublicToolScreenshotIcon />,
         desc: t('Home.captureScreenIntoImage'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => ipcRenderer.invoke('activate-screenshot'),
       },
       {
         label: t('YakitRoute.recordingManagement'),
         icon: <PublicToolScreenRecorderPageIcon />,
         desc: t('YakitRoute.manageAllRecordedVideoFiles'),
-        rightIcon: <OutlineArrowrightIcon />,
+        rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.ScreenRecorderPage }),
       },
     ] as ToolInfo[]
@@ -660,7 +664,7 @@ const Home: React.FC<HomeProp> = (props) => {
             onClick={() => ipcRenderer.invoke('open-url', WebsiteGV.WebFuzzerAddress)}
           >
             <span className={styles['text-style']}>{t('Home.officialDocs')}</span>
-            <OutlineQuestionmarkcircleIcon />
+            <QuestionMarkCircleOutlined color="currentColor" />
           </div>
         </div>
       ),
@@ -1060,7 +1064,7 @@ const Home: React.FC<HomeProp> = (props) => {
                           }}
                           onClick={handleOpenScanning}
                         >
-                          <SolidPlayIcon className={styles['open-icon']} />
+                          <PlaySolid className={styles['open-icon']} color="currentColor" />
                           {t('YakitButton.startScan')}
                         </div>
                         <div
@@ -1070,10 +1074,11 @@ const Home: React.FC<HomeProp> = (props) => {
                           }}
                           onClick={() => setShowScanningDropdown(!showScanningDropdown)}
                         >
-                          <OutlineChevronupIcon
+                          <ChevronUpOutlined
                             className={classNames(styles['title-icon'], {
                               [styles['rotate-180']]: !showScanningDropdown,
                             })}
+                            color="currentColor"
                           />
                         </div>
                         <div
@@ -1098,7 +1103,9 @@ const Home: React.FC<HomeProp> = (props) => {
                               key={item.key}
                             >
                               <span>{item.label}</span>
-                              {scanningCheck === item.key && <SolidCheckIcon className={styles['check-icon']} />}
+                              {scanningCheck === item.key && (
+                                <CheckSolid className={styles['check-icon']} color="currentColor" />
+                              )}
                             </div>
                           ))}
                         </div>
@@ -1107,7 +1114,7 @@ const Home: React.FC<HomeProp> = (props) => {
                     {!pcap.IsPrivileged && system !== 'Windows_NT' && (
                       <div className={styles['home-card-config-detection']}>
                         <div className={styles['config-detection-left']}>
-                          <SolidExclamationIcon className={styles['exclamation-icon']} />
+                          <ExclamationSolid className={styles['exclamation-icon']} color="currentColor" />
                           {t('Home.netcardPermissionNotFixed')}
                         </div>
                         <YakitButton
@@ -1185,7 +1192,7 @@ const Home: React.FC<HomeProp> = (props) => {
                     {showMITMCertWarn && (
                       <div className={styles['home-card-config-detection']}>
                         <div className={styles['config-detection-left']}>
-                          <SolidExclamationIcon className={styles['exclamation-icon']} />
+                          <ExclamationSolid className={styles['exclamation-icon']} color="currentColor" />
                           {t('Home.certNotConfigured')}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1245,7 +1252,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                       })
                                     }}
                                   >
-                                    <SolidPlayIcon className={styles['open-icon']} />
+                                    <PlaySolid className={styles['open-icon']} color="currentColor" />
                                     {t('Home.hijackStart')}
                                   </div>
                                   <div
@@ -1256,10 +1263,11 @@ const Home: React.FC<HomeProp> = (props) => {
                                       setShowMitmDropdown(!showMitmDropdown)
                                     }}
                                   >
-                                    <OutlineChevronupIcon
+                                    <ChevronUpOutlined
                                       className={classNames(styles['title-icon'], {
                                         [styles['rotate-180']]: !showMitmDropdown,
                                       })}
+                                      color="currentColor"
                                     />
                                   </div>
                                   <div
@@ -1371,7 +1379,7 @@ const Home: React.FC<HomeProp> = (props) => {
                       <div className={styles['sequence-animation-desc']}>{t('Home.fuzzWebNodeChain')}</div>
                       <div className={styles['sequence-animation-btn-wrapper']}>
                         <YakitButton
-                          icon={<SolidPlayIcon className={styles['animation-play-icon']} />}
+                          icon={<PlaySolid className={styles['animation-play-icon']} color="currentColor" />}
                           className={styles['animation-btn']}
                           type="outline1"
                           onClick={handleSequenceAnimation}
@@ -1533,7 +1541,7 @@ const Home: React.FC<HomeProp> = (props) => {
                           style={{ borderRadius: '40px 0 0 40px' }}
                           onClick={handleOpenScanning}
                         >
-                          <SolidPlayIcon className={styles['open-icon']} />
+                          <PlaySolid className={styles['open-icon']} color="currentColor" />
                           {t('YakitButton.startScan')}
                         </div>
                         <div
@@ -1541,10 +1549,11 @@ const Home: React.FC<HomeProp> = (props) => {
                           style={{ borderRadius: '0 40px 40px 0' }}
                           onClick={() => setShowScanningDropdown(!showScanningDropdown)}
                         >
-                          <OutlineChevronupIcon
+                          <ChevronUpOutlined
                             className={classNames(styles['title-icon'], {
                               [styles['rotate-180']]: !showScanningDropdown,
                             })}
+                            color="currentColor"
                           />
                         </div>
                         <div
@@ -1569,7 +1578,9 @@ const Home: React.FC<HomeProp> = (props) => {
                               key={item.key}
                             >
                               <span>{item.label}</span>
-                              {scanningCheck === item.key && <SolidCheckIcon className={styles['check-icon']} />}
+                              {scanningCheck === item.key && (
+                                <CheckSolid className={styles['check-icon']} color="currentColor" />
+                              )}
                             </div>
                           ))}
                         </div>
@@ -1578,7 +1589,7 @@ const Home: React.FC<HomeProp> = (props) => {
                     {!pcap.IsPrivileged && system !== 'Windows_NT' && (
                       <div className={styles['home-card-config-detection']}>
                         <div className={styles['config-detection-left']}>
-                          <SolidExclamationIcon className={styles['exclamation-icon']} />
+                          <ExclamationSolid className={styles['exclamation-icon']} color="currentColor" />
                           {t('Home.netcardPermissionNotFixed')}
                         </div>
                         <YakitButton
@@ -1654,7 +1665,7 @@ const Home: React.FC<HomeProp> = (props) => {
             </div>
             <YakitHint
               visible={pcapHintShow}
-              heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
+              heardIcon={pcapResult ? <ShieldCheckSolid color="#56C991" size={32} /> : undefined}
               title={pcapResult ? t('Home.netcardAccessGranted') : t('Home.netcardNoAccess')}
               width={600}
               content={
@@ -1736,7 +1747,7 @@ const Home: React.FC<HomeProp> = (props) => {
                 <span className={styles['data-preview-title-text']}>{projectName}</span>
               </div>
               <div className={styles['data-preview-item']}>
-                <OutlineDatabaseIcon className={styles['data-preview-item-icon']} />
+                <DatabaseOutlined className={styles['data-preview-item-icon']} color="currentColor" />
                 <span className={styles['data-preview-item-text']}>{t('HomeCom.projectDatabase')}</span>
                 <div className={styles['data-preview-item-cont']}>
                   {!judgeMoreTenGB ? (
@@ -1747,7 +1758,7 @@ const Home: React.FC<HomeProp> = (props) => {
                         {curProjectInfo?.FileSize}
                       </span>
                       <Tooltip title={t('HomeCom.databaseTooLarge')} placement="topRight">
-                        <SolidExclamationIcon className={styles['database-warning-icon']} />
+                        <ExclamationSolid className={styles['database-warning-icon']} color="currentColor" />
                       </Tooltip>
                     </>
                   )}
@@ -1762,7 +1773,7 @@ const Home: React.FC<HomeProp> = (props) => {
                 </div>
               </div>
               <div className={styles['data-preview-item']}>
-                <OutlineChartbarIcon className={styles['data-preview-item-icon']} />
+                <ChartBarOutlined className={styles['data-preview-item-icon']} color="currentColor" />
                 <span className={styles['data-preview-item-text']}>{t('Home.historyData')}</span>
                 <div
                   className={classNames(styles['data-preview-item-cont'], styles['data-preview-item-cont-jump'])}
@@ -1849,13 +1860,13 @@ const Home: React.FC<HomeProp> = (props) => {
                 </div>
               </div>
               <div className={styles['data-preview-item']}>
-                <OutlineDesktopcomputerIcon className={styles['data-preview-item-icon']} />
+                <DesktopComputerOutlined className={styles['data-preview-item-icon']} color="currentColor" />
                 <span className={styles['data-preview-item-text']}>{t('Home.localPlugin')}</span>
                 <div className={classNames(styles['data-preview-item-cont'], styles['data-preview-item-cont-jump'])}>
                   {localPluginTotal < 30 ? (
                     <YakitButton
                       type="text"
-                      icon={<CloudDownloadIcon className={styles['download-btn-icon']} />}
+                      icon={<CloudDownloadOutlined size={16} className={styles['download-btn-icon']} />}
                       onClick={() => setVisibleOnline(true)}
                       style={{ padding: 0 }}
                       className={styles['download-btn']}

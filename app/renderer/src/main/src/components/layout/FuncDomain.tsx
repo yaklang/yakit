@@ -1,13 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Badge, Tooltip, Form, Divider } from 'antd'
-import {
-  RiskStateSvgIcon,
-  UISettingSvgIcon,
-  UnLoginSvgIcon,
-  UpdateSvgIcon,
-  VersionUpdateSvgIcon,
-  YakitWhiteSvgIcon,
-} from './icons'
+import { RiskStateSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RiskStateSvgIcon'
+import { UISettingSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/UISettingSvgIcon'
+import { VersionUpdateSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/VersionUpdateSvgIcon'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
@@ -43,7 +38,6 @@ import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
 import { LocalGV } from '@/yakitGV'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
 import { showPcapPermission } from '@/utils/ConfigPcapPermission'
-import { GithubSvgIcon, TerminalIcon } from '@/assets/newIcon'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { NetWorkApi } from '@/services/fetch'
@@ -66,12 +60,15 @@ import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import {
-  OutlinePencilaltIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineWrenchIcon,
-} from '@/assets/icon/outline'
+  PencilAltOutlined,
+  QuestionMarkCircleOutlined,
+  RefreshOutlined,
+  SearchOutlined,
+  Wrench1Outlined,
+  CloudDownloadOutlined,
+  TerminalOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { type DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
@@ -84,7 +81,7 @@ const YakitCodeScanRiskDetails = React.lazy(() =>
 const YakitRiskDetails = React.lazy(() =>
   import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitRiskDetails })),
 )
-import { SolidPlayIcon } from '@/assets/icon/solid'
+import { GitHubSolid, PlaySolid, UserCircleSolid, YakitSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType, getYakExecutorParam } from '@/pages/plugins/editDetails/utils'
@@ -348,7 +345,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           <div className={styles['ui-op-btn-wrapper']} onClick={openConsoleNewWindow}>
             <div className={styles['op-btn-body']}>
               <Tooltip placement="bottom" title={t('FuncDomain.engineConsole')}>
-                <TerminalIcon className={classNames(styles['icon-style'], styles['size-style'])} />
+                <TerminalOutlined size={16} className={classNames(styles['icon-style'], styles['size-style'])} />
               </Tooltip>
             </div>
           </div>
@@ -460,14 +457,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 </>
               ) : (
                 <div className={styles['user-show']} onClick={() => setLoginShow(true)}>
-                  <UnLoginSvgIcon />
+                  <UserCircleSolid color="#CCD2DE" size={30} />
                 </div>
               )}
             </div>
           </>
         )}
       </div>
-
       <UserMenuModals
         loginShow={loginShow}
         onCancelLogin={() => setLoginShow(false)}
@@ -503,7 +499,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         setControlOtherModal={setControlOtherModal}
         runDynamicControlRemote={runDynamicControlRemote}
       />
-
       <CeRechargeModal
         visible={rechargeVisible}
         onClose={() => setRechargeVisible(false)}
@@ -1351,13 +1346,13 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
       <div className={styles['update-header-wrapper']}>
         <div className={styles['header-info']}>
           <div className={styles['update-icon']}>
-            <YakitWhiteSvgIcon />
+            <YakitSolid color="white" size={20} />
           </div>
           <div>
             <div className={styles['update-title']}>
               {`${versionTitle()} ${getReleaseEditionName()} ${lastVersion || version}`}{' '}
               {intranet && fetchIntranetYakitVersion && (
-                <OutlineRefreshIcon onClick={() => fetchIntranetYakitVersion(true)} />
+                <RefreshOutlined onClick={() => fetchIntranetYakitVersion(true)} color="currentColor" />
               )}
             </div>
             <div className={styles['update-time']}>{`当前版本: ${version}`}</div>
@@ -1371,7 +1366,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
             '获取失败'
           ) : isUpdate ? (
             <div className={styles['update-btn']} onClick={() => onDownload(intranet ? 'intranetYakit' : 'yakit')}>
-              <UpdateSvgIcon style={{ marginRight: 4 }} />
+              <CloudDownloadOutlined color="var(--Colors-Use-Main-Primary)" size={16} style={{ marginRight: 4 }} />
               立即下载
             </div>
           ) : (
@@ -1384,12 +1379,11 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 if (onUpdateEdit) onUpdateEdit('yakit')
               }}
             >
-              <OutlinePencilaltIcon className={styles['edit-icon']} />
+              <PencilAltOutlined className={styles['edit-icon']} color="currentColor" />
             </div>
           )}
         </div>
       </div>
-
       {!intranet && (
         <div className={styles['update-content-wrapper']}>
           <div
@@ -1536,7 +1530,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     }
                   }}
                 >
-                  <UpdateSvgIcon style={{ marginRight: 4 }} />
+                  <CloudDownloadOutlined color="var(--Colors-Use-Main-Primary)" size={16} style={{ marginRight: 4 }} />
                   立即更新
                 </div>
               )}
@@ -1577,12 +1571,11 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 if (onUpdateEdit) onUpdateEdit('yaklang')
               }}
             >
-              <OutlinePencilaltIcon className={styles['edit-icon']} />
+              <PencilAltOutlined className={styles['edit-icon']} color="currentColor" />
             </div>
           )}
         </div>
       </div>
-
       <div className={styles['update-content-wrapper']}>
         <div
           className={classNames({
@@ -1683,7 +1676,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             ]}
           />
           <Tooltip title={t('MoreYaklangVersion.slimVersionTip')}>
-            <YakitButton type="text2" icon={<OutlineQuestionmarkcircleIcon />} size="small" />
+            <YakitButton type="text2" icon={<QuestionMarkCircleOutlined color="currentColor" />} size="small" />
           </Tooltip>
         </div>
       )}
@@ -1691,7 +1684,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
         <YakitInput
           value={searchVersionVal}
           size="middle"
-          prefix={<OutlineSearchIcon className="search-icon" />}
+          prefix={<SearchOutlined className="search-icon" color="currentColor" />}
           onChange={(e) => onSearchVersion(e.target.value.trim())}
         />
       </div>
@@ -2341,7 +2334,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                   className={styles['content-style']}
                   onClick={() => yakitShell.openExternal(WebsiteGV.YakitHistoryVersionAddress)}
                 >
-                  <GithubSvgIcon className={styles['icon-style']} /> 历史版本
+                  <GitHubSolid className={styles['icon-style']} /> 历史版本
                 </div>
               </div>
             </div>
@@ -3274,7 +3267,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
               requiredParams={requiredParams}
             ></PerformanceSampleForm>
           ),
-          okButtonProps: { icon: <SolidPlayIcon /> },
+          okButtonProps: { icon: <PlaySolid color="currentColor" /> },
           onOkText: '开始检测',
           onOk: () => {
             const yakExecutorParams: YakExecutorParam[] = []
@@ -3384,8 +3377,9 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
       >
         <div className={styles['ui-op-btn-wrapper']}>
           <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
-            <OutlineWrenchIcon
+            <Wrench1Outlined
               className={classNames(show ? styles['icon-hover-style'] : styles['icon-style'], styles['wrench-icon'])}
+              color="currentColor"
             />
           </div>
         </div>

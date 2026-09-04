@@ -5,7 +5,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { OutlineFilterIcon, OutlineRefreshIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { FilterOutlined, RefreshOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { SystemInfo } from '@/constants/hardware'
 import { localMcpDefalutUrl, type mcpStreamHooks, remoteMcpDefalutUrl } from '@/components/layout/hooks/useMcp/useMcp'
@@ -247,7 +247,7 @@ export const ConfigMcpModal: FC<ConfigMcpModalProps> = (props) => {
           filtersType: 'select',
           filterMultiple: true,
           filters: sourceFilterOptions,
-          filterIcon: <OutlineFilterIcon className={styles['filter-icon']} />,
+          filterIcon: <FilterOutlined className={styles['filter-icon']} color="currentColor" />,
         },
       },
       {
@@ -267,7 +267,7 @@ export const ConfigMcpModal: FC<ConfigMcpModalProps> = (props) => {
         filterProps: {
           filterKey: 'Keyword',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
       },
       {
@@ -576,7 +576,7 @@ export const ConfigMcpModal: FC<ConfigMcpModalProps> = (props) => {
                       <div className={styles['virtual-table-header-actions']}>
                         <YakitButton
                           type="text"
-                          icon={<OutlineRefreshIcon />}
+                          icon={<RefreshOutlined color="currentColor" />}
                           loading={loading}
                           onClick={onRefreshTools}
                         >

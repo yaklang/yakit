@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react'
 import { Divider } from 'antd'
 import { useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import classNames from 'classnames'
-import { OutlineArrownarrowdownIcon, OutlineArrownarrowupIcon, OutlineFilterIcon } from '@/assets/icon/outline'
+import { ArrowNarrowDownOutlined, ArrowNarrowUpOutlined, FilterOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -76,7 +76,8 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
                   onBodyLengthSort?.('asc')
                 }}
               >
-                <OutlineArrownarrowupIcon className={style['outlineFilterIcon']} /> {t('YakitTable.asc')}
+                <ArrowNarrowUpOutlined className={style['outlineFilterIcon']} color="currentColor" />{' '}
+                {t('YakitTable.asc')}
               </div>
               <div
                 className={classNames(style['body-length-filter'], {
@@ -86,7 +87,8 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
                   onBodyLengthSort?.('desc')
                 }}
               >
-                <OutlineArrownarrowdownIcon className={style['outlineFilterIcon']} /> {t('YakitTable.desc')}
+                <ArrowNarrowDownOutlined className={style['outlineFilterIcon']} color="currentColor" />{' '}
+                {t('YakitTable.desc')}
               </div>
             </>
           )}
@@ -98,7 +100,8 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
               setShow(true)
             }}
           >
-            <OutlineFilterIcon className={style['outlineFilterIcon']} /> {t('RangeInputNumberTableWrapper.filter')}
+            <FilterOutlined className={style['outlineFilterIcon']} color="currentColor" />{' '}
+            {t('RangeInputNumberTableWrapper.filter')}
           </div>
           <Divider style={{ margin: '4px 0' }}></Divider>
           <div className={style['body-length-checkbox']}>

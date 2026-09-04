@@ -1,6 +1,6 @@
 import { type Dispatch, type FC, type SetStateAction, useEffect, useMemo } from 'react'
 import { KnowledgeBaseTableHeader } from './KnowledgeBaseTableHeader'
-import { type IconProps, PlusIcon } from '@/assets/newIcon'
+import { type IconProps } from '@yakit-libs/yakit-ui-icons/oldicon'
 
 import styles from '../knowledgeBase.module.scss'
 import type useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
@@ -25,6 +25,8 @@ import { AddKnowledgeBaseModal } from './AddKnowledgeBaseModal'
 import { InstallPluginModal } from './InstallPluginModal/InstallPluginModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '../hooks/useCheckKnowledgePlugin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+import { PlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 type UseMultipleHoldGRPCStreamReturn = ReturnType<typeof useMultipleHoldGRPCStream>
 
@@ -318,7 +320,7 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
         >
           <YakitButton
             disabled={!knowledgeBaseItems.streamstep || knowledgeBaseItems.streamstep !== 'success'}
-            icon={<PlusIcon />}
+            icon={<PlusOutlined size={16} />}
             type="secondary2"
             onClick={async () => {
               try {

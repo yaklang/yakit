@@ -3,13 +3,8 @@ import { useMemo } from 'react'
 import type { BottomSideBarProps } from './BottomSideBarType'
 import classNames from 'classnames'
 import styles from './BottomSideBar.module.scss'
-import {
-  OutlineAnnotationIcon,
-  OutlineBugIcon,
-  OutlineClockIcon,
-  OutlineScanRuleEditIcon,
-  OutlineTagIcon,
-} from '@/assets/icon/outline'
+import { AnnotationOutlined, ClockOutlined, TagOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineBugIcon, OutlineScanRuleEditIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import useStore from '../hooks/useStore'
 import emiter from '@/utils/eventBus/eventBus'
 
@@ -40,7 +35,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
             emiter.emit('onOpenLeftSecondNode', 'result')
           }}
         >
-          <OutlineTagIcon />
+          <TagOutlined color="currentColor" />
           审计结果
         </div>
         <div
@@ -49,7 +44,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
             emiter.emit('onOpenLeftSecondNode', 'history')
           }}
         >
-          <OutlineClockIcon />
+          <ClockOutlined color="currentColor" />
           审计历史
         </div>
         <div
@@ -76,7 +71,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
             onOpenEditorDetails('holeDispose')
           }}
         >
-          <OutlineAnnotationIcon />
+          <AnnotationOutlined color="currentColor" />
           漏洞处置
         </div>
       </div>

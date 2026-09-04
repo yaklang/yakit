@@ -1,4 +1,4 @@
-import { OutlineRefreshIcon } from '@/assets/icon/outline'
+import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
@@ -344,7 +344,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
       <TableVirtualResize<UnfinishedTask>
         query={query.Filter}
         size="middle"
-        extra={<YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={onRefresh} />}
+        extra={<YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} onClick={onRefresh} />}
         isRefresh={isRefresh}
         renderKey="RuntimeId"
         data={response.Tasks || []}

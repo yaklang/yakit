@@ -8,11 +8,11 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import styles from './HTTPFuzzerHotPatch.module.scss'
 import { yakitNotify } from '@/utils/notification'
 import {
-  OutlineChevronrightIcon,
-  OutlineClouddownloadIcon,
-  OutlineClouduploadIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ChevronRightOutlined,
+  CloudDownloadOutlined,
+  CloudUploadOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import classNames from 'classnames'
 import type { DbOperateMessage } from '../layout/mainOperatorContent/utils'
@@ -358,7 +358,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
             <div className={styles['extra-opt-btns']}>
               {tab === 'local' && !item.isDefault && hasPermissions && (
                 <YakitButton
-                  icon={<OutlineClouduploadIcon />}
+                  icon={<CloudUploadOutlined color="currentColor" />}
                   type="text2"
                   onClick={(e) => {
                     e.stopPropagation()
@@ -368,7 +368,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
               )}
               {tab === 'online' && (
                 <YakitButton
-                  icon={<OutlineClouddownloadIcon />}
+                  icon={<CloudDownloadOutlined color="currentColor" />}
                   type="text2"
                   onClick={(e) => {
                     e.stopPropagation()
@@ -378,7 +378,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
               )}
               {(tab === 'local' && !item.isDefault) || (tab === 'online' && hasPermissions) ? (
                 <YakitButton
-                  icon={<OutlineTrashIcon />}
+                  icon={<TrashOutlined color="currentColor" />}
                   type="text"
                   colors="danger"
                   onClick={(e) => {
@@ -452,7 +452,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     >
                       {team.tags}
                     </span>
-                    <OutlineChevronrightIcon className={styles['hotCode-group-item-arrow']} />
+                    <ChevronRightOutlined className={styles['hotCode-group-item-arrow']} color="currentColor" />
                   </div>
                 </YakitPopover>
               </div>

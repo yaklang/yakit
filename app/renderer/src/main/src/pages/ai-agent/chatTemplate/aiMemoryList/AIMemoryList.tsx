@@ -40,7 +40,6 @@ const getScoreList = (data: AIAgentGrpcApi.MemoryEntry) => {
     },
   ]
 }
-
 export const AIMemoryContent: React.FC<AIMemoryContentProps> = React.memo((props) => {
   const { item } = props
   const { t } = useI18nNamespaces(['aiAgent'])

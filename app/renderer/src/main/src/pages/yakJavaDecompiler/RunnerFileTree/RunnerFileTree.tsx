@@ -2,7 +2,7 @@ import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import type { OpenedFileProps, RunnerFileTreeProps } from './RunnerFileTreeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { PlusCircleOutlined, RefreshOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
 import classNames from 'classnames'
@@ -269,7 +269,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                   <YakitButton
                     type="text2"
                     disabled={fileTree.length === 0}
-                    icon={<OutlineRefreshIcon />}
+                    icon={<RefreshOutlined color="currentColor" />}
                     onClick={() => {
                       emiter.emit('onRefreshDecompilerTree')
                     }}
@@ -285,7 +285,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                     placement: 'bottomLeft',
                   }}
                 >
-                  <YakitButton type="text2" icon={<OutlinePluscircleIcon />} />
+                  <YakitButton type="text2" icon={<PlusCircleOutlined color="currentColor" />} />
                 </YakitDropdownMenu>
               </div>
             </div>
@@ -381,7 +381,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo(() => {
               onClick={() => openItem(item)}
             >
               <div className={styles['del-btn']} onClick={(e) => removeItem(e, item)}>
-                <OutlineXIcon />
+                <XOutlined color="currentColor" />
               </div>
               <img src={KeyToIcon[item.icon].iconPath} />
               <div className={classNames(styles['file-name'], 'yakit-content-single-ellipsis')} title={item.name}>

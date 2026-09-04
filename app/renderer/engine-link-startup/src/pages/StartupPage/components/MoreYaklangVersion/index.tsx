@@ -1,7 +1,7 @@
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import React, { useEffect, useMemo, useState } from 'react'
-import { OutlineQuestionmarkcircleIcon, OutlineSearchIcon } from '@/assets/outline'
+import { QuestionMarkCircleOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { isYakit } from '@/utils/envfile'
 import styles from './MoreYaklangVersion.module.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -62,7 +62,7 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
             style={{ width: i18n.language === 'en' ? 240 : undefined }}
           />
           <Tooltip title={t('MoreYaklangVersion.slim_version_tip')}>
-            <YakitButton type="text2" icon={<OutlineQuestionmarkcircleIcon />} size="small" />
+            <YakitButton type="text2" icon={<QuestionMarkCircleOutlined color="currentColor" />} size="small" />
           </Tooltip>
         </div>
       )}
@@ -70,7 +70,9 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
         <YakitInput
           value={searchVersionVal}
           size="middle"
-          prefix={<OutlineSearchIcon className="search-icon" />}
+          prefix={
+            <SearchOutlined color="var(--Colors-Use-Neutral-Text-3-Secondary)" className="search-icon" size={16} />
+          }
           onChange={(e) => onSearchVersion(e.target.value.trim())}
         />
       </div>

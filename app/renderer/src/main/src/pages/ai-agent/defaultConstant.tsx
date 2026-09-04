@@ -1,46 +1,47 @@
 import type { ReactNode } from 'react'
 import type { AIAgentSetting } from './aiAgentType'
 import {
-  OutlineChipIcon,
-  OutlineCogIcon,
-  OutlineMCPIcon,
-  OutlineWrenchIcon,
-  OutlineBookOpenTextIcon,
-  OutlineBotIcon,
-  OutlineDocumenttextIcon,
-  OutlineFolderopenIcon,
-  OutlinePointerIcon,
-  OutlineEarOffIcon,
-  OutlineAIIcon,
-  OutlineCalendarIcon,
-} from '@/assets/icon/outline'
+  AIOutlined,
+  BookOpenTextOutlined,
+  BotOutlined,
+  CalendarOutlined,
+  ChipOutlined,
+  CogOutlined,
+  DocumentTextOutlined,
+  EarOffOutlined,
+  FolderOpenOutlined,
+  MCPOutlined,
+  PointerOutlined,
+  Wrench1Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { genDefaultPagination, type PaginationSchema } from '../invoker/schema'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import { OpenAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OpenAIIcon'
 import {
-  ChatGLMIcon,
-  ComateIcon,
-  DeepSeekIcon,
-  GeminiIcon,
-  MoonshotIcon,
-  OllamaIcon,
-  OpenAIIcon,
-  OpenRouterIcon,
-  SiliconFlowIcon,
-  TongyiIcon,
-  MemfitIcon,
-} from './aiModelList/icon'
+  ChatGlmWithBackgroundAiModelColorful,
+  ComateWithBackgroundAiModelColorful,
+  DeepSeekWithBackgroundAiModelColorful,
+  GeminiWithBackgroundAiModelColorful,
+  MemfitWithBackgroundAiModelColorful,
+  MoonshotWithBackgroundAiModelColorful,
+  OllamaWithBackgroundAiModelColorful,
+  OpenRouterWithBackgroundAiModelColorful,
+  SiliconFlowWithBackgroundAiModelColorful,
+  TongyiWithBackgroundAiModelColorful,
+} from '@yakit-libs/yakit-ui-icons/colorful'
 import type { AIAgentGrpcApi } from '../ai-re-act/hooks/grpcApi'
 import { AISourceEnum, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
 import {
-  SolidCursorclickIcon,
-  SolidHashtagIcon,
-  SolidLightbulbIcon,
-  SolidLightningboltIcon,
-  SolidToolIcon,
-} from '@/assets/icon/solid'
+  CursorClickSolid,
+  HashtagSolid,
+  LightBulbSolid,
+  LightningBoltSolid,
+  ToolSolid,
+} from '@yakit-libs/yakit-ui-icons/solid'
 import type { MCPServerType } from './type/aiMCP'
-import { ColorsAIIcon, ColorsChatIcon } from '@/assets/icon/colors'
+import { ColorsAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsAIIcon'
+import { ColorsChatIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsChatIcon'
 import type { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
 import type { ExportAIForgeRequest } from './forgeName/type'
 
@@ -63,12 +64,16 @@ export const AiAgentTabList: YakitTabsProps[] = [
     label: 'AIAgentTabs.session',
     icon: <ColorsChatIcon className="ai-agent-session-tab-icon" />,
   },
-  { value: AIAgentTabListEnum.Setting, label: 'AIAgentTabs.config', icon: <OutlineCogIcon /> },
-  { value: AIAgentTabListEnum.Scheduled, label: 'AIAgentTabs.scheduled', icon: <OutlineCalendarIcon /> },
+  { value: AIAgentTabListEnum.Setting, label: 'AIAgentTabs.config', icon: <CogOutlined color="currentColor" /> },
+  {
+    value: AIAgentTabListEnum.Scheduled,
+    label: 'AIAgentTabs.scheduled',
+    icon: <CalendarOutlined color="currentColor" />,
+  },
   // {value: AIAgentTabListEnum.Forge_Name, label: "AIAgentTabs.skill", icon: <OutlineTemplateIcon />},
   // {value: AIAgentTabListEnum.Tool, label: "AIAgentTabs.tool", icon: <OutlineWrenchIcon />},
-  { value: AIAgentTabListEnum.AI_Model, label: 'AiAgengt.aiModel', icon: <OutlineChipIcon /> },
-  { value: AIAgentTabListEnum.MCP, label: 'MCP', icon: <OutlineMCPIcon /> },
+  { value: AIAgentTabListEnum.AI_Model, label: 'AiAgengt.aiModel', icon: <ChipOutlined color="currentColor" /> },
+  { value: AIAgentTabListEnum.MCP, label: 'MCP', icon: <MCPOutlined color="currentColor" /> },
 ]
 export enum AIMentionTabsEnum {
   /** forge 智能体 */
@@ -210,20 +215,20 @@ export const tagColors: YakitTagColor[] = [
 
 export const AIOnlineModelIconMap: Record<string, ReactNode> = {
   openai: <OpenAIIcon />,
-  chatglm: <ChatGLMIcon />,
-  moonshot: <MoonshotIcon />,
-  tongyi: <TongyiIcon />,
-  comate: <ComateIcon />,
-  deepseek: <DeepSeekIcon />,
-  siliconflow: <SiliconFlowIcon />,
-  ollama: <OllamaIcon />,
-  openrouter: <OpenRouterIcon />,
-  gemini: <GeminiIcon />,
-  'yaklang-writer': <MemfitIcon />,
-  'yaklang-rag': <MemfitIcon />,
-  'yaklang-com-search': <MemfitIcon />,
-  'yakit-plugin-search': <MemfitIcon />,
-  aibalance: <MemfitIcon />,
+  chatglm: <ChatGlmWithBackgroundAiModelColorful />,
+  moonshot: <MoonshotWithBackgroundAiModelColorful />,
+  tongyi: <TongyiWithBackgroundAiModelColorful />,
+  comate: <ComateWithBackgroundAiModelColorful />,
+  deepseek: <DeepSeekWithBackgroundAiModelColorful />,
+  siliconflow: <SiliconFlowWithBackgroundAiModelColorful />,
+  ollama: <OllamaWithBackgroundAiModelColorful />,
+  openrouter: <OpenRouterWithBackgroundAiModelColorful />,
+  gemini: <GeminiWithBackgroundAiModelColorful />,
+  'yaklang-writer': <MemfitWithBackgroundAiModelColorful />,
+  'yaklang-rag': <MemfitWithBackgroundAiModelColorful />,
+  'yaklang-com-search': <MemfitWithBackgroundAiModelColorful />,
+  'yakit-plugin-search': <MemfitWithBackgroundAiModelColorful />,
+  aibalance: <MemfitWithBackgroundAiModelColorful />,
 }
 
 export enum AILocalModelTypeEnum {
@@ -252,15 +257,15 @@ export const AIReviewRuleOptions = [
 export type AIReviewRuleOptionsType = (typeof AIReviewRuleOptions)[number]['value']
 export const AIReviewRuleIconMap: Record<AIReviewRuleOptionsType, { icon: ReactNode; activeIcon: ReactNode }> = {
   manual: {
-    icon: <OutlinePointerIcon />,
-    activeIcon: <OutlinePointerIcon style={{ color: 'var(--Colors-Use-Purple-Primary)' }} />,
+    icon: <PointerOutlined color="currentColor" />,
+    activeIcon: <PointerOutlined style={{ color: 'var(--Colors-Use-Purple-Primary)' }} />,
   },
   yolo: {
-    icon: <OutlineEarOffIcon />,
-    activeIcon: <OutlineEarOffIcon style={{ color: 'var(--Colors-Use-Error-Primary)' }} />,
+    icon: <EarOffOutlined color="currentColor" />,
+    activeIcon: <EarOffOutlined style={{ color: 'var(--Colors-Use-Error-Primary)' }} />,
   },
   ai: {
-    icon: <OutlineAIIcon />,
+    icon: <AIOutlined color="currentColor" />,
     activeIcon: <ColorsAIIcon />,
   },
 }
@@ -272,11 +277,11 @@ export enum AIMCPServerTypeEnum {
 
 /** @name 任务回答类型对应图标 */
 export const taskAnswerToIconMap: Record<string, ReactNode> = {
-  plan: <SolidLightbulbIcon />,
-  execute: <SolidLightningboltIcon />,
-  summary: <SolidHashtagIcon />,
-  'call-tools': <SolidToolIcon />,
-  decision: <SolidCursorclickIcon />,
+  plan: <LightBulbSolid color="currentColor" />,
+  execute: <LightningBoltSolid color="currentColor" />,
+  summary: <HashtagSolid color="currentColor" />,
+  'call-tools': <ToolSolid color="currentColor" />,
+  decision: <CursorClickSolid color="currentColor" />,
 }
 
 export enum ReActChatEventEnum {
@@ -289,12 +294,12 @@ export enum ReActChatEventEnum {
 }
 
 export const iconMap = {
-  file: <OutlineDocumenttextIcon />,
-  folder: <OutlineFolderopenIcon />,
-  forge: <OutlineBotIcon />,
-  tool: <OutlineWrenchIcon />,
-  knowledgeBase: <OutlineBookOpenTextIcon />,
-  focusMode: <OutlineBookOpenTextIcon />,
+  file: <DocumentTextOutlined color="currentColor" />,
+  folder: <FolderOpenOutlined color="currentColor" />,
+  forge: <BotOutlined color="currentColor" />,
+  tool: <Wrench1Outlined color="currentColor" />,
+  knowledgeBase: <BookOpenTextOutlined color="currentColor" />,
+  focusMode: <BookOpenTextOutlined color="currentColor" />,
 }
 
 export enum AttachedResourceTypeEnum {

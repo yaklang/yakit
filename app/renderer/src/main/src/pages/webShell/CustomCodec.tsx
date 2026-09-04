@@ -1,7 +1,7 @@
 import httpQueryStyles from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig.module.scss'
 import matcherStyles from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtraction.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { HollowLightningBoltIcon, QuestionMarkCircleIcon, RemoveIcon, TerminalIcon, TrashIcon } from '@/assets/newIcon'
+import { HollowLightningBoltIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import React, { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { Form, Tooltip } from 'antd'
 import classNames from 'classnames'
@@ -18,7 +18,13 @@ import { InputItem, ManyMultiSelectForString } from '@/utils/inputUtil'
 import type { YakScript } from '@/pages/invoker/schema'
 
 import webFuzzerStyles from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage.module.scss'
-import { OutlineCodeIcon, OutlineQrcodeIcon } from '@/assets/icon/outline'
+import {
+  CodeOutlined,
+  QrcodeOutlined,
+  QuestionMarkCircleOutlined,
+  TerminalOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import style from '@/pages/customizeMenu/CustomizeMenu.module.scss'
@@ -28,6 +34,8 @@ import { ShellScript } from '@/pages/webShell/models'
 import { shallow } from 'zustand/shallow'
 import { useMenuHeight } from '@/store/menuHeight'
 import { WebsiteGV } from '@/enums/website'
+
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -95,8 +103,7 @@ const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = Re
         [httpQueryStyles['matchersList-item-operate-hover']]: visiblePopover,
       })}
     >
-      <TrashIcon className={httpQueryStyles['trash-icon']} onClick={() => onRemove()} />
-
+      <TrashOutlined size={16} className={httpQueryStyles['trash-icon']} onClick={() => onRemove()} />
       <Tooltip title="调试">
         <HollowLightningBoltIcon
           className={httpQueryStyles['hollow-lightningBolt-icon']}
@@ -111,7 +118,7 @@ const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = Re
       {/*    setVisiblePopover={setVisiblePopover}*/}
       {/*/>*/}
       <YakitPopover placement="topRight" classNames={{ root: style['terminal-popover'] }} content={popoverContent}>
-        <TerminalIcon className={style['plugin-local-icon']} />
+        <TerminalOutlined size={16} className={style['plugin-local-icon']} />
       </YakitPopover>
     </div>
   )
@@ -216,11 +223,11 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
               type="outline2"
               className={mitmStyles['button-question']}
               onClick={() => openExternalWebsite(WebsiteGV.OfficialWebsite)}
-              icon={<QuestionMarkCircleIcon />}
+              icon={<QuestionMarkCircleOutlined size={16} />}
             ></YakitButton>
           </Tooltip>
           <div onClick={() => onClose()} className={mitmStyles['icon-remove']}>
-            <RemoveIcon />
+            <XSolid size={12} />
           </div>
         </div>
       }
@@ -293,12 +300,12 @@ const webFuzzerTabs = [
   {
     key: 'enCoder',
     label: '编码器',
-    icon: <OutlineCodeIcon />,
+    icon: <CodeOutlined color="currentColor" />,
   },
   {
     key: 'deCoder',
     label: '解码器',
-    icon: <OutlineQrcodeIcon />,
+    icon: <QrcodeOutlined color="currentColor" />,
   },
 ]
 

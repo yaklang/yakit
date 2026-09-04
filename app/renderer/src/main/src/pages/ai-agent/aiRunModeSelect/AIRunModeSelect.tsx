@@ -4,13 +4,13 @@ import { Tooltip } from 'antd'
 import { Dropdown } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineBoxesIcon,
-  OutlineBrainCircuitIcon,
-  OutlineChevrondownIcon,
-  OutlineGrid2x2CheckIcon,
-  OutlineGoal2Icon,
-} from '@/assets/icon/outline'
-import { SolidCheckIcon } from '@/assets/icon/solid'
+  BoxesOutlined,
+  BrainCircuitOutlined,
+  ChevronDownOutlined,
+  Grid2x2CheckOutlined,
+  Goal2Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { CheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import styles from './AIRunModeSelect.module.scss'
@@ -23,7 +23,7 @@ import {
   AIInputEventHotPatchTypeEnum,
 } from '@/pages/ai-re-act/hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
-import { OutlineViewGridIcon } from '@/components/yakChat/icon'
+import { OutlineViewGridIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineViewGridIcon'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
@@ -33,22 +33,22 @@ type ModeOptionKey = 'plan' | 'multiAgent' | 'goal'
 const ModeOptionList: {
   key: ModeOptionKey
   label: string
-  icon: FC
+  icon: React.ComponentType<React.ComponentProps<typeof BoxesOutlined>>
 }[] = [
   {
     key: 'plan',
     label: 'Plan',
-    icon: OutlineBrainCircuitIcon,
+    icon: BrainCircuitOutlined,
   },
   {
     key: 'multiAgent',
     label: 'Multi-Agent',
-    icon: OutlineBoxesIcon,
+    icon: BoxesOutlined,
   },
   {
     key: 'goal',
     label: 'Goal',
-    icon: OutlineGoal2Icon,
+    icon: Goal2Outlined,
   },
 ]
 
@@ -176,7 +176,7 @@ const AIRunModeSelect: React.FC = memo(() => {
     if (count === 1) {
       return { Icon: selectedModes[0].icon, label: selectedModes[0].label }
     }
-    return { Icon: OutlineGrid2x2CheckIcon, label: '多模式' }
+    return { Icon: Grid2x2CheckOutlined, label: '多模式' }
   }, [selectedModes])
 
   const onToggleMode = useMemoizedFn((key: ModeOptionKey) => {
@@ -229,12 +229,12 @@ const AIRunModeSelect: React.FC = memo(() => {
                 >
                   <div className={styles['mode-option-left']}>
                     <div className={styles['mode-option-icon']}>
-                      <Icon />
+                      <Icon color="currentColor" />
                     </div>
                     <span className={styles['mode-option-label']}>{item.label}</span>
                   </div>
                   {checked ? (
-                    <SolidCheckIcon className={styles['mode-option-check']} />
+                    <CheckSolid className={styles['mode-option-check']} color="currentColor" />
                   ) : (
                     <span className={styles['mode-option-check-placeholder']} />
                   )}
@@ -294,7 +294,7 @@ const AIRunModeSelect: React.FC = memo(() => {
         title={triggerDisplay.label}
       >
         <span className={styles['mode-btn-label']}>{triggerDisplay.label}</span>
-        <OutlineChevrondownIcon className={styles['mode-btn-arrow']} />
+        <ChevronDownOutlined className={styles['mode-btn-arrow']} color="currentColor" />
       </YakitButton>
     </Dropdown>
   )

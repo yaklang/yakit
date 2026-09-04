@@ -10,7 +10,7 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { contentType } from '../HTTPFlowTable'
 import { isEqual, toArray } from 'lodash'
-import { OutlineInformationcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { InformationCircleOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitNotify } from '@/utils/notification'
 import styles from './HTTPFlowTableFormConfiguration.module.scss'
 
@@ -126,7 +126,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
     if (hasUnsavedChange()) {
       Modal.confirm({
         title: t('YakitModal.friendlyReminder'),
-        icon: <OutlineInformationcircleIcon />,
+        icon: <InformationCircleOutlined color="currentColor" />,
         content: t('HTTPFlowTableFormConfiguration.saveAdvancedConfigAndClose'),
         okText: t('YakitButton.save'),
         cancelText: t('YakitButton.doNotSave'),
@@ -139,7 +139,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             }}
             className="modal-remove-icon"
           >
-            <OutlineXIcon />
+            <XOutlined color="currentColor" />
           </div>
         ),
         onOk: handleSave,
@@ -211,7 +211,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                 <span className={styles['form-label']}>
                   {t('HTTPFlowTableFormConfiguration.filterMode')}
                   <Tooltip title={t('HTTPFlowTableFormConfiguration.advancedFilterHelp')}>
-                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                   </Tooltip>
                 </span>
               }

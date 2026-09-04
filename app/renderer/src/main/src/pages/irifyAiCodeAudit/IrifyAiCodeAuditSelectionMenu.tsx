@@ -2,7 +2,7 @@ import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
-import { IconSolidAIIcon } from '@/assets/icon/colors'
+import { IconSolidAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './IrifyAiCodeAuditSelectionMenu.module.scss'
 

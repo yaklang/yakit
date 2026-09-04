@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import styles from './BottomEditorDetails.module.scss'
 import classNames from 'classnames'
 import type { BottomEditorDetailsProps, ShowItemType } from './BottomEditorDetailsType'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -49,7 +49,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         <div className={styles['extra']}>
           <YakitButton
             type="text2"
-            icon={<OutlineXIcon />}
+            icon={<XOutlined color="currentColor" />}
             onClick={() => {
               setEditorDetails(false)
             }}

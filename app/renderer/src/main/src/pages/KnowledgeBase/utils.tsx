@@ -15,32 +15,30 @@ import type {
 import type { KnowledgeBaseItem } from './hooks/useKnowledgeBase'
 import { yakitNotify } from '@/utils/notification'
 
-import {
-  CrabIcon,
-  SleepingCatIcon,
-  TigerIcon,
-  CatIcon,
-  OctopusIcon,
-  PigIcon,
-  DogIcon,
-  RabbitIcon,
-  JumpingDragonIcon,
-  BatmanIcon,
-  SkeletonIcon,
-  MeasuringCupIcon,
-  CarIcon,
-  TVIcon,
-  HeadphonesIcon,
-  SmileyFaceIcon,
-  HeartIcon,
-  WalletIcon,
-  DiamondIcon,
-  RobotIcon,
-} from './icon/sidebarIcon'
+import { CrabIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CrabIcon'
+import { SleepingCatIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SleepingCatIcon'
+import { TigerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TigerIcon'
+import { CatIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CatIcon'
+import { OctopusIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OctopusIcon'
+import { PigIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PigIcon'
+import { DogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/DogIcon'
+import { RabbitIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RabbitIcon'
+import { JumpingDragonIcon } from '@yakit-libs/yakit-ui-icons/oldicon/JumpingDragonIcon'
+import { BatmanIcon } from '@yakit-libs/yakit-ui-icons/oldicon/BatmanIcon'
+import { SkeletonIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SkeletonIcon'
+import { MeasuringCupIcon } from '@yakit-libs/yakit-ui-icons/oldicon/MeasuringCupIcon'
+import { CarIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CarIcon'
+import { TVIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TVIcon'
+import { HeadphonesIcon } from '@yakit-libs/yakit-ui-icons/oldicon/HeadphonesIcon'
+import { SmileyFaceIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SmileyFaceIcon'
+import { HeartIcon } from '@yakit-libs/yakit-ui-icons/oldicon/HeartIcon'
+import { WalletIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WalletIcon'
+import { DiamondIcon } from '@yakit-libs/yakit-ui-icons/oldicon/DiamondIcon'
+import { RobotIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RobotIcon'
 import type { YakitSideTabProps } from '../../components/yakitSideTab/YakitSideTabType'
 import type { API } from '@/services/swagger/resposeType'
 import { NetWorkApi } from '@/services/fetch'
-import { OutlineBookOpenTextIcon, OutlineChipIcon, OutlinePuzzleIcon } from '@/assets/icon/outline'
+import { BookOpenTextOutlined, ChipOutlined, PuzzleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import knowledgeJoyrideFirst from '@/pages/KnowledgeBase/images/knowledge-joyride-first.mp4'
 import knowledgeJoyrideLast from '@/pages/KnowledgeBase/images/knowledge-joyride-last.mp4'
 import joyrideFirstStepImg from '@/pages/KnowledgeBase/images/joyride-first-step.png'
@@ -68,17 +66,17 @@ export enum KnowledgeTabListEnum {
   AI_Model = 'AIModel',
 }
 export const KnowledgeTabList: YakitSideTabProps['yakitTabs'] = [
-  { value: KnowledgeTabListEnum.Knowledge, label: '知识库', icon: <OutlineBookOpenTextIcon /> },
+  { value: KnowledgeTabListEnum.Knowledge, label: '知识库', icon: <BookOpenTextOutlined color="currentColor" /> },
   {
     value: KnowledgeTabListEnum.Plugin,
     label: '插件',
-    icon: <OutlinePuzzleIcon />,
+    icon: <PuzzleOutlined color="currentColor" />,
   },
   {
     value: KnowledgeTabListEnum.AI_Model,
     label: () => (
       <div className="first-step" style={{ display: 'flex', gap: 4 }}>
-        <OutlineChipIcon />
+        <ChipOutlined color="currentColor" />
         模型
       </div>
     ),

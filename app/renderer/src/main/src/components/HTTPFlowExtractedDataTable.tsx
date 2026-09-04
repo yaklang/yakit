@@ -4,7 +4,7 @@ import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import { genDefaultPagination, type QueryGeneralRequest, type QueryGeneralResponse } from '@/pages/invoker/schema'
 import { useControllableValue, useDebounceEffect, useDebounceFn, useMemoizedFn } from 'ahooks'
 import styles from './hTTPFlowDetail.module.scss'
-import { OutlineSearchIcon } from '@/assets/icon/outline'
+import { SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { MultipleSelect } from './HTTPFlowTable/HTTPFlowTable'
 import { yakitNotify } from '@/utils/notification'
 import type { ColumnsTypeProps, FiltersItemProps, SortProps } from './TableVirtualResize/TableVirtualResizeType'
@@ -259,14 +259,16 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         filterProps: {
           filterKey: 'RuleVerbose',
           filterMultiple: true,
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} onClick={getHTTPFlowsFieldGroup} />,
+          filterIcon: (
+            <SearchOutlined className={styles['filter-icon']} onClick={getHTTPFlowsFieldGroup} color="currentColor" />
+          ),
           filterRender: (closePopover: () => void) => {
             return (
               <MultipleSelect
                 filterProps={{
                   filterSearch: true,
                   filterSearchInputProps: {
-                    prefix: <OutlineSearchIcon className="search-icon" />,
+                    prefix: <SearchOutlined className="search-icon" color="currentColor" />,
                     allowClear: true,
                   },
                 }}
@@ -320,7 +322,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         filterProps: {
           filterKey: 'Keyword',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
       },
     ]

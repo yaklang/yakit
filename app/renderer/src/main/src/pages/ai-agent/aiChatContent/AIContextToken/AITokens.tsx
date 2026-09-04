@@ -4,7 +4,7 @@ import { useCreation } from 'ahooks'
 import { Tooltip } from 'antd'
 import { QuestionCircleOutlined } from '@ant-design/icons'
 import classNames from 'classnames'
-import { OutlineArrowdownIcon, OutlineArrowupIcon } from '@/assets/icon/outline'
+import { ArrowDownOutlined, ArrowUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { AIModelConfig } from '../../aiModelList/utils'
 import { getIconByAI } from '../../aiModelList/aiModelSelect/AIModelSelect'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -39,7 +39,7 @@ const AITokens: React.FC<AITokensProps> = ({ modelType, aiModel, token }) => {
         <div className={styles['ai-tokens-item']}>
           <div className={styles['token-item']}>
             {t('AIContextToken.input')}
-            <OutlineArrowupIcon />
+            <ArrowUpOutlined color="currentColor" />
           </div>
           <div className={classNames(styles['token-tag'], styles['upload-token'])}>{token[0]}</div>
         </div>
@@ -47,7 +47,7 @@ const AITokens: React.FC<AITokensProps> = ({ modelType, aiModel, token }) => {
         <div className={styles['ai-tokens-item']}>
           <div className={styles['token-item']}>
             {t('AIContextToken.output')}
-            <OutlineArrowdownIcon />
+            <ArrowDownOutlined color="currentColor" />
           </div>
           <div className={classNames(styles['token-tag'], styles['download-token'])}>{token[1]}</div>
         </div>

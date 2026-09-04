@@ -1,7 +1,7 @@
 import type React from 'react'
 import classNames from 'classnames'
-import { OutlineAIIcon, OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
-import { PublicAIAuditCodeIcon } from '@/routes/publicIcon'
+import { AIOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PublicAIAuditCodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import type { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
@@ -38,11 +38,11 @@ export const IrifyAiCodeAuditHistoryItem: React.FC<IrifyAiCodeAuditHistoryItemPr
           >
             <span className={styles['style-badge-icon']}>
               {style === 'skill' ? (
-                <OutlineAIIcon />
+                <AIOutlined color="currentColor" />
               ) : style === 'code' ? (
                 <PublicAIAuditCodeIcon />
               ) : (
-                <OutlineQuestionmarkcircleIcon />
+                <QuestionMarkCircleOutlined color="currentColor" />
               )}
             </span>
             <span className={styles['style-badge-label']}>

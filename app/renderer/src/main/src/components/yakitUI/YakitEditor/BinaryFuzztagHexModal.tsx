@@ -1,3 +1,4 @@
+import { FigmaIcon2017756Outlined, DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -5,8 +6,7 @@ import { type BinaryFuzztagEntry, bytesToHex, encodeBytesToTag } from './binaryF
 import { BinaryFuzztagHexEditor } from './BinaryFuzztagHexEditor'
 import styles from './BinaryFuzztagModal.module.scss'
 import { YakitDropdownMenu } from '../YakitDropdownMenu/YakitDropdownMenu'
-import { DocumentDuplicateSvgIcon } from '@/assets/newIcon'
-import { OutlineExportIcon } from '@/assets/icon/outline'
+
 import { setClipboardText } from '@/utils/clipboard'
 import { yakitNotify } from '@/utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
@@ -131,18 +131,17 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
         </div>
         <div className={styles['header-actions']}>
           <YakitDropdownMenu menu={copyMenu}>
-            <YakitButton type="outline2" icon={<DocumentDuplicateSvgIcon />}>
+            <YakitButton type="outline2" icon={<DocumentDuplicateOutlined size={16} />}>
               复制
             </YakitButton>
           </YakitDropdownMenu>
           <YakitDropdownMenu menu={exportMenu}>
-            <YakitButton type="outline2" icon={<OutlineExportIcon />}>
+            <YakitButton type="outline2" icon={<FigmaIcon2017756Outlined />}>
               导出
             </YakitButton>
           </YakitDropdownMenu>
         </div>
       </div>
-
       <div className={styles['modal-body']}>
         <BinaryFuzztagHexEditor
           dataRef={dataRef}
@@ -153,7 +152,6 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
           }}
         />
       </div>
-
       <div className={styles['modal-footer']}>
         <YakitButton type="outline2" onClick={onCancel}>
           取消

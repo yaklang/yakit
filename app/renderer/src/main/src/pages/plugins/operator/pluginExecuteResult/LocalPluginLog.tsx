@@ -5,18 +5,18 @@ import React, { type ReactNode } from 'react'
 import styles from './LocalPluginLog.module.scss'
 import { useMemoizedFn } from 'ahooks'
 import {
-  LogNodeStatusCodeIcon,
-  LogNodeStatusEchartsIcon,
-  LogNodeStatusErrorIcon,
-  LogNodeStatusFileErrorIcon,
-  LogNodeStatusFileIcon,
-  LogNodeStatusFolderErrorIcon,
-  LogNodeStatusFolderIcon,
-  LogNodeStatusInfoIcon,
-  LogNodeStatusMDIcon,
-  LogNodeStatusSuccessIcon,
-  LogNodeStatusWarningIcon,
-} from '@/assets/icon/colors'
+  ChartLogColorful,
+  ErrorLogColorful,
+  FileFailedLogColorful,
+  FileLogColorful,
+  FolderFailedLogColorful,
+  FolderLogColorful,
+  InfoLogColorful,
+  MarkdownLogColorful,
+  SuccessLogColorful,
+  TextOutputLogColorful,
+  WarningLogColorful,
+} from '@yakit-libs/yakit-ui-icons/colorful'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { renderFileTypeIcon } from '@/components/MilkdownEditor/CustomFile/CustomFile'
 import type { PluginExecuteLogFile } from './PluginExecuteResultType'
@@ -80,28 +80,28 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
     }
     switch (key) {
       case 'warn':
-        return <LogNodeStatusWarningIcon />
+        return <WarningLogColorful />
       case 'error':
-        return <LogNodeStatusErrorIcon />
+        return <ErrorLogColorful />
       case 'success':
-        return <LogNodeStatusSuccessIcon />
+        return <SuccessLogColorful />
       case 'code':
       case 'text':
-        return <LogNodeStatusCodeIcon />
+        return <TextOutputLogColorful />
       case 'json-graph':
-        return <LogNodeStatusEchartsIcon />
+        return <ChartLogColorful />
       case 'folder-error':
-        return <LogNodeStatusFolderErrorIcon />
+        return <FolderFailedLogColorful />
       case 'folder':
-        return <LogNodeStatusFolderIcon />
+        return <FolderLogColorful />
       case 'file-error':
-        return <LogNodeStatusFileErrorIcon />
+        return <FileFailedLogColorful />
       case 'file':
-        return <LogNodeStatusFileIcon />
+        return <FileLogColorful />
       case 'markdown':
-        return <LogNodeStatusMDIcon />
+        return <MarkdownLogColorful />
       default:
-        return <LogNodeStatusInfoIcon className={styles['info-icon']} />
+        return <InfoLogColorful className={styles['info-icon']} />
     }
   })
   return (

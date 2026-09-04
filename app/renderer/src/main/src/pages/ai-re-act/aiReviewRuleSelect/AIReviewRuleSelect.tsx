@@ -12,7 +12,7 @@ import {
   AIReviewRuleOptions,
   type AIReviewRuleOptionsType,
 } from '@/pages/ai-agent/defaultConstant'
-import { OutlineSirenIcon } from '@/assets/icon/outline'
+import { SirenOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { FormItemSlider } from '@/pages/ai-agent/AIChatSetting/AIChatSetting'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -233,7 +233,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
           <YakitButton
             type="text2"
             isHover={visible}
-            icon={<OutlineSirenIcon className={styles['siren-icon']} />}
+            icon={<SirenOutlined className={styles['siren-icon']} color="currentColor" />}
             onClick={(e) => {
               e.stopPropagation()
             }}

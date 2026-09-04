@@ -1,3 +1,9 @@
+import {
+  SortAscendingOutlined,
+  SortDescendingOutlined,
+  ChevronDownOutlined,
+  DotsHorizontalOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   type HeardMenuProps,
@@ -10,17 +16,7 @@ import {
   privateConvertDatabase,
   jsonDataConvertMenus,
 } from './HeardMenuType'
-import {
-  AcademicCapIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  CursorClickIcon,
-  DotsHorizontalIcon,
-  SortAscendingIcon,
-  SortDescendingIcon,
-  UserIcon,
-} from '@/assets/newIcon'
+import { CheckIcon, ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import ReactResizeDetector from 'react-resize-detector'
 import { useGetState, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { Divider, Dropdown, Tabs, Tooltip } from 'antd'
@@ -62,7 +58,7 @@ import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import classNames from 'classnames'
 import style from './HeardMenu.module.scss'
 import { ExtraMenu } from '../publicMenu/ExtraMenu'
-import { SolidPayloadIcon } from '@/assets/icon/solid'
+import { PayloadSolid, AcademicCapSolid, CursorClickSolid, UserSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -603,7 +599,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
       key: 'new',
       label: '扫描模式',
       labelUi: 'Layout.HeardMenu.scanMode',
-      itemIcon: <UserIcon />,
+      itemIcon: <UserSolid size={16} />,
       tip: '复原扫描模式',
       tipUi: 'Layout.HeardMenu.resetScanMode',
       onRestoreMenu: () => onRestoreMenu(),
@@ -612,7 +608,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
       key: 'expert',
       label: '专家模式',
       labelUi: 'Layout.HeardMenu.expertMode',
-      itemIcon: <AcademicCapIcon />,
+      itemIcon: <AcademicCapSolid size={16} />,
       tip: '复原专家模式',
       tipUi: 'Layout.HeardMenu.resetExpertMode',
       onRestoreMenu: () => onRestoreMenu(),
@@ -786,11 +782,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         [style['margin-right-0']]: isExpand,
                         [style['heard-menu-customize-menu']]: customizeVisible,
                       })}
-                      icon={<CursorClickIcon />}
+                      icon={<CursorClickSolid size={16} />}
                     >
                       <div className={style['heard-menu-customize-content']}>
                         {t('YakitButton.custom')}
-                        {(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
+                        {(customizeVisible && <ChevronUpIcon />) || <ChevronDownOutlined size={16} />}
                       </div>
                     </YakitButton>
                   </Dropdown>
@@ -804,7 +800,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 onClick={() => {
                   onRouteMenuSelect({ route: YakitRoute.PayloadManager })
                 }}
-                icon={<SolidPayloadIcon />}
+                icon={<PayloadSolid color="currentColor" />}
               >
                 {t('YakitRoute.Payload')}
               </YakitButton>
@@ -812,7 +808,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
           )}
           {!isExpand && (
             <div className={style['heard-menu-sort']} onClick={() => onExpand(true)}>
-              {!isExpand && <SortDescendingIcon />}
+              {!isExpand && <SortDescendingOutlined color="currentColor" />}
             </div>
           )}
         </div>
@@ -822,12 +818,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
           <Tabs
             tabBarExtraContent={
               <div className={style['heard-menu-sort']} onClick={() => onExpand(false)}>
-                <SortAscendingIcon />
+                <SortAscendingOutlined color="currentColor" />
               </div>
             }
             onTabClick={onTabClick}
             popupClassName={style['heard-sub-menu-popup']}
-            moreIcon={<DotsHorizontalIcon className={style['dots-icon']} />}
+            moreIcon={<DotsHorizontalOutlined size={16} className={style['dots-icon']} />}
             items={subMenuData.map((item, index) => {
               const lableShow = item.labelUi ? t(item.labelUi) : item.label
               const nodeLabel = (
@@ -1026,7 +1022,7 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
           })}
         >
           {t('YakitButton.more')}
-          {(show && <ChevronUpIcon />) || <ChevronDownIcon />}
+          {(show && <ChevronUpIcon />) || <ChevronDownOutlined size={16} />}
         </div>
       </YakitPopover>
     </div>

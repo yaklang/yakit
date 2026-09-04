@@ -2,7 +2,7 @@ import { type FC, forwardRef, type ReactNode, useMemo, useState } from 'react'
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import styles from './OperationLog.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { OutlineChevrondownIcon, OutlineClockIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined, ClockOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { getFileActionStatus, isPluginExecuteLogFileItem } from '@/pages/invoker/utils'
 import classNames from 'classnames'
 import { formatTime } from '@/utils/timeUtil'
@@ -118,7 +118,7 @@ const TimelineCard: FC<TimelineCardProps> = ({ item, isExpanded, onToggle }) => 
               onClick={() => onToggle(item.id)}
               className={classNames(styles['expand-icon'], { [styles.expanded]: isExpanded })}
             >
-              <OutlineChevrondownIcon />
+              <ChevronDownOutlined color="currentColor" />
             </span>
           )}
         </div>
@@ -181,7 +181,7 @@ const OperationLog: FC<OperationLogProps> = ({ loading, list }) => {
                 className={styles['timeline-tag']}
                 color="yellow"
                 fullRadius
-                icon={<OutlineClockIcon />}
+                icon={<ClockOutlined color="currentColor" />}
               >
                 {day}
               </YakitTag>

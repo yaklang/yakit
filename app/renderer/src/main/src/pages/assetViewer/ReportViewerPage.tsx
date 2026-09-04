@@ -4,16 +4,15 @@ import { flushSync } from 'react-dom'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { QuestionMarkCircleIcon, RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon, SelectIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { Pagination, Space, Tooltip } from 'antd'
-import { OutlineClipboardlistIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { ClipboardListOutlined, TrashOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { genDefaultPagination, type QueryGeneralRequest, type QueryGeneralResponse } from '../invoker/schema'
 import { yakitNotify } from '@/utils/notification'
 import type { Report } from './models'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { SelectIcon } from '@/assets/icons/select'
 import classNames from 'classnames'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { useCreation, useMemoizedFn } from 'ahooks'
@@ -230,7 +229,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
       extra={
         <div className={styles['card-extra']}>
           <Tooltip title={t('ReportViewerPage.clickToInspect')} placement="bottom">
-            <YakitButton type="text" icon={<QuestionMarkCircleIcon />} size="small"></YakitButton>
+            <YakitButton type="text" icon={<QuestionMarkCircleOutlined size={16} />} size="small"></YakitButton>
           </Tooltip>
           <YakitButton
             type="text"
@@ -251,7 +250,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
           >
             <YakitButton
               type="text"
-              icon={<OutlineTrashIcon />}
+              icon={<TrashOutlined color="currentColor" />}
               danger
               size="small"
               disabled={!response.Data.length}
@@ -260,7 +259,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
           {isIRify() && (
             <YakitButton
               type="primary"
-              icon={<OutlineClipboardlistIcon />}
+              icon={<ClipboardListOutlined color="currentColor" />}
               size="small"
               onClick={() => setCreateVisible(true)}
             >
@@ -315,7 +314,6 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                 >
                   <Tooltip title={t('ReportViewerPage.selectToDelete')}>
                     <SelectIcon
-                      // @ts-expect-error 类型定义不完整，需要忽略此行
                       className={classNames(styles['icon-select'], {
                         [styles['icon-select-active']]: selectedRowKeys.includes(item.Id),
                       })}

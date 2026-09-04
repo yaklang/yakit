@@ -45,7 +45,7 @@ import { KnowledgeBaseGV } from '@/yakitGV'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { GuideFooter } from './GuideFooter'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { OutlineMessageCirclePlusIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { MessageCirclePlusOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { InstallPluginModal } from './InstallPluginModal/InstallPluginModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '../hooks/useCheckKnowledgePlugin'
@@ -583,13 +583,17 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
                         <Tooltip title="新建会话">
                           <YakitButton
                             type="text2"
-                            icon={<OutlineMessageCirclePlusIcon />}
+                            icon={<MessageCirclePlusOutlined color="currentColor" />}
                             onClick={() => historyAIReActChatBridge.onNewChat()}
                           />
                         </Tooltip>
                       ),
                       close: (
-                        <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setShowFreeChat(false)} />
+                        <YakitButton
+                          type="text2"
+                          icon={<XOutlined color="currentColor" />}
+                          onClick={() => setShowFreeChat(false)}
+                        />
                       ),
                       taskDetails: true,
                     },

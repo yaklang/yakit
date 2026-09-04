@@ -8,12 +8,11 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import classNames from 'classnames'
 import { Divider, Tooltip } from 'antd'
 import {
-  OutlineArrowcirclerightIcon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
-import { TrashIcon } from '@/assets/newIcon'
+  ArrowCircleRightOutlined,
+  RefreshOutlined,
+  SearchOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import type { SSAProgram } from '../yakRunnerScanHistory/YakRunnerScanHistory'
@@ -285,7 +284,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
             <Tooltip title={'打开项目'}>
               <YakitButton
                 type="text"
-                icon={<OutlineArrowcirclerightIcon />}
+                icon={<ArrowCircleRightOutlined color="currentColor" />}
                 onClick={(e) => {
                   e.stopPropagation()
                   const params: AuditCodePageInfoProps = {
@@ -306,7 +305,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
             <YakitButton
               type="text"
               danger
-              icon={<OutlineTrashIcon />}
+              icon={<TrashOutlined color="currentColor" />}
               onClick={(e) => {
                 e?.stopPropagation()
                 setDeleteParams({
@@ -361,7 +360,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
           </YakitCheckbox>
 
           <YakitInput.Search
-            prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+            prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
             placeholder="请输入关键词搜索"
             value={params.Keyword}
             onChange={(e) => {
@@ -377,7 +376,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
           <YakitButton
             type="outline1"
             colors="danger"
-            icon={<TrashIcon />}
+            icon={<TrashOutlined size={16} />}
             onClick={() => {
               setDeleteParams({
                 title: selectedRowKeys.length === 0 ? '确认清空列表数据？' : '确认删除勾选数据？',
@@ -399,10 +398,9 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
             迁移旧项目数据
           </YakitButton>
 
-          <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={(e) => update(true)} />
+          <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} onClick={(e) => update(true)} />
         </div>
       </div>
-
       <div className={styles['table']}>
         <YakitVirtualList<SSAProgram>
           className={styles['audit-virtual-list']}
@@ -423,7 +421,6 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
           }}
         />
       </div>
-
       <YakitHint
         visible={!!deleteParams}
         title={deleteParams?.title}
@@ -431,7 +428,6 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
         onOk={() => deleteParams && onDelete(deleteParams.params)}
         onCancel={() => setDeleteParams(undefined)}
       />
-
       <IRifyUpdateProjectManagerModal visible={isAllowIRifyUpdate} onClose={() => setIsAllowIRifyUpdate(false)} />
     </div>
   )

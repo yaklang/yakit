@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { visualizer } from 'rollup-plugin-visualizer'
 import checker from 'vite-plugin-checker'
+import { yakitUiIconsPurePlugin } from '../../vite-plugins/yakitUiIconsPurePlugin.mjs'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.resolve(rootDir, '../../pages/main')
@@ -97,6 +98,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       generateThemeCssPlugin(),
       noopAntdComponentStylePlugin(),
+      yakitUiIconsPurePlugin(),
       react(),
       nodePolyfills({
         // 对齐 CRA fallback.fs=false：不要注入浏览器内存版 fs（主窗口 nodeIntegration 下真 Node fs 可用）

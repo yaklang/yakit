@@ -3,7 +3,7 @@ import type { PluginDebugBodyProps, PluginDebugProps } from './PluginDebugType'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePuzzleIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { PuzzleOutlined, RefreshOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -18,7 +18,7 @@ import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { failed, yakitNotify } from '@/utils/notification'
 import { PluginExecuteResult } from '../operator/pluginExecuteResult/PluginExecuteResult'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { SolidPlayIcon } from '@/assets/icon/solid'
+import { PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { Divider, Form } from 'antd'
 import {
   ExecuteEnterNodeByPluginParams,
@@ -122,11 +122,11 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
         title={<div className={styles['header-title']}>插件调试</div>}
         extra={
           <div className={styles['header-extra-wrapper']}>
-            <YakitButton icon={<OutlinePuzzleIcon />} onClick={onOpenDiff}>
+            <YakitButton icon={<PuzzleOutlined color="currentColor" />} onClick={onOpenDiff}>
               合并代码
             </YakitButton>
 
-            <YakitButton type="text2" icon={<OutlineXIcon />} onClick={onCancel} />
+            <YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={onCancel} />
           </div>
         }
         onClose={onCancel}
@@ -548,7 +548,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                     <>
                       <YakitButton type="text" loading={fetchParamsLoading} onClick={onFetchParams}>
                         {t('PluginDebugBody.get_parameters')}
-                        <OutlineRefreshIcon />
+                        <RefreshOutlined color="currentColor" />
                       </YakitButton>
                       <div className={styles['divider-wrapper']}></div>
                     </>
@@ -558,7 +558,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                       {t('YakitButton.stop')}
                     </YakitButton>
                   ) : (
-                    <YakitButton icon={<SolidPlayIcon />} onClick={onStartExecute}>
+                    <YakitButton icon={<PlaySolid color="currentColor" />} onClick={onStartExecute}>
                       {t('YakitButton.execute')}
                     </YakitButton>
                   )}

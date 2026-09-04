@@ -7,16 +7,16 @@ import { grpcDeleteAITool, grpcGetAIToolList, grpcToggleAIToolFavorite } from '.
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
-import { SolidStarIcon, SolidToolIcon } from '@/assets/icon/solid'
+import { StarSolid, ToolSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineClipboardcopyIcon,
-  OutlineDotsverticalIcon,
-  OutlinePencilaltIcon,
-  OutlineSearchIcon,
-  OutlineStarIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ClipboardCopyOutlined,
+  DotsVerticalOutlined,
+  PencilAltOutlined,
+  SearchOutlined,
+  StarOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import styles from './AIToolList.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -62,13 +62,13 @@ export const toolMenu: (t: TFunction) => YakitMenuItemType[] = (t: TFunction) =>
     {
       key: 'copy',
       label: t('YakitButton.copy'),
-      itemIcon: <OutlineClipboardcopyIcon />,
+      itemIcon: <ClipboardCopyOutlined color="currentColor" />,
     },
     {
       key: 'delete',
       label: t('YakitButton.delete'),
       type: 'danger',
-      itemIcon: <OutlineTrashIcon />,
+      itemIcon: <TrashOutlined color="currentColor" />,
     },
   ]
 }
@@ -235,7 +235,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                 allowClear
             /> */}
         <YakitInput
-          prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+          prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
           allowClear
           placeholder={t('YakitInput.searchKeyWordPlaceholder')}
           value={keyWord}
@@ -343,7 +343,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
         <div className={styles['ai-tool-list-item-content']} onClick={onToolClick}>
           <div className={styles['ai-tool-list-item-heard']}>
             <div className={styles['ai-tool-list-item-heard-name']}>
-              <SolidToolIcon className={styles['tool-icon']} />
+              <ToolSolid className={styles['tool-icon']} color="currentColor" />
               <span className={styles['ai-tool-list-item-heard-name-text']}>{item.VerboseName || item.Name}</span>
             </div>
             <div
@@ -355,17 +355,17 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
               {item.IsFavorite ? (
                 <YakitButton
                   type="text2"
-                  icon={<SolidStarIcon className={styles['star-icon-active']} />}
+                  icon={<StarSolid className={styles['star-icon-active']} color="currentColor" />}
                   onClick={onFavorite}
                 />
               ) : (
                 <YakitButton
                   type="text2"
-                  icon={<OutlineStarIcon className={styles['star-icon']} />}
+                  icon={<StarOutlined className={styles['star-icon']} color="currentColor" />}
                   onClick={onFavorite}
                 />
               )}
-              <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={onEdit} />
+              <YakitButton type="text2" icon={<PencilAltOutlined color="currentColor" />} onClick={onEdit} />
               <YakitDropdownMenu
                 menu={{
                   data: toolMenu(t),
@@ -378,7 +378,12 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                   onOpenChange: setVisible,
                 }}
               >
-                <YakitButton isActive={visible} type="text2" size="small" icon={<OutlineDotsverticalIcon />} />
+                <YakitButton
+                  isActive={visible}
+                  type="text2"
+                  size="small"
+                  icon={<DotsVerticalOutlined color="currentColor" />}
+                />
               </YakitDropdownMenu>
             </div>
           </div>

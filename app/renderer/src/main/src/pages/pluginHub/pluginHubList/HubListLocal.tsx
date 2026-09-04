@@ -2,14 +2,14 @@ import type React from 'react'
 import { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
 import { useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport, useDebounceEffect } from 'ahooks'
 import {
-  OutlineClouduploadIcon,
-  OutlineExclamationcircleIcon,
-  OutlinePluscircleIcon,
-  OutlinePlusIcon,
-  OutlineRefreshIcon,
-  OutlineReplyIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  CloudUploadOutlined,
+  ExclamationCircleOutlined,
+  PlusCircleOutlined,
+  PlusOutlined,
+  RefreshOutlined,
+  ReplyOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import type { PluginSearchParams, PluginListPageMeta, PluginFilterParams } from '@/pages/plugins/baseTemplateType'
@@ -46,7 +46,7 @@ import { useStore } from '@/store'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import type { HubListBaseProps } from '../type'
 import type { API } from '@/services/swagger/resposeType'
-import { SolidChevrondownIcon, SolidPluscircleIcon } from '@/assets/icon/solid'
+import { ChevronDownSolid, PlusCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { FilterPopoverBtn, FuncFilterPopover } from '@/pages/plugins/funcTemplate'
@@ -56,7 +56,11 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { NoPromptHint } from '../utilsUI/UtilsTemplate'
 import { RemotePluginGV } from '@/enums/plugin'
-import { SolidCloudpluginIcon, SolidPrivatepluginIcon, SolidYakOfficialPluginColorIcon } from '@/assets/icon/colors'
+import {
+  SolidCloudpluginIcon,
+  SolidPrivatepluginIcon,
+  SolidYakOfficialPluginColorIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { PluginLocalUpload } from '@/pages/plugins/local/PluginLocalUpload'
 import {
@@ -1176,7 +1180,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                       onClick={() => onChangeOnline?.(getSearch())}
                       type="primary"
                       size="small"
-                      icon={<OutlineReplyIcon />}
+                      icon={<ReplyOutlined color="currentColor" />}
                       style={{ marginLeft: 8 }}
                     >
                       {t('YakitButton.back')}
@@ -1188,7 +1192,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 <div className={styles['hub-list-header-extra']}>
                   <FuncFilterPopover
                     maxWidth={1200}
-                    icon={<SolidChevrondownIcon />}
+                    icon={<ChevronDownSolid color="currentColor" />}
                     name={t('YakitButton.batchOperation')}
                     disabled={selectedNum === 0}
                     button={{
@@ -1227,7 +1231,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                   <HubButton
                     width={wrapperWidth}
                     iconWidth={900}
-                    icon={<SolidPluscircleIcon />}
+                    icon={<PlusCircleSolid color="currentColor" />}
                     size="large"
                     name={t('HubListLocal.newPlugin')}
                     onClick={onNewPlugin}
@@ -1243,7 +1247,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                   >
                     {t('HubListLocal.doNotDownload')}{' '}
                     <Tooltip title={t('HubListLocal.skipNotDownloadTooltip')} align={{ offset: [0, 10] }}>
-                      <OutlineExclamationcircleIcon className={styles['exclamationcircleIcon']} />
+                      <ExclamationCircleOutlined className={styles['exclamationcircleIcon']} color="currentColor" />
                     </Tooltip>
                   </YakitCheckbox>
                   <div className={styles['divider-style']}></div>
@@ -1286,7 +1290,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                               {t('HubListLocal.pluginGroup')}{' '}
                               <span className={styles['total-style']}>{showGroupList.length}</span>
                             </span>
-                            <OutlineXIcon onClick={() => onRemoveAllGroup()} />
+                            <XOutlined onClick={() => onRemoveAllGroup()} color="currentColor" />
                           </div>
                         </YakitPopover>
                       )}
@@ -1316,11 +1320,12 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                             [styles['op-btn-body-hover']]: addGroupVisible,
                           })}
                         >
-                          <OutlinePluscircleIcon
+                          <PlusCircleOutlined
                             className={classNames(
                               addGroupVisible ? styles['icon-hover-style'] : styles['icon-style'],
                               styles['plus-icon'],
                             )}
+                            color="currentColor"
                           />
                         </div>
                       </div>
@@ -1328,7 +1333,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                       <YakitButton
                         disabled={!selectList.length && !allChecked}
                         type={'text'}
-                        icon={<OutlinePluscircleIcon />}
+                        icon={<PlusCircleOutlined color="currentColor" />}
                         style={{
                           color: addGroupBtnColor,
                         }}
@@ -1395,10 +1400,10 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 <div className={styles['hub-list-empty']}>
                   <YakitEmpty title={t('YakitEmpty.noData')} description={t('HubListLocal.noDataDesc')} />
                   <div className={styles['refresh-buttons']}>
-                    <YakitButton type="outline1" icon={<OutlinePlusIcon />} onClick={onNewPlugin}>
+                    <YakitButton type="outline1" icon={<PlusOutlined color="currentColor" />} onClick={onNewPlugin}>
                       {t('HubListLocal.newPlugin')}
                     </YakitButton>
-                    <YakitButton type="outline1" icon={<OutlineRefreshIcon />} onClick={onRefresh}>
+                    <YakitButton type="outline1" icon={<RefreshOutlined color="currentColor" />} onClick={onRefresh}>
                       {t('YakitButton.refresh')}
                     </YakitButton>
                   </div>
@@ -1438,7 +1443,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                     type="text2"
                     loading={batchUploadLoading}
                     disabled={allChecked || selectedNum === 0}
-                    icon={<OutlineClouduploadIcon />}
+                    icon={<CloudUploadOutlined color="currentColor" />}
                     onClick={onHeaderExtraUpload}
                   />
                 </Tooltip>

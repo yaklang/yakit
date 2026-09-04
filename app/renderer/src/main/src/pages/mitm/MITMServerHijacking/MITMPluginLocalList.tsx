@@ -8,14 +8,8 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { Divider, Dropdown, Empty, Progress } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import classNames from 'classnames'
-import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  CloudDownloadIcon,
-  FolderOpenIcon,
-  ImportIcon,
-  SolidCloudDownloadIcon,
-} from '@/assets/newIcon'
+import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
+import { FolderOpenSolid, CloudDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { type DownloadOnlinePluginAllResProps, type TagValue, YakModuleList } from '@/pages/yakitStore/YakitStorePage'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -47,7 +41,13 @@ import emiter from '@/utils/eventBus/eventBus'
 import type { API } from '@/services/swagger/resposeType'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import {
+  PencilAltOutlined,
+  TrashOutlined,
+  ChevronDownOutlined,
+  CloudDownloadOutlined,
+  FigmaIcon6480193584Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { UpdateGroupList, type UpdateGroupListItem } from '@/pages/pluginHub/group/UpdateGroupList'
 import { DelGroupConfirmPop } from '@/pages/pluginHub/group/PluginOperationGroupList'
@@ -207,10 +207,18 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         <div className={style['mitm-plugin-empty']}>
           <YakitEmpty description={t('MITMPluginLocalList.click_to_get_official_cloud_plugins_or_i')} />
           <div className={style['mitm-plugin-buttons']}>
-            <YakitButton type="outline1" icon={<CloudDownloadIcon />} onClick={() => setVisibleOnline(true)}>
+            <YakitButton
+              type="outline1"
+              icon={<CloudDownloadOutlined size={16} />}
+              onClick={() => setVisibleOnline(true)}
+            >
               获取云端插件
             </YakitButton>
-            <YakitButton type="outline1" icon={<ImportIcon />} onClick={() => setVisibleImport(true)}>
+            <YakitButton
+              type="outline1"
+              icon={<FigmaIcon6480193584Outlined size={16} />}
+              onClick={() => setVisibleImport(true)}
+            >
               导入插件源
             </YakitButton>
           </div>
@@ -393,7 +401,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
     <YakitHint
       visible={visible}
       title={t('MITMPluginLocalList.rules_updating', { edition: getReleaseEditionName() })}
-      heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
+      heardIcon={<CloudDownloadSolid size={32} style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       onCancel={() => {
         StopAllRule()
         setVisible(false)
@@ -500,7 +508,7 @@ export const TagsAndGroupRender: React.FC<TagsAndGroupRenderProps> = React.memo(
                 closable={true}
                 className={classNames(style['mitm-plugin-query-plugin-group'])}
               >
-                <FolderOpenIcon className={style['folder-icon']} />
+                <FolderOpenSolid className={style['folder-icon']} />
                 <span className={classNames(style['mitm-plugin-query-plugin-group-name'], 'content-ellipsis')}>
                   {i.name}
                 </span>
@@ -780,11 +788,11 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
             [style['mitm-plugin-group-left-open']]: visible,
           })}
         >
-          <FolderOpenIcon />
+          <FolderOpenSolid />
           <span>插件组</span>
           <div className={style['mitm-plugin-group-number']}>{pugGroup.length}</div>
           {(visible && <ChevronUpIcon className={style['chevron-down']} />) || (
-            <ChevronDownIcon className={style['chevron-down']} />
+            <ChevronDownOutlined size={16} className={style['chevron-down']} />
           )}
         </div>
       </Dropdown>
@@ -1078,7 +1086,7 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
           {showExtraOptBtns(item.name) && (
             <div className={style['extra-opt-btns']}>
               <YakitButton
-                icon={<OutlinePencilaltIcon />}
+                icon={<PencilAltOutlined color="currentColor" />}
                 type="text2"
                 onClick={(e) => {
                   e.stopPropagation()
@@ -1086,7 +1094,7 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                 }}
               ></YakitButton>
               <YakitButton
-                icon={<OutlineTrashIcon />}
+                icon={<TrashOutlined color="currentColor" />}
                 type="text"
                 colors="danger"
                 onClick={(e) => {

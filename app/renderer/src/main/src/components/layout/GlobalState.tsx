@@ -3,18 +3,15 @@ import { useDebounceEffect, useGetState, useMemoizedFn } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { failed, info, yakitFailed, yakitNotify } from '@/utils/notification'
-import { ExclamationIcon } from '@/assets/newIcon'
+import { ExclamationIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ExclamationIcon'
 import type { YakitSystem } from '@/yakitGVDefine'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
-import {
-  ErrorIcon,
-  HelpIcon,
-  ShieldCheckIcon as AllShieldCheckIcon,
-  SuccessIcon,
-  WarningIcon,
-  RocketIcon,
-} from './globalStateIcon'
+import { ErrorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ErrorIcon'
+import { HelpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/HelpIcon'
+import { SuccessIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SuccessIcon'
+import { WarningIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WarningIcon'
+import { RocketIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RocketIcon'
 import { showConfigSystemProxyForm, showConfigChromePathForm } from '@/utils/ConfigSystemProxy'
 import { ConfigGlobalReverse } from '@/utils/ConfigGlobalReverse'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
@@ -49,15 +46,17 @@ import {
 } from '@/apiUtils/grpc'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
-import { OutlineShieldcheckIcon } from '@/assets/icon/outline'
+import { ShieldCheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitApp, yakitHost, yakitPlugin, yakitReverse } from '@/services/electronBridge'
+
+import { ShieldCheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 /** 不同状态下展示的ICON */
 const ShowIcon: Record<string, ReactNode> = {
   error: <ExclamationIcon className={styles['icon-style']} />,
   warning: <ExclamationIcon className={styles['icon-style']} />,
   success: <RocketIcon className={styles['icon-style']} />,
-  help: <OutlineShieldcheckIcon className={styles['icon-style']} />,
+  help: <ShieldCheckOutlined className={styles['icon-style']} color="currentColor" />,
   loading: <LoadingOutlined className={styles['icon-style']} />,
 }
 /** 不同状态下组件展示的颜色 */
@@ -1382,7 +1381,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
       </YakitPopover>
       <YakitHint
         visible={pcapHintShow}
-        heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
+        heardIcon={pcapResult ? <ShieldCheckSolid color="#56C991" size={32} /> : undefined}
         title={pcapResult ? t('Home.netcardAccessGranted') : t('Home.netcardNoAccess')}
         width={600}
         content={

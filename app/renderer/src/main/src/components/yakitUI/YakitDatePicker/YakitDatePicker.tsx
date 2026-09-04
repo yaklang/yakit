@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import type { YakitDatePickerProps, YakitRangePickerProps } from './YakitDatePickerType'
 import classNames from 'classnames'
 import styles from './YakitDatePicker.module.scss'
-import { OutlineClockIcon } from '@/assets/icon/outline'
+import { ClockOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import zhCN from 'antd/es/date-picker/locale/zh_CN'
 import zhTW from 'antd/es/date-picker/locale/zh_TW'
 import enUS from 'antd/es/date-picker/locale/en_US'
@@ -99,7 +99,7 @@ const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
         locale={getAntdLocale(lang)}
         suffixIcon={
           <div className={styles['picker-icon']}>
-            <OutlineClockIcon />
+            <ClockOutlined color="currentColor" />
           </div>
         }
         classNames={{
@@ -194,7 +194,7 @@ const InternalRangePicker: React.FC<YakitRangePickerProps> = (props) => {
         locale={getAntdLocale(lang)}
         suffixIcon={
           <div className={styles['picker-icon']}>
-            <OutlineClockIcon />
+            <ClockOutlined color="currentColor" />
           </div>
         }
         classNames={{

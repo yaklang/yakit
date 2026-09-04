@@ -1,7 +1,7 @@
 import { useEffect, useState, useImperativeHandle, forwardRef } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { OutlineSearchIcon } from '@/assets/icon/outline'
+import { SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
@@ -273,7 +273,7 @@ export const StringFuzzer = forwardRef<StringFuzzerRef, StringFuzzerProps>((prop
             <div className={styles['stringFuzzer-search']}>
               <YakitInput
                 allowClear
-                prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+                prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
                 value={searchVal}
                 onChange={(e) => setSearchVal(e.target.value)}
               ></YakitInput>

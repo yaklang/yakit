@@ -2,14 +2,16 @@ import type React from 'react'
 import { useState } from 'react'
 import classNames from 'classnames'
 import { useDebounceEffect } from 'ahooks'
-import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
-import { SolidCheckIcon } from '@/assets/icon/solid'
+import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronUpIcon'
+import { CheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { yakitNotify } from '@/utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './hTTPFlowDetail.module.scss'
+
+import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -109,7 +111,7 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
               onClick={() => handleClickCoding(item.codeKey)}
             >
               {item.label}
-              {codeKey === item.codeKey && <SolidCheckIcon className={styles['check-icon']} />}
+              {codeKey === item.codeKey && <CheckSolid className={styles['check-icon']} color="currentColor" />}
             </div>
           ))}
         </div>
@@ -119,7 +121,7 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
     >
       <YakitButton size="small" type={codeKey !== '' ? 'primary' : 'outline2'} onClick={(e) => e.preventDefault()}>
         {t('CodingPopover.encoding')}
-        {codeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
+        {codeShow ? <ChevronUpIcon /> : <ChevronDownOutlined size={16} />}
       </YakitButton>
     </YakitPopover>
   )

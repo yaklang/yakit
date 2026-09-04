@@ -4,12 +4,11 @@ import { useState } from 'react'
 import type { CopyComponentsProps, YakitTagProps } from './YakitTagType'
 import styles from './YakitTag.module.scss'
 import classNames from 'classnames'
-import { DocumentDuplicateSvgIcon } from '@/assets/newIcon'
 import { useMemoizedFn } from 'ahooks'
 import CheckOutlined from '@ant-design/icons/lib/icons/CheckOutlined'
 import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { success } from '@/utils/notification'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined, DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -55,7 +54,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
         enableCopy ? (
           <CopyComponents copyText={copyText || ''} onAfterCopy={onAfterCopy} iconColor={iconColor} />
         ) : isClosable ? (
-          (closeIcon ?? <OutlineXIcon />)
+          (closeIcon ?? <XOutlined color="currentColor" />)
         ) : undefined
       }
       className={classNames(
@@ -127,7 +126,7 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
       {(loading && <LoadingOutlined style={{ color: 'var(--Colors-Use-Main-Primary)' }} />) || (
         <>
           {(isShowSure && <CheckOutlined style={{ color: 'var(--Colors-Use-Success-Primary)' }} />) || (
-            <DocumentDuplicateSvgIcon style={{ color: iconColor || 'var(--Colors-Use-Main-Primary)' }} />
+            <DocumentDuplicateOutlined size={16} style={{ color: iconColor || 'var(--Colors-Use-Main-Primary)' }} />
           )}
         </>
       )}

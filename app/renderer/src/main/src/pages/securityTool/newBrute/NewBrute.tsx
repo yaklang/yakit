@@ -20,7 +20,8 @@ import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamTyp
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { PluginExecuteProgress } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineArrowscollapseIcon, OutlineArrowsexpandIcon } from '@/assets/icon/outline'
+import { ArrowsExpandOutlined, ArrowsOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+
 import classNames from 'classnames'
 import { Divider, Form, type TreeDataNode as DataNode } from 'antd'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
@@ -219,7 +220,7 @@ const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
               )}
           <YakitButton
             type="text2"
-            icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+            icon={hidden ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
             onClick={(e) => {
               e.stopPropagation()
               setHidden(!hidden)

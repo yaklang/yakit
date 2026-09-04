@@ -6,7 +6,7 @@ import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import styles from './AITaskContent.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useInViewport, useMemoizedFn } from 'ahooks'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDetails'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
@@ -117,12 +117,13 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
         <div className={styles['tab-bar-item-label']} title={typeof finalLabel === 'string' ? `${finalLabel}` : ''}>
           {finalLabel}
         </div>
-        <OutlineXIcon
+        <XOutlined
           onClick={(e) => {
             e.stopPropagation()
             onClose(tab.value)
           }}
           className={styles['x-icon']}
+          color="currentColor"
         />
       </div>
     )

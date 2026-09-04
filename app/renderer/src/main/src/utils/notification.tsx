@@ -2,7 +2,9 @@ import { App, type NotificationArgsProps, message as staticMessage, notification
 import type { NotificationInstance } from 'antd/es/notification/interface'
 import type { MessageInstance } from 'antd/es/message/interface'
 import type React from 'react'
-import { CheckCircleOutlineIcon, CloseCircleIcon, ExclamationOutlineIcon } from '@/assets/newIcon'
+import { CheckCircleOutlineIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckCircleOutlineIcon'
+import { CloseCircleIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CloseCircleIcon'
+import { ExclamationOutlineIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ExclamationOutlineIcon'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 
 const defaultNotificationConfig = {

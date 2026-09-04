@@ -12,16 +12,16 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import {
-  OutlineArrowsexpandIcon,
-  OutlineChevrondownIcon,
-  OutlineChevronupIcon,
-  OutlineDocumentduplicateIcon,
-  OutlineFolderopenIcon,
-} from '@/assets/icon/outline'
+  ArrowsExpandOutlined,
+  ChevronDownOutlined,
+  ChevronUpOutlined,
+  DocumentDuplicateOutlined,
+  FolderOpenOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakEditor } from '@/utils/editors'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { SolidCalendarIcon } from '@/assets/icon/solid'
+import { CalendarSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { setClipboardText } from '@/utils/clipboard'
 import type { PluginExecuteLogFile } from '../plugins/operator/pluginExecuteResult/PluginExecuteResultType.d'
 import { onOpenLocalFileByPath } from '../notepadManage/notepadManage/utils'
@@ -202,15 +202,20 @@ const ExecuteLogFile: React.FC<ExecuteLogFileProps> = React.memo((props) => {
         }
         extra={
           <div className={styles['log-file-card-extra']}>
-            <YakitButton type="outline2" icon={<OutlineDocumentduplicateIcon />} onClick={onCopy}>
+            <YakitButton type="outline2" icon={<DocumentDuplicateOutlined color="currentColor" />} onClick={onCopy}>
               复制文件名
             </YakitButton>
-            <YakitButton type="primary" icon={<OutlineFolderopenIcon />} disabled={!path} onClick={onOpen}>
+            <YakitButton
+              type="primary"
+              icon={<FolderOpenOutlined color="currentColor" />}
+              disabled={!path}
+              onClick={onOpen}
+            >
               打开文件位置
             </YakitButton>
             <YakitButton
               type="text2"
-              icon={expand ? <OutlineChevrondownIcon /> : <OutlineChevronupIcon />}
+              icon={expand ? <ChevronDownOutlined color="currentColor" /> : <ChevronUpOutlined color="currentColor" />}
               onClick={onExpand}
             />
           </div>
@@ -303,15 +308,20 @@ const FileLogShow: React.FC<FileLogShowProps> = React.memo((props) => {
         }
         extra={
           <div className={styles['file-card-extra']}>
-            <YakitButton type="outline2" icon={<OutlineDocumentduplicateIcon />} onClick={onCopy}>
+            <YakitButton type="outline2" icon={<DocumentDuplicateOutlined color="currentColor" />} onClick={onCopy}>
               复制文件名
             </YakitButton>
-            <YakitButton type="primary" icon={<OutlineFolderopenIcon />} disabled={!is_existed} onClick={onOpen}>
+            <YakitButton
+              type="primary"
+              icon={<FolderOpenOutlined color="currentColor" />}
+              disabled={!is_existed}
+              onClick={onOpen}
+            >
               打开文件位置
             </YakitButton>
             <YakitButton
               type="text2"
-              icon={expand ? <OutlineChevrondownIcon /> : <OutlineChevronupIcon />}
+              icon={expand ? <ChevronDownOutlined color="currentColor" /> : <ChevronUpOutlined color="currentColor" />}
               onClick={onExpand}
             />
           </div>
@@ -372,11 +382,11 @@ export const EditorLogShow: React.FC<EditorLogShowProps> = React.memo((props) =>
           <div>{level}</div>
           <div className={styles['editor-content-extra']}>
             <div className={styles['time']}>
-              <SolidCalendarIcon />
+              <CalendarSolid color="currentColor" />
               <span>{formatTimestamp(timestamp)}</span>
             </div>
             <Divider type="vertical" style={{ margin: '0 8px' }} />
-            <YakitButton type="text2" icon={<OutlineArrowsexpandIcon />} onClick={onExpand} />
+            <YakitButton type="text2" icon={<ArrowsExpandOutlined color="currentColor" />} onClick={onExpand} />
           </div>
         </div>
         <div className={styles['editor']}>
@@ -424,7 +434,7 @@ const GraphLogShow: React.FC<GraphLogShowProps> = React.memo((props) => {
         <div className={styles['graph-content-title']}>
           <div>{graphData.name}</div>
           <div className={styles['time']}>
-            <SolidCalendarIcon />
+            <CalendarSolid color="currentColor" />
             <span>{formatTimestamp(timestamp)}</span>
           </div>
         </div>

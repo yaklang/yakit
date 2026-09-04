@@ -1,4 +1,3 @@
-import { ArrowCircleRightSvgIcon } from '@/assets/newIcon'
 import { DurationMsToColor, RangeInputNumberTable, StatusCodeToColor } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -27,7 +26,7 @@ import {
   onAddOverlayWidget,
 } from '../../HTTPFuzzerPage'
 import styles from './HTTPFuzzerPageTable.module.scss'
-import { HollowLightningBoltIcon } from '@/assets/newIcon'
+import { HollowLightningBoltIcon } from '@yakit-libs/yakit-ui-icons/oldicon/HollowLightningBoltIcon'
 import { Divider, Tooltip } from 'antd'
 import { ExtractionResultsContent } from '../../MatcherAndExtractionCard/MatcherAndExtractionCardShared'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -40,7 +39,7 @@ import ReactResizeDetector from 'react-resize-detector'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { DefFuzzerTableMaxData } from '@/defaultConstants/HTTPFuzzerPage'
 import { CodingPopover } from '@/components/HTTPFlowDetailParts'
-import { OutlineSelectorIcon } from '@/assets/icon/outline'
+import { SelectorOutlined, ArrowCircleRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { isCellRedSingleColor } from '@/components/TableVirtualResize/utils'
 import { useSelectionByteCount } from '@/components/yakitUI/YakitEditor/useSelectionByteCount'
@@ -265,10 +264,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         width: 200,
         filterProps: {
           filterIcon: (
-            <OutlineSelectorIcon
+            <SelectorOutlined
               className={classNames(styles['search-icon'], styles['filter-icon'], {
                 [styles['active-icon']]: !!query?.ExtractedResults?.length,
               })}
+              color="currentColor"
             />
           ),
           filterRender: () => (
@@ -361,10 +361,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 filterKey: 'StatusCode',
                 filtersType: 'input',
                 filterIcon: (
-                  <OutlineSelectorIcon
+                  <SelectorOutlined
                     className={classNames(styles['filter-icon'], {
                       [styles['active-icon']]: !!query?.StatusCode?.length || sorterTable?.orderBy === 'StatusCode',
                     })}
+                    color="currentColor"
                   />
                 ),
                 filterRender: () => (
@@ -402,11 +403,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
               filterProps: {
                 filterKey: 'bodyLength',
                 filterIcon: (
-                  <OutlineSelectorIcon
+                  <SelectorOutlined
                     className={classNames(styles['filter-icon'], {
                       [styles['active-icon']]:
                         query?.afterBodyLength || query?.beforeBodyLength || sorterTable?.orderBy === 'BodyLength',
                     })}
+                    color="currentColor"
                   />
                 ),
                 filterRender: () => (
@@ -445,11 +447,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
               filterProps: {
                 filterKey: 'durationMs',
                 filterIcon: (
-                  <OutlineSelectorIcon
+                  <SelectorOutlined
                     className={classNames(styles['filter-icon'], {
                       [styles['active-icon']]:
                         query?.afterDurationMs || query?.beforeDurationMs || sorterTable?.orderBy === 'DurationMs',
                     })}
+                    color="currentColor"
                   />
                 ),
                 filterRender: () => (
@@ -587,8 +590,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         <Divider type="vertical" style={{ margin: 0 }} />
                       </>
                     )}
-
-                    <ArrowCircleRightSvgIcon
+                    <ArrowCircleRightOutlined
+                      size={16}
                       style={{
                         color: !isCellRedSingleColor(record.cellClassName) ? '' : '#fff',
                       }}

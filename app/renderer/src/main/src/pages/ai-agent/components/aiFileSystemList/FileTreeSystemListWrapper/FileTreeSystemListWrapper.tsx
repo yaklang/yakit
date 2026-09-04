@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from './FileTreeSystemListWrapper.module.scss'
 import FileTreeSystemList from '../FileTreeSystemList/FileTreeSystemList'
-import { OutlineChevrondownIcon, OutlineDocumentaddIcon, OutlineFolderaddIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined, DocumentAddOutlined, FolderAddOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { checkPathIncludeRelation, mergePathArray, onOpenFileFolder } from '../utils'
@@ -128,7 +128,10 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
     <div className={classNames(styles['file-tree-system'], { [styles['file-tree-system-fill']]: fillHeight })}>
       <div className={styles['file-tree-system-title']}>
         <div className={styles['file-tree-system-title-toggle']} onClick={() => setExpanded((p) => !p)}>
-          <OutlineChevrondownIcon style={{ transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
+          <ChevronDownOutlined
+            style={{ transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+            color="currentColor"
+          />
           <span>{title}</span>
         </div>
 
@@ -139,14 +142,14 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
               type="text2"
               title="打开文件"
               onClick={() => menuSelect(FileListTileMenu.OpenFile)}
-              icon={<OutlineDocumentaddIcon />}
+              icon={<DocumentAddOutlined color="currentColor" />}
             />
             <YakitButton
               hidden={!isOpen}
               type="text2"
               title="打开文件夹"
               onClick={() => menuSelect(FileListTileMenu.OpenFolder)}
-              icon={<OutlineFolderaddIcon />}
+              icon={<FolderAddOutlined color="currentColor" />}
             />
           </div>
         )}

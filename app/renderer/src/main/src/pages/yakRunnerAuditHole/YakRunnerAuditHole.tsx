@@ -16,7 +16,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import classNames from 'classnames'
 import { Divider, Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { FieldGroup } from '../risks/YakitRiskTable/utils'
 import type { FieldName } from '../risks/RiskTable'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
@@ -359,7 +359,7 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
         <div className={styles['vulnerability-type-heard-title']}>
           {t('YakRunnerAuditHole.vulnerabilityTypeTop10')}
           <Tooltip title={t('YakRunnerAuditHole.vulnerabilityTypeResetTip')}>
-            <OutlineInformationcircleIcon className={styles['info-icon']} />
+            <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
           </Tooltip>
         </div>
         <YakitButton

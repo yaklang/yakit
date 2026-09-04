@@ -10,18 +10,18 @@ import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Tooltip } from 'antd'
 import {
-  OutlineChevronleftIcon,
-  OutlineDocumenttextIcon,
-  OutlineDocumentIcon,
-  OutlineTagIcon,
-  OutlineInformationcircleIcon,
-  OutlinePencilaltIcon,
-  OutlinePlayIcon,
-  OutlinePauseIcon,
-  OutlineTrashIcon,
-  OutlineExternallinkIcon,
-  OutlineMessageCirclePlusIcon,
-} from '@/assets/icon/outline'
+  ChevronLeftOutlined,
+  DocumentOutlined,
+  DocumentTextOutlined,
+  ExternalLinkOutlined,
+  InformationCircleOutlined,
+  MessageCirclePlusOutlined,
+  PauseOutlined,
+  PencilAltOutlined,
+  PlayOutlined,
+  TagOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import type { AIReActSchedule } from '../../../ai-re-act/hooks/grpcApi'
 import { grpcGetAIReActSchedule, grpcDeleteAIReActSchedule, grpcSetAIReActScheduleEnabled } from '../utils'
 import { yakitNotify } from '@/utils/notification'
@@ -254,7 +254,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
   return (
     <div className={styles['detail-overlay']}>
       <div className={styles['detail-header']}>
-        <YakitButton type="text2" size="small" icon={<OutlineChevronleftIcon />} onClick={handleClose}>
+        <YakitButton type="text2" size="small" icon={<ChevronLeftOutlined />} onClick={handleClose}>
           <span className={styles['detail-header-back']}>{t('AIScheduledTasks.taskIntro')}</span>
         </YakitButton>
         <div className={styles['detail-header-actions']}>
@@ -270,28 +270,28 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
             <YakitButton
               type="text2"
               size="small"
-              icon={schedule.Status === 'active' ? <OutlinePauseIcon /> : <OutlinePlayIcon />}
+              icon={schedule.Status === 'active' ? <PauseOutlined /> : <PlayOutlined />}
               loading={toggling}
               disabled={isCompleted || toggling}
               onClick={handleToggleEnabled}
             />
           </Tooltip>
           <Tooltip title={t('YakitButton.edit')}>
-            <YakitButton type="text2" size="small" icon={<OutlinePencilaltIcon />} onClick={handleEdit} />
+            <YakitButton type="text2" size="small" icon={<PencilAltOutlined />} onClick={handleEdit} />
           </Tooltip>
           <Tooltip title={t('AIScheduledTasks.runNow')}>
-            <YakitButton type="text2" size="small" icon={<OutlineMessageCirclePlusIcon />} onClick={handleRunNow} />
+            <YakitButton type="text2" size="small" icon={<MessageCirclePlusOutlined />} onClick={handleRunNow} />
           </Tooltip>
           {showRelatedChatLink && (
             <Tooltip title={t('AIScheduledTasks.openChat')}>
-              <YakitButton type="text2" size="small" icon={<OutlineExternallinkIcon />} onClick={openRelatedChat} />
+              <YakitButton type="text2" size="small" icon={<ExternalLinkOutlined />} onClick={openRelatedChat} />
             </Tooltip>
           )}
           <Tooltip title={t('YakitButton.delete')}>
             <YakitButton
               type="text2"
               size="small"
-              icon={<OutlineTrashIcon />}
+              icon={<TrashOutlined />}
               loading={deleting}
               disabled={deleting}
               onClick={handleDelete}
@@ -302,7 +302,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
       <div className={styles['detail-content']}>
         <section className={classNames(styles['detail-section'], styles['detail-name-section'])}>
           <div className={styles['detail-section-title']}>
-            <OutlineTagIcon className={styles['detail-section-icon']} />
+            <TagOutlined className={styles['detail-section-icon']} />
             <span>{t('AIScheduledTasks.taskName')}</span>
           </div>
           <div className={styles['detail-name-card']}>
@@ -317,7 +317,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
 
         <section className={styles['detail-section']}>
           <div className={styles['detail-section-title']}>
-            <OutlineDocumenttextIcon className={styles['detail-section-icon']} />
+            <DocumentTextOutlined className={styles['detail-section-icon']} />
             <span>{t('AIScheduledTasks.prompt')}</span>
           </div>
           <div className={styles['detail-panel']}>{schedule.Payload.Prompt}</div>
@@ -326,7 +326,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
         {hasOriginalRequest && (
           <section className={styles['detail-section']}>
             <div className={styles['detail-section-title']}>
-              <OutlineDocumentIcon className={styles['detail-section-icon']} />
+              <DocumentOutlined className={styles['detail-section-icon']} />
               <span>{t('AIScheduledTasks.originalRequest')}</span>
             </div>
             <div className={styles['detail-panel']}>{schedule.OriginalRequest}</div>
@@ -335,7 +335,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
 
         <section className={styles['detail-section']}>
           <div className={styles['detail-section-title']}>
-            <OutlineInformationcircleIcon className={styles['detail-section-icon']} />
+            <InformationCircleOutlined className={styles['detail-section-icon']} />
             <span>{t('AIScheduledTasks.detail')}</span>
           </div>
           <div className={styles['detail-card']}>
@@ -353,7 +353,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
                       <YakitButton
                         type="text2"
                         size="small"
-                        icon={<OutlineExternallinkIcon />}
+                        icon={<ExternalLinkOutlined />}
                         onClick={openRelatedChat}
                       />
                     </Tooltip>
@@ -369,7 +369,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
         {hasLastExecution && (
           <section className={styles['detail-section']}>
             <div className={styles['detail-section-title']}>
-              <OutlineInformationcircleIcon className={styles['detail-section-icon']} />
+              <InformationCircleOutlined className={styles['detail-section-icon']} />
               <span>{t('AIScheduledTasks.lastExecution')}</span>
             </div>
             <div className={styles['detail-card']}>

@@ -1,9 +1,9 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 import type { AIForgeFormProps, AIForgeInfoOptProps, AIToolFormProps } from './type'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { SolidToolIcon } from '@/assets/icon/solid'
+import { ToolSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { OutlineChevrondownIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { useMemoizedFn, useSize } from 'ahooks'
 import { Form } from 'antd'
@@ -94,7 +94,7 @@ export const AIForgeInfoOpt: React.FC<AIForgeInfoOptProps> = memo((props) => {
                     {tools.map((item) => {
                       return (
                         <div key={item} className={styles['tools-list-opt']}>
-                          <SolidToolIcon />
+                          <ToolSolid color="currentColor" />
                           <div className={classNames(styles['tool-name'], 'yakit-content-single-ellipsis')}>{item}</div>
                         </div>
                       )
@@ -107,12 +107,13 @@ export const AIForgeInfoOpt: React.FC<AIForgeInfoOptProps> = memo((props) => {
             >
               <YakitTag className={styles['footer-tag']}>
                 <div className={styles['tag-body']}>
-                  <SolidToolIcon className={styles['tool-header-icon']} />
+                  <ToolSolid className={styles['tool-header-icon']} color="currentColor" />
                   {tools.length}
-                  <OutlineChevrondownIcon
+                  <ChevronDownOutlined
                     className={classNames(styles['tool-arrow'], {
                       [styles['tool-expand-arrow']]: toolsShow,
                     })}
+                    color="currentColor"
                   />
                 </div>
               </YakitTag>
@@ -267,7 +268,7 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
           <YakitButton loading={loading} onClick={handleParamsSubmit}>
             开始执行
           </YakitButton>
-          <YakitButton type="text2" icon={<OutlineXIcon />} onClick={onBack} />
+          <YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={onBack} />
         </div>
       </div>
 
@@ -344,7 +345,7 @@ export const AIToolForm: React.FC<AIToolFormProps> = memo((props) => {
           <YakitButton loading={loading} onClick={handleParamsSubmit}>
             开始执行
           </YakitButton>
-          <YakitButton type="text2" icon={<OutlineXIcon />} onClick={onBack} />
+          <YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={onBack} />
         </div>
       </div>
 

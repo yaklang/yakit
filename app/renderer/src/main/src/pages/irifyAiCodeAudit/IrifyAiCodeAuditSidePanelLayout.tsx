@@ -2,7 +2,7 @@ import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'
-import { OutlineBotIcon, OutlinePlusIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { BotOutlined, PlusOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
@@ -19,7 +19,7 @@ import type { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
 
 const defaultAiTabs: YakitTabsProps[] = [
   {
-    icon: <OutlineBotIcon />,
+    icon: <BotOutlined color="currentColor" />,
     label: 'HTTPHistory.AI',
     value: 'ai',
   },
@@ -128,12 +128,18 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
             <Tooltip title={t('newChat')}>
               <YakitButton
                 type="text2"
-                icon={<OutlinePlusIcon />}
+                icon={<PlusOutlined color="currentColor" />}
                 onClick={() => historyAIReActChatBridge.onNewChat()}
               />
             </Tooltip>
           ),
-          close: <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />,
+          close: (
+            <YakitButton
+              type="text2"
+              icon={<XOutlined color="currentColor" />}
+              onClick={() => setOpenTabsFlag(false)}
+            />
+          ),
           taskDetails: true,
         },
         footerRightTypes: [

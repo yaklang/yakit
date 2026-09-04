@@ -2,7 +2,6 @@ import React, { useContext } from 'react'
 import { Tooltip } from 'antd'
 import { useCreation } from 'ahooks'
 import classNames from 'classnames'
-import { RemoveIcon, StatusOfflineIcon } from '@/assets/newIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
@@ -10,6 +9,9 @@ import MITMContext from '@/pages/mitm/Context/MITMContext'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { HTTPFlowShieldProps } from '../HTTPFlowTable.constants'
 import style from '../HTTPFlowTable.module.scss'
+
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { StatusOfflineOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: HTTPFlowShieldProps) => {
   const { shieldData, cancleFilter, cancleAllFilter } = props
@@ -33,7 +35,7 @@ const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: HTTPFlo
                     <div className={classNames(style['tag-name-style'])}>{item}</div>
                   </Tooltip>
                   <div className={classNames(style['tag-del-style'])} onClick={() => cancleFilter(item)}>
-                    <RemoveIcon />
+                    <XSolid size={12} />
                   </div>
                 </div>
               ))}
@@ -56,7 +58,7 @@ const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: HTTPFlo
           >
             <span className="content-ellipsis">{t('HTTPFlowShield.conditionBlocked')}</span>
             <span className={style['http-history-table-left-number']}>{shieldData?.data.length}</span>
-            <StatusOfflineIcon className={style['http-history-table-left-shield-icon']} />
+            <StatusOfflineOutlined size={12} className={style['http-history-table-left-shield-icon']} />
           </div>
         </YakitPopover>
       )}

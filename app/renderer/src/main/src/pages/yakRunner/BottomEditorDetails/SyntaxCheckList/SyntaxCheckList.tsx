@@ -3,8 +3,8 @@ import { useMemoizedFn } from 'ahooks'
 import styles from './SyntaxCheckList.module.scss'
 import classNames from 'classnames'
 import type { IMonacoEditorMarker } from '@/utils/editorMarkers'
-import { OutlineDeprecatedIcon } from '@/assets/icon/outline'
-import { SolidExclamationIcon, SolidInformationcircleIcon, SolidXcircleIcon } from '@/assets/icon/solid'
+import { FigmaIcon22915169930Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ExclamationSolid, InformationCircleSolid, XCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { Selection } from '../../RunnerTabs/RunnerTabsType'
 const { ipcRenderer } = window.require('electron')
 export interface SyntaxCheckListProps {
@@ -20,28 +20,28 @@ export const SyntaxCheckList: React.FC<SyntaxCheckListProps> = (props) => {
       case 1:
         return (
           <div className={classNames(styles['hint-icon'], styles['icon-box'])}>
-            <OutlineDeprecatedIcon />
+            <FigmaIcon22915169930Outlined color="currentColor" />
           </div>
         )
       // Info
       case 2:
         return (
           <div className={classNames(styles['info-icon'], styles['icon-box'])}>
-            <SolidInformationcircleIcon />
+            <InformationCircleSolid color="currentColor" />
           </div>
         )
       // Warning
       case 4:
         return (
           <div className={classNames(styles['warn-icon'], styles['icon-box'])}>
-            <SolidExclamationIcon />
+            <ExclamationSolid color="currentColor" />
           </div>
         )
       // Error
       case 8:
         return (
           <div className={classNames(styles['error-icon'], styles['icon-box'])}>
-            <SolidXcircleIcon />
+            <XCircleSolid color="currentColor" />
           </div>
         )
       default:

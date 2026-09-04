@@ -27,30 +27,30 @@ import {
   useVirtualList,
 } from 'ahooks'
 import {
-  OutlineCloseIcon,
-  OutlineClouddownloadIcon,
-  OutlineClouduploadIcon,
-  OutlineExclamationcircleIcon,
-  OutlineExclamationIcon,
-  OutlineLightbulbIcon,
-  OutlineOpenIcon,
-  OutlinePencilaltIcon,
-  OutlinePluscircleIcon,
-  OutlinePlusIcon,
-  OutlineSearchIcon,
-  OutlineSelectorIcon,
-  OutlineTrashIcon,
-  OutlineXIcon,
-  OutlineReplyIcon,
-} from '@/assets/icon/outline'
+  CloseOutlined,
+  CloudDownloadOutlined,
+  CloudUploadOutlined,
+  ExclamationCircleOutlined,
+  ExclamationOutlined,
+  LightBulbOutlined,
+  OpenOutlined,
+  PencilAltOutlined,
+  PlusCircleOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  SelectorOutlined,
+  TrashOutlined,
+  XOutlined,
+  ReplyOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import {
-  SolidCheckIcon,
-  SolidClouddownloadIcon,
-  SolidClouduploadIcon,
-  SolidFolderopenIcon,
-  SolidReplyIcon,
-} from '@/assets/icon/solid'
-import { Descriptions, Form, type InputRef, Progress, Tooltip, Modal } from 'antd'
+  CheckSolid,
+  CloudDownloadSolid,
+  CloudUploadSolid,
+  FolderOpenSolid,
+  ReplySolid,
+} from '@yakit-libs/yakit-ui-icons/solid'
+import { Descriptions, Form, type InputRef, Modal, Progress, Tooltip } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -354,7 +354,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
             <YakitButton type="text" onClick={handleReset}>
               {t('YakitButton.reset')}
             </YakitButton>
-            <YakitButton type="secondary2" icon={<OutlinePlusIcon />} onClick={handleAddGroup} />
+            <YakitButton type="secondary2" icon={<PlusOutlined color="currentColor" />} onClick={handleAddGroup} />
           </div>
         </div>
 
@@ -428,7 +428,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
                               }}
                               onClick={(e) => e.stopPropagation()}
                             />
-                            <SolidFolderopenIcon />
+                            <FolderOpenSolid color="currentColor" />
                             <span
                               className={classNames(styles['title-style'], 'yakit-content-single-ellipsis')}
                               title={data.GroupName}
@@ -447,7 +447,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
                             >
                               <YakitButton
                                 type="secondary2"
-                                icon={<OutlinePencilaltIcon />}
+                                icon={<PencilAltOutlined color="currentColor" />}
                                 loading={isEditLoading}
                                 onClick={() => {
                                   handleEdit(data)
@@ -456,7 +456,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
                               {canUpload && (
                                 <YakitButton
                                   type="secondary2"
-                                  icon={<OutlineClouduploadIcon />}
+                                  icon={<CloudUploadOutlined color="currentColor" />}
                                   onClick={() => {
                                     ruleGroupItemRef.current = data
                                     setUploadInfoVisible(true)
@@ -466,7 +466,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
                               <YakitButton
                                 type="secondary2"
                                 colors="danger"
-                                icon={<OutlineTrashIcon />}
+                                icon={<TrashOutlined color="currentColor" />}
                                 loading={isDelLoading}
                                 onClick={() => {
                                   handleDelete(data)
@@ -483,7 +483,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
                               {canUpload && (
                                 <YakitButton
                                   type="secondary2"
-                                  icon={<OutlineClouduploadIcon />}
+                                  icon={<CloudUploadOutlined color="currentColor" />}
                                   onClick={() => {
                                     ruleGroupItemRef.current = data
                                     setUploadInfoVisible(true)
@@ -604,7 +604,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     if (isModify) {
       Modal.confirm({
         title: t('YakitModal.friendlyReminder'),
-        icon: <OutlineExclamationcircleIcon />,
+        icon: <ExclamationCircleOutlined color="currentColor" />,
         content: t('EditRuleDrawer.saveAndCloseConfirm'),
         okText: t('YakitButton.save'),
         cancelText: t('YakitButton.doNotSave'),
@@ -617,7 +617,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             }}
             className="modal-remove-icon"
           >
-            <OutlineXIcon />
+            <XOutlined color="currentColor" />
           </div>
         ),
         onOk: () => {
@@ -955,7 +955,12 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     if (auditDetailShow)
       return (
         <div className={styles['drawer-title']}>
-          <YakitButton type="outline2" size="large" icon={<SolidReplyIcon />} onClick={handleCancelDetail}>
+          <YakitButton
+            type="outline2"
+            size="large"
+            icon={<ReplySolid color="currentColor" />}
+            onClick={handleCancelDetail}
+          >
             {t('YakitButton.back')}
           </YakitButton>
 
@@ -1005,7 +1010,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
               {t('YakitButton.save')}
             </YakitButton>
             <div className={styles['divider-style']}></div>
-            <YakitButton type="text2" icon={<OutlineXIcon />} onClick={handleCancel} />
+            <YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={handleCancel} />
           </div>
         }
         open={visible}
@@ -1034,7 +1039,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 open={infoTooltipShow}
                 onOpenChange={setInfoTooltipShow}
               >
-                <YakitButton type="text2" icon={<OutlineCloseIcon />} onClick={handleSetExpand} />
+                <YakitButton type="text2" icon={<CloseOutlined color="currentColor" />} onClick={handleSetExpand} />
               </Tooltip>
             </div>
 
@@ -1108,7 +1113,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                     open={codeTooltipShow}
                     onOpenChange={setCodeTooltipShow}
                   >
-                    <YakitButton type="text2" icon={<OutlineOpenIcon />} onClick={handleSetExpand} />
+                    <YakitButton type="text2" icon={<OpenOutlined color="currentColor" />} onClick={handleSetExpand} />
                   </Tooltip>
                 )}
 
@@ -1128,7 +1133,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                   {t('EditRuleDrawer.autoDetect')}
                 </YakitButton>
                 {isShowResult && (
-                  <YakitButton type="outline2" onClick={goBackForm} icon={<OutlineReplyIcon />}>
+                  <YakitButton type="outline2" onClick={goBackForm} icon={<ReplyOutlined color="currentColor" />}>
                     {t('YakitButton.back')}
                   </YakitButton>
                 )}
@@ -1545,7 +1550,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
               <YakitInput
                 placeholder={t('YakitInput.searchKeyWordPlaceholder')}
                 maxLength={50}
-                prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+                prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
                 value={search}
                 allowClear
                 onChange={(e) => {
@@ -1606,7 +1611,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
         }
         onOpenChange={handleAddGroupVisibleChange}
       >
-        <YakitButton type="text" disabled={!isActive} icon={<OutlinePluscircleIcon />}>
+        <YakitButton type="text" disabled={!isActive} icon={<PlusCircleOutlined color="currentColor" />}>
           {oldGroup.length ? undefined : t('UpdateRuleToGroup.addGroupButton')}
         </YakitButton>
       </YakitPopover>
@@ -2015,7 +2020,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
             <div className={styles['title-style']}>{currentInfo.current?.Title || '-'}</div>
 
             <div className={styles['advice-icon']}>
-              <OutlineLightbulbIcon />
+              <LightBulbOutlined color="currentColor" />
             </div>
           </div>
           {currentInfo.current?.Description && (
@@ -2205,9 +2210,9 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
     >
       <div className={styles['progressTitle']}>
         {type === 'upload' ? (
-          <SolidClouduploadIcon style={{ color: 'var(--Colors-Use-Orange-Primary)' }} />
+          <CloudUploadSolid style={{ color: 'var(--Colors-Use-Orange-Primary)' }} />
         ) : (
-          <SolidClouddownloadIcon style={{ color: 'var(--Colors-Use-Orange-Primary)' }} />
+          <CloudDownloadSolid style={{ color: 'var(--Colors-Use-Orange-Primary)' }} />
         )}
         <span className={styles['text']}>
           {type === 'upload'
@@ -2451,7 +2456,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                                   }}
                                   onClick={(e) => e.stopPropagation()}
                                 />
-                                <SolidFolderopenIcon />
+                                <FolderOpenSolid color="currentColor" />
                                 <span
                                   className={classNames(styles['title-style'], 'yakit-content-single-ellipsis')}
                                   title={item.groupName}
@@ -2469,7 +2474,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                               >
                                 <YakitButton
                                   type="secondary2"
-                                  icon={<OutlineClouddownloadIcon />}
+                                  icon={<CloudDownloadOutlined color="currentColor" />}
                                   onClick={() => {
                                     ruleGroupItemRef.current = item
                                     setDownloadInfoVisible(true)
@@ -2479,7 +2484,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                                   <YakitButton
                                     type="secondary2"
                                     colors="danger"
-                                    icon={<OutlineTrashIcon />}
+                                    icon={<TrashOutlined color="currentColor" />}
                                     loading={isDelLoading}
                                     onClick={() => {
                                       handleDelete(item)
@@ -2613,7 +2618,7 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                     <YakitTag
                       color={title?.tag as YakitTagColor}
                       closable={false}
-                      icon={<OutlineExclamationIcon className={styles['exclamationIcon']} />}
+                      icon={<ExclamationOutlined className={styles['exclamationIcon']} color="currentColor" />}
                     >
                       {title ? title.name : alert.Severity || '-'}
                     </YakitTag>
@@ -2640,7 +2645,7 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                               >
                                 {item.name}
                                 {item.key.includes(alert.Severity || '') && (
-                                  <SolidCheckIcon className={styles['check-icon']} />
+                                  <CheckSolid className={styles['check-icon']} color="currentColor" />
                                 )}
                               </div>
                             ))}
@@ -2648,7 +2653,11 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                         }
                       >
                         <Tooltip title="修改漏洞等级">
-                          <YakitButton icon={<OutlineSelectorIcon />} type="text2" size="small"></YakitButton>
+                          <YakitButton
+                            icon={<SelectorOutlined color="currentColor" />}
+                            type="text2"
+                            size="small"
+                          ></YakitButton>
                         </Tooltip>
                       </YakitPopover>
                     </div>

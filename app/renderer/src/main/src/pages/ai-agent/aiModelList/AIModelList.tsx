@@ -43,25 +43,26 @@ import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineAtomIcon,
-  OutlineChatIcon,
-  OutlineClipboardcopyIcon,
-  OutlineClouddownloadIcon,
-  OutlineDotsverticalIcon,
-  OutlineExclamationIcon,
-  OutlineExitIcon,
-  OutlineLightbulbIcon,
-  OutlinePencilaltIcon,
-  OutlinePlayIcon,
-  OutlinePlusIcon,
-  OutlinePlussmIcon,
-  OutlineRefreshIcon,
-  OutlineTrashIcon,
-  OutlineSpeechToTextIcon,
-  OutlineCheckIcon,
-  OutlineCogIcon,
-  OutlineEngineIcon,
-} from '@/assets/icon/outline'
+  AtomOutlined,
+  ChatOutlined,
+  ClipboardCopyOutlined,
+  CloudDownloadOutlined,
+  DotsVerticalOutlined,
+  ExclamationOutlined,
+  LightBulbOutlined,
+  PencilAltOutlined,
+  PlayOutlined,
+  PlusOutlined,
+  PlusSmOutlined,
+  RefreshOutlined,
+  TrashOutlined,
+  SpeechToTextOutlined,
+  CheckOutlined,
+  CogOutlined,
+  FigmaIcon28011794Outlined,
+  FigmaIcon4866167279Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import {
   DownloadLlamaServerModelPrompt,
@@ -372,10 +373,10 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
         <div className={styles['ai-model-list-header-right']}>
           {modelType === 'online' && <AIOnlineModeSetting onRefresh={onRefreshAIModel} />}
           <Tooltip title={t('YakitButton.add')}>
-            <YakitButton type="text2" icon={<OutlinePlusIcon />} onClick={onAdd} />
+            <YakitButton type="text2" icon={<PlusOutlined color="currentColor" />} onClick={onAdd} />
           </Tooltip>
           <Tooltip title={t('YakitButton.refresh')}>
-            <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={() => onRefresh()} />
+            <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} onClick={() => onRefresh()} />
           </Tooltip>
           {modelType === 'local' && (
             <>
@@ -500,7 +501,7 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
       onOpenChange={onSetConfig}
       placement="bottomRight"
     >
-      <YakitButton type="text2" icon={<OutlineCogIcon />} />
+      <YakitButton type="text2" icon={<CogOutlined color="currentColor" />} />
     </YakitPopover>
   )
 })
@@ -689,7 +690,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
           <div className={styles['ai-list-empty-wrapper']}>
             <YakitEmpty title={t('YakitEmpty.noData')} description={t('AIOnlineModelList.noDataDesc')} />
             <div className={styles['ai-list-btns-wrapper']}>
-              <YakitButton type="outline1" icon={<OutlinePlussmIcon />} onClick={onAdd}>
+              <YakitButton type="outline1" icon={<PlusSmOutlined color="currentColor" />} onClick={onAdd}>
                 {t('AIModelList.addModel')}
               </YakitButton>
             </div>
@@ -830,7 +831,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
         <div className={styles['ai-online-model-list-item-type']}>{modelName}</div>
 
         <div className={styles['ai-online-model-list-item-model']}>
-          <OutlineAtomIcon className={styles['atom-icon']} />
+          <AtomOutlined className={styles['atom-icon']} color="currentColor" />
           <span className={styles['ai-online-model-list-item-model-text']}>{config.Type}</span>
         </div>
         {!isShowRemove && (
@@ -846,8 +847,18 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
       </div>
       <div className={styles['ai-online-model-list-item-extra']}>
         <div className={styles['ai-online-model-list-item-extra-edit']}>
-          <YakitButton type="text2" icon={<OutlineEngineIcon />} onClick={onCheckModel} loading={testLoading} />
-          <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={onEditClick} disabled={item?.IsOnline} />
+          <YakitButton
+            type="text2"
+            icon={<FigmaIcon4866167279Outlined color="currentColor" />}
+            onClick={onCheckModel}
+            loading={testLoading}
+          />
+          <YakitButton
+            type="text2"
+            icon={<PencilAltOutlined color="currentColor" />}
+            onClick={onEditClick}
+            disabled={item?.IsOnline}
+          />
           {isShowRemove && (
             <YakitPopconfirm
               title={`确定要删除厂商${config.Type},模型名称为${modelName} 吗？`}
@@ -858,7 +869,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
             >
               <YakitButton
                 type="text2"
-                icon={<OutlineTrashIcon />}
+                icon={<TrashOutlined color="currentColor" />}
                 className={styles['trash-icon']}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -867,7 +878,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
             </YakitPopconfirm>
           )}
         </div>
-        {checked && <OutlineCheckIcon className={styles['check-icon']} />}
+        {checked && <CheckOutlined className={styles['check-icon']} color="currentColor" />}
       </div>
     </div>
   )
@@ -989,7 +1000,7 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
         <div className={styles['ai-local-model-empty']}>
           <div className={styles['ai-local-model-notice']}>
             <div className={styles['notice-title']}>
-              <OutlineLightbulbIcon />
+              <LightBulbOutlined color="currentColor" />
               {t('AILocalModelList.notice')}
             </div>
             <div>
@@ -1007,10 +1018,14 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
           <div className={styles['ai-list-empty-wrapper']}>
             <YakitEmpty title={t('YakitEmpty.noData')} description={t('AILocalModelList.localManagerDesc')} />
             <div className={styles['ai-list-btns-wrapper']}>
-              <YakitButton type="outline1" icon={<OutlineRefreshIcon />} onClick={init}>
+              <YakitButton type="outline1" icon={<RefreshOutlined color="currentColor" />} onClick={init}>
                 {t('YakitButton.refresh')}
               </YakitButton>
-              <YakitButton type="primary" icon={<OutlineClouddownloadIcon />} onClick={installLlamaServer}>
+              <YakitButton
+                type="primary"
+                icon={<CloudDownloadOutlined color="currentColor" />}
+                onClick={installLlamaServer}
+              >
                 {t('AILocalModelList.installLlamaServer')}
               </YakitButton>
             </div>
@@ -1194,21 +1209,21 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
       case AILocalModelTypeEnum.AIChat:
         return (
           <YakitTag size="small" color="blue" className={styles['ai-local-model-type-tag']}>
-            <OutlineChatIcon className={styles['type-icon']} />
+            <ChatOutlined className={styles['type-icon']} color="currentColor" />
             AIChat
           </YakitTag>
         )
       case AILocalModelTypeEnum.Embedding:
         return (
           <YakitTag size="small" color="purple" className={styles['ai-local-model-type-tag']}>
-            <OutlineExclamationIcon className={styles['type-icon']} />
+            <ExclamationOutlined className={styles['type-icon']} color="currentColor" />
             Embedding
           </YakitTag>
         )
       case AILocalModelTypeEnum.SpeechToText:
         return (
           <YakitTag size="small" color="bluePurple" className={styles['ai-local-model-type-tag']}>
-            <OutlineSpeechToTextIcon className={styles['type-icon']} />
+            <SpeechToTextOutlined className={styles['type-icon']} color="currentColor" />
             Speech-to-text
           </YakitTag>
         )
@@ -1224,7 +1239,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
       {
         key: 'path',
         label: t('YakitButton.openFileLocation'),
-        itemIcon: <OutlineClipboardcopyIcon />,
+        itemIcon: <ClipboardCopyOutlined color="currentColor" />,
       },
     ]
     const noEdit = ['starting', 'running', 'stopping'].includes(item.Status?.Status || '')
@@ -1233,13 +1248,13 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
         {
           key: 'edit',
           label: t('YakitButton.edit'),
-          itemIcon: <OutlinePencilaltIcon />,
+          itemIcon: <PencilAltOutlined color="currentColor" />,
         },
         {
           key: 'delete',
           label: t('YakitButton.delete'),
           type: 'danger',
-          itemIcon: <OutlineTrashIcon />,
+          itemIcon: <TrashOutlined color="currentColor" />,
         },
       ])
     }
@@ -1260,7 +1275,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
 
         <div className={styles['ai-local-model-heard-extra']}>
           {isShowEnable ? (
-            <YakitButton type="text" onClick={onDown} icon={<OutlineClouddownloadIcon />}>
+            <YakitButton type="text" onClick={onDown} icon={<CloudDownloadOutlined color="currentColor" />}>
               {t('YakitButton.download')}
             </YakitButton>
           ) : (
@@ -1279,12 +1294,12 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                   trigger={'click'}
                   okButtonProps={{ loading: stopLoading }}
                 >
-                  <YakitButton type="text" colors="danger" icon={<OutlineExitIcon />}>
+                  <YakitButton type="text" colors="danger" icon={<FigmaIcon28011794Outlined color="currentColor" />}>
                     {t('YakitButton.deactivated')}
                   </YakitButton>
                 </YakitPopconfirm>
               ) : (
-                <YakitButton type="text" onClick={onStart} icon={<OutlinePlayIcon />}>
+                <YakitButton type="text" onClick={onStart} icon={<PlayOutlined color="currentColor" />}>
                   {t('YakitButton.enable')}
                 </YakitButton>
               )}
@@ -1307,7 +1322,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                   isActive={visible}
                   type="text2"
                   size="small"
-                  icon={<OutlineDotsverticalIcon />}
+                  icon={<DotsVerticalOutlined color="currentColor" />}
                   onClick={(e) => e.stopPropagation()}
                 />
               </YakitDropdownMenu>
@@ -1361,7 +1376,7 @@ export const OutlineAtomIconByStatus: React.FC<OutlineAtomIconByStatusProps> = R
         iconClassName,
       )}
     >
-      <OutlineAtomIcon />
+      <AtomOutlined color="currentColor" />
     </div>
   )
 })

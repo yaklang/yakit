@@ -12,7 +12,7 @@ import {
   isMemfit,
 } from '@/utils/envfile'
 import { Tooltip } from 'antd'
-import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
+import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 
 import yakitSE from '@/assets/yakitSE.png'
@@ -20,7 +20,8 @@ import yakitEE from '@/assets/yakitEE.png'
 import yakitCE from '@/assets/yakit.jpg'
 import styles from './newYakitLoading.module.scss'
 import classNames from 'classnames'
-import { SolidIrifyMiniLogoIcon, SolidMemfitMiniLogoIcon } from '@/assets/icon/colors'
+import { SolidIrifyMiniLogoIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidIrifyMiniLogoIcon'
+import { SolidMemfitMiniLogoIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidMemfitMiniLogoIcon'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import IRifyPrimaryBg from '../../assets/uiLayout/IRifyPrimaryBg.png'
@@ -255,7 +256,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
               >
                 {t('YakitLoading.openEngineFolder')}
                 <Tooltip title={t('YakitLoading.openEngineFolderTip')}>
-                  <OutlineQuestionmarkcircleIcon />
+                  <QuestionMarkCircleOutlined color="currentColor" />
                 </Tooltip>
               </div>
             </div>

@@ -14,13 +14,14 @@ import React, {
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import {
-  OutlineClouduploadIcon,
-  OutlineDocumentduplicateIcon,
-  OutlineExitIcon,
-  OutlinePaperairplaneIcon,
-  OutlineQuestionmarkcircleIcon,
-} from '@/assets/icon/outline'
-import { SolidStoreIcon } from '@/assets/icon/solid'
+  CloudUploadOutlined,
+  DocumentDuplicateOutlined,
+  PaperAirplaneOutlined,
+  QuestionMarkCircleOutlined,
+  FigmaIcon28011794Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { FigmaIcon16256302540Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { HubButton } from '@/pages/pluginHub/hubExtraOperate/funcTemplate'
 import { WebsiteGV } from '@/enums/website'
 import { EditorInfo, type EditorInfoFormRefProps } from '../editorInfo/EditorInfo'
@@ -945,7 +946,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 {title}
                 <div className={styles['header-subtitle']} onClick={handleOpenHelp}>
                   <span className={classNames(styles['subtitle-style'])}>{t('PluginEditor.helpDoc')}</span>
-                  <OutlineQuestionmarkcircleIcon />
+                  <QuestionMarkCircleOutlined color="currentColor" />
                 </div>
               </div>
 
@@ -957,7 +958,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     loading={onlineLoading}
                     type="outline2"
                     size={isEdit ? 'middle' : 'large'}
-                    icon={<OutlineDocumentduplicateIcon />}
+                    icon={<DocumentDuplicateOutlined color="currentColor" />}
                     name={t('PluginEditor.copyToCloud')}
                     onClick={onBtnCopyOnline}
                   />
@@ -969,7 +970,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     loading={modifyLoading}
                     type="outline1"
                     size={isEdit ? 'middle' : 'large'}
-                    icon={<OutlinePaperairplaneIcon />}
+                    icon={<PaperAirplaneOutlined color="currentColor" />}
                     name={t('PluginEditor.submitAndSave')}
                     onClick={onBtnSubmitOnline}
                   />
@@ -981,7 +982,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     loading={onlineLoading}
                     type="outline1"
                     size={isEdit ? 'middle' : 'large'}
-                    icon={<OutlineClouduploadIcon />}
+                    icon={<CloudUploadOutlined color="currentColor" />}
                     name={t('PluginEditor.syncToCloud')}
                     onClick={onBtnOnlineSave}
                   />
@@ -992,7 +993,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                   loading={localLoading}
                   type="outline1"
                   size={isEdit ? 'middle' : 'large'}
-                  icon={<OutlineExitIcon />}
+                  icon={<FigmaIcon28011794Outlined color="currentColor" />}
                   name={t('PluginEditor.saveAndExit')}
                   onClick={onBtnLocalSaveAndExit}
                 />
@@ -1001,7 +1002,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                   iconWidth={1000}
                   loading={localLoading}
                   size={isEdit ? 'middle' : 'large'}
-                  icon={<SolidStoreIcon />}
+                  icon={<FigmaIcon16256302540Solid color="currentColor" />}
                   name={t('YakitButton.save')}
                   onClick={onBtnLocalSave}
                 />

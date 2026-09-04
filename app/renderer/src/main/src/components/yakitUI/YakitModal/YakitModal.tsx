@@ -3,7 +3,7 @@ import { type CSSProperties, type ReactNode, useMemo } from 'react'
 import { Modal, type ModalProps } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton, type YakitButtonProp } from '../YakitButton/YakitButton'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -117,7 +117,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
               <YakitButton
                 type="text"
                 size={size === 'large' ? 'large' : 'middle'}
-                icon={closeIcon ? closeIcon : <OutlineXIcon />}
+                icon={closeIcon ? closeIcon : <XOutlined color="currentColor" />}
                 onClick={onCancelX}
               />
             )}

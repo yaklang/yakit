@@ -7,7 +7,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import styles from './packetScanner.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { OutlineScanIcon } from '@/assets/icon/outline'
+import { ScanOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 /**
  * @description 数据包扫描的默认菜单数据
@@ -99,7 +99,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
       }
     >
       <Tooltip title={t('PacketScanButton.packetScan')}>
-        <YakitButton icon={<OutlineScanIcon />} type="outline2" size="large" />
+        <YakitButton icon={<ScanOutlined color="currentColor" size={16} />} type="outline2" size="large" />
       </Tooltip>
     </YakitPopover>
   )

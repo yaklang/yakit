@@ -11,7 +11,13 @@ import type {
   ImportAIforgeRef,
   ImportAIForgeRequest,
 } from './type'
-import { OutlineExportIcon, OutlinePencilaltIcon, OutlineSearchIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import {
+  PencilAltOutlined,
+  SearchOutlined,
+  TrashOutlined,
+  FigmaIcon2017756Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import {
   useDebounceEffect,
@@ -26,7 +32,7 @@ import {
 import { grpcDeleteAIForge, grpcGetAIForge, grpcQueryAIForge } from '../grpc'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { SolidToolIcon } from '@/assets/icon/solid'
+import { ToolSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import emiter from '@/utils/eventBus/eventBus'
@@ -328,7 +334,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
       <div className={styles['header-wrapper']}>
         <div className={styles['header-second']}>
           <YakitInput
-            prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+            prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
             allowClear
             placeholder={t('YakitInput.searchKeyWordPlaceholder')}
             value={search}
@@ -372,7 +378,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                           {tools.length > 0 && (
                             <div className={styles['content-tools']}>
                               <div className={styles['tools-header']}>
-                                <SolidToolIcon />
+                                <ToolSolid color="currentColor" />
                                 {t('ForgeName.relatedTools')}
                               </div>
 
@@ -409,7 +415,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                         >
                           <YakitButton
                             type="text2"
-                            icon={<OutlineExportIcon />}
+                            icon={<FigmaIcon2017756Outlined />}
                             onClick={(e) => {
                               e.stopPropagation()
                               batchExportRef.current?.open({
@@ -427,7 +433,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                         >
                           <YakitButton
                             type="text2"
-                            icon={<OutlinePencilaltIcon />}
+                            icon={<PencilAltOutlined color="currentColor" />}
                             onClick={(e) => {
                               e.stopPropagation()
                               handleModifyAIForge(data)
@@ -452,7 +458,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                             <YakitButton
                               loading={delLoading}
                               type="text2"
-                              icon={<OutlineTrashIcon className={styles['del-icon']} />}
+                              icon={<TrashOutlined className={styles['del-icon']} color="currentColor" />}
                               onClick={(e) => {
                                 e.stopPropagation()
                               }}

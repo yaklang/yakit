@@ -21,14 +21,15 @@ import {
   UpdateRuleToGroup,
 } from './template'
 import {
-  OutlineClouddownloadIcon,
-  OutlineClouduploadIcon,
-  OutlineExportIcon,
-  OutlineImportIcon,
-  OutlinePencilaltIcon,
-  OutlinePlusIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  CloudDownloadOutlined,
+  CloudUploadOutlined,
+  PencilAltOutlined,
+  PlusOutlined,
+  TrashOutlined,
+  FigmaIcon6480193584Outlined,
+  FigmaIcon2017756Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
@@ -53,7 +54,7 @@ import classNames from 'classnames'
 import styles from './RuleManagement.module.scss'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { IRifyApplySyntaxFlowRuleUpdate } from '../mitm/MITMServerHijacking/MITMPluginLocalList'
 import { useStore } from '@/store'
 import { randomString } from '@/utils/randomUtil'
@@ -326,7 +327,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             return (
               <YakitButton
                 type="text2"
-                icon={<OutlinePencilaltIcon />}
+                icon={<PencilAltOutlined color="currentColor" />}
                 loading={isLoading}
                 onClick={() => {
                   handleOpenEditHint(rowData)
@@ -338,7 +339,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
               <div className={styles['col-btns']}>
                 <YakitButton
                   type="text2"
-                  icon={<OutlinePencilaltIcon />}
+                  icon={<PencilAltOutlined color="currentColor" />}
                   loading={isLoading}
                   onClick={() => {
                     handleOpenEditHint(rowData)
@@ -348,7 +349,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                 <YakitButton
                   type="text"
                   colors="danger"
-                  icon={<OutlineTrashIcon />}
+                  icon={<TrashOutlined color="currentColor" />}
                   loading={isLoading}
                   onClick={() => {
                     handleDelRule(rowData)
@@ -879,7 +880,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                 <YakitButton
                   type="text"
                   colors="danger"
-                  icon={<OutlineTrashIcon />}
+                  icon={<TrashOutlined color="currentColor" />}
                   loading={isLoading}
                   onClick={() => {
                     handleDelOnlineRule(rowData)
@@ -916,7 +917,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             {(isCommunityIRify() || eeIRifyIsLogin) && (
               <YakitButton
                 type="text"
-                icon={<OutlineClouddownloadIcon />}
+                icon={<CloudDownloadOutlined color="currentColor" />}
                 onClick={() => {
                   isDownloadOnlineRuleGroupRef.current = true
                   infoRef.current = {
@@ -985,14 +986,14 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                           <YakitButton
                             type="outline1"
                             colors="danger"
-                            icon={<OutlineTrashIcon />}
+                            icon={<TrashOutlined color="currentColor" />}
                             loading={delLoading}
                             onClick={handleBatchDelRule}
                           />
 
                           <YakitButton
                             type="outline2"
-                            icon={<OutlineExportIcon />}
+                            icon={<FigmaIcon2017756Outlined />}
                             onClick={() =>
                               handleOpenExportHint({
                                 title: '导出规则',
@@ -1006,7 +1007,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
                           <YakitButton
                             type="outline2"
-                            icon={<OutlineImportIcon />}
+                            icon={<FigmaIcon6480193584Outlined color="currentColor" />}
                             onClick={() =>
                               handleOpenExportHint({
                                 title: '导入规则',
@@ -1021,7 +1022,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                           {canUpAndDel && (
                             <YakitButton
                               type="outline2"
-                              icon={<OutlineClouduploadIcon />}
+                              icon={<CloudUploadOutlined color="currentColor" />}
                               onClick={() => {
                                 infoRef.current = {
                                   type: 'upload',
@@ -1037,7 +1038,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
                           <YakitButton
                             type="outline2"
-                            icon={<OutlinePlusIcon />}
+                            icon={<PlusOutlined color="currentColor" />}
                             onClick={() => {
                               handleOpenEditHint()
                             }}
@@ -1134,14 +1135,14 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                             <YakitButton
                               type="outline1"
                               colors="danger"
-                              icon={<OutlineTrashIcon />}
+                              icon={<TrashOutlined color="currentColor" />}
                               loading={onlineDelLoading}
                               onClick={handleBatchDelOnlineRule}
                             />
                           )}
                           <YakitButton
                             type="primary"
-                            icon={<OutlineClouddownloadIcon />}
+                            icon={<CloudDownloadOutlined color="currentColor" />}
                             onClick={() => {
                               isDownloadOnlineRuleGroupRef.current = false
                               infoRef.current = {

@@ -41,11 +41,11 @@ import {
 import type { ModifyNotepadContentRefProps } from '../ModifyNotepadType'
 import { useStore } from '@/store'
 import {
-  OutlineShareIcon,
-  OutlineClouddownloadIcon,
-  OutlineDotshorizontalIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ShareOutlined,
+  CloudDownloadOutlined,
+  DotsHorizontalOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { DownFilesModal } from '@/components/MilkdownEditor/CustomFile/CustomFile'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -452,7 +452,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
           {currentRole === notepadRole.adminPermission && (
             <YakitButton
               type="outline1"
-              icon={<OutlineShareIcon />}
+              icon={<ShareOutlined color="currentColor" />}
               size="large"
               onClick={() => onShare(notepadDetail)}
             >
@@ -461,7 +461,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
           )}
           <YakitButton
             type="primary"
-            icon={<OutlineClouddownloadIcon />}
+            icon={<CloudDownloadOutlined color="currentColor" />}
             size="large"
             onClick={onDownNotepad}
             loading={downItemLoading}
@@ -470,7 +470,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
           </YakitButton>
           {currentRole === notepadRole.adminPermission && (
             <FuncFilterPopover
-              icon={<OutlineDotshorizontalIcon />}
+              icon={<DotsHorizontalOutlined color="currentColor" />}
               button={{ type: 'text2', size: 'large' }}
               menu={{
                 type: 'primary',
@@ -479,7 +479,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                     key: 'remove',
                     label: t('YakitButton.delete'),
                     type: 'danger',
-                    itemIcon: <OutlineTrashIcon />,
+                    itemIcon: <TrashOutlined color="currentColor" />,
                   },
                 ],
                 onClick: ({ key }) => {

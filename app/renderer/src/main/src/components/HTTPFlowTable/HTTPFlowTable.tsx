@@ -29,7 +29,6 @@ import ReactResizeDetector from 'react-resize-detector'
 import { generateYakCodeByRequest, RequestToYakCodeTemplate } from '../../pages/invoker/fromPacketToYakCode'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { TableVirtualResize } from '../TableVirtualResize/TableVirtualResize'
-import { ColorSwatchIcon, ChevronDownIcon } from '@/assets/newIcon'
 import classNames from 'classnames'
 import type { ColumnsTypeProps, FiltersItemProps, SortProps } from '../TableVirtualResize/TableVirtualResizeType'
 import { minWinSendToChildWin, openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
@@ -47,18 +46,26 @@ const ShareModal = lazy(() =>
 )
 import { useSize } from 'ahooks'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
-import { CheckedSvgIcon } from '../layout/icons'
+import { CheckedSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckedSvgIcon'
 import { ExportSelect } from '../DataExport/DataExport'
 import emiter from '@/utils/eventBus/eventBus'
 import { MITMConsts } from '@/pages/mitm/MITMConsts'
 import type { HTTPHistorySourcePageType } from '../HTTPHistory'
 import { useHttpFlowStore } from '@/store/httpFlow'
-import { OutlineClouddownloadIcon, OutlineCogIcon, OutlineFilterIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
-import { SolidStarIcon } from '@/assets/icon/solid'
+import {
+  CloudDownloadOutlined,
+  CogOutlined,
+  FilterOutlined,
+  RefreshOutlined,
+  ColorSwatchOutlined,
+  ChevronDownOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { StarSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
 import type { ParamsTProps, VirtualTableRefreshReason } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { useCampare } from '@/hook/useCompare/useCompare'
-import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
+import { IconSolidAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/IconSolidAIIcon'
+import { IconSolidAIWhiteIcon } from '@yakit-libs/yakit-ui-icons/oldicon/IconSolidAIWhiteIcon'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ManageRightClickPluginsTabKey } from '@/pages/manageRightClickPlugins/constants'
 import { getSceneTabActions } from '@/pages/manageRightClickPlugins/utils'
@@ -94,7 +101,7 @@ import { onSendToTab, toggleHTTPFlowFavorite } from './HTTPFlowTable.actions'
 import { NowProjectDescription } from '@/pages/globalVariable'
 import { useStore } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { PublicHTTPHistoryIcon } from '@/routes/publicIcon'
+import { PublicHTTPHistoryIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicHTTPHistoryIcon'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { areMITMDebugHooksEnabled } from '@/utils/mitmDebugHooks'
 import { serverPushStatus } from '@/utils/duplex/duplex'
@@ -2314,7 +2321,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           : ManageRightClickPluginsTabKey.PluginExtensionSingle),
       label: (
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <OutlineCogIcon />
+          <CogOutlined color="currentColor" />
           {t('YakitEditor.manageRightClickPlugins')}
         </div>
       ),
@@ -2390,7 +2397,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           key: 'Get*plug-in',
           label: (
             <>
-              <OutlineClouddownloadIcon style={{ marginRight: 4 }} />
+              <CloudDownloadOutlined style={{ marginRight: 4 }} />
               {t('HTTPFlowTable.getPlugin')}
             </>
           ),
@@ -3021,7 +3028,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                   <Tooltip title={t('YakitButton.advancedFilter')} placement="top">
                     <YakitButton
                       type="text2"
-                      icon={<OutlineFilterIcon />}
+                      icon={<FilterOutlined color="currentColor" />}
                       onClick={() => {
                         setDrawerFormVisible(true)
                       }}
@@ -3084,7 +3091,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             <Tooltip title={t('HTTPFlowTable.favorites')} placement="top">
               <YakitButton
                 type={onlyFavorite ? 'outline1' : 'outline2'}
-                icon={<SolidStarIcon />}
+                icon={<StarSolid color="currentColor" />}
                 onClick={(e) => {
                   e.currentTarget.blur()
                   onToggleOnlyFavorite()
@@ -3117,7 +3124,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     style={{ padding: 4 }}
                     onClick={() => setIsShowColor(true)}
                   >
-                    <ColorSwatchIcon />
+                    <ColorSwatchOutlined size={16} />
                   </YakitButton>
                 </YakitPopover>
               </div>
@@ -3127,7 +3134,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 {(selectedRowKeys.length === 0 && (
                   <YakitButton type="outline2" disabled={selectedRowKeys.length === 0}>
                     {t('YakitButton.batchOperation')}
-                    <ChevronDownIcon style={{ color: '#85899E' }} />
+                    <ChevronDownOutlined size={16} style={{ color: '#85899E' }} />
                   </YakitButton>
                 )) || (
                   <YakitPopover
@@ -3150,7 +3157,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                   >
                     <YakitButton type="outline2" disabled={selectedRowKeys.length === 0}>
                       {t('YakitButton.batchOperation')}
-                      <ChevronDownIcon />
+                      <ChevronDownOutlined size={16} />
                     </YakitButton>
                   </YakitPopover>
                 )}
@@ -3226,7 +3233,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             )}
             {showSetting && (
               <YakitButton
-                icon={<OutlineCogIcon />}
+                icon={<CogOutlined color="currentColor" />}
                 type={isAdvancedSet ? 'text' : 'text2'}
                 onClick={() => {
                   setAdvancedSetVisible(true)
@@ -3268,7 +3275,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }}
               >
                 <Badge dot={offsetData.length > 0} offset={[-5, 4]} className={style['http-history-table-badge']}>
-                  <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={(e) => e.stopPropagation()} />
+                  <YakitButton
+                    type="text2"
+                    icon={<RefreshOutlined color="currentColor" />}
+                    onClick={(e) => e.stopPropagation()}
+                  />
                 </Badge>
               </YakitDropdownMenu>
             )}

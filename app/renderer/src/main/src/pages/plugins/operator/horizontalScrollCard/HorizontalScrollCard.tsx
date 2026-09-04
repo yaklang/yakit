@@ -7,7 +7,11 @@ import type {
 } from './HorizontalScrollCardType'
 import styles from './HorizontalScrollCard.module.scss'
 import classNames from 'classnames'
-import { OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon, OutlineHashtagIcon } from '@/assets/icon/outline'
+import {
+  ChevronDoubleLeftOutlined,
+  ChevronDoubleRightOutlined,
+  HashtagOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { useCreation, useLongPress, useThrottleFn } from 'ahooks'
 import ReactResizeDetector from 'react-resize-detector'
 import { isBoolean } from 'lodash'
@@ -156,7 +160,7 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
         />
         {scroll.scrollLeft > 0 && (
           <div className={classNames(styles['horizontal-scroll-card-list-direction-left'])} ref={scrollLeftIconRef}>
-            <OutlineChevrondoubleleftIcon />
+            <ChevronDoubleLeftOutlined color="currentColor" />
           </div>
         )}
         <div
@@ -193,7 +197,7 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
         </div>
         {scroll.scrollRight > 0 && (
           <div className={classNames(styles['horizontal-scroll-card-list-direction-right'])} ref={scrollRightIconRef}>
-            <OutlineChevrondoublerightIcon />
+            <ChevronDoubleRightOutlined color="currentColor" />
           </div>
         )}
       </div>
@@ -216,7 +220,7 @@ export const HorizontalScrollCardItemInfoMultiple: React.FC<StatusCardListProps>
       )}
     >
       <div className={styles['horizontal-scroll-card-list-item-info-multiple-tag']}>
-        <OutlineHashtagIcon />
+        <HashtagOutlined color="currentColor" />
         {tag}
       </div>
       <div className={styles['horizontal-scroll-card-list-item-info-multiple-infos']}>

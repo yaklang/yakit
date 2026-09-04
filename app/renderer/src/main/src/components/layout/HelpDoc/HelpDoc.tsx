@@ -3,7 +3,7 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import type { YakitSystem } from '@/yakitGVDefine'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { useMemoizedFn } from 'ahooks'
-import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
+import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { WebsiteGV } from '@/enums/website'
 import { yakitShell } from '@/services/electronBridge'
 import { isMemfit } from '@/utils/envfile'
@@ -80,7 +80,7 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
             [styles['op-btn-body-hover']]: show,
           })}
         >
-          <OutlineQuestionmarkcircleIcon className={styles['icon-style']} />
+          <QuestionMarkCircleOutlined className={styles['icon-style']} color="currentColor" />
         </div>
       </div>
     </YakitPopover>

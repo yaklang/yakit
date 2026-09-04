@@ -4,7 +4,7 @@ import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { Divider, Form } from 'antd'
-import { HollowLightningBoltIcon } from '@/assets/newIcon'
+import { HollowLightningBoltIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import type {
   FilterEmptySubMatcherFunctionProps,
   HTTPResponseMatcher,
@@ -21,7 +21,7 @@ import { StringToUint8Array } from '@/utils/str'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { VariableList } from '@/pages/httpRequestBuilder/HTTPRequestBuilder'
-import { OutlinePlusIcon } from '@/assets/icon/outline'
+import { PlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { defMatcherAndExtractionCode } from '../MatcherAndExtractionCard/constants'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -401,7 +401,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
               size="small"
             >
               {t('YakitButton.add')}
-              <OutlinePlusIcon />
+              <PlusOutlined color="currentColor" />
             </YakitButton>
           </>
         }

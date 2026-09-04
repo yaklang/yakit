@@ -16,7 +16,7 @@ import type {
   YakitVirtualListPositionProps,
   YakitVirtualListProps,
 } from './YakitTimeLineListType'
-import { YakitTimeLineItemIcon } from './icon'
+import { YakitTimeLineItemIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import styles from './YakitTimeLineList.module.scss'

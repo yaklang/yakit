@@ -1,16 +1,17 @@
-import { OutlineLightbulbIcon, OutlinePaperclipIcon } from '@/assets/icon/outline'
 import {
-  IconHeading1,
-  IconHeading2,
-  IconHeading3,
-  IconListOrdered,
-  IconList,
-  IconCheckSquare,
-  IconCurlyBraces,
-  IconQuote,
-  IconFlipVertical,
-  IconType,
-} from './icon/icon'
+  LightBulbOutlined,
+  List1Outlined,
+  PaperClipOutlined,
+  ListOrderedOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { IconHeading1 } from '@yakit-libs/yakit-ui-icons/oldicon/IconHeading1'
+import { IconHeading2 } from '@yakit-libs/yakit-ui-icons/oldicon/IconHeading2'
+import { IconHeading3 } from '@yakit-libs/yakit-ui-icons/oldicon/IconHeading3'
+import { IconCheckSquare } from '@yakit-libs/yakit-ui-icons/oldicon/IconCheckSquare'
+import { IconCurlyBraces } from '@yakit-libs/yakit-ui-icons/oldicon/IconCurlyBraces'
+import { IconQuote } from '@yakit-libs/yakit-ui-icons/oldicon/IconQuote'
+import { IconFlipVertical } from '@yakit-libs/yakit-ui-icons/oldicon/IconFlipVertical'
+import { IconType } from '@yakit-libs/yakit-ui-icons/oldicon/IconType'
 import type { ReactNode } from 'react'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 
@@ -55,13 +56,13 @@ export const MilkdownMenu = {
   },
   orderedList: {
     key: 'orderedList',
-    icon: <IconListOrdered />,
+    icon: <ListOrderedOutlined />,
     labelKey: 'MilkdownEditor.menu.orderedList.label',
     descriptionKey: 'MilkdownEditor.menu.orderedList.description',
   },
   unorderedList: {
     key: 'unorderedList',
-    icon: <IconList />,
+    icon: <List1Outlined />,
     labelKey: 'MilkdownEditor.menu.unorderedList.label',
     descriptionKey: 'MilkdownEditor.menu.unorderedList.description',
   },
@@ -85,13 +86,13 @@ export const MilkdownMenu = {
   },
   highLight: {
     key: 'highLight',
-    icon: <OutlineLightbulbIcon />,
+    icon: <LightBulbOutlined color="currentColor" />,
     labelKey: 'MilkdownEditor.menu.highLight.label',
     descriptionKey: 'MilkdownEditor.menu.highLight.description',
   },
   file: {
     key: 'file',
-    icon: <OutlinePaperclipIcon />,
+    icon: <PaperClipOutlined color="currentColor" />,
     labelKey: 'MilkdownEditor.menu.file.label',
     descriptionKey: 'MilkdownEditor.menu.file.description',
   },

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import type { AIFocusModeProps } from './type'
-import { OutlineMicroscopeIcon, OutlineQuestionmarkcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { MicroscopeOutlined, QuestionMarkCircleOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
@@ -87,10 +87,10 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
           return (
             <div className={styles['drop-select-wrapper']}>
               <div className={styles['select-title']}>
-                <OutlineMicroscopeIcon />
+                <MicroscopeOutlined color="currentColor" />
                 {t('AiAgengt.focusMode')}
                 <Tooltip title={t('AIFocusMode.focusModeTooltip')}>
-                  <OutlineQuestionmarkcircleIcon />
+                  <QuestionMarkCircleOutlined color="currentColor" />
                 </Tooltip>
               </div>
               {menu}
@@ -101,7 +101,7 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
           value || {
             label: (
               <div className={styles['select-option']}>
-                <OutlineMicroscopeIcon className={styles['icon-wrapper']} />
+                <MicroscopeOutlined className={styles['icon-wrapper']} color="currentColor" />
                 <span className={styles['select-option-text']}>{t('AiAgengt.focusMode')}</span>
               </div>
             ),
@@ -120,13 +120,14 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
             value={item.value}
             label={
               <div className={styles['select-option']}>
-                <OutlineMicroscopeIcon className={styles['icon-wrapper']} />
+                <MicroscopeOutlined className={styles['icon-wrapper']} color="currentColor" />
                 <span className={styles['select-option-text']} title={`${item.label}`}>
                   {item.label}
                 </span>
                 {!props.disabled && (
-                  <OutlineXIcon
+                  <XOutlined
                     className={styles['icon-wrapper']}
+                    color="currentColor"
                     data-select-clear
                     onClick={(e) => {
                       e.stopPropagation()

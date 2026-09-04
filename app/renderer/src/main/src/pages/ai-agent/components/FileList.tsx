@@ -1,8 +1,7 @@
 import type { FC } from 'react'
 import styles from './FileList.module.scss'
 import { renderFileTypeIcon } from '@/components/MilkdownEditor/CustomFile/CustomFile'
-import { IconNotepadFileTypeDir } from '@/components/MilkdownEditor/icon/icon'
-import { OutlineChevronrightIcon } from '@/assets/icon/outline'
+import { ChevronRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import type { AIYakExecFileRecord } from '@/pages/ai-re-act/hooks/aiRender'
 import { getFileActionStatus } from '@/pages/invoker/utils'
@@ -15,6 +14,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useMemoizedFn } from 'ahooks'
 import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { FolderFileTypeColorful } from '@yakit-libs/yakit-ui-icons/colorful'
 
 export interface FileListItem {
   name: string
@@ -34,7 +34,7 @@ const getFileIcon = (name, isDir) => {
   // 后缀
   const type = name.indexOf('.') > -1 ? name.split('.').pop() : ''
   if (isDir) {
-    return <IconNotepadFileTypeDir />
+    return <FolderFileTypeColorful size={48} />
   }
   return renderFileTypeIcon({ type })
 }
@@ -104,7 +104,7 @@ const FileList: FC<FileListProps> = ({ title, fileList }) => {
                 </div>
                 <div className={styles['file-list-item-actions']}>
                   <div className={styles['file-list-item-actions-time']}>{formatTimestamp(item.timestamp)}</div>
-                  <OutlineChevronrightIcon />
+                  <ChevronRightOutlined color="currentColor" />
                 </div>
               </div>
             )

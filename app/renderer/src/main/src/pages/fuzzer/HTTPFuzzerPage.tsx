@@ -32,17 +32,11 @@ import { WebFuzzerAiTestMenu } from './components/WebFuzzerAiTestMenu/WebFuzzerA
 import type { WebFuzzerAiTestTemplate } from '@/defaultConstants/webFuzzerAiTestTemplates'
 import styles from './HTTPFuzzerPage.module.scss'
 import { ShareImportExportData } from './components/ShareImportExportData'
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChromeSvgIcon,
-  ClockIcon,
-  SearchIcon,
-  StopIcon,
-  ArrowsRetractIcon,
-  ArrowsExpandIcon,
-  QuestionMarkCircleIcon,
-} from '@/assets/newIcon'
+import { ChevronLeftIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronLeftIcon'
+import { ChevronRightIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronRightIcon'
+import { ChromeSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChromeSvgIcon'
+import { ArrowsRetractIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ArrowsRetractIcon'
+import { ArrowsExpandIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ArrowsExpandIcon'
 import classNames from 'classnames'
 import { type PaginationSchema, genDefaultPagination } from '../invoker/schema'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -89,20 +83,23 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { FUZZER_LABEL_LIST_NUMBER } from './HTTPFuzzerEditorMenu'
 import { WebFuzzerNewEditor } from './WebFuzzerNewEditor/WebFuzzerNewEditor'
 import {
-  OutlineAnnotationIcon,
-  OutlineBeakerIcon,
-  OutlineExportIcon,
-  OutlinePayloadIcon,
-  OutlinePlusIcon,
-  OutlineXIcon,
-  OutlineCodeIcon,
-  OutlinePlugsIcon,
-  OutlineSearchIcon,
-  OutlineFilterIcon,
-  OutlineSwitchhorizontalIcon,
-  OutlineCogIcon,
-  OutlineDotsverticalIcon,
-} from '@/assets/icon/outline'
+  AnnotationOutlined,
+  BeakerOutlined,
+  PlusOutlined,
+  XOutlined,
+  CodeOutlined,
+  PlugsOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  SwitchHorizontalOutlined,
+  CogOutlined,
+  DotsVerticalOutlined,
+  ChevronDownOutlined,
+  FigmaIcon2017756Outlined,
+  ClockOutlined,
+  QuestionMarkCircleOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlinePayloadIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlinePayloadIcon'
 import emiter from '@/utils/eventBus/eventBus'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import {
@@ -128,7 +125,7 @@ import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitD
 import { openABSFileLocated, openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
 import type { PayloadGroupNodeProps } from '../payloadManager/newPayload'
 import { createRoot, type Root } from 'react-dom/client'
-import { SolidPauseIcon, SolidPlayIcon } from '@/assets/icon/solid'
+import { PauseSolid, PlaySolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { WebFuzzerCasualReplaceReviewOverlay } from '@/pages/fuzzer/WebFuzzerCasualReplaceReviewOverlay'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
@@ -171,7 +168,7 @@ import type { FuzzerResChartData } from './FuzzerConcurrentLoad/FuzzerConcurrent
 import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import type { WebFuzzerDroppedProps } from './FuzzerSequence/FuzzerSequenceType'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
-import { OutlineChevrondownIcon } from '@/assets/icon/outline'
+
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { convertKeyboardToUIKey, registerShortcutKeyHandle } from '@/utils/globalShortcutKey/utils'
 import {
@@ -190,7 +187,7 @@ import i18n from '@/i18n/i18n'
 import { defHost, defPort, maskProxyPassword } from '../mitm/MITMServerStartForm/MITMServerStartForm'
 import type { ExportDataType } from '@/utils/exporter'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
-import { PublicHTTPHistoryIcon } from '@/routes/publicIcon'
+import { PublicHTTPHistoryIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicHTTPHistoryIcon'
 import { useProxy } from '@/hook/useProxy'
 import { MITMConsts } from '../mitm/MITMConsts'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -2220,7 +2217,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                   </>
                 }
               >
-                <OutlineDotsverticalIcon className={styles['resize-card-icon']} />
+                <DotsVerticalOutlined className={styles['resize-card-icon']} color="currentColor" />
               </YakitPopover>
             ) : (
               <>
@@ -2273,7 +2270,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                         size="small"
                         type="primary"
                         className={styles['hot-patch-trigger-dropdown']}
-                        icon={<OutlineChevrondownIcon />}
+                        icon={<ChevronDownOutlined color="currentColor" />}
                       />
                     }
                   />
@@ -2283,7 +2280,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                   size="small"
                   type="primary"
                   className={styles['hot-patch-trigger-dropdown']}
-                  icon={<OutlineChevrondownIcon />}
+                  icon={<ChevronDownOutlined color="currentColor" />}
                   onClick={() => setHotCodeTemplateMounted(true)}
                 />
               )}
@@ -2972,7 +2969,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <Tooltip title={t('HTTPFuzzerPage.AI_new_conversation')}>
                               <YakitButton
                                 type="text2"
-                                icon={<OutlinePlusIcon />}
+                                icon={<PlusOutlined color="currentColor" />}
                                 onClick={() => historyAIReActChatBridge.onNewChat()}
                               />
                             </Tooltip>
@@ -2980,7 +2977,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           close: (
                             <YakitButton
                               type="text2"
-                              icon={<OutlineXIcon />}
+                              icon={<XOutlined color="currentColor" />}
                               onClick={() => emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: 'ai' }))}
                             />
                           ),
@@ -3047,7 +3044,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                   {!loading ? (
                     <>
                       {!isPause ? (
-                        <YakitButton onClick={resumeAndPause} icon={<SolidPlayIcon />} type={'primary'} size="large">
+                        <YakitButton
+                          onClick={resumeAndPause}
+                          icon={<PlaySolid color="currentColor" />}
+                          type={'primary'}
+                          size="large"
+                        >
                           {t('YakitButton.continue')}
                         </YakitButton>
                       ) : (
@@ -3065,7 +3067,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                       <YakitButton
                         disabled={cachedTotal <= 1}
                         onClick={resumeAndPause}
-                        icon={<SolidPauseIcon />}
+                        icon={<PauseSolid color="currentColor" />}
                         type={'primary'}
                         size="large"
                       >
@@ -3075,7 +3077,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                         onClick={() => {
                           cancelCurrentHTTPFuzzer()
                         }}
-                        icon={<StopIcon />}
+                        icon={<StopSolid />}
                         type={'primary'}
                         colors="danger"
                         size="large"
@@ -3152,7 +3154,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </div>
                       }
                     >
-                      <YakitButton type="text" icon={<ClockIcon />} style={{ padding: '4px 0px' }}>
+                      <YakitButton type="text" icon={<ClockOutlined size={16} />} style={{ padding: '4px 0px' }}>
                         {t('YakitButton.history')}
                       </YakitButton>
                     </YakitPopover>
@@ -3172,7 +3174,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }}
                   >
                     {t('HTTPFuzzerPage.bruteForceExample')}
-                    <QuestionMarkCircleIcon />
+                    <QuestionMarkCircleOutlined size={16} />
                   </div>
                   {loading && (
                     <div className={classNames(styles['spinning-text'], styles['display-flex'])}>
@@ -3228,7 +3230,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                 <div className={styles['fuzzer-heard-right']}>
                   {fuzzerTaskId && (
                     <Tooltip title={`TaskId: ${fuzzerTaskId}`}>
-                      <YakitButton type="text2" icon={<QuestionMarkCircleIcon />} />
+                      <YakitButton type="text2" icon={<QuestionMarkCircleOutlined size={16} />} />
                     </Tooltip>
                   )}
                   {getFuzzerRequestParams && typeof getFuzzerRequestParams === 'function' ? (
@@ -3245,7 +3247,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                   <FuncBtn
                     maxWidth={1600}
                     type="outline2"
-                    icon={<OutlineSwitchhorizontalIcon />}
+                    icon={<SwitchHorizontalOutlined color="currentColor" />}
                     onClick={onSynWF}
                     name={t('HTTPFuzzerPage.syncConfig')}
                     style={{ marginRight: 8 }}
@@ -3277,7 +3279,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     <FuncBtn
                       maxWidth={1600}
                       type="primary"
-                      icon={<OutlineCodeIcon />}
+                      icon={<CodeOutlined color="currentColor" />}
                       name={t('HTTPFuzzerPage.generateYamlTemplate')}
                       tooltipPlacement="topRight"
                     />
@@ -3442,7 +3444,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             {t('HTTPFuzzerPage.responseLimitExceeded')}
                                             <YakitButton
                                               type="text"
-                                              icon={<OutlineCogIcon />}
+                                              icon={<CogOutlined color="currentColor" />}
                                               style={{
                                                 padding: 0,
                                                 height: 'auto',
@@ -3919,7 +3921,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             {!showSearchIcon && searchNode}
             {showSearchIcon && (
               <YakitPopover content={searchNode}>
-                <YakitButton icon={<SearchIcon />} size={size} type="outline2" />
+                <YakitButton icon={<SearchOutlined size={16} />} size={size} type="outline2" />
               </YakitPopover>
             )}
             <Divider
@@ -4011,7 +4013,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
           <YakitButton
             type="text2"
             size="small"
-            icon={<OutlineAnnotationIcon />}
+            icon={<AnnotationOutlined color="currentColor" />}
             isActive={showResponseInfoSecondEditor}
             onClick={() => {
               setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
@@ -4065,7 +4067,12 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
               }
             }}
           >
-            <YakitButton icon={<OutlineSearchIcon />} size={size} type="outline2" isHover={!!query?.keyWord} />
+            <YakitButton
+              icon={<SearchOutlined color="currentColor" />}
+              size={size}
+              type="outline2"
+              isHover={!!query?.keyWord}
+            />
           </YakitPopover>
         )}
         <YakitPopover
@@ -4137,7 +4144,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
           }}
         >
           <YakitButton
-            icon={<OutlineFilterIcon />}
+            icon={<FilterOutlined color="currentColor" />}
             size={size}
             type="outline2"
             isHover={
@@ -4153,9 +4160,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             }
           />
         </YakitPopover>
-
         <Divider type="vertical" style={{ margin: 0, top: 1 }} />
-
         {isShowMatch && (
           <>
             {+(secondNodeSize?.width || 0) >= 610 ? (
@@ -4192,7 +4197,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     <YakitButton
                       type="outline2"
                       size={size}
-                      icon={<OutlinePlugsIcon />}
+                      icon={<PlugsOutlined color="currentColor" />}
                       onClick={() => {
                         matchSubmit && matchSubmit()
                       }}
@@ -4208,7 +4213,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     placement="top"
                   >
                     <Tooltip title={t('SecondNodeExtra.matchAndExtract')}>
-                      <YakitButton type="outline2" size={size} icon={<OutlinePlugsIcon />} />
+                      <YakitButton type="outline2" size={size} icon={<PlugsOutlined color="currentColor" />} />
                     </Tooltip>
                   </YakitPopconfirm>
                 )}
@@ -4216,7 +4221,6 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             )}
           </>
         )}
-
         {/* {+(secondNodeSize?.width || 0) >= 610 ? (
                     <YakitButton
                         type='outline2'
@@ -4367,11 +4371,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             }}
           >
             <Tooltip title={t('SecondNodeExtra.exportData')}>
-              <YakitButton type="outline2" icon={<OutlineExportIcon />} size={size} />
+              <YakitButton type="outline2" icon={<FigmaIcon2017756Outlined />} size={size} />
             </Tooltip>
           </YakitPopover>
         )}
-
         <YakitModal
           title={t('SecondNodeExtra.extractFromResponsePacket')}
           onCancel={() => setResponseExtractorVisible(false)}
@@ -4399,7 +4402,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             <YakitButton
               style={{ marginRight: 10 }}
               type="outline2"
-              icon={<OutlineExportIcon />}
+              icon={<FigmaIcon2017756Outlined />}
               size={size}
               onClick={() => {
                 emiter.emit(
@@ -5109,7 +5112,7 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
         label: 'Payload',
       },
       {
-        icon: <OutlineBeakerIcon />,
+        icon: <BeakerOutlined color="currentColor" />,
         value: 'extractContent',
         label: t('ResponseViewerSecondNode.extractContent'),
       },
@@ -5134,7 +5137,7 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
             </div>
           ))}
         </div>
-        <YakitButton type="text2" icon={<OutlineXIcon />} size="small" onClick={() => onClose()} />
+        <YakitButton type="text2" icon={<XOutlined color="currentColor" />} size="small" onClick={() => onClose()} />
       </div>
       <div className={styles['payload-extract-content-body']} style={{ display: type === 'payload' ? '' : 'none' }}>
         {fuzzerResponse.Payloads?.map((item, index) => (

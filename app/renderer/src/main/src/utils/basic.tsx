@@ -20,7 +20,7 @@ import type { NetInterface } from '@/models/Traffic'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitReverse, yakitScript, yakitStream } from '@/services/electronBridge'
 

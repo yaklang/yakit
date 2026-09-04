@@ -36,29 +36,28 @@ import {
   useCreation,
 } from 'ahooks'
 import {
-  OutlineArrowscollapseIcon,
-  OutlineCalendarIcon,
-  OutlineDatabasebackupIcon,
-  OutlineDocumentduplicateIcon,
-  OutlineDotshorizontalIcon,
-  OutlineFilterIcon,
-  OutlineOpenIcon,
-  OutlineSearchIcon,
-  OutlineTrashIcon,
-  OutlineViewgridIcon,
-  OutlineViewlistIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
-import { SolidCheckIcon, SolidExclamationIcon } from '@/assets/icon/solid'
-import {
-  SolidOfficialpluginIcon,
-  SolidYakitPluginIcon,
-  SolidPluginYakMitmIcon,
-  SolidPluginProtScanIcon,
-  SolidSparklesPluginIcon,
-  SolidDocumentSearchPluginIcon,
-  SolidCollectionPluginIcon,
-} from '@/assets/icon/colors'
+  CalendarOutlined,
+  DatabaseBackupOutlined,
+  DocumentDuplicateOutlined,
+  DotsHorizontalOutlined,
+  FilterOutlined,
+  OpenOutlined,
+  SearchOutlined,
+  TrashOutlined,
+  ViewGridOutlined,
+  ViewListOutlined,
+  XOutlined,
+  ArrowsOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { CheckSolid, ExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { SolidOfficialpluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidOfficialpluginIcon'
+import { SolidYakitPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidYakitPluginIcon'
+import { SolidPluginYakMitmIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidPluginYakMitmIcon'
+import { SolidPluginProtScanIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidPluginProtScanIcon'
+import { SolidSparklesPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidSparklesPluginIcon'
+import { SolidDocumentSearchPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidDocumentSearchPluginIcon'
+import { SolidCollectionPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidCollectionPluginIcon'
 import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -68,7 +67,9 @@ import { Dropdown, Form, Radio, Tooltip } from 'antd'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { formatDate } from '@/utils/timeUtil'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { PluginTestErrorIcon, PluginTestWarningIcon, PluginsGridCheckIcon } from './icon'
+import { PluginTestErrorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PluginTestErrorIcon'
+import { PluginTestWarningIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PluginTestWarningIcon'
+import { PluginsGridCheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PluginsGridCheckIcon'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitLogo from '@/assets/yakitLogo.png'
 import type { PluginFilterParams, PluginSearchParams } from './baseTemplateType'
@@ -184,7 +185,7 @@ export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
                         }}
                       >
                         {item.name}
-                        <SolidCheckIcon />
+                        <CheckSolid color="currentColor" />
                       </div>
                     )
                   })}
@@ -198,7 +199,7 @@ export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
             }
           >
             <div className={classNames(styles['ellipsis-body'], { [styles['ellipsis-active']]: visible })}>
-              <OutlineDotshorizontalIcon />
+              <DotsHorizontalOutlined color="currentColor" />
             </div>
           </YakitPopover>
         </div>
@@ -372,7 +373,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
           className={styles['search-icon']}
           size="large"
           type="outline2"
-          icon={<OutlineSearchIcon />}
+          icon={<SearchOutlined color="currentColor" />}
           isActive={showPopver}
         ></YakitButton>
       </YakitPopover>
@@ -536,7 +537,9 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                 <YakitButton
                   type="text2"
                   onClick={onExpend}
-                  icon={<OutlineOpenIcon className={styles['panel-header-icon']} onClick={onExpend} />}
+                  icon={
+                    <OpenOutlined className={styles['panel-header-icon']} onClick={onExpend} color="currentColor" />
+                  }
                 ></YakitButton>
               </Tooltip>
             </div>
@@ -596,7 +599,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                     <span>
                       {t('FuncTemplate.filterCondition')} <span className={styles['total-style']}>{tagLength}</span>
                     </span>
-                    <OutlineXIcon onClick={() => onDelAllTag()} />
+                    <XOutlined onClick={() => onDelAllTag()} color="currentColor" />
                   </div>
                 </YakitPopover>
               )}
@@ -612,7 +615,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
             title={isList ? t('FuncTemplate.switchToGrid') : t('FuncTemplate.switchToList')}
           >
             <div className={styles['is-list-btn']} onClick={() => setIsList(!isList)}>
-              {isList ? <OutlineViewgridIcon /> : <OutlineViewlistIcon />}
+              {isList ? <ViewGridOutlined color="currentColor" /> : <ViewListOutlined color="currentColor" />}
             </div>
           </Tooltip>
         </div>
@@ -1194,7 +1197,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
 
         <div className={styles['opt-footer']} onClick={(e) => e.stopPropagation()}>
           <div className={styles['footer-time']}>
-            <OutlineCalendarIcon />
+            <CalendarOutlined color="currentColor" />
             {formatDate(time)}
           </div>
           <div className={styles['extra-footer']}>{extra()}</div>
@@ -1354,9 +1357,13 @@ export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps>
       {removeLoading ? (
         <LoadingOutlined className={styles['plugin-loading']} />
       ) : (
-        <YakitButton type="text2" icon={<OutlineTrashIcon />} onClick={onRemove} />
+        <YakitButton type="text2" icon={<TrashOutlined color="currentColor" />} onClick={onRemove} />
       )}
-      <YakitButton icon={<OutlineDatabasebackupIcon />} onClick={onReduction} loading={reductionLoading}>
+      <YakitButton
+        icon={<DatabaseBackupOutlined color="currentColor" />}
+        onClick={onReduction}
+        loading={reductionLoading}
+      >
         {t('FuncTemplate.restore')}
       </YakitButton>
     </div>
@@ -1510,7 +1517,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
         </div>
       }
     >
-      <YakitButton type="text2" icon={<OutlineFilterIcon />} isHover={visible} isActive={isActive} />
+      <YakitButton type="text2" icon={<FilterOutlined color="currentColor" />} isHover={visible} isActive={isActive} />
     </YakitPopover>
   )
 })
@@ -1686,7 +1693,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                         {item.Severity === 'Warning' ? <PluginTestWarningIcon /> : <PluginTestErrorIcon />}
                         {item.Item}
                         <YakitButton
-                          icon={<OutlineDocumentduplicateIcon />}
+                          icon={<DocumentDuplicateOutlined color="currentColor" />}
                           type="text"
                           onClick={() => {
                             setClipboardText(formatSingleResult(item))
@@ -1712,7 +1719,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                 )}
                 {response && (+response?.Score || 0) < 60 && (
                   <div className={styles['opt-results']}>
-                    <SolidExclamationIcon />
+                    <ExclamationSolid color="currentColor" />
                     <div className={styles['content-style']}>
                       {isSpecial
                         ? specialHint || t('CodeScoreModule.unable_to_judge_manual_review')
@@ -1857,7 +1864,7 @@ export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) 
       centered={true}
       maskClosable={false}
       closable={true}
-      closeIcon={<OutlineArrowscollapseIcon className={styles['plugin-editor-modal-close-icon']} />}
+      closeIcon={<ArrowsOutlined className={styles['plugin-editor-modal-close-icon']} />}
       footer={null}
       open={visible}
       onCancel={() => setVisible(content)}
@@ -1902,7 +1909,7 @@ export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo(
       centered={true}
       maskClosable={false}
       closable={true}
-      closeIcon={<OutlineArrowscollapseIcon className={styles['plugin-editor-modal-close-icon']} />}
+      closeIcon={<ArrowsOutlined className={styles['plugin-editor-modal-close-icon']} />}
       footer={null}
       open={visible}
       onCancel={() => setVisible(content)}

@@ -7,7 +7,7 @@ import type { ShowModalProps } from '@/utils/showModal'
 import { YakitModal, type YakitModalProp } from './YakitModal'
 import { ErrorBoundary } from 'react-error-boundary'
 import ExclamationCircleOutlined from '@ant-design/icons/lib/icons/ExclamationCircleOutlined'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { createRoot } from 'react-dom/client'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { ALL_I18N_NAMESPACES } from '@/i18n/namespaces'
@@ -207,7 +207,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
           }}
           className="modal-remove-icon"
         >
-          <OutlineXIcon />
+          <XOutlined color="currentColor" />
         </div>
       }
       {...props}

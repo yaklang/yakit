@@ -1,8 +1,8 @@
 import type React from 'react'
 import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
-import { OutlineIdentificationIcon, OutlinePuzzleIcon, OutlineTagIcon, OutlineXIcon } from '@/assets/icon/outline'
-import { SolidBanIcon } from '@/assets/icon/solid'
+import { IdentificationOutlined, PuzzleOutlined, TagOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { BanSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type {
   PluginBaseInfoFormProps,
   PluginBaseInfoFormRefProps,
@@ -373,16 +373,21 @@ export const PluginLogMergeDetail: React.FC<PluginLogMergeDetailProps> = memo((p
               type="outline1"
               colors="danger"
               loading={modifyLoading}
-              icon={<SolidBanIcon />}
+              icon={<BanSolid color="currentColor" />}
               onClick={onOpenNoPass}
             >
               {t('PluginLogMergeDetail.cancelMerge')}
             </YakitButton>
-            <YakitButton colors="success" loading={modifyLoading} icon={<OutlinePuzzleIcon />} onClick={onOpenPass}>
+            <YakitButton
+              colors="success"
+              loading={modifyLoading}
+              icon={<PuzzleOutlined color="currentColor" />}
+              onClick={onOpenPass}
+            >
               {t('PluginLogMergeDetail.mergeCode')}
             </YakitButton>
 
-            <YakitButton type="text2" icon={<OutlineXIcon />} onClick={onCancel} />
+            <YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={onCancel} />
           </div>
         }
         onClose={onCancel}
@@ -650,7 +655,7 @@ const PluginBaseInfoForm: React.FC<PluginBaseInfoFormProps> = memo(
             wrapperClassName={styles['item-input']}
             placeholder={t('YakitInput.please_enter')}
             size="large"
-            prefix={<OutlineIdentificationIcon />}
+            prefix={<IdentificationOutlined color="currentColor" />}
             maxLength={100}
             disabled={allDisabled}
           />
@@ -685,7 +690,7 @@ const PluginBaseInfoForm: React.FC<PluginBaseInfoFormProps> = memo(
             </YakitSelect>
           </Form.Item>
           <div className={styles['item-select-prefix-icon']}>
-            <OutlineTagIcon />
+            <TagOutlined color="currentColor" />
           </div>
         </Form.Item>
 

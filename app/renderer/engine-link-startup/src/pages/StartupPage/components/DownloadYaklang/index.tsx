@@ -16,8 +16,8 @@ import {
   grpcWriteEngineKeyToYakitProjects,
 } from '../../grpc'
 import { DragHeaderHeight, safeFormatDownloadProcessState } from '../../utils'
-import { YaklangInstallHintSvgIcon } from '@/assets/newIcon'
-import { OutlineQuestionmarkcircleIcon } from '@/assets/outline'
+import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ShieldExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { QuestionModal } from '../QuestionModal'
 import { yakitEngine } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -205,7 +205,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
 
               <div className={styles['hint-left-wrapper']}>
                 <div className={styles['hint-icon']}>
-                  <YaklangInstallHintSvgIcon />
+                  <ShieldExclamationSolid color="#FFB660" size={32} />
                 </div>
                 <div
                   className={styles['qs-icon']}
@@ -215,7 +215,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
                     setIsTop(2)
                   }}
                 >
-                  <OutlineQuestionmarkcircleIcon />
+                  <QuestionMarkCircleOutlined color="currentColor" />
                 </div>
               </div>
 

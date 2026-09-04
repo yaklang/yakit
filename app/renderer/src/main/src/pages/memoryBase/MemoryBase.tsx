@@ -17,11 +17,11 @@ import classNames from 'classnames'
 import { ChevrondownButton, ChevronleftButton } from '../ai-re-act/aiReActChat/AIReActComponent'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineQuestionmarkcircleIcon,
-  OutlineRefreshIcon,
-  OutlineTrashIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  QuestionMarkCircleOutlined,
+  RefreshOutlined,
+  TrashOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { Badge, Divider, type RadioChangeEvent, Slider, Tooltip } from 'antd'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -276,7 +276,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
               }}
             >
               <YakitButton
-                icon={<OutlineTrashIcon />}
+                icon={<TrashOutlined color="currentColor" />}
                 type="text"
                 danger
                 onClick={(e) => {
@@ -644,7 +644,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                     }}
                   >
                     <Badge dot={offsetData.length > 0} offset={[-5, 4]}>
-                      <YakitButton type="text2" icon={<OutlineRefreshIcon />} />
+                      <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} />
                     </Badge>
                   </YakitDropdownMenu>
                 </div>
@@ -680,7 +680,11 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
         <div className={styles['memory-detail']}>
           <div className={styles['memory-detail-header']}>
             <div>详情</div>
-            <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setCurrentItem(undefined)} />
+            <YakitButton
+              type="text2"
+              icon={<XOutlined color="currentColor" />}
+              onClick={() => setCurrentItem(undefined)}
+            />
           </div>
           <div className={styles['memory-detail-content']}>
             <AIMemoryContent item={currentSelectItem} />
@@ -1087,7 +1091,7 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
                     </div>
                   }
                 >
-                  <OutlineQuestionmarkcircleIcon />
+                  <QuestionMarkCircleOutlined color="currentColor" />
                 </Tooltip>
               </div>
             }

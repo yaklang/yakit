@@ -41,7 +41,7 @@ import styles from './editors.module.scss'
 import classNames from 'classnames'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { OutlineDotsverticalIcon } from '@/assets/icon/outline'
+import { DotsVerticalOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 const DataCompareModal = React.lazy(() =>
   import('@/pages/compare/DataCompare').then((m) => ({ default: m.DataCompareModal })),
@@ -1009,7 +1009,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             </>
           }
         >
-          <OutlineDotsverticalIcon className={styles['resize-card-icon']} />
+          <DotsVerticalOutlined className={styles['resize-card-icon']} color="currentColor" />
         </YakitPopover>
       )
     }

@@ -3,7 +3,7 @@ import classNames from 'classnames'
 import { Progress, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import styles from './WebFuzzerApiDoc.module.scss'
-import { OutlineBookopenIcon, OutlineClockIcon, OutlineUploadIcon } from '@/assets/icon/outline'
+import { BookOpenOutlined, ClockOutlined, UploadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakURLResource } from '@/pages/yakURLTree/data'
 import {
   type ApiDocInfo,
@@ -319,7 +319,7 @@ export const WebFuzzerApiDoc: React.FC<{
           <div className={styles['header-title']} style={parsing ? { visibility: 'hidden' } : {}}>
             {docInfo?.title && (
               <>
-                <OutlineBookopenIcon className={styles['header-icon']} />
+                <BookOpenOutlined className={styles['header-icon']} color="currentColor" />
                 <span className={classNames(styles['doc-name'], 'content-ellipsis')}>{docInfo.title}</span>
               </>
             )}
@@ -345,12 +345,12 @@ export const WebFuzzerApiDoc: React.FC<{
                 </div>
               }
             >
-              <YakitButton type="text2" size="small" icon={<OutlineClockIcon />} disabled={parsing} />
+              <YakitButton type="text2" size="small" icon={<ClockOutlined color="currentColor" />} disabled={parsing} />
             </Tooltip>
             <YakitButton
               type="text2"
               size="small"
-              icon={<OutlineUploadIcon />}
+              icon={<UploadOutlined color="currentColor" />}
               loading={loading}
               onClick={onUpload}
               title={t('ApiDoc.upload')}

@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ChevronDownIcon, SwitchHorizontalIcon, ChevronUpIcon } from '@/assets/newIcon'
+import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
@@ -12,6 +12,8 @@ import { yakitNotify } from '@/utils/notification'
 import classNames from 'classnames'
 import styles from './MenuCodec.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+import { ChevronDownOutlined, SwitchHorizontalOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -190,7 +192,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
           <YakitButton type={avtiveKey === 'decode' ? 'primary' : 'outline2'} onClick={(e) => e.preventDefault()}>
             <div className={styles['codec-menu-btn']}>
               {t('Layout.MenuCodec.decode')}
-              {codeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              {codeShow ? <ChevronUpIcon /> : <ChevronDownOutlined size={16} />}
             </div>
           </YakitButton>
         </YakitPopover>
@@ -205,7 +207,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
           <YakitButton type={avtiveKey === 'code' ? 'primary' : 'outline2'} onClick={(e) => e.preventDefault()}>
             <div className={styles['encode-menu-btn']}>
               {t('Layout.MenuCodec.encode')}
-              {decodeShow ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              {decodeShow ? <ChevronUpIcon /> : <ChevronDownOutlined size={16} />}
             </div>
           </YakitButton>
         </YakitPopover>
@@ -218,7 +220,6 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
           {t('Layout.MenuCodec.fuzztag')}
         </YakitButton>
       </div>
-
       <div className={styles['input-textarea-wrapper']}>
         <YakitInput.TextArea
           className={styles['input-textarea-body']}
@@ -234,13 +235,11 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
           />
         </div>
       </div>
-
       <div className={styles['exchange-btn-wrapper']}>
         <div className={styles['exchange-btn']} onClick={exchangeValue}>
-          <SwitchHorizontalIcon />
+          <SwitchHorizontalOutlined size={16} />
         </div>
       </div>
-
       <div className={styles['input-textarea-wrapper']}>
         <YakitInput.TextArea
           className={styles['input-textarea-body']}

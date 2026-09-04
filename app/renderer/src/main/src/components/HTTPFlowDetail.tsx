@@ -32,7 +32,8 @@ import {
   type HTTPFlowExtractedDataTableRefProps,
   type QueryMITMRuleExtractedDataRequest,
 } from '@/components/HTTPFlowExtractedDataTable'
-import { ChevronDownIcon, ChevronUpIcon, ChromeSvgIcon } from '@/assets/newIcon'
+import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronUpIcon'
+import { ChromeSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChromeSvgIcon'
 import { YakitEmpty } from './yakitUI/YakitEmpty/YakitEmpty'
 import classNames from 'classnames'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
@@ -44,12 +45,11 @@ import { CopyComponents, YakitTag } from './yakitUI/YakitTag/YakitTag'
 import { YakitDropdownMenu } from './yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { openABSFileLocated, openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
 import emiter from '@/utils/eventBus/eventBus'
-import { OutlineCloseIcon, OutlineLog2Icon, OutlineOpenIcon } from '@/assets/icon/outline'
+import { CloseOutlined, Log2Outlined, OpenOutlined, ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { RemoteGV } from '@/yakitGV'
 import type { QueryGeneralResponse } from '@/pages/invoker/schema'
 import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
-import { SolidCheckIcon } from '@/assets/icon/solid'
 import { YakitCopyText } from './yakitUI/YakitCopyText/YakitCopyText'
 import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
 import PluginTabs from './businessUI/PluginTabs/PluginTabs'
@@ -1050,12 +1050,13 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                   <div className={classNames(styles['http-history-fold-box'], styles['http-history-fold-border-box'])}>
                     <div className={classNames(styles['http-history-icon-box'])} style={{ height: 32 }}>
                       <Tooltip placement="top" title={t('HTTPFlowDetailMini.expandLeft')}>
-                        <OutlineCloseIcon
+                        <CloseOutlined
                           className={styles['fold-icon']}
                           onClick={() => {
                             setRemoteValue('IsFoldValue', JSON.stringify({ is: false, id }))
                             setFold(false)
                           }}
+                          color="currentColor"
                         />
                       </Tooltip>
                     </div>
@@ -1093,12 +1094,13 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             <div className={classNames(styles['http-history-fold-box'])}>
                               <div className={styles['http-history-icon-box']}>
                                 <Tooltip placement="top" title={t('HTTPFlowDetailMini.collapseRight')}>
-                                  <OutlineOpenIcon
+                                  <OpenOutlined
                                     className={styles['fold-icon']}
                                     onClick={() => {
                                       setRemoteValue('IsFoldValue', JSON.stringify({ is: true, id }))
                                       setFold(true)
                                     }}
+                                    color="currentColor"
                                   />
                                 </Tooltip>
                               </div>
@@ -1203,12 +1205,13 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                               <div className={classNames(styles['http-history-fold-box'])}>
                                 <div className={styles['http-history-icon-box']}>
                                   <Tooltip placement="top" title={t('HTTPFlowDetailMini.collapseRight')}>
-                                    <OutlineOpenIcon
+                                    <OpenOutlined
                                       className={styles['fold-icon']}
                                       onClick={() => {
                                         setRemoteValue('IsFoldValue', JSON.stringify({ is: true, id }))
                                         setFold(true)
                                       }}
+                                      color="currentColor"
                                     />
                                   </Tooltip>
                                 </div>
@@ -1249,12 +1252,13 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                               <div className={classNames(styles['http-history-fold-box'])}>
                                 <div className={styles['http-history-icon-box']}>
                                   <Tooltip placement="top" title={t('HTTPFlowDetailMini.collapseRight')}>
-                                    <OutlineOpenIcon
+                                    <OpenOutlined
                                       className={styles['fold-icon']}
                                       onClick={() => {
                                         setRemoteValue('IsFoldValue', JSON.stringify({ is: true, id }))
                                         setFold(true)
                                       }}
+                                      color="currentColor"
                                     />
                                   </Tooltip>
                                 </div>
@@ -1270,12 +1274,13 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         <div className={classNames(styles['empty-box-fold-box'])}>
                           <div className={styles['empty-box-icon-box']}>
                             <Tooltip placement="top" title={t('HTTPFlowDetailMini.collapseRight')}>
-                              <OutlineOpenIcon
+                              <OpenOutlined
                                 className={styles['fold-icon']}
                                 onClick={() => {
                                   setRemoteValue('IsFoldValue', JSON.stringify({ is: true }))
                                   setFold(true)
                                 }}
+                                color="currentColor"
                               />
                             </Tooltip>
                           </div>
@@ -1882,7 +1887,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
               if (['History'].includes(pageType || '') && showJumpTree) {
                 titleEle.push(
                   <Tooltip title={t('HTTPFlowDetailRequestAndResponse.jumpToWebTree')} key="jump-web-tree">
-                    <OutlineLog2Icon className={styles['jump-web-tree']} onClick={handleJumpWebTree} />
+                    <Log2Outlined
+                      className={styles['jump-web-tree']}
+                      onClick={handleJumpWebTree}
+                      color="currentColor"
+                    />
                   </Tooltip>,
                 )
               }

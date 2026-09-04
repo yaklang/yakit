@@ -4,11 +4,11 @@ import type { SequenceItemProps } from './FuzzerSequenceType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useCreation, useHover, useMemoizedFn } from 'ahooks'
 import {
-  OutlineArrowcirclerightIcon,
-  OutlineCogIcon,
-  OutlineInformationcircleIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ArrowCircleRightOutlined,
+  CogOutlined,
+  InformationCircleOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { Divider, Form, Tooltip } from 'antd'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import classNames from 'classnames'
@@ -23,7 +23,6 @@ import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import styles from './FuzzerSequence.module.scss'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { InformationCircleIcon } from '@/assets/newIcon'
 
 export type ConcurrencyAdvancedConfigValue = Pick<
   AdvancedConfigValueProps,
@@ -90,7 +89,7 @@ const AdvancedSet: React.FC<AdvancedSetProps> = memo((props) => {
           <div className={styles['advanced-configuration-drawer-title-text']}>
             {t('AdvancedSet.advancedConfig')}
             <Tooltip title={t('AdvancedSet.advancedConfigToolTips')} placement="bottom">
-              <OutlineInformationcircleIcon />
+              <InformationCircleOutlined color="currentColor" />
             </Tooltip>
           </div>
           <div className={styles['advanced-configuration-drawer-title-btns']}>
@@ -264,7 +263,7 @@ const AdvancedSetV2: React.FC<AdvancedSetV2Props> = memo((props) => {
                 <span className={styles['advanced-config-form-label']}>
                   {t('HttpQueryAdvancedConfig.disable_Advanced_set')}
                   <Tooltip title={t('HttpQueryAdvancedConfig.disable_Advanced_set_tip')}>
-                    <InformationCircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined size={16} className={styles['info-icon']} />
                   </Tooltip>
                 </span>
               }
@@ -372,7 +371,7 @@ const ConcurrencyItem: React.FC<SequenceItemProps> = memo((props) => {
           </div>
           <div className={styles['fuzzer-sequence-list-item-heard-extra']}>
             <YakitButton
-              icon={<OutlineTrashIcon />}
+              icon={<TrashOutlined color="currentColor" />}
               type="text2"
               onClick={(e) => {
                 e.stopPropagation()
@@ -384,7 +383,7 @@ const ConcurrencyItem: React.FC<SequenceItemProps> = memo((props) => {
             <YakitButton
               // 添加一个不同的key 解决多次点击后 选中态不能正常显示的问题(偶发)
               key={`cog-${item.id}-${isActive ? 'active' : 'inactive'}`}
-              icon={<OutlineCogIcon />}
+              icon={<CogOutlined color="currentColor" />}
               type="text2"
               isActive={isActive}
               onClick={(e) => {
@@ -396,7 +395,7 @@ const ConcurrencyItem: React.FC<SequenceItemProps> = memo((props) => {
             <Divider type="vertical" style={{ margin: 0 }} />
             <Tooltip title={t('SequenceItem.go_to_fuzzer_configuration')}>
               <YakitButton
-                icon={<OutlineArrowcirclerightIcon />}
+                icon={<ArrowCircleRightOutlined color="currentColor" />}
                 type="text2"
                 disabled={disabled}
                 onClick={(e) => {

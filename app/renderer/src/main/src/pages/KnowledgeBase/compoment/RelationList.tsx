@@ -2,13 +2,13 @@ import type React from 'react'
 import { Form } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
-import { TrashIcon } from '@/assets/newIcon'
 import { randomString } from '@/utils/randomUtil'
 import styles from '../knowledgeBase.module.scss'
-import { SolidDragsortIcon } from '@/assets/icon/solid'
+import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 interface RelationListProps {
   form: any
@@ -55,7 +55,7 @@ const RelationList: React.FC<RelationListProps> = ({ form, disabled }) => {
                                 }}
                               >
                                 <div {...provided.dragHandleProps}>
-                                  <SolidDragsortIcon className={styles['draggable-icon']} />
+                                  <FigmaIcon2281144183Solid className={styles['draggable-icon']} color="currentColor" />
                                 </div>
                                 <Item key={`concept-${id}`} name={[field.name, 'concept']} style={{ marginBottom: 8 }}>
                                   <YakitSelect
@@ -81,7 +81,11 @@ const RelationList: React.FC<RelationListProps> = ({ form, disabled }) => {
                                   <YakitInput.TextArea disabled={disabled} rows={1} />
                                 </Item>
                                 {!disabled && (
-                                  <TrashIcon className={styles['dnd-delete-icon']} onClick={() => remove(field.name)} />
+                                  <TrashOutlined
+                                    size={16}
+                                    className={styles['dnd-delete-icon']}
+                                    onClick={() => remove(field.name)}
+                                  />
                                 )}
                               </div>
                             )}

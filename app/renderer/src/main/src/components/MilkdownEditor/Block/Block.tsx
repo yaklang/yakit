@@ -6,7 +6,7 @@ import { paragraphSchema } from '@milkdown/kit/preset/commonmark'
 import { TextSelection } from '@milkdown/kit/prose/state'
 import styles from './Block.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePlusIcon } from '@/assets/icon/outline'
+import { PlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 
 import { useMemoizedFn } from 'ahooks'
@@ -184,7 +184,7 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
         onOpenChange={setVisibleAdd}
       >
         <div className={styles['tooltip-popover-btn']} onMouseDown={onAdd}>
-          <OutlinePlusIcon />
+          <PlusOutlined color="currentColor" />
         </div>
       </YakitPopover>
     </div>

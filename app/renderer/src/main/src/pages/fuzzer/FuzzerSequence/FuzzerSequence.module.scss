@@ -126,6 +126,20 @@
     }
   }
 
+  .inherit-line-symbol {
+    display: block;
+    width: 3px;
+    height: 8px;
+    vertical-align: 0;
+  }
+
+  .inherit-arrow-symbol {
+    display: block;
+    width: 13px;
+    height: 9px;
+    vertical-align: 0;
+  }
+
   .fuzzer-sequence-list {
     @extend .display-column-center;
     padding: 12px 12px 0;

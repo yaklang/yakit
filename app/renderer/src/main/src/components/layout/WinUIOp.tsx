@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { WinUIOpCloseSvgIcon, WinUIOpMaxSvgIcon, WinUIOpMinSvgIcon, WinUIOpRestoreSvgIcon } from './icons'
+import { WinUIOpCloseSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WinUIOpCloseSvgIcon'
+import { WinUIOpMaxSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WinUIOpMaxSvgIcon'
+import { WinUIOpRestoreSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WinUIOpRestoreSvgIcon'
 import { useMemoizedFn } from 'ahooks'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { useRunNodeStore } from '@/store/runNode'
@@ -11,6 +13,8 @@ import styles from './uiOperate.module.scss'
 import { getReleaseEditionName } from '@/utils/envfile'
 import { yakitApp, yakitWindowControls } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+import { MinusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 export interface WinUIOpProp {
   currentProjectId: string // 当前项目id
@@ -103,7 +107,7 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
     >
       <div className={styles['win-ui-op-body']}>
         <div className={styles['op-btn']} onClick={() => operate('min')}>
-          <WinUIOpMinSvgIcon className={styles['icon-style']} />
+          <MinusOutlined size={20} className={styles['icon-style']} />
         </div>
         <div className={styles['short-divider-wrapper']}>
           <div className={styles['divider-style']}></div>

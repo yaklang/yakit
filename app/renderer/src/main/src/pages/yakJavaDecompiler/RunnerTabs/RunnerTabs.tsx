@@ -18,14 +18,18 @@ import styles from './RunnerTabs.module.scss'
 import { KeyToIcon } from '../../yakRunner/FileTree/icon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineChevrondoubleleftIcon,
-  OutlineChevrondoublerightIcon,
-  OutlineImportIcon,
-  OutlineSplitScreenIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
-import { SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
-import { YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon } from '../icon'
+  ChevronDoubleLeftOutlined,
+  ChevronDoubleRightOutlined,
+  XOutlined,
+  FigmaIcon6480193584Outlined,
+  FigmaIcon22849134660Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import {
+  SolidYakCattleNoBackColorIcon,
+  YakRunnerOpenFileIcon,
+  YakRunnerOpenFolderIcon,
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect } from 'ahooks'
 import useStore from '../hooks/useStore'
@@ -263,7 +267,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             placement: 'bottomRight',
           }}
         >
-          <OutlineSplitScreenIcon className={styles['extra-box-icon']} />
+          <FigmaIcon22849134660Outlined size={16} className={styles['extra-box-icon']} />
         </YakitDropdownMenu>
       )
     }
@@ -534,7 +538,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                   })}
                   ref={scrollLeftIconRef}
                 >
-                  <OutlineChevrondoubleleftIcon />
+                  <ChevronDoubleLeftOutlined color="currentColor" />
                 </div>
                 <div
                   className={classNames(styles['bar-container'])}
@@ -564,7 +568,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                   })}
                   ref={scrollRightIconRef}
                 >
-                  <OutlineChevrondoublerightIcon />
+                  <ChevronDoubleRightOutlined color="currentColor" />
                 </div>
                 {/* {pageItem.hideAdd !== true && (
                                     <OutlinePlusIcon
@@ -661,7 +665,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                   className={styles['del-btn']}
                   type="text2"
                   size="small"
-                  icon={<OutlineXIcon />}
+                  icon={<XOutlined color="currentColor" />}
                   onClick={closeTabItem}
                 />
               </div>
@@ -979,7 +983,7 @@ export const YakJavaDecompilerWelcomePage: React.FC<YakJavaDecompilerWelcomePage
                 打开 JAR 文件
                 <span className={styles['sub-title']}>支持 .jar, .war, .ear, .zip</span>
               </div>
-              <OutlineImportIcon className={styles['icon-style']} />
+              <FigmaIcon6480193584Outlined className={styles['icon-style']} color="currentColor" />
             </div>
             <div className={classNames(styles['btn-style'], styles['btn-open-file'])} onClick={openDirectory}>
               <div className={styles['btn-title']}>
@@ -987,7 +991,7 @@ export const YakJavaDecompilerWelcomePage: React.FC<YakJavaDecompilerWelcomePage
                 打开 JAR 目录
                 <span className={styles['sub-title']}>批量浏览目录内所有 JAR</span>
               </div>
-              <OutlineImportIcon className={styles['icon-style']} />
+              <FigmaIcon6480193584Outlined className={styles['icon-style']} color="currentColor" />
             </div>
           </div>
         </div>

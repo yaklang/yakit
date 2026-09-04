@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { SolidPayloadIcon } from '@/assets/icon/solid'
+import { PayloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { type configManagementTabType, useConfigManagementTab } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useMemoizedFn } from 'ahooks'
@@ -49,7 +49,7 @@ export const ManagementTab: React.FC<{ hideIcon?: boolean }> = React.memo((props
       <YakitButton
         type="secondary2"
         className={styles['button-border']}
-        icon={!props.hideIcon ? <SolidPayloadIcon /> : undefined}
+        icon={!props.hideIcon ? <PayloadSolid color="currentColor" /> : undefined}
       >
         {t('Layout.ExtraMenu.resourceManager')}
       </YakitButton>

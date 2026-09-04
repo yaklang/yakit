@@ -20,9 +20,8 @@ import type {
 } from './types'
 
 import styles from './KnowledgeEntryTable.module.scss'
-import { PlusIcon, TrashIcon } from '@/assets/newIcon'
-import { OutlinePencilaltIcon, OutlineSearchIcon } from '@/assets/icon/outline'
-import { SolidPlayIcon } from '@/assets/icon/solid'
+import { PencilAltOutlined, SearchOutlined, PlusOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -282,7 +281,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
             <YakitButton
               type="text2"
               size="small"
-              icon={<SolidPlayIcon />}
+              icon={<PlaySolid color="currentColor" />}
               onClick={() => handleCreateIndex(item)}
               title={t('playground.KnowledgeEntryTable.createIndexForEntry')}
             >
@@ -292,7 +291,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
           <YakitButton
             type="text2"
             size="small"
-            icon={<OutlinePencilaltIcon />}
+            icon={<PencilAltOutlined color="currentColor" />}
             onClick={() => handleOpenEdit(item)}
             title={t('YakitButton.edit')}
           />
@@ -305,7 +304,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
               type="text2"
               size="small"
               colors="danger"
-              icon={<TrashIcon />}
+              icon={<TrashOutlined size={16} />}
               title={t('YakitButton.delete')}
             />
           </YakitPopconfirm>
@@ -337,9 +336,9 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               style={{ width: 200 }}
-              suffix={<OutlineSearchIcon />}
+              suffix={<SearchOutlined color="currentColor" />}
             />
-            <YakitButton type="primary" size="small" icon={<PlusIcon />} onClick={handleOpenCreate}>
+            <YakitButton type="primary" size="small" icon={<PlusOutlined size={16} />} onClick={handleOpenCreate}>
               {t('playground.KnowledgeEntryTable.addEntry')}
             </YakitButton>
           </Space>
@@ -365,7 +364,6 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
           }}
         />
       </AutoCard>
-
       <YakitModal
         title={editingEntry ? t('playground.KnowledgeEntryTable.editEntry') : '新增知识条目'}
         open={modalVisible}
@@ -413,10 +411,15 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
                       <Form.Item {...restField} name={[name]} style={{ marginBottom: 0, flex: 1 }}>
                         <YakitInput placeholder={t('YakitInput.enterKeyword')} />
                       </Form.Item>
-                      <YakitButton type="text2" colors="danger" icon={<TrashIcon />} onClick={() => remove(name)} />
+                      <YakitButton
+                        type="text2"
+                        colors="danger"
+                        icon={<TrashOutlined size={16} />}
+                        onClick={() => remove(name)}
+                      />
                     </Space>
                   ))}
-                  <YakitButton type="outline1" onClick={() => add()} icon={<PlusIcon />}>
+                  <YakitButton type="outline1" onClick={() => add()} icon={<PlusOutlined size={16} />}>
                     {t('playground.KnowledgeEntryTable.addKeyword')}
                   </YakitButton>
                 </>
@@ -459,10 +462,15 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
                       <Form.Item {...restField} name={[name]} style={{ marginBottom: 0, flex: 1 }}>
                         <YakitInput placeholder={t('playground.KnowledgeEntryTable.enterPotentialQuestion')} />
                       </Form.Item>
-                      <YakitButton type="text2" colors="danger" icon={<TrashIcon />} onClick={() => remove(name)} />
+                      <YakitButton
+                        type="text2"
+                        colors="danger"
+                        icon={<TrashOutlined size={16} />}
+                        onClick={() => remove(name)}
+                      />
                     </Space>
                   ))}
-                  <YakitButton type="outline1" onClick={() => add()} icon={<PlusIcon />}>
+                  <YakitButton type="outline1" onClick={() => add()} icon={<PlusOutlined size={16} />}>
                     {t('playground.KnowledgeEntryTable.addQuestion')}
                   </YakitButton>
                 </>

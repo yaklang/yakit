@@ -10,10 +10,14 @@ import type {
   AITaskExecutionDetailsProps,
   AITaskStatisticsStatusProps,
 } from './type'
-import { OutlinePresentationchartbarIcon, OutlineTrashIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { PresentationChartBarOutlined, TrashOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import styles from './AITaskExecutionDetails.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { AIDeleteNodeIcon, AIDoingNodeIcon, AIDoneNodeIcon, AIPendingNodeIcon, AISkippedNodeIcon } from './icon'
+import { AIDeleteNodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIDeleteNodeIcon'
+import { AIDoingNodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIDoingNodeIcon'
+import { AIDoneNodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIDoneNodeIcon'
+import { AIPendingNodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIPendingNodeIcon'
+import { AISkippedNodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AISkippedNodeIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AIToDoListItem } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoList'
@@ -246,11 +250,11 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
       <div className={styles['header']}>
         <div className={styles['header-row']}>
           <div className={styles['header-title']}>
-            <OutlinePresentationchartbarIcon className={styles['header-icon']} />
+            <PresentationChartBarOutlined className={styles['header-icon']} color="currentColor" />
             <span className={styles['title-text']}>任务执行详情</span>
             <div className={styles['header-subtitle']}>{taskName}</div>
           </div>
-          {onClose && <YakitButton icon={<OutlineXIcon />} type="text2" onClick={onClose} />}
+          {onClose && <YakitButton icon={<XOutlined color="currentColor" />} type="text2" onClick={onClose} />}
         </div>
       </div>
 
@@ -416,7 +420,7 @@ const AIBrowserProcesses: React.FC<AIBrowserProcessesProps> = React.memo((props)
             title={processes.process_name}
             titleExtra={
               <YakitPopconfirm title={'确定要关闭嘛?'} onConfirm={() => onRemove(processes)}>
-                <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
+                <YakitButton isHover icon={<TrashOutlined color="currentColor" />} type="secondary2" colors="danger" />
               </YakitPopconfirm>
             }
           />
@@ -851,7 +855,12 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
               category={dynamicItem.category}
               titleExtra={
                 <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
-                  <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
+                  <YakitButton
+                    isHover
+                    icon={<TrashOutlined color="currentColor" />}
+                    type="secondary2"
+                    colors="danger"
+                  />
                 </YakitPopconfirm>
               }
             />

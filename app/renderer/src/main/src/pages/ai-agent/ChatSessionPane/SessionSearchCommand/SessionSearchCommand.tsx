@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { OutlineSearchIcon } from '@/assets/icon/outline'
+import { SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { AISession } from '../../type/aiChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getSessionDisplayTitle } from '../../historyChat/source'
@@ -67,7 +67,7 @@ export const SessionSearchCommand: React.FC<SessionSearchCommandProps> = memo(({
           size="small"
           variant="borderless"
           autoFocus
-          prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+          prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
           placeholder={t('YakitInput.searchKeyWordPlaceholder')}
           allowClear
           value={search}

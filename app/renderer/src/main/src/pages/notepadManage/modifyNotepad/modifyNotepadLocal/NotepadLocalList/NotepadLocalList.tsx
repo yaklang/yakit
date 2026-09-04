@@ -21,7 +21,13 @@ import classNames from 'classnames'
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
 import { NotepadRemoteGV } from '@/enums/notepad'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineExportIcon, OutlineImportIcon, OutlinePlusIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import {
+  PlusOutlined,
+  TrashOutlined,
+  FigmaIcon6480193584Outlined,
+  FigmaIcon2017756Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { Dropdown, Tooltip } from 'antd'
 import {
   NotepadExport,
@@ -196,7 +202,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
             <YakitButton
               className={styles['icon-16']}
               type="text2"
-              icon={<OutlineImportIcon />}
+              icon={<FigmaIcon6480193584Outlined color="currentColor" />}
               size="small"
               onClick={() => setImportVisible(true)}
             />
@@ -214,7 +220,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
                 className={styles['icon-16']}
                 type="text"
                 danger
-                icon={<OutlineTrashIcon />}
+                icon={<TrashOutlined color="currentColor" />}
                 disabled={!response.Total}
               />
             </Tooltip>
@@ -223,7 +229,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
             <YakitButton
               className={styles['icon-16']}
               type="text2"
-              icon={<OutlineExportIcon />}
+              icon={<FigmaIcon2017756Outlined />}
               size="small"
               onClick={() => onExport(getActionFilter())}
               disabled={!response.Total}
@@ -233,7 +239,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
             <YakitButton
               className={styles['icon-16']}
               type="primary"
-              icon={<OutlinePlusIcon />}
+              icon={<PlusOutlined color="currentColor" />}
               size="small"
               onClick={() => goAddNotepad()}
             />
@@ -262,13 +268,13 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
                       {
                         key: 'export',
                         label: t('YakitButton.export'),
-                        itemIcon: <OutlineExportIcon />,
+                        itemIcon: <FigmaIcon2017756Outlined />,
                       },
                       {
                         key: 'delete',
                         label: t('YakitButton.delete'),
                         type: 'danger',
-                        itemIcon: <OutlineTrashIcon />,
+                        itemIcon: <TrashOutlined color="currentColor" />,
                       },
                     ]}
                     onClick={({ key }) => {

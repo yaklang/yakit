@@ -123,19 +123,15 @@
       gap: 4px;
 
       .exit-icon {
-        svg {
-          width: 16px;
-          height: 16px;
-        }
+        width: 16px;
+        height: 16px;
       }
 
       &:hover {
         color: var(--Colors-Use-Error-Primary);
 
         .exit-icon {
-          svg {
-            color: var(--Colors-Use-Error-Primary);
-          }
+          color: var(--Colors-Use-Error-Primary);
         }
       }
     }

@@ -10,15 +10,15 @@ import { HotPatchDefaultContent, HotPatchTempDefault } from '@/defaultConstants/
 import { AnalyzeHotPatchTempDefault, MITMHotPatchTempDefault } from '@/defaultConstants/mitm'
 import { cloneDeep } from 'lodash'
 import {
-  OutlinePlusIcon,
-  OutlineTrashIcon,
-  OutlinePencilaltIcon,
-  OutlineTerminalIcon,
-  OutlineInformationcircleIcon,
-  OutlinePluscircleIcon,
-  OutlineDocumentaddIcon,
-  OutlineMinuscircleIcon,
-} from '@/assets/icon/outline'
+  PlusOutlined,
+  TrashOutlined,
+  PencilAltOutlined,
+  TerminalOutlined,
+  InformationCircleOutlined,
+  PlusCircleOutlined,
+  DocumentAddOutlined,
+  MinusCircleOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { openConsoleNewWindow } from '@/utils/openWebsite'
 import { Dropdown, Tooltip } from 'antd'
 import classNames from 'classnames'
@@ -37,7 +37,7 @@ import { isEnpriTrace } from '@/utils/envfile'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import styles from './ConfigManagement.module.scss'
-import { SolidChevronrightIcon, SolidDotsverticalIcon, SolidPlayIcon, SolidStopIcon } from '@/assets/icon/solid'
+import { ChevronRightSolid, DotsVerticalSolid, PlaySolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import {
   DEFAULT_GLOBAL_TEMPLATE_CONTENT,
@@ -743,12 +743,12 @@ export const HotPatchManagement: React.FC = () => {
             {
               key: 'create-template',
               label: t('HotCodeTemplate.create_hot_patch_template'),
-              itemIcon: <OutlineDocumentaddIcon />,
+              itemIcon: <DocumentAddOutlined color="currentColor" />,
             },
             {
               key: 'create-group',
               label: t('HotCodeTemplate.create_group'),
-              itemIcon: <OutlinePluscircleIcon />,
+              itemIcon: <PlusCircleOutlined color="currentColor" />,
             },
           ]}
           onClick={({ key, domEvent }) => {
@@ -759,7 +759,7 @@ export const HotPatchManagement: React.FC = () => {
         />
       )}
     >
-      <YakitButton size="small" type="outline1" icon={<OutlinePlusIcon />} />
+      <YakitButton size="small" type="outline1" icon={<PlusOutlined color="currentColor" />} />
     </Dropdown>
   ))
 
@@ -781,7 +781,7 @@ export const HotPatchManagement: React.FC = () => {
         menu.push({
           key: 'add-to-group',
           label: t('HotCodeTemplate.add_to_group'),
-          itemIcon: <OutlinePluscircleIcon />,
+          itemIcon: <PlusCircleOutlined color="currentColor" />,
           children: [
             { key: 'create-group', label: `${t('HotCodeTemplate.create_group')}` },
             ...groups.map((group) => ({ key: `group::${group}`, label: group, title: group })),
@@ -792,7 +792,7 @@ export const HotPatchManagement: React.FC = () => {
         menu.push({
           key: 'remove-from-group',
           label: t('HotCodeTemplate.remove_from_group'),
-          itemIcon: <OutlineMinuscircleIcon />,
+          itemIcon: <MinusCircleOutlined color="currentColor" />,
         })
       }
       if (type === 'global') {
@@ -800,7 +800,7 @@ export const HotPatchManagement: React.FC = () => {
           {
             key: isGlobalEnabled ? 'disable-global' : 'enable-global',
             label: isGlobalEnabled ? t('YakitButton.close') : t('YakitButton.enable'),
-            itemIcon: isGlobalEnabled ? <SolidStopIcon /> : <SolidPlayIcon />,
+            itemIcon: isGlobalEnabled ? <StopSolid color="currentColor" /> : <PlaySolid color="currentColor" />,
             type: isGlobalEnabled ? 'danger' : 'text',
           },
           ...menu,
@@ -810,14 +810,14 @@ export const HotPatchManagement: React.FC = () => {
         menu.push({
           key: 'rename',
           label: t('YakitButton.rename'),
-          itemIcon: <OutlinePencilaltIcon />,
+          itemIcon: <PencilAltOutlined color="currentColor" />,
         })
       }
       if ((!item.isDefault && source === 'local') || (source === 'online' && hasPermissions)) {
         menu.push({
           key: 'delete',
           label: t('YakitButton.delete'),
-          itemIcon: <OutlineTrashIcon />,
+          itemIcon: <TrashOutlined color="currentColor" />,
           type: 'danger',
         })
       }
@@ -898,9 +898,10 @@ export const HotPatchManagement: React.FC = () => {
               </YakitTag>
             )}
             {showTemplateMenu && (
-              <SolidDotsverticalIcon
+              <DotsVerticalSolid
                 className={styles['template-more-icon']}
                 onClick={(e) => onShowTemplateContextMenu(e, type, item, source, existingGroups)}
+                color="currentColor"
               />
             )}
           </>
@@ -941,10 +942,11 @@ export const HotPatchManagement: React.FC = () => {
                 })
               }}
             >
-              <SolidChevronrightIcon
+              <ChevronRightSolid
                 className={classNames(styles['template-tree-expand-icon'], {
                   [styles['template-tree-expand-icon-expanded']]: expanded,
                 })}
+                color="currentColor"
               />
               <span className={styles['template-tree-group-title']} title={team.tags}>
                 {team.tags}
@@ -973,7 +975,7 @@ export const HotPatchManagement: React.FC = () => {
                 <div>
                   <span className={styles['template-title']}>{t('GlobalHotPatch.Global_hot_template')}</span>
                   <Tooltip title={t('GlobalHotPatch.Global_hot_template_tip')}>
-                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                   </Tooltip>
                 </div>
                 {renderHeaderAddMenu('global')}
@@ -1067,7 +1069,11 @@ export const HotPatchManagement: React.FC = () => {
           <div className={styles['editor-header-right']}>
             {hideTemplateContent && (
               <Tooltip placement="bottom" title={t('HTTPFuzzerHotPatch.engineConsole')}>
-                <YakitButton type="text" onClick={openConsoleNewWindow} icon={<OutlineTerminalIcon />} />
+                <YakitButton
+                  type="text"
+                  onClick={openConsoleNewWindow}
+                  icon={<TerminalOutlined color="currentColor" />}
+                />
               </Tooltip>
             )}
             {/* 产品要求暂时去掉 */}
@@ -1088,7 +1094,7 @@ export const HotPatchManagement: React.FC = () => {
                     danger={isCurrentEnabled}
                     loading={globalConfigLoading}
                     onClick={() => (isCurrentEnabled ? onDisableGlobalHotPatch() : onEnableSelectedAsGlobal())}
-                    icon={isCurrentEnabled ? <SolidStopIcon /> : <SolidPlayIcon />}
+                    icon={isCurrentEnabled ? <StopSolid color="currentColor" /> : <PlaySolid color="currentColor" />}
                   >
                     {isCurrentEnabled ? t('YakitButton.close') : t('YakitButton.enable')}
                   </YakitButton>
@@ -1130,7 +1136,11 @@ export const HotPatchManagement: React.FC = () => {
                 <span className={styles['template-content-title']}>{t('HTTPFuzzerHotPatch.templateContent')}</span>
                 <div className={styles['template-content-actions']}>
                   <Tooltip placement="bottom" title={t('HTTPFuzzerHotPatch.engineConsole')}>
-                    <YakitButton type="text" onClick={openConsoleNewWindow} icon={<OutlineTerminalIcon />} />
+                    <YakitButton
+                      type="text"
+                      onClick={openConsoleNewWindow}
+                      icon={<TerminalOutlined color="currentColor" />}
+                    />
                   </Tooltip>
                   <YakitButton type="primary" loading={loading} onClick={onDebugExecution}>
                     {t('YakitButton.debugExecution')}

@@ -6,7 +6,7 @@ import ModalInfo from '../../ModelInfo'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { PreWrapper } from '../../ToolInvokerCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePencilaltIcon } from '@/assets/icon/outline'
+import { PencilAltOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { onEditAIModel } from '@/pages/ai-agent/aiModelList/AIModelList'
 import { getFileNameByModelType, getModelLabelByModelType } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
@@ -56,7 +56,7 @@ export const AIModelErrorPrompt: React.FC<AIModelErrorPromptProps> = React.memo(
       titleMore={
         !isChildWindow && (
           <Tooltip title="点此编辑当前模型">
-            <YakitButton type="text2" size="small" icon={<OutlinePencilaltIcon />} onClick={onEdit} />
+            <YakitButton type="text2" size="small" icon={<PencilAltOutlined color="currentColor" />} onClick={onEdit} />
           </Tooltip>
         )
       }

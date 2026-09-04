@@ -1,4 +1,6 @@
-import { HomeIcon, OutlinePlay2Icon, WandIcon } from '@/assets/icon/outline'
+import { Play2Outlined, WandOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+
+import { HomeIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import type { Entity } from '@/components/playground/entityRepository'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { randomString } from '@/utils/randomUtil'
@@ -58,7 +60,7 @@ const GenerateKnowledge: FC<GenerateKnowledgeProps> = ({
         key: 'supplementaryConditions',
         label: (
           <div className={styles['dropdownMene-data-items']}>
-            <WandIcon />
+            <WandOutlined color="currentColor" />
             <div className={styles['title']}>补充条件</div>
             <div />
             <div className={styles['describe']}>在条件约束下，通过图中的实体关系生成知识</div>
@@ -170,7 +172,11 @@ const GenerateKnowledge: FC<GenerateKnowledgeProps> = ({
           open: dropdownMenuVisible,
         }}
       >
-        {children ? children : <YakitButton type="primary" size="large" icon={<OutlinePlay2Icon />} name="生成知识" />}
+        {children ? (
+          children
+        ) : (
+          <YakitButton type="primary" size="large" icon={<Play2Outlined color="currentColor" />} name="生成知识" />
+        )}
       </YakitDropdownMenu>
       <YakitModal
         open={additionalConditionsVisible}

@@ -10,7 +10,7 @@ import {
   HoverAIForgeIcon,
   HoverAIKnowledgeBaseIcon,
   HoverAIToolIcon,
-} from '../../ai-agent/aiChatWelcome/icon'
+} from '@yakit-libs/yakit-ui-icons/oldicon'
 export interface AIRecommendIconByType {
   icon: ReactNode
   hoverIcon: ReactNode

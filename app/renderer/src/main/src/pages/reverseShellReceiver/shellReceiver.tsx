@@ -7,10 +7,11 @@ import { failed, success } from '@/utils/notification'
 import classNames from 'classnames'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { OutlineExitIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { SearchOutlined, FigmaIcon28011794Outlined, CogOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { SolidDocumentduplicateIcon } from '@/assets/icon/solid'
+import { DocumentDuplicateSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
@@ -32,7 +33,7 @@ import { defaultGenerateReverseShellCommand } from './constants'
 import { ReverseShellTerminal, type XTermSizeProps } from './ReverseShellTerminal/ReverseShellTerminal'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { OutlineCogIcon } from '@/assets/icon/outline'
+
 import { setClipboardText } from '@/utils/clipboard'
 const { ipcRenderer } = window.require('electron')
 
@@ -148,7 +149,7 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
         </div>
         <div className={styles['input-box']}>
           <YakitInput.Search
-            prefix={<OutlineSearchIcon className={styles['prefix']} />}
+            prefix={<SearchOutlined className={styles['prefix']} color="currentColor" />}
             placeholder="请输入关键词搜索"
             value={keyWord}
             onChange={(e) => {
@@ -335,7 +336,7 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
           </div>
         </div>
         <div className={styles['line']}></div>
-        <YakitButton icon={<SolidDocumentduplicateIcon />} size="max" onClick={onCopy}>
+        <YakitButton icon={<DocumentDuplicateSolid color="currentColor" />} size="max" onClick={onCopy}>
           Copy
         </YakitButton>
       </div>
@@ -387,15 +388,15 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
                     {xtermSize?.cols || 0} && reset
                   </div>
                   <CopyComponents
-                    copyText={`export TERM=xterm-256color && stty rows ${
-                      xtermSize?.rows || 0
-                    } columns ${xtermSize?.cols || 0} && reset`}
+                    copyText={`export TERM=xterm-256color && stty rows ${xtermSize?.rows || 0} columns ${
+                      xtermSize?.cols || 0
+                    } && reset`}
                   />
                 </div>
               </div>
             }
           >
-            <YakitButton type="text2" icon={<OutlineCogIcon />}>
+            <YakitButton type="text2" icon={<CogOutlined color="currentColor" />}>
               设置终端
             </YakitButton>
           </YakitPopover>
@@ -414,7 +415,7 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
           >
             <YakitButton danger={true} type={'primary'}>
               断开
-              <OutlineExitIcon />
+              <FigmaIcon28011794Outlined color="currentColor" />
             </YakitButton>
           </YakitPopconfirm>
         </div>

@@ -3,9 +3,10 @@ import type React from 'react'
 import type { YakitSwitchProps } from './YakitSwitchType'
 import styles from './YakitSwitch.module.scss'
 import classNames from 'classnames'
-import { CheckIcon, RemoveIcon } from '@/assets/newIcon'
+import { CheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckIcon'
 import './yakitSwitchAnimation.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 /**
  * 更新说明
@@ -61,7 +62,8 @@ export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
         />
       ),
       unCheckedChildren: (
-        <RemoveIcon
+        <XSolid
+          size={12}
           className={classNames({
             [styles['yakit-switch-large-icon']]: size === 'large',
             [styles['yakit-switch-middle-icon']]: size === 'middle',

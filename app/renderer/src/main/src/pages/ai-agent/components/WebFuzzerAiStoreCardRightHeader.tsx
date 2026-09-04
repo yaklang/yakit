@@ -1,6 +1,6 @@
 import { type FC, useState } from 'react'
 
-import { OutlineCheckCheckIcon } from '@/assets/icon/outline'
+import { CheckCheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import styles from './WebFuzzerAiStoreCardRightHeader.module.scss'
 import { useMemoizedFn } from 'ahooks'
@@ -12,7 +12,8 @@ import {
 } from '@/pages/fuzzer/webFuzzerAiRequestApplyBridge'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { ColorsPreViewMDIcon, ColorsSourceCodeIcon } from '@/assets/icon/colors'
+import { ColorsPreViewMDIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsPreViewMDIcon'
+import { ColorsSourceCodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsSourceCodeIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 const WebFuzzerAiStoreCardRightHeader: FC<{ content?: string; fuzzerPageId: string }> = ({ content, fuzzerPageId }) => {
@@ -72,7 +73,7 @@ const WebFuzzerAiStoreCardRightHeader: FC<{ content?: string; fuzzerPageId: stri
     <div className={styles['container']}>
       <Tooltip title="应用">
         <YakitButton type="text2" size="small">
-          <OutlineCheckCheckIcon onClick={handleApplication} />
+          <CheckCheckOutlined onClick={handleApplication} color="currentColor" />
         </YakitButton>
       </Tooltip>
       <Tooltip title="对比">

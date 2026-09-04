@@ -1,5 +1,5 @@
 import type React from 'react'
-import { DingtalkIcon, FeishuIcon } from '@/assets/commonProcessIcons'
+import { DingTalkSocialColorful, FeishuSocialColorful } from '@yakit-libs/yakit-ui-icons/colorful'
 import { YakitEllipsis } from '@/components/basics/YakitEllipsis'
 import type { RobotChannelType } from './RobotControl'
 import styles from './RobotControl.module.scss'
@@ -20,11 +20,11 @@ export interface RobotLinkInfo {
 const getChannelIcon = (channel?: RobotChannelType) => {
   switch (channel) {
     case 'feishu':
-      return <FeishuIcon />
+      return <FeishuSocialColorful />
     case 'dingtalk':
-      return <DingtalkIcon />
+      return <DingTalkSocialColorful />
     default:
-      return <FeishuIcon />
+      return <FeishuSocialColorful />
   }
 }
 
