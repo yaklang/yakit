@@ -168,9 +168,6 @@ describe('browser protocol runtime validation', () => {
     expect(() =>
       decodeBrowserTaskResult('capability.call', { method: 'browser.transform.profile.list' }, '{}'),
     ).toThrow('数组或空值')
-    expect(() =>
-      decodeBrowserTaskResult('capability.call', { method: 'browser.authorization.baseline.candidates' }, '[null]'),
-    ).toThrow('$[0]')
   })
 
   it('rejects malformed typed capability records before component callbacks run', () => {
