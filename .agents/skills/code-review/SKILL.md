@@ -5,7 +5,7 @@ description: 对 Yakit 仓库的代码改动做规范化 code review：按代码
 
 # code-review
 
-产出规范化三块式 review 报告。**只读**：不改被审代码，不运行被审代码本体；允许的命令只有 `yarn type-check` 与 `yarn test:vitest ... --run`。tsc / vitest 未实际跑过，报告中不得标 ✅，不得编造结果。发现问题不瞒报、不把功能 bug 降成警告。
+产出规范化三块式 review 报告。**只读**：不改被审代码，不运行被审代码本体；对被审代码只允许执行 `yarn type-check` 与 `yarn test:vitest ... --run`，另允许在临时 worktree 内 `yarn cli install` 装依赖。tsc / vitest 未实际跑过，报告中不得标 ✅，不得编造结果。发现问题不瞒报、不把功能 bug 降成警告。
 
 ## 触发
 

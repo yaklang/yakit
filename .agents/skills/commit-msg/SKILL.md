@@ -12,7 +12,7 @@ description: 为 Yakit 仓库完成一次本地提交：确定提交范围（暂
 | 情况 | 行为 |
 | --- | --- |
 | 默认（语义触发、`/commit-msg`、被其他 skill 调用） | 完整流程 |
-| 说明「仅要 message」 | 只输出一行 message，不改仓库 |
+| 「仅要 message」（含「写 / 生成 commit message」「写个提交信息」类措辞） | 只输出一行 message，不改仓库 |
 | 已给出 message（如「用 fix: xxx 提交」） | 跳过生成，直接弹窗确认后 commit |
 
 ## 终态
