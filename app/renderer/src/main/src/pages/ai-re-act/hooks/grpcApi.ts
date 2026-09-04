@@ -171,6 +171,13 @@ export interface AIStartParams {
    * 与 EnablePlan 可同时勾选；目前策略侧不支持热更新，变更需下次启动生效。
    */
   Strategy?: AIExecutionStrategy
+
+  /**
+   * 为 true 时禁用 Memory Triage（智能记忆处理），不创建 AIMemory 实例，
+   * 跳过 embedding/DB/AI 调用。适用于轻量级或无状态会话。
+   * @default false
+   */
+  DisableMemoryTriage?: boolean
 }
 
 /** 执行策略，对应后端 AIExecutionStrategy */

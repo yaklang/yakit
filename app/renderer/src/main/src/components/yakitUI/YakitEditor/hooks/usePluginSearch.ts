@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { queryYakScriptList } from '@/pages/yakitStore/network'
 import type { YakScript } from '@/pages/invoker/schema'
@@ -18,6 +18,7 @@ export interface UsePluginSearchParams {
 export interface UsePluginSearchResult {
   customHTTPMutatePlugin: CodecTypeProps[]
   contextMenuPlugin: contextMenuProps[]
+  isGetPlugin: boolean
   setCustomHTTPMutatePlugin: (info: CodecTypeProps[]) => void
   setContextMenuPlugin: (info: contextMenuProps[]) => void
   onRefreshPluginCodecMenu: () => void
@@ -62,8 +63,10 @@ export const usePluginSearch = (params: UsePluginSearchParams): UsePluginSearchR
   })
 
   // 右键插件
+  const [isGetPlugin, setIsGetPlugin] = useState<boolean>(false)
   const searchCodecCustomContextMenuPlugin = useMemoizedFn(() => {
-    getSceneTabActions(ManageRightClickPluginsTabKey.PacketContextMenu).then(({ list }) => {
+    getSceneTabActions(ManageRightClickPluginsTabKey.PacketContextMenu).then(({ list, noData }) => {
+      setIsGetPlugin(noData)
       setContextMenuPlugin(
         list.map((action) => {
           return {
@@ -103,6 +106,7 @@ export const usePluginSearch = (params: UsePluginSearchParams): UsePluginSearchR
   return {
     customHTTPMutatePlugin,
     contextMenuPlugin,
+    isGetPlugin,
     setCustomHTTPMutatePlugin,
     setContextMenuPlugin,
     onRefreshPluginCodecMenu,

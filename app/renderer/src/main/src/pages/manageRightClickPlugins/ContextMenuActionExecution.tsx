@@ -9,9 +9,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
-import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { usePageInfo } from '@/store/pageInfo'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import type { YakScript } from '@/pages/invoker/schema'
 import { PluginDetailHeader } from '@/pages/plugins/baseTemplate'
@@ -32,13 +30,13 @@ import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import { ParamsToGroupByGroupName, getValueByType, getYakExecutorParam } from '@/pages/plugins/editDetails/utils'
 import type { ModifyPluginCallback } from '@/pages/pluginEditor/pluginEditor/PluginEditor'
 import { ModifyYakitPlugin } from '@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin'
-import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import { randomString } from '@/utils/randomUtil'
 import { yakitNotify } from '@/utils/notification'
-import { cancelContextMenuAction, executeContextMenuAction } from './api'
+import { cancelContextMenuAction, executeContextMenuAction, grpcFetchLocalPluginDetailByUUID } from './api'
 import { getContextMenuExecution, removeContextMenuExecution, updateContextMenuExecution } from './executionRegistry'
-import type { ContextMenuActionEvent, ContextMenuPacketActionResult } from './types'
+import { ContextMenuResultMode, type ContextMenuActionEvent, type ContextMenuPacketActionResult } from './types'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import styles from './ContextMenuActionExecution.module.scss'
 
 const { ipcRenderer } = window.require('electron')
@@ -60,15 +58,10 @@ const ExecutionStatus = {
   Expired: 'Expired',
 } as const
 
-export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialog' | 'drawer' | 'tab' }> = React.memo(
-  ({ pageId, mode }) => {
+export const ContextMenuActionExecution: React.FC<{ executionID: string; mode: ContextMenuResultMode }> = React.memo(
+  ({ executionID, mode }) => {
     const { t, i18nRefresh } = useI18nNamespaces(['manageRightClickPlugins', 'yakitUi'])
-    // #region 执行上下文：从 pageInfo 缓存按 pageId 读取 executionID
-    const pageInfo = usePageInfo((s) => {
-      const currentItem = s.pages.get(YakitRoute.ContextMenuResult)?.pageList?.find((item) => item.pageId === pageId)
-      return currentItem?.pageParamsInfo?.contextMenuResultPageInfo
-    })
-    const executionID = pageInfo?.executionID || ''
+    // #region 执行上下文：直接持有 executionID（Tab 路由壳层 / 弹窗抽屉宿主均以此传入）
     /** registry 刷新版本：插件编辑/刷新后回写 registry 并自增，驱动 execution 重新读取与表单重建 */
     const [registryVersion, setRegistryVersion] = useState(0)
     const execution = getContextMenuExecution(executionID)
@@ -141,8 +134,7 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
     const [plugin, setPlugin] = useState<YakScript | null>(null)
     const [pluginLoading, setPluginLoading] = useState(false)
     const [editHint, setEditHint] = useState(false)
-    /** 页面根容器：作为编辑抽屉的 getContainer，抽屉高度跟随容器*/
-    const pageWrapperRef = useRef<HTMLDivElement>(null)
+    const pageWrapperRef = useRef<HTMLElement>()
     // #endregion
 
     // #region Tab 切换
@@ -220,9 +212,9 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
 
     // #region 插件详情加载与编辑
     const loadPlugin = useMemoizedFn(() => {
-      if (!execution?.action.PluginName) return
+      if (!execution?.action.PluginUUID) return
       setPluginLoading(true)
-      grpcFetchLocalPluginDetail({ Name: execution.action.PluginName, UUID: execution.action.PluginUUID }, true)
+      grpcFetchLocalPluginDetailByUUID({ UUID: execution.action.PluginUUID }, true)
         .then((res) => {
           setPlugin(res)
           if (execution.action.PluginUUID !== res.UUID) return
@@ -253,6 +245,7 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
       e.stopPropagation()
       if (!plugin) return
       if (editHint) return
+      pageWrapperRef.current = getMainOperatorPageBodyContainer()
       setEditHint(true)
     })
 
@@ -372,19 +365,19 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
     // #region 渲染物料：头部信息与操作按钮
     const headerProps = useMemo(
       () => ({
-        pluginName: execution?.action.PluginName || '',
-        help: execution?.action.Help || '',
+        pluginName: plugin?.ScriptName || '',
+        help: plugin?.Help || '',
         tags: plugin?.Tags || '',
-        img: plugin?.HeadImg || execution?.action.HeadImg || '',
+        img: plugin?.HeadImg || '',
         user: plugin?.Author || '-',
-        pluginId: execution?.action.PluginUUID || '',
+        pluginId: plugin?.UUID || '',
         updated_at: plugin?.UpdatedAt || 0,
         prImgs: (plugin?.CollaboratorInfo || []).map((ele) => ({
           headImg: ele.HeadImg,
           userName: ele.UserName,
         })),
       }),
-      [execution?.action, plugin],
+      [plugin],
     )
 
     /** 头部右侧的刷新/编辑按钮（执行/停止按钮在 extraNode 内单独拼装） */
@@ -414,11 +407,7 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
     }
 
     return (
-      <div
-        ref={pageWrapperRef}
-        className={classNames(styles['execution'], detailStyles['details-content-wrapper'])}
-        data-mode={mode}
-      >
+      <div className={classNames(styles['execution'], detailStyles['details-content-wrapper'])} data-mode={mode}>
         <PluginTabs
           activeKey={activeTab}
           tabPosition="right"
@@ -509,7 +498,10 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
                       {extraParamsGroup.length > 0 && (
                         <YakitButton
                           type="text"
-                          onClick={() => setExtraParamsVisible(true)}
+                          onClick={() => {
+                            pageWrapperRef.current = getMainOperatorPageBodyContainer()
+                            setExtraParamsVisible(true)
+                          }}
                           disabled={loading}
                           size="large"
                         >
@@ -604,6 +596,7 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
           }}
           jsonSchemaListRef={jsonSchemaListRef}
           jsonSchemaInitial={jsonSchemaInitial}
+          getContainer={mode === ContextMenuResultMode.Tab ? undefined : pageWrapperRef.current || undefined}
         />
       </div>
     )

@@ -43,15 +43,29 @@ export const fetchSceneActions = async (tabKey: string): Promise<ContextMenuActi
   return response.Actions
 }
 
-export const getSceneTabActions = async (tabKey: string): Promise<{ list: ContextMenuAction[] }> => {
+/** 动作唯一标识是否相同 */
+export const isSameAction = (
+  a: Pick<ContextMenuAction, 'PluginUUID' | 'ActionID'>,
+  b: Pick<ContextMenuAction, 'PluginUUID' | 'ActionID'>,
+) => a.PluginUUID === b.PluginUUID && a.ActionID === b.ActionID
+
+/** 按唯一标识给列表项打补丁（无匹配则原样返回） */
+export const patchAction = (
+  list: ContextMenuAction[],
+  target: Pick<ContextMenuAction, 'PluginUUID' | 'ActionID'>,
+  patch: Partial<ContextMenuAction>,
+) => list.map((i) => (isSameAction(i, target) ? { ...i, ...patch } : i))
+
+export const getSceneTabActions = async (tabKey: string): Promise<{ list: ContextMenuAction[]; noData: boolean }> => {
   const scene = getSceneByTabKey(tabKey)
-  if (!scene) return { list: [] }
+  if (!scene) return { list: [], noData: true }
   try {
-    const response = await grpcQueryContextMenuActions({ Scene: scene }, true)
+    const response = await grpcQueryContextMenuActions({ Scene: scene, IncludeDisabled: true }, true)
     return {
       list: response.Actions.filter((action) => action.Enabled),
+      noData: response.Actions.length === 0,
     }
   } catch {
-    return { list: [] }
+    return { list: [], noData: true }
   }
 }

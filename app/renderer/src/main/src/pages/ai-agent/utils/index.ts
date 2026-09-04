@@ -140,6 +140,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     }
     data.DisableToolIntervalReview =
       setting.DisableToolIntervalReview ?? AIAgentSettingDefault.DisableToolIntervalReview
+    data.DisableMemoryTriage = setting.DisableMemoryTriage ?? AIAgentSettingDefault.DisableMemoryTriage
   } catch (error) {}
   return { ...data }
 }

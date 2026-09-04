@@ -270,7 +270,17 @@ export const extraMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
               text = selectText
             }
           }
-          emiter.emit('onOpenFuzzerModal', JSON.stringify({ text, scriptName: key, isAiPlugin, params, isExec }))
+          emiter.emit(
+            'onOpenFuzzerModal',
+            JSON.stringify({
+              text,
+              scriptName: key,
+              isAiPlugin,
+              params,
+              isExec,
+              pluginType: ['codec', 'context-menu'],
+            }),
+          )
         } catch (e) {
           failed(`custom context menu execute failed: ${e}`)
         }

@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
+import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { PluginHasParamsModal } from '@/components/pluginHasParamsDrawer/PluginHasParamsDrawer'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -13,8 +15,10 @@ import { getValueByType, ParamsToGroupByGroupName } from '@/pages/plugins/editDe
 import emiter from '@/utils/eventBus/eventBus'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
+import { ContextMenuActionExecution } from './ContextMenuActionExecution'
 import { registerContextMenuExecution } from './executionRegistry'
-import type { RunContextMenuActionOptions } from './types'
+import { ContextMenuResultMode, type RunContextMenuActionOptions } from './types'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 
 interface ParamsModalValue {
   /** 表单初始值（key = 参数 Field，value = 默认值或缓存值） */
@@ -94,25 +98,84 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
   const loadingRef = useRef<boolean>(false)
   const [paramsVisible, setParamsVisible] = useState(false)
   const [paramsModalValue, setParamsModalValue] = useState<ParamsModalValue>(emptyParamsModalValue)
+  /** 当前打开的结果弹窗/抽屉句柄：新开结果窗口前先销毁旧的，避免快捷键连按堆叠多个执行 */
+  const activeResultRef = useRef<{ destroy: () => void }>()
+  const closeActiveResult = useMemoizedFn(() => {
+    const active = activeResultRef.current
+    activeResultRef.current = undefined
+    active?.destroy()
+  })
+  useEffect(() => {
+    return () => {
+      closeActiveResult()
+    }
+  }, [closeActiveResult])
 
   /**
-   * 启动执行：注册到 executionRegistry 拿 executionID，然后新开「右键插件结果」Tab
-   * 本期统一以新开 Tab 展示执行结果（含 Auto/Dialog/Drawer，均降级为 Tab）
-   * TODO: dialog
-   * TODO: drawer
+   * 启动执行：注册到 executionRegistry 拿 executionID，按结果展示方式分发载体
+   * - tab：新开「右键插件结果」Tab
+   * - drawer：右侧抽屉展示
+   * - dialog：弹窗展示
+   * 弹窗/抽屉同一时刻只保留一个，重复触发时销毁旧窗口再开新的
+   * 组件卸载（关 Tab / 关弹窗 / 关抽屉）时自清理：取消执行 + 移除注册表
    */
   const launch = useMemoizedFn((options: RunContextMenuActionOptions, params: YakExecutorParam[] = []) => {
     const executionID = registerContextMenuExecution({ ...options, params })
-    emiter.emit(
-      'openPage',
-      JSON.stringify({
-        route: YakitRoute.ContextMenuResult,
-        params: {
-          executionID,
-          pluginName: options.action.PluginName,
-        },
-      }),
-    )
+    const title = `${options.action.PluginName} · ${options.action.HookName}`
+    // auto 与 tab 同为开 Tab 展示，归一后传入组件
+    const mode =
+      options.action.ResultMode === ContextMenuResultMode.Auto ? ContextMenuResultMode.Tab : options.action.ResultMode
+    const content = <ContextMenuActionExecution executionID={executionID} mode={mode} />
+    const getContainer = getMainOperatorPageBodyContainer()
+
+    switch (options.action.ResultMode) {
+      case ContextMenuResultMode.Drawer: {
+        closeActiveResult()
+        const m1 = showYakitDrawer({
+          title,
+          width: '90%',
+          placement: 'right',
+          content,
+          bodyStyle: { padding: 0 },
+          getContainer,
+          onCancel: () => {
+            if (activeResultRef.current === m1) activeResultRef.current = undefined
+            m1.destroy()
+          },
+        })
+        activeResultRef.current = m1
+        break
+      }
+      case ContextMenuResultMode.Dialog: {
+        closeActiveResult()
+        const m2 = showYakitModal({
+          title,
+          width: '90%',
+          footer: null,
+          maskClosable: false,
+          content,
+          getContainer,
+          onCancel: () => {
+            if (activeResultRef.current === m2) activeResultRef.current = undefined
+            m2.destroy()
+          },
+        })
+        activeResultRef.current = m2
+        break
+      }
+      default:
+        emiter.emit(
+          'openPage',
+          JSON.stringify({
+            route: YakitRoute.ContextMenuResult,
+            params: {
+              executionID,
+              pluginName: options.action.PluginName,
+            },
+          }),
+        )
+        break
+    }
   })
 
   const loadCachedParams = async (options: RunContextMenuActionOptions): Promise<YakExecutorParam[]> => {

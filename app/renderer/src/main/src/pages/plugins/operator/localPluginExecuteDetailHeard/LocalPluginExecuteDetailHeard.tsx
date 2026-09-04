@@ -483,7 +483,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                   <>
                     {!isExpand &&
                       (isContextMenuPlugin ? (
-                        <YakitButton disabled>从右键菜单执行</YakitButton>
+                        <YakitButton disabled>{t('pluginEditor.executeFromRightClickMenu')}</YakitButton>
                       ) : (
                         <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
                       ))}

@@ -369,6 +369,8 @@
     "modifyToUploadPacketPostOnly": "Modify to Upload Packet (POST parameters only)",
     "encodeResult": "Encoded Result",
     "replaceContent": "Replace Content",
+    "packetChangedDuringPluginExecution": "Packet changed during plugin execution, plugin modifications not applied",
+    "pluginModifiedPeerPacketNoFillEntry": "Plugin also modified the peer packet, but the current page has no fill-in entry",
     "manualHostConfigTip": "To manually specify the target address or perform Host collision, please configure \"Advanced Settings - Real Host\"",
     "HTTPPacketYakitEditor": {
       "copyCurlCommand": "Copy cURL Command",

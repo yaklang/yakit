@@ -15,7 +15,16 @@
     "maxAddLimit": "最多添加 {{UpperLimit}} 个插件",
     "added": "已添加",
     "searchPlaceholder": "搜索插件名称、说明或 Hook",
-    "noMatchedPlugins": "没有匹配的插件"
+    "noMatchedPlugins": "没有匹配的插件",
+    "resultModeLabel": "结果展示",
+    "resultModeDialog": "弹窗",
+    "resultModeDrawer": "右侧抽屉",
+    "resultModeTab": "新页签",
+    "shortcutLabel": "快捷键",
+    "setShortcutMenu": "设置快捷键",
+    "setResultModeMenu": "设置结果展示",
+    "pluginShortcutConflict": "右键插件冲突：{{name}} - 此快捷键已被同场景其他插件占用",
+    "systemShortcutConflict": "系统快捷键冲突：{{name}} - 请重新设置，避免与已有快捷键冲突"
   },
   "ContextMenuExecutionHost": {
     "executeFailed": "右键插件执行失败: {{error}}",
@@ -40,12 +49,16 @@
     "contextMenuSaveBeforeRun": "右键插件需要保存后，从对应的 History 或 HTTP 数据包场景触发",
     "contextMenuRunFromScene": "右键插件需要从对应的 History 或 HTTP 数据包场景触发",
     "contextMenuSaveAndTrigger": "保存插件后，从对应的 History 或 HTTP 数据包右键菜单触发执行",
+    "contextMenuSaveAndTriggerShort": "保存后从右键菜单执行",
+    "executeFromRightClickMenu": "从右键菜单执行",
     "contextMenuEnableAndTrigger": "保存并在右键插件管理中启用后，从对应的 History 或 HTTP 数据包场景触发执行"
   },
   "grpc": {
     "queryContextMenuActionsFailed": "查询右键插件失败: {{error}}",
     "setContextMenuActionBindingFailed": "保存右键插件配置失败: {{error}}",
-    "cancelContextMenuActionFailed": "取消右键插件失败: {{error}}"
+    "cancelContextMenuActionFailed": "取消右键插件失败: {{error}}",
+    "fetchPluginDetailFailed": "查询本地插件详情失败: {{error}}",
+    "fetchPluginDetailFailedNoUUID": "查询插件的UUID不能为空"
   },
   "utils": {
     "engineVersionTooLow": "引擎版本过低，请更新到高于 {{version}} 的版本"

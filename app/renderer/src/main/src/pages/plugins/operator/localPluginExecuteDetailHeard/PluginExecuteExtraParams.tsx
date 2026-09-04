@@ -30,6 +30,7 @@ interface PluginExecuteExtraParamsProps extends JsonFormSchemaListWrapper {
   setVisible: (b: boolean) => void
   onSave: (value: { customValue: CustomPluginExecuteFormValue; fixedValue: PluginExecuteExtraFormValue }) => void
   refreshValue?: number
+  getContainer?: HTMLElement
 }
 
 export interface PluginExecuteExtraParamsRefProps {
@@ -38,6 +39,7 @@ export interface PluginExecuteExtraParamsRefProps {
 const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.memo(
   React.forwardRef((props, ref) => {
     const {
+      getContainer,
       pluginType,
       customPluginParams = [],
       hiddenFixedParams,
@@ -163,6 +165,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
         onClose={onClose}
         width="max(700px, 40%)"
         title="额外参数"
+        getContainer={getContainer}
       >
         {pluginParamsNodeByPluginType(pluginType)}
       </YakitDrawer>

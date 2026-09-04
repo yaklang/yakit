@@ -15,7 +15,16 @@
     "maxAddLimit": "You can add up to {{UpperLimit}} plugins",
     "added": "Added",
     "searchPlaceholder": "Search plugin name, description or hook",
-    "noMatchedPlugins": "No matching plugins"
+    "noMatchedPlugins": "No matching plugins",
+    "resultModeLabel": "Result Display",
+    "resultModeDialog": "Pop-up",
+    "resultModeDrawer": "Right drawer",
+    "resultModeTab": "New tab",
+    "shortcutLabel": "Shortcut",
+    "setShortcutMenu": "Set shortcut",
+    "setResultModeMenu": "Set result display",
+    "pluginShortcutConflict": "Plugin conflict: {{name}} - this shortcut is already used by another plugin in the same scene",
+    "systemShortcutConflict": "System shortcut conflict: {{name}} - please rebind to avoid conflicting with existing shortcuts"
   },
   "ContextMenuExecutionHost": {
     "executeFailed": "Context menu plugin execution failed: {{error}}",
@@ -40,12 +49,16 @@
     "contextMenuSaveBeforeRun": "Right-click plugins must be saved first, then triggered from the corresponding History or HTTP packet scenario",
     "contextMenuRunFromScene": "Right-click plugins must be triggered from the corresponding History or HTTP packet scenario",
     "contextMenuSaveAndTrigger": "After saving the plugin, trigger it from the History or HTTP packet right-click menu",
+    "contextMenuSaveAndTriggerShort": "Save and trigger from the right-click menu",
+    "executeFromRightClickMenu": "Execute from right-click menu",
     "contextMenuEnableAndTrigger": "After saving and enabling the plugin in right-click plugin management, trigger it from the corresponding History or HTTP packet scenario"
   },
   "grpc": {
     "queryContextMenuActionsFailed": "Failed to query context menu plugins: {{error}}",
     "setContextMenuActionBindingFailed": "Failed to save context menu plugin binding: {{error}}",
-    "cancelContextMenuActionFailed": "Failed to cancel context menu plugin: {{error}}"
+    "cancelContextMenuActionFailed": "Failed to cancel context menu plugin: {{error}}",
+    "fetchPluginDetailFailed": "Failed to fetch local plugin details: {{error}}",
+    "fetchPluginDetailFailedNoUUID": "Plugin UUID cannot be empty"
   },
   "utils": {
     "engineVersionTooLow": "Engine version is too low, please update to a version above {{version}}"

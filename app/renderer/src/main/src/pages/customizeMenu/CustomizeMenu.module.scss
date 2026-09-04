@@ -431,15 +431,15 @@
         }
 
         .second-menu-edit-icon {
-          width: 16px;
-          height: 16px;
+          width: 14px;
+          height: 14px;
 
           svg {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             margin-right: 0;
             cursor: pointer;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: var(--Colors-Use-Neutral-Disable);
 
             &:hover {
               color: var(--Colors-Use-Main-Primary);
@@ -690,6 +690,7 @@
   :global {
     .ant-popover-inner {
       padding: 4px;
+
       .ant-popover-inner-content {
         height: 40vh;
       }

@@ -22,8 +22,83 @@ import {
   splitHTTPFlowTableShieldData,
   uniqStrings,
   parseIncludeIds,
+  resolveHTTPFlowTableBatchSelection,
 } from '@/components/HTTPFlowTable/HTTPFlowTable.utils'
 import { HTTP_FLOW_FAVORITE_TAG, type HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
+
+describe('resolveHTTPFlowTableBatchSelection', () => {
+  const makeFlow = (id: number): HTTPFlow => ({ Id: id }) as HTTPFlow
+
+  it('returns selected rows for normal multi-select', () => {
+    const rows = [makeFlow(1), makeFlow(2)]
+    expect(
+      resolveHTTPFlowTableBatchSelection({
+        selectedRowKeys: ['1', '2'],
+        selectedRows: rows,
+        isAllSelect: false,
+        total: 2,
+      }),
+    ).toEqual({ ok: true, rows, ids: ['1', '2'] })
+  })
+
+  it('all-select only checks total limit and returns current selection', () => {
+    const rows = [makeFlow(1)]
+    expect(
+      resolveHTTPFlowTableBatchSelection({
+        selectedRowKeys: ['1'],
+        selectedRows: rows,
+        isAllSelect: true,
+        total: 3,
+      }),
+    ).toEqual({ ok: true, rows, ids: ['1'] })
+  })
+
+  it('rejects when all-select total exceeds max rows', () => {
+    expect(
+      resolveHTTPFlowTableBatchSelection({
+        selectedRowKeys: ['1'],
+        selectedRows: [makeFlow(1)],
+        isAllSelect: true,
+        total: 201,
+      }),
+    ).toEqual({ ok: false, reason: 'max_exceeded' })
+  })
+
+  it('rejects when multi-select count exceeds max rows', () => {
+    expect(
+      resolveHTTPFlowTableBatchSelection({
+        selectedRowKeys: Array.from({ length: 201 }, (_, i) => `${i}`),
+        selectedRows: [],
+        isAllSelect: false,
+        total: 201,
+      }),
+    ).toEqual({ ok: false, reason: 'max_exceeded' })
+  })
+
+  it('all-select with single row still returns selected rows', () => {
+    const rows = [makeFlow(1)]
+    expect(
+      resolveHTTPFlowTableBatchSelection({
+        selectedRowKeys: ['1'],
+        selectedRows: rows,
+        isAllSelect: true,
+        total: 1,
+      }),
+    ).toEqual({ ok: true, rows, ids: ['1'] })
+  })
+
+  it('respects custom maxRows limit', () => {
+    expect(
+      resolveHTTPFlowTableBatchSelection({
+        selectedRowKeys: ['1', '2', '3'],
+        selectedRows: [makeFlow(1), makeFlow(2), makeFlow(3)],
+        isAllSelect: false,
+        total: 3,
+        maxRows: 2,
+      }),
+    ).toEqual({ ok: false, reason: 'max_exceeded' })
+  })
+})
 
 describe('parseIncludeIds', () => {
   it('parses single and comma-separated numbers into an id array', () => {

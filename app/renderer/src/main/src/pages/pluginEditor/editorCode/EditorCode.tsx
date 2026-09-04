@@ -545,6 +545,9 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                 {pluginTypeToName[type]?.name || type}
               </YakitTag>
             )}
+            {type === 'context-menu' && (
+              <YakitTag color="blue">{t('pluginEditor.contextMenuSaveAndTriggerShort')}</YakitTag>
+            )}
             <div className={classNames(styles['title-style'], 'yakit-content-single-ellipsis')} title={name || ''}>
               {name || ''}
             </div>
@@ -633,7 +636,6 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                       ))}
                   </div>
                 </div>
-                {type === 'context-menu' && <YakitTag color="blue">保存后从场景右键菜单执行</YakitTag>}
               </div>
               <div className={styles['container']}>
                 <div className={styles['form-wrapper']}>
