@@ -17,7 +17,6 @@ const ConfigPrivateDomain = React.lazy(() =>
 )
 import { ConfigGlobalReverse } from '@/utils/ConfigGlobalReverse'
 import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
-import { showConfigSystemProxyForm } from '@/utils/ConfigSystemProxy'
 import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
 import { useConfigManagementTab, useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
 import { UserPlatformType } from '@/pages/globalVariable'
@@ -831,7 +830,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
       label: '系统设置',
       children: [
         { key: 'reverse', label: '全局反连' },
-        { key: 'agent', label: '系统代理' },
         // { key: "engineVar",label: "引擎环境变量" },
         { key: 'config-network', label: '全局配置' },
         { key: 'setShortcutKey', label: '快捷键设置' },
@@ -947,9 +945,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
           ),
           footer: null,
         })
-        return
-      case 'agent':
-        showConfigSystemProxyForm()
         return
       case 'mcp':
       case 'mcp-toggle':
