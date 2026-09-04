@@ -122,7 +122,6 @@ import {
   EnterpriseDeprecatedSecondMenu,
 } from './deprecatedMenu'
 import { YakitRoute } from '../enums/yakitRoute'
-import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import { getNotepadAdd, getNotepadManage, getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
 import { ClipboardListSolid, CodecSolid, TerminalSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { PublicToolDataCompareIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolDataCompareIcon'
@@ -270,9 +269,6 @@ const Misstatement = React.lazy(() =>
 )
 const SystemConfig = React.lazy(() =>
   import('@/pages/systemConfig/SystemConfig').then((m) => ({ default: m.SystemConfig })),
-)
-const ShortcutKeyList = React.lazy(() =>
-  import('@/pages/shortcutKey/ShortcutKey').then((m) => ({ default: m.ShortcutKeyList })),
 )
 const AIAgent = React.lazy(() => import('@/pages/ai-agent/AIAgent').then((m) => ({ default: m.AIAgent })))
 
@@ -802,9 +798,6 @@ export interface ComponentParams {
   /** hTTPHacker v2 新版 */
   mitmHackerPageInfo?: MITMHackerPageInfoProps
 
-  /** 快捷键配置页面信息 */
-  shortcutKeyPage?: ShortcutKeyPageName
-
   /** 编辑 forge 模板 */
   modifyAIForgePageInfo?: AIForgeEditorPageInfoProps
   /** 新增 ai-forge 模板页面 */
@@ -1086,7 +1079,11 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     case YakitRoute.AI_Agent:
       return <AIAgent pageId={params?.id || ''} />
     case YakitRoute.ShortcutKey:
-      return <ShortcutKeyList />
+      return (
+        <Suspense fallback={<PageLoading />}>
+          <Settings pageId={params?.id || ''} anchor="shortcut-key" />
+        </Suspense>
+      )
     case YakitRoute.FingerprintManage:
       return <FingerprintManage />
     case YakitRoute.Ssa_Result_Diff:

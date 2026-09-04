@@ -1,8 +1,9 @@
 .settings-content {
+  position: relative;
   flex: 1;
   min-width: 0;
   padding: 12px 20px;
-  overflow: auto;
+  overflow: overlay;
 }
 
 .settings-content-body {

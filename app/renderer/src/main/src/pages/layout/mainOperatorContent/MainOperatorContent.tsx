@@ -168,7 +168,6 @@ import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import { defaultHTTPHistoryAnalysisPageInfo } from '@/defaultConstants/hTTPHistoryAnalysis'
 import type { BatchAddNewGroupFormItem } from './BatchAddNewGroup'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
-import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import { getGlobalShortcutKeyEvents } from '@/utils/globalShortcutKey/events/global'
 import {
   convertKeyEventToKeyCombination,
@@ -934,7 +933,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         addHTTPHistoryAnalysis(params)
         break
       case YakitRoute.ShortcutKey:
-        addShortcutKey(params)
+        addSettingsPage({ anchor: 'shortcut-key' })
         break
       case YakitRoute.AddAIForge:
       case YakitRoute.ModifyAIForge: {
@@ -999,17 +998,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
           yakRunnerScanHistoryPageInfo: {
             ...data,
           },
-        },
-      },
-    )
-  })
-
-  const addShortcutKey = useMemoizedFn((data: ShortcutKeyPageName) => {
-    openMenuPage(
-      { route: YakitRoute.ShortcutKey },
-      {
-        pageParams: {
-          shortcutKeyPage: data,
         },
       },
     )

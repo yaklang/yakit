@@ -143,7 +143,6 @@ const YakitAuditRiskDetails = React.lazy(() =>
     default: m.YakitAuditRiskDetails,
   })),
 )
-import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import type { mcpStreamHooks } from './hooks/useMcp/useMcp'
 const ConfigMcpModal = React.lazy(() => import('@/utils/ConfigSystemMcp').then((m) => ({ default: m.ConfigMcpModal })))
 import { useCampare } from '@/hook/useCompare/useCompare'
@@ -823,7 +822,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
       children: [
         // { key: "engineVar",label: "引擎环境变量" },
         { key: 'config-network', label: '全局配置' },
-        { key: 'setShortcutKey', label: '快捷键设置' },
         { key: 'manageRightClickPlugins', label: '右键插件管理' },
         { key: 'configMcp', label: 'Yak Mcp配置' },
       ],
@@ -999,15 +997,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'run-node':
         setRunNodeModalVisible(true)
-        return
-      case 'setShortcutKey':
-        emiter.emit(
-          'openPage',
-          JSON.stringify({
-            route: YakitRoute.ShortcutKey,
-            params: 'global' as ShortcutKeyPageName,
-          }),
-        )
         return
       case 'manageRightClickPlugins':
         emiter.emit('openPage', JSON.stringify({ route: YakitRoute.ManageRightClickPlugins }))

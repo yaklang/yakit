@@ -4,6 +4,7 @@ import { AppearanceSettings } from './appearance/AppearanceSettings'
 import { GeneralSettings } from './general/GeneralSettings'
 import { SystemProxySettings } from './systemProxy/SystemProxySettings'
 import { ReverseSettings } from './reverse/ReverseSettings'
+import { ShortcutKeySettings } from './shortcutKey/ShortcutKeySettings'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './SettingsContent.module.scss'
 
@@ -11,11 +12,13 @@ const SettingsPanels: Partial<Record<SettingsAnchor, ComponentType>> = {
   general: GeneralSettings,
   appearance: AppearanceSettings,
   reverse: ReverseSettings,
+  'shortcut-key': ShortcutKeySettings,
   'system-proxy': SystemProxySettings,
 }
 
 const hideOuterTitle: Partial<Record<SettingsAnchor, true>> = {
   reverse: true,
+  'shortcut-key': true,
   'system-proxy': true,
 }
 
@@ -30,7 +33,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
   const Panel = SettingsPanels[anchor as SettingsAnchor]
 
   return (
-    <div className={styles['settings-content']}>
+    <div className={styles['settings-content']} data-settings-content>
       <div key={anchor} className={styles['settings-content-body']}>
         {!hideOuterTitle[anchor as SettingsAnchor] && <div className={styles['settings-content-title']}>{title}</div>}
         <div className={styles['settings-content-main']}>
