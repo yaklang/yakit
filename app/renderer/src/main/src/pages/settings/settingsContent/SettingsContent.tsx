@@ -3,16 +3,19 @@ import { getSettingsLabel, type SettingsAnchor } from '../constants'
 import { AppearanceSettings } from './appearance/AppearanceSettings'
 import { GeneralSettings } from './general/GeneralSettings'
 import { SystemProxySettings } from './systemProxy/SystemProxySettings'
+import { ReverseSettings } from './reverse/ReverseSettings'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './SettingsContent.module.scss'
 
 const SettingsPanels: Partial<Record<SettingsAnchor, ComponentType>> = {
   general: GeneralSettings,
   appearance: AppearanceSettings,
+  reverse: ReverseSettings,
   'system-proxy': SystemProxySettings,
 }
 
 const hideOuterTitle: Partial<Record<SettingsAnchor, true>> = {
+  reverse: true,
   'system-proxy': true,
 }
 

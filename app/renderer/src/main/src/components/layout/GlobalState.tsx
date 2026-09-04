@@ -13,7 +13,6 @@ import { SuccessIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SuccessIcon'
 import { WarningIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WarningIcon'
 import { RocketIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RocketIcon'
 import { showConfigSystemProxyForm, showConfigChromePathForm } from '@/utils/ConfigSystemProxy'
-import { ConfigGlobalReverse } from '@/utils/ConfigGlobalReverse'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { Tooltip, Row, Col } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
@@ -48,6 +47,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { ShieldCheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitApp, yakitHost, yakitPlugin, yakitReverse } from '@/services/electronBridge'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 import { ShieldCheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
@@ -945,20 +945,12 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       className={styles['btn-style']}
                       onClick={() => {
                         setShow(false)
-                        showYakitModal({
-                          type: 'white',
-                          title: (modalT) => modalT('GlobalState.configGlobalReverse'),
-                          width: 800,
-                          content: (
-                            <div style={{ width: 800 }}>
-                              <ConfigGlobalReverse />
-                            </div>
-                          ),
-                          footer: null,
-                        })
+                        emiter.emit(
+                          'openPage',
+                          JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'reverse' } }),
+                        )
                       }}
                     >
-                      {' '}
                       {t('GlobalState.disable')}
                     </YakitButton>
                   ) : (
@@ -967,17 +959,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       className={styles['btn-style']}
                       onClick={() => {
                         setShow(false)
-                        showYakitModal({
-                          type: 'white',
-                          title: (modalT) => modalT('GlobalState.configGlobalReverse'),
-                          width: 800,
-                          content: (
-                            <div style={{ width: 800 }}>
-                              <ConfigGlobalReverse />
-                            </div>
-                          ),
-                          footer: null,
-                        })
+                        emiter.emit(
+                          'openPage',
+                          JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'reverse' } }),
+                        )
                       }}
                     >
                       {t('GlobalState.toConfigure')}

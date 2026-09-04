@@ -10,7 +10,6 @@ import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notificati
 const ConfigPrivateDomain = React.lazy(() =>
   import('../ConfigPrivateDomain/ConfigPrivateDomain').then((m) => ({ default: m.ConfigPrivateDomain })),
 )
-import { ConfigGlobalReverse } from '@/utils/ConfigGlobalReverse'
 import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
 import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
 import { useConfigManagementTab, useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
@@ -822,7 +821,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
       key: 'systemSet',
       label: '系统设置',
       children: [
-        { key: 'reverse', label: '全局反连' },
         // { key: "engineVar",label: "引擎环境变量" },
         { key: 'config-network', label: '全局配置' },
         { key: 'setShortcutKey', label: '快捷键设置' },
@@ -925,19 +923,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'hotPatch-management':
         setConfigManagementActiveTab('hotPatch')
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.ConfigManagement }))
-        return
-      case 'reverse':
-        showYakitModal({
-          type: 'white',
-          title: (modalT) => modalT('UIOpSetting.configGlobalReverse'),
-          width: 800,
-          content: (
-            <div style={{ width: 800 }}>
-              <ConfigGlobalReverse />
-            </div>
-          ),
-          footer: null,
-        })
         return
       case 'mcp':
       case 'mcp-toggle':
