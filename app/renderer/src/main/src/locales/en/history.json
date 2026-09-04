@@ -61,9 +61,6 @@
     "selectSeverity": "Select severity",
     "selectDisposalStatus": "Select disposal status",
     "inputDisposalNote": "Enter disposal note",
-    "testers": "Testers",
-    "selectTesters": "Please select testers",
-    "searchTesters": "Search testers",
     "batchModifyMark": "Batch Modify",
     "RowContextMenu": {
       "sendToWebFuzzer": "Send to Web Fuzzer",
@@ -102,7 +99,6 @@
       "exportToExcel": "Export to Excel",
       "exportToHAR": "Export to HAR",
       "modifyMark": "Modify Mark",
-      "addTesters": "Add Testers",
       "editTag": "Edit Tag",
       "openInNewWindow": "Open in New Window",
       "uploadData": "Upload Data",

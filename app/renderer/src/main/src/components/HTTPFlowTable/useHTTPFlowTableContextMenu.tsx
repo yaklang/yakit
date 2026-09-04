@@ -114,8 +114,6 @@ export interface UseHTTPFlowTableContextMenuOptions {
   onViewAttachmentDataRefresh: (id: number) => void
   /** EE：批量修改标记 */
   onOpenBatchMarkEdit?: (list: HTTPFlow[]) => void
-  /** EE：批量添加测试人员 */
-  onOpenBatchTesters?: (list: HTTPFlow[]) => void
 }
 
 export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenuOptions) => {
@@ -160,7 +158,6 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onBatch,
     onViewAttachmentDataRefresh,
     onOpenBatchMarkEdit,
-    onOpenBatchTesters,
   } = options
 
   const menuData = useMemo(() => {
@@ -570,15 +567,6 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
                 onOpenBatchMarkEdit?.(list)
               },
             },
-            {
-              key: 'addTesters',
-              label: t('HTTPFlowTable.RowContextMenu.addTesters'),
-              default: true,
-              webSocket: true,
-              onClickBatch: (list: HTTPFlow[]) => {
-                onOpenBatchTesters?.(list)
-              },
-            },
           ]
         : []),
       {
@@ -624,7 +612,6 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     getUrlWithoutQuery,
     total,
     onOpenBatchMarkEdit,
-    onOpenBatchTesters,
   ])
 
   // 右键插件处理
