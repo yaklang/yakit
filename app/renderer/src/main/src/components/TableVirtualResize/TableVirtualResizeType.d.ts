@@ -13,7 +13,8 @@ import { type YakitProtoCheckboxProps } from './YakitProtoCheckbox/YakitProtoChe
  * @property {ReactNode} renderTitle: 自定义表格顶部的title
  * @property {number} titleHeight: 自定义表格顶部的高度,使用renderTitle,需要传入对应的height,否则虚拟列表滚动会不正确
  * @property {T[]} data:数组 可以传cellClassName用来控制单元格样式，不要传height
- * @property {string} renderKey:每行的key值，不可重复
+ * @property {string} renderKey:行的业务标识字段，用于选择和交互；值可能重复时需通过 getRowKey 提供唯一 React key
+ * @property {(record: T, index: number) => React.Key} getRowKey:仅用于 React 渲染的唯一行 key
  * @property {ColumnsTypeProps[]} columns:每列的参数
  * @property {RowSelectionProps<T>} rowSelection:多选/单选配置，目前只支持多选
  * @property {boolean} enableDrag:true,表格列之间可以拖动，最后一列除外。columns中也可以单独设置某一列是否可以拖动
@@ -55,6 +56,7 @@ export interface TableVirtualResizeProps<T> {
   data: T[]
   overscan?: number
   renderKey: string
+  getRowKey?: (record: T, index: number) => React.Key
   columns: ColumnsTypeProps[]
   rowSelection?: RowSelectionProps<T>
   enableDrag?: boolean

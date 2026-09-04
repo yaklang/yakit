@@ -35,6 +35,7 @@ const BLOCKED_CHROMIUM_DEBUG_SWITCHES = ['remote-debugging-port', 'remote-debugg
 const BLOCKED_NODE_DEBUG_ARG_PREFIXES = ['--inspect', '--inspect-brk', '--inspect-port']
 const MITM_DEBUG_HOOKS_ARGUMENT = '--yakit-mitm-debug-hooks=1'
 const mitmDebugHooksEnabled = !app.isPackaged && (isDev || e2eEnvironment.enabled)
+const tableVirtualFixtureEnabled = e2eEnvironment.enabled && process.env.YAKIT_E2E_TABLE_VIRTUAL_FIXTURE === '1'
 
 const getForbiddenStartupDebugFlags = () => {
   const detected = []
@@ -260,7 +261,11 @@ function createWindow() {
   })
 
   if (isDev) win.loadURL('http://127.0.0.1:3000')
-  else win.loadFile(path.resolve(__dirname, '../renderer/pages/main/index.html'))
+  else if (tableVirtualFixtureEnabled) {
+    win.loadFile(path.resolve(__dirname, '../renderer/pages/main/index.html'), {
+      query: { 'e2e-fixture': 'table-virtual-fixed-right' },
+    })
+  } else win.loadFile(path.resolve(__dirname, '../renderer/pages/main/index.html'))
 
   if (isDev) win.webContents.openDevTools({ mode: 'detach' })
 
@@ -279,6 +284,10 @@ function createWindow() {
   win.once('ready-to-show', () => {
     readyWinShow = true
     printLogOutputFile(`[mainWin] ready-to-show, isVisible: ${win.isVisible()}, isDestroyed: ${win.isDestroyed()}`)
+    if (tableVirtualFixtureEnabled) {
+      win.show()
+      win.focus()
+    }
   })
 
   // F5 / reload 时清掉 ready 标记，避免刷新过程中误发，并让 markRenderOk 重新走一遍

@@ -17,6 +17,11 @@ import './theme/componentsTheme/formItemHelp.css'
 import { Suspense, lazy, useEffect, useState } from 'react'
 const ChildNewApp = lazy(() => import('./newApp/ChildNewApp'))
 const MarkdownPdfPrintPage = lazy(() => import('./pages/irifyAiCodeAudit/MarkdownPdfPrint/MarkdownPdfPrintPage'))
+const TableVirtualFixedRightMaskFixture = lazy(() =>
+  import('./e2e/TableVirtualFixedRightMaskFixture').then(({ TableVirtualFixedRightMaskFixture }) => ({
+    default: TableVirtualFixedRightMaskFixture,
+  })),
+)
 import { GetMainColor } from './utils/envfile'
 import { useTheme } from './hook/useTheme'
 import { applyYakitThemeColors } from './utils/applyYakitThemeColors'
@@ -126,7 +131,11 @@ ReactDOM.render(
     <YakitAntdProvider>
       <NotificationProvider>
         <Suspense fallback={<div>loading...</div>}>
-          <App />
+          {getQueryParam('e2e-fixture') === 'table-virtual-fixed-right' ? (
+            <TableVirtualFixedRightMaskFixture />
+          ) : (
+            <App />
+          )}
         </Suspense>
       </NotificationProvider>
     </YakitAntdProvider>
