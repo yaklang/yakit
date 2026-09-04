@@ -43,22 +43,23 @@
   thead {
     padding: 4px;
     height: 30px;
+  }
 
-    tr th {
-      padding: 0 8px;
-      color: var(--Colors-Use-Neutral-Text-1-Title);
-      font-size: 12px;
-      font-weight: 500;
-      line-height: 16px;
-      letter-spacing: 0.5px;
+  :global(.ant-table-thead > tr > th.ant-table-cell) {
+    padding: 0 8px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    letter-spacing: 0.5px;
 
-      &::before {
-        display: none;
-      }
+    &::before {
+      display: none;
     }
   }
 
-  tbody tr td {
+  :global(.ant-table-tbody > tr > td.ant-table-cell),
+  :global(.ant-table-tbody > tr > td.ant-table-cell.ant-table-cell-ellipsis.ant-table-cell-with-append) {
     padding: 0 3px;
     height: 24px;
     line-height: 24px;

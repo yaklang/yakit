@@ -15,6 +15,18 @@ export interface AIEchartsDataKey {
   modelName: string
   value: number
 }
+
+/** 详情图表会随弹层 destroyOnHidden 每次打开重挂载，echarts init 可能早于弹层定位布局完成（量到 0×0），下一帧显式 resize 兜底 */
+const useChartResizeOnMount = (chartRef: { current: EChartsReact | null }) => {
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      const instance = chartRef.current?.getEchartsInstance()
+      instance && instance.resize()
+    })
+    return () => cancelAnimationFrame(id)
+  }, [])
+}
+
 //#region 上下文压力 echarts图表
 export interface ContextPressureEchartsProps {
   dataEcharts: {
@@ -319,6 +331,7 @@ export interface AIPressureDetailsEchartsProps {
 export const AIPressureDetailsEcharts: React.FC<AIPressureDetailsEchartsProps> = React.memo((props) => {
   const { dataEcharts, threshold } = props
   const chartRef = useRef<EChartsReact>(null)
+  useChartResizeOnMount(chartRef)
   const colorRef = useGetColorsByTheme()
   const optionRef = useRef<echarts.EChartsOption>(
     getPressureDetailsOption({ dataEcharts, threshold, colors: colorRef }),
@@ -651,6 +664,7 @@ export const AICostDetailsEcharts: React.FC<AICostDetailsEchartsProps> = React.m
   const { dataEcharts } = props
   const colorRef = useGetColorsByTheme()
   const chartRef = useRef<EChartsReact>(null)
+  useChartResizeOnMount(chartRef)
   const optionRef = useRef<echarts.EChartsOption>(getResponseSpeedDetailsOption(dataEcharts, colorRef))
   const onSetOption = useDebounceFn(
     () => {
@@ -1094,12 +1108,14 @@ export const TokenCountEcharts: FC<{
   metric?: ContextStatsChartMetric
 }> = memo(({ contextStatsData, metric = 'bytes' }) => {
   const colors = useGetColorsByTheme()
+  const chartRef = useRef<EChartsReact>(null)
+  useChartResizeOnMount(chartRef)
   const option = useMemo(
     () => getTokenCountOption(colors, contextStatsData, metric),
     [colors, contextStatsData, metric],
   )
 
-  return <ReactECharts option={option} style={{ width: '100%', height: 240 }} />
+  return <ReactECharts ref={chartRef} option={option} style={{ width: '100%', height: 240 }} />
 })
 
 //#endregion
