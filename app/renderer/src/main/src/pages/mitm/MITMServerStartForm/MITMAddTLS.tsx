@@ -45,7 +45,6 @@ const MITMAddTLS: React.FC<AddTLSProps> = React.memo((props) => {
           cerFormRef.current.resetFields()
         })
       }}
-      zIndex={1001}
       width="50%"
       bodyStyle={{ padding: 0 }}
     >

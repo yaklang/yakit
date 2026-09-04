@@ -198,7 +198,6 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
         okType="primary"
         okText={isEdit ? t('YakitButton.save') : t('MITMRuleFromModal.add_this_rule')}
         width={750}
-        zIndex={1001}
         onOk={() => onOk()}
         bodyStyle={{ padding: 0 }}
       >
@@ -639,7 +638,6 @@ export const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.mem
       title={t('InputHTTPHeaderForm.enter_new_http_header')}
       open={visible}
       onCancel={() => setVisible(false)}
-      zIndex={1002}
       footer={null}
       closable={true}
       bodyStyle={{ padding: 0 }}
@@ -764,7 +762,6 @@ const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((prop
       title={t('InputHTTPCookieForm.enter_new_cookie_value')}
       open={visible}
       onCancel={() => setVisible(false)}
-      zIndex={1002}
       footer={null}
       closable={true}
       width={600}
@@ -971,7 +968,6 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
         open={ruleVisible}
         onCancel={() => setRuleVisible(false)}
         width={840}
-        zIndex={1002}
         footer={null}
         closable={true}
         bodyStyle={{ padding: 0 }}

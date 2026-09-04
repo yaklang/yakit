@@ -35,7 +35,6 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
     ...restProps
   } = props
   const mergeOpen = open ?? visible
-  const { token } = theme.useToken()
   const isVertical = placement === 'bottom' || placement === 'top'
   const { height: styleHeight, ...restStyle } = style || {}
   const mergedHeight = height ?? (isVertical ? styleHeight : undefined)
@@ -62,7 +61,6 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
       style={isVertical ? restStyle : style}
       styles={mergedStyles}
       {...restProps}
-      zIndex={props.zIndex ?? token.zIndexPopupBase + YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET}
       closeIcon={
         <div className={styles['yakit-drawer-icon']}>
           {props.closeIcon || <XSolid size={12} className={styles['yakit-drawer-remove-icon']} />}
@@ -83,6 +81,8 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
 const YakitBaseDrawer: React.FC<ShowDrawerProps> = (props) => {
   const { onVisibleSetter, ...resProps } = props
   const [visible, setVisible] = useState<boolean>(true)
+  // 命令式抽屉挂在独立 createRoot，吃不到树内 zIndexContext，需与命令式 Modal 同档抬升
+  const { token } = theme.useToken()
 
   useEffect(() => {
     if (visible && onVisibleSetter) {
@@ -99,6 +99,7 @@ const YakitBaseDrawer: React.FC<ShowDrawerProps> = (props) => {
       open={visible}
       closable={true}
       destroyOnHidden={true}
+      zIndex={props.zIndex ?? token.zIndexPopupBase + YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET}
       {...resProps}
     />
   )
