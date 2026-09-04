@@ -215,17 +215,6 @@ export const startupDuplexConn = () => {
           emiter.emit('onServerPushProjectChanged', JSON.stringify(obj))
           break
         case 'browser_extension':
-          if (
-            obj &&
-            typeof obj === 'object' &&
-            obj.event === 'authorization.workspace.open' &&
-            typeof obj.deviceId === 'string' &&
-            (obj.targetDeviceId === undefined || typeof obj.targetDeviceId === 'string') &&
-            (typeof obj.workspaceId === 'string' || (typeof obj.tabId === 'number' && obj.tabId > 0))
-          ) {
-            window.sessionStorage.setItem('browser.authorization.workspace.handoff.v1', JSON.stringify(obj))
-            emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.BrowserExtension }))
-          }
           emiter.emit('onBrowserExtensionChanged', JSON.stringify(obj))
           break
         // 通知QuerySSARisks轮询更新

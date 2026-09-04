@@ -8,52 +8,6 @@ import {
   validateBrowserTaskEvent,
 } from '../browserProtocolValidation'
 
-function context(side: 'left' | 'right') {
-  return {
-    side,
-    deviceId: `device-${side}`,
-    installationId: `installation-${side}`,
-    isolationContextId: `context-${side}`,
-    cookieStoreId: `store-${side}`,
-    origin: 'https://example.test',
-    grantId: `grant-${side}`,
-    target: { tabId: side === 'left' ? 1 : 2, frameId: 0, documentId: `document-${side}` },
-    fingerprint: `fingerprint-${side}`,
-    contextReference: { kind: 'handle', id: `handle-${side}` },
-    authentication: {
-      status: 'authenticated',
-      cookieCount: 1,
-      storageEntryCount: 0,
-      authCookieNames: null,
-      authStorageKeys: null,
-    },
-    expiresAt: Date.now() + 60_000,
-  }
-}
-
-function workspace(extra: Record<string, unknown> = {}) {
-  return {
-    version: 1,
-    id: 'workspace-1',
-    engineInstanceId: 'engine-1',
-    mode: 'horizontal',
-    state: 'ready',
-    left: context('left'),
-    right: context('right'),
-    proof: { id: 'proof-1', level: 'strong', reasons: null, expiresAt: Date.now() + 60_000 },
-    baselines: {},
-    baselinePair: {
-      state: 'waiting',
-      reasons: null,
-      resourceCandidates: null,
-      operationCandidates: null,
-    },
-    createdAt: Date.now(),
-    expiresAt: Date.now() + 60_000,
-    ...extra,
-  }
-}
-
 describe('browser protocol runtime validation', () => {
   it('normalizes absent YakURL resources and nullable status collections', () => {
     expect(browserSnapshotResources({ Resources: null })).toEqual([])
@@ -209,27 +163,6 @@ describe('browser protocol runtime validation', () => {
     ).toThrow('$.legacyField')
   })
 
-  it('normalizes nullable authorization collections before components can call filter or map', () => {
-    const result = decodeBrowserTaskResult(
-      'authorization.workspace.inspect',
-      { workspaceId: 'workspace-1' },
-      JSON.stringify(workspace()),
-    ) as ReturnType<typeof workspace>
-    expect(result.left.authentication.authCookieNames).toEqual([])
-    expect(result.proof.reasons).toEqual([])
-    expect(result.baselinePair.resourceCandidates).toEqual([])
-    expect(result.baselinePair.operationCandidates).toEqual([])
-  })
-
-  it('rejects old workspace versions and unexpected fields instead of leaking them into React', () => {
-    expect(() =>
-      decodeBrowserTaskResult('authorization.workspace.inspect', {}, JSON.stringify(workspace({ version: 0 }))),
-    ).toThrow('$.version')
-    expect(() =>
-      decodeBrowserTaskResult('authorization.workspace.inspect', {}, JSON.stringify(workspace({ unexpected: true }))),
-    ).toThrow('$.unexpected')
-  })
-
   it('normalizes capability list null and rejects a non-array list response', () => {
     expect(decodeBrowserTaskResult('capability.call', { method: 'browser.transform.profile.list' }, 'null')).toEqual([])
     expect(() =>
@@ -257,23 +190,7 @@ describe('browser protocol runtime validation', () => {
     ).toThrow('$.profile')
   })
 
-  it('normalizes evidence collections and rejects prototype-pollution keys', () => {
-    const evidence = decodeBrowserTaskResult(
-      'authorization.evidence.inspect',
-      {},
-      JSON.stringify({
-        version: 1,
-        workspaceId: 'workspace-1',
-        executionId: 'execution-1',
-        cases: null,
-        comparisons: null,
-        semantic: null,
-        representations: null,
-      }),
-    ) as Record<string, unknown>
-    expect(evidence.cases).toEqual([])
-    expect(evidence.representations).toEqual([])
-
+  it('rejects prototype-pollution keys', () => {
     expect(() =>
       decodeBrowserTaskResult(
         'capability.call',
