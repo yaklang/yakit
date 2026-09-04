@@ -429,12 +429,6 @@ function normalizeCapabilityResult(method: string, value: unknown): unknown {
     }
   }
   if (method === 'browser.transform.profile.list') return objectList(value, normalizeProfile)
-  if (method === 'browser.authorization.baseline.candidates')
-    return objectList(value, (item, path) => {
-      requiredString(item, 'id', schema, path)
-      requiredBoolean(item, 'eligible', schema, path)
-      return { ...item, reasons: stringCollection(item, 'reasons', schema, path) }
-    })
   if (['browser.tabs', 'browser.isolation.container.list', 'browser.callable.list'].includes(method)) {
     return objectList(value)
   }
