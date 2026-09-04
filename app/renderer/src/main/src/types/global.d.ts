@@ -730,8 +730,8 @@ declare global {
       isMITMDebugHooksEnabled?: () => boolean
     }
     theme: {
-      setTheme: (theme: 'light' | 'dark') => Promise<unknown>
-      onUpdated: (callback: (theme: 'light' | 'dark') => void) => BridgeCleanup
+      setTheme: (theme: 'light' | 'dark' | 'system') => Promise<unknown>
+      onUpdated: (callback: (theme: 'light' | 'dark' | 'system') => void) => BridgeCleanup
     }
     system: {
       fetchSystemName: () => Promise<YakitSystem>

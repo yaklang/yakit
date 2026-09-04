@@ -67,6 +67,7 @@ import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import {
+  OutlineDotscirclehorizontalIcon,
   OutlinePencilaltIcon,
   OutlineQuestionmarkcircleIcon,
   OutlineRefreshIcon,
@@ -155,15 +156,12 @@ const ConfigMcpModal = React.lazy(() => import('@/utils/ConfigSystemMcp').then((
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { openConsoleNewWindow } from '@/utils/openWebsite'
 import useEngineConsole from './hooks/useEngineConsole/useEngineConsole'
-import { useTheme } from '@/hook/useTheme'
 import { grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder } from '@/utils/logCollection'
 import { useDownloadYakit } from './update/useDownloadYakit'
 import { JSONParseLog } from '@/utils/tool'
-import { useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { SystemInfo } from '@/constants/hardware'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import cloneDeep from 'lodash/cloneDeep'
-import { syncAppSettings } from '@/auxWindow/utils/messaging'
 import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
 import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
 import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
@@ -366,6 +364,18 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           {!showProjectManage && isIRify() && <UIOpIRifyRisk isEngineLink={isEngineLink} />}
           {!isEnpriTraceAgent() && (
             <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode} onLogin={() => setLoginShow(true)} />
+          )}
+          {!showProjectManage && (
+            <div
+              className={styles['ui-op-btn-wrapper']}
+              onClick={() => {
+                emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'general' } }))
+              }}
+            >
+              <div className={styles['op-btn-body']}>
+                <OutlineDotscirclehorizontalIcon className={classNames(styles['icon-style'], styles['size-style'])} />
+              </div>
+            </div>
           )}
           {!showProjectManage && (
             <UIOpSetting
@@ -645,32 +655,6 @@ interface UIOpSettingProp {
   mcp: mcpStreamHooks
 }
 
-/** @name 菜单模式切换 目前只有Yakit 社区版有 */
-const ModeSwitch = () => {
-  if (isCommunityYakit()) {
-    return {
-      key: 'modeSwitching',
-      label: '模式切换',
-      children: [
-        {
-          key: YakitModeEnum.Classic,
-          label: '经典模式',
-        },
-        {
-          key: YakitModeEnum.SecurityExpert,
-          label: '安全专家模式',
-        },
-        {
-          key: YakitModeEnum.Scan,
-          label: '扫描模式',
-        },
-      ],
-    }
-  }
-
-  return null
-}
-
 const DBCacheManager = () => {
   if (SystemInfo.mode === 'local') {
     return {
@@ -712,24 +696,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         children: [
           { label: '本地', key: 'local' },
           { label: '远程', key: 'remote' },
-        ],
-      },
-      {
-        key: 'i18nSwitching',
-        label: '语言切换',
-        children: [
-          {
-            key: 'zh',
-            label: '简体中文',
-          },
-          {
-            key: 'en',
-            label: '英文',
-          },
-          {
-            key: 'zh-TW',
-            label: '繁体中文',
-          },
         ],
       },
       { type: 'divider' },
@@ -829,39 +795,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         { label: '调试信息日志', key: 'printLog' },
       ],
     },
-    ModeSwitch(),
-    {
-      key: 'themeSwitching',
-      label: '主题切换',
-      children: [
-        {
-          key: 'light',
-          label: '亮色',
-        },
-        {
-          key: 'dark',
-          label: '暗色',
-        },
-      ],
-    },
-    {
-      key: 'i18nSwitching',
-      label: '语言切换',
-      children: [
-        {
-          key: 'zh',
-          label: '简体中文',
-        },
-        {
-          key: 'en',
-          label: '英文',
-        },
-        {
-          key: 'zh-TW',
-          label: '繁体中文',
-        },
-      ],
-    },
     { type: 'divider' },
     DBCacheManager(),
     {
@@ -946,9 +879,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const { setConfigManagementActiveTab } = useConfigManagementTab()
   const { delTemporaryProject } = useTemporaryProjectStore()
   const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
-  /** 当前主题 */
-  const { setTheme } = useTheme()
-  const { softMode, setSoftMode } = useSoftMode()
   const [reclaimHint, setReclaimHint] = useState<boolean>(false)
   const { t, i18n } = useI18nNamespaces(['home', 'layout'])
 
@@ -1144,28 +1074,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'memory-base':
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Memory }))
-        return
-      case YakitModeEnum.Classic:
-      case YakitModeEnum.SecurityExpert:
-      case YakitModeEnum.Scan:
-        if (softMode === type) {
-          yakitNotify('info', t('UIOpSetting.modeAlreadySet'))
-        } else {
-          setSoftMode(type)
-        }
-        return
-      case 'light':
-        setTheme('light')
-        return
-      case 'dark':
-        setTheme('dark')
-        return
-      case 'zh':
-      case 'en':
-      case 'zh-TW':
-        i18n.changeLanguage(type)
-        yakitApp.setYakitHomeConfig('softLange', type).catch((err) => {})
-        syncAppSettings({ type: 'i18n', payload: type })
         return
       default:
         return

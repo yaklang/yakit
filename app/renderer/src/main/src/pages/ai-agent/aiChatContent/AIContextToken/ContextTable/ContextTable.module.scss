@@ -45,7 +45,7 @@
     height: 30px;
 
     tr th {
-      padding: 0 8px;
+      padding: 0 8px !important;
       color: var(--Colors-Use-Neutral-Text-1-Title);
       font-size: 12px;
       font-weight: 500;
@@ -59,7 +59,7 @@
   }
 
   tbody tr td {
-    padding: 0 3px;
+    padding: 0 3px !important;
     height: 24px;
     line-height: 24px;
   }

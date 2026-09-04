@@ -456,8 +456,7 @@
     "remoteModeCannotModify": "遠端控制中，暫無法修改",
     "configPrivateDomain": "配置私有域",
     "configGlobalReverse": "配置全域性反連",
-    "alreadyLocalMode": "已為本地連線",
-    "modeAlreadySet": "當前模式已設定"
+    "alreadyLocalMode": "已為本地連線"
   },
   "YakitLoading": {
     "slogans": [

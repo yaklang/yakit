@@ -27,6 +27,7 @@ import type { ReportPageEventProps } from './events/reportPage'
 import type { YakKnowledgeRepositoryEventProps } from './events/aiRepository'
 import type { MainWinOperatorEventProps } from './events/mainWin'
 import type { RuleManagementEventProps } from './events/ruleManagement'
+import type { SettingsEventProps } from './events/settings'
 import type { YakRunnerAiCodeAuditEventProps } from './events/yakRunnerAiCodeAudit'
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
@@ -83,6 +84,7 @@ type Events = [
   MainWinOperatorEventProps,
   RuleManagementEventProps,
   YakRunnerAiCodeAuditEventProps,
+  SettingsEventProps,
 ]
 
 type CheckVal = Exchange<ArrContrast<Events>>

@@ -1,6 +1,6 @@
 import { yakitApp } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
-import { useTheme, type Theme } from '@/hook/useTheme'
+import { useTheme, resolveTheme, type ThemeMode } from '@/hook/useTheme'
 import { applyAuxThemeColors } from '@/auxWindow/utils/applyAuxThemeColors'
 import { isAuxWindow } from '@/utils/isAuxOrChildWindow'
 
@@ -17,9 +17,9 @@ function handleAppSyncMessage(message: AppSyncMessage) {
   if (!message?.type) return
   switch (message.type) {
     case 'theme': {
-      const theme = message.payload as Theme
+      const theme = message.payload as ThemeMode
       if (isAuxWindow()) {
-        applyAuxThemeColors(theme)
+        applyAuxThemeColors(resolveTheme(theme))
       }
       useTheme.getState().syncTheme(theme)
       break

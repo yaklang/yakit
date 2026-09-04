@@ -115,6 +115,7 @@ import type {
   CodecPageInfoProps,
   ManageRightClickPluginsPageInfoProps,
   ContextMenuResultPageInfoProps,
+  SettingsPageInfoProps,
 } from '@/store/pageInfo'
 import {
   CommunityDeprecatedFirstMenu,
@@ -307,6 +308,7 @@ const ManageRightClickPlugins = React.lazy(() => import('@/pages/manageRightClic
 const ContextMenuActionExecution = React.lazy(
   () => import('@/pages/manageRightClickPlugins/ContextMenuActionExecution'),
 )
+const Settings = React.lazy(() => import('@/pages/settings/Settings').then((m) => ({ default: m.Settings })))
 
 /**
  * @description 页面路由对应的页面信息
@@ -521,6 +523,7 @@ export const YakitRouteToPageInfo: Record<
   'ai-forge': { label: '技能库', labelUi: 'YakitRoute.ai-forge' },
   'manage-right-click-plugins': { label: '右键插件设置', labelUi: 'YakitRoute.manageRightClickPlugins' },
   'context-menu-result': { label: '右键插件结果', labelUi: 'YakitRoute.contextMenuResult' },
+  settings: { label: '设置', labelUi: 'YakitRoute.settings' },
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -580,6 +583,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.AI_Forge,
   YakitRoute.MCP_History,
   YakitRoute.ManageRightClickPlugins,
+  YakitRoute.Settings,
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -640,6 +644,7 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.MCP_History,
   YakitRoute.ManageRightClickPlugins,
   YakitRoute.ContextMenuResult,
+  YakitRoute.Settings,
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -826,6 +831,8 @@ export interface ComponentParams {
 
   /** 右键插件执行结果页面 */
   contextMenuResultPageInfo?: ContextMenuResultPageInfoProps
+  /** 应用设置页面 */
+  settingsPageInfo?: SettingsPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
   return function WithPage(props) {
@@ -1114,6 +1121,12 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         <div />
       )
     }
+    case YakitRoute.Settings:
+      return (
+        <Suspense fallback={<PageLoading />}>
+          <Settings pageId={params?.id || ''} anchor={params?.settingsPageInfo?.anchor} />
+        </Suspense>
+      )
     default:
       return <div />
   }
