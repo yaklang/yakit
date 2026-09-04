@@ -1,4 +1,4 @@
-import { Drawer } from 'antd'
+import { Drawer, theme } from 'antd'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import type { YakitDrawerProps } from './YakitDrawerType'
@@ -13,13 +13,8 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import i18n from '@/i18n/i18n'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitAntdProvider } from '@/theme/antdTheme'
+import { YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET } from '../YakitModal/YakitModalConfirm'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
-
-/** 对齐 YakitModalConfirm 的 YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET：
- * 命令式 Modal zIndex = zIndexPopupBase(1000) + 1000 = 2000，
- * Drawer 走 antd5 useZIndex 默认只有 1100，同屏会被命令式 Modal 盖住，需对齐抬高。
- */
-const YAKIT_IMPERATIVE_DRAWER_Z_INDEX = 2000
 
 /**
  * @description:YakitDrawer  抽屉 placement === "bottom" heard有背景色
@@ -40,6 +35,7 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
     ...restProps
   } = props
   const mergeOpen = open ?? visible
+  const { token } = theme.useToken()
   const isVertical = placement === 'bottom' || placement === 'top'
   const { height: styleHeight, ...restStyle } = style || {}
   const mergedHeight = height ?? (isVertical ? styleHeight : undefined)
@@ -66,7 +62,7 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
       style={isVertical ? restStyle : style}
       styles={mergedStyles}
       {...restProps}
-      zIndex={props.zIndex ?? YAKIT_IMPERATIVE_DRAWER_Z_INDEX}
+      zIndex={props.zIndex ?? token.zIndexPopupBase + YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET}
       closeIcon={
         <div className={styles['yakit-drawer-icon']}>
           {props.closeIcon || <XSolid size={12} className={styles['yakit-drawer-remove-icon']} />}
