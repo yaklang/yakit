@@ -25,9 +25,3 @@ export interface SetHTTPFlowMarkRequest {
   DisposalStatus?: string
   DisposalNote?: string
 }
-
-/** xxx--- 等待后端联调 */
-export interface SetHTTPFlowTestersRequest {
-  Ids: number[]
-  Testers: string[]
-}
