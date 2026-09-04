@@ -24,8 +24,6 @@ import { RefreshIcon } from '@/assets/newIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitReverse, yakitScript, yakitStream } from '@/services/electronBridge'
 
-export { ConfigGlobalReverse } from './ConfigGlobalReverse'
-
 export interface YakScriptParam {
   Script: string
   Params: YakExecutorParam[]
