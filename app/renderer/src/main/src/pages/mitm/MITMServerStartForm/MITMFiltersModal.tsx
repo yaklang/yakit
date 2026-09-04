@@ -5,7 +5,7 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { useCreation, useGetState, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { Tooltip } from 'antd'
+import { Tooltip, theme } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import {
   type MITMAdvancedFilter,
@@ -23,7 +23,10 @@ import {
   FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import {
+  showYakitModal,
+  YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET,
+} from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -91,6 +94,7 @@ export const getMitmHijackFilter = (baseFilter: MITMFilterSchema, advancedFilter
 const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => {
   const { filterType, visible, setVisible, isStartMITM, onSetHijackFilterFlag, onSetFilterFlag } = props
   const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { token } = theme.useToken()
   const filtersRef = useRef<any>()
   const [type, setType] = useState<FilterSettingType>('base-setting')
   // filter 过滤器
@@ -263,6 +267,8 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
   // 保存过滤器
   const onSaveFilter = useMemoizedFn(() => {
     const m = showYakitModal({
+      // 抽屉(命令式层级)内嵌套的本 Modal 会被 zIndexContext 再抬 100，保存弹窗需再抬一层命令式偏移压过它
+      zIndex: token.zIndexPopupBase + YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET * 2,
       title: (modalT) =>
         filterType === 'filter'
           ? modalT('MITMFiltersModal.save_filter_config')
