@@ -37,7 +37,7 @@ description: 对 Yakit 仓库的代码改动做规范化 code review：按代码
 
 | 模式 | 获取改动 | 报告文件名（仓库根） |
 | --- | --- | --- |
-| PR | `gh pr view <编号> --repo yaklang/yakit --json title,headRefName,baseRefName,files` + `gh pr diff <编号>` | `PR-<编号>-review.md` |
+| PR | `gh pr view <编号> --repo yaklang/yakit --json title,headRefName,headRefOid,baseRefName,baseRefOid,files` + `gh pr diff <编号>`（`baseRefOid` / `headRefOid` 供步骤四构造 base / head 快照，必须记录） | `PR-<编号>-review.md` |
 | 分支 | `git diff <基线>...HEAD` + `git log --oneline <基线>..HEAD`，基线默认 `master` | `<分支名>-review.md`（`/` 替换为 `-`） |
 | 工作区 | `git diff HEAD` + `git status --short` 中的未跟踪新文件（读文件内容纳入审查） | `working-tree-review.md` |
 
@@ -68,6 +68,19 @@ description: 对 Yakit 仓库的代码改动做规范化 code review：按代码
 
 ## 步骤四：强制验证（每次必做）
 
+### 验证运行位置
+
+验证结果只对被审快照有效，先按模式确定运行位置：
+
+- **工作区 / 分支模式**：被审对象就是当前分支 / 工作区，在当前工作目录运行。
+- **PR 模式**：**禁止直接在当前工作目录运行**——本地检出可能是 master 或其它分支，不是该 PR 的 head，跑出来的结果是别的代码状态的结果。必须构造 base / head 双快照对比运行：
+  1. 用步骤一取得的 `baseRefOid` / `headRefOid`，`git fetch origin <OID>` 逐个 fetch 精确 OID（不用分支名——远端分支可能已移动，OID 才是 PR 当时的快照）。
+  2. `git worktree add --detach <临时目录> <OID>` 分别建立 head、base 两个隔离 worktree，全程不动当前工作目录与用户当前状态。
+  3. 在两个 worktree 中运行**完全相同**的 tsc / vitest 命令，按下方归因规则判定；快照内依赖未就绪时先在对应子项目执行 `yarn cli install`，仍无法运行则按「环境异常降级」处理。
+  4. 验证结束后 `git worktree remove <临时目录>` 清理。
+
+  **归因规则**：head 失败且 base 同项也失败 → 基线遗留问题，**不记本 PR 的 P0**（报告如实注明「base 同样失败，非本 PR 引入」，可作警告提醒）；head 失败且 base 通过 → 本 PR 引入，记 ❌ P0；head 通过 → ✅。fetch 不到 OID、worktree 建立失败等**无法构造目标快照的情形，按「环境异常降级」处理——不得标 ✅，也不得拿当前工作目录的结果代替**。
+
 ### TS 验证
 
 改动落在哪个 TS 子项目，就对哪个跑该子项目的类型检查（tsc 是项目级检查，必须跑整个子项目，不是单文件）：
@@ -78,7 +91,7 @@ description: 对 Yakit 仓库的代码改动做规范化 code review：按代码
 | `app/renderer/engine-link-startup/` | `cd app/renderer/engine-link-startup && yarn type-check` |
 | 仅 `app/main/` 或不含任何 TS 子项目文件 | 跳过，报告中注明原因（Electron 主进程为纯 JS 无 tsconfig / 本次改动无 TS 文件） |
 
-结果计分：通过 → 1 条 ✅ 正确项；失败 → 1 条 ❌ P0 问题（附报错的 `文件:行号` 摘要）。
+结果计分：通过 → 1 条 ✅ 正确项；失败 → 1 条 ❌ P0 问题（附报错的 `文件:行号` 摘要）；PR 模式下 head 失败但 base 同样失败的为基线遗留，不记 P0（见「验证运行位置」归因规则）。
 
 ### 测试验证
 
@@ -88,18 +101,18 @@ description: 对 Yakit 仓库的代码改动做规范化 code review：按代码
 2. 变更业务文件的同目录 `__test__/<stem>.(test|spec).*` 存在 → 纳入；
 3. `__test__/` 用例 import 了某个变更模块（grep 文件路径 / `@renderer` / `@engine` 等别名匹配）→ 该用例纳入。
 
-在仓库根执行：
+在仓库根执行（PR 模式在 base / head 两个 worktree 中分别执行相同命令）：
 
 ```bash
 yarn test:vitest <测试文件...> --run
 ```
 
-- 全部通过 → 1 条 ✅（注明跑了几个文件几个用例）；有失败 → 每个失败用例记 ❌ P0（附用例名与断言失败摘要）。
+- 全部通过 → 1 条 ✅（注明跑了几个文件几个用例）；有失败 → 每个失败用例记 ❌ P0（附用例名与断言失败摘要）；PR 模式下 head 失败但 base 同样失败的用例为基线遗留，不记 P0（报告注明）。
 - 找不到任何相关测试 → 汇总表如实标「⏭️ 无相关测试」。
 
 ### 环境异常降级
 
-tsc / vitest 因**环境原因**无法运行（依赖未安装、node 版本不符等），而非代码本身报错时：汇总表对应行标 ⚠️「验证环境异常」，提示先执行 `yarn cli install`。**既不得标 ✅，也不得算作代码问题。**
+tsc / vitest 因**环境原因**无法运行（依赖未安装、node 版本不符等），而非代码本身报错时：汇总表对应行标 ⚠️「验证环境异常」，提示先执行 `yarn cli install`。**既不得标 ✅，也不得算作代码问题。** PR 模式下无法构造目标快照（fetch 不到 OID、worktree 建立失败、快照内依赖无法就绪）时同样按本节降级——**拿不到 head / base 快照的真实运行结果，就不得给该 PR 的验证标通过**，也不得用当前工作目录的结果代替。
 
 ## 步骤五：测试用例缺失检查
 
@@ -200,7 +213,7 @@ tsc / vitest 因**环境原因**无法运行（依赖未安装、node 版本不�
 
 - **改动文件 > 50 个**：优先审查源码/依赖/配置等高风险文件，样式与文案抽检，报告开头说明覆盖度。
 - **gh 未安装或未登录**：报告错误并停止；若本地分支恰好对应该 PR，经用户确认后降级为分支模式。
-- **PR 模式只有 diff 没有本地上下文**：结合文件清单审查；本地存在对应分支时读本地代码补充上下文，否则报告中注明「仅基于 diff 审查」。
+- **PR 模式只有 diff 没有本地上下文**：结合文件清单审查；本地存在对应分支时读本地代码补充上下文，否则报告中注明「仅基于 diff 审查」。验证一律在按 OID 构造的隔离 worktree 中双跑（见步骤四「验证运行位置」），不使用本地当前目录的验证结果。
 - **被其他 skill 调用**：按传入范围执行，三块报告全文返回给调用方；落盘同样需先经用户同意（弹框询问），同意才写入文件。
 
 ## 禁止事项

@@ -132,10 +132,12 @@ None
 
 ## 合并方式
 
-请使用 **<合并方式文案>** 合并。
+- [ ] Create a merge commit（保留完整提交历史）
+- [x] Squash and merge（压缩为一条提交）
+- [ ] Rebase and merge（线性历史）
 ````
 
-回退结构的「合并方式」文案对应：merge → `Create a merge commit`；squash → `Squash and merge`；rebase → `Rebase and merge`，必须完整写出整节（含 `## 合并方式` 标题与加粗文案）。
+回退结构的「合并方式」小节与模板版**格式完全一致**：完整保留三项 checkbox，勾选（`- [x]`）第 6 步选定的方式对应的一项（示例中为 squash），其余两项保持 `- [ ]`。**不得写成单行文字**（如「请使用 squash 合并」）——后续更新 PR 时第 6 步优先级 2 只识别已勾选项（`- [x]`）来沿用旧选择，单行文字识别不到，会回退自动规则改写原选择。
 
 ## 二、task list 同步规则示例（更新已有 PR 时）
 

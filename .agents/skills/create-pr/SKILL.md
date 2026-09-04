@@ -1,13 +1,15 @@
 ---
 name: create-pr
-description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改动、推送远端、调用 code-review skill 评审后在 yaklang/yakit 创建或更新 PR。当用户要求提 PR、提交 PR、创建 PR、发 PR、raise/submit/open PR、"create PR"、更新已有 PR，或使用 /create-pr 时触发。
+description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改动、调用 code-review skill 评审、推送远端后在 yaklang/yakit 创建或更新 PR。当用户要求提 PR、提交 PR、创建 PR、发 PR、raise/submit/open PR、"create PR"、更新已有 PR，或使用 /create-pr 时触发。
 ---
 
 # create-pr
 
-为 Yakit 仓库一站式完成：**commit 工作区改动 → 推送远端 → code review → 创建/更新 PR**。
+为 Yakit 仓库一站式完成：**commit 工作区改动 → code review → 推送远端 → 创建/更新 PR**。
 
 > 本 skill 的调用本身就是授权：push、创建 PR 均直接执行，不再逐步向用户确认；commit 环节沿用 `commit-msg` skill 的弹窗确认（展示 message 与文件清单，确认后才执行）。但**不要**做超出此流程的动作（整理历史 commit、改写远端、合并 PR 等）。
+>
+> **暂不支持 fork 工作流**：本 skill 面向对 `yaklang/yakit` 有直接推送权限的贡献者（origin 直接指向该仓库，PR 建在 `--repo yaklang/yakit`）。fork 模式（origin 指向个人 fork）会在第 1 步前置检查处停止；外部贡献者请自行推送分支并在 GitHub 网页上发起 PR，不走本 skill。
 
 ## 输入信息（均可选，均可同时出现）
 
@@ -23,8 +25,9 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 ### 1. 前置检查
 
 - `git branch --show-current` 确认当前分支，**在 master 上直接停止并提示**。
-- `git remote -v` 确认 origin 指向 `yaklang/yakit`；不符则**停止并提示**，避免推错仓库。
+- `git remote -v` 确认 origin 指向 `yaklang/yakit`；不符则**停止并提示**，避免推错仓库——若 origin 指向贡献者个人 fork（upstream 才是 `yaklang/yakit`），提示「暂不支持 fork 工作流，请自行推送并用网页创建 PR」。
 - **gh 检查**（`command -v gh` + `gh auth status`；PowerShell 无 `command -v`，等价命令为 `Get-Command gh`）：已安装且已登录则正常继续；**未安装或未登录时不要直接停止**，按「gh 降级流程」（见下方）用 `AskUserQuestion` 弹框让用户选择处理方式。
+- **`code-review` skill 可用性检查**：确认当前会话的可用 skill 列表中存在 `code-review`——第 3 步评审的强制依赖（调用契约：外部指定评审范围时直接执行、不再弹框）。不存在则**立即停止并提示**，不要降级为自行评审——前置检查阶段尚未产生任何 commit 与远端写入，把该依赖不可用挡在最前面，避免流程走到评审步骤才发现无法执行、留下远端半完成状态。
 - `git fetch origin master` 更新基线；PR 的 base 固定为 `master`。
 - `git status` + `git log origin/master..HEAD --oneline` 摸底：工作区是否有改动、分支已有多少 commit。
 
@@ -33,7 +36,7 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 用 `AskUserQuestion` 弹框，选项二选一（question 中说明当前 gh 状态）：
 
 - **「安装并登录 gh」**：按平台执行安装——macOS：`brew install gh`；Windows：`winget install GitHub.cli`（或 `scoop install gh` / `choco install gh`）；Linux：提示参考官方安装方式。装完提示用户在终端执行 `gh auth login` 完成登录（登录是交互式操作，agent 不能代办），登录确认后**回到第 1 步重新检查并正常继续**。安装或登录失败则停止并报告。
-- **「手动创建 PR（输出 title 与 description）」**：commit、push、评审、描述生成等步骤**全部正常执行**，仅第 7 步切换为「手动模式」——不执行任何 `gh` 命令，改为输出 PR 标题与描述供用户复制，详见第 7 步「手动模式」。
+- **「手动创建 PR（输出 title 与 description）」**：commit、评审、push、描述生成等步骤**全部正常执行**，仅第 7 步切换为「手动模式」——不执行任何 `gh` 命令，改为输出 PR 标题与描述供用户复制，详见第 7 步「手动模式」。
 
 用户拒绝两个选项（选 Other 取消）则停止。
 
@@ -41,24 +44,19 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 
 - `git status` 检查工作区（含未跟踪文件）。**有未提交改动时不要直接提交**，先用 `AskUserQuestion` 弹框让用户选择处理方式（question 中概述改动情况，如「工作区有 3 个已修改 + 1 个未跟踪文件」）：
 
-  - **「提交为一个 commit」**：`git add -A` 暂存全部改动，生成**一个** commit。提交优先通过 Skill 工具调用 `commit-msg` skill 完成（该 skill 会确定提交范围、基于暂存区 diff 归纳 message，并在 commit 前弹窗展示 message 与文件清单供用户确认，确认后才执行 `git commit`）；会话中不存在该 skill 时，按其规范自行完成（`git commit -m` 前同样弹窗确认，message 为 `type: subject`、中文为主、72 字符内、不带 `(#PR号)` 后缀），必须基于实际 diff 归纳，不逐文件罗列。
+  - **「提交为一个 commit」**：`git add -A` 暂存全部改动，生成**一个** commit。提交优先通过 Skill 工具调用 `commit-msg` skill 完成（该 skill 会确定提交范围、基于暂存区 diff 归纳 message，并在 commit 前弹窗展示 message 与文件清单供用户确认，确认后才执行提交）；会话中不存在该 skill 时，按其规范自行完成（执行 commit 前同样弹窗确认，message 写入临时文件后以 `git commit -F` 提交，格式为 `type: subject`、中文为主、72 字符内、不带 `(#PR号)` 后缀），必须基于实际 diff 归纳，不逐文件罗列。**提交终态核验**：commit 环节结束后，仅当终态为 `COMMITTED`、且实测 `git rev-parse HEAD` 已前移到新 commit、`git diff --cached` 为空（暂存内容已全部进入提交）时，才继续第 3 步代码评审；终态为 `CANCELLED` / `FAILED` 或任一核验不符（如改动仍留在 index 的半完成状态），**必须停止整个流程**并向用户如实报告，不得带着旧 HEAD 继续评审或推送。
   - **「stash 暂存」**：`git stash push -u -m "create-pr: 暂存未提交改动"`（`-u` 连未跟踪文件一起暂存），后续流程基于干净工作区继续，本次 PR **不包含**这些改动。向用户报告 stash 已创建，何时 `git stash pop` 由用户自行决定，**不要自动恢复**。
 
   用户拒绝两个选项（选 Other 取消）则停止。
 - 工作区干净：跳过此步，不要生成空提交。
 
-### 3. 推送远端
+### 3. 代码评审（对比远端 master，强制，推送前完成）
 
-- 分支已有 upstream：`git push`。
-- 无 upstream：`git push -u origin <当前分支>`。
-- push 被拒绝（远端有本地没有的提交）：**停止并向用户报告**，不要擅自 pull / rebase / force push。
+在第 2 步处理完工作区改动之后、第 4 步推送之前，对 `git diff origin/master...HEAD` 全量 diff 做一次 code review（无论提交了新 commit 还是 stash 暂存，评审对象必须是本地最终 HEAD 上、最终进入 PR 的代码）——评审先于推送：评审无法执行或发现问题时，远端尚未产生任何写入。
 
-### 4. 代码评审（对比远端 master，强制）
-
-推送后、生成 PR 描述前，对 `git diff origin/master...HEAD` 全量 diff 做一次 code review（在第 2 步处理完工作区改动并推送之后——无论提交了新 commit 还是 stash 暂存，评审对象必须是最终进入 PR 的代码）：
-
+- **评审开始时记录 `git rev-parse HEAD` 的完整 SHA**，供第 4 步推送前核验 HEAD 未变化。
 - **必须通过 Skill 工具调用 `code-review` skill 完成评审**，评审范围限定为本分支对比 `origin/master` 的 diff（外部调用已指定范围时 code-review 会直接执行，不再弹框询问审查对象）。
-- **会话中不存在 `code-review` skill**（未出现在当前可用 skill 列表中）：**停止并向用户报告**，不要降级为自行通读 diff 的评审——没有规范化报告就没有合并结论，PR 描述的「代码评审结论」小节将无从填写。
+- **会话中不存在 `code-review` skill**（第 1 步检查通过后会话 skill 列表又发生变化等情形）：**停止并向用户报告**，不要降级为自行通读 diff 的评审——没有规范化报告就没有合并结论，PR 描述的「代码评审结论」小节将无从填写；此时尚未推送，不会留下远端半完成状态。
 
 约定：
 
@@ -66,6 +64,13 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 - 从 code-review 报告中提取**所有建议合并前修复的问题**（P0 与 P1 全部——P1 即「需要修复」级别；仅警告级别不阻塞合并的问题不写入 PR 描述），供第 5 步写入「建议合并前修复的问题」小节。
 - 从 code-review 报告「三、合并结论」中提取**合并结论**（不通过 / 需要修复 / 可以合并）与**统计行**（正确 X 项 / 问题 Y 项（P0 a 项 / P1 b 项）/ 警告 Z 项），供第 5 步单独写入 PR 描述的「代码评审结论」小节——**该小节为必需小节**。
 - 每条问题记录 `文件:行号` 位置与一句话问题描述，供第 5 步写入 PR 描述。
+
+### 4. 推送远端
+
+- **评审后 HEAD 核验**：推送前重新执行 `git rev-parse HEAD`，与第 3 步评审开始时记录的 SHA 一致才继续；不一致（评审期间 HEAD 被会话外操作改动）则**停止并报告**，不得把未经评审的提交推上远端。
+- **始终显式指定已验证的远端与分支**，不使用裸 `git push`：分支的 upstream、`branch.<name>.pushRemote` 或 `remote.pushDefault` 都可能把 push 导向 origin 之外的 remote，而第 1 步只验证过 origin 指向 `yaklang/yakit`。统一执行 `git push -u origin HEAD:refs/heads/<当前分支>`（显式走 origin 并顺带设置 upstream；分支名遵循 git ref 命名规则，含 shell 元字符时按命令注入防护规则安全引用）。
+- **推送后校验**：`git ls-remote origin refs/heads/<当前分支>` 返回的 OID 与本地 `git rev-parse HEAD` 一致才继续；不一致则停止并报告（防止静默推错仓库或分支，导致后续 PR 的 head 不存在或过期）。
+- push 被拒绝（远端有本地没有的提交）：**停止并向用户报告**，不要擅自 pull / rebase / force push。
 
 ### 5. 生成 PR 标题与描述
 
@@ -86,7 +91,7 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 
 **模板外追加小节**（模板没有但需要时插入，位置：在「影响范围」之后、「合并方式」之前，不得破坏模板既有小节）：
 
-- **「代码评审结论」**：**必需小节**（第 4 步强制通过 `code-review` skill 评审，必有结论）。单独一小节展示 code-review 报告的合并结论与统计：
+- **「代码评审结论」**：**必需小节**（第 3 步强制通过 `code-review` skill 评审，必有结论）。单独一小节展示 code-review 报告的合并结论与统计：
 
   ```markdown
   ## 代码评审结论
@@ -96,7 +101,7 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 
   顺序上放在「建议合并前修复的问题」小节**之前**（先结论、后明细）。更新已有 PR 时，该小节**每次以最新评审结果覆盖重写**（与「建议合并前修复的问题」的累积保留不同——结论反映的是当前代码状态）。
 
-- **「建议合并前修复的问题」**：第 4 步评审中所有建议合并前修复的问题，每条注明 `文件:行号` 与一句话问题描述，统一使用 markdown task list 语法：未修复 `- [ ]`、已修复 `- [x]`；无此类问题时省略整节。
+- **「建议合并前修复的问题」**：第 3 步评审中所有建议合并前修复的问题，每条注明 `文件:行号` 与一句话问题描述，统一使用 markdown task list 语法：未修复 `- [ ]`、已修复 `- [x]`；无此类问题时省略整节。
 
   ```markdown
   ## 建议合并前修复的问题
@@ -104,7 +109,7 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
   - [ ] `src/xxx.ts:123` <问题描述>
   ```
 
-**回退**：模板文件不存在时（如当前分支早于模板合入），使用 [`references/pr-examples.md`](references/pr-examples.md) 中的约定结构生成描述。
+**回退**：模板文件不存在时（如当前分支早于模板合入），使用 [`references/pr-examples.md`](references/pr-examples.md) 中的约定结构生成描述；其中「合并方式」小节同样使用三项 checkbox 勾选格式（与模板版一致），不得写成单行文字。
 
 **信息不足不硬写**：无法从 diff / log / 用户输入确认的信息（issue 编号、影响范围细节等）一律不编造，显式标注「待补充」，创建前向用户说明缺失项。
 
@@ -148,10 +153,12 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 gh pr view <当前分支> --repo yaklang/yakit --json number,url,state
 ```
 
-- **已有且状态为 OPEN 的 PR**（命令成功返回 PR 信息且 `state` 为 `OPEN`）：**不新建**，更新该 PR 的**描述**（body），并且**每次编辑都必须显式带上 `--title "<最终标题>"`**——最终标题按第 5 步智能替换确定：旧标题为分支名则用本次 commit 总结标题，否则保留旧标题（不要省略 `--title`，省略后标题可能被改成其它内容）：
+- **已有且状态为 OPEN 的 PR**（命令成功返回 PR 信息且 `state` 为 `OPEN`）：**不新建**，更新该 PR 的**描述**（body），并且**每次编辑都必须显式带上 `--title`（最终标题作为独立参数安全传递）**——最终标题按第 5 步智能替换确定：旧标题为分支名则用本次 commit 总结标题，否则保留旧标题（不要省略 `--title`，省略后标题可能被改成其它内容）。
+
+  **命令注入防护**：动态文本（PR 正文、标题、commit message）**禁止内插进 shell 命令字符串**——双引号内的反引号与 `$()` 会发生命令替换，正文中的引号会破坏参数边界（markdown 正文常含反引号）。做法：先把完整描述写入临时文件（如 `/tmp/pr-body.md`），统一用 `--body-file` 传递，用完删除；title 含单引号等 shell 元字符时安全引用（单引号包裹并对内部单引号转义）：
 
   ```bash
-  gh pr edit <PR number> --repo yaklang/yakit --title "<最终标题>" --body "<描述>"
+  gh pr edit <PR number> --repo yaklang/yakit --title '<最终标题>' --body-file /tmp/pr-body.md
   ```
 
   更新前先 `gh pr view <PR number> --repo yaklang/yakit --json body --jq '.body'` 获取旧描述全文，作为以下各处同步的依据：
@@ -159,7 +166,7 @@ gh pr view <当前分支> --repo yaklang/yakit --json number,url,state
   - **改动类型复选**：旧描述「改动类型」小节已有勾选项（`- [x]`）时，沿用旧勾选原样迁移（可能是用户或维护者手动改过，与合并方式沿用旧勾选同理）；无有效勾选（全 `- [ ]` 或无该小节）才按第 5 步基于本次 diff 重新判断。
   - **关联 Issue / PR**：旧描述该小节有实际内容（非 `None`）时保留旧内容，本次用户输入又明确提供了新关联则与旧内容合并去重后写入；旧内容为 `None` 且本次用户未提供时才填 `None`。旧关联可能是用户手动维护的，不得因重新生成描述而丢失。
   - **合并方式**：按第 6 步优先级 2 保留旧描述中已勾选的方式；旧描述「## 合并方式」小节的勾选原样迁移到新描述（无有效勾选才回退自动规则）。
-  - **「建议合并前修复的问题」**：更新描述前必须重新执行第 4 步评审，并按下述规则同步：
+  - **「建议合并前修复的问题」**：更新描述前必须重新执行第 3 步评审，并按下述规则同步：
 
   - 原记录的问题（含旧版「## P0 问题」小节中的历史条目）若已在代码中修复：**保留该条目并标注已修复**，格式如 `- [x] ~~<原问题描述>~~（✅ 已修复：<修复 commit 短哈希>）`，不得直接删除条目。
   - 已标注「✅ 已修复」的条目：后续更新中原样保留（保持 `- [x]` 勾选状态），不删除。
@@ -173,17 +180,19 @@ gh pr view <当前分支> --repo yaklang/yakit --json number,url,state
 - **没有开放状态的 PR**（查重返回 not found / no pull requests，或已有 PR 状态为 CLOSED / MERGED）：创建新 PR，**标题为第 5 步基于全部 commit 归纳的 `type: subject` 标题**（不使用分支名、不拿单个 commit message 原样照搬多 commit 场景）：
 
   ```bash
-  gh pr create --repo yaklang/yakit --base master --head <当前分支> --title "<commit 总结标题>" --body "<描述>"
+  gh pr create --repo yaklang/yakit --base master --head <当前分支> --title '<commit 总结标题>' --body-file /tmp/pr-body.md
   ```
+
+  （描述同样先写临时文件、以 `--body-file` 传递，防护规则见上方 OPEN PR 更新处的说明。）
 
   创建成功后，向用户报告：**PR 链接 + 标题 + 所选合并方式 + 代码评审结论与统计 + 关联信息（issue / 跨项目 PR 链接，如有）+ 建议合并前修复的问题（如有）**。
 
 - 若 create 仍报「A pull request already exists」（与查重之间存在并发竞态）：回退改用 `gh pr edit` 更新描述，同样必须带 `--title`（取第 5 步智能替换后的最终标题），不要报错中断、不要新建。
-- **创建/更新后必须回读验证**：`gh pr view <PR number> --repo yaklang/yakit --json title,body --jq '{title: .title, body: .body}'`（PR number 取本次操作对象：更新时用查重得到的编号，新建时用 `gh pr create` 输出链接中的编号，避免同分支旧 closed PR 干扰回读结果），确认两点：① 标题与第 5 步确定的**最终标题完全一致**（新建 = commit 总结标题；更新 = 智能替换结果。若不符一律执行 `gh pr edit <PR number> --repo yaklang/yakit --title "<最终标题>"` 修正）；② 描述包含完整的「## 合并方式」小节且勾选项与第 6 步最终确定的合并方式一致——用户指定、沿用旧勾选或自动计算三者之一（不符则重新执行 `gh pr edit` 修正）。两点都通过才能向用户报告。
+- **创建/更新后必须回读验证**：`gh pr view <PR number> --repo yaklang/yakit --json title,body --jq '{title: .title, body: .body}'`（PR number 取本次操作对象：更新时用查重得到的编号，新建时用 `gh pr create` 输出链接中的编号，避免同分支旧 closed PR 干扰回读结果），确认两点：① 标题与第 5 步确定的**最终标题完全一致**（新建 = commit 总结标题；更新 = 智能替换结果。若不符一律执行 `gh pr edit <PR number> --repo yaklang/yakit --title '<最终标题>'` 修正）；② 描述包含完整的「## 合并方式」小节且勾选项与第 6 步最终确定的合并方式一致——用户指定、沿用旧勾选或自动计算三者之一（不符则重新执行 `gh pr edit` 修正）。两点都通过才能向用户报告。
 
 ### 手动模式（gh 降级流程中用户选择「手动创建 PR」时）
 
-用户在第 1 步选择手动创建后，前 6 步（commit、push、评审、描述生成、合并方式选择）**全部正常执行**，本步不执行任何 `gh` 命令、**不生成任何文件**，标题与描述直接在对话框中展示供用户复制：
+用户在第 1 步选择手动创建后，前 6 步（commit、评审、push、描述生成、合并方式选择）**全部正常执行**，本步不执行任何 `gh` 命令、**不生成任何文件**，标题与描述直接在对话框中展示供用户复制：
 
 1. **PR 标题**（第 5 步 commit 总结标题）：单独用一个代码块展示，便于复制到创建页的 Title 输入框。
 2. **描述全文**：用代码块完整展示（包裹 markdown 源码，保证复制到的是源码而非渲染后文本），便于整体复制到创建页的 Description 输入框；描述较长也不截断。
@@ -198,7 +207,7 @@ gh pr view <当前分支> --repo yaklang/yakit --json number,url,state
 - **当前在 master**：停止并提示。
 - **origin 不是 yaklang/yakit**：停止并提示，避免推错仓库。
 - **gh 未安装或未登录**：不要直接停止，执行第 1 步「gh 降级流程」弹框让用户选择（安装登录 / 手动创建）；用户拒绝两个选项才停止。
-- **会话中不存在 `code-review` skill**：第 4 步无法执行规范化评审，停止并提示，不要降级为自行评审。
+- **会话中不存在 `code-review` skill**：第 1 步前置检查即停止并提示（此时尚未 commit、push，不产生任何本地 / 远端变更），不要降级为自行评审。
 - **分支无 commit 且工作区无改动**：无可提交内容，停止并说明。
 - **只执行了部分诉求**（如用户只要求生成 PR 描述不创建）：按用户实际要求裁剪流程，不要强行走完全部步骤。
 

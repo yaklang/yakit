@@ -19,16 +19,28 @@ description: 为 Yakit 仓库完成一次完整的本地提交：确定提交范
 | 触发且说明「仅要 message」 | 只生成一行 message 输出给用户，**不执行任何 git 命令改动仓库** |
 | 触发且提供了 message 内容（如「用 fix: xxx 提交」） | 不再生成，直接进入弹窗确认按给定 message 执行 commit |
 
+## 返回契约（终态报告）
+
+无论以何种方式触发，流程结束必须给出明确终态，供用户与调用方（如 `create-pr` skill）核验后续动作：
+
+| 终态 | 含义 | 保证 |
+| --- | --- | --- |
+| `COMMITTED` | commit 成功 | 附 commit SHA 与提交文件清单；HEAD 已前移、暂存区已清空 |
+| `CANCELLED` | 用户在任一弹窗取消 | 未执行任何 git 变更，index 与工作区保持调用前原样 |
+| `FAILED` | 提交执行失败（如 pre-commit hook 拒绝） | 附报错原文与 index / 工作区实际状态 |
+
+被其他 skill 调用时，调用方以终态 + 实际 git 状态核验决定继续或停止（见 `create-pr` skill 第 2 步「提交终态核验」）。
+
 ## 提交流程
 
 1. **读取暂存区**：通过 `git status --short` 与 `git diff --cached` 获取实际提交内容，不能只靠文件名猜测。
    - 暂存区**非空**：直接基于暂存区内容提交（**不要顺手 `git add` 工作区其它未暂存改动**）。
-   - 暂存区**为空**、工作区有改动：先用 `AskUserQuestion` 弹框询问——「暂存全部改动并提交」（`git add -A`）／「取消，不提交」；未获同意前不要擅自 `git add` 或凭空生成。
+   - 暂存区**为空**、工作区有改动：先用 `AskUserQuestion` 弹框询问——「暂存全部改动并提交」（`git add -A`）／「取消，不提交」；未获同意前不要擅自 `git add` 或凭空生成，用户取消时报告 `CANCELLED` 终态并停止。
    - 暂存区与工作区都为空：说明没有可提交的改动，停止。
 2. **检查仓库风格**：通过 `git log --oneline -10` 查看最近的提交风格、语言和习惯。
 3. **归纳主语义**：找出本次提交的主要目的和影响范围，用一个更高层级的概括覆盖全部改动。
-4. **弹窗确认**：执行 commit 前用 `AskUserQuestion` 向用户展示**生成的 message 与本次提交的文件清单**，选项：「确认提交」／「取消」；用户通过 Other 输入新 message 时，改用新 message 提交。**未获用户确认前不得执行 `git commit`**。
-5. **执行提交**：`git commit -m "<确认后的 message>"`。提交后如实报告结果；commit 失败（如 pre-commit hook 拒绝）时原样展示报错，不隐藏、不重试掩盖。
+4. **弹窗确认**：执行 commit 前用 `AskUserQuestion` 向用户展示**生成的 message 与本次提交的文件清单**，选项：「确认提交」／「取消」；用户通过 Other 输入新 message 时，改用新 message 提交。**未获用户确认前不得执行 `git commit`**；用户选择「取消」则流程终止，报告 `CANCELLED` 终态（未执行任何 git 变更）。
+5. **执行提交**：把确认后的 message 写入临时文件（如 `/tmp/commit-msg.txt`），执行 `git commit -F <该文件>`，完成后删除临时文件。**禁止把动态 message 拼进 `git commit -m "..."`**——message 中的反引号 / `$()` 会触发 shell 命令替换、引号会破坏参数边界。成功后报告 `COMMITTED` 终态（附 commit SHA 与提交文件清单）；commit 失败（如 pre-commit hook 拒绝）时原样展示报错并报告 `FAILED` 终态（附 index / 工作区当前实际状态——hook 可能留下部分改动，不得谎称已恢复），不隐藏、不重试掩盖。
 6. **禁止推送**：本 skill 只到 commit 为止，**不执行 `git push`**（推送由用户或 `create-pr` skill 决定）。
 
 ## 格式规范
