@@ -112,11 +112,9 @@
   }
 }
 .item-extra-tooltip {
-  padding-bottom: 4px;
   :global {
     .ant-tooltip-arrow {
       right: 4px;
-      bottom: 1px;
     }
   }
 }

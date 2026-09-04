@@ -1,4 +1,4 @@
-import { Drawer } from 'antd'
+import { Drawer, theme } from 'antd'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import type { YakitDrawerProps } from './YakitDrawerType'
@@ -13,6 +13,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import i18n from '@/i18n/i18n'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitAntdProvider } from '@/theme/antdTheme'
+import { YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET } from '../YakitModal/YakitModalConfirm'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
 
 /**
@@ -80,6 +81,8 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
 const YakitBaseDrawer: React.FC<ShowDrawerProps> = (props) => {
   const { onVisibleSetter, ...resProps } = props
   const [visible, setVisible] = useState<boolean>(true)
+  // 命令式抽屉挂在独立 createRoot，吃不到树内 zIndexContext，需与命令式 Modal 同档抬升
+  const { token } = theme.useToken()
 
   useEffect(() => {
     if (visible && onVisibleSetter) {
@@ -96,6 +99,7 @@ const YakitBaseDrawer: React.FC<ShowDrawerProps> = (props) => {
       open={visible}
       closable={true}
       destroyOnHidden={true}
+      zIndex={props.zIndex ?? token.zIndexPopupBase + YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET}
       {...resProps}
     />
   )

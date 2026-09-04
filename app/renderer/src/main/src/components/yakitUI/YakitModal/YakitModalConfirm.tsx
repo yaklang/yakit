@@ -19,7 +19,7 @@ const tOriginal = i18n.getFixedT(null, 'yakitUi')
  * antd 5 页面 Modal：zIndexPopupBase + CONTAINER_OFFSET(100)；嵌套再 +100。
  * 命令式弹窗对齐 ConfirmDialog，用 CONTAINER_MAX_OFFSET(1000) 压过最多 10 层嵌套。
  */
-const YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET = 1000
+export const YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET = 1000
 
 export type ModalI18nNode = React.ReactNode | ((modalT: TFunction) => React.ReactNode) | string
 

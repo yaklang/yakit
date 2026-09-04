@@ -187,6 +187,10 @@
     }
   }
 }
+
+.ui-op-submenu.ui-op-submenu:global(.ant-menu-submenu-popup) {
+  padding: 0 6px;
+}
 .ui-op-plus-dropdown {
   :global {
     .ant-popover-inner {

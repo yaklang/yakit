@@ -477,6 +477,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                   selectable={false}
                   selectedKeys={[]}
                   data={data}
+                  popupClassName={styles['child-menu-submenu']}
                   onClick={({ key, keyPath }) => onNoExpandClickMenu(key, keyPath)}
                 />
               }

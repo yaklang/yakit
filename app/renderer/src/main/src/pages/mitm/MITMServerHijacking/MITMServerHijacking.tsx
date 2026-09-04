@@ -472,6 +472,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = React.memo
             <Divider type="vertical" style={{ margin: '0 4px', top: 1 }} />
             <YakitPopover
               placement="bottom"
+              classNames={{ root: style['proxy-configuration-popover'] }}
               title={
                 <div className={style['proxy_configuration_top']} onClick={() => setDownStreamAgentModalVisible(true)}>
                   {t('ProxyConfig.downstream_agent')}

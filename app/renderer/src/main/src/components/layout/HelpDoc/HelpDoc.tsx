@@ -42,6 +42,7 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
           label: t('HelpDoc.aboutUs'),
         },
       ]}
+      popupClassName={styles['ui-op-submenu']}
       onClick={({ key }) => menuSelect(key)}
     ></YakitMenu>
   )
