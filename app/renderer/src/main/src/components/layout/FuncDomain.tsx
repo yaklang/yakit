@@ -366,6 +366,14 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode} onLogin={() => setLoginShow(true)} />
           )}
           {!showProjectManage && (
+            <UIOpSetting
+              engineMode={engineMode}
+              onEngineModeChange={onEngineModeChange}
+              typeCallback={typeCallback}
+              mcp={mcp}
+            />
+          )}
+          {!showProjectManage && (
             <div
               className={styles['ui-op-btn-wrapper']}
               onClick={() => {
@@ -373,17 +381,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
               }}
             >
               <div className={styles['op-btn-body']}>
-                <OutlineDotscirclehorizontalIcon className={classNames(styles['icon-style'], styles['size-style'])} />
+                <UISettingSvgIcon className={classNames(styles['icon-style'], styles['size-style'])} />
               </div>
             </div>
-          )}
-          {!showProjectManage && (
-            <UIOpSetting
-              engineMode={engineMode}
-              onEngineModeChange={onEngineModeChange}
-              typeCallback={typeCallback}
-              mcp={mcp}
-            />
           )}
         </div>
         {homeIcon}
@@ -1109,7 +1109,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       >
         <div className={styles['ui-op-btn-wrapper']}>
           <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
-            <UISettingSvgIcon className={show ? styles['icon-hover-style'] : styles['icon-style']} />
+            <OutlineDotscirclehorizontalIcon
+              className={classNames(styles['size-style'], show ? styles['icon-hover-style'] : styles['icon-style'])}
+            />
           </div>
         </div>
       </YakitPopover>
