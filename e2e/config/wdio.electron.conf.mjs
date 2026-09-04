@@ -80,6 +80,7 @@ export const config = {
     'real-engine': [path.join(repoRoot, 'e2e/specs/real-engine/**/*.e2e.mjs')],
     'web-fuzzer-mcp': [path.join(repoRoot, 'e2e/specs/web-fuzzer-mcp/**/*.e2e.mjs')],
     'mitm-performance': [path.join(repoRoot, 'e2e/specs/performance/**/*.e2e.mjs')],
+    'table-virtual-fixed-right': [path.join(repoRoot, 'e2e/specs/table-virtual-fixed-right/**/*.e2e.mjs')],
   },
   maxInstances: 1,
   capabilities: [

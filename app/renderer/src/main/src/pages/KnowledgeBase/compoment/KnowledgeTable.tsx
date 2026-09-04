@@ -45,6 +45,8 @@ import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
+const getKnowledgeTableRowKey = (record: KnowledgeBaseEntry) => record.HiddenIndex
+
 const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (props) => {
   const {
     knowledgeBaseItems,
@@ -549,6 +551,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
             setCurrentIndex={setCurrentIndex}
             isShowTitle={false}
             renderKey="ID"
+            getRowKey={getKnowledgeTableRowKey}
             data={tableData}
             rowSelection={{
               isAll: allCheck,

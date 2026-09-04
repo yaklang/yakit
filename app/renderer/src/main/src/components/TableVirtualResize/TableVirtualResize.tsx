@@ -142,6 +142,19 @@ const SCROLL_BOTTOM_PAGINATION_THRESHOLD = 10
 const SCROLL_BOTTOM_NEAR_THRESHOLD = 50
 const SCROLL_HORIZONTAL_EDGE_THRESHOLD = 50
 
+export const getVirtualTableReactRowKey = <T,>(
+  record: T,
+  index: number,
+  renderKey: string,
+  getRowKey?: (record: T, index: number) => React.Key,
+): React.Key => {
+  const customKey = getRowKey?.(record, index)
+  if (customKey !== undefined && customKey !== null) return customKey
+
+  const renderKeyValue = (record as Record<string, unknown>)?.[renderKey]
+  return renderKeyValue !== undefined && renderKeyValue !== null ? (renderKeyValue as React.Key) : index
+}
+
 /** 性能优化：按 scrollBottom 所在区间判断是否更新，避免中间区域滚动触发底部分页 UI 重渲染 */
 const shouldUpdateScrollBottomState = (prevBottom: number, nextBottom: number) => {
   const zone = (bottom: number) =>
@@ -176,6 +189,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     overscan = 10,
     rowSelection,
     renderKey,
+    getRowKey,
     enableDrag,
     pagination = defPagination,
     title,
@@ -1691,6 +1705,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                       list={list}
                       colWidth={colWidth}
                       renderKey={renderKey}
+                      getRowKey={getRowKey}
                       isLastItem={index === columns.length - 1}
                       onRowClick={onRowClick}
                       onRowDoubleClick={onRowDoubleClick}
@@ -1947,6 +1962,7 @@ interface ColRenderProps {
   colWidth: number
   list: { data: any; index: number }[]
   renderKey: string
+  getRowKey?: (record: any, index: number) => React.Key
   isLastItem: boolean
   onRowClick: (r: any, rowIndex: number) => void
   onRowDoubleClick?: (r: any) => void
@@ -2047,6 +2063,7 @@ function areColRenderPropsEqual(preProps: ColRenderProps, nextProps: ColRenderPr
   if (preProps.selectedRowKeysSet !== nextProps.selectedRowKeysSet) return false
   if (preProps.mouseCellId !== nextProps.mouseCellId) return false
   if (preProps.columnsItem !== nextProps.columnsItem) return false
+  if (preProps.getRowKey !== nextProps.getRowKey) return false
   if (preProps.colWidth !== nextProps.colWidth) return false
   if (preProps.lineHighlight !== nextProps.lineHighlight) return false
   if (preProps.size !== nextProps.size) return false
@@ -2065,6 +2082,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
     colWidth,
     list,
     renderKey,
+    getRowKey,
     isLastItem,
     onRowClick,
     onRowDoubleClick,
@@ -2109,13 +2127,14 @@ const ColRender = React.memo((props: ColRenderProps) => {
       }}
     >
       {list.length !== 0 &&
-        list.map((item, number) => {
+        list.map((item) => {
+          const reactRowKey = getVirtualTableReactRowKey(item.data, item.index, renderKey, getRowKey)
           return (
-            <React.Fragment key={`${item.data[renderKey]}-${colIndex}` || number}>
+            <React.Fragment key={`${reactRowKey}-${colIndex}`}>
               {(colIndex === 0 && (
                 <CellRenderDrop
                   colIndex={colIndex}
-                  key={`${item.data[renderKey]}-${colIndex}-${item.data['cellClassName']}` || number}
+                  key={`${reactRowKey}-${colIndex}-${columnsItem.dataKey}-${item.data['cellClassName']}`}
                   item={item}
                   columnsItem={columnsItem}
                   number={item.index}
@@ -2144,11 +2163,9 @@ const ColRender = React.memo((props: ColRenderProps) => {
               )) || (
                 <CellRender
                   colIndex={colIndex}
-                  key={
-                    `${item.data[renderKey]}-${colIndex}-${item.data[columnsItem.dataKey]}-${
-                      item.data['cellClassName']
-                    }` || number
-                  }
+                  key={`${reactRowKey}-${colIndex}-${columnsItem.dataKey}-${item.data[columnsItem.dataKey]}-${
+                    item.data['cellClassName']
+                  }`}
                   item={item}
                   columnsItem={columnsItem}
                   number={item.index}
