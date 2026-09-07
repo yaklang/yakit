@@ -778,14 +778,6 @@ declare global {
     TimeoutMilliseconds: number
   }
 
-  interface YakitBrowserTransformAdapterStartRequest {
-    DeviceId: string
-    ProfileId: string
-    Host?: string
-    Port?: number
-    TimeoutMilliseconds?: number
-  }
-
   interface YakitBridge {
     app: {
       generateStartEngine: () => Promise<unknown>
@@ -892,9 +884,6 @@ declare global {
       requestYakURL: (params: YakitBrowserExtensionYakURLRequest) => Promise<unknown>
       executeTask: (params: YakitBrowserExtensionTaskRequest, token: string) => Promise<unknown>
       cancelTask: (token: string) => Promise<unknown>
-      startTransformAdapter: (params: YakitBrowserTransformAdapterStartRequest) => Promise<unknown>
-      getTransformAdapterStatus: () => Promise<unknown>
-      stopTransformAdapter: () => Promise<unknown>
     }
     window: {
       openChildWindow: (payload: ChildWindowPayload) => void
