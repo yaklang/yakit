@@ -190,6 +190,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     rowSelection,
     renderKey,
     getRowKey,
+    rowInteractionDisabled,
     enableDrag,
     pagination = defPagination,
     title,
@@ -302,6 +303,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     return map
   }, [data, rowSelection?.getCheckboxProps])
 
+  const isRowInteractionDisabled = useMemoizedFn((record?: T) =>
+    record ? rowInteractionDisabled?.(record) === true : false,
+  )
+
   // 性能优化：预构建 Set，供 CellRender O(1) 判断 checkbox 选中态（替代每 cell findIndex selectedRowKeys）
   const selectedRowKeysSet = useMemo(
     () => new Set<React.Key>(rowSelection?.selectedRowKeys ?? []),
@@ -325,7 +330,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }
   }, [])
   useEffect(() => {
-    setCurrentRow(currentSelectItem)
+    setCurrentRow(isRowInteractionDisabled(currentSelectItem) ? undefined : currentSelectItem)
   }, [currentSelectItem])
   useEffect(() => {
     scrollTo(0)
@@ -416,11 +421,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         return
       }
       if (!currentRow) {
-        setCurrentIndex && setCurrentIndex(0)
-        setCurrentRow(data[0])
-        if (onSetCurrentRow) onSetCurrentRow(data[0])
+        const firstEnabledIndex = data.findIndex((record) => !isRowInteractionDisabled(record))
+        if (firstEnabledIndex === -1) return
+        setCurrentIndex && setCurrentIndex(firstEnabledIndex)
+        setCurrentRow(data[firstEnabledIndex])
+        if (onSetCurrentRow) onSetCurrentRow(data[firstEnabledIndex])
         return
       }
+      if (isRowInteractionDisabled(currentRow)) return
       let index
       // 如果上点的话，应该是选择更新的内容
       for (let i = 0; i < dataLength; i++) {
@@ -435,6 +443,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         }
       }
       if (index >= 0) {
+        if (isRowInteractionDisabled(data[index])) return
         setCurrentIndex && setCurrentIndex(index)
         setCurrentRow(data[index])
         if (onSetCurrentRow) onSetCurrentRow(data[index])
@@ -454,11 +463,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         return
       }
       if (!currentRow) {
-        setCurrentRow(data[0])
-        setCurrentIndex && setCurrentIndex(0)
-        if (onSetCurrentRow) onSetCurrentRow(data[0])
+        const firstEnabledIndex = data.findIndex((record) => !isRowInteractionDisabled(record))
+        if (firstEnabledIndex === -1) return
+        setCurrentRow(data[firstEnabledIndex])
+        setCurrentIndex && setCurrentIndex(firstEnabledIndex)
+        if (onSetCurrentRow) onSetCurrentRow(data[firstEnabledIndex])
         return
       }
+      if (isRowInteractionDisabled(currentRow)) return
       let index
       // 如果上点的话，应该是选择更新的内容
       for (let i = 0; i < dataLength; i++) {
@@ -474,6 +486,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       }
 
       if (index) {
+        if (isRowInteractionDisabled(data[index])) return
         setCurrentRow(data[index])
         setCurrentIndex && setCurrentIndex(index)
         if (onSetCurrentRow) onSetCurrentRow(data[index])
@@ -698,13 +711,15 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     if (!rowSelection) return
     if (!rowSelection.onSelectAll) return
     if (checked) {
-      const keys = data.map((ele, index) => (renderKey ? ele[renderKey] : index))
-      rowSelection.onSelectAll(keys, data, checked)
+      const enabledRows = data.filter((record) => !isRowInteractionDisabled(record))
+      const keys = enabledRows.map((ele, index) => (renderKey ? ele[renderKey] : index))
+      rowSelection.onSelectAll(keys, enabledRows, checked)
     } else {
       rowSelection.onSelectAll([], [], checked)
     }
   })
   const onChangeCheckboxSingle = useMemoizedFn((checked: boolean, key: string, row: T) => {
+    if (isRowInteractionDisabled(row)) return
     if (!rowSelection) return
     if (!rowSelection.onChangeCheckboxSingle) return
     rowSelection.onChangeCheckboxSingle(checked, key, row)
@@ -797,7 +812,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const currentRecord = record as any
     const key = currentRecord?.[renderKey]
 
-    return !!(currentRecord?.disabled || currentRecord?.Disabled || checkboxPropsMap.get(key)?.disabled)
+    return !!(
+      isRowInteractionDisabled(record) ||
+      currentRecord?.disabled ||
+      currentRecord?.Disabled ||
+      checkboxPropsMap.get(key)?.disabled
+    )
   })
 
   const commitDragSelectionRange = useMemoizedFn(() => {
@@ -1247,6 +1267,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       skipRowClickAfterDragRef.current = false
       return
     }
+    if (isRowInteractionDisabled(record)) {
+      preSelectRef.current = undefined
+      return
+    }
 
     if (preSelectRef.current) {
       // 多选 批量选中
@@ -1257,7 +1281,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       if (startKeyIndex === -1 || endKeyIndex === -1) return
       const max = Math.max(startKeyIndex, endKeyIndex)
       const min = Math.min(startKeyIndex, endKeyIndex)
-      const selectList = data.filter((_, index) => index >= min && index <= max)
+      const selectList = data.filter(
+        (candidate, index) => index >= min && index <= max && !isRowInteractionDisabled(candidate),
+      )
       setSelectedRows(selectList)
       setCurrentIndex && setCurrentIndex(undefined)
       setCurrentRow(undefined)
@@ -1291,6 +1317,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }
   })
   const onRowContextMenu = useMemoizedFn((record: T, e: React.MouseEvent, rowIndex: number) => {
+    if (isRowInteractionDisabled(record)) return
     if ((selectedRows?.length || 0) > 0) {
       const index = selectedRows.findIndex((ele) => ele[renderKey] === record[renderKey])
       // 右键点击范围是否在多选的区域内，不在则清空多选区域，选中右键点击的item
@@ -1708,7 +1735,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                       getRowKey={getRowKey}
                       isLastItem={index === columns.length - 1}
                       onRowClick={onRowClick}
-                      onRowDoubleClick={onRowDoubleClick}
+                      onRowDoubleClick={(record) => {
+                        if (!isRowInteractionDisabled(record)) onRowDoubleClick?.(record)
+                      }}
                       onRowContextMenu={(data, e, rowIndex) => {
                         onRowContextMenu(data, e, rowIndex)
                       }}

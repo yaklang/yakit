@@ -42,10 +42,11 @@ import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import { HubButton } from '@/pages/pluginHub/hubExtraOperate/funcTemplate'
 
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { validateKnowledgeTableIdentitySnapshot } from './knowledgeTableIdentity'
 
 const { ipcRenderer } = window.require('electron')
 
-const getKnowledgeTableRowKey = (record: KnowledgeBaseEntry) => record.HiddenIndex
+const getKnowledgeTableInteractionKey = (record: KnowledgeBaseEntry) => record.HiddenIndex
 
 const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (props) => {
   const {
@@ -123,6 +124,14 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
       },
     },
     responseKey: { data: 'KnowledgeBaseEntries', id: 'ID' },
+  })
+
+  const identitySnapshot = useMemo(() => validateKnowledgeTableIdentitySnapshot(tableData), [tableData])
+  const tableDataRef = useRef(tableData)
+  tableDataRef.current = tableData
+  const getKnowledgeTableReactKey = useMemoizedFn((record: KnowledgeBaseEntry, index: number) => {
+    if (!identitySnapshot.isAmbiguous(record)) return getKnowledgeTableInteractionKey(record)
+    return identitySnapshot.getReactKey(record, index)
   })
 
   const {
@@ -241,13 +250,14 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
   })
 
   const selectedRowKeys = useCreation(() => {
-    return selectList.map((ele) => ele.ID) || []
-  }, [selectList])
+    return selectList.filter((ele) => !identitySnapshot.isAmbiguous(ele)).map((ele) => ele.ID) || []
+  }, [selectList, identitySnapshot])
 
   const onSelectAll = useMemoizedFn((_, __, checked: boolean) => {
     if (checked) {
-      setAllCheck(true)
-      setSelectList(tableData)
+      const selectableRows = tableData.filter((record) => !identitySnapshot.isAmbiguous(record))
+      setAllCheck(selectableRows.length === tableData.length)
+      setSelectList(selectableRows)
     } else {
       setAllCheck(false)
       setSelectList([])
@@ -255,6 +265,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
   })
 
   const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows: any) => {
+    if (identitySnapshot.isAmbiguous(selectedRows)) return
     if (c) {
       setSelectList((s) => [...s, selectedRows])
     } else {
@@ -265,6 +276,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
 
   const onSetCurrentRow = useMemoizedFn(async (val?: KnowledgeBaseEntry, cancelVal?: KnowledgeBaseEntry) => {
     const currentSelectItem = [val, cancelVal]
+    if (currentSelectItem.some((item) => item && identitySnapshot.isAmbiguous(item))) return
     const toggleIDs = new Set((currentSelectItem || []).filter(Boolean).map((i) => i?.ID))
 
     const result = [
@@ -280,6 +292,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
   // 删除知识列表
   const { run: deleteRunAsunc } = useRequest(
     async (item: KnowledgeBaseEntry) => {
+      if (identitySnapshot.isAmbiguous(item)) return
       await ipcRenderer.invoke('DeleteKnowledgeBaseEntry', {
         KnowledgeBaseEntryId: item.ID,
         KnowledgeBaseId: item.KnowledgeBaseId,
@@ -291,7 +304,8 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
       manual: true,
       onError: (error) => failed('删除知识库列表失败' + error),
       onSuccess: (item) => {
-        const resultData = tableData.filter((it) => it.ID !== item.ID)
+        if (!item) return
+        const resultData = tableDataRef.current.filter((it) => it.HiddenIndex !== item.HiddenIndex)
         debugVirtualTableEvent.setTData(resultData)
         success('删除知识条目成功')
       },
@@ -345,36 +359,39 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
         dataKey: 'HiddenIndex',
         width: 90,
         fixed: 'right',
-        render: (_, item: KnowledgeBaseEntry) => (
-          <div className={styles['knowledge-base-render']}>
-            <YakitPopconfirm
-              title="确认删除此条知识吗？"
-              onCancel={(e) => {
-                e?.stopPropagation()
-              }}
-              onConfirm={(e) => {
-                e?.stopPropagation()
-                deleteRunAsunc(item)
-              }}
-              placement="top"
-            >
-              <TrashOutlined size={16} onClick={(e) => e.stopPropagation()} className={styles['delete']} />
-            </YakitPopconfirm>
-            <Divider type="vertical" />
-            <ArrowCircleRightOutlined
-              size={16}
-              className={styles['icon']}
-              onClick={(e) => {
-                e.stopPropagation()
-                openKnowledgeDetailDrawer(item)
-              }}
-            />
-          </div>
-        ),
+        render: (_, item: KnowledgeBaseEntry) =>
+          identitySnapshot.isAmbiguous(item) ? (
+            <span>身份异常</span>
+          ) : (
+            <div className={styles['knowledge-base-render']}>
+              <YakitPopconfirm
+                title="确认删除此条知识吗？"
+                onCancel={(e) => {
+                  e?.stopPropagation()
+                }}
+                onConfirm={(e) => {
+                  e?.stopPropagation()
+                  deleteRunAsunc(item)
+                }}
+                placement="top"
+              >
+                <TrashOutlined size={16} onClick={(e) => e.stopPropagation()} className={styles['delete']} />
+              </YakitPopconfirm>
+              <Divider type="vertical" />
+              <ArrowCircleRightOutlined
+                size={16}
+                className={styles['icon']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openKnowledgeDetailDrawer(item)
+                }}
+              />
+            </div>
+          ),
       },
     ]
     return columnsArr
-  }, [tableProps.type, knowledgeBaseItems.ID])
+  }, [tableProps.type, knowledgeBaseItems.ID, identitySnapshot])
 
   const ResizeBoxProps = useCreation(() => {
     setSelectedSubERMId('')
@@ -427,6 +444,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
   })
 
   const openKnowledgeDetailDrawer = (items) => {
+    if (identitySnapshot.isAmbiguous(items)) return
     setKnowledgeDrawerDetail({
       visible: true,
       ...items,
@@ -551,7 +569,8 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
             setCurrentIndex={setCurrentIndex}
             isShowTitle={false}
             renderKey="ID"
-            getRowKey={getKnowledgeTableRowKey}
+            getRowKey={getKnowledgeTableReactKey}
+            rowInteractionDisabled={(record) => identitySnapshot.isAmbiguous(record)}
             data={tableData}
             rowSelection={{
               isAll: allCheck,
@@ -559,6 +578,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
               selectedRowKeys,
               onSelectAll,
               onChangeCheckboxSingle,
+              getCheckboxProps: (record) => ({ disabled: identitySnapshot.isAmbiguous(record) }),
             }}
             pagination={{
               total: tableTotal,

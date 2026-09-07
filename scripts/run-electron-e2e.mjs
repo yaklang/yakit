@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { randomUUID } from 'node:crypto'
+import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
@@ -9,20 +10,40 @@ import {
   getRendererBuildIdentity,
   validateRendererBuildMetadata,
 } from '../e2e/fixtures/electron/renderer-build-metadata.mjs'
+import { parseElectronE2EOptions } from '../e2e/fixtures/electron/electron-runner-options.mjs'
 import { terminateProcessTree } from '../e2e/fixtures/process/process-tree.mjs'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(scriptDir, '..')
 const temporaryPrefix = path.join(tmpdir(), 'yakit-electron-e2e-')
 const rawArgs = process.argv.slice(2)
-const withYakEngine = rawArgs.includes('--with-yak-engine')
-const wdioArgs = rawArgs.filter((arg) => arg !== '--with-yak-engine')
+const { deviceScaleFactor, electronAppArgs, hoverMode, softwareRendering, theme, wdioArgs, withYakEngine } =
+  parseElectronE2EOptions(rawArgs)
 const rendererBuildMetadataPath = path.join(repoRoot, 'app/renderer/pages/main/yakit-e2e-build.json')
 const requiredRendererArtifacts = [
   path.join(repoRoot, 'app/renderer/pages/main/index.html'),
   path.join(repoRoot, 'app/renderer/engine-link-startup/dist/index.html'),
   rendererBuildMetadataPath,
 ]
+const durableTextExtensions = new Set(['.json', '.log', '.txt', '.xml'])
+
+const sanitizeDurableArtifacts = async (directory) => {
+  const entries = await readdir(directory, { withFileTypes: true })
+  await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = path.join(directory, entry.name)
+      if (entry.isDirectory()) return sanitizeDurableArtifacts(entryPath)
+      if (!durableTextExtensions.has(path.extname(entry.name))) return
+      const source = await readFile(entryPath, 'utf8')
+      const sanitized = source
+        .replaceAll(repoRoot, '<repo>')
+        .replaceAll(temporaryRoot, '<temp>')
+        .replaceAll(homedir(), '<home>')
+        .replaceAll(tmpdir(), '<system-temp>')
+      if (sanitized !== source) await writeFile(entryPath, sanitized)
+    }),
+  )
+}
 
 const exists = async (filePath) => {
   try {
@@ -57,7 +78,7 @@ try {
   process.exit(2)
 }
 
-const runId = new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-')
+const runId = `${new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-')}-${randomUUID().slice(0, 8)}`
 const artifactsDir = path.join(repoRoot, 'reports', 'e2e-electron', runId)
 const temporaryRoot = await mkdtemp(temporaryPrefix)
 const userDataDir = path.join(temporaryRoot, 'user-data')
@@ -74,6 +95,11 @@ const metadata = {
   args: wdioArgs,
   runner: {
     withYakEngine,
+    deviceScaleFactor,
+    softwareRendering,
+    theme,
+    hoverMode,
+    electronAppArgs,
   },
   rendererBuild: rendererBuildMetadata,
 }
@@ -157,6 +183,9 @@ try {
     YAKIT_E2E_USER_DATA: userDataDir,
     YAKIT_HOME: yakitHomeDir,
     YAKIT_E2E_ARTIFACTS_DIR: artifactsDir,
+    YAKIT_E2E_ELECTRON_APP_ARGS: JSON.stringify(electronAppArgs),
+    YAKIT_E2E_TABLE_THEME: theme,
+    YAKIT_E2E_TABLE_HOVER_MODE: hoverMode,
     ...(yakFixture
       ? {
           YAKIT_E2E_ENGINE_FIXTURE: 'external',
@@ -273,6 +302,7 @@ try {
       )}\n`,
     ),
   ])
+  await sanitizeDurableArtifacts(artifactsDir)
   console.info(`[electron-e2e] artifacts: ${artifactsDir}`)
 }
 

@@ -1,6 +1,76 @@
+import {
+  compareTableIdentityTuples,
+  createTableIdentityDigest,
+} from '../fixtures/table-virtual/table-virtual-oracle.mjs'
+
 const FIXTURE_URL = 'e2e-fixture=table-virtual-fixed-right'
 const WHEEL_TRACE = [840, 1680, 2520, -560, 3360, 1120]
 const ANCHORS = [...Array(7).fill(0), ...Array(7).fill(0.5), ...Array(6).fill(0.8)]
+const DIAGNOSTIC_THEME = process.env.YAKIT_E2E_TABLE_THEME || 'light'
+const DIAGNOSTIC_HOVER_MODE = process.env.YAKIT_E2E_TABLE_HOVER_MODE || 'none'
+
+const REQUIRED_STATES = Object.freeze([
+  'empty',
+  'loading',
+  'data',
+  'append',
+  'prepend',
+  'replace',
+  'remove',
+  'sort-filter-refresh',
+])
+
+const TABLE_MASK_SCENARIOS = Object.freeze([
+  Object.freeze({
+    id: 'generic-single-right',
+    consumer: 'GenericTableVirtualResizeFixture',
+    level: 'required',
+    fixedColumns: 'single-right',
+    states: REQUIRED_STATES,
+  }),
+  Object.freeze({
+    id: 'generic-double-right',
+    consumer: 'GenericTableVirtualResizeFixture',
+    level: 'required',
+    fixedColumns: 'double-right',
+    states: Object.freeze(['data']),
+  }),
+  Object.freeze({
+    id: 'generic-left-and-right',
+    consumer: 'GenericTableVirtualResizeFixture',
+    level: 'required',
+    fixedColumns: 'left-and-right',
+    states: Object.freeze(['data']),
+  }),
+])
+
+export const buildTableMaskScenarioMatrix = () => TABLE_MASK_SCENARIOS
+
+const createManifest = (dataset) =>
+  Object.freeze(
+    Array.from({ length: 1500 }, (_, ordinal) =>
+      Object.freeze({
+        ordinal,
+        ID: dataset === 'duplicate' ? (ordinal % 3) + 1 : ordinal + 1,
+        HiddenIndex: `row-${ordinal}`,
+        immutableLabel: `fixture-${ordinal}`,
+      }),
+    ),
+  )
+
+const selectManifestRows = (manifest, state) => {
+  if (state === 'empty' || state === 'loading') return []
+  if (state === 'append') return manifest.slice(0, 180)
+  if (state === 'prepend') return [manifest[200], ...manifest.slice(0, 179)]
+  if (state === 'replace') return manifest.slice(300, 480)
+  if (state === 'remove') return manifest.slice(0, 180).filter(({ ordinal }) => ordinal !== 80)
+  if (state === 'sort-filter-refresh')
+    return manifest
+      .filter(({ ordinal }) => ordinal % 2 === 0)
+      .slice(0, 180)
+      .reverse()
+  return manifest
+}
 
 const nextAnimationFrames = (count = 1) =>
   browser.executeAsync((frames, done) => {
@@ -32,15 +102,28 @@ export const waitForTableMaskFixture = async () => {
   await browser.waitUntil(
     async () => {
       const windows = await getFixtureWindow()
-      return windows.visible && windows.focused
+      return windows.visible
     },
-    { timeout: 30_000, timeoutMsg: 'The table mask fixture Main window did not become visible and focused' },
+    { timeout: 30_000, timeoutMsg: 'The table mask fixture Main window did not become visible' },
   )
+  await browser.electron.execute((electron, urlFragment) => {
+    const fixtureWindow = electron.BrowserWindow.getAllWindows().find((window) =>
+      window.webContents.getURL().includes(urlFragment),
+    )
+    fixtureWindow?.show()
+    fixtureWindow?.focus()
+  }, FIXTURE_URL)
+  await browser.waitUntil(async () => (await getFixtureWindow()).focused, {
+    timeout: 5_000,
+    timeoutMsg: 'The table mask fixture Main window did not become focused',
+  })
   await browser.switchToYakitWindow(FIXTURE_URL)
   const supportsDisplayP3 = await browser.execute(() => CSS.supports('color', 'color(display-p3 0 1 0)'))
   if (!supportsDisplayP3) throw new Error('The Electron fixture requires CSS Display P3 color support')
   await $('[data-testid="table-virtual-fixed-right-fixture"]').waitForDisplayed()
   await $('[data-testid="table-mask-fixed-column"]').waitForExist()
+  await setFixtureOption('theme', DIAGNOSTIC_THEME)
+  await setFixtureOption('hover-mode', DIAGNOSTIC_HOVER_MODE)
 }
 
 const readGeometry = () =>
@@ -138,6 +221,10 @@ const setDataset = async (dataset) => {
     timeout: 3_000,
     timeoutMsg: `Fixture did not switch to ${dataset} IDs`,
   })
+  await browser.waitUntil(async () => (await $('[data-testid="table-mask-manifest-dataset"]').getText()) === dataset, {
+    timeout: 8_000,
+    timeoutMsg: `Fixture did not finish the ${dataset} manifest`,
+  })
   await nextAnimationFrames(2)
   await $('[data-testid="table-mask-fixed-column"]').waitForExist()
 }
@@ -152,20 +239,78 @@ const setIdentity = async (identity) => {
   await $('[data-testid="table-mask-fixed-column"]').waitForExist()
 }
 
+const setFixtureOption = async (kind, value) => {
+  await $(`[data-testid="table-mask-${kind}-${value}"]`).click()
+  await browser.waitUntil(async () => (await $(`[data-testid="table-mask-active-${kind}"]`).getText()) === value, {
+    timeout: 3_000,
+    timeoutMsg: `Fixture did not switch ${kind} to ${value}`,
+  })
+  await nextAnimationFrames(2)
+}
+
+const preparePointerMode = async () => {
+  if (DIAGNOSTIC_HOVER_MODE === 'forced') {
+    await $('[data-oracle-source="fixed"]').moveTo()
+    await nextAnimationFrames(2)
+    return
+  }
+  await movePointerOutsideTable()
+}
+
+const captureSemanticOracle = async (dataset, state) => {
+  const rendered = await browser.execute(() => {
+    const container = document.querySelector('[data-testid="table-mask-scroll-container"]')
+    if (!(container instanceof HTMLElement)) throw new Error('Fixture scroll container is missing')
+    const isVisible = (element) => {
+      const rect = element.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
+      return rect.bottom > containerRect.top && rect.top < containerRect.bottom
+    }
+    const fixed = Array.from(document.querySelectorAll('[data-oracle-source="fixed"]')).find(isVisible)
+    if (!(fixed instanceof HTMLElement)) throw new Error('A visible fixed semantic cell is required')
+    const visualIndex = fixed.dataset.visualIndex
+    const sentinel = Array.from(document.querySelectorAll('[data-oracle-source="sentinel"]')).find(
+      (element) => element instanceof HTMLElement && element.dataset.visualIndex === visualIndex,
+    )
+    if (!(sentinel instanceof HTMLElement)) throw new Error('The independently rendered sentinel tuple is missing')
+    fixed.click()
+    return {
+      visualIndex: Number(visualIndex),
+      sentinel: { ordinal: Number(sentinel.dataset.oracleOrdinal), digest: sentinel.dataset.oracleDigest },
+      fixed: { ordinal: Number(fixed.dataset.oracleOrdinal), digest: fixed.dataset.oracleDigest },
+    }
+  })
+  await nextAnimationFrames()
+  const action = await browser.execute(() => {
+    const output = document.querySelector('[data-testid="table-mask-action-tuple"]')
+    if (!(output instanceof HTMLElement)) return undefined
+    return { ordinal: Number(output.dataset.oracleOrdinal), digest: output.dataset.oracleDigest }
+  })
+  const expectedRecord = selectManifestRows(createManifest(dataset), state)[rendered.visualIndex]
+  const expected = expectedRecord && {
+    ordinal: expectedRecord.ordinal,
+    digest: createTableIdentityDigest(expectedRecord),
+  }
+  return compareTableIdentityTuples({ expected, sentinel: rendered.sentinel, fixed: rendered.fixed, action })
+}
+
 const readFixedChildBackgroundContract = () =>
   browser.execute(() => {
     const fixed = document.querySelector('[data-testid="table-mask-fixed-column"]')
+    const expectedGreen = document.querySelector('[data-calibration="green"]')
     if (!(fixed instanceof HTMLElement)) throw new Error('Fixture fixed column is missing')
+    if (!(expectedGreen instanceof HTMLElement)) throw new Error('Fixture green calibration swatch is missing')
+    const expected = getComputedStyle(expectedGreen).backgroundColor
     const backgrounds = Array.from(fixed.children).map((cell, index) => {
       const computed = getComputedStyle(cell).backgroundColor
-      const transparent = computed === 'transparent' || /^rgba\([^)]*,\s*0(?:\.0+)?\)$/.test(computed)
-      return { index, computed, transparent }
+      return { index, computed, matchesFixedPaint: computed === expected }
     })
     return {
       parent: getComputedStyle(fixed).backgroundColor,
       parentTop: getComputedStyle(fixed).top,
+      expected,
       children: backgrounds,
-      pass: backgrounds.length > 0 && backgrounds.every(({ transparent }) => transparent),
+      pass: backgrounds.length > 0 && backgrounds.every(({ matchesFixedPaint }) => matchesFixedPaint),
     }
   })
 
@@ -218,7 +363,7 @@ const captureOracleFrame = async () => {
       !(fixed instanceof HTMLElement) ||
       !(container instanceof HTMLElement) ||
       !(fixedHeader instanceof HTMLElement) ||
-      swatches.length !== 3
+      swatches.length !== 4
     ) {
       throw new Error('Fixture capture targets are missing')
     }
@@ -285,7 +430,9 @@ const captureOracleFrame = async () => {
         ]),
       )
       const isPrimary = (sample, channel) =>
-        sample[channel] > 200 && sample[(channel + 1) % 3] < 80 && sample[(channel + 2) % 3] < 80
+        sample[channel] > 180 &&
+        sample[channel] - sample[(channel + 1) % 3] > 80 &&
+        sample[channel] - sample[(channel + 2) % 3] > 80
       const rgba = isPrimary(samples.red, 0) && isPrimary(samples.green, 1) && isPrimary(samples.blue, 2)
       const bgra = isPrimary(samples.red, 2) && isPrimary(samples.green, 1) && isPrimary(samples.blue, 0)
       if (!rgba && !bgra) throw new Error(`Unable to calibrate bitmap channels: ${JSON.stringify(samples)}`)
@@ -299,6 +446,8 @@ const captureOracleFrame = async () => {
           rgba ? bytes.slice(0, 3) : [bytes[2], bytes[1], bytes[0]],
         ]),
       )
+      const colorDistance = (left, right) =>
+        Math.sqrt(left.reduce((sum, channel, index) => sum + (channel - right[index]) ** 2, 0))
 
       const clippedCells = layout.cells.map((cell) => ({
         ...cell,
@@ -331,8 +480,9 @@ const captureOracleFrame = async () => {
             for (let x = pixelLeft; x < pixelRight; x += 1) {
               const [r, g, b] = rgbAt(capture.x + x / scaleX, capture.y + y / scaleY)
               pixels += 1
-              if (r > 200 && b > 200 && g < 80) magenta += 1
-              if (g > 200 && r < 80 && b < 80) green += 1
+              const rgb = [r, g, b]
+              if (colorDistance(rgb, samplesRgb.magenta) <= 70) magenta += 1
+              if (colorDistance(rgb, samplesRgb.green) <= 70) green += 1
             }
           }
           const greenCoverage = pixels ? green / pixels : 0
@@ -386,12 +536,22 @@ const captureConsecutiveFrames = async () => {
   return { first, second, failed: first.failed && second.failed }
 }
 
-export const runTableMaskVariant = async ({ scenario, variant, dataset, identity }) => {
+export const runTableMaskVariant = async ({
+  scenario,
+  variant,
+  dataset,
+  identity,
+  layout = 'single-right',
+  state = 'data',
+  consumer = 'GenericTableVirtualResizeFixture',
+}) => {
   await setDataset(dataset)
   await setIdentity(identity)
   await setVariant(variant)
+  await setFixtureOption('layout', layout)
+  await setFixtureOption('state', state)
   await waitForStableGeometry()
-  await movePointerOutsideTable()
+  await preparePointerMode()
   const fixedChildBackgroundContract = await readFixedChildBackgroundContract()
   const runs = []
   for (const [runIndex, anchor] of ANCHORS.entries()) {
@@ -399,6 +559,7 @@ export const runTableMaskVariant = async ({ scenario, variant, dataset, identity
     await replayWheelTrace()
     const after = await waitForStableGeometry()
     const frames = await captureConsecutiveFrames()
+    const semanticOracle = await captureSemanticOracle(dataset, state)
     const pairedDeltas = after.pairs.map((pair) => ({
       index: pair.index,
       top: Math.abs(pair.fixed.top - pair.sentinel.top),
@@ -423,13 +584,18 @@ export const runTableMaskVariant = async ({ scenario, variant, dataset, identity
     const fixedEdgePass = Math.abs(after.fixedRect.right - expectedFixedRight) <= 1
     const pixelFailure = frames.failed
     const geometryFailure = !pairedGeometry.pass || !fixedEdgePass
+    const semanticFailure = !semanticOracle.pass
     runs.push({
       run: runIndex + 1,
       anchor,
-      failed: pixelFailure || geometryFailure,
+      failed: pixelFailure || geometryFailure || semanticFailure,
       pixelFailure,
       geometryFailure,
-      failureKinds: [pixelFailure && 'pixel', geometryFailure && 'geometry'].filter(Boolean),
+      semanticFailure,
+      failureKinds: [pixelFailure && 'pixel', geometryFailure && 'geometry', semanticFailure && 'semantic'].filter(
+        Boolean,
+      ),
+      semanticOracle,
       pairedGeometryPass: pairedGeometry.pass,
       pairedGeometry,
       fixedEdgePass,
@@ -453,6 +619,9 @@ export const runTableMaskVariant = async ({ scenario, variant, dataset, identity
     scenario,
     variant,
     dataset,
+    layout,
+    state,
+    consumer,
     identity: {
       renderKey: 'ID',
       reactRowKey: identity === 'row-key' ? 'HiddenIndex' : 'ID (identity reversal)',
@@ -476,4 +645,43 @@ export const runTableMaskVariant = async ({ scenario, variant, dataset, identity
       },
     },
   }
+}
+
+export const runTableMaskScenario = async (scenario) => {
+  await setDataset('unique')
+  await setIdentity('row-key')
+  await setVariant('production')
+  await setFixtureOption('layout', scenario.fixedColumns)
+  const states = []
+  for (const state of scenario.states) {
+    await setFixtureOption('state', state)
+    if (state === 'empty' || state === 'loading') {
+      const rowCount = await browser.execute(() => document.querySelectorAll('[data-oracle-source="sentinel"]').length)
+      states.push({ state, pass: rowCount === 0, renderedRows: rowCount })
+      continue
+    }
+    await $('[data-testid="table-mask-fixed-column"]').waitForExist()
+    await waitForStableGeometry()
+    const semanticOracle = await captureSemanticOracle('unique', state)
+    states.push({ state, pass: semanticOracle.pass, semanticOracle })
+  }
+  return {
+    schemaVersion: 1,
+    id: scenario.id,
+    consumer: scenario.consumer,
+    level: scenario.level,
+    fixedColumns: scenario.fixedColumns,
+    states,
+    status: states.every(({ pass }) => pass) ? 'PASS' : 'FAIL',
+  }
+}
+
+export const runTableMaskSemanticVariant = async ({ variant, dataset = 'duplicate' }) => {
+  await setDataset(dataset)
+  await setIdentity('row-key')
+  await setVariant(variant)
+  await setFixtureOption('layout', 'single-right')
+  await setFixtureOption('state', 'data')
+  await waitForStableGeometry()
+  return captureSemanticOracle(dataset, 'data')
 }

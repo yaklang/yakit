@@ -1,6 +1,15 @@
 const { ipcRenderer } = require('electron')
 
 const mitmDebugHooksEnabled = process.argv.includes('--yakit-mitm-debug-hooks=1')
+// Sandboxed preload scripts cannot require local modules. Parse only the
+// versioned argument issued by e2eEnvironment.js and never expose raw argv.
+const e2eFixtureArgumentPrefix = '--yakit-e2e-fixture-capability='
+const e2eFixtureArguments = process.argv.filter((argument) => argument.startsWith(e2eFixtureArgumentPrefix))
+const e2eFixtureStartupCapability =
+  e2eFixtureArguments.length === 1 &&
+  e2eFixtureArguments[0] === `${e2eFixtureArgumentPrefix}table-virtual-fixed-right:1`
+    ? Object.freeze({ name: 'table-virtual-fixed-right', protocolVersion: 1 })
+    : null
 
 const invoke = (channel, ...args) => ipcRenderer.invoke(channel, ...args)
 const send = (channel, ...args) => ipcRenderer.send(channel, ...args)
@@ -78,6 +87,7 @@ process.on('loaded', function () {
       setYakitHomeConfig: (key, value) => invoke('set-yakit-home-config', key, value),
       relaunchApp: () => invoke('relaunch-app'),
       isMITMDebugHooksEnabled: () => mitmDebugHooksEnabled,
+      e2eFixtureStartupCapability,
     },
     theme: {
       setTheme: (theme) => invoke('aux-window:app-sync', { type: 'theme', payload: theme }),

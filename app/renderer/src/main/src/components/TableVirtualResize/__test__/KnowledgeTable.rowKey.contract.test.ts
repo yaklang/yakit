@@ -12,9 +12,9 @@ const knowledgeTableSource = readFileSync(
 describe('KnowledgeTable React row key contract', () => {
   it('uses HiddenIndex for React identity while retaining ID as the business render key', () => {
     expect(knowledgeTableSource).toMatch(
-      /const getKnowledgeTableRowKey = \(record: KnowledgeBaseEntry\) => record\.HiddenIndex/,
+      /const getKnowledgeTableInteractionKey = \(record: KnowledgeBaseEntry\) => record\.HiddenIndex/,
     )
     expect(knowledgeTableSource).toContain('renderKey="ID"')
-    expect(knowledgeTableSource).toContain('getRowKey={getKnowledgeTableRowKey}')
+    expect(knowledgeTableSource).toContain('getRowKey={getKnowledgeTableReactKey}')
   })
 })

@@ -702,6 +702,11 @@ declare global {
     Result: string
   }
 
+  interface E2EFixtureStartupCapability {
+    readonly name: 'table-virtual-fixed-right'
+    readonly protocolVersion: 1
+  }
+
   interface YakitBridge {
     app: {
       generateStartEngine: () => Promise<unknown>
@@ -728,6 +733,8 @@ declare global {
       setYakitHomeConfig: (key: string, value: any) => Promise<{ success: boolean }>
       /** Synchronous build/runtime gate for MITM diagnostic globals; false in packaged builds. */
       isMITMDebugHooksEnabled?: () => boolean
+      /** Process-start marker for the supported E2E fixture. It is a capability gate, not a secret. */
+      readonly e2eFixtureStartupCapability: E2EFixtureStartupCapability | null
     }
     theme: {
       setTheme: (theme: 'light' | 'dark') => Promise<unknown>

@@ -7,6 +7,7 @@ const repoRoot = path.resolve(configDir, '../..')
 const artifactsDir = process.env.YAKIT_E2E_ARTIFACTS_DIR || path.join(repoRoot, 'reports/e2e-electron/manual')
 const appEntryPoint = path.join(repoRoot, 'app/main/index.js')
 const isolatedUserData = process.env.YAKIT_E2E_USER_DATA
+const electronAppArgs = JSON.parse(process.env.YAKIT_E2E_ELECTRON_APP_ARGS || '[]')
 
 if (process.env.YAKIT_E2E !== '1' || !isolatedUserData || !path.isAbsolute(isolatedUserData)) {
   throw new Error('WDIO Electron must be started through scripts/run-electron-e2e.mjs with isolated userData')
@@ -97,7 +98,7 @@ export const config = {
         // ChromeDriver waits for DevToolsActivePort below --user-data-dir.
         // Keep it identical to Electron app.setPath('userData') so the driver
         // and the application cannot accidentally observe different profiles.
-        appArgs: [`--user-data-dir=${isolatedUserData}`],
+        appArgs: [`--user-data-dir=${isolatedUserData}`, ...electronAppArgs],
         captureMainProcessLogs: true,
         captureRendererLogs: true,
         mainProcessLogLevel: 'info',

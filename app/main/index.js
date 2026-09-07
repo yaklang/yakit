@@ -4,7 +4,7 @@ const path = require('path')
 const os = require('os')
 const url = require('url')
 const process = require('process')
-const { configureE2EEnvironment } = require('./e2eEnvironment')
+const { configureE2EEnvironment, resolveE2EFixtureStartupCapability } = require('./e2eEnvironment')
 
 // This must run before localCache/filePath are loaded: both can resolve and
 // create files below Electron's userData directory during module startup.
@@ -35,7 +35,12 @@ const BLOCKED_CHROMIUM_DEBUG_SWITCHES = ['remote-debugging-port', 'remote-debugg
 const BLOCKED_NODE_DEBUG_ARG_PREFIXES = ['--inspect', '--inspect-brk', '--inspect-port']
 const MITM_DEBUG_HOOKS_ARGUMENT = '--yakit-mitm-debug-hooks=1'
 const mitmDebugHooksEnabled = !app.isPackaged && (isDev || e2eEnvironment.enabled)
-const tableVirtualFixtureEnabled = e2eEnvironment.enabled && process.env.YAKIT_E2E_TABLE_VIRTUAL_FIXTURE === '1'
+const e2eFixtureStartupCapability = resolveE2EFixtureStartupCapability({
+  e2eEnabled: e2eEnvironment.enabled,
+  isDev,
+  fixtureEnabled: process.env.YAKIT_E2E_TABLE_VIRTUAL_FIXTURE === '1',
+})
+const tableVirtualFixtureEnabled = Boolean(e2eFixtureStartupCapability)
 
 const getForbiddenStartupDebugFlags = () => {
   const detected = []
@@ -249,7 +254,10 @@ function createWindow() {
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      additionalArguments: mitmDebugHooksEnabled ? [MITM_DEBUG_HOOKS_ARGUMENT] : [],
+      additionalArguments: [
+        ...(mitmDebugHooksEnabled ? [MITM_DEBUG_HOOKS_ARGUMENT] : []),
+        ...(e2eFixtureStartupCapability ? [e2eFixtureStartupCapability.argument] : []),
+      ],
       nodeIntegration: true,
       contextIsolation: false,
       sandbox: true,

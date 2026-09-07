@@ -1,7 +1,13 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import { runTableMaskVariant, waitForTableMaskFixture } from '../../drivers/table-virtual-fixed-right.driver.mjs'
+import {
+  buildTableMaskScenarioMatrix,
+  runTableMaskScenario,
+  runTableMaskSemanticVariant,
+  runTableMaskVariant,
+  waitForTableMaskFixture,
+} from '../../drivers/table-virtual-fixed-right.driver.mjs'
 
 const artifactsDir = process.env.YAKIT_E2E_ARTIFACTS_DIR
 
@@ -77,4 +83,20 @@ describe('TableVirtualResize fixed-right paint mask', () => {
     expect(result.fixedChildBackgroundContract.pass).toBe(true)
     expect(result.fixedChildBackgroundContract.parentTop).toBe('auto')
   })
+
+  it('rejects a fixed-record fault through the independent semantic oracle', async () => {
+    const semanticOracle = await runTableMaskSemanticVariant({ variant: 'fixed-record-fault' })
+    await saveResult({ schemaVersion: 1, scenario: 'e-fixed-record-fault', semanticOracle })
+
+    expect(semanticOracle.pass).toBe(false)
+    expect(semanticOracle.mismatches).toEqual([expect.objectContaining({ source: 'fixed', kind: 'identity-mismatch' })])
+  })
+
+  for (const scenario of buildTableMaskScenarioMatrix()) {
+    it(`runs bounded fixed-column/state coverage: ${scenario.id}`, async () => {
+      const result = await runTableMaskScenario(scenario)
+      await saveResult({ ...result, scenario: `matrix-${scenario.id}` })
+      expect(result.status).toBe('PASS')
+    })
+  }
 })

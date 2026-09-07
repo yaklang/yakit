@@ -27,6 +27,7 @@ import { useTheme } from './hook/useTheme'
 import { applyYakitThemeColors } from './utils/applyYakitThemeColors'
 import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
 import { debugToPrintLogs } from './utils/logCollection'
+import { resolveRendererEntry, TABLE_VIRTUAL_FIXED_RIGHT_RENDERER_ENTRY } from './e2e/resolveRendererEntry'
 
 // 延迟加载并发流桥接，避免首屏同步拉入 AI-agent 会话机制
 import('@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge')
@@ -46,6 +47,11 @@ setupMonacoWorkers()
 const getQueryParam = (param) => {
   return new URLSearchParams(window.location.search).get(param)
 }
+
+const rendererEntry = resolveRendererEntry({
+  queryFixture: getQueryParam('e2e-fixture'),
+  startupCapability: window.yakitBridge?.app?.e2eFixtureStartupCapability,
+})
 
 const App = () => {
   const [windowType, setWindowType] = useState(getQueryParam('window'))
@@ -131,11 +137,7 @@ ReactDOM.render(
     <YakitAntdProvider>
       <NotificationProvider>
         <Suspense fallback={<div>loading...</div>}>
-          {getQueryParam('e2e-fixture') === 'table-virtual-fixed-right' ? (
-            <TableVirtualFixedRightMaskFixture />
-          ) : (
-            <App />
-          )}
+          {rendererEntry === TABLE_VIRTUAL_FIXED_RIGHT_RENDERER_ENTRY ? <TableVirtualFixedRightMaskFixture /> : <App />}
         </Suspense>
       </NotificationProvider>
     </YakitAntdProvider>
