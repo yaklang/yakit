@@ -42,7 +42,7 @@ import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitDropdownMenu } from '../yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { Progress } from 'antd'
-import { OutlineChevrondownIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const MESSAGE_PAGE_LIMIT = 20
 
@@ -930,7 +930,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                 >
                   <YakitButton type="outline2">
                     {t('MessageCenter.updateData')}
-                    <OutlineChevrondownIcon />
+                    <ChevronDownOutlined />
                   </YakitButton>
                 </YakitDropdownMenu>
               </div>

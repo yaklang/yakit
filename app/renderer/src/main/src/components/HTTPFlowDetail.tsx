@@ -1339,12 +1339,13 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                               <div className={classNames(styles['http-history-fold-box'])}>
                                 <div className={styles['http-history-icon-box']}>
                                   <Tooltip placement="top" title={t('HTTPFlowDetailMini.collapseRight')}>
-                                    <OutlineOpenIcon
+                                    <OpenOutlined
                                       className={styles['fold-icon']}
                                       onClick={() => {
                                         setRemoteValue('IsFoldValue', JSON.stringify({ is: true, id }))
                                         setFold(true)
                                       }}
+                                      color="currentColor"
                                     />
                                   </Tooltip>
                                 </div>
