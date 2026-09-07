@@ -129,6 +129,13 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
     setAllCheck(false)
   })
 
+  const queryEntityTable = useMemoizedFn(async (params: QueryEntityRequest) => {
+    const response = await apiQueryEntity(params)
+    console.log('[EntityTable] QueryEntity gRPC keys', params.Pagination)
+    console.table(response.Entities?.map(({ ID, HiddenIndex, Name }) => ({ ID, HiddenIndex, Name })))
+    return response
+  })
+
   const [tableParams, tableData, tableTotal, pagination, _, __, debugVirtualTableEvent] = useVirtualTableHook<
     QueryEntityRequest,
     Entity,
@@ -138,7 +145,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
     tableBoxRef,
     tableRef,
     boxHeightRef,
-    grpcFun: apiQueryEntity,
+    grpcFun: queryEntityTable,
     onFirst,
     responseKey: { data: 'Entities', id: 'ID' },
   })
