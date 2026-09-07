@@ -6,7 +6,6 @@ import {
   BotOutlined,
   CalendarOutlined,
   ChipOutlined,
-  CogOutlined,
   DocumentTextOutlined,
   EarOffOutlined,
   FolderOpenOutlined,
@@ -50,7 +49,6 @@ export const YakitAIAgentPageID = 'yakit-ai-agent'
 
 export enum AIAgentTabListEnum {
   Session = 'session',
-  Setting = 'setting',
   Forge_Name = 'forgeName',
   Tool = 'tool',
   AI_Model = 'AIModel',
@@ -64,7 +62,6 @@ export const AiAgentTabList: YakitTabsProps[] = [
     label: 'AIAgentTabs.session',
     icon: <ColorsChatIcon className="ai-agent-session-tab-icon" />,
   },
-  { value: AIAgentTabListEnum.Setting, label: 'AIAgentTabs.config', icon: <CogOutlined color="currentColor" /> },
   {
     value: AIAgentTabListEnum.Scheduled,
     label: 'AIAgentTabs.scheduled',

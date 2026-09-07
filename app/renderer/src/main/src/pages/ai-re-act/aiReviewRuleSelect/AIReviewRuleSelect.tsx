@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { Slider, type SliderSingleProps } from 'antd'
 import type { AIChatSelectProps, ReviewRuleSelectProps } from './type'
 import styles from './AIReviewRuleSelect.module.scss'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
@@ -14,7 +15,6 @@ import {
 } from '@/pages/ai-agent/defaultConstant'
 import { SirenOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { FormItemSlider } from '@/pages/ai-agent/AIChatSetting/AIChatSetting'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { type AIInputEvent, AIInputEventHotPatchTypeEnum, type AIStartParams } from '../hooks/grpcApi'
 import isEqual from 'lodash/isEqual'
@@ -294,6 +294,18 @@ export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
       >
         {children}
       </YakitSelect>
+    </div>
+  )
+})
+
+const FormItemSlider: React.FC<SliderSingleProps> = React.memo((props) => {
+  const { value, ...rest } = props
+  return (
+    <div className={styles['form-item-slider']}>
+      <div className={styles['slider-body']}>
+        <Slider tooltip={{ open: false }} value={value} {...rest} />
+      </div>
+      <div className={styles['slider-value']}>{value}</div>
     </div>
   )
 })

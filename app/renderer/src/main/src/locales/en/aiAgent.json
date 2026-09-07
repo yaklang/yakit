@@ -344,7 +344,6 @@
     "session": "Session",
     "historyChat": "History Chat",
     "scheduled": "Scheduled",
-    "config": "Settings",
     "skill": "Skill",
     "tool": "Tool"
   },
