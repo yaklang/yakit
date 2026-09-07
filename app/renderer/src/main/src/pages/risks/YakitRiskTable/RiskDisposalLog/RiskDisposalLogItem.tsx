@@ -4,7 +4,7 @@ import { useMemoizedFn } from 'ahooks'
 import { Image } from 'antd'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineChatalt2Icon, OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { ChatAlt2Outlined, PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { disposalCommentJSONConvertToData } from './convert'
@@ -47,7 +47,7 @@ export const RiskDisposalLogItem: React.FC<RiskDisposalLogItemProps> = memo((pro
   return (
     <div className={classNames(styles['log-item'], { [styles['hidden-line']]: hiddenLine })}>
       <div className={styles['log-item-icon']}>
-        {info.headImg ? <img src={info.headImg} alt="" /> : <OutlineChatalt2Icon />}
+        {info.headImg ? <img src={info.headImg} alt="" /> : <ChatAlt2Outlined />}
       </div>
       <div className={styles['log-item-main']}>
         <div className={styles['log-item-header']}>
@@ -64,7 +64,7 @@ export const RiskDisposalLogItem: React.FC<RiskDisposalLogItemProps> = memo((pro
           </div>
           {!isSystem && (
             <div className={styles['log-item-ops']}>
-              <YakitButton type="text" size="small" icon={<OutlinePencilaltIcon />} onClick={() => onReply?.(info)}>
+              <YakitButton type="text" size="small" icon={<PencilAltOutlined />} onClick={() => onReply?.(info)}>
                 {t('RiskDisposalLog.reply')}
               </YakitButton>
               {info.isMine && (
@@ -72,7 +72,7 @@ export const RiskDisposalLogItem: React.FC<RiskDisposalLogItemProps> = memo((pro
                   type="text"
                   size="small"
                   danger
-                  icon={<OutlineTrashIcon />}
+                  icon={<TrashOutlined />}
                   onClick={() => onDelete?.(info)}
                 />
               )}
