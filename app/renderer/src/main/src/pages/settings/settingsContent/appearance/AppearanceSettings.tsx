@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { SolidCheckCircleIcon } from '@/assets/icon/solid'
+import { CheckCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { isCommunityYakit } from '@/utils/envfile'
 import { useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { useTheme, type ThemeMode } from '@/hook/useTheme'
@@ -91,7 +91,7 @@ export const AppearanceSettings: React.FC = () => {
                 <div className={styles['theme-card-label']}>
                   <span>{item.label}</span>
                   <span className={styles['theme-check']}>
-                    <SolidCheckCircleIcon />
+                    <CheckCircleSolid color="currentColor" />
                   </span>
                 </div>
               </div>
@@ -113,7 +113,7 @@ export const AppearanceSettings: React.FC = () => {
                     <div className={styles['mode-item-desc']}>{item.desc}</div>
                   </div>
                   <div className={classNames(styles['mode-check'], { [styles['mode-check-active']]: active })}>
-                    <SolidCheckCircleIcon />
+                    <CheckCircleSolid color="currentColor" />
                   </div>
                 </div>
               )

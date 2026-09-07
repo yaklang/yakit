@@ -1,15 +1,15 @@
 import type { ReactNode } from 'react'
 import {
-  OutlineCogIcon,
-  OutlineMCPIcon,
-  OutlineGlobealtIcon,
-  OutlineKeyIcon,
-  OutlinePaperairplaneIcon,
-  OutlineGlobeIcon,
-  OutlineFileSlidersIcon,
-  OutlineSunIcon,
-  OutlineCodepenIcon,
-} from '@/assets/icon/outline'
+  CogOutlined,
+  MCPOutlined,
+  GlobeAltOutlined,
+  KeyOutlined,
+  PaperAirplaneOutlined,
+  GlobeOutlined,
+  FileSlidersOutlined,
+  SunOutlined,
+  CodepenOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 
 export type SettingsAnchor =
@@ -40,26 +40,26 @@ export const SettingsMenu: SettingsMenuGroup[] = [
   {
     titleKey: 'preference',
     items: [
-      { key: 'general', icon: <OutlineCogIcon /> },
-      { key: 'appearance', icon: <OutlineSunIcon /> },
-      { key: 'shortcut-key', icon: <OutlineKeyIcon /> },
+      { key: 'general', icon: <CogOutlined color="currentColor" /> },
+      { key: 'appearance', icon: <SunOutlined color="currentColor" /> },
+      { key: 'shortcut-key', icon: <KeyOutlined color="currentColor" /> },
     ],
   },
   {
     titleKey: 'system',
     items: [
-      { key: 'reverse', icon: <OutlinePaperairplaneIcon /> },
-      { key: 'system-proxy', icon: <OutlinePaperairplaneIcon /> },
-      { key: 'global-config', icon: <OutlineGlobealtIcon /> },
-      { key: 'right-click-plugins', icon: <OutlineGlobeIcon /> },
+      { key: 'reverse', icon: <PaperAirplaneOutlined color="currentColor" /> },
+      { key: 'system-proxy', icon: <PaperAirplaneOutlined color="currentColor" /> },
+      { key: 'global-config', icon: <GlobeAltOutlined color="currentColor" /> },
+      { key: 'right-click-plugins', icon: <GlobeOutlined color="currentColor" /> },
     ],
   },
   {
     titleKey: 'ai',
     items: [
-      { key: 'ai-config', icon: <OutlineFileSlidersIcon /> },
-      { key: 'ai-model', icon: <OutlineCodepenIcon /> },
-      { key: 'yak-mcp', icon: <OutlineMCPIcon /> },
+      { key: 'ai-config', icon: <FileSlidersOutlined color="currentColor" /> },
+      { key: 'ai-model', icon: <CodepenOutlined color="currentColor" /> },
+      { key: 'yak-mcp', icon: <MCPOutlined color="currentColor" /> },
     ],
   },
 ]

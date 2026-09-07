@@ -20,7 +20,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { PencilAltOutlined, RefreshOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PaintbrushOutlined, RefreshOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { failed } from '@/utils/notification'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
@@ -133,7 +133,8 @@ export const ShortcutKeySettings: React.FC = () => {
           handleCallbackKeyShow(true)
         } else {
           const keys = result[1].split('|') as YakitKeyBoard[]
-          const info = isConflictToYakEditor(keys) || findContextMenuPluginShortcutConflict(keys, editInfo.current?.page)
+          const info =
+            isConflictToYakEditor(keys) || findContextMenuPluginShortcutConflict(keys, editInfo.current?.page)
           setWarnInfo(info)
           setInputKeys(keys)
         }
@@ -211,7 +212,12 @@ export const ShortcutKeySettings: React.FC = () => {
           <div className={styles['head-block']}>
             <div className={styles['page-head']}>
               <div className={styles['page-title']}>{t('SettingsPage.item.shortcut-key')}</div>
-              <YakitButton type="outline1" colors="danger" icon={<RefreshOutlined color="currentColor" />} onClick={resetAll}>
+              <YakitButton
+                type="outline1"
+                colors="danger"
+                icon={<RefreshOutlined color="currentColor" />}
+                onClick={resetAll}
+              >
                 {t('ShortcutKey.resetAll')}
               </YakitButton>
             </div>
@@ -256,7 +262,7 @@ export const ShortcutKeySettings: React.FC = () => {
                         <YakitButton
                           type="text2"
                           size="small"
-                          icon={<PencilAltOutlined color="currentColor" />}
+                          icon={<PaintbrushOutlined color="currentColor" />}
                           onClick={() => resetOne(section.page, item.key)}
                         />
                       </Tooltip>

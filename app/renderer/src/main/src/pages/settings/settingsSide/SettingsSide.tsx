@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import classNames from 'classnames'
 import { Divider, Space } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { OutlineSearchIcon } from '@/assets/icon/outline'
+import { SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { getSettingsGroupLabel, getSettingsLabel, SettingsMenu, type SettingsAnchor } from '../constants'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './SettingsSide.module.scss'
@@ -41,7 +41,7 @@ export const SettingsSide: React.FC<SettingsSideProps> = (props) => {
         <YakitInput
           allowClear
           placeholder={t('SettingsPage.searchPlaceholder')}
-          prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+          prefix={<SearchOutlined color="currentColor" className={styles['search-icon']} />}
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
         />

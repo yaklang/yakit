@@ -65,7 +65,7 @@ import {
   SearchOutlined,
   Wrench1Outlined,
   CloudDownloadOutlined,
-  DotsHorizontalOutlined,
+  DotsCircleHorizontalOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { type DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
@@ -1071,7 +1071,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       >
         <div className={styles['ui-op-btn-wrapper']}>
           <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
-            <DotsHorizontalOutlined
+            <DotsCircleHorizontalOutlined
               className={classNames(styles['size-style'], show ? styles['icon-hover-style'] : styles['icon-style'])}
             />
           </div>
