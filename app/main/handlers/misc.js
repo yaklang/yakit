@@ -629,27 +629,6 @@ module.exports = (win, getClient) => {
     handlerHelper.registerHandler(win, stream, streamExecuteBrowserExtensionTaskMap, token)
   })
 
-  const browserTransformAdapterCall = (method, params = {}) => {
-    return new Promise((resolve, reject) => {
-      getClient()[method](params, (err, data) => {
-        if (err) {
-          reject(err)
-          return
-        }
-        resolve(data)
-      })
-    })
-  }
-  ipcMain.handle('StartBrowserTransformAdapter', (e, params) => {
-    return browserTransformAdapterCall('StartBrowserTransformAdapter', params)
-  })
-  ipcMain.handle('GetBrowserTransformAdapterStatus', () => {
-    return browserTransformAdapterCall('GetBrowserTransformAdapterStatus')
-  })
-  ipcMain.handle('StopBrowserTransformAdapter', () => {
-    return browserTransformAdapterCall('StopBrowserTransformAdapter')
-  })
-
   const streamReadFileMap = new Map()
   ipcMain.handle('cancel-ReadFile', handlerHelper.cancelHandler(streamReadFileMap))
   ipcMain.handle('ReadFile', (e, params, token) => {

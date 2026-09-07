@@ -723,11 +723,6 @@ service Yak {
 
   // Browser extension tasks are routed to one paired browser device.
   rpc ExecuteBrowserExtensionTask(BrowserExtensionTaskRequest) returns (stream BrowserExtensionTaskEvent);
-  // A loopback-only, token-authenticated adapter lets Burp/Fiddler reuse one
-  // live browser Transform Profile without introducing another JS runtime.
-  rpc StartBrowserTransformAdapter(BrowserTransformAdapterStartRequest) returns (BrowserTransformAdapterStatus);
-  rpc GetBrowserTransformAdapterStatus(Empty) returns (BrowserTransformAdapterStatus);
-  rpc StopBrowserTransformAdapter(Empty) returns (BrowserTransformAdapterStatus);
 
   // 文件IO
   rpc ReadFile(ReadFileRequest) returns (stream ReadFileResponse);
@@ -10190,36 +10185,4 @@ message BrowserExtensionTaskEvent {
   bytes Data = 5;
   int64 Timestamp = 6;
   uint64 Sequence = 7;
-}
-
-message BrowserTransformAdapterStartRequest {
-  string DeviceId = 1;
-  string ProfileId = 2;
-  string Host = 3;
-  int32 Port = 4;
-  int64 TimeoutMilliseconds = 5;
-}
-
-message BrowserTransformAdapterStatus {
-  bool Running = 1;
-  string Endpoint = 2;
-  string Token = 3;
-  string DeviceId = 4;
-  string ProfileId = 5;
-  string ProfileName = 6;
-  bool RequestEnabled = 7;
-  bool ResponseEnabled = 8;
-  int64 StartedAt = 9;
-  uint64 RequestCount = 10;
-  uint64 FailureCount = 11;
-  int64 LastUsedAt = 12;
-  string LastError = 13;
-  int32 Port = 14;
-  string Host = 15;
-  int64 TimeoutMilliseconds = 16;
-  string ProtocolVersion = 17;
-  repeated string Methods = 18;
-  string UrlPattern = 19;
-  string Origin = 20;
-  uint64 BypassCount = 21;
 }
