@@ -34,7 +34,7 @@ import style from './HTTPFlowTable.module.scss'
 import { buildColumnOrderMap, compareByColumnOrder } from '@/utils/sortByColumnOrder'
 import { defalutColumnsOrder } from '@/pages/hTTPHistoryAnalysis/HTTPHistory/HTTPHistoryFilter'
 
-/** 需要完全排除的列字段，表格不可能出现的�?*/
+/** 需要完全排除的列字段，表格不可能出现的列 */
 export const noColumnsKey: string[] = ['Payloads']
 
 /** 不需要参与自定义的列（不需要存进缓存） */
@@ -90,7 +90,7 @@ export interface ResolveHTTPFlowTableColumnsResult {
   configColumns: ColumnAllInfoItem[]
 }
 
-/** 构建 HTTP 流量表格全部列定义（�?Id / action 固定列） */
+/** 构建 HTTP 流量表格全部列定义（含 Id / action 固定列） */
 export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContext): ColumnsTypeProps[] => {
   const {
     t,
@@ -400,7 +400,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
               })}
             >
               {rowData.BodyLength}
-              {rowData.BodySizeVerbose && rowData.BodyLength > 1024 ? `�?{rowData.BodySizeVerbose}）` : ''}
+              {rowData.BodySizeVerbose && rowData.BodyLength > 1024 ? `（${rowData.BodySizeVerbose}）` : ''}
             </div>
           )}
         </>
@@ -519,7 +519,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
       enableDrag: false,
       width: 120,
       render: (text, { RequestLength }) =>
-        `${RequestLength || text.slice(0, -1)}${RequestLength > 1024 ? `�?{text}）` : ''}`,
+        `${RequestLength || text.slice(0, -1)}${RequestLength > 1024 ? `（${text}）` : ''}`,
     },
     {
       title: t('YakitTable.action'),
@@ -613,7 +613,7 @@ export const resolveHTTPFlowTableColumns = (
   return { columns, configColumns }
 }
 
-/** 合并远程列顺序与默认列顺序，补全新增�?*/
+/** 合并远程列顺序与默认列顺序，补全新增列 */
 export const mergeHTTPFlowColumnsOrder = (remoteOrder: string[], defaultOrder: string[]) => {
   const arr2 = remoteOrder.filter((key) => defaultOrder.includes(key))
   defaultOrder.forEach((key, idx) => {
