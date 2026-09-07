@@ -37,6 +37,7 @@ export interface AIOnlineModelListItemProps {
   onEdit: (item: AIModelConfig) => void
   checked: boolean
   modelType: AIModelTypeEnumType
+  checkedVariant?: 'outline' | 'circle'
 }
 export interface OutlineAtomIconByStatusProps {
   isReady?: boolean
@@ -65,6 +66,8 @@ export interface AIOnlineModelProps {
   onEdit: (i: number) => void
   onSelect: (v: AIModelConfig, i: number) => void
   modelType: AIOnlineModelListItemProps['modelType']
+  /** 选中图标：默认勾选描边，circle 为实心圆勾 */
+  checkedVariant?: 'outline' | 'circle'
 }
 
 export interface AIOnlineModeSettingProps {

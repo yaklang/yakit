@@ -63,6 +63,11 @@
       "langZh": "Chinese (Simplified) 簡體中文",
       "langEn": "English",
       "langZhTW": "Chinese (Traditional) 繁體中文"
+    },
+    "aiModel": {
+      "intelligent": "高質量模型",
+      "lightweight": "輕量模型",
+      "vision": "視覺模型"
     }
   }
 }

@@ -335,6 +335,15 @@
   @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
 }
 
+.check-icon-circle {
+  flex-shrink: 0;
+  @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
 .ai-online-mode-setting-popover {
   :global {
     .ant-form-item {

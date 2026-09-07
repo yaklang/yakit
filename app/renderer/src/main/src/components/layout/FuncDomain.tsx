@@ -821,7 +821,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
       label: '系统设置',
       children: [
         // { key: "engineVar",label: "引擎环境变量" },
-        { key: 'config-network', label: '全局配置' },
         { key: 'manageRightClickPlugins', label: '右键插件管理' },
         { key: 'configMcp', label: 'Yak Mcp配置' },
       ],

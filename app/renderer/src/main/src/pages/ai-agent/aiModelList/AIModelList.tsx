@@ -62,6 +62,7 @@ import {
   FigmaIcon28011794Outlined,
   FigmaIcon4866167279Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
+import { CheckCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import {
@@ -701,7 +702,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
   }),
 )
 export const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) => {
-  const { title, subTitle, list, onEdit, onRemove, onSelect, modelType } = props
+  const { title, subTitle, list, onEdit, onRemove, onSelect, modelType, checkedVariant } = props
 
   return (
     <div className={styles['ai-online-model']}>
@@ -724,6 +725,7 @@ export const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) =>
               onRemove={() => onRemove(index)}
               checked={index === 0}
               modelType={modelType}
+              checkedVariant={checkedVariant}
             />
           </div>
         ))}
@@ -732,7 +734,7 @@ export const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) =>
   )
 })
 const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((props) => {
-  const { item, checked, onEdit, onRemove, modelType } = props
+  const { item, checked, onEdit, onRemove, modelType, checkedVariant } = props
 
   const [testLoading, setTestLoading] = useState<boolean>(false)
 
@@ -878,12 +880,17 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
             </YakitPopconfirm>
           )}
         </div>
-        {checked && <CheckOutlined className={styles['check-icon']} color="currentColor" />}
+        {checked &&
+          (checkedVariant === 'circle' ? (
+            <CheckCircleSolid className={styles['check-icon-circle']} color="currentColor" />
+          ) : (
+            <CheckOutlined className={styles['check-icon']} color="currentColor" />
+          ))}
       </div>
     </div>
   )
 })
-const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
+export const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
   forwardRef((props, ref) => {
     const { setLocalTotal } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
