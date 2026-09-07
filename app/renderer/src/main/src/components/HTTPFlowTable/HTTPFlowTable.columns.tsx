@@ -7,9 +7,9 @@ import {
   StarOutlined,
   ArrowCircleRightOutlined,
   ChromeOutlined,
+  ChevronDownOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { CheckCircleSolid, StarSolid } from '@yakit-libs/yakit-ui-icons/solid'
-import { OutlineChevrondownIcon } from '@/assets/icon/outline'
 import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import type { ColumnsTypeProps, FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import {
@@ -252,7 +252,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
                 }}
               >
                 <span>{text || '-'}</span>
-                <OutlineChevrondownIcon className={markStyles['table-tag-icon']} />
+                <ChevronDownOutlined className={markStyles['table-tag-icon']} />
               </div>
             ),
           },
@@ -275,7 +275,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
                 }}
               >
                 <span>{text || '-'}</span>
-                <OutlineChevrondownIcon className={markStyles['table-tag-icon']} />
+                <ChevronDownOutlined className={markStyles['table-tag-icon']} />
               </div>
             ),
           },
@@ -298,7 +298,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
                 }}
               >
                 <span>{text || '-'}</span>
-                <OutlineChevrondownIcon className={markStyles['table-tag-icon']} />
+                <ChevronDownOutlined className={markStyles['table-tag-icon']} />
               </div>
             ),
           },
@@ -315,7 +315,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
                 }}
               >
                 <span>{text || '-'}</span>
-                <OutlineChevrondownIcon className={markStyles['table-tag-icon']} />
+                <ChevronDownOutlined className={markStyles['table-tag-icon']} />
               </div>
             ),
           },
