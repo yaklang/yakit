@@ -196,7 +196,14 @@
     "judgeRepeatError": "校驗任務重名錯誤：{{error}}",
     "getTaskNotificationError": "獲取任務通知錯誤：{{error}}",
     "createTaskProjectSuccess": "建立任務專案成功：{{successInfo}}",
-    "createTaskProjectFailed": "建立任務專案失敗：{{failedInfo}}"
+    "createTaskProjectFailed": "建立任務專案失敗：{{failedInfo}}",
+    "webNotification": "Web端通知",
+    "plugin": "外掛",
+    "updateData": "更新資料",
+    "updateFlow": "更新流量",
+    "updateRisk": "更新漏洞",
+    "syncSuccess": "資料更新完成",
+    "syncFailed": "資料更新失敗"
   },
   "JsonFormWrapper": {
     "EditTable": {

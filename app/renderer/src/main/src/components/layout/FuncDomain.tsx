@@ -85,7 +85,7 @@ import yakitImg from '../../assets/yakit.jpg'
 import classNames from 'classnames'
 import styles from './funcDomain.module.scss'
 import { useEETaskNotificationHook } from '../MessageCenter/useEETaskNotificationHook'
-import { apiFetchMessageRead, apiFetchQueryMessage } from '../MessageCenter/utils'
+import { apiFetchMessageRead, apiFetchQueryMessage, apiFetchQueryWebMessage } from '../MessageCenter/utils'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { randomString } from '@/utils/randomUtil'
 import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
@@ -1947,14 +1947,16 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   })
 
   const [messageList, setMessageList] = useState<API.MessageLogDetail[]>([])
+  const [webUnreadCount, setWebUnreadCount] = useState<number>(0)
   const isUpdate = useMemo(() => {
     const unRead = messageList.filter((item) => !item.isRead).length > 0
     return (
       (yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
       lowerYaklangLastVersion ||
-      unRead
+      unRead ||
+      webUnreadCount > 0
     )
-  }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, messageList])
+  }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, messageList, webUnreadCount])
 
   const [noticeType, setNoticeType] = useState<'message' | 'update'>('update')
   useUpdateEffect(() => {
@@ -1988,10 +1990,36 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       })
   })
 
+  /** EE Web 未读红点 xxx--- 等待后端联调 */
+  const onFetchWebUnread = useMemoizedFn(() => {
+    if (!isEnpriTrace()) {
+      setWebUnreadCount(0)
+      return
+    }
+    apiFetchQueryWebMessage(
+      {
+        page: 1,
+        limit: 1,
+      },
+      {
+        isRead: 'false',
+      },
+    )
+      .then((res) => {
+        setWebUnreadCount(res?.pagemeta?.total || 0)
+      })
+      .catch(() => {
+        setWebUnreadCount(0)
+      })
+  })
+
   // 初始化获取消息中心
   useEffect(() => {
     if (userInfo.isLogin) {
       onFetchMessage()
+      onFetchWebUnread()
+    } else {
+      setWebUnreadCount(0)
     }
   }, [userInfo.isLogin, show])
 
