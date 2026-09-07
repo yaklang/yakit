@@ -221,7 +221,8 @@ class StaleHTTPFlowTableQueryError extends Error {
 // 性能优化：分页空回调提取为模块级常量，避免内联箭头每次渲染创建新引用
 const noopPaginationChange = () => {}
 
-// 性能优化：纯函数提升为模块级，避免组件每次渲染重新创�?// 保留数组中非重复数据
+// 性能优化：纯函数提升为模块级，避免组件每次渲染重新创建
+// 保留数组中非重复数据
 const filterNonUnique = (arr: (string | number)[]) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
 // 数组去重
 const filterItem = (arr: (string | number)[]) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -310,7 +311,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
   const [showShieldTooManyHint, setShowShieldTooManyHint] = useState(false)
   const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
-  // 性能优化：bodyLengthUnit 值从未在 JSX/memo 依赖中读取，仅通过 getter 在回调中使用，改�?ref 避免不必要重渲染
+  // 性能优化：bodyLengthUnit 值从未在 JSX/memo 依赖中读取，仅通过 getter 在回调中使用，改为 ref 避免不必要重渲染
   const bodyLengthUnitRef = useRef<'B' | 'K' | 'M'>('B')
   const getBodyLengthUnit = useMemoizedFn(() => bodyLengthUnitRef.current)
   const setBodyLengthUnit = useMemoizedFn((v: React.SetStateAction<'B' | 'K' | 'M'>) => {
@@ -321,7 +322,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
   const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
   const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
-  // 性能优化：afterBodyLength/beforeBodyLength 值未�?JSX/memo 依赖中读取，仅通过 getter 和在 useDebounceFn 回调中使用，改为 ref
+  // 性能优化：afterBodyLength/beforeBodyLength 值未在 JSX/memo 依赖中读取，仅通过 getter 和在 useDebounceFn 回调中使用，改为 ref
   const afterBodyLengthRef = useRef<number | undefined>(undefined)
   const getAfterBodyLength = useMemoizedFn(() => afterBodyLengthRef.current)
   const setAfterBodyLength = useMemoizedFn((v: React.SetStateAction<number | undefined>) => {
@@ -341,7 +342,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const [batchVisible, setBatchVisible] = useState<boolean>(false)
 
-  // 性能优化：exportDataKey 值仅�?useMemoizedFn 回调中读取，从未�?JSX/memo 依赖中，改为 ref
+  // 性能优化：exportDataKey 值仅在 useMemoizedFn 回调中读取，从未在 JSX/memo 依赖中，改为 ref
   const exportDataKeyRef = useRef<string[]>([])
   const setExportDataKey = useMemoizedFn((v: string[]) => {
     exportDataKeyRef.current = v
@@ -369,7 +370,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [backgroundRefresh, pageType])
   const isTableActive = isHTTPFlowTableActive(inViewport, backgroundRefresh, pageType)
 
-  // 整表重新加载时清空选中；缓存页重新可见时保留当前包，待响应后按 ID/Hash 校验�?  const onFirst = useMemoizedFn((reason: VirtualTableRefreshReason) => {
+  // 整表重新加载时清空选中；缓存页重新可见时保留当前包，待响应后按 ID/Hash 校验。
+  const onFirst = useMemoizedFn((reason: VirtualTableRefreshReason) => {
     if (reason === 'visibility') {
       selectionReconcilePendingRef.current = true
       setUpdateCacheData([])
@@ -387,7 +389,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setIsRefresh((v) => !v)
   })
 
-  // 接口返回后：去掉前端收藏/标签过滤 + 行颜�?  const initResDataFun = useMemoizedFn((arr: HTTPFlow[]) =>
+  // 接口返回后：去掉前端收藏/标签过滤 + 行颜色
+  const initResDataFun = useMemoizedFn((arr: HTTPFlow[]) =>
     getClassNameData(filterHTTPFlowsByFavoriteAndTags(arr, tagsFilter, onlyFavorite)),
   )
 
@@ -514,7 +517,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     httpFlowLiveStreamController,
   ])
 
-  // hook �?Pagination.AfterId，后�?QueryHTTPFlows 要顶�?AfterId，这里做一层转�?  const apiQueryHTTPFlows = useMemoizedFn(
+  // hook 用 Pagination.AfterId，后端 QueryHTTPFlows 要顶层 AfterId，这里做一层转换
+  const apiQueryHTTPFlows = useMemoizedFn(
     async (
       hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest },
       liveCycleToken?: MITMLiveCycleToken,
@@ -522,7 +526,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     ) => {
       const { Pagination, Filter } = hookParams
       const { AfterId, BeforeId, FixedLimit, ...paginationFields } = Pagination
-      // �?update（无游标）时更新 total
+      // 仅 update（无游标）时更新 total
       const isUpdateRequest = !AfterId && !BeforeId
       const metadataOnlyBackgroundQuery = shouldUseHTTPFlowMetadataOnlyQuery(inViewport, backgroundRefresh, pageType)
       const query: YakQueryHTTPFlowRequest = {
@@ -631,7 +635,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return !!AfterId && !BeforeId && Limit !== OFFSET_STEP
   })
 
-  // history 页面时，判断倒序情况，并且未加载的数据（减去 offsetData 缓存）超�?200 条时整表刷新 数据裁剪后按照增量来加载
+  // history 页面时，判断倒序情况，并且未加载的数据（减去 offsetData 缓存）超过 200 条时整表刷新 数据裁剪后按照增量来加载
   const grpcQueryHTTPFlows = useMemoizedFn(async (hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }) => {
     const queryEpoch = tableQueryEpochRef.current
     const { Pagination } = hookParams
@@ -738,11 +742,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return apiQueryHTTPFlows(hookParams, undefined, queryEpoch)
   })
 
-  // 实时 MITM 同样只保留一个内存窗口，完整数据仍在数据库中并可按滚动继续加载�?  const maxDataLength = useMemo(() => {
+  // 实时 MITM 同样只保留一个内存窗口，完整数据仍在数据库中并可按滚动继续加载。
+  const maxDataLength = useMemo(() => {
     return pageType === 'History' || pageType === 'MITM' ? HTTP_FLOW_TABLE_MAX_DATA_LENGTH : 0
   }, [pageType])
 
-  // 表格数据交给 useVirtualTableHook：负责上下滚动加载、中间位置拉新数据（offsetData 红点�?  const [
+  // 表格数据交给 useVirtualTableHook：负责上下滚动加载、中间位置拉新数据（offsetData 红点）
+  const [
     tableParams,
     data,
     ,
@@ -764,7 +770,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       refreshT,
     },
   ] = useVirtualTableHook<ParamsTProps & { Filter: YakQueryHTTPFlowRequest }, HTTPFlow, 'Data', 'Id'>({
-    tableBoxRef: useRef(null), // props.inViewport 判断可见性，不必再挂一�?ref
+    tableBoxRef: useRef(null), // props.inViewport 判断可见性，不必再挂一个 ref
     tableRef,
     boxHeightRef,
     grpcFun: grpcQueryHTTPFlows,
@@ -858,12 +864,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     pageType,
   ])
 
-  // Total 只用精确查询定期校准；实时流可能重放或去重，不按批次累加�?  const getAddDataByGrpc = useMemoizedFn((query: YakQueryHTTPFlowRequest, queryEpoch = tableQueryEpochRef.current) => {
+  // Total 只用精确查询定期校准；实时流可能重放或去重，不按批次累加。
+  const getAddDataByGrpc = useMemoizedFn((query: YakQueryHTTPFlowRequest, queryEpoch = tableQueryEpochRef.current) => {
     if (queryEpoch !== tableQueryEpochRef.current) return
     if (!isTableActive) return
     const clientHeight = tableRef.current?.containerRef?.clientHeight
     if (clientHeight === 0) return
-    // 性能优化：仅需覆盖 Pagination，无需深拷贝整�?query 对象
+    // 性能优化：仅需覆盖 Pagination，无需深拷贝整个 query 对象
     const copyQuery: YakQueryHTTPFlowRequest = {
       ...query,
       IncludeSystemTiming: false,
@@ -922,7 +929,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }))
   }, [runTimeId])
 
-  // 兼容收藏、改标签�?setData 写法，使用浅更新避免复制大量二进制字段�?  const setData = useMemoizedFn((value: React.SetStateAction<HTTPFlow[]>) => {
+  // 兼容收藏、改标签等 setData 写法，使用浅更新避免复制大量二进制字段。
+  const setData = useMemoizedFn((value: React.SetStateAction<HTTPFlow[]>) => {
     patchTData((prev) => (typeof value === 'function' ? value(prev) : value))
   })
   updateDataRef.current = updateData
@@ -1010,7 +1018,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           return item.Id == id
         })
         if (scrollToIndex !== undefined) {
-          // 加随机值触发更新渲染执行表格跳转方�?          setScrollToIndex(scrollToIndex + '_' + Math.random())
+          // 加随机值触发更新渲染执行表格跳转方法
+          setScrollToIndex(scrollToIndex + '_' + Math.random())
         }
       }
     } catch (error) {}
@@ -1031,7 +1040,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     try {
       const res = await getRemoteValue(RemoteHistoryGV.HTTPFlowTableFormConfiguration)
       if (!res) {
-        // 迁移旧数�?        const [
+        // 迁移旧数据
+        const [
           filterModeRes,
           hostNameRes,
           urlPathRes,
@@ -1125,7 +1135,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const { shieldIds, shieldHosts } = splitHTTPFlowTableShieldData(lastPickData)
 
     setParams((prev) => {
-      // 高级筛�?屏蔽hostName
+      // 高级筛选 屏蔽hostName
       const excludedHosts = [...shieldHosts, ...filterConfig.shield.hostName]
       return {
         ...prev,
@@ -1138,7 +1148,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     if (pageType === 'MITM') {
       emiter.emit('onGetMITMShieldDataEvent', JSON.stringify({ shieldData, version: mitmVersion }))
     }
-    // 判断是否第一次加载页�?    if (isOneceLoading.current) {
+    // 判断是否第一次加载页面
+    if (isOneceLoading.current) {
       getShieldList()
     } else {
       handleShieldDataUpdate()
@@ -1262,12 +1273,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const ids = parseIncludeIds(rawInput)
     const next = ids.length > 0 ? ids : undefined
     const prevIds = getParams().IncludeId
-    // 判断新值和旧值是否“完全相同”（内容相等），同时处理两者都�?undefined/空数组的情况，视为相同，否则，必须两者都存在（非空）、长度相同、且每个元素按索引相�?    const same =
+    // 判断新值和旧值是否“完全相同”（内容相等），同时处理两者都为 undefined/空数组的情况，视为相同，否则，必须两者都存在（非空）、长度相同、且每个元素按索引相等
+    const same =
       (!next || next.length === 0) && (!prevIds || prevIds.length === 0)
         ? true
         : !!next && !!prevIds && next.length === prevIds.length && next.every((id, i) => id === prevIds[i])
-    // 如果新旧值相同，并且 viewAttachId 为假值（0 �?undefined），则不执行更新，直接返�?    if (same && !viewAttachId) return
-    // 如果 viewAttachId 存在，则将其重置�?0（清除查看附近数据包状态）
+    // 如果新旧值相同，并且 viewAttachId 为假值（0 或 undefined），则不执行更新，直接返回
+    if (same && !viewAttachId) return
+    // 如果 viewAttachId 存在，则将其重置为 0（清除查看附近数据包状态）
     if (viewAttachId) setViewAttachId(0)
     setParams((prev) => ({
       ...prev,
@@ -1311,7 +1324,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [campareTagsFilter, onlyFavorite, pageType])
 
   /**
-   * 网站树部�?   */
+   * 网站树部分
+   */
   const campareIncludeInUrl = useCampare(props.includeInUrl)
   useDebounceEffect(
     () => {
@@ -1486,19 +1500,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [onMITMFlowCommitted, onRefreshQueryHTTPFlowsFun])
 
   useEffect(() => {
-    // 获取缓存的后台刷新状�?    getRemoteValue(RemoteHistoryGV.BackgroundRefresh)
+    // 获取缓存的后台刷新状态
+    getRemoteValue(RemoteHistoryGV.BackgroundRefresh)
       .then((value) => {
         setBackgroundRefresh(!!value)
       })
       .catch(() => {})
   }, [inViewport])
 
-  // 取消屏蔽筛�?  const cancleFilter = useMemoizedFn((value) => {
+  // 取消屏蔽筛选
+  const cancleFilter = useMemoizedFn((value) => {
     const newArr = filterNonUnique([...shieldData.data, value])
     const newObj = { ...shieldData, data: newArr }
     setShieldData(newObj)
   })
-  // 取消所有屏蔽筛�?  const cancleAllFilter = useMemoizedFn((version) => {
+  // 取消所有屏蔽筛选
+  const cancleAllFilter = useMemoizedFn((version) => {
     if (version !== mitmVersion) return
     const newObj = { ...shieldData, data: [] }
     setShieldData(newObj)
@@ -1643,7 +1660,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     if (rowDate) {
       setSelected(rowDate)
       setOnlyShowFirstNode && setOnlyShowFirstNode(false)
-      // 仅在子窗口存在时才同步选中行数据（�?4.9MB 解码）到子窗口；无子窗口时跳过，避免单击行的无谓大内容构�?      if (getChildWindowHash()) {
+      // 仅在子窗口存在时才同步选中行数据（含 4.9MB 解码）到子窗口；无子窗口时跳过，避免单击行的无谓大内容构造
+      if (getChildWindowHash()) {
         minWinSendToChildWin({
           type: 'openPacketNewWindow',
           data: getPacketNewWindow(rowDate),
@@ -1655,7 +1673,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   })
 
-  // 只展示表格时清空 selected，selected �?effect �?onSelected(undefined)
+  // 只展示表格时清空 selected，selected 的 effect 会 onSelected(undefined)
   useEffect(() => {
     if (onlyShowFirstNode) {
       setCurrentIndex(undefined)
@@ -1687,17 +1705,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   // #region 表格自定义相关（excludeCustomColumnsKey这个变量暂时勿动，没有做其他列兼容）
   const specialCustoms = useMemoizedFn((key: string) => isHTTPFlowSpecialCustomColumn(key))
-  // 排除展示的列（包含noColumnsKey�?  const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(() => {
+  // 排除展示的列（包含noColumnsKey）
+  const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(() => {
     if (defaultExcludeColumnsKey && defaultExcludeColumnsKey.length > 0) {
-      // 预设排除：把 noColumnsKey 一并合入，保证不可能出现的列也被剔�?      return Array.from(new Set([...defaultExcludeColumnsKey, ...noColumnsKey]))
+      // 预设排除：把 noColumnsKey 一并合入，保证不可能出现的列也被剔除
+      return Array.from(new Set([...defaultExcludeColumnsKey, ...noColumnsKey]))
     }
     return noColumnsKey
   })
   // 默认所有列展示顺序
   const defalutColumnsOrderRef = useRef<string[]>(getHTTPFlowDefaultColumnsOrder())
-  // 所有列展示顺序（不包含excludeCustomColumnsKey�?  const [columnsOrder, setColumnsOrder] = useState<string[]>([])
+  // 所有列展示顺序（不包含excludeCustomColumnsKey）
+  const [columnsOrder, setColumnsOrder] = useState<string[]>([])
   useEffect(() => {
-    // 预设排除列模式下，不读取远程缓存，避免被全局列设置覆�?    if (defaultExcludeColumnsKey && defaultExcludeColumnsKey.length > 0) return
+    // 预设排除列模式下，不读取远程缓存，避免被全局列设置覆盖
+    if (defaultExcludeColumnsKey && defaultExcludeColumnsKey.length > 0) return
     if (inViewport) {
       debugToPrintLogs({
         page: 'HTTPFlowTable',
@@ -1714,7 +1736,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           if (res[0].status === 'fulfilled') {
             const arr = res[0].value.split(',')
             const excludeKeys = [...arr, ...noColumnsKey].filter((key) => key)
-            // 确保顺序缓存里面的key一定在默认所有列中存�?            const realArr = excludeKeys.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
+            // 确保顺序缓存里面的key一定在默认所有列中存在
+            const realArr = excludeKeys.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
             if (!isEqual(realArr, excludeColumnsKey)) {
               refreshTabelKey = true
               setExcludeColumnsKey(realArr)
@@ -1748,7 +1771,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [inViewport])
   // 表格可配置列
   const configColumnRef = useRef<ColumnAllInfoItem[]>([])
-  // 表格的key�?  const [tableKeyNumber, setTableKeyNumber] = useState<string>(uuidv4())
+  // 表格的key值
+  const [tableKeyNumber, setTableKeyNumber] = useState<string>(uuidv4())
   // 序号是否固定
   const [idFixed, setIdFixed] = useState<boolean>(true)
 
@@ -1938,13 +1962,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   }, [])
 
-  // 删除成功�?通知所有使用该组件的控件更�?  const onUpdateOtherPage = useMemoizedFn(() => {
-    // 说明�?此处emit并非是通知当前组件 而是通知复用此组件的其余组件 根据pageType区分
+  // 删除成功时 通知所有使用该组件的控件更新
+  const onUpdateOtherPage = useMemoizedFn(() => {
+    // 说明： 此处emit并非是通知当前组件 而是通知复用此组件的其余组件 根据pageType区分
     emiter.emit('onDeleteToUpdate', JSON.stringify({ sourcePage: pageType }))
     emiter.emit('onDeleteToUpdateHTTPHistoryFilter')
   })
 
-  // 删除全部 / 按筛选删�?  const onRemoveHttpHistoryAll = useMemoizedFn(
+  // 删除全部 / 按筛选删除
+  const onRemoveHttpHistoryAll = useMemoizedFn(
     (opts?: { isAddQuery?: boolean; query?: YakDeleteHTTPFlowRequest; resetId?: boolean; mergeParams?: boolean }) => {
       const { isAddQuery, query, resetId, mergeParams = true } = opts || {}
       const deleteAll = !!resetId
@@ -2002,7 +2028,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   })
 
-  // 性能优化：提取为 useMemoizedFn，避免每次渲染重新创建闭�?  const formatJson = useMemoizedFn((filterVal, jsonData) => {
+  // 性能优化：提取为 useMemoizedFn，避免每次渲染重新创建闭包
+  const formatJson = useMemoizedFn((filterVal, jsonData) => {
     return jsonData.map((v, index) =>
       filterVal.map((j) => {
         if (['Request', 'Response'].includes(j)) {
@@ -2074,7 +2101,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         //         : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
         OffsetId: undefined,
       }
-      // 与展示查�?apiQueryHTTPFlows 保持一致：MITM 场景补充本次会话起始时间作为下界�?      // 否则导出会把数据库中全部历史流量一起导�?      if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
+      // 与展示查询 apiQueryHTTPFlows 保持一致：MITM 场景补充本次会话起始时间作为下界，
+      // 否则导出会把数据库中全部历史流量一起导出
+      if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
         const time = await getRemoteValue(MITMConsts.MITMStartTimeStamp)
         if (time) {
           query.AfterUpdatedAt = parseInt(time, 10)
@@ -2087,7 +2116,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         .map((item) => item.key)
 
       const Ids: number[] = list.map((item) => parseInt(item.Id + ''))
-      // 最大请求条�?      const pageSize = getPageSize
+      // 最大请求条数
+      const pageSize = getPageSize
       // 需要多少次请求
       const count = Math.ceil((isAllSelect ? total : Ids.length) / pageSize)
       const resultArray: number[] = []
@@ -2204,7 +2234,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
               setExportDataKey(['Id', ...v])
             }}
             exportKey={'MITM-HISTORY-EXPORT-KEYS'}
-            getData={() => Promise.resolve()} //getData这里没用�?传空promise为了解决报错
+            getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
             onClose={() => m.destroy()}
             getContainer={getMainOperatorPageBodyContainerOrBody()}
             onHarExport={() => handleClickHarExport(ids)}
@@ -2228,7 +2258,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       title: t('HTTPFlowTable.saveFile'),
       defaultPath: `History-${Date.now()}`,
       filters: [
-        { name: 'HAR Files', extensions: ['har'] }, // 只允许保�?.har 文件
+        { name: 'HAR Files', extensions: ['har'] }, // 只允许保存 .har 文件
       ],
     })
       .then((file) => {
@@ -2293,7 +2323,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     openPacketNewWindow(getPacketNewWindow(r))
   })
 
-  // 右键插件(单�?
+  // 右键插件(单选)
   const [codecSingleHistoryPlugin, setCodecSingleHistoryPlugin] = useState<codecHistoryPluginProps[]>([])
   const [isGetSinglePlugin, setIsGetSinglePlugin] = useState<boolean>(false)
   const searchCodecSingleHistoryPlugin = useMemoizedFn(() => {
@@ -2315,7 +2345,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
   })
 
-  // 右键插件(多�?
+  // 右键插件(多选)
   const [codecMultipleHistoryPlugin, setCodecMultipleHistoryPlugin] = useState<codecHistoryPluginProps[]>([])
   const [isGetMultiplePlugin, setIsGetMultiplePlugin] = useState<boolean>(false)
   const searchCodecMultipleHistoryPlugin = useMemoizedFn(() => {
@@ -2383,7 +2413,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         ),
       }
 
-      // 如果有参数，添加子菜�?      if (item?.params && item.params.length > 0) {
+      // 如果有参数，添加子菜单
+      if (item?.params && item.params.length > 0) {
         return {
           ...baseItem,
           children: [
@@ -2491,7 +2522,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   })
   /**
-   * @description 数据�?PoC 模版
+   * @description 数据包 PoC 模版
    */
   const onPocMould = useMemoizedFn((v: HTTPFlow) => {
     const flow = v
@@ -2506,7 +2537,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     )
   })
   /**
-   * @description 批量检�?PoC 模版
+   * @description 批量检测 PoC 模版
    */
   const onBatchPocMould = useMemoizedFn((v: HTTPFlow) => {
     const flow = v as HTTPFlow
@@ -2531,7 +2562,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setShieldData({ ...shieldData, data: newArr })
   })
   /**
-   * @description 屏蔽该记�?   */
+   * @description 屏蔽该记录
+   */
   const onShieldRecord = useMemoizedFn((v: HTTPFlow) => {
     if (!(v && v.Id)) return
     const id = Math.ceil(v.Id)
@@ -2577,14 +2609,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onRemoveHttpHistory,
   })
 
-  /**@description 重置查询条件并刷�?*/
+  /**@description 重置查询条件并刷新 */
   const resetParams = useMemo(() => {
     const obj: YakQueryHTTPFlowRequest = {
-      // 这里是外界传进来的条件重置时需要保�?      SourceType: props.params?.SourceType || 'mitm',
+      // 这里是外界传进来的条件重置时需要保留
+      SourceType: props.params?.SourceType || 'mitm',
       ...getRunTimeIdObj(runTimeId),
       Full: false,
-      // MITM “清空视图”使用持久高水位隔离本次会话之前的数据�?      AfterId: params.AfterId,
-      // 屏蔽条件和高级筛选里面的参数需要保�?      ExcludeId: params.ExcludeId,
+      // MITM “清空视图”使用持久高水位隔离本次会话之前的数据。
+      AfterId: params.AfterId,
+      // 屏蔽条件和高级筛选里面的参数需要保留
+      ExcludeId: params.ExcludeId,
       ExcludeInUrl: params.ExcludeInUrl,
       // 高级筛选里面的参数，没有放开高级筛选按钮的一开始就不会获取下面的值，传进去也没有关系
       SearchContentType: params.SearchContentType,
@@ -2623,7 +2658,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const onResetRefresh = useMemoizedFn(() => {
     resetAllFun({ ...resetParams })
   })
-  /**@description 导入重置查询条件并刷�?*/
+  /**@description 导入重置查询条件并刷新 */
   const onImportResetRefresh = useMemoizedFn(() => {
     resetAllFun({ ...resetParams, SourceType: '' })
   })
@@ -2631,14 +2666,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onImportResetRefresh()
   }, [importRefresh])
 
-  /**查看附近数据�?*/
+  /**查看附近数据包 */
   const onViewAttachmentDataRefresh = useMemoizedFn((id: number) => {
     viewAttachIdFirstRef.current = true
     resetAllFun({ ...resetParams, SourceType: props.params?.SourceType || '', IncludeId: getFullRange(+id) }, +id)
   })
 
   /**
-   * @description 分享数据�?   * @param ids 分享数据得ids
+   * @description 分享数据包
+   * @param ids 分享数据得ids
    */
   const onShareData = useMemoizedFn((ids: string[], number: number) => {
     if (isAllSelect) {
@@ -2761,8 +2797,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onShieldDomain,
     onBatch,
     onViewAttachmentDataRefresh,
-    onClearSelection: resetSelected,
     onOpenBatchMarkEdit,
+    onClearSelection: resetSelected,
   })
 
   useEffect(() => {
@@ -2772,7 +2808,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   }, [props.params?.SourceType])
 
-  /**订阅的时候已经判�?pageType === "MITM" */
+  /**订阅的时候已经判断 pageType === "MITM" */
   const onHasParamsJumpHistory = useMemoizedFn((data) => {
     try {
       const value = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'onHasParamsJumpHistory' })
@@ -2856,7 +2892,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onResetRefresh()
   })
 
-  // mitm页面发送事件跳转过�?  useEffect(() => {
+  // mitm页面发送事件跳转过来
+  useEffect(() => {
     if (pageType === 'MITM') {
       emiter.on('onHasParamsJumpHistory', onHasParamsJumpHistory)
       emiter.on('onMitmClearFromPlugin', onMitmClearFromPlugin)
@@ -3345,7 +3382,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     updateData,
   ])
 
-  // 性能优化：提�?rowSelection �?useMemo，避免内联对象每次渲染创建新引用破坏 TableVirtualResize �?React.memo
+  // 性能优化：提取 rowSelection 为 useMemo，避免内联对象每次渲染创建新引用破坏 TableVirtualResize 的 React.memo
   const tableRowSelection = useMemo(
     () => ({
       isAll: isAllSelect,
@@ -3357,7 +3394,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     [isAllSelect, selectedRowKeys, onSelectAll, onSelectChange],
   )
 
-  // 性能优化：提�?pagination prop �?useMemo，避免内联对�?+ 内联�?onChange 每次渲染创建新引�?  const tablePagination = useMemo(
+  // 性能优化：提取 pagination prop 为 useMemo，避免内联对象 + 内联空 onChange 每次渲染创建新引用
+  const tablePagination = useMemo(
     () => ({
       page: pagination.Page,
       limit: pagination.Limit,
@@ -3411,7 +3449,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     } = setting
     // 后台刷新
     if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
-    // 二进制展示配�?    if (newBinaryDisplayEnabled !== binaryDisplayEnabled) {
+    // 二进制展示配置
+    if (newBinaryDisplayEnabled !== binaryDisplayEnabled) {
       binaryDisplayEnabledStore.setEnabled(newBinaryDisplayEnabled)
     }
     // 自定义列
@@ -3426,7 +3465,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(newColOrder))
       setExcludeColumnsKey(newExcludeColumnsKey)
       setColumnsOrder(newColOrder)
-      // 表格列宽度需要重新计�?      setTableKeyNumber(uuidv4())
+      // 表格列宽度需要重新计算
+      setTableKeyNumber(uuidv4())
     }
   })
 
