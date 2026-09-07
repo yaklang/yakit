@@ -1,6 +1,7 @@
-import React from 'react'
+import type React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import type * as AhooksModule from 'ahooks'
 vi.mock('antd', () => ({
   Avatar: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
   notification: { config: vi.fn(), success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
@@ -33,7 +34,7 @@ vi.mock('../api', () => ({ grpcSetContextMenuActionBinding: mocks.grpcSetContext
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { on: vi.fn(), off: vi.fn(), emit: mocks.emit } }))
 vi.mock('@/store/pageInfo', () => ({ usePageInfo: () => undefined }))
 vi.mock('ahooks', async () => {
-  const actual = await vi.importActual<typeof import('ahooks')>('ahooks')
+  const actual = await vi.importActual<typeof AhooksModule>('ahooks')
   return {
     ...actual,
     useInViewport: () => [true],

@@ -1,12 +1,13 @@
 import { act } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type * as AntdModule from 'antd'
 
 /**
  * 以 antd Menu 桩捕获 builtinPlacements：注入 rightTop/rightBottom 左偏锚点即为「子菜单向左展开」。
  * jsdom 无真实布局（getBoundingClientRect / clientWidth 恒为 0），布局测量均需打桩。
  */
 vi.mock('antd', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('antd')>()
+  const actual = await importOriginal<typeof AntdModule>()
   const MenuStub = (props: { builtinPlacements?: Record<string, { points: string[] }> }) => (
     <div
       data-testid="yakit-menu"
