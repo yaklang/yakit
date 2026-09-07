@@ -307,7 +307,7 @@ const getSeverityIcon = (Severity?: string) => {
   let icon = <></>
   switch (severity?.name) {
     case '无':
-      icon = <IconSolidDefaultRiskIcon />
+      icon = <DefaultRiskColorful />
       break
     case '信息':
       icon = <FingerprintInfoRiskColorful />
@@ -575,7 +575,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
               }}
             >
               <span>{text || record.RiskType || '-'}</span>
-              <OutlineChevrondownIcon className={styles['table-tag-icon']} />
+              <ChevronDownOutlined className={styles['table-tag-icon']} color="currentColor" />
             </div>
           ) : (
             text || record.RiskType || '-'
@@ -599,7 +599,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     }}
                   >
                     <span>{score !== undefined ? score : '-'}</span>
-                    <OutlineChevrondownIcon className={styles['table-tag-icon']} />
+                    <ChevronDownOutlined className={styles['table-tag-icon']} color="currentColor" />
                   </div>
                 )
               },
@@ -631,7 +631,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
               }}
             >
               {severityTag}
-              <OutlineChevrondownIcon className={styles['table-tag-icon']} />
+              <ChevronDownOutlined className={styles['table-tag-icon']} color="currentColor" />
             </div>
           ) : (
             severityTag
@@ -683,7 +683,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
               }}
             >
               <span>{formatDisposalStatusDisplay(text, t)}</span>
-              <OutlineChevrondownIcon className={styles['table-tag-icon']} />
+              <ChevronDownOutlined className={styles['table-tag-icon']} color="currentColor" />
             </div>
           ) : (
             <div
@@ -694,7 +694,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
               }}
             >
               <span>{text ? text.replaceAll('|', ',') : '-'}</span>
-              <OutlineChevrondownIcon className={styles['table-tag-icon']} />
+              <ChevronDownOutlined className={styles['table-tag-icon']} color="currentColor" />
             </div>
           ),
       },
