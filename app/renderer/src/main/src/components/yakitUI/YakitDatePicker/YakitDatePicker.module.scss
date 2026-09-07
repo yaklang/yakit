@@ -29,8 +29,31 @@
     }
     .ant-picker-range:hover,
     .ant-picker-focused {
+      background-color: var(--Colors-Use-Neutral-Bg);
       border-color: var(--Colors-Use-Main-Hover);
       box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+    }
+    .ant-picker-status-error.ant-picker,
+    .ant-picker-status-error.ant-picker:not([disabled]):hover {
+      background-color: var(--Colors-Use-Neutral-Bg);
+      border-color: var(--Colors-Use-Error-Primary);
+    }
+    .ant-picker-status-error.ant-picker-focused,
+    .ant-picker-status-error.ant-picker:focus {
+      background-color: var(--Colors-Use-Neutral-Bg);
+      border-color: var(--Colors-Use-Error-Primary);
+      box-shadow: 0 0 0 2px rgb(255 77 79 / 20%);
+    }
+    .ant-picker-status-warning.ant-picker,
+    .ant-picker-status-warning.ant-picker:not([disabled]):hover {
+      background-color: var(--Colors-Use-Neutral-Bg);
+      border-color: var(--Colors-Use-Warning-Primary);
+    }
+    .ant-picker-status-warning.ant-picker-focused,
+    .ant-picker-status-warning.ant-picker:focus {
+      background-color: var(--Colors-Use-Neutral-Bg);
+      border-color: var(--Colors-Use-Warning-Primary);
+      box-shadow: 0 0 0 2px rgb(250 173 20 / 20%);
     }
     .ant-picker-range .ant-picker-active-bar {
       background-color: var(--Colors-Use-Main-Primary);
@@ -43,6 +66,9 @@
 }
 .yakit-range-picker-dropdaown {
   :global {
+    .ant-picker-panel-container {
+      background: var(--Colors-Use-Neutral-Bg);
+    }
     .ant-picker-header-super-prev-btn,
     .ant-picker-header-prev-btn,
     .ant-picker-header-super-next-btn,
@@ -66,7 +92,10 @@
     .ant-picker-cell-in-view.ant-picker-cell-in-range::before {
       background: var(--Colors-Use-Neutral-Bg);
     }
-    .ant-picker-date-panel {
+    .ant-picker-date-panel,
+    .ant-picker-month-panel,
+    .ant-picker-year-panel,
+    .ant-picker-decade-panel {
       background: var(--Colors-Use-Neutral-Bg);
       .ant-picker-header {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
@@ -195,8 +224,31 @@
     }
     .ant-picker:hover,
     .ant-picker-focused {
+      background-color: var(--Colors-Use-Basic-Background);
       border-color: var(--Colors-Use-Main-Hover);
       box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+    }
+    .ant-picker-status-error.ant-picker,
+    .ant-picker-status-error.ant-picker:not([disabled]):hover {
+      background-color: var(--Colors-Use-Neutral-Bg);
+      border-color: var(--Colors-Use-Error-Primary);
+    }
+    .ant-picker-status-error.ant-picker-focused,
+    .ant-picker-status-error.ant-picker:focus {
+      background-color: var(--Colors-Use-Neutral-Bg);
+      border-color: var(--Colors-Use-Error-Primary);
+      box-shadow: 0 0 0 2px rgb(255 77 79 / 20%);
+    }
+    .ant-picker-status-warning.ant-picker,
+    .ant-picker-status-warning.ant-picker:not([disabled]):hover {
+      background-color: var(--Colors-Use-Neutral-Bg);
+      border-color: var(--Colors-Use-Warning-Primary);
+    }
+    .ant-picker-status-warning.ant-picker-focused,
+    .ant-picker-status-warning.ant-picker:focus {
+      background-color: var(--Colors-Use-Neutral-Bg);
+      border-color: var(--Colors-Use-Warning-Primary);
+      box-shadow: 0 0 0 2px rgb(250 173 20 / 20%);
     }
     .ant-picker .ant-picker-active-bar {
       background-color: var(--Colors-Use-Main-Primary);
@@ -209,6 +261,9 @@
 }
 .yakit-data-picker-dropdaown {
   :global {
+    .ant-picker-panel-container {
+      background: var(--Colors-Use-Neutral-Bg);
+    }
     .ant-picker-panel {
       background: var(--Colors-Use-Neutral-Bg);
       border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
@@ -243,6 +298,35 @@
     .ant-picker-body .ant-picker-content tbody tr .ant-picker-cell-in-view {
       color: var(--Colors-Use-Neutral-Text-1-Title);
     }
+    .ant-picker-date-panel,
+    .ant-picker-month-panel,
+    .ant-picker-year-panel,
+    .ant-picker-decade-panel {
+      background: var(--Colors-Use-Neutral-Bg);
+      .ant-picker-header {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+      }
+      .ant-picker-header > button {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      }
+    }
+    .ant-picker-body .ant-picker-content thead tr th {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+    .ant-picker-body .ant-picker-content tbody tr .ant-picker-cell {
+      color: var(--Colors-Use-Neutral-Disable);
+    }
+    .ant-picker-body .ant-picker-content tbody tr .ant-picker-cell-in-view {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+    .ant-picker-cell:hover:not(.ant-picker-cell-in-view) .ant-picker-cell-inner,
+    .ant-picker-cell:hover:not(.ant-picker-cell-selected):not(.ant-picker-cell-range-start):not(
+        .ant-picker-cell-range-end
+      ):not(.ant-picker-cell-range-hover-start):not(.ant-picker-cell-range-hover-end)
+      .ant-picker-cell-inner {
+      background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    }
     .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
       border: 1px solid var(--Colors-Use-Main-Focus);
     }
@@ -257,7 +341,13 @@
       .ant-picker-cell-inner {
       background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
-    // showTime 面板底部「此刻」按钮对齐 YakitButton(type=text)、「确定」按钮对齐 YakitButton(type=primary) 风格
+    .ant-picker-footer {
+      background-color: var(--Colors-Use-Neutral-Bg);
+    }
+    .ant-picker-today-btn {
+      color: var(--Colors-Use-Main-Primary);
+    }
+    // showTime panel footer buttons
     .ant-picker-now-btn {
       display: inline-flex;
       align-items: center;
