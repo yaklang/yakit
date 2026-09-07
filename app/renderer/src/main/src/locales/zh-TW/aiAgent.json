@@ -4,7 +4,6 @@
     "lightweightModels": "輕量模型",
     "visionModels": "視覺模型",
     "callingMode": "呼叫模式",
-    "aiModel": "AI模型",
     "focusMode": "場景",
     "reasoningEffort": "思考"
   },
@@ -69,9 +68,8 @@
     "configTitle": "AI 模型未配置",
     "toConfigure": "去配置",
     "configDesc": "無可使用AI模型，請配置後使用",
-    "openModelTabSuccess": "已開啟AI側邊欄模型配置",
     "selectModel": "AI 模型選擇",
-    "openConfigTooltip": "開啟ai側邊欄模型配置"
+    "openConfigTooltip": "開啟設定中的模型配置"
   },
   "AIModelList": {
     "onlineTooltip": "透過api訪問模型,接受AI資訊或向AI傳送訊息,可配置多個",
@@ -84,7 +82,6 @@
     "confirmAddBtn": "確定添加",
     "addThirdPartyApp": "新增第三方應用",
     "addLocalModel": "新增本地模型",
-    "clearConfirm": "是否確認清空所有{{type}}模型配置",
     "online": "線上",
     "local": "本地",
     "clearModelsTitle": "清空模型",
@@ -92,15 +89,12 @@
     "policyAuto": "根據請求內容自動選擇最合適的模型",
     "policyPerformance": "優先使用高智慧模型",
     "policyCost": "優先使用輕量級/低成本模型",
-    "policyBalance": "在響應速度、智慧程度和成本之間取得平衡"
+    "policyBalance": "在響應速度、智慧程度和成本之間取得平衡",
+    "sameModelWarning": "不建議輕量和高質使用同一個模型，輕量適合使用響應快速的模型"
   },
   "AIOnlineModeSetting": {
-    "configUpdateFailed": "配置更新失敗,未獲取到全域性ai配置,請重試",
     "disableFallback": "禁用降級到輕量模型",
     "configErrorEdit": "配置錯誤，無法編輯"
-  },
-  "AIOnlineModelList": {
-    "noDataDesc": "透過 api 訪問模型，接受 AI 資訊或向 Al 傳送資訊，可配置多個。"
   },
   "AILocalModelList": {
     "llamaServerNotReady": "Llama伺服器未準備就緒: {{reason}}",

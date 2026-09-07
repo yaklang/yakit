@@ -13,7 +13,6 @@ import { SplitView } from '../yakRunner/SplitView/SplitView'
 import FileTreeList from './aiChatWelcome/FileTreeList/FileTreeList'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 
-const AIModelList = React.lazy(() => import('./aiModelList/AIModelList'))
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
 const AIScheduledTasks = React.lazy(() => import('./aiScheduledTasks/AIScheduledTasks'))
 
@@ -76,13 +75,6 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         content = (
           <React.Suspense fallback={<div>Loading...</div>}>
             <AIScheduledTasks visible={show} />
-          </React.Suspense>
-        )
-        break
-      case AIAgentTabListEnum.AI_Model:
-        content = (
-          <React.Suspense fallback={<div>Loading...</div>}>
-            <AIModelList />
           </React.Suspense>
         )
         break

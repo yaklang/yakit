@@ -4,7 +4,6 @@
     "lightweightModels": "Lightweight Models",
     "visionModels": "Vision Models",
     "callingMode": "Calling Mode",
-    "aiModel": "AI model",
     "focusMode": "Focus Mode",
     "reasoningEffort": "Thinking"
   },
@@ -69,9 +68,8 @@
     "configTitle": "AI Model Not Configured",
     "toConfigure": "Go to Configure",
     "configDesc": "No available AI model found. Please configure one before use.",
-    "openModelTabSuccess": "AI sidebar model configuration opened",
     "selectModel": "Select AI Model",
-    "openConfigTooltip": "Open AI sidebar model configuration"
+    "openConfigTooltip": "Open model configuration in Settings"
   },
   "AIModelList": {
     "onlineTooltip": "Access models via API, receive AI info or send messages to AI, multiple configurations possible.",
@@ -84,7 +82,6 @@
     "confirmAddBtn": "Confirm",
     "addThirdPartyApp": "Add Third-Party Application",
     "addLocalModel": "Add Local Model",
-    "clearConfirm": "Are you sure to clear all {{type}} model configurations?",
     "online": "Online",
     "local": "Local",
     "clearModelsTitle": "Clear Models",
@@ -92,15 +89,12 @@
     "policyAuto": "Automatically select the most suitable model based on request content",
     "policyPerformance": "Prioritize high-intelligence models",
     "policyCost": "Prioritize lightweight/low-cost models",
-    "policyBalance": "Balance between response speed, intelligence, and cost"
+    "policyBalance": "Balance between response speed, intelligence, and cost",
+    "sameModelWarning": "Using the same model for lightweight and high-quality is not recommended; lightweight should use a fast-response model"
   },
   "AIOnlineModeSetting": {
-    "configUpdateFailed": "Configuration update failed, global AI configuration not obtained, please try again",
     "disableFallback": "Disable fallback to lightweight models",
     "configErrorEdit": "Configuration error, cannot edit"
-  },
-  "AIOnlineModelList": {
-    "noDataDesc": "Access models via API, receive AI info or send messages to AI, multiple configurations possible."
   },
   "AILocalModelList": {
     "llamaServerNotReady": "Llama server not ready: {{reason}}",

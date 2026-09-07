@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react'
 import type { AIModelConfig } from '../utils'
-import type { AIOnlineModelListProps } from '../AIModelListType'
+import type { ModalProps } from 'antd'
 import { type AIModelTypeEnum } from '../../defaultConstant'
 
 export type AISelectType = 'online' | 'local'
 export interface AIModelSelectProps {
   isOpen?: boolean
   className?: string
-  mountContainer?: AIOnlineModelListProps['mountContainer']
+  mountContainer?: ModalProps['getContainer']
 }
 export interface AIModelItemProps {
   type: AIModelTypeEnum

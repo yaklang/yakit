@@ -14,6 +14,7 @@ import {
 import { ChevronDownSolid, ChevronRightSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import {
   AILocalModelList,
+  AILocalModelListItemPromptHint,
   AIOnlineModel,
   getTipByType,
   onEditAIModel,
@@ -26,7 +27,7 @@ import type {
   AIModelActionProps,
   AIModelType,
 } from '@/pages/ai-agent/aiModelList/AIModelListType'
-import type { AIModelConfig, AIModelTypeFileName } from '@/pages/ai-agent/aiModelList/utils'
+import { grpcClearAllModels, type AIModelConfig, type AIModelTypeFileName } from '@/pages/ai-agent/aiModelList/utils'
 import {
   AIModelPolicyEnum,
   AIModelPolicyOptions,
@@ -39,6 +40,7 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 import styles from './AIModelSettings.module.scss'
 
 const ModelGroup: React.FC<{
@@ -70,7 +72,9 @@ const ModelGroup: React.FC<{
 export const AIModelSettings: React.FC = () => {
   const { t } = useI18nNamespaces(['setting', 'aiAgent', 'yakitUi'])
   const [modelType, setModelType] = useState<AIModelType>('online')
-  const [, setLocalTotal] = useState(0)
+  const [localTotal, setLocalTotal] = useState(0)
+  const [clearLocalVisible, setClearLocalVisible] = useState(false)
+  const [sameModelAlert, setSameModelAlert] = useState(true)
   const localRef = useRef<AILocalModelListRefProps>(null)
   const pageRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(pageRef)
@@ -129,6 +133,23 @@ export const AIModelSettings: React.FC = () => {
     if (modelType === 'online') onAddOnline()
     else onAddLocal()
   })
+
+  const onClearLocal = useMemoizedFn((deleteSourceFile: boolean) => {
+    return grpcClearAllModels({ DeleteSourceFile: deleteSourceFile }).then(() => {
+      localRef.current?.onRefresh()
+      setClearLocalVisible(false)
+    })
+  })
+
+  const isSameSelectedModel = useCreation(() => {
+    const intelligentSelect = aiGlobalConfig?.IntelligentModels?.[0]
+    const lightweightSelect = aiGlobalConfig?.LightweightModels?.[0]
+    if (!intelligentSelect || !lightweightSelect) return false
+    return (
+      intelligentSelect.ModelName === lightweightSelect.ModelName &&
+      intelligentSelect.Provider?.Type === lightweightSelect.Provider?.Type
+    )
+  }, [aiGlobalConfig?.IntelligentModels, aiGlobalConfig?.LightweightModels])
 
   const onEdit = useMemoizedFn((options: AIModelActionProps) => {
     if (!aiGlobalConfig) return
@@ -218,6 +239,11 @@ export const AIModelSettings: React.FC = () => {
             <YakitButton type="text" icon={<PlusOutlined color="currentColor" />} onClick={onAdd}>
               {t('YakitButton.add')}
             </YakitButton>
+            {modelType === 'local' && localTotal > 0 && (
+              <YakitButton type="text" colors="danger" onClick={() => setClearLocalVisible(true)}>
+                {t('YakitButton.clear')}
+              </YakitButton>
+            )}
             <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} onClick={() => onRefresh()} />
           </div>
         </div>
@@ -258,6 +284,16 @@ export const AIModelSettings: React.FC = () => {
             </div>
             {isHaveData ? (
               <div className={styles['groups']}>
+                {sameModelAlert && isSameSelectedModel && (
+                  <div className={styles['same-model-alert']}>
+                    <YakitAlert
+                      type="warning"
+                      description={t('AIModelList.sameModelWarning')}
+                      closable
+                      onClose={() => setSameModelAlert(false)}
+                    />
+                  </div>
+                )}
                 {!!aiGlobalConfig?.IntelligentModels?.length && (
                   <ModelGroup title={t('AiAgengt.intelligentModels')} desc={t('AIModelList.intelligentModelsDesc')}>
                     {renderOnlineGroup(
@@ -301,6 +337,14 @@ export const AIModelSettings: React.FC = () => {
             <AILocalModelList ref={localRef} setLocalTotal={setLocalTotal} />
           </div>
         </div>
+      )}
+      {clearLocalVisible && (
+        <AILocalModelListItemPromptHint
+          title={t('AIModelList.clearModelsTitle')}
+          content={t('AIModelList.clearModelsDesc')}
+          onOk={onClearLocal}
+          onCancel={() => setClearLocalVisible(false)}
+        />
       )}
     </div>
   )

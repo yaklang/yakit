@@ -3,23 +3,14 @@ import type {
   AILocalModelListItemPromptHintProps,
   AILocalModelListItemProps,
   AILocalModelListProps,
-  AILocalModelListRefProps,
   AILocalModelListWrapperProps,
-  AIModelActionProps,
   AIModelFreeTagProps,
-  AIModelListProps,
-  AIModelType,
   AIOnlineModelListItemProps,
-  AIOnlineModelListProps,
-  AIOnlineModelListRefProps,
   AIOnlineModelProps,
-  AIOnlineModeSettingProps,
   OutlineAtomIconByStatusProps,
 } from './AIModelListType'
 import styles from './AIModelList.module.scss'
-import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { useCreation, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import type { YakitRadioButtonsProps } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType'
+import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
   type AIGlobalConfig,
@@ -27,7 +18,6 @@ import {
   getModelName,
   grpcAIConfigHealthCheck,
   grpcCancelStartLocalModel,
-  grpcClearAllModels,
   grpcDeleteLocalModel,
   grpcGetSupportedLocalModels,
   grpcIsLlamaServerReady,
@@ -37,7 +27,7 @@ import {
 } from './utils'
 import { resetForcedAIModalFlag } from './utils'
 import type { LocalModelConfig } from '../type/aiModel'
-import { Divider, Form, Tooltip } from 'antd'
+import type { ModalProps } from 'antd'
 import { yakitNotify } from '@/utils/notification'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -52,13 +42,10 @@ import {
   LightBulbOutlined,
   PencilAltOutlined,
   PlayOutlined,
-  PlusOutlined,
-  PlusSmOutlined,
   RefreshOutlined,
   TrashOutlined,
   SpeechToTextOutlined,
   CheckOutlined,
-  CogOutlined,
   FigmaIcon28011794Outlined,
   FigmaIcon4866167279Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -75,10 +62,8 @@ import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu
 import {
   AILocalModelTypeEnum,
   AIModelPolicyEnum,
-  AIModelPolicyOptions,
   AIModelTypeEnum,
   type AIModelTypeEnumType,
-  AIModelTypeInterFileNameEnum,
   AIOnlineModelIconMap,
 } from '../defaultConstant'
 import { randomString } from '@/utils/randomUtil'
@@ -99,17 +84,13 @@ import {
   getModelTypeByFileName,
 } from './aiModelForm/AIModelForm'
 import type { AIModelFormProps } from './aiModelForm/AIModelFormType'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
-import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 export const setAIModal = (params: {
   modelType?: AIModelFormProps['aiModelType']
   item?: AIModelFormProps['item']
   onSuccess: () => void
-  mountContainer?: AIOnlineModelListProps['mountContainer']
+  mountContainer?: ModalProps['getContainer']
   t: TFunction
 }) => {
   const { modelType, item, onSuccess, mountContainer, t } = params
@@ -147,7 +128,7 @@ export const onEditAIModel = (data: {
   aiGlobalConfig: AIGlobalConfig
   index: number
   fileName: string
-  mountContainer?: AIOnlineModelListProps['mountContainer']
+  mountContainer?: ModalProps['getContainer']
   onSuccess: () => void
   t: TFunction
 }) => {
@@ -217,205 +198,6 @@ export const onSelectAIModel = (data: {
   } catch (error) {}
 }
 
-const modelTypeOptions: (t: TFunction) => YakitRadioButtonsProps['options'] = (t) => {
-  return [
-    {
-      label: (
-        <Tooltip placement="topLeft" title={t('AIModelList.onlineTooltip')}>
-          {t('AIModelList.online')}
-        </Tooltip>
-      ),
-      value: 'online',
-    },
-    {
-      label: (
-        <Tooltip placement="top" title={t('AIModelList.localTooltip')}>
-          {t('AIModelList.local')}
-        </Tooltip>
-      ),
-      value: 'local',
-    },
-  ]
-}
-const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
-  const { mountContainer } = props
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-
-  const [modelType, setModelType] = useState<AIModelType>('online')
-
-  const [localTotal, setLocalTotal] = useState<number>(0)
-
-  const [removeVisible, setRemoveVisible] = useState<boolean>(false)
-
-  const onlineRef = useRef<AIOnlineModelListRefProps>(null)
-  const localRef = useRef<AILocalModelListRefProps>(null)
-  const onlineListRef = useRef<HTMLDivElement>(null)
-  const [inViewport = true] = useInViewport(onlineListRef)
-  const [aiGlobalConfigData, event] = useAIGlobalConfig()
-  useEffect(() => {
-    if (!inViewport) return
-    emiter.on('onRefreshAIModelList', onRefreshAIModelList)
-    return () => {
-      emiter.off('onRefreshAIModelList', onRefreshAIModelList)
-    }
-  }, [inViewport])
-
-  useEffect(() => {
-    if (inViewport) {
-      onRefresh()
-    }
-  }, [inViewport])
-
-  const onToolQueryTypeChange = useMemoizedFn((e) => {
-    setModelType(e.target.value as AIModelType)
-  })
-  const total = useCreation(() => {
-    if (modelType === 'online') {
-      return aiGlobalConfigData.total
-    } else {
-      return localTotal
-    }
-  }, [modelType, localTotal, aiGlobalConfigData.total])
-  const onRefreshAIModelList = useMemoizedFn(() => {
-    onRefresh()
-  })
-  const onRefresh = useMemoizedFn((isShowLoading?: boolean) => {
-    switch (modelType) {
-      case 'online':
-        event.onRefresh(isShowLoading)
-        break
-      case 'local':
-        localRef.current?.onRefresh()
-        break
-      default:
-        break
-    }
-  })
-  const onAdd = useMemoizedFn(() => {
-    switch (modelType) {
-      case 'online':
-        onAddOnline()
-        break
-      case 'local':
-        onAddLocal()
-        break
-      default:
-        break
-    }
-  })
-  const onAddLocal = useMemoizedFn(() => {
-    const m = showYakitModal({
-      title: (modalT) => modalT('AIModelList.addLocalModel'),
-      width: '50%',
-      content: (
-        <AddAIModel
-          onCancel={() => {
-            m.destroy()
-            localRef.current?.onRefresh()
-          }}
-        />
-      ),
-      footer: null,
-    })
-  })
-  const onAddOnline = useMemoizedFn(() => {
-    setAIModal({
-      mountContainer,
-      t,
-      onSuccess: () => {
-        event.onRefresh()
-      },
-    })
-  })
-  const onClear = useMemoizedFn(() => {
-    switch (modelType) {
-      case 'online':
-        onClearOnline()
-        break
-      case 'local':
-        setRemoveVisible(true)
-        break
-      default:
-        break
-    }
-  })
-  const onClearOnline = useMemoizedFn(() => {
-    onlineRef.current?.onRemoveAll()
-  })
-  const onClearLocal = useMemoizedFn(() => {
-    return grpcClearAllModels({ DeleteSourceFile: false }).then(() => {
-      localRef.current?.onRefresh()
-      setRemoveVisible(false)
-    })
-  })
-  const onCancelRemove = useMemoizedFn(() => {
-    setRemoveVisible(false)
-    localRef.current?.onRefresh()
-  })
-  const onRefreshAIModel = useMemoizedFn(() => {
-    //刷新列表
-    onRefresh(false)
-    // 刷新ai输入框中model数据
-    emiter.emit('onRefreshAvailableAIModelList')
-  })
-  return (
-    <div className={styles['ai-model-list-wrapper']} ref={onlineListRef}>
-      <div className={styles['ai-model-list-header']}>
-        <div className={styles['ai-model-list-header-left']}>
-          <YakitRadioButtons
-            size="small"
-            buttonStyle="solid"
-            value={modelType}
-            options={modelTypeOptions(t)}
-            onChange={onToolQueryTypeChange}
-          />
-          <div className={styles['ai-model-list-total']}>{total}</div>
-        </div>
-        <div className={styles['ai-model-list-header-right']}>
-          {modelType === 'online' && <AIOnlineModeSetting onRefresh={onRefreshAIModel} />}
-          <Tooltip title={t('YakitButton.add')}>
-            <YakitButton type="text2" icon={<PlusOutlined color="currentColor" />} onClick={onAdd} />
-          </Tooltip>
-          <Tooltip title={t('YakitButton.refresh')}>
-            <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} onClick={() => onRefresh()} />
-          </Tooltip>
-          {modelType === 'local' && (
-            <>
-              <Divider type="vertical" />
-              <YakitPopconfirm
-                placement="right"
-                title={t('AIModelList.clearConfirm', {
-                  type: modelType === 'local' ? t('AIModelList.local') : t('AIModelList.online'),
-                })}
-                onConfirm={onClear}
-              >
-                <YakitButton type="text" danger>
-                  {t('YakitButton.clear')}
-                </YakitButton>
-              </YakitPopconfirm>
-            </>
-          )}
-        </div>
-      </div>
-      {modelType === 'online' ? (
-        <AIOnlineModelList ref={onlineRef} onAdd={onAdd} mountContainer={mountContainer} />
-      ) : (
-        <AILocalModelList ref={localRef} setLocalTotal={setLocalTotal} />
-      )}
-      {removeVisible && (
-        <AILocalModelListItemPromptHint
-          title={t('AIModelList.clearModelsTitle')}
-          content={t('AIModelList.clearModelsDesc')}
-          onOk={onClearLocal}
-          onCancel={onCancelRemove}
-        />
-      )}
-    </div>
-  )
-})
-
-export default AIModelList
-
 export const getTipByType = (routingPolicy: AIModelPolicyEnum, t: TFunction) => {
   switch (routingPolicy) {
     case AIModelPolicyEnum.PolicyAuto:
@@ -432,275 +214,6 @@ export const getTipByType = (routingPolicy: AIModelPolicyEnum, t: TFunction) => 
   }
 }
 
-const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((props) => {
-  const { onRefresh } = props
-  const { t, i18n } = useI18nNamespaces(['aiAgent'])
-  const zhLang = i18n.language.startsWith('zh')
-  const [visible, setVisible] = useState<boolean>(false)
-  const [form] = Form.useForm()
-  const routingPolicy = Form.useWatch('RoutingPolicy', form)
-
-  const [aiGlobalConfigData, event] = useAIGlobalConfig()
-
-  const getList = useMemoizedFn(() => {
-    event.getLastAIGlobalConfig().then((res) => {
-      form.setFieldsValue({
-        RoutingPolicy: res.RoutingPolicy || AIModelPolicyEnum.PolicyAuto,
-        DisableFallback: res.DisableFallback,
-      })
-    })
-  })
-  const onSetConfig = useMemoizedFn((visible: boolean) => {
-    setVisible(visible) // 不管是否保存成功,都设置
-    if (visible) {
-      getList()
-      return
-    }
-
-    const values = form.getFieldsValue()
-    if (!aiGlobalConfigData?.aiGlobalConfigRef.current) {
-      yakitNotify('error', t('AIOnlineModeSetting.configUpdateFailed'))
-      return
-    }
-    if (
-      aiGlobalConfigData?.aiGlobalConfigRef.current.RoutingPolicy === values.RoutingPolicy &&
-      aiGlobalConfigData?.aiGlobalConfigRef.current.DisableFallback === values.DisableFallback
-    ) {
-      return
-    }
-    const config: AIGlobalConfig = {
-      ...aiGlobalConfigData?.aiGlobalConfigRef.current,
-      RoutingPolicy: values.RoutingPolicy,
-      DisableFallback: values.DisableFallback,
-    }
-    event.setAIGlobalConfig(config).then(() => {
-      onRefresh()
-    })
-  })
-  return (
-    <YakitPopover
-      content={
-        <div className={styles['ai-online-mode-setting-popover']} style={{ width: zhLang ? 500 : 700 }}>
-          <Form form={form} labelCol={{ span: zhLang ? 8 : 10 }} wrapperCol={{ span: zhLang ? 16 : 14 }}>
-            <Form.Item
-              name="RoutingPolicy"
-              label={t('AiAgengt.callingMode')}
-              extra={<>{getTipByType(routingPolicy, t)}</>}
-            >
-              <YakitRadioButtons
-                buttonStyle="solid"
-                options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
-              />
-            </Form.Item>
-            <Form.Item name="DisableFallback" valuePropName="checked" label={t('AIOnlineModeSetting.disableFallback')}>
-              <YakitSwitch size="middle" />
-            </Form.Item>
-          </Form>
-        </div>
-      }
-      open={visible}
-      onOpenChange={onSetConfig}
-      placement="bottomRight"
-    >
-      <YakitButton type="text2" icon={<CogOutlined color="currentColor" />} />
-    </YakitPopover>
-  )
-})
-const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
-  forwardRef((props, ref) => {
-    const { onAdd, mountContainer } = props
-    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-
-    const [isShowAlert, setIsShowAlert] = useState<boolean>(false)
-
-    const onlineListRef = useRef<HTMLDivElement>(null)
-    const [inViewport = true] = useInViewport(onlineListRef)
-
-    const [aiGlobalConfigData, event] = useAIGlobalConfig()
-
-    useImperativeHandle(
-      ref,
-      () => ({
-        onRemoveAll: () => onRemoveAll(),
-      }),
-      [],
-    )
-    useEffect(() => {
-      if (inViewport) event.onRefresh()
-    }, [inViewport])
-    const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
-    useEffect(() => {
-      setIsShowAlert(isSelectEqual(aiGlobalConfig))
-    }, [aiGlobalConfig])
-    const onRemoveAll = useMemoizedFn(() => {})
-    const isHaveData = useCreation(() => {
-      return !!(
-        aiGlobalConfig?.IntelligentModels?.length ||
-        aiGlobalConfig?.LightweightModels?.length ||
-        aiGlobalConfig?.VisionModels?.length
-      )
-    }, [
-      aiGlobalConfig?.IntelligentModels?.length,
-      aiGlobalConfig?.LightweightModels?.length,
-      aiGlobalConfig?.VisionModels?.length,
-    ])
-
-    const onEdit = useMemoizedFn((options: AIModelActionProps) => {
-      try {
-        if (!aiGlobalConfig) return
-        const { fileName, index } = options
-        onEditAIModel({
-          aiGlobalConfig,
-          index,
-          fileName,
-          mountContainer: undefined,
-          t,
-          onSuccess: () => {
-            event.onRefresh()
-          },
-        })
-      } catch (error) {}
-    })
-    const onRemove = useMemoizedFn((options: AIModelActionProps) => {
-      if (!aiGlobalConfig) return
-      const { fileName, index } = options
-      onRemoveAIModel({
-        aiGlobalConfig,
-        index,
-        fileName,
-        onSuccess: () => {
-          event.onRefresh()
-        },
-      })
-    })
-    const onSelect = useMemoizedFn((item: AIModelConfig, options: AIModelActionProps) => {
-      if (!aiGlobalConfig) return
-      const { fileName, index } = options
-      onSelectAIModel({
-        aiGlobalConfig,
-        item,
-        index,
-        fileName,
-        onSuccess: () => {
-          event.onRefresh()
-        },
-      })
-    })
-    /**
-     * 高质模型和轻量模型的厂商和模型名称是否一样
-     */
-    const isSelectEqual = useMemoizedFn((config: AIGlobalConfig) => {
-      const intelligentSelect = config?.IntelligentModels?.[0]
-      const lightweightSelect = config?.LightweightModels?.[0]
-      const isEqualName = intelligentSelect?.ModelName === lightweightSelect?.ModelName
-      const isEqualType = intelligentSelect?.Provider?.Type === lightweightSelect?.Provider?.Type
-      return isEqualName && isEqualType
-    })
-    return (
-      <YakitSpin spinning={aiGlobalConfigData.queryLoading}>
-        {isHaveData ? (
-          <div className={styles['ai-online-model-wrapper']} ref={onlineListRef}>
-            {isShowAlert && (
-              <YakitAlert
-                type={'warning'}
-                description={'不建议轻量和高质使用同一个模型，轻量适合使用响应快速的模型'}
-                closable={true}
-                onClose={() => setIsShowAlert(false)}
-              />
-            )}
-            {!!aiGlobalConfig?.IntelligentModels.length && (
-              <AIOnlineModel
-                title={t('AiAgengt.intelligentModels')}
-                subTitle={t('AIModelList.intelligentModelsDesc')}
-                list={aiGlobalConfig?.IntelligentModels || []}
-                onEdit={(index) =>
-                  onEdit({
-                    fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
-                    index,
-                  })
-                }
-                onRemove={(index) =>
-                  onRemove({
-                    fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
-                    index,
-                  })
-                }
-                onSelect={(item, index) =>
-                  onSelect(item, {
-                    fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
-                    index,
-                  })
-                }
-                modelType={AIModelTypeEnum.TierIntelligent}
-              />
-            )}
-            {!!aiGlobalConfig?.LightweightModels.length && (
-              <AIOnlineModel
-                title={t('AiAgengt.lightweightModels')}
-                subTitle={t('AIModelList.lightweightModelsDesc')}
-                list={aiGlobalConfig?.LightweightModels || []}
-                onEdit={(index) =>
-                  onEdit({
-                    fileName: AIModelTypeInterFileNameEnum.LightweightModels,
-                    index,
-                  })
-                }
-                onRemove={(index) =>
-                  onRemove({
-                    fileName: AIModelTypeInterFileNameEnum.LightweightModels,
-                    index,
-                  })
-                }
-                onSelect={(item, index) =>
-                  onSelect(item, {
-                    fileName: AIModelTypeInterFileNameEnum.LightweightModels,
-                    index,
-                  })
-                }
-                modelType={AIModelTypeEnum.TierLightweight}
-              />
-            )}
-            {!!aiGlobalConfig?.VisionModels.length && (
-              <AIOnlineModel
-                title={t('AiAgengt.visionModels')}
-                subTitle={t('AIModelList.visionModelsDesc')}
-                list={aiGlobalConfig?.VisionModels || []}
-                onEdit={(index) =>
-                  onEdit({
-                    fileName: AIModelTypeInterFileNameEnum.VisionModels,
-                    index,
-                  })
-                }
-                onRemove={(index) =>
-                  onRemove({
-                    fileName: AIModelTypeInterFileNameEnum.VisionModels,
-                    index,
-                  })
-                }
-                onSelect={(item, index) =>
-                  onSelect(item, {
-                    fileName: AIModelTypeInterFileNameEnum.VisionModels,
-                    index,
-                  })
-                }
-                modelType={AIModelTypeEnum.TierVision}
-              />
-            )}
-          </div>
-        ) : (
-          <div className={styles['ai-list-empty-wrapper']}>
-            <YakitEmpty title={t('YakitEmpty.noData')} description={t('AIOnlineModelList.noDataDesc')} />
-            <div className={styles['ai-list-btns-wrapper']}>
-              <YakitButton type="outline1" icon={<PlusSmOutlined color="currentColor" />} onClick={onAdd}>
-                {t('AIModelList.addModel')}
-              </YakitButton>
-            </div>
-          </div>
-        )}
-      </YakitSpin>
-    )
-  }),
-)
 export const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) => {
   const { title, subTitle, list, onEdit, onRemove, onSelect, modelType, checkedVariant } = props
 
@@ -1387,7 +900,7 @@ export const OutlineAtomIconByStatus: React.FC<OutlineAtomIconByStatusProps> = R
     </div>
   )
 })
-const AILocalModelListItemPromptHint: React.FC<AILocalModelListItemPromptHintProps> = React.memo((props) => {
+export const AILocalModelListItemPromptHint: React.FC<AILocalModelListItemPromptHintProps> = React.memo((props) => {
   const { title, content, onOk, onCancel } = props
   const [checked, setChecked] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)

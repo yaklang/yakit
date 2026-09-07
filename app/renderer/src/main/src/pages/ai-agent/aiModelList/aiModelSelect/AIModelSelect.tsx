@@ -27,13 +27,11 @@ import styles from './AIModelSelect.module.scss'
 import classNames from 'classnames'
 import type { GetAIModelAvailableTotalResponse } from '../../type/aiModel'
 import {
-  AIAgentTabListEnum,
   type AIModelPolicyEnum,
   AIModelTypeEnum,
   AIModelTypeInterFileNameEnum,
   AIOnlineModelIconMap,
   defaultAIGlobalConfig,
-  SwitchAIAgentTabEventEnum,
 } from '../../defaultConstant'
 import { AIModelFreeTag, getTipByType, OutlineAtomIconByStatus, setAIModal } from '../AIModelList'
 import { AIChatSelect } from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
@@ -51,9 +49,7 @@ import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalCon
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { yakitNotify } from '@/utils/notification'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { createPortal } from 'react-dom'
@@ -344,33 +340,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     },
   )
   const openModelTab = useMemoizedFn(() => {
-    if (getCurrentPageTabRouteKey() !== YakitRoute.AI_Agent) {
-      emiter.emit(
-        'openPage',
-        JSON.stringify({
-          route: YakitRoute.AI_Agent,
-        }),
-      )
-      setTimeout(() => {
-        onSwitchAIAgentTab()
-      }, 100)
-    } else {
-      onSwitchAIAgentTab()
-    }
-
-    yakitNotify('success', t('AIModelSelect.openModelTabSuccess'))
-  })
-  const onSwitchAIAgentTab = useMemoizedFn(() => {
-    emiter.emit(
-      'switchAIAgentTab',
-      JSON.stringify({
-        type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-        params: {
-          active: AIAgentTabListEnum.AI_Model,
-          show: true,
-        },
-      }),
-    )
+    emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'ai-model' } }))
   })
   return (
     <div ref={refRef} className={className}>

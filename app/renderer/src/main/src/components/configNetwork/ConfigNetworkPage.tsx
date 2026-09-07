@@ -49,18 +49,8 @@ import { useProxy } from '@/hook/useProxy'
 import { handleAIConfig } from '@/pages/spaceEngine/utils'
 import { getReleaseEditionName, isIRify } from '@/utils/envfile'
 import { JSONParseLog } from '@/utils/tool'
-import {
-  AIOnlineModel,
-  getTipByType,
-  onEditAIModel,
-  onRemoveAIModel,
-  onSelectAIModel,
-  setAIModal,
-} from '@/pages/ai-agent/aiModelList/AIModelList'
-import { AIModelPolicyOptions, AIModelTypeEnum, AIModelTypeInterFileNameEnum } from '@/pages/ai-agent/defaultConstant'
-import type { AIModelConfig } from '@/pages/ai-agent/aiModelList/utils'
-import YakitCollapse from '../yakitUI/YakitCollapse/YakitCollapse'
-import type { AIModelActionProps, AIOnlineModelListProps } from '@/pages/ai-agent/aiModelList/AIModelListType'
+import { getTipByType } from '@/pages/ai-agent/aiModelList/AIModelList'
+import { AIModelPolicyOptions } from '@/pages/ai-agent/defaultConstant'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { setOpenPerformanceTips } from '@/utils/duplex/duplex'
 
@@ -1523,14 +1513,13 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 }
 
 interface AIModelGlobalConfigProps {
-  mountContainer?: AIOnlineModelListProps['mountContainer']
   embedded?: boolean
 }
 /**
  * 在全局配置得页面使用这个组件,组件得父元素得Form表单中没有使用自带得设置值,而是采用得state来控制
  */
 const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((props) => {
-  const { mountContainer, embedded } = props
+  const { embedded } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const refRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(refRef)
@@ -1542,140 +1531,20 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
   }, [inViewport])
   const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
 
-  const onEdit = useMemoizedFn((options: AIModelActionProps) => {
-    if (!aiGlobalConfig) return
-    const { fileName, index } = options
-    onEditAIModel({
-      aiGlobalConfig,
-      index,
-      fileName,
-      mountContainer: undefined,
-      t,
-      onSuccess: () => {
-        event.onRefresh()
-      },
-    })
-  })
-
-  const onRemove = useMemoizedFn((options: AIModelActionProps) => {
-    if (!aiGlobalConfig) return
-    const { fileName, index } = options
-    onRemoveAIModel({
-      aiGlobalConfig,
-      index,
-      fileName,
-      onSuccess: () => {
-        event.onRefresh()
-      },
-    })
-  })
-
-  const onSelect = useMemoizedFn((item: AIModelConfig, options: AIModelActionProps) => {
-    if (!aiGlobalConfig) return
-    const { index, fileName } = options
-    onSelectAIModel({
-      aiGlobalConfig,
-      item,
-      index,
-      fileName,
-      onSuccess: () => {
-        event.onRefresh()
-      },
-    })
-  })
-
-  /**增加ai配置模型 */
-  const onAdd = useMemoizedFn(() => {
-    setAIModal({
-      mountContainer,
-      t,
-      onSuccess: () => {
-        event.onRefresh()
-      },
-    })
-  })
-
-  const modelCollapse = (
-    <YakitCollapse defaultActiveKey={['高质模型', '轻量模型', '视觉模式']}>
-      {!!aiGlobalConfig?.IntelligentModels.length && (
-        <YakitCollapse.YakitPanel key="高质模型" header={t('AiAgengt.intelligentModels')}>
-          <AIOnlineModel
-            list={aiGlobalConfig?.IntelligentModels || []}
-            onEdit={(index) =>
-              onEdit({
-                fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
-                index,
-              })
-            }
-            onRemove={(index) =>
-              onRemove({
-                fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
-                index,
-              })
-            }
-            onSelect={(item, index) =>
-              onSelect(item, {
-                fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
-                index,
-              })
-            }
-            modelType={AIModelTypeEnum.TierIntelligent}
-          />
-        </YakitCollapse.YakitPanel>
-      )}
-      {!!aiGlobalConfig?.LightweightModels.length && (
-        <YakitCollapse.YakitPanel key="轻量模型" header={t('AiAgengt.lightweightModels')}>
-          <AIOnlineModel
-            list={aiGlobalConfig?.LightweightModels || []}
-            onEdit={(index) =>
-              onEdit({
-                fileName: AIModelTypeInterFileNameEnum.LightweightModels,
-                index,
-              })
-            }
-            onRemove={(index) =>
-              onRemove({
-                fileName: AIModelTypeInterFileNameEnum.LightweightModels,
-                index,
-              })
-            }
-            onSelect={(item, index) =>
-              onSelect(item, {
-                fileName: AIModelTypeInterFileNameEnum.LightweightModels,
-                index,
-              })
-            }
-            modelType={AIModelTypeEnum.TierLightweight}
-          />
-        </YakitCollapse.YakitPanel>
-      )}
-      {!!aiGlobalConfig?.VisionModels?.length && (
-        <YakitCollapse.YakitPanel key="视觉模式" header={t('AiAgengt.visionModels')}>
-          <AIOnlineModel
-            list={aiGlobalConfig?.VisionModels || []}
-            onEdit={(index) =>
-              onEdit({
-                fileName: AIModelTypeInterFileNameEnum.VisionModels,
-                index,
-              })
-            }
-            onRemove={(index) =>
-              onRemove({
-                fileName: AIModelTypeInterFileNameEnum.VisionModels,
-                index,
-              })
-            }
-            onSelect={(item, index) =>
-              onSelect(item, {
-                fileName: AIModelTypeInterFileNameEnum.VisionModels,
-                index,
-              })
-            }
-            modelType={AIModelTypeEnum.TierVision}
-          />
-        </YakitCollapse.YakitPanel>
-      )}
-    </YakitCollapse>
+  const policyControl = (
+    <YakitRadioButtons
+      buttonStyle="solid"
+      options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
+      value={aiGlobalConfig.RoutingPolicy}
+      onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
+    />
+  )
+  const fallbackControl = (
+    <YakitSwitch
+      size="middle"
+      checked={aiGlobalConfig.DisableFallback}
+      onChange={(c) => event.setAIGlobalConfig({ DisableFallback: c })}
+    />
   )
 
   if (embedded) {
@@ -1689,12 +1558,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
             </div>
             <div className={classNames(gStyles['setting-row-control'], gStyles['setting-row-control-fit'])}>
               <div className={gStyles['control-stack-end']}>
-                <YakitRadioButtons
-                  buttonStyle="solid"
-                  options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
-                  value={aiGlobalConfig.RoutingPolicy}
-                  onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
-                />
+                {policyControl}
                 <div className={gStyles['setting-row-desc']}>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</div>
               </div>
             </div>
@@ -1703,13 +1567,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
             <div className={gStyles['setting-row-text']}>
               <div className={gStyles['setting-row-title']}>{t('AIModelGlobalConfig.disableFallback')}</div>
             </div>
-            <div className={gStyles['setting-row-control']}>
-              <YakitSwitch
-                size="middle"
-                checked={aiGlobalConfig.DisableFallback}
-                onChange={(c) => event.setAIGlobalConfig({ DisableFallback: c })}
-              />
-            </div>
+            <div className={gStyles['setting-row-control']}>{fallbackControl}</div>
           </div>
         </div>
       </div>
@@ -1721,30 +1579,11 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
       <Divider orientation={'left'} style={{ marginTop: '0px' }}>
         {t('AIModelGlobalConfig.aiModelConfig')}
       </Divider>
-      <Form.Item label={t('AiAgengt.aiModel')}>
-        <div className={styles['ai-model-list-wrapper']}>
-          <div className={styles['ai-model-list-header']}>
-            <YakitButton type="primary" onClick={onAdd}>
-              {t('YakitButton.add')}
-            </YakitButton>
-          </div>
-          {modelCollapse}
-        </div>
-      </Form.Item>
       <Form.Item label={t('AiAgengt.callingMode')} extra={<>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</>}>
-        <YakitRadioButtons
-          buttonStyle="solid"
-          options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
-          value={aiGlobalConfig.RoutingPolicy}
-          onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
-        />
+        {policyControl}
       </Form.Item>
       <Form.Item valuePropName="checked" label={t('AIModelGlobalConfig.disableFallback')}>
-        <YakitSwitch
-          size="middle"
-          checked={aiGlobalConfig.DisableFallback}
-          onChange={(c) => event.setAIGlobalConfig({ DisableFallback: c })}
-        />
+        {fallbackControl}
       </Form.Item>
     </div>
   )
