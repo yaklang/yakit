@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import type { API } from '@/services/swagger/resposeType'
 import styles from './MessageCenter.module.scss'
@@ -11,7 +11,18 @@ import YakitTabs from '../yakitUI/YakitTabs/YakitTabs'
 import { formatTimestampJudge } from '@/utils/timeUtil'
 import { useStore } from '@/store'
 import { AuthorImg } from '@/pages/plugins/funcTemplate'
-import { apiFetchMessageClear, apiFetchMessageRead, apiFetchQueryMessage, type MessageQueryDataProps } from './utils'
+import {
+  apiFetchMessageClear,
+  apiFetchMessageRead,
+  apiFetchQueryMessage,
+  apiFetchQueryWebMessage,
+  apiFetchWebMessageClear,
+  apiFetchWebMessageRead,
+  apiFetchWebMessageSync,
+  apiFetchWebMessageSyncProgress,
+  type MessageQueryDataProps,
+  type WebMessageSyncType,
+} from './utils'
 import { useEETaskNotificationHook } from './useEETaskNotificationHook'
 import emiter from '@/utils/eventBus/eventBus'
 import { RollingLoadList } from '../RollingLoadList/RollingLoadList'
@@ -28,8 +39,14 @@ import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import moment from 'moment'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { YakitDropdownMenu } from '../yakitUI/YakitDropdownMenu/YakitDropdownMenu'
+import { Progress } from 'antd'
+import { OutlineChevrondownIcon } from '@/assets/icon/outline'
 
 const MESSAGE_PAGE_LIMIT = 20
+
+type MessageChannel = 'web' | 'plugin'
 
 export interface MessageItemProps {
   onClose: () => void
@@ -534,6 +551,9 @@ export interface MessageCenterModalProps {
 export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => {
   const { visible, setVisible } = props
   const { t } = useI18nNamespaces(['yakitUi', 'components'])
+  const showChannelTabs = isEnpriTrace()
+  const [channel, setChannel] = useState<MessageChannel>('web')
+  const isWebChannel = showChannelTabs && channel === 'web'
   const [loading, setLoading] = useState<boolean>(false)
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [width, setWidth] = useState<number>(481)
@@ -541,6 +561,9 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   const [dataSorce, setDataSorce] = useState<API.MessageLogDetail[]>([])
   const [noRedDataTotal, setNoRedDataTotal] = useState<number>()
   const [isRef, setIsRef] = useState<boolean>(false)
+  const [syncType, setSyncType] = useState<WebMessageSyncType>()
+  const [syncPercent, setSyncPercent] = useState<number>()
+  const syncTimerRef = useRef<ReturnType<typeof setInterval>>()
 
   const refresh = useMemoizedFn(() => {
     update()
@@ -555,6 +578,15 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     { wait: 50, leading: false },
   ).run
 
+  const clearSyncProgress = useMemoizedFn(() => {
+    if (syncTimerRef.current) {
+      clearInterval(syncTimerRef.current)
+      syncTimerRef.current = undefined
+    }
+    setSyncType(undefined)
+    setSyncPercent(undefined)
+  })
+
   const update = useMemoizedFn((data?: MessageQueryDataProps, isAdd?: boolean) => {
     setLoading(true)
     if (!isAdd) {
@@ -564,7 +596,8 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
       isRead: activeKey === 'unread' ? 'false' : undefined,
       ...data,
     }
-    apiFetchQueryMessage(
+    const fetchList = isWebChannel ? apiFetchQueryWebMessage : apiFetchQueryMessage
+    fetchList(
       {
         page: 1,
         limit: MESSAGE_PAGE_LIMIT,
@@ -599,9 +632,17 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   })
 
   useEffect(() => {
-    // 初次加载数据
+    // 初次加载 / 切换未读全部 / 切换通道
     update()
-  }, [activeKey])
+  }, [activeKey, channel])
+
+  useEffect(() => {
+    return () => {
+      if (syncTimerRef.current) {
+        clearInterval(syncTimerRef.current)
+      }
+    }
+  }, [])
 
   const loadMore = useMemoizedFn(() => {
     update(
@@ -613,6 +654,8 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   })
 
   const onRefreshMessageSocketFun = useMemoizedFn((data: string) => {
+    // socket 仅刷新插件通道列表
+    if (isWebChannel) return
     try {
       const obj: API.MessageLogDetail = JSONParseLog(data, {
         page: 'MessageCenterModal',
@@ -713,6 +756,22 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   })
 
   const onRedAllMessage = useMemoizedFn(() => {
+    if (isWebChannel) {
+      apiFetchWebMessageRead({
+        isAll: true,
+        hash: '',
+      })
+        .then((ok) => {
+          if (ok) {
+            update()
+            setNoRedDataTotal(0)
+          }
+        })
+        .catch((err) => {
+          failed(err)
+        })
+      return
+    }
     // 如若是企业版则先需校验任务完成情况 - 执行任务通知 - 校验任务项目是否异常 - 更新状态
     if (isEnpriTrace()) {
       debugTaskEvent.startT({ isReadAllOther: true })
@@ -734,7 +793,8 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   })
 
   const onClearAllMessage = useMemoizedFn(() => {
-    apiFetchMessageClear({
+    const fetchClear = isWebChannel ? apiFetchWebMessageClear : apiFetchMessageClear
+    fetchClear({
       isAll: true,
       hash: '',
     })
@@ -745,6 +805,54 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
       })
       .catch((err) => {
         failed(err)
+      })
+  })
+
+  const onChannelChange = useMemoizedFn((next: MessageChannel) => {
+    if (next === channel) return
+    clearSyncProgress()
+    setDataSorce([])
+    setNoRedDataTotal(undefined)
+    setHasMore(true)
+    setActiveKey('unread')
+    setChannel(next)
+  })
+
+  const startSyncProgressPoll = useMemoizedFn((type: WebMessageSyncType) => {
+    if (syncTimerRef.current) {
+      clearInterval(syncTimerRef.current)
+    }
+    syncTimerRef.current = setInterval(() => {
+      apiFetchWebMessageSyncProgress(type)
+        .then((res) => {
+          const percent = Math.max(0, Math.min(100, Number(res?.percent) || 0))
+          setSyncPercent(percent)
+          if (percent >= 100) {
+            clearSyncProgress()
+            yakitNotify('success', t('MessageCenter.syncSuccess'))
+            update()
+          }
+        })
+        .catch((err) => {
+          clearSyncProgress()
+          failed(err)
+          yakitNotify('error', t('MessageCenter.syncFailed'))
+        })
+    }, 1000)
+  })
+
+  const onSyncData = useMemoizedFn((type: WebMessageSyncType) => {
+    clearSyncProgress()
+    setSyncType(type)
+    setSyncPercent(0)
+    apiFetchWebMessageSync({ type })
+      .then(() => {
+        startSyncProgressPoll(type)
+      })
+      .catch((err) => {
+        clearSyncProgress()
+        failed(err)
+        yakitNotify('error', t('MessageCenter.syncFailed'))
       })
   })
 
@@ -778,6 +886,57 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
             <YakitButton size="small" type="text2" icon={<XSolid size={12} />} onClick={() => setVisible(false)} />
           </div>
         </div>
+        {showChannelTabs && (
+          <div className={styles['message-channel-bar']}>
+            <YakitRadioButtons
+              className={classNames(styles['message-channel-radio-buttons'])}
+              size="small"
+              buttonStyle="solid"
+              value={channel}
+              onChange={(e) => onChannelChange(e.target.value as MessageChannel)}
+              options={[
+                { label: t('MessageCenter.webNotification'), value: 'web' },
+                { label: t('MessageCenter.plugin'), value: 'plugin' },
+              ]}
+            />
+            {isWebChannel && (
+              <div className={styles['message-channel-actions']}>
+                {syncType && typeof syncPercent === 'number' && (
+                  <div className={styles['message-sync-progress']}>
+                    <Progress
+                      strokeColor="var(--Colors-Use-Main-Primary)"
+                      trailColor="var(--Colors-Use-Neutral-Bg)"
+                      percent={Math.floor(syncPercent)}
+                      size="small"
+                    />
+                  </div>
+                )}
+                <YakitDropdownMenu
+                  menu={{
+                    data: [
+                      { key: 'flow', label: t('MessageCenter.updateFlow') },
+                      { key: 'risk', label: t('MessageCenter.updateRisk') },
+                    ],
+                    onClick: ({ key }) => {
+                      if (key === 'flow' || key === 'risk') {
+                        onSyncData(key)
+                      }
+                    },
+                  }}
+                  dropdown={{
+                    trigger: ['click'],
+                    placement: 'bottomRight',
+                  }}
+                >
+                  <YakitButton type="outline2">
+                    {t('MessageCenter.updateData')}
+                    <OutlineChevrondownIcon />
+                  </YakitButton>
+                </YakitDropdownMenu>
+              </div>
+            )}
+          </div>
+        )}
         <YakitTabs
           activeKey={activeKey}
           onChange={(v: any) => setActiveKey(v)}
@@ -786,7 +945,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
           tabBarExtraContent={
             <>
               {activeKey === 'unread' && dataSorce.length > 0 && (
-                <YakitButton type="outline2" loading={taskLoading} onClick={onRedAllMessage}>
+                <YakitButton type="outline2" loading={!isWebChannel && taskLoading} onClick={onRedAllMessage}>
                   {t('MessageCenter.markAllRead')}
                 </YakitButton>
               )}

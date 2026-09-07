@@ -196,7 +196,14 @@
     "judgeRepeatError": "Task name duplicate check error: {{error}}",
     "getTaskNotificationError": "Failed to get task notification: {{error}}",
     "createTaskProjectSuccess": "Task project created successfully: {{successInfo}}",
-    "createTaskProjectFailed": "Task project creation failed: {{failedInfo}}"
+    "createTaskProjectFailed": "Task project creation failed: {{failedInfo}}",
+    "webNotification": "Web Notifications",
+    "plugin": "Plugin",
+    "updateData": "Update Data",
+    "updateFlow": "Update Traffic",
+    "updateRisk": "Update Risks",
+    "syncSuccess": "Data sync completed",
+    "syncFailed": "Data sync failed"
   },
   "JsonFormWrapper": {
     "EditTable": {
