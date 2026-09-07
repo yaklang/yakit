@@ -32,7 +32,6 @@ import { useRunNodeStore } from '@/store/runNode'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
 import type { mcpStreamHooks } from './hooks/useMcp/useMcp'
-const ConfigMcpModal = lazy(() => import('@/utils/ConfigSystemMcp').then((m) => ({ default: m.ConfigMcpModal })))
 import emiter from '@/utils/eventBus/eventBus'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import { openABSFileLocated } from '@/utils/openWebsite'
@@ -90,7 +89,6 @@ interface ReverseDetail {
 export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) => {
   const { isEngineLink, system, mcp } = props
   const { t, i18n, i18nRefresh } = useI18nNamespaces(['yakitRoute', 'home', 'yakitUi', 'layout', 'utils'])
-  const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
   const enableMcp = useMemo(() => {
     if (!mcp.mcpStreamInfo.mcpCurrent) return false
     if (['stopped', 'error'].includes(mcp.mcpStreamInfo.mcpCurrent.Status)) {
@@ -1070,7 +1068,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       className={styles['btn-style']}
                       onClick={() => {
                         setShow(false)
-                        setConfigMcpModalVisible(true)
+                        emiter.emit(
+                          'openPage',
+                          JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }),
+                        )
                       }}
                     >
                       {t('GlobalState.toConfigure')}
@@ -1454,11 +1455,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
           setCloseRunNodeItemVerifyVisible(false)
         }}
       />
-      {configMcpModalVisible && (
-        <Suspense fallback={null}>
-          <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />
-        </Suspense>
-      )}
     </>
   )
 })

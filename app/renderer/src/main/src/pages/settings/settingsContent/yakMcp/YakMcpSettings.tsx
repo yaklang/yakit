@@ -20,7 +20,7 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { SystemInfo } from '@/constants/hardware'
 import { useYakMcpStream } from '@/store/yakMcpStream'
-import { AIMCPToolDetailPopover } from '@/utils/ConfigSystemMcp'
+import { AIMCPToolDetailPopover } from './AIMCPToolDetailPopover'
 import {
   type GetMCPToolListRequest,
   type GetMCPToolListResponse,

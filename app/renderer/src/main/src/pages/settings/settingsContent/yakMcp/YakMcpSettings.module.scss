@@ -227,6 +227,71 @@
   }
 }
 
+.mcp-tool-detail-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  width: 400px;
+  max-height: 50vh;
+}
+
+.detail-title {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.detail-description {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 14px;
+}
+
+.param-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.param-section-title {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 14px;
+}
+
+.param-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.param-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 14px;
+}
+
+.param-item-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.param-item-required {
+  &::before {
+    margin-right: 2px;
+    content: '*';
+    color: var(--Colors-Use-Error-Primary);
+    font-size: 14px;
+  }
+}
+
+.param-description {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+}
+
 .transport {
   display: flex;
   flex-direction: column;

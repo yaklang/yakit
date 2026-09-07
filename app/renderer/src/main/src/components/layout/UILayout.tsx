@@ -1782,7 +1782,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         isEngineLink={engineLink}
                         engineMode={engineMode || 'remote'}
                         isRemoteMode={isRemoteEngine}
-                        mcp={mcp}
                         onEngineModeChange={handleOperations}
                         runDynamicControlRemote={runControlRemote}
                         typeCallback={handleOperations}
@@ -1824,7 +1823,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           isReverse={true}
                           engineMode={engineMode || 'remote'}
                           isRemoteMode={isRemoteEngine}
-                          mcp={mcp}
                           onEngineModeChange={handleOperations}
                           runDynamicControlRemote={runControlRemote}
                           typeCallback={handleOperations}

@@ -143,8 +143,6 @@ const YakitAuditRiskDetails = React.lazy(() =>
     default: m.YakitAuditRiskDetails,
   })),
 )
-import type { mcpStreamHooks } from './hooks/useMcp/useMcp'
-const ConfigMcpModal = React.lazy(() => import('@/utils/ConfigSystemMcp').then((m) => ({ default: m.ConfigMcpModal })))
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { openConsoleNewWindow } from '@/utils/openWebsite'
 import useEngineConsole from './hooks/useEngineConsole/useEngineConsole'
@@ -178,7 +176,6 @@ export interface FuncDomainProp {
   isReverse?: Boolean
   engineMode: YaklangEngineMode
   isRemoteMode: boolean
-  mcp: mcpStreamHooks
   onEngineModeChange: (type: YaklangEngineMode) => any
   typeCallback: (type: YakitSettingCallbackType) => any
   /** 远程控制 - 自动切换远程连接 */
@@ -209,7 +206,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     onEngineModeChange,
     runDynamicControlRemote,
     typeCallback,
-    mcp,
     showProjectManage = false,
     system,
     isJudgeLicense,
@@ -326,7 +322,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       })
   })
 
-  // mcp 全局监听
   // 引擎日志 全局监听
   useEngineConsole({})
 
@@ -358,12 +353,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode} onLogin={() => setLoginShow(true)} />
           )}
           {!showProjectManage && (
-            <UIOpSetting
-              engineMode={engineMode}
-              onEngineModeChange={onEngineModeChange}
-              typeCallback={typeCallback}
-              mcp={mcp}
-            />
+            <UIOpSetting engineMode={engineMode} onEngineModeChange={onEngineModeChange} typeCallback={typeCallback} />
           )}
           {!showProjectManage && (
             <div
@@ -642,7 +632,6 @@ interface UIOpSettingProp {
   /** yaklang引擎切换启动模式 */
   onEngineModeChange: (type: YaklangEngineMode) => any
   typeCallback: (type: YakitSettingCallbackType) => any
-  mcp: mcpStreamHooks
 }
 
 const DBCacheManager = () => {
@@ -853,7 +842,7 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
 }
 
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
-  const { engineMode, onEngineModeChange, typeCallback, mcp } = props
+  const { engineMode, onEngineModeChange, typeCallback } = props
 
   const [runNodeModalVisible, setRunNodeModalVisible] = useState<boolean>(false)
   const [show, setShow] = useState<boolean>(false)
@@ -863,7 +852,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const { dynamicStatus } = yakitDynamicStatus()
   const { setConfigManagementActiveTab } = useConfigManagementTab()
   const { delTemporaryProject } = useTemporaryProjectStore()
-  const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
   const [reclaimHint, setReclaimHint] = useState<boolean>(false)
   const { t, i18n } = useI18nNamespaces(['home', 'layout'])
 
@@ -922,7 +910,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'mcp':
       case 'mcp-toggle':
-        setConfigMcpModalVisible(true)
+        emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }))
         return
       case 'mcp-history':
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.MCP_History }))
@@ -1083,11 +1071,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         />
       </React.Suspense>
       <RunNodeModal runNodeModalVisible={runNodeModalVisible} onClose={() => setRunNodeModalVisible(false)} />
-      {configMcpModalVisible && (
-        <React.Suspense fallback={null}>
-          <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />
-        </React.Suspense>
-      )}
       <YakitHint
         visible={reclaimHint}
         title={t('HomeCom.reclaimDatabaseSpaceTitle')}
