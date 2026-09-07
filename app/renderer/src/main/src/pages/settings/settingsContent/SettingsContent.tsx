@@ -7,6 +7,7 @@ import { ReverseSettings } from './reverse/ReverseSettings'
 import { ShortcutKeySettings } from './shortcutKey/ShortcutKeySettings'
 import { GlobalConfigSettings } from './globalConfig/GlobalConfigSettings'
 import { AIModelSettings } from './aiModel/AIModelSettings'
+import { YakMcpSettings } from './yakMcp/YakMcpSettings'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './SettingsContent.module.scss'
 
@@ -18,6 +19,7 @@ const SettingsPanels: Partial<Record<SettingsAnchor, ComponentType>> = {
   'system-proxy': SystemProxySettings,
   'global-config': GlobalConfigSettings,
   'ai-model': AIModelSettings,
+  'yak-mcp': YakMcpSettings,
 }
 
 const hideOuterTitle: Partial<Record<SettingsAnchor, true>> = {
@@ -26,6 +28,7 @@ const hideOuterTitle: Partial<Record<SettingsAnchor, true>> = {
   'system-proxy': true,
   'global-config': true,
   'ai-model': true,
+  'yak-mcp': true,
 }
 
 interface SettingsContentProps {

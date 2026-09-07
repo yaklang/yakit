@@ -822,7 +822,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
       children: [
         // { key: "engineVar",label: "引擎环境变量" },
         { key: 'manageRightClickPlugins', label: '右键插件管理' },
-        { key: 'configMcp', label: 'Yak Mcp配置' },
       ],
     },
     {
@@ -923,7 +922,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'mcp':
       case 'mcp-toggle':
-      case 'configMcp':
         setConfigMcpModalVisible(true)
         return
       case 'mcp-history':

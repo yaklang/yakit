@@ -68,6 +68,10 @@
       "intelligent": "高質量模型",
       "lightweight": "輕量模型",
       "vision": "視覺模型"
+    },
+    "yakMcp": {
+      "openHistory": "打開調用歷史",
+      "enableColumn": "開啟"
     }
   }
 }

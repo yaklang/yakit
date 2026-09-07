@@ -628,7 +628,7 @@ export const ConfigMcpModal: FC<ConfigMcpModalProps> = (props) => {
 interface AIMCPToolDetailPopoverProps {
   item: MCPToolConfig
 }
-const AIMCPToolDetailPopover: FC<AIMCPToolDetailPopoverProps> = (props) => {
+export const AIMCPToolDetailPopover: FC<AIMCPToolDetailPopoverProps> = (props) => {
   const { item } = props
   const { t, i18nRefresh } = useI18nNamespaces(['utils'])
   const { getLabelByParams } = useAINodeLabel()

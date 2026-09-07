@@ -68,6 +68,10 @@
       "intelligent": "High-quality models",
       "lightweight": "Lightweight models",
       "vision": "Vision models"
+    },
+    "yakMcp": {
+      "openHistory": "Open call history",
+      "enableColumn": "Enabled"
     }
   }
 }
