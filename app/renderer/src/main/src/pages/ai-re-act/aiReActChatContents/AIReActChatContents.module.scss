@@ -16,8 +16,7 @@
   .item-wrapper {
     width: 100%;
     box-sizing: border-box;
-    padding-left: 8px;
-    padding-right: 8px;
+    min-width: 0;
     max-width: 784px;
     margin: 0 auto;
     .item-inner {
@@ -51,10 +50,12 @@
     font-size: 12px;
     font-weight: bold;
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    width: 100%;
     max-width: 784px;
     margin: 0 auto;
   }
   .footer-loading {
+    width: 100%;
     max-width: 784px;
     margin: 0 auto;
     padding-bottom: 24px;

@@ -119,8 +119,8 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
 const TYPE = 'reAct'
 
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo(
-  forwardRef((props, ref) => {
-    const listRootRef = useRef<HTMLDivElement>(null)
+  forwardRef((_props, ref) => {
+    const listRootRef = useRef<HTMLDivElement | null>(null)
     const { activeChat } = useAIAgentStore()
 
     const store = useCurrentStore()

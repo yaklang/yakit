@@ -486,6 +486,24 @@
     "warningTitle": "檔案警告",
     "tooLarge": "檔案過大，無法預覽"
   },
+  "AIRightPanel": {
+    "taskBoard": "任務詳情看板",
+    "fileSystem": "檔案系統",
+    "traffic": "流量",
+    "risk": "漏洞",
+    "sessionHistory": "會話歷史",
+    "taskList": "任務列表",
+    "timeline": "時間線",
+    "exportLog": "匯出日誌",
+    "viewLog": "查看日誌",
+    "collapse": "折疊",
+    "more": "更多",
+    "duration": "執行時長",
+    "toolCallStats": "工具調用統計",
+    "success": "成功",
+    "failed": "失敗",
+    "totalAttempts": "總嘗試次數"
+  },
   "AIChatContent": {
     "noActiveChat": "當前沒有活躍的會話",
     "fileSystem": "檔案系統",

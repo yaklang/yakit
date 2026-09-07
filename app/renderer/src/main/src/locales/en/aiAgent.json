@@ -486,6 +486,24 @@
     "warningTitle": "File Warning",
     "tooLarge": "The file is too large to preview"
   },
+  "AIRightPanel": {
+    "taskBoard": "Task Board",
+    "fileSystem": "File System",
+    "traffic": "Traffic",
+    "risk": "Risks",
+    "sessionHistory": "Session History",
+    "taskList": "Task List",
+    "timeline": "Timeline",
+    "exportLog": "Export Logs",
+    "viewLog": "View Logs",
+    "collapse": "Collapse",
+    "more": "More",
+    "duration": "Duration",
+    "toolCallStats": "Tool Call Stats",
+    "success": "Success",
+    "failed": "Failed",
+    "totalAttempts": "Total Attempts"
+  },
   "AIChatContent": {
     "noActiveChat": "There is no active session",
     "fileSystem": "File System",
