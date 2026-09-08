@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import '@ant-design/v5-patch-for-react-19'
 import { createRoot } from 'react-dom/client'
 import './i18n/i18n'
 import './index.scss'

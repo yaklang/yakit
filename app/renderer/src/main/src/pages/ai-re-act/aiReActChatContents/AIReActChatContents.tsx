@@ -253,7 +253,15 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
       return <AIChatListItem key={item.token} item={item} />
     }, [])
     const Item = useCallback(
-      ({ children, style, 'data-index': dataIndex }) => (
+      ({
+        children,
+        style,
+        'data-index': dataIndex,
+      }: {
+        children?: React.ReactNode
+        style?: React.CSSProperties
+        'data-index'?: number
+      }) => (
         <div style={style} data-index={dataIndex} className={styles['item-wrapper']}>
           <div className={styles['item-inner']}>{children}</div>
         </div>

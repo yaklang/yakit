@@ -87,14 +87,16 @@ export function childrenToTabItems(children: ReactNode): TabsProps['items'] {
       destroyInactiveTabPane,
       destroyOnHidden,
       ...rest
-    } = child.props as ReactElement['props'] & {
+    } = child.props as {
       tab?: ReactNode
+      children?: ReactNode
       destroyInactiveTabPane?: boolean
       destroyOnHidden?: boolean
+      [key: string]: unknown
     }
     items.push({
       ...rest,
-      key: child.key != null ? String(child.key) : rest.tabKey,
+      key: child.key != null ? String(child.key) : (rest.tabKey as string),
       label: tab,
       children: paneChildren,
       destroyOnHidden: destroyOnHidden ?? destroyInactiveTabPane,
@@ -124,15 +126,17 @@ export function childrenToCollapseItems(children: ReactNode): CollapseProps['ite
       disabled,
       collapsible,
       ...rest
-    } = child.props as ReactElement['props'] & {
+    } = child.props as {
       header?: ReactNode
+      children?: ReactNode
       disabled?: boolean
       collapsible?: 'header' | 'icon' | 'disabled'
+      [key: string]: unknown
     }
     if (header == null) return undefined
     items.push({
       ...rest,
-      key: child.key != null ? String(child.key) : rest.panelKey,
+      key: child.key != null ? String(child.key) : (rest.panelKey as string),
       label: header,
       children: panelChildren,
       collapsible: collapsible ?? (disabled ? 'disabled' : undefined),

@@ -7,7 +7,7 @@ import { showModal } from '@/utils/showModal'
 import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
 import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
-import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
+import { useConfigManagementTab, useEeSystemConfig, useStore, useYakitDynamicStatus } from '@/store'
 import { UserPlatformType } from '@/pages/globalVariable'
 import { genDefaultPagination, type QueryGeneralResponse } from '@/pages/invoker/schema'
 import type { Risk } from '@/pages/risks/schema'
@@ -214,7 +214,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
   const { userInfo } = useStore()
 
   /** 当前远程连接状态 */
-  const { dynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus } = useYakitDynamicStatus()
   const dynamicConnect = dynamicStatus.isDynamicStatus
   /** 头像背景色，mount 时随机一次，不参与重渲染 */
   const avatarColor = useRef<string>(randomAvatarColor())
@@ -817,7 +817,8 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
   const [available, setAvailable] = useState(false) // cve数据库是否可用
   const [isDiffUpdate, setIsDiffUpdate] = useState(false)
-  const { dynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus } = useYakitDynamicStatus()
+  const { setConfigManagementActiveTab } = useConfigManagementTab()
   const { delTemporaryProject } = useTemporaryProjectStore()
   const [reclaimHint, setReclaimHint] = useState<boolean>(false)
   const { t } = useI18nNamespaces(['home', 'layout'])

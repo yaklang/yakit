@@ -639,7 +639,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
       return (
         <TabBarDefault
           {...props}
-          children={(barNode: React.ReactElement) => {
+          children={(barNode: React.ReactElement<{ className?: string }>) => {
             const {
               key,
               props: { className },
@@ -648,7 +648,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
             if (!key) return barNode
 
             try {
-              const isDisable = className.indexOf('disabled') > -1
+              const isDisable = (className?.indexOf('disabled') ?? -1) > -1
               if (!isDisable) return barNode
 
               let hint = ''

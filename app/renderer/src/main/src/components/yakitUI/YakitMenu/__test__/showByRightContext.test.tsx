@@ -74,6 +74,8 @@ const stubLayout = ({ innerWidth, left, right, width, height = 0 }: LayoutStub) 
 describe('showByRightContext 三级子菜单展开方向', () => {
   let originalClientWidth: PropertyDescriptor | undefined
   let originalClientHeight: PropertyDescriptor | undefined
+  /** 必须经 destroy 句柄清理模块级 rightContextRoot：直接 el.remove() 会留 Root 指向游离 div，污染下个用例 */
+  const handles: { destroy: () => void }[] = []
 
   beforeEach(() => {
     originalClientWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth')
@@ -81,8 +83,7 @@ describe('showByRightContext 三级子菜单展开方向', () => {
   })
 
   afterEach(() => {
-    const contextRoot = document.getElementById('yakit-right-context')
-    if (contextRoot) act(() => contextRoot.remove())
+    handles.splice(0).forEach((h) => h.destroy())
     if (originalClientWidth) Object.defineProperty(HTMLElement.prototype, 'clientWidth', originalClientWidth)
     if (originalClientHeight) Object.defineProperty(HTMLElement.prototype, 'clientHeight', originalClientHeight)
     vi.unstubAllGlobals()
@@ -92,7 +93,7 @@ describe('showByRightContext 三级子菜单展开方向', () => {
 
   const renderMenu = async (layout: LayoutStub, props: YakitMenuProp = menuProps) => {
     stubLayout(layout)
-    showByRightContext(props, 300, 300)
+    handles.push(showByRightContext(props, 300, 300))
     // showByRightContext 内部经 setTimeout 渲染，等一拍让 useLayoutEffect 完成测量与方向判定
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0))
@@ -140,7 +141,7 @@ describe('showByRightContext 三级子菜单展开方向', () => {
 
     // 第二次：复用同一 div（带非零高度才会走同步定位分支），换到右侧不足、左侧充足的布局，应重新判定为向左
     stubLayout({ innerWidth: 1000, left: 800, right: 1000, width: 200, height: 100 })
-    showByRightContext(menuProps, 300, 300)
+    handles.push(showByRightContext(menuProps, 300, 300))
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0))
     })

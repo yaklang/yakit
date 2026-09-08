@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import ExclamationCircleOutlined from '@ant-design/icons/lib/icons/ExclamationCircleOutlined'
 import { lazy, Suspense } from 'react'
-import { useStore, yakitDynamicStatus } from '@/store'
+import { useStore, useYakitDynamicStatus } from '@/store'
 import { defaultUserInfo } from '@/pages/userInfoDefaults'
 const SetUserInfo = lazy(() => import('@/pages/MainOperator').then((m) => ({ default: m.SetUserInfo })))
 import { loginOut } from '@/utils/login'
@@ -126,7 +126,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   const [imControlStatusLoading, setIMControlStatusLoading] = useState<boolean>(false)
   const imControlStateRetryTimerRef = useRef<number>()
   /** 当前远程连接状态 */
-  const { dynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus } = useYakitDynamicStatus()
 
   const refreshIMControlStatus = useMemoizedFn(() => {
     if (!userInfo.isLogin) {

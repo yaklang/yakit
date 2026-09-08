@@ -124,7 +124,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
               })
               const scopeList: any[] = []
               children?.forEach((v) => {
-                scopeList.push(keyToScope[v.key])
+                scopeList.push(keyToScope[String(v.key)])
               })
               const scope: number[] = [0, 0]
               if (scopeList.length > 0) {
@@ -241,7 +241,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                       height={treeHeight}
                       // showSearch={false}
                       onSelect={(selectedKeys, info) => {
-                        const scope = keyToScope[selectedKeys[0]]
+                        const scope = keyToScope[String(selectedKeys[0])]
                         if (scope?.length == 2) {
                           HexEditorRef.current.setSelectionRange(Math.floor(scope[0] / 8), Math.ceil(scope[1] / 8))
                         }

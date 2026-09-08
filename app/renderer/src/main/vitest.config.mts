@@ -30,6 +30,8 @@ export default defineConfig({
         find: /^monaco-editor(\/.*)?$/,
         replacement: path.resolve(rootDir, 'src/types/monacoEditorStub.ts'),
       },
+      { find: 'react-resize-detector', replacement: path.resolve(rootDir, 'src/utils/shims/reactResizeDetector.tsx') },
+      { find: 'xterm-for-react', replacement: path.resolve(rootDir, 'src/utils/shims/xtermForReact.tsx') },
     ],
   },
   test: {

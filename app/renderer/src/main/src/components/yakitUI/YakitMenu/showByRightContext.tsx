@@ -1,4 +1,4 @@
-import ReactDOM from 'react-dom'
+import { createRoot, type Root } from 'react-dom/client'
 import React, { memo, type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { coordinate } from '@/pages/globalVariable'
@@ -52,6 +52,8 @@ const ContextMenuId = 'yakit-right-context'
 /** 连续右键复用同一 div 时组件不会重挂载，用每次调用递增的序号驱动挂载后的测量与方向计算重跑 */
 let contextRenderSeq = 0
 
+let rightContextRoot: Root | null = null
+
 /**
  * @name 生成一个鼠标所在坐标位置的展示框(props默认为菜单组件，也可自行传递自定义组件)
  * @description x和y参数为可选参数，填写时将以x-y坐标位展示内容
@@ -60,7 +62,11 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
   let divExisted = document.getElementById(ContextMenuId)
 
   if (isForce) {
-    if (divExisted) divExisted.remove()
+    if (divExisted) {
+      rightContextRoot?.unmount()
+      rightContextRoot = null
+      divExisted.remove()
+    }
     divExisted = null
   }
 
@@ -75,8 +81,6 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
   /** 右键展示元素宽高 */
   const divWidth = roundDown(div.getBoundingClientRect().width || 0)
   const divHeight = roundDown(div.getBoundingClientRect().height || 0)
-  /**RightContext 根节点 */
-  // let rightContextRootDiv
 
   if (divWidth > 0 && divHeight > 0) {
     // y坐标计算
@@ -100,11 +104,9 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
 
   const destory = () => {
     document.removeEventListener('click', onClickOutside, true)
-    // if (rightContextRootDiv) {
-    //     rightContextRootDiv.unmount()
-    // }
-    const unmountResult = ReactDOM.unmountComponentAtNode(div)
-    if (unmountResult && div.parentNode) {
+    rightContextRoot?.unmount()
+    rightContextRoot = null
+    if (div.parentNode) {
       div.parentNode.removeChild(div)
     }
     emiter.emit('setYakitHeaderDraggable', true)
@@ -138,12 +140,10 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
       //     destory()
       //     document.removeEventListener("contextmenu", onContextMenuOutsize)
       // })
-      // if (!rightContextRootDiv) {
-      //     rightContextRootDiv = createRoot(div)
-      // }
-      // rightContextRootDiv.render(<RightContext data={props} callback={offsetPosition} />)
-      // 上面注释内容为react 18新特性写法，但在antd menu下会有二级菜单多个同时打开问题
-      ReactDOM.render(<RightContext data={props} callback={offsetPosition} renderSeq={renderSeq} />, div)
+      if (!rightContextRoot) {
+        rightContextRoot = createRoot(div)
+      }
+      rightContextRoot.render(<RightContext data={props} callback={offsetPosition} renderSeq={renderSeq} />)
     })
   }
   render()

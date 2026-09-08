@@ -183,6 +183,7 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
 
   return (
     <Draggable
+      nodeRef={draggleRef}
       defaultClassName={classNames(
         {
           [styles['yakit-hint-modal-top']]: isTop,

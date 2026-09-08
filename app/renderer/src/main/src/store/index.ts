@@ -70,7 +70,8 @@ interface YakitDynamicStatusProps {
   setDynamicStatus: (info: DynamicStatusProps) => void
 }
 
-export const yakitDynamicStatus = create<YakitDynamicStatusProps>((set, get) => ({
+/** Zustand hook：必须以 use 开头，否则 React Compiler 会当普通函数缓存，跳过内部 hooks 导致白屏 */
+export const useYakitDynamicStatus = create<YakitDynamicStatusProps>((set, get) => ({
   dynamicStatus: {
     isDynamicStatus: false,
     isDynamicSelfStatus: false,

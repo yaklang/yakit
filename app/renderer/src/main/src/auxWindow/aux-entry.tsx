@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import ReactDOM from 'react-dom'
+import '@ant-design/v5-patch-for-react-19'
+import { createRoot } from 'react-dom/client'
 import 'antd/dist/reset.css'
 import '@/theme/yakit.scss'
 import './styles/aux-base.scss'
@@ -34,11 +35,10 @@ ConfigProvider.config({
   holderRender: (node) => <YakitAntdProvider>{node}</YakitAntdProvider>,
 })
 
-ReactDOM.render(
+createRoot(document.getElementById('root')!).render(
   <YakitAntdProvider>
     <NotificationProvider>
       <App />
     </NotificationProvider>
   </YakitAntdProvider>,
-  document.getElementById('root'),
 )

@@ -21,7 +21,9 @@
     "types": ["vite/client", "node"],
     "noUncheckedSideEffectImports": false,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "react-resize-detector": ["./src/utils/shims/reactResizeDetector.tsx"],
+      "xterm-for-react": ["./src/utils/shims/xtermForReact.tsx"]
     }
   },
   "include": ["src", "types"],
