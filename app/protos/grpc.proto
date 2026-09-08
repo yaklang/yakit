@@ -229,6 +229,9 @@ service Yak {
   rpc HTTPFlowsToOnline(HTTPFlowsToOnlineRequest) returns (Empty);
   rpc QueryHTTPFlowsProcessNames(QueryHTTPFlowRequest) returns (QueryHTTPFlowsProcessNamesResponse);
   rpc HTTPFlowsToOnlineBatch(HTTPFlowsToOnlineBatchRequest) returns (HTTPFlowsToOnlineBatchResponse);
+  rpc HTTPFlowsFromOnline(HTTPFlowsFromOnlineRequest) returns (stream HTTPFlowsFromOnlineProgress);
+  rpc BatchSetHTTPFlowIssueFields(BatchSetHTTPFlowIssueFieldsRequest) returns (BatchSetHTTPFlowIssueFieldsResponse);
+
 
   // 流量分析器
   rpc AnalyzeHTTPFlow(AnalyzeHTTPFlowRequest) returns (stream AnalyzeHTTPFlowResponse);
@@ -474,6 +477,9 @@ service Yak {
   rpc RiskFieldGroup(Empty) returns (RiskFieldGroupResponse);
   // 误报反馈
   rpc RiskFeedbackToOnline(UploadRiskToOnlineRequest) returns (Empty);
+
+  rpc RisksFromOnline(RisksFromOnlineRequest) returns (stream RisksFromOnlineProgress);
+  rpc BatchSetRiskTags(BatchSetRiskTagsRequest) returns (BatchSetRiskTagsResponse);
 
   // Report
   rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
@@ -5532,6 +5538,33 @@ message SetTagForRiskRequest {
   repeated string Tags = 3;
 }
 
+message RisksFromOnlineRequest {
+  string Token = 1;
+}
+
+message RisksFromOnlineProgress {
+  double Progress = 1;
+  string Log = 2;
+}
+
+message BatchSetRiskTagsRequest {
+  QueryRisksRequest Filter = 1;
+  string Tags = 2;
+  string VerifierUid = 3;
+  int64 FixTime = 4;
+  string FixSuggestion = 5;
+  repeated int64 Ids = 6;
+  repeated string Hashes = 7;
+  string Token = 8;
+  string RiskTypeVerbose = 9;
+  string Severity = 10;
+  double SeverityScore = 11;
+}
+
+message BatchSetRiskTagsResponse {
+  int64 UpdatedCount = 1;
+}
+
 
 message VerifyTunnelServerDomainParams {
   GetTunnelServerExternalIPParams ConnectParams = 1;
@@ -7388,6 +7421,30 @@ message HTTPFlowsToOnlineBatchRequest {
 message HTTPFlowsToOnlineBatchResponse {
   int64 SuccessCount = 1;
   int64 FailedCount = 2;
+}
+
+message HTTPFlowsFromOnlineRequest {
+  string Token = 1;
+}
+
+message HTTPFlowsFromOnlineProgress {
+  double Progress = 1;
+  string Log = 2;
+}
+
+message BatchSetHTTPFlowIssueFieldsRequest {
+  QueryHTTPFlowRequest Filter = 1;
+  string IssueType = 2;
+  string Severity = 3;
+  string Status = 4;
+  string StatusReason = 5;
+  repeated int64 Ids = 6;
+  repeated string Hashes = 7;
+  string Token = 8;
+}
+
+message BatchSetHTTPFlowIssueFieldsResponse {
+  int64 UpdatedCount = 1;
 }
 
 message AnalyzeHTTPFlowRequest{
@@ -10428,4 +10485,13 @@ message BrowserExtensionTaskEvent {
   bytes Data = 5;
   int64 Timestamp = 6;
   uint64 Sequence = 7;
+}
+
+message UploadToTemporaryFileRequest {
+  bytes Data = 1;
+}
+
+message UploadToTemporaryFileResponse {
+  string FileName = 1;
+  int64 Size = 2;
 }
