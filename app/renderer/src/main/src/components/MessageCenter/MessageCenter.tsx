@@ -18,8 +18,8 @@ import {
   apiFetchQueryWebMessage,
   apiFetchWebMessageClear,
   apiFetchWebMessageRead,
-  apiFetchWebMessageSync,
-  apiFetchWebMessageSyncProgress,
+  apiHTTPFlowsFromOnline,
+  apiRisksFromOnline,
   type MessageQueryDataProps,
   type WebMessageSyncType,
 } from './utils'
@@ -43,6 +43,7 @@ import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButton
 import { YakitDropdownMenu } from '../yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { Progress } from 'antd'
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { randomString } from '@/utils/randomUtil'
 
 const MESSAGE_PAGE_LIMIT = 20
 
@@ -563,7 +564,8 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   const [isRef, setIsRef] = useState<boolean>(false)
   const [syncType, setSyncType] = useState<WebMessageSyncType>()
   const [syncPercent, setSyncPercent] = useState<number>()
-  const syncTimerRef = useRef<ReturnType<typeof setInterval>>()
+  const syncCleanupRef = useRef<(() => void) | undefined>()
+  const { userInfo } = useStore()
 
   const refresh = useMemoizedFn(() => {
     update()
@@ -579,9 +581,9 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   ).run
 
   const clearSyncProgress = useMemoizedFn(() => {
-    if (syncTimerRef.current) {
-      clearInterval(syncTimerRef.current)
-      syncTimerRef.current = undefined
+    if (syncCleanupRef.current) {
+      syncCleanupRef.current()
+      syncCleanupRef.current = undefined
     }
     setSyncType(undefined)
     setSyncPercent(undefined)
@@ -638,8 +640,8 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
 
   useEffect(() => {
     return () => {
-      if (syncTimerRef.current) {
-        clearInterval(syncTimerRef.current)
+      if (syncCleanupRef.current) {
+        syncCleanupRef.current()
       }
     }
   }, [])
@@ -818,42 +820,35 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     setChannel(next)
   })
 
-  const startSyncProgressPoll = useMemoizedFn((type: WebMessageSyncType) => {
-    if (syncTimerRef.current) {
-      clearInterval(syncTimerRef.current)
-    }
-    syncTimerRef.current = setInterval(() => {
-      apiFetchWebMessageSyncProgress(type)
-        .then((res) => {
-          const percent = Math.max(0, Math.min(100, Number(res?.percent) || 0))
-          setSyncPercent(percent)
-          if (percent >= 100) {
-            clearSyncProgress()
-            yakitNotify('success', t('MessageCenter.syncSuccess'))
-            update()
-          }
-        })
-        .catch((err) => {
-          clearSyncProgress()
-          failed(err)
-          yakitNotify('error', t('MessageCenter.syncFailed'))
-        })
-    }, 1000)
-  })
-
   const onSyncData = useMemoizedFn((type: WebMessageSyncType) => {
+    if (!userInfo.isLogin || !userInfo.token) {
+      yakitNotify('error', t('MessageCenter.syncFailed'))
+      return
+    }
     clearSyncProgress()
     setSyncType(type)
     setSyncPercent(0)
-    apiFetchWebMessageSync({ type })
-      .then(() => {
-        startSyncProgressPoll(type)
-      })
-      .catch((err) => {
-        clearSyncProgress()
-        failed(err)
+    const streamToken = randomString(40)
+    let hasError = false
+    const startApi = type === 'flow' ? apiHTTPFlowsFromOnline : apiRisksFromOnline
+    syncCleanupRef.current = startApi(userInfo.token, streamToken, {
+      onProgress: (percent) => {
+        setSyncPercent(percent)
+      },
+      onError: (err) => {
+        hasError = true
+        failed(`${err}`)
         yakitNotify('error', t('MessageCenter.syncFailed'))
-      })
+      },
+      onEnd: () => {
+        const err = hasError
+        clearSyncProgress()
+        if (!err) {
+          yakitNotify('success', t('MessageCenter.syncSuccess'))
+          update()
+        }
+      },
+    })
   })
 
   return (

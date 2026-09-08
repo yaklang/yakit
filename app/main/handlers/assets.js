@@ -134,15 +134,9 @@ module.exports = (win, getClient) => {
     return await asyncSetTagForRisk(params)
   })
 
-  /** 占位：待引擎 gRPC SetRiskEdit 联调 */
-  const asyncSetRiskEdit = (params) => {
+  const asyncBatchSetRiskTags = (params) => {
     return new Promise((resolve, reject) => {
-      const client = getClient()
-      if (typeof client.SetRiskEdit !== 'function') {
-        reject(new Error('SetRiskEdit 待引擎联调'))
-        return
-      }
-      client.SetRiskEdit(params, (err, data) => {
+      getClient().BatchSetRiskTags(params, (err, data) => {
         if (err) {
           reject(err)
           return
@@ -151,8 +145,8 @@ module.exports = (win, getClient) => {
       })
     })
   }
-  ipcMain.handle('SetRiskEdit', async (e, params) => {
-    return await asyncSetRiskEdit(params)
+  ipcMain.handle('BatchSetRiskTags', async (e, params) => {
+    return await asyncBatchSetRiskTags(params)
   })
 
   const asyncQueryRiskTags = (params) => {
@@ -659,6 +653,13 @@ td {
   })
 
   const handlerHelper = require('./handleStreamWithContext')
+
+  const streamRisksFromOnlineMap = new Map()
+  ipcMain.handle('cancel-RisksFromOnline', handlerHelper.cancelHandler(streamRisksFromOnlineMap))
+  ipcMain.handle('RisksFromOnline', (e, params, token) => {
+    let stream = getClient().RisksFromOnline(params)
+    handlerHelper.registerHandler(win, stream, streamRisksFromOnlineMap, token)
+  })
 
   const streamExecuteChaosMakerRuleMap = new Map()
   ipcMain.handle('cancel-ExecuteChaosMakerRule', handlerHelper.cancelHandler(streamExecuteChaosMakerRuleMap))

@@ -51,7 +51,6 @@
     "queryRiskTagsFailed": "查询QueryRiskTags失败：",
     "queryAvailableRiskTypeFailed": "查询QueryAvailableRiskType失败：",
     "cvss_score": "CVSS评分",
-    "none": "无",
     "enter_cvss": "请输入 CVSS 评分",
     "select_disposal_status": "请选择处置状态"
   },

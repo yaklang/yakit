@@ -1,19 +1,18 @@
-import { NetWorkApi } from '@/services/fetch'
-import type { API } from '@/services/swagger/resposeType'
 import { yakitNotify } from '@/utils/notification'
-import type { SetHTTPFlowMarkRequest } from './HTTPFlowMark.constants'
+import type {
+  BatchSetHTTPFlowIssueFieldsRequest,
+  BatchSetHTTPFlowIssueFieldsResponse,
+} from './HTTPFlowMark.constants'
 
-/**
- * 批量/单条修改流量标记
- * xxx--- 等待后端联调
- */
-export const apiSetHTTPFlowMark = (data: SetHTTPFlowMarkRequest): Promise<API.ActionSucceeded> => {
+const { ipcRenderer } = window.require('electron')
+
+/** BatchSetHTTPFlowIssueFields：批量/单条修改流量标记 */
+export const apiBatchSetHTTPFlowIssueFields = (
+  data: BatchSetHTTPFlowIssueFieldsRequest,
+): Promise<BatchSetHTTPFlowIssueFieldsResponse> => {
   return new Promise((resolve, reject) => {
-    NetWorkApi<SetHTTPFlowMarkRequest, API.ActionSucceeded>({
-      method: 'post',
-      url: 'httpflow/mark',
-      data,
-    })
+    ipcRenderer
+      .invoke('BatchSetHTTPFlowIssueFields', data)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', `修改流量标记失败: ${e}`)
