@@ -679,6 +679,29 @@ const DBCacheManager = () => {
   }
 }
 
+const LangSwitchMenu = () => {
+  if (!isEnpriTrace()) {
+    return {
+      key: 'i18nSwitching',
+      label: '语言切换',
+      children: [
+        {
+          key: 'zh',
+          label: '简体中文',
+        },
+        {
+          key: 'en',
+          label: '英文',
+        },
+        {
+          key: 'zh-TW',
+          label: '繁体中文',
+        },
+      ],
+    }
+  }
+}
+
 const GetUIOpSettingMenu = (t: (key: string) => string) => {
   // 便携版
   if (isEnpriTraceAgent()) {
@@ -704,24 +727,7 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
           { label: '远程', key: 'remote' },
         ],
       },
-      {
-        key: 'i18nSwitching',
-        label: '语言切换',
-        children: [
-          {
-            key: 'zh',
-            label: '简体中文',
-          },
-          {
-            key: 'en',
-            label: '英文',
-          },
-          {
-            key: 'zh-TW',
-            label: '繁体中文',
-          },
-        ],
-      },
+      LangSwitchMenu(),
       { type: 'divider' },
       {
         key: 'logs',
@@ -808,24 +814,7 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         },
       ],
     },
-    {
-      key: 'i18nSwitching',
-      label: '语言切换',
-      children: [
-        {
-          key: 'zh',
-          label: '简体中文',
-        },
-        {
-          key: 'en',
-          label: '英文',
-        },
-        {
-          key: 'zh-TW',
-          label: '繁体中文',
-        },
-      ],
-    },
+    LangSwitchMenu(),
     { type: 'divider' },
     DBCacheManager(),
     {
