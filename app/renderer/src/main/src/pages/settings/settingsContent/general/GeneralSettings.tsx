@@ -8,8 +8,8 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV } from '@/utils/envfile'
 import { JSONParseLog } from '@/utils/tool'
 import { loginOut } from '@/utils/login'
-import { failed, success } from '@/utils/notification'
-import { useStore } from '@/store'
+import { failed, success, warn } from '@/utils/notification'
+import { useStore, yakitDynamicStatus } from '@/store'
 import { CacheDropDownGV } from '@/yakitGV'
 import emiter from '@/utils/eventBus/eventBus'
 import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
@@ -33,9 +33,11 @@ const formatSize = (bytes: number): string => {
 }
 
 export const GeneralSettings: React.FC = () => {
-  const { t } = useI18nNamespaces(['setting', 'components', 'yakitUi'])
+  const { t } = useI18nNamespaces(['setting', 'components', 'yakitUi', 'layout'])
   const [form] = Form.useForm()
   const { userInfo } = useStore()
+  const { dynamicStatus } = yakitDynamicStatus()
+  const pluginSourceLocked = dynamicStatus.isDynamicStatus
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
   const [, aiGlobalConfigEvent] = useAIGlobalConfig()
 
@@ -166,6 +168,10 @@ export const GeneralSettings: React.FC = () => {
   ]
 
   const onFinish = useMemoizedFn((v: PluginSourceProfile) => {
+    if (dynamicStatus.isDynamicStatus) {
+      warn(t('UIOpSetting.remoteModeCannotModify'))
+      return
+    }
     const BaseUrl = v.BaseUrl.endsWith('/') ? v.BaseUrl.slice(0, -1) : v.BaseUrl
     const values = {
       ...getFormValue(),
@@ -223,6 +229,10 @@ export const GeneralSettings: React.FC = () => {
   })
 
   const persistPluginSource = useMemoizedFn(() => {
+    if (dynamicStatus.isDynamicStatus) {
+      warn(t('UIOpSetting.remoteModeCannotModify'))
+      return
+    }
     form
       .validateFields()
       .then((v) => onFinish(v))
@@ -271,6 +281,7 @@ export const GeneralSettings: React.FC = () => {
                   cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
                   initValue={defaultHttpUrl}
                   placeholder={t('ConfigPrivateDomain.enterPrivateDomain')}
+                  disabled={pluginSourceLocked}
                   onBlur={persistPluginSource}
                   onSelect={persistPluginSource}
                 />
@@ -286,6 +297,7 @@ export const GeneralSettings: React.FC = () => {
                   ref={httpProxyRef}
                   cacheHistoryDataKey={CacheDropDownGV.ConfigProxy}
                   placeholder={t('ConfigPrivateDomain.setProxy')}
+                  disabled={pluginSourceLocked}
                   onBlur={persistPluginSource}
                   onSelect={persistPluginSource}
                 />

@@ -7,9 +7,6 @@ import { YakitEllipsis } from '../basics/YakitEllipsis'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
 import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
-const ConfigPrivateDomain = React.lazy(() =>
-  import('../ConfigPrivateDomain/ConfigPrivateDomain').then((m) => ({ default: m.ConfigPrivateDomain })),
-)
 import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
 import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
 import { useConfigManagementTab, useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
@@ -660,10 +657,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         key: 'pcapfix',
         label: '网卡权限修复',
       },
-      {
-        key: 'store',
-        label: '配置插件源',
-      },
       DBCacheManager(),
       {
         key: 'diagnose-network',
@@ -777,10 +770,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
     { type: 'divider' },
     DBCacheManager(),
     {
-      key: 'store',
-      label: '配置插件源',
-    },
-    {
       key: 'proxy-management',
       label: '网络代理管理',
     },
@@ -853,7 +842,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const { setConfigManagementActiveTab } = useConfigManagementTab()
   const { delTemporaryProject } = useTemporaryProjectStore()
   const [reclaimHint, setReclaimHint] = useState<boolean>(false)
-  const { t, i18n } = useI18nNamespaces(['home', 'layout'])
+  const { t } = useI18nNamespaces(['home', 'layout'])
 
   useEffect(() => {
     onIsCVEDatabaseReady()
@@ -880,26 +869,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         setDataBaseUpdateVisible(true)
         setIsDiffUpdate(true)
         return
-      case 'store': {
-        if (dynamicStatus.isDynamicStatus) {
-          warn(t('UIOpSetting.remoteModeCannotModify'))
-          return
-        }
-        const m = showYakitModal({
-          title: (modalT) => modalT('UIOpSetting.configPrivateDomain'),
-          type: 'white',
-          footer: null,
-          maskClosable: false,
-          width: i18n.language.startsWith('zh') ? 500 : 650,
-          // onCancel: () => m.destroy(),
-          content: (
-            <React.Suspense fallback={null}>
-              <ConfigPrivateDomain onClose={() => m.destroy()} />
-            </React.Suspense>
-          ),
-        })
-        return m
-      }
       case 'proxy-management':
         setConfigManagementActiveTab('proxy')
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.ConfigManagement }))
