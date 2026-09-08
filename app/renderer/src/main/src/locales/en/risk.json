@@ -51,7 +51,6 @@
     "queryRiskTagsFailed": "Query QueryRiskTags failed: ",
     "queryAvailableRiskTypeFailed": "Query QueryAvailableRiskType failed: ",
     "cvss_score": "CVSS Score",
-    "none": "None",
     "enter_cvss": "Please enter CVSS score",
     "select_disposal_status": "Please select disposal status"
   },

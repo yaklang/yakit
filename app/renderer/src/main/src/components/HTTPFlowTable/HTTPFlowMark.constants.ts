@@ -1,3 +1,5 @@
+import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+
 /** 流量标记：问题类型 */
 export const FLOW_PROBLEM_TYPE_OPTIONS = [
   'SQL注入',
@@ -17,8 +19,24 @@ export const FLOW_SEVERITY_OPTIONS = ['低危', '中危', '高危', '严重'] as
 /** 流量标记：处置状态 */
 export const FLOW_DISPOSAL_STATUS_OPTIONS = ['确认', '误报', '待修复'] as const
 
-/** xxx--- 等待后端联调 */
-export interface SetHTTPFlowMarkRequest {
+/** BatchSetHTTPFlowIssueFields 请求 */
+export interface BatchSetHTTPFlowIssueFieldsRequest {
+  Filter?: YakQueryHTTPFlowRequest
+  IssueType?: string
+  Severity?: string
+  Status?: string
+  StatusReason?: string
+  Ids?: number[]
+  Hashes?: string[]
+  Token?: string
+}
+
+export interface BatchSetHTTPFlowIssueFieldsResponse {
+  UpdatedCount?: number
+}
+
+/** 本地列表 patch 用（对齐表格字段名） */
+export interface FlowMarkPatchPayload {
   Ids: number[]
   ProblemType?: string
   Severity?: string

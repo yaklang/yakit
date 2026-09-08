@@ -6,45 +6,59 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import type { HTTPFlow } from './HTTPFlowTable.constants'
+import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import {
   FLOW_DISPOSAL_STATUS_OPTIONS,
   FLOW_PROBLEM_TYPE_OPTIONS,
   FLOW_SEVERITY_OPTIONS,
-  type SetHTTPFlowMarkRequest,
+  type BatchSetHTTPFlowIssueFieldsRequest,
+  type FlowMarkPatchPayload,
 } from './HTTPFlowMark.constants'
-import { apiSetHTTPFlowMark } from './HTTPFlowMark.utils'
+import { apiBatchSetHTTPFlowIssueFields } from './HTTPFlowMark.utils'
 import styles from './HTTPFlowMark.module.scss'
 
 export interface FlowMarkEditFormProps {
   info?: any //暂时any HTTPFlow
   ids: number[]
+  filter?: YakQueryHTTPFlowRequest
+  token?: string
   batch?: boolean
   onClose?: () => void
-  onSuccess?: (payload: SetHTTPFlowMarkRequest) => void
+  onSuccess?: (payload: FlowMarkPatchPayload) => void
 }
 
 export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) => {
-  const { info, ids, batch, onClose, onSuccess } = props
+  const { info, ids, filter, token, batch, onClose, onSuccess } = props
   const { t } = useI18nNamespaces(['history', 'yakitUi'])
   const [form] = Form.useForm()
 
   const onFinish = useMemoizedFn(
     (value: { ProblemType?: string; Severity?: string; DisposalStatus?: string; DisposalNote?: string }) => {
-      const payload: SetHTTPFlowMarkRequest = { Ids: ids }
-      if (batch) {
-        if (value.ProblemType) payload.ProblemType = value.ProblemType
-        if (value.Severity) payload.Severity = value.Severity
-        if (value.DisposalStatus) payload.DisposalStatus = value.DisposalStatus
-        if (value.DisposalNote?.trim()) payload.DisposalNote = value.DisposalNote.trim()
-      } else {
-        payload.ProblemType = value.ProblemType
-        payload.Severity = value.Severity
-        payload.DisposalStatus = value.DisposalStatus
-        payload.DisposalNote = value.DisposalNote?.trim() || undefined
+      const payload: BatchSetHTTPFlowIssueFieldsRequest = {
+        Ids: ids,
+        Filter: filter,
+        Token: token,
       }
-      apiSetHTTPFlowMark(payload).then(() => {
-        onSuccess?.(payload)
+      if (batch) {
+        if (value.ProblemType) payload.IssueType = value.ProblemType
+        if (value.Severity) payload.Severity = value.Severity
+        if (value.DisposalStatus) payload.Status = value.DisposalStatus
+        if (value.DisposalNote?.trim()) payload.StatusReason = value.DisposalNote.trim()
+      } else {
+        payload.IssueType = value.ProblemType
+        payload.Severity = value.Severity
+        payload.Status = value.DisposalStatus
+        payload.StatusReason = value.DisposalNote?.trim() || undefined
+      }
+      apiBatchSetHTTPFlowIssueFields(payload).then(() => {
+        const patch: FlowMarkPatchPayload = {
+          Ids: ids,
+          ...(payload.IssueType !== undefined ? { ProblemType: payload.IssueType } : {}),
+          ...(payload.Severity !== undefined ? { Severity: payload.Severity } : {}),
+          ...(payload.Status !== undefined ? { DisposalStatus: payload.Status } : {}),
+          ...(payload.StatusReason !== undefined ? { DisposalNote: payload.StatusReason } : {}),
+        }
+        onSuccess?.(patch)
         onClose?.()
       })
     },
@@ -103,10 +117,12 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
           <YakitInput.TextArea placeholder={t('HTTPFlowTable.inputDisposalNote')} rows={4} />
         </Form.Item>
         <div className={styles['flow-mark-edit-form-btns']}>
-          <YakitButton type="outline2" onClick={() => onClose?.()}>
+          <YakitButton type="outline2" onClick={onClose}>
             {t('YakitButton.cancel')}
           </YakitButton>
-          <YakitButton htmlType="submit">{t('YakitButton.ok')}</YakitButton>
+          <YakitButton htmlType="submit" type="primary">
+            {t('YakitButton.ok')}
+          </YakitButton>
         </div>
       </Form>
     </div>
