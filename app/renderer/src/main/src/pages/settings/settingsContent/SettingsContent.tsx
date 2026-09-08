@@ -59,7 +59,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
   }, [anchor, section, sectionTick])
 
   return (
-    <div ref={scrollerRef} className={styles['settings-content']} data-settings-content>
+    <div ref={scrollerRef} className={styles['settings-content']}>
       <div key={anchor} className={styles['settings-content-body']}>
         {!hideOuterTitle[anchor as SettingsAnchor] && <div className={styles['settings-content-title']}>{title}</div>}
         <div className={styles['settings-content-main']}>

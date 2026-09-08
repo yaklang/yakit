@@ -54,7 +54,6 @@ const getEventKeys = (data: Record<string, ShortcutKeyEventInfo>) => {
 
 export const ShortcutKeySettings: React.FC = () => {
   const { t, i18nRefresh } = useI18nNamespaces(['shortcutKey', 'setting', 'utils', 'yakitUi', 'history'])
-  const wrapper = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(false)
   const [keyword, setKeyword] = useState('')
   const [groups, setGroups] = useState<Record<string, Record<string, ShortcutKeyEventInfo>>>({})
@@ -199,14 +198,8 @@ export const ShortcutKeySettings: React.FC = () => {
 
   const editingKey = editInfo.current && keyShow ? `${editInfo.current.page}:${editInfo.current.key}` : ''
 
-  const getModalContainer = useMemoizedFn(() => {
-    return (
-      (wrapper.current?.closest('[data-settings-content]') as HTMLElement | null) || wrapper.current || document.body
-    )
-  })
-
   return (
-    <div ref={wrapper} className={styles['shortcut']}>
+    <div className={styles['shortcut']}>
       <Spin spinning={loading}>
         <div className={styles['shortcut-body']}>
           <div className={styles['head-block']}>
@@ -274,8 +267,6 @@ export const ShortcutKeySettings: React.FC = () => {
           ))}
 
           <YakitModal
-            getContainer={getModalContainer}
-            rootClassName={styles['shortcut-modal-root']}
             type="white"
             title={t('ShortcutKey.editShortcut')}
             centered

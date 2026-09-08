@@ -3,15 +3,6 @@
   min-width: 0;
 }
 
-.shortcut-modal-root {
-  :global {
-    .ant-modal-wrap,
-    .ant-modal-mask {
-      position: absolute;
-    }
-  }
-}
-
 .shortcut-body {
   display: flex;
   flex-direction: column;
