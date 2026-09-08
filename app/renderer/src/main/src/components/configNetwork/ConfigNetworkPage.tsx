@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { AutoCard } from '@/components/AutoCard'
-import { ManyMultiSelectForString, SwitchItem } from '@/utils/inputUtil'
-import { Divider, Form, Slider, Space, Upload, Modal } from 'antd'
+import { Form, Modal } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { yakitInfo, warn, failed, success, yakitNotify } from '@/utils/notification'
 import { AutoSpin } from '@/components/AutoSpin'
 import update from 'immutability-helper'
@@ -11,7 +8,6 @@ import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks
 import styles from './ConfigNetworkPage.module.scss'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { InputCertificateForm } from '@/pages/mitm/MITMServerStartForm/MITMAddTLS'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { RectangleFailIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RectangleFailIcon'
@@ -20,7 +16,6 @@ import { UnionIcon } from '@yakit-libs/yakit-ui-icons/oldicon/UnionIcon'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import classNames from 'classnames'
 import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
 import { TableVirtualResize } from '../TableVirtualResize/TableVirtualResize'
 import type { ColumnsTypeProps } from '../TableVirtualResize/TableVirtualResizeType'
@@ -37,7 +32,6 @@ import { LocalGVS } from '@/enums/localGlobal'
 import { RemoteGV } from '@/yakitGV'
 import { DragDropContext, Draggable, type DropResult, Droppable } from '@hello-pangea/dnd'
 import NewThirdPartyApplicationConfig from './NewThirdPartyApplicationConfig'
-import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import emiter from '@/utils/eventBus/eventBus'
 import { CodeCustomize } from './CustomizeCode'
@@ -47,7 +41,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { checkProxyVersion } from '@/utils/proxyConfigUtil'
 import { useProxy } from '@/hook/useProxy'
 import { handleAIConfig } from '@/pages/spaceEngine/utils'
-import { getReleaseEditionName, isIRify } from '@/utils/envfile'
+import { isIRify } from '@/utils/envfile'
 import { JSONParseLog } from '@/utils/tool'
 import { getTipByType } from '@/pages/ai-agent/aiModelList/AIModelList'
 import { AIModelPolicyOptions } from '@/pages/ai-agent/defaultConstant'
@@ -58,9 +52,7 @@ import { GlobalConfigEmbeddedForm } from '@/pages/settings/settingsContent/globa
 import gStyles from '@/pages/settings/settingsContent/globalConfig/GlobalConfigSettings.module.scss'
 import { CheckCircleSolid, FigmaIcon2281144183Solid, LockClosedSolid, XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
-export interface ConfigNetworkPageProp {
-  embedded?: boolean
-}
+export interface ConfigNetworkPageProp {}
 
 export interface AuthInfo {
   AuthUsername: string
@@ -210,8 +202,7 @@ export const defaultParams: GlobalNetworkConfig = {
   MaxContentLength: 10,
 }
 
-export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
-  const { embedded } = props
+export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = () => {
   const [params, setParams] = useState<GlobalNetworkConfig>(defaultParams)
   const [certificateParams, setCertificateParams] = useState<ClientCertificatePfx[]>()
   const currentIndex = useRef<number>(0)
@@ -871,628 +862,50 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
   return (
     <>
-      <div ref={configRef} className={embedded ? styles['config-network-embedded'] : undefined}>
-        {embedded ? (
-          <AutoSpin spinning={loading} tip={t('ConfigNetworkPage.loading')}>
-            {params && (
-              <GlobalConfigEmbeddedForm
-                t={t}
-                params={params}
-                setParams={setParams}
-                format={format}
-                setFormat={setFormat}
-                onCertificate={onCertificate}
-                cerFormRef={cerFormRef}
-                certificateList={certificateList}
-                appConfigs={params.AppConfigs || []}
-                onAddApp={onAddApp}
-                onEditApp={onEditApp}
-                onRemoveApp={onRemoveApp}
-                aiBlock={<AIModelGlobalConfig embedded />}
-                codeBlock={<CodeCustomize variant="settings" />}
-                chromePath={chromePath}
-                setChromePath={setChromePath}
-                hideRules={hideRules}
-                endpointsCount={Endpoints.length}
-                routesCount={Routes.length}
-                onClickDownstreamProxy={onClickDownstreamProxy}
-                onOpenAuth={() => setVisible(true)}
-                pprofFileAutoAnalyze={pprofFileAutoAnalyze}
-                setPprofFileAutoAnalyze={setPprofFileAutoAnalyze}
-                secondaryTabsNum={secondaryTabsNum}
-                setSecondaryTabsNum={setSecondaryTabsNum}
-                limitLogNum={limitLogNum}
-                setLimitLogNum={setLimitLogNum}
-                onLimitLogNumEnter={onLimitLogNumEnter}
-                performanceTips={performanceTips}
-                setPerformanceTips={setPerformanceTips}
-                closeConfirmEnabled={closeConfirmEnabled}
-                setCloseConfirmEnabled={setCloseConfirmEnabled}
-                isDelPrivatePlugin={isDelPrivatePlugin}
-                setIsDelPrivatePlugin={setIsDelPrivatePlugin}
-                netInterfaceList={netInterfaceList}
-                resetConfig={resetConfig}
-                submit={submit}
-              />
-            )}
-          </AutoSpin>
-        ) : (
-          <AutoCard style={{ height: 'auto' }}>
-            <AutoSpin spinning={loading} tip={t('ConfigNetworkPage.loading')}>
-              {params && (
-                <Form
-                  size={'small'}
-                  labelCol={{ span: 5 }}
-                  wrapperCol={{ span: 14 }}
-                  onSubmitCapture={() => submit()}
-                  labelWrap
-                >
-                  <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                    {t('ConfigNetworkPage.dnsConfig')}
-                  </Divider>
-                  <SwitchItem
-                    label={t('ConfigNetworkPage.disableSystemDNS')}
-                    setValue={(DisableSystemDNS) => setParams({ ...params, DisableSystemDNS })}
-                    value={params.DisableSystemDNS}
-                    oldTheme={false}
-                  />
-                  <ManyMultiSelectForString
-                    label={t('ConfigNetworkPage.backupDNS')}
-                    setValue={(CustomDNSServers) =>
-                      setParams({ ...params, CustomDNSServers: CustomDNSServers.split(',') })
-                    }
-                    value={params.CustomDNSServers.join(',')}
-                    data={[]}
-                    mode={'tags'}
-                  />
-                  <SwitchItem
-                    label={t('ConfigNetworkPage.enableTCPDNS')}
-                    setValue={(DNSFallbackTCP) => setParams({ ...params, DNSFallbackTCP })}
-                    value={params.DNSFallbackTCP}
-                    oldTheme={false}
-                  />
-                  <SwitchItem
-                    label={t('ConfigNetworkPage.enableDoHAntiPollution')}
-                    setValue={(DNSFallbackDoH) => setParams({ ...params, DNSFallbackDoH })}
-                    value={params.DNSFallbackDoH}
-                    oldTheme={false}
-                  />
-                  {params.DNSFallbackDoH && (
-                    <ManyMultiSelectForString
-                      label={t('ConfigNetworkPage.backupDoH')}
-                      setValue={(data) => setParams({ ...params, CustomDoHServers: data.split(',') })}
-                      value={params.CustomDoHServers.join(',')}
-                      data={[]}
-                      mode={'tags'}
-                    />
-                  )}
-                  <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                    {t('ConfigNetworkPage.tlsClientConfig')}
-                  </Divider>
-                  <Form.Item label={t('ConfigNetworkPage.selectFormat')}>
-                    <YakitRadioButtons
-                      size="small"
-                      value={format}
-                      onChange={(e) => {
-                        setFormat(e.target.value)
-                      }}
-                      buttonStyle="solid"
-                      options={[
-                        {
-                          value: 1,
-                          label: t('ConfigNetworkPage.p12Format'),
-                        },
-                        {
-                          value: 2,
-                          label: t('ConfigNetworkPage.pemFormat'),
-                        },
-                      ]}
-                    />
-                  </Form.Item>
-                  {format === 1 && (
-                    <>
-                      <Form.Item label={t('ConfigNetworkPage.addCertificate')}>
-                        {/*
-                                    PEM: 3 - CERT / KEY / CA-CERT
-                                    PKCS12(P12/PFX)(.p12 .pfx): File + Password
-                                */}
-                        <Upload
-                          accept={'.p12,.pfx'}
-                          multiple={false}
-                          maxCount={1}
-                          showUploadList={false}
-                          beforeUpload={(file) => onCertificate(file)}
-                        >
-                          <YakitButton type={'outline2'}>{t('ConfigNetworkPage.addTlsClientCertificate')}</YakitButton>
-                        </Upload>
-                      </Form.Item>
-                    </>
-                  )}
-                  {format === 2 && (
-                    <InputCertificateForm
-                      ref={cerFormRef}
-                      isShowCerName={false}
-                      formProps={{
-                        labelCol: { span: 5 },
-                        wrapperCol: { span: 14 },
-                      }}
-                    />
-                  )}
-                  <Form.Item colon={false} label={<> </>}>
-                    {certificateList}
-                  </Form.Item>
-                  <Form.Item label={t('ConfigNetworkPage.clientTlsVersionSupport')}>
-                    <Slider
-                      style={{ width: '33%' }}
-                      range
-                      dots
-                      value={[params.MinTlsVersion, params.MaxTlsVersion]}
-                      onChange={(value) => {
-                        if (value.length == 2) {
-                          setParams({ ...params, MinTlsVersion: value[0], MaxTlsVersion: value[1] })
-                        }
-                      }}
-                      min={0x300}
-                      max={0x304}
-                      tooltip={{
-                        formatter: (value) => {
-                          switch (value) {
-                            case 0x300:
-                              return 'SSLv3'
-                            case 0x301:
-                              return 'TLS 1.0'
-                            case 0x302:
-                              return 'TLS 1.1'
-                            case 0x303:
-                              return 'TLS 1.2'
-                            case 0x304:
-                              return 'TLS 1.3'
-                            default:
-                              return value
-                          }
-                        },
-                      }}
-                    />
-                  </Form.Item>
-
-                  <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                    {t('ConfigNetworkPage.thirdPartyAppConfig')}
-                  </Divider>
-                  <Form.Item label={t('ConfigNetworkPage.thirdPartyApp')}>
-                    {(params.AppConfigs || []).map((i, index) => {
-                      const extraParamsArr = i.ExtraParams || []
-                      const extraParams = {}
-                      extraParamsArr.forEach((item) => {
-                        extraParams[item.Key] = item.Value
-                      })
-                      return (
-                        <YakitTag
-                          key={index}
-                          onClick={() => {
-                            const m = showYakitModal({
-                              title: (modalT) => modalT('ConfigNetworkPage.editThirdPartyApp'),
-                              width: 600,
-                              closable: true,
-                              maskClosable: false,
-                              footer: null,
-                              content: (
-                                <NewThirdPartyApplicationConfig
-                                  formValues={{
-                                    Type: i.Type,
-                                    ...extraParams,
-                                  }}
-                                  disabledType={true}
-                                  onAdd={(data) => {
-                                    // 不影响ai优先级排序
-                                    setParams({
-                                      ...params,
-                                      AppConfigs: (params.AppConfigs || []).map((i) => {
-                                        if (i.Type === data.Type) {
-                                          i = data
-                                        }
-                                        return { ...i }
-                                      }),
-                                    })
-                                    setTimeout(() => submit(), 100)
-                                    m.destroy()
-                                  }}
-                                  onCancel={() => m.destroy()}
-                                />
-                              ),
-                            })
-                          }}
-                          closable
-                          onClose={async () => {
-                            const newAppConfigs = (params.AppConfigs || []).filter((e) => i.Type !== e.Type)
-                            const newAiApiPriority = params.AiApiPriority.filter((ele) => ele !== i.Type)
-                            setParams({
-                              ...params,
-                              AppConfigs: newAppConfigs,
-                              AiApiPriority: newAiApiPriority,
-                            })
-                            setTimeout(() => submit(), 100)
-                          }}
-                        >
-                          {i.Type}
-                        </YakitTag>
-                      )
-                    })}
-                    <YakitButton
-                      type={'outline1'}
-                      onClick={() => {
-                        const m = showYakitModal({
-                          title: (modalT) => modalT('ConfigNetworkPage.addThirdPartyApp'),
-                          width: 600,
-                          footer: null,
-                          closable: true,
-                          maskClosable: false,
-                          content: (
-                            <NewThirdPartyApplicationConfig
-                              onAdd={(data) => {
-                                // 新增，有影响ai优化级
-                                const newValue = handleAIConfig(
-                                  {
-                                    AppConfigs: params.AppConfigs,
-                                    AiApiPriority: params.AiApiPriority,
-                                  },
-                                  data,
-                                )
-                                if (!newValue) {
-                                  yakitNotify('error', t('ConfigNetworkPage.paramError'))
-                                  return
-                                }
-                                setParams((perv) => ({ ...perv, ...newValue })) // submit后会拿最新得全局配置
-                                setTimeout(() => submit(), 100)
-                                m.destroy()
-                              }}
-                              onCancel={() => m.destroy()}
-                            />
-                          ),
-                        })
-                      }}
-                    >
-                      {t('ConfigNetworkPage.addThirdPartyApp')}
-                    </YakitButton>
-                  </Form.Item>
-                  {/* <Form.Item label={"AI使用优先级"}>
-                                    <div className={styles["ai-sort-box"]}>
-                                        {!!params.AppConfigs.length ? (
-                                            <AISortContent
-                                                appConfigs={params.AppConfigs}
-                                                AiApiPriority={params.AiApiPriority}
-                                                onUpdate={(aiTypes) => {
-                                                    setParams((perv) => {
-                                                        const noAiConfig: ThirdPartyApplicationConfig[] =
-                                                            perv.AppConfigs.filter(
-                                                                (ele) => !aiTypes.some((i) => i.Type === ele.Type)
-                                                            )
-
-                                                        const newConfig = [...aiTypes, ...noAiConfig]
-                                                        return {
-                                                            ...perv,
-                                                            AiApiPriority: aiTypes.map((ele) => ele.Type),
-                                                            AppConfigs: newConfig
-                                                        }
-                                                    })
-                                                    setTimeout(() => submit(), 100)
-                                                }}
-                                            />
-                                        ) : (
-                                            <>请先配置ai</>
-                                        )}
-                                    </div>
-                                </Form.Item> */}
-                  <AIModelGlobalConfig />
-                  <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                    {t('ConfigNetworkPage.customCodeSnippet')}
-                    <div className={styles['form-rule-code-customize-describe']}>
-                      {t('ConfigNetworkPage.customCodeSnippetDesc')}
-                    </div>
-                  </Divider>
-
-                  <Form.Item
-                    label={t('ConfigNetworkPage.codeSnippet')}
-                    name="code-customize"
-                    className={styles['form-rule-code-customize-item']}
-                  >
-                    <CodeCustomize />
-                  </Form.Item>
-
-                  <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                    {t('ConfigNetworkPage.otherConfig')}
-                  </Divider>
-                  <Form.Item label={t('ConfigNetworkPage.httpAuthGlobalConfig')}>
-                    <div className={styles['form-rule-body']}>
-                      <div className={styles['form-rule']} onClick={() => setVisible(true)}>
-                        <div className={styles['form-rule-text']}>
-                          {t('ConfigNetworkPage.existingAuthConfig', {
-                            count: params.AuthInfos.filter((item) => !item.Forbidden).length,
-                          })}
-                        </div>
-                        <div className={styles['form-rule-icon']}>
-                          <CogOutlined size={16} />
-                        </div>
-                      </div>
-                    </div>
-                  </Form.Item>
-
-                  <Form.Item
-                    label={t('ConfigNetworkPage.disableIP')}
-                    tooltip={t('ConfigNetworkPage.disableIPTip', { soft: getReleaseEditionName() })}
-                  >
-                    <YakitSelect
-                      mode="tags"
-                      value={params.DisallowIPAddress}
-                      onChange={(value) => {
-                        setParams({ ...params, DisallowIPAddress: value })
-                      }}
-                    ></YakitSelect>
-                  </Form.Item>
-                  <Form.Item
-                    label={t('ConfigNetworkPage.disableDomain')}
-                    tooltip={t('ConfigNetworkPage.disableDomainTip', { soft: getReleaseEditionName() })}
-                  >
-                    <YakitSelect
-                      mode="tags"
-                      value={params.DisallowDomain}
-                      onChange={(value) => {
-                        setParams({ ...params, DisallowDomain: value })
-                      }}
-                    ></YakitSelect>
-                  </Form.Item>
-                  <Form.Item
-                    label={t('ConfigNetworkPage.pluginScanWhitelist')}
-                    tooltip={t('ConfigNetworkPage.pluginScanWhitelistTip')}
-                  >
-                    <YakitSelect
-                      mode="tags"
-                      value={params.IncludePluginScanURIs}
-                      onChange={(value) => {
-                        setParams({ ...params, IncludePluginScanURIs: value })
-                      }}
-                    ></YakitSelect>
-                  </Form.Item>
-                  <Form.Item
-                    label={t('ConfigNetworkPage.pluginScanBlacklist')}
-                    tooltip={t('ConfigNetworkPage.pluginScanBlacklistTip')}
-                  >
-                    <YakitSelect
-                      mode="tags"
-                      value={params.ExcludePluginScanURIs}
-                      onChange={(value) => {
-                        setParams({ ...params, ExcludePluginScanURIs: value })
-                      }}
-                    ></YakitSelect>
-                  </Form.Item>
-                  <Form.Item label={t('ConfigNetworkPage.globalProxy')}>
-                    <YakitInput
-                      allowClear
-                      size="small"
-                      value={params.GlobalProxy.join(',')}
-                      onChange={(e) => {
-                        const { value } = e.target
-                        setParams({ ...params, GlobalProxy: value.split(',') })
-                      }}
-                    />
-                  </Form.Item>
-                  <Form.Item label={t('ConfigNetworkPage.pluginExecTimeout')}>
-                    <YakitInputNumber
-                      size="small"
-                      value={params.CallPluginTimeout}
-                      onChange={(e) => {
-                        setParams({ ...params, CallPluginTimeout: e as number })
-                      }}
-                      min={1}
-                    />
-                  </Form.Item>
-                  <Form.Item label={t('ConfigNetworkPage.noConfigLaunchPath')}>
-                    <YakitInput
-                      value={chromePath}
-                      placeholder={t('ConfigNetworkPage.selectLaunchPath')}
-                      size="small"
-                      onChange={(e) => setChromePath(e.target.value)}
-                    />
-                    <Upload
-                      multiple={false}
-                      maxCount={1}
-                      showUploadList={false}
-                      beforeUpload={(f) => {
-                        const file_name = f.name
-                        const path: string = f?.path || ''
-                        if (path.length > 0) {
-                          setChromePath(path)
-                        }
-                        return false
-                      }}
-                    >
-                      <div className={styles['config-select-path']}>{t('ConfigNetworkPage.selectPath')}</div>
-                    </Upload>
-                  </Form.Item>
-                  <Form.Item label={t('ConfigNetworkPage.systemProxy')} tooltip={t('ConfigNetworkPage.systemProxyTip')}>
-                    <YakitSwitch
-                      checked={params.EnableSystemProxyFromEnv}
-                      onChange={(EnableSystemProxyFromEnv) => setParams({ ...params, EnableSystemProxyFromEnv })}
-                    />
-                  </Form.Item>
-                  <Form.Item label={t(hideRules ? 'AgentConfigModal.proxy_configuration' : 'ProxyConfig.title')}>
-                    <div className={styles['form-rule-body']}>
-                      <div className={styles['form-rule']} onClick={onClickDownstreamProxy}>
-                        <div className={styles['form-rule-text']}>
-                          {t('ProxyConfig.recordPointsCount', { i: Endpoints.length })}
-                          {!hideRules ? `,${t('ProxyConfig.recordRoutesCount', { i: Routes.length })}` : null}
-                        </div>
-                        <div className={styles['form-rule-icon']}>
-                          <CogOutlined color="currentColor" />
-                        </div>
-                      </div>
-                    </div>
-                  </Form.Item>
-                  <Form.Item
-                    label={t('ConfigNetworkPage.saveHTTPFlow')}
-                    tooltip={t('ConfigNetworkPage.saveHTTPFlowTip')}
-                  >
-                    <YakitSwitch
-                      checked={!params.SkipSaveHTTPFlow}
-                      onChange={(val) => setParams({ ...params, SkipSaveHTTPFlow: !val })}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label={t('ConfigNetworkPage.dbSyncStorage')}
-                    tooltip={t('ConfigNetworkPage.dbSyncStorageTip')}
-                  >
-                    <YakitSwitch
-                      checked={params.DbSaveSync}
-                      onChange={(val) => setParams({ ...params, DbSaveSync: val })}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label={t('ConfigNetworkPage.dumpPacketSize')}
-                    tooltip={t('ConfigNetworkPage.dumpPacketSizeTip')}
-                    labelCol={{ span: 5 }}
-                    wrapperCol={{ span: 2 }}
-                  >
-                    <YakitInput
-                      suffix="M"
-                      size="small"
-                      value={params.MaxContentLength}
-                      onChange={(e) => {
-                        let value = e.target.value.replace(/\D/g, '')
-                        if (value.length > 1 && value.startsWith('0')) {
-                          value = value.replace(/^0+/, '')
-                        }
-                        setParams({ ...params, MaxContentLength: value })
-                      }}
-                      onPressEnter={() => {
-                        let value = parseInt(params.MaxContentLength + '' || '0', 10)
-                        if (!value || value === 0) {
-                          value = 10
-                        } else if (value > 50) {
-                          value = 50
-                        }
-                        setParams({ ...params, MaxContentLength: value })
-                      }}
-                      onBlur={() => {
-                        let value = parseInt(params.MaxContentLength + '' || '0', 10)
-                        if (!value || value === 0) {
-                          value = 10
-                        } else if (value > 50) {
-                          value = 50
-                        }
-                        setParams({ ...params, MaxContentLength: value })
-                      }}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label={t('ConfigNetworkPage.autoPerformanceSampling')}
-                    tooltip={t('ConfigNetworkPage.autoPerformanceSamplingTip')}
-                  >
-                    <YakitSwitch
-                      checked={pprofFileAutoAnalyze}
-                      onChange={(pprofFileAutoAnalyze) => setPprofFileAutoAnalyze(pprofFileAutoAnalyze)}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label={t('ConfigNetworkPage.secondaryTabsNum')}
-                    labelCol={{ span: 5 }}
-                    wrapperCol={{ span: 2 }}
-                  >
-                    <YakitInput
-                      size="small"
-                      value={secondaryTabsNum}
-                      onChange={(e) => {
-                        let value = e.target.value.replace(/\D/g, '')
-                        if (value.length > 1 && value.startsWith('0')) {
-                          value = value.replace(/^0+/, '')
-                        }
-                        setSecondaryTabsNum(value)
-                      }}
-                      onPressEnter={() => {
-                        let value = parseInt(secondaryTabsNum + '' || '0', 10)
-                        if (!value || value === 0) {
-                          value = 100
-                        }
-                        setSecondaryTabsNum(value)
-                      }}
-                      onBlur={() => {
-                        let value = parseInt(secondaryTabsNum + '' || '0', 10)
-                        if (!value || value === 0) {
-                          value = 100
-                        }
-                        setSecondaryTabsNum(value)
-                      }}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label={t('ConfigNetworkPage.pluginLogCount')}
-                    labelCol={{ span: 5 }}
-                    wrapperCol={{ span: 2 }}
-                  >
-                    <YakitInput
-                      size="small"
-                      value={limitLogNum}
-                      onChange={(e) => {
-                        let value = e.target.value.replace(/\D/g, '')
-                        if (value.length > 1 && value.startsWith('0')) {
-                          value = value.replace(/^0+/, '')
-                        }
-                        setLimitLogNum(value)
-                      }}
-                      onPressEnter={onLimitLogNumEnter}
-                      onBlur={onLimitLogNumEnter}
-                    />
-                  </Form.Item>
-                  <Form.Item label={t('ConfigNetworkPage.performance')} tooltip={t('ConfigNetworkPage.performanceTip')}>
-                    <YakitSwitch checked={performanceTips} onChange={setPerformanceTips} />
-                  </Form.Item>
-                  <Form.Item label={t('ConfigNetworkPage.closeConfirm')}>
-                    <YakitSwitch checked={closeConfirmEnabled} onChange={setCloseConfirmEnabled} />
-                  </Form.Item>
-                  <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                    {t('ConfigNetworkPage.synScanNicConfig')}
-                  </Divider>
-                  <Form.Item label={t('ConfigNetworkPage.nic')} tooltip={t('ConfigNetworkPage.nicTip')}>
-                    <YakitSelect
-                      // showSearch
-                      options={netInterfaceList}
-                      placeholder={t('YakitSelect.pleaseSelect')}
-                      size="small"
-                      value={params.SynScanNetInterface}
-                      onChange={(netInterface) => {
-                        setParams({ ...params, SynScanNetInterface: netInterface })
-                      }}
-                      maxTagCount={100}
-                    />
-                  </Form.Item>
-                  <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                    {t('ConfigNetworkPage.privacyConfig')}
-                  </Divider>
-                  <Form.Item
-                    label={t('ConfigNetworkPage.deletePrivatePluginsOnLogout')}
-                    tooltip={t('ConfigNetworkPage.deletePrivatePluginsOnLogoutTip')}
-                  >
-                    <YakitSwitch checked={isDelPrivatePlugin} onChange={setIsDelPrivatePlugin} />
-                  </Form.Item>
-                  {!embedded && (
-                    <Form.Item colon={false} label={' '}>
-                      <Space>
-                        <YakitButton type="primary" htmlType="submit">
-                          {t('ConfigNetworkPage.updateGlobalConfig')}
-                        </YakitButton>
-                        <YakitPopconfirm
-                          title={t('ConfigNetworkPage.confirmResetConfig')}
-                          onConfirm={resetConfig}
-                          placement="top"
-                        >
-                          <YakitButton type="outline1"> {t('ConfigNetworkPage.resetConfig')} </YakitButton>
-                        </YakitPopconfirm>
-                      </Space>
-                    </Form.Item>
-                  )}
-                </Form>
-              )}
-            </AutoSpin>
-          </AutoCard>
-        )}
+      <div ref={configRef} className={styles['config-network-embedded']}>
+        <AutoSpin spinning={loading} tip={t('ConfigNetworkPage.loading')}>
+          {params && (
+            <GlobalConfigEmbeddedForm
+              t={t}
+              params={params}
+              setParams={setParams}
+              format={format}
+              setFormat={setFormat}
+              onCertificate={onCertificate}
+              cerFormRef={cerFormRef}
+              certificateList={certificateList}
+              appConfigs={params.AppConfigs || []}
+              onAddApp={onAddApp}
+              onEditApp={onEditApp}
+              onRemoveApp={onRemoveApp}
+              aiBlock={<AIModelGlobalConfig />}
+              codeBlock={<CodeCustomize variant="settings" />}
+              chromePath={chromePath}
+              setChromePath={setChromePath}
+              hideRules={hideRules}
+              endpointsCount={Endpoints.length}
+              routesCount={Routes.length}
+              onClickDownstreamProxy={onClickDownstreamProxy}
+              onOpenAuth={() => setVisible(true)}
+              pprofFileAutoAnalyze={pprofFileAutoAnalyze}
+              setPprofFileAutoAnalyze={setPprofFileAutoAnalyze}
+              secondaryTabsNum={secondaryTabsNum}
+              setSecondaryTabsNum={setSecondaryTabsNum}
+              limitLogNum={limitLogNum}
+              setLimitLogNum={setLimitLogNum}
+              onLimitLogNumEnter={onLimitLogNumEnter}
+              performanceTips={performanceTips}
+              setPerformanceTips={setPerformanceTips}
+              closeConfirmEnabled={closeConfirmEnabled}
+              setCloseConfirmEnabled={setCloseConfirmEnabled}
+              isDelPrivatePlugin={isDelPrivatePlugin}
+              setIsDelPrivatePlugin={setIsDelPrivatePlugin}
+              netInterfaceList={netInterfaceList}
+              resetConfig={resetConfig}
+              submit={submit}
+            />
+          )}
+        </AutoSpin>
         <ProxyRulesConfig
           hideRules={hideRules}
           visible={proxyDrawerVisible}
@@ -1512,14 +925,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
   )
 }
 
-interface AIModelGlobalConfigProps {
-  embedded?: boolean
-}
 /**
  * 在全局配置得页面使用这个组件,组件得父元素得Form表单中没有使用自带得设置值,而是采用得state来控制
  */
-const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((props) => {
-  const { embedded } = props
+const AIModelGlobalConfig: React.FC = React.memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const refRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(refRef)
@@ -1531,60 +940,39 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
   }, [inViewport])
   const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
 
-  const policyControl = (
-    <YakitRadioButtons
-      buttonStyle="solid"
-      options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
-      value={aiGlobalConfig.RoutingPolicy}
-      onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
-    />
-  )
-  const fallbackControl = (
-    <YakitSwitch
-      size="middle"
-      checked={aiGlobalConfig.DisableFallback}
-      onChange={(c) => event.setAIGlobalConfig({ DisableFallback: c })}
-    />
-  )
-
-  if (embedded) {
-    return (
-      <div ref={refRef} className={gStyles['section']}>
-        <div className={gStyles['section-title']}>{t('AIModelGlobalConfig.aiModelConfig')}</div>
-        <div className={gStyles['list-panel']}>
-          <div className={gStyles['setting-row']}>
-            <div className={gStyles['setting-row-text']}>
-              <div className={gStyles['setting-row-title']}>{t('AiAgengt.callingMode')}</div>
-            </div>
-            <div className={classNames(gStyles['setting-row-control'], gStyles['setting-row-control-fit'])}>
-              <div className={gStyles['control-stack-end']}>
-                {policyControl}
-                <div className={gStyles['setting-row-desc']}>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</div>
-              </div>
+  return (
+    <div ref={refRef} className={gStyles['section']}>
+      <div className={gStyles['section-title']}>{t('AIModelGlobalConfig.aiModelConfig')}</div>
+      <div className={gStyles['list-panel']}>
+        <div className={gStyles['setting-row']}>
+          <div className={gStyles['setting-row-text']}>
+            <div className={gStyles['setting-row-title']}>{t('AiAgengt.callingMode')}</div>
+          </div>
+          <div className={classNames(gStyles['setting-row-control'], gStyles['setting-row-control-fit'])}>
+            <div className={gStyles['control-stack-end']}>
+              <YakitRadioButtons
+                buttonStyle="solid"
+                options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
+                value={aiGlobalConfig.RoutingPolicy}
+                onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
+              />
+              <div className={gStyles['setting-row-desc']}>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</div>
             </div>
           </div>
-          <div className={gStyles['setting-row']}>
-            <div className={gStyles['setting-row-text']}>
-              <div className={gStyles['setting-row-title']}>{t('AIModelGlobalConfig.disableFallback')}</div>
-            </div>
-            <div className={gStyles['setting-row-control']}>{fallbackControl}</div>
+        </div>
+        <div className={gStyles['setting-row']}>
+          <div className={gStyles['setting-row-text']}>
+            <div className={gStyles['setting-row-title']}>{t('AIModelGlobalConfig.disableFallback')}</div>
+          </div>
+          <div className={gStyles['setting-row-control']}>
+            <YakitSwitch
+              size="middle"
+              checked={aiGlobalConfig.DisableFallback}
+              onChange={(c) => event.setAIGlobalConfig({ DisableFallback: c })}
+            />
           </div>
         </div>
       </div>
-    )
-  }
-
-  return (
-    <div ref={refRef} className={styles['ai-model-global-config-wrapper']}>
-      <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-        {t('AIModelGlobalConfig.aiModelConfig')}
-      </Divider>
-      <Form.Item label={t('AiAgengt.callingMode')} extra={<>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</>}>
-        {policyControl}
-      </Form.Item>
-      <Form.Item valuePropName="checked" label={t('AIModelGlobalConfig.disableFallback')}>
-        {fallbackControl}
-      </Form.Item>
     </div>
   )
 })

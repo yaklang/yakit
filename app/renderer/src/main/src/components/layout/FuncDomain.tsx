@@ -957,9 +957,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'diagnose-network':
         addToTab('**diagnose-network')
         return
-      case 'config-network':
-        addToTab('**config-network')
-        return
       case 'debug-traffic-analize':
         addToTab('**beta-debug-traffic-analize')
         return

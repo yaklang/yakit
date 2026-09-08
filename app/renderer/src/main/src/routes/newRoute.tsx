@@ -200,9 +200,6 @@ const WebShellViewer = React.lazy(() =>
 const WebShellDetailOpt = React.lazy(() =>
   import('@/pages/webShell/WebShellDetailOpt').then((m) => ({ default: m.WebShellDetailOpt })),
 )
-const ConfigNetworkPage = React.lazy(() =>
-  import('@/components/configNetwork/ConfigNetworkPage').then((m) => ({ default: m.ConfigNetworkPage })),
-)
 const PluginManage = React.lazy(() =>
   import('@/pages/plugins/manage/PluginManage').then((m) => ({ default: m.PluginManage })),
 )
@@ -458,7 +455,6 @@ export const YakitRouteToPageInfo: Record<
   'beta-debug-monaco-editor': { label: '插件编辑器', labelUi: 'YakitRoute.pluginEditor' },
   'beta-vulinbox-manager': { label: 'Vulinbox 管理器', labelUi: 'YakitRoute.vulinboxManager' },
   'beta-diagnose-network': { label: '网络异常诊断', labelUi: 'YakitRoute.networkDiagnosis' },
-  'beta-config-network': { label: '全局配置', labelUi: 'YakitRoute.globalConfig' },
   'plugin-audit': { label: '插件管理', labelUi: 'YakitRoute.pluginManagement' },
   '**beta-debug-traffic-analize': { label: '流量分析', labelUi: 'YakitRoute.trafficAnalysis' },
   'beta-webshell-manager': { label: '网站管理', labelUi: 'YakitRoute.websiteManagement' },
@@ -550,7 +546,6 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.ControlAdminPage,
   YakitRoute.Beta_VulinboxManager,
   YakitRoute.Beta_DiagnoseNetwork,
-  YakitRoute.Beta_ConfigNetwork,
   YakitRoute.Beta_DebugTrafficAnalize,
   YakitRoute.Plugin_Audit,
   YakitRoute.Beta_WebShellManager,
@@ -1034,8 +1029,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return <VulinboxManager />
     case YakitRoute.Beta_DiagnoseNetwork:
       return <DiagnoseNetworkPage />
-    case YakitRoute.Beta_ConfigNetwork:
-      return <ConfigNetworkPage />
     case YakitRoute.Plugin_Audit:
       return (
         <OnlineJudgment isJudgingLogin={true}>

@@ -70,8 +70,6 @@ export enum YakitRoute {
   Beta_VulinboxManager = 'beta-vulinbox-manager',
   /** 网络调试 */
   Beta_DiagnoseNetwork = 'beta-diagnose-network',
-  /** 配置全局 */
-  Beta_ConfigNetwork = 'beta-config-network',
   /** 插件管理 */
   Plugin_Audit = 'plugin-audit',
   /** WebShell 管理 */

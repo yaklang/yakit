@@ -838,14 +838,6 @@
   }
 }
 
-.ai-model-global-config-wrapper {
-  :global {
-    .ant-form-item:not(:last-child) {
-      margin-bottom: 0;
-    }
-  }
-}
-
 .reasoning-effort-wrapper {
   display: flex;
   align-items: center;
