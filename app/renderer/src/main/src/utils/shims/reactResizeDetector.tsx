@@ -79,7 +79,7 @@ const ReactResizeDetector: React.FC<Props> = ({
   return (
     <>
       {children}
-      <div ref={anchorRef} />
+      <div ref={anchorRef} style={{ display: 'none' }} aria-hidden={true} />
     </>
   )
 }

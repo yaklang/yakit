@@ -64,6 +64,7 @@ describe('reactResizeDetector shim', () => {
         <ReactResizeDetector onResize={onResize} />
       </div>,
     )
+    expect(screen.getByTestId('parent').firstElementChild).not.toBeVisible()
     const observer = MockResizeObserver.instances.at(-1)!
     expect(observer.observed).toHaveLength(1)
     expect(observer.observed[0]).toBe(screen.getByTestId('parent'))
