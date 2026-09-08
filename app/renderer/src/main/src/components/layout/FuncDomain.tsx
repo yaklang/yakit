@@ -8,7 +8,7 @@ import { showModal } from '@/utils/showModal'
 import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
 import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
-import { useConfigManagementTab, useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
+import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
 import { UserPlatformType } from '@/pages/globalVariable'
 import { genDefaultPagination, type QueryGeneralResponse } from '@/pages/invoker/schema'
 import type { Risk } from '@/pages/risks/schema'
@@ -708,6 +708,15 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         { label: '明文导出', key: 'plaintextProject' },
       ],
     },
+    DBCacheManager(),
+    {
+      key: 'cve-database',
+      label: 'CVE 数据库',
+      children: [
+        { label: '全量更新', key: 'cve-database-all-update' },
+        { label: '差量更新', key: 'cve-database-differential-update' },
+      ],
+    },
     {
       key: 'explab',
       label: '试验性功能',
@@ -761,21 +770,12 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
       ],
     },
     { type: 'divider' },
-    DBCacheManager(),
     {
-      key: 'proxy-management',
-      label: '网络代理管理',
-    },
-    {
-      key: 'hotPatch-management',
-      label: '全局热加载管理',
-    },
-    {
-      key: 'cve-database',
-      label: 'CVE 数据库',
+      key: 'systemSet',
+      label: '系统设置',
       children: [
-        { label: '全量更新', key: 'cve-database-all-update' },
-        { label: '差量更新', key: 'cve-database-differential-update' },
+        // { key: "engineVar",label: "引擎环境变量" },
+        { key: 'manageRightClickPlugins', label: '右键插件管理' },
       ],
     },
     {
@@ -784,15 +784,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
       children: [
         { label: '本地', key: 'local' },
         { label: '远程', key: 'remote' },
-      ],
-    },
-    { type: 'divider' },
-    {
-      key: 'systemSet',
-      label: '系统设置',
-      children: [
-        // { key: "engineVar",label: "引擎环境变量" },
-        { key: 'manageRightClickPlugins', label: '右键插件管理' },
       ],
     },
     {
@@ -832,7 +823,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const [available, setAvailable] = useState(false) // cve数据库是否可用
   const [isDiffUpdate, setIsDiffUpdate] = useState(false)
   const { dynamicStatus } = yakitDynamicStatus()
-  const { setConfigManagementActiveTab } = useConfigManagementTab()
   const { delTemporaryProject } = useTemporaryProjectStore()
   const [reclaimHint, setReclaimHint] = useState<boolean>(false)
   const { t } = useI18nNamespaces(['home', 'layout'])
@@ -861,14 +851,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'cve-database-differential-update':
         setDataBaseUpdateVisible(true)
         setIsDiffUpdate(true)
-        return
-      case 'proxy-management':
-        setConfigManagementActiveTab('proxy')
-        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.ConfigManagement }))
-        return
-      case 'hotPatch-management':
-        setConfigManagementActiveTab('hotPatch')
-        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.ConfigManagement }))
         return
       case 'mcp':
       case 'mcp-toggle':
