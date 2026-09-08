@@ -388,6 +388,7 @@
     "controllerSideDesc": "可透過受控端分享的金鑰遠端控制他的 客戶端",
     "noYakitLatestVersion": "未獲取{{edition}}最新版本",
     "noYaklangLatestVersion": "未獲取引擎最新版本",
+    "update": "更新",
     "updateContentSuccess": "修改更新內容成功"
   },
   "MoreYaklangVersion": {

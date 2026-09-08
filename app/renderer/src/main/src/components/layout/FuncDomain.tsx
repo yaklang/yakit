@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Badge, Tooltip, Form, Divider } from 'antd'
 import { RiskStateSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RiskStateSvgIcon'
 import { UISettingSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/UISettingSvgIcon'
-import { VersionUpdateSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/VersionUpdateSvgIcon'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
@@ -326,13 +325,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     <div className={styles['func-domain-wrapper']} onDoubleClick={(e) => e.stopPropagation()}>
       <div className={classNames(styles['func-domain-body'], { [styles['func-domain-reverse-body']]: isReverse })}>
         {showDevTool() && <UIDevTool onDevToolRefresh={onDevToolRefresh} />}
-
-        <ScreenAndScreenshot
-          system={system}
-          token={screenRecorderInfo.token}
-          isRecording={screenRecorderInfo.isRecording}
-        />
-
+        {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
         {/* {!showProjectManage && (
           <div className={styles['ui-op-btn-wrapper']} onClick={openConsoleNewWindow}>
             <div className={styles['op-btn-body']}>
@@ -342,13 +335,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             </div>
           </div>
         )} */}
-
         <div className={styles['state-setting-wrapper']}>
-          {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
+          <ScreenAndScreenshot
+            system={system}
+            token={screenRecorderInfo.token}
+            isRecording={screenRecorderInfo.isRecording}
+          />
           {!showProjectManage && isIRify() && <UIOpIRifyRisk isEngineLink={isEngineLink} />}
-          {!isEnpriTraceAgent() && (
-            <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode} onLogin={() => setLoginShow(true)} />
-          )}
           {!showProjectManage && (
             <UIOpSetting engineMode={engineMode} onEngineModeChange={onEngineModeChange} typeCallback={typeCallback} />
           )}
@@ -1612,7 +1605,7 @@ interface SetUpdateContentProp extends FetchUpdateContentProp {
   source?: VersionSource
 }
 
-const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
+export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const { isEngineLink, isRemoteMode, onLogin } = props
   const { t } = useI18nNamespaces(['layout', 'yakitUi'])
 
@@ -2269,13 +2262,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         else setShow(visible)
       }}
     >
-      <div className={styles['ui-op-btn-wrapper']}>
-        <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
-          <Badge dot={isUpdate}>
-            <VersionUpdateSvgIcon className={show ? styles['icon-hover-style'] : styles['icon-style']} />
-          </Badge>
-        </div>
-      </div>
+      <YakitButton radius type={isUpdate ? 'primary' : 'secondary2'} size="small">
+        {t('FuncDomain.update')}
+      </YakitButton>
       <YakitModal
         title={
           editShow.type === 'yakit'

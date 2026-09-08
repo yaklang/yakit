@@ -45,6 +45,8 @@ export type GlobalEventProps = {
   onUpdateLimitLogNum: number
   /** 远程控制受控端密钥弹窗自动关闭 */
   onCloseControlMyselfModal?: string
+  /** 打开登录弹窗 */
+  onOpenLogin: string
   /** 菜单栏设置菜单选项 */
   onUIOpSettingMenuSelect: string
 }

@@ -3,10 +3,9 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { MacUIOp } from './MacUIOp'
 import { PerformanceDisplay, type yakProcess } from './PerformanceDisplay'
-import { FuncDomain } from './FuncDomain'
+import { FuncDomain, UIOpNotice } from './FuncDomain'
 import { TemporaryProjectPop, WinUIOp } from './WinUIOp'
 import { GlobalState } from './GlobalState'
-import { YakitGlobalHost } from './YakitGlobalHost'
 import type {
   EngineWatchDogCallbackType,
   YakitSettingCallbackType,
@@ -1562,6 +1561,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   }, [performanceSamplingInfo, isShowSamplingInfo, i18nRefresh])
   /** ---------- 软件顶部展示采样中 End ---------- */
 
+  const engineNotice = useCreation(() => {
+    if (!engineLink || isEnpriTraceAgent()) return null
+    return (
+      <UIOpNotice
+        isEngineLink={engineLink}
+        isRemoteMode={isRemoteEngine}
+        onLogin={() => emiter.emit('onOpenLogin', '')}
+      />
+    )
+  }, [engineLink, isRemoteEngine])
+
   /** ---------- 软件顶部展示录屏中状态 Start ---------- */
   const { screenRecorderInfo, setRecording } = useScreenRecorder()
   const stopScreen = useCreation(() => {
@@ -1751,10 +1761,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
                         </div>
                       )}
-                      <div className={classNames(dropClassName)}>
-                        <div className={styles['divider-wrapper']}></div>
-                        <YakitGlobalHost isEngineLink={engineLink} />
-                      </div>
                     </>
                   )}
                   <div className={styles['short-divider-wrapper']}>
@@ -1766,7 +1772,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                       engineMode={engineMode}
                       typeCallback={handleOperations}
                       engineLink={engineLink}
-                      cpuWrapperClassName={dropClassName}
+                      extraLeft={engineNotice}
                     />
                   </div>
                 </div>
@@ -1860,19 +1866,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                       engineMode={engineMode}
                       typeCallback={handleOperations}
                       engineLink={engineLink}
-                      cpuWrapperClassName={dropClassName}
+                      extraLeft={engineNotice}
                     />
                   </div>
-                  <div className={styles['short-divider-wrapper']}>
-                    <div className={styles['divider-style']}></div>
-                  </div>
                   <div className={classNames(dropClassName)}>
-                    {engineLink && (
-                      <>
-                        <YakitGlobalHost isEngineLink={engineLink} />
-                        <div className={styles['divider-wrapper']}></div>
-                      </>
-                    )}
+                    {engineLink && <div className={styles['divider-wrapper']}></div>}
                   </div>
                   <WinUIOp
                     currentProjectId={currentProject?.Id ? currentProject?.Id + '' : ''}
