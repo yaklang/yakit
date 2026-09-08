@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type * as LogCollection from '@/utils/logCollection'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { safeParseFuzzerCache } from '../parseFuzzerCache'
 
 vi.mock('@/utils/logCollection', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/utils/logCollection')>()
+  const actual = await importOriginal<typeof LogCollection>()
   return {
     ...actual,
     debugToPrintLogs: vi.fn(),
