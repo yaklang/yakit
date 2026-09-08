@@ -68,6 +68,8 @@ export interface Risk {
   Cvss?: number
   /** 验证人（已修复） */
   Verifier?: string
+  /** 验证人 uid（已修复，提交 BatchSetRiskTags） */
+  VerifierUid?: string
   /** 修复时间 unix 秒（已修复） */
   RepairTime?: number
   /** 修复建议（已修复） */

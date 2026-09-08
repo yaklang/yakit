@@ -51,7 +51,6 @@
     "queryRiskTagsFailed": "查詢QueryRiskTags失敗：",
     "queryAvailableRiskTypeFailed": "查詢QueryAvailableRiskType失敗：",
     "cvss_score": "CVSS評分",
-    "none": "無",
     "enter_cvss": "請輸入 CVSS 評分",
     "select_disposal_status": "請選擇處置狀態"
   },

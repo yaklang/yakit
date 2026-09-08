@@ -548,4 +548,26 @@ module.exports = (win, getClient) => {
   ipcMain.handle('HTTPFlowsToOnlineBatch', async (e, params) => {
     return await asyncHTTPFlowsToOnlineBatch(params)
   })
+
+  const streamHTTPFlowsFromOnlineMap = new Map()
+  ipcMain.handle('cancel-HTTPFlowsFromOnline', handlerHelper.cancelHandler(streamHTTPFlowsFromOnlineMap))
+  ipcMain.handle('HTTPFlowsFromOnline', (e, params, token) => {
+    let stream = getClient().HTTPFlowsFromOnline(params)
+    handlerHelper.registerHandler(win, stream, streamHTTPFlowsFromOnlineMap, token)
+  })
+
+  const asyncBatchSetHTTPFlowIssueFields = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().BatchSetHTTPFlowIssueFields(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('BatchSetHTTPFlowIssueFields', async (e, params) => {
+    return await asyncBatchSetHTTPFlowIssueFields(params)
+  })
 }
