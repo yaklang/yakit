@@ -5521,7 +5521,8 @@ message RisksFromOnlineProgress {
 
 message BatchSetRiskTagsRequest {
   QueryRisksRequest Filter = 1;
-  string Tags = 2;
+  // 设置 处置状态标签   QueryRisksRequest中tags为筛选条件
+  repeated string SetTags = 2;
   string VerifierUid = 3;
   int64 FixTime = 4;
   string FixSuggestion = 5;
