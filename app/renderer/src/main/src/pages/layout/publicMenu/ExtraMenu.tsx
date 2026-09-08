@@ -275,7 +275,7 @@ export const OrdinaryMenu: React.FC<OrdinaryMenuProps> = React.memo((props) => {
           }}
         >
           <YakitButton
-            type="secondary2"
+            type="outline1"
             icon={item.icon}
             className={classNames(styles['heard-menu-customize'], styles['button-border'], {
               [styles['heard-menu-customize-menu']]: activePopoverKey === itemKey,

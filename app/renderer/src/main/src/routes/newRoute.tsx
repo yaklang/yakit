@@ -122,8 +122,8 @@ import {
   EnterpriseDeprecatedSecondMenu,
 } from './deprecatedMenu'
 import { YakitRoute } from '../enums/yakitRoute'
-import { getNotepadAdd, getNotepadManage, getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
-import { ClipboardListSolid, CodecSolid, TerminalSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { getNotepadManage, getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
+import { CodecSolid, TerminalSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { PublicToolDataCompareIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolDataCompareIcon'
 import { PublicToolVulinboxIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolVulinboxIcon'
 import { type SoftMode, YakitModeEnum } from '@/store/softMode'
@@ -1679,16 +1679,6 @@ export const getSecurityExpertLeftMenu: () => ExtraMenuItem[] = () => {
     getVulinboxMenuItem(true),
   ]
 }
-/** @name yakit 安全专家模式 记事本菜单 */
-export const getSecurityExpertNotepadMenu: () => ExtraMenuItem[] = () => {
-  return [
-    {
-      page: YakitRoute.Modify_Notepad,
-      i18n: false,
-      label: getNotepadNameByEditionMulLang(),
-    },
-  ]
-}
 /** @name 右侧额外菜单 */
 export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) => {
   if (isIRify()) {
@@ -1697,12 +1687,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
         page: YakitRoute.Codec,
         icon: <CodecSolid color="currentColor" />,
         ...YakitRouteToPageInfo[YakitRoute.Codec],
-      },
-      {
-        page: YakitRoute.Modify_Notepad,
-        icon: <ClipboardListSolid color="currentColor" />,
-        i18n: false,
-        label: getNotepadNameByEditionMulLang(),
       },
     ]
   }
@@ -1713,24 +1697,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
         page: YakitRoute.YakScript,
         icon: <TerminalSolid color="currentColor" />,
         ...YakitRouteToPageInfo[YakitRoute.YakScript],
-      },
-      {
-        page: undefined,
-        icon: <ClipboardListSolid color="currentColor" />,
-        i18n: false,
-        label: getNotepadNameByEditionMulLang(),
-        children: [
-          {
-            page: YakitRoute.Notepad_Manage,
-            i18n: false,
-            label: getNotepadManage(),
-          },
-          {
-            page: YakitRoute.Modify_Notepad,
-            i18n: false,
-            label: getNotepadAdd(),
-          },
-        ],
       },
     ]
   }
@@ -1749,24 +1715,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
           ...YakitRouteToPageInfo[YakitRoute.YakScript],
         },
         getVulinboxMenuItem(),
-        {
-          page: undefined,
-          icon: <ClipboardListSolid color="currentColor" />,
-          i18n: false,
-          label: getNotepadNameByEditionMulLang(),
-          children: [
-            {
-              page: YakitRoute.Notepad_Manage,
-              i18n: false,
-              label: getNotepadManage(),
-            },
-            {
-              page: YakitRoute.Modify_Notepad,
-              i18n: false,
-              label: getNotepadAdd(),
-            },
-          ],
-        },
       ]
     }
     if (isCommunityYakit()) {
@@ -1784,12 +1732,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
             ...YakitRouteToPageInfo[YakitRoute.YakScript],
           },
           getVulinboxMenuItem(),
-          {
-            page: YakitRoute.Modify_Notepad,
-            icon: <ClipboardListSolid color="currentColor" />,
-            i18n: false,
-            label: getNotepadNameByEditionMulLang(),
-          },
         ]
       }
       // 安全专家模式
@@ -1958,11 +1900,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
               {
                 page: YakitRoute.YakScript,
                 ...YakitRouteToPageInfo[YakitRoute.YakScript],
-              },
-              {
-                page: YakitRoute.Modify_Notepad,
-                i18n: false,
-                label: getNotepadNameByEditionMulLang(),
               },
             ],
           },

@@ -90,6 +90,7 @@ import {
   grpcFetchLocalYakVersion,
 } from '@/apiUtils/grpc'
 import { WebsiteGV } from '@/enums/website'
+import { NotepadMenu } from '@/pages/layout/NotepadMenu/NotepadMenu'
 
 import YakitLogo from '@/assets/yakitLogo.png'
 import yakitImg from '../../assets/yakit.jpg'
@@ -325,6 +326,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     <div className={styles['func-domain-wrapper']} onDoubleClick={(e) => e.stopPropagation()}>
       <div className={classNames(styles['func-domain-body'], { [styles['func-domain-reverse-body']]: isReverse })}>
         {showDevTool() && <UIDevTool onDevToolRefresh={onDevToolRefresh} />}
+        {!showProjectManage && <NotepadMenu />}
         {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
         {/* {!showProjectManage && (
           <div className={styles['ui-op-btn-wrapper']} onClick={openConsoleNewWindow}>
