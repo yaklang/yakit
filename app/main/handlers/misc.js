@@ -4,6 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
 const { uploadLocalFileToEngine } = require('./uploadToTemporaryFile')
+const { attachYakitScreenshot } = require('../yakitScreenshot')
 
 module.exports = (win, getClient) => {
   // asyncYsoDump wrapper
@@ -642,6 +643,7 @@ module.exports = (win, getClient) => {
     }
     stream = getClient().DuplexConnection(params)
     handlerHelper.registerHandler(win, stream, streamDuplexConnectionMap, token)
+    attachYakitScreenshot(win, stream)
   })
 
   // asyncGetSpaceEngineStatus wrapper
