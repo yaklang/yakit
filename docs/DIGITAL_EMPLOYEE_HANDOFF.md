@@ -1,9 +1,11 @@
 # AI SenSo 数字员工功能交接
 
-更新时间：2026-09-04
+更新时间：2026-09-08
 
 ## 0. 最新交接摘要（上下文切换先读）
 
+- **2026-09-08 联调临时调整，优先于下方历史授权说明**：按用户要求关闭 AI SenSo 客户端启动授权。唯一开关为 `app/main/memfitLicense.js` 的 `MEMFIT_LICENSE_REQUIRED = false`；启动页、主进程和主界面二次校验统一读取，连接引擎后进入数字员工。作用于开发运行及基于当前代码重新构建的安装包；需重启 Electron。恢复时将该值改为 `true` 并重新构建。保留真实授权服务与缓存，不改变其他产品，也不改变引擎端的能力授权。
+- 默认智能体归属后端实施说明见 `docs/DEFAULT_AGENT_ASSIGNMENT_BACKEND.md`；后端已提供核对方案，尚需实际提交、引擎版本和联调验收结果。
 - 2026-09-04 已完成 AI SenSo 客户端授权入口加固：Memfit 连接引擎后先在独立启动窗口展示授权页，Electron 主进程会再次调用引擎校验缓存授权；只有校验成功才加载并显示主业务渲染器，不再依赖首页 React 状态作为第一道门禁。
 - 新授权入口复用现有 `GetLicense/CheckLicense/GetKey/SetKey`，授权码仍由引擎验证并缓存在引擎键值存储中；主业务渲染器原有 `EnterpriseJudgeLogin` 保留为二次校验兜底。非 Memfit 产品保持原窗口切换流程。
 - 生产环境不再注册 `trigger-devtool`，应用菜单不再包含 DevTools，辅助窗口也只允许开发环境显式打开 DevTools；开发环境仍可通过 `YAKIT_OPEN_DEVTOOLS=true` 调试。

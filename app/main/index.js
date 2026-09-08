@@ -4,6 +4,7 @@ const path = require('path')
 const os = require('os')
 const url = require('url')
 const { registerIPC, registerNewIPC, verifyCachedMemfitLicense } = require('./ipc')
+const { isMemfitLicenseRequired } = require('./memfitLicense')
 const process = require('process')
 const shouldOpenDevTools = isDev && process.env.YAKIT_OPEN_DEVTOOLS === 'true'
 
@@ -588,8 +589,10 @@ function registerGlobalIPC() {
     }
 
     if (isMemfitRuntime()) {
-      const verified = await verifyCachedMemfitLicense()
-      if (!verified) throw new Error('a valid AI Senso license is required')
+      if (isMemfitLicenseRequired()) {
+        const verified = await verifyCachedMemfitLicense()
+        if (!verified) throw new Error('a valid AI Senso license is required')
+      }
       await loadMainWindow()
     }
 

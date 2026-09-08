@@ -7,7 +7,7 @@ const grpc = require('@grpc/grpc-js')
 const protoLoader = require('@grpc/proto-loader')
 const { printLogOutputFile } = require('./logFile')
 const { assertTrustedAppSender, normalizeHttpBaseUrl } = require('./security')
-const { verifyCachedMemfitLicense } = require('./memfitLicense')
+const { verifyCachedMemfitLicense, isMemfitLicenseRequired } = require('./memfitLicense')
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
   longs: String,
@@ -201,6 +201,11 @@ module.exports = {
     require('./handlers/yakLocal').clearing()
   },
   registerIPC: (win) => {
+    ipcMain.handle('IsMemfitLicenseRequired', (event) => {
+      assertTrustedAppSender(event, 'IsMemfitLicenseRequired')
+      return isMemfitLicenseRequired()
+    })
+
     // YAKIT_HOME 配置管理
     const { getConfig, setConfig, getYakitHome, getAppConfigDir } = require('./filePath')
 

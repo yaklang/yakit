@@ -29,6 +29,26 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
   const [loading, setLoading] = useState<boolean>(requireEnterpriseLicense)
   const [licensePageLoading, setLicensePageLoading] = useState<boolean>(false)
   useEffect(() => {
+    if (isMemfit()) {
+      let active = true
+      ipcRenderer
+        .invoke('IsMemfitLicenseRequired')
+        .then((required: boolean) => {
+          if (!active) return
+          if (required === false) {
+            setJudgeLicense(false)
+          } else {
+            judgeLicense()
+          }
+        })
+        .catch(() => {
+          // 策略读取失败仍走原授权流程，不能因 IPC 异常直接放行。
+          if (active) judgeLicense()
+        })
+      return () => {
+        active = false
+      }
+    }
     if (!requireEnterpriseLicense) {
       return
     }
