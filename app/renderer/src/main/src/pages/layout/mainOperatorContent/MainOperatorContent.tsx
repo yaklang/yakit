@@ -730,7 +730,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const isSecurityExpert = useMemo(() => {
     return isCommunityYakit() && softMode === YakitModeEnum.SecurityExpert
   }, [softMode])
+
+  // tab数据
+  const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(
+    _.cloneDeepWith(getInitPageCache(softMode)) || [],
+  )
+  const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey(softMode))
   useEffect(() => {
+    if (currentTabKey === YakitRoute.Settings) return
     if (softMode === YakitModeEnum.SecurityExpert) {
       getRemoteValue(RemoteSoftModeGV.YakitCESecurityExpertSelectFirstTabKey)
         .then((cacheTabKey) => {
@@ -745,12 +752,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
     }
   }, [softMode])
-
-  // tab数据
-  const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(
-    _.cloneDeepWith(getInitPageCache(softMode)) || [],
-  )
-  const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey(softMode))
   useEffect(() => {
     setCurrentPageTabRouteKey(currentTabKey)
     return scheduleIdleTask(() => {
@@ -2834,6 +2835,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const unFuzzerCacheData = useRef<any>(null)
   // web-fuzzer多开页面缓存数据、
   useEffect(() => {
+    const stayOnSettings = currentTabKey === YakitRoute.Settings
+    const settingsPage = stayOnSettings ? getPageCache().find((item) => item.route === YakitRoute.Settings) : undefined
+
     if (isEnterpriseEdition()) {
       // 不是社区版的时候，每次进来都需要清除页面数据中心数据和FuzzerSequence数据
       clearAllData()
@@ -2843,14 +2847,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       clearOtherDataByRoute(YakitRoute.HTTPFuzzer)
     }
 
-    setPageCache(getInitPageCache(softMode))
+    const initCache = getInitPageCache(softMode)
+    setPageCache(stayOnSettings && settingsPage ? [...initCache, settingsPage] : initCache)
     // yakit 安全专家模式选中上次默认选中key
     if (softMode === YakitModeEnum.SecurityExpert) {
       setTimeout(() => {
         onInitFuzzer(true)
       }, 500)
     } else {
-      setCurrentTabKey(getInitActiveTabKey(softMode))
+      if (!stayOnSettings) {
+        setCurrentTabKey(getInitActiveTabKey(softMode))
+      }
       getRemoteValue(RemoteGV.SelectFirstMenuTabKey)
         .then((cacheTabKey) => {
           /**没有缓存数据或者缓存数据的tab key为HTTPFuzzer，初始化WF缓存数据 */
