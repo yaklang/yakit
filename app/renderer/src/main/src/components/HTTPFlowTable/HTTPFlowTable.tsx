@@ -99,7 +99,7 @@ import { useHTTPFlowTableShortcutKeys } from './useHTTPFlowTableShortcutKeys'
 import { useHTTPFlowTableContextMenu } from './useHTTPFlowTableContextMenu'
 import { onSendToTab, toggleHTTPFlowFavorite } from './HTTPFlowTable.actions'
 import { FlowMarkEditForm } from './FlowMarkEditForm'
-import type { SetHTTPFlowMarkRequest } from './HTTPFlowMark.constants'
+import type { FlowMarkPatchPayload } from './HTTPFlowMark.constants'
 import { isEnterpriseEdition } from '@/utils/envfile'
 import { NowProjectDescription } from '@/pages/globalVariable'
 import { useStore } from '@/store'
@@ -304,6 +304,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const selectionReconcilePendingRef = useRef(false)
 
   const { setCompareLeft, setCompareRight } = useHttpFlowStore()
+  const { userInfo } = useStore()
 
   // 屏蔽数据
   const [shieldData, setShieldData, getShieldData] = useGetSetState<ShieldData>({
@@ -1807,7 +1808,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const isEnterprise = isEnterpriseEdition()
 
-  const patchFlowMark = useMemoizedFn((payload: SetHTTPFlowMarkRequest) => {
+  const patchFlowMark = useMemoizedFn((payload: FlowMarkPatchPayload) => {
     const idSet = new Set(payload.Ids.map(String))
     const patchRow = (row: HTTPFlow): HTTPFlow => {
       if (!idSet.has(String(row.Id))) return row
@@ -1831,6 +1832,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         <FlowMarkEditForm
           info={record}
           ids={[Number(record.Id)]}
+          filter={getParams()}
+          token={userInfo.token}
           onClose={() => m.destroy()}
           onSuccess={patchFlowMark}
         />
@@ -1846,7 +1849,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const m = showYakitModal({
       title: t('HTTPFlowTable.batchModifyMark'),
       content: (
-        <FlowMarkEditForm batch ids={ids} onClose={() => m.destroy()} onSuccess={patchFlowMark} />
+        <FlowMarkEditForm
+          batch
+          ids={ids}
+          filter={getParams()}
+          token={userInfo.token}
+          onClose={() => m.destroy()}
+          onSuccess={patchFlowMark}
+        />
       ),
       footer: null,
       onCancel: () => m.destroy(),
@@ -2505,7 +2515,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   }, [])
 
-  const { userInfo } = useStore()
   const codecMultipleHistoryPluginCom = useCampare(codecMultipleHistoryPlugin)
   const codecSingleHistoryPluginCom = useCampare(codecSingleHistoryPlugin)
   const selectedRowKeysCom = useCampare(selectedRowKeys)

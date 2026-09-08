@@ -67,7 +67,7 @@ import { YakitMenu, type YakitMenuItemType } from './yakitUI/YakitMenu/YakitMenu
 import { isEnterpriseEdition } from '@/utils/envfile'
 import { useStore } from '@/store'
 import { FlowDisposalLog } from './HTTPFlowTable/FlowDisposalLog'
-import type { SetHTTPFlowMarkRequest } from './HTTPFlowTable/HTTPFlowMark.constants'
+import type { FlowMarkPatchPayload } from './HTTPFlowTable/HTTPFlowMark.constants'
 import { FlowMarkEditForm } from './HTTPFlowTable/FlowMarkEditForm'
 import { showYakitModal } from './yakitUI/YakitModal/YakitModalConfirm'
 const { TabPane } = PluginTabs
@@ -877,7 +877,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
       })
   }
 
-  const onFlowMarkSuccess = useMemoizedFn((payload: SetHTTPFlowMarkRequest) => {
+  const onFlowMarkSuccess = useMemoizedFn((payload: FlowMarkPatchPayload) => {
     setFlow((prev) => {
       if (!prev) return prev
       return {
@@ -899,6 +899,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         <FlowMarkEditForm
           info={flow}
           ids={[flowId]}
+          token={userInfo.token}
           onClose={() => m.destroy()}
           onSuccess={(payload) => {
             onFlowMarkSuccess(payload)

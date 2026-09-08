@@ -53,7 +53,7 @@ import {
   type DeleteRiskRequest,
   type ExportHtmlProps,
   type FieldGroup,
-  type SetRiskEditRequest,
+  type BatchSetRiskTagsRequest,
   type SetTagForRiskRequest,
   type UploadRiskToOnlineRequest,
   apiDeleteRisk,
@@ -64,7 +64,7 @@ import {
   apiQueryRisks,
   apiQueryRisksIncrementOrderDesc,
   apiRiskFeedbackToOnline,
-  apiSetRiskEdit,
+  apiBatchSetRiskTags,
   apiSetTagForRisk,
 } from './utils'
 import { apiGetUserSearch } from '@/pages/notepadManage/NotepadShareModal/utils'
@@ -516,22 +516,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       label: item.Name,
       total: item.Total,
     }))
-    const severityFilters = isEnterprise
-      ? [
-          { value: 'none', label: t('YakitRiskTable.none') },
-          { value: 'critical', label: t('YakitTag.critical') },
-          { value: 'high', label: t('YakitTag.high') },
-          { value: 'warning', label: t('YakitTag.warning') },
-          { value: 'low', label: t('YakitTag.low') },
-          { value: 'info', label: t('YakitTag.info') },
-        ]
-      : [
-          { value: 'critical', label: t('YakitTag.critical') },
-          { value: 'high', label: t('YakitTag.high') },
-          { value: 'warning', label: t('YakitTag.warning') },
-          { value: 'low', label: t('YakitTag.low') },
-          { value: 'info', label: t('YakitTag.info') },
-        ]
+    const severityFilters = [
+      { value: 'critical', label: t('YakitTag.critical') },
+      { value: 'high', label: t('YakitTag.high') },
+      { value: 'warning', label: t('YakitTag.warning') },
+      { value: 'low', label: t('YakitTag.low') },
+      { value: 'info', label: t('YakitTag.info') },
+    ]
     const columnArr: ColumnsTypeProps[] = [
       {
         title: t('YakitTable.order'),
@@ -900,19 +891,19 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const disposalStatus = disposalList.join('|')
     const { severity } = cvssToSeverityLevel(cvss)
     const isRepaired = disposalList.includes(DISPOSAL_STATUS_REPAIRED)
-    const params: SetRiskEditRequest = {
-      Id: info.Id,
-      Hash: info.Hash,
-      RiskType: riskType,
-      Cvss: cvss,
+    const params: BatchSetRiskTagsRequest = {
+      Filter: getQuery(),
+      Ids: [info.Id],
+      Token: userInfo.token,
+      RiskTypeVerbose: riskType,
+      SeverityScore: cvss,
       Severity: severity,
-      Tags: disposalStatus,
-      Verifier: isRepaired ? info.Verifier : undefined,
-      RepairTime: isRepaired ? info.RepairTime : undefined,
-      RepairSuggestion: isRepaired ? info.RepairSuggestion : undefined,
-      DisposalNote: isRepaired ? undefined : info.DisposalNote,
+      SetTags: disposalList,
+      VerifierUid: isRepaired ? info.VerifierUid || info.Verifier : undefined,
+      FixTime: isRepaired ? info.RepairTime : undefined,
+      FixSuggestion: isRepaired ? info.RepairSuggestion : undefined,
     }
-    apiSetRiskEdit(params).then(() => {
+    apiBatchSetRiskTags(params).then(() => {
       const index = response.Data.findIndex((item) => item.Id === info.Id)
       if (index === -1) return
       response.Data[index] = {
@@ -923,6 +914,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         Severity: severity,
         Tags: disposalStatus,
         Verifier: isRepaired ? info.Verifier : undefined,
+        VerifierUid: isRepaired ? info.VerifierUid || info.Verifier : undefined,
         RepairTime: isRepaired ? info.RepairTime : undefined,
         RepairSuggestion: isRepaired ? info.RepairSuggestion : undefined,
         DisposalNote: isRepaired ? undefined : info.DisposalNote,
@@ -1740,6 +1732,9 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
   const initDisposal = getDisposalStatusFromTags(info.Tags)
   const [typeSearch, setTypeSearch] = useState('')
   const [verifierOptions, setVerifierOptions] = useState<{ label: string; value: string }[]>(() => {
+    if (info.VerifierUid) {
+      return [{ label: info.Verifier || info.VerifierUid, value: info.VerifierUid }]
+    }
     if (info.Verifier) return [{ label: info.Verifier, value: info.Verifier }]
     return []
   })
@@ -1775,7 +1770,7 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
         .then((res) => {
           const list = (res?.data || []).map((item) => ({
             label: item.name,
-            value: item.name,
+            value: item.uid || String(item.id),
           }))
           setVerifierOptions(list)
         })
@@ -1812,6 +1807,10 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
       const disposal = disposalList.join('|')
       const { severity } = cvssToSeverityLevel(cvss)
       const isRepaired = disposalList.includes(DISPOSAL_STATUS_REPAIRED)
+      const verifierUid = isRepaired ? value.verifier : undefined
+      const verifierName = verifierUid
+        ? verifierOptions.find((item) => item.value === verifierUid)?.label || info.Verifier || verifierUid
+        : undefined
       onSave({
         ...info,
         RiskType: riskType,
@@ -1819,7 +1818,8 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
         Cvss: cvss,
         Severity: severity,
         Tags: disposal,
-        Verifier: isRepaired ? value.verifier : undefined,
+        Verifier: verifierName,
+        VerifierUid: verifierUid,
         RepairTime: isRepaired ? value.repair_time : undefined,
         RepairSuggestion: isRepaired ? value.repair_suggestion : undefined,
         DisposalNote: isRepaired ? undefined : value.disposal_note,
@@ -1843,7 +1843,7 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
           risk_type: initRiskType,
           cvss: initCvss,
           disposal_status: initDisposal,
-          verifier: info.Verifier,
+          verifier: info.VerifierUid || info.Verifier,
           repair_time: info.RepairTime,
           repair_suggestion: info.RepairSuggestion,
           disposal_note: info.DisposalNote,
@@ -2389,9 +2389,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
           />
         )}
 
-        {showType === 'history' && isEnterprise && (
-          <RiskDisposalLog info={info} isLogin={userInfo.isLogin} />
-        )}
+        {showType === 'history' && isEnterprise && <RiskDisposalLog info={info} isLogin={userInfo.isLogin} />}
       </div>
     </>
   )
