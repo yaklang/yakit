@@ -397,27 +397,25 @@ const ShowUserInfo: React.FC<ShowUserInfoProps> = (props) => {
 export interface ControlAdminPageProps {}
 export interface AccountAdminPageProp {}
 
-interface QueryProps {}
-
 const defaultPagination = {
-  Limit: 20,
-  Order: 'desc',
-  OrderBy: 'updated_at',
-  Page: 1,
+  limit: 20,
+  order: 'desc',
+  order_by: 'updated_at',
+  page: 1,
 }
 export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
   const [loading, setLoading] = useState<boolean>(false)
   const [resetLoading, setResetLoading] = useState<boolean>(false)
-  const [params, setParams, getParams] = useGetState<API.GetRemoteWhere>({
+  const [params, setParams, getParams] = useGetState<API.RemoteWhere>({
+    ...defaultPagination,
     user_name: '',
   })
-  const [pagination, setPagination] = useGetState<PaginationSchema>(defaultPagination)
   const [data, setData] = useState<API.RemoteLists[]>([])
   const [total, setTotal] = useState<number>(0)
   const [hasMore, setHasMore] = useState<boolean>(true)
   const updateLoadMore = useDebounceFn(
     (page: number) => {
-      if (page > Math.ceil(total / pagination.Limit)) {
+      if (page > Math.ceil(total / params.limit)) {
         setHasMore(false)
         return
       }
@@ -425,24 +423,22 @@ export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
       setHasMore(true)
       const paginationProps = {
         page: page || 1,
-        limit: pagination.Limit,
+        limit: params.limit,
       }
 
-      NetWorkApi<QueryProps, API.RemoteResponse>({
-        method: 'get',
+      NetWorkApi<API.RemoteWhere, API.RemoteResponse>({
+        method: 'post',
         url: 'remote/list',
-        params: {
-          ...paginationProps,
-        },
         data: {
           ...getParams(),
+          ...paginationProps,
         },
       })
         .then((res) => {
           if (Array.isArray(res?.data)) {
             setData([...data, ...res.data])
           }
-          setPagination({ ...pagination, Limit: res.pagemeta.limit, Page: res.pagemeta.page })
+          setParams((pre) => ({ ...pre, limit: res.pagemeta.limit, page: res.pagemeta.page }))
           setTotal(res.pagemeta.total)
         })
         .catch((err) => {
@@ -461,21 +457,19 @@ export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
     setResetLoading(true)
     const paginationProps = {
       page: page || 1,
-      limit: limit || pagination.Limit,
+      limit: limit || params.limit,
     }
-    NetWorkApi<QueryProps, API.RemoteResponse>({
-      method: 'get',
+    NetWorkApi<API.RemoteWhere, API.RemoteResponse>({
+      method: 'post',
       url: 'remote/list',
-      params: {
-        ...paginationProps,
-      },
       data: {
         ...getParams(),
+        ...paginationProps,
       },
     })
       .then((res) => {
         setData(res?.data || [])
-        setPagination({ ...pagination, Limit: res.pagemeta.limit, Page: res.pagemeta.page })
+        setParams((pre) => ({ ...pre, limit: res.pagemeta.limit, page: res.pagemeta.page }))
         setTotal(res.pagemeta.total)
       })
       .catch((err) => {
@@ -629,7 +623,7 @@ export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
             hasMore={hasMore}
             columns={columns}
             dataSource={data}
-            loadMoreData={() => updateLoadMore.run(pagination.Page + 1)}
+            loadMoreData={() => updateLoadMore.run(params.page + 1)}
           />
         </div>
       </YakitSpin>
