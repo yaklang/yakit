@@ -1246,7 +1246,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                     onChange={setYakScriptSkipUpdate}
                   >
                     {t('HubListLocal.doNotDownload')}{' '}
-                    <Tooltip title={t('HubListLocal.skipNotDownloadTooltip')} align={{ offset: [0, 10] }}>
+                    <Tooltip title={t('HubListLocal.skipNotDownloadTooltip')}>
                       <ExclamationCircleOutlined className={styles['exclamationcircleIcon']} color="currentColor" />
                     </Tooltip>
                   </YakitCheckbox>
