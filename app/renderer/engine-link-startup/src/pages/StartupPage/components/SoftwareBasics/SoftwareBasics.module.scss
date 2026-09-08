@@ -7,6 +7,12 @@
 
   &-item {
     &-title {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      overflow: hidden;
+      word-break: break-all;
       margin-bottom: 5px;
       color: var(--Colors-Use-Neutral-Text-1-Title);
       font-size: 14px;
