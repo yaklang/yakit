@@ -17,6 +17,7 @@ import {
 import type { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 import { getReleaseEditionName } from '@/utils/envfile'
+import { SettingsSections } from '../../constants'
 import type { GlobalNetworkConfig, ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { InputCertificateForm } from '@/pages/mitm/MITMServerStartForm/MITMAddTLS'
 import classNames from 'classnames'
@@ -162,7 +163,7 @@ export const GlobalConfigEmbeddedForm: React.FC<GlobalConfigEmbeddedFormProps> =
         </div>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections['global-config'].dns}>
         <div className={styles['section-title']}>{t('ConfigNetworkPage.dnsConfig')}</div>
         <div className={styles['list-panel']}>
           <SettingRow title={t('ConfigNetworkPage.disableSystemDNS')}>
@@ -202,7 +203,7 @@ export const GlobalConfigEmbeddedForm: React.FC<GlobalConfigEmbeddedFormProps> =
         </div>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections['global-config'].tls}>
         <div className={styles['section-title']}>{t('ConfigNetworkPage.tlsClientConfig')}</div>
         <div className={styles['list-panel']}>
           <SettingRow title={t('ConfigNetworkPage.selectFormat')}>
@@ -280,7 +281,7 @@ export const GlobalConfigEmbeddedForm: React.FC<GlobalConfigEmbeddedFormProps> =
         </div>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections['global-config'].thirdParty}>
         <div className={styles['section-head']}>
           <div className={styles['section-title']}>{t('ConfigNetworkPage.thirdPartyAppConfig')}</div>
           {!!appConfigs.length && (
@@ -320,11 +321,15 @@ export const GlobalConfigEmbeddedForm: React.FC<GlobalConfigEmbeddedFormProps> =
         </div>
       </div>
 
-      <div className={styles['ai-slot']}>{aiBlock}</div>
+      <div className={styles['ai-slot']} data-settings-section={SettingsSections['global-config'].aiModel}>
+        {aiBlock}
+      </div>
 
-      <div className={styles['code-slot']}>{codeBlock}</div>
+      <div className={styles['code-slot']} data-settings-section={SettingsSections['global-config'].customCode}>
+        {codeBlock}
+      </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections['global-config'].other}>
         <div className={styles['section-title']}>{t('ConfigNetworkPage.otherConfig')}</div>
         <div className={styles['list-panel']}>
           <SettingRow title={t('ConfigNetworkPage.httpAuthGlobalConfig')} wide>
@@ -501,7 +506,7 @@ export const GlobalConfigEmbeddedForm: React.FC<GlobalConfigEmbeddedFormProps> =
         </div>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections['global-config'].synScan}>
         <div className={styles['section-title']}>{t('ConfigNetworkPage.synScanNicConfig')}</div>
         <div className={styles['list-panel']}>
           <SettingRow title={t('ConfigNetworkPage.nic')} desc={t('ConfigNetworkPage.nicTip')} wide>
@@ -515,7 +520,7 @@ export const GlobalConfigEmbeddedForm: React.FC<GlobalConfigEmbeddedFormProps> =
         </div>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections['global-config'].privacy}>
         <div className={styles['section-title']}>{t('ConfigNetworkPage.privacyConfig')}</div>
         <div className={styles['list-panel']}>
           <SettingRow

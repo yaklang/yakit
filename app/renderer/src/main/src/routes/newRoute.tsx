@@ -1113,7 +1113,11 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     case YakitRoute.Settings:
       return (
         <Suspense fallback={<PageLoading />}>
-          <Settings pageId={params?.id || ''} anchor={params?.settingsPageInfo?.anchor} />
+          <Settings
+            pageId={params?.id || ''}
+            anchor={params?.settingsPageInfo?.anchor}
+            section={params?.settingsPageInfo?.section}
+          />
         </Suspense>
       )
     default:

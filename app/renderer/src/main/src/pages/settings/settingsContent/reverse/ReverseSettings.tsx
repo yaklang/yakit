@@ -19,6 +19,7 @@ import type { NetInterface } from '@/models/Traffic'
 import { yakitReverse } from '@/services/electronBridge'
 import { isCommunityEdition } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { SettingsSections } from '../../constants'
 import styles from './ReverseSettings.module.scss'
 
 const YAK_BRIDGE_CMD = 'yak bridge --secret [your-password]'
@@ -183,10 +184,16 @@ export const ReverseSettings: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections.reverse.localReverseIp}>
         <div className={styles['section-head']}>
           <div className={styles['section-title']}>{t('basic.ConfigGlobalReverse.localReverseIP')}</div>
-          <YakitButton type="text" size="middle" disabled={ok} onClick={updateIface} icon={<RefreshOutlined color="currentColor" />}>
+          <YakitButton
+            type="text"
+            size="middle"
+            disabled={ok}
+            onClick={updateIface}
+            icon={<RefreshOutlined color="currentColor" />}
+          >
             {t('basic.ConfigGlobalReverse.updateYakEngineLocalIP')}
           </YakitButton>
         </div>
@@ -200,7 +207,7 @@ export const ReverseSettings: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections.reverse.publicReverse}>
         <div className={styles['section-title']}>{t('basic.ConfigGlobalReverse.publicReverseConfig')}</div>
         <div className={styles['list-panel']}>
           <div className={styles['hint-wrap']}>
@@ -233,7 +240,7 @@ export const ReverseSettings: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections.reverse.dnslog}>
         <div className={styles['section-title']}>
           {isCommunityEdition() ? 'Yakit ' : ''}
           {t('basic.ConfigGlobalReverse.globalDNSLogConfig')}

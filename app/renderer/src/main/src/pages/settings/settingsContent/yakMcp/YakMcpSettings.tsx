@@ -37,6 +37,7 @@ import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { SettingsSections } from '../../constants'
 import styles from './YakMcpSettings.module.scss'
 
 const TRANSPORT_OPTIONS = [
@@ -484,7 +485,7 @@ export const YakMcpSettings: React.FC = () => {
             </div>
           </div>
 
-          <div className={styles['section']}>
+          <div className={styles['section']} data-settings-section={SettingsSections['yak-mcp'].toolConfig}>
             <div className={styles['section-head']}>
               <div className={styles['section-head-text']}>
                 <div className={styles['section-title']}>{t('ConfigSystemMcp.tool_config_title')}</div>

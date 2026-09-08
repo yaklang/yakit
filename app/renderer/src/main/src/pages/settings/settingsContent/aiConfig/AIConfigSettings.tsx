@@ -18,6 +18,7 @@ import {
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
+import { SettingsSections } from '../../constants'
 import styles from './AIConfigSettings.module.scss'
 
 const ReviewPolicyOptions = AIReviewRuleOptions.map((item) => ({
@@ -144,7 +145,7 @@ export const AIConfigSettings: React.FC = () => {
         </YakitButton>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections['ai-config'].permissions}>
         <div className={styles['section-head']}>
           <div className={styles['section-title']}>{t('AIChatSetting.permissionsAndSecurity')}</div>
           <YakitButton
@@ -196,7 +197,7 @@ export const AIConfigSettings: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections['ai-config'].planning}>
         <div className={styles['section-head']}>
           <div className={styles['section-title']}>{t('AIChatSetting.planningAndExecution')}</div>
           <YakitButton
@@ -262,7 +263,7 @@ export const AIConfigSettings: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections['ai-config'].automation}>
         <div className={styles['section-head']}>
           <div className={styles['section-title']}>{t('AIChatSetting.automation')}</div>
           <YakitButton
@@ -321,7 +322,7 @@ export const AIConfigSettings: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles['section']}>
+      <div className={styles['section']} data-settings-section={SettingsSections['ai-config'].resources}>
         <div className={styles['section-head']}>
           <div className={styles['section-title']}>{t('AIChatSetting.resourcesLimits')}</div>
           <YakitButton

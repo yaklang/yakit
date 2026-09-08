@@ -367,8 +367,10 @@ export interface ManageRightClickPluginsPageInfoProps {
 }
 
 export interface SettingsPageInfoProps {
-  /** 定位到某一设置项 */
+  /** 定位到侧栏某一设置项 */
   anchor?: string
+  /** 定位到页内某一小标题 */
+  section?: string
 }
 
 export interface ContextMenuResultPageInfoProps {

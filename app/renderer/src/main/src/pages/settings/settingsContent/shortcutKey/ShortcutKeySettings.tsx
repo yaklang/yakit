@@ -234,7 +234,7 @@ export const ShortcutKeySettings: React.FC = () => {
           </div>
 
           {sections.map((section) => (
-            <div key={section.page} className={styles['section']}>
+            <div key={section.page} className={styles['section']} data-settings-section={section.page}>
               <div className={styles['section-head']}>
                 <div className={styles['section-title']}>{section.title}</div>
                 <YakitButton

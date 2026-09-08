@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import { type ComponentType, useEffect, useRef } from 'react'
 import { getSettingsLabel, type SettingsAnchor } from '../constants'
 import { AppearanceSettings } from './appearance/AppearanceSettings'
 import { GeneralSettings } from './general/GeneralSettings'
@@ -36,16 +36,30 @@ const hideOuterTitle: Partial<Record<SettingsAnchor, true>> = {
 
 interface SettingsContentProps {
   anchor: string
+  section?: string
+  sectionTick?: number
 }
 
 export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
-  const { anchor } = props
+  const { anchor, section, sectionTick } = props
   const { t } = useI18nNamespaces(['setting'])
   const title = getSettingsLabel(anchor, t)
   const Panel = SettingsPanels[anchor as SettingsAnchor]
+  const scrollerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!section) return
+    const timer = window.setTimeout(() => {
+      const scroller = scrollerRef.current
+      if (!scroller) return
+      const el = scroller.querySelector(`[data-settings-section="${section}"]`) as HTMLElement | null
+      el?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    }, 80)
+    return () => window.clearTimeout(timer)
+  }, [anchor, section, sectionTick])
 
   return (
-    <div className={styles['settings-content']} data-settings-content>
+    <div ref={scrollerRef} className={styles['settings-content']} data-settings-content>
       <div key={anchor} className={styles['settings-content-body']}>
         {!hideOuterTitle[anchor as SettingsAnchor] && <div className={styles['settings-content-title']}>{title}</div>}
         <div className={styles['settings-content-main']}>

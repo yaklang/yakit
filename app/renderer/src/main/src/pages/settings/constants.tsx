@@ -73,3 +73,44 @@ export const getSettingsLabel = (anchor: string, t: TFunction) => {
   const label = t(key)
   return label === key ? anchor : label
 }
+
+/** 设置页内小标题定位 id，配合 openPage params.section 使用 */
+export const SettingsSections = {
+  general: {
+    workspace: 'workspace',
+    pluginSource: 'plugin-source',
+  },
+  appearance: {
+    theme: 'theme',
+    mode: 'mode',
+    language: 'language',
+  },
+  reverse: {
+    localReverseIp: 'local-reverse-ip',
+    publicReverse: 'public-reverse',
+    dnslog: 'dnslog',
+  },
+  'system-proxy': {
+    systemProxy: 'system-proxy',
+  },
+  'global-config': {
+    dns: 'dns',
+    tls: 'tls',
+    thirdParty: 'third-party',
+    customCode: 'custom-code',
+    other: 'other',
+    aiModel: 'ai-model-config',
+    synScan: 'syn-scan',
+    privacy: 'privacy',
+  },
+  'ai-config': {
+    permissions: 'permissions',
+    planning: 'planning',
+    automation: 'automation',
+    resources: 'resources',
+  },
+  'yak-mcp': {
+    toolConfig: 'tool-config',
+  },
+  /** 快捷键页内 section 使用 ShortcutKeyPageName（如 global、yak-editor） */
+} as const

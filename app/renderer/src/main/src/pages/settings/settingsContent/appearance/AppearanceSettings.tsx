@@ -8,6 +8,7 @@ import { useTheme, type ThemeMode } from '@/hook/useTheme'
 import { yakitApp } from '@/services/electronBridge'
 import { syncAppSettings } from '@/auxWindow/utils/messaging'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { SettingsSections } from '../../constants'
 import themePreviewLight from '../../assets/theme-preview-light.png'
 import themePreviewDark from '../../assets/theme-preview-dark.png'
 import styles from './AppearanceSettings.module.scss'
@@ -61,7 +62,7 @@ export const AppearanceSettings: React.FC = () => {
 
   return (
     <div className={styles['appearance']}>
-      <div className={styles['appearance-section']}>
+      <div className={styles['appearance-section']} data-settings-section={SettingsSections.appearance.theme}>
         <div className={styles['appearance-section-title']}>{t('SettingsPage.appearance.theme')}</div>
         <div className={styles['theme-cards']}>
           {themeOptions.map((item) => {
@@ -101,7 +102,7 @@ export const AppearanceSettings: React.FC = () => {
       </div>
 
       {showMode && (
-        <div className={styles['appearance-section']}>
+        <div className={styles['appearance-section']} data-settings-section={SettingsSections.appearance.mode}>
           <div className={styles['appearance-section-title']}>{t('SettingsPage.appearance.mode')}</div>
           <div className={styles['list-panel']}>
             {modeOptions.map((item) => {
@@ -122,7 +123,7 @@ export const AppearanceSettings: React.FC = () => {
         </div>
       )}
 
-      <div className={styles['appearance-section']}>
+      <div className={styles['appearance-section']} data-settings-section={SettingsSections.appearance.language}>
         <div className={styles['appearance-section-title']}>{t('SettingsPage.appearance.language')}</div>
         <div className={styles['list-panel']}>
           <div className={styles['language-row']}>

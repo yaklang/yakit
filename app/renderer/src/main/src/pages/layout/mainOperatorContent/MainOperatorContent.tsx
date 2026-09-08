@@ -1306,10 +1306,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       },
     )
   })
-  const addSettingsPage = useMemoizedFn((data?: { anchor?: string }) => {
+  const addSettingsPage = useMemoizedFn((data?: { anchor?: string; section?: string }) => {
     const isExist = pageCache.filter((item) => item.route === YakitRoute.Settings).length
-    if (isExist && data?.anchor) {
-      emiter.emit('onSettingsAnchor', data.anchor)
+    if (isExist) {
+      if (data?.anchor) {
+        emiter.emit('onSettingsAnchor', data.anchor)
+      }
+      emiter.emit('onSettingsSection', data?.section || '')
     }
     openMenuPage(
       { route: YakitRoute.Settings },
@@ -1317,6 +1320,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         pageParams: {
           settingsPageInfo: {
             anchor: data?.anchor || 'general',
+            section: data?.section,
           },
         },
       },

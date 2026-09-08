@@ -16,6 +16,7 @@ import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { yakitApp, yakitAuth, yakitCodec, yakitProfile, yakitShell, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { SettingsSections } from '../../constants'
 import styles from './GeneralSettings.module.scss'
 
 interface PluginSourceProfile {
@@ -241,7 +242,7 @@ export const GeneralSettings: React.FC = () => {
 
   return (
     <div className={styles['general']}>
-      <div className={styles['general-section']}>
+      <div className={styles['general-section']} data-settings-section={SettingsSections.general.workspace}>
         <div className={styles['section-head']}>
           <div className={styles['section-title']}>{t('SettingsPage.general.workspace')}</div>
           <div className={styles['section-actions']}>
@@ -262,7 +263,7 @@ export const GeneralSettings: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles['general-section']}>
+      <div className={styles['general-section']} data-settings-section={SettingsSections.general.pluginSource}>
         <div className={styles['section-title']}>{t('SettingsPage.general.pluginSource')}</div>
         <Form form={form} size="small" onFinish={onFinish}>
           <div className={styles['list-panel']}>

@@ -9,6 +9,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { yakitHost } from '@/services/electronBridge'
 import { defHost, defPort } from '@/pages/mitm/mitmDefaults'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { SettingsSections } from '../../constants'
 import styles from './SystemProxySettings.module.scss'
 
 export const SystemProxySettings: React.FC = () => {
@@ -70,7 +71,7 @@ export const SystemProxySettings: React.FC = () => {
             <YakitSwitch size="large" checked={enable} onChange={onSetSystemProxy} />
           </div>
         </div>
-        <div className={styles['section']}>
+        <div className={styles['section']} data-settings-section={SettingsSections['system-proxy'].systemProxy}>
           <div className={styles['section-title']}>{t('ConfigSystemProxy.systemProxy')}</div>
           <div className={styles['section-desc']}>{t('ConfigSystemProxy.proxyHint')}</div>
           <YakitInput

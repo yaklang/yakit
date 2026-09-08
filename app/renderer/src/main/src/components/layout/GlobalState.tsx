@@ -46,6 +46,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { ShieldCheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitApp, yakitHost, yakitPlugin, yakitReverse } from '@/services/electronBridge'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { SettingsSections } from '@/pages/settings/Settings'
 
 import { ShieldCheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
@@ -991,7 +992,13 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         setShow(false)
                         emiter.emit(
                           'openPage',
-                          JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'global-config' } }),
+                          JSON.stringify({
+                            route: YakitRoute.Settings,
+                            params: {
+                              anchor: 'global-config',
+                              section: SettingsSections['global-config'].other,
+                            },
+                          }),
                         )
                       }}
                     >
