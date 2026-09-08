@@ -14,6 +14,8 @@ export type GlobalEventProps = {
   onRefRisksRead: string
   /**系统代理已刷新 */
   onRefConfigSystemProxy: string
+  /** Chrome 启动路径已保存 */
+  onRefConfigChromePath: string
   /**消息通知查看全部 */
   openAllMessageNotification?: string
   /**切换一级菜单的选中key */

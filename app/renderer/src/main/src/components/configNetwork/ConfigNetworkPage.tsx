@@ -662,7 +662,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = () => {
     })
   }, [])
   const onSetChromePath = useMemoizedFn((value?: string) => {
-    setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(value || chromePath))
+    const path = value || chromePath
+    setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(path)).then(() => {
+      emiter.emit('onRefConfigChromePath', '')
+    })
   })
   const onResetChromePath = useMemoizedFn(() => {
     let path = ''
@@ -673,7 +676,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = () => {
       })
       .finally(() => {
         setChromePath(path)
-        setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(path))
+        setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(path)).then(() => {
+          emiter.emit('onRefConfigChromePath', '')
+        })
       })
   })
 

@@ -12,7 +12,6 @@ import { HelpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/HelpIcon'
 import { SuccessIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SuccessIcon'
 import { WarningIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WarningIcon'
 import { RocketIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RocketIcon'
-import { showConfigSystemProxyForm, showConfigChromePathForm } from '@/utils/ConfigSystemProxy'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { Tooltip, Row, Col } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
@@ -715,16 +714,22 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
   // 是否已经设置过Chrome启动路径
   const [isAlreadyChromePath, setAlreadyChromePath] = useState<boolean>(false)
-  const setAlreadyChromePathStatus = (is: boolean) => setAlreadyChromePath(is)
-
-  useEffect(() => {
+  const refreshChromePathStatus = useMemoizedFn(() => {
     getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
-      if (!setting) return
-      const values: string = JSONParseLog(setting, { page: 'GlobalState', fun: 'RemoteGV.GlobalChromePath' })
-      if (values.length > 0) {
-        setAlreadyChromePath(true)
+      if (!setting) {
+        setAlreadyChromePath(false)
+        return
       }
+      const values: string = JSONParseLog(setting, { page: 'GlobalState', fun: 'RemoteGV.GlobalChromePath' })
+      setAlreadyChromePath(!!values && values.length > 0)
     })
+  })
+  useEffect(() => {
+    refreshChromePathStatus()
+    emiter.on('onRefConfigChromePath', refreshChromePathStatus)
+    return () => {
+      emiter.off('onRefConfigChromePath', refreshChromePathStatus)
+    }
   }, [])
 
   /**
@@ -984,7 +989,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       className={styles['btn-style']}
                       onClick={() => {
                         setShow(false)
-                        showConfigChromePathForm(setAlreadyChromePathStatus)
+                        emiter.emit(
+                          'openPage',
+                          JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'global-config' } }),
+                        )
                       }}
                     >
                       {isAlreadyChromePath ? t('GlobalState.configured') : t('GlobalState.toConfigure')}
@@ -1025,7 +1033,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       className={styles['btn-style']}
                       onClick={() => {
                         setShow(false)
-                        showConfigSystemProxyForm()
+                        emiter.emit(
+                          'openPage',
+                          JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'system-proxy' } }),
+                        )
                       }}
                     >
                       {t('GlobalState.toConfigure')}
