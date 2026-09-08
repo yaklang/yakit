@@ -47,7 +47,7 @@ const ModelGroup: React.FC<{
   title: ReactNode
   desc: ReactNode
   defaultOpen?: boolean
-  children: ReactNode
+  children: (open: boolean) => ReactNode
 }> = (props) => {
   const { title, desc, defaultOpen = true, children } = props
   const [open, setOpen] = useState(defaultOpen)
@@ -64,7 +64,7 @@ const ModelGroup: React.FC<{
           <div className={styles['model-group-desc']}>{desc}</div>
         </div>
       </div>
-      {open ? <div className={styles['model-group-body']}>{children}</div> : null}
+      <div className={styles['model-group-body']}>{children(open)}</div>
     </div>
   )
 }
@@ -189,9 +189,14 @@ export const AIModelSettings: React.FC = () => {
     aiGlobalConfig?.VisionModels?.length
   )
 
-  const renderOnlineGroup = (fileName: AIModelTypeFileName, list: AIModelConfig[], type: AIModelTypeEnumType) => (
+  const renderOnlineGroup = (
+    fileName: AIModelTypeFileName,
+    list: AIModelConfig[],
+    type: AIModelTypeEnumType,
+    collapsed?: boolean,
+  ) => (
     <AIOnlineModel
-      list={list}
+      list={collapsed ? list.slice(0, 1) : list}
       onEdit={(index) => onEdit({ fileName, index })}
       onRemove={(index) => onRemove({ fileName, index })}
       onSelect={(item, index) => onSelect(item, { fileName, index })}
@@ -296,29 +301,38 @@ export const AIModelSettings: React.FC = () => {
                 )}
                 {!!aiGlobalConfig?.IntelligentModels?.length && (
                   <ModelGroup title={t('AiAgengt.intelligentModels')} desc={t('AIModelList.intelligentModelsDesc')}>
-                    {renderOnlineGroup(
-                      AIModelTypeInterFileNameEnum.IntelligentModels,
-                      aiGlobalConfig.IntelligentModels,
-                      AIModelTypeEnum.TierIntelligent,
-                    )}
+                    {(open) =>
+                      renderOnlineGroup(
+                        AIModelTypeInterFileNameEnum.IntelligentModels,
+                        aiGlobalConfig.IntelligentModels,
+                        AIModelTypeEnum.TierIntelligent,
+                        !open,
+                      )
+                    }
                   </ModelGroup>
                 )}
                 {!!aiGlobalConfig?.LightweightModels?.length && (
                   <ModelGroup title={t('AiAgengt.lightweightModels')} desc={t('AIModelList.lightweightModelsDesc')}>
-                    {renderOnlineGroup(
-                      AIModelTypeInterFileNameEnum.LightweightModels,
-                      aiGlobalConfig.LightweightModels,
-                      AIModelTypeEnum.TierLightweight,
-                    )}
+                    {(open) =>
+                      renderOnlineGroup(
+                        AIModelTypeInterFileNameEnum.LightweightModels,
+                        aiGlobalConfig.LightweightModels,
+                        AIModelTypeEnum.TierLightweight,
+                        !open,
+                      )
+                    }
                   </ModelGroup>
                 )}
                 {!!aiGlobalConfig?.VisionModels?.length && (
                   <ModelGroup title={t('AiAgengt.visionModels')} desc={t('AIModelList.visionModelsDesc')}>
-                    {renderOnlineGroup(
-                      AIModelTypeInterFileNameEnum.VisionModels,
-                      aiGlobalConfig.VisionModels,
-                      AIModelTypeEnum.TierVision,
-                    )}
+                    {(open) =>
+                      renderOnlineGroup(
+                        AIModelTypeInterFileNameEnum.VisionModels,
+                        aiGlobalConfig.VisionModels,
+                        AIModelTypeEnum.TierVision,
+                        !open,
+                      )
+                    }
                   </ModelGroup>
                 )}
               </div>
