@@ -212,9 +212,17 @@ describe('safeParseFuzzerCache', () => {
     const inner =
       '[{"groupChildren":[],"groupId":"0","id":"httpFuzzer-bad-num","pageParams":{"actualHost":"","concurrent":'
     expect(() => safeParseFuzzerCache(inner)).toThrow(SyntaxError)
+    expect(debugToPrintLogs).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'ERRO',
+        title: expect.stringContaining('截断修复未成功'),
+        content: expect.objectContaining({ originalError: expect.any(String), repairError: expect.any(String) }),
+      }),
+    )
   })
 
   it('throws original JSON error when payload is not json', () => {
     expect(() => safeParseFuzzerCache('{not-json')).toThrow(SyntaxError)
+    expect(debugToPrintLogs).toHaveBeenCalledWith(expect.objectContaining({ status: 'ERRO' }))
   })
 })

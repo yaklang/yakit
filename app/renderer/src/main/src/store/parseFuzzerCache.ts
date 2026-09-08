@@ -15,7 +15,14 @@ export const safeParseFuzzerCache = (raw: string): any[] => {
   } catch (error) {
     try {
       return parseCache(replaceBrokenTabStrings(raw))
-    } catch {
+    } catch (repairError) {
+      debugToPrintLogs({
+        page: 'MainOperatorContent',
+        fun: 'safeParseFuzzerCache',
+        status: 'ERRO',
+        title: 'Web Fuzzer 缓存解析失败且截断修复未成功，抛出原始解析错误',
+        content: { originalError: `${error}`, repairError: `${repairError}` },
+      })
       throw error
     }
   }
