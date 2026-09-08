@@ -12,8 +12,8 @@
         background: var(--Colors-Use-Neutral-Bg);
         color: var(--Colors-Use-Neutral-Text-1-Title);
       }
-      .ant-segmented-item:hover,
-      .ant-segmented-item:focus {
+      .ant-segmented-item:not(.ant-segmented-item-disabled):hover,
+      .ant-segmented-item:not(.ant-segmented-item-disabled):focus {
         color: var(--Colors-Use-Neutral-Text-1-Title);
       }
     }
