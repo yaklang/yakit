@@ -10,7 +10,7 @@ import { AIChatListItem } from '@/pages/ai-agent/components/aiChatListItem/AICha
 import { AIYaklangCode } from '@/pages/ai-agent/components/aiYaklangCode/AIYaklangCode'
 import type { ModalInfoProps } from '@/pages/ai-agent/components/ModelInfo'
 import { AIStreamContentType } from '../hooks/defaultConstant'
-import { Virtuoso } from 'react-virtuoso'
+import { Virtuoso, type ListProps } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
 import useChatStreamLocateHighlight from '../hooks/useChatStreamLocateHighlight'
 import type { ReActChatRenderElement, ChatReferenceMaterialPayload } from '../hooks/aiRender'
@@ -117,6 +117,15 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
   }
 })
 const TYPE = 'reAct'
+
+// Virtuoso 的滚动容器需要保持全宽，内容轨道放到内部 List，避免滚动条跟随轨道移动。
+const VirtuosoListContainer = forwardRef<HTMLDivElement, ListProps>(({ children, style, ...props }, ref) => (
+  <div {...props} ref={ref} style={style} className={styles['re-act-contents-track']}>
+    {children}
+  </div>
+))
+
+VirtuosoListContainer.displayName = 'VirtuosoListContainer'
 
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo(
   forwardRef((_props, ref) => {
@@ -240,6 +249,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     const components = useMemo(
       () => ({
         Item,
+        List: VirtuosoListContainer,
         Footer,
         Header,
       }),

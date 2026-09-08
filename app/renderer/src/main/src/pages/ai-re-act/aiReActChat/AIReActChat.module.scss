@@ -1,4 +1,4 @@
-@use '../../../styles/mixin.scss' as mixin;
+@use '../styles/mixin.scss' as mixin;
 
 @mixin content-side($type) {
   .content-#{$type}-side {
@@ -65,10 +65,12 @@
   align-items: flex-start;
   height: 100%;
   width: 100%;
-  // 面板存在/小屏两态由下方 :has(data-ai-right-panel*) 联动，列表和输入框共同使用 chat-layout-wrapper
+  // 面板存在/小屏两态由下方 :has(data-ai-right-panel*) 联动。
+  // 滚动容器保持全宽，消息内容与输入框分别套用同一条内容轨道。
   --ai-right-panel-slot-width: 0px;
   --ai-right-panel-content-shift: 0px;
-  --ai-right-panel-list-content-shift: 0px;
+  // 内容轨道只在根容器计算一次，列表、输入框和状态提示共同复用。
+  --ai-right-panel-content-track-width: min(784px, calc(100% - var(--ai-right-panel-slot-width)));
   position: relative;
   overflow: hidden;
 
@@ -78,8 +80,6 @@
     --ai-right-panel-slot-width: 325px;
     // 内容中心偏移 = -(325px / 2) = -162.5px
     --ai-right-panel-content-shift: -162.5px;
-    // 列表和输入框已经共用同一轨道，不再追加单独的列表偏移
-    --ai-right-panel-list-content-shift: var(--ai-right-panel-content-shift);
   }
 
   // 小屏面板槽位 = 41px 面板 + 12px 右侧留白 + 8px 内容间距 = 61px
@@ -87,12 +87,11 @@
     --ai-right-panel-slot-width: 61px;
     // 内容中心偏移 = -(61px / 2) = -30.5px
     --ai-right-panel-content-shift: -30.5px;
-    // 列表和输入框已经共用同一轨道，不再追加单独的列表偏移
-    --ai-right-panel-list-content-shift: var(--ai-right-panel-content-shift);
   }
 
-  // 面板态下 footer 与列表都以 ai-re-act 根容器为坐标基准，避免原有 4px/12px padding 造成左右边界错位
+  // 面板态下 footer 以 ai-re-act 根容器为坐标基准，与消息项使用相同的内容轨道。
   &:has([data-ai-right-panel]) .chat-footer {
+    @include mixin.ai-right-panel-content-track;
     padding: 0;
   }
 
@@ -131,7 +130,7 @@
 }
 
 .chat-layout-wrapper {
-  // 列表与输入框的共同内容轨道：面板态统一计算宽度和横向偏移，子元素只填满轨道
+  // 保持滚动容器的父级全宽，避免 Virtuoso 滚动条停在内容轨道右侧。
   width: 100%;
   min-width: 0;
   min-height: 0;
@@ -141,11 +140,6 @@
   flex-direction: column;
   gap: 8px;
   transform: none;
-}
-
-.ai-re-act:has([data-ai-right-panel]) .chat-layout-wrapper {
-  width: min(784px, calc(100% - var(--ai-right-panel-slot-width)));
-  transform: translateX(var(--ai-right-panel-list-content-shift));
 }
 
 .chat-footer {

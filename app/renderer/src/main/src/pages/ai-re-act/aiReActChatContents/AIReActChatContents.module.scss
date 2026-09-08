@@ -1,3 +1,5 @@
+@use '../styles/mixin.scss' as mixin;
+
 .ai-re-act-chat-contents {
   width: 100%;
   overflow: hidden auto;
@@ -7,18 +9,22 @@
   position: relative;
   margin-top: 8px;
   .re-act-contents-list {
+    // Virtuoso Scroller 负责滚动并保持全宽，避免滚动条随内容轨道移动。
     display: flex;
     flex-direction: column;
     gap: 8px;
     width: 100%;
+    max-width: none;
     height: 100%;
+  }
+  // Virtuoso 的内部 List 承担内容轨道，外层 re-act-contents-list 只负责滚动。
+  .re-act-contents-track {
+    @include mixin.ai-right-panel-content-track;
   }
   .item-wrapper {
     width: 100%;
     box-sizing: border-box;
     min-width: 0;
-    max-width: 784px;
-    margin: 0 auto;
     .item-inner {
       padding-top: 4px;
     }
@@ -46,18 +52,16 @@
       font-size: 12px;
     }
   }
+  // Virtuoso 的 Footer 与内部 List 是兄弟节点，父级是全宽 viewport；
+  // 需要单独套用内容轨道，面板态下才能与消息列表对齐。
   .end {
     font-size: 12px;
     font-weight: bold;
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    width: 100%;
-    max-width: 784px;
-    margin: 0 auto;
+    @include mixin.ai-right-panel-content-track;
   }
   .footer-loading {
-    width: 100%;
-    max-width: 784px;
-    margin: 0 auto;
+    @include mixin.ai-right-panel-content-track;
     padding-bottom: 24px;
     .footer-loading-title {
       width: 100%;
@@ -76,7 +80,8 @@
   .scroll-to-bottom-wrapper {
     position: absolute;
     bottom: 8px;
-    width: 100%;
+    // 置底按钮也沿用消息内容轨道，避免面板态下回到窗口中心。
+    @include mixin.ai-right-panel-content-track;
     display: flex;
     justify-content: center;
     pointer-events: none;

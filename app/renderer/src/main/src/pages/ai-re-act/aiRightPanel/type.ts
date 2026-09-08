@@ -19,13 +19,13 @@ export interface AIRightPanelToolStats {
   total?: number
 }
 
-/** 漏洞各等级计数，展示顺序为 严重/高危/中危/低危/未知，等级色走主题 Status 语义色 */
+/** 漏洞各等级计数，展示顺序为 严重/高危/中危/低危/信息，等级色走主题 Status 语义色 */
 export interface AIRightPanelRiskCounts {
   serious?: number
   high?: number
   medium?: number
   low?: number
-  unknown?: number
+  info?: number
 }
 
 export interface AIRightPanelProps {
@@ -33,19 +33,6 @@ export interface AIRightPanelProps {
   layoutRef?: React.RefObject<HTMLElement | null>
   /** 是否使用小屏图标栏 */
   small?: boolean
-  /** 当前选中的菜单项 */
-  activeKey?: AIRightPanelMenuKey
-  onMenuClick?: (key: AIRightPanelMenuKey) => void
-  /** 执行时长展示文案，如 "7s"；未传时展示占位 "—" */
-  executionDuration?: string
-  /** 工具调用统计，未传的数值展示占位 "—" */
-  toolCallStats?: AIRightPanelToolStats
-  /** 流量条目右侧计数角标，未传不展示 */
-  trafficCount?: number | string
-  /** 漏洞条目右侧各等级计数角标，未传不展示 */
-  riskCounts?: AIRightPanelRiskCounts
-  className?: string
-  style?: React.CSSProperties
 }
 
 /** AIReActChat 列表与输入框内容轨道的最大宽度（px） */

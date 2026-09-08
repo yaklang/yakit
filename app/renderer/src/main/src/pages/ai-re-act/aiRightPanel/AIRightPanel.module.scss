@@ -83,8 +83,7 @@
   user-select: none;
   box-sizing: border-box;
 
-  &:hover,
-  &.menu-item-active {
+  &:hover {
     background: var(--Colors-Use-Neutral-Bg-Hover);
   }
 }
@@ -144,10 +143,35 @@
 }
 
 .menu-item-icon-small {
+  position: relative;
   width: 16px;
   height: 16px;
   font-size: 16px;
   line-height: 16px;
+}
+
+// 小屏漏洞总数角标：16px × 14px（含左右各 2px 内边距），向右下偏移 8px/6px，与 16px 图标重叠 8px × 8px（面积约四分之一）
+.risk-count-badge {
+  position: absolute;
+  right: -8px;
+  bottom: -6px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  min-width: 16px;
+  height: 14px;
+  padding: 0 2px;
+  box-sizing: border-box;
+  color: var(--Colors-Use-Basic-White);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+  white-space: nowrap;
+  background: var(--Colors-Use-Status-High);
+  @include themeify.color-mix-border(1px, solid, var(--Colors-Use-Neutral-Bg), 50%);
+  border-radius: 4px;
 }
 
 // 「更多/折叠」图标使用帮助文本颜色
@@ -200,8 +224,8 @@
     color: var(--Colors-Use-Status-Low);
   }
 
-  // 当前设计将 unknown 档映射为 Status-Safe 颜色
-  &-unknown {
+  // 当前设计将 info 档映射为 Status-Safe 颜色
+  &-info {
     color: var(--Colors-Use-Status-Safe);
   }
 }

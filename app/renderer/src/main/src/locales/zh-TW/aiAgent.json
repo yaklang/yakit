@@ -502,7 +502,8 @@
     "toolCallStats": "工具調用統計",
     "success": "成功",
     "failed": "失敗",
-    "totalAttempts": "總嘗試次數"
+    "totalAttempts": "總嘗試次數",
+    "running": "執行中"
   },
   "AIChatContent": {
     "noActiveChat": "當前沒有活躍的會話",
