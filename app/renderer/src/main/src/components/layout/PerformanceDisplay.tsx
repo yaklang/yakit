@@ -29,6 +29,7 @@ interface PerformanceDisplayProps {
   typeCallback: (type: 'break') => any
   engineLink: boolean
   extraLeft?: React.ReactNode
+  extraRight?: React.ReactNode
 }
 
 export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo((props) => {
@@ -59,6 +60,7 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo(
     <div className={styles['system-func-wrapper']}>
       {props.extraLeft}
       <UIEngineList {...props} cpu={cpu} rps={rps} />
+      {props.extraRight}
     </div>
   )
 })

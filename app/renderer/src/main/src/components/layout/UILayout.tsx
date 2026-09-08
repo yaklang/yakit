@@ -1772,7 +1772,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                       engineMode={engineMode}
                       typeCallback={handleOperations}
                       engineLink={engineLink}
-                      extraLeft={engineNotice}
+                      extraRight={engineNotice}
                     />
                   </div>
                 </div>
