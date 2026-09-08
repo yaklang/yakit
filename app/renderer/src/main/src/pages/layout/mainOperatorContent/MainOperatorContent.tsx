@@ -126,6 +126,7 @@ import {
   type RuleManagementPageInfoProps,
   type AuditHoleInfoProps,
 } from '@/store/pageInfo'
+import { safeParseFuzzerCache } from '@/store/parseFuzzerCache'
 import cloneDeep from 'lodash/cloneDeep'
 import { onToManageGroup } from '@/pages/securityTool/yakPoC/YakPoC'
 import { apiFetchQueryYakScriptGroupLocal } from '@/pages/plugins/utils'
@@ -2889,7 +2890,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         try {
           setLoading(true)
           const res = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerCache)
-          const cache = JSONParseLog(res || '[]', { page: 'MainOperatorContent', fun: 'onInitFuzzer' })
+          const cache = safeParseFuzzerCache(res || '[]')
           await fetchFuzzerList(cache, false)
           await getFuzzerSequenceCache()
         } catch (error) {
@@ -2933,7 +2934,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setFuzzerSequenceCacheData(cache)
   })
 
-  // 获取数据库中缓存的web-fuzzer页面信息
+  // 获取数据库中缓存的 web-fuzzer 页面信息。
+  // 截断恢复后 request / hotPatchCode 等可能缺失，下面用空串；页面打开后走各自默认值。
+  // 看起来像没存上，实际是缓存 JSON 被截断、数据不完整。
   const fetchFuzzerList = useMemoizedFn(async (cache, add, openFlag = true, preserveIds = false) => {
     try {
       const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
