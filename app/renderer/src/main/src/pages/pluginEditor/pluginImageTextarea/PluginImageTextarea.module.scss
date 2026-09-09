@@ -67,6 +67,11 @@
 
 .plugin-image-textarea-body {
   padding: 0;
+
+  &:global(.ant-input):focus,
+  &:global(.ant-input):focus-visible {
+    box-shadow: none;
+  }
 }
 
 .plugin-image-textarea-footer-operate {
