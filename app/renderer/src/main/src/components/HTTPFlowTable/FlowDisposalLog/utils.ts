@@ -1,22 +1,83 @@
-import { httpUploadImgBase64 } from '@/apiUtils/http'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { yakitNotify } from '@/utils/notification'
+import { yakitUpload } from '@/services/electronBridge'
 import type {
+  FlowDisposalLogItem,
   FlowDisposalLogsResponse,
   PublishFlowDisposalCommentRequest,
   UploadDisposalImageRequest,
 } from './types'
 
-/** 流量处置日志图片上传（占位：待后端联调） */
+const parseFragmentUploadUrl = (res: UploadImgApiResponse | undefined): string => {
+  if (res?.code === 200) {
+    const data = res.data
+    const url = typeof data === 'string' ? data : data?.from || ''
+    if (url) return url
+  }
+  const data = res?.data
+  const message =
+    res?.message || (typeof data === 'object' && data ? data.reason : undefined) || '上传图片失败'
+  throw new Error(String(message))
+}
+
+/** 流量处置评论贴图 → fragment/upload type=HttpflowComment */
 export const apiUploadFlowDisposalImage = (request: UploadDisposalImageRequest): Promise<string> => {
-  return httpUploadImgBase64({
-    ...request,
-    type: 'comment',
+  return new Promise((resolve, reject) => {
+    if (!request.hash) {
+      const err = '缺少流量 hash'
+      yakitNotify('error', `上传图片失败: ${err}`)
+      reject(err)
+      return
+    }
+    yakitUpload
+      .splitUpload({
+        url: 'fragment/upload',
+        base64: request.base64,
+        imgInfo: request.imgInfo,
+        type: 'HttpflowComment',
+        filedHash: request.hash,
+      })
+      .then(({ resArr }) => {
+        resolve(parseFragmentUploadUrl(resArr?.[0]))
+      })
+      .catch((e) => {
+        yakitNotify('error', `上传图片失败: ${e}`)
+        reject(e)
+      })
   })
 }
 
-/** 流量处置日志列表（占位：待后端联调） */
+type CommentDetailExtra = API.CommentDetail & { headImg?: string; head_img?: string }
+
+const mapCommentDetail = (item: CommentDetailExtra): FlowDisposalLogItem => {
+  const isComment = item.recordType === 'comment'
+  return {
+    id: item.id || 0,
+    logType: isComment ? 'comment' : 'system',
+    userName: item.userName,
+    headImg: item.headImg || item.head_img,
+    description: item.content,
+    createdAt: item.createdAt || 0,
+    parentComment: item.parentId
+      ? { id: item.parentId, userName: item.parentUserName || '', description: '' }
+      : undefined,
+  }
+}
+
+const enrichParentComments = <T extends { id: number; description?: string; parentComment?: { id: number; description: string } }>(
+  list: T[],
+): T[] => {
+  const byId = new Map(list.map((item) => [item.id, item]))
+  list.forEach((item) => {
+    if (!item.parentComment?.id) return
+    const parent = byId.get(item.parentComment.id)
+    if (parent?.description) item.parentComment.description = parent.description
+  })
+  return list
+}
+
+/** 流量处置日志列表 → POST /risk/httpflow/comment/list */
 export const apiGetFlowDisposalLogs = (params: {
   flow_id?: number
   hash?: string
@@ -24,13 +85,28 @@ export const apiGetFlowDisposalLogs = (params: {
   limit?: number
 }): Promise<FlowDisposalLogsResponse> => {
   return new Promise((resolve, reject) => {
-    // xxx--- 等待后端联调
-    NetWorkApi<typeof params, FlowDisposalLogsResponse>({
-      method: 'get',
-      url: 'httpflow/disposal/logs',
-      params,
+    if (!params.hash) {
+      reject(new Error('缺少流量 hash'))
+      return
+    }
+    NetWorkApi<API.CommentListRequest, API.CommentListResponse>({
+      method: 'post',
+      url: 'risk/httpflow/comment/list',
+      data: {
+        hash: params.hash,
+        targetType: 'httpflow',
+        page: 1,
+        limit: params.limit ?? 20,
+        order_by: 'id',
+        order: 'desc',
+      },
     })
-      .then(resolve)
+      .then((res) => {
+        resolve({
+          data: enrichParentComments((res.data || []).map(mapCommentDetail)),
+          total: res.pagemeta?.total,
+        })
+      })
       .catch((e) => {
         yakitNotify('error', `查询流量处置日志失败: ${e}`)
         reject(e)
@@ -38,16 +114,25 @@ export const apiGetFlowDisposalLogs = (params: {
   })
 }
 
-/** 发布/回复评论（占位） */
+/** 发布/回复评论 → POST /risk/httpflow/comment */
 export const apiPublishFlowDisposalComment = (
   data: PublishFlowDisposalCommentRequest,
 ): Promise<API.ActionSucceeded> => {
   return new Promise((resolve, reject) => {
-    // xxx--- 等待后端联调
-    NetWorkApi<PublishFlowDisposalCommentRequest, API.ActionSucceeded>({
+    if (!data.hash) {
+      reject(new Error('缺少流量 hash'))
+      return
+    }
+    const payload: API.CommentRequest = {
+      hash: data.hash,
+      targetType: 'httpflow',
+      content: data.description,
+      parentId: data.logId,
+    }
+    NetWorkApi<API.CommentRequest, API.ActionSucceeded>({
       method: 'post',
-      url: 'httpflow/disposal/comment',
-      data,
+      url: 'risk/httpflow/comment',
+      data: payload,
     })
       .then(resolve)
       .catch((e) => {
@@ -57,14 +142,13 @@ export const apiPublishFlowDisposalComment = (
   })
 }
 
-/** 删除评论（占位） */
+/** 删除评论 → POST /risk/httpflow/comment/delete */
 export const apiDeleteFlowDisposalComment = (logId: number): Promise<API.ActionSucceeded> => {
   return new Promise((resolve, reject) => {
-    // xxx--- 等待后端联调
-    NetWorkApi<{ logId: number }, API.ActionSucceeded>({
-      method: 'delete',
-      url: 'httpflow/disposal/comment',
-      params: { logId },
+    NetWorkApi<API.CommentDeleteRequest, API.ActionSucceeded>({
+      method: 'post',
+      url: 'risk/httpflow/comment/delete',
+      data: { id: logId },
     })
       .then(resolve)
       .catch((e) => {
