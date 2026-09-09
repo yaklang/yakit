@@ -28,11 +28,11 @@ export interface FlowDisposalLogItem {
   createdAt: number
   isMine?: boolean
   parentComment?: DisposalLogParentComment
-  /** 系统日志：标记字段（与流量标记一致） */
-  problemType?: string
+  /** 系统日志：标记字段（对齐 IssueType/Status/StatusReason） */
+  issueType?: string
   severity?: string
-  disposalStatus?: string
-  disposalNote?: string
+  status?: string
+  statusReason?: string
 }
 
 export interface FlowDisposalLogsResponse {
@@ -62,4 +62,6 @@ export interface QuotationInfoProps {
 export interface UploadDisposalImageRequest {
   base64: string
   imgInfo: { filename?: string; contentType?: string }
+  /** httpflow hash */
+  hash: string
 }

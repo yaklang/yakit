@@ -33,30 +33,30 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
   const [form] = Form.useForm()
 
   const onFinish = useMemoizedFn(
-    (value: { ProblemType?: string; Severity?: string; DisposalStatus?: string; DisposalNote?: string }) => {
+    (value: { IssueType?: string; Severity?: string; Status?: string; StatusReason?: string }) => {
       const payload: BatchSetHTTPFlowIssueFieldsRequest = {
         Ids: ids,
         Filter: filter,
         Token: token,
       }
       if (batch) {
-        if (value.ProblemType) payload.IssueType = value.ProblemType
+        if (value.IssueType) payload.IssueType = value.IssueType
         if (value.Severity) payload.Severity = value.Severity
-        if (value.DisposalStatus) payload.Status = value.DisposalStatus
-        if (value.DisposalNote?.trim()) payload.StatusReason = value.DisposalNote.trim()
+        if (value.Status) payload.Status = value.Status
+        if (value.StatusReason?.trim()) payload.StatusReason = value.StatusReason.trim()
       } else {
-        payload.IssueType = value.ProblemType
+        payload.IssueType = value.IssueType
         payload.Severity = value.Severity
-        payload.Status = value.DisposalStatus
-        payload.StatusReason = value.DisposalNote?.trim() || undefined
+        payload.Status = value.Status
+        payload.StatusReason = value.StatusReason?.trim() || undefined
       }
       apiBatchSetHTTPFlowIssueFields(payload).then(() => {
         const patch: FlowMarkPatchPayload = {
           Ids: ids,
-          ...(payload.IssueType !== undefined ? { ProblemType: payload.IssueType } : {}),
+          ...(payload.IssueType !== undefined ? { IssueType: payload.IssueType } : {}),
           ...(payload.Severity !== undefined ? { Severity: payload.Severity } : {}),
-          ...(payload.Status !== undefined ? { DisposalStatus: payload.Status } : {}),
-          ...(payload.StatusReason !== undefined ? { DisposalNote: payload.StatusReason } : {}),
+          ...(payload.Status !== undefined ? { Status: payload.Status } : {}),
+          ...(payload.StatusReason !== undefined ? { StatusReason: payload.StatusReason } : {}),
         }
         onSuccess?.(patch)
         onClose?.()
@@ -79,14 +79,14 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
           batch
             ? {}
             : {
-                ProblemType: info?.ProblemType,
+                IssueType: info?.IssueType,
                 Severity: info?.Severity,
-                DisposalStatus: info?.DisposalStatus,
-                DisposalNote: info?.DisposalNote,
+                Status: info?.Status,
+                StatusReason: info?.StatusReason,
               }
         }
       >
-        <Form.Item label={t('HTTPFlowTable.problemType')} name="ProblemType">
+        <Form.Item label={t('HTTPFlowTable.problemType')} name="IssueType">
           <YakitSelect allowClear placeholder={t('HTTPFlowTable.selectProblemType')}>
             {FLOW_PROBLEM_TYPE_OPTIONS.map((item) => (
               <YakitSelect.Option key={item} value={item}>
@@ -104,7 +104,7 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
             ))}
           </YakitSelect>
         </Form.Item>
-        <Form.Item label={t('HTTPFlowTable.disposalStatus')} name="DisposalStatus">
+        <Form.Item label={t('HTTPFlowTable.disposalStatus')} name="Status">
           <YakitSelect allowClear placeholder={t('HTTPFlowTable.selectDisposalStatus')}>
             {FLOW_DISPOSAL_STATUS_OPTIONS.map((item) => (
               <YakitSelect.Option key={item} value={item}>
@@ -113,7 +113,7 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
             ))}
           </YakitSelect>
         </Form.Item>
-        <Form.Item label={t('HTTPFlowTable.disposalNote')} name="DisposalNote">
+        <Form.Item label={t('HTTPFlowTable.disposalNote')} name="StatusReason">
           <YakitInput.TextArea placeholder={t('HTTPFlowTable.inputDisposalNote')} rows={4} />
         </Form.Item>
         <div className={styles['flow-mark-edit-form-btns']}>
