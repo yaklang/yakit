@@ -31,7 +31,9 @@ async function calcDirSize(dirPath) {
     let size = 0
     try {
       const entries = await fs.promises.readdir(dir, { withFileTypes: true })
-      for (const entry of entries) {
+      for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i]
+        if (i % 200 === 0) await new Promise((resolve) => setImmediate(resolve))
         const fullPath = path.join(dir, entry.name)
         if (entry.isFile()) {
           try {
