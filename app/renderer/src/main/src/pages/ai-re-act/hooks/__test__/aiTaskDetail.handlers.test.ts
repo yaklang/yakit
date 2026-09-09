@@ -104,4 +104,19 @@ describe('aiTaskDetail handlers', () => {
     aiTaskDetailDataHandlers.session_snapshot(staleRequest)
     expect(req.rawData.taskDetailsMap.get(taskId)?.execution?.http_flow_count).toBe(42)
   })
+
+  it('session_snapshot ignores responses that are not structured', () => {
+    const taskId = 'task-snapshot-unstructured'
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'session_snapshot',
+        { revision: 1, execution: { http_flow_count: 99 } },
+        { NodeId: 'session_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+
+    aiTaskDetailDataHandlers.session_snapshot(req)
+
+    expect(req.rawData.taskDetailsMap.has(taskId)).toBe(false)
+  })
 })

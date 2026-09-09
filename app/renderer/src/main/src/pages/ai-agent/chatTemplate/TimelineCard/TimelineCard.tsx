@@ -10,6 +10,7 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useMemoizedFn } from 'ahooks'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useLoadHistory from '@/pages/ai-re-act/hooks/useLoadHistory'
@@ -103,9 +104,10 @@ const TimelineCard: FC = () => {
     () => ({
       Item: VirtuosoItemContainer,
       List: VirtuosoListContainer,
+      EmptyPlaceholder: () => (timelinesLoading ? null : <YakitEmpty />),
       Footer: () => (reActTimelines.length > 0 ? <div className={styles['arrow']} /> : null),
     }),
-    [reActTimelines.length],
+    [reActTimelines.length, timelinesLoading],
   )
 
   const itemContent = useMemoizedFn((_: number, item: AIAgentGrpcApi.TimelineItem) => <TimelineRow item={item} />)

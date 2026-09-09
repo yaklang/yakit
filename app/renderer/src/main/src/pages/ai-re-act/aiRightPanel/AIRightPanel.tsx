@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import { TaskListPane } from '@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane'
+import { AIRightPanelPane } from './AIRightPanelPane'
+import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -146,11 +149,22 @@ interface MenuItemProps {
   suffix?: React.ReactNode
   smallBadge?: React.ReactNode
   onClick?: () => void
+  onMouseEnter?: () => boolean
+  onMouseLeave?: () => void
 }
 
 const MenuItem: React.FC<MenuItemProps> = React.memo(
-  ({ icon, label, small, secondary, suffix, smallBadge, onClick }) => {
+  ({ icon, label, small, secondary, suffix, smallBadge, onClick, onMouseEnter, onMouseLeave }) => {
     const [tooltipOpen, setTooltipOpen] = useState(false)
+
+    const handleMouseEnter = useMemoizedFn(() => {
+      const paneOpened = onMouseEnter?.() ?? false
+      setTooltipOpen(!paneOpened)
+    })
+    const handleMouseLeave = useMemoizedFn(() => {
+      setTooltipOpen(false)
+      onMouseLeave?.()
+    })
 
     const onItemClick = useMemoizedFn(() => {
       if (onClick) {
@@ -165,8 +179,8 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
         className={classNames(styles['menu-item'], className)}
         aria-label={label}
         onClick={onItemClick}
-        onMouseEnter={() => setTooltipOpen(true)}
-        onMouseLeave={() => setTooltipOpen(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {children}
       </div>
@@ -266,6 +280,51 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   }, [layoutRef, small])
 
   const isSmall = small ?? chatSmall
+  const [activePane, setActivePane] = useState<'task-list' | 'timeline'>()
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>()
+  const cancelPaneClose = useMemoizedFn(() => clearTimeout(closeTimer.current))
+  const closePane = useMemoizedFn(() => {
+    cancelPaneClose()
+    setActivePane(undefined)
+  })
+  const openPane = useMemoizedFn((key: 'task-list' | 'timeline') => {
+    cancelPaneClose()
+    setActivePane(key)
+  })
+  const schedulePaneClose = useMemoizedFn(() => {
+    cancelPaneClose()
+    // 留出从入口穿过间距移入浮层的时间。
+    closeTimer.current = setTimeout(closePane, 150)
+  })
+
+  const handleMenuMouseEnter = useMemoizedFn((key: AIRightPanelMenuKey) => {
+    if (!isSmall) return false
+    switch (key) {
+      case 'task-list':
+      case 'timeline':
+        openPane(key)
+        return true
+      default:
+        return false
+    }
+  })
+
+  const handleMenuMouseLeave = useMemoizedFn((key: AIRightPanelMenuKey) => {
+    if (!isSmall) return
+    switch (key) {
+      case 'task-list':
+      case 'timeline':
+        schedulePaneClose()
+        break
+      default:
+        break
+    }
+  })
+
+  useEffect(() => {
+    closePane()
+    return cancelPaneClose
+  }, [isSmall, activeChat?.Id, closePane, cancelPaneClose])
 
   const mainMenus = useCreation(() => {
     // 无 questionID 或非 ai-agent 来源时不展示「任务详情」入口
@@ -279,6 +338,10 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   // 任务详情/文件系统/流量/漏洞打开工作区对应 tab；导出/查看日志行为与 AIHorizontalScrollCard 一致
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
     switch (key) {
+      case 'task-list':
+      case 'timeline':
+        openPane(key)
+        break
       case 'task-board':
         syncCasualTaskTab()
         break
@@ -337,6 +400,17 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
     }
   })
 
+  const renderSmallBadge = useMemoizedFn((key: AIRightPanelMenuKey) => {
+    if (!isSmall) return undefined
+
+    switch (key) {
+      case 'risk':
+        return riskTotal > 0 ? riskTotal : undefined
+      default:
+        return undefined
+    }
+  })
+
   const renderMenuSuffix = useMemoizedFn((key: AIRightPanelMenuKey) => {
     if (key === 'traffic' && executionData?.http_flow_count) {
       return <span className={styles['count-tag']}>{executionData.http_flow_count}</span>
@@ -362,6 +436,28 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
     return null
   })
 
+  const renderPaneTitle = useMemoizedFn(() => {
+    switch (activePane) {
+      case 'task-list':
+        return t('AIRightPanel.taskList')
+      case 'timeline':
+        return t('AIRightPanel.timeline')
+      default:
+        return ''
+    }
+  })
+
+  const renderPaneContent = useMemoizedFn(() => {
+    switch (activePane) {
+      case 'task-list':
+        return <TaskListPane />
+      case 'timeline':
+        return <TimelineCard />
+      default:
+        return null
+    }
+  })
+
   const renderMoreToggle = useMemoizedFn(() => (
     <MenuItem
       icon={moreOpen ? <ChevronDoubleUpOutlined /> : <ChevronDoubleDownOutlined />}
@@ -377,6 +473,7 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
       <div
         className={classNames(styles['right-panel'], {
           [styles['right-panel-small']]: isSmall,
+          [styles['right-panel-hidden']]: !!activePane && !isSmall,
         })}
       >
         <div
@@ -393,8 +490,10 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
                 label={t(item.labelKey)}
                 small={isSmall}
                 suffix={renderMenuSuffix(item.key)}
-                smallBadge={isSmall && item.key === 'risk' && riskTotal > 0 ? riskTotal : undefined}
+                smallBadge={renderSmallBadge(item.key)}
                 onClick={() => handleMenuClick(item.key)}
+                onMouseEnter={() => handleMenuMouseEnter(item.key)}
+                onMouseLeave={() => handleMenuMouseLeave(item.key)}
               />
             ))}
           </div>
@@ -409,11 +508,24 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
                 label={t(item.labelKey)}
                 small={isSmall}
                 onClick={() => handleMenuClick(item.key)}
+                onMouseEnter={() => handleMenuMouseEnter(item.key)}
+                onMouseLeave={() => handleMenuMouseLeave(item.key)}
               />
             ))}
           {renderMoreToggle()}
         </div>
       </div>
+      {activePane && (
+        <div
+          className={classNames(styles['pane-slot'], { [styles['pane-slot-small']]: isSmall })}
+          onMouseEnter={isSmall ? cancelPaneClose : undefined}
+          onMouseLeave={isSmall ? schedulePaneClose : undefined}
+        >
+          <AIRightPanelPane title={renderPaneTitle()} onClose={closePane}>
+            {renderPaneContent()}
+          </AIRightPanelPane>
+        </div>
+      )}
       <ExportAILogsModal
         visible={exportModalVisible}
         onCancel={onExportCancel}

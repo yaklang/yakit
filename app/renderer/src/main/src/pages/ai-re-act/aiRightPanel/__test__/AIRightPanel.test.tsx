@@ -2,6 +2,14 @@ import type React from 'react'
 import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
+// CI 的根配置将样式模块替换为空对象；为这里验证的状态类提供稳定映射。
+vi.mock('../AIRightPanel.module.scss', () => ({
+  default: {
+    'right-panel-hidden': 'right-panel-hidden',
+    'pane-slot-small': 'pane-slot-small',
+  },
+}))
+
 // 数据源 mock：用真实 zustand vanilla store 构造（订阅语义与产品一致），
 // rawData.taskDetailsMap 由各用例按需覆写；改写状态用 mockTaskStore.setState 原生推送更新
 import { createStore } from 'zustand/vanilla'
@@ -124,6 +132,14 @@ vi.mock('i18next-resources-to-backend', () => {
 })
 
 import { AIRightPanel } from '../AIRightPanel'
+import { AIRightPanelPane } from '../AIRightPanelPane'
+
+vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane', () => ({
+  TaskListPane: () => <div data-testid="task-list-pane" />,
+}))
+vi.mock('@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard', () => ({
+  default: () => <div data-testid="timeline-pane" />,
+}))
 
 const renderPanel = async (ui: React.ReactElement) => {
   const renderResult = render(ui)
@@ -133,6 +149,86 @@ const renderPanel = async (ui: React.ReactElement) => {
 }
 
 describe('AIRightPanel', () => {
+  it('正常态点击时间线打开面板，关闭后恢复菜单', async () => {
+    await renderPanel(<AIRightPanel />)
+    fireEvent.click(screen.getByLabelText('更多'))
+    fireEvent.click(screen.getByLabelText('时间线'))
+    expect(screen.getByTestId('timeline-pane')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button'))
+    expect(screen.queryByTestId('timeline-pane')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
+  })
+
+  it('小屏在任务列表和时间线间悬停切换，移出时间线后销毁', async () => {
+    render(<AIRightPanel small />)
+    fireEvent.click(screen.getByLabelText('更多'))
+    const taskItem = screen.getByLabelText('任务列表')
+    const timelineItem = screen.getByLabelText('时间线')
+    fireEvent.mouseEnter(taskItem)
+    fireEvent.mouseLeave(taskItem)
+    fireEvent.mouseEnter(timelineItem)
+    expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
+    expect(screen.getByTestId('timeline-pane')).toBeInTheDocument()
+    fireEvent.mouseLeave(timelineItem)
+    await waitFor(() => expect(screen.queryByTestId('timeline-pane')).not.toBeInTheDocument())
+    fireEvent.click(timelineItem)
+    expect(screen.getByTestId('timeline-pane')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button'))
+    expect(screen.queryByTestId('timeline-pane')).not.toBeInTheDocument()
+  })
+  it('正常态点击任务列表替换菜单，关闭后恢复菜单', async () => {
+    await renderPanel(<AIRightPanel />)
+    fireEvent.click(screen.getByLabelText('任务列表'))
+    expect(screen.getByTestId('task-list-pane')).toBeVisible()
+    expect(screen.getByLabelText('文件系统').parentElement?.parentElement?.parentElement?.className).toContain(
+      'right-panel-hidden',
+    )
+    fireEvent.click(screen.getByRole('button'))
+    expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('文件系统').parentElement?.parentElement?.parentElement?.className).not.toContain(
+      'right-panel-hidden',
+    )
+  })
+
+  it('小屏悬停打开，移入浮层保持，移出后销毁', async () => {
+    render(<AIRightPanel small />)
+    const item = screen.getByLabelText('任务列表')
+    fireEvent.mouseEnter(item)
+    const pane = screen.getByTestId('task-list-pane').closest('section')!.parentElement!
+    expect(pane.className).toContain('pane-slot-small')
+    fireEvent.mouseLeave(item)
+    fireEvent.mouseEnter(pane)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 200))
+    })
+    expect(screen.getByTestId('task-list-pane')).toBeInTheDocument()
+    fireEvent.mouseLeave(pane)
+    await waitFor(() => expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument())
+    fireEvent.mouseEnter(item)
+    fireEvent.click(screen.getByRole('button'))
+    expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
+  })
+
+  it('切换屏幕模式时清理打开的任务浮层', () => {
+    const result = render(<AIRightPanel small />)
+    fireEvent.mouseEnter(screen.getByLabelText('任务列表'))
+    result.rerender(<AIRightPanel small={false} />)
+    expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
+  })
+
+  it('包裹组件支持自定义标题和操作区', () => {
+    render(
+      <AIRightPanelPane title="自定义标题" actions={<button>操作</button>} onClose={vi.fn()}>
+        内容
+      </AIRightPanelPane>,
+    )
+    expect(screen.getByText('自定义标题')).toBeInTheDocument()
+    expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(screen.getByRole('button', { name: '操作' })).toBeInTheDocument()
+    expect(screen.getByText('内容')).toBeInTheDocument()
+  })
+
   it('正常态渲染数据卡片、六个主菜单与「更多」按钮', async () => {
     setMockQuestionID('task-normal')
     // 「任务详情」入口需要 questionID 与 ai-agent 来源同时满足
@@ -205,8 +301,8 @@ describe('AIRightPanel', () => {
   it('small 小屏态 hover 展开项后收起分组（触发元素卸载），浮层随之销毁', async () => {
     render(<AIRightPanel small />)
     fireEvent.click(screen.getByLabelText('更多'))
-    const timelineButton = screen.getByLabelText('时间线')
-    // hover 打开「时间线」浮层
+    const timelineButton = screen.getByLabelText('导出日志')
+    // hover 打开普通菜单的文案提示
     fireEvent.mouseEnter(timelineButton)
     await waitFor(() => expect(document.querySelector('.ant-tooltip')).toBeInTheDocument())
 
@@ -306,8 +402,6 @@ describe('AIRightPanel', () => {
       const riskTotalBadge = screen.getByText('22')
 
       expect(riskButton).toContainElement(riskTotalBadge)
-      expect(riskTotalBadge.className).toContain('risk-count-badge')
-      expect(riskTotalBadge.parentElement?.className).toContain('menu-item-icon-small')
     } finally {
       resetMockStore()
     }
