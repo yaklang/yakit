@@ -74,11 +74,9 @@
     "try_start_local_process": "Attempting to start local process",
     "remote_mode_no_auto_start": "Remote mode does not auto-start local engine",
     "start_local_engine_with_port": "Starting local engine with standard permissions on port {{port}}",
-    "engine_start_failed": "Engine start failed: {{status}}: {{message}}",
     "engine_start_interrupted": "Engine start command interrupted or unexpected error: {{error}}",
     "engine_ready_to_connect": "Engine is ready to connect",
     "engine_not_fully_started": "Engine not fully started, unable to connect. Failed attempts: {{count}}",
-    "command_timeout_retry": "Command timed out. Click to retry",
     "engine_start_interrupted_check_log": "Engine start command interrupted or unexpected error. Check logs for details..."
   },
   "YakitLoading": {
@@ -111,7 +109,8 @@
     "exit": "Exit",
     "open_engine_files": "Open Engine Files",
     "disconnect": "Disconnect",
-    "more_engine_versions": "More Engine Versions"
+    "more_engine_versions": "More Engine Versions",
+    "port_denied_retry": "Retry as Administrator"
   },
   "UpdateYakitHint": {
     "download_complete": "Download complete",
@@ -201,19 +200,11 @@
     }
   },
   "LocalEngine": {
-    "checking_secret_password_mode": "Checking random password mode...",
-    "secret_password_check_passed": "Check passed, random password mode is supported",
-    "command_timeout_check_log": "Command timed out. Check logs for details...",
-    "engine_connect_timeout_check_log": "Engine connection timed out. Check logs for details...",
+    "checking_secret_password_mode": "Checking engine environment...",
+    "secret_password_check_passed": "Engine environment check passed",
     "engine_version_low_reset": "Engine version is outdated. Click to reset engine version...",
     "engine_version_low_download": "Engine version is outdated. Click to download engine update...",
-    "port_unavailable_check_log": "Port unavailable. Check log errors for details...",
-    "antivirus_blocked_check_log": "Blocked by antivirus. Add the app to the allowlist and restart...",
     "engine_connect_error_reset": "Engine connection failed. Click to reset engine version...",
-    "database_error_check_log": "Local database error detected. Click to repair...",
-    "cannot_start_contact_staff": "Unable to start. Send logs to support for assistance...",
-    "failure_reason": "[Reason]: {{status}}: {{message}}",
-    "none": "None",
     "dev_env_direct_connect": "Development environment, connecting engine directly",
     "checking_software_update": "Checking for software updates...",
     "skip_check_hint": "Check skipped (can be enabled in software update settings)",

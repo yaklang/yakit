@@ -74,11 +74,9 @@
     "try_start_local_process": "嘗試啟動本機進程",
     "remote_mode_no_auto_start": "遠端模式不自動啟動本機引擎",
     "start_local_engine_with_port": "開始以普通權限啟動本機引擎進程，本機埠為: {{port}}",
-    "engine_start_failed": "引擎啟動失敗:{{status}}:{{message}}",
     "engine_start_interrupted": "引擎啟動命令被中斷或意外情況：{{error}}",
     "engine_ready_to_connect": "引擎已準備好，可以進行連接",
     "engine_not_fully_started": "引擎未完全啟動，無法連接，失敗次數：{{count}}",
-    "command_timeout_retry": "命令執行逾時，請點擊重新執行",
     "engine_start_interrupted_check_log": "引擎啟動命令被中斷或意外情況，可查看日誌詳細資訊..."
   },
   "YakitLoading": {
@@ -111,7 +109,8 @@
     "exit": "退出",
     "open_engine_files": "開啟引擎檔案",
     "disconnect": "中斷連接",
-    "more_engine_versions": "更多引擎版本"
+    "more_engine_versions": "更多引擎版本",
+    "port_denied_retry": "以管理員身分重試"
   },
   "UpdateYakitHint": {
     "download_complete": "下載完畢",
@@ -201,19 +200,11 @@
     }
   },
   "LocalEngine": {
-    "checking_secret_password_mode": "開始檢查隨機密碼模式中...",
-    "secret_password_check_passed": "檢查通過，已支援隨機密碼模式",
-    "command_timeout_check_log": "命令執行逾時，可查看日誌詳細資訊...",
-    "engine_connect_timeout_check_log": "引擎連接逾時，可查看日誌詳細資訊...",
+    "checking_secret_password_mode": "正在檢查引擎環境...",
+    "secret_password_check_passed": "引擎環境檢查通過",
     "engine_version_low_reset": "引擎版本低，可點擊重置引擎版本更新...",
     "engine_version_low_download": "引擎版本低，可點擊下載引擎更新...",
-    "port_unavailable_check_log": "埠不可用，可查看日誌報錯資訊進行處理...",
-    "antivirus_blocked_check_log": "被防毒軟體攔截，可將應用加入白名單後重新啟動...",
     "engine_connect_error_reset": "連接引擎出現問題，可點擊重置引擎版本更新...",
-    "database_error_check_log": "偵測到本機資料庫出現錯誤，可點擊修復進行處理...",
-    "cannot_start_contact_staff": "無法啟動，可將日誌資訊傳送給工作人員處理...",
-    "failure_reason": "[Reason]：{{status}}：{{message}}",
-    "none": "無",
     "dev_env_direct_connect": "開發環境，直接連接引擎",
     "checking_software_update": "檢查軟體是否有更新...",
     "skip_check_hint": "跳過檢查(可在軟體更新處設定啟動)",

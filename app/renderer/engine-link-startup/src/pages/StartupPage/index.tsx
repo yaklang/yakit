@@ -856,8 +856,34 @@ export const StartupPage: React.FC = () => {
         setCustomPort(extra.port)
         handleStartLocalLink(isCheckVersion.current)
         return
+      case 'port_denied':
+      case 'endpoint_unreachable':
+      case 'timeout':
+      case 'process_error':
+      case 'unknownReason':
+      case 'unknown':
+      case 'exception':
+        // check 阶段失败，重新走完整 check 流程
+        setRestartLoading(true)
+        handleStartLocalLink(isCheckVersion.current)
+        return
+      case 'build_yak_error':
+      case 'dial_error':
+        // 引擎服务构建或连接失败，重置引擎版本
+        setRestartLoading(true)
+        safeSetYakitStatus('skipAgreement_Install')
+        return
+      case 'call_error':
+        // 认证失败，重新连接
+        setRestartLoading(true)
+        handleStartLocalLink(isCheckVersion.current)
+        return
       case 'start_timeout':
-        // 启动yak超时
+      case 'engine_exited':
+      case 'engine_init_failed':
+      case 'engine_failed':
+      case 'exit':
+        // start 阶段失败，重新启动引擎
         setTimeoutLoading(setRestartLoading, 5000)
         onStartLinkEngine()
         return

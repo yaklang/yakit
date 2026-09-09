@@ -298,7 +298,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
       )
     }
 
-    if (yakitStatus === 'allow-secret-error') {
+    if (yakitStatus === 'allow-secret-error' || yakitStatus === 'build_yak_error' || yakitStatus === 'dial_error') {
       return (
         <>
           <YakitButton
@@ -321,6 +321,41 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             size="large"
             loading={restartLoading}
             onClick={() => btnClickCallback('start_timeout')}
+          >
+            {t('YakitLoading.retry')}
+          </YakitButton>
+        </>
+      )
+    }
+
+    if (yakitStatus === 'port_denied') {
+      return (
+        <>
+          <YakitButton
+            className={styles['btn-style']}
+            size="large"
+            loading={restartLoading}
+            onClick={() => btnClickCallback('port_denied')}
+          >
+            {t('YakitLoading.port_denied_retry')}
+          </YakitButton>
+        </>
+      )
+    }
+
+    if (
+      yakitStatus === 'endpoint_unreachable' ||
+      yakitStatus === 'engine_exited' ||
+      yakitStatus === 'engine_init_failed' ||
+      yakitStatus === 'engine_failed'
+    ) {
+      return (
+        <>
+          <YakitButton
+            className={styles['btn-style']}
+            size="large"
+            loading={restartLoading}
+            onClick={() => btnClickCallback(yakitStatus)}
           >
             {t('YakitLoading.retry')}
           </YakitButton>
@@ -575,6 +610,22 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
       )
     }
 
+    // 兜底: 未知状态显示重试按钮，不让用户卡住
+    if (yakitStatus) {
+      return (
+        <>
+          <YakitButton
+            className={styles['btn-style']}
+            size="large"
+            loading={restartLoading}
+            onClick={() => btnClickCallback('start_timeout')}
+          >
+            {t('YakitLoading.retry')}
+          </YakitButton>
+        </>
+      )
+    }
+
     return null
   }, [yakitStatus, restartLoading, engineMode, checkStatus, buildInEngineVersion, dbPathKey, countdown, i18nRefresh])
 
@@ -597,6 +648,20 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
       'allow-secret-error',
       'check_yak_version_error',
       'start_timeout',
+      'port_denied',
+      'endpoint_unreachable',
+      'engine_exited',
+      'engine_init_failed',
+      'engine_failed',
+      'timeout',
+      'process_error',
+      'exit',
+      'build_yak_error',
+      'dial_error',
+      'call_error',
+      'unknownReason',
+      'unknown',
+      'exception',
       'error',
       'break',
     ]

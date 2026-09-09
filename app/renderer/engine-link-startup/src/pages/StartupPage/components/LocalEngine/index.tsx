@@ -76,53 +76,20 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           return
         }
         allowSecretLocalJson.current = null
-        switch (res.status) {
-          case 'timeout':
-            setLog((arr) => arr.concat([t('LocalEngine.command_timeout_check_log')]))
-            setYakitStatus('check_timeout')
-            break
-          case 'call_error':
-            setLog((arr) => arr.concat([t('LocalEngine.engine_connect_timeout_check_log')]))
-            setYakitStatus('check_timeout')
-            break
-          case 'old_version':
-            setLog((arr) =>
-              arr.concat([
-                buildInEngineVersion
-                  ? t('LocalEngine.engine_version_low_reset')
-                  : t('LocalEngine.engine_version_low_download'),
-              ]),
-            )
-            setYakitStatus('old_version')
-            break
-          case 'port_occupied':
-            setLog((arr) => arr.concat([t('LocalEngine.port_unavailable_check_log')]))
-            setYakitStatus('port_occupied_prev')
-            break
-          case 'antivirus_blocked':
-            setLog((arr) => arr.concat([t('LocalEngine.antivirus_blocked_check_log')]))
-            setYakitStatus('antivirus_blocked')
-            break
-          case 'build_yak_error':
-          case 'dial_error':
-            setLog((arr) => arr.concat([t('LocalEngine.engine_connect_error_reset')]))
-            setYakitStatus('skipAgreement_Install')
-            break
-          case 'database_error':
-            setLog((arr) => arr.concat([t('LocalEngine.database_error_check_log')]))
-            setYakitStatus('database_error')
-            break
-          default:
-            setLog((arr) =>
-              arr.concat([
-                t('LocalEngine.cannot_start_contact_staff'),
-                t('LocalEngine.failure_reason', {
-                  status: res.status,
-                  message: res.message || t('LocalEngine.none'),
-                }),
-              ]),
-            )
-            setYakitStatus('allow-secret-error')
+        // 主进程已组装好用户可读的 message，前端只管显示 + 切换 UI 状态
+        setLog((arr) => arr.concat([res.message || '引擎环境检查失败，请查看日志详细信息']))
+        // 旧版本场景保留特殊处理
+        if (res.status === 'old_version') {
+          setLog((arr) =>
+            arr.concat([
+              buildInEngineVersion
+                ? t('LocalEngine.engine_version_low_reset')
+                : t('LocalEngine.engine_version_low_download'),
+            ]),
+          )
+          setYakitStatus('old_version')
+        } else {
+          setYakitStatus(res.status)
         }
       } catch (error) {
         // 旧调用直接跳过

@@ -180,7 +180,7 @@ describe('LocalEngine Component', () => {
       await initEngine()
 
       await waitFor(() => {
-        expect(props.setYakitStatus).toHaveBeenCalledWith('check_timeout')
+        expect(props.setYakitStatus).toHaveBeenCalledWith('timeout')
       })
     })
 
@@ -206,7 +206,7 @@ describe('LocalEngine Component', () => {
       await initEngine()
 
       await waitFor(() => {
-        expect(props.setYakitStatus).toHaveBeenCalledWith('port_occupied_prev')
+        expect(props.setYakitStatus).toHaveBeenCalledWith('port_occupied')
       })
     })
 
@@ -232,7 +232,7 @@ describe('LocalEngine Component', () => {
       await initEngine()
 
       await waitFor(() => {
-        expect(props.setYakitStatus).toHaveBeenCalledWith('skipAgreement_Install')
+        expect(props.setYakitStatus).toHaveBeenCalledWith('build_yak_error')
       })
     })
 
@@ -259,7 +259,7 @@ describe('LocalEngine Component', () => {
       await initEngine()
 
       await waitFor(() => {
-        expect(props.setYakitStatus).toHaveBeenCalledWith('allow-secret-error')
+        expect(props.setYakitStatus).toHaveBeenCalledWith('unknown')
       })
     })
 

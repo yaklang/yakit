@@ -139,19 +139,13 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                   props.onKeepaliveShouldChange(true)
                 }
               } else {
-                if (res.status === 'timeout') {
-                  props.setCheckLog([t('YaklangEngineWatchDog.command_timeout_retry')])
-                  props.setYakitStatus('start_timeout')
-                } else {
-                  outputToWelcomeConsole(
-                    t('YaklangEngineWatchDog.engine_start_failed', {
-                      status: res.status,
-                      message: res.message,
-                    }),
-                  )
-                }
-                debugToPrintLog(`[ERROR] 本地新引擎进程启动失败: ${res.status + ':' + res.message}`)
+                // 主进程已组装好用户可读的 message，前端只管显示
+                const failMsg = res.message || '引擎启动失败，请查看日志详细信息'
+                outputToWelcomeConsole(failMsg)
+                props.setCheckLog([failMsg])
+                props.setYakitStatus(res.status)
               }
+              debugToPrintLog(`[ERROR] 本地新引擎进程启动失败: ${res.status + ':' + res.message}`)
               startingUp.current = false
             })
             .catch((error) => {

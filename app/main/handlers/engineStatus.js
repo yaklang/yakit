@@ -256,7 +256,8 @@ module.exports = (win, callback, getClient, newClient) => {
       hostFormatted = `${hostRaw.substr(0, hostRaw.lastIndexOf(':'))}`
     }
     const addr = `${hostFormatted}:${portFromRaw}`
-    engineLogOutputFileAndUI(win, `原始参数为: ${JSON.stringify(params)}`)
+    const safeConnParams = { Host: params['Host'], Port: params['Port'], IsTLS: params['IsTLS'], Sudo: params['Sudo'] }
+    engineLogOutputFileAndUI(win, `原始参数为: ${JSON.stringify(safeConnParams)}`)
     engineLogOutputFileAndUI(win, `开始连接引擎地址为：${addr} Host: ${hostRaw} Port: ${portFromRaw}`)
     GLOBAL_YAK_SETTING.defaultYakGRPCAddr = addr
 

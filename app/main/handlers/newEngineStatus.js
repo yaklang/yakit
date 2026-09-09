@@ -9,6 +9,172 @@ const runningTasks = new Map()
 
 const ECHO_TEST_MSG = 'Hello Yakit!'
 
+// #region 引擎 stdout 事件解析
+
+/**
+ * 解析引擎 stdout 单行事件
+ * 事件前缀:
+ *   "yak grpc ready {JSON}"  — 成功,引擎已监听
+ *   "yak grpc failed {JSON}" — 失败,引擎要退出
+ *   "yak grpc ok"            — 旧文本标记,不再据此判定成功
+ * @param {string} line 单行 stdout (已 trim)
+ * @returns {object|null}
+ */
+function parseEngineStdoutLine(line) {
+  if (line.startsWith('yak grpc ready ')) {
+    try {
+      const data = JSON.parse(line.substring('yak grpc ready '.length))
+      return {
+        type: 'ready',
+        schemaVersion: data.schemaVersion,
+        address: data.address,
+        transport: data.transport || 'tcp',
+        instanceId: data.instanceId,
+        engineVersion: data.engineVersion,
+        phaseI18n: data.phaseI18n,
+      }
+    } catch (e) {
+      return null
+    }
+  }
+  if (line.startsWith('yak grpc failed ')) {
+    try {
+      const data = JSON.parse(line.substring('yak grpc failed '.length))
+      return {
+        type: 'failed',
+        schemaVersion: data.schemaVersion,
+        phase: data.phase,
+        reason: data.reason,
+        reasonCode: data.reasonCode || '',
+        elapsedMs: data.elapsedMs,
+        version: data.version,
+        phaseI18n: data.phaseI18n,
+        reasonI18n: data.reasonI18n || null,
+      }
+    } catch (e) {
+      return null
+    }
+  }
+  if (line === 'yak grpc ok') {
+    return { type: 'log_ok' }
+  }
+  return null
+}
+
+/**
+ * 将引擎 failed 事件的 reasonCode + phase 映射到 status 值
+ * @param {string} reasonCode
+ * @param {string} phase
+ * @returns {string}
+ */
+function mapEngineFailedToStatus(reasonCode, phase) {
+  if (reasonCode === 'tcp_bind_in_use') return 'port_occupied'
+  if (reasonCode === 'tcp_bind_denied') return 'port_denied'
+  if (reasonCode === 'tcp_bind_failed') return 'endpoint_unreachable'
+  if (phase === 'database') return 'database_error'
+  if (phase === 'serve') return 'engine_exited'
+  if (phase === 'build_server' || phase === 'cert' || phase === 'init') return 'engine_init_failed'
+  return 'engine_failed'
+}
+
+/**
+ * 从引擎输出中提取 reasonI18n 的中文文案
+ * @param {object} reasonI18n - 引擎输出的 reasonI18n 字段
+ * @returns {string} 中文文案，无值时返回空字符串
+ */
+function pickReasonZh(reasonI18n) {
+  if (!reasonI18n) return ''
+  return reasonI18n.zh || ''
+}
+
+/**
+ * 从引擎输出中提取 phaseI18n 的中文文案
+ * @param {object} phaseI18n - 引擎输出的 phaseI18n 字段
+ * @returns {string} 中文文案，无值时返回空字符串
+ */
+function pickPhaseZh(phaseI18n) {
+  if (!phaseI18n) return ''
+  return phaseI18n.zh || ''
+}
+
+/**
+ * 组装 check 阶段用户可读的 message
+ * 引擎已在每个失败点直接设定 reasonI18n，主进程取来即用，不按 reasonCode 再拼文案。
+ * 当前 dev 引擎的 check-secret JSON 有 phaseI18n 但尚未输出 reasonI18n，
+ * 此时从 info 的 [reasonCode] 前缀 + phase 兜底拼文案。
+ * buildin 旧引擎无 JSON 输出，走 old_version/antivirus_blocked 分支，不会进入此函数。
+ * @param {object} json - check-secret-local-grpc 输出的 JSON
+ * @param {string} reasonCode - 提取出的分类码（仅供日志/诊断）
+ * @param {object} params - 调用参数（含 port）
+ * @returns {string}
+ */
+function buildCheckMessage(json, reasonCode, params) {
+  // 1. 优先用引擎提供的 reasonI18n（核心字段，取来即用）
+  const reasonZh = pickReasonZh(json.reasonI18n)
+  if (reasonZh) return reasonZh
+
+  // 2. 当前 dev 引擎兜底：有 phaseI18n 但缺 reasonI18n，从 info 提取 + phase 拼文案
+  const port = json.port || (params && params.port) || ''
+  const phaseZh = pickPhaseZh(json.phaseI18n)
+  const info = json.info || ''
+  const portLabel = port ? `端口 ${port} ` : ''
+
+  // 旧引擎根据 info 前缀判断具体场景
+  const codeMatch = info.match(/^\[([a-z_]+)\]/)
+  const legacyCode = codeMatch ? codeMatch[1] : ''
+  if (legacyCode === 'tcp_bind_in_use') return `${portLabel}被占用，请结束旧进程或切换端口`
+  if (legacyCode === 'tcp_bind_denied') return `${portLabel}被系统阻止，请以管理员身份运行或检查防火墙`
+  if (legacyCode === 'tcp_bind_failed') return `${portLabel}监听失败，请检查网络配置`
+  if (json.phase === 'database') return `数据库初始化失败，可点击修复进行处理`
+  if (json.phase === 'build_server') return `引擎服务构建失败，请查看日志或联系支持`
+  if (json.phase === 'dial') return `引擎连接失败，请查看日志详细信息`
+  if (json.phase === 'version_rpc') return `引擎认证失败，请查看日志详细信息`
+  if (json.phase === 'wait_connect') return `引擎服务就绪超时，请查看日志或重试`
+
+  // 3. 最终兜底
+  if (info) return info
+  if (phaseZh) return `${phaseZh}失败，请查看日志详细信息`
+  return '引擎环境检查失败，请查看日志详细信息'
+}
+
+/**
+ * 组装 start 阶段用户可读的 message
+ * 引擎已在每个失败点直接设定 reasonI18n，主进程取来即用，不按 reasonCode 再拼文案。
+ * 当前 dev 引擎的 yak grpc failed 事件有 phaseI18n 但可能未输出 reasonI18n，
+ * 此时从 reason 的 [reasonCode] 前缀 + phase 兜底拼文案。
+ * buildin 旧引擎无 failed 事件输出，走轮询 + 进程退出码判定，不会进入此函数。
+ * @param {object} event - 引擎 failed 事件 (parseEngineStdoutLine 输出)
+ * @returns {string}
+ */
+function buildStartMessage(event) {
+  if (!event) return '引擎启动失败，请查看日志详细信息'
+
+  // 1. 优先用引擎提供的 reasonI18n（核心字段，取来即用）
+  const reasonZh = pickReasonZh(event.reasonI18n)
+  if (reasonZh) return reasonZh
+
+  // 2. 当前 dev 引擎兜底：有 phaseI18n 但缺 reasonI18n，从 reason 提取 + phase 拼文案
+  const phaseZh = pickPhaseZh(event.phaseI18n)
+  const reason = event.reason || ''
+
+  // 旧引擎根据 reason 前缀判断具体场景
+  const codeMatch = reason.match(/^\[([a-z_]+)\]/)
+  const legacyCode = codeMatch ? codeMatch[1] : ''
+  if (legacyCode === 'tcp_bind_in_use') return `端口被另一个进程占用，请结束旧进程或切换端口`
+  if (legacyCode === 'tcp_bind_denied') return `端口被系统策略阻止，请以管理员身份运行或检查防火墙`
+  if (legacyCode === 'tcp_bind_failed') return `网络监听失败，请检查网络配置`
+  if (event.phase === 'database') return `数据库初始化失败，可点击修复进行处理`
+  if (event.phase === 'serve') return `引擎服务异常退出，请查看日志或重试`
+  if (event.phase === 'build_server' || event.phase === 'cert') return `引擎服务构建失败，请查看日志或联系支持`
+
+  // 3. 最终兜底
+  if (reason) return reason
+  if (phaseZh) return `${phaseZh}失败，请查看日志详细信息`
+  return '引擎启动失败，请查看日志详细信息'
+}
+
+// #endregion
+
 /** 各版本下的数据库环境变量 */
 const DefaultDBFileEnv = {
   irify: {
@@ -84,7 +250,7 @@ module.exports = {
             if (checkId !== currentCheckId || successDetected || killed) return
             killFun(true)
             engineLogOutputFileAndUI(win, `----- 检查随机密码模式超时 -----`)
-            reject({ status: 'timeout', message: '检查随机密码模式超时' })
+            reject({ status: 'timeout', message: '引擎环境检查超时，请查看日志详细信息' })
           }, timeoutMs)
 
           subprocess.stdout.on('data', (data) => {
@@ -107,7 +273,7 @@ module.exports = {
             clearTimeout(timeoutId)
             engineLogOutputFileAndUI(win, `----- 检查随机密码模式失败 -----`)
             engineLogOutputFileAndUI(win, `process_error: ${error.message}`)
-            reject({ status: 'process_error', message: error.message })
+            reject({ status: 'process_error', message: `引擎进程启动失败：${error.message}` })
           })
 
           subprocess.on('close', (code) => {
@@ -135,57 +301,49 @@ module.exports = {
             }
 
             if (json && json.ok === false) {
-              const reasons = Array.isArray(json.reason)
-                ? json.reason.map((r) => String(r))
-                : [String(json.reason || json.info || combinedOutput || '')]
-              const has = (keyword) => reasons.some((r) => r.includes(keyword))
-
-              if (has('net.Listen(tcp, addr) failed')) {
-                const msg = `端口 ${params.port} 已被占用，请检查是否已有其他 Yakit 实例或进程正在运行，建议用户手动释放或修改端口。`
-                engineLogOutputFileAndUI(win, `----- 检查失败: ${msg} -----`)
-                return reject({ status: 'port_occupied', message: msg, json })
-              } else if (has('build yak grpc server failed')) {
-                const msg = json.info
-                engineLogOutputFileAndUI(win, `----- 检查失败: build yak grpc server failed：${msg} -----`)
-                return reject({
-                  status: 'build_yak_error',
-                  message: msg,
-                  json,
-                })
-              } else if (has('database error')) {
-                const msg = json.info
-                engineLogOutputFileAndUI(win, `----- 检查失败: database error：${msg} -----`)
-                return reject({
-                  status: 'database_error',
-                  message: msg,
-                  json,
-                })
-              } else if (has('dial grpc server failed')) {
-                // 远程，目前没有check处理
-                const msg = json.info
-                engineLogOutputFileAndUI(win, `----- 检查失败: dial grpc server failed：${msg} -----`)
-                return reject({
-                  status: 'dial_error',
-                  message: msg,
-                  json,
-                })
-              } else if (has('call Version RPC failed')) {
-                // 远程，目前没有check处理
-                const msg = json.info
-                engineLogOutputFileAndUI(win, `----- 检查失败: call Version RPC failed：${msg} -----`)
-                return reject({
-                  status: 'call_error',
-                  message: msg,
-                  json,
-                })
-              } else {
-                engineLogOutputFileAndUI(win, `----- 检查失败: unknownReason：${json.info || '未知原因'} -----`)
-                return reject({
-                  status: 'unknownReason',
-                  message: json.info || '未知原因',
-                  json,
-                })
+              // 优先用引擎输出的 reasonCode（新引擎），兜底从 info 正则提取（旧引擎）
+              let reasonCode = json.reasonCode || ''
+              if (!reasonCode) {
+                const infoStr = json.info || ''
+                const codeMatch = infoStr.match(/^\[([a-z_]+)\]/)
+                if (codeMatch) reasonCode = codeMatch[1]
+                // 旧引擎 reason 常量映射
+                if (!reasonCode) {
+                  const reasonStr = Array.isArray(json.reason) ? json.reason[0] : json.reason || ''
+                  if (reasonStr.includes('database')) reasonCode = 'database_error'
+                  else if (reasonStr.includes('build yak grpc')) reasonCode = 'build_server_failed'
+                  else if (reasonStr.includes('dial grpc')) reasonCode = 'dial_failed'
+                  else if (reasonStr.includes('Version RPC')) reasonCode = 'version_rpc_failed'
+                  else if (reasonStr.includes('net.Listen')) reasonCode = 'tcp_bind_failed'
+                  else if (reasonStr.includes('waiting grpc')) reasonCode = 'wait_connect_failed'
+                }
               }
+              // 兼容引擎 phaseI18n 的 Zh/zh 两种字段名
+              const pi = json.phaseI18n || {}
+              const ri = json.reasonI18n || {}
+              const engineEvent = {
+                phase: json.phase || '',
+                reasonCode,
+                reason: json.info || '',
+                phaseI18n: { zh: pi.zh || '', en: pi.en || '' },
+                reasonI18n: ri.zh ? { zh: ri.zh || '', en: ri.en || '' } : null,
+              }
+              // 组装用户可读的 message
+              const message = buildCheckMessage(json, reasonCode, params)
+              // 映射 status
+              let status
+              if (reasonCode === 'tcp_bind_in_use') status = 'port_occupied'
+              else if (reasonCode === 'tcp_bind_denied') status = 'port_denied'
+              else if (reasonCode === 'tcp_bind_failed') status = 'endpoint_unreachable'
+              else if (reasonCode === 'database_error' || json.phase === 'database') status = 'database_error'
+              else if (reasonCode === 'build_server_failed' || json.phase === 'build_server') status = 'build_yak_error'
+              else if (reasonCode === 'dial_failed' || json.phase === 'dial') status = 'dial_error'
+              else if (reasonCode === 'version_rpc_failed' || json.phase === 'version_rpc') status = 'call_error'
+              else if (reasonCode === 'wait_connect_failed' || json.phase === 'wait_connect') status = 'timeout'
+              else status = 'unknownReason'
+
+              engineLogOutputFileAndUI(win, `----- 检查失败: ${message} -----`)
+              return reject({ status, message, json, engineEvent })
             }
 
             if (
@@ -193,30 +351,30 @@ module.exports = {
               /(no such file or directory|The system cannot find the file specified)/i.test(combinedOutput)
             ) {
               engineLogOutputFileAndUI(win, `----- 检查失败：旧版本引擎不支持随机密码模式 -----`)
-              return reject({ status: 'old_version', message: '旧版本引擎不支持随机密码模式' })
+              return reject({ status: 'old_version', message: '引擎版本过低，请更新引擎' })
             }
 
             if (!json && /(flag provided but not defined)/i.test(combinedOutput)) {
               engineLogOutputFileAndUI(win, `----- 检查失败：旧版本无法支持某些参数 -----`)
-              return reject({ status: 'old_version', message: '旧版本无法支持某些参数' })
+              return reject({ status: 'old_version', message: '引擎版本过低，请更新引擎' })
             }
 
             if (!json && !stdout && !stderr) {
               engineLogOutputFileAndUI(win, `----- 检查失败：可能被杀软或防火墙拦截或无法找到引擎 -----`)
               return reject({
                 status: 'antivirus_blocked',
-                message: '可能被杀软或防火墙拦截或无法找到引擎',
+                message: '引擎被杀毒软件拦截，可将应用加入白名单后重启',
               })
             }
 
             engineLogOutputFileAndUI(win, `----- 检查随机密码模式失败 -----`)
-            reject({ status: 'unknown', message: '未知错误，请查看详细日志信息' })
+            reject({ status: 'unknown', message: '引擎环境检查失败，请查看日志详细信息' })
           })
         } catch (e) {
           if (checkId !== currentCheckId) return
           engineLogOutputFileAndUI(win, `----- 执行检查命令时发生异常 -----`)
           engineLogOutputFileAndUI(win, `exception：${e}`)
-          reject({ status: 'exception', message: e.message || String(e) })
+          reject({ status: 'exception', message: `引擎环境检查异常：${e.message || String(e)}` })
         }
       }).catch(async (err) => {
         return Promise.reject({ ok: false, ...err })
@@ -233,6 +391,7 @@ module.exports = {
           status: safeError.status,
           message: safeError.message,
           json: safeError.json || null,
+          engineEvent: safeError.engineEvent || null,
         }
       }
     })
@@ -551,7 +710,13 @@ module.exports = {
         hostFormatted = `${hostRaw.substr(0, hostRaw.lastIndexOf(':'))}`
       }
       const addr = `${hostFormatted}:${portFromRaw}`
-      engineLogOutputFileAndUI(win, `原始参数为: ${JSON.stringify(params)}`)
+      const safeConnParams = {
+        Host: params['Host'],
+        Port: params['Port'],
+        IsTLS: params['IsTLS'],
+        Mode: params['Mode'],
+      }
+      engineLogOutputFileAndUI(win, `原始参数为: ${JSON.stringify(safeConnParams)}`)
       engineLogOutputFileAndUI(win, `开始连接引擎地址为：${addr} Host: ${hostRaw} Port: ${portFromRaw}`)
       GLOBAL_YAK_SETTING.defaultYakGRPCAddr = addr
 
@@ -600,7 +765,8 @@ module.exports = {
           const resultParams = isEnpriTraceAgent ? [...grpcParams, '--disable-output'] : grpcParams
 
           const command = getLocalYaklangEngine()
-          engineLogOutputFileAndUI(win, `启动命令: ${command} ${resultParams.join(' ')}`)
+          const safeResultParams = resultParams.map((p) => (p === password ? '***' : p))
+          engineLogOutputFileAndUI(win, `启动命令: ${command} ${safeResultParams.join(' ')}`)
 
           const defaltEnv = { ...process.env, YAKIT_HOME: getYakitHome() }
           const subprocess = childProcess.spawn(command, resultParams, {
@@ -619,6 +785,10 @@ module.exports = {
           const taskKey = 'start_' + checkId
           let cleaned = false
           let pollIntervalId = null
+          let stdoutLineBuffer = ''
+          let readyEventAddress = null
+          let engineFailedEvent = null
+          let settled = false
           const timeoutMs = 60000 // 增加到 60 秒，配合轮询检测
 
           /** 轮询检测引擎连接状态 */
@@ -634,7 +804,7 @@ module.exports = {
               }
 
               // 尝试连接引擎
-              const addr = `127.0.0.1:${port}`
+              const addr = readyEventAddress || `127.0.0.1:${port}`
               engineLogOutputFileAndUI(win, `轮询尝试连接引擎: ${addr}`)
 
               try {
@@ -698,13 +868,14 @@ module.exports = {
             if (checkId !== currentStartId || successDetected || killed) return
             killFun(true)
             engineLogOutputFileAndUI(win, `----- 启动本地引擎超时 (60s) -----`)
-            reject({ status: 'timeout', message: '启动本地引擎超时' })
+            reject({ status: 'timeout', message: '引擎启动超时，请查看日志或重试' })
           }, timeoutMs)
 
           /** 成功回调，确保只触发一次 */
           const onSuccess = (msg1, msg2) => {
-            if (checkId !== currentStartId || successDetected || killed) return
+            if (checkId !== currentStartId || successDetected || killed || settled) return
             successDetected = true
+            settled = true
             cleanup()
             cleanTask()
             clearTimeout(timeoutId)
@@ -718,6 +889,7 @@ module.exports = {
             stdout += output
             engineLogOutputFileAndUI(win, output)
 
+            // 检测数据库初始化标记（保留原有逻辑）
             const regex = /<json-f97f966eb7f8ba8fdb63e4d29109c058>(.*?)<json-f97f966eb7f8ba8fdb63e4d29109c058>/
 
             const match = output.match(regex)
@@ -729,9 +901,54 @@ module.exports = {
               win.webContents.send('startUp-engine-msg', 'LocalEngine.database_initializing')
             }
 
-            // 保留原有的 yak grpc ok 检测方式
-            if (/yak grpc ok/i.test(output)) {
-              onSuccess('引擎启动成功（通过 yak grpc ok 检测）', `检测到 'yak grpc ok'，引擎启动成功！`)
+            // 按行解析引擎 stdout 事件（yak grpc ready / failed / ok）
+            stdoutLineBuffer += output
+            const lines = stdoutLineBuffer.split('\n')
+            stdoutLineBuffer = lines.pop()
+            for (const line of lines) {
+              const trimmed = line.trim()
+              if (!trimmed) continue
+              const event = parseEngineStdoutLine(trimmed)
+              if (!event) continue
+              if (event.type === 'ready') {
+                if (settled || successDetected || killed) continue
+                if (event.address) readyEventAddress = event.address
+                engineLogOutputFileAndUI(
+                  win,
+                  `----- 收到引擎 ready 事件: address=${event.address} instanceId=${event.instanceId} transport=${event.transport} -----`,
+                )
+                // 立即尝试用 ready 事件提供的地址连接引擎
+                try {
+                  callback(readyEventAddress || `127.0.0.1:${port}`, '', password)
+                  newClient().Echo({ text: ECHO_TEST_MSG }, (err, data) => {
+                    if (settled || successDetected || killed) return
+                    if (err) {
+                      engineLogOutputFileAndUI(win, `ready 事件后首次连接失败，继续轮询等待...`)
+                      return
+                    }
+                    if (data && data['result'] === ECHO_TEST_MSG) {
+                      onSuccess(
+                        `引擎启动成功（ready 事件 + Echo 握手通过，instanceId=${event.instanceId}）`,
+                        `引擎启动成功！(instanceId=${event.instanceId})`,
+                      )
+                    }
+                  })
+                } catch (e) {
+                  engineLogOutputFileAndUI(win, `ready 事件后连接异常: ${e.message || e}`)
+                }
+              } else if (event.type === 'failed') {
+                if (settled || successDetected || killed) continue
+                settled = true
+                engineFailedEvent = event
+                cleanup()
+                cleanTask()
+                clearTimeout(timeoutId)
+                const status = mapEngineFailedToStatus(event.reasonCode, event.phase)
+                const message = buildStartMessage(event)
+                engineLogOutputFileAndUI(win, `----- 引擎启动失败: ${message} -----`)
+                reject({ status, message, engineEvent: event })
+              }
+              // type === 'log_ok': 仅记日志，不再据此判定成功
             }
           })
 
@@ -753,16 +970,20 @@ module.exports = {
             clearTimeout(timeoutId)
             engineLogOutputFileAndUI(win, `启动引擎出错: ${err.message}`)
             win.webContents.send('start-yaklang-engine-error', `本地引擎遭遇错误，错误原因为：${err}`)
-            reject({ status: 'process_error', message: err.message })
+            reject({ status: 'process_error', message: `引擎进程异常：${err.message}` })
           })
 
           subprocess.on('close', (code) => {
-            if (checkId !== currentStartId || killed || successDetected) return
+            if (checkId !== currentStartId || killed || successDetected || settled) return
             cleanup()
             cleanTask()
             clearTimeout(timeoutId)
             engineLogOutputFileAndUI(win, `----- 引擎进程退出，退出码: ${code} -----`)
-            reject({ status: 'exit', message: `引擎进程提前退出 (${code})` })
+            reject({
+              status: 'exit',
+              message: `引擎进程异常退出（退出码 ${code}），请查看日志或重试`,
+              engineEvent: engineFailedEvent,
+            })
           })
         } catch (e) {
           reject({ status: 'exception', message: e.message || String(e) })
@@ -781,6 +1002,7 @@ module.exports = {
           ok: false,
           status: safeError.status,
           message: safeError.message,
+          engineEvent: safeError.engineEvent || null,
         }
       }
     })
