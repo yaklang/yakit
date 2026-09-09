@@ -67,7 +67,9 @@ export const NotepadMenu: React.FC = React.memo(() => {
       classNames={{ root: classNames(extraStyles['menu-popover'], extraStyles['menu-popover-no-arrow']) }}
       placement="bottomRight"
       trigger="click"
-      content={<YakitMenu selectedKeys={[]} data={menuData} onClick={({ key }) => onMenuClick(String(key))} />}
+      content={
+        <YakitMenu width={216} selectedKeys={[]} data={menuData} onClick={({ key }) => onMenuClick(String(key))} />
+      }
       open={open}
       onOpenChange={(visible) => setOpen(visible)}
     >

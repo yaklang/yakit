@@ -28,7 +28,7 @@ describe('getSettingsGroupLabel', () => {
 })
 
 describe('SettingsMenu', () => {
-  it('侧边菜单覆盖全部锚点分组，且含尚未接线的 right-click-plugins', () => {
+  it('侧边菜单覆盖全部锚点分组', () => {
     const keys = SettingsMenu.flatMap((group) => group.items.map((item) => item.key))
     const expected: SettingsAnchor[] = [
       'general',
@@ -51,5 +51,7 @@ describe('SettingsSections', () => {
     expect(SettingsSections.appearance.theme).toBe('theme')
     expect(SettingsSections['ai-config'].permissions).toBe('permissions')
     expect(SettingsSections['yak-mcp'].toolConfig).toBe('tool-config')
+    expect(SettingsSections['right-click-plugins'].historySingle).toBe('plugin-extension-single')
+    expect(SettingsSections['right-click-plugins'].packet).toBe('packet-context-menu')
   })
 })

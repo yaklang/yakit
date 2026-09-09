@@ -9,10 +9,11 @@ import { GlobalConfigSettings } from './globalConfig/GlobalConfigSettings'
 import { AIModelSettings } from './aiModel/AIModelSettings'
 import { AIConfigSettings } from './aiConfig/AIConfigSettings'
 import { YakMcpSettings } from './yakMcp/YakMcpSettings'
+import { RightClickPluginsSettings } from './rightClickPlugins/RightClickPluginsSettings'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './SettingsContent.module.scss'
 
-const SettingsPanels: Partial<Record<SettingsAnchor, ComponentType>> = {
+const SettingsPanels: Record<SettingsAnchor, ComponentType> = {
   general: GeneralSettings,
   appearance: AppearanceSettings,
   reverse: ReverseSettings,
@@ -22,6 +23,7 @@ const SettingsPanels: Partial<Record<SettingsAnchor, ComponentType>> = {
   'ai-config': AIConfigSettings,
   'ai-model': AIModelSettings,
   'yak-mcp': YakMcpSettings,
+  'right-click-plugins': RightClickPluginsSettings,
 }
 
 const hideOuterTitle: Partial<Record<SettingsAnchor, true>> = {
@@ -32,6 +34,7 @@ const hideOuterTitle: Partial<Record<SettingsAnchor, true>> = {
   'ai-config': true,
   'ai-model': true,
   'yak-mcp': true,
+  'right-click-plugins': true,
 }
 
 interface SettingsContentProps {
@@ -62,13 +65,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
     <div ref={scrollerRef} className={styles['settings-content']}>
       <div key={anchor} className={styles['settings-content-body']}>
         {!hideOuterTitle[anchor as SettingsAnchor] && <div className={styles['settings-content-title']}>{title}</div>}
-        <div className={styles['settings-content-main']}>
-          {Panel ? (
-            <Panel />
-          ) : (
-            <div className={styles['settings-content-placeholder']}>{t('SettingsPage.placeholder', { anchor })}</div>
-          )}
-        </div>
+        <div className={styles['settings-content-main']}>{Panel && <Panel />}</div>
       </div>
     </div>
   )

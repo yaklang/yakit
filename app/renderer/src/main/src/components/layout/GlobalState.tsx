@@ -46,7 +46,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { ShieldCheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitApp, yakitHost, yakitPlugin, yakitReverse } from '@/services/electronBridge'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { SettingsSections } from '@/pages/settings/Settings'
+import { SettingsSections } from '@/pages/settings/constants'
 
 import { ShieldCheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 

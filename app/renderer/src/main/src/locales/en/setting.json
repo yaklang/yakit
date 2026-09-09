@@ -16,7 +16,6 @@
   },
   "SettingsPage": {
     "searchPlaceholder": "Search",
-    "placeholder": "Anchor: {{anchor}}",
     "group": {
       "preference": "Preferences",
       "system": "System",
@@ -72,6 +71,11 @@
     "yakMcp": {
       "openHistory": "Open call history",
       "enableColumn": "Enabled"
+    },
+    "rightClickPlugins": {
+      "tabSingle": "History (Single)",
+      "tabMultiple": "History (Multiple)",
+      "tabPacket": "Packet"
     }
   }
 }

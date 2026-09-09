@@ -36,6 +36,8 @@ export type YakitMenuItemType = YakitMenuItemProps | YakitMenuItemDividerProps
 export interface YakitMenuProp extends MenuProps {
   data?: YakitMenuItemType[]
   width?: number
+  /** 二级及以下菜单宽度，不传则与 width 相同 */
+  submenuWidth?: number
   type?: 'primary' | 'grey'
   /** 是否鼠标悬浮展示文字内容弹窗 */
   isHint?: boolean
@@ -52,6 +54,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
   const {
     data = [],
     width = 128,
+    submenuWidth,
     type = 'primary',
     isHint = false,
     className,
@@ -80,7 +83,9 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
     return ''
   })
 
-  const generateMenuInfo = useMemoizedFn((data: YakitMenuItemType) => {
+  const childWidth = submenuWidth ?? width
+
+  const generateMenuInfo = useMemoizedFn((data: YakitMenuItemType, itemWidth: number = width) => {
     if (
       typeof (data as any as YakitMenuItemDividerProps)['type'] !== 'undefined' &&
       (data as any as YakitMenuItemDividerProps).type === 'divider'
@@ -96,7 +101,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
       if (info.children && info.children.length > 0) {
         const itemInfo: ItemType = {
           label: (
-            <div style={{ minWidth: width }} className={classNames(styles['yakit-menu-item'])}>
+            <div style={{ minWidth: itemWidth }} className={classNames(styles['yakit-menu-item'])}>
               <div className={styles['yakit-submenu-item-content']}>
                 {info.itemIcon}
                 {isHint && !!hintTitle ? (
@@ -126,7 +131,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
         }
         const arr: ItemType[] = []
         for (const item of info.children) {
-          arr.push(generateMenuInfo(item))
+          arr.push(generateMenuInfo(item, childWidth))
         }
         itemInfo.children = itemInfo.children.concat(arr)
         return itemInfo
@@ -135,7 +140,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
         const itemInfo: ItemType = {
           label: (
             <div
-              style={{ minWidth: width }}
+              style={{ minWidth: itemWidth }}
               className={classNames(styles['yakit-menu-item'], itemMenuTypeClass(info.type) || '', {
                 [styles['yakit-menu-item-no-style']]: noStyle,
                 'yakit-menu-item-no-style': noStyle,

@@ -9,7 +9,7 @@ vi.mock('@/services/electronBridge', () => ({
   },
 }))
 
-type MatchMediaStub = MediaQueryList & { emit: (matches: boolean) => void }
+type MatchMediaStub = Omit<MediaQueryList, 'matches'> & { matches: boolean; emit: (matches: boolean) => void }
 
 function installMatchMedia(matches: boolean): MatchMediaStub {
   const listeners = new Set<EventListener>()

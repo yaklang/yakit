@@ -112,5 +112,10 @@ export const SettingsSections = {
   'yak-mcp': {
     toolConfig: 'tool-config',
   },
+  'right-click-plugins': {
+    historySingle: 'plugin-extension-single',
+    historyMultiple: 'plugin-extension-multiple',
+    packet: 'packet-context-menu',
+  },
   /** 快捷键页内 section 使用 ShortcutKeyPageName（如 global、yak-editor） */
 } as const

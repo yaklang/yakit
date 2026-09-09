@@ -4,11 +4,11 @@ import { SettingsContent } from '../SettingsContent'
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
-    t: (key: string, options?: { anchor?: string }) => {
-      if (key === 'SettingsPage.placeholder') return `placeholder:${options?.anchor}`
+    t: (key: string) => {
       if (key === 'SettingsPage.item.general') return '通用'
       if (key === 'SettingsPage.item.appearance') return '外观'
       if (key === 'SettingsPage.item.reverse') return '反连'
+      if (key === 'SettingsPage.item.right-click-plugins') return '右键插件管理'
       return key
     },
   }),
@@ -33,6 +33,9 @@ vi.mock('../globalConfig/GlobalConfigSettings', () => ({ GlobalConfigSettings: (
 vi.mock('../aiModel/AIModelSettings', () => ({ AIModelSettings: () => <div>model-panel</div> }))
 vi.mock('../aiConfig/AIConfigSettings', () => ({ AIConfigSettings: () => <div>ai-config-panel</div> }))
 vi.mock('../yakMcp/YakMcpSettings', () => ({ YakMcpSettings: () => <div>mcp-panel</div> }))
+vi.mock('../rightClickPlugins/RightClickPluginsSettings', () => ({
+  RightClickPluginsSettings: () => <div data-testid="panel-right-click-plugins">right-click-plugins-panel</div>,
+}))
 
 describe('SettingsContent', () => {
   afterEach(() => {
@@ -51,9 +54,10 @@ describe('SettingsContent', () => {
     expect(screen.getByTestId('panel-reverse')).toBeInTheDocument()
   })
 
-  it('未注册的 right-click-plugins 走 placeholder', () => {
+  it('right-click-plugins 渲染已注册面板且不显示外层标题', () => {
     render(<SettingsContent anchor="right-click-plugins" />)
-    expect(screen.getByText('placeholder:right-click-plugins')).toBeInTheDocument()
+    expect(screen.queryByText('右键插件管理')).not.toBeInTheDocument()
+    expect(screen.getByTestId('panel-right-click-plugins')).toBeInTheDocument()
   })
 
   it('section 存在时滚动到对应节点', () => {

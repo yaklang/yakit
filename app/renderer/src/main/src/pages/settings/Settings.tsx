@@ -7,7 +7,6 @@ import { SettingsSide } from './settingsSide/SettingsSide'
 import { SettingsContent } from './settingsContent/SettingsContent'
 
 export type { SettingsAnchor } from './constants'
-export { SettingsSections } from './constants'
 
 export interface SettingsProps {
   pageId?: string

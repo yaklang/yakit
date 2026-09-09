@@ -20,7 +20,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { PaintbrushOutlined, RefreshOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PaintbrushOutlined, SearchOutlined, RotateCcwOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { failed } from '@/utils/notification'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
@@ -208,7 +208,7 @@ export const ShortcutKeySettings: React.FC = () => {
               <YakitButton
                 type="outline1"
                 colors="danger"
-                icon={<RefreshOutlined color="currentColor" />}
+                icon={<RotateCcwOutlined color="currentColor" />}
                 onClick={resetAll}
               >
                 {t('ShortcutKey.resetAll')}
@@ -233,7 +233,7 @@ export const ShortcutKeySettings: React.FC = () => {
                 <YakitButton
                   type="text2"
                   size="small"
-                  icon={<RefreshOutlined color="currentColor" />}
+                  icon={<RotateCcwOutlined color="currentColor" />}
                   onClick={() => resetPage(section.page)}
                 />
               </div>

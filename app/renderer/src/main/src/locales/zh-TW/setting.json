@@ -16,7 +16,6 @@
   },
   "SettingsPage": {
     "searchPlaceholder": "請輸入關鍵詞搜尋",
-    "placeholder": "錨點：{{anchor}}",
     "group": {
       "preference": "偏好設定",
       "system": "系統設定",
@@ -72,6 +71,11 @@
     "yakMcp": {
       "openHistory": "打開調用歷史",
       "enableColumn": "開啟"
+    },
+    "rightClickPlugins": {
+      "tabSingle": "History (單選)",
+      "tabMultiple": "History (多選)",
+      "tabPacket": "資料包"
     }
   }
 }

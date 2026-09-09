@@ -16,7 +16,6 @@
   },
   "SettingsPage": {
     "searchPlaceholder": "请输入关键词搜索",
-    "placeholder": "锚点：{{anchor}}",
     "group": {
       "preference": "偏好设置",
       "system": "系统设置",
@@ -72,6 +71,11 @@
     "yakMcp": {
       "openHistory": "打开调用历史",
       "enableColumn": "开启"
+    },
+    "rightClickPlugins": {
+      "tabSingle": "History (单选)",
+      "tabMultiple": "History (多选)",
+      "tabPacket": "数据包"
     }
   }
 }
