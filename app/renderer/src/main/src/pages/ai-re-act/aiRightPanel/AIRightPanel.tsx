@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react'
 import { TaskListPane } from '@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane'
 import { AIRightPanelPane } from './AIRightPanelPane'
 import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard'
+import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
+import { AI_AGENT_HISTORY_AI_SOURCES } from '../hooks/useGetChatDataStoreKey'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -29,10 +32,17 @@ import {
   NewspaperOutlined,
   ScrollTextOutlined,
   TimelineOutlined,
+  XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tooltip } from 'antd'
 import styles from './AIRightPanel.module.scss'
-import type { AIRightPanelMenuKey, AIRightPanelProps, AIRightPanelRiskCounts, AIRightPanelToolStats } from './type'
+import type {
+  AIRightPanelMenuKey,
+  AIRightPanelPaneKey,
+  AIRightPanelProps,
+  AIRightPanelRiskCounts,
+  AIRightPanelToolStats,
+} from './type'
 import { AI_RIGHT_PANEL_INPUT_MAX_WIDTH, AI_RIGHT_PANEL_NORMAL_SLOT_WIDTH } from './type'
 
 /** 菜单项定义：key 为唯一标识（React key 用），labelKey 为 i18n 文案 key，icon 为入口图标 */
@@ -280,14 +290,14 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   }, [layoutRef, small])
 
   const isSmall = small ?? chatSmall
-  const [activePane, setActivePane] = useState<'task-list' | 'timeline'>()
+  const [activePane, setActivePane] = useState<AIRightPanelPaneKey>()
   const closeTimer = useRef<ReturnType<typeof setTimeout>>()
   const cancelPaneClose = useMemoizedFn(() => clearTimeout(closeTimer.current))
   const closePane = useMemoizedFn(() => {
     cancelPaneClose()
     setActivePane(undefined)
   })
-  const openPane = useMemoizedFn((key: 'task-list' | 'timeline') => {
+  const openPane = useMemoizedFn((key: AIRightPanelPaneKey) => {
     cancelPaneClose()
     setActivePane(key)
   })
@@ -302,6 +312,7 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
     switch (key) {
       case 'task-list':
       case 'timeline':
+      case 'session-history':
         openPane(key)
         return true
       default:
@@ -314,6 +325,7 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
     switch (key) {
       case 'task-list':
       case 'timeline':
+      case 'session-history':
         schedulePaneClose()
         break
       default:
@@ -335,18 +347,23 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
     return MAIN_MENUS
   }, [currentChatStatusQuestionID])
 
-  // 任务详情/文件系统/流量/漏洞打开工作区对应 tab；导出/查看日志行为与 AIHorizontalScrollCard 一致
+  /**
+   * 菜单点击：任务列表、时间线、会话历史打开右侧内容面板；
+   * 任务详情、流量、漏洞切换工作区 tab；文件系统打开侧栏会话页；
+   * 导出日志打开导出弹窗，查看日志打开日志窗口。
+   */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
     switch (key) {
       case 'task-list':
       case 'timeline':
+      case 'session-history':
         openPane(key)
         break
       case 'task-board':
         syncCasualTaskTab()
         break
       case 'file-system':
-        // 文件树在左侧边栏的会话 tab 分栏内，激活侧边栏并切到该 tab（emit 协议与 AIModelSelect.onSwitchAIAgentTab 一致）
+        // 文件树位于左侧边栏的会话页，展开侧边栏并切换到该页。
         emiter.emit(
           'switchAIAgentTab',
           JSON.stringify({
@@ -438,6 +455,8 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
 
   const renderPaneTitle = useMemoizedFn(() => {
     switch (activePane) {
+      case 'session-history':
+        return t('AIRightPanel.sessionHistory')
       case 'task-list':
         return t('AIRightPanel.taskList')
       case 'timeline':
@@ -449,6 +468,17 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
 
   const renderPaneContent = useMemoizedFn(() => {
     switch (activePane) {
+      case 'session-history':
+        return (
+          <HistoryChat
+            aiSource={AI_AGENT_HISTORY_AI_SOURCES}
+            title={t('ChatSessionPane.sessionList')}
+            hidePinButton
+            headerActionsExtra={
+              <YakitButton type="text2" aria-label={t('YakitButton.close')} icon={<XOutlined />} onClick={closePane} />
+            }
+          />
+        )
       case 'task-list':
         return <TaskListPane />
       case 'timeline':
@@ -521,7 +551,12 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
           onMouseEnter={isSmall ? cancelPaneClose : undefined}
           onMouseLeave={isSmall ? schedulePaneClose : undefined}
         >
-          <AIRightPanelPane title={renderPaneTitle()} onClose={closePane}>
+          <AIRightPanelPane
+            title={renderPaneTitle()}
+            hideHeader={activePane === 'session-history'}
+            noPadding={activePane === 'session-history'}
+            onClose={closePane}
+          >
             {renderPaneContent()}
           </AIRightPanelPane>
         </div>

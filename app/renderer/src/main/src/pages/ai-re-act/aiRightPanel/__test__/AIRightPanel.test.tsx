@@ -140,6 +140,26 @@ vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane', () => ({
 vi.mock('@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard', () => ({
   default: () => <div data-testid="timeline-pane" />,
 }))
+vi.mock('@/pages/ai-agent/historyChat/HistoryChat', () => ({
+  default: ({
+    hidePinButton,
+    headerActionsExtra,
+    aiSource,
+  }: {
+    hidePinButton?: boolean
+    headerActionsExtra?: React.ReactNode
+    aiSource: string[]
+  }) => (
+    <div data-testid="history-chat" data-sources={aiSource.join(',')}>
+      <header>
+        <span>会话列表</span>
+        <button>新建会话</button>
+        {headerActionsExtra}
+        {!hidePinButton && <button>固定</button>}
+      </header>
+    </div>
+  ),
+}))
 
 const renderPanel = async (ui: React.ReactElement) => {
   const renderResult = render(ui)
@@ -149,6 +169,34 @@ const renderPanel = async (ui: React.ReactElement) => {
 }
 
 describe('AIRightPanel', () => {
+  it('点击会话历史打开 HistoryChat，关闭按钮位于原头部最右侧且没有固定按钮', async () => {
+    await renderPanel(<AIRightPanel />)
+    fireEvent.click(screen.getByLabelText('会话历史'))
+    const history = screen.getByTestId('history-chat')
+    expect(history).toHaveAttribute('data-sources', 'ai,im,')
+    const pane = history.closest('section')!
+    expect(pane.querySelectorAll('header')).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: '固定' })).not.toBeInTheDocument()
+    const closeButton = pane.querySelector('header')!.lastElementChild!
+    expect(closeButton).toHaveAttribute('aria-label')
+    fireEvent.click(closeButton)
+    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
+  })
+
+  it('小屏会话历史支持悬停打开、移出销毁和点击关闭', async () => {
+    render(<AIRightPanel small />)
+    const item = screen.getByLabelText('会话历史')
+    fireEvent.mouseEnter(item)
+    expect(screen.getByTestId('history-chat')).toBeInTheDocument()
+    fireEvent.mouseLeave(item)
+    await waitFor(() => expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument())
+    fireEvent.click(item)
+    fireEvent.click(screen.getByTestId('history-chat').querySelector('header')!.lastElementChild!)
+    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
+  })
+
   it('正常态点击时间线打开面板，关闭后恢复菜单', async () => {
     await renderPanel(<AIRightPanel />)
     fireEvent.click(screen.getByLabelText('更多'))

@@ -14,6 +14,11 @@
   overflow: hidden;
 }
 
+// 内容自带内边距的变体（如会话历史）：去掉面板 padding
+.pane-no-padding {
+  padding: 0;
+}
+
 .header {
   display: flex;
   flex: none;
