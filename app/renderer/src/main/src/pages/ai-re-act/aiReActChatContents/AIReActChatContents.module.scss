@@ -21,6 +21,12 @@
   .re-act-contents-track {
     @include mixin.ai-right-panel-content-track;
   }
+  // 首屏 loading 遮罩层默认全宽居中，接入内容轨道后圆点才会落在消息列表中心。
+  // 直接子级限定只命中包住列表的这层 Spin，不影响后续嵌入消息内容的 Spin。
+  > :global(.ant-spin-nested-loading) > :global(div) > :global(.ant-spin) {
+    inset-inline: 0;
+    @include mixin.ai-right-panel-content-track;
+  }
   .item-wrapper {
     width: 100%;
     box-sizing: border-box;

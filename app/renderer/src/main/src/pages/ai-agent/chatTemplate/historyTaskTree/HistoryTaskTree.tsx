@@ -108,7 +108,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
       {expanded && (
         <div className={styles['section-body']}>
           <YakitCollapse
-            destroyInactivePanel
+            destroyOnHidden
             accordion
             bordered={false}
             activeKey={activeKey}

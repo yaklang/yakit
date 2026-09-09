@@ -3,7 +3,7 @@ import styles from './TimelineCard.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import classNames from 'classnames'
 import { formatTime } from '@/utils/timeUtil'
-import { Virtuoso, type Components, type ItemProps, type ListProps } from 'react-virtuoso'
+import { Virtuoso, type Components, type ContextProp, type ItemProps, type ListProps } from 'react-virtuoso'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import useVirtuosoAutoScroll from '@/pages/ai-re-act/hooks/useVirtuosoAutoScroll'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -16,6 +16,11 @@ import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useLoadHistory from '@/pages/ai-re-act/hooks/useLoadHistory'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { useStore } from 'zustand'
+import {
+  useVirtuosoInitialRender,
+  useVirtuosoListReady,
+  type VirtuosoReadyContext,
+} from '@/pages/ai-agent/components/useVirtuosoInitialRender'
 
 const TYPE_COLOR_MAP: Record<string, 'info' | 'white' | 'danger'> = {
   user_input: 'info',
@@ -58,31 +63,35 @@ const TimelineRow = memo(({ item }: { item: AIAgentGrpcApi.TimelineItem }) => {
 
 TimelineRow.displayName = 'TimelineRow'
 
-const VirtuosoItemContainer = forwardRef<HTMLDivElement, ItemProps<AIAgentGrpcApi.TimelineItem>>(
-  ({ children, style, ...props }, ref) => {
+const VirtuosoItemContainer = forwardRef<
+  HTMLDivElement,
+  ItemProps<AIAgentGrpcApi.TimelineItem> & ContextProp<VirtuosoReadyContext>
+>(({ children, style, context, ...props }, ref) => {
+  return (
+    <div {...props} ref={ref} style={style} className={styles['item-wrapper']}>
+      <div className={styles['item-inner']}>{children}</div>
+    </div>
+  )
+})
+
+VirtuosoItemContainer.displayName = 'VirtuosoItemContainer'
+
+const VirtuosoListContainer = forwardRef<HTMLDivElement, ListProps & ContextProp<VirtuosoReadyContext>>(
+  ({ children, style, context, ...props }, ref) => {
+    useVirtuosoListReady({ children, style, context })
+
     return (
-      <div {...props} ref={ref} style={style} className={styles['item-wrapper']}>
-        <div className={styles['item-inner']}>{children}</div>
+      <div {...props} ref={ref} style={style} className={styles['virtuoso-item-list']}>
+        {children}
       </div>
     )
   },
 )
 
-VirtuosoItemContainer.displayName = 'VirtuosoItemContainer'
-
-const VirtuosoListContainer = forwardRef<HTMLDivElement, ListProps>(({ children, style, ...props }, ref) => {
-  return (
-    <div {...props} ref={ref} style={style} className={styles['virtuoso-item-list']}>
-      {children}
-    </div>
-  )
-})
-
 VirtuosoListContainer.displayName = 'VirtuosoListContainer'
 
-const TimelineCard: FC = () => {
+const TimelineList: FC<{ sessionId: string }> = memo(({ sessionId }) => {
   const store = useCurrentStore()
-  const sessionId = useCurrentSessionId()
 
   const reActTimelines = useStore(store, (state) => state.reActTimelines)
   const timelinesLoading = useStore(store, (state) => state.timelinesLoading)
@@ -100,7 +109,14 @@ const TimelineCard: FC = () => {
     isPrependingRef,
   })
 
-  const components = useMemo<Components<AIAgentGrpcApi.TimelineItem>>(
+  const { renderLoading, virtuosoContext, handleListHeightChanged, initialTopMostItemIndex } = useVirtuosoInitialRender(
+    {
+      dataLength: reActTimelines.length,
+      onHeightChanged: handleTotalListHeightChanged,
+    },
+  )
+
+  const components = useMemo<Components<AIAgentGrpcApi.TimelineItem, VirtuosoReadyContext>>(
     () => ({
       Item: VirtuosoItemContainer,
       List: VirtuosoListContainer,
@@ -118,16 +134,17 @@ const TimelineCard: FC = () => {
         [styles['timeline-card-empty']]: reActTimelines.length === 0,
       })}
     >
-      <YakitSpin spinning={timelinesLoading}>
+      <YakitSpin spinning={timelinesLoading || renderLoading}>
         <Virtuoso
           ref={virtuosoRef}
           firstItemIndex={firstItemIndex}
           data={reActTimelines}
+          context={virtuosoContext}
           components={components}
           scrollerRef={setScrollerRef}
-          totalListHeightChanged={handleTotalListHeightChanged}
+          totalListHeightChanged={handleListHeightChanged}
           atBottomStateChange={setIsAtBottomRef}
-          initialTopMostItemIndex={reActTimelines.length > 0 ? reActTimelines.length - 1 : 0}
+          initialTopMostItemIndex={initialTopMostItemIndex}
           style={{ height: '100%', width: '100%' }}
           increaseViewportBy={{ top: 300, bottom: 300 }}
           atBottomThreshold={100}
@@ -138,5 +155,11 @@ const TimelineCard: FC = () => {
       </YakitSpin>
     </div>
   )
-}
+})
+
+const TimelineCard: FC = memo(() => {
+  const sessionId = useCurrentSessionId()
+  return <TimelineList key={sessionId} sessionId={sessionId} />
+})
+
 export default TimelineCard

@@ -29,6 +29,8 @@ vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
 }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 vi.mock('ahooks', async (importOriginal) => ({
+  // ahooks 导出庞大且此处整体 spread，模块类型无法用 import type 描述，显式豁免。
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   ...(await importOriginal<typeof import('ahooks')>()),
   useInViewport: () => [true],
 }))

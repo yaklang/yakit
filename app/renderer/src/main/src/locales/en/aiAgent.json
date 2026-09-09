@@ -514,6 +514,9 @@
     "exportLog": "Export Log",
     "taskDetail": "Task Detail"
   },
+  "AIReActChatContents": {
+    "uiRendering": "Rendering UI..."
+  },
   "ChatSessionPane": {
     "sessionList": "Sessions"
   },

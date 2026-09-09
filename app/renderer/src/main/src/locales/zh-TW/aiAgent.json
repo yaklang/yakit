@@ -514,6 +514,9 @@
     "exportLog": "匯出日誌",
     "taskDetail": "任務詳情"
   },
+  "AIReActChatContents": {
+    "uiRendering": "UI渲染中..."
+  },
   "ChatSessionPane": {
     "sessionList": "會話"
   },
