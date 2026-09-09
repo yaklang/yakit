@@ -99,6 +99,7 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
   emiter.emit('setYakitHeaderDraggable', false)
 
   const destory = () => {
+    document.removeEventListener('click', onClickOutside, true)
     // if (rightContextRootDiv) {
     //     rightContextRootDiv.unmount()
     // }
@@ -107,6 +108,16 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
       div.parentNode.removeChild(div)
     }
     emiter.emit('setYakitHeaderDraggable', true)
+  }
+
+  const onClickOutside = (e: MouseEvent) => {
+    const el = e.target as HTMLElement
+    if (
+      div.contains(el) &&
+      el.closest('input, textarea, [contenteditable="true"], .ant-input, .ant-input-affix-wrapper')
+    )
+      return
+    setTimeout(() => destory(), 0)
   }
 
   const offsetPosition = (width: number, height: number) => {
@@ -122,13 +133,7 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
 
   const render = () => {
     setTimeout(() => {
-      document.addEventListener(
-        'click',
-        function onClickOutsize() {
-          setTimeout(() => destory(), 0)
-        },
-        { capture: true, once: true },
-      )
+      document.addEventListener('click', onClickOutside, true)
       // document.addEventListener("contextmenu", function onContextMenuOutsize() {
       //     destory()
       //     document.removeEventListener("contextmenu", onContextMenuOutsize)
