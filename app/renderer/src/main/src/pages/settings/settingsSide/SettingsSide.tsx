@@ -56,10 +56,17 @@ export const SettingsSide: React.FC<SettingsSideProps> = (props) => {
                   <div
                     id={item.key}
                     key={item.key}
+                    role="button"
+                    tabIndex={0}
                     className={classNames(styles['settings-item'], {
                       [styles['settings-item-active']]: item.key === activeAnchor,
                     })}
                     onClick={() => onSelect(item.key)}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter' && e.key !== ' ') return
+                      e.preventDefault()
+                      onSelect(item.key)
+                    }}
                   >
                     {item.icon}
                     {item.label}
