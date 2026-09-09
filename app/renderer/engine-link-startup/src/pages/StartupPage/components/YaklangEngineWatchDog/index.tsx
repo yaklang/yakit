@@ -143,7 +143,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 const failMsg = res.message || '引擎启动失败，请查看日志详细信息'
                 outputToWelcomeConsole(failMsg)
                 props.setCheckLog([failMsg])
-                props.setYakitStatus(res.status)
+                props.setYakitStatus(res.status as YakitStatusType)
               }
               debugToPrintLog(`[ERROR] 本地新引擎进程启动失败: ${res.status + ':' + res.message}`)
               startingUp.current = false

@@ -1,5 +1,6 @@
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 'react'
 import type { AllowSecretLocalJson, LocalEngineProps } from './LocalEngineType'
+import type { YakitStatusType } from '../../types'
 import { useMemoizedFn } from 'ahooks'
 import { debugToPrintLog } from '@/utils/logCollection'
 import {
@@ -89,7 +90,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           )
           setYakitStatus('old_version')
         } else {
-          setYakitStatus(res.status)
+          setYakitStatus(res.status as YakitStatusType)
         }
       } catch (error) {
         // 旧调用直接跳过
