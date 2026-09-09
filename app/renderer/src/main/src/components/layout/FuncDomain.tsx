@@ -1139,7 +1139,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       <YakitPopover
         classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown']) }}
         placement={'bottom'}
-        align={{ offset: [0, 24] }}
         content={menu}
         open={show}
         onOpenChange={(visible) => setShow(visible)}

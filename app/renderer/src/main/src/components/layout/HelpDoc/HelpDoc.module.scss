@@ -1,8 +1,5 @@
 @use '../../../styles/mixin.scss' as mixin;
 
-.ui-op-dropdown {
-  top: 24px !important;
-}
 .ui-op-setting-dropdown {
   :global {
     .ant-popover-inner {
