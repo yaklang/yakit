@@ -882,10 +882,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
       if (!prev) return prev
       return {
         ...prev,
-        ...(payload.ProblemType !== undefined ? { ProblemType: payload.ProblemType } : {}),
+        ...(payload.IssueType !== undefined ? { IssueType: payload.IssueType } : {}),
         ...(payload.Severity !== undefined ? { Severity: payload.Severity } : {}),
-        ...(payload.DisposalStatus !== undefined ? { DisposalStatus: payload.DisposalStatus } : {}),
-        ...(payload.DisposalNote !== undefined ? { DisposalNote: payload.DisposalNote } : {}),
+        ...(payload.Status !== undefined ? { Status: payload.Status } : {}),
+        ...(payload.StatusReason !== undefined ? { StatusReason: payload.StatusReason } : {}),
       }
     })
   })

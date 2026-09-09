@@ -104,14 +104,14 @@ export interface HTTPFlow {
 
   FromPlugin: string
 
-  /** 问题类型（占位：待后端对齐，仅企业版） */
-  ProblemType?: string
-  /** 严重程度（占位：待后端对齐，仅企业版） */
+  /** 问题类型（对齐 IssueType） */
+  IssueType?: string
+  /** 严重程度 */
   Severity?: string
-  /** 处置状态（占位：待后端对齐，仅企业版） */
-  DisposalStatus?: string
-  /** 处置说明（占位：待后端对齐，仅企业版） */
-  DisposalNote?: string
+  /** 处置状态（对齐 Status） */
+  Status?: string
+  /** 处置说明（对齐 StatusReason） */
+  StatusReason?: string
   /** 测试人员（占位：待后端对齐，仅企业版） */
   Testers?: string[] | string
 }

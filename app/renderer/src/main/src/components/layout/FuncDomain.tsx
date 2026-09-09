@@ -4,7 +4,7 @@ import { RiskStateSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RiskStateSv
 import { UISettingSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/UISettingSvgIcon'
 import { VersionUpdateSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/VersionUpdateSvgIcon'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
-import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useCreation, useDebounceEffect, useInterval, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
 import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 const ConfigPrivateDomain = React.lazy(() =>
@@ -2216,6 +2216,16 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       setWebUnreadCount(0)
     }
   }, [userInfo.isLogin, show])
+
+  // Web 端通知无 WS：登录后每分钟轮询未读
+  useInterval(
+    () => {
+      if (userInfo.isLogin && isEnpriTrace()) {
+        onFetchWebUnread()
+      }
+    },
+    userInfo.isLogin && isEnpriTrace() ? 60_000 : undefined,
+  )
 
   const onRefreshMessageSocketFun = useMemoizedFn((data: string) => {
     try {

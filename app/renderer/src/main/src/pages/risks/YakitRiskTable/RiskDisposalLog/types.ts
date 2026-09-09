@@ -61,4 +61,6 @@ export interface QuotationInfoProps {
 export interface UploadDisposalImageRequest {
   base64: string
   imgInfo: { filename?: string; contentType?: string }
+  /** risk hash */
+  hash: string
 }

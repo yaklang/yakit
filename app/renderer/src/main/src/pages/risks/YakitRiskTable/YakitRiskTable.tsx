@@ -575,11 +575,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         ? [
             {
               title: t('YakitRiskTable.cvss_score'),
-              dataKey: 'Cvss',
+              dataKey: 'SeverityScore',
               width: 100,
               align: 'center' as const,
               render: (_text: unknown, record: Risk) => {
-                const score = typeof record.Cvss === 'number' ? record.Cvss : undefined
+                const score = typeof record.SeverityScore === 'number' ? record.SeverityScore : undefined
                 return (
                   <div
                     className={styles['table-tag']}
@@ -881,7 +881,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     })
   })
   const onSaveRiskEdit = useMemoizedFn((info: Risk) => {
-    const cvss = typeof info.Cvss === 'number' ? info.Cvss : undefined
+    const cvss = typeof info.SeverityScore === 'number' ? info.SeverityScore : undefined
     if (cvss === undefined) {
       yakitNotify('error', t('YakitRiskTable.enter_cvss'))
       return
@@ -900,8 +900,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       Severity: severity,
       SetTags: disposalList,
       VerifierUid: isRepaired ? info.VerifierUid || info.Verifier : undefined,
-      FixTime: isRepaired ? info.RepairTime : undefined,
-      FixSuggestion: isRepaired ? info.RepairSuggestion : undefined,
+      FixTime: isRepaired ? info.FixTime : undefined,
+      FixSuggestion: isRepaired ? info.FixSuggestion : undefined,
     }
     apiBatchSetRiskTags(params).then(() => {
       const index = response.Data.findIndex((item) => item.Id === info.Id)
@@ -910,13 +910,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         ...info,
         RiskType: riskType,
         RiskTypeVerbose: riskType,
-        Cvss: cvss,
+        SeverityScore: cvss,
         Severity: severity,
         Tags: disposalStatus,
         Verifier: isRepaired ? info.Verifier : undefined,
         VerifierUid: isRepaired ? info.VerifierUid || info.Verifier : undefined,
-        RepairTime: isRepaired ? info.RepairTime : undefined,
-        RepairSuggestion: isRepaired ? info.RepairSuggestion : undefined,
+        FixTime: isRepaired ? info.FixTime : undefined,
+        FixSuggestion: isRepaired ? info.FixSuggestion : undefined,
         DisposalNote: isRepaired ? undefined : info.DisposalNote,
       }
       setResponse({
@@ -1728,7 +1728,7 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
   const { t, i18nRefresh } = useI18nNamespaces(['risk', 'yakitUi'])
   const [form] = Form.useForm()
   const initRiskType = info.RiskTypeVerbose || info.RiskType || undefined
-  const initCvss = typeof info.Cvss === 'number' ? info.Cvss : undefined
+  const initCvss = typeof info.SeverityScore === 'number' ? info.SeverityScore : undefined
   const initDisposal = getDisposalStatusFromTags(info.Tags)
   const [typeSearch, setTypeSearch] = useState('')
   const [verifierOptions, setVerifierOptions] = useState<{ label: string; value: string }[]>(() => {
@@ -1738,6 +1738,21 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
     if (info.Verifier) return [{ label: info.Verifier, value: info.Verifier }]
     return []
   })
+
+  useEffect(() => {
+    const uid = info.VerifierUid
+    if (!uid) return
+    const keywords = (info.Verifier || uid).trim()
+    if (!keywords) return
+    apiGetUserSearch({ keywords })
+      .then((res) => {
+        const matched = (res?.data || []).find((item) => (item.uid || String(item.id)) === uid)
+        if (matched) {
+          setVerifierOptions([{ label: matched.name, value: matched.uid || String(matched.id) }])
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const disposalStatus = Form.useWatch('disposal_status', form)
   const cvssWatch = Form.useWatch('cvss', form)
@@ -1815,13 +1830,13 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
         ...info,
         RiskType: riskType,
         RiskTypeVerbose: riskType,
-        Cvss: cvss,
+        SeverityScore: cvss,
         Severity: severity,
         Tags: disposal,
         Verifier: verifierName,
         VerifierUid: verifierUid,
-        RepairTime: isRepaired ? value.repair_time : undefined,
-        RepairSuggestion: isRepaired ? value.repair_suggestion : undefined,
+        FixTime: isRepaired ? value.repair_time : undefined,
+        FixSuggestion: isRepaired ? value.repair_suggestion : undefined,
         DisposalNote: isRepaired ? undefined : value.disposal_note,
       })
       if (onClose) onClose()
@@ -1844,8 +1859,8 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
           cvss: initCvss,
           disposal_status: initDisposal,
           verifier: info.VerifierUid || info.Verifier,
-          repair_time: info.RepairTime,
-          repair_suggestion: info.RepairSuggestion,
+          repair_time: info.FixTime,
+          repair_suggestion: info.FixSuggestion,
           disposal_note: info.DisposalNote,
         }}
       >

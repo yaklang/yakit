@@ -182,20 +182,51 @@ export const apiRisksFromOnline = (
   return startFromOnlineStream('RisksFromOnline', 'cancel-RisksFromOnline', loginToken, streamToken, handlers)
 }
 
-/** Web 端通知列表 xxx--- 等待后端联调 */
+const mapWebInfoToMessageLog = (item: API.WebInfoDetail): API.MessageLogDetail => {
+  return {
+    id: item.id || 0,
+    created_at: item.created_at || 0,
+    updated_at: item.updated_at || 0,
+    handlerUserName: item.handlerUserName || '',
+    handlerHeadImag: item.handlerHeadImag || '',
+    handlerRole: item.handlerRole || '',
+    upPluginType: item.webInfoType || 'web',
+    scriptName: '',
+    uuid: '',
+    upPluginLogId: 0,
+    isRead: !!item.isRead,
+    hash: item.hash || '',
+    description: item.webInfoType || '',
+    status: 0,
+  }
+}
+
+/** Web 端通知列表 → POST /web/info/list */
 export const apiFetchQueryWebMessage: (
   params: MessageQueryParamsProps,
   data?: MessageQueryDataProps,
 ) => Promise<API.MessageLogResponse> = (params, data) => {
   return new Promise((resolve, reject) => {
-    NetWorkApi<MessageQueryProps, API.MessageLogResponse>({
-      method: 'get',
-      url: 'message/web/log',
-      params,
-      data,
+    const payload: API.WebInfoRequest = {
+      page: params.page,
+      limit: params.limit,
+      order_by: 'id',
+      order: 'desc',
+      isRead: data?.isRead,
+      logType: data?.logType,
+      ...(data?.beforeId ? { before_id: data.beforeId } : {}),
+      ...(data?.afterId ? { after_id: data.afterId } : {}),
+    }
+    NetWorkApi<API.WebInfoRequest, API.WebInfoResponse>({
+      method: 'post',
+      url: 'web/info/list',
+      data: payload,
     })
       .then((res) => {
-        resolve(res)
+        resolve({
+          pagemeta: res.pagemeta,
+          data: (res.data || []).map(mapWebInfoToMessageLog),
+        })
       })
       .catch((err) => {
         reject(err)
@@ -203,12 +234,12 @@ export const apiFetchQueryWebMessage: (
   })
 }
 
-/** Web 端通知已读 xxx--- 等待后端联调 */
+/** Web 端通知已读 → POST /web/info */
 export const apiFetchWebMessageRead: (data: MessageQueryReadProps) => Promise<boolean> = (data) => {
   return new Promise((resolve, reject) => {
-    NetWorkApi<MessageQueryProps, API.ActionSucceeded>({
+    NetWorkApi<API.WebInfoWhereRequest, API.ActionSucceeded>({
       method: 'post',
-      url: 'message/web/log',
+      url: 'web/info',
       data,
     })
       .then((res) => {
@@ -220,12 +251,12 @@ export const apiFetchWebMessageRead: (data: MessageQueryReadProps) => Promise<bo
   })
 }
 
-/** Web 端通知清空 xxx--- 等待后端联调 */
+/** Web 端通知清空 → DELETE /web/info */
 export const apiFetchWebMessageClear: (data: MessageQueryReadProps) => Promise<boolean> = (data) => {
   return new Promise((resolve, reject) => {
-    NetWorkApi<MessageQueryProps, API.ActionSucceeded>({
+    NetWorkApi<API.WebInfoWhereRequest, API.ActionSucceeded>({
       method: 'delete',
-      url: 'message/web/log',
+      url: 'web/info',
       data,
     })
       .then((res) => {

@@ -35,11 +35,11 @@ export interface BatchSetHTTPFlowIssueFieldsResponse {
   UpdatedCount?: number
 }
 
-/** 本地列表 patch 用（对齐表格字段名） */
+/** 本地列表 patch 用（对齐 IssueType/Status/StatusReason） */
 export interface FlowMarkPatchPayload {
   Ids: number[]
-  ProblemType?: string
+  IssueType?: string
   Severity?: string
-  DisposalStatus?: string
-  DisposalNote?: string
+  Status?: string
+  StatusReason?: string
 }

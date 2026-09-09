@@ -55,10 +55,12 @@ export interface MessageItemProps {
   onRedTaskItem: (data: API.MessageLogDetail) => void
   isEllipsis?: boolean
   removeItem?: (data: API.MessageLogDetail) => void
+  /** Web 端通知走 /web/info，插件走 /message/log */
+  useWebApi?: boolean
 }
 
 export const MessageItem: React.FC<MessageItemProps> = (props) => {
-  const { onClose, data, isEllipsis, onRedTaskItem, removeItem } = props
+  const { onClose, data, isEllipsis, onRedTaskItem, removeItem, useWebApi } = props
   const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'components'])
   const { goEditNotepad } = useGoEditNotepad()
   const getDescription = useMemo(() => {
@@ -286,7 +288,15 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
         }
       }
       default:
-        return <></>
+        return (
+          <span
+            className={classNames(styles['text'], {
+              'yakit-single-line-ellipsis': isEllipsis,
+            })}
+          >
+            {data.description || data.upPluginType || '-'}
+          </span>
+        )
     }
   }, [data, isEllipsis, i18nRefresh])
 
@@ -297,12 +307,17 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
       onRedTaskItem(data)
       return
     }
-    apiFetchMessageRead({
+    const fetchRead = useWebApi ? apiFetchWebMessageRead : apiFetchMessageRead
+    fetchRead({
       isAll: false,
       hash: data.hash,
     })
       .then((ok) => {
         if (ok) {
+          if (useWebApi) {
+            removeItem && removeItem(data)
+            return
+          }
           switch (data.upPluginType) {
             // 跳转到插件仓库回收站
             case 'delete':
@@ -701,6 +716,9 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     if (activeKey === 'unread' && !item.isRead) {
       const newList = dataSorce.filter((i) => i.hash !== item.hash)
       setDataSorce(newList)
+      if (isWebChannel) {
+        setNoRedDataTotal((prev) => Math.max(0, (prev || 0) - 1))
+      }
     }
   })
 
@@ -720,6 +738,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                 onClose={() => setVisible(false)}
                 onRedTaskItem={onRedTaskItem}
                 removeItem={removeItem}
+                useWebApi={isWebChannel}
               />
             )
           }}

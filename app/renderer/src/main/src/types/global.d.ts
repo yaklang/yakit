@@ -515,10 +515,10 @@ declare global {
   interface UploadImgApiResponse {
     code?: number
     message?: string
-    data?: {
+    data?: string | {
       from?: string
       reason?: string
-    } & string
+    }
   }
 
   interface UploadFileApiResponse {

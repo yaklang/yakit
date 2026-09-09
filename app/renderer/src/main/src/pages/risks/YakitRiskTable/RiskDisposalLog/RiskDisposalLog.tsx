@@ -172,7 +172,7 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
           loading={submitting}
           quotation={quotation}
           delQuotation={() => setQuotation(undefined)}
-          onUploadImage={apiUploadDisposalImage}
+          onUploadImage={(req) => apiUploadDisposalImage({ ...req, hash: riskHash })}
           onSubmit={onSubmit}
         />
       </div>

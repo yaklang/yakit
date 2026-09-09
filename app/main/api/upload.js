@@ -60,7 +60,11 @@ module.exports = (win, getClient) => {
       formData.append('totalChunks', totalChunks)
       formData.append('fileName', fileName)
       formData.append('type', type)
-      fileHash && formData.append('fileHash', fileHash)
+      // 与 Web postPackage 对齐：业务 hash 走 hash 字段；保留 fileHash 兼容旧接口
+      if (fileHash) {
+        formData.append('hash', fileHash)
+        formData.append('fileHash', fileHash)
+      }
       // console.log("参数---", fileName, fileHash)
       httpApi({
         method: 'post',
@@ -140,7 +144,7 @@ module.exports = (win, getClient) => {
             url,
             chunkIndex: 0,
             totalChunks: 1,
-            fileName: '',
+            fileName: imgInfo.filename || 'image.png',
             type,
             fileHash: filedHash,
             base64,
