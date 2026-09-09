@@ -1,8 +1,8 @@
-import { httpUploadImgBase64 } from '@/apiUtils/http'
 import { NetWorkApi } from '@/services/fetch'
 import { yakitNotify } from '@/utils/notification'
 import type { API } from '@/services/swagger/resposeType'
 import i18n from '@/i18n/i18n'
+import { yakitUpload } from '@/services/electronBridge'
 import type {
   DisposalLogItem,
   DisposalLogsResponse,
@@ -12,36 +12,100 @@ import type {
 
 const tOriginal = i18n.getFixedT(null, 'risk')
 
-/**
- * 处置日志图片上传（占位：待后端联调）
- *
- * 后端契约占位（定稿后替换本实现）：
- * - URL: risk/disposal/upload（待定）
- * - 请求: multipart file 或 base64 + filename + contentType + type
- * - 响应: 图片 URL 字符串，或 { from: string }
- *
- * 当前临时走 upload/img（httpUploadImgBase64，经 Electron IPC）
- */
+const parseFragmentUploadUrl = (res: UploadImgApiResponse | undefined): string => {
+  if (res?.code === 200) {
+    const data = res.data
+    const url = typeof data === 'string' ? data : data?.from || ''
+    if (url) return url
+  }
+  const data = res?.data
+  const message =
+    res?.message || (typeof data === 'object' && data ? data.reason : undefined) || 'unknown'
+  throw new Error(String(message))
+}
+
+/** 漏洞处置评论贴图 → fragment/upload type=RiskComment */
 export const apiUploadDisposalImage = (request: UploadDisposalImageRequest): Promise<string> => {
-  return httpUploadImgBase64({
-    ...request,
-    type: 'comment',
+  return new Promise((resolve, reject) => {
+    if (!request.hash) {
+      const err = '缺少 risk hash'
+      yakitNotify('error', `上传图片失败: ${err}`)
+      reject(err)
+      return
+    }
+    yakitUpload
+      .splitUpload({
+        url: 'fragment/upload',
+        base64: request.base64,
+        imgInfo: request.imgInfo,
+        type: 'RiskComment',
+        filedHash: request.hash,
+      })
+      .then(({ resArr }) => {
+        resolve(parseFragmentUploadUrl(resArr?.[0]))
+      })
+      .catch((e) => {
+        yakitNotify('error', `上传图片失败: ${e}`)
+        reject(e)
+      })
   })
 }
 
-/** 处置日志列表（占位：待后端联调） */
+type CommentDetailExtra = API.CommentDetail & { headImg?: string; head_img?: string }
+
+const mapCommentDetail = (item: CommentDetailExtra): DisposalLogItem => {
+  const isComment = item.recordType === 'comment'
+  return {
+    id: item.id || 0,
+    logType: isComment ? 'comment' : 'system',
+    userName: item.userName,
+    headImg: item.headImg || item.head_img,
+    description: item.content,
+    createdAt: item.createdAt || 0,
+    parentComment: item.parentId
+      ? { id: item.parentId, userName: item.parentUserName || '', description: '' }
+      : undefined,
+  }
+}
+
+/** 同页按 parentId 回填父评论正文 */
+const enrichParentComments = <T extends { id: number; description?: string; parentComment?: { id: number; description: string } }>(
+  list: T[],
+): T[] => {
+  const byId = new Map(list.map((item) => [item.id, item]))
+  list.forEach((item) => {
+    if (!item.parentComment?.id) return
+    const parent = byId.get(item.parentComment.id)
+    if (parent?.description) item.parentComment.description = parent.description
+  })
+  return list
+}
+
+/** 处置日志列表 → POST /risk/httpflow/comment/list */
 export const apiGetDisposalLogs = (params: {
   risk_hash: string
   beforeId?: number
   limit?: number
 }): Promise<DisposalLogsResponse> => {
   return new Promise((resolve, reject) => {
-    NetWorkApi<typeof params, DisposalLogsResponse>({
-      method: 'get',
-      url: 'risk/disposal/logs',
-      params,
+    NetWorkApi<API.CommentListRequest, API.CommentListResponse>({
+      method: 'post',
+      url: 'risk/httpflow/comment/list',
+      data: {
+        hash: params.risk_hash,
+        targetType: 'risk',
+        page: 1,
+        limit: params.limit ?? 20,
+        order_by: 'id',
+        order: 'desc',
+      },
     })
-      .then(resolve)
+      .then((res) => {
+        resolve({
+          data: enrichParentComments((res.data || []).map(mapCommentDetail)),
+          total: res.pagemeta?.total,
+        })
+      })
       .catch((e) => {
         yakitNotify('error', `${tOriginal('RiskDisposalLog.fetch_logs_failed')}: ${e}`)
         reject(e)
@@ -49,15 +113,21 @@ export const apiGetDisposalLogs = (params: {
   })
 }
 
-/** 发布/回复评论（占位） */
+/** 发布/回复评论 → POST /risk/httpflow/comment */
 export const apiPublishDisposalComment = (
   data: PublishDisposalCommentRequest,
 ): Promise<API.ActionSucceeded> => {
   return new Promise((resolve, reject) => {
-    NetWorkApi<PublishDisposalCommentRequest, API.ActionSucceeded>({
+    const payload: API.CommentRequest = {
+      hash: data.risk_hash,
+      targetType: 'risk',
+      content: data.description,
+      parentId: data.logId,
+    }
+    NetWorkApi<API.CommentRequest, API.ActionSucceeded>({
       method: 'post',
-      url: 'risk/disposal/comment',
-      data,
+      url: 'risk/httpflow/comment',
+      data: payload,
     })
       .then(resolve)
       .catch((e) => {
@@ -67,13 +137,13 @@ export const apiPublishDisposalComment = (
   })
 }
 
-/** 删除评论（占位） */
+/** 删除评论 → POST /risk/httpflow/comment/delete */
 export const apiDeleteDisposalComment = (logId: number): Promise<API.ActionSucceeded> => {
   return new Promise((resolve, reject) => {
-    NetWorkApi<{ logId: number }, API.ActionSucceeded>({
-      method: 'delete',
-      url: 'risk/disposal/comment',
-      params: { logId },
+    NetWorkApi<API.CommentDeleteRequest, API.ActionSucceeded>({
+      method: 'post',
+      url: 'risk/httpflow/comment/delete',
+      data: { id: logId },
     })
       .then(resolve)
       .catch((e) => {

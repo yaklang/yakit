@@ -45,10 +45,15 @@ export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest | HttpUploadImg
       .splitUpload({ ...request, url: 'fragment/upload' })
       .then(({ resArr }) => {
         const res = resArr?.[0]
-        if (res?.code === 200 && (res?.data?.from || typeof res?.data === 'string')) {
-          resolve(res?.data?.from || res?.data)
+        const data = res?.data
+        const url = typeof data === 'string' ? data : data?.from || ''
+        if (res?.code === 200 && url) {
+          resolve(url)
         } else {
-          const message = res?.message || res?.data?.reason || tOriginal('YakitNotification.unknown_error')
+          const message =
+            res?.message ||
+            (typeof data === 'object' && data ? data.reason : undefined) ||
+            tOriginal('YakitNotification.unknown_error')
           if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { error: message }))
           reject(message)
         }
@@ -74,10 +79,15 @@ export const httpUploadImgBase64: APIFunc<HttpUploadImgBase64Request, string> = 
     yakitUpload
       .uploadImgBase64(request)
       .then((res) => {
-        if (res?.code === 200 && (res?.data?.from || typeof res?.data === 'string')) {
-          resolve(res?.data?.from || res?.data)
+        const data = res?.data
+        const url = typeof data === 'string' ? data : data?.from || ''
+        if (res?.code === 200 && url) {
+          resolve(url)
         } else {
-          const message = res?.message || res?.data?.reason || tOriginal('YakitNotification.unknown_error')
+          const message =
+            res?.message ||
+            (typeof data === 'object' && data ? data.reason : undefined) ||
+            tOriginal('YakitNotification.unknown_error')
           if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { error: message }))
           reject(message)
         }

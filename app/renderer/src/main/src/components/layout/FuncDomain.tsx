@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Badge, Tooltip, Form, Divider } from 'antd'
 import { UISettingSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/UISettingSvgIcon'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
-import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useCreation, useDebounceEffect, useInterval, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
 import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
@@ -2022,6 +2022,16 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       setWebUnreadCount(0)
     }
   }, [userInfo.isLogin, show])
+
+  // Web 端通知无 WS：登录后每分钟轮询未读
+  useInterval(
+    () => {
+      if (userInfo.isLogin && isEnpriTrace()) {
+        onFetchWebUnread()
+      }
+    },
+    userInfo.isLogin && isEnpriTrace() ? 60_000 : undefined,
+  )
 
   const onRefreshMessageSocketFun = useMemoizedFn((data: string) => {
     try {

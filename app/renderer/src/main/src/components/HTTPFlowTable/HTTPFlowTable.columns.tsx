@@ -235,12 +235,12 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
       ? ([
           {
             title: t('HTTPFlowTable.problemType'),
-            dataKey: 'ProblemType',
+            dataKey: 'IssueType',
             width: 140,
             filterProps: {
-              filterKey: 'ProblemType',
+              filterKey: 'IssueType',
               filtersType: 'select',
-              filterMultiple: false,
+              filterMultiple: true,
               filters: FLOW_PROBLEM_TYPE_OPTIONS.map((item) => ({ value: item, label: item })),
             },
             render: (text: string, record: HTTPFlow) => (
@@ -263,7 +263,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
             filterProps: {
               filterKey: 'Severity',
               filtersType: 'select',
-              filterMultiple: false,
+              filterMultiple: true,
               filters: FLOW_SEVERITY_OPTIONS.map((item) => ({ value: item, label: item })),
             },
             render: (text: string, record: HTTPFlow) => (
@@ -281,12 +281,12 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
           },
           {
             title: t('HTTPFlowTable.disposalStatus'),
-            dataKey: 'DisposalStatus',
+            dataKey: 'Status',
             width: 100,
             filterProps: {
-              filterKey: 'DisposalStatus',
+              filterKey: 'Status',
               filtersType: 'select',
-              filterMultiple: false,
+              filterMultiple: true,
               filters: FLOW_DISPOSAL_STATUS_OPTIONS.map((item) => ({ value: item, label: item })),
             },
             render: (text: string, record: HTTPFlow) => (
@@ -304,7 +304,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
           },
           {
             title: t('HTTPFlowTable.disposalNote'),
-            dataKey: 'DisposalNote',
+            dataKey: 'StatusReason',
             width: 160,
             render: (text: string, record: HTTPFlow) => (
               <div

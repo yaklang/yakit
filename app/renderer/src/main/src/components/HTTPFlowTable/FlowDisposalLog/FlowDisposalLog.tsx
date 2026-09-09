@@ -186,7 +186,7 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
           loading={submitting}
           quotation={quotation}
           delQuotation={() => setQuotation(undefined)}
-          onUploadImage={apiUploadFlowDisposalImage}
+          onUploadImage={(req) => apiUploadFlowDisposalImage({ ...req, hash: flowHash })}
           onSubmit={onSubmit}
         />
       </div>
