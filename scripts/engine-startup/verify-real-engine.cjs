@@ -10,11 +10,11 @@ const { createEngineStartup } = require('../../app/main/handlers/utils/engineSta
 const { createEngineGrpcClient } = require('../../app/main/handlers/utils/engineGrpcClient')
 const { grpc, Yak } = require('./grpc.cjs')
 
-const listen = () =>
+const listen = (port = 0) =>
   new Promise((resolve, reject) => {
     const server = net.createServer()
     server.once('error', reject)
-    server.listen(0, '127.0.0.1', () => resolve(server))
+    server.listen(port, '127.0.0.1', () => resolve(server))
   })
 const close = (server) => new Promise((resolve) => server.close(resolve))
 async function verify(binary) {
@@ -75,7 +75,9 @@ async function verify(binary) {
     }
     assert(!logs.join('\n').includes(checked.json.secret), 'Production password leaked into logs')
     await manager.dispose()
-    occupied = await listen()
+    // Rebinding the *same* port proves disposal released the running engine.
+    // Reserving a different free port could hide a leaked child process.
+    occupied = await listen(port)
     const conflict = await manager.check({ port: occupied.address().port })
     assert.equal(conflict.status, 'port_occupied')
     assert.equal(occupied.listening, true)

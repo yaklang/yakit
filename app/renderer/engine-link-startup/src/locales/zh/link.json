@@ -1,4 +1,24 @@
 {
+  "EngineFailure": {
+    "port_occupied": "端口被占用，请切换端口或检查占用进程。",
+    "port_denied": "系统拒绝使用该端口，请切换端口或检查系统策略。",
+    "endpoint_unreachable": "引擎监听失败，请检查端口配置后重试。",
+    "database_error": "数据库初始化失败，请先保留日志并备份数据，再尝试修复。",
+    "build_yak_error": "引擎服务构建失败，请查看日志或重新安装引擎。",
+    "engine_init_failed": "引擎初始化失败，请查看日志并重新检查引擎。",
+    "dial_error": "引擎连接失败，请检查地址和认证信息后重试。",
+    "call_error": "引擎认证失败，请重新检查连接。",
+    "timeout": "等待引擎超时，请保留日志并重试；数据迁移可能需要更长时间。",
+    "antivirus_blocked": "引擎未输出诊断信息便退出，可能被安全软件拦截，也可能是进程异常。请检查拦截记录和引擎日志，确认文件可信后重试。",
+    "old_version": "当前引擎不支持安全本地启动，请选择其他引擎版本或更新引擎。",
+    "protocol_error": "引擎返回了无效的连接信息，请重新检查或更新引擎。",
+    "process_error": "引擎进程未正常完成，请保留引擎日志与退出码，检查文件和权限后重试。",
+    "engine_exited": "引擎进程意外退出，请查看引擎日志并重试。"
+  },
+  "UIEngineList": {
+    "switch_engine": "切换引擎",
+    "authenticated_switch_required": "进程列表无法验证引擎的认证信息，暂不支持直接切换。请使用连接配置填写地址和密码后连接；当前引擎不会被自动关闭。"
+  },
   "StartupPage": {
     "born_for_cybersecurity": "为网络安全而生",
     "checking_environment": "正在进行环境检查...",
@@ -200,6 +220,7 @@
     }
   },
   "LocalEngine": {
+    "migration_wait_hint": "引擎仍在准备中。跨大版本升级可能需要额外时间迁移数据库，通常同一大版本升级只需迁移一次。请耐心等待，本阶段最多等待 180 秒；如超时，可查看日志后重试。",
     "checking_secret_password_mode": "正在检查引擎环境...",
     "secret_password_check_passed": "引擎环境检查通过",
     "engine_version_low_reset": "引擎版本低，可点击重置引擎版本更新...",

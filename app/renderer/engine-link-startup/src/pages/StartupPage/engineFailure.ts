@@ -19,15 +19,39 @@ export function engineFailureStatus(status: string, stage: 'check' | 'start'): Y
 }
 
 export function engineFailureMessage(
-  result: { message?: string; engineEvent?: { reasonI18n?: { zh?: string; en?: string; 'zh-TW'?: string } | null } },
+  result: {
+    status?: string
+    message?: string
+    engineEvent?: { reasonI18n?: { zh?: string; en?: string; 'zh-TW'?: string } | null }
+  },
   language: string,
   fallback: string,
+  translate?: (key: string, options?: { defaultValue: string }) => string,
 ): string {
   const labels = result.engineEvent?.reasonI18n
-  const localized = language.startsWith('en')
-    ? labels?.en
-    : language === 'zh-TW'
-      ? labels?.['zh-TW'] || labels?.zh
-      : labels?.zh
-  return (typeof localized === 'string' && localized) || result.message || fallback
+  const localized = language.startsWith('en') ? labels?.en : language === 'zh-TW' ? labels?.['zh-TW'] : labels?.zh
+  if (typeof localized === 'string' && localized.trim()) return localized
+  // Legacy engines and main-process failures may only supply Chinese diagnostics.
+  // Preserve those details in the logs, but use translated recovery advice in the UI.
+  if (language === 'zh' && result.message) return result.message
+  const statuses = [
+    'port_occupied',
+    'port_denied',
+    'endpoint_unreachable',
+    'database_error',
+    'build_yak_error',
+    'engine_init_failed',
+    'dial_error',
+    'call_error',
+    'timeout',
+    'antivirus_blocked',
+    'old_version',
+    'protocol_error',
+    'process_error',
+    'engine_exited',
+  ]
+  if (result.status && statuses.includes(result.status) && translate) {
+    return translate(`EngineFailure.${result.status}`, { defaultValue: fallback })
+  }
+  return fallback
 }

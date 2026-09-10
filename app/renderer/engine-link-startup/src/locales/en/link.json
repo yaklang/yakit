@@ -1,4 +1,24 @@
 {
+  "EngineFailure": {
+    "port_occupied": "The port is in use. Choose another port or inspect the process using it.",
+    "port_denied": "The system denied access to this port. Choose another port or check system policies.",
+    "endpoint_unreachable": "The engine could not listen on the endpoint. Check the port settings and retry.",
+    "database_error": "Database initialization failed. Save the logs and back up your data before attempting a repair.",
+    "build_yak_error": "The engine service could not be created. Check the logs or reinstall the engine.",
+    "engine_init_failed": "Engine initialization failed. Check the logs and run the engine check again.",
+    "dial_error": "The engine connection failed. Check the address and credentials, then retry.",
+    "call_error": "Engine authentication failed. Check the connection credentials again.",
+    "timeout": "Timed out waiting for the engine. Save the logs and retry; data migration may take longer.",
+    "antivirus_blocked": "The engine exited without diagnostic output. Security software may have blocked it, or the process may have failed. Check security-software events and engine logs, verify the file is trusted, then retry.",
+    "old_version": "This engine does not support secure local startup. Choose another engine version or update it.",
+    "protocol_error": "The engine returned invalid connection information. Run the engine check again or update the engine.",
+    "process_error": "The engine process did not finish normally. Save the engine logs and exit code, check the file and permissions, then retry.",
+    "engine_exited": "The engine exited unexpectedly. Check its logs and retry."
+  },
+  "UIEngineList": {
+    "switch_engine": "Switch engine",
+    "authenticated_switch_required": "A process listing cannot verify engine credentials, so direct switching is unavailable. Enter the address and password in the connection settings instead. The current engine will not be closed automatically."
+  },
   "StartupPage": {
     "born_for_cybersecurity": "Born for cybersecurity",
     "checking_environment": "Checking environment...",
@@ -200,6 +220,7 @@
     }
   },
   "LocalEngine": {
+    "migration_wait_hint": "The engine is still preparing. Upgrading across major versions may take extra time to migrate the database, usually once per major-version upgrade. Please wait; this stage allows up to 180 seconds. If it times out, check the logs and retry.",
     "checking_secret_password_mode": "Checking engine environment...",
     "secret_password_check_passed": "Engine environment check passed",
     "engine_version_low_reset": "Engine version is outdated. Click to reset engine version...",

@@ -1,4 +1,24 @@
 {
+  "EngineFailure": {
+    "port_occupied": "連接埠被占用，請切換連接埠或檢查占用程序。",
+    "port_denied": "系統拒絕使用此連接埠，請切換連接埠或檢查系統原則。",
+    "endpoint_unreachable": "引擎監聽失敗，請檢查連接埠設定後重試。",
+    "database_error": "資料庫初始化失敗，請先保留日誌並備份資料，再嘗試修復。",
+    "build_yak_error": "引擎服務建立失敗，請查看日誌或重新安裝引擎。",
+    "engine_init_failed": "引擎初始化失敗，請查看日誌並重新檢查引擎。",
+    "dial_error": "引擎連線失敗，請檢查位址與驗證資訊後重試。",
+    "call_error": "引擎驗證失敗，請重新檢查連線。",
+    "timeout": "等待引擎逾時，請保留日誌並重試；資料遷移可能需要較長時間。",
+    "antivirus_blocked": "引擎未輸出診斷資訊便結束，可能遭安全軟體攔截，也可能是程序異常。請檢查攔截記錄與引擎日誌，確認檔案可信後重試。",
+    "old_version": "目前引擎不支援安全本機啟動，請選擇其他引擎版本或更新引擎。",
+    "protocol_error": "引擎傳回無效的連線資訊，請重新檢查或更新引擎。",
+    "process_error": "引擎程序未正常完成，請保留引擎日誌與結束代碼，檢查檔案和權限後重試。",
+    "engine_exited": "引擎程序意外結束，請查看引擎日誌並重試。"
+  },
+  "UIEngineList": {
+    "switch_engine": "切換引擎",
+    "authenticated_switch_required": "程序清單無法驗證引擎的驗證資訊，暫不支援直接切換。請在連線設定中填入位址與密碼後連線；目前引擎不會被自動關閉。"
+  },
   "StartupPage": {
     "born_for_cybersecurity": "為網路安全而生",
     "checking_environment": "正在進行環境檢查...",
@@ -200,6 +220,7 @@
     }
   },
   "LocalEngine": {
+    "migration_wait_hint": "引擎仍在準備中。跨大版本升級可能需要額外時間遷移資料庫，通常同一大版本升級只需遷移一次。請耐心等候，此階段最多等待 180 秒；如逾時，可查看日誌後重試。",
     "checking_secret_password_mode": "正在檢查引擎環境...",
     "secret_password_check_passed": "引擎環境檢查通過",
     "engine_version_low_reset": "引擎版本低，可點擊重置引擎版本更新...",

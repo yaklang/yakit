@@ -91,7 +91,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
       } else {
         const status = engineFailureStatus(result.status, 'start')
         if (!status) return
-        const message = engineFailureMessage(result, i18n.language, t('YaklangEngineWatchDog.startup_failed'))
+        const message = engineFailureMessage(result, i18n.language, t('YaklangEngineWatchDog.startup_failed'), t)
         outputToWelcomeConsole(message)
         props.setCheckLog([message])
         props.setYakitStatus(status)

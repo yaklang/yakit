@@ -17,6 +17,7 @@ function fixture(options = {}) {
   const children = []
   const clients = []
   const log = vi.fn()
+  const notify = vi.fn()
   const commitConnection = vi.fn()
   const spawn = vi.fn((command, args, settings) => {
     const child = new EventEmitter()
@@ -60,18 +61,112 @@ function fixture(options = {}) {
     commitConnection,
     spawn,
     log,
+    notify,
     // These children have synthetic PIDs. Never invoke the host's taskkill from a unit test.
     // Windows process-tree behavior is exercised separately with owned real processes.
     platform: 'linux',
     timeouts: { check: 1000, start: 1000, probe: 100, retry: 50 },
     ...options,
   })
-  return { manager, children, clients, log, spawn, commitConnection }
+  return { manager, children, clients, log, notify, spawn, commitConnection }
 }
 
 describe('engine startup lifecycle', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
+
+  it.each(['stdout', 'stderr'])('accepts the authoritative check result on %s', async (stream) => {
+    const f = fixture()
+    const pending = f.manager.check(params)
+    f.children[0].output(wrap({ ok: true, port: 9011, secret: 'legacy-secret' }), stream)
+    f.children[0].exit()
+    expect((await pending).ok).toBe(true)
+    expect(f.log.mock.calls.flat().join('')).not.toContain('legacy-secret')
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('preserves structured failures on stderr and rejects contradictory results', async () => {
+    const f = fixture()
+    const failed = f.manager.check(params)
+    f.children[0].output(wrap({ ok: false, reason: ['database error'] }), 'stderr')
+    f.children[0].exit(1)
+    expect((await failed).status).toBe('database_error')
+    const ambiguous = f.manager.check(params)
+    f.children[1].output(wrap({ ok: true, port: 9011 }))
+    f.children[1].output(wrap({ ok: false, reason: ['database error'] }), 'stderr')
+    f.children[1].exit()
+    expect((await ambiguous).ok).toBe(false)
+    expect(f.commitConnection).not.toHaveBeenCalled()
+  })
+
+  it.each([0, 1, 3221225477])('keeps actionable advice and exit code %s for silent check exits', async (code) => {
+    const f = fixture()
+    const pending = f.manager.check(params)
+    f.children[0].exit(code)
+    expect(await pending).toMatchObject({ ok: false, status: 'antivirus_blocked', exitCode: code })
+    expect(f.log).toHaveBeenCalledWith(`Engine check exited: code=${code}, signal=none`)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('does not label a diagnostic process crash as antivirus blocking', async () => {
+    const f = fixture()
+    const pending = f.manager.check(params)
+    f.children[0].output('runtime panic: failed to initialize\n', 'stderr')
+    f.children[0].exit(2)
+    expect(await pending).toMatchObject({ status: 'process_error', exitCode: 2 })
+  })
+
+  it.each(['check', 'start'])('allows %s to wait 180 seconds with a single hint after 20 seconds', async (stage) => {
+    const f = fixture({ timeouts: {} })
+    const pending = f.manager[stage](params)
+    await vi.advanceTimersByTimeAsync(19999)
+    expect(f.notify).not.toHaveBeenCalledWith('LocalEngine.migration_wait_hint')
+    await vi.advanceTimersByTimeAsync(1)
+    expect(f.notify.mock.calls.filter(([key]) => key === 'LocalEngine.migration_wait_hint')).toHaveLength(1)
+    await vi.advanceTimersByTimeAsync(159999)
+    expect(f.children[0].kill).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(1)
+    expect((await pending).status).toBe('timeout')
+    expect(f.children[0].kill).toHaveBeenCalledOnce()
+    expect(f.notify.mock.calls.filter(([key]) => key === 'LocalEngine.migration_wait_hint')).toHaveLength(1)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it.each(['check', 'start'])('clears the delayed hint when %s is cancelled or superseded', async (stage) => {
+    const f = fixture({ timeouts: {} })
+    const first = f.manager[stage](params)
+    await vi.advanceTimersByTimeAsync(19000)
+    await f.manager.cancel()
+    expect((await first).status).toBe('cancelled')
+    const second = f.manager.check(params)
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(f.notify).not.toHaveBeenCalledWith('LocalEngine.migration_wait_hint')
+    f.children[1].output(wrap({ ok: true, port: 9011 }))
+    f.children[1].exit()
+    expect((await second).ok).toBe(true)
+    await vi.advanceTimersByTimeAsync(20000)
+    expect(f.notify).not.toHaveBeenCalledWith('LocalEngine.migration_wait_hint')
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('treats initial, database and delayed progress as best-effort when the window closes', async () => {
+    const f = fixture({
+      timeouts: {},
+      notify: () => {
+        throw new Error('Object has been destroyed')
+      },
+    })
+    const pending = f.manager.start(params)
+    expect(() => f.children[0].output('<json-f97f966eb7f8ba8fdb63e4d29109c058>\n')).not.toThrow()
+    await vi.advanceTimersByTimeAsync(20000)
+    expect(f.children[0].kill).not.toHaveBeenCalled()
+    f.children[0].output('yak grpc ok\n')
+    f.clients.at(-1).done(null, { result: 'Hello Yakit!' })
+    f.clients.at(-1).done({ code: 16 })
+    expect((await pending).ok).toBe(true)
+    await f.manager.dispose()
+    expect(vi.getTimerCount()).toBe(0)
+  })
 
   it.each(['***', 'legacy-secret', ''])(
     'creates a fresh production password regardless of check secret %s',

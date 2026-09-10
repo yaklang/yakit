@@ -41,7 +41,9 @@ module.exports = {
       },
       log: (message) => engineLogOutputFileAndUI(win, message),
       notify: (message) => {
-        if (!win.isDestroyed()) win.webContents.send('startUp-engine-msg', message)
+        try {
+          if (!win.isDestroyed() && !win.webContents.isDestroyed()) win.webContents.send('startUp-engine-msg', message)
+        } catch {}
       },
     })
     process.once('exit', startup.killOnExit)

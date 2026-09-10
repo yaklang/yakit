@@ -140,6 +140,25 @@ describe('LocalEngine Component', () => {
 
   const renderComponent = () => render(<LocalEngine ref={ref} {...props} />)
 
+  it('keeps the migration hint alongside later progress and ignores notifications after cancellation', () => {
+    let logs: string[] = ['checking']
+    props.setLog = vi.fn((value) => {
+      logs = typeof value === 'function' ? value(logs) : value
+    })
+    const view = renderComponent()
+    const notify = vi.mocked(yakitEngine.onStartUpEngineMessage).mock.calls[0][0]
+    act(() => {
+      notify('LocalEngine.migration_wait_hint')
+      notify('LocalEngine.database_initializing')
+      notify('LocalEngine.database_initializing')
+    })
+    expect(logs).toEqual(['checking', 'LocalEngine.migration_wait_hint', 'LocalEngine.database_initializing'])
+    view.rerender(<LocalEngine ref={ref} {...props} yakitStatus="break" />)
+    vi.mocked(props.setLog).mockClear()
+    act(() => notify('LocalEngine.migration_wait_hint'))
+    expect(props.setLog).not.toHaveBeenCalled()
+  })
+
   // 辅助函数：等待 ref 可用并调用 init
   const initEngine = async (port = 9011) => {
     await waitFor(() => expect(ref.current).toBeDefined())

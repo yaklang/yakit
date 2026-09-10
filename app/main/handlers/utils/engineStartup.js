@@ -80,10 +80,17 @@ function createEngineStartup({
   platform = process.platform,
   timeouts = {},
 }) {
-  const limits = { check: 60000, start: 60000, connect: 10000, probe: 2000, retry: 500, ...timeouts }
+  const limits = { check: 180000, start: 180000, connect: 10000, probe: 2000, retry: 500, ...timeouts }
   let generation = 0
   let active = null
   const children = new Set()
+
+  // Progress is best-effort: a closing renderer must not interrupt engine cleanup.
+  function notifyProgress(message) {
+    try {
+      notify(message)
+    } catch {}
+  }
 
   async function operation(stage, work) {
     const id = ++generation
@@ -135,6 +142,9 @@ function createEngineStartup({
       () => op.finish({ ok: false, status: 'timeout', message: '等待引擎超时，请重试或查看日志' }),
       limits[stage],
     )
+    if (stage === 'check' || stage === 'start') {
+      op.timer(() => notifyProgress('LocalEngine.migration_wait_hint'), 20000)
+    }
     try {
       await work(op)
     } catch (error) {
@@ -259,7 +269,13 @@ function createEngineStartup({
           }
         },
         (code, signal) => {
-          const json = parseCheckResult(stdout)
+          try {
+            log(`Engine check exited: code=${code ?? 'unknown'}, signal=${signal ?? 'none'}`)
+          } catch {}
+          // Some legacy engines write the marked result to stderr. Multiple
+          // results across either stream remain ambiguous and are rejected.
+          const output = stdout + '\n' + stderr
+          const json = parseCheckResult(output)
           if (json?.ok === true && code === 0 && !signal) {
             if ((json.transport && json.transport !== 'tcp') || Number(json.port) !== Number(params.port)) {
               return op.finish({
@@ -281,7 +297,6 @@ function createEngineStartup({
             const safe = redactEngineData({ ...failure, json })
             return op.finish(safe)
           }
-          const output = stdout + stderr
           if (
             /flag provided but not defined|unknown command.*check-secret-local-grpc|No help topic for.*check-secret-local-grpc/i.test(
               output,
@@ -297,8 +312,12 @@ function createEngineStartup({
           }
           op.finish({
             ok: false,
-            status: 'process_error',
-            message: `引擎检查未正常完成（退出码 ${code ?? signal ?? '未知'}），请重试或查看日志`,
+            status: output.trim() ? 'process_error' : 'antivirus_blocked',
+            exitCode: code,
+            signal,
+            message: output.trim()
+              ? `引擎检查未正常完成（退出码 ${code ?? signal ?? '未知'}），请重试或查看日志`
+              : `引擎未输出诊断信息便退出（退出码 ${code ?? signal ?? '未知'}）。可能被安全软件拦截，也可能是进程异常；请检查拦截记录和引擎日志，确认文件可信后重试`,
           })
         },
       )
@@ -385,7 +404,8 @@ function createEngineStartup({
           if (event?.type === 'failed')
             return op.finish(redactEngineData(classifyEngineFailure(event, 'start'), [params.password]))
           if (event?.type === 'ready' || event?.type === 'log_ok') tryConnect()
-          if (line.includes('<json-f97f966eb7f8ba8fdb63e4d29109c058>')) notify('LocalEngine.database_initializing')
+          if (line.includes('<json-f97f966eb7f8ba8fdb63e4d29109c058>'))
+            notifyProgress('LocalEngine.database_initializing')
         },
         (code, signal) =>
           op.finish({
@@ -394,7 +414,7 @@ function createEngineStartup({
             message: `引擎进程已退出（${code ?? signal ?? '未知'}），请重试或查看日志`,
           }),
       )
-      notify('LocalEngine.waiting_engine_fully_started')
+      notifyProgress('LocalEngine.waiting_engine_fully_started')
       clearRetry = op.timer(tryConnect, limits.retry)
     })
   }

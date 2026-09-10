@@ -99,7 +99,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         }
         allowSecretLocalJson.current = null
         // 主进程已组装好用户可读的 message，前端只管显示 + 切换 UI 状态
-        setLog((arr) => arr.concat([engineFailureMessage(res, i18n.language, t('LocalEngine.check_failed'))]))
+        setLog((arr) => arr.concat([engineFailureMessage(res, i18n.language, t('LocalEngine.check_failed'), t)]))
         // 旧版本场景保留特殊处理
         if (res.status === 'old_version') {
           setLog((arr) =>
@@ -380,7 +380,9 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
     // 主进程推送 i18n key（如 LocalEngine.xxx），渲染端翻译后输出日志
     useEffect(() => {
       const offStartUpMessage = yakitEngine.onStartUpEngineMessage((key: string) => {
-        setLog([t(key)])
+        if (yakitStatusRef.current === 'break') return
+        // Keep the migration hint visible when later progress messages arrive.
+        setLog((lines) => [...lines.filter((line) => line !== t(key)), t(key)])
       })
       return () => {
         offStartUpMessage()
