@@ -69,9 +69,7 @@
     "configTitle": "AI 模型未配置",
     "toConfigure": "去配置",
     "configDesc": "無可使用AI模型，請配置後使用",
-    "openModelTabSuccess": "已開啟AI側邊欄模型配置",
-    "selectModel": "AI 模型選擇",
-    "openConfigTooltip": "開啟ai側邊欄模型配置"
+    "selectModel": "AI 模型選擇"
   },
   "AIModelList": {
     "onlineTooltip": "透過api訪問模型,接受AI資訊或向AI傳送訊息,可配置多個",
@@ -344,7 +342,6 @@
     "session": "會話",
     "historyChat": "歷史會話",
     "scheduled": "定時任務",
-    "config": "配置",
     "skill": "技能",
     "tool": "工具"
   },

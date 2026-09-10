@@ -69,9 +69,7 @@
     "configTitle": "AI Model Not Configured",
     "toConfigure": "Go to Configure",
     "configDesc": "No available AI model found. Please configure one before use.",
-    "openModelTabSuccess": "AI sidebar model configuration opened",
-    "selectModel": "Select AI Model",
-    "openConfigTooltip": "Open AI sidebar model configuration"
+    "selectModel": "Select AI Model"
   },
   "AIModelList": {
     "onlineTooltip": "Access models via API, receive AI info or send messages to AI, multiple configurations possible.",
@@ -344,7 +342,6 @@
     "session": "Session",
     "historyChat": "History Chat",
     "scheduled": "Scheduled",
-    "config": "Settings",
     "skill": "Skill",
     "tool": "Tool"
   },
