@@ -701,7 +701,9 @@ export const saveFuzzerCache = debounce(
   { leading: true },
 )
 
-/**处理WF需要缓存的数据 */
+/**
+ * 处理 WF 需要缓存的数据。
+ */
 export const getFuzzerProcessedCacheData = (pageList) => {
   const cache = pageList.map((ele) => {
     const advancedConfigValue = ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
@@ -710,11 +712,14 @@ export const getFuzzerProcessedCacheData = (pageList) => {
       groupChildren: [],
       groupId: ele.pageGroupId,
       id: ele.pageId,
+      sortFieId: ele.sortFieId,
+      verbose: ele.pageName,
+      expand: ele.expand,
+      color: ele.color,
       pageParams: {
         actualHost: advancedConfigValue.actualHost || '',
         id: ele.pageId,
         isHttps: advancedConfigValue.isHttps,
-        request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
         params: advancedConfigValue.params,
         extractors: advancedConfigValue.extractors,
         matchers: advancedConfigValue.matchers,
@@ -723,12 +728,9 @@ export const getFuzzerProcessedCacheData = (pageList) => {
         proxy: advancedConfigValue.proxy,
         minDelaySeconds: advancedConfigValue.minDelaySeconds,
         maxDelaySeconds: advancedConfigValue.maxDelaySeconds,
+        request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
         hotPatchCode: hotPatchCode,
       },
-      sortFieId: ele.sortFieId,
-      verbose: ele.pageName,
-      expand: ele.expand,
-      color: ele.color,
     }
   })
   return cache

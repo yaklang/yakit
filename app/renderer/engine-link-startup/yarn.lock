@@ -1013,10 +1013,10 @@
   resolved "https://registry.npmjs.org/@yakit-libs/color/-/color-1.4.1.tgz#876a8314dab6bd9d83256eff6ab768a228c89f4a"
   integrity sha512-RK/Qm8IUaLrCBgfYn33411qpTu3JQ07EHc7jFYfeUxALDhwo4JqxST60CkOS2Mx0EY13mJLg6f/o7yPI+oe+Qw==
 
-"@yakit-libs/yakit-ui-icons@0.2.3":
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/@yakit-libs/yakit-ui-icons/-/yakit-ui-icons-0.2.3.tgz#ece76295c7af368ba9da63801103f8485d534aa8"
-  integrity sha512-boSNuvUdgE/4FEG2ZBXFCul8CFKPd0PAmAq/6FRZIL35Dx6qiXfu2j/L0wgS7GG34nVnONbGd4oDSNIexoaFyQ==
+"@yakit-libs/yakit-ui-icons@0.2.5":
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/@yakit-libs/yakit-ui-icons/-/yakit-ui-icons-0.2.5.tgz#779a1ce91bef3521ee720f9be5ff109abfc82018"
+  integrity sha512-5zTl4rPkT3K2FsUJws7faIPbcUlOj4Bvu3Ci7lWhqXjInXT4U22Io/1KjccMcIza+Og1lC9aQBjekmk0JmB+LA==
   dependencies:
     "@yakit-libs/color" "1.4.1"
 

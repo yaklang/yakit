@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import type { AIModelConfig } from '../utils'
 import type { ModalProps } from 'antd'
 import { type AIModelTypeEnum } from '../../defaultConstant'
@@ -26,9 +26,12 @@ export interface AIModelSelectListProps {
   list: AIModelConfig[]
   onSelect: (v: AIModelConfig, i: number) => void
   onEdit: (v: AIModelConfig, i: number) => void
-  dropdownRenderRectRef?: DOMRect
+  dropdownRef: RefObject<HTMLDivElement>
+  triggerRef: RefObject<HTMLDivElement>
   /** 下拉框是否展开 */
   open?: boolean
+  /** 触发器宽度变化时关闭一级下拉框 */
+  onWidthChange: () => void
 }
 
 export interface AIModelEditContentProps {

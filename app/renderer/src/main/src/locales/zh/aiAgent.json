@@ -479,6 +479,26 @@
     "warningTitle": "文件警告",
     "tooLarge": "文件过大，无法预览"
   },
+  "AIRightPanel": {
+    "aiSettings": "AI 设置",
+    "taskBoard": "任务详情看板",
+    "fileSystem": "文件系统",
+    "traffic": "流量",
+    "risk": "漏洞",
+    "sessionHistory": "会话历史",
+    "taskList": "任务列表",
+    "timeline": "时间线",
+    "exportLog": "导出日志",
+    "viewLog": "查看日志",
+    "collapse": "折叠",
+    "more": "更多",
+    "duration": "执行时长",
+    "toolCallStats": "工具调用统计",
+    "success": "成功",
+    "failed": "失败",
+    "totalAttempts": "总尝试次数",
+    "running": "执行中"
+  },
   "AIChatContent": {
     "noActiveChat": "当前没有活跃的会话",
     "fileSystem": "文件系统",
@@ -488,15 +508,14 @@
     "exportLog": "导出日志",
     "taskDetail": "任务详情"
   },
+  "AIReActChatContents": {
+    "uiRendering": "UI渲染中..."
+  },
   "ChatSessionPane": {
     "sessionList": "会话"
   },
   "AIAgentChatLayout": {
     "dockDisabledTip": "屏幕过小，不支持该模块停靠在右边"
-  },
-  "AIHorizontalScrollCard": {
-    "questionIdMissing": "currentChatStatus.questionID不存在",
-    "taskDetailSourceMismatch": "当前会话不属于 AIAgent 数据源，无法查看任务详情"
   },
   "AIContextToken": {
     "pressure": "上下文压力",

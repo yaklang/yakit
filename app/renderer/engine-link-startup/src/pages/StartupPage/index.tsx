@@ -1147,11 +1147,13 @@ export const StartupPage: React.FC = () => {
     const offFromMainWindow = yakitApp.onFromMainWindow((data) => {
       const type = data.yakitStatus
       if (type) {
-        // 重新获取语言
-        yakitApp.getYakitHomeConfig().then((config) => {
-          const lang = normalizeLang(config.softLange as Lange)
-          i18n.changeLanguage(lang)
-        })
+        if (!isEnpriTrace()) {
+          // 重新获取语言
+          yakitApp.getYakitHomeConfig().then((config) => {
+            const lang = normalizeLang(config.softLange as Lange)
+            i18n.changeLanguage(lang)
+          })
+        }
         handleOperations(type, data)
       }
     })

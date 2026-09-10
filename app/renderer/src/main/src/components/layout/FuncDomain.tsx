@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Badge, Tooltip, Form, Divider } from 'antd'
-import { RiskStateSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RiskStateSvgIcon'
 import { UISettingSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/UISettingSvgIcon'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
@@ -38,15 +37,9 @@ import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { addToTab } from '@/pages/MainTabs'
-const DatabaseUpdateModal = React.lazy(() =>
-  import('@/pages/cve/CVETable').then((m) => ({ default: m.DatabaseUpdateModal })),
-)
 import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { WinKeyborad } from '../yakitUI/YakitEditor/keyboardConstants'
-const ScrecorderModal = React.lazy(() =>
-  import('@/pages/screenRecorder/ScrecorderModal').then((m) => ({ default: m.ScrecorderModal })),
-)
 import { useScreenRecorder } from '@/store/screenRecorder'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useRunNodeStore } from '@/store/runNode'
@@ -62,6 +55,7 @@ import {
   Wrench1Outlined,
   CloudDownloadOutlined,
   DotsCircleHorizontalOutlined,
+  BugOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { type DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
@@ -69,12 +63,6 @@ import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { type PerformanceSamplingLog, usePerformanceSampling } from '@/store/performanceSampling'
 import { isShowCodeScanDetail } from '@/pages/risks/YakitRiskTable/riskTableUtils'
-const YakitCodeScanRiskDetails = React.lazy(() =>
-  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitCodeScanRiskDetails })),
-)
-const YakitRiskDetails = React.lazy(() =>
-  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitRiskDetails })),
-)
 import { GitHubSolid, PlaySolid, UserCircleSolid, YakitSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
@@ -91,12 +79,37 @@ import {
 } from '@/apiUtils/grpc'
 import { WebsiteGV } from '@/enums/website'
 import { NotepadMenu } from '@/pages/layout/NotepadMenu/NotepadMenu'
-
 import YakitLogo from '@/assets/yakitLogo.png'
 import yakitImg from '../../assets/yakit.jpg'
 import classNames from 'classnames'
 import styles from './funcDomain.module.scss'
 import { useEETaskNotificationHook } from '../MessageCenter/useEETaskNotificationHook'
+import { apiFetchMessageRead, apiFetchQueryMessage } from '../MessageCenter/utils'
+import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { randomString } from '@/utils/randomUtil'
+import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
+import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
+import {
+  apiNewRiskRead,
+  apiQueryNewSSARisks,
+  apiQuerySSARisks,
+} from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils'
+import type {
+  QueryNewSSARisksResponse,
+  SSARisk,
+} from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import { useCampare } from '@/hook/useCompare/useCompare'
+import { openConsoleNewWindow } from '@/utils/openWebsite'
+import useEngineConsole from './hooks/useEngineConsole/useEngineConsole'
+import { grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder } from '@/utils/logCollection'
+import { useDownloadYakit } from './update/useDownloadYakit'
+import { JSONParseLog } from '@/utils/tool'
+import { SystemInfo } from '@/constants/hardware'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import cloneDeep from 'lodash/cloneDeep'
+import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
+import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
+import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
 const MessageCenter = React.lazy(() =>
   import('../MessageCenter/MessageCenter').then((m) => ({ default: m.MessageCenter })),
 )
@@ -106,10 +119,6 @@ const TaskNotification = React.lazy(() =>
 const TaskErrNotification = React.lazy(() =>
   import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskErrNotification })),
 )
-import { apiFetchMessageRead, apiFetchQueryMessage } from '../MessageCenter/utils'
-import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { randomString } from '@/utils/randomUtil'
-import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 const PluginExecuteResult = React.lazy(() =>
   import('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult').then((m) => ({
     default: m.PluginExecuteResult,
@@ -125,33 +134,23 @@ const PluginExecuteProgress = React.lazy(() =>
     default: m.PluginExecuteProgress,
   })),
 )
-import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
-import {
-  apiNewRiskRead,
-  apiQueryNewSSARisks,
-  apiQuerySSARisks,
-} from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils'
-import type {
-  QueryNewSSARisksResponse,
-  SSARisk,
-} from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 const YakitAuditRiskDetails = React.lazy(() =>
   import('@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable').then((m) => ({
     default: m.YakitAuditRiskDetails,
   })),
 )
-import { useCampare } from '@/hook/useCompare/useCompare'
-import { openConsoleNewWindow } from '@/utils/openWebsite'
-import useEngineConsole from './hooks/useEngineConsole/useEngineConsole'
-import { grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder } from '@/utils/logCollection'
-import { useDownloadYakit } from './update/useDownloadYakit'
-import { JSONParseLog } from '@/utils/tool'
-import { SystemInfo } from '@/constants/hardware'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import cloneDeep from 'lodash/cloneDeep'
-import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
-import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
-import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
+const YakitCodeScanRiskDetails = React.lazy(() =>
+  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitCodeScanRiskDetails })),
+)
+const YakitRiskDetails = React.lazy(() =>
+  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitRiskDetails })),
+)
+const DatabaseUpdateModal = React.lazy(() =>
+  import('@/pages/cve/CVETable').then((m) => ({ default: m.DatabaseUpdateModal })),
+)
+const ScrecorderModal = React.lazy(() =>
+  import('@/pages/screenRecorder/ScrecorderModal').then((m) => ({ default: m.ScrecorderModal })),
+)
 
 // ===== 用户功能菜单拆分模块导入 =====
 import { randomAvatarColor } from './userMenu/constants'
@@ -2631,7 +2630,9 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
       <div className={styles['ui-op-btn-wrapper']}>
         <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
           <Badge count={risks.NewRiskTotal} offset={[2, 15]}>
-            <RiskStateSvgIcon className={show ? styles['icon-hover-style'] : styles['icon-style']} />
+            <BugOutlined
+              className={classNames(styles['size-style'], show ? styles['icon-hover-style'] : styles['icon-style'])}
+            />
           </Badge>
         </div>
       </div>
@@ -2882,7 +2883,9 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
       <div className={styles['ui-op-btn-wrapper']}>
         <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
           <Badge count={risks.NewRiskTotal} offset={[2, 15]}>
-            <RiskStateSvgIcon className={show ? styles['icon-hover-style'] : styles['icon-style']} />
+            <BugOutlined
+              className={classNames(styles['size-style'], show ? styles['icon-hover-style'] : styles['icon-style'])}
+            />
           </Badge>
         </div>
       </div>

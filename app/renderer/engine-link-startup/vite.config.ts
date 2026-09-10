@@ -44,4 +44,7 @@ export default defineConfig({
     esbuildOptions: { target: 'esnext' },
     include: ['react', 'react-dom', 'antd', 'monaco-editor'],
   },
+  json: {
+    stringify: true,
+  },
 })

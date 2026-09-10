@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom'
-import React, { memo, type ReactNode, useEffect, useRef } from 'react'
+import React, { memo, type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { coordinate } from '@/pages/globalVariable'
 import emiter from '@/utils/eventBus/eventBus'
@@ -8,6 +8,23 @@ import styles from './showByRightContext.module.scss'
 
 const roundDown = (value: number) => {
   return Math.floor(value)
+}
+
+/**
+ * antd/rc-menu 垂直子菜单默认 placement 为 rightTop（向右展开）。
+ * 右侧放得下时保持向右；右侧不够且左侧放得下时，把 right* 锚点改成向左优先。
+ * 两侧都不够时再选剩余空间更大的一侧。adjustX 只会平移、不会切换 placement。
+ * 各级实际宽度并不一致，这里用根菜单宽度估算子菜单所需空间，再决定整棵往哪边展开。
+ */
+const preferLeftSubmenuPlacements: NonNullable<YakitMenuProp['builtinPlacements']> = {
+  rightTop: {
+    points: ['tr', 'tl'],
+    overflow: { adjustX: true, adjustY: true },
+  },
+  rightBottom: {
+    points: ['br', 'bl'],
+    overflow: { adjustX: true, adjustY: true },
+  },
 }
 
 const genX = (client, coordinate, target) => {
@@ -31,6 +48,9 @@ const genY = (client, coordinate, target) => {
 }
 
 const ContextMenuId = 'yakit-right-context'
+
+/** 连续右键复用同一 div 时组件不会重挂载，用每次调用递增的序号驱动挂载后的测量与方向计算重跑 */
+let contextRenderSeq = 0
 
 /**
  * @name 生成一个鼠标所在坐标位置的展示框(props默认为菜单组件，也可自行传递自定义组件)
@@ -98,6 +118,8 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
     div.style.top = `${top}px`
   }
 
+  const renderSeq = ++contextRenderSeq
+
   const render = () => {
     setTimeout(() => {
       document.addEventListener(
@@ -116,7 +138,7 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
       // }
       // rightContextRootDiv.render(<RightContext data={props} callback={offsetPosition} />)
       // 上面注释内容为react 18新特性写法，但在antd menu下会有二级菜单多个同时打开问题
-      ReactDOM.render(<RightContext data={props} callback={offsetPosition} />, div)
+      ReactDOM.render(<RightContext data={props} callback={offsetPosition} renderSeq={renderSeq} />, div)
     })
   }
   render()
@@ -127,19 +149,49 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
 interface RightContextProp {
   data: YakitMenuProp | ReactNode
   callback?: (width: number, height: number) => any
+  renderSeq?: number
 }
 const RightContext: React.FC<RightContextProp> = memo((props) => {
-  const { data, callback } = props
+  const { data, callback, renderSeq } = props
 
   const wrapperRef = useRef<HTMLDivElement>(null)
+  /** 右侧放不下且左侧放得下时，子菜单优先向左展开 */
+  const [preferSubmenuLeft, setPreferSubmenuLeft] = useState(false)
 
-  useEffect(() => {
-    if ((wrapperRef.current?.clientWidth || 0) > 0 && (wrapperRef.current?.clientHeight || 0) > 0) {
-      if (callback) callback(wrapperRef.current?.clientWidth || 0, wrapperRef.current?.clientHeight || 0)
-    }
+  useLayoutEffect(() => {
+    const width = wrapperRef.current?.clientWidth || 0
+    const height = wrapperRef.current?.clientHeight || 0
+    if (width <= 0 || height <= 0) return
+
+    callback?.(width, height)
   }, [wrapperRef])
 
+  useLayoutEffect(() => {
+    const root = document.getElementById(ContextMenuId)
+    if (!root) return
+    const rect = root.getBoundingClientRect()
+    const spaceLeft = rect.left
+    const spaceRight = window.innerWidth - rect.right
+    // 各级宽度不一致，用根菜单宽度估算子菜单能否放下
+    const needWidth = rect.width
+    if (spaceRight >= needWidth) {
+      setPreferSubmenuLeft(false)
+    } else if (spaceLeft >= needWidth) {
+      setPreferSubmenuLeft(true)
+    } else {
+      setPreferSubmenuLeft(spaceLeft > spaceRight)
+    }
+  }, [renderSeq])
+
   const menuProps = data as YakitMenuProp
+
+  const builtinPlacements = useMemo(() => {
+    if (!preferSubmenuLeft) return menuProps.builtinPlacements
+    return {
+      ...menuProps.builtinPlacements,
+      ...preferLeftSubmenuPlacements,
+    }
+  }, [menuProps.builtinPlacements, preferSubmenuLeft])
 
   return (
     <div className={styles['show-by-right-context-wrapper']} ref={wrapperRef}>
@@ -147,8 +199,12 @@ const RightContext: React.FC<RightContextProp> = memo((props) => {
         data
       ) : (
         <YakitMenu
+          // 复用 div 再次右键时必须重挂载菜单：rc-trigger 弹层在 trigger 元素被复用时会沿用
+          // 上一次的 popup 实例与对齐缓存，导致三四级子菜单 hover 后不渲染
+          key={renderSeq}
           {...menuProps}
           popupClassName={classNames(styles['show-by-right-context-submenu'], menuProps.popupClassName)}
+          builtinPlacements={builtinPlacements}
         />
       )}
     </div>
