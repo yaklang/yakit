@@ -64,6 +64,7 @@ const MAIN_MENUS: MenuItemDef[] = [
 
 /** 「更多」分组展开后追加显示的功能入口（收起态仅在底部显示「更多」按钮） */
 const MORE_MENUS: MenuItemDef[] = [
+  // { key: 'ai-settings', labelKey: 'AIRightPanel.aiSettings', icon: <CogOutlined /> },
   { key: 'timeline', labelKey: 'AIRightPanel.timeline', icon: <TimelineOutlined /> },
   { key: 'export-log', labelKey: 'AIRightPanel.exportLog', icon: <FigmaIcon2017756Outlined /> },
   { key: 'view-log', labelKey: 'AIRightPanel.viewLog', icon: <NewspaperOutlined /> },

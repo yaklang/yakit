@@ -170,14 +170,20 @@ const renderPanel = async (ui: React.ReactElement) => {
 }
 
 describe('AIRightPanel', () => {
-  it.each([false, true])('AI 设置位于底部分组的时间线上方，随更多分组展开和收起（小屏：%s）', async (small) => {
+  it.each([false, true])('暂不显示 AI 设置，更多分组按顺序展开和收起（小屏：%s）', async (small) => {
     render(<AIRightPanel small={small} />)
     fireEvent.click(await screen.findByLabelText('更多'))
-    const settings = screen.getByLabelText('AI 设置')
-    expect(settings.nextElementSibling).toBe(screen.getByLabelText('时间线'))
-    expect(settings.parentElement?.firstElementChild).toBe(settings)
+    expect(screen.queryByLabelText('AI 设置')).not.toBeInTheDocument()
+    const timeline = screen.getByLabelText('时间线')
+    const exportLog = screen.getByLabelText('导出日志')
+    expect(timeline.parentElement?.firstElementChild).toBe(timeline)
+    expect(timeline.nextElementSibling).toBe(exportLog)
+    expect(exportLog.nextElementSibling).toBe(screen.getByLabelText('查看日志'))
     fireEvent.click(screen.getByLabelText('折叠'))
     expect(screen.queryByLabelText('AI 设置')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('时间线')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('导出日志')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('查看日志')).not.toBeInTheDocument()
   })
 
   it('点击会话历史打开 HistoryChat，关闭按钮位于原头部最右侧且没有固定按钮', async () => {
