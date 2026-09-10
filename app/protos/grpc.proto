@@ -5532,6 +5532,8 @@ message BatchSetRiskTagsRequest {
   string RiskTypeVerbose = 9;
   string Severity = 10;
   double SeverityScore = 11;
+  // 处置原因
+  string TagReason = 12;
 }
 
 message BatchSetRiskTagsResponse {
