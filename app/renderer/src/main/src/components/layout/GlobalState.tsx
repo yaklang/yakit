@@ -47,6 +47,7 @@ import { ShieldCheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitApp, yakitHost, yakitPlugin, yakitReverse } from '@/services/electronBridge'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { SettingsSections } from '@/pages/settings/constants'
+import { startIdleVisibleInterval } from '@/utils/scheduleIdleTask'
 
 import { ShieldCheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
@@ -583,9 +584,15 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     })
   })
 
-  const [timeInterval, setTimeInterval, getTimeInterval] = useGetState<number>(5)
+  const [timeInterval, setTimeInterval] = useState<number>(5)
   const [zoomScale, setZoomScale] = useState<number>(100)
-  const timeRef = useRef<any>(null)
+
+  const onTimeIntervalChange = useMemoizedFn((value: number | string | null) => {
+    const next = !value ? 1 : +value || 5
+    if (next === timeInterval) return
+    setTimeInterval(next)
+    setRemoteValue(RemoteGV.GlobalStateTimeInterval, `${next}`)
+  })
 
   useEffect(() => {
     getRemoteValue(RemoteGV.GlobalStateZoomScale).then((scale: any) => {
@@ -599,7 +606,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
   // 启动全局状态轮询定时器
   useEffect(() => {
-    let timer: any = null
     if (isEngineLink) {
       // 仅在引擎连接时校验引擎是否为官方发布版本
       // 频繁读写将会大幅占用性能
@@ -610,10 +616,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         if ((+time || 5) > 5) updateAllInfo()
       })
 
-      if (timer) clearInterval(timer)
-      timer = setInterval(() => {
-        setRemoteValue(RemoteGV.GlobalStateTimeInterval, `${getTimeInterval()}`)
-      }, 20000)
       updatePluginTotal()
       isIRify() && onRuleUpdate()
       emiter.on('onRefreshQueryYakScript', updatePluginTotal)
@@ -636,26 +638,19 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
       isFirstCheckRef.current = true
 
       isRunRef.current = false
-      if (timeRef.current) clearInterval(timeRef.current)
-      timeRef.current = null
     }
 
     return () => {
       if (isEngineLink) emiter.off('onRefreshQueryYakScript', updatePluginTotal)
-      if (timer) clearInterval(timer)
-      timer = null
     }
   }, [isEngineLink])
-  // 修改查询间隔时间后
+  // 修改查询间隔时间后：空闲再开、隐藏时跳过 tick
   useDebounceEffect(
     () => {
-      if (timeRef.current) clearInterval(timeRef.current)
-      timeRef.current = setInterval(updateAllInfo, timeInterval * 1000)
-
+      const cancel = startIdleVisibleInterval(updateAllInfo, timeInterval * 1000)
       return () => {
         isRunRef.current = false
-        if (timeRef.current) clearInterval(timeRef.current)
-        timeRef.current = null
+        cancel()
       }
     },
     [timeInterval],
@@ -1205,12 +1200,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             formatter={(value) => `${value}s`}
             parser={(value) => value!.replace('s', '')}
             value={timeInterval}
-            onChange={(value) => {
-              if (!value) setTimeInterval(1)
-              else {
-                if (+value !== timeInterval) setTimeInterval(+value || 5)
-              }
-            }}
+            onChange={onTimeIntervalChange}
           />
         </div>
       </div>
@@ -1347,12 +1337,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             formatter={(value) => `${value}s`}
             parser={(value) => value!.replace('s', '')}
             value={timeInterval}
-            onChange={(value) => {
-              if (!value) setTimeInterval(1)
-              else {
-                if (+value !== timeInterval) setTimeInterval(+value || 5)
-              }
-            }}
+            onChange={onTimeIntervalChange}
           />
         </div>
       </div>

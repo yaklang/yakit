@@ -18,6 +18,7 @@ import { useEeSystemConfig, type UserInfoProps, useStore, yakitDynamicStatus } f
 import type { SimpleQueryYakScriptSchema } from './invoker/batch/QueryYakScriptParam'
 import { refreshToken } from '@/utils/login'
 import { getLocalValue, getRemoteValue, setLocalValue, setRemoteValue } from '@/utils/kv'
+import { startIdleVisibleInterval } from '@/utils/scheduleIdleTask'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import {
@@ -333,9 +334,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
   const [controlShow, setControlShow] = useState<boolean>(false)
   const [controlName, setControlName] = useState<string>('')
   const { dynamicStatus, setDynamicStatus } = yakitDynamicStatus()
-  // 定时器监听是否连接/断开
+  // 定时器监听是否连接/断开：空闲后再开，页面隐藏时跳过
   useEffect(() => {
-    const id = setInterval(() => {
+    const cancel = startIdleVisibleInterval(() => {
       // 当服务启动时 请求接口
       ipcRenderer.invoke('alive-dynamic-control-status').then((is: boolean) => {
         if (is) {
@@ -371,7 +372,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     })
 
     return () => {
-      clearInterval(id)
+      cancel()
       ipcRenderer.removeAllListeners('lougin-out-dynamic-control-page-callback')
     }
   }, [])

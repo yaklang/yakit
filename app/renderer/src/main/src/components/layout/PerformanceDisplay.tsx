@@ -23,6 +23,7 @@ import { remoteOperation } from '@/pages/dynamicControl/DynamicControl'
 import { yakitApp, yakitEngine, yakitPerf, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitGlobalHost } from './YakitGlobalHost'
+import { startIdleVisibleInterval } from '@/utils/scheduleIdleTask'
 
 interface PerformanceDisplayProps {
   engineMode: YaklangEngineMode | undefined
@@ -37,14 +38,36 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo(
   const [rps, setRps] = useState<number>(0)
 
   useEffect(() => {
-    yakitPerf.startComputePercent()
-    const time = setInterval(() => {
-      yakitPerf.fetchComputePercent().then((res) => setCpu(res))
-    }, 500)
+    let computeStarted = false
+    const ensureCompute = () => {
+      if (computeStarted || document.hidden) return
+      computeStarted = true
+      yakitPerf.startComputePercent()
+    }
+    const stopCompute = () => {
+      if (!computeStarted) return
+      computeStarted = false
+      yakitPerf.clearComputePercent()
+    }
+
+    // 空闲后再采 CPU，页面隐藏时停采集，避免首屏与后台空转抢主线程
+    const cancelInterval = startIdleVisibleInterval(
+      () => {
+        ensureCompute()
+        yakitPerf.fetchComputePercent().then((res) => setCpu(res))
+      },
+      500,
+      { runImmediately: true },
+    )
+    const onVisibilityChange = () => {
+      if (document.hidden) stopCompute()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
 
     return () => {
-      clearInterval(time)
-      yakitPerf.clearComputePercent()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      cancelInterval()
+      stopCompute()
     }
   }, [])
 

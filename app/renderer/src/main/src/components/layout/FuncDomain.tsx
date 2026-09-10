@@ -44,6 +44,7 @@ import { useScreenRecorder } from '@/store/screenRecorder'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useRunNodeStore } from '@/store/runNode'
 import emiter from '@/utils/eventBus/eventBus'
+import { startIdleVisibleInterval } from '@/utils/scheduleIdleTask'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
@@ -1594,18 +1595,15 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   /** Yakit版本号 */
   const [yakitVersion, setYakitVersion] = useState<string>('dev')
   const [yakitLastVersion, setYakitLastVersion] = useState<string>('')
-  const yakitTime = useRef<any>(null)
 
   /** Yaklang引擎版本号 */
   const [yaklangVersion, setYaklangVersion] = useState<string>('dev') // 当前连接引擎的版本号
   const [yaklangLastVersion, setYaklangLastVersion] = useState<string>('') // 官方推荐的最新版
   const [yaklangLocalVersion, setYaklangLocalVersion] = useState<string>('') // 本地引擎文件版本号
   const [yaklangBuildType, setYaklangBuildType] = useState<'full' | 'slim'>('full') // 当前引擎标准/轻量
-  const yaklangTime = useRef<any>(null)
 
   /** 更多引擎列表 */
   const [moreYaklangVersionList, setMoreYaklangVersionList] = useState<string[]>([]) // 更多引擎版本list
-  const moreYaklangTime = useRef<any>(null)
 
   // 是否低于主推引擎版本
   const lowerYaklangLastVersion = useMemo(() => {
@@ -1620,7 +1618,6 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     return false
   }, [isRemoteMode, moreYaklangVersionList, yaklangLastVersion, yaklangVersion])
 
-  const versionsInfoTime = useRef<any>(null)
   const [communityYakitContent, setCommunityYakitContent] = useState<UpdateContentProp>({ version: '', content: '' })
   const [communityYaklangContent, setCommunityYaklangContent] = useState<UpdateContentProp>({
     version: '',
@@ -1845,65 +1842,31 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       })
   }, [isEngineLink, yaklangVersion])
 
-  /** 清空定时器 */
-  const handleClearIntervals = useMemoizedFn(() => {
-    if (versionsInfoTime.current) {
-      clearInterval(versionsInfoTime.current)
-      versionsInfoTime.current = null
-    }
-    if (yakitTime.current) {
-      clearInterval(yakitTime.current)
-      yakitTime.current = null
-    }
-    if (yaklangTime.current) {
-      clearInterval(yaklangTime.current)
-      yaklangTime.current = null
-    }
-    if (moreYaklangTime.current) {
-      clearInterval(moreYaklangTime.current)
-      moreYaklangTime.current = null
-    }
-  })
-
   useEffect(() => {
-    if (isEngineLink) {
-      // 获取是否 启动检测更新 的缓存状态
-      getLocalValue(LocalGV.NoAutobootLatestVersionCheck).then((val: boolean) => {
-        setIsCheck(val)
-      })
-
-      // 设置获取更新内容的定时器(yakit&yaklang)
-      if (versionsInfoTime.current) clearInterval(versionsInfoTime.current)
-      versionsInfoTime.current = setInterval(fetchYakitAndYaklangVersionInfo, 60000)
-      fetchYakitAndYaklangVersionInfo()
-
-      // 获取本地的 yakit 版本号，启动定时器(获取最新的 yakit 版本号)
-      grpcFetchLocalYakitVersion(true).then((v: string) => setYakitVersion(`v${v}`))
-      if (yakitTime.current) clearInterval(yakitTime.current)
-      fetchYakitLastVersion()
-      yakitTime.current = setInterval(fetchYakitLastVersion, 60000)
-
-      // 获取当前连接引擎的版本号，启动定时器(获取最新和本地引擎文件的版本号)
-      yakitEngine.requestYakVersion()
-      if (yaklangTime.current) clearInterval(yaklangTime.current)
-      fetchYaklangLastVersion()
-      yaklangTime.current = setInterval(fetchYaklangLastVersion, 60000)
-
-      // 获取更多引擎列表，并启动定时器
-      if (moreYaklangTime.current) clearInterval(moreYaklangTime.current)
-      fetchMoreYaklangLastVersion()
-      moreYaklangTime.current = setInterval(fetchMoreYaklangLastVersion, 60000)
-    } else {
+    if (!isEngineLink) {
       setYakitLastVersion('')
       setYaklangVersion('dev')
       setYaklangLastVersion('')
       setYaklangLocalVersion('')
       setMoreYaklangVersionList([])
+      return
     }
-
-    return () => {
-      handleClearIntervals()
-    }
+    // 获取是否 启动检测更新 的缓存状态
+    getLocalValue(LocalGV.NoAutobootLatestVersionCheck).then((val: boolean) => {
+      setIsCheck(val)
+    })
+    grpcFetchLocalYakitVersion(true).then((v: string) => setYakitVersion(`v${v}`))
+    yakitEngine.requestYakVersion()
+    return startIdleVisibleInterval(
+      () => {
+        fetchYakitAndYaklangVersionInfo()
+        fetchYakitLastVersion()
+        fetchYaklangLastVersion()
+        fetchMoreYaklangLastVersion()
+      },
+      60000,
+      { runImmediately: true },
+    )
   }, [isEngineLink])
 
   // intranetYakit为内网Yakit
@@ -2390,7 +2353,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
   })
 
   /** 定时器 */
-  const timeRef = useRef<any>(null)
+  const timeRef = useRef<(() => void) | null>(null)
   /** 风险详情弹窗（保证同时只存在一个） */
   const riskDetailModalRef = useRef<{ destroy: () => void } | null>(null)
   /** 打开详情中，防止同一次/连续点击叠多个弹窗 */
@@ -2422,9 +2385,13 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   /** 获取最新的漏洞与风险信息(5秒一次) */
   useEffect(() => {
+    let cancelled = false
+    const clearPoll = () => {
+      timeRef.current?.()
+      timeRef.current = null
+    }
     if (isEngineLink) {
-      if (timeRef.current) clearInterval(timeRef.current)
-
+      clearPoll()
       yakitRisk
         .queryRisks({
           Pagination: { Limit: 1, Page: 1, Order: 'desc', OrderBy: 'id' },
@@ -2435,14 +2402,14 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         })
         .catch((e) => {})
         .finally(() => {
+          if (cancelled) return
           update()
           emiter.on('onRefreshQueryNewRisk', update)
           // 以下为兼容以前的引擎 PS:以前的引擎依然为轮询
           if (!serverPushStatus) {
-            timeRef.current = setInterval(() => {
+            timeRef.current = startIdleVisibleInterval(() => {
               if (serverPushStatus) {
-                if (timeRef.current) clearInterval(timeRef.current)
-                timeRef.current = null
+                clearPoll()
                 return
               }
               update()
@@ -2451,13 +2418,13 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         })
       emiter.on('onRefRisksRead', onRefRisksRead)
       return () => {
-        clearInterval(timeRef.current)
+        cancelled = true
+        clearPoll()
         emiter.off('onRefreshQueryNewRisk', update)
         emiter.off('onRefRisksRead', onRefRisksRead)
       }
     } else {
-      if (timeRef.current) clearInterval(timeRef.current)
-      timeRef.current = null
+      clearPoll()
       fetchNode.current = 0
       setRisks({ Data: [], Total: 0, NewRiskTotal: 0, Unread: 0 })
     }
@@ -2654,7 +2621,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
   })
 
   /** 定时器 */
-  const timeRef = useRef<any>(null)
+  const timeRef = useRef<(() => void) | null>(null)
   /** 风险详情弹窗（保证同时只存在一个） */
   const riskDetailModalRef = useRef<{ destroy: () => void } | null>(null)
   /** 打开详情中，防止同一次/连续点击叠多个弹窗 */
@@ -2678,8 +2645,14 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   /** 获取最新的漏洞与风险信息(5秒一次) */
   useEffect(() => {
+    let cancelled = false
+    const clearPoll = () => {
+      timeRef.current?.()
+      timeRef.current = null
+    }
+
     if (isEngineLink) {
-      if (timeRef.current) clearInterval(timeRef.current)
+      clearPoll()
       apiQuerySSARisks({
         Pagination: {
           Limit: 1,
@@ -2695,14 +2668,14 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         })
         .catch((e) => {})
         .finally(() => {
+          if (cancelled) return
           update()
           emiter.on('onRefreshQuerySSARisks', update)
           // 以下为兼容以前的引擎 PS:以前的引擎依然为轮询
           if (!serverPushStatus) {
-            timeRef.current = setInterval(() => {
+            timeRef.current = startIdleVisibleInterval(() => {
               if (serverPushStatus) {
-                if (timeRef.current) clearInterval(timeRef.current)
-                timeRef.current = null
+                clearPoll()
                 return
               }
               update()
@@ -2711,13 +2684,13 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         })
       emiter.on('onRefRisksRead', onRefRisksRead)
       return () => {
-        clearInterval(timeRef.current)
+        cancelled = true
+        clearPoll()
         emiter.off('onRefreshQuerySSARisks', update)
         emiter.off('onRefRisksRead', onRefRisksRead)
       }
     } else {
-      if (timeRef.current) clearInterval(timeRef.current)
-      timeRef.current = null
+      clearPoll()
       fetchNode.current = 0
       setRisks({ Data: [], Total: 0, NewRiskTotal: 0, Unread: 0 })
     }

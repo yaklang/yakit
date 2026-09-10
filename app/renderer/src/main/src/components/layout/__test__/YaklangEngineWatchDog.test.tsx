@@ -106,6 +106,7 @@ describe('YaklangEngineWatchDog 组件测试', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     vi.clearAllMocks()
   })
 
@@ -213,6 +214,60 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       await waitFor(() => {
         expect(props.onFailed).toHaveBeenCalled()
       })
+    })
+
+    it('探活持续成功时只回调一次 onReady，未连接时仍每 1s 探测', async () => {
+      vi.useFakeTimers()
+      props.keepalive = true
+      vi.mocked(isEngineConnectionAlive).mockResolvedValue(true)
+      render(<YaklangEngineWatchDog {...props} />)
+
+      await vi.runOnlyPendingTimersAsync()
+      expect(props.onReady).toHaveBeenCalledTimes(1)
+      const aliveCalls = vi.mocked(isEngineConnectionAlive).mock.calls.length
+
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(aliveCalls + 1)
+      expect(props.onReady).toHaveBeenCalledTimes(1)
+    })
+
+    it('引擎已连接后探活间隔为 3s', async () => {
+      vi.useFakeTimers()
+      props.keepalive = true
+      props.engineLink = true
+      vi.mocked(isEngineConnectionAlive).mockResolvedValue(true)
+      render(<YaklangEngineWatchDog {...props} />)
+
+      await vi.runOnlyPendingTimersAsync()
+      const aliveCalls = vi.mocked(isEngineConnectionAlive).mock.calls.length
+
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(aliveCalls)
+
+      await vi.advanceTimersByTimeAsync(2000)
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(aliveCalls + 1)
+    })
+
+    it('上一轮探活未完成时跳过本轮，避免请求堆积', async () => {
+      vi.useFakeTimers()
+      props.keepalive = true
+      let resolveAlive: ((value: boolean) => void) | undefined
+      vi.mocked(isEngineConnectionAlive).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveAlive = resolve
+          }),
+      )
+      render(<YaklangEngineWatchDog {...props} />)
+
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(1)
+
+      resolveAlive?.(true)
+      await Promise.resolve()
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(2)
     })
   })
 })

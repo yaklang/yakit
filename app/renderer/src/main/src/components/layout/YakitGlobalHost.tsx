@@ -1,8 +1,9 @@
 import type React from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { yakitEngine } from '@/services/electronBridge'
+import { startIdleVisibleInterval } from '@/utils/scheduleIdleTask'
 
 import styles from './yakitGlobalHost.module.scss'
 
@@ -15,8 +16,6 @@ export const YakitGlobalHost: React.FC<YakitGlobalHostProp> = (props) => {
   const { isEngineLink, compact } = props
 
   const [host, setHost] = useState<{ addr: string; port: string }>({ addr: '??', port: '??' })
-  /** 获取连接引擎地址计时器 */
-  const timeRef = useRef<any>(null)
 
   /** 获取连接引擎的地址参数 */
   const getGlobalHost = useMemoizedFn(() => {
@@ -33,18 +32,11 @@ export const YakitGlobalHost: React.FC<YakitGlobalHostProp> = (props) => {
 
   /** 引擎连接和断开时的展示内容处理 */
   useEffect(() => {
-    if (isEngineLink) {
-      if (timeRef.current) clearInterval(timeRef.current)
-      timeRef.current = setInterval(getGlobalHost, 1000)
-
-      return () => {
-        clearInterval(timeRef.current)
-      }
-    } else {
-      if (timeRef.current) clearInterval(timeRef.current)
-      timeRef.current = null
+    if (!isEngineLink) {
       setHost({ addr: '??', port: '??' })
+      return
     }
+    return startIdleVisibleInterval(getGlobalHost, 1000, { runImmediately: true })
   }, [isEngineLink])
 
   return (
