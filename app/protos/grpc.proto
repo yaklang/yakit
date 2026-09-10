@@ -7367,6 +7367,9 @@ message QueryHTTPFlowRequest {
   // 显式跳过精确 Total；用于已有游标的实时增量查询。
   // Data/Pagination 仍正常返回，但 Total 为 0。初始化、历史与周期校准不得开启。
   bool SkipTotal = 55;
+  string IssueType = 56;
+  string Severity = 57;
+  string Status = 58;
 }
 
 message HTTPFlowsToOnlineRequest {
@@ -7397,12 +7400,15 @@ message HTTPFlowsFromOnlineProgress {
 }
 
 message BatchSetHTTPFlowIssueFieldsRequest {
+  // 批量更新 条件筛选
   QueryHTTPFlowRequest Filter = 1;
-  string IssueType = 2;
-  string Severity = 3;
-  string Status = 4;
+  string SetIssueType = 2;
+  string SetSeverity = 3;
+  string SetStatus = 4;
   string StatusReason = 5;
+  // 按 ID 批量更新
   repeated int64 Ids = 6;
+  // 按 Hash 批量更新
   repeated string Hashes = 7;
   string Token = 8;
 }
