@@ -75,6 +75,9 @@ const replaceBrokenTabStrings = (raw: string): string => {
  * 不依赖特定字段顺序，通过统计大括号 `{}` 的嵌套层级来定位每个顶层对象。
  * 支持嵌套对象和截断场景（最后一个未闭合的对象也会被保留）。
  *
+ * 末尾的 `]` 按外层数组结束符剥掉。截断若落在 params / extractors / matchers / proxy 等嵌套数组上，
+ * 这个 `]` 可能其实是内层括号，字符串修复对不上就会失败；接受这种边界，抛原始错误让用户手动恢复标签页。
+ *
  * @param raw - 原始缓存字符串（应为一个 JSON 数组）
  * @returns 每个顶层对象的字符串片段（包含大括号）的数组
  * @throws 如果输入不是数组或找不到任何顶层对象
@@ -83,6 +86,7 @@ const splitTabsRobust = (raw: string): string[] => {
   const body = (raw || '').trim()
   if (!body.startsWith('[')) throw new Error('not array')
 
+  // 假定末尾 ] 是外层数组的；嵌套数组截断时可能剥错，修失败则外抛
   const inner = body.slice(1).replace(/]\s*$/, '')
 
   const segments: string[] = []
