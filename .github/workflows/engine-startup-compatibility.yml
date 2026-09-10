@@ -10,15 +10,6 @@ on:
       - 'package.json'
       - 'yarn.lock'
       - '.github/workflows/engine-startup-compatibility.yml'
-  push:
-    paths:
-      - 'app/main/**'
-      - 'app/protos/grpc.proto'
-      - 'app/renderer/engine-link-startup/**'
-      - 'scripts/engine-startup/**'
-      - 'package.json'
-      - 'yarn.lock'
-      - '.github/workflows/engine-startup-compatibility.yml'
   workflow_dispatch:
 
 permissions:
