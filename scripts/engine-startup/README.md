@@ -33,13 +33,10 @@ or native install scripts, uses bounded jobs and RPCs, and uploads JUnit results
 
 ## Real engine experiments
 
-Build the engine entry point at explicit revisions with its supported Go toolchain:
-
-```sh
-go build -mod=readonly -o /absolute/path/to/yak ./common/yak/cmd/yak.go
-```
-
-From the Yakit repository, pass only explicitly selected engine binaries:
+Download explicitly versioned, already published engine binaries from the CDN
+and verify their SHA-256 before executing them. Do not compile engines for this
+test or follow the moving `latest` pointer. From the Yakit repository, pass the
+verified binaries:
 
 ```sh
 node scripts/engine-startup/verify-real-engine.cjs /absolute/yak-old /absolute/yak-new
@@ -49,8 +46,22 @@ Each binary gets disposable databases and a temporary home containing spaces and
 Unicode. The experiment verifies random credentials, authenticated startup,
 rejection of empty/masked/wrong credentials, secret redaction, port conflict
 recovery, and owned-child cleanup. The JSON output includes binary SHA-256 hashes.
-The Windows CI job pins and builds both source revisions; it never downloads a
-moving `latest` engine.
+The Windows CI job downloads these Windows x64 binaries from
+`https://yaklang.oss-accelerate.aliyuncs.com/yak/<version>/yak_windows_amd64.exe`
+and checks the hashes pinned in the workflow before running the same experiments:
+
+| Coverage           | Published version    | SHA-256                                                            |
+| ------------------ | -------------------- | ------------------------------------------------------------------ |
+| Older release      | `1.4.8-beta17`       | `017d3fd2dcde3399f0b26940be94a8d4bb941be2504ccbf36949a67c01eb9d8a` |
+| Current test alpha | `1.4.8-alpha0910ipc` | `351ba169c3ee77b936a619c3f649aa3a4b13d8a692b906176429d527b8ab9a0c` |
+
+Updating a version or replacing an alpha artifact requires an explicit hash
+update. A failed download or mismatched hash fails the job; it does not fall back
+to source compilation or skip engine verification.
+
+The exact workflow download step and unchanged verifier were also run locally on
+Windows with Node 24.19.0: both CDN binaries passed hash verification and all
+startup, authentication, redaction, port-conflict and cleanup checks.
 
 To exercise the unmodified legacy Yakit IPC handlers against the repaired engine:
 
@@ -65,9 +76,11 @@ random password and still recognizes the legacy port-conflict reason.
 
 ## Verification scope
 
-The compatibility baseline is engine `65467f3cf73d9803b9cee7754008dd317611e3ca`
-and Yakit `de89a81859ab914f5b5aae7c842cd6cc630dfccc`. The repaired engine is
+Earlier source-built experiments used engine
+`65467f3cf73d9803b9cee7754008dd317611e3ca` and Yakit
+`de89a81859ab914f5b5aae7c842cd6cc630dfccc`, with repaired engine
 `4f7863298e6cabdeb4ad25e7321743d6a93dd2a3` in yaklang/yaklang#5043.
+CI now uses the published CDN versions listed above, not those source builds.
 These experiments exercise startup, authentication, and recovery; they do not
 replace a packaged Electron GUI smoke test or establish compatibility with every
 historical release. Engine IPC platform testing is tracked separately.

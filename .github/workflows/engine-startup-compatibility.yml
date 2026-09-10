@@ -87,45 +87,37 @@ jobs:
   windows-real-engine:
     name: Windows real old/new engines
     runs-on: windows-2022
-    timeout-minutes: 40
-    env:
-      CGO_ENABLED: '1'
-      GOMAXPROCS: '2'
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      # Pin both source revisions. Never download an unversioned 'latest' engine.
-      - uses: actions/checkout@v4
-        with:
-          repository: yaklang/yaklang
-          ref: 65467f3cf73d9803b9cee7754008dd317611e3ca
-          path: .engine-source/old
-          persist-credentials: false
-      - uses: actions/checkout@v4
-        with:
-          repository: yaklang/yaklang
-          ref: 4f7863298e6cabdeb4ad25e7321743d6a93dd2a3
-          path: .engine-source/new
-          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.1'
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.22.12'
-          cache: false
       - name: Install locked client dependencies
         timeout-minutes: 10
         run: yarn install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 60000
-      - name: Build the pre-change engine
-        working-directory: .engine-source/old
-        timeout-minutes: 15
-        run: go build -mod=readonly -p 2 -o "$env:RUNNER_TEMP/yak-old.exe" ./common/yak/cmd/yak.go
-      - name: Build the new engine with the shared dependency cache
-        working-directory: .engine-source/new
-        timeout-minutes: 15
-        run: go build -mod=readonly -p 2 -o "$env:RUNNER_TEMP/yak-new.exe" ./common/yak/cmd/yak.go
+      - name: Download pinned released engines from CDN and verify SHA-256
+        timeout-minutes: 5
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Pin published versions AND hashes, including the non-production alpha.
+          # Never compile engines here or follow a moving 'latest' pointer.
+          $engines = @(
+            @{ Version = '1.4.8-beta17'; File = 'yak-old.exe'; SHA256 = '017d3fd2dcde3399f0b26940be94a8d4bb941be2504ccbf36949a67c01eb9d8a' },
+            @{ Version = '1.4.8-alpha0910ipc'; File = 'yak-new.exe'; SHA256 = '351ba169c3ee77b936a619c3f649aa3a4b13d8a692b906176429d527b8ab9a0c' }
+          )
+          foreach ($engine in $engines) {
+            $url = "https://yaklang.oss-accelerate.aliyuncs.com/yak/$($engine.Version)/yak_windows_amd64.exe"
+            $destination = Join-Path $env:RUNNER_TEMP $engine.File
+            curl.exe --fail --location --proto '=https' --proto-redir '=https' --retry 3 --connect-timeout 20 --max-time 120 --output $destination $url
+            if ($LASTEXITCODE -ne 0) { throw "Engine download failed: $($engine.Version)" }
+            $actual = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash
+            if ($actual -ne $engine.SHA256) { throw "Engine SHA-256 mismatch: $($engine.Version)" }
+            Write-Output "Verified $($engine.Version): $actual"
+          }
       - name: Verify authenticated startup and port conflict recovery against both binaries
         timeout-minutes: 5
         shell: pwsh
