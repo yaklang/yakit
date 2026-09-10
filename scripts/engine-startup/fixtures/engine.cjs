@@ -49,7 +49,10 @@ if (scenario === 'hang') {
   server.addService(Yak.service, {
     Echo(call, done) {
       if (scenario === 'slow-rpc') return
-      if (scenario === 'wrong-auth' || call.metadata.get('authorization')[0] !== `bearer ${password}`) {
+      if (
+        scenario !== 'unauthenticated' &&
+        (scenario === 'wrong-auth' || call.metadata.get('authorization')[0] !== `bearer ${password}`)
+      ) {
         return done({ code: grpc.status.UNAUTHENTICATED, details: 'Invalid credentials' })
       }
       done(null, { result: call.request.text })

@@ -358,11 +358,14 @@ module.exports = {
         throw new Error('本地引擎连接参数无效，请重新检查引擎')
       }
       const address = `${host.includes(':') && !host.startsWith('[') ? `[${host}]` : host}:${port}`
-      const result = await startup.connect({
-        defaultYakGRPCAddr: address,
-        caPem: Buffer.from(params.PemBytes || '').toString('utf8'),
-        password: params.Password || '',
-      })
+      const result = await startup.connect(
+        {
+          defaultYakGRPCAddr: address,
+          caPem: Buffer.from(params.PemBytes || '').toString('utf8'),
+          password: params.Password || '',
+        },
+        params.Mode === 'local',
+      )
       if (!result.ok) throw new Error(result.message)
       return result.data
     })

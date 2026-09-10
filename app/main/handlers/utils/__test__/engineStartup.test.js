@@ -60,6 +60,9 @@ function fixture(options = {}) {
     commitConnection,
     spawn,
     log,
+    // These children have synthetic PIDs. Never invoke the host's taskkill from a unit test.
+    // Windows process-tree behavior is exercised separately with owned real processes.
+    platform: 'linux',
     timeouts: { check: 1000, start: 1000, probe: 100, retry: 50 },
     ...options,
   })
@@ -99,6 +102,9 @@ describe('engine startup lifecycle', () => {
     expect(f.clients[0].connection.password).toBe(params.password)
     expect(f.clients[0].deadline).toBeInstanceOf(Date)
     f.clients[0].done(null, { result: 'Hello Yakit!' })
+    expect(f.commitConnection).not.toHaveBeenCalled()
+    expect(f.clients[1].connection.password).toBe('')
+    f.clients[1].done({ code: 16 })
     expect((await pending).ok).toBe(true)
     expect(f.clients[0].close).toHaveBeenCalledOnce()
     expect(f.commitConnection).toHaveBeenCalledOnce()
@@ -111,6 +117,7 @@ describe('engine startup lifecycle', () => {
     const pending = f.manager.start(params)
     await vi.advanceTimersByTimeAsync(50)
     f.clients[0].done(null, { result: 'Hello Yakit!' })
+    f.clients[1].done({ code: 16 })
     expect((await pending).ok).toBe(true)
     expect(f.children[0].args).not.toContain('--transport')
     expect(f.children[0].args).toContain('--local-password')
@@ -138,6 +145,20 @@ describe('engine startup lifecycle', () => {
     expect((await pending).status).toBe('cancelled')
     expect(f.clients[0].call.cancel).toHaveBeenCalledOnce()
     expect(f.clients[0].close).toHaveBeenCalledOnce()
+    expect(f.commitConnection).not.toHaveBeenCalled()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('ignores a late anonymous-auth rejection after cancellation', async () => {
+    const f = fixture()
+    const pending = f.manager.start(params)
+    await vi.advanceTimersByTimeAsync(50)
+    f.clients[0].done(null, { result: 'Hello Yakit!' })
+    expect(f.clients).toHaveLength(2)
+    await f.manager.cancel()
+    f.clients[1].done({ code: 16 })
+    expect((await pending).status).toBe('cancelled')
+    expect(f.clients[1].close).toHaveBeenCalledOnce()
     expect(f.commitConnection).not.toHaveBeenCalled()
     expect(vi.getTimerCount()).toBe(0)
   })

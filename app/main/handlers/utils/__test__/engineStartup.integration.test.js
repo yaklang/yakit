@@ -147,6 +147,13 @@ describe('real child processes and authenticated TCP', () => {
     expect((await manager.start({ port: await freePort(), password: 'password' })).status).toBe('engine_exited')
   })
 
+  it('rejects an Echo server that accepts anonymous requests', async () => {
+    const { manager, commitConnection } = setup('v2', 'unauthenticated')
+    const result = await manager.start({ port: await freePort(), password: 'password' })
+    expect(result.status).toBe('protocol_error')
+    expect(commitConnection).not.toHaveBeenCalled()
+  })
+
   it('does not commit a connection advertising an unexpected transport', async () => {
     const { manager, commitConnection } = setup('v2', 'wrong-transport', { retry: 3000 })
     expect((await manager.start({ port: await freePort(), password: 'password' })).status).toBe('protocol_error')

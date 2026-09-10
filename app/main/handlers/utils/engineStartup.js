@@ -217,6 +217,19 @@ function createEngineStartup({
     }
   }
 
+  function authenticatedProbe(op, connection, done) {
+    probe(op, connection, (error, data) => {
+      if (error) return done(error)
+      // A different, unauthenticated Echo server can occupy the port between
+      // check and start. A successful Echo alone does not establish auth enforcement.
+      probe(op, { ...connection, password: '' }, (anonymousError) => {
+        if (anonymousError?.code === 16) return done(null, data) // UNAUTHENTICATED, including legacy engines.
+        if (anonymousError) return done(anonymousError)
+        done(Object.assign(new Error('Local endpoint accepts unauthenticated RPCs'), { unsafeEndpoint: true }))
+      })
+    })
+  }
+
   function check(params) {
     return operation('check', async (op) => {
       if (!validPort(params.port) || (params.transport && params.transport !== 'tcp')) {
@@ -326,10 +339,17 @@ function createEngineStartup({
         if (!op.current() || inFlight || !isAlive(op.child)) return
         clearRetry()
         inFlight = true
-        probe(op, connection, (error) => {
+        authenticatedProbe(op, connection, (error) => {
           inFlight = false
           if (!isAlive(op.child)) return
           if (error) {
+            if (error.unsafeEndpoint) {
+              return op.finish({
+                ok: false,
+                status: 'protocol_error',
+                message: '本地端口上的服务未启用认证，请切换端口或重新检查引擎',
+              })
+            }
             clearRetry = op.timer(tryConnect, limits.retry)
             return
           }
@@ -379,9 +399,10 @@ function createEngineStartup({
     })
   }
 
-  function connect(connection) {
+  function connect(connection, requireLocalAuth = false) {
     return operation('connect', (op) => {
-      probe(op, connection, (error, data) => {
+      const connectProbe = requireLocalAuth ? authenticatedProbe : probe
+      connectProbe(op, connection, (error, data) => {
         if (error) return op.finish({ ok: false, status: 'dial_error', message: '引擎连接失败，请检查地址和认证信息' })
         try {
           commitConnection(connection)
