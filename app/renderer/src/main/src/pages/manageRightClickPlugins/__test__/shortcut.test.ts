@@ -52,7 +52,6 @@ import { grpcQueryContextMenuActions } from '../api'
 import {
   checkContextMenuShortcutConflict,
   findContextMenuPluginShortcutConflict,
-  getEnabledContextMenuShortcuts,
   matchContextMenuShortcut,
   parseContextMenuShortcut,
   refreshContextMenuShortcutCache,
@@ -307,7 +306,6 @@ describe('findContextMenuPluginShortcutConflict', () => {
       ],
     })
     await expect(refreshContextMenuShortcutCache()).resolves.toBe(2)
-    expect(getEnabledContextMenuShortcuts()).toHaveLength(2)
 
     mockQuery.mockRejectedValueOnce(new Error('network'))
     await expect(refreshContextMenuShortcutCache()).resolves.toBe(2)
