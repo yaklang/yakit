@@ -90,7 +90,15 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           )
           setYakitStatus('old_version')
         } else {
-          setYakitStatus(res.status as YakitStatusType)
+          // check 阶段：主进程返回的 status 需要映射到前端 UI 分支
+          // port_occupied -> port_occupied_prev（杀旧进程 / 换端口二选一）
+          // timeout       -> check_timeout（重试按钮）
+          // 其余 status 直接透传
+          const checkStatusMap: Record<string, YakitStatusType> = {
+            port_occupied: 'port_occupied_prev',
+            timeout: 'check_timeout',
+          }
+          setYakitStatus(checkStatusMap[res.status as string] || (res.status as YakitStatusType))
         }
       } catch (error) {
         // 旧调用直接跳过

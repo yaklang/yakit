@@ -180,7 +180,7 @@ describe('LocalEngine Component', () => {
       await initEngine()
 
       await waitFor(() => {
-        expect(props.setYakitStatus).toHaveBeenCalledWith('timeout')
+        expect(props.setYakitStatus).toHaveBeenCalledWith('check_timeout')
       })
     })
 
@@ -206,7 +206,7 @@ describe('LocalEngine Component', () => {
       await initEngine()
 
       await waitFor(() => {
-        expect(props.setYakitStatus).toHaveBeenCalledWith('port_occupied')
+        expect(props.setYakitStatus).toHaveBeenCalledWith('port_occupied_prev')
       })
     })
 
