@@ -145,7 +145,45 @@ describe('AIModelSelect', () => {
     )
   })
 
-  it('选择器外层宽度变化时关闭二级弹窗，高度变化不关闭，关闭后可重新悬停打开', async () => {
+  it.each([500, 700])('宽度变为 %s 时，即使未打开编辑浮层也关闭列表并保存模型选择', async (width) => {
+    let resizeInput: (width: number) => void = () => {}
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(private callback: ResizeObserverCallback) {}
+        observe(target: Element) {
+          resizeInput = (width) =>
+            this.callback(
+              [{ target, contentRect: { width, height: 120 } } as ResizeObserverEntry],
+              this as unknown as ResizeObserver,
+            )
+        }
+        disconnect() {}
+        unobserve() {}
+      },
+    )
+    const dropdown = await openModels()
+    act(() => resizeInput(600))
+    fireEvent.click(within(dropdown).getByText('model-b'))
+    act(() => resizeInput(width))
+    expect(screen.queryByRole('region', { name: '模型列表' })).not.toBeInTheDocument()
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1))
+    expect(mocks.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        IntelligentModels: [
+          expect.objectContaining({ ModelName: 'model-b' }),
+          expect.objectContaining({ ModelName: 'model-a' }),
+        ],
+      }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: '打开选择' }))
+    act(() => resizeInput(width))
+    expect(screen.getByRole('region', { name: '模型列表' })).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: '关闭选择' }))
+    expect(mocks.save).toHaveBeenCalledTimes(1)
+  })
+
+  it('选择器外层宽度变化时关闭一级和二级弹窗，高度变化不关闭，关闭后可重新打开', async () => {
     let resizeInput: (width: number, height: number) => void = () => {}
     let observedTarget: Element | undefined
     const disconnect = vi.fn()
@@ -172,6 +210,7 @@ describe('AIModelSelect', () => {
       await waitFor(() => expect(observedTarget).toBe(document.querySelector('.model-trigger')))
       act(() => resizeInput(600, 120))
       const dropdown = screen.getByRole('region', { name: '模型列表' })
+      expect(dropdown).toBeVisible()
       const measureDropdown = vi.spyOn(dropdown.firstElementChild!, 'getBoundingClientRect')
       measureDropdown.mockReturnValue(new DOMRect(100, 0, 200, 300))
       const editButton = within(dropdown).getAllByRole('button')[1]
@@ -183,13 +222,19 @@ describe('AIModelSelect', () => {
 
       act(() => resizeInput(600, 240))
       expect(screen.getByText('model-edited')).toBeVisible()
+      expect(dropdown).toBeVisible()
       act(() => resizeInput(500, 240))
       expect(screen.queryByText('model-edited')).not.toBeInTheDocument()
-      expect(dropdown).toBeVisible()
+      expect(screen.queryByRole('region', { name: '模型列表' })).not.toBeInTheDocument()
+      expect(disconnect).toHaveBeenCalled()
       expect(mocks.save).not.toHaveBeenCalled()
 
-      measureDropdown.mockReturnValue(new DOMRect(200, 0, 200, 300))
-      fireEvent.mouseEnter(editButton)
+      fireEvent.click(screen.getByRole('button', { name: '打开选择' }))
+      act(() => resizeInput(500, 240))
+      const reopenedDropdown = screen.getByRole('region', { name: '模型列表' })
+      const reopenedMeasureDropdown = vi.spyOn(reopenedDropdown.firstElementChild!, 'getBoundingClientRect')
+      reopenedMeasureDropdown.mockReturnValue(new DOMRect(200, 0, 200, 300))
+      fireEvent.mouseEnter(within(reopenedDropdown).getAllByRole('button')[1])
       expect(await screen.findByText('model-edited')).toBeVisible()
       expect(screen.getByText('model-edited').closest('[style*="translate("]')).toHaveStyle({
         transform: 'translate(406px, 0px)',

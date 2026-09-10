@@ -30,6 +30,8 @@ export interface AIModelSelectListProps {
   triggerRef: RefObject<HTMLDivElement>
   /** 下拉框是否展开 */
   open?: boolean
+  /** 触发器宽度变化时关闭一级下拉框 */
+  onWidthChange: () => void
 }
 
 export interface AIModelEditContentProps {

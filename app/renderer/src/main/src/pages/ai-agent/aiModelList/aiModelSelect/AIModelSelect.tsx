@@ -156,6 +156,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         break
     }
   })
+  const closeOnWidthChange = useMemoizedFn(() => onSetOpen(false))
   const [_, event] = useAIGlobalConfig()
   /**
    * 更新AI配置
@@ -327,6 +328,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
       })
     },
   )
+
   return (
     <div ref={refRef} className={className}>
       {isHaveData ? (
@@ -397,6 +399,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                       dropdownRef={dropdownRenderRef}
                       triggerRef={refRef}
                       open={open}
+                      onWidthChange={closeOnWidthChange}
                     />
                   )}
                   {/* {!execute && !!lightweightModels.length && (
@@ -452,7 +455,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 })
 
 const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) => {
-  const { title, subTitle, list, onSelect, type, onEdit, dropdownRef, triggerRef, open } = props
+  const { title, subTitle, list, onSelect, type, onEdit, dropdownRef, triggerRef, open, onWidthChange } = props
   const [currentSelectIndex, setCurrentSelectIndex] = useState<number>()
   const [currentItem, setCurrentItem] = useState<AIModelConfig>()
   const [loading, setLoading] = useState<boolean>(false)
@@ -491,13 +494,16 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
 
   useEffect(() => {
     if (!open || !triggerRef.current) return
-    // 输入区域缩放会改变浮层定位；输入内容增高时保留当前编辑状态。
+    // 输入区域宽度变化会同时关闭二级编辑浮层和一级模型选择下拉框；高度变化保留当前状态。
     const input = triggerRef.current
     let previousWidth: number | undefined
     const observer = new ResizeObserver(([entry]) => {
       if (!entry) return
       const width = entry.contentRect.width
-      if (previousWidth !== undefined && width !== previousWidth) closeEditContent()
+      if (previousWidth !== undefined && width !== previousWidth) {
+        closeEditContent()
+        onWidthChange()
+      }
       previousWidth = width
     })
     observer.observe(input)
