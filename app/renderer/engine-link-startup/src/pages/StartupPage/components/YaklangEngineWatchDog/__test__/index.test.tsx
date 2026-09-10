@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
+import { act, render, waitFor } from '@testing-library/react'
 import { YaklangEngineWatchDog } from '../index'
 import type { YaklangEngineWatchDogProps } from '../index'
 import emiter from '@/utils/eventBus/eventBus'
@@ -185,7 +185,7 @@ describe('YaklangEngineWatchDog 组件测试', () => {
     })
   })
 
-  describe('自动启动本地引擎（autoStartProgress 触发的 useDebounceEffect）', () => {
+  describe('自动启动本地引擎', () => {
     it('启动成功时，应调用 onKeepaliveShouldChange(true)', async () => {
       render(<YaklangEngineWatchDog {...props} />)
       triggerEngineTest()
@@ -204,6 +204,73 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       triggerEngineTest()
 
       expect(props.onKeepaliveShouldChange).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('并发与取消', () => {
+    it('连续点击启动只发出一次连接和启动请求', async () => {
+      let finish!: () => void
+      vi.mocked(yakitEngine.connectYaklangEngine).mockImplementationOnce(
+        () =>
+          new Promise((_resolve, reject) => {
+            finish = () => reject(new Error('offline'))
+          }),
+      )
+      render(<YaklangEngineWatchDog {...props} />)
+      triggerEngineTest()
+      triggerEngineTest()
+      await act(async () => finish())
+      expect(yakitEngine.connectYaklangEngine).toHaveBeenCalledOnce()
+      expect(grpcStartLocalEngine).toHaveBeenCalledOnce()
+    })
+
+    it.each(['unmount', 'break', 'credential'])('%s 后旧连接失败不能启动子进程', async (operation) => {
+      let finish!: () => void
+      vi.mocked(yakitEngine.connectYaklangEngine).mockImplementationOnce(
+        () =>
+          new Promise((_resolve, reject) => {
+            finish = () => reject(new Error('late'))
+          }),
+      )
+      const view = render(<YaklangEngineWatchDog {...props} />)
+      triggerEngineTest()
+      if (operation === 'unmount') view.unmount()
+      else
+        view.rerender(
+          <YaklangEngineWatchDog
+            {...props}
+            {...(operation === 'break'
+              ? { yakitStatus: 'break' }
+              : { credential: { ...props.credential, Port: 9012 } })}
+          />,
+        )
+      await act(async () => finish())
+      expect(grpcStartLocalEngine).not.toHaveBeenCalled()
+      expect(props.onKeepaliveShouldChange).not.toHaveBeenCalled()
+    })
+
+    it('cancelled 不显示失败；Windows 端口拒绝保留换端口操作', async () => {
+      vi.mocked(grpcStartLocalEngine).mockResolvedValueOnce({ ok: false, status: 'cancelled', message: '' })
+      render(<YaklangEngineWatchDog {...props} />)
+      await act(async () => triggerEngineTest())
+      expect(props.setYakitStatus).not.toHaveBeenCalled()
+      vi.mocked(grpcStartLocalEngine).mockResolvedValueOnce({ ok: false, status: 'port_denied', message: 'denied' })
+      await act(async () => triggerEngineTest())
+      expect(props.setYakitStatus).toHaveBeenCalledWith('port_denied')
+    })
+
+    it('保活取消后到达的成功响应不应进入主界面', async () => {
+      let finish!: () => void
+      vi.mocked(isEngineConnectionAlive).mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finish = () => resolve(true)
+          }),
+      )
+      const view = render(<YaklangEngineWatchDog {...props} keepalive />)
+      view.rerender(<YaklangEngineWatchDog {...props} keepalive={false} />)
+      await act(async () => finish())
+      expect(props.onReady).not.toHaveBeenCalled()
     })
   })
 

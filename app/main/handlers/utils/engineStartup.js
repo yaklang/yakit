@@ -1,0 +1,432 @@
+const childProcess = require('child_process')
+const { randomBytes } = require('crypto')
+const {
+  createEngineLineReader,
+  parseEngineEvent,
+  parseCheckResult,
+  classifyEngineFailure,
+  redactEngineLog,
+  redactEngineData,
+} = require('./engineDiagnostics')
+
+const ECHO_TEXT = 'Hello Yakit!'
+const MAX_CHECK_OUTPUT = 512 * 1024
+const cancelled = (stage) => ({ ok: false, stage, status: 'cancelled', message: '引擎连接已取消' })
+const isAlive = (child) => child?.pid && child.exitCode === null && child.signalCode === null
+
+// Only terminate a child we spawned. Never search for engines or kill a process by port/name.
+function stopEngineChild(child, execFile = childProcess.execFile, platform = process.platform) {
+  if (!isAlive(child)) return Promise.resolve(true)
+  return new Promise((resolve) => {
+    let finished = false
+    const finish = () => {
+      if (finished) return
+      finished = true
+      clearTimeout(forceTimer)
+      clearTimeout(deadline)
+      child.removeListener('close', finish)
+      resolve(!isAlive(child))
+    }
+    const forceTimer = setTimeout(() => {
+      if (isAlive(child)) {
+        try {
+          child.kill('SIGKILL')
+        } catch {}
+      }
+    }, 2000)
+    const deadline = setTimeout(finish, 4000)
+    child.once('close', finish)
+    try {
+      if (platform === 'win32') {
+        execFile(
+          'taskkill.exe',
+          ['/PID', String(child.pid), '/T', '/F'],
+          { windowsHide: true, timeout: 3000 },
+          () => {},
+        )
+      } else {
+        child.kill('SIGTERM')
+      }
+    } catch {
+      try {
+        child.kill('SIGKILL')
+      } catch {}
+    }
+  })
+}
+
+function validPort(port) {
+  return /^(?:[1-9]\d*)$/.test(String(port)) && Number(port) <= 65535
+}
+
+function validLocalPassword(password) {
+  return (
+    typeof password === 'string' &&
+    password.trim().length > 0 &&
+    !/^\*+$/.test(password.trim()) &&
+    !/[\r\n\0]/.test(password)
+  )
+}
+
+function createEngineStartup({
+  getCommand,
+  getEnv,
+  createClient,
+  commitConnection,
+  log = () => {},
+  notify = () => {},
+  spawn = childProcess.spawn,
+  execFile = childProcess.execFile,
+  platform = process.platform,
+  timeouts = {},
+}) {
+  const limits = { check: 60000, start: 60000, connect: 10000, probe: 2000, retry: 500, ...timeouts }
+  let generation = 0
+  let active = null
+  const children = new Set()
+
+  async function operation(stage, work) {
+    const id = ++generation
+    if (active) await active.cancel()
+    if (id !== generation) return cancelled(stage)
+    let resolve
+    const promise = new Promise((done) => {
+      resolve = done
+    })
+    const resources = new Set()
+    const op = {
+      child: null,
+      finished: false,
+      promise,
+      current: () => !op.finished && id === generation,
+      add: (dispose) => {
+        resources.add(dispose)
+        return () => resources.delete(dispose)
+      },
+      timer(fn, delay) {
+        const timer = setTimeout(() => {
+          resources.delete(clear)
+          if (op.current()) fn()
+        }, delay)
+        const clear = () => clearTimeout(timer)
+        resources.add(clear)
+        return clear
+      },
+      async finish(result, keepChild = false) {
+        if (op.finished) return promise
+        op.finished = true
+        for (const dispose of resources) {
+          try {
+            dispose()
+          } catch {}
+        }
+        resources.clear()
+        if (!keepChild && op.child && !(await stopEngineChild(op.child, execFile, platform))) {
+          result = { ok: false, stage, status: 'process_error', message: '引擎进程尚未退出，请稍后重试或查看日志' }
+        }
+        if (active === op) active = null
+        resolve({ stage, ...result })
+        return promise
+      },
+      cancel: () => op.finish(cancelled(stage)),
+    }
+    active = op
+    op.timer(
+      () => op.finish({ ok: false, status: 'timeout', message: '等待引擎超时，请重试或查看日志' }),
+      limits[stage],
+    )
+    try {
+      await work(op)
+    } catch (error) {
+      op.finish({ ok: false, status: 'exception', message: `引擎启动异常：${redactEngineLog(error.message || error)}` })
+    }
+    return promise
+  }
+
+  function attachProcess(op, args, params, onLine, onClose) {
+    const password = params.password || ''
+    const child = spawn(getCommand(), args, {
+      detached: false,
+      windowsHide: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: getEnv(params.softwareVersion),
+    })
+    op.child = child
+    children.add(child)
+    const overflow = () =>
+      op.finish({ ok: false, status: 'protocol_error', message: '引擎启动输出过大，请查看日志或重新安装引擎' })
+    const readers = ['stdout', 'stderr'].map((stream) => {
+      const reader = createEngineLineReader((line) => {
+        // A closed window or failed log write must not strand an engine operation.
+        try {
+          log(redactEngineLog(line, [password]))
+        } catch {}
+        if (op.current()) onLine(line, stream)
+      }, overflow)
+      child[stream].on('data', reader.write)
+      child[stream].once('end', reader.end)
+      return reader
+    })
+    child.once('error', (error) =>
+      op.finish({
+        ok: false,
+        status: 'process_error',
+        message: `引擎进程启动失败：${redactEngineLog(error.message, [password])}`,
+      }),
+    )
+    child.once('close', (code, signal) => {
+      for (const reader of readers) reader.end()
+      children.delete(child)
+      if (op.current()) onClose(code, signal)
+    })
+    return child
+  }
+
+  function probe(op, connection, done) {
+    let client
+    let call
+    let finished = false
+    let remove = () => {}
+    let clearTimer = () => {}
+    const dispose = () => {
+      if (finished) return
+      finished = true
+      clearTimer()
+      remove()
+      try {
+        call?.cancel()
+      } catch {}
+      try {
+        client?.close()
+      } catch {}
+    }
+    const finish = (error, data) => {
+      if (finished) return
+      dispose()
+      if (op.current()) done(error, data)
+    }
+    remove = op.add(dispose)
+    clearTimer = op.timer(() => finish(new Error('Echo timed out')), limits.probe)
+    try {
+      client = createClient(connection)
+      call = client.Echo({ text: ECHO_TEXT }, { deadline: new Date(Date.now() + limits.probe) }, (error, data) => {
+        finish(error || (data?.result !== ECHO_TEXT ? new Error('Unexpected Echo response') : null), data)
+      })
+    } catch (error) {
+      finish(error)
+    }
+  }
+
+  function check(params) {
+    return operation('check', async (op) => {
+      if (!validPort(params.port) || (params.transport && params.transport !== 'tcp')) {
+        return op.finish({ ok: false, status: 'protocol_error', message: '本地引擎端口或连接方式无效，请重新配置' })
+      }
+      // A cancelled process must have exited before another check touches the same databases.
+      for (const child of children) {
+        if (isAlive(child))
+          return op.finish({
+            ok: false,
+            status: 'port_occupied',
+            message: '已有本地引擎进程正在运行，请先断开或切换端口',
+          })
+      }
+      const args = ['check-secret-local-grpc', '--port', String(params.port)]
+      let stdout = ''
+      let stderr = ''
+      attachProcess(
+        op,
+        args,
+        params,
+        (line, stream) => {
+          if (stream === 'stdout') stdout += line + '\n'
+          else stderr += line + '\n'
+          if (stdout.length + stderr.length > MAX_CHECK_OUTPUT) {
+            op.finish({ ok: false, status: 'protocol_error', message: '引擎检查输出过大，请查看日志' })
+          }
+        },
+        (code, signal) => {
+          const json = parseCheckResult(stdout)
+          if (json?.ok === true && code === 0 && !signal) {
+            if ((json.transport && json.transport !== 'tcp') || Number(json.port) !== Number(params.port)) {
+              return op.finish({
+                ok: false,
+                status: 'protocol_error',
+                message: '引擎检查返回的地址与请求不一致，请重试或更新引擎',
+              })
+            }
+            // The check's secret is diagnostic data in newer engines (sometimes "***").
+            // Generate a fresh production credential here for both old and new engines.
+            return op.finish({
+              ok: true,
+              status: 'success',
+              json: { ...json, secret: randomBytes(32).toString('hex') },
+            })
+          }
+          if (json?.ok === false) {
+            const failure = classifyEngineFailure(json, 'check')
+            const safe = redactEngineData({ ...failure, json })
+            return op.finish(safe)
+          }
+          const output = stdout + stderr
+          if (
+            /flag provided but not defined|unknown command.*check-secret-local-grpc|No help topic for.*check-secret-local-grpc/i.test(
+              output,
+            ) ||
+            (/check-secret-local-grpc/.test(output) &&
+              /no such file or directory|cannot find the file specified/i.test(output))
+          ) {
+            return op.finish({
+              ok: false,
+              status: 'old_version',
+              message: '当前引擎不支持安全本地启动，请选择其他引擎版本或更新引擎',
+            })
+          }
+          op.finish({
+            ok: false,
+            status: 'process_error',
+            message: `引擎检查未正常完成（退出码 ${code ?? signal ?? '未知'}），请重试或查看日志`,
+          })
+        },
+      )
+    })
+  }
+
+  function start(params) {
+    return operation('start', async (op) => {
+      if (
+        !validPort(params.port) ||
+        !validLocalPassword(params.password) ||
+        (params.transport && params.transport !== 'tcp')
+      ) {
+        return op.finish({ ok: false, status: 'protocol_error', message: '本地引擎连接参数无效，请重新检查引擎' })
+      }
+      for (const child of children) {
+        if (isAlive(child))
+          return op.finish({
+            ok: false,
+            status: 'port_occupied',
+            message: '已有本地引擎进程正在运行，请先断开或切换端口',
+          })
+      }
+      const connection = { defaultYakGRPCAddr: `127.0.0.1:${params.port}`, caPem: '', password: params.password }
+      const args = [
+        'grpc',
+        '--local-password',
+        params.password,
+        '--frontend',
+        String(params.version || 'yakit'),
+        '--port',
+        String(params.port),
+      ]
+      if (params.isEnpriTraceAgent) args.push('--disable-output')
+      let inFlight = false
+      let clearRetry = () => {}
+      const tryConnect = () => {
+        if (!op.current() || inFlight || !isAlive(op.child)) return
+        clearRetry()
+        inFlight = true
+        probe(op, connection, (error) => {
+          inFlight = false
+          if (!isAlive(op.child)) return
+          if (error) {
+            clearRetry = op.timer(tryConnect, limits.retry)
+            return
+          }
+          try {
+            commitConnection(connection)
+            op.finish({ ok: true, status: 'success', message: '引擎认证连接成功' }, true)
+          } catch (error) {
+            op.finish({
+              ok: false,
+              status: 'exception',
+              message: `引擎连接失败：${redactEngineLog(error.message, [params.password])}`,
+            })
+          }
+        })
+      }
+      attachProcess(
+        op,
+        args,
+        params,
+        (line, stream) => {
+          if (stream !== 'stdout') return
+          const event = parseEngineEvent(line)
+          if (
+            event?.type === 'invalid' ||
+            (event?.type === 'ready' && (event.transport !== 'tcp' || event.address !== connection.defaultYakGRPCAddr))
+          ) {
+            return op.finish({
+              ok: false,
+              status: 'protocol_error',
+              message: '引擎返回了不兼容的连接信息，请重新检查或更新引擎',
+            })
+          }
+          if (event?.type === 'failed')
+            return op.finish(redactEngineData(classifyEngineFailure(event, 'start'), [params.password]))
+          if (event?.type === 'ready' || event?.type === 'log_ok') tryConnect()
+          if (line.includes('<json-f97f966eb7f8ba8fdb63e4d29109c058>')) notify('LocalEngine.database_initializing')
+        },
+        (code, signal) =>
+          op.finish({
+            ok: false,
+            status: 'engine_exited',
+            message: `引擎进程已退出（${code ?? signal ?? '未知'}），请重试或查看日志`,
+          }),
+      )
+      notify('LocalEngine.waiting_engine_fully_started')
+      clearRetry = op.timer(tryConnect, limits.retry)
+    })
+  }
+
+  function connect(connection) {
+    return operation('connect', (op) => {
+      probe(op, connection, (error, data) => {
+        if (error) return op.finish({ ok: false, status: 'dial_error', message: '引擎连接失败，请检查地址和认证信息' })
+        try {
+          commitConnection(connection)
+          op.finish({ ok: true, status: 'success', data })
+        } catch (error) {
+          op.finish({ ok: false, status: 'exception', message: '引擎连接失败，请重试' })
+        }
+      })
+    })
+  }
+
+  async function cancel() {
+    generation++
+    const pending = active
+    if (pending) await pending.cancel()
+    return pending ? 1 : 0
+  }
+
+  async function dispose() {
+    const count = children.size || (active ? 1 : 0)
+    await cancel()
+    await Promise.all([...children].map((child) => stopEngineChild(child, execFile, platform)))
+    return count
+  }
+
+  function killOnExit() {
+    for (const child of children) {
+      if (isAlive(child)) {
+        try {
+          if (platform === 'win32') {
+            childProcess.execFileSync('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], {
+              windowsHide: true,
+              timeout: 3000,
+              stdio: 'ignore',
+            })
+          }
+        } catch {}
+        try {
+          child.kill('SIGKILL')
+        } catch {}
+      }
+    }
+  }
+
+  return { check, start, connect, cancel, dispose, killOnExit }
+}
+
+module.exports = { createEngineStartup, stopEngineChild, validLocalPassword }

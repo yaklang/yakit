@@ -1,6 +1,6 @@
 import type React from 'react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
+import { act, render, waitFor } from '@testing-library/react'
 import { LocalEngine } from '../index'
 import type { LocalEngineProps, LocalEngineLinkFuncProps } from '../LocalEngineType'
 import {
@@ -259,7 +259,7 @@ describe('LocalEngine Component', () => {
       await initEngine()
 
       await waitFor(() => {
-        expect(props.setYakitStatus).toHaveBeenCalledWith('unknown')
+        expect(props.setYakitStatus).toHaveBeenCalledWith('check_error')
       })
     })
 
@@ -269,6 +269,79 @@ describe('LocalEngine Component', () => {
       await initEngine()
 
       expect(grpcCheckAllowSecretLocal).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('安全重试与过期响应', () => {
+    afterEach(() => vi.useRealTimers())
+
+    it('IPC 异常应显示可重新检查的错误', async () => {
+      vi.mocked(grpcCheckAllowSecretLocal).mockRejectedValueOnce(new Error('IPC closed'))
+      renderComponent()
+      await act(async () => ref.current!.init(9011))
+      expect(props.setYakitStatus).toHaveBeenCalledWith('check_error')
+      expect(props.setRestartLoading).toHaveBeenCalledWith(false)
+    })
+
+    it('取消检查不应显示失败或继续启动', async () => {
+      vi.mocked(grpcCheckAllowSecretLocal).mockResolvedValueOnce({ ok: false, status: 'cancelled' } as any)
+      renderComponent()
+      await act(async () => ref.current!.init(9011))
+      expect(props.setYakitStatus).not.toHaveBeenCalled()
+      expect(props.onLinkEngine).not.toHaveBeenCalled()
+    })
+
+    it('旧检查晚返回不能覆盖新端口的凭据', async () => {
+      vi.useFakeTimers()
+      systemInfoDevSpy.mockReturnValue(true)
+      let finishOld!: (value: any) => void
+      vi.mocked(grpcCheckAllowSecretLocal).mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishOld = resolve
+          }),
+      )
+      vi.mocked(grpcCheckAllowSecretLocal).mockResolvedValueOnce({
+        ok: true,
+        status: 'success',
+        json: { port: 9012, secret: 'new' },
+      } as any)
+      renderComponent()
+      await act(async () => ref.current!.init(9011))
+      await act(async () => ref.current!.init(9012))
+      await act(async () => finishOld({ ok: true, status: 'success', json: { port: 9011, secret: 'old' } }))
+      await act(async () => vi.advanceTimersByTimeAsync(1500))
+      expect(props.onLinkEngine).toHaveBeenCalledExactlyOnceWith({ port: 9012, secret: 'new' })
+    })
+
+    it.each(['unmount', 'break'])('%s 后延迟启动不得执行', async (operation) => {
+      vi.useFakeTimers()
+      systemInfoDevSpy.mockReturnValue(true)
+      const view = renderComponent()
+      await act(async () => ref.current!.init(9011))
+      if (operation === 'unmount') view.unmount()
+      else view.rerender(<LocalEngine ref={ref} {...props} yakitStatus="break" />)
+      await act(async () => vi.advanceTimersByTimeAsync(2000))
+      expect(props.onLinkEngine).not.toHaveBeenCalled()
+    })
+
+    it('重试失败后旧版本检查不能重新启动', async () => {
+      vi.useFakeTimers()
+      let finishVersion!: (value: string) => void
+      vi.mocked(grpcFetchLatestYakitVersion).mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishVersion = resolve
+          }),
+      )
+      renderComponent()
+      await act(async () => ref.current!.init(9011))
+      vi.mocked(grpcCheckAllowSecretLocal).mockResolvedValueOnce({ ok: false, status: 'unknownReason' } as any)
+      await act(async () => ref.current!.init(9012))
+      await act(async () => finishVersion('1.4.7-0429'))
+      await act(async () => vi.advanceTimersByTimeAsync(5000))
+      expect(props.setYakitStatus).toHaveBeenLastCalledWith('check_error')
+      expect(props.onLinkEngine).not.toHaveBeenCalled()
     })
   })
 

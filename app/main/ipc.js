@@ -4,6 +4,7 @@ const fs = require('fs')
 const PROTO_PATH = path.join(__dirname, '../protos/grpc.proto')
 const { HttpSetting } = require('./state')
 const grpc = require('@grpc/grpc-js')
+const { createEngineGrpcClient } = require('./handlers/utils/engineGrpcClient')
 const protoLoader = require('@grpc/proto-loader')
 const { printLogOutputFile } = require('./logFile')
 const { assertTrustedAppSender, normalizeHttpBaseUrl } = require('./security')
@@ -68,49 +69,8 @@ const options = {
   interceptors: [createGrpcInterceptor()],
 }
 
-function newClient() {
-  const md = new grpc.Metadata()
-  md.set('authorization', `bearer ${global.password}`)
-  if (global.caPem !== '') {
-    const creds = grpc.credentials.createFromMetadataGenerator((params, callback) => {
-      return callback(null, md)
-    })
-    return new Yak(
-      global.defaultYakGRPCAddr,
-      // grpc.credentials.createInsecure(),
-      grpc.credentials.combineChannelCredentials(
-        grpc.credentials.createSsl(Buffer.from(global.caPem, 'latin1'), null, null, {
-          checkServerIdentity: (hostname, cert) => {
-            return undefined
-          },
-        }),
-        creds,
-      ),
-      options,
-    )
-  } else if (global.password && global.password !== '') {
-    // 非 TLS 连接（可能需要密码认证，例如 secret-local 模式）
-    // 对于非 TLS 连接，不能使用 combineChannelCredentials
-    // 需要通过拦截器在每次调用时添加 metadata
-    const optionsWithInterceptors = {
-      ...options,
-      interceptors: [
-        (options, nextCall) => {
-          return new grpc.InterceptingCall(nextCall(options), {
-            start: function (metadata, listener, next) {
-              metadata.set('authorization', `bearer ${global.password}`)
-              next(metadata, listener)
-            },
-          })
-        },
-        createGrpcInterceptor(),
-      ],
-    }
-    return new Yak(global.defaultYakGRPCAddr, grpc.credentials.createInsecure(), optionsWithInterceptors)
-  } else {
-    // 普通非 TLS 连接（无密码）
-    return new Yak(global.defaultYakGRPCAddr, grpc.credentials.createInsecure(), options)
-  }
+function newClient(settings = global) {
+  return createEngineGrpcClient(Yak, settings, options)
 }
 
 function getClient(createNew) {
@@ -542,7 +502,7 @@ module.exports = {
     // asyncEcho wrapper
     const asyncEcho = (params) => {
       return new Promise((resolve, reject) => {
-        getClient().Echo(params, (err, data) => {
+        getClient().Echo(params, { deadline: new Date(Date.now() + 5000) }, (err, data) => {
           if (err) {
             reject(err)
             return

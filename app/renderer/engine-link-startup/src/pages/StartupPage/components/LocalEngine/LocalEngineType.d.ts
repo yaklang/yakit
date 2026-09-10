@@ -80,6 +80,7 @@ export interface EngineEvent {
 export interface ExecResult {
   ok: boolean
   status: string
+  stage?: 'check' | 'start' | 'connect'
   message: string
   engineEvent?: EngineEvent | null
 }

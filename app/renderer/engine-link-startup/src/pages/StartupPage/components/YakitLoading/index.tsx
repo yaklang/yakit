@@ -214,7 +214,18 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
       )
     }
 
-    if (yakitStatus === 'check_timeout') {
+    if (
+      [
+        'check_timeout',
+        'check_error',
+        'unknown',
+        'unknownReason',
+        'process_error',
+        'exception',
+        'call_error',
+        'antivirus_blocked',
+      ].includes(yakitStatus)
+    ) {
       return (
         <>
           <YakitButton
@@ -262,7 +273,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             className={styles['btn-style']}
             size="large"
             loading={restartLoading}
-            onClick={() => btnClickCallback('port_occupied_prev', { killCurProcess: true })}
+            onClick={() => btnClickCallback('check_timeout')}
           >
             {t('YakitLoading.reconnect')}
           </YakitButton>
@@ -337,7 +348,16 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('port_denied')}
           >
-            {t('YakitLoading.port_denied_retry')}
+            {t('YakitLoading.retry')}
+          </YakitButton>
+          <YakitButton
+            className={styles['btn-style']}
+            size="large"
+            type="secondary2"
+            loading={restartLoading}
+            onClick={() => btnClickCallback('port_occupied_prev')}
+          >
+            {t('YakitLoading.switch_port')}
           </YakitButton>
         </>
       )
@@ -610,15 +630,15 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
       )
     }
 
-    // 兜底: 未知状态显示重试按钮，不让用户卡住
-    if (yakitStatus) {
+    // Active startup states must not offer a second concurrent start.
+    if (yakitStatus && !['ready', 'init', 'link', 'reclaimDatabaseSpace_start'].includes(yakitStatus)) {
       return (
         <>
           <YakitButton
             className={styles['btn-style']}
             size="large"
             loading={restartLoading}
-            onClick={() => btnClickCallback('start_timeout')}
+            onClick={() => btnClickCallback('check_timeout')}
           >
             {t('YakitLoading.retry')}
           </YakitButton>
@@ -635,6 +655,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     }
     const statusArr: YakitStatusType[] = [
       'check_timeout',
+      'check_error',
       'old_version',
       'skipAgreement_InstallNetWork',
       'skipAgreement_Install',

@@ -1,6 +1,6 @@
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 'react'
 import type { AllowSecretLocalJson, LocalEngineProps } from './LocalEngineType'
-import type { YakitStatusType } from '../../types'
+import { engineFailureMessage, engineFailureStatus } from '../../engineFailure'
 import { useMemoizedFn } from 'ahooks'
 import { debugToPrintLog } from '@/utils/logCollection'
 import {
@@ -37,7 +37,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       yakitUpdate,
       setYakitUpdate,
     } = props
-    const { t } = useI18nNamespaces(['link'])
+    const { t, i18n } = useI18nNamespaces(['link'])
     // check Json
     const allowSecretLocalJson = useRef<AllowSecretLocalJson>(null)
     // 本地 yakit 版本
@@ -55,8 +55,26 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
     }, [yakitStatus])
 
     const latestCheckCallIdRef = useRef(0)
+    const isCurrentCheck = (id: number) => id === latestCheckCallIdRef.current && yakitStatusRef.current !== 'break'
+    const startTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+    useEffect(
+      () => () => {
+        latestCheckCallIdRef.current++
+        clearTimeout(startTimer.current)
+      },
+      [],
+    )
+    useEffect(() => {
+      if (yakitStatus === 'break') {
+        latestCheckCallIdRef.current++
+        clearTimeout(startTimer.current)
+        allowSecretLocalJson.current = null
+      }
+    }, [yakitStatus])
     const handleAllowSecretLocal = useMemoizedFn(async (port: number, checkVersion: boolean) => {
       const callId = ++latestCheckCallIdRef.current
+      clearTimeout(startTimer.current)
+      allowSecretLocalJson.current = null
       // 中断连接 后续不执行
       if (yakitStatusRef.current === 'break') {
         debugToPrintLog(`------ 开始 check 被阻止 ------`)
@@ -68,6 +86,9 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       setLog([t('LocalEngine.checking_secret_password_mode')])
       try {
         const res = await grpcCheckAllowSecretLocal({ port, softwareVersion: FetchSoftwareVersion() })
+        if (!isCurrentCheck(callId)) return
+        const failureStatus = engineFailureStatus(res.status, 'check')
+        if (!res.ok && failureStatus === null) return
         setRestartLoading(false)
         if (res.ok && res.status === 'success') {
           setLog((arr) => arr.concat([t('LocalEngine.secret_password_check_passed')]))
@@ -78,7 +99,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         }
         allowSecretLocalJson.current = null
         // 主进程已组装好用户可读的 message，前端只管显示 + 切换 UI 状态
-        setLog((arr) => arr.concat([res.message || '引擎环境检查失败，请查看日志详细信息']))
+        setLog((arr) => arr.concat([engineFailureMessage(res, i18n.language, t('LocalEngine.check_failed'))]))
         // 旧版本场景保留特殊处理
         if (res.status === 'old_version') {
           setLog((arr) =>
@@ -90,19 +111,14 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           )
           setYakitStatus('old_version')
         } else {
-          // check 阶段：主进程返回的 status 需要映射到前端 UI 分支
-          // port_occupied -> port_occupied_prev（杀旧进程 / 换端口二选一）
-          // timeout       -> check_timeout（重试按钮）
-          // 其余 status 直接透传
-          const checkStatusMap: Record<string, YakitStatusType> = {
-            port_occupied: 'port_occupied_prev',
-            timeout: 'check_timeout',
-          }
-          setYakitStatus(checkStatusMap[res.status as string] || (res.status as YakitStatusType))
+          setYakitStatus(failureStatus || 'check_error')
         }
       } catch (error) {
         // 旧调用直接跳过
-        if (callId !== latestCheckCallIdRef.current) return
+        if (!isCurrentCheck(callId)) return
+        setRestartLoading(false)
+        setLog([t('LocalEngine.check_failed')])
+        setYakitStatus('check_error')
       }
     })
 
@@ -143,6 +159,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
      * - 未开启 yakit 更新检查，不进行 yakit 更新检查，直接检查引擎和内置的版本
      */
     const handleCheckYakitLatestVersion = useMemoizedFn(() => {
+      const checkId = latestCheckCallIdRef.current
       // 中断连接 后续不执行
       if (yakitStatusRef.current === 'break') {
         debugToPrintLog(`------ 开始检查yakit是否有版本更新 被阻止 ------`)
@@ -153,6 +170,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       let showUpdateYakit = false
       getLocalValue(LocalGVS.NoAutobootLatestVersionCheck)
         .then(async (val: boolean) => {
+          if (!isCurrentCheck(checkId)) return
           if (!val) {
             debugToPrintLog(`------ 开始检查软件版本更新逻辑 ------`)
             try {
@@ -163,6 +181,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 grpcFetchLocalYakitVersion(true),
                 Promise.race([grpcFetchLatestYakitVersion({ timeout: 3000 }, true), promise]),
               ])
+              if (!isCurrentCheck(checkId)) return
               if (res1.status === 'fulfilled') {
                 currentYakit.current = res1.value || ''
                 debugToPrintLog(`------ 当前软件版本: ${currentYakit.current} ------`)
@@ -183,13 +202,14 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         })
         .catch(() => {})
         .finally(() => {
+          if (!isCurrentCheck(checkId)) return
           if (showUpdateYakit) {
             setLog([t('LocalEngine.new_version_detected', { name: getReleaseEditionName() })])
             setYakitStatus('update_yakit')
           } else {
             setLog((old) => old.concat([t('LocalEngine.software_no_update')]))
             setTimeout(() => {
-              handleCheckEngineVersion()
+              if (isCurrentCheck(checkId)) handleCheckEngineVersion()
             }, 500)
           }
         })
@@ -203,6 +223,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
      */
 
     const handleCheckEngineVersion = useMemoizedFn(async () => {
+      const checkId = latestCheckCallIdRef.current
       // 中断连接 后续不执行
       if (yakitStatusRef.current === 'break') {
         debugToPrintLog(`------ 开始检查引擎本地版本和内置版本 被阻止 ------`)
@@ -212,6 +233,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
       try {
         const res = await getLocalValue(LocalGVS.NoYakVersionCheck)
+        if (!isCurrentCheck(checkId) || !allowSecretLocalJson.current) return
         if (res) {
           setLog([t('LocalEngine.fetching_engine_version')])
         } else {
@@ -222,6 +244,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const localVersionPromise = localVersion ? Promise.resolve(localVersion) : grpcFetchLocalYakVersion(true)
         const buildInVersionPromise = grpcFetchBuildInYakVersion(true)
         const [res1, res2] = await Promise.allSettled([localVersionPromise, buildInVersionPromise])
+        if (!isCurrentCheck(checkId)) return
         if (!res && res2.status === 'fulfilled') {
           const buildIn = res2.value || ''
           buildInYak.current = buildIn.startsWith('v') ? buildIn.substring(1) : buildIn
@@ -261,6 +284,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           startYakEngine()
         }
       } catch (error) {
+        if (!isCurrentCheck(checkId)) return
         setLog((old) => old.concat([t('LocalEngine.error_with_reason', { reason: error })]))
         setYakitStatus('check_yak_version_error')
       }
@@ -271,6 +295,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
      * - 通过相同版本的线上hash和本地hash对比，判断是否一样
      */
     const handleCheckEngineSource = useMemoizedFn(async (version?: string) => {
+      const checkId = latestCheckCallIdRef.current
       // 中断连接 后续不执行
       if (yakitStatusRef.current === 'break') {
         debugToPrintLog(`------ 开始校验引擎是否来源正确 被阻止 ------`)
@@ -295,6 +320,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           grpcFetchLocalYakVersionHash(true),
         ])
 
+        if (!isCurrentCheck(checkId)) return
         if (!res1 || !Array.isArray(res2) || res2.length === 0) {
           setLog((old) => old.concat([t('LocalEngine.unknown_error_cannot_verify_source')]))
         } else {
@@ -306,9 +332,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           }
         }
       } catch (error) {
+        if (!isCurrentCheck(checkId)) return
         setLog((old) => old.concat([t('LocalEngine.abnormal_cannot_verify_source')]))
       } finally {
-        startYakEngine()
+        if (isCurrentCheck(checkId)) startYakEngine()
       }
     })
 
@@ -323,10 +350,14 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       if (allowSecretLocalJson.current) {
         debugToPrintLog(`------ 准备开始启动连接引擎逻辑 ------`)
         setLog([t('LocalEngine.preparing_start_connect_engine')])
-        setTimeout(() => {
+        const checked = allowSecretLocalJson.current
+        const checkId = latestCheckCallIdRef.current
+        clearTimeout(startTimer.current)
+        startTimer.current = setTimeout(() => {
+          if (checkId !== latestCheckCallIdRef.current || yakitStatusRef.current === 'break') return
           onLinkEngine({
-            port: allowSecretLocalJson.current.port,
-            secret: allowSecretLocalJson.current.secret,
+            port: checked.port,
+            secret: checked.secret,
           })
           // 启动本地连接后，重置所有检查状态，并后续不会在进行检查
           handleResetAllStatus()

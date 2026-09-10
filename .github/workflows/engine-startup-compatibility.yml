@@ -1,0 +1,151 @@
+name: engine startup compatibility
+
+on:
+  pull_request:
+    paths:
+      - 'app/main/**'
+      - 'app/protos/grpc.proto'
+      - 'app/renderer/engine-link-startup/**'
+      - 'scripts/engine-startup/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - '.github/workflows/engine-startup-compatibility.yml'
+  push:
+    paths:
+      - 'app/main/**'
+      - 'app/protos/grpc.proto'
+      - 'app/renderer/engine-link-startup/**'
+      - 'scripts/engine-startup/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - '.github/workflows/engine-startup-compatibility.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HUSKY: '0'
+  ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+jobs:
+  startup:
+    name: startup (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.1'
+      - name: Install locked test dependencies without Electron/native build scripts
+        timeout-minutes: 10
+        run: yarn install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 60000
+      - name: Verify lifecycle, real TCP authentication and owned process cleanup
+        timeout-minutes: 3
+        run: yarn test:engine-startup --reporter=default --reporter=junit --outputFile.junit=engine-startup-junit.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: engine-startup-${{ matrix.os }}-${{ github.run_attempt }}
+          path: engine-startup-junit.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+  recovery-ui:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: app/renderer/engine-link-startup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.1'
+      - name: Install locked Link renderer dependencies
+        timeout-minutes: 10
+        run: yarn install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 60000
+      - name: Check types
+        run: yarn type-check
+      - name: Check localized recovery messages
+        run: yarn i18n:check
+      - name: Verify recovery buttons and stale asynchronous results
+        timeout-minutes: 3
+        run: yarn test run src/pages/StartupPage --maxWorkers=1 --reporter=default --reporter=junit --outputFile.junit=engine-recovery-junit.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: engine-recovery-ui-${{ github.run_attempt }}
+          path: app/renderer/engine-link-startup/engine-recovery-junit.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+  windows-real-engine:
+    name: Windows real old/new engines
+    runs-on: windows-2022
+    timeout-minutes: 40
+    env:
+      CGO_ENABLED: '1'
+      GOMAXPROCS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      # Pin both source revisions. Never download an unversioned 'latest' engine.
+      - uses: actions/checkout@v4
+        with:
+          repository: yaklang/yaklang
+          ref: 65467f3cf73d9803b9cee7754008dd317611e3ca
+          path: .engine-source/old
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: yaklang/yaklang
+          ref: e873805f11fb0018b8a062db0007c857605c8e42
+          path: .engine-source/new
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.1'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.12'
+          cache: false
+      - name: Install locked client dependencies
+        timeout-minutes: 10
+        run: yarn install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 60000
+      - name: Build the pre-change engine
+        working-directory: .engine-source/old
+        timeout-minutes: 15
+        run: go build -mod=readonly -p 2 -o "$env:RUNNER_TEMP/yak-old.exe" ./common/yak/cmd/yak.go
+      - name: Build the new engine with the shared dependency cache
+        working-directory: .engine-source/new
+        timeout-minutes: 15
+        run: go build -mod=readonly -p 2 -o "$env:RUNNER_TEMP/yak-new.exe" ./common/yak/cmd/yak.go
+      - name: Verify authenticated startup and port conflict recovery against both binaries
+        timeout-minutes: 5
+        shell: pwsh
+        run: |
+          node scripts/engine-startup/verify-real-engine.cjs "$env:RUNNER_TEMP/yak-old.exe" "$env:RUNNER_TEMP/yak-new.exe" > windows-real-engine.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content windows-real-engine.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-real-engine-${{ github.run_attempt }}
+          path: windows-real-engine.json
+          if-no-files-found: warn
+          retention-days: 14

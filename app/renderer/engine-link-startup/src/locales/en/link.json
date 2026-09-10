@@ -77,7 +77,8 @@
     "engine_start_interrupted": "Engine start command interrupted or unexpected error: {{error}}",
     "engine_ready_to_connect": "Engine is ready to connect",
     "engine_not_fully_started": "Engine not fully started, unable to connect. Failed attempts: {{count}}",
-    "engine_start_interrupted_check_log": "Engine start command interrupted or unexpected error. Check logs for details..."
+    "engine_start_interrupted_check_log": "Engine start command interrupted or unexpected error. Check logs for details...",
+    "startup_failed": "Engine startup failed. Retry or view the logs."
   },
   "YakitLoading": {
     "agreement_check_prefix": "I agree to the",
@@ -109,8 +110,7 @@
     "exit": "Exit",
     "open_engine_files": "Open Engine Files",
     "disconnect": "Disconnect",
-    "more_engine_versions": "More Engine Versions",
-    "port_denied_retry": "Retry as Administrator"
+    "more_engine_versions": "More Engine Versions"
   },
   "UpdateYakitHint": {
     "download_complete": "Download complete",
@@ -224,7 +224,8 @@
     "abnormal_cannot_verify_source": "Abnormal error, unable to verify source",
     "preparing_start_connect_engine": "Preparing to start engine connection",
     "waiting_engine_fully_started": "Waiting for the engine to fully start",
-    "database_initializing": "Database is initializing..."
+    "database_initializing": "Database is initializing...",
+    "check_failed": "Engine check failed. Retry or view the logs."
   },
   "EngineLog": {
     "welcome": "Welcome to {{name}}!",

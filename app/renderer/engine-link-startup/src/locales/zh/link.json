@@ -77,7 +77,8 @@
     "engine_start_interrupted": "引擎启动命令被中断或意外情况：{{error}}",
     "engine_ready_to_connect": "引擎已准备好，可以进行连接",
     "engine_not_fully_started": "引擎未完全启动，无法连接，失败次数：{{count}}",
-    "engine_start_interrupted_check_log": "引擎启动命令被中断或意外情况，可查看日志详细信息..."
+    "engine_start_interrupted_check_log": "引擎启动命令被中断或意外情况，可查看日志详细信息...",
+    "startup_failed": "引擎启动失败，请重试或查看日志"
   },
   "YakitLoading": {
     "agreement_check_prefix": "勾选同意",
@@ -109,8 +110,7 @@
     "exit": "退出",
     "open_engine_files": "打开引擎文件",
     "disconnect": "中断连接",
-    "more_engine_versions": "更多引擎版本",
-    "port_denied_retry": "以管理员身份重试"
+    "more_engine_versions": "更多引擎版本"
   },
   "UpdateYakitHint": {
     "download_complete": "下载完毕",
@@ -224,7 +224,8 @@
     "abnormal_cannot_verify_source": "异常情况，无法检测来源",
     "preparing_start_connect_engine": "准备开始启动连接引擎",
     "waiting_engine_fully_started": "正在等待引擎完全启动",
-    "database_initializing": "数据库正在初始化中..."
+    "database_initializing": "数据库正在初始化中...",
+    "check_failed": "引擎检查失败，请重试或查看日志"
   },
   "EngineLog": {
     "welcome": "欢迎使用 {{name}}!",

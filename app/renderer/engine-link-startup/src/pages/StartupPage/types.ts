@@ -36,6 +36,7 @@ export type YakitStatusType =
   | 'init' // 初始
   | 'install' // 解压内置引擎
   | 'installNetWork' // 初始内置引擎不存在，联网安装
+  | 'check_error' // 检查失败，重试完整检查流程
   | 'check_timeout' // 引擎check超时
   | 'old_version' // 检查随机密码模式失败(引擎版本低)
   | 'skipAgreement_InstallNetWork' // 下载yak引擎 不需要勾选用户协议

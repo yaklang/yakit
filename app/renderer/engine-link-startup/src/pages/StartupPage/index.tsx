@@ -332,58 +332,21 @@ export const StartupPage: React.FC = () => {
     }
   })
 
-  const killCurrentProcess = useMemoizedFn((callback: () => void, extraPorts?: number[]) => {
-    // ---------- 1. PS 查询所有 yak 进程 ----------
-    yakitEngine
-      .listYakGrpc()
-      .then(async (res) => {
-        // 查找 PID
-        const pidsToKill = extraPorts
-          ? res
-              .filter((p) => extraPorts.includes(Number(p.port)))
-              .map((p) => p.pid)
-              .filter(Boolean)
-          : []
-
-        if (pidsToKill.length === 0) {
-          callback()
-          return
-        }
-
-        // ---------- 2. kill ----------
-        for (const pid of pidsToKill) {
-          try {
-            await yakitEngine.killYakGrpc(pid)
-            yakitNotify('info', `KILL yak PROCESS: ${pid}`)
-          } catch (err) {
-            yakitNotify('error', `Kill yak process failed: ${err}`)
-          }
-        }
-
-        callback()
-      })
-      .catch(() => {
-        callback()
-      })
-  })
-
-  // 在 3 秒内，不断尝试让主进程取消所有正在执行的任务
+  // Wait for the main process to settle cancellation before offering another startup.
+  // Only processes owned by this Yakit instance are stopped.
   const cancelAllTasks = async () => {
-    const start = Date.now()
-    while (Date.now() - start < 3000) {
-      let res: any = null
-      try {
-        res = await yakitEngine.cancelAllTasks()
-      } catch (e) {
-        debugToPrintLog(`------ cancel-all-tasks failed: ${e}`)
-      }
-      if (!res || res.canceled === 0) {
-        await new Promise((r) => setTimeout(r, 300))
-      } else {
-        await new Promise((r) => setTimeout(r, 500))
-      }
-    }
+    await yakitEngine.cancelAllTasks()
   }
+  const stopOwnedEngine = useMemoizedFn(async (callback: () => void) => {
+    try {
+      await cancelAllTasks()
+      callback()
+    } catch (error) {
+      setRestartLoading(false)
+      safeSetYakitStatus('check_error')
+      setCheckLog([String(error)])
+    }
+  })
 
   const setTimeoutLoading = useMemoizedFn((setLoading: (v: boolean) => any, time = 2000) => {
     setLoading(true)
@@ -834,21 +797,15 @@ export const StartupPage: React.FC = () => {
         setRestartLoading(true)
         setYaklangDownload(true)
         return
+      case 'check_error':
       case 'check_timeout':
         // 超时手动校验引擎
         setRestartLoading(true)
         handleStartLocalLink(isCheckVersion.current)
         return
       case 'port_occupied_prev':
-        // 端口被占用前置操作
-        if (extra?.killCurProcess) {
-          setRestartLoading(true)
-          killCurrentProcess(() => {
-            handleStartLocalLink(isCheckVersion.current)
-          }, [getCustomPort()])
-        } else {
-          safeSetYakitStatus('port_occupied')
-        }
+        // An occupied port may belong to another Yakit instance; offer a new port.
+        safeSetYakitStatus('port_occupied')
         return
       case 'port_occupied':
         // 端口被占用
@@ -954,11 +911,11 @@ export const StartupPage: React.FC = () => {
           } else {
             breakHandleRef.current = false
             safeSetYakitStatus('')
-            killCurrentProcess(() => {
+            stopOwnedEngine(() => {
               setTimeout(() => {
                 handleStartLocalLink(isCheckVersion.current)
               }, 500)
-            }, [getCustomPort()])
+            })
           }
         } else {
           // 否则执行断开
@@ -971,14 +928,13 @@ export const StartupPage: React.FC = () => {
           setYakitLoadingTip(t('StartupPage.interrupting'))
           setRestartLoading(false)
           setDisableYakitLoading(true)
-          cancelAllTasks()
-          setTimeout(() => {
-            setYakitLoadingTip('')
-            setDisableYakitLoading(false)
-            if (extra.isRemote) {
-              handleLinkRemoteMode()
-            }
-          }, 3000)
+          void cancelAllTasks()
+            .catch((error) => setCheckLog([String(error)]))
+            .finally(() => {
+              setYakitLoadingTip('')
+              setDisableYakitLoading(false)
+              if (extra?.isRemote) handleLinkRemoteMode()
+            })
         }
         return
       case 'link_countdown':
@@ -1046,7 +1002,7 @@ export const StartupPage: React.FC = () => {
   // 下载指定版本引擎
   useUpdateEffect(() => {
     if (yaklangSpecifyVersion) {
-      killCurrentProcess(() => {
+      stopOwnedEngine(() => {
         yakEngineVersionExistsAndCorrectness(
           yaklangSpecifyVersion,
           () => {
@@ -1071,7 +1027,7 @@ export const StartupPage: React.FC = () => {
             setYaklangDownload(true)
           },
         )
-      }, [getCustomPort()])
+      })
     }
   }, [yaklangSpecifyVersion])
   // #endregion
