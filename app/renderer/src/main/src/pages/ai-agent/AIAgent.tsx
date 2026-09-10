@@ -11,6 +11,7 @@ import { useDebounceFn, useInViewport, useMemoizedFn, useRequest, useUpdateEffec
 import { AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import {
+  applyAIAgentChatSettingBroadcast,
   loadAIAgentChatSetting,
   persistAIAgentChatSetting,
   serializeAIAgentChatSetting,
@@ -31,7 +32,6 @@ import { SplitView } from '../yakRunner/SplitView/SplitView'
 import { AIBottomDetails } from './aiBottomDetails/AIBottomDetails'
 
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { omit } from 'lodash'
 import { useChatIPC } from '../ai-re-act/hooks/useChatIPC'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { globalSessionEngine } from '../ai-re-act/hooks/ChatMultiSessionController'
@@ -129,7 +129,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         const cache = JSON.parse(payload) as AIAgentSetting
         if (typeof cache !== 'object' || !cache) return
         if (serializeAIAgentChatSetting(getSetting()) === payload) return
-        setSetting((old) => ({ ...old, ...omit(cache, ['AIService', 'AIModelName']) }))
+        setSetting((old) => applyAIAgentChatSettingBroadcast(old, cache))
       } catch (_) {}
     }
     emiter.on('onAIAgentChatSettingChange', onChange)

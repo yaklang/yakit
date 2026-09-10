@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -20,12 +20,6 @@ export const SystemProxySettings: React.FC = () => {
     Enable: false,
     CurrentProxy: '',
   })
-
-  const enable = useMemo(() => {
-    if (!current.Enable) return false
-    if (current.CurrentProxy === proxy) return true
-    return false
-  }, [proxy, current])
 
   const update = useMemoizedFn(() => {
     setLoading(true)
@@ -50,7 +44,7 @@ export const SystemProxySettings: React.FC = () => {
     yakitHost
       .setSystemProxy({
         HttpProxy: proxy,
-        Enable: !enable,
+        Enable: !current.Enable,
       })
       .then(() => {
         info(t('ConfigSystemProxy.setSystemProxySuccess'))
@@ -67,8 +61,8 @@ export const SystemProxySettings: React.FC = () => {
         <div className={styles['page-head']}>
           <div className={styles['page-title']}>{t('SettingsPage.item.system-proxy')}</div>
           <div className={styles['page-status']}>
-            <span>{enable ? t('YakitButton.enabled') : t('YakitButton.notEnabled')}</span>
-            <YakitSwitch size="large" checked={enable} onChange={onSetSystemProxy} />
+            <span>{current.Enable ? t('YakitButton.enabled') : t('YakitButton.notEnabled')}</span>
+            <YakitSwitch size="large" checked={current.Enable} onChange={onSetSystemProxy} />
           </div>
         </div>
         <div className={styles['section']} data-settings-section={SettingsSections['system-proxy'].systemProxy}>

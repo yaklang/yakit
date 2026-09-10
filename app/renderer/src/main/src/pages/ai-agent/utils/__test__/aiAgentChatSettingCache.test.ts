@@ -6,6 +6,7 @@ import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import { AIAgentSettingDefault } from '../../defaultConstant'
 import type { AIAgentSetting } from '../../aiAgentType'
 import {
+  applyAIAgentChatSettingBroadcast,
   loadAIAgentChatSetting,
   mergeAIAgentChatSettingCache,
   persistAIAgentChatSetting,
@@ -46,11 +47,17 @@ const settingWithModel: AIAgentSetting = {
 }
 
 describe('serializeAIAgentChatSetting', () => {
-  it('持久化时去掉 AIService / AIModelName，避免把会话模型写进全局缓存', () => {
+  it('持久化时去掉模型字段和会话运行模式', () => {
     const parsed = JSON.parse(serializeAIAgentChatSetting(settingWithModel)) as AIAgentSetting
     expect(parsed.AIService).toBeUndefined()
     expect(parsed.AIModelName).toBeUndefined()
+    expect(parsed.EnablePlan).toBeUndefined()
+    expect(parsed.SyncPerceptionTrigger).toBeUndefined()
+    expect(parsed.Source).toBeUndefined()
+    expect(parsed.Strategy?.EnableMultiAgent).toBeUndefined()
+    expect(parsed.Strategy?.EnableGoalMode).toBeUndefined()
     expect(parsed.ReviewPolicy).toBe('yolo')
+    expect(parsed.Strategy?.GoalMinIterations).toBe(9)
   })
 })
 
@@ -112,6 +119,47 @@ describe('loadAIAgentChatSetting', () => {
   })
 })
 
+describe('applyAIAgentChatSettingBroadcast', () => {
+  it('应用设置广播时保留当前会话的规划 / 多 Agent / 目标优化', () => {
+    const current: AIAgentSetting = {
+      ...AIAgentSettingDefault,
+      EnablePlan: true,
+      ReviewPolicy: 'manual',
+      Strategy: {
+        EnableMultiAgent: true,
+        EnableGoalMode: true,
+        GoalMinIterations: 3,
+        MaxSubAgents: 2,
+      },
+    }
+    const incoming = JSON.parse(serializeAIAgentChatSetting(settingWithModel)) as Partial<AIAgentSetting>
+    const next = applyAIAgentChatSettingBroadcast(current, incoming)
+    expect(next.EnablePlan).toBe(true)
+    expect(next.Strategy?.EnableMultiAgent).toBe(true)
+    expect(next.Strategy?.EnableGoalMode).toBe(true)
+    expect(next.ReviewPolicy).toBe('yolo')
+    expect(next.AIService).toBeUndefined()
+  })
+
+  it('即使广播里带上会话开关 false，也不会覆盖当前会话', () => {
+    const current: AIAgentSetting = {
+      ...AIAgentSettingDefault,
+      EnablePlan: true,
+      Strategy: { EnableMultiAgent: true, EnableGoalMode: true },
+    }
+    const next = applyAIAgentChatSettingBroadcast(current, {
+      EnablePlan: false,
+      ReviewPolicy: 'ai',
+      Strategy: { EnableMultiAgent: false, EnableGoalMode: false, GoalMinIterations: 8 },
+    })
+    expect(next.EnablePlan).toBe(true)
+    expect(next.Strategy?.EnableMultiAgent).toBe(true)
+    expect(next.Strategy?.EnableGoalMode).toBe(true)
+    expect(next.ReviewPolicy).toBe('ai')
+    expect(next.Strategy?.GoalMinIterations).toBe(8)
+  })
+})
+
 describe('persistAIAgentChatSetting', () => {
   beforeEach(() => {
     setRemoteValueMock.mockReset()
@@ -124,6 +172,7 @@ describe('persistAIAgentChatSetting', () => {
     expect(setRemoteValueMock).toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting, payload)
     expect(emitMock).toHaveBeenCalledWith('onAIAgentChatSettingChange', payload)
     expect(payload).not.toContain('gpt-test')
+    expect(payload).not.toContain('EnablePlan')
   })
 
   it('emit=false 时只落库不广播', () => {

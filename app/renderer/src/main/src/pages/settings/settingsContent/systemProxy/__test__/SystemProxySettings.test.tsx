@@ -46,4 +46,17 @@ describe('SystemProxySettings', () => {
       expect(setSystemProxy).toHaveBeenCalledWith({ HttpProxy: '127.0.0.1:8083', Enable: false })
     })
   })
+
+  it('修改地址草稿不会把已启用状态显示成未启用', async () => {
+    render(<SystemProxySettings />)
+    await waitFor(() => {
+      expect(screen.getByText('YakitButton.enabled')).toBeInTheDocument()
+    })
+    const input = document.querySelector('input') as HTMLInputElement
+    expect(input).toBeTruthy()
+    fireEvent.change(input, { target: { value: '127.0.0.1:9090' } })
+    expect(screen.getByText('YakitButton.enabled')).toBeInTheDocument()
+    expect(screen.queryByText('YakitButton.notEnabled')).not.toBeInTheDocument()
+    expect(document.querySelector('.ant-switch-checked')).toBeTruthy()
+  })
 })

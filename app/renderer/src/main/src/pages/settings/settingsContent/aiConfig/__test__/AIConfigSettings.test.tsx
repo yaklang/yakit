@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { persistAIAgentChatSetting } from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
@@ -36,5 +36,28 @@ describe('AIConfigSettings', () => {
     await waitFor(() => {
       expect(persistAIAgentChatSetting).toHaveBeenCalled()
     })
+  })
+
+  it('没有改动时卸载不会保存', async () => {
+    const { unmount } = render(<AIConfigSettings />)
+    await waitFor(() => {
+      expect(screen.getByText('SettingsPage.item.ai-config')).toBeInTheDocument()
+    })
+    vi.mocked(persistAIAgentChatSetting).mockClear()
+    unmount()
+    expect(persistAIAgentChatSetting).not.toHaveBeenCalled()
+  })
+
+  it('修改后马上保存，离开页面也不会丢', async () => {
+    const { unmount } = render(<AIConfigSettings />)
+    await waitFor(() => {
+      expect(screen.getByText('SettingsPage.item.ai-config')).toBeInTheDocument()
+    })
+    vi.mocked(persistAIAgentChatSetting).mockClear()
+    const switchBtn = document.querySelector('button.ant-switch') as HTMLElement
+    expect(switchBtn).toBeTruthy()
+    fireEvent.click(switchBtn)
+    expect(persistAIAgentChatSetting).toHaveBeenCalled()
+    unmount()
   })
 })

@@ -135,8 +135,8 @@ declare global {
       getDirSize: (dirPath: string) => Promise<number>
     }
     theme: {
-      setTheme: (theme: 'light' | 'dark') => Promise<unknown>
-      onUpdated: (callback: (theme: 'light' | 'dark') => void) => BridgeCleanup
+      setTheme: (theme: 'light' | 'dark' | 'system') => Promise<unknown>
+      onUpdated: (callback: (theme: 'light' | 'dark' | 'system') => void) => BridgeCleanup
     }
     shell: {
       openUrl: (url: string) => Promise<unknown>

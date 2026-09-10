@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { Slider } from 'antd'
-import { useDebounceFn, useMemoizedFn } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -11,6 +11,7 @@ import { RefreshOutlined, RotateCcwOutlined } from '@yakit-libs/yakit-ui-icons/o
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIAgentSettingDefault, AIReviewRuleOptions } from '@/pages/ai-agent/defaultConstant'
 import {
+  applyAIAgentChatSettingBroadcast,
   loadAIAgentChatSetting,
   persistAIAgentChatSetting,
   serializeAIAgentChatSetting,
@@ -86,23 +87,17 @@ export const AIConfigSettings: React.FC = () => {
   const settingRef = useRef(setting)
   settingRef.current = setting
 
-  const persist = useDebounceFn(
-    (next: AIAgentSetting) => {
-      lastPayloadRef.current = serializeAIAgentChatSetting(next)
-      persistAIAgentChatSetting(next)
-    },
-    { wait: 200 },
-  ).run
-
   const apply = useMemoizedFn((patch: Partial<AIAgentSetting>) => {
     const next = { ...settingRef.current, ...patch }
     setSetting(next)
-    persist(next)
+    lastPayloadRef.current = serializeAIAgentChatSetting(next)
+    persistAIAgentChatSetting(next)
   })
 
   const applyAll = useMemoizedFn((next: AIAgentSetting) => {
     setSetting(next)
-    persist(next)
+    lastPayloadRef.current = serializeAIAgentChatSetting(next)
+    persistAIAgentChatSetting(next)
   })
 
   useEffect(() => {
@@ -120,7 +115,7 @@ export const AIConfigSettings: React.FC = () => {
         const cache = JSON.parse(payload) as AIAgentSetting
         if (typeof cache !== 'object' || !cache) return
         lastPayloadRef.current = payload
-        setSetting((old) => ({ ...old, ...cache }))
+        setSetting((old) => applyAIAgentChatSettingBroadcast(old, cache))
       } catch (_) {}
     }
     emiter.on('onAIAgentChatSettingChange', onChange)

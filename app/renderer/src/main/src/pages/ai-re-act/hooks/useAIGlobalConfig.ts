@@ -63,6 +63,7 @@ function useAIGlobalConfig(params) {
   const [total, setTotal] = useState<number>(0)
 
   const aiGlobalConfigRef = useRef<AIGlobalConfig>()
+  const saveQueue = useRef(Promise.resolve())
 
   useEffect(() => {
     isInit && getAIGlobalConfig(isShowLoading !== false)
@@ -87,27 +88,26 @@ function useAIGlobalConfig(params) {
       })
   })
 
-  const setAIGlobalConfig = useMemoizedFn((data: Partial<AIGlobalConfig>) => {
-    return new Promise<void>((resolve, reject) => {
-      const config: AIGlobalConfig = {
-        ...aiGlobalConfig,
-        ...data,
-      }
-      setUpdateLoading(true)
-      grpcSetAIGlobalConfig(config)
-        .then(() => {
-          aiGlobalConfigRef.current = cloneDeep(config)
-          setConfig(aiGlobalConfigRef.current)
-          getAIGlobalConfig(false)
-          resolve()
-        })
-        .catch(reject)
-        .finally(() => {
-          setTimeout(() => {
-            setUpdateLoading(false)
-          }, 200)
-        })
+  const setAIGlobalConfig = useMemoizedFn(async (data: Partial<AIGlobalConfig>): Promise<void> => {
+    const next: AIGlobalConfig = {
+      ...(aiGlobalConfigRef.current || aiGlobalConfig),
+      ...data,
+    }
+    aiGlobalConfigRef.current = cloneDeep(next)
+    setConfig(aiGlobalConfigRef.current)
+    setUpdateLoading(true)
+
+    const task = saveQueue.current.then(async () => {
+      await grpcSetAIGlobalConfig(next)
     })
+    saveQueue.current = task.catch(() => undefined)
+    try {
+      await task
+    } finally {
+      setTimeout(() => {
+        setUpdateLoading(false)
+      }, 200)
+    }
   })
 
   /** 获取最新的值,不会设置全局变量中的值,会设置ref */

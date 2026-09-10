@@ -8,9 +8,38 @@ import type { AIAgentSetting } from '../aiAgentType'
 import { AIAgentSettingDefault } from '../defaultConstant'
 
 const omitPersistKeys = ['AIService', 'AIModelName'] as const
+const omitSessionRuntimeKeys = ['EnablePlan', 'SyncPerceptionTrigger', 'Source'] as const
+
+export const stripAIAgentChatSettingForPersist = (setting: Partial<AIAgentSetting>): Partial<AIAgentSetting> => {
+  const data = omit(setting, [...omitPersistKeys, ...omitSessionRuntimeKeys]) as Partial<AIAgentSetting>
+  if (data.Strategy) {
+    data.Strategy = omit(data.Strategy, ['EnableMultiAgent', 'EnableGoalMode'])
+  }
+  return data
+}
 
 export const serializeAIAgentChatSetting = (setting: AIAgentSetting) => {
-  return JSON.stringify(omit(setting, omitPersistKeys))
+  return JSON.stringify(stripAIAgentChatSettingForPersist(setting))
+}
+
+export const applyAIAgentChatSettingBroadcast = (
+  current: AIAgentSetting,
+  incoming: Partial<AIAgentSetting>,
+): AIAgentSetting => {
+  const patch = stripAIAgentChatSettingForPersist(incoming)
+  return {
+    ...current,
+    ...patch,
+    EnablePlan: current.EnablePlan,
+    SyncPerceptionTrigger: current.SyncPerceptionTrigger,
+    Source: current.Source,
+    Strategy: {
+      ...current.Strategy,
+      ...patch.Strategy,
+      EnableMultiAgent: current.Strategy?.EnableMultiAgent,
+      EnableGoalMode: current.Strategy?.EnableGoalMode,
+    },
+  }
 }
 
 /** 与 AIAgent 页读取远端缓存时的合并规则保持一致 */

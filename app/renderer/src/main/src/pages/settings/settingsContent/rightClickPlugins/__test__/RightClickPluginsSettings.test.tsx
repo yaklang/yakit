@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ManageRightClickPluginsTabKey } from '@/pages/manageRightClickPlugins/constants'
@@ -149,6 +149,7 @@ describe('RightClickPluginsSettings', () => {
     render(<RightClickPluginsSettings />)
     await waitFor(() => expect(screen.getByText('sqlmap')).toBeInTheDocument())
     expect(screen.getByText('Control+s')).toBeInTheDocument()
+    expect(screen.queryByText('ManageRightClickPlugins.setShortcutMenu')).not.toBeInTheDocument()
   })
 
   it('开关打开时保存为已添加', async () => {
@@ -190,9 +191,11 @@ describe('RightClickPluginsSettings', () => {
     render(<RightClickPluginsSettings />)
     await waitFor(() => expect(screen.getByText('to-disable')).toBeInTheDocument())
     await user.click(document.querySelectorAll('button.ant-switch')[1])
-    await waitFor(() => expect(mockBind).toHaveBeenCalled())
+    await waitFor(() => {
+      expect(mockBind).toHaveBeenCalled()
+      expectBefore('keep-off', 'to-disable')
+    })
     expect(mockBind.mock.calls.some((call) => call[0].PluginUUID === 'p3' && call[0].Enabled === false)).toBe(true)
-    expectBefore('keep-off', 'to-disable')
   })
 
   it('拖拽不能把已启用项排到未启用区域', async () => {
@@ -203,11 +206,15 @@ describe('RightClickPluginsSettings', () => {
     ])
     render(<RightClickPluginsSettings />)
     await waitFor(() => expect(screen.getByText('keep-off')).toBeInTheDocument())
-    dnd.onDragEnd?.({ source: { index: 0 }, destination: { index: 2 } })
-    await waitFor(() => expect(mockBind).toHaveBeenCalled())
+    await act(async () => {
+      await dnd.onDragEnd?.({ source: { index: 0 }, destination: { index: 2 } })
+    })
+    await waitFor(() => {
+      expect(mockBind).toHaveBeenCalled()
+      expectBefore('keep-on', 'sqlmap')
+      expectBefore('sqlmap', 'keep-off')
+    })
     expect(mockBind.mock.calls.some((call) => call[0].PluginUUID === 'p3')).toBe(false)
-    expectBefore('keep-on', 'sqlmap')
-    expectBefore('sqlmap', 'keep-off')
   })
 
   it('搜索会筛选列表，切换 tab 会清空关键词', async () => {
