@@ -7,6 +7,7 @@ import { AIAgentSettingDefault } from '../../defaultConstant'
 import type { AIAgentSetting } from '../../aiAgentType'
 import {
   applyAIAgentChatSettingBroadcast,
+  applyAIAgentChatSettingSessionDefaults,
   loadAIAgentChatSetting,
   mergeAIAgentChatSettingCache,
   persistAIAgentChatSetting,
@@ -74,18 +75,28 @@ describe('mergeAIAgentChatSettingCache', () => {
     expect(merged.ReActMaxIteration).toBe(AIAgentSettingDefault.ReActMaxIteration)
   })
 
-  it('强制关闭会话专属开关，Strategy 只保留默认迭代上限', () => {
+  it('保留已保存的记忆处理开关和策略数值，不在读缓存时重置', () => {
     const merged = mergeAIAgentChatSettingCache(settingWithModel)
-    expect(merged.SyncPerceptionTrigger).toBe(false)
-    expect(merged.EnablePlan).toBe(false)
-    expect(merged.DisableMemoryTriage).toBe(AIAgentSettingDefault.DisableMemoryTriage)
-    expect(merged.Strategy).toEqual({
+    expect(merged.DisableMemoryTriage).toBe(true)
+    expect(merged.Strategy?.GoalMinIterations).toBe(9)
+    expect(merged.Strategy?.MaxSubAgents).toBe(4)
+    expect(merged.ReviewPolicy).toBe('yolo')
+  })
+})
+
+describe('applyAIAgentChatSettingSessionDefaults', () => {
+  it('打开新会话时关掉规划 / 多 Agent / 目标优化，但留下已保存的策略数值', () => {
+    const next = applyAIAgentChatSettingSessionDefaults(mergeAIAgentChatSettingCache(settingWithModel))
+    expect(next.SyncPerceptionTrigger).toBe(false)
+    expect(next.EnablePlan).toBe(false)
+    expect(next.Source).toBe(AISourceEnum.aiAgent)
+    expect(next.DisableMemoryTriage).toBe(true)
+    expect(next.Strategy).toEqual({
       EnableMultiAgent: false,
       EnableGoalMode: false,
-      GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
-      MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
+      GoalMinIterations: 9,
+      MaxSubAgents: 4,
     })
-    expect(merged.Source).toBe(AISourceEnum.aiAgent)
   })
 })
 
@@ -110,12 +121,15 @@ describe('loadAIAgentChatSetting', () => {
   })
 
   it('合法缓存走合并规则后再返回', async () => {
-    getRemoteValueMock.mockResolvedValue(JSON.stringify({ ReviewPolicy: 'ai', EnablePlan: true }))
+    getRemoteValueMock.mockResolvedValue(
+      JSON.stringify({ ReviewPolicy: 'ai', EnablePlan: true, DisableMemoryTriage: true }),
+    )
     const loaded = await loadAIAgentChatSetting()
     expect(getRemoteValueMock).toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
     expect(loaded?.ReviewPolicy).toBe('ai')
-    expect(loaded?.EnablePlan).toBe(false)
-    expect(loaded?.Source).toBe(AISourceEnum.aiAgent)
+    expect(loaded?.EnablePlan).toBe(true)
+    expect(loaded?.DisableMemoryTriage).toBe(true)
+    expect(loaded?.Source).toBe(AIAgentSettingDefault.Source)
   })
 })
 

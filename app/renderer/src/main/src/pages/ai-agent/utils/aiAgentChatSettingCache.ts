@@ -30,34 +30,37 @@ export const applyAIAgentChatSettingBroadcast = (
   return {
     ...current,
     ...patch,
-    EnablePlan: current.EnablePlan,
-    SyncPerceptionTrigger: current.SyncPerceptionTrigger,
-    Source: current.Source,
     Strategy: {
       ...current.Strategy,
       ...patch.Strategy,
-      EnableMultiAgent: current.Strategy?.EnableMultiAgent,
-      EnableGoalMode: current.Strategy?.EnableGoalMode,
     },
   }
 }
 
-/** 与 AIAgent 页读取远端缓存时的合并规则保持一致 */
+/** 读已保存设置：只铺默认值、去掉模型字段，不改会话开关 */
 export const mergeAIAgentChatSettingCache = (cache: Partial<AIAgentSetting>): AIAgentSetting => {
-  const newCache = omit(cache, omitPersistKeys)
+  const saved = omit(cache, omitPersistKeys) as Partial<AIAgentSetting>
   return {
     ...cloneDeep(AIAgentSettingDefault),
-    ...newCache,
+    ...saved,
+    Strategy: {
+      ...cloneDeep(AIAgentSettingDefault.Strategy),
+      ...saved.Strategy,
+    },
+  }
+}
+
+export const applyAIAgentChatSettingSessionDefaults = (setting: AIAgentSetting): AIAgentSetting => {
+  return {
+    ...setting,
     SyncPerceptionTrigger: false,
     EnablePlan: false,
-    DisableMemoryTriage: AIAgentSettingDefault.DisableMemoryTriage,
+    Source: AISourceEnum.aiAgent,
     Strategy: {
+      ...setting.Strategy,
       EnableMultiAgent: false,
       EnableGoalMode: false,
-      GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
-      MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
     },
-    Source: AISourceEnum.aiAgent,
   }
 }
 

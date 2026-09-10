@@ -65,32 +65,30 @@ export const getNotepadAdd = () => {
 }
 
 /** 打开最近编辑的记事本，若无则新建 */
+const openModifyNotepad = (params?: { notepadHash?: string; title?: string }) => {
+  emiter.emit(
+    'openPage',
+    JSON.stringify({
+      route: YakitRoute.Modify_Notepad,
+      ...(params ? { params } : {}),
+    }),
+  )
+}
+
 export const openLatestOrNewNotepad = () => {
   grpcQueryNote({
     Filter: { ...defaultNoteFilter },
     Pagination: { ...genDefaultPagination(1), OrderBy: 'updated_at', Page: 1 },
   })
     .then((res) => {
-      if (res.Data && res.Data.length > 0) {
-        const latestNote = res.Data[0]
-        emiter.emit(
-          'openPage',
-          JSON.stringify({
-            route: YakitRoute.Modify_Notepad,
-            params: { notepadHash: `${latestNote.Id}`, title: latestNote.Title },
-          }),
-        )
-      } else {
-        emiter.emit(
-          'openPage',
-          JSON.stringify({
-            route: YakitRoute.Modify_Notepad,
-            params: { notepadHash: '' },
-          }),
-        )
+      const latestNote = res.Data?.[0]
+      if (latestNote?.Id) {
+        openModifyNotepad({ notepadHash: String(latestNote.Id), title: latestNote.Title })
+        return
       }
+      openModifyNotepad({ notepadHash: '' })
     })
     .catch(() => {
-      emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Modify_Notepad }))
+      openModifyNotepad()
     })
 }

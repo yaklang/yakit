@@ -21,6 +21,8 @@ const AI_MODEL_CONFIG_KEYS = [
   AIModelTypeInterFileNameEnum.VisionModels,
 ] as const
 
+let saveQueue: Promise<unknown> = Promise.resolve()
+
 interface UseAIGlobalConfigData {
   aiGlobalConfig: AIGlobalConfig
   queryLoading: boolean
@@ -63,7 +65,6 @@ function useAIGlobalConfig(params) {
   const [total, setTotal] = useState<number>(0)
 
   const aiGlobalConfigRef = useRef<AIGlobalConfig>()
-  const saveQueue = useRef(Promise.resolve())
 
   useEffect(() => {
     isInit && getAIGlobalConfig(isShowLoading !== false)
@@ -90,19 +91,23 @@ function useAIGlobalConfig(params) {
 
   const setAIGlobalConfig = useMemoizedFn(async (data: Partial<AIGlobalConfig>): Promise<void> => {
     const next: AIGlobalConfig = {
-      ...(aiGlobalConfigRef.current || aiGlobalConfig),
+      ...useAIGlobalConfigStore.getState().aiGlobalConfig,
       ...data,
     }
-    aiGlobalConfigRef.current = cloneDeep(next)
-    setConfig(aiGlobalConfigRef.current)
+    const snapshot = cloneDeep(next)
+    aiGlobalConfigRef.current = snapshot
+    setConfig(snapshot)
     setUpdateLoading(true)
 
-    const task = saveQueue.current.then(async () => {
-      await grpcSetAIGlobalConfig(next)
+    const task = saveQueue.then(async () => {
+      await grpcSetAIGlobalConfig(snapshot)
     })
-    saveQueue.current = task.catch(() => undefined)
+    saveQueue = task.catch(() => undefined)
     try {
       await task
+    } catch (err) {
+      getAIGlobalConfig(false)
+      throw err
     } finally {
       setTimeout(() => {
         setUpdateLoading(false)

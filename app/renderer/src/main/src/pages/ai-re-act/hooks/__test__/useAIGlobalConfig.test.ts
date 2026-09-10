@@ -60,4 +60,51 @@ describe('useAIGlobalConfig', () => {
       DisableFallback: true,
     })
   })
+
+  it('两个实例先后保存时，后一次会带上前一次的改动', async () => {
+    const first = renderHook(() => useAIGlobalConfig())
+    const second = renderHook(() => useAIGlobalConfig())
+    await act(async () => {
+      first.result.current[1].setConfigStore({
+        ...defaultAIGlobalConfig,
+        RoutingPolicy: AIModelPolicyEnum.PolicyAuto,
+        DisableFallback: false,
+      })
+      second.result.current[1].setConfigStore({
+        ...defaultAIGlobalConfig,
+        RoutingPolicy: AIModelPolicyEnum.PolicyAuto,
+        DisableFallback: false,
+      })
+      void first.result.current[1].setAIGlobalConfig({ RoutingPolicy: AIModelPolicyEnum.PolicyPerformance })
+      void second.result.current[1].setAIGlobalConfig({ DisableFallback: true })
+    })
+
+    await waitFor(() => {
+      expect(setMock).toHaveBeenCalledTimes(2)
+    })
+    expect(setMock.mock.calls[1][0]).toMatchObject({
+      RoutingPolicy: AIModelPolicyEnum.PolicyPerformance,
+      DisableFallback: true,
+    })
+  })
+
+  it('保存失败会回拉配置且后续保存仍能继续', async () => {
+    setMock.mockRejectedValueOnce(new Error('save-fail')).mockResolvedValue(null)
+
+    const { result } = renderHook(() => useAIGlobalConfig())
+    await act(async () => {
+      await expect(
+        result.current[1].setAIGlobalConfig({ RoutingPolicy: AIModelPolicyEnum.PolicyPerformance }),
+      ).rejects.toThrow('save-fail')
+    })
+    await waitFor(() => {
+      expect(getMock).toHaveBeenCalled()
+    })
+
+    await act(async () => {
+      await result.current[1].setAIGlobalConfig({ DisableFallback: true })
+    })
+    expect(setMock).toHaveBeenCalledTimes(2)
+    expect(setMock.mock.calls[1][0]).toMatchObject({ DisableFallback: true })
+  })
 })

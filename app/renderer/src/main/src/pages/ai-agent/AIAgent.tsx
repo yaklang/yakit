@@ -12,6 +12,7 @@ import { AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID } 
 import cloneDeep from 'lodash/cloneDeep'
 import {
   applyAIAgentChatSettingBroadcast,
+  applyAIAgentChatSettingSessionDefaults,
   loadAIAgentChatSetting,
   persistAIAgentChatSetting,
   serializeAIAgentChatSetting,
@@ -106,7 +107,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const initToCacheData = useMemoizedFn(async () => {
     const next = await loadAIAgentChatSetting()
     if (!next) return
-    setSetting(next)
+    setSetting(applyAIAgentChatSettingSessionDefaults(next))
   })
 
   useEffect(() => {

@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { persistAIAgentChatSetting } from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
+import { persistAIAgentChatSetting, loadAIAgentChatSetting } from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
+import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 import { AIConfigSettings } from '../AIConfigSettings'
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -59,5 +60,33 @@ describe('AIConfigSettings', () => {
     fireEvent.click(switchBtn)
     expect(persistAIAgentChatSetting).toHaveBeenCalled()
     unmount()
+  })
+
+  it('加载后改其他项，不会把记忆处理开关写回默认值', async () => {
+    vi.mocked(loadAIAgentChatSetting).mockResolvedValueOnce({
+      ...AIAgentSettingDefault,
+      DisallowRequireForUserPrompt: false,
+      DisableMemoryTriage: true,
+      Strategy: {
+        ...AIAgentSettingDefault.Strategy,
+        GoalMinIterations: 9,
+        MaxSubAgents: 4,
+      },
+    })
+    render(<AIConfigSettings />)
+    await waitFor(() => {
+      expect(loadAIAgentChatSetting).toHaveBeenCalled()
+    })
+    await waitFor(() => {
+      expect(screen.getByText('SettingsPage.item.ai-config')).toBeInTheDocument()
+    })
+    vi.mocked(persistAIAgentChatSetting).mockClear()
+    const switchBtn = document.querySelector('button.ant-switch') as HTMLElement
+    fireEvent.click(switchBtn)
+    expect(persistAIAgentChatSetting).toHaveBeenCalled()
+    const saved = vi.mocked(persistAIAgentChatSetting).mock.calls[0][0]
+    expect(saved.DisableMemoryTriage).toBe(true)
+    expect(saved.Strategy?.GoalMinIterations).toBe(9)
+    expect(saved.Strategy?.MaxSubAgents).toBe(4)
   })
 })
