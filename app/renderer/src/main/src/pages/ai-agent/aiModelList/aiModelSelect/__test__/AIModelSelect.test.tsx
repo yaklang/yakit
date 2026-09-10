@@ -1,6 +1,8 @@
 import type React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import emiter from '@/utils/eventBus/eventBus'
+import { YakitRoute } from '@/enums/yakitRoute'
 import { AIModelSelect } from '../AIModelSelect'
 import { defaultAIGlobalConfig } from '../../../defaultConstant'
 
@@ -98,17 +100,28 @@ const openModels = async () => {
   return screen.getByRole('region', { name: '模型列表' })
 }
 
+/** 下拉按钮顺序：配置、刷新、两条模型编辑、新增模型 */
+const getDropdownButtons = (dropdown: HTMLElement) => within(dropdown).getAllByRole('button')
+const getEditButtons = (dropdown: HTMLElement) =>
+  getDropdownButtons(dropdown).filter((button) => button.className.includes('edit-icon'))
+
 describe('AIModelSelect', () => {
-  it('移除配置入口后仍可刷新模型列表', async () => {
+  it('配置入口打开设置中的模型配置，刷新仍会重新拉取模型列表', async () => {
+    const emit = vi.spyOn(emiter, 'emit')
     const dropdown = await openModels()
     expect(within(dropdown).getByText('model-a')).toBeInTheDocument()
-    // 刷新、两条模型的编辑和新增模型按钮；不再包含旧配置入口。
-    const buttons = within(dropdown).getAllByRole('button')
-    expect(buttons).toHaveLength(4)
-    await waitFor(() => expect(buttons[0]).not.toHaveClass('ant-btn-loading'))
-    fireEvent.click(buttons[0])
-    await waitFor(() => expect(mocks.load).toHaveBeenCalledTimes(2))
+    const buttons = getDropdownButtons(dropdown)
+    expect(buttons).toHaveLength(5)
+    const [configButton, refreshButton] = buttons
+    fireEvent.click(configButton)
+    expect(emit).toHaveBeenCalledWith(
+      'openPage',
+      JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'ai-model' } }),
+    )
     expect(mocks.configure).not.toHaveBeenCalled()
+    await waitFor(() => expect(refreshButton).not.toHaveClass('ant-btn-loading'))
+    fireEvent.click(refreshButton)
+    await waitFor(() => expect(mocks.load).toHaveBeenCalledTimes(2))
   })
 
   it('选择模型后关闭下拉，将选择结果保存为首选模型', async () => {
@@ -129,7 +142,7 @@ describe('AIModelSelect', () => {
 
   it('悬停编辑按钮后仍可加载模型名称、编辑并保存', async () => {
     const dropdown = await openModels()
-    fireEvent.mouseEnter(within(dropdown).getAllByRole('button')[1])
+    fireEvent.mouseEnter(getEditButtons(dropdown)[0])
     fireEvent.click(await screen.findByText('model-edited'))
     expect(mocks.names).toHaveBeenCalledWith({ Config: JSON.stringify({ Type: 'test-provider' }) })
     fireEvent.click(screen.getByRole('button', { name: '关闭选择' }))
@@ -213,8 +226,7 @@ describe('AIModelSelect', () => {
       expect(dropdown).toBeVisible()
       const measureDropdown = vi.spyOn(dropdown.firstElementChild!, 'getBoundingClientRect')
       measureDropdown.mockReturnValue(new DOMRect(100, 0, 200, 300))
-      const editButton = within(dropdown).getAllByRole('button')[1]
-      fireEvent.mouseEnter(editButton)
+      fireEvent.mouseEnter(getEditButtons(dropdown)[0])
       expect(await screen.findByText('model-edited')).toBeVisible()
       expect(screen.getByText('model-edited').closest('[style*="translate("]')).toHaveStyle({
         transform: 'translate(306px, 0px)',
@@ -234,7 +246,7 @@ describe('AIModelSelect', () => {
       const reopenedDropdown = screen.getByRole('region', { name: '模型列表' })
       const reopenedMeasureDropdown = vi.spyOn(reopenedDropdown.firstElementChild!, 'getBoundingClientRect')
       reopenedMeasureDropdown.mockReturnValue(new DOMRect(200, 0, 200, 300))
-      fireEvent.mouseEnter(within(reopenedDropdown).getAllByRole('button')[1])
+      fireEvent.mouseEnter(getEditButtons(reopenedDropdown)[0])
       expect(await screen.findByText('model-edited')).toBeVisible()
       expect(screen.getByText('model-edited').closest('[style*="translate("]')).toHaveStyle({
         transform: 'translate(406px, 0px)',
