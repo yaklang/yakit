@@ -25,6 +25,7 @@ import {
   GetConnectPort,
   getReleaseEditionName,
   isCommunityYakit,
+  isEnpriTrace,
   isEnpriTraceAgent,
   isEnterpriseEdition,
   isMemfit,
@@ -378,8 +379,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         const mode = config.yakitMode || 'classic'
         setSoftMode(mode as SoftMode)
       }
-      const lang = config.softLange || 'zh'
-      i18n.changeLanguage(lang)
+      if (!isEnpriTrace()) {
+        const lang = config.softLange || 'zh'
+        i18n.changeLanguage(lang)
+      }
     } catch (error) {}
   })
 

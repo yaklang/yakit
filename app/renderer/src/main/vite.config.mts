@@ -350,5 +350,8 @@ export default defineConfig(({ mode }) => {
     worker: {
       format: 'es',
     },
+    json: {
+      stringify: true,
+    },
   }
 })
