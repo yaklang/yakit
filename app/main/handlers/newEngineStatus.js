@@ -314,8 +314,11 @@ module.exports = {
                   else if (reasonStr.includes('build yak grpc')) reasonCode = 'build_server_failed'
                   else if (reasonStr.includes('dial grpc')) reasonCode = 'dial_failed'
                   else if (reasonStr.includes('Version RPC')) reasonCode = 'version_rpc_failed'
-                  else if (reasonStr.includes('net.Listen')) reasonCode = 'tcp_bind_failed'
-                  else if (reasonStr.includes('waiting grpc')) reasonCode = 'wait_connect_failed'
+                  else if (reasonStr.includes('net.Listen')) {
+                    if (reasonStr.includes('is occupied') || reasonStr.includes('address already in use'))
+                      reasonCode = 'tcp_bind_in_use'
+                    else reasonCode = 'tcp_bind_failed'
+                  } else if (reasonStr.includes('waiting grpc')) reasonCode = 'wait_connect_failed'
                 }
               }
               // 兼容引擎 phaseI18n 的 Zh/zh 两种字段名
