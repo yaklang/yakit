@@ -14,7 +14,7 @@
     "getPlugin": "Get Plugins",
     "maxAddLimit": "You can add up to {{UpperLimit}} plugins",
     "added": "Added",
-    "searchPlaceholder": "Search plugin name, description or hook",
+    "searchPlaceholder": "Search plugin name",
     "noMatchedPlugins": "No matching plugins",
     "resultModeLabel": "Result Display",
     "resultModeDialog": "Pop-up",

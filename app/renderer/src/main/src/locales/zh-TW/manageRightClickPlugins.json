@@ -14,7 +14,7 @@
     "getPlugin": "獲取外掛",
     "maxAddLimit": "最多新增 {{UpperLimit}} 個外掛",
     "added": "已新增",
-    "searchPlaceholder": "搜尋外掛名稱、說明或 Hook",
+    "searchPlaceholder": "搜尋外掛名稱",
     "noMatchedPlugins": "沒有匹配的外掛",
     "resultModeLabel": "結果展示",
     "resultModeDialog": "彈窗",

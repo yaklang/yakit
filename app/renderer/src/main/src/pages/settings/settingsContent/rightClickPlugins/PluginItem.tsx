@@ -30,6 +30,7 @@ import {
   type ContextMenuScene,
 } from '@/pages/manageRightClickPlugins/types'
 import type { YakitMenuItemProps, YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import styles from './RightClickPluginsSettings.module.scss'
 
 interface PluginItemProps {
@@ -64,6 +65,7 @@ export const PluginItem: React.FC<PluginItemProps> = React.memo((props) => {
   const isLegacyCodec = plugin.PluginType === LEGACY_CONTEXT_MENU_PLUGIN_TYPE
   const resultMode = plugin.ResultMode === ContextMenuResultMode.Auto ? ContextMenuResultMode.Tab : plugin.ResultMode
   const shortcutKeys = useMemo(() => parseContextMenuShortcut(plugin.Shortcut), [plugin.Shortcut])
+  const shortcutText = useMemo(() => convertKeyboardToUIKey(shortcutKeys), [shortcutKeys])
 
   const [editPlugin, setEditPlugin] = useState<YakScript | null>(null)
   const [editHint, setEditHint] = useState(false)
@@ -223,6 +225,11 @@ export const PluginItem: React.FC<PluginItemProps> = React.memo((props) => {
           <div className={styles['name']} title={plugin.PluginName}>
             {plugin.PluginName}
           </div>
+          {shortcutText ? (
+            <YakitTag border className={styles['key-tag']}>
+              {shortcutText}
+            </YakitTag>
+          ) : null}
           <div className={styles['actions']} onMouseDown={(e) => e.stopPropagation()}>
             <button type="button" className={styles['action-btn']} disabled={editLoading} onClick={handleOpenEdit}>
               <PencilOutlined size={16} color="currentColor" />
@@ -266,6 +273,7 @@ export const PluginItem: React.FC<PluginItemProps> = React.memo((props) => {
       <YakitModal
         type="white"
         title={t('ShortcutKey.editShortcut')}
+        style={{ marginLeft: 120 }}
         centered={true}
         keyboard={false}
         footer={null}

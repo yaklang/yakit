@@ -273,6 +273,7 @@ export const ShortcutKeySettings: React.FC = () => {
             keyboard={false}
             footer={null}
             maskClosable={false}
+            style={{ marginLeft: 120 }}
             styles={{ mask: { backgroundColor: 'transparent' } }}
             open={keyShow}
             onCancel={() => {

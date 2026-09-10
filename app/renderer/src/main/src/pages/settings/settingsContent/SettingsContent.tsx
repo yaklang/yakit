@@ -13,7 +13,12 @@ import { RightClickPluginsSettings } from './rightClickPlugins/RightClickPlugins
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './SettingsContent.module.scss'
 
-const SettingsPanels: Record<SettingsAnchor, ComponentType> = {
+interface SettingsPanelProps {
+  section?: string
+  sectionTick?: number
+}
+
+const SettingsPanels: Record<SettingsAnchor, ComponentType<SettingsPanelProps>> = {
   general: GeneralSettings,
   appearance: AppearanceSettings,
   reverse: ReverseSettings,
@@ -65,7 +70,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
     <div ref={scrollerRef} className={styles['settings-content']}>
       <div key={anchor} className={styles['settings-content-body']}>
         {!hideOuterTitle[anchor as SettingsAnchor] && <div className={styles['settings-content-title']}>{title}</div>}
-        <div className={styles['settings-content-main']}>{Panel && <Panel />}</div>
+        <div className={styles['settings-content-main']}>
+          {Panel && <Panel section={section} sectionTick={sectionTick} />}
+        </div>
       </div>
     </div>
   )

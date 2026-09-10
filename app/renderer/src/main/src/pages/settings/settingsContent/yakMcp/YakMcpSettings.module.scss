@@ -114,6 +114,11 @@
   justify-content: flex-end;
 }
 
+.json-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .json-block {
   margin: 0;
   width: 100%;
@@ -125,6 +130,13 @@
   line-height: 18px;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+.json-copy {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  height: auto;
 }
 
 .copy-addr {

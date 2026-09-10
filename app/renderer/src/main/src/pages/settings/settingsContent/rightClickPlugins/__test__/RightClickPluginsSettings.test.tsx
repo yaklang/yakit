@@ -34,8 +34,13 @@ vi.mock('@/utils/eventBus/eventBus', () => ({
   default: { on: vi.fn(), off: vi.fn(), emit: vi.fn() },
 }))
 
+const dnd = vi.hoisted(() => ({ onDragEnd: undefined as ((result: any) => void) | undefined }))
+
 vi.mock('@hello-pangea/dnd', () => ({
-  DragDropContext: ({ children }: { children: React.ReactNode }) => children,
+  DragDropContext: ({ children, onDragEnd }: { children: React.ReactNode; onDragEnd?: (result: any) => void }) => {
+    dnd.onDragEnd = onDragEnd
+    return children
+  },
   Droppable: ({ children }: { children: (provided: any, snapshot?: any) => React.ReactNode }) =>
     children({ droppableProps: {}, innerRef: vi.fn(), placeholder: null }, {}),
   Draggable: ({ children }: { children: (provided: any, snapshot: any) => React.ReactNode }) =>
@@ -67,18 +72,23 @@ vi.mock('@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin', () => ({
 }))
 
 vi.mock('@/pages/manageRightClickPlugins/shortcut', () => ({
-  parseContextMenuShortcut: () => [],
+  parseContextMenuShortcut: (shortcut?: string) => (shortcut ? shortcut.split('|').filter(Boolean) : []),
   serializeContextMenuShortcut: () => '',
   checkContextMenuShortcutConflict: () => undefined,
 }))
 
 vi.mock('@/utils/globalShortcutKey/utils', () => ({
-  convertKeyboardToUIKey: () => '',
+  convertKeyboardToUIKey: (keys: string[] = []) => keys.join('+'),
   setIsActiveShortcutKeyPage: vi.fn(),
 }))
 
 const mockFetch = fetchSceneActions as ReturnType<typeof vi.fn>
 const mockBind = grpcSetContextMenuActionBinding as ReturnType<typeof vi.fn>
+const expectBefore = (a: string, b: string) => {
+  expect(
+    screen.getByText(a).compareDocumentPosition(screen.getByText(b)) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy()
+}
 
 const makeAction = (over: Partial<ContextMenuAction>): ContextMenuAction =>
   ({
@@ -134,6 +144,13 @@ describe('RightClickPluginsSettings', () => {
     expect(mockFetch).toHaveBeenCalledWith(ManageRightClickPluginsTabKey.PluginExtensionSingle)
   })
 
+  it('已绑定快捷键时名称行展示 tag', async () => {
+    mockFetch.mockResolvedValue([makeAction({ PluginName: 'sqlmap', Enabled: true, Shortcut: 'Control|s' })])
+    render(<RightClickPluginsSettings />)
+    await waitFor(() => expect(screen.getByText('sqlmap')).toBeInTheDocument())
+    expect(screen.getByText('Control+s')).toBeInTheDocument()
+  })
+
   it('开关打开时保存为已添加', async () => {
     const user = userEvent.setup()
     render(<RightClickPluginsSettings />)
@@ -148,7 +165,63 @@ describe('RightClickPluginsSettings', () => {
       PluginUUID: 'p2',
       ActionID: 'a2',
       Enabled: true,
+      Sort: 1,
     })
+    expectBefore('sqlmap', 'path-extract')
+  })
+
+  it('拉取后未启用项排在已启用之后', async () => {
+    mockFetch.mockResolvedValue([
+      makeAction({ PluginUUID: 'p2', ActionID: 'a2', PluginName: 'path-extract', Enabled: false, Sort: 0 }),
+      makeAction({ PluginName: 'sqlmap', Enabled: true, Sort: 3 }),
+    ])
+    render(<RightClickPluginsSettings />)
+    await waitFor(() => expect(screen.getByText('sqlmap')).toBeInTheDocument())
+    expectBefore('sqlmap', 'path-extract')
+  })
+
+  it('禁用后移到列表末尾', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValue([
+      makeAction({ PluginName: 'sqlmap', Enabled: true, Sort: 0 }),
+      makeAction({ PluginUUID: 'p2', ActionID: 'a2', PluginName: 'keep-off', Enabled: false, Sort: 0 }),
+      makeAction({ PluginUUID: 'p3', ActionID: 'a3', PluginName: 'to-disable', Enabled: true, Sort: 1 }),
+    ])
+    render(<RightClickPluginsSettings />)
+    await waitFor(() => expect(screen.getByText('to-disable')).toBeInTheDocument())
+    await user.click(document.querySelectorAll('button.ant-switch')[1])
+    await waitFor(() => expect(mockBind).toHaveBeenCalled())
+    expect(mockBind.mock.calls.some((call) => call[0].PluginUUID === 'p3' && call[0].Enabled === false)).toBe(true)
+    expectBefore('keep-off', 'to-disable')
+  })
+
+  it('拖拽不能把已启用项排到未启用区域', async () => {
+    mockFetch.mockResolvedValue([
+      makeAction({ PluginName: 'sqlmap', Enabled: true, Sort: 0 }),
+      makeAction({ PluginUUID: 'p2', ActionID: 'a2', PluginName: 'keep-on', Enabled: true, Sort: 1 }),
+      makeAction({ PluginUUID: 'p3', ActionID: 'a3', PluginName: 'keep-off', Enabled: false, Sort: 0 }),
+    ])
+    render(<RightClickPluginsSettings />)
+    await waitFor(() => expect(screen.getByText('keep-off')).toBeInTheDocument())
+    dnd.onDragEnd?.({ source: { index: 0 }, destination: { index: 2 } })
+    await waitFor(() => expect(mockBind).toHaveBeenCalled())
+    expect(mockBind.mock.calls.some((call) => call[0].PluginUUID === 'p3')).toBe(false)
+    expectBefore('keep-on', 'sqlmap')
+    expectBefore('sqlmap', 'keep-off')
+  })
+
+  it('搜索会筛选列表，切换 tab 会清空关键词', async () => {
+    const user = userEvent.setup()
+    render(<RightClickPluginsSettings />)
+    await waitFor(() => expect(screen.getByText('path-extract')).toBeInTheDocument())
+    const input = screen.getByPlaceholderText('ManageRightClickPlugins.searchPlaceholder')
+    await user.type(input, 'sqlmap')
+    expect(screen.getByText('sqlmap')).toBeInTheDocument()
+    expect(screen.queryByText('path-extract')).not.toBeInTheDocument()
+    await user.click(screen.getByText('SettingsPage.rightClickPlugins.tabPacket'))
+    expect((screen.getByPlaceholderText('ManageRightClickPlugins.searchPlaceholder') as HTMLInputElement).value).toBe(
+      '',
+    )
   })
 
   it('切换 tab 会重新拉取对应场景插件', async () => {
@@ -159,6 +232,20 @@ describe('RightClickPluginsSettings', () => {
     await user.click(screen.getByText('SettingsPage.rightClickPlugins.tabPacket'))
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(ManageRightClickPluginsTabKey.PacketContextMenu)
+    })
+  })
+
+  it('section 会定位到对应 tab', async () => {
+    mockFetch.mockResolvedValue([])
+    const { rerender } = render(<RightClickPluginsSettings section={ManageRightClickPluginsTabKey.PacketContextMenu} />)
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(ManageRightClickPluginsTabKey.PacketContextMenu)
+    })
+    rerender(
+      <RightClickPluginsSettings section={ManageRightClickPluginsTabKey.PluginExtensionSingle} sectionTick={1} />,
+    )
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(ManageRightClickPluginsTabKey.PluginExtensionSingle)
     })
   })
 })

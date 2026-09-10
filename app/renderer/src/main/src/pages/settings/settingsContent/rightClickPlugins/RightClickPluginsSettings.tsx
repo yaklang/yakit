@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useLatest, useMemoizedFn } from 'ahooks'
+import { useLatest, useMemoizedFn, useInViewport, useUpdateEffect } from 'ahooks'
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
-import { CloudDownloadOutlined, RotateCcwOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { CloudDownloadOutlined, RotateCcwOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -40,17 +41,38 @@ const reorder = <T,>(list: T[], startIndex: number, endIndex: number) => {
 }
 
 const syncEnabledSort = (list: ContextMenuAction[]) => {
-  let sort = 0
-  return list.map((item) => (item.Enabled ? { ...item, Enabled: true, Sort: sort++ } : item))
+  const enabled = list.filter((item) => item.Enabled)
+  const disabled = list.filter((item) => !item.Enabled)
+  return [...enabled.map((item, sort) => ({ ...item, Sort: sort })), ...disabled]
 }
 
-export const RightClickPluginsSettings: React.FC = () => {
+interface RightClickPluginsSettingsProps {
+  section?: string
+  sectionTick?: number
+}
+
+export const RightClickPluginsSettings: React.FC<RightClickPluginsSettingsProps> = (props) => {
+  const { section, sectionTick } = props
   const { t, i18nRefresh } = useI18nNamespaces(['setting', 'manageRightClickPlugins', 'yakitUi'])
-  const [currentTabKey, setCurrentTabKey] = useState(GroupTabList[0].key)
+  const [currentTabKey, setCurrentTabKey] = useState(() => getGroupTabByKey(section || '')?.key || GroupTabList[0].key)
   const currentTabKeyRef = useLatest(currentTabKey)
   const [actions, setActions] = useState<ContextMenuAction[]>([])
   const actionsRef = useRef<ContextMenuAction[]>([])
   const [openSettingKey, setOpenSettingKey] = useState('')
+  const [keyword, setKeyword] = useState('')
+  const appliedSection = `${section || ''}:${sectionTick ?? 0}`
+  const [prevApplied, setPrevApplied] = useState(appliedSection)
+  if (appliedSection !== prevApplied) {
+    setPrevApplied(appliedSection)
+    const tab = getGroupTabByKey(section || '')?.key
+    if (tab) {
+      setCurrentTabKey(tab)
+      setOpenSettingKey('')
+      setKeyword('')
+    }
+  }
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(wrapperRef)
   const bindingSavingRef = useRef(false)
   const refreshSeqRef = useRef(0)
 
@@ -61,6 +83,12 @@ export const RightClickPluginsSettings: React.FC = () => {
 
   const enabledActions = useMemo(() => actions.filter((item) => item.Enabled), [actions])
   const enabledCount = enabledActions.length
+  const searching = !!keyword.trim()
+  const visibleActions = useMemo(() => {
+    const k = keyword.trim().toLowerCase()
+    if (!k) return actions
+    return actions.filter((item) => (item.PluginName || '').toLowerCase().includes(k))
+  }, [actions, keyword])
   const tabOptions = useMemo(
     () => GroupTabList.map((item) => ({ label: t(TabI18n[item.key]), value: item.key })),
     [i18nRefresh],
@@ -72,13 +100,17 @@ export const RightClickPluginsSettings: React.FC = () => {
     try {
       const list = await fetchSceneActions(tabKey)
       if (seq !== refreshSeqRef.current) return
-      setList(list)
+      setList(syncEnabledSort([...list].sort((a, b) => Number(b.Enabled) - Number(a.Enabled) || a.Sort - b.Sort)))
     } catch {}
   })
 
   useEffect(() => {
     refreshList()
   }, [currentTabKey])
+
+  useUpdateEffect(() => {
+    if (inViewport) refreshList()
+  }, [inViewport])
 
   useEffect(() => {
     emiter.on('refreshContextMenuPlugins', refreshList)
@@ -140,7 +172,9 @@ export const RightClickPluginsSettings: React.FC = () => {
       yakitNotify('error', t('ManageRightClickPlugins.maxAddLimit', { UpperLimit }))
       return
     }
-    await runPersist(patchAction(actionsRef.current, action, enabled ? { Enabled: true } : toUnboundAction(action)))
+    const rest = actionsRef.current.filter((item) => actionKey(item) !== actionKey(action))
+    const item = enabled ? { ...action, Enabled: true } : toUnboundAction(action)
+    await runPersist([...rest, item])
   })
 
   const onChangeResultMode = useMemoizedFn(async (action: ContextMenuAction, mode: ContextMenuResultMode) => {
@@ -160,13 +194,28 @@ export const RightClickPluginsSettings: React.FC = () => {
   })
 
   const onDragEnd = useMemoizedFn(async (result: DropResult) => {
-    if (!result.destination || result.destination.index === result.source.index) return
-    await runPersist(reorder(actionsRef.current, result.source.index, result.destination.index))
+    if (searching || !result.destination) return
+    const max = actionsRef.current.filter((item) => item.Enabled).length - 1
+    if (result.source.index > max) return
+    const dest = Math.min(result.destination.index, max)
+    if (dest === result.source.index) return
+    await runPersist(reorder(actionsRef.current, result.source.index, dest))
   })
 
   return (
-    <div className={styles['right-click-plugins']} data-settings-section={currentTabKey}>
-      <div className={styles['page-title']}>{t('SettingsPage.item.right-click-plugins')}</div>
+    <div ref={wrapperRef} className={styles['right-click-plugins']} data-settings-section={currentTabKey}>
+      <div className={styles['page-header']}>
+        <div className={styles['page-title']}>{t('SettingsPage.item.right-click-plugins')}</div>
+        <YakitInput
+          size="small"
+          allowClear
+          wrapperClassName={styles['search']}
+          placeholder={t('ManageRightClickPlugins.searchPlaceholder')}
+          prefix={<SearchOutlined color="currentColor" className={styles['search-icon']} />}
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
+      </div>
       <div className={styles['content']}>
         <div className={styles['toolbar']}>
           <div className={styles['toolbar-left']}>
@@ -178,6 +227,7 @@ export const RightClickPluginsSettings: React.FC = () => {
               onChange={(v) => {
                 setCurrentTabKey(v as typeof currentTabKey)
                 setOpenSettingKey('')
+                setKeyword('')
               }}
             />
             <div className={styles['count']}>
@@ -222,11 +272,15 @@ export const RightClickPluginsSettings: React.FC = () => {
                       </YakitButton>
                     </YakitEmpty>
                   </div>
+                ) : visibleActions.length === 0 ? (
+                  <div className={styles['empty']}>
+                    <YakitEmpty title={t('ManageRightClickPlugins.noMatchedPlugins')} />
+                  </div>
                 ) : (
-                  actions.map((item, index) => {
+                  visibleActions.map((item, index) => {
                     const key = actionKey(item)
                     return (
-                      <Draggable key={key} draggableId={key} index={index}>
+                      <Draggable key={key} draggableId={key} index={index} isDragDisabled={!item.Enabled || searching}>
                         {(providedItem, snapshot) => (
                           <div
                             ref={providedItem.innerRef}

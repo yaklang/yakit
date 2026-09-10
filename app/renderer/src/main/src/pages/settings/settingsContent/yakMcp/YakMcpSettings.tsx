@@ -432,7 +432,10 @@ export const YakMcpSettings: React.FC = () => {
                 <div className={styles['setting-row-title']}>{t('ConfigSystemMcp.detailed_config')}</div>
               </div>
               <div className={classNames(styles['setting-row-control'], styles['setting-row-control-wide'])}>
-                <pre className={styles['json-block']}>{detailJson}</pre>
+                <div className={styles['json-wrap']}>
+                  <pre className={styles['json-block']}>{detailJson}</pre>
+                  <CopyComponents copyText={detailJson} className={styles['json-copy']} />
+                </div>
               </div>
             </div>
           </div>

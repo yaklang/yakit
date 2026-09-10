@@ -381,7 +381,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                       <YakitDropdownMenu
                         key={i18nRefresh}
                         menu={{
-                          width: 216,
+                          width: 206,
                           data: userMenu.map((item) => {
                             const obj = cloneDeep(item)
                             // @ts-expect-error 类型定义不完整，需要忽略此行
@@ -971,7 +971,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
 
   const menu = (
     <YakitMenu
-      width={216}
+      width={206}
       submenuWidth={142}
       selectedKeys={[]}
       // triggerSubMenuAction={'click'}
@@ -1060,7 +1060,7 @@ const UIDevTool: React.FC<UIDevTool> = React.memo((props) => {
 
   const menu = (
     <YakitMenu
-      width={216}
+      width={206}
       selectedKeys={undefined}
       data={[
         {
@@ -3214,7 +3214,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
 
   const menu = (
     <YakitMenu
-      width={216}
+      width={206}
       selectedKeys={[]}
       data={yakitMenuData as YakitMenuItemProps[]}
       onClick={({ key }) => menuSelect(key)}
