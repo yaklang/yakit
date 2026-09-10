@@ -69,9 +69,7 @@
     "configTitle": "AI 模型未配置",
     "toConfigure": "去配置",
     "configDesc": "無可使用AI模型，請配置後使用",
-    "openModelTabSuccess": "已開啟AI側邊欄模型配置",
-    "selectModel": "AI 模型選擇",
-    "openConfigTooltip": "開啟ai側邊欄模型配置"
+    "selectModel": "AI 模型選擇"
   },
   "AIModelList": {
     "onlineTooltip": "透過api訪問模型,接受AI資訊或向AI傳送訊息,可配置多個",
@@ -344,7 +342,6 @@
     "session": "會話",
     "historyChat": "歷史會話",
     "scheduled": "定時任務",
-    "config": "配置",
     "skill": "技能",
     "tool": "工具"
   },
@@ -486,6 +483,26 @@
     "warningTitle": "檔案警告",
     "tooLarge": "檔案過大，無法預覽"
   },
+  "AIRightPanel": {
+    "aiSettings": "AI 設定",
+    "taskBoard": "任務詳情看板",
+    "fileSystem": "檔案系統",
+    "traffic": "流量",
+    "risk": "漏洞",
+    "sessionHistory": "會話歷史",
+    "taskList": "任務列表",
+    "timeline": "時間線",
+    "exportLog": "匯出日誌",
+    "viewLog": "查看日誌",
+    "collapse": "折疊",
+    "more": "更多",
+    "duration": "執行時長",
+    "toolCallStats": "工具調用統計",
+    "success": "成功",
+    "failed": "失敗",
+    "totalAttempts": "總嘗試次數",
+    "running": "執行中"
+  },
   "AIChatContent": {
     "noActiveChat": "當前沒有活躍的會話",
     "fileSystem": "檔案系統",
@@ -495,15 +512,14 @@
     "exportLog": "匯出日誌",
     "taskDetail": "任務詳情"
   },
+  "AIReActChatContents": {
+    "uiRendering": "UI渲染中..."
+  },
   "ChatSessionPane": {
     "sessionList": "會話"
   },
   "AIAgentChatLayout": {
     "dockDisabledTip": "螢幕過小，不支援該模組停靠在右邊"
-  },
-  "AIHorizontalScrollCard": {
-    "questionIdMissing": "currentChatStatus.questionID不存在",
-    "taskDetailSourceMismatch": "當前會話不屬於 AIAgent 資料來源，無法查看任務詳情"
   },
   "AIContextToken": {
     "pressure": "上下文壓力",

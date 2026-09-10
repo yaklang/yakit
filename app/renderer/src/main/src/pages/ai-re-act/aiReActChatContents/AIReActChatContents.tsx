@@ -1,5 +1,10 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState, useEffect } from 'react'
-import type { AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps } from './AIReActChatContentsType'
+import type {
+  AIReActChatContentsPProps,
+  AIReActChatContentsRef,
+  AIReferenceNodeProps,
+  AIStreamNodeProps,
+} from './AIReActChatContentsType'
 import styles from './AIReActChatContents.module.scss'
 import { AIMarkdown } from '@/pages/ai-agent/components/aiMarkdown/AIMarkdown'
 import { AIStreamChatContent } from '@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent'
@@ -10,14 +15,14 @@ import { AIChatListItem } from '@/pages/ai-agent/components/aiChatListItem/AICha
 import { AIYaklangCode } from '@/pages/ai-agent/components/aiYaklangCode/AIYaklangCode'
 import type { ModalInfoProps } from '@/pages/ai-agent/components/ModelInfo'
 import { AIStreamContentType } from '../hooks/defaultConstant'
-import { Virtuoso } from 'react-virtuoso'
+import { Virtuoso, type Components, type ContextProp, type ListProps } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
 import useChatStreamLocateHighlight from '../hooks/useChatStreamLocateHighlight'
 import type { ReActChatRenderElement, ChatReferenceMaterialPayload } from '../hooks/aiRender'
 import Loading from '@/components/Loading/Loading'
 import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
+import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import AITextSyntaxFlow from '@/pages/ai-agent/components/aiTextSyntaxFlow/AITextSyntaxFlow'
 import { useCurrentStore, useCurrentRawData } from '../hooks/useCurrentDataBySession'
@@ -31,7 +36,12 @@ import { AITaskStatus } from '../hooks/grpcApi'
 import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import emiter from '@/utils/eventBus/eventBus'
 import { PositionOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { useDebounceFn, useMount, useCreation, useMemoizedFn } from 'ahooks'
+import { useDebounceFn, useCreation, useMemoizedFn } from 'ahooks'
+import {
+  useVirtuosoInitialRender,
+  useVirtuosoListReady,
+  type VirtuosoReadyContext,
+} from '@/pages/ai-agent/components/useVirtuosoInitialRender'
 
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
   const { stream, aiMarkdownProps, listItemIndex, sessionId } = props
@@ -118,12 +128,44 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
 })
 const TYPE = 'reAct'
 
+// Virtuoso 的滚动容器需要保持全宽，内容轨道放到内部 List，避免滚动条跟随轨道移动。
+const VirtuosoListContainer = forwardRef<HTMLDivElement, ListProps & ContextProp<VirtuosoReadyContext>>(
+  ({ children, style, context, ...props }, ref) => {
+    useVirtuosoListReady({ children, style, context })
+
+    return (
+      <div {...props} ref={ref} style={style} className={styles['re-act-contents-track']}>
+        {children}
+      </div>
+    )
+  },
+)
+
+VirtuosoListContainer.displayName = 'VirtuosoListContainer'
+
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo(
   forwardRef((props, ref) => {
-    const listRootRef = useRef<HTMLDivElement>(null)
-    const { activeChat } = useAIAgentStore()
+    const sessionId = useCurrentSessionId()
+    const contentsRef = useRef<AIReActChatContentsRef>(null)
+    // 头部会保存定位方法的引用，切换会话后仍需转发到当前列表。
+    useImperativeHandle(
+      ref,
+      () => ({
+        scrollToItemIndex: (index, behavior) => contentsRef.current?.scrollToItemIndex(index, behavior),
+      }),
+      [],
+    )
+    return <AIReActChatContentsList {...props} key={sessionId} ref={contentsRef} />
+  }),
+)
+
+const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
+  forwardRef((_props, ref) => {
+    const { t } = useI18nNamespaces(['aiAgent'])
+    const listRootRef = useRef<HTMLDivElement | null>(null)
 
     const store = useCurrentStore()
+    const initLoading = useStore(store, (state) => state.initLoading)
     const casualChatElements = useStore(store, (state) => state.chatElements)
     const chatLength = useStore(store, (state) => state.chatElements.length)
     const casualTitle = useStore(store, (state) => state.currentLoadingTitle.casualTitle)
@@ -149,6 +191,12 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       total: chatLength,
       isPrependingRef,
     })
+    const { renderLoading, virtuosoContext, handleListHeightChanged, initialTopMostItemIndex } =
+      useVirtuosoInitialRender({
+        dataLength: chatLength,
+        onHeightChanged: handleTotalListHeightChanged,
+      })
+    const initialLoading = !initLoading && renderLoading
 
     // 是否已滚动到底部：ref 供 hook 内部判断，state 触发重渲染控制置底按钮显隐
     const [isAtBottom, setIsAtBottom] = useState(true)
@@ -190,12 +238,12 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       })
       if (index !== -1) locateToIndex(index, 'auto')
     })
-    useMount(() => {
+    useEffect(() => {
       emiter.on('onAITreeLocatePlanningList', onTreeLocate)
       return () => {
         emiter.off('onAITreeLocatePlanningList', onTreeLocate)
       }
-    })
+    }, [onTreeLocate])
 
     const renderItem = useCallback((_, item?: ReActChatRenderElement) => {
       if (!item?.token) return null
@@ -237,9 +285,10 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         ) : null,
       [grpcLoadMoreLoading],
     )
-    const components = useMemo(
+    const components = useMemo<Components<ReActChatRenderElement, VirtuosoReadyContext>>(
       () => ({
         Item,
+        List: VirtuosoListContainer,
         Footer,
         Header,
       }),
@@ -248,26 +297,29 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     // console.log('chatElements', casualChatElements, store.getState().items)
     return (
       <div ref={listRootRef} className={styles['ai-re-act-chat-contents']}>
-        <Virtuoso
-          key={activeChat?.SessionID}
-          ref={virtuosoRef}
-          scrollerRef={setScrollerRef}
-          defaultItemHeight={80}
-          atBottomStateChange={handleAtBottomStateChange}
-          data={casualChatElements}
-          totalListHeightChanged={handleTotalListHeightChanged}
-          itemContent={renderItem}
-          firstItemIndex={firstItemIndex}
-          initialTopMostItemIndex={chatLength > 1 ? { index: 'LAST' } : 0}
-          components={components}
-          increaseViewportBy={{ top: 600, bottom: 200 }}
-          atBottomThreshold={50}
-          skipAnimationFrameInResizeObserver
-          startReached={handleLoadMore}
-          rangeChanged={onRangeChange}
-          className={styles['re-act-contents-list']}
-        />
-        {chatLength > 0 && !isAtBottom && (
+        <YakitSpin spinning={initialLoading} tip={t('AIReActChatContents.uiRendering')}>
+          <Virtuoso
+            ref={virtuosoRef}
+            scrollerRef={setScrollerRef}
+            defaultItemHeight={80}
+            atBottomStateChange={handleAtBottomStateChange}
+            data={casualChatElements}
+            context={virtuosoContext}
+            totalListHeightChanged={handleListHeightChanged}
+            itemContent={renderItem}
+            firstItemIndex={firstItemIndex}
+            initialTopMostItemIndex={initialTopMostItemIndex}
+            components={components}
+            increaseViewportBy={{ top: 600, bottom: 200 }}
+            atBottomThreshold={50}
+            skipAnimationFrameInResizeObserver
+            startReached={handleLoadMore}
+            rangeChanged={onRangeChange}
+            className={styles['re-act-contents-list']}
+            style={{ visibility: initialLoading ? 'hidden' : undefined }}
+          />
+        </YakitSpin>
+        {chatLength > 0 && !initialLoading && !isAtBottom && (
           <div className={styles['scroll-to-bottom-wrapper']}>
             <YakitButton
               type="outline2"

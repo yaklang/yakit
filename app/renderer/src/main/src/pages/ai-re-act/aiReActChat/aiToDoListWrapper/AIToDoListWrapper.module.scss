@@ -1,3 +1,5 @@
+@use '../../styles/mixin.scss' as mixin;
+
 .todoList-wrapper {
   height: 33px;
   width: 100%;
@@ -11,8 +13,8 @@
   z-index: 10;
   flex-shrink: 0;
   .to-do-list {
-    width: 100%;
-    max-width: 784px;
+    // 待办卡片与消息列表共用同一条内容轨道。
+    @include mixin.ai-right-panel-content-track;
     margin: 8px 0 0;
   }
 }

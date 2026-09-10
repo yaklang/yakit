@@ -69,9 +69,7 @@
     "configTitle": "AI Model Not Configured",
     "toConfigure": "Go to Configure",
     "configDesc": "No available AI model found. Please configure one before use.",
-    "openModelTabSuccess": "AI sidebar model configuration opened",
-    "selectModel": "Select AI Model",
-    "openConfigTooltip": "Open AI sidebar model configuration"
+    "selectModel": "Select AI Model"
   },
   "AIModelList": {
     "onlineTooltip": "Access models via API, receive AI info or send messages to AI, multiple configurations possible.",
@@ -344,7 +342,6 @@
     "session": "Session",
     "historyChat": "History Chat",
     "scheduled": "Scheduled",
-    "config": "Settings",
     "skill": "Skill",
     "tool": "Tool"
   },
@@ -486,6 +483,26 @@
     "warningTitle": "File Warning",
     "tooLarge": "The file is too large to preview"
   },
+  "AIRightPanel": {
+    "aiSettings": "AI Settings",
+    "taskBoard": "Task Board",
+    "fileSystem": "File System",
+    "traffic": "Traffic",
+    "risk": "Risks",
+    "sessionHistory": "Session History",
+    "taskList": "Task List",
+    "timeline": "Timeline",
+    "exportLog": "Export Logs",
+    "viewLog": "View Logs",
+    "collapse": "Collapse",
+    "more": "More",
+    "duration": "Duration",
+    "toolCallStats": "Tool Call Stats",
+    "success": "Success",
+    "failed": "Failed",
+    "totalAttempts": "Total Attempts",
+    "running": "Running"
+  },
   "AIChatContent": {
     "noActiveChat": "There is no active session",
     "fileSystem": "File System",
@@ -495,15 +512,14 @@
     "exportLog": "Export Log",
     "taskDetail": "Task Detail"
   },
+  "AIReActChatContents": {
+    "uiRendering": "Rendering UI..."
+  },
   "ChatSessionPane": {
     "sessionList": "Sessions"
   },
   "AIAgentChatLayout": {
     "dockDisabledTip": "The screen is too small to dock this panel on the right"
-  },
-  "AIHorizontalScrollCard": {
-    "questionIdMissing": "currentChatStatus.questionID does not exist",
-    "taskDetailSourceMismatch": "The current session does not belong to the AIAgent data source and task details cannot be viewed"
   },
   "AIContextToken": {
     "pressure": "Context Pressure",

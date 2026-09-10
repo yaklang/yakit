@@ -1177,6 +1177,12 @@ export class ChatMultiSessionController {
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
     })
 
+    // 会话流建立且 pong 校验通过后，通知后端做一次会话快照同步
+    this.requestMessage(sessionId, {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SESSION_SNAPSHOT_SYNC,
+    })
+
     // 获取最新记忆列表数据, 并注册轮询定时器
     this.requestMessage(sessionId, { IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT })
     if (meta.memoryPollingTimer) clearInterval(meta.memoryPollingTimer)
