@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type * as LogCollection from '@/utils/logCollection'
 import { debugToPrintLogs } from '@/utils/logCollection'
-import { safeParseFuzzerCache } from '../parseFuzzerCache'
+import { defaultPostTemplate, HotPatchDefaultContent } from '@/defaultConstants/HTTPFuzzerPage'
+import type {
+  HTTPResponseMatcher,
+  HTTPResponseExtractor,
+} from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType'
+import { safeParseFuzzerCache, sanitizeFuzzerCachePageParams } from '../parseFuzzerCache'
 
 vi.mock('@/utils/logCollection', async (importOriginal) => {
   const actual = await importOriginal<typeof LogCollection>()
@@ -225,5 +230,118 @@ describe('safeParseFuzzerCache', () => {
   it('throws original JSON error when payload is not json', () => {
     expect(() => safeParseFuzzerCache('{not-json')).toThrow(SyntaxError)
     expect(debugToPrintLogs).toHaveBeenCalledWith(expect.objectContaining({ status: 'ERRO' }))
+  })
+
+  it('drops request/hotPatchCode when truncation hits an earlier field; recovery must fall back to defaults', () => {
+    // 真实缓存字段顺序里 request / hotPatchCode 排在 params 之后，截断落在 params 内会连带丢弃二者
+    const broken =
+      '[{"groupChildren":[],"groupId":"0","id":"tab-req","sortFieId":1,"verbose":"req","pageParams":{"actualHost":"","id":"tab-req","isHttps":true,"params":[{"Key":"k","Value":"unclosed'
+    const parsed = safeParseFuzzerCache(broken)
+    expect(parsed[0].pageParams.isHttps).toBe(true)
+    expect(parsed[0].pageParams.request).toBeUndefined()
+    expect(parsed[0].pageParams.hotPatchCode).toBeUndefined()
+    // 恢复端（fetchFuzzerList）须用默认值回填：页面编辑器对空请求提前返回，
+    // 拿到 '' 会一直空白而不会回退默认值；热加载编辑器同理直接展示空串
+    expect(defaultPostTemplate.trim().startsWith('POST')).toBe(true)
+    expect(HotPatchDefaultContent.trim().length).toBeGreaterThan(0)
+  })
+})
+
+const goodMatcher: HTTPResponseMatcher = {
+  SubMatchers: [],
+  SubMatcherCondition: '',
+  MatcherType: 'word',
+  Scope: 'body',
+  Condition: 'and',
+  Group: ['admin'],
+  GroupEncoding: '',
+  Negative: false,
+  ExprType: '',
+  HitColor: 'red',
+  Action: '',
+  filterMode: 'onlyMatch',
+}
+const goodExtractor: HTTPResponseExtractor = {
+  Name: 'data_0',
+  Type: 'regex',
+  Scope: 'body',
+  Groups: ['root'],
+  RegexpMatchGroup: [],
+  XPathAttribute: '',
+}
+
+describe('sanitizeFuzzerCachePageParams', () => {
+  afterEach(() => {
+    vi.mocked(debugToPrintLogs).mockClear()
+  })
+
+  it('returns the original params object when matchers/extractors are intact', () => {
+    const params = { matchers: [goodMatcher], extractors: [goodExtractor], concurrent: 20 }
+    const result = sanitizeFuzzerCachePageParams(params)
+    expect(result).toBe(params)
+    expect(result.matchers).toHaveLength(1)
+    expect(result.extractors).toHaveLength(1)
+    expect(debugToPrintLogs).not.toHaveBeenCalled()
+  })
+
+  it('returns the original params when matchers/extractors are missing or not arrays', () => {
+    const params: { matchers?: HTTPResponseMatcher[]; extractors?: HTTPResponseExtractor[]; concurrent: number } = {
+      concurrent: 20,
+    }
+    expect(sanitizeFuzzerCachePageParams(params)).toBe(params)
+    const nullParams: typeof params = {
+      concurrent: 20,
+      matchers: null as unknown as HTTPResponseMatcher[],
+      extractors: null as unknown as HTTPResponseExtractor[],
+    }
+    expect(sanitizeFuzzerCachePageParams(nullParams)).toBe(nullParams)
+    expect(debugToPrintLogs).not.toHaveBeenCalled()
+  })
+
+  it('drops matchers missing SubMatchers or Group and extractors missing Groups', () => {
+    const brokenSubMatchers = { ...goodMatcher, SubMatchers: undefined } as unknown as HTTPResponseMatcher
+    const brokenGroup = { ...goodMatcher, Group: undefined } as unknown as HTTPResponseMatcher
+    const brokenGroups = { ...goodExtractor, Groups: undefined } as unknown as HTTPResponseExtractor
+    const result = sanitizeFuzzerCachePageParams({
+      matchers: [goodMatcher, brokenSubMatchers, brokenGroup],
+      extractors: [goodExtractor, brokenGroups],
+    })
+    expect(result.matchers).toEqual([goodMatcher])
+    expect(result.extractors).toEqual([goodExtractor])
+    expect(debugToPrintLogs).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'WARN',
+        fun: 'sanitizeFuzzerCachePageParams',
+        content: expect.objectContaining({ matchers: 3, matchersLeft: 1, extractors: 2, extractorsLeft: 1 }),
+      }),
+    )
+  })
+
+  it('keeps other pageParams fields untouched while dropping broken elements', () => {
+    const result = sanitizeFuzzerCachePageParams({
+      request: 'GET / HTTP/1.1',
+      concurrent: 20,
+      matchers: [{ MatcherType: 'word' } as HTTPResponseMatcher],
+      extractors: [],
+    })
+    expect(result.request).toBe('GET / HTTP/1.1')
+    expect(result.concurrent).toBe(20)
+    expect(result.matchers).toEqual([])
+  })
+
+  it('end-to-end: truncated cache yields broken matchers, sanitize makes them panel-safe', () => {
+    const broken =
+      '[{"groupChildren":[],"groupId":"0","id":"httpFuzzer-m","sortFieId":1,"verbose":"m","pageParams":{"actualHost":"","id":"httpFuzzer-m","isHttps":true,"request":"GET /","params":[],"extractors":[],"matchers":[{"MatcherType":"word","Scope":"body","Group":["adm'
+    const parsed = safeParseFuzzerCache(broken)
+    // 截断修复保留残缺 matcher：规则面板直接 .SubMatchers.map / .Group.length 会抛 TypeError
+    expect(parsed[0].pageParams.matchers).toEqual([{ MatcherType: 'word', Scope: 'body' }])
+    expect(() => (parsed[0].pageParams.matchers[0] as HTTPResponseMatcher).SubMatchers.map((ele) => ele)).toThrow(
+      TypeError,
+    )
+
+    const sanitized = sanitizeFuzzerCachePageParams(parsed[0].pageParams)
+    expect(sanitized.matchers).toEqual([])
+    // 清洗后可被规则面板安全消费
+    expect(sanitized.matchers.map((ele) => ele.SubMatchers.length)).toEqual([])
   })
 })

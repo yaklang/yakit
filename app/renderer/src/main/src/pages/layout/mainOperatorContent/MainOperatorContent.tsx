@@ -126,13 +126,15 @@ import {
   type RuleManagementPageInfoProps,
   type AuditHoleInfoProps,
 } from '@/store/pageInfo'
-import { safeParseFuzzerCache } from '@/store/parseFuzzerCache'
+import { safeParseFuzzerCache, sanitizeFuzzerCachePageParams } from '@/store/parseFuzzerCache'
+import { adoptOrphanCacheTabs } from './adoptOrphanCacheTabs'
 import cloneDeep from 'lodash/cloneDeep'
 import { onToManageGroup } from '@/pages/securityTool/yakPoC/YakPoC'
 import { apiFetchQueryYakScriptGroupLocal } from '@/pages/plugins/utils'
 import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import {
   DefFuzzerTableMaxData,
+  HotPatchDefaultContent,
   defaultAdvancedConfigShow,
   defaultAdvancedConfigValue,
   defaultPostTemplate,
@@ -2934,9 +2936,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setFuzzerSequenceCacheData(cache)
   })
 
-  // 获取数据库中缓存的 web-fuzzer 页面信息。
-  // 截断恢复后 request / hotPatchCode 等可能缺失，下面用空串；页面打开后走各自默认值。
-  // 看起来像没存上，实际是缓存 JSON 被截断、数据不完整。
+  /**
+   * 获取数据库中缓存的 web-fuzzer 页面信息。
+   * 截断修复丢弃损坏字段及其后的所有内容、保留前面的完整数据（修复策略见 parseFuzzerCache.ts），
+   * 缺失字段由默认值填充、落点在本函数：request / hotPatchCode 回填默认 POST 模板与默认热加载模板
+   * （编辑器对空内容提前返回、不会自行回退默认值），其余字段经浅合并由默认高级配置兜底，
+   * 残缺的 matcher / extractor 元素经 sanitizeFuzzerCachePageParams 清洗丢弃。
+   * 看起来像没存上，实际是缓存 JSON 被截断、数据不完整。
+   */
   const fetchFuzzerList = useMemoizedFn(async (cache, add, openFlag = true, preserveIds = false) => {
     try {
       const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
@@ -2972,7 +2979,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         routeKey: YakitRoute.HTTPFuzzer,
       }
       let multipleNodeListLength: number = 0
-      const newCache = add && !preserveIds ? rebuildMultipleNodeTree(key, cloneDeep(cache)) : cache
+      const newCache = adoptOrphanCacheTabs(
+        add && !preserveIds ? rebuildMultipleNodeTree(key, cloneDeep(cache)) : cache,
+      )
       const multipleNodeList: MultipleNodeInfo[] = newCache.filter((ele) => ele.groupId === '0')
       const pLength = multipleNodeList.length
       for (let index = 0; index < pLength; index++) {
@@ -2999,11 +3008,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 advancedConfigValue: {
                   ...defaultAdvancedConfigValue,
                   ...defaultCache,
-                  ...nodeItem.pageParams,
+                  ...sanitizeFuzzerCachePageParams(nodeItem.pageParams || {}),
                 },
                 advancedConfigShow: cacheData.advancedConfigShow,
-                request: nodeItem.pageParams?.request || '',
-                hotPatchCode: nodeItem.pageParams?.hotPatchCode || '',
+                request: nodeItem.pageParams?.request || defaultPostTemplate,
+                hotPatchCode: nodeItem.pageParams?.hotPatchCode || HotPatchDefaultContent,
               },
             },
             sortFieId: nodeItem.sortFieId,
@@ -3034,11 +3043,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
               advancedConfigValue: {
                 ...defaultAdvancedConfigValue,
                 ...defaultCache,
-                ...parentItem.pageParams,
+                ...sanitizeFuzzerCachePageParams(parentItem.pageParams || {}),
               },
               advancedConfigShow: cacheData.advancedConfigShow,
-              request: parentItem.pageParams?.request || '',
-              hotPatchCode: parentItem.pageParams?.hotPatchCode || '',
+              request: parentItem.pageParams?.request || defaultPostTemplate,
+              hotPatchCode: parentItem.pageParams?.hotPatchCode || HotPatchDefaultContent,
             },
           },
           sortFieId: parentItem.sortFieId,

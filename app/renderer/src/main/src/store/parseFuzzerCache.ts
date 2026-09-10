@@ -1,4 +1,8 @@
 import { debugToPrintLogs } from '@/utils/logCollection'
+import type {
+  HTTPResponseMatcher,
+  HTTPResponseExtractor,
+} from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType'
 
 /**
  * 安全解析 Web Fuzzer 标签页缓存。
@@ -26,6 +30,49 @@ export const safeParseFuzzerCache = (raw: string): any[] => {
       throw error
     }
   }
+}
+
+/**
+ * 清洗缓存恢复出的 pageParams 中残缺的匹配器 / 提取器元素。
+ *
+ * 截断修复按字符串字段截断并补齐括号，截断落在 matcher / extractor 内部时，
+ * 会留下缺 `SubMatchers` / `Group` / `Groups` 等数组的残缺对象；规则面板
+ * 渲染时直接对它们调 .map / .length，会抛 TypeError。这里丢弃残缺元素，
+ * 完好的保持原样（含缓存正常、未触发截断修复的常见场景）。
+ *
+ * @param pageParams - 恢复端组装的标签页参数
+ * @returns 清洗后的 pageParams（原对象不修改）
+ */
+const isMatcherItemBroken = (ele: HTTPResponseMatcher): boolean =>
+  !Array.isArray(ele.SubMatchers) || !Array.isArray(ele.Group)
+
+const isExtractorItemBroken = (ele: HTTPResponseExtractor): boolean => !Array.isArray(ele.Groups)
+
+export const sanitizeFuzzerCachePageParams = <
+  T extends { matchers?: HTTPResponseMatcher[]; extractors?: HTTPResponseExtractor[] },
+>(
+  pageParams: T,
+): T => {
+  const matchers = Array.isArray(pageParams.matchers) ? pageParams.matchers : []
+  const extractors = Array.isArray(pageParams.extractors) ? pageParams.extractors : []
+  const matchersLeft = matchers.filter((ele) => !isMatcherItemBroken(ele))
+  const extractorsLeft = extractors.filter((ele) => !isExtractorItemBroken(ele))
+  if (matchersLeft.length !== matchers.length || extractorsLeft.length !== extractors.length) {
+    debugToPrintLogs({
+      page: 'MainOperatorContent',
+      fun: 'sanitizeFuzzerCachePageParams',
+      status: 'WARN',
+      title: `Web Fuzzer 缓存恢复时丢弃残缺匹配器/提取器（matcher ${matchers.length - matchersLeft.length} 个、extractor ${extractors.length - extractorsLeft.length} 个），打开规则面板将看不到这些残缺项`,
+      content: {
+        matchers: matchers.length,
+        matchersLeft: matchersLeft.length,
+        extractors: extractors.length,
+        extractorsLeft: extractorsLeft.length,
+      },
+    })
+    return { ...pageParams, matchers: matchersLeft, extractors: extractorsLeft }
+  }
+  return pageParams
 }
 
 /**
