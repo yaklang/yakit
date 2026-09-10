@@ -62,10 +62,17 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            min-width: 0;
+            .title-wrapper {
+              min-width: 0;
+            }
             .title-style {
               font-size: 14px;
               line-height: 20px;
               color: var(--Colors-Use-Neutral-Text-1-Title);
+              overflow: hidden;
+              white-space: nowrap;
+              text-overflow: ellipsis;
             }
             .subtitle-style {
               margin-top: 4px;
