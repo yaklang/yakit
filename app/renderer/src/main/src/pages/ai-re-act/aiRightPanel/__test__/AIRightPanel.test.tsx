@@ -105,6 +105,7 @@ vi.mock('i18next-resources-to-backend', () => {
           sessionHistory: '会话历史',
           taskList: '任务列表',
           timeline: '时间线',
+          aiSettings: 'AI 设置',
           exportLog: '导出日志',
           viewLog: '查看日志',
           collapse: '折叠',
@@ -169,6 +170,16 @@ const renderPanel = async (ui: React.ReactElement) => {
 }
 
 describe('AIRightPanel', () => {
+  it.each([false, true])('AI 设置位于底部分组的时间线上方，随更多分组展开和收起（小屏：%s）', async (small) => {
+    render(<AIRightPanel small={small} />)
+    fireEvent.click(await screen.findByLabelText('更多'))
+    const settings = screen.getByLabelText('AI 设置')
+    expect(settings.nextElementSibling).toBe(screen.getByLabelText('时间线'))
+    expect(settings.parentElement?.firstElementChild).toBe(settings)
+    fireEvent.click(screen.getByLabelText('折叠'))
+    expect(screen.queryByLabelText('AI 设置')).not.toBeInTheDocument()
+  })
+
   it('点击会话历史打开 HistoryChat，关闭按钮位于原头部最右侧且没有固定按钮', async () => {
     await renderPanel(<AIRightPanel />)
     fireEvent.click(screen.getByLabelText('会话历史'))

@@ -102,19 +102,9 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 
   const refRef = useRef<HTMLDivElement>(null)
   const dropdownRenderRef = useRef<HTMLDivElement>(null)
-  const dropdownRenderRectRef = useRef<DOMRect>()
 
   const aiGlobalConfigRef = useRef<AIGlobalConfig>()
   const [inViewport = true] = useInViewport(refRef)
-
-  useEffect(() => {
-    if (open) {
-      setTimeout(() => {
-        const rect = dropdownRenderRef.current?.getBoundingClientRect()
-        dropdownRenderRectRef.current = rect
-      }, 200)
-    }
-  }, [open])
 
   useEffect(() => {
     if (!inViewport) return
@@ -404,7 +394,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                           index,
                         })
                       }
-                      dropdownRenderRectRef={dropdownRenderRectRef.current}
+                      dropdownRef={dropdownRenderRef}
+                      triggerRef={refRef}
                       open={open}
                     />
                   )}
@@ -461,7 +452,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 })
 
 const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) => {
-  const { title, subTitle, list, onSelect, type, onEdit, dropdownRenderRectRef, open } = props
+  const { title, subTitle, list, onSelect, type, onEdit, dropdownRef, triggerRef, open } = props
   const [currentSelectIndex, setCurrentSelectIndex] = useState<number>()
   const [currentItem, setCurrentItem] = useState<AIModelConfig>()
   const [loading, setLoading] = useState<boolean>(false)
@@ -471,6 +462,19 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const modelNameListMapRef = useRef<Map<number, ModelNameListRef>>(new Map())
+
+  const clearHideTimer = useMemoizedFn(() => {
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current)
+      hideTimerRef.current = null
+    }
+  })
+  const closeEditContent = useMemoizedFn(() => {
+    clearHideTimer()
+    setCurrentItem(undefined)
+    setCurrentSelectIndex(undefined)
+    setEditStyle(undefined)
+  })
 
   // 组件卸载时清理定时器
   useEffect(() => {
@@ -484,6 +488,21 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
       modelNameListMapRef.current.clear()
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open || !triggerRef.current) return
+    // 输入区域缩放会改变浮层定位；输入内容增高时保留当前编辑状态。
+    const input = triggerRef.current
+    let previousWidth: number | undefined
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return
+      const width = entry.contentRect.width
+      if (previousWidth !== undefined && width !== previousWidth) closeEditContent()
+      previousWidth = width
+    })
+    observer.observe(input)
+    return () => observer.disconnect()
+  }, [open, triggerRef])
   /** 缓存中有就取缓存中的数据，反之调用接口获取数据 */
   const getModelNameList = useMemoizedFn((item: AIModelConfig, index: number) => {
     if (!item?.Provider || isNil(index)) return
@@ -555,19 +574,12 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
     e.stopPropagation()
     hideEditContent()
   })
-  // 清除延迟隐藏定时器
-  const clearHideTimer = useMemoizedFn(() => {
-    if (hideTimerRef.current) {
-      clearTimeout(hideTimerRef.current)
-      hideTimerRef.current = null
-    }
-  })
-
   const onMouseEnterEdit = useMemoizedFn((e: React.MouseEvent, item: AIModelConfig, index: number) => {
     clearHideTimer()
-    if (!dropdownRenderRectRef) return
+    const dropdownRect = dropdownRef.current?.getBoundingClientRect()
+    if (!dropdownRect) return
 
-    const { left = 0, right = 0, width } = dropdownRenderRectRef || {}
+    const { left, right, width } = dropdownRect
     if (isEqual(currentSelectIndex, index)) return
 
     const rightContextWidth = 200
@@ -577,7 +589,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
      * 链接所在文件内位置 #ai-model-edit-content 处
      */
     const rightContextHeight = 240
-    // 判断右侧屏幕剩余空间是否满足：如果不满足，则在 dropdownRenderRectRef 的左方展示
+    // 判断右侧屏幕剩余空间是否满足：如果不满足，则在下拉框的左方展示
     const spaceOnRight = window.innerWidth - right
     let toLeft = spaceOnRight < rightContextWidth ? left - rightContextWidth - 6 : right + 6
 
@@ -610,11 +622,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   // 统一的隐藏逻辑：开启定时器，如果 150ms 内没有被再次打断，则关闭弹窗
   const hideEditContent = useMemoizedFn(() => {
     clearHideTimer()
-    hideTimerRef.current = setTimeout(() => {
-      setCurrentItem(undefined)
-      setCurrentSelectIndex(undefined)
-      setEditStyle(undefined)
-    }, 150)
+    hideTimerRef.current = setTimeout(closeEditContent, 150)
   })
   const onEditContentChange = useMemoizedFn((v: AIModelConfig) => {
     if (isNil(currentSelectIndex)) return

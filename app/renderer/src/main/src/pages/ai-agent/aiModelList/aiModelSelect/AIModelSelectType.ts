@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import type { AIModelConfig } from '../utils'
 import type { AIOnlineModelListProps } from '../AIModelListType'
 import { type AIModelTypeEnum } from '../../defaultConstant'
@@ -26,7 +26,8 @@ export interface AIModelSelectListProps {
   list: AIModelConfig[]
   onSelect: (v: AIModelConfig, i: number) => void
   onEdit: (v: AIModelConfig, i: number) => void
-  dropdownRenderRectRef?: DOMRect
+  dropdownRef: RefObject<HTMLDivElement>
+  triggerRef: RefObject<HTMLDivElement>
   /** 下拉框是否展开 */
   open?: boolean
 }

@@ -13,6 +13,11 @@
   box-sizing: border-box;
   // wrapper 的透明留白不接收指针事件，只有面板卡片接收交互
   pointer-events: none;
+
+  // 小屏浮层需越过 TodoList 所在的 z-index: 10 层叠上下文。
+  &[data-ai-right-panel-small='true'] {
+    z-index: 11;
+  }
 }
 
 // 面板卡片：正常态宽 301px，小屏态宽 41px

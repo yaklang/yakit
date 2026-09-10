@@ -12,6 +12,7 @@ export type AIRightPanelMenuKey =
   | 'session-history'
   | 'task-list'
   | 'timeline'
+  | 'ai-settings'
   | 'export-log'
   | 'view-log'
 

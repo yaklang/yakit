@@ -487,6 +487,7 @@
     "tooLarge": "檔案過大，無法預覽"
   },
   "AIRightPanel": {
+    "aiSettings": "AI 設定",
     "taskBoard": "任務詳情看板",
     "fileSystem": "檔案系統",
     "traffic": "流量",
@@ -522,10 +523,6 @@
   },
   "AIAgentChatLayout": {
     "dockDisabledTip": "螢幕過小，不支援該模組停靠在右邊"
-  },
-  "AIHorizontalScrollCard": {
-    "questionIdMissing": "currentChatStatus.questionID不存在",
-    "taskDetailSourceMismatch": "當前會話不屬於 AIAgent 資料來源，無法查看任務詳情"
   },
   "AIContextToken": {
     "pressure": "上下文壓力",

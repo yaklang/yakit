@@ -1,6 +1,6 @@
 import type React from 'react'
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AIModelSelect } from '../AIModelSelect'
 import { defaultAIGlobalConfig } from '../../../defaultConstant'
 
@@ -58,6 +58,15 @@ vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => ({ YakitSelect: { 
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // jsdom 没有原生 ResizeObserver；尺寸变化在对应交互用例中主动触发。
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+    },
+  )
   mocks.load.mockImplementation(({ haveDataCall }) => {
     haveDataCall({
       onlineModelsTotal: 2,
@@ -75,6 +84,12 @@ beforeEach(() => {
     })
     return Promise.resolve()
   })
+})
+
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
 })
 
 const openModels = async () => {
@@ -114,11 +129,6 @@ describe('AIModelSelect', () => {
 
   it('悬停编辑按钮后仍可加载模型名称、编辑并保存', async () => {
     const dropdown = await openModels()
-    // 组件在打开后延迟测量下拉区域，之后才能定位编辑浮层。
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 250))
-    })
-    fireEvent.click(within(dropdown).getByText('model-a'))
     fireEvent.mouseEnter(within(dropdown).getAllByRole('button')[1])
     fireEvent.click(await screen.findByText('model-edited'))
     expect(mocks.names).toHaveBeenCalledWith({ Config: JSON.stringify({ Type: 'test-provider' }) })
@@ -133,5 +143,62 @@ describe('AIModelSelect', () => {
         }),
       ),
     )
+  })
+
+  it('选择器外层宽度变化时关闭二级弹窗，高度变化不关闭，关闭后可重新悬停打开', async () => {
+    let resizeInput: (width: number, height: number) => void = () => {}
+    let observedTarget: Element | undefined
+    const disconnect = vi.fn()
+    // 组件观察的是自身触发器元素（triggerRef），记录 observe 到的目标供用例主动触发尺寸变化。
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(private callback: ResizeObserverCallback) {}
+        observe(target: Element) {
+          observedTarget = target
+          resizeInput = (width, height) =>
+            this.callback(
+              [{ target, contentRect: { width, height } } as ResizeObserverEntry],
+              this as unknown as ResizeObserver,
+            )
+        }
+        disconnect = disconnect
+        unobserve() {}
+      },
+    )
+    try {
+      render(<AIModelSelect className="model-trigger" />)
+      fireEvent.click(await screen.findByRole('button', { name: '打开选择' }))
+      await waitFor(() => expect(observedTarget).toBe(document.querySelector('.model-trigger')))
+      act(() => resizeInput(600, 120))
+      const dropdown = screen.getByRole('region', { name: '模型列表' })
+      const measureDropdown = vi.spyOn(dropdown.firstElementChild!, 'getBoundingClientRect')
+      measureDropdown.mockReturnValue(new DOMRect(100, 0, 200, 300))
+      const editButton = within(dropdown).getAllByRole('button')[1]
+      fireEvent.mouseEnter(editButton)
+      expect(await screen.findByText('model-edited')).toBeVisible()
+      expect(screen.getByText('model-edited').closest('[style*="translate("]')).toHaveStyle({
+        transform: 'translate(306px, 0px)',
+      })
+
+      act(() => resizeInput(600, 240))
+      expect(screen.getByText('model-edited')).toBeVisible()
+      act(() => resizeInput(500, 240))
+      expect(screen.queryByText('model-edited')).not.toBeInTheDocument()
+      expect(dropdown).toBeVisible()
+      expect(mocks.save).not.toHaveBeenCalled()
+
+      measureDropdown.mockReturnValue(new DOMRect(200, 0, 200, 300))
+      fireEvent.mouseEnter(editButton)
+      expect(await screen.findByText('model-edited')).toBeVisible()
+      expect(screen.getByText('model-edited').closest('[style*="translate("]')).toHaveStyle({
+        transform: 'translate(406px, 0px)',
+      })
+      cleanup()
+      expect(disconnect).toHaveBeenCalled()
+    } finally {
+      cleanup()
+      vi.unstubAllGlobals()
+    }
   })
 })

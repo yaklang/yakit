@@ -15,6 +15,18 @@ const mixinStylePath = path.resolve(pageDir, '../styles/mixin.scss')
 const agentChatStylePath = path.resolve(pageDir, '../../ai-agent/aiAgentChat/AIAgentChat.module.scss')
 
 describe('AIRightPanel layout contract', () => {
+  it('小屏面板的父级层叠上下文高于 TodoList，浮层可以覆盖待办卡片', () => {
+    const panelCss = compile(panelStylePath).css
+    const todoCss = compile(todoWrapperStylePath).css
+    const panelLayer = panelCss.match(
+      /\.right-panel-wrapper\[data-ai-right-panel-small=true\]\s*\{[^}]*z-index:\s*(\d+)/,
+    )
+    const todoLayer = todoCss.match(/\.todoList-wrapper\s*\{[^}]*z-index:\s*(\d+)/)
+    expect(panelLayer).not.toBeNull()
+    expect(todoLayer).not.toBeNull()
+    expect(Number(panelLayer?.[1])).toBeGreaterThan(Number(todoLayer?.[1]))
+  })
+
   it('keeps the panel interactive while allowing the far-right scrollbar to receive input', () => {
     const css = compile(panelStylePath).css
 

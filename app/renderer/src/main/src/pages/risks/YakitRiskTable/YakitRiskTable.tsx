@@ -116,6 +116,7 @@ import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBod
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { getDiscoveryTimeColumnFixed } from './riskTableUtils'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -604,6 +605,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       {
         title: t('YakitRiskTable.discovery_time'),
         dataKey: 'CreatedAt',
+        fixed: getDiscoveryTimeColumnFixed(excludeColumnsKey),
         filterProps: {
           filterKey: 'CreatedAt',
           filtersType: 'dateTime',
