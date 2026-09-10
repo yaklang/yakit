@@ -55,6 +55,12 @@
 .history-chat-tooltip {
   max-width: none;
 
+  :global {
+    .ant-popover-inner {
+      padding: 0;
+    }
+  }
+
   &:global(.ant-tooltip) :global {
     .ant-tooltip-inner {
       padding: 0;
