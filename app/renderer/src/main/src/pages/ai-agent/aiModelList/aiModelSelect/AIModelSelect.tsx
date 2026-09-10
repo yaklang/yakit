@@ -836,7 +836,7 @@ export const getIconByAI = (value) => {
 
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
   const { type, item, checked, isSelected, onMouseEnterEdit, onMouseLeaveEdit } = props
-  const { t } = useI18nNamespaces(['projectManage'])
+  const { t } = useI18nNamespaces(['projectManage', 'yakitUi'])
 
   const value = useCreation(() => {
     return getModelName(item?.ModelName)
@@ -879,6 +879,7 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
             type="text2"
             size="small"
             className={styles['edit-icon']}
+            aria-label={t('YakitButton.edit')}
             icon={<PencilAltOutlined color="currentColor" />}
             onClick={(e) => {
               e.stopPropagation()

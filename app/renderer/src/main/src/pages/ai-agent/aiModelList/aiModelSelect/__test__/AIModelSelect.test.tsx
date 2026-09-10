@@ -100,10 +100,9 @@ const openModels = async () => {
   return screen.getByRole('region', { name: '模型列表' })
 }
 
-/** 下拉按钮顺序：配置、刷新、两条模型编辑、新增模型 */
+/** 下拉按钮顺序：配置、刷新、两条模型编辑、新增模型。CI 根目录 vitest 会 stub CSS modules，不能靠 className。 */
 const getDropdownButtons = (dropdown: HTMLElement) => within(dropdown).getAllByRole('button')
-const getEditButtons = (dropdown: HTMLElement) =>
-  getDropdownButtons(dropdown).filter((button) => button.className.includes('edit-icon'))
+const getEditButtons = (dropdown: HTMLElement) => within(dropdown).getAllByRole('button', { name: 'YakitButton.edit' })
 
 describe('AIModelSelect', () => {
   it('配置入口打开设置中的模型配置，刷新仍会重新拉取模型列表', async () => {
