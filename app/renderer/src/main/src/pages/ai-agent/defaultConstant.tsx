@@ -48,10 +48,7 @@ export const YakitAIAgentPageID = 'yakit-ai-agent'
 
 export enum AIAgentTabListEnum {
   Session = 'session',
-  Forge_Name = 'forgeName',
-  Tool = 'tool',
   MCP = 'mcp',
-  KnowledgeBase = 'knowledgeBase',
   Scheduled = 'scheduled',
 }
 export const AiAgentTabList: YakitTabsProps[] = [

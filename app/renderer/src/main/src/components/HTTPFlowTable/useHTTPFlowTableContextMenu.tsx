@@ -672,7 +672,13 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         checkContextMenuVersion().then((versionValid) => {
           if (!versionValid) return
           const tab = key.split('_')[1]
-          emiter.emit('openPage', JSON.stringify({ route: YakitRoute.ManageRightClickPlugins, params: { tab } }))
+          emiter.emit(
+            'openPage',
+            JSON.stringify({
+              route: YakitRoute.Settings,
+              params: { anchor: 'right-click-plugins', section: tab },
+            }),
+          )
         })
         return
       }

@@ -3,10 +3,9 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { MacUIOp } from './MacUIOp'
 import { PerformanceDisplay, type yakProcess } from './PerformanceDisplay'
-import { FuncDomain } from './FuncDomain'
+import { FuncDomain, UIOpNotice } from './FuncDomain'
 import { TemporaryProjectPop, WinUIOp } from './WinUIOp'
 import { GlobalState } from './GlobalState'
-import { YakitGlobalHost } from './YakitGlobalHost'
 import type {
   EngineWatchDogCallbackType,
   YakitSettingCallbackType,
@@ -53,7 +52,6 @@ import emiter from '@/utils/eventBus/eventBus'
 import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
 const DownloadYakit = lazy(() => import('./update/DownloadYakit').then((m) => ({ default: m.DownloadYakit })))
 const DownloadYaklang = lazy(() => import('./update/DownloadYaklang').then((m) => ({ default: m.DownloadYaklang })))
-import { HelpDoc } from './HelpDoc/HelpDoc'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import { CheckCircleSolid, HomeSolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { setNowProjectDescription } from '@/pages/globalVariable'
@@ -1566,6 +1564,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   }, [performanceSamplingInfo, isShowSamplingInfo, i18nRefresh])
   /** ---------- 软件顶部展示采样中 End ---------- */
 
+  const engineNotice = useCreation(() => {
+    if (!engineLink || isEnpriTraceAgent()) return null
+    return (
+      <UIOpNotice
+        isEngineLink={engineLink}
+        isRemoteMode={isRemoteEngine}
+        onLogin={() => emiter.emit('onOpenLogin', '')}
+      />
+    )
+  }, [engineLink, isRemoteEngine])
+
   /** ---------- 软件顶部展示录屏中状态 Start ---------- */
   const { screenRecorderInfo, setRecording } = useScreenRecorder()
   const stopScreen = useCreation(() => {
@@ -1755,10 +1764,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
                         </div>
                       )}
-                      <div className={classNames(dropClassName)}>
-                        <div className={styles['divider-wrapper']}></div>
-                        <YakitGlobalHost isEngineLink={engineLink} />
-                      </div>
                     </>
                   )}
                   <div className={styles['short-divider-wrapper']}>
@@ -1770,7 +1775,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                       engineMode={engineMode}
                       typeCallback={handleOperations}
                       engineLink={engineLink}
-                      cpuWrapperClassName={dropClassName}
+                      extraRight={engineNotice}
                     />
                   </div>
                 </div>
@@ -1780,15 +1785,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                   {stopScreen}
 
-                  <HelpDoc system={system} />
-
                   {engineLink && (
                     <>
                       <FuncDomain
                         isEngineLink={engineLink}
                         engineMode={engineMode || 'remote'}
                         isRemoteMode={isRemoteEngine}
-                        mcp={mcp}
                         onEngineModeChange={handleOperations}
                         runDynamicControlRemote={runControlRemote}
                         typeCallback={handleOperations}
@@ -1824,26 +1826,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                   {engineLink && (
                     <>
                       {!showProjectManage && <GlobalState isEngineLink={engineLink} system={system} mcp={mcp} />}
-
-                      {!isEnpriTraceAgent() && (
-                        <div
-                          className={classNames(styles['yakit-mode-icon'], {
-                            [styles['yakit-mode-selected']]: false && yakitMode === 'soft',
-                          })}
-                          onClick={() => changeYakitMode('soft')}
-                        >
-                          <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
-                        </div>
-                      )}
-
-                      <div className={styles['divider-wrapper']}></div>
                       <div>
                         <FuncDomain
                           isEngineLink={engineLink}
                           isReverse={true}
                           engineMode={engineMode || 'remote'}
                           isRemoteMode={isRemoteEngine}
-                          mcp={mcp}
                           onEngineModeChange={handleOperations}
                           runDynamicControlRemote={runControlRemote}
                           typeCallback={handleOperations}
@@ -1851,12 +1839,22 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           system={system}
                           isJudgeLicense={isJudgeLicense}
                           onDevToolRefresh={onDevToolRefresh}
+                          homeIcon={
+                            !isEnpriTraceAgent() ? (
+                              <div
+                                className={classNames(styles['yakit-mode-icon'], styles['yakit-mode-icon-reverse'], {
+                                  [styles['yakit-mode-selected']]: yakitMode === 'soft',
+                                })}
+                                onClick={() => changeYakitMode('soft')}
+                              >
+                                <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
+                              </div>
+                            ) : null
+                          }
                         />
                       </div>
                     </>
                   )}
-
-                  <HelpDoc system={system} />
 
                   {stopScreen}
 
@@ -1871,19 +1869,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                       engineMode={engineMode}
                       typeCallback={handleOperations}
                       engineLink={engineLink}
-                      cpuWrapperClassName={dropClassName}
+                      extraLeft={engineNotice}
                     />
                   </div>
-                  <div className={styles['short-divider-wrapper']}>
-                    <div className={styles['divider-style']}></div>
-                  </div>
                   <div className={classNames(dropClassName)}>
-                    {engineLink && (
-                      <>
-                        <YakitGlobalHost isEngineLink={engineLink} />
-                        <div className={styles['divider-wrapper']}></div>
-                      </>
-                    )}
+                    {engineLink && <div className={styles['divider-wrapper']}></div>}
                   </div>
                   <WinUIOp
                     currentProjectId={currentProject?.Id ? currentProject?.Id + '' : ''}

@@ -1,16 +1,18 @@
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
+import classNames from 'classnames'
 import { yakitEngine } from '@/services/electronBridge'
 
 import styles from './yakitGlobalHost.module.scss'
 
 export interface YakitGlobalHostProp {
   isEngineLink: boolean
+  compact?: boolean
 }
 
 export const YakitGlobalHost: React.FC<YakitGlobalHostProp> = (props) => {
-  const { isEngineLink } = props
+  const { isEngineLink, compact } = props
 
   const [host, setHost] = useState<{ addr: string; port: string }>({ addr: '??', port: '??' })
   /** 获取连接引擎地址计时器 */
@@ -46,7 +48,11 @@ export const YakitGlobalHost: React.FC<YakitGlobalHostProp> = (props) => {
   }, [isEngineLink])
 
   return (
-    <div className={styles['yakit-global-host-wrapper']}>
+    <div
+      className={classNames(styles['yakit-global-host-wrapper'], {
+        [styles['yakit-global-host-wrapper-compact']]: compact,
+      })}
+    >
       <div className={styles['yakit-global-host-body']}>
         <span className={styles['addr-ip']}>{`${host.addr} `}</span>
         <span className={styles['addr-port']}>{host.port}</span>

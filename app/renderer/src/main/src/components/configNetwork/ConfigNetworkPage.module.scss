@@ -838,29 +838,6 @@
   }
 }
 
-.ai-model-global-config-wrapper {
-  :global {
-    .ant-form-item:not(:last-child) {
-      margin-bottom: 0;
-    }
-  }
-  .ai-model-list-wrapper {
-    display: flex;
-    flex-direction: column;
-    width: 500px;
-    gap: 8px;
-    :global {
-      .ant-collapse-item .ant-collapse-content > .ant-collapse-content-box {
-        padding: 0 8px 8px;
-      }
-    }
-    .ai-model-list-header {
-      display: flex;
-      align-items: center;
-    }
-  }
-}
-
 .reasoning-effort-wrapper {
   display: flex;
   align-items: center;

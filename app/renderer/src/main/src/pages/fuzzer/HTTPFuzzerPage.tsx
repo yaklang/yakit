@@ -3452,9 +3452,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                               }}
                                               onClick={() => {
                                                 emiter.emit(
-                                                  'menuOpenPage',
+                                                  'openPage',
                                                   JSON.stringify({
-                                                    route: YakitRoute.Beta_ConfigNetwork,
+                                                    route: YakitRoute.Settings,
+                                                    params: { anchor: 'global-config' },
                                                   }),
                                                 )
                                               }}

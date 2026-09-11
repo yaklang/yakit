@@ -388,6 +388,7 @@
     "controllerSideDesc": "You can remotely control his client through the key shared by the controlled side",
     "noYakitLatestVersion": "Failed to fetch the latest {{edition}} version",
     "noYaklangLatestVersion": "Failed to fetch the latest engine version",
+    "update": "Update",
     "updateContentSuccess": "Update content modified successfully"
   },
   "MoreYaklangVersion": {
@@ -456,8 +457,7 @@
     "remoteModeCannotModify": "Cannot modify in remote control",
     "configPrivateDomain": "Configure Private Domain",
     "configGlobalReverse": "Configure Global Reverse Connection",
-    "alreadyLocalMode": "Already in local connection",
-    "modeAlreadySet": "Current mode has been set"
+    "alreadyLocalMode": "Already in local connection"
   },
   "YakitLoading": {
     "slogans": [

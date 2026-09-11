@@ -96,7 +96,6 @@
     "pluginEditor": "插件编辑器",
     "vulinboxManager": "Vulinbox 管理器",
     "networkDiagnosis": "网络异常诊断",
-    "globalConfig": "全局配置",
     "pluginManagement": "插件管理",
     "trafficAnalysis": "流量分析",
     "websiteManagement": "网站管理",
@@ -130,6 +129,7 @@
     "ai-tool": "工具库",
     "ai-forge": "技能库",
     "manageRightClickPlugins": "右键插件设置",
-    "contextMenuResult": "右键插件结果"
+    "contextMenuResult": "右键插件结果",
+    "settings": "设置"
   }
 }

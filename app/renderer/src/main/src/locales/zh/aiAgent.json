@@ -4,7 +4,6 @@
     "lightweightModels": "轻量模型",
     "visionModels": "视觉模型",
     "callingMode": "调用模式",
-    "aiModel": "AI模型",
     "focusMode": "场景",
     "reasoningEffort": "思考"
   },
@@ -69,7 +68,8 @@
     "configTitle": "AI 模型未配置",
     "toConfigure": "去配置",
     "configDesc": "无可使用AI模型，请配置后使用",
-    "selectModel": "AI 模型选择"
+    "selectModel": "AI 模型选择",
+    "openConfigTooltip": "打开设置中的模型配置"
   },
   "AIModelList": {
     "onlineTooltip": "通过api访问模型,接受AI信息或向AI发送消息,可配置多个",
@@ -82,7 +82,6 @@
     "confirmAddBtn": "确定添加",
     "addThirdPartyApp": "添加第三方应用",
     "addLocalModel": "添加本地模型",
-    "clearConfirm": "是否确认清空所有{{type}}模型配置",
     "online": "线上",
     "local": "本地",
     "clearModelsTitle": "清空模型",
@@ -90,15 +89,12 @@
     "policyAuto": "根据请求内容自动选择最合适的模型",
     "policyPerformance": "优先使用高智能模型",
     "policyCost": "优先使用轻量级/低成本模型",
-    "policyBalance": "在响应速度、智能程度和成本之间取得平衡"
+    "policyBalance": "在响应速度、智能程度和成本之间取得平衡",
+    "sameModelWarning": "不建议轻量和高质使用同一个模型，轻量适合使用响应快速的模型"
   },
   "AIOnlineModeSetting": {
-    "configUpdateFailed": "配置更新失败,未获取到全局ai配置,请重试",
     "disableFallback": "禁用降级到轻量模型",
     "configErrorEdit": "配置错误，无法编辑"
-  },
-  "AIOnlineModelList": {
-    "noDataDesc": "通过 api 访问模型，接受 AI 信息或向 Al 发送信息，可配置多个。"
   },
   "AILocalModelList": {
     "llamaServerNotReady": "Llama服务器未准备就绪: {{reason}}",
@@ -679,6 +675,34 @@
     "permissionsAndSecurity": "基础权限与安全",
     "planningAndExecution": "任务规划与执行",
     "automation": "自动化配置",
-    "resourcesLimits": "资源与上下文阈值"
+    "resourcesLimits": "资源与上下文阈值",
+    "disallowUserPrompt": "禁用人机交互",
+    "enableFileOperator": "激活系统文件操作权限",
+    "disableToolIntervalReview": "禁用工具运行时 AI 审查",
+    "disableToolIntervalReviewDesc": "在工具运行时关掉 AI 审查，提升工具执行效率",
+    "riskThreshold": "风险阈值",
+    "riskThresholdDesc": "低于这个分数，AI 自动同意，如果高于这个分数，转成手动",
+    "reviewPolicy": "Review 规则",
+    "allowPlanUserInteract": "允许 plan 阶段人机交互",
+    "planUserInteractMaxCount": "plan 阶段人机交互次数",
+    "planUserInteractMaxCountDesc": "在任务规划的时候，如果 AI 允许用户问题，那么最多问几次",
+    "reActMaxIteration": "ReAct 迭代轮数限制",
+    "planExecTaskConcurrency": "深度规划任务并发数",
+    "planExecTaskConcurrencyDesc": "控制深度搜索或复杂拆解任务时的并行处理能力",
+    "useDefaultAIConfig": "使用默认系统配置 AI",
+    "enableAISearchTool": "AI 搜索本地工具",
+    "disableToolUse": "禁用 Tools",
+    "disableToolUseDesc": "禁用任何外部工具，这就是一个纯聊天机器了",
+    "disableMemoryTriage": "禁用智能记忆处理",
+    "disableMemoryTriageDesc": "开启后不创建 AIMemory 实例，跳过 embedding/DB/AI 调用，适用于轻量级或无状态会话",
+    "aiCallAutoRetry": "AI 对话重试次数",
+    "aiCallAutoRetryDesc": "如果远端 AI 不稳定（网络原因）的时候，某一次对话重试几次",
+    "aiTransactionRetry": "AI 事务重试次数",
+    "aiTransactionRetryDesc": "如果回答质量不高的时候，调大可以有效重试回答",
+    "timelineContentSize": "时间线上下文大小",
+    "aiCallTokenLimit": "压力 token 阈值",
+    "aiCallTokenLimitDesc": "Token pressure limit，当 AI 对话的 token 数量超过这个限制时，需要警告",
+    "userInteractLimit": "用户交互上限",
+    "userInteractLimitDesc": "用户交互的最大次数限制，超过这个次数，AI 将不再被允许问用户问题"
   }
 }

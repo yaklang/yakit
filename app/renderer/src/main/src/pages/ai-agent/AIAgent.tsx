@@ -3,13 +3,20 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { AIAgentProps, AIAgentSetting } from './aiAgentType'
 import { AIAgentSideList } from './AIAgentSideList'
 import AIAgentContext, { type AIAgentContextDispatcher, type AIAgentContextStore } from './useContext/AIAgentContext'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { getRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import type { AISession } from './type/aiChat'
 import { useDebounceFn, useInViewport, useMemoizedFn, useRequest, useUpdateEffect } from 'ahooks'
 import { AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
+import {
+  applyAIAgentChatSettingBroadcast,
+  applyAIAgentChatSettingSessionDefaults,
+  loadAIAgentChatSetting,
+  persistAIAgentChatSetting,
+  serializeAIAgentChatSetting,
+} from './utils/aiAgentChatSettingCache'
 import { AIAgentChat } from './aiAgentChat/AIAgentChat'
 import { loadRemoteHistory } from './components/aiFileSystemList/store/useHistoryFolder'
 import { initCustomFolderStore } from './components/aiFileSystemList/store/useCustomFolder'
@@ -26,9 +33,7 @@ import { SplitView } from '../yakRunner/SplitView/SplitView'
 import { AIBottomDetails } from './aiBottomDetails/AIBottomDetails'
 
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { omit } from 'lodash'
 import { useChatIPC } from '../ai-re-act/hooks/useChatIPC'
-import { AISourceEnum } from '../ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { globalSessionEngine } from '../ai-re-act/hooks/ChatMultiSessionController'
 
@@ -70,10 +75,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   // 缓存全局配置数据
   useUpdateEffect(() => {
-    const cache = omit(getSetting(), ['AIService', 'AIModelName'])
     // 只有配置变化了才更新，SessionID不管
     if (activeChat?.SessionID) globalSessionEngine.updateSessionConfig(activeChat?.SessionID, getSetting())
-    setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(cache))
+    persistAIAgentChatSetting(getSetting())
   }, [setting])
 
   const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
@@ -101,27 +105,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
    * 读取全局配置 setting
    */
   const initToCacheData = useMemoizedFn(async () => {
-    try {
-      const res = await getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
-      if (!res) return
-      const cache = JSON.parse(res) as AIAgentSetting
-      if (typeof cache !== 'object') return
-      const newCache = omit(cache, ['AIService', 'AIModelName'])
-      setSetting({
-        ...AIAgentSettingDefault,
-        ...newCache,
-        SyncPerceptionTrigger: false,
-        EnablePlan: false,
-        DisableMemoryTriage: AIAgentSettingDefault.DisableMemoryTriage,
-        Strategy: {
-          EnableMultiAgent: false,
-          EnableGoalMode: false,
-          GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
-          MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
-        },
-        Source: AISourceEnum.aiAgent,
-      })
-    } catch (error) {}
+    const next = await loadAIAgentChatSetting()
+    if (!next) return
+    setSetting(applyAIAgentChatSettingSessionDefaults(next))
   })
 
   useEffect(() => {
@@ -135,6 +121,22 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     bootstrap().catch(() => {})
 
     return () => {}
+  }, [])
+
+  useEffect(() => {
+    const onChange = (payload?: string) => {
+      if (!payload) return
+      try {
+        const cache = JSON.parse(payload) as AIAgentSetting
+        if (typeof cache !== 'object' || !cache) return
+        if (serializeAIAgentChatSetting(getSetting()) === payload) return
+        setSetting((old) => applyAIAgentChatSettingBroadcast(old, cache))
+      } catch (_) {}
+    }
+    emiter.on('onAIAgentChatSettingChange', onChange)
+    return () => {
+      emiter.off('onAIAgentChatSettingChange', onChange)
+    }
   }, [])
   // #endregion
 

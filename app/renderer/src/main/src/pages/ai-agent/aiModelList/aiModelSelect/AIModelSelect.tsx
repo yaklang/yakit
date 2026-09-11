@@ -38,6 +38,7 @@ import { AIChatSelect } from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleS
 import {
   BrainOutlined,
   CheckOutlined,
+  CogOutlined,
   InformationCircleOutlined,
   PencilAltOutlined,
   RefreshOutlined,
@@ -48,6 +49,7 @@ import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalCon
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { YakitRoute } from '@/enums/yakitRoute'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { createPortal } from 'react-dom'
@@ -328,6 +330,9 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
       })
     },
   )
+  const openModelTab = useMemoizedFn(() => {
+    emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'ai-model' } }))
+  })
 
   return (
     <div ref={refRef} className={className}>
@@ -364,6 +369,14 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                     </Tooltip>
                   </div>
                   <div className={styles['select-title-right']}>
+                    <Tooltip title={t('AIModelSelect.openConfigTooltip')}>
+                      <YakitButton
+                        size="small"
+                        type="text2"
+                        icon={<CogOutlined color="currentColor" />}
+                        onClick={openModelTab}
+                      />
+                    </Tooltip>
                     {aiType === 'online' && (
                       <Tooltip title={t('YakitButton.refresh')}>
                         <YakitButton
@@ -823,7 +836,7 @@ export const getIconByAI = (value) => {
 
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
   const { type, item, checked, isSelected, onMouseEnterEdit, onMouseLeaveEdit } = props
-  const { t } = useI18nNamespaces(['projectManage'])
+  const { t } = useI18nNamespaces(['projectManage', 'yakitUi'])
 
   const value = useCreation(() => {
     return getModelName(item?.ModelName)
@@ -866,6 +879,7 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
             type="text2"
             size="small"
             className={styles['edit-icon']}
+            aria-label={t('YakitButton.edit')}
             icon={<PencilAltOutlined color="currentColor" />}
             onClick={(e) => {
               e.stopPropagation()

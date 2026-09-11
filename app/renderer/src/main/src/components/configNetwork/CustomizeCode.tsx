@@ -21,7 +21,7 @@ import type {
 } from './CustomizeCodeTypes'
 import { getAllRows } from './CustomizeCodeTypes'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
-import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PencilAltOutlined, PlusOutlined, TrashOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
@@ -155,7 +155,7 @@ const LevelOptions = [
   },
 ]
 
-const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({ value }) => {
+const CodeCustomize: FC<Partial<TCodeCustomizeTagProps> & { variant?: 'settings' }> = ({ variant }) => {
   const [form] = Form.useForm()
   const { theme } = useTheme()
   const { t } = useI18nNamespaces(['configNetwork', 'yakitUi'])
@@ -236,7 +236,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({ value }) => {
   )
 
   // 删除自定义代码片段
-  const onDelete = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, name: string) => {
+  const onDelete = (e: React.MouseEvent, name: string) => {
     e.stopPropagation()
     runDeleteCode({ Filter: { Name: [name] } })
   }
@@ -301,21 +301,71 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({ value }) => {
     }
   }
 
+  const snippetNames = Array.isArray(detailCustomCodeData?.Names) ? detailCustomCodeData.Names : []
+  const modal = (
+    <CodeCustomizeModal
+      theme={theme}
+      form={form}
+      visible={visibleOpen}
+      onOk={handCodeCustomizeOk}
+      title={t('ConfigNetworkPage.addCodeSnippet')}
+      codeCustomizeModalVisible={codeCustomizeModalVisible}
+      confirmLoading={createCustomCodeLoading}
+    />
+  )
+  const addButton = (
+    <YakitButton type="text" onClick={codeCustomizeModalVisible} icon={<PlusOutlined color="currentColor" />}>
+      {t('YakitButton.add')}
+    </YakitButton>
+  )
+
+  if (variant === 'settings') {
+    return (
+      <div className={styles['code-settings']}>
+        <div className={styles['code-settings-head']}>
+          <div className={styles['code-settings-head-text']}>
+            <div className={styles['code-settings-title']}>{t('ConfigNetworkPage.customCodeSnippet')}</div>
+            <div className={styles['code-settings-desc']}>{t('ConfigNetworkPage.customCodeSnippetDesc')}</div>
+          </div>
+          {snippetNames.length > 0 ? addButton : null}
+        </div>
+        <div className={styles['code-settings-panel']}>
+          {snippetNames.length ? (
+            snippetNames.map((name) => (
+              <div key={name} className={styles['code-settings-row']}>
+                <div className={styles['code-settings-name']}>{name}</div>
+                <div className={styles['code-settings-actions']}>
+                  <YakitButton
+                    type="text2"
+                    size="small"
+                    icon={<PencilAltOutlined color="currentColor" />}
+                    onClick={() => onUpdateCustomCode(name)}
+                  />
+                  <YakitButton
+                    type="text2"
+                    size="small"
+                    icon={<TrashOutlined color="currentColor" />}
+                    onClick={(e) => onDelete(e, name)}
+                  />
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className={styles['code-settings-empty']}>{addButton}</div>
+          )}
+        </div>
+        {modal}
+      </div>
+    )
+  }
+
   return (
     <div className={styles['customizeCode_tags']}>
       {codeCustomizeTag}
       <YakitButton type={'primary'} onClick={codeCustomizeModalVisible}>
         {t('YakitButton.add')}
       </YakitButton>
-      <CodeCustomizeModal
-        theme={theme}
-        form={form}
-        visible={visibleOpen}
-        onOk={handCodeCustomizeOk}
-        title={t('ConfigNetworkPage.addCodeSnippet')}
-        codeCustomizeModalVisible={codeCustomizeModalVisible}
-        confirmLoading={createCustomCodeLoading}
-      />
+      {modal}
     </div>
   )
 }

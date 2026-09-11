@@ -96,7 +96,6 @@
     "pluginEditor": "Plugin Editor",
     "vulinboxManager": "Vulinbox Manager",
     "networkDiagnosis": "Network Diagnosis",
-    "globalConfig": "Global Configuration",
     "pluginManagement": "Plugin Management",
     "trafficAnalysis": "Traffic Analysis",
     "websiteManagement": "Website Management",
@@ -130,6 +129,7 @@
     "ai-tool": "Tool",
     "ai-forge": "Forge",
     "manageRightClickPlugins": "Manage Right-Click Plugins",
-    "contextMenuResult": "Right-Click Plugin Result"
+    "contextMenuResult": "Right-Click Plugin Result",
+    "settings": "Settings"
   }
 }

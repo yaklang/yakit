@@ -14,7 +14,7 @@
     "getPlugin": "获取插件",
     "maxAddLimit": "最多添加 {{UpperLimit}} 个插件",
     "added": "已添加",
-    "searchPlaceholder": "搜索插件名称、说明或 Hook",
+    "searchPlaceholder": "搜索插件名称",
     "noMatchedPlugins": "没有匹配的插件",
     "resultModeLabel": "结果展示",
     "resultModeDialog": "弹窗",

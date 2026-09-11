@@ -13,5 +13,69 @@
   "SoftwareSettings": {
     "projectManagement": "Project Management",
     "remoteMode": "Remote Mode"
+  },
+  "SettingsPage": {
+    "searchPlaceholder": "Search",
+    "group": {
+      "preference": "Preferences",
+      "system": "System",
+      "ai": "AI"
+    },
+    "item": {
+      "general": "General",
+      "appearance": "Appearance",
+      "shortcut-key": "Keyboard Shortcuts",
+      "reverse": "Global Reverse",
+      "system-proxy": "System Proxy",
+      "global-config": "Global Config",
+      "right-click-plugins": "Right-Click Plugins",
+      "ai-config": "AI Config",
+      "ai-model": "Models",
+      "yak-mcp": "Yak MCP"
+    },
+    "general": {
+      "workspace": "Workspace",
+      "usedSpace": "Used: {{size}}",
+      "calculating": "Calculating...",
+      "openDirectory": "Open Directory",
+      "pluginSource": "Plugin Source",
+      "privateDomain": "Private Domain",
+      "required": "Required",
+      "setProxy": "Proxy",
+      "proxyHint": "Set a proxy when the plugin store is unreachable",
+      "proxyPlaceholder": "Set proxy"
+    },
+    "appearance": {
+      "theme": "Theme",
+      "followSystem": "System",
+      "light": "Light",
+      "dark": "Dark",
+      "mode": "Mode",
+      "classic": "Classic",
+      "classicDesc": "The previous menu and home layout",
+      "securityExpert": "Security Expert",
+      "securityExpertDesc": "Menus and pinned pages focus on common pentest tools",
+      "scan": "Scan",
+      "scanDesc": "Menus and home focus on scanning features",
+      "language": "Language",
+      "languageSetting": "Language",
+      "langZh": "Chinese (Simplified) 简体中文",
+      "langEn": "English",
+      "langZhTW": "Chinese (Traditional) 繁體中文"
+    },
+    "aiModel": {
+      "intelligent": "High-quality models",
+      "lightweight": "Lightweight models",
+      "vision": "Vision models"
+    },
+    "yakMcp": {
+      "openHistory": "Open call history",
+      "enableColumn": "Enabled"
+    },
+    "rightClickPlugins": {
+      "tabSingle": "History (Single)",
+      "tabMultiple": "History (Multiple)",
+      "tabPacket": "Packet"
+    }
   }
 }

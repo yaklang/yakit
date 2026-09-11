@@ -388,6 +388,7 @@
     "controllerSideDesc": "可通过受控端分享的密钥远程控制他的 客户端",
     "noYakitLatestVersion": "未获取{{edition}}最新版本",
     "noYaklangLatestVersion": "未获取引擎最新版本",
+    "update": "更新",
     "updateContentSuccess": "修改更新内容成功"
   },
   "MoreYaklangVersion": {
@@ -456,8 +457,7 @@
     "remoteModeCannotModify": "远程控制中，暂无法修改",
     "configPrivateDomain": "配置私有域",
     "configGlobalReverse": "配置全局反连",
-    "alreadyLocalMode": "已为本地连接",
-    "modeAlreadySet": "当前模式已设置"
+    "alreadyLocalMode": "已为本地连接"
   },
   "YakitLoading": {
     "slogans": [

@@ -569,8 +569,11 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   })
   useEffect(() => {
     emiter.on('onCloseControlMyselfModal', onCloseControlMyselfModal)
+    const onOpenLogin = () => setLoginShow(true)
+    emiter.on('onOpenLogin', onOpenLogin)
     return () => {
       emiter.off('onCloseControlMyselfModal', onCloseControlMyselfModal)
+      emiter.off('onOpenLogin', onOpenLogin)
     }
   }, [])
 

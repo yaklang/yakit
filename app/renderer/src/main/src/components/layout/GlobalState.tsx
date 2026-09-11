@@ -12,8 +12,6 @@ import { HelpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/HelpIcon'
 import { SuccessIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SuccessIcon'
 import { WarningIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WarningIcon'
 import { RocketIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RocketIcon'
-import { showConfigSystemProxyForm, showConfigChromePathForm } from '@/utils/ConfigSystemProxy'
-import { ConfigGlobalReverse } from '@/utils/ConfigGlobalReverse'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { Tooltip, Row, Col } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
@@ -33,7 +31,6 @@ import { useRunNodeStore } from '@/store/runNode'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
 import type { mcpStreamHooks } from './hooks/useMcp/useMcp'
-const ConfigMcpModal = lazy(() => import('@/utils/ConfigSystemMcp').then((m) => ({ default: m.ConfigMcpModal })))
 import emiter from '@/utils/eventBus/eventBus'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import { openABSFileLocated } from '@/utils/openWebsite'
@@ -48,6 +45,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { ShieldCheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitApp, yakitHost, yakitPlugin, yakitReverse } from '@/services/electronBridge'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { SettingsSections } from '@/pages/settings/constants'
 
 import { ShieldCheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
@@ -90,7 +89,6 @@ interface ReverseDetail {
 export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) => {
   const { isEngineLink, system, mcp } = props
   const { t, i18n, i18nRefresh } = useI18nNamespaces(['yakitRoute', 'home', 'yakitUi', 'layout', 'utils'])
-  const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
   const enableMcp = useMemo(() => {
     if (!mcp.mcpStreamInfo.mcpCurrent) return false
     if (['stopped', 'error'].includes(mcp.mcpStreamInfo.mcpCurrent.Status)) {
@@ -717,16 +715,22 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
   // 是否已经设置过Chrome启动路径
   const [isAlreadyChromePath, setAlreadyChromePath] = useState<boolean>(false)
-  const setAlreadyChromePathStatus = (is: boolean) => setAlreadyChromePath(is)
-
-  useEffect(() => {
+  const refreshChromePathStatus = useMemoizedFn(() => {
     getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
-      if (!setting) return
-      const values: string = JSONParseLog(setting, { page: 'GlobalState', fun: 'RemoteGV.GlobalChromePath' })
-      if (values.length > 0) {
-        setAlreadyChromePath(true)
+      if (!setting) {
+        setAlreadyChromePath(false)
+        return
       }
+      const values: string = JSONParseLog(setting, { page: 'GlobalState', fun: 'RemoteGV.GlobalChromePath' })
+      setAlreadyChromePath(!!values && values.length > 0)
     })
+  })
+  useEffect(() => {
+    refreshChromePathStatus()
+    emiter.on('onRefConfigChromePath', refreshChromePathStatus)
+    return () => {
+      emiter.off('onRefConfigChromePath', refreshChromePathStatus)
+    }
   }, [])
 
   /**
@@ -945,20 +949,12 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       className={styles['btn-style']}
                       onClick={() => {
                         setShow(false)
-                        showYakitModal({
-                          type: 'white',
-                          title: (modalT) => modalT('GlobalState.configGlobalReverse'),
-                          width: 800,
-                          content: (
-                            <div style={{ width: 800 }}>
-                              <ConfigGlobalReverse />
-                            </div>
-                          ),
-                          footer: null,
-                        })
+                        emiter.emit(
+                          'openPage',
+                          JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'reverse' } }),
+                        )
                       }}
                     >
-                      {' '}
                       {t('GlobalState.disable')}
                     </YakitButton>
                   ) : (
@@ -967,17 +963,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       className={styles['btn-style']}
                       onClick={() => {
                         setShow(false)
-                        showYakitModal({
-                          type: 'white',
-                          title: (modalT) => modalT('GlobalState.configGlobalReverse'),
-                          width: 800,
-                          content: (
-                            <div style={{ width: 800 }}>
-                              <ConfigGlobalReverse />
-                            </div>
-                          ),
-                          footer: null,
-                        })
+                        emiter.emit(
+                          'openPage',
+                          JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'reverse' } }),
+                        )
                       }}
                     >
                       {t('GlobalState.toConfigure')}
@@ -1001,7 +990,16 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       className={styles['btn-style']}
                       onClick={() => {
                         setShow(false)
-                        showConfigChromePathForm(setAlreadyChromePathStatus)
+                        emiter.emit(
+                          'openPage',
+                          JSON.stringify({
+                            route: YakitRoute.Settings,
+                            params: {
+                              anchor: 'global-config',
+                              section: SettingsSections['global-config'].other,
+                            },
+                          }),
+                        )
                       }}
                     >
                       {isAlreadyChromePath ? t('GlobalState.configured') : t('GlobalState.toConfigure')}
@@ -1042,7 +1040,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       className={styles['btn-style']}
                       onClick={() => {
                         setShow(false)
-                        showConfigSystemProxyForm()
+                        emiter.emit(
+                          'openPage',
+                          JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'system-proxy' } }),
+                        )
                       }}
                     >
                       {t('GlobalState.toConfigure')}
@@ -1085,7 +1086,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       className={styles['btn-style']}
                       onClick={() => {
                         setShow(false)
-                        setConfigMcpModalVisible(true)
+                        emiter.emit(
+                          'openPage',
+                          JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }),
+                        )
                       }}
                     >
                       {t('GlobalState.toConfigure')}
@@ -1469,11 +1473,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
           setCloseRunNodeItemVerifyVisible(false)
         }}
       />
-      {configMcpModalVisible && (
-        <Suspense fallback={null}>
-          <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />
-        </Suspense>
-      )}
     </>
   )
 })

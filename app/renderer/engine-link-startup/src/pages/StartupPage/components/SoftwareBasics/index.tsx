@@ -4,7 +4,7 @@ import lightTheme from '@/assets/light-theme.png'
 import darkTheme from '@/assets/dark-theme.png'
 import { FigmaIcon28011794Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { CheckCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
-import type { Theme } from '@/hooks/useTheme'
+import { useTheme, type Theme } from '@/hooks/useTheme'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
@@ -61,7 +61,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       const newHistory = [currentPath, ...workspaceHistory.filter((p) => p !== currentPath)].slice(0, 10)
       await yakitApp.setYakitHomeConfig('workspaceHistory', newHistory)
       await yakitApp.setYakitHomeConfig('autoStart', autoStart)
-      setSoftTheme(softTheme, true)
+      useTheme.getState().persistThemeMode()
       if (isCommunityYakit()) {
         await yakitApp.setYakitHomeConfig('yakitMode', softMode)
       }

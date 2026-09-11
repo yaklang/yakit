@@ -110,6 +110,7 @@
     "updateGlobalConfig": "更新全局配置",
     "confirmResetConfig": "确定需要重置配置吗？",
     "resetConfig": "重置配置",
+    "reset": "重置",
     "resetConfigSuccess": "重置配置成功",
     "saveHttpAuthAndClose": "请问是否要保存HTTP认证全局配置并关闭弹框？",
     "executionOrder": "执行顺序",

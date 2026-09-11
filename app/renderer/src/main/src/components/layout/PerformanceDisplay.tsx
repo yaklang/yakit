@@ -22,20 +22,19 @@ import { yakitDynamicStatus } from '@/store'
 import { remoteOperation } from '@/pages/dynamicControl/DynamicControl'
 import { yakitApp, yakitEngine, yakitPerf, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitGlobalHost } from './YakitGlobalHost'
 
 interface PerformanceDisplayProps {
   engineMode: YaklangEngineMode | undefined
   typeCallback: (type: 'break') => any
   engineLink: boolean
-  cpuWrapperClassName: Record<string, boolean>
+  extraLeft?: React.ReactNode
+  extraRight?: React.ReactNode
 }
 
 export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo((props) => {
-  // cpu和内存可视图数据
   const [cpu, setCpu] = useState<number[]>([])
-
-  const [showLine, setShowLine] = useState<boolean>(true)
-  const showLineTime = useRef<any>(null)
+  const [rps, setRps] = useState<number>(0)
 
   useEffect(() => {
     yakitPerf.startComputePercent()
@@ -49,34 +48,8 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo(
     }
   }, [])
 
-  const onWinResize = (e: UIEvent) => {
-    if (showLineTime.current) clearTimeout(showLineTime.current)
-    showLineTime.current = setTimeout(() => {
-      if (document) {
-        const header = document.getElementById('yakit-header')
-        if (header) {
-          setShowLine(header.clientWidth >= 1000)
-        }
-      }
-    }, 100)
-  }
-
   useEffect(() => {
-    if (window) {
-      window.addEventListener('resize', onWinResize)
-      return () => {
-        window.removeEventListener('resize', onWinResize)
-        if (showLineTime.current) clearTimeout(showLineTime.current)
-        showLineTime.current = null
-      }
-    }
-  }, [])
-
-  const [rps, setRps] = useState<number>(0)
-  const onRefreshCurRps = (rps: number) => {
-    setRps(rps)
-  }
-  useEffect(() => {
+    const onRefreshCurRps = (nextRps: number) => setRps(nextRps)
     emiter.on('onRefreshCurRps', onRefreshCurRps)
     return () => {
       emiter.off('onRefreshCurRps', onRefreshCurRps)
@@ -85,26 +58,9 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo(
 
   return (
     <div className={styles['system-func-wrapper']}>
-      <div className={classNames(styles['cpu-wrapper'], props.cpuWrapperClassName)}>
-        <div className={styles['cpu-title']}>
-          <span className={styles['title-headline']}>RPS </span>
-          <span className={styles['title-content']}>{rps}</span>
-        </div>
-
-        <div className={styles['cpu-title']}>
-          <span className={styles['title-headline']}> CPU </span>
-          <span className={styles['title-content']}>{`${cpu[cpu.length - 1] || 0}%`}</span>
-        </div>
-
-        {showLine && (
-          <div className={styles['cpu-spark']}>
-            <Sparklines data={cpu} width={50} height={10} max={50}>
-              <SparklinesCurve color="#85899E" />
-            </Sparklines>
-          </div>
-        )}
-      </div>
-      <UIEngineList {...props} />
+      {props.extraLeft}
+      <UIEngineList {...props} cpu={cpu} rps={rps} />
+      {props.extraRight}
     </div>
   )
 })
@@ -121,11 +77,13 @@ interface UIEngineListProp {
   engineMode: YaklangEngineMode | undefined
   typeCallback: (type: 'break') => any
   engineLink: boolean
+  cpu: number[]
+  rps: number
 }
 
 /** @name 已启动引擎列表 */
 const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
-  const { engineMode, typeCallback, engineLink } = props
+  const { engineMode, typeCallback, engineLink, cpu, rps } = props
   const { t } = useI18nNamespaces(['layout', 'yakitUi'])
 
   const [show, setShow] = useState<boolean>(false)
@@ -222,33 +180,29 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
           <div className={styles['ui-engine-list-body']}>
             <div className={styles['engine-list-header']}>
               {t('PerformanceDisplay.localYakProcessManagement')}
-              <YakitPopconfirm
-                title={t('PerformanceDisplay.resetEngineVersionNotice')}
-                onConfirm={async () => {
-                  if (dynamicStatus.isDynamicStatus) {
-                    yakitNotify('warning', t('PerformanceDisplay.remoteControlClosing'))
-                    await remoteOperation(false, dynamicStatus)
-                  }
-                  await delTemporaryProject()
-                  process.map((i) => {
-                    yakitEngine.killYakGrpc(i.pid)
-                  })
-                  yakitEngine
-                    .restoreEngineAndPlugin({})
-                    .finally(() => {
-                      yakitEngine.writeEngineKeyToYakitProjects().finally(() => {
-                        info(t('PerformanceDisplay.restoreEngineSuccess'))
-                        yakitApp.relaunch()
-                      })
-                    })
-                    .catch((e) => {
-                      failed(t('PerformanceDisplay.restoreEngineFailed', { error: e }))
-                    })
-                }}
-              >
-                <YakitButton style={{ marginLeft: 8 }}>{t('PerformanceDisplay.resetEngineVersion')}</YakitButton>
-              </YakitPopconfirm>
-              {psLoading && <LoadingOutlined className={styles['loading-icon']} />}
+              <span className={styles['loading-slot']}>
+                {psLoading && <LoadingOutlined className={styles['loading-icon']} />}
+              </span>
+              <div className={styles['engine-list-header-stats']}>
+                <div className={styles['cpu-wrapper']}>
+                  <div className={styles['cpu-title']}>
+                    <span className={styles['title-headline']}>RPS </span>
+                    <span className={classNames(styles['title-content'], styles['rps-value'])}>{rps}</span>
+                  </div>
+                  <div className={styles['cpu-title']}>
+                    <span className={styles['title-headline']}> CPU </span>
+                    <span className={classNames(styles['title-content'], styles['cpu-value'])}>
+                      {`${cpu[cpu.length - 1] || 0}%`}
+                    </span>
+                  </div>
+                  <div className={styles['cpu-spark']}>
+                    <Sparklines data={cpu} width={50} height={10} max={50}>
+                      <SparklinesCurve color="#85899E" />
+                    </Sparklines>
+                  </div>
+                </div>
+                <YakitGlobalHost isEngineLink={engineLink} compact />
+              </div>
             </div>
             <div className={styles['engine-list-container']}>
               {process.map((i) => {
@@ -374,20 +328,48 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
             </div>
             <div className={styles['engine-list-footer']}>
               <div></div>
-              <YakitPopconfirm
-                title={
-                  <div style={{ width: 330 }}>
-                    {t('PerformanceDisplay.closeEngineConfirm1')}
-                    <br />
-                    {t('PerformanceDisplay.closeEngineConfirm2', { edition: getReleaseEditionName() })}
-                    <br />
-                    {t('PerformanceDisplay.closeEngineConfirm3')}
-                  </div>
-                }
-                onConfirm={() => allClose()}
-              >
-                <div className={styles['engine-list-footer-btn']}>{t('YakitButton.closeAll')}</div>
-              </YakitPopconfirm>
+              <div className={styles['engine-list-footer-actions']}>
+                <YakitPopconfirm
+                  title={t('PerformanceDisplay.resetEngineVersionNotice')}
+                  onConfirm={async () => {
+                    if (dynamicStatus.isDynamicStatus) {
+                      yakitNotify('warning', t('PerformanceDisplay.remoteControlClosing'))
+                      await remoteOperation(false, dynamicStatus)
+                    }
+                    await delTemporaryProject()
+                    process.map((i) => {
+                      yakitEngine.killYakGrpc(i.pid)
+                    })
+                    yakitEngine
+                      .restoreEngineAndPlugin({})
+                      .finally(() => {
+                        yakitEngine.writeEngineKeyToYakitProjects().finally(() => {
+                          info(t('PerformanceDisplay.restoreEngineSuccess'))
+                          yakitApp.relaunch()
+                        })
+                      })
+                      .catch((e) => {
+                        failed(t('PerformanceDisplay.restoreEngineFailed', { error: e }))
+                      })
+                  }}
+                >
+                  <YakitButton>{t('PerformanceDisplay.resetEngineVersion')}</YakitButton>
+                </YakitPopconfirm>
+                <YakitPopconfirm
+                  title={
+                    <div style={{ width: 330 }}>
+                      {t('PerformanceDisplay.closeEngineConfirm1')}
+                      <br />
+                      {t('PerformanceDisplay.closeEngineConfirm2', { edition: getReleaseEditionName() })}
+                      <br />
+                      {t('PerformanceDisplay.closeEngineConfirm3')}
+                    </div>
+                  }
+                  onConfirm={() => allClose()}
+                >
+                  <div className={styles['engine-list-footer-btn']}>{t('YakitButton.closeAll')}</div>
+                </YakitPopconfirm>
+              </div>
             </div>
           </div>
         </div>

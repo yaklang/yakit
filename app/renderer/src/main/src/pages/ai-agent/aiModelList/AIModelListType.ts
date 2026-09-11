@@ -1,26 +1,13 @@
 import type { LocalModelConfig } from '../type/aiModel'
 import type { YakitSizeType } from '@/components/yakitUI/YakitInputNumber/YakitInputNumberType'
-import { type ModalProps } from 'antd'
-import type { ReactNode } from 'react'
+import type { ForwardedRef, ReactNode } from 'react'
 import type { AIModelConfig, AIModelTypeFileName } from './utils'
 import type { AIModelTypeEnumType } from '../defaultConstant'
 
-export interface AIModelListProps extends Partial<Pick<AIOnlineModelListProps, 'mountContainer'>> {}
-
 export type AIModelType = 'online' | 'local'
 
-export interface AIOnlineModelListProps {
-  ref: React.ForwardedRef<AIOnlineModelListRefProps>
-  onAdd: () => void
-  mountContainer?: ModalProps['getContainer']
-}
-
-export interface AIOnlineModelListRefProps {
-  onRemoveAll: () => void
-}
-
 export interface AILocalModelListProps {
-  ref: React.ForwardedRef<AILocalModelListRefProps>
+  ref: ForwardedRef<AILocalModelListRefProps>
   setLocalTotal: (total: number) => void
 }
 
@@ -37,6 +24,7 @@ export interface AIOnlineModelListItemProps {
   onEdit: (item: AIModelConfig) => void
   checked: boolean
   modelType: AIModelTypeEnumType
+  checkedVariant?: 'outline' | 'circle'
 }
 export interface OutlineAtomIconByStatusProps {
   isReady?: boolean
@@ -65,10 +53,8 @@ export interface AIOnlineModelProps {
   onEdit: (i: number) => void
   onSelect: (v: AIModelConfig, i: number) => void
   modelType: AIOnlineModelListItemProps['modelType']
-}
-
-export interface AIOnlineModeSettingProps {
-  onRefresh: () => void
+  /** 选中图标：默认勾选描边，circle 为实心圆勾 */
+  checkedVariant?: 'outline' | 'circle'
 }
 
 export interface AIModelActionProps {

@@ -4,7 +4,6 @@
     "lightweightModels": "Lightweight Models",
     "visionModels": "Vision Models",
     "callingMode": "Calling Mode",
-    "aiModel": "AI model",
     "focusMode": "Focus Mode",
     "reasoningEffort": "Thinking"
   },
@@ -69,7 +68,8 @@
     "configTitle": "AI Model Not Configured",
     "toConfigure": "Go to Configure",
     "configDesc": "No available AI model found. Please configure one before use.",
-    "selectModel": "Select AI Model"
+    "selectModel": "Select AI Model",
+    "openConfigTooltip": "Open model configuration in Settings"
   },
   "AIModelList": {
     "onlineTooltip": "Access models via API, receive AI info or send messages to AI, multiple configurations possible.",
@@ -82,7 +82,6 @@
     "confirmAddBtn": "Confirm",
     "addThirdPartyApp": "Add Third-Party Application",
     "addLocalModel": "Add Local Model",
-    "clearConfirm": "Are you sure to clear all {{type}} model configurations?",
     "online": "Online",
     "local": "Local",
     "clearModelsTitle": "Clear Models",
@@ -90,15 +89,12 @@
     "policyAuto": "Automatically select the most suitable model based on request content",
     "policyPerformance": "Prioritize high-intelligence models",
     "policyCost": "Prioritize lightweight/low-cost models",
-    "policyBalance": "Balance between response speed, intelligence, and cost"
+    "policyBalance": "Balance between response speed, intelligence, and cost",
+    "sameModelWarning": "Using the same model for lightweight and high-quality is not recommended; lightweight should use a fast-response model"
   },
   "AIOnlineModeSetting": {
-    "configUpdateFailed": "Configuration update failed, global AI configuration not obtained, please try again",
     "disableFallback": "Disable fallback to lightweight models",
     "configErrorEdit": "Configuration error, cannot edit"
-  },
-  "AIOnlineModelList": {
-    "noDataDesc": "Access models via API, receive AI info or send messages to AI, multiple configurations possible."
   },
   "AILocalModelList": {
     "llamaServerNotReady": "Llama server not ready: {{reason}}",
@@ -679,6 +675,34 @@
     "permissionsAndSecurity": "Permissions & Security",
     "planningAndExecution": "Planning & Execution",
     "automation": "Automation",
-    "resourcesLimits": "Resources & Limits"
+    "resourcesLimits": "Resources & Limits",
+    "disallowUserPrompt": "Disable human-computer interaction",
+    "enableFileOperator": "Enable system file operation permissions",
+    "disableToolIntervalReview": "Disable AI review during tool execution",
+    "disableToolIntervalReviewDesc": "Turn off AI review while tools run to improve execution efficiency",
+    "riskThreshold": "Risk threshold",
+    "riskThresholdDesc": "Below this score, AI auto-approves; above it, switch to manual",
+    "reviewPolicy": "Review policy",
+    "allowPlanUserInteract": "Allow human-computer interaction in plan stage",
+    "planUserInteractMaxCount": "Plan-stage interaction count",
+    "planUserInteractMaxCountDesc": "During task planning, if AI may ask the user, the maximum number of questions",
+    "reActMaxIteration": "ReAct iteration limit",
+    "planExecTaskConcurrency": "Deep planning task concurrency",
+    "planExecTaskConcurrencyDesc": "Controls parallel processing for deep search or complex breakdown tasks",
+    "useDefaultAIConfig": "Use default system-configured AI",
+    "enableAISearchTool": "AI search local tools",
+    "disableToolUse": "Disable Tools",
+    "disableToolUseDesc": "Disable all external tools; this becomes a pure chatbot",
+    "disableMemoryTriage": "Disable intelligent memory processing",
+    "disableMemoryTriageDesc": "When enabled, skip creating AIMemory and embedding/DB/AI calls for lightweight or stateless sessions",
+    "aiCallAutoRetry": "AI dialogue retry count",
+    "aiCallAutoRetryDesc": "How many times to retry a single dialogue when the remote AI is unstable",
+    "aiTransactionRetry": "AI transaction retry count",
+    "aiTransactionRetryDesc": "Increase this to retry when answer quality is low",
+    "timelineContentSize": "Timeline context size",
+    "aiCallTokenLimit": "Pressure token threshold",
+    "aiCallTokenLimitDesc": "Warn when AI dialogue tokens exceed this limit",
+    "userInteractLimit": "User interaction limit",
+    "userInteractLimitDesc": "Maximum user interactions; beyond this, AI may no longer ask the user"
   }
 }

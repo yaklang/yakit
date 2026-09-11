@@ -726,12 +726,13 @@ declare global {
       onSync: (callback: (message: AppSyncMessage) => void) => BridgeCleanup
       getYakitHomeConfig: () => Promise<YakitHomeConfig>
       setYakitHomeConfig: (key: string, value: any) => Promise<{ success: boolean }>
+      getDirSize: (dirPath: string) => Promise<number>
       /** Synchronous build/runtime gate for MITM diagnostic globals; false in packaged builds. */
       isMITMDebugHooksEnabled?: () => boolean
     }
     theme: {
-      setTheme: (theme: 'light' | 'dark') => Promise<unknown>
-      onUpdated: (callback: (theme: 'light' | 'dark') => void) => BridgeCleanup
+      setTheme: (theme: 'light' | 'dark' | 'system') => Promise<unknown>
+      onUpdated: (callback: (theme: 'light' | 'dark' | 'system') => void) => BridgeCleanup
     }
     system: {
       fetchSystemName: () => Promise<YakitSystem>
