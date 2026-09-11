@@ -66,6 +66,14 @@ const pidAlive = (pid) => {
     return false
   }
 }
+const processGroupAlive = (pid) => {
+  try {
+    process.kill(-pid, 0)
+    return true
+  } catch {
+    return false
+  }
+}
 const listen = () =>
   new Promise((resolve, reject) => {
     const server = net.createServer()
@@ -75,7 +83,7 @@ const listen = () =>
 const close = (server) => new Promise((resolve) => server.close(resolve))
 
 describe('real child processes and authenticated TCP', () => {
-  let dir, fixturePath, managers, children, servers, descendants
+  let dir, fixturePath, managers, children, servers, descendants, externalChildren
   beforeEach(async () => {
     dir = await fs.mkdtemp(path.join(os.tmpdir(), 'Yakit startup 空格 '))
     fixturePath = path.join(dir, 'engine fixture.cjs')
@@ -84,12 +92,27 @@ describe('real child processes and authenticated TCP', () => {
     children = []
     servers = []
     descendants = []
+    externalChildren = []
   })
   afterEach(async () => {
     await Promise.all(managers.map((manager) => manager.dispose()))
     for (const pid of descendants) {
-      if (pidAlive(pid)) process.kill(pid, 'SIGKILL')
+      try {
+        if (pidAlive(pid)) process.kill(pid, 'SIGKILL')
+      } catch {}
     }
+    for (const child of externalChildren) {
+      try {
+        if (pidAlive(child.pid)) process.kill(-child.pid, 'SIGKILL')
+      } catch {}
+    }
+    await vi.waitFor(
+      () => {
+        expect(descendants.filter(pidAlive)).toHaveLength(0)
+        expect(externalChildren.filter((child) => pidAlive(child.pid))).toHaveLength(0)
+      },
+      { timeout: 5000 },
+    )
     await Promise.all(servers.map(close))
     await fs.rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 })
     expect(children.filter(alive)).toHaveLength(0)
@@ -100,6 +123,18 @@ describe('real child processes and authenticated TCP', () => {
     const port = server.address().port
     await close(server)
     return port
+  }
+  async function readDescendantPid() {
+    let pid
+    await vi.waitFor(
+      async () => {
+        pid = Number(await fs.readFile(path.join(dir, 'descendant'), 'utf8'))
+        expect(pidAlive(pid)).toBe(true)
+      },
+      { timeout: 5000 },
+    )
+    descendants.push(pid)
+    return pid
   }
   function setup(contract = 'v2', scenario = 'success', timeouts = {}) {
     const commitConnection = vi.fn()
@@ -116,6 +151,7 @@ describe('real child processes and authenticated TCP', () => {
       }),
       spawn: (command, args, options) => {
         const child = childProcess.spawn(command, [fixturePath, ...args], options)
+        child.spawnOptions = options
         children.push(child)
         return child
       },
@@ -282,18 +318,83 @@ describe('real child processes and authenticated TCP', () => {
     }
   })
 
-  it.skipIf(process.platform !== 'win32')('Windows: cancels the owned process tree with taskkill', async () => {
-    const { manager } = setup('v2', 'tree')
+  it.skipIf(process.platform === 'win32').each([
+    ['normal helper', 'tree'],
+    ['SIGTERM-ignoring helper', 'tree-ignore-term'],
+  ])('POSIX: cancel removes the entire owned process group with a %s', async (_label, scenario) => {
+    const { manager } = setup('v2', scenario)
     const pending = manager.start({ port: await freePort(), password: 'password' })
-    let pid
+    await vi.waitFor(() => expect(children).toHaveLength(1))
+    const parent = children[0]
+    const helperPid = await readDescendantPid()
+
+    expect(parent.spawnOptions.detached).toBe(true)
+    expect(await manager.cancel()).toEqual({ ok: true, canceled: 1, status: 'cancelled' })
+    expect((await pending).status).toBe('cancelled')
     await vi.waitFor(
-      async () => {
-        pid = Number(await fs.readFile(path.join(dir, 'descendant'), 'utf8'))
-        expect(pidAlive(pid)).toBe(true)
+      () => {
+        expect(pidAlive(parent.pid)).toBe(false)
+        expect(pidAlive(helperPid)).toBe(false)
+        expect(processGroupAlive(parent.pid)).toBe(false)
       },
       { timeout: 5000 },
     )
-    descendants.push(pid)
+  })
+
+  it.skipIf(process.platform === 'win32')(
+    'POSIX: dispose removes a retained group after its parent exits naturally',
+    async () => {
+      const { manager } = setup('v2', 'success-parent-exit-tree')
+      const port = await freePort()
+      expect((await manager.start({ port, password: 'password' })).ok).toBe(true)
+      const parent = children[0]
+      const helperPid = await readDescendantPid()
+      await vi.waitFor(() => expect(parent.exitCode).toBe(0), { timeout: 5000 })
+      expect(pidAlive(helperPid)).toBe(true)
+      expect(processGroupAlive(parent.pid)).toBe(true)
+
+      expect(await manager.dispose()).toEqual({ ok: true, canceled: 1, status: 'cancelled' })
+      await vi.waitFor(
+        () => {
+          expect(pidAlive(helperPid)).toBe(false)
+          expect(processGroupAlive(parent.pid)).toBe(false)
+        },
+        { timeout: 5000 },
+      )
+    },
+  )
+
+  it.skipIf(process.platform === 'win32')('POSIX: killOnExit kills only the owned process group', async () => {
+    const external = childProcess.spawn(process.execPath, ['-e', 'setTimeout(() => process.exit(92), 15000)'], {
+      detached: true,
+      stdio: 'ignore',
+    })
+    externalChildren.push(external)
+    await vi.waitFor(() => expect(pidAlive(external.pid)).toBe(true))
+
+    const { manager } = setup('v2', 'tree')
+    const pending = manager.start({ port: await freePort(), password: 'password' })
+    await vi.waitFor(() => expect(children).toHaveLength(1))
+    const parent = children[0]
+    const helperPid = await readDescendantPid()
+
+    manager.killOnExit()
+    await vi.waitFor(
+      () => {
+        expect(pidAlive(parent.pid)).toBe(false)
+        expect(pidAlive(helperPid)).toBe(false)
+        expect(processGroupAlive(parent.pid)).toBe(false)
+      },
+      { timeout: 5000 },
+    )
+    expect(pidAlive(external.pid)).toBe(true)
+    expect((await pending).status).toBe('engine_exited')
+  })
+
+  it.skipIf(process.platform !== 'win32')('Windows: cancels the owned process tree with taskkill', async () => {
+    const { manager } = setup('v2', 'tree')
+    const pending = manager.start({ port: await freePort(), password: 'password' })
+    const pid = await readDescendantPid()
     await manager.cancel()
     expect((await pending).status).toBe('cancelled')
     await vi.waitFor(() => expect(pidAlive(pid)).toBe(false), { timeout: 2000 })

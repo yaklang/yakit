@@ -5,14 +5,14 @@ import type { YakitStatusType } from './types'
 export function engineFailureStatus(status: string, stage: 'check' | 'start'): YakitStatusType | null {
   if (status === 'cancelled') return null
   if (status === 'port_occupied') return 'port_occupied_prev'
-  if (status === 'port_denied') return 'port_denied'
+  if (status === 'port_denied' || status === 'endpoint_unreachable') return status
   if (status === 'database_error') return 'database_error'
   if (status === 'protocol_error') return 'check_error'
   if (stage === 'check') {
     if (status === 'old_version') return 'old_version'
     if (status === 'timeout' || status === 'call_error') return 'check_timeout'
     if (status === 'build_yak_error' || status === 'dial_error') return status
-    if (status === 'antivirus_blocked' || status === 'endpoint_unreachable') return status
+    if (status === 'antivirus_blocked') return status
     return 'check_error'
   }
   return 'start_timeout'

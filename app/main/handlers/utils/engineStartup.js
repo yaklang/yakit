@@ -14,28 +14,73 @@ const MAX_CHECK_OUTPUT = 512 * 1024
 const cancelled = (stage) => ({ ok: false, stage, status: 'cancelled', message: '引擎连接已取消' })
 const isAlive = (child) => child?.pid && child.exitCode === null && child.signalCode === null
 
+function isProcessGroupAlive(groupId, killProcess) {
+  if (!groupId) return false
+  try {
+    killProcess(-groupId, 0)
+    return true
+  } catch (error) {
+    return error?.code !== 'ESRCH'
+  }
+}
+
+function isOwnedProcessAlive(child, platform, killProcess) {
+  if (platform !== 'win32' && child?.ownedProcessGroupExited) return false
+  if (platform !== 'win32' && child?.ownedProcessGroup) {
+    const alive = isProcessGroupAlive(child.ownedProcessGroup, killProcess)
+    if (!alive) {
+      child.ownedProcessGroup = null
+      child.ownedProcessGroupExited = true
+    }
+    return alive
+  }
+  return Boolean(isAlive(child))
+}
+
 // Only terminate a child we spawned. Never search for engines or kill a process by port/name.
-function stopEngineChild(child, execFile = childProcess.execFile, platform = process.platform) {
-  if (!isAlive(child)) return Promise.resolve(true)
+function stopEngineChild(
+  child,
+  execFile = childProcess.execFile,
+  platform = process.platform,
+  killProcess = process.kill,
+) {
+  if (!isOwnedProcessAlive(child, platform, killProcess)) return Promise.resolve(true)
   return new Promise((resolve) => {
     let finished = false
-    const finish = () => {
+    let forceTimer
+    let deadline
+    let pollTimer
+    const finish = (confirmedExit = !isOwnedProcessAlive(child, platform, killProcess)) => {
       if (finished) return
       finished = true
       clearTimeout(forceTimer)
       clearTimeout(deadline)
-      child.removeListener('close', finish)
-      resolve(!isAlive(child))
+      clearTimeout(pollTimer)
+      child.removeListener('close', checkExit)
+      resolve(confirmedExit)
     }
-    const forceTimer = setTimeout(() => {
-      if (isAlive(child)) {
-        try {
-          child.kill('SIGKILL')
-        } catch {}
-      }
-    }, 2000)
-    const deadline = setTimeout(finish, 4000)
-    child.once('close', finish)
+
+    const checkExit = () => {
+      if (!isOwnedProcessAlive(child, platform, killProcess)) return finish(true)
+      clearTimeout(pollTimer)
+      pollTimer = setTimeout(checkExit, 50)
+    }
+
+    const signalOwnedProcess = (signal) => {
+      if (!isOwnedProcessAlive(child, platform, killProcess)) return checkExit()
+      try {
+        if (platform !== 'win32' && child.ownedProcessGroup) {
+          killProcess(-child.ownedProcessGroup, signal)
+        } else {
+          child.kill(signal)
+        }
+      } catch {}
+      checkExit()
+    }
+
+    forceTimer = setTimeout(() => signalOwnedProcess('SIGKILL'), 2000)
+    deadline = setTimeout(() => finish(), 4000)
+    child.on('close', checkExit)
     try {
       if (platform === 'win32') {
         execFile(
@@ -45,12 +90,10 @@ function stopEngineChild(child, execFile = childProcess.execFile, platform = pro
           () => {},
         )
       } else {
-        child.kill('SIGTERM')
+        signalOwnedProcess('SIGTERM')
       }
     } catch {
-      try {
-        child.kill('SIGKILL')
-      } catch {}
+      signalOwnedProcess('SIGKILL')
     }
   })
 }
@@ -78,6 +121,7 @@ function createEngineStartup({
   spawn = childProcess.spawn,
   execFile = childProcess.execFile,
   platform = process.platform,
+  killProcess = process.kill,
   timeouts = {},
 }) {
   const limits = { check: 180000, start: 180000, connect: 10000, probe: 2000, retry: 500, ...timeouts }
@@ -86,6 +130,28 @@ function createEngineStartup({
   let cleanupPromise = null
   let cleanupFailure = null
   const children = new Set()
+
+  function ownedChildAlive(child) {
+    const alive = isOwnedProcessAlive(child, platform, killProcess)
+    if (!alive) {
+      clearTimeout(child?.ownedProcessGroupWatcher)
+      if (child) child.ownedProcessGroupWatcher = null
+      children.delete(child)
+    }
+    return alive
+  }
+
+  function watchOwnedChild(child) {
+    if (!child?.ownedProcessGroup || child.ownedProcessGroupWatcher) return
+    const check = () => {
+      child.ownedProcessGroupWatcher = null
+      if (!ownedChildAlive(child)) return
+      child.ownedProcessGroupWatcher = setTimeout(check, 250)
+      child.ownedProcessGroupWatcher.unref?.()
+    }
+    child.ownedProcessGroupWatcher = setTimeout(check, 250)
+    child.ownedProcessGroupWatcher.unref?.()
+  }
 
   // Progress is best-effort: a closing renderer must not interrupt engine cleanup.
   function notifyProgress(message) {
@@ -115,8 +181,14 @@ function createEngineStartup({
 
   async function stopOwnedChild(child, operationId, stage) {
     const startedAt = Date.now()
-    logCleanup('cleanup_start', { operationId, stage, child, confirmedExit: !isAlive(child) })
-    const confirmedExit = await stopEngineChild(child, execFile, platform)
+    logCleanup('cleanup_start', {
+      operationId,
+      stage,
+      child,
+      confirmedExit: !ownedChildAlive(child),
+    })
+    const confirmedExit = await stopEngineChild(child, execFile, platform, killProcess)
+    if (confirmedExit) children.delete(child)
     logCleanup('cleanup_result', {
       operationId,
       stage,
@@ -135,7 +207,7 @@ function createEngineStartup({
     if (active) {
       const previous = active
       await previous.cancel()
-      if (previous.cleanupFailed || isAlive(previous.child)) {
+      if (previous.cleanupFailed || ownedChildAlive(previous.child)) {
         cleanupFailure = {
           ok: false,
           status: 'process_error',
@@ -208,11 +280,15 @@ function createEngineStartup({
   function attachProcess(op, args, params, onLine, onClose) {
     const password = params.password || ''
     const child = spawn(getCommand(), args, {
-      detached: false,
+      detached: platform !== 'win32',
       windowsHide: true,
       stdio: ['ignore', 'pipe', 'pipe'],
       env: getEnv(params.softwareVersion),
     })
+    if (platform !== 'win32' && child.pid) {
+      child.ownedProcessGroup = child.pid
+      child.ownedProcessGroupExited = false
+    }
     op.child = child
     children.add(child)
     const overflow = () =>
@@ -238,7 +314,7 @@ function createEngineStartup({
     )
     child.once('close', (code, signal) => {
       for (const reader of readers) reader.end()
-      children.delete(child)
+      if (ownedChildAlive(child)) watchOwnedChild(child)
       if (op.current()) onClose(code, signal)
     })
     return child
@@ -310,7 +386,7 @@ function createEngineStartup({
       }
       // A cancelled process must have exited before another check touches the same databases.
       for (const child of children) {
-        if (isAlive(child))
+        if (ownedChildAlive(child))
           return op.finish({
             ok: false,
             status: 'port_occupied',
@@ -397,7 +473,7 @@ function createEngineStartup({
         return op.finish({ ok: false, status: 'protocol_error', message: '本地引擎连接参数无效，请重新检查引擎' })
       }
       for (const child of children) {
-        if (isAlive(child))
+        if (ownedChildAlive(child))
           return op.finish({
             ok: false,
             status: 'port_occupied',
@@ -523,10 +599,10 @@ function createEngineStartup({
       if (pending) {
         const result = await pending.cancel()
         if (result.status === 'cancelled') canceled++
-        if (pending.cleanupFailed || isAlive(pendingChild)) failed = true
+        if (pending.cleanupFailed || ownedChildAlive(pendingChild)) failed = true
       }
 
-      const retained = [...children].filter((child) => child !== pendingChild && isAlive(child))
+      const retained = [...children].filter((child) => child !== pendingChild && ownedChildAlive(child))
       const retainedResults = await Promise.all(retained.map((child) => stopOwnedChild(child, operationId, 'dispose')))
       for (const confirmedExit of retainedResults) {
         if (confirmedExit) canceled++
@@ -571,7 +647,7 @@ function createEngineStartup({
 
   function killOnExit() {
     for (const child of children) {
-      if (isAlive(child)) {
+      if (ownedChildAlive(child)) {
         try {
           if (platform === 'win32') {
             childProcess.execFileSync('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], {
@@ -579,11 +655,15 @@ function createEngineStartup({
               timeout: 3000,
               stdio: 'ignore',
             })
+          } else if (child.ownedProcessGroup) {
+            killProcess(-child.ownedProcessGroup, 'SIGKILL')
           }
         } catch {}
-        try {
-          child.kill('SIGKILL')
-        } catch {}
+        if (platform === 'win32') {
+          try {
+            child.kill('SIGKILL')
+          } catch {}
+        }
       }
     }
   }

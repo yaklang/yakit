@@ -15,6 +15,7 @@ const wrap = (json) => `<json-${MARKER}>\n${JSON.stringify(json)}\n</json-${MARK
 
 function fixture(options = {}) {
   const children = []
+  const processGroups = new Map()
   const clients = []
   const log = vi.fn()
   const notify = vi.fn()
@@ -31,6 +32,7 @@ function fixture(options = {}) {
       settings,
     })
     child.exit = (code = 0, signal = null) => {
+      processGroups.set(child.pid, false)
       child.exitCode = code
       child.signalCode = signal
       child.emit('exit', code, signal)
@@ -41,8 +43,25 @@ function fixture(options = {}) {
       return true
     })
     child.output = (text, stream = 'stdout') => child[stream].emit('data', Buffer.from(text))
+    child.exitParent = (code = 0, signal = null) => {
+      child.exitCode = code
+      child.signalCode = signal
+      child.emit('exit', code, signal)
+      child.emit('close', code, signal)
+    }
     children.push(child)
+    processGroups.set(child.pid, true)
     return child
+  })
+  const killProcess = vi.fn((pid, signal) => {
+    const groupId = Math.abs(pid)
+    if (!processGroups.get(groupId)) {
+      const error = new Error('process group not found')
+      error.code = 'ESRCH'
+      throw error
+    }
+    if (signal !== 0) children.find((child) => child.pid === groupId)?.kill(signal)
+    return true
   })
   const createClient = vi.fn((connection) => {
     const client = { connection, close: vi.fn(), call: { cancel: vi.fn() } }
@@ -62,13 +81,14 @@ function fixture(options = {}) {
     spawn,
     log,
     notify,
+    killProcess,
     // These children have synthetic PIDs. Never invoke the host's taskkill from a unit test.
     // Windows process-tree behavior is exercised separately with owned real processes.
     platform: 'linux',
     timeouts: { check: 1000, start: 1000, probe: 100, retry: 50 },
     ...options,
   })
-  return { manager, children, clients, log, notify, spawn, commitConnection }
+  return { manager, children, clients, processGroups, killProcess, log, notify, spawn, commitConnection }
 }
 
 describe('engine startup lifecycle', () => {
@@ -639,6 +659,61 @@ describe('engine startup lifecycle', () => {
     expect(execFile).toHaveBeenCalledOnce()
     await running
     expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('spawns an owned POSIX process group and waits for the whole group to exit', async () => {
+    const f = fixture()
+    const running = f.manager.start(params)
+    const child = f.children[0]
+    expect(child.settings.detached).toBe(true)
+    child.kill.mockImplementation(() => true)
+
+    const cancelling = f.manager.cancel()
+    child.exitParent(null, 'SIGTERM')
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(f.killProcess).toHaveBeenCalledWith(-child.pid, 'SIGTERM')
+    expect(f.killProcess).toHaveBeenCalledWith(-child.pid, 'SIGKILL')
+    expect(await Promise.race([cancelling.then(() => 'settled'), Promise.resolve('pending')])).toBe('pending')
+
+    f.processGroups.set(child.pid, false)
+    await vi.advanceTimersByTimeAsync(50)
+    expect((await running).status).toBe('cancelled')
+    expect(await cancelling).toEqual({ ok: true, canceled: 1, status: 'cancelled' })
+
+    const callsAfterExit = f.killProcess.mock.calls.length
+    f.processGroups.set(child.pid, true)
+    f.manager.killOnExit()
+    expect(f.killProcess).toHaveBeenCalledTimes(callsAfterExit)
+  })
+
+  it('reports cleanup failure when the POSIX group survives the four second deadline', async () => {
+    const f = fixture()
+    const running = f.manager.start(params)
+    const child = f.children[0]
+    child.kill.mockImplementation(() => true)
+
+    const cancelling = f.manager.cancel()
+    child.exitParent(null, 'SIGTERM')
+    await vi.advanceTimersByTimeAsync(4000)
+    expect(await running).toMatchObject({ ok: false, status: 'process_error' })
+    expect(await cancelling).toMatchObject({ ok: false, status: 'process_error' })
+
+    f.processGroups.set(child.pid, false)
+    expect((await f.manager.dispose()).ok).toBe(true)
+  })
+
+  it('uses only the owned POSIX group for the synchronous exit fallback', () => {
+    const f = fixture()
+    f.manager.start(params)
+    const child = f.children[0]
+    const externalGroupId = 99999
+    f.processGroups.set(externalGroupId, true)
+
+    f.manager.killOnExit()
+
+    expect(f.killProcess).toHaveBeenCalledWith(-child.pid, 'SIGKILL')
+    expect(f.killProcess.mock.calls.some(([pid]) => pid > 0)).toBe(false)
+    expect(f.killProcess.mock.calls.some(([pid]) => pid === -externalGroupId)).toBe(false)
   })
 })
 

@@ -102,6 +102,7 @@ vi.mock('../components/YakitLoading', () => ({
       <div data-testid="recovery-busy">{String(props.restartLoading)}</div>
       <button onClick={() => props.btnClickCallback('error')}>retry error</button>
       <button onClick={() => props.btnClickCallback('start_timeout')}>retry start timeout</button>
+      <button onClick={() => props.btnClickCallback('endpoint_unreachable')}>retry bind failure</button>
       <button onClick={() => props.btnClickCallback('port_occupied', { port: 9022 })}>switch port</button>
       <button onClick={() => props.setYaklangSpecifyVersion('v1.2.3')}>install version</button>
       <button onClick={() => props.btnClickCallback('remote')}>switch directly to remote</button>
@@ -286,6 +287,22 @@ describe('StartupPage owned-engine recovery', () => {
     expect(screen.queryByTestId('remote-engine')).toBeNull()
     expect(screen.getByTestId('status').textContent).toBe('check_error')
     expect(screen.getByTestId('check-log').textContent).toContain('StartupPage.stop_owned_engine_failed')
+    expect(mocks.emit).not.toHaveBeenCalled()
+  })
+
+  it('rechecks the engine after cleaning up a failed bind instead of starting with old credentials', async () => {
+    const cleanup = deferred<{ ok: true; canceled: number; status: 'cancelled' }>()
+    mocks.cancelAllTasks.mockReturnValue(cleanup.promise)
+    renderErrorPage()
+    fireEvent.click(screen.getByRole('button', { name: 'retry bind failure' }))
+    expect(mocks.localLink).not.toHaveBeenCalled()
+    expect(mocks.emit).not.toHaveBeenCalled()
+    cleanup.resolve({ ok: true, canceled: 1, status: 'cancelled' })
+    await act(async () => {
+      await cleanup.promise
+    })
+    expect(mocks.localInit).toHaveBeenCalledOnce()
+    expect(mocks.localLink).not.toHaveBeenCalled()
     expect(mocks.emit).not.toHaveBeenCalled()
   })
 

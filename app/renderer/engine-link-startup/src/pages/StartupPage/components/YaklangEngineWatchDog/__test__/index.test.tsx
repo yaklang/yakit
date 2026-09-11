@@ -234,6 +234,18 @@ describe('YaklangEngineWatchDog 组件测试', () => {
     })
   })
 
+  it('preserves a structured start bind failure for full check recovery', async () => {
+    vi.mocked(grpcStartLocalEngine).mockResolvedValueOnce({
+      ok: false,
+      status: 'endpoint_unreachable',
+      message: 'bind failed',
+    })
+    render(<YaklangEngineWatchDog {...props} />)
+    await act(async () => triggerEngineTest())
+    expect(props.setYakitStatus).toHaveBeenCalledExactlyOnceWith('endpoint_unreachable')
+    expect(props.onKeepaliveShouldChange).not.toHaveBeenCalled()
+  })
+
   describe('并发与取消', () => {
     it('连续点击启动只发出一次连接和启动请求', async () => {
       let finish!: () => void

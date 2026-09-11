@@ -1,7 +1,6 @@
 // A bounded subprocess fixture for the old/new CLI contract. No user home or database access.
 const { grpc, Yak } = require(process.env.YAKIT_TEST_GRPC_HELPER)
 const { spawn } = require('node:child_process')
-const { writeFileSync } = require('node:fs')
 const args = process.argv.slice(2)
 const port = Number(args[args.indexOf('--port') + 1])
 const password = args[args.indexOf('--local-password') + 1]
@@ -17,14 +16,22 @@ function writeCheck(data) {
   })
 }
 
+function spawnHelper(ignoreTerm = false) {
+  const descendantPath = JSON.stringify(process.env.YAKIT_TEST_DESCENDANT)
+  spawn(
+    process.execPath,
+    [
+      '-e',
+      `${ignoreTerm ? "process.on('SIGTERM', () => {})" : ''}; require('node:fs').writeFileSync(${descendantPath}, String(process.pid)); setTimeout(() => process.exit(91), 15000)`,
+    ],
+    { stdio: 'ignore', windowsHide: true },
+  )
+}
+
 if (scenario === 'hang') {
   process.stdout.write('fixture waiting\n')
-} else if (scenario === 'tree') {
-  const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 12000)'], {
-    stdio: 'ignore',
-    windowsHide: true,
-  })
-  writeFileSync(process.env.YAKIT_TEST_DESCENDANT, String(child.pid))
+} else if (scenario === 'tree' || scenario === 'tree-ignore-term') {
+  spawnHelper(scenario === 'tree-ignore-term')
   process.stdout.write('fixture tree ready\n')
 } else if (scenario === 'crash') {
   process.exitCode = 7
@@ -45,6 +52,7 @@ if (scenario === 'hang') {
   })
 } else {
   if (args[0] !== 'grpc' || !password || args.includes('--transport')) process.exit(8)
+  if (scenario === 'success-parent-exit-tree') spawnHelper()
   const server = new grpc.Server()
   server.addService(Yak.service, {
     Echo(call, done) {
@@ -77,5 +85,6 @@ if (scenario === 'hang') {
       process.stdout.write(`dy ${event}\r\n`)
     }
     process.stdout.write(`{"secret":"${password}"}\n`)
+    if (scenario === 'success-parent-exit-tree') setTimeout(() => process.exit(0), 750)
   })
 }

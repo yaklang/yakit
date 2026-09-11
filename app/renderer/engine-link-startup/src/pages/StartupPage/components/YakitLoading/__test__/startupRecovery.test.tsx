@@ -65,6 +65,12 @@ describe('startup recovery buttons', () => {
     },
   )
 
+  it('a start bind failure retains the full check recovery action', () => {
+    const { callback } = show(engineFailureStatus('endpoint_unreachable', 'start')!)
+    fireEvent.click(screen.getByRole('button', { name: 'YakitLoading.retry' }))
+    expect(callback).toHaveBeenCalledExactlyOnceWith('endpoint_unreachable')
+  })
+
   it('a start timeout can retry with the existing credentials', () => {
     const { callback } = show('start_timeout')
     fireEvent.click(screen.getByRole('button', { name: 'YakitLoading.retry' }))
