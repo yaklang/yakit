@@ -67,6 +67,7 @@
     "pending_verify": "待驗證",
     "confirmed": "確認",
     "repaired": "已修復",
+    "false_positive": "誤報",
     "closed": "關閉",
     "verifier": "驗證人",
     "verifier_required": "請選擇驗證人",

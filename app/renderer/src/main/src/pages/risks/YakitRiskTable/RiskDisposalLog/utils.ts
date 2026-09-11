@@ -19,8 +19,7 @@ const parseFragmentUploadUrl = (res: UploadImgApiResponse | undefined): string =
     if (url) return url
   }
   const data = res?.data
-  const message =
-    res?.message || (typeof data === 'object' && data ? data.reason : undefined) || 'unknown'
+  const message = res?.message || (typeof data === 'object' && data ? data.reason : undefined) || 'unknown'
   throw new Error(String(message))
 }
 
@@ -69,7 +68,9 @@ const mapCommentDetail = (item: CommentDetailExtra): DisposalLogItem => {
 }
 
 /** 同页按 parentId 回填父评论正文 */
-const enrichParentComments = <T extends { id: number; description?: string; parentComment?: { id: number; description: string } }>(
+const enrichParentComments = <
+  T extends { id: number; description?: string; parentComment?: { id: number; description: string } },
+>(
   list: T[],
 ): T[] => {
   const byId = new Map(list.map((item) => [item.id, item]))
@@ -114,9 +115,7 @@ export const apiGetDisposalLogs = (params: {
 }
 
 /** 发布/回复评论 → POST /risk/httpflow/comment */
-export const apiPublishDisposalComment = (
-  data: PublishDisposalCommentRequest,
-): Promise<API.ActionSucceeded> => {
+export const apiPublishDisposalComment = (data: PublishDisposalCommentRequest): Promise<API.ActionSucceeded> => {
   return new Promise((resolve, reject) => {
     const payload: API.CommentRequest = {
       hash: data.risk_hash,
@@ -137,12 +136,12 @@ export const apiPublishDisposalComment = (
   })
 }
 
-/** 删除评论 → POST /risk/httpflow/comment/delete */
+/** 删除评论 → DELETE /risk/httpflow/comment */
 export const apiDeleteDisposalComment = (logId: number): Promise<API.ActionSucceeded> => {
   return new Promise((resolve, reject) => {
     NetWorkApi<API.CommentDeleteRequest, API.ActionSucceeded>({
-      method: 'post',
-      url: 'risk/httpflow/comment/delete',
+      method: 'delete',
+      url: 'risk/httpflow/comment',
       data: { id: logId },
     })
       .then(resolve)

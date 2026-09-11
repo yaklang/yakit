@@ -67,6 +67,7 @@
     "pending_verify": "Pending Verification",
     "confirmed": "Confirmed",
     "repaired": "Fixed",
+    "false_positive": "False Positive",
     "closed": "Closed",
     "verifier": "Verifier",
     "verifier_required": "Please select a verifier",

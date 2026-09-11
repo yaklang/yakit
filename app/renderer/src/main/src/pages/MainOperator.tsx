@@ -483,7 +483,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
   /** 消息中心 相关逻辑 */
   const [messageCenterShow, setMessageCenterShow] = useState<boolean>(false)
-  const openAllMessageNotificationFun = useMemoizedFn(() => {
+  const [messageCenterChannel, setMessageCenterChannel] = useState<'web' | 'plugin'>('web')
+  const openAllMessageNotificationFun = useMemoizedFn((channel?: string) => {
+    if (channel === 'web' || channel === 'plugin') {
+      setMessageCenterChannel(channel)
+    }
     setChatShow(false)
     setMessageCenterShow(true)
   })
@@ -732,7 +736,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
           {messageCenterShow && (
             <Suspense fallback={null}>
-              <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow} />
+              <MessageCenterModal
+                visible={messageCenterShow}
+                setVisible={setMessageCenterShow}
+                initialChannel={messageCenterChannel}
+              />
             </Suspense>
           )}
 

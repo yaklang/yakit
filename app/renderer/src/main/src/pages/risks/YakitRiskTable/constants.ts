@@ -43,6 +43,7 @@ export const DISPOSAL_STATUS_OPTIONS = [
   { value: '待验证', labelKey: 'YakitRiskEditForm.pending_verify' },
   { value: '确认', labelKey: 'YakitRiskEditForm.confirmed' },
   { value: '已修复', labelKey: 'YakitRiskEditForm.repaired' },
+  { value: '误报', labelKey: 'YakitRiskEditForm.false_positive' },
   { value: '关闭', labelKey: 'YakitRiskEditForm.closed' },
 ] as const
 

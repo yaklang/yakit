@@ -666,6 +666,10 @@ export declare namespace API {
      * 等级评分（小数）
      */
     severityScore?: number
+    /**
+     * 处置原因
+     */
+    tagReason?: string
   }
   export interface RiskTypes {
     risk_type: string
@@ -752,6 +756,10 @@ export declare namespace API {
      * 等级评分（小数）
      */
     severityScore?: number
+    /**
+     * 处置原因
+     */
+    tagReason?: string
   }
   export interface RiskFeedBackResponse extends Paging {
     data: RiskFeedBackData[]
@@ -1718,10 +1726,6 @@ export declare namespace API {
     beforeHttpFlowUpdatedAt?: number
     afterHttpFlowUpdatedAt?: number
     departmentName?: string
-  }
-  export interface HTTPFlowUpdateTagsRequest extends HTTPFlowWhere {
-    deleteAll?: boolean
-    hash?: string
     /**
      * 问题类型
      */
@@ -1734,6 +1738,22 @@ export declare namespace API {
      * 处置状态
      */
     status?: string
+  }
+  export interface HTTPFlowUpdateTagsRequest extends HTTPFlowWhere {
+    deleteAll?: boolean
+    hash?: string
+    /**
+     * 问题类型
+     */
+    setIssueType?: string
+    /**
+     * 严重程度
+     */
+    setSeverity?: string
+    /**
+     * 处置状态
+     */
+    setStatus?: string
     statusReason?: string
   }
   export interface HTTPFlowRequest {

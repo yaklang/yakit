@@ -40,22 +40,22 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
         Token: token,
       }
       if (batch) {
-        if (value.IssueType) payload.IssueType = value.IssueType
-        if (value.Severity) payload.Severity = value.Severity
-        if (value.Status) payload.Status = value.Status
+        if (value.IssueType) payload.SetIssueType = value.IssueType
+        if (value.Severity) payload.SetSeverity = value.Severity
+        if (value.Status) payload.SetStatus = value.Status
         if (value.StatusReason?.trim()) payload.StatusReason = value.StatusReason.trim()
       } else {
-        payload.IssueType = value.IssueType
-        payload.Severity = value.Severity
-        payload.Status = value.Status
+        payload.SetIssueType = value.IssueType
+        payload.SetSeverity = value.Severity
+        payload.SetStatus = value.Status
         payload.StatusReason = value.StatusReason?.trim() || undefined
       }
       apiBatchSetHTTPFlowIssueFields(payload).then(() => {
         const patch: FlowMarkPatchPayload = {
           Ids: ids,
-          ...(payload.IssueType !== undefined ? { IssueType: payload.IssueType } : {}),
-          ...(payload.Severity !== undefined ? { Severity: payload.Severity } : {}),
-          ...(payload.Status !== undefined ? { Status: payload.Status } : {}),
+          ...(payload.SetIssueType !== undefined ? { IssueType: payload.SetIssueType } : {}),
+          ...(payload.SetSeverity !== undefined ? { Severity: payload.SetSeverity } : {}),
+          ...(payload.SetStatus !== undefined ? { Status: payload.SetStatus } : {}),
           ...(payload.StatusReason !== undefined ? { StatusReason: payload.StatusReason } : {}),
         }
         onSuccess?.(patch)
