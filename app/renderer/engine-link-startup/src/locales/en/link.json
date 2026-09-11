@@ -1,4 +1,24 @@
 {
+  "EngineFailure": {
+    "port_occupied": "The port is in use. Choose another port or inspect the process using it.",
+    "port_denied": "The system denied access to this port. Choose another port or check system policies.",
+    "endpoint_unreachable": "The engine could not listen on the endpoint. Check the port settings and retry.",
+    "database_error": "Database initialization failed. Save the logs and back up your data before attempting a repair.",
+    "build_yak_error": "The engine service could not be created. Check the logs or reinstall the engine.",
+    "engine_init_failed": "Engine initialization failed. Check the logs and run the engine check again.",
+    "dial_error": "The engine connection failed. Check the address and credentials, then retry.",
+    "call_error": "Engine authentication failed. Check the connection credentials again.",
+    "timeout": "Timed out waiting for the engine. Save the logs and retry; data migration may take longer.",
+    "antivirus_blocked": "The engine exited without diagnostic output. Security software may have blocked it, or the process may have failed. Check security-software events and engine logs, verify the file is trusted, then retry.",
+    "old_version": "This engine does not support secure local startup. Choose another engine version or update it.",
+    "protocol_error": "The engine returned invalid connection information. Run the engine check again or update the engine.",
+    "process_error": "The engine process did not finish normally. Save the engine logs and exit code, check the file and permissions, then retry.",
+    "engine_exited": "The engine exited unexpectedly. Check its logs and retry."
+  },
+  "UIEngineList": {
+    "switch_engine": "Switch engine",
+    "authenticated_switch_required": "A process listing cannot verify engine credentials, so direct switching is unavailable. Enter the address and password in the connection settings instead. The current engine will not be closed automatically."
+  },
   "StartupPage": {
     "born_for_cybersecurity": "Born for cybersecurity",
     "checking_environment": "Checking environment...",
@@ -41,6 +61,7 @@
     "remote_connection_disconnected": "Remote connection disconnected",
     "engine_reconnecting": "Engine connection failed, retrying...",
     "manual_disconnect_triggered": "Manual disconnect triggered",
+    "stop_owned_engine_failed": "Unable to stop this Yakit instance's engine process. Retry after checking the engine logs.",
     "fix_database_unexpected_console": "Unexpected error while repairing database: {{error}}",
     "reclaim_database_unexpected_console": "Unexpected error during reclaim: {{error}}",
     "no_image": "No image"
@@ -74,12 +95,11 @@
     "try_start_local_process": "Attempting to start local process",
     "remote_mode_no_auto_start": "Remote mode does not auto-start local engine",
     "start_local_engine_with_port": "Starting local engine with standard permissions on port {{port}}",
-    "engine_start_failed": "Engine start failed: {{status}}: {{message}}",
     "engine_start_interrupted": "Engine start command interrupted or unexpected error: {{error}}",
     "engine_ready_to_connect": "Engine is ready to connect",
     "engine_not_fully_started": "Engine not fully started, unable to connect. Failed attempts: {{count}}",
-    "command_timeout_retry": "Command timed out. Click to retry",
-    "engine_start_interrupted_check_log": "Engine start command interrupted or unexpected error. Check logs for details..."
+    "engine_start_interrupted_check_log": "Engine start command interrupted or unexpected error. Check logs for details...",
+    "startup_failed": "Engine startup failed. Retry or view the logs."
   },
   "YakitLoading": {
     "agreement_check_prefix": "I agree to the",
@@ -201,19 +221,12 @@
     }
   },
   "LocalEngine": {
-    "checking_secret_password_mode": "Checking random password mode...",
-    "secret_password_check_passed": "Check passed, random password mode is supported",
-    "command_timeout_check_log": "Command timed out. Check logs for details...",
-    "engine_connect_timeout_check_log": "Engine connection timed out. Check logs for details...",
+    "migration_wait_hint": "The engine is still preparing. Upgrading across major versions may take extra time to migrate the database, usually once per major-version upgrade. Please wait; this stage allows up to 180 seconds. If it times out, check the logs and retry.",
+    "checking_secret_password_mode": "Checking engine environment...",
+    "secret_password_check_passed": "Engine environment check passed",
     "engine_version_low_reset": "Engine version is outdated. Click to reset engine version...",
     "engine_version_low_download": "Engine version is outdated. Click to download engine update...",
-    "port_unavailable_check_log": "Port unavailable. Check log errors for details...",
-    "antivirus_blocked_check_log": "Blocked by antivirus. Add the app to the allowlist and restart...",
     "engine_connect_error_reset": "Engine connection failed. Click to reset engine version...",
-    "database_error_check_log": "Local database error detected. Click to repair...",
-    "cannot_start_contact_staff": "Unable to start. Send logs to support for assistance...",
-    "failure_reason": "[Reason]: {{status}}: {{message}}",
-    "none": "None",
     "dev_env_direct_connect": "Development environment, connecting engine directly",
     "checking_software_update": "Checking for software updates...",
     "skip_check_hint": "Check skipped (can be enabled in software update settings)",
@@ -233,7 +246,8 @@
     "abnormal_cannot_verify_source": "Abnormal error, unable to verify source",
     "preparing_start_connect_engine": "Preparing to start engine connection",
     "waiting_engine_fully_started": "Waiting for the engine to fully start",
-    "database_initializing": "Database is initializing..."
+    "database_initializing": "Database is initializing...",
+    "check_failed": "Engine check failed. Retry or view the logs."
   },
   "EngineLog": {
     "welcome": "Welcome to {{name}}!",

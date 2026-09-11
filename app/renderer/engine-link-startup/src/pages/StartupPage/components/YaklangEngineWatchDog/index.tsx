@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import type { YakitStatusType, YaklangEngineWatchDogCredential } from '../../types'
-import { useDebounceEffect, useMemoizedFn } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import { debugToPrintLog } from '@/utils/logCollection'
 import { yakitNotify } from '@/utils/notification'
 import { __PLATFORM__, FetchSoftwareVersion, isEnpriTraceAgent, toEngineHandshakeName } from '@/utils/envfile'
@@ -9,6 +9,7 @@ import { grpcStartLocalEngine, isEngineConnectionAlive } from '../../grpc'
 import { outputToWelcomeConsole } from '../../utils'
 import { yakitEngine } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { engineFailureMessage, engineFailureStatus } from '../../engineFailure'
 
 export interface YaklangEngineWatchDogProps {
   credential: YaklangEngineWatchDogCredential
@@ -26,150 +27,91 @@ export interface YaklangEngineWatchDogProps {
 }
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['link'])
-  const yakitStatusRef = useRef<YakitStatusType>(props.yakitStatus)
-  // 是否自动重启引擎进程
-  const [autoStartProgress, setAutoStartProgress] = useState(false)
-  // 是否正在重启引擎进程
-  const startingUp = useRef<boolean>(false)
+  const { t, i18n } = useI18nNamespaces(['link'])
+  const yakitStatusRef = useRef(props.yakitStatus)
+  const credentialRef = useRef(props.credential)
+  const mounted = useRef(true)
+  const startingUp = useRef(false)
+  const pendingCredential = useRef(props.credential)
   const latestStartCallIdRef = useRef(0)
+  yakitStatusRef.current = props.yakitStatus
+  credentialRef.current = props.credential
 
   useEffect(() => {
-    yakitStatusRef.current = props.yakitStatus
-  }, [props.yakitStatus])
-
-  useEffect(() => {
-    if (!props.engineLink) setAutoStartProgress(false)
-  }, [props.engineLink])
-
-  /** 接受连接引擎的指令 */
-  useEffect(() => {
-    emiter.on('startAndCreateEngineProcess', () => {
-      engineTest()
-    })
+    mounted.current = true
     return () => {
-      emiter.off('startAndCreateEngineProcess')
+      mounted.current = false
+      latestStartCallIdRef.current++
     }
   }, [])
-
-  /** 引擎信息认证 */
-  const engineTest = useMemoizedFn(() => {
-    debugToPrintLog(`[IFNO] engine-test mode:${props.credential.Mode} port:${props.credential.Port}`)
-    // 重置状态
-    setAutoStartProgress(false)
-
-    const mode = props.credential.Mode
-    if (!mode) {
-      return
+  useEffect(() => {
+    if (props.yakitStatus === 'break') {
+      latestStartCallIdRef.current++
+      startingUp.current = false
     }
+  }, [props.yakitStatus])
 
-    if (props.credential.Port <= 0) {
-      outputToWelcomeConsole(t('YaklangEngineWatchDog.port_empty_cannot_connect'))
-      return
-    }
-
-    /**
-     * 认证要小心做，拿到准确的信息之后，尝试连接一次，确定连接成功之后才可以开始后续步骤
-     * 当然引擎没有启动的时候无法连接成功，要准备根据引擎状态选择合适的方式启动引擎
-     */
+  const engineTest = useMemoizedFn(async () => {
+    const credential = props.credential
+    if (!credential.Mode || credential.Port <= 0 || yakitStatusRef.current === 'break') return
+    if (startingUp.current && pendingCredential.current === credential) return
+    const callId = ++latestStartCallIdRef.current
+    pendingCredential.current = credential
+    startingUp.current = true
+    const isCurrent = () =>
+      mounted.current &&
+      callId === latestStartCallIdRef.current &&
+      credentialRef.current === credential &&
+      yakitStatusRef.current !== 'break'
     outputToWelcomeConsole(t('YaklangEngineWatchDog.start_connecting_core_engine'))
-    debugToPrintLog(`------ 测试目标引擎是否存在进程存活情况------`)
-    yakitEngine
-      .connectYaklangEngine(props.credential)
-      .then(() => {
-        debugToPrintLog(`------ 目标引擎进程存活 ------`)
-        outputToWelcomeConsole(t('YaklangEngineWatchDog.connect_core_engine_success'))
-        if (props.onKeepaliveShouldChange) {
-          props.onKeepaliveShouldChange(true)
+    try {
+      try {
+        await yakitEngine.connectYaklangEngine(credential)
+        if (isCurrent()) props.onKeepaliveShouldChange?.(true)
+        return
+      } catch {
+        if (!isCurrent()) return
+        if (credential.Mode === 'remote') {
+          yakitNotify('error', t('EngineFailure.dial_error'))
+          return
         }
+      }
+      outputToWelcomeConsole(t('YaklangEngineWatchDog.start_local_engine_with_port', { port: credential.Port }))
+      const result = await grpcStartLocalEngine({
+        port: credential.Port,
+        password: credential.Password,
+        version: toEngineHandshakeName(__PLATFORM__),
+        isEnpriTraceAgent: isEnpriTraceAgent(),
+        softwareVersion: FetchSoftwareVersion(),
       })
-      .catch((e) => {
-        debugToPrintLog(`------ 目标引擎进程不存在 ------`)
-        outputToWelcomeConsole(t('YaklangEngineWatchDog.engine_not_connected_try_start'))
-        switch (mode) {
-          case 'local':
-            outputToWelcomeConsole(t('YaklangEngineWatchDog.try_start_local_process'))
-            setAutoStartProgress(true)
-            return
-          case 'remote':
-            outputToWelcomeConsole(t('YaklangEngineWatchDog.remote_mode_no_auto_start'))
-            yakitNotify('error', e + '')
-            return
-        }
-      })
+      if (!isCurrent()) return
+      if (result.ok && result.status === 'success') {
+        debugToPrintLog('[INFO] 本地引擎认证连接成功')
+        props.onKeepaliveShouldChange?.(true)
+      } else {
+        const status = engineFailureStatus(result.status, 'start')
+        if (!status) return
+        const message = engineFailureMessage(result, i18n.language, t('YaklangEngineWatchDog.startup_failed'), t)
+        outputToWelcomeConsole(message)
+        props.setCheckLog([message])
+        props.setYakitStatus(status)
+      }
+    } catch (error) {
+      if (!isCurrent()) return
+      props.setCheckLog([t('YaklangEngineWatchDog.startup_failed')])
+      props.setYakitStatus('start_timeout')
+    } finally {
+      if (callId === latestStartCallIdRef.current) startingUp.current = false
+    }
   })
 
-  useDebounceEffect(
-    () => {
-      const mode = props.credential.Mode
-
-      if (!mode) {
-        return
-      }
-      if (mode === 'remote') {
-        return
-      }
-      if (props.credential.Port <= 0) {
-        return
-      }
-      if (!autoStartProgress) {
-        // 不启动进程的话，就直接退出
-        return
-      }
-      debugToPrintLog(`[INFO] 尝试启动新的引擎进程 port:${props.credential.Port}`)
-      // 只有普通模式才涉及到引擎启动的流程
-      outputToWelcomeConsole(t('YaklangEngineWatchDog.start_local_engine_with_port', { port: props.credential.Port }))
-
-      if (mode === 'local') {
-        if (!startingUp.current) {
-          const callId = ++latestStartCallIdRef.current
-          grpcStartLocalEngine({
-            port: props.credential.Port,
-            password: props.credential.Password,
-            version: toEngineHandshakeName(__PLATFORM__),
-            isEnpriTraceAgent: isEnpriTraceAgent(),
-            softwareVersion: FetchSoftwareVersion(),
-          })
-            .then((res) => {
-              if (yakitStatusRef.current === 'break') return
-
-              if (res.ok && res.status === 'success') {
-                debugToPrintLog(`[INFO] 本地新引擎进程启动成功`)
-                if (props.onKeepaliveShouldChange) {
-                  props.onKeepaliveShouldChange(true)
-                }
-              } else {
-                if (res.status === 'timeout') {
-                  props.setCheckLog([t('YaklangEngineWatchDog.command_timeout_retry')])
-                  props.setYakitStatus('start_timeout')
-                } else {
-                  outputToWelcomeConsole(
-                    t('YaklangEngineWatchDog.engine_start_failed', {
-                      status: res.status,
-                      message: res.message,
-                    }),
-                  )
-                }
-                debugToPrintLog(`[ERROR] 本地新引擎进程启动失败: ${res.status + ':' + res.message}`)
-              }
-              startingUp.current = false
-            })
-            .catch((error) => {
-              // 旧调用直接跳过
-              if (callId !== latestStartCallIdRef.current) return
-              // 如果手动中断 显示中断界面 意外情况暂时不做处理
-              outputToWelcomeConsole(t('YaklangEngineWatchDog.engine_start_interrupted', { error }))
-              props.setCheckLog([t('YaklangEngineWatchDog.engine_start_interrupted_check_log')])
-            })
-        }
-      }
-    },
-    [autoStartProgress, props.onKeepaliveShouldChange, props.credential],
-    {
-      leading: false,
-      wait: 1000,
-    },
-  )
+  useEffect(() => {
+    const start = () => {
+      void engineTest()
+    }
+    emiter.on('startAndCreateEngineProcess', start)
+    return () => emiter.off('startAndCreateEngineProcess', start)
+  }, [engineTest])
 
   /**
    * 引擎连接尝试逻辑
@@ -185,15 +127,17 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
     }
     debugToPrintLog(`------ 开始启动引擎进程探活逻辑------`)
 
-    let count = 0
+    let disposed = false
+    let pending = false
     let failedCount = 0
     let notified = false
 
     const connect = () => {
-      count++
+      if (pending || disposed) return
+      pending = true
       isEngineConnectionAlive()
         .then(() => {
-          if (!keepalive) {
+          if (disposed) {
             return
           }
           if (!notified) {
@@ -205,7 +149,8 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             props.onReady()
           }
         })
-        .catch((e) => {
+        .catch(() => {
+          if (disposed) return
           failedCount++
           if (failedCount > 0 && failedCount <= 10) {
             outputToWelcomeConsole(t('YaklangEngineWatchDog.engine_not_fully_started', { count: failedCount }))
@@ -214,10 +159,14 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             props.onFailed(failedCount)
           }
         })
+        .finally(() => {
+          pending = false
+        })
     }
     connect()
     const id = setInterval(connect, 3000)
     return () => {
+      disposed = true
       clearInterval(id)
     }
   }, [props.keepalive, props.onReady, props.onFailed])

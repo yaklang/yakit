@@ -214,7 +214,18 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
       )
     }
 
-    if (yakitStatus === 'check_timeout') {
+    if (
+      [
+        'check_timeout',
+        'check_error',
+        'unknown',
+        'unknownReason',
+        'process_error',
+        'exception',
+        'call_error',
+        'antivirus_blocked',
+      ].includes(yakitStatus)
+    ) {
       return (
         <>
           <YakitButton
@@ -262,7 +273,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             className={styles['btn-style']}
             size="large"
             loading={restartLoading}
-            onClick={() => btnClickCallback('port_occupied_prev', { killCurProcess: true })}
+            onClick={() => btnClickCallback('check_timeout')}
           >
             {t('YakitLoading.reconnect')}
           </YakitButton>
@@ -298,7 +309,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
       )
     }
 
-    if (yakitStatus === 'allow-secret-error') {
+    if (yakitStatus === 'allow-secret-error' || yakitStatus === 'build_yak_error' || yakitStatus === 'dial_error') {
       return (
         <>
           <YakitButton
@@ -321,6 +332,50 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             size="large"
             loading={restartLoading}
             onClick={() => btnClickCallback('start_timeout')}
+          >
+            {t('YakitLoading.retry')}
+          </YakitButton>
+        </>
+      )
+    }
+
+    if (yakitStatus === 'port_denied') {
+      return (
+        <>
+          <YakitButton
+            className={styles['btn-style']}
+            size="large"
+            loading={restartLoading}
+            onClick={() => btnClickCallback('port_denied')}
+          >
+            {t('YakitLoading.retry')}
+          </YakitButton>
+          <YakitButton
+            className={styles['btn-style']}
+            size="large"
+            type="secondary2"
+            loading={restartLoading}
+            onClick={() => btnClickCallback('port_occupied_prev')}
+          >
+            {t('YakitLoading.switch_port')}
+          </YakitButton>
+        </>
+      )
+    }
+
+    if (
+      yakitStatus === 'endpoint_unreachable' ||
+      yakitStatus === 'engine_exited' ||
+      yakitStatus === 'engine_init_failed' ||
+      yakitStatus === 'engine_failed'
+    ) {
+      return (
+        <>
+          <YakitButton
+            className={styles['btn-style']}
+            size="large"
+            loading={restartLoading}
+            onClick={() => btnClickCallback(yakitStatus)}
           >
             {t('YakitLoading.retry')}
           </YakitButton>
@@ -575,6 +630,22 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
       )
     }
 
+    // Active startup states must not offer a second concurrent start.
+    if (yakitStatus && !['ready', 'init', 'link', 'reclaimDatabaseSpace_start'].includes(yakitStatus)) {
+      return (
+        <>
+          <YakitButton
+            className={styles['btn-style']}
+            size="large"
+            loading={restartLoading}
+            onClick={() => btnClickCallback('check_timeout')}
+          >
+            {t('YakitLoading.retry')}
+          </YakitButton>
+        </>
+      )
+    }
+
     return null
   }, [yakitStatus, restartLoading, engineMode, checkStatus, buildInEngineVersion, dbPathKey, countdown, i18nRefresh])
 
@@ -584,6 +655,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     }
     const statusArr: YakitStatusType[] = [
       'check_timeout',
+      'check_error',
       'old_version',
       'skipAgreement_InstallNetWork',
       'skipAgreement_Install',
@@ -597,6 +669,20 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
       'allow-secret-error',
       'check_yak_version_error',
       'start_timeout',
+      'port_denied',
+      'endpoint_unreachable',
+      'engine_exited',
+      'engine_init_failed',
+      'engine_failed',
+      'timeout',
+      'process_error',
+      'exit',
+      'build_yak_error',
+      'dial_error',
+      'call_error',
+      'unknownReason',
+      'unknown',
+      'exception',
       'error',
       'break',
     ]
@@ -769,7 +855,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                   {unLinkStatus && (
                     <div className={styles['more-version-btn']}>
                       <YakitPopover
-                        open={moreVersionPopShow}
+                        open={!restartLoading && moreVersionPopShow}
                         classNames={{ root: styles['more-versions-popover'] }}
                         placement="topLeft"
                         trigger="click"
@@ -777,16 +863,23 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                           <MoreYaklangVersion
                             moreYaklangVersionList={moreYaklangVersionList}
                             onClosePop={(visible, version) => {
+                              if (restartLoading) return
                               setMoreVersionPopShow(visible)
                               setYaklangSpecifyVersion(version)
                             }}
                           />
                         }
                         onOpenChange={(visible) => {
+                          if (restartLoading) return
                           setMoreVersionPopShow(visible)
                         }}
                       >
-                        <span className={classNames(styles['primary-btn'])}>
+                        <span
+                          data-testid="engine-more-versions"
+                          className={classNames(styles['primary-btn'], {
+                            [styles['primary-btn-disable']]: restartLoading,
+                          })}
+                        >
                           {t('YakitLoading.more_engine_versions')}
                         </span>
                       </YakitPopover>

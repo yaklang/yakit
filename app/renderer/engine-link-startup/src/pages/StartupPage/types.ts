@@ -36,17 +36,32 @@ export type YakitStatusType =
   | 'init' // 初始
   | 'install' // 解压内置引擎
   | 'installNetWork' // 初始内置引擎不存在，联网安装
+  | 'check_error' // 检查失败，重试完整检查流程
   | 'check_timeout' // 引擎check超时
   | 'old_version' // 检查随机密码模式失败(引擎版本低)
   | 'skipAgreement_InstallNetWork' // 下载yak引擎 不需要勾选用户协议
   | 'skipAgreement_Install' // 重置yak引擎 不需要勾选用户协议
   | 'port_occupied_prev' // 端口被占用前操作
   | 'port_occupied' // 端口被占用
+  | 'port_denied' // 端口被系统策略阻止(权限不足)
+  | 'endpoint_unreachable' // 网络监听失败(其他原因)
   | 'database_error' // 数据库错误
   | 'fix_database_timeout' // 数据库修复超时
   | 'fix_database_error' // 数据库修复失败
   | 'antivirus_blocked' // 检查随机密码模式失败(杀软)
   | 'allow-secret-error' // 检查随机密码模式失败(未知)
+  | 'build_yak_error' // 引擎服务构建失败
+  | 'dial_error' // gRPC Dial 失败
+  | 'call_error' // 认证或版本校验失败
+  | 'engine_exited' // 引擎服务异常退出
+  | 'engine_init_failed' // 引擎初始化失败
+  | 'engine_failed' // 引擎启动失败(未分类)
+  | 'timeout' // 引擎检查超时
+  | 'process_error' // 引擎进程启动失败
+  | 'exception' // 引擎检查异常
+  | 'unknownReason' // 未知原因失败
+  | 'unknown' // 未知错误
+  | 'exit' // 引擎进程提前退出
   | 'update_yakit' // 检测到新版yakit
   | 'update_yak' // 检测到新版yak
   | 'check_yak_version_error' // 检测新版yak出错
@@ -127,3 +142,7 @@ export interface TypeCallbackExtra {
   message?: string
   dbPath?: string[]
 }
+
+export type CancelTasksResult =
+  | { ok: true; canceled: number; status: 'cancelled' }
+  | { ok: false; canceled: number; status: 'process_error'; message: string }

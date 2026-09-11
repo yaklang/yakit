@@ -36,6 +36,10 @@ export interface AllowSecretLocalJson {
   address: string
   secret: string
   version: string
+  phase?: string
+  elapsedMs?: number
+  phaseI18n?: { zh: string; en: string } | null
+  reasonI18n?: { zh: string; en: string } | null
 }
 
 export interface LocalLinkParams {
@@ -57,14 +61,33 @@ interface FixupDatabaseJson {
   path: string[]
   info: string
 }
+export interface EngineEvent {
+  type: 'ready' | 'failed' | 'log_ok'
+  schemaVersion?: number
+  address?: string
+  transport?: string
+  instanceId?: string
+  engineVersion?: string
+  phase?: string
+  reason?: string
+  reasonCode?: string
+  elapsedMs?: number
+  version?: string
+  phaseI18n?: { zh: string; en: string } | null
+  reasonI18n?: { zh: string; en: string } | null
+}
+
 export interface ExecResult {
   ok: boolean
   status: string
+  stage?: 'check' | 'start' | 'connect'
   message: string
+  engineEvent?: EngineEvent | null
 }
 
 export interface AllowSecretLocalExecResult extends ExecResult {
   json: null | AllowSecretLocalJson
+  engineEvent?: EngineEvent | null
 }
 
 export interface FixupDatabaseExecResult extends ExecResult {

@@ -1,4 +1,24 @@
 {
+  "EngineFailure": {
+    "port_occupied": "連接埠被占用，請切換連接埠或檢查占用程序。",
+    "port_denied": "系統拒絕使用此連接埠，請切換連接埠或檢查系統原則。",
+    "endpoint_unreachable": "引擎監聽失敗，請檢查連接埠設定後重試。",
+    "database_error": "資料庫初始化失敗，請先保留日誌並備份資料，再嘗試修復。",
+    "build_yak_error": "引擎服務建立失敗，請查看日誌或重新安裝引擎。",
+    "engine_init_failed": "引擎初始化失敗，請查看日誌並重新檢查引擎。",
+    "dial_error": "引擎連線失敗，請檢查位址與驗證資訊後重試。",
+    "call_error": "引擎驗證失敗，請重新檢查連線。",
+    "timeout": "等待引擎逾時，請保留日誌並重試；資料遷移可能需要較長時間。",
+    "antivirus_blocked": "引擎未輸出診斷資訊便結束，可能遭安全軟體攔截，也可能是程序異常。請檢查攔截記錄與引擎日誌，確認檔案可信後重試。",
+    "old_version": "目前引擎不支援安全本機啟動，請選擇其他引擎版本或更新引擎。",
+    "protocol_error": "引擎傳回無效的連線資訊，請重新檢查或更新引擎。",
+    "process_error": "引擎程序未正常完成，請保留引擎日誌與結束代碼，檢查檔案和權限後重試。",
+    "engine_exited": "引擎程序意外結束，請查看引擎日誌並重試。"
+  },
+  "UIEngineList": {
+    "switch_engine": "切換引擎",
+    "authenticated_switch_required": "程序清單無法驗證引擎的驗證資訊，暫不支援直接切換。請在連線設定中填入位址與密碼後連線；目前引擎不會被自動關閉。"
+  },
   "StartupPage": {
     "born_for_cybersecurity": "為網路安全而生",
     "checking_environment": "正在進行環境檢查...",
@@ -41,6 +61,7 @@
     "remote_connection_disconnected": "遠端連接已斷開",
     "engine_reconnecting": "引擎連接未成功, 正在嘗試重連",
     "manual_disconnect_triggered": "手動觸發中斷連接",
+    "stop_owned_engine_failed": "無法停止目前 Yakit 實例的引擎進程，請查看引擎日誌後重試",
     "fix_database_unexpected_console": "修復資料庫出現意外情況：{{error}}",
     "reclaim_database_unexpected_console": "回收出現意外情況：{{error}}",
     "no_image": "暫無圖片"
@@ -74,12 +95,11 @@
     "try_start_local_process": "嘗試啟動本機進程",
     "remote_mode_no_auto_start": "遠端模式不自動啟動本機引擎",
     "start_local_engine_with_port": "開始以普通權限啟動本機引擎進程，本機埠為: {{port}}",
-    "engine_start_failed": "引擎啟動失敗:{{status}}:{{message}}",
     "engine_start_interrupted": "引擎啟動命令被中斷或意外情況：{{error}}",
     "engine_ready_to_connect": "引擎已準備好，可以進行連接",
     "engine_not_fully_started": "引擎未完全啟動，無法連接，失敗次數：{{count}}",
-    "command_timeout_retry": "命令執行逾時，請點擊重新執行",
-    "engine_start_interrupted_check_log": "引擎啟動命令被中斷或意外情況，可查看日誌詳細資訊..."
+    "engine_start_interrupted_check_log": "引擎啟動命令被中斷或意外情況，可查看日誌詳細資訊...",
+    "startup_failed": "引擎啟動失敗，請重試或查看日誌"
   },
   "YakitLoading": {
     "agreement_check_prefix": "勾選同意",
@@ -201,19 +221,12 @@
     }
   },
   "LocalEngine": {
-    "checking_secret_password_mode": "開始檢查隨機密碼模式中...",
-    "secret_password_check_passed": "檢查通過，已支援隨機密碼模式",
-    "command_timeout_check_log": "命令執行逾時，可查看日誌詳細資訊...",
-    "engine_connect_timeout_check_log": "引擎連接逾時，可查看日誌詳細資訊...",
+    "migration_wait_hint": "引擎仍在準備中。跨大版本升級可能需要額外時間遷移資料庫，通常同一大版本升級只需遷移一次。請耐心等候，此階段最多等待 180 秒；如逾時，可查看日誌後重試。",
+    "checking_secret_password_mode": "正在檢查引擎環境...",
+    "secret_password_check_passed": "引擎環境檢查通過",
     "engine_version_low_reset": "引擎版本低，可點擊重置引擎版本更新...",
     "engine_version_low_download": "引擎版本低，可點擊下載引擎更新...",
-    "port_unavailable_check_log": "埠不可用，可查看日誌報錯資訊進行處理...",
-    "antivirus_blocked_check_log": "被防毒軟體攔截，可將應用加入白名單後重新啟動...",
     "engine_connect_error_reset": "連接引擎出現問題，可點擊重置引擎版本更新...",
-    "database_error_check_log": "偵測到本機資料庫出現錯誤，可點擊修復進行處理...",
-    "cannot_start_contact_staff": "無法啟動，可將日誌資訊傳送給工作人員處理...",
-    "failure_reason": "[Reason]：{{status}}：{{message}}",
-    "none": "無",
     "dev_env_direct_connect": "開發環境，直接連接引擎",
     "checking_software_update": "檢查軟體是否有更新...",
     "skip_check_hint": "跳過檢查(可在軟體更新處設定啟動)",
@@ -233,7 +246,8 @@
     "abnormal_cannot_verify_source": "異常情況，無法偵測來源",
     "preparing_start_connect_engine": "準備開始啟動連接引擎",
     "waiting_engine_fully_started": "正在等待引擎完全啟動",
-    "database_initializing": "資料庫正在初始化中..."
+    "database_initializing": "資料庫正在初始化中...",
+    "check_failed": "引擎檢查失敗，請重試或查看日誌"
   },
   "EngineLog": {
     "welcome": "歡迎使用 {{name}}!",

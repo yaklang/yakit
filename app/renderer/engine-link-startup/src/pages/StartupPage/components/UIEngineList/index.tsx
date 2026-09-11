@@ -1,10 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import type {
-  TypeCallbackExtra,
-  YakitStatusType,
-  YaklangEngineMode,
-  YaklangEngineWatchDogCredential,
-} from '../../types'
+import type { TypeCallbackExtra, YakitStatusType, YaklangEngineMode } from '../../types'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import classNames from 'classnames'
@@ -14,19 +9,19 @@ import { getReleaseEditionName } from '@/utils/envfile'
 import { yakitNotify } from '@/utils/notification'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { LoadingOutlined } from '@ant-design/icons'
+import { Tooltip } from 'antd'
 import { CheckedSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckedSvgIcon'
 import { GooglePhotosLogoSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/GooglePhotosLogoSvgIcon'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { grpcRelaunch, grpcUnpackBuildInYak, grpcWriteEngineKeyToYakitProjects } from '../../grpc'
 import { yakitEngine } from '@/utils/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './UIEngineList.module.scss'
 
 interface yakProcess {
   port: number
   pid: number
   ppid?: number
-  cmd: string
-  origin: any
 }
 
 interface UIEngineListProp {
@@ -38,6 +33,7 @@ interface UIEngineListProp {
 /** @name 已启动引擎列表 */
 export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
   const { engineMode, typeCallback, engineLink } = props
+  const { t } = useI18nNamespaces(['link'])
 
   const [show, setShow] = useState<boolean>(false)
 
@@ -60,8 +56,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
             return {
               port: element.port,
               pid: element.pid,
-              cmd: element.cmd,
-              origin: element.origin,
+              ppid: element.ppid,
             }
           }),
         )
@@ -178,52 +173,16 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                         Details
                       </YakitButton>
 
-                      <YakitPopconfirm
-                        title={<>确定是否切换连接的引擎</>}
-                        onConfirm={async () => {
-                          if (!isLocal) {
-                            yakitNotify('info', '远程模式，不支持切换引擎')
-                            return
-                          }
-                          const oldPort = port
-                          const switchEngine: YaklangEngineWatchDogCredential = {
-                            Port: i.port,
-                            Host: '127.0.0.1',
-                          }
-                          yakitEngine
-                            .connectYaklangEngine(switchEngine)
-                            .then(() => {
-                              setTimeout(() => {
-                                yakitNotify('success', `切换核心引擎成功！`)
-                              }, 500)
-                            })
-                            .catch((e) => {
-                              yakitNotify('error', '切换引擎失败，请尝试切换其他端口重连')
-                              process.forEach((item) => {
-                                if (item.port == oldPort) {
-                                  yakitEngine
-                                    .killYakGrpc(item.pid)
-                                    .then((val) => {
-                                      if (!val) {
-                                        yakitNotify('success', '引擎进程关闭中...')
-                                        typeCallback('break')
-                                      }
-                                    })
-                                    .catch((e: any) => {})
-                                    .finally(fetchPSList)
-                                }
-                              })
-                            })
-                        }}
-                      >
-                        <YakitButton
-                          type="outline1"
-                          colors="success"
-                          disabled={+i.port === 0 || (isLocal && +i.port === port)}
-                        >
-                          切换引擎
-                        </YakitButton>
-                      </YakitPopconfirm>
+                      {/* A process listing does not provide trusted credentials. Never
+                          probe anonymously, extract passwords from argv, or kill the
+                          current engine as a side effect of a failed switch. */}
+                      <Tooltip title={t('UIEngineList.authenticated_switch_required')}>
+                        <span>
+                          <YakitButton type="outline1" colors="success" disabled>
+                            {t('UIEngineList.switch_engine')}
+                          </YakitButton>
+                        </span>
+                      </Tooltip>
                       <YakitPopconfirm
                         title={
                           <>

@@ -29,6 +29,7 @@ declare global {
   type YaklangEngineWatchDogCredential = StartupTypes.YaklangEngineWatchDogCredential
   type TypeCallbackExtra = StartupTypes.TypeCallbackExtra
   type StartLocalEngine = StartupTypes.StartLocalEngine
+  type CancelTasksResult = StartupTypes.CancelTasksResult
   type YakitAuthInfo = RemoteEngineTypes.YakitAuthInfo
   type CheckAllowSecretLocal = LocalEngineTypes.CheckAllowSecretLocal
   type FixupDatabase = LocalEngineTypes.FixupDatabase
@@ -202,7 +203,7 @@ declare global {
       calcEngineSha265: () => Promise<string[]>
       startSecretLocalYaklangEngine: (params: StartLocalEngine) => Promise<StartupExecResult>
       echo: (payload: EchoPayload) => Promise<EchoResult>
-      cancelAllTasks: () => Promise<any>
+      cancelAllTasks: () => Promise<CancelTasksResult>
       killYakGrpc: (pid: number) => Promise<any>
       listYakGrpc: () => Promise<YakProcessInfo[]>
       fetchYaklangEngineAddr: () => Promise<YaklangEngineAddr>
