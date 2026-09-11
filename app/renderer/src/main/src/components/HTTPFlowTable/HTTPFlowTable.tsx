@@ -2316,7 +2316,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return {
       key:
         PLUGIN_RIGHT_MAG +
-        (selectedRowKeys.length > 1
+        (selectedRowKeys.length > 0
           ? ManageRightClickPluginsTabKey.PluginExtensionMultiple
           : ManageRightClickPluginsTabKey.PluginExtensionSingle),
       label: (
@@ -2383,7 +2383,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return items
   })
   const getCodecHistoryPlugin = useMemoizedFn(() => {
-    const isMultiple = selectedRowKeys.length > 1
+    const isMultiple = selectedRowKeys.length > 0
     const isGetPlugin = isMultiple ? isGetMultiplePlugin : isGetSinglePlugin
     const plugins = isMultiple ? codecMultipleHistoryPlugin : codecSingleHistoryPlugin
 
