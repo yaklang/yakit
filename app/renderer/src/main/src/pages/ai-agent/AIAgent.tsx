@@ -105,9 +105,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
    * 读取全局配置 setting
    */
   const initToCacheData = useMemoizedFn(async () => {
-    const next = await loadAIAgentChatSetting()
-    if (!next) return
-    setSetting(applyAIAgentChatSettingSessionDefaults(next))
+    const result = await loadAIAgentChatSetting()
+    if (result.status !== 'success') return
+    setSetting(applyAIAgentChatSettingSessionDefaults(result.setting))
   })
 
   useEffect(() => {

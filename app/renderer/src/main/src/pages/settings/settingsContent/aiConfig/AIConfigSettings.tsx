@@ -87,6 +87,7 @@ export const AIConfigSettings: React.FC = () => {
   const lastPayloadRef = useRef(serializeAIAgentChatSetting(AIAgentSettingDefault))
   const settingRef = useRef(setting)
   const readyRef = useRef(false)
+  const hasBroadcastRef = useRef(false)
   settingRef.current = setting
 
   const apply = useMemoizedFn((patch: Partial<AIAgentSetting>) => {
@@ -107,16 +108,17 @@ export const AIConfigSettings: React.FC = () => {
   useEffect(() => {
     let cancelled = false
     loadAIAgentChatSetting()
-      .then((next) => {
-        if (cancelled || !next) return
-        lastPayloadRef.current = serializeAIAgentChatSetting(next)
-        setSetting(next)
-      })
-      .finally(() => {
+      .then((result) => {
         if (cancelled) return
+        if (result.status === 'error') return
+        if (!hasBroadcastRef.current && result.status === 'success') {
+          lastPayloadRef.current = serializeAIAgentChatSetting(result.setting)
+          setSetting(result.setting)
+        }
         readyRef.current = true
         setReady(true)
       })
+      .catch(() => {})
     return () => {
       cancelled = true
     }
@@ -129,6 +131,7 @@ export const AIConfigSettings: React.FC = () => {
         const cache = JSON.parse(payload) as AIAgentSetting
         if (typeof cache !== 'object' || !cache) return
         lastPayloadRef.current = payload
+        hasBroadcastRef.current = true
         setSetting((old) => applyAIAgentChatSettingBroadcast(old, cache))
       } catch (_) {}
     }

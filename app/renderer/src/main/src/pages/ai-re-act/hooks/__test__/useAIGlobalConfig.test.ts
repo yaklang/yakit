@@ -150,4 +150,34 @@ describe('useAIGlobalConfig', () => {
       RoutingPolicy: AIModelPolicyEnum.PolicyPerformance,
     })
   })
+
+  it('普通刷新的迟到回包不会覆盖后续已成功的保存', async () => {
+    let resolveGet: (value: typeof defaultAIGlobalConfig) => void = () => undefined
+    const delayedGet = new Promise<typeof defaultAIGlobalConfig>((resolve) => {
+      resolveGet = resolve
+    })
+    getMock.mockImplementationOnce(() => delayedGet).mockResolvedValue({ ...defaultAIGlobalConfig })
+
+    const { result } = renderHook(() => useAIGlobalConfig())
+    await act(async () => {
+      result.current[1].onRefresh(false)
+      await Promise.resolve()
+    })
+    await waitFor(() => {
+      expect(getMock).toHaveBeenCalled()
+    })
+
+    await act(async () => {
+      await result.current[1].setAIGlobalConfig({ DisableFallback: true })
+    })
+
+    await act(async () => {
+      resolveGet({ ...defaultAIGlobalConfig, DisableFallback: false })
+      await delayedGet
+    })
+
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toMatchObject({
+      DisableFallback: true,
+    })
+  })
 })

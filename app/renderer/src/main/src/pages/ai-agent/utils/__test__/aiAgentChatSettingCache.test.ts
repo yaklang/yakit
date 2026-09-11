@@ -105,19 +105,24 @@ describe('loadAIAgentChatSetting', () => {
     getRemoteValueMock.mockReset()
   })
 
-  it('远端无缓存时返回 undefined', async () => {
+  it('远端无缓存时返回 empty', async () => {
     getRemoteValueMock.mockResolvedValue('')
-    await expect(loadAIAgentChatSetting()).resolves.toBeUndefined()
+    await expect(loadAIAgentChatSetting()).resolves.toEqual({ status: 'empty' })
   })
 
-  it('非法 JSON 返回 undefined，不抛错', async () => {
+  it('非法 JSON 返回 error，不抛错', async () => {
     getRemoteValueMock.mockResolvedValue('{')
-    await expect(loadAIAgentChatSetting()).resolves.toBeUndefined()
+    await expect(loadAIAgentChatSetting()).resolves.toEqual({ status: 'error' })
   })
 
-  it('非对象 JSON 返回 undefined', async () => {
+  it('非对象 JSON 返回 error', async () => {
     getRemoteValueMock.mockResolvedValue('"not-object"')
-    await expect(loadAIAgentChatSetting()).resolves.toBeUndefined()
+    await expect(loadAIAgentChatSetting()).resolves.toEqual({ status: 'error' })
+  })
+
+  it('读取异常返回 error', async () => {
+    getRemoteValueMock.mockRejectedValue(new Error('kv-fail'))
+    await expect(loadAIAgentChatSetting()).resolves.toEqual({ status: 'error' })
   })
 
   it('合法缓存走合并规则后再返回', async () => {
@@ -126,10 +131,12 @@ describe('loadAIAgentChatSetting', () => {
     )
     const loaded = await loadAIAgentChatSetting()
     expect(getRemoteValueMock).toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
-    expect(loaded?.ReviewPolicy).toBe('ai')
-    expect(loaded?.EnablePlan).toBe(true)
-    expect(loaded?.DisableMemoryTriage).toBe(true)
-    expect(loaded?.Source).toBe(AIAgentSettingDefault.Source)
+    expect(loaded.status).toBe('success')
+    if (loaded.status !== 'success') return
+    expect(loaded.setting.ReviewPolicy).toBe('ai')
+    expect(loaded.setting.EnablePlan).toBe(true)
+    expect(loaded.setting.DisableMemoryTriage).toBe(true)
+    expect(loaded.setting.Source).toBe(AIAgentSettingDefault.Source)
   })
 })
 
