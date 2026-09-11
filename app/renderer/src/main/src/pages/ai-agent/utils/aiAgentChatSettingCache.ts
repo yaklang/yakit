@@ -64,15 +64,20 @@ export const applyAIAgentChatSettingSessionDefaults = (setting: AIAgentSetting):
   }
 }
 
-export const loadAIAgentChatSetting = async (): Promise<AIAgentSetting | undefined> => {
+export type LoadAIAgentChatSettingResult =
+  | { status: 'success'; setting: AIAgentSetting }
+  | { status: 'empty' }
+  | { status: 'error' }
+
+export const loadAIAgentChatSetting = async (): Promise<LoadAIAgentChatSettingResult> => {
   try {
     const res = await getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
-    if (!res) return undefined
-    const cache = JSON.parse(res) as AIAgentSetting
-    if (typeof cache !== 'object' || !cache) return undefined
-    return mergeAIAgentChatSettingCache(cache)
-  } catch (_) {
-    return undefined
+    if (!res) return { status: 'empty' }
+    const cache = JSON.parse(res) as unknown
+    if (typeof cache !== 'object' || !cache) return { status: 'error' }
+    return { status: 'success', setting: mergeAIAgentChatSettingCache(cache as AIAgentSetting) }
+  } catch {
+    return { status: 'error' }
   }
 }
 

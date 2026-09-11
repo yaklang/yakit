@@ -81,10 +81,11 @@ function useAIGlobalConfig(params) {
   })
 
   const getAIGlobalConfig = useMemoizedFn((isShowLoading?: boolean) => {
+    const epoch = saveEpoch
     const showLoading = isShowLoading !== false
     showLoading && setQueryLoading(true)
     grpcGetAIGlobalConfig()
-      .then((res) => applyFetchedConfig(res))
+      .then((res) => applyFetchedConfig(res, epoch))
       .finally(() => {
         showLoading &&
           setTimeout(() => {
