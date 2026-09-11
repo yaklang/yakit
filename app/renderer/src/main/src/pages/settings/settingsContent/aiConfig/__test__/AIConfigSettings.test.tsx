@@ -211,6 +211,34 @@ describe('AIConfigSettings', () => {
     expect(saved.ReviewPolicy).toBe('yolo')
   })
 
+  it('迟到的读取不会覆盖等于初始默认值的广播', async () => {
+    let resolveLoad: (value: LoadAIAgentChatSettingResult) => void = () => undefined
+    vi.mocked(loadAIAgentChatSetting).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveLoad = resolve
+        }),
+    )
+    render(<AIConfigSettings />)
+    act(() => {
+      emiter.emit('onAIAgentChatSettingChange', serializeAIAgentChatSetting(AIAgentSettingDefault))
+    })
+    expect(document.querySelector('[data-ai-config-ready="1"]')).toBeFalsy()
+    await act(async () => {
+      resolveLoad(
+        successLoad({
+          DisableMemoryTriage: true,
+          ReviewPolicy: 'yolo',
+        }),
+      )
+    })
+    await waitReady()
+    fireEvent.click(document.querySelector('button.ant-switch') as HTMLElement)
+    const saved = vi.mocked(persistAIAgentChatSetting).mock.calls[0][0]
+    expect(saved.DisableMemoryTriage).toBe(AIAgentSettingDefault.DisableMemoryTriage)
+    expect(saved.ReviewPolicy).toBe(AIAgentSettingDefault.ReviewPolicy)
+  })
+
   it('读取失败后即使收到广播也不解锁写盘', async () => {
     vi.mocked(loadAIAgentChatSetting).mockResolvedValueOnce({ status: 'error' })
     render(<AIConfigSettings />)
