@@ -21,6 +21,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { yakitApp } from '@/utils/electronBridge'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { MoreYaklangVersion } from '../MoreYaklangVersion'
+import { LocalTransportSettings } from '../LocalEngine/LocalTransportSettings'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import classNames from 'classnames'
@@ -551,6 +552,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
       return (
         <>
           <YakitButton
+            data-testid="engine-manual-reconnect"
             className={styles['btn-style']}
             size="large"
             loading={restartLoading}
@@ -722,6 +724,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         data-testid="startup-engine-loading"
         data-yakit-status={yakitStatus}
       >
+        <LocalTransportSettings />
         <div
           className={classNames(styles['log-wrapper'], {
             [styles['log-default-color']]: !logError,

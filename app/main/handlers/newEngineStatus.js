@@ -3,7 +3,8 @@ const childProcess = require('child_process')
 const { GLOBAL_YAK_SETTING } = require('../state')
 const { getLocalYaklangEngine, getYakitHome } = require('../filePath')
 const { engineLogOutputFileAndUI, engineLogOutputUI } = require('../logFile')
-const { createEngineStartup, validLocalPassword } = require('./utils/engineStartup')
+const { getEngineSession, connectEngine, registerSessionIPC } = require('./utils/engineSessionRuntime')
+const { assertTrustedAppSender } = require('../security')
 
 // 引擎连接过程中涉及到能中断的执行任务
 const runningTasks = new Map()
@@ -27,30 +28,12 @@ module.exports = {
       engineLogOutputUI(win, `${msg}`, true)
     })
 
-    const startup = createEngineStartup({
-      getCommand: getLocalYaklangEngine,
-      getEnv: (softwareVersion) => ({
-        ...process.env,
-        YAKIT_HOME: getYakitHome(),
-        ...(DefaultDBFileEnv[softwareVersion] || {}),
-      }),
-      createClient: (connection) => newClient(connection),
-      commitConnection: ({ defaultYakGRPCAddr, caPem, password }) => {
-        callback(defaultYakGRPCAddr, caPem, password)
-        GLOBAL_YAK_SETTING.defaultYakGRPCAddr = defaultYakGRPCAddr
-      },
-      log: (message) => engineLogOutputFileAndUI(win, message),
-      notify: (message) => {
-        try {
-          if (!win.isDestroyed() && !win.webContents.isDestroyed()) win.webContents.send('startUp-engine-msg', message)
-        } catch {}
-      },
+    const startup = getEngineSession(win, callback, newClient)
+    registerSessionIPC(ipcEventPre)
+    ipcMain.handle(ipcEventPre + 'check-allow-secret-local-yaklang-engine', (e, params) => {
+      assertTrustedAppSender(e, ipcEventPre + 'check-allow-secret-local-yaklang-engine')
+      return startup.prepare(params)
     })
-    process.once('exit', startup.killOnExit)
-    win.once('closed', () => {
-      void startup.dispose().finally(() => process.removeListener('exit', startup.killOnExit))
-    })
-    ipcMain.handle(ipcEventPre + 'check-allow-secret-local-yaklang-engine', (e, params) => startup.check(params))
 
     let currentFixId = 0 // 全局任务标识
     /** 修复数据库 */
@@ -346,55 +329,26 @@ module.exports = {
       }
     })
 
-    /** Probe with an isolated client; commit global credentials only after authentication. */
-    ipcMain.handle(ipcEventPre + 'connect-yaklang-engine', async (e, params) => {
-      const hostRaw = String(params.Host || '127.0.0.1')
-      let host = hostRaw
-      let port = params.Port
-      const hostWithPort = /^(\[[^\]]+\]|[^:]+):(\d+)$/.exec(hostRaw)
-      if (hostWithPort) [, host, port] = hostWithPort
-      if (!/^\d+$/.test(String(port)) || Number(port) < 1 || Number(port) > 65535 || /[\s/\\]/.test(host)) {
-        throw new Error('引擎连接地址无效')
-      }
-      if (params.Mode === 'local' && (host !== '127.0.0.1' || !validLocalPassword(params.Password))) {
-        throw new Error('本地引擎连接参数无效，请重新检查引擎')
-      }
-      const address = `${host.includes(':') && !host.startsWith('[') ? `[${host}]` : host}:${port}`
-      const result = await startup.connect(
-        {
-          defaultYakGRPCAddr: address,
-          caPem: Buffer.from(params.PemBytes || '').toString('utf8'),
-          password: params.Password || '',
-        },
-        params.Mode === 'local',
-      )
-      if (!result.ok) throw new Error(result.message)
-      return result.data
+    ipcMain.handle(ipcEventPre + 'connect-yaklang-engine', (e, params) => {
+      assertTrustedAppSender(e, ipcEventPre + 'connect-yaklang-engine')
+      return connectEngine(params)
     })
-    ipcMain.handle(ipcEventPre + 'start-secret-local-yaklang-engine', (e, params) => startup.start(params))
+    ipcMain.handle(ipcEventPre + 'start-secret-local-yaklang-engine', (e, params) => {
+      assertTrustedAppSender(e, ipcEventPre + 'start-secret-local-yaklang-engine')
+      return startup.launch(params)
+    })
 
     // 中断连接 取消所有正在执行的任务
-    ipcMain.handle(ipcEventPre + 'cancel-all-tasks', async () => {
-      const engineCanceled = await startup.dispose()
-      if (runningTasks.size === 0) {
-        return { ok: true, canceled: engineCanceled }
-      }
-
-      let count = engineCanceled
-
+    ipcMain.handle(ipcEventPre + 'cancel-all-tasks', async (e) => {
+      assertTrustedAppSender(e, ipcEventPre + 'cancel-all-tasks')
+      const result = await startup.cancel()
       for (const [, cancel] of runningTasks) {
         try {
           cancel()
-          count++
         } catch {}
       }
-
       runningTasks.clear()
-
-      return {
-        ok: true,
-        canceled: count,
-      }
+      return result
     })
   },
 }

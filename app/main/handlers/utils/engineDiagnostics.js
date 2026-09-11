@@ -10,6 +10,7 @@ function redactEngineLog(value, secrets = []) {
     if (secret) text = text.split(secret).join('***')
   }
   return text
+    .replace(/(--(?:local-password|password|secret)(?:\s+|=))(?:"[^"\r\n]*"|'[^'\r\n]*'|\S+)/gi, '$1***')
     .replace(/("(?:secret|password)"\s*:\s*)"(?:\\.|[^"\\])*"/gi, '$1"***"')
     .replace(/((?:generated random secret for testing|secret|password)\s*[:=]\s*)\S+/gi, '$1***')
     .replace(/(bearer\s+)\S+/gi, '$1***')
@@ -22,7 +23,7 @@ function redactEngineData(value, secrets = []) {
     return Object.fromEntries(
       Object.entries(value).map(([key, item]) => [
         key,
-        /^(secret|password)$/i.test(key) ? '***' : redactEngineData(item, secrets),
+        /^(secret|password|authorization|cmd|origin)$/i.test(key) ? '***' : redactEngineData(item, secrets),
       ]),
     )
   return value
@@ -72,6 +73,7 @@ function parseEngineEvent(line) {
   try {
     const data = JSON.parse(match[3])
     if (!isObject(data)) return { type: 'invalid' }
+    if (data.schemaVersion !== undefined && ![1, 2].includes(data.schemaVersion)) return { type: 'invalid' }
     if (match[2] === 'ready') {
       if (![1, 2].includes(data.schemaVersion) || typeof data.address !== 'string') return { type: 'invalid' }
       if (data.transport !== undefined && typeof data.transport !== 'string') return { type: 'invalid' }
@@ -117,6 +119,10 @@ function classifyEngineFailure(data = {}, stage = 'check') {
     tcp_bind_in_use: 'port_occupied',
     tcp_bind_denied: 'port_denied',
     tcp_bind_failed: 'endpoint_unreachable',
+    ipc_bind_in_use: 'ipc_unavailable',
+    ipc_bind_denied: 'ipc_unavailable',
+    ipc_bind_failed: 'ipc_unavailable',
+    ipc_endpoint_invalid: 'protocol_error',
     database_error: 'database_error',
     database_failed: 'database_error',
     build_server_failed: stage === 'check' ? 'build_yak_error' : 'engine_init_failed',
@@ -142,6 +148,7 @@ function classifyEngineFailure(data = {}, stage = 'check') {
     port_occupied: '端口被占用，请切换端口或检查占用进程',
     port_denied: '系统拒绝使用该端口，请切换端口或检查系统策略',
     endpoint_unreachable: '引擎监听失败，请检查端口配置后重试',
+    ipc_unavailable: '本地 IPC 监听失败，请查看诊断或手动选择 TCP 兼容连接',
     database_error: '数据库初始化失败，可点击修复进行处理',
     build_yak_error: '引擎服务构建失败，请查看日志或重新安装引擎',
     dial_error: '引擎连接失败，请查看日志或重试',

@@ -1,26 +1,17 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { failed, info, success, yakitNotify } from '@/utils/notification'
+import React, { useState, useEffect, useRef } from 'react'
 import type { YaklangEngineMode } from '@/yakitGVDefine'
-import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
-import { useInViewport, useMemoizedFn } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import { Sparklines, SparklinesCurve } from 'react-sparklines'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
-import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
-import { CheckedSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckedSvgIcon'
 import { GooglePhotosLogoSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/GooglePhotosLogoSvgIcon'
-import type { YaklangEngineWatchDogCredential } from '@/components/layout/YaklangEngineWatchDog'
-import { useRunNodeStore } from '@/store/runNode'
 import emiter from '@/utils/eventBus/eventBus'
-import { useTemporaryProjectStore } from '@/store/temporaryProject'
-import { getReleaseEditionName, isEnpriTraceAgent } from '@/utils/envfile'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { YakitPopconfirm } from '../yakitUI/YakitPopconfirm/YakitPopconfirm'
 import classNames from 'classnames'
 import styles from './performanceDisplay.module.scss'
-import { yakitDynamicStatus } from '@/store'
-import { remoteOperation } from '@/pages/dynamicControl/DynamicControl'
-import { yakitApp, yakitEngine, yakitPerf, yakitUILayout } from '@/services/electronBridge'
+import panelStyles from '../../../../../shared/engineManagement.module.scss'
+import { yakitEngine, yakitPerf } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 interface PerformanceDisplayProps {
@@ -109,13 +100,7 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo(
   )
 })
 
-export interface yakProcess {
-  port: number
-  pid: number
-  ppid?: number
-  cmd: string
-  origin: any
-}
+export interface yakProcess extends LocalEngineInstance {}
 
 interface UIEngineListProp {
   engineMode: YaklangEngineMode | undefined
@@ -123,282 +108,282 @@ interface UIEngineListProp {
   engineLink: boolean
 }
 
-/** @name 已启动引擎列表 */
-const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
-  const { engineMode, typeCallback, engineLink } = props
-  const { t } = useI18nNamespaces(['layout', 'yakitUi'])
-
-  const [show, setShow] = useState<boolean>(false)
-
-  const listRef = useRef(null)
-  const [inViewport] = useInViewport(listRef)
-
-  const [psLoading, setPSLoading] = useState<boolean>(false)
-  const [process, setProcess] = useState<yakProcess[]>([])
-  const { runNodeList } = useRunNodeStore()
-  const [port, setPort] = useState<number>(0)
-
-  const fetchPSList = useMemoizedFn(() => {
-    if (psLoading) return
-
-    setPSLoading(true)
-    yakitEngine
-      .listYakGrpc()
-      .then((i: yakProcess[]) => {
-        const valuesArray = Array.from(runNodeList.values())
-        // 过滤掉运行节点
-        setProcess(
-          i
-            .filter((item) => !valuesArray.includes(item.pid.toString()))
-            .map((element: yakProcess) => {
-              return {
-                port: element.port,
-                pid: element.pid,
-                cmd: element.cmd,
-                origin: element.origin,
-              }
-            }),
-        )
-      })
-      .catch((e) => {
-        failed(`PS | GREP yak failed ${e}`)
-      })
-      .finally(() => {
-        setPSLoading(false)
-      })
-  })
-  const fetchCurrentPort = () => {
-    yakitEngine
-      .fetchYaklangEngineAddr()
-      .then((data) => {
-        const hosts: string[] = (data.addr as string).split(':')
-        if (hosts.length !== 2) return
-        if (+hosts[1]) setPort(+hosts[1] || 0)
-      })
-      .catch(() => {})
-  }
+export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['layout'])
+  const [show, setShow] = useState(false)
+  const [recoveryOpen, setRecoveryOpen] = useState(false)
+  const [rows, setRows] = useState<LocalEngineInstance[]>([])
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+  const [builtIn, setBuiltIn] = useState('')
+  const generation = useRef(0)
+  const mounted = useRef(true)
   useEffect(() => {
-    if (inViewport) {
-      fetchPSList()
-      fetchCurrentPort()
-
-      const id = setInterval(() => {
-        fetchPSList()
-        fetchCurrentPort()
-      }, 3000)
-      return () => {
-        clearInterval(id)
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      generation.current++
+    }
+  }, [])
+  const refresh = useMemoizedFn(async () => {
+    const token = ++generation.current
+    try {
+      const items = await yakitEngine.listYakGrpc()
+      if (mounted.current && token === generation.current) setRows(items)
+    } catch {
+      if (mounted.current) setMessage(t('EngineManagement.discoveryFailed'))
+    }
+  })
+  useEffect(() => {
+    if (!show) return
+    void refresh()
+    void yakitEngine
+      .getBuildInEngineVersion()
+      .then(setBuiltIn)
+      .catch(() => {})
+    const timer = setInterval(refresh, 3000)
+    return () => {
+      clearInterval(timer)
+      generation.current++
+    }
+  }, [show])
+  const execute = useMemoizedFn(async (work: () => Promise<void>) => {
+    if (busy) return
+    setBusy(true)
+    setMessage('')
+    try {
+      await work()
+    } catch {
+      if (mounted.current) setMessage(t('EngineManagement.operationFailed'))
+    } finally {
+      if (mounted.current) {
+        setBusy(false)
+        void refresh()
       }
     }
-  }, [inViewport])
-
-  const allClose = useMemoizedFn(async () => {
-    await delTemporaryProject()
-    ;(process || []).forEach((i) => {
-      yakitEngine.killYakGrpc(i.pid).then((val) => {
-        if (!val) {
-          info(`KILL yak PROCESS: ${i.pid}`)
-          if (+i.port === port && isLocal) typeCallback('break')
-        }
-      })
-    })
-    setTimeout(() => success(t('PerformanceDisplay.engineProcessesClosing')), 1000)
   })
-
-  const isLocal = useMemo(() => {
-    return engineMode === 'local'
-  }, [engineMode])
-
-  const { delTemporaryProject } = useTemporaryProjectStore()
-  const { dynamicStatus } = yakitDynamicStatus()
-
+  const managed = rows.filter((item) => item.ownership === 'managed' && item.state !== 'exited')
+  const stop = (item: LocalEngineInstance) =>
+    execute(async () => {
+      const result = await yakitEngine.stopLocalEngine(item.id)
+      if (!result.ok || !result.stopped) {
+        setMessage(t('EngineManagement.stopFailed'))
+        return
+      }
+      setMessage(t('EngineManagement.stopped'))
+      if (item.current) props.typeCallback('break')
+    })
+  const stopAll = () =>
+    execute(async () => {
+      const result = await yakitEngine.stopAllLocalEngines()
+      const details = (result.results || [])
+        .map(
+          (item) =>
+            `${item.id?.slice(0, 8) || ''}: ${t(item.stopped ? 'EngineManagement.stopped' : 'EngineManagement.stopFailed')}`,
+        )
+        .join(' · ')
+      setMessage(details || t(result.ok && result.stopped ? 'EngineManagement.stopped' : 'EngineManagement.stopFailed'))
+      if (result.ok && result.stopped && rows.some((item) => item.current)) props.typeCallback('break')
+    })
+  const restore = () =>
+    execute(async () => {
+      const stopped = await yakitEngine.stopAllLocalEngines()
+      if (!stopped.ok || !stopped.stopped) {
+        setMessage(t('EngineManagement.stopFailed'))
+        return
+      }
+      await yakitEngine.restoreEngineAndPlugin({})
+      await yakitEngine.writeEngineKeyToYakitProjects()
+      setMessage(t('EngineManagement.restored'))
+      // No restart in finally; configuration/extraction failure keeps the recovery UI available.
+    })
+  const visibleRows = rows
+    .filter((item) => item.state !== 'exited')
+    .sort((a, b) => Number(b.current) - Number(a.current))
+  const details = (item: LocalEngineInstance) =>
+    showYakitModal({
+      title: t('EngineManagement.details'),
+      width: 520,
+      content: (
+        <dl className={panelStyles.details}>
+          <dt>{t('EngineManagement.transport')}</dt>
+          <dd>{t(`EngineManagement.${item.transport}`)}</dd>
+          <dt>{t('EngineManagement.endpoint')}</dt>
+          <dd className={panelStyles.copy}>
+            <span>{item.displayEndpoint || t('EngineManagement.endpointUnknown')}</span>
+            <YakitButton
+              type="text2"
+              disabled={!item.displayEndpoint}
+              onClick={() => navigator.clipboard.writeText(item.displayEndpoint)}
+            >
+              {t('EngineManagement.copy')}
+            </YakitButton>
+          </dd>
+          <dt>PID</dt>
+          <dd>{item.pid ?? t('EngineManagement.unknown')}</dd>
+          <dt>{t('EngineManagement.state')}</dt>
+          <dd>{t(`EngineManagement.${item.state}`, { defaultValue: item.state })}</dd>
+          <dt>{t('EngineManagement.version')}</dt>
+          <dd>{item.version || t('EngineManagement.unknown')}</dd>
+          {item.fallbackReason && (
+            <>
+              <dt>{t('EngineManagement.fallbackReason')}</dt>
+              <dd>
+                {item.fallbackReason.reasonCode || item.fallbackReason.status} · {item.fallbackReason.stage}
+              </dd>
+            </>
+          )}
+          <dt>{t('EngineManagement.ownership')}</dt>
+          <dd>{t(`EngineManagement.${item.ownership}`)}</dd>
+        </dl>
+      ),
+      footer: null,
+    })
   return (
     <YakitPopover
       open={show}
-      classNames={{ root: classNames(styles['ui-engine-list-dropdown']) }}
-      placement={'bottomRight'}
+      trigger="click"
+      placement="bottomRight"
+      onOpenChange={setShow}
+      classNames={{ root: panelStyles.popover }}
       content={
-        <div ref={listRef} className={styles['ui-engine-list-wrapper']}>
-          <div className={styles['ui-engine-list-body']}>
-            <div className={styles['engine-list-header']}>
-              {t('PerformanceDisplay.localYakProcessManagement')}
-              <YakitPopconfirm
-                title={t('PerformanceDisplay.resetEngineVersionNotice')}
-                onConfirm={async () => {
-                  if (dynamicStatus.isDynamicStatus) {
-                    yakitNotify('warning', t('PerformanceDisplay.remoteControlClosing'))
-                    await remoteOperation(false, dynamicStatus)
-                  }
-                  await delTemporaryProject()
-                  process.map((i) => {
-                    yakitEngine.killYakGrpc(i.pid)
-                  })
-                  yakitEngine
-                    .restoreEngineAndPlugin({})
-                    .finally(() => {
-                      yakitEngine.writeEngineKeyToYakitProjects().finally(() => {
-                        info(t('PerformanceDisplay.restoreEngineSuccess'))
-                        yakitApp.relaunch()
-                      })
-                    })
-                    .catch((e) => {
-                      failed(t('PerformanceDisplay.restoreEngineFailed', { error: e }))
-                    })
-                }}
+        <section
+          className={panelStyles.panel}
+          aria-label={t('EngineManagement.title')}
+          data-testid="engine-management-panel"
+        >
+          <header className={panelStyles.header}>
+            <div>
+              <div className={panelStyles.heading}>
+                <h3>{t('EngineManagement.title')}</h3>
+                <span className={panelStyles.count}>{visibleRows.length}</span>
+              </div>
+              <p className={panelStyles.scope}>{t('EngineManagement.scopeShort')}</p>
+            </div>
+            <YakitButton type="text2" disabled={busy} onClick={refresh}>
+              {t('EngineManagement.refresh')}
+            </YakitButton>
+          </header>
+          {(busy || message) && (
+            <div className={panelStyles.feedback} role="status" aria-live="polite">
+              {busy ? t('EngineManagement.working') : message}
+            </div>
+          )}
+          <div className={panelStyles.list}>
+            {!visibleRows.length && <div className={panelStyles.empty}>{t('EngineManagement.empty')}</div>}
+            {visibleRows.map((item) => (
+              <article
+                className={panelStyles.card}
+                data-current={item.current && props.engineLink}
+                data-engine-id={item.id}
+                key={item.id}
               >
-                <YakitButton style={{ marginLeft: 8 }}>{t('PerformanceDisplay.resetEngineVersion')}</YakitButton>
-              </YakitPopconfirm>
-              {psLoading && <LoadingOutlined className={styles['loading-icon']} />}
-            </div>
-            <div className={styles['engine-list-container']}>
-              {process.map((i) => {
-                return (
-                  <div key={i.pid} className={styles['engine-list-opt']}>
-                    <div className={styles['left-body']}>
-                      <YakitTag color={isLocal && +i.port === port && engineLink ? 'success' : undefined}>
-                        {`PID: ${i.pid}`}
-                        {isLocal && +i.port === port && engineLink && <CheckedSvgIcon style={{ marginLeft: 8 }} />}
-                      </YakitTag>
-                      <div className={styles['engine-ps-info']}>
-                        {`yak grpc --port ${i.port === 0 ? t('PerformanceDisplay.fetching') : i.port}`}
-                        &nbsp;
-                        {isLocal && +i.port === port && engineLink && (
-                          <span className={styles['current-ps-info']}>{t('PerformanceDisplay.current')}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className={styles['right-body']}>
-                      <YakitButton
-                        type="text"
-                        onClick={() => {
-                          setShow(false)
-                          showYakitModal({
-                            title: (modalT) => modalT('PerformanceDisplay.yakProcessDetails'),
-                            content: <div style={{ padding: 8 }}>{JSON.stringify(i)}</div>,
-                            footer: null,
-                          })
-                        }}
-                      >
-                        Details
-                      </YakitButton>
-
-                      <YakitPopconfirm
-                        title={<>{t('PerformanceDisplay.switchEngineConfirm')}</>}
-                        onConfirm={async () => {
-                          const oldPort = port
-                          if (+i.port !== oldPort) {
-                            await delTemporaryProject()
+                <div className={panelStyles.rowHeader}>
+                  <strong>{t(`EngineManagement.${item.transport}`)}</strong>
+                  {item.current && props.engineLink && (
+                    <span className={`${panelStyles.badge} ${panelStyles.current}`}>
+                      {t('EngineManagement.current')}
+                    </span>
+                  )}
+                  {item.ownership === 'external' && (
+                    <span className={panelStyles.badge}>{t('EngineManagement.externalBadge')}</span>
+                  )}
+                  <span className={panelStyles.state} data-ready={item.state === 'ready'}>
+                    {t(`EngineManagement.${item.state}`, { defaultValue: item.state })}
+                  </span>
+                </div>
+                <div className={panelStyles.endpoint} title={item.displayEndpoint}>
+                  {item.displayEndpoint || t('EngineManagement.endpointUnknown')}
+                </div>
+                <div className={panelStyles.meta}>
+                  <span>PID {item.pid ?? '—'}</span>
+                  <span>{item.version || t('EngineManagement.versionUnknown')}</span>
+                  <span>{t(`EngineManagement.${item.ownership}`)}</span>
+                </div>
+                <div className={panelStyles.actions}>
+                  <YakitButton type="text2" onClick={() => details(item)}>
+                    {t('EngineManagement.details')}
+                  </YakitButton>
+                  {item.current ? (
+                    <YakitButton
+                      type="outline2"
+                      disabled={busy}
+                      onClick={() =>
+                        execute(async () => {
+                          const result = await yakitEngine.disconnectLocalEngine()
+                          if (!result.ok) {
+                            setMessage(t('EngineManagement.operationFailed'))
+                            return
                           }
-                          const switchEngine: YaklangEngineWatchDogCredential = {
-                            Mode: 'local',
-                            Port: i.port,
-                            Host: '127.0.0.1',
-                          }
-                          yakitUILayout.setSwitchConnectionRefresh(true)
-                          yakitEngine
-                            .connectYaklangEngine(switchEngine)
-                            .then(() => {
-                              setTimeout(() => {
-                                success(t('PerformanceDisplay.switchCoreEngineSuccess'))
-                                if (!isEnpriTraceAgent() && +i.port !== oldPort) {
-                                  emiter.emit('onSwitchEngine')
-                                }
-                                yakitUILayout.setSwitchConnectionRefresh(false)
-                              }, 500)
-                            })
-                            .catch((e) => {
-                              failed(t('PerformanceDisplay.switchEngineFailed'))
-                              if (isLocal) {
-                                process.forEach((item) => {
-                                  if (item.port == oldPort) {
-                                    yakitEngine
-                                      .killYakGrpc(item.pid)
-                                      .then((val) => {
-                                        if (!val) {
-                                          success(t('PerformanceDisplay.engineProcessesClosing'))
-                                          yakitUILayout.setSwitchConnectionRefresh(false)
-                                          typeCallback('break')
-                                        }
-                                      })
-                                      .catch((e: any) => {})
-                                      .finally(fetchPSList)
-                                  }
-                                })
-                              }
-                            })
-                        }}
-                      >
-                        <YakitButton
-                          type="outline1"
-                          colors="success"
-                          disabled={+i.port === 0 || (isLocal && +i.port === port)}
-                        >
-                          {t('PerformanceDisplay.switchEngine')}
-                        </YakitButton>
-                      </YakitPopconfirm>
-                      <YakitPopconfirm
-                        title={
-                          <>
-                            {t('PerformanceDisplay.closeEngineConfirm1')}
-                            <br />
-                            {t('PerformanceDisplay.closeEngineConfirm2', { edition: getReleaseEditionName() })}
-                            <br />
-                            {t('PerformanceDisplay.closeEngineConfirm3')}
-                          </>
-                        }
-                        onConfirm={async () => {
-                          if (+i.port === port) {
-                            await delTemporaryProject()
-                          }
-
-                          yakitEngine
-                            .killYakGrpc(i.pid)
-                            .then((val) => {
-                              if (!val) {
-                                isLocal && +i.port === port && typeCallback('break')
-                                success(t('PerformanceDisplay.engineProcessesClosing'))
-                              }
-                            })
-                            .catch((e: any) => {})
-                            .finally(fetchPSList)
-                        }}
-                      >
-                        <YakitButton type="outline1" colors="danger">
-                          {t('PerformanceDisplay.closeEngine')}
-                        </YakitButton>
-                      </YakitPopconfirm>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-            <div className={styles['engine-list-footer']}>
-              <div></div>
-              <YakitPopconfirm
-                title={
-                  <div style={{ width: 330 }}>
-                    {t('PerformanceDisplay.closeEngineConfirm1')}
-                    <br />
-                    {t('PerformanceDisplay.closeEngineConfirm2', { edition: getReleaseEditionName() })}
-                    <br />
-                    {t('PerformanceDisplay.closeEngineConfirm3')}
-                  </div>
-                }
-                onConfirm={() => allClose()}
-              >
-                <div className={styles['engine-list-footer-btn']}>{t('YakitButton.closeAll')}</div>
-              </YakitPopconfirm>
-            </div>
+                          props.typeCallback('break')
+                        })
+                      }
+                    >
+                      {t('EngineManagement.disconnect')}
+                    </YakitButton>
+                  ) : (
+                    <YakitButton
+                      type="outline2"
+                      disabled={busy}
+                      onClick={() =>
+                        showYakitModal({
+                          title: t('EngineManagement.settings'),
+                          width: 440,
+                          content: <p className={panelStyles.settingsHelp}>{t('EngineManagement.settingsReason')}</p>,
+                          footer: null,
+                        })
+                      }
+                    >
+                      {t('EngineManagement.settings')}
+                    </YakitButton>
+                  )}
+                  <YakitPopconfirm title={t('EngineManagement.stopConfirm')} onConfirm={() => stop(item)}>
+                    <YakitButton
+                      data-testid="engine-stop"
+                      type="outline2"
+                      colors="danger"
+                      disabled={busy || !item.actions.stop}
+                    >
+                      {t('EngineManagement.stop')}
+                    </YakitButton>
+                  </YakitPopconfirm>
+                </div>
+              </article>
+            ))}
           </div>
-        </div>
+          <footer className={panelStyles.footer}>
+            <YakitButton type="text2" aria-expanded={recoveryOpen} onClick={() => setRecoveryOpen(!recoveryOpen)}>
+              {t('EngineManagement.troubleshoot')}
+              <span aria-hidden="true">{recoveryOpen ? ' −' : ' +'}</span>
+            </YakitButton>
+            <YakitPopconfirm title={t('EngineManagement.stopConfirm')} onConfirm={stopAll}>
+              <YakitButton type="text" colors="danger" disabled={busy || !managed.length}>
+                {t('EngineManagement.stopAllShort', { count: managed.length })}
+              </YakitButton>
+            </YakitPopconfirm>
+          </footer>
+          <div className={panelStyles.recovery} hidden={!recoveryOpen}>
+            <p>{t('EngineManagement.restoreHelp', { version: builtIn || '—' })}</p>
+            <YakitPopconfirm
+              title={t('EngineManagement.restoreConfirm', { version: builtIn || '—' })}
+              onConfirm={restore}
+            >
+              <YakitButton type="outline2" disabled={busy || !builtIn}>
+                {t('EngineManagement.restore')}
+              </YakitButton>
+            </YakitPopconfirm>
+          </div>
+        </section>
       }
-      onOpenChange={(visible) => setShow(visible)}
     >
-      <div className={styles['ui-op-btn-wrapper']}>
-        <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
-          <GooglePhotosLogoSvgIcon className={classNames({ [styles['icon-rotate-animation']]: !show })} />
-        </div>
-      </div>
+      <button
+        type="button"
+        data-testid="engine-management-trigger"
+        aria-label={t('EngineManagement.title')}
+        className={`${styles['ui-op-btn-wrapper']} ${panelStyles.trigger}`}
+      >
+        <GooglePhotosLogoSvgIcon />
+      </button>
     </YakitPopover>
   )
 })

@@ -7,7 +7,17 @@ export function engineFailureStatus(status: string, stage: 'check' | 'start'): Y
   if (status === 'port_occupied') return 'port_occupied_prev'
   if (status === 'port_denied') return 'port_denied'
   if (status === 'database_error') return 'database_error'
-  if (status === 'protocol_error') return 'check_error'
+  if (
+    [
+      'protocol_error',
+      'stop_failed',
+      'ipc_unavailable',
+      'ipc_unsupported',
+      'operation_busy',
+      'connection_settings_required',
+    ].includes(status)
+  )
+    return 'check_error'
   if (stage === 'check') {
     if (status === 'old_version') return 'old_version'
     if (status === 'timeout' || status === 'call_error') return 'check_timeout'
@@ -49,6 +59,11 @@ export function engineFailureMessage(
     'protocol_error',
     'process_error',
     'engine_exited',
+    'stop_failed',
+    'ipc_unavailable',
+    'ipc_unsupported',
+    'operation_busy',
+    'connection_settings_required',
   ]
   if (result.status && statuses.includes(result.status) && translate) {
     return translate(`EngineFailure.${result.status}`, { defaultValue: fallback })

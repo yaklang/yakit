@@ -84,7 +84,7 @@ describe('YaklangEngineWatchDog 组件测试', () => {
         Mode: 'local',
         Host: '127.0.0.1',
         Port: 9011,
-        Password: 'test-password',
+        LaunchId: 'test-plan',
       },
       keepalive: false,
       engineLink: false,
@@ -138,7 +138,7 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       })
     })
 
-    it('连接失败且 mode = "local" 时，应触发自动启动本地引擎，并把版本映射为 Handshake 旧名', async () => {
+    it('显式启动新本地会话时，交由主进程统一编排，并把版本映射为 Handshake 旧名', async () => {
       render(<YaklangEngineWatchDog {...props} />)
       triggerEngineTest()
 
@@ -148,7 +148,7 @@ describe('YaklangEngineWatchDog 组件测试', () => {
           expect(grpcStartLocalEngine).toHaveBeenCalledWith(
             expect.objectContaining({
               port: 9011,
-              password: 'test-password',
+              launchId: 'test-plan',
               version: 'yakit',
               isEnpriTraceAgent: false,
               softwareVersion: 'yakit',
@@ -208,23 +208,24 @@ describe('YaklangEngineWatchDog 组件测试', () => {
   })
 
   describe('并发与取消', () => {
-    it('连续点击启动只发出一次连接和启动请求', async () => {
+    it('连续点击只发出一次完整启动动作，不先匿名连接', async () => {
       let finish!: () => void
-      vi.mocked(yakitEngine.connectYaklangEngine).mockImplementationOnce(
+      vi.mocked(grpcStartLocalEngine).mockImplementationOnce(
         () =>
-          new Promise((_resolve, reject) => {
-            finish = () => reject(new Error('offline'))
+          new Promise((resolve) => {
+            finish = () => resolve({ ok: true, status: 'success', message: '' })
           }),
       )
       render(<YaklangEngineWatchDog {...props} />)
       triggerEngineTest()
       triggerEngineTest()
-      await act(async () => finish())
-      expect(yakitEngine.connectYaklangEngine).toHaveBeenCalledOnce()
       expect(grpcStartLocalEngine).toHaveBeenCalledOnce()
+      await act(async () => finish())
+      expect(yakitEngine.connectYaklangEngine).not.toHaveBeenCalled()
     })
 
     it.each(['unmount', 'break', 'credential'])('%s 后旧连接失败不能启动子进程', async (operation) => {
+      props.credential.InstanceId = 'owned-instance'
       let finish!: () => void
       vi.mocked(yakitEngine.connectYaklangEngine).mockImplementationOnce(
         () =>

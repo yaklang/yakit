@@ -28,6 +28,7 @@ export interface LocalEngineLinkFuncProps {
 }
 
 export interface AllowSecretLocalJson {
+  launchId?: string
   ok: boolean
   reason: string[]
   info: string
@@ -43,11 +44,13 @@ export interface AllowSecretLocalJson {
 }
 
 export interface LocalLinkParams {
+  launchId?: string
   port: number
   secret?: string
 }
 
 export interface CheckAllowSecretLocal {
+  policy?: 'auto' | 'ipc' | 'tcp'
   port: number
   softwareVersion: SoftwareVersion
 }
@@ -78,6 +81,9 @@ export interface EngineEvent {
 }
 
 export interface ExecResult {
+  instance?: LocalEngineInstance
+  fallback?: boolean
+  attempts?: ExecResult[]
   ok: boolean
   status: string
   stage?: 'check' | 'start' | 'connect'

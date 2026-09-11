@@ -5,6 +5,7 @@ const PROTO_PATH = path.join(__dirname, '../protos/grpc.proto')
 const { HttpSetting } = require('./state')
 const grpc = require('@grpc/grpc-js')
 const { createEngineGrpcClient } = require('./handlers/utils/engineGrpcClient')
+const { getEngineSession } = require('./handlers/utils/engineSessionRuntime')
 const protoLoader = require('@grpc/proto-loader')
 const { printLogOutputFile } = require('./logFile')
 const { assertTrustedAppSender, normalizeHttpBaseUrl } = require('./security')
@@ -70,6 +71,7 @@ const options = {
 }
 
 function newClient(settings = global) {
+  if (!settings.defaultYakGRPCAddr && !settings.endpoint) throw new Error('Engine disconnected')
   return createEngineGrpcClient(Yak, settings, options)
 }
 
@@ -180,6 +182,7 @@ module.exports = {
       return {
         addr: global.defaultYakGRPCAddr,
         isTLS: !!global.caPem,
+        instance: getEngineSession().current(),
       }
     })
 
@@ -204,6 +207,7 @@ module.exports = {
       return {
         addr: global.defaultYakGRPCAddr,
         isTLS: !!global.caPem,
+        instance: getEngineSession().current(),
       }
     })
 
@@ -522,6 +526,7 @@ module.exports = {
       return {
         addr: global.defaultYakGRPCAddr,
         isTLS: !!global.caPem,
+        instance: getEngineSession().current(),
       }
     })
 

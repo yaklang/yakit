@@ -5,8 +5,9 @@ import {
   runIdempotentElectronCDPCommand,
 } from '../fixtures/electron/electron-cdp-retry.mjs'
 
-export const LINK_WINDOW_URL = '/engine-link-startup/dist/index.html'
-export const MAIN_WINDOW_URL = '/renderer/pages/main/index.html'
+const devRenderers = process.env.YAKIT_E2E_RENDERER_MODE === 'development'
+export const LINK_WINDOW_URL = devRenderers ? '127.0.0.1:5173' : '/engine-link-startup/dist/index.html'
+export const MAIN_WINDOW_URL = devRenderers ? '127.0.0.1:3000' : '/renderer/pages/main/index.html'
 
 export const waitForShellWindows = async () => {
   let readyWindows
@@ -107,7 +108,7 @@ export const connectRemoteEngineThroughUI = async (credentials) => {
   await $('[data-testid="remote-engine-connect"]').click()
 }
 
-export const waitForMainWindow = async () => {
+export const waitForMainWindow = async ({ timeout = 15_000 } = {}) => {
   await browser.waitUntil(
     async () => {
       try {
@@ -120,7 +121,7 @@ export const waitForMainWindow = async () => {
       }
     },
     {
-      timeout: 15_000,
+      timeout,
       timeoutMsg: 'Main window did not become visible after the engine-ready handoff',
     },
   )
@@ -136,12 +137,18 @@ export const waitForMainWindow = async () => {
 export const enterDefaultProjectThroughUI = async () => {
   await browser.switchToYakitWindow(MAIN_WINDOW_URL)
   const homeEntry = await $('[data-testid="home-open-mitm-v2"]')
-  if (await homeEntry.isDisplayed()) return
-
-  await $('[data-testid="project-manage"]').waitForDisplayed({
-    timeout: 30_000,
-    timeoutMsg: 'Main did not expose Project Management before entering a project',
-  })
+  // A saved/default project can finish opening after the initial Main handoff.
+  await browser.waitUntil(
+    async () => (await homeEntry.isDisplayed()) || (await $('[data-testid="project-manage"]').isDisplayed()),
+    {
+      timeout: 30_000,
+      timeoutMsg: 'Main did not expose an interactive home or Project Management',
+    },
+  )
+  if (await homeEntry.isDisplayed()) {
+    await homeEntry.waitForClickable()
+    return
+  }
 
   let defaultProject
   await browser.waitUntil(

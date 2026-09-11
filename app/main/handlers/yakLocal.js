@@ -9,6 +9,8 @@ const path = require('path')
 const { setLocalCache, deleteLocalCache } = require('../localCache')
 const { getYakitHome } = require('../filePath')
 const { assertTrustedAppSender, normalizePid } = require('../security')
+const { getEngineSession } = require('./utils/engineSessionRuntime')
+const { observedEngine } = require('./utils/engineProcessDTO')
 const isWindows = process.platform === 'win32'
 
 if (process.platform === 'darwin' || process.platform === 'linux') {
@@ -61,112 +63,24 @@ const runWindowsTaskKill = (pid) => {
   })
 }
 
-const windowsPidTableNetstatANO = (stdout) => {
-  let lines = stdout.split('\n').map((i) => i.trim())
-  let pidToPort = new Map()
-  if (lines.length > 0) {
-    lines
-      .map((i) => i.split(/\s+/))
-      .forEach((i) => {
-        if (i.length !== 5) {
-          return
-        }
-        const pid = parseInt(i[4] || 1)
-        const localPort = i[1]
-        const port = parseInt(localPort.substr(localPort.lastIndexOf(':') + 1))
-        let portList = pidToPort.get(pid)
-        if (portList === undefined) {
-          pidToPort.set(pid, [])
-          portList = pidToPort.get(pid)
-        }
-        if (!portList.includes(port)) {
-          portList.push(port)
-        }
-      })
-  }
-
-  return pidToPort
+// Discovery is observational: argv never establishes ownership or credentials.
+const fetchGeneralYakProcess = async () => {
+  const processes = await psList()
+  return processes
+    .filter((item) => /(?:^|[\\/])yak(?:\.exe)?$/i.test(item.name || '') || /(?:^|\s)grpc(?:\s|$)/.test(item.cmd || ''))
+    .map(observedEngine)
+}
+const fetchWindowsYakProcess = fetchGeneralYakProcess
+const listLocalEngines = async () => {
+  const managed = getEngineSession().list()
+  let discovered = []
+  try {
+    discovered = await fetchGeneralYakProcess()
+  } catch {}
+  const ownedPids = new Set(managed.filter((item) => item.state !== 'exited').map((item) => item.pid))
+  return [...managed, ...discovered.filter((item) => !ownedPids.has(item.pid))]
 }
 
-// asyncPsList wrapper
-const fetchWindowsYakProcess = () => {
-  return new Promise((resolve, reject) => {
-    childProcess.exec('netstat /ano | findstr LISTENING', (error, stdout) => {
-      if (error) {
-        reject(error)
-        return
-      }
-
-      let pidToPorts = windowsPidTableNetstatANO(stdout)
-      psList()
-        .then((data) => {
-          let ls = data
-            .filter((i) => {
-              return (i.name || '').includes('yak')
-            })
-            .map((i) => {
-              let portsRaw = '0'
-              try {
-                let ports = pidToPorts.get(i.pid)
-                if (ports.length > 0) {
-                  ports.forEach((i) => {
-                    if (parseInt(i) > 50000) {
-                      return
-                    }
-                    portsRaw = i
-                  })
-                }
-              } catch (e) {
-                console.info(i.cmd)
-              }
-              return {
-                port: portsRaw,
-                ...i,
-              }
-            })
-            .map((i) => {
-              return { port: parseInt(i.port), ...i, origin: i }
-            })
-          resolve(ls)
-        })
-        .catch((e) => reject(e))
-    })
-  })
-}
-const fetchGeneralYakProcess = () => {
-  return new Promise((resolve, reject) => {
-    psList()
-      .then((data) => {
-        let ls = data
-          .filter((i) => {
-            try {
-              return i.cmd.includes('grpc')
-            } catch (e) {
-              return false
-            }
-          })
-          .map((i) => {
-            // 上一步筛选了 yak.*grpc 的命令, 所以没有 --port 的就是默认 grpc 启动的 8087 端口
-            let portsRaw = '8087'
-            try {
-              portsRaw = new RegExp(/port\s+(\d+)/).exec(i.cmd)[1]
-            } catch (e) {
-              console.info(i.cmd)
-            }
-            return {
-              port: portsRaw,
-              ...i,
-              name: 'yak',
-            }
-          })
-          .map((i) => {
-            return { port: parseInt(i.port), ...i, origin: i }
-          })
-        resolve(ls)
-      })
-      .catch((e) => reject(e))
-  })
-}
 const fetchGeneralYakProcessx = () => {
   return new Promise((resolve, reject) => {
     psList()
@@ -184,7 +98,7 @@ const fetchGeneralYakProcessx = () => {
             try {
               portsRaw = new RegExp(/port\s+(\d+)/).exec(i.cmd)[1]
             } catch (e) {
-              console.info(i.cmd)
+              // Do not log process command lines (they may contain credentials).
             }
             return {
               port: portsRaw,
@@ -267,20 +181,13 @@ module.exports = {
     })
 
     ipcMain.handle('ps-yak-grpc', async (e, params) => {
-      if (isWindows) {
-        return await fetchWindowsYakProcess()
-      } else {
-        return await fetchGeneralYakProcess()
-      }
+      return listLocalEngines()
     })
 
     ipcMain.handle('kill-yak-grpc', async (e, pid) => {
       assertTrustedAppSender(e, 'kill-yak-grpc')
-      try {
-        return await asyncKillYakGRPC(pid)
-      } catch (e) {
-        return 'failed'
-      }
+      // Legacy arbitrary-PID requests cannot prove ownership. Use local-engine-stop with an instance ID.
+      throw new Error('Engine ownership required; use managed instance stop')
     })
 
     ipcMain.handle('is-yak-engine-installed', (e) => {
@@ -342,20 +249,13 @@ module.exports = {
   },
   registerNewIPC: (win, getClient, ipcEventPre) => {
     ipcMain.handle(ipcEventPre + 'ps-yak-grpc', async (e, params) => {
-      if (isWindows) {
-        return await fetchWindowsYakProcess()
-      } else {
-        return await fetchGeneralYakProcess()
-      }
+      return listLocalEngines()
     })
 
     ipcMain.handle(ipcEventPre + 'kill-yak-grpc', async (e, pid) => {
       assertTrustedAppSender(e, ipcEventPre + 'kill-yak-grpc')
-      try {
-        return await asyncKillYakGRPC(pid)
-      } catch (e) {
-        return 'failed'
-      }
+      // Legacy arbitrary-PID requests cannot prove ownership. Use local-engine-stop with an instance ID.
+      throw new Error('Engine ownership required; use managed instance stop')
     })
   },
 }
