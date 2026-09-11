@@ -305,9 +305,6 @@ const getSeverityIcon = (Severity?: string) => {
   const severity = SeverityMapTag.filter((item) => item.key.includes(Severity || ''))[0]
   let icon = <></>
   switch (severity?.name) {
-    case '无':
-      icon = <DefaultRiskColorful />
-      break
     case '信息':
       icon = <FingerprintInfoRiskColorful />
       break
@@ -576,7 +573,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             {
               title: t('YakitRiskTable.cvss_score'),
               dataKey: 'SeverityScore',
-              width: 100,
+              width: 120,
               align: 'center' as const,
               render: (_text: unknown, record: Risk) => {
                 const score = typeof record.SeverityScore === 'number' ? record.SeverityScore : undefined
@@ -601,10 +598,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         dataKey: 'Severity',
         width: 100,
         align: 'center',
-        sorterProps: {
-          sorter: true,
-          sorterKey: 'severity',
-        },
         render: (_, i: Risk) => {
           const title = SeverityMapTag.filter((item) => item.key.includes(i.Severity || ''))[0]
           const severityTag = (
@@ -902,6 +895,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       VerifierUid: isRepaired ? info.VerifierUid || info.Verifier : undefined,
       FixTime: isRepaired ? info.FixTime : undefined,
       FixSuggestion: isRepaired ? info.FixSuggestion : undefined,
+      TagReason: isRepaired ? undefined : info.DisposalNote,
     }
     apiBatchSetRiskTags(params).then(() => {
       const index = response.Data.findIndex((item) => item.Id === info.Id)
@@ -1731,10 +1725,9 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
   const initCvss = typeof info.SeverityScore === 'number' ? info.SeverityScore : undefined
   const initDisposal = getDisposalStatusFromTags(info.Tags)
   const [typeSearch, setTypeSearch] = useState('')
+  const [verifierLoading, setVerifierLoading] = useState(() => !!info.VerifierUid)
   const [verifierOptions, setVerifierOptions] = useState<{ label: string; value: string }[]>(() => {
-    if (info.VerifierUid) {
-      return [{ label: info.Verifier || info.VerifierUid, value: info.VerifierUid }]
-    }
+    if (info.VerifierUid) return []
     if (info.Verifier) return [{ label: info.Verifier, value: info.Verifier }]
     return []
   })
@@ -1742,16 +1735,17 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
   useEffect(() => {
     const uid = info.VerifierUid
     if (!uid) return
-    const keywords = (info.Verifier || uid).trim()
-    if (!keywords) return
-    apiGetUserSearch({ keywords })
+    apiGetUserSearch({ uid })
       .then((res) => {
         const matched = (res?.data || []).find((item) => (item.uid || String(item.id)) === uid)
         if (matched) {
-          setVerifierOptions([{ label: matched.name, value: matched.uid || String(matched.id) }])
+          const opt = { label: matched.name, value: matched.uid || String(matched.id) }
+          setVerifierOptions([opt])
+          form.setFieldsValue({ verifier: opt.value })
         }
       })
       .catch(() => {})
+      .finally(() => setVerifierLoading(false))
   }, [])
 
   const disposalStatus = Form.useWatch('disposal_status', form)
@@ -1850,135 +1844,137 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
 
   return (
     <div className={styles['yakit-risk-select-tag']}>
-      <Form
-        {...layout}
-        form={form}
-        onFinish={onFinish}
-        initialValues={{
-          risk_type: initRiskType,
-          cvss: initCvss,
-          disposal_status: initDisposal,
-          verifier: info.VerifierUid || info.Verifier,
-          repair_time: info.FixTime,
-          repair_suggestion: info.FixSuggestion,
-          disposal_note: info.DisposalNote,
-        }}
-      >
-        <Form.Item
-          label={t('YakitRiskEditForm.risk_type')}
-          name="risk_type"
-          rules={[{ required: true, message: t('YakitRiskEditForm.risk_type_required') }]}
+      <YakitSpin spinning={verifierLoading}>
+        <Form
+          {...layout}
+          form={form}
+          onFinish={onFinish}
+          initialValues={{
+            risk_type: initRiskType,
+            cvss: initCvss,
+            disposal_status: initDisposal,
+            verifier: info.VerifierUid ? undefined : info.Verifier,
+            repair_time: info.FixTime,
+            repair_suggestion: info.FixSuggestion,
+            disposal_note: info.DisposalNote,
+          }}
         >
-          <YakitSelect
-            showSearch
-            allowClear
-            placeholder={t('YakitRiskEditForm.risk_type_required')}
-            optionFilterProp="children"
-            onSearch={setTypeSearch}
+          <Form.Item
+            label={t('YakitRiskEditForm.risk_type')}
+            name="risk_type"
+            rules={[{ required: true, message: t('YakitRiskEditForm.risk_type_required') }]}
           >
-            {typeOptions.map((item) => (
-              <YakitSelect.Option key={item} value={item}>
-                {item}
-              </YakitSelect.Option>
-            ))}
-          </YakitSelect>
-        </Form.Item>
-        <Form.Item label={t('YakitRiskEditForm.cvss_score')} required style={{ marginBottom: 0 }}>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-            <Form.Item
-              name="cvss"
-              rules={[
-                { required: true, message: t('YakitRiskEditForm.cvss_required') },
-                { type: 'number', min: 0, max: 10, message: t('YakitRiskEditForm.cvss_range') },
-              ]}
-              style={{ flex: 1, marginBottom: 24 }}
+            <YakitSelect
+              showSearch
+              allowClear
+              placeholder={t('YakitRiskEditForm.risk_type_required')}
+              optionFilterProp="children"
+              onSearch={setTypeSearch}
             >
-              <YakitInputNumber
-                min={0}
-                max={10}
-                step={0.1}
-                precision={1}
-                placeholder="0.0-10.0"
-                style={{ width: '100%' }}
-              />
-            </Form.Item>
-            <Form.Item
-              label={t('YakitRiskEditForm.level')}
-              style={{ flex: 1, marginBottom: 24 }}
-              labelCol={{ span: 6 }}
-              wrapperCol={{ span: 18 }}
-            >
-              <YakitInput value={severityLabel} disabled />
-            </Form.Item>
-          </div>
-        </Form.Item>
-        <Form.Item label={t('YakitRiskEditForm.disposal_status')} name="disposal_status">
-          <YakitSelect mode="tags" allowClear placeholder={t('YakitRiskEditForm.disposal_placeholder')}>
-            {disposalSelectOptions.map((item) => {
-              const preset = DISPOSAL_STATUS_OPTIONS.find((opt) => opt.value === item)
-              return (
+              {typeOptions.map((item) => (
                 <YakitSelect.Option key={item} value={item}>
-                  {preset ? t(preset.labelKey) : item}
+                  {item}
                 </YakitSelect.Option>
-              )
-            })}
-          </YakitSelect>
-        </Form.Item>
-        {isRepairedSelected ? (
-          <>
-            <Form.Item
-              label={t('YakitRiskEditForm.verifier')}
-              name="verifier"
-              rules={[{ required: true, message: t('YakitRiskEditForm.verifier_required') }]}
-            >
-              <YakitSelect
-                showSearch
-                allowClear
-                placeholder={t('YakitRiskEditForm.verifier_placeholder')}
-                filterOption={false}
-                onSearch={onSearchVerifier}
-              >
-                {verifierOptions.map((item) => (
-                  <YakitSelect.Option key={item.value} value={item.value}>
-                    {item.label}
-                  </YakitSelect.Option>
-                ))}
-              </YakitSelect>
-            </Form.Item>
-            <Form.Item
-              label={t('YakitRiskEditForm.repair_time')}
-              name="repair_time"
-              rules={[{ required: true, message: t('YakitRiskEditForm.repair_time_required') }]}
-              getValueFromEvent={(date) => (date ? moment(date).unix() : undefined)}
-              getValueProps={(value) => ({ value: value ? moment.unix(value) : undefined })}
-            >
-              <YakitDatePicker
-                locale={locale}
-                style={{ width: '100%' }}
-                placeholder={t('YakitRiskEditForm.repair_time_required')}
-              />
-            </Form.Item>
-            <Form.Item label={t('YakitRiskEditForm.repair_suggestion')} name="repair_suggestion">
-              <YakitInput.TextArea placeholder={t('YakitRiskEditForm.repair_suggestion_placeholder')} rows={3} />
-            </Form.Item>
-          </>
-        ) : (
-          <Form.Item label={t('YakitRiskEditForm.disposal_note')} name="disposal_note">
-            <YakitInput.TextArea placeholder={t('YakitRiskEditForm.disposal_note_placeholder')} rows={3} />
+              ))}
+            </YakitSelect>
           </Form.Item>
-        )}
-        <div className={styles['yakit-risk-select-tag-btns']}>
-          <YakitButton
-            type="outline2"
-            onClick={() => {
-              if (onClose) onClose()
-            }}
-          >
-            {t('YakitButton.cancel')}
-          </YakitButton>
-          <YakitButton htmlType="submit">{t('YakitButton.ok')}</YakitButton>
-        </div>
-      </Form>
+          <Form.Item label={t('YakitRiskEditForm.cvss_score')} required style={{ marginBottom: 0 }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <Form.Item
+                name="cvss"
+                rules={[
+                  { required: true, message: t('YakitRiskEditForm.cvss_required') },
+                  { type: 'number', min: 0, max: 10, message: t('YakitRiskEditForm.cvss_range') },
+                ]}
+                style={{ flex: 1, marginBottom: 24 }}
+              >
+                <YakitInputNumber
+                  min={0}
+                  max={10}
+                  step={0.1}
+                  precision={1}
+                  placeholder="0.0-10.0"
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+              <Form.Item
+                label={t('YakitRiskEditForm.level')}
+                style={{ flex: 1, marginBottom: 24 }}
+                labelCol={{ span: 6 }}
+                wrapperCol={{ span: 18 }}
+              >
+                <YakitInput value={severityLabel} disabled />
+              </Form.Item>
+            </div>
+          </Form.Item>
+          <Form.Item label={t('YakitRiskEditForm.disposal_status')} name="disposal_status">
+            <YakitSelect mode="tags" allowClear placeholder={t('YakitRiskEditForm.disposal_placeholder')}>
+              {disposalSelectOptions.map((item) => {
+                const preset = DISPOSAL_STATUS_OPTIONS.find((opt) => opt.value === item)
+                return (
+                  <YakitSelect.Option key={item} value={item}>
+                    {preset ? t(preset.labelKey) : item}
+                  </YakitSelect.Option>
+                )
+              })}
+            </YakitSelect>
+          </Form.Item>
+          {isRepairedSelected ? (
+            <>
+              <Form.Item
+                label={t('YakitRiskEditForm.verifier')}
+                name="verifier"
+                rules={[{ required: true, message: t('YakitRiskEditForm.verifier_required') }]}
+              >
+                <YakitSelect
+                  showSearch
+                  allowClear
+                  placeholder={t('YakitRiskEditForm.verifier_placeholder')}
+                  filterOption={false}
+                  onSearch={onSearchVerifier}
+                >
+                  {verifierOptions.map((item) => (
+                    <YakitSelect.Option key={item.value} value={item.value}>
+                      {item.label}
+                    </YakitSelect.Option>
+                  ))}
+                </YakitSelect>
+              </Form.Item>
+              <Form.Item
+                label={t('YakitRiskEditForm.repair_time')}
+                name="repair_time"
+                rules={[{ required: true, message: t('YakitRiskEditForm.repair_time_required') }]}
+                getValueFromEvent={(date) => (date ? moment(date).unix() : undefined)}
+                getValueProps={(value) => ({ value: value ? moment.unix(value) : undefined })}
+              >
+                <YakitDatePicker
+                  locale={locale}
+                  style={{ width: '100%' }}
+                  placeholder={t('YakitRiskEditForm.repair_time_required')}
+                />
+              </Form.Item>
+              <Form.Item label={t('YakitRiskEditForm.repair_suggestion')} name="repair_suggestion">
+                <YakitInput.TextArea placeholder={t('YakitRiskEditForm.repair_suggestion_placeholder')} rows={3} />
+              </Form.Item>
+            </>
+          ) : (
+            <Form.Item label={t('YakitRiskEditForm.disposal_note')} name="disposal_note">
+              <YakitInput.TextArea placeholder={t('YakitRiskEditForm.disposal_note_placeholder')} rows={3} />
+            </Form.Item>
+          )}
+          <div className={styles['yakit-risk-select-tag-btns']}>
+            <YakitButton
+              type="outline2"
+              onClick={() => {
+                if (onClose) onClose()
+              }}
+            >
+              {t('YakitButton.cancel')}
+            </YakitButton>
+            <YakitButton htmlType="submit">{t('YakitButton.ok')}</YakitButton>
+          </div>
+        </Form>
+      </YakitSpin>
     </div>
   )
 })

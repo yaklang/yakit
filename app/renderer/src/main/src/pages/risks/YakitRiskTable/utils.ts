@@ -196,6 +196,8 @@ export interface BatchSetRiskTagsRequest {
   RiskTypeVerbose?: string
   Severity?: string
   SeverityScore?: number
+  /** 处置原因（对齐 proto TagReason，表单处置说明） */
+  TagReason?: string
 }
 
 export interface BatchSetRiskTagsResponse {

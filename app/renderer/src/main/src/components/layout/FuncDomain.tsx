@@ -111,7 +111,12 @@ const TaskNotification = React.lazy(() =>
 const TaskErrNotification = React.lazy(() =>
   import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskErrNotification })),
 )
-import { apiFetchMessageRead, apiFetchQueryMessage, apiFetchQueryWebMessage } from '../MessageCenter/utils'
+import {
+  apiFetchMessageRead,
+  apiFetchQueryMessage,
+  apiFetchQueryWebMessage,
+  apiFetchWebMessageRead,
+} from '../MessageCenter/utils'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { randomString } from '@/utils/randomUtil'
 import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
@@ -1742,7 +1747,7 @@ interface SetUpdateContentProp extends FetchUpdateContentProp {
 
 const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const { isEngineLink, isRemoteMode, onLogin } = props
-  const { t } = useI18nNamespaces(['layout', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['layout', 'yakitUi', 'components'])
 
   const { userInfo } = useStore()
 
@@ -2141,21 +2146,24 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   })
 
   const [messageList, setMessageList] = useState<API.MessageLogDetail[]>([])
-  const [webUnreadCount, setWebUnreadCount] = useState<number>(0)
+  const [webMessageList, setWebMessageList] = useState<API.MessageLogDetail[]>([])
   const isUpdate = useMemo(() => {
     const unRead = messageList.filter((item) => !item.isRead).length > 0
+    const webUnRead = webMessageList.filter((item) => !item.isRead).length > 0
     return (
       (yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
       lowerYaklangLastVersion ||
       unRead ||
-      webUnreadCount > 0
+      webUnRead
     )
-  }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, messageList, webUnreadCount])
+  }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, messageList, webMessageList])
 
-  const [noticeType, setNoticeType] = useState<'message' | 'update'>('update')
+  type NoticeType = 'web' | 'plugin' | 'message' | 'update'
+  const [noticeType, setNoticeType] = useState<NoticeType>('update')
+  const isWebNotice = noticeType === 'web'
   useUpdateEffect(() => {
     if (userInfo.isLogin) {
-      setNoticeType('message')
+      setNoticeType(isEnpriTrace() ? 'web' : 'message')
     } else {
       setNoticeType('update')
     }
@@ -2163,7 +2171,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
   const getAllMessage = useMemoizedFn(() => {
     setShow(false)
-    emiter.emit('openAllMessageNotification')
+    emiter.emit('openAllMessageNotification', noticeType === 'web' ? 'web' : 'plugin')
   })
 
   const onFetchMessage = useMemoizedFn(() => {
@@ -2184,26 +2192,26 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       })
   })
 
-  /** EE Web 未读红点 xxx--- 等待后端联调 */
+  /** EE 系统通知未读列表（与插件消息同为最多 20 条） */
   const onFetchWebUnread = useMemoizedFn(() => {
     if (!isEnpriTrace()) {
-      setWebUnreadCount(0)
+      setWebMessageList([])
       return
     }
     apiFetchQueryWebMessage(
       {
         page: 1,
-        limit: 1,
+        limit: 20,
       },
       {
         isRead: 'false',
       },
     )
       .then((res) => {
-        setWebUnreadCount(res?.pagemeta?.total || 0)
+        setWebMessageList(res.data || [])
       })
       .catch(() => {
-        setWebUnreadCount(0)
+        setWebMessageList([])
       })
   })
 
@@ -2213,11 +2221,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       onFetchMessage()
       onFetchWebUnread()
     } else {
-      setWebUnreadCount(0)
+      setWebMessageList([])
     }
   }, [userInfo.isLogin, show])
 
-  // Web 端通知无 WS：登录后每分钟轮询未读
+  // 系统通知无 WS：登录后每分钟轮询未读
   useInterval(
     () => {
       if (userInfo.isLogin && isEnpriTrace()) {
@@ -2246,19 +2254,39 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   }, [])
 
   const onRedAllMessage = useMemoizedFn(() => {
-    apiFetchMessageRead({
+    const fetchRead = isWebNotice ? apiFetchWebMessageRead : apiFetchMessageRead
+    fetchRead({
       isAll: true,
       hash: '',
     })
       .then((ok) => {
         if (ok) {
-          onFetchMessage()
+          if (isWebNotice) {
+            onFetchWebUnread()
+          } else {
+            onFetchMessage()
+          }
         }
       })
       .catch((err) => {
         failed(err)
       })
   })
+
+  const currentMessageList = isWebNotice ? webMessageList : messageList
+  const noticeTabOptions = useMemo(() => {
+    if (isEnpriTrace()) {
+      return [
+        { label: t('MessageCenter.webNotification'), value: 'web' },
+        { label: t('MessageCenter.plugin'), value: 'plugin' },
+        { label: '更新通知', value: 'update' },
+      ]
+    }
+    return [
+      { label: '消息中心', value: 'message' },
+      { label: '更新通知', value: 'update' },
+    ]
+  }, [t, i18nRefresh])
 
   const notice = useMemo(() => {
     const isUpdateYakit = yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)
@@ -2273,20 +2301,10 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             <YakitRadioButtons
               value={noticeType}
               onChange={(e) => {
-                const value = e.target.value
-                setNoticeType(value as 'message' | 'update')
+                setNoticeType(e.target.value as NoticeType)
               }}
               buttonStyle="solid"
-              options={[
-                {
-                  label: '消息中心',
-                  value: 'message',
-                },
-                {
-                  label: '更新通知',
-                  value: 'update',
-                },
-              ]}
+              options={noticeTabOptions}
             />
             {noticeType === 'update' ? (
               <div className={styles['switch-title']}>
@@ -2306,7 +2324,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
               <div className={styles['message-title']}>
                 {userInfo.isLogin && (
                   <>
-                    {messageList.length > 0 && (
+                    {currentMessageList.length > 0 && (
                       <>
                         <YakitButton type="text" style={{ fontWeight: 400 }} onClick={onRedAllMessage}>
                           全部已读
@@ -2381,7 +2399,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             <div className={styles['notice-info-wrapper']}>
               <React.Suspense fallback={null}>
                 <MessageCenter
-                  messageList={messageList}
+                  messageList={currentMessageList}
+                  useWebApi={isWebNotice}
                   getAllMessage={getAllMessage}
                   onLogin={() => {
                     setShow(false)
@@ -2413,7 +2432,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     isRemoteMode,
     communityYaklang,
     noticeType,
-    messageList,
+    noticeTabOptions,
+    currentMessageList,
+    isWebNotice,
     isIntranetYakitUpdateWait,
   ])
 

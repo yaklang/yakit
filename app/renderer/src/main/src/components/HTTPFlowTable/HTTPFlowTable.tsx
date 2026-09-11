@@ -546,6 +546,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       if (Array.isArray(query.Methods)) {
         query.Methods = query.Methods.join(',')
       }
+      if (Array.isArray(query.IssueType)) {
+        query.IssueType = query.IssueType.join(',')
+      }
+      if (Array.isArray(query.Severity)) {
+        query.Severity = query.Severity.join(',')
+      }
+      if (Array.isArray(query.Status)) {
+        query.Status = query.Status.join(',')
+      }
       if ('bodyLength' in query) {
         delete query.bodyLength
       }
@@ -1374,6 +1383,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     delete copyQuery.bodyLength
     if (Array.isArray(copyQuery.Methods)) {
       copyQuery.Methods = copyQuery.Methods.join(',')
+    }
+    if (Array.isArray(copyQuery.IssueType)) {
+      copyQuery.IssueType = copyQuery.IssueType.join(',')
+    }
+    if (Array.isArray(copyQuery.Severity)) {
+      copyQuery.Severity = copyQuery.Severity.join(',')
+    }
+    if (Array.isArray(copyQuery.Status)) {
+      copyQuery.Status = copyQuery.Status.join(',')
     }
     setQueryParams(JSON.stringify(copyQuery))
   }, [tableParams.Filter])

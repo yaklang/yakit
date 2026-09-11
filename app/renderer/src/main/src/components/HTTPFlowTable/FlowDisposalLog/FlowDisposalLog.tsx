@@ -6,6 +6,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import Login from '@/pages/Login'
+import { useStore } from '@/store'
 import { PluginImageTextarea } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea'
 import type {
   ImageTextareaData,
@@ -34,6 +35,7 @@ export interface FlowDisposalLogProps {
 export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
   const { flow, isLogin, refreshKey } = props
   const { t } = useI18nNamespaces(['history', 'yakitUi', 'risk'])
+  const { userInfo } = useStore()
   const powerEmptyImage = useEmptyImage('power')
   const [loginShow, setLoginShow] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -48,6 +50,7 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
 
   const flowId = Number(flow.Id) || 0
   const flowHash = flow.Hash || ''
+  const companyName = userInfo.companyName || ''
 
   const fetchList = useMemoizedFn((reset = false) => {
     if (!isLogin || (!flowId && !flowHash) || fetchingRef.current) return
@@ -65,7 +68,10 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
       limit: 20,
     })
       .then((res) => {
-        const data = res.data || []
+        const data = (res.data || []).map((item) => ({
+          ...item,
+          isMine: !!companyName && item.logType === 'comment' && item.userName === companyName,
+        }))
         if (data.length > 0) {
           beforeIdRef.current = data[data.length - 1].id
         }

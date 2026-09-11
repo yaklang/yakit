@@ -19,12 +19,12 @@ export const FLOW_SEVERITY_OPTIONS = ['低危', '中危', '高危', '严重'] as
 /** 流量标记：处置状态 */
 export const FLOW_DISPOSAL_STATUS_OPTIONS = ['确认', '误报', '待修复'] as const
 
-/** BatchSetHTTPFlowIssueFields 请求 */
+/** BatchSetHTTPFlowIssueFields 请求（对齐 proto Set* 字段） */
 export interface BatchSetHTTPFlowIssueFieldsRequest {
   Filter?: YakQueryHTTPFlowRequest
-  IssueType?: string
-  Severity?: string
-  Status?: string
+  SetIssueType?: string
+  SetSeverity?: string
+  SetStatus?: string
   StatusReason?: string
   Ids?: number[]
   Hashes?: string[]

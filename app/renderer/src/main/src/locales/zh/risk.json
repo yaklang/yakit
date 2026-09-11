@@ -67,6 +67,7 @@
     "pending_verify": "待验证",
     "confirmed": "确认",
     "repaired": "已修复",
+    "false_positive": "误报",
     "closed": "关闭",
     "verifier": "验证人",
     "verifier_required": "请选择验证人",

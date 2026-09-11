@@ -16,8 +16,7 @@ const parseFragmentUploadUrl = (res: UploadImgApiResponse | undefined): string =
     if (url) return url
   }
   const data = res?.data
-  const message =
-    res?.message || (typeof data === 'object' && data ? data.reason : undefined) || '上传图片失败'
+  const message = res?.message || (typeof data === 'object' && data ? data.reason : undefined) || '上传图片失败'
   throw new Error(String(message))
 }
 
@@ -65,7 +64,9 @@ const mapCommentDetail = (item: CommentDetailExtra): FlowDisposalLogItem => {
   }
 }
 
-const enrichParentComments = <T extends { id: number; description?: string; parentComment?: { id: number; description: string } }>(
+const enrichParentComments = <
+  T extends { id: number; description?: string; parentComment?: { id: number; description: string } },
+>(
   list: T[],
 ): T[] => {
   const byId = new Map(list.map((item) => [item.id, item]))
@@ -142,12 +143,12 @@ export const apiPublishFlowDisposalComment = (
   })
 }
 
-/** 删除评论 → POST /risk/httpflow/comment/delete */
+/** 删除评论 → DELETE /risk/httpflow/comment */
 export const apiDeleteFlowDisposalComment = (logId: number): Promise<API.ActionSucceeded> => {
   return new Promise((resolve, reject) => {
     NetWorkApi<API.CommentDeleteRequest, API.ActionSucceeded>({
-      method: 'post',
-      url: 'risk/httpflow/comment/delete',
+      method: 'delete',
+      url: 'risk/httpflow/comment',
       data: { id: logId },
     })
       .then(resolve)

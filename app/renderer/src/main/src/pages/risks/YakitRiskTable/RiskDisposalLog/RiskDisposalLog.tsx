@@ -6,6 +6,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import Login from '@/pages/Login'
+import { useStore } from '@/store'
 import type { Risk } from '../../schema'
 import { PluginImageTextarea } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea'
 import type {
@@ -15,7 +16,12 @@ import type {
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { RiskDisposalLogItem } from './RiskDisposalLogItem'
 import { disposalCommentConvertToJSON, disposalCommentJSONConvertToData } from './convert'
-import { apiDeleteDisposalComment, apiGetDisposalLogs, apiPublishDisposalComment, apiUploadDisposalImage } from './utils'
+import {
+  apiDeleteDisposalComment,
+  apiGetDisposalLogs,
+  apiPublishDisposalComment,
+  apiUploadDisposalImage,
+} from './utils'
 import type { DisposalLogItem, QuotationInfoProps } from './types'
 import styles from './RiskDisposalLog.module.scss'
 
@@ -27,6 +33,7 @@ export interface RiskDisposalLogProps {
 export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
   const { info, isLogin } = props
   const { t } = useI18nNamespaces(['risk', 'yakitUi'])
+  const { userInfo } = useStore()
   const powerEmptyImage = useEmptyImage('power')
   const [loginShow, setLoginShow] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -41,6 +48,7 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
   const fetchingRef = useRef(false)
 
   const riskHash = info.Hash || ''
+  const companyName = userInfo.companyName || ''
 
   const fetchList = useMemoizedFn((reset = false) => {
     if (!isLogin || !riskHash || fetchingRef.current) return
@@ -57,7 +65,10 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
       limit: 20,
     })
       .then((res) => {
-        const data = res.data || []
+        const data = (res.data || []).map((item) => ({
+          ...item,
+          isMine: !!companyName && item.logType === 'comment' && item.userName === companyName,
+        }))
         if (data.length > 0) {
           beforeIdRef.current = data[data.length - 1].id
         }
