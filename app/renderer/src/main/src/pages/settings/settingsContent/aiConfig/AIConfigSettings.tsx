@@ -107,6 +107,18 @@ export const AIConfigSettings: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false
+    const onChange = (payload?: string) => {
+      if (!payload) return
+      try {
+        const cache = JSON.parse(payload) as AIAgentSetting
+        if (typeof cache !== 'object' || !cache) return
+        hasBroadcastRef.current = true
+        if (payload === lastPayloadRef.current) return
+        lastPayloadRef.current = payload
+        setSetting((old) => applyAIAgentChatSettingBroadcast(old, cache))
+      } catch (_) {}
+    }
+    emiter.on('onAIAgentChatSettingChange', onChange)
     loadAIAgentChatSetting()
       .then((result) => {
         if (cancelled) return
@@ -121,22 +133,6 @@ export const AIConfigSettings: React.FC = () => {
       .catch(() => {})
     return () => {
       cancelled = true
-    }
-  }, [])
-
-  useEffect(() => {
-    const onChange = (payload?: string) => {
-      if (!payload || payload === lastPayloadRef.current) return
-      try {
-        const cache = JSON.parse(payload) as AIAgentSetting
-        if (typeof cache !== 'object' || !cache) return
-        lastPayloadRef.current = payload
-        hasBroadcastRef.current = true
-        setSetting((old) => applyAIAgentChatSettingBroadcast(old, cache))
-      } catch (_) {}
-    }
-    emiter.on('onAIAgentChatSettingChange', onChange)
-    return () => {
       emiter.off('onAIAgentChatSettingChange', onChange)
     }
   }, [])
