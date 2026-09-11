@@ -1,6 +1,6 @@
 {
   "name": "main",
-  "version": "2.09.04",
+  "version": "2.09.11",
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^5.6.1",
