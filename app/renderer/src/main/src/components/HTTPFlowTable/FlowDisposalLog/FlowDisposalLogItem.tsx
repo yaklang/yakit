@@ -48,7 +48,7 @@ export const FlowDisposalLogItemView: React.FC<FlowDisposalLogItemProps> = memo(
   })
 
   const showParentQuote = !!(parentContent?.text || (parentContent?.imgs && parentContent.imgs.length > 0))
-  const hasBody = isSystem ? true : !!(content?.text || content?.imgs?.length || showParentQuote)
+  const hasBody = isSystem ? !!info.description : !!(content?.text || content?.imgs?.length || showParentQuote)
 
   return (
     <div className={styles['log-item']}>
@@ -117,24 +117,7 @@ export const FlowDisposalLogItemView: React.FC<FlowDisposalLogItemProps> = memo(
           {hasBody && (
             <div className={styles['info-additional']}>
               {isSystem ? (
-                <div className={styles['log-system-fields']}>
-                  <div className={styles['field-row']}>
-                    <span className={styles['label']}>{t('HTTPFlowTable.problemType')}：</span>
-                    <span>{info.issueType || '-'}</span>
-                  </div>
-                  <div className={styles['field-row']}>
-                    <span className={styles['label']}>{t('HTTPFlowTable.severity')}：</span>
-                    <span>{info.severity || '-'}</span>
-                  </div>
-                  <div className={styles['field-row']}>
-                    <span className={styles['label']}>{t('HTTPFlowTable.disposalStatus')}：</span>
-                    <span>{info.status || '-'}</span>
-                  </div>
-                  <div className={styles['field-row']}>
-                    <span className={styles['label']}>{t('HTTPFlowTable.disposalNote')}：</span>
-                    <span>{info.statusReason || t('HTTPFlowDetailMini.logNone')}</span>
-                  </div>
-                </div>
+                <div className={styles['log-item-content']}>{info.description || '-'}</div>
               ) : (
                 <>
                   {showParentQuote && (

@@ -287,6 +287,46 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
           return <></>
         }
       }
+      case 'httpflowTagsUpdate':
+        return (
+          <span
+            className={classNames(styles['text'], {
+              'yakit-single-line-ellipsis': isEllipsis,
+            })}
+          >
+            {t('MessageCenter.httpflowTagsUpdate', { user: String(data.handlerUserName || '') })}
+          </span>
+        )
+      case 'httpflowTesterAssign':
+        return (
+          <span
+            className={classNames(styles['text'], {
+              'yakit-single-line-ellipsis': isEllipsis,
+            })}
+          >
+            {t('MessageCenter.httpflowTesterAssign', { user: String(data.handlerUserName || '') })}
+          </span>
+        )
+      case 'riskTagsUpdate':
+        return (
+          <span
+            className={classNames(styles['text'], {
+              'yakit-single-line-ellipsis': isEllipsis,
+            })}
+          >
+            {t('MessageCenter.riskTagsUpdate', { user: String(data.handlerUserName || '') })}
+          </span>
+        )
+      case 'riskTesterAssign':
+        return (
+          <span
+            className={classNames(styles['text'], {
+              'yakit-single-line-ellipsis': isEllipsis,
+            })}
+          >
+            {t('MessageCenter.riskTesterAssign', { user: String(data.handlerUserName || '') })}
+          </span>
+        )
       default:
         return (
           <span
@@ -448,12 +488,14 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
 
 export interface MessageCenterProps {
   messageList: API.MessageLogDetail[]
+  /** 系统通知走 /web/info 已读 API */
+  useWebApi?: boolean
   getAllMessage: () => void
   onLogin: () => void
   onClose: () => void
 }
 export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
-  const { messageList, getAllMessage, onLogin, onClose } = props
+  const { messageList, useWebApi, getAllMessage, onLogin, onClose } = props
   const { t } = useI18nNamespaces(['yakitUi', 'components'])
   const { userInfo } = useStore()
   const [newMessageList, setNewMessageList] = useState<API.MessageLogDetail[]>(messageList)
@@ -471,7 +513,8 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
   // 移除列表中的某一项
   const removeItem = useMemoizedFn((item: API.MessageLogDetail) => {
     setLoading(true)
-    apiFetchMessageRead({
+    const fetchRead = useWebApi ? apiFetchWebMessageRead : apiFetchMessageRead
+    fetchRead({
       isAll: false,
       hash: item.hash,
     })
@@ -502,6 +545,7 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
                     onClose={onClose}
                     onRedTaskItem={onRedTaskItem}
                     removeItem={removeItem}
+                    useWebApi={useWebApi}
                   />
                 ))}
 
@@ -563,12 +607,14 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
 export interface MessageCenterModalProps {
   visible: boolean
   setVisible: (v: boolean) => void
+  /** 打开时初始通道（与铃铛当前 Tab 对齐） */
+  initialChannel?: MessageChannel
 }
 export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => {
-  const { visible, setVisible } = props
+  const { visible, setVisible, initialChannel } = props
   const { t } = useI18nNamespaces(['yakitUi', 'components'])
   const showChannelTabs = isEnpriTrace()
-  const [channel, setChannel] = useState<MessageChannel>('web')
+  const [channel, setChannel] = useState<MessageChannel>(initialChannel || 'web')
   const isWebChannel = showChannelTabs && channel === 'web'
   const [loading, setLoading] = useState<boolean>(false)
   const [hasMore, setHasMore] = useState<boolean>(true)
@@ -581,6 +627,12 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   const [syncPercent, setSyncPercent] = useState<number>()
   const syncCleanupRef = useRef<(() => void) | undefined>()
   const { userInfo } = useStore()
+
+  useEffect(() => {
+    if (initialChannel === 'web' || initialChannel === 'plugin') {
+      setChannel(initialChannel)
+    }
+  }, [initialChannel])
 
   const refresh = useMemoizedFn(() => {
     update()

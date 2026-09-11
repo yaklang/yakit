@@ -4,7 +4,8 @@ import type { API } from '@/services/swagger/resposeType'
 import { yakitNotify } from '@/utils/notification'
 
 export interface UserSearchQuery {
-  keywords: string
+  keywords?: string
+  uid?: string
 }
 
 /**
@@ -15,7 +16,7 @@ export interface UserSearchQuery {
 export const apiGetUserSearch: APIFunc<UserSearchQuery, API.UserOrdinaryResponse> = (query) => {
   return new Promise((resolve, reject) => {
     try {
-      if (!query.keywords) {
+      if (!query.keywords && !query.uid) {
         resolve({
           data: [],
         })
