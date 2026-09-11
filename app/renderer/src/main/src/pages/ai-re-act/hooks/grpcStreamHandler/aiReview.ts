@@ -186,6 +186,36 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
   store.getState().updateState({ currentReviewDetail: { token: chatData.id, renderNum: 0 } })
 }
 
+const handleCodeAuditRetryPrompt: AIMessageHandler = (requestInfo) => {
+  const { res, chatType, store, rawData } = requestInfo
+  if (!(res.Type === 'structured' && res.NodeId === 'code_audit_retry_prompt')) return
+  if (res.IsSync) return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const data = JSON.parse(ipcContent) as AIAgentGrpcApi.CodeAuditRetryPrompt
+  if (!data?.finding_ids?.length) {
+    requestInfo.pushLog({ level: 'error', message: `${res.NodeId}数据异常: ${ipcContent}` })
+    return
+  }
+
+  const interactiveId = res.EventUUID || res.TaskId || `code-audit-retry-${Date.now()}`
+  const chatData: AIChatQSData = {
+    ...genBaseAIChatData(res),
+    chatType: chatType,
+    id: interactiveId,
+    type: AIChatQSDataTypeEnum.CODE_AUDIT_RETRY_PROMPT,
+    data: { ...cloneDeep(data), interactive_id: interactiveId },
+    TaskId: generateTaskNodeDataID({
+      chatType,
+      planID: store.getState().currentChatStatus.questionID,
+      taskID: res.TaskId,
+      isExist: (key) => rawData.contents.has(key),
+    }),
+  }
+  rawData.contents.set(chatData.id, cloneDeep(chatData))
+  store.getState().updateState({ currentReviewDetail: { token: chatData.id, renderNum: 0 } })
+}
+
 const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
   const { res, chatType, store, rawData, request } = requestInfo
   if (res.Type !== 'exec_aiforge_review_require') return
@@ -370,4 +400,5 @@ export const aiReviewDataHandlers = {
   ai_review_end: handleAIReviewJudgement,
   review_release: handleReviewRelease,
   detached_plan_require: handleDetachedPlanReview,
+  code_audit_retry_prompt: handleCodeAuditRetryPrompt,
 } as const

@@ -784,6 +784,22 @@ export declare namespace AIAgentGrpcApi {
     options: AIRequireOption[]
   }
 
+  /** code_audit_retry_prompt 子 Agent 重试选择 */
+  export interface CodeAuditRetryFinding {
+    id: string
+    title: string
+    category: string
+    severity: string
+    confidence: number
+    retry_count: number
+    last_error: string
+  }
+  export interface CodeAuditRetryPrompt {
+    finding_count: number
+    finding_ids: string[]
+    findings: CodeAuditRetryFinding[]
+  }
+
   /** 工具相关信息、执行结果与总结 */
   export interface AIToolCall {
     /** 工具 ID */

@@ -29,7 +29,12 @@ import classNames from 'classnames'
 import styles from './AIReActChatReview.module.scss'
 import { OutlineHandleColorsIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineHandleColorsIcon'
 import { ColorsOutlineWarpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsOutlineWarpIcon'
-import { AIChatQSDataTypeEnum, type AIReviewType, type AITaskInfoProps } from '../../../ai-re-act/hooks/aiRender'
+import {
+  AIChatQSDataTypeEnum,
+  type AIReviewType,
+  type AITaskInfoProps,
+  type UICodeAuditRetryPrompt,
+} from '../../../ai-re-act/hooks/aiRender'
 import type { AIForge } from '@/pages/ai-agent/type/forge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
@@ -56,6 +61,11 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const [reviewTrees, setReviewTrees] = useState<AITaskInfoProps[]>([])
   const [currentPlansId, setCurrentPlansId] = useState<string>('')
   const [forgeOption, setForgeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
+  const [requireLoading, setRequireLoading] = useState(false)
+  const [requireQS, setRequireQS] = useState('')
+  const [aiOptionsSelect, setAIOptionsSelect] = useState<string>()
+  /** Code Audit Phase3 用户选中的待重试 finding IDs */
+  const [codeAuditRetrySelected, setCodeAuditRetrySelected] = useState<string[]>([])
   const forgeReviewFormRef = useRef<ForgeReviewFormRefProps>({ validateFields: () => new Promise(() => {}) })
 
   const initReviewTreesRef = useRef<AITaskInfoProps[]>([])
@@ -84,6 +94,14 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
           }
         }
         break
+      case AIChatQSDataTypeEnum.CODE_AUDIT_RETRY_PROMPT:
+        {
+          const data = info.data as UICodeAuditRetryPrompt
+          if (data?.finding_ids?.length) {
+            setCodeAuditRetrySelected([...data.finding_ids])
+          }
+        }
+        break
       default:
         break
     }
@@ -109,6 +127,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     }
   }, [renderNum, execute])
   //#endregion
+  const isCodeAuditRetryPrompt = useCreation(() => {
+    return info.type === AIChatQSDataTypeEnum.CODE_AUDIT_RETRY_PROMPT
+  }, [renderNum])
+
   const reviewTitle = useCreation(() => {
     const subTitle = countdown ? (
       <>
@@ -135,6 +157,9 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         break
       case 'exec_aiforge_review_require':
         title = t('AIReActChatReview.startApp')
+        break
+      case AIChatQSDataTypeEnum.CODE_AUDIT_RETRY_PROMPT:
+        title = 'Code Audit 重试选择'
         break
       default:
         break
@@ -191,6 +216,46 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     }
     return null
   }, [renderNum])
+  const codeAuditRetryPrompt = useCreation(() => {
+    if (info.type !== AIChatQSDataTypeEnum.CODE_AUDIT_RETRY_PROMPT) return null
+    const data = info.data as UICodeAuditRetryPrompt
+    const findings = data?.findings || []
+    if (findings.length === 0) return null
+    return (
+      <div className={styles['code-audit-retry-prompt']}>
+        <div className={styles['retry-prompt-title']}>
+          Phase 3 验证完成，以下 {findings.length} 个 finding 验证失败或未完成，请选择要重试的项：
+        </div>
+        <div className={styles['retry-finding-list']}>
+          {findings.map((f) => {
+            const selected = codeAuditRetrySelected.includes(f.id)
+            return (
+              <div
+                key={f.id}
+                className={classNames(styles['retry-finding-item'], {
+                  [styles['retry-finding-item-selected']]: selected,
+                })}
+                onClick={() => {
+                  setCodeAuditRetrySelected((prev) =>
+                    prev.includes(f.id) ? prev.filter((id) => id !== f.id) : [...prev, f.id],
+                  )
+                }}
+              >
+                <div className={styles['retry-finding-row']}>
+                  <span className={styles['retry-finding-id']}>{f.id}</span>
+                  <span className={styles['retry-finding-severity']}>{f.severity}</span>
+                  <span className={styles['retry-finding-category']}>{f.category}</span>
+                </div>
+                <div className={styles['retry-finding-title']}>{f.title}</div>
+                {f.last_error && <div className={styles['retry-finding-error']}>{f.last_error}</div>}
+                {f.retry_count > 0 && <div className={styles['retry-finding-count']}>已重试 {f.retry_count} 次</div>}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }, [renderNum, codeAuditRetrySelected, i18nRefresh])
 
   const taskReview = useCreation(() => {
     if (info.type === 'task_review_require') {
@@ -397,10 +462,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   // #endregion
 
   // #region 审阅选项-AI交互用户相关逻辑
-  const [requireLoading, setRequireLoading] = useState(false)
-  const [requireQS, setRequireQS] = useState('')
-  const [aiOptionsSelect, setAIOptionsSelect] = useState<string>()
-
   const isRequireQS = useCreation(() => {
     return !!(requireQS && requireQS.trim())
   }, [requireQS])
@@ -420,6 +481,18 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const handleAIRequireOpSend = useMemoizedFn((qs: string) => {
     const jsonInput: Record<string, string> = { suggestion: qs }
     onSendAIByValue(JSON.stringify(jsonInput), aiOptionsSelect)
+  })
+  /** 提交 Code Audit Phase3 重试选择 */
+  const handleCodeAuditRetrySend = useMemoizedFn(() => {
+    const data = info.data as UICodeAuditRetryPrompt
+    const interactiveId = data?.interactive_id
+    if (!interactiveId) return
+    const params: AIInputEvent = {
+      IsInteractiveMessage: true,
+      InteractiveId: interactiveId,
+      InteractiveJSONInput: codeAuditRetrySelected.join(','),
+    }
+    onSend({ token: sessionId, type: toAIChatSendType(chatType), params })
   })
   /**审阅模式提交树,type: plan_review_require */
   const handleSubmitReviewTree = useMemoizedFn(() => {
@@ -502,6 +575,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   // 是否显示继续执行按钮
   const isContinue = useCreation(() => {
     if (info.type === 'require_user_interactive') return false
+    if (isCodeAuditRetryPrompt) return false
 
     if (!info.data) return
     const { selectors } = info.data as AIAgentGrpcApi.ToolUseReviewRequire
@@ -509,11 +583,18 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
     const findIndex = selectors.findIndex((item) => item.value === 'continue')
     return findIndex !== -1
-  }, [renderNum])
+  }, [renderNum, isCodeAuditRetryPrompt])
   const onSendAIByValue = useMemoizedFn((value: string, optionValue?: string) => {
+    let interactiveId = ''
+    if (info.type === AIChatQSDataTypeEnum.CODE_AUDIT_RETRY_PROMPT) {
+      interactiveId = (info.data as UICodeAuditRetryPrompt).interactive_id || ''
+    } else {
+      interactiveId = (info.data as AIReviewType).id || ''
+    }
+    if (!interactiveId) return
     const params: AIInputEvent = {
       IsInteractiveMessage: true,
-      InteractiveId: (info.data as AIReviewType).id,
+      InteractiveId: interactiveId,
       InteractiveJSONInput: value,
     }
     onSend({ token: sessionId, type: toAIChatSendType(chatType), params, optionValue })
@@ -573,6 +654,34 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             {t('YakitButton.submitted')}
           </YakitButton>
         )}
+        {isCodeAuditRetryPrompt && (
+          <>
+            <YakitButton
+              type="outline2"
+              onClick={() => {
+                const data = info.data as UICodeAuditRetryPrompt
+                const interactiveId = data?.interactive_id
+                if (!interactiveId) return
+                const params: AIInputEvent = {
+                  IsInteractiveMessage: true,
+                  InteractiveId: interactiveId,
+                  InteractiveJSONInput: 'skip',
+                }
+                onSend({ token: sessionId, type: toAIChatSendType(chatType), params })
+              }}
+            >
+              不重试
+            </YakitButton>
+            <YakitButton
+              type="primary"
+              disabled={codeAuditRetrySelected.length === 0}
+              loading={requireLoading}
+              onClick={handleCodeAuditRetrySend}
+            >
+              重试选中项
+            </YakitButton>
+          </>
+        )}
       </div>
     )
   }, [
@@ -584,6 +693,11 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     requireLoading,
     noAIOptionsList.showButton,
     i18nRefresh,
+    isCodeAuditRetryPrompt,
+    codeAuditRetrySelected,
+    info,
+    chatType,
+    sessionId,
   ])
 
   const reviewHeardExtra = useCreation(() => {
@@ -654,6 +768,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
               {toolReview}
               {forgeReview}
               {aiRequireReview}
+              {codeAuditRetryPrompt}
             </div>
             {!reviewTreeOption && (aiOptions || noAIOptionsAllowShowInput) ? (
               <div className={styles['reivew-options']}>

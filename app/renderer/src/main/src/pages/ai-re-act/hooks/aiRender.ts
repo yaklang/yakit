@@ -269,6 +269,9 @@ export type UITaskReview = AIAgentGrpcApi.TaskReviewRequire & ReviewSelectedOpti
 export type UIToolUseReview = AIAgentGrpcApi.ToolUseReviewRequire & ReviewSelectedOption
 export type UIRequireUserInteractive = AIAgentGrpcApi.AIReviewRequire & ReviewSelectedOption
 export type UIExecAIForgeReview = AIAgentGrpcApi.ExecForgeReview & ReviewSelectedOption
+/** Code Audit Phase3 子 Agent 失败 finding 重试选择 */
+export type UICodeAuditRetryPrompt = AIAgentGrpcApi.CodeAuditRetryPrompt &
+  ReviewSelectedOption & { interactive_id: string }
 
 export type AIReviewType =
   | UIPlanReview
@@ -364,6 +367,8 @@ export enum AIChatQSDataTypeEnum {
   REQUIRE_USER_INTERACTIVE = 'require_user_interactive',
   /**智能体/forge审阅 */
   EXEC_AIFORGE_REVIEW_REQUIRE = 'exec_aiforge_review_require',
+  /** Code Audit Phase3 子 Agent 失败 finding 重试选择 */
+  CODE_AUDIT_RETRY_PROMPT = 'code_audit_retry_prompt',
   /**工具决策 */
   TOOL_CALL_DECISION = 'tool_call_decision',
   /**当前任务规划结束标志 */
@@ -440,6 +445,7 @@ type ChatRequireUserInteractive = AIChatQSDataBase<
   UIRequireUserInteractive
 >
 type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE, UIExecAIForgeReview>
+type ChatCodeAuditRetryPrompt = AIChatQSDataBase<AIChatQSDataTypeEnum.CODE_AUDIT_RETRY_PROMPT, UICodeAuditRetryPrompt>
 export type ChatTaskNodeGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_NODE_GROUP, AITaskStartInfo>
 type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
@@ -474,6 +480,7 @@ export type AIChatQSData =
   | ChatToolUseReviewRequire
   | ChatRequireUserInteractive
   | ChatExecAIForgeReview
+  | ChatCodeAuditRetryPrompt
   | ChatTaskNodeGroup
   | ChatToolCallDecision
   | ChatPlanExecEnd

@@ -1384,6 +1384,7 @@ export class ChatMultiSessionController {
           'react_task_created',
           'plan_exec_tasks',
           'skip_subtask_in_plan',
+          'code_audit_retry_prompt',
         ].includes(res.NodeId)
       ) {
         funcKey = res.NodeId

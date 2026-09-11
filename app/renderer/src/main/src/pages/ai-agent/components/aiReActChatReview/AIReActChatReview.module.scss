@@ -343,6 +343,86 @@
   align-items: center;
   gap: 8px;
 }
+.code-audit-retry-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--Colors-Use-Basic-Background);
+
+  .retry-prompt-title {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 22px;
+  }
+  .retry-finding-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 360px;
+    overflow: auto;
+  }
+  .retry-finding-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Neutral-Bg);
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+    &:hover {
+      border-color: var(--Colors-Use-Main-Primary);
+    }
+    &.retry-finding-item-selected {
+      border-color: var(--Colors-Use-Main-Primary);
+      background: color-mix(in srgb, var(--Colors-Use-Main-Primary) 8%, var(--Colors-Use-Neutral-Bg));
+    }
+  }
+  .retry-finding-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .retry-finding-id {
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--Colors-Use-Main-Primary);
+  }
+  .retry-finding-severity {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 1px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    background: var(--Colors-Use-Status-Serious);
+    color: #fff;
+  }
+  .retry-finding-category {
+    font-size: 11px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+  .retry-finding-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    word-break: break-all;
+  }
+  .retry-finding-error {
+    font-size: 11px;
+    color: var(--Colors-Use-Status-Serious);
+    word-break: break-all;
+    line-height: 16px;
+  }
+  .retry-finding-count {
+    font-size: 11px;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  }
+}
 .task-review-summary-popover {
   max-width: 700px;
   padding-bottom: 4px;
