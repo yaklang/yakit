@@ -12,6 +12,7 @@ import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AISourceEnum, type AIAgentGrpcApi } from '../hooks/grpcApi'
 import useCurrentTaskExecution from '../hooks/useCurrentTaskData/useCurrentTaskExecution'
 import emiter from '@/utils/eventBus/eventBus'
+import { YakitRoute } from '@/enums/yakitRoute'
 import { failed, yakitNotify } from '@/utils/notification'
 import { AIAgentTabListEnum, AITabsEnum, SwitchAIAgentTabEventEnum } from '@/pages/ai-agent/defaultConstant'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
@@ -25,6 +26,7 @@ import {
   ChatAlt2Outlined,
   ChevronDoubleDownOutlined,
   ChevronDoubleUpOutlined,
+  CogOutlined,
   FigmaIcon2017756Outlined,
   FigmaIcon348196674Outlined,
   FlagOutlined,
@@ -64,7 +66,7 @@ const MAIN_MENUS: MenuItemDef[] = [
 
 /** 「更多」分组展开后追加显示的功能入口（收起态仅在底部显示「更多」按钮） */
 const MORE_MENUS: MenuItemDef[] = [
-  // { key: 'ai-settings', labelKey: 'AIRightPanel.aiSettings', icon: <CogOutlined /> },
+  { key: 'ai-settings', labelKey: 'AIRightPanel.aiSettings', icon: <CogOutlined /> },
   { key: 'timeline', labelKey: 'AIRightPanel.timeline', icon: <TimelineOutlined /> },
   { key: 'export-log', labelKey: 'AIRightPanel.exportLog', icon: <FigmaIcon2017756Outlined /> },
   { key: 'view-log', labelKey: 'AIRightPanel.viewLog', icon: <NewspaperOutlined /> },
@@ -351,7 +353,7 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   /**
    * 菜单点击：任务列表、时间线、会话历史打开右侧内容面板；
    * 任务详情、流量、漏洞切换工作区 tab；文件系统打开侧栏会话页；
-   * 导出日志打开导出弹窗，查看日志打开日志窗口。
+   * AI 设置打开设置页，导出日志打开导出弹窗，查看日志打开日志窗口。
    */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
     switch (key) {
@@ -378,6 +380,9 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
         break
       case 'risk':
         emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk }))
+        break
+      case 'ai-settings':
+        emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'ai-config' } }))
         break
       case 'export-log':
         setExportModalVisible(true)
