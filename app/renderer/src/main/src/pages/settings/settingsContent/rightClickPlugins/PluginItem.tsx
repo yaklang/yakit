@@ -215,6 +215,7 @@ export const PluginItem: React.FC<PluginItemProps> = React.memo((props) => {
         [styles['item-dragging']]: isDragging,
         [styles['item-actions-open']]: settingMenuOpen || keyShow || editHint,
       })}
+      data-plugin-name={plugin.PluginName}
     >
       <div className={styles['drag']} {...dragHandleProps}>
         <FigmaIcon2281144183Solid size={16} color="currentColor" />

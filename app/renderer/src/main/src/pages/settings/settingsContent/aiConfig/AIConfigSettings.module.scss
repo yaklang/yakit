@@ -8,6 +8,10 @@
   min-width: 0;
 }
 
+.ai-config-pending {
+  pointer-events: none;
+}
+
 .page-head {
   display: flex;
   align-items: center;

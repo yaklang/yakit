@@ -22,6 +22,7 @@ const AI_MODEL_CONFIG_KEYS = [
 ] as const
 
 let saveQueue: Promise<unknown> = Promise.resolve()
+let saveEpoch = 0
 
 interface UseAIGlobalConfigData {
   aiGlobalConfig: AIGlobalConfig
@@ -70,17 +71,20 @@ function useAIGlobalConfig(params) {
     isInit && getAIGlobalConfig(isShowLoading !== false)
   }, [isInit])
   /** 刷新，会设置全局变量中的值和ref */
+  const applyFetchedConfig = useMemoizedFn((res: AIGlobalConfig, applyEpoch?: number) => {
+    if (applyEpoch !== undefined && applyEpoch !== saveEpoch) return
+    setConfig(res)
+    aiGlobalConfigRef.current = res
+    setTotal(
+      (res.IntelligentModels?.length || 0) + (res.LightweightModels?.length || 0) + (res.VisionModels?.length || 0),
+    )
+  })
+
   const getAIGlobalConfig = useMemoizedFn((isShowLoading?: boolean) => {
     const showLoading = isShowLoading !== false
     showLoading && setQueryLoading(true)
     grpcGetAIGlobalConfig()
-      .then((res) => {
-        setConfig(res)
-        aiGlobalConfigRef.current = res
-        const total =
-          (res.IntelligentModels?.length || 0) + (res.LightweightModels?.length || 0) + (res.VisionModels?.length || 0)
-        setTotal(total)
-      })
+      .then((res) => applyFetchedConfig(res))
       .finally(() => {
         showLoading &&
           setTimeout(() => {
@@ -90,6 +94,7 @@ function useAIGlobalConfig(params) {
   })
 
   const setAIGlobalConfig = useMemoizedFn(async (data: Partial<AIGlobalConfig>): Promise<void> => {
+    const epoch = ++saveEpoch
     const next: AIGlobalConfig = {
       ...useAIGlobalConfigStore.getState().aiGlobalConfig,
       ...data,
@@ -106,7 +111,11 @@ function useAIGlobalConfig(params) {
     try {
       await task
     } catch (err) {
-      getAIGlobalConfig(false)
+      if (epoch === saveEpoch) {
+        grpcGetAIGlobalConfig()
+          .then((res) => applyFetchedConfig(res, epoch))
+          .catch(() => undefined)
+      }
       throw err
     } finally {
       setTimeout(() => {

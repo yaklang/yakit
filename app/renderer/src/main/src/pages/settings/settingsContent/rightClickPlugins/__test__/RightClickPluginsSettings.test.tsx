@@ -1,6 +1,6 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ManageRightClickPluginsTabKey } from '@/pages/manageRightClickPlugins/constants'
 import {
   ContextMenuExecutionType,
@@ -33,6 +33,15 @@ vi.mock('@/utils/notification', () => ({
 vi.mock('@/utils/eventBus/eventBus', () => ({
   default: { on: vi.fn(), off: vi.fn(), emit: vi.fn() },
 }))
+
+vi.mock('ahooks', async (importOriginal) => {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  const actual = await importOriginal<typeof import('ahooks')>()
+  return {
+    ...actual,
+    useInViewport: () => [true],
+  }
+})
 
 const dnd = vi.hoisted(() => ({ onDragEnd: undefined as ((result: any) => void) | undefined }))
 
@@ -89,6 +98,8 @@ const expectBefore = (a: string, b: string) => {
     screen.getByText(a).compareDocumentPosition(screen.getByText(b)) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy()
 }
+const pluginSwitch = (name: string) =>
+  within(screen.getByText(name).closest('[data-plugin-name]') as HTMLElement).getByRole('switch')
 
 const makeAction = (over: Partial<ContextMenuAction>): ContextMenuAction =>
   ({
@@ -130,6 +141,10 @@ describe('RightClickPluginsSettings', () => {
     mockBind.mockResolvedValue({})
   })
 
+  afterEach(() => {
+    cleanup()
+  })
+
   it('渲染三组 tab、计数与插件列表', async () => {
     render(<RightClickPluginsSettings />)
     expect(screen.getByText('SettingsPage.item.right-click-plugins')).toBeInTheDocument()
@@ -156,9 +171,7 @@ describe('RightClickPluginsSettings', () => {
     const user = userEvent.setup()
     render(<RightClickPluginsSettings />)
     await waitFor(() => expect(screen.getByText('path-extract')).toBeInTheDocument())
-    const switches = document.querySelectorAll('button.ant-switch')
-    expect(switches.length).toBeGreaterThan(1)
-    await user.click(switches[1])
+    await user.click(pluginSwitch('path-extract'))
     await waitFor(() => {
       expect(mockBind).toHaveBeenCalled()
     })
@@ -190,9 +203,11 @@ describe('RightClickPluginsSettings', () => {
     ])
     render(<RightClickPluginsSettings />)
     await waitFor(() => expect(screen.getByText('to-disable')).toBeInTheDocument())
-    await user.click(document.querySelectorAll('button.ant-switch')[1])
+    await user.click(pluginSwitch('to-disable'))
     await waitFor(() => {
       expect(mockBind).toHaveBeenCalled()
+    })
+    await waitFor(() => {
       expectBefore('keep-off', 'to-disable')
     })
     expect(mockBind.mock.calls.some((call) => call[0].PluginUUID === 'p3' && call[0].Enabled === false)).toBe(true)
