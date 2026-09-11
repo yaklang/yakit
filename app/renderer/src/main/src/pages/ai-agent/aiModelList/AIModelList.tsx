@@ -206,6 +206,9 @@ export const getTipByType = (routingPolicy: AIModelPolicyEnum, t: TFunction) => 
       return t('AIModelList.policyPerformance')
     case AIModelPolicyEnum.PolicyCost:
       return t('AIModelList.policyCost')
+    case AIModelPolicyEnum.PolicyBalance:
+      return t('AIModelList.policyBalance')
+
     default:
       return null
   }
