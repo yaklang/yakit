@@ -24,7 +24,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 
 vi.mock('@/store', () => ({
   useStore: () => ({ userInfo: { isLogin: false } }),
-  yakitDynamicStatus: () => ({ dynamicStatus: { isDynamicStatus: false } }),
+  useYakitDynamicStatus: () => ({ dynamicStatus: { isDynamicStatus: false } }),
 }))
 
 vi.mock('@/utils/kv', () => ({

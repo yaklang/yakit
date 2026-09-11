@@ -10,6 +10,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(rootDir, './src'),
+      'react-resize-detector': path.resolve(rootDir, 'src/utils/shims/reactResizeDetector.tsx'),
+      'xterm-for-react': path.resolve(rootDir, 'src/utils/shims/xtermForReact.tsx'),
     },
   },
   test: {

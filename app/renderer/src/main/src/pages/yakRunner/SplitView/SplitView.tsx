@@ -326,7 +326,9 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
             if (index === elements.length - 1) return null
             return (
               <div
-                ref={(ref) => (sashDivs.current[index] = ref)}
+                ref={(ref) => {
+                  sashDivs.current[index] = ref
+                }}
                 key={sashIDs.current[index] || `sash-${wrapperId}-${index}`}
                 className={classNames(styles['split-view-sash'], sashClassName, {
                   [styles['vertical']]: isVer,
@@ -352,7 +354,9 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
           {elements.map((item, index) => {
             return (
               <div
-                ref={(ref) => (divs.current[index] = ref)}
+                ref={(ref) => {
+                  divs.current[index] = ref
+                }}
                 key={viewIDs.current[index] || `view-${wrapperId}-${index}`}
                 className={styles['element-view']}
                 style={{ minWidth: minWidth }}

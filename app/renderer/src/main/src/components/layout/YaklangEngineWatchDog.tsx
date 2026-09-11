@@ -4,7 +4,7 @@ import { isEngineConnectionAlive } from '@/components/layout/WelcomeConsoleUtil'
 import type { EngineWatchDogCallbackType, YaklangEngineMode } from '@/yakitGVDefine'
 import { failed } from '@/utils/notification'
 import { setRemoteValue } from '@/utils/kv'
-import { yakitDynamicStatus } from '@/store'
+import { useYakitDynamicStatus } from '@/store'
 import { remoteOperation } from '@/pages/dynamicControl/remoteOperation'
 import { fetchEnv, getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify, toEngineHandshakeName } from '@/utils/envfile'
 import emiter from '@/utils/eventBus/eventBus'
@@ -41,7 +41,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
     const [autoStartProgress, setAutoStartProgress] = useState(false)
     // 是否正在重启引擎进程
     const startingUp = useRef<boolean>(false)
-    const { dynamicStatus, setDynamicStatus } = yakitDynamicStatus()
+    const { dynamicStatus, setDynamicStatus } = useYakitDynamicStatus()
 
     /** 引擎信息认证 */
     const engineTest = useMemoizedFn((isDynamicControl?: boolean) => {

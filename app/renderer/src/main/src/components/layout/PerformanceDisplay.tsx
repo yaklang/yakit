@@ -18,7 +18,7 @@ import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { YakitPopconfirm } from '../yakitUI/YakitPopconfirm/YakitPopconfirm'
 import classNames from 'classnames'
 import styles from './performanceDisplay.module.scss'
-import { yakitDynamicStatus } from '@/store'
+import { useYakitDynamicStatus } from '@/store'
 import { remoteOperation } from '@/pages/dynamicControl/DynamicControl'
 import { yakitApp, yakitEngine, yakitPerf, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -191,7 +191,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
   }, [engineMode])
 
   const { delTemporaryProject } = useTemporaryProjectStore()
-  const { dynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus } = useYakitDynamicStatus()
 
   return (
     <YakitPopover

@@ -192,7 +192,7 @@ describe('TimelineCard 首次定位', () => {
     })
     expect(loadMore).toHaveBeenCalledWith('session-1')
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(0)
+      await vi.advanceTimersByTimeAsync(50)
     })
     expect(isSpinning()).toBe(true)
 

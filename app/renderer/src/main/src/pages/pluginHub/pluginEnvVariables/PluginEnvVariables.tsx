@@ -29,7 +29,7 @@ const DefaultEnvInfo: PluginEnvInfo = {
 }
 
 /** @name 插件全局变量 */
-export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props, ref) => {
+export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props) => {
   const { t } = useI18nNamespaces(['pluginHub', 'yakitUi'])
   const { isPlugin, keys } = props
 

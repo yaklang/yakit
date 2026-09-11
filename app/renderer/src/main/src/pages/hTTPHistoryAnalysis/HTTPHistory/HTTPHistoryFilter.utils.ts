@@ -166,6 +166,17 @@ export const mergeHTTPFlowsById = (prev: HTTPFlow[], next: HTTPFlow[]): HTTPFlow
   return merged
 }
 
+export const toggleHTTPFlowSelectedRowKeys = (prevKeys: string[], rowId: number, selected: boolean): string[] => {
+  const id = String(rowId)
+  if (selected) return prevKeys.includes(id) ? prevKeys : [...prevKeys, id]
+  return prevKeys.filter((ele) => ele !== id)
+}
+
+export const toggleHTTPFlowSelectedRows = (prevRows: HTTPFlow[], row: HTTPFlow, selected: boolean): HTTPFlow[] => {
+  if (selected) return prevRows.some((ele) => ele.Id === row.Id) ? prevRows : [...prevRows, row]
+  return prevRows.filter((ele) => ele.Id !== row.Id)
+}
+
 export const buildHTTPFlowQueryRequestParams = (
   query: YakQueryHTTPFlowRequest,
   pagination: HTTPHistoryFilterPagination,

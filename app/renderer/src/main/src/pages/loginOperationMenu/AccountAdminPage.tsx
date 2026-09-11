@@ -693,7 +693,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
             }}
             expandedKeys={expandedKeys}
             onExpand={(expandedKeys, { expanded, node }) => {
-              setExpandedKeys(expandedKeys)
+              setExpandedKeys(expandedKeys as (string | number)[])
             }}
             onScroll={(e) => {
               const { target } = e

@@ -97,9 +97,10 @@ vi.mock('@/utils/envfile', async (importOriginal) => {
 
 vi.mock('@/store', () => ({
   useStore: () => ({ userInfo: { isLogin: false } }),
-  yakitDynamicStatus: () => ({
+  useYakitDynamicStatus: () => ({
     dynamicStatus: { isDynamicStatus: false },
   }),
+  useConfigManagementTab: () => ({ setConfigManagementActiveTab: vi.fn() }),
   useEeSystemConfig: () => ({ eeSystemConfig: [] }),
 }))
 

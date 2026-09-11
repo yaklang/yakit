@@ -209,7 +209,7 @@ export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
 
 type MITMAdvancedFilterSearchType = 'ruleName' | 'ruleContent'
 
-const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((props, ref) => {
+const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((props) => {
   const { t, i18n } = useI18nNamespaces(['mitm', 'webFuzzer'])
   const { visible = true } = props
 

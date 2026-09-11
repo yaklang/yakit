@@ -6,7 +6,7 @@ import { Tooltip } from 'antd'
 import styles from './YakitSideTab.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref) => {
+export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
   const {
     yakitTabs,
     cacheKey,
@@ -39,7 +39,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
     }
     onActiveKey(item.value)
   })
-  const renderContent = useMemoizedFn(() => {
+  const renderContent = () => {
     switch (type) {
       case 'vertical':
         return (
@@ -117,7 +117,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
       default:
         return <div>{tYakitUi('YakitSideTab.unknownType')}</div>
     }
-  })
+  }
   return (
     <div
       className={classNames(
@@ -164,26 +164,24 @@ const YakitTabsItem: React.FC<YakitTabsItemProps> = React.memo((props) => {
   }, [renderLabel, item.icon, rotate])
   const [label, icon] = node
 
-  const tabDom = useMemoizedFn(() => {
-    return (
-      <div
-        key={item.value}
-        className={className}
-        onClick={() => onChange(item)}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-      >
-        {onTabPaneRender ? (
-          onTabPaneRender(item, node)
-        ) : (
-          <>
-            {icon}
-            {label}
-          </>
-        )}
-      </div>
-    )
-  })
+  const tabDom = (
+    <div
+      key={item.value}
+      className={className}
+      onClick={() => onChange(item)}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      {onTabPaneRender ? (
+        onTabPaneRender(item, node)
+      ) : (
+        <>
+          {icon}
+          {label}
+        </>
+      )}
+    </div>
+  )
 
   const hint = barHint?.(item.value)
 
@@ -191,10 +189,10 @@ const YakitTabsItem: React.FC<YakitTabsItemProps> = React.memo((props) => {
     <>
       {hint ? (
         <Tooltip key={`${item.value}`} title={hint} placement="right" destroyOnHidden open={hover}>
-          {tabDom()}
+          {tabDom}
         </Tooltip>
       ) : (
-        <>{tabDom()}</>
+        <>{tabDom}</>
       )}
     </>
   )

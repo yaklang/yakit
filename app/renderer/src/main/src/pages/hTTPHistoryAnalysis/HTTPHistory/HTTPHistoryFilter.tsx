@@ -138,6 +138,8 @@ import {
   buildLegacyHTTPHistoryFilterConfig,
   getHTTPFlowExportPageSize,
   mergeHTTPFlowsById,
+  toggleHTTPFlowSelectedRowKeys,
+  toggleHTTPFlowSelectedRows,
 } from './HTTPHistoryFilter.utils'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -718,16 +720,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     }
   })
   const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: HTTPFlow) => {
-    if (c) {
-      const ids = [...selectedRowKeys, rows.Id + '']
-      setSelectedRowKeys(ids)
-      setSelectedRows(data.filter((item) => ids.includes(String(item.Id))))
-    } else {
-      setIsAllSelect(false)
-      const ids = selectedRowKeys.filter((ele) => ele !== rows.Id + '')
-      setSelectedRowKeys(ids)
-      setSelectedRows(data.filter((item) => ids.includes(String(item.Id))))
-    }
+    if (!c) setIsAllSelect(false)
+    setSelectedRowKeys((prev) => toggleHTTPFlowSelectedRowKeys(prev, rows.Id, c))
+    setSelectedRows((prev) => toggleHTTPFlowSelectedRows(prev, rows, c))
   })
   const compareSelectedRowKeys = useCampare(selectedRowKeys)
   useDebounceEffect(

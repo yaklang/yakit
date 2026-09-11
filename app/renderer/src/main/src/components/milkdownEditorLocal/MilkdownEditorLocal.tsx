@@ -6,7 +6,7 @@ import type { LocalMilkdownProps, MilkdownEditorLocalProps } from './MilkdownEdi
 import { getMarkdown } from '@milkdown/kit/utils'
 import { useCreation } from 'ahooks'
 
-const LocalMilkdown: React.FC<LocalMilkdownProps> = React.memo((props, ref) => {
+const LocalMilkdown: React.FC<LocalMilkdownProps> = React.memo((props) => {
   const { setEditor, onSaveContentBeforeDestroy, line } = props
   //#region 编辑器初始
   const localParams: InitEditorHooksLocalProps = useCreation(() => {

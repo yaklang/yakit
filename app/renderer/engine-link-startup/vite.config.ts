@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { defineConfig, type Plugin } from 'vite'
-import react from '@vitejs/plugin-react'
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import pluginBabel from '@rolldown/plugin-babel'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { yakitUiIconsPurePlugin } from '../vite-plugins/yakitUiIconsPurePlugin.mjs'
@@ -22,7 +23,12 @@ function generateThemeCssPlugin(): Plugin {
 export default defineConfig({
   base: './',
   envPrefix: ['YAKIT_'],
-  plugins: [generateThemeCssPlugin(), yakitUiIconsPurePlugin(), react()],
+  plugins: [
+    generateThemeCssPlugin(),
+    yakitUiIconsPurePlugin(),
+    react(),
+    pluginBabel({ presets: [reactCompilerPreset()] }),
+  ],
   server: {
     host: true,
     port: 5173,
@@ -30,6 +36,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(rootDir, 'src'),
+      'react-resize-detector': path.resolve(rootDir, 'src/utils/shims/reactResizeDetector.tsx'),
+      'xterm-for-react': path.resolve(rootDir, 'src/utils/shims/xtermForReact.tsx'),
     },
   },
   build: {
