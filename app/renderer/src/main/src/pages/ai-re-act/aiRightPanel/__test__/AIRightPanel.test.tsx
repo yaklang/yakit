@@ -1,6 +1,7 @@
 import type React from 'react'
 import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 // CI 的根配置将样式模块替换为空对象；为这里验证的状态类提供稳定映射。
 vi.mock('../AIRightPanel.module.scss', () => ({
@@ -170,15 +171,23 @@ const renderPanel = async (ui: React.ReactElement) => {
 }
 
 describe('AIRightPanel', () => {
-  it.each([false, true])('暂不显示 AI 设置，更多分组按顺序展开和收起（小屏：%s）', async (small) => {
+  it.each([false, true])('AI 设置跳转到设置页，更多分组按顺序展开和收起（小屏：%s）', async (small) => {
     render(<AIRightPanel small={small} />)
     fireEvent.click(await screen.findByLabelText('更多'))
-    expect(screen.queryByLabelText('AI 设置')).not.toBeInTheDocument()
+    const aiSettings = screen.getByLabelText('AI 设置')
     const timeline = screen.getByLabelText('时间线')
     const exportLog = screen.getByLabelText('导出日志')
-    expect(timeline.parentElement?.firstElementChild).toBe(timeline)
+    expect(aiSettings.parentElement?.firstElementChild).toBe(aiSettings)
+    expect(aiSettings.nextElementSibling).toBe(timeline)
     expect(timeline.nextElementSibling).toBe(exportLog)
     expect(exportLog.nextElementSibling).toBe(screen.getByLabelText('查看日志'))
+    mockEmit.mockClear()
+    fireEvent.click(aiSettings)
+    expect(mockEmit).toHaveBeenCalledTimes(1)
+    expect(mockEmit).toHaveBeenCalledWith(
+      'openPage',
+      JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'ai-config' } }),
+    )
     fireEvent.click(screen.getByLabelText('折叠'))
     expect(screen.queryByLabelText('AI 设置')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('时间线')).not.toBeInTheDocument()
