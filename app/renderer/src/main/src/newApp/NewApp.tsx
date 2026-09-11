@@ -141,8 +141,6 @@ function NewApp() {
     testYak()
   }
 
-  /** 定时器 */
-  const timeRef = useRef<NodeJS.Timeout>()
   const testYak = () => {
     getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
       if (!setting) {
@@ -152,9 +150,6 @@ function NewApp() {
             yakitApp.syncEditBaseUrl(data.BaseUrl)
             setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({ BaseUrl: data.BaseUrl }))
             refreshLogin()
-            timeRef.current = setTimeout(() => {
-              if (timeRef.current) clearTimeout(timeRef.current)
-            }, 200)
           })
           .catch((e) => {
             failed(t('NewApp.fetchFailed', { error: String(e) }))
@@ -170,9 +165,6 @@ function NewApp() {
             yakitApp.syncEditBaseUrl(values.BaseUrl)
             setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
             refreshLogin()
-            timeRef.current = setTimeout(() => {
-              if (timeRef.current) clearTimeout(timeRef.current)
-            }, 200)
           })
           .catch((e: any) => failed(t('NewApp.setPrivateDomainFailed', { error: String(e) })))
       }

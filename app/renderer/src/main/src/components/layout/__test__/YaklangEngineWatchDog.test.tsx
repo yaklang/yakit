@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
+import { act, render, waitFor } from '@testing-library/react'
 import { YaklangEngineWatchDog } from '../YaklangEngineWatchDog'
 import type { YaklangEngineWatchDogProps } from '../YaklangEngineWatchDog'
 import emiter from '@/utils/eventBus/eventBus'
@@ -106,6 +106,7 @@ describe('YaklangEngineWatchDog 组件测试', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     vi.clearAllMocks()
   })
 
@@ -213,6 +214,59 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       await waitFor(() => {
         expect(props.onFailed).toHaveBeenCalled()
       })
+    })
+
+    it('探活持续成功时只回调一次 onReady，未连接时仍每 1s 探测', async () => {
+      vi.useFakeTimers()
+      props.keepalive = true
+      vi.mocked(isEngineConnectionAlive).mockResolvedValue(true)
+      render(<YaklangEngineWatchDog {...props} />)
+
+      await vi.runOnlyPendingTimersAsync()
+      expect(props.onReady).toHaveBeenCalledTimes(1)
+      const aliveCalls = vi.mocked(isEngineConnectionAlive).mock.calls.length
+
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(aliveCalls + 1)
+      expect(props.onReady).toHaveBeenCalledTimes(1)
+    })
+
+    it('引擎已连接后探活间隔为 3s', async () => {
+      vi.useFakeTimers()
+      props.keepalive = true
+      props.engineLink = true
+      vi.mocked(isEngineConnectionAlive).mockResolvedValue(true)
+      render(<YaklangEngineWatchDog {...props} />)
+
+      await vi.runOnlyPendingTimersAsync()
+      const aliveCalls = vi.mocked(isEngineConnectionAlive).mock.calls.length
+
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(aliveCalls)
+
+      await vi.advanceTimersByTimeAsync(2000)
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(aliveCalls + 1)
+    })
+
+    it('上一轮探活未完成时仍继续探测，避免单次挂起阻断失败通知', async () => {
+      vi.useFakeTimers()
+      props.keepalive = true
+      let call = 0
+      vi.mocked(isEngineConnectionAlive).mockImplementation(() => {
+        call += 1
+        if (call === 1) return new Promise(() => {})
+        return Promise.reject(new Error('fail'))
+      })
+      render(<YaklangEngineWatchDog {...props} />)
+
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(1)
+      expect(props.onFailed).not.toHaveBeenCalled()
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000)
+      })
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(2)
+      expect(props.onFailed).toHaveBeenCalledWith(1)
     })
   })
 })

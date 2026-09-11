@@ -87,6 +87,7 @@ import { NewYakitLoading } from '../basics/NewYakitLoading'
 import classNames from 'classnames'
 import styles from './uiLayout.module.scss'
 import { JSONParseLog } from '@/utils/tool'
+import { startIdleVisibleInterval } from '@/utils/scheduleIdleTask'
 import { closeDuplexConn, startupDuplexConn } from '@/utils/duplex/duplex'
 import { type SoftMode, useSoftMode } from '@/store/softMode'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -197,16 +198,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       setCredential(data.credential)
       onSetEngineMode(data.credential.Mode)
       setYakitStatus('ready')
-      if (data.credential.Mode === 'local') {
-        setTimeout(() => {
-          setKeepalive(true)
-        }, 500)
-      } else {
-        setKeepalive(true)
-      }
-      setTimeout(() => {
-        setNewCheckLog([])
-      }, 2000)
+      setKeepalive(true)
     })
     yakitUILayout.markRendererReady()
     return () => {
@@ -410,8 +402,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
       setLocalValue(LocalGV.YaklangEngineMode, getEngineMode())
 
-      const waitTime: number = 20000
-      const id = setInterval(() => {
+      return startIdleVisibleInterval(() => {
         grpcFetchYakInstallResult(true)
           .then((flag: boolean) => {
             if (isEngineInstalled.current === flag) return
@@ -420,10 +411,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             yakitEngine.clearLocalYaklangVersionCache()
           })
           .catch()
-      }, waitTime)
-      return () => {
-        clearInterval(id)
-      }
+      }, 20000)
     } else {
       // 清空主进程yaklang版本缓存
       yakitEngine.clearLocalYaklangVersionCache()
@@ -519,9 +507,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           yakitApp.completeMainWindow({ yakitStatus: type })
         }
       }, 1500)
-      setTimeout(() => {
-        setNewCheckLog([])
-      }, 2000)
     }, [GetConnectPort()])
   })
   useEffect(() => {
@@ -1633,7 +1618,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       yakitFailed(error + '')
     }
 
-    setTimeout(() => setEngineLink(true), 100)
+    setEngineLink(true)
   })
 
   const onReady = useMemoizedFn(() => {

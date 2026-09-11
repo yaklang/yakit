@@ -175,58 +175,46 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
       if (!props.engineLink) setAutoStartProgress(false)
     }, [props.engineLink])
 
-    /** 未连接引擎前, 每隔1秒尝试连接一次, 连接引擎后, 每隔5秒尝试连接一次 */
-    const attemptConnectTime = useMemoizedFn(() => {
-      return props.engineLink ? 5000 : 1000
-    })
+    const failedCountRef = useRef(0)
+    const readyNotifiedRef = useRef(false)
 
     /**
      * 引擎连接尝试逻辑
+     * 未连接每 1s 探活，已连接每 3s。
+     * 上一轮未完成不阻塞后续 tick，避免单次 Echo 挂起后探活与失败通知停止。
      * 引擎连接有效尝试次数: 1-10
      */
     useEffect(() => {
-      const keepalive = props.keepalive
-      if (!keepalive) {
-        if (props.onFailed) {
-          props.onFailed(100)
-        }
+      if (!props.keepalive) {
+        failedCountRef.current = 0
+        readyNotifiedRef.current = false
+        props.onFailed?.(100)
         return
       }
       debugToPrintLog(`------ 开始启动引擎进程探活逻辑------`)
 
-      let count = 0
-      let failedCount = 0
-      let notified = false
       const connect = () => {
-        count++
         isEngineConnectionAlive()
           .then(() => {
-            // debugToPrintLog(`[INFO] 探活结果: 存活`)
-            if (!keepalive) {
-              return
-            }
-            if (!notified) {
-              notified = true
-            }
-            failedCount = 0
-            if (props.onReady) {
-              props.onReady()
+            if (!props.keepalive) return
+            failedCountRef.current = 0
+            if (!readyNotifiedRef.current) {
+              readyNotifiedRef.current = true
+              props.onReady?.()
             }
           })
-          .catch((e) => {
-            // debugToPrintLog(`[INFO] 探活结果: 不存在`)
-            failedCount++
-            if (props.onFailed) {
-              props.onFailed(failedCount)
-            }
+          .catch(() => {
+            failedCountRef.current += 1
+            readyNotifiedRef.current = false
+            props.onFailed?.(failedCountRef.current)
           })
       }
       connect()
-      const id = setInterval(connect, attemptConnectTime())
+      const id = setInterval(connect, props.engineLink ? 3000 : 1000)
       return () => {
         clearInterval(id)
       }
-    }, [props.keepalive, props.onReady, props.onFailed])
+    }, [props.keepalive, props.engineLink, props.onReady, props.onFailed])
     return <></>
   },
 )
