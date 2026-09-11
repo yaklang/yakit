@@ -51,6 +51,12 @@ jobs:
       - name: Prepare locked Electron 27 runtime
         timeout-minutes: 2
         run: node node_modules/electron/install.js
+      - name: Configure Electron sandbox helper on the disposable Linux runner
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo chown root:root node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
       - name: Verify lifecycle, authentication, cancellation and fallback regressions
         timeout-minutes: 2
         run: yarn test:engine-startup --reporter=default --reporter=junit --outputFile.junit=engine-startup-junit.xml
@@ -62,13 +68,13 @@ jobs:
         timeout-minutes: 2
         shell: bash
         run: |
+          trap 'cat ipc-electron.json 2>/dev/null || true' EXIT
           binary="$(node scripts/engine-startup/download-engine.cjs ipc "$RUNNER_TEMP/startup-engines")"
           if [ "$RUNNER_OS" = Linux ]; then
             xvfb-run -a node scripts/engine-startup/verify-electron-ipc.cjs "$binary" 1 matrix > ipc-electron.json
           else
             node scripts/engine-startup/verify-electron-ipc.cjs "$binary" 1 matrix > ipc-electron.json
           fi
-          cat ipc-electron.json
       - name: Windows released legacy engine / secure TCP compatibility
         if: runner.os == 'Windows'
         timeout-minutes: 3
