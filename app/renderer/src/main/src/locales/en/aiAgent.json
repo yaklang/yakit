@@ -90,6 +90,7 @@
     "policyAuto": "Automatically select the most suitable model based on request content",
     "policyPerformance": "Prioritize high-intelligence models",
     "policyCost": "Prioritize lightweight/low-cost models",
+    "policyBalance": "Balance between response speed, intelligence, and cost",
     "sameModelWarning": "Using the same model for lightweight and high-quality is not recommended; lightweight should use a fast-response model"
   },
   "AIOnlineModeSetting": {

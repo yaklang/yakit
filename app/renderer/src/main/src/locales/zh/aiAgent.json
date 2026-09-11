@@ -90,6 +90,7 @@
     "policyAuto": "根据请求内容自动选择最合适的模型",
     "policyPerformance": "优先使用高智能模型",
     "policyCost": "优先使用轻量级/低成本模型",
+    "policyBalance": "在响应速度、智能程度和成本之间取得平衡",
     "sameModelWarning": "不建议轻量和高质使用同一个模型，轻量适合使用响应快速的模型"
   },
   "AIOnlineModeSetting": {
