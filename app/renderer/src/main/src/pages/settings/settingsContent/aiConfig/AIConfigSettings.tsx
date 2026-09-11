@@ -83,11 +83,14 @@ const digitsOnly = (raw: string) => {
 export const AIConfigSettings: React.FC = () => {
   const { t } = useI18nNamespaces(['setting', 'aiAgent', 'yakitUi'])
   const [setting, setSetting] = useState<AIAgentSetting>(() => cloneDeep(AIAgentSettingDefault))
+  const [ready, setReady] = useState(false)
   const lastPayloadRef = useRef(serializeAIAgentChatSetting(AIAgentSettingDefault))
   const settingRef = useRef(setting)
+  const readyRef = useRef(false)
   settingRef.current = setting
 
   const apply = useMemoizedFn((patch: Partial<AIAgentSetting>) => {
+    if (!readyRef.current) return
     const next = { ...settingRef.current, ...patch }
     setSetting(next)
     lastPayloadRef.current = serializeAIAgentChatSetting(next)
@@ -95,17 +98,28 @@ export const AIConfigSettings: React.FC = () => {
   })
 
   const applyAll = useMemoizedFn((next: AIAgentSetting) => {
+    if (!readyRef.current) return
     setSetting(next)
     lastPayloadRef.current = serializeAIAgentChatSetting(next)
     persistAIAgentChatSetting(next)
   })
 
   useEffect(() => {
-    loadAIAgentChatSetting().then((next) => {
-      if (!next) return
-      lastPayloadRef.current = serializeAIAgentChatSetting(next)
-      setSetting(next)
-    })
+    let cancelled = false
+    loadAIAgentChatSetting()
+      .then((next) => {
+        if (cancelled || !next) return
+        lastPayloadRef.current = serializeAIAgentChatSetting(next)
+        setSetting(next)
+      })
+      .finally(() => {
+        if (cancelled) return
+        readyRef.current = true
+        setReady(true)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -127,7 +141,11 @@ export const AIConfigSettings: React.FC = () => {
   const reviewDesc = AIReviewRuleOptions.find((item) => item.value === setting.ReviewPolicy)?.describe
 
   return (
-    <div className={styles['ai-config']}>
+    <div
+      className={classNames(styles['ai-config'], { [styles['ai-config-pending']]: !ready })}
+      data-ai-config-ready={ready ? '1' : '0'}
+      aria-busy={!ready}
+    >
       <div className={styles['page-head']}>
         <div className={styles['page-title']}>{t('SettingsPage.item.ai-config')}</div>
         <YakitButton

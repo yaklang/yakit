@@ -107,4 +107,47 @@ describe('useAIGlobalConfig', () => {
     expect(setMock).toHaveBeenCalledTimes(2)
     expect(setMock.mock.calls[1][0]).toMatchObject({ DisableFallback: true })
   })
+
+  it('先前保存失败的回拉不会覆盖后续已成功的保存', async () => {
+    let rejectFirst: (err: Error) => void = () => undefined
+    const firstWrite = new Promise<null>((_, reject) => {
+      rejectFirst = reject
+    })
+    let resolveGet: (value: typeof defaultAIGlobalConfig) => void = () => undefined
+    const delayedGet = new Promise<typeof defaultAIGlobalConfig>((resolve) => {
+      resolveGet = resolve
+    })
+    setMock.mockImplementationOnce(() => firstWrite).mockResolvedValue(null)
+    getMock.mockImplementation(() => delayedGet)
+
+    const { result } = renderHook(() => useAIGlobalConfig())
+    await act(async () => {
+      void result.current[1].setAIGlobalConfig({ DisableFallback: true }).catch(() => undefined)
+      await Promise.resolve()
+    })
+    await waitFor(() => {
+      expect(setMock).toHaveBeenCalledTimes(1)
+    })
+
+    await act(async () => {
+      rejectFirst(new Error('save-fail'))
+    })
+    await waitFor(() => {
+      expect(getMock).toHaveBeenCalled()
+    })
+
+    await act(async () => {
+      await result.current[1].setAIGlobalConfig({ RoutingPolicy: AIModelPolicyEnum.PolicyPerformance })
+    })
+
+    await act(async () => {
+      resolveGet({ ...defaultAIGlobalConfig, DisableFallback: false })
+      await delayedGet
+    })
+
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toMatchObject({
+      DisableFallback: true,
+      RoutingPolicy: AIModelPolicyEnum.PolicyPerformance,
+    })
+  })
 })
