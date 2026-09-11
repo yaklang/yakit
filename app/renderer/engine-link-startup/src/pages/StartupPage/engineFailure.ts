@@ -15,6 +15,7 @@ export function engineFailureStatus(status: string, stage: 'check' | 'start'): Y
     if (status === 'antivirus_blocked') return status
     return 'check_error'
   }
+  if (status === 'engine_exited' || status === 'engine_init_failed' || status === 'engine_failed') return status
   return 'start_timeout'
 }
 
