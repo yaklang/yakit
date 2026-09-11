@@ -9,6 +9,7 @@ import {
   AIChatQSDataTypeEnum,
   type AIToolResult,
   type AIYakExecFileRecord,
+  type ChatStream,
   type ChatToolResult,
 } from '@/pages/ai-re-act/hooks/aiRender'
 import FileList from './FileList'
@@ -152,10 +153,16 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
     }
   }, [renderNum])
 
-  // TODO - 可以修改为新版 获取流数据
-  const { stream } = useStreamingChatContent({
+  // 主窗口：轮询当前会话的实时流数据
+  const { stream: liveStream } = useStreamingChatContent({
     token: data.stream.EventUUID,
   })
+  // 子窗口：本进程的 globalSessionEngine 没有会话数据，useStreamingChatContent 恒拿不到内容；
+  // 流数据（含 tool_call_watcher 挂载的 selectors 与 stdout 正文）改从 IPC 拉取的快照读取，
+  // 否则"跳过长时间加载"按钮与工具输出在子窗口永远不展示
+  const stream = isChildWindow.current
+    ? ((auxStreamStore.rawData.get(data.stream.EventUUID) as ChatStream | undefined) ?? null)
+    : liveStream
 
   const selectors = useCreation(() => {
     return stream?.data?.selectors

@@ -5,14 +5,19 @@ import {
   type ConcurrentStreamFramePayload,
   isConcurrentStreamFrame,
 } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
-import { type AIYakExecFileRecord, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import {
+  AIChatQSDataTypeEnum,
+  type AIYakExecFileRecord,
+  type AIChatQSData,
+  type ChatStream,
+} from '@/pages/ai-re-act/hooks/aiRender'
 import { fetchConcurrentStreamContents } from './fetchConcurrentStreamContents'
 import styles from './AIConcurrentStream.module.scss'
 import AIConcurrentStreamContent, {
   type AIConcurrentStreamDispatcher,
   type AIConcurrentStreamStore,
 } from './useContext/AIConcurrentStreamContent'
-import { useDebounceFn, useMemoizedFn } from 'ahooks'
+import { useDebounceFn, useInterval, useMemoizedFn } from 'ahooks'
 import ConcurrentStreamSkeleton from '@/auxWindow/components/ConcurrentStreamSkeleton/ConcurrentStreamSkeleton'
 
 // 子卡片按需加载，避免重型卡片（AINodeItem 及其下游 review/report/fuzz 等子卡）
@@ -46,6 +51,11 @@ function shallowEqualQSData(a: AIChatQSData, b: AIChatQSData): boolean {
   return true
 }
 
+/** 有活跃流（未 end 的 STREAM 项）时的轮询间隔 */
+const ACTIVE_POLL_INTERVAL = 2000
+/** 空闲时的兜底轮询间隔：可捕获后续新起的活动（如下一批子 Agent） */
+const IDLE_POLL_INTERVAL = 10000
+
 const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }) => {
   const [frame, setFrame] = useState<ConcurrentStreamFramePayload | null>(null)
   const [contentVersion, setContentVersion] = useState(0)
@@ -60,6 +70,12 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
   // 子卡片按各自 token 的版本订阅，避免全局 renderNum 递增导致全树重渲染
   // （全量重渲染会长时间占用主线程，拖动滚动条时更新被推迟到 mouseup，表现为"松手才跳位"）。
   const tokenVersionsRef = useRef<Map<string, number>>(new Map())
+  // 后台轮询间隔（ms）；undefined 表示未开始（首次数据尚未拉到）
+  const [pollInterval, setPollInterval] = useState<number | undefined>(undefined)
+  // 拉取进行中的标记：避免轮询与手动刷新并发堆叠请求
+  const fetchingRef = useRef<boolean>(false)
+  // 是否首次拉取：仅首次展示骨架屏，后续刷新原地 diff 更新，避免整页闪烁
+  const initialLoadRef = useRef<boolean>(true)
 
   useEffect(() => {
     if (!windowId) return
@@ -100,13 +116,18 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
   }, [windowId])
 
   const fetchContents = useMemoizedFn((frame) => {
-    setLoading(true)
+    if (fetchingRef.current) return
+    fetchingRef.current = true
+    if (initialLoadRef.current) setLoading(true)
     fetchConcurrentStreamContents(frame)
       .then((entries) => {
-        // diff 旧 rawData：只对内容发生变化的 token 递增版本号，
-        // 未变化的 token 版本保持不变，对应卡片的 memo 依旧命中、不重渲染。
         const prevRaw = rawDataRef.current
         const nextRaw = entries.rawData
+        // 主窗口暂时不可达（IPC 超时/主窗口忙）时返回空数据，直接应用会把已渲染内容清空；
+        // 已有数据的情况下跳过空响应，等待下一次拉取恢复
+        if (nextRaw.size === 0 && prevRaw.size > 0) return
+        // diff 旧 rawData：只对内容发生变化的 token 递增版本号，
+        // 未变化的 token 版本保持不变，对应卡片的 memo 依旧命中、不重渲染。
         const versions = tokenVersionsRef.current
         /** 组 token 聚合：组内任一子节点变化时组版本也递增（组卡片扫 rawData 找子节点） */
         const bumpVersion = (token: string) => {
@@ -129,9 +150,19 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
         rawDataRef.current = nextRaw
         execFileRecordRef.current = entries.execFileRecord
         childrenTokensRef.current = entries.childrenTokens
+        // 是否仍有活跃流：有则快轮询跟进 stdout 增量 / tool_call_watcher 挂载的"跳过"按钮，
+        // 无则降频兜底，可捕获后续新起的活动（如下一批子 Agent）
+        let hasActiveStream = false
+        nextRaw.forEach((item) => {
+          if (item?.type !== AIChatQSDataTypeEnum.STREAM) return
+          if ((item as ChatStream)?.data?.status !== 'end') hasActiveStream = true
+        })
+        setPollInterval(hasActiveStream ? ACTIVE_POLL_INTERVAL : IDLE_POLL_INTERVAL)
       })
       .finally(() => {
+        fetchingRef.current = false
         setTimeout(() => {
+          initialLoadRef.current = false
           setContentVersion((v) => v + 1)
           setLoading(false)
         }, 200)
@@ -152,6 +183,13 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
     if (!frame) return
     getRawData(frame)
   })
+  // 子窗口数据是主动拉取的快照，主窗口数据变化不会推送过来；
+  // 周期性拉取保证长时间运行的工具流（stdout 增量、tool_call_watcher 挂载的"跳过"按钮）
+  // 能及时出现在子窗口，而不是只能等手动刷新
+  useInterval(() => {
+    if (!frame || fetchingRef.current) return
+    fetchContents(frame)
+  }, pollInterval)
   const store: AIConcurrentStreamStore = useMemo(() => {
     return {
       session: frame?.session ?? '',
