@@ -74,13 +74,45 @@ async function verify(binary) {
       auth.push({ credential: label, code: result.error?.code || 0 })
     }
     assert(!logs.join('\n').includes(checked.json.secret), 'Production password leaked into logs')
-    await manager.dispose()
+    assert.equal((await manager.dispose()).ok, true, 'Owned engine cleanup failed')
     // Rebinding the *same* port proves disposal released the running engine.
     // Reserving a different free port could hide a leaked child process.
     occupied = await listen(port)
     const conflict = await manager.check({ port: occupied.address().port })
     assert.equal(conflict.status, 'port_occupied')
     assert.equal(occupied.listening, true)
+    await close(occupied)
+    occupied = null
+
+    // A failed RPC can coexist with a live owned engine. Exercise both user
+    // recovery choices: restart on the same port and switch to another port.
+    let recoveryPort = port
+    let previousSecret = checked.json.secret
+    for (const changePort of [false, true]) {
+      const recoveryCheck = await manager.check({ port: recoveryPort })
+      assert.equal(recoveryCheck.ok, true, recoveryCheck.message)
+      assert.notEqual(recoveryCheck.json.secret, previousSecret)
+      previousSecret = recoveryCheck.json.secret
+      const recoveryStart = await manager.start({ port: recoveryPort, password: previousSecret })
+      assert.equal(recoveryStart.ok, true, recoveryStart.message)
+      const failedConnection = await manager.connect({ ...committed, password: 'wrong-recovery-credential' })
+      assert.equal(failedConnection.ok, false)
+      assert.equal((await manager.check({ port: recoveryPort })).status, 'port_occupied')
+      assert.deepEqual(await manager.dispose(), { ok: true, canceled: 1, status: 'cancelled' })
+      const released = await listen(recoveryPort)
+      await close(released)
+      if (changePort) {
+        const nextPort = await listen()
+        recoveryPort = nextPort.address().port
+        await close(nextPort)
+      }
+    }
+    const finalCheck = await manager.check({ port: recoveryPort })
+    assert.equal(finalCheck.ok, true, finalCheck.message)
+    assert.notEqual(finalCheck.json.secret, previousSecret)
+    assert.equal((await manager.start({ port: recoveryPort, password: finalCheck.json.secret })).ok, true)
+    assert(!logs.join('\n').includes(finalCheck.json.secret), 'Recovery password leaked into logs')
+    assert.equal((await manager.dispose()).ok, true)
     return {
       binary,
       sha256,
@@ -90,6 +122,7 @@ async function verify(binary) {
       secretRedaction: 'passed',
       portConflictRecovery: 'passed',
       cleanup: 'passed',
+      ownedEngineRecovery: 'passed',
     }
   } finally {
     await manager.dispose()

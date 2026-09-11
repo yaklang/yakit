@@ -7,13 +7,22 @@ import { yakitEngine } from '@/utils/electronBridge'
 import { grpcStartLocalEngine, isEngineConnectionAlive } from '../../../grpc'
 import { toEngineHandshakeName } from '@/utils/envfile'
 import type { YaklangEngineMode } from '@/pages/StartupPage/types'
+import { yakitNotify } from '@/utils/notification'
+import enLink from '../../../../../locales/en/link.json'
+import zhLink from '../../../../../locales/zh/link.json'
+import zhTWLink from '../../../../../locales/zh-TW/link.json'
+
+const locale = vi.hoisted(() => ({ language: 'zh' as 'en' | 'zh' | 'zh-TW' }))
 
 // Mock 外部依赖
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
-    t: (key: string) => key,
+    t: (key: string) =>
+      key === 'EngineFailure.dial_error'
+        ? { en: enLink, zh: zhLink, 'zh-TW': zhTWLink }[locale.language].EngineFailure.dial_error
+        : key,
     i18n: {
-      language: 'zh',
+      language: locale.language,
       hasResourceBundle: () => true,
       loadNamespaces: vi.fn(async () => undefined),
       on: vi.fn(),
@@ -97,6 +106,7 @@ describe('YaklangEngineWatchDog 组件测试', () => {
     }
 
     vi.clearAllMocks()
+    locale.language = 'zh'
     vi.mocked(yakitEngine.connectYaklangEngine).mockRejectedValue(new Error('fail'))
     vi.mocked(grpcStartLocalEngine).mockResolvedValue({ ok: true, status: 'success', message: '' })
     vi.mocked(emiter.on).mockImplementation((event: any, callback) => {
@@ -174,6 +184,23 @@ describe('YaklangEngineWatchDog 组件测试', () => {
         },
         { timeout: 2000 },
       )
+    })
+
+    it.each([
+      ['en', enLink.EngineFailure.dial_error],
+      ['zh', zhLink.EngineFailure.dial_error],
+      ['zh-TW', zhTWLink.EngineFailure.dial_error],
+    ] as const)('remote failures use %s recovery text without raw IPC details', async (language, expected) => {
+      locale.language = language
+      props.credential.Mode = 'remote'
+      render(<YaklangEngineWatchDog {...props} />)
+      for (const detail of ['引擎连接超时', '引擎认证失败 private-ipc-detail']) {
+        vi.mocked(yakitEngine.connectYaklangEngine).mockRejectedValueOnce(new Error(detail))
+        await act(async () => triggerEngineTest())
+        expect(yakitNotify).toHaveBeenLastCalledWith('error', expected)
+      }
+      expect(grpcStartLocalEngine).not.toHaveBeenCalled()
+      expect(props.onKeepaliveShouldChange).not.toHaveBeenCalled()
     })
 
     it('连接失败且 mode = "remote" 时，不自动启动本地引擎', async () => {

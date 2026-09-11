@@ -160,6 +160,8 @@ export const StartupPage: React.FC = () => {
   // 回收数据库空间
   const reclaimDbSpacePath = useRef<string[]>([])
   const [remoteLinkLoading, setRemoteLinkLoading] = useState<boolean>(false)
+  const [ownedEngineCleanupBusy, setOwnedEngineCleanupBusy] = useState<boolean>(false)
+  const stoppingOwnedEngineRef = useRef<boolean>(false)
 
   // #region 工作空间确认回调
   const handleWorkspaceConfirmed = useMemoizedFn(() => {
@@ -334,18 +336,38 @@ export const StartupPage: React.FC = () => {
 
   // Wait for the main process to settle cancellation before offering another startup.
   // Only processes owned by this Yakit instance are stopped.
-  const cancelAllTasks = async () => {
-    await yakitEngine.cancelAllTasks()
-  }
-  const stopOwnedEngine = useMemoizedFn(async (callback: () => void) => {
+  const showStopOwnedEngineError = useMemoizedFn((reason: 'process_error' | 'ipc_error') => {
+    debugToPrintLog(`------ 停止本实例所属引擎进程失败: ${reason} ------`)
+    breakHandleRef.current = false
+    setRestartLoading(false)
+    safeSetYakitStatus('check_error')
+    setCheckLog([t('StartupPage.stop_owned_engine_failed')])
+  })
+  const stopOwnedEngine = useMemoizedFn(async (callback: () => void): Promise<boolean> => {
+    if (stoppingOwnedEngineRef.current) return false
+    stoppingOwnedEngineRef.current = true
+    setOwnedEngineCleanupBusy(true)
     try {
-      await cancelAllTasks()
-      callback()
-    } catch (error) {
-      setRestartLoading(false)
-      safeSetYakitStatus('check_error')
-      setCheckLog([String(error)])
+      const result = await yakitEngine.cancelAllTasks()
+      if (!result.ok) {
+        showStopOwnedEngineError('process_error')
+        return false
+      }
+    } catch {
+      showStopOwnedEngineError('ipc_error')
+      return false
+    } finally {
+      stoppingOwnedEngineRef.current = false
+      setOwnedEngineCleanupBusy(false)
     }
+    callback()
+    return true
+  })
+
+  const selectYaklangSpecifyVersion = useMemoizedFn((version: string) => {
+    if (restartLoading || ownedEngineCleanupBusy || stoppingOwnedEngineRef.current) return
+    setRestartLoading(true)
+    setYaklangSpecifyVersion(version)
   })
 
   const setTimeoutLoading = useMemoizedFn((setLoading: (v: boolean) => any, time = 2000) => {
@@ -801,7 +823,7 @@ export const StartupPage: React.FC = () => {
       case 'check_timeout':
         // 超时手动校验引擎
         setRestartLoading(true)
-        handleStartLocalLink(isCheckVersion.current)
+        void stopOwnedEngine(() => handleStartLocalLink(isCheckVersion.current))
         return
       case 'port_occupied_prev':
         // An occupied port may belong to another Yakit instance; offer a new port.
@@ -811,7 +833,7 @@ export const StartupPage: React.FC = () => {
         // 端口被占用
         setRestartLoading(true)
         setCustomPort(extra.port)
-        handleStartLocalLink(isCheckVersion.current)
+        void stopOwnedEngine(() => handleStartLocalLink(isCheckVersion.current))
         return
       case 'port_denied':
       case 'endpoint_unreachable':
@@ -822,7 +844,7 @@ export const StartupPage: React.FC = () => {
       case 'exception':
         // check 阶段失败，重新走完整 check 流程
         setRestartLoading(true)
-        handleStartLocalLink(isCheckVersion.current)
+        void stopOwnedEngine(() => handleStartLocalLink(isCheckVersion.current))
         return
       case 'build_yak_error':
       case 'dial_error':
@@ -833,7 +855,7 @@ export const StartupPage: React.FC = () => {
       case 'call_error':
         // 认证失败，重新连接
         setRestartLoading(true)
-        handleStartLocalLink(isCheckVersion.current)
+        void stopOwnedEngine(() => handleStartLocalLink(isCheckVersion.current))
         return
       case 'start_timeout':
       case 'engine_exited':
@@ -841,11 +863,14 @@ export const StartupPage: React.FC = () => {
       case 'engine_failed':
       case 'exit':
         // start 阶段失败，重新启动引擎
-        setTimeoutLoading(setRestartLoading, 5000)
-        onStartLinkEngine()
+        setRestartLoading(true)
+        void stopOwnedEngine(() => {
+          setTimeoutLoading(setRestartLoading, 5000)
+          onStartLinkEngine()
+        })
         return
       case 'remote':
-        handleLinkRemoteMode()
+        void stopOwnedEngine(handleLinkRemoteMode)
         return
       case 'local':
         handleLinkLocalMode()
@@ -885,10 +910,10 @@ export const StartupPage: React.FC = () => {
         return
       case 'error':
         // 引擎连接超时或意外断掉连接
-        setTimeoutLoading(setRestartLoading)
-        handleStartLocalLink(false)
+        setRestartLoading(true)
         isCheckVersion.current = false
         setKeepalive(false)
+        void stopOwnedEngine(() => handleStartLocalLink(false))
         return
       case 'reclaimDatabaseSpace_success':
       case 'reclaimDatabaseSpace_error':
@@ -928,13 +953,12 @@ export const StartupPage: React.FC = () => {
           setYakitLoadingTip(t('StartupPage.interrupting'))
           setRestartLoading(false)
           setDisableYakitLoading(true)
-          void cancelAllTasks()
-            .catch((error) => setCheckLog([String(error)]))
-            .finally(() => {
-              setYakitLoadingTip('')
-              setDisableYakitLoading(false)
-              if (extra?.isRemote) handleLinkRemoteMode()
-            })
+          void stopOwnedEngine(() => {
+            if (extra?.isRemote) handleLinkRemoteMode()
+          }).finally(() => {
+            setYakitLoadingTip('')
+            setDisableYakitLoading(false)
+          })
         }
         return
       case 'link_countdown':
@@ -1001,34 +1025,37 @@ export const StartupPage: React.FC = () => {
 
   // 下载指定版本引擎
   useUpdateEffect(() => {
-    if (yaklangSpecifyVersion) {
-      stopOwnedEngine(() => {
-        yakEngineVersionExistsAndCorrectness(
-          yaklangSpecifyVersion,
-          () => {
-            setYaklangSpecifyVersion('')
-            breakHandleRef.current = false
-            isCheckVersion.current = false
+    if (!yaklangSpecifyVersion) return
+    void stopOwnedEngine(() => {
+      void yakEngineVersionExistsAndCorrectness(
+        yaklangSpecifyVersion,
+        () => {
+          setYaklangSpecifyVersion('')
+          breakHandleRef.current = false
+          isCheckVersion.current = false
+          setLinkLocalEngine()
+        },
+        (err) => {
+          setYaklangSpecifyVersion('')
+          breakHandleRef.current = false
+          isCheckVersion.current = false
+          if (err.message === 'operation not permitted') {
             setLinkLocalEngine()
-          },
-          (err) => {
-            setYaklangSpecifyVersion('')
-            breakHandleRef.current = false
-            isCheckVersion.current = false
-            if (err.message === 'operation not permitted') {
-              setLinkLocalEngine()
-            } else {
-              // 引擎文件已经被删除了
-              safeSetYakitStatus('')
-              handleOperations('install')
-            }
-          },
-          () => {
-            setYaklangDownload(true)
-          },
-        )
-      })
-    }
+          } else {
+            // 引擎文件已经被删除了
+            setRestartLoading(false)
+            safeSetYakitStatus('')
+            handleOperations('install')
+          }
+        },
+        () => {
+          setRestartLoading(false)
+          setYaklangDownload(true)
+        },
+      )
+    }).then((stopped) => {
+      if (!stopped) setYaklangSpecifyVersion('')
+    })
   }, [yaklangSpecifyVersion])
   // #endregion
 
@@ -1254,13 +1281,13 @@ export const StartupPage: React.FC = () => {
                       checkLog={checkLog}
                       yakitStatus={yakitStatus}
                       engineMode={engineMode || 'local'}
-                      restartLoading={restartLoading}
+                      restartLoading={restartLoading || ownedEngineCleanupBusy}
                       dbPath={dbPath}
                       btnClickCallback={loadingClickCallback}
                       port={customPort}
                       countdown={countdown}
                       moreYaklangVersionList={moreYaklangVersionList}
-                      setYaklangSpecifyVersion={setYaklangSpecifyVersion}
+                      setYaklangSpecifyVersion={selectYaklangSpecifyVersion}
                     />
                     {/* 更新引擎 */}
                     {yaklangDownload && (

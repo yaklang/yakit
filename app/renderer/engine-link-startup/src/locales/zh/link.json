@@ -61,6 +61,7 @@
     "remote_connection_disconnected": "远程连接已断开",
     "engine_reconnecting": "引擎连接未成功, 正在尝试重连",
     "manual_disconnect_triggered": "手动触发中断连接",
+    "stop_owned_engine_failed": "无法停止当前 Yakit 实例的引擎进程，请查看引擎日志后重试",
     "fix_database_unexpected_console": "修复数据库出现意外情况：{{error}}",
     "reclaim_database_unexpected_console": "回收出现意外情况：{{error}}",
     "no_image": "暂无图片"

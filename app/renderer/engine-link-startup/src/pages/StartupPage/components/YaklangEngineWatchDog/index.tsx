@@ -69,10 +69,10 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         await yakitEngine.connectYaklangEngine(credential)
         if (isCurrent()) props.onKeepaliveShouldChange?.(true)
         return
-      } catch (error) {
+      } catch {
         if (!isCurrent()) return
         if (credential.Mode === 'remote') {
-          yakitNotify('error', String(error))
+          yakitNotify('error', t('EngineFailure.dial_error'))
           return
         }
       }

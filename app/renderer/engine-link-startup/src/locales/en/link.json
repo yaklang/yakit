@@ -61,6 +61,7 @@
     "remote_connection_disconnected": "Remote connection disconnected",
     "engine_reconnecting": "Engine connection failed, retrying...",
     "manual_disconnect_triggered": "Manual disconnect triggered",
+    "stop_owned_engine_failed": "Unable to stop this Yakit instance's engine process. Retry after checking the engine logs.",
     "fix_database_unexpected_console": "Unexpected error while repairing database: {{error}}",
     "reclaim_database_unexpected_console": "Unexpected error during reclaim: {{error}}",
     "no_image": "No image"

@@ -855,7 +855,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                   {unLinkStatus && (
                     <div className={styles['more-version-btn']}>
                       <YakitPopover
-                        open={moreVersionPopShow}
+                        open={!restartLoading && moreVersionPopShow}
                         classNames={{ root: styles['more-versions-popover'] }}
                         placement="topLeft"
                         trigger="click"
@@ -863,16 +863,23 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                           <MoreYaklangVersion
                             moreYaklangVersionList={moreYaklangVersionList}
                             onClosePop={(visible, version) => {
+                              if (restartLoading) return
                               setMoreVersionPopShow(visible)
                               setYaklangSpecifyVersion(version)
                             }}
                           />
                         }
                         onOpenChange={(visible) => {
+                          if (restartLoading) return
                           setMoreVersionPopShow(visible)
                         }}
                       >
-                        <span className={classNames(styles['primary-btn'])}>
+                        <span
+                          data-testid="engine-more-versions"
+                          className={classNames(styles['primary-btn'], {
+                            [styles['primary-btn-disable']]: restartLoading,
+                          })}
+                        >
                           {t('YakitLoading.more_engine_versions')}
                         </span>
                       </YakitPopover>

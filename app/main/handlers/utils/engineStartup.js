@@ -83,6 +83,8 @@ function createEngineStartup({
   const limits = { check: 180000, start: 180000, connect: 10000, probe: 2000, retry: 500, ...timeouts }
   let generation = 0
   let active = null
+  let cleanupPromise = null
+  let cleanupFailure = null
   const children = new Set()
 
   // Progress is best-effort: a closing renderer must not interrupt engine cleanup.
@@ -92,9 +94,56 @@ function createEngineStartup({
     } catch {}
   }
 
+  function logCleanup(event, { operationId, stage, child, confirmedExit, elapsedMs = 0 }) {
+    try {
+      log(
+        redactEngineLog(
+          JSON.stringify({
+            event,
+            operationId,
+            stage,
+            ownedChildPid: child?.pid ?? null,
+            exitCode: child?.exitCode ?? null,
+            signal: child?.signalCode ?? null,
+            confirmedExit,
+            elapsedMs,
+          }),
+        ),
+      )
+    } catch {}
+  }
+
+  async function stopOwnedChild(child, operationId, stage) {
+    const startedAt = Date.now()
+    logCleanup('cleanup_start', { operationId, stage, child, confirmedExit: !isAlive(child) })
+    const confirmedExit = await stopEngineChild(child, execFile, platform)
+    logCleanup('cleanup_result', {
+      operationId,
+      stage,
+      child,
+      confirmedExit,
+      elapsedMs: Date.now() - startedAt,
+    })
+    return confirmedExit
+  }
+
   async function operation(stage, work) {
     const id = ++generation
-    if (active) await active.cancel()
+    if (cleanupPromise) await cleanupPromise
+    if (id !== generation) return cancelled(stage)
+    if (cleanupFailure) return { stage, ...cleanupFailure }
+    if (active) {
+      const previous = active
+      await previous.cancel()
+      if (previous.cleanupFailed || isAlive(previous.child)) {
+        cleanupFailure = {
+          ok: false,
+          status: 'process_error',
+          message: '引擎进程尚未退出，请稍后重试或查看日志',
+        }
+        return { stage, ...cleanupFailure }
+      }
+    }
     if (id !== generation) return cancelled(stage)
     let resolve
     const promise = new Promise((done) => {
@@ -103,6 +152,7 @@ function createEngineStartup({
     const resources = new Set()
     const op = {
       child: null,
+      cleanupFailed: false,
       finished: false,
       promise,
       current: () => !op.finished && id === generation,
@@ -128,8 +178,10 @@ function createEngineStartup({
           } catch {}
         }
         resources.clear()
-        if (!keepChild && op.child && !(await stopEngineChild(op.child, execFile, platform))) {
-          result = { ok: false, stage, status: 'process_error', message: '引擎进程尚未退出，请稍后重试或查看日志' }
+        if (!keepChild && op.child && !(await stopOwnedChild(op.child, id, stage))) {
+          op.cleanupFailed = true
+          cleanupFailure = { ok: false, status: 'process_error', message: '引擎进程尚未退出，请稍后重试或查看日志' }
+          result = cleanupFailure
         }
         if (active === op) active = null
         resolve({ stage, ...result })
@@ -192,7 +244,7 @@ function createEngineStartup({
     return child
   }
 
-  function probe(op, connection, done) {
+  function probe(op, connection, done, deadlineAt = Date.now() + limits.probe) {
     let client
     let call
     let finished = false
@@ -216,10 +268,11 @@ function createEngineStartup({
       if (op.current()) done(error, data)
     }
     remove = op.add(dispose)
-    clearTimer = op.timer(() => finish(new Error('Echo timed out')), limits.probe)
+    const remaining = Math.max(0, deadlineAt - Date.now())
+    clearTimer = op.timer(() => finish(new Error('Echo timed out')), remaining)
     try {
       client = createClient(connection)
-      call = client.Echo({ text: ECHO_TEXT }, { deadline: new Date(Date.now() + limits.probe) }, (error, data) => {
+      call = client.Echo({ text: ECHO_TEXT }, { deadline: new Date(deadlineAt) }, (error, data) => {
         finish(error || (data?.result !== ECHO_TEXT ? new Error('Unexpected Echo response') : null), data)
       })
     } catch (error) {
@@ -227,17 +280,27 @@ function createEngineStartup({
     }
   }
 
-  function authenticatedProbe(op, connection, done) {
-    probe(op, connection, (error, data) => {
-      if (error) return done(error)
-      // A different, unauthenticated Echo server can occupy the port between
-      // check and start. A successful Echo alone does not establish auth enforcement.
-      probe(op, { ...connection, password: '' }, (anonymousError) => {
-        if (anonymousError?.code === 16) return done(null, data) // UNAUTHENTICATED, including legacy engines.
-        if (anonymousError) return done(anonymousError)
-        done(Object.assign(new Error('Local endpoint accepts unauthenticated RPCs'), { unsafeEndpoint: true }))
-      })
-    })
+  function authenticatedProbe(op, connection, done, deadlineAt) {
+    probe(
+      op,
+      connection,
+      (error, data) => {
+        if (error) return done(error)
+        // A different, unauthenticated Echo server can occupy the port between
+        // check and start. A successful Echo alone does not establish auth enforcement.
+        probe(
+          op,
+          { ...connection, password: '' },
+          (anonymousError) => {
+            if (anonymousError?.code === 16) return done(null, data) // UNAUTHENTICATED, including legacy engines.
+            if (anonymousError) return done(anonymousError)
+            done(Object.assign(new Error('Local endpoint accepts unauthenticated RPCs'), { unsafeEndpoint: true }))
+          },
+          deadlineAt,
+        )
+      },
+      deadlineAt,
+    )
   }
 
   function check(params) {
@@ -422,30 +485,88 @@ function createEngineStartup({
   function connect(connection, requireLocalAuth = false) {
     return operation('connect', (op) => {
       const connectProbe = requireLocalAuth ? authenticatedProbe : probe
-      connectProbe(op, connection, (error, data) => {
-        if (error) return op.finish({ ok: false, status: 'dial_error', message: '引擎连接失败，请检查地址和认证信息' })
-        try {
-          commitConnection(connection)
-          op.finish({ ok: true, status: 'success', data })
-        } catch (error) {
-          op.finish({ ok: false, status: 'exception', message: '引擎连接失败，请重试' })
-        }
-      })
+      const deadlineAt = Date.now() + limits.connect
+      connectProbe(
+        op,
+        connection,
+        (error, data) => {
+          if (error)
+            return op.finish({ ok: false, status: 'dial_error', message: '引擎连接失败，请检查地址和认证信息' })
+          try {
+            commitConnection(connection)
+            op.finish({ ok: true, status: 'success', data })
+          } catch {
+            op.finish({ ok: false, status: 'exception', message: '引擎连接失败，请重试' })
+          }
+        },
+        deadlineAt,
+      )
     })
   }
 
-  async function cancel() {
-    generation++
+  function cleanupAll() {
+    const operationId = ++generation
+    if (cleanupPromise) return cleanupPromise
     const pending = active
-    if (pending) await pending.cancel()
-    return pending ? 1 : 0
-  }
+    const pendingChild = pending?.child || null
+    const cleanupStartedAt = Date.now()
+    const task = (async () => {
+      let canceled = 0
+      let failed = false
+      logCleanup('cleanup_start', {
+        operationId,
+        stage: 'dispose',
+        child: null,
+        confirmedExit: null,
+      })
 
-  async function dispose() {
-    const count = children.size || (active ? 1 : 0)
-    await cancel()
-    await Promise.all([...children].map((child) => stopEngineChild(child, execFile, platform)))
-    return count
+      if (pending) {
+        const result = await pending.cancel()
+        if (result.status === 'cancelled') canceled++
+        if (pending.cleanupFailed || isAlive(pendingChild)) failed = true
+      }
+
+      const retained = [...children].filter((child) => child !== pendingChild && isAlive(child))
+      const retainedResults = await Promise.all(retained.map((child) => stopOwnedChild(child, operationId, 'dispose')))
+      for (const confirmedExit of retainedResults) {
+        if (confirmedExit) canceled++
+        else failed = true
+      }
+
+      if (failed) {
+        cleanupFailure = {
+          ok: false,
+          status: 'process_error',
+          message: '引擎进程尚未退出，请稍后重试或查看日志',
+        }
+        return { ...cleanupFailure, canceled }
+      }
+      cleanupFailure = null
+      return { ok: true, canceled, status: 'cancelled' }
+    })()
+      .catch(() => {
+        cleanupFailure = {
+          ok: false,
+          status: 'process_error',
+          message: '引擎进程清理失败，请稍后重试或查看日志',
+        }
+        return { ...cleanupFailure, canceled: 0 }
+      })
+      .then((result) => {
+        logCleanup('cleanup_result', {
+          operationId,
+          stage: 'dispose',
+          child: null,
+          confirmedExit: result.ok,
+          elapsedMs: Date.now() - cleanupStartedAt,
+        })
+        return result
+      })
+    cleanupPromise = task
+    task.finally(() => {
+      if (cleanupPromise === task) cleanupPromise = null
+    })
+    return task
   }
 
   function killOnExit() {
@@ -467,7 +588,7 @@ function createEngineStartup({
     }
   }
 
-  return { check, start, connect, cancel, dispose, killOnExit }
+  return { check, start, connect, cancel: cleanupAll, dispose: cleanupAll, killOnExit }
 }
 
 module.exports = { createEngineStartup, stopEngineChild, validLocalPassword }

@@ -15,6 +15,7 @@ their promises, and terminate only child processes owned by this manager.
 
 ```sh
 yarn test:engine-startup
+yarn test:vitest app/main/handlers/__test__/newEngineStatus.test.js --run --maxWorkers=1
 cd app/renderer/engine-link-startup
 yarn type-check
 yarn i18n:check
@@ -109,13 +110,34 @@ existing Electron channels; it does not add Unix socket or named-pipe support.
 - The real-engine verifier rebinds the original startup port after disposal;
   reserving a different port is not evidence that cleanup succeeded.
 
-Self-check and engine-start stages each have a 180-second deadline. Per-RPC probes
-stay short and cancellable; initial connection probes and cleanup deadlines are
-not expanded. At 20 seconds, each still-pending check/start emits a one-time hint
+Self-check and engine-start stages each have a 180-second deadline. Startup RPC
+probes remain cancellable with a 2-second deadline per probe. An explicit connection
+has one 10-second budget; local authenticated and anonymous-rejection probes share
+that absolute deadline. Authentication rejection fails immediately. Cleanup retains
+its bounded 4-second process-exit wait. At 20 seconds, each still-pending check/start emits a one-time hint
 explaining that a major-version database migration may take extra time and is
 usually a one-time operation. The hint does not assert that migration is occurring.
 Timers are cleared on success, failure, cancellation and supersession. Subsequent
 progress messages do not erase the migration hint.
+
+Recovery actions first await cleanup of this manager's owned processes before
+checking or starting again. External port owners are never terminated. Concurrent
+cleanup calls share the same result, and new operations wait for cleanup to settle.
+After a cleanup failure, the user can retry cancellation; another check/start is
+blocked until cleanup succeeds.
+
+`cancel()`, `dispose()`, and `EngineLink:cancel-all-tasks` return either
+`{ ok: true, canceled, status: 'cancelled' }` or
+`{ ok: false, canceled, status: 'process_error', message }`. The count includes
+confirmed completed cancellations only: an active operation counts once, including
+its child; each retained child counts once. Failed cleanup does not authorize
+check, start, installation, or mode switching. The renderer displays localized
+recovery guidance for both business failures and rejected IPC calls.
+
+Cleanup logs use the existing engine log sink with `cleanup_start` and
+`cleanup_result` events. Fields are `operationId`, `stage`, `ownedChildPid`,
+`exitCode`, `signal`, `confirmedExit`, and `elapsedMs`; credentials and command-line
+arguments are excluded. Logging is best-effort and never changes the cleanup result.
 
 Local validation uses the installed Windows x64 `1.4.8-alpha0910ipc` engine,
 SHA-256 `351ba169c3ee77b936a619c3f649aa3a4b13d8a692b906176429d527b8ab9a0c`,
@@ -131,3 +153,22 @@ no errors, and the community Link production build passing. The real-engine
 experiment also passes under both Node 24.19.0 and Electron 27's Node 18.17.1.
 These are local verification results; PR comments are not marked resolved remotely
 until the corresponding changes have been reviewed and published.
+
+## Recovery and cancellation follow-up (macOS)
+
+The repair adds regressions for queued operations invalidated by a later cancel,
+cleanup failure blocking a replacement connection, and the parent page waiting
+before retry, port change, installation, or either remote-mode entry. Explicit
+connection tests cover a 3-second response, a 10-second timeout, immediate auth
+rejection, and a shared local authentication deadline. TCP and TLS tests use real
+loopback servers; their test certificate is not a production credential.
+
+The real-engine verifier also exercises a failed RPC while an owned child is
+still alive, then confirms cleanup before same-port restart and a later port
+change. Each check must produce new credentials. This simulates RPC failure with
+wrong credentials; it does not reproduce an operating-system network outage.
+
+macOS verification uses the already-installed engine with SHA-256
+`0e27d266de388c6e837beab7fc268b36136de4733836d28ad6ba22a2a98b147a`, disposable
+databases, Node 26.7.0 and Electron 27's Node 18.17.1. This local verification does
+not replace Windows process-tree CI or packaged Electron GUI checks on each OS.

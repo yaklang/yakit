@@ -142,3 +142,7 @@ export interface TypeCallbackExtra {
   message?: string
   dbPath?: string[]
 }
+
+export type CancelTasksResult =
+  | { ok: true; canceled: number; status: 'cancelled' }
+  | { ok: false; canceled: number; status: 'process_error'; message: string }

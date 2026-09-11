@@ -5,9 +5,6 @@ const { getLocalYaklangEngine, getYakitHome } = require('../filePath')
 const { engineLogOutputFileAndUI, engineLogOutputUI } = require('../logFile')
 const { createEngineStartup, validLocalPassword } = require('./utils/engineStartup')
 
-// 引擎连接过程中涉及到能中断的执行任务
-const runningTasks = new Map()
-
 /** 各版本下的数据库环境变量 */
 const DefaultDBFileEnv = {
   irify: {
@@ -48,7 +45,14 @@ module.exports = {
     })
     process.once('exit', startup.killOnExit)
     win.once('closed', () => {
-      void startup.dispose().finally(() => process.removeListener('exit', startup.killOnExit))
+      void startup.dispose().then(
+        (result) => {
+          if (result.ok) process.removeListener('exit', startup.killOnExit)
+        },
+        () => {
+          // Keep the synchronous exit fallback if asynchronous cleanup failed.
+        },
+      )
     })
     ipcMain.handle(ipcEventPre + 'check-allow-secret-local-yaklang-engine', (e, params) => startup.check(params))
 
@@ -374,27 +378,6 @@ module.exports = {
     ipcMain.handle(ipcEventPre + 'start-secret-local-yaklang-engine', (e, params) => startup.start(params))
 
     // 中断连接 取消所有正在执行的任务
-    ipcMain.handle(ipcEventPre + 'cancel-all-tasks', async () => {
-      const engineCanceled = await startup.dispose()
-      if (runningTasks.size === 0) {
-        return { ok: true, canceled: engineCanceled }
-      }
-
-      let count = engineCanceled
-
-      for (const [, cancel] of runningTasks) {
-        try {
-          cancel()
-          count++
-        } catch {}
-      }
-
-      runningTasks.clear()
-
-      return {
-        ok: true,
-        canceled: count,
-      }
-    })
+    ipcMain.handle(ipcEventPre + 'cancel-all-tasks', () => startup.dispose())
   },
 }
