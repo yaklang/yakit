@@ -61,6 +61,9 @@
   flex: 1;
   flex-direction: column;
   justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  gap: 12px;
 
   .log-wrapper {
     font-size: 14px;
@@ -111,6 +114,8 @@
   .footer-wrapper {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
+    white-space: nowrap;
 
     .exit-btn {
       display: flex;

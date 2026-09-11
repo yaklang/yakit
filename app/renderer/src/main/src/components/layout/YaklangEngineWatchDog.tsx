@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { useDebounceEffect, useMemoizedFn } from 'ahooks'
+import React, { useEffect } from 'react'
+import { useMemoizedFn } from 'ahooks'
 import { isEngineConnectionAlive } from '@/components/layout/WelcomeConsoleUtil'
 import type { EngineWatchDogCallbackType, YaklangEngineMode } from '@/yakitGVDefine'
 import { failed } from '@/utils/notification'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitDynamicStatus } from '@/store'
 import { remoteOperation } from '@/pages/dynamicControl/remoteOperation'
-import { fetchEnv, getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify, toEngineHandshakeName } from '@/utils/envfile'
+import { getRemoteHttpSettingGV } from '@/utils/envfile'
 import emiter from '@/utils/eventBus/eventBus'
 import { debugToPrintLog } from '@/utils/logCollection'
 import { yakitEngine } from '@/services/electronBridge'
@@ -14,7 +14,10 @@ import { yakitEngine } from '@/services/electronBridge'
 export interface YaklangEngineWatchDogCredential {
   Mode?: YaklangEngineMode
   Host: string
-  Port: number
+  Port?: number
+  Endpoint?: LocalEngineEndpoint
+  InstanceId?: string
+  LaunchId?: string
 
   /**
    * 高级登陆验证信息
@@ -37,10 +40,6 @@ export interface YaklangEngineWatchDogProps {
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo(
   (props: YaklangEngineWatchDogProps) => {
-    // 是否自动重启引擎进程
-    const [autoStartProgress, setAutoStartProgress] = useState(false)
-    // 是否正在重启引擎进程
-    const startingUp = useRef<boolean>(false)
     const { dynamicStatus, setDynamicStatus } = yakitDynamicStatus()
 
     /** 引擎信息认证 */
@@ -49,13 +48,12 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         `[IFNO] engine-test mode:${props.credential.Mode} port:${props.credential.Port} isDynamicControl:${isDynamicControl}`,
       )
       // 重置状态
-      setAutoStartProgress(false)
       const mode = props.credential.Mode
       if (!mode) {
         return
       }
 
-      if (props.credential.Port <= 0) {
+      if (mode === 'remote' && (props.credential.Port || 0) <= 0) {
         return
       }
 
@@ -85,7 +83,9 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
           debugToPrintLog(`------ 目标引擎进程不存在 ------`)
           switch (mode) {
             case 'local':
-              setAutoStartProgress(true)
+              // A disconnected session must be recovered explicitly in the startup UI.
+              props.onKeepaliveShouldChange?.(false)
+              failed(String(e))
               return
             case 'remote':
               if (isDynamicControl) {
@@ -108,72 +108,6 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         emiter.off('startAndCreateEngineProcess')
       }
     }, [])
-
-    // 这个 hook
-    useDebounceEffect(
-      () => {
-        const mode = props.credential.Mode
-        if (!mode) {
-          return
-        }
-
-        if (mode === 'remote') {
-          return
-        }
-
-        if (props.credential.Port <= 0) {
-          return
-        }
-
-        if (!autoStartProgress) {
-          // 不启动进程的话，就直接退出
-          return
-        }
-
-        debugToPrintLog(`[INFO] 尝试启动新的引擎进程 port:${props.credential.Port}`)
-
-        setTimeout(() => {
-          if (props.onKeepaliveShouldChange) {
-            props.onKeepaliveShouldChange(true)
-          }
-        }, 600)
-
-        yakitEngine
-          .isPortAvailable(props.credential.Port)
-          .then(() => {
-            if (startingUp.current) {
-              return
-            }
-            startingUp.current = true
-            yakitEngine
-              .startLocalYaklangEngine({
-                port: props.credential.Port,
-                version: toEngineHandshakeName(fetchEnv()),
-                isEnpriTraceAgent: isEnpriTraceAgent(),
-                isIRify: isIRify(),
-              })
-              .then(() => {
-                debugToPrintLog(`[INFO] 本地新引擎进程启动成功`)
-              })
-              .catch((e) => {
-                console.info(e)
-                debugToPrintLog(`[ERROR] 本地新引擎进程启动失败: ${e}`)
-              })
-              .finally(() => {
-                startingUp.current = false
-              })
-          })
-          .catch((e) => {
-            debugToPrintLog(`[ERROR] 新引擎进程启动出错: 端口被占用: ${e}`)
-          })
-      },
-      [autoStartProgress, props.onKeepaliveShouldChange, props.credential],
-      { leading: false, wait: 1000 },
-    )
-
-    useEffect(() => {
-      if (!props.engineLink) setAutoStartProgress(false)
-    }, [props.engineLink])
 
     /** 未连接引擎前, 每隔1秒尝试连接一次, 连接引擎后, 每隔5秒尝试连接一次 */
     const attemptConnectTime = useMemoizedFn(() => {

@@ -60,16 +60,37 @@ declare global {
     timeout?: number
   }
 
-  interface YakProcessInfo {
-    port: number
-    pid: number
+  type LocalEngineEndpoint =
+    | { transport: 'tcp'; host: '127.0.0.1'; port: number }
+    | { transport: 'unix' | 'npipe'; path: string }
+  interface LocalEngineInstance {
+    fallbackReason?: { status: string; reasonCode?: string; stage?: string }
+    id: string
+    pid?: number
     ppid?: number
-    cmd: string
-    origin: unknown
+    port?: number
+    endpoint?: LocalEngineEndpoint
+    transport: 'tcp' | 'unix' | 'npipe' | 'unknown'
+    displayEndpoint: string
+    state: string
+    version?: string
+    ownership: 'managed' | 'external'
+    current: boolean
+    actions: { stop: boolean; connect: boolean }
+    actionReason: string
   }
-
+  interface EngineStopResult {
+    ok: boolean
+    stopped?: boolean
+    status?: string
+    results?: EngineStopResult[]
+    id?: string
+  }
+  interface YakProcessInfo extends LocalEngineInstance {}
   interface YaklangEngineAddr {
     addr: string
+    isTLS?: boolean
+    instance?: LocalEngineInstance | null
   }
 
   interface EchoPayload {
@@ -205,6 +226,10 @@ declare global {
       cancelAllTasks: () => Promise<any>
       killYakGrpc: (pid: number) => Promise<any>
       listYakGrpc: () => Promise<YakProcessInfo[]>
+      currentLocalEngine: () => Promise<LocalEngineInstance | null>
+      stopLocalEngine: (id: string) => Promise<EngineStopResult>
+      stopAllLocalEngines: () => Promise<EngineStopResult>
+      disconnectLocalEngine: () => Promise<{ ok: boolean }>
       fetchYaklangEngineAddr: () => Promise<YaklangEngineAddr>
       outputLogToWelcomeConsole: (message: string) => Promise<unknanyown>
       connectYaklangEngine: (credential: YaklangEngineWatchDogCredential) => Promise<any>

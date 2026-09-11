@@ -66,6 +66,7 @@ vi.mock('@/utils/notification', () => ({
 
 vi.mock('@/utils/kv', () => ({
   getLocalValue: vi.fn(),
+  setLocalValue: vi.fn(),
 }))
 
 vi.mock('@/enums/yakitGV', () => ({
@@ -117,7 +118,7 @@ describe('LocalEngine Component', () => {
     ;(grpcCheckAllowSecretLocal as any).mockResolvedValue({
       ok: true,
       status: 'success',
-      json: { port: 9011, secret: 'test-secret', version: '1.4.7-beta1' },
+      json: { port: 9011, launchId: 'test-plan', version: '1.4.7-beta1' },
     })
     ;(grpcFetchLocalYakitVersion as any).mockResolvedValue('1.4.7-0429')
     ;(grpcFetchLatestYakitVersion as any).mockResolvedValue('1.4.7-0429') // 默认相同版本
@@ -182,6 +183,7 @@ describe('LocalEngine Component', () => {
 
       await waitFor(() => {
         expect(grpcCheckAllowSecretLocal).toHaveBeenCalledWith({
+          policy: 'auto',
           port: 9011,
           softwareVersion: FetchSoftwareVersion(),
         })
@@ -323,14 +325,14 @@ describe('LocalEngine Component', () => {
       vi.mocked(grpcCheckAllowSecretLocal).mockResolvedValueOnce({
         ok: true,
         status: 'success',
-        json: { port: 9012, secret: 'new' },
+        json: { port: 9012, launchId: 'new' },
       } as any)
       renderComponent()
       await act(async () => ref.current!.init(9011))
       await act(async () => ref.current!.init(9012))
-      await act(async () => finishOld({ ok: true, status: 'success', json: { port: 9011, secret: 'old' } }))
+      await act(async () => finishOld({ ok: true, status: 'success', json: { port: 9011, launchId: 'old' } }))
       await act(async () => vi.advanceTimersByTimeAsync(1500))
-      expect(props.onLinkEngine).toHaveBeenCalledExactlyOnceWith({ port: 9012, secret: 'new' })
+      expect(props.onLinkEngine).toHaveBeenCalledExactlyOnceWith({ port: 9012, launchId: 'new' })
     })
 
     it.each(['unmount', 'break'])('%s 后延迟启动不得执行', async (operation) => {

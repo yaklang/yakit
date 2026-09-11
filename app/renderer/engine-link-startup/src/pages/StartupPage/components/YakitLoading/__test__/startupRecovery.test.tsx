@@ -10,6 +10,7 @@ vi.mock('@/utils/kv', () => ({ getLocalValue: async () => true, setLocalValue: v
 vi.mock('@/utils/electronBridge', () => ({ yakitApp: {}, yakitEngine: {} }))
 vi.mock('../../AgreementContentModal', () => ({ AgreementContentModal: () => null }))
 vi.mock('../../MoreYaklangVersion', () => ({ MoreYaklangVersion: () => null }))
+vi.mock('../../LocalEngine/LocalTransportSettings', () => ({ LocalTransportSettings: () => null }))
 
 function show(status: YakitLoadingProp['yakitStatus']) {
   const callback = vi.fn()

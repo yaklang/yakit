@@ -77,6 +77,7 @@ export const config = {
   specs: [path.join(repoRoot, 'e2e/specs/**/*.e2e.mjs')],
   suites: {
     smoke: [path.join(repoRoot, 'e2e/specs/smoke/**/*.e2e.mjs')],
+    'ipc-startup': [path.join(repoRoot, 'e2e/specs/ipc-startup/**/*.e2e.mjs')],
     'real-engine': [path.join(repoRoot, 'e2e/specs/real-engine/**/*.e2e.mjs')],
     'web-fuzzer-mcp': [path.join(repoRoot, 'e2e/specs/web-fuzzer-mcp/**/*.e2e.mjs')],
     'mitm-performance': [path.join(repoRoot, 'e2e/specs/performance/**/*.e2e.mjs')],

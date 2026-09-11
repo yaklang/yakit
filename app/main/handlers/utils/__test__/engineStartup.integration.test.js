@@ -123,10 +123,10 @@ describe('real child processes and authenticated TCP', () => {
     expect(commitConnection).not.toHaveBeenCalled()
   })
 
-  it.each(['hang', 'slow-rpc', 'wrong-auth'])('%s: reaches a deadline and cleans up', async (scenario) => {
+  it.each(['hang', 'slow-rpc', 'wrong-auth'])('%s: fails safely and cleans up', async (scenario) => {
     const { manager, commitConnection } = setup('v2', scenario, { start: 2000 })
     const result = await manager.start({ port: await freePort(), password: 'real-test-password' })
-    expect(result.status).toBe('timeout')
+    expect(result.status).toBe(scenario === 'wrong-auth' ? 'protocol_error' : 'timeout')
     expect(commitConnection).not.toHaveBeenCalled()
     expect(children.every((child) => !alive(child))).toBe(true)
   })

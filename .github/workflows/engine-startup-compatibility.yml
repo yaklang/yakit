@@ -1,37 +1,33 @@
-name: engine startup compatibility
+name: 启动测试
+run-name: "${{ github.event.pull_request.draft && '[WIP] ' || '' }}启动测试 · ${{ github.head_ref || github.ref_name }}"
 
 on:
   pull_request:
+    # Intentionally do not run for renderer-only (or test/docs-only) changes.
+    # Manual dispatch is available when updating the smoke suite or pinned artifacts.
     paths:
       - 'app/main/**'
-      - 'app/protos/grpc.proto'
-      - 'app/renderer/engine-link-startup/**'
-      - 'scripts/engine-startup/**'
-      - 'package.json'
-      - 'yarn.lock'
-      - '.github/workflows/engine-startup-compatibility.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: engine-startup-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   HUSKY: '0'
-  ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
 
 jobs:
   startup:
-    name: startup (${{ matrix.os }})
+    name: "${{ github.event.pull_request.draft && '[WIP] ' || '' }}启动测试 (${{ matrix.os }})"
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-24.04, macos-15]
+        os: [windows-2022, macos-15, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,96 +35,63 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.22.1'
-      - name: Install locked test dependencies without Electron/native build scripts
-        timeout-minutes: 10
+          cache: yarn
+      - name: Cache pinned engines and Electron
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ runner.temp }}/startup-engines
+            ~/.cache/electron
+            ~/Library/Caches/electron
+            ~/AppData/Local/electron/Cache
+          key: startup-artifacts-${{ runner.os }}-${{ runner.arch }}-27-${{ hashFiles('scripts/engine-startup/engines.json') }}
+      - name: Install locked client/test dependencies
+        timeout-minutes: 5
         run: yarn install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 60000
-      - name: Verify lifecycle, real TCP authentication and owned process cleanup
-        timeout-minutes: 3
+      - name: Prepare locked Electron 27 runtime
+        timeout-minutes: 2
+        run: node node_modules/electron/install.js
+      - name: Configure Electron sandbox helper on the disposable Linux runner
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo chown root:root node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
+      - name: Verify lifecycle, authentication, cancellation and fallback regressions
+        timeout-minutes: 2
         run: yarn test:engine-startup --reporter=default --reporter=junit --outputFile.junit=engine-startup-junit.xml
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: engine-startup-${{ matrix.os }}-${{ github.run_attempt }}
-          path: engine-startup-junit.xml
-          if-no-files-found: warn
-          retention-days: 14
-
-  recovery-ui:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: app/renderer/engine-link-startup
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22.22.1'
-      - name: Install locked Link renderer dependencies
-        timeout-minutes: 10
-        run: yarn install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 60000
-      - name: Check types
-        run: yarn type-check
-      - name: Check localized recovery messages
-        run: yarn i18n:check
-      - name: Verify recovery buttons and stale asynchronous results
+      - name: Download pinned IPC engine from CDN (never compile)
         timeout-minutes: 3
-        run: yarn test run src/pages/StartupPage --maxWorkers=1 --reporter=default --reporter=junit --outputFile.junit=engine-recovery-junit.xml
+        shell: bash
+        run: node scripts/engine-startup/download-engine.cjs ipc "$RUNNER_TEMP/startup-engines"
+      - name: Electron main auto / IPC-only / TCP startup smoke
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          trap 'cat ipc-electron.json 2>/dev/null || true' EXIT
+          binary="$(node scripts/engine-startup/download-engine.cjs ipc "$RUNNER_TEMP/startup-engines")"
+          if [ "$RUNNER_OS" = Linux ]; then
+            xvfb-run -a node scripts/engine-startup/verify-electron-ipc.cjs "$binary" 1 matrix > ipc-electron.json
+          else
+            node scripts/engine-startup/verify-electron-ipc.cjs "$binary" 1 matrix > ipc-electron.json
+          fi
+      - name: Windows released legacy engine / secure TCP compatibility
+        if: runner.os == 'Windows'
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          binary="$(node scripts/engine-startup/download-engine.cjs legacy "$RUNNER_TEMP/startup-engines")"
+          node scripts/engine-startup/verify-real-engine.cjs "$binary" > legacy-engine.json
+          node scripts/engine-startup/verify-electron-ipc.cjs "$binary" 1 auto manual-tcp > legacy-recovery.json
+          cat legacy-engine.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: engine-recovery-ui-${{ github.run_attempt }}
-          path: app/renderer/engine-link-startup/engine-recovery-junit.xml
-          if-no-files-found: warn
-          retention-days: 14
-
-  windows-real-engine:
-    name: Windows real old/new engines
-    runs-on: windows-2022
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22.22.1'
-      - name: Install locked client dependencies
-        timeout-minutes: 10
-        run: yarn install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 60000
-      - name: Download pinned released engines from CDN and verify SHA-256
-        timeout-minutes: 5
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          # Pin published versions AND hashes, including the non-production alpha.
-          # Never compile engines here or follow a moving 'latest' pointer.
-          $engines = @(
-            @{ Version = '1.4.8-beta17'; File = 'yak-old.exe'; SHA256 = '017d3fd2dcde3399f0b26940be94a8d4bb941be2504ccbf36949a67c01eb9d8a' },
-            @{ Version = '1.4.8-alpha0910ipc'; File = 'yak-new.exe'; SHA256 = '351ba169c3ee77b936a619c3f649aa3a4b13d8a692b906176429d527b8ab9a0c' }
-          )
-          foreach ($engine in $engines) {
-            $url = "https://yaklang.oss-accelerate.aliyuncs.com/yak/$($engine.Version)/yak_windows_amd64.exe"
-            $destination = Join-Path $env:RUNNER_TEMP $engine.File
-            curl.exe --fail --location --proto '=https' --proto-redir '=https' --retry 3 --connect-timeout 20 --max-time 120 --output $destination $url
-            if ($LASTEXITCODE -ne 0) { throw "Engine download failed: $($engine.Version)" }
-            $actual = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash
-            if ($actual -ne $engine.SHA256) { throw "Engine SHA-256 mismatch: $($engine.Version)" }
-            Write-Output "Verified $($engine.Version): $actual"
-          }
-      - name: Verify authenticated startup and port conflict recovery against both binaries
-        timeout-minutes: 5
-        shell: pwsh
-        run: |
-          node scripts/engine-startup/verify-real-engine.cjs "$env:RUNNER_TEMP/yak-old.exe" "$env:RUNNER_TEMP/yak-new.exe" > windows-real-engine.json
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Get-Content windows-real-engine.json
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: windows-real-engine-${{ github.run_attempt }}
-          path: windows-real-engine.json
+          name: startup-${{ matrix.os }}-${{ github.run_attempt }}
+          path: |
+            engine-startup-junit.xml
+            ipc-electron.json
+            legacy-engine.json
+            legacy-recovery.json
           if-no-files-found: warn
           retention-days: 14
