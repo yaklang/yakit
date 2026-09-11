@@ -1,64 +1,105 @@
-# Engine startup compatibility
+# IPC-first startup smoke tests
 
-Local startup deliberately uses the existing authenticated loopback TCP protocol.
-Do not automatically enable Unix sockets or Windows named pipes based on the engine
-version: older engines do not recognize those flags. IPC support in the engine is
-opt-in and is separate from this client compatibility change.
+Yakit owns one main-process engine session shared by Link and Main. Local startup
+defaults to Windows named pipes or macOS/Linux Unix sockets. An explicit TCP
+choice stays TCP. Remote Host/Port/TLS behavior is separate.
 
-The startup manager generates a fresh cryptographic password and probes with the
-same immutable credentials that it commits to the connection settings. It also
-checks that an anonymous Echo is rejected. A ready event or log line alone cannot
-complete startup. Failed or cancelled attempts close their RPC clients, settle
-their promises, and terminate only child processes owned by this manager.
+## Safety contract
 
-## Automated client tests
+- Main generates a fresh random endpoint and password for every new instance.
+  IPC has no fabricated port. Renderer DTOs never contain passwords or command lines.
+- Check and ready endpoints must match the requested endpoint before authenticated
+  RPCs. Startup requires authenticated Echo success **and** anonymous Echo rejection.
+- Automatic fallback is limited to one TCP attempt, after confirmed child exit,
+  with explicit unsupported-IPC-flag or classified IPC-bind evidence. Unknown
+  failures, endpoint mismatches, authentication errors, database errors, ordinary
+  timeouts and cancellation never trigger fallback.
+- Check/start each share a 180-second budget across both attempts, with a
+  360-second operation cap. At 20 seconds a one-time migration hint is shown;
+  it does not claim a migration has been detected.
+- Reconnect uses a trusted instance ID, not credentials from process discovery.
+  Only current-session children may be stopped. Discovered external engines are
+  read-only. A failed stop blocks replacement and engine-file mutation.
+- Restoring the embedded engine is transactional and never deletes project data.
+  No automatic restart is performed after a failed restore.
+
+## Fixed CDN artifacts (no engine compilation)
+
+`engines.json` pins **1.4.8-alpha0911ipc** for Windows x64, Linux x64 and macOS
+arm64, plus Windows **1.4.8-beta17** as a historical TCP sample. Each platform has
+its own SHA-256. Downloads are from
+`https://yaklang.oss-accelerate.aliyuncs.com/yak/<version>/<file>`.
+No latest pointer, source build, public release or OSS write is used.
 
 ```sh
+node scripts/engine-startup/download-engine.cjs ipc /absolute/cache
+node scripts/engine-startup/verify-electron-ipc.cjs /absolute/downloaded-yak 1 matrix
+# Optional repeated IPC startup/stop check:
+node scripts/engine-startup/verify-electron-ipc.cjs /absolute/downloaded-yak 100 ipc ipc
+```
+
+The matrix executes auto IPC, IPC-only and explicit TCP using the locked Electron
+27 runtime and grpc-js client, even with unusable proxy variables. IPC is tested
+while the fallback TCP port is occupied. It exercises cancellation/recovery,
+business RPC, negative authentication, disconnect/reconnect, endpoint/password
+freshness, secret redaction and confirmed owned-child cleanup. All databases are
+temporary, in a Unicode/space-containing home.
+
+Windows historical checks:
+
+```sh
+node scripts/engine-startup/verify-real-engine.cjs /absolute/legacy-yak
+node scripts/engine-startup/verify-electron-ipc.cjs /absolute/legacy-yak 1 auto manual-tcp
+```
+
+**beta17 caveat:** its checker silently ignores IPC flags and reports TCP.
+Yakit correctly rejects that mismatched endpoint; a separate explicit TCP choice
+then succeeds. This sample is not evidence of automatic unsupported-flag fallback.
+That branch is covered by deterministic CLI-diagnostic lifecycle tests.
+
+## Existing project scaffolding
+
+Use the Node version required by package.json (at least 22.22.0), installed frozen
+dependencies, and the repository CLI. Do not run the source-engine E2E suites for
+this CDN-only task.
+
+```sh
+yarn check-deps
 yarn test:engine-startup
 yarn test:vitest app/main/handlers/__test__/newEngineStatus.test.js --run --maxWorkers=1
 cd app/renderer/engine-link-startup
 yarn type-check
 yarn i18n:check
 yarn test run src/pages/StartupPage --maxWorkers=1
+cd ../../..
+yarn test:e2e:preflight
+yarn test:e2e:build
+yarn test:e2e:electron:smoke
+yarn test:e2e:electron:ipc
 ```
 
-The main-process suite covers legacy and structured diagnostics, split output,
-timeouts, spawn failures, authentication, stale callbacks, cancellation, and real
-TCP connections using the production gRPC client factory. The Windows integration
-case starts and terminates an owned process tree. Mock process tests never invoke
-the host's real process termination command.
-
-The renderer suite covers retry recovery, credential invalidation, and stale
-check/connect responses. CI installs frozen dependencies without Electron download
-or native install scripts, uses bounded jobs and RPCs, and uploads JUnit results.
-
-## Real engine experiments
-
-Download explicitly versioned, already published engine binaries from the CDN
-and verify their SHA-256 before executing them. Do not compile engines for this
-test or follow the moving `latest` pointer. From the Yakit repository, pass the
-verified binaries:
+For development-renderer acceptance, start both renderers using
+`yarn cli start -v yakit`, then:
 
 ```sh
-node scripts/engine-startup/verify-real-engine.cjs /absolute/yak-old /absolute/yak-new
+node scripts/run-electron-e2e.mjs --dev-renderers --with-cdn-engine --suite ipc-startup
 ```
 
-Each binary gets disposable databases and a temporary home containing spaces and
-Unicode. The experiment verifies random credentials, authenticated startup,
-rejection of empty/masked/wrong credentials, secret redaction, port conflict
-recovery, and owned-child cleanup. The JSON output includes binary SHA-256 hashes.
-The Windows CI job downloads these Windows x64 binaries from
-`https://yaklang.oss-accelerate.aliyuncs.com/yak/<version>/yak_windows_amd64.exe`
-and checks the hashes pinned in the workflow before running the same experiments:
+The runner verifies HTTP 200 and root/script content on ports 3000/5173 before
+starting Electron. Its CDN fixture installs into disposable userData/YAKIT_HOME,
+does not pre-start the engine, and never uses the user's installed engine/database.
+`YAKIT_E2E_CDN_BINARY` may point to an already downloaded binary; the same manifest
+hash is still mandatory. `YAKIT_E2E_STARTUP_POLICY=auto|ipc|tcp` selects the initial
+UI scenario. The UI test checks real Link-to-Main handoff, Echo, project entry,
+endpoint header, management controls, stop, policy change and a fresh restart.
+Screenshots/metadata live under `reports/e2e-electron/<run-id>`.
 
-| Coverage           | Published version    | SHA-256                                                            |
-| ------------------ | -------------------- | ------------------------------------------------------------------ |
-| Older release      | `1.4.8-beta17`       | `017d3fd2dcde3399f0b26940be94a8d4bb941be2504ccbf36949a67c01eb9d8a` |
-| Current test alpha | `1.4.8-alpha0910ipc` | `351ba169c3ee77b936a619c3f649aa3a4b13d8a692b906176429d527b8ab9a0c` |
+## CI
 
-Updating a version or replacing an alpha artifact requires an explicit hash
-update. A failed download or mismatched hash fails the job; it does not fall back
-to source compilation or skip engine verification.
+The `启动测试` workflow has three parallel jobs: windows-2022, macos-15 and
+ubuntu-24.04. Only PR changes under `app/main/**` trigger it automatically;
+renderer-only, documentation-only and fixture-only changes do not. Manual dispatch
+is available. Draft PR run/job names have a **[WIP]** prefix without skipping checks.
 
 The exact workflow download step and unchanged verifier were also run locally on
 Windows with Node 24.19.0: both CDN binaries passed hash verification and all
@@ -172,3 +213,9 @@ macOS verification uses the already-installed engine with SHA-256
 `0e27d266de388c6e837beab7fc268b36136de4733836d28ad6ba22a2a98b147a`, disposable
 databases, Node 26.7.0 and Electron 27's Node 18.17.1. This local verification does
 not replace Windows process-tree CI or packaged Electron GUI checks on each OS.
+
+Each real startup smoke step has a two-minute cap. Cold dependency/CDN preparation
+is separate and may take longer; the whole job has a ten-minute limit. Logs,
+SHA/runtime metadata and JUnit results are retained as Actions artifacts. These
+are startup/authentication smoke tests, not a packaged installer or full-product
+cross-platform GUI certification.

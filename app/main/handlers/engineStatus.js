@@ -8,7 +8,7 @@ const net = require('net')
 const { engineLogOutputFileAndUI, engineLogOutputUI } = require('../logFile')
 const { assertTrustedAppSender, normalizePid } = require('../security')
 
-let dbFile = undefined
+const { getEngineSession, connectEngine, registerSessionIPC } = require('./utils/engineSessionRuntime')
 
 function isPortAvailable(port) {
   return new Promise((resolve, reject) => {
@@ -73,6 +73,8 @@ const runWindowsTaskKill = (pid) => {
 const ECHO_TEST_MSG = 'Hello Yakit!'
 
 module.exports = (win, callback, getClient, newClient) => {
+  const startup = getEngineSession(win, callback, newClient)
+  registerSessionIPC()
   /** 获取本地引擎版本号 */
   ipcMain.handle('fetch-yak-version', () => {
     try {
@@ -137,79 +139,14 @@ module.exports = (win, callback, getClient, newClient) => {
     return await asyncIsPortAvailable(port)
   })
 
-  /**
-   * @name 手动启动yaklang引擎进程
-   * @param {Object} params
-   * @param {Boolean} params.sudo 是否使用管理员权限启动yak
-   * @param {Number} params.port 本地缓存数据里的引擎启动端口号
-   * @param {Boolean} params.isEnpriTraceAgent 本地缓存数据里的引擎启动端口号
-   */
-  const asyncStartLocalYakEngineServer = (win, params) => {
-    const { version } = params
-
-    const { port, isEnpriTraceAgent, isIRify } = params
-    return new Promise((resolve, reject) => {
-      try {
-        engineLogOutputFileAndUI(win, `----- 已启动本地引擎进程 -----`)
-        if (isIRify) {
-          dbFile = ['--profile-db', 'irify-profile-rule.db', '--project-db', 'default-irify.db']
-        }
-
-        const grpcPort = ['grpc', '--port', `${port}`, '--frontend', `${version || 'yakit'}`]
-        const extraParams = dbFile ? [...grpcPort, ...dbFile] : grpcPort
-        const resultParams = isEnpriTraceAgent ? [...extraParams, '--disable-output'] : extraParams
-
-        engineLogOutputFileAndUI(win, `启动命令: ${getLocalYaklangEngine()} ${resultParams.join(' ')}`)
-        const subprocess = childProcess.spawn(getLocalYaklangEngine(), resultParams, {
-          detached: false,
-          windowsHide: true,
-          stdio: ['ignore', 'pipe', 'pipe'],
-          env: {
-            ...process.env,
-            YAKIT_HOME: getYakitHome(),
-          },
-        })
-
-        // subprocess.unref()
-        process.on('exit', () => {
-          // 终止子进程
-          subprocess.kill()
-        })
-        subprocess.on('error', (err) => {
-          engineLogOutputFileAndUI(win, `----- 本地引擎遭遇错误，错误原因 -----`)
-          engineLogOutputFileAndUI(win, err)
-          win.webContents.send('start-yaklang-engine-error', `本地引擎遭遇错误，错误原因为：${err}`)
-          reject(err)
-        })
-        subprocess.on('close', async (e) => {
-          engineLogOutputFileAndUI(win, `----- 本地引擎退出，退出码为：${e} -----`)
-        })
-
-        subprocess.stdout.on('data', (data) => {
-          try {
-            // const match = data.toString("utf-8").match(/\[\w+:\d+]\s+(.*)/)[1]
-            engineLogOutputFileAndUI(win, `${data.toString('utf-8')}`)
-          } catch (error) {}
-        })
-        subprocess.stderr.on('data', (data) => {
-          try {
-            // const match = data.toString("utf-8").match(/\[\w+:\d+]\s+(.*)/)[1]
-            engineLogOutputFileAndUI(win, `${data.toString('utf-8')}`)
-          } catch (error) {}
-        })
-        resolve()
-      } catch (e) {
-        reject(e)
-      }
-    })
-  }
-
-  /** 本地启动yaklang引擎 */
   ipcMain.handle('start-local-yaklang-engine', async (e, params) => {
-    if (!params['port']) {
-      throw Error('启动本地引擎必须指定端口')
-    }
-    return await asyncStartLocalYakEngineServer(win, params)
+    assertTrustedAppSender(e, 'start-local-yaklang-engine')
+    const result = await startup.launch({
+      ...params,
+      softwareVersion: params.isIRify ? 'irify' : params.softwareVersion,
+    })
+    if (!result.ok) throw new Error(result.message)
+    return result
   })
 
   /** 判断远程缓存端口是否已开启引擎 */
@@ -236,52 +173,9 @@ module.exports = (win, callback, getClient, newClient) => {
     return await judgeRemoteEngineStarted(win, params)
   })
 
-  /** 连接引擎 */
-  ipcMain.handle('connect-yaklang-engine', async (e, params) => {
-    /**
-     * connect yaklang engine 实际上是为了设置参数，实际上他是不知道远程还是本地
-     * params 中的参数应该有如下：
-     *  @Host: 主机名，可能携带端口
-     *  @Port: 端口
-     *  @Sudo: 是否是管理员权限
-     *  @IsTLS?: 是否是 TLS 加密的
-     *  @PemBytes?: Uint8Array 是 CaPem
-     *  @Password?: 登陆密码
-     */
-    const hostRaw = `${params['Host'] || '127.0.0.1'}`
-    let portFromRaw = `${params['Port'] || 8087}`
-    let hostFormatted = hostRaw
-    if (hostRaw.lastIndexOf(':') >= 0) {
-      portFromRaw = `${parseInt(hostRaw.substr(hostRaw.lastIndexOf(':') + 1))}`
-      hostFormatted = `${hostRaw.substr(0, hostRaw.lastIndexOf(':'))}`
-    }
-    const addr = `${hostFormatted}:${portFromRaw}`
-    const safeConnParams = { Host: params['Host'], Port: params['Port'], IsTLS: params['IsTLS'], Sudo: params['Sudo'] }
-    engineLogOutputFileAndUI(win, `原始参数为: ${JSON.stringify(safeConnParams)}`)
-    engineLogOutputFileAndUI(win, `开始连接引擎地址为：${addr} Host: ${hostRaw} Port: ${portFromRaw}`)
-    GLOBAL_YAK_SETTING.defaultYakGRPCAddr = addr
-
-    callback(
-      GLOBAL_YAK_SETTING.defaultYakGRPCAddr,
-      Buffer.from(params['PemBytes'] === undefined ? '' : params['PemBytes']).toString('utf-8'),
-      params['Password'] || '',
-    )
-    return await new Promise((resolve, reject) => {
-      const deadline = new Date()
-      // 设置超时时间为60秒
-      deadline.setSeconds(deadline.getSeconds() + 60)
-      newClient().Echo({ text: ECHO_TEST_MSG }, { deadline }, (err, data) => {
-        if (err) {
-          reject(err + '')
-          return
-        }
-        if (data['result'] === ECHO_TEST_MSG) {
-          resolve(data)
-        } else {
-          reject(`ECHO ${ECHO_TEST_MSG} ERROR`)
-        }
-      })
-    })
+  ipcMain.handle('connect-yaklang-engine', (e, params) => {
+    assertTrustedAppSender(e, 'connect-yaklang-engine')
+    return connectEngine(params)
   })
 
   /** 输出到欢迎界面的日志中 */
