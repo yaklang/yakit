@@ -137,7 +137,7 @@ export const useHTTPFlowTableShortcutKeys = (options: UseHTTPFlowTableShortcutKe
 
     const selectedKeys = getSelectedRowKeys()
     const isAllSelect = getIsAllSelect()
-    const isMultiple = selectedKeys.length > 1
+    const isMultiple = selectedKeys.length > 0
     const plugins = isMultiple ? multiplePlugins : singlePlugins
     if (!plugins.length) return
 

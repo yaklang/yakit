@@ -127,8 +127,17 @@ describe('useHTTPFlowTableShortcutKeys context-menu shortcuts', () => {
   it('passes numeric HTTP flow IDs when a single shortcut runs a context-menu action', () => {
     const action = makeAction()
     const plugin = makePlugin(action)
+    const onClearSelection = vi.fn()
 
-    renderHook(() => useHTTPFlowTableShortcutKeys(makeOptions({ singlePlugins: [plugin] })))
+    renderHook(() =>
+      useHTTPFlowTableShortcutKeys(
+        makeOptions({
+          multiplePlugins: [plugin],
+          getSelectedRows: () => [makeFlow(7)],
+          onClearSelection,
+        }),
+      ),
+    )
     const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true, cancelable: true })
     document.dispatchEvent(event)
 
@@ -139,6 +148,7 @@ describe('useHTTPFlowTableShortcutKeys context-menu shortcuts', () => {
       }),
     )
     expect(event.defaultPrevented).toBe(true)
+    expect(onClearSelection).toHaveBeenCalledTimes(1)
   })
 
   it('passes all selected flow IDs and clears a multiple selection', () => {

@@ -971,6 +971,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     if (menuName.startsWith('pluginExtension')) {
       if (key.startsWith(PLUGIN_RIGHT_MAG)) {
         onPluginExtensionHandle({ key, keyPath, id: [], rows: [], menu: batchContextMenu })
+        setBatchVisible(false)
         return
       }
       const resolved = resolveBatchSelectionOrNotify()
