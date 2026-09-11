@@ -211,7 +211,9 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   /** 按 token 列表从 IDB 补灌 + 灌内存 + bump renderNum（按 kind） */
   const hydrateTokens = useMemoizedFn(async (tokens: string[]) => {
     if (!tokens.length || !sessionId) return
+    const lifecycle = globalSessionEngine.ensureSession(sessionId).meta.lifecycle
     const rows = await globalSessionEngine.persistGetSessionContents(sessionId, tokens)
+    if (!lifecycle.current) return
     const state = store.getState()
     for (const row of rows) {
       applyHydratedStageSettled(row.content)

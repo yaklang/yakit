@@ -81,7 +81,7 @@ export const handleTaskPlanEnd: (
     }
     taskNodeInfo.data.status = AITaskStatus.error
     store.getState().incrementNodeVersion(taskNodeInfo.id, 'task')
-    persistIndependentItem(sessionId, taskNodeInfo)
+    persistIndependentItem(sessionId, taskNodeInfo, meta.lifecycle)
   }
 
   // 将当前正在执行的任务树里, 进行中的节点状态变成error

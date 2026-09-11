@@ -22,7 +22,7 @@ export type CreateChatStoreOptions = {
 
 export const createChatStore = (options?: CreateChatStoreOptions) => {
   const onRenderStructureChange = options?.onRenderStructureChange
-  return createStore<ChatStoreState>()(
+  const store = createStore<ChatStoreState>()(
     immer((set) => ({
       execute: false,
 
@@ -408,4 +408,10 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       },
     })),
   )
+  /** 重连使用初始状态清除旧消息，保留 store 实例及原有 action / 结构变化回调。 */
+  const initialState = store.getState()
+  return Object.assign(store, {
+    /** 重置会话运行状态；配置和归属保存在 Controller 中，不受影响。 */
+    reset: () => store.setState(cloneDeep(initialState)),
+  })
 }

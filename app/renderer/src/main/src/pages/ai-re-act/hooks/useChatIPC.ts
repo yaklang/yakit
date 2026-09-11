@@ -20,17 +20,22 @@ export function useChatIPC(route: YakitRouteType, pageId: string) {
       return
     }
 
+    /** 监听闭包绑定本轮 meta，已排队的旧 IPC 回调不能操作同 ID 的新连接。 */
+    let connection: ReturnType<ChatMultiSessionController['ensureSession']>['meta'] | undefined
+    const isCurrentConnection = () =>
+      globalSessionEngine.isSessionReady(token) && globalSessionEngine.ensureSession(token).meta === connection
+
     ipcRenderer.removeAllListeners(`${token}-data`)
     ipcRenderer.removeAllListeners(`${token}-error`)
     ipcRenderer.removeAllListeners(`${token}-end`)
     ipcRenderer.on(`${token}-data`, (e, res: any) => {
-      globalSessionEngine.handleGrpcOutputEvent(token, res)
+      if (isCurrentConnection()) void globalSessionEngine.handleGrpcOutputEvent(token, res)
     })
     ipcRenderer.on(`${token}-error`, (e, res: any) => {
-      globalSessionEngine.handleSessionError(token, res)
+      if (isCurrentConnection()) globalSessionEngine.handleSessionError(token, res)
     })
     ipcRenderer.on(`${token}-end`, (e, res: any) => {
-      globalSessionEngine.handleSessionEnd(token, res)
+      if (isCurrentConnection()) void globalSessionEngine.handleSessionEnd(token, res)
     })
 
     let cb: Parameters<ChatMultiSessionController['handleStartSession']>[1] = undefined
@@ -40,7 +45,13 @@ export function useChatIPC(route: YakitRouteType, pageId: string) {
         onLinkSuccess,
       }
     }
-    globalSessionEngine.handleStartSession({ token, params, route, pageId, localSource }, cb)
+    if (globalSessionEngine.handleStartSession({ token, params, route, pageId, localSource }, cb)) {
+      connection = globalSessionEngine.ensureSession(token).meta
+    } else {
+      ipcRenderer.removeAllListeners(`${token}-data`)
+      ipcRenderer.removeAllListeners(`${token}-error`)
+      ipcRenderer.removeAllListeners(`${token}-end`)
+    }
   })
 
   const onSend = useMemoizedFn((payload: AIChatSendParams) => {

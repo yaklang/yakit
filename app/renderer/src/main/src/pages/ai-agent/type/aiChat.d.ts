@@ -1,5 +1,6 @@
+import type { SessionLifecycle } from '@/pages/ai-re-act/hooks/sessionLifecycle'
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
-import type { PlanItemDetailsData, SessionRenderContent, AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import type { PlanItemDetailsData, AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import { type PaginationSchema } from '@/pages/invoker/schema'
 
 /** 上下文字节统计 */
@@ -176,10 +177,12 @@ export interface AIAgentChatData {
   contents: Map<string, AIChatQSData>
 }
 export interface AIAgentChatMetaData {
+  /** 当前连接的身份、写入权限和异步收尾状态。 */
+  lifecycle: SessionLifecycle
   /** 会话通信流建立成功后的UI回调触发事件 */
   onLinkSuccess?: (sessionId: string) => void
-  /** forceClose 传入的回调，在 grpc session-end 移除监听前执行 */
-  onEnd?: () => void
+  /** forceClose 回调，事件与 IDB 事务收尾后执行，参数反馈失败 */
+  onEnd?: (error?: unknown) => void
   /** 通过用户问题创建会话时的问题 */
   createChatQuestion?: AIInputEvent
 
@@ -237,12 +240,6 @@ export interface AIAgentChatMetaData {
 
   /** 轮询获取最新记忆列表的定时器 */
   memoryPollingTimer: NodeJS.Timeout | null
-
-  /**
-   * start 时从 IDB 读出的渲染树暂存，pong 后消费 hydrate，避免二次读库。
-   * 消费后应置 undefined。
-   */
-  pendingSessionRender?: SessionRenderContent
 
   /**
    * 记录自由对话下成组agent任务的taskID

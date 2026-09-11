@@ -283,7 +283,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     checkAndShowDataMigration()
   }, [])
 
-  // 新 AI 会话持久化库：挂载预热、卸载关闭
+  // 会话缓存：本次主渲染端首次 open 清空三表，组件重挂只复用初始化结果
   useEffect(() => {
     try {
       // 清理旧逻辑创建的IDB库 aiChatMessageDB

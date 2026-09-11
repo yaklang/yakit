@@ -61,7 +61,7 @@ const genStreamGroupData = (
   // 设置组数据详情
   if (groupDetail && groupDetail.type === AIChatQSDataTypeEnum.STREAM_GROUP) {
     groupDetail.data.lastToken = tokens[tokens.length - 1]
-    persistIndependentItem(sessionId, groupDetail)
+    persistIndependentItem(sessionId, groupDetail, meta.lifecycle)
   } else {
     const chatData: AIChatQSData = {
       id: group,
@@ -83,7 +83,7 @@ const genStreamGroupData = (
       Timestamp: res.Timestamp,
     }
     rawData.contents.set(group, chatData)
-    persistIndependentItem(sessionId, chatData)
+    persistIndependentItem(sessionId, chatData, meta.lifecycle)
   }
 
   tokens.forEach((mapKey) => {
@@ -92,7 +92,7 @@ const genStreamGroupData = (
     mapValue.parentGroupToken = group
     // 流已结束后才入组：需补写 parentGroupToken
     if (mapValue.type === AIChatQSDataTypeEnum.STREAM && mapValue.data.status === 'end') {
-      upsertSessionContent(sessionId, mapValue.id, mapValue)
+      upsertSessionContent(sessionId, mapValue.id, mapValue, meta.lifecycle)
     }
   })
 }
@@ -135,7 +135,14 @@ const handleStreamStart: AIMessageHandler = async (requestInfo) => {
       requestInfo.pushLog({ level: 'error', message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空` })
       return
     }
-    const toolResult = await ensureContentInMemory(sessionId, CallToolID, rawData.contents)
+    const toolResult = await ensureContentInMemory(
+      sessionId,
+      CallToolID,
+      rawData.contents,
+      undefined,
+      requestInfo.meta.lifecycle,
+    )
+    if (!requestInfo.meta.lifecycle.current) return
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
       requestInfo.pushLog({
         level: 'error',
@@ -231,7 +238,14 @@ const handleStream: AIMessageHandler = async (requestInfo) => {
       requestInfo.pushLog({ level: 'error', message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空` })
       return
     }
-    const toolResult = await ensureContentInMemory(sessionId, CallToolID, rawData.contents)
+    const toolResult = await ensureContentInMemory(
+      sessionId,
+      CallToolID,
+      rawData.contents,
+      undefined,
+      requestInfo.meta.lifecycle,
+    )
+    if (!requestInfo.meta.lifecycle.current) return
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT || !toolResult.data.stream.EventUUID) {
       requestInfo.pushLog({
         level: 'error',
@@ -244,7 +258,9 @@ const handleStream: AIMessageHandler = async (requestInfo) => {
       toolResult.data.stream.EventUUID,
       rawData.contents,
       () => createStreamChatData(requestInfo, toolResult.data.stream.EventUUID),
+      requestInfo.meta.lifecycle,
     )
+    if (!requestInfo.meta.lifecycle.current) return
     if (!toolForStreamData || toolForStreamData.type !== AIChatQSDataTypeEnum.STREAM) {
       requestInfo.pushLog({
         level: 'error',
@@ -263,9 +279,14 @@ const handleStream: AIMessageHandler = async (requestInfo) => {
   }
 
   // 数据集合中对应的数据
-  const streamData = await ensureContentInMemory(sessionId, EventUUID, rawData.contents, () =>
-    createStreamChatData(requestInfo, EventUUID),
+  const streamData = await ensureContentInMemory(
+    sessionId,
+    EventUUID,
+    rawData.contents,
+    () => createStreamChatData(requestInfo, EventUUID),
+    requestInfo.meta.lifecycle,
   )
+  if (!requestInfo.meta.lifecycle.current) return
 
   // 数据不存在
   if (!streamData || streamData.type !== AIChatQSDataTypeEnum.STREAM) {
@@ -342,7 +363,14 @@ const handleStreamFinished: AIMessageHandler = async (requestInfo) => {
       return
     }
 
-    const toolResult = await ensureContentInMemory(sessionId, CallToolID, rawData.contents)
+    const toolResult = await ensureContentInMemory(
+      sessionId,
+      CallToolID,
+      rawData.contents,
+      undefined,
+      requestInfo.meta.lifecycle,
+    )
+    if (!requestInfo.meta.lifecycle.current) return
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
       // 工具执行结果卡片UI没有展示时
       toolErrorResult.status = 'end'
@@ -351,7 +379,7 @@ const handleStreamFinished: AIMessageHandler = async (requestInfo) => {
       // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
       toolResult.data.tool.execError = toolErrorResult.content
       if (showUI) store.getState().incrementNodeVersion(toolResult.id, 'item')
-      persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
+      persistToolResultIfTerminal(requestInfo.sessionId, toolResult, requestInfo.meta.lifecycle)
       meta.toolStderrStreamData.delete(CallToolID)
     }
     return
@@ -363,7 +391,14 @@ const handleStreamFinished: AIMessageHandler = async (requestInfo) => {
       return
     }
 
-    const toolResult = await ensureContentInMemory(sessionId, res.CallToolID, rawData.contents)
+    const toolResult = await ensureContentInMemory(
+      sessionId,
+      res.CallToolID,
+      rawData.contents,
+      undefined,
+      requestInfo.meta.lifecycle,
+    )
+    if (!requestInfo.meta.lifecycle.current) return
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT || !toolResult.data.stream.EventUUID) {
       return
     }
@@ -372,7 +407,9 @@ const handleStreamFinished: AIMessageHandler = async (requestInfo) => {
       toolResult.data.stream.EventUUID,
       rawData.contents,
       () => createStreamChatData(requestInfo, toolResult.data.stream.EventUUID),
+      requestInfo.meta.lifecycle,
     )
+    if (!requestInfo.meta.lifecycle.current) return
     if (!toolForStreamData || toolForStreamData.type !== AIChatQSDataTypeEnum.STREAM) {
       return
     }
@@ -385,42 +422,57 @@ const handleStreamFinished: AIMessageHandler = async (requestInfo) => {
     toolResult.data.tool.toolStdoutContent = { content: displayContent, isShowAll }
     ensureToolResultOnUI(requestInfo, toolResult)
     // stdout 流结束：落库该 STREAM；若工具已终态则同步刷新 TOOL_RESULT
-    upsertSessionContent(requestInfo.sessionId, toolForStreamData.id, toolForStreamData)
-    persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
+    upsertSessionContent(requestInfo.sessionId, toolForStreamData.id, toolForStreamData, requestInfo.meta.lifecycle)
+    persistToolResultIfTerminal(requestInfo.sessionId, toolResult, requestInfo.meta.lifecycle)
     return
   }
 
   // 数据集合中对应的数据
-  const streamData = await ensureContentInMemory(sessionId, event_writer_id, rawData.contents, () => {
-    const created = createStreamChatData(requestInfo, event_writer_id)
-    created.data.NodeId = node_id
-    created.data.status = 'end'
-    return created
-  })
+  const streamData = await ensureContentInMemory(
+    sessionId,
+    event_writer_id,
+    rawData.contents,
+    () => {
+      const created = createStreamChatData(requestInfo, event_writer_id)
+      created.data.NodeId = node_id
+      created.data.status = 'end'
+      return created
+    },
+    requestInfo.meta.lifecycle,
+  )
+  if (!requestInfo.meta.lifecycle.current) return
   // 数据不存在 不输出到日志，因为日志的流数据也有该类型数据
   if (!streamData || streamData.type !== AIChatQSDataTypeEnum.STREAM) return
 
   // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
   streamData.data.status = 'end'
   store.getState().incrementNodeVersion(streamData.id, 'item')
-  upsertSessionContent(requestInfo.sessionId, streamData.id, streamData)
+  upsertSessionContent(requestInfo.sessionId, streamData.id, streamData, requestInfo.meta.lifecycle)
 }
 
 const handleReferenceMaterial: AIMessageHandler = async (requestInfo) => {
-  const { sessionId, res, chatType, store, rawData } = requestInfo
+  const { sessionId, res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'reference_material') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReferenceMaterialPayload
 
-  const chatData = await ensureContentInMemory(sessionId, data.event_uuid, rawData.contents)
+  const chatData = await ensureContentInMemory(
+    sessionId,
+    data.event_uuid,
+    rawData.contents,
+    undefined,
+    requestInfo.meta.lifecycle,
+  )
+  if (!requestInfo.meta.lifecycle.current) return
   const toolResult = res.CallToolID
-    ? await ensureContentInMemory(sessionId, res.CallToolID, rawData.contents)
+    ? await ensureContentInMemory(sessionId, res.CallToolID, rawData.contents, undefined, requestInfo.meta.lifecycle)
     : undefined
+  if (!requestInfo.meta.lifecycle.current) return
 
   // 收数时自动生成 refToken，立刻落表3；内存只挂 token，不存完整 payload
   const refToken = uuidv4()
-  setSessionReferencePersist(sessionId, refToken, data)
+  setSessionReferencePersist(sessionId, refToken, data, meta.lifecycle)
 
   if (chatData) {
     chatData.reference = [...(chatData.reference || []), refToken]
@@ -428,7 +480,7 @@ const handleReferenceMaterial: AIMessageHandler = async (requestInfo) => {
     // 非 STREAM：有内存则立刻 upsert（独立单条晚到参考资料）
     const shouldUpsertContent = chatData.type === AIChatQSDataTypeEnum.STREAM ? chatData.data.status === 'end' : true
     if (shouldUpsertContent) {
-      upsertSessionContent(sessionId, chatData.id, chatData)
+      upsertSessionContent(sessionId, chatData.id, chatData, meta.lifecycle)
     }
     if (store.getState().items[chatData.id]) {
       // 属于item元素，已经在UI上渲染了

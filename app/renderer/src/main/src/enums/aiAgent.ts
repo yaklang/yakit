@@ -2,12 +2,6 @@ export enum RemoteAIAgentGV {
   /** @name ai-agent-chat 全局配置 */
   AIAgentChatSetting = 'ai-agent-chat-setting',
 
-  /**
-   * 清空 AI 会话 IndexedDB 的依据
-   * 打开 IDB 时与 AIAgentIDBCacheClearValue 比较，缺标识或旧于当前值则清空三表
-   */
-  AIAgentIDBCacheClear = 'ai-agent-idb-cache-clear',
-
   /** @name 替换 forge 模板时是否隐藏提示框, 直接进行替换 */
   AIAgentReplaceForgeNoPrompt = 'ai-agent-replace-forge-no-prompt',
 

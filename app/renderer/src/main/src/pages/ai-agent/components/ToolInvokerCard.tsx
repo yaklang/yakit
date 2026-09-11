@@ -299,12 +299,15 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   const rawData = useCurrentRawData()
   const getListToolList = useMemoizedFn(() => {
     if (!data?.callToolId || !activeChat) return
+    // 查询绑定当前连接，重连后迟到的旧详情不能覆盖同 ID 的新工具卡片。
+    const lifecycle = globalSessionEngine.ensureSession(sessionId).meta.lifecycle
     setLoading(true)
     const params: AIEventQueryRequest = {
       ProcessID: data.callToolId,
     }
     grpcQueryAIToolDetails(params)
       .then((res) => {
+        if (!lifecycle.current) return
         globalSessionEngine.updateToolResult(sessionId, itemData.id, { resultDetails: getResultDetails(res) })
       })
       .finally(() =>
