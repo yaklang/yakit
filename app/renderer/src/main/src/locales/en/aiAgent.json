@@ -69,7 +69,8 @@
     "toConfigure": "Go to Configure",
     "configDesc": "No available AI model found. Please configure one before use.",
     "selectModel": "Select AI Model",
-    "openConfigTooltip": "Open model configuration in Settings"
+    "openConfigTooltip": "Open model configuration in Settings",
+    "manageModels": "Manage Models"
   },
   "AIModelList": {
     "onlineTooltip": "Access models via API, receive AI info or send messages to AI, multiple configurations possible.",

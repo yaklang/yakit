@@ -118,7 +118,7 @@
   display: flex;
   flex: 1;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -128,8 +128,8 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   color: var(--Colors-Use-Neutral-Text-1-Title);
 
   svg {
@@ -142,8 +142,8 @@
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -200,19 +200,6 @@
 // 「更多/折叠」图标使用帮助文本颜色
 .menu-item-icon-secondary {
   color: var(--Colors-Use-Neutral-Text-4-Help-text);
-}
-
-// 计数角标
-.count-tag {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  padding: 2px 8px;
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  background: var(--Colors-Use-Neutral-Border);
-  border-radius: 4px;
 }
 
 .risk-tag {

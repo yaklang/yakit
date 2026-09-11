@@ -46,6 +46,7 @@ import type {
   AIRightPanelToolStats,
 } from './type'
 import { AI_RIGHT_PANEL_INPUT_MAX_WIDTH, AI_RIGHT_PANEL_NORMAL_SLOT_WIDTH } from './type'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 
 /** 菜单项定义：key 为唯一标识（React key 用），labelKey 为 i18n 文案 key，icon 为入口图标 */
 interface MenuItemDef {
@@ -436,7 +437,11 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
 
   const renderMenuSuffix = useMemoizedFn((key: AIRightPanelMenuKey) => {
     if (key === 'traffic' && executionData?.http_flow_count) {
-      return <span className={styles['count-tag']}>{executionData.http_flow_count}</span>
+      return (
+        <YakitTag fullRadius color="white" border={false}>
+          {executionData?.http_flow_count}
+        </YakitTag>
+      )
     }
     if (key === 'risk' && riskCounts) {
       const entries = RISK_TAG_ORDER.map((field) => ({ field, value: riskCounts[field] })).filter(

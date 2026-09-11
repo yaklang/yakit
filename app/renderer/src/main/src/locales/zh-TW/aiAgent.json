@@ -69,7 +69,8 @@
     "toConfigure": "去配置",
     "configDesc": "無可使用AI模型，請配置後使用",
     "selectModel": "AI 模型選擇",
-    "openConfigTooltip": "開啟設定中的模型配置"
+    "openConfigTooltip": "開啟設定中的模型配置",
+    "manageModels": "管理模型"
   },
   "AIModelList": {
     "onlineTooltip": "透過api訪問模型,接受AI資訊或向AI傳送訊息,可配置多個",
