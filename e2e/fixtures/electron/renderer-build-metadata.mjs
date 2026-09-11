@@ -6,7 +6,13 @@ import { promisify } from 'node:util'
 
 export const RENDERER_BUILD_METADATA_SCHEMA_VERSION = 2
 export const RENDERER_BUILD_INPUT_CONTRACT = 1
-export const RENDERER_BUILD_INPUTS = ['app/protos', 'app/renderer/src/main', 'package.json', 'yarn.lock']
+export const RENDERER_BUILD_INPUTS = [
+  'app/protos',
+  'app/renderer/src/main',
+  'app/renderer/shared',
+  'package.json',
+  'yarn.lock',
+]
 
 const supportedModes = new Set(['production-unminified', 'production-minified'])
 const execFileAsync = promisify(execFile)

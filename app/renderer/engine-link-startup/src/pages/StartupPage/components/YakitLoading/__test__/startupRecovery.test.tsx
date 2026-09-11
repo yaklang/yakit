@@ -14,6 +14,7 @@ vi.mock('../../MoreYaklangVersion', () => ({
     <button onClick={() => onClosePop(false, 'v1.2.3')}>choose v1.2.3</button>
   ),
 }))
+vi.mock('../../LocalEngine/LocalTransportSettings', () => ({ LocalTransportSettings: () => null }))
 
 function show(status: YakitLoadingProp['yakitStatus'], overrides: Partial<YakitLoadingProp> = {}) {
   const callback = vi.fn()
