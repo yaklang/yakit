@@ -133,7 +133,6 @@ describe('useHTTPFlowTableShortcutKeys context-menu shortcuts', () => {
       useHTTPFlowTableShortcutKeys(
         makeOptions({
           multiplePlugins: [plugin],
-          getSelectedRowKeys: () => ['7'],
           getSelectedRows: () => [makeFlow(7)],
           onClearSelection,
         }),
