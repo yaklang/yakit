@@ -45,7 +45,7 @@ const { startIdleVisibleInterval } = vi.hoisted(() => ({
 vi.mock('@/utils/scheduleIdleTask', () => ({ startIdleVisibleInterval }))
 
 vi.mock('ahooks', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('ahooks')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     useInViewport: () => [inViewport.current],
@@ -62,7 +62,7 @@ vi.mock('@/utils/kv', () => ({
 }))
 
 vi.mock('@/utils/envfile', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/utils/envfile')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     getReleaseEditionName: () => 'Yakit',
@@ -102,7 +102,7 @@ vi.mock('@/pages/assetViewer/PortTable/utils', () => ({
 }))
 
 vi.mock('@/pages/layout/NotepadMenu/utils', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/pages/layout/NotepadMenu/utils')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     getNotepadAdd: () => 'add',

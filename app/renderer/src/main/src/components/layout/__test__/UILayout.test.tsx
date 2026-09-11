@@ -36,7 +36,7 @@ const { startIdleVisibleInterval, grpcFetchYakInstallResult } = vi.hoisted(() =>
 vi.mock('@/utils/scheduleIdleTask', () => ({ startIdleVisibleInterval }))
 
 vi.mock('@/apiUtils/grpc', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/apiUtils/grpc')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     grpcFetchYakInstallResult,
@@ -46,7 +46,7 @@ vi.mock('@/apiUtils/grpc', async (importOriginal) => {
 
 vi.mock('@/components/layout/YaklangEngineWatchDog', () => ({
   YaklangEngineWatchDog: ({ onReady }: { onReady?: () => void }) => {
-    const { useEffect } = require('react') as typeof import('react')
+    const { useEffect } = require('react')
     useEffect(() => {
       onReady?.()
     }, [])
@@ -59,7 +59,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 }))
 
 vi.mock('@/utils/envfile', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/utils/envfile')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     isEnpriTraceAgent: () => true,
@@ -136,7 +136,7 @@ vi.mock('@/constants/hardware', () => ({
 }))
 
 vi.mock('@/services/electronBridge', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/services/electronBridge')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   const unsubscribe = () => undefined
   return {
     ...actual,
@@ -235,14 +235,20 @@ vi.mock('@/pages/yakRunner/BottomEditorDetails/TerminalBox/TerminalMap', () => (
   clearTerminalMap: vi.fn(),
   getMapAllTerminalKey: () => [],
 }))
-vi.mock('@/pages/pluginHub/hooks/useGetSetState', () => ({
-  default: (init: unknown) => {
-    const React = require('react') as typeof import('react')
-    const [v, setV] = React.useState(init)
-    const get = () => v
-    return [v, setV, get]
-  },
-}))
+vi.mock('@/pages/pluginHub/hooks/useGetSetState', () => {
+  const { useRef, useState } = require('react')
+  const useGetSetState = (init?: unknown) => {
+    const [v, setV] = useState(init)
+    const ref = useRef(init)
+    const set = (next: unknown) => {
+      const value = typeof next === 'function' ? (next as (prev: unknown) => unknown)(ref.current) : next
+      ref.current = value
+      setV(value)
+    }
+    return [v, set, () => ref.current]
+  }
+  return { default: useGetSetState }
+})
 
 import UILayout from '../UILayout'
 

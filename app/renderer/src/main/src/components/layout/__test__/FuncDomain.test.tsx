@@ -38,7 +38,7 @@ const { startIdleVisibleInterval, queryRisks } = vi.hoisted(() => ({
 vi.mock('@/utils/scheduleIdleTask', () => ({ startIdleVisibleInterval }))
 
 vi.mock('@/services/electronBridge', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/services/electronBridge')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     yakitRisk: {
@@ -79,7 +79,7 @@ vi.mock('@/utils/duplex/duplex', () => ({
 }))
 
 vi.mock('@/utils/envfile', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/utils/envfile')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     isIRify: () => false,

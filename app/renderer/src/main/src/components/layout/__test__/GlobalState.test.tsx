@@ -123,7 +123,7 @@ vi.mock('@/pages/mitm/MITMServerHijacking/MITMPluginOnline', () => ({
 }))
 
 vi.mock('@/apiUtils/grpc', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/apiUtils/grpc')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     grpcFetchBuildInYakVersion: vi.fn().mockResolvedValue('dev'),

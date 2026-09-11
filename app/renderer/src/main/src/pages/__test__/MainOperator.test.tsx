@@ -109,7 +109,7 @@ vi.mock('@/pages/ai-re-act/hooks/persist/aiChatPersistStore', () => ({
 }))
 
 vi.mock('antd', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('antd')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     Watermark: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
