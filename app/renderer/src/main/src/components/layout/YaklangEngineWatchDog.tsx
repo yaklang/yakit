@@ -177,26 +177,23 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
     const failedCountRef = useRef(0)
     const readyNotifiedRef = useRef(false)
-    const probingRef = useRef(false)
 
     /**
      * 引擎连接尝试逻辑
-     * 未连接每 1s 探活，已连接每 3s；上一轮未完成则跳过，避免 echo 堆积。
+     * 未连接每 1s 探活，已连接每 3s。
+     * 上一轮未完成不阻塞后续 tick，避免单次 Echo 挂起后探活与失败通知停止。
      * 引擎连接有效尝试次数: 1-10
      */
     useEffect(() => {
       if (!props.keepalive) {
         failedCountRef.current = 0
         readyNotifiedRef.current = false
-        probingRef.current = false
         props.onFailed?.(100)
         return
       }
       debugToPrintLog(`------ 开始启动引擎进程探活逻辑------`)
 
       const connect = () => {
-        if (probingRef.current) return
-        probingRef.current = true
         isEngineConnectionAlive()
           .then(() => {
             if (!props.keepalive) return
@@ -210,9 +207,6 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             failedCountRef.current += 1
             readyNotifiedRef.current = false
             props.onFailed?.(failedCountRef.current)
-          })
-          .finally(() => {
-            probingRef.current = false
           })
       }
       connect()

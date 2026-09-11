@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
+import { act, render, waitFor } from '@testing-library/react'
 import { YaklangEngineWatchDog } from '../YaklangEngineWatchDog'
 import type { YaklangEngineWatchDogProps } from '../YaklangEngineWatchDog'
 import emiter from '@/utils/eventBus/eventBus'
@@ -248,26 +248,25 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       expect(isEngineConnectionAlive).toHaveBeenCalledTimes(aliveCalls + 1)
     })
 
-    it('上一轮探活未完成时跳过本轮，避免请求堆积', async () => {
+    it('上一轮探活未完成时仍继续探测，避免单次挂起阻断失败通知', async () => {
       vi.useFakeTimers()
       props.keepalive = true
-      let resolveAlive: ((value: boolean) => void) | undefined
-      vi.mocked(isEngineConnectionAlive).mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            resolveAlive = resolve
-          }),
-      )
+      let call = 0
+      vi.mocked(isEngineConnectionAlive).mockImplementation(() => {
+        call += 1
+        if (call === 1) return new Promise(() => {})
+        return Promise.reject(new Error('fail'))
+      })
       render(<YaklangEngineWatchDog {...props} />)
 
       expect(isEngineConnectionAlive).toHaveBeenCalledTimes(1)
-      await vi.advanceTimersByTimeAsync(1000)
-      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(1)
+      expect(props.onFailed).not.toHaveBeenCalled()
 
-      resolveAlive?.(true)
-      await Promise.resolve()
-      await vi.advanceTimersByTimeAsync(1000)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000)
+      })
       expect(isEngineConnectionAlive).toHaveBeenCalledTimes(2)
+      expect(props.onFailed).toHaveBeenCalledWith(1)
     })
   })
 })
