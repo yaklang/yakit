@@ -1,6 +1,8 @@
 const SCREENSHOT_REQUEST = 'yakit_screenshot_request'
 const SCREENSHOT_RESPONSE = 'yakit_screenshot_response'
 const SCREENSHOT_SUBSCRIBE = 'yakit_screenshot_subscribe'
+const activeCaptures = new WeakMap()
+const CAPTURE_BUSY = 'A Yakit screenshot is already in progress; retry shortly'
 
 function formatLocalCaptureTime(date) {
   const pad = (value) => String(value).padStart(2, '0')
@@ -44,24 +46,70 @@ async function watermarkScreenshot(png, capturedAt, logicalWidth) {
   }
 }
 
-async function captureYakitScreenshot(win) {
+async function captureYakitScreenshot(win, signal) {
   if (!win || win.isDestroyed() || win.webContents.isDestroyed()) {
     throw new Error('Yakit main window is unavailable')
   }
-  const capturedAt = formatLocalCaptureTime(new Date())
-  const [logicalWidth] = win.getContentSize()
-  const screenshot = await win.webContents.capturePage()
-  if (screenshot.isEmpty() || logicalWidth <= 0) {
-    throw new Error('Yakit page capture is empty')
+  const contents = win.webContents
+  if (activeCaptures.has(contents)) throw new Error(CAPTURE_BUSY)
+  if (contents.isLoadingMainFrame() || contents.isCrashed()) {
+    throw new Error('Yakit main window is not ready')
   }
-  const png = screenshot.toPNG().toString('base64')
-  const code = `(${watermarkScreenshot.toString()})(${JSON.stringify(png)}, ${JSON.stringify(capturedAt)}, ${logicalWidth})`
-  return win.webContents.executeJavaScriptInIsolatedWorld(999, [{ code }])
+  if (signal?.aborted) throw signal.reason
+
+  const task = { error: null }
+  activeCaptures.set(contents, task)
+  let rejectInvalidated
+  const invalidated = new Promise((_, reject) => {
+    rejectInvalidated = reject
+  })
+  const invalidate = (error = new Error('Yakit screenshot request is no longer active')) => {
+    task.error = error
+    rejectInvalidated(error)
+  }
+  const onAbort = () => invalidate(signal.reason)
+  const onNavigation = (_event, _url, _isInPlace, isMainFrame) => {
+    if (isMainFrame) invalidate()
+  }
+  const release = () => {
+    if (activeCaptures.get(contents) === task) activeCaptures.delete(contents)
+    contents.removeListener('did-start-navigation', onNavigation)
+    contents.removeListener('render-process-gone', onTerminated)
+    contents.removeListener('destroyed', onTerminated)
+    win.removeListener('closed', onTerminated)
+    signal?.removeEventListener('abort', onAbort)
+  }
+  const onTerminated = () => {
+    invalidate()
+    release()
+  }
+  contents.on('did-start-navigation', onNavigation)
+  contents.once('render-process-gone', onTerminated)
+  contents.once('destroyed', onTerminated)
+  win.once('closed', onTerminated)
+  signal?.addEventListener('abort', onAbort, { once: true })
+
+  const capture = (async () => {
+    const capturedAt = formatLocalCaptureTime(new Date())
+    const [logicalWidth] = win.getContentSize()
+    const screenshot = await contents.capturePage()
+    if (task.error) throw task.error
+    if (screenshot.isEmpty() || logicalWidth <= 0) throw new Error('Yakit page capture is empty')
+    const png = screenshot.toPNG().toString('base64')
+    const code = `(${watermarkScreenshot.toString()})(${JSON.stringify(png)}, ${JSON.stringify(capturedAt)}, ${logicalWidth})`
+    const result = await contents.executeJavaScriptInIsolatedWorld(999, [{ code }])
+    if (task.error) throw task.error
+    return result
+  })()
+  // A deadline/navigation ends the request, not the native work. Only actual
+  // settlement or renderer termination may free this window's physical slot.
+  capture.then(release, release)
+  return Promise.race([capture, invalidated])
 }
 
 function attachYakitScreenshot(win, stream) {
   let closed = false
-  let busy = false
+  const pendingRequests = new Set()
   const onData = async (message) => {
     if (closed || message.MessageType !== SCREENSHOT_REQUEST) return
     let request
@@ -78,19 +126,15 @@ function attachYakitScreenshot(win, stream) {
         Data: Buffer.from(JSON.stringify({ requestId: request.requestId, ...result })),
       })
     }
-    if (busy) {
-      reply({ error: 'A Yakit screenshot is already in progress; retry shortly' })
+    if (win && activeCaptures.has(win.webContents)) {
+      reply({ error: CAPTURE_BUSY })
       return
     }
-    busy = true
-    let timer
+    const controller = new AbortController()
+    pendingRequests.add(controller)
+    const timer = setTimeout(() => controller.abort(new Error('Yakit page capture timed out')), 10000)
     try {
-      const result = await Promise.race([
-        captureYakitScreenshot(win),
-        new Promise((_, reject) => {
-          timer = setTimeout(() => reject(new Error('Yakit page capture timed out')), 10000)
-        }),
-      ])
+      const result = await captureYakitScreenshot(win, controller.signal)
       if (result.data.length > 30 * 1024 * 1024) {
         throw new Error('Yakit screenshot exceeds the 30 MiB transfer limit')
       }
@@ -99,12 +143,15 @@ function attachYakitScreenshot(win, stream) {
       reply({ error: error.message || String(error) })
     } finally {
       clearTimeout(timer)
-      busy = false
+      pendingRequests.delete(controller)
     }
   }
   const cleanup = () => {
     closed = true
     stream.removeListener('data', onData)
+    for (const controller of pendingRequests) {
+      controller.abort(new Error('Yakit screenshot connection closed'))
+    }
   }
   stream.on('data', onData)
   stream.once('end', cleanup)
