@@ -21,7 +21,6 @@ vi.mock('../../utils', () => ({
   sortMemfitNameFirst: (names: string[]) => names,
 }))
 vi.mock('../../AIModelList', () => ({
-  getTipByType: () => 'policy',
   OutlineAtomIconByStatus: () => null,
   AIModelFreeTag: () => null,
   setAIModal: mocks.configure,
@@ -105,13 +104,15 @@ const getDropdownButtons = (dropdown: HTMLElement) => within(dropdown).getAllByR
 const getEditButtons = (dropdown: HTMLElement) => within(dropdown).getAllByRole('button', { name: 'YakitButton.edit' })
 
 describe('AIModelSelect', () => {
-  it('配置入口打开设置中的模型配置，刷新仍会重新拉取模型列表', async () => {
+  it('管理模型按钮显示国际化文案并打开模型配置，刷新仍会重新拉取模型列表', async () => {
     const emit = vi.spyOn(emiter, 'emit')
     const dropdown = await openModels()
     expect(within(dropdown).getByText('model-a')).toBeInTheDocument()
     const buttons = getDropdownButtons(dropdown)
     expect(buttons).toHaveLength(5)
-    const [configButton, refreshButton] = buttons
+    const configButton = within(dropdown).getByRole('button', { name: 'AIModelSelect.manageModels' })
+    expect(configButton).toBeVisible()
+    const refreshButton = buttons[1]
     fireEvent.click(configButton)
     expect(emit).toHaveBeenCalledWith(
       'openPage',

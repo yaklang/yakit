@@ -118,7 +118,7 @@
   display: flex;
   flex: 1;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -128,8 +128,8 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   color: var(--Colors-Use-Neutral-Text-1-Title);
 
   svg {
@@ -142,8 +142,8 @@
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   white-space: nowrap;
   text-overflow: ellipsis;

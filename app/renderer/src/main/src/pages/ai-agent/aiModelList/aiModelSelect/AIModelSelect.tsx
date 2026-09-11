@@ -33,7 +33,7 @@ import {
   AIOnlineModelIconMap,
   defaultAIGlobalConfig,
 } from '../../defaultConstant'
-import { AIModelFreeTag, getTipByType, OutlineAtomIconByStatus, setAIModal } from '../AIModelList'
+import { AIModelFreeTag, OutlineAtomIconByStatus, setAIModal } from '../AIModelList'
 import { AIChatSelect } from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
 import {
   BrainOutlined,
@@ -364,9 +364,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                         }}
                       />
                     )} */}
-                    <Tooltip title={getTipByType(policy, t)}>
-                      <InformationCircleOutlined className={styles['icon-info']} color="currentColor" />
-                    </Tooltip>
                   </div>
                   <div className={styles['select-title-right']}>
                     <Tooltip title={t('AIModelSelect.openConfigTooltip')}>
@@ -375,7 +372,9 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                         type="text2"
                         icon={<CogOutlined color="currentColor" />}
                         onClick={openModelTab}
-                      />
+                      >
+                        {t('AIModelSelect.manageModels')}
+                      </YakitButton>
                     </Tooltip>
                     {aiType === 'online' && (
                       <Tooltip title={t('YakitButton.refresh')}>
