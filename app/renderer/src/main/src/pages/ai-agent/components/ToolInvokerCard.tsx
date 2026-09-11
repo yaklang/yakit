@@ -41,12 +41,14 @@ import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 import { setClipboardText } from '@/utils/clipboard'
-import { success } from '@/utils/notification'
+import { success, yakitNotify } from '@/utils/notification'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import useAIConcurrentStreamStore from '@/auxWindow/pages/AIConcurrentStream/useContext/useStore'
+import { sendConcurrentStreamInteractiveAction } from '@/auxWindow/pages/AIConcurrentStream/sendConcurrentStreamInteractiveAction'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -140,6 +142,9 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
   const { nodeLabel } = useAINodeLabel(data.verboseName)
 
+  // aux 子窗的会话元信息（主窗口无 Provider，默认 session 为空串，不影响主窗口分支）
+  const auxStreamStore = useAIConcurrentStreamStore()
+
   const operationInfo = useCreation(() => {
     return {
       callToolId: data.callToolId,
@@ -178,6 +183,19 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
       IsInteractiveMessage: true,
       InteractiveId: selectors.InteractiveId,
       InteractiveJSONInput: JSON.stringify(jsonInput),
+    }
+    // 子窗口没有自己的会话控制器（无 AIAgentContext），交互消息经主进程中转由主窗口代发
+    if (isChildWindow.current) {
+      const { session, chatType } = auxStreamStore
+      if (!session) return
+      sendConcurrentStreamInteractiveAction({
+        session,
+        chatType,
+        params: info,
+      }).then((res) => {
+        if (res && !res.success) yakitNotify('error', res.message || '操作无效')
+      })
+      return
     }
     onSend({ token: sessionId, type: '', params: info })
   })

@@ -30,7 +30,7 @@ function register(manager, mainWindow) {
   }
 
   /**
-   * 子窗口打开后通过 fetch-concurrent-stream-contents 主动向主窗口拉取 rawData。
+   * 子窗通过 fetch-concurrent-stream-contents 主动向主窗口拉取 rawData。
    * 这里做 requestId 中转：转发请求到主窗口，等待响应后再 resolve 子窗口的 invoke。
    */
   ipcMain.handle(FETCH_CONTENTS, async (_event, frame) => {
@@ -53,6 +53,35 @@ function register(manager, mainWindow) {
       })
 
       safeSendMain('fetch-concurrent-stream-contents-request', { requestId, ...frame })
+    })
+  })
+
+  /**
+   * 子窗转发交互动作（如工具卡"跳过长时间加载"）到主窗口会话。
+   * 与 FETCH_CONTENTS 相同的 requestId 中转模式：转发到主窗口代发，回执后再 resolve。
+   */
+  const INTERACTIVE_ACTION = 'ai-concurrent-stream-interactive-action'
+  ipcMain.removeHandler(INTERACTIVE_ACTION)
+  ipcMain.handle(INTERACTIVE_ACTION, async (_event, payload) => {
+    if (!payload?.session || !payload?.params || !mainWindow || mainWindow.isDestroyed()) {
+      return { success: false, message: 'main window unavailable' }
+    }
+
+    const requestId = crypto.randomUUID()
+    const responseChannel = `ai-concurrent-stream-interactive-action-response-${requestId}`
+
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        ipcMain.removeAllListeners(responseChannel)
+        resolve({ success: false, message: 'main window response timeout' })
+      }, 5000)
+
+      ipcMain.once(responseChannel, (_responseEvent, data) => {
+        clearTimeout(timeout)
+        resolve(data ?? { success: false, message: 'empty response' })
+      })
+
+      safeSendMain('ai-concurrent-stream-interactive-action-request', { requestId, ...payload })
     })
   })
 

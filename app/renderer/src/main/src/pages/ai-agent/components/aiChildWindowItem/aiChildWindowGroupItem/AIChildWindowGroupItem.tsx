@@ -6,10 +6,11 @@ import { AIChatQSDataTypeEnum } from '../../../../ai-re-act/hooks/aiRender'
 
 /** 子窗口版 group item，数据从 rawData Map 获取 */
 const AIChildWindowGroupItem: FC<{ token: string }> = memo(({ token }) => {
-  const { renderNum, rawData } = useAIConcurrentStreamStore()
+  const { tokenVersions, rawData } = useAIConcurrentStreamStore()
+  const version = tokenVersions?.get(token) || 0
   const itemData = useCreation(() => {
     return rawData?.get(token)
-  }, [renderNum, token])
+  }, [version, token])
   if (!itemData) return null
 
   switch (itemData.type) {

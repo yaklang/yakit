@@ -26,6 +26,26 @@ interface AIConcurrentStreamProps {
   windowId: string
 }
 
+/**
+ * 浅比较两个 AIChatQSData 是否等价（只比较常用字段，避免深比较开销）。
+ * data 内部为流式原地累加的对象，引用不同即视为不等价时会产生大量误报增量，
+ * 因此对 content / status / selectors / type 等关键字段做值级比较。
+ */
+function shallowEqualQSData(a: AIChatQSData, b: AIChatQSData): boolean {
+  if (a.type !== b.type) return false
+  if (a.id !== b.id) return false
+  const da = a.data as Record<string, unknown> | undefined
+  const db = b.data as Record<string, unknown> | undefined
+  if (da === db) return true
+  if (!da || !db) return false
+  const keys = new Set([...Object.keys(da), ...Object.keys(db)])
+  for (const key of keys) {
+    if (key === 'reference') continue
+    if (da[key] !== db[key]) return false
+  }
+  return true
+}
+
 const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }) => {
   const [frame, setFrame] = useState<ConcurrentStreamFramePayload | null>(null)
   const [contentVersion, setContentVersion] = useState(0)
@@ -36,6 +56,10 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
   const rawDataRef = useRef<Map<string, AIChatQSData>>(new Map())
   const execFileRecordRef = useRef<Map<string, AIYakExecFileRecord[]>>(new Map())
   const childrenTokensRef = useRef<string[]>([])
+  // 按 token 粒度的内容版本：每次拉取 diff 旧数据，只有变化的 token 递增版本。
+  // 子卡片按各自 token 的版本订阅，避免全局 renderNum 递增导致全树重渲染
+  // （全量重渲染会长时间占用主线程，拖动滚动条时更新被推迟到 mouseup，表现为"松手才跳位"）。
+  const tokenVersionsRef = useRef<Map<string, number>>(new Map())
 
   useEffect(() => {
     if (!windowId) return
@@ -79,7 +103,30 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
     setLoading(true)
     fetchConcurrentStreamContents(frame)
       .then((entries) => {
-        rawDataRef.current = entries.rawData
+        // diff 旧 rawData：只对内容发生变化的 token 递增版本号，
+        // 未变化的 token 版本保持不变，对应卡片的 memo 依旧命中、不重渲染。
+        const prevRaw = rawDataRef.current
+        const nextRaw = entries.rawData
+        const versions = tokenVersionsRef.current
+        /** 组 token 聚合：组内任一子节点变化时组版本也递增（组卡片扫 rawData 找子节点） */
+        const bumpVersion = (token: string) => {
+          versions.set(token, (versions.get(token) || 0) + 1)
+        }
+        nextRaw.forEach((next, token) => {
+          const prev = prevRaw.get(token)
+          if (prev === next) return
+          if (prev && shallowEqualQSData(prev, next)) return
+          bumpVersion(token)
+          if (next?.parentGroupToken) bumpVersion(next.parentGroupToken)
+        })
+        prevRaw.forEach((prev, token) => {
+          // 旧数据里存在、新数据里已删除的 token 同样视为变化
+          if (!nextRaw.has(token)) {
+            bumpVersion(token)
+            if (prev?.parentGroupToken) bumpVersion(prev.parentGroupToken)
+          }
+        })
+        rawDataRef.current = nextRaw
         execFileRecordRef.current = entries.execFileRecord
         childrenTokensRef.current = entries.childrenTokens
       })
@@ -114,8 +161,9 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
       rawData: rawDataRef.current,
       execFileRecord: execFileRecordRef.current,
       renderNum: contentVersion,
+      tokenVersions: tokenVersionsRef.current,
     }
-  }, [contentVersion])
+  }, [contentVersion, frame])
   const dispatcher: AIConcurrentStreamDispatcher = useMemo(() => {
     return {
       requestRefresh,

@@ -19,11 +19,13 @@ import React from 'react'
 /** 子窗口版 stream group 卡片，从 rawData 中按 parentGroupToken 查找子节点 */
 const AIChildWindowGroupStreamCard: FC<AIChildWindowGroupStreamCardProps> = memo((props) => {
   const { token } = props
-  const { rawData, renderNum } = useAIConcurrentStreamStore()
+  const { rawData, tokenVersions } = useAIConcurrentStreamStore()
+  // per-token 版本：组内任一子节点变化时组版本递增（见 AIConcurrentStream 的 diff 逻辑）
+  const version = tokenVersions?.get(token) || 0
   const { ref: containerRef, isFocus } = useClickFocus<HTMLDivElement>()
 
   const [expand, setExpand] = useState(true)
-  // 按 token + renderNum 缓存该 group 的子节点，避免每次渲染都全量 forEach
+  // 按 token + 版本 缓存该 group 的子节点，避免每次渲染都全量 forEach
   const childItemTokens = useCreation<string[]>(() => {
     if (!rawData) return []
     const items: string[] = []
@@ -33,7 +35,7 @@ const AIChildWindowGroupStreamCard: FC<AIChildWindowGroupStreamCardProps> = memo
       }
     })
     return items
-  }, [token, renderNum])
+  }, [token, version])
   const lastToken = useCreation(() => {
     return childItemTokens.length > 0 ? childItemTokens[childItemTokens.length - 1] : ''
   }, [childItemTokens.length])
@@ -60,8 +62,10 @@ export default AIChildWindowGroupStreamCard
 
 const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardHeardWrapperProps> = memo((props) => {
   const { token, lastToken, childrenTokensLength, setExpand, expand } = props
-  const { rawData, renderNum } = useAIConcurrentStreamStore()
+  const { rawData, tokenVersions } = useAIConcurrentStreamStore()
   const { getLabelByParams } = useAINodeLabel()
+  const version = tokenVersions?.get(token) || 0
+  const lastVersion = tokenVersions?.get(lastToken) || 0
 
   const lastItem = useCreation(() => {
     const lastItem = rawData.get(lastToken)
@@ -73,7 +77,7 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
       default:
         return undefined
     }
-  }, [lastToken])
+  }, [lastToken, lastVersion])
   const shouldShowMask = useCreation(() => {
     const lastItem = rawData.get(lastToken)
     if (!lastItem) return false
@@ -85,7 +89,7 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
       default:
         return false
     }
-  }, [lastToken])
+  }, [lastToken, lastVersion])
   const nodeLabel = useCreation(() => {
     const groupData = rawData.get(token)
     if (!groupData) return ''
@@ -96,7 +100,7 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
       default:
         return ''
     }
-  }, [renderNum])
+  }, [version])
   return (
     <AIGroupStreamCardHeard
       expand={expand}
@@ -112,7 +116,7 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
 const AIChildWindowGroupStreamCardListWrapper: React.FC<AIChildWindowGroupStreamCardListWrapperProps> = memo(
   (props) => {
     const { childItemTokens, expand } = props
-    const { rawData, renderNum } = useAIConcurrentStreamStore()
+    const { rawData, tokenVersions } = useAIConcurrentStreamStore()
     return (
       <>
         <AIGroupStreamCardList
@@ -126,7 +130,8 @@ const AIChildWindowGroupStreamCardListWrapper: React.FC<AIChildWindowGroupStream
                 key={token}
                 itemData={itemData}
                 groupIndex={index}
-                renderNum={renderNum ?? 0}
+                // per-token 版本：内容未变化的子节点不重渲染
+                renderNum={tokenVersions?.get(token) || 0}
               />
             )
           }}

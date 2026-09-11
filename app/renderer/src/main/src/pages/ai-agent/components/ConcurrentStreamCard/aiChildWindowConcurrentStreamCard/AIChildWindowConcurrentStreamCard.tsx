@@ -16,15 +16,17 @@ export interface AIChildWindowConcurrentStreamCardProps {
 const AIChildWindowConcurrentStreamCard: FC<AIChildWindowConcurrentStreamCardProps> = memo((props) => {
   const { token } = props
 
-  const { rawData, renderNum } = useAIConcurrentStreamStore()
+  const { rawData, tokenVersions } = useAIConcurrentStreamStore()
   const { requestRefresh } = useAIConcurrentStreamDispatcher()
 
+  // per-token 版本：根 task 节点数据变化时才重渲染头部，避免每次拉取全树重渲
+  const version = tokenVersions?.get(token) || 0
   const itemData = useCreation<ChatTaskNodeGroup | undefined>(() => {
     if (!rawData) return undefined
     const itemData = rawData.get(token)
     if (!itemData) return undefined
     return itemData as ChatTaskNodeGroup
-  }, [renderNum])
+  }, [version])
 
   return (
     <div className={classNames(styles['chat-card'], styles['child-chat-card'], 'concurrent-stream-card')}>

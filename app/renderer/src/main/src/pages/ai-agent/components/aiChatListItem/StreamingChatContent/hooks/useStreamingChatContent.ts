@@ -40,6 +40,9 @@ export function useStreamingChatContent(params: UseStreamingChatContentParams): 
   // 若不 clone，shouldUpdate 比较的是同一个对象，prev.data.content === next.data.content 恒为 true，
   // 轮询永远检测不到内容增长 → 不会触发重渲染 → 打字机吃不到后续批次 → 平滑效果失效。
   // 这里通过 clone 拍下快照，让 shouldUpdate 按值比较 content/status 字符串，从而正确感知增量。
+  // 注意：tool_call_watcher 也是对同一个 stream 对象原地挂载 data.selectors
+  // （见 aiToolResult.ts 的 handleToolCallWatcher），clone 展开后 data.selectors 引用保持不变，
+  // 因此 shouldUpdate 中对比 selectors 引用变化即可让"跳过"按钮在长时间无输出的工具上及时出现。
   const cloneStream = useCallback((chatStreamItem: ChatStream): ChatStream => {
     return {
       ...chatStreamItem,
@@ -64,7 +67,11 @@ export function useStreamingChatContent(params: UseStreamingChatContentParams): 
     },
     shouldUpdate: (prev, next) => {
       if (!prev) return true
-      return prev.data.content !== next.data.content || prev.data.status !== next.data.status
+      return (
+        prev.data.content !== next.data.content ||
+        prev.data.status !== next.data.status ||
+        prev.data.selectors !== next.data.selectors
+      )
     },
   })
 
