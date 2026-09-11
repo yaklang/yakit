@@ -28,15 +28,6 @@ vi.mock('../ChatSessionPane/ChatSessionPane', () => ({ default: () => <div>会�
 vi.mock('../aiChatWelcome/FileTreeList/FileTreeList', () => ({ default: () => <div>文件列表</div> }))
 vi.mock('../aiMCP/AIMCP', () => ({ default: () => <div>MCP 内容</div> }))
 vi.mock('../aiScheduledTasks/AIScheduledTasks', () => ({ default: () => <div>定时任务</div> }))
-vi.mock('../../yakRunner/SplitView/SplitView', () => ({
-  SplitView: ({ elements }: { elements: { element: React.ReactNode }[] }) => (
-    <>
-      {elements.map((item, index) => (
-        <div key={index}>{item.element}</div>
-      ))}
-    </>
-  ),
-}))
 
 const SideList = () => {
   const [show, setShow] = useState(true)
@@ -47,14 +38,14 @@ describe('AIAgentSideList', () => {
   it('仅保留会话、定时任务和 MCP 入口，点击后显示对应内容', async () => {
     render(<SideList />)
     expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['session', 'scheduled', 'mcp'])
-    expect(screen.getByText('会话列表')).toBeInTheDocument()
+    expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
     expect(screen.getByText('文件列表')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'scheduled' }))
     expect(await screen.findByText('定时任务')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'mcp' }))
     expect(await screen.findByText('MCP 内容')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'session' }))
-    expect(screen.getByText('会话列表')).toBeInTheDocument()
+    expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
   })
 
   it('事件切换、旧 history 映射和显隐仍有效，卸载后移除监听', async () => {
@@ -71,7 +62,7 @@ describe('AIAgentSideList', () => {
     expect(screen.getByLabelText('show')).toHaveTextContent('false')
     emit(SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, { active: 'history' })
     expect(screen.getByLabelText('active')).toHaveTextContent('session')
-    expect(screen.getByText('会话列表')).toBeInTheDocument()
+    expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
     result.unmount()
     expect(off).toHaveBeenCalledWith('switchAIAgentTab', expect.any(Function))
     off.mockRestore()

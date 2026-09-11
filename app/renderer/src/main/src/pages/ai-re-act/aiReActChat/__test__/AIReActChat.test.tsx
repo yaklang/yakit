@@ -72,8 +72,8 @@ vi.mock('@/pages/ai-agent/aiAgentChat/AIAgentChat', () => ({
 vi.mock('../AIReActComponent', () => ({
   ChevrondownButton: () => <span data-testid="expand-button" />,
 }))
-vi.mock('../../aiRightPanel/AIRightPanel', () => ({
-  AIRightPanel: () => <div data-testid="right-panel" />,
+vi.mock('../AIReActChatRightPanel', () => ({
+  AIReActChatRightPanel: () => <div data-testid="right-panel" />,
 }))
 
 import { AIReActChat } from '../AIReActChat'

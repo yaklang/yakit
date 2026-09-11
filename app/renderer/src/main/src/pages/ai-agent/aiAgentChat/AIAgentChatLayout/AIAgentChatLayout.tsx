@@ -113,8 +113,9 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
           secondRatio={workspaceVisible ? '30%' : '100%'}
           secondMinSize={MIN_CHAT_CONTENT_WIDTH}
           firstNodeStyle={workspaceVisible ? undefined : { display: 'none', padding: 0 }}
-          secondNodeStyle={workspaceVisible ? undefined : { padding: 0 }}
+          secondNodeStyle={{ padding: 0 }}
           lineStyle={workspaceVisible ? undefined : { display: 'none' }}
+          lineDirection="right"
           firstNode={
             <div className={styles['chat-workspace']}>
               <AIChatWorkspace

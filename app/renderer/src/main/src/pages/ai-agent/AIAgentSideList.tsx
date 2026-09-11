@@ -8,8 +8,6 @@ import classNames from 'classnames'
 import styles from './AIAgentSideList.module.scss'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import ChatSessionPane from './ChatSessionPane/ChatSessionPane'
-import { SplitView } from '../yakRunner/SplitView/SplitView'
 import FileTreeList from './aiChatWelcome/FileTreeList/FileTreeList'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 
@@ -60,14 +58,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
       case AIAgentTabListEnum.Session:
         content = (
           <div className={styles['session-pane']}>
-            <SplitView
-              isVertical
-              className={styles['session-split']}
-              elements={[
-                { element: <ChatSessionPane /> },
-                { element: <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} /> },
-              ]}
-            />
+            <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} />
           </div>
         )
         break

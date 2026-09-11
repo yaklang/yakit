@@ -33,6 +33,8 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { yakitNotify } from '@/utils/notification'
+import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
+import { useWelcomePanelStats } from './hooks/useWelcomePanelStats'
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
@@ -58,6 +60,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const settingCardRef = useRef<AIChatWelcomeSettingCardRef>(null)
 
     const welcomeRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(welcomeRef)
+    const panelStats = useWelcomePanelStats(inViewport)
     const [isCompact, setIsCompact] = useState(false)
     useEffect(() => {
       const el = welcomeRef.current
@@ -113,6 +117,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             </div>
           </div>
         </div>
+        <AIRightPanel welcome layoutRef={welcomeRef} {...panelStats} />
       </div>
     )
   }),

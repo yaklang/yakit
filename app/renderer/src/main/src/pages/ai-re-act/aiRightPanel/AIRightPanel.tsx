@@ -10,7 +10,6 @@ import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AISourceEnum, type AIAgentGrpcApi } from '../hooks/grpcApi'
-import useCurrentTaskExecution from '../hooks/useCurrentTaskData/useCurrentTaskExecution'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { failed, yakitNotify } from '@/utils/notification'
@@ -65,6 +64,8 @@ const MAIN_MENUS: MenuItemDef[] = [
   { key: 'task-list', labelKey: 'AIRightPanel.taskList', icon: <FlagOutlined /> },
 ]
 
+const WELCOME_MENUS = MAIN_MENUS.filter((item) => item.key !== 'task-board' && item.key !== 'task-list')
+
 /** 「更多」分组展开后追加显示的功能入口（收起态仅在底部显示「更多」按钮） */
 const MORE_MENUS: MenuItemDef[] = [
   { key: 'ai-settings', labelKey: 'AIRightPanel.aiSettings', icon: <CogOutlined /> },
@@ -76,23 +77,6 @@ const MORE_MENUS: MenuItemDef[] = [
 /** 漏洞计数角标的展示顺序；后端标准等级映射到设计稿中的五种颜色。 */
 const RISK_TAG_ORDER: Array<keyof AIRightPanelRiskCounts> = ['serious', 'high', 'medium', 'low', 'info']
 
-/** 将 session_snapshot 的六个标准等级映射为面板展示的五个等级。 */
-const getRiskCounts = (execution?: AIAgentGrpcApi.SessionSnapshot['execution']): AIRightPanelRiskCounts | undefined => {
-  const levelCount = execution?.risk_level_count
-  if (!levelCount) return undefined
-  return {
-    serious: levelCount.critical,
-    high: levelCount.high,
-    medium: levelCount.warning,
-    low: levelCount.low,
-    info: levelCount.info + levelCount.other,
-  }
-}
-
-/** 小屏漏洞图标显示的总数优先使用后端 total，兼容旧快照时再按展示等级求和。 */
-const getRiskTotal = (execution?: AIAgentGrpcApi.SessionSnapshot['execution'], riskCounts?: AIRightPanelRiskCounts) =>
-  execution?.risk_level_count?.total ?? RISK_TAG_ORDER.reduce((total, field) => total + (riskCounts?.[field] ?? 0), 0)
-
 /** 工具调用统计的三个指标（成功/失败带专属色 tone，对应 stat-value-* 样式；总尝试次数用默认色） */
 const TOOL_STATS: Array<{ field: keyof AIRightPanelToolStats; labelKey: string; tone?: 'success' | 'failed' }> = [
   { field: 'success', labelKey: 'AIRightPanel.success', tone: 'success' },
@@ -100,7 +84,7 @@ const TOOL_STATS: Array<{ field: keyof AIRightPanelToolStats; labelKey: string; 
   { field: 'total', labelKey: 'AIRightPanel.totalAttempts' },
 ]
 
-/** 执行时长、工具调用统计等数据未传入时的占位符 */
+/** 执行时长、工具调用统计等数据缺失时的占位符 */
 const PLACEHOLDER = '—'
 
 /** 数据卡片区：执行时长 + 工具调用统计（成功/失败/总尝试）。 */
@@ -256,7 +240,7 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
  * - 小屏态（正常态面板会使列表可用宽度小于最大宽度时）：仅图标的窄栏（宽 41px）
  */
 export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
-  const { layoutRef, small } = props
+  const { layoutRef, small, welcome = false, trafficTotal, riskTotal = 0, riskCounts, executionData } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [moreOpen, setMoreOpen] = useState(false)
   const [chatSmall, setChatSmall] = useState(false)
@@ -264,12 +248,6 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   const { activeChat } = useAIAgentStore()
   const { getSetting } = useAIAgentDispatcher()
   const { currentChatStatusQuestionID, syncCasualTaskTab } = useCasualTaskTab()
-  const executionData = useCurrentTaskExecution(currentChatStatusQuestionID)
-  const riskCounts = useCreation(() => getRiskCounts(executionData), [executionData?.risk_level_count])
-  const riskTotal = useCreation(
-    () => getRiskTotal(executionData, riskCounts),
-    [executionData?.risk_level_count, riskCounts],
-  )
   const { onOpenLogWindow } = useAiChatLog()
   const [exportModalVisible, setExportModalVisible] = useState(false)
   const [exportLoading, setExportLoading] = useState(false)
@@ -509,6 +487,40 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
     />
   ))
 
+  const renderMenuItem = useMemoizedFn((item: MenuItemDef) => (
+    <MenuItem
+      key={item.key}
+      icon={item.icon}
+      label={t(item.labelKey)}
+      small={isSmall}
+      suffix={renderMenuSuffix(item.key)}
+      smallBadge={renderSmallBadge(item.key)}
+      onClick={() => handleMenuClick(item.key)}
+      onMouseEnter={() => handleMenuMouseEnter(item.key)}
+      onMouseLeave={() => handleMenuMouseLeave(item.key)}
+    />
+  ))
+
+  const renderMainMenus = useMemoizedFn((menus: MenuItemDef[], dataCards?: React.ReactNode) => (
+    <div className={classNames(styles['panel-top'], { [styles['panel-top-small']]: isSmall })}>
+      <div className={styles['menu-group']}>
+        {dataCards}
+        {menus.map(renderMenuItem)}
+      </div>
+    </div>
+  ))
+
+  const renderChatPanel = useMemoizedFn(() => (
+    <>
+      {renderMainMenus(mainMenus, !isSmall ? <DataCards executionData={executionData} /> : undefined)}
+      <div className={styles['divider']} />
+      <div className={styles['bottom-group']}>
+        {moreOpen && MORE_MENUS.map(renderMenuItem)}
+        {renderMoreToggle()}
+      </div>
+    </>
+  ))
+
   return (
     <div className={styles['right-panel-wrapper']} data-ai-right-panel data-ai-right-panel-small={isSmall}>
       <div
@@ -517,44 +529,7 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
           [styles['right-panel-hidden']]: !!activePane && !isSmall,
         })}
       >
-        <div
-          className={classNames(styles['panel-top'], {
-            [styles['panel-top-small']]: isSmall,
-          })}
-        >
-          <div className={styles['menu-group']}>
-            {!isSmall && <DataCards executionData={executionData} />}
-            {mainMenus.map((item) => (
-              <MenuItem
-                key={item.key}
-                icon={item.icon}
-                label={t(item.labelKey)}
-                small={isSmall}
-                suffix={renderMenuSuffix(item.key)}
-                smallBadge={renderSmallBadge(item.key)}
-                onClick={() => handleMenuClick(item.key)}
-                onMouseEnter={() => handleMenuMouseEnter(item.key)}
-                onMouseLeave={() => handleMenuMouseLeave(item.key)}
-              />
-            ))}
-          </div>
-        </div>
-        <div className={styles['divider']} />
-        <div className={styles['bottom-group']}>
-          {moreOpen &&
-            MORE_MENUS.map((item) => (
-              <MenuItem
-                key={item.key}
-                icon={item.icon}
-                label={t(item.labelKey)}
-                small={isSmall}
-                onClick={() => handleMenuClick(item.key)}
-                onMouseEnter={() => handleMenuMouseEnter(item.key)}
-                onMouseLeave={() => handleMenuMouseLeave(item.key)}
-              />
-            ))}
-          {renderMoreToggle()}
-        </div>
+        {welcome ? renderMainMenus(WELCOME_MENUS) : renderChatPanel()}
       </div>
       {activePane && (
         <div

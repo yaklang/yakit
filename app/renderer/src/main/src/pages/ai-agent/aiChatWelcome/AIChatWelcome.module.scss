@@ -13,9 +13,14 @@
 }
 .ai-chat-welcome-wrapper {
   @extend %display-column-center;
+  --ai-right-panel-slot-width: 325px;
   height: 100%;
   position: relative;
   background: linear-gradient(180deg, var(--Colors-Use-Main-Bg) 0.11%, var(--Colors-Use-Basic-Background) 50%);
+
+  &:has([data-ai-right-panel-small='true']) {
+    --ai-right-panel-slot-width: 61px;
+  }
 
   .input-wrapper {
     position: relative;
@@ -26,8 +31,9 @@
     gap: 64px;
     flex: 1;
     flex-shrink: 0;
-    width: 100%;
+    width: calc(100% - var(--ai-right-panel-slot-width));
     max-width: 784px;
+    transform: translateX(calc(var(--ai-right-panel-slot-width) / -2));
     min-width: 0;
     box-sizing: border-box;
     height: 100%;
