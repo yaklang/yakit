@@ -217,8 +217,11 @@ export const parseYakGRPCReadyLine = (line) => {
   } catch (error) {
     throw new Error(`Invalid Yak gRPC ready JSON: ${error.message}`)
   }
-  if (payload?.schemaVersion !== 1) {
+  if (![1, 2].includes(payload?.schemaVersion)) {
     throw new Error(`Unsupported Yak gRPC ready schema: ${payload?.schemaVersion}`)
+  }
+  if (payload.schemaVersion === 2 && payload.transport !== 'tcp') {
+    throw new Error(`Yak gRPC fixture requires TCP transport: ${payload.transport}`)
   }
   const addressMatch = /^127\.0\.0\.1:(\d+)$/.exec(payload.address || '')
   const port = Number(addressMatch?.[1])
@@ -226,7 +229,7 @@ export const parseYakGRPCReadyLine = (line) => {
     throw new Error(`Yak gRPC fixture must listen on 127.0.0.1 with a valid port: ${payload.address}`)
   }
   return {
-    schemaVersion: 1,
+    schemaVersion: payload.schemaVersion,
     address: payload.address,
     host: '127.0.0.1',
     port,

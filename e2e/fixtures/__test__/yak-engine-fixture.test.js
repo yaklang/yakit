@@ -51,7 +51,7 @@ describe('parseYakGRPCReadyLine', () => {
     expect(() => parseYakGRPCReadyLine(`${YAK_GRPC_READY_PREFIX}not-json`)).toThrow(/Invalid Yak gRPC ready JSON/)
     expect(() =>
       parseYakGRPCReadyLine(
-        `${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 2, address: '127.0.0.1:54321' })}`,
+        `${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 3, address: '127.0.0.1:54321' })}`,
       ),
     ).toThrow(/Unsupported Yak gRPC ready schema/)
     expect(() =>
@@ -59,6 +59,19 @@ describe('parseYakGRPCReadyLine', () => {
         `${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 1, address: '0.0.0.0:54321' })}`,
       ),
     ).toThrow(/must listen on 127.0.0.1/)
+  })
+
+  it('accepts schema v2 TCP readiness while preserving loopback-only fixture isolation', () => {
+    const line = (transport, address) =>
+      `${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 2, transport, address })}`
+    expect(parseYakGRPCReadyLine(line('tcp', '127.0.0.1:54321'))).toEqual({
+      schemaVersion: 2,
+      address: '127.0.0.1:54321',
+      host: '127.0.0.1',
+      port: 54321,
+    })
+    expect(() => parseYakGRPCReadyLine(line('unix', '/tmp/yak.sock'))).toThrow(/requires TCP/)
+    expect(() => parseYakGRPCReadyLine(line('tcp', '0.0.0.0:54321'))).toThrow(/127.0.0.1/)
   })
 
   it('supports legacy yak grpc ok output when the runner reserved a concrete port', () => {

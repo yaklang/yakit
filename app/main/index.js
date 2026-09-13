@@ -1,7 +1,16 @@
-const { app, BrowserWindow, dialog, nativeImage, globalShortcut, ipcMain, protocol, Menu } = require('electron')
+const {
+  app,
+  BrowserWindow,
+  dialog,
+  nativeImage,
+  globalShortcut,
+  ipcMain,
+  protocol,
+  Menu,
+  crashReporter,
+} = require('electron')
 const isDev = require('electron-is-dev')
 const path = require('path')
-const os = require('os')
 const url = require('url')
 const process = require('process')
 const { configureE2EEnvironment } = require('./e2eEnvironment')
@@ -29,7 +38,11 @@ const {
   closeAllLogHandles,
   initAllLogFolders,
   printLogOutputFile,
+  flushAllLogs,
+  getCurrentLogFiles,
 } = require('./logFile')
+const { createRendererDiagnostics, settleWithin } = require('./rendererDiagnostics')
+const { createRendererRecovery } = require('./rendererRecovery')
 
 const BLOCKED_CHROMIUM_DEBUG_SWITCHES = ['remote-debugging-port', 'remote-debugging-address', 'remote-debugging-pipe']
 const BLOCKED_NODE_DEBUG_ARG_PREFIXES = ['--inspect', '--inspect-brk', '--inspect-port']
@@ -96,6 +109,46 @@ if (shouldAbortStartupForDebugFlags) {
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = 'windows-close-flag'
 
+const rendererDiagnostics = shouldAbortStartupForDebugFlags
+  ? null
+  : createRendererDiagnostics({
+      app,
+      crashReporter,
+      writeLog: (message) => {
+        renderLogOutputFile(message)
+        printLogOutputFile(message)
+      },
+      flushLogs: flushAllLogs,
+      getLogFiles: getCurrentLogFiles,
+    })
+const rendererRecovery = shouldAbortStartupForDebugFlags
+  ? null
+  : createRendererRecovery({
+      dialog,
+      diagnostics: rendererDiagnostics,
+      getLanguage: () => getConfig().softLange,
+      reload: (target, ignoreCache) => {
+        clearRenderMap(target)
+        if (ignoreCache) target.webContents.reloadIgnoringCache()
+        else target.webContents.reload()
+      },
+      backToConnection: () => reloadApplication(),
+      exit: exitAfterRendererFailure,
+      onGone: (target) => {
+        clearRenderMap(target)
+        setLocalCache('render-crash-screen', true)
+        require('./handlers/logger').saveLogs()
+      },
+    })
+
+async function exitAfterRendererFailure() {
+  rendererRecovery?.stop()
+  rendererDiagnostics?.stop()
+  // Even a failed disk or an unresponsive renderer must not trap the user in the application.
+  await settleWithin(closeAllLogHandles)
+  app.exit(0)
+}
+
 /** 窗口对象 */
 let win = null
 let engineLinkWin = null
@@ -147,6 +200,8 @@ function createEngineLinkWindow() {
     maximizable: false,
   })
 
+  rendererRecovery.attach(engineLinkWin, 'engineLinkWin')
+
   if (!hasPos) engineLinkWin.center()
   if (isDev) engineLinkWin.loadURL('http://127.0.0.1:5173')
   else engineLinkWin.loadFile(path.join(__dirname, '../renderer/engine-link-startup/dist/index.html'))
@@ -193,20 +248,12 @@ function createEngineLinkWindow() {
     printLogOutputFile('[engineLinkWin] did-stop-loading')
   })
 
-  engineLinkWin.webContents.on('render-process-gone', (event, details) => {
-    const snapshot = collectDevicePerformanceSnapshot()
-    renderLogOutputFile(`----- engineLinkWin Render gone ------`)
-    renderLogOutputFile(`reason: ${details.reason}, exitCode: ${details.exitCode}`)
-    printLogOutputFile(`[engineLinkWin] render-process-gone snapshot: ${JSON.stringify(snapshot)}`)
-    if (details.reason === 'crashed') setLocalCache('render-crash-screen', true)
-    require('./handlers/logger').saveLogs()
-  })
-
   engineLinkWin.on('close', (e) => {
     state.saveState(engineLinkWin)
     // WDIO owns the isolated Electron process lifecycle. Let its teardown
     // close the window directly instead of opening the user-facing dialog.
     if (e2eEnvironment.enabled) return
+    if (rendererRecovery.handleClose(engineLinkWin, e)) return
 
     e.preventDefault()
     if (engineLinkWin.isVisible()) {
@@ -259,6 +306,8 @@ function createWindow() {
     skipTaskbar: true,
   })
 
+  rendererRecovery.attach(win, 'mainWin')
+
   if (isDev) win.loadURL('http://127.0.0.1:3000')
   else win.loadFile(path.resolve(__dirname, '../renderer/pages/main/index.html'))
 
@@ -306,15 +355,6 @@ function createWindow() {
     printLogOutputFile(`[mainWin] did-stop-loading`)
   })
 
-  win.webContents.on('render-process-gone', (event, details) => {
-    const snapshot = collectDevicePerformanceSnapshot()
-    renderLogOutputFile(`----- Render gone ------`)
-    renderLogOutputFile(`reason: ${details.reason}, exitCode: ${details.exitCode}`)
-    printLogOutputFile(`[mainWin] render-process-gone snapshot: ${JSON.stringify(snapshot)}`)
-    if (details.reason === 'crashed') setLocalCache('render-crash-screen', true)
-    require('./handlers/logger').saveLogs()
-  })
-
   win.on('close', (e) => {
     const bounds = win.getBounds()
     if (bounds.width >= minWidth && bounds.height >= minHeight) {
@@ -323,6 +363,7 @@ function createWindow() {
     // Test runs use a disposable profile and are terminated by the runner.
     // Product startup and close confirmation remain unchanged outside E2E.
     if (e2eEnvironment.enabled) return
+    if (rendererRecovery.handleClose(win, e)) return
 
     e.preventDefault()
     if (win.isVisible()) {
@@ -380,6 +421,7 @@ function markRenderOk(curWin) {
 }
 // 关闭、reload清理渲染map
 function clearRenderMap(targetWin) {
+  if (!targetWin) return
   renderMap.delete(targetWin.id)
   messageQueue.delete(targetWin.id)
 }
@@ -418,14 +460,6 @@ function winShow(targetWin, readyShow) {
     }
   }
 }
-// 窗口关闭
-function winClose(targetWin, removeEvent) {
-  if (targetWin && !targetWin.isDestroyed()) {
-    removeEvent && targetWin.removeAllListeners('close')
-    targetWin.close()
-    targetWin = null
-  }
-}
 // 获取当前窗口
 function getActiveWindow() {
   // 优先：当前聚焦窗口
@@ -441,73 +475,14 @@ function getActiveWindow() {
   return null
 }
 
-/**
- * ---------------- 设备 / 性能 ----------------
- */
-// 基础系统信息（Node / OS）
-function getBaseSystemInfo() {
-  return {
-    platform: process.platform,
-    arch: process.arch,
-    osType: os.type(),
-    osRelease: os.release(),
-    loadAvg: os.loadavg(),
-    uptime: os.uptime(),
-    cpuCount: os.cpus().length,
-    cpuModel: os.cpus()[0]?.model,
-    totalMemoryGB: (os.totalmem() / 1024 / 1024 / 1024).toFixed(2),
-    freeMemoryGB: (os.freemem() / 1024 / 1024 / 1024).toFixed(2),
-    nodeVersion: process.version,
-    electronVersion: process.versions.electron,
-    chromeVersion: process.versions.chrome,
-    v8Version: process.versions.v8,
+// Returning to the connection flow is also available from the native recovery dialog.
+function reloadApplication(ignoreCache = false) {
+  lastEngineLinkCredential = null
+  winHide(win)
+  for (const target of [win, engineLinkWin]) {
+    if (target && !target.isDestroyed()) rendererRecovery.recover(target, ignoreCache)
   }
-}
-// GPU 核心信息
-function getGPUInfo() {
-  return {
-    gpuFeatureStatus: app.getGPUFeatureStatus(),
-    gpuInfoBasic: app.getGPUInfo('basic'),
-    gpuInfoComplete: app.getGPUInfo('complete'),
-  }
-}
-// Chromium 命令行 GPU Flags
-function getGPUFlags() {
-  return {
-    disableGPU: app.commandLine.hasSwitch('disable-gpu'),
-    disableGPUCompositing: app.commandLine.hasSwitch('disable-gpu-compositing'),
-    useAngle: app.commandLine.getSwitchValue('use-angle'),
-    enableFeatures: app.commandLine.getSwitchValue('enable-features'),
-    disableFeatures: app.commandLine.getSwitchValue('disable-features'),
-  }
-}
-// Electron 进程内存 / 性能状态
-async function getProcessMetrics() {
-  const metrics = app.getAppMetrics()
-  return metrics.map((m) => ({
-    pid: m.pid,
-    type: m.type,
-    cpuPercent: m.cpu.percentCPUUsage,
-    memoryMB: (m.memory.workingSetSize / 1024).toFixed(1),
-  }))
-}
-// GPU Crash / Blacklist 判断
-function analyzeGPUStatus(gpuFeatureStatus) {
-  const badFeatures = Object.entries(gpuFeatureStatus).filter(([, v]) => v !== 'enabled')
-
-  return {
-    hasIssue: badFeatures.length > 0,
-    badFeatures,
-  }
-}
-function collectDevicePerformanceSnapshot() {
-  return {
-    time: new Date().toISOString(),
-    base: getBaseSystemInfo(),
-    gpu: getGPUInfo(),
-    gpuFlags: getGPUFlags(),
-    processes: getProcessMetrics(),
-  }
+  winShow(engineLinkWin, readyEngineLinkShow)
 }
 
 /**
@@ -519,31 +494,9 @@ function registerGlobalIPC() {
 
   // ------------------- 刷新相关 -------------------
   /** 刷新缓存 */
-  ipcMain.handle('trigger-reload', () => {
-    lastEngineLinkCredential = null
-    clearRenderMap(engineLinkWin)
-    clearRenderMap(win)
-    win.webContents.reload()
-    winHide(win)
-    engineLinkWin.webContents.reload()
-    setTimeout(() => {
-      winShow(engineLinkWin, readyEngineLinkShow)
-    }, 500)
-    return
-  })
+  ipcMain.handle('trigger-reload', () => reloadApplication())
   /** 强制清空刷新缓存 */
-  ipcMain.handle('trigger-reload-cache', () => {
-    lastEngineLinkCredential = null
-    clearRenderMap(engineLinkWin)
-    clearRenderMap(win)
-    win.webContents.reloadIgnoringCache()
-    winHide(win)
-    engineLinkWin.webContents.reloadIgnoringCache()
-    setTimeout(() => {
-      winShow(engineLinkWin, readyEngineLinkShow)
-    }, 500)
-    return
-  })
+  ipcMain.handle('trigger-reload-cache', () => reloadApplication(true))
 
   /** 设置主窗口缩放比例(类原生应用缩放) */
   ipcMain.handle('set-main-window-zoom-factor', (_e, factor) => {
@@ -555,9 +508,12 @@ function registerGlobalIPC() {
 
   // ------------------- render已准备好 -------------------
   ipcMain.on('engine-win-render-ok', (event) => {
+    if (event.sender !== engineLinkWin?.webContents) return
     markRenderOk(engineLinkWin)
+    rendererRecovery.markReady(engineLinkWin)
   })
   ipcMain.on('main-win-uilayout-render-ok', (event) => {
+    if (event.sender !== win?.webContents) return
     // 队列里已有 credential 时只冲刷，避免与首次入队重复推送
     const hadPending = (messageQueue.get(win.id) || []).some((m) => m.channel === 'from-engineLinkWin')
     markRenderOk(win)
@@ -565,6 +521,7 @@ function registerGlobalIPC() {
     if (lastEngineLinkCredential && !hadPending) {
       safeSend(win, 'from-engineLinkWin', lastEngineLinkCredential)
     }
+    rendererRecovery.markReady(win)
   })
 
   // ------------------- 窗口发送数据操作 -------------------
@@ -594,13 +551,13 @@ function registerGlobalIPC() {
   })
 
   // ------------------- 软件重启逻辑 -------------------
-  ipcMain.handle('relaunch', () => {
+  ipcMain.handle('relaunch', async () => {
     lastEngineLinkCredential = null
     clearRenderMap(engineLinkWin)
     clearRenderMap(win)
-    winClose(engineLinkWin, true)
-    winClose(win, true)
-    closeAllLogHandles()
+    rendererRecovery.stop()
+    rendererDiagnostics.stop()
+    await settleWithin(closeAllLogHandles)
     app.relaunch()
     app.exit(0)
   })
@@ -610,12 +567,12 @@ function registerGlobalIPC() {
     const { showCloseMessageBox, isIRify, isMemfit } = params
     const parentWindow = getActiveWindow()
 
-    const exitCleanupOperation = () => {
+    const exitCleanupOperation = async () => {
       clearRenderMap(engineLinkWin)
       clearRenderMap(win)
-      winClose(engineLinkWin, false)
-      winClose(win, false)
-      closeAllLogHandles()
+      rendererRecovery.stop()
+      rendererDiagnostics.stop()
+      await settleWithin(closeAllLogHandles)
       app.exit()
     }
     if (
@@ -651,14 +608,14 @@ function registerGlobalIPC() {
             engineLinkWin?.minimize()
             win?.minimize()
           } else if (res.response === 1) {
-            exitCleanupOperation()
+            await exitCleanupOperation()
           } else {
             e.preventDefault()
           }
         })
     } else {
       await asyncKillDynamicControl()
-      exitCleanupOperation()
+      await exitCleanupOperation()
     }
   })
 
@@ -682,6 +639,30 @@ function registerGlobalIPC() {
 /**
  * set software menu
  */
+if (rendererRecovery) {
+  const labels = rendererRecovery.labels()
+  MenuTemplate.find((item) => item.label === 'View').submenu.unshift(
+    {
+      label: labels.title,
+      accelerator: 'CommandOrControl+Alt+R',
+      click: () => rendererRecovery.request(getActiveWindow()),
+    },
+    {
+      label: labels.export,
+      click: async () => {
+        const target = getActiveWindow()
+        if (!target) return
+        try {
+          await rendererRecovery.exportDiagnostics(target)
+        } catch (error) {
+          rendererDiagnostics.record('diagnostics-export-failed', { error: String(error?.message || error) }, target)
+          dialog.showErrorBox(labels.title, labels.exportError)
+        }
+      },
+    },
+    { type: 'separator' },
+  )
+}
 const menu = Menu.buildFromTemplate(MenuTemplate)
 Menu.setApplicationMenu(menu)
 
@@ -700,7 +681,7 @@ if (!shouldAbortStartupForDebugFlags) {
     /** 获取缓存数据并储存于软件内 */
     initLocalCache()
 
-    getAllLogHandles()
+    await getAllLogHandles()
 
     /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
     initExtraLocalCache()
@@ -737,13 +718,17 @@ if (!shouldAbortStartupForDebugFlags) {
       callback(filePath)
     })
 
-    // 收集 设备 / 性能
-    const snapshot = collectDevicePerformanceSnapshot()
-    const { hasIssue, badFeatures } = analyzeGPUStatus(snapshot.gpu.gpuFeatureStatus)
-    if (hasIssue) {
-      printLogOutputFile(`hasIssue: ${JSON.stringify(badFeatures)}`)
+    void rendererDiagnostics.start().catch((error) => {
+      printLogOutputFile(`[renderer-diagnostics] startup failed: ${error?.message || error}`)
+    })
+
+    // Windows/Linux hide the application menu. Keep the rescue shortcut active only while this app is focused.
+    if (process.platform !== 'darwin') {
+      app.on('browser-window-focus', () => {
+        globalShortcut.register('CommandOrControl+Alt+R', () => rendererRecovery.request(getActiveWindow()))
+      })
+      app.on('browser-window-blur', () => globalShortcut.unregister('CommandOrControl+Alt+R'))
     }
-    printLogOutputFile(`after whenReady snapshot: ${JSON.stringify(snapshot)}`)
 
     createEngineLinkWindow()
     createWindow()
@@ -761,9 +746,16 @@ if (!shouldAbortStartupForDebugFlags) {
   })
 }
 
-app.on('child-process-gone', async (_e, killed) => {
-  const snapshot = collectDevicePerformanceSnapshot()
-  printLogOutputFile(`child-process-gone snapshot: ${JSON.stringify(snapshot)}, killed: ${JSON.stringify(killed)}`)
+app.on('child-process-gone', (_event, details) => {
+  if (details.reason !== 'clean-exit') rendererDiagnostics?.record('child-process-gone', details)
+})
+
+// Native Quit must work even when the renderer cannot acknowledge a close IPC.
+app.on('before-quit', (event) => {
+  if ([win, engineLinkWin].some((target) => rendererRecovery?.isUnhealthy(target))) {
+    event.preventDefault()
+    void exitAfterRendererFailure()
+  }
 })
 
 /**
