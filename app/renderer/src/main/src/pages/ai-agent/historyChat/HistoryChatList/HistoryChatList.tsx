@@ -1,4 +1,5 @@
 import { memo, useMemo, useRef, useState, type FC } from 'react'
+import { Virtuoso } from 'react-virtuoso'
 import styles from './HistoryChatList.module.scss'
 import { PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { ChatAlt2Solid, UserSolid, UsersSolid } from '@yakit-libs/yakit-ui-icons/solid'
@@ -42,6 +43,10 @@ const CHAT_GROUPS = [
 ] as const
 
 type ChatGroupKey = (typeof CHAT_GROUPS)[number]['key']
+
+type HistoryRow =
+  | { type: 'group'; key: string; label: string; first: boolean }
+  | { type: 'session'; key: string; session: AISession }
 
 export const normalizeTimestamp = (timestamp?: number | string) => {
   if (!timestamp) return 0
@@ -189,6 +194,19 @@ const HistoryChatList: FC<{
     })).filter((item) => item.list.length > 0)
   }, [showHistory])
 
+  // Keep all sessions available to search, but only mount rows in the viewport.
+  // A mounted session row also subscribes to its chat store and several popovers.
+  const historyRows = useMemo<HistoryRow[]>(() => {
+    return groupedHistory.flatMap((group, index) => [
+      { type: 'group' as const, key: `group:${group.key}`, label: group.label, first: index === 0 },
+      ...group.list.map((session) => ({ type: 'session' as const, key: `session:${session.SessionID}`, session })),
+    ])
+  }, [groupedHistory])
+
+  const setScrollerRef = useMemoizedFn((element: HTMLElement | Window | null) => {
+    listRef.current = element instanceof HTMLElement ? (element as HTMLDivElement) : null
+  })
+
   const handleCallbackEditName = useMemoizedFn(async (result: boolean, info?: AISession) => {
     if (result && info) {
       try {
@@ -215,12 +233,7 @@ const HistoryChatList: FC<{
       }
 
       const newChats = sessionList.filter((item) => item.SessionID !== SessionID)
-      let active: AISession | undefined
-      if (newChats.length === 0) {
-        onNewChat()
-      } else {
-        active = getNextActiveChat(sessionList, findIndex)
-      }
+      const active = getNextActiveChat(sessionList, findIndex)
 
       try {
         const sessionIds = [SessionID]
@@ -230,7 +243,9 @@ const HistoryChatList: FC<{
           deleteSessionsParams: { sessionIds, source: [] },
         })
         setSessions && setSessions(newChats)
-        if (activeSessionId === SessionID && active) {
+        if (newChats.length === 0) {
+          onNewChat()
+        } else if (activeSessionId === SessionID && active) {
           handleSetActiveChat(active)
         }
         resolve()
@@ -289,27 +304,35 @@ const HistoryChatList: FC<{
 
   return (
     <YakitSpin spinning={closeLoading}>
-      <div ref={listRef} className={styles['history-chat-list']}>
-        {groupedHistory.map((group) => {
-          return (
-            <div key={group.key} className={styles['history-group']}>
-              <div className={styles['history-group-title']}>{t(group.label)}</div>
-              {group.list.map((item) => {
-                return (
-                  <HistoryChatListItem
-                    key={item.SessionID}
-                    item={item}
-                    handleSetActiveChat={handleSetActiveChat}
-                    getPopupContainer={getPopupContainer}
-                    overlayClassName={overlayClassName}
-                    handleOpenEditName={handleOpenEditName}
-                    handleDeleteChat={handleDeleteChat}
-                  />
-                )
-              })}
-            </div>
-          )
-        })}
+      <div className={styles['history-chat-list']}>
+        <Virtuoso
+          className={styles['history-virtual-list']}
+          data={historyRows}
+          scrollerRef={setScrollerRef}
+          computeItemKey={(_index, row) => row.key}
+          defaultItemHeight={32}
+          overscan={160}
+          itemContent={(_index, row) =>
+            row.type === 'group' ? (
+              <div
+                className={classNames(styles['history-group-title'], {
+                  [styles['history-group-spaced']]: !row.first,
+                })}
+              >
+                {t(row.label)}
+              </div>
+            ) : (
+              <HistoryChatListItem
+                item={row.session}
+                handleSetActiveChat={handleSetActiveChat}
+                getPopupContainer={getPopupContainer}
+                overlayClassName={overlayClassName}
+                handleOpenEditName={handleOpenEditName}
+                handleDeleteChat={handleDeleteChat}
+              />
+            )
+          }
+        />
         {loading && <div className={styles['history-loading']}>{t('YakitSpin.loading')}</div>}
 
         {editInfo.current && (
@@ -349,9 +372,13 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
   }, [item])
   const handleDeleteChatItem = useMemoizedFn(async (info: AISession) => {
     setDelLoading(true)
-    handleDeleteChat(info).finally(() => {
+    try {
+      await handleDeleteChat(info)
+    } catch {
+      // The parent restores the list and reports errors; cancellation is also handled there.
+    } finally {
       setDelLoading(false)
-    })
+    }
   })
   return (
     <div
@@ -397,6 +424,7 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
             e?.stopPropagation()
             handleDeleteChatItem(item)
           }}
+          onCancel={(e) => e?.stopPropagation()}
         >
           <YakitButton
             loading={delLoading}
