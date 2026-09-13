@@ -5,7 +5,14 @@ import os from 'node:os'
 import path from 'node:path'
 import { EventEmitter } from 'node:events'
 import { createRequire } from 'node:module'
-import { createRendererDiagnostics, HISTORY_LIMIT, INCIDENT_LIMIT, LOG_TAIL_BYTES } from '../rendererDiagnostics'
+import {
+  createRendererDiagnostics,
+  HISTORY_LIMIT,
+  INCIDENT_LIMIT,
+  LOG_TAIL_BYTES,
+  MEMORY_CHANNEL,
+  MEMORY_HISTORY_LIMIT,
+} from '../rendererDiagnostics'
 
 const require = createRequire(import.meta.url)
 
@@ -40,6 +47,31 @@ describe('renderer diagnostics', () => {
   function create() {
     recorder = createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, getLogFiles: () => logs })
     return recorder
+  }
+
+  function memoryWindow(id = 1) {
+    const window = Object.assign(new EventEmitter(), { id, isDestroyed: () => false })
+    window.webContents = Object.assign(new EventEmitter(), {
+      id,
+      mainFrame: {},
+      send: vi.fn(),
+      isDestroyed: () => false,
+      isCrashed: vi.fn(() => false),
+      getOSProcessId: vi.fn(() => id * 100),
+    })
+    recorder.trackWindow(window, id === 1 ? 'mainWin' : 'engineLinkWin')
+    return window
+  }
+
+  function respond(window, usedHeapKB = 90_000) {
+    const [, nonce] = window.webContents.send.mock.calls.at(-1)
+    window.webContents.emit('ipc-message', { senderFrame: window.webContents.mainFrame }, MEMORY_CHANNEL, nonce, {
+      usedHeapKB,
+      heapLimitKB: 100_000,
+      availableHeapKB: 10_000,
+      blinkAllocatedKB: 100,
+      blinkTotalKB: 200,
+    })
   }
 
   afterEach(() => {
@@ -109,6 +141,86 @@ describe('renderer diagnostics', () => {
     expect(fs.readdirSync(recorder.directory).filter((file) => file.endsWith('.json'))).toHaveLength(INCIDENT_LIMIT)
   })
 
+  it('records bounded heap pressure evidence independently for Main and Link', async () => {
+    vi.useFakeTimers()
+    create()
+    const main = memoryWindow()
+    const link = memoryWindow(2)
+    await recorder.start()
+    for (let i = 0; i < 75; i++) {
+      await vi.advanceTimersByTimeAsync(1000)
+      respond(main)
+      respond(link, 1000)
+    }
+    const incident = recorder.record('render-process-gone', { reason: 'crashed', exitCode: 5 }, main)
+    expect(incident.memoryAssessment).toMatchObject({ status: 'suspected-js-heap-pressure', heapUsedRatio: 0.9 })
+    expect(incident.snapshot.rendererMemory[0].samples).toHaveLength(MEMORY_HISTORY_LIMIT)
+    expect(incident.snapshot.rendererMemory[1].samples.at(-1).usedHeapKB).toBe(1000)
+    expect(recorder.record('render-process-gone', { reason: 'killed' }, link).memoryAssessment.status).toBe(
+      'no-js-heap-pressure-observed',
+    )
+    const pressureRecords = writeLog.mock.calls.filter(([line]) => line.includes('"event":"renderer-memory-pressure"'))
+    expect(pressureRecords).toHaveLength(2) // no repeated disk writes for every high sample
+  })
+
+  it('allows one outstanding request and rejects wrong frames, nonces and malformed counters', async () => {
+    vi.useFakeTimers()
+    create()
+    const window = memoryWindow()
+    await recorder.start()
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(window.webContents.send).toHaveBeenCalledTimes(1)
+    const [, nonce] = window.webContents.send.mock.calls[0]
+    window.webContents.emit('ipc-message', { senderFrame: {} }, MEMORY_CHANNEL, nonce, {})
+    window.webContents.emit('ipc-message', { senderFrame: window.webContents.mainFrame }, MEMORY_CHANNEL, 'stale', {})
+    expect(recorder.snapshot().rendererMemory[0].samples).toHaveLength(0)
+    respond(window, Infinity)
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(window.webContents.send).toHaveBeenCalledTimes(2)
+    respond(window)
+    respond(window) // duplicate response does not extend history or write another incident
+    expect(recorder.snapshot().rendererMemory[0].samples).toHaveLength(1)
+    recorder.stop()
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(window.webContents.send).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not attribute old PID or stale heap samples to an early or subsequent crash', async () => {
+    vi.useFakeTimers()
+    create()
+    const window = memoryWindow()
+    expect(recorder.record('render-process-gone', { reason: 'crashed' }, window).memoryAssessment.status).toBe(
+      'unknown',
+    )
+    window.webContents.emit('dom-ready')
+    respond(window)
+    await vi.advanceTimersByTimeAsync(10_001)
+    expect(recorder.record('render-process-gone', { reason: 'killed' }, window).memoryAssessment.status).toBe('unknown')
+    window.webContents.getOSProcessId.mockReturnValue(999)
+    window.webContents.emit('dom-ready')
+    expect(recorder.record('render-process-gone', { reason: 'crashed' }, window).memoryAssessment.status).toBe(
+      'unknown',
+    )
+    expect(recorder.record('render-process-gone', { reason: 'oom' }, window).memoryAssessment.status).toBe(
+      'reported-oom',
+    )
+    window.emit('closed')
+    expect(recorder.snapshot().rendererMemory).toHaveLength(0)
+  })
+
+  it('invalidates an in-flight response on navigation and accepts sampling before application-ready', () => {
+    create()
+    const window = memoryWindow()
+    window.webContents.emit('dom-ready')
+    const [, oldNonce] = window.webContents.send.mock.calls.at(-1)
+    window.webContents.emit('did-start-loading')
+    window.webContents.emit('dom-ready')
+    window.webContents.emit('ipc-message', { senderFrame: window.webContents.mainFrame }, MEMORY_CHANNEL, oldNonce, {})
+    respond(window, 1000)
+    expect(recorder.snapshot().rendererMemory[0].samples).toHaveLength(1)
+    expect(recorder.record('render-process-gone', {}, window).window.rendererPid).toBe(100)
+  })
+
   it('survives reporter, filesystem and log-sink failures', () => {
     crashReporter.start.mockImplementation(() => {
       throw new Error('Crashpad unavailable')
@@ -121,6 +233,21 @@ describe('renderer diagnostics', () => {
     fs.writeFileSync(recorder.directory, 'not a directory')
     expect(() => recorder.record('render-process-gone', { reason: 'oom' })).not.toThrow()
     expect(recorder.snapshot().reporter).toMatchObject({ enabled: false, error: 'Crashpad unavailable' })
+  })
+
+  it('exports an OOM incident even without a dump and with a failed log flush', async () => {
+    create()
+    const incident = recorder.record('render-process-gone', { reason: 'oom', exitCode: -1 })
+    flushLogs.mockRejectedValue(new Error('disk unavailable'))
+    const destination = path.join(root, 'oom-no-dump.zip')
+    const manifest = await recorder.exportBundle(destination)
+    expect(manifest.dumpCollection).toEqual({ status: 'no-dump-found', candidates: 0, included: 0 })
+    expect(manifest.flush).toEqual({ error: 'disk unavailable' })
+    const unpacked = path.join(root, 'oom-unpacked')
+    await require('compressing').zip.uncompress(destination, unpacked)
+    expect(JSON.parse(fs.readFileSync(path.join(unpacked, `${incident.id}.json`))).memoryAssessment.status).toBe(
+      'reported-oom',
+    )
   })
 
   it('exports current-session log tails, incidents, bounded dumps and a manifest', async () => {

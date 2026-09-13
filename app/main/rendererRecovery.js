@@ -9,6 +9,8 @@ const messages = {
     hung: '界面暂时没有响应',
     repeated: '界面连续恢复失败',
     detail: '可以尝试恢复界面，或回到引擎连接页。未保存的界面内容可能丢失；后台任务状态需要重新确认。',
+    memory:
+      '检测到内存不足或崩溃前 JS 堆用量偏高。建议先导出诊断，再回到连接页释放主界面内存；重新连接后减少同时打开的页面和数据量。高堆用量不能单独证明崩溃原因。',
     limited: '一分钟内已发生多次故障，已停止提供重复重载。请导出诊断，然后回到连接页或退出软件。',
     recover: '恢复界面',
     connection: '回到连接页',
@@ -24,6 +26,8 @@ const messages = {
     hung: '介面暫時沒有回應',
     repeated: '介面連續復原失敗',
     detail: '可以嘗試復原介面，或回到引擎連線頁。未儲存的介面內容可能遺失；背景工作狀態需要重新確認。',
+    memory:
+      '偵測到記憶體不足或崩潰前 JS 堆用量偏高。建議先匯出診斷，再回到連線頁釋放主介面記憶體；重新連線後減少同時開啟的頁面和資料量。高堆用量不能單獨證明崩潰原因。',
     limited: '一分鐘內已發生多次故障，已停止提供重複重新載入。請匯出診斷，然後回到連線頁或退出軟體。',
     recover: '復原介面',
     connection: '回到連線頁',
@@ -40,6 +44,8 @@ const messages = {
     repeated: 'The interface keeps failing to recover',
     detail:
       'Try recovering the interface or return to the engine connection page. Unsaved content may be lost. Check the status of background tasks after reconnecting.',
+    memory:
+      'Out of memory was reported or high JS heap usage was observed before the crash. Export diagnostics, then return to the connection page to release the main interface memory. Reconnect with fewer open pages and less data. High heap usage alone does not prove the crash cause.',
     limited:
       'Several failures occurred within one minute. Further reloads are paused. Export diagnostics, then return to the connection page or exit.',
     recover: 'Recover interface',
@@ -58,7 +64,7 @@ function createRendererRecovery({ dialog, diagnostics, reload, backToConnection,
   const text = () => messages[getLanguage()] || messages.en
   const record = (...args) => {
     try {
-      diagnostics.record(...args)
+      return diagnostics.record(...args)
     } catch {
       // Logging failure must not prevent the native recovery controls from opening.
     }
@@ -76,7 +82,7 @@ function createRendererRecovery({ dialog, diagnostics, reload, backToConnection,
 
   function markReady(window) {
     const state = states.get(window)
-    if (!state) return
+    if (!state || state.status === 'parked' || state.ownTermination || window.webContents.isCrashed()) return
     clearTimeout(state.timer)
     if (state.status === 'recovering') record('recovery-ready', {}, window)
     state.status = 'healthy'
@@ -86,7 +92,7 @@ function createRendererRecovery({ dialog, diagnostics, reload, backToConnection,
   function recover(window, ignoreCache = false) {
     const state = states.get(window)
     if (!state || stopped || window.isDestroyed()) return
-    const needsNewProcess = state.cause === 'unresponsive' || state.cause === 'recovery-timeout'
+    const needsNewProcess = state.ownTermination || state.cause === 'unresponsive' || state.cause === 'recovery-timeout'
     state.status = 'recovering'
     state.revision++
     clearTimeout(state.timer)
@@ -95,10 +101,55 @@ function createRendererRecovery({ dialog, diagnostics, reload, backToConnection,
     state.timer.unref?.()
     try {
       if (needsNewProcess && !window.webContents.isCrashed()) {
-        state.ownTermination = true
-        window.webContents.forcefullyCrashRenderer()
+        afterProcessExit(window, state, () => reload(window, ignoreCache))
+      } else reload(window, ignoreCache)
+    } catch (error) {
+      state.ownTermination = false
+      fail(window, 'recovery-error', { error: String(error?.message || error) })
+    }
+  }
+
+  function afterProcessExit(window, state, action) {
+    const revision = state.revision
+    const alreadyTerminating = state.ownTermination
+    state.ownTermination = true
+    state.afterTermination = () => {
+      if (stopped || window.isDestroyed() || state.revision !== revision) return
+      try {
+        action()
+      } catch (error) {
+        fail(window, 'recovery-error', { error: String(error?.message || error) })
       }
-      reload(window, ignoreCache)
+    }
+    // forcefullyCrashRenderer is asynchronous: an immediate reload can be killed with the old process.
+    if (!alreadyTerminating) window.webContents.forcefullyCrashRenderer()
+  }
+
+  function park(window) {
+    const state = states.get(window)
+    if (!state || stopped || window.isDestroyed()) return
+    clearTimeout(state.timer)
+    state.status = 'parked'
+    state.revision++
+    const revision = state.revision
+    record('recovery-parked', {}, window)
+    state.timer = setTimeout(() => fail(window, 'recovery-timeout', {}), RECOVERY_TIMEOUT_MS)
+    state.timer.unref?.()
+    try {
+      // Keep the BrowserWindow/registered handlers, but release the old process and its application heap.
+      // Do not reload the heavy Main application until the user connects again.
+      const loadBlank = () => {
+        void window.webContents
+          .loadURL('about:blank')
+          .then(() => {
+            if (state.revision === revision) clearTimeout(state.timer)
+          })
+          .catch((error) => {
+            if (state.revision === revision) fail(window, 'recovery-error', { error: String(error?.message || error) })
+          })
+      }
+      if (!window.webContents.isCrashed()) afterProcessExit(window, state, loadBlank)
+      else loadBlank()
     } catch (error) {
       state.ownTermination = false
       fail(window, 'recovery-error', { error: String(error?.message || error) })
@@ -115,13 +166,14 @@ function createRendererRecovery({ dialog, diagnostics, reload, backToConnection,
         const t = text()
         const limited = state.failures.filter((time) => Date.now() - time < CRASH_WINDOW_MS).length >= MAX_FAILURES
         const actions = [...(limited ? [] : ['recover']), 'connection', 'export', 'exit', 'wait']
+        const memoryPressure = ['reported-oom', 'suspected-js-heap-pressure'].includes(state.memoryAssessment?.status)
         const { response } = await dialog.showMessageBox(window, {
           type: 'warning',
           title: t.title,
           message: limited ? t.repeated : state.cause === 'unresponsive' ? t.hung : t.failed,
-          detail: `${limited ? t.limited : t.detail}\n\n${diagnostics.directory}`,
+          detail: `${limited ? t.limited : t.detail}${memoryPressure ? `\n\n${t.memory}` : ''}\n\n${diagnostics.directory}`,
           buttons: actions.map((action) => t[action]),
-          defaultId: 0,
+          defaultId: memoryPressure ? actions.indexOf('connection') : 0,
           cancelId: actions.length - 1,
           noLink: true,
         })
@@ -168,10 +220,13 @@ function createRendererRecovery({ dialog, diagnostics, reload, backToConnection,
     state.status = 'failed'
     state.cause = cause
     state.ownTermination = false
+    state.afterTermination = null
     state.revision++
     state.failures = state.failures.filter((time) => Date.now() - time < CRASH_WINDOW_MS)
     if (cause !== 'manual-recovery') state.failures.push(Date.now())
-    record(cause, details, window)
+    const incident = record(cause, details, window)
+    state.memoryAssessment =
+      incident?.memoryAssessment || (details.reason === 'oom' ? { status: 'reported-oom' } : null)
     void prompt(window)
   }
 
@@ -181,15 +236,18 @@ function createRendererRecovery({ dialog, diagnostics, reload, backToConnection,
     diagnostics.trackWindow(window, name)
     window.webContents.on('render-process-gone', (_event, details) => {
       if (stopped || details.reason === 'clean-exit') return
+      if (state.ownTermination && ['recovering', 'parked'].includes(state.status)) {
+        state.ownTermination = false
+        const afterTermination = state.afterTermination
+        state.afterTermination = null
+        record('recovery-forced-termination', details, window)
+        if (afterTermination) queueMicrotask(afterTermination)
+        return
+      }
       try {
         onGone(window)
       } catch (error) {
         record('recovery-cleanup-failed', { error: String(error?.message || error) }, window)
-      }
-      if (state.ownTermination && state.status === 'recovering') {
-        state.ownTermination = false
-        record('recovery-forced-termination', details, window)
-        return
       }
       fail(window, 'render-process-gone', details)
     })
@@ -214,9 +272,11 @@ function createRendererRecovery({ dialog, diagnostics, reload, backToConnection,
     attach,
     markReady,
     recover,
+    park,
     exportDiagnostics,
     labels: text,
-    isUnhealthy: (window) => !stopped && states.has(window) && states.get(window).status !== 'healthy',
+    isUnhealthy: (window) =>
+      !stopped && states.has(window) && ['failed', 'recovering'].includes(states.get(window).status),
     request: (window) => {
       if (!states.has(window)) return
       if (states.get(window).status !== 'failed') fail(window, 'manual-recovery', {})

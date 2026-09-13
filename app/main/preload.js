@@ -1,5 +1,24 @@
 const { ipcRenderer } = require('electron')
 
+// Sandboxed preloads cannot require local helpers; keep this bounded responder in both entry points.
+// It returns counters only, never a heap snapshot or application content.
+ipcRenderer.on('renderer-diagnostics:memory', (_event, nonce) => {
+  if (typeof nonce !== 'string' || nonce.length > 64) return
+  try {
+    const heap = process.getHeapStatistics()
+    const blink = process.getBlinkMemoryInfo()
+    ipcRenderer.send('renderer-diagnostics:memory', nonce, {
+      usedHeapKB: heap.usedHeapSize,
+      heapLimitKB: heap.heapSizeLimit,
+      availableHeapKB: heap.totalAvailableSize,
+      blinkAllocatedKB: blink.allocated,
+      blinkTotalKB: blink.total,
+    })
+  } catch {
+    ipcRenderer.send('renderer-diagnostics:memory', nonce, null)
+  }
+})
+
 const mitmDebugHooksEnabled = process.argv.includes('--yakit-mitm-debug-hooks=1')
 
 const invoke = (channel, ...args) => ipcRenderer.invoke(channel, ...args)

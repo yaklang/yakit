@@ -16,6 +16,9 @@ const require = createRequire(import.meta.url)
 const directory = path.join(process.env.YAKIT_E2E_USER_DATA, 'renderer-diagnostics')
 const bundle = path.join(process.env.YAKIT_E2E_ARTIFACTS_DIR, 'renderer-diagnostics.zip')
 const report = { nativeCrashes: [], recoveries: [], scenarios: [] }
+const simulateOOM = Boolean(process.env.YAKIT_E2E_RENDERER_HEAP_MB)
+const crashTimeout = simulateOOM ? 60_000 : 25_000
+report.injection = simulateOOM ? 'bounded-v8-heap-oom' : 'chromium-page-crash'
 // ChromeDriver retains stale execution contexts after a native renderer crash.
 // Use the surviving main-process bridge to query the actual replacement renderer.
 const inRenderer = (url, script) =>
@@ -69,28 +72,55 @@ const queueChoices = (choices) =>
 
 async function injectCrash(action = 'recover', target = 'main') {
   if (action) await queueChoices([action])
-  return browser.electron.execute((electron, target) => {
-    const match = target === 'main' ? '/renderer/pages/main/' : '/engine-link-startup/'
-    const window = electron.BrowserWindow.getAllWindows().find((entry) => entry.webContents.getURL().includes(match))
-    const pid = window.webContents.getOSProcessId()
-    if (!pid || pid === process.pid) throw new Error('Refusing to signal an invalid renderer PID')
-    if (!window.webContents.debugger.isAttached()) window.webContents.debugger.attach('1.3')
-    window.webContents.once('render-process-gone', () => {
-      if (window.webContents.debugger.isAttached()) window.webContents.debugger.detach()
-    })
-    void window.webContents.debugger.sendCommand('Page.crash').catch(() => {})
-    return {
-      target,
-      rendererPid: pid,
-      mainPid: process.pid,
-      expectedReason: 'crashed',
-    }
-  }, target)
+  return browser.electron.execute(
+    async (electron, target, simulateOOM) => {
+      const match = target === 'main' ? '/renderer/pages/main/' : '/engine-link-startup/'
+      const window = electron.BrowserWindow.getAllWindows().find((entry) => entry.webContents.getURL().includes(match))
+      const pid = window.webContents.getOSProcessId()
+      if (!pid || pid === process.pid) throw new Error('Refusing to signal an invalid renderer PID')
+      let heapLimitBytes
+      if (simulateOOM) {
+        const backgroundThrottling = window.webContents.getBackgroundThrottling()
+        window.webContents.setBackgroundThrottling(false)
+        window.webContents.once('render-process-gone', () =>
+          window.webContents.setBackgroundThrottling(backgroundThrottling),
+        )
+        heapLimitBytes = await window.webContents.executeJavaScript('performance.memory.jsHeapSizeLimit')
+        if (!heapLimitBytes || heapLimitBytes > 600 * 1024 * 1024)
+          throw new Error('Refusing OOM simulation without a bounded heap')
+        // Retained JS arrays exhaust old space; typed arrays would allocate outside this limit.
+        await window.webContents.executeJavaScript(`(() => {
+        const chunks = globalThis.__oomChunks = []
+        const timer = setInterval(() => {
+          if (chunks.length >= 300) { clearInterval(timer); return }
+          chunks.push(new Array(512 * 1024).fill(chunks.length))
+        }, 100)
+        setTimeout(() => clearInterval(timer), 35000)
+        return true
+      })()`)
+      } else {
+        if (!window.webContents.debugger.isAttached()) window.webContents.debugger.attach('1.3')
+        window.webContents.once('render-process-gone', () => {
+          if (window.webContents.debugger.isAttached()) window.webContents.debugger.detach()
+        })
+        void window.webContents.debugger.sendCommand('Page.crash').catch(() => {})
+      }
+      return {
+        target,
+        rendererPid: pid,
+        mainPid: process.pid,
+        allowedReasons: simulateOOM ? ['oom', 'crashed'] : ['crashed'],
+        heapLimitBytes,
+      }
+    },
+    target,
+    simulateOOM,
+  )
 }
 
-async function waitForRecovery(previousReadyCount, previousPid) {
+async function waitForRecovery(previousReadyCount, previousPid, requireNewProcess = true) {
   await browser.waitUntil(async () => (await probe()).readyCount > previousReadyCount, {
-    timeout: 25_000,
+    timeout: crashTimeout,
     interval: 200,
     timeoutMsg: 'Reloaded renderer did not send its real application-ready IPC',
   })
@@ -113,7 +143,7 @@ async function waitForRecovery(previousReadyCount, previousPid) {
     )
     return { rendererPid: window.webContents.getOSProcessId(), mainPid: process.pid }
   })
-  expect(state.rendererPid).not.toBe(previousPid)
+  if (requireNewProcess) expect(state.rendererPid).not.toBe(previousPid)
   await echoFromRecoveredMain()
   await browser.waitUntil(
     async () =>
@@ -131,12 +161,18 @@ async function waitForRecovery(previousReadyCount, previousPid) {
       timeoutMsg: 'Main recovered its shell but did not render the real project list',
     },
   )
-  report.recoveries.push({ ...state, echoPassed: true })
+  const readyIncident = (await readIncidents()).find(
+    (entry) => entry.event === 'recovery-ready' && entry.window.rendererPid === state.rendererPid,
+  )
+  const memory = readyIncident?.snapshot.rendererMemory.find((entry) => entry.name === 'mainWin')?.samples.at(-1)
+  report.recoveries.push({ ...state, echoPassed: true, memoryAtReady: memory })
 }
 
 describe('Renderer crash recovery with a real Yak engine', function () {
   this.bail(true)
   before(async () => {
+    if (process.argv.includes('renderer-oom') && !simulateOOM)
+      throw new Error('Set YAKIT_E2E_RENDERER_HEAP_MB=256 for the OOM suite')
     if (process.env.YAKIT_E2E_ENGINE_FIXTURE !== 'external') throw new Error('Run this suite with --with-yak-engine')
     await waitForShellWindows()
     await browser.electron.execute((electron, destination) => {
@@ -153,7 +189,12 @@ describe('Renderer crash recovery with a real Yak engine', function () {
         const options = args[args.length - 1]
         if (!['界面恢复', '介面復原', 'Recover interface'].includes(options.title))
           return state.originalMessageBox(...args)
-        state.dialogs.push({ message: options.message, buttons: options.buttons })
+        state.dialogs.push({
+          message: options.message,
+          buttons: options.buttons,
+          detail: options.detail,
+          defaultId: options.defaultId,
+        })
         const choice = state.choices.shift() || 'wait'
         const labels = {
           recover: ['恢复界面', '復原介面', 'Recover interface'],
@@ -177,6 +218,7 @@ describe('Renderer crash recovery with a real Yak engine', function () {
       Password: '',
     })
     await waitForMainWindow()
+    report.mainWindowId = findApplicationWindows(await browser.getYakitWindowState()).mainWindow.id
   })
 
   after(async () => {
@@ -194,6 +236,25 @@ describe('Renderer crash recovery with a real Yak engine', function () {
       .catch(() => {})
   })
 
+  it('recovers an empty application root after a real JavaScript exception using the native menu', async () => {
+    const before = await probe()
+    await inRenderer(
+      MAIN_WINDOW_URL,
+      `setTimeout(() => {
+      document.getElementById('root').replaceChildren()
+      throw new Error('renderer-recovery-test: application exception')
+    }, 0); true`,
+    )
+    await browser.waitUntil(
+      async () => inRenderer(MAIN_WINDOW_URL, "document.getElementById('root').childElementCount === 0"),
+      { timeout: 10_000 },
+    )
+    await queueChoices(['recover'])
+    await requestFromMenu()
+    await waitForRecovery(before.readyCount, null, false)
+    report.scenarios.push('empty root + real JS exception -> native recovery menu -> real ready/project list/Echo')
+  })
+
   it('records a real native crash, reloads Main and preserves the engine connection and saved data', async () => {
     const before = await probe()
     await browser.execute(() => {
@@ -209,10 +270,17 @@ describe('Renderer crash recovery with a real Yak engine', function () {
     await captureRenderer(MAIN_WINDOW_URL, 'main-recovered.png')
     const incident = (await readIncidents()).find((entry) => entry.event === 'render-process-gone')
     expect(incident.window.rendererPid).toBe(crashed.rendererPid)
-    expect(incident.details.reason).toBe(crashed.expectedReason)
+    expect(crashed.allowedReasons).toContain(incident.details.reason)
     expect(incident.details.exitCode).not.toBe(0)
     expect(Array.isArray(incident.snapshot.current.processes)).toBe(true)
     expect(Object.keys(incident.snapshot.gpu.gpuInfoBasic).length).toBeGreaterThan(0)
+    if (simulateOOM) {
+      expect(['reported-oom', 'suspected-js-heap-pressure']).toContain(incident.memoryAssessment.status)
+      if (incident.details.reason !== 'oom') expect(incident.memoryAssessment.heapUsedRatio).toBeGreaterThanOrEqual(0.8)
+      const memoryDialog = (await probe()).dialogs.find((entry) => entry.detail.includes('JS'))
+      expect(memoryDialog.buttons[memoryDialog.defaultId]).toMatch(/连接|連線|Connection/)
+      report.mainOOM = incident
+    }
     report.scenarios.push('native crash -> new renderer PID -> real ready IPC -> same main process -> gRPC Echo passed')
   })
 
@@ -251,7 +319,7 @@ describe('Renderer crash recovery with a real Yak engine', function () {
             entry.window.rendererPid === crashed.rendererPid,
         ),
       {
-        timeout: 10_000,
+        timeout: crashTimeout,
       },
     )
     expect((await probe()).dialogs).toHaveLength(before.dialogs.length)
@@ -265,7 +333,9 @@ describe('Renderer crash recovery with a real Yak engine', function () {
       const before = await probe()
       const crashed = await injectCrash('wait')
       report.nativeCrashes.push(crashed)
-      await browser.waitUntil(async () => (await probe()).dialogs.length > before.dialogs.length, { timeout: 10_000 })
+      await browser.waitUntil(async () => (await probe()).dialogs.length > before.dialogs.length, {
+        timeout: crashTimeout,
+      })
       const latest = (await probe()).dialogs.at(-1)
       limited = !latest.buttons.some((label) => ['恢复界面', '復原介面', 'Recover interface'].includes(label))
       if (limited) break
@@ -295,8 +365,10 @@ describe('Renderer crash recovery with a real Yak engine', function () {
     await requestFromMenu()
     await browser.waitUntil(
       async () => {
-        const { linkWindow, mainWindow } = findApplicationWindows(await browser.getYakitWindowState())
-        return linkWindow?.visible && !linkWindow.loading && !mainWindow.visible
+        const windows = await browser.getYakitWindowState()
+        const { linkWindow } = findApplicationWindows(windows)
+        const parkedMain = windows.find((entry) => entry.id === report.mainWindowId)
+        return linkWindow?.visible && !linkWindow.loading && !parkedMain.visible && parkedMain.url === 'about:blank'
       },
       { timeout: 25_000 },
     )
@@ -304,15 +376,52 @@ describe('Renderer crash recovery with a real Yak engine', function () {
     await require('compressing').zip.uncompress(bundle, unpacked)
     const manifest = JSON.parse(await fs.readFile(path.join(unpacked, 'manifest.json'), 'utf8'))
     expect(manifest.files.filter((entry) => entry.name.endsWith('-log.txt'))).toHaveLength(3)
+    expect(await fs.readFile(path.join(unpacked, 'render-log.txt'), 'utf8')).toContain(
+      'renderer-recovery-test: application exception',
+    )
     expect(manifest.files.some((entry) => entry.name.startsWith('incident-'))).toBe(true)
     if (process.platform === 'darwin')
       expect(manifest.files.some((entry) => entry.name.endsWith('.dmp') && entry.includedBytes > 0)).toBe(true)
+    if (simulateOOM && process.platform === 'darwin') {
+      report.nativeOOMEvidence = []
+      for (const file of manifest.files.filter((entry) => entry.name.endsWith('.dmp') && entry.includedBytes > 0)) {
+        const data = await fs.readFile(path.join(unpacked, file.name))
+        expect(data.subarray(0, 4).toString()).toBe('MDMP')
+        if (data.includes(Buffer.from('v8-oom-location')) && data.includes(Buffer.from('Reached heap limit'))) {
+          report.nativeOOMEvidence.push({
+            name: file.name,
+            bytes: data.length,
+            annotation: 'v8-oom-location: Reached heap limit',
+          })
+        }
+      }
+      expect(report.nativeOOMEvidence.length).toBeGreaterThan(0)
+    }
     // The recovery/connection flow must not kill the independently running engine.
     expect(() => process.kill(Number(process.env.YAKIT_E2E_ENGINE_PID), 0)).not.toThrow()
     report.scenarios.push(
       'failure limit -> native menu -> diagnostic ZIP with actual dump and three logs -> connection page; engine still alive',
     )
     report.export = manifest.files
+    report.parkedMain = await browser.electron.execute((electron, id) => {
+      const main = electron.BrowserWindow.fromId(id)
+      return {
+        id,
+        url: main.webContents.getURL(),
+        rendererPid: main.webContents.getOSProcessId(),
+        processes: electron.app.getAppMetrics(),
+      }
+    }, report.mainWindowId)
+    expect(report.parkedMain.processes.some((entry) => entry.pid === report.nativeCrashes.at(-1).rendererPid)).toBe(
+      false,
+    )
+    expect(
+      await browser.electron.execute(
+        (electron, id) =>
+          electron.BrowserWindow.fromId(id).webContents.executeJavaScript('document.body.childElementCount'),
+        report.mainWindowId,
+      ),
+    ).toBe(0)
   })
 
   it('recovers a visible Link renderer after a real native crash', async () => {
@@ -320,7 +429,7 @@ describe('Renderer crash recovery with a real Yak engine', function () {
     const crashed = await injectCrash('recover', 'link')
     report.nativeCrashes.push(crashed)
     await browser.waitUntil(async () => (await probe()).linkReadyCount > before.linkReadyCount, {
-      timeout: 25_000,
+      timeout: crashTimeout,
       timeoutMsg: 'Link did not send its real ready IPC after recovery',
     })
     await browser.waitUntil(
@@ -349,5 +458,62 @@ describe('Renderer crash recovery with a real Yak engine', function () {
       ),
     ).toBe(true)
     report.scenarios.push('visible Link native crash -> new renderer PID -> real Link ready IPC -> startup page usable')
+    if (simulateOOM) {
+      report.linkOOM = (await readIncidents()).find(
+        (entry) => entry.event === 'render-process-gone' && entry.window.rendererPid === crashed.rendererPid,
+      )
+      expect(['reported-oom', 'suspected-js-heap-pressure']).toContain(report.linkOOM.memoryAssessment.status)
+    }
+  })
+
+  it('loads parked Main only after reconnecting and survives an external renderer kill without a new dump', async () => {
+    const before = await probe()
+    await inRenderer(
+      LINK_WINDOW_URL,
+      `window.yakitBridge.app.completeEngineLink({ credential: {Host: '127.0.0.1', Port: ${Number(process.env.YAKIT_E2E_ENGINE_PORT)}, Mode: 'remote', IsTLS: false, Password: ''} })`,
+    )
+    await waitForRecovery(before.readyCount, report.nativeCrashes.find((entry) => entry.target === 'main').rendererPid)
+    const readDumps = async () =>
+      (
+        await Promise.all(
+          ['', 'pending', 'completed', 'reports'].map((subdir) =>
+            fs.readdir(path.join(directory, 'Crashpad', subdir)).catch(() => []),
+          ),
+        )
+      )
+        .flat()
+        .filter((name) => name.endsWith('.dmp'))
+    const dumpsBefore = await readDumps()
+    const killed = await browser.electron.execute((electron) => {
+      const link = electron.BrowserWindow.getAllWindows().find((entry) =>
+        entry.webContents.getURL().includes('/engine-link-startup/'),
+      )
+      const pid = link.webContents.getOSProcessId()
+      if (!pid || pid === process.pid) throw new Error('Invalid renderer PID')
+      process.kill(pid, 'SIGKILL')
+      return { rendererPid: pid, mainPid: process.pid }
+    })
+    await browser.waitUntil(
+      async () =>
+        (await readIncidents()).some(
+          (entry) => entry.event === 'render-process-gone' && entry.window.rendererPid === killed.rendererPid,
+        ),
+      { timeout: 10_000 },
+    )
+    const incident = (await readIncidents()).find(
+      (entry) => entry.event === 'render-process-gone' && entry.window.rendererPid === killed.rendererPid,
+    )
+    expect(incident.details.reason).toBe('killed')
+    await echoFromRecoveredMain()
+    report.externalKill = {
+      ...killed,
+      incident,
+      newDumps: (await readDumps()).filter((name) => !dumpsBefore.includes(name)),
+    }
+    expect(report.externalKill.newDumps).toHaveLength(0)
+    // SIGKILL is an external-kill proxy, not an assertion that the kernel OOM killer was invoked.
+    report.scenarios.push(
+      'reconnect parked Main -> real ready/project list/Echo -> hidden Link SIGKILL -> incident without new dump; Main still usable',
+    )
   })
 })

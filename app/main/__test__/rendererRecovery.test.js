@@ -12,6 +12,7 @@ function makeWindow(id = 1) {
     id,
     isCrashed: vi.fn(() => false),
     forcefullyCrashRenderer: vi.fn(),
+    loadURL: vi.fn().mockResolvedValue(undefined),
   })
   return window
 }
@@ -192,6 +193,9 @@ describe('renderer recovery', () => {
     expect(s.window.webContents.forcefullyCrashRenderer).not.toHaveBeenCalled()
     await vi.advanceTimersByTimeAsync(RECOVERY_TIMEOUT_MS)
     expect(s.window.webContents.forcefullyCrashRenderer).toHaveBeenCalledTimes(1)
+    expect(s.reload).toHaveBeenCalledTimes(1)
+    s.crash('killed')
+    await tick()
     expect(s.reload).toHaveBeenCalledTimes(2)
     s.recovery.markReady(s.window)
   })
@@ -227,6 +231,127 @@ describe('renderer recovery', () => {
     s.crash()
     await tick()
     expect(s.backToConnection).toHaveBeenCalledTimes(1)
+  })
+
+  it.each(['reported-oom', 'suspected-js-heap-pressure'])(
+    'explains %s and defaults to releasing Main memory',
+    async (status) => {
+      const s = setup()
+      s.diagnostics.record.mockReturnValue({ memoryAssessment: { status } })
+      s.crash()
+      await tick()
+      const options = s.dialog.showMessageBox.mock.calls[0][1]
+      expect(options.detail).toContain('High heap usage alone does not prove')
+      expect(options.buttons[options.defaultId]).toBe('Connection page')
+    },
+  )
+
+  it('parks a live Main without reloading its application or counting its deliberate termination', async () => {
+    const s = setup()
+    s.window.webContents.forcefullyCrashRenderer.mockImplementation(() => s.crash('killed'))
+    s.recovery.park(s.window)
+    s.recovery.markReady(s.window) // late readiness cannot unpark the old document
+    await vi.advanceTimersByTimeAsync(RECOVERY_TIMEOUT_MS + 1)
+    expect(s.window.webContents.forcefullyCrashRenderer).toHaveBeenCalledOnce()
+    expect(s.window.webContents.loadURL).toHaveBeenCalledWith('about:blank')
+    expect(s.reload).not.toHaveBeenCalled()
+    expect(s.dialog.showMessageBox).not.toHaveBeenCalled()
+    expect(s.onGone).not.toHaveBeenCalled()
+    expect(s.recovery.isUnhealthy(s.window)).toBe(false)
+    s.recovery.recover(s.window)
+    expect(s.reload).toHaveBeenCalledOnce()
+    s.recovery.markReady(s.window)
+    expect(s.recovery.isUnhealthy(s.window)).toBe(false)
+  })
+
+  it('does not kill an already dead Main when parking and reports a failed blank navigation', async () => {
+    const s = setup()
+    s.window.webContents.isCrashed.mockReturnValue(true)
+    s.window.webContents.loadURL.mockRejectedValue(new Error('navigation failed'))
+    s.recovery.park(s.window)
+    await tick()
+    expect(s.window.webContents.forcefullyCrashRenderer).not.toHaveBeenCalled()
+    expect(s.diagnostics.record).toHaveBeenCalledWith('recovery-error', { error: 'navigation failed' }, s.window)
+  })
+
+  it('counts OOM during recovery and stops offering reload after three failures', async () => {
+    const s = setup()
+    s.dialog.showMessageBox.mockResolvedValue({ response: 0 })
+    s.crash('oom')
+    await tick()
+    s.crash('oom')
+    await tick()
+    s.dialog.showMessageBox.mockResolvedValue({ response: 3 })
+    s.crash('oom')
+    await tick()
+    expect(s.reload).toHaveBeenCalledTimes(2)
+    const options = s.dialog.showMessageBox.mock.calls.at(-1)[1]
+    expect(options.buttons).not.toContain('Recover interface')
+    expect(options.buttons).toContain('Export diagnostics')
+  })
+
+  it('does not accept late readiness from a dead renderer or a dialog answer after parking', async () => {
+    const s = setup()
+    let answer
+    s.dialog.showMessageBox.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          answer = resolve
+        }),
+    )
+    s.crash('oom')
+    s.window.webContents.isCrashed.mockReturnValue(true)
+    s.recovery.markReady(s.window)
+    expect(s.recovery.isUnhealthy(s.window)).toBe(true)
+    s.recovery.park(s.window)
+    answer({ response: 0 })
+    await tick()
+    expect(s.reload).not.toHaveBeenCalled()
+    expect(s.recovery.isUnhealthy(s.window)).toBe(false)
+  })
+
+  it('waits for asynchronous termination before loading and ignores old-process readiness', async () => {
+    const s = setup()
+    s.dialog.showMessageBox.mockResolvedValueOnce({ response: 0 })
+    s.window.emit('unresponsive')
+    await tick()
+    expect(s.reload).not.toHaveBeenCalled()
+    s.recovery.markReady(s.window)
+    expect(s.recovery.isUnhealthy(s.window)).toBe(true)
+    s.crash('killed')
+    await tick()
+    expect(s.reload).toHaveBeenCalledOnce()
+    s.recovery.markReady(s.window)
+    expect(s.recovery.isUnhealthy(s.window)).toBe(false)
+  })
+
+  it('drops pending reloads after close or stop and times out if termination never arrives', async () => {
+    const s = setup()
+    s.dialog.showMessageBox.mockResolvedValueOnce({ response: 0 })
+    s.window.emit('unresponsive')
+    await tick()
+    await vi.advanceTimersByTimeAsync(RECOVERY_TIMEOUT_MS)
+    expect(s.reload).not.toHaveBeenCalled()
+    expect(s.diagnostics.record).toHaveBeenCalledWith('recovery-timeout', {}, s.window)
+    s.recovery.park(s.window)
+    s.crash('killed')
+    s.recovery.stop()
+    s.window.emit('closed')
+    await tick()
+    expect(s.window.webContents.loadURL).not.toHaveBeenCalled()
+  })
+
+  it('can switch a pending process replacement to parking without killing twice or reloading Main', async () => {
+    const s = setup()
+    s.dialog.showMessageBox.mockResolvedValueOnce({ response: 0 })
+    s.window.emit('unresponsive')
+    await tick()
+    s.recovery.park(s.window)
+    expect(s.window.webContents.forcefullyCrashRenderer).toHaveBeenCalledOnce()
+    s.crash('killed')
+    await tick()
+    expect(s.reload).not.toHaveBeenCalled()
+    expect(s.window.webContents.loadURL).toHaveBeenCalledWith('about:blank')
   })
 
   it('makes closing a crashed or recovering window independent of the renderer', async () => {

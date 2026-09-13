@@ -129,10 +129,13 @@ const rendererRecovery = shouldAbortStartupForDebugFlags
       getLanguage: () => getConfig().softLange,
       reload: (target, ignoreCache) => {
         clearRenderMap(target)
-        if (ignoreCache) target.webContents.reloadIgnoringCache()
+        if (target === win && mainParked) {
+          mainParked = false
+          loadMainWindow()
+        } else if (ignoreCache) target.webContents.reloadIgnoringCache()
         else target.webContents.reload()
       },
-      backToConnection: () => reloadApplication(),
+      backToConnection: () => reloadApplication(false, true),
       exit: exitAfterRendererFailure,
       onGone: (target) => {
         clearRenderMap(target)
@@ -152,6 +155,7 @@ async function exitAfterRendererFailure() {
 /** 窗口对象 */
 let win = null
 let engineLinkWin = null
+let mainParked = false
 
 process.on('uncaughtException', (error) => {
   try {
@@ -270,6 +274,11 @@ function createEngineLinkWindow() {
  * ---------------- 创建主窗口 ----------------
  */
 let readyWinShow = false
+function loadMainWindow() {
+  if (isDev) void win.loadURL('http://127.0.0.1:3000').catch(() => {})
+  else void win.loadFile(path.resolve(__dirname, '../renderer/pages/main/index.html')).catch(() => {})
+}
+
 function createWindow() {
   const minWidth = 900
   const minHeight = 650
@@ -308,8 +317,7 @@ function createWindow() {
 
   rendererRecovery.attach(win, 'mainWin')
 
-  if (isDev) win.loadURL('http://127.0.0.1:3000')
-  else win.loadFile(path.resolve(__dirname, '../renderer/pages/main/index.html'))
+  loadMainWindow()
 
   if (isDev) win.webContents.openDevTools({ mode: 'detach' })
 
@@ -476,11 +484,16 @@ function getActiveWindow() {
 }
 
 // Returning to the connection flow is also available from the native recovery dialog.
-function reloadApplication(ignoreCache = false) {
+function reloadApplication(ignoreCache = false, parkMain = false) {
   lastEngineLinkCredential = null
   winHide(win)
   for (const target of [win, engineLinkWin]) {
-    if (target && !target.isDestroyed()) rendererRecovery.recover(target, ignoreCache)
+    if (!target || target.isDestroyed()) continue
+    if (parkMain && target === win) {
+      mainParked = true
+      clearRenderMap(win)
+      rendererRecovery.park(win)
+    } else rendererRecovery.recover(target, ignoreCache)
   }
   winShow(engineLinkWin, readyEngineLinkShow)
 }
@@ -508,12 +521,23 @@ function registerGlobalIPC() {
 
   // ------------------- render已准备好 -------------------
   ipcMain.on('engine-win-render-ok', (event) => {
-    if (event.sender !== engineLinkWin?.webContents) return
+    if (
+      event.sender !== engineLinkWin?.webContents ||
+      event.senderFrame !== engineLinkWin.webContents.mainFrame ||
+      engineLinkWin.webContents.isCrashed()
+    )
+      return
     markRenderOk(engineLinkWin)
     rendererRecovery.markReady(engineLinkWin)
   })
   ipcMain.on('main-win-uilayout-render-ok', (event) => {
-    if (event.sender !== win?.webContents) return
+    if (
+      event.sender !== win?.webContents ||
+      event.senderFrame !== win.webContents.mainFrame ||
+      win.webContents.isCrashed() ||
+      mainParked
+    )
+      return
     // 队列里已有 credential 时只冲刷，避免与首次入队重复推送
     const hadPending = (messageQueue.get(win.id) || []).some((m) => m.channel === 'from-engineLinkWin')
     markRenderOk(win)
@@ -529,6 +553,7 @@ function registerGlobalIPC() {
   ipcMain.handle('engineLinkWin-done', async (event, data) => {
     // 缓存 credential，供主窗口 F5 刷新后重推
     lastEngineLinkCredential = data
+    if (mainParked) rendererRecovery.recover(win)
     winHide(engineLinkWin)
     winShow(win, readyWinShow)
     safeSend(win, 'from-engineLinkWin', data)

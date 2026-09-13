@@ -8,6 +8,29 @@ const HISTORY_LIMIT = 12
 const INCIDENT_LIMIT = 10
 const LOG_TAIL_BYTES = 2 * 1024 * 1024
 const DUMP_MAX_BYTES = 32 * 1024 * 1024
+const MEMORY_CHANNEL = 'renderer-diagnostics:memory'
+const MEMORY_INTERVAL_MS = 1000
+const MEMORY_HISTORY_LIMIT = 60
+const MEMORY_FRESH_MS = 10_000
+
+function memoryAssessment(details, memory, pid) {
+  if (details.reason === 'oom') return { status: 'reported-oom', source: 'electron' }
+  const last = memory.at(-1)
+  const ageMs = last ? Math.max(0, Date.now() - last.receivedAt) : null
+  if (!last || last.rendererPid !== pid || ageMs > MEMORY_FRESH_MS) {
+    return { status: 'unknown', sampleAgeMs: ageMs }
+  }
+  const ratio = last.usedHeapKB / last.heapLimitKB
+  return {
+    // High usage is evidence of pressure, not proof of the cause of a native crash.
+    status: ratio >= 0.8 ? 'suspected-js-heap-pressure' : 'no-js-heap-pressure-observed',
+    sampleAgeMs: ageMs,
+    heapUsedRatio: ratio,
+    usedHeapKB: last.usedHeapKB,
+    heapLimitKB: last.heapLimitKB,
+    availableHeapKB: last.availableHeapKB,
+  }
+}
 
 // A rejected or stuck GPU query must never delay window creation or recovery.
 function settleWithin(read, timeoutMs = 1500) {
@@ -65,6 +88,7 @@ function createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, ge
   const history = []
   const windows = new Map()
   let timer
+  let memoryTimer
   let gpu = { status: 'pending' }
   let reporter = { enabled: false, uploadToServer: false }
   const base = {
@@ -127,13 +151,89 @@ function createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, ge
   }
 
   function snapshot() {
-    return { time: new Date().toISOString(), base, gpu, reporter, current: sample(), history: history.slice() }
+    return {
+      time: new Date().toISOString(),
+      base,
+      gpu,
+      reporter,
+      current: sample(),
+      history: history.slice(),
+      rendererMemory: [...windows.values()].map(({ name, rendererPid, memory }) => ({
+        name,
+        rendererPid,
+        samples: memory.slice(),
+      })),
+    }
   }
 
   function trackWindow(window, name) {
-    windows.set(window, { name, windowId: window.id, webContentsId: window.webContents.id, rendererPid: null })
+    const identity = {
+      name,
+      windowId: window.id,
+      webContentsId: window.webContents.id,
+      rendererPid: null,
+      memory: [],
+      pending: null,
+      lastPressureAt: -Infinity,
+    }
+    windows.set(window, identity)
     window.webContents.on('did-finish-load', sample)
+    window.webContents.on('dom-ready', () => {
+      identity.pending = null
+      requestMemory(window, identity)
+    })
+    window.webContents.on('did-start-loading', () => {
+      identity.pending = null
+    })
+    window.webContents.on('ipc-message', (event, channel, nonce, payload) => {
+      if (
+        channel !== MEMORY_CHANNEL ||
+        !identity.pending ||
+        nonce !== identity.pending.nonce ||
+        event.senderFrame !== window.webContents.mainFrame
+      )
+        return
+      const pending = identity.pending
+      identity.pending = null
+      const keys = ['usedHeapKB', 'heapLimitKB', 'availableHeapKB', 'blinkAllocatedKB', 'blinkTotalKB']
+      if (
+        !payload ||
+        keys.some((key) => !Number.isSafeInteger(payload[key]) || payload[key] < 0) ||
+        payload.heapLimitKB === 0 ||
+        payload.usedHeapKB > payload.heapLimitKB
+      )
+        return
+      const value = { receivedAt: Date.now(), rendererPid: pending.pid }
+      for (const key of keys) value[key] = payload[key]
+      identity.memory.push(value)
+      if (identity.memory.length > MEMORY_HISTORY_LIMIT) identity.memory.shift()
+      if (value.usedHeapKB / value.heapLimitKB >= 0.8 && Date.now() - identity.lastPressureAt >= 60_000) {
+        identity.lastPressureAt = Date.now()
+        record('renderer-memory-pressure', { source: 'v8-heap' }, window)
+      }
+    })
     window.once('closed', () => windows.delete(window))
+  }
+
+  function requestMemory(window, identity) {
+    try {
+      // One outstanding request per window: a hung renderer cannot accumulate polling IPC.
+      if (
+        identity.pending ||
+        window.isDestroyed() ||
+        window.webContents.isDestroyed() ||
+        window.webContents.isCrashed()
+      )
+        return
+      const pid = window.webContents.getOSProcessId()
+      if (!pid) return
+      identity.rendererPid = pid
+      const nonce = randomUUID()
+      identity.pending = { nonce, pid }
+      window.webContents.send(MEMORY_CHANNEL, nonce)
+    } catch {
+      identity.pending = null
+    }
   }
 
   async function start() {
@@ -141,6 +241,10 @@ function createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, ge
     sample()
     timer = setInterval(sample, SAMPLE_INTERVAL_MS)
     timer.unref?.()
+    memoryTimer = setInterval(() => {
+      for (const [window, identity] of windows) requestMemory(window, identity)
+    }, MEMORY_INTERVAL_MS)
+    memoryTimer.unref?.()
     const [gpuFeatureStatus, gpuInfoBasic, gpuInfoComplete] = await Promise.all([
       settleWithin(() => app.getGPUFeatureStatus()),
       settleWithin(() => app.getGPUInfo('basic')),
@@ -152,7 +256,15 @@ function createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, ge
 
   function record(event, details = {}, window) {
     // Copy the pre-crash identity before sampling: a dead renderer's PID may already be 0.
-    const identity = windows.get(window) ? { ...windows.get(window) } : null
+    const tracked = windows.get(window)
+    const identity = tracked
+      ? {
+          name: tracked.name,
+          windowId: tracked.windowId,
+          webContentsId: tracked.webContentsId,
+          rendererPid: tracked.rendererPid,
+        }
+      : null
     const incident = {
       schemaVersion: 1,
       id: `incident-${Date.now()}-${randomUUID()}`,
@@ -160,6 +272,7 @@ function createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, ge
       event,
       details,
       window: identity,
+      memoryAssessment: memoryAssessment(details, tracked?.memory || [], identity?.rendererPid),
       snapshot: snapshot(),
       crashDumps,
     }
@@ -217,7 +330,7 @@ function createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, ge
         }
       }
       const incidents = listFiles(directory, (name) => /^incident-.*\.json$/.test(name)).slice(0, INCIDENT_LIMIT)
-      // Crashpad uses reports on macOS and pending/completed on other platforms.
+      // Crashpad's layout varies by platform and Electron version (macOS 27 also uses pending).
       const dumps = ['', 'reports', 'pending', 'completed']
         .flatMap((subdir) => listFiles(path.join(crashDumps, subdir), (name) => name.endsWith('.dmp')))
         .sort((a, b) => b.mtimeMs - a.mtimeMs)
@@ -234,6 +347,14 @@ function createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, ge
         } catch (error) {
           manifest.files.push({ name, error: String(error?.message || error) })
         }
+      }
+      const includedDumps = manifest.files.filter(
+        (entry) => entry.name.endsWith('.dmp') && entry.includedBytes > 0,
+      ).length
+      manifest.dumpCollection = {
+        status: includedDumps ? 'included' : dumps.length ? 'unavailable' : 'no-dump-found',
+        candidates: dumps.length,
+        included: includedDumps,
       }
       await fs.promises.writeFile(path.join(staging, 'manifest.json'), JSON.stringify(manifest, null, 2))
       await require('compressing').zip.compressDir(
@@ -258,8 +379,19 @@ function createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, ge
     trackWindow,
     record,
     exportBundle,
-    stop: () => clearInterval(timer),
+    stop: () => {
+      clearInterval(timer)
+      clearInterval(memoryTimer)
+    },
   }
 }
 
-module.exports = { createRendererDiagnostics, settleWithin, HISTORY_LIMIT, INCIDENT_LIMIT, LOG_TAIL_BYTES }
+module.exports = {
+  createRendererDiagnostics,
+  settleWithin,
+  HISTORY_LIMIT,
+  INCIDENT_LIMIT,
+  LOG_TAIL_BYTES,
+  MEMORY_CHANNEL,
+  MEMORY_HISTORY_LIMIT,
+}
