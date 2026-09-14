@@ -130,9 +130,11 @@
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
     "rc-motion": "2.9.5",
-    "rc-resize-observer": "1.4.3"
+    "rc-resize-observer": "1.4.3",
+    "react-draggable": "4.5.0"
   },
   "devDependencies": {
+    "@babel/core": "7.29.7",
     "@eslint/js": "^9.39.1",
     "@rolldown/plugin-babel": "0.2.3",
     "@testing-library/dom": "^10.4.0",
