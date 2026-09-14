@@ -60,7 +60,7 @@ import {
   ShieldCheckSolid,
 } from '@yakit-libs/yakit-ui-icons/solid'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { BlastingAnimationAemonstration } from '../fuzzer/HTTPFuzzerPage'
+import { BlastingAnimationAemonstration, SequenceAnimationAemonstration } from '../fuzzer/AnimationAemonstration'
 import {
   ArrowRightOutlined,
   ChartBarOutlined,
@@ -70,7 +70,6 @@ import {
   QuestionMarkCircleOutlined,
   CloudDownloadOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { SequenceAnimationAemonstration } from '../fuzzer/FuzzerSequence/FuzzerSequence'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import type { RouteToPageProps } from '../layout/publicMenu/PublicMenu'

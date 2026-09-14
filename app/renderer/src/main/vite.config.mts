@@ -188,8 +188,6 @@ export default defineConfig(({ mode }) => {
           './src/auxWindow/aux-entry.tsx',
           './src/newApp/NewApp.tsx',
           './src/components/layout/UILayout.tsx',
-          './src/pages/mitm/MITMServerHijacking/MITMPluginOnline.tsx',
-          './src/pages/softwareSettings/ProjectManage.tsx',
           // 已有动态边界：NewApp lazy MainOperator；UILayout lazy SoftwareSettings
           './src/pages/MainOperator.tsx',
           './src/pages/softwareSettings/SoftwareSettings.tsx',
@@ -198,7 +196,11 @@ export default defineConfig(({ mode }) => {
           './src/pages/irifyAiCodeAudit/MarkdownPdfPrint/MarkdownPdfPrintPage.tsx',
           // 主窗模块初始化无条件动态 import
           './src/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge.ts',
-          // UILayout 无条件挂载 PluginHasParamsModal（visible=false 仍会初始化 lazy 模块）
+          // UILayout lazy 化后启动即触发的动态边界（无条件挂载，visible=false 仍会初始化 lazy 模块）：
+          // 顶部状态条 PerformanceDisplay、项目导出弹窗、一键下载插件、带参插件弹窗
+          './src/components/layout/PerformanceDisplay.tsx',
+          './src/pages/softwareSettings/ProjectManage.tsx',
+          './src/pages/mitm/MITMServerHijacking/MITMPluginOnline.tsx',
           './src/components/pluginHasParamsDrawer/PluginHasParamsDrawer.tsx',
           // 发行版启动状态机自动选择的主体（inactive 页签 hasMounted=false，不预热）
           './src/pages/EnterpriseJudgeLogin.tsx',
@@ -334,6 +336,15 @@ export default defineConfig(({ mode }) => {
         output: {
           codeSplitting: {
             groups: [
+              {
+                // react 本体会被 rolldown 合并进 monaco/streamdown 组，导致任何引 react 的 chunk
+                // 都必须整包 import 3.5MB 的 vendor-monaco。这里用更高优先级把 react 单独抽出。
+                // @babel/runtime helpers、rc-* 基础件被全图共享，同样会被卷进大 vendor 组，
+                // 一并纳入高优先级组，避免 antd/notification 入口链反向拖动 streamdown/monaco。
+                name: 'vendor-react',
+                test: /[\\/]node_modules[\\/](react|react-dom|scheduler|@babel[\\/]runtime|rc-[a-z-]+|@rc-component)([\\/]|$)/,
+                priority: 60,
+              },
               {
                 name: 'vendor-monaco',
                 test: /[\\/]node_modules[\\/](monaco-editor|react-monaco-editor)([\\/]|$)/,

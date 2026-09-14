@@ -1,0 +1,33 @@
+.blasting-animation-aemonstration {
+  padding: 16px;
+  padding-top: 0;
+  .animation-cont-wrap {
+    margin-top: 16px;
+    width: 100%;
+    height: 300px;
+    border-radius: 10px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    overflow: hidden;
+    background-color: var(--Colors-Use-Basic-White);
+    video {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+.sequence-animation-aemonstration {
+  padding: 16px;
+  .animation-cont-wrap {
+    width: 100%;
+    height: 410px;
+    border-radius: 10px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    overflow: hidden;
+    background-color: var(--Colors-Use-Basic-White);
+    video {
+      width: 100%;
+      height: 410px;
+    }
+  }
+}
