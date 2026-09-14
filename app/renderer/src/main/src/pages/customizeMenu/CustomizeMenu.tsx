@@ -13,12 +13,10 @@ import type {
   SystemRouteMenuDataItemProps,
 } from './CustomizeMenuType'
 import style from './CustomizeMenu.module.scss'
-import {
-  SolidCloudpluginIcon,
-  SolidOfficialpluginIcon,
-  SolidPrivatepluginIcon,
-  PrivateOutlineDefaultPluginIcon,
-} from '@yakit-libs/yakit-ui-icons/oldicon'
+import { SolidCloudpluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidCloudpluginIcon'
+import { SolidOfficialpluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidOfficialpluginIcon'
+import { SolidPrivatepluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidPrivatepluginIcon'
+import { PrivateOutlineDefaultPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineDefaultPluginIcon'
 import classNames from 'classnames'
 import {
   DragDropContext,

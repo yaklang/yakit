@@ -1,6 +1,6 @@
 import React from 'react'
 import { Form } from 'antd'
-import { ResizerIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
+import { ResizerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ResizerIcon'
 import { AutoTextarea } from '../components/AutoTextarea/AutoTextarea'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './HttpQueryAdvancedConfig.module.scss'

@@ -1,56 +1,54 @@
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState, type ReactElement, type CSSProperties } from 'react'
 import classNames from 'classnames'
-import {
-  PublicBasicCrawlerIcon,
-  PublicBatchExecutorIcon,
-  PublicBlastingIcon,
-  PublicBruteIcon,
-  PublicCodecIcon,
-  PublicDNSLogIcon,
-  PublicDirectoryScanningIcon,
-  PublicInformationGatheringIcon,
-  PublicMitmIcon,
-  PublicNotepadIcon,
-  PublicNotepadManagerIcon,
-  PublicPayloadGeneraterIcon,
-  PublicPayloadManagerIcon,
-  PublicPluginLocalIcon,
-  PublicPluginMineIcon,
-  PublicPluginStoreIcon,
-  PublicPocIcon,
-  PublicPublicToolLightbulbIcon,
-  PublicScanPortIcon,
-  PublicSequenceAnimationIcon,
-  PublicSpaceEngineIcon,
-  PublicSubDomainCollectionIcon,
-  PublicToolBasicCrawlerIcon,
-  PublicToolCVEIcon,
-  PublicToolDBDomainIcon,
-  PublicToolDBHTTPHistoryIcon,
-  PublicToolDBReportIcon,
-  PublicToolDBRiskIcon,
-  PublicToolDataCompareIcon,
-  PublicToolICMPSizeLogIcon,
-  PublicToolModScanPortIcon,
-  PublicToolPayloadIcon,
-  PublicToolPluginHubIcon,
-  PublicToolReverseServerIcon,
-  PublicToolScreenRecorderPageIcon,
-  PublicToolScreenRecordingIcon,
-  PublicToolScreenshotIcon,
-  PublicToolShellReceiverIcon,
-  PublicToolSpaceEngineIcon,
-  PublicToolSubDomainCollectionIcon,
-  PublicToolTCPPortLogIcon,
-  PublicToolVulinboxIcon,
-  PublicToolWebsocketFuzzerIcon,
-  PublicWebFuzzerIcon,
-  OutlineBugIcon,
-  OutlineModScanPortDataIcon,
-  OutlineTrashSecondIcon,
-  SolidBorderDocumentTextIcon,
-} from '@yakit-libs/yakit-ui-icons/oldicon'
+import { PublicBasicCrawlerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicBasicCrawlerIcon'
+import { PublicBatchExecutorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicBatchExecutorIcon'
+import { PublicBlastingIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicBlastingIcon'
+import { PublicBruteIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicBruteIcon'
+import { PublicCodecIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicCodecIcon'
+import { PublicDNSLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicDNSLogIcon'
+import { PublicDirectoryScanningIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicDirectoryScanningIcon'
+import { PublicInformationGatheringIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicInformationGatheringIcon'
+import { PublicMitmIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicMitmIcon'
+import { PublicNotepadIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicNotepadIcon'
+import { PublicNotepadManagerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicNotepadManagerIcon'
+import { PublicPayloadGeneraterIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPayloadGeneraterIcon'
+import { PublicPayloadManagerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPayloadManagerIcon'
+import { PublicPluginLocalIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPluginLocalIcon'
+import { PublicPluginMineIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPluginMineIcon'
+import { PublicPluginStoreIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPluginStoreIcon'
+import { PublicPocIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPocIcon'
+import { PublicPublicToolLightbulbIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPublicToolLightbulbIcon'
+import { PublicScanPortIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicScanPortIcon'
+import { PublicSequenceAnimationIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicSequenceAnimationIcon'
+import { PublicSpaceEngineIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicSpaceEngineIcon'
+import { PublicSubDomainCollectionIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicSubDomainCollectionIcon'
+import { PublicToolBasicCrawlerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolBasicCrawlerIcon'
+import { PublicToolCVEIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolCVEIcon'
+import { PublicToolDBDomainIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolDBDomainIcon'
+import { PublicToolDBHTTPHistoryIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolDBHTTPHistoryIcon'
+import { PublicToolDBReportIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolDBReportIcon'
+import { PublicToolDBRiskIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolDBRiskIcon'
+import { PublicToolDataCompareIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolDataCompareIcon'
+import { PublicToolICMPSizeLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolICMPSizeLogIcon'
+import { PublicToolModScanPortIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolModScanPortIcon'
+import { PublicToolPayloadIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolPayloadIcon'
+import { PublicToolPluginHubIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolPluginHubIcon'
+import { PublicToolReverseServerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolReverseServerIcon'
+import { PublicToolScreenRecorderPageIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolScreenRecorderPageIcon'
+import { PublicToolScreenRecordingIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolScreenRecordingIcon'
+import { PublicToolScreenshotIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolScreenshotIcon'
+import { PublicToolShellReceiverIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolShellReceiverIcon'
+import { PublicToolSpaceEngineIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolSpaceEngineIcon'
+import { PublicToolSubDomainCollectionIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolSubDomainCollectionIcon'
+import { PublicToolTCPPortLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolTCPPortLogIcon'
+import { PublicToolVulinboxIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolVulinboxIcon'
+import { PublicToolWebsocketFuzzerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolWebsocketFuzzerIcon'
+import { PublicWebFuzzerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicWebFuzzerIcon'
+import { OutlineBugIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineBugIcon'
+import { OutlineModScanPortDataIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineModScanPortDataIcon'
+import { OutlineTrashSecondIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineTrashSecondIcon'
+import { SolidBorderDocumentTextIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidBorderDocumentTextIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   CheckSolid,

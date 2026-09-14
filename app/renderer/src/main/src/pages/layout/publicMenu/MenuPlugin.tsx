@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react'
-import { ChevronUpIcon, SMViewGridAddIcon, PublicDefaultPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
+import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronUpIcon'
+import { SMViewGridAddIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SMViewGridAddIcon'
+import { PublicDefaultPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicDefaultPluginIcon'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { useMemoizedFn } from 'ahooks'
 import type { EnhancedPublicRouteMenuProps } from './utils'
