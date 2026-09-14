@@ -355,6 +355,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
     filterTagDom,
     website = false,
     isCrawler = false,
+    sourceType,
     showAdvancedSearch = false,
     showSetting = false,
   } = props
@@ -419,7 +420,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
             pageType="Plugin"
             runtimeId={runtimeId}
             filterTagDom={filterTagDom}
-            params={{ SourceType: isCrawler ? 'basic-crawler' : 'scan' }}
+            params={{ SourceType: sourceType ?? (isCrawler ? 'basic-crawler' : 'scan') }}
             httpHistoryTableTitleStyle={{
               paddingTop: 12,
               paddingLeft: 8,

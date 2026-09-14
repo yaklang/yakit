@@ -39,6 +39,7 @@ import classNames from 'classnames'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { binaryDisplayEnabledStore, useBinaryDisplayEnabled } from '@/store/binaryDisplayEnabled'
 import { YakitResizeBox } from './yakitUI/YakitResizeBox/YakitResizeBox'
+import { BrowserHTTPGateway } from './BrowserHTTPGateway'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
 import { YakitCheckableTag } from './yakitUI/YakitTag/YakitCheckableTag'
 import { CopyComponents, YakitTag } from './yakitUI/YakitTag/YakitTag'
@@ -1420,6 +1421,19 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
   // 编辑器实例
   const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
   const [resEditor, setResEditor] = useState<IMonacoEditor>()
+  const isBrowserPlaintextFlow = flow?.Tags?.split('|').includes('[浏览器明文网关]') || false
+  const requestLabel = isBrowserPlaintextFlow
+    ? t('HTTPFlowDetailRequestAndResponse.plaintextRequest')
+    : t('HTTPFlowDetailRequestAndResponse.request')
+  const bareRequestLabel = isBrowserPlaintextFlow
+    ? t('HTTPFlowDetailRequestAndResponse.wireRequest')
+    : t('HTTPFlowDetailRequestAndResponse.rawRequest')
+  const responseLabel = isBrowserPlaintextFlow
+    ? t('HTTPFlowDetailRequestAndResponse.plaintextResponse')
+    : t('HTTPFlowDetailRequestAndResponse.response')
+  const bareResponseLabel = isBrowserPlaintextFlow
+    ? t('HTTPFlowDetailRequestAndResponse.wireResponse')
+    : t('HTTPFlowDetailRequestAndResponse.rawResponse')
 
   useEffect(() => {
     if (reqEditor) {
@@ -1462,9 +1476,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     const showManualModifyBare =
       existedTags.includes('[手动修改]') || existedTags.includes('[响应被丢弃]') || existedTags.includes('[规则修改]')
     const showAutoFixBare = existedTags.includes('[自动修复]')
-    if (showManualModifyBare || showAutoFixBare) {
+    const showBrowserPlaintextBare = existedTags.includes('[浏览器明文网关]')
+    if (showManualModifyBare || showAutoFixBare || showBrowserPlaintextBare) {
       setShowBeforeData(true)
-      if (showManualModifyBare) {
+      if (showManualModifyBare || showBrowserPlaintextBare) {
         handleGetHTTPFlowBare('request')
       } else {
         setBeforeResValue('')
@@ -1817,8 +1832,21 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     })
   }
   const fromMITM = useMemo(() => props.pageType === 'MITM', [props.pageType])
-  return (
+  const packets = (
     <YakitResizeBox
+      separatorNode={
+        isBrowserPlaintextFlow && flow?.Id === id ? (
+          <BrowserHTTPGateway
+            key={id}
+            id={id}
+            request={fetchSsafeHTTPRequest()}
+            wireRequest={beforeResValue}
+            response={flow?.ResponseString || ''}
+            wireResponse={beforeRspValue}
+          />
+        ) : undefined
+      }
+      style={{ flex: 1, minHeight: 0 }}
       firstNode={() => {
         if (flow === undefined) {
           return <YakitEmpty title={t('HTTPFlowDetailRequestAndResponse.selectHttpRecordToView')} />
@@ -1844,7 +1872,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             isShowBeautifyRender={!flow?.IsTooLargeRequest}
             title={(() => {
               const titleEle: ReactNode[] = []
-              if (isShowBeforeData && beforeResValue.length > 0) {
+              if (!isBrowserPlaintextFlow && isShowBeforeData && beforeResValue.length > 0) {
                 titleEle.push(
                   <div className={classNames(styles['type-options-checkable-tag'])} key="type-options-checkable-tag">
                     <YakitCheckableTag
@@ -1855,7 +1883,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }
                       }}
                     >
-                      {t('HTTPFlowDetailRequestAndResponse.request')}
+                      {requestLabel}
                     </YakitCheckableTag>
                     <YakitCheckableTag
                       checked={resType === 'request'}
@@ -1865,14 +1893,14 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }
                       }}
                     >
-                      {t('HTTPFlowDetailRequestAndResponse.rawRequest')}
+                      {bareRequestLabel}
                     </YakitCheckableTag>
                   </div>,
                 )
               } else {
                 titleEle.push(
                   <span style={{ fontSize: 12 }} key="Request">
-                    Request
+                    {isBrowserPlaintextFlow ? requestLabel : 'Request'}
                   </span>,
                 )
               }
@@ -1937,8 +1965,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             dataCompare={{
               rightCode: beforeResValue,
               leftCode: resType === 'request' ? flow?.RequestString || '' : undefined,
-              leftTitle: t('HTTPFlowDetailRequestAndResponse.request'),
-              rightTitle: t('HTTPFlowDetailRequestAndResponse.rawRequest'),
+              leftTitle: requestLabel,
+              rightTitle: bareRequestLabel,
             }}
             onEditor={(Editor) => {
               setReqEditor(Editor)
@@ -2006,7 +2034,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                   Response
                 </span>,
               ]
-              if (isShowBeforeData && beforeRspValue.length > 0) {
+              if (!isBrowserPlaintextFlow && isShowBeforeData && beforeRspValue.length > 0) {
                 titleEle = [
                   <div className={classNames(styles['type-options-checkable-tag'])} key={'title-Res'}>
                     <YakitCheckableTag
@@ -2017,7 +2045,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }
                       }}
                     >
-                      {t('HTTPFlowDetailRequestAndResponse.response')}
+                      {responseLabel}
                     </YakitCheckableTag>
                     <YakitCheckableTag
                       checked={rspType === 'response'}
@@ -2027,7 +2055,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }
                       }}
                     >
-                      {t('HTTPFlowDetailRequestAndResponse.rawResponse')}
+                      {bareResponseLabel}
                     </YakitCheckableTag>
                   </div>,
                 ]
@@ -2087,8 +2115,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             dataCompare={{
               rightCode: beforeRspValue,
               leftCode: rspType === 'response' ? flow?.ResponseString || '' : undefined,
-              leftTitle: t('HTTPFlowDetailRequestAndResponse.response'),
-              rightTitle: t('HTTPFlowDetailRequestAndResponse.rawResponse'),
+              leftTitle: responseLabel,
+              rightTitle: bareResponseLabel,
             }}
             onEditor={(Editor) => {
               setResEditor(Editor)
@@ -2118,6 +2146,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
       secondMinSize={300}
     />
   )
+  return packets
 })
 
 export { CodingPopover } from './HTTPFlowDetailParts'

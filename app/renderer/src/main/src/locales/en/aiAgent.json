@@ -517,7 +517,29 @@
     "relatedRisks": "Risks",
     "httpTraffic": "Traffic",
     "refreshCodeBlockData": "Refresh Code Block Data",
-    "paramsGenerating": "Generating parameters..."
+    "paramsGenerating": "Generating parameters...",
+    "browserHTTP": {
+      "request": "Request",
+      "response": "Response",
+      "requestFlow": "Plaintext request → Wire request",
+      "responseFlow": "Wire response → Plaintext response",
+      "plaintextRequest": "Edited plaintext request",
+      "wireRequest": "Gateway-transformed wire request",
+      "wireResponse": "Server wire response",
+      "plaintextResponse": "Gateway-transformed plaintext response",
+      "truncated": "truncated",
+      "packetTitle": "Plaintext gateway packets",
+      "instance": "Instance {{ref}}",
+      "plainRequest": "Plaintext request",
+      "gateway": "Plaintext gateway",
+      "onlineResponse": "Wire response",
+      "changed": " changed",
+      "unchanged": " unchanged",
+      "disabled": " disabled",
+      "viewPackets": "View packets",
+      "loading": "Loading structured packets…",
+      "unavailable": "No structured packets received; use Refresh to retry"
+    }
   },
   "FileTreeSystemItem": {
     "joinPathFailed": "Path join failed",

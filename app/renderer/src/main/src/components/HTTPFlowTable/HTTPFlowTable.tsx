@@ -780,7 +780,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     getAdditionalServerPushActive: () => pageType === 'MITM' && httpFlowLiveStreamController.snapshot().active,
     defaultParams: {
       Filter: {
-        SourceType: props.params?.SourceType || 'mitm',
+        SourceType: props.params?.SourceType ?? 'mitm',
         ...getRunTimeIdObj(runTimeId),
         FromPlugin: '',
         Full: false,
@@ -2556,7 +2556,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const resetParams = useMemo(() => {
     const obj: YakQueryHTTPFlowRequest = {
       // 这里是外界传进来的条件重置时需要保留
-      SourceType: props.params?.SourceType || 'mitm',
+      SourceType: props.params?.SourceType ?? 'mitm',
       ...getRunTimeIdObj(runTimeId),
       Full: false,
       // MITM “清空视图”使用持久高水位隔离本次会话之前的数据。

@@ -202,6 +202,8 @@ interface MouseUpCallBackProps {
 }
 
 export interface YakitResizeBoxProps {
+  /** 两个面板之间的独立操作区，不参与拖拽事件 */
+  separatorNode?: React.ReactNode
   /** 是否为竖向拖拽 默认横向拖拽 */
   isVer?: boolean
   /** 是否拖拽立即生效 默认为拖拽完成生效 */
@@ -525,6 +527,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
       ) : (
         <div style={lineStyle} />
       )}
+      {props.separatorNode}
       <div
         ref={secondRef}
         style={{
