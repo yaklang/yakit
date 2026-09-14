@@ -523,7 +523,29 @@
     "httpTraffic": "流量",
     "refreshCodeBlockData": "刷新代码块数据",
     "paramsGenerating": "参数生成中...",
-    "executing": "执行中..."
+    "executing": "执行中...",
+    "browserHTTP": {
+      "request": "请求",
+      "response": "响应",
+      "requestFlow": "明文请求 → 线上请求",
+      "responseFlow": "线上响应 → 明文响应",
+      "plaintextRequest": "编辑的明文请求",
+      "wireRequest": "网关转换后的线上请求",
+      "wireResponse": "服务器线上响应",
+      "plaintextResponse": "网关转换后的明文响应",
+      "truncated": "已截断",
+      "packetTitle": "明文网关数据包",
+      "instance": "实例 {{ref}}",
+      "plainRequest": "明文请求",
+      "gateway": "明文网关",
+      "onlineResponse": "线上响应",
+      "changed": "已变化",
+      "unchanged": "未变化",
+      "disabled": "未启用",
+      "viewPackets": "查看前后数据包",
+      "loading": "正在读取结构化数据包…",
+      "unavailable": "未收到结构化数据包，可点击右上角刷新"
+    }
   },
   "FileTreeSystemItem": {
     "joinPathFailed": "路径拼接失败",

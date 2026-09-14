@@ -71,6 +71,32 @@ describe('aiToolResult handlers', () => {
     expect(req.pushLog).not.toHaveBeenCalled()
   })
 
+  it('keeps tool_call_result as structured data on the tool card', async () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('tool_call_start', {
+        call_tool_id: 'call-browser-http',
+        tool: { name: 'browser.http.test', description: 'd' },
+      }),
+    })
+    aiToolResultDataHandlers.tool_call_start(req)
+    const executionResult = {
+      stdout: '',
+      stderr: '',
+      combined_output: '',
+      result: { browserRef: 'A', statusCode: 200 },
+    }
+
+    await aiToolResultDataHandlers.tool_call_result({
+      ...req,
+      res: makeGrpcJsonRes('tool_call_result', {
+        call_tool_id: 'call-browser-http',
+        result: executionResult,
+      }),
+    })
+
+    expect((req.rawData.contents.get('call-browser-http') as any).data.tool.executionResult).toEqual(executionResult)
+  })
+
   it('D6: handler keys registered', () => {
     for (const key of Object.keys(aiToolResultDataHandlers)) {
       expect(typeof (aiToolResultDataHandlers as any)[key]).toBe('function')

@@ -189,6 +189,11 @@ export interface AIStreamOutput {
   selectors?: ToolStreamSelectors
 }
 
+/** tool_call_result 事件中的结构化工具结果 */
+export interface AIToolCallResultOutput extends AIStreamOutput {
+  executionResult: unknown
+}
+
 /** 工具结果的信息内容 */
 export interface AIToolResult {
   type: 'create' | 'stream' | 'result'
@@ -229,6 +234,8 @@ export interface AIToolResult {
     dirPath: string
     /** 工具执行结果详情数据 */
     resultDetails: string
+    /** 工具回调的结构化结果；不要从 stdout/resultDetails 反向解析 */
+    executionResult?: unknown
     /** review参数信息 */
     reviewParams?: AIAgentGrpcApi.ToolUseReviewRequire['params']
     /** 工具调用理由 */
@@ -442,7 +449,7 @@ export interface AIChatQSDataBase<T extends string, U> {
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
-type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIStreamOutput>
+type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIToolCallResultOutput>
 type ChatToolCallParams = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_PARAM, AIAgentGrpcApi.AIToolCallParams>
 type ChatApiRequestFailed = AIChatQSDataBase<
   AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,

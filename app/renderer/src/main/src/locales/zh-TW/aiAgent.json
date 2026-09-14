@@ -523,7 +523,29 @@
     "httpTraffic": "流量",
     "refreshCodeBlockData": "重新整理程式碼塊資料",
     "paramsGenerating": "參數生成中...",
-    "executing": "執行中..."
+    "executing": "執行中...",
+    "browserHTTP": {
+      "request": "請求",
+      "response": "響應",
+      "requestFlow": "明文請求 → 線上請求",
+      "responseFlow": "線上響應 → 明文響應",
+      "plaintextRequest": "編輯的明文請求",
+      "wireRequest": "閘道轉換後的線上請求",
+      "wireResponse": "伺服器線上響應",
+      "plaintextResponse": "閘道轉換後的明文響應",
+      "truncated": "已截斷",
+      "packetTitle": "明文閘道資料包",
+      "instance": "實例 {{ref}}",
+      "plainRequest": "明文請求",
+      "gateway": "明文閘道",
+      "onlineResponse": "線上響應",
+      "changed": "已變化",
+      "unchanged": "未變化",
+      "disabled": "未啟用",
+      "viewPackets": "查看前後資料包",
+      "loading": "正在讀取結構化資料包…",
+      "unavailable": "未收到結構化資料包，可點擊右上角重新整理"
+    }
   },
   "FileTreeSystemItem": {
     "joinPathFailed": "路徑拼接失敗",

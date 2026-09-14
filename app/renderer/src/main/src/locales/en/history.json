@@ -1,4 +1,75 @@
 {
+  "BrowserHTTPGateway": {
+    "envelopeChanges": "Packet formatting changes",
+    "boundCall": "Bound page call",
+    "sections": {
+      "inputRequest": "Plaintext input",
+      "inputResponse": "Server response",
+      "transform": "Browser extension transform",
+      "sendRequest": "Send wire request",
+      "returnResponse": "Return result"
+    },
+    "sectionHint": {
+      "0": "Inspect the actual input",
+      "1": "Inspect the data changes",
+      "2": "Inspect the complete output"
+    },
+    "sectionDescription": {
+      "0": "Field values read from the saved input packet.",
+      "1": "The page function performs the transformation. Below are actual field values from the input and final output packets.",
+      "2": "The final saved packet shows what was sent or returned."
+    },
+    "beforeValue": "Value in input packet",
+    "afterValue": "Value in output packet",
+    "pageFunction": "Page function",
+    "technical": "View underlying configuration",
+    "valueUnavailable": "Field absent or packet encoding cannot be read directly. Inspect the full packet.",
+    "showPacket": "View full packet",
+    "hidePacket": "Hide full packet",
+    "railLabel": "Gateway",
+    "process": "Extension pipeline",
+    "input": "Input fields",
+    "output": "Output fields",
+    "packet": "Full packet",
+    "before": "Before",
+    "after": "After",
+    "state": {
+      "unknown": "No evidence",
+      "failed": "Failed",
+      "disabled": "Not transformed",
+      "executed": "Executed",
+      "loadFailed": "Load failed"
+    },
+    "owner": {
+      "unknown": "Owner not recorded",
+      "page": "Browser page",
+      "extension": "Browser extension",
+      "engine": "Yak engine"
+    },
+    "title": "Browser extension · Plaintext gateway",
+    "browser": "Browser {{ref}}",
+    "ownership": "AI supplies test data; the browser extension calls page functions to transform it; the Yak engine sends and records HTTP traffic.",
+    "request": "Request transformation",
+    "response": "Response transformation",
+    "unknown": "Detailed transformation evidence was not saved. Packet differences alone do not prove encryption or decryption.",
+    "failed": "Response transformation failed. The original server response is preserved.",
+    "disabled": "Transformation was disabled for this direction. Response formatting differences may come from HTTP normalization.",
+    "executed": "The extension executed this transformation. Execution does not prove business success; inspect the response.",
+    "loadFailed": "Could not load transformation evidence. Saved packets remain available.",
+    "responseEnabled": "Response transformation enabled",
+    "responseDisabled": "Response not transformed",
+    "steps": "View extension steps and field mappings",
+    "requestBefore": "Request submitted to the gateway",
+    "requestAfter": "Request sent to the server",
+    "responseBefore": "Original server response",
+    "responseAfter": "Gateway response (original when not transformed)",
+    "packetMissing": "Before/after packets are not loaded or were not saved.",
+    "proof": {
+      "exact": "Preparation: sample packets matched; this does not prove business success.",
+      "structure": "Preparation: structure only; input semantics and business success are unverified.",
+      "execution": "Preparation: execution only; equivalence to native packets is unverified."
+    }
+  },
   "HTTPHistory": {
     "websiteTree": "Website Tree",
     "process": "Process",
@@ -261,10 +332,14 @@
     "selectHttpRecordToView": "Select an HTTP record to view the request",
     "request": "Request",
     "rawRequest": "Raw Request",
+    "plaintextRequest": "Gateway input request",
+    "wireRequest": "Sent request",
     "containsBinaryStream": "Contains binary stream",
     "selectHttpRecordResponseToView": "Select an HTTP record to view the response",
     "response": "Response",
     "rawResponse": "Raw Response",
+    "plaintextResponse": "Gateway response",
+    "wireResponse": "Original server response",
     "oversizedRequest": "Oversized request",
     "oversizedResponse": "Oversized response",
     "editTag": "Edit tag",
