@@ -1,4 +1,5 @@
-import { FolderDefault, FolderDefaultExpanded, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
+import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
+import { FolderOpenOutlined, FolderOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { type FC, useEffect, useMemo, useRef, useState } from 'react'
 import styles from './FileTreeSystemItem.module.scss'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
@@ -218,11 +219,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
   })
 
   // 文件图标
-  const iconImage = useMemo(() => {
-    if (!data.isFolder) return KeyToIcon[data.icon].iconPath
-    if (expanded) return KeyToIcon[FolderDefaultExpanded].iconPath
-    return KeyToIcon[FolderDefault].iconPath
-  }, [data.icon, data.isFolder, expanded])
+  const FolderIcon = expanded ? FolderOpenOutlined : FolderOutlined
 
   // 菜单数据
   const menuData = useMemo(() => {
@@ -331,7 +328,11 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
             }}
           />
         )}
-        <img src={iconImage} alt="" />
+        {data.isFolder ? (
+          <FolderIcon className={styles['folder-icon']} color="currentColor" />
+        ) : (
+          <img src={KeyToIcon[data.icon].iconPath} alt="" />
+        )}
         {isInput ? (
           <div className={styles['file-tree-input-wrapper']}>
             <YakitInput

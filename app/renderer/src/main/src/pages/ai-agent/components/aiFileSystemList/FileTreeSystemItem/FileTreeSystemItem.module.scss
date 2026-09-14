@@ -36,4 +36,15 @@
     width: 16px;
     height: 16px;
   }
+
+  .folder-icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
 }

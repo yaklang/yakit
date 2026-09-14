@@ -58,7 +58,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
       case AIAgentTabListEnum.Session:
         content = (
           <div className={styles['session-pane']}>
-            <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} />
+            <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} onClose={() => setShow(false)} />
           </div>
         )
         break

@@ -25,7 +25,14 @@ vi.mock('@/components/yakitSideTab/YakitSideTab', () => ({
   ),
 }))
 vi.mock('../ChatSessionPane/ChatSessionPane', () => ({ default: () => <div>会话列表</div> }))
-vi.mock('../aiChatWelcome/FileTreeList/FileTreeList', () => ({ default: () => <div>文件列表</div> }))
+vi.mock('../aiChatWelcome/FileTreeList/FileTreeList', () => ({
+  default: ({ onClose }: { onClose: () => void }) => (
+    <div>
+      文件列表
+      <button onClick={onClose}>关闭文件系统</button>
+    </div>
+  ),
+}))
 vi.mock('../aiMCP/AIMCP', () => ({ default: () => <div>MCP 内容</div> }))
 vi.mock('../aiScheduledTasks/AIScheduledTasks', () => ({ default: () => <div>定时任务</div> }))
 
@@ -35,17 +42,34 @@ const SideList = () => {
 }
 
 describe('AIAgentSideList', () => {
-  it('仅保留会话、定时任务和 MCP 入口，点击后显示对应内容', async () => {
+  it('隐藏会话标签，保留文件系统内容与定时任务、MCP 入口', async () => {
     render(<SideList />)
-    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['session', 'scheduled', 'mcp'])
+    expect(screen.queryByRole('button', { name: 'session' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'scheduled' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'mcp' })).toBeInTheDocument()
     expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
     expect(screen.getByText('文件列表')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'scheduled' }))
     expect(await screen.findByText('定时任务')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'mcp' }))
     expect(await screen.findByText('MCP 内容')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'session' }))
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, params: { active: 'session', show: true } }),
+      )
+    })
+    expect(screen.getByText('文件列表')).toBeInTheDocument()
     expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '关闭文件系统' }))
+    expect(screen.getByLabelText('show')).toHaveTextContent('false')
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, params: { active: 'session', show: true } }),
+      )
+    })
+    expect(screen.getByLabelText('show')).toHaveTextContent('true')
   })
 
   it('事件切换、旧 history 映射和显隐仍有效，卸载后移除监听', async () => {
