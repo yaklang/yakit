@@ -108,12 +108,14 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
   const destory = () => {
     document.removeEventListener('click', onClickOutside, true)
     root?.unmount()
-    // 只有自己仍是当前菜单时才清模块级单例，否则保留新菜单的 Root 供下轮复用
-    if (rightContextRoot === root) rightContextRoot = null
+    // 只有自己仍是当前菜单时才清模块级单例并恢复标题栏拖拽；isForce 已换新菜单时保留其 Root 与拖拽状态
+    if (rightContextRoot === root) {
+      rightContextRoot = null
+      emiter.emit('setYakitHeaderDraggable', true)
+    }
     if (div.parentNode) {
       div.parentNode.removeChild(div)
     }
-    emiter.emit('setYakitHeaderDraggable', true)
   }
 
   const onClickOutside = (e: MouseEvent) => {

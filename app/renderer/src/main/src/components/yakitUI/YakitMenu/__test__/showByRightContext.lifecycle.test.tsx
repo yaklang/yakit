@@ -66,15 +66,22 @@ describe('showByRightContext', () => {
     handles.push(oldHandle)
     await waitForRender()
 
-    handles.push(showByRightContext(menuNode('b'), 30, 40, true))
+    const newHandle = showByRightContext(menuNode('b'), 30, 40, true)
+    handles.push(newHandle)
     await waitForRender()
     const div2 = document.getElementById(ContextMenuId)
     expect(screen.getByTestId('ctx-b')).toBeInTheDocument()
 
-    // 旧句柄只该清自己的（已移除的）div，不得 unmount 当前菜单的 Root
+    // 旧句柄只该清自己的（已移除的）div，不得卸当前菜单的 Root，也不得覆盖新菜单发出的关闭拖拽
     expect(() => oldHandle.destroy()).not.toThrow()
     expect(div2?.isConnected).toBe(true)
     expect(screen.getByTestId('ctx-b')).toBeInTheDocument()
+    expect(emiter.emit).not.toHaveBeenCalledWith('setYakitHeaderDraggable', true)
+
+    // 新菜单自己的 destroy 仍正常恢复标题栏拖拽
+    newHandle.destroy()
+    expect(emiter.emit).toHaveBeenCalledWith('setYakitHeaderDraggable', true)
+    expect(document.getElementById(ContextMenuId)).not.toBeInTheDocument()
   })
 
   it('点击外部（capture once）销毁菜单，destroy 句柄幂等', async () => {
