@@ -97,6 +97,12 @@ import {
   type LargeRequestReplacementMarker,
 } from './largeMultipartReplacement'
 import { resolveManualRequestSubmitAction } from './manualRequestSubmission'
+import {
+  isConditionalHijackTask,
+  isHijackEditorMode,
+  resolveConditionalHijackModeAfterTaskCount,
+  resolveConditionalHijackModeOnMessage,
+} from './conditionalHijackMode'
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
   forwardRef((props, ref) => {
@@ -209,19 +215,26 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       }
     }, [])
     useEffect(() => {
-      if (autoForward !== 'manual') {
+      if (!isHijackEditorMode(autoForward)) {
         resetOrder()
       }
     }, [autoForward])
 
     const forwardHandlerV2 = useMemoizedFn((value: MITMV2Response) => {
-      if (autoForward !== 'manual' && value.ManualHijackListAction) {
-        if (hijackFilterFlag) {
-          setAutoForward('manual')
-          yakitNotify('info', t('MITMManual.conditional_hijack_triggered'))
-        }
-      }
       const hijackData = value.ManualHijackList[0]
+      const conditionalHijackTask = value.ManualHijackList.some((task) =>
+        isConditionalHijackTask(task.HijackTaskSource, hijackFilterFlag),
+      )
+      const nextMode = resolveConditionalHijackModeOnMessage(
+        autoForward,
+        conditionalHijackTask,
+        value.ManualHijackListAction,
+        !!hijackData,
+      )
+      if (nextMode !== autoForward) {
+        setAutoForward(nextMode)
+        yakitNotify('info', t('MITMManual.conditional_hijack_triggered'))
+      }
       switch (value.ManualHijackListAction) {
         case ManualHijackListAction.Hijack_List_Add: // 新增的需要考虑到达顺序/arrivalOrder
           if (hijackData) {
@@ -307,6 +320,10 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             setCurrentSelectItem(undefined)
             setEditorShowIndexShowIndex(0)
             setData(newData)
+            const modeAfterReload = resolveConditionalHijackModeAfterTaskCount(autoForward, newData.length)
+            if (modeAfterReload !== autoForward) {
+              setAutoForward(modeAfterReload)
+            }
             setIsRefresh(!isRefresh)
           }
           break
@@ -389,6 +406,10 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       }
       const newData = decorateManualHijackRows(mergedData, filterColorTag, changedTaskIDs)
       setData(newData)
+      const modeAfterBatch = resolveConditionalHijackModeAfterTaskCount(autoForward, newData.length)
+      if (modeAfterBatch !== autoForward) {
+        setAutoForward(modeAfterBatch)
+      }
       mitmV2HijackInfoRef.current = []
       mitmV2HijackIndexRef.current.clear()
       stopFlushInterval()

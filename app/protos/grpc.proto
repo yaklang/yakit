@@ -7871,6 +7871,14 @@ message RemoveHookParams {
   repeated string RemoveHookID = 3;
 }
 
+// Describes why an intercepted task was sent to the frontend. UNSPECIFIED is
+// reserved for compatibility with engines that predate this field.
+enum MITMHijackTaskSource {
+  MITM_HIJACK_TASK_SOURCE_UNSPECIFIED = 0;
+  MITM_HIJACK_TASK_SOURCE_MANUAL = 1;
+  MITM_HIJACK_TASK_SOURCE_CONDITIONAL = 2;
+}
+
 message MITMResponse {
   bytes request = 1;
 
@@ -7930,6 +7938,8 @@ message MITMResponse {
 
   // 响应跟踪信息
   TraceInfo traceInfo = 40;
+
+  MITMHijackTaskSource hijackTaskSource = 41;
 }
 
 message TraceInfo {
@@ -9690,6 +9700,7 @@ message SingleManualHijackInfoMessage{
   TraceInfo TraceInfo = 15;
 
   string Method = 16;
+  MITMHijackTaskSource HijackTaskSource = 17;
 }
 
 message QueryMITMReplacerRulesRequest{

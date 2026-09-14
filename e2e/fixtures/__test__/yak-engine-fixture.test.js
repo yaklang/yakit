@@ -37,10 +37,10 @@ describe('parseYakGRPCReadyLine', () => {
     expect(parseYakGRPCReadyLine('yak grpc ok')).toBeUndefined()
     expect(
       parseYakGRPCReadyLine(
-        `[stdout] ${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 1, address: '127.0.0.1:54321' })}`,
+        `[stdout] ${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 2, address: '127.0.0.1:54321' })}`,
       ),
     ).toEqual({
-      schemaVersion: 1,
+      schemaVersion: 2,
       address: '127.0.0.1:54321',
       host: '127.0.0.1',
       port: 54321,
@@ -51,12 +51,12 @@ describe('parseYakGRPCReadyLine', () => {
     expect(() => parseYakGRPCReadyLine(`${YAK_GRPC_READY_PREFIX}not-json`)).toThrow(/Invalid Yak gRPC ready JSON/)
     expect(() =>
       parseYakGRPCReadyLine(
-        `${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 2, address: '127.0.0.1:54321' })}`,
+        `${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 1, address: '127.0.0.1:54321' })}`,
       ),
     ).toThrow(/Unsupported Yak gRPC ready schema/)
     expect(() =>
       parseYakGRPCReadyLine(
-        `${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 1, address: '0.0.0.0:54321' })}`,
+        `${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 2, address: '0.0.0.0:54321' })}`,
       ),
     ).toThrow(/must listen on 127.0.0.1/)
   })
