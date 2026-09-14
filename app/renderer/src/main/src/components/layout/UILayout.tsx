@@ -206,7 +206,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       setCredential(data.credential)
       onSetEngineMode(data.credential.Mode)
       setYakitStatus('ready')
-      setKeepalive(true)
+      if (data.credential.Mode === 'local') {
+        setTimeout(() => {
+          setKeepalive(true)
+        }, 300)
+      } else {
+        setKeepalive(true)
+      }
+      setTimeout(() => {
+        setNewCheckLog([])
+      }, 1000)
     })
     yakitUILayout.markRendererReady()
     return () => {
