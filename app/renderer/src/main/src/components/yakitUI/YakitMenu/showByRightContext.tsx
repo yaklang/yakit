@@ -102,14 +102,20 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
   // 与 Drawer/Modal 一致：菜单打开时关闭标题栏拖拽，避免挡住菜单点击
   emiter.emit('setYakitHeaderDraggable', false)
 
+  /** 本轮句柄自己的 Root（render 的 setTimeout 内创建/复用后回填）：destroy 只卸自己的，避免 isForce 换新 Root 后旧句柄误杀当前菜单 */
+  let root: Root | null = null
+
   const destory = () => {
     document.removeEventListener('click', onClickOutside, true)
-    rightContextRoot?.unmount()
-    rightContextRoot = null
+    root?.unmount()
+    // 只有自己仍是当前菜单时才清模块级单例并恢复标题栏拖拽；isForce 已换新菜单时保留其 Root 与拖拽状态
+    if (rightContextRoot === root) {
+      rightContextRoot = null
+      emiter.emit('setYakitHeaderDraggable', true)
+    }
     if (div.parentNode) {
       div.parentNode.removeChild(div)
     }
-    emiter.emit('setYakitHeaderDraggable', true)
   }
 
   const onClickOutside = (e: MouseEvent) => {
@@ -143,6 +149,7 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
       if (!rightContextRoot) {
         rightContextRoot = createRoot(div)
       }
+      root = rightContextRoot
       rightContextRoot.render(<RightContext data={props} callback={offsetPosition} renderSeq={renderSeq} />)
     })
   }
