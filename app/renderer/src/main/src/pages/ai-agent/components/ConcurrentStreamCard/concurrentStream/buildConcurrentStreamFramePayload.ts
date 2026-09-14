@@ -94,6 +94,13 @@ export function buildConcurrentStreamFramePayload(
 
       if (kind === 'item') {
         handFileRecord(childData)
+        // 工具执行结果卡片引用了底层 stdout 流（EventUUID），该流条目本身未挂渲染树；
+        // 子窗口读 stream.selectors / content 必须拿到它，否则"跳过长时间加载"按钮
+        // 与工具输出在子窗口永远不展示
+        if (childData.type === AIChatQSDataTypeEnum.TOOL_RESULT && childData.data?.stream?.EventUUID) {
+          const streamData = rawData.contents.get(childData.data.stream.EventUUID)
+          if (streamData) frameRawData.set(streamData.id, streamData)
+        }
       }
       // group 下的所有子节点数据
       if (kind === 'group') {
@@ -103,6 +110,11 @@ export function buildConcurrentStreamFramePayload(
           if (!grandChildData) continue
           frameRawData.set(grandChildToken, grandChildData)
           handFileRecord(grandChildData)
+          // group 内的工具卡片同样需携带其底层 stdout 流
+          if (grandChildData.type === AIChatQSDataTypeEnum.TOOL_RESULT && grandChildData.data?.stream?.EventUUID) {
+            const streamData = rawData.contents.get(grandChildData.data.stream.EventUUID)
+            if (streamData) frameRawData.set(streamData.id, streamData)
+          }
         }
       }
     }
