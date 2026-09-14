@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useState } from 'react'
 import { Steps, Tooltip } from 'antd'
-import { ChromeSvgIcon } from '@/assets/newIcon'
+import { ChromeSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChromeSvgIcon'
 import { getRemoteProjectValue } from '@/utils/kv'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
