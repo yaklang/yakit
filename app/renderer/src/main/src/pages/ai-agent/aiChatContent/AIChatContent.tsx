@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { AIChatContentProps } from './type'
 import styles from './AIChatContent.module.scss'
 import { useMemoizedFn } from 'ahooks'
@@ -15,16 +15,29 @@ import { useStore } from 'zustand'
 import { AIHorizontalScrollCard } from './aiHorizontalScrollCard/AIHorizontalScrollCard'
 import { sessionStatusStore, SessionDeleteStatus } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { ArrowLeftOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { onNewChat } from '../historyChat/HistoryChat'
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
     const { onChat } = props
+    const { t } = useI18nNamespaces(['aiAgent'])
 
     const store = useCurrentStore()
     const initLoading = useStore(store, (state) => state.initLoading)
     const { activeChat } = useAIAgentStore()
 
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true)
+    const [showBackToHome, setShowBackToHome] = useState(false)
+
+    useEffect(() => {
+      setShowBackToHome(false)
+      if (!initLoading) return
+      const timer = setTimeout(() => setShowBackToHome(true), 3000)
+      return () => clearTimeout(timer)
+    }, [initLoading, activeChat?.SessionID])
 
     const aiReActChatRef = useRef<AIReActChatRefProps>({
       handleStart: () => {},
@@ -59,7 +72,17 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     return (
       <div className={styles['ai-chat-content-wrapper']}>
         <YakitSpin spinning={isSessionDeleting || sourceDeleting}>
-          <AIGlobalLoading loopAnimationMode="sequential" loading={initLoading}>
+          <AIGlobalLoading
+            loopAnimationMode="sequential"
+            loading={initLoading}
+            actions={
+              showBackToHome && (
+                <YakitButton type="outline2" icon={<ArrowLeftOutlined color="currentColor" />} onClick={onNewChat}>
+                  {t('AIChatContent.backToHome')}
+                </YakitButton>
+              )
+            }
+          >
             <AIHorizontalScrollCard />
             <div className={styles['ai-chat-tab-wrapper']}>
               <AIReActChat

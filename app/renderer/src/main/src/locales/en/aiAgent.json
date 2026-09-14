@@ -504,6 +504,7 @@
     "noActiveChat": "There is no active session",
     "fileSystem": "File System",
     "newChatTitle": "New Session",
+    "backToHome": "Back to Home",
     "newChat": "New Session",
     "log": "Log",
     "exportLog": "Export Log",
