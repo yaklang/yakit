@@ -51,6 +51,11 @@ import {
 } from '../MITMHacker/utils'
 import type { ManualHijackTypeProps, MITMManualRefProps } from '../MITMManual/MITMManualType'
 import { grpcMITMV2RecoverManualHijack } from '../MITMManual/utils'
+import {
+  isConditionalHijackTask,
+  isHijackEditorMode,
+  shouldSyncAutoForwardMode,
+} from '../MITMManual/conditionalHijackMode'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
@@ -116,7 +121,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     return mitmContent.mitmStore.version
   }, [mitmContent.mitmStore.version])
 
-  const [hijackResponseType, setHijackResponseType] = useState<'all' | 'never'>('never') // 劫持类型
+  const [hijackResponseType, setHijackResponseType] = useState<'onlyOne' | 'all' | 'never'>('never') // 劫持类型
 
   const [forResponse, setForResponse] = useState(false)
   const [urlInfo, setUrlInfo] = useState(t('MITMHijackedContent.listening'))
@@ -573,7 +578,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   const isManual = useCreation(() => {
     return autoForward === 'manual'
   }, [autoForward])
+  const isHijackEditor = useCreation(() => {
+    return isHijackEditorMode(autoForward)
+  }, [autoForward])
   useEffect(() => {
+    if (!shouldSyncAutoForwardMode(autoForward)) return
+
     const value: MITMHijackGetFilterRequest = {
       isManual: !isManual,
       version: mitmVersion,
@@ -629,18 +639,23 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     }
     setCurrentIsWebsocket(!!msg?.isWebsocket)
     setCurrentIsForResponse(!!msg?.forResponse)
+    const conditionalHijackTask = isConditionalHijackTask(msg.hijackTaskSource, hijackFilterFlag)
 
     if (msg.forResponse) {
       if (!msg.response || !msg.responseId) {
         yakitFailed(t('MITMHijackedContent.bug__mitm_error__failed_to_get_correct_r'))
         return
       }
-      if (!isManual) {
+      if (!isHijackEditor && !conditionalHijackTask) {
         forwardResponse(msg.responseId || 0)
         if (currentPacket) {
           clearCurrentPacket()
         }
       } else {
+        if (!isHijackEditor && conditionalHijackTask) {
+          setAutoForward('hijackFilter')
+          info(t('MITMManual.conditional_hijack_triggered'))
+        }
         setForResponse(true)
         setCurrentPacketInfo({
           currentPacket: msg?.isWebsocket ? Uint8ArrayToString(msg.Payload) : Uint8ArrayToString(msg.response),
@@ -677,8 +692,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         setStatus('hijacked')
       }
       if (!isManual) {
-        if (hijackFilterFlag) {
-          setAutoForward('manual')
+        if (conditionalHijackTask) {
+          setAutoForward('hijackFilter')
           updateRequest()
           info(t('MITMManual.conditional_hijack_triggered'))
         } else {
@@ -707,6 +722,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       },
     })
   }
+
+  const closeConditionalHijackView = useMemoizedFn(() => {
+    setAutoForward((mode) => (mode === 'hijackFilter' ? 'log' : mode))
+  })
 
   const handleAutoForward = useMemoizedFn((e: ManualHijackTypeProps) => {
     try {
@@ -787,6 +806,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     setCalloutColor('')
     setUrlInfo(t('MITMHijackedContent.listening'))
     setIpInfo('')
+    closeConditionalHijackView()
   })
 
   // 这个 Forward 提交数据、切换tab、编辑器右键菜单会调用
@@ -809,8 +829,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       }
       grpcMITMForwardModifiedResponse(value).finally(() => {
         clearCurrentPacket()
+        closeConditionalHijackView()
       })
     } else {
+      const waitForResponse = hijackResponseType !== 'never'
       const value: MITMForwardModifiedRequest = {
         id: currentPacketId,
         request: modifiedPacketBytes,
@@ -820,6 +842,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       grpcMITMForwardModifiedRequest(value).finally(() => {
         clearCurrentPacket()
         setCalloutColor('')
+        if (!isManual && !waitForResponse) {
+          closeConditionalHijackView()
+        }
       })
     }
   })
@@ -866,7 +891,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     return (
       <>
         {/* 手动劫持 */}
-        <div style={{ display: autoForward === 'manual' ? 'block' : 'none', width: '100%' }}>
+        <div style={{ display: isHijackEditor ? 'block' : 'none', width: '100%' }}>
           {mitmVersion === MITMVersion.V2 ? (
             <div className={styles['mitm-v2-hijacked-manual-heard-extra']}>
               <div className={styles['mitm-v2-hijacked-manual-heard-extra-left']}>
@@ -937,7 +962,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
               traceInfo={traceInfo}
               setHijackResponseType={onSetHijackResponseType}
               onDiscardRequest={onDiscardRequest}
-              onSubmitData={forward}
+              onSubmitData={() => forward(isManual)}
               width={width}
               calloutColor={calloutColor}
               onSetCalloutColor={setCalloutColor}
@@ -966,10 +991,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     return (
       <>
         {/* 手动劫持 */}
-        <div
-          style={{ display: autoForward === 'manual' ? 'block' : 'none' }}
-          className={styles['mitm-hijacked-manual-content']}
-        >
+        <div style={{ display: isHijackEditor ? 'block' : 'none' }} className={styles['mitm-hijacked-manual-content']}>
           {mitmVersion === MITMVersion.V2 ? (
             <MITMManual
               ref={mitmManualRef}
