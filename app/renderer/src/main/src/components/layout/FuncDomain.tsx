@@ -7,7 +7,7 @@ import { showModal } from '@/utils/showModal'
 import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
 import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
-import { useConfigManagementTab, useEeSystemConfig, useStore, useYakitDynamicStatus } from '@/store'
+import { useEeSystemConfig, useStore, useYakitDynamicStatus } from '@/store'
 import { UserPlatformType } from '@/pages/globalVariable'
 import { genDefaultPagination, type QueryGeneralResponse } from '@/pages/invoker/schema'
 import type { Risk } from '@/pages/risks/schema'
@@ -818,7 +818,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const [available, setAvailable] = useState(false) // cve数据库是否可用
   const [isDiffUpdate, setIsDiffUpdate] = useState(false)
   const { dynamicStatus } = useYakitDynamicStatus()
-  const { setConfigManagementActiveTab } = useConfigManagementTab()
   const { delTemporaryProject } = useTemporaryProjectStore()
   const [reclaimHint, setReclaimHint] = useState<boolean>(false)
   const { t } = useI18nNamespaces(['home', 'layout'])

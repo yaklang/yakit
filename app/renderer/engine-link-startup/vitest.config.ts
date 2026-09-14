@@ -17,7 +17,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: [],
+    setupFiles: [path.resolve(rootDir, 'src/setupVitest.ts')],
     include: ['src/**/__test__/**/*.test.{ts,tsx,js,jsx}', 'src/**/__test__/**/*.spec.{ts,tsx,js,jsx}'],
     exclude: ['src/__test__/yakitUiIconsPurePlugin.test.ts', 'src/__test__/iconMigrationConsumerContract.test.tsx'],
   },

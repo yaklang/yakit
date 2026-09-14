@@ -100,7 +100,6 @@ vi.mock('@/store', () => ({
   useYakitDynamicStatus: () => ({
     dynamicStatus: { isDynamicStatus: false },
   }),
-  useConfigManagementTab: () => ({ setConfigManagementActiveTab: vi.fn() }),
   useEeSystemConfig: () => ({ eeSystemConfig: [] }),
 }))
 
