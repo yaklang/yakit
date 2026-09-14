@@ -1,9 +1,9 @@
 const LICENSE_ACTIVATION_KEY = 'LICENSE_ACTIVATION'
 const LICENSE_COMPANY_VERSION = 'EnpriTrace'
 
-// 临时用于 AI SenSo 后端联调；恢复授权时改为 true，并重新构建客户端。
+// AI SenSo 客户端授权统一开关；修改后需重启 Electron，安装包需重新构建。
 // 两个渲染器通过只读 IPC 读取同一策略；不伪造授权结果或修改引擎授权缓存。
-const MEMFIT_LICENSE_REQUIRED = false
+const MEMFIT_LICENSE_REQUIRED = true
 const isMemfitLicenseRequired = () => MEMFIT_LICENSE_REQUIRED
 
 const invokeClient = (getClient, method, params) => {
