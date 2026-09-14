@@ -2,7 +2,8 @@ import type React from 'react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { MacUIOp } from './MacUIOp'
-import { PerformanceDisplay, type yakProcess } from './PerformanceDisplay'
+import type { yakProcess } from './PerformanceDisplay'
+const PerformanceDisplay = lazy(() => import('./PerformanceDisplay').then((m) => ({ default: m.PerformanceDisplay })))
 import { FuncDomain, UIOpNotice } from './FuncDomain'
 import { TemporaryProjectPop, WinUIOp } from './WinUIOp'
 import { GlobalState } from './GlobalState'
@@ -41,7 +42,12 @@ import {
   type ProjectIOProgress,
   type ProjectParamsProp,
 } from '@/pages/softwareSettings/projectUtils'
-import { NewProjectAndFolder, TransferProject } from '@/pages/softwareSettings/ProjectManage'
+const NewProjectAndFolder = lazy(() =>
+  import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.NewProjectAndFolder })),
+)
+const TransferProject = lazy(() =>
+  import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.TransferProject })),
+)
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { useScreenRecorder } from '@/store/screenRecorder'
@@ -52,7 +58,9 @@ import emiter from '@/utils/eventBus/eventBus'
 import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
 const DownloadYakit = lazy(() => import('./update/DownloadYakit').then((m) => ({ default: m.DownloadYakit })))
 const DownloadYaklang = lazy(() => import('./update/DownloadYaklang').then((m) => ({ default: m.DownloadYaklang })))
-import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
+const YakitGetOnlinePlugin = lazy(() =>
+  import('@/pages/mitm/MITMServerHijacking/MITMPluginOnline').then((m) => ({ default: m.YakitGetOnlinePlugin })),
+)
 import { CheckCircleSolid, HomeSolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { setNowProjectDescription } from '@/pages/globalVariable'
 import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
@@ -198,7 +206,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       setCredential(data.credential)
       onSetEngineMode(data.credential.Mode)
       setYakitStatus('ready')
-      setKeepalive(true)
+      if (data.credential.Mode === 'local') {
+        setTimeout(() => {
+          setKeepalive(true)
+        }, 300)
+      } else {
+        setKeepalive(true)
+      }
+      setTimeout(() => {
+        setNewCheckLog([])
+      }, 1000)
     })
     yakitUILayout.markRendererReady()
     return () => {
@@ -1756,12 +1773,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                   </div>
 
                   <div className={styles['left-cpu']}>
-                    <PerformanceDisplay
-                      engineMode={engineMode}
-                      typeCallback={handleOperations}
-                      engineLink={engineLink}
-                      extraRight={engineNotice}
-                    />
+                    <Suspense fallback={null}>
+                      <PerformanceDisplay
+                        engineMode={engineMode}
+                        typeCallback={handleOperations}
+                        engineLink={engineLink}
+                        extraRight={engineNotice}
+                      />
+                    </Suspense>
                   </div>
                 </div>
                 <div className={classNames(styles['header-title'], dropClassName)} onDoubleClick={maxScreen} />
@@ -1850,12 +1869,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                 <div className={styles['header-right']}>
                   <div className={styles['left-cpu']}>
-                    <PerformanceDisplay
-                      engineMode={engineMode}
-                      typeCallback={handleOperations}
-                      engineLink={engineLink}
-                      extraLeft={engineNotice}
-                    />
+                    <Suspense fallback={null}>
+                      <PerformanceDisplay
+                        engineMode={engineMode}
+                        typeCallback={handleOperations}
+                        engineLink={engineLink}
+                        extraLeft={engineNotice}
+                      />
+                    </Suspense>
                   </div>
                   <div className={classNames(dropClassName)}>
                     {engineLink && <div className={styles['divider-wrapper']}></div>}

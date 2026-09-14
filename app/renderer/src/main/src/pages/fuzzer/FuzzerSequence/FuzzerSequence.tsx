@@ -104,7 +104,7 @@ import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeB
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { ShareImportExportData } from '../components/ShareImportExportData'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import sequencemp4 from '@/assets/sequence.mp4'
+import { SequenceAnimationAemonstration } from '../AnimationAemonstration'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
 import { Uint8ArrayToString } from '@/utils/str'
 import type { DebugProps } from './FuzzerPageSetting'
@@ -3127,15 +3127,3 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
     )
   }),
 )
-
-// 序列动画演示
-interface SequenceAnimationAemonstrationProps {}
-export const SequenceAnimationAemonstration: React.FC<SequenceAnimationAemonstrationProps> = React.memo((props) => {
-  return (
-    <div className={styles['sequence-animation-aemonstration']}>
-      <div className={styles['animation-cont-wrap']}>
-        <video src={sequencemp4} autoPlay loop></video>
-      </div>
-    </div>
-  )
-})

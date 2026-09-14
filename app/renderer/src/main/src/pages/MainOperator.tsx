@@ -1,4 +1,4 @@
-import React, { type ReactNode, useEffect, useRef, useState } from 'react'
+import React, { type ReactNode, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Avatar, Layout, Upload, Watermark } from 'antd'
 import CameraOutlined from '@ant-design/icons/lib/icons/CameraOutlined'
 import { failed, success, yakitFailed } from '../utils/notification'
@@ -12,8 +12,6 @@ import { setUpYaklangMonaco } from '../utils/monacoSpec/yakEditor'
 import { useGetState, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { AutoSpin } from '../components/AutoSpin'
 import { addToTab } from './MainTabs'
-import Login from './Login'
-import SetPassword from './SetPassword'
 import { useEeSystemConfig, type UserInfoProps, useStore, useYakitDynamicStatus } from '@/store'
 import type { SimpleQueryYakScriptSchema } from './invoker/batch/QueryYakScriptParam'
 import { refreshToken } from '@/utils/login'
@@ -31,22 +29,28 @@ import {
   isIRify,
   isMemfit,
 } from '@/utils/envfile'
-import HeardMenu from './layout/HeardMenu/HeardMenu'
 import { CodeGV } from '@/yakitGV'
 import CustomizeMenu from './customizeMenu/CustomizeMenu'
-import { ControlOperation } from '@/pages/dynamicControl/DynamicControl'
+const ControlOperation = lazy(() =>
+  import('@/pages/dynamicControl/DynamicControl').then((m) => ({ default: m.ControlOperation })),
+)
+import HeardMenu from './layout/HeardMenu/HeardMenu'
+const Login = lazy(() => import('./Login'))
+const SetPassword = lazy(() => import('./SetPassword'))
 import { YakitHintModal } from '@/components/yakitUI/YakitHint/YakitHintModal'
 import { useScreenRecorder } from '@/store/screenRecorder'
 import PublicMenu, { type RouteToPageProps } from './layout/publicMenu/PublicMenu'
 import { type YakitRoute } from '@/enums/yakitRoute'
-import { YakChatCS } from '@/components/yakChat/chatCS'
+const YakChatCS = lazy(() => import('@/components/yakChat/chatCS').then((m) => ({ default: m.YakChatCS })))
 import { MainOperatorContent } from './layout/mainOperatorContent/MainOperatorContent'
 import type { MultipleNodeInfo } from './layout/mainOperatorContent/MainOperatorContentType'
 import emiter from '@/utils/eventBus/eventBus'
 import { httpDeleteOSSResource } from '@/apiUtils/http'
-import { setUpSyntaxFlowMonaco } from '@/utils/monacoSpec/syntaxflowEditor'
+import { setUpSyntaxFlowMonaco } from '../utils/monacoSpec/syntaxflowEditor'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { MessageCenterModal } from '@/components/MessageCenter/MessageCenter'
+const MessageCenterModal = lazy(() =>
+  import('@/components/MessageCenter/MessageCenter').then((m) => ({ default: m.MessageCenterModal })),
+)
 import { LocalGVS } from '@/enums/localGlobal'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { grpcOpenRenderLogFolder } from '@/utils/logCollection'
@@ -61,7 +65,11 @@ import './main.scss'
 import { genDefaultPagination } from './invoker/schema'
 import { apiQuerySSAPrograms } from './yakRunnerScanHistory/utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { IRifyUpdateProjectManagerModal } from './YakRunnerProjectManager/YakRunnerProjectManager'
+const IRifyUpdateProjectManagerModal = lazy(() =>
+  import('./YakRunnerProjectManager/YakRunnerProjectManager').then((m) => ({
+    default: m.IRifyUpdateProjectManagerModal,
+  })),
+)
 import { parseUrl } from '@/hook/useProxy'
 import { JSONParseLog } from '@/utils/tool'
 import { Trans } from 'react-i18next'
@@ -691,7 +699,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             </div>
           </AutoSpin>
 
-          {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
+          {loginshow && (
+            <Suspense fallback={null}>
+              <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>
+            </Suspense>
+          )}
           <YakitModal
             open={passwordShow}
             title={t('Main.setPassword')}
@@ -702,17 +714,27 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             onCancel={() => setPasswordShow(false)}
             footer={null}
           >
-            <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
+            <Suspense fallback={null}>
+              <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
+            </Suspense>
           </YakitModal>
 
-          {(isCommunityEdition() || isEnpriTrace()) && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
+          {(isCommunityEdition() || isEnpriTrace()) && (
+            <Suspense fallback={null}>
+              <YakChatCS visible={chatShow} setVisible={setChatShow} />
+            </Suspense>
+          )}
           {/* {(isCommunityEdition() || isEnpriTrace()) && !chatShow && (
                         <div className='chat-icon-wrapper' onClick={onChatCS} draggable={true} ref={chartCSDragItemRef}>
                             <img src={yakitCattle} />
                         </div>
                     )} */}
 
-          {messageCenterShow && <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow} />}
+          {messageCenterShow && (
+            <Suspense fallback={null}>
+              <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow} />
+            </Suspense>
+          )}
 
           <YakitHint
             getContainer={chartCSDragAreaRef.current || undefined}
@@ -726,7 +748,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
           />
         </Layout>
       </Watermark>
-      {controlShow && <ControlOperation controlName={controlName} />}
+      {controlShow && (
+        <Suspense fallback={null}>
+          <ControlOperation controlName={controlName} />
+        </Suspense>
+      )}
       <YakitHintModal
         visible={false}
         title={t('Main.remoteRequestTitle')}
@@ -769,7 +795,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
           </div>
         }
       />
-      <IRifyUpdateProjectManagerModal visible={isAllowIRifyUpdate} onClose={() => setIsAllowIRifyUpdate(false)} />
+      <Suspense fallback={null}>
+        <IRifyUpdateProjectManagerModal visible={isAllowIRifyUpdate} onClose={() => setIsAllowIRifyUpdate(false)} />
+      </Suspense>
       {/* irify-end */}
 
       {/* <UpdateForward
