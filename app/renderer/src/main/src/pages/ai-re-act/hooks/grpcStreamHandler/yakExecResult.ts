@@ -43,6 +43,7 @@ const handleStatus: AIMessageHandler = (request) => {
 
     if (meta.cardKVPaidTimer) return
     meta.cardKVPaidTimer = setTimeout(() => {
+      if (!meta.lifecycle.current || meta.lifecycle.closing) return
       const cacheCard: AIAgentGrpcApi.AIInfoCard[] = convertCardInfo(meta.cardKVPair)
       store.getState().updateState({ card: cacheCard })
       meta.cardKVPaidTimer = null
@@ -74,6 +75,7 @@ const handleCard: (value: AIAgentGrpcApi.AICardMessage, requestInfo: AIMessageHa
 
   if (meta.cardKVPaidTimer) return
   meta.cardKVPaidTimer = setTimeout(() => {
+    if (!meta.lifecycle.current || meta.lifecycle.closing) return
     const cacheCard: AIAgentGrpcApi.AIInfoCard[] = convertCardInfo(meta.cardKVPair)
     store.getState().updateState({ card: cacheCard })
     meta.cardKVPaidTimer = null

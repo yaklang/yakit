@@ -1,10 +1,7 @@
 import type { AIAgentGrpcApi } from '../grpcApi'
 import type { AIChatQSData, SessionRenderContent } from '../aiRender'
 import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import {
-  AIAgentIDBCacheClearValue,
   DB_NAME,
   DB_VERSION,
   INDEX_BY_SESSION_ID,
@@ -12,7 +9,6 @@ import {
   SESSION_CONTENT_STORE,
   SESSION_REFERENCE_STORE,
   SESSION_RENDER_STORE,
-  shouldClearIDBCache,
 } from './constants'
 import type {
   SessionContentUpdater,
@@ -29,21 +25,24 @@ import type {
  * - 直接存结构化对象（structured clone），不做整包 JSON.stringify
  * - 单例 lazy-open：缓存 dbPromise，读写内 await open() 兜底
  */
-class AIChatPersistStore {
+export class AIChatPersistStore {
   private dbPromise: Promise<IDBDatabase> | null = null
-  /** 版本标识检查（含可能的清库）进行中 / 已完成；失败会置回 null 以便下次 open 重试 */
-  private cacheClearPromise: Promise<void> | null = null
+  /** 本次主渲染端加载的清库屏障；成功后保留，close / 组件重挂不重复清库 */
+  private startupClearPromise: Promise<void> | null = null
 
   /**
    * 打开（或复用）数据库连接；首次调用时建库建表。
-   * 打开后按远程 KV 标识决定是否清空旧结构数据（casualElements 等）。
+   * 首次打开清空三张缓存表；所有读写等待清理事务提交，失败允许下次重试。
    */
   async open(): Promise<IDBDatabase> {
     if (!this.dbPromise) {
-      this.dbPromise = this.openDatabase()
+      this.dbPromise = this.openDatabase().catch((error) => {
+        this.dbPromise = null
+        throw error
+      })
     }
     const db = await this.dbPromise
-    await this.ensureIDBCacheClear(db)
+    await this.ensureStartupClear(db)
     return db
   }
 
@@ -82,31 +81,22 @@ class AIChatPersistStore {
     })
   }
 
-  /**
-   * 比较远程 KV 标识。
-   * 无标识（旧库从未写过）或旧于当前值 → 清空三表后再写入新标识。
-   */
-  private ensureIDBCacheClear(db: IDBDatabase): Promise<void> {
-    if (!this.cacheClearPromise) {
-      this.cacheClearPromise = this.maybeClearStaleIDB(db).catch(() => {
-        this.cacheClearPromise = null
+  /** 每个主渲染端运行周期只清理一次；失败不允许读写绕过初始化。 */
+  private ensureStartupClear(db: IDBDatabase): Promise<void> {
+    if (!this.startupClearPromise) {
+      this.startupClearPromise = this.clearAllStores(db).catch((error) => {
+        this.startupClearPromise = null
+        throw error
       })
     }
-    return this.cacheClearPromise
-  }
-
-  private async maybeClearStaleIDB(db: IDBDatabase): Promise<void> {
-    const flag = await getRemoteValue(RemoteAIAgentGV.AIAgentIDBCacheClear)
-    if (!shouldClearIDBCache(flag)) return
-    await this.clearAllStores(db)
-    await setRemoteValue(RemoteAIAgentGV.AIAgentIDBCacheClear, AIAgentIDBCacheClearValue)
+    return this.startupClearPromise
   }
 
   private clearAllStores(db: IDBDatabase): Promise<void> {
     return new Promise((resolve, reject) => {
       const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
       tx.oncomplete = () => resolve()
-      tx.onerror = () => reject(tx.error)
+      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
       tx.objectStore(SESSION_RENDER_STORE).clear()
       tx.objectStore(SESSION_CONTENT_STORE).clear()
       tx.objectStore(SESSION_REFERENCE_STORE).clear()
@@ -133,9 +123,9 @@ class AIChatPersistStore {
       const tx = db.transaction(SESSION_RENDER_STORE, 'readwrite')
       const store = tx.objectStore(SESSION_RENDER_STORE)
       const record: SessionRenderRecord = { sessionId, source, content, grpcOffset }
-      const req = store.put(record)
-      req.onsuccess = () => resolve()
-      req.onerror = () => reject(req.error)
+      store.put(record)
+      tx.oncomplete = () => resolve()
+      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
     })
   }
 
@@ -172,9 +162,9 @@ class AIChatPersistStore {
         createdAt: Date.now(),
         content,
       }
-      const req = store.put(record)
-      req.onsuccess = () => resolve()
-      req.onerror = () => reject(req.error)
+      store.put(record)
+      tx.oncomplete = () => resolve()
+      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
     })
   }
 
@@ -240,9 +230,9 @@ class AIChatPersistStore {
     return new Promise((resolve, reject) => {
       const tx = db.transaction(SESSION_CONTENT_STORE, 'readwrite')
       const store = tx.objectStore(SESSION_CONTENT_STORE)
-      const req = store.delete([sessionId, token])
-      req.onsuccess = () => resolve()
-      req.onerror = () => reject(req.error)
+      store.delete([sessionId, token])
+      tx.oncomplete = () => resolve()
+      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
     })
   }
 
@@ -291,6 +281,11 @@ class AIChatPersistStore {
     return new Promise((resolve, reject) => {
       const tx = db.transaction(SESSION_CONTENT_STORE, 'readwrite')
       const store = tx.objectStore(SESSION_CONTENT_STORE)
+      let result: AIChatQSData
+      /** 保留 updater / put 的同步异常，但必须等事务真正中止后才拒绝写入 Promise。 */
+      let updateError: unknown
+      tx.oncomplete = () => resolve(result)
+      tx.onabort = () => reject(updateError ?? tx.error ?? new Error('IDB transaction aborted'))
       const getReq = store.get([sessionId, token])
 
       getReq.onsuccess = () => {
@@ -298,19 +293,18 @@ class AIChatPersistStore {
         try {
           const next = updater(oldRow?.content)
           const record: SessionContentRecord = { sessionId, token, content: next }
-          const putReq = store.put(record)
-          putReq.onsuccess = () => resolve(next)
-          putReq.onerror = () => reject(putReq.error)
+          result = next
+          store.put(record)
         } catch (err) {
-          reject(err)
+          updateError = err
+          tx.abort()
         }
       }
-      getReq.onerror = () => reject(getReq.error)
     })
   }
 
   /**
-   * 清除指定 session 在三表中的全部记录。
+   * 在同一事务中检查指定 session 的三表记录，有记录才删除；事务提交后完成。
    * - sessionRender：复合主键前缀无法直接 range 删，用游标扫 sessionId
    * - sessionContent / sessionReference：走 bySessionId 索引
    */
@@ -320,7 +314,7 @@ class AIChatPersistStore {
       const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
 
       tx.oncomplete = () => resolve()
-      tx.onerror = () => reject(tx.error)
+      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
 
       // 表1：复合主键 [sessionId, source]，用前缀范围删除该 session 全部 source
       const renderStore = tx.objectStore(SESSION_RENDER_STORE)
@@ -359,7 +353,7 @@ class AIChatPersistStore {
       const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
 
       tx.oncomplete = () => resolve()
-      tx.onerror = () => reject(tx.error)
+      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
 
       const renderStore = tx.objectStore(SESSION_RENDER_STORE)
       const sourceIndex = renderStore.index(INDEX_BY_SOURCE)
@@ -391,7 +385,6 @@ class AIChatPersistStore {
           deleteBySessionIndex(SESSION_REFERENCE_STORE, sessionId)
         }
       }
-      keysReq.onerror = () => reject(keysReq.error)
     })
   }
 

@@ -1,3 +1,4 @@
+import { SessionLifecycle } from '../sessionLifecycle'
 import cloneDeep from 'lodash/cloneDeep'
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import { AIAgentSettingDefault, AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
@@ -77,6 +78,7 @@ export const createTestRawData = (): AIAgentChatData => {
 
 /** 与 Controller 内 genAIAgentChatMetaData 对齐 */
 export const createTestMeta = (): AIAgentChatMetaData => ({
+  lifecycle: new SessionLifecycle(),
   createChatQuestion: undefined,
   onEnd: undefined,
   pingSyncID: '',

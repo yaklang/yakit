@@ -12,6 +12,7 @@ import {
 } from '../persist/contentPersistHelper'
 import { AIChatQSDataTypeEnum } from '../aiRender'
 import aiChatPersistStore from '../persist/aiChatPersistStore'
+import { SessionLifecycle } from '../sessionLifecycle'
 
 vi.mock('../persist/aiChatPersistStore', () => {
   return {
@@ -26,6 +27,53 @@ vi.mock('../persist/aiChatPersistStore', () => {
 describe('contentPersistHelper', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('waits for an in-flight transaction but drops queued writes from an invalidated connection', async () => {
+    const lifecycle = new SessionLifecycle()
+    let commit!: () => void
+    const transaction = new Promise<void>((resolve) => {
+      commit = resolve
+    })
+    vi.mocked(aiChatPersistStore.setSessionContent).mockReturnValueOnce(transaction as any)
+    const item = { id: 'old', stageSettled: false } as any
+    const first = upsertSessionContent('generation', item.id, item, lifecycle)
+    const queued = upsertSessionContent('generation', item.id, item, lifecycle)
+    await Promise.resolve()
+    expect(aiChatPersistStore.setSessionContent).toHaveBeenCalledOnce()
+    expect(item.stageSettled).toBe(false)
+    lifecycle.current = false
+    lifecycle.writable = false
+    let drained = false
+    const drain = drainSessionContentWrites('generation').then(() => {
+      drained = true
+    })
+    await Promise.resolve()
+    expect(drained).toBe(false)
+    commit()
+    await Promise.all([first, queued, drain])
+    expect(aiChatPersistStore.setSessionContent).toHaveBeenCalledOnce()
+    expect(item.stageSettled).toBe(false)
+  })
+
+  it('ordinary close blocks new writes while allowing already queued writes to commit', async () => {
+    const lifecycle = new SessionLifecycle()
+    const saved = upsertSessionContent('closing', 'saved', { id: 'saved' } as any, lifecycle)
+    lifecycle.writable = false
+    await upsertSessionContent('closing', 'late', { id: 'late' } as any, lifecycle)
+    await saved
+    expect(aiChatPersistStore.setSessionContent).toHaveBeenCalledOnce()
+    expect(aiChatPersistStore.setSessionContent).toHaveBeenCalledWith('closing', 'saved', expect.any(Function))
+  })
+
+  it('records a failed transaction for the recovery/end barrier without marking content settled', async () => {
+    const lifecycle = new SessionLifecycle()
+    const error = new Error('transaction aborted')
+    vi.mocked(aiChatPersistStore.setSessionContent).mockRejectedValueOnce(error)
+    const item = { id: 'failed', stageSettled: false } as any
+    await upsertSessionContent('failed', item.id, item, lifecycle)
+    expect(lifecycle.error).toBe(error)
+    expect(item.stageSettled).toBe(false)
   })
 
   it('E1: isToolResultTerminalStatus', () => {

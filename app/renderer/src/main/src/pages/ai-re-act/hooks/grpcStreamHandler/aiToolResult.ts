@@ -37,7 +37,14 @@ const ensureToolResultContent = async (
   requestInfo: AIMessageHandlerParams,
   callToolId: string,
 ): Promise<Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.TOOL_RESULT }> | undefined> => {
-  const item = await ensureContentInMemory(requestInfo.sessionId, callToolId, requestInfo.rawData.contents)
+  const item = await ensureContentInMemory(
+    requestInfo.sessionId,
+    callToolId,
+    requestInfo.rawData.contents,
+    undefined,
+    requestInfo.meta.lifecycle,
+  )
+  if (!requestInfo.meta.lifecycle.current) return
   if (!item || item.type !== AIChatQSDataTypeEnum.TOOL_RESULT) return undefined
   return item
 }
@@ -90,6 +97,7 @@ const handleToolCallParam: AIMessageHandler = async (requestInfo) => {
   }
 
   const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!requestInfo.meta.lifecycle.current) return
   if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
@@ -101,7 +109,7 @@ const handleToolCallParam: AIMessageHandler = async (requestInfo) => {
   toolResult.data.tool.reviewParams = cloneDeep(params)
   // 晚到 param（已 result）：刷新已上树卡片；未上树则首次挂树
   if (toolResult.data.type === 'result') ensureToolResultOnUI(requestInfo, toolResult)
-  persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
+  persistToolResultIfTerminal(requestInfo.sessionId, toolResult, requestInfo.meta.lifecycle)
 }
 
 const handleToolCallWatcher: AIMessageHandler = async (requestInfo) => {
@@ -117,6 +125,7 @@ const handleToolCallWatcher: AIMessageHandler = async (requestInfo) => {
 
   // 先获取工具结果数据，从里面拿到stream的EventUUID
   const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!requestInfo.meta.lifecycle.current) return
   if (!toolResult || !toolResult.data.stream.EventUUID) {
     requestInfo.pushLog({
       level: 'error',
@@ -129,7 +138,10 @@ const handleToolCallWatcher: AIMessageHandler = async (requestInfo) => {
     requestInfo.sessionId,
     toolResult.data.stream.EventUUID,
     rawData.contents,
+    undefined,
+    requestInfo.meta.lifecycle,
   )
+  if (!requestInfo.meta.lifecycle.current) return
   if (!toolForStreamData || toolForStreamData.type !== AIChatQSDataTypeEnum.STREAM) {
     requestInfo.pushLog({
       level: 'error',
@@ -163,6 +175,7 @@ const handleToolCallLogDir: AIMessageHandler = async (requestInfo) => {
   }
 
   const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!requestInfo.meta.lifecycle.current) return
   if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
@@ -181,7 +194,7 @@ const handleToolCallLogDir: AIMessageHandler = async (requestInfo) => {
   // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
   toolResult.data.tool.dirPath = dir_path || ''
   if (toolResult.data.tool.status !== 'default') ensureToolResultOnUI(requestInfo, toolResult)
-  persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
+  persistToolResultIfTerminal(requestInfo.sessionId, toolResult, requestInfo.meta.lifecycle)
 }
 
 const handleToolCallResult: AIMessageHandler = async (requestInfo) => {
@@ -200,6 +213,7 @@ const handleToolCallResult: AIMessageHandler = async (requestInfo) => {
   }
 
   const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!requestInfo.meta.lifecycle.current) return
   if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
@@ -232,7 +246,7 @@ const handleToolCallResult: AIMessageHandler = async (requestInfo) => {
   }
 
   ensureToolResultOnUI(requestInfo, toolResult)
-  upsertSessionContent(requestInfo.sessionId, toolResult.id, toolResult)
+  upsertSessionContent(requestInfo.sessionId, toolResult.id, toolResult, requestInfo.meta.lifecycle)
 }
 
 const handleToolCallSummary: AIMessageHandler = async (requestInfo) => {
@@ -247,6 +261,7 @@ const handleToolCallSummary: AIMessageHandler = async (requestInfo) => {
   }
 
   const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!requestInfo.meta.lifecycle.current) return
   if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
@@ -273,7 +288,7 @@ const handleToolCallSummary: AIMessageHandler = async (requestInfo) => {
   if (statusInfo !== 'default') {
     ensureToolResultOnUI(requestInfo, toolResult)
   }
-  persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
+  persistToolResultIfTerminal(requestInfo.sessionId, toolResult, requestInfo.meta.lifecycle)
 }
 
 const handleToolCallStatus: AIMessageHandler = async (requestInfo) => {
@@ -288,6 +303,7 @@ const handleToolCallStatus: AIMessageHandler = async (requestInfo) => {
   }
 
   const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!requestInfo.meta.lifecycle.current) return
   if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
@@ -301,7 +317,7 @@ const handleToolCallStatus: AIMessageHandler = async (requestInfo) => {
 
   toolResult.data.isProcessingParams = status === 'processing_params'
   ensureToolResultOnUI(requestInfo, toolResult)
-  persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
+  persistToolResultIfTerminal(requestInfo.sessionId, toolResult, requestInfo.meta.lifecycle)
 }
 
 const handleToolCallReason: AIMessageHandler = async (requestInfo) => {
@@ -316,6 +332,7 @@ const handleToolCallReason: AIMessageHandler = async (requestInfo) => {
   }
 
   const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!requestInfo.meta.lifecycle.current) return
   if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
@@ -326,7 +343,7 @@ const handleToolCallReason: AIMessageHandler = async (requestInfo) => {
 
   toolResult.data.tool.reason = reason || ''
   if (toolResult.data.type !== 'create') ensureToolResultOnUI(requestInfo, toolResult)
-  persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
+  persistToolResultIfTerminal(requestInfo.sessionId, toolResult, requestInfo.meta.lifecycle)
 }
 
 export const aiToolResultDataHandlers = {

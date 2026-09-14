@@ -3,6 +3,7 @@ import { AIChatQSDataTypeEnum, type AIChatQSData } from '../aiRender'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import aiChatPersistStore from './aiChatPersistStore'
 import type { SessionContentUpdater } from './type'
+import type { SessionLifecycle } from '../sessionLifecycle'
 
 /**
  * 同一 sessionId::token 的串行写队列，避免异步 put 未完成又来更新导致丢写。
@@ -13,9 +14,25 @@ const contentWriteChains = new Map<string, Promise<unknown>>()
 
 const contentKey = (sessionId: string, token: string) => `${sessionId}::${token}`
 
-function enqueueContentWrite(sessionId: string, token: string, task: () => Promise<unknown>): Promise<unknown> {
+/** 捕获发起任务的连接身份；关闭仅禁止新增，重连/删除同时跳过尚未提交的旧写。 */
+function enqueueContentWrite(
+  sessionId: string,
+  token: string,
+  task: () => Promise<unknown>,
+  lifecycle?: SessionLifecycle,
+): Promise<unknown> {
+  if (lifecycle && (!lifecycle.current || !lifecycle.writable)) return Promise.resolve()
   const key = contentKey(sessionId, token)
-  const next = (contentWriteChains.get(key) || Promise.resolve()).then(task, task)
+  const run = async () => {
+    if (lifecycle && !lifecycle.current) return
+    try {
+      await task()
+    } catch (error) {
+      if (lifecycle) lifecycle.error ??= error
+      console.error('AI session content write failed', error)
+    }
+  }
+  const next = (contentWriteChains.get(key) || Promise.resolve()).then(run, run)
   contentWriteChains.set(key, next)
   next.finally(() => {
     if (contentWriteChains.get(key) === next) {
@@ -53,9 +70,12 @@ export const upsertSessionContent = (
   sessionId: string,
   token: string,
   next: AIChatQSData | SessionContentUpdater,
+  lifecycle?: SessionLifecycle,
 ): Promise<unknown> => {
-  return enqueueContentWrite(sessionId, token, async () => {
-    try {
+  return enqueueContentWrite(
+    sessionId,
+    token,
+    async () => {
       if (typeof next === 'function') {
         await aiChatPersistStore.setSessionContent(sessionId, token, (old) => {
           const result = next(old)
@@ -63,33 +83,41 @@ export const upsertSessionContent = (
           return result
         })
       } else {
-        next.stageSettled = true
         const snapshot = clonePersistableContent(next)
+        snapshot.stageSettled = true
         await aiChatPersistStore.setSessionContent(sessionId, token, () => snapshot)
+        // 事务提交后才允许内存淘汰；该标识本身不用于判断事务是否完成。
+        if (!lifecycle || lifecycle.current) next.stageSettled = true
       }
-    } catch {
-      // 持久化失败不打断主流程
-    }
-  })
+    },
+    lifecycle,
+  )
 }
 
 /** 独立单条首次/更新落库（薄封装，便于各 handler 统一调用） */
-export const persistIndependentItem = (sessionId: string, data: AIChatQSData): Promise<unknown> => {
-  return upsertSessionContent(sessionId, data.id, data)
+export const persistIndependentItem = (
+  sessionId: string,
+  data: AIChatQSData,
+  lifecycle?: SessionLifecycle,
+): Promise<unknown> => {
+  return upsertSessionContent(sessionId, data.id, data, lifecycle)
 }
 
 /**
  * 删除已落库正文（走同 token 串行队列，避免未完成的 put 在 delete 后又写回孤儿行）。
  * 典型场景：QUESTION 前端 uuid → 后端 taskId 替换。
  */
-export const deletePersistedContent = (sessionId: string, token: string): Promise<unknown> => {
-  return enqueueContentWrite(sessionId, token, async () => {
-    try {
-      await aiChatPersistStore.deleteSessionContent(sessionId, token)
-    } catch {
-      // 持久化失败不打断主流程
-    }
-  })
+export const deletePersistedContent = (
+  sessionId: string,
+  token: string,
+  lifecycle?: SessionLifecycle,
+): Promise<unknown> => {
+  return enqueueContentWrite(
+    sessionId,
+    token,
+    () => aiChatPersistStore.deleteSessionContent(sessionId, token),
+    lifecycle,
+  )
 }
 
 /** TOOL_RESULT 终态：success / failed / user_cancelled */
@@ -98,10 +126,14 @@ export const isToolResultTerminalStatus = (status: string | undefined): boolean 
 }
 
 /** 工具已终态时追加写正文；未终态不落库 */
-export const persistToolResultIfTerminal = (sessionId: string, toolResult: AIChatQSData): Promise<unknown> | void => {
+export const persistToolResultIfTerminal = (
+  sessionId: string,
+  toolResult: AIChatQSData,
+  lifecycle?: SessionLifecycle,
+): Promise<unknown> | void => {
   if (toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) return
   if (!isToolResultTerminalStatus(toolResult.data.tool.status)) return
-  return upsertSessionContent(sessionId, toolResult.id, toolResult)
+  return upsertSessionContent(sessionId, toolResult.id, toolResult, lifecycle)
 }
 
 /**
@@ -112,18 +144,18 @@ export const setSessionReferencePersist = (
   sessionId: string,
   refToken: string,
   data: AIAgentGrpcApi.ReferenceMaterialPayload,
+  lifecycle?: SessionLifecycle,
 ): Promise<unknown> => {
-  return enqueueContentWrite(sessionId, refToken, async () => {
-    try {
-      await aiChatPersistStore.setSessionReference(sessionId, refToken, data)
-    } catch {
-      // 持久化失败不打断主流程
-    }
-  })
+  return enqueueContentWrite(
+    sessionId,
+    refToken,
+    () => aiChatPersistStore.setSessionReference(sessionId, refToken, data),
+    lifecycle,
+  )
 }
 
 /**
- * 排干某 session 所有在飞的正文/参考资料写，resolve 时该 session 的 token 写队列已排空。
+ * 等待调用时该 session 的正文/参考资料链尾；调用方须先停止旧任务追加写入。
  * 整 session 删除前调用，确保 delete 事务排在所有 put 之后，避免 delete 后迟到的 put 又写回孤儿行。
  */
 export const drainSessionContentWrites = (sessionId: string): Promise<unknown[]> => {

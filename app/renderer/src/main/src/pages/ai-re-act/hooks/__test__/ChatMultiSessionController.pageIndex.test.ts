@@ -51,16 +51,23 @@ const startParams = (sessionId: string, pageId = 'page-1', userQuery = '') => ({
   } as any,
 })
 
-describe('ChatMultiSessionController page index / ensureSession', () => {
+/** 首批历史结束后才允许发送问题或审核；测试主动送回执，不依赖定时等待。 */
+const finishRecovery = (ctrl: ChatMultiSessionController, sessionId: string) =>
+  ctrl.handleGrpcOutputEvent(
+    sessionId,
+    makeGrpcJsonRes('structured', { next_start_id: 0 }, { NodeId: 'recovery_history' }),
+  )
+
+describe('ChatMultiSessionController page index / ensureSession', async () => {
   let ctrl: ChatMultiSessionController
 
-  beforeEach(() => {
+  beforeEach(async () => {
     resetIpcMocks()
     vi.clearAllMocks()
     ctrl = new ChatMultiSessionController()
   })
 
-  it('A2/A3: ensureSession idempotent and active show', () => {
+  it('A2/A3: ensureSession idempotent and active show', async () => {
     const a = ctrl.ensureSession('s1')
     const b = ctrl.ensureSession('s1')
     expect(a.store).toBe(b.store)
@@ -73,6 +80,7 @@ describe('ChatMultiSessionController page index / ensureSession', () => {
 
   it('A1/A4: start registers ready + rebind moves page', async () => {
     expect(ctrl.handleStartSession(startParams('s-rebind', 'page-a'))).toBe(true)
+    await ctrl.ensureSession('s-rebind').meta.lifecycle.preparation
     expect(ctrl.isSessionReady('s-rebind')).toBe(true)
 
     ctrl.rebindSessionPageId('s-rebind', 'page-b')
@@ -87,7 +95,7 @@ describe('ChatMultiSessionController page index / ensureSession', () => {
     await Promise.resolve()
   })
 
-  it('A5/A6: updateSessionConfig ignores Source; removeContentsFromMemory is callable', () => {
+  it('A5/A6: updateSessionConfig ignores Source; removeContentsFromMemory is callable', async () => {
     const { request, rawData } = ctrl.ensureSession('s-cfg')
     request.Source = 'ai'
     ctrl.updateSessionConfig('s-cfg', { ReviewPolicy: 'yolo', Source: 'im' } as any)
@@ -107,12 +115,13 @@ describe('ChatMultiSessionController page index / ensureSession', () => {
     expect(rawData.contents.size).toBe(0)
   })
 
-  it('A22: getSessionExecute is read-only and does not create empty pool', () => {
+  it('A22: getSessionExecute is read-only and does not create empty pool', async () => {
     expect(ctrl.getSessionExecute('ghost')).toBe(false)
     // 只读查询不得 ensureSession 造池：再 ensure 才应新建
     expect(ctrl.filterExecutingSessionIds(['ghost'])).toEqual([])
 
     ctrl.handleStartSession(startParams('s-exec'))
+    await ctrl.ensureSession('s-exec').meta.lifecycle.preparation
     const { store } = ctrl.ensureSession('s-exec')
     store.getState().updateState({ execute: true })
     expect(ctrl.getSessionExecute('s-exec')).toBe(true)
@@ -122,9 +131,11 @@ describe('ChatMultiSessionController page index / ensureSession', () => {
     expect(ctrl.getSessionExecute('s-exec')).toBe(false)
   })
 
-  it('A23: getSessionIdsBySourceAndRoute crosses pageIds', () => {
+  it('A23: getSessionIdsBySourceAndRoute crosses pageIds', async () => {
     ctrl.handleStartSession(startParams('s-a', 'page-a'))
+    await ctrl.ensureSession('s-a').meta.lifecycle.preparation
     ctrl.handleStartSession(startParams('s-b', 'page-b'))
+    await ctrl.ensureSession('s-b').meta.lifecycle.preparation
     ctrl.handleStartSession({
       ...startParams('s-im', 'page-a'),
       params: { Params: { Source: 'im', UserQuery: '' } } as any,
@@ -136,13 +147,14 @@ describe('ChatMultiSessionController page index / ensureSession', () => {
   })
 })
 
-describe('ChatMultiSessionController session api / dispatch', () => {
+describe('ChatMultiSessionController session api / dispatch', async () => {
   let ctrl: ChatMultiSessionController
 
-  beforeEach(() => {
+  beforeEach(async () => {
     resetIpcMocks()
     ctrl = new ChatMultiSessionController()
     ctrl.handleStartSession(startParams('s-api'))
+    await ctrl.ensureSession('s-api').meta.lifecycle.preparation
   })
 
   it('A7: persist helpers callable', async () => {
@@ -151,16 +163,21 @@ describe('ChatMultiSessionController session api / dispatch', () => {
     await expect(ctrl.persistDeleteBySource('ai')).resolves.toBeUndefined()
   })
 
-  it('A8: handleGrpcOutputEvent unknown type no throw', () => {
-    expect(() => ctrl.handleGrpcOutputEvent('s-api', makeGrpcJsonRes('unknown_type_xyz', { a: 1 }))).not.toThrow()
+  it('A8: handleGrpcOutputEvent unknown type no throw', async () => {
+    await expect(
+      ctrl.handleGrpcOutputEvent('s-api', makeGrpcJsonRes('unknown_type_xyz', { a: 1 })),
+    ).resolves.toBeUndefined()
   })
 
-  it('A8: session_title via structured NodeId', () => {
-    ctrl.handleGrpcOutputEvent('s-api', makeGrpcJsonRes('structured', { title: 'T' }, { NodeId: 'session_title' }))
+  it('A8: session_title via structured NodeId', async () => {
+    await ctrl.handleGrpcOutputEvent(
+      's-api',
+      makeGrpcJsonRes('structured', { title: 'T' }, { NodeId: 'session_title' }),
+    )
     expect(ctrl.ensureSession('s-api').rawData.sessionTitle).toBe('T')
   })
 
-  it('A9: pushDataToSession / closeChatReview / updateToolResult', () => {
+  it('A9: pushDataToSession / closeChatReview / updateToolResult', async () => {
     const { store, rawData } = ctrl.ensureSession('s-api')
     const data = {
       id: 'q1',
@@ -207,25 +224,26 @@ describe('ChatMultiSessionController session api / dispatch', () => {
   })
 })
 
-describe('ChatMultiSessionController lifecycle', () => {
+describe('ChatMultiSessionController lifecycle', async () => {
   let ctrl: ChatMultiSessionController
 
-  beforeEach(() => {
+  beforeEach(async () => {
     resetIpcMocks()
     vi.clearAllMocks()
     vi.useFakeTimers()
     ctrl = new ChatMultiSessionController()
     ctrl.handleStartSession(startParams('s-life'))
+    await ctrl.ensureSession('s-life').meta.lifecycle.preparation
   })
 
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  it('A10: handleSessionEnd stops execute', () => {
+  it('A10: handleSessionEnd stops execute', async () => {
     const { store } = ctrl.ensureSession('s-life')
     store.getState().updateState({ execute: true })
-    ctrl.handleSessionEnd('s-life')
+    await ctrl.handleSessionEnd('s-life')
     expect(store.getState().execute).toBe(false)
     // i18n 资源加载方式变化时 t 的返回值不定，与同一 tAgent 求值比较而非硬编码
     expect(store.getState().currentLoadingTitle.casualTitle).toBe(tAgent('AIChatLoading.sessionClosed'))
@@ -233,11 +251,11 @@ describe('ChatMultiSessionController lifecycle', () => {
     expect(ctrl.isSessionReady('s-life')).toBe(false)
   })
 
-  it('A11: forceClose arms fallback end', () => {
+  it('A11: forceClose arms fallback end', async () => {
     const onEnd = vi.fn()
     ctrl.forceCloseSession({ sessionIds: ['s-life'], onEnd })
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-life')
-    vi.advanceTimersByTime(5000)
+    await vi.advanceTimersByTimeAsync(5000)
     expect(onEnd).toHaveBeenCalled()
   })
 
@@ -272,7 +290,9 @@ describe('ChatMultiSessionController lifecycle', () => {
   it('A25: deleteSessions by source clears all pages then persistBySource', async () => {
     const aiChatPersistStore = (await import('../persist/aiChatPersistStore')).default
     ctrl.handleStartSession(startParams('s-bulk-a', 'page-a'))
+    await ctrl.ensureSession('s-bulk-a').meta.lifecycle.preparation
     ctrl.handleStartSession(startParams('s-bulk-b', 'page-b'))
+    await ctrl.ensureSession('s-bulk-b').meta.lifecycle.preparation
 
     const done = ctrl.deleteSessions({
       sessionIds: [],
@@ -291,6 +311,7 @@ describe('ChatMultiSessionController lifecycle', () => {
   it('A26: deleteAll clears all sources via deleteAllPersist', async () => {
     const aiChatPersistStore = (await import('../persist/aiChatPersistStore')).default
     ctrl.handleStartSession(startParams('s-all-a', 'page-a'))
+    await ctrl.ensureSession('s-all-a').meta.lifecycle.preparation
     ctrl.handleStartSession({
       ...startParams('s-all-im', 'page-b'),
       params: { Params: { Source: 'im', UserQuery: '' } } as any,
@@ -316,38 +337,43 @@ describe('ChatMultiSessionController lifecycle', () => {
   })
 })
 
-describe('ChatMultiSessionController start / send / history', () => {
+describe('ChatMultiSessionController start / send / history', async () => {
   let ctrl: ChatMultiSessionController
 
-  beforeEach(() => {
+  beforeEach(async () => {
     resetIpcMocks()
     ctrl = new ChatMultiSessionController()
   })
 
-  it('A13: duplicate start returns false', () => {
+  it('A13: duplicate start returns false', async () => {
     expect(ctrl.handleStartSession(startParams('s-dup'))).toBe(true)
+    await ctrl.ensureSession('s-dup').meta.lifecycle.preparation
     expect(ctrl.handleStartSession(startParams('s-dup'))).toBe(false)
+    await ctrl.ensureSession('s-dup').meta.lifecycle.preparation
   })
 
-  it('A14: no UserQuery enters restore loading', () => {
+  it('A14: no UserQuery enters restore loading', async () => {
     ctrl.handleStartSession(startParams('s-restore', 'page-1', ''))
+    await ctrl.ensureSession('s-restore').meta.lifecycle.preparation
     expect(ctrl.ensureSession('s-restore').store.getState().initLoading).toBe(true)
   })
 
   it('A14c: restore finish (grpcOffset=0) clears initLoading and loadingHistory casualTitle', async () => {
     ctrl.handleStartSession(startParams('s-restore-clear', 'page-1', ''))
+    await ctrl.ensureSession('s-restore-clear').meta.lifecycle.preparation
     const { store } = ctrl.ensureSession('s-restore-clear')
     expect(store.getState().initLoading).toBe(true)
     // 建连时写入「获取历史数据中...」占位文案
     expect(store.getState().currentLoadingTitle.casualTitle).not.toBe('')
 
-    ctrl.handleGrpcOutputEvent('s-restore-clear', makeGrpcJsonRes('pong', {}))
+    await ctrl.handleGrpcOutputEvent('s-restore-clear', makeGrpcJsonRes('pong', {}))
+    await finishRecovery(ctrl, 's-restore-clear')
     await vi.waitFor(() => {
       expect(store.getState().initLoading).toBe(false)
     })
     // 恢复完成后兜底清空，否则 Footer 一直显示「获取历史数据中...」
     expect(store.getState().currentLoadingTitle.casualTitle).toBe('')
-    ctrl.handleSessionEnd('s-restore-clear')
+    await ctrl.handleSessionEnd('s-restore-clear')
   })
 
   it('A14d: restore via recovery_history clears casualTitle; running-task title preserved', async () => {
@@ -356,10 +382,11 @@ describe('ChatMultiSessionController start / send / history', () => {
     ;(grpcQueryAIEvent as any).mockResolvedValue({ Events: [{ ID: 7 }], Total: 1 })
 
     ctrl.handleStartSession(startParams('s-recovery', 'page-1', ''))
+    await ctrl.ensureSession('s-recovery').meta.lifecycle.preparation
     await vi.waitFor(() => {
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's-recovery', expect.anything())
     })
-    ctrl.handleGrpcOutputEvent('s-recovery', makeGrpcJsonRes('pong', {}))
+    await ctrl.handleGrpcOutputEvent('s-recovery', makeGrpcJsonRes('pong', {}))
     await vi.waitFor(() => {
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
         'send-ai-re-act',
@@ -367,7 +394,7 @@ describe('ChatMultiSessionController start / send / history', () => {
         expect.objectContaining({ IsSyncMessage: true, SyncType: 'recovery_history' }),
       )
     })
-    ctrl.handleGrpcOutputEvent(
+    await ctrl.handleGrpcOutputEvent(
       's-recovery',
       makeGrpcJsonRes('structured', { next_start_id: 3, events: [] }, { NodeId: 'recovery_history' }),
     )
@@ -379,6 +406,7 @@ describe('ChatMultiSessionController start / send / history', () => {
 
     // 问题仍在执行（queue_info 已回填运行态文案）时不清空，避免覆盖
     ctrl.handleStartSession(startParams('s-recovery-run', 'page-2', ''))
+    await ctrl.ensureSession('s-recovery-run').meta.lifecycle.preparation
     await vi.waitFor(() => {
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's-recovery-run', expect.anything())
     })
@@ -387,7 +415,7 @@ describe('ChatMultiSessionController start / send / history', () => {
       currentChatStatus: { questionID: 'q1', coordinatorId: '', status: AITaskStatus.inProgress },
       currentLoadingTitle: { casualTitle: 'question-running', planTitle: '' },
     })
-    ctrl.handleGrpcOutputEvent('s-recovery-run', makeGrpcJsonRes('pong', {}))
+    await ctrl.handleGrpcOutputEvent('s-recovery-run', makeGrpcJsonRes('pong', {}))
     await vi.waitFor(() => {
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
         'send-ai-re-act',
@@ -395,7 +423,7 @@ describe('ChatMultiSessionController start / send / history', () => {
         expect.objectContaining({ IsSyncMessage: true, SyncType: 'recovery_history' }),
       )
     })
-    ctrl.handleGrpcOutputEvent(
+    await ctrl.handleGrpcOutputEvent(
       's-recovery-run',
       makeGrpcJsonRes('structured', { next_start_id: 5, events: [] }, { NodeId: 'recovery_history' }),
     )
@@ -404,26 +432,30 @@ describe('ChatMultiSessionController start / send / history', () => {
     })
     expect(runningStore.getState().currentLoadingTitle.casualTitle).toBe('question-running')
     ;(grpcQueryAIEvent as any).mockResolvedValue({ Events: [] })
-    ctrl.handleSessionEnd('s-recovery')
-    ctrl.handleSessionEnd('s-recovery-run')
+    await ctrl.handleSessionEnd('s-recovery')
+    await ctrl.handleSessionEnd('s-recovery-run')
   })
 
-  it('A23: onLinkStart after ensureSession; onLinkSuccess after pong', async () => {
+  it('A23: onLinkStart after ensureSession; onLinkSuccess after first history', async () => {
     const onLinkStart = vi.fn()
     const onLinkSuccess = vi.fn()
     expect(ctrl.handleStartSession(startParams('s-cb'), { onLinkStart, onLinkSuccess })).toBe(true)
+    await ctrl.ensureSession('s-cb').meta.lifecycle.preparation
     expect(onLinkStart).toHaveBeenCalledWith('s-cb')
     expect(ctrl.ensureSession('s-cb').store).toBeTruthy()
     expect(onLinkSuccess).not.toHaveBeenCalled()
 
-    ctrl.handleGrpcOutputEvent('s-cb', makeGrpcJsonRes('pong', {}))
+    await ctrl.handleGrpcOutputEvent('s-cb', makeGrpcJsonRes('pong', {}))
+    await finishRecovery(ctrl, 's-cb')
     await vi.waitFor(() => {
       expect(onLinkSuccess).toHaveBeenCalledWith('s-cb')
     })
   })
 
-  it('A24: skip subtask send records id; grpc event clears it', () => {
+  it('A24: skip subtask send records id; grpc event clears it', async () => {
     ctrl.handleStartSession(startParams('s-skip'))
+    await ctrl.ensureSession('s-skip').meta.lifecycle.preparation
+    await finishRecovery(ctrl, 's-skip')
     const skipParams = {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
@@ -437,7 +469,7 @@ describe('ChatMultiSessionController start / send / history', () => {
     ctrl.handleSendMessage({ token: 's-skip', type: 'task', params: skipParams as any })
     expect(ctrl.ensureSession('s-skip').store.getState().skipSubtaskTaskIDs).toEqual(['sub-1'])
 
-    ctrl.handleGrpcOutputEvent(
+    await ctrl.handleGrpcOutputEvent(
       's-skip',
       makeGrpcJsonRes(
         'structured',
@@ -455,8 +487,10 @@ describe('ChatMultiSessionController start / send / history', () => {
     expect(ctrl.ensureSession('s-skip').store.getState().skipSubtaskTaskIDs).toEqual([])
   })
 
-  it('A28: cancel task send records task_id; event clears it', () => {
+  it('A28: cancel task send records task_id; event clears it', async () => {
     ctrl.handleStartSession(startParams('s-cancel'))
+    await ctrl.ensureSession('s-cancel').meta.lifecycle.preparation
+    await finishRecovery(ctrl, 's-cancel')
     const cancelParams = {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
@@ -469,7 +503,7 @@ describe('ChatMultiSessionController start / send / history', () => {
     ctrl.handleSendMessage({ token: 's-cancel', type: 'task', params: cancelParams as any })
     expect(ctrl.ensureSession('s-cancel').store.getState().skipSubtaskTaskIDs).toEqual(['react-1'])
 
-    ctrl.handleGrpcOutputEvent(
+    await ctrl.handleGrpcOutputEvent(
       's-cancel',
       makeGrpcJsonRes(
         'structured',
@@ -487,8 +521,10 @@ describe('ChatMultiSessionController start / send / history', () => {
     expect(ctrl.ensureSession('s-cancel').store.getState().skipSubtaskTaskIDs).toEqual([])
   })
 
-  it('A29: skip/cancel payload without id is not recorded', () => {
+  it('A29: skip/cancel payload without id is not recorded', async () => {
     ctrl.handleStartSession(startParams('s-noop'))
+    await ctrl.ensureSession('s-noop').meta.lifecycle.preparation
+    await finishRecovery(ctrl, 's-noop')
     ctrl.handleSendMessage({
       token: 's-noop',
       type: 'task',
@@ -509,10 +545,12 @@ describe('ChatMultiSessionController start / send / history', () => {
     })
     expect(ctrl.ensureSession('s-noop').store.getState().skipSubtaskTaskIDs).toEqual([])
   })
-  it('A14b: requests the runtime queue snapshot after pong', async () => {
+  it('A14b: requests the runtime queue snapshot after first history', async () => {
     ctrl.handleStartSession(startParams('s-runtime-snapshot', 'page-1', ''))
+    await ctrl.ensureSession('s-runtime-snapshot').meta.lifecycle.preparation
 
-    ctrl.handleGrpcOutputEvent('s-runtime-snapshot', makeGrpcJsonRes('pong', {}))
+    await ctrl.handleGrpcOutputEvent('s-runtime-snapshot', makeGrpcJsonRes('pong', {}))
+    await finishRecovery(ctrl, 's-runtime-snapshot')
 
     await vi.waitFor(() => {
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
@@ -524,10 +562,10 @@ describe('ChatMultiSessionController start / send / history', () => {
         }),
       )
     })
-    ctrl.handleSessionEnd('s-runtime-snapshot')
+    await ctrl.handleSessionEnd('s-runtime-snapshot')
   })
 
-  it.each(['', '新会话问题'])('有效 pong 后同步一次会话快照（UserQuery=%j）', async (userQuery) => {
+  it.each(['', '新会话问题'])('首批历史完成后同步一次会话快照（UserQuery=%j）', async (userQuery) => {
     const sessionId = 's-session-snapshot'
     const snapshotCalls = () =>
       ipcRendererMock.invoke.mock.calls.filter(
@@ -537,15 +575,18 @@ describe('ChatMultiSessionController start / send / history', () => {
 
     try {
       ctrl.handleStartSession(startParams(sessionId, 'page-1', userQuery))
+      await ctrl.ensureSession(sessionId).meta.lifecycle.preparation
       await Promise.resolve()
       expect(snapshotCalls()).toHaveLength(0)
 
-      ctrl.handleGrpcOutputEvent(sessionId, makeGrpcJsonRes('pong', {}, { SyncID: 'expired-ping' }))
+      await ctrl.handleGrpcOutputEvent(sessionId, makeGrpcJsonRes('pong', {}, { SyncID: 'expired-ping' }))
       await Promise.resolve()
       expect(snapshotCalls()).toHaveLength(0)
 
       const { meta } = ctrl.ensureSession(sessionId)
-      ctrl.handleGrpcOutputEvent(sessionId, makeGrpcJsonRes('pong', {}, { SyncID: meta.pingSyncID }))
+      await ctrl.handleGrpcOutputEvent(sessionId, makeGrpcJsonRes('pong', {}, { SyncID: meta.pingSyncID }))
+      expect(snapshotCalls()).toHaveLength(0)
+      await finishRecovery(ctrl, sessionId)
 
       await vi.waitFor(() => {
         expect(snapshotCalls()).toEqual([
@@ -553,11 +594,11 @@ describe('ChatMultiSessionController start / send / history', () => {
         ])
       })
     } finally {
-      ctrl.handleSessionEnd(sessionId)
+      await ctrl.handleSessionEnd(sessionId)
     }
   })
 
-  it('A17: send without ready warns when active', () => {
+  it('A17: send without ready warns when active', async () => {
     ctrl.setActiveShowSession('ghost')
     expect(() =>
       ctrl.handleSendMessage({
@@ -568,8 +609,9 @@ describe('ChatMultiSessionController start / send / history', () => {
     ).not.toThrow()
   })
 
-  it('A19: requestRecoveryHistory invokes send', () => {
+  it('A19: requestRecoveryHistory invokes send', async () => {
     ctrl.handleStartSession(startParams('s-hist'))
+    await ctrl.ensureSession('s-hist').meta.lifecycle.preparation
     ctrl.requestRecoveryHistory('s-hist')
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
       'send-ai-re-act',
@@ -580,6 +622,7 @@ describe('ChatMultiSessionController start / send / history', () => {
 
   it('A20: loadTimelineHistory toggles timelinesLoading', async () => {
     ctrl.handleStartSession(startParams('s-tl'))
+    await ctrl.ensureSession('s-tl').meta.lifecycle.preparation
     const { store } = ctrl.ensureSession('s-tl')
     expect(store.getState().timelinesLoading).toBe(false)
 
@@ -602,13 +645,16 @@ describe('ChatMultiSessionController start / send / history', () => {
 
   it('A21: loadFileSystemHistory callable', async () => {
     ctrl.handleStartSession(startParams('s-fs'))
+    await ctrl.ensureSession('s-fs').meta.lifecycle.preparation
     const { grpcQueryAIEvent } = await import('@/pages/ai-agent/grpc')
     ;(grpcQueryAIEvent as any).mockResolvedValue({ Events: [] })
     await expect(ctrl.loadFileSystemHistory('s-fs')).resolves.toBeUndefined()
   })
 
-  it('A22: task plan-review continue updates currentPlan and clears extra', () => {
+  it('A22: task plan-review continue updates currentPlan and clears extra', async () => {
     ctrl.handleStartSession(startParams('s-plan-cont'))
+    await ctrl.ensureSession('s-plan-cont').meta.lifecycle.preparation
+    await finishRecovery(ctrl, 's-plan-cont')
     const session = ctrl.ensureSession('s-plan-cont')
     session.rawData.contents.set('plan-rev-1', {
       id: 'plan-rev-1',
@@ -659,8 +705,10 @@ describe('ChatMultiSessionController start / send / history', () => {
     expect(session.store.getState().currentReviewDetail.token).toBe('')
   })
 
-  it('A23: task plan-review non-continue skips currentPlan but still clears extra', () => {
+  it('A23: task plan-review non-continue skips currentPlan but still clears extra', async () => {
     ctrl.handleStartSession(startParams('s-plan-chg'))
+    await ctrl.ensureSession('s-plan-chg').meta.lifecycle.preparation
+    await finishRecovery(ctrl, 's-plan-chg')
     const session = ctrl.ensureSession('s-plan-chg')
     session.rawData.contents.set('plan-rev-2', {
       id: 'plan-rev-2',
@@ -702,21 +750,22 @@ describe('ChatMultiSessionController start / send / history', () => {
   })
 })
 
-describe('ChatMultiSessionController restore / renderPersist / collect', () => {
+describe('ChatMultiSessionController restore / renderPersist / collect', async () => {
   let ctrl: ChatMultiSessionController
 
-  beforeEach(() => {
+  beforeEach(async () => {
     resetIpcMocks()
     vi.useFakeTimers()
     ctrl = new ChatMultiSessionController()
     ctrl.handleStartSession(startParams('s-rp'))
+    await ctrl.ensureSession('s-rp').meta.lifecycle.preparation
   })
 
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  it('A15/A18: hydrate via ensureSession + structural dirty deferred', () => {
+  it('A15/A18: hydrate via ensureSession + structural dirty deferred', async () => {
     const { store } = ctrl.ensureSession('s-rp')
     store.getState().hydrateRenderTree({
       items: { a: { kind: 'item', token: 'a', type: 'thought', renderNum: 0, nodeId: '' } as any },
@@ -739,7 +788,7 @@ describe('ChatMultiSessionController restore / renderPersist / collect', () => {
     expect(aiChatPersistStore.setSessionRender).toHaveBeenCalled()
   })
 
-  it('A10b: session end with processing currentChatStatus', () => {
+  it('A10b: session end with processing currentChatStatus', async () => {
     const { store } = ctrl.ensureSession('s-rp')
     store.getState().updateState({
       currentChatStatus: {
@@ -748,7 +797,7 @@ describe('ChatMultiSessionController restore / renderPersist / collect', () => {
         coordinatorId: 'c1',
       },
     })
-    ctrl.handleSessionEnd('s-rp')
+    await ctrl.handleSessionEnd('s-rp')
     expect(store.getState().execute).toBe(false)
     expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.error)
   })
