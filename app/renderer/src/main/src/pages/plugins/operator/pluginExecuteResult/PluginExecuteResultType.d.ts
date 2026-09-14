@@ -1,3 +1,4 @@
+import type { HTTPHistorySourcePageType } from '@/components/HTTPHistory'
 import {
   type HoldGRPCStreamInfo,
   type HoldGRPCStreamProps,
@@ -51,6 +52,7 @@ export interface PluginExecuteWebsiteTreeProps {
   showAdvancedSearch?: boolean
   /** 流量表是否展示列设置，默认 false */
   showSetting?: boolean
+  pageType: HTTPHistorySourcePageType
 }
 export interface PluginExecutePortTableProps {
   runtimeId: string

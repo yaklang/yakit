@@ -139,6 +139,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
             runtimeId={runtimeId}
             website={!!streamInfo.tabsInfoState['website']?.targets}
             isCrawler={isCrawler}
+            pageType="Plugin"
           />
         ) : (
           <></>
@@ -357,6 +358,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
     isCrawler = false,
     showAdvancedSearch = false,
     showSetting = false,
+    pageType,
   } = props
   const { t } = useI18nNamespaces(['plugin'])
 
@@ -416,10 +418,10 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
             containerClassName={styles['current-http-table-container']}
             includeInUrl={includeInUrl}
             onQueryParams={onQueryParams}
-            pageType="Plugin"
+            pageType={pageType}
             runtimeId={runtimeId}
             filterTagDom={filterTagDom}
-            params={{ SourceType: isCrawler ? 'basic-crawler' : 'scan' }}
+            params={pageType === 'History' ? undefined : { SourceType: isCrawler ? 'basic-crawler' : 'scan' }}
             httpHistoryTableTitleStyle={{
               paddingTop: 12,
               paddingLeft: 8,

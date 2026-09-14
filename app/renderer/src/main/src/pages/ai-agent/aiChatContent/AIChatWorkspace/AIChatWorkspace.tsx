@@ -31,6 +31,8 @@ import { FileDefault, FileSuffix, KeyToIcon } from '@/pages/yakRunner/FileTree/i
 import styles from './AIChatWorkspace.module.scss'
 
 interface AIChatWorkspaceProps {
+  /** 欢迎页且没有激活会话时，流量和漏洞页签展示全量数据 */
+  welcome?: boolean
   filePreviewData?: FileNodeProps
   setFilePreviewData: (data?: FileNodeProps) => void
   onTabsChange?: (count: number) => void
@@ -64,7 +66,7 @@ const getFileTabIcon = (file?: FileNodeProps) => {
 }
 
 export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props) => {
-  const { filePreviewData, setFilePreviewData, onTabsChange } = props
+  const { welcome = false, filePreviewData, setFilePreviewData, onTabsChange } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
   const store = useCurrentStore()
@@ -258,7 +260,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
       setActiveTabKey(next?.key || '')
     }
   })
-
+  const showAll = welcome && !activeChat?.SessionID
   const tabContent = useMemo(() => {
     if (!activeTab) return null
 
@@ -277,15 +279,19 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         ) : (
           <YakitEmpty style={{ paddingTop: 48 }} />
         )
-      case AITabsEnum.Risk:
+      case AITabsEnum.Risk: {
+        if (showAll) return <VulnerabilitiesRisksTable runTimeIDs={[]} />
         return riskRunTimeIds.length ? (
           <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={riskRunTimeIds} />
         ) : (
           <YakitEmpty style={{ paddingTop: 48 }} />
         )
+      }
       case AITabsEnum.HTTP:
+        if (showAll) return <PluginExecuteHttpFlow pageType="History" runtimeId="" showAdvancedSearch showSetting />
         return runTimeIds.length ? (
           <PluginExecuteHttpFlow
+            pageType="Plugin"
             filterTagDom={filterTagDom}
             runtimeId={runTimeIds.join(',')}
             showAdvancedSearch
@@ -301,6 +307,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     }
   }, [
     activeTab,
+    showAll,
     httpTabUpdate,
     riskTabUpdate,
     relatedRuntimeIDs,
