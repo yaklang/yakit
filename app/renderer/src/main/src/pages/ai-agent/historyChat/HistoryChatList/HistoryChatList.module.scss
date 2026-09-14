@@ -3,11 +3,12 @@
   min-height: 0;
   padding-left: 12px;
   padding-right: 12px;
-  overflow-y: auto;
-  .history-group {
-    & + .history-group {
-      margin-top: 12px;
-    }
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  .history-virtual-list {
+    flex: 1;
+    min-height: 0;
   }
   .history-group-title {
     padding: 0px 12px;
@@ -15,6 +16,9 @@
     font-size: 11px;
     font-weight: 500;
     line-height: 16px;
+    &.history-group-spaced {
+      padding-top: 12px;
+    }
   }
   .history-item {
     position: relative;
