@@ -1,11 +1,11 @@
 import type React from 'react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  OutlineCheckcircleIcon,
-  OutlineExternallinkIcon,
-  OutlineQrcodeIcon,
-  OutlineRefreshIcon,
-} from '@/assets/icon/outline'
+  CheckCircleOutlined,
+  ExternalLinkOutlined,
+  QrcodeOutlined,
+  RefreshOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -174,7 +174,7 @@ export const AIBrowserHandoffCard: React.FC<AIBrowserHandoffCardProps> = memo(({
     return (
       <ChatCard
         className={styles['handoff-card-complete']}
-        titleIcon={<OutlineCheckcircleIcon />}
+        titleIcon={<CheckCircleOutlined color="currentColor" />}
         titleText={`${badge} · ${title}`}
         titleExtra={t(state === 'completed' ? 'AIBrowserHandoffCard.completed' : 'AIBrowserHandoffCard.cancelled')}
       />
@@ -186,7 +186,7 @@ export const AIBrowserHandoffCard: React.FC<AIBrowserHandoffCardProps> = memo(({
   return (
     <ChatCard
       className={styles['handoff-card']}
-      titleIcon={<OutlineQrcodeIcon />}
+      titleIcon={<QrcodeOutlined color="currentColor" />}
       titleText={`${badge} · ${title}`}
       titleExtra={<span className={styles['local-only']}>{t('AIBrowserHandoffCard.localOnly')}</span>}
     >
@@ -204,11 +204,11 @@ export const AIBrowserHandoffCard: React.FC<AIBrowserHandoffCardProps> = memo(({
             ) : (
               <div className={styles.placeholder}>
                 {pageChanged ? (
-                  <OutlineCheckcircleIcon />
+                  <CheckCircleOutlined color="currentColor" />
                 ) : usingBrowserFallback ? (
-                  <OutlineExternallinkIcon />
+                  <ExternalLinkOutlined color="currentColor" />
                 ) : (
-                  <OutlineQrcodeIcon />
+                  <QrcodeOutlined color="currentColor" />
                 )}
                 <span>
                   {error ||
@@ -248,7 +248,7 @@ export const AIBrowserHandoffCard: React.FC<AIBrowserHandoffCardProps> = memo(({
             <YakitButton
               size="small"
               type="outline2"
-              icon={<OutlineRefreshIcon />}
+              icon={<RefreshOutlined color="currentColor" />}
               loading={loading}
               onClick={() => void loadPresentation()}
             >
@@ -258,7 +258,7 @@ export const AIBrowserHandoffCard: React.FC<AIBrowserHandoffCardProps> = memo(({
           <YakitButton
             size="small"
             type="text2"
-            icon={<OutlineExternallinkIcon />}
+            icon={<ExternalLinkOutlined color="currentColor" />}
             disabled={actionLoading}
             onClick={handleFocus}
           >

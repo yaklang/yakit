@@ -6,7 +6,7 @@ import { BrowserHTTPGateway } from '../BrowserHTTPGateway'
 import { getRemoteProjectValue } from '@/utils/kv'
 
 vi.mock('@/utils/kv', () => ({ getRemoteProjectValue: vi.fn() }))
-vi.mock('@/assets/newIcon', () => ({ ChromeSvgIcon: () => null }))
+vi.mock('@yakit-libs/yakit-ui-icons/oldicon/ChromeSvgIcon', () => ({ ChromeSvgIcon: () => null }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 vi.mock('../yakitUI/YakitButton/YakitButton', () => ({
   YakitButton: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,

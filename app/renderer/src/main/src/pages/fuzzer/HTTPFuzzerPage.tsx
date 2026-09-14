@@ -3330,7 +3330,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                       (httpResponse.WireResponseRaw?.length || 0) > 0) && (
                       <YakitButton
                         type="text2"
-                        icon={<OutlineSwitchhorizontalIcon />}
+                        icon={<SwitchHorizontalOutlined color="currentColor" />}
                         onClick={() => showBrowserTransformPackets(httpResponse)}
                       >
                         明文 / 线上

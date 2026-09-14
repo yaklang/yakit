@@ -149,7 +149,7 @@ const BrowserHTTPResultCard: FC<{ data: BrowserHTTPTestResult }> = ({ data }) =>
           <strong>{t('ToolInvokerCard.browserHTTP.plainRequest')}</strong>
           <span>{data.plaintextRequest.raw.split(/\r?\n/, 1)[0]}</span>
         </div>
-        <OutlineArrownarrowrightIcon />
+        <ArrowNarrowRightOutlined color="currentColor" />
         <div className={styles['browser-http-gateway']}>
           <strong>{t('ToolInvokerCard.browserHTTP.gateway')}</strong>
           <span>
@@ -159,7 +159,7 @@ const BrowserHTTPResultCard: FC<{ data: BrowserHTTPTestResult }> = ({ data }) =>
             {transformState(data.responseTransformEnabled, data.responseTransformed)}
           </span>
         </div>
-        <OutlineArrownarrowrightIcon />
+        <ArrowNarrowRightOutlined color="currentColor" />
         <div>
           <strong>{t('ToolInvokerCard.browserHTTP.onlineResponse')}</strong>
           <span>HTTP {data.statusCode || '-'}</span>
