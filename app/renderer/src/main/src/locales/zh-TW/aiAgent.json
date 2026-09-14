@@ -512,9 +512,6 @@
   "AIReActChatContents": {
     "uiRendering": "UI渲染中..."
   },
-  "ChatSessionPane": {
-    "sessionList": "會話"
-  },
   "AIAgentChatLayout": {
     "dockDisabledTip": "螢幕過小，不支援該模組停靠在右邊"
   },

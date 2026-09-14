@@ -24,7 +24,6 @@ vi.mock('@/components/yakitSideTab/YakitSideTab', () => ({
     </div>
   ),
 }))
-vi.mock('../ChatSessionPane/ChatSessionPane', () => ({ default: () => <div>会话列表</div> }))
 vi.mock('../aiChatWelcome/FileTreeList/FileTreeList', () => ({
   default: ({ onClose }: { onClose: () => void }) => (
     <div>

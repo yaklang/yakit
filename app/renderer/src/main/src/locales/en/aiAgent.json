@@ -512,9 +512,6 @@
   "AIReActChatContents": {
     "uiRendering": "Rendering UI..."
   },
-  "ChatSessionPane": {
-    "sessionList": "Sessions"
-  },
   "AIAgentChatLayout": {
     "dockDisabledTip": "The screen is too small to dock this panel on the right"
   },
