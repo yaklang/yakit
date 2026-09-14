@@ -32,7 +32,7 @@ function applyTheme(theme: ThemeMode) {
   localStorage.setItem('theme', theme)
 }
 
-const themeStore = create<{
+const useThemeStore = create<{
   /** 用户选择：system / light / dark */
   theme: ThemeMode
   setTheme: (theme: ThemeMode) => void
@@ -80,16 +80,16 @@ function useLiveResolvedTheme(theme: ThemeMode): Theme {
 }
 
 function useThemeHook() {
-  const themeMode = themeStore((s) => s.theme)
-  const setTheme = themeStore((s) => s.setTheme)
-  const syncTheme = themeStore((s) => s.syncTheme)
+  const themeMode = useThemeStore((s) => s.theme)
+  const setTheme = useThemeStore((s) => s.setTheme)
+  const syncTheme = useThemeStore((s) => s.syncTheme)
   const theme = useLiveResolvedTheme(themeMode)
   return { theme, themeMode, setTheme, syncTheme }
 }
 
 /** theme：当前实际亮/暗；themeMode：用户选的 system/light/dark */
 export const useTheme = Object.assign(useThemeHook, {
-  getState: themeStore.getState,
-  setState: themeStore.setState,
-  subscribe: themeStore.subscribe,
+  getState: useThemeStore.getState,
+  setState: useThemeStore.setState,
+  subscribe: useThemeStore.subscribe,
 })

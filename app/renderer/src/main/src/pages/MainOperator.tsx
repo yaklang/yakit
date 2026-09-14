@@ -14,7 +14,7 @@ import { AutoSpin } from '../components/AutoSpin'
 import { addToTab } from './MainTabs'
 import Login from './Login'
 import SetPassword from './SetPassword'
-import { useEeSystemConfig, type UserInfoProps, useStore, yakitDynamicStatus } from '@/store'
+import { useEeSystemConfig, type UserInfoProps, useStore, useYakitDynamicStatus } from '@/store'
 import type { SimpleQueryYakScriptSchema } from './invoker/batch/QueryYakScriptParam'
 import { refreshToken } from '@/utils/login'
 import { getLocalValue, getRemoteValue, setLocalValue, setRemoteValue } from '@/utils/kv'
@@ -333,7 +333,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
   // 远程控制浮层
   const [controlShow, setControlShow] = useState<boolean>(false)
   const [controlName, setControlName] = useState<string>('')
-  const { dynamicStatus, setDynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus, setDynamicStatus } = useYakitDynamicStatus()
   // 定时器监听是否连接/断开：空闲后再开，页面隐藏时跳过
   useEffect(() => {
     const cancel = startIdleVisibleInterval(() => {

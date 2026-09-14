@@ -84,7 +84,6 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
 const StartToExecYakScriptViewer = React.forwardRef(
   (
     props: {
-      ref: any
       noErrorsLogCallBack?: () => void
       verbose: string
       script: YakScriptParam

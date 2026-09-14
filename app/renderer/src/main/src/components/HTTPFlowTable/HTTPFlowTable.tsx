@@ -1616,14 +1616,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
   const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: HTTPFlow) => {
     if (c) {
-      setSelectedRowKeys([...selectedRowKeys, keys])
-      setSelectedRows([...selectedRows, rows])
+      setSelectedRowKeys((prev) => [...prev, keys])
+      setSelectedRows((prev) => [...prev, rows])
     } else {
       setIsAllSelect(false)
-      const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== keys)
-      const newSelectedRows = selectedRows.filter((ele) => ele.Id !== rows.Id)
-      setSelectedRowKeys(newSelectedRowKeys)
-      setSelectedRows(newSelectedRows)
+      setSelectedRowKeys((prev) => prev.filter((ele) => ele !== keys))
+      setSelectedRows((prev) => prev.filter((ele) => ele.Id !== rows.Id))
     }
   })
   const resetSelected = useMemoizedFn(() => {

@@ -22,7 +22,7 @@ import { monaco } from 'react-monaco-editor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
 
-export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | null = memo((props) => {
+export const CollapseList: <T>(props: CollapseListProp<T>) => React.ReactNode = memo((props) => {
   const { type = 'sideBar', panelKey, onlyKey = '', list, titleRender, renderItem, collapseProps, isShowBottom } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
 

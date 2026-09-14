@@ -9,7 +9,7 @@ import { getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV } from '@/utils/envfil
 import { JSONParseLog } from '@/utils/tool'
 import { loginOut } from '@/utils/login'
 import { failed, success, warn } from '@/utils/notification'
-import { useStore, yakitDynamicStatus } from '@/store'
+import { useStore, useYakitDynamicStatus } from '@/store'
 import { CacheDropDownGV } from '@/yakitGV'
 import emiter from '@/utils/eventBus/eventBus'
 import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
@@ -37,7 +37,7 @@ export const GeneralSettings: React.FC = () => {
   const { t } = useI18nNamespaces(['setting', 'components', 'yakitUi', 'layout'])
   const [form] = Form.useForm()
   const { userInfo } = useStore()
-  const { dynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus } = useYakitDynamicStatus()
   const pluginSourceLocked = dynamicStatus.isDynamicStatus
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
   const [, aiGlobalConfigEvent] = useAIGlobalConfig()

@@ -10,6 +10,8 @@ import {
   buildLegacyHTTPHistoryFilterConfig,
   getHTTPFlowExportPageSize,
   mergeHTTPFlowsById,
+  toggleHTTPFlowSelectedRowKeys,
+  toggleHTTPFlowSelectedRows,
 } from '@/pages/hTTPHistoryAnalysis/HTTPHistory/HTTPHistoryFilter.utils'
 
 const defaultFilterConfig: Parameters<typeof buildLegacyHTTPHistoryFilterConfig>[0] = {
@@ -274,5 +276,34 @@ describe('getHTTPFlowExportPageSize', () => {
 
   it('rounds medium exports to the nearest hundred block', () => {
     expect(getHTTPFlowExportPageSize(3200)).toBe(300)
+  })
+})
+
+describe('toggleHTTPFlowSelectedRowKeys / toggleHTTPFlowSelectedRows', () => {
+  const makeFlow = (id: number): HTTPFlow => ({ Id: id }) as HTTPFlow
+
+  it('appends the row and stringifies the numeric id on select', () => {
+    expect(toggleHTTPFlowSelectedRowKeys([], 1, true)).toEqual(['1'])
+    expect(toggleHTTPFlowSelectedRows([], makeFlow(1), true).map((item) => item.Id)).toEqual([1])
+  })
+
+  it('keeps rows selected across pages on select (regression: rebuilding from current page data would drop them)', () => {
+    const prevRows = [makeFlow(1), makeFlow(2)]
+    expect(toggleHTTPFlowSelectedRows(prevRows, makeFlow(3), true).map((item) => item.Id)).toEqual([1, 2, 3])
+    expect(toggleHTTPFlowSelectedRowKeys(['1', '2'], 3, true)).toEqual(['1', '2', '3'])
+  })
+
+  it('is idempotent when the same row is selected twice', () => {
+    const rows = [makeFlow(1), makeFlow(2)]
+    const keys = ['1', '2']
+    expect(toggleHTTPFlowSelectedRows(rows, makeFlow(2), true)).toBe(rows)
+    expect(toggleHTTPFlowSelectedRowKeys(keys, 2, true)).toBe(keys)
+  })
+
+  it('removes the row by id on deselect and keeps the rest', () => {
+    expect(
+      toggleHTTPFlowSelectedRows([makeFlow(1), makeFlow(2), makeFlow(3)], makeFlow(2), false).map((item) => item.Id),
+    ).toEqual([1, 3])
+    expect(toggleHTTPFlowSelectedRowKeys(['1', '2', '3'], 2, false)).toEqual(['1', '3'])
   })
 })

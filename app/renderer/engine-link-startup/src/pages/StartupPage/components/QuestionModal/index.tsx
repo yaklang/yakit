@@ -75,6 +75,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
 
   return (
     <Draggable
+      nodeRef={draggleRef}
       defaultClassName={classNames(
         styles['yaklang-qs-modal'],
         { [styles['modal-top-wrapper']]: isTop === 2 },

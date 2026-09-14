@@ -46,7 +46,7 @@ import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { useScreenRecorder } from '@/store/screenRecorder'
 import { type ResultObjProps, remoteOperation } from '@/pages/dynamicControl/remoteOperation'
-import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
+import { useEeSystemConfig, useStore, useYakitDynamicStatus } from '@/store'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import emiter from '@/utils/eventBus/eventBus'
 import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
@@ -935,7 +935,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   /** ---------- yakit和yaklang的更新(以连接引擎的状态下) & kill引擎进程 End ---------- */
 
   // #region 远程控制(控制端)
-  const { dynamicStatus, setDynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus, setDynamicStatus } = useYakitDynamicStatus()
 
   useEffect(() => {
     // 监听退出远程控制

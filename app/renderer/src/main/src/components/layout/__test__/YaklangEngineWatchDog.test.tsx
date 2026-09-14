@@ -39,7 +39,7 @@ vi.mock('@/utils/kv', () => ({
 }))
 
 vi.mock('@/store', () => ({
-  yakitDynamicStatus: () => ({
+  useYakitDynamicStatus: () => ({
     dynamicStatus: {
       isDynamicStatus: false,
       isDynamicSelfStatus: false,

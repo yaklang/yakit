@@ -95,7 +95,7 @@ vi.mock('@/utils/notification', () => ({
 
 vi.mock('@/store', () => ({
   useStore: () => ({ userInfo: { isLogin: false } }),
-  yakitDynamicStatus: () => ({
+  useYakitDynamicStatus: () => ({
     dynamicStatus: { isDynamicStatus: false },
     setDynamicStatus: vi.fn(),
   }),

@@ -424,6 +424,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
   // 停靠模式-浮窗
   return ReactDOM.createPortal(
     <Draggable
+      nodeRef={draggleRef}
       defaultClassName={classNames(
         styles['yakit-window-wrapper'],
         {

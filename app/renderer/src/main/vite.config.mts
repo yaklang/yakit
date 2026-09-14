@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
-import react from '@vitejs/plugin-react'
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import pluginBabel from '@rolldown/plugin-babel'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
@@ -100,6 +101,7 @@ export default defineConfig(({ mode }) => {
       noopAntdComponentStylePlugin(),
       yakitUiIconsPurePlugin(),
       react(),
+      pluginBabel({ presets: [reactCompilerPreset()] }),
       nodePolyfills({
         // 对齐 CRA fallback.fs=false：不要注入浏览器内存版 fs（主窗口 nodeIntegration 下真 Node fs 可用）
         include: ['buffer', 'process', 'stream', 'util', 'events', 'path', 'crypto', 'timers', 'vm'],
@@ -138,6 +140,11 @@ export default defineConfig(({ mode }) => {
         // 精确匹配，避免字符串前缀误伤 react-dom / react-dnd
         { find: /^react$/, replacement: path.resolve(rootDir, 'node_modules/react') },
         { find: /^react-dom$/, replacement: path.resolve(rootDir, 'node_modules/react-dom') },
+        {
+          find: 'react-resize-detector',
+          replacement: path.resolve(rootDir, 'src/utils/shims/reactResizeDetector.tsx'),
+        },
+        { find: 'xterm-for-react', replacement: path.resolve(rootDir, 'src/utils/shims/xtermForReact.tsx') },
       ],
     },
     css: {
