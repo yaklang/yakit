@@ -4,15 +4,22 @@ import ConcurrentStreamCardActions from '../ConcurrentStreamCardActions/Concurre
 import type { ConcurrentStreamCardHeardProps } from './type'
 import styles from './ConcurrentStreamCardHeard.module.scss'
 import { getAIStatusPresentation } from '@/pages/ai-agent/utils/AIStatusUtils'
-import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
 import Loading from '@/components/Loading/Loading'
 import { useCreation, useMemoizedFn } from 'ahooks'
+import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { randomString } from '@/utils/randomUtil'
+import type { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 
 const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((props) => {
   const { token, isChildWindow, onClickTitle, rowData, coordinatorId, expand, expandToggle, onRefresh } = props
+
+  const { onSend } = useAIAgentDispatcher()
+  const sessionId = useCurrentSessionId()
 
   const titleText = useMemo(() => {
     return rowData?.data?.taskName || ''
@@ -27,6 +34,30 @@ const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((prop
   const showCancelTask = useCreation(() => {
     return rowData?.data?.status === 'processing' && !!rowData?.data?.taskId && !isChildWindow
   }, [rowData?.data?.status])
+
+  const showRerun = useCreation(() => {
+    if (!rowData?.data?.taskId || !rowData?.data?.goal) return false
+    if (isChildWindow) return false
+    const status = rowData?.data?.status
+    return (
+      status === AITaskStatus.success ||
+      status === AITaskStatus.error ||
+      status === AITaskStatus.cancel ||
+      status === AITaskStatus.skipped
+    )
+  }, [rowData?.data?.status, rowData?.data?.taskId, rowData?.data?.goal, isChildWindow])
+
+  const onRerun = useMemoizedFn(() => {
+    if (!rowData?.data?.taskId) return
+    const info: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REDO_SUBTASK_IN_PLAN,
+      SyncJsonInput: JSON.stringify({ subtask_id: rowData.data.taskId }),
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: 'task', params: info })
+    yakitNotify('info', `任务 ${rowData.data.taskName || rowData.data.taskId} 已重新运行`)
+  })
 
   const modalInfo = useMemo(() => {
     if (!rowData) return undefined
@@ -81,10 +112,12 @@ const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((prop
           onExpandToggle={expandToggle}
           showContinueTask={showContinueTask}
           showCancelTask={showCancelTask}
+          showRerun={showRerun}
           showDetails={showDetails}
           coordinatorId={coordinatorId}
           taskId={rowData?.data?.taskId}
           onDetails={onDetails}
+          onRerun={onRerun}
         />
       </div>
     </div>

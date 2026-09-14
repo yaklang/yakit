@@ -6,6 +6,7 @@ import {
   ChevronsUpDownOutlined,
   ListTodoOutlined,
   List1Outlined,
+  RefreshOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { AIHistoryContinueTask, AIHistorySkipTask } from '../../../chatTemplate/historyTaskTree/HistoryTaskTree'
@@ -25,9 +26,11 @@ interface ConcurrentStreamCardActionsProps {
   token: string
   showContinueTask: boolean
   showCancelTask: boolean
+  showRerun?: boolean
   showDetails: boolean
   coordinatorId?: string
   taskId?: string | null
+  onRerun?: () => void
 }
 
 const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
@@ -36,10 +39,12 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
   onDetails,
   showContinueTask,
   showCancelTask,
+  showRerun,
   showDetails,
   coordinatorId,
   taskId,
   token,
+  onRerun,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
 
@@ -75,6 +80,20 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
       {showDetails && (
         <Tooltip title="任务详情" placement="top">
           <YakitButton size="small" icon={<ListTodoOutlined color="currentColor" />} type="text2" onClick={onDetails} />
+        </Tooltip>
+      )}
+      {showRerun && (
+        <Tooltip title={t('ConcurrentStreamCard.rerun')}>
+          <YakitButton
+            size="small"
+            type="text"
+            icon={<RefreshOutlined color="currentColor" />}
+            onClick={(e) => {
+              e.stopPropagation()
+              onRerun?.()
+            }}
+            className={styles['expand-btn']}
+          />
         </Tooltip>
       )}
       <Tooltip title={t('ConcurrentStreamCard.openInNewWindow')}>

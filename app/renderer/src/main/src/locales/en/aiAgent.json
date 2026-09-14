@@ -669,7 +669,8 @@
     "refresh": "Refresh",
     "openInNewWindow": "Open in New Window",
     "collapse": "Collapse",
-    "expand": "Expand"
+    "expand": "Expand",
+    "rerun": "Rerun"
   },
   "AIChatSetting": {
     "permissionsAndSecurity": "Permissions & Security",
