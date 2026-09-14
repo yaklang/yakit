@@ -318,7 +318,12 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   useEffect(() => {
     closePane()
     return cancelPaneClose
-  }, [isSmall, activeChat?.Id, closePane, cancelPaneClose])
+  }, [isSmall])
+
+  useEffect(() => {
+    cancelPaneClose()
+    setActivePane((pane) => (pane === 'session-history' ? pane : undefined))
+  }, [activeChat?.Id])
 
   const mainMenus = useCreation(() => {
     // 无 questionID 或非 ai-agent 来源时不展示「任务详情」入口
@@ -414,10 +419,10 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   })
 
   const renderMenuSuffix = useMemoizedFn((key: AIRightPanelMenuKey) => {
-    if (key === 'traffic' && executionData?.http_flow_count) {
+    if (key === 'traffic' && trafficTotal) {
       return (
         <YakitTag fullRadius color="white" border={false}>
-          {executionData?.http_flow_count}
+          {trafficTotal}
         </YakitTag>
       )
     }
