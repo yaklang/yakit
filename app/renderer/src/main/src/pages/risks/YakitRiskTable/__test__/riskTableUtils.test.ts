@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { getDiscoveryTimeColumnFixed } from '../riskTableUtils'
 
 describe('getDiscoveryTimeColumnFixed', () => {
-  it('keeps the discovery time column fixed when the action column is shown', () => {
-    expect(getDiscoveryTimeColumnFixed([])).toBe('right')
-    expect(getDiscoveryTimeColumnFixed(['title'])).toBe('right')
+  it('leaves the discovery time column unfixed when the action column is shown', () => {
+    expect(getDiscoveryTimeColumnFixed([])).toBeUndefined()
+    expect(getDiscoveryTimeColumnFixed(['title'])).toBeUndefined()
   })
 
-  it('removes the fixed position when the action column is excluded', () => {
-    expect(getDiscoveryTimeColumnFixed(['action'])).toBeUndefined()
-    expect(getDiscoveryTimeColumnFixed(['title', 'action'])).toBeUndefined()
+  it('fixes the discovery time column to the right when the action column is excluded', () => {
+    expect(getDiscoveryTimeColumnFixed(['action'])).toBe('right')
+    expect(getDiscoveryTimeColumnFixed(['title', 'action'])).toBe('right')
   })
 })
