@@ -61,6 +61,22 @@ describe('showByRightContext', () => {
     expect(screen.getByTestId('ctx-b')).toBeInTheDocument()
   })
 
+  it('isForce 换新菜单后，旧句柄 destroy 不卸掉当前菜单', async () => {
+    const oldHandle = showByRightContext(menuNode('a'), 10, 20)
+    handles.push(oldHandle)
+    await waitForRender()
+
+    handles.push(showByRightContext(menuNode('b'), 30, 40, true))
+    await waitForRender()
+    const div2 = document.getElementById(ContextMenuId)
+    expect(screen.getByTestId('ctx-b')).toBeInTheDocument()
+
+    // 旧句柄只该清自己的（已移除的）div，不得 unmount 当前菜单的 Root
+    expect(() => oldHandle.destroy()).not.toThrow()
+    expect(div2?.isConnected).toBe(true)
+    expect(screen.getByTestId('ctx-b')).toBeInTheDocument()
+  })
+
   it('点击外部（capture once）销毁菜单，destroy 句柄幂等', async () => {
     const handle = showByRightContext(menuNode('a'), 10, 20)
     handles.push(handle)

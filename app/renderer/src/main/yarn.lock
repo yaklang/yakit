@@ -2009,7 +2009,7 @@
   resolved "https://registry.yarnpkg.com/@rolldown/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.2.1.tgz#ea040d8719fe26c8b0d781081329b20a1606a006"
   integrity sha512-Z4eCmn5QJ/5+azF9knpLWKfVd9aidn0mAe9TpJgvBLId9Ax3t0+JVxBmT25Bv7NBbVW1TZyKjQjQReouMeH5UQ==
 
-"@rolldown/plugin-babel@^0.2.3":
+"@rolldown/plugin-babel@0.2.3":
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/@rolldown/plugin-babel/-/plugin-babel-0.2.3.tgz#94f2c897285160aab1a7cfe827cbca1b7233e4f4"
   integrity sha512-+zEk16yGlz1F9STiRr6uG9hmIXb6nprjLczV/htGptYuLoCuxb+itZ03RKCEeOhBpDDd1NU7qF6x1VLMUp62bw==
@@ -9720,6 +9720,14 @@ react-dom@19.2.8:
   integrity sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==
   dependencies:
     scheduler "^0.27.0"
+
+react-draggable@4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/react-draggable/-/react-draggable-4.5.0.tgz#0b274ccb6965fcf97ed38fcf7e3cc223bc48cdf5"
+  integrity sha512-VC+HBLEZ0XJxnOxVAZsdRi8rD04Iz3SiiKOoYzamjylUcju/hP9np/aZdLHf/7WOD268WMoNJMvYfB5yAK45cw==
+  dependencies:
+    clsx "^2.1.1"
+    prop-types "^15.8.1"
 
 react-draggable@^4.0.3:
   version "4.4.5"
