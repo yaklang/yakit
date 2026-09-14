@@ -14,6 +14,14 @@
 
 ## 2026-09-14
 
+### 修复 Windows 安装器创建旧品牌快捷方式
+
+- **原因**：`build/yakit_build.nsh` 根据安装包文件名和安装目录里的 EXE 猜测产品，AI Senso 落入旧品牌 `AI SenPike` 分支；安装完成后的桌面快捷方式和立即运行均指向旧 EXE。
+- **修复**：安装与卸载共用打包元数据 `${PRODUCT_FILENAME}`；AI Senso 保留历史 `AI SenPike_InstallPath` 注册表键以兼容已有目录，并将旧 EXE 识别为已有安装。卸载使用当前目录，不再从历史注册表重定向。
+- **旧入口迁移**：AI Senso 安装前记录是否已有 `AI SenPike.lnk`，安装完成且新 EXE 存在时，先创建指向新 EXE 的 `AI Senso.lnk`，成功后删除旧入口；兼容旧卸载器先删除旧入口的升级流程，迁移创建失败时不主动删除旧入口。没有旧入口时仍由安装完成页的选项决定是否创建。
+- **验证**：`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-nsis-product.ps1` 通过 11 个真实 NSIS 编译/运行场景，覆盖产品识别、旧目录、新旧 EXE 共存、快捷方式迁移/失败、旧卸载器删除入口、卸载目录以及其他产品。测试使用临时桌面与模拟注册表读取，不操作真实安装目录。
+- **安装器验证**：复用本地 `release/win-unpacked` 完成 Electron Builder NSIS 编译，产物仅位于 `release/shortcut-validation/`，不作为当前源码完整重建的交付包；未安装到用户系统。用户侧需重新构建并安装新版后生效。
+
 ### 恢复 AI SenSo 客户端启动授权
 
 - **改动**：按用户要求将 `app/main/memfitLicense.js` 的 `MEMFIT_LICENSE_REQUIRED` 从 `false` 恢复为 `true`，同步更新交接摘要；结束 2026-09-08 的联调临时关闭状态。

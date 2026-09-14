@@ -13,6 +13,7 @@ Var /Global IS_UPDATED
 Var /Global INSTALL_PATH
 Var /Global INSTALL_PATH_REG_KEY_NAME
 Var /Global EXE_NAME
+Var /Global HAD_SENSO_DESKTOP_SHORTCUT
 Var /Global KEEP_FOLDER
 Var /Global DeleteOldEngine
 Var /Global DeleteOldEngineLabel
@@ -115,6 +116,12 @@ FunctionEnd
     ${If} ${FileExists} `$INSTDIR\$EXE_NAME.exe`
         StrCpy $IS_INSTALLED "true"
     ${EndIf}
+    !if "${APP_ID}" == "com.aisenso.desktop"
+        ; 旧品牌安装也视为已有安装，避免在原目录下再追加一层目录。
+        ${If} ${FileExists} "$INSTDIR\AI SenPike.exe"
+            StrCpy $IS_INSTALLED "true"
+        ${EndIf}
+    !endif
 !macroend
 
 !macro checkIsUpdated
@@ -126,84 +133,54 @@ FunctionEnd
     ${EndIf}
 !macroend
 
+; 安装与卸载使用打包元数据，不依赖安装包文件名或目录中的旧 EXE。
+!macro initProductIdentity
+    StrCpy $EXE_NAME "${PRODUCT_FILENAME}"
+    !if "${APP_ID}" == "com.aisenso.desktop"
+        ; 保留历史键名，升级时继续找到已有目录和 yakit-projects。
+        StrCpy $INSTALL_PATH_REG_KEY_NAME "AI SenPike_InstallPath"
+    !else if "${PRODUCT_FILENAME}" == "Yakit"
+        StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
+    !else if "${PRODUCT_FILENAME}" == "Memfit AI"
+        StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
+    !else
+        StrCpy $INSTALL_PATH_REG_KEY_NAME "${PRODUCT_FILENAME}_InstallPath"
+    !endif
+!macroend
+
 !macro customInit
-    ; 根据不同版本设置不同的RegKey 社区版/SE/EE
-    StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
-    StrCpy $EXE_NAME "Yakit"
-    ${StrStr} $0 $EXEFILE "EnpriTraceAgent"
-    ${If} $0 != "" ; se
-        StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
-        StrCpy $EXE_NAME "EnpriTraceAgent"
-    ${Else}
-        ${StrStr} $0 $EXEFILE "IRifyEnpriTrace"
-        ${If} $0 != "" ; irifyee
-            StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
-            StrCpy $EXE_NAME "IRifyEnpriTrace"
-        ${Else}
-            ${StrStr} $0 $EXEFILE "EnpriTrace"
-            ${If} $0 != "" ; ee
-                StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
-                StrCpy $EXE_NAME "EnpriTrace"
-            ${Else}
-                ${StrStr} $0 $EXEFILE "IRify"
-                ${If} $0 != "" ; irify
-                    StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
-                    StrCpy $EXE_NAME "IRify"
-                ${Else}
-                    ${StrStr} $0 $EXEFILE "MemfitAI"
-                    ${If} $0 != ""
-                        StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
-                        StrCpy $EXE_NAME "Memfit AI"
-                    ${Else}
-                        StrCpy $INSTALL_PATH_REG_KEY_NAME "AI SenPike_InstallPath"
-                        StrCpy $EXE_NAME "AI SenPike"
-                    ${EndIf}
-                ${EndIf}
-            ${EndIf}
+    !insertmacro initProductIdentity
+    !if "${APP_ID}" == "com.aisenso.desktop"
+        ; 旧卸载器可能先删除快捷方式，卸载前记住用户已有的桌面入口。
+        ${If} ${FileExists} "$DESKTOP\AI SenPike.lnk"
+            StrCpy $HAD_SENSO_DESKTOP_SHORTCUT "true"
         ${EndIf}
-    ${EndIf}
-
-    ; 设置用户一开始的安装路径
+    !endif
     StrCpy $INSTDIR ""
-
     !insertmacro checkInstalled
     !insertmacro checkIsUpdated
 !macroend
 
 !macro customUnInit
-    ; 根据不同版本设置不同的RegKey 社区版/SE/EE
-    StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
-    StrCpy $EXE_NAME "Yakit"
-    ${If} ${FileExists} `$INSTDIR\EnpriTraceAgent.exe` ; se
-        StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
-        StrCpy $EXE_NAME "EnpriTraceAgent"
-    ${Else}
-        ${If} ${FileExists} `$INSTDIR\IRifyEnpriTrace.exe` ; irifyee
-            StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
-            StrCpy $EXE_NAME "IRifyEnpriTrace"
-        ${Else}
-            ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee
-                StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
-                StrCpy $EXE_NAME "EnpriTrace"
-            ${Else}
-                ${If} ${FileExists} `$INSTDIR\IRify.exe` ; irify
-                    StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
-                    StrCpy $EXE_NAME "IRify"
-                ${Else}
-                    ${If} ${FileExists} `$INSTDIR\Memfit AI.exe` ; memfit
-                        StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
-                        StrCpy $EXE_NAME "Memfit AI"
-                    ${Else}
-                        StrCpy $INSTALL_PATH_REG_KEY_NAME "AI SenPike_InstallPath"
-                        StrCpy $EXE_NAME "AI SenPike"
-                    ${EndIf}
+    !insertmacro initProductIdentity
+    ; 卸载只操作当前安装目录，不能被历史注册表路径重定向。
+    !insertmacro checkIsUpdated
+!macroend
+
+!macro migrateSensoDesktopShortcut
+    !if "${APP_ID}" == "com.aisenso.desktop"
+        ; 仅在旧桌面入口存在时迁移，保留用户此前创建快捷方式的选择。
+        ${If} $HAD_SENSO_DESKTOP_SHORTCUT == "true"
+        ${OrIf} ${FileExists} "$DESKTOP\AI SenPike.lnk"
+            ${If} ${FileExists} "$INSTDIR\$EXE_NAME.exe"
+                ClearErrors
+                CreateShortCut "$DESKTOP\$EXE_NAME.lnk" "$INSTDIR\$EXE_NAME.exe"
+                ${IfNot} ${Errors}
+                    Delete "$DESKTOP\AI SenPike.lnk"
                 ${EndIf}
             ${EndIf}
         ${EndIf}
-    ${EndIf}
-
-    !insertmacro checkInstalled
-    !insertmacro checkIsUpdated
+    !endif
 !macroend
 
 
@@ -245,6 +222,7 @@ FunctionEnd
 !macro customInstall
     DetailPrint "检查安装目录权限..."
     Call EnsureInstallDirWritable
+    !insertmacro migrateSensoDesktopShortcut
 
     ; 创建 yakit-projects 文件夹
     DetailPrint "创建yakit-projects文件夹..."
