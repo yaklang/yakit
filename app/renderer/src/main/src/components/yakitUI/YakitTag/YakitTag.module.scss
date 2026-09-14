@@ -202,6 +202,10 @@
   background: var(--Colors-Use-Neutral-Bg-Hover);
   border-color: var(--Colors-Use-Neutral-Border);
   color: var(--Colors-Use-Neutral-Text-1-Title);
+
+  &:not(.yakit-tag-border) {
+    background: var(--Colors-Use-Neutral-Border);
+  }
 }
 
 .yakit-tag-lakeBlue {
