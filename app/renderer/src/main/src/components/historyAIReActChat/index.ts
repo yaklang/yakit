@@ -1,7 +1,6 @@
 export { HistroryAIReActChat } from '../HistroryAIReActChat'
 export {
   HistoryAIReActChatProvider,
-  useHistoryAIReActChat,
   type HistoryAIReActChatBridge,
   type HistoryAIReActChatContextValue,
   type HistoryAIReActChatExternalParameters,
@@ -10,3 +9,4 @@ export {
   type HistoryAIReActChatSlotRender,
   type HistoryAIReActFocusModeLoop,
 } from '../withHistoryAIReActChat'
+export { useHistoryAIReActChat } from './context'
