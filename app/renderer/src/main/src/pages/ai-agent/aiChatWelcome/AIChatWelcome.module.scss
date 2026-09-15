@@ -161,11 +161,9 @@
     .input-panel {
       width: 100%;
       border-radius: 12px;
-      padding: 0;
+      padding: 1px;
       overflow: visible;
-      .ai-text-wrapper {
-        box-shadow: 0 16px 24px 0 var(--Colors-Use-Basic-Shadow);
-      }
+      background-color: var(--Colors-Use-Neutral-Bg);
     }
   }
   .open-file-tree-button {
@@ -204,12 +202,11 @@
 .card-list {
   @extend %display-flex-center;
   background-color: var(--Colors-Use-Neutral-Bg);
-  padding: 10px 12px 8px;
+  padding: 10px 11px 8px;
   border-radius: 12px 12px 0 0;
   gap: 4px;
-  margin: 0 16px;
   justify-content: flex-start;
-  overflow: auto hidden;
+  flex-wrap: wrap;
 
   .card-item {
     @extend %display-flex-center;
