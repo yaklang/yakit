@@ -281,7 +281,7 @@ describe('engine startup lifecycle', () => {
     const second = f.manager.start(params)
     await vi.advanceTimersByTimeAsync(4000)
     expect((await first).status).toBe('stop_failed')
-    expect((await second).status).toBe('stop_failed')
+    expect((await second).status).toBe('port_occupied')
     expect(f.spawn).toHaveBeenCalledOnce()
     f.children[0].exit()
   })

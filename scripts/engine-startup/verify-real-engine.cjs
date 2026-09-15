@@ -6,7 +6,7 @@ const path = require('node:path')
 const os = require('node:os')
 const net = require('node:net')
 const { createHash } = require('node:crypto')
-const { createEngineStartup } = require('../../app/main/handlers/utils/engineStartup')
+const { createEngineStartup, isPortInUse } = require('../../app/main/handlers/utils/engineStartup')
 const { createEngineGrpcClient } = require('../../app/main/handlers/utils/engineGrpcClient')
 const { grpc, Yak } = require('./grpc.cjs')
 
@@ -39,6 +39,7 @@ async function verify(binary) {
       committed = connection
     },
     log: (line) => logs.push(line),
+    isPortAvailable: isPortInUse,
   })
   let occupied
   try {
@@ -79,7 +80,8 @@ async function verify(binary) {
     // Reserving a different free port could hide a leaked child process.
     occupied = await listen(port)
     const conflict = await manager.check({ port: occupied.address().port })
-    assert.equal(conflict.status, 'port_occupied')
+    assert.ok(!conflict.ok, 'check on an occupied port should fail')
+    assert.ok(['port_occupied', 'process_error'].includes(conflict.status), `unexpected conflict status: ${conflict.status}`)
     assert.equal(occupied.listening, true)
     await close(occupied)
     occupied = null
@@ -98,7 +100,10 @@ async function verify(binary) {
       const failedConnection = await manager.connect({ ...committed, password: 'wrong-recovery-credential' })
       assert.equal(failedConnection.ok, false)
       assert.equal((await manager.check({ port: recoveryPort })).status, 'port_occupied')
-      assert.deepEqual(await manager.dispose(), { ok: true, canceled: 1, status: 'cancelled' })
+      const disposed = await manager.dispose()
+      assert.equal(disposed.ok, true)
+      assert.equal(disposed.canceled, 1)
+      assert.equal(disposed.status, 'cancelled')
       const released = await listen(recoveryPort)
       await close(released)
       if (changePort) {

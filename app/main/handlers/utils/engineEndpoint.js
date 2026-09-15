@@ -105,6 +105,17 @@ function createLocalEndpoint(policy, port, edition = 'yakit', platform = process
   }
 }
 
+function parseRemoteEndpoint(params = {}) {
+  const raw = String(params.Host || '127.0.0.1')
+  let host = raw
+  let port = params.Port
+  const combined = /^(\[[^\]]+\]|[^:]+):(\d+)$/.exec(raw)
+  if (combined) [, host, port] = combined
+  if (!validPort(port) || /[\s/\\]/.test(host)) throw new Error('引擎连接地址无效')
+  const address = `${host.includes(':') && !host.startsWith('[') ? `[${host}]` : host}:${port}`
+  return { address, caPem: Buffer.from(params.PemBytes || '').toString('utf8'), password: params.Password || '' }
+}
+
 module.exports = {
   ENGINE_TIMEOUTS,
   validPort,
@@ -114,4 +125,5 @@ module.exports = {
   matchesEngineEndpoint,
   endpointArgs,
   createLocalEndpoint,
+  parseRemoteEndpoint,
 }

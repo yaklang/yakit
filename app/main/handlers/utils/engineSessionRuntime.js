@@ -1,10 +1,11 @@
 const { app, ipcMain } = require('electron')
 const { createEngineSession } = require('./engineSession')
-const { validPort } = require('./engineEndpoint')
+const { validPort, parseRemoteEndpoint } = require('./engineEndpoint')
 const { assertTrustedAppSender } = require('../../security')
 const { getLocalYaklangEngine, getYakitHome } = require('../../filePath')
 const { GLOBAL_YAK_SETTING } = require('../../state')
 const { engineLogOutputFileAndUI } = require('../../logFile')
+const { isPortInUse } = require('./engineStartup')
 
 const windows = new Set()
 let session
@@ -27,6 +28,7 @@ function getEngineSession(win, callback, newClient) {
     getCommand: getLocalYaklangEngine,
     getEnv: (edition) => ({ ...process.env, YAKIT_HOME: getYakitHome(), ...(databaseEnv[edition] || {}) }),
     createClient: newClient,
+    isPortAvailable: isPortInUse,
     commitConnection: ({ defaultYakGRPCAddr, caPem, password }) => {
       callback(defaultYakGRPCAddr, caPem, password)
       GLOBAL_YAK_SETTING.defaultYakGRPCAddr = defaultYakGRPCAddr
@@ -63,17 +65,11 @@ async function connectEngine(params = {}) {
   if (params.Mode === 'local' || params.InstanceId || params.LaunchId || params.Endpoint) {
     result = await manager.connect(params)
   } else {
-    const raw = String(params.Host || '127.0.0.1')
-    let host = raw
-    let port = params.Port
-    const combined = /^(\[[^\]]+\]|[^:]+):(\d+)$/.exec(raw)
-    if (combined) [, host, port] = combined
-    if (!validPort(port) || /[\s/\\]/.test(host)) throw new Error('引擎连接地址无效')
-    const address = `${host.includes(':') && !host.startsWith('[') ? `[${host}]` : host}:${port}`
+    const endpoint = parseRemoteEndpoint(params)
     result = await manager.connectRemote({
-      defaultYakGRPCAddr: address,
-      caPem: Buffer.from(params.PemBytes || '').toString('utf8'),
-      password: params.Password || '',
+      defaultYakGRPCAddr: endpoint.address,
+      caPem: endpoint.caPem,
+      password: endpoint.password,
     })
   }
   if (!result.ok) throw new Error(result.message)

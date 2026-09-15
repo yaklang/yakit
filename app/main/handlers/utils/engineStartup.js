@@ -1,5 +1,6 @@
 const childProcess = require('child_process')
 const { randomBytes } = require('crypto')
+const net = require('net')
 const {
   ENGINE_TIMEOUTS,
   normalizeLocalEndpoint,
@@ -20,6 +21,21 @@ const ECHO_TEXT = 'Hello Yakit!'
 const MAX_CHECK_OUTPUT = 512 * 1024
 const cancelled = (stage) => ({ ok: false, stage, status: 'cancelled', message: '引擎连接已取消' })
 const isAlive = (child) => child?.pid && child.exitCode === null && child.signalCode === null
+
+function isPortInUse(host, port) {
+  return new Promise((resolve) => {
+    const tester = net.connect({ host, port })
+    tester.once('connect', () => {
+      tester.destroy()
+      resolve(true)
+    })
+    tester.once('error', () => resolve(false))
+    setTimeout(() => {
+      tester.destroy()
+      resolve(false)
+    }, 200)
+  })
+}
 
 // Only terminate a child we spawned. Never search for engines or kill a process by port/name.
 function stopEngineChild(child, execFile = childProcess.execFile, platform = process.platform) {
@@ -296,7 +312,7 @@ function createEngineStartup({
           if (isAlive(child))
             return op.finish({
               ok: false,
-              status: 'stop_failed',
+              status: 'port_occupied',
               stopped: false,
               message: '已有受管引擎尚未停止，请先停止该实例',
             })
@@ -416,7 +432,7 @@ function createEngineStartup({
           if (isAlive(child))
             return op.finish({
               ok: false,
-              status: 'stop_failed',
+              status: 'port_occupied',
               stopped: false,
               message: '已有受管引擎尚未停止，请先停止该实例',
             })
@@ -534,7 +550,7 @@ function createEngineStartup({
     const pending = active
     if (pending) await pending.cancel()
     const stopped = !pending?.child || !isAlive(pending.child)
-    return { ok: stopped, stopped, status: stopped ? 'cancelled' : 'stop_failed' }
+    return { ok: stopped, stopped, canceled: stopped ? 1 : 0, status: stopped ? 'cancelled' : 'stop_failed' }
   }
 
   async function dispose() {
@@ -546,7 +562,13 @@ function createEngineStartup({
       })),
     )
     const stopped = results.every((result) => result.stopped)
-    return { ok: stopped, stopped, status: stopped ? 'stopped' : 'stop_failed', results }
+    return {
+      ok: stopped,
+      stopped,
+      canceled: results.filter((result) => result.stopped).length,
+      status: stopped ? 'cancelled' : 'stop_failed',
+      results,
+    }
   }
 
   function killOnExit() {
@@ -571,4 +593,4 @@ function createEngineStartup({
   return { check, start, connect, cancel, dispose, killOnExit, hasLiveChildren: () => [...children].some(isAlive) }
 }
 
-module.exports = { createEngineStartup, stopEngineChild, validLocalPassword }
+module.exports = { createEngineStartup, stopEngineChild, validLocalPassword, isPortInUse }
