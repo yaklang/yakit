@@ -54,6 +54,7 @@ import { RemoteEngine } from './RemoteEngine/RemoteEngine'
 import { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
 import { DownloadYakit } from './update/DownloadYakit'
 import { DownloadYaklang } from './update/DownloadYaklang'
+import { HelpDoc } from './HelpDoc/HelpDoc'
 import { SolidCheckCircleIcon, SolidHomeIcon } from '@/assets/icon/solid'
 import { setNowProjectDescription } from '@/pages/globalVariable'
 import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
@@ -1792,6 +1793,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                     {stopScreen}
 
+                    <HelpDoc system={system} />
+
                     {engineLink && (
                       <>
                         <FuncDomain
@@ -1865,6 +1868,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         </div>
                       </>
                     )}
+
+                    <HelpDoc system={system} />
 
                     {stopScreen}
 

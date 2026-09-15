@@ -8,28 +8,22 @@ import { yakitShell } from '@/services/electronBridge'
 
 import classNames from 'classnames'
 import styles from './HelpDoc.module.scss'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 interface HelpDocProps {
   system: YakitSystem
 }
 
-/** @name Yakit软件更新下载弹窗 */
+/** @name 帮助菜单 */
 export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
   const { system } = props
-  const { t } = useI18nNamespaces(['layout'])
 
   const [show, setShow] = useState<boolean>(false)
   const menu = (
     <YakitMenu
       data={[
         {
-          key: 'Github',
-          label: 'Github',
-          children: [
-            { label: t('HelpDoc.featureRequest'), key: 'feature_request' },
-            { label: 'BUG', key: 'report_bug' },
-          ],
+          key: 'official_website',
+          label: '官方网站',
         },
       ]}
       onClick={({ key }) => menuSelect(key)}
@@ -38,11 +32,8 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
   const menuSelect = useMemoizedFn((type: string) => {
     if (show) setShow(false)
     switch (type) {
-      case 'report_bug':
-        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=bug_report.yml`)
-        return
-      case 'feature_request':
-        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=feature_request.yml`)
+      case 'official_website':
+        yakitShell.openExternal('https://www.asiainfo-sec.com/intelligent-operations.html')
         return
       default:
         return
