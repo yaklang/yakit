@@ -644,7 +644,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         // 倒数第二个 外界div宽度变宽，多出的宽度加在倒数第二列
         return {
           ...ele,
-          width: (ele.width || cw) + cw,
+          width: Math.max((ele.width || cw) + cw, minColWidth),
         }
       }
       return {
