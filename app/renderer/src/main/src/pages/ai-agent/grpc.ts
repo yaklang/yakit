@@ -126,6 +126,26 @@ export const grpcQueryAIToolDetails: APIFunc<AIEventQueryRequest, AIChatQSData[]
                   params,
                 },
               }
+            } else if (item.Type === AIChatQSDataTypeEnum.TOOL_CALL_RESULT) {
+              const { call_tool_id, result } = JSONParseLog(ipcContent) as {
+                call_tool_id?: string
+                result?: unknown
+              }
+              current = {
+                ...genBaseAIChatData(item),
+                chatType: 'reAct',
+                type: AIChatQSDataTypeEnum.TOOL_CALL_RESULT,
+                data: {
+                  CallToolID: call_tool_id || item.CallToolID,
+                  NodeId: item.NodeId,
+                  NodeIdVerbose: item.NodeIdVerbose || convertNodeIdToVerbose(item.NodeId),
+                  content: JSON.stringify(result, null, 2) ?? '',
+                  ContentType: item.ContentType,
+                  EventUUID: item.EventUUID,
+                  status: 'end',
+                  executionResult: result,
+                },
+              }
             } else {
               current = {
                 ...genBaseAIChatData(item),

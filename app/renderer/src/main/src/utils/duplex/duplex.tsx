@@ -8,6 +8,7 @@ import { yakitDuplex, yakitStream } from '@/services/electronBridge'
 import { areMITMDebugHooksEnabled } from '@/utils/mitmDebugHooks'
 import { setRemoteValue } from '../kv'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
+import { YakitRoute } from '@/enums/yakitRoute'
 import i18n from '@/i18n/i18n'
 import { setClipboardText } from '../clipboard'
 import {
@@ -212,6 +213,9 @@ export const startupDuplexConn = () => {
         // MCP / 后端通知前端刷新项目列表或进入新建项目
         case 'project':
           emiter.emit('onServerPushProjectChanged', JSON.stringify(obj))
+          break
+        case 'browser_extension':
+          emiter.emit('onBrowserExtensionChanged', JSON.stringify(obj))
           break
         // 通知QuerySSARisks轮询更新
         case 'ssa_risk':

@@ -45,8 +45,10 @@ import { success } from '@/utils/notification'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
-import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
+import { CodeComparison } from '@/pages/compare/DataCompare'
+import { type BrowserHTTPTestResult, parseBrowserHTTPTestResult } from './browserHTTPTestResult'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -70,6 +72,111 @@ interface ToolStatusCardProps {
 }
 interface ToolStdoutCardProps extends ToolInvokerCardProps {}
 interface ToolResultCardProps extends ToolInvokerCardProps {}
+
+const BrowserHTTPPacketCompare: FC<{ data: BrowserHTTPTestResult }> = ({ data }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const [direction, setDirection] = useState<'request' | 'response'>('request')
+  const request = direction === 'request'
+  const leftPacket = request ? data.plaintextRequest : data.wireResponse
+  const rightPacket = request ? data.wireRequest : data.plaintextResponse
+  const packetTitle = (title: string, truncated: boolean) =>
+    truncated ? `${title} (${t('ToolInvokerCard.browserHTTP.truncated')})` : title
+
+  return (
+    <div className={styles['browser-http-compare']}>
+      <div className={styles['browser-http-compare-toolbar']}>
+        <div className={styles['browser-http-direction']}>
+          <YakitButton type={request ? 'primary' : 'outline2'} onClick={() => setDirection('request')}>
+            {t('ToolInvokerCard.browserHTTP.request')}
+          </YakitButton>
+          <YakitButton type={request ? 'outline2' : 'primary'} onClick={() => setDirection('response')}>
+            {t('ToolInvokerCard.browserHTTP.response')}
+          </YakitButton>
+        </div>
+        <span>
+          {request ? t('ToolInvokerCard.browserHTTP.requestFlow') : t('ToolInvokerCard.browserHTTP.responseFlow')}
+        </span>
+      </div>
+      <div className={styles['browser-http-compare-title']}>
+        <span>
+          {packetTitle(
+            request ? t('ToolInvokerCard.browserHTTP.plaintextRequest') : t('ToolInvokerCard.browserHTTP.wireResponse'),
+            leftPacket.truncated,
+          )}
+        </span>
+        <span>
+          {packetTitle(
+            request ? t('ToolInvokerCard.browserHTTP.wireRequest') : t('ToolInvokerCard.browserHTTP.plaintextResponse'),
+            rightPacket.truncated,
+          )}
+        </span>
+      </div>
+      <div className={styles['browser-http-compare-editor']}>
+        <CodeComparison
+          leftCode={leftPacket.raw}
+          rightCode={rightPacket.raw}
+          readOnly
+          originalEditable={false}
+          fontSize={12}
+        />
+      </div>
+    </div>
+  )
+}
+
+const BrowserHTTPResultCard: FC<{ data: BrowserHTTPTestResult }> = ({ data }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const transformState = (enabled: boolean, transformed: boolean) =>
+    transformed
+      ? t('ToolInvokerCard.browserHTTP.changed')
+      : enabled
+        ? t('ToolInvokerCard.browserHTTP.unchanged')
+        : t('ToolInvokerCard.browserHTTP.disabled')
+  const openPackets = useMemoizedFn(() => {
+    const drawer = showYakitDrawer({
+      title: t('ToolInvokerCard.browserHTTP.packetTitle'),
+      width: '82%',
+      bodyStyle: { padding: 0 },
+      content: <BrowserHTTPPacketCompare data={data} />,
+      onClose: () => drawer.destroy(),
+    })
+  })
+
+  return (
+    <div className={styles['browser-http-result']}>
+      <div className={styles['browser-http-flow']}>
+        <div>
+          <strong>{t('ToolInvokerCard.browserHTTP.plainRequest')}</strong>
+          <span>{data.plaintextRequest.raw.split(/\r?\n/, 1)[0]}</span>
+        </div>
+        <ArrowNarrowRightOutlined color="currentColor" />
+        <div className={styles['browser-http-gateway']}>
+          <strong>{t('ToolInvokerCard.browserHTTP.gateway')}</strong>
+          <span>
+            {t('ToolInvokerCard.browserHTTP.request')}
+            {transformState(data.requestTransformEnabled, data.requestTransformed)} ·{' '}
+            {t('ToolInvokerCard.browserHTTP.response')}
+            {transformState(data.responseTransformEnabled, data.responseTransformed)}
+          </span>
+        </div>
+        <ArrowNarrowRightOutlined color="currentColor" />
+        <div>
+          <strong>{t('ToolInvokerCard.browserHTTP.onlineResponse')}</strong>
+          <span>HTTP {data.statusCode || '-'}</span>
+        </div>
+      </div>
+      <div className={styles['browser-http-result-footer']}>
+        <span title={data.url}>
+          {data.browserRef ? `${t('ToolInvokerCard.browserHTTP.instance', { ref: data.browserRef })} · ` : ''}
+          {data.url}
+        </span>
+        <YakitButton size="small" type="outline2" onClick={openPackets}>
+          {t('ToolInvokerCard.browserHTTP.viewPackets')}
+        </YakitButton>
+      </div>
+    </div>
+  )
+}
 
 const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
   const { itemData } = props
@@ -233,6 +340,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   const { activeChat } = useAIAgentStore()
 
   const [loading, setLoading] = useState<boolean>(false)
+  const [browserHTTPDetailsRequested, setBrowserHTTPDetailsRequested] = useState(false)
 
   const [expand, , expandToggle] = useUiExpand(itemData.id, false)
 
@@ -296,16 +404,22 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   }, [data.durationSeconds])
 
   const sessionId = useCurrentSessionId()
-  const rawData = useCurrentRawData()
   const getListToolList = useMemoizedFn(() => {
     if (!data?.callToolId || !activeChat) return
+    if (data.toolName === 'browser.http.test') setBrowserHTTPDetailsRequested(true)
     setLoading(true)
     const params: AIEventQueryRequest = {
       ProcessID: data.callToolId,
     }
     grpcQueryAIToolDetails(params)
       .then((res) => {
-        globalSessionEngine.updateToolResult(sessionId, itemData.id, { resultDetails: getResultDetails(res) })
+        const resultEvent = res.find((item) => item.type === AIChatQSDataTypeEnum.TOOL_CALL_RESULT)
+        globalSessionEngine.updateToolResult(sessionId, itemData.id, {
+          resultDetails: getResultDetails(res),
+          ...(resultEvent?.type === AIChatQSDataTypeEnum.TOOL_CALL_RESULT
+            ? { executionResult: resultEvent.data.executionResult }
+            : {}),
+        })
       })
       .finally(() =>
         setTimeout(() => {
@@ -350,6 +464,22 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   const outputText = useCreation(() => {
     return resultDetails || content || ''
   }, [resultDetails, content])
+
+  const browserHTTPResult = useCreation(() => {
+    return data.toolName === 'browser.http.test' ? parseBrowserHTTPTestResult(data.tool.executionResult) : undefined
+  }, [data.toolName, data.tool.executionResult, renderNum])
+
+  useEffect(() => {
+    if (
+      data.toolName !== 'browser.http.test' ||
+      status !== 'success' ||
+      browserHTTPResult ||
+      browserHTTPDetailsRequested ||
+      !activeChat
+    )
+      return
+    getListToolList()
+  }, [data.toolName, status, browserHTTPResult, browserHTTPDetailsRequested, activeChat])
 
   return (
     <ChatCard
@@ -441,6 +571,19 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
         )
       }
     >
+      {data.toolName === 'browser.http.test' && status === 'success' && (
+        <YakitSpin spinning={loading}>
+          {browserHTTPResult ? (
+            <BrowserHTTPResultCard data={browserHTTPResult} />
+          ) : (
+            <div className={styles['browser-http-loading']}>
+              {loading || (activeChat && !browserHTTPDetailsRequested)
+                ? t('ToolInvokerCard.browserHTTP.loading')
+                : t('ToolInvokerCard.browserHTTP.unavailable')}
+            </div>
+          )}
+        </YakitSpin>
+      )}
       {expand && (
         <ToolStatusCard status={'neutral'}>
           <YakitSpin spinning={loading}>

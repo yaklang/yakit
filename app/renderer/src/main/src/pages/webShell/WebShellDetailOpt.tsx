@@ -9,9 +9,9 @@ import { failed } from '@/utils/notification'
 import { writeXTerm, xtermFit } from '@/utils/xtermUtils'
 import { requestYakURLList } from './yakURLTree/netif'
 import ReactResizeDetector from 'react-resize-detector'
-import path from 'path'
 import type { YakURL } from '@/pages/yakURLTree/data'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
+import { normalizeRemotePath } from '@/utils/remotePath'
 
 interface MsgProps {
   arch: string
@@ -123,7 +123,7 @@ ${obj.CurrentDir}`
       cmd = cmd.replace(defaultXterm, '')
     }
 
-    const p = linePath === '' ? path.normalize(defaultPath) : path.normalize(linePath)
+    const p = normalizeRemotePath(linePath === '' ? defaultPath : linePath)
     const url: YakURL = {
       FromRaw: '',
       Schema: props.webshellInfo.ShellType,

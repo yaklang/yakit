@@ -1,0 +1,218 @@
+.gateway-overlay {
+  :global(.ant-popover-inner) {
+    padding: 0;
+  }
+}
+
+.gateway-popover {
+  width: 390px;
+  max-height: min(560px, calc(100vh - 100px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  background: var(--Colors-Use-Basic-Background);
+
+  > header {
+    min-height: 54px;
+    padding: 8px 9px 8px 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+
+    > div {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    > div > :global(.anticon) {
+      color: var(--Colors-Use-Main-Primary);
+      font-size: 17px;
+    }
+    strong,
+    small {
+      display: block;
+    }
+    strong {
+      font-size: 13px;
+    }
+    small {
+      margin-top: 2px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      font-size: 11px;
+    }
+  }
+
+  > footer {
+    min-height: 42px;
+    padding: 5px 10px;
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
+  }
+}
+
+.gateway-device-list {
+  min-height: 120px;
+  overflow: auto;
+}
+.gateway-device-list > section + section {
+  border-top: 1px solid var(--Colors-Use-Neutral-Border);
+}
+.gateway-device-head {
+  min-height: 35px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--Colors-Use-Neutral-Bg);
+
+  > span {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  > span i {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--Colors-Use-Success-Primary);
+  }
+  strong {
+    overflow: hidden;
+    font-size: 12px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  small {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 10px;
+  }
+}
+
+.gateway-profile-list > button {
+  width: 100%;
+  min-height: 58px;
+  padding: 8px 11px 8px 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 14px;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-top: 1px solid var(--Colors-Use-Neutral-Border);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+  &.active {
+    box-shadow: inset 3px 0 0 var(--Colors-Use-Main-Primary);
+    background: var(--Colors-Use-Main-Bg);
+  }
+  > span:first-child {
+    min-width: 0;
+  }
+  strong,
+  small {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  strong {
+    font-size: 12px;
+  }
+  small {
+    margin-top: 3px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 10px;
+  }
+  > :global(.anticon) {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 11px;
+  }
+  &.active > :global(.anticon) {
+    color: var(--Colors-Use-Success-Primary);
+  }
+}
+
+.gateway-directions {
+  display: flex;
+  gap: 3px;
+}
+.gateway-directions i {
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: var(--Colors-Use-Neutral-Bg);
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  font-size: 9px;
+  font-style: normal;
+
+  &.enabled {
+    background: var(--Colors-Use-Success-Bg);
+    color: var(--Colors-Use-Success-Primary);
+  }
+}
+
+.gateway-device-error,
+.gateway-device-empty {
+  min-height: 48px;
+  padding: 9px 13px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.gateway-device-error {
+  color: var(--Colors-Use-Warning-Primary);
+}
+.gateway-device-error span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gateway-empty {
+  min-height: 150px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  text-align: center;
+}
+.gateway-empty > :global(.anticon) {
+  font-size: 20px;
+}
+.gateway-empty strong {
+  color: var(--Colors-Use-Neutral-Text-2-Primary);
+  font-size: 12px;
+}
+.gateway-empty span {
+  max-width: 300px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.gateway-active-tag {
+  max-width: 240px;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+
+  > span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}

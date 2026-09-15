@@ -1,4 +1,75 @@
 {
+  "BrowserHTTPGateway": {
+    "envelopeChanges": "報文封裝變化",
+    "boundCall": "綁定的頁面呼叫",
+    "sections": {
+      "inputRequest": "提交明文",
+      "inputResponse": "接收伺服器響應",
+      "transform": "瀏覽器插件轉換",
+      "sendRequest": "傳送實際請求",
+      "returnResponse": "返回處理結果"
+    },
+    "sectionHint": {
+      "0": "查看實際輸入內容",
+      "1": "查看資料如何變化",
+      "2": "查看完整輸出報文"
+    },
+    "sectionDescription": {
+      "0": "從本次儲存的輸入報文中讀取欄位值。",
+      "1": "透過頁面函數完成轉換，下方展示輸入與最終輸出報文中的實際欄位值。",
+      "2": "這是本次儲存的最終報文，可直接核對實際傳送或返回的內容。"
+    },
+    "beforeValue": "輸入報文中的值",
+    "afterValue": "輸出報文中的值",
+    "pageFunction": "頁面函數",
+    "technical": "查看底層設定步驟",
+    "valueUnavailable": "此欄位未出現，或目前報文編碼無法直接讀取；請查看完整報文。",
+    "showPacket": "查看完整報文",
+    "hidePacket": "收起完整報文",
+    "railLabel": "明文網關",
+    "process": "插件轉換流程",
+    "input": "輸入欄位",
+    "output": "輸出欄位",
+    "packet": "完整報文",
+    "before": "轉換前",
+    "after": "轉換後",
+    "state": {
+      "unknown": "證據未記錄",
+      "failed": "轉換失敗",
+      "disabled": "未轉換",
+      "executed": "已執行",
+      "loadFailed": "載入失敗"
+    },
+    "owner": {
+      "unknown": "執行方未記錄",
+      "page": "瀏覽器頁面",
+      "extension": "瀏覽器插件",
+      "engine": "Yak 引擎"
+    },
+    "title": "瀏覽器插件 · 明文網關",
+    "browser": "實例 {{ref}}",
+    "ownership": "AI 提交測試資料；瀏覽器插件呼叫頁面函數完成轉換；Yak 引擎傳送並儲存流量。",
+    "request": "請求轉換",
+    "response": "響應轉換",
+    "unknown": "此記錄未儲存詳細轉換證據，僅展示已儲存的資料包；不能據此認定已加密或解密。",
+    "failed": "響應轉換失敗，保留伺服器原始響應。",
+    "disabled": "本次未啟用此方向的轉換；響應中的格式差異可能來自 HTTP 自動整理。",
+    "executed": "插件已執行此方向的轉換。轉換執行不代表業務成功，請結合響應內容判斷。",
+    "loadFailed": "轉換證據載入失敗，仍可查看已儲存的資料包。",
+    "responseEnabled": "響應轉換已啟用",
+    "responseDisabled": "響應未轉換",
+    "steps": "查看插件執行步驟與欄位映射",
+    "requestBefore": "提交給網關的請求",
+    "requestAfter": "實際發往伺服器的請求",
+    "responseBefore": "伺服器原始響應",
+    "responseAfter": "網關處理後的響應（未轉換時保留原響應）",
+    "packetMissing": "轉換前後的資料包尚未載入或未儲存。",
+    "proof": {
+      "exact": "準備階段：樣本資料包一致；不代表本次業務成功。",
+      "structure": "準備階段：僅結構一致；未證明加密輸入語義或業務成功。",
+      "execution": "準備階段：僅執行通過；未與原生資料包驗證一致性。"
+    }
+  },
   "HTTPHistory": {
     "websiteTree": "網站樹",
     "process": "程序",
@@ -254,10 +325,14 @@
     "selectHttpRecordToView": "選擇想要檢視的 HTTP 記錄請求",
     "request": "請求",
     "rawRequest": "原始請求",
+    "plaintextRequest": "網關輸入請求",
+    "wireRequest": "實際傳送請求",
     "containsBinaryStream": "含二進位制流",
     "selectHttpRecordResponseToView": "選擇想要檢視的 HTTP 記錄響應",
     "response": "響應",
     "rawResponse": "原始響應",
+    "plaintextResponse": "網關處理後響應",
+    "wireResponse": "伺服器原始響應",
     "oversizedRequest": "超大請求",
     "oversizedResponse": "超大響應",
     "editTag": "編輯tag",

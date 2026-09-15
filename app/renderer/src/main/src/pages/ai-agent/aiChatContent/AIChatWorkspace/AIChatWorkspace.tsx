@@ -288,6 +288,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
           <PluginExecuteHttpFlow
             filterTagDom={filterTagDom}
             runtimeId={runTimeIds.join(',')}
+            sourceType=""
             showAdvancedSearch
             showSetting
           />

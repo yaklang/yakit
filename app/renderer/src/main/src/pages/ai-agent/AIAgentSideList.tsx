@@ -12,6 +12,7 @@ import ChatSessionPane from './ChatSessionPane/ChatSessionPane'
 import { SplitView } from '../yakRunner/SplitView/SplitView'
 import FileTreeList from './aiChatWelcome/FileTreeList/FileTreeList'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import { BrowserInstancesPanel } from './browserInstances/BrowserInstancesPanel'
 
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
 const AIScheduledTasks = React.lazy(() => import('./aiScheduledTasks/AIScheduledTasks'))
@@ -84,6 +85,9 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
             <AIMCP />
           </React.Suspense>
         )
+        break
+      case AIAgentTabListEnum.Browser:
+        content = <BrowserInstancesPanel />
         break
       default:
         break

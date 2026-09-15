@@ -105,7 +105,7 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
     if (!(selection instanceof TextSelection)) return false
     const { mentionType, mentionId, mentionName, lock } = params
     const { from } = selection
-    tr.deleteRange(from - 1, from)
+    if (from > 0 && state.doc.textBetween(from - 1, from) === '@') tr.deleteRange(from - 1, from)
     const fragment = state.schema.text(`${mentionName}`)
     dispatch?.(
       tr
