@@ -110,10 +110,9 @@ const UICloseFlag = 'windows-close-flag'
 
 /**
  * 诊断收集在除 debug-flag 阻止启动之外的所有环境都启用，方便导出日志、事件和 dump。
- * 恢复对话框在打包生产环境、E2E 测试和开发环境下都会启用。
- * 为避免开发环境因 Vite 编译慢或启动/重连时项目数据加载慢被误判，开发环境下“恢复超时”
- *（窗口 20 秒内未就绪）不弹窗，仅记录事件；渲染进程崩溃、窗口无响应、主框架加载失败
- * 仍会弹出恢复对话框。开发者也可通过快捷键或菜单手动调出恢复对话框。
+ * 恢复对话框在打包生产环境和 E2E 测试时自动弹出；在开发环境也启用恢复能力，但设
+ * 为静默模式，崩溃/卡死/加载失败时只记录事件、不主动弹窗，避免 Vite 编译慢被误判
+ * 打扰开发者。开发者仍可通过快捷键或菜单手动调出恢复对话框。
  * */
 const rendererDiagnostics = shouldAbortStartupForDebugFlags
   ? null
@@ -131,8 +130,7 @@ const rendererRecovery = shouldAbortStartupForDebugFlags
   : createRendererRecovery({
       dialog,
       diagnostics: rendererDiagnostics,
-      silent: false,
-      silentTimeout: !app.isPackaged && !e2eEnvironment.enabled,
+      silent: !app.isPackaged && !e2eEnvironment.enabled,
       getLanguage: () => getConfig().softLange,
       reload: (target, ignoreCache) => {
         clearRenderMap(target)

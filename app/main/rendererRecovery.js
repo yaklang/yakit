@@ -67,7 +67,6 @@ function createRendererRecovery({
   onGone,
   getLanguage,
   silent = false,
-  silentTimeout = false,
 }) {
   const states = new Map()
   let stopped = false
@@ -107,14 +106,7 @@ function createRendererRecovery({
     state.revision++
     clearTimeout(state.timer)
     record('recovery-requested', { forceNewProcess: needsNewProcess }, window)
-    state.timer = setTimeout(() => {
-      if (silentTimeout) {
-        record('recovery-timeout', { silent: true }, window)
-        markReady(window)
-      } else {
-        fail(window, 'recovery-timeout', {})
-      }
-    }, RECOVERY_TIMEOUT_MS)
+    state.timer = setTimeout(() => fail(window, 'recovery-timeout', {}), RECOVERY_TIMEOUT_MS)
     state.timer.unref?.()
     try {
       if (needsNewProcess && !window.webContents.isCrashed()) {
@@ -150,14 +142,7 @@ function createRendererRecovery({
     state.revision++
     const revision = state.revision
     record('recovery-parked', {}, window)
-    state.timer = setTimeout(() => {
-      if (silentTimeout) {
-        record('recovery-timeout', { silent: true }, window)
-        markReady(window)
-      } else {
-        fail(window, 'recovery-timeout', {})
-      }
-    }, RECOVERY_TIMEOUT_MS)
+    state.timer = setTimeout(() => fail(window, 'recovery-timeout', {}), RECOVERY_TIMEOUT_MS)
     state.timer.unref?.()
     try {
       // Keep the BrowserWindow/registered handlers, but release the old process and its application heap.
