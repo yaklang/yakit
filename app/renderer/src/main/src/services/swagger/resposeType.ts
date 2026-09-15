@@ -661,7 +661,7 @@ export declare namespace API {
     /**
      * 严重程度
      */
-    severity?: string
+    setSeverity?: string
     /**
      * 等级评分（小数）
      */
@@ -760,6 +760,14 @@ export declare namespace API {
      * 处置原因
      */
     tagReason?: string
+    /**
+     * 测试人员列表 (uid+姓名)
+     */
+    testers?: RiskListTesters[]
+  }
+  export interface RiskListTesters {
+    testerUid?: string
+    testerName?: string
   }
   export interface RiskFeedBackResponse extends Paging {
     data: RiskFeedBackData[]
@@ -1857,6 +1865,14 @@ export declare namespace API {
      */
     status?: string
     statusReason?: string
+    /**
+     * 测试人员列表 (uid+姓名)
+     */
+    testers?: HTTPFlowDetailTesters[]
+  }
+  export interface HTTPFlowDetailTesters {
+    testerUid?: string
+    testerName?: string
   }
   export interface HTTPFlowDeleteWhere {
     deleteAll?: boolean

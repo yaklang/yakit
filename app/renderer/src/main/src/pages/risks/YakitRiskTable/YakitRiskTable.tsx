@@ -890,7 +890,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       Token: userInfo.token,
       RiskTypeVerbose: riskType,
       SeverityScore: cvss,
-      Severity: severity,
+      SetSeverity: severity,
       SetTags: disposalList,
       VerifierUid: isRepaired ? info.VerifierUid || info.Verifier : undefined,
       FixTime: isRepaired ? info.FixTime : undefined,
