@@ -66,6 +66,7 @@ vi.mock('@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal', () =>
   ExportAILogsModal: () => null,
 }))
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcExportAILogs: vi.fn() }))
+vi.mock('@/pages/risks/YakitRiskTable/utils', () => ({ apiRiskFieldGroup: vi.fn() }))
 vi.mock('@/hook/useAiChatLog/useAiChatLog.ts', () => ({ default: () => ({ onOpenLogWindow: vi.fn() }) }))
 vi.mock('@/components/yakitUI/YakitEmpty/YakitEmpty', () => ({ YakitEmpty: () => <div>暂无数据</div> }))
 

@@ -28,7 +28,7 @@ import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
 import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
 import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
-import { AIReActChatRightPanel } from './AIReActChatRightPanel'
+import { AIRightPanel } from '../aiRightPanel/AIRightPanel'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -297,6 +297,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     return (
       <>
         <div
+          ref={props.rightPanelLayoutRef}
           className={classNames(styles['ai-re-act'], {
             [styles['content-re-act-side']]: isShowRetract,
             [styles['content-re-act-side-hidden']]: isShowExpand,
@@ -341,7 +342,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               </div>
             </div>
           </div>
-          {showAIRightPanel && showFreeChat && <AIReActChatRightPanel layoutRef={wrapperRef} />}
+          {showAIRightPanel && showFreeChat && <AIRightPanel layoutRef={wrapperRef} />}
           <div className={styles['open-wrapper']} onClick={(e) => setShowFreeChat(true)}>
             <ChevrondownButton />
             <div className={styles['text']}>自由对话</div>

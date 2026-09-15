@@ -3,18 +3,33 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useStore } from 'zustand'
 import { createStore } from 'zustand/vanilla'
 import { AIChatContent } from '../AIChatContent'
+import type { AIReActChatProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 
 const store = createStore(() => ({ initLoading: true }))
 const agentStore = createStore(() => ({ activeChat: { SessionID: 'session-1', Source: 'ai' } }))
 const { newChat } = vi.hoisted(() => ({ newChat: vi.fn() }))
 
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => store }))
-vi.mock('../../useContext/useStore', () => ({ default: () => useStore(agentStore) }))
+vi.mock('../../useContext/useStore', () => ({
+  default: function useAgentStore() {
+    return useStore(agentStore)
+  },
+}))
 vi.mock('../../historyChat/HistoryChat', () => ({ onNewChat: newChat }))
 vi.mock('../aiHorizontalScrollCard/AIHorizontalScrollCard', () => ({ AIHorizontalScrollCard: () => null }))
 vi.mock('@/pages/ai-re-act/aiReActChat/AIReActChat', async () => {
   const { forwardRef } = await import('react')
-  return { AIReActChat: forwardRef(() => <div>聊天内容</div>) }
+  return {
+    AIReActChat: forwardRef<HTMLDivElement, AIReActChatProps>(function Chat(props, _ref) {
+      return (
+        <div ref={props.rightPanelLayoutRef}>
+          聊天内容
+          {props.showAIRightPanel && <span>内部面板</span>}
+          <button onClick={() => props.setShowFreeChat(!props.showFreeChat)}>切换自由对话</button>
+        </div>
+      )
+    }),
+  }
 })
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: () => '回到首页' }),
@@ -51,6 +66,38 @@ const advance = (duration: number) => act(() => vi.advanceTimersByTime(duration)
 const queryBackButton = () => screen.queryByRole('button', { name: '回到首页' })
 
 describe('AIChatContent 加载超时操作', () => {
+  it('公共布局关闭内部面板，并将自由对话变更交给父级', () => {
+    store.setState({ initLoading: false })
+    const setShowFreeChat = vi.fn()
+    const rightPanelLayoutRef = vi.fn()
+    const { rerender } = render(
+      <AIChatContent
+        onChat={vi.fn()}
+        showFreeChat
+        rightPanelLayoutRef={rightPanelLayoutRef}
+        setShowFreeChat={setShowFreeChat}
+      />,
+    )
+    expect(screen.queryByText('内部面板')).not.toBeInTheDocument()
+    expect(rightPanelLayoutRef.mock.calls[0][0]).toContainElement(screen.getByText('切换自由对话'))
+    fireEvent.click(screen.getByText('切换自由对话'))
+    expect(setShowFreeChat).toHaveBeenLastCalledWith(false)
+    rerender(
+      <AIChatContent
+        onChat={vi.fn()}
+        showFreeChat={false}
+        rightPanelLayoutRef={rightPanelLayoutRef}
+        setShowFreeChat={setShowFreeChat}
+      />,
+    )
+    fireEvent.click(screen.getByText('切换自由对话'))
+    expect(setShowFreeChat).toHaveBeenLastCalledWith(true)
+  })
+
+  it('独立使用时保留内部面板', () => {
+    render(<AIChatContent onChat={vi.fn()} />)
+    expect(screen.getByText('内部面板')).toBeInTheDocument()
+  })
   it('持续加载 3 秒后在文案下方显示带返回图标的按钮，点击复用新建会话逻辑', () => {
     render(<AIChatContent onChat={vi.fn()} />)
     advance(2999)

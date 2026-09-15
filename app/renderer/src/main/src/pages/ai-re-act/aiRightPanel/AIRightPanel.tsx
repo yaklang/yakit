@@ -5,7 +5,11 @@ import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCar
 import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
 import { AI_AGENT_HISTORY_AI_SOURCES } from '../hooks/useGetChatDataStoreKey'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { useCreation, useMemoizedFn } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { useStore } from 'zustand'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import useCurrentTaskExecution from '../hooks/useCurrentTaskData/useCurrentTaskExecution'
+import { useWelcomePanelStats } from '@/pages/ai-agent/aiChatWelcome/hooks/useWelcomePanelStats'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
@@ -240,10 +244,9 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
  * - 小屏测量（small 未传时监听 layoutRef 宽度）
  * - 内容面板（activePane）的打开、关闭与延时关闭
  * - 小屏悬停打开浮层的交互
- * - 流量 / 漏洞角标渲染
  */
 const usePanelShared = (props: AIRightPanelProps) => {
-  const { layoutRef, small, trafficTotal, riskTotal = 0, riskCounts } = props
+  const { layoutRef, small } = props
 
   const [chatSmall, setChatSmall] = useState(false)
   useEffect(() => {
@@ -315,8 +318,44 @@ const usePanelShared = (props: AIRightPanelProps) => {
     return cancelPaneClose
   }, [isSmall])
 
+  return {
+    isSmall,
+    activePane,
+    setActivePane,
+    closePane,
+    openPane,
+    cancelPaneClose,
+    schedulePaneClose,
+    handleMenuMouseEnter,
+    handleMenuMouseLeave,
+  }
+}
+
+/** 主菜单区容器：panel-top + menu-group，两种模式共用；dataCards 为菜单上方的数据卡片区 */
+const MenuList: React.FC<{
+  menus: MenuItemDef[]
+  small: boolean
+  dataCards?: React.ReactNode
+  trafficTotal?: number
+  riskTotal?: number
+  riskCounts?: AIRightPanelRiskCounts
+  onMenuClick: (key: AIRightPanelMenuKey) => void
+  onMenuMouseEnter: (key: AIRightPanelMenuKey) => boolean
+  onMenuMouseLeave: (key: AIRightPanelMenuKey) => void
+}> = ({
+  menus,
+  small,
+  dataCards,
+  trafficTotal,
+  riskTotal = 0,
+  riskCounts,
+  onMenuClick,
+  onMenuMouseEnter,
+  onMenuMouseLeave,
+}) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const renderSmallBadge = useMemoizedFn((key: AIRightPanelMenuKey) => {
-    if (!isSmall) return undefined
+    if (!small) return undefined
 
     switch (key) {
       case 'risk':
@@ -355,33 +394,6 @@ const usePanelShared = (props: AIRightPanelProps) => {
     return null
   })
 
-  return {
-    isSmall,
-    activePane,
-    setActivePane,
-    closePane,
-    openPane,
-    cancelPaneClose,
-    schedulePaneClose,
-    handleMenuMouseEnter,
-    handleMenuMouseLeave,
-    renderSmallBadge,
-    renderMenuSuffix,
-  }
-}
-
-/** 主菜单区容器：panel-top + menu-group，两种模式共用；dataCards 为菜单上方的数据卡片区 */
-const MenuList: React.FC<{
-  menus: MenuItemDef[]
-  small: boolean
-  dataCards?: React.ReactNode
-  renderSuffix: (key: AIRightPanelMenuKey) => React.ReactNode
-  renderBadge: (key: AIRightPanelMenuKey) => React.ReactNode
-  onMenuClick: (key: AIRightPanelMenuKey) => void
-  onMenuMouseEnter: (key: AIRightPanelMenuKey) => boolean
-  onMenuMouseLeave: (key: AIRightPanelMenuKey) => void
-}> = ({ menus, small, dataCards, renderSuffix, renderBadge, onMenuClick, onMenuMouseEnter, onMenuMouseLeave }) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
   return (
     <div className={classNames(styles['panel-top'], { [styles['panel-top-small']]: small })}>
       <div className={styles['menu-group']}>
@@ -392,8 +404,8 @@ const MenuList: React.FC<{
             icon={item.icon}
             label={t(item.labelKey)}
             small={small}
-            suffix={renderSuffix(item.key)}
-            smallBadge={renderBadge(item.key)}
+            suffix={renderMenuSuffix(item.key)}
+            smallBadge={renderSmallBadge(item.key)}
             onClick={() => onMenuClick(item.key)}
             onMouseEnter={() => onMenuMouseEnter(item.key)}
             onMouseLeave={() => onMenuMouseLeave(item.key)}
@@ -469,9 +481,13 @@ const PaneSlot: React.FC<{
 // #endregion
 
 // #region 首页模式：仅文件系统、流量、漏洞、会话历史四个入口，不订阅会话与任务相关数据
-const WelcomeRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
-  const panel = usePanelShared(props)
+type PanelState = ReturnType<typeof usePanelShared>
 
+type WelcomeRightPanelProps = Pick<AIRightPanelProps, 'layoutRef'> & { panel: PanelState }
+
+const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel, layoutRef }) => {
+  const [inViewport = true] = useInViewport(layoutRef)
+  const welcomeStats = useWelcomePanelStats(inViewport)
   /**
    * 菜单点击：会话历史打开右侧内容面板；
    * 文件系统展开侧栏会话页，流量、漏洞切换工作区 tab。
@@ -503,7 +519,7 @@ const WelcomeRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   })
 
   return (
-    <div className={styles['right-panel-wrapper']} data-ai-right-panel data-ai-right-panel-small={panel.isSmall}>
+    <>
       <div
         className={classNames(styles['right-panel'], {
           [styles['right-panel-small']]: panel.isSmall,
@@ -513,32 +529,40 @@ const WelcomeRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
         <MenuList
           menus={WELCOME_MENUS}
           small={panel.isSmall}
-          renderSuffix={panel.renderMenuSuffix}
-          renderBadge={panel.renderSmallBadge}
+          {...welcomeStats}
           onMenuClick={handleMenuClick}
           onMenuMouseEnter={panel.handleMenuMouseEnter}
           onMenuMouseLeave={panel.handleMenuMouseLeave}
         />
       </div>
-      {panel.activePane && (
-        <PaneSlot
-          pane={panel.activePane}
-          small={panel.isSmall}
-          onClose={panel.closePane}
-          onMouseEnter={panel.cancelPaneClose}
-          onMouseLeave={panel.schedulePaneClose}
-        />
-      )}
-    </div>
+    </>
   )
 })
 // #endregion
 
 // #region 会话模式：数据卡片 + 主菜单 + 底部「更多」分组 + 任务、导出日志等会话相关交互
-const ChatRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
-  const { executionData } = props
+type ChatRightPanelProps = { panel: PanelState }
+
+const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
+  const { panel } = props
+  const store = useCurrentStore()
+  const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
+  const executionData = useCurrentTaskExecution(questionID)
+  const levelCount = executionData?.risk_level_count
+  // 快照 risk_level_count 为固定字段，直接映射展示等级；
+  // 首页全量统计侧的多别名归并见 useWelcomePanelStats.getRiskCounts，两处语义不同未合并，调整归并时需同步检查。
+  const riskCounts = useCreation<AIRightPanelRiskCounts | undefined>(() => {
+    if (!levelCount) return undefined
+    return {
+      serious: levelCount.critical,
+      high: levelCount.high,
+      medium: levelCount.warning,
+      low: levelCount.low,
+      info: levelCount.info + levelCount.other,
+    }
+  }, [levelCount])
+  const riskTotal = levelCount?.total ?? Object.values(riskCounts ?? {}).reduce((total, count) => total + count, 0)
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const panel = usePanelShared(props)
   const [moreOpen, setMoreOpen] = useState(false)
   // 菜单点击交互：打开工作区 tab / 导出与查看日志
   const { activeChat } = useAIAgentStore()
@@ -647,7 +671,7 @@ const ChatRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   ))
 
   return (
-    <div className={styles['right-panel-wrapper']} data-ai-right-panel data-ai-right-panel-small={panel.isSmall}>
+    <>
       <div
         className={classNames(styles['right-panel'], {
           [styles['right-panel-small']]: panel.isSmall,
@@ -658,8 +682,9 @@ const ChatRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
           menus={mainMenus}
           small={panel.isSmall}
           dataCards={!panel.isSmall ? <DataCards executionData={executionData} /> : undefined}
-          renderSuffix={panel.renderMenuSuffix}
-          renderBadge={panel.renderSmallBadge}
+          trafficTotal={executionData?.http_flow_count}
+          riskTotal={riskTotal}
+          riskCounts={riskCounts}
           onMenuClick={handleMenuClick}
           onMenuMouseEnter={panel.handleMenuMouseEnter}
           onMenuMouseLeave={panel.handleMenuMouseLeave}
@@ -681,22 +706,13 @@ const ChatRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
           {renderMoreToggle()}
         </div>
       </div>
-      {panel.activePane && (
-        <PaneSlot
-          pane={panel.activePane}
-          small={panel.isSmall}
-          onClose={panel.closePane}
-          onMouseEnter={panel.cancelPaneClose}
-          onMouseLeave={panel.schedulePaneClose}
-        />
-      )}
       <ExportAILogsModal
         visible={exportModalVisible}
         onCancel={onExportCancel}
         onOk={onExportOk}
         loading={exportLoading}
       />
-    </div>
+    </>
   )
 })
 // #endregion
@@ -709,7 +725,26 @@ const ChatRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
  */
 export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   const { welcome = false } = props
-  return welcome ? <WelcomeRightPanel {...props} /> : <ChatRightPanel {...props} />
+  const panel = usePanelShared(props)
+  useEffect(() => {
+    if (!welcome) return
+    panel.cancelPaneClose()
+    panel.setActivePane((pane) => (pane === 'session-history' ? pane : undefined))
+  }, [welcome])
+  return (
+    <div className={styles['right-panel-wrapper']} data-ai-right-panel data-ai-right-panel-small={panel.isSmall}>
+      {welcome ? <WelcomeRightPanel panel={panel} layoutRef={props.layoutRef} /> : <ChatRightPanel panel={panel} />}
+      {panel.activePane && (
+        <PaneSlot
+          pane={panel.activePane}
+          small={panel.isSmall}
+          onClose={panel.closePane}
+          onMouseEnter={panel.cancelPaneClose}
+          onMouseLeave={panel.schedulePaneClose}
+        />
+      )}
+    </div>
+  )
 })
 
 export default AIRightPanel

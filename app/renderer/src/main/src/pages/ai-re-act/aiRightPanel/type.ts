@@ -1,5 +1,4 @@
 import type React from 'react'
-import type { AIAgentGrpcApi } from '../hooks/grpcApi'
 
 /** 右侧可打开的内容面板标识 */
 export type AIRightPanelPaneKey = 'task-list' | 'timeline' | 'session-history'
@@ -36,14 +35,6 @@ export interface AIRightPanelRiskCounts {
 export interface AIRightPanelProps {
   /** 首页模式：仅展示文件系统、流量、漏洞、会话历史 */
   welcome?: boolean
-  /** 调用方提供的流量总数 */
-  trafficTotal?: number
-  /** 调用方提供的漏洞总数 */
-  riskTotal?: number
-  /** 调用方提供的漏洞等级计数 */
-  riskCounts?: AIRightPanelRiskCounts
-  /** 自由对话的数据卡片内容，未提供时不展示数据卡片 */
-  executionData?: AIAgentGrpcApi.SessionSnapshot['execution']
   /** AI 聊天外层容器 ref：用于计算扣除正常态面板槽位后的列表可用宽度 */
   layoutRef?: React.RefObject<HTMLElement | null>
   /** 是否使用小屏图标栏 */

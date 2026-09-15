@@ -1,7 +1,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { AIChatContentProps } from './type'
 import styles from './AIChatContent.module.scss'
-import { useMemoizedFn } from 'ahooks'
+import { useControllableValue, useMemoizedFn } from 'ahooks'
 import { AIReActChat } from '@/pages/ai-re-act/aiReActChat/AIReActChat'
 import useAIAgentStore from '../useContext/useStore'
 import type {
@@ -29,7 +29,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     const initLoading = useStore(store, (state) => state.initLoading)
     const { activeChat } = useAIAgentStore()
 
-    const [showFreeChat, setShowFreeChat] = useState<boolean>(true)
+    const [showFreeChat, setShowFreeChat] = useControllableValue<boolean>(props, {
+      defaultValue: true,
+      valuePropName: 'showFreeChat',
+      trigger: 'setShowFreeChat',
+    })
     const [showBackToHome, setShowBackToHome] = useState(false)
 
     useEffect(() => {
@@ -89,7 +93,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 showFreeChat={showFreeChat}
                 setShowFreeChat={setShowFreeChat}
                 startRequest={startRequest}
-                showAIRightPanel
+                showAIRightPanel={!props.rightPanelLayoutRef}
+                rightPanelLayoutRef={props.rightPanelLayoutRef}
                 ref={aiReActChatRef}
               />
             </div>

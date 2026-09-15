@@ -65,32 +65,27 @@
   align-items: flex-start;
   height: 100%;
   width: 100%;
-  // 面板存在/小屏两态由下方 :has(data-ai-right-panel*) 联动。
-  // 滚动容器保持全宽，消息内容与输入框分别套用同一条内容轨道。
-  --ai-right-panel-slot-width: 0px;
-  --ai-right-panel-content-shift: 0px;
-  // 内容轨道只在根容器计算一次，列表、输入框和状态提示共同复用。
-  --ai-right-panel-content-track-width: min(784px, calc(100% - var(--ai-right-panel-slot-width)));
+  // 预留宽度继承自公共布局，内部面板由下方规则覆盖。
+  // 内容左移半个预留宽度，在剩余区域居中。
+  --ai-right-panel-content-shift: calc(var(--ai-right-panel-slot-width, 0px) / -2);
+  // 内容宽度不超过 784px 或扣除面板后的可用宽度。
+  --ai-right-panel-content-track-width: min(784px, calc(100% - var(--ai-right-panel-slot-width, 0px)));
   position: relative;
   overflow: hidden;
 
-  // 正常面板槽位 = 301px 面板 + 12px 右侧留白 + 12px 内容间距 = 325px；
-  // 共同轨道需要向左移动半个槽位，才能以扣除槽位后的可用区域为中心。
+  // 内部面板正常模式（含间距）。
   &:has([data-ai-right-panel]) {
     --ai-right-panel-slot-width: 325px;
-    // 内容中心偏移 = -(325px / 2) = -162.5px
-    --ai-right-panel-content-shift: -162.5px;
   }
 
-  // 小屏面板槽位 = 41px 面板 + 12px 右侧留白 + 8px 内容间距 = 61px
+  // 内部面板小屏模式（含间距）。
   &:has([data-ai-right-panel-small='true']) {
     --ai-right-panel-slot-width: 61px;
-    // 内容中心偏移 = -(61px / 2) = -30.5px
-    --ai-right-panel-content-shift: -30.5px;
   }
 
   // 面板态下 footer 以 ai-re-act 根容器为坐标基准，与消息项使用相同的内容轨道。
-  &:has([data-ai-right-panel]) .chat-footer {
+  &:has([data-ai-right-panel]) .chat-footer,
+  :global([data-ai-shared-right-panel='true']) & .chat-footer {
     @include mixin.ai-right-panel-content-track;
     padding: 0;
   }

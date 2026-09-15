@@ -72,8 +72,8 @@ vi.mock('@/pages/ai-agent/aiAgentChat/AIAgentChat', () => ({
 vi.mock('../AIReActComponent', () => ({
   ChevrondownButton: () => <span data-testid="expand-button" />,
 }))
-vi.mock('../AIReActChatRightPanel', () => ({
-  AIReActChatRightPanel: () => <div data-testid="right-panel" />,
+vi.mock('../../aiRightPanel/AIRightPanel', () => ({
+  AIRightPanel: () => <div data-testid="right-panel" />,
 }))
 
 import { AIReActChat } from '../AIReActChat'
@@ -86,6 +86,17 @@ const baseProps = {
 }
 
 describe('AIReActChat', () => {
+  it('提供聊天区域定位引用，供公共面板对齐', () => {
+    const rightPanelLayoutRef = vi.fn()
+    const { unmount } = render(
+      <AIReActChat {...baseProps} showAIRightPanel={false} rightPanelLayoutRef={rightPanelLayoutRef} />,
+    )
+    const element = rightPanelLayoutRef.mock.calls[0][0] as HTMLDivElement
+    expect(element).toContainElement(screen.getByTestId('chat-contents'))
+    expect(element).toContainElement(screen.getByTestId('chat-textarea'))
+    unmount()
+    expect(rightPanelLayoutRef.mock.calls.at(-1)?.[0]).toBeNull()
+  })
   it('自由对话收起时不渲染右侧面板', () => {
     render(<AIReActChat {...baseProps} showFreeChat={false} />)
 

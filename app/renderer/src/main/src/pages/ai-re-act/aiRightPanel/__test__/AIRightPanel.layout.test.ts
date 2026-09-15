@@ -13,6 +13,10 @@ const panelStylePath = path.resolve(pageDir, 'AIRightPanel.module.scss')
 const todoWrapperStylePath = path.resolve(pageDir, '../aiReActChat/aiToDoListWrapper/AIToDoListWrapper.module.scss')
 const mixinStylePath = path.resolve(pageDir, '../styles/mixin.scss')
 const agentChatStylePath = path.resolve(pageDir, '../../ai-agent/aiAgentChat/AIAgentChat.module.scss')
+const layoutStylePath = path.resolve(
+  pageDir,
+  '../../ai-agent/aiAgentChat/AIAgentChatLayout/AIAgentChatLayout.module.scss',
+)
 
 describe('AIRightPanel layout contract', () => {
   it('小屏面板的父级层叠上下文高于 TodoList，浮层可以覆盖待办卡片', () => {
@@ -48,16 +52,17 @@ describe('AIRightPanel layout contract', () => {
     const contentsSource = readFileSync(contentsStylePath, 'utf8')
     const contentsComponentSource = readFileSync(contentsComponentPath, 'utf8')
     const mixinSource = readFileSync(mixinStylePath, 'utf8')
+    const layoutSource = readFileSync(layoutStylePath, 'utf8')
 
-    expect(chatSource).toContain('--ai-right-panel-slot-width: 0px')
-    expect(chatSource).toContain('--ai-right-panel-content-shift: 0px')
+    expect(layoutSource).toContain('--ai-right-panel-slot-width: 0px')
+    expect(layoutSource).toContain('--ai-right-panel-slot-width: 325px')
+    expect(layoutSource).toContain('--ai-right-panel-slot-width: 61px')
+    expect(chatSource).toContain('--ai-right-panel-content-shift: calc(var(--ai-right-panel-slot-width, 0px) / -2)')
     expect(chatSource).not.toContain('--ai-right-panel-list-content-shift')
     expect(chatSource).toContain('--ai-right-panel-slot-width: 325px')
-    expect(chatSource).toContain('--ai-right-panel-content-shift: -162.5px')
     expect(chatSource).toContain('--ai-right-panel-slot-width: 61px')
-    expect(chatSource).toContain('--ai-right-panel-content-shift: -30.5px')
     expect(chatSource).toContain(
-      '--ai-right-panel-content-track-width: min(784px, calc(100% - var(--ai-right-panel-slot-width)))',
+      '--ai-right-panel-content-track-width: min(784px, calc(100% - var(--ai-right-panel-slot-width, 0px)))',
     )
     // 轨道的实际声明收敛在共享 mixin，面板态 footer include 同一条轨道
     expect(chatSource).toContain('@include mixin.ai-right-panel-content-track')
