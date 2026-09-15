@@ -8,11 +8,11 @@ ipcRenderer.on('renderer-diagnostics:memory', (_event, nonce) => {
     const heap = process.getHeapStatistics()
     const blink = process.getBlinkMemoryInfo()
     ipcRenderer.send('renderer-diagnostics:memory', nonce, {
-      usedHeapKB: heap.usedHeapSize,
-      heapLimitKB: heap.heapSizeLimit,
-      availableHeapKB: heap.totalAvailableSize,
-      blinkAllocatedKB: blink.allocated,
-      blinkTotalKB: blink.total,
+      usedHeapKB: Math.round(heap.usedHeapSize / 1024),
+      heapLimitKB: Math.round(heap.heapSizeLimit / 1024),
+      availableHeapKB: Math.round(heap.totalAvailableSize / 1024),
+      blinkAllocatedKB: Math.round(blink.allocated / 1024),
+      blinkTotalKB: Math.round(blink.total / 1024),
     })
   } catch {
     ipcRenderer.send('renderer-diagnostics:memory', nonce, null)

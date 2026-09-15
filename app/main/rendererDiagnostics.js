@@ -51,6 +51,21 @@ function settleWithin(read, timeoutMs = 1500) {
   })
 }
 
+async function atomicRename(partial, destination) {
+  try {
+    await fs.promises.rename(partial, destination)
+  } catch (error) {
+    // Windows does not allow renaming over an existing file; fall back to an
+    // explicit overwrite so that Save-dialog overwrite confirmations work.
+    if (process.platform === 'win32' && error.code === 'EEXIST') {
+      await fs.promises.rm(destination, { force: true })
+      await fs.promises.rename(partial, destination)
+    } else {
+      throw error
+    }
+  }
+}
+
 function readProcesses(app) {
   try {
     return app.getAppMetrics().map((metric) => ({
@@ -362,7 +377,7 @@ function createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, ge
         fs.createWriteStream(partial, { flags: 'wx', mode: 0o600 }),
         { ignoreBase: true },
       )
-      await fs.promises.rename(partial, destination)
+      await atomicRename(partial, destination)
       return manifest
     } finally {
       await fs.promises.rm(staging, { recursive: true, force: true })

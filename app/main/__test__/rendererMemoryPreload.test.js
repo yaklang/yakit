@@ -9,8 +9,12 @@ describe.each(['preload.js', 'engineLinkPreload.js'])('%s memory counters', (fil
     const ipcRenderer = Object.assign(new EventEmitter(), { send: vi.fn() })
     const process = Object.assign(new EventEmitter(), {
       argv: [],
-      getHeapStatistics: vi.fn(() => ({ usedHeapSize: 100, heapSizeLimit: 1024, totalAvailableSize: 800 })),
-      getBlinkMemoryInfo: vi.fn(() => ({ allocated: 10, total: 20 })),
+      getHeapStatistics: vi.fn(() => ({
+        usedHeapSize: 102_400,
+        heapSizeLimit: 1_048_576,
+        totalAvailableSize: 819_200,
+      })),
+      getBlinkMemoryInfo: vi.fn(() => ({ allocated: 10_240, total: 20_480 })),
     })
     const context = {
       process,

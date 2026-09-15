@@ -58,7 +58,16 @@ const messages = {
   },
 }
 
-function createRendererRecovery({ dialog, diagnostics, reload, backToConnection, exit, onGone, getLanguage }) {
+function createRendererRecovery({
+  dialog,
+  diagnostics,
+  reload,
+  backToConnection,
+  exit,
+  onGone,
+  getLanguage,
+  silent = false,
+}) {
   const states = new Map()
   let stopped = false
   const text = () => messages[getLanguage()] || messages.en
@@ -227,7 +236,7 @@ function createRendererRecovery({ dialog, diagnostics, reload, backToConnection,
     const incident = record(cause, details, window)
     state.memoryAssessment =
       incident?.memoryAssessment || (details.reason === 'oom' ? { status: 'reported-oom' } : null)
-    void prompt(window)
+    if (!silent) void prompt(window)
   }
 
   function attach(window, name) {

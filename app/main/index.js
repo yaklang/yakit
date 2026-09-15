@@ -33,7 +33,6 @@ const Screenshots = require('./screenshots')
 const windowStateKeeper = require('electron-window-state')
 const { MenuTemplate } = require('./menu')
 const {
-  renderLogOutputFile,
   getAllLogHandles,
   closeAllLogHandles,
   initAllLogFolders,
@@ -109,13 +108,18 @@ if (shouldAbortStartupForDebugFlags) {
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = 'windows-close-flag'
 
+/**
+ * 诊断收集在除 debug-flag 阻止启动之外的所有环境都启用，方便导出日志、事件和 dump。
+ * 恢复对话框在打包生产环境和 E2E 测试时自动弹出；在开发环境也启用恢复能力，但设
+ * 为静默模式，崩溃/卡死/加载失败时只记录事件、不主动弹窗，避免 Vite 编译慢被误判
+ * 打扰开发者。开发者仍可通过快捷键或菜单手动调出恢复对话框。
+ * */
 const rendererDiagnostics = shouldAbortStartupForDebugFlags
   ? null
   : createRendererDiagnostics({
       app,
       crashReporter,
       writeLog: (message) => {
-        renderLogOutputFile(message)
         printLogOutputFile(message)
       },
       flushLogs: flushAllLogs,
@@ -126,6 +130,7 @@ const rendererRecovery = shouldAbortStartupForDebugFlags
   : createRendererRecovery({
       dialog,
       diagnostics: rendererDiagnostics,
+      silent: !app.isPackaged && !e2eEnvironment.enabled,
       getLanguage: () => getConfig().softLange,
       reload: (target, ignoreCache) => {
         clearRenderMap(target)
@@ -706,7 +711,7 @@ if (!shouldAbortStartupForDebugFlags) {
     /** 获取缓存数据并储存于软件内 */
     initLocalCache()
 
-    await getAllLogHandles()
+    void getAllLogHandles()
 
     /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
     initExtraLocalCache()
