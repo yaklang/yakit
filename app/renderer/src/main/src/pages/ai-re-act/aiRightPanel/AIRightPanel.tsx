@@ -176,7 +176,7 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
     })
 
     // 菜单容器和交互行为在两种尺寸下相同，具体内容由大小屏分支分别生成。
-    const renderMenuContainer = useMemoizedFn((children: React.ReactNode, className?: string) => (
+    const renderMenuContainer = (children: React.ReactNode, className?: string) => (
       <div
         className={classNames(styles['menu-item'], className)}
         aria-label={label}
@@ -186,10 +186,10 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
       >
         {children}
       </div>
-    ))
+    )
 
     // 正常态使用独立的文案和右侧 suffix，不渲染小屏专用结构。
-    const renderNormalContent = useMemoizedFn(() =>
+    const renderNormalContent = () =>
       renderMenuContainer(
         <>
           <div className={styles['menu-item-base']}>
@@ -202,11 +202,10 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
           </div>
           {suffix}
         </>,
-      ),
-    )
+      )
 
     // 小屏态只保留图标和可选角标，不渲染正常态文案或 suffix。
-    const renderSmallContent = useMemoizedFn(() =>
+    const renderSmallContent = () =>
       renderMenuContainer(
         <div className={styles['menu-item-base']}>
           <span
@@ -225,8 +224,7 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
           </span>
         </div>,
         styles['menu-item-small'],
-      ),
-    )
+      )
 
     return small ? (
       <Tooltip key={label} title={label} placement="left" open={tooltipOpen}>
@@ -354,7 +352,7 @@ const MenuList: React.FC<{
   onMenuMouseLeave,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const renderSmallBadge = useMemoizedFn((key: AIRightPanelMenuKey) => {
+  const renderSmallBadge = (key: AIRightPanelMenuKey) => {
     if (!small) return undefined
 
     switch (key) {
@@ -363,9 +361,9 @@ const MenuList: React.FC<{
       default:
         return undefined
     }
-  })
+  }
 
-  const renderMenuSuffix = useMemoizedFn((key: AIRightPanelMenuKey) => {
+  const renderMenuSuffix = (key: AIRightPanelMenuKey) => {
     if (key === 'traffic' && trafficTotal) {
       return (
         <YakitTag fullRadius color="white" border={false}>
@@ -392,7 +390,7 @@ const MenuList: React.FC<{
       )
     }
     return null
-  })
+  }
 
   return (
     <div className={classNames(styles['panel-top'], { [styles['panel-top-small']]: small })}>
@@ -426,7 +424,7 @@ const PaneSlot: React.FC<{
 }> = React.memo(({ pane, small, onClose, onMouseEnter, onMouseLeave }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
-  const renderTitle = useMemoizedFn(() => {
+  const renderTitle = () => {
     switch (pane) {
       case 'session-history':
         return t('AIRightPanel.sessionHistory')
@@ -437,9 +435,9 @@ const PaneSlot: React.FC<{
       default:
         return ''
     }
-  })
+  }
 
-  const renderContent = useMemoizedFn(() => {
+  const renderContent = () => {
     switch (pane) {
       case 'session-history':
         return (
@@ -459,7 +457,7 @@ const PaneSlot: React.FC<{
       default:
         return null
     }
-  })
+  }
 
   return (
     <div
@@ -642,25 +640,27 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
       return
     }
     setExportLoading(true)
-    try {
-      await grpcExportAILogs(
-        {
-          SessionID: activeChat.SessionID,
-          ExportDataTypes: data.types,
-          OutputPath: data.outputPath,
-        },
-        true,
-      )
-      yakitNotify('success', t('YakitNotification.exportSuccess'))
-      setExportModalVisible(false)
-    } catch (error) {
-      failed(t('YakitNotification.exportFailed', { error: error + '' }))
-    } finally {
-      setExportLoading(false)
-    }
+    await grpcExportAILogs(
+      {
+        SessionID: activeChat.SessionID,
+        ExportDataTypes: data.types,
+        OutputPath: data.outputPath,
+      },
+      true,
+    )
+      .then(() => {
+        yakitNotify('success', t('YakitNotification.exportSuccess'))
+        setExportModalVisible(false)
+      })
+      .catch((error) => {
+        failed(t('YakitNotification.exportFailed', { error: error + '' }))
+      })
+      .finally(() => {
+        setExportLoading(false)
+      })
   })
 
-  const renderMoreToggle = useMemoizedFn(() => (
+  const renderMoreToggle = () => (
     <MenuItem
       icon={moreOpen ? <ChevronDoubleUpOutlined /> : <ChevronDoubleDownOutlined />}
       label={moreOpen ? t('AIRightPanel.collapse') : t('AIRightPanel.more')}
@@ -668,7 +668,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
       secondary
       onClick={() => setMoreOpen((prev) => !prev)}
     />
-  ))
+  )
 
   return (
     <>

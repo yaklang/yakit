@@ -178,43 +178,46 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   })
 
   const onOpenTaskDetail = useMemoizedFn((data: string) => {
+    let info: AIAgentTriggerEventInfo
     try {
-      const info: AIAgentTriggerEventInfo = JSON.parse(data)
-      const { type, params } = info
-      if (!params) return
-      const key = params.key as string
-      const taskId = (params.taskId || key) as string
-      if (!key || !taskId) return
-      const tabKey = `task:${key}`
+      info = JSON.parse(data)
+    } catch {
+      return
+    }
+    if (!info?.params) return
+    const { type, params } = info
+    const key = params.key as string
+    const taskId = (params.taskId || key) as string
+    if (!key || !taskId) return
+    const tabKey = `task:${key}`
 
-      if (type === 'update') {
-        if (!tabs.some((item) => item.key === tabKey)) return
-        setTabs((current) =>
-          current.map((item) =>
-            item.key === tabKey
-              ? {
-                  ...item,
-                  label: params.label ?? item.label,
-                  taskId: params.taskId ?? item.taskId,
-                  taskGoal: params.goal ?? item.taskGoal,
-                }
-              : item,
-          ),
-        )
-        setActiveTabKey(tabKey)
-        return
-      }
+    if (type === 'update') {
+      if (!tabs.some((item) => item.key === tabKey)) return
+      setTabs((current) =>
+        current.map((item) =>
+          item.key === tabKey
+            ? {
+                ...item,
+                label: params.label ?? item.label,
+                taskId: params.taskId ?? item.taskId,
+                taskGoal: params.goal ?? item.taskGoal,
+              }
+            : item,
+        ),
+      )
+      setActiveTabKey(tabKey)
+      return
+    }
 
-      if (type === 'add') {
-        openTab({
-          key: tabKey,
-          type: AITabsEnum.Task_Detail,
-          label: params.label || key,
-          taskId,
-          taskGoal: params.goal,
-        })
-      }
-    } catch {}
+    if (type === 'add') {
+      openTab({
+        key: tabKey,
+        type: AITabsEnum.Task_Detail,
+        label: params.label || key,
+        taskId,
+        taskGoal: params.goal,
+      })
+    }
   })
 
   useEffect(() => {
@@ -248,7 +251,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         {showId}
       </YakitTag>
     )
-  }, [activeTab?.runtimeId])
+  }, [activeTab?.runtimeId, onClearRuntimeFilter])
 
   const onCloseTab = useMemoizedFn((event: React.MouseEvent, key: string) => {
     event.stopPropagation()

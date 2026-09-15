@@ -123,7 +123,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     }
   })
 
-  const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
+  const renderTabContent = (ele: HoldGRPCStreamProps.InfoTab) => {
     switch (ele.type) {
       case 'risk':
         return runtimeId ? (
@@ -175,7 +175,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
       default:
         return <></>
     }
-  })
+  }
 
   const showTabs = useMemo(() => {
     let tabs = streamInfo.tabsState
@@ -494,7 +494,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     return tab
   }, [echartsLists, textLists, i18nRefresh])
 
-  const renderTabContent = useMemoizedFn((type) => {
+  const renderTabContent = (type: string) => {
     switch (type) {
       case 'plugin-log': {
         const currentTime = moment().format('YYYY-MM-DD')
@@ -518,7 +518,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
       default:
         return <></>
     }
-  })
+  }
   const onTabChange = useMemoizedFn((key: string) => {
     setActiveKey(key)
   })

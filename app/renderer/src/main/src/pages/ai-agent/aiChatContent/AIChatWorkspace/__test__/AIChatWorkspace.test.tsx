@@ -4,8 +4,14 @@ import { createStore } from 'zustand/vanilla'
 import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabs, AITabsEnum } from '../../../defaultConstant'
-import { AIChatWorkspace } from '../AIChatWorkspace'
+import type * as AIChatWorkspaceModule from '../AIChatWorkspace'
+import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import type { PluginExecuteWebsiteTreeProps } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
+
+const { AIChatWorkspace } = await compileReactModule<typeof AIChatWorkspaceModule>(
+  import.meta.url,
+  '../AIChatWorkspace.tsx',
+)
 
 const store = createStore(() => ({
   currentChatStatus: { questionID: 'task-1' },

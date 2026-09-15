@@ -1,5 +1,5 @@
 import type { AIMarkdownProps } from './type'
-import React, { type ReactNode, useRef, useState } from 'react'
+import React, { type ReactNode, useState } from 'react'
 import type { ReportItem } from '@/pages/assetViewer/reportRenders/schema'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
@@ -35,7 +35,7 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
     }
     return value
   }, [content])
-  const renderContent = useMemoizedFn(() => {
+  const renderContent = () => {
     let content: ReactNode = <></>
     switch (type) {
       case 'preview':
@@ -65,7 +65,7 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
         break
     }
     return content
-  })
+  }
   const onDown = useMemoizedFn((e) => {
     e.stopPropagation()
     const time = moment().valueOf()
@@ -80,13 +80,13 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
   })
 
   // 判断路由，子窗口有些功能不展示
-  const isChildWindow = useRef(isAuxOrChildWindow())
+  const isChildWindow = isAuxOrChildWindow()
 
   return (
     <div className={classNames(styles['ai-milkdown-wrapper'], className)}>
       <div className={styles['ai-milkdown-body']}>
         <div className={styles['hover-actions']}>
-          {!isChildWindow.current && (
+          {!isChildWindow && (
             <Tooltip title={t('AIMarkdown.openFromNotepad')}>
               <YakitButton size="small" type="text" icon={<OutlineNotebookIcon />} onClick={onGoToNote} />
             </Tooltip>

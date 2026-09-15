@@ -2,7 +2,13 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useEffect } from 'react'
 import type { FileTreeSystemListProps, HistoryItem } from '../../type'
-import FileTreeSystemListWrapper from '../FileTreeSystemListWrapper'
+import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
+import type * as FileTreeSystemListWrapperModule from '../FileTreeSystemListWrapper'
+
+const { default: FileTreeSystemListWrapper } = await compileReactModule<typeof FileTreeSystemListWrapperModule>(
+  import.meta.url,
+  '../FileTreeSystemListWrapper.tsx',
+)
 
 const { treeProps, openFileFolder, mergePaths } = vi.hoisted(() => ({
   treeProps: new Map<string, FileTreeSystemListProps>(),
@@ -27,7 +33,11 @@ vi.mock('../../FileTreeSystemList/FileTreeSystemList', () => ({
         treeProps.delete(props.path)
       }
     }, [props.path])
-    return <div data-testid={props.path}>{props.path}</div>
+    return (
+      <div data-testid={props.path} data-selected={props.selected?.path}>
+        {props.path}
+      </div>
+    )
   },
 }))
 
@@ -42,7 +52,19 @@ const paths: HistoryItem[] = [
   { path: 'report.txt', isFolder: false },
 ]
 
-describe('FileTreeSystemListWrapper', () => {
+describe('FileTreeSystemListWrapper（启用 React Compiler）', () => {
+  it('路径不变时同步选中文件的变化', async () => {
+    const props = { title: '文件列表', path: paths, setSelected: vi.fn() }
+    const { rerender } = render(<FileTreeSystemListWrapper {...props} />)
+    const tree = await screen.findByTestId('report.txt')
+    expect(tree).not.toHaveAttribute('data-selected')
+    const selected = { parent: null, name: 'report.txt', path: 'report.txt', isFolder: false, icon: '', depth: 0 }
+    rerender(<FileTreeSystemListWrapper {...props} selected={selected} />)
+    expect(tree).toHaveAttribute('data-selected', 'report.txt')
+    rerender(<FileTreeSystemListWrapper {...props} />)
+    expect(tree).not.toHaveAttribute('data-selected')
+  })
+
   it('只统计合并后的 uniquePaths 中的文件，排除目录及被合并的文件路径', async () => {
     mergePaths.mockResolvedValueOnce(paths)
     render(

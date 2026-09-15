@@ -3,9 +3,16 @@ import { useState } from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import emiter from '@/utils/eventBus/eventBus'
-import { AIAgentSideList } from '../AIAgentSideList'
+import type * as AIAgentSideListModule from '../AIAgentSideList'
+import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
+import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { SwitchAIAgentTabEventEnum } from '../defaultConstant'
 import type { YakitSideTabProps } from '@/components/yakitSideTab/YakitSideTabType'
+
+const { AIAgentSideList } = await compileReactModule<typeof AIAgentSideListModule>(
+  import.meta.url,
+  '../AIAgentSideList.tsx',
+)
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18nRefresh: 0 }),
@@ -25,15 +32,37 @@ vi.mock('@/components/yakitSideTab/YakitSideTab', () => ({
   ),
 }))
 vi.mock('../aiChatWelcome/FileTreeList/FileTreeList', () => ({
-  default: ({ onClose }: { onClose: () => void }) => (
+  default: ({
+    onClose,
+    selected,
+    setSelected,
+  }: {
+    onClose: () => void
+    selected?: FileNodeProps
+    setSelected: (file: FileNodeProps) => void
+  }) => (
     <div>
       文件列表
+      <output aria-label="selected-file">{selected?.path}</output>
+      <button
+        onClick={() =>
+          setSelected({ path: '/report.txt', name: 'report.txt', parent: null, isFolder: false, icon: '', depth: 0 })
+        }
+      >
+        选择文件
+      </button>
       <button onClick={onClose}>关闭文件系统</button>
     </div>
   ),
 }))
 vi.mock('../aiMCP/AIMCP', () => ({ default: () => <div>MCP 内容</div> }))
-vi.mock('../aiScheduledTasks/AIScheduledTasks', () => ({ default: () => <div>定时任务</div> }))
+vi.mock('../aiScheduledTasks/AIScheduledTasks', () => ({
+  default: ({ visible }: { visible: boolean }) => (
+    <div data-testid="scheduled" data-visible={visible}>
+      定时任务
+    </div>
+  ),
+}))
 
 const SideList = () => {
   const [show, setShow] = useState(true)
@@ -41,6 +70,21 @@ const SideList = () => {
 }
 
 describe('AIAgentSideList', () => {
+  it('当前页签不变时更新选中文件和定时任务的可见状态', async () => {
+    render(<SideList />)
+    fireEvent.click(screen.getByText('选择文件'))
+    expect(screen.getByLabelText('selected-file')).toHaveTextContent('/report.txt')
+    fireEvent.click(screen.getByRole('button', { name: 'scheduled' }))
+    expect(await screen.findByTestId('scheduled')).toHaveAttribute('data-visible', 'true')
+    act(() =>
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_SHOW, params: { show: false } }),
+      ),
+    )
+    expect(screen.getByTestId('scheduled')).toHaveAttribute('data-visible', 'false')
+  })
+
   it('隐藏会话标签，保留文件系统内容与定时任务、MCP 入口', async () => {
     render(<SideList />)
     expect(screen.queryByRole('button', { name: 'session' })).not.toBeInTheDocument()

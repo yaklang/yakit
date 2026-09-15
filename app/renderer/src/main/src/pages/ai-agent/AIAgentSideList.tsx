@@ -26,33 +26,36 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     setActive(value)
   })
 
+  const onSwitchAIAgentTab = useMemoizedFn((data: string) => {
+    let info: Omit<AIAgentTriggerEventInfo, 'type'> & { type: `${SwitchAIAgentTabEventEnum}` }
+    try {
+      info = JSON.parse(data)
+    } catch {
+      return
+    }
+    if (!info?.params) return
+    const { type, params } = info
+    switch (type) {
+      case SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE:
+        setActive((params.active === 'history' ? AIAgentTabListEnum.Session : params.active) as AIAgentTabListEnum)
+        setShow(params.show !== false)
+        break
+      case SwitchAIAgentTabEventEnum.SET_TAB_SHOW:
+        setShow(params.show !== false)
+        break
+      default:
+        break
+    }
+  })
   useEffect(() => {
     emiter.on('switchAIAgentTab', onSwitchAIAgentTab)
     return () => {
       emiter.off('switchAIAgentTab', onSwitchAIAgentTab)
     }
-  }, [])
+  }, [onSwitchAIAgentTab])
 
-  const onSwitchAIAgentTab = useMemoizedFn((data: string) => {
-    try {
-      const info: Omit<AIAgentTriggerEventInfo, 'type'> & { type: `${SwitchAIAgentTabEventEnum}` } = JSON.parse(data)
-      const { type, params } = info
-      if (!params) return
-      switch (type) {
-        case SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE:
-          setActive((params.active === 'history' ? AIAgentTabListEnum.Session : params.active) as AIAgentTabListEnum)
-          setShow(params.show !== false)
-          break
-        case SwitchAIAgentTabEventEnum.SET_TAB_SHOW:
-          setShow(params.show !== false)
-          break
-        default:
-          break
-      }
-    } catch (error) {}
-  })
   const [filePreviewData, setFilePreviewData] = useState<FileNodeProps>()
-  const renderTabContent = useMemoizedFn((key: AIAgentTabListEnum) => {
+  const renderTabContent = (key: AIAgentTabListEnum) => {
     let content: ReactNode = <></>
     switch (key) {
       case AIAgentTabListEnum.Session:
@@ -80,7 +83,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         break
     }
     return content
-  })
+  }
   return (
     <div className={styles['ai-agent-side-list']}>
       <YakitSideTab

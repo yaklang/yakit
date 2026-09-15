@@ -1,14 +1,19 @@
 import type React from 'react'
+import { createContext, useContext } from 'react'
 import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { grpcQueryHTTPFlows } from '@/pages/ai-agent/grpc'
+import { grpcExportAILogs, grpcQueryHTTPFlows } from '@/pages/ai-agent/grpc'
+import { failed, yakitNotify } from '@/utils/notification'
+import type { ExportAILogsModal as ExportAILogsModalComponent } from '@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal'
 import { apiRiskFieldGroup } from '@/pages/risks/YakitRiskTable/utils'
+import type * as AIRightPanelModule from '../AIRightPanel'
 
 const viewportState = vi.hoisted(() => ({ visible: true }))
+const ViewportContext = createContext<boolean | undefined>(undefined)
 vi.mock('ahooks', async () => ({
   ...(await vi.importActual('ahooks')),
-  useInViewport: () => [viewportState.visible],
+  useInViewport: () => [useContext(ViewportContext) ?? viewportState.visible],
 }))
 
 // CI 的根配置将样式模块替换为空对象；为这里验证的状态类提供稳定映射。
@@ -99,9 +104,13 @@ vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
 }))
 
 vi.mock('@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal', () => ({
-  ExportAILogsModal: ({ visible }: { visible: boolean }) => {
+  ExportAILogsModal: ({ visible, loading, onOk }: React.ComponentProps<typeof ExportAILogsModalComponent>) => {
     mockExportModalState.lastVisible = visible
-    return null
+    return visible ? (
+      <button disabled={loading} onClick={() => onOk({ types: ['timeline'], outputPath: '/logs' })}>
+        确认导出
+      </button>
+    ) : null
   },
 }))
 
@@ -151,7 +160,8 @@ vi.mock('i18next-resources-to-backend', () => {
   }
 })
 
-import { AIRightPanel } from '../AIRightPanel'
+import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
+const { AIRightPanel } = await compileReactModule<typeof AIRightPanelModule>(import.meta.url, '../AIRightPanel.tsx')
 import { AIRightPanelPane } from '../AIRightPanelPane'
 import type { AIRightPanelProps } from '../type'
 
@@ -183,8 +193,11 @@ vi.mock('@/pages/ai-agent/historyChat/HistoryChat', () => ({
 }))
 
 const WelcomeRightPanel = ({ refresh = true, ...props }: Pick<AIRightPanelProps, 'small'> & { refresh?: boolean }) => {
-  viewportState.visible = refresh
-  return <AIRightPanel welcome {...props} layoutRef={{ current: null }} />
+  return (
+    <ViewportContext.Provider value={refresh}>
+      <AIRightPanel welcome {...props} layoutRef={{ current: null }} />
+    </ViewportContext.Provider>
+  )
 }
 
 const renderPanel = async (ui: React.ReactElement) => {
@@ -1004,5 +1017,37 @@ describe('AIRightPanel', () => {
     expect(mockExportModalState.lastVisible).toBe(true)
     fireEvent.click(screen.getByText('查看日志'))
     expect(mockOpenLogWindow).toHaveBeenCalledTimes(1)
+  })
+
+  it.each([true, false])('导出结束后恢复 loading，失败保留弹窗（成功 %s）', async (success) => {
+    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-export' } })
+    let finish!: () => void
+    vi.mocked(grpcExportAILogs).mockImplementationOnce(async () => {
+      await new Promise<void>((resolve) => {
+        finish = resolve
+      })
+      if (!success) throw new Error('导出失败')
+      return { FilePath: '/logs/export.zip' }
+    })
+    vi.mocked(failed).mockClear()
+    vi.mocked(yakitNotify).mockClear()
+    await renderPanel(<AIRightPanel />)
+    fireEvent.click(screen.getByText('更多'))
+    fireEvent.click(screen.getByText('导出日志'))
+    fireEvent.click(screen.getByText('确认导出'))
+    expect(screen.getByText('确认导出')).toBeDisabled()
+    expect(grpcExportAILogs).toHaveBeenLastCalledWith(
+      { SessionID: 'session-export', ExportDataTypes: ['timeline'], OutputPath: '/logs' },
+      true,
+    )
+    await act(async () => finish())
+    if (success) {
+      expect(screen.queryByText('确认导出')).not.toBeInTheDocument()
+      expect(yakitNotify).toHaveBeenCalledWith('success', expect.any(String))
+      fireEvent.click(screen.getByText('导出日志'))
+    } else {
+      expect(failed).toHaveBeenCalledWith(expect.any(String))
+    }
+    expect(screen.getByText('确认导出')).not.toBeDisabled()
   })
 })

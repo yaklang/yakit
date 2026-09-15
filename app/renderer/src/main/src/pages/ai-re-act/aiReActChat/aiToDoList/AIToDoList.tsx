@@ -5,7 +5,7 @@ import type { AIToDoListItemProps, AIToDoListProps } from './type'
 import { ChevronDownOutlined, ChevronRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
-import { useCreation, useHover, useMemoizedFn } from 'ahooks'
+import { useCreation, useHover } from 'ahooks'
 import { AIToDoListDeletedIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIToDoListDeletedIcon'
 import { AIToDoListPendingIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIToDoListPendingIcon'
 import { AIToDoListDoneIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIToDoListDoneIcon'
@@ -76,7 +76,7 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
 
 export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) => {
   const { item } = props
-  const renderContent = useMemoizedFn(() => {
+  const renderContent = () => {
     switch (item.status) {
       case AIToDoListStatusEnum.Pending:
         return renderPending()
@@ -91,8 +91,8 @@ export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) 
       default:
         return null
     }
-  })
-  const renderPending = useMemoizedFn(() => {
+  }
+  const renderPending = () => {
     return (
       <>
         <AIToDoListPendingIcon />
@@ -101,8 +101,8 @@ export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) 
         </div>
       </>
     )
-  })
-  const renderDoing = useMemoizedFn(() => {
+  }
+  const renderDoing = () => {
     return (
       <>
         <YakitSolidLoading size={16} className={styles['loading']} />
@@ -111,8 +111,8 @@ export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) 
         </div>
       </>
     )
-  })
-  const renderDone = useMemoizedFn(() => {
+  }
+  const renderDone = () => {
     return (
       <>
         <AIToDoListDoneIcon />
@@ -121,8 +121,8 @@ export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) 
         </div>
       </>
     )
-  })
-  const renderDeleted = useMemoizedFn(() => {
+  }
+  const renderDeleted = () => {
     return (
       <>
         <AIToDoListDeletedIcon />
@@ -131,8 +131,8 @@ export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) 
         </div>
       </>
     )
-  })
-  const renderSkipped = useMemoizedFn(() => {
+  }
+  const renderSkipped = () => {
     return (
       <>
         <AIToDoListSkippedIcon />
@@ -141,7 +141,7 @@ export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) 
         </div>
       </>
     )
-  })
+  }
   return (
     <div
       className={classNames(styles['card-list-item'], {

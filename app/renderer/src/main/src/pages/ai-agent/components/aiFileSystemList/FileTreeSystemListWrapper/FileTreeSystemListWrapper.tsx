@@ -70,7 +70,7 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
     return count
   }, [showFileCount, uniquePaths])
 
-  const renderContent = useMemoizedFn(() => {
+  const renderContent = () => {
     if (isOpen && uniquePaths.length === 0) {
       return (
         <div>
@@ -99,7 +99,7 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
         onTreeDragEnd={onTreeDragEnd}
       />
     ))
-  })
+  }
 
   useEffect(() => {
     if (!path || path.length === 0) return setUniquePaths([])
