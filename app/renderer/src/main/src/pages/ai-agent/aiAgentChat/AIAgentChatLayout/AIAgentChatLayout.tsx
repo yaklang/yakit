@@ -96,6 +96,8 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
     const updateFrame = () => {
       const containerRect = container.getBoundingClientRect()
       const targetRect = target.getBoundingClientRect()
+      // 切页隐藏时保留有效尺寸，恢复可见后再同步浮层位置。
+      if (containerRect.width <= 0 || targetRect.width <= 0) return
       const next = {
         left: targetRect.left - containerRect.left,
         top: targetRect.top - containerRect.top,

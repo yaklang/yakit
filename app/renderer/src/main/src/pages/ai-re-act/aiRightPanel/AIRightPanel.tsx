@@ -255,6 +255,8 @@ const usePanelShared = (props: AIRightPanelProps) => {
 
     const getLayoutWidth = () => layoutElement.clientWidth || layoutElement.getBoundingClientRect().width
     const update = (layoutWidth: number) => {
+      // 页面隐藏时宽度为 0，保留尺寸模式，避免误关当前内容面板。
+      if (layoutWidth <= 0) return
       const nextChatSmall = layoutWidth - AI_RIGHT_PANEL_NORMAL_SLOT_WIDTH < AI_RIGHT_PANEL_INPUT_MAX_WIDTH
       setChatSmall((previous) => (previous === nextChatSmall ? previous : nextChatSmall))
     }

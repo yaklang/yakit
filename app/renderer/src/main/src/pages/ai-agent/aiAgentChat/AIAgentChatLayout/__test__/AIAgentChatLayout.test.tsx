@@ -115,6 +115,7 @@ beforeEach(() => {
   layoutWidth = 1400
   chatTop = 120
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+    if (this.closest('[hidden]')) return new DOMRect()
     const chat = this.dataset.testid === 'chat-content'
     return {
       x: 0,
@@ -154,6 +155,46 @@ afterEach(() => {
 })
 
 describe('公共右侧面板', () => {
+  it.each(['welcome', 're-act'])('%s 大屏切走再切回保留尺寸和会话列表实例', async (mode) => {
+    if (mode === 're-act') {
+      agentStore.setState({ activeChat: { Id: 'chat-1', SessionID: 'session-1' } })
+    }
+    const page = (hidden: boolean) => (
+      <div hidden={hidden}>
+        <Layout />
+      </div>
+    )
+    const { container, rerender } = render(page(false))
+    if (mode === 'welcome') await screen.findByText('欢迎页')
+    fireEvent.click(screen.getByLabelText('AIRightPanel.sessionHistory'))
+    const panel = container.querySelector('[data-ai-right-panel]')
+    const frame = panel?.parentElement
+    const frameStyle = frame?.getAttribute('style')
+    const history = screen.getByTestId('history-list')
+    history.scrollTop = 120
+    expect(panel).toHaveAttribute('data-ai-right-panel-small', 'false')
+
+    rerender(page(true))
+    act(() => observers.forEach((notify) => notify()))
+    expect(panel).toHaveAttribute('data-ai-right-panel-small', 'false')
+    expect(frame?.getAttribute('style')).toBe(frameStyle)
+    expect(screen.getByTestId('history-list')).toBe(history)
+
+    rerender(page(false))
+    // 恢复可见、尺寸通知到达前也应保留大屏布局。
+    expect(panel).toHaveAttribute('data-ai-right-panel-small', 'false')
+    expect(frame?.getAttribute('style')).toBe(frameStyle)
+    act(() => observers.forEach((notify) => notify()))
+    expect(panel).toHaveAttribute('data-ai-right-panel-small', 'false')
+    expect(screen.getByTestId('history-list')).toBe(history)
+    expect(history.scrollTop).toBe(120)
+
+    // 恢复后真实缩窄仍应触发小屏模式。
+    layoutWidth = 900
+    act(() => observers.forEach((notify) => notify()))
+    expect(panel).toHaveAttribute('data-ai-right-panel-small', 'true')
+  })
+
   it('按页面挂载数据源，回到欢迎页后取消任务订阅和轮询', async () => {
     const readTask = vi.spyOn(taskDetailsMap, 'get')
     const subscribe = taskStore.subscribe.bind(taskStore)
