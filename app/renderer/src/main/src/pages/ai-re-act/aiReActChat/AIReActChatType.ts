@@ -46,6 +46,8 @@ type ExternalParametersRightIcon = Partial<{
 export interface AIReActChatProps {
   chatContainerClassName?: string
   chatContainerHeaderClassName?: string
+  /** 是否渲染右侧功能面板（AIRightPanel）：仅 ai-agent 主页面开启，侧边栏等复用方不展示 */
+  showAIRightPanel?: boolean
   showFreeChat: boolean
   setShowFreeChat: (show: boolean) => void
   title?: React.ReactNode

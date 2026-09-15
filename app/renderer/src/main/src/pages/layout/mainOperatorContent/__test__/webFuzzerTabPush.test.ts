@@ -297,4 +297,20 @@ describe('getFuzzerProcessedCacheData', () => {
 
     expect(cached.pageParams.proxy).toEqual(['http://127.0.0.1:8080', 'http://127.0.0.1:8081'])
   })
+
+  // 字段顺序是截断恢复策略的一部分：小体积元数据放在 pageParams 前，request 放在 pageParams 末尾，
+  // 保证缓存 JSON 在长字符串处截断时 parseFuzzerCache 丢弃的字段最少。顺序回退会静默削弱恢复能力。
+  it('serializes tab metadata before pageParams and keeps request after the small config fields', () => {
+    const tabA = tab('tab-a')
+    const currentPage = page([tabA], 'tab-a')
+
+    const [cached] = getFuzzerProcessedCacheData(currentPage.pageList)
+
+    const keys = Object.keys(cached)
+    expect(keys.indexOf('verbose')).toBeLessThan(keys.indexOf('pageParams'))
+    expect(keys.indexOf('sortFieId')).toBeLessThan(keys.indexOf('pageParams'))
+
+    const pageParamsKeys = Object.keys(cached.pageParams)
+    expect(pageParamsKeys.indexOf('request')).toBeGreaterThan(pageParamsKeys.indexOf('maxDelaySeconds'))
+  })
 })

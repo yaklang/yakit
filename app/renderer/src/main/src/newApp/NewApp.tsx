@@ -4,7 +4,7 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { useDebounceFn, useInterval, useMemoizedFn } from 'ahooks'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
-import { useGoogleChromePluginPath, useStore, yakitDynamicStatus } from '@/store'
+import { useGoogleChromePluginPath, useStore, useYakitDynamicStatus } from '@/store'
 import { refreshToken } from '@/utils/login'
 import UILayout from '@/components/layout/UILayout'
 import { getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isIRify, isMemfit } from '@/utils/envfile'
@@ -141,8 +141,6 @@ function NewApp() {
     testYak()
   }
 
-  /** 定时器 */
-  const timeRef = useRef<NodeJS.Timeout>()
   const testYak = () => {
     getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
       if (!setting) {
@@ -152,9 +150,6 @@ function NewApp() {
             yakitApp.syncEditBaseUrl(data.BaseUrl)
             setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({ BaseUrl: data.BaseUrl }))
             refreshLogin()
-            timeRef.current = setTimeout(() => {
-              if (timeRef.current) clearTimeout(timeRef.current)
-            }, 200)
           })
           .catch((e) => {
             failed(t('NewApp.fetchFailed', { error: String(e) }))
@@ -170,9 +165,6 @@ function NewApp() {
             yakitApp.syncEditBaseUrl(values.BaseUrl)
             setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
             refreshLogin()
-            timeRef.current = setTimeout(() => {
-              if (timeRef.current) clearTimeout(timeRef.current)
-            }, 200)
           })
           .catch((e: any) => failed(t('NewApp.setPrivateDomainFailed', { error: String(e) })))
       }
@@ -244,7 +236,7 @@ function NewApp() {
   }
 
   // 退出时 确保渲染进程各类事项已经处理完毕
-  const { dynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus } = useYakitDynamicStatus()
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
   useEffect(() => {
     const offCloseWindow = yakitApp.onCloseWindow(async () => {

@@ -13,5 +13,69 @@
   "SoftwareSettings": {
     "projectManagement": "專案管理",
     "remoteMode": "遠端模式"
+  },
+  "SettingsPage": {
+    "searchPlaceholder": "請輸入關鍵詞搜尋",
+    "group": {
+      "preference": "偏好設定",
+      "system": "系統設定",
+      "ai": "AI 設定"
+    },
+    "item": {
+      "general": "一般",
+      "appearance": "外觀",
+      "shortcut-key": "鍵盤快捷鍵",
+      "reverse": "全域反連",
+      "system-proxy": "系統代理",
+      "global-config": "全域設定",
+      "right-click-plugins": "右鍵外掛管理",
+      "ai-config": "AI 設定",
+      "ai-model": "模型",
+      "yak-mcp": "Yak MCP"
+    },
+    "general": {
+      "workspace": "工作空間",
+      "usedSpace": "佔用空間：{{size}}",
+      "calculating": "計算中...",
+      "openDirectory": "打開目錄",
+      "pluginSource": "外掛來源",
+      "privateDomain": "私有域地址",
+      "required": "必填",
+      "setProxy": "設定代理",
+      "proxyHint": "特殊情況無法造訪外掛商店時，可設定代理進行造訪",
+      "proxyPlaceholder": "設定代理"
+    },
+    "appearance": {
+      "theme": "主題",
+      "followSystem": "跟隨系統",
+      "light": "亮色",
+      "dark": "暗色",
+      "mode": "模式",
+      "classic": "經典模式",
+      "classicDesc": "該模式就是之前的選單首頁佈局",
+      "securityExpert": "安全專家模式",
+      "securityExpertDesc": "將選單列和固定頁面調整為滲透常用功能，整體更簡潔明瞭",
+      "scan": "掃描模式",
+      "scanDesc": "將選單列和首頁重點放在掃描性功能上，方便快捷",
+      "language": "語言",
+      "languageSetting": "語言設定",
+      "langZh": "Chinese (Simplified) 簡體中文",
+      "langEn": "English",
+      "langZhTW": "Chinese (Traditional) 繁體中文"
+    },
+    "aiModel": {
+      "intelligent": "高質量模型",
+      "lightweight": "輕量模型",
+      "vision": "視覺模型"
+    },
+    "yakMcp": {
+      "openHistory": "打開調用歷史",
+      "enableColumn": "開啟"
+    },
+    "rightClickPlugins": {
+      "tabSingle": "History (單選)",
+      "tabMultiple": "History (多選)",
+      "tabPacket": "資料包"
+    }
   }
 }

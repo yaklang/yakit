@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import classNames from 'classnames'
 import type {
   AIBrowserProcessesProps,
@@ -21,7 +21,7 @@ import { AISkippedNodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AISkippedN
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AIToDoListItem } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoList'
-import { useCreation, useInterval, useMemoizedFn, useSelections } from 'ahooks'
+import { useCreation, useMemoizedFn, useSelections } from 'ahooks'
 import type {
   ForgesAndSkillsDynamicItem,
   PlanItemDetailsData,
@@ -64,36 +64,19 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
 import { AIToDoListDetail } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoListDetail'
-import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import useCurrentTaskData from '@/pages/ai-re-act/hooks/useCurrentTaskData/useCurrentTaskData'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName, onClose } = props
-  const rawData = useCurrentRawData()
-
-  const [planItemDetailsData, setPlanItemDetailsData] = useState<PlanItemDetailsData>()
-  const perPlanItemDetailsDataUUIdRef = useRef<string>('')
-  useEffect(() => {
-    onReset()
-    getData()
-  }, [taskId])
-  useInterval(() => {
-    getData()
-  }, 5 * 1000)
-  const onReset = useMemoizedFn(() => {
-    setPlanItemDetailsData(undefined)
-    perPlanItemDetailsDataUUIdRef.current = ''
-  })
-  const getData = useMemoizedFn(() => {
-    if (!taskId) return
-    const itemData = rawData.taskDetailsMap.get(taskId)
-    if (!itemData) return
-    if (perPlanItemDetailsDataUUIdRef.current === itemData.uuid) return
-    perPlanItemDetailsDataUUIdRef.current = itemData.uuid
-    setPlanItemDetailsData(cloneDeep(itemData))
-  })
+  const taskData = useCurrentTaskData(taskId, 5)
+  // taskDetailsMap 中的数据会原地更新，使用 uuid 作为快照变更信号，避免详情组件持有可变引用。
+  const planItemDetailsData = useCreation<PlanItemDetailsData | undefined>(
+    () => (taskData ? cloneDeep(taskData) : undefined),
+    [taskId, taskData?.uuid],
+  )
   const perception = useCreation(() => {
     if (!planItemDetailsData) return
     return planItemDetailsData.perception

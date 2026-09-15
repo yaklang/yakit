@@ -8,7 +8,6 @@ interface MultiFuncPaneStore {
   setVisible: (visible: boolean) => void
   toggleVisible: () => void
   setTab: (tab: MultiFuncPaneTab) => void
-  openWithTab: (tab: MultiFuncPaneTab) => void
 }
 
 export const useMultiFuncPaneStore = create<MultiFuncPaneStore>((set, get) => ({
@@ -23,5 +22,4 @@ export const useMultiFuncPaneStore = create<MultiFuncPaneStore>((set, get) => ({
     if (get().tab === tab) return
     set({ tab })
   },
-  openWithTab: (tab) => set({ visible: true, tab }),
 }))

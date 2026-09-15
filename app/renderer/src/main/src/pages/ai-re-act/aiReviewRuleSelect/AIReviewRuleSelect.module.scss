@@ -190,6 +190,35 @@
   align-items: center;
 }
 
+.form-item-slider {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+
+  :global {
+    .ant-slider {
+      margin: 6px;
+    }
+  }
+
+  .slider-body {
+    flex: 1;
+    padding-left: 2px;
+    padding-right: 2px;
+    overflow: hidden;
+  }
+
+  .slider-value {
+    width: 30px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+  }
+}
+
 .review-rule-select-wrapper {
   display: flex;
   align-items: center;

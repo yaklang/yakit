@@ -29,7 +29,6 @@ export const YakitAutoComplete = React.forwardRef<YakitAutoCompleteRefProps, Yak
     cacheHistoryDataKey,
     cacheHistoryListLength = 10,
     isCacheDefaultValue = true,
-    ref: _ref,
     initValue = '',
     wrapperStyle,
     isInit = true,

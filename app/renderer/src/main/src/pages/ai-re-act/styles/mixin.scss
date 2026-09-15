@@ -1,0 +1,8 @@
+/// AI ReAct 消息内容轨道：配合 ai-re-act 根容器上的 --ai-right-panel-content-* 变量使用。
+/// 变量沿 DOM 继承，但 width/transform 声明不继承，进入轨道的元素需各自 @include；
+/// 调用方必须位于 ai-re-act 容器内，否则变量无定义。
+@mixin ai-right-panel-content-track() {
+  width: var(--ai-right-panel-content-track-width);
+  margin: 0 auto;
+  transform: translateX(var(--ai-right-panel-content-shift));
+}

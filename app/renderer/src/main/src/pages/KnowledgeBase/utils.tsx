@@ -38,10 +38,9 @@ import { RobotIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RobotIcon'
 import type { YakitSideTabProps } from '../../components/yakitSideTab/YakitSideTabType'
 import type { API } from '@/services/swagger/resposeType'
 import { NetWorkApi } from '@/services/fetch'
-import { BookOpenTextOutlined, ChipOutlined, PuzzleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { BookOpenTextOutlined, PuzzleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import knowledgeJoyrideFirst from '@/pages/KnowledgeBase/images/knowledge-joyride-first.mp4'
 import knowledgeJoyrideLast from '@/pages/KnowledgeBase/images/knowledge-joyride-last.mp4'
-import joyrideFirstStepImg from '@/pages/KnowledgeBase/images/joyride-first-step.png'
 import knowledgeJoyrideThree from '@/pages/KnowledgeBase/images/knowledge-joyride-three.mp4'
 import type { Step } from 'react-joyride'
 import styles from './knowledgeBase.module.scss'
@@ -63,7 +62,6 @@ const targetInstallList = [
 export enum KnowledgeTabListEnum {
   Knowledge = 'knowledge',
   Plugin = 'plugin',
-  AI_Model = 'AIModel',
 }
 export const KnowledgeTabList: YakitSideTabProps['yakitTabs'] = [
   { value: KnowledgeTabListEnum.Knowledge, label: '知识库', icon: <BookOpenTextOutlined color="currentColor" /> },
@@ -71,15 +69,6 @@ export const KnowledgeTabList: YakitSideTabProps['yakitTabs'] = [
     value: KnowledgeTabListEnum.Plugin,
     label: '插件',
     icon: <PuzzleOutlined color="currentColor" />,
-  },
-  {
-    value: KnowledgeTabListEnum.AI_Model,
-    label: () => (
-      <div className="first-step" style={{ display: 'flex', gap: 4 }}>
-        <ChipOutlined color="currentColor" />
-        模型
-      </div>
-    ),
   },
 ]
 
@@ -951,30 +940,13 @@ const stopList = [
 // Joyride 步骤定义
 const joyrideSteps: Step[] = [
   {
-    target: '.first-step',
-    disableBeacon: true,
-    placement: 'right',
-    spotlightPadding: 5,
-    title: '添加模型',
-    content: (
-      <div className={styles['joyride-steps-content']}>
-        <div>
-          选择厂商后输入 ApiKey 选择对应使用模型即可。（注：需要添加<span>视觉模型</span>）
-        </div>
-        <div className={styles['joyride-steps-img-wrapper']}>
-          <img src={joyrideFirstStepImg} alt="" style={{ width: '351px' }} />
-        </div>
-      </div>
-    ),
-  },
-  {
     target: '.second-step',
     disableBeacon: true,
     spotlightPadding: 2,
     title: '知识库可用性诊断',
     content: (
       <div className={styles['joyride-steps-content']}>
-        <div>添加模型后，可以使用可用性诊断，判断模型是否可用于生成知识库</div>
+        <div>可以使用可用性诊断，判断当前配置的模型是否可用于生成知识库</div>
       </div>
     ),
   },

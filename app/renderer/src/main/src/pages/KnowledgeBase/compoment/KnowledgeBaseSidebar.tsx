@@ -50,7 +50,6 @@ import type { CreateKnowledgeBaseData, TClearKnowledgeResponse } from '../TKnowl
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { installWithEvents } from './AllInstallPlugins'
 import { failed, success } from '@/utils/notification'
-import AIModelList from '@/pages/ai-agent/aiModelList/AIModelList'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import { randomString } from '@/utils/randomUtil'
@@ -942,13 +941,6 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                 </div>
               </div>
             </div>
-          </React.Suspense>
-        )
-        break
-      case KnowledgeTabListEnum.AI_Model:
-        content = (
-          <React.Suspense>
-            <AIModelList />
           </React.Suspense>
         )
         break

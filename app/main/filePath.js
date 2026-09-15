@@ -37,6 +37,9 @@ const getVersionEnvVarName = () => {
  * （旧逻辑：Windows 打包=exe 同级，其他=userData）
  */
 const getAppConfigDir = () => {
+  if (process.env.YAKIT_E2E === '1' && !app.isPackaged) {
+    return path.join(app.getPath('userData'), 'configuration')
+  }
   try {
     const appKey = String(app.getName() || 'yakit')
       .toLowerCase()

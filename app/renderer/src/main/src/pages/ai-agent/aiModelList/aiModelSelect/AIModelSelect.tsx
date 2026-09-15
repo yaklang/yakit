@@ -27,15 +27,13 @@ import styles from './AIModelSelect.module.scss'
 import classNames from 'classnames'
 import type { GetAIModelAvailableTotalResponse } from '../../type/aiModel'
 import {
-  AIAgentTabListEnum,
   type AIModelPolicyEnum,
   AIModelTypeEnum,
   AIModelTypeInterFileNameEnum,
   AIOnlineModelIconMap,
   defaultAIGlobalConfig,
-  SwitchAIAgentTabEventEnum,
 } from '../../defaultConstant'
-import { AIModelFreeTag, getTipByType, OutlineAtomIconByStatus, setAIModal } from '../AIModelList'
+import { AIModelFreeTag, OutlineAtomIconByStatus, setAIModal } from '../AIModelList'
 import { AIChatSelect } from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
 import {
   BrainOutlined,
@@ -51,9 +49,7 @@ import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalCon
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { yakitNotify } from '@/utils/notification'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { createPortal } from 'react-dom'
@@ -108,19 +104,9 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 
   const refRef = useRef<HTMLDivElement>(null)
   const dropdownRenderRef = useRef<HTMLDivElement>(null)
-  const dropdownRenderRectRef = useRef<DOMRect>()
 
   const aiGlobalConfigRef = useRef<AIGlobalConfig>()
   const [inViewport = true] = useInViewport(refRef)
-
-  useEffect(() => {
-    if (open) {
-      setTimeout(() => {
-        const rect = dropdownRenderRef.current?.getBoundingClientRect()
-        dropdownRenderRectRef.current = rect
-      }, 200)
-    }
-  }, [open])
 
   useEffect(() => {
     if (!inViewport) return
@@ -172,6 +158,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         break
     }
   })
+  const closeOnWidthChange = useMemoizedFn(() => onSetOpen(false))
   const [_, event] = useAIGlobalConfig()
   /**
    * 更新AI配置
@@ -344,34 +331,9 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     },
   )
   const openModelTab = useMemoizedFn(() => {
-    if (getCurrentPageTabRouteKey() !== YakitRoute.AI_Agent) {
-      emiter.emit(
-        'openPage',
-        JSON.stringify({
-          route: YakitRoute.AI_Agent,
-        }),
-      )
-      setTimeout(() => {
-        onSwitchAIAgentTab()
-      }, 100)
-    } else {
-      onSwitchAIAgentTab()
-    }
+    emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'ai-model' } }))
+  })
 
-    yakitNotify('success', t('AIModelSelect.openModelTabSuccess'))
-  })
-  const onSwitchAIAgentTab = useMemoizedFn(() => {
-    emiter.emit(
-      'switchAIAgentTab',
-      JSON.stringify({
-        type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-        params: {
-          active: AIAgentTabListEnum.AI_Model,
-          show: true,
-        },
-      }),
-    )
-  })
   return (
     <div ref={refRef} className={className}>
       {isHaveData ? (
@@ -402,9 +364,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                         }}
                       />
                     )} */}
-                    <Tooltip title={getTipByType(policy, t)}>
-                      <InformationCircleOutlined className={styles['icon-info']} color="currentColor" />
-                    </Tooltip>
                   </div>
                   <div className={styles['select-title-right']}>
                     <Tooltip title={t('AIModelSelect.openConfigTooltip')}>
@@ -413,7 +372,9 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                         type="text2"
                         icon={<CogOutlined color="currentColor" />}
                         onClick={openModelTab}
-                      />
+                      >
+                        {t('AIModelSelect.manageModels')}
+                      </YakitButton>
                     </Tooltip>
                     {aiType === 'online' && (
                       <Tooltip title={t('YakitButton.refresh')}>
@@ -447,8 +408,10 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                           index,
                         })
                       }
-                      dropdownRenderRectRef={dropdownRenderRectRef.current}
+                      dropdownRef={dropdownRenderRef}
+                      triggerRef={refRef}
                       open={open}
+                      onWidthChange={closeOnWidthChange}
                     />
                   )}
                   {/* {!execute && !!lightweightModels.length && (
@@ -504,7 +467,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 })
 
 const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) => {
-  const { title, subTitle, list, onSelect, type, onEdit, dropdownRenderRectRef, open } = props
+  const { title, subTitle, list, onSelect, type, onEdit, dropdownRef, triggerRef, open, onWidthChange } = props
   const [currentSelectIndex, setCurrentSelectIndex] = useState<number>()
   const [currentItem, setCurrentItem] = useState<AIModelConfig>()
   const [loading, setLoading] = useState<boolean>(false)
@@ -514,6 +477,19 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const modelNameListMapRef = useRef<Map<number, ModelNameListRef>>(new Map())
+
+  const clearHideTimer = useMemoizedFn(() => {
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current)
+      hideTimerRef.current = null
+    }
+  })
+  const closeEditContent = useMemoizedFn(() => {
+    clearHideTimer()
+    setCurrentItem(undefined)
+    setCurrentSelectIndex(undefined)
+    setEditStyle(undefined)
+  })
 
   // 组件卸载时清理定时器
   useEffect(() => {
@@ -527,6 +503,24 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
       modelNameListMapRef.current.clear()
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open || !triggerRef.current) return
+    // 输入区域宽度变化会同时关闭二级编辑浮层和一级模型选择下拉框；高度变化保留当前状态。
+    const input = triggerRef.current
+    let previousWidth: number | undefined
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return
+      const width = entry.contentRect.width
+      if (previousWidth !== undefined && width !== previousWidth) {
+        closeEditContent()
+        onWidthChange()
+      }
+      previousWidth = width
+    })
+    observer.observe(input)
+    return () => observer.disconnect()
+  }, [open, triggerRef])
   /** 缓存中有就取缓存中的数据，反之调用接口获取数据 */
   const getModelNameList = useMemoizedFn((item: AIModelConfig, index: number) => {
     if (!item?.Provider || isNil(index)) return
@@ -598,19 +592,12 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
     e.stopPropagation()
     hideEditContent()
   })
-  // 清除延迟隐藏定时器
-  const clearHideTimer = useMemoizedFn(() => {
-    if (hideTimerRef.current) {
-      clearTimeout(hideTimerRef.current)
-      hideTimerRef.current = null
-    }
-  })
-
   const onMouseEnterEdit = useMemoizedFn((e: React.MouseEvent, item: AIModelConfig, index: number) => {
     clearHideTimer()
-    if (!dropdownRenderRectRef) return
+    const dropdownRect = dropdownRef.current?.getBoundingClientRect()
+    if (!dropdownRect) return
 
-    const { left = 0, right = 0, width } = dropdownRenderRectRef || {}
+    const { left, right, width } = dropdownRect
     if (isEqual(currentSelectIndex, index)) return
 
     const rightContextWidth = 200
@@ -620,7 +607,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
      * 链接所在文件内位置 #ai-model-edit-content 处
      */
     const rightContextHeight = 240
-    // 判断右侧屏幕剩余空间是否满足：如果不满足，则在 dropdownRenderRectRef 的左方展示
+    // 判断右侧屏幕剩余空间是否满足：如果不满足，则在下拉框的左方展示
     const spaceOnRight = window.innerWidth - right
     let toLeft = spaceOnRight < rightContextWidth ? left - rightContextWidth - 6 : right + 6
 
@@ -653,11 +640,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   // 统一的隐藏逻辑：开启定时器，如果 150ms 内没有被再次打断，则关闭弹窗
   const hideEditContent = useMemoizedFn(() => {
     clearHideTimer()
-    hideTimerRef.current = setTimeout(() => {
-      setCurrentItem(undefined)
-      setCurrentSelectIndex(undefined)
-      setEditStyle(undefined)
-    }, 150)
+    hideTimerRef.current = setTimeout(closeEditContent, 150)
   })
   const onEditContentChange = useMemoizedFn((v: AIModelConfig) => {
     if (isNil(currentSelectIndex)) return
@@ -852,7 +835,7 @@ export const getIconByAI = (value) => {
 
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
   const { type, item, checked, isSelected, onMouseEnterEdit, onMouseLeaveEdit } = props
-  const { t } = useI18nNamespaces(['projectManage'])
+  const { t } = useI18nNamespaces(['projectManage', 'yakitUi'])
 
   const value = useCreation(() => {
     return getModelName(item?.ModelName)
@@ -895,6 +878,7 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
             type="text2"
             size="small"
             className={styles['edit-icon']}
+            aria-label={t('YakitButton.edit')}
             icon={<PencilAltOutlined color="currentColor" />}
             onClick={(e) => {
               e.stopPropagation()

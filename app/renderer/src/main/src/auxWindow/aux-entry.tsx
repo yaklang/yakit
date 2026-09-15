@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import ReactDOM from 'react-dom'
+import '@ant-design/v5-patch-for-react-19'
+import { createRoot } from 'react-dom/client'
 import 'antd/dist/reset.css'
 import '@/theme/yakit.scss'
 import './styles/aux-base.scss'
@@ -9,13 +10,13 @@ import { ConfigProvider } from 'antd'
 import { YakitAntdProvider } from '@/theme/antdTheme'
 import { NotificationProvider } from '@/utils/notification'
 import AuxWindowApp from './AuxWindowApp'
-import { useTheme } from '@/hook/useTheme'
+import { useTheme, resolveTheme } from '@/hook/useTheme'
 import { applyAuxThemeColors } from '@/auxWindow/utils/applyAuxThemeColors'
 import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
 import { setupMonacoWorkers } from '@/utils/monacoSpec/setupMonacoWorkers'
 
 setupMonacoWorkers()
-applyAuxThemeColors(useTheme.getState().theme)
+applyAuxThemeColors(resolveTheme(useTheme.getState().theme))
 
 const initialLoading = document.getElementById('initial-loading')
 if (initialLoading) {
@@ -34,11 +35,10 @@ ConfigProvider.config({
   holderRender: (node) => <YakitAntdProvider>{node}</YakitAntdProvider>,
 })
 
-ReactDOM.render(
+createRoot(document.getElementById('root')!).render(
   <YakitAntdProvider>
     <NotificationProvider>
       <App />
     </NotificationProvider>
   </YakitAntdProvider>,
-  document.getElementById('root'),
 )

@@ -336,11 +336,10 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
 
     const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: MITMContentReplacerRule) => {
       if (c) {
-        setSelectedRowKeys([...selectedRowKeys, keys])
+        setSelectedRowKeys((prev) => [...prev, keys])
       } else {
         setIsAllSelect(false)
-        const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== keys)
-        setSelectedRowKeys(newSelectedRowKeys)
+        setSelectedRowKeys((prev) => prev.filter((ele) => ele !== keys))
       }
     })
     const onSetCurrentRow = useDebounceFn(

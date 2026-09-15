@@ -28,12 +28,14 @@ import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
 import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
 import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
+import { AIRightPanel } from '../aiRightPanel/AIRightPanel'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
     const {
       chatContainerClassName,
       chatContainerHeaderClassName,
+      showAIRightPanel,
       title,
       sendRequest,
       startRequest,
@@ -306,37 +308,40 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               [styles['ai-re-act-chat-hidden']]: !showFreeChat,
             })}
           >
-            <div className={classNames(styles['chat-container'], chatContainerClassName)}>
-              {title && (
-                <AIReActChatHeader
-                  title={title}
-                  chatContainerHeaderClassName={chatContainerHeaderClassName}
-                  isShowRetract={isShowRetract}
-                  externalParameters={externalParameters}
-                  scrollToItemIndex={aiReActChatContentsRef.current?.scrollToItemIndex}
-                />
-              )}
-              <AIToDoListWrapper />
-              <AIReActChatContents ref={aiReActChatContentsRef} />
-              <AIReActTaskChatReview />
-            </div>
-            <div className={classNames(styles['chat-footer'])}>
-              <div className={styles['footer-body']}>
-                <div className={styles['footer-inputs']}>
-                  <AITaskQuery />
-                  <AINotifyMessage />
-                  <div className={classNames(styles['footer-inputs-file-list'])}>
-                    <AIReactChatTextarea
-                      ref={aiChatTextareaRef}
-                      handleSubmit={handleSubmit}
-                      externalParameters={externalParameters}
-                      handleStopCasualTask={handleStopCasualTask}
-                    />
+            <div className={styles['chat-layout-wrapper']}>
+              <div className={classNames(styles['chat-container'], chatContainerClassName)}>
+                {title && (
+                  <AIReActChatHeader
+                    title={title}
+                    chatContainerHeaderClassName={chatContainerHeaderClassName}
+                    isShowRetract={isShowRetract}
+                    externalParameters={externalParameters}
+                    scrollToItemIndex={aiReActChatContentsRef.current?.scrollToItemIndex}
+                  />
+                )}
+                <AIToDoListWrapper />
+                <AIReActChatContents ref={aiReActChatContentsRef} />
+                <AIReActTaskChatReview />
+              </div>
+              <div className={classNames(styles['chat-footer'])}>
+                <div className={styles['footer-body']}>
+                  <div className={styles['footer-inputs']}>
+                    <AITaskQuery />
+                    <AINotifyMessage />
+                    <div className={classNames(styles['footer-inputs-file-list'])}>
+                      <AIReactChatTextarea
+                        ref={aiChatTextareaRef}
+                        handleSubmit={handleSubmit}
+                        externalParameters={externalParameters}
+                        handleStopCasualTask={handleStopCasualTask}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          {showAIRightPanel && showFreeChat && <AIRightPanel layoutRef={wrapperRef} />}
           <div className={styles['open-wrapper']} onClick={(e) => setShowFreeChat(true)}>
             <ChevrondownButton />
             <div className={styles['text']}>自由对话</div>

@@ -261,6 +261,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_EXECUTE_DETACHED_PLAN = 'execute_detached_plan',
   /** 关闭浏览器进程 */
   SYNC_CLOSE_BROWSER = 'close_browser_sync',
+  /** 请求后端做一次会话快照同步 */
+  SYNC_TYPE_SESSION_SNAPSHOT_SYNC = 'session_snapshot_sync',
 }
 
 export interface AIInputEvent {
@@ -697,6 +699,15 @@ export declare namespace AIAgentGrpcApi {
       execution_minutes: number
       http_flow_count: number
       risk_count: number
+      risk_level_count: {
+        critical: number
+        high: number
+        warning: number
+        low: number
+        info: number
+        other: number
+        total: number
+      }
       modified_file_count: number
     }
     background_processes: {

@@ -11,6 +11,7 @@ import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { code } from '@streamdown/code'
 import { mermaid } from '@streamdown/mermaid'
 import { math } from '@streamdown/math'
+import 'katex/dist/katex.min.css'
 import rehypeSlug from 'rehype-slug'
 import { yakitNotify } from '@/utils/notification'
 

@@ -1479,11 +1479,10 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
   })
   const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: HTTPFlowRuleData) => {
     if (c) {
-      setSelectedRowKeys([...selectedRowKeys, rows.Id])
+      setSelectedRowKeys((prev) => [...prev, rows.Id])
     } else {
       setIsAllSelect(false)
-      const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== rows.Id)
-      setSelectedRowKeys(newSelectedRowKeys)
+      setSelectedRowKeys((prev) => prev.filter((ele) => ele !== rows.Id))
     }
   })
 

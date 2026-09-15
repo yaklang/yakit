@@ -114,6 +114,8 @@ interface HistoryChatProps {
   title?: ReactNode
   /** 隐藏底部搜索输入，改由 headerActionsExtra / renderExtra 自定义搜索 */
   hideInlineSearch?: boolean
+  /** 隐藏固定按钮，保留新建与其他头部操作 */
+  hidePinButton?: boolean
   /** 顶栏操作区额外按钮（新建与钉住之间） */
   headerActionsExtra?: ReactNode
   renderExtra?: (sessions: AISession[]) => ReactNode
@@ -121,7 +123,16 @@ interface HistoryChatProps {
 }
 
 const HistoryChat = memo(
-  ({ aiSource, embedded, title, hideInlineSearch, headerActionsExtra, renderExtra, className }: HistoryChatProps) => {
+  ({
+    aiSource,
+    embedded,
+    title,
+    hideInlineSearch,
+    hidePinButton = false,
+    headerActionsExtra,
+    renderExtra,
+    className,
+  }: HistoryChatProps) => {
     const { setActiveChat, getSetting } = useAIAgentDispatcher()
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const [historySourceFilter, setHistorySourceFilter] = useState<HistorySourceFilter>('local')
@@ -510,7 +521,7 @@ const HistoryChat = memo(
                     />
                   </Tooltip>
                   {headerActionsExtra}
-                  <SideSettingButton />
+                  {!hidePinButton && <SideSettingButton />}
                 </>
               )}
             </div>

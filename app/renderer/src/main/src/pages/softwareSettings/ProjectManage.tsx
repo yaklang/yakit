@@ -1155,8 +1155,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             <div className={styles['open-recent-body']} onClick={() => operateFunc('setCurrent', latestProject)}>
               <div className={styles['body-title']}>
                 <DocumentTextSvgIcon />
-                <div>
-                  <div className={styles['title-style']}>{latestProject?.ProjectName || '[default]'}</div>
+                <div className={styles['title-wrapper']}>
+                  <div className={styles['title-style']} title={latestProject?.ProjectName || '[default]'}>
+                    {latestProject?.ProjectName || '[default]'}
+                  </div>
                   <div className={styles['subtitle-style']}>{`${t('ProjectManage.recentOperation')}：${
                     latestProject ? formatTimestamp(latestProject?.UpdateAt) : '- -'
                   }`}</div>

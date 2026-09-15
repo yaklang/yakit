@@ -6,7 +6,7 @@ import { useMemoizedFn } from 'ahooks'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { loginOut } from '@/utils/login'
-import { type UserInfoProps, yakitDynamicStatus } from '@/store'
+import { type UserInfoProps, useYakitDynamicStatus } from '@/store'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -28,7 +28,7 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
   const { userInfo, onCancel } = props
   const { getFieldValue } = form
   const [loading, setLoading] = useState<boolean>(false)
-  const { dynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus } = useYakitDynamicStatus()
   const onFinish = useMemoizedFn((values: API.UpUserInfoRequest) => {
     const { old_pwd, pwd, confirm_pwd } = values
     if (getFieldValue('confirm_pwd') !== getFieldValue('pwd')) {

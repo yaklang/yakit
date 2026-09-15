@@ -66,6 +66,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 showFreeChat={showFreeChat}
                 setShowFreeChat={setShowFreeChat}
                 startRequest={startRequest}
+                showAIRightPanel
                 ref={aiReActChatRef}
               />
             </div>

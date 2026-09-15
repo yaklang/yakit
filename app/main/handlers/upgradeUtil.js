@@ -11,6 +11,8 @@ const EventEmitter = require('events')
 const zip = require('node-stream-zip')
 const crypto = require('crypto')
 const { assertTrustedAppSender, validateOpenPath } = require('../security')
+const { getEngineSession } = require('./utils/engineSessionRuntime')
+const { restoreBuiltinEngine } = require('./utils/engineRestore')
 
 const {
   getYakitHome,
@@ -42,6 +44,27 @@ const {
 const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = require('./utils/requestWithProgress')
 const { getCheckTextUrl, fetchSpecifiedYakVersionHash } = require('../handlers/utils/network')
 const { engineLogOutputFileAndUI } = require('../logFile')
+
+const restoreEngine = () =>
+  getEngineSession().withStopped(async () => {
+    const platform = process.platform === 'win32' ? 'windows' : process.platform
+    const arch = process.arch === 'arm64' ? 'arm64' : 'amd64'
+    const target = path.join(getYaklangEngineDir(), process.platform === 'win32' ? 'yak.exe' : 'yak')
+    await restoreBuiltinEngine({
+      zipPath: loadExtraFilePath(path.join('bins', 'yak.zip')),
+      target,
+      entry: `bins/yak_${platform}_${arch}${process.platform === 'win32' ? '.exe' : ''}`,
+      writeConfig: async () => {
+        writeEngineBuildType('full')
+        if (process.platform === 'darwin') {
+          const hash = fs.readFileSync(loadExtraFilePath(path.join('bins', 'engine-sha256.txt')), 'utf8').trim()
+          if (!/^[a-f0-9]{64}$/i.test(hash)) throw new Error('Invalid bundled engine hash')
+          fs.writeFileSync(path.join(getYakitHome(), 'engine-sha256.txt'), hash)
+        }
+      },
+    })
+    latestVersionCache = null
+  })
 
 /** 解析当前引擎构建类型：标记文件 -> 本地 slim 缓存比对 -> OSS slim hash 比对 */
 const resolveEngineBuildType = async (version) => {
@@ -726,7 +749,8 @@ module.exports = {
     }
 
     ipcMain.handle('install-yak-engine', async (e, version) => {
-      return await installYakEngine(version)
+      assertTrustedAppSender(e, 'install-yak-engine')
+      return getEngineSession().withStopped(() => installYakEngine(version))
     })
 
     ipcMain.handle('fetch-yak-engine-build-type', async (e, version) => {
@@ -901,47 +925,9 @@ module.exports = {
     )
 
     // asyncRestoreEngineAndPlugin wrapper
-    ipcMain.handle('RestoreEngineAndPlugin', async (e, params) => {
-      latestVersionCache = null
-      const engineTarget = isWindows
-        ? path.join(getYaklangEngineDir(), 'yak.exe')
-        : path.join(getYaklangEngineDir(), 'yak')
-      const buidinEngine = path.join(getYaklangEngineDir(), 'yak.build-in')
-      const cacheFlagLock = path.join(getBasicDir(), 'flag.txt')
-      try {
-        // remove old engine
-        if (fs.existsSync(buidinEngine)) {
-          fs.unlinkSync(buidinEngine)
-        }
-        if (isWindows && fs.existsSync(engineTarget)) {
-          // access write will fetch delete!
-          fs.accessSync(engineTarget, fs.constants.F_OK | fs.constants.W_OK)
-        }
-
-        if (fs.existsSync(cacheFlagLock)) {
-          fs.unlinkSync(cacheFlagLock)
-        }
-      } catch (e) {
-        throw e
-      }
-
-      function tryUnlink(retriesLeft) {
-        try {
-          if (fs.existsSync(engineTarget)) {
-            fs.unlinkSync(engineTarget)
-          }
-        } catch (err) {
-          if (err.message.indexOf('operation not permitted') > -1) {
-            if (retriesLeft > 0) {
-              setTimeout(() => tryUnlink(retriesLeft - 1), 500)
-            } else {
-              throw e
-            }
-          }
-        }
-      }
-      tryUnlink(2)
-      return await asyncInitBuildInEngine({})
+    ipcMain.handle('RestoreEngineAndPlugin', async (e) => {
+      assertTrustedAppSender(e, 'RestoreEngineAndPlugin')
+      return restoreEngine()
     })
 
     // 插件压缩包和解压目录
@@ -1201,47 +1187,9 @@ module.exports = {
     }
 
     // asyncRestoreEngineAndPlugin wrapper
-    ipcMain.handle(ipcEventPre + 'RestoreEngineAndPlugin', async (e, params) => {
-      latestVersionCache = null
-      const engineTarget = isWindows
-        ? path.join(getYaklangEngineDir(), 'yak.exe')
-        : path.join(getYaklangEngineDir(), 'yak')
-      const buidinEngine = path.join(getYaklangEngineDir(), 'yak.build-in')
-      const cacheFlagLock = path.join(getBasicDir(), 'flag.txt')
-      try {
-        // remove old engine
-        if (fs.existsSync(buidinEngine)) {
-          fs.unlinkSync(buidinEngine)
-        }
-        if (isWindows && fs.existsSync(engineTarget)) {
-          // access write will fetch delete!
-          fs.accessSync(engineTarget, fs.constants.F_OK | fs.constants.W_OK)
-        }
-
-        if (fs.existsSync(cacheFlagLock)) {
-          fs.unlinkSync(cacheFlagLock)
-        }
-      } catch (e) {
-        throw e
-      }
-
-      function tryUnlink(retriesLeft) {
-        try {
-          if (fs.existsSync(engineTarget)) {
-            fs.unlinkSync(engineTarget)
-          }
-        } catch (err) {
-          if (err.message.indexOf('operation not permitted') > -1) {
-            if (retriesLeft > 0) {
-              setTimeout(() => tryUnlink(retriesLeft - 1), 500)
-            } else {
-              throw e
-            }
-          }
-        }
-      }
-      tryUnlink(2)
-      return await asyncInitBuildInEngine({})
+    ipcMain.handle(ipcEventPre + 'RestoreEngineAndPlugin', async (e) => {
+      assertTrustedAppSender(e, 'RestoreEngineAndPlugin')
+      return restoreEngine()
     })
 
     // asyncDownloadLatestYak wrapper
@@ -1359,7 +1307,8 @@ module.exports = {
     }
 
     ipcMain.handle(ipcEventPre + 'install-yak-engine', async (e, version) => {
-      return await installYakEngine(version)
+      assertTrustedAppSender(e, 'install-yak-engine')
+      return getEngineSession().withStopped(() => installYakEngine(version))
     })
 
     ipcMain.handle(ipcEventPre + 'fetch-yak-engine-build-type', async (e, version) => {

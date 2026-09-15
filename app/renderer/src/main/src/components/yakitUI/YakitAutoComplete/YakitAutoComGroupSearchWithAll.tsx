@@ -81,7 +81,6 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
       cacheHistoryDataKey,
       cacheHistoryListLength = 10,
       isCacheDefaultValue = true,
-      ref: _ref,
       initValue = '',
       wrapperStyle,
       isInit = true,

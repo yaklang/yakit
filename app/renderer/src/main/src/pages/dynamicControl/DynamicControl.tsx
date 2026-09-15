@@ -16,7 +16,7 @@ import { ContentUploadInput } from '@/components/functionTemplate/ContentUploadT
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { VirtualTable } from './VirtualTable'
 import type { VirtualColumns } from './VirtualTable'
-import { type DynamicStatusProps, useStore, yakitDynamicStatus } from '@/store'
+import { type DynamicStatusProps, useStore, useYakitDynamicStatus } from '@/store'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { getReleaseEditionName, getRemoteHttpSettingGV } from '@/utils/envfile'
@@ -33,7 +33,7 @@ export interface ControlOperationProps {
 // 控制中 - 禁止操作
 export const ControlOperation: React.FC<ControlOperationProps> = (props) => {
   const { controlName } = props
-  const { dynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus } = useYakitDynamicStatus()
   // 关闭远程控制
   const closeControl = () => {
     ipcRenderer.invoke('kill-dynamic-control')
@@ -84,7 +84,7 @@ export const ControlMyself: React.FC<ControlMyselfProps> = (props) => {
   const [loading, setLoading] = useState<boolean>(true)
   const [textArea, setTextArea] = useState<string>()
   const { userInfo } = useStore()
-  const { dynamicStatus, setDynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus, setDynamicStatus } = useYakitDynamicStatus()
   const [restartBtn, setRestartBtn] = useState<boolean>(false)
   const [restartLoading, setRestartLoading] = useState<boolean>(false)
 

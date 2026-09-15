@@ -416,7 +416,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         <div className={styles['mitm-filters-subTitle']}>
           {filterType === 'filter' && (
             <>
-              <Tooltip title={t('MITMFiltersModal.export_configuration')} align={{ offset: [0, 10] }}>
+              <Tooltip title={t('MITMFiltersModal.export_configuration')}>
                 <YakitButton
                   style={{ padding: '3px 8px' }}
                   type="text"
@@ -424,7 +424,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                   onClick={onFilterExport}
                 />
               </Tooltip>
-              <Tooltip title={t('MITMFiltersModal.import_configuration')} align={{ offset: [0, 10] }}>
+              <Tooltip title={t('MITMFiltersModal.import_configuration')}>
                 <YakitButton
                   style={{ padding: '3px 8px' }}
                   type="text"

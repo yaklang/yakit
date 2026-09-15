@@ -110,6 +110,7 @@
     "updateGlobalConfig": "Update global configuration",
     "confirmResetConfig": "Are you sure you want to reset the configuration?",
     "resetConfig": "Reset configuration",
+    "reset": "Reset",
     "resetConfigSuccess": "Configuration reset successfully",
     "saveHttpAuthAndClose": "Do you want to save the HTTP auth global configuration and close the dialog?",
     "executionOrder": "Execution order",

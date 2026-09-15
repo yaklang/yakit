@@ -156,18 +156,18 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
         <AIContextToken iconOnly buttonProps={rightIcon.dataDetails === true ? undefined : rightIcon.dataDetails} />
       )} */}
       {rightIcon.history && (
-        <Tooltip
+        <YakitPopover
           trigger={['click']}
           destroyOnHidden
           classNames={{ root: styles['history-chat-tooltip'] }}
-          title={
+          content={
             <div className={styles['history-chat-tooltip-content']}>
               <HistoryChat embedded aiSource={aiSource} />
             </div>
           }
         >
           <YakitButton type="text2" icon={<ClockOutlined size={16} />} title="" />
-        </Tooltip>
+        </YakitPopover>
       )}
       {rightIcon.add}
       {rightIcon.close}

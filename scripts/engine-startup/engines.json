@@ -1,0 +1,25 @@
+{
+  "ipc": {
+    "version": "1.4.8-alpha0911ipc",
+    "note": "Published IPC smoke baseline. Download only; every platform is pinned by SHA256, never latest or a local engine build.",
+    "win32-x64": {
+      "file": "yak_windows_amd64.exe",
+      "sha256": "343f2940e873dc8c9c2e3b6ee43f28c99b3630804a9a18c661f1a33a87852cda"
+    },
+    "linux-x64": {
+      "file": "yak_linux_amd64",
+      "sha256": "c02514b5fbce9cd177f23a0140488853777e6f02b084c35c5c5e07a5f798c14d"
+    },
+    "darwin-arm64": {
+      "file": "yak_darwin_arm64",
+      "sha256": "0e27d266de388c6e837beab7fc268b36136de4733836d28ad6ba22a2a98b147a"
+    }
+  },
+  "legacy": {
+    "version": "1.4.8-beta17",
+    "win32-x64": {
+      "file": "yak_windows_amd64.exe",
+      "sha256": "017d3fd2dcde3399f0b26940be94a8d4bb941be2504ccbf36949a67c01eb9d8a"
+    }
+  }
+}

@@ -5,6 +5,7 @@ const PROTO_PATH = path.join(__dirname, '../protos/grpc.proto')
 const { HttpSetting } = require('./state')
 const grpc = require('@grpc/grpc-js')
 const { createEngineGrpcClient } = require('./handlers/utils/engineGrpcClient')
+const { getEngineSession } = require('./handlers/utils/engineSessionRuntime')
 const protoLoader = require('@grpc/proto-loader')
 const { printLogOutputFile } = require('./logFile')
 const { assertTrustedAppSender, normalizeHttpBaseUrl } = require('./security')
@@ -26,6 +27,36 @@ const global = {
 }
 
 let _client
+
+async function calcDirSize(dirPath) {
+  const walk = async (dir) => {
+    let size = 0
+    try {
+      const entries = await fs.promises.readdir(dir, { withFileTypes: true })
+      for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i]
+        if (i % 200 === 0) await new Promise((resolve) => setImmediate(resolve))
+        const fullPath = path.join(dir, entry.name)
+        if (entry.isFile()) {
+          try {
+            const stat = await fs.promises.stat(fullPath)
+            size += stat.size
+          } catch (_) {}
+        } else if (entry.isDirectory()) {
+          size += await walk(fullPath)
+        }
+      }
+    } catch (_) {}
+    return size
+  }
+  if (!dirPath) return 0
+  try {
+    await fs.promises.access(dirPath)
+  } catch (_) {
+    return 0
+  }
+  return walk(dirPath)
+}
 
 function createGrpcInterceptor() {
   return (options, nextCall) => {
@@ -70,6 +101,7 @@ const options = {
 }
 
 function newClient(settings = global) {
+  if (!settings.defaultYakGRPCAddr && !settings.endpoint) throw new Error('Engine disconnected')
   return createEngineGrpcClient(Yak, settings, options)
 }
 
@@ -176,10 +208,15 @@ module.exports = {
       app.exit(0)
     })
 
+    ipcMain.handle('get-dir-size', async (e, dirPath) => {
+      return calcDirSize(dirPath)
+    })
+
     ipcMain.handle('yakit-connect-status', () => {
       return {
         addr: global.defaultYakGRPCAddr,
         isTLS: !!global.caPem,
+        instance: getEngineSession().current(),
       }
     })
 
@@ -204,6 +241,7 @@ module.exports = {
       return {
         addr: global.defaultYakGRPCAddr,
         isTLS: !!global.caPem,
+        instance: getEngineSession().current(),
       }
     })
 
@@ -413,31 +451,7 @@ module.exports = {
     })
 
     ipcMain.handle(ipcEventPre + 'get-dir-size', async (e, dirPath) => {
-      const calcSize = async (dir) => {
-        let size = 0
-        try {
-          const entries = await fs.promises.readdir(dir, { withFileTypes: true })
-          for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name)
-            if (entry.isFile()) {
-              try {
-                const stat = await fs.promises.stat(fullPath)
-                size += stat.size
-              } catch (_) {}
-            } else if (entry.isDirectory()) {
-              size += await calcSize(fullPath)
-            }
-          }
-        } catch (_) {}
-        return size
-      }
-      if (!dirPath) return 0
-      try {
-        await fs.promises.access(dirPath)
-      } catch (_) {
-        return 0
-      }
-      return calcSize(dirPath)
+      return calcDirSize(dirPath)
     })
 
     // 软件启动后判断是 CE 版本还是 EE 版本
@@ -522,6 +536,7 @@ module.exports = {
       return {
         addr: global.defaultYakGRPCAddr,
         isTLS: !!global.caPem,
+        instance: getEngineSession().current(),
       }
     })
 

@@ -113,6 +113,7 @@ import type {
   CodecPageInfoProps,
   ManageRightClickPluginsPageInfoProps,
   ContextMenuResultPageInfoProps,
+  SettingsPageInfoProps,
 } from '@/store/pageInfo'
 import {
   CommunityDeprecatedFirstMenu,
@@ -121,9 +122,8 @@ import {
   EnterpriseDeprecatedSecondMenu,
 } from './deprecatedMenu'
 import { YakitRoute } from '../enums/yakitRoute'
-import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
-import { getNotepadAdd, getNotepadManage, getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
-import { ClipboardListSolid, CodecSolid, TerminalSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { getNotepadManage, getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
+import { CodecSolid, TerminalSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { PublicToolDataCompareIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolDataCompareIcon'
 import { PublicToolVulinboxIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicToolVulinboxIcon'
 import { type SoftMode, YakitModeEnum } from '@/store/softMode'
@@ -200,9 +200,6 @@ const WebShellViewer = React.lazy(() =>
 const WebShellDetailOpt = React.lazy(() =>
   import('@/pages/webShell/WebShellDetailOpt').then((m) => ({ default: m.WebShellDetailOpt })),
 )
-const ConfigNetworkPage = React.lazy(() =>
-  import('@/components/configNetwork/ConfigNetworkPage').then((m) => ({ default: m.ConfigNetworkPage })),
-)
 const PluginManage = React.lazy(() =>
   import('@/pages/plugins/manage/PluginManage').then((m) => ({ default: m.PluginManage })),
 )
@@ -270,9 +267,6 @@ const Misstatement = React.lazy(() =>
 const SystemConfig = React.lazy(() =>
   import('@/pages/systemConfig/SystemConfig').then((m) => ({ default: m.SystemConfig })),
 )
-const ShortcutKeyList = React.lazy(() =>
-  import('@/pages/shortcutKey/ShortcutKey').then((m) => ({ default: m.ShortcutKeyList })),
-)
 const AIAgent = React.lazy(() => import('@/pages/ai-agent/AIAgent').then((m) => ({ default: m.AIAgent })))
 
 const HTTPHacker = React.lazy(() => import('../pages/hacker/httpHacker'))
@@ -306,6 +300,7 @@ const ManageRightClickPlugins = React.lazy(() => import('@/pages/manageRightClic
 const ContextMenuActionExecution = React.lazy(
   () => import('@/pages/manageRightClickPlugins/ContextMenuActionExecution'),
 )
+const Settings = React.lazy(() => import('@/pages/settings/Settings').then((m) => ({ default: m.Settings })))
 
 /**
  * @description 页面路由对应的页面信息
@@ -460,7 +455,6 @@ export const YakitRouteToPageInfo: Record<
   'beta-debug-monaco-editor': { label: '插件编辑器', labelUi: 'YakitRoute.pluginEditor' },
   'beta-vulinbox-manager': { label: 'Vulinbox 管理器', labelUi: 'YakitRoute.vulinboxManager' },
   'beta-diagnose-network': { label: '网络异常诊断', labelUi: 'YakitRoute.networkDiagnosis' },
-  'beta-config-network': { label: '全局配置', labelUi: 'YakitRoute.globalConfig' },
   'plugin-audit': { label: '插件管理', labelUi: 'YakitRoute.pluginManagement' },
   '**beta-debug-traffic-analize': { label: '流量分析', labelUi: 'YakitRoute.trafficAnalysis' },
   'beta-webshell-manager': { label: '网站管理', labelUi: 'YakitRoute.websiteManagement' },
@@ -520,6 +514,7 @@ export const YakitRouteToPageInfo: Record<
   'ai-forge': { label: '技能库', labelUi: 'YakitRoute.ai-forge' },
   'manage-right-click-plugins': { label: '右键插件设置', labelUi: 'YakitRoute.manageRightClickPlugins' },
   'context-menu-result': { label: '右键插件结果', labelUi: 'YakitRoute.contextMenuResult' },
+  settings: { label: '设置', labelUi: 'YakitRoute.settings' },
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -551,7 +546,6 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.ControlAdminPage,
   YakitRoute.Beta_VulinboxManager,
   YakitRoute.Beta_DiagnoseNetwork,
-  YakitRoute.Beta_ConfigNetwork,
   YakitRoute.Beta_DebugTrafficAnalize,
   YakitRoute.Plugin_Audit,
   YakitRoute.Beta_WebShellManager,
@@ -579,6 +573,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.AI_Forge,
   YakitRoute.MCP_History,
   YakitRoute.ManageRightClickPlugins,
+  YakitRoute.Settings,
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -639,6 +634,7 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.MCP_History,
   YakitRoute.ManageRightClickPlugins,
   YakitRoute.ContextMenuResult,
+  YakitRoute.Settings,
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -797,9 +793,6 @@ export interface ComponentParams {
   /** hTTPHacker v2 新版 */
   mitmHackerPageInfo?: MITMHackerPageInfoProps
 
-  /** 快捷键配置页面信息 */
-  shortcutKeyPage?: ShortcutKeyPageName
-
   /** 编辑 forge 模板 */
   modifyAIForgePageInfo?: AIForgeEditorPageInfoProps
   /** 新增 ai-forge 模板页面 */
@@ -825,6 +818,8 @@ export interface ComponentParams {
 
   /** 右键插件执行结果页面 */
   contextMenuResultPageInfo?: ContextMenuResultPageInfoProps
+  /** 应用设置页面 */
+  settingsPageInfo?: SettingsPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
   return function WithPage(props) {
@@ -1034,8 +1029,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return <VulinboxManager />
     case YakitRoute.Beta_DiagnoseNetwork:
       return <DiagnoseNetworkPage />
-    case YakitRoute.Beta_ConfigNetwork:
-      return <ConfigNetworkPage />
     case YakitRoute.Plugin_Audit:
       return (
         <OnlineJudgment isJudgingLogin={true}>
@@ -1079,7 +1072,11 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     case YakitRoute.AI_Agent:
       return <AIAgent pageId={params?.id || ''} />
     case YakitRoute.ShortcutKey:
-      return <ShortcutKeyList />
+      return (
+        <Suspense fallback={<PageLoading />}>
+          <Settings pageId={params?.id || ''} anchor="shortcut-key" />
+        </Suspense>
+      )
     case YakitRoute.FingerprintManage:
       return <FingerprintManage />
     case YakitRoute.Ssa_Result_Diff:
@@ -1113,6 +1110,16 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         <div />
       )
     }
+    case YakitRoute.Settings:
+      return (
+        <Suspense fallback={<PageLoading />}>
+          <Settings
+            pageId={params?.id || ''}
+            anchor={params?.settingsPageInfo?.anchor}
+            section={params?.settingsPageInfo?.section}
+          />
+        </Suspense>
+      )
     default:
       return <div />
   }
@@ -1672,16 +1679,6 @@ export const getSecurityExpertLeftMenu: () => ExtraMenuItem[] = () => {
     getVulinboxMenuItem(true),
   ]
 }
-/** @name yakit 安全专家模式 记事本菜单 */
-export const getSecurityExpertNotepadMenu: () => ExtraMenuItem[] = () => {
-  return [
-    {
-      page: YakitRoute.Modify_Notepad,
-      i18n: false,
-      label: getNotepadNameByEditionMulLang(),
-    },
-  ]
-}
 /** @name 右侧额外菜单 */
 export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) => {
   if (isIRify()) {
@@ -1690,12 +1687,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
         page: YakitRoute.Codec,
         icon: <CodecSolid color="currentColor" />,
         ...YakitRouteToPageInfo[YakitRoute.Codec],
-      },
-      {
-        page: YakitRoute.Modify_Notepad,
-        icon: <ClipboardListSolid color="currentColor" />,
-        i18n: false,
-        label: getNotepadNameByEditionMulLang(),
       },
     ]
   }
@@ -1706,24 +1697,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
         page: YakitRoute.YakScript,
         icon: <TerminalSolid color="currentColor" />,
         ...YakitRouteToPageInfo[YakitRoute.YakScript],
-      },
-      {
-        page: undefined,
-        icon: <ClipboardListSolid color="currentColor" />,
-        i18n: false,
-        label: getNotepadNameByEditionMulLang(),
-        children: [
-          {
-            page: YakitRoute.Notepad_Manage,
-            i18n: false,
-            label: getNotepadManage(),
-          },
-          {
-            page: YakitRoute.Modify_Notepad,
-            i18n: false,
-            label: getNotepadAdd(),
-          },
-        ],
       },
     ]
   }
@@ -1742,24 +1715,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
           ...YakitRouteToPageInfo[YakitRoute.YakScript],
         },
         getVulinboxMenuItem(),
-        {
-          page: undefined,
-          icon: <ClipboardListSolid color="currentColor" />,
-          i18n: false,
-          label: getNotepadNameByEditionMulLang(),
-          children: [
-            {
-              page: YakitRoute.Notepad_Manage,
-              i18n: false,
-              label: getNotepadManage(),
-            },
-            {
-              page: YakitRoute.Modify_Notepad,
-              i18n: false,
-              label: getNotepadAdd(),
-            },
-          ],
-        },
       ]
     }
     if (isCommunityYakit()) {
@@ -1777,12 +1732,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
             ...YakitRouteToPageInfo[YakitRoute.YakScript],
           },
           getVulinboxMenuItem(),
-          {
-            page: YakitRoute.Modify_Notepad,
-            icon: <ClipboardListSolid color="currentColor" />,
-            i18n: false,
-            label: getNotepadNameByEditionMulLang(),
-          },
         ]
       }
       // 安全专家模式
@@ -1951,11 +1900,6 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
               {
                 page: YakitRoute.YakScript,
                 ...YakitRouteToPageInfo[YakitRoute.YakScript],
-              },
-              {
-                page: YakitRoute.Modify_Notepad,
-                i18n: false,
-                label: getNotepadNameByEditionMulLang(),
               },
             ],
           },

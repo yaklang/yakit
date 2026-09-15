@@ -97,11 +97,10 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
 
   const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: HTTPFlowExtractedData) => {
     if (c) {
-      setSelectedRowKeys([...selectedRowKeys, keys])
+      setSelectedRowKeys((prev) => [...prev, keys])
     } else {
       setIsAllSelect(false)
-      const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== keys)
-      setSelectedRowKeys(newSelectedRowKeys)
+      setSelectedRowKeys((prev) => prev.filter((ele) => ele !== keys))
     }
   })
 

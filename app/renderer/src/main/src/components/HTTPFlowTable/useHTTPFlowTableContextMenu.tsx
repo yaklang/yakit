@@ -672,7 +672,13 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         checkContextMenuVersion().then((versionValid) => {
           if (!versionValid) return
           const tab = key.split('_')[1]
-          emiter.emit('openPage', JSON.stringify({ route: YakitRoute.ManageRightClickPlugins, params: { tab } }))
+          emiter.emit(
+            'openPage',
+            JSON.stringify({
+              route: YakitRoute.Settings,
+              params: { anchor: 'right-click-plugins', section: tab },
+            }),
+          )
         })
         return
       }
@@ -965,6 +971,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     if (menuName.startsWith('pluginExtension')) {
       if (key.startsWith(PLUGIN_RIGHT_MAG)) {
         onPluginExtensionHandle({ key, keyPath, id: [], rows: [], menu: batchContextMenu })
+        setBatchVisible(false)
         return
       }
       const resolved = resolveBatchSelectionOrNotify()

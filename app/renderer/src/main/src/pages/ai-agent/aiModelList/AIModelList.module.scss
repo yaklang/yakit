@@ -8,25 +8,6 @@
   display: flex;
   flex-direction: column;
 }
-.ai-model-list-wrapper {
-  @extend %display-column;
-  gap: 6px;
-  height: 100%;
-  overflow: hidden;
-  .ai-model-list-header {
-    @extend %display-flex-center;
-    justify-content: space-between;
-    gap: 4px;
-    padding: 8px 12px 0;
-    .ai-model-list-header-left {
-      @extend %display-flex-center;
-      gap: 4px;
-    }
-    .ai-model-list-header-right {
-      @extend %display-flex-center;
-    }
-  }
-}
 .ai-model-list-total {
   width: fit-content;
   height: 16px;
@@ -35,11 +16,6 @@
   background: var(--Colors-Use-Neutral-Bg-Hover);
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   line-height: 16px;
-}
-.ai-online-model-wrapper {
-  @extend %display-column;
-  gap: 8px;
-  padding: 0 8px 8px;
 }
 .ai-online-model {
   @extend %display-column;
@@ -335,11 +311,12 @@
   @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
 }
 
-.ai-online-mode-setting-popover {
-  :global {
-    .ant-form-item {
-      margin-bottom: 0;
-    }
+.check-icon-circle {
+  flex-shrink: 0;
+  @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
+  svg {
+    width: 16px;
+    height: 16px;
   }
 }
 

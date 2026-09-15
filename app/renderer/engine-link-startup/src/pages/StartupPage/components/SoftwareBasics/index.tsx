@@ -4,7 +4,7 @@ import lightTheme from '@/assets/light-theme.png'
 import darkTheme from '@/assets/dark-theme.png'
 import { FigmaIcon28011794Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { CheckCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
-import type { Theme } from '@/hooks/useTheme'
+import { useTheme, type Theme } from '@/hooks/useTheme'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
@@ -12,7 +12,7 @@ import { Tooltip } from 'antd'
 import { yakitApp, yakitShell } from '@/utils/electronBridge'
 import { useCountDown, useInViewport, useMemoizedFn } from 'ahooks'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { isCommunityYakit } from '@/utils/envfile'
+import { isCommunityYakit, isEnpriTrace } from '@/utils/envfile'
 import { type Lange, normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './SoftwareBasics.module.scss'
@@ -61,11 +61,13 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       const newHistory = [currentPath, ...workspaceHistory.filter((p) => p !== currentPath)].slice(0, 10)
       await yakitApp.setYakitHomeConfig('workspaceHistory', newHistory)
       await yakitApp.setYakitHomeConfig('autoStart', autoStart)
-      setSoftTheme(softTheme, true)
+      useTheme.getState().persistThemeMode()
       if (isCommunityYakit()) {
         await yakitApp.setYakitHomeConfig('yakitMode', softMode)
       }
-      await yakitApp.setYakitHomeConfig('softLange', softLang)
+      if (!isEnpriTrace()) {
+        await yakitApp.setYakitHomeConfig('softLange', softLang)
+      }
       if (currentPath !== originalHome) {
         await yakitApp.setYakitHomeConfig('YAKIT_HOME', currentPath)
         yakitApp.relaunchApp()
@@ -106,9 +108,11 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
         const mode = config.yakitMode || 'classic'
         setSoftMode(mode as YakitSoftMode)
       }
-      const lang = normalizeLang(config.softLange as Lange)
-      i18n.changeLanguage(lang)
-      setSoftLang(lang)
+      if (!isEnpriTrace()) {
+        const lang = normalizeLang(config.softLange as Lange)
+        i18n.changeLanguage(lang)
+        setSoftLang(lang)
+      }
       setAutoStart(config.autoStart || false)
       const allPaths = [...new Set([home, ...(config.workspaceHistory || [])].filter(Boolean))]
       pendingFetchPathsRef.current = allPaths
@@ -347,29 +351,31 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
           </div>
         </div>
       )}
-      <div className={styles['softwareBasics-item']} style={{ marginBottom: 10 }}>
-        <div className={styles['softwareBasics-item-title']}>{t('SoftwareBasics.langTitle')}</div>
-        <div className={styles['softwareBasics-item-cont']}>
-          <YakitSelect
-            value={softLang}
-            options={[
-              {
-                label: t('SoftwareBasics.langZh'),
-                value: 'zh',
-              },
-              {
-                label: t('SoftwareBasics.langZhTW'),
-                value: 'zh-TW',
-              },
-              {
-                label: t('SoftwareBasics.langEn'),
-                value: 'en',
-              },
-            ]}
-            onChange={handleLangChange}
-          ></YakitSelect>
+      {!isEnpriTrace() && (
+        <div className={styles['softwareBasics-item']} style={{ marginBottom: 10 }}>
+          <div className={styles['softwareBasics-item-title']}>{t('SoftwareBasics.langTitle')}</div>
+          <div className={styles['softwareBasics-item-cont']}>
+            <YakitSelect
+              value={softLang}
+              options={[
+                {
+                  label: t('SoftwareBasics.langZh'),
+                  value: 'zh',
+                },
+                {
+                  label: t('SoftwareBasics.langZhTW'),
+                  value: 'zh-TW',
+                },
+                {
+                  label: t('SoftwareBasics.langEn'),
+                  value: 'en',
+                },
+              ]}
+              onChange={handleLangChange}
+            ></YakitSelect>
+          </div>
         </div>
-      </div>
+      )}
       <div className={styles['footer-btn']}>
         <YakitButton
           data-testid="startup-confirm"

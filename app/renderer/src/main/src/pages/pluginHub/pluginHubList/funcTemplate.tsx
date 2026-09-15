@@ -145,6 +145,7 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
             >
               {(item.data || []).map((listItem) => {
                 const checked = (selecteds[item.groupKey] || []).findIndex((ele) => ele.value === listItem.value) !== -1
+                const displayLabel = onPluginTagsToName(listItem.label)
                 return (
                   <label
                     className={classNames(styles['list-item'], {
@@ -159,9 +160,9 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
                       />
                       <span
                         className={classNames(styles['item-title'], 'yakit-content-single-ellipsis')}
-                        title={listItem.label}
+                        title={displayLabel}
                       >
-                        {listItem.label}
+                        {displayLabel}
                       </span>
                     </div>
                     <span className={styles['list-item-extra']}>{listItem.count}</span>
@@ -299,9 +300,10 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
               <div className={styles['header-filter-tag']}>
                 {tagLength <= 2 ? (
                   showTagList.map((item) => {
+                    const displayLabel = onPluginTagsToName(item.label)
                     return (
                       <YakitTag key={item.value} color="info" closable onClose={() => onDelTag(item)}>
-                        {item.label}
+                        {displayLabel}
                       </YakitTag>
                     )
                   })
@@ -311,10 +313,11 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                     content={
                       <div className={styles['hub-outer-list-filter']}>
                         {showTagList.map((item) => {
+                          const displayLabel = onPluginTagsToName(item.label)
                           return (
-                            <Tooltip title={item.label} placement="top" key={item.value}>
+                            <Tooltip title={displayLabel} placement="top" key={item.value}>
                               <YakitTag closable onClose={() => onDelTag(item)}>
-                                {item.label}
+                                {displayLabel}
                               </YakitTag>
                             </Tooltip>
                           )

@@ -77,10 +77,11 @@ import type { RouteToPageProps } from '../layout/publicMenu/PublicMenu'
 import { usePluginToId } from '@/store/publicMenu'
 import { ResidentPluginName } from '@/routes/newRoute'
 import { Form, Tooltip } from 'antd'
-import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useSize, useThrottleFn } from 'ahooks'
+import { useDebounceEffect, useInViewport, useMemoizedFn, useSize, useThrottleFn } from 'ahooks'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { startIdleVisibleInterval } from '@/utils/scheduleIdleTask'
 import { MITMConsts } from '../mitm/MITMConsts'
 import { CacheDropDownGV, RemoteGV } from '@/yakitGV'
 import { openABSFileLocated } from '@/utils/openWebsite'
@@ -142,8 +143,7 @@ const Home: React.FC<HomeProp> = (props) => {
   const [inViewport] = useInViewport(homeRef)
   const { pluginToId } = usePluginToId()
   const isRunRef = useRef<boolean>(false)
-  const [timeInterval, setTimeInterval, getTimeInterval] = useGetState<number>(5)
-  const timeRef = useRef<any>(null)
+  const [timeInterval, setTimeInterval] = useState<number>(5)
   const [showMitmDropdown, setShowMitmDropdown] = useState<boolean>(false)
   const showMitmDropdownRef = useRef<boolean>(showMitmDropdown)
   const mitmDropdownRef = useRef<HTMLDivElement>(null)
@@ -365,14 +365,8 @@ const Home: React.FC<HomeProp> = (props) => {
   }, [showMitmDropdown])
 
   useEffect(() => {
-    let timer: any = null
     getRemoteValue(RemoteGV.GlobalStateTimeInterval).then((time: any) => {
       setTimeInterval(+time || 5)
-      if ((+time || 5) > 5) updateAllInfo()
-      if (timer) clearInterval(timer)
-      timer = setInterval(() => {
-        setRemoteValue(RemoteGV.GlobalStateTimeInterval, `${getTimeInterval()}`)
-      }, 20000)
     })
 
     getRemoteValue(CacheDropDownGV.MITMDefaultHostHistoryList).then((e) => {
@@ -453,19 +447,17 @@ const Home: React.FC<HomeProp> = (props) => {
     { wait: 200 },
   )
 
-  // 修改查询间隔时间后
+  // 仅首页在视口内时轮询证书/网卡权限；离开首页或页面隐藏时停掉，避免后台 IPC
   useDebounceEffect(
     () => {
-      if (timeRef.current) clearInterval(timeRef.current)
-      timeRef.current = setInterval(updateAllInfo, timeInterval * 1000)
-
+      if (!inViewport) return
+      const cancel = startIdleVisibleInterval(updateAllInfo, timeInterval * 1000, { runImmediately: true })
       return () => {
         isRunRef.current = false
-        if (timeRef.current) clearInterval(timeRef.current)
-        timeRef.current = null
+        cancel()
       }
     },
-    [timeInterval],
+    [timeInterval, inViewport],
     { wait: 300 },
   )
 

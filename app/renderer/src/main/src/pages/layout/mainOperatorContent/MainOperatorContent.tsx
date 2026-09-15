@@ -126,12 +126,15 @@ import {
   type RuleManagementPageInfoProps,
   type AuditHoleInfoProps,
 } from '@/store/pageInfo'
+import { safeParseFuzzerCache, sanitizeFuzzerCachePageParams } from '@/store/parseFuzzerCache'
+import { adoptOrphanCacheTabs } from './adoptOrphanCacheTabs'
 import cloneDeep from 'lodash/cloneDeep'
 import { onToManageGroup } from '@/pages/securityTool/yakPoC/YakPoC'
 import { apiFetchQueryYakScriptGroupLocal } from '@/pages/plugins/utils'
 import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import {
   DefFuzzerTableMaxData,
+  HotPatchDefaultContent,
   defaultAdvancedConfigShow,
   defaultAdvancedConfigValue,
   defaultPostTemplate,
@@ -168,7 +171,6 @@ import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import { defaultHTTPHistoryAnalysisPageInfo } from '@/defaultConstants/hTTPHistoryAnalysis'
 import type { BatchAddNewGroupFormItem } from './BatchAddNewGroup'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
-import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import { getGlobalShortcutKeyEvents } from '@/utils/globalShortcutKey/events/global'
 import {
   convertKeyEventToKeyCombination,
@@ -731,7 +733,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const isSecurityExpert = useMemo(() => {
     return isCommunityYakit() && softMode === YakitModeEnum.SecurityExpert
   }, [softMode])
+
+  // tab数据
+  const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(
+    _.cloneDeepWith(getInitPageCache(softMode)) || [],
+  )
+  const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey(softMode))
   useEffect(() => {
+    if (currentTabKey === YakitRoute.Settings) return
     if (softMode === YakitModeEnum.SecurityExpert) {
       getRemoteValue(RemoteSoftModeGV.YakitCESecurityExpertSelectFirstTabKey)
         .then((cacheTabKey) => {
@@ -746,12 +755,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
     }
   }, [softMode])
-
-  // tab数据
-  const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(
-    _.cloneDeepWith(getInitPageCache(softMode)) || [],
-  )
-  const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey(softMode))
   useEffect(() => {
     setCurrentPageTabRouteKey(currentTabKey)
     return scheduleIdleTask(() => {
@@ -934,7 +937,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         addHTTPHistoryAnalysis(params)
         break
       case YakitRoute.ShortcutKey:
-        addShortcutKey(params)
+        addSettingsPage({ anchor: 'shortcut-key' })
         break
       case YakitRoute.AddAIForge:
       case YakitRoute.ModifyAIForge: {
@@ -962,6 +965,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         break
       case YakitRoute.ContextMenuResult:
         addContextMenuResult(params)
+        break
+      case YakitRoute.Settings:
+        addSettingsPage(params)
         break
       default:
         break
@@ -996,17 +1002,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
           yakRunnerScanHistoryPageInfo: {
             ...data,
           },
-        },
-      },
-    )
-  })
-
-  const addShortcutKey = useMemoizedFn((data: ShortcutKeyPageName) => {
-    openMenuPage(
-      { route: YakitRoute.ShortcutKey },
-      {
-        pageParams: {
-          shortcutKeyPage: data,
         },
       },
     )
@@ -1314,6 +1309,26 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       },
     )
   })
+  const addSettingsPage = useMemoizedFn((data?: { anchor?: string; section?: string }) => {
+    const isExist = pageCache.filter((item) => item.route === YakitRoute.Settings).length
+    if (isExist) {
+      if (data?.anchor) {
+        emiter.emit('onSettingsAnchor', data.anchor)
+      }
+      emiter.emit('onSettingsSection', data?.section || '')
+    }
+    openMenuPage(
+      { route: YakitRoute.Settings },
+      {
+        pageParams: {
+          settingsPageInfo: {
+            anchor: data?.anchor || 'general',
+            section: data?.section,
+          },
+        },
+      },
+    )
+  })
   const addContextMenuResult = useMemoizedFn((data) => {
     if (!data?.executionID) return
     openMenuPage(
@@ -1571,7 +1586,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       if (type === '**debug-monaco-editor') openMenuPage({ route: YakitRoute.Beta_DebugMonacoEditor })
       if (type === '**vulinbox-manager') openMenuPage({ route: YakitRoute.Beta_VulinboxManager })
       if (type === '**diagnose-network') openMenuPage({ route: YakitRoute.Beta_DiagnoseNetwork })
-      if (type === '**config-network') openMenuPage({ route: YakitRoute.Beta_ConfigNetwork })
       if (type === '**beta-debug-traffic-analize') openMenuPage({ route: YakitRoute.Beta_DebugTrafficAnalize })
       if (type === '**webshell-manager') openMenuPage({ route: YakitRoute.Beta_WebShellManager })
       if (type === '**webshell-opt') addWebShellOpt(data)
@@ -2828,6 +2842,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const unFuzzerCacheData = useRef<any>(null)
   // web-fuzzer多开页面缓存数据、
   useEffect(() => {
+    const stayOnSettings = currentTabKey === YakitRoute.Settings
+    const settingsPage = stayOnSettings ? getPageCache().find((item) => item.route === YakitRoute.Settings) : undefined
+
     if (isEnterpriseEdition()) {
       // 不是社区版的时候，每次进来都需要清除页面数据中心数据和FuzzerSequence数据
       clearAllData()
@@ -2837,14 +2854,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       clearOtherDataByRoute(YakitRoute.HTTPFuzzer)
     }
 
-    setPageCache(getInitPageCache(softMode))
+    const initCache = getInitPageCache(softMode)
+    setPageCache(stayOnSettings && settingsPage ? [...initCache, settingsPage] : initCache)
     // yakit 安全专家模式选中上次默认选中key
     if (softMode === YakitModeEnum.SecurityExpert) {
       setTimeout(() => {
         onInitFuzzer(true)
       }, 500)
     } else {
-      setCurrentTabKey(getInitActiveTabKey(softMode))
+      if (!stayOnSettings) {
+        setCurrentTabKey(getInitActiveTabKey(softMode))
+      }
       getRemoteValue(RemoteGV.SelectFirstMenuTabKey)
         .then((cacheTabKey) => {
           /**没有缓存数据或者缓存数据的tab key为HTTPFuzzer，初始化WF缓存数据 */
@@ -2889,7 +2909,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         try {
           setLoading(true)
           const res = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerCache)
-          const cache = JSONParseLog(res || '[]', { page: 'MainOperatorContent', fun: 'onInitFuzzer' })
+          const cache = safeParseFuzzerCache(res || '[]')
           await fetchFuzzerList(cache, false)
           await getFuzzerSequenceCache()
         } catch (error) {
@@ -2933,7 +2953,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setFuzzerSequenceCacheData(cache)
   })
 
-  // 获取数据库中缓存的web-fuzzer页面信息
+  /**
+   * 获取数据库中缓存的 web-fuzzer 页面信息。
+   * 截断修复丢弃损坏字段及其后的所有内容、保留前面的完整数据（修复策略见 parseFuzzerCache.ts），
+   * 缺失字段由默认值填充、落点在本函数：request / hotPatchCode 回填默认 POST 模板与默认热加载模板
+   * （编辑器对空内容提前返回、不会自行回退默认值），其余字段经浅合并由默认高级配置兜底，
+   * 残缺的 matcher / extractor 元素经 sanitizeFuzzerCachePageParams 清洗丢弃。
+   * 看起来像没存上，实际是缓存 JSON 被截断、数据不完整。
+   */
   const fetchFuzzerList = useMemoizedFn(async (cache, add, openFlag = true, preserveIds = false) => {
     try {
       const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
@@ -2969,7 +2996,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         routeKey: YakitRoute.HTTPFuzzer,
       }
       let multipleNodeListLength: number = 0
-      const newCache = add && !preserveIds ? rebuildMultipleNodeTree(key, cloneDeep(cache)) : cache
+      const newCache = adoptOrphanCacheTabs(
+        add && !preserveIds ? rebuildMultipleNodeTree(key, cloneDeep(cache)) : cache,
+      )
       const multipleNodeList: MultipleNodeInfo[] = newCache.filter((ele) => ele.groupId === '0')
       const pLength = multipleNodeList.length
       for (let index = 0; index < pLength; index++) {
@@ -2996,11 +3025,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 advancedConfigValue: {
                   ...defaultAdvancedConfigValue,
                   ...defaultCache,
-                  ...nodeItem.pageParams,
+                  ...sanitizeFuzzerCachePageParams(nodeItem.pageParams || {}),
                 },
                 advancedConfigShow: cacheData.advancedConfigShow,
-                request: nodeItem.pageParams?.request || '',
-                hotPatchCode: nodeItem.pageParams?.hotPatchCode || '',
+                request: nodeItem.pageParams?.request || defaultPostTemplate,
+                hotPatchCode: nodeItem.pageParams?.hotPatchCode || HotPatchDefaultContent,
               },
             },
             sortFieId: nodeItem.sortFieId,
@@ -3031,11 +3060,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
               advancedConfigValue: {
                 ...defaultAdvancedConfigValue,
                 ...defaultCache,
-                ...parentItem.pageParams,
+                ...sanitizeFuzzerCachePageParams(parentItem.pageParams || {}),
               },
               advancedConfigShow: cacheData.advancedConfigShow,
-              request: parentItem.pageParams?.request || '',
-              hotPatchCode: parentItem.pageParams?.hotPatchCode || '',
+              request: parentItem.pageParams?.request || defaultPostTemplate,
+              hotPatchCode: parentItem.pageParams?.hotPatchCode || HotPatchDefaultContent,
             },
           },
           sortFieId: parentItem.sortFieId,

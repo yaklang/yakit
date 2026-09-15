@@ -153,7 +153,7 @@ function createEngineLinkWindow() {
 
   engineLinkWin.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
 
-  if (isDev) engineLinkWin.webContents.openDevTools({ mode: 'detach' })
+  if (isDev && process.env.YAKIT_E2E !== '1') engineLinkWin.webContents.openDevTools({ mode: 'detach' })
 
   engineLinkWin.setMenu(null)
   engineLinkWin.setMenuBarVisibility(false)
@@ -262,7 +262,7 @@ function createWindow() {
   if (isDev) win.loadURL('http://127.0.0.1:3000')
   else win.loadFile(path.resolve(__dirname, '../renderer/pages/main/index.html'))
 
-  if (isDev) win.webContents.openDevTools({ mode: 'detach' })
+  if (isDev && process.env.YAKIT_E2E !== '1') win.webContents.openDevTools({ mode: 'detach' })
 
   win.setMenu(null)
   win.setMenuBarVisibility(false)

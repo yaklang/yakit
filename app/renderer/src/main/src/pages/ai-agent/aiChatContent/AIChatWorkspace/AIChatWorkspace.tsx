@@ -165,9 +165,8 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     }
 
     if (key === AITabsEnum.Task_Detail) return
-    if (key === AITabsEnum.HTTP && !httpTabShow && relatedRuntimeIDs.length === 0) return
-    if (key === AITabsEnum.Risk && !riskTabShow && relatedRuntimeIDs.length === 0) return
 
+    // 手动切换始终打开 tab，无数据时由内容区域展示空状态。
     openTab({
       key,
       type: key,

@@ -527,6 +527,36 @@ describe('ChatMultiSessionController start / send / history', () => {
     ctrl.handleSessionEnd('s-runtime-snapshot')
   })
 
+  it.each(['', '新会话问题'])('有效 pong 后同步一次会话快照（UserQuery=%j）', async (userQuery) => {
+    const sessionId = 's-session-snapshot'
+    const snapshotCalls = () =>
+      ipcRendererMock.invoke.mock.calls.filter(
+        ([channel, token, params]) =>
+          channel === 'send-ai-re-act' && token === sessionId && params?.SyncType === 'session_snapshot_sync',
+      )
+
+    try {
+      ctrl.handleStartSession(startParams(sessionId, 'page-1', userQuery))
+      await Promise.resolve()
+      expect(snapshotCalls()).toHaveLength(0)
+
+      ctrl.handleGrpcOutputEvent(sessionId, makeGrpcJsonRes('pong', {}, { SyncID: 'expired-ping' }))
+      await Promise.resolve()
+      expect(snapshotCalls()).toHaveLength(0)
+
+      const { meta } = ctrl.ensureSession(sessionId)
+      ctrl.handleGrpcOutputEvent(sessionId, makeGrpcJsonRes('pong', {}, { SyncID: meta.pingSyncID }))
+
+      await vi.waitFor(() => {
+        expect(snapshotCalls()).toEqual([
+          ['send-ai-re-act', sessionId, { IsSyncMessage: true, SyncType: 'session_snapshot_sync' }],
+        ])
+      })
+    } finally {
+      ctrl.handleSessionEnd(sessionId)
+    }
+  })
+
   it('A17: send without ready warns when active', () => {
     ctrl.setActiveShowSession('ghost')
     expect(() =>

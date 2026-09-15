@@ -52,8 +52,8 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { ToolSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { ConfigMcpModal } from '@/utils/ConfigSystemMcp'
-import { useYakMcpStream } from '@/store/yakMcpStream'
+import emiter from '@/utils/eventBus/eventBus'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 const AIMCP: React.FC<AIMCPProps> = React.memo((props) => {
   const [listType, setListType] = useState<'mcp' | 'mcp-tool'>('mcp')
@@ -249,14 +249,13 @@ const AIMCPToolItemPopoverContent: React.FC<AIMCPToolItemPopoverContentProps> = 
 
 const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   const { setCurrentMCP } = props
-  const { t } = useI18nNamespaces(['aiAgent'])
+  const { t } = useI18nNamespaces(['aiAgent', 'setting'])
   const [keyWord, setKeyWord] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const [spinning, setSpinning] = useState<boolean>(false)
   const [hasMore, setHasMore] = useState<boolean>(false)
   const [isRef, setIsRef] = useState<boolean>(false)
   const [recalculation, setRecalculation] = useState<boolean>(false)
-  const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
   const [response, setResponse] = useState<GetAllMCPServersResponse>({
     MCPServers: [],
     Pagination: genDefaultPagination(20),
@@ -264,7 +263,6 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   })
   const mcpListRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(mcpListRef)
-  const mcp = useYakMcpStream()
   useEffect(() => {
     getList()
   }, [inViewPort])
@@ -355,7 +353,13 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
           <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
         </div>
         <div style={{ display: 'flex', gap: '4px' }}>
-          <YakitButton onClick={() => setConfigMcpModalVisible(true)}>Yak Mcp</YakitButton>
+          <YakitButton
+            onClick={() =>
+              emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }))
+            }
+          >
+            {t('SettingsPage.item.yak-mcp')}
+          </YakitButton>
           <YakitButton icon={<PlusSmOutlined color="currentColor" />} onClick={handleNewAIMCP} />
         </div>
       </div>
@@ -389,7 +393,6 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
           recalculation={recalculation}
         />
       </YakitSpin>
-      {configMcpModalVisible && <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />}
     </div>
   )
 })

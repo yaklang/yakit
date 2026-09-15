@@ -5,7 +5,7 @@ import styles from './YakitTree.module.scss'
 import classNames from 'classnames'
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
-export type TreeKey = string | number
+export type TreeKey = string | number | bigint
 interface YakitTreeProps extends TreeProps {
   showIcon?: boolean // 是否展示treeNode节点前的icon 默认 -> 展示
   treeData: TreeNode[] // 需要满足 DataNode类型的数组

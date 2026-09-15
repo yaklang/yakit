@@ -1,3 +1,5 @@
+@use '../../ai-re-act/styles/mixin.scss' as mixin;
+
 .ai-agent-chat {
   width: 100%;
   height: 100%;
@@ -14,6 +16,8 @@
   max-height: calc(100% - 120px);
   display: flex;
   justify-content: center;
+  // review 卡片与消息列表共用内容轨道，面板态下对齐消息区中心。
+  @include mixin.ai-right-panel-content-track;
   margin-bottom: 24px;
   z-index: 9;
   left: 0;

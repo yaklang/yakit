@@ -116,6 +116,7 @@ import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBod
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { getDiscoveryTimeColumnFixed } from './riskTableUtils'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -604,6 +605,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       {
         title: t('YakitRiskTable.discovery_time'),
         dataKey: 'CreatedAt',
+        fixed: getDiscoveryTimeColumnFixed(excludeColumnsKey),
         filterProps: {
           filterKey: 'CreatedAt',
           filtersType: 'dateTime',
@@ -1699,7 +1701,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             {isRequest ? (
               <div className={styles['content-resize-first-heard']}>
                 <span>Request</span>
-                <Tooltip title={t('YakitButton.prev')} align={{ targetOffset: [0, -10] }}>
+                <Tooltip title={t('YakitButton.prev')}>
                   <YakitButton
                     type="text"
                     disabled={packetIndex <= 0}
@@ -1709,7 +1711,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                     }}
                   ></YakitButton>
                 </Tooltip>
-                <Tooltip title={t('YakitButton.next')} align={{ targetOffset: [0, -10] }}>
+                <Tooltip title={t('YakitButton.next')}>
                   <YakitButton
                     type="text"
                     disabled={packetIndex + 1 === packetHistory.length}

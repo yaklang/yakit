@@ -14,6 +14,7 @@ vi.mock('../../MoreYaklangVersion', () => ({
     <button onClick={() => onClosePop(false, 'v1.2.3')}>choose v1.2.3</button>
   ),
 }))
+vi.mock('../../LocalEngine/LocalTransportSettings', () => ({ LocalTransportSettings: () => null }))
 
 function show(status: YakitLoadingProp['yakitStatus'], overrides: Partial<YakitLoadingProp> = {}) {
   const callback = vi.fn()
@@ -76,6 +77,16 @@ describe('startup recovery buttons', () => {
     fireEvent.click(screen.getByRole('button', { name: 'YakitLoading.retry' }))
     expect(callback).toHaveBeenCalledExactlyOnceWith('start_timeout')
   })
+
+  it.each(['engine_exited', 'engine_init_failed', 'engine_failed'] as const)(
+    'a start %s failure retries with the original process status',
+    (failure) => {
+      const status = engineFailureStatus(failure, 'start')!
+      const { callback } = show(status)
+      fireEvent.click(screen.getByRole('button', { name: 'YakitLoading.retry' }))
+      expect(callback).toHaveBeenCalledExactlyOnceWith(failure)
+    },
+  )
 
   it('an occupied port never offers to kill an unrelated engine implicitly', () => {
     const { callback } = show('port_occupied_prev')

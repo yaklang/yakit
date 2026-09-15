@@ -64,12 +64,12 @@ export default function ObjectFieldTemplate<
   } = registry.templates
   const { colSpan = 24, labelAlign = 'right', rowGutter = 24 } = formContext as GenericObjectType
 
-  const findSchema = (element: ObjectFieldTemplatePropertyType): S => element.content.props.schema
+  const findSchema = (element: ObjectFieldTemplatePropertyType): S => (element.content.props as { schema: S }).schema
 
   const findSchemaType = (element: ObjectFieldTemplatePropertyType) => findSchema(element).type
 
   const findUiSchema = (element: ObjectFieldTemplatePropertyType): UiSchema<T, S, F> | undefined =>
-    element.content.props.uiSchema
+    (element.content.props as { uiSchema?: UiSchema<T, S, F> }).uiSchema
 
   const findUiSchemaField = (element: ObjectFieldTemplatePropertyType) => getUiOptions(findUiSchema(element)).field
 

@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
+import { act, render, waitFor } from '@testing-library/react'
 import { YaklangEngineWatchDog } from '../YaklangEngineWatchDog'
 import type { YaklangEngineWatchDogProps } from '../YaklangEngineWatchDog'
 import emiter from '@/utils/eventBus/eventBus'
 import { yakitEngine } from '@/services/electronBridge'
 import { isEngineConnectionAlive } from '@/components/layout/WelcomeConsoleUtil'
-import { fetchEnv, toEngineHandshakeName } from '@/utils/envfile'
+import { failed } from '@/utils/notification'
 
 vi.mock('@/utils/eventBus/eventBus', () => ({
   default: {
@@ -39,7 +39,7 @@ vi.mock('@/utils/kv', () => ({
 }))
 
 vi.mock('@/store', () => ({
-  yakitDynamicStatus: () => ({
+  useYakitDynamicStatus: () => ({
     dynamicStatus: {
       isDynamicStatus: false,
       isDynamicSelfStatus: false,
@@ -93,7 +93,6 @@ describe('YaklangEngineWatchDog 组件测试', () => {
     }
 
     vi.clearAllMocks()
-    vi.mocked(fetchEnv).mockReturnValue('yakit')
     vi.mocked(yakitEngine.connectYaklangEngine).mockRejectedValue(new Error('fail'))
     vi.mocked(yakitEngine.isPortAvailable).mockResolvedValue(undefined)
     vi.mocked(yakitEngine.startLocalYaklangEngine).mockResolvedValue(undefined)
@@ -106,6 +105,7 @@ describe('YaklangEngineWatchDog 组件测试', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     vi.clearAllMocks()
   })
 
@@ -118,12 +118,19 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       expect(yakitEngine.connectYaklangEngine).not.toHaveBeenCalled()
     })
 
-    it('当 credential.Port <= 0 时，应直接返回, 不调用连接', () => {
+    it('remote 模式 credential.Port <= 0 时应直接返回，不调用连接；本地 IPC 端点无端口仍可连接', () => {
+      props.credential.Mode = 'remote'
       props.credential.Port = 0
       render(<YaklangEngineWatchDog {...props} />)
       triggerEngineTest()
 
       expect(yakitEngine.connectYaklangEngine).not.toHaveBeenCalled()
+
+      props.credential.Mode = 'local'
+      props.credential.Port = 0
+      triggerEngineTest()
+
+      expect(yakitEngine.connectYaklangEngine).toHaveBeenCalledWith(props.credential)
     })
 
     it('连接成功时，应调用 onKeepaliveShouldChange(true)', async () => {
@@ -136,43 +143,15 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       })
     })
 
-    it('连接失败且 mode = "local" 时，应触发自动启动本地引擎，并把版本映射为 Handshake 旧名', async () => {
+    it('连接失败且 mode = "local" 时，应关闭探活并提示失败，不再自动启动本地引擎', async () => {
       render(<YaklangEngineWatchDog {...props} />)
       triggerEngineTest()
 
-      await waitFor(
-        () => {
-          expect(toEngineHandshakeName).toHaveBeenCalledWith('yakit')
-          expect(yakitEngine.startLocalYaklangEngine).toHaveBeenCalledWith(
-            expect.objectContaining({
-              port: 9011,
-              version: 'yakit',
-              isEnpriTraceAgent: false,
-              isIRify: false,
-            }),
-          )
-        },
-        { timeout: 2000 },
-      )
-    })
-
-    it('启动本地引擎时，应将 yakitEE 映射为 enterprise 传给引擎', async () => {
-      vi.mocked(fetchEnv).mockReturnValue('yakitEE')
-      vi.mocked(toEngineHandshakeName).mockReturnValue('enterprise')
-      render(<YaklangEngineWatchDog {...props} />)
-      triggerEngineTest()
-
-      await waitFor(
-        () => {
-          expect(toEngineHandshakeName).toHaveBeenCalledWith('yakitEE')
-          expect(yakitEngine.startLocalYaklangEngine).toHaveBeenCalledWith(
-            expect.objectContaining({
-              version: 'enterprise',
-            }),
-          )
-        },
-        { timeout: 2000 },
-      )
+      await waitFor(() => {
+        expect(props.onKeepaliveShouldChange).toHaveBeenCalledWith(false)
+        expect(failed).toHaveBeenCalled()
+      })
+      expect(yakitEngine.startLocalYaklangEngine).not.toHaveBeenCalled()
     })
 
     it('连接失败且 mode = "remote" 时，不自动启动本地引擎', async () => {
@@ -213,6 +192,59 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       await waitFor(() => {
         expect(props.onFailed).toHaveBeenCalled()
       })
+    })
+
+    it('探活持续成功时只回调一次 onReady，未连接时仍每 1s 探测', async () => {
+      vi.useFakeTimers()
+      props.keepalive = true
+      vi.mocked(isEngineConnectionAlive).mockResolvedValue(true)
+      render(<YaklangEngineWatchDog {...props} />)
+
+      await vi.runOnlyPendingTimersAsync()
+      expect(props.onReady).toHaveBeenCalledTimes(1)
+      const aliveCalls = vi.mocked(isEngineConnectionAlive).mock.calls.length
+
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(aliveCalls + 1)
+      expect(props.onReady).toHaveBeenCalledTimes(1)
+    })
+
+    it('引擎已连接后探活间隔为 3s', async () => {
+      vi.useFakeTimers()
+      props.keepalive = true
+      props.engineLink = true
+      vi.mocked(isEngineConnectionAlive).mockResolvedValue(true)
+      render(<YaklangEngineWatchDog {...props} />)
+
+      await vi.runOnlyPendingTimersAsync()
+      const aliveCalls = vi.mocked(isEngineConnectionAlive).mock.calls.length
+
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(aliveCalls)
+
+      await vi.advanceTimersByTimeAsync(2000)
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(aliveCalls + 1)
+    })
+
+    it('上一轮探活未完成时仍继续探测，避免单次挂起阻断失败通知', async () => {
+      vi.useFakeTimers()
+      props.keepalive = true
+      let call = 0
+      vi.mocked(isEngineConnectionAlive).mockImplementation(() => {
+        call += 1
+        if (call === 1) return new Promise(() => {})
+        return Promise.reject(new Error('fail'))
+      })
+      render(<YaklangEngineWatchDog {...props} />)
+
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(1)
+      expect(props.onFailed).not.toHaveBeenCalled()
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000)
+      })
+      expect(isEngineConnectionAlive).toHaveBeenCalledTimes(2)
+      expect(props.onFailed).toHaveBeenCalledWith(1)
     })
   })
 })

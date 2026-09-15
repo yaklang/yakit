@@ -6,7 +6,9 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "react-resize-detector": ["./src/utils/shims/reactResizeDetector.tsx"],
+      "xterm-for-react": ["./src/utils/shims/xtermForReact.tsx"]
     },
     "noUnusedLocals": false,
     "noUnusedParameters": false,

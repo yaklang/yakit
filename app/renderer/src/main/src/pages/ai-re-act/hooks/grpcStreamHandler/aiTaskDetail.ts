@@ -158,20 +158,32 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
 
 const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
   const { res, rawData } = requestInfo
-  if (res.NodeId !== 'session_snapshot') return
+  if (res.Type !== 'structured' || res.NodeId !== 'session_snapshot') return
   if (!res.TaskId) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const snapshot = (JSON.parse(ipcContent) as AIAgentGrpcApi.SessionSnapshot) || {}
   if (isEmpty(snapshot)) return
+
+  const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+  if (
+    typeof snapshot.revision === 'number' &&
+    snapshot.revision > 0 &&
+    snapshot.revision <= (oldData.sessionSnapshotRevision ?? 0)
+  ) {
+    return
+  }
+
   const applySnapshotFields = (target: PlanItemDetailsData) => {
     target.uuid = uuidv4()
     target.taskId = target.taskId || res.TaskId
     target.execution = snapshot.execution
     target.backgroundProcesses = snapshot.background_processes
+    if (typeof snapshot.revision === 'number' && snapshot.revision > 0) {
+      target.sessionSnapshotRevision = snapshot.revision
+    }
   }
 
-  const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
   applySnapshotFields(oldData)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
 }

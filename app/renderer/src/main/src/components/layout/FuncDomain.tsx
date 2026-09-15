@@ -1,20 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Badge, Tooltip, Form, Divider } from 'antd'
-import { RiskStateSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RiskStateSvgIcon'
 import { UISettingSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/UISettingSvgIcon'
-import { VersionUpdateSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/VersionUpdateSvgIcon'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
 import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
-const ConfigPrivateDomain = React.lazy(() =>
-  import('../ConfigPrivateDomain/ConfigPrivateDomain').then((m) => ({ default: m.ConfigPrivateDomain })),
-)
-import { ConfigGlobalReverse } from '@/utils/ConfigGlobalReverse'
 import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
-import { showConfigSystemProxyForm } from '@/utils/ConfigSystemProxy'
 import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
-import { useConfigManagementTab, useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
+import { useEeSystemConfig, useStore, useYakitDynamicStatus } from '@/store'
 import { UserPlatformType } from '@/pages/globalVariable'
 import { genDefaultPagination, type QueryGeneralResponse } from '@/pages/invoker/schema'
 import type { Risk } from '@/pages/risks/schema'
@@ -30,6 +23,7 @@ import {
   isEnpriTrace,
   isEnpriTraceAgent,
   isIRify,
+  isMemfit,
   isYakit,
   showDevTool,
 } from '@/utils/envfile'
@@ -43,19 +37,14 @@ import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { addToTab } from '@/pages/MainTabs'
-const DatabaseUpdateModal = React.lazy(() =>
-  import('@/pages/cve/CVETable').then((m) => ({ default: m.DatabaseUpdateModal })),
-)
 import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { WinKeyborad } from '../yakitUI/YakitEditor/keyboardConstants'
-const ScrecorderModal = React.lazy(() =>
-  import('@/pages/screenRecorder/ScrecorderModal').then((m) => ({ default: m.ScrecorderModal })),
-)
 import { useScreenRecorder } from '@/store/screenRecorder'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useRunNodeStore } from '@/store/runNode'
 import emiter from '@/utils/eventBus/eventBus'
+import { startIdleVisibleInterval } from '@/utils/scheduleIdleTask'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
@@ -66,21 +55,15 @@ import {
   SearchOutlined,
   Wrench1Outlined,
   CloudDownloadOutlined,
-  TerminalOutlined,
+  DotsCircleHorizontalOutlined,
+  BugOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { type DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { type PerformanceSamplingLog, usePerformanceSampling } from '@/store/performanceSampling'
 import { isShowCodeScanDetail } from '@/pages/risks/YakitRiskTable/riskTableUtils'
-const YakitCodeScanRiskDetails = React.lazy(() =>
-  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitCodeScanRiskDetails })),
-)
-const YakitRiskDetails = React.lazy(() =>
-  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitRiskDetails })),
-)
 import { GitHubSolid, PlaySolid, UserCircleSolid, YakitSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
@@ -96,12 +79,38 @@ import {
   grpcFetchLocalYakVersion,
 } from '@/apiUtils/grpc'
 import { WebsiteGV } from '@/enums/website'
-
+import { NotepadMenu } from '@/pages/layout/NotepadMenu/NotepadMenu'
 import YakitLogo from '@/assets/yakitLogo.png'
 import yakitImg from '../../assets/yakit.jpg'
 import classNames from 'classnames'
 import styles from './funcDomain.module.scss'
 import { useEETaskNotificationHook } from '../MessageCenter/useEETaskNotificationHook'
+import { apiFetchMessageRead, apiFetchQueryMessage } from '../MessageCenter/utils'
+import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { randomString } from '@/utils/randomUtil'
+import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
+import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
+import {
+  apiNewRiskRead,
+  apiQueryNewSSARisks,
+  apiQuerySSARisks,
+} from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils'
+import type {
+  QueryNewSSARisksResponse,
+  SSARisk,
+} from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import { useCampare } from '@/hook/useCompare/useCompare'
+import { openConsoleNewWindow } from '@/utils/openWebsite'
+import useEngineConsole from './hooks/useEngineConsole/useEngineConsole'
+import { grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder } from '@/utils/logCollection'
+import { useDownloadYakit } from './update/useDownloadYakit'
+import { JSONParseLog } from '@/utils/tool'
+import { SystemInfo } from '@/constants/hardware'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import cloneDeep from 'lodash/cloneDeep'
+import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
+import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
+import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
 const MessageCenter = React.lazy(() =>
   import('../MessageCenter/MessageCenter').then((m) => ({ default: m.MessageCenter })),
 )
@@ -111,10 +120,6 @@ const TaskNotification = React.lazy(() =>
 const TaskErrNotification = React.lazy(() =>
   import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskErrNotification })),
 )
-import { apiFetchMessageRead, apiFetchQueryMessage } from '../MessageCenter/utils'
-import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { randomString } from '@/utils/randomUtil'
-import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 const PluginExecuteResult = React.lazy(() =>
   import('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult').then((m) => ({
     default: m.PluginExecuteResult,
@@ -130,39 +135,23 @@ const PluginExecuteProgress = React.lazy(() =>
     default: m.PluginExecuteProgress,
   })),
 )
-import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
-import {
-  apiNewRiskRead,
-  apiQueryNewSSARisks,
-  apiQuerySSARisks,
-} from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils'
-import type {
-  QueryNewSSARisksResponse,
-  SSARisk,
-} from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 const YakitAuditRiskDetails = React.lazy(() =>
   import('@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable').then((m) => ({
     default: m.YakitAuditRiskDetails,
   })),
 )
-import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
-import type { mcpStreamHooks } from './hooks/useMcp/useMcp'
-const ConfigMcpModal = React.lazy(() => import('@/utils/ConfigSystemMcp').then((m) => ({ default: m.ConfigMcpModal })))
-import { useCampare } from '@/hook/useCompare/useCompare'
-import { openConsoleNewWindow } from '@/utils/openWebsite'
-import useEngineConsole from './hooks/useEngineConsole/useEngineConsole'
-import { useTheme } from '@/hook/useTheme'
-import { grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder } from '@/utils/logCollection'
-import { useDownloadYakit } from './update/useDownloadYakit'
-import { JSONParseLog } from '@/utils/tool'
-import { useSoftMode, YakitModeEnum } from '@/store/softMode'
-import { SystemInfo } from '@/constants/hardware'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import cloneDeep from 'lodash/cloneDeep'
-import { syncAppSettings } from '@/auxWindow/utils/messaging'
-import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
-import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
-import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
+const YakitCodeScanRiskDetails = React.lazy(() =>
+  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitCodeScanRiskDetails })),
+)
+const YakitRiskDetails = React.lazy(() =>
+  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitRiskDetails })),
+)
+const DatabaseUpdateModal = React.lazy(() =>
+  import('@/pages/cve/CVETable').then((m) => ({ default: m.DatabaseUpdateModal })),
+)
+const ScrecorderModal = React.lazy(() =>
+  import('@/pages/screenRecorder/ScrecorderModal').then((m) => ({ default: m.ScrecorderModal })),
+)
 
 // ===== 用户功能菜单拆分模块导入 =====
 import { randomAvatarColor } from './userMenu/constants'
@@ -184,7 +173,6 @@ export interface FuncDomainProp {
   isReverse?: Boolean
   engineMode: YaklangEngineMode
   isRemoteMode: boolean
-  mcp: mcpStreamHooks
   onEngineModeChange: (type: YaklangEngineMode) => any
   typeCallback: (type: YakitSettingCallbackType) => any
   /** 远程控制 - 自动切换远程连接 */
@@ -198,6 +186,11 @@ export interface FuncDomainProp {
   system: YakitSystem
 
   onDevToolRefresh: () => void
+  /**
+   * Windows 顶栏为 row-reverse：房子单独渲染，视觉在用户右侧。
+   * 分隔线跟用户区走；房子自身 border-left 充当与用户区的分隔。
+   */
+  homeIcon?: React.ReactNode
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
@@ -210,18 +203,18 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     onEngineModeChange,
     runDynamicControlRemote,
     typeCallback,
-    mcp,
     showProjectManage = false,
     system,
     isJudgeLicense,
     onDevToolRefresh,
+    homeIcon,
   } = props
 
   /** 登录用户信息 */
   const { userInfo } = useStore()
 
   /** 当前远程连接状态 */
-  const { dynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus } = useYakitDynamicStatus()
   const dynamicConnect = dynamicStatus.isDynamicStatus
   /** 头像背景色，mount 时随机一次，不参与重渲染 */
   const avatarColor = useRef<string>(randomAvatarColor())
@@ -326,7 +319,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       })
   })
 
-  // mcp 全局监听
   // 引擎日志 全局监听
   useEngineConsole({})
 
@@ -334,14 +326,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     <div className={styles['func-domain-wrapper']} onDoubleClick={(e) => e.stopPropagation()}>
       <div className={classNames(styles['func-domain-body'], { [styles['func-domain-reverse-body']]: isReverse })}>
         {showDevTool() && <UIDevTool onDevToolRefresh={onDevToolRefresh} />}
-
-        <ScreenAndScreenshot
-          system={system}
-          token={screenRecorderInfo.token}
-          isRecording={screenRecorderInfo.isRecording}
-        />
-
-        {!showProjectManage && (
+        {!showProjectManage && <NotepadMenu />}
+        {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
+        {/* {!showProjectManage && (
           <div className={styles['ui-op-btn-wrapper']} onClick={openConsoleNewWindow}>
             <div className={styles['op-btn-body']}>
               <Tooltip placement="bottom" title={t('FuncDomain.engineConsole')}>
@@ -349,26 +336,31 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
               </Tooltip>
             </div>
           </div>
-        )}
-
-        <div className={styles['short-divider-wrapper']}>
-          <div className={styles['divider-style']}></div>
-        </div>
+        )} */}
         <div className={styles['state-setting-wrapper']}>
-          {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
+          <ScreenAndScreenshot
+            system={system}
+            token={screenRecorderInfo.token}
+            isRecording={screenRecorderInfo.isRecording}
+          />
           {!showProjectManage && isIRify() && <UIOpIRifyRisk isEngineLink={isEngineLink} />}
-          {!isEnpriTraceAgent() && (
-            <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode} onLogin={() => setLoginShow(true)} />
+          {!showProjectManage && (
+            <UIOpSetting engineMode={engineMode} onEngineModeChange={onEngineModeChange} typeCallback={typeCallback} />
           )}
           {!showProjectManage && (
-            <UIOpSetting
-              engineMode={engineMode}
-              onEngineModeChange={onEngineModeChange}
-              typeCallback={typeCallback}
-              mcp={mcp}
-            />
+            <div
+              className={styles['ui-op-btn-wrapper']}
+              onClick={() => {
+                emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'general' } }))
+              }}
+            >
+              <div className={styles['op-btn-body']}>
+                <UISettingSvgIcon className={classNames(styles['icon-style'], styles['size-style'])} />
+              </div>
+            </div>
           )}
         </div>
+        {homeIcon}
         {!showProjectManage && !isJudgeLicense && (
           <>
             <div className={styles['divider-wrapper']}></div>
@@ -389,6 +381,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                       <YakitDropdownMenu
                         key={i18nRefresh}
                         menu={{
+                          width: 206,
                           data: userMenu.map((item) => {
                             const obj = cloneDeep(item)
                             // @ts-expect-error 类型定义不完整，需要忽略此行
@@ -632,33 +625,6 @@ interface UIOpSettingProp {
   /** yaklang引擎切换启动模式 */
   onEngineModeChange: (type: YaklangEngineMode) => any
   typeCallback: (type: YakitSettingCallbackType) => any
-  mcp: mcpStreamHooks
-}
-
-/** @name 菜单模式切换 目前只有Yakit 社区版有 */
-const ModeSwitch = () => {
-  if (isCommunityYakit()) {
-    return {
-      key: 'modeSwitching',
-      label: '模式切换',
-      children: [
-        {
-          key: YakitModeEnum.Classic,
-          label: '经典模式',
-        },
-        {
-          key: YakitModeEnum.SecurityExpert,
-          label: '安全专家模式',
-        },
-        {
-          key: YakitModeEnum.Scan,
-          label: '扫描模式',
-        },
-      ],
-    }
-  }
-
-  return null
 }
 
 const DBCacheManager = () => {
@@ -687,10 +653,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         key: 'pcapfix',
         label: '网卡权限修复',
       },
-      {
-        key: 'store',
-        label: '配置插件源',
-      },
       DBCacheManager(),
       {
         key: 'diagnose-network',
@@ -704,24 +666,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
           { label: '远程', key: 'remote' },
         ],
       },
-      {
-        key: 'i18nSwitching',
-        label: '语言切换',
-        children: [
-          {
-            key: 'zh',
-            label: '简体中文',
-          },
-          {
-            key: 'en',
-            label: '英文',
-          },
-          {
-            key: 'zh-TW',
-            label: '繁体中文',
-          },
-        ],
-      },
       { type: 'divider' },
       {
         key: 'logs',
@@ -731,6 +675,23 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
           { label: '引擎日志', key: 'engineLog' },
           { label: '调试信息日志', key: 'printLog' },
         ],
+      },
+      { type: 'divider' },
+      {
+        key: 'official_website',
+        label: t('HelpDoc.officialWebsite'),
+      },
+      {
+        key: 'Github',
+        label: 'Github',
+        children: [
+          { label: t('HelpDoc.featureRequest'), key: 'feature_request' },
+          { label: 'BUG', key: 'report_bug' },
+        ],
+      },
+      {
+        key: 'aboutUs',
+        label: t('HelpDoc.aboutUs'),
       },
     ]
   }
@@ -748,6 +709,15 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         { label: '切换项目', key: 'changeProject' },
         { label: '加密导出', key: 'encryptionProject' },
         { label: '明文导出', key: 'plaintextProject' },
+      ],
+    },
+    DBCacheManager(),
+    {
+      key: 'cve-database',
+      label: 'CVE 数据库',
+      children: [
+        { label: '全量更新', key: 'cve-database-all-update' },
+        { label: '差量更新', key: 'cve-database-differential-update' },
       ],
     },
     {
@@ -793,81 +763,22 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         { key: 'memory-base', label: '记忆库' },
       ],
     },
-    ModeSwitch(),
     {
-      key: 'themeSwitching',
-      label: '主题切换',
+      key: 'logs',
+      label: ' 日志收集',
       children: [
-        {
-          key: 'light',
-          label: '亮色',
-        },
-        {
-          key: 'dark',
-          label: '暗色',
-        },
-      ],
-    },
-    {
-      key: 'i18nSwitching',
-      label: '语言切换',
-      children: [
-        {
-          key: 'zh',
-          label: '简体中文',
-        },
-        {
-          key: 'en',
-          label: '英文',
-        },
-        {
-          key: 'zh-TW',
-          label: '繁体中文',
-        },
+        { label: '渲染端日志', key: 'renderLog' },
+        { label: '引擎日志', key: 'engineLog' },
+        { label: '调试信息日志', key: 'printLog' },
       ],
     },
     { type: 'divider' },
-    DBCacheManager(),
-    {
-      key: 'store',
-      label: '配置插件源',
-    },
-    {
-      key: 'proxy-management',
-      label: '网络代理管理',
-    },
-    {
-      key: 'hotPatch-management',
-      label: '全局热加载管理',
-    },
-    {
-      key: 'cve-database',
-      label: 'CVE 数据库',
-      children: [
-        { label: '全量更新', key: 'cve-database-all-update' },
-        { label: '差量更新', key: 'cve-database-differential-update' },
-      ],
-    },
     {
       key: 'link',
       label: '切换连接模式',
       children: [
         { label: '本地', key: 'local' },
         { label: '远程', key: 'remote' },
-      ],
-    },
-    { type: 'divider' },
-    {
-      key: 'systemSet',
-      label: '系统设置',
-      children: [
-        { key: 'reverse', label: '全局反连' },
-        { key: 'agent', label: '系统代理' },
-        // { key: "engineVar",label: "引擎环境变量" },
-        { key: 'config-network', label: '全局配置' },
-        { key: 'setShortcutKey', label: '快捷键设置' },
-        { key: 'manageRightClickPlugins', label: '右键插件管理' },
-        { key: 'configMcp', label: 'Yak Mcp配置' },
       ],
     },
     {
@@ -880,34 +791,36 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
     },
     { type: 'divider' },
     {
-      key: 'logs',
-      label: ' 日志收集',
+      key: 'official_website',
+      label: t('HelpDoc.officialWebsite'),
+    },
+    {
+      key: 'Github',
+      label: 'Github',
       children: [
-        { label: '渲染端日志', key: 'renderLog' },
-        { label: '引擎日志', key: 'engineLog' },
-        { label: '调试信息日志', key: 'printLog' },
+        { label: t('HelpDoc.featureRequest'), key: 'feature_request' },
+        { label: 'BUG', key: 'report_bug' },
       ],
+    },
+    {
+      key: 'aboutUs',
+      label: t('HelpDoc.aboutUs'),
     },
   ].filter((item) => item)
 }
 
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
-  const { engineMode, onEngineModeChange, typeCallback, mcp } = props
+  const { engineMode, onEngineModeChange, typeCallback } = props
 
   const [runNodeModalVisible, setRunNodeModalVisible] = useState<boolean>(false)
   const [show, setShow] = useState<boolean>(false)
   const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
   const [available, setAvailable] = useState(false) // cve数据库是否可用
   const [isDiffUpdate, setIsDiffUpdate] = useState(false)
-  const { dynamicStatus } = yakitDynamicStatus()
-  const { setConfigManagementActiveTab } = useConfigManagementTab()
+  const { dynamicStatus } = useYakitDynamicStatus()
   const { delTemporaryProject } = useTemporaryProjectStore()
-  const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
-  /** 当前主题 */
-  const { setTheme } = useTheme()
-  const { softMode, setSoftMode } = useSoftMode()
   const [reclaimHint, setReclaimHint] = useState<boolean>(false)
-  const { t, i18n } = useI18nNamespaces(['home', 'layout'])
+  const { t } = useI18nNamespaces(['home', 'layout'])
 
   useEffect(() => {
     onIsCVEDatabaseReady()
@@ -934,54 +847,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         setDataBaseUpdateVisible(true)
         setIsDiffUpdate(true)
         return
-      case 'store': {
-        if (dynamicStatus.isDynamicStatus) {
-          warn(t('UIOpSetting.remoteModeCannotModify'))
-          return
-        }
-        const m = showYakitModal({
-          title: (modalT) => modalT('UIOpSetting.configPrivateDomain'),
-          type: 'white',
-          footer: null,
-          maskClosable: false,
-          width: i18n.language.startsWith('zh') ? 500 : 650,
-          // onCancel: () => m.destroy(),
-          content: (
-            <React.Suspense fallback={null}>
-              <ConfigPrivateDomain onClose={() => m.destroy()} />
-            </React.Suspense>
-          ),
-        })
-        return m
-      }
-      case 'proxy-management':
-        setConfigManagementActiveTab('proxy')
-        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.ConfigManagement }))
-        return
-      case 'hotPatch-management':
-        setConfigManagementActiveTab('hotPatch')
-        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.ConfigManagement }))
-        return
-      case 'reverse':
-        showYakitModal({
-          type: 'white',
-          title: (modalT) => modalT('UIOpSetting.configGlobalReverse'),
-          width: 800,
-          content: (
-            <div style={{ width: 800 }}>
-              <ConfigGlobalReverse />
-            </div>
-          ),
-          footer: null,
-        })
-        return
-      case 'agent':
-        showConfigSystemProxyForm()
-        return
       case 'mcp':
       case 'mcp-toggle':
-      case 'configMcp':
-        setConfigMcpModalVisible(true)
+        emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }))
         return
       case 'mcp-history':
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.MCP_History }))
@@ -1028,9 +896,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'diagnose-network':
         addToTab('**diagnose-network')
         return
-      case 'config-network':
-        addToTab('**config-network')
-        return
       case 'debug-traffic-analize':
         addToTab('**beta-debug-traffic-analize')
         return
@@ -1054,15 +919,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'run-node':
         setRunNodeModalVisible(true)
         return
-      case 'setShortcutKey':
-        emiter.emit(
-          'openPage',
-          JSON.stringify({
-            route: YakitRoute.ShortcutKey,
-            params: 'global' as ShortcutKeyPageName,
-          }),
-        )
-        return
       case 'manageRightClickPlugins':
         emiter.emit('openPage', JSON.stringify({ route: YakitRoute.ManageRightClickPlugins }))
         return
@@ -1074,6 +930,18 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'printLog':
         grpcOpenPrintLogFolder()
+        return
+      case 'report_bug':
+        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=bug_report.yml`)
+        return
+      case 'feature_request':
+        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=feature_request.yml`)
+        return
+      case 'official_website':
+        yakitShell.openExternal(isMemfit() ? WebsiteGV.MemfitWebsite : WebsiteGV.YakHelpDocAddress)
+        return
+      case 'aboutUs':
+        yakitShell.openExternal(WebsiteGV.AboutUsWebsite)
         return
       case 'ai-agent':
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
@@ -1090,28 +958,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'memory-base':
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Memory }))
         return
-      case YakitModeEnum.Classic:
-      case YakitModeEnum.SecurityExpert:
-      case YakitModeEnum.Scan:
-        if (softMode === type) {
-          yakitNotify('info', t('UIOpSetting.modeAlreadySet'))
-        } else {
-          setSoftMode(type)
-        }
-        return
-      case 'light':
-        setTheme('light')
-        return
-      case 'dark':
-        setTheme('dark')
-        return
-      case 'zh':
-      case 'en':
-      case 'zh-TW':
-        i18n.changeLanguage(type)
-        yakitApp.setYakitHomeConfig('softLange', type).catch((err) => {})
-        syncAppSettings({ type: 'i18n', payload: type })
-        return
       default:
         return
     }
@@ -1125,7 +971,8 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
 
   const menu = (
     <YakitMenu
-      width={142}
+      width={206}
+      submenuWidth={142}
       selectedKeys={[]}
       // triggerSubMenuAction={'click'}
       data={GetUIOpSettingMenu(t) as YakitMenuItemProps[]}
@@ -1139,7 +986,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       <YakitPopover
         classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown']) }}
         placement={'bottom'}
-        align={{ offset: [0, 24] }}
         content={menu}
         open={show}
         onOpenChange={(visible) => setShow(visible)}
@@ -1147,7 +993,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       >
         <div className={styles['ui-op-btn-wrapper']}>
           <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
-            <UISettingSvgIcon className={show ? styles['icon-hover-style'] : styles['icon-style']} />
+            <DotsCircleHorizontalOutlined
+              className={classNames(styles['size-style'], show ? styles['icon-hover-style'] : styles['icon-style'])}
+            />
           </div>
         </div>
       </YakitPopover>
@@ -1160,11 +1008,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         />
       </React.Suspense>
       <RunNodeModal runNodeModalVisible={runNodeModalVisible} onClose={() => setRunNodeModalVisible(false)} />
-      {configMcpModalVisible && (
-        <React.Suspense fallback={null}>
-          <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />
-        </React.Suspense>
-      )}
       <YakitHint
         visible={reclaimHint}
         title={t('HomeCom.reclaimDatabaseSpaceTitle')}
@@ -1217,6 +1060,7 @@ const UIDevTool: React.FC<UIDevTool> = React.memo((props) => {
 
   const menu = (
     <YakitMenu
+      width={206}
       selectedKeys={undefined}
       data={[
         {
@@ -1740,7 +1584,7 @@ interface SetUpdateContentProp extends FetchUpdateContentProp {
   source?: VersionSource
 }
 
-const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
+export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const { isEngineLink, isRemoteMode, onLogin } = props
   const { t } = useI18nNamespaces(['layout', 'yakitUi'])
 
@@ -1751,18 +1595,15 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   /** Yakit版本号 */
   const [yakitVersion, setYakitVersion] = useState<string>('dev')
   const [yakitLastVersion, setYakitLastVersion] = useState<string>('')
-  const yakitTime = useRef<any>(null)
 
   /** Yaklang引擎版本号 */
   const [yaklangVersion, setYaklangVersion] = useState<string>('dev') // 当前连接引擎的版本号
   const [yaklangLastVersion, setYaklangLastVersion] = useState<string>('') // 官方推荐的最新版
   const [yaklangLocalVersion, setYaklangLocalVersion] = useState<string>('') // 本地引擎文件版本号
   const [yaklangBuildType, setYaklangBuildType] = useState<'full' | 'slim'>('full') // 当前引擎标准/轻量
-  const yaklangTime = useRef<any>(null)
 
   /** 更多引擎列表 */
   const [moreYaklangVersionList, setMoreYaklangVersionList] = useState<string[]>([]) // 更多引擎版本list
-  const moreYaklangTime = useRef<any>(null)
 
   // 是否低于主推引擎版本
   const lowerYaklangLastVersion = useMemo(() => {
@@ -1777,7 +1618,6 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     return false
   }, [isRemoteMode, moreYaklangVersionList, yaklangLastVersion, yaklangVersion])
 
-  const versionsInfoTime = useRef<any>(null)
   const [communityYakitContent, setCommunityYakitContent] = useState<UpdateContentProp>({ version: '', content: '' })
   const [communityYaklangContent, setCommunityYaklangContent] = useState<UpdateContentProp>({
     version: '',
@@ -2002,65 +1842,31 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       })
   }, [isEngineLink, yaklangVersion])
 
-  /** 清空定时器 */
-  const handleClearIntervals = useMemoizedFn(() => {
-    if (versionsInfoTime.current) {
-      clearInterval(versionsInfoTime.current)
-      versionsInfoTime.current = null
-    }
-    if (yakitTime.current) {
-      clearInterval(yakitTime.current)
-      yakitTime.current = null
-    }
-    if (yaklangTime.current) {
-      clearInterval(yaklangTime.current)
-      yaklangTime.current = null
-    }
-    if (moreYaklangTime.current) {
-      clearInterval(moreYaklangTime.current)
-      moreYaklangTime.current = null
-    }
-  })
-
   useEffect(() => {
-    if (isEngineLink) {
-      // 获取是否 启动检测更新 的缓存状态
-      getLocalValue(LocalGV.NoAutobootLatestVersionCheck).then((val: boolean) => {
-        setIsCheck(val)
-      })
-
-      // 设置获取更新内容的定时器(yakit&yaklang)
-      if (versionsInfoTime.current) clearInterval(versionsInfoTime.current)
-      versionsInfoTime.current = setInterval(fetchYakitAndYaklangVersionInfo, 60000)
-      fetchYakitAndYaklangVersionInfo()
-
-      // 获取本地的 yakit 版本号，启动定时器(获取最新的 yakit 版本号)
-      grpcFetchLocalYakitVersion(true).then((v: string) => setYakitVersion(`v${v}`))
-      if (yakitTime.current) clearInterval(yakitTime.current)
-      fetchYakitLastVersion()
-      yakitTime.current = setInterval(fetchYakitLastVersion, 60000)
-
-      // 获取当前连接引擎的版本号，启动定时器(获取最新和本地引擎文件的版本号)
-      yakitEngine.requestYakVersion()
-      if (yaklangTime.current) clearInterval(yaklangTime.current)
-      fetchYaklangLastVersion()
-      yaklangTime.current = setInterval(fetchYaklangLastVersion, 60000)
-
-      // 获取更多引擎列表，并启动定时器
-      if (moreYaklangTime.current) clearInterval(moreYaklangTime.current)
-      fetchMoreYaklangLastVersion()
-      moreYaklangTime.current = setInterval(fetchMoreYaklangLastVersion, 60000)
-    } else {
+    if (!isEngineLink) {
       setYakitLastVersion('')
       setYaklangVersion('dev')
       setYaklangLastVersion('')
       setYaklangLocalVersion('')
       setMoreYaklangVersionList([])
+      return
     }
-
-    return () => {
-      handleClearIntervals()
-    }
+    // 获取是否 启动检测更新 的缓存状态
+    getLocalValue(LocalGV.NoAutobootLatestVersionCheck).then((val: boolean) => {
+      setIsCheck(val)
+    })
+    grpcFetchLocalYakitVersion(true).then((v: string) => setYakitVersion(`v${v}`))
+    yakitEngine.requestYakVersion()
+    return startIdleVisibleInterval(
+      () => {
+        fetchYakitAndYaklangVersionInfo()
+        fetchYakitLastVersion()
+        fetchYaklangLastVersion()
+        fetchMoreYaklangLastVersion()
+      },
+      60000,
+      { runImmediately: true },
+    )
   }, [isEngineLink])
 
   // intranetYakit为内网Yakit
@@ -2397,13 +2203,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         else setShow(visible)
       }}
     >
-      <div className={styles['ui-op-btn-wrapper']}>
-        <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
-          <Badge dot={isUpdate}>
-            <VersionUpdateSvgIcon className={show ? styles['icon-hover-style'] : styles['icon-style']} />
-          </Badge>
-        </div>
-      </div>
+      <YakitButton radius type={isUpdate ? 'primary' : 'secondary2'} size="small">
+        {t('FuncDomain.update')}
+      </YakitButton>
       <YakitModal
         title={
           editShow.type === 'yakit'
@@ -2551,7 +2353,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
   })
 
   /** 定时器 */
-  const timeRef = useRef<any>(null)
+  const timeRef = useRef<(() => void) | null>(null)
   /** 风险详情弹窗（保证同时只存在一个） */
   const riskDetailModalRef = useRef<{ destroy: () => void } | null>(null)
   /** 打开详情中，防止同一次/连续点击叠多个弹窗 */
@@ -2583,9 +2385,13 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   /** 获取最新的漏洞与风险信息(5秒一次) */
   useEffect(() => {
+    let cancelled = false
+    const clearPoll = () => {
+      timeRef.current?.()
+      timeRef.current = null
+    }
     if (isEngineLink) {
-      if (timeRef.current) clearInterval(timeRef.current)
-
+      clearPoll()
       yakitRisk
         .queryRisks({
           Pagination: { Limit: 1, Page: 1, Order: 'desc', OrderBy: 'id' },
@@ -2596,14 +2402,14 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         })
         .catch((e) => {})
         .finally(() => {
+          if (cancelled) return
           update()
           emiter.on('onRefreshQueryNewRisk', update)
           // 以下为兼容以前的引擎 PS:以前的引擎依然为轮询
           if (!serverPushStatus) {
-            timeRef.current = setInterval(() => {
+            timeRef.current = startIdleVisibleInterval(() => {
               if (serverPushStatus) {
-                if (timeRef.current) clearInterval(timeRef.current)
-                timeRef.current = null
+                clearPoll()
                 return
               }
               update()
@@ -2612,13 +2418,13 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         })
       emiter.on('onRefRisksRead', onRefRisksRead)
       return () => {
-        clearInterval(timeRef.current)
+        cancelled = true
+        clearPoll()
         emiter.off('onRefreshQueryNewRisk', update)
         emiter.off('onRefRisksRead', onRefRisksRead)
       }
     } else {
-      if (timeRef.current) clearInterval(timeRef.current)
-      timeRef.current = null
+      clearPoll()
       fetchNode.current = 0
       setRisks({ Data: [], Total: 0, NewRiskTotal: 0, Unread: 0 })
     }
@@ -2791,7 +2597,9 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
       <div className={styles['ui-op-btn-wrapper']}>
         <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
           <Badge count={risks.NewRiskTotal} offset={[2, 15]}>
-            <RiskStateSvgIcon className={show ? styles['icon-hover-style'] : styles['icon-style']} />
+            <BugOutlined
+              className={classNames(styles['size-style'], show ? styles['icon-hover-style'] : styles['icon-style'])}
+            />
           </Badge>
         </div>
       </div>
@@ -2813,7 +2621,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
   })
 
   /** 定时器 */
-  const timeRef = useRef<any>(null)
+  const timeRef = useRef<(() => void) | null>(null)
   /** 风险详情弹窗（保证同时只存在一个） */
   const riskDetailModalRef = useRef<{ destroy: () => void } | null>(null)
   /** 打开详情中，防止同一次/连续点击叠多个弹窗 */
@@ -2837,8 +2645,14 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   /** 获取最新的漏洞与风险信息(5秒一次) */
   useEffect(() => {
+    let cancelled = false
+    const clearPoll = () => {
+      timeRef.current?.()
+      timeRef.current = null
+    }
+
     if (isEngineLink) {
-      if (timeRef.current) clearInterval(timeRef.current)
+      clearPoll()
       apiQuerySSARisks({
         Pagination: {
           Limit: 1,
@@ -2854,14 +2668,14 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         })
         .catch((e) => {})
         .finally(() => {
+          if (cancelled) return
           update()
           emiter.on('onRefreshQuerySSARisks', update)
           // 以下为兼容以前的引擎 PS:以前的引擎依然为轮询
           if (!serverPushStatus) {
-            timeRef.current = setInterval(() => {
+            timeRef.current = startIdleVisibleInterval(() => {
               if (serverPushStatus) {
-                if (timeRef.current) clearInterval(timeRef.current)
-                timeRef.current = null
+                clearPoll()
                 return
               }
               update()
@@ -2870,13 +2684,13 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         })
       emiter.on('onRefRisksRead', onRefRisksRead)
       return () => {
-        clearInterval(timeRef.current)
+        cancelled = true
+        clearPoll()
         emiter.off('onRefreshQuerySSARisks', update)
         emiter.off('onRefRisksRead', onRefRisksRead)
       }
     } else {
-      if (timeRef.current) clearInterval(timeRef.current)
-      timeRef.current = null
+      clearPoll()
       fetchNode.current = 0
       setRisks({ Data: [], Total: 0, NewRiskTotal: 0, Unread: 0 })
     }
@@ -3042,7 +2856,9 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
       <div className={styles['ui-op-btn-wrapper']}>
         <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
           <Badge count={risks.NewRiskTotal} offset={[2, 15]}>
-            <RiskStateSvgIcon className={show ? styles['icon-hover-style'] : styles['icon-style']} />
+            <BugOutlined
+              className={classNames(styles['size-style'], show ? styles['icon-hover-style'] : styles['icon-style'])}
+            />
           </Badge>
         </div>
       </div>
@@ -3074,6 +2890,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
           label: '崩溃日志收集',
           key: 'crash-log',
         },
+        { type: 'divider' },
         {
           label: isRecording ? (
             <div
@@ -3120,11 +2937,15 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
           key: 'screenshot',
         },
         {
+          label: '录屏管理',
+          key: 'screen-recorder',
+        },
+        {
           type: 'divider',
         },
         {
-          label: '录屏管理',
-          key: 'screen-recorder',
+          label: '引擎 Console',
+          key: 'engine-console',
         },
       ]
     }
@@ -3159,6 +2980,13 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         label: <span>录屏管理</span>,
         key: 'screen-recorder',
       },
+      {
+        type: 'divider',
+      },
+      {
+        label: '引擎 Console',
+        key: 'engine-console',
+      },
     ]
   }, [system, screenshotLoading, isRecording])
   const menuSelect = useMemoizedFn((type: string) => {
@@ -3189,6 +3017,9 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         break
       case 'screen-recorder':
         addToTab('**screen-recorder')
+        break
+      case 'engine-console':
+        openConsoleNewWindow()
         break
       default:
         break
@@ -3359,7 +3190,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
 
   const menu = (
     <YakitMenu
-      width={142}
+      width={206}
       selectedKeys={[]}
       data={yakitMenuData as YakitMenuItemProps[]}
       onClick={({ key }) => menuSelect(key)}

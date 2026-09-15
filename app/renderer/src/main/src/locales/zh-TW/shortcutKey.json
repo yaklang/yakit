@@ -6,6 +6,8 @@
     "hotPatchManagement": "熱載入管理",
     "loadFailed": "獲取快捷鍵失敗",
     "restoreDefault": "恢復預設設定",
+    "restoreDefaultItem": "恢復預設",
+    "resetAll": "全部重設",
     "editShortcut": "編輯快捷鍵",
     "hint": "先按所需的組合鍵, 再按 Enter 鍵, 按 Esc 鍵取消"
   }

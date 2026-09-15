@@ -182,6 +182,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
   return (
     <div className={visible ? styles['mask-wrapper'] : styles['hidden-wrapper']}>
       <Draggable
+        nodeRef={draggleRef}
         defaultClassName={classNames(styles['yaklang-update-modal'], {
           [styles['modal-top-wrapper']]: isTop === 0,
         })}

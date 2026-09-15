@@ -587,7 +587,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     const tab = item.key.split('_')[1]
                     emiter.emit(
                       'openPage',
-                      JSON.stringify({ route: YakitRoute.ManageRightClickPlugins, params: { tab } }),
+                      JSON.stringify({
+                        route: YakitRoute.Settings,
+                        params: { anchor: 'right-click-plugins', section: tab },
+                      }),
                     )
                   })
                 } else {

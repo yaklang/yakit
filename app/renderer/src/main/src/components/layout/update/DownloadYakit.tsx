@@ -75,6 +75,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
   return (
     <>
       <Draggable
+        nodeRef={draggleRef}
         defaultClassName={classNames(
           styles['draggable-modal'],
           visible ? styles['download-yakit-modal'] : styles['draggable-hidden-modal'],
@@ -192,6 +193,7 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
 
   return (
     <Draggable
+      nodeRef={draggleRef}
       defaultClassName={classNames(
         styles['draggable-modal'],
         { [styles['modal-top-wrapper']]: isTop === 2 },

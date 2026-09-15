@@ -18,6 +18,7 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { inputHTTPFuzzerHostConfigItem } from '@/pages/fuzzer/HTTPFuzzerHosts'
 import { YakitRoute } from '@/enums/yakitRoute'
+import emiter from '@/utils/eventBus/eventBus'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { cloneDeep, isEqual } from 'lodash'
@@ -209,18 +210,27 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
           ),
           onOk: () => {
             onSaveSetting()
-            jumpPage && ipcRenderer.invoke('open-route-page', { route: YakitRoute.Beta_ConfigNetwork })
+            jumpPage &&
+              emiter.emit(
+                'openPage',
+                JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'global-config' } }),
+              )
           },
           onCancel: () => {
             setVisible(false)
-            jumpPage && ipcRenderer.invoke('open-route-page', { route: YakitRoute.Beta_ConfigNetwork })
+            jumpPage &&
+              emiter.emit(
+                'openPage',
+                JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'global-config' } }),
+              )
           },
           cancelButtonProps: { size: 'small', className: 'modal-cancel-button' },
           okButtonProps: { size: 'small', className: 'modal-ok-button' },
         })
       } else {
         setVisible(false)
-        jumpPage && ipcRenderer.invoke('open-route-page', { route: YakitRoute.Beta_ConfigNetwork })
+        jumpPage &&
+          emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'global-config' } }))
       }
     })
 

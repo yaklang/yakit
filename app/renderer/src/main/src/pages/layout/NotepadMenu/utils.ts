@@ -1,5 +1,10 @@
 import { isEnpriTrace } from '@/utils/envfile'
 import i18n from '@/i18n/i18n'
+import emiter from '@/utils/eventBus/eventBus'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { defaultNoteFilter } from '@/defaultConstants/ModifyNotepad'
+import { genDefaultPagination } from '@/pages/invoker/schema'
+import { grpcQueryNote } from '@/pages/notepadManage/notepadManage/utils'
 
 export const getNotepadNameByEditionMulLang = () => {
   const isEnterprise = isEnpriTrace()
@@ -57,4 +62,33 @@ export const getNotepadAdd = () => {
       break
   }
   return result
+}
+
+/** 打开最近编辑的记事本，若无则新建 */
+const openModifyNotepad = (params?: { notepadHash?: string; title?: string }) => {
+  emiter.emit(
+    'openPage',
+    JSON.stringify({
+      route: YakitRoute.Modify_Notepad,
+      ...(params ? { params } : {}),
+    }),
+  )
+}
+
+export const openLatestOrNewNotepad = () => {
+  grpcQueryNote({
+    Filter: { ...defaultNoteFilter },
+    Pagination: { ...genDefaultPagination(1), OrderBy: 'updated_at', Page: 1 },
+  })
+    .then((res) => {
+      const latestNote = res.Data?.[0]
+      if (latestNote?.Id) {
+        openModifyNotepad({ notepadHash: String(latestNote.Id), title: latestNote.Title })
+        return
+      }
+      openModifyNotepad({ notepadHash: '' })
+    })
+    .catch(() => {
+      openModifyNotepad()
+    })
 }

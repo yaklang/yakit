@@ -1,10 +1,10 @@
 import type React from 'react'
 import { memo, useState } from 'react'
 import styles from './HistoryTaskTree.module.scss'
-import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCasualConcurrentTaskList } from './useHasTaskTree'
 import { AITree } from '../../aiTree/AITree'
+import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 export const SubAgentList: React.FC = memo(() => {
   const { t } = useI18nNamespaces(['aiAgent'])

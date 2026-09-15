@@ -2,8 +2,8 @@ import type React from 'react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { MacUIOp } from './MacUIOp'
-import { PerformanceDisplay, type yakProcess } from './PerformanceDisplay'
-import { FuncDomain } from './FuncDomain'
+import { PerformanceDisplay } from './PerformanceDisplay'
+import { FuncDomain, UIOpNotice } from './FuncDomain'
 import { TemporaryProjectPop, WinUIOp } from './WinUIOp'
 import { GlobalState } from './GlobalState'
 import { YakitGlobalHost } from './YakitGlobalHost'
@@ -25,6 +25,7 @@ import {
   GetConnectPort,
   getReleaseEditionName,
   isCommunityYakit,
+  isEnpriTrace,
   isEnpriTraceAgent,
   isEnterpriseEdition,
   isMemfit,
@@ -46,13 +47,12 @@ import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { useScreenRecorder } from '@/store/screenRecorder'
 import { type ResultObjProps, remoteOperation } from '@/pages/dynamicControl/remoteOperation'
-import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
+import { useEeSystemConfig, useStore, useYakitDynamicStatus } from '@/store'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import emiter from '@/utils/eventBus/eventBus'
 import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
 const DownloadYakit = lazy(() => import('./update/DownloadYakit').then((m) => ({ default: m.DownloadYakit })))
 const DownloadYaklang = lazy(() => import('./update/DownloadYaklang').then((m) => ({ default: m.DownloadYaklang })))
-import { HelpDoc } from './HelpDoc/HelpDoc'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import { CheckCircleSolid, HomeSolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { setNowProjectDescription } from '@/pages/globalVariable'
@@ -88,6 +88,7 @@ import { NewYakitLoading } from '../basics/NewYakitLoading'
 import classNames from 'classnames'
 import styles from './uiLayout.module.scss'
 import { JSONParseLog } from '@/utils/tool'
+import { startIdleVisibleInterval } from '@/utils/scheduleIdleTask'
 import { closeDuplexConn, startupDuplexConn } from '@/utils/duplex/duplex'
 import { type SoftMode, useSoftMode } from '@/store/softMode'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -198,16 +199,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       setCredential(data.credential)
       onSetEngineMode(data.credential.Mode)
       setYakitStatus('ready')
-      if (data.credential.Mode === 'local') {
-        setTimeout(() => {
-          setKeepalive(true)
-        }, 500)
-      } else {
-        setKeepalive(true)
-      }
-      setTimeout(() => {
-        setNewCheckLog([])
-      }, 2000)
+      setKeepalive(true)
     })
     yakitUILayout.markRendererReady()
     return () => {
@@ -378,8 +370,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         const mode = config.yakitMode || 'classic'
         setSoftMode(mode as SoftMode)
       }
-      const lang = config.softLange || 'zh'
-      i18n.changeLanguage(lang)
+      if (!isEnpriTrace()) {
+        const lang = config.softLange || 'zh'
+        i18n.changeLanguage(lang)
+      }
     } catch (error) {}
   })
 
@@ -409,8 +403,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
       setLocalValue(LocalGV.YaklangEngineMode, getEngineMode())
 
-      const waitTime: number = 20000
-      const id = setInterval(() => {
+      return startIdleVisibleInterval(() => {
         grpcFetchYakInstallResult(true)
           .then((flag: boolean) => {
             if (isEngineInstalled.current === flag) return
@@ -419,10 +412,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             yakitEngine.clearLocalYaklangVersionCache()
           })
           .catch()
-      }, waitTime)
-      return () => {
-        clearInterval(id)
-      }
+      }, 20000)
     } else {
       // 清空主进程yaklang版本缓存
       yakitEngine.clearLocalYaklangVersionCache()
@@ -521,7 +511,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       setTimeout(() => {
         setNewCheckLog([])
       }, 2000)
-    }, [GetConnectPort()])
+    })
   })
   useEffect(() => {
     emiter.on('openEngineLinkWin', openEngineLinkWin)
@@ -529,57 +519,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       emiter.off('openEngineLinkWin', openEngineLinkWin)
     }
   }, [])
-  const killCurrentProcess = useMemoizedFn(async (callback: () => void, extraPorts?: number[]) => {
-    let finalPorts: number[] = []
-
-    // ---------- 1. 获取 fetch-yaklang-engine-addr 的端口 ----------
+  const killCurrentProcess = useMemoizedFn(async (callback: () => void) => {
     try {
-      const data = await yakitEngine.fetchYaklangEngineAddr()
-      const parts = (data.addr as string).split(':')
-      if (parts.length === 2) {
-        const fetchPort = Number(parts[1]) || 0
-        if (fetchPort) finalPorts.push(fetchPort)
-      }
-    } catch (err) {}
-
-    // 合并额外端口
-    if (Array.isArray(extraPorts)) {
-      finalPorts.push(...extraPorts)
-    }
-
-    // 去重
-    finalPorts = Array.from(new Set(finalPorts))
-
-    // ---------- 2. PS 查询所有 yak 进程 ----------
-    yakitEngine
-      .listYakGrpc()
-      .then(async (res) => {
-        // 查找 PID
-        const pidsToKill = res
-          .filter((p) => finalPorts.includes(Number(p.port)))
-          .map((p) => p.pid)
-          .filter(Boolean)
-
-        if (pidsToKill.length === 0) {
-          callback()
+      const current = await yakitEngine.currentLocalEngine()
+      if (current) {
+        const result = await yakitEngine.stopLocalEngine(current.id)
+        if (!result.ok || !result.stopped) {
+          failed(t('EngineManagement.stopFailed'))
           return
         }
-
-        // ---------- 4. kill ----------
-        for (const pid of pidsToKill) {
-          try {
-            await yakitEngine.killYakGrpc(pid)
-            info(`KILL yak PROCESS: ${pid}`)
-          } catch (err) {
-            failed(`Kill yak process failed: ${err}`)
-          }
-        }
-
-        callback()
-      })
-      .catch(() => {
-        callback()
-      })
+      }
+      callback()
+    } catch {
+      failed(t('EngineManagement.stopFailed'))
+    }
   })
 
   const handleOperations = useMemoizedFn((type: YakitSettingCallbackType | YaklangEngineMode) => {
@@ -596,7 +549,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
       case 'local':
         info(t('UILayout.engineModeSwitched', { mode: EngineModeVerbose('local') }))
-        delTemporaryProject()
         onDisconnect()
         onSetEngineMode(undefined)
         if (isEngineInstalled.current) {
@@ -607,7 +559,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         return
       case 'remote':
         info(t('UILayout.engineModeSwitched', { mode: EngineModeVerbose('remote') }))
-        delTemporaryProject()
         onDisconnect()
         onSetEngineMode(undefined)
         openEngineLinkWin('remote')
@@ -776,8 +727,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const initBuildInEngine = () => {
     yakitEngine
       .restoreEngineAndPlugin({})
-      .then(() => {
-        yakitEngine.writeEngineKeyToYakitProjects().finally(() => {
+      .then(async () => {
+        await yakitEngine.writeEngineKeyToYakitProjects()
+        {
           yakitNotify('info', t('UILayout.unpackBuiltinEngineSuccess'))
           showYakitModal({
             closable: false,
@@ -803,7 +755,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             ),
             footer: null,
           })
-        })
+        }
       })
       .catch((e) => {
         yakitNotify('error', t('UILayout.initBuiltinEngineFailed', { error: String(e) }))
@@ -866,67 +818,27 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   const [killOldEngine, setKillOldEngine] = useState<boolean>(false)
   const [killLoading, setKillLoading] = useState<boolean>(false)
-  const killOldProcess = useMemoizedFn((callback?: () => void) => {
-    let isFailed: boolean = false
-    let port: number = 0
-    let pid: number = 0
-
-    if (getEngineLink()) {
-      setKillLoading(true)
-
-      yakitEngine
-        .fetchYaklangEngineAddr()
-        .then((data) => {
-          const hosts: string[] = (data.addr as string).split(':')
-          if (hosts.length !== 2) return
-          if (+hosts[1]) port = +hosts[1] || 0
-        })
-        .catch((e) => {
-          failed(t('UILayout.fetchEngineProcessError', { error: String(e) }))
-          isFailed = true
-        })
-        .finally(() => {
-          if (isFailed) {
-            setTimeout(() => setKillLoading(false), 300)
-            return
-          }
-          yakitEngine
-            .listYakGrpc()
-            .then((i: yakProcess[]) => {
-              const pss = i.find((item) => +item.port === port)
-              if (pss) pid = pss.pid || 0
-            })
-            .catch((e) => {
-              failed(`PS | GREP yak failed ${e}`)
-              isFailed = true
-            })
-            .finally(() => {
-              if (isFailed) {
-                setTimeout(() => setKillLoading(false), 300)
-                return
-              }
-              if (!pid) {
-                failed(t('UILayout.noConnectedEngineProcess'))
-                setTimeout(() => setKillLoading(false), 300)
-                return
-              }
-
-              yakitEngine
-                .killYakGrpc(pid)
-                .then(() => {
-                  info(`KILL yak PROCESS: ${pid}`)
-                  setKillOldEngine(false)
-                  setLinkLocalEngine()
-                  callback && callback()
-                })
-                .catch((e) => {
-                  failed(`PS | GREP yak failed ${e}`)
-                })
-                .finally(() => {
-                  setTimeout(() => setKillLoading(false), 100)
-                })
-            })
-        })
+  const killOldProcess = useMemoizedFn(async (callback?: () => void) => {
+    if (killLoading) return
+    setKillLoading(true)
+    try {
+      const current = await yakitEngine.currentLocalEngine()
+      if (!current) {
+        failed(t('EngineManagement.settingsReason'))
+        return
+      }
+      const result = await yakitEngine.stopLocalEngine(current.id)
+      if (!result.ok || !result.stopped) {
+        failed(t('EngineManagement.stopFailed'))
+        return
+      }
+      setKillOldEngine(false)
+      setLinkLocalEngine()
+      callback?.()
+    } catch {
+      failed(t('EngineManagement.stopFailed'))
+    } finally {
+      setKillLoading(false)
     }
   })
 
@@ -949,7 +861,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   /** ---------- yakit和yaklang的更新(以连接引擎的状态下) & kill引擎进程 End ---------- */
 
   // #region 远程控制(控制端)
-  const { dynamicStatus, setDynamicStatus } = yakitDynamicStatus()
+  const { dynamicStatus, setDynamicStatus } = useYakitDynamicStatus()
 
   useEffect(() => {
     // 监听退出远程控制
@@ -1173,7 +1085,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     isExportTemporaryProjectFlag,
     setTemporaryProjectNoPromptFlag,
     setIsExportTemporaryProjectFlag,
-    delTemporaryProject,
   } = useTemporaryProjectStore()
 
   // 项目明文导出成功的回调
@@ -1563,6 +1474,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   }, [performanceSamplingInfo, isShowSamplingInfo, i18nRefresh])
   /** ---------- 软件顶部展示采样中 End ---------- */
 
+  const engineNotice = useCreation(() => {
+    if (!engineLink || isEnpriTraceAgent()) return null
+    return (
+      <UIOpNotice
+        isEngineLink={engineLink}
+        isRemoteMode={isRemoteEngine}
+        onLogin={() => emiter.emit('onOpenLogin', '')}
+      />
+    )
+  }, [engineLink, isRemoteEngine])
+
   /** ---------- 软件顶部展示录屏中状态 Start ---------- */
   const { screenRecorderInfo, setRecording } = useScreenRecorder()
   const stopScreen = useCreation(() => {
@@ -1621,7 +1543,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       yakitFailed(error + '')
     }
 
-    setTimeout(() => setEngineLink(true), 100)
+    setEngineLink(true)
   })
 
   const onReady = useMemoizedFn(() => {
@@ -1767,7 +1689,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                       engineMode={engineMode}
                       typeCallback={handleOperations}
                       engineLink={engineLink}
-                      cpuWrapperClassName={dropClassName}
+                      extraRight={engineNotice}
                     />
                   </div>
                 </div>
@@ -1777,15 +1699,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                   {stopScreen}
 
-                  <HelpDoc system={system} />
-
                   {engineLink && (
                     <>
                       <FuncDomain
                         isEngineLink={engineLink}
                         engineMode={engineMode || 'remote'}
                         isRemoteMode={isRemoteEngine}
-                        mcp={mcp}
                         onEngineModeChange={handleOperations}
                         runDynamicControlRemote={runControlRemote}
                         typeCallback={handleOperations}
@@ -1821,26 +1740,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                   {engineLink && (
                     <>
                       {!showProjectManage && <GlobalState isEngineLink={engineLink} system={system} mcp={mcp} />}
-
-                      {!isEnpriTraceAgent() && (
-                        <div
-                          className={classNames(styles['yakit-mode-icon'], {
-                            [styles['yakit-mode-selected']]: false && yakitMode === 'soft',
-                          })}
-                          onClick={() => changeYakitMode('soft')}
-                        >
-                          <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
-                        </div>
-                      )}
-
-                      <div className={styles['divider-wrapper']}></div>
                       <div>
                         <FuncDomain
                           isEngineLink={engineLink}
                           isReverse={true}
                           engineMode={engineMode || 'remote'}
                           isRemoteMode={isRemoteEngine}
-                          mcp={mcp}
                           onEngineModeChange={handleOperations}
                           runDynamicControlRemote={runControlRemote}
                           typeCallback={handleOperations}
@@ -1848,12 +1753,22 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           system={system}
                           isJudgeLicense={isJudgeLicense}
                           onDevToolRefresh={onDevToolRefresh}
+                          homeIcon={
+                            !isEnpriTraceAgent() ? (
+                              <div
+                                className={classNames(styles['yakit-mode-icon'], styles['yakit-mode-icon-reverse'], {
+                                  [styles['yakit-mode-selected']]: yakitMode === 'soft',
+                                })}
+                                onClick={() => changeYakitMode('soft')}
+                              >
+                                <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
+                              </div>
+                            ) : null
+                          }
                         />
                       </div>
                     </>
                   )}
-
-                  <HelpDoc system={system} />
 
                   {stopScreen}
 
@@ -1868,11 +1783,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                       engineMode={engineMode}
                       typeCallback={handleOperations}
                       engineLink={engineLink}
-                      cpuWrapperClassName={dropClassName}
+                      extraLeft={engineNotice}
                     />
-                  </div>
-                  <div className={styles['short-divider-wrapper']}>
-                    <div className={styles['divider-style']}></div>
                   </div>
                   <div className={classNames(dropClassName)}>
                     {engineLink && (

@@ -36,6 +36,7 @@ export const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((p
 
   return (
     <Draggable
+      nodeRef={draggleRef}
       defaultClassName={classNames(
         styles['yakit-agr-modal'],
         { [styles['modal-top-wrapper']]: isTop === 1 },

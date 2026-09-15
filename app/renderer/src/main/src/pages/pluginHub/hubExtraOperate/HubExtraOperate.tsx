@@ -629,7 +629,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             }}
           >
             {t('HubExtraOperate.doNotDownload')}{' '}
-            <Tooltip title={t('HubExtraOperate.skipDownloadTooltip')} align={{ offset: [0, 10] }}>
+            <Tooltip title={t('HubExtraOperate.skipDownloadTooltip')}>
               <ExclamationCircleOutlined className={styles['exclamationcircleIcon']} color="currentColor" />
             </Tooltip>
           </YakitCheckbox>
