@@ -28,6 +28,9 @@ vi.mock('../ChatSessionPane/ChatSessionPane', () => ({ default: () => <div>会�
 vi.mock('../aiChatWelcome/FileTreeList/FileTreeList', () => ({ default: () => <div>文件列表</div> }))
 vi.mock('../aiMCP/AIMCP', () => ({ default: () => <div>MCP 内容</div> }))
 vi.mock('../aiScheduledTasks/AIScheduledTasks', () => ({ default: () => <div>定时任务</div> }))
+vi.mock('../browserInstances/BrowserInstancesPanel', () => ({
+  BrowserInstancesPanel: () => <div>浏览器实例</div>,
+}))
 vi.mock('../../yakRunner/SplitView/SplitView', () => ({
   SplitView: ({ elements }: { elements: { element: React.ReactNode }[] }) => (
     <>
@@ -44,13 +47,20 @@ const SideList = () => {
 }
 
 describe('AIAgentSideList', () => {
-  it('仅保留会话、定时任务和 MCP 入口，点击后显示对应内容', async () => {
+  it('保留会话、定时任务、浏览器和 MCP 入口，点击后显示对应内容', async () => {
     render(<SideList />)
-    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['session', 'scheduled', 'mcp'])
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
+      'session',
+      'scheduled',
+      'browser',
+      'mcp',
+    ])
     expect(screen.getByText('会话列表')).toBeInTheDocument()
     expect(screen.getByText('文件列表')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'scheduled' }))
     expect(await screen.findByText('定时任务')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'browser' }))
+    expect(await screen.findByText('浏览器实例')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'mcp' }))
     expect(await screen.findByText('MCP 内容')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'session' }))

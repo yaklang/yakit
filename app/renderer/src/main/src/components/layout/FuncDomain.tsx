@@ -782,10 +782,6 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
       ],
     },
     {
-      key: 'browser-extension',
-      label: '浏览器集成',
-    },
-    {
       key: 'diagnose-network',
       label: '网络诊断',
     },
@@ -899,9 +895,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'diagnose-network':
         addToTab('**diagnose-network')
-        return
-      case 'browser-extension':
-        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.BrowserExtension }))
         return
       case 'debug-traffic-analize':
         addToTab('**beta-debug-traffic-analize')
