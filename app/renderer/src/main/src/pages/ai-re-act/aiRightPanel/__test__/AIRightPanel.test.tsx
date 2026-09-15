@@ -964,13 +964,13 @@ describe('AIRightPanel', () => {
     }
   })
 
-  it('菜单点击：文件系统激活侧边栏会话 tab，流量/漏洞打开工作区对应 tab', async () => {
-    await renderPanel(<AIRightPanel />)
-    // 文件树位于左侧边栏会话 tab 分栏，emit switchAIAgentTab 激活
+  it.each([false, true])('菜单点击：文件系统激活侧边栏 File 页，流量/漏洞打开工作区（首页：%s）', async (welcome) => {
+    await renderPanel(<AIRightPanel welcome={welcome} />)
+    // 首页与会话面板都通过 switchAIAgentTab 激活文件页。
     fireEvent.click(screen.getByText('文件系统'))
     expect(mockEmit).toHaveBeenCalledWith(
       'switchAIAgentTab',
-      JSON.stringify({ type: 'setTabActive', params: { active: 'session', show: true } }),
+      JSON.stringify({ type: 'setTabActive', params: { active: 'file', show: true } }),
     )
     fireEvent.click(screen.getByText('流量'))
     expect(mockEmit).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: 'http' }))

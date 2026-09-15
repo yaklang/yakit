@@ -85,8 +85,10 @@ describe('AIAgentSideList', () => {
     expect(screen.getByTestId('scheduled')).toHaveAttribute('data-visible', 'false')
   })
 
-  it('隐藏会话标签，保留文件系统内容与定时任务、MCP 入口', async () => {
+  it('默认激活 File 页，隐藏文件标签并保留定时任务、MCP 入口', async () => {
     render(<SideList />)
+    expect(screen.getByLabelText('active')).toHaveTextContent('file')
+    expect(screen.queryByRole('button', { name: 'file' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'session' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'scheduled' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'mcp' })).toBeInTheDocument()
@@ -99,9 +101,10 @@ describe('AIAgentSideList', () => {
     act(() => {
       emiter.emit(
         'switchAIAgentTab',
-        JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, params: { active: 'session', show: true } }),
+        JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, params: { active: 'file', show: true } }),
       )
     })
+    expect(screen.getByLabelText('active')).toHaveTextContent('file')
     expect(screen.getByText('文件列表')).toBeInTheDocument()
     expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '关闭文件系统' }))
@@ -109,13 +112,13 @@ describe('AIAgentSideList', () => {
     act(() => {
       emiter.emit(
         'switchAIAgentTab',
-        JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, params: { active: 'session', show: true } }),
+        JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, params: { active: 'file', show: true } }),
       )
     })
     expect(screen.getByLabelText('show')).toHaveTextContent('true')
   })
 
-  it('事件切换、旧 history 映射和显隐仍有效，卸载后移除监听', async () => {
+  it('事件切换和显隐仍有效，卸载后移除监听', async () => {
     const off = vi.spyOn(emiter, 'off')
     const result = render(<SideList />)
     const emit = (type: SwitchAIAgentTabEventEnum, params: object) =>
@@ -127,8 +130,8 @@ describe('AIAgentSideList', () => {
     expect(screen.getByLabelText('show')).toHaveTextContent('true')
     emit(SwitchAIAgentTabEventEnum.SET_TAB_SHOW, { show: false })
     expect(screen.getByLabelText('show')).toHaveTextContent('false')
-    emit(SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, { active: 'history' })
-    expect(screen.getByLabelText('active')).toHaveTextContent('session')
+    emit(SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, { active: 'file' })
+    expect(screen.getByLabelText('active')).toHaveTextContent('file')
     expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
     result.unmount()
     expect(off).toHaveBeenCalledWith('switchAIAgentTab', expect.any(Function))

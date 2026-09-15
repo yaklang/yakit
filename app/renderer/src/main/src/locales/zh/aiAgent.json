@@ -209,6 +209,7 @@
     "nextRun": "下次运行",
     "runNow": "立即运行",
     "runStarted": "已触发运行",
+    "openRunSessionFailed": "任务已启动，但打开会话失败，请在会话历史中查看",
     "pausedSuccess": "已暂停",
     "pause": "暂停任务",
     "resume": "恢复任务",

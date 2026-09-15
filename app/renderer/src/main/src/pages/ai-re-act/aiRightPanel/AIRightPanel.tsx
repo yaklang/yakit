@@ -490,7 +490,7 @@ const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel,
   const welcomeStats = useWelcomePanelStats(inViewport)
   /**
    * 菜单点击：会话历史打开右侧内容面板；
-   * 文件系统展开侧栏会话页，流量、漏洞切换工作区 tab。
+   * 文件系统展开侧栏文件页，流量、漏洞切换工作区 tab。
    */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
     switch (key) {
@@ -498,12 +498,12 @@ const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel,
         panel.openPane(key)
         break
       case 'file-system':
-        // 文件树位于左侧边栏的会话页，展开侧边栏并切换到该页。
+        // 文件树位于左侧边栏的文件页，展开侧边栏并切换到该页。
         emiter.emit(
           'switchAIAgentTab',
           JSON.stringify({
             type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-            params: { active: AIAgentTabListEnum.Session, show: true },
+            params: { active: AIAgentTabListEnum.File, show: true },
           }),
         )
         break
@@ -589,7 +589,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
 
   /**
    * 菜单点击：任务列表、时间线、会话历史打开右侧内容面板；
-   * 任务详情、流量、漏洞切换工作区 tab；文件系统打开侧栏会话页；
+   * 任务详情、流量、漏洞切换工作区 tab；文件系统打开侧栏文件页；
    * AI 设置打开设置页，导出日志打开导出弹窗，查看日志打开日志窗口。
    */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
@@ -603,12 +603,12 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
         syncCasualTaskTab()
         break
       case 'file-system':
-        // 文件树位于左侧边栏的会话页，展开侧边栏并切换到该页。
+        // 文件树位于左侧边栏的文件页，展开侧边栏并切换到该页。
         emiter.emit(
           'switchAIAgentTab',
           JSON.stringify({
             type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-            params: { active: AIAgentTabListEnum.Session, show: true },
+            params: { active: AIAgentTabListEnum.File, show: true },
           }),
         )
         break

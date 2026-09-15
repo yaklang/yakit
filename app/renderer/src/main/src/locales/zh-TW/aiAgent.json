@@ -209,6 +209,7 @@
     "nextRun": "下次運行",
     "runNow": "立即運行",
     "runStarted": "已觸發運行",
+    "openRunSessionFailed": "任務已啟動，但開啟會話失敗，請在會話歷史中查看",
     "pausedSuccess": "已暫停",
     "pause": "暫停任務",
     "resume": "恢復任務",

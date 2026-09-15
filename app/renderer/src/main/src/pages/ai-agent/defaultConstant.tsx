@@ -46,7 +46,7 @@ import type { ExportAIForgeRequest } from './forgeName/type'
 export const YakitAIAgentPageID = 'yakit-ai-agent'
 
 export enum AIAgentTabListEnum {
-  Session = 'session',
+  File = 'file',
   MCP = 'mcp',
   Scheduled = 'scheduled',
 }

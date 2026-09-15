@@ -16,7 +16,7 @@ const AIScheduledTasks = React.lazy(() => import('./aiScheduledTasks/AIScheduled
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
-  const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.Session)
+  const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.File)
   const [show, setShow] = useControllableValue<boolean>(props, {
     defaultValue: false,
     valuePropName: 'show',
@@ -37,7 +37,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     const { type, params } = info
     switch (type) {
       case SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE:
-        setActive((params.active === 'history' ? AIAgentTabListEnum.Session : params.active) as AIAgentTabListEnum)
+        setActive(params.active as AIAgentTabListEnum)
         setShow(params.show !== false)
         break
       case SwitchAIAgentTabEventEnum.SET_TAB_SHOW:
@@ -58,9 +58,9 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   const renderTabContent = (key: AIAgentTabListEnum) => {
     let content: ReactNode = <></>
     switch (key) {
-      case AIAgentTabListEnum.Session:
+      case AIAgentTabListEnum.File:
         content = (
-          <div className={styles['session-pane']}>
+          <div className={styles['file-pane']}>
             <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} onClose={() => setShow(false)} />
           </div>
         )

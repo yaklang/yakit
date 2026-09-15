@@ -209,6 +209,7 @@
     "nextRun": "Next Run",
     "runNow": "Run Now",
     "runStarted": "Run triggered",
+    "openRunSessionFailed": "The task has started, but its session could not be opened. Please check the session history.",
     "pausedSuccess": "Paused",
     "pause": "Pause",
     "resume": "Resume",
