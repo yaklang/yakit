@@ -595,6 +595,39 @@ describe('AIRightPanel', () => {
     await waitFor(() => expect(screen.getByText('文件系统')).toBeInTheDocument())
   })
 
+  it.each(['任务详情看板', '流量', '漏洞'])('大屏点击%s后切为小屏，提示保持关闭直到鼠标移出再移入', async (label) => {
+    casualTaskState.questionID = 'q-1'
+    try {
+      const { rerender } = render(<AIRightPanel small={false} />)
+      const button = screen.getByLabelText(label)
+      fireEvent.mouseEnter(button)
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+      fireEvent.click(button)
+      if (label === '任务详情看板') {
+        expect(mockSyncCasualTaskTab).toHaveBeenCalled()
+      } else {
+        expect(mockEmit).toHaveBeenCalledWith(
+          'switchAIActTab',
+          JSON.stringify({ key: label === '流量' ? 'http' : 'risk' }),
+        )
+      }
+      // 左侧工作区展开后切为小屏，新入口接收到鼠标进入事件。
+      rerender(<AIRightPanel small />)
+      const smallButton = screen.getByLabelText(label)
+      fireEvent.mouseEnter(smallButton)
+      expect(smallButton).not.toHaveClass('ant-tooltip-open')
+      fireEvent.mouseLeave(smallButton)
+      fireEvent.mouseEnter(smallButton)
+      expect(smallButton).toHaveClass('ant-tooltip-open')
+      await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent(label))
+    } finally {
+      casualTaskState.questionID = ''
+      mockSyncCasualTaskTab.mockClear()
+      mockEmit.mockClear()
+      cleanup()
+    }
+  })
+
   it('small 小屏态「更多」hover 后点击展开，Tooltip 浮层不残留', async () => {
     render(<AIRightPanel small />)
     const moreButton = screen.getByLabelText('更多')

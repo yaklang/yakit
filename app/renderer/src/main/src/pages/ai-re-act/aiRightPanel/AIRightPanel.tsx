@@ -158,21 +158,25 @@ interface MenuItemProps {
 const MenuItem: React.FC<MenuItemProps> = React.memo(
   ({ icon, label, small, secondary, suffix, smallBadge, onClick, onMouseEnter, onMouseLeave }) => {
     const [tooltipOpen, setTooltipOpen] = useState(false)
+    const tooltipDismissedRef = useRef(false)
 
     const handleMouseEnter = useMemoizedFn(() => {
       const paneOpened = onMouseEnter?.() ?? false
-      setTooltipOpen(!paneOpened)
+      setTooltipOpen(!!small && !paneOpened && !tooltipDismissedRef.current)
     })
     const handleMouseLeave = useMemoizedFn(() => {
+      tooltipDismissedRef.current = false
       setTooltipOpen(false)
       onMouseLeave?.()
     })
 
     const onItemClick = useMemoizedFn(() => {
+      // 点击可能让大屏切为小屏；鼠标移出前不因新入口的悬停事件重新显示提示。
+      tooltipDismissedRef.current = true
+      setTooltipOpen(false)
       if (onClick) {
         onClick()
       }
-      setTooltipOpen(false)
     })
 
     // 菜单容器和交互行为在两种尺寸下相同，具体内容由大小屏分支分别生成。
