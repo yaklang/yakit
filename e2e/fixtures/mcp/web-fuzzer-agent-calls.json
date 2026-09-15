@@ -3,6 +3,7 @@
   "requiredTools": [
     "create_web_fuzzer_tab",
     "execute_web_fuzzer_tab",
+    "query_web_fuzzer_execution_result",
     "create_web_fuzzer_tabs",
     "query_web_fuzzer_tabs",
     "update_web_fuzzer_tab",
@@ -49,8 +50,7 @@
             "id": "$ref:authGroupId",
             "name": "AI Auth Flow",
             "expanded": true,
-            "color": "#2F80ED",
-            "renderedColor": "rgb(47, 128, 237)"
+            "color": "#2F80ED"
           }
         ],
         "tabs": [
@@ -88,6 +88,34 @@
         "tabs.0.actualAddr": "127.0.0.1:9443",
         "usedGroupColors.0": "#2F80ED",
         "availableGroupColors.0": "purple"
+      }
+    },
+    {
+      "id": "execute-created-tab-through-ui",
+      "tool": "execute_web_fuzzer_tab",
+      "arguments": {
+        "pageId": "$ref:loginTabId",
+        "timeoutSeconds": 10
+      },
+      "expectResult": {
+        "operation": "completed",
+        "pageId": "$ref:loginTabId"
+      },
+      "capture": {
+        "executionTaskId": "taskId"
+      },
+      "expectUI": {
+        "activeTabId": "$ref:loginTabId"
+      }
+    },
+    {
+      "id": "query-executed-tab-summary",
+      "tool": "query_web_fuzzer_execution_result",
+      "arguments": {
+        "taskId": "$ref:executionTaskId"
+      },
+      "expectResultPaths": {
+        "taskId": "$ref:executionTaskId"
       }
     },
     {
