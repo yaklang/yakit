@@ -194,7 +194,7 @@ export interface BatchSetRiskTagsRequest {
   Hashes?: string[]
   Token?: string
   RiskTypeVerbose?: string
-  Severity?: string
+  SetSeverity?: string
   SeverityScore?: number
   /** 处置原因（对齐 proto TagReason，表单处置说明） */
   TagReason?: string

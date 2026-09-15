@@ -29,6 +29,11 @@ export interface HTTPHeaderItem {
   Value: string
 }
 
+export interface HTTPFlowTester {
+  TesterUid?: string
+  TesterName?: string
+}
+
 export interface HTTPFlow {
   Id: number
   Method: string
@@ -112,8 +117,8 @@ export interface HTTPFlow {
   Status?: string
   /** 处置说明（对齐 StatusReason） */
   StatusReason?: string
-  /** 测试人员（占位：待后端对齐，仅企业版） */
-  Testers?: string[] | string
+  /** 测试人员列表（仅企业版） */
+  Testers?: HTTPFlowTester[]
 }
 
 export interface FuzzableParams {
