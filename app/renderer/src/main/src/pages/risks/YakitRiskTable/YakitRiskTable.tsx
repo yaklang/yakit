@@ -1823,7 +1823,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
           styles['yakit-risk-details-content'],
           'yakit-descriptions',
           {
-            [styles['yakit-risk-details-content-no-border']]: !border,
+            [styles['yakit-risk-details-content-no-top-border']]: !border,
           },
           className,
         )}
