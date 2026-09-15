@@ -45,13 +45,23 @@ describe('parseYakGRPCReadyLine', () => {
       host: '127.0.0.1',
       port: 54321,
     })
+    expect(
+      parseYakGRPCReadyLine(
+        `[stdout] ${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 2, address: '127.0.0.1:54322' })}`,
+      ),
+    ).toEqual({
+      schemaVersion: 2,
+      address: '127.0.0.1:54322',
+      host: '127.0.0.1',
+      port: 54322,
+    })
   })
 
   it('rejects malformed, unsupported, or externally bound ready events', () => {
     expect(() => parseYakGRPCReadyLine(`${YAK_GRPC_READY_PREFIX}not-json`)).toThrow(/Invalid Yak gRPC ready JSON/)
     expect(() =>
       parseYakGRPCReadyLine(
-        `${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 2, address: '127.0.0.1:54321' })}`,
+        `${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 3, address: '127.0.0.1:54321' })}`,
       ),
     ).toThrow(/Unsupported Yak gRPC ready schema/)
     expect(() =>
