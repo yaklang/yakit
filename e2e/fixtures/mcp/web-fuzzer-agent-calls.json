@@ -2,6 +2,7 @@
   "schemaVersion": 2,
   "requiredTools": [
     "create_web_fuzzer_tab",
+    "execute_web_fuzzer_tab",
     "create_web_fuzzer_tabs",
     "query_web_fuzzer_tabs",
     "update_web_fuzzer_tab",

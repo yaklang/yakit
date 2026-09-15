@@ -179,6 +179,7 @@ import {
   unregisterShortcutFocusHandle,
 } from '@/utils/globalShortcutKey/utils'
 import { keepSearchNameMapStore } from '@/store/keepSearchName'
+import { queueMcpWebFuzzerExecution, type McpWebFuzzerExecution } from '@/utils/eventBus/events/webFuzzer'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useProxy } from '@/hook/useProxy'
@@ -3646,6 +3647,32 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     emiter.on('onServerPushOpenWebFuzzerTab', onServerPushOpenWebFuzzerTab)
     return () => {
       emiter.off('onServerPushOpenWebFuzzerTab', onServerPushOpenWebFuzzerTab)
+    }
+  }, [])
+
+  const onServerPushExecuteWebFuzzerTab = useMemoizedFn((res?: string) => {
+    try {
+      const execution = JSONParseLog(res || '{}', {
+        page: 'MainOperatorContent',
+        fun: 'onServerPushExecuteWebFuzzerTab',
+      }) as McpWebFuzzerExecution
+      if (!execution.executionId || !execution.pageId || !Number.isFinite(execution.expiresAt)) {
+        throw new Error('Web Fuzzer execution push is invalid')
+      }
+      queueMcpWebFuzzerExecution(execution)
+      scheduleIdleTask(() => {
+        emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: execution.pageId, forceRefresh: true }))
+        emiter.emit('onExecuteWebFuzzerTab', execution.pageId)
+      })
+    } catch (error) {
+      yakitNotify('error', t('MainOperatorContent.openWFFailed', { error: `${error}` }))
+    }
+  })
+
+  useEffect(() => {
+    emiter.on('onServerPushExecuteWebFuzzerTab', onServerPushExecuteWebFuzzerTab)
+    return () => {
+      emiter.off('onServerPushExecuteWebFuzzerTab', onServerPushExecuteWebFuzzerTab)
     }
   }, [])
 

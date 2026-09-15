@@ -33,8 +33,42 @@ export type WebFuzzerEventProps = {
   onGetDiscardPackageCount: string
   /** MCP / 后端推送：新建 Web Fuzzer Tab */
   onServerPushOpenWebFuzzerTab: string
+  /** MCP / 后端推送：执行指定 Web Fuzzer Tab */
+  onServerPushExecuteWebFuzzerTab: string
+  onExecuteWebFuzzerTab: string
   /** OpenAPI / API 文档解析进度 */
   onOpenAPIParseProgress: string
   /** 保存webfuzzer历史记录 */
   onSaveHistoryDataHttpFuzzer?: string
+}
+
+export interface McpWebFuzzerExecution {
+  executionId: string
+  pageId: string
+  expiresAt: number
+}
+
+const pendingMcpWebFuzzerExecutions = new Map<string, McpWebFuzzerExecution[]>()
+
+export const queueMcpWebFuzzerExecution = (execution: McpWebFuzzerExecution) => {
+  if (!execution.executionId || !execution.pageId || execution.expiresAt <= Date.now()) return
+  const queue = pendingMcpWebFuzzerExecutions.get(execution.pageId) || []
+  if (queue.some((item) => item.executionId === execution.executionId)) return
+  queue.push(execution)
+  pendingMcpWebFuzzerExecutions.set(execution.pageId, queue)
+}
+
+export const consumeMcpWebFuzzerExecution = (pageId: string): McpWebFuzzerExecution | undefined => {
+  const queue = pendingMcpWebFuzzerExecutions.get(pageId)
+  if (!queue) return undefined
+  const now = Date.now()
+  while (queue.length > 0) {
+    const execution = queue.shift()!
+    if (execution.expiresAt > now) {
+      if (queue.length === 0) pendingMcpWebFuzzerExecutions.delete(pageId)
+      return execution
+    }
+  }
+  pendingMcpWebFuzzerExecutions.delete(pageId)
+  return undefined
 }
