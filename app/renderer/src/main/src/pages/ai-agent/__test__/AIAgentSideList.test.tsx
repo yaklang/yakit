@@ -63,6 +63,9 @@ vi.mock('../aiScheduledTasks/AIScheduledTasks', () => ({
     </div>
   ),
 }))
+vi.mock('../browserInstances/BrowserInstancesPanel', () => ({
+  BrowserInstancesPanel: () => <div>浏览器实例</div>,
+}))
 
 const SideList = () => {
   const [show, setShow] = useState(true)
@@ -85,17 +88,24 @@ describe('AIAgentSideList', () => {
     expect(screen.getByTestId('scheduled')).toHaveAttribute('data-visible', 'false')
   })
 
-  it('默认激活 File 页，隐藏文件标签并保留定时任务、MCP 入口', async () => {
+  it('默认激活 File 页，隐藏文件标签并保留定时任务、浏览器、MCP 入口', async () => {
     render(<SideList />)
     expect(screen.getByLabelText('active')).toHaveTextContent('file')
     expect(screen.queryByRole('button', { name: 'file' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'session' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'scheduled' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'browser' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'mcp' })).toBeInTheDocument()
     expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
     expect(screen.getByText('文件列表')).toBeInTheDocument()
+  })
+
+  it('点击 scheduled/browser/mcp 切换对应内容，file 切换显隐文件系统', async () => {
+    render(<SideList />)
     fireEvent.click(screen.getByRole('button', { name: 'scheduled' }))
     expect(await screen.findByText('定时任务')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'browser' }))
+    expect(await screen.findByText('浏览器实例')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'mcp' }))
     expect(await screen.findByText('MCP 内容')).toBeInTheDocument()
     act(() => {

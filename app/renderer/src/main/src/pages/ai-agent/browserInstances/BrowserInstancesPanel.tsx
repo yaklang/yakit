@@ -2,29 +2,35 @@ import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CheckOutlined,
+  ChevronDownOutlined,
+  ChevronRightOutlined,
+  ChromeOutlined,
   CloseOutlined,
-  DownOutlined,
-  EllipsisOutlined,
-  GlobalOutlined,
-  LinkOutlined,
+  DotsHorizontalOutlined,
+  GlobeOutlined,
+  PaperAirplaneOutlined,
+  PencilOutlined,
   PlusOutlined,
-  RightOutlined,
-  SettingOutlined,
-} from '@ant-design/icons'
+  RefreshOutlined,
+  TrashOutlined,
+  PositionOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import emiter from '@/utils/eventBus/eventBus'
-import { YakitRoute } from '@/enums/yakitRoute'
 import { failed, success } from '@/utils/notification'
 import {
   approveBrowserExtensionPairing,
   callBrowserExtensionCapability,
   rejectBrowserExtensionPairing,
+  requestBrowserExtensionSnapshot,
   type BrowserPairingRequest,
 } from '@/pages/browserExtension/browserExtensionClient'
 import i18n from '@/i18n/i18n'
@@ -39,10 +45,48 @@ import {
   type AIBrowserInstance,
   type AIBrowserThumbnail,
 } from './browserInstanceStore'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import styles from './BrowserInstancesPanel.module.scss'
 
-const openBrowserManagement = () => {
-  emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.BrowserExtension }))
+export const formatLastSeen = (timestamp: number) => {
+  const date = new Date(timestamp)
+  if (!Number.isFinite(date.getTime()) || timestamp <= 0) return '-'
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
+export const browserProductLabel = (instance: { client?: string; clientVersion?: string }) => {
+  const client = (instance.client || '').trim()
+  const version = (instance.clientVersion || '').trim()
+  if (!client || /extension|protocol/i.test(client)) return version || client
+  if (version && !version.toLowerCase().includes(client.toLowerCase())) return `${client} ${version}`
+  return version || client
+}
+
+export const pairingSubtitle = (request: BrowserPairingRequest) => {
+  const parts = [(request.origin || '').trim()].filter(Boolean)
+  if (request.managedInstance?.manager === 'ytray') parts.push('YTray')
+  else if (request.managedInstance?.manager) parts.push(request.managedInstance.manager)
+  return parts.join(' · ')
+}
+
+export const renameBrowserDevice = async (id: string, nextName: string) => {
+  const name = nextName.trim()
+  if (!name) return false
+  await requestBrowserExtensionSnapshot('POST', `/devices/${id}`, { name })
+  await refreshBrowserInstances(true)
+  success(i18n.t('aiAgent:BrowserInstances.renameSuccess'))
+  return true
+}
+
+export const openPairingWindow = async () => {
+  try {
+    await requestBrowserExtensionSnapshot('POST', '/pairing-window', { ttlSeconds: 120 })
+    await refreshBrowserInstances(true)
+    success(i18n.t('aiAgent:BrowserInstances.pairingWindowOpened'))
+  } catch (error) {
+    failed(i18n.t('aiAgent:BrowserInstances.pairingWindowFailed', { error: `${error}` }))
+  }
 }
 
 export const browserInstanceMention = (instance: AIBrowserInstance): AIMentionCommandParams => ({
@@ -62,14 +106,6 @@ export const insertBrowserInstanceMention = (instance: AIBrowserInstance) => {
   )
 }
 
-const formatRelativeTime = (timestamp: number) => {
-  const diff = Math.max(0, Date.now() - timestamp)
-  if (diff < 60_000) return i18n.t('aiAgent:BrowserInstances.justNow')
-  if (diff < 3_600_000) return i18n.t('aiAgent:BrowserInstances.minutesAgo', { count: Math.floor(diff / 60_000) })
-  if (diff < 86_400_000) return i18n.t('aiAgent:BrowserInstances.hoursAgo', { count: Math.floor(diff / 3_600_000) })
-  return i18n.t('aiAgent:BrowserInstances.daysAgo', { count: Math.floor(diff / 86_400_000) })
-}
-
 interface BrowserStatusProps {
   instance: AIBrowserInstance
 }
@@ -80,6 +116,15 @@ const BrowserStatus: React.FC<BrowserStatusProps> = ({ instance }) => {
       {i18n.t(instance.online ? 'aiAgent:BrowserInstances.inUse' : 'aiAgent:BrowserInstances.offline')}
     </span>
   )
+}
+
+const BrowserFavicon: React.FC<{ src?: string; className?: string }> = ({ src, className }) => {
+  const [broken, setBroken] = useState(false)
+  useEffect(() => {
+    setBroken(false)
+  }, [src])
+  if (!src || broken) return <GlobeOutlined className={className} color="currentColor" />
+  return <img className={className} src={src} alt="" onError={() => setBroken(true)} />
 }
 
 const thumbnailCache = new Map<string, AIBrowserThumbnail>()
@@ -152,7 +197,9 @@ const BrowserPreviewPopover: React.FC<
             {thumbnail?.dataUrl ? (
               <img src={thumbnail.dataUrl} alt={thumbnail.title} />
             ) : (
-              <div className={styles['preview-loading']}>{loading ? <YakitSpin spinning /> : <GlobalOutlined />}</div>
+              <div className={styles['preview-loading']}>
+                {loading ? <YakitSpin spinning /> : <GlobeOutlined color="currentColor" />}
+              </div>
             )}
           </div>
           <div className={styles['preview-caption']} title={instance.tab?.title}>
@@ -175,10 +222,8 @@ const BrowserCardPreview: React.FC<{
     <div className={styles['page-preview']}>
       {thumbnail?.dataUrl ? (
         <img className={styles['page-preview-image']} src={thumbnail.dataUrl} alt={thumbnail.title} />
-      ) : instance.tab?.favIconUrl ? (
-        <img className={styles['page-preview-favicon']} src={instance.tab.favIconUrl} alt="" />
       ) : (
-        <GlobalOutlined />
+        <BrowserFavicon src={instance.tab?.favIconUrl} className={styles['page-preview-favicon']} />
       )}
       {!thumbnail?.dataUrl && (
         <span>
@@ -194,6 +239,9 @@ const BrowserCardPreview: React.FC<{
 
 const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instance }) => {
   const [focusing, setFocusing] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editingName, setEditingName] = useState(instance.name)
+  const [mutating, setMutating] = useState(false)
   const thumbnailKey = thumbnailCacheKey(instance)
   const thumbnailRequestId = useRef(0)
   const [thumbnail, setThumbnail] = useState<AIBrowserThumbnail | undefined>(() => thumbnailCache.get(thumbnailKey))
@@ -268,106 +316,271 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
     }
   }, [canThumbnail, thumbnailKey, refreshThumbnail])
 
+  const saveName = useMemoizedFn(async () => {
+    if (!editingName.trim() || editingName.trim() === instance.name) {
+      setEditing(false)
+      setEditingName(instance.name)
+      return
+    }
+    setMutating(true)
+    try {
+      await renameBrowserDevice(instance.id, editingName)
+      setEditing(false)
+    } catch (error) {
+      failed(i18n.t('aiAgent:BrowserInstances.renameFailed', { error: `${error}` }))
+    } finally {
+      setMutating(false)
+    }
+  })
+
+  const productLabel = browserProductLabel(instance)
+  const moreMenu = (
+    <YakitDropdownMenu
+      menu={{
+        width: 136,
+        data: [
+          {
+            key: 'rename',
+            label: i18n.t('aiAgent:BrowserInstances.rename'),
+            itemIcon: <PencilOutlined color="currentColor" />,
+          },
+          ...(canClose
+            ? [
+                { type: 'divider' as const },
+                {
+                  key: 'close',
+                  label: i18n.t('aiAgent:BrowserInstances.close'),
+                  itemIcon: <CloseOutlined color="currentColor" />,
+                  type: 'danger' as const,
+                },
+              ]
+            : []),
+        ],
+        onClick: ({ key }) => {
+          if (key === 'close') confirmClose()
+          if (key === 'rename') {
+            setEditingName(instance.name)
+            setEditing(true)
+          }
+        },
+      }}
+      dropdown={{ trigger: ['click'], placement: 'bottomRight' }}
+    >
+      <YakitButton
+        type="text2"
+        size="small"
+        icon={<DotsHorizontalOutlined color="currentColor" />}
+        aria-label={i18n.t('aiAgent:BrowserInstances.more')}
+      />
+    </YakitDropdownMenu>
+  )
+
   return (
     <div className={styles['browser-card']}>
-      <div className={styles['current-main']}>
-        <div className={styles['browser-avatar']}>
-          {instance.tab?.favIconUrl ? <img src={instance.tab.favIconUrl} alt="" /> : <GlobalOutlined />}
+      <BrowserPreviewPopover instance={instance} thumbnail={thumbnail} refreshThumbnail={refreshThumbnail}>
+        <span className={styles['preview-shell']}>
+          <BrowserCardPreview instance={instance} thumbnail={thumbnail} />
           {instance.identity && (
             <span className={styles['identity-mark']} data-identity={instance.identity}>
               {instance.identity}
             </span>
           )}
-        </div>
-        <div className={styles['instance-copy']}>
-          <div className={styles['instance-title-row']} title={browserInstanceDisplayName(instance)}>
-            <span className={styles['instance-title']}>{instance.tab?.title || instance.name}</span>
+        </span>
+      </BrowserPreviewPopover>
+      <div className={styles['card-body']}>
+        <div className={styles['card-header']}>
+          {editing ? (
+            <YakitInput
+              size="small"
+              wrapperClassName={styles['name-input']}
+              value={editingName}
+              maxLength={80}
+              onChange={(event) => setEditingName(event.target.value)}
+              onPressEnter={() => void saveName()}
+            />
+          ) : (
+            <span className={styles['instance-title']} title={instance.name || browserInstanceDisplayName(instance)}>
+              {instance.name || instance.tab?.title}
+            </span>
+          )}
+          <div className={styles['card-actions']}>
+            {editing ? (
+              <>
+                <YakitButton
+                  type="text2"
+                  icon={<XOutlined color="currentColor" />}
+                  disabled={mutating}
+                  onClick={() => {
+                    setEditingName(instance.name)
+                    setEditing(false)
+                  }}
+                />
+                <YakitButton
+                  type="text2"
+                  icon={<CheckOutlined color="currentColor" />}
+                  loading={mutating}
+                  onClick={() => void saveName()}
+                />
+              </>
+            ) : (
+              <>
+                <YakitButton
+                  type="text2"
+                  icon={<PaperAirplaneOutlined color="currentColor" />}
+                  aria-label={i18n.t('aiAgent:BrowserInstances.reference')}
+                  onClick={() => insertBrowserInstanceMention(instance)}
+                />
+                <YakitButton
+                  type="text2"
+                  icon={<PositionOutlined color="currentColor" />}
+                  disabled={!canFocus}
+                  loading={focusing}
+                  aria-label={i18n.t('aiAgent:BrowserInstances.focus')}
+                  onClick={focusBrowser}
+                />
+                {moreMenu}
+              </>
+            )}
           </div>
-          <div className={styles['instance-url']} title={instance.tab?.url || instance.origin}>
+        </div>
+        <div className={styles['instance-url-row']} title={instance.tab?.url || instance.origin}>
+          <BrowserFavicon src={instance.tab?.favIconUrl} />
+          <span className={styles['instance-url']}>
             {instance.tab?.url ||
               (instance.online ? i18n.t('aiAgent:BrowserInstances.noAuthorizedPage') : instance.origin)}
-          </div>
-          <div className={styles['instance-meta']}>
-            <span className={classNames(styles['online-dot'], { [styles['offline-dot']]: !instance.online })} />
-            <span>
-              {instance.online ? i18n.t('aiAgent:BrowserInstances.online') : formatRelativeTime(instance.lastSeenAt)}
-            </span>
-            <BrowserStatus instance={instance} />
-          </div>
+          </span>
         </div>
-        <BrowserPreviewPopover instance={instance} thumbnail={thumbnail} refreshThumbnail={refreshThumbnail}>
-          <BrowserCardPreview instance={instance} thumbnail={thumbnail} />
-        </BrowserPreviewPopover>
-      </div>
-      <div className={styles['current-actions']}>
-        <YakitButton type="text2" icon={<LinkOutlined />} onClick={() => insertBrowserInstanceMention(instance)}>
-          {i18n.t('aiAgent:BrowserInstances.reference')}
-        </YakitButton>
-        <YakitButton
-          type="text2"
-          icon={<GlobalOutlined />}
-          disabled={!canFocus}
-          loading={focusing}
-          onClick={focusBrowser}
-        >
-          {i18n.t('aiAgent:BrowserInstances.focus')}
-        </YakitButton>
-        <YakitDropdownMenu
-          menu={{
-            width: 136,
-            data: [
-              {
-                key: 'manage',
-                label: i18n.t('aiAgent:BrowserInstances.manage'),
-                itemIcon: <SettingOutlined />,
-              },
-              ...(canClose
-                ? [
-                    { type: 'divider' as const },
-                    {
-                      key: 'close',
-                      label: i18n.t('aiAgent:BrowserInstances.close'),
-                      itemIcon: <CloseOutlined />,
-                      type: 'danger' as const,
-                    },
-                  ]
-                : []),
-            ],
-            onClick: ({ key }) => {
-              if (key === 'close') confirmClose()
-              else openBrowserManagement()
-            },
-          }}
-          dropdown={{ trigger: ['click'], placement: 'bottomRight' }}
-        >
-          <YakitButton type="text2" icon={<EllipsisOutlined />} aria-label={i18n.t('aiAgent:BrowserInstances.more')} />
-        </YakitDropdownMenu>
+        <div className={styles['instance-meta']}>
+          <BrowserStatus instance={instance} />
+          {!!productLabel && <span className={styles['browser-product']}>{productLabel}</span>}
+        </div>
       </div>
     </div>
   )
 }
 
-const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ instance }) => (
-  <div className={styles['offline-row']}>
-    <div className={styles['browser-avatar']}>
-      {instance.tab?.favIconUrl ? <img src={instance.tab.favIconUrl} alt="" /> : <GlobalOutlined />}
-      {instance.identity && (
-        <span className={styles['identity-mark']} data-identity={instance.identity}>
-          {instance.identity}
-        </span>
-      )}
-    </div>
-    <div className={styles['instance-copy']}>
-      <div className={styles['instance-title']} title={browserInstanceDisplayName(instance)}>
-        {instance.tab?.title || instance.name}
+const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ instance }) => {
+  const [editing, setEditing] = useState(false)
+  const [editingName, setEditingName] = useState(instance.name)
+  const [mutating, setMutating] = useState(false)
+
+  const saveName = useMemoizedFn(async () => {
+    if (!editingName.trim() || editingName.trim() === instance.name) {
+      setEditing(false)
+      setEditingName(instance.name)
+      return
+    }
+    setMutating(true)
+    try {
+      await renameBrowserDevice(instance.id, editingName)
+      setEditing(false)
+    } catch (error) {
+      failed(i18n.t('aiAgent:BrowserInstances.renameFailed', { error: `${error}` }))
+    } finally {
+      setMutating(false)
+    }
+  })
+
+  const removeDevice = useMemoizedFn(() => {
+    const modal = YakitModalConfirm({
+      width: 420,
+      title: i18n.t('aiAgent:BrowserInstances.removeOfflineTitle'),
+      content: i18n.t('aiAgent:BrowserInstances.removeOfflineConfirm', { name: instance.name }),
+      onOkText: i18n.t('aiAgent:BrowserInstances.removeOfflineOk'),
+      showConfirmLoading: true,
+      onOk: async () => {
+        try {
+          await requestBrowserExtensionSnapshot('DELETE', `/devices/${instance.id}`)
+          await refreshBrowserInstances(true)
+          success(i18n.t('aiAgent:BrowserInstances.removeOfflineSuccess'))
+          modal.destroy()
+        } catch (error) {
+          failed(i18n.t('aiAgent:BrowserInstances.removeFailed', { error: `${error}` }))
+        }
+      },
+    })
+  })
+
+  return (
+    <div className={styles['offline-row']}>
+      <div className={styles['browser-avatar']}>
+        <BrowserFavicon src={instance.tab?.favIconUrl} />
+        {instance.identity && (
+          <span className={styles['identity-mark']} data-identity={instance.identity}>
+            {instance.identity}
+          </span>
+        )}
       </div>
-      <div className={styles['instance-url']} title={instance.tab?.url || instance.origin}>
-        {instance.tab?.url || instance.origin}
+      <div className={styles['offline-copy']}>
+        <div className={styles['offline-title-row']}>
+          {editing ? (
+            <YakitInput
+              size="small"
+              wrapperClassName={styles['name-input']}
+              value={editingName}
+              maxLength={80}
+              onChange={(event) => setEditingName(event.target.value)}
+              onPressEnter={() => void saveName()}
+            />
+          ) : (
+            <span className={styles['instance-title']} title={instance.name}>
+              {instance.name}
+            </span>
+          )}
+          <div className={styles['offline-actions']}>
+            {editing ? (
+              <>
+                <YakitButton
+                  type="text2"
+                  icon={<XOutlined color="currentColor" />}
+                  disabled={mutating}
+                  onClick={() => {
+                    setEditingName(instance.name)
+                    setEditing(false)
+                  }}
+                />
+                <YakitButton
+                  type="text2"
+                  icon={<CheckOutlined color="currentColor" />}
+                  loading={mutating}
+                  onClick={() => void saveName()}
+                />
+              </>
+            ) : (
+              <>
+                <div className={styles['offline-hover-actions']}>
+                  <YakitButton
+                    type="text2"
+                    icon={<PencilOutlined color="currentColor" />}
+                    aria-label={i18n.t('aiAgent:BrowserInstances.rename')}
+                    onClick={() => {
+                      setEditingName(instance.name)
+                      setEditing(true)
+                    }}
+                  />
+                  <YakitButton
+                    type="text2"
+                    danger
+                    icon={<TrashOutlined color="currentColor" />}
+                    aria-label={i18n.t('aiAgent:BrowserInstances.remove')}
+                    onClick={removeDevice}
+                  />
+                </div>
+                <BrowserStatus instance={instance} />
+              </>
+            )}
+          </div>
+        </div>
+        <div className={styles['instance-url']} title={instance.origin}>
+          {instance.origin}
+        </div>
+        <div className={styles['offline-last-seen']}>
+          {i18n.t('aiAgent:BrowserInstances.lastSeen', { time: formatLastSeen(instance.lastSeenAt) })}
+        </div>
       </div>
     </div>
-    <BrowserStatus instance={instance} />
-  </div>
-)
+  )
+}
 
 const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ request }) => {
   const [action, setAction] = useState<'approve' | 'reject' | ''>('')
@@ -401,11 +614,14 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
     }
   })
 
+  const subtitle = pairingSubtitle(request)
+  const code = `${request.code.slice(0, 3)} ${request.code.slice(3)}`.trim()
+
   return (
     <article className={styles['pairing-card']}>
-      <div className={styles['pairing-main']}>
-        <div className={styles['browser-avatar']}>
-          <GlobalOutlined />
+      <div className={styles['pairing-body']}>
+        <div className={styles['pairing-avatar']}>
+          <ChromeOutlined color="currentColor" size={22} />
           {identity && (
             <span className={styles['identity-mark']} data-identity={identity}>
               {identity}
@@ -413,26 +629,42 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
           )}
         </div>
         <div className={styles['pairing-copy']}>
-          <strong>
+          <div className={styles['pairing-title']}>
             {i18n.t(
               identity ? 'aiAgent:BrowserInstances.pairingTitleManaged' : 'aiAgent:BrowserInstances.pairingTitle',
               { identity },
             )}
-          </strong>
-          <span>
-            {i18n.t('aiAgent:BrowserInstances.verificationCode')} {request.code.slice(0, 3)} {request.code.slice(3)}
-            {' · '}
-            {i18n.t('aiAgent:BrowserInstances.expiresIn', { count: seconds })}
-          </span>
+          </div>
+          {!!subtitle && (
+            <span className={styles['pairing-meta']} title={subtitle}>
+              {subtitle}
+            </span>
+          )}
+          <div className={styles['pairing-code-row']}>
+            <YakitTag size="small" className={styles['pairing-code']}>
+              {i18n.t('aiAgent:BrowserInstances.verificationCode')} {code}
+            </YakitTag>
+            <span className={styles['pairing-expire']}>
+              {i18n.t('aiAgent:BrowserInstances.expiresIn', { count: seconds })}
+            </span>
+          </div>
         </div>
       </div>
       <div className={styles['pairing-actions']}>
-        <YakitButton type="outline2" danger disabled={Boolean(action)} onClick={() => void decide(false)}>
+        <YakitButton
+          type="text2"
+          className={styles['pairing-action-btn']}
+          icon={<XOutlined color="currentColor" />}
+          loading={action === 'reject'}
+          disabled={Boolean(action)}
+          onClick={() => void decide(false)}
+        >
           {i18n.t('aiAgent:BrowserInstances.reject')}
         </YakitButton>
         <YakitButton
-          type="primary"
-          icon={<CheckOutlined />}
+          type="text2"
+          className={styles['pairing-action-btn']}
+          icon={<CheckOutlined color="currentColor" />}
           loading={action === 'approve'}
           disabled={seconds <= 0 || action === 'reject'}
           onClick={() => void decide(true)}
@@ -446,9 +678,21 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
 
 export const BrowserInstancesPanel: React.FC = () => {
   const { instances, pending, loading, error } = useBrowserInstances()
+  const [onlineExpanded, setOnlineExpanded] = useState(true)
+  const [pendingExpanded, setPendingExpanded] = useState(true)
   const [offlineExpanded, setOfflineExpanded] = useState(false)
+  const [pairingLoading, setPairingLoading] = useState(false)
   const online = useMemo(() => instances.filter((instance) => instance.online), [instances])
   const offline = useMemo(() => instances.filter((instance) => !instance.online), [instances])
+  const handleOpenPairingWindow = useMemoizedFn(async () => {
+    if (pairingLoading) return
+    setPairingLoading(true)
+    try {
+      await openPairingWindow()
+    } finally {
+      setPairingLoading(false)
+    }
+  })
 
   return (
     <div className={styles['browser-instances-panel']}>
@@ -457,54 +701,100 @@ export const BrowserInstancesPanel: React.FC = () => {
           <div className={styles['panel-title']}>{i18n.t('aiAgent:BrowserInstances.title')}</div>
           <div className={styles['panel-subtitle']}>{i18n.t('aiAgent:BrowserInstances.subtitle')}</div>
         </div>
-        <YakitButton type="outline2" icon={<PlusOutlined />} onClick={openBrowserManagement}>
-          {i18n.t('aiAgent:BrowserInstances.add')}
-        </YakitButton>
+        <div className={styles['header-actions']}>
+          <YakitButton
+            type="text2"
+            icon={<PlusOutlined color="currentColor" />}
+            size="small"
+            loading={pairingLoading}
+            aria-label={i18n.t('aiAgent:BrowserInstances.connect')}
+            onClick={() => void handleOpenPairingWindow()}
+          />
+          <span className={styles['header-divider']} />
+          <YakitButton
+            type="text2"
+            icon={<RefreshOutlined color="currentColor" />}
+            size="small"
+            loading={loading}
+            aria-label={i18n.t('aiAgent:BrowserInstances.refresh')}
+            onClick={() => void refreshBrowserInstances()}
+          />
+        </div>
       </div>
 
       <YakitSpin spinning={loading && !instances.length && !pending.length}>
         <div className={styles['panel-body']}>
           {error && !instances.length && !pending.length ? (
             <div className={styles['empty-state']}>
-              <GlobalOutlined />
+              <GlobeOutlined color="currentColor" size={30} />
               <span>{i18n.t('aiAgent:BrowserInstances.readFailed')}</span>
-              <YakitButton type="text" onClick={openBrowserManagement}>
+              <YakitButton type="text" loading={pairingLoading} onClick={() => void handleOpenPairingWindow()}>
                 {i18n.t('aiAgent:BrowserInstances.goConnect')}
               </YakitButton>
             </div>
           ) : !instances.length && !pending.length ? (
             <div className={styles['empty-state']}>
-              <GlobalOutlined />
+              <GlobeOutlined color="currentColor" size={30} />
               <span>{i18n.t('aiAgent:BrowserInstances.noInstances')}</span>
               <span className={styles['empty-hint']}>{i18n.t('aiAgent:BrowserInstances.emptyHint')}</span>
-              <YakitButton type="primary" onClick={openBrowserManagement}>
+              <YakitButton type="primary" loading={pairingLoading} onClick={() => void handleOpenPairingWindow()}>
                 {i18n.t('aiAgent:BrowserInstances.connect')}
               </YakitButton>
             </div>
           ) : (
             <>
-              {!!online.length && (
-                <section className={styles['instance-section']}>
-                  <div className={styles['section-title']}>
-                    <DownOutlined /> {i18n.t('aiAgent:BrowserInstances.current')}
-                  </div>
-                  <div className={styles['browser-card-list']}>
-                    {online.map((instance) => (
-                      <BrowserInstanceCard key={instance.id} instance={instance} />
-                    ))}
-                  </div>
-                </section>
-              )}
               {!!pending.length && (
                 <section className={styles['instance-section']}>
-                  <div className={styles['section-title']}>
-                    <RightOutlined /> {i18n.t('aiAgent:BrowserInstances.pendingApproval')}
-                  </div>
-                  <div className={styles['browser-card-list']}>
-                    {pending.map((request) => (
-                      <BrowserPairingCard key={request.id} request={request} />
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    className={styles['section-toggle']}
+                    onClick={() => setPendingExpanded((value) => !value)}
+                    aria-expanded={pendingExpanded}
+                  >
+                    {pendingExpanded ? (
+                      <ChevronDownOutlined color="currentColor" size={9} />
+                    ) : (
+                      <ChevronRightOutlined color="currentColor" size={9} />
+                    )}
+                    <span>{i18n.t('aiAgent:BrowserInstances.pendingApproval')}</span>
+                    <YakitTag fullRadius size="small">
+                      {pending.length}
+                    </YakitTag>
+                  </button>
+                  {pendingExpanded && (
+                    <div className={styles['browser-card-list']}>
+                      {pending.map((request) => (
+                        <BrowserPairingCard key={request.id} request={request} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
+              {!!online.length && (
+                <section className={styles['instance-section']}>
+                  <button
+                    type="button"
+                    className={styles['section-toggle']}
+                    onClick={() => setOnlineExpanded((value) => !value)}
+                    aria-expanded={onlineExpanded}
+                  >
+                    {onlineExpanded ? (
+                      <ChevronDownOutlined color="currentColor" size={9} />
+                    ) : (
+                      <ChevronRightOutlined color="currentColor" size={9} />
+                    )}
+                    <span>{i18n.t('aiAgent:BrowserInstances.current')}</span>
+                    <YakitTag fullRadius size="small">
+                      {online.length}
+                    </YakitTag>
+                  </button>
+                  {onlineExpanded && (
+                    <div className={styles['browser-card-list']}>
+                      {online.map((instance) => (
+                        <BrowserInstanceCard key={instance.id} instance={instance} />
+                      ))}
+                    </div>
+                  )}
                 </section>
               )}
               {!!offline.length && (
@@ -515,9 +805,15 @@ export const BrowserInstancesPanel: React.FC = () => {
                     onClick={() => setOfflineExpanded((value) => !value)}
                     aria-expanded={offlineExpanded}
                   >
-                    {offlineExpanded ? <DownOutlined /> : <RightOutlined />}
+                    {offlineExpanded ? (
+                      <ChevronDownOutlined color="currentColor" size={9} />
+                    ) : (
+                      <ChevronRightOutlined color="currentColor" size={9} />
+                    )}
                     <span>{i18n.t('aiAgent:BrowserInstances.others')}</span>
-                    <small>{offline.length}</small>
+                    <YakitTag fullRadius size="small">
+                      {offline.length}
+                    </YakitTag>
                   </button>
                   {offlineExpanded && (
                     <div className={styles['offline-list']}>
@@ -532,11 +828,6 @@ export const BrowserInstancesPanel: React.FC = () => {
           )}
         </div>
       </YakitSpin>
-
-      <button className={styles['manage-all']} type="button" onClick={openBrowserManagement}>
-        <span>{i18n.t('aiAgent:BrowserInstances.manageAll')}</span>
-        <RightOutlined />
-      </button>
     </div>
   )
 }
