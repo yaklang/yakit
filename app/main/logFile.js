@@ -2,6 +2,8 @@ const path = require('path')
 const fs = require('fs')
 const { getEngineLogDir, getRenderLogDir, getPrintLogDir } = require('./filePath')
 const { shell } = require('electron')
+const currentLogFiles = {}
+const pendingWrites = new Set()
 
 /** 生成时间字符 (YYYYMMDDHHMMSS) */
 const getFormattedDateTime = () => {
@@ -81,21 +83,28 @@ const getLogFileHandle = (folderPath, fileName, info) => {
         console.error(`打开${info}错误: `, err)
         reject(err)
       } else {
-        fs.write(fd, `---------- 开始记录${info} ----------\n`, (err) => {})
-        resolve(fd)
+        currentLogFiles[fileName.replace('-log', '')] = filePath
+        writeLogFileContent(fd, `---------- 开始记录${info} ----------`).then(() => resolve(fd))
       }
     })
   })
 }
 /** 通过文件句柄写入内容 */
 const writeLogFileContent = (fileHandle, content, info) => {
-  if (fileHandle) {
-    fs.write(fileHandle, `${content}\n`, (err) => {
-      if (err) {
-        console.error(`写入${info || '日志'}错误: `, err)
-      }
+  if (fileHandle !== null && fileHandle !== undefined) {
+    const pending = new Promise((resolve) => {
+      fs.write(fileHandle, `${content}\n`, (err) => {
+        if (err) {
+          console.error(`写入${info || '日志'}错误: `, err)
+        }
+        resolve()
+      })
     })
+    pendingWrites.add(pending)
+    pending.then(() => pendingWrites.delete(pending))
+    return pending
   }
+  return Promise.resolve()
 }
 
 // #region 引擎日志
@@ -111,14 +120,17 @@ const getEngineLogHandle = async () => {
 }
 
 /** 关闭引擎日志文件 */
-const closeEngineLogHandle = () => {
+const closeEngineLogHandle = async () => {
   const { info } = TypeToLogBasicInfo.engine || {}
-  writeLogFileContent(engineLogHandle, `---------- 结束日志收集, 关闭中 ----------`, info)
-  if (engineLogHandle) {
-    fs.close(engineLogHandle, (err) => {
-      if (err) {
-        console.error(`关闭${info}错误: `, err)
-      }
+  await writeLogFileContent(engineLogHandle, `---------- 结束日志收集, 关闭中 ----------`, info)
+  if (engineLogHandle !== null) {
+    await new Promise((resolve) => {
+      fs.close(engineLogHandle, (err) => {
+        if (err) {
+          console.error(`关闭${info}错误: `, err)
+        }
+        resolve()
+      })
     })
   }
   engineLogHandle = null
@@ -184,14 +196,17 @@ const getRenderLogHandle = async () => {
 }
 
 /** 关闭渲染端日志文件 */
-const closeRenderLogHandle = () => {
+const closeRenderLogHandle = async () => {
   const { info } = TypeToLogBasicInfo.render || {}
-  writeLogFileContent(renderLogHandle, `---------- 结束日志收集, 关闭中 ----------`, info)
-  if (renderLogHandle) {
-    fs.close(renderLogHandle, (err) => {
-      if (err) {
-        console.error(`关闭${info}错误: `, err)
-      }
+  await writeLogFileContent(renderLogHandle, `---------- 结束日志收集, 关闭中 ----------`, info)
+  if (renderLogHandle !== null) {
+    await new Promise((resolve) => {
+      fs.close(renderLogHandle, (err) => {
+        if (err) {
+          console.error(`关闭${info}错误: `, err)
+        }
+        resolve()
+      })
     })
   }
   renderLogHandle = null
@@ -233,14 +248,17 @@ const getPrintLogHandle = async () => {
 }
 
 /** 关闭输出信息日志文件 */
-const closePrintLogHandle = () => {
+const closePrintLogHandle = async () => {
   const { info } = TypeToLogBasicInfo.print || {}
-  writeLogFileContent(printLogHandle, `---------- 结束日志收集, 关闭中 ----------`, info)
-  if (printLogHandle) {
-    fs.close(printLogHandle, (err) => {
-      if (err) {
-        console.error(`关闭${info}错误: `, err)
-      }
+  await writeLogFileContent(printLogHandle, `---------- 结束日志收集, 关闭中 ----------`, info)
+  if (printLogHandle !== null) {
+    await new Promise((resolve) => {
+      fs.close(printLogHandle, (err) => {
+        if (err) {
+          console.error(`关闭${info}错误: `, err)
+        }
+        resolve()
+      })
     })
   }
   printLogHandle = null
@@ -275,11 +293,25 @@ const getAllLogHandles = async () => {
     await Promise.allSettled([getEngineLogHandle(), getRenderLogHandle(), getPrintLogHandle()])
   } catch (error) {}
 }
+/** Drain the 500 ms buffers and await writes already issued before exporting or exiting. */
+const flushAllLogs = async () => {
+  clearTimeout(engineTime)
+  clearTimeout(renderTime)
+  clearTimeout(printTime)
+  engineTime = renderTime = printTime = null
+  for (const [handle, buffer] of [
+    [engineLogHandle, engineContent],
+    [renderLogHandle, renderContent],
+    [printLogHandle, printContent],
+  ]) {
+    if (buffer.length) writeLogFileContent(handle, buffer.splice(0).join('\n'))
+  }
+  await Promise.all([...pendingWrites])
+}
 /** 关闭本次软件所有获取到的日志句柄 */
-const closeAllLogHandles = () => {
-  closeEngineLogHandle()
-  closeRenderLogHandle()
-  closePrintLogHandle()
+const closeAllLogHandles = async () => {
+  await flushAllLogs()
+  await Promise.all([closeEngineLogHandle(), closeRenderLogHandle(), closePrintLogHandle()])
 }
 
 /** 初始化所有日志文件夹 */
@@ -326,6 +358,8 @@ module.exports = {
 
   getAllLogHandles,
   closeAllLogHandles,
+  flushAllLogs,
+  getCurrentLogFiles: () => ({ ...currentLogFiles }),
 
   initAllLogFolders,
 }
