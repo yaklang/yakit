@@ -10,7 +10,7 @@ const defaultMcpStreamState: mcpStreamHooks = {
   },
   mcpStreamEvent: {
     onCancel: () => {},
-    onStart: () => {},
+    onStart: (_options, _overrideUrl?) => {},
     onSetMcpUrl: () => {},
   },
 }

@@ -24,7 +24,7 @@ export interface mcpStreamHooks {
   }
   mcpStreamEvent: {
     onCancel: () => void
-    onStart: (options: StartMcpServerOptions) => void
+    onStart: (options: StartMcpServerOptions, overrideUrl?: string) => void
     onSetMcpUrl: (url: string) => void
   }
 }

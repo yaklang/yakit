@@ -173,4 +173,25 @@ describe('YakMcpSettings', () => {
     expect(mainSwitch).toBeDisabled()
     expect(autoStartSwitch).toBeDisabled()
   })
+
+  it('远程模式下启动地址不写入缓存', async () => {
+    mcpStreamInfoRef.current = { mcpUrl: '127.0.0.1:11432', mcpCurrent: undefined, mcpServerUrl: '' }
+    ipcRendererMock.invoke.mockResolvedValue('/opt/yak')
+    getRemoteValueMock.mockResolvedValue('')
+
+    const { SystemInfo } = await import('@/constants/hardware')
+    ;(SystemInfo as any).mode = 'remote'
+
+    const { rerender } = render(<YakMcpSettings />)
+
+    mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: '0.0.0.0:11432' }
+    rerender(<YakMcpSettings />)
+
+    await waitFor(() => {
+      expect(setRemoteValueMock).toHaveBeenCalledWith(
+        RemoteAIAgentGV.YakMCPStartConfig,
+        expect.stringContaining('"url":""'),
+      )
+    })
+  })
 })
