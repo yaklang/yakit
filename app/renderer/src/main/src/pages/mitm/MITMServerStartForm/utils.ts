@@ -156,3 +156,22 @@ export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIPro
   data.advancedFilters = advancedFilters
   return data
 }
+
+/**
+ * @description 向 MITM 过滤器指定字段追加单个值并去重，返回后端所需的 MITMFilterData
+ * @param current 当前后端过滤器数据
+ * @param field 前端基础过滤器字段名
+ * @param value 要追加的值
+ */
+export const buildNextMITMFilterData = (
+  current: MITMFilterData,
+  field: 'excludeUri' | 'excludeHostname',
+  value: string,
+): MITMFilterData => {
+  const ui = convertMITMFilterUI(current)
+  const nextBaseFilter = {
+    ...ui.baseFilter,
+    [field]: Array.from(new Set([...(ui.baseFilter[field] || []), value])),
+  }
+  return convertLocalMITMFilterRequest({ baseFilter: nextBaseFilter, advancedFilters: ui.advancedFilters })
+}

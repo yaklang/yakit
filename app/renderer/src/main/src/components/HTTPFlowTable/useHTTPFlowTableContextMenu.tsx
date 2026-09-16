@@ -111,6 +111,8 @@ export interface UseHTTPFlowTableContextMenuOptions {
   onShieldRecord: (flow: HTTPFlow) => void
   onShieldURL: (flow: HTTPFlow) => void
   onShieldDomain: (flow: HTTPFlow) => void
+  onFilterURL?: (flow: HTTPFlow) => void
+  onFilterDomain?: (flow: HTTPFlow) => void
   onBatch: (f: (element: HTTPFlow) => void, number: number, all?: boolean, rows?: HTTPFlow[]) => void
   onViewAttachmentDataRefresh: (id: number) => void
   onClearSelection: () => void
@@ -155,6 +157,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onShieldRecord,
     onShieldURL,
     onShieldDomain,
+    onFilterURL,
+    onFilterDomain,
     onBatch,
     onViewAttachmentDataRefresh,
     onClearSelection,
@@ -459,6 +463,27 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           },
         ],
       },
+      ...(pageType === 'MITM'
+        ? [
+            {
+              key: 'filter',
+              label: t('HTTPFlowTable.RowContextMenu.filter'),
+              webSocket: true,
+              default: true,
+              onClickSingle: () => {},
+              children: [
+                {
+                  key: 'filterURL',
+                  label: t('HTTPFlowTable.RowContextMenu.filterURL'),
+                },
+                {
+                  key: 'filterDomain',
+                  label: t('HTTPFlowTable.RowContextMenu.filterDomain'),
+                },
+              ],
+            },
+          ]
+        : []),
       {
         key: 'delete',
         label: t('HTTPFlowTable.RowContextMenu.delete'),
@@ -866,6 +891,12 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
               break
             case 'blockDomain':
               onShieldDomain(rowData)
+              break
+            case 'filterURL':
+              onFilterURL?.(rowData)
+              break
+            case 'filterDomain':
+              onFilterDomain?.(rowData)
               break
             case 'deleteRecord':
               onRemoveHttpHistory({ Id: [rowData.Id] })

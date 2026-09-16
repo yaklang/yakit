@@ -98,6 +98,10 @@ import {
 import { useHTTPFlowTableShortcutKeys } from './useHTTPFlowTableShortcutKeys'
 import { useHTTPFlowTableContextMenu } from './useHTTPFlowTableContextMenu'
 import { onSendToTab, toggleHTTPFlowFavorite } from './HTTPFlowTable.actions'
+import { grpcMITMGetFilter, grpcMITMSetFilter } from '@/pages/mitm/MITMHacker/utils'
+import type { MITMSetFilterRequest } from '@/pages/mitm/MITMHacker/utils'
+import { defaultMITMFilterData } from '@/defaultConstants/mitm'
+import { buildNextMITMFilterData } from '@/pages/mitm/MITMServerStartForm/utils'
 import { NowProjectDescription } from '@/pages/globalVariable'
 import { useStore } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -2529,6 +2533,46 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     appendShieldItem(host)
   })
 
+  /**
+   * @description 将值追加到 MITM 过滤器指定字段并去重，静默保存
+   */
+  const appendMITMFilterItem = useMemoizedFn(
+    async (field: 'excludeUri' | 'excludeHostname', value: string, emptyTip: string) => {
+      if (!value) {
+        yakitNotify('warning', emptyTip)
+        return
+      }
+      try {
+        const current = await grpcMITMGetFilter()
+        const filter = buildNextMITMFilterData(current.FilterData || defaultMITMFilterData, field, value)
+        const req: MITMSetFilterRequest = {
+          FilterData: filter,
+          version: mitmVersion,
+        }
+        await grpcMITMSetFilter(req)
+        yakitNotify('success', t('HTTPFlowTable.filterUpdateSuccess'))
+        emiter.emit('onRefFilterWhiteListEvent', mitmVersion)
+      } catch (err) {
+        yakitFailed(t('HTTPFlowTable.filterUpdateFailed', { err: err + '' }))
+      }
+    },
+  )
+
+  /**
+   * @description 过滤URL：追加到 MITM 过滤器的 excludeUri
+   */
+  const onFilterURL = useMemoizedFn((v: HTTPFlow) => {
+    appendMITMFilterItem('excludeUri', v.Url, t('HTTPFlowTable.filterURLEmpty'))
+  })
+
+  /**
+   * @description 过滤域名：追加到 MITM 过滤器的 excludeHostname
+   */
+  const onFilterDomain = useMemoizedFn((v: HTTPFlow) => {
+    const host = v?.HostPort?.split(':')[0] || ''
+    appendMITMFilterItem('excludeHostname', host, t('HTTPFlowTable.filterDomainEmpty'))
+  })
+
   useHTTPFlowTableShortcutKeys({
     inViewport,
     getSelected,
@@ -2738,6 +2782,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onShieldRecord,
     onShieldURL,
     onShieldDomain,
+    onFilterURL,
+    onFilterDomain,
     onBatch,
     onViewAttachmentDataRefresh,
     onClearSelection: resetSelected,
