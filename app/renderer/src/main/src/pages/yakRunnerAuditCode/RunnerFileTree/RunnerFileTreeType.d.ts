@@ -8,7 +8,7 @@ export interface RunnerFileTreeProps {
 
 export interface OpenedFileProps {}
 
-export type ActiveProps = 'all' | 'file' | 'rule' | 'global-filtering-function' | 'rule-generate'
+export type ActiveProps = 'all' | 'file' | 'rule' | 'global-filtering-function' | 'rule-generate' | 'c-headers'
 
 export interface RiskTreeProps {
   type: 'file' | 'rule' | 'risk'

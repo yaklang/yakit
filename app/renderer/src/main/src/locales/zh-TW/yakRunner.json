@@ -133,6 +133,7 @@
     "ruleSummary": "規則彙總",
     "ruleGenerate": "規則生成",
     "globalFilterFn": "全域性過濾函式",
+    "cHeaders": "C 頭檔",
     "codeScan": "程式碼掃描",
     "compileProject": "編譯專案",
     "recompile": "重新編譯",
@@ -187,5 +188,19 @@
     "jumpToScanFailed": "跳轉程式碼掃描頁失敗：{{error}}",
     "openProject": "開啟專案",
     "compileHistory": "編譯歷史"
+  },
+  "CHeaderManager": {
+    "loadingDir": "正在載入頭檔目錄…",
+    "addZip": "新增 Zip 頭檔包",
+    "addFolder": "匯入頭檔資料夾",
+    "searchPlaceholder": "搜尋頭檔包或檔名",
+    "emptyTitle": "暫無 C 頭檔",
+    "emptyDesc": "C 專案編譯時會在此目錄尋找系統頭檔（支援頂層 zip）。可將 CRT / Windows SDK 等頭檔包放在這裡。",
+    "importSuccess": "匯入成功",
+    "importFailed": "匯入失敗",
+    "deleteSuccess": "已刪除 {{name}}",
+    "deleteFailed": "刪除失敗",
+    "deleteConfirm": "確定刪除 {{name}}？",
+    "truncated": "檔案過大，僅顯示部分內容"
   }
 }
