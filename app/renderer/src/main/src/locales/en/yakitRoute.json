@@ -123,6 +123,7 @@
     "ai": "AI",
     "ai-repository": "Knowledge base",
     "ssaCompileHistory": "SSACompileHistory",
+    "cHeaders": "C Headers",
     "mcpHistory": "MCP Call History",
     "penetrationRecordDescription": "Records any content generated during the penetration testing process, making it easy to review and track.",
     "ai-memory": "Memory Base",

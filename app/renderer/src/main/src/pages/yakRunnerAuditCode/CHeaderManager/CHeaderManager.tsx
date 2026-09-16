@@ -357,7 +357,7 @@ const CHeaderManager: React.FC<CHeaderManagerProps> = React.memo(() => {
         width={560}
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
-        getContainer={document.getElementById('audit-code') || document.body}
+        getContainer={document.body}
         destroyOnClose
       >
         {previewTruncated && <div className={styles['preview-tip']}>{t('CHeaderManager.truncated')}</div>}
