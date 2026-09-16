@@ -101,12 +101,14 @@ vi.mock('@/utils/tool', () => ({ JSONParseLog: vi.fn() }))
 vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 
 describe('PluginExecuteHttpFlow 查询范围', () => {
-  it('History 模式透传空 runtimeId，且不限制 SourceType', () => {
-    render(<PluginExecuteHttpFlow pageType="History" runtimeId="" showAdvancedSearch showSetting />)
+  it.each([false, true])('History 模式透传空 runtimeId，并包含所有来源（isCrawler：%s）', (isCrawler) => {
+    render(
+      <PluginExecuteHttpFlow pageType="History" runtimeId="" isCrawler={isCrawler} showAdvancedSearch showSetting />,
+    )
     const table = screen.getByTestId('http-table')
     expect(table).toHaveAttribute('data-page-type', 'History')
     expect(table).toHaveAttribute('data-runtime-id', '')
-    expect(table).not.toHaveAttribute('data-source-type')
+    expect(table).toHaveAttribute('data-source-type', 'mitm,scan,basic-crawler')
   })
 
   it.each([
