@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/utils/electronBridge', () => ({
   yakitClipboard: { setText: vi.fn() },
   yakitLicense: {
-    isRequired: vi.fn(),
     verifyCached: vi.fn(),
     getRequestCode: vi.fn(),
     activate: vi.fn(),
@@ -33,20 +32,17 @@ describe('Memfit license entry policy', () => {
   })
   afterEach(cleanup)
 
-  it('enters integration mode without showing activation or calling license RPCs', async () => {
-    vi.mocked(yakitLicense.isRequired).mockResolvedValue(false)
+  it('enters only after the engine verifies a cached license', async () => {
+    vi.mocked(yakitLicense.verifyCached).mockResolvedValue(true)
     const onVerified = vi.fn().mockResolvedValue(undefined)
     render(<MemfitLicenseGate onVerified={onVerified} />)
-    expect(screen.queryByText('产品授权')).toBeNull()
     await waitFor(() => expect(onVerified).toHaveBeenCalledTimes(1))
-    expect(yakitLicense.verifyCached).not.toHaveBeenCalled()
+    expect(yakitLicense.verifyCached).toHaveBeenCalledTimes(1)
     expect(yakitLicense.getRequestCode).not.toHaveBeenCalled()
     expect(yakitLicense.activate).not.toHaveBeenCalled()
-    expect(screen.queryByText('产品授权')).toBeNull()
   })
 
-  it('restores activation when the policy requires a license', async () => {
-    vi.mocked(yakitLicense.isRequired).mockResolvedValue(true)
+  it('shows activation when no valid cached license exists', async () => {
     vi.mocked(yakitLicense.verifyCached).mockResolvedValue(false)
     vi.mocked(yakitLicense.getRequestCode).mockResolvedValue('device-request')
     const onVerified = vi.fn()
@@ -56,12 +52,13 @@ describe('Memfit license entry policy', () => {
     expect(onVerified).not.toHaveBeenCalled()
   })
 
-  it('does not allow entry if the policy IPC fails', async () => {
-    vi.mocked(yakitLicense.isRequired).mockRejectedValue(new Error('policy unavailable'))
+  it('does not allow entry if the license request cannot be loaded', async () => {
+    vi.mocked(yakitLicense.verifyCached).mockResolvedValue(false)
+    vi.mocked(yakitLicense.getRequestCode).mockRejectedValue(new Error('license unavailable'))
     const onVerified = vi.fn()
     render(<MemfitLicenseGate onVerified={onVerified} />)
     await screen.findByRole('alert')
     expect(onVerified).not.toHaveBeenCalled()
-    expect(yakitLicense.verifyCached).not.toHaveBeenCalled()
+    expect(yakitLicense.verifyCached).toHaveBeenCalledTimes(1)
   })
 })

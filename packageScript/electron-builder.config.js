@@ -78,7 +78,7 @@ switch (platform) {
   case 'memfit':
     appInfoOption = {
       appId: 'com.aisenso.desktop',
-      extraMetadata: { name: 'AI Senso' },
+      extraMetadata: { name: 'AI Senso', main: 'app/main-bytecode/index.js' },
       productName: 'AI Senso',
       copyright: 'Copyright © 2021 v1ll4n',
     }
@@ -178,6 +178,7 @@ const configOption = {
     '!**/*.test.*',
     '!**/*.spec.*',
     '!app/renderer/src/**/*',
+    ...(platform === 'memfit' ? ['!app/main/**/*', 'app/main-bytecode/**/*'] : ['!app/main-bytecode/**/*']),
     // 先排除整个目录（后面的规则可以“打破前面的排除”）
     '!app/renderer/engine-link-startup/**/*',
     // 再单独放行 dist
@@ -210,11 +211,11 @@ const configOption = {
     gatekeeperAssess: false,
     entitlements: 'packageScript/plist/entitlements.mac.plist',
     entitlementsInherit: 'packageScript/plist/entitlements.mac.plist',
-    target: [{ target: 'dmg', arch: ['x64', 'arm64'] }],
+    target: [{ target: 'dmg', arch: platform === 'memfit' ? [process.arch] : ['x64', 'arm64'] }],
     icon: macIcon,
   },
   linux: {
-    target: [{ target: 'AppImage', arch: ['x64', 'arm64'] }],
+    target: [{ target: 'AppImage', arch: platform === 'memfit' ? [process.arch] : ['x64', 'arm64'] }],
     icon: linuxIcon,
   },
   win: {

@@ -153,7 +153,6 @@ interface YakitBridge {
     setRemoteKeyWithTTL: (key: string, value: string, ttl: number) => Promise<unknown>
   }
   license: {
-    isRequired: () => Promise<boolean>
     getRequestCode: () => Promise<string>
     verifyCached: () => Promise<boolean>
     activate: (licenseActivation: string) => Promise<boolean>

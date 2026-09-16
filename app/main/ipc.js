@@ -7,7 +7,7 @@ const grpc = require('@grpc/grpc-js')
 const protoLoader = require('@grpc/proto-loader')
 const { printLogOutputFile } = require('./logFile')
 const { assertTrustedAppSender, normalizeHttpBaseUrl } = require('./security')
-const { verifyCachedMemfitLicense, isMemfitLicenseRequired } = require('./memfitLicense')
+const { verifyCachedMemfitLicense } = require('./memfitLicense')
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
   longs: String,
@@ -201,11 +201,6 @@ module.exports = {
     require('./handlers/yakLocal').clearing()
   },
   registerIPC: (win) => {
-    ipcMain.handle('IsMemfitLicenseRequired', (event) => {
-      assertTrustedAppSender(event, 'IsMemfitLicenseRequired')
-      return isMemfitLicenseRequired()
-    })
-
     // YAKIT_HOME 配置管理
     const { getConfig, setConfig, getYakitHome, getAppConfigDir } = require('./filePath')
 
@@ -385,19 +380,19 @@ module.exports = {
     require('./handlers/openNewChildWindow/index').register(win, getClient)
 
     // 接口注册
-    const api = fs.readdirSync(path.join(__dirname, './api'))
+    const api = fs.readdirSync(path.join(__dirname, './api')).filter((item) => item.endsWith('.js'))
     api.forEach((item) => {
       require(path.join(__dirname, `./api/${item}`))(win, getClient)
     })
 
     // 各类UI层面用户操作
-    const uiOp = fs.readdirSync(path.join(__dirname, './uiOperate'))
+    const uiOp = fs.readdirSync(path.join(__dirname, './uiOperate')).filter((item) => item.endsWith('.js'))
     uiOp.forEach((item) => {
       require(path.join(__dirname, `./uiOperate/${item}`))(win, getClient)
     })
 
     // 工具类 例如node文件处理
-    const utils = fs.readdirSync(path.join(__dirname, './utils'))
+    const utils = fs.readdirSync(path.join(__dirname, './utils')).filter((item) => item.endsWith('.js'))
     utils.forEach((item) => {
       require(path.join(__dirname, `./utils/${item}`)).register(win, getClient)
     })
@@ -494,7 +489,7 @@ module.exports = {
     require('./handlers/newMisc').registerNewIPC(win, getClient, ipcEventPre)
 
     // 各类UI层面用户操作
-    const uiOp = fs.readdirSync(path.join(__dirname, './newUiOperate'))
+    const uiOp = fs.readdirSync(path.join(__dirname, './newUiOperate')).filter((item) => item.endsWith('.js'))
     uiOp.forEach((item) => {
       require(path.join(__dirname, `./newUiOperate/${item}`)).registerNewIPC(win, getClient, ipcEventPre)
     })
@@ -566,7 +561,7 @@ module.exports = {
     })
 
     // 工具类 例如node文件处理
-    const utils = fs.readdirSync(path.join(__dirname, './utils'))
+    const utils = fs.readdirSync(path.join(__dirname, './utils')).filter((item) => item.endsWith('.js'))
     utils.forEach((item) => {
       require(path.join(__dirname, `./utils/${item}`)).registerNewIPC(win, getClient, ipcEventPre)
     })

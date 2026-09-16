@@ -4,12 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
 const { assertTrustedAppSender } = require('../security')
-const {
-  activateMemfitLicense,
-  getMemfitLicenseRequest,
-  verifyCachedMemfitLicense,
-  isMemfitLicenseRequired,
-} = require('../memfitLicense')
+const { activateMemfitLicense, getMemfitLicenseRequest, verifyCachedMemfitLicense } = require('../memfitLicense')
 
 module.exports = {
   registerNewIPC: (win, getClient, ipcEventPre) => {
@@ -43,11 +38,6 @@ module.exports = {
     }
     ipcMain.handle(ipcEventPre + 'SetKey', async (e, params) => {
       return await asyncSetKey(params)
-    })
-
-    ipcMain.handle(ipcEventPre + 'IsMemfitLicenseRequired', (event) => {
-      assertTrustedAppSender(event, ipcEventPre + 'IsMemfitLicenseRequired')
-      return isMemfitLicenseRequired()
     })
 
     ipcMain.handle(ipcEventPre + 'GetMemfitLicenseRequest', async (event) => {

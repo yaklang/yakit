@@ -21,7 +21,6 @@ export const MemfitLicenseGate: React.FC<MemfitLicenseGateProps> = ({ onVerified
   const [licenseRequest, setLicenseRequest] = useState('')
   const [licenseActivation, setLicenseActivation] = useState('')
   const [loading, setLoading] = useState(true)
-  const [licenseRequired, setLicenseRequired] = useState<boolean>()
   const [error, setError] = useState('')
   const completingRef = useRef(false)
 
@@ -43,13 +42,6 @@ export const MemfitLicenseGate: React.FC<MemfitLicenseGateProps> = ({ onVerified
       setLoading(true)
       setError('')
       try {
-        const required = await yakitLicense.isRequired()
-        if (!active) return
-        setLicenseRequired(required)
-        if (required === false) {
-          await complete()
-          return
-        }
         const cachedValid = await yakitLicense.verifyCached().catch(() => false)
         if (!active) return
         if (cachedValid) {
@@ -99,14 +91,6 @@ export const MemfitLicenseGate: React.FC<MemfitLicenseGateProps> = ({ onVerified
     }
   }
 
-  if (licenseRequired !== true) {
-    return (
-      <Spin spinning={loading} tip="正在进入工作台…">
-        {error && <div role="alert">{error}</div>}
-      </Spin>
-    )
-  }
-
   return (
     <div className={styles['license-gate']}>
       <div className={styles['license-panel']}>
@@ -138,7 +122,11 @@ export const MemfitLicenseGate: React.FC<MemfitLicenseGateProps> = ({ onVerified
             />
           </div>
 
-          {error && <div className={styles['license-error']}>{error}</div>}
+          {error && (
+            <div className={styles['license-error']} role="alert">
+              {error}
+            </div>
+          )}
 
           <YakitButton
             type="primary"

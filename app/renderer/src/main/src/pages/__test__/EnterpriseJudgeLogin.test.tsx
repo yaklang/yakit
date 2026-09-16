@@ -39,31 +39,36 @@ describe('main renderer license entry policy', () => {
     return setJudgeLicense
   }
 
-  it('exits the gate without reading or writing license data during integration', async () => {
-    mocks.invoke.mockResolvedValue(false)
+  it('shows authorization when no cached license exists', async () => {
     const setJudgeLicense = await mount()
-    await waitFor(() => expect(setJudgeLicense).toHaveBeenCalledWith(false))
-    expect(mocks.invoke).toHaveBeenCalledTimes(1)
-    expect(mocks.invoke).toHaveBeenCalledWith('IsMemfitLicenseRequired')
-    expect(getRemoteValue).not.toHaveBeenCalled()
+    await waitFor(() => expect(getRemoteValue).toHaveBeenCalledWith('LICENSE_ACTIVATION'))
+    expect(mocks.invoke).not.toHaveBeenCalled()
+    expect(setJudgeLicense).not.toHaveBeenCalled()
     expect(setRemoteValue).not.toHaveBeenCalled()
   })
 
-  it('uses the original license flow when authorization is restored', async () => {
-    mocks.invoke.mockResolvedValue(true)
+  it('enters only after the engine validates the cached license', async () => {
+    vi.mocked(getRemoteValue).mockResolvedValue(JSON.stringify('activation-code'))
+    mocks.invoke.mockResolvedValue({})
     const setJudgeLicense = await mount()
-    await waitFor(() => expect(getRemoteValue).toHaveBeenCalledWith('LICENSE_ACTIVATION'))
-    expect(setJudgeLicense).not.toHaveBeenCalled()
+    await waitFor(() => expect(setJudgeLicense).toHaveBeenCalledWith(false))
+    expect(mocks.invoke).toHaveBeenCalledWith('CheckLicense', {
+      LicenseActivation: 'activation-code',
+      CompanyVersion: 'EnpriTrace',
+    })
+    expect(setRemoteValue).toHaveBeenCalledWith('LICENSE_ACTIVATION', JSON.stringify('activation-code'))
   })
 
-  it('falls back to authorization when the policy cannot be read', async () => {
-    mocks.invoke.mockRejectedValue(new Error('policy unavailable'))
+  it('does not enter when the engine rejects the cached license', async () => {
+    vi.mocked(getRemoteValue).mockResolvedValue(JSON.stringify('invalid-code'))
+    mocks.invoke.mockRejectedValue(new Error('invalid license'))
     const setJudgeLicense = await mount()
-    await waitFor(() => expect(getRemoteValue).toHaveBeenCalledWith('LICENSE_ACTIVATION'))
+    await waitFor(() => expect(mocks.invoke).toHaveBeenCalledWith('CheckLicense', expect.any(Object)))
     expect(setJudgeLicense).not.toHaveBeenCalled()
+    expect(setRemoteValue).not.toHaveBeenCalled()
   })
 
-  it('does not consult the Memfit switch for enterprise products', async () => {
+  it('keeps the enterprise product on its existing license flow', async () => {
     mocks.isMemfit.mockReturnValue(false)
     const setJudgeLicense = await mount()
     await waitFor(() => expect(getRemoteValue).toHaveBeenCalledWith('LICENSE_ACTIVATION'))

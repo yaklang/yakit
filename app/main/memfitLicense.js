@@ -1,11 +1,6 @@
 const LICENSE_ACTIVATION_KEY = 'LICENSE_ACTIVATION'
 const LICENSE_COMPANY_VERSION = 'EnpriTrace'
 
-// AI SenSo 客户端授权统一开关；修改后需重启 Electron，安装包需重新构建。
-// 两个渲染器通过只读 IPC 读取同一策略；不伪造授权结果或修改引擎授权缓存。
-const MEMFIT_LICENSE_REQUIRED = true
-const isMemfitLicenseRequired = () => MEMFIT_LICENSE_REQUIRED
-
 const invokeClient = (getClient, method, params) => {
   return new Promise((resolve, reject) => {
     const client = getClient()
@@ -81,7 +76,6 @@ const verifyCachedMemfitLicense = async (getClient) => {
 }
 
 module.exports = {
-  isMemfitLicenseRequired,
   LICENSE_ACTIVATION_KEY,
   activateMemfitLicense,
   getMemfitLicenseRequest,

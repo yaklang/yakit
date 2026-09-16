@@ -1,6 +1,14 @@
 const packageJson = require('../../package.json')
+const path = require('path')
+const { execFileSync } = require('child_process')
 
 module.exports = async function (context) {
+  if (process.env.PLATFORM === 'memfit') {
+    execFileSync(process.execPath, [path.resolve(__dirname, '../../scripts/verify-main-bytecode.js')], {
+      stdio: 'inherit',
+    })
+  }
+
   const isLegacy = process.env.THE_LEGACY == 'true'
 
   const archMap = {

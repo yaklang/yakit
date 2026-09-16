@@ -77,3 +77,4 @@ electron.env
 report/
 backups/
 app/renderer/src/main/src/assets/newAssets/_generated-source/
+app/main-bytecode/
