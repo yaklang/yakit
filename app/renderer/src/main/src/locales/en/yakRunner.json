@@ -201,6 +201,10 @@
     "deleteSuccess": "Deleted {{name}}",
     "deleteFailed": "Delete failed",
     "deleteConfirm": "Delete {{name}}?",
-    "truncated": "File is large; only part of the content is shown"
+    "truncated": "File is large; only part of the content is shown",
+    "downloadOfficial": "Download official header pack",
+    "downloadSuccess": "Official header pack downloaded{{version}}",
+    "downloadFailed": "Failed to download official header pack",
+    "downloadOverwrite": "c-std-headers.zip already exists. Overwrite it?"
   }
 }
