@@ -2,8 +2,14 @@ import type { AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo } from '@/pages
 import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import emiter from '@/utils/eventBus/eventBus'
 import { AUDIT_CODE_RULE_GEN_AI_PAGE_ID } from '@/constants/focusMode'
+import { unescapeLikelyJsonEscapedText } from '@/utils/unescapeLikelyJsonEscapedText'
+import {
+  enqueueYakRunnerCasualCodeReplaceReview,
+  type YakRunnerCasualCodeReplaceReviewPayload,
+} from '@/pages/yakRunner/yakRunnerAiCodeApplyBridge'
 
 export { AUDIT_CODE_RULE_GEN_AI_PAGE_ID }
+export { unescapeLikelyJsonEscapedText }
 
 type GetRuleEditor = () => string
 type GetEditorSelection = () => {
@@ -27,7 +33,7 @@ export function registerAuditCodeRuleEditorGetter(pageId: string, getter: GetRul
 }
 
 export function getAuditCodeRuleEditorString(pageId: string): string {
-  return ruleEditorGetters.get(pageId)?.()?.trim() ?? ''
+  return ruleEditorGetters.get(pageId)?.() ?? ''
 }
 
 export function registerAuditCodeEditorSelectionGetter(pageId: string, getter: GetEditorSelection): () => void {
@@ -52,7 +58,7 @@ export function appendAuditCodeRuleGenContextToEvent(pageId: string, event: AIIn
     (item) => item.Key !== AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_SYNTAXFLOW_RULE,
   )
 
-  const draft = getAuditCodeRuleEditorString(pageId)
+  const draft = getAuditCodeRuleEditorString(pageId).trim()
   if (draft) {
     next = [
       ...next,
@@ -92,12 +98,63 @@ export function appendAuditCodeRuleGenContextToEvent(pageId: string, event: AIIn
   return { ...event, AttachedResourceInfo: next }
 }
 
-/** 将 AI 生成的完整规则直接写入底部「规则编写」并打开面板 */
-export function applySyntaxFlowRuleChangeToAuditCode(data: AIAgentGrpcApi.YaklangCodeChange): void {
-  // 规则生成不走 patch：优先用全文 content；patch 场景也用 content（已是片段时仍覆盖草稿）
-  const content = data?.code?.content
-  if (content == null || String(content).trim() === '') return
+export function normalizeSyntaxFlowCodeChangeContent(
+  data: AIAgentGrpcApi.SyntaxFlowRuleChange,
+): AIAgentGrpcApi.SyntaxFlowRuleChange {
+  const content = unescapeLikelyJsonEscapedText(String(data?.code?.content ?? ''))
+  const patch = data?.code?.patch
+  if (!patch) {
+    return {
+      ...data,
+      code: {
+        ...data.code,
+        content,
+      },
+    }
+  }
+  const oldSnippet =
+    patch.old_snippet != null ? unescapeLikelyJsonEscapedText(String(patch.old_snippet)) : patch.old_snippet
+  return {
+    ...data,
+    code: {
+      ...data.code,
+      content,
+      patch: {
+        ...patch,
+        old_snippet: oldSnippet,
+      },
+    },
+  }
+}
 
-  emiter.emit('onResetAuditRule', String(content))
+/** 打开底部「规则编写」面板（不直接改内容；内容经 diff 审阅确认后写入） */
+export function openAuditCodeRuleEditorPanel(): void {
   emiter.emit('onCodeAuditOpenBottomDetail', JSON.stringify({ type: 'ruleEditor' }))
+}
+
+/**
+ * 将确认后的规则写入底部「规则编写」
+ */
+export function applyAcceptedSyntaxFlowRuleToAuditCode(content: string): void {
+  const next = unescapeLikelyJsonEscapedText(String(content ?? ''))
+  emiter.emit('onResetAuditRule', next)
+  openAuditCodeRuleEditorPanel()
+}
+
+/** @deprecated 保留兼容：直接覆盖（无 diff）。新路径请走审阅队列。 */
+export function applySyntaxFlowRuleChangeToAuditCode(data: AIAgentGrpcApi.SyntaxFlowRuleChange): void {
+  const normalized = normalizeSyntaxFlowCodeChangeContent(data)
+  const content = normalized?.code?.content
+  if (content == null || String(content).trim() === '') return
+  applyAcceptedSyntaxFlowRuleToAuditCode(String(content))
+}
+
+/** 入队规则编写 diff 审阅（复用 Yak Runner overlay 协议） */
+export function enqueueAuditCodeRuleReplaceReview(payload: YakRunnerCasualCodeReplaceReviewPayload): void {
+  openAuditCodeRuleEditorPanel()
+  enqueueYakRunnerCasualCodeReplaceReview(AUDIT_CODE_RULE_GEN_AI_PAGE_ID, {
+    ...payload,
+    language: payload.language || 'sf',
+    fileName: payload.fileName || 'rule.sf',
+  })
 }

@@ -1102,6 +1102,12 @@ export declare namespace AIAgentGrpcApi {
     reason?: string
     source_action?: string
   }
+
+  /**
+   * syntaxflow_rule_change：与 YaklangCodeChange 同结构（op/code/reason/source_action），
+   * 独立事件类型供 IRify「规则编写」审阅分流，不与 Yak Runner 混用。
+   */
+  export type SyntaxFlowRuleChange = YaklangCodeChange
   /** prompt_profile 中按 role 拆分的字节统计项 */
   export interface PromptProfileRoleStat {
     role_name: string

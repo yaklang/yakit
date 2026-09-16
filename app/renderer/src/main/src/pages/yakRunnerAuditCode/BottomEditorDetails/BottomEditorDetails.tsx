@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import styles from './BottomEditorDetails.module.scss'
 import classNames from 'classnames'
@@ -23,7 +23,18 @@ import { openSSARiskNewWindow } from '@/utils/openWebsite'
 import { JSONParseLog } from '@/utils/tool'
 import { yakitNotify } from '@/utils/notification'
 import { openAIForge } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils'
-import { AUDIT_CODE_RULE_GEN_AI_PAGE_ID, registerAuditCodeRuleEditorGetter } from '../auditCodeRuleGenAiBridge'
+import {
+  AUDIT_CODE_RULE_GEN_AI_PAGE_ID,
+  registerAuditCodeRuleEditorGetter,
+  unescapeLikelyJsonEscapedText,
+} from '../auditCodeRuleGenAiBridge'
+import { YakRunnerCasualCodeReplaceReviewOverlay } from '@/pages/yakRunner/YakRunnerCasualCodeReplaceReviewOverlay'
+import {
+  registerYakRunnerPageCasualCodeReplaceReview,
+  registerYakRunnerPageGetActiveCodeString,
+  type YakRunnerCasualCodeReplaceReviewPayload,
+} from '@/pages/yakRunner/yakRunnerAiCodeApplyBridge'
+import { syncYakRunnerPatchWorkingDraft } from '@/pages/yakRunner/yakRunnerAiCodePatchApply'
 const { ipcRenderer } = window.require('electron')
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -35,9 +46,21 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
   const [showType, setShowType] = useState<ShowItemType[]>([])
   // monaco输入内容
   const [ruleEditor, setRuleEditor] = useState<string>('')
+  const ruleEditorRef = useRef(ruleEditor)
   // 展示所需的BugHash
   const [bugHash, setBugHash] = useState<string>('')
   const [info, setInfo] = useState<SSARisk>()
+
+  const casualReviewQueueIdRef = useRef(0)
+  const casualReviewSessionIdRef = useRef<string | null>(null)
+  const casualReviewBaselineRef = useRef<string | null>(null)
+  const [casualReviewQueue, setCasualReviewQueue] = useState<
+    { id: string; payload: YakRunnerCasualCodeReplaceReviewPayload }[]
+  >([])
+
+  useEffect(() => {
+    ruleEditorRef.current = ruleEditor
+  }, [ruleEditor])
 
   const toAI = useMemoizedFn((e) => {
     e.stopPropagation()
@@ -70,7 +93,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
   const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
   const onResetAuditRuleFun = useMemoizedFn((v: string) => {
-    setRuleEditor(v)
+    setRuleEditor(unescapeLikelyJsonEscapedText(v))
   })
 
   useEffect(() => {
@@ -80,10 +103,96 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     }
   }, [])
 
-  // 供「规则生成」AI 发送时附带当前规则草稿
+  // 供「规则生成」AI 发送时附带当前规则草稿；并给 patch 合并用 active code
   useEffect(() => {
-    return registerAuditCodeRuleEditorGetter(AUDIT_CODE_RULE_GEN_AI_PAGE_ID, () => ruleEditor)
-  }, [ruleEditor])
+    const unregisterGetter = registerAuditCodeRuleEditorGetter(
+      AUDIT_CODE_RULE_GEN_AI_PAGE_ID,
+      () => ruleEditorRef.current,
+    )
+    const unregisterActive = registerYakRunnerPageGetActiveCodeString(
+      AUDIT_CODE_RULE_GEN_AI_PAGE_ID,
+      () => ruleEditorRef.current,
+    )
+    return () => {
+      unregisterGetter()
+      unregisterActive()
+    }
+  }, [])
+
+  const onCasualCodeReplaceReviewEnqueued = useMemoizedFn((payload: YakRunnerCasualCodeReplaceReviewPayload) => {
+    const incoming = unescapeLikelyJsonEscapedText(payload.change.code?.content ?? '')
+    let baseline = unescapeLikelyJsonEscapedText(payload.original ?? '')
+    if (casualReviewSessionIdRef.current != null && casualReviewBaselineRef.current != null) {
+      baseline = casualReviewBaselineRef.current
+    } else {
+      baseline = ruleEditorRef.current || baseline
+    }
+
+    const normIncoming = String(incoming).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+    const normOriginal = String(baseline).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+    if (normOriginal === normIncoming) {
+      if (casualReviewSessionIdRef.current != null) {
+        setCasualReviewQueue([])
+        casualReviewSessionIdRef.current = null
+        casualReviewBaselineRef.current = null
+      }
+      // 内容相同也确保面板打开且草稿已是最新
+      setRuleEditor(normIncoming)
+      return
+    }
+
+    const enrichedPayload: YakRunnerCasualCodeReplaceReviewPayload = {
+      ...payload,
+      original: baseline,
+      change: {
+        ...payload.change,
+        code: {
+          ...payload.change.code,
+          content: incoming,
+        },
+      },
+      language: payload.language || 'sf',
+      fileName: payload.fileName || 'rule.sf',
+    }
+
+    if (casualReviewSessionIdRef.current == null) {
+      casualReviewQueueIdRef.current += 1
+      casualReviewSessionIdRef.current = `sf-rule-${casualReviewQueueIdRef.current}`
+    }
+    casualReviewBaselineRef.current = baseline
+    const id = casualReviewSessionIdRef.current
+    setCasualReviewQueue([{ id, payload: enrichedPayload }])
+    // 首次交付时立刻挂上 ruleEditor 面板，避免 overlay 等下一轮 effect 才进 DOM
+    setShowType((arr) => filterItem([...arr, 'ruleEditor']))
+    setShowItem('ruleEditor')
+    setEditorDetails(true)
+  })
+
+  const onCasualRoundApplyMerged = useMemoizedFn((mergedCode: string, done?: boolean) => {
+    const head = casualReviewQueue[0]
+    if (!head) return
+    const next = unescapeLikelyJsonEscapedText(mergedCode)
+    casualReviewBaselineRef.current = next
+    syncYakRunnerPatchWorkingDraft(AUDIT_CODE_RULE_GEN_AI_PAGE_ID, next)
+    setRuleEditor(next)
+    setCasualReviewQueue((prev) => {
+      const cur = prev[0]
+      if (!cur) return prev
+      return [{ ...cur, payload: { ...cur.payload, original: next } }]
+    })
+    if (done) {
+      setCasualReviewQueue([])
+      casualReviewSessionIdRef.current = null
+      casualReviewBaselineRef.current = null
+    }
+  })
+
+  useEffect(() => {
+    return registerYakRunnerPageCasualCodeReplaceReview(
+      AUDIT_CODE_RULE_GEN_AI_PAGE_ID,
+      onCasualCodeReplaceReviewEnqueued,
+    )
+  }, [onCasualCodeReplaceReviewEnqueued])
 
   useEffect(() => {
     if (showItem && isShowEditorDetails) {
@@ -211,16 +320,23 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
       <div className={styles['content']}>
         {showType.includes('ruleEditor') && (
           <div
-            className={classNames(styles['render-hideen'], {
+            className={classNames(styles['render-hideen'], styles['rule-editor-wrap'], {
               [styles['render-show']]: showItem === 'ruleEditor',
             })}
           >
             <RuleEditorBox
               ruleEditor={ruleEditor}
               setRuleEditor={setRuleEditor}
-              disabled={auditExecuting}
+              disabled={auditExecuting || !!casualReviewQueue[0]}
               onAuditRuleSubmit={onAuditRuleSubmit}
             />
+            {casualReviewQueue[0] ? (
+              <YakRunnerCasualCodeReplaceReviewOverlay
+                roundKey={casualReviewQueue[0].id}
+                payload={casualReviewQueue[0].payload}
+                onApplyRound={onCasualRoundApplyMerged}
+              />
+            ) : null}
           </div>
         )}
         {showType.includes('holeDetail') && (

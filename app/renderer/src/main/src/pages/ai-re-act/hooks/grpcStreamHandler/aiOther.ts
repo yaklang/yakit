@@ -478,6 +478,17 @@ const handleYaklangCodeChange: AIMessageHandler = (requestInfo) => {
   store.getState().updateStateCount('yaklangCodeChangeUpdate')
 }
 
+const handleSyntaxFlowRuleChange: AIMessageHandler = (requestInfo) => {
+  const { res, rawData, store } = requestInfo
+  if (res.Type !== 'syntaxflow_rule_change') return
+  if (res.IsSync) return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const syntaxflowRuleChange = JSON.parse(ipcContent) as AIAgentGrpcApi.SyntaxFlowRuleChange
+  rawData.syntaxflowRuleChange = syntaxflowRuleChange
+  store.getState().updateStateCount('syntaxflowRuleChangeUpdate')
+}
+
 const handleReactTaskCreated: AIMessageHandler = (requestInfo) => {
   const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'react_task_created') return
@@ -562,6 +573,7 @@ export const aiOtherDataHandlers = {
   yak_risk_count: handleTrafficCount,
   plan: handlePlan,
   yaklang_code_change: handleYaklangCodeChange,
+  syntaxflow_rule_change: handleSyntaxFlowRuleChange,
   react_task_created: handleReactTaskCreated,
   skip_subtask_in_plan: handleSkipSubtaskInPlan,
 } as const

@@ -139,6 +139,8 @@ export interface AIAgentChatData {
   systemStream: string
   /** yaklang_code_change 数据 */
   yaklangCodeChange?: AIAgentGrpcApi.YaklangCodeChange
+  /** syntaxflow_rule_change 数据（规则生成 →「规则编写」） */
+  syntaxflowRuleChange?: AIAgentGrpcApi.SyntaxFlowRuleChange
 
   /**
    * 与 IDB sessionRender.grpcOffset 同步的事件游标。

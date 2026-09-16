@@ -78,6 +78,12 @@
     .render-show {
       display: block;
     }
+    .rule-editor-wrap {
+      position: relative;
+      &.render-show {
+        display: block;
+      }
+    }
     .no-syntax-check {
       height: 100%;
       display: flex;

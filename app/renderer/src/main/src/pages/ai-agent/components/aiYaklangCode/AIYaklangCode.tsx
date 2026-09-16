@@ -16,6 +16,7 @@ import { shallow } from 'zustand/shallow'
 import { YakitMonacoDiffInline } from '@/components/yakitUI/YakitMonacoDiffInline/YakitMonacoDiffInline'
 import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
+import { unescapeLikelyJsonEscapedText } from '@/utils/unescapeLikelyJsonEscapedText'
 
 const CODE_BLOCK_MAX_HEIGHT = 200
 
@@ -68,7 +69,12 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
     isLiveStreaming && autoApplyStreamId ? 200 : undefined,
   )
 
-  const content = autoApplyStreamId && isLiveStreaming ? streamedContent : defContent
+  const content = useCreation(() => {
+    const raw = autoApplyStreamId && isLiveStreaming ? streamedContent : defContent
+    // 流式中途可能截断在反斜杠处，结束后再解义
+    if (isLiveStreaming) return raw
+    return unescapeLikelyJsonEscapedText(raw)
+  }, [autoApplyStreamId, isLiveStreaming, streamedContent, defContent])
 
   const type = useCreation(() => contentType.split('/')?.[1] || 'plaintext', [contentType])
 

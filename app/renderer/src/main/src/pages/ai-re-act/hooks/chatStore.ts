@@ -32,6 +32,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       memoryListUpdate: 0,
       updateSystemStream: 0,
       yaklangCodeChangeUpdate: 0,
+      syntaxflowRuleChangeUpdate: 0,
       syncIDUpdate: 0,
 
       grpcFolders: [],

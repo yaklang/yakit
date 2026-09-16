@@ -81,6 +81,7 @@ const genAIAgentChatData = (): AIAgentChatData => {
     memoryList: DefaultMemoryList,
     systemStream: '',
     yaklangCodeChange: undefined,
+    syntaxflowRuleChange: undefined,
 
     grpcOffset: 0,
 

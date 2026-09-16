@@ -544,6 +544,11 @@ export interface ChatStoreState {
    * aiChat.d.ts AIAgentChatData yaklangCodeChange
    */
   yaklangCodeChangeUpdate: number
+  /**
+   * syntaxflow_rule_change 更新
+   * aiChat.d.ts AIAgentChatData syntaxflowRuleChange
+   */
+  syntaxflowRuleChangeUpdate: number
   /** aiChat.d.ts AIAgentChatMetaData syncIDMap */
   syncIDUpdate: number
 
@@ -639,6 +644,7 @@ export interface ChatStoreState {
       | 'memoryListUpdate'
       | 'updateSystemStream'
       | 'yaklangCodeChangeUpdate'
+      | 'syntaxflowRuleChangeUpdate'
       | 'syncIDUpdate'
       | 'currentPlanReviewExtraUpdate'
       | 'chatTodoListUpdate',
@@ -667,6 +673,7 @@ export interface ChatStoreState {
         | 'memoryListUpdate'
         | 'updateSystemStream'
         | 'yaklangCodeChangeUpdate'
+        | 'syntaxflowRuleChangeUpdate'
         | 'syncIDUpdate'
         | 'grpcFolders'
         | 'reActTimelines'
