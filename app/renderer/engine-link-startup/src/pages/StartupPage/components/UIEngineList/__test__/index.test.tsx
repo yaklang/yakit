@@ -114,14 +114,6 @@ describe('managed engine UI safety', () => {
     expect(yakitEngine.stopLocalEngine).toHaveBeenCalledWith('owned-1')
     expect(change).not.toHaveBeenCalled()
   })
-  it('disconnects without stopping a process', async () => {
-    vi.mocked(yakitEngine.listYakGrpc).mockResolvedValue([managed])
-    vi.mocked(yakitEngine.disconnectLocalEngine).mockResolvedValue({ ok: true })
-    const change = mount()
-    fireEvent.click(await screen.findByRole('button', { name: 'EngineManagement.disconnect' }))
-    await waitFor(() => expect(change).toHaveBeenCalledWith('break'))
-    expect(yakitEngine.stopLocalEngine).not.toHaveBeenCalled()
-  })
   it('does not overwrite the engine after partial stop failure', async () => {
     vi.mocked(yakitEngine.stopAllLocalEngines).mockResolvedValue({ ok: false, stopped: false })
     mount()

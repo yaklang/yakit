@@ -7,6 +7,7 @@ import { GooglePhotosLogoSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/Goog
 import emiter from '@/utils/eventBus/eventBus'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { YakitPopconfirm } from '../yakitUI/YakitPopconfirm/YakitPopconfirm'
+import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import styles from './performanceDisplay.module.scss'
 import panelStyles from '../../../../../shared/engineManagement.module.scss'
 import { yakitEngine, yakitPerf } from '@/services/electronBridge'
@@ -266,65 +267,50 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                   {item.ownership === 'external' && (
                     <span className={panelStyles.badge}>{t('EngineManagement.externalBadge')}</span>
                   )}
-                  <span className={panelStyles.state} data-ready={item.state === 'ready'}>
+                  <YakitTag className={panelStyles.state} color={item.state === 'ready' ? 'success' : 'danger'}>
                     {t(`EngineManagement.${item.state}`, { defaultValue: item.state })}
-                  </span>
+                  </YakitTag>
                 </div>
                 <div className={panelStyles.endpoint} title={item.displayEndpoint}>
                   {item.displayEndpoint || t('EngineManagement.endpointUnknown')}
                 </div>
                 <div className={panelStyles.meta}>
-                  <span>PID {item.pid ?? '—'}</span>
-                  <span>{item.version || t('EngineManagement.versionUnknown')}</span>
-                  <span>{t(`EngineManagement.${item.ownership}`)}</span>
-                </div>
-                <div className={panelStyles.actions}>
-                  <YakitButton type="text2" onClick={() => details(item)}>
-                    {t('EngineManagement.details')}
-                  </YakitButton>
-                  {item.current ? (
-                    <YakitButton
-                      type="outline2"
-                      disabled={busy}
-                      onClick={() =>
-                        execute(async () => {
-                          const result = await yakitEngine.disconnectLocalEngine()
-                          if (!result.ok) {
-                            setMessage(t('EngineManagement.operationFailed'))
-                            return
-                          }
-                          props.typeCallback('break')
-                        })
-                      }
-                    >
-                      {t('EngineManagement.disconnect')}
+                  <div className={panelStyles.metaFacts}>
+                    <span>PID {item.pid ?? '—'}</span>
+                    <span>{item.version || t('EngineManagement.versionUnknown')}</span>
+                    <span>{t(`EngineManagement.${item.ownership}`)}</span>
+                  </div>
+                  <div className={panelStyles.actions}>
+                    <YakitButton type="text2" onClick={() => details(item)}>
+                      {t('EngineManagement.details')}
                     </YakitButton>
-                  ) : (
-                    <YakitButton
-                      type="outline2"
-                      disabled={busy}
-                      onClick={() =>
-                        showYakitModal({
-                          title: t('EngineManagement.settings'),
-                          width: 440,
-                          content: <p className={panelStyles.settingsHelp}>{t('EngineManagement.settingsReason')}</p>,
-                          footer: null,
-                        })
-                      }
-                    >
-                      {t('EngineManagement.settings')}
-                    </YakitButton>
-                  )}
-                  <YakitPopconfirm title={t('EngineManagement.stopConfirm')} onConfirm={() => stop(item)}>
-                    <YakitButton
-                      data-testid="engine-stop"
-                      type="outline2"
-                      colors="danger"
-                      disabled={busy || !item.actions.stop}
-                    >
-                      {t('EngineManagement.stop')}
-                    </YakitButton>
-                  </YakitPopconfirm>
+                    {!item.current && (
+                      <YakitButton
+                        type="outline2"
+                        disabled={busy}
+                        onClick={() =>
+                          showYakitModal({
+                            title: t('EngineManagement.settings'),
+                            width: 440,
+                            content: <p className={panelStyles.settingsHelp}>{t('EngineManagement.settingsReason')}</p>,
+                            footer: null,
+                          })
+                        }
+                      >
+                        {t('EngineManagement.settings')}
+                      </YakitButton>
+                    )}
+                    <YakitPopconfirm title={t('EngineManagement.stopConfirm')} onConfirm={() => stop(item)}>
+                      <YakitButton
+                        data-testid="engine-stop"
+                        type="outline1"
+                        colors="danger"
+                        disabled={busy || !item.actions.stop}
+                      >
+                        {t('EngineManagement.stop')}
+                      </YakitButton>
+                    </YakitPopconfirm>
+                  </div>
                 </div>
               </article>
             ))}

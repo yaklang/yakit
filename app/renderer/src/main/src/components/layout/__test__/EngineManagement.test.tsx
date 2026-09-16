@@ -41,6 +41,9 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   ),
 }))
 vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({ showYakitModal: vi.fn() }))
+vi.mock('@/components/yakitUI/YakitTag/YakitTag', () => ({
+  YakitTag: ({ children }: { children: ReactNode }) => <span>{children}</span>,
+}))
 
 const external: LocalEngineInstance = {
   id: 'observed-4242',
@@ -113,14 +116,6 @@ describe('managed engine UI safety', () => {
     await screen.findByText('EngineManagement.stopFailed')
     expect(yakitEngine.stopLocalEngine).toHaveBeenCalledWith('owned-1')
     expect(change).not.toHaveBeenCalled()
-  })
-  it('disconnects without stopping a process', async () => {
-    vi.mocked(yakitEngine.listYakGrpc).mockResolvedValue([managed])
-    vi.mocked(yakitEngine.disconnectLocalEngine).mockResolvedValue({ ok: true })
-    const change = mount()
-    fireEvent.click(await screen.findByRole('button', { name: 'EngineManagement.disconnect' }))
-    await waitFor(() => expect(change).toHaveBeenCalledWith('break'))
-    expect(yakitEngine.stopLocalEngine).not.toHaveBeenCalled()
   })
   it('does not overwrite the engine after partial stop failure', async () => {
     vi.mocked(yakitEngine.stopAllLocalEngines).mockResolvedValue({ ok: false, stopped: false })

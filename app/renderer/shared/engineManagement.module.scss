@@ -6,7 +6,7 @@
 .panel {
   width: 540px;
   max-width: calc(100vw - 40px);
-  padding: 20px;
+  padding: 14px;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 12px;
 }
@@ -15,7 +15,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 .heading {
   display: flex;
@@ -44,12 +44,12 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-height: min(360px, calc(100vh - 250px));
+  gap: 8px;
+  max-height: min(280px, calc(100vh - 250px));
   overflow-y: auto;
 }
 .card {
-  padding: 14px;
+  padding: 10px;
   border: 1px solid var(--Colors-Use-Neutral-Border);
   border-radius: 6px;
   background: var(--Colors-Use-Basic-Background);
@@ -63,7 +63,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 9px;
+  margin-bottom: 6px;
 }
 .rowHeader strong {
   font-size: 13px;
@@ -87,20 +87,6 @@
 }
 .state {
   margin-left: auto;
-  color: var(--Colors-Use-Neutral-Text-3-Secondary);
-}
-.state[data-ready='true'] {
-  color: var(--Colors-Use-Success-Primary);
-}
-.state::before {
-  content: '';
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  margin-right: 5px;
-  vertical-align: middle;
-  border-radius: 50%;
-  background: currentColor;
 }
 .endpoint {
   overflow: hidden;
@@ -114,11 +100,18 @@
 .meta {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   margin-top: 5px;
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   font-size: 11px;
   line-height: 18px;
+}
+.metaFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .actions {
   display: flex;
@@ -126,7 +119,6 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
 }
 .footer {
   display: flex;
@@ -134,8 +126,8 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 16px;
-  padding-top: 12px;
+  margin-top: 10px;
+  padding-top: 8px;
   border-top: 1px solid var(--Colors-Use-Neutral-Border);
 }
 .feedback {
