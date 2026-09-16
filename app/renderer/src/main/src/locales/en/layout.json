@@ -489,6 +489,7 @@
   },
   "McpHook": {
     "started": "MCP service started: {{serverUrl}}",
+    "autoStarting": "Automatically starting MCP service",
     "error": "MCP service error: {{message}}",
     "stopped": "MCP service stopped: {{message}}",
     "MCPStopped": "Yak Mcp service stopped",

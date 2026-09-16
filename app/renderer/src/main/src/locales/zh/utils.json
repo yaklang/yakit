@@ -103,6 +103,8 @@
     "enable_ai_tool_framework_desc": "开放 fs、ssa、yakscript 等 AI 内置工具",
     "enable_bridge_external_mcp": "桥接外部 MCP",
     "enable_bridge_external_mcp_desc": "桥接 AI Agent 中已启用的外部 MCP 服务器工具",
+    "auto_start": "Yak MCP 自启动",
+    "auto_start_desc": "启动时自动开启MCP服务",
     "no_tool_tier_title": "未开启任何工具能力",
     "no_tool_tier_desc": "请至少开启一项工具能力，才能配置具体工具",
     "refresh_tools": "刷新",

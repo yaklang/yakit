@@ -19,7 +19,15 @@ import {
   SearchOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { SystemInfo } from '@/constants/hardware'
+import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import { useYakMcpStream } from '@/store/yakMcpStream'
+import {
+  defaultMcpStartConfig,
+  localMcpDefalutUrl,
+  parseMcpStartConfig,
+  type YakMCPStartConfig,
+} from '@/components/layout/hooks/useMcp/useMcp'
+import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { AIMCPToolDetailPopover } from './AIMCPToolDetailPopover'
 import {
   type GetMCPToolListRequest,
@@ -87,6 +95,17 @@ export const YakMcpSettings: React.FC = () => {
       .catch(() => setEnginePath(''))
   }, [])
 
+  useEffect(() => {
+    getRemoteValue(RemoteAIAgentGV.YakMCPStartConfig).then((raw) => {
+      const config = parseMcpStartConfig(raw)
+      const merged = config ? { ...defaultMcpStartConfig, ...config } : defaultMcpStartConfig
+      setEnableLegacyMcpTools(merged.enableLegacyMcpTools)
+      setEnableAIToolFramework(merged.enableAIToolFramework)
+      setEnableBridgeExternalMcp(merged.enableBridgeExternalMcp)
+      setAutoStartMcp(merged.autoStart)
+    })
+  }, [])
+
   const sseJson = useMemo(
     () => JSON.stringify({ mcpServers: { yakit: { type: 'sse', url: mcpStreamInfo.mcpServerUrl } } }, null, 2),
     [mcpStreamInfo.mcpServerUrl],
@@ -120,6 +139,8 @@ export const YakMcpSettings: React.FC = () => {
   const [enableLegacyMcpTools, setEnableLegacyMcpTools] = useState(true)
   const [enableAIToolFramework, setEnableAIToolFramework] = useState(true)
   const [enableBridgeExternalMcp, setEnableBridgeExternalMcp] = useState(false)
+  const [autoStartMcp, setAutoStartMcp] = useState(false)
+  const pendingMcpStartConfigRef = useRef<YakMCPStartConfig | null>(null)
   const tierVisibilityRef = useRef<MCPTierVisibility>({
     enableLegacyMcpTools,
     enableAIToolFramework,
@@ -134,6 +155,25 @@ export const YakMcpSettings: React.FC = () => {
       }),
     [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp],
   )
+
+  const canToggleMcp = useMemo(
+    () => !!mcpStreamInfo.mcpUrl?.trim() && (enableMcp || hasActiveToolTier),
+    [mcpStreamInfo.mcpUrl, enableMcp, hasActiveToolTier],
+  )
+
+  // 当主启用/自启动开关被禁用时，强制关闭自启动并同步缓存
+  useEffect(() => {
+    if (!canToggleMcp && autoStartMcp) {
+      setAutoStartMcp(false)
+      saveMcpStartConfig({ autoStart: false })
+    }
+  }, [canToggleMcp])
+
+  // 启动地址变更时同步到缓存（远程模式不缓存地址）
+  useUpdateEffect(() => {
+    saveMcpStartConfig()
+  }, [mcpStreamInfo.mcpUrl])
+
   const [isRefresh, setIsRefresh] = useState(false)
   const [forceSyncLoading, setForceSyncLoading] = useState(false)
   const isInitRequestRef = useRef(true)
@@ -315,6 +355,7 @@ export const YakMcpSettings: React.FC = () => {
   const onLegacyTierChange = useMemoizedFn((checked: boolean) => {
     const tiers = { ...tierVisibilityRef.current, enableLegacyMcpTools: checked }
     setEnableLegacyMcpTools(checked)
+    saveMcpStartConfig({ enableLegacyMcpTools: checked })
     resetAndFetchTools(tiers)
   })
 
@@ -326,12 +367,17 @@ export const YakMcpSettings: React.FC = () => {
     }
     setEnableAIToolFramework(checked)
     if (!checked) setEnableBridgeExternalMcp(false)
+    saveMcpStartConfig({
+      enableAIToolFramework: checked,
+      enableBridgeExternalMcp: checked ? tierVisibilityRef.current.enableBridgeExternalMcp : false,
+    })
     resetAndFetchTools(tiers)
   })
 
   const onBridgeTierChange = useMemoizedFn((checked: boolean) => {
     const tiers = { ...tierVisibilityRef.current, enableBridgeExternalMcp: checked }
     setEnableBridgeExternalMcp(checked)
+    saveMcpStartConfig({ enableBridgeExternalMcp: checked })
     resetAndFetchTools(tiers, checked)
   })
 
@@ -363,6 +409,26 @@ export const YakMcpSettings: React.FC = () => {
       })
   })
 
+  const flushMcpStartConfig = useMemoizedFn(() => {
+    if (!pendingMcpStartConfigRef.current) return
+    setRemoteValue(RemoteAIAgentGV.YakMCPStartConfig, JSON.stringify(pendingMcpStartConfigRef.current))
+    pendingMcpStartConfigRef.current = null
+  })
+
+  const debouncedSaveMcpStartConfig = useDebounceFn(flushMcpStartConfig, { wait: 500 }).run
+
+  const saveMcpStartConfig = useMemoizedFn((override?: Partial<YakMCPStartConfig>) => {
+    pendingMcpStartConfigRef.current = {
+      autoStart: autoStartMcp,
+      url: isRemoteEngine ? '' : mcpStreamInfo.mcpUrl || localMcpDefalutUrl,
+      enableLegacyMcpTools,
+      enableAIToolFramework,
+      enableBridgeExternalMcp,
+      ...override,
+    }
+    debouncedSaveMcpStartConfig()
+  })
+
   const onToggleEnable = useMemoizedFn((checked: boolean) => {
     if (checked) {
       if (!hasActiveToolTier) return
@@ -371,9 +437,20 @@ export const YakMcpSettings: React.FC = () => {
         EnableAIToolFramework: enableAIToolFramework,
         EnableBridgeExternalMCP: enableBridgeExternalMcp,
       })
-      return
+    } else {
+      mcpStreamEvent.onCancel()
     }
-    mcpStreamEvent.onCancel()
+  })
+
+  useEffect(() => {
+    if (enableMcp) {
+      saveMcpStartConfig()
+    }
+  }, [enableMcp])
+
+  const onToggleAutoStart = useMemoizedFn((checked: boolean) => {
+    setAutoStartMcp(checked)
+    saveMcpStartConfig({ autoStart: checked })
   })
 
   const onOpenHistory = useMemoizedFn(() => {
@@ -391,12 +468,7 @@ export const YakMcpSettings: React.FC = () => {
           <div className={styles['divider']} />
           <div className={styles['page-status']}>
             <span>{enableMcp ? t('YakitButton.enabled') : t('YakitButton.notEnabled')}</span>
-            <YakitSwitch
-              size="large"
-              checked={enableMcp}
-              disabled={!enableMcp && !hasActiveToolTier}
-              onChange={onToggleEnable}
-            />
+            <YakitSwitch size="large" checked={enableMcp} disabled={!canToggleMcp} onChange={onToggleEnable} />
           </div>
         </div>
       </div>
@@ -484,6 +556,15 @@ export const YakMcpSettings: React.FC = () => {
                   disabled={!enableAIToolFramework}
                   onChange={onBridgeTierChange}
                 />
+              </div>
+            </div>
+            <div className={styles['setting-row']}>
+              <div className={styles['setting-row-text']}>
+                <div className={styles['setting-row-title']}>{t('ConfigSystemMcp.auto_start')}</div>
+                <div className={styles['setting-row-desc']}>{t('ConfigSystemMcp.auto_start_desc')}</div>
+              </div>
+              <div className={styles['setting-row-control']}>
+                <YakitSwitch checked={autoStartMcp} disabled={!canToggleMcp} onChange={onToggleAutoStart} />
               </div>
             </div>
           </div>

@@ -21,4 +21,7 @@ export enum RemoteAIAgentGV {
   AIModelCheckResultEditorBeautify = 'ai-model-check-result-editor-beautify',
   /** @name 嵌入侧栏（HistoryAIReActChat）统一缓存的回答模式，与 AI Agent 全局配置隔离 */
   HistoryAIReviewPolicy = 'history-ai-review-policy',
+
+  /** @name Yak MCP 启动配置（地址、三个能力层开关、自启动开关） */
+  YakMCPStartConfig = 'yak-mcp-start-config',
 }

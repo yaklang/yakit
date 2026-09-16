@@ -138,7 +138,6 @@ export interface UILayoutProp {
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
   const { t, i18n, i18nRefresh } = useI18nNamespaces(['layout', 'yakitUi', 'projectManage'])
-  const mcp = useSyncYakMcpStream({})
   // #region 软件级功能设置
   // 顶部是否可以拖拽并移动软件位置
   const [drop, setDrop] = useState<boolean>(true)
@@ -181,6 +180,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   /** 当前引擎连接状态 */
   const [engineLink, setEngineLink, getEngineLink] = useGetSetState<boolean>(false)
+
+  const mcp = useSyncYakMcpStream({ engineLink })
 
   // 是否持续监听引擎进程的连接状态
   const [keepalive, setKeepalive] = useState<boolean>(false)
