@@ -127,6 +127,7 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
   const currentChatStatusQuestionID = useStore(store, (state) => state.currentChatStatus.questionID)
 
   const { setting } = useAIAgentStore()
+  const [historyReady, setHistoryReady] = React.useState(false)
 
   const aiSource: AISource[] = useCreation(() => {
     switch (setting?.Source) {
@@ -159,10 +160,11 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
         <YakitPopover
           trigger={['click']}
           destroyOnHidden
+          afterOpenChange={setHistoryReady}
           classNames={{ root: styles['history-chat-tooltip'] }}
           content={
             <div className={styles['history-chat-tooltip-content']}>
-              <HistoryChat embedded aiSource={aiSource} />
+              {historyReady ? <HistoryChat embedded aiSource={aiSource} /> : null}
             </div>
           }
         >

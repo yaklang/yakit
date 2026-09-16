@@ -307,6 +307,7 @@ const HistoryChatList: FC<{
       <div className={styles['history-chat-list']}>
         <Virtuoso
           className={styles['history-virtual-list']}
+          style={{ height: '100%', width: '100%' }}
           data={historyRows}
           scrollerRef={setScrollerRef}
           computeItemKey={(_index, row) => row.key}
