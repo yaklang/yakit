@@ -81,7 +81,10 @@ async function verify(binary) {
     occupied = await listen(port)
     const conflict = await manager.check({ port: occupied.address().port })
     assert.ok(!conflict.ok, 'check on an occupied port should fail')
-    assert.ok(['port_occupied', 'process_error'].includes(conflict.status), `unexpected conflict status: ${conflict.status}`)
+    assert.ok(
+      ['port_occupied', 'process_error'].includes(conflict.status),
+      `unexpected conflict status: ${conflict.status}`,
+    )
     assert.equal(occupied.listening, true)
     await close(occupied)
     occupied = null
