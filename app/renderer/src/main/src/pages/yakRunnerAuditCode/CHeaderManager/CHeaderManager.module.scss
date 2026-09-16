@@ -1,0 +1,99 @@
+.c-header-manager {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 0 8px 8px;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0 8px;
+}
+
+.path-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.path-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tree-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+
+  :global {
+    .ant-tree {
+      background: transparent;
+      font-size: 12px;
+    }
+    .ant-tree .ant-tree-treenode {
+      padding: 0 0 2px;
+    }
+    .ant-tree-node-content-wrapper {
+      min-width: 0;
+    }
+  }
+}
+
+.empty-wrap {
+  padding: 16px 8px;
+}
+
+.node {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+}
+
+.node-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.node-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.node-extra {
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.node:hover .node-extra {
+  opacity: 1;
+}
+
+.preview-editor {
+  height: 100%;
+  min-height: 360px;
+}
+
+.preview-tip {
+  padding: 0 12px 8px;
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}

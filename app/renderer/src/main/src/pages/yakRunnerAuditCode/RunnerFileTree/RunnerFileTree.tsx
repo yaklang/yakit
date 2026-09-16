@@ -62,6 +62,7 @@ const GlobalFilterFunction = React.lazy(() => import('../GlobalFilterFunction/Gl
 const AuditCodeRuleGenChat = React.lazy(() =>
   import('../AuditCodeRuleGenChat').then((m) => ({ default: m.AuditCodeRuleGenChat })),
 )
+const CHeaderManager = React.lazy(() => import('../CHeaderManager/CHeaderManager'))
 const RunnerFileTreeTab: YakitTabsProps[] = [
   {
     label: 'RunnerFileTree.all',
@@ -82,6 +83,10 @@ const RunnerFileTreeTab: YakitTabsProps[] = [
   {
     label: 'RunnerFileTree.globalFilterFn',
     value: 'global-filtering-function',
+  },
+  {
+    label: 'RunnerFileTree.cHeaders',
+    value: 'c-headers',
   },
 ]
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
@@ -382,6 +387,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         return t('RunnerFileTree.ruleGenerate')
       case 'global-filtering-function':
         return t('RunnerFileTree.globalFilterFn')
+      case 'c-headers':
+        return t('RunnerFileTree.cHeaders')
       default:
         return t('RunnerFileTree.fileList')
     }
@@ -519,54 +526,58 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                     {fileTreeLoad && active === 'all' && <YakitSpin size="small" />}
                   </div>
                   <div className={styles['extra']}>
-                    {active === 'all' && (
-                      <Tooltip title={t('YakitButton.locate')}>
-                        <YakitButton
-                          disabled={fileTreeLoad || fileTree.length === 0}
-                          type="text2"
-                          icon={<PositionOutlined color="currentColor" />}
-                          onClick={onActiveFileScrollToFileTree}
-                        />
-                      </Tooltip>
+                    {active !== 'c-headers' && active !== 'global-filtering-function' && (
+                      <>
+                        {active === 'all' && (
+                          <Tooltip title={t('YakitButton.locate')}>
+                            <YakitButton
+                              disabled={fileTreeLoad || fileTree.length === 0}
+                              type="text2"
+                              icon={<PositionOutlined color="currentColor" />}
+                              onClick={onActiveFileScrollToFileTree}
+                            />
+                          </Tooltip>
+                        )}
+                        <Tooltip title={t('YakitInput.search')}>
+                          <YakitButton
+                            disabled={fileTree.length === 0}
+                            type="text2"
+                            icon={<SearchOutlined color="currentColor" />}
+                            onClick={() => {
+                              setSearchVisible(true)
+                            }}
+                          />
+                        </Tooltip>
+                        <Tooltip title={t('RunnerFileTree.refreshExplorer')}>
+                          <YakitButton
+                            type="text2"
+                            disabled={fileTree.length === 0}
+                            icon={<RefreshOutlined color="currentColor" />}
+                            onClick={() => {
+                              if (active === 'all') {
+                                emiter.emit('onCodeAuditRefreshTree')
+                              } else if (active === 'file') {
+                                setFileRefresh(!fileRefresh)
+                              } else if (active === 'rule') {
+                                setRuleRefresh(!ruleRefresh)
+                              }
+                            }}
+                          />
+                        </Tooltip>
+                        <YakitDropdownMenu
+                          menu={{
+                            data: menuData,
+                            onClick: ({ key, keyPath }) => menuSelect(key, keyPath),
+                          }}
+                          dropdown={{
+                            trigger: ['click'],
+                            placement: 'bottomLeft',
+                          }}
+                        >
+                          <YakitButton type="text2" icon={<PlusCircleOutlined color="currentColor" />} />
+                        </YakitDropdownMenu>
+                      </>
                     )}
-                    <Tooltip title={t('YakitInput.search')}>
-                      <YakitButton
-                        disabled={fileTree.length === 0}
-                        type="text2"
-                        icon={<SearchOutlined color="currentColor" />}
-                        onClick={() => {
-                          setSearchVisible(true)
-                        }}
-                      />
-                    </Tooltip>
-                    <Tooltip title={t('RunnerFileTree.refreshExplorer')}>
-                      <YakitButton
-                        type="text2"
-                        disabled={fileTree.length === 0}
-                        icon={<RefreshOutlined color="currentColor" />}
-                        onClick={() => {
-                          if (active === 'all') {
-                            emiter.emit('onCodeAuditRefreshTree')
-                          } else if (active === 'file') {
-                            setFileRefresh(!fileRefresh)
-                          } else if (active === 'rule') {
-                            setRuleRefresh(!ruleRefresh)
-                          }
-                        }}
-                      />
-                    </Tooltip>
-                    <YakitDropdownMenu
-                      menu={{
-                        data: menuData,
-                        onClick: ({ key, keyPath }) => menuSelect(key, keyPath),
-                      }}
-                      dropdown={{
-                        trigger: ['click'],
-                        placement: 'bottomLeft',
-                      }}
-                    >
-                      <YakitButton type="text2" icon={<PlusCircleOutlined color="currentColor" />} />
-                    </YakitDropdownMenu>
                   </div>
                 </div>
 
@@ -628,6 +639,17 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                     >
                       <React.Suspense fallback={<YakitSpin spinning />}>
                         <GlobalFilterFunction projectName={projectName} />
+                      </React.Suspense>
+                    </div>
+                  )}
+                  {rendered.current.has('c-headers') && (
+                    <div
+                      className={classNames(styles['tree-body'], {
+                        [styles['hidden-tree-body']]: active !== 'c-headers',
+                      })}
+                    >
+                      <React.Suspense fallback={<YakitSpin spinning />}>
+                        <CHeaderManager />
                       </React.Suspense>
                     </div>
                   )}
