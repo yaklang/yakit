@@ -2,8 +2,9 @@ import type { ReactNode } from 'react'
 import {
   CogOutlined,
   MCPOutlined,
-  GlobeAltOutlined,
-  KeyOutlined,
+  PuzzleOutlined,
+  CommandOutlined,
+  HardDriveDownloadOutlined,
   PaperAirplaneOutlined,
   GlobeOutlined,
   FileSlidersOutlined,
@@ -42,16 +43,16 @@ export const SettingsMenu: SettingsMenuGroup[] = [
     items: [
       { key: 'general', icon: <CogOutlined color="currentColor" /> },
       { key: 'appearance', icon: <SunOutlined color="currentColor" /> },
-      { key: 'shortcut-key', icon: <KeyOutlined color="currentColor" /> },
+      { key: 'shortcut-key', icon: <CommandOutlined color="currentColor" /> },
     ],
   },
   {
     titleKey: 'system',
     items: [
-      { key: 'reverse', icon: <PaperAirplaneOutlined color="currentColor" /> },
+      { key: 'reverse', icon: <HardDriveDownloadOutlined color="currentColor" /> },
       { key: 'system-proxy', icon: <PaperAirplaneOutlined color="currentColor" /> },
-      { key: 'global-config', icon: <GlobeAltOutlined color="currentColor" /> },
-      { key: 'right-click-plugins', icon: <GlobeOutlined color="currentColor" /> },
+      { key: 'global-config', icon: <GlobeOutlined color="currentColor" /> },
+      { key: 'right-click-plugins', icon: <PuzzleOutlined color="currentColor" /> },
     ],
   },
   {
