@@ -410,6 +410,7 @@
     "guideViewManual": "点击查看手册",
     "guideCloseManual": "关闭手册",
     "guideGotIt": "知道了",
+    "guideOpenHint": "点击展开新手引导手册",
     "guideStep1Title": "第一步：安装 YTray",
     "guideStep1Desc": "需要下载并安装新工具 YTray",
     "guideStep2Title": "第二步：准备好浏览器",

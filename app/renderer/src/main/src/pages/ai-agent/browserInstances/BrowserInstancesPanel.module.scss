@@ -17,10 +17,26 @@
   border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 }
 
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .panel-title {
   font-size: 14px;
   line-height: 20px;
   font-weight: 600;
+}
+
+.panel-guide-icon {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  flex-shrink: 0;
+
+  &:hover {
+    color: var(--Colors-Use-Main-Primary);
+    background-color: transparent;
+  }
 }
 
 .panel-subtitle {

@@ -11,11 +11,13 @@ import {
   PaperAirplaneOutlined,
   PencilOutlined,
   PlusOutlined,
+  QuestionMarkCircleOutlined,
   RefreshOutlined,
   TrashOutlined,
   PositionOutlined,
   XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
+import { Tooltip } from 'antd'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -46,7 +48,10 @@ import {
   type AIBrowserThumbnail,
 } from './browserInstanceStore'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { BrowserInstancesGuideEmpty } from './BrowserInstancesGuideEmpty/BrowserInstancesGuideEmpty'
+import {
+  BrowserInstancesGuideEmpty,
+  BrowserInstancesGuideManual,
+} from './BrowserInstancesGuideEmpty/BrowserInstancesGuideEmpty'
 import styles from './BrowserInstancesPanel.module.scss'
 
 export const formatLastSeen = (timestamp: number) => {
@@ -683,6 +688,7 @@ export const BrowserInstancesPanel: React.FC = () => {
   const [pendingExpanded, setPendingExpanded] = useState(true)
   const [offlineExpanded, setOfflineExpanded] = useState(false)
   const [pairingLoading, setPairingLoading] = useState(false)
+  const [manualVisible, setManualVisible] = useState(false)
   const online = useMemo(() => instances.filter((instance) => instance.online), [instances])
   const offline = useMemo(() => instances.filter((instance) => !instance.online), [instances])
   const handleOpenPairingWindow = useMemoizedFn(async () => {
@@ -699,7 +705,19 @@ export const BrowserInstancesPanel: React.FC = () => {
     <div className={styles['browser-instances-panel']}>
       <div className={styles['panel-header']}>
         <div>
-          <div className={styles['panel-title']}>{i18n.t('aiAgent:BrowserInstances.title')}</div>
+          <div className={styles['panel-title-row']}>
+            <div className={styles['panel-title']}>{i18n.t('aiAgent:BrowserInstances.title')}</div>
+            <Tooltip title={i18n.t('aiAgent:BrowserInstances.guideOpenHint')}>
+              <YakitButton
+                type="text2"
+                size="small"
+                icon={<QuestionMarkCircleOutlined color="currentColor" />}
+                className={styles['panel-guide-icon']}
+                aria-label={i18n.t('aiAgent:BrowserInstances.guideOpenHint')}
+                onClick={() => setManualVisible(true)}
+              />
+            </Tooltip>
+          </div>
           <div className={styles['panel-subtitle']}>{i18n.t('aiAgent:BrowserInstances.subtitle')}</div>
         </div>
         <div className={styles['header-actions']}>
@@ -734,7 +752,7 @@ export const BrowserInstancesPanel: React.FC = () => {
               </YakitButton>
             </div>
           ) : !instances.length && !pending.length ? (
-            <BrowserInstancesGuideEmpty />
+            <BrowserInstancesGuideEmpty onOpenManual={() => setManualVisible(true)} />
           ) : (
             <>
               {!!pending.length && (
@@ -822,6 +840,7 @@ export const BrowserInstancesPanel: React.FC = () => {
           )}
         </div>
       </YakitSpin>
+      <BrowserInstancesGuideManual open={manualVisible} onClose={() => setManualVisible(false)} />
     </div>
   )
 }

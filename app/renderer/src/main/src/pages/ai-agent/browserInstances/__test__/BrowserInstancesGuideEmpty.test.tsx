@@ -1,7 +1,11 @@
+import { useState } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { openExternalWebsite } from '@/utils/openWebsite'
-import { BrowserInstancesGuideEmpty } from '../BrowserInstancesGuideEmpty/BrowserInstancesGuideEmpty'
+import {
+  BrowserInstancesGuideEmpty,
+  BrowserInstancesGuideManual,
+} from '../BrowserInstancesGuideEmpty/BrowserInstancesGuideEmpty'
 
 vi.mock('@/i18n/i18n', () => ({
   default: {
@@ -111,13 +115,23 @@ vi.mock('@yakit-libs/yakit-ui-icons/colorful', () => ({
   WindowsOperatingSystemColorful: () => <span>win-icon</span>,
 }))
 
+const GuideHarness: React.FC = () => {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <BrowserInstancesGuideEmpty onOpenManual={() => setOpen(true)} />
+      <BrowserInstancesGuideManual open={open} onClose={() => setOpen(false)} />
+    </>
+  )
+}
+
 describe('BrowserInstancesGuideEmpty', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('opens manual modal with YakitRadioButtons platforms and keeps download link external', () => {
-    render(<BrowserInstancesGuideEmpty />)
+    render(<GuideHarness />)
     fireEvent.click(screen.getByRole('link', { name: 'https://yaklang.io/ytray/' }))
     expect(openExternalWebsite).toHaveBeenCalledWith('https://yaklang.io/ytray/')
 

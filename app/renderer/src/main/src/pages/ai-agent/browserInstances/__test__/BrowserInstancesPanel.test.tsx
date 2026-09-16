@@ -100,7 +100,13 @@ vi.mock('@/utils/openWebsite', () => ({
   openExternalWebsite: vi.fn(),
 }))
 vi.mock('../BrowserInstancesGuideEmpty/BrowserInstancesGuideEmpty', () => ({
-  BrowserInstancesGuideEmpty: () => <div>浏览器引导空态</div>,
+  BrowserInstancesGuideEmpty: ({ onOpenManual }: { onOpenManual?: () => void }) => (
+    <button type="button" onClick={onOpenManual}>
+      浏览器引导空态
+    </button>
+  ),
+  BrowserInstancesGuideManual: ({ open }: { open?: boolean; onClose?: () => void }) =>
+    open ? <div role="dialog">新手引导手册</div> : null,
 }))
 vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({
   YakitModalConfirm: mocks.modalConfirm,

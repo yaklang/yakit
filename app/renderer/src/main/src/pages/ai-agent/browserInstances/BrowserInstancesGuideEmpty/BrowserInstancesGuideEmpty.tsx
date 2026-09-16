@@ -84,8 +84,12 @@ const PlatformLabel: React.FC<{ icon: React.ReactNode; text: string }> = ({ icon
   </span>
 )
 
-export const BrowserInstancesGuideEmpty: React.FC = () => {
-  const [manualVisible, setManualVisible] = useState(false)
+type BrowserInstancesGuideManualProps = {
+  open: boolean
+  onClose: () => void
+}
+
+export const BrowserInstancesGuideManual: React.FC<BrowserInstancesGuideManualProps> = ({ open, onClose }) => {
   const [platform, setPlatform] = useState<GuidePlatform>(detectGuidePlatform)
   const platformOptions = useMemo(
     () => [
@@ -102,6 +106,86 @@ export const BrowserInstancesGuideEmpty: React.FC = () => {
   )
   const images = GUIDE_PLATFORM_IMAGES[platform]
 
+  return (
+    <YakitModal
+      type="white"
+      wrapClassName={styles['guide-empty-modal-wrap']}
+      title={
+        <div className={styles['guide-empty-modal-header']}>
+          <span className={styles['guide-empty-modal-title']}>{i18n.t('aiAgent:BrowserInstances.guideTitle')}</span>
+          <div className={styles['guide-empty-modal-platforms']}>
+            <YakitRadioButtons
+              buttonStyle="solid"
+              value={platform}
+              onChange={(event) => setPlatform(event.target.value as GuidePlatform)}
+              options={platformOptions}
+            />
+          </div>
+          <YakitButton
+            type="text2"
+            icon={<XOutlined color="currentColor" />}
+            aria-label={i18n.t('aiAgent:BrowserInstances.guideCloseManual')}
+            onClick={onClose}
+          />
+        </div>
+      }
+      centered
+      open={open}
+      onCancel={onClose}
+      footerStyle={{ justifyContent: 'center' }}
+      footer={
+        <YakitButton type="primary" onClick={onClose}>
+          {i18n.t('aiAgent:BrowserInstances.guideGotIt')}
+        </YakitButton>
+      }
+      width={760}
+      closable={false}
+      destroyOnHidden
+    >
+      <div className={styles['guide-empty-modal']}>
+        {GUIDE_STEPS.map((step) => (
+          <section key={step.titleKey} className={styles['guide-empty-step']}>
+            <div className={styles['guide-empty-step-title']}>{i18n.t(step.titleKey)}</div>
+            {step.items.map((item) => (
+              <div key={item.subtitleKey} className={styles['guide-empty-step-item']}>
+                <div className={styles['guide-empty-step-subtitle']}>
+                  <span>{i18n.t(item.subtitleKey)}</span>
+                  {item.link && (
+                    <a
+                      href={item.link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={openExternalLink(item.link.href)}
+                    >
+                      {item.link.label}
+                    </a>
+                  )}
+                </div>
+                <div
+                  className={
+                    item.imageKeys.length > 1
+                      ? styles['guide-empty-step-images-multi']
+                      : styles['guide-empty-step-images']
+                  }
+                >
+                  {item.imageKeys.map((imageKey) => (
+                    <img key={imageKey} src={images[imageKey]} alt={i18n.t(item.subtitleKey)} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </section>
+        ))}
+      </div>
+    </YakitModal>
+  )
+}
+
+type BrowserInstancesGuideEmptyProps = {
+  onOpenManual: () => void
+}
+
+export const BrowserInstancesGuideEmpty: React.FC<BrowserInstancesGuideEmptyProps> = ({ onOpenManual }) => {
   return (
     <div className={styles['guide-empty']}>
       <div className={styles['guide-empty-header']}>
@@ -122,82 +206,10 @@ export const BrowserInstancesGuideEmpty: React.FC = () => {
         type="text"
         icon={<CursorClickOutlined color="currentColor" />}
         className={styles['guide-empty-link']}
-        onClick={() => setManualVisible(true)}
+        onClick={onOpenManual}
       >
         {i18n.t('aiAgent:BrowserInstances.guideViewManual')}
       </YakitButton>
-
-      <YakitModal
-        type="white"
-        wrapClassName={styles['guide-empty-modal-wrap']}
-        title={
-          <div className={styles['guide-empty-modal-header']}>
-            <span className={styles['guide-empty-modal-title']}>{i18n.t('aiAgent:BrowserInstances.guideTitle')}</span>
-            <div className={styles['guide-empty-modal-platforms']}>
-              <YakitRadioButtons
-                buttonStyle="solid"
-                value={platform}
-                onChange={(event) => setPlatform(event.target.value as GuidePlatform)}
-                options={platformOptions}
-              />
-            </div>
-            <YakitButton
-              type="text2"
-              icon={<XOutlined color="currentColor" />}
-              aria-label={i18n.t('aiAgent:BrowserInstances.guideCloseManual')}
-              onClick={() => setManualVisible(false)}
-            />
-          </div>
-        }
-        centered
-        open={manualVisible}
-        onCancel={() => setManualVisible(false)}
-        footerStyle={{ justifyContent: 'center' }}
-        footer={
-          <YakitButton type="primary" onClick={() => setManualVisible(false)}>
-            {i18n.t('aiAgent:BrowserInstances.guideGotIt')}
-          </YakitButton>
-        }
-        width={760}
-        closable={false}
-        destroyOnHidden
-      >
-        <div className={styles['guide-empty-modal']}>
-          {GUIDE_STEPS.map((step) => (
-            <section key={step.titleKey} className={styles['guide-empty-step']}>
-              <div className={styles['guide-empty-step-title']}>{i18n.t(step.titleKey)}</div>
-              {step.items.map((item) => (
-                <div key={item.subtitleKey} className={styles['guide-empty-step-item']}>
-                  <div className={styles['guide-empty-step-subtitle']}>
-                    <span>{i18n.t(item.subtitleKey)}</span>
-                    {item.link && (
-                      <a
-                        href={item.link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={openExternalLink(item.link.href)}
-                      >
-                        {item.link.label}
-                      </a>
-                    )}
-                  </div>
-                  <div
-                    className={
-                      item.imageKeys.length > 1
-                        ? styles['guide-empty-step-images-multi']
-                        : styles['guide-empty-step-images']
-                    }
-                  >
-                    {item.imageKeys.map((imageKey) => (
-                      <img key={imageKey} src={images[imageKey]} alt={i18n.t(item.subtitleKey)} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </section>
-          ))}
-        </div>
-      </YakitModal>
     </div>
   )
 }

@@ -410,6 +410,7 @@
     "guideViewManual": "Open the guide",
     "guideCloseManual": "Close guide",
     "guideGotIt": "Got it",
+    "guideOpenHint": "Click to open the getting started guide",
     "guideStep1Title": "Step 1: Install YTray",
     "guideStep1Desc": "Download and install the YTray tool",
     "guideStep2Title": "Step 2: Prepare a browser",
