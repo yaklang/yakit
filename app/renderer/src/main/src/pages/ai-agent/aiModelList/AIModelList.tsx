@@ -194,7 +194,6 @@ export const onSelectAIModel = (data: {
     grpcSetAIGlobalConfig(newAIGlobalConfig).then(() => {
       onSuccess()
     })
-    emiter.emit('onRefreshAvailableAIModelList')
   } catch (error) {}
 }
 
@@ -718,7 +717,6 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
     return grpcDeleteLocalModel({ Name: item.Name, DeleteSourceFile: deleteSourceFile }).then(() => {
       onRefresh()
       setRemoveVisible(false)
-      emiter.emit('onRefreshAvailableAIModelList')
     })
   })
   const onCancelRemove = useMemoizedFn(() => {

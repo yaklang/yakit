@@ -70,7 +70,11 @@
     "configDesc": "No available AI model found. Please configure one before use.",
     "selectModel": "Select AI Model",
     "openConfigTooltip": "Open model configuration in Settings",
-    "manageModels": "Manage Models"
+    "manageModels": "Manage Models",
+    "resetModel": "Reset Model",
+    "resetModelTooltip": "Reset to the default model",
+    "emptyModels": "No models found. Refresh to try again.",
+    "noBuiltinModel": "No built-in high-quality model found"
   },
   "AIModelList": {
     "onlineTooltip": "Access models via API, receive AI info or send messages to AI, multiple configurations possible.",

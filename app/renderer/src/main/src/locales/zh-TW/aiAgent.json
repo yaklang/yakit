@@ -70,7 +70,11 @@
     "configDesc": "無可使用AI模型，請配置後使用",
     "selectModel": "AI 模型選擇",
     "openConfigTooltip": "開啟設定中的模型配置",
-    "manageModels": "管理模型"
+    "manageModels": "管理模型",
+    "resetModel": "重置模型",
+    "resetModelTooltip": "重置回預設的模型",
+    "emptyModels": "未取得模型，可點擊重新整理再次取得。",
+    "noBuiltinModel": "未找到內建高質模型"
   },
   "AIModelList": {
     "onlineTooltip": "透過api訪問模型,接受AI資訊或向AI傳送訊息,可配置多個",
