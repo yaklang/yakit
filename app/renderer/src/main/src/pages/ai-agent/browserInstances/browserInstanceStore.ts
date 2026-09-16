@@ -49,6 +49,13 @@ export const browserInstanceDisplayName = (instance: AIBrowserInstance) =>
 
 export const browserInstanceMentionName = (instance: AIBrowserInstance) => `@${instance.identity || instance.name}`
 
+export const formatLastSeen = (timestamp: number) => {
+  const date = new Date(timestamp)
+  if (!Number.isFinite(date.getTime()) || timestamp <= 0) return '-'
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
 interface BrowserInstanceState {
   instances: AIBrowserInstance[]
   pending: BrowserPairingRequest[]

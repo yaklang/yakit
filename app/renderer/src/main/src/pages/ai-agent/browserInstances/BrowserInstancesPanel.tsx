@@ -17,7 +17,7 @@ import {
   PositionOutlined,
   XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { Tooltip } from 'antd'
+import { Tooltip, type InputRef } from 'antd'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -40,6 +40,7 @@ import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMil
 import {
   browserInstanceDisplayName,
   browserInstanceMentionName,
+  formatLastSeen,
   readBrowserThumbnail,
   refreshBrowserInstances,
   selectBrowserInstance,
@@ -53,13 +54,6 @@ import {
   BrowserInstancesGuideManual,
 } from './BrowserInstancesGuideEmpty/BrowserInstancesGuideEmpty'
 import styles from './BrowserInstancesPanel.module.scss'
-
-export const formatLastSeen = (timestamp: number) => {
-  const date = new Date(timestamp)
-  if (!Number.isFinite(date.getTime()) || timestamp <= 0) return '-'
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-}
 
 export const browserProductLabel = (instance: { client?: string; clientVersion?: string }) => {
   const client = (instance.client || '').trim()
@@ -248,9 +242,15 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
   const [editing, setEditing] = useState(false)
   const [editingName, setEditingName] = useState(instance.name)
   const [mutating, setMutating] = useState(false)
+  const nameInputRef = useRef<InputRef>(null)
   const thumbnailKey = thumbnailCacheKey(instance)
   const thumbnailRequestId = useRef(0)
   const [thumbnail, setThumbnail] = useState<AIBrowserThumbnail | undefined>(() => thumbnailCache.get(thumbnailKey))
+  useEffect(() => {
+    if (!editing) return
+    const timer = window.setTimeout(() => nameInputRef.current?.focus({ cursor: 'all' }), 50)
+    return () => window.clearTimeout(timer)
+  }, [editing])
   const canFocus = Boolean(
     instance.online && instance.tab && (instance.connection?.capabilities || []).includes('browser.takeover'),
   )
@@ -397,10 +397,12 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
         <div className={styles['card-header']}>
           {editing ? (
             <YakitInput
+              ref={nameInputRef}
               size="small"
               wrapperClassName={styles['name-input']}
               value={editingName}
               maxLength={80}
+              autoFocus
               onChange={(event) => setEditingName(event.target.value)}
               onPressEnter={() => void saveName()}
             />
@@ -469,6 +471,12 @@ const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ 
   const [editing, setEditing] = useState(false)
   const [editingName, setEditingName] = useState(instance.name)
   const [mutating, setMutating] = useState(false)
+  const nameInputRef = useRef<InputRef>(null)
+  useEffect(() => {
+    if (!editing) return
+    const timer = window.setTimeout(() => nameInputRef.current?.focus({ cursor: 'all' }), 50)
+    return () => window.clearTimeout(timer)
+  }, [editing])
 
   const saveName = useMemoizedFn(async () => {
     if (!editingName.trim() || editingName.trim() === instance.name) {
@@ -521,10 +529,12 @@ const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ 
         <div className={styles['offline-title-row']}>
           {editing ? (
             <YakitInput
+              ref={nameInputRef}
               size="small"
               wrapperClassName={styles['name-input']}
               value={editingName}
               maxLength={80}
+              autoFocus
               onChange={(event) => setEditingName(event.target.value)}
               onPressEnter={() => void saveName()}
             />

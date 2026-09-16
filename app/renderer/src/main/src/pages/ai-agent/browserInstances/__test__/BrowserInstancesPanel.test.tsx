@@ -121,7 +121,6 @@ vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
 import {
   BrowserInstancesPanel,
   browserProductLabel,
-  formatLastSeen,
   openPairingWindow,
   pairingSubtitle,
   renameBrowserDevice,
@@ -155,12 +154,6 @@ const pairingRequest = (partial: Partial<BrowserPairingRequest> = {}): BrowserPa
 })
 
 describe('BrowserInstancesPanel helpers', () => {
-  it('formatLastSeen returns dash for invalid timestamps and formats valid ones', () => {
-    expect(formatLastSeen(0)).toBe('-')
-    expect(formatLastSeen(Number.NaN)).toBe('-')
-    expect(formatLastSeen(1_700_000_000_000)).toMatch(/^\d{4}\/\d{1,2}\/\d{1,2} \d{2}:\d{2}:\d{2}$/)
-  })
-
   it('browserProductLabel prefers readable product text and drops extension/protocol clients', () => {
     expect(browserProductLabel({ client: 'extension', clientVersion: '0.2.4' })).toBe('0.2.4')
     expect(browserProductLabel({ client: 'Chrome', clientVersion: '131.0.0' })).toBe('Chrome 131.0.0')

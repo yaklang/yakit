@@ -11,12 +11,19 @@ vi.mock('@/pages/browserExtension/browserExtensionClient', () => ({
 import {
   browserInstanceDisplayName,
   browserInstanceMentionName,
+  formatLastSeen,
   normalizeBrowserInstances,
   readBrowserThumbnail,
 } from '../browserInstanceStore'
 import { callBrowserExtensionCapability } from '@/pages/browserExtension/browserExtensionClient'
 
 describe('browser instance presentation', () => {
+  it('formatLastSeen returns dash for invalid timestamps and formats valid ones', () => {
+    expect(formatLastSeen(0)).toBe('-')
+    expect(formatLastSeen(Number.NaN)).toBe('-')
+    expect(formatLastSeen(1_700_000_000_000)).toMatch(/^\d{4}\/\d{1,2}\/\d{1,2} \d{2}:\d{2}:\d{2}$/)
+  })
+
   it('uses the stable managed-profile identity and does not treat a grant id as a running task', () => {
     const [instance] = normalizeBrowserInstances(
       {

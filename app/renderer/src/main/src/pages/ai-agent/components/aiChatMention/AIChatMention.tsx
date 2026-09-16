@@ -48,8 +48,8 @@ import type { InputRef } from 'antd'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { mentionWidth } from '../aiMilkdownInput/aiMilkdownMention/AIMilkdownMention'
 import {
-  browserInstanceDisplayName,
   browserInstanceMentionName,
+  formatLastSeen,
   refreshBrowserInstances,
   selectBrowserInstance,
   useBrowserInstances,
@@ -820,31 +820,43 @@ const BrowserListOfMention: React.FC<BrowserListOfMentionProps> = React.memo(
           {!filtered.length ? (
             <div className={styles['browser-list-empty']}>{t('BrowserInstances.noMentionInstances')}</div>
           ) : (
-            filtered.map((instance) => (
-              <div
-                key={instance.id}
-                id={`AIMentionSelectItem-${instance.id}`}
-                className={classNames(styles['browser-mention-row'], {
-                  [styles['row-item-active']]: selected?.id === instance.id,
-                })}
-                onClick={() => onSelect(instance)}
-              >
-                <span className={styles['browser-mention-icon']}>
-                  {instance.tab?.favIconUrl ? <img src={instance.tab.favIconUrl} alt="" /> : <ChromeOutlined />}
-                </span>
-                <span className={styles['browser-mention-copy']}>
-                  <span>{browserInstanceDisplayName(instance)}</span>
-                  <small>{instance.tab?.title || instance.origin || instance.client}</small>
-                </span>
-                <span
-                  className={classNames(styles['browser-mention-status'], {
-                    [styles['browser-mention-offline']]: !instance.online,
+            <div className={styles['browser-mention-list']}>
+              {filtered.map((instance) => (
+                <div
+                  key={instance.id}
+                  id={`AIMentionSelectItem-${instance.id}`}
+                  className={classNames(styles['browser-mention-row'], {
+                    [styles['browser-mention-row-active']]: selected?.id === instance.id,
                   })}
+                  onClick={() => onSelect(instance)}
                 >
-                  {instance.online ? t('BrowserInstances.online') : t('BrowserInstances.offline')}
-                </span>
-              </div>
-            ))
+                  <div className={styles['browser-mention-avatar']}>
+                    {instance.tab?.favIconUrl ? <img src={instance.tab.favIconUrl} alt="" /> : <ChromeOutlined />}
+                    {!!instance.identity && (
+                      <span className={styles['browser-mention-identity']} data-identity={instance.identity}>
+                        {instance.identity}
+                      </span>
+                    )}
+                  </div>
+                  <div className={styles['browser-mention-copy']}>
+                    <div className={styles['browser-mention-title-row']}>
+                      <span className={styles['browser-mention-title']} title={instance.name || instance.tab?.title}>
+                        {instance.name || instance.tab?.title || instance.client}
+                      </span>
+                      <span className={styles['browser-mention-status']}>
+                        {instance.online ? t('BrowserInstances.online') : t('BrowserInstances.offline')}
+                      </span>
+                    </div>
+                    <div className={styles['browser-mention-url']} title={instance.origin}>
+                      {instance.origin}
+                    </div>
+                    <div className={styles['browser-mention-last-seen']}>
+                      {t('BrowserInstances.lastSeen', { time: formatLastSeen(instance.lastSeenAt) })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </YakitSpin>
       </div>
