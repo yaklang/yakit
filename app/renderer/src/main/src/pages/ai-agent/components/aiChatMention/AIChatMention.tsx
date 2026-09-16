@@ -56,6 +56,7 @@ import {
   type AIBrowserInstance,
 } from '../../browserInstances/browserInstanceStore'
 import { BrowserClientIcon } from '../../browserInstances/BrowserClientIcon'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 
 const defaultRef: AIChatMentionListRefProps = {
   onRefresh: () => {},
@@ -843,9 +844,9 @@ const BrowserListOfMention: React.FC<BrowserListOfMentionProps> = React.memo(
                       <span className={styles['browser-mention-title']} title={instance.name || instance.tab?.title}>
                         {instance.name || instance.tab?.title || instance.client}
                       </span>
-                      <span className={styles['browser-mention-status']}>
+                      <YakitTag size="small" fullRadius color={instance.online ? 'success' : 'danger'}>
                         {instance.online ? t('BrowserInstances.online') : t('BrowserInstances.offline')}
-                      </span>
+                      </YakitTag>
                     </div>
                     <div className={styles['browser-mention-url']} title={instance.origin}>
                       {instance.origin}
