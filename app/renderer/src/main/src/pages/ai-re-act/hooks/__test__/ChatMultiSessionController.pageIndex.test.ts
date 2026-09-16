@@ -628,7 +628,7 @@ describe('ChatMultiSessionController start / send / history', async () => {
 
     const { grpcQueryAIEvent } = await import('@/pages/ai-agent/grpc')
     let resolveQuery: (value: { Events: unknown[]; Total: number }) => void = () => undefined
-    ;(grpcQueryAIEvent as any).mockImplementation(
+    ;(grpcQueryAIEvent as any).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           resolveQuery = resolve

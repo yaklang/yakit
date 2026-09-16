@@ -179,6 +179,10 @@ export interface AIAgentChatData {
 export interface AIAgentChatMetaData {
   /** 当前连接的身份、写入权限和异步收尾状态。 */
   lifecycle: SessionLifecycle
+  /** 本轮建联前查询并解析的规划开始历史，按事件 ID 升序保存，仅驻留内存。 */
+  planExecutionHistoryEvents: AIAgentGrpcApi.AIStartPlanAndExecution[]
+  /** 本轮建联前查询的子 Agent 创建历史，仅保留 react_task_is_sub_agent 为 true 的内容。 */
+  subAgentHistoryEvents: AIAgentGrpcApi.CasualCreated[]
   /** 会话通信流建立成功后的UI回调触发事件 */
   onLinkSuccess?: (sessionId: string) => void
   /** forceClose 回调，事件与 IDB 事务收尾后执行，参数反馈失败 */

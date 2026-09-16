@@ -8,6 +8,7 @@ import { makeGrpcJsonRes, makeGrpcRes } from './fixtures'
 import aiChatPersistStore from '../persist/aiChatPersistStore'
 import { persistIndependentItem, drainSessionContentWrites } from '../persist/contentPersistHelper'
 import { sessionStatusStore, SessionDeleteStatus } from '../sessionStatus/sessionStatusStore'
+import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIEvent: vi.fn().mockResolvedValue({ Events: [], Total: 0 }) }))
@@ -69,6 +70,7 @@ describe('session reconnect / IDB lifecycle', () => {
     vi.useFakeTimers()
     vi.resetAllMocks()
     resetIpcMocks()
+    vi.mocked(grpcQueryAIEvent).mockResolvedValue({ Events: [], Total: 0 } as any)
     for (const name of [
       'deleteSessionPersist',
       'deletePersistBySource',
@@ -90,6 +92,174 @@ describe('session reconnect / IDB lifecycle', () => {
     vi.useRealTimers()
   })
 
+  it.each(['', 'new question'])('waits for both histories before IPC start (query=%j)', async (query) => {
+    const history = deferred<any>()
+    const subAgents = deferred<any>()
+    vi.mocked(grpcQueryAIEvent).mockReturnValueOnce(history.promise).mockReturnValueOnce(subAgents.promise)
+    begin('s', query)
+    await tick()
+    expect(grpcQueryAIEvent).toHaveBeenNthCalledWith(
+      1,
+      {
+        Filter: {
+          SessionID: 's',
+          EventType: ['start_plan_and_execution'],
+        },
+        Pagination: { Page: 1, Limit: -1, OrderBy: 'id', Order: 'asc' },
+      },
+      true,
+    )
+    expect(grpcQueryAIEvent).toHaveBeenNthCalledWith(
+      2,
+      {
+        Filter: { SessionID: 's', EventType: ['structured'], NodeId: ['react_task_created'] },
+        Pagination: { Page: 1, Limit: -1, OrderBy: 'id', Order: 'asc' },
+      },
+      true,
+    )
+    expect(ipcRendererMock.invoke.mock.calls.some(([method]) => method === 'start-ai-re-act')).toBe(false)
+    const plan = { coordinator_id: 'plan-1', 're-act_task': 'question-1' }
+    const subAgent = { react_task_id: 'child-1', react_task_is_sub_agent: true }
+    const events = [
+      makeGrpcJsonRes('start_plan_and_execution', plan),
+      makeGrpcRes({ Type: 'start_plan_and_execution', Content: Buffer.from('invalid json') }),
+    ]
+    const taskEvents = [
+      makeGrpcJsonRes('structured', subAgent, { NodeId: 'react_task_created' }),
+      makeGrpcJsonRes('structured', { react_task_is_sub_agent: false }, { NodeId: 'react_task_created' }),
+      makeGrpcJsonRes('structured', { react_task_is_sub_agent: 'true' }, { NodeId: 'react_task_created' }),
+      makeGrpcJsonRes('structured', { react_task_is_sub_agent: 'false' }, { NodeId: 'react_task_created' }),
+      makeGrpcJsonRes('structured', { react_task_is_sub_agent: 1 }, { NodeId: 'react_task_created' }),
+      makeGrpcJsonRes('structured', {}, { NodeId: 'react_task_created' }),
+      makeGrpcJsonRes('structured', null, { NodeId: 'react_task_created' }),
+      makeGrpcRes({ Type: 'structured', NodeId: 'react_task_created', Content: Buffer.from('invalid json') }),
+    ]
+    // 两种完成顺序均不能在另一个请求完成前 start。
+    if (query) subAgents.resolve({ Events: taskEvents })
+    else history.resolve({ Events: events })
+    await tick()
+    expect(ipcRendererMock.invoke.mock.calls.some(([method]) => method === 'start-ai-re-act')).toBe(false)
+    history.resolve({ Events: events, Total: 2 })
+    subAgents.resolve({ Events: taskEvents })
+    await ctrl.ensureSession('s').meta.lifecycle.preparation
+    expect(ctrl.ensureSession('s').meta.planExecutionHistoryEvents).toEqual([plan])
+    expect(ctrl.ensureSession('s').meta.subAgentHistoryEvents).toEqual([subAgent])
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's', expect.anything())
+    await ctrl.handleSessionEnd('s')
+    await start('s', query)
+    expect(ctrl.ensureSession('s').meta.planExecutionHistoryEvents).toEqual([])
+    expect(ctrl.ensureSession('s').meta.subAgentHistoryEvents).toEqual([])
+  })
+
+  it('stores sub Agent history only when both Type and NodeId match', async () => {
+    const subAgent = { react_task_id: 'child-1', react_task_is_sub_agent: true }
+    vi.mocked(grpcQueryAIEvent)
+      .mockResolvedValueOnce({ Events: [] } as any)
+      .mockResolvedValueOnce({
+        Events: [
+          makeGrpcJsonRes('stream', subAgent, { NodeId: 'react_task_created' }),
+          makeGrpcJsonRes('structured', subAgent, { NodeId: 'react_task_status_changed' }),
+          makeGrpcJsonRes('stream', subAgent, { NodeId: 'other' }),
+          makeGrpcJsonRes('structured', subAgent, { NodeId: 'react_task_created' }),
+        ],
+      } as any)
+    await start('s')
+    expect(ctrl.ensureSession('s').meta.subAgentHistoryEvents).toEqual([subAgent])
+  })
+
+  it('does not store late history or start the stream when closed during a history query', async () => {
+    const history = deferred<any>()
+    vi.mocked(grpcQueryAIEvent)
+      .mockResolvedValueOnce({ Events: [makeGrpcJsonRes('start_plan_and_execution', { coordinator_id: 'p' })] } as any)
+      .mockReturnValueOnce(history.promise)
+    begin('s')
+    await tick()
+    const { lifecycle } = ctrl.ensureSession('s').meta
+    ctrl.forceCloseSession({ sessionIds: ['s'] })
+    history.resolve({
+      Events: [makeGrpcJsonRes('structured', { react_task_is_sub_agent: true }, { NodeId: 'react_task_created' })],
+    })
+    await lifecycle.ending
+    expect(ctrl.ensureSession('s').meta.planExecutionHistoryEvents).toEqual([])
+    expect(ctrl.ensureSession('s').meta.subAgentHistoryEvents).toEqual([])
+    expect(ipcRendererMock.invoke.mock.calls.some(([method]) => method === 'start-ai-re-act')).toBe(false)
+    expect(ctrl.isSessionReady('s')).toBe(false)
+  })
+
+  it.each(['plan', 'sub Agent', 'both'])(
+    'continues after %s query failure and keeps successful history',
+    async (failed) => {
+      const plan = { coordinator_id: 'plan-1' }
+      const subAgent = { react_task_id: 'child-1', react_task_is_sub_agent: true }
+      vi.mocked(grpcQueryAIEvent).mockImplementation(async (request) => {
+        const isPlan = request.Filter?.EventType?.includes('start_plan_and_execution')
+        if (failed === 'both' || (isPlan ? failed === 'plan' : failed === 'sub Agent')) throw new Error('query failed')
+        return {
+          Events: [
+            isPlan
+              ? makeGrpcJsonRes('start_plan_and_execution', plan)
+              : makeGrpcJsonRes('structured', subAgent, { NodeId: 'react_task_created' }),
+          ],
+        } as any
+      })
+      begin('s')
+      const { meta } = ctrl.ensureSession('s')
+      await meta.lifecycle.preparation
+      expect(meta.planExecutionHistoryEvents).toEqual(failed === 'sub Agent' ? [plan] : [])
+      expect(meta.subAgentHistoryEvents).toEqual(failed === 'plan' ? [subAgent] : [])
+      expect(meta.lifecycle.error).toBeUndefined()
+      expect(meta.lifecycle.ending).toBeUndefined()
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's', expect.anything())
+      await ctrl.handleSessionEnd('s')
+      expect(vi.getTimerCount()).toBe(0)
+    },
+  )
+
+  it.each(['success', 'failure', 'pending'])('waits at most 5 seconds with the other query %s', async (other) => {
+    const late = deferred<any>()
+    const second = deferred<any>()
+    const plan = { coordinator_id: 'plan-1' }
+    vi.mocked(grpcQueryAIEvent).mockReturnValueOnce(second.promise).mockReturnValueOnce(late.promise)
+    begin('s')
+    await tick()
+    if (other === 'success') second.resolve({ Events: [makeGrpcJsonRes('start_plan_and_execution', plan)] })
+    if (other === 'failure') second.reject(new Error('query failed'))
+    await vi.advanceTimersByTimeAsync(4999)
+    expect(ipcRendererMock.invoke.mock.calls.some(([method]) => method === 'start-ai-re-act')).toBe(false)
+    await vi.advanceTimersByTimeAsync(1)
+    const { meta } = ctrl.ensureSession('s')
+    await meta.lifecycle.preparation
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's', expect.anything())
+    expect(meta.planExecutionHistoryEvents).toEqual(other === 'success' ? [plan] : [])
+    expect(meta.subAgentHistoryEvents).toEqual([])
+    expect(meta.lifecycle.error).toBeUndefined()
+
+    // 超时后成功或失败的响应均不能回填历史，也不能影响已经开始的连接。
+    late.resolve({
+      Events: [makeGrpcJsonRes('structured', { react_task_is_sub_agent: true }, { NodeId: 'react_task_created' })],
+    })
+    if (other === 'pending') second.reject(new Error('late failure'))
+    await tick()
+    expect(meta.subAgentHistoryEvents).toEqual([])
+    expect(meta.lifecycle.error).toBeUndefined()
+    expect(ctrl.isSessionReady('s')).toBe(true)
+    await ctrl.handleSessionEnd('s')
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('finishes closing after the history timeout without starting a stream', async () => {
+    vi.mocked(grpcQueryAIEvent).mockImplementation(() => new Promise(() => {}))
+    begin('s')
+    await tick()
+    const { lifecycle } = ctrl.ensureSession('s').meta
+    ctrl.forceCloseSession({ sessionIds: ['s'] })
+    await vi.advanceTimersByTimeAsync(5000)
+    await lifecycle.ending
+    expect(ctrl.isSessionReady('s')).toBe(false)
+    expect(ipcRendererMock.invoke.mock.calls.some(([method]) => method === 'start-ai-re-act')).toBe(false)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
   it('clears old cache before IPC, resets memory in the same store and recovers from zero', async () => {
     const cleanup = deferred()
     vi.mocked(aiChatPersistStore.deleteSessionPersist).mockReturnValueOnce(cleanup.promise)
@@ -102,6 +272,7 @@ describe('session reconnect / IDB lifecycle', () => {
     })
     begin('s')
     await tick()
+    expect(grpcQueryAIEvent).not.toHaveBeenCalled()
     expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('start-ai-re-act', expect.anything(), expect.anything())
     expect(begin('s')).toBe(false)
     cleanup.resolve()

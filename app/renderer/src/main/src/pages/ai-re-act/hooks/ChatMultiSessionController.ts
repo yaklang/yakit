@@ -143,6 +143,8 @@ const genAIAgentChatData = (): AIAgentChatData => {
 const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
   return {
     lifecycle: new SessionLifecycle(),
+    planExecutionHistoryEvents: [],
+    subAgentHistoryEvents: [],
     createChatQuestion: undefined,
     onEnd: undefined,
     pingSyncID: '',
@@ -663,7 +665,59 @@ export class ChatMultiSessionController {
     }
   }
 
-  /** 新建/重连共用入口：同步占位，清库成功后建联，历史恢复完成后才发送首问。 */
+  /**
+   * 建联前统一加载规划和子 Agent 历史，分别按类型和 NodeId 查询，避免 OR 条件跨会话取数。
+   * 两个请求共用 5 秒等待期限，各自失败或超时按空结果处理，不阻塞后续建联。
+   * 只消费期限内完成的结果，超时后的 IPC 响应不会再修改 meta。
+   */
+  private async loadSessionHistoryBeforeStart(sessionId: string, meta: AIAgentChatMetaData) {
+    const { lifecycle } = meta
+    if (!lifecycle.current || lifecycle.closing) return
+    /** 两个并行请求共用一个截止定时器，全部提前结束时立即清理。 */
+    let timeoutId!: ReturnType<typeof setTimeout>
+    const timeout = new Promise<undefined>((resolve) => {
+      timeoutId = setTimeout(() => resolve(undefined), 5000)
+    })
+    const queries = [
+      grpcQueryAIEvent(
+        {
+          Filter: { SessionID: sessionId, EventType: ['start_plan_and_execution'] },
+          Pagination: { Page: 1, Limit: -1, OrderBy: 'id', Order: 'asc' },
+        },
+        true,
+      ),
+      grpcQueryAIEvent(
+        {
+          Filter: { SessionID: sessionId, EventType: ['structured'], NodeId: ['react_task_created'] },
+          Pagination: { Page: 1, Limit: -1, OrderBy: 'id', Order: 'asc' },
+        },
+        true,
+      ),
+    ]
+    const [plans, tasks] = await Promise.all(
+      queries.map((query) => Promise.race([query.catch(() => undefined), timeout])),
+    ).finally(() => clearTimeout(timeoutId))
+    if (!lifecycle.current || lifecycle.closing) return
+
+    for (const event of [...(plans?.Events || []), ...(tasks?.Events || [])]) {
+      try {
+        const content = JSON.parse(Uint8ArrayToString(event.Content) || '')
+        if (!content || typeof content !== 'object') continue
+        if (event.Type === 'start_plan_and_execution') {
+          const info = content as AIAgentGrpcApi.AIStartPlanAndExecution
+          meta.planExecutionHistoryEvents.push(info)
+        } else if (event.Type === 'structured' && event.NodeId === 'react_task_created') {
+          const info = content as AIAgentGrpcApi.CasualCreated
+          if (info.react_task_is_sub_agent !== true) continue
+          meta.subAgentHistoryEvents.push(info)
+        }
+      } catch {
+        // 单条历史内容损坏时跳过，其他有效历史仍可用于恢复。
+      }
+    }
+  }
+
+  /** 新建/重连共用入口：同步占位，清库并查询辅助历史后建联，历史恢复完成后才发送首问。 */
   public handleStartSession(
     requestParams: AIChatIPCStartParams,
     cb?: {
@@ -722,6 +776,7 @@ export class ChatMultiSessionController {
     cb?.onLinkStart?.(sessionId)
 
     lifecycle.preparation = this.prepareSessionPersistBeforeStart(sessionId, meta)
+      .then(() => this.loadSessionHistoryBeforeStart(sessionId, meta))
       .then(() => {
         if (!lifecycle.current || lifecycle.closing) return
         lifecycle.started = true
