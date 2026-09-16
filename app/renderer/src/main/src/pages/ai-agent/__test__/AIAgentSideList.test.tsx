@@ -88,14 +88,16 @@ describe('AIAgentSideList', () => {
     expect(screen.getByTestId('scheduled')).toHaveAttribute('data-visible', 'false')
   })
 
-  it('默认激活 File 页，隐藏文件标签并保留定时任务、浏览器、MCP 入口', async () => {
+  it('默认激活 File 页，按浏览器、定时任务、MCP 排列入口', async () => {
     render(<SideList />)
     expect(screen.getByLabelText('active')).toHaveTextContent('file')
     expect(screen.queryByRole('button', { name: 'file' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'session' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'scheduled' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'browser' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'mcp' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
+      'browser',
+      'scheduled',
+      'mcp',
+    ])
     expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
     expect(screen.getByText('文件列表')).toBeInTheDocument()
   })

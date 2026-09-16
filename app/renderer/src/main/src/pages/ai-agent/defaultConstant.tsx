@@ -54,14 +54,14 @@ export enum AIAgentTabListEnum {
 }
 export const AiAgentTabList: YakitTabsProps[] = [
   {
-    value: AIAgentTabListEnum.Scheduled,
-    label: 'AIAgentTabs.scheduled',
-    icon: <CalendarOutlined color="currentColor" />,
-  },
-  {
     value: AIAgentTabListEnum.Browser,
     label: 'AIAgentTabs.browser',
     icon: <ChromeOutlined color="currentColor" />,
+  },
+  {
+    value: AIAgentTabListEnum.Scheduled,
+    label: 'AIAgentTabs.scheduled',
+    icon: <CalendarOutlined color="currentColor" />,
   },
   { value: AIAgentTabListEnum.MCP, label: 'MCP', icon: <MCPOutlined color="currentColor" /> },
 ]

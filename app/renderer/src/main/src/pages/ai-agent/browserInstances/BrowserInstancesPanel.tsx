@@ -4,7 +4,6 @@ import {
   CheckOutlined,
   ChevronDownOutlined,
   ChevronRightOutlined,
-  ChromeOutlined,
   CloseOutlined,
   DotsHorizontalOutlined,
   GlobeOutlined,
@@ -16,6 +15,7 @@ import {
   PositionOutlined,
   XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
+import { ChromeBrowserColorful, EdgeBrowserColorful } from '@yakit-libs/yakit-ui-icons/colorful'
 import { Tooltip, type InputRef } from 'antd'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
@@ -37,7 +37,6 @@ import {
 import i18n from '@/i18n/i18n'
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import {
-  browserInstanceDisplayName,
   browserInstanceMentionName,
   formatLastSeen,
   readBrowserThumbnail,
@@ -63,9 +62,9 @@ export const browserProductLabel = (instance: { client?: string; clientVersion?:
 }
 
 export const pairingSubtitle = (request: BrowserPairingRequest) => {
-  const parts = [(request.origin || '').trim()].filter(Boolean)
+  const parts = [browserProductLabel(request)].filter(Boolean)
   if (request.managedInstance?.manager === 'ytray') parts.push('YTray')
-  else if (request.managedInstance?.manager) parts.push(request.managedInstance.manager)
+  else if (request.managedInstance?.manager === 'yakit') parts.push('Yakit')
   return parts.join(' · ')
 }
 
@@ -406,8 +405,8 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
               onPressEnter={() => void saveName()}
             />
           ) : (
-            <span className={styles['instance-title']} title={instance.name || browserInstanceDisplayName(instance)}>
-              {instance.name || instance.tab?.title}
+            <span className={styles['instance-title']} title={instance.tab?.title || instance.name}>
+              {instance.tab?.title || instance.name}
             </span>
           )}
           <div className={styles['card-actions']}>
@@ -636,7 +635,7 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
     <article className={styles['pairing-card']}>
       <div className={styles['pairing-body']}>
         <div className={styles['pairing-avatar']}>
-          <ChromeOutlined color="currentColor" size={22} />
+          {/edge/i.test(request.client) ? <EdgeBrowserColorful size={22} /> : <ChromeBrowserColorful size={22} />}
           {identity && (
             <span className={styles['identity-mark']} data-identity={identity}>
               {identity}

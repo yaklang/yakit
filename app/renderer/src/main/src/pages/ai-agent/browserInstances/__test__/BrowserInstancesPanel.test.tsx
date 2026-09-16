@@ -163,8 +163,8 @@ describe('BrowserInstancesPanel helpers', () => {
     expect(browserProductLabel({ client: '', clientVersion: '1.0.0' })).toBe('1.0.0')
   })
 
-  it('pairingSubtitle uses origin and appends managed manager', () => {
-    expect(pairingSubtitle(pairingRequest({ origin: 'chrome-extension://a' }))).toBe('chrome-extension://a')
+  it('pairingSubtitle uses browser version and appends managed manager', () => {
+    expect(pairingSubtitle(pairingRequest({ origin: 'chrome-extension://a' }))).toBe('Chrome 131.0.0')
     expect(
       pairingSubtitle(
         pairingRequest({
@@ -172,7 +172,7 @@ describe('BrowserInstancesPanel helpers', () => {
           managedInstance: { manager: 'ytray', instanceId: 'ytray-a', badge: 'A' },
         }),
       ),
-    ).toBe('chrome-extension://a · YTray')
+    ).toBe('Chrome 131.0.0 · YTray')
     expect(
       pairingSubtitle(
         pairingRequest({
@@ -180,7 +180,7 @@ describe('BrowserInstancesPanel helpers', () => {
           managedInstance: { manager: 'yakit', instanceId: 'yakit-a', badge: 'A' },
         }),
       ),
-    ).toBe('chrome-extension://a · yakit')
+    ).toBe('Chrome 131.0.0 · Yakit')
   })
 })
 
@@ -244,7 +244,12 @@ describe('BrowserInstancesPanel interactions', () => {
   it('toggles pending / online / offline sections', () => {
     mocks.useBrowserInstances.mockReturnValue({
       instances: [
-        baseInstance({ id: 'online-1', online: true, name: 'Online Browser' }),
+        baseInstance({
+          id: 'online-1',
+          online: true,
+          name: 'Online Browser',
+          tab: { id: 1, title: 'Current Page', url: 'https://example.test/' },
+        }),
         baseInstance({ id: 'offline-1', online: false, name: 'Offline Browser' }),
       ],
       pending: [pairingRequest({ id: 'pending-1', code: '654321' })],
@@ -253,7 +258,7 @@ describe('BrowserInstancesPanel interactions', () => {
     })
     render(<BrowserInstancesPanel />)
 
-    expect(screen.getByText('Online Browser')).toBeInTheDocument()
+    expect(screen.getByTitle('Current Page')).toBeInTheDocument()
     expect(screen.getByText(/确认码|verificationCode/)).toBeInTheDocument()
     expect(screen.queryByText('Offline Browser')).not.toBeInTheDocument()
 
@@ -261,7 +266,7 @@ describe('BrowserInstancesPanel interactions', () => {
     expect(screen.getByText('Offline Browser')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /aiAgent:BrowserInstances.current/ }))
-    expect(screen.queryByText('Online Browser')).not.toBeInTheDocument()
+    expect(screen.queryByTitle('Current Page')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /aiAgent:BrowserInstances.pendingApproval/ }))
     expect(screen.queryByText(/确认码|verificationCode/)).not.toBeInTheDocument()

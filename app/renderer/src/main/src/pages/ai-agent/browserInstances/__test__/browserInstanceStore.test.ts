@@ -51,8 +51,8 @@ describe('browser instance presentation', () => {
             {
               deviceId: 'device-a',
               installationId: 'install-a',
-              client: 'chrome-extension',
-              clientVersion: '1.0.0',
+              client: 'Chrome for Testing',
+              clientVersion: '152.0.7977.82',
               capabilities: ['browser.tabs'],
               sessionId: 'session',
               connectionId: 'connection',
@@ -81,7 +81,14 @@ describe('browser instance presentation', () => {
       ],
     )
 
-    expect(instance).toMatchObject({ identity: 'A', name: '管理员', online: true, running: false })
+    expect(instance).toMatchObject({
+      identity: 'A',
+      name: '管理员',
+      client: 'Chrome for Testing',
+      clientVersion: '152.0.7977.82',
+      online: true,
+      running: false,
+    })
   })
 
   it('uses the live ytray badge and never invents a letter for an unmanaged browser', () => {

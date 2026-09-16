@@ -152,6 +152,8 @@ export const normalizeBrowserInstances = (
       return {
         ...device,
         name: profile?.name || device.name,
+        client: connection?.client || device.client,
+        clientVersion: connection?.clientVersion || device.clientVersion,
         online: Boolean(connection),
         running: Boolean(connection?.taskId),
         identity:
