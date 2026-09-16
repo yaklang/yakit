@@ -2,13 +2,15 @@ import '../../pages/ai-re-act/hooks/__test__/setupElectron'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
+import type lodash from 'lodash'
+import type * as HistoryAIReActChatModule from '../withHistoryAIReActChat'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '../historyAIReActChat'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 
 vi.mock('lodash', async (importOriginal) => {
-  const original = await importOriginal<{ default: typeof import('lodash') }>()
+  const original = await importOriginal<{ default: typeof lodash }>()
   return { ...original, clone: original.default.clone, cloneDeep: original.default.cloneDeep }
 })
 vi.mock('../HistroryAIReActChat', () => ({ HistroryAIReActChat: () => null }))
@@ -73,7 +75,7 @@ describe('HistoryAIReActChatProvider', () => {
 
   it('Provider 模块重新执行后仍与已加载的消费者共享 Context', async () => {
     // 模拟热更新只重新执行 Provider 模块，保留已加载的 Hook 及其依赖。
-    const reloaded = await compileReactModule<typeof import('../withHistoryAIReActChat')>(
+    const reloaded = await compileReactModule<typeof HistoryAIReActChatModule>(
       import.meta.url,
       '../withHistoryAIReActChat.tsx',
     )

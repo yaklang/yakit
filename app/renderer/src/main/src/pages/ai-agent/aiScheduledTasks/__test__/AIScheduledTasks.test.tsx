@@ -1,4 +1,5 @@
-import React from 'react'
+import type React from 'react'
+import type * as AhooksModule from 'ahooks'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '../../../ai-re-act/hooks/__test__/setupElectron'
@@ -34,7 +35,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key }),
 }))
 vi.mock('ahooks', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('ahooks')>()),
+  ...(await importOriginal<typeof AhooksModule>()),
   useInViewport: () => [true],
 }))
 vi.mock('@/components/RollingLoadList/RollingLoadList', () => ({

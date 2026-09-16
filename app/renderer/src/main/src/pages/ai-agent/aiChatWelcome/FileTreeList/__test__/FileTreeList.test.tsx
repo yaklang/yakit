@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
+import type * as ZustandModule from 'zustand'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import type { FileTreeSystemListProps, HistoryItem } from '../../../components/aiFileSystemList/type'
 import FileTreeList from '../FileTreeList'
@@ -22,7 +23,7 @@ vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => ({}) }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => session.id }))
 vi.mock('zustand', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('zustand')>()),
+  ...(await importOriginal<typeof ZustandModule>()),
   useStore: (_store: unknown, selector: (state: { grpcFolders: HistoryItem[] }) => unknown) =>
     selector({ grpcFolders: [...aiPaths] }),
 }))
