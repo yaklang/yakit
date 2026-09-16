@@ -10,7 +10,6 @@ import {
   GlobeOutlined,
   PaperAirplaneOutlined,
   PencilOutlined,
-  PlusOutlined,
   QuestionMarkCircleOutlined,
   RefreshOutlined,
   TrashOutlined,
@@ -731,15 +730,6 @@ export const BrowserInstancesPanel: React.FC = () => {
           <div className={styles['panel-subtitle']}>{i18n.t('aiAgent:BrowserInstances.subtitle')}</div>
         </div>
         <div className={styles['header-actions']}>
-          <YakitButton
-            type="text2"
-            icon={<PlusOutlined color="currentColor" />}
-            size="small"
-            loading={pairingLoading}
-            aria-label={i18n.t('aiAgent:BrowserInstances.connect')}
-            onClick={() => void handleOpenPairingWindow()}
-          />
-          <span className={styles['header-divider']} />
           <YakitButton
             type="text2"
             icon={<RefreshOutlined color="currentColor" />}

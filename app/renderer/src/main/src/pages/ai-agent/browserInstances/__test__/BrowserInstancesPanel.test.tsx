@@ -227,16 +227,15 @@ describe('BrowserInstancesPanel interactions', () => {
     })
   })
 
-  it('opens pairing window from header connect button', async () => {
+  it('opens pairing window from empty-state goConnect', async () => {
     mocks.useBrowserInstances.mockReturnValue({
       instances: [],
       pending: [],
       loading: false,
-      error: '',
+      error: 'unavailable',
     })
     render(<BrowserInstancesPanel />)
-    expect(screen.getByText('浏览器引导空态')).toBeInTheDocument()
-    fireEvent.click(screen.getByLabelText('aiAgent:BrowserInstances.connect'))
+    fireEvent.click(screen.getByText('aiAgent:BrowserInstances.goConnect'))
     await waitFor(() => {
       expect(mocks.requestBrowserExtensionSnapshot).toHaveBeenCalledWith('POST', '/pairing-window', { ttlSeconds: 120 })
     })
