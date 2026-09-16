@@ -15,7 +15,7 @@ import {
   PositionOutlined,
   XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { ChromeBrowserColorful, EdgeBrowserColorful } from '@yakit-libs/yakit-ui-icons/colorful'
+import { BrowserClientIcon } from './BrowserClientIcon'
 import { Tooltip, type InputRef } from 'antd'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
@@ -516,7 +516,7 @@ const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ 
   return (
     <div className={styles['offline-row']}>
       <div className={styles['browser-avatar']}>
-        <BrowserFavicon src={instance.tab?.favIconUrl} />
+        <BrowserClientIcon client={instance.client} size={18} />
         {instance.identity && (
           <span className={styles['identity-mark']} data-identity={instance.identity}>
             {instance.identity}
@@ -635,7 +635,7 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
     <article className={styles['pairing-card']}>
       <div className={styles['pairing-body']}>
         <div className={styles['pairing-avatar']}>
-          {/edge/i.test(request.client) ? <EdgeBrowserColorful size={22} /> : <ChromeBrowserColorful size={22} />}
+          <BrowserClientIcon client={request.client} size={22} />
           {identity && (
             <span className={styles['identity-mark']} data-identity={identity}>
               {identity}

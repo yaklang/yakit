@@ -55,7 +55,7 @@ import {
   useBrowserInstances,
   type AIBrowserInstance,
 } from '../../browserInstances/browserInstanceStore'
-import { ChromeOutlined } from '@ant-design/icons'
+import { BrowserClientIcon } from '../../browserInstances/BrowserClientIcon'
 
 const defaultRef: AIChatMentionListRefProps = {
   onRefresh: () => {},
@@ -831,7 +831,7 @@ const BrowserListOfMention: React.FC<BrowserListOfMentionProps> = React.memo(
                   onClick={() => onSelect(instance)}
                 >
                   <div className={styles['browser-mention-avatar']}>
-                    {instance.tab?.favIconUrl ? <img src={instance.tab.favIconUrl} alt="" /> : <ChromeOutlined />}
+                    <BrowserClientIcon client={instance.client} size={18} />
                     {!!instance.identity && (
                       <span className={styles['browser-mention-identity']} data-identity={instance.identity}>
                         {instance.identity}
