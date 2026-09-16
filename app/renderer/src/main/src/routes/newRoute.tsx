@@ -285,6 +285,7 @@ const ForgeEditor = React.lazy(() => import('@/pages/aiForge/forgeEditor/ForgeEd
 const AIToolEditor = React.lazy(() => import('@/pages/aiTool/AIToolEditor/AIToolEditor'))
 const YakRunnerScanHistory = React.lazy(() => import('@/pages/yakRunnerScanHistory/YakRunnerScanHistory'))
 const SSACompileHistory = React.lazy(() => import('@/pages/ssaCompileHistory/SSACompileHistory'))
+const CHeaderManager = React.lazy(() => import('@/pages/yakRunnerAuditCode/CHeaderManager/CHeaderManager'))
 const MCPHistory = React.lazy(() => import('@/pages/ai-agent/aiMCPHistory/MCPHistory'))
 const MemoryBase = React.lazy(() => import('@/pages/memoryBase/MemoryBase'))
 const ConfigManagement = React.lazy(() => import('@/pages/configManagement/ConfigManagement'))
@@ -504,6 +505,7 @@ export const YakitRouteToPageInfo: Record<
   'add-ai-tool': { label: '新建 Tool', labelUi: 'YakitRoute.createTool' },
   'modify-ai-tool': { label: '编辑 Tool', labelUi: 'YakitRoute.editTool' },
   'ssa-compile-history': { label: 'SSA项目编译历史', labelUi: 'YakitRoute.ssaCompileHistory' },
+  'c-headers': { label: 'C 头文件', labelUi: 'YakitRoute.cHeaders' },
   'mcp-history': { label: 'MCP调用历史', labelUi: 'YakitRoute.mcpHistory' },
   'config-management': {
     label: '配置管理',
@@ -573,6 +575,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
   YakitRoute.MCP_History,
+  YakitRoute.C_Headers,
   YakitRoute.ManageRightClickPlugins,
   YakitRoute.Settings,
 ]
@@ -633,6 +636,7 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
   YakitRoute.MCP_History,
+  YakitRoute.C_Headers,
   YakitRoute.ManageRightClickPlugins,
   YakitRoute.ContextMenuResult,
   YakitRoute.Settings,
@@ -646,6 +650,7 @@ export const NoScrollRoutes: YakitRoute[] = [
   YakitRoute.AI_Agent,
   YakitRoute.ShortcutKey,
   YakitRoute.YakRunner_ScanHistory,
+  YakitRoute.C_Headers,
   YakitRoute.ManageRightClickPlugins,
 ]
 
@@ -1057,6 +1062,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return <YakRunnerScanHistory />
     case YakitRoute.SSA_Compile_History:
       return <SSACompileHistory />
+    case YakitRoute.C_Headers:
+      return <CHeaderManager />
     case YakitRoute.MCP_History:
       return <MCPHistory />
     case YakitRoute.Rule_Management:

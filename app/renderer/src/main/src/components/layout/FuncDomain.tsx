@@ -760,6 +760,7 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         { key: 'ssa-result-diff', label: 'ssa-result-diff' },
         { key: 'ai-repository', label: '知识库' },
         { key: 'ssa-compile-history', label: 'SSA项目编译历史' },
+        { key: 'c-headers', label: 'C 头文件' },
         { key: 'memory-base', label: '记忆库' },
       ],
     },
@@ -954,6 +955,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'ssa-compile-history':
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.SSA_Compile_History }))
+        return
+      case 'c-headers':
+        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.C_Headers }))
         return
       case 'memory-base':
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Memory }))
