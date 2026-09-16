@@ -734,6 +734,7 @@ service Yak {
   rpc ImportCHeaderPack(ImportCHeaderPackRequest) returns (GeneralResponse);
   rpc DeleteCHeaderPack(DeleteCHeaderPackRequest) returns (GeneralResponse);
   rpc PreviewCHeaderFile(PreviewCHeaderFileRequest) returns (PreviewCHeaderFileResponse);
+  rpc DownloadOfficialCHeaders(DownloadOfficialCHeadersRequest) returns (DownloadOfficialCHeadersResponse);
 
   // Wireshark
   rpc GetPcapMetadata(PcapMetadataRequest) returns (PcapMetadata);
@@ -8292,6 +8293,17 @@ message PreviewCHeaderFileRequest {
 message PreviewCHeaderFileResponse {
   bytes Content = 1;
   bool Truncated = 2;
+}
+
+message DownloadOfficialCHeadersRequest {
+  bool Force = 1; // overwrite existing c-std-headers.zip
+}
+
+message DownloadOfficialCHeadersResponse {
+  bool Ok = 1;
+  string Reason = 2;
+  string Version = 3;
+  string PackPath = 4;
 }
 
 message GetReverseShellProgramListRequest{

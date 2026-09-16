@@ -201,6 +201,10 @@
     "deleteSuccess": "已删除 {{name}}",
     "deleteFailed": "删除失败",
     "deleteConfirm": "确定删除 {{name}}？",
-    "truncated": "文件过大，仅显示部分内容"
+    "truncated": "文件过大，仅显示部分内容",
+    "downloadOfficial": "下载官方头文件包",
+    "downloadSuccess": "官方头文件包已下载{{version}}",
+    "downloadFailed": "下载官方头文件包失败",
+    "downloadOverwrite": "已存在 c-std-headers.zip，确定覆盖下载？"
   }
 }

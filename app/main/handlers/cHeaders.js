@@ -20,6 +20,7 @@ module.exports = (win, getClient) => {
     'ImportCHeaderPack',
     'DeleteCHeaderPack',
     'PreviewCHeaderFile',
+    'DownloadOfficialCHeaders',
   ]
   methods.forEach((method) => {
     const fn = unary(getClient, method)

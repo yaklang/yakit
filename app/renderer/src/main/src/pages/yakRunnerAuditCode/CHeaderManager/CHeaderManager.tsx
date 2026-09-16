@@ -16,6 +16,7 @@ import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { FileDefault, FileSuffix, FolderDefault, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import {
+  CloudDownloadOutlined,
   DocumentDuplicateOutlined,
   PlusCircleOutlined,
   RefreshOutlined,
@@ -113,6 +114,7 @@ const CHeaderManager: React.FC<CHeaderManagerProps> = React.memo(() => {
   const [previewTitle, setPreviewTitle] = useState('')
   const [previewValue, setPreviewValue] = useState('')
   const [previewTruncated, setPreviewTruncated] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const wrapper = useRef<HTMLDivElement>(null)
   const size = useSize(wrapper)
 
@@ -201,6 +203,29 @@ const CHeaderManager: React.FC<CHeaderManagerProps> = React.memo(() => {
     }
   })
 
+  const hasOfficialPack = useMemo(
+    () => treeData.some((item) => item.title.toLowerCase() === 'c-std-headers.zip'),
+    [treeData]
+  )
+
+  const runDownloadOfficial = useMemoizedFn(async (force: boolean) => {
+    setDownloading(true)
+    try {
+      const result = await ipcRenderer.invoke('DownloadOfficialCHeaders', { Force: force })
+      if (result && result.Ok === false) {
+        yakitNotify('error', result.Reason || t('CHeaderManager.downloadFailed'))
+        return
+      }
+      const version = result?.Version ? ` ${result.Version}` : ''
+      yakitNotify('success', t('CHeaderManager.downloadSuccess', { version }))
+      loadPacks()
+    } catch (e) {
+      yakitNotify('error', `${e}`)
+    } finally {
+      setDownloading(false)
+    }
+  })
+
   const onPreview = useMemoizedFn(async (node: CHeaderTreeNode) => {
     if (node.isDir) return
     try {
@@ -260,6 +285,24 @@ const CHeaderManager: React.FC<CHeaderManagerProps> = React.memo(() => {
             onClick={() => setClipboardText(dir)}
           />
           <YakitButton type="text2" size="small" icon={<RefreshOutlined color="currentColor" />} onClick={loadPacks} />
+          <YakitPopconfirm
+            title={t('CHeaderManager.downloadOverwrite')}
+            disabled={!hasOfficialPack}
+            onConfirm={() => runDownloadOfficial(true)}
+          >
+            <YakitButton
+              type="text2"
+              size="small"
+              loading={downloading}
+              icon={<CloudDownloadOutlined color="currentColor" />}
+              title={t('CHeaderManager.downloadOfficial')}
+              onClick={() => {
+                if (!hasOfficialPack) {
+                  runDownloadOfficial(false)
+                }
+              }}
+            />
+          </YakitPopconfirm>
           <YakitDropdownMenu
             menu={{
               data: [
@@ -287,8 +330,11 @@ const CHeaderManager: React.FC<CHeaderManagerProps> = React.memo(() => {
         ) : shownTree.length === 0 ? (
           <div className={styles['empty-wrap']}>
             <YakitEmpty title={t('CHeaderManager.emptyTitle')} description={t('CHeaderManager.emptyDesc')} />
-            <div style={{ textAlign: 'center', marginTop: 8 }}>
-              <YakitButton type="primary" size="small" onClick={() => onImport('zip')}>
+            <div style={{ textAlign: 'center', marginTop: 8, display: 'flex', justifyContent: 'center', gap: 8 }}>
+              <YakitButton type="primary" size="small" loading={downloading} onClick={() => runDownloadOfficial(false)}>
+                {t('CHeaderManager.downloadOfficial')}
+              </YakitButton>
+              <YakitButton size="small" onClick={() => onImport('zip')}>
                 {t('CHeaderManager.addZip')}
               </YakitButton>
             </div>
