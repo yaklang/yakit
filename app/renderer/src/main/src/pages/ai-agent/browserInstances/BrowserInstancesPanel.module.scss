@@ -13,7 +13,6 @@
   min-height: 60px;
   padding: 12px;
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
   border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 }
@@ -46,6 +45,8 @@
 }
 
 .panel-body {
+  height: 100%;
+  min-height: 0;
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -653,10 +654,4 @@
     font-size: 30px;
     color: var(--Colors-Use-Main-Primary);
   }
-}
-
-.empty-hint {
-  font-size: 11px;
-  line-height: 17px;
-  color: var(--Colors-Use-Neutral-Text-3-Secondary);
 }

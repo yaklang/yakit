@@ -46,6 +46,7 @@ import {
   type AIBrowserThumbnail,
 } from './browserInstanceStore'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { BrowserInstancesGuideEmpty } from './BrowserInstancesGuideEmpty/BrowserInstancesGuideEmpty'
 import styles from './BrowserInstancesPanel.module.scss'
 
 export const formatLastSeen = (timestamp: number) => {
@@ -733,14 +734,7 @@ export const BrowserInstancesPanel: React.FC = () => {
               </YakitButton>
             </div>
           ) : !instances.length && !pending.length ? (
-            <div className={styles['empty-state']}>
-              <GlobeOutlined color="currentColor" size={30} />
-              <span>{i18n.t('aiAgent:BrowserInstances.noInstances')}</span>
-              <span className={styles['empty-hint']}>{i18n.t('aiAgent:BrowserInstances.emptyHint')}</span>
-              <YakitButton type="primary" loading={pairingLoading} onClick={() => void handleOpenPairingWindow()}>
-                {i18n.t('aiAgent:BrowserInstances.connect')}
-              </YakitButton>
-            </div>
+            <BrowserInstancesGuideEmpty />
           ) : (
             <>
               {!!pending.length && (

@@ -96,6 +96,12 @@ vi.mock('../browserInstanceStore', async () => {
     selectBrowserInstance: vi.fn(),
   }
 })
+vi.mock('@/utils/openWebsite', () => ({
+  openExternalWebsite: vi.fn(),
+}))
+vi.mock('../BrowserInstancesGuideEmpty/BrowserInstancesGuideEmpty', () => ({
+  BrowserInstancesGuideEmpty: () => <div>浏览器引导空态</div>,
+}))
 vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({
   YakitModalConfirm: mocks.modalConfirm,
 }))
@@ -222,7 +228,7 @@ describe('BrowserInstancesPanel interactions', () => {
     })
   })
 
-  it('opens pairing window from empty state', async () => {
+  it('opens pairing window from header connect button', async () => {
     mocks.useBrowserInstances.mockReturnValue({
       instances: [],
       pending: [],
@@ -230,7 +236,8 @@ describe('BrowserInstancesPanel interactions', () => {
       error: '',
     })
     render(<BrowserInstancesPanel />)
-    fireEvent.click(screen.getByText('aiAgent:BrowserInstances.connect'))
+    expect(screen.getByText('浏览器引导空态')).toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('aiAgent:BrowserInstances.connect'))
     await waitFor(() => {
       expect(mocks.requestBrowserExtensionSnapshot).toHaveBeenCalledWith('POST', '/pairing-window', { ttlSeconds: 120 })
     })
