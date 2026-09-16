@@ -10,9 +10,10 @@ import useStore from '../hooks/useStore'
 import type { LeftSideBarProps, LeftSideType } from './LeftSideBarType'
 
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
-  const { fileTreeLoad, onOpenEditorDetails, isUnShow, setUnShow, active, setActive } = props
+  const { fileTreeLoad, onOpenEditorDetails, isUnShow, setUnShow, active, setActive, onFileTreeTabChange } = props
   const { pageInfo } = useStore()
   const [isOnlyFileTree, setOnlyFileTree] = useState<boolean>(false)
+  const [fileTreeTab, setFileTreeTab] = useState<string>('all')
   const ref = useRef(null)
   const getContainerSize = useSize(ref)
   // 抽屉展示高度
@@ -30,6 +31,19 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
     setActive(type)
   })
 
+  const onActiveTabChange = useMemoizedFn((tab: string) => {
+    setFileTreeTab(tab)
+    onFileTreeTabChange?.(tab as any)
+    // 规则生成占满左侧内容区，隐藏下方审计结果栏
+    if (tab === 'rule-generate') {
+      setOnlyFileTree(true)
+    } else if (!pageInfo?.Query) {
+      setOnlyFileTree(true)
+    } else {
+      setOnlyFileTree(false)
+    }
+  })
+
   const ResizeBoxProps = useCreation(() => {
     const p = {
       firstRatio: '50%',
@@ -37,19 +51,21 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
       firstMinSize: 250,
       secondMinSize: 180,
     }
-    if (isOnlyFileTree) {
+    if (isOnlyFileTree || fileTreeTab === 'rule-generate') {
       p.firstRatio = '100%'
       p.secondRatio = '0%'
     }
     return p
-  }, [isOnlyFileTree])
+  }, [isOnlyFileTree, fileTreeTab])
 
   // 当跳转时打开，没有则关闭
   useEffect(() => {
-    if (!pageInfo?.Query) {
+    if (!pageInfo?.Query && fileTreeTab !== 'rule-generate') {
       setOnlyFileTree(true)
     }
-  }, [pageInfo])
+  }, [pageInfo, fileTreeTab])
+
+  const hideAuditSecond = isOnlyFileTree || fileTreeTab === 'rule-generate'
 
   return (
     <div
@@ -64,44 +80,6 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
       )}
       ref={ref}
     >
-      {/* 左侧边栏 */}
-      {/* <div className={styles["left-side-bar-list"]}>
-                <div
-                    className={classNames(styles["left-side-bar-item"], {
-                        [styles["left-side-bar-item-active"]]: active === "audit",
-                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "audit" && isUnShow
-                    })}
-                    onClick={() => {
-                        if (active !== "audit") {
-                            setUnShow(false)
-                        }
-                        if (active === "audit") {
-                            setUnShow(!isUnShow)
-                        }
-                        onSetActive("audit")
-                    }}
-                >
-                    <span className={styles["item-text"]}>审计</span>
-                </div>
-                <div
-                    className={classNames(styles["left-side-bar-item"], {
-                        [styles["left-side-bar-item-active"]]: active === "search",
-                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "search" && isUnShow
-                    })}
-                    onClick={() => {
-                        if (active !== "search") {
-                            setUnShow(false)
-                        }
-                        if (active === "search") {
-                            setUnShow(!isUnShow)
-                        }
-                        onSetActive("search")
-                    }}
-                >
-                    <span className={styles["item-text"]}>搜索</span>
-                </div>
-            </div> */}
-
       {/* 侧边栏对应展示内容 */}
       <div className={styles['left-side-bar-content']}>
         {rendered.current.has('audit') && (
@@ -113,9 +91,15 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
             <YakitResizeBox
               isVer={true}
               firstNodeStyle={{ padding: 0 }}
-              lineStyle={{ display: isOnlyFileTree ? 'none' : '' }}
-              secondNodeStyle={{ padding: 0, display: isOnlyFileTree ? 'none' : '' }}
-              firstNode={<RunnerFileTree fileTreeLoad={fileTreeLoad} boxHeight={boxHeight} />}
+              lineStyle={{ display: hideAuditSecond ? 'none' : '' }}
+              secondNodeStyle={{ padding: 0, display: hideAuditSecond ? 'none' : '' }}
+              firstNode={
+                <RunnerFileTree
+                  fileTreeLoad={fileTreeLoad}
+                  boxHeight={boxHeight}
+                  onActiveTabChange={onActiveTabChange}
+                />
+              }
               secondNode={<AuditCode setOnlyFileTree={setOnlyFileTree} onOpenEditorDetails={onOpenEditorDetails} />}
               {...ResizeBoxProps}
             />

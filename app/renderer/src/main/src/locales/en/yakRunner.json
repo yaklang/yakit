@@ -130,6 +130,7 @@
     "all": "All",
     "vulnFile": "Vulnerability Files",
     "ruleSummary": "Rule Summary",
+    "ruleGenerate": "Rule Generation",
     "globalFilterFn": "Global Filter Function",
     "codeScan": "Code Scan",
     "compileProject": "Compile Project",

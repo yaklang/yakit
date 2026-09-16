@@ -43,6 +43,7 @@ import {
   normalizeYaklangCodeChangeForReview,
   resetYakRunnerPatchWorkingDraft,
 } from '../pages/yakRunner/yakRunnerAiCodePatchApply'
+import { applySyntaxFlowRuleChangeToAuditCode } from '../pages/yakRunnerAuditCode/auditCodeRuleGenAiBridge'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import emiter from '@/utils/eventBus/eventBus'
 
@@ -229,6 +230,11 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     return route === YakitRoute.YakScript && !!pageId
   }, [route, pageId])
 
+  // IRify 代码审计「规则生成」：yaklang_code_change 直接写入底部规则编写
+  const isHaveAuditCodeRuleGenPageId = useCreation(() => {
+    return route === YakitRoute.YakRunner_Audit_Code && !!pageId
+  }, [route, pageId])
+
   useUpdateEffect(() => {
     // 只有配置变化了才更新，SessionID不管
     if (activeChat?.SessionID) globalSessionEngine.updateSessionConfig(activeChat?.SessionID, getSetting())
@@ -269,6 +275,12 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   const onYaklangCodeChange = useMemoizedFn((data: AIAgentGrpcApi.YaklangCodeChange) => {
+    // 代码审计「规则生成」：全文覆盖到底部「规则编写」，不做 diff 审阅
+    if (isHaveAuditCodeRuleGenPageId) {
+      applySyntaxFlowRuleChangeToAuditCode(data)
+      return
+    }
+
     if (!isHaveYakRunnerPageId) return
 
     const editorNow = getYakRunnerPageActiveCodeString(pageId) ?? ''

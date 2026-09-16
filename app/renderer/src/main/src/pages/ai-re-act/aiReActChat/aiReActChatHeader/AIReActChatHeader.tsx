@@ -138,6 +138,8 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
         return ['webFuzzer']
       case AISourceEnum.irify:
         return ['irify']
+      case AISourceEnum.irifyRuleGen:
+        return ['irifyRuleGen']
       case AISourceEnum.yakRunner:
         return ['yakRunner']
       case AISourceEnum.im:

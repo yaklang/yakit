@@ -56,4 +56,6 @@ export type YakRunnerAuditEventProps = {
   onOpenLeftSecondNode: 'result' | 'history'
   // 刷新文件树或者规则树
   onRefreshFileOrRuleTree?: string
+  /** 编辑器选中代码发送到「规则生成」AI 对话 */
+  onAuditCodeRuleGenSendCodeBlock: string
 }

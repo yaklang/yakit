@@ -34,6 +34,8 @@ export enum AISourceEnum {
   flow = 'flow',
   /** irify 来源 */
   irify = 'irify',
+  /** IRify 代码审计「规则生成」 */
+  irifyRuleGen = 'irifyRuleGen',
   /** Yak Runner 代码审计 */
   yakRunner = 'yakRunner',
   /** IM bot 来源（飞书/钉钉等） */

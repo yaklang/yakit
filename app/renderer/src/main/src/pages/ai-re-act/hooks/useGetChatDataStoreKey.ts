@@ -31,6 +31,8 @@ export const getImageStoreKeyByAISource = (source: AISource): ChatDataStoreKey =
       return 'WebFuzzerAiStore'
     case AISourceEnum.irify:
       return 'irifyAiCodeAuditPageAiStore'
+    case AISourceEnum.irifyRuleGen:
+      return 'irifyRuleGenPageAiStore'
     case AISourceEnum.yakRunner:
       return 'yakRunnerPageAiStore'
     default:

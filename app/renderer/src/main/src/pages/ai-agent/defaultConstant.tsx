@@ -313,6 +313,8 @@ export enum AttachedResourceKeyEnum {
   CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID = 'directory_path',
   CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID = 'file_path',
   CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content = 'content',
+  /** IRify 代码审计「规则编写」草稿 */
+  CONTEXT_PROVIDER_KEY_SYNTAXFLOW_RULE = 'syntaxflow_rule',
   CONTEXT_PROVIDER_KEY_DEFAULT = 'default',
 }
 

@@ -23,6 +23,7 @@ import { openSSARiskNewWindow } from '@/utils/openWebsite'
 import { JSONParseLog } from '@/utils/tool'
 import { yakitNotify } from '@/utils/notification'
 import { openAIForge } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils'
+import { AUDIT_CODE_RULE_GEN_AI_PAGE_ID, registerAuditCodeRuleEditorGetter } from '../auditCodeRuleGenAiBridge'
 const { ipcRenderer } = window.require('electron')
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -78,6 +79,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
       emiter.off('onResetAuditRule', onResetAuditRuleFun)
     }
   }, [])
+
+  // 供「规则生成」AI 发送时附带当前规则草稿
+  useEffect(() => {
+    return registerAuditCodeRuleEditorGetter(AUDIT_CODE_RULE_GEN_AI_PAGE_ID, () => ruleEditor)
+  }, [ruleEditor])
 
   useEffect(() => {
     if (showItem && isShowEditorDetails) {

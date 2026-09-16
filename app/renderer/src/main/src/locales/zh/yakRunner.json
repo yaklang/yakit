@@ -130,6 +130,7 @@
     "all": "全部",
     "vulnFile": "漏洞文件",
     "ruleSummary": "规则汇总",
+    "ruleGenerate": "规则生成",
     "globalFilterFn": "全局过滤函数",
     "codeScan": "代码扫描",
     "compileProject": "编译项目",

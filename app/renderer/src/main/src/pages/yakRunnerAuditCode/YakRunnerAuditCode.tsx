@@ -64,8 +64,17 @@ import { getCodeByPath, getCodeSizeByPath, getNameByPath, monacaLanguageType } f
 import { openAIForge } from '../yakRunnerAuditHole/YakitAuditHoleTable/utils'
 import { isIRify } from '@/utils/envfile'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { HistoryAIReActChatProvider } from '@/components/historyAIReActChat'
+import { AISourceEnum, type AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AUDIT_CODE_RULE_GEN_AI_PAGE_ID, IRIFY_AUDIT_FOCUS_MODE_WRITE_SYNTAXFLOW } from '@/constants/focusMode'
+import {
+  appendAuditCodeRuleGenContextToEvent,
+  registerAuditCodeEditorSelectionGetter,
+} from './auditCodeRuleGenAiBridge'
+import type { ActiveProps } from './RunnerFileTree/RunnerFileTreeType'
 const { ipcRenderer } = window.require('electron')
-export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
+
+const YakRunnerAuditCodeWorkbench: React.FC<YakRunnerAuditCodeProps> = (props) => {
   const { auditCodePageInfo } = props
   // 页面数据
   const [pageInfo, setPageInfo] = useState<AuditCodePageInfoProps | undefined>(auditCodePageInfo)
@@ -644,6 +653,45 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
   })
 
   const [isUnShow, setUnShow] = useState<boolean>(false)
+  const [fileTreeTab, setFileTreeTab] = useState<ActiveProps>('all')
+  const isRuleGenerateTab = fileTreeTab === 'rule-generate'
+
+  const onFileTreeTabChange = useMemoizedFn((tab: ActiveProps) => {
+    setFileTreeTab(tab)
+  })
+
+  // 规则生成：把当前编辑器选区注册给 AI 附件桥
+  useEffect(() => {
+    return registerAuditCodeEditorSelectionGetter(AUDIT_CODE_RULE_GEN_AI_PAGE_ID, () => {
+      const file = activeFile
+      if (!file?.code || !file.selections) return null
+      const sel = file.selections
+      if (sel.startLineNumber === sel.endLineNumber && sel.startColumn === sel.endColumn) {
+        return null
+      }
+      const lines = file.code.split('\n')
+      const startIdx = Math.max(0, sel.startLineNumber - 1)
+      const endIdx = Math.min(lines.length - 1, sel.endLineNumber - 1)
+      let content = ''
+      if (startIdx === endIdx) {
+        content = (lines[startIdx] || '').slice(sel.startColumn - 1, sel.endColumn - 1)
+      } else {
+        const parts: string[] = []
+        parts.push((lines[startIdx] || '').slice(sel.startColumn - 1))
+        for (let i = startIdx + 1; i < endIdx; i++) parts.push(lines[i] || '')
+        parts.push((lines[endIdx] || '').slice(0, sel.endColumn - 1))
+        content = parts.join('\n')
+      }
+      if (!content.trim()) return null
+      return {
+        path: file.path,
+        language: file.language,
+        startLine: sel.startLineNumber,
+        endLine: sel.endLineNumber,
+        content,
+      }
+    })
+  }, [activeFile])
 
   const store: YakRunnerContextStore = useMemo(() => {
     return {
@@ -771,10 +819,10 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
           <div className={styles['audit-code-body']}>
             <YakitResizeBox
               freeze={!isUnShow}
-              firstRatio={isUnShow ? '25px' : '300px'}
+              firstRatio={isUnShow ? '25px' : isRuleGenerateTab ? '380px' : '300px'}
               firstNodeStyle={isUnShow ? { padding: 0, maxWidth: 25 } : { padding: 0 }}
               lineDirection="right"
-              firstMinSize={isUnShow ? 25 : 252}
+              firstMinSize={isUnShow ? 25 : isRuleGenerateTab ? 360 : 252}
               lineStyle={{ width: 4 }}
               secondMinSize={480}
               firstNode={
@@ -785,6 +833,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                   setUnShow={setUnShow}
                   active={active}
                   setActive={setActive}
+                  onFileTreeTabChange={onFileTreeTabChange}
                 />
               }
               secondNodeStyle={
@@ -834,6 +883,25 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         />
       </div>
     </YakRunnerContext.Provider>
+  )
+}
+
+/** 代码审计：包 HistoryAIReActChatProvider，固定 write_syntaxflow_rule 专注模式 */
+export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
+  const transformInputEvent = useMemoizedFn((event: AIInputEvent) =>
+    appendAuditCodeRuleGenContextToEvent(AUDIT_CODE_RULE_GEN_AI_PAGE_ID, event),
+  )
+
+  return (
+    <HistoryAIReActChatProvider
+      source={AISourceEnum.irifyRuleGen}
+      route={YakitRoute.YakRunner_Audit_Code}
+      pageId={AUDIT_CODE_RULE_GEN_AI_PAGE_ID}
+      focusModeLoop={IRIFY_AUDIT_FOCUS_MODE_WRITE_SYNTAXFLOW}
+      transformInputEvent={transformInputEvent}
+    >
+      <YakRunnerAuditCodeWorkbench {...props} />
+    </HistoryAIReActChatProvider>
   )
 }
 
