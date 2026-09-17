@@ -343,14 +343,15 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
       menu={{
         width: 136,
         data: [
-          {
-            key: 'rename',
-            label: i18n.t('aiAgent:BrowserInstances.rename'),
-            itemIcon: <PencilOutlined color="currentColor" />,
-          },
+          // 使用中暂不支持重命名
+          // {
+          //   key: 'rename',
+          //   label: i18n.t('aiAgent:BrowserInstances.rename'),
+          //   itemIcon: <PencilOutlined color="currentColor" />,
+          // },
           ...(canClose
             ? [
-                { type: 'divider' as const },
+                // { type: 'divider' as const },
                 {
                   key: 'close',
                   label: i18n.t('aiAgent:BrowserInstances.close'),
@@ -362,10 +363,10 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
         ],
         onClick: ({ key }) => {
           if (key === 'close') confirmClose()
-          if (key === 'rename') {
-            setEditingName(instance.name)
-            setEditing(true)
-          }
+          // if (key === 'rename') {
+          //   setEditingName(instance.name)
+          //   setEditing(true)
+          // }
         },
       }}
       dropdown={{ trigger: ['click'], placement: 'bottomRight' }}

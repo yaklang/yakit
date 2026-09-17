@@ -841,15 +841,18 @@ const BrowserListOfMention: React.FC<BrowserListOfMentionProps> = React.memo(
                   </div>
                   <div className={styles['browser-mention-copy']}>
                     <div className={styles['browser-mention-title-row']}>
-                      <span className={styles['browser-mention-title']} title={instance.name || instance.tab?.title}>
-                        {instance.name || instance.tab?.title || instance.client}
+                      <span
+                        className={styles['browser-mention-title']}
+                        title={instance.tab?.title || instance.name || instance.client}
+                      >
+                        {instance.tab?.title || instance.name || instance.client}
                       </span>
                       <YakitTag size="small" fullRadius color={instance.online ? 'success' : 'danger'}>
                         {instance.online ? t('BrowserInstances.online') : t('BrowserInstances.offline')}
                       </YakitTag>
                     </div>
-                    <div className={styles['browser-mention-url']} title={instance.origin}>
-                      {instance.origin}
+                    <div className={styles['browser-mention-url']} title={instance.tab?.url ?? instance.origin}>
+                      {instance.tab?.url ?? instance.origin}
                     </div>
                     <div className={styles['browser-mention-last-seen']}>
                       {t('BrowserInstances.lastSeen', { time: formatLastSeen(instance.lastSeenAt) })}

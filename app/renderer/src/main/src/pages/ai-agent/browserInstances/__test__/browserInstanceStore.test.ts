@@ -142,7 +142,7 @@ describe('browser instance presentation', () => {
 
     expect(instances.find((item) => item.id === 'device-c')).toMatchObject({ identity: 'C' })
     expect(instances.find((item) => item.id === 'device-external')?.identity).toBeUndefined()
-    expect(browserInstanceMentionName(instances.find((item) => item.id === 'device-c')!)).toBe('@C')
+    expect(browserInstanceMentionName(instances.find((item) => item.id === 'device-c')!)).toBe('C')
   })
 
   it('uses the current tab title instead of the generic extension name', () => {

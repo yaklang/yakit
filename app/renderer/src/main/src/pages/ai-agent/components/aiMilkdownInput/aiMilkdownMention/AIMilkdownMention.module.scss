@@ -22,12 +22,26 @@
   visibility: hidden;
 }
 
+// ProseMirror 光标按节点 DOM 的 border-box 定位，不含 margin；
+// 用 host 的 padding-right 把光标推到 chip 外侧。
+.mention-custom-host {
+  display: inline-block;
+  max-width: 150px;
+  padding-right: 4px;
+  vertical-align: middle;
+  line-height: 1;
+}
+.mention-custom-host-readonly {
+  padding-right: 2px;
+}
+
 .mention-custom {
   cursor: pointer;
   user-select: none;
   overflow: hidden;
-  max-width: 150px;
-  margin-right: 4px;
+  max-width: 100%;
+  margin-right: 0;
+  vertical-align: middle;
   &:not(.mention-custom-no-effect):hover {
     background-color: var(--Colors-Use-Neutral-Border);
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
@@ -80,8 +94,4 @@
   svg {
     color: var(--Colors-Use-Main-Primary);
   }
-}
-
-.mention-custom-readonly {
-  margin-right: 2px;
 }

@@ -47,7 +47,7 @@ export const browserInstanceDisplayName = (instance: AIBrowserInstance) =>
     ? `${instance.identity} · ${instance.tab?.title || instance.name}`
     : instance.tab?.title || instance.name
 
-export const browserInstanceMentionName = (instance: AIBrowserInstance) => `@${instance.identity || instance.name}`
+export const browserInstanceMentionName = (instance: AIBrowserInstance) => `${instance.identity || instance.name}`
 
 export const formatLastSeen = (timestamp: number) => {
   const date = new Date(timestamp)

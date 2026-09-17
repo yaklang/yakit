@@ -115,6 +115,11 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
     return undefined
   }, [devices, value])
 
+  // 无在线浏览器且未选中配置时不展示入口
+  if (!loading && !devices.length && !value) {
+    return null
+  }
+
   const content = (
     <div className={styles['gateway-popover']}>
       <header>

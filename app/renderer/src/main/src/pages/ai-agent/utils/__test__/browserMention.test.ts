@@ -7,13 +7,13 @@ describe('browser instance mention', () => {
     const result = getResourceInfoByMention({
       mentionId: 'device-1',
       mentionType: 'browser',
-      mentionName: '@A',
+      mentionName: 'A',
     })
 
     expect(result).toEqual({
       Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_BROWSER,
       Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_BROWSER_DEVICE_ID,
-      Value: JSON.stringify({ deviceId: 'device-1', name: '@A', reference: 'A' }),
+      Value: JSON.stringify({ deviceId: 'device-1', name: 'A', reference: 'A' }),
     })
   })
 })
