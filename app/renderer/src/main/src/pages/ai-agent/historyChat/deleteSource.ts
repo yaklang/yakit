@@ -18,6 +18,7 @@ export enum DeleteSessionsAISourceEnum {
   webFuzzer = AISourceEnum.webFuzzer,
   flow = AISourceEnum.flow,
   irify = AISourceEnum.irify,
+  irifyRuleGen = AISourceEnum.irifyRuleGen,
   yakRunner = AISourceEnum.yakRunner,
   im = AISourceEnum.im,
   other = AISourceEnum.other,
