@@ -115,7 +115,7 @@ beforeEach(() => {
     }),
   )
   mocks.load.mockImplementation(({ haveDataCall }) => {
-    haveDataCall({
+    haveDataCall?.({
       onlineModelsTotal: config.IntelligentModels.length,
       localModelsTotal: 0,
       localModels: [],
@@ -210,6 +210,48 @@ describe('AIModelSelect', () => {
     expect(mocks.latest).not.toHaveBeenCalled()
   })
 
+  it.each([false, true])('初始化响应迟到时保留用户选择及保存结果（已关闭保存：%s）', async (saved) => {
+    const initialConfig = cloneDeep(config)
+    let completeLoad!: () => void
+    mocks.load.mockImplementationOnce(
+      ({ haveDataCall }) =>
+        new Promise((resolve) => {
+          completeLoad = () => {
+            haveDataCall?.({
+              onlineModelsTotal: initialConfig.IntelligentModels.length,
+              localModelsTotal: 0,
+              localModels: [],
+              onlineModels: initialConfig,
+            })
+            resolve(null)
+          }
+        }),
+    )
+    const dropdown = await openModels()
+    expect(mocks.load).toHaveBeenCalledTimes(1)
+    fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' }))
+    if (saved) closeModels()
+
+    await act(async () => completeLoad())
+
+    expect(screen.getByTestId('selected-model')).toHaveTextContent('remote-model-2')
+    if (!saved) closeModels()
+    const expectedConfig = {
+      ...initialConfig,
+      IntelligentModels: [
+        { ...initialConfig.IntelligentModels[0], ModelName: 'remote-model-2' },
+        initialConfig.IntelligentModels[1],
+      ],
+    }
+    expect(mocks.save).toHaveBeenCalledTimes(1)
+    expect(mocks.save).toHaveBeenCalledWith(expectedConfig)
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(expectedConfig)
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '打开选择' })))
+    expect(screen.getByRole('option', { name: 'remote-model-2' })).toHaveAttribute('aria-selected', 'true')
+    closeModels()
+    expect(mocks.save).toHaveBeenCalledTimes(1)
+  })
+
   it('点击重置时才获取内置高质模型，并使用最新配置而非本地缓存加载列表', async () => {
     config.IntelligentModels.push(createModel('cached-default', 'cached-provider', true))
     const dropdown = await openModels()
@@ -236,6 +278,68 @@ describe('AIModelSelect', () => {
         IntelligentModels: [latestConfig.IntelligentModels[2], ...latestConfig.IntelligentModels.slice(0, 2)],
       }),
     )
+  })
+
+  it.each(['reset', 'store'] as const)('初始化响应迟到时不覆盖后续配置更新（来源：%s）', async (source) => {
+    const initialConfig = cloneDeep(config)
+    let completeLoad!: () => void
+    mocks.load.mockImplementationOnce(
+      ({ haveDataCall }) =>
+        new Promise((resolve) => {
+          completeLoad = () => {
+            haveDataCall?.({
+              onlineModelsTotal: initialConfig.IntelligentModels.length,
+              localModelsTotal: 0,
+              localModels: [],
+              onlineModels: initialConfig,
+            })
+            resolve(null)
+          }
+        }),
+    )
+    const dropdown = await openModels()
+    const expectedConfig = {
+      ...latestConfig,
+      IntelligentModels: [latestConfig.IntelligentModels[2], ...latestConfig.IntelligentModels.slice(0, 2)],
+    }
+    if (source === 'reset') resetModel()
+    else act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(expectedConfig))
+    expect(await within(dropdown).findByRole('option', { name: 'builtin-default' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+
+    await act(async () => completeLoad())
+
+    expect(screen.getByTestId('selected-model')).toHaveTextContent('builtin-default')
+    expectModelRequest('builtin-provider')
+    closeModels()
+    expect(mocks.save).toHaveBeenCalledTimes(source === 'reset' ? 1 : 0)
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(expectedConfig)
+  })
+
+  it('最新配置的内置模型已在首位时，关闭重置仍同步到全局配置且不重复保存', async () => {
+    latestConfig = {
+      ...config,
+      IntelligentModels: [createModel('builtin-default', 'builtin-provider', true), ...config.IntelligentModels],
+    }
+    const dropdown = await openModels()
+    resetModel()
+    expect(await within(dropdown).findByRole('option', { name: 'builtin-default' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(mocks.save).not.toHaveBeenCalled()
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(config)
+
+    closeModels()
+
+    expect(mocks.save).toHaveBeenCalledWith(latestConfig)
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(latestConfig)
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '打开选择' })))
+    expect(screen.getByRole('option', { name: 'builtin-default' })).toHaveAttribute('aria-selected', 'true')
+    closeModels()
+    expect(mocks.save).toHaveBeenCalledTimes(1)
   })
 
   it('重置首次立即执行，500ms 内重复点击忽略且不补发，之后可重新获取', async () => {

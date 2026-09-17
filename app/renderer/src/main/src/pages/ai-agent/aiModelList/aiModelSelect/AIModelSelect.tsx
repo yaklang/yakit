@@ -73,6 +73,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
   const [inViewport = true] = useInViewport(refRef)
   const [{ aiGlobalConfig }, event] = useAIGlobalConfig()
 
+  // 配置与保存基线统一从全局配置同步，可用性检查不回写选择草稿。
   useEffect(() => {
     if (isEqual(savedConfigRef.current, aiGlobalConfig)) return
     const config = cloneDeep(aiGlobalConfig)
@@ -90,11 +91,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     () => {
       isForcedSetAIModal({
         t,
-        haveDataCall: (res) => {
-          const config = cloneDeep(res.onlineModels)
-          setAIDraftConfig(config)
-          savedConfigRef.current = config
-        },
         pageKey: 'ai-agent',
         isOpen,
         mountContainer: document.getElementById('main-operator-page-body-ai-agent'),
@@ -189,7 +185,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
       const models = [...config.IntelligentModels]
       const [builtinModel] = models.splice(builtinIndex, 1)
       models.unshift(builtinModel)
-      savedConfigRef.current = cloneDeep(config)
+      // 重置只更新草稿，关闭时仍与全局保存基线比较并统一持久化。
       setAIDraftConfig({ ...config, IntelligentModels: models })
       // 连接变化时由 effect 加载；同一连接则直接刷新，避免重复请求。
       const builtinModelListConfig = getModelListConfig(builtinModel)
