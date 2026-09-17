@@ -912,6 +912,9 @@
     "emptyHint": "連接外掛並共享包含轉換配置的頁面",
     "openInstances": "打開瀏覽器實例",
     "request": "請求",
-    "response": "響應"
+    "response": "響應",
+    "bidirectional": "雙向",
+    "requestOnly": "僅請求",
+    "responseOnly": "僅響應"
   }
 }

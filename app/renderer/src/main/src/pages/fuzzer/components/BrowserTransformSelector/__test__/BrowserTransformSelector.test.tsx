@@ -254,6 +254,8 @@ describe('BrowserTransformSelector', () => {
       browserName: 'Chrome Browser',
       origin: 'https://example.com',
       maxConcurrency: 2,
+      requestEnabled: true,
+      responseEnabled: false,
     })
   })
 })

@@ -912,6 +912,9 @@
     "emptyHint": "Connect the extension and share a page that includes transform profiles",
     "openInstances": "Open browser instances",
     "request": "Request",
-    "response": "Response"
+    "response": "Response",
+    "bidirectional": "Bidirectional",
+    "requestOnly": "Request only",
+    "responseOnly": "Response only"
   }
 }

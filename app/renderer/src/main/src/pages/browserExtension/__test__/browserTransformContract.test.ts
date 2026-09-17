@@ -38,12 +38,21 @@ describe('browser transform Web Fuzzer contract', () => {
   it('maps the confirmed profile to the exact Web Fuzzer request identifiers', () => {
     const selection = toBrowserTransformSelection(
       { id: 'browser-1', name: 'Chrome Browser' },
-      { id: 'profile-1', name: profile.name, origin: profile.origin, maxConcurrency: 1 },
+      {
+        id: 'profile-1',
+        name: profile.name,
+        origin: profile.origin,
+        maxConcurrency: 1,
+        request: profile.request,
+        response: profile.response,
+      },
     )
     expect(selection).toMatchObject({
       deviceId: 'browser-1',
       profileId: 'profile-1',
       profileName: profile.name,
+      requestEnabled: true,
+      responseEnabled: false,
     })
     expect(browserTransformRequestFields(selection)).toEqual({
       BrowserExtensionDeviceId: 'browser-1',

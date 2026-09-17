@@ -5,6 +5,8 @@ export interface BrowserTransformSelectionContract {
   browserName?: string
   origin?: string
   maxConcurrency?: number
+  requestEnabled?: boolean
+  responseEnabled?: boolean
 }
 
 export interface BrowserTransformSelectableDevice {
@@ -17,6 +19,8 @@ export interface BrowserTransformSelectableProfile {
   name: string
   origin: string
   maxConcurrency: number
+  request?: { enabled: boolean }
+  response?: { enabled: boolean }
 }
 
 export function toBrowserTransformSelection(
@@ -30,6 +34,8 @@ export function toBrowserTransformSelection(
     browserName: device.name,
     origin: profile.origin,
     maxConcurrency: profile.maxConcurrency,
+    requestEnabled: profile.request?.enabled,
+    responseEnabled: profile.response?.enabled,
   }
 }
 

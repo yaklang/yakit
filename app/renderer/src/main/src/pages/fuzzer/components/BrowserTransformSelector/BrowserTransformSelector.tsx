@@ -123,6 +123,13 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
     }
     return undefined
   }, [devices, value])
+  const selectedDirection = selected
+    ? selected.profile.request.enabled && selected.profile.response.enabled
+      ? t('BrowserTransformSelector.bidirectional')
+      : selected.profile.request.enabled
+        ? t('BrowserTransformSelector.requestOnly')
+        : t('BrowserTransformSelector.responseOnly')
+    : ''
 
   // 无在线浏览器且未选中配置时不展示入口
   if (!loading && !devices.length && !value) {
@@ -245,7 +252,10 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
           className={styles['gateway-active-tag']}
         >
           <ChromeOutlined />
-          <span>{selected?.profile.name || value.profileName}</span>
+          <span>
+            {selected?.profile.name || value.profileName}
+            {selectedDirection ? ` · ${selectedDirection}` : ''}
+          </span>
         </YakitTag>
       ) : (
         <YakitButton type="text2" icon={<ChromeOutlined />}>

@@ -444,28 +444,41 @@ export const isRequestChunkedData = (chunk?: RandomChunkedResponse): boolean => 
   return chunk.Direction === ChunkedDataDirection.REQUEST
 }
 
-const BrowserTransformPacketComparison: React.FC<{ response: FuzzerResponse }> = ({ response }) => {
-  const [direction, setDirection] = useState<'request' | 'response'>('request')
+const BrowserTransformPacketComparison: React.FC<{
+  response: FuzzerResponse
+  selection?: BrowserTransformSelection
+}> = ({ response, selection }) => {
+  const [direction, setDirection] = useState<'request' | 'response'>(
+    selection?.requestEnabled === false && selection.responseEnabled ? 'response' : 'request',
+  )
   const plainPacket = direction === 'request' ? response.RequestRaw : response.ResponseRaw
   const wirePacket = direction === 'request' ? response.WireRequestRaw : response.WireResponseRaw
   const columns =
     direction === 'request'
       ? [
-          { title: 'Web Fuzzer 明文请求', packet: plainPacket, response: false },
-          { title: '浏览器线上请求', packet: wirePacket, response: false },
+          { title: 'Web Fuzzer 输入请求', packet: plainPacket, response: false },
+          { title: '浏览器实际请求', packet: wirePacket, response: false },
         ]
       : [
-          { title: '浏览器线上响应', packet: wirePacket, response: true },
-          { title: 'Web Fuzzer 明文响应', packet: plainPacket, response: true },
+          { title: '服务器实际响应', packet: wirePacket, response: true },
+          { title: 'Web Fuzzer 输出响应', packet: plainPacket, response: true },
         ]
   return (
     <div className={styles['browser-transform-comparison']}>
       <header>
         <div role="group" aria-label="浏览器转换报文方向">
-          <button className={direction === 'request' ? styles.active : ''} onClick={() => setDirection('request')}>
+          <button
+            disabled={selection?.requestEnabled === false}
+            className={direction === 'request' ? styles.active : ''}
+            onClick={() => setDirection('request')}
+          >
             请求转换
           </button>
-          <button className={direction === 'response' ? styles.active : ''} onClick={() => setDirection('response')}>
+          <button
+            disabled={selection?.responseEnabled === false}
+            className={direction === 'response' ? styles.active : ''}
+            onClick={() => setDirection('response')}
+          >
             响应还原
           </button>
         </div>
@@ -493,7 +506,7 @@ const BrowserTransformPacketComparison: React.FC<{ response: FuzzerResponse }> =
   )
 }
 
-function showBrowserTransformPackets(response: FuzzerResponse) {
+function showBrowserTransformPackets(response: FuzzerResponse, selection?: BrowserTransformSelection) {
   showYakitModal({
     type: 'white',
     title: '浏览器转换报文',
@@ -501,7 +514,7 @@ function showBrowserTransformPackets(response: FuzzerResponse) {
     footer: null,
     centered: true,
     destroyOnClose: true,
-    content: <BrowserTransformPacketComparison response={response} />,
+    content: <BrowserTransformPacketComparison response={response} selection={selection} />,
   })
 }
 export interface HistoryHTTPFuzzerTask {
@@ -3331,7 +3344,14 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                       <YakitButton
                         type="text2"
                         icon={<SwitchHorizontalOutlined color="currentColor" />}
-                        onClick={() => showBrowserTransformPackets(httpResponse)}
+                        onClick={() =>
+                          showBrowserTransformPackets(
+                            httpResponse,
+                            browserTransformSelection?.profileId === httpResponse.BrowserTransformProfileId
+                              ? browserTransformSelection
+                              : undefined,
+                          )
+                        }
                       >
                         明文 / 线上
                       </YakitButton>
