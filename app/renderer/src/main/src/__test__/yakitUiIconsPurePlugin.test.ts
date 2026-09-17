@@ -47,7 +47,7 @@ function collectImports(code: string, names = importedNames()) {
 describe('yakitUiIconsPurePlugin consumer import guard', () => {
   it('accepts the AI stream icon mapping imports', async () => {
     const source = await readFile(
-      new URL('../pages/ai-agent/components/aiStreamChatContent/icons.ts', import.meta.url),
+      new URL('../pages/ai-agent/components/aiStreamChatContent/icons.tsx', import.meta.url),
       'utf8',
     )
     const names = collectImports(source)
