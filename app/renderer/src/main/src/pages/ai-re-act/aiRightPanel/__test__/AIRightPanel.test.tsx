@@ -21,6 +21,8 @@ vi.mock('../AIRightPanel.module.scss', () => ({
   default: {
     'right-panel-hidden': 'right-panel-hidden',
     'pane-slot-small': 'pane-slot-small',
+    'count-badge': 'count-badge',
+    'menu-item-icon-small': 'menu-item-icon-small',
   },
 }))
 
@@ -278,7 +280,7 @@ describe('AIRightPanel', () => {
         expect(screen.getByLabelText('漏洞')).toHaveTextContent('5｜7｜13｜17｜23')
         expect(readTask).not.toHaveBeenCalled()
         result.rerender(<AIRightPanel welcome small />)
-        expect(screen.getByLabelText('漏洞总数 65')).toBeInTheDocument()
+        expect(screen.getByLabelText('漏洞 65')).toBeInTheDocument()
         expect(readTask).not.toHaveBeenCalled()
       } finally {
         result.unmount()
@@ -308,7 +310,7 @@ describe('AIRightPanel', () => {
           execution: { http_flow_count: 1000, risk_level_count: { critical: 889, total: 889 } },
         })
         result.rerender(<WelcomeRightPanel small />)
-        expect(screen.getByLabelText('漏洞总数 65')).toBeInTheDocument()
+        expect(screen.getByLabelText('漏洞 65')).toBeInTheDocument()
         result.rerender(<WelcomeRightPanel small={false} />)
         expect(screen.getByLabelText('流量')).toHaveTextContent('123')
         expect(screen.getByLabelText('漏洞')).toHaveTextContent('5｜7｜13｜17｜23')
@@ -371,7 +373,7 @@ describe('AIRightPanel', () => {
       expect(screen.getByLabelText('流量')).toHaveTextContent(/^流量$/)
       expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞$/)
       result.rerender(<WelcomeRightPanel small />)
-      expect(screen.queryByLabelText(/^漏洞总数/)).not.toBeInTheDocument()
+      expect(screen.queryByLabelText(/^漏洞 /)).not.toBeInTheDocument()
       result.unmount()
       await renderPanel(<AIRightPanel />)
       expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(1)
@@ -736,20 +738,61 @@ describe('AIRightPanel', () => {
     }
   })
 
-  it('小屏漏洞菜单在图标右下角显示漏洞总数角标', () => {
+  it.each([false, true])('数量更新后无需悬停即可刷新流量和漏洞（小屏：%s）', (small) => {
+    vi.useFakeTimers()
+    setMockQuestionID('task-live-count')
+    const detail = {
+      uuid: 'snapshot-0',
+      execution: { http_flow_count: 0, risk_level_count: { high: 0, total: 0 } },
+    }
+    mockTaskDetailsMap.set('task-live-count', detail)
+    try {
+      render(<AIRightPanel small={small} />)
+      const trafficMenu = screen.getByLabelText('流量')
+      const riskMenu = screen.getByLabelText('漏洞')
+
+      for (const [index, count] of [42, 58, 0].entries()) {
+        // 与 session_snapshot 一致：保留任务条目引用，替换 execution 并更新 uuid。
+        detail.execution = { http_flow_count: count, risk_level_count: { high: count, total: count } }
+        detail.uuid = `snapshot-${index + 1}`
+        act(() => vi.advanceTimersByTime(3000))
+
+        expect(trafficMenu.textContent).toBe(`${small ? '' : '流量'}${count || ''}`)
+        expect(riskMenu.textContent).toBe(`${small ? '' : '漏洞'}${count || ''}`)
+      }
+    } finally {
+      cleanup()
+      resetMockStore()
+      vi.useRealTimers()
+    }
+  })
+
+  it('小屏流量和漏洞使用相同的图标角标，切回正常尺寸后恢复数量标签', () => {
     setMockQuestionID('task-risk-small')
     mockTaskDetailsMap.set('task-risk-small', {
       uuid: 'uuid-risk-small',
       execution: {
+        http_flow_count: 42,
         risk_level_count: { critical: 4, high: 6, warning: 1, low: 3, info: 5, other: 3, total: 22 },
       },
     })
     const result = render(<AIRightPanel small />)
     try {
-      const riskButton = screen.getByLabelText('漏洞')
-      const riskTotalBadge = screen.getByText('22')
+      for (const [label, count] of [
+        ['流量', 42],
+        ['漏洞', 22],
+      ] as const) {
+        const badge = screen.getByLabelText(`${label} ${count}`)
+        expect(screen.getByLabelText(label)).toContainElement(badge)
+        expect(badge).toHaveClass('count-badge')
+        expect(badge.parentElement).toHaveClass('menu-item-icon-small')
+      }
 
-      expect(riskButton).toContainElement(riskTotalBadge)
+      result.rerender(<AIRightPanel small={false} />)
+      expect(screen.queryByLabelText('流量 42')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('漏洞 22')).not.toBeInTheDocument()
+      expect(screen.getByLabelText('流量')).toHaveTextContent('42')
+      expect(screen.getByLabelText('漏洞')).toHaveTextContent('4｜6｜1｜3｜8')
     } finally {
       result.unmount()
       resetMockStore()
@@ -771,8 +814,8 @@ describe('AIRightPanel', () => {
     const result = render(<AIRightPanel small />)
     try {
       await screen.findByLabelText('漏洞')
-      if (expected === 0) expect(screen.queryByLabelText(/^漏洞总数/)).not.toBeInTheDocument()
-      else expect(screen.getByLabelText(`漏洞总数 ${expected}`)).toBeInTheDocument()
+      if (expected === 0) expect(screen.queryByLabelText(/^漏洞 /)).not.toBeInTheDocument()
+      else expect(screen.getByLabelText(`漏洞 ${expected}`)).toBeInTheDocument()
     } finally {
       result.unmount()
       resetMockStore()

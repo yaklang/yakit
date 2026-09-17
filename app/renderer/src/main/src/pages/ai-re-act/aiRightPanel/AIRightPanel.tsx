@@ -221,7 +221,7 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
           >
             {icon}
             {smallBadge && (
-              <span className={styles['risk-count-badge']} aria-label={`漏洞总数 ${smallBadge}`}>
+              <span className={styles['count-badge']} aria-label={`${label} ${smallBadge}`}>
                 {smallBadge}
               </span>
             )}
@@ -362,6 +362,8 @@ const MenuList: React.FC<{
     if (!small) return undefined
 
     switch (key) {
+      case 'traffic':
+        return (trafficTotal ?? 0) > 0 ? trafficTotal : undefined
       case 'risk':
         return riskTotal > 0 ? riskTotal : undefined
       default:

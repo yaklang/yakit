@@ -128,7 +128,8 @@ const ToolLoadingCard: React.FC<Omit<ToolInvokerCardProps, 'fileList'>> = memo((
 /**tool_**_stdout */
 const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   const { fileList, itemData, renderNum } = props
-  const { t } = useI18nNamespaces(['aiAgent'])
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const [expand, , expandToggle] = useUiExpand(itemData.id, false)
   // 判断路由，子窗口有些功能不展示
   const isChildWindow = useRef(isAuxOrChildWindow())
   const sessionId = useCurrentSessionId()
@@ -185,10 +186,19 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
     <ChatCard
       titleText={nodeLabel || data.toolName}
       titleIcon={<Wrench2Outlined color="currentColor" />}
+      onClickTitle={expandToggle}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
+          {!expand && (
+            <div className={classNames(styles['tool-loading-status'], styles['tool-loading-status-small'])}>
+              <span className={styles['tool-loading-status-icon']}>
+                <RefreshOutlined color="currentColor" />
+              </span>
+              <span>{t('ToolInvokerCard.executing')}</span>
+            </div>
+          )}
           {selectors?.selectors && (
-            <div className={styles['stdout-card-extra']}>
+            <div className={styles['stdout-card-extra']} onClick={(e) => e.stopPropagation()}>
               {selectors?.selectors?.map((item) => {
                 return (
                   <YakitPopconfirm
@@ -205,6 +215,20 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
               })}
             </div>
           )}
+          <Tooltip title={t(expand ? 'YakitButton.collapse' : 'YakitButton.expand')}>
+            <YakitButton
+              size="small"
+              type="text"
+              aria-label={t(expand ? 'YakitButton.collapse' : 'YakitButton.expand')}
+              aria-expanded={expand}
+              icon={expand ? <ChevronsDownUpOutlined /> : <ChevronsUpDownOutlined />}
+              onClick={(e) => {
+                e.stopPropagation()
+                expandToggle()
+              }}
+              className={styles['stdout-expand-btn']}
+            />
+          </Tooltip>
         </div>
       }
       titleExtra={
@@ -214,14 +238,18 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
           </span>
         ) : null
       }
-      footer={<OperationCardFooter {...operationInfo} />}
+      footer={expand && <OperationCardFooter {...operationInfo} />}
     >
-      <ToolStatusCard status={'purple'}>
-        <ToolParamsLine params={data?.tool?.reviewParams} />
-        <ToolTerminalOutput content={stream?.data?.content || ''} autoScrollBottom />
-        <AIReferenceNode referenceList={stream?.reference || []} sessionId={sessionId} />
-      </ToolStatusCard>
-      {!!fileList?.length && <FileList fileList={fileList} />}
+      {expand && (
+        <>
+          <ToolStatusCard status={'purple'}>
+            <ToolParamsLine params={data?.tool?.reviewParams} />
+            <ToolTerminalOutput content={stream?.data?.content || ''} autoScrollBottom />
+            <AIReferenceNode referenceList={stream?.reference || []} sessionId={sessionId} />
+          </ToolStatusCard>
+          {!!fileList?.length && <FileList fileList={fileList} />}
+        </>
+      )}
     </ChatCard>
   )
 })
