@@ -82,6 +82,8 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
   const importExportStreamRef = useRef<P[]>([])
   const [progressStream, setProgressStream] = useSafeState<P[]>([])
   const hasErrorRef = useRef(false)
+  const finishedRef = useRef(false)
+  const logListInfoRef = useRef<LogListInfo[]>([])
 
   const handleReset = useMemoizedFn(() => {
     token.current = ''
@@ -90,6 +92,8 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     importExportStreamRef.current = []
     setProgressStream([])
     hasErrorRef.current = false
+    finishedRef.current = false
+    logListInfoRef.current = []
   })
 
   const onSubmit = useMemoizedFn(async () => {
@@ -119,7 +123,10 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
 
   useEffect(() => {
     if (progressStream.length && isProgressFinished(progressStream[0]) && !hasErrorRef.current) {
-      onFinished(true)
+      if (!finishedRef.current) {
+        finishedRef.current = true
+        onFinished(true)
+      }
     }
   }, [progressStream.length])
   const streamData = useMemo(() => {
@@ -128,7 +135,9 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     }
   }, [progressStream.length])
   const logListInfo = useMemo(() => {
-    return getlogListInfo?.(progressStream) || []
+    const list = getlogListInfo?.(progressStream) || []
+    logListInfoRef.current = list
+    return list
   }, [progressStream.length])
   const progressTitle = useMemo(() => {
     return extra.type === 'export'
@@ -158,7 +167,8 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     })
     ipcRenderer.on(`${token.current}-error`, (_, error) => {
       hasErrorRef.current = true
-      if (logListInfo.length === 0) {
+      if (logListInfoRef.current.length === 0 && !finishedRef.current) {
+        finishedRef.current = true
         onFinished(false)
       }
       yakitNotify('error', `[${typeTitle}] error:  ${error}`)
@@ -169,7 +179,10 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
   })
 
   const onCancel = useMemoizedFn(() => {
-    onFinished(false)
+    if (!finishedRef.current) {
+      finishedRef.current = true
+      onFinished(false)
+    }
   })
 
   // modal header 描述文字

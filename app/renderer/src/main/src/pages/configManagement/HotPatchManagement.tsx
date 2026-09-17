@@ -739,7 +739,7 @@ export const HotPatchManagement: React.FC = () => {
 
   const renderHeaderAddMenu = useMemoizedFn((type: HotCodeType) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <Tooltip title={'全部导出'}>
+      <Tooltip title={t('HotPatchTemplateImportExport.export_all')}>
         <YakitButton
           type="text2"
           icon={<FigmaIcon2017756Outlined />}
@@ -820,7 +820,7 @@ export const HotPatchManagement: React.FC = () => {
       if (source === 'local') {
         menu.push({
           key: 'export',
-          label: '导出模板',
+          label: t('HotPatchTemplateImportExport.export_template'),
           itemIcon: <FigmaIcon2017756Outlined color="currentColor" />,
         })
       }
@@ -1104,7 +1104,7 @@ export const HotPatchManagement: React.FC = () => {
             )}
           </div>
           <div className={styles['editor-header-right']}>
-            <Tooltip title="单个导出">
+            <Tooltip title={t('HotPatchTemplateImportExport.export_single')}>
               <YakitButton
                 type="text2"
                 icon={<FigmaIcon2017756Outlined />}

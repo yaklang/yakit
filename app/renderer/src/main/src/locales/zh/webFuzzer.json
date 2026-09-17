@@ -640,6 +640,24 @@
     "remove_from_group": "移除分组",
     "remove_from_group_success": "已移除分组"
   },
+  "HotPatchTemplateImportExport": {
+    "export_title": "导出热加载模板",
+    "import_title": "导入热加载模板",
+    "export_path": "导出路径",
+    "export_path_placeholder": "请输入导出路径",
+    "export_path_help_remote": "可手动输入导出路径，",
+    "export_path_help_local": "可手动输入导出路径或点击此处",
+    "select_folder": "选择文件夹",
+    "filename": "文件名",
+    "password": "密码",
+    "change_path": "修改路径",
+    "local_path": "本地路径",
+    "local_path_placeholder": "请输入本地路径",
+    "import_desc": "将读取文件中自带的模板类型进行导入",
+    "export_all": "全部导出",
+    "export_single": "单个导出",
+    "export_template": "导出模板"
+  },
   "AddHotCodeTemplate": {
     "hot_reload_template_name_empty": "热加载模板名为空",
     "hot_reload_template_name_exists": "热加载模板名已存在",

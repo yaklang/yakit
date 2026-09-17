@@ -18,10 +18,10 @@ import type { ExecResult } from '../../../pages/invoker/schema'
 
 export const BatchImportHotPatchTemplate = memo(
   forwardRef<BatchImportHotPatchTemplateRef, BatchImportHotPatchTemplateProps>((props, ref) => {
-    const { t } = useI18nNamespaces(['yakitUi'])
+    const { t } = useI18nNamespaces(['yakitUi', 'webFuzzer'])
     const [importExtra, setImportExtra] = useState<ImportExportModalExtra>({
       hint: false,
-      title: '导入热加载模板',
+      title: t('HotPatchTemplateImportExport.import_title'),
       type: 'import',
       apiKey: 'ImportHotPatchTemplateStream',
     })
@@ -50,7 +50,7 @@ export const BatchImportHotPatchTemplate = memo(
       <ImportExportModal<ImportHotPatchFormValues, ImportHotPatchTemplateStreamRequest, ExecResult>
         getContainer={getMainOperatorPageBodyContainerOrBody()}
         extra={importExtra}
-        importDesc="将读取文件中自带的模板类型进行导入"
+        importDesc={t('HotPatchTemplateImportExport.import_desc')}
         getProgressValue={(p: ExecResult) => {
           return (
             extractExecResultProgress(p, {
@@ -73,14 +73,14 @@ export const BatchImportHotPatchTemplate = memo(
             <YakitFormDragger
               formItemProps={{
                 name: 'Filename',
-                label: '本地路径',
-                rules: [{ required: true, message: '请输入本地路径' }],
+                label: t('HotPatchTemplateImportExport.local_path'),
+                rules: [{ required: true, message: t('HotPatchTemplateImportExport.local_path_placeholder') }],
               }}
               multiple={false}
               selectType="file"
               fileExtensionIsExist={false}
             />
-            <Form.Item label={'密码'} name="Password">
+            <Form.Item label={t('HotPatchTemplateImportExport.password')} name="Password">
               <YakitInput />
             </Form.Item>
           </>

@@ -34,12 +34,12 @@ const defaultExportHotPatchRequest: ExportHotPatchTemplateStreamRequest = {
 
 export const BatchExportHotPatchTemplate = memo(
   forwardRef<BatchExportHotPatchTemplateRef, BatchExportHotPatchTemplateProps>((props, ref) => {
-    const { t } = useI18nNamespaces(['yakitUi'])
+    const { t } = useI18nNamespaces(['yakitUi', 'webFuzzer'])
     const isRemoteEngine = SystemInfo.mode === 'remote'
     const [showChangePath, setShowChangePath] = useState<boolean>(!isRemoteEngine)
     const [exportExtra, setExportExtra] = useState<ImportExportModalExtra>({
       hint: false,
-      title: '导出热加载模板',
+      title: t('HotPatchTemplateImportExport.export_title'),
       type: 'export',
       apiKey: 'ExportHotPatchTemplateStream',
     })
@@ -121,20 +121,30 @@ export const BatchExportHotPatchTemplate = memo(
               <YakitFormDragger
                 formItemProps={{
                   name: 'OutputPluginDir',
-                  label: '导出路径',
-                  rules: [{ required: !isRemoteEngine, message: '请输入导出路径' }],
+                  label: t('HotPatchTemplateImportExport.export_path'),
+                  rules: [
+                    { required: !isRemoteEngine, message: t('HotPatchTemplateImportExport.export_path_placeholder') },
+                  ],
                 }}
                 multiple={false}
                 selectType="folder"
-                help={isRemoteEngine ? '可手动输入导出路径，' : '可手动输入导出路径或点击此处'}
-                uploadFolderText="选择文件夹"
+                help={
+                  isRemoteEngine
+                    ? t('HotPatchTemplateImportExport.export_path_help_remote')
+                    : t('HotPatchTemplateImportExport.export_path_help_local')
+                }
+                uploadFolderText={t('HotPatchTemplateImportExport.select_folder')}
                 showUploadBtn={!isRemoteEngine}
               />
             )}
-            <Form.Item label={'文件名'} name="OutputFilename" rules={[{ required: true }]}>
+            <Form.Item
+              label={t('HotPatchTemplateImportExport.filename')}
+              name="OutputFilename"
+              rules={[{ required: true }]}
+            >
               <YakitInput />
             </Form.Item>
-            <Form.Item label={'密码'} name="Password">
+            <Form.Item label={t('HotPatchTemplateImportExport.password')} name="Password">
               <YakitInput />
             </Form.Item>
           </>
@@ -146,7 +156,7 @@ export const BatchExportHotPatchTemplate = memo(
               setShowChangePath(true)
             }}
           >
-            修改路径
+            {t('HotPatchTemplateImportExport.change_path')}
           </YakitButton>
         }
         onBeforeSubmit={async (values) => {
