@@ -5,7 +5,7 @@ import vm from 'node:vm'
 
 const filePathSource = fs.readFileSync(path.resolve(process.cwd(), 'app/main/filePath.js'), 'utf8')
 
-const loadFilePath = (electronApp) => {
+const loadFilePath = (electronApp, env = {}) => {
   const module = { exports: {} }
   const mockFs = {
     existsSync: () => true,
@@ -24,7 +24,7 @@ const loadFilePath = (electronApp) => {
       if (id === 'electron-is-dev') return false
       if (id === 'os') return { homedir: () => '/home/yakit-test', platform: () => 'linux' }
       if (id === 'path') return path
-      if (id === 'process') return { platform: 'win32', env: {} }
+      if (id === 'process') return { platform: 'win32', env }
       if (id === 'fs') return mockFs
       throw new Error(`Unexpected module: ${id}`)
     },
@@ -34,6 +34,13 @@ const loadFilePath = (electronApp) => {
 }
 
 describe('getYakitInstallDir', () => {
+  it('isolates E2E config from the real ~/.yakit profile', () => {
+    const app = { isPackaged: false, getPath: () => '/isolated/user-data', getName: () => 'yakit' }
+    const isolated = loadFilePath(app, { YAKIT_E2E: '1' })
+    expect(isolated.getConfigPath()).toBe(path.join('/isolated/user-data', 'config', 'config.json'))
+    const packaged = loadFilePath({ ...app, isPackaged: true }, { YAKIT_E2E: '1' })
+    expect(packaged.getConfigPath()).toBe(path.join('/home/yakit-test', '.yakit', 'yakit', 'config.json'))
+  })
   it('uses the system downloads directory', () => {
     const downloadsPath = 'D:\\WindowsKu\\Download'
     const getPath = vi.fn(() => downloadsPath)

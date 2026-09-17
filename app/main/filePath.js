@@ -37,6 +37,10 @@ const getVersionEnvVarName = () => {
  * （旧逻辑：Windows 打包=exe 同级，其他=userData）
  */
 const getAppConfigDir = () => {
+  // configureE2EEnvironment validates this disposable userData path before filePath is loaded.
+  if (!app.isPackaged && process.env.YAKIT_E2E === '1') {
+    return path.join(app.getPath('userData'), 'config')
+  }
   try {
     const appKey = String(app.getName() || 'yakit')
       .toLowerCase()

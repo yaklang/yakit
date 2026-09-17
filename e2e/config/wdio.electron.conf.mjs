@@ -7,6 +7,10 @@ const repoRoot = path.resolve(configDir, '../..')
 const artifactsDir = process.env.YAKIT_E2E_ARTIFACTS_DIR || path.join(repoRoot, 'reports/e2e-electron/manual')
 const appEntryPoint = path.join(repoRoot, 'app/main/index.js')
 const isolatedUserData = process.env.YAKIT_E2E_USER_DATA
+const rendererHeapMB = process.env.YAKIT_E2E_RENDERER_HEAP_MB
+if (rendererHeapMB && (!/^\d+$/.test(rendererHeapMB) || Number(rendererHeapMB) < 64 || Number(rendererHeapMB) > 512)) {
+  throw new Error('OOM simulation requires a renderer heap limit between 64 and 512 MiB')
+}
 
 if (process.env.YAKIT_E2E !== '1' || !isolatedUserData || !path.isAbsolute(isolatedUserData)) {
   throw new Error('WDIO Electron must be started through scripts/run-electron-e2e.mjs with isolated userData')
@@ -78,6 +82,8 @@ export const config = {
   suites: {
     smoke: [path.join(repoRoot, 'e2e/specs/smoke/**/*.e2e.mjs')],
     'real-engine': [path.join(repoRoot, 'e2e/specs/real-engine/**/*.e2e.mjs')],
+    'renderer-recovery': [path.join(repoRoot, 'e2e/specs/recovery/**/*.e2e.mjs')],
+    'renderer-oom': [path.join(repoRoot, 'e2e/specs/recovery/**/*.e2e.mjs')],
     'web-fuzzer-mcp': [path.join(repoRoot, 'e2e/specs/web-fuzzer-mcp/**/*.e2e.mjs')],
     'mitm-performance': [path.join(repoRoot, 'e2e/specs/performance/**/*.e2e.mjs')],
   },
@@ -96,7 +102,10 @@ export const config = {
         // ChromeDriver waits for DevToolsActivePort below --user-data-dir.
         // Keep it identical to Electron app.setPath('userData') so the driver
         // and the application cannot accidentally observe different profiles.
-        appArgs: [`--user-data-dir=${isolatedUserData}`],
+        appArgs: [
+          `--user-data-dir=${isolatedUserData}`,
+          ...(rendererHeapMB ? [`--js-flags=--max-old-space-size=${rendererHeapMB}`] : []),
+        ],
         captureMainProcessLogs: true,
         captureRendererLogs: true,
         mainProcessLogLevel: 'info',
@@ -130,11 +139,6 @@ export const config = {
     if (result.passed) return
     const name = safeName(test.title)
     try {
-      await browser.saveScreenshot(path.join(artifactsDir, `${name}.png`))
-    } catch (error) {
-      console.error(`[electron-e2e] failed to capture screenshot: ${error}`)
-    }
-    try {
       const applicationState = await collectFailureState()
       applicationState.failure = {
         title: test.title,
@@ -147,6 +151,23 @@ export const config = {
       )
     } catch (error) {
       console.error(`[electron-e2e] failed to capture application state: ${error}`)
+    }
+    try {
+      // ChromeDriver's screenshot command can delete the whole session after a renderer crash.
+      // Preserve the main-process state first and capture through the surviving BrowserWindow.
+      const encoded = await browser.electron.execute(async (electron) => {
+        const window = electron.BrowserWindow.getAllWindows().find(
+          (entry) => entry.isVisible() && !entry.webContents.isCrashed(),
+        )
+        if (!window) return null
+        return Promise.race([
+          window.webContents.capturePage().then((image) => image.toPNG().toString('base64')),
+          new Promise((resolve) => setTimeout(() => resolve(null), 1500)),
+        ])
+      })
+      if (encoded) await writeFile(path.join(artifactsDir, `${name}.png`), Buffer.from(encoded, 'base64'))
+    } catch (error) {
+      console.error(`[electron-e2e] failed to capture screenshot: ${error}`)
     }
   },
 }
