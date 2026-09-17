@@ -10,12 +10,12 @@ function useCurrentDataBySession() {
 }
 
 /**
- * 获取当前数据的 store
+ * 获取界面订阅的 store；历史期间保留已发布渲染树，批次结束后统一更新。
  */
 
 export function useCurrentStore() {
   const data = useCurrentDataBySession()
-  return data.store
+  return data.store.renderStore
 }
 
 /**

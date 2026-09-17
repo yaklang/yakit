@@ -1,21 +1,71 @@
 import { useMemoizedFn, useThrottleFn } from 'ahooks'
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import type React from 'react'
 import type { VirtuosoHandle } from 'react-virtuoso'
 
 interface UseVirtuosoAutoScrollProps {
   total?: number
   isPrependingRef?: React.MutableRefObject<boolean>
+  /** 历史批次处理期间记录阅读位置，提交后按同一条消息校正实际高度差。 */
+  historyLoading?: boolean
 }
-const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScrollProps) => {
+const useVirtuosoAutoScroll = ({ total, isPrependingRef, historyLoading }: UseVirtuosoAutoScrollProps) => {
   const virtuosoRef = useRef<VirtuosoHandle>(null)
   const isAtBottomRef = useRef(true)
   /** 用户正在主动滚动（wheel / touch / keyboard） */
   const userScrollingRef = useRef(false)
   const userScrollTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const scrollerElRef = useRef<HTMLElement | null>(null)
+  /** 用户当前阅读的消息及其相对视口位置；新的用户操作会取消旧位置校正。 */
+  const historyAnchorRef = useRef<{ token: string; offset: number } | null>(null)
+
+  /** 按稳定消息 token 记录位置，避免前插后数组下标变化导致定位到另一条消息。 */
+  const captureHistoryAnchor = useMemoizedFn(() => {
+    // 首屏自动补满仍应跟随底部；仅为用户回看历史保留阅读位置。
+    if (isAtBottomRef.current) return
+    const el = scrollerElRef.current
+    if (!el || el.scrollHeight <= el.clientHeight) return
+    const top = el.getBoundingClientRect().top
+    const item = Array.from(el.querySelectorAll<HTMLElement>('[data-chat-token]')).find(
+      (node) => node.getBoundingClientRect().bottom > top,
+    )
+    if (item)
+      historyAnchorRef.current = { token: item.dataset.chatToken!, offset: item.getBoundingClientRect().top - top }
+  })
+
+  /** 只修正实际测量后的偏差；用户操作后立即停止，不与主动滚动争夺位置。 */
+  const restoreHistoryAnchor = useMemoizedFn(() => {
+    const el = scrollerElRef.current
+    const anchor = historyAnchorRef.current
+    if (!el || !anchor || historyLoading) return
+    const item = Array.from(el.querySelectorAll<HTMLElement>('[data-chat-token]')).find(
+      (node) => node.dataset.chatToken === anchor.token,
+    )
+    if (!item) return
+    const diff = item.getBoundingClientRect().top - el.getBoundingClientRect().top - anchor.offset
+    if (Math.abs(diff) > 1) el.scrollTop += diff
+  })
+
+  const handleScroll = useMemoizedFn(() => {
+    if (historyLoading) captureHistoryAnchor()
+    else restoreHistoryAnchor()
+  })
+
+  useLayoutEffect(() => {
+    if (historyLoading) captureHistoryAnchor()
+    else restoreHistoryAnchor()
+  }, [historyLoading, captureHistoryAnchor, restoreHistoryAnchor])
+
+  useEffect(() => {
+    const list = scrollerElRef.current?.querySelector('[data-testid="virtuoso-item-list"]')
+    if (!list) return
+    const observer = new ResizeObserver(restoreHistoryAnchor)
+    observer.observe(list)
+    return () => observer.disconnect()
+  }, [historyLoading, total, restoreHistoryAnchor])
 
   const markUserScrolling = useMemoizedFn((direction?: 'up' | 'down') => {
+    historyAnchorRef.current = null
     userScrollingRef.current = true
     // 用户主动向上滚动，立即关闭自动滚动，无需等 atBottomStateChange
     if (direction === 'up') {
@@ -70,6 +120,7 @@ const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScroll
         scrollerElRef.current.removeEventListener('touchmove', handleTouchMove)
         scrollerElRef.current.removeEventListener('keydown', handleKeyDown)
         scrollerElRef.current.removeEventListener('mousedown', handleMouseDown)
+        scrollerElRef.current.removeEventListener('scroll', handleScroll)
       }
     }
   }, [])
@@ -83,6 +134,7 @@ const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScroll
       scrollerElRef.current.removeEventListener('touchmove', handleTouchMove)
       scrollerElRef.current.removeEventListener('keydown', handleKeyDown)
       scrollerElRef.current.removeEventListener('mousedown', handleMouseDown)
+      scrollerElRef.current.removeEventListener('scroll', handleScroll)
     }
 
     scrollerElRef.current = el
@@ -92,10 +144,12 @@ const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScroll
       el.addEventListener('touchmove', handleTouchMove, { passive: true })
       el.addEventListener('keydown', handleKeyDown)
       el.addEventListener('mousedown', handleMouseDown)
+      el.addEventListener('scroll', handleScroll, { passive: true })
     }
   })
 
   const scrollToIndex = useMemoizedFn((index: 'LAST' | number, behavior?: 'auto' | 'smooth') => {
+    historyAnchorRef.current = null
     const isLast = index === 'LAST' || (total != null && index === total - 1)
     isAtBottomRef.current = isLast
     requestIdleCallback(() => {
@@ -145,6 +199,7 @@ const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScroll
   )
 
   const scrollToItemIndex = useMemoizedFn((arrayIndex: number, behavior: 'auto' | 'smooth' = 'auto') => {
+    historyAnchorRef.current = null
     isAtBottomRef.current = false
     requestAnimationFrame(() => {
       virtuosoRef.current?.scrollToIndex({

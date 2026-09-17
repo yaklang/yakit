@@ -776,7 +776,7 @@ export class ChatMultiSessionController {
     cb?.onLinkStart?.(sessionId)
 
     lifecycle.preparation = this.prepareSessionPersistBeforeStart(sessionId, meta)
-      .then(() => this.loadSessionHistoryBeforeStart(sessionId, meta))
+      // .then(() => this.loadSessionHistoryBeforeStart(sessionId, meta))
       .then(() => {
         if (!lifecycle.current || lifecycle.closing) return
         lifecycle.started = true
