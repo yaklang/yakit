@@ -8,7 +8,6 @@ import { yakitDuplex, yakitStream } from '@/services/electronBridge'
 import { areMITMDebugHooksEnabled } from '@/utils/mitmDebugHooks'
 import { setRemoteValue } from '../kv'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
-import { YakitRoute } from '@/enums/yakitRoute'
 import i18n from '@/i18n/i18n'
 import { setClipboardText } from '../clipboard'
 import {

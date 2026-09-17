@@ -9,6 +9,7 @@ import {
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from '@/pages/ai-agent/defaultConstant'
@@ -50,6 +51,7 @@ interface BrowserTransformSelectorProps {
 }
 
 export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> = React.memo(({ value, onChange }) => {
+  const { t } = useI18nNamespaces(['webFuzzer'])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [devices, setDevices] = useState<DeviceProfiles[]>([])
@@ -70,7 +72,12 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
       const loaded = await Promise.all(
         online.map(async ({ device, connection }) => {
           if (!connection.capabilities.includes('browser.transform.profile.list')) {
-            return { device, connection, profiles: [], error: '当前插件构建不支持浏览器明文网关' }
+            return {
+              device,
+              connection,
+              profiles: [],
+              error: t('BrowserTransformSelector.capabilityUnsupported'),
+            }
           }
           try {
             const profiles = await callBrowserExtensionCapability<BrowserTransformProfile[]>(
@@ -86,14 +93,16 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
         }),
       )
       setDevices(loaded)
-      setError(snapshot.status?.running ? '' : snapshot.status?.lastError || '浏览器 Bridge 未运行')
+      setError(
+        snapshot.status?.running ? '' : snapshot.status?.lastError || t('BrowserTransformSelector.bridgeNotRunning'),
+      )
     } catch (loadError) {
       setDevices([])
       setError(`${loadError}`)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     void load()
@@ -126,8 +135,8 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
         <div>
           <ChromeOutlined />
           <span>
-            <strong>浏览器明文网关</strong>
-            <small>{devices.length} 个在线浏览器</small>
+            <strong>{t('BrowserTransformSelector.title')}</strong>
+            <small>{t('BrowserTransformSelector.onlineCount', { count: devices.length })}</small>
           </span>
         </div>
         <YakitButton type="text2" icon={<ReloadOutlined spin={loading} />} onClick={() => void load()} />
@@ -167,8 +176,12 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
                         </small>
                       </span>
                       <span className={styles['gateway-directions']}>
-                        <i className={profile.request.enabled ? styles.enabled : ''}>请求</i>
-                        <i className={profile.response.enabled ? styles.enabled : ''}>响应</i>
+                        <i className={profile.request.enabled ? styles.enabled : ''}>
+                          {t('BrowserTransformSelector.request')}
+                        </i>
+                        <i className={profile.response.enabled ? styles.enabled : ''}>
+                          {t('BrowserTransformSelector.response')}
+                        </i>
                       </span>
                       {active ? <CheckCircleOutlined /> : <RightOutlined />}
                     </button>
@@ -176,15 +189,15 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
                 })}
               </div>
             ) : (
-              <div className={styles['gateway-device-empty']}>当前共享文档没有可用转换配置</div>
+              <div className={styles['gateway-device-empty']}>{t('BrowserTransformSelector.noProfiles')}</div>
             )}
           </section>
         ))}
         {!devices.length && (
           <div className={styles['gateway-empty']}>
             <DisconnectOutlined />
-            <strong>没有在线浏览器</strong>
-            <span>{error || '连接插件并共享包含转换配置的页面'}</span>
+            <strong>{t('BrowserTransformSelector.emptyTitle')}</strong>
+            <span>{error || t('BrowserTransformSelector.emptyHint')}</span>
           </div>
         )}
       </div>
@@ -205,7 +218,7 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
             setOpen(false)
           }}
         >
-          打开浏览器实例
+          {t('BrowserTransformSelector.openInstances')}
         </YakitButton>
       </footer>
     </div>
@@ -236,7 +249,7 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
         </YakitTag>
       ) : (
         <YakitButton type="text2" icon={<ChromeOutlined />}>
-          浏览器明文
+          {t('BrowserTransformSelector.entry')}
         </YakitButton>
       )}
     </YakitPopover>

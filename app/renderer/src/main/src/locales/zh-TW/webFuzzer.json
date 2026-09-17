@@ -900,5 +900,18 @@
     "ascii_decode": "'ASCII'解碼",
     "ascii_decode_tag_content": "把標籤內容按'ASCII'解碼",
     "parse_as_string_eg_str_xa0_x45": "解析成字符串（例如{{str(\\xA0\\x45)}}）"
+  },
+  "BrowserTransformSelector": {
+    "entry": "瀏覽器明文",
+    "title": "瀏覽器明文閘道",
+    "onlineCount": "{{count}} 個線上瀏覽器",
+    "capabilityUnsupported": "當前外掛建置不支援瀏覽器明文閘道",
+    "bridgeNotRunning": "瀏覽器 Bridge 未運行",
+    "noProfiles": "當前共享文件沒有可用轉換配置",
+    "emptyTitle": "沒有線上瀏覽器",
+    "emptyHint": "連接外掛並共享包含轉換配置的頁面",
+    "openInstances": "打開瀏覽器實例",
+    "request": "請求",
+    "response": "響應"
   }
 }

@@ -900,5 +900,18 @@
     "ascii_decode": "'ASCII' Decode",
     "ascii_decode_tag_content": "ASCII decode tag content",
     "parse_as_string_eg_str_xa0_x45": "Parse as string (e.g. {{str(\\xA0\\x45)}})"
+  },
+  "BrowserTransformSelector": {
+    "entry": "Browser plaintext",
+    "title": "Browser plaintext gateway",
+    "onlineCount": "{{count}} online browser(s)",
+    "capabilityUnsupported": "This extension build does not support the plaintext gateway",
+    "bridgeNotRunning": "Browser Bridge is not running",
+    "noProfiles": "No transform profiles available on the shared document",
+    "emptyTitle": "No online browsers",
+    "emptyHint": "Connect the extension and share a page that includes transform profiles",
+    "openInstances": "Open browser instances",
+    "request": "Request",
+    "response": "Response"
   }
 }
