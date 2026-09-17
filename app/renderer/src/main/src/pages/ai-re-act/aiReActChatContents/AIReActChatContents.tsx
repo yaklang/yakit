@@ -276,7 +276,7 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
       if (!mainTitle) return <div className={styles['end']}>当前会话已结束</div>
       return (
         <div className={styles['footer-loading']}>
-          <Loading size={14} style={{ marginTop: 8 }}>
+          <Loading size={16} style={{ marginTop: 8, padding: '0 8px' }}>
             <div className={styles['footer-loading-title']}>
               <ScrollText text={mainTitle as string} />
             </div>

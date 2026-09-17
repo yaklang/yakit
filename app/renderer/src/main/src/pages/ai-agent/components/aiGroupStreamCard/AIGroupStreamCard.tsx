@@ -203,14 +203,14 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
     return perHasNext.current
   }, [chatLength])
 
-  const nodeLabel = useCreation(() => {
-    if (!groupData) return ''
+  const { nodeId, nodeLabel } = useCreation(() => {
+    if (!groupData) return { nodeId: undefined, nodeLabel: '' }
     switch (groupData.type) {
       case AIChatQSDataTypeEnum.STREAM_GROUP:
-        return getLabelByParams(groupData.data?.NodeIdVerbose)
+        return { nodeId: groupData.data.NodeId, nodeLabel: getLabelByParams(groupData.data.NodeIdVerbose) }
 
       default:
-        return ''
+        return { nodeId: undefined, nodeLabel: '' }
     }
   }, [renderNum])
 
@@ -250,6 +250,7 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
       expand={expand}
       setExpand={setExpand}
       lastItem={lastItem}
+      nodeId={nodeId}
       nodeLabel={nodeLabel}
       shouldShowMask={shouldShowMask}
       childrenTokensLength={childrenTokensLength}

@@ -1,0 +1,45 @@
+import {
+  AtomOutlined,
+  BookOpenTextOutlined,
+  ChatAltOutlined,
+  ClipboardCheckOutlined,
+  CodeOutlined,
+  DocumentOutlined,
+  FolderOutlined,
+  GitPullRequestCreateArrowOutlined,
+  LightBulbOutlined,
+  LoaderOutlined,
+  MCPOutlined,
+  ScrollTextOutlined,
+  SearchOutlined,
+  SparklesOutlined,
+  StethoscopeOutlined,
+  type IconComponent,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+// 仅对照表中标黄的 NodeID 使用专用图标，其他节点统一回退到默认图标。
+const streamIcons = new Map<string, IconComponent>([
+  ['loading_skills_names', LoaderOutlined],
+  ['load_skill_resources_path', LoaderOutlined],
+  ['load_capability', LoaderOutlined],
+  ['dispatch_sub_react_agents', GitPullRequestCreateArrowOutlined],
+  ['load_tool', LoaderOutlined],
+  ['loading_skills_name', LoaderOutlined],
+  ['perception', LightBulbOutlined],
+  ['intent', LightBulbOutlined],
+  ['semantic_search_yaklang_samples', SearchOutlined],
+  ['code_sample_title', DocumentOutlined],
+  ['mcp-loader', MCPOutlined],
+  ['grep_yaklang_samples', SearchOutlined],
+  ['batch-compress', FolderOutlined],
+  ['write_yaklang_code', CodeOutlined],
+  ['re-act-loop', AtomOutlined],
+  ['review', StethoscopeOutlined],
+  ['directly_answer', ChatAltOutlined],
+  ['memory-timeline', FolderOutlined],
+  ['summary', ScrollTextOutlined],
+  ['re-act-verify', ClipboardCheckOutlined],
+  ['enhance-query', BookOpenTextOutlined],
+])
+
+export const getAIStreamIcon = (nodeId?: string): IconComponent => streamIcons.get(nodeId || '') ?? SparklesOutlined

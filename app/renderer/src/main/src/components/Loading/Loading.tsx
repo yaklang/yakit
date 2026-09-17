@@ -29,6 +29,7 @@ const Loader: FC<LoaderProps> = ({ size = 32, color, loading = true, className, 
     >
       <div style={{ color }}>
         <span>{'{'}</span>
+        {` `}
         <span>{'}'}</span>
       </div>
       <div className={styles.text}>{children}</div>
