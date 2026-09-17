@@ -1,5 +1,11 @@
 import type { AIMessageHandler } from '../type'
-import { AIInputEventSyncTypeEnum, AITaskStatus, type AITaskStatusType, type AIAgentGrpcApi } from '../grpcApi'
+import {
+  AIInputEventSyncTypeEnum,
+  AINotifyType,
+  AITaskStatus,
+  type AITaskStatusType,
+  type AIAgentGrpcApi,
+} from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, genExecTasks, handleTaskPlanEnd, trySettleTaskPlanEnd } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
@@ -273,6 +279,8 @@ const handleNotify: AIMessageHandler = (request) => {
   }
   const { type, content } = data
   store.getState().updateState({ notifyMessage: { type, content, label: res.NodeIdVerbose } })
+
+  if (type === AINotifyType.notify429TypeQuotaExceeded) return
 
   let durationMs = 0
   if (typeof data.duration_ms === 'number' && !Number.isNaN(data.duration_ms) && data.duration_ms > 0) {

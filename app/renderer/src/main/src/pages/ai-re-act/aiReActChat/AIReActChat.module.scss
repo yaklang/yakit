@@ -246,7 +246,15 @@
   color: var(--Colors-Use-Main-Primary);
   font-size: 12px;
   margin-bottom: 2px;
+  padding: 0 4px;
   gap: 8px;
+
+  .notify-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 8px;
+  }
 
   .content-wrapper {
     display: flex;

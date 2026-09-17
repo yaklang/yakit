@@ -363,6 +363,11 @@ export enum AITaskStatus {
 }
 export type AITaskStatusType = `${AITaskStatus}`
 
+export enum AINotifyType {
+  notify429TypeRateLimited = 'rate_limited',
+  notify429TypeQuotaExceeded = 'quota_exceeded',
+}
+
 export declare namespace AIAgentGrpcApi {
   /** 上传/下载 Token 量 */
   export interface Consumption {
@@ -1030,8 +1035,8 @@ export declare namespace AIAgentGrpcApi {
 
   /** 通知消息 */
   export interface Notify {
-    /** 警告提示类型，用于前端路由和样式区分。当前取值为 notify、rate-limit */
-    type: 'notify' | 'rate-limit'
+    /** 警告提示类型，用于前端路由和样式区分 */
+    type: AINotifyType
     warning_type: string
     /** 面向用户展示的提示内容，可能包含换行 */
     content: string
