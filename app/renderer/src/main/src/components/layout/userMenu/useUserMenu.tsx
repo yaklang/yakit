@@ -133,7 +133,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   useEffect(() => {
     emiter.on('onOpenRecharge', onOpenRecharge)
     return () => emiter.off('onOpenRecharge', onOpenRecharge)
-  }, [onOpenRecharge])
+  }, [])
   const [apiKeys, setApiKeys] = useState<API.ApiKeyDetail>()
   const [apiKeysInfo, setApiKeysInfo] = useState<API.ApiUserUsageResponse>()
   const [apiKeysInfoLoading, setApiKeysInfoLoading] = useState<boolean>(false)

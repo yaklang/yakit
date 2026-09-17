@@ -3,9 +3,9 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { AIStreamChatContent } from '../AIStreamChatContent'
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
-import styles from '../AIStreamChatContent.module.scss'
 import { getAIStreamIcon } from '../icons'
 import { LoaderOutlined, SearchOutlined, SparklesOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineThoughtIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineThoughtIcon'
 
 vi.mock('@/components/yakitUI/YakitTag/YakitTag', () => ({ CopyComponents: () => null }))
 vi.mock('@/pages/ai-re-act/hooks/useAINodeLabel', () => ({
@@ -68,6 +68,7 @@ describe('AIStreamChatContent', () => {
   })
 
   it.each([undefined, 'unknown-node'])('未指定专用图标的节点 %s 显示前置默认图标', (nodeId) => {
+    const { container: defaultIconContainer } = render(<SparklesOutlined />)
     const { container } = render(
       <AIStreamChatContent
         nodeId={nodeId}
@@ -78,14 +79,14 @@ describe('AIStreamChatContent', () => {
     )
 
     const title = screen.getByText('流消息')
-    expect(title.previousElementSibling).toHaveClass(styles['stream-icon'])
-    expect(title.previousElementSibling?.querySelector('svg')).not.toBeNull()
-    expect(container.querySelectorAll(`.${styles['stream-icon']}`)).toHaveLength(1)
+    expect(title.previousElementSibling?.innerHTML).toBe(defaultIconContainer.firstElementChild?.innerHTML)
+    expect(container.querySelectorAll('svg')).toHaveLength(1)
     expect(screen.getByText('输出内容')).toBeInTheDocument()
     expect(screen.getByText('参考资料')).toBeInTheDocument()
   })
 
   it('思考流保留思考图标及展开收起行为', () => {
+    const { container: thoughtIconContainer } = render(<OutlineThoughtIcon />)
     const { container } = render(
       <AIStreamChatContent
         nodeId={AI_STREAM_THOUGHT_NODE_ID}
@@ -94,8 +95,12 @@ describe('AIStreamChatContent', () => {
       />,
     )
 
-    expect(container.querySelector(`.${styles['thought-icon']} svg`)).not.toBeNull()
-    expect(container.querySelector(`.${styles['stream-icon']}`)).toBeNull()
+    const title = screen.getByText('思考')
+    expect(title.previousElementSibling?.querySelector('path')).toHaveAttribute(
+      'd',
+      thoughtIconContainer.querySelector('path')?.getAttribute('d'),
+    )
+    expect(container.querySelectorAll('svg')).toHaveLength(2)
     expect(screen.queryByText('思考内容')).not.toBeInTheDocument()
     fireEvent.click(screen.getByText('思考'))
     expect(screen.getByText('思考内容')).toBeInTheDocument()

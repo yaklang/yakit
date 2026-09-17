@@ -1,9 +1,12 @@
 import React from 'react'
+import { get } from 'lodash'
 import type * as AIReActChatModule from '../AIReActChat'
 import type { AIReActChatContentsRef } from '../../aiReActChatContents/AIReActChatContentsType'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
+import enLayout from '@/locales/en/layout.json'
+import zhLayout from '@/locales/zh/layout.json'
 
-const { scrollToItemIndex } = vi.hoisted(() => ({ scrollToItemIndex: vi.fn() }))
+const { scrollToItemIndex, locale } = vi.hoisted(() => ({ scrollToItemIndex: vi.fn(), locale: { language: 'zh' } }))
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createChatStore } from '../../hooks/chatStore'
@@ -15,6 +18,7 @@ let chatStore: ReturnType<typeof createChatStore>
 beforeEach(() => {
   chatStore = createChatStore()
   vi.clearAllMocks()
+  locale.language = 'zh'
 })
 
 vi.mock('ahooks', async () => {
@@ -60,9 +64,25 @@ vi.mock('../../hooks/ChatMultiSessionController', () => ({
   },
 }))
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
-  YakitButton: ({ type, ...props }: Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'type'> & { type: string }) => (
-    <button {...props} data-type={type} />
+  YakitButton: ({
+    type,
+    icon,
+    children,
+    ...props
+  }: Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'type'> & {
+    type: string
+    icon?: React.ReactNode
+  }) => (
+    <button {...props} data-type={type}>
+      {icon}
+      {children}
+    </button>
   ),
+}))
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({
+    t: (key: string) => get(locale.language === 'en' ? enLayout : zhLayout, key, key),
+  }),
 }))
 
 vi.mock('../../aiReActChatContents/AIReActChatContents', () => ({
@@ -134,18 +154,34 @@ describe('AIReActChat', () => {
     showNotify(AINotifyType.notify429TypeQuotaExceeded)
     render(<AIReActChat {...baseProps} />)
 
-    expect(screen.getByRole('button', { name: '充值' })).toHaveAttribute('data-type', 'primary')
-    expect(screen.getByRole('button', { name: '关闭' })).toHaveAttribute('data-type', 'text')
-    fireEvent.click(screen.getByRole('button', { name: '充值' }))
+    const rechargeBtn = screen.getByRole('button', { name: '充值' })
+    const closeBtn = screen.getAllByRole('button').find((btn) => btn.getAttribute('data-type') === 'text')!
+    expect(rechargeBtn).toHaveAttribute('data-type', 'primary')
+    expect(closeBtn).toHaveAttribute('data-type', 'text')
+    expect(closeBtn).toHaveTextContent(/^$/)
+    expect(closeBtn.querySelector('svg')).toBeInTheDocument()
+    fireEvent.click(rechargeBtn)
     expect(emiter.emit).toHaveBeenCalledWith('onOpenRecharge', '')
     expect(chatStore.getState().notifyMessage).not.toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: '关闭' }))
+    fireEvent.click(closeBtn)
     expect(chatStore.getState().notifyMessage).toBeNull()
     expect(screen.queryByText('余额不足')).not.toBeInTheDocument()
 
     showNotify(AINotifyType.notify429TypeQuotaExceeded, '新的配额提示')
     expect(screen.getByRole('button', { name: '充值' })).toBeInTheDocument()
+  })
+
+  it('英文界面使用翻译后的充值文案，点击仍触发充值入口', () => {
+    locale.language = 'en'
+    showNotify(AINotifyType.notify429TypeQuotaExceeded)
+    render(<AIReActChat {...baseProps} />)
+
+    const rechargeBtn = screen.getByRole('button', { name: 'Recharge' })
+    expect(screen.queryByRole('button', { name: '充值' })).not.toBeInTheDocument()
+    expect(rechargeBtn).toHaveAttribute('data-type', 'primary')
+    fireEvent.click(rechargeBtn)
+    expect(emiter.emit).toHaveBeenCalledWith('onOpenRecharge', '')
   })
 
   it('限流消息覆盖配额提示后不显示操作按钮，停止执行后隐藏', () => {
@@ -155,7 +191,7 @@ describe('AIReActChat', () => {
     showNotify(AINotifyType.notify429TypeRateLimited, '请求过快')
 
     expect(screen.queryByRole('button', { name: '充值' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '关闭' })).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('button').find((btn) => btn.getAttribute('data-type') === 'text')).toBeUndefined()
     expect(screen.getAllByText('请求过快')).toHaveLength(2)
     act(() => chatStore.getState().updateState({ execute: false }))
     expect(screen.queryByText('请求过快')).not.toBeInTheDocument()

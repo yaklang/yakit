@@ -37,6 +37,7 @@ import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 import { AIRightPanel } from '../aiRightPanel/AIRightPanel'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -372,6 +373,7 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
   const notifyMessage = useStore(store, (state) => state.notifyMessage)
+  const { t } = useI18nNamespaces(['layout'])
 
   const { nodeLabel } = useAINodeLabel(notifyMessage?.label)
   const isQuotaExceeded = notifyMessage?.type === AINotifyType.notify429TypeQuotaExceeded
@@ -393,7 +395,7 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
       {isQuotaExceeded && (
         <div className={styles['notify-actions']}>
           <YakitButton size="small" type="primary" onClick={() => emiter.emit('onOpenRecharge', '')}>
-            充值
+            {t('CeUserMenu.recharge')}
           </YakitButton>
           <YakitButton size="small" type="text" icon={<XOutlined />} onClick={onClose} />
         </div>
