@@ -6,7 +6,7 @@ import useLoadOlder from '../useLoadOlder'
 
 const recovery = vi.hoisted(() => vi.fn())
 const store = createChatStore()
-const rawData = { grpcOffset: 1 }
+const rawData = { grpcOffset: 88 }
 vi.mock('../useCurrentSessionId', () => ({ default: () => 's' }))
 vi.mock('../useCurrentDataBySession', () => ({
   useCurrentStore: () => store.renderStore,
@@ -23,7 +23,7 @@ describe('useLoadOlder history request guards', () => {
     vi.useFakeTimers()
     recovery.mockReset()
     store.reset()
-    rawData.grpcOffset = 1
+    rawData.grpcOffset = 88
     root = document.createElement('div')
     scroller = document.createElement('div')
     scroller.dataset.virtuosoScroller = 'true'
@@ -70,6 +70,7 @@ describe('useLoadOlder history request guards', () => {
     act(() => result.current.handleAtTopStateChange(true))
     act(() => result.current.handleAtTopStateChange(true))
     expect(recovery).toHaveBeenCalledTimes(1)
+    rawData.grpcOffset = 22
     act(() => store.getState().updateState({ grpcLoadMoreLoading: false }))
     // 保留旧的 atTop 通知，模拟 Virtuoso 完成前插后的真实位置变化。
     scroller.scrollTop = top
@@ -103,6 +104,22 @@ describe('useLoadOlder history request guards', () => {
     act(() => result.current.handleAtTopStateChange(true))
     expect(recovery).toHaveBeenCalledTimes(2)
     expect(result.current.isPrependingRef.current).toBe(true)
+    expect(store.getState().grpcLoadMoreLoading).toBe(true)
+  })
+
+  it('waits for the next top event to retry when the receipt did not advance the cursor', () => {
+    const { result } = setup()
+    act(() => result.current.handleAtTopStateChange(true))
+    act(() => store.getState().updateState({ grpcLoadMoreLoading: false }))
+    act(() => vi.advanceTimersToNextFrame())
+    act(() => vi.advanceTimersToNextFrame())
+    expect(result.current.isPrependingRef.current).toBe(false)
+    expect(recovery).toHaveBeenCalledTimes(1)
+    expect(rawData.grpcOffset).toBe(88)
+
+    act(() => result.current.handleAtTopStateChange(false))
+    act(() => result.current.handleAtTopStateChange(true))
+    expect(recovery).toHaveBeenCalledTimes(2)
     expect(store.getState().grpcLoadMoreLoading).toBe(true)
   })
 })

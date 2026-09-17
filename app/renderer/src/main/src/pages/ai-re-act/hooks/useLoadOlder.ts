@@ -63,6 +63,8 @@ const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLD
   const atTopRef = useRef(false)
   const wasLoadingRef = useRef(false)
   const wasProcessingRef = useRef(false)
+  /** 本次补载使用的游标；回执未推进游标时不自动重试，等待用户再次触顶。 */
+  const requestedOffsetRef = useRef<number | null>(null)
 
   // 排队锁
   const pendingRequestRef = useRef(false)
@@ -88,6 +90,7 @@ const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLD
   const fetchHasMore = useMemoizedFn(() => !!sessionId && rawData.grpcOffset > 0)
 
   const loadMore = useMemoizedFn(() => {
+    requestedOffsetRef.current = rawData.grpcOffset
     return !!sessionId && globalSessionEngine.requestRecoveryHistory(sessionId)
   })
 
@@ -130,7 +133,7 @@ const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLD
       releaseFrame = requestAnimationFrame(() => {
         checkFrame = requestAnimationFrame(() => {
           isPrependingRef.current = false
-          if (atTopRef.current && fetchHasMore()) handleLoadMore()
+          if (atTopRef.current && fetchHasMore() && rawData.grpcOffset !== requestedOffsetRef.current) handleLoadMore()
         })
       })
     }
@@ -139,7 +142,7 @@ const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLD
       cancelAnimationFrame(releaseFrame)
       cancelAnimationFrame(checkFrame)
     }
-  }, [loading, handleLoadMore, fetchHasMore])
+  }, [loading, handleLoadMore, fetchHasMore, rawData])
 
   // 消息处理结束（processing true→false）后，补发排队中的向上加载
   useEffect(() => {
@@ -159,6 +162,7 @@ const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLD
     isPrependingRef.current = false
     atTopRef.current = false
     pendingRequestRef.current = false
+    requestedOffsetRef.current = null
     const leavingId = sessionId
     return () => {
       if (!leavingId) return

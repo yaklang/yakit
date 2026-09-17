@@ -1204,11 +1204,21 @@ export class ChatMultiSessionController {
       })
       .catch((error) => {
         if (!lifecycle.current) return
-        lifecycle.error ??= error
         console.error('handleGrpcOutputEvent error', error)
-        const loadingHistory =
-          this.sessionRestoreLoading.has(sessionId) || this.storePool.get(sessionId)?.getState().grpcLoadMoreLoading
-        if (loadingHistory && !lifecycle.closing) this.failSessionStart(sessionId, error)
+        if (this.sessionRestoreLoading.has(sessionId)) {
+          lifecycle.error ??= error
+          if (!lifecycle.closing) this.failSessionStart(sessionId, error)
+          return
+        }
+        const store = this.storePool.get(sessionId)
+        if (store?.getState().grpcLoadMoreLoading && !lifecycle.closing) {
+          // 补载坏数据直接跳过，继续处理后续事件；仅结束回执本身异常时结束本批 loading。
+          if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
+            store.getState().updateState({ grpcLoadMoreLoading: false })
+          }
+          return
+        }
+        lifecycle.error ??= error
       })
     return lifecycle.events
   }
@@ -1257,12 +1267,13 @@ export class ChatMultiSessionController {
       await this.flushSessionRender(sessionId)
       await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
       if (!meta.lifecycle.current || meta.lifecycle.closing) return
-      if (meta.lifecycle.error) throw meta.lifecycle.error
+      const restoring = this.sessionRestoreLoading.has(sessionId)
+      // 首屏仍要求完整恢复；补载写入失败保留错误供关闭时反馈，不阻止游标前进和后续补载。
+      if (restoring && meta.lifecycle.error) throw meta.lifecycle.error
       store.getState().updateState({ grpcLoadMoreLoading: false })
       if (store.getState().currentChatStatus.status !== AITaskStatus.inProgress) {
         store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
       }
-      const restoring = this.sessionRestoreLoading.has(sessionId)
       this.finishSessionRestoreLoading(sessionId)
       if (restoring) {
         if (meta.createChatQuestion) {

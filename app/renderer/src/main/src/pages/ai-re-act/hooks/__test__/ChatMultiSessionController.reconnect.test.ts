@@ -9,6 +9,7 @@ import aiChatPersistStore from '../persist/aiChatPersistStore'
 import { persistIndependentItem, drainSessionContentWrites } from '../persist/contentPersistHelper'
 import { sessionStatusStore, SessionDeleteStatus } from '../sessionStatus/sessionStatusStore'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
+import { yakitNotify } from '@/utils/notification'
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIEvent: vi.fn().mockResolvedValue({ Events: [], Total: 0 }) }))
@@ -454,6 +455,103 @@ describe('session reconnect / IDB lifecycle', () => {
         (item) => item.type === AIChatQSDataTypeEnum.QUESTION,
       ),
     ).toBe(true)
+  })
+
+  it('skips broken history events and loads the next batch without replaying them', async () => {
+    await start('s')
+    await ctrl.handleGrpcOutputEvent('s', historyEnd(88))
+    ctrl.requestRecoveryHistory('s')
+    const { store, rawData, meta } = ctrl.ensureSession('s')
+    vi.mocked(yakitNotify).mockClear()
+    const broken = makeGrpcRes({ Type: 'thought', IsSync: true, Content: Buffer.from('{') })
+    await ctrl.handleGrpcOutputEvent('s', broken)
+    expect(store.getState()).toMatchObject({ grpcLoadMoreLoading: true })
+    expect(ctrl.requestRecoveryHistory('s')).toBe(false)
+    await ctrl.handleGrpcOutputEvent('s', broken)
+    const write = deferred()
+    vi.mocked(aiChatPersistStore.setSessionContent).mockReturnValueOnce(write.promise as any)
+    await ctrl.handleGrpcOutputEvent(
+      's',
+      makeGrpcJsonRes('thought', { thought: 'remaining history' }, { EventUUID: 'history-tail', IsSync: true }),
+    )
+    await ctrl.handleGrpcOutputEvent(
+      's',
+      makeGrpcJsonRes('thought', { thought: 'live answer' }, { EventUUID: 'live-tail', IsSync: false }),
+    )
+    const finished = ctrl.handleGrpcOutputEvent('s', historyEnd(22))
+    try {
+      await tick()
+      expect(store.getState().grpcLoadMoreLoading).toBe(true)
+    } finally {
+      write.resolve()
+    }
+    await finished
+
+    const received = [...rawData.contents.values()].map((item) => item.data)
+    expect(received.filter((content) => content === 'remaining history')).toHaveLength(1)
+    expect(received.filter((content) => content === 'live answer')).toHaveLength(1)
+    expect(rawData.grpcOffset).toBe(22)
+    expect(store.getState().grpcLoadMoreLoading).toBe(false)
+    expect(meta.lifecycle.error).toBeUndefined()
+    expect(ctrl.isSessionReady('s')).toBe(true)
+    expect(yakitNotify).not.toHaveBeenCalled()
+    expect(ctrl.requestRecoveryHistory('s')).toBe(true)
+    expect(requests().at(-1).SyncJsonInput).toBe(JSON.stringify({ start_id: 22, limit: 60 }))
+    await ctrl.handleGrpcOutputEvent('s', historyEnd(10))
+    expect(rawData.grpcOffset).toBe(10)
+    await expect(ctrl.handleSessionEnd('s')).resolves.toBeUndefined()
+  })
+
+  it.each(['missing cursor', 'invalid JSON', 'backend error'])(
+    'keeps the cursor and connection on a %s receipt',
+    async (kind) => {
+      await start('s')
+      await ctrl.handleGrpcOutputEvent('s', historyEnd(88))
+      ctrl.requestRecoveryHistory('s')
+      const { store, rawData, meta } = ctrl.ensureSession('s')
+      const receipt =
+        kind === 'invalid JSON'
+          ? makeGrpcRes({ Type: 'structured', NodeId: 'recovery_history', Content: Buffer.from('{') })
+          : makeGrpcJsonRes('structured', kind === 'backend error' ? { error: 'query failed' } : {}, {
+              NodeId: 'recovery_history',
+            })
+      await ctrl.handleGrpcOutputEvent('s', receipt)
+      expect(store.getState().grpcLoadMoreLoading).toBe(false)
+      expect(rawData.grpcOffset).toBe(88)
+      expect(ctrl.isSessionReady('s')).toBe(true)
+      expect(meta.lifecycle.error).toBeUndefined()
+      expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', 's')
+
+      expect(ctrl.requestRecoveryHistory('s')).toBe(true)
+      expect(requests().at(-1).SyncJsonInput).toBe(JSON.stringify({ start_id: 88, limit: 60 }))
+      await ctrl.handleGrpcOutputEvent('s', historyEnd(22))
+      expect(rawData.grpcOffset).toBe(22)
+    },
+  )
+
+  it.each(['content', 'render'])('retains %s write errors but continues loading later history', async (kind) => {
+    await start('s')
+    await ctrl.handleGrpcOutputEvent('s', historyEnd(88))
+    ctrl.requestRecoveryHistory('s')
+    const { rawData, meta, store } = ctrl.ensureSession('s')
+    const failure = new Error('IDB commit failed')
+    if (kind === 'content') {
+      vi.mocked(aiChatPersistStore.setSessionContent).mockRejectedValueOnce(failure)
+      await persistIndependentItem('s', message('failed-write'), meta.lifecycle)
+    } else {
+      vi.mocked(aiChatPersistStore.setSessionRender).mockRejectedValueOnce(failure)
+    }
+    await ctrl.handleGrpcOutputEvent('s', historyEnd(22))
+    expect(rawData.grpcOffset).toBe(22)
+    expect(meta.lifecycle.error).toBe(failure)
+    expect(ctrl.isSessionReady('s')).toBe(true)
+    expect(store.getState()).toMatchObject({ grpcLoadMoreLoading: false })
+    expect(ctrl.requestRecoveryHistory('s')).toBe(true)
+    expect(requests().at(-1).SyncJsonInput).toBe(JSON.stringify({ start_id: 22, limit: 60 }))
+    await ctrl.handleGrpcOutputEvent('s', historyEnd(10))
+    expect(store.getState().grpcLoadMoreLoading).toBe(false)
+    expect(rawData.grpcOffset).toBe(10)
+    await expect(ctrl.handleSessionEnd('s')).rejects.toThrow('IDB commit failed')
   })
 
   it('failed delete resets deletion status instead of reporting deleted', async () => {
