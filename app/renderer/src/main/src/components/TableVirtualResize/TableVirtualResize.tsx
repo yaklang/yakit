@@ -135,7 +135,7 @@ function TableVirtualResizeFunction<T>(props: TableVirtualResizeProps<T>, ref: R
   return <Table<T> {...props} getTableRef={getTableRef} />
 }
 
-const defMinWidth = 60
+const defMinWidth = 88
 
 // 滚动阈值：用于合并 setScroll 更新，减少 scrollBottom/scrollLeft 变化时的整表重渲染
 const SCROLL_BOTTOM_PAGINATION_THRESHOLD = 10
@@ -631,10 +631,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const cw = w - scrollBarWidth / (cLength - total || 1)
 
     const newColumns = getColumns().map((ele, index) => {
+      // 列宽下限：容器过窄时不再压缩列，改为撑出横向滚动条
+      const minColWidth = ele.minWidth || defMinWidth
       if (ele.isDefWidth) {
         return {
           ...ele,
-          width: cw,
+          width: Math.max(cw, minColWidth),
         }
       }
 
@@ -642,13 +644,13 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         // 倒数第二个 外界div宽度变宽，多出的宽度加在倒数第二列
         return {
           ...ele,
-          width: (ele.width || cw) + cw,
+          width: Math.max((ele.width || cw) + cw, minColWidth),
         }
       }
       return {
         ...ele,
         isDefWidth: !ele.width,
-        width: ele.width || cw,
+        width: ele.width || Math.max(cw, minColWidth),
       }
     })
 

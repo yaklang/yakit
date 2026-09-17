@@ -178,6 +178,10 @@ $keyColor: map-keys($tagColor);
   border: 0;
 }
 
+.yakit-risk-details-content-no-top-border {
+  border-top: 0;
+}
+
 .table-renderTitle {
   display: flex;
   align-items: flex-start;
