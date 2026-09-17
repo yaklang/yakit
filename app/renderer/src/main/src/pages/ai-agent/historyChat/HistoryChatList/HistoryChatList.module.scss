@@ -1,20 +1,43 @@
-.history-chat-list {
+.history-chat-list,
+.history-chat-list-virtual {
   flex: 1;
   min-height: 0;
   padding-left: 12px;
   padding-right: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+// Fuzzer 等非虚拟列表消费者：自身滚动 + 日期分组间距
+.history-chat-list {
   overflow-y: auto;
   .history-group {
     & + .history-group {
       margin-top: 12px;
     }
   }
+}
+
+// AI HistoryChatList（Virtuoso）：由虚拟列表内部滚动
+.history-chat-list-virtual {
+  overflow: hidden;
+  .history-virtual-list {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+.history-chat-list,
+.history-chat-list-virtual {
   .history-group-title {
     padding: 0px 12px;
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
     font-size: 11px;
     font-weight: 500;
     line-height: 16px;
+    &.history-group-spaced {
+      padding-top: 12px;
+    }
   }
   .history-item {
     position: relative;
