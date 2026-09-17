@@ -4,7 +4,23 @@ import { describe, expect, it, vi } from 'vitest'
 import { AIStreamChatContent } from '../AIStreamChatContent'
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { getAIStreamIcon } from '../icons'
-import { LoaderOutlined, SearchOutlined, SparklesOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  AnnotationOutlined,
+  AtomOutlined,
+  BookOpenTextOutlined,
+  ClipboardCheckOutlined,
+  FigmaIcon34227111184Outlined,
+  FigmaIcon34227111185Outlined,
+  FolderArchiveOutlined,
+  GitMergeOutlined,
+  LightBulbOutlined,
+  LoaderPinwheelOutlined,
+  MCPOutlined,
+  ScrollTextOutlined,
+  SearchOutlined,
+  Sparkles2Outlined,
+  StethoscopeOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { OutlineThoughtIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineThoughtIcon'
 
 vi.mock('@/components/yakitUI/YakitTag/YakitTag', () => ({ CopyComponents: () => null }))
@@ -18,29 +34,29 @@ vi.mock('../../thoughtDuration/ThoughtDuration', () => ({ default: () => null })
 
 describe('AIStreamChatContent', () => {
   it.each([
-    'loading_skills_names',
-    'load_skill_resources_path',
-    'load_capability',
-    'dispatch_sub_react_agents',
-    'load_tool',
-    'loading_skills_name',
-    'perception',
-    'intent',
-    'semantic_search_yaklang_samples',
-    'code_sample_title',
-    'mcp-loader',
-    'grep_yaklang_samples',
-    'batch-compress',
-    'write_yaklang_code',
-    're-act-loop',
-    'review',
-    'directly_answer',
-    'memory-timeline',
-    'summary',
-    're-act-verify',
-    'enhance-query',
-  ])('标黄节点 %s 使用专用图标', (nodeId) => {
-    expect(getAIStreamIcon(nodeId)).not.toBe(SparklesOutlined)
+    ['loading_skills_names', LoaderPinwheelOutlined],
+    ['load_skill_resources_path', LoaderPinwheelOutlined],
+    ['load_capability', LoaderPinwheelOutlined],
+    ['dispatch_sub_react_agents', GitMergeOutlined],
+    ['load_tool', LoaderPinwheelOutlined],
+    ['loading_skills_name', LoaderPinwheelOutlined],
+    ['perception', LightBulbOutlined],
+    ['intent', LightBulbOutlined],
+    ['semantic_search_yaklang_samples', SearchOutlined],
+    ['code_sample_title', FigmaIcon34227111184Outlined],
+    ['mcp-loader', MCPOutlined],
+    ['grep_yaklang_samples', SearchOutlined],
+    ['batch-compress', FolderArchiveOutlined],
+    ['write_yaklang_code', FigmaIcon34227111185Outlined],
+    ['re-act-loop', AtomOutlined],
+    ['review', StethoscopeOutlined],
+    ['directly_answer', AnnotationOutlined],
+    ['memory-timeline', FolderArchiveOutlined],
+    ['summary', ScrollTextOutlined],
+    ['re-act-verify', ClipboardCheckOutlined],
+    ['enhance-query', BookOpenTextOutlined],
+  ])('节点 %s 使用设计图对应的图标', (nodeId, expectedIcon) => {
+    expect(getAIStreamIcon(nodeId)).toBe(expectedIcon)
   })
 
   it.each([
@@ -53,22 +69,22 @@ describe('AIStreamChatContent', () => {
     'memory-reducer',
     'unknown-node',
     undefined,
-  ])('未标黄节点 %s 不按前缀或语义猜测专用图标', (nodeId) => {
-    expect(getAIStreamIcon(nodeId)).toBe(SparklesOutlined)
+  ])('未配置节点 %s 不按前缀或语义猜测专用图标', (nodeId) => {
+    expect(getAIStreamIcon(nodeId)).toBe(Sparkles2Outlined)
   })
 
   it('节点变化时更新前置图标', () => {
     const props = { nodeIdVerbose: { Zh: '输出', En: 'Output' }, content: '内容' }
     const { rerender } = render(<AIStreamChatContent {...props} nodeId="load_tool" />)
     const loadingSvg = screen.getByText('输出').previousElementSibling?.innerHTML
-    expect(getAIStreamIcon('load_tool')).toBe(LoaderOutlined)
+    expect(getAIStreamIcon('load_tool')).toBe(LoaderPinwheelOutlined)
     rerender(<AIStreamChatContent {...props} nodeId="grep_yaklang_samples" />)
     expect(getAIStreamIcon('grep_yaklang_samples')).toBe(SearchOutlined)
     expect(screen.getByText('输出').previousElementSibling?.innerHTML).not.toBe(loadingSvg)
   })
 
   it.each([undefined, 'unknown-node'])('未指定专用图标的节点 %s 显示前置默认图标', (nodeId) => {
-    const { container: defaultIconContainer } = render(<SparklesOutlined />)
+    const { container: defaultIconContainer } = render(<Sparkles2Outlined />)
     const { container } = render(
       <AIStreamChatContent
         nodeId={nodeId}

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build, parseAst } from 'vite'
@@ -45,6 +45,17 @@ function collectImports(code: string, names = importedNames()) {
 }
 
 describe('yakitUiIconsPurePlugin consumer import guard', () => {
+  it('accepts the AI stream icon mapping imports', async () => {
+    const source = await readFile(
+      new URL('../pages/ai-agent/components/aiStreamChatContent/icons.ts', import.meta.url),
+      'utf8',
+    )
+    const names = collectImports(source)
+
+    expect(names.outline.has('FigmaIcon34227111184Outlined')).toBe(true)
+    expect(names.outline.has('FigmaIcon34227111185Outlined')).toBe(true)
+  })
+
   it('decodes Uint8Array HTML assets before checking oldicon modulepreloads', () => {
     const plugin = yakitUiIconsPurePlugin().find(
       (candidate) => candidate.name === 'yakit-ui-icons-oldicon-html-preload-gate',
