@@ -421,11 +421,13 @@ function normalizeCapabilityResult(method: string, value: unknown): unknown {
     const target = objectValue(item.target, schema, `${path}.target`)
     const match = objectValue(item.match, schema, `${path}.match`)
     const request = objectValue(item.request, schema, `${path}.request`)
+    const response = objectValue(item.response, schema, `${path}.response`)
     return {
       ...item,
       target,
       match: { ...match, methods: stringCollection(match, 'methods', schema, `${path}.match`) },
       request: { ...request, nodes: collection(request, 'nodes', schema, `${path}.request`) },
+      response: { ...response, nodes: collection(response, 'nodes', schema, `${path}.response`) },
     }
   }
   if (method === 'browser.transform.profile.list') return objectList(value, normalizeProfile)
