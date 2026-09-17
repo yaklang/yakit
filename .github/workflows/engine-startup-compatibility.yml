@@ -29,9 +29,9 @@ jobs:
       matrix:
         os: [windows-2022, macos-15, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
-    # Step timeout caps sum to ~17min (cold cache + CDN downloads); 10min would kill
-    # the job mid-download and lose all artifacts.
-    timeout-minutes: 15
+    # Step timeout caps sum to ~17min (cold cache + CDN downloads); the job budget
+    # must stay above that or a cold run is killed mid-download and loses artifacts.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:

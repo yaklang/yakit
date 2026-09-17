@@ -349,7 +349,8 @@ export const StartupPage: React.FC = () => {
     setOwnedEngineCleanupBusy(true)
     try {
       const result = await yakitEngine.stopAllLocalEngines()
-      if (!result.ok) {
+      // stopAll() 在 records 已空但仍有存活子进程时返回 { ok: true, stopped: false }，此时不能重启
+      if (!result.ok || !result.stopped) {
         showStopOwnedEngineError('process_error')
         return false
       }

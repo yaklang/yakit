@@ -154,14 +154,14 @@ describe('StartupPage owned-engine recovery', () => {
   })
 
   it('waits for owned-engine cleanup before retrying a failed check', async () => {
-    const cleanup = deferred<{ ok: true; canceled: number; status: 'cancelled' }>()
+    const cleanup = deferred<{ ok: true; stopped: boolean; canceled: number; status: 'cancelled' }>()
     mocks.stopAllLocalEngines.mockReturnValue(cleanup.promise)
     renderErrorPage()
 
     fireEvent.click(screen.getByRole('button', { name: 'retry error' }))
 
     expect(mocks.localLink).not.toHaveBeenCalled()
-    cleanup.resolve({ ok: true, canceled: 1, status: 'cancelled' })
+    cleanup.resolve({ ok: true, stopped: true, canceled: 1, status: 'cancelled' })
     await act(async () => {
       await cleanup.promise
     })
@@ -201,6 +201,22 @@ describe('StartupPage owned-engine recovery', () => {
     expect(screen.getByTestId('check-log').textContent).not.toContain('private process detail')
   })
 
+  it('does not retry when owned-engine cleanup reports a live child process', async () => {
+    mocks.stopAllLocalEngines.mockResolvedValue({
+      ok: true,
+      stopped: false,
+      canceled: 0,
+      status: 'stop_failed',
+    })
+    renderErrorPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'retry error' }))
+    await act(async () => {})
+
+    expect(mocks.localLink).not.toHaveBeenCalled()
+    expect(screen.getByTestId('check-log').textContent).toContain('StartupPage.stop_owned_engine_failed')
+  })
+
   it('allows a retry after an owned-engine cleanup failure settles', async () => {
     mocks.stopAllLocalEngines
       .mockResolvedValueOnce({
@@ -209,7 +225,7 @@ describe('StartupPage owned-engine recovery', () => {
         status: 'process_error',
         message: 'still alive',
       })
-      .mockResolvedValueOnce({ ok: true, canceled: 1, status: 'cancelled' })
+      .mockResolvedValueOnce({ ok: true, stopped: true, canceled: 1, status: 'cancelled' })
     renderErrorPage()
 
     fireEvent.click(screen.getByRole('button', { name: 'retry error' }))
@@ -235,7 +251,7 @@ describe('StartupPage owned-engine recovery', () => {
   })
 
   it('checks the selected port after owned-engine cleanup succeeds', async () => {
-    mocks.stopAllLocalEngines.mockResolvedValue({ ok: true, canceled: 1, status: 'cancelled' })
+    mocks.stopAllLocalEngines.mockResolvedValue({ ok: true, stopped: true, canceled: 1, status: 'cancelled' })
     renderErrorPage()
 
     fireEvent.click(screen.getByRole('button', { name: 'switch port' }))
@@ -291,13 +307,13 @@ describe('StartupPage owned-engine recovery', () => {
   })
 
   it('rechecks the engine after cleaning up a failed bind instead of starting with old credentials', async () => {
-    const cleanup = deferred<{ ok: true; canceled: number; status: 'cancelled' }>()
+    const cleanup = deferred<{ ok: true; stopped: boolean; canceled: number; status: 'cancelled' }>()
     mocks.stopAllLocalEngines.mockReturnValue(cleanup.promise)
     renderErrorPage()
     fireEvent.click(screen.getByRole('button', { name: 'retry bind failure' }))
     expect(mocks.localLink).not.toHaveBeenCalled()
     expect(mocks.emit).not.toHaveBeenCalled()
-    cleanup.resolve({ ok: true, canceled: 1, status: 'cancelled' })
+    cleanup.resolve({ ok: true, stopped: true, canceled: 1, status: 'cancelled' })
     await act(async () => {
       await cleanup.promise
     })
@@ -307,14 +323,14 @@ describe('StartupPage owned-engine recovery', () => {
   })
 
   it('waits for cleanup before retrying a failed startup', async () => {
-    const cleanup = deferred<{ ok: true; canceled: number; status: 'cancelled' }>()
+    const cleanup = deferred<{ ok: true; stopped: boolean; canceled: number; status: 'cancelled' }>()
     mocks.stopAllLocalEngines.mockReturnValue(cleanup.promise)
     renderErrorPage()
 
     fireEvent.click(screen.getByRole('button', { name: 'retry start timeout' }))
 
     expect(mocks.stopAllLocalEngines).toHaveBeenCalledOnce()
-    cleanup.resolve({ ok: true, canceled: 1, status: 'cancelled' })
+    cleanup.resolve({ ok: true, stopped: true, canceled: 1, status: 'cancelled' })
     await act(async () => {
       await cleanup.promise
       vi.advanceTimersByTime(100)
@@ -349,7 +365,7 @@ describe('StartupPage owned-engine recovery', () => {
         status: 'process_error',
         message: 'still alive',
       })
-      .mockResolvedValueOnce({ ok: true, canceled: 1, status: 'cancelled' })
+      .mockResolvedValueOnce({ ok: true, stopped: true, canceled: 1, status: 'cancelled' })
     renderErrorPage()
 
     fireEvent.click(screen.getByRole('button', { name: 'install version' }))
@@ -361,7 +377,7 @@ describe('StartupPage owned-engine recovery', () => {
   })
 
   it('switches to remote mode after disconnect cleanup succeeds', async () => {
-    mocks.stopAllLocalEngines.mockResolvedValue({ ok: true, canceled: 1, status: 'cancelled' })
+    mocks.stopAllLocalEngines.mockResolvedValue({ ok: true, stopped: true, canceled: 1, status: 'cancelled' })
     renderErrorPage()
 
     fireEvent.click(screen.getByRole('button', { name: 'disconnect to remote' }))
@@ -371,7 +387,7 @@ describe('StartupPage owned-engine recovery', () => {
   })
 
   it('waits for owned-engine cleanup before switching directly to remote mode', async () => {
-    const cleanup = deferred<{ ok: true; canceled: number; status: 'cancelled' }>()
+    const cleanup = deferred<{ ok: true; stopped: boolean; canceled: number; status: 'cancelled' }>()
     mocks.stopAllLocalEngines.mockReturnValue(cleanup.promise)
     renderErrorPage()
 
@@ -379,7 +395,7 @@ describe('StartupPage owned-engine recovery', () => {
     expect(screen.queryByTestId('remote-engine')).toBeNull()
     expect(screen.getByTestId('recovery-busy').textContent).toBe('true')
 
-    cleanup.resolve({ ok: true, canceled: 1, status: 'cancelled' })
+    cleanup.resolve({ ok: true, stopped: true, canceled: 1, status: 'cancelled' })
     await act(async () => {
       await cleanup.promise
     })

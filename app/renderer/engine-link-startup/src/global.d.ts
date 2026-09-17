@@ -232,7 +232,7 @@ declare global {
       stopAllLocalEngines: () => Promise<EngineStopResult>
       disconnectLocalEngine: () => Promise<{ ok: boolean }>
       fetchYaklangEngineAddr: () => Promise<YaklangEngineAddr>
-      outputLogToWelcomeConsole: (message: string) => Promise<unknanyown>
+      outputLogToWelcomeConsole: (message: string) => Promise<unknown>
       connectYaklangEngine: (credential: YaklangEngineWatchDogCredential) => Promise<any>
       getRemoteAuthAll: () => Promise<YakitAuthInfo[]>
       saveRemoteAuth: (params: YakitAuthInfo) => Promise<unknown>
