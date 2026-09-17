@@ -1,7 +1,7 @@
 import type { Risk } from '../schema'
 
 export const getDiscoveryTimeColumnFixed = (excludeColumnsKey: string[]): 'right' | undefined => {
-  return excludeColumnsKey.includes('action') ? undefined : 'right'
+  return excludeColumnsKey.includes('action') ? 'right' : undefined
 }
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {

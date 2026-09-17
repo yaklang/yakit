@@ -74,7 +74,13 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
       {showCancelTask && !!taskId && <AIHistorySkipTask taskId={taskId} isTask={chatType === 'task'} />}
       {showDetails && (
         <Tooltip title="任务详情" placement="top">
-          <YakitButton size="small" icon={<ListTodoOutlined color="currentColor" />} type="text2" onClick={onDetails} />
+          <YakitButton
+            size="small"
+            icon={<ListTodoOutlined color="currentColor" />}
+            type="text"
+            onClick={onDetails}
+            className={styles['expand-btn']}
+          />
         </Tooltip>
       )}
       <Tooltip title={t('ConcurrentStreamCard.openInNewWindow')}>

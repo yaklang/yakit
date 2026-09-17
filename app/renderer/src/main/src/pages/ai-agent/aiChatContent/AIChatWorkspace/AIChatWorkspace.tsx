@@ -31,6 +31,8 @@ import { FileDefault, FileSuffix, KeyToIcon } from '@/pages/yakRunner/FileTree/i
 import styles from './AIChatWorkspace.module.scss'
 
 interface AIChatWorkspaceProps {
+  /** 欢迎页且没有激活会话时，流量和漏洞页签展示全量数据 */
+  welcome?: boolean
   filePreviewData?: FileNodeProps
   setFilePreviewData: (data?: FileNodeProps) => void
   onTabsChange?: (count: number) => void
@@ -64,7 +66,7 @@ const getFileTabIcon = (file?: FileNodeProps) => {
 }
 
 export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props) => {
-  const { filePreviewData, setFilePreviewData, onTabsChange } = props
+  const { welcome = false, filePreviewData, setFilePreviewData, onTabsChange } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
   const store = useCurrentStore()
@@ -176,43 +178,46 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   })
 
   const onOpenTaskDetail = useMemoizedFn((data: string) => {
+    let info: AIAgentTriggerEventInfo
     try {
-      const info: AIAgentTriggerEventInfo = JSON.parse(data)
-      const { type, params } = info
-      if (!params) return
-      const key = params.key as string
-      const taskId = (params.taskId || key) as string
-      if (!key || !taskId) return
-      const tabKey = `task:${key}`
+      info = JSON.parse(data)
+    } catch {
+      return
+    }
+    if (!info?.params) return
+    const { type, params } = info
+    const key = params.key as string
+    const taskId = (params.taskId || key) as string
+    if (!key || !taskId) return
+    const tabKey = `task:${key}`
 
-      if (type === 'update') {
-        if (!tabs.some((item) => item.key === tabKey)) return
-        setTabs((current) =>
-          current.map((item) =>
-            item.key === tabKey
-              ? {
-                  ...item,
-                  label: params.label ?? item.label,
-                  taskId: params.taskId ?? item.taskId,
-                  taskGoal: params.goal ?? item.taskGoal,
-                }
-              : item,
-          ),
-        )
-        setActiveTabKey(tabKey)
-        return
-      }
+    if (type === 'update') {
+      if (!tabs.some((item) => item.key === tabKey)) return
+      setTabs((current) =>
+        current.map((item) =>
+          item.key === tabKey
+            ? {
+                ...item,
+                label: params.label ?? item.label,
+                taskId: params.taskId ?? item.taskId,
+                taskGoal: params.goal ?? item.taskGoal,
+              }
+            : item,
+        ),
+      )
+      setActiveTabKey(tabKey)
+      return
+    }
 
-      if (type === 'add') {
-        openTab({
-          key: tabKey,
-          type: AITabsEnum.Task_Detail,
-          label: params.label || key,
-          taskId,
-          taskGoal: params.goal,
-        })
-      }
-    } catch {}
+    if (type === 'add') {
+      openTab({
+        key: tabKey,
+        type: AITabsEnum.Task_Detail,
+        label: params.label || key,
+        taskId,
+        taskGoal: params.goal,
+      })
+    }
   })
 
   useEffect(() => {
@@ -246,7 +251,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         {showId}
       </YakitTag>
     )
-  }, [activeTab?.runtimeId])
+  }, [activeTab?.runtimeId, onClearRuntimeFilter])
 
   const onCloseTab = useMemoizedFn((event: React.MouseEvent, key: string) => {
     event.stopPropagation()
@@ -258,7 +263,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
       setActiveTabKey(next?.key || '')
     }
   })
-
+  const showAll = welcome && !activeChat?.SessionID
   const tabContent = useMemo(() => {
     if (!activeTab) return null
 
@@ -277,15 +282,19 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         ) : (
           <YakitEmpty style={{ paddingTop: 48 }} />
         )
-      case AITabsEnum.Risk:
+      case AITabsEnum.Risk: {
+        if (showAll) return <VulnerabilitiesRisksTable runTimeIDs={[]} />
         return riskRunTimeIds.length ? (
           <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={riskRunTimeIds} />
         ) : (
           <YakitEmpty style={{ paddingTop: 48 }} />
         )
+      }
       case AITabsEnum.HTTP:
+        if (showAll) return <PluginExecuteHttpFlow pageType="History" runtimeId="" showAdvancedSearch showSetting />
         return runTimeIds.length ? (
           <PluginExecuteHttpFlow
+            pageType="Plugin"
             filterTagDom={filterTagDom}
             runtimeId={runTimeIds.join(',')}
             showAdvancedSearch
@@ -301,6 +310,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     }
   }, [
     activeTab,
+    showAll,
     httpTabUpdate,
     riskTabUpdate,
     relatedRuntimeIDs,

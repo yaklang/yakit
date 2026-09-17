@@ -1,7 +1,20 @@
 import type React from 'react'
+import { createContext, useContext } from 'react'
 import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { grpcExportAILogs, grpcQueryHTTPFlows } from '@/pages/ai-agent/grpc'
+import { failed, yakitNotify } from '@/utils/notification'
+import type { ExportAILogsModal as ExportAILogsModalComponent } from '@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal'
+import { apiRiskFieldGroup } from '@/pages/risks/YakitRiskTable/utils'
+import type * as AIRightPanelModule from '../AIRightPanel'
+
+const viewportState = vi.hoisted(() => ({ visible: true }))
+const ViewportContext = createContext<boolean | undefined>(undefined)
+vi.mock('ahooks', async () => ({
+  ...(await vi.importActual('ahooks')),
+  useInViewport: () => [useContext(ViewportContext) ?? viewportState.visible],
+}))
 
 // CI 的根配置将样式模块替换为空对象；为这里验证的状态类提供稳定映射。
 vi.mock('../AIRightPanel.module.scss', () => ({
@@ -19,12 +32,13 @@ import type { StoreApi } from 'zustand/vanilla'
 interface MockTaskStoreState {
   currentChatStatus: { questionID: string }
 }
-// 详情条目带 uuid：DataCards 轮询比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
+// 详情条目带 uuid：父级轮询比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
 interface MockTaskDetails {
   uuid?: string
   execution?: Record<string, unknown>
 }
 const mockTaskDetailsMap = new Map<string, MockTaskDetails>()
+const mockAgentStore = createStore<{ activeChat?: { Id: number; SessionID: string } }>(() => ({}))
 const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreState>(() => ({
   currentChatStatus: { questionID: '' },
 }))
@@ -45,13 +59,22 @@ vi.mock('../../hooks/useCurrentDataBySession', () => ({
   }),
 }))
 
-// grpc.ts 顶层依赖 electron，测试中只保留日志导出方法的 mock。
+// 隔离日志导出及首页统计查询的 IPC 依赖。
 vi.mock('@/pages/ai-agent/grpc', () => ({
   grpcExportAILogs: vi.fn(() => Promise.resolve()),
+  grpcQueryHTTPFlows: vi.fn(),
 }))
-vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
-  default: () => ({ activeChat: undefined }),
+vi.mock('@/pages/risks/YakitRiskTable/utils', () => ({
+  apiRiskFieldGroup: vi.fn(),
 }))
+vi.mock('@/pages/ai-agent/useContext/useStore', async () => {
+  const { useStore } = await import('zustand')
+  return {
+    default: function useMockAIAgentStore() {
+      return useStore(mockAgentStore)
+    },
+  }
+})
 
 // 菜单点击交互依赖（vi.hoisted：vi.mock 工厂引用的变量需先于 mock 提升初始化）
 const { mockEmit, casualTaskState, mockSyncCasualTaskTab, mockOpenLogWindow, mockExportModalState, dispatcherState } =
@@ -81,9 +104,13 @@ vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
 }))
 
 vi.mock('@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal', () => ({
-  ExportAILogsModal: ({ visible }: { visible: boolean }) => {
+  ExportAILogsModal: ({ visible, loading, onOk }: React.ComponentProps<typeof ExportAILogsModalComponent>) => {
     mockExportModalState.lastVisible = visible
-    return null
+    return visible ? (
+      <button disabled={loading} onClick={() => onOk({ types: ['timeline'], outputPath: '/logs' })}>
+        确认导出
+      </button>
+    ) : null
   },
 }))
 
@@ -133,8 +160,10 @@ vi.mock('i18next-resources-to-backend', () => {
   }
 })
 
-import { AIRightPanel } from '../AIRightPanel'
+import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
+const { AIRightPanel } = await compileReactModule<typeof AIRightPanelModule>(import.meta.url, '../AIRightPanel.tsx')
 import { AIRightPanelPane } from '../AIRightPanelPane'
+import type { AIRightPanelProps } from '../type'
 
 vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane', () => ({
   TaskListPane: () => <div data-testid="task-list-pane" />,
@@ -163,6 +192,14 @@ vi.mock('@/pages/ai-agent/historyChat/HistoryChat', () => ({
   ),
 }))
 
+const WelcomeRightPanel = ({ refresh = true, ...props }: Pick<AIRightPanelProps, 'small'> & { refresh?: boolean }) => {
+  return (
+    <ViewportContext.Provider value={refresh}>
+      <AIRightPanel welcome {...props} layoutRef={{ current: null }} />
+    </ViewportContext.Provider>
+  )
+}
+
 const renderPanel = async (ui: React.ReactElement) => {
   const renderResult = render(ui)
   // 「任务详情」按条件渲染可能缺席，用常驻菜单「文件系统」作为就绪探针
@@ -170,7 +207,178 @@ const renderPanel = async (ui: React.ReactElement) => {
   return renderResult
 }
 
+const expectEmptyDataCards = () => {
+  expect(screen.getByText('执行时长')).toBeVisible()
+  expect(screen.getByText('执行时长').nextElementSibling).toHaveTextContent('—')
+  expect(screen.getByText('工具调用统计')).toBeVisible()
+  for (const label of ['成功', '失败', '总尝试次数']) {
+    expect(screen.getByText(label).previousElementSibling).toHaveTextContent('—')
+  }
+}
+
 describe('AIRightPanel', () => {
+  beforeEach(() => {
+    viewportState.visible = true
+    mockAgentStore.setState({ activeChat: undefined })
+  })
+
+  describe('首页模式', () => {
+    beforeEach(() => {
+      vi.mocked(grpcQueryHTTPFlows)
+        .mockReset()
+        .mockResolvedValue({
+          Total: 123,
+          Data: [],
+          Pagination: { Page: 1, Limit: 1, Order: 'desc', OrderBy: 'id' },
+        })
+      vi.mocked(apiRiskFieldGroup)
+        .mockReset()
+        .mockResolvedValue({
+          RiskIPGroup: [],
+          RiskTypeGroup: [],
+          RiskLevelGroup: [
+            { Name: 'critical', Total: 2 },
+            { Name: 'fatal', Total: 3 },
+            { Name: 'high', Total: 7 },
+            { Name: 'warning', Total: 11 },
+            { Name: 'medium', Total: 2 },
+            { Name: 'low', Total: 17 },
+            { Name: 'info', Total: 19 },
+            { Name: 'other', Total: 4 },
+          ].map((group) => ({ ...group, Verbose: '', Delta: 0 })),
+        })
+    })
+
+    it.each([false, true])('大小屏均只显示四个首页入口（小屏：%s）', async (small) => {
+      casualTaskState.questionID = 'existing-task'
+      try {
+        render(<WelcomeRightPanel small={small} />)
+        await screen.findByLabelText('文件系统')
+        for (const label of ['文件系统', '流量', '漏洞', '会话历史']) {
+          expect(screen.getByLabelText(label)).toBeInTheDocument()
+        }
+        for (const label of ['任务详情看板', '任务列表', '更多', '时间线', '导出日志', '查看日志']) {
+          expect(screen.queryByLabelText(label)).not.toBeInTheDocument()
+        }
+        expect(screen.queryByText('执行时长')).not.toBeInTheDocument()
+        expect(screen.queryByText('工具调用统计')).not.toBeInTheDocument()
+        fireEvent.click(screen.getByLabelText('会话历史'))
+        expect(screen.getByTestId('history-chat')).toBeInTheDocument()
+      } finally {
+        resetMockStore()
+      }
+    })
+
+    it('欢迎页自行读取全量统计，不读取当前任务数据', async () => {
+      setMockQuestionID('existing-task')
+      const readTask = vi.spyOn(mockTaskDetailsMap, 'get')
+      const result = await renderPanel(<AIRightPanel welcome />)
+      try {
+        await waitFor(() => expect(screen.getByLabelText('流量')).toHaveTextContent('123'))
+        expect(screen.getByLabelText('漏洞')).toHaveTextContent('5｜7｜13｜17｜23')
+        expect(readTask).not.toHaveBeenCalled()
+        result.rerender(<AIRightPanel welcome small />)
+        expect(screen.getByLabelText('漏洞总数 65')).toBeInTheDocument()
+        expect(readTask).not.toHaveBeenCalled()
+      } finally {
+        result.unmount()
+        readTask.mockRestore()
+        resetMockStore()
+      }
+    })
+
+    it('可见时无筛选查询全量统计，重渲染不重查，再次可见时刷新', async () => {
+      setMockQuestionID('stream-task')
+      mockTaskDetailsMap.set('stream-task', {
+        uuid: 'stream-1',
+        execution: { http_flow_count: 999, risk_level_count: { critical: 888, total: 888 } },
+      })
+      try {
+        const result = await renderPanel(<WelcomeRightPanel refresh={false} />)
+        expect(grpcQueryHTTPFlows).not.toHaveBeenCalled()
+        expect(apiRiskFieldGroup).not.toHaveBeenCalled()
+        result.rerender(<WelcomeRightPanel refresh />)
+        await waitFor(() => expect(screen.getByLabelText('流量')).toHaveTextContent('123'))
+        expect(screen.getByLabelText('漏洞')).toHaveTextContent('5｜7｜13｜17｜23')
+        expect(grpcQueryHTTPFlows).toHaveBeenCalledExactlyOnceWith({ Pagination: { Page: 1, Limit: 1 } })
+        expect(apiRiskFieldGroup).toHaveBeenCalledExactlyOnceWith()
+
+        mockTaskDetailsMap.set('stream-task', {
+          uuid: 'stream-2',
+          execution: { http_flow_count: 1000, risk_level_count: { critical: 889, total: 889 } },
+        })
+        result.rerender(<WelcomeRightPanel small />)
+        expect(screen.getByLabelText('漏洞总数 65')).toBeInTheDocument()
+        result.rerender(<WelcomeRightPanel small={false} />)
+        expect(screen.getByLabelText('流量')).toHaveTextContent('123')
+        expect(screen.getByLabelText('漏洞')).toHaveTextContent('5｜7｜13｜17｜23')
+        expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(1)
+        expect(apiRiskFieldGroup).toHaveBeenCalledTimes(1)
+
+        result.rerender(<WelcomeRightPanel refresh={false} />)
+        expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(1)
+        expect(apiRiskFieldGroup).toHaveBeenCalledTimes(1)
+        vi.mocked(grpcQueryHTTPFlows).mockResolvedValueOnce({
+          Total: 456,
+          Data: [],
+          Pagination: { Page: 1, Limit: 1, Order: 'desc', OrderBy: 'id' },
+        })
+        vi.mocked(apiRiskFieldGroup).mockResolvedValueOnce({
+          RiskIPGroup: [],
+          RiskTypeGroup: [],
+          RiskLevelGroup: [{ Name: 'high', Total: 9, Verbose: '', Delta: 0 }],
+        })
+        result.rerender(<WelcomeRightPanel refresh />)
+        await waitFor(() => expect(screen.getByLabelText('流量')).toHaveTextContent('456'))
+        expect(screen.getByLabelText('漏洞')).toHaveTextContent('9')
+        await waitFor(() => expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(2))
+        expect(apiRiskFieldGroup).toHaveBeenCalledTimes(2)
+      } finally {
+        resetMockStore()
+      }
+    })
+
+    it.each(['traffic', 'risk'])(
+      '一个统计接口失败时错误提示照常暴露，另一个仍正常展示（失败：%s）',
+      async (failedApi) => {
+        if (failedApi === 'traffic') vi.mocked(grpcQueryHTTPFlows).mockRejectedValueOnce(new Error('query failed'))
+        else vi.mocked(apiRiskFieldGroup).mockRejectedValueOnce(new Error('query failed'))
+        await renderPanel(<WelcomeRightPanel />)
+        if (failedApi === 'traffic') {
+          await waitFor(() => expect(screen.getByLabelText('漏洞')).toHaveTextContent('5｜7｜13｜17｜23'))
+          expect(screen.getByLabelText('流量')).toHaveTextContent(/^流量$/)
+        } else {
+          await waitFor(() => expect(screen.getByLabelText('流量')).toHaveTextContent('123'))
+          expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞$/)
+        }
+        // 失败要暴露错误提示：grpcQueryHTTPFlows 不传 hiddenError（真实实现内部会 yakitNotify 弹错误），
+        // apiRiskFieldGroup 无静默参数、失败必弹提示；组件侧 .catch 仅兜底未处理的 rejection。
+        expect(vi.mocked(grpcQueryHTTPFlows).mock.calls[0]?.[1]).toBeFalsy()
+        expect(apiRiskFieldGroup).toHaveBeenCalledExactlyOnceWith()
+        expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(1)
+      },
+    )
+
+    it('空统计不显示角标，自由对话不查询首页统计', async () => {
+      vi.mocked(grpcQueryHTTPFlows).mockResolvedValueOnce({
+        Total: 0,
+        Data: [],
+        Pagination: { Page: 1, Limit: 1, Order: 'desc', OrderBy: 'id' },
+      })
+      vi.mocked(apiRiskFieldGroup).mockResolvedValueOnce({ RiskIPGroup: [], RiskTypeGroup: [], RiskLevelGroup: [] })
+      const result = await renderPanel(<WelcomeRightPanel />)
+      await act(async () => {})
+      expect(screen.getByLabelText('流量')).toHaveTextContent(/^流量$/)
+      expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞$/)
+      result.rerender(<WelcomeRightPanel small />)
+      expect(screen.queryByLabelText(/^漏洞总数/)).not.toBeInTheDocument()
+      result.unmount()
+      await renderPanel(<AIRightPanel />)
+      expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(1)
+      expect(apiRiskFieldGroup).toHaveBeenCalledTimes(1)
+    })
+  })
+
   it.each([false, true])('AI 设置跳转到设置页，更多分组按顺序展开和收起（小屏：%s）', async (small) => {
     render(<AIRightPanel small={small} />)
     fireEvent.click(await screen.findByLabelText('更多'))
@@ -208,6 +416,36 @@ describe('AIRightPanel', () => {
     fireEvent.click(closeButton)
     expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
     expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
+  })
+
+  it.each([false, true])('切换详情会话后保留当前会话列表（small=%s）', (small) => {
+    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-1' } })
+    render(<AIRightPanel small={small} />)
+    fireEvent.click(screen.getByLabelText('会话历史'))
+    const history = screen.getByTestId('history-chat')
+
+    act(() => {
+      mockAgentStore.setState({ activeChat: { Id: 2, SessionID: 'session-2' } })
+    })
+
+    expect(screen.getByTestId('history-chat')).toBe(history)
+    fireEvent.click(history.querySelector('header')!.lastElementChild!)
+    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
+  })
+
+  it.each(['任务列表', '时间线'])('切换详情会话后关闭旧会话的%s', (label) => {
+    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-1' } })
+    render(<AIRightPanel small />)
+    fireEvent.click(screen.getByLabelText('更多'))
+    fireEvent.click(screen.getByLabelText(label))
+    const testId = label === '任务列表' ? 'task-list-pane' : 'timeline-pane'
+    expect(screen.getByTestId(testId)).toBeInTheDocument()
+
+    act(() => {
+      mockAgentStore.setState({ activeChat: { Id: 2, SessionID: 'session-2' } })
+    })
+
+    expect(screen.queryByTestId(testId)).not.toBeInTheDocument()
   })
 
   it('小屏会话历史支持悬停打开、移出销毁和点击关闭', async () => {
@@ -310,8 +548,8 @@ describe('AIRightPanel', () => {
     mockTaskDetailsMap.set('task-normal', {
       execution: { started_at: 1000, ended_at: 7000, tool_call_success: 1, tool_call_failed: 2, tool_call_total: 3 },
     })
+    const result = await renderPanel(<AIRightPanel />)
     try {
-      await renderPanel(<AIRightPanel />)
       expect(screen.getByText('执行时长')).toBeInTheDocument()
       // timeDiffWithMoment mock 返回差值 "6000s"
       expect(screen.getByText('6000s')).toBeInTheDocument()
@@ -323,6 +561,7 @@ describe('AIRightPanel', () => {
       expect(screen.getByText('更多')).toBeInTheDocument()
       expect(screen.queryByText('时间线')).not.toBeInTheDocument()
     } finally {
+      result.unmount()
       resetMockStore()
       casualTaskState.questionID = ''
     }
@@ -354,6 +593,39 @@ describe('AIRightPanel', () => {
     // antd Tooltip 悬停触发，浮层渲染到 body 下
     fireEvent.mouseEnter(fileSystemButton)
     await waitFor(() => expect(screen.getByText('文件系统')).toBeInTheDocument())
+  })
+
+  it.each(['任务详情看板', '流量', '漏洞'])('大屏点击%s后切为小屏，提示保持关闭直到鼠标移出再移入', async (label) => {
+    casualTaskState.questionID = 'q-1'
+    try {
+      const { rerender } = render(<AIRightPanel small={false} />)
+      const button = screen.getByLabelText(label)
+      fireEvent.mouseEnter(button)
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+      fireEvent.click(button)
+      if (label === '任务详情看板') {
+        expect(mockSyncCasualTaskTab).toHaveBeenCalled()
+      } else {
+        expect(mockEmit).toHaveBeenCalledWith(
+          'switchAIActTab',
+          JSON.stringify({ key: label === '流量' ? 'http' : 'risk' }),
+        )
+      }
+      // 左侧工作区展开后切为小屏，新入口接收到鼠标进入事件。
+      rerender(<AIRightPanel small />)
+      const smallButton = screen.getByLabelText(label)
+      fireEvent.mouseEnter(smallButton)
+      expect(smallButton).not.toHaveClass('ant-tooltip-open')
+      fireEvent.mouseLeave(smallButton)
+      fireEvent.mouseEnter(smallButton)
+      expect(smallButton).toHaveClass('ant-tooltip-open')
+      await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent(label))
+    } finally {
+      casualTaskState.questionID = ''
+      mockSyncCasualTaskTab.mockClear()
+      mockEmit.mockClear()
+      cleanup()
+    }
   })
 
   it('small 小屏态「更多」hover 后点击展开，Tooltip 浮层不残留', async () => {
@@ -408,8 +680,8 @@ describe('AIRightPanel', () => {
         risk_level_count: { critical: 4, high: 6, warning: 1, low: 3, info: 5, other: 3, total: 22 },
       },
     })
+    const result = await renderPanel(<AIRightPanel />)
     try {
-      await renderPanel(<AIRightPanel />)
       expect(screen.getByText('42')).toBeInTheDocument()
       // 面板展示严重/高危/中危/低危/信息，其中 info 与 other 合并到信息。
       expect(screen.getByText('4')).toBeInTheDocument()
@@ -418,6 +690,7 @@ describe('AIRightPanel', () => {
       expect(screen.getByText('3')).toBeInTheDocument()
       expect(screen.getByText('8')).toBeInTheDocument()
     } finally {
+      result.unmount()
       resetMockStore()
     }
   })
@@ -430,14 +703,15 @@ describe('AIRightPanel', () => {
         risk_level_count: { critical: 2, high: 0, warning: 0, low: 1, info: 0, other: 0, total: 3 },
       },
     })
+    const result = await renderPanel(<AIRightPanel />)
     try {
-      await renderPanel(<AIRightPanel />)
       const riskButton = screen.getByLabelText('漏洞')
       // 仅展示非零等级：严重 2、低危 1
       expect(riskButton).toContainElement(screen.getByText('2'))
       expect(riskButton).toContainElement(screen.getByText('1'))
       expect(screen.queryByText('0')).not.toBeInTheDocument()
     } finally {
+      result.unmount()
       resetMockStore()
     }
   })
@@ -450,13 +724,14 @@ describe('AIRightPanel', () => {
         risk_level_count: { critical: 0, high: 0, warning: 0, low: 0, info: 0, other: 0, total: 0 },
       },
     })
+    const result = await renderPanel(<AIRightPanel />)
     try {
-      await renderPanel(<AIRightPanel />)
       const riskButton = screen.getByLabelText('漏洞')
       // 无任何等级数字与分隔符，整个 risk-tag 角标隐藏
       expect(riskButton.textContent).toBe('漏洞')
       expect(screen.queryByText('｜')).not.toBeInTheDocument()
     } finally {
+      result.unmount()
       resetMockStore()
     }
   })
@@ -469,14 +744,81 @@ describe('AIRightPanel', () => {
         risk_level_count: { critical: 4, high: 6, warning: 1, low: 3, info: 5, other: 3, total: 22 },
       },
     })
+    const result = render(<AIRightPanel small />)
     try {
-      render(<AIRightPanel small />)
-
       const riskButton = screen.getByLabelText('漏洞')
       const riskTotalBadge = screen.getByText('22')
 
       expect(riskButton).toContainElement(riskTotalBadge)
     } finally {
+      result.unmount()
+      resetMockStore()
+    }
+  })
+
+  it.each([
+    { total: undefined, expected: 22 },
+    { total: 99, expected: 99 },
+    { total: 0, expected: 0 },
+  ])('快照漏洞总数优先使用 total=$total，缺失时按等级求和', async ({ total, expected }) => {
+    setMockQuestionID('task-risk-total')
+    mockTaskDetailsMap.set('task-risk-total', {
+      uuid: 'uuid-risk-total',
+      execution: {
+        risk_level_count: { critical: 4, high: 6, warning: 1, low: 3, info: 5, other: 3, total },
+      },
+    })
+    const result = render(<AIRightPanel small />)
+    try {
+      await screen.findByLabelText('漏洞')
+      if (expected === 0) expect(screen.queryByLabelText(/^漏洞总数/)).not.toBeInTheDocument()
+      else expect(screen.getByLabelText(`漏洞总数 ${expected}`)).toBeInTheDocument()
+    } finally {
+      result.unmount()
+      resetMockStore()
+    }
+  })
+
+  it('当前任务变化时自动更新统计，切到无快照任务或清空任务后移除旧角标', async () => {
+    // 两个任务使用相同 uuid，确保更新由 questionID 订阅驱动。
+    mockTaskDetailsMap.set('task-first', {
+      uuid: 'same-uuid',
+      execution: {
+        http_flow_count: 42,
+        risk_level_count: { critical: 2, high: 0, warning: 0, low: 0, info: 1, other: 2, total: 5 },
+      },
+    })
+    mockTaskDetailsMap.set('task-second', {
+      uuid: 'same-uuid',
+      execution: {
+        http_flow_count: 81,
+        risk_level_count: { critical: 0, high: 7, warning: 0, low: 0, info: 0, other: 0, total: 7 },
+      },
+    })
+    setMockQuestionID('task-first')
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      expect(screen.getByLabelText('流量')).toHaveTextContent('42')
+      expect(screen.getByLabelText('漏洞')).toHaveTextContent('2｜3')
+
+      act(() => setMockQuestionID('task-second'))
+      expect(screen.getByLabelText('流量')).toHaveTextContent('81')
+      expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞7$/)
+
+      act(() => setMockQuestionID('task-without-snapshot'))
+      expect(screen.getByLabelText('流量')).toHaveTextContent(/^流量$/)
+      expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞$/)
+      expectEmptyDataCards()
+
+      act(() => setMockQuestionID('task-first'))
+      expect(screen.getByLabelText('流量')).toHaveTextContent('42')
+      expect(screen.getByLabelText('漏洞')).toHaveTextContent('2｜3')
+      act(() => setMockQuestionID(''))
+      expect(screen.getByLabelText('流量')).toHaveTextContent(/^流量$/)
+      expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞$/)
+      expectEmptyDataCards()
+    } finally {
+      result.unmount()
       resetMockStore()
     }
   })
@@ -558,7 +900,7 @@ describe('AIRightPanel', () => {
     }
   })
 
-  it('数据源：未传 props 时读取当前任务的执行详情展示时长与工具统计', async () => {
+  it('会话面板自行读取当前任务的执行详情并传给 DataCards 展示', async () => {
     setMockQuestionID('task-1')
     mockTaskDetailsMap.set('task-1', {
       uuid: 'uuid-1',
@@ -570,8 +912,8 @@ describe('AIRightPanel', () => {
         tool_call_total: 4,
       },
     })
+    const result = await renderPanel(<AIRightPanel />)
     try {
-      await renderPanel(<AIRightPanel />)
       // timeDiffWithMoment mock 返回差值 "6000s"
       expect(screen.getByText('6000s')).toBeInTheDocument()
       // 统计值与其 label 同属一个 stat 块，经 label 定位避免与 risk 角标写死值（4｜6｜1｜3｜8）撞车
@@ -579,12 +921,18 @@ describe('AIRightPanel', () => {
       expect(statValue('成功')).toBe('3')
       expect(statValue('失败')).toBe('1')
       expect(statValue('总尝试次数')).toBe('4')
+
+      // 当前任务无执行数据时保留卡片，旧统计值替换为占位符。
+      act(() => setMockQuestionID('task-without-data'))
+      expectEmptyDataCards()
+      expect(screen.queryByText('6000s')).not.toBeInTheDocument()
     } finally {
+      result.unmount()
       resetMockStore()
     }
   })
 
-  it('数据源：任务执行中展示「执行中」，无执行数据时展示占位符', async () => {
+  it('数据源：任务执行中展示「执行中」，无执行数据时保留占位卡片，恢复后更新数值', async () => {
     setMockQuestionID('task-2')
     mockTaskDetailsMap.set('task-2', {
       uuid: 'uuid-2',
@@ -597,55 +945,65 @@ describe('AIRightPanel', () => {
       },
     })
     mockTaskDetailsMap.set('task-empty', { uuid: 'uuid-empty' })
+    const result = await renderPanel(<AIRightPanel />)
     try {
       // 有 started_at 无 ended_at：执行中
-      const renderResult = await renderPanel(<AIRightPanel />)
       expect(screen.getByText('执行中')).toBeInTheDocument()
+      expect(screen.getByText('失败').previousElementSibling).toHaveTextContent('0')
 
-      // 切到无 execution 的任务：外部 taskId 变化后重新渲染，executionData 立即重读
+      // 仅更新 store，由父级订阅自动刷新传参，不手动重渲染或重新挂载卡片。
       act(() => {
         setMockQuestionID('task-empty')
       })
-      renderResult.rerender(<AIRightPanel key="task-empty" />)
-      // 时长 + 成功/失败/总尝试 共 4 个占位符
-      await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(4))
+      expectEmptyDataCards()
+      expect(screen.queryByText('执行中')).not.toBeInTheDocument()
+      act(() => setMockQuestionID('task-2'))
+      expect(screen.getByText('执行中')).toBeInTheDocument()
+      expect(screen.getByText('成功').previousElementSibling).toHaveTextContent('2')
     } finally {
+      result.unmount()
       resetMockStore()
     }
   })
 
-  it('数据源：同任务详情更新（uuid 变化）后轮询刷新卡片数据', async () => {
+  it('数据源：同任务详情原地更新（uuid 变化）后轮询刷新卡片数据', async () => {
     setMockQuestionID('task-3')
-    mockTaskDetailsMap.set('task-3', {
+    const taskDetails: MockTaskDetails = {
       uuid: 'uuid-3a',
       execution: { started_at: 1000, ended_at: 0, tool_call_success: 0, tool_call_failed: 0, tool_call_total: 0 },
-    })
+    }
+    mockTaskDetailsMap.set('task-3', taskDetails)
+    const result = await renderPanel(<AIRightPanel />)
     try {
-      await renderPanel(<AIRightPanel />)
       expect(screen.getByText('执行中')).toBeInTheDocument()
 
-      // session_snapshot 刷新详情：store 无计数信号，靠 uuid 轮询（3s 间隔）感知后重读 execution
-      mockTaskDetailsMap.set('task-3', {
-        uuid: 'uuid-3b',
-        execution: { started_at: 1000, ended_at: 9000, tool_call_success: 5, tool_call_failed: 2, tool_call_total: 7 },
-      })
+      // session_snapshot 保留详情对象引用并替换 execution，靠 uuid 轮询（3s 间隔）感知更新。
+      taskDetails.uuid = 'uuid-3b'
+      taskDetails.execution = {
+        started_at: 1000,
+        ended_at: 9000,
+        tool_call_success: 5,
+        tool_call_failed: 2,
+        tool_call_total: 7,
+      }
       // 轮询间隔 3s，超时放宽到 5s 预留余量，避免慢环境下 flaky
       await waitFor(() => expect(screen.getByText('8000s')).toBeInTheDocument(), { timeout: 5000 })
       expect(screen.getByText('5')).toBeInTheDocument()
       expect(screen.getByText('2')).toBeInTheDocument()
       expect(screen.getByText('7')).toBeInTheDocument()
     } finally {
+      result.unmount()
       resetMockStore()
     }
   })
 
-  it('菜单点击：文件系统激活侧边栏会话 tab，流量/漏洞打开工作区对应 tab', async () => {
-    await renderPanel(<AIRightPanel />)
-    // 文件树位于左侧边栏会话 tab 分栏，emit switchAIAgentTab 激活
+  it.each([false, true])('菜单点击：文件系统激活侧边栏 File 页，流量/漏洞打开工作区（首页：%s）', async (welcome) => {
+    await renderPanel(<AIRightPanel welcome={welcome} />)
+    // 首页与会话面板都通过 switchAIAgentTab 激活文件页。
     fireEvent.click(screen.getByText('文件系统'))
     expect(mockEmit).toHaveBeenCalledWith(
       'switchAIAgentTab',
-      JSON.stringify({ type: 'setTabActive', params: { active: 'session', show: true } }),
+      JSON.stringify({ type: 'setTabActive', params: { active: 'file', show: true } }),
     )
     fireEvent.click(screen.getByText('流量'))
     expect(mockEmit).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: 'http' }))
@@ -692,5 +1050,37 @@ describe('AIRightPanel', () => {
     expect(mockExportModalState.lastVisible).toBe(true)
     fireEvent.click(screen.getByText('查看日志'))
     expect(mockOpenLogWindow).toHaveBeenCalledTimes(1)
+  })
+
+  it.each([true, false])('导出结束后恢复 loading，失败保留弹窗（成功 %s）', async (success) => {
+    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-export' } })
+    let finish!: () => void
+    vi.mocked(grpcExportAILogs).mockImplementationOnce(async () => {
+      await new Promise<void>((resolve) => {
+        finish = resolve
+      })
+      if (!success) throw new Error('导出失败')
+      return { FilePath: '/logs/export.zip' }
+    })
+    vi.mocked(failed).mockClear()
+    vi.mocked(yakitNotify).mockClear()
+    await renderPanel(<AIRightPanel />)
+    fireEvent.click(screen.getByText('更多'))
+    fireEvent.click(screen.getByText('导出日志'))
+    fireEvent.click(screen.getByText('确认导出'))
+    expect(screen.getByText('确认导出')).toBeDisabled()
+    expect(grpcExportAILogs).toHaveBeenLastCalledWith(
+      { SessionID: 'session-export', ExportDataTypes: ['timeline'], OutputPath: '/logs' },
+      true,
+    )
+    await act(async () => finish())
+    if (success) {
+      expect(screen.queryByText('确认导出')).not.toBeInTheDocument()
+      expect(yakitNotify).toHaveBeenCalledWith('success', expect.any(String))
+      fireEvent.click(screen.getByText('导出日志'))
+    } else {
+      expect(failed).toHaveBeenCalledWith(expect.any(String))
+    }
+    expect(screen.getByText('确认导出')).not.toBeDisabled()
   })
 })

@@ -27,9 +27,8 @@ textarea.qs-input-textarea {
     flex-shrink: 0;
   }
 
-  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
   background: var(--Colors-Use-Neutral-Bg);
-  border-radius: 8px;
+  border-radius: 12px;
   position: relative;
   .btn-base {
     width: 24px;
@@ -38,10 +37,9 @@ textarea.qs-input-textarea {
     display: flex;
     align-items: center;
     gap: 4px;
-    height: 38px;
     overflow: hidden;
     justify-content: space-between;
-    padding: 6px 12px 8px 12px;
+    padding: 6px 11px;
     :global {
       .ant-select {
         background: transparent;
@@ -129,10 +127,10 @@ textarea.qs-input-textarea {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
   background: var(--Colors-Use-Basic-Background);
   padding: 8px;
-  border-radius: 8px 8px 0 0;
+  border-radius: 12px;
   min-height: 94px;
   flex-shrink: 0;
 

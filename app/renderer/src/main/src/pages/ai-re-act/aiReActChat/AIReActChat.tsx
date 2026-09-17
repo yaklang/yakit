@@ -40,6 +40,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       sendRequest,
       startRequest,
       externalParameters,
+      rightPanelLayoutRef,
     } = props
     const { setActiveChat, getSetting, onStart, onSend } = useAIAgentDispatcher()
 
@@ -64,12 +65,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       setHttpFlow: () => {},
       getValue: () => {},
     })
-    useImperativeHandle(ref, () => {
-      return {
-        ...aiChatTextareaRef.current,
-        handleStart: (value) => handleStart(value),
-      }
-    }, [])
     useEffect(() => {
       if (activeChat?.SessionID) {
         // 关键词: flushSync warning, Milkdown ReactRenderer, prosemirror-adapter flushSync
@@ -115,21 +110,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     }, [inViewPort])
     //#endregion
     // #region 问题相关逻辑
-    // 初始化 AI ReAct
-    const handleSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
-      if (!setting) {
-        yakitNotify('error', '请先配置 AI ReAct 参数')
-        return
-      }
-      if (store.getState().execute) {
-        handleSend(value)
-      } else {
-        handleStart(value)
-      }
-      onSetQuestion('')
-      externalParameters?.onAfterSubmit?.()
-    })
-
     const handleStart = useMemoizedFn((value: HandleStartParams) => {
       const { qs, sessionId, enabledCapabilities } = value
       const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
@@ -218,10 +198,16 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
     })
 
+    useImperativeHandle(ref, () => {
+      return {
+        ...aiChatTextareaRef.current,
+        handleStart: (value) => handleStart(value),
+      }
+    }, [])
     /**自由对话 */
     const handleSend = useMemoizedFn((data: HandleStartParams) => {
       if (!activeChat?.SessionID) return
-      try {
+      const sendChat = () => {
         const { attachedResourceInfo } = getAIReActRequestParams(data)
         const chatMessage: AIInputEvent = {
           IsFreeInput: true,
@@ -260,6 +246,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             params: chatMessage,
           })
         }
+      }
+      try {
+        sendChat()
       } catch (error) {}
     })
 
@@ -274,6 +263,21 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const onSetQuestion = useMemoizedFn((value: string) => {
       aiChatTextareaRef?.current?.setValue(value ?? '')
+    })
+
+    // 初始化 AI ReAct
+    const handleSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
+      if (!setting) {
+        yakitNotify('error', '请先配置 AI ReAct 参数')
+        return
+      }
+      if (store.getState().execute) {
+        handleSend(value)
+      } else {
+        handleStart(value)
+      }
+      onSetQuestion('')
+      externalParameters?.onAfterSubmit?.()
     })
 
     const handleStopCasualTask = useMemoizedFn(() => {
@@ -293,10 +297,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const aiReActChatContentsRef = useRef<AIReActChatContentsRef>(null)
+    const scrollToItemIndex = useMemoizedFn<AIReActChatContentsRef['scrollToItemIndex']>((index, behavior) => {
+      aiReActChatContentsRef.current?.scrollToItemIndex(index, behavior)
+    })
 
     return (
       <>
         <div
+          ref={rightPanelLayoutRef}
           className={classNames(styles['ai-re-act'], {
             [styles['content-re-act-side']]: isShowRetract,
             [styles['content-re-act-side-hidden']]: isShowExpand,
@@ -316,7 +324,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                     chatContainerHeaderClassName={chatContainerHeaderClassName}
                     isShowRetract={isShowRetract}
                     externalParameters={externalParameters}
-                    scrollToItemIndex={aiReActChatContentsRef.current?.scrollToItemIndex}
+                    scrollToItemIndex={scrollToItemIndex}
                   />
                 )}
                 <AIToDoListWrapper />

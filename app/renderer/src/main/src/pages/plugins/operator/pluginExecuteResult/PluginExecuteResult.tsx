@@ -62,6 +62,7 @@ import { LocalList, LocalPluginLog, LocalText } from './LocalPluginLog'
 import { CodeScanResult } from '@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable'
 import { YakitAuditHoleTable } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable'
 import { HTTPFlowRealTimeTableAndEditor } from '@/components/HTTPHistory'
+import { SourceType } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
 import { ErrorBoundary } from 'react-error-boundary'
 import moment from 'moment'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -123,7 +124,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     }
   })
 
-  const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
+  const renderTabContent = (ele: HoldGRPCStreamProps.InfoTab) => {
     switch (ele.type) {
       case 'risk':
         return runtimeId ? (
@@ -139,6 +140,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
             runtimeId={runtimeId}
             website={!!streamInfo.tabsInfoState['website']?.targets}
             isCrawler={isCrawler}
+            pageType="Plugin"
           />
         ) : (
           <></>
@@ -174,7 +176,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
       default:
         return <></>
     }
-  })
+  }
 
   const showTabs = useMemo(() => {
     let tabs = streamInfo.tabsState
@@ -357,6 +359,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
     isCrawler = false,
     showAdvancedSearch = false,
     showSetting = false,
+    pageType,
   } = props
   const { t } = useI18nNamespaces(['plugin'])
 
@@ -367,6 +370,12 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
   const [includeInUrl, setIncludeInUrl] = useState<string[]>([])
   const [treeQueryparams, setTreeQueryparams] = useState<string>('')
   const [refreshTreeFlag, setRefreshTreeFlag] = useState<boolean>(false)
+  const httpFlowParams = useMemo(() => {
+    if (pageType === 'History') {
+      return { SourceType: SourceType.map(({ value }) => value).join(',') }
+    }
+    return { SourceType: isCrawler ? 'basic-crawler' : 'scan' }
+  }, [pageType, isCrawler])
   // 流量表筛选条件 改变 控制webtree刷新
   const onQueryParams = useMemoizedFn((queryParams: string, execFlag?: boolean) => {
     const treeQuery = JSONParseLog(queryParams, { page: 'PluginExecuteHttpFlow', fun: 'onQueryParams-treeQuery' }) || {}
@@ -416,10 +425,10 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
             containerClassName={styles['current-http-table-container']}
             includeInUrl={includeInUrl}
             onQueryParams={onQueryParams}
-            pageType="Plugin"
+            pageType={pageType}
             runtimeId={runtimeId}
             filterTagDom={filterTagDom}
-            params={{ SourceType: isCrawler ? 'basic-crawler' : 'scan' }}
+            params={httpFlowParams}
             httpHistoryTableTitleStyle={{
               paddingTop: 12,
               paddingLeft: 8,
@@ -492,7 +501,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     return tab
   }, [echartsLists, textLists, i18nRefresh])
 
-  const renderTabContent = useMemoizedFn((type) => {
+  const renderTabContent = (type: string) => {
     switch (type) {
       case 'plugin-log': {
         const currentTime = moment().format('YYYY-MM-DD')
@@ -516,7 +525,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
       default:
         return <></>
     }
-  })
+  }
   const onTabChange = useMemoizedFn((key: string) => {
     setActiveKey(key)
   })

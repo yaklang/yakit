@@ -209,6 +209,7 @@
     "nextRun": "Next Run",
     "runNow": "Run Now",
     "runStarted": "Run triggered",
+    "openRunSessionFailed": "The task has started, but its session could not be opened. Please check the session history.",
     "pausedSuccess": "Paused",
     "pause": "Pause",
     "resume": "Resume",
@@ -504,6 +505,7 @@
     "noActiveChat": "There is no active session",
     "fileSystem": "File System",
     "newChatTitle": "New Session",
+    "backToHome": "Back to Home",
     "newChat": "New Session",
     "log": "Log",
     "exportLog": "Export Log",
@@ -511,9 +513,6 @@
   },
   "AIReActChatContents": {
     "uiRendering": "Rendering UI..."
-  },
-  "ChatSessionPane": {
-    "sessionList": "Sessions"
   },
   "AIAgentChatLayout": {
     "dockDisabledTip": "The screen is too small to dock this panel on the right"

@@ -5,12 +5,15 @@ import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCar
 import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
 import { AI_AGENT_HISTORY_AI_SOURCES } from '../hooks/useGetChatDataStoreKey'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { useCreation, useMemoizedFn } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { useStore } from 'zustand'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import useCurrentTaskExecution from '../hooks/useCurrentTaskData/useCurrentTaskExecution'
+import { useWelcomePanelStats } from '@/pages/ai-agent/aiChatWelcome/hooks/useWelcomePanelStats'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AISourceEnum, type AIAgentGrpcApi } from '../hooks/grpcApi'
-import useCurrentTaskExecution from '../hooks/useCurrentTaskData/useCurrentTaskExecution'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { failed, yakitNotify } from '@/utils/notification'
@@ -65,6 +68,8 @@ const MAIN_MENUS: MenuItemDef[] = [
   { key: 'task-list', labelKey: 'AIRightPanel.taskList', icon: <FlagOutlined /> },
 ]
 
+const WELCOME_MENUS = MAIN_MENUS.filter((item) => item.key !== 'task-board' && item.key !== 'task-list')
+
 /** 「更多」分组展开后追加显示的功能入口（收起态仅在底部显示「更多」按钮） */
 const MORE_MENUS: MenuItemDef[] = [
   { key: 'ai-settings', labelKey: 'AIRightPanel.aiSettings', icon: <CogOutlined /> },
@@ -76,23 +81,6 @@ const MORE_MENUS: MenuItemDef[] = [
 /** 漏洞计数角标的展示顺序；后端标准等级映射到设计稿中的五种颜色。 */
 const RISK_TAG_ORDER: Array<keyof AIRightPanelRiskCounts> = ['serious', 'high', 'medium', 'low', 'info']
 
-/** 将 session_snapshot 的六个标准等级映射为面板展示的五个等级。 */
-const getRiskCounts = (execution?: AIAgentGrpcApi.SessionSnapshot['execution']): AIRightPanelRiskCounts | undefined => {
-  const levelCount = execution?.risk_level_count
-  if (!levelCount) return undefined
-  return {
-    serious: levelCount.critical,
-    high: levelCount.high,
-    medium: levelCount.warning,
-    low: levelCount.low,
-    info: levelCount.info + levelCount.other,
-  }
-}
-
-/** 小屏漏洞图标显示的总数优先使用后端 total，兼容旧快照时再按展示等级求和。 */
-const getRiskTotal = (execution?: AIAgentGrpcApi.SessionSnapshot['execution'], riskCounts?: AIRightPanelRiskCounts) =>
-  execution?.risk_level_count?.total ?? RISK_TAG_ORDER.reduce((total, field) => total + (riskCounts?.[field] ?? 0), 0)
-
 /** 工具调用统计的三个指标（成功/失败带专属色 tone，对应 stat-value-* 样式；总尝试次数用默认色） */
 const TOOL_STATS: Array<{ field: keyof AIRightPanelToolStats; labelKey: string; tone?: 'success' | 'failed' }> = [
   { field: 'success', labelKey: 'AIRightPanel.success', tone: 'success' },
@@ -100,7 +88,7 @@ const TOOL_STATS: Array<{ field: keyof AIRightPanelToolStats; labelKey: string; 
   { field: 'total', labelKey: 'AIRightPanel.totalAttempts' },
 ]
 
-/** 执行时长、工具调用统计等数据未传入时的占位符 */
+/** 执行时长、工具调用统计等数据缺失时的占位符 */
 const PLACEHOLDER = '—'
 
 /** 数据卡片区：执行时长 + 工具调用统计（成功/失败/总尝试）。 */
@@ -170,25 +158,29 @@ interface MenuItemProps {
 const MenuItem: React.FC<MenuItemProps> = React.memo(
   ({ icon, label, small, secondary, suffix, smallBadge, onClick, onMouseEnter, onMouseLeave }) => {
     const [tooltipOpen, setTooltipOpen] = useState(false)
+    const tooltipDismissedRef = useRef(false)
 
     const handleMouseEnter = useMemoizedFn(() => {
       const paneOpened = onMouseEnter?.() ?? false
-      setTooltipOpen(!paneOpened)
+      setTooltipOpen(!!small && !paneOpened && !tooltipDismissedRef.current)
     })
     const handleMouseLeave = useMemoizedFn(() => {
+      tooltipDismissedRef.current = false
       setTooltipOpen(false)
       onMouseLeave?.()
     })
 
     const onItemClick = useMemoizedFn(() => {
+      // 点击可能让大屏切为小屏；鼠标移出前不因新入口的悬停事件重新显示提示。
+      tooltipDismissedRef.current = true
+      setTooltipOpen(false)
       if (onClick) {
         onClick()
       }
-      setTooltipOpen(false)
     })
 
     // 菜单容器和交互行为在两种尺寸下相同，具体内容由大小屏分支分别生成。
-    const renderMenuContainer = useMemoizedFn((children: React.ReactNode, className?: string) => (
+    const renderMenuContainer = (children: React.ReactNode, className?: string) => (
       <div
         className={classNames(styles['menu-item'], className)}
         aria-label={label}
@@ -198,10 +190,10 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
       >
         {children}
       </div>
-    ))
+    )
 
     // 正常态使用独立的文案和右侧 suffix，不渲染小屏专用结构。
-    const renderNormalContent = useMemoizedFn(() =>
+    const renderNormalContent = () =>
       renderMenuContainer(
         <>
           <div className={styles['menu-item-base']}>
@@ -214,11 +206,10 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
           </div>
           {suffix}
         </>,
-      ),
-    )
+      )
 
     // 小屏态只保留图标和可选角标，不渲染正常态文案或 suffix。
-    const renderSmallContent = useMemoizedFn(() =>
+    const renderSmallContent = () =>
       renderMenuContainer(
         <div className={styles['menu-item-base']}>
           <span
@@ -237,8 +228,7 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
           </span>
         </div>,
         styles['menu-item-small'],
-      ),
-    )
+      )
 
     return small ? (
       <Tooltip key={label} title={label} placement="left" open={tooltipOpen}>
@@ -250,30 +240,17 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
   },
 )
 
+// #region 面板共享内核（首页 / 会话两种模式复用）
 /**
- * Memfit AI 右侧功能面板：
- * - 正常态（宽 301px）：数据卡片 + 主菜单 + 底部「更多」分组，更多分组可在 展开/收起 间切换
- * - 小屏态（正常态面板会使列表可用宽度小于最大宽度时）：仅图标的窄栏（宽 41px）
+ * 两种模式共用的面板内核：
+ * - 小屏测量（small 未传时监听 layoutRef 宽度）
+ * - 内容面板（activePane）的打开、关闭与延时关闭
+ * - 小屏悬停打开浮层的交互
  */
-export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
+const usePanelShared = (props: AIRightPanelProps) => {
   const { layoutRef, small } = props
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const [moreOpen, setMoreOpen] = useState(false)
-  const [chatSmall, setChatSmall] = useState(false)
-  // 菜单点击交互：打开工作区 tab / 导出与查看日志
-  const { activeChat } = useAIAgentStore()
-  const { getSetting } = useAIAgentDispatcher()
-  const { currentChatStatusQuestionID, syncCasualTaskTab } = useCasualTaskTab()
-  const executionData = useCurrentTaskExecution(currentChatStatusQuestionID)
-  const riskCounts = useCreation(() => getRiskCounts(executionData), [executionData?.risk_level_count])
-  const riskTotal = useCreation(
-    () => getRiskTotal(executionData, riskCounts),
-    [executionData?.risk_level_count, riskCounts],
-  )
-  const { onOpenLogWindow } = useAiChatLog()
-  const [exportModalVisible, setExportModalVisible] = useState(false)
-  const [exportLoading, setExportLoading] = useState(false)
 
+  const [chatSmall, setChatSmall] = useState(false)
   useEffect(() => {
     // 监听滚动容器的父级（.ai-re-act-chat）宽度：内容轨道避让在 Virtuoso 内部 List 上，
     // 父级保持全宽不随面板态变化，宽度稳定可安全作为小屏判断输入。
@@ -282,6 +259,8 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
 
     const getLayoutWidth = () => layoutElement.clientWidth || layoutElement.getBoundingClientRect().width
     const update = (layoutWidth: number) => {
+      // 页面隐藏时宽度为 0，保留尺寸模式，避免误关当前内容面板。
+      if (layoutWidth <= 0) return
       const nextChatSmall = layoutWidth - AI_RIGHT_PANEL_NORMAL_SLOT_WIDTH < AI_RIGHT_PANEL_INPUT_MAX_WIDTH
       setChatSmall((previous) => (previous === nextChatSmall ? previous : nextChatSmall))
     }
@@ -294,6 +273,7 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   }, [layoutRef, small])
 
   const isSmall = small ?? chatSmall
+
   const [activePane, setActivePane] = useState<AIRightPanelPaneKey>()
   const closeTimer = useRef<ReturnType<typeof setTimeout>>()
   const cancelPaneClose = useMemoizedFn(() => clearTimeout(closeTimer.current))
@@ -340,7 +320,267 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   useEffect(() => {
     closePane()
     return cancelPaneClose
-  }, [isSmall, activeChat?.Id, closePane, cancelPaneClose])
+  }, [isSmall])
+
+  return {
+    isSmall,
+    activePane,
+    setActivePane,
+    closePane,
+    openPane,
+    cancelPaneClose,
+    schedulePaneClose,
+    handleMenuMouseEnter,
+    handleMenuMouseLeave,
+  }
+}
+
+/** 主菜单区容器：panel-top + menu-group，两种模式共用；dataCards 为菜单上方的数据卡片区 */
+const MenuList: React.FC<{
+  menus: MenuItemDef[]
+  small: boolean
+  dataCards?: React.ReactNode
+  trafficTotal?: number
+  riskTotal?: number
+  riskCounts?: AIRightPanelRiskCounts
+  onMenuClick: (key: AIRightPanelMenuKey) => void
+  onMenuMouseEnter: (key: AIRightPanelMenuKey) => boolean
+  onMenuMouseLeave: (key: AIRightPanelMenuKey) => void
+}> = ({
+  menus,
+  small,
+  dataCards,
+  trafficTotal,
+  riskTotal = 0,
+  riskCounts,
+  onMenuClick,
+  onMenuMouseEnter,
+  onMenuMouseLeave,
+}) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const renderSmallBadge = (key: AIRightPanelMenuKey) => {
+    if (!small) return undefined
+
+    switch (key) {
+      case 'risk':
+        return riskTotal > 0 ? riskTotal : undefined
+      default:
+        return undefined
+    }
+  }
+
+  const renderMenuSuffix = (key: AIRightPanelMenuKey) => {
+    if (key === 'traffic' && trafficTotal) {
+      return (
+        <YakitTag fullRadius color="white" border={false}>
+          {trafficTotal}
+        </YakitTag>
+      )
+    }
+    if (key === 'risk' && riskCounts) {
+      const entries = RISK_TAG_ORDER.map((field) => ({ field, value: riskCounts[field] })).filter(
+        (entry) => !!entry.value,
+      )
+      if (!entries.length) return null
+      return (
+        <span className={styles['risk-tag']}>
+          {entries.map((entry, index) => (
+            <React.Fragment key={entry.field}>
+              {index > 0 && <span className={styles['risk-tag-separator']}>｜</span>}
+              <span className={classNames(styles['risk-tag-value'], styles[`risk-tag-value-${entry.field}`])}>
+                {entry.value}
+              </span>
+            </React.Fragment>
+          ))}
+        </span>
+      )
+    }
+    return null
+  }
+
+  return (
+    <div className={classNames(styles['panel-top'], { [styles['panel-top-small']]: small })}>
+      <div className={styles['menu-group']}>
+        {dataCards}
+        {menus.map((item) => (
+          <MenuItem
+            key={item.key}
+            icon={item.icon}
+            label={t(item.labelKey)}
+            small={small}
+            suffix={renderMenuSuffix(item.key)}
+            smallBadge={renderSmallBadge(item.key)}
+            onClick={() => onMenuClick(item.key)}
+            onMouseEnter={() => onMenuMouseEnter(item.key)}
+            onMouseLeave={() => onMenuMouseLeave(item.key)}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** 内容面板浮层：按打开的面板渲染标题与内容；会话历史由 HistoryChat 自带头部，隐藏浮层头部 */
+const PaneSlot: React.FC<{
+  pane: AIRightPanelPaneKey
+  small: boolean
+  onClose: () => void
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
+}> = React.memo(({ pane, small, onClose, onMouseEnter, onMouseLeave }) => {
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+
+  const renderTitle = () => {
+    switch (pane) {
+      case 'session-history':
+        return t('AIRightPanel.sessionHistory')
+      case 'task-list':
+        return t('AIRightPanel.taskList')
+      case 'timeline':
+        return t('AIRightPanel.timeline')
+      default:
+        return ''
+    }
+  }
+
+  const renderContent = () => {
+    switch (pane) {
+      case 'session-history':
+        return (
+          <HistoryChat
+            aiSource={AI_AGENT_HISTORY_AI_SOURCES}
+            title={t('AIRightPanel.sessionHistory')}
+            hidePinButton
+            headerActionsExtra={
+              <YakitButton type="text2" aria-label={t('YakitButton.close')} icon={<XOutlined />} onClick={onClose} />
+            }
+          />
+        )
+      case 'task-list':
+        return <TaskListPane />
+      case 'timeline':
+        return <TimelineCard />
+      default:
+        return null
+    }
+  }
+
+  return (
+    <div
+      className={classNames(styles['pane-slot'], { [styles['pane-slot-small']]: small })}
+      onMouseEnter={small ? onMouseEnter : undefined}
+      onMouseLeave={small ? onMouseLeave : undefined}
+    >
+      <AIRightPanelPane
+        title={renderTitle()}
+        hideHeader={pane === 'session-history'}
+        noPadding={pane === 'session-history'}
+        onClose={onClose}
+      >
+        {renderContent()}
+      </AIRightPanelPane>
+    </div>
+  )
+})
+// #endregion
+
+// #region 首页模式：仅文件系统、流量、漏洞、会话历史四个入口，不订阅会话与任务相关数据
+type PanelState = ReturnType<typeof usePanelShared>
+
+type WelcomeRightPanelProps = Pick<AIRightPanelProps, 'layoutRef'> & { panel: PanelState }
+
+const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel, layoutRef }) => {
+  const [inViewport = true] = useInViewport(layoutRef)
+  const welcomeStats = useWelcomePanelStats(inViewport)
+  /**
+   * 菜单点击：会话历史打开右侧内容面板；
+   * 文件系统展开侧栏文件页，流量、漏洞切换工作区 tab。
+   */
+  const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
+    switch (key) {
+      case 'session-history':
+        panel.openPane(key)
+        break
+      case 'file-system':
+        // 文件树位于左侧边栏的文件页，展开侧边栏并切换到该页。
+        emiter.emit(
+          'switchAIAgentTab',
+          JSON.stringify({
+            type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+            params: { active: AIAgentTabListEnum.File, show: true },
+          }),
+        )
+        break
+      case 'traffic':
+        emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP }))
+        break
+      case 'risk':
+        emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk }))
+        break
+      default:
+        break
+    }
+  })
+
+  return (
+    <>
+      <div
+        className={classNames(styles['right-panel'], {
+          [styles['right-panel-small']]: panel.isSmall,
+          [styles['right-panel-hidden']]: !!panel.activePane && !panel.isSmall,
+        })}
+      >
+        <MenuList
+          menus={WELCOME_MENUS}
+          small={panel.isSmall}
+          {...welcomeStats}
+          onMenuClick={handleMenuClick}
+          onMenuMouseEnter={panel.handleMenuMouseEnter}
+          onMenuMouseLeave={panel.handleMenuMouseLeave}
+        />
+      </div>
+    </>
+  )
+})
+// #endregion
+
+// #region 会话模式：数据卡片 + 主菜单 + 底部「更多」分组 + 任务、导出日志等会话相关交互
+type ChatRightPanelProps = { panel: PanelState }
+
+const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
+  const { panel } = props
+  const store = useCurrentStore()
+  const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
+  const executionData = useCurrentTaskExecution(questionID)
+  const levelCount = executionData?.risk_level_count
+  // 快照 risk_level_count 为固定字段，直接映射展示等级；
+  // 首页全量统计侧的多别名归并见 useWelcomePanelStats.getRiskCounts，两处语义不同未合并，调整归并时需同步检查。
+  const riskCounts = useCreation<AIRightPanelRiskCounts | undefined>(() => {
+    if (!levelCount) return undefined
+    return {
+      serious: levelCount.critical,
+      high: levelCount.high,
+      medium: levelCount.warning,
+      low: levelCount.low,
+      info: levelCount.info + levelCount.other,
+    }
+  }, [levelCount])
+  const riskTotal = levelCount?.total ?? Object.values(riskCounts ?? {}).reduce((total, count) => total + count, 0)
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const [moreOpen, setMoreOpen] = useState(false)
+  // 菜单点击交互：打开工作区 tab / 导出与查看日志
+  const { activeChat } = useAIAgentStore()
+  const { getSetting } = useAIAgentDispatcher()
+  const { currentChatStatusQuestionID, syncCasualTaskTab } = useCasualTaskTab()
+  const { onOpenLogWindow } = useAiChatLog()
+  const [exportModalVisible, setExportModalVisible] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
+
+  useEffect(() => {
+    // 切换会话时保留会话历史浮层，其余面板关闭
+    panel.cancelPaneClose()
+    panel.setActivePane((pane) => (pane === 'session-history' ? pane : undefined))
+  }, [activeChat?.Id])
 
   const mainMenus = useCreation(() => {
     // 无 questionID 或非 ai-agent 来源时不展示「任务详情」入口
@@ -353,7 +593,7 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
 
   /**
    * 菜单点击：任务列表、时间线、会话历史打开右侧内容面板；
-   * 任务详情、流量、漏洞切换工作区 tab；文件系统打开侧栏会话页；
+   * 任务详情、流量、漏洞切换工作区 tab；文件系统打开侧栏文件页；
    * AI 设置打开设置页，导出日志打开导出弹窗，查看日志打开日志窗口。
    */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
@@ -361,18 +601,18 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
       case 'task-list':
       case 'timeline':
       case 'session-history':
-        openPane(key)
+        panel.openPane(key)
         break
       case 'task-board':
         syncCasualTaskTab()
         break
       case 'file-system':
-        // 文件树位于左侧边栏的会话页，展开侧边栏并切换到该页。
+        // 文件树位于左侧边栏的文件页，展开侧边栏并切换到该页。
         emiter.emit(
           'switchAIAgentTab',
           JSON.stringify({
             type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-            params: { active: AIAgentTabListEnum.Session, show: true },
+            params: { active: AIAgentTabListEnum.File, show: true },
           }),
         )
         break
@@ -406,139 +646,55 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
       return
     }
     setExportLoading(true)
-    try {
-      await grpcExportAILogs(
-        {
-          SessionID: activeChat.SessionID,
-          ExportDataTypes: data.types,
-          OutputPath: data.outputPath,
-        },
-        true,
-      )
-      yakitNotify('success', t('YakitNotification.exportSuccess'))
-      setExportModalVisible(false)
-    } catch (error) {
-      failed(t('YakitNotification.exportFailed', { error: error + '' }))
-    } finally {
-      setExportLoading(false)
-    }
+    await grpcExportAILogs(
+      {
+        SessionID: activeChat.SessionID,
+        ExportDataTypes: data.types,
+        OutputPath: data.outputPath,
+      },
+      true,
+    )
+      .then(() => {
+        yakitNotify('success', t('YakitNotification.exportSuccess'))
+        setExportModalVisible(false)
+      })
+      .catch((error) => {
+        failed(t('YakitNotification.exportFailed', { error: error + '' }))
+      })
+      .finally(() => {
+        setExportLoading(false)
+      })
   })
 
-  const renderSmallBadge = useMemoizedFn((key: AIRightPanelMenuKey) => {
-    if (!isSmall) return undefined
-
-    switch (key) {
-      case 'risk':
-        return riskTotal > 0 ? riskTotal : undefined
-      default:
-        return undefined
-    }
-  })
-
-  const renderMenuSuffix = useMemoizedFn((key: AIRightPanelMenuKey) => {
-    if (key === 'traffic' && executionData?.http_flow_count) {
-      return (
-        <YakitTag fullRadius color="white" border={false}>
-          {executionData?.http_flow_count}
-        </YakitTag>
-      )
-    }
-    if (key === 'risk' && riskCounts) {
-      const entries = RISK_TAG_ORDER.map((field) => ({ field, value: riskCounts[field] })).filter(
-        (entry) => !!entry.value,
-      )
-      if (!entries.length) return null
-      return (
-        <span className={styles['risk-tag']}>
-          {entries.map((entry, index) => (
-            <React.Fragment key={entry.field}>
-              {index > 0 && <span className={styles['risk-tag-separator']}>｜</span>}
-              <span className={classNames(styles['risk-tag-value'], styles[`risk-tag-value-${entry.field}`])}>
-                {entry.value}
-              </span>
-            </React.Fragment>
-          ))}
-        </span>
-      )
-    }
-    return null
-  })
-
-  const renderPaneTitle = useMemoizedFn(() => {
-    switch (activePane) {
-      case 'session-history':
-        return t('AIRightPanel.sessionHistory')
-      case 'task-list':
-        return t('AIRightPanel.taskList')
-      case 'timeline':
-        return t('AIRightPanel.timeline')
-      default:
-        return ''
-    }
-  })
-
-  const renderPaneContent = useMemoizedFn(() => {
-    switch (activePane) {
-      case 'session-history':
-        return (
-          <HistoryChat
-            aiSource={AI_AGENT_HISTORY_AI_SOURCES}
-            title={t('ChatSessionPane.sessionList')}
-            hidePinButton
-            headerActionsExtra={
-              <YakitButton type="text2" aria-label={t('YakitButton.close')} icon={<XOutlined />} onClick={closePane} />
-            }
-          />
-        )
-      case 'task-list':
-        return <TaskListPane />
-      case 'timeline':
-        return <TimelineCard />
-      default:
-        return null
-    }
-  })
-
-  const renderMoreToggle = useMemoizedFn(() => (
+  const renderMoreToggle = () => (
     <MenuItem
       icon={moreOpen ? <ChevronDoubleUpOutlined /> : <ChevronDoubleDownOutlined />}
       label={moreOpen ? t('AIRightPanel.collapse') : t('AIRightPanel.more')}
-      small={isSmall}
+      small={panel.isSmall}
       secondary
       onClick={() => setMoreOpen((prev) => !prev)}
     />
-  ))
+  )
 
   return (
-    <div className={styles['right-panel-wrapper']} data-ai-right-panel data-ai-right-panel-small={isSmall}>
+    <>
       <div
         className={classNames(styles['right-panel'], {
-          [styles['right-panel-small']]: isSmall,
-          [styles['right-panel-hidden']]: !!activePane && !isSmall,
+          [styles['right-panel-small']]: panel.isSmall,
+          [styles['right-panel-hidden']]: !!panel.activePane && !panel.isSmall,
         })}
       >
-        <div
-          className={classNames(styles['panel-top'], {
-            [styles['panel-top-small']]: isSmall,
-          })}
-        >
-          <div className={styles['menu-group']}>
-            {!isSmall && <DataCards executionData={executionData} />}
-            {mainMenus.map((item) => (
-              <MenuItem
-                key={item.key}
-                icon={item.icon}
-                label={t(item.labelKey)}
-                small={isSmall}
-                suffix={renderMenuSuffix(item.key)}
-                smallBadge={renderSmallBadge(item.key)}
-                onClick={() => handleMenuClick(item.key)}
-                onMouseEnter={() => handleMenuMouseEnter(item.key)}
-                onMouseLeave={() => handleMenuMouseLeave(item.key)}
-              />
-            ))}
-          </div>
-        </div>
+        <MenuList
+          menus={mainMenus}
+          small={panel.isSmall}
+          dataCards={!panel.isSmall ? <DataCards executionData={executionData} /> : undefined}
+          trafficTotal={executionData?.http_flow_count}
+          riskTotal={riskTotal}
+          riskCounts={riskCounts}
+          onMenuClick={handleMenuClick}
+          onMenuMouseEnter={panel.handleMenuMouseEnter}
+          onMenuMouseLeave={panel.handleMenuMouseLeave}
+        />
         <div className={styles['divider']} />
         <div className={styles['bottom-group']}>
           {moreOpen &&
@@ -547,37 +703,52 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
                 key={item.key}
                 icon={item.icon}
                 label={t(item.labelKey)}
-                small={isSmall}
+                small={panel.isSmall}
                 onClick={() => handleMenuClick(item.key)}
-                onMouseEnter={() => handleMenuMouseEnter(item.key)}
-                onMouseLeave={() => handleMenuMouseLeave(item.key)}
+                onMouseEnter={() => panel.handleMenuMouseEnter(item.key)}
+                onMouseLeave={() => panel.handleMenuMouseLeave(item.key)}
               />
             ))}
           {renderMoreToggle()}
         </div>
       </div>
-      {activePane && (
-        <div
-          className={classNames(styles['pane-slot'], { [styles['pane-slot-small']]: isSmall })}
-          onMouseEnter={isSmall ? cancelPaneClose : undefined}
-          onMouseLeave={isSmall ? schedulePaneClose : undefined}
-        >
-          <AIRightPanelPane
-            title={renderPaneTitle()}
-            hideHeader={activePane === 'session-history'}
-            noPadding={activePane === 'session-history'}
-            onClose={closePane}
-          >
-            {renderPaneContent()}
-          </AIRightPanelPane>
-        </div>
-      )}
       <ExportAILogsModal
         visible={exportModalVisible}
         onCancel={onExportCancel}
         onOk={onExportOk}
         loading={exportLoading}
       />
+    </>
+  )
+})
+// #endregion
+
+/**
+ * Memfit AI 右侧功能面板：
+ * - 首页模式（welcome）：仅文件系统、流量、漏洞、会话历史四个入口，不订阅会话与任务数据
+ * - 正常态（宽 301px）：数据卡片 + 主菜单 + 底部「更多」分组，更多分组可在 展开/收起 间切换
+ * - 小屏态（正常态面板会使列表可用宽度小于最大宽度时）：仅图标的窄栏（宽 41px）
+ */
+export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
+  const { welcome = false } = props
+  const panel = usePanelShared(props)
+  useEffect(() => {
+    if (!welcome) return
+    panel.cancelPaneClose()
+    panel.setActivePane((pane) => (pane === 'session-history' ? pane : undefined))
+  }, [welcome])
+  return (
+    <div className={styles['right-panel-wrapper']} data-ai-right-panel data-ai-right-panel-small={panel.isSmall}>
+      {welcome ? <WelcomeRightPanel panel={panel} layoutRef={props.layoutRef} /> : <ChatRightPanel panel={panel} />}
+      {panel.activePane && (
+        <PaneSlot
+          pane={panel.activePane}
+          small={panel.isSmall}
+          onClose={panel.closePane}
+          onMouseEnter={panel.cancelPaneClose}
+          onMouseLeave={panel.schedulePaneClose}
+        />
+      )}
     </div>
   )
 })

@@ -143,6 +143,8 @@ interface AIGlobalLoadingProps {
   loopAnimationMode?: LoopAnimationMode
   /** 固定模式下使用的 loop 动画下标。 */
   fixedLoopIndex?: number
+  /** 加载文案下方的操作区。 */
+  actions?: ReactNode
   /** 被加载层覆盖的业务内容。 */
   children?: ReactNode
 }
@@ -151,6 +153,7 @@ const AIGlobalLoading: FC<AIGlobalLoadingProps> = ({
   loading,
   loopAnimationMode = 'fixed',
   fixedLoopIndex = 0,
+  actions,
   children,
 }) => {
   const beginAnimationRef = useRef<HTMLDivElement | null>(null)
@@ -248,6 +251,7 @@ const AIGlobalLoading: FC<AIGlobalLoadingProps> = ({
             ) : (
               <p className={styles.typewriter} style={{ height: 10 }} />
             )}
+            {actions}
           </div>
         </div>
       )}

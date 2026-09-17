@@ -209,6 +209,7 @@
     "nextRun": "下次運行",
     "runNow": "立即運行",
     "runStarted": "已觸發運行",
+    "openRunSessionFailed": "任務已啟動，但開啟會話失敗，請在會話歷史中查看",
     "pausedSuccess": "已暫停",
     "pause": "暫停任務",
     "resume": "恢復任務",
@@ -504,6 +505,7 @@
     "noActiveChat": "當前沒有活躍的會話",
     "fileSystem": "檔案系統",
     "newChatTitle": "新會話",
+    "backToHome": "回到首頁",
     "newChat": "新建會話",
     "log": "日誌",
     "exportLog": "匯出日誌",
@@ -511,9 +513,6 @@
   },
   "AIReActChatContents": {
     "uiRendering": "UI渲染中..."
-  },
-  "ChatSessionPane": {
-    "sessionList": "會話"
   },
   "AIAgentChatLayout": {
     "dockDisabledTip": "螢幕過小，不支援該模組停靠在右邊"

@@ -1,5 +1,5 @@
 import type React from 'react'
-import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useCreation, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
 import { clone, cloneDeep } from 'lodash'
 
@@ -52,6 +52,7 @@ import { useStore } from 'zustand'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { sessionStatusStore, SessionDeleteStatus } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { HistoryAIReActChatContext } from './historyAIReActChat/context'
 
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
@@ -87,16 +88,6 @@ export interface HistoryAIReActChatContextValue {
   setShowFreeChat: React.Dispatch<React.SetStateAction<boolean>>
   historyAIReActChatBridge: HistoryAIReActChatBridge
   focusModeLoop: HistoryAIReActFocusModeLoop
-}
-
-const HistoryAIReActChatContext = createContext<HistoryAIReActChatContextValue | null>(null)
-
-export function useHistoryAIReActChat(): HistoryAIReActChatContextValue {
-  const ctx = useContext(HistoryAIReActChatContext)
-  if (!ctx) {
-    throw new Error('useHistoryAIReActChat 必须在 HistoryAIReActChatProvider 内使用')
-  }
-  return ctx
 }
 
 /**

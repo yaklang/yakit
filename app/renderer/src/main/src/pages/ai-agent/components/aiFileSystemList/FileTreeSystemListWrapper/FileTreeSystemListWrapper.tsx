@@ -1,8 +1,9 @@
 import { FileListTileMenu, type FileTreeSystemListWrapperProps, type HistoryItem, PathIncludeResult } from '../type'
 import { type FC, useEffect, useState } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import styles from './FileTreeSystemListWrapper.module.scss'
 import FileTreeSystemList from '../FileTreeSystemList/FileTreeSystemList'
 import { ChevronDownOutlined, DocumentAddOutlined, FolderAddOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -10,6 +11,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { checkPathIncludeRelation, mergePathArray, onOpenFileFolder } from '../utils'
 import { yakitNotify } from '@/utils/notification'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 interface OnFileNotifyParams {
   uniquePaths: HistoryItem[]
@@ -40,6 +42,7 @@ export const onFileNotify = async ({ uniquePaths, incoming, label, path }: OnFil
 }
 
 const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
+  variant,
   path,
   title,
   isOpen,
@@ -50,13 +53,24 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
   onTreeDragStart,
   onTreeDragEnd,
 }) => {
+  const { t } = useI18nNamespaces(['yakitUi'])
   // 展开
   const [expanded, setExpanded] = useState(true)
 
   // 去重path
   const [uniquePaths, setUniquePaths, getUniquePaths] = useGetSetState<HistoryItem[]>([])
+  const showFileCount = variant === 'sidebar' && !isOpen
+  const fileCount = useCreation(() => {
+    if (!showFileCount) return undefined
 
-  const renderContent = useMemoizedFn(() => {
+    let count = 0
+    for (const item of uniquePaths) {
+      if (item.isFolder === false) count += 1
+    }
+    return count
+  }, [showFileCount, uniquePaths])
+
+  const renderContent = () => {
     if (isOpen && uniquePaths.length === 0) {
       return (
         <div>
@@ -85,7 +99,7 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
         onTreeDragEnd={onTreeDragEnd}
       />
     ))
-  })
+  }
 
   useEffect(() => {
     if (!path || path.length === 0) return setUniquePaths([])
@@ -125,14 +139,24 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
   })
 
   return (
-    <div className={classNames(styles['file-tree-system'], { [styles['file-tree-system-fill']]: fillHeight })}>
+    <div
+      className={classNames(styles['file-tree-system'], {
+        [styles['file-tree-system-fill']]: fillHeight,
+        [styles['file-tree-system-sidebar']]: variant === 'sidebar',
+      })}
+    >
       <div className={styles['file-tree-system-title']}>
         <div className={styles['file-tree-system-title-toggle']} onClick={() => setExpanded((p) => !p)}>
           <ChevronDownOutlined
             style={{ transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}
             color="currentColor"
           />
-          <span>{title}</span>
+          <span className={styles['file-tree-system-title-text']}>{title}</span>
+          {showFileCount && (
+            <YakitTag size="small" fullRadius border={false} className={styles['file-tree-system-count']}>
+              {fileCount}
+            </YakitTag>
+          )}
         </div>
 
         {showTitleActions && (
@@ -140,14 +164,16 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
             <YakitButton
               hidden={!isOpen}
               type="text2"
-              title="打开文件"
+              title={t('YakitButton.openFile')}
+              aria-label={t('YakitButton.openFile')}
               onClick={() => menuSelect(FileListTileMenu.OpenFile)}
               icon={<DocumentAddOutlined color="currentColor" />}
             />
             <YakitButton
               hidden={!isOpen}
               type="text2"
-              title="打开文件夹"
+              title={t('YakitButton.openFolder')}
+              aria-label={t('YakitButton.openFolder')}
               onClick={() => menuSelect(FileListTileMenu.OpenFolder)}
               icon={<FolderAddOutlined color="currentColor" />}
             />

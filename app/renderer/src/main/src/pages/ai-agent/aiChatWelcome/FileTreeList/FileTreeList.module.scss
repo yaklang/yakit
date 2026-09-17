@@ -4,7 +4,7 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  border-top: 1px solid var(--Colors-Use-Neutral-Border);
+  background-color: var(--Colors-Use-Basic-Background);
 }
 
 .header {
@@ -12,22 +12,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 32px;
-  padding: 0 12px;
-}
-
-.header-title {
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 16px;
-  letter-spacing: 0.5px;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  padding: 12px 12px 0;
   svg {
     width: 16px;
     height: 16px;
@@ -35,10 +20,12 @@
   }
 }
 
-.divider {
-  flex-shrink: 0;
-  height: 1px;
-  background: var(--Colors-Use-Neutral-Border);
+.header-title {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.5px;
 }
 
 .body {
@@ -47,20 +34,26 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: 4px 8px 8px;
 }
 
-.top-panel {
-  flex: 0 0 auto;
-  max-height: 50%;
-  min-height: 0;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
+.file-split {
+  background-color: var(--Colors-Use-Basic-Background);
 }
 
-.bottom-panel {
-  flex: 1 1 auto;
+.file-sash {
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 1px 0 auto;
+    height: 1px;
+    background-color: var(--Colors-Use-Neutral-Border);
+    pointer-events: none;
+  }
+}
+
+.opened-files {
+  border: 0;
+  border-radius: 0;
   min-height: 0;
   overflow: hidden;
   display: flex;

@@ -4,7 +4,14 @@ import { createStore } from 'zustand/vanilla'
 import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabs, AITabsEnum } from '../../../defaultConstant'
-import { AIChatWorkspace } from '../AIChatWorkspace'
+import type * as AIChatWorkspaceModule from '../AIChatWorkspace'
+import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
+import type { PluginExecuteWebsiteTreeProps } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
+
+const { AIChatWorkspace } = await compileReactModule<typeof AIChatWorkspaceModule>(
+  import.meta.url,
+  '../AIChatWorkspace.tsx',
+)
 
 const store = createStore(() => ({
   currentChatStatus: { questionID: 'task-1' },
@@ -16,13 +23,22 @@ const store = createStore(() => ({
 }))
 const initialState = store.getState()
 const rawData = { httpRunTimeIDs: [] as string[], riskRunTimeIDs: [] as string[] }
-const activeChat = { SessionID: 'session-1', Title: '当前任务', RelatedRuntimeIDs: [] as string[] }
+const agentStore = createStore<{
+  activeChat?: { SessionID: string; Title: string; RelatedRuntimeIDs: string[] }
+}>(() => ({}))
 
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => store,
   useCurrentRawData: () => rawData,
 }))
-vi.mock('@/pages/ai-agent/useContext/useStore', () => ({ default: () => ({ activeChat }) }))
+vi.mock('@/pages/ai-agent/useContext/useStore', async () => {
+  const { useStore } = await import('zustand')
+  return {
+    default: function useMockAIAgentStore() {
+      return useStore(agentStore)
+    },
+  }
+})
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
   default: () => ({ getSetting: () => ({ Source: 'ai' }) }),
 }))
@@ -38,7 +54,11 @@ vi.mock('@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDet
   AITaskExecutionDetails: ({ taskId }: { taskId: string }) => <div data-testid="task-detail">{taskId}</div>,
 }))
 vi.mock('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult', () => ({
-  PluginExecuteHttpFlow: ({ runtimeId }: { runtimeId: string }) => <div data-testid="http-flows">{runtimeId}</div>,
+  PluginExecuteHttpFlow: ({ runtimeId, pageType }: PluginExecuteWebsiteTreeProps) => (
+    <div data-testid="http-flows" data-page-type={pageType}>
+      {runtimeId}
+    </div>
+  ),
   VulnerabilitiesRisksTable: ({ runTimeIDs }: { runTimeIDs: string[] }) => (
     <div data-testid="risks">{runTimeIDs.join(',')}</div>
   ),
@@ -52,16 +72,151 @@ vi.mock('@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal', () =>
   ExportAILogsModal: () => null,
 }))
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcExportAILogs: vi.fn() }))
+vi.mock('@/pages/risks/YakitRiskTable/utils', () => ({ apiRiskFieldGroup: vi.fn() }))
 vi.mock('@/hook/useAiChatLog/useAiChatLog.ts', () => ({ default: () => ({ onOpenLogWindow: vi.fn() }) }))
 vi.mock('@/components/yakitUI/YakitEmpty/YakitEmpty', () => ({ YakitEmpty: () => <div>暂无数据</div> }))
 
 beforeEach(() => {
+  agentStore.setState({ activeChat: { SessionID: 'session-1', Title: '当前任务', RelatedRuntimeIDs: [] } })
   store.setState(initialState, true)
   rawData.httpRunTimeIDs = []
   rawData.riskRunTimeIDs = []
 })
 
 describe('AIChatWorkspace 菜单切换', () => {
+  it.each([{ runtimeIds: [] }, { runtimeIds: ['stale-runtime'] }])(
+    '欢迎页流量使用 History 模式和空 runtimeId（$runtimeIds）',
+    ({ runtimeIds }) => {
+      agentStore.setState({ activeChat: undefined })
+      rawData.httpRunTimeIDs = runtimeIds
+      render(<AIChatWorkspace welcome setFilePreviewData={vi.fn()} />)
+      act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+      expect(screen.getByTestId('http-flows')).toHaveAttribute('data-page-type', 'History')
+      expect(screen.getByTestId('http-flows')).toBeEmptyDOMElement()
+      expect(screen.queryByText('暂无数据')).not.toBeInTheDocument()
+    },
+  )
+
+  it('未激活会话时，只有欢迎页允许展示全部流量', () => {
+    agentStore.setState({ activeChat: undefined })
+    const setFilePreviewData = vi.fn()
+    const { rerender } = render(<AIChatWorkspace setFilePreviewData={setFilePreviewData} />)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+    expect(screen.queryByTestId('http-flows')).not.toBeInTheDocument()
+    expect(screen.getByText('暂无数据')).toBeInTheDocument()
+    rerender(<AIChatWorkspace welcome setFilePreviewData={setFilePreviewData} />)
+    expect(screen.getByTestId('http-flows')).toHaveAttribute('data-page-type', 'History')
+    rerender(<AIChatWorkspace welcome={false} setFilePreviewData={setFilePreviewData} />)
+    expect(screen.queryByTestId('http-flows')).not.toBeInTheDocument()
+  })
+
+  it.each([true, false])('从欢迎页选择会话后流量按会话展示，有 runtimeId：%s', (hasRuntimeIds) => {
+    agentStore.setState({ activeChat: undefined })
+    const setFilePreviewData = vi.fn()
+    const { rerender } = render(<AIChatWorkspace welcome setFilePreviewData={setFilePreviewData} />)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+    expect(screen.getByTestId('http-flows')).toBeEmptyDOMElement()
+    act(() => {
+      rawData.httpRunTimeIDs = hasRuntimeIds ? ['http-runtime', 'shared-runtime'] : []
+      agentStore.setState({
+        activeChat: {
+          SessionID: 'session-2',
+          Title: '新会话',
+          RelatedRuntimeIDs: hasRuntimeIds ? ['shared-runtime', 'related-runtime'] : [],
+        },
+      })
+    })
+    expect(screen.queryByTestId('http-flows')).not.toBeInTheDocument()
+    // 会话已选中但欢迎页标识尚未更新时，也不能回退到全量查询。
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+    if (hasRuntimeIds) {
+      expect(screen.getByTestId('http-flows')).toHaveTextContent(/^http-runtime,shared-runtime,related-runtime$/)
+      expect(screen.getByTestId('http-flows')).toHaveAttribute('data-page-type', 'Plugin')
+    } else {
+      expect(screen.queryByTestId('http-flows')).not.toBeInTheDocument()
+      expect(screen.getByText('暂无数据')).toBeInTheDocument()
+    }
+    rerender(<AIChatWorkspace welcome={false} setFilePreviewData={setFilePreviewData} />)
+    if (hasRuntimeIds) {
+      expect(screen.getByTestId('http-flows')).toHaveTextContent(/^http-runtime,shared-runtime,related-runtime$/)
+    } else {
+      expect(screen.queryByTestId('http-flows')).not.toBeInTheDocument()
+    }
+  })
+
+  it.each([{ runtimeIds: [] }, { runtimeIds: ['stale-runtime'] }])(
+    '欢迎页未激活会话时查询全部漏洞（$runtimeIds）',
+    ({ runtimeIds }) => {
+      agentStore.setState({ activeChat: undefined })
+      rawData.riskRunTimeIDs = runtimeIds
+      render(<AIChatWorkspace welcome setFilePreviewData={vi.fn()} />)
+      act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk })))
+      expect(screen.getByTestId('risks')).toBeEmptyDOMElement()
+      expect(screen.queryByText('暂无数据')).not.toBeInTheDocument()
+    },
+  )
+
+  it('没有会话时仍按页面模式区分全量视图和空状态，模式切换立即更新内容', () => {
+    agentStore.setState({ activeChat: undefined })
+    const setFilePreviewData = vi.fn()
+    const { rerender } = render(<AIChatWorkspace setFilePreviewData={setFilePreviewData} />)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk })))
+    expect(screen.getByText('暂无数据')).toBeInTheDocument()
+    expect(screen.queryByTestId('risks')).not.toBeInTheDocument()
+
+    rerender(<AIChatWorkspace welcome setFilePreviewData={setFilePreviewData} />)
+    expect(screen.getByTestId('risks')).toBeEmptyDOMElement()
+
+    rerender(<AIChatWorkspace welcome={false} setFilePreviewData={setFilePreviewData} />)
+    expect(screen.getByText('暂无数据')).toBeInTheDocument()
+    expect(screen.queryByTestId('risks')).not.toBeInTheDocument()
+  })
+
+  it.each([true, false])('已激活会话时即使 welcome=true 也按会话 ID 查询，有数据：%s', (hasRuntimeIds) => {
+    if (hasRuntimeIds) {
+      rawData.riskRunTimeIDs = ['risk-runtime', 'shared-runtime']
+      agentStore.setState({
+        activeChat: {
+          SessionID: 'session-1',
+          Title: '当前任务',
+          RelatedRuntimeIDs: ['shared-runtime', 'related-runtime'],
+        },
+      })
+    }
+    render(<AIChatWorkspace welcome setFilePreviewData={vi.fn()} />)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk })))
+    if (hasRuntimeIds) {
+      expect(screen.getByTestId('risks')).toHaveTextContent(/^risk-runtime,shared-runtime,related-runtime$/)
+    } else {
+      expect(screen.queryByTestId('risks')).not.toBeInTheDocument()
+      expect(screen.getByText('暂无数据')).toBeInTheDocument()
+    }
+  })
+
+  it.each([true, false])('欢迎页选中会话后清空旧页签，再次打开按会话展示，有数据：%s', (hasRuntimeIds) => {
+    agentStore.setState({ activeChat: undefined })
+    const setFilePreviewData = vi.fn()
+    const { rerender } = render(<AIChatWorkspace welcome setFilePreviewData={setFilePreviewData} />)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk })))
+    expect(screen.getByTestId('risks')).toBeEmptyDOMElement()
+
+    act(() => {
+      rawData.riskRunTimeIDs = hasRuntimeIds ? ['session-runtime'] : []
+      agentStore.setState({ activeChat: { SessionID: 'session-2', Title: '新会话', RelatedRuntimeIDs: [] } })
+    })
+    rerender(<AIChatWorkspace welcome={false} setFilePreviewData={setFilePreviewData} />)
+    expect(screen.queryByText(AITabs.risk.label)).not.toBeInTheDocument()
+    expect(screen.queryByTestId('risks')).not.toBeInTheDocument()
+
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk })))
+    if (hasRuntimeIds) {
+      expect(screen.getByTestId('risks')).toHaveTextContent(/^session-runtime$/)
+    } else {
+      expect(screen.queryByTestId('risks')).not.toBeInTheDocument()
+      expect(screen.getByText('暂无数据')).toBeInTheDocument()
+    }
+  })
+
   it.each([true, false])('small=%s：先打开任务详情，无数据时仍可点击流量、漏洞打开 tab', (small) => {
     const onTabsChange = vi.fn()
     render(

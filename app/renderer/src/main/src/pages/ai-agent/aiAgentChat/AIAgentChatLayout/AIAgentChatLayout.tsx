@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from 'react'
+import React, { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { FlagOutlined, ViewListOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -23,6 +23,7 @@ import { YakitAIAgentPageID } from '../../defaultConstant'
 import { useMultiFuncPaneStore } from '../useMultiFuncPaneStore'
 import type { AIAgentChatMode, HandleStartParams } from '../type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
 import styles from './AIAgentChatLayout.module.scss'
 
 const AIChatWelcome = React.lazy(() => import('../../aiChatWelcome/AIChatWelcome'))
@@ -74,6 +75,52 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
   const [filePreviewData, setFilePreviewData] = useState<FileNodeProps>()
   const [workspaceVisible, setWorkspaceVisible] = useState(false)
   const [dockDisabled, setDockDisabled] = useState(false)
+  const welcome = mode === 'welcome'
+  const [showFreeChat, setShowFreeChat] = useState(true)
+  const chatContentRef = useRef<HTMLDivElement>(null)
+  const panelLayoutRef = useRef<HTMLDivElement>(null)
+  const [chatLayoutElement, setChatLayoutElement] = useState<HTMLDivElement | null>(null)
+  const [panelFrame, setPanelFrame] = useState<React.CSSProperties>()
+  const panelVisible = welcome || showFreeChat
+
+  useEffect(() => {
+    if (welcome) setShowFreeChat(true)
+  }, [welcome])
+
+  useLayoutEffect(() => {
+    const container = chatContentRef.current
+    const target = welcome ? container : chatLayoutElement
+    if (!container || !target) return
+
+    // 只定位浮层，保留聊天滚动容器的宽度、间距与顶部卡片布局。
+    const updateFrame = () => {
+      const containerRect = container.getBoundingClientRect()
+      const targetRect = target.getBoundingClientRect()
+      // 切页隐藏时保留有效尺寸，恢复可见后再同步浮层位置。
+      if (containerRect.width <= 0 || targetRect.width <= 0) return
+      const next = {
+        left: targetRect.left - containerRect.left,
+        top: targetRect.top - containerRect.top,
+        width: targetRect.width,
+        height: targetRect.height,
+      }
+      setPanelFrame((previous) =>
+        previous?.left === next.left &&
+        previous.top === next.top &&
+        previous.width === next.width &&
+        previous.height === next.height
+          ? previous
+          : next,
+      )
+    }
+
+    updateFrame()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(updateFrame)
+    observer.observe(container)
+    if (target !== container) observer.observe(target)
+    return () => observer.disconnect()
+  }, [welcome, chatLayoutElement])
 
   useEffect(() => {
     if (!hasTaskTree && multiFuncTab === 'task-list') {
@@ -113,11 +160,13 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
           secondRatio={workspaceVisible ? '30%' : '100%'}
           secondMinSize={MIN_CHAT_CONTENT_WIDTH}
           firstNodeStyle={workspaceVisible ? undefined : { display: 'none', padding: 0 }}
-          secondNodeStyle={workspaceVisible ? undefined : { padding: 0 }}
+          secondNodeStyle={{ padding: 0 }}
           lineStyle={workspaceVisible ? undefined : { display: 'none' }}
+          lineDirection="right"
           firstNode={
             <div className={styles['chat-workspace']}>
               <AIChatWorkspace
+                welcome={mode === 'welcome'}
                 filePreviewData={filePreviewData}
                 setFilePreviewData={setFilePreviewData}
                 onTabsChange={onTabsChange}
@@ -125,14 +174,28 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
             </div>
           }
           secondNode={
-            <div className={styles['chat-content']}>
+            <div ref={chatContentRef} className={styles['chat-content']} data-ai-shared-right-panel={panelVisible}>
               {mode === 'welcome' ? (
                 <React.Suspense fallback={<div>loading...</div>}>
                   <AIChatWelcome onTriageSubmit={onTriageSubmit} onSetReAct={onSetReAct} ref={aiChatWelcomeRef} />
                 </React.Suspense>
               ) : (
-                <AIChatContent ref={aiReActChatRef} onChat={onChat} />
+                <AIChatContent
+                  ref={aiReActChatRef}
+                  onChat={onChat}
+                  showFreeChat={showFreeChat}
+                  setShowFreeChat={setShowFreeChat}
+                  rightPanelLayoutRef={setChatLayoutElement}
+                />
               )}
+              <div
+                ref={panelLayoutRef}
+                className={styles['right-panel-frame']}
+                style={panelFrame}
+                hidden={!panelVisible}
+              >
+                <AIRightPanel welcome={welcome} layoutRef={panelLayoutRef} />
+              </div>
             </div>
           }
         />

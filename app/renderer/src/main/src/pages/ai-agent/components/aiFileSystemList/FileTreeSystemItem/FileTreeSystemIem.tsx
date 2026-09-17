@@ -1,4 +1,5 @@
-import { FolderDefault, FolderDefaultExpanded, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
+import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
+import { FolderOpenOutlined, FolderOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { type FC, useEffect, useMemo, useRef, useState } from 'react'
 import styles from './FileTreeSystemItem.module.scss'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
@@ -71,29 +72,26 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
 }) => {
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const inputRef = useRef<InputRef>(null)
+  const editingRequested = !!(data.isCreate || data.isRename)
+  const [editTarget, setEditTarget] = useState({ isCreate: data.isCreate, isRename: data.isRename, name: data.name })
   // 是否可输入
-  const [isInput, setIsInput] = useState<boolean>(false)
-  const [inputVal, setInputVal] = useState<string>('')
-  useEffect(() => {
-    if (data.isCreate || data.isRename) {
+  const [isInput, setIsInput] = useState(editingRequested)
+  const [inputVal, setInputVal] = useState(editingRequested ? data.name : '')
+  // 编辑目标变化时同步输入状态，避免在 Effect 中补一次渲染。
+  if (editTarget.isCreate !== data.isCreate || editTarget.isRename !== data.isRename || editTarget.name !== data.name) {
+    setEditTarget({ isCreate: data.isCreate, isRename: data.isRename, name: data.name })
+    if (editingRequested) {
       setIsInput(true)
       setInputVal(data.name)
-      if (data.name) {
-        setTimeout(() => {
-          inputRef.current?.setSelectionRange(0, data.name.lastIndexOf('.'))
-        }, 100)
-      }
     }
-  }, [data.isCreate, data.isRename, data.name])
-
-  // input 失去焦点或回车
-  const onInputOk = useMemoizedFn(() => {
-    if (data.isCreate) {
-      onCreateFun()
-    } else if (data.isRename) {
-      onRenameFun()
-    }
-  })
+  }
+  useEffect(() => {
+    if (!editingRequested || !data.name) return
+    const timer = setTimeout(() => {
+      inputRef.current?.setSelectionRange(0, data.name.lastIndexOf('.'))
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [editingRequested, data.isCreate, data.isRename, data.name])
 
   // 创建文件夹或文件
   const onCreateFun = useMemoizedFn(async () => {
@@ -123,106 +121,117 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
 
     let flag = false
     let currentPath = ''
-    try {
-      currentPath = await getPathJoin(data.parent, fileName)
-      if (currentPath.length === 0) {
-        throw new Error(t('FileTreeSystemItem.joinPathFailed'))
-      }
-      // 区分新建文件夹 新建文件接口
-      const result = data.isFolder
-        ? await grpcFetchCreateFolder(currentPath, data.parent)
-        : await grpcFetchCreateFile(currentPath, null, data.parent)
-      if (result.length === 0) {
-        throw new Error(t('YakitNotification.createFailedNoError'))
-      }
-      flag = true
-    } catch (error) {
-      yakitNotify('error', error + '')
-    } finally {
-      if (flag && currentPath.length) {
-        // 新增节点数据
-        const event: FileMonitorProps = {
-          Id: watchToken,
-          CreateEvents: [
-            {
-              Path: currentPath,
-              Op: 'create',
-              IsDir: data.isFolder,
-            },
-          ],
-          DeleteEvents: [],
-          ChangeEvents: [],
+    await getPathJoin(data.parent, fileName)
+      .then(async (path) => {
+        currentPath = path
+        if (currentPath.length === 0) {
+          throw new Error(t('FileTreeSystemItem.joinPathFailed'))
         }
-        emiter.emit('onRefreshYakRunnerFileTree', JSON.stringify(event))
-        yakitNotify('success', t('YakitNotification.createSuccess'))
-      }
-      setTimeout(() => {
-        setInputVal('')
-      }, 300)
-    }
+        // 区分新建文件夹 新建文件接口
+        const result = data.isFolder
+          ? await grpcFetchCreateFolder(currentPath, data.parent)
+          : await grpcFetchCreateFile(currentPath, null, data.parent)
+        if (result.length === 0) {
+          throw new Error(t('YakitNotification.createFailedNoError'))
+        }
+        flag = true
+      })
+      .catch((error) => {
+        yakitNotify('error', error + '')
+      })
+      .finally(() => {
+        if (flag && currentPath.length) {
+          // 新增节点数据
+          const event: FileMonitorProps = {
+            Id: watchToken,
+            CreateEvents: [
+              {
+                Path: currentPath,
+                Op: 'create',
+                IsDir: data.isFolder,
+              },
+            ],
+            DeleteEvents: [],
+            ChangeEvents: [],
+          }
+          emiter.emit('onRefreshYakRunnerFileTree', JSON.stringify(event))
+          yakitNotify('success', t('YakitNotification.createSuccess'))
+        }
+        setTimeout(() => {
+          setInputVal('')
+        }, 300)
+      })
   })
 
   // 重命名
   const onRenameFun = useMemoizedFn(async () => {
     if (!inputVal.length) return
     const oldPath = data.path
-    try {
-      if (inputVal === data.name) {
-        throw new Error(t('FileTreeSystemItem.renameSame'))
-      }
-      const parentPath = await getPathParent(oldPath)
-      const newPath = await getPathJoin(parentPath, inputVal)
-      if (!newPath) throw new Error(t('FileTreeSystemItem.renameJoinPathFailed'))
-      // 调接口更新文件/文件夹名字
-      const result = await grpcFetchRenameFileTree(oldPath, inputVal, parentPath)
-      if (!result.length) throw new Error(t('YakitNotification.renameFailedNoError'))
-      // 更新文件树节点数据
-      const event: FileMonitorProps = {
-        Id: watchToken,
-        CreateEvents: [],
-        DeleteEvents: [],
-        ChangeEvents: [{ Op: 'rename', Path: oldPath, NewPath: newPath, IsDir: data.isFolder }],
-      }
-      emiter.emit('onRefreshYakRunnerFileTree', JSON.stringify(event))
-      if (selected?.path) {
-        const updatedPath = replacePathPrefix(selected.path, oldPath, newPath)
-        if (updatedPath !== selected.path) {
-          const name = selected.path === oldPath ? inputVal : selected.name
-          const newSelected = { ...selected, path: updatedPath, name: name }
-          setSelected(newSelected)
+    await Promise.resolve()
+      .then(async () => {
+        if (inputVal === data.name) {
+          throw new Error(t('FileTreeSystemItem.renameSame'))
         }
-      }
-      yakitNotify('success', t('YakitNotification.renameSuccess'))
-    } catch (error) {
-      // 回滚旧文件树节点
-      const event: FileMonitorProps = {
-        Id: watchToken,
-        CreateEvents: [],
-        DeleteEvents: [],
-        ChangeEvents: [
-          {
-            Op: 'renameRollback',
-            Path: oldPath,
-            IsDir: data.isFolder,
-          },
-        ],
-      }
-      emiter.emit('onRefreshYakRunnerFileTree', JSON.stringify(event))
-      yakitNotify('error', error + '')
-    } finally {
-      setTimeout(() => {
-        setIsInput(false)
-        setInputVal('')
-      }, 300)
+        const parentPath = await getPathParent(oldPath)
+        const newPath = await getPathJoin(parentPath, inputVal)
+        if (!newPath) throw new Error(t('FileTreeSystemItem.renameJoinPathFailed'))
+        // 调接口更新文件/文件夹名字
+        const result = await grpcFetchRenameFileTree(oldPath, inputVal, parentPath)
+        if (!result.length) throw new Error(t('YakitNotification.renameFailedNoError'))
+        // 更新文件树节点数据
+        const event: FileMonitorProps = {
+          Id: watchToken,
+          CreateEvents: [],
+          DeleteEvents: [],
+          ChangeEvents: [{ Op: 'rename', Path: oldPath, NewPath: newPath, IsDir: data.isFolder }],
+        }
+        emiter.emit('onRefreshYakRunnerFileTree', JSON.stringify(event))
+        if (selected?.path) {
+          const updatedPath = replacePathPrefix(selected.path, oldPath, newPath)
+          if (updatedPath !== selected.path) {
+            const name = selected.path === oldPath ? inputVal : selected.name
+            const newSelected = { ...selected, path: updatedPath, name: name }
+            setSelected(newSelected)
+          }
+        }
+        yakitNotify('success', t('YakitNotification.renameSuccess'))
+      })
+      .catch((error) => {
+        // 回滚旧文件树节点
+        const event: FileMonitorProps = {
+          Id: watchToken,
+          CreateEvents: [],
+          DeleteEvents: [],
+          ChangeEvents: [
+            {
+              Op: 'renameRollback',
+              Path: oldPath,
+              IsDir: data.isFolder,
+            },
+          ],
+        }
+        emiter.emit('onRefreshYakRunnerFileTree', JSON.stringify(event))
+        yakitNotify('error', error + '')
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setIsInput(false)
+          setInputVal('')
+        }, 300)
+      })
+  })
+
+  // input 失去焦点或回车
+  const onInputOk = useMemoizedFn(() => {
+    if (data.isCreate) {
+      onCreateFun()
+    } else if (data.isRename) {
+      onRenameFun()
     }
   })
 
   // 文件图标
-  const iconImage = useMemo(() => {
-    if (!data.isFolder) return KeyToIcon[data.icon].iconPath
-    if (expanded) return KeyToIcon[FolderDefaultExpanded].iconPath
-    return KeyToIcon[FolderDefault].iconPath
-  }, [data.icon, data.isFolder, expanded])
+  const FolderIcon = expanded ? FolderOpenOutlined : FolderOutlined
 
   // 菜单数据
   const menuData = useMemo(() => {
@@ -258,7 +267,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
     ]
 
     return menu.filter((item) => !item.isHide) as YakitMenuItemType[]
-  }, [data.depth, isOpen, i18nRefresh])
+  }, [data.depth, isOpen, i18nRefresh, t])
 
   // 菜单点击事件
   const handleDropdown = (key: string) => {
@@ -331,7 +340,11 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
             }}
           />
         )}
-        <img src={iconImage} alt="" />
+        {data.isFolder ? (
+          <FolderIcon className={styles['folder-icon']} color="currentColor" />
+        ) : (
+          <img src={KeyToIcon[data.icon].iconPath} alt="" />
+        )}
         {isInput ? (
           <div className={styles['file-tree-input-wrapper']}>
             <YakitInput

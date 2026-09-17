@@ -138,7 +138,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
         }),
       )
     })
-    const getTitleNode = useMemoizedFn(() => {
+    const getTitleNode = () => {
       return (
         <div className={styles['node-title']}>
           <p>{data.name}</p>
@@ -173,8 +173,8 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
           </div>
         </div>
       )
-    })
-    const getContent = useMemoizedFn(() => {
+    }
+    const getContent = () => {
       return (
         <div className={styles['node-content']}>
           <div className={styles['node-content-text']}>{data.goal}</div>
@@ -191,11 +191,11 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
           </div>
         </div>
       )
-    })
+    }
 
     const handleMouseEnter = useMemoizedFn(() => onNodeHover?.(data.task_id))
 
-    const node = useMemoizedFn(() => {
+    const node = () => {
       const style = isParentLast && !data.progress ? { marginBottom: '16px' } : {}
       const getWrapper = (extraClass?: string) => (
         <div className={classNames(styles['node-wrapper'], extraClass)} style={style} onClick={onClick}>
@@ -218,7 +218,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
             getWrapper(styles['node-wrapper-default']),
           ]
       }
-    })
+    }
 
     const [Icon, Card] = node()
 

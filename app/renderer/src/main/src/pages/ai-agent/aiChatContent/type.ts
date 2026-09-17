@@ -5,6 +5,9 @@ export interface AIChatContentRefProps extends AIReActChatRefProps {}
 export interface AIChatContentProps {
   ref?: React.ForwardedRef<AIChatContentRefProps>
   onChat: () => void
+  showFreeChat?: boolean
+  setShowFreeChat?: (visible: boolean) => void
+  rightPanelLayoutRef?: React.RefCallback<HTMLDivElement>
 }
 export interface AIAgentTabPayload {
   key: AITabsEnum

@@ -48,6 +48,8 @@ export interface AIReActChatProps {
   chatContainerHeaderClassName?: string
   /** 是否渲染右侧功能面板（AIRightPanel）：仅 ai-agent 主页面开启，侧边栏等复用方不展示 */
   showAIRightPanel?: boolean
+  /** 公共右侧面板使用的聊天区域定位基准 */
+  rightPanelLayoutRef?: React.RefCallback<HTMLDivElement>
   showFreeChat: boolean
   setShowFreeChat: (show: boolean) => void
   title?: React.ReactNode

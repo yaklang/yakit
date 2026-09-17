@@ -32,7 +32,7 @@
       gap: 4px;
       min-width: 0;
       cursor: pointer;
-      span {
+      .file-tree-system-title-text {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 600;
@@ -71,5 +71,26 @@
 .dropdown-menu {
   > div:first-of-type {
     width: 100%;
+  }
+}
+
+.file-tree-system-sidebar {
+  .file-tree-system-title {
+    flex-shrink: 0;
+    padding: 0 12px;
+  }
+  .file-tree-system-title-icon {
+    display: flex;
+    flex-shrink: 0;
+  }
+  .file-tree-system-title-toggle .file-tree-system-count {
+    flex-shrink: 0;
+    margin-inline-end: 0;
+  }
+  .file-tree-system-body {
+    padding: 4px 8px;
+    :global(.ant-tree-treenode) {
+      padding-left: 12px;
+    }
   }
 }

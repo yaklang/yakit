@@ -34,7 +34,7 @@
   background: var(--Colors-Use-Neutral-Bg);
   @include themeify.color-mix-border(1px, solid, var(--Colors-Use-Neutral-Disable), 50%);
   border-radius: 12px;
-  box-shadow: 0 4px 4px 0 var(--Colors-Use-Basic-Shadow);
+  box-shadow: 0 4px 8px 0 var(--Colors-Use-Basic-Shadow);
   box-sizing: border-box;
   pointer-events: auto;
 }

@@ -33,7 +33,29 @@
 }
 
 .chat-content {
+  position: relative;
   width: 100%;
   min-width: 0;
   height: 100%;
+  // 面板预留宽度（含间距），供欢迎页和自由对话继承。
+  --ai-right-panel-slot-width: 0px;
+
+  &[data-ai-shared-right-panel='true'] {
+    // 正常模式：301px 面板 + 24px 间距。
+    --ai-right-panel-slot-width: 325px;
+  }
+
+  &[data-ai-shared-right-panel='true']:has(> .right-panel-frame [data-ai-right-panel-small='true']) {
+    // 小屏模式：41px 面板 + 20px 间距。
+    --ai-right-panel-slot-width: 61px;
+  }
+}
+
+.right-panel-frame {
+  position: absolute;
+  pointer-events: none;
+
+  &[hidden] {
+    display: none;
+  }
 }

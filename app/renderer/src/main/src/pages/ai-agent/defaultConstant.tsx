@@ -39,7 +39,6 @@ import {
 } from '@yakit-libs/yakit-ui-icons/solid'
 import type { MCPServerType } from './type/aiMCP'
 import { ColorsAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsAIIcon'
-import { ColorsChatIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsChatIcon'
 import type { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
 import type { ExportAIForgeRequest } from './forgeName/type'
 
@@ -47,16 +46,11 @@ import type { ExportAIForgeRequest } from './forgeName/type'
 export const YakitAIAgentPageID = 'yakit-ai-agent'
 
 export enum AIAgentTabListEnum {
-  Session = 'session',
+  File = 'file',
   MCP = 'mcp',
   Scheduled = 'scheduled',
 }
 export const AiAgentTabList: YakitTabsProps[] = [
-  {
-    value: AIAgentTabListEnum.Session,
-    label: 'AIAgentTabs.session',
-    icon: <ColorsChatIcon className="ai-agent-session-tab-icon" />,
-  },
   {
     value: AIAgentTabListEnum.Scheduled,
     label: 'AIAgentTabs.scheduled',

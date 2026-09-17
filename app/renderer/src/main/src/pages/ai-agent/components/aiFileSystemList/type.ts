@@ -4,6 +4,8 @@ import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import type { Dispatch, SetStateAction } from 'react'
 
 export interface FileTreeSystemListWrapperProps {
+  /** 侧边栏样式：AI Artifacts 展示文件总数，操作按钮常显 */
+  variant?: 'sidebar'
   path: HistoryItem[]
   title: string
   isOpen?: boolean

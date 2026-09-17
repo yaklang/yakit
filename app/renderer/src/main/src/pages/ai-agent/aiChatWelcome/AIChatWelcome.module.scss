@@ -13,9 +13,21 @@
 }
 .ai-chat-welcome-wrapper {
   @extend %display-column-center;
+  --ai-chat-welcome-bg: url('@/assets/aiAgent/ai-agent-welcome-bg.png');
   height: 100%;
   position: relative;
-  background: linear-gradient(180deg, var(--Colors-Use-Main-Bg) 0.11%, var(--Colors-Use-Basic-Background) 50%);
+  background-image:
+    var(--ai-chat-welcome-bg),
+    linear-gradient(180deg, var(--Colors-Use-Main-Bg) 0.11%, var(--Colors-Use-Basic-Background) 50%);
+  background-position: left top;
+  background-size:
+    auto,
+    100% 100%;
+  background-repeat: no-repeat;
+
+  :global(html[data-theme='dark']) & {
+    --ai-chat-welcome-bg: url('@/assets/aiAgent/ai-agent-welcome-bg-dark.png');
+  }
 
   .input-wrapper {
     position: relative;
@@ -26,8 +38,11 @@
     gap: 64px;
     flex: 1;
     flex-shrink: 0;
-    width: 100%;
+    // 扣除面板预留宽度，内容最多宽 784px。
+    width: calc(100% - var(--ai-right-panel-slot-width, 325px));
     max-width: 784px;
+    // 左移半个预留宽度，在剩余区域居中。
+    transform: translateX(calc(var(--ai-right-panel-slot-width, 325px) / -2));
     min-width: 0;
     box-sizing: border-box;
     height: 100%;
@@ -158,11 +173,9 @@
     .input-panel {
       width: 100%;
       border-radius: 12px;
-      padding: 0;
+      padding: 1px;
       overflow: visible;
-      .ai-text-wrapper {
-        box-shadow: 0 16px 24px 0 var(--Colors-Use-Basic-Shadow);
-      }
+      background-color: var(--Colors-Use-Neutral-Bg);
     }
   }
   .open-file-tree-button {
@@ -201,12 +214,11 @@
 .card-list {
   @extend %display-flex-center;
   background-color: var(--Colors-Use-Neutral-Bg);
-  padding: 10px 12px 8px;
+  padding: 10px 11px 8px;
   border-radius: 12px 12px 0 0;
   gap: 4px;
-  margin: 0 16px;
   justify-content: flex-start;
-  overflow: auto hidden;
+  flex-wrap: wrap;
 
   .card-item {
     @extend %display-flex-center;
