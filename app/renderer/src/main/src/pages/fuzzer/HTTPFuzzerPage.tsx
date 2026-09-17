@@ -81,6 +81,7 @@ import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeB
 import _, { throttle } from 'lodash'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { FUZZER_LABEL_LIST_NUMBER } from './HTTPFuzzerEditorMenu'
+import { BlastingAnimationAemonstration } from './AnimationAemonstration'
 import { WebFuzzerNewEditor } from './WebFuzzerNewEditor/WebFuzzerNewEditor'
 import {
   AnnotationOutlined,
@@ -5159,68 +5160,6 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
         </Descriptions>
 
         {fuzzerResponse.ExtractedResults?.length === 0 && t('ResponseViewerSecondNode.none')}
-      </div>
-    </div>
-  )
-})
-
-// 爆破动画演示（MP4 动态 import，避免打进主 chunk）
-interface BlastingAnimationAemonstrationProps {
-  animationType?: string
-  videoStyle?: CSSProperties
-}
-export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstrationProps> = React.memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['webFuzzer'])
-  const [animationType, setAnimationType] = useState<string>(props.animationType || 'id')
-
-  const [animationResources, setAnimationResources] = useState<string>('')
-
-  useEffect(() => {
-    let cancelled = false
-    const load = async () => {
-      let mod: { default: string }
-      if (animationType === 'pwd') {
-        mod = await import('@/assets/blasting-pwd.mp4')
-      } else if (animationType === 'count') {
-        mod = await import('@/assets/blasting-count.mp4')
-      } else {
-        mod = await import('@/assets/blasting-id.mp4')
-      }
-      if (!cancelled) setAnimationResources(mod.default)
-    }
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [animationType])
-
-  return (
-    <div className={styles['blasting-animation-aemonstration']}>
-      {!props.animationType && (
-        <YakitRadioButtons
-          size="large"
-          buttonStyle="solid"
-          value={animationType}
-          options={[
-            {
-              value: 'id',
-              label: t('BlastingAnimationAemonstration.bruteForceId'),
-            },
-            {
-              value: 'pwd',
-              label: t('BlastingAnimationAemonstration.bruteForcePassword'),
-            },
-            {
-              value: 'count',
-              label: t('BlastingAnimationAemonstration.bruteForceAccount'),
-            },
-          ]}
-          onChange={(e) => setAnimationType(e.target.value)}
-        />
-      )}
-
-      <div className={styles['animation-cont-wrap']}>
-        {animationResources ? <video src={animationResources} autoPlay loop style={props.videoStyle}></video> : null}
       </div>
     </div>
   )

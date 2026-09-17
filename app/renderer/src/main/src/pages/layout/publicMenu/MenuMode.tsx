@@ -1,40 +1,38 @@
 import React from 'react'
-import {
-  PublicAIAgentIcon,
-  PublicAuditCodeIcon,
-  PublicAuditHoleIcon,
-  PublicBasicCrawlerIcon,
-  PublicBatchPluginIcon,
-  PublicBruteIcon,
-  PublicCVEIcon,
-  PublicCodeScanIcon,
-  PublicCodecIcon,
-  PublicDNSLogIcon,
-  PublicDataCompareIcon,
-  PublicDirectoryScanningIcon,
-  PublicDomainIcon,
-  PublicFingerprintManageIcon,
-  PublicHTTPHistoryIcon,
-  PublicICMPSizeLogIcon,
-  PublicKnowledgeBaseIcon,
-  PublicMitmIcon,
-  PublicPayloadGeneraterIcon,
-  PublicPluginStoreIcon,
-  PublicPocIcon,
-  PublicPortsIcon,
-  PublicProjectManagerIcon,
-  PublicReportIcon,
-  PublicReverseServerIcon,
-  PublicRiskIcon,
-  PublicRuleManagementIcon,
-  PublicScanPortIcon,
-  PublicShellReceiverIcon,
-  PublicSpaceEngineIcon,
-  PublicSubDomainCollectionIcon,
-  PublicTCPPortLogIcon,
-  PublicWebFuzzerIcon,
-  PublicWebsocketFuzzerIcon,
-} from '@yakit-libs/yakit-ui-icons/oldicon'
+import { PublicAIAgentIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicAIAgentIcon'
+import { PublicAuditCodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicAuditCodeIcon'
+import { PublicAuditHoleIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicAuditHoleIcon'
+import { PublicBasicCrawlerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicBasicCrawlerIcon'
+import { PublicBatchPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicBatchPluginIcon'
+import { PublicBruteIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicBruteIcon'
+import { PublicCVEIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicCVEIcon'
+import { PublicCodeScanIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicCodeScanIcon'
+import { PublicCodecIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicCodecIcon'
+import { PublicDNSLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicDNSLogIcon'
+import { PublicDataCompareIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicDataCompareIcon'
+import { PublicDirectoryScanningIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicDirectoryScanningIcon'
+import { PublicDomainIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicDomainIcon'
+import { PublicFingerprintManageIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicFingerprintManageIcon'
+import { PublicHTTPHistoryIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicHTTPHistoryIcon'
+import { PublicICMPSizeLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicICMPSizeLogIcon'
+import { PublicKnowledgeBaseIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicKnowledgeBaseIcon'
+import { PublicMitmIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicMitmIcon'
+import { PublicPayloadGeneraterIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPayloadGeneraterIcon'
+import { PublicPluginStoreIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPluginStoreIcon'
+import { PublicPocIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPocIcon'
+import { PublicPortsIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPortsIcon'
+import { PublicProjectManagerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicProjectManagerIcon'
+import { PublicReportIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicReportIcon'
+import { PublicReverseServerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicReverseServerIcon'
+import { PublicRiskIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicRiskIcon'
+import { PublicRuleManagementIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicRuleManagementIcon'
+import { PublicScanPortIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicScanPortIcon'
+import { PublicShellReceiverIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicShellReceiverIcon'
+import { PublicSpaceEngineIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicSpaceEngineIcon'
+import { PublicSubDomainCollectionIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicSubDomainCollectionIcon'
+import { PublicTCPPortLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicTCPPortLogIcon'
+import { PublicWebFuzzerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicWebFuzzerIcon'
+import { PublicWebsocketFuzzerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicWebsocketFuzzerIcon'
 import { useMemoizedFn } from 'ahooks'
 import type { RouteToPageProps } from './PublicMenu'
 import { Tooltip } from 'antd'
