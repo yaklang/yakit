@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { aiStreamDataHandlers } from '../grpcStreamHandler/aiStream'
 import { makeGrpcJsonRes, makeHandlerRequest, makeGrpcRes } from './fixtures'
+import { upsertSessionContent, setSessionReferencePersist } from '../persist/contentPersistHelper'
 import { AIChatQSDataTypeEnum } from '../aiRender'
 
 vi.mock('../persist/contentPersistHelper', () => ({
@@ -56,6 +57,37 @@ describe('aiStream handlers', () => {
     await aiStreamDataHandlers['stream-finished'](req)
     const stream = req.rawData.contents.get('ew-1') as any
     expect(stream.data.status).toBe('end')
+  })
+
+  it('ignores a stream finish invalidated while awaiting an in-memory item', async () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('stream_start', { event_writer_id: 'ew-old' }, { NodeId: 're-act-loop-thought' }),
+    })
+    await aiStreamDataHandlers.stream_start(req)
+    const stream = req.rawData.contents.get('ew-old')
+    expect(stream?.type).toBe(AIChatQSDataTypeEnum.STREAM)
+    vi.mocked(upsertSessionContent).mockClear()
+    req.res = makeGrpcJsonRes(
+      'structured',
+      { event_writer_id: 'ew-old', node_id: 're-act-loop-thought' },
+      { NodeId: 'stream-finished' },
+    )
+    const pending = aiStreamDataHandlers['stream-finished'](req)
+    req.meta.lifecycle.current = false
+    await pending
+    if (stream?.type !== AIChatQSDataTypeEnum.STREAM) throw new Error('missing stream fixture')
+    expect(stream.data.status).toBe('start')
+    expect(upsertSessionContent).not.toHaveBeenCalled()
+  })
+
+  it('does not persist references after the connection becomes invalid', async () => {
+    const req = makeHandlerRequest({ res: makeGrpcJsonRes('reference_material', { event_uuid: 'missing' }) })
+    vi.mocked(setSessionReferencePersist).mockClear()
+    const pending = aiStreamDataHandlers.reference_material(req)
+    req.meta.lifecycle.current = false
+    await pending
+    expect(req.rawData.contents.size).toBe(0)
+    expect(setSessionReferencePersist).not.toHaveBeenCalled()
   })
 
   it('D4: reference_material handler registered', () => {

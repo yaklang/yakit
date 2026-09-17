@@ -302,6 +302,10 @@ describe('AIReActChatContents 首屏加载', () => {
     await finishPositioning()
     expect(store.renderStore.getState().chatElements).toHaveLength(25)
     expect(getScroller().scrollTop).toBe(5 * ITEM_HEIGHT)
-    expect(getScroller().querySelector('[data-known-size]')).not.toBeNull()
+    const item = getScroller().querySelector('[data-chat-token="0"]')
+    // token 用于补载锚定，数组下标仍供任务树定位高亮；测量属性也必须透传。
+    expect(item).toHaveAttribute('data-index', '5')
+    expect(item).toHaveAttribute('data-item-index', '1000000')
+    expect(item).toHaveAttribute('data-known-size', String(ITEM_HEIGHT))
   })
 })

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { aiOtherDataHandlers } from '../grpcStreamHandler/aiOther'
 import { DefaultMemoryList } from '../defaultConstant'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
@@ -80,6 +80,28 @@ describe('aiOther other handlers', () => {
     const node = req.rawData.contents.get('q1-sub-1') as ChatTaskNodeGroup | undefined
     expect(node?.type).toBe(AIChatQSDataTypeEnum.TASK_NODE_GROUP)
     expect(node?.data.loadingTitle).toBe('')
+  })
+
+  afterEach(() => {
+    vi.clearAllTimers()
+    vi.useRealTimers()
+  })
+
+  it.each(['active', 'invalidated', 'closing'])('notify expiration respects a %s connection', (state) => {
+    vi.useFakeTimers()
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('notify', { type: 'notify', content: 'old notice', duration_ms: 100 }),
+    })
+    aiOtherDataHandlers.notify(req)
+    expect(req.store.getState().notifyMessage?.content).toBe('old notice')
+    if (state === 'invalidated') req.meta.lifecycle.current = false
+    if (state === 'closing') req.meta.lifecycle.closing = true
+    // 新连接或收尾阶段的通知不能被旧定时器清掉。
+    req.store
+      .getState()
+      .updateState({ notifyMessage: { type: 'notify', content: 'latest notice', label: { Zh: '', En: '' } } })
+    vi.advanceTimersByTime(100)
+    expect(req.store.getState().notifyMessage?.content ?? null).toBe(state === 'active' ? null : 'latest notice')
   })
 
   it('D3: notify sets message', () => {

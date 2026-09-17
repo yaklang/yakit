@@ -1,13 +1,16 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { AITaskStatus } from '../grpcApi'
 import { trySettleTaskPlanEnd, handleTaskPlanEnd } from '../utils'
 import { DefaultTaskPlanEndGate } from '../defaultConstant'
 import { createTestSession } from './fixtures'
+import { persistIndependentItem } from '../persist/contentPersistHelper'
 import { AIChatQSDataTypeEnum } from '../aiRender'
+
+vi.mock('../persist/contentPersistHelper', () => ({ persistIndependentItem: vi.fn() }))
 
 describe('trySettleTaskPlanEnd / handleTaskPlanEnd', () => {
   beforeEach(() => {
-    // no-op
+    vi.clearAllMocks()
   })
 
   it('B1: missing end keeps status unchanged', () => {
@@ -112,6 +115,7 @@ describe('trySettleTaskPlanEnd / handleTaskPlanEnd', () => {
     handleTaskPlanEnd(session)
     const node = session.rawData.contents.get(nodeId) as any
     expect(node.data.status).toBe(AITaskStatus.error)
+    expect(persistIndependentItem).toHaveBeenCalledWith(session.sessionId, node, session.meta.lifecycle)
     expect(session.store.getState().currentPlan.task_tree[0].progress).toBe(AITaskStatus.error)
     expect(session.meta.currentTaskPlanActiveNode.size).toBe(0)
   })

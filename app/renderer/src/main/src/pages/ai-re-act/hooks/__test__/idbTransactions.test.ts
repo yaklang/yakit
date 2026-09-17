@@ -124,7 +124,7 @@ describe('AI session IDB startup and transaction boundaries', () => {
     expect(rejected).toBe(true)
   })
 
-  it.each(['render', 'content', 'reference', 'delete-content', 'delete-session', 'delete-all'])(
+  it.each(['render', 'content', 'reference', 'delete-content', 'delete-session', 'delete-source', 'delete-all'])(
     '%s waits for transaction commit and rejects a subsequent abort',
     async (kind) => {
       vi.stubGlobal('IDBKeyRange', { bound: vi.fn(), only: vi.fn() })
@@ -145,6 +145,8 @@ describe('AI session IDB startup and transaction boundaries', () => {
             return store.deleteSessionContent('s', 't')
           case 'delete-session':
             return store.deleteSessionPersist('s')
+          case 'delete-source':
+            return store.deletePersistBySource('ai')
           default:
             return store.deleteAllPersist()
         }

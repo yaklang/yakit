@@ -141,6 +141,39 @@ describe('yakExecResult handlers', () => {
     expect(req.store.getState().currentLoadingTitle.planTitle).toBe('planning')
   })
 
+  it.each([
+    ['status', 'active'],
+    ['status', 'invalidated'],
+    ['status', 'closing'],
+    ['yak_exec_result', 'active'],
+    ['yak_exec_result', 'invalidated'],
+    ['yak_exec_result', 'closing'],
+  ] as const)('delayed %s cards respect a %s connection', (event, state) => {
+    const log = {
+      type: 'log',
+      content: {
+        level: 'feature-status-card-data',
+        timestamp: 1,
+        data: JSON.stringify({ id: 'progress', data: '42', tags: [] }),
+      },
+    }
+    const res =
+      event === 'status'
+        ? makeGrpcJsonRes('structured', { key: 'progress', value: '42' }, { NodeId: 'status' })
+        : makeGrpcJsonRes('yak_exec_result', {
+            IsMessage: true,
+            Message: Buffer.from(JSON.stringify(log)).toString('base64'),
+          })
+    const req = makeHandlerRequest({ res })
+    aiYakExecResultDataHandlers[event](req)
+    expect(req.store.getState().card).toEqual([])
+    if (state === 'invalidated') req.meta.lifecycle.current = false
+    if (state === 'closing') req.meta.lifecycle.closing = true
+    vi.advanceTimersByTime(500)
+    if (state === 'active') expect(req.store.getState().card).toHaveLength(1)
+    else expect(req.store.getState().card).toEqual([])
+  })
+
   it('D10: yak_exec_result registered', () => {
     expect(typeof aiYakExecResultDataHandlers.yak_exec_result).toBe('function')
   })

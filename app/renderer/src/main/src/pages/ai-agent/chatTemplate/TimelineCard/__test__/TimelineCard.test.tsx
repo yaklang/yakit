@@ -59,6 +59,15 @@ const scrollTo = vi.fn(function (this: HTMLElement, options: ScrollToOptions) {
 })
 
 beforeEach(() => {
+  // 共用滚动 hook 新增了尺寸观察；布局仍由 VirtuosoMockContext 提供。
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  )
   vi.useFakeTimers()
   vi.clearAllMocks()
   hasMore.mockReturnValue(false)
@@ -94,6 +103,7 @@ afterEach(() => {
   vi.clearAllTimers()
   vi.useRealTimers()
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
   if (originalScrollTo) Object.defineProperty(HTMLElement.prototype, 'scrollTo', originalScrollTo)
   else Reflect.deleteProperty(HTMLElement.prototype, 'scrollTo')
   if (originalScrollBy) Object.defineProperty(HTMLElement.prototype, 'scrollBy', originalScrollBy)

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { aiToolResultDataHandlers } from '../grpcStreamHandler/aiToolResult'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
+import { persistToolResultIfTerminal } from '../persist/contentPersistHelper'
 import { AIChatQSDataTypeEnum } from '../aiRender'
 
 vi.mock('../persist/contentPersistHelper', () => ({
@@ -44,6 +45,30 @@ describe('aiToolResult handlers', () => {
     } as any)
     await aiToolResultDataHandlers.tool_call_param(req)
     expect((req.rawData.contents.get('call-9') as any).data.tool.reviewParams).toEqual({ a: 1 })
+  })
+
+  it('does not apply tool params from an invalidated asynchronous handler', async () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('tool_call_start', {
+        call_tool_id: 'call-old',
+        tool: { name: 'http', description: '' },
+        start_time: 1,
+        start_time_ms: 1,
+      }),
+    })
+    aiToolResultDataHandlers.tool_call_start(req)
+    const tool = req.rawData.contents.get('call-old')
+    if (tool?.type !== AIChatQSDataTypeEnum.TOOL_RESULT) throw new Error('missing tool fixture')
+    req.pushLog = vi.fn()
+    const originalParams = tool.data.tool.reviewParams
+    vi.mocked(persistToolResultIfTerminal).mockClear()
+    req.res = makeGrpcJsonRes('tool_call_param', { call_tool_id: 'call-old', params: { stale: true } })
+    const pending = aiToolResultDataHandlers.tool_call_param(req)
+    req.meta.lifecycle.current = false
+    await pending
+    expect(tool.data.tool.reviewParams).toBe(originalParams)
+    expect(persistToolResultIfTerminal).not.toHaveBeenCalled()
+    expect(req.pushLog).not.toHaveBeenCalled()
   })
 
   it('D6: handler keys registered', () => {
