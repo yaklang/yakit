@@ -3,10 +3,12 @@ run-name: "${{ github.event.pull_request.draft && '[WIP] ' || '' }}启动测试 
 
 on:
   pull_request:
-    # Intentionally do not run for renderer-only (or test/docs-only) changes.
-    # Manual dispatch is available when updating the smoke suite or pinned artifacts.
+    # Renderer-only (or test/docs-only) changes stay out, but pins, verifiers and
+    # the workflow itself must still be verified by CI.
     paths:
       - 'app/main/**'
+      - 'scripts/engine-startup/**'
+      - '.github/workflows/engine-startup-compatibility.yml'
   workflow_dispatch:
 
 permissions:
@@ -27,7 +29,9 @@ jobs:
       matrix:
         os: [windows-2022, macos-15, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
+    # Step timeout caps sum to ~17min (cold cache + CDN downloads); 10min would kill
+    # the job mid-download and lose all artifacts.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:

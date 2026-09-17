@@ -103,11 +103,10 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         if (!status) return
         const message = engineFailureMessage(result, i18n.language, t('YaklangEngineWatchDog.startup_failed'), t)
         outputToWelcomeConsole(message)
-        props.setCheckLog([
-          ...(result.attempts || []).map((attempt) =>
-            engineFailureMessage(attempt, i18n.language, t('YaklangEngineWatchDog.startup_failed'), t),
-          ),
-        ])
+        const attemptMessages = (result.attempts || []).map((attempt) =>
+          engineFailureMessage(attempt, i18n.language, t('YaklangEngineWatchDog.startup_failed'), t),
+        )
+        props.setCheckLog(attemptMessages.length ? attemptMessages : [message])
         props.setYakitStatus(status)
       }
     } catch (error) {

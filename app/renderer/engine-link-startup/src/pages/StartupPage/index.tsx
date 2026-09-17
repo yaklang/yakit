@@ -348,7 +348,7 @@ export const StartupPage: React.FC = () => {
     stoppingOwnedEngineRef.current = true
     setOwnedEngineCleanupBusy(true)
     try {
-      const result = await yakitEngine.cancelAllTasks()
+      const result = await yakitEngine.stopAllLocalEngines()
       if (!result.ok) {
         showStopOwnedEngineError('process_error')
         return false

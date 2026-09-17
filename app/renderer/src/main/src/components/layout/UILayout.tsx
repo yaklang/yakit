@@ -537,19 +537,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }
   }, [])
   const killCurrentProcess = useMemoizedFn(async (callback: () => void) => {
+    // 停不掉也要继续走 callback（启动页打开、exiting 清理都挂在里面），失败只 toast
     try {
       const current = await yakitEngine.currentLocalEngine()
       if (current) {
         const result = await yakitEngine.stopLocalEngine(current.id)
-        if (!result.ok || !result.stopped) {
-          failed(t('EngineManagement.stopFailed'))
-          return
-        }
+        if (!result.ok || !result.stopped) failed(t('EngineManagement.stopFailed'))
       }
-      callback()
     } catch {
       failed(t('EngineManagement.stopFailed'))
     }
+    callback()
   })
 
   const handleOperations = useMemoizedFn((type: YakitSettingCallbackType | YaklangEngineMode) => {
