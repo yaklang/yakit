@@ -10,13 +10,17 @@ import {
   validateRendererBuildMetadata,
 } from '../e2e/fixtures/electron/renderer-build-metadata.mjs'
 import { terminateProcessTree } from '../e2e/fixtures/process/process-tree.mjs'
+import { prepareCdnEngine } from '../e2e/fixtures/yak-engine/cdn-engine-fixture.mjs'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(scriptDir, '..')
 const temporaryPrefix = path.join(tmpdir(), 'yakit-electron-e2e-')
 const rawArgs = process.argv.slice(2)
 const withYakEngine = rawArgs.includes('--with-yak-engine')
-const wdioArgs = rawArgs.filter((arg) => arg !== '--with-yak-engine')
+const withCdnEngine = rawArgs.includes('--with-cdn-engine')
+const devRenderers = rawArgs.includes('--dev-renderers')
+if (withYakEngine && withCdnEngine) throw new Error('Choose either a source engine or a pinned CDN engine')
+const wdioArgs = rawArgs.filter((arg) => !['--with-yak-engine', '--with-cdn-engine', '--dev-renderers'].includes(arg))
 const rendererBuildMetadataPath = path.join(repoRoot, 'app/renderer/pages/main/yakit-e2e-build.json')
 const requiredRendererArtifacts = [
   path.join(repoRoot, 'app/renderer/pages/main/index.html'),
@@ -34,7 +38,7 @@ const exists = async (filePath) => {
 }
 
 const missingArtifacts = []
-for (const artifact of requiredRendererArtifacts) {
+for (const artifact of devRenderers ? [] : requiredRendererArtifacts) {
   if (!(await exists(artifact))) missingArtifacts.push(path.relative(repoRoot, artifact))
 }
 
@@ -47,11 +51,20 @@ if (missingArtifacts.length) {
 
 let rendererBuildMetadata
 try {
-  rendererBuildMetadata = validateRendererBuildMetadata(
-    JSON.parse(await readFile(rendererBuildMetadataPath, 'utf8')),
-    await getRendererBuildIdentity(repoRoot),
-    rendererBuildMetadataPath,
-  )
+  if (devRenderers) {
+    for (const port of [3000, 5173]) {
+      const response = await fetch(`http://127.0.0.1:${port}`, { signal: AbortSignal.timeout(30000) })
+      const html = await response.text()
+      if (!response.ok || !html.includes('<script') || !html.includes('id="root"'))
+        throw new Error(`Renderer :${port} is not ready; run yarn cli start -v yakit first`)
+    }
+    rendererBuildMetadata = { mode: 'development', source: await getRendererBuildIdentity(repoRoot) }
+  } else
+    rendererBuildMetadata = validateRendererBuildMetadata(
+      JSON.parse(await readFile(rendererBuildMetadataPath, 'utf8')),
+      await getRendererBuildIdentity(repoRoot),
+      rendererBuildMetadataPath,
+    )
 } catch (error) {
   console.error(`[electron-e2e] ${error.message}`)
   process.exit(2)
@@ -74,6 +87,7 @@ const metadata = {
   args: wdioArgs,
   runner: {
     withYakEngine,
+    withCdnEngine,
   },
   rendererBuild: rendererBuildMetadata,
 }
@@ -103,6 +117,10 @@ process.once('SIGTERM', () => forwardSignal('SIGTERM'))
 
 let exitCode = 1
 try {
+  if (withCdnEngine) {
+    metadata.cdnEngine = await prepareCdnEngine({ repoRoot, userDataDir, yakitHomeDir })
+    await writeFile(path.join(artifactsDir, 'run-metadata.json'), `${JSON.stringify(metadata, null, 2)}\n`)
+  }
   if (withYakEngine) {
     console.info('[electron-e2e] preparing isolated Yak engine fixture')
     yakFixture = await startYakEngineFixture({
@@ -152,11 +170,13 @@ try {
 
   const childEnv = {
     ...process.env,
-    ELECTRON_IS_DEV: '0',
+    ELECTRON_IS_DEV: devRenderers ? '1' : '0',
+    YAKIT_E2E_RENDERER_MODE: devRenderers ? 'development' : 'production',
     YAKIT_E2E: '1',
     YAKIT_E2E_USER_DATA: userDataDir,
     YAKIT_HOME: yakitHomeDir,
     YAKIT_E2E_ARTIFACTS_DIR: artifactsDir,
+    ...(withCdnEngine ? { YAKIT_E2E_ENGINE_FIXTURE: 'local-cdn' } : {}),
     ...(yakFixture
       ? {
           YAKIT_E2E_ENGINE_FIXTURE: 'external',
@@ -243,6 +263,7 @@ try {
           durationMs: metadata.durationMs,
           suiteArgs: metadata.args,
           logsDirectory: 'logs',
+          cdnEngine: metadata.cdnEngine,
           yakEngine: metadata.yakEngine
             ? {
                 head: metadata.yakEngine.head,

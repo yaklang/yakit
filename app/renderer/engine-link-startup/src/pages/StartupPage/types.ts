@@ -102,7 +102,10 @@ export interface DownloadingState {
 export interface YaklangEngineWatchDogCredential {
   Mode?: YaklangEngineMode
   Host: string
-  Port: number
+  Port?: number
+  Endpoint?: LocalEngineEndpoint
+  InstanceId?: string
+  LaunchId?: string
 
   /**
    * 高级登陆验证信息
@@ -131,8 +134,10 @@ export interface LoadingClickExtra {
 }
 
 export interface StartLocalEngine {
-  port: number
-  password: string
+  launchId?: string
+  policy?: 'auto' | 'ipc' | 'tcp'
+  port?: number
+  password?: string
   version: string
   isEnpriTraceAgent: boolean
   softwareVersion: SoftwareVersion

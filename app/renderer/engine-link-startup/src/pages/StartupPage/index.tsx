@@ -348,8 +348,9 @@ export const StartupPage: React.FC = () => {
     stoppingOwnedEngineRef.current = true
     setOwnedEngineCleanupBusy(true)
     try {
-      const result = await yakitEngine.cancelAllTasks()
-      if (!result.ok) {
+      const result = await yakitEngine.stopAllLocalEngines()
+      // stopAll() 在 records 已空但仍有存活子进程时返回 { ok: true, stopped: false }，此时不能重启
+      if (!result.ok || !result.stopped) {
         showStopOwnedEngineError('process_error')
         return false
       }
@@ -563,10 +564,9 @@ export const StartupPage: React.FC = () => {
     setTimeout(async () => {
       try {
         await grpcUnpackBuildInYak(true)
-        grpcWriteEngineKeyToYakitProjects({}, true).finally(() => {
-          safeSetYakitStatus('')
-          callback()
-        })
+        await grpcWriteEngineKeyToYakitProjects({}, true)
+        safeSetYakitStatus('')
+        callback()
       } catch (error) {
         setCheckLog([
           isInitLocalLink.current
@@ -667,7 +667,10 @@ export const StartupPage: React.FC = () => {
     setCredential({
       Host: '127.0.0.1',
       IsTLS: false,
-      Password: params.secret || '',
+      Password: undefined,
+      LaunchId: params.launchId,
+      InstanceId: undefined,
+      Endpoint: undefined,
       PemBytes: undefined,
       Port: params.port,
       Mode: 'local',
@@ -1085,7 +1088,12 @@ export const StartupPage: React.FC = () => {
 
   // 引擎连接成功发送数据到主界面
   useEffect(() => {
-    if (engineLink && getYakitStatus() === 'link' && getCredential().Port && !isStopSend.current) {
+    if (
+      engineLink &&
+      getYakitStatus() === 'link' &&
+      (getCredential().InstanceId || getCredential().Port) &&
+      !isStopSend.current
+    ) {
       yakitApp.completeEngineLink({ credential: getCredential() })
     }
   }, [engineLink, yakitStatus])
@@ -1234,6 +1242,16 @@ export const StartupPage: React.FC = () => {
         </div>
         <YaklangEngineWatchDog
           credential={credential}
+          onLocalStarted={(instance) =>
+            setCredential((previous) => ({
+              ...previous,
+              InstanceId: instance.id,
+              Endpoint: instance.endpoint,
+              Port: instance.endpoint?.transport === 'tcp' ? instance.endpoint.port : undefined,
+              LaunchId: undefined,
+              Password: undefined,
+            }))
+          }
           keepalive={keepalive}
           engineLink={engineLink}
           onKeepaliveShouldChange={safeSetKeepalive}

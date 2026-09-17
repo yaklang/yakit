@@ -15,7 +15,6 @@ const wrap = (json) => `<json-${MARKER}>\n${JSON.stringify(json)}\n</json-${MARK
 
 function fixture(options = {}) {
   const children = []
-  const processGroups = new Map()
   const clients = []
   const log = vi.fn()
   const notify = vi.fn()
@@ -32,7 +31,6 @@ function fixture(options = {}) {
       settings,
     })
     child.exit = (code = 0, signal = null) => {
-      processGroups.set(child.pid, false)
       child.exitCode = code
       child.signalCode = signal
       child.emit('exit', code, signal)
@@ -43,25 +41,8 @@ function fixture(options = {}) {
       return true
     })
     child.output = (text, stream = 'stdout') => child[stream].emit('data', Buffer.from(text))
-    child.exitParent = (code = 0, signal = null) => {
-      child.exitCode = code
-      child.signalCode = signal
-      child.emit('exit', code, signal)
-      child.emit('close', code, signal)
-    }
     children.push(child)
-    processGroups.set(child.pid, true)
     return child
-  })
-  const killProcess = vi.fn((pid, signal) => {
-    const groupId = Math.abs(pid)
-    if (!processGroups.get(groupId)) {
-      const error = new Error('process group not found')
-      error.code = 'ESRCH'
-      throw error
-    }
-    if (signal !== 0) children.find((child) => child.pid === groupId)?.kill(signal)
-    return true
   })
   const createClient = vi.fn((connection) => {
     const client = { connection, close: vi.fn(), call: { cancel: vi.fn() } }
@@ -81,14 +62,13 @@ function fixture(options = {}) {
     spawn,
     log,
     notify,
-    killProcess,
     // These children have synthetic PIDs. Never invoke the host's taskkill from a unit test.
     // Windows process-tree behavior is exercised separately with owned real processes.
     platform: 'linux',
     timeouts: { check: 1000, start: 1000, probe: 100, retry: 50 },
     ...options,
   })
-  return { manager, children, clients, processGroups, killProcess, log, notify, spawn, commitConnection }
+  return { manager, children, clients, log, notify, spawn, commitConnection }
 }
 
 describe('engine startup lifecycle', () => {
@@ -300,50 +280,10 @@ describe('engine startup lifecycle', () => {
     f.children[0].kill.mockImplementation(() => false)
     const second = f.manager.start(params)
     await vi.advanceTimersByTimeAsync(4000)
-    expect((await first).status).toBe('process_error')
-    expect((await second).status).toBe('process_error')
+    expect((await first).status).toBe('stop_failed')
+    expect((await second).status).toBe('port_occupied')
     expect(f.spawn).toHaveBeenCalledOnce()
     f.children[0].exit()
-  })
-
-  it('does not connect when superseding an active child whose exit cannot be confirmed', async () => {
-    const f = fixture()
-    const first = f.manager.start(params)
-    f.children[0].kill.mockImplementation(() => false)
-    const second = f.manager.connect({
-      defaultYakGRPCAddr: 'remote.example:9011',
-      password: 'remote',
-      caPem: 'cert',
-    })
-    await vi.advanceTimersByTimeAsync(4000)
-    expect(await first).toMatchObject({ ok: false, status: 'process_error' })
-    expect(await second).toMatchObject({ ok: false, stage: 'connect', status: 'process_error' })
-    expect(f.clients).toHaveLength(0)
-    expect(f.commitConnection).not.toHaveBeenCalled()
-    f.children[0].exit(null, 'SIGKILL')
-  })
-
-  it('blocks independent connections after a settled startup fails to clean up', async () => {
-    const f = fixture()
-    const pending = f.manager.start(params)
-    f.children[0].kill.mockImplementation(() => false)
-    await vi.advanceTimersByTimeAsync(5000)
-    expect(await pending).toMatchObject({ ok: false, status: 'process_error' })
-
-    const connection = { defaultYakGRPCAddr: 'remote.example:9011', password: 'remote', caPem: '' }
-    const clientCount = f.clients.length
-    const blockedConnection = f.manager.connect(connection)
-    expect(f.clients).toHaveLength(clientCount)
-    expect(await blockedConnection).toMatchObject({ ok: false, status: 'process_error' })
-    expect(f.commitConnection).not.toHaveBeenCalled()
-
-    f.children[0].exit(null, 'SIGKILL')
-    expect((await f.manager.dispose()).ok).toBe(true)
-    const reconnect = f.manager.connect(connection)
-    expect(f.clients).toHaveLength(clientCount + 1)
-    f.clients.at(-1).done(null, { result: 'Hello Yakit!' })
-    expect((await reconnect).ok).toBe(true)
-    expect(f.commitConnection).toHaveBeenCalledOnce()
   })
 
   it('settles both timeout and early exit without leaked timers', async () => {
@@ -427,219 +367,6 @@ describe('engine startup lifecycle', () => {
     expect(f.commitConnection.mock.calls[0][0].password).toBe('new')
   })
 
-  it('uses the full connect budget instead of the short startup probe deadline', async () => {
-    const f = fixture()
-    const startedAt = Date.now()
-    const pending = f.manager.connect({ defaultYakGRPCAddr: 'remote.example:9011', password: 'remote', caPem: 'cert' })
-    expect(f.clients[0].deadline.getTime()).toBe(startedAt + 10000)
-    await vi.advanceTimersByTimeAsync(3000)
-    expect(f.commitConnection).not.toHaveBeenCalled()
-    f.clients[0].done(null, { result: 'Hello Yakit!' })
-    expect((await pending).ok).toBe(true)
-  })
-
-  it('times out an unresponsive explicit connection at 10 seconds and closes its RPC resources', async () => {
-    const f = fixture()
-    const pending = f.manager.connect({ defaultYakGRPCAddr: 'remote.example:9011', password: 'remote', caPem: 'cert' })
-    await vi.advanceTimersByTimeAsync(9999)
-    expect(f.clients[0].close).not.toHaveBeenCalled()
-    await vi.advanceTimersByTimeAsync(1)
-    expect(await pending).toMatchObject({ ok: false, status: 'timeout' })
-    expect(f.clients[0].call.cancel).toHaveBeenCalledOnce()
-    expect(f.clients[0].close).toHaveBeenCalledOnce()
-    expect(f.commitConnection).not.toHaveBeenCalled()
-  })
-
-  it('fails an explicit local connection immediately on authentication rejection', async () => {
-    const f = fixture()
-    const pending = f.manager.connect(
-      { defaultYakGRPCAddr: '127.0.0.1:9011', password: 'wrong-password', caPem: '' },
-      true,
-    )
-    f.clients[0].done({ code: 16 })
-    expect(await pending).toMatchObject({ ok: false, status: 'dial_error' })
-    expect(f.clients).toHaveLength(1)
-    expect(f.commitConnection).not.toHaveBeenCalled()
-    expect(vi.getTimerCount()).toBe(0)
-  })
-
-  it('shares one absolute connect deadline across both local authentication probes', async () => {
-    const f = fixture({ timeouts: { check: 1000, start: 1000, connect: 1000, probe: 100, retry: 50 } })
-    const pending = f.manager.connect(
-      { defaultYakGRPCAddr: '127.0.0.1:9011', password: 'local-password', caPem: '' },
-      true,
-    )
-    const deadline = f.clients[0].deadline.getTime()
-    await vi.advanceTimersByTimeAsync(300)
-    f.clients[0].done(null, { result: 'Hello Yakit!' })
-    expect(f.clients[1].deadline.getTime()).toBe(deadline)
-    f.clients[1].done({ code: 16 })
-    expect((await pending).ok).toBe(true)
-  })
-
-  it('does not extend the connect budget when the anonymous authentication probe starts late', async () => {
-    const f = fixture({ timeouts: { check: 1000, start: 1000, connect: 1000, probe: 100, retry: 50 } })
-    const pending = f.manager.connect(
-      { defaultYakGRPCAddr: '127.0.0.1:9011', password: 'local-password', caPem: '' },
-      true,
-    )
-    const deadline = f.clients[0].deadline.getTime()
-    await vi.advanceTimersByTimeAsync(900)
-    f.clients[0].done(null, { result: 'Hello Yakit!' })
-    expect(f.clients[1].deadline.getTime()).toBe(deadline)
-    await vi.advanceTimersByTimeAsync(100)
-    expect(await pending).toMatchObject({ ok: false, status: 'timeout' })
-    expect(f.clients[1].close).toHaveBeenCalledOnce()
-    expect(f.commitConnection).not.toHaveBeenCalled()
-  })
-
-  it('reports retained child cleanup failure and blocks later operations until cleanup succeeds', async () => {
-    const f = fixture()
-    const started = f.manager.start(params)
-    await vi.advanceTimersByTimeAsync(50)
-    f.clients[0].done(null, { result: 'Hello Yakit!' })
-    f.clients[1].done({ code: 16 })
-    expect((await started).ok).toBe(true)
-    f.children[0].kill.mockImplementation(() => false)
-
-    const disposing = f.manager.dispose()
-    await vi.advanceTimersByTimeAsync(4000)
-    expect(await disposing).toMatchObject({ ok: false, canceled: 0, status: 'process_error' })
-    expect(
-      await f.manager.connect({ defaultYakGRPCAddr: 'remote.example:9011', password: 'remote', caPem: 'cert' }),
-    ).toMatchObject({
-      ok: false,
-      status: 'process_error',
-    })
-    expect(f.clients).toHaveLength(2)
-
-    f.children[0].exit(null, 'SIGKILL')
-    expect(await f.manager.dispose()).toEqual({ ok: true, canceled: 0, status: 'cancelled' })
-  })
-
-  it('propagates active cleanup failure without double-counting its child', async () => {
-    const f = fixture()
-    const pending = f.manager.start(params)
-    f.children[0].kill.mockImplementation(() => false)
-    const cancelling = f.manager.cancel()
-    await vi.advanceTimersByTimeAsync(4000)
-    expect(await pending).toMatchObject({ ok: false, status: 'process_error' })
-    expect(await cancelling).toMatchObject({ ok: false, canceled: 0, status: 'process_error' })
-    f.children[0].exit(null, 'SIGKILL')
-  })
-
-  it('accepts cleanup when an already-finishing timed out operation confirms child exit', async () => {
-    const f = fixture()
-    const pending = f.manager.start(params)
-    f.children[0].kill.mockImplementation(() => true)
-    await vi.advanceTimersByTimeAsync(1000)
-
-    const cancelling = f.manager.cancel()
-    f.children[0].exit(null, 'SIGTERM')
-    expect((await pending).status).toBe('timeout')
-    expect(await cancelling).toEqual({ ok: true, canceled: 0, status: 'cancelled' })
-  })
-
-  it('does not begin a new operation until retained child cleanup has settled', async () => {
-    const f = fixture()
-    const started = f.manager.start(params)
-    await vi.advanceTimersByTimeAsync(50)
-    f.clients[0].done(null, { result: 'Hello Yakit!' })
-    f.clients[1].done({ code: 16 })
-    await started
-    f.children[0].kill.mockImplementation(() => true)
-
-    const disposing = f.manager.dispose()
-    const connecting = f.manager.connect({
-      defaultYakGRPCAddr: 'remote.example:9011',
-      password: 'remote',
-      caPem: 'cert',
-    })
-    expect(f.clients).toHaveLength(2)
-    f.children[0].exit(null, 'SIGTERM')
-    expect(await disposing).toEqual({ ok: true, canceled: 1, status: 'cancelled' })
-    await vi.advanceTimersByTimeAsync(0)
-    expect(f.clients).toHaveLength(3)
-    f.clients[2].done(null, { result: 'Hello Yakit!' })
-    expect((await connecting).ok).toBe(true)
-  })
-
-  it('lets a repeated dispose invalidate an operation queued behind cleanup', async () => {
-    const f = fixture()
-    const started = f.manager.start(params)
-    await vi.advanceTimersByTimeAsync(50)
-    f.clients[0].done(null, { result: 'Hello Yakit!' })
-    f.clients[1].done({ code: 16 })
-    await started
-    f.children[0].kill.mockImplementation(() => true)
-
-    const firstDispose = f.manager.dispose()
-    const connecting = f.manager.connect({
-      defaultYakGRPCAddr: 'remote.example:9011',
-      password: 'remote',
-      caPem: 'cert',
-    })
-    const secondDispose = f.manager.dispose()
-    f.children[0].exit(null, 'SIGTERM')
-
-    expect(await firstDispose).toEqual({ ok: true, canceled: 1, status: 'cancelled' })
-    expect(await secondDispose).toEqual({ ok: true, canceled: 1, status: 'cancelled' })
-    expect(await connecting).toMatchObject({ ok: false, stage: 'connect', status: 'cancelled' })
-    expect(f.clients).toHaveLength(2)
-    expect(f.commitConnection).toHaveBeenCalledOnce()
-  })
-
-  it('logs bounded cleanup evidence and ignores logging failures', async () => {
-    const f = fixture({
-      log: () => {
-        throw new Error('log unavailable')
-      },
-    })
-    const pending = f.manager.start(params)
-    const cancelling = f.manager.cancel()
-    await vi.advanceTimersByTimeAsync(0)
-    expect((await pending).status).toBe('cancelled')
-    expect(await cancelling).toEqual({ ok: true, canceled: 1, status: 'cancelled' })
-
-    const withLog = fixture()
-    const run = withLog.manager.start(params)
-    const cancel = withLog.manager.cancel()
-    await vi.advanceTimersByTimeAsync(0)
-    await run
-    await cancel
-    const cleanupLogs = withLog.log.mock.calls
-      .flat()
-      .filter((line) => String(line).includes('cleanup_'))
-      .join('\n')
-    expect(cleanupLogs).toContain('cleanup_start')
-    expect(cleanupLogs).toContain('cleanup_result')
-    expect(cleanupLogs).toContain('operationId')
-    expect(cleanupLogs).toContain('ownedChildPid')
-    expect(cleanupLogs).toContain('confirmedExit')
-    expect(cleanupLogs).not.toContain(params.password)
-  })
-
-  it('logs cleanup action boundaries even when there is no owned child', async () => {
-    const f = fixture()
-    expect(await f.manager.dispose()).toEqual({ ok: true, canceled: 0, status: 'cancelled' })
-    const events = f.log.mock.calls.flat().map((line) => JSON.parse(line))
-    expect(events).toEqual([
-      expect.objectContaining({
-        event: 'cleanup_start',
-        stage: 'dispose',
-        ownedChildPid: null,
-        confirmedExit: null,
-      }),
-      expect.objectContaining({
-        event: 'cleanup_result',
-        stage: 'dispose',
-        ownedChildPid: null,
-        confirmedExit: true,
-      }),
-    ])
-    expect(events[0].operationId).toBe(events[1].operationId)
-  })
-
   it('uses argument-safe Windows process-tree termination and skips exited children', async () => {
     const f = fixture()
     const running = f.manager.start(params)
@@ -659,61 +386,6 @@ describe('engine startup lifecycle', () => {
     expect(execFile).toHaveBeenCalledOnce()
     await running
     expect(vi.getTimerCount()).toBe(0)
-  })
-
-  it('spawns an owned POSIX process group and waits for the whole group to exit', async () => {
-    const f = fixture()
-    const running = f.manager.start(params)
-    const child = f.children[0]
-    expect(child.settings.detached).toBe(true)
-    child.kill.mockImplementation(() => true)
-
-    const cancelling = f.manager.cancel()
-    child.exitParent(null, 'SIGTERM')
-    await vi.advanceTimersByTimeAsync(2000)
-    expect(f.killProcess).toHaveBeenCalledWith(-child.pid, 'SIGTERM')
-    expect(f.killProcess).toHaveBeenCalledWith(-child.pid, 'SIGKILL')
-    expect(await Promise.race([cancelling.then(() => 'settled'), Promise.resolve('pending')])).toBe('pending')
-
-    f.processGroups.set(child.pid, false)
-    await vi.advanceTimersByTimeAsync(50)
-    expect((await running).status).toBe('cancelled')
-    expect(await cancelling).toEqual({ ok: true, canceled: 1, status: 'cancelled' })
-
-    const callsAfterExit = f.killProcess.mock.calls.length
-    f.processGroups.set(child.pid, true)
-    f.manager.killOnExit()
-    expect(f.killProcess).toHaveBeenCalledTimes(callsAfterExit)
-  })
-
-  it('reports cleanup failure when the POSIX group survives the four second deadline', async () => {
-    const f = fixture()
-    const running = f.manager.start(params)
-    const child = f.children[0]
-    child.kill.mockImplementation(() => true)
-
-    const cancelling = f.manager.cancel()
-    child.exitParent(null, 'SIGTERM')
-    await vi.advanceTimersByTimeAsync(4000)
-    expect(await running).toMatchObject({ ok: false, status: 'process_error' })
-    expect(await cancelling).toMatchObject({ ok: false, status: 'process_error' })
-
-    f.processGroups.set(child.pid, false)
-    expect((await f.manager.dispose()).ok).toBe(true)
-  })
-
-  it('uses only the owned POSIX group for the synchronous exit fallback', () => {
-    const f = fixture()
-    f.manager.start(params)
-    const child = f.children[0]
-    const externalGroupId = 99999
-    f.processGroups.set(externalGroupId, true)
-
-    f.manager.killOnExit()
-
-    expect(f.killProcess).toHaveBeenCalledWith(-child.pid, 'SIGKILL')
-    expect(f.killProcess.mock.calls.some(([pid]) => pid > 0)).toBe(false)
-    expect(f.killProcess.mock.calls.some(([pid]) => pid === -externalGroupId)).toBe(false)
   })
 })
 

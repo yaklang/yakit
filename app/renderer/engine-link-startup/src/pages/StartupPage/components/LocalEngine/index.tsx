@@ -38,6 +38,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       setYakitUpdate,
     } = props
     const { t, i18n } = useI18nNamespaces(['link'])
+    const policyKey = `LocalEngine.TransportPolicy.${FetchSoftwareVersion()}`
     // check Json
     const allowSecretLocalJson = useRef<AllowSecretLocalJson>(null)
     // 本地 yakit 版本
@@ -85,13 +86,19 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       debugToPrintLog(`------ 开始执行 check ------`)
       setLog([t('LocalEngine.checking_secret_password_mode')])
       try {
-        const res = await grpcCheckAllowSecretLocal({ port, softwareVersion: FetchSoftwareVersion() })
+        const savedPolicy = await getLocalValue(policyKey)
+        if (!isCurrentCheck(callId)) return
+        const res = await grpcCheckAllowSecretLocal({
+          port,
+          softwareVersion: FetchSoftwareVersion(),
+          policy: ['auto', 'ipc', 'tcp'].includes(savedPolicy) ? savedPolicy : 'auto',
+        })
         if (!isCurrentCheck(callId)) return
         const failureStatus = engineFailureStatus(res.status, 'check')
         if (!res.ok && failureStatus === null) return
         setRestartLoading(false)
         if (res.ok && res.status === 'success') {
-          setLog((arr) => arr.concat([t('LocalEngine.secret_password_check_passed')]))
+          setLog((arr) => arr.concat([t('EngineManagement.prepared')]))
           setYakitStatus('')
           allowSecretLocalJson.current = res.json
           handlePreCheckForLinkEngine(checkVersion)
@@ -357,7 +364,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           if (checkId !== latestCheckCallIdRef.current || yakitStatusRef.current === 'break') return
           onLinkEngine({
             port: checked.port,
-            secret: checked.secret,
+            launchId: checked.launchId,
           })
           // 启动本地连接后，重置所有检查状态，并后续不会在进行检查
           handleResetAllStatus()

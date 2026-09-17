@@ -17,6 +17,7 @@ export interface YaklangEngineWatchDogProps {
   engineLink: boolean
 
   onReady?: () => void
+  onLocalStarted?: (instance: LocalEngineInstance) => void
   onFailed?: (failedCount: number) => void
   onKeepaliveShouldChange?: (keepalive: boolean) => void
 
@@ -53,7 +54,12 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
 
   const engineTest = useMemoizedFn(async () => {
     const credential = props.credential
-    if (!credential.Mode || credential.Port <= 0 || yakitStatusRef.current === 'break') return
+    if (
+      !credential.Mode ||
+      (credential.Mode === 'remote' && (credential.Port || 0) <= 0) ||
+      yakitStatusRef.current === 'break'
+    )
+      return
     if (startingUp.current && pendingCredential.current === credential) return
     const callId = ++latestStartCallIdRef.current
     pendingCredential.current = credential
@@ -65,21 +71,23 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
       yakitStatusRef.current !== 'break'
     outputToWelcomeConsole(t('YaklangEngineWatchDog.start_connecting_core_engine'))
     try {
-      try {
-        await yakitEngine.connectYaklangEngine(credential)
-        if (isCurrent()) props.onKeepaliveShouldChange?.(true)
-        return
-      } catch {
-        if (!isCurrent()) return
-        if (credential.Mode === 'remote') {
-          yakitNotify('error', t('EngineFailure.dial_error'))
+      if (credential.Mode === 'remote' || credential.InstanceId) {
+        // Reconnection is not permission to restart a process or change its transport.
+        try {
+          await yakitEngine.connectYaklangEngine(credential)
+          if (isCurrent()) props.onKeepaliveShouldChange?.(true)
           return
+        } catch (error) {
+          if (isCurrent() && credential.Mode === 'remote') {
+            yakitNotify('error', t('EngineFailure.dial_error'))
+            return
+          }
+          throw error
         }
       }
-      outputToWelcomeConsole(t('YaklangEngineWatchDog.start_local_engine_with_port', { port: credential.Port }))
       const result = await grpcStartLocalEngine({
+        launchId: credential.LaunchId,
         port: credential.Port,
-        password: credential.Password,
         version: toEngineHandshakeName(__PLATFORM__),
         isEnpriTraceAgent: isEnpriTraceAgent(),
         softwareVersion: FetchSoftwareVersion(),
@@ -87,19 +95,24 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
       if (!isCurrent()) return
       if (result.ok && result.status === 'success') {
         debugToPrintLog('[INFO] 本地引擎认证连接成功')
+        if (result.instance) props.onLocalStarted?.(result.instance)
+        if (result.fallback) yakitNotify('info', t('EngineManagement.fallback'))
         props.onKeepaliveShouldChange?.(true)
       } else {
-        const status = engineFailureStatus(result.status, 'start')
+        const status = engineFailureStatus(result.status, result.stage === 'check' ? 'check' : 'start')
         if (!status) return
         const message = engineFailureMessage(result, i18n.language, t('YaklangEngineWatchDog.startup_failed'), t)
         outputToWelcomeConsole(message)
-        props.setCheckLog([message])
+        const attemptMessages = (result.attempts || []).map((attempt) =>
+          engineFailureMessage(attempt, i18n.language, t('YaklangEngineWatchDog.startup_failed'), t),
+        )
+        props.setCheckLog(attemptMessages.length ? attemptMessages : [message])
         props.setYakitStatus(status)
       }
     } catch (error) {
       if (!isCurrent()) return
       props.setCheckLog([t('YaklangEngineWatchDog.startup_failed')])
-      props.setYakitStatus('start_timeout')
+      props.setYakitStatus('check_error')
     } finally {
       if (callId === latestStartCallIdRef.current) startingUp.current = false
     }
