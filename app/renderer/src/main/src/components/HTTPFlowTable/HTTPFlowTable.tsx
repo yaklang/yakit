@@ -2562,6 +2562,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
    * @description 过滤URL：追加到 MITM 过滤器的 excludeUri
    */
   const onFilterURL = useMemoizedFn((v: HTTPFlow) => {
+    onRemoveHttpHistory({ URLPrefix: v.Url })
     appendMITMFilterItem('excludeUri', v.Url, t('HTTPFlowTable.filterURLEmpty'))
   })
 
@@ -2570,6 +2571,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
    */
   const onFilterDomain = useMemoizedFn((v: HTTPFlow) => {
     const host = v?.HostPort?.split(':')[0] || ''
+    onRemoveHttpHistory({ URLPrefix: host })
     appendMITMFilterItem('excludeHostname', host, t('HTTPFlowTable.filterDomainEmpty'))
   })
 
