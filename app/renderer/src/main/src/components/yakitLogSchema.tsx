@@ -54,3 +54,33 @@ export const ExtractExecResultMessage = (data: ExecResult): ExecResultLog | Exec
     } catch (e) {}
   }
 }
+
+export interface ExecResultProgressInfo {
+  value: number
+  finished: boolean
+}
+
+export const extractExecResultProgress = (
+  data: ExecResult,
+  option?: { page?: string; fun?: string },
+): ExecResultProgressInfo | undefined => {
+  if (!data.IsMessage || !data.Message) return undefined
+
+  try {
+    const obj: ExecResultMessage = JSONParseLog(Buffer.from(data.Message).toString(), {
+      page: option?.page,
+      fun: option?.fun,
+    })
+    if (obj.type === 'progress') {
+      const progress = (obj.content as ExecResultProgress)?.progress
+      if (typeof progress === 'number') {
+        return {
+          value: progress,
+          finished: progress === 1,
+        }
+      }
+    }
+  } catch (e) {}
+
+  return undefined
+}
