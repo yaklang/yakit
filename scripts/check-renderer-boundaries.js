@@ -58,6 +58,10 @@ function relativePath(absolutePath) {
 
 const violations = []
 for (const absolutePath of sourceFiles(rendererRoot).filter((file) => !file.split(path.sep).includes('__test__'))) {
+  const source = fs.readFileSync(absolutePath, 'utf8')
+  for (const reference of moduleReferences(source)) {
+    const root = builtinRoot(reference.moduleName)
+    if (!root || allowedBrowserPolyfills.has(root)) continue
     violations.push({
       file: relativePath(absolutePath),
       line: lineAt(source, reference.index),
