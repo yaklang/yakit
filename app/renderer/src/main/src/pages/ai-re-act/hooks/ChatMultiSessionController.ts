@@ -1016,11 +1016,14 @@ export class ChatMultiSessionController {
     })
   }
 
-  /** 发 recovery_history 拉更旧事件（grpcOffset 为起点，向前回溯 RECOVERY_HISTORY_LIMIT 条） */
-  public requestRecoveryHistory(sessionId: string) {
+  /** 拉取更旧事件；仅可发送时开启 loading，返回是否发起请求，供列表释放前插标记。 */
+  public requestRecoveryHistory(sessionId: string): boolean {
+    const lifecycle = this.metaPool.get(sessionId)?.lifecycle
+    // 关闭后仍可浏览已加载内容，但不能等待一个不会发出的历史请求。
+    if (!lifecycle?.current || lifecycle.closing || !lifecycle.started) return false
     const { store, rawData } = this.ensureSession(sessionId)
     const grpcLoadMoreLoading = store.getState().grpcLoadMoreLoading
-    if (grpcLoadMoreLoading) return
+    if (grpcLoadMoreLoading) return false
     store.getState().updateState({ grpcLoadMoreLoading: true })
     this.requestMessage(sessionId, {
       IsSyncMessage: true,
@@ -1030,6 +1033,7 @@ export class ChatMultiSessionController {
         limit: ChatMultiSessionController.RECOVERY_HISTORY_LIMIT,
       }),
     })
+    return true
   }
 
   /** timeline 历史单次拉取条数 */

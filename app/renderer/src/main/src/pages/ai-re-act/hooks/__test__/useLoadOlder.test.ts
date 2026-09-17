@@ -29,7 +29,10 @@ describe('useLoadOlder history request guards', () => {
     scroller.dataset.virtuosoScroller = 'true'
     root.append(scroller)
     document.body.append(root)
-    recovery.mockImplementation(() => store.getState().updateState({ grpcLoadMoreLoading: true }))
+    recovery.mockImplementation(() => {
+      store.getState().updateState({ grpcLoadMoreLoading: true })
+      return true
+    })
   })
   afterEach(() => {
     cleanup()
@@ -87,5 +90,19 @@ describe('useLoadOlder history request guards', () => {
     unmount()
     act(() => vi.advanceTimersToNextFrame())
     expect(recovery).toHaveBeenCalledTimes(1)
+  })
+
+  it('releases the prepend guard when the connection rejects a history request', () => {
+    recovery.mockReturnValueOnce(false)
+    const { result } = setup()
+    act(() => result.current.handleAtTopStateChange(true))
+    expect(result.current.isPrependingRef.current).toBe(false)
+    expect(store.getState().grpcLoadMoreLoading).toBe(false)
+
+    act(() => result.current.handleAtTopStateChange(false))
+    act(() => result.current.handleAtTopStateChange(true))
+    expect(recovery).toHaveBeenCalledTimes(2)
+    expect(result.current.isPrependingRef.current).toBe(true)
+    expect(store.getState().grpcLoadMoreLoading).toBe(true)
   })
 })

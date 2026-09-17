@@ -98,7 +98,10 @@ beforeEach(() => {
   store.setState(initialState, true)
   rawData.contents.clear()
   rawData.grpcOffset = 0
-  recovery.mockImplementation(() => store.setState({ grpcLoadMoreLoading: true }))
+  recovery.mockImplementation(() => {
+    store.setState({ grpcLoadMoreLoading: true })
+    return true
+  })
   // jsdom 无布局，使用 Virtuoso 官方尺寸上下文并模拟滚动容器几何信息。
   vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(VIEWPORT_HEIGHT)
   vi.spyOn(Element.prototype, 'scrollHeight', 'get').mockImplementation(

@@ -335,6 +335,42 @@ describe('session reconnect / IDB lifecycle', () => {
     expect(requests().filter((request) => request.IsFreeInput)).toHaveLength(1)
   })
 
+  it.each(['closing', 'closed'])('rejects history while %s and allows it after reconnect', async (state) => {
+    await start('s')
+    await ctrl.handleGrpcOutputEvent('s', historyEnd(88))
+    ctrl.forceCloseSession({ sessionIds: ['s'] })
+    if (state === 'closed') await ctrl.handleSessionEnd('s')
+    const requestCount = requests().length
+
+    expect(ctrl.requestRecoveryHistory('s')).toBe(false)
+    expect(requests()).toHaveLength(requestCount)
+    expect(ctrl.ensureSession('s').store.getState().grpcLoadMoreLoading).toBe(false)
+
+    await ctrl.handleSessionEnd('s')
+    await start('s')
+    await ctrl.handleGrpcOutputEvent('s', historyEnd(88))
+    expect(ctrl.requestRecoveryHistory('s')).toBe(true)
+    expect(ctrl.ensureSession('s').store.getState().grpcLoadMoreLoading).toBe(true)
+    expect(requests().at(-1).SyncJsonInput).toBe(JSON.stringify({ start_id: 88, limit: 60 }))
+    const acceptedCount = requests().length
+    expect(ctrl.requestRecoveryHistory('s')).toBe(false)
+    expect(requests()).toHaveLength(acceptedCount)
+  })
+
+  it('does not start history loading before the connection has started', async () => {
+    const cleanup = deferred()
+    vi.mocked(aiChatPersistStore.deleteSessionPersist).mockReturnValueOnce(cleanup.promise)
+    begin('s')
+    try {
+      expect(ctrl.requestRecoveryHistory('s')).toBe(false)
+      expect(requests()).toHaveLength(0)
+      expect(ctrl.ensureSession('s').store.getState().grpcLoadMoreLoading).toBe(false)
+    } finally {
+      cleanup.resolve()
+    }
+    await ctrl.ensureSession('s').meta.lifecycle.preparation
+  })
+
   it('closing during preparation prevents a late IPC start and waits for cleanup', async () => {
     const cleanup = deferred()
     vi.mocked(aiChatPersistStore.deleteSessionPersist).mockReturnValueOnce(cleanup.promise)

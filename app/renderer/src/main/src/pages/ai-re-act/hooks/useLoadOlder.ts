@@ -88,7 +88,7 @@ const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLD
   const fetchHasMore = useMemoizedFn(() => !!sessionId && rawData.grpcOffset > 0)
 
   const loadMore = useMemoizedFn(() => {
-    if (sessionId) globalSessionEngine.requestRecoveryHistory(sessionId)
+    return !!sessionId && globalSessionEngine.requestRecoveryHistory(sessionId)
   })
 
   const handleLoadMore = useMemoizedFn(() => {
@@ -105,7 +105,8 @@ const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLD
     }
 
     isPrependingRef.current = true
-    loadMore()
+    // 连接关闭等原因拒绝请求时不会有 loading 收尾，立即释放前插标记。
+    if (!loadMore()) isPrependingRef.current = false
   })
 
   const handleAtTopStateChange = useMemoizedFn((atTop: boolean) => {
