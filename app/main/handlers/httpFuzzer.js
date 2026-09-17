@@ -1,5 +1,7 @@
 const { ipcMain } = require('electron')
 const handlerHelper = require('./handleStreamWithContext')
+const { getYakProjects } = require('../filePath')
+const fs = require('fs')
 
 module.exports = (win, getClient) => {
   // asyncStringFuzzer wrapper with cancel support
@@ -775,5 +777,24 @@ module.exports = (win, getClient) => {
   }
   ipcMain.handle('DownloadHotPatchTemplate', async (e, params) => {
     return await asyncDownloadHotPatchTemplate(params)
+  })
+
+  const exportHotPatchTemplateMap = new Map()
+  ipcMain.handle('cancel-ExportHotPatchTemplateStream', handlerHelper.cancelHandler(exportHotPatchTemplateMap))
+  ipcMain.handle('ExportHotPatchTemplateStream', (_, params, token) => {
+    if (!fs.existsSync(getYakProjects())) {
+      try {
+        fs.mkdirSync(getYakProjects(), { recursive: true })
+      } catch (error) {}
+    }
+    let stream = getClient().ExportHotPatchTemplateStream(params)
+    handlerHelper.registerHandler(win, stream, exportHotPatchTemplateMap, token)
+  })
+
+  const importHotPatchTemplateMap = new Map()
+  ipcMain.handle('cancel-ImportHotPatchTemplateStream', handlerHelper.cancelHandler(importHotPatchTemplateMap))
+  ipcMain.handle('ImportHotPatchTemplateStream', (_, params, token) => {
+    let stream = getClient().ImportHotPatchTemplateStream(params)
+    handlerHelper.registerHandler(win, stream, importHotPatchTemplateMap, token)
   })
 }

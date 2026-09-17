@@ -38,6 +38,9 @@ interface ImportExportModalProps<F, R, P> {
   getContainer?: HTMLElement
   extra: ImportExportModalExtra
   hasDesc?: boolean
+  descExtra?: React.ReactNode
+  exportDesc?: React.ReactNode
+  importDesc?: React.ReactNode
   modelProps?: YakitModalProp
   formProps?: FormProps
   renderForm: (form: FormInstance) => React.ReactNode
@@ -56,6 +59,9 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     getContainer,
     extra,
     hasDesc = true,
+    descExtra = null,
+    exportDesc = null,
+    importDesc = null,
     modelProps = {},
     formProps = {},
     renderForm,
@@ -164,9 +170,25 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     if (!hasDesc) return null
     switch (type) {
       case 'export':
-        return <div className={styles['export-hint']}>{t('ImportExportModal.exportHint')}</div>
+        if (exportDesc) {
+          return <div className={styles['export-hint']}>{exportDesc}</div>
+        }
+        return (
+          <div className={styles['export-hint']}>
+            {t('ImportExportModal.exportHint')}
+            {descExtra}
+          </div>
+        )
       case 'import':
-        return <div className={styles['import-hint']}>{t('ImportExportModal.importHint')}</div>
+        if (importDesc) {
+          return <div className={styles['import-hint']}>{importDesc}</div>
+        }
+        return (
+          <div className={styles['import-hint']}>
+            {t('ImportExportModal.importHint')}
+            {descExtra}
+          </div>
+        )
 
       default:
         break
@@ -175,16 +197,19 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
 
   useEffect(() => {
     if (extra.hint) {
-      handleReset()
-      form.resetFields()
+      if (formProps.initialValues) {
+        form.setFieldsValue(formProps.initialValues)
+      }
     }
     // 关闭时重置所有数据
     return () => {
       if (extra.hint) {
+        handleReset()
+        form.resetFields()
         onCancelStream()
       }
     }
-  }, [extra.hint])
+  }, [extra.hint, formProps.initialValues])
 
   return (
     <>

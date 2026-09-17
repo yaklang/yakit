@@ -18,6 +18,8 @@ import {
   PlusCircleOutlined,
   DocumentAddOutlined,
   MinusCircleOutlined,
+  FigmaIcon2017756Outlined,
+  FigmaIcon6480193584Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { openConsoleNewWindow } from '@/utils/openWebsite'
 import { Dropdown, Tooltip } from 'antd'
@@ -49,6 +51,9 @@ import { HotPatchTemplate } from '@/pages/invoker/data/MITMPluginTamplate'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useStore } from '@/store'
 import { formatTemplateTeams } from './utils'
+import type { BatchExportHotPatchTemplateRef, BatchImportHotPatchTemplateRef } from './components/type'
+import { BatchExportHotPatchTemplate } from './components/BatchExportHotPatchTemplate'
+import { BatchImportHotPatchTemplate } from './components/BatchImportHotPatchTemplate'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -178,6 +183,8 @@ export const HotPatchManagement: React.FC = () => {
   const userInfo = useStore((s) => s.userInfo)
   const selectRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(selectRef)
+  const batchExportRef = useRef<BatchExportHotPatchTemplateRef>(null)
+  const batchImportRef = useRef<BatchImportHotPatchTemplateRef>(null)
 
   const isGlobalType = useMemo(() => activeType === 'global', [activeType])
 
@@ -731,36 +738,51 @@ export const HotPatchManagement: React.FC = () => {
   })
 
   const renderHeaderAddMenu = useMemoizedFn((type: HotCodeType) => (
-    <Dropdown
-      placement="bottomRight"
-      trigger={['click']}
-      popupRender={() => (
-        <YakitMenu
-          className={styles['hot-patch-menu']}
-          popupClassName={styles['hot-patch-menu']}
-          width={180}
-          data={[
-            {
-              key: 'create-template',
-              label: t('HotCodeTemplate.create_hot_patch_template'),
-              itemIcon: <DocumentAddOutlined color="currentColor" />,
-            },
-            {
-              key: 'create-group',
-              label: t('HotCodeTemplate.create_group'),
-              itemIcon: <PlusCircleOutlined color="currentColor" />,
-            },
-          ]}
-          onClick={({ key, domEvent }) => {
-            domEvent.stopPropagation()
-            if (key === 'create-template') onAddNewTemplate(type)
-            if (key === 'create-group') onOpenCreateGroupModal(type)
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <Tooltip title={t('YakitButton.batchExport')}>
+        <YakitButton
+          type="text2"
+          icon={<FigmaIcon2017756Outlined />}
+          onClick={() => {
+            batchExportRef.current?.open({
+              Filter: {
+                Type: type,
+              },
+            })
           }}
         />
-      )}
-    >
-      <YakitButton size="small" type="outline1" icon={<PlusOutlined color="currentColor" />} />
-    </Dropdown>
+      </Tooltip>
+      <Dropdown
+        placement="bottomRight"
+        trigger={['click']}
+        popupRender={() => (
+          <YakitMenu
+            className={styles['hot-patch-menu']}
+            popupClassName={styles['hot-patch-menu']}
+            width={180}
+            data={[
+              {
+                key: 'create-template',
+                label: t('HotCodeTemplate.create_hot_patch_template'),
+                itemIcon: <DocumentAddOutlined color="currentColor" />,
+              },
+              {
+                key: 'create-group',
+                label: t('HotCodeTemplate.create_group'),
+                itemIcon: <PlusCircleOutlined color="currentColor" />,
+              },
+            ]}
+            onClick={({ key, domEvent }) => {
+              domEvent.stopPropagation()
+              if (key === 'create-template') onAddNewTemplate(type)
+              if (key === 'create-group') onOpenCreateGroupModal(type)
+            }}
+          />
+        )}
+      >
+        <YakitButton size="small" type="outline1" icon={<PlusOutlined color="currentColor" />} />
+      </Dropdown>
+    </div>
   ))
 
   const onShowTemplateContextMenu = useMemoizedFn(
@@ -793,6 +815,13 @@ export const HotPatchManagement: React.FC = () => {
           key: 'remove-from-group',
           label: t('HotCodeTemplate.remove_from_group'),
           itemIcon: <MinusCircleOutlined color="currentColor" />,
+        })
+      }
+      if (source === 'local') {
+        menu.push({
+          key: 'export',
+          label: '导出模板',
+          itemIcon: <FigmaIcon2017756Outlined color="currentColor" />,
         })
       }
       if (type === 'global') {
@@ -839,6 +868,14 @@ export const HotPatchManagement: React.FC = () => {
             else if (key === 'disable-global') onDisableGlobalHotPatch()
             else if (key === 'rename') onRenameTemplate(item, type)
             else if (key === 'delete') onDeleteTemplate(item, source, type)
+            else if (key === 'export')
+              batchExportRef.current?.open({
+                OutputFilename: item.name,
+                Filter: {
+                  Type: type,
+                  Name: [item.name],
+                },
+              })
           },
         },
         event.clientX,
@@ -1067,6 +1104,24 @@ export const HotPatchManagement: React.FC = () => {
             )}
           </div>
           <div className={styles['editor-header-right']}>
+            <YakitButton
+              type="text2"
+              icon={<FigmaIcon2017756Outlined />}
+              onClick={() => {
+                batchExportRef.current?.open({
+                  OutputFilename: selectedTemplate,
+                  Filter: {
+                    Type: activeType,
+                    Name: [selectedTemplate],
+                  },
+                })
+              }}
+            />
+            <YakitButton
+              type="text2"
+              icon={<FigmaIcon6480193584Outlined />}
+              onClick={() => batchImportRef.current?.open()}
+            />
             {hideTemplateContent && (
               <Tooltip placement="bottom" title={t('HTTPFuzzerHotPatch.engineConsole')}>
                 <YakitButton
@@ -1234,6 +1289,14 @@ export const HotPatchManagement: React.FC = () => {
         visible={addHotCodeTemplateVisible}
         onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
         onSaveHotCodeOk={onSaveAsSuccess}
+      />
+      <BatchExportHotPatchTemplate ref={batchExportRef} />
+      <BatchImportHotPatchTemplate
+        ref={batchImportRef}
+        onSuccess={() => {
+          loadGlobalTemplateList()
+          loadTemplateList(panelType)
+        }}
       />
     </div>
   )
