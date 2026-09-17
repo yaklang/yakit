@@ -95,6 +95,9 @@ export const YakMcpSettings: React.FC = () => {
       .catch(() => setEnginePath(''))
   }, [])
 
+  // 缓存加载完成前阻止 effect 以默认 state 覆盖用户配置
+  const configLoadedRef = useRef(false)
+
   useEffect(() => {
     getRemoteValue(RemoteAIAgentGV.YakMCPStartConfig).then((raw) => {
       const config = parseMcpStartConfig(raw)
@@ -103,6 +106,7 @@ export const YakMcpSettings: React.FC = () => {
       setEnableAIToolFramework(merged.enableAIToolFramework)
       setEnableBridgeExternalMcp(merged.enableBridgeExternalMcp)
       setAutoStartMcp(merged.autoStart)
+      configLoadedRef.current = true
     })
   }, [])
 
@@ -418,6 +422,7 @@ export const YakMcpSettings: React.FC = () => {
   const debouncedSaveMcpStartConfig = useDebounceFn(flushMcpStartConfig, { wait: 500 }).run
 
   const saveMcpStartConfig = useMemoizedFn((override?: Partial<YakMCPStartConfig>) => {
+    if (!configLoadedRef.current) return
     pendingMcpStartConfigRef.current = {
       autoStart: autoStartMcp,
       url: isRemoteEngine ? '' : mcpStreamInfo.mcpUrl || localMcpDefalutUrl,

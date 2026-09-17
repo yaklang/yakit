@@ -184,6 +184,12 @@ describe('YakMcpSettings', () => {
 
     const { rerender } = render(<YakMcpSettings />)
 
+    // 等缓存加载完成（configLoadedRef 置位）后再改地址，贴合真实时序
+    await waitFor(() => {
+      expect(getRemoteValueMock).toHaveBeenCalledWith(RemoteAIAgentGV.YakMCPStartConfig)
+    })
+    await new Promise((r) => setTimeout(r, 0))
+
     mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: '0.0.0.0:11432' }
     rerender(<YakMcpSettings />)
 
@@ -193,5 +199,43 @@ describe('YakMcpSettings', () => {
         expect.stringContaining('"url":""'),
       )
     })
+  })
+
+  it('MCP 运行中打开设置页不会用默认 state 覆盖缓存配置', async () => {
+    ipcRendererMock.invoke.mockResolvedValue('/opt/yak')
+    // 缓存中存有用户自定义的自启动与能力层配置
+    const cached = {
+      autoStart: true,
+      url: '127.0.0.1:9011',
+      enableLegacyMcpTools: false,
+      enableAIToolFramework: false,
+      enableBridgeExternalMcp: false,
+    }
+    getRemoteValueMock.mockResolvedValue(JSON.stringify(cached))
+    // MCP 正在运行：enableMcp 为 true，挂载即触发 [enableMcp] effect
+    mcpStreamInfoRef.current = {
+      mcpUrl: '127.0.0.1:9011',
+      mcpCurrent: { Status: 'running' },
+      mcpServerUrl: 'http://127.0.0.1:9011/sse',
+    }
+
+    render(<YakMcpSettings />)
+
+    await waitFor(() => {
+      expect(getRemoteValueMock).toHaveBeenCalledWith(RemoteAIAgentGV.YakMCPStartConfig)
+    })
+
+    // 等过 500ms 防抖落盘窗口
+    await new Promise((r) => setTimeout(r, 600))
+
+    // 不应以尚未恢复的默认 state（autoStart:false / enableLegacyMcpTools:true）覆盖缓存
+    expect(setRemoteValueMock).not.toHaveBeenCalledWith(
+      RemoteAIAgentGV.YakMCPStartConfig,
+      expect.stringContaining('"autoStart":false'),
+    )
+    expect(setRemoteValueMock).not.toHaveBeenCalledWith(
+      RemoteAIAgentGV.YakMCPStartConfig,
+      expect.stringContaining('"enableLegacyMcpTools":true'),
+    )
   })
 })
