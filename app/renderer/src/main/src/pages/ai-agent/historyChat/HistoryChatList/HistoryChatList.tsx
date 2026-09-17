@@ -304,7 +304,7 @@ const HistoryChatList: FC<{
 
   return (
     <YakitSpin spinning={closeLoading}>
-      <div className={styles['history-chat-list']}>
+      <div className={styles['history-chat-list-virtual']}>
         <Virtuoso
           className={styles['history-virtual-list']}
           style={{ height: '100%', width: '100%' }}
