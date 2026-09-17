@@ -197,6 +197,9 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
 
   useEffect(() => {
     if (extra.hint) {
+      handleReset()
+      form.resetFields()
+      // 使用当前最新的 initialValues 填充表单，避免 resetFields 只回到 mount 时的旧快照
       if (formProps.initialValues) {
         form.setFieldsValue(formProps.initialValues)
       }
@@ -204,12 +207,10 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     // 关闭时重置所有数据
     return () => {
       if (extra.hint) {
-        handleReset()
-        form.resetFields()
         onCancelStream()
       }
     }
-  }, [extra.hint, formProps.initialValues])
+  }, [extra.hint])
 
   return (
     <>
