@@ -34,7 +34,7 @@ export type ImportExportModalExtra = {
   type: 'export' | 'import'
   apiKey: string
 }
-interface ImportExportModalProps<F, R, P> {
+export interface ImportExportModalProps<F, R, P> {
   getContainer?: HTMLElement
   extra: ImportExportModalExtra
   hasDesc?: boolean
