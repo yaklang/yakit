@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
+import type * as ToolModule from '@/utils/tool'
 
 // tool.ts 在 JSON.parse 失败时会调用 debugToPrintLogs 输出日志，
 // 该函数依赖全局 yakitLogs，在 jsdom 环境可能报错，这里 mock 掉避免噪音。
 vi.mock('@/utils/tool', async (importOriginal) => {
-  const actual = await importOriginal()
+  const actual = await importOriginal<typeof ToolModule>()
   return {
     ...actual,
     debugToPrintLogs: vi.fn(),

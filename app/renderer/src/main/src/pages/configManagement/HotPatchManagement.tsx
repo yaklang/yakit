@@ -739,7 +739,7 @@ export const HotPatchManagement: React.FC = () => {
 
   const renderHeaderAddMenu = useMemoizedFn((type: HotCodeType) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <Tooltip title={t('YakitButton.batchExport')}>
+      <Tooltip title={'全部导出'}>
         <YakitButton
           type="text2"
           icon={<FigmaIcon2017756Outlined />}
@@ -1104,19 +1104,21 @@ export const HotPatchManagement: React.FC = () => {
             )}
           </div>
           <div className={styles['editor-header-right']}>
-            <YakitButton
-              type="text2"
-              icon={<FigmaIcon2017756Outlined />}
-              onClick={() => {
-                batchExportRef.current?.open({
-                  OutputFilename: selectedTemplate,
-                  Filter: {
-                    Type: activeType,
-                    Name: [selectedTemplate],
-                  },
-                })
-              }}
-            />
+            <Tooltip title="单个导出">
+              <YakitButton
+                type="text2"
+                icon={<FigmaIcon2017756Outlined />}
+                onClick={() => {
+                  batchExportRef.current?.open({
+                    OutputFilename: selectedTemplate,
+                    Filter: {
+                      Type: activeType,
+                      Name: [selectedTemplate],
+                    },
+                  })
+                }}
+              />
+            </Tooltip>
             <YakitButton
               type="text2"
               icon={<FigmaIcon6480193584Outlined />}
