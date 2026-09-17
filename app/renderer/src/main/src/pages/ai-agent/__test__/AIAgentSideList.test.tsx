@@ -93,7 +93,13 @@ describe('AIAgentSideList', () => {
     expect(screen.getByLabelText('active')).toHaveTextContent('file')
     expect(screen.queryByRole('button', { name: 'file' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'session' })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['browser', 'scheduled', 'mcp'])
+    // 侧栏 tab 之外，File 面板 mock 也会渲染按钮，断言时只取入口 tab
+    expect(
+      screen
+        .getAllByRole('button')
+        .map((button) => button.textContent)
+        .filter((text) => text === 'browser' || text === 'scheduled' || text === 'mcp'),
+    ).toEqual(['browser', 'scheduled', 'mcp'])
     expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
     expect(screen.getByText('文件列表')).toBeInTheDocument()
   })
