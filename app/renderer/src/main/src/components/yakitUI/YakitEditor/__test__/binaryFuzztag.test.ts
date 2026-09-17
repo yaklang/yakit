@@ -13,6 +13,10 @@ import {
   packetTextToRawBytes,
   rawBytesToPacketText,
   bytesToUnquoteString,
+  bytesToText,
+  textToBytes,
+  textToByteMap,
+  charsToBytes,
   decodeBinaryTag,
   encodeBytesToTag,
   canLocateFileReference,
@@ -607,5 +611,62 @@ describe('bytesToUnquoteString vs runCodec(StrQuote)', () => {
     expect(quoted).toBe('"A\\x60\\xff"')
     expect(quoted).not.toContain('`')
     expect(Array.from(goUnquoteToBytes(quoted))).toEqual(Array.from(bytes))
+  })
+})
+
+describe('bytesToText / textToBytes round-trip', () => {
+  it('中文与真实换行原样显示，round-trip 无损', () => {
+    const bytes = new TextEncoder().encode('测试11\r\n测试速22\n\tend')
+    expect(bytesToText(bytes)).toBe('测试11\r\n测试速22\n\tend')
+    expect(Array.from(textToBytes(bytesToText(bytes)))).toEqual(Array.from(bytes))
+  })
+
+  it('全字节值 0-255（含非法 UTF-8 与控制符）逐字节转义，round-trip 无损', () => {
+    const bytes = Uint8Array.from({ length: 256 }, (_, i) => i)
+    const text = bytesToText(bytes)
+    expect(text).toContain('\\x00')
+    expect(text).toContain('A')
+    expect(Array.from(textToBytes(text))).toEqual(Array.from(bytes))
+  })
+
+  it('字面反斜杠序列转双反斜杠防止被反向解析吞掉，round-trip 无损', () => {
+    // 字节 5c 78 34 31 是字面 "\x41" 四个字符，不能被 textToBytes 误解析为单字节 0x41
+    const bytes = new Uint8Array([0x5c, 0x78, 0x34, 0x31])
+    expect(bytesToText(bytes)).toBe('\\\\x41')
+    expect(Array.from(textToBytes(bytesToText(bytes)))).toEqual(Array.from(bytes))
+  })
+
+  it('用户输入转义序列解析为对应字节', () => {
+    expect(Array.from(textToBytes('A\\x41\\u4e2dB'))).toEqual([0x41, 0x41, 0xe4, 0xb8, 0xad, 0x42])
+  })
+})
+
+describe('textToByteMap / charsToBytes 选区映射', () => {
+  // 单元: A(1B) B(1B) \x41(4字符1B) \u4e2d(6字符=中3B) C(1B)，共 13 字符 7 字节
+  const text = 'AB\\x41\\u4e2dC'
+  const map = textToByteMap(text)
+
+  it('前缀字符 -> 累计字节数映射正确（转义单元内部映射到单元起始字节数）', () => {
+    expect(map).toEqual([0, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 6, 7])
+  })
+
+  it('字符区间 -> 字节闭区间；空区间或跨半个转义单元返回 null', () => {
+    expect(charsToBytes(map, 0, 2)).toEqual([0, 1])
+    expect(charsToBytes(map, 2, 6)).toEqual([2, 2])
+    expect(charsToBytes(map, 0, 0)).toBeNull()
+    expect(charsToBytes(map, 3, 5)).toBeNull()
+  })
+
+  it('完整转义单元边界的字节闭区间正确', () => {
+    for (const [cs, ce, expected] of [
+      [0, 1, [0, 0]],
+      [1, 2, [1, 1]],
+      [2, 6, [2, 2]],
+      [6, 12, [3, 5]],
+      [12, 13, [6, 6]],
+      [0, 13, [0, 6]],
+    ] as [number, number, [number, number]][]) {
+      expect(charsToBytes(map, cs, ce)).toEqual(expected)
+    }
   })
 })

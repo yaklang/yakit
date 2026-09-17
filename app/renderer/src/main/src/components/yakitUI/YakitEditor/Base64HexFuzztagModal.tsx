@@ -1,5 +1,6 @@
 import type React from 'react'
 import { useMemo, useRef, useState } from 'react'
+import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { type BinaryFuzztagEntry, bytesToHex } from './binaryFuzztag'
@@ -88,8 +89,12 @@ export const Base64HexFuzztagModal: React.FC<Base64HexFuzztagModalProps> = (prop
   // 默认文本编辑器；但内容不可打印(无 previewText)时默认 HEX，避免文本模式 UTF-8 往返损坏二进制数据
   const [editorType, setEditorType] = useState<EditorType>(() => (entry.previewText ? 'text' : 'hex'))
   const [text, setText] = useState<string>(() => decodeText(initialData))
+  // 文本模式下的 textarea：经 resizableTextArea.textArea 取原生节点读选区
+  const textRef = useRef<TextAreaRef>(null)
   // HEX 编辑器挂载 key：每次切到 HEX 时自增，强制以最新 dataRef.current 重新挂载
   const [hexMountKey, setHexMountKey] = useState<number>(0)
+  // 文字→HEX 时带入的字节选区（带入即会在 HEX 挂载后弹出编辑面板）
+  const [hexInitialSel, setHexInitialSel] = useState<[number, number] | undefined>(undefined)
   const [hostVersion, setHostVersion] = useState<number>(0)
 
   const bytePreview = useMemo(() => {
@@ -112,6 +117,20 @@ export const Base64HexFuzztagModal: React.FC<Base64HexFuzztagModalProps> = (prop
     if (type === 'hex') {
       // 文本 -> HEX：先把文本编码进字节缓冲，再重新挂载 HEX 编辑器
       dataRef.current = encodeText(text)
+      // 换算 textarea 当前光标/选区 -> 字节区间带入（光标=单字节定位，选中=区间）
+      const el = textRef.current?.resizableTextArea?.textArea ?? null
+      if (el) {
+        const lo = encodeText(text.slice(0, el.selectionStart)).length
+        if (el.selectionStart === el.selectionEnd) {
+          setHexInitialSel(lo < dataRef.current.length ? [lo, lo] : undefined)
+        } else {
+          const hi = encodeText(text.slice(0, el.selectionEnd)).length - 1
+          const hit = hi >= lo && hi < dataRef.current.length
+          setHexInitialSel(hit ? [lo, hi] : undefined)
+        }
+      } else {
+        setHexInitialSel(undefined)
+      }
       setHexMountKey((k) => k + 1)
     } else {
       // HEX -> 文本：把字节缓冲解码回文本
@@ -151,6 +170,7 @@ export const Base64HexFuzztagModal: React.FC<Base64HexFuzztagModalProps> = (prop
         {editorType === 'text' ? (
           <div className={styles['text-pane']}>
             <YakitInput.TextArea
+              ref={textRef}
               className={styles['text-area']}
               value={text}
               readOnly={readOnly}
@@ -163,6 +183,7 @@ export const Base64HexFuzztagModal: React.FC<Base64HexFuzztagModalProps> = (prop
             key={hexMountKey}
             dataRef={dataRef}
             readOnly={readOnly}
+            initialSelection={hexInitialSel}
             onChange={() => setHostVersion((v) => v + 1)}
           />
         )}

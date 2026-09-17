@@ -321,6 +321,7 @@
     "confirmClearList": "確定清空列表資料嗎?"
   },
   "YakitEditor": {
+    "textView": "文字",
     "getPlugin": "獲取外掛",
     "executePlugin": "執行插件",
     "modifyParameters": "修改參數",
