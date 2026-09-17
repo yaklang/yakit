@@ -93,11 +93,7 @@ describe('AIAgentSideList', () => {
     expect(screen.getByLabelText('active')).toHaveTextContent('file')
     expect(screen.queryByRole('button', { name: 'file' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'session' })).not.toBeInTheDocument()
-    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
-      'browser',
-      'scheduled',
-      'mcp',
-    ])
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['browser', 'scheduled', 'mcp'])
     expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
     expect(screen.getByText('文件列表')).toBeInTheDocument()
   })
