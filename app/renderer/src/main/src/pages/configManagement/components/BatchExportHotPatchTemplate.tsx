@@ -19,6 +19,7 @@ import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { SystemInfo } from '@/constants/hardware'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { ExecResult } from '../../../pages/invoker/schema'
+import { getPathJoin } from '@/pages/yakRunner/utils'
 const { ipcRenderer } = window.require('electron')
 
 const defaultExportHotPatchRequest: ExportHotPatchTemplateStreamRequest = {
@@ -152,7 +153,9 @@ export const BatchExportHotPatchTemplate = memo(
           let name = values.OutputFilename + '.zip'
           if (values.Password) name += '.enc'
           try {
-            exportPath.current = await ipcRenderer.invoke('GenerateProjectsFilePath', name)
+            getPathJoin(values.OutputPluginDir, name).then((path) => {
+              exportPath.current = path
+            })
           } catch (error) {}
         }}
         onSubmitForm={(values) => ({

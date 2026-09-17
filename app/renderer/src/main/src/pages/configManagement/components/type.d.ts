@@ -1,5 +1,5 @@
 export interface ExportHotPatchFormValues {
-  OutputPluginDir?: string
+  OutputPluginDir: string
   OutputFilename: string
   Password?: string
 }
