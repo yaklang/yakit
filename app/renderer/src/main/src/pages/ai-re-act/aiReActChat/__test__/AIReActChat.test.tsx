@@ -1,5 +1,5 @@
 import React from 'react'
-import { get } from 'lodash'
+import get from 'lodash/get'
 import type * as AIReActChatModule from '../AIReActChat'
 import type { AIReActChatContentsRef } from '../../aiReActChatContents/AIReActChatContentsType'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
