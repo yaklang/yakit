@@ -21,6 +21,7 @@ export interface CHeaderTreeNode {
   isPack: boolean
   kind: string
   sizeBytes: number
+  depth: number
   isLeaf?: boolean
   children?: CHeaderTreeNode[]
 }
