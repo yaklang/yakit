@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import React, { useEffect, useRef, useState } from 'react'
 import type { WebFuzzerPageProps, WebFuzzerType } from './WebFuzzerPageType'
 import styles from './WebFuzzerPage.module.scss'
@@ -26,8 +27,6 @@ import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useFuzzerSequence } from '@/store/fuzzerSequence'
 import { JSONParseLog } from '@/utils/tool'
-const { ipcRenderer } = window.require('electron')
-
 export const webFuzzerTabs = (t: TFunction) => {
   return [
     {
@@ -148,7 +147,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     }
   })
   const onAddGroup = useMemoizedFn((params: Record<string, string>) => {
-    ipcRenderer.invoke('send-add-group', params)
+    ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-add-group', data: params })
   })
   /**本组件中切换tab展示的事件 */
   const onSetType = useMemoizedFn((key: WebFuzzerType) => {

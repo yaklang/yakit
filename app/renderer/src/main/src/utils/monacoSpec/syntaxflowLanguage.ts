@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { type CancellationToken, type editor, languages, type Position } from 'monaco-editor'
 import { SyntaxFlowMonacoSpec } from './syntaxflowEditor'
 import {
@@ -8,7 +9,6 @@ import {
   getSortTextByKindAndLabel,
 } from './yakCompletionSchema'
 import { monaco } from 'react-monaco-editor'
-const { ipcRenderer } = window.require('electron')
 
 export const newSyntaxflowCompletionHandlerProvider = (
   model: editor.ITextModel,
@@ -33,15 +33,15 @@ export const newSyntaxflowCompletionHandlerProvider = (
     }
     const rng = getSyntaxflowCompletionPosition(model, position)
 
-    await ipcRenderer
-      .invoke('YaklangLanguageSuggestion', {
+    await ipc
+      .invoke('grpc', 'YaklangLanguageSuggestion', {
         InspectType: 'completion',
         YakScriptType: SyntaxFlowMonacoSpec,
         YakScriptCode: model.getValue(),
         ModelID: model.id,
         Range: rng,
       } as YaklangLanguageSuggestionRequest)
-      .then((r: YaklangLanguageSuggestionResponse) => {
+      .then((r) => {
         if (r.SuggestionMessage.length > 0) {
           const range = {
             startLineNumber: position.lineNumber,

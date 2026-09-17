@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type { UserInfoProps } from '@/store'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
@@ -7,7 +8,6 @@ import { NowProjectDescription } from '@/pages/globalVariable'
 import emiter from './eventBus/eventBus'
 import { LocalGVS } from '@/enums/localGlobal'
 import { JSONParseLog } from './tool'
-import { yakitApp, yakitNetwork, yakitPlugin } from '@/services/electronBridge'
 import { stopIMControl } from './imControl'
 
 let stopIMControlForLogoutPromise: Promise<unknown> | undefined
@@ -57,17 +57,17 @@ export const loginOutLocal = (userInfo: UserInfoProps) => {
     } catch (error) {}
 
     if (isDelPrivate) {
-      yakitPlugin
-        .deleteByUserId({
-          UserID: userInfo.user_id,
+      ipc
+        .invoke('grpc', 'DeletePluginByUserID', {
+          UserID: userInfo.user_id ?? undefined,
           OnlineBaseUrl,
         })
         .finally(() => {
-          yakitApp.userSignOut()
+          ipc.invoke('local', 'user-sign-out', {})
           emiter.emit('onRefreshLocalPluginList')
         })
     } else {
-      yakitApp.userSignOut()
+      ipc.invoke('local', 'user-sign-out', {})
     }
   })
 }
@@ -86,7 +86,7 @@ export const refreshToken = (userInfo: UserInfoProps) => {
 export const aboutLoginUpload = (Token: string) => {
   if ((isEnpriTraceAgent() || isEnpriTrace()) && NowProjectDescription) {
     const { ProjectName, ExternalModule, ExternalProjectCode } = NowProjectDescription
-    return yakitNetwork.uploadRiskToOnline({ Token, ProjectName, ExternalModule, ExternalProjectCode })
+    return ipc.invoke('grpc', 'UploadRiskToOnline', { Token, ProjectName, ExternalModule, ExternalProjectCode })
   }
 }
 
@@ -102,7 +102,7 @@ export interface HTTPFlowsToOnlineRequest {
 export const loginHTTPFlowsToOnline = (Token: string) => {
   if ((isEnpriTraceAgent() || isEnpriTrace()) && NowProjectDescription) {
     const { ProjectName, Description, ExternalModule, ExternalProjectCode } = NowProjectDescription
-    return yakitNetwork.httpFlowsToOnline({
+    return ipc.invoke('grpc', 'HTTPFlowsToOnline', {
       Token,
       ProjectName,
       ProjectDescription: Description,

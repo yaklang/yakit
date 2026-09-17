@@ -3,7 +3,7 @@ import { type TextareaForImage } from './pluginImageTextarea/PluginImageTextarea
 
 /** @name 获取插件信息的关键参数(前端逻辑专属) */
 export interface KeyParamsFetchPluginDetail {
-  id: number
+  id: number | string
   uuid: string
   name: string
 }

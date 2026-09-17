@@ -5,7 +5,7 @@ import { type AIMCPServerTypeEnum } from '../defaultConstant'
 
 export interface GetAllMCPServersRequest {
   Keyword: string
-  ID?: number
+  ID?: string | number
   Pagination: PaginationSchema
   IsShowToolList: boolean
 }
@@ -16,7 +16,7 @@ export interface GetAllMCPServersResponse {
   Total: number
 }
 export interface MCPServer {
-  ID: number
+  ID: string | number
   Name: string
   Type: MCPServerType
   URL: string
@@ -42,7 +42,7 @@ export interface MCPServerToolParamInfo {
 }
 
 export interface UpdateMCPServerRequest {
-  ID: number
+  ID: string | number
   Name: string
   Type: MCPServerType
   URL: string
@@ -69,7 +69,7 @@ export interface AddMCPServerRequest {
 }
 
 export interface DeleteMCPServerRequest {
-  ID: number
+  ID: string | number
 }
 
 export type MCPServerType = `${AIMCPServerTypeEnum}`
@@ -96,7 +96,7 @@ export const resolveMCPToolListSourceFilter = (tiers: MCPTierVisibility): string
 
 // ---- MCP Tool-level enable/disable management ----
 export interface MCPToolConfig {
-  ID: number
+  ID: string | number
   /** Canonical tool name, e.g. "port_scan" or "mcp_IDA-MCP_decompile" */
   ToolName: string
   /** "builtin" (legacy MCP) | "aitool" (AI framework builtin) | "bridge" (external MCP) */
@@ -141,7 +141,7 @@ export interface GetMCPToolDetailRequest {
 }
 
 export interface MCPToolCallHistory {
-  ID: number
+  ID: string | number
   ToolName: string
   Arguments: string
   Result: string
@@ -170,11 +170,11 @@ export interface QueryMCPToolCallHistoryResponse {
 }
 
 export interface GetMCPToolCallHistoryDetailRequest {
-  ID: number
+  ID: string | number
 }
 
 export interface DeleteMCPToolCallHistoryRequest {
-  IDs?: number[]
+  IDs?: (string | number)[]
   DeleteAll?: boolean
   DeleteFiltered?: boolean
   Keyword?: string

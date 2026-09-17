@@ -1,3 +1,5 @@
+import { yakScriptForUI } from '@/pages/invoker/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import { ArrowsExpandIcon, ArrowsRetractIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -70,7 +72,6 @@ import type { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const PluginTrace = React.lazy(() => import('./PluginTrace/PluginTrace'))
 
-const { ipcRenderer } = window.require('electron')
 // 性能优化：空 Map 常量，避免每次渲染创建新对象
 const emptyBoolMap = new Map<string, boolean>()
 
@@ -81,7 +82,7 @@ interface MITMPluginHijackContentProps {
   hasParamsCheckList: string[]
   setHasParamsCheckList: (s: string[]) => void
   setNoParamsCheckList: (s: string[]) => void
-  onSubmitYakScriptId: (id: number, params: YakExecutorParam[]) => any
+  onSubmitYakScriptId: (id: string | number, params: YakExecutorParam[]) => any
   status: MitmStatus
   isFullScreen: boolean
   setIsFullScreen: (b: boolean) => void
@@ -277,7 +278,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
 
   useEffect(() => {
     // 加载状态(从服务端加载)
-    grpcClientMITMLoading(mitmVersion).on((flag: boolean) => {
+    const unsubscribegrpcClientMITMLoading = grpcClientMITMLoading(mitmVersion).on((flag: boolean) => {
       setLoading(flag)
     })
     const CHECK_CACHE_LIST_DATA = 'CHECK_CACHE_LIST_DATA'
@@ -300,7 +301,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     let noParamsCheckArr: string[] = []
     let hasParamsCheckArr: string[] = []
     // 用于 MITM 的 查看当前 Hooks
-    grpcClientMITMHooks(mitmVersion).on((data: YakScriptHooks[]) => {
+    const unsubscribegrpcClientMITMHooks = grpcClientMITMHooks(mitmVersion).on((data: YakScriptHooks[]) => {
       if (isDefaultCheck.current) {
         const tmp = new Map<string, boolean>()
         const tmpID = new Map<string, boolean>()
@@ -349,8 +350,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     return () => {
       // 组件销毁时进行本地缓存 用于后续页面进入默认选项（只缓存普通插件，不缓存带参插件）
       setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(noParamsCheckArr))
-      grpcClientMITMHooks(mitmVersion).remove()
-      grpcClientMITMLoading(mitmVersion).remove()
+      unsubscribegrpcClientMITMHooks()
+      unsubscribegrpcClientMITMLoading()
     }
   }, [])
   // 性能优化：用 ref 缓存 hooks 的插件名 key，只在插件名集合变化时重建 hooksItem（避免 localeCompare 排序在每次 Map 引用变化时重跑）
@@ -445,9 +446,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
   })
   /**@description 保存热加载代码到本地插件 */
   const onSaveHotCode = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('SaveYakScript', script)
-      .then((data: YakScript) => {
+    ipc
+      .invoke('grpc', 'SaveYakScript', script)
+      .then(yakScriptForUI)
+      .then((data) => {
         yakitNotify('success', t('MITMPluginHijackContent.local_plugin_saved_successfully'))
       })
       .catch((e: any) => {
@@ -475,8 +477,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
   const [selectedTemplateName, setSelectedTemplateName] = useState<string>('')
 
   const onUpdateTemplate = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('UpdateHotPatchTemplate', {
+    ipc
+      .invoke('grpc', 'UpdateHotPatchTemplate', {
         Condition: {
           Type: 'mitm',
           Name: [tempNameRef.current],

@@ -11,14 +11,14 @@ import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageTy
  */
 export interface PageItemProps {
   routeKey: YakitRoute | string
-  yakScriptId?: number
+  yakScriptId?: string | number
   params?: ComponentParams
 }
 
 export interface RenderSubPageProps {
   renderSubPage: MultipleNodeInfo[]
   route: YakitRoute
-  pluginId?: number
+  pluginId?: string | number
   selectSubMenuId: string
 }
 
@@ -30,7 +30,7 @@ export interface RenderFuzzerSequenceProps {
 
 export interface RenderSubPageItemProps {
   route: YakitRoute
-  pluginId?: number
+  pluginId?: string | number
   selectSubMenuId: string
   subItem: MultipleNodeInfo
 }

@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../shared/communication/window-client'
 import type React from 'react'
 import { useEffect, useState, useLayoutEffect } from 'react'
 import { Modal } from 'antd'
@@ -12,8 +13,6 @@ import { apiDownloadPluginMine } from './plugins/utils'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { yakitAuth } from '@/services/electronBridge'
-
 export interface LoginProp {
   visible: boolean
   onCancel: () => any
@@ -57,7 +56,8 @@ const Login: React.FC<LoginProp> = (props) => {
         },
       })
         .then((res) => {
-          if (res) yakitAuth.startUserSignIn({ url: res, type })
+          if (res && (type === 'github' || type === 'wechat' || type === 'qq'))
+            return ipc.invoke('local', 'user-sign-in', { url: res, type })
         })
         .catch((err) => {
           failed(t('Login.loginError', { error: err }))
@@ -69,7 +69,7 @@ const Login: React.FC<LoginProp> = (props) => {
   }
   // 全局监听登录状态
   useEffect(() => {
-    const cleanup = yakitAuth.onSignInData((res: any) => {
+    const cleanup = ipc.on('fetch-signin-data', (res: any) => {
       const { ok, info } = res
       if (ok) {
         const m = YakitModalConfirm({

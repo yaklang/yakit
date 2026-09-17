@@ -49,8 +49,6 @@ import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'mitm')
 const PluginHasParamsDrawer = React.lazy(() => import('../../components/pluginHasParamsDrawer/PluginHasParamsDrawer'))
 
-const { ipcRenderer } = window.require('electron')
-
 export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
   const {
     hooks,
@@ -525,7 +523,7 @@ export interface MITMYakScriptLoaderProps {
   hooksID: Map<string, boolean>
   maxWidth?: number
   onSendToPatch?: (s: YakScript) => any
-  onSubmitYakScriptId: (id: number, params: YakExecutorParam[]) => any
+  onSubmitYakScriptId: (id: string | number, params: YakExecutorParam[]) => any
   onRemoveHook?: (name: string, id: string) => void
   /**
    * @param 是否劫持启动前/未开启劫持启动

@@ -1,9 +1,8 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import emiter from '../eventBus/eventBus'
 import { Uint8ArrayToString } from '../str'
 import type { API } from '@/services/swagger/resposeType'
 import { JSONParseLog } from '../tool'
-import { yakitSocket } from '@/services/electronBridge'
-
 let webSocketListeners: Array<() => void> = []
 
 const cleanupWebSocketListeners = () => {
@@ -17,7 +16,7 @@ export let webSocketStatus = false
 export const startWebSocket = () => {
   cleanupWebSocketListeners()
 
-  const offMessage = yakitSocket.onMessage((data: Uint8Array) => {
+  const offMessage = ipc.on('client-socket-message', (data: Uint8Array) => {
     try {
       const obj = JSONParseLog(Uint8ArrayToString(data), { page: 'webSocket', fun: 'startWebSocket' })
       switch (obj.messageType) {
@@ -28,7 +27,7 @@ export const startWebSocket = () => {
     } catch (error) {}
   })
 
-  const offOpen = yakitSocket.onOpen(() => {
+  const offOpen = ipc.on('client-socket-open', () => {
     webSocketStatus = true
     // 连接成功时 通知需要消息中心信息
     sendWebSocket({
@@ -37,11 +36,11 @@ export const startWebSocket = () => {
     })
   })
 
-  const offClose = yakitSocket.onClose(() => {
+  const offClose = ipc.on('client-socket-close', () => {
     webSocketStatus = false
   })
 
-  const offError = yakitSocket.onError((error: any) => {
+  const offError = ipc.on('client-socket-error', (error: any) => {
     // console.log("webSocket错误",error);
   })
 
@@ -49,10 +48,10 @@ export const startWebSocket = () => {
 }
 
 export const closeWebSocket = () => {
-  yakitSocket.close()
+  ipc.invoke('local', 'socket-close', {})
   cleanupWebSocketListeners()
 }
 
 export const sendWebSocket = (data: API.WsRequest) => {
-  yakitSocket.send(data)
+  ipc.invoke('local', 'socket-send', data)
 }

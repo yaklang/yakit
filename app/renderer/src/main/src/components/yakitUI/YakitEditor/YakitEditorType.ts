@@ -20,7 +20,7 @@ export interface ContextMenuPacketEditorConfig {
   /** HTTPS 状态，未传时为 unknown */
   httpsState?: ContextMenuHttpsState
   /** 关联流量 ID */
-  httpFlowId?: number
+  httpFlowId?: string | number
 }
 
 /** monaco-editor 相关接口 */

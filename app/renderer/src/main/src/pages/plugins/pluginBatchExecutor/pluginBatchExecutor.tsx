@@ -1,3 +1,4 @@
+import type { HybridScanInputValue } from '@/models/HybridScan'
 import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import {
   useMemoizedFn,
@@ -14,9 +15,6 @@ import {
   type YakPoCExecutorInputValueProps,
   type PluginInfoProps,
   type PluginBatchExecutorTaskProps,
-  apiHybridScan,
-  apiHybridScanByMode,
-  apiCancelHybridScan,
   convertHybridScanParams,
   hybridScanParamsConvertToInputValue,
 } from '../utils'
@@ -148,7 +146,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
   }, [inViewport])
 
   /**设置输入模块的初始值后，根据value刷新列表相关数据 */
-  const onInitInputValueAfter = useMemoizedFn((value: HybridScanControlAfterRequest) => {
+  const onInitInputValueAfter = useMemoizedFn((value: HybridScanInputValue) => {
     try {
       const inputValue: YakPoCExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
       const { pluginInfo } = inputValue
@@ -412,7 +410,7 @@ interface HybridScanExecuteContentProps {
   /**插件执行输出结果默认选择得tabKey */
   defaultActiveKey?: string
   /** 设置输入模块的初始值后得回调事件，例如：插件批量执行页面(设置完初始值后，刷新左侧得插件列表页面) */
-  onInitInputValueAfter?: (value: HybridScanControlAfterRequest) => void
+  onInitInputValueAfter?: (value: HybridScanInputValue) => void
   /**进度条新鲜 */
   setProgressList: (s: StreamResult.Progress[]) => void
 
@@ -449,7 +447,7 @@ export interface HybridScanExecuteContentRefProps {
   onActionHybridScanByRuntimeId: (runtimeId: string, hybridScanMode: HybridScanModeType) => Promise<null>
   onStopExecute: () => void
   onStartExecute: () => void
-  onInitInputValue: (v: HybridScanControlAfterRequest) => void
+  onInitInputValue: (v: HybridScanInputValue) => void
   onPause: () => void
   onContinue: () => void
 }
@@ -622,7 +620,8 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
           return
         }
         hybridScanStreamEvent.reset()
-        apiHybridScanByMode(runtimeId, hybridScanMode, tokenRef.current)
+        hybridScanStreamEvent
+          .setMode(runtimeId, hybridScanMode)
           .then(() => {
             if (hybridScanMode === 'pause') {
               setPauseLoading(true)
@@ -706,7 +705,8 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
           if (!runtimeId) reject('未设置正常得 runtimeId')
 
           const action = (mode) => {
-            apiHybridScanByMode(runtimeId, mode, tokenRef.current)
+            hybridScanStreamEvent
+              .setMode(runtimeId, mode)
               .then(() => {
                 hybridScanStreamEvent.start()
                 resolve(null)
@@ -734,7 +734,7 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
         })
       })
     /**设置输入模块的初始值 */
-    const onInitInputValue = useMemoizedFn((value: HybridScanControlAfterRequest) => {
+    const onInitInputValue = useMemoizedFn((value: HybridScanInputValue) => {
       const inputValue: YakPoCExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
       const { params } = inputValue
       const isRawHTTPRequest = !!params.HTTPRequestTemplate.IsRawHTTPRequest
@@ -813,7 +813,8 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
         hybridScanParams.Targets.InputFile = [hybridScanParams.Targets.Input]
         hybridScanParams.Targets.Input = ''
       }
-      apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
+      hybridScanStreamEvent.startTask(hybridScanParams).then(() => {
+        if (!hybridScanStreamEvent.isActive()) return
         setIsExpand(false)
         setExecuteStatus('process')
         if (setHidden) setHidden(true)
@@ -830,20 +831,20 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
     })
     /**取消执行 */
     const onStopExecute = useMemoizedFn(() => {
-      apiCancelHybridScan(tokenRef.current).then(() => {
+      hybridScanStreamEvent.cancel().then(() => {
         setExecuteStatus('finished')
       })
     })
     /**暂停 */
     const onPause = useMemoizedFn(() => {
       setPauseLoading(true)
-      apiHybridScanByMode(runtimeId, 'pause', tokenRef.current)
+      hybridScanStreamEvent.setMode(runtimeId, 'pause')
     })
     /**继续 */
     const onContinue = useMemoizedFn(() => {
       setContinueLoading(true)
       hybridScanStreamEvent.reset()
-      apiHybridScanByMode(runtimeId, 'resume', tokenRef.current).then(() => {
+      hybridScanStreamEvent.setMode(runtimeId, 'resume').then(() => {
         hybridScanStreamEvent.start()
       })
     })

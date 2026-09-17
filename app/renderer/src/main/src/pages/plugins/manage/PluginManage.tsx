@@ -1,3 +1,5 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { memo, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { PluginsContainer, PluginsLayout, statusTag } from '../baseTemplate'
@@ -95,7 +97,6 @@ import { httpUploadPluginToEE } from '@/pages/pluginHub/utils/http'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
 interface PluginManageProps {}
 
 export const PluginManage: React.FC<PluginManageProps> = (props) => {
@@ -962,7 +963,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         emiter.emit(
           'editorLocalSaveToLocalList',
           JSON.stringify({
-            id: Number(res.Id) || 0,
+            id: positiveInt64(res.Id) || 0,
             name: res.ScriptName,
             uuid: res.UUID || '',
           }),
@@ -980,50 +981,49 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
   /** ---------- 上传插件 start ---------- */
   const [uploadPluginLibraryVisible, setUploadPluginLibraryVisible] = useState<boolean>(false)
-  const uploadTokenRef = useRef(randomString(40))
+  const uploadController = useRef<AbortController>()
   const [percent, setPercent] = useState<number>(0)
   const [percentShow, setPercentShow] = useState<boolean>(false)
-  const onUploadPluginLibrary = useMemoizedFn((path) => {
+  const onUploadPluginLibrary = useMemoizedFn((path: string) => {
+    uploadController.current?.abort()
+    const controller = new AbortController()
+    uploadController.current = controller
     setPercentShow(true)
     setPercent(0)
-    uploadTokenRef.current = randomString(40)
-
-    ipcRenderer
-      .invoke('split-upload', {
-        url: 'fragment/upload',
-        path: path,
-        token: uploadTokenRef.current,
-        type: 'PluginDB',
-      })
+    ipc
+      .invoke(
+        'local',
+        'split-upload',
+        { url: 'fragment/upload', path, type: 'PluginDB' },
+        {
+          signal: controller.signal,
+          onProgress({ progress }) {
+            if (!controller.signal.aborted) setPercent(progress)
+          },
+        },
+      )
       .then(({ TaskStatus }) => {
+        if (controller.signal.aborted) return
         if (TaskStatus) {
           setPercent(100)
           yakitNotify('success', t('YakitNotification.uploaded'))
-          setTimeout(() => {
-            setPercentShow(false)
-          }, 300)
-        } else {
-          yakitNotify('error', t('YakitNotification.uploadFailedNoError'))
-        }
+        } else yakitNotify('error', t('YakitNotification.uploadFailedNoError'))
       })
-      .catch((err) => {
-        yakitNotify('error', t('YakitNotification.uploadFailed', { error: String(err) }))
+      .catch((error) => {
+        if (!controller.signal.aborted)
+          yakitNotify('error', t('YakitNotification.uploadFailed', { error: String(error) }))
+      })
+      .finally(() => {
+        if (uploadController.current !== controller || controller.signal.aborted) return
+        uploadController.current = undefined
+        setPercentShow(false)
       })
   })
   const onUploadPluginLibraryCancel = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancle-split-upload').then(() => {
-      setPercentShow(false)
-    })
+    uploadController.current?.abort()
+    setPercentShow(false)
   })
-  useEffect(() => {
-    ipcRenderer.on(`callback-split-upload-${uploadTokenRef.current}`, async (e, result: any) => {
-      const { progress } = result
-      setPercent(progress)
-    })
-    return () => {
-      ipcRenderer.removeAllListeners(`callback-split-upload-${uploadTokenRef.current}`)
-    }
-  }, [])
+  useEffect(() => () => uploadController.current?.abort(), [])
   /** ---------- 上传插件 end ---------- */
 
   /** ---------- 同步插件到企业版 start ---------- */
@@ -1788,8 +1788,8 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
     isCancelRef.current = false
     if (file) {
       setLoading(true)
-      ipcRenderer
-        .invoke('upload-group-data', { path: file.path })
+      ipc
+        .invoke('local', 'upload-group-data', { path: file.path })
         .then((res) => {
           if (res.code === 200 && !isCancelRef.current) {
             importSuccess()
@@ -1797,8 +1797,8 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
             onClose()
           }
 
-          if (!res.data.ok) {
-            yakitNotify('error', res.data.reason)
+          if (res.data && typeof res.data === 'object' && 'ok' in res.data && !res.data.ok) {
+            yakitNotify('error', 'reason' in res.data ? String(res.data.reason) : t('PluginManage.importGroupFailed'))
           }
         })
         .catch((err) => {
@@ -1856,7 +1856,7 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
                       className={styles['hight-light']}
                       onClick={async (e) => {
                         e.stopPropagation()
-                        const fileData = await ipcRenderer.invoke('get-template-file')
+                        const fileData = await ipc.invoke('local', 'get-template-file', {})
                         // 将 base64 编码的文件数据转换为字节字符
                         const byteCharacters = atob(fileData)
                         // 将字节字符转换为字节数字

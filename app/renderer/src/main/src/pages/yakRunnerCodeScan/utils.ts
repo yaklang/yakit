@@ -1,60 +1,18 @@
-import { info, yakitNotify } from '@/utils/notification'
+import { syntaxFlowResultsForUI } from '@/pages/yakRunnerCodeScan/grpcAdapters'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
+import { yakitNotify } from '@/utils/notification'
 import type {
   DeleteSyntaxFlowResultRequest,
   DeleteSyntaxFlowResultResponse,
   QuerySyntaxFlowResultRequest,
   QuerySyntaxFlowResultResponse,
-  SyntaxFlowScanRequest,
 } from './YakRunnerCodeScanType'
 import type { APIOptionalFunc } from '@/apiUtils/type'
 import type { QuerySyntaxFlowRuleRequest, SyntaxFlowRuleFilter } from '../ruleManagement/RuleManagementType'
 import { grpcFetchLocalRuleList } from '../ruleManagement/api'
 
-const { ipcRenderer } = window.require('electron')
-
 export type CodeScanComplianceMode = 'include' | 'exclude'
-
-/**
- * @description SyntaxFlowScan 规则执行
- */
-export const apiSyntaxFlowScan: (params: SyntaxFlowScanRequest, token: string) => Promise<null> = (params, token) => {
-  return new Promise((resolve, reject) => {
-    try {
-      ipcRenderer
-        .invoke(
-          'SyntaxFlowScan',
-          {
-            ...params,
-          } as SyntaxFlowScanRequest,
-          token,
-        )
-        .then(() => {
-          info(`启动成功,任务ID: ${token}`)
-          resolve(null)
-        })
-    } catch (error) {
-      yakitNotify('error', '规则执行出错:' + error)
-      reject(error)
-    }
-  })
-}
-
-/**
- * @description SyntaxFlowScan 取消规则执行
- */
-export const apiCancelSyntaxFlowScan: (token: string) => Promise<null> = (token) => {
-  return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke(`cancel-SyntaxFlowScan`, token)
-      .then(() => {
-        resolve(null)
-      })
-      .catch((e: any) => {
-        yakitNotify('error', '取消规则执行出错:' + e)
-        reject(e)
-      })
-  })
-}
 
 /** 获取审计结果 */
 export const apiFetchQuerySyntaxFlowResult: (
@@ -64,9 +22,11 @@ export const apiFetchQuerySyntaxFlowResult: (
     const queryParams: QuerySyntaxFlowResultRequest = {
       ...params,
     }
-    ipcRenderer
-      .invoke('QuerySyntaxFlowResult', queryParams)
-      .then((res: QuerySyntaxFlowResultResponse) => {
+    ipc
+      .invoke('grpc', 'QuerySyntaxFlowResult', queryParams)
+      .then(syntaxFlowResultsForUI)
+      .then(grpcPageForUI)
+      .then((res) => {
         resolve(res)
       })
       .catch((e) => {
@@ -85,9 +45,9 @@ export const apiDeleteQuerySyntaxFlowResult: APIOptionalFunc<
     const queryParams: DeleteSyntaxFlowResultRequest = {
       ...params,
     }
-    ipcRenderer
-      .invoke('DeleteSyntaxFlowResult', queryParams)
-      .then((res: DeleteSyntaxFlowResultResponse) => {
+    ipc
+      .invoke('grpc', 'DeleteSyntaxFlowResult', queryParams)
+      .then((res) => {
         resolve(res)
       })
       .catch((e) => {

@@ -23,7 +23,6 @@ import './HackerPlugin.scss'
 import { showModal } from '../../utils/showModal'
 import { xtermClear } from '../../utils/xtermUtils'
 
-const { ipcRenderer } = window.require('electron')
 const { Text } = Typography
 
 export interface HackerPluginProps {
@@ -62,7 +61,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
   const [vlistHeigth, setVListHeight] = useState(600)
 
   const [execting, setExecting] = useState<boolean>(false)
-  const [infoState, { reset, setXtermRef }, xtermRef] = useHoldingIPCRStream(
+  const [infoState, { reset, setXtermRef, open, cancel: cancelStream }, xtermRef] = useHoldingIPCRStream(
     `execute-packet-yak-script`,
     'ExecutePacketYakScript',
     token,
@@ -121,8 +120,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
       Request: props.request,
     }
     if (props.response) params.Response = props.response
-    ipcRenderer
-      .invoke('ExecutePacketYakScript', params, token)
+    open(params)
       .then(() => {})
       .catch((e) => {
         failed(`Start Packet Checker Error: ${e}`)
@@ -131,7 +129,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
   })
   const cancelScript = useMemoizedFn(() => {
     // cancel 后主进程不再转发 end，需本地收尾
-    ipcRenderer.invoke('cancel-ExecutePacketYakScript', token)
+    void cancelStream()
     setExecting(false)
   })
 

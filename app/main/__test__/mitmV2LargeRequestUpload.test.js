@@ -1,10 +1,10 @@
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
-const {
+import {
   uploadMITMV2ReplacementFile,
   createMITMV2ReplacementUploadController,
-} = require('../handlers/mitmV2LargeRequestUpload')
+} from '../services/mitmV2LargeRequestUpload'
 
 const cloneMessage = (message) => ({
   ...message,
@@ -134,16 +134,17 @@ describe('MITMv2 replacement upload IPC contract', () => {
     const firstSend = deferred()
     const sentTaskIDs = []
     let writeCount = 0
+    const send = async (message) => {
+      sentTaskIDs.push(message.ManualHijackMessage.TaskID)
+      writeCount += 1
+      if (writeCount === 1) {
+        firstSend.resolve()
+        await firstWrite.promise
+      }
+    }
     const controller = createMITMV2ReplacementUploadController({
       isStreamRunning: () => true,
-      getSendMessageAndWait: () => async (message) => {
-        sentTaskIDs.push(message.ManualHijackMessage.TaskID)
-        writeCount += 1
-        if (writeCount === 1) {
-          firstSend.resolve()
-          await firstWrite.promise
-        }
-      },
+      getSendMessageAndWait: () => send,
       chunkSize: 32,
     })
 
@@ -168,9 +169,12 @@ describe('MITMv2 replacement upload IPC contract', () => {
     fs.writeFileSync(filePath, Buffer.from('retry'))
     let running = false
     const sent = []
+    const send = async (message) => {
+      sent.push(cloneMessage(message))
+    }
     const controller = createMITMV2ReplacementUploadController({
       isStreamRunning: () => running,
-      getSendMessageAndWait: () => async (message) => sent.push(cloneMessage(message)),
+      getSendMessageAndWait: () => send,
       chunkSize: 32,
     })
 
@@ -184,5 +188,50 @@ describe('MITMv2 replacement upload IPC contract', () => {
       Size: 5,
     })
     expect(sent.map((message) => message.ManualHijackMessage.TaskID)).toEqual(['recovered', 'recovered'])
+  })
+  it('never redirects an in-progress or queued file to a replacement stream', async () => {
+    const filePath = path.join(tempDir, 'bound.bin')
+    fs.writeFileSync(filePath, 'original')
+    const firstWrite = deferred()
+    const firstSent = deferred()
+    const original = vi.fn(async () => {
+      firstSent.resolve()
+      await firstWrite.promise
+    })
+    const replacement = vi.fn(async () => {})
+    let current = original
+    const controller = createMITMV2ReplacementUploadController({
+      isStreamRunning: () => true,
+      getSendMessageAndWait: () => current,
+      chunkSize: 4,
+    })
+    const results = Promise.allSettled([
+      controller.replace({ TaskID: 'a', ReplaceBody: true, FilePath: filePath }),
+      controller.replace({ TaskID: 'b', ReplaceBody: true, FilePath: filePath }),
+    ])
+    await firstSent.promise
+    current = replacement
+    firstWrite.resolve()
+    expect((await results).map((result) => result.status)).toEqual(['rejected', 'rejected'])
+    expect(replacement).not.toHaveBeenCalled()
+  })
+  it('sends a cancel frame when a file upload is aborted', async () => {
+    const filePath = path.join(tempDir, 'abort.bin')
+    fs.writeFileSync(filePath, 'contents')
+    const controller = new AbortController()
+    const sent = []
+    await expect(
+      uploadMITMV2ReplacementFile(
+        async (message) => {
+          sent.push(cloneMessage(message))
+          if (sent.length === 1) controller.abort()
+        },
+        { TaskID: 'aborted', ReplaceBody: true, FilePath: filePath },
+        4,
+        controller.signal,
+      ),
+    ).rejects.toThrow()
+    expect(sent.at(-1).ManualHijackMessage.LargeRequestFileCancel).toBe(true)
+    expect(sent.some((message) => message.ManualHijackMessage.LargeRequestFileEOF)).toBe(false)
   })
 })

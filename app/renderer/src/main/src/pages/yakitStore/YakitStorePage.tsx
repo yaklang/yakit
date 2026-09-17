@@ -1,3 +1,6 @@
+import { yakScriptsForUI } from '@/pages/invoker/grpcAdapters'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
 import { Spin } from 'antd'
@@ -8,8 +11,6 @@ import './YakitStorePage.scss'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { setTimeout } from 'timers'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface GetYakScriptByOnlineIDRequest {
   OnlineID?: number
@@ -119,9 +120,11 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     if (page) newParams.Pagination.Page = page
     if (limit) newParams.Pagination.Limit = limit
     setLoading(true)
-    ipcRenderer
-      .invoke('QueryYakScript', newParams)
-      .then((item: QueryYakScriptsResponse) => {
+    ipc
+      .invoke('grpc', 'QueryYakScript', newParams)
+      .then(yakScriptsForUI)
+      .then(grpcPageForUI)
+      .then((item) => {
         const data = page === 1 ? item.Data : response.Data.concat(item.Data)
         const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
         setHasMore(!isMore)

@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../shared/communication/window-client'
 import type React from 'react'
 import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import {
@@ -29,7 +30,6 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
-import { yakitFileSystem } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 
@@ -683,7 +683,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
           }
 
           setUploadLoading(true)
-          yakitFileSystem.fetchFileContent((f as any).path).then((res) => {
+          ipc.invoke('local', 'read-file-content', (f as any).path).then((res) => {
             p.setContent && p.setContent(res)
             setTimeout(() => {
               setUploadLoading(false)

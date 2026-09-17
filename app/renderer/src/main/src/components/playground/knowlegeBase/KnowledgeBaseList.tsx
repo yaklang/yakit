@@ -1,3 +1,5 @@
+import { grpcPagingToUI, int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
@@ -22,8 +24,6 @@ import styles from './KnowledgeBaseList.module.scss'
 import { PencilAltOutlined, ChatAlt2Outlined, PlusOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
   selectedKbId,
@@ -54,16 +54,16 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
         setPagination(currentPagination)
       }
 
-      const response: GetKnowledgeBaseResponse = await ipcRenderer.invoke('CreateKnowledgeBaseV2', {
+      const response = await ipc.invoke('grpc', 'GetKnowledgeBase', {
         Keyword: searchKeyword || undefined,
         Pagination: currentPagination,
       })
 
       if (response && response.KnowledgeBases) {
         setKnowledgeBases(response.KnowledgeBases)
-        setTotal(response.Total || 0)
+        setTotal(int64ToSafeNumber(response.Total || 0))
         if (response.Pagination) {
-          setPagination(response.Pagination)
+          setPagination(grpcPagingToUI(response.Pagination))
         }
       } else {
         setKnowledgeBases([])
@@ -112,7 +112,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
           ),
       )
 
-      await ipcRenderer.invoke('BuildVectorIndexForKnowledgeBase', {
+      await ipc.invoke('grpc', 'BuildVectorIndexForKnowledgeBase', {
         KnowledgeBaseId: kb.ID,
         DistanceFuncType: 'cosine',
       })
@@ -148,7 +148,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
   // 创建知识库
   const handleCreate = useMemoizedFn(async (values: KnowledgeBaseFormData) => {
     try {
-      await ipcRenderer.invoke('CreateKnowledgeBase', values)
+      await ipc.invoke('grpc', 'CreateKnowledgeBase', values)
       success(t('playground.KnowledgeBaseList.createSuccess'))
       setModalVisible(false)
       form.resetFields()
@@ -163,7 +163,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
   const handleUpdate = useMemoizedFn(async (values: KnowledgeBaseFormData) => {
     if (!editingKb) return
     try {
-      await ipcRenderer.invoke('UpdateKnowledgeBase', {
+      await ipc.invoke('grpc', 'UpdateKnowledgeBase', {
         KnowledgeBaseId: editingKb.ID,
         ...values,
       })
@@ -181,7 +181,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
   // 删除知识库
   const handleDelete = useMemoizedFn(async (kb: KnowledgeBase) => {
     try {
-      await ipcRenderer.invoke('DeleteKnowledgeBase', {
+      await ipc.invoke('grpc', 'DeleteKnowledgeBase', {
         KnowledgeBaseId: kb.ID,
       })
       success(t('playground.KnowledgeBaseList.deleteSuccess'))

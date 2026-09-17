@@ -1,3 +1,5 @@
+import { languageFindForUI } from '@/utils/monacoSpec/grpcCodeRange'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react'
 import type {
@@ -96,8 +98,6 @@ import { onSetSelectedSearchVal } from '../AuditSearchModal/AuditSearch'
 import { ConvertAuditStaticAnalyzeErrorToMarker, type IMonacoEditorMarker } from '@/utils/editorMarkers'
 import { getPathParent, grpcFetchCreateFile, grpcFetchSaveFile, monacaLanguageType } from '@/pages/yakRunner/utils'
 import { JSONParseLog } from '@/utils/tool'
-
-const { ipcRenderer } = window.require('electron')
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
   const { tabsId, wrapperClassName } = props
@@ -1011,8 +1011,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
       const type = getModelContext(model, 'plugin') || 'yak'
       if (iWord.word.length === 0) return
 
-      ipcRenderer
-        .invoke('YaklangLanguageFind', {
+      ipc
+        .invoke('grpc', 'YaklangLanguageFind', {
           InspectType: 'reference',
           YakScriptType: type,
           YakScriptCode: '',
@@ -1027,6 +1027,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
           ProgramName: projectName,
           FileName: editorInfo.path,
         } as YaklangLanguageSuggestionRequest)
+        .then(languageFindForUI)
         .then((r: YaklangLanguageFindResponse) => {
           const newFind = r.Ranges.map(({ StartColumn, StartLine, EndColumn, EndLine }) => ({
             startLineNumber: Number(StartLine),
@@ -1498,9 +1499,9 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
 
   // 默认保存路径
   useEffect(() => {
-    ipcRenderer.invoke('fetch-code-path').then((path: string) => {
-      ipcRenderer
-        .invoke('is-exists-file', path)
+    ipc.invoke('local', 'fetch-code-path', {}).then((path: string) => {
+      ipc
+        .invoke('local', 'assert-file-absent', path)
         .then(() => {
           setCodePath('')
         })
@@ -1531,11 +1532,11 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
 
   const onSaveFile = useMemoizedFn(() => {
     setShowModal(false)
-    ipcRenderer.invoke('show-save-dialog', `${codePath}${codePath ? '/' : ''}${info.name}`).then(async (res) => {
+    ipc.invoke('local', 'show-save-dialog', `${codePath}${codePath ? '/' : ''}${info.name}`).then(async (res) => {
       try {
         const path = res.filePath
         const name = res.name
-        if (path.length > 0) {
+        if (!res.canceled && path) {
           const suffix = name.split('.').pop()
 
           const file: FileDetailInfo = {

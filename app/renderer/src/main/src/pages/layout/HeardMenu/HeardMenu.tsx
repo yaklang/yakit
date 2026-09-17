@@ -1,3 +1,7 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
+import { getRemoteObject } from '@/utils/kv'
+import { navigationForUI } from '@/pages/invoker/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import {
   SortAscendingOutlined,
   SortDescendingOutlined,
@@ -65,8 +69,6 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { usePluginToId } from '@/store/publicMenu'
 import { JSONParseLog } from '@/utils/tool'
-
-const { ipcRenderer } = window.require('electron')
 
 const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
   const { defaultExpand, onRouteMenuSelect, setRouteToLabel } = props
@@ -153,7 +155,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
       if (isIRify()) return
       // 获取软件内菜单模式
       getRemoteValue(RemoteGV.PatternMenu).then((patternMenu) => {
-        const menuMode = patternMenu || 'expert'
+        const menuMode = patternMenu === 'new' ? 'new' : 'expert'
         setRemoteValue(RemoteGV.PatternMenu, menuMode)
         setPatternMenu(menuMode)
         init(menuMode)
@@ -169,9 +171,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
       ResidentPluginName.BasicCrawler,
       ResidentPluginName.DirectoryScanning,
     ]
-    ipcRenderer
-      .invoke('QueryYakScriptByNames', { YakScriptName: pluginTool })
-      .then((res: { Data: YakScript[] }) => {
+    ipc
+      .invoke('grpc', 'QueryYakScriptByNames', { YakScriptName: pluginTool })
+      .then((res) => {
         const { Data } = res
         const info: Record<string, number> = {}
         for (const item of Data) info[item.ScriptName] = +(item.Id || 0) || 0
@@ -186,12 +188,12 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     fetchPluginToolInfo()
     // 除简易版本外 更新菜单
     if (!isEnpriTraceAgent()) {
-      ipcRenderer.on('fetch-new-main-menu', (e) => {
+      const stopIpcEvent1 = ipc.on('fetch-new-main-menu', () => {
         fetchPluginToolInfo()
         init(getPatternMenu())
       })
       return () => {
-        ipcRenderer.removeAllListeners('fetch-new-main-menu')
+        stopIpcEvent1()
       }
     }
   }, [])
@@ -203,9 +205,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
   const init = useMemoizedFn((menuMode: string) => {
     setLoading(true)
 
-    ipcRenderer
-      .invoke('GetAllNavigationItem', { Mode: menuMode })
-      .then((res: { Data: DatabaseFirstMenuProps[] }) => {
+    ipc
+      .invoke('grpc', 'GetAllNavigationItem', { Mode: menuMode })
+      .then(navigationForUI)
+      .then((res) => {
         const database = databaseConvertData(res.Data || [])
 
         // 过滤掉代码中无效菜单项后的用户数据
@@ -252,12 +255,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             filterLocal = [...DefaultMenu]
           })
           .finally(async () => {
-            let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
-            try {
-              allowModify = JSONParseLog(allowModify, { page: 'HeardMenu', fun: 'IsImportJSONMenu' }) || {}
-            } catch (error) {
-              allowModify = {}
-            }
+            const allowModify = await getRemoteObject(RemoteGV.IsImportJSONMenu)
             if (allowModify[menuMode]) filterLocal = []
 
             // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
@@ -293,8 +291,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
    * @param pluginName 需要下载的插件名合集
    */
   const batchDownloadPlugin = useMemoizedFn((menus: EnhancedPrivateRouteMenuProps[], pluginName: string[]) => {
-    ipcRenderer
-      .invoke('DownloadOnlinePluginByPluginName', {
+    if (!pluginName.length) return
+    ipc
+      .invoke('local', 'DownloadOnlinePluginByPluginName', {
         ScriptNames: pluginName,
         Token: userInfo.token,
       })
@@ -309,7 +308,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             if (item.children && item.children.length > 0) {
               item.children.forEach((subItem) => {
                 if (subItem.page === YakitRoute.Plugin_OP && pluginToinfo[subItem.yakScripName || subItem.menuName]) {
-                  subItem.yakScriptId = +pluginToinfo[subItem.yakScripName || subItem.menuName].Id || 0
+                  subItem.yakScriptId = positiveInt64(pluginToinfo[subItem.yakScripName || subItem.menuName].Id) || 0
                 }
               })
             }
@@ -330,11 +329,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
   const updateMenus = useMemoizedFn((data: EnhancedPrivateRouteMenuProps[]) => {
     const menus = privateConvertDatabase(data, patternMenu)
 
-    ipcRenderer
-      .invoke('DeleteAllNavigation', { Mode: patternMenu })
+    ipc
+      .invoke('grpc', 'DeleteAllNavigation', { Mode: patternMenu })
       .then(() => {
-        ipcRenderer
-          .invoke('AddToNavigation', { Data: menus })
+        ipc
+          .invoke('grpc', 'AddToNavigation', { Data: menus })
           .then((rsp) => {})
           .catch((e) => {
             yakitNotify('error', `${t('Layout.HeardMenu.saveMenuFailed')}${e}`)
@@ -394,7 +393,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
 
     grpcFetchLocalPluginDetail({ Name: info.pluginName }, true)
       .then((i: YakScript) => {
-        const lastId = +i.Id || 0
+        const lastId = positiveInt64(i.Id) || 0
         // 插件不存在于本地数据库中
         if (lastId === 0) {
           updateSingleMenu({ pluginName: i.ScriptName, pluginId: 0 })
@@ -414,7 +413,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
       .catch((err) => onOpenDownModal(info))
   })
   /** 更新前端菜单数据(单项) */
-  const updateSingleMenu = useMemoizedFn((info: { pluginName: string; pluginId: number }) => {
+  const updateSingleMenu = useMemoizedFn((info: { pluginName: string; pluginId: number | string }) => {
     const menus = [...routeMenu]
     const pluginTool = [
       ResidentPluginName.SubDomainCollection,
@@ -467,8 +466,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
   })
   /** 下载单个插件菜单 */
   const singleDownloadPlugin = useMemoizedFn((menuItem: RouteToPageProps, callback?: () => any) => {
-    ipcRenderer
-      .invoke('DownloadOnlinePluginByPluginName', {
+    if (!menuItem.pluginName) return
+    ipc
+      .invoke('local', 'DownloadOnlinePluginByPluginName', {
         ScriptNames: [menuItem.pluginName],
         Token: userInfo.token,
       })
@@ -478,10 +478,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
           // 打开页面
           onRouteMenuSelect({
             route: YakitRoute.Plugin_OP,
-            pluginId: +info.Id || 0,
+            pluginId: positiveInt64(info.Id) || 0,
             pluginName: info.ScriptName || menuItem.pluginName,
           })
-          updateSingleMenu({ pluginName: info.ScriptName, pluginId: +info.Id || 0 })
+          updateSingleMenu({ pluginName: info.ScriptName, pluginId: positiveInt64(info.Id) || 0 })
           if (callback) setTimeout(() => callback(), 200)
         }
       })
@@ -556,14 +556,14 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
   })
   /** @description: 编辑菜单 */
   const onGoCustomize = useMemoizedFn(() => {
-    ipcRenderer.invoke('open-customize-menu')
+    ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-open-customize-menu', data: undefined })
   })
   /**
    * @description: 复原菜单
    */
   const onRestoreMenu = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('DeleteAllNavigation', { Mode: patternMenu })
+    ipc
+      .invoke('grpc', 'DeleteAllNavigation', { Mode: patternMenu })
       .then(async () => {
         // 初始化标志重置
         isInitRef.current = true
@@ -578,16 +578,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
 
         setRemoteValue(RemoteGV.UserDeleteMenu, JSON.stringify(deleteCache)).finally(async () => {
           // 取消不可更改菜单的标记(JSON导入的菜单无法更新系统新页面)
-          let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
-          try {
-            allowModify = JSONParseLog(allowModify, { page: 'HeardMenu', fun: 'UserDeleteMenu' }) || {}
-          } catch (error) {
-            allowModify = {}
-          }
+          const allowModify = await getRemoteObject(RemoteGV.IsImportJSONMenu)
           delete allowModify[patternMenu]
           setRemoteValue(RemoteGV.IsImportJSONMenu, JSON.stringify(allowModify))
           setTimeout(() => {
-            ipcRenderer.invoke('change-main-menu')
+            ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-new-main-menu' })
           }, 50)
         })
       })
@@ -631,20 +626,15 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         JSONParseLog(menuDataString, { page: 'HeardMenu', fun: 'onImportJSON' }),
       )
       setImportLoading(true)
-      ipcRenderer
-        .invoke('DeleteAllNavigation', { Mode: patternMenu })
+      ipc
+        .invoke('grpc', 'DeleteAllNavigation', { Mode: patternMenu })
         .then(() => {
           const menuLists = privateConvertDatabase(menus, patternMenu)
 
-          ipcRenderer
-            .invoke('AddToNavigation', { Data: menuLists })
+          ipc
+            .invoke('grpc', 'AddToNavigation', { Data: menuLists })
             .then(async () => {
-              let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
-              try {
-                allowModify = JSONParseLog(allowModify, { page: 'HeardMenu', fun: 'AddToNavigation' }) || {}
-              } catch (error) {
-                allowModify = {}
-              }
+              const allowModify = await getRemoteObject(RemoteGV.IsImportJSONMenu)
               allowModify[patternMenu] = 1
               // 缓存用户菜单数据的来源，防止菜单初始化时的对比操作改变菜单
               setRemoteValue(RemoteGV.IsImportJSONMenu, JSON.stringify(allowModify))

@@ -37,7 +37,7 @@ describe('aiToolResult handlers', () => {
       id: 'call-9',
       type: AIChatQSDataTypeEnum.TOOL_RESULT,
       chatType: 'reAct',
-      Timestamp: 1,
+      Timestamp: '1',
       AIService: '',
       AIModelName: '',
       data: { tool: { status: 'default' }, callToolId: 'call-9' },

@@ -14,8 +14,6 @@ import type { TreeNode } from '@/components/WebTree/WebTree'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { DirectoryTree } = Tree
-const { ipcRenderer } = window.require('electron')
-
 export interface JavaDecompilerOperatorProp {}
 
 export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (props) => {
@@ -206,7 +204,7 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
                   loadData={(node) => {
                     const originData = node.data
                     return new Promise((resolve, reject) => {
-                      if (originData === undefined) {
+                      if (!originData?.Url) {
                         reject('node.data is empty')
                         return
                       }

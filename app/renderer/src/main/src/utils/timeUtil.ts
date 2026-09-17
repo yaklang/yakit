@@ -1,18 +1,19 @@
+import { int64ToSafeNumber } from './int64'
 import moment from 'moment'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'utils')
 
 /** @name 将unix时间戳转换为 YYYY-MM-DD HH:mm:ss */
-export const formatTimestamp = (i: number, onlyTime?: boolean) => {
+export const formatTimestamp = (i: number | string, onlyTime?: boolean) => {
   if (onlyTime) {
     return formatTime(i)
   }
-  return moment.unix(i).format('YYYY-MM-DD HH:mm:ss')
+  return moment.unix(typeof i === 'string' ? int64ToSafeNumber(i) : i).format('YYYY-MM-DD HH:mm:ss')
 }
 
 /** @name 将unix时间戳转换为 HH:mm:ss */
-export const formatTime = (i: number) => {
-  return moment.unix(i).format('HH:mm:ss')
+export const formatTime = (i: number | string) => {
+  return moment.unix(typeof i === 'string' ? int64ToSafeNumber(i) : i).format('HH:mm:ss')
 }
 
 /** @name 将unix时间戳转换为 YYYY-MM-DD */

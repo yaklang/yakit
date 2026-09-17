@@ -1,3 +1,6 @@
+import { ssaProgramsForUI } from '@/pages/yakRunnerCodeScan/grpcAdapters'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
@@ -26,8 +29,6 @@ import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import { IRifyUpdateProjectManagerModal } from '../YakRunnerProjectManager/YakRunnerProjectManager'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-
-const { ipcRenderer } = window.require('electron')
 
 interface SSAProgramFilter {
   ProgramNames?: string[]
@@ -123,12 +124,14 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
       ...(filterNoProject ? { ProjectIds: [0] } : {}),
     }
 
-    ipcRenderer
-      .invoke('QuerySSAPrograms', {
+    ipc
+      .invoke('grpc', 'QuerySSAPrograms', {
         Filter: finalParams,
         Pagination: { ...paginationProps, AfterId: reload ? undefined : parseInt(afterId.current + '') },
       })
-      .then((item: QueryGeneralResponse<SSAProgram>) => {
+      .then(ssaProgramsForUI)
+      .then(grpcPageForUI)
+      .then((item) => {
         const newData = reload ? item.Data : data.concat(item.Data)
         const isMore = item.Data.length < item.Pagination.Limit || newData.length === total
         setHasMore(!isMore)
@@ -162,12 +165,14 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
       ...params,
       ...(filterNoProject ? { ProjectIds: [0] } : {}),
     }
-    ipcRenderer
-      .invoke('QuerySSAPrograms', {
+    ipc
+      .invoke('grpc', 'QuerySSAPrograms', {
         Filter: finalParams,
         Pagination: paginationProps,
       })
-      .then((item: QueryGeneralResponse<SSAProgram>) => {
+      .then(ssaProgramsForUI)
+      .then(grpcPageForUI)
+      .then((item) => {
         setTotal(item.Total)
       })
   })
@@ -175,7 +180,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
   const onDelete = useMemoizedFn(async (params: DeleteSSAProgramRequest) => {
     try {
       setLoading(true)
-      ipcRenderer.invoke('DeleteSSAPrograms', params).then(() => {
+      ipc.invoke('grpc', 'DeleteSSAPrograms', params).then(() => {
         update(true)
         setIsAllSelect(false)
         setSelectedRowKeys([])

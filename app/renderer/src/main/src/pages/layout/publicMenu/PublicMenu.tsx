@@ -1,3 +1,6 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
+import { navigationForUI } from '@/pages/invoker/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import { SortAscendingOutlined, SortDescendingOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -53,8 +56,6 @@ import { useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { toMITMHacker } from '@/pages/hacker/httpHacker'
 import { ManagementTab } from '@/components/managementTab'
 
-const { ipcRenderer } = window.require('electron')
-
 /**
  * @name Route信息(用于打开页面)
  * @property route-页面的路由
@@ -63,7 +64,7 @@ const { ipcRenderer } = window.require('electron')
  */
 export interface RouteToPageProps {
   route: YakitRoute
-  pluginId?: number
+  pluginId?: number | string
   pluginName?: string
 }
 interface PublicMenuProps {
@@ -137,9 +138,9 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
       ResidentPluginName.BasicCrawler,
       ResidentPluginName.DirectoryScanning,
     ]
-    ipcRenderer
-      .invoke('QueryYakScriptByNames', { YakScriptName: pluginTool })
-      .then((res: { Data: YakScript[] }) => {
+    ipc
+      .invoke('grpc', 'QueryYakScriptByNames', { YakScriptName: pluginTool })
+      .then((res) => {
         const { Data } = res
         const info: Record<string, number> = {}
         for (const item of Data) info[item.ScriptName] = +(item.Id || 0) || 0
@@ -154,20 +155,21 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
   useEffect(() => {
     fetchPluginToolInfo()
     fetchCommonPlugins()
-    ipcRenderer.on('refresh-public-menu-callback', (e) => {
+    const stopIpcEvent1 = ipc.on('refresh-public-menu-callback', () => {
       fetchPluginToolInfo()
       fetchCommonPlugins()
     })
     return () => {
-      ipcRenderer.removeAllListeners('refresh-public-menu-callback')
+      stopIpcEvent1()
     }
   }, [])
   /** 获取数据库保存的常用插件列表数据 */
   const fetchCommonPlugins = useMemoizedFn(() => {
     setLoading(true)
-    ipcRenderer
-      .invoke('GetAllNavigationItem', { Mode: CodeGV.PublicMenuModeValue })
-      .then((res: { Data: DatabaseFirstMenuProps[] }) => {
+    ipc
+      .invoke('grpc', 'GetAllNavigationItem', { Mode: CodeGV.PublicMenuModeValue })
+      .then(navigationForUI)
+      .then((res) => {
         // 没有考虑过滤系统删除的内定页面，因为public版本的可自定义菜单均为插件
         const database = databaseConvertData(res.Data || [])
         const caches: DatabaseMenuItemProps[] = []
@@ -243,8 +245,9 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
    * @param pluginName 需要下载的插件名合集
    */
   const batchDownloadPlugin = useMemoizedFn((menus: EnhancedPublicRouteMenuProps[], pluginName: string[]) => {
-    ipcRenderer
-      .invoke('DownloadOnlinePluginByPluginName', {
+    if (!pluginName.length) return
+    ipc
+      .invoke('local', 'DownloadOnlinePluginByPluginName', {
         ScriptNames: pluginName,
         Token: userInfo.token,
       })
@@ -259,7 +262,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             if (item.children && item.children.length > 0) {
               item.children.forEach((subItem) => {
                 if (subItem.page === YakitRoute.Plugin_OP && pluginToinfo[subItem.yakScripName || subItem.menuName]) {
-                  subItem.yakScriptId = +pluginToinfo[subItem.yakScripName || subItem.menuName].Id || 0
+                  subItem.yakScriptId = positiveInt64(pluginToinfo[subItem.yakScripName || subItem.menuName].Id) || 0
                   subItem.headImg = pluginToinfo[subItem.yakScripName || subItem.menuName].HeadImg || ''
                 }
               })
@@ -280,11 +283,11 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
   const updateMenus = useMemoizedFn((data: EnhancedPublicRouteMenuProps[]) => {
     const menus = publicConvertDatabase(data)
 
-    ipcRenderer
-      .invoke('DeleteAllNavigation', { Mode: CodeGV.PublicMenuModeValue })
+    ipc
+      .invoke('grpc', 'DeleteAllNavigation', { Mode: CodeGV.PublicMenuModeValue })
       .then(() => {
-        ipcRenderer
-          .invoke('AddToNavigation', { Data: menus })
+        ipc
+          .invoke('grpc', 'AddToNavigation', { Data: menus })
           .then((rsp) => {})
           .catch((e) => {
             yakitNotify('error', `${t('Layout.HeardMenu.saveMenuFailed')}${e}`)
@@ -309,7 +312,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
 
     grpcFetchLocalPluginDetail({ Name: info.pluginName }, true)
       .then((i: YakScript) => {
-        const lastId = +i.Id || 0
+        const lastId = positiveInt64(i.Id) || 0
         // 插件不存在于本地数据库中
         if (lastId === 0) {
           updateSingleMenu({ pluginName: i.ScriptName, pluginId: 0, headImg: '' }, source)
@@ -330,7 +333,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
   })
   /** 更新前端菜单数据(单项) */
   const updateSingleMenu = useMemoizedFn(
-    (info: { pluginName: string; pluginId: number; headImg: string }, source: string) => {
+    (info: { pluginName: string; pluginId: number | string; headImg: string }, source: string) => {
       if (source === 'route') {
         const data = { ...pluginToId }
         data[info.pluginName as any] = info.pluginId
@@ -352,8 +355,9 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
   )
   /** 下载单个插件菜单 */
   const singleDownloadPlugin = useMemoizedFn((menuItem: RouteToPageProps, source: string, callback?: () => any) => {
-    ipcRenderer
-      .invoke('DownloadOnlinePluginByPluginName', {
+    if (!menuItem.pluginName) return
+    ipc
+      .invoke('local', 'DownloadOnlinePluginByPluginName', {
         ScriptNames: [menuItem.pluginName],
         Token: userInfo.token,
       })
@@ -364,9 +368,12 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
           onMenuSelect({
             route: YakitRoute.Plugin_OP,
             pluginName: info.ScriptName || menuItem.pluginName,
-            pluginId: +info.Id || 0,
+            pluginId: positiveInt64(info.Id) || 0,
           })
-          updateSingleMenu({ pluginName: info.ScriptName, pluginId: +info.Id || 0, headImg: info.HeadImg }, source)
+          updateSingleMenu(
+            { pluginName: info.ScriptName, pluginId: positiveInt64(info.Id) || 0, headImg: info.HeadImg },
+            source,
+          )
         } else {
           yakitNotify('error', t('Layout.PublicMenu.pluginNotAvailableOnline'))
         }

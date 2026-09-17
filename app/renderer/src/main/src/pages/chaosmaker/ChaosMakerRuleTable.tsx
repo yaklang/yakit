@@ -1,3 +1,5 @@
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Space, Tag } from 'antd'
@@ -23,8 +25,6 @@ export interface ChaosMakerRuleTableProp {
   groups?: ChaosMakerRuleGroup[]
   onReset?: () => any
 }
-
-const { ipcRenderer } = window.require('electron')
 
 export interface QueryChaosMakerRulesRequest extends QueryGeneralRequest {
   RuleType: string
@@ -64,13 +64,14 @@ export const ChaosMakerRuleTable: React.FC<ChaosMakerRuleTableProp> = (props) =>
       Limit: limit || pagination.Limit,
     }
     setLoading(true)
-    ipcRenderer
-      .invoke('QueryChaosMakerRules', {
+    ipc
+      .invoke('grpc', 'QueryChaosMakerRule', {
         ...params,
         ...(extraParam ? extraParam : {}),
         Pagination: paginationProps,
       })
-      .then((r: QueryGeneralResponse<ChaosMakerRule>) => {
+      .then(grpcPageForUI)
+      .then((r) => {
         setData(r.Data)
         setPagination(r.Pagination)
         setTotal(r.Total)

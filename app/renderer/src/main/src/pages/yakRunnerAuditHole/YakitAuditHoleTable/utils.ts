@@ -1,3 +1,7 @@
+import { newSSARisksForUI } from '@/pages/risks/grpcAdapters'
+import { ssaRisksForUI } from '@/pages/risks/grpcAdapters'
+import { int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import { yakitNotify } from '@/utils/notification'
 import type {
   DeleteSSARisksRequest,
@@ -18,12 +22,12 @@ import type { GetAIForgeRequest } from '@/pages/ai-agent/type/forge'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, ['yakitUi', 'yakRunnerAuditHole'])
 
-const { ipcRenderer } = window.require('electron')
 /** QuerySSARisks */
 export const apiQuerySSARisks: (query?: QuerySSARisksRequest) => Promise<QuerySSARisksResponse> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QuerySSARisks', query)
+    ipc
+      .invoke('grpc', 'QuerySSARisks', query ?? {})
+      .then(ssaRisksForUI)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.queryFailed', { error: e + '' }))
@@ -35,9 +39,9 @@ export const apiQuerySSARisks: (query?: QuerySSARisksRequest) => Promise<QuerySS
 /** DeleteSSARisks */
 export const apiDeleteSSARisks: (query?: DeleteSSARisksRequest) => Promise<null> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteSSARisks', query)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'DeleteSSARisks', query ?? {})
+      .then(() => resolve(null))
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.deleteFailed', { error: e + '' }))
         reject(e)
@@ -46,16 +50,16 @@ export const apiDeleteSSARisks: (query?: DeleteSSARisksRequest) => Promise<null>
 }
 
 export interface CreateSSARiskDisposalsRequest {
-  RiskIds: number[]
+  RiskIds: (string | number)[]
   Status: string
   Comment: string
 }
 /** CreateSSARiskDisposals */
 export const apiCreateSSARiskDisposals: (params: CreateSSARiskDisposalsRequest) => Promise<null> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('CreateSSARiskDisposals', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'CreateSSARiskDisposals', params ?? {})
+      .then(() => resolve(null))
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.settingFailed', { error: e + '' }))
         reject(e)
@@ -64,12 +68,12 @@ export const apiCreateSSARiskDisposals: (params: CreateSSARiskDisposalsRequest) 
 }
 
 export interface SSARiskDisposalData {
-  Id: number
+  Id: string | number
   Status: string
   Comment: string
   CreatedAt: number
   UpdatedAt: number
-  RiskId: number
+  RiskId: string | number
   TaskName: string
 }
 
@@ -78,13 +82,22 @@ export interface GetSSARiskDisposalResponse {
 }
 
 export const apiGetSSARiskDisposal: (params: {
-  RiskId?: number
+  RiskId?: string | number
   RiskHash?: string
 }) => Promise<GetSSARiskDisposalResponse> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetSSARiskDisposal', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'GetSSARiskDisposal', params ?? {})
+      .then((res) =>
+        resolve({
+          ...res,
+          Data: res.Data.map((row) => ({
+            ...row,
+            CreatedAt: int64ToSafeNumber(row.CreatedAt),
+            UpdatedAt: int64ToSafeNumber(row.UpdatedAt),
+          })),
+        }),
+      )
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.getFailed', { error: e + '' }))
         reject(e)
@@ -93,9 +106,9 @@ export const apiGetSSARiskDisposal: (params: {
 }
 
 export interface SSARiskDisposalsFilter {
-  ID?: number[]
+  ID?: (string | number)[]
   Status?: string[]
-  RiskId?: number[]
+  RiskId?: (string | number)[]
   Search?: string
 }
 
@@ -104,15 +117,15 @@ export interface DeleteSSARiskDisposalsRequest {
 }
 
 export interface DeleteSSARiskDisposalsResponse {
-  Message: DbOperateMessage
+  Message: import('@/services/ipc').GrpcOutput<'DeleteSSARiskDisposals'>['Message']
 }
 
 export const apiDeleteSSARiskDisposals: (
   params: DeleteSSARiskDisposalsRequest,
 ) => Promise<DeleteSSARiskDisposalsResponse> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteSSARiskDisposals', params)
+    ipc
+      .invoke('grpc', 'DeleteSSARiskDisposals', params ?? {})
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.deleteFailed', { error: e + '' }))
@@ -135,8 +148,8 @@ export const apiGetSSARiskFieldGroupEx: (
   params?: GetSSARiskFieldGroupRequest,
 ) => Promise<GetSSARiskFieldGroupExResponse> = (params = { Filter: {} }) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetSSARiskFieldGroupEx', params)
+    ipc
+      .invoke('grpc', 'GetSSARiskFieldGroupEx', params ?? {})
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.queryFailed', { error: e + '' }))
@@ -147,9 +160,9 @@ export const apiGetSSARiskFieldGroupEx: (
 
 export const apiNewRiskRead: (query?: SSARisksFilter) => Promise<null> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('NewSSARiskRead', { Filter: query })
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'NewSSARiskRead', { Filter: query })
+      .then(() => resolve(null))
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.readFailed', { error: e + '' }))
         reject(e)
@@ -169,8 +182,8 @@ export interface GroupTableColumnResponse {
 
 export const apiGroupTableColumn: (query: GroupTableColumnRequest) => Promise<GroupTableColumnResponse> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GroupTableColumn', query)
+    ipc
+      .invoke('grpc', 'GroupTableColumn', query ?? {})
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.readFailed', { error: e + '' }))
@@ -186,8 +199,8 @@ export interface SSARiskFeedbackToOnlineRequest {
 /** SSARiskFeedbackToOnline */
 export const apiSSARiskFeedbackToOnline: (params: SSARiskFeedbackToOnlineRequest) => Promise<unknown> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('SSARiskFeedbackToOnline', params)
+    ipc
+      .invoke('grpc', 'SSARiskFeedbackToOnline', params ?? {})
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.feedbackFailed', { error: e + '' }))
@@ -199,60 +212,15 @@ export const apiSSARiskFeedbackToOnline: (params: SSARiskFeedbackToOnlineRequest
 /** QueryNewSSARisks */
 export const apiQueryNewSSARisks: (query?: QueryNewSSARisksRequest) => Promise<QueryNewSSARisksResponse> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryNewSSARisks', query)
+    ipc
+      .invoke('grpc', 'QueryNewSSARisks', query ?? {})
+      .then(newSSARisksForUI)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.queryFailed', { error: e + '' }))
         reject(e)
       })
   })
-}
-
-/** 导出SSA风险请求参数 */
-export interface ExportSSARiskRequest {
-  Filter: SSARisksFilter
-  TargetPath: string
-  WithDataFlowPath?: boolean
-  WithFileContent?: boolean
-}
-
-/** 导出SSA风险响应 */
-export interface ExportSSARiskResponse {
-  Process: number
-  Verbose: string
-  ExportFilePath?: string
-}
-
-/** 导入SSA风险请求参数 */
-export interface ImportSSARiskRequest {
-  InputPath: string
-}
-
-/** 导入SSA风险响应 */
-export interface ImportSSARiskResponse {
-  Process: number
-  Verbose: string
-}
-
-/** ExportSSARisk - 导出SSA风险数据到JSON文件 */
-export const apiExportSSARisk = (params: ExportSSARiskRequest, token: string) => {
-  return ipcRenderer.invoke('ExportSSARisk', params, token)
-}
-
-/** ImportSSARisk - 从JSON文件导入SSA风险数据 */
-export const apiImportSSARisk = (params: ImportSSARiskRequest, token: string) => {
-  return ipcRenderer.invoke('ImportSSARisk', params, token)
-}
-
-/** 取消导出SSA风险 */
-export const cancelExportSSARisk = (token: string) => {
-  return ipcRenderer.invoke('cancel-ExportSSARisk', token)
-}
-
-/** 取消导入SSA风险 */
-export const cancelImportSSARisk = (token: string) => {
-  return ipcRenderer.invoke('cancel-ImportSSARisk', token)
 }
 
 export const openAIForge = (params: {

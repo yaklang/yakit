@@ -177,6 +177,18 @@ jobs:
       log_filename: tsc-output.log
       artifact_name: ci-log-tsc-renderer
 
+  ci-tsc-electron:
+    name: TypeScript、proto 与构建（Electron）
+    uses: ./.github/workflows/pr-ci-yarn-check.yml
+    secrets: inherit
+    with:
+      pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
+      pr_ref: ${{ github.event.pull_request.head.ref }}
+      workdir: .
+      run_command: node scripts/build-electron.mjs --production
+      log_filename: tsc-electron-output.log
+      artifact_name: ci-log-tsc-electron
+
   ci-eslint-engine-link:
     name: ESLint（engine-link-startup）
     uses: ./.github/workflows/pr-ci-yarn-check.yml
@@ -366,6 +378,7 @@ jobs:
       - ci-i18n-engine-link
       - ci-eslint-renderer
       - ci-tsc-renderer
+      - ci-tsc-electron
       - ci-eslint-engine-link
       - ci-tsc-engine-link
       - ci-media
@@ -410,6 +423,7 @@ jobs:
           OUTCOME_I18N_ENGINE_LINK: ${{ needs.ci-i18n-engine-link.result }}
           OUTCOME_ESLINT: ${{ needs.ci-eslint-renderer.result }}
           OUTCOME_TSC: ${{ needs.ci-tsc-renderer.result }}
+          OUTCOME_TSC_ELECTRON: ${{ needs.ci-tsc-electron.result }}
           OUTCOME_ESLINT_ENGINE_LINK: ${{ needs.ci-eslint-engine-link.result }}
           OUTCOME_TSC_ENGINE_LINK: ${{ needs.ci-tsc-engine-link.result }}
           OUTCOME_MEDIA: ${{ needs.ci-media.result }}

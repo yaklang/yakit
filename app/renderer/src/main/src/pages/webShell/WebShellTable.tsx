@@ -1,3 +1,6 @@
+import { webShellsForUI } from '@/pages/webShell/models'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { defQueryWebShellRequest, type QueryWebShellRequest } from '@/pages/webShell/WebShellViewer'
 import { ResizeBox } from '@/components/ResizeBox'
@@ -42,8 +45,6 @@ export interface WebShellManagerProp {
   advancedQuery: boolean //是否开启高级查询
   setAdvancedQuery: (b: boolean) => void
 }
-
-const { ipcRenderer } = window.require('electron')
 
 function emptyWebshell() {
   return {} as WebShellDetail
@@ -309,9 +310,11 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
       ...(extraParam ? extraParam : {}),
       Pagination: paginationProps,
     }
-    ipcRenderer
-      .invoke('QueryWebShells', finalParams)
-      .then((r: QueryGeneralResponse<WebShellDetail>) => {
+    ipc
+      .invoke('grpc', 'QueryWebShells', finalParams)
+      .then(webShellsForUI)
+      .then(grpcPageForUI)
+      .then((r) => {
         const d = Number(paginationProps.Page) === 1 ? r.Data : data.concat(r.Data)
         setData(d)
         setPagination(r.Pagination)

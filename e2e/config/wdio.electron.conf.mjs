@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url'
 const configDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(configDir, '../..')
 const artifactsDir = process.env.YAKIT_E2E_ARTIFACTS_DIR || path.join(repoRoot, 'reports/e2e-electron/manual')
-const appEntryPoint = path.join(repoRoot, 'app/main/index.js')
+// Launch the package so Electron sets app.getAppPath() to the package root and follows package.main.
+const appEntryPoint = repoRoot
 const isolatedUserData = process.env.YAKIT_E2E_USER_DATA
 const rendererHeapMB = process.env.YAKIT_E2E_RENDERER_HEAP_MB
 if (rendererHeapMB && (!/^\d+$/.test(rendererHeapMB) || Number(rendererHeapMB) < 64 || Number(rendererHeapMB) > 512)) {

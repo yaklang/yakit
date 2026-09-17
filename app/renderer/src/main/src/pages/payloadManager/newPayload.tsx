@@ -1,3 +1,8 @@
+import { usePayloadProgress } from './usePayloadProgress'
+import { grpcPageForUI } from '@/utils/int64'
+import { payloadsForUI } from '@/pages/payloadManager/grpcAdapters'
+import { payloadGroupsForUI } from '@/pages/payloadManager/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Divider, Progress, Tooltip, Upload } from 'antd'
@@ -98,8 +103,6 @@ import type { API } from '@/services/swagger/resposeType'
 import { useTheme } from '@/hook/useTheme'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
-
 // 是否为Payload操作员
 export const isPayloadOperator = (userInfo?: UserInfoProps) =>
   userInfo?.isLogin && ['admin', 'auditor'].includes(userInfo?.role || '') && isEnpriTrace()
@@ -233,149 +236,50 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     return ['dragger', 'large-dragger'].includes(uploadType) ? uploadList.length === 0 : editorValue.length === 0
   }, [uploadList, dictionariesName, isDictionaries, uploadType, editorValue])
 
-  // 数据库存储
-  const onSavePayload = useMemoizedFn(() => {
-    setStoreType('database')
-    ipcRenderer.invoke(
-      'SavePayloadStream',
-      {
-        IsFile: uploadType === 'dragger',
-        IsNew: isDictionaries,
-        Content: editorValue,
-        FileName: uploadList.map((item) => item.path),
-        Group: group || dictionariesName,
-        Folder: folder || '',
-      },
-      token,
-    )
-  })
-
-  // 文件存储
-  const onSavePayloadToFile = useMemoizedFn(() => {
-    setStoreType('database')
-    if (uploadType === 'large-dragger') {
-      ipcRenderer.invoke(
-        'SavePayloadToLargeFileStream',
-        {
-          IsFile: true,
-          IsNew: true,
-          Content: editorValue,
-          FileName: uploadList.map((item) => item.path),
-          Group: group || dictionariesName,
-          Folder: folder || '',
-        },
-        fileToken,
-      )
-    } else {
-      // 两次stream
-      ipcRenderer.invoke(
-        'SavePayloadToFileStream',
-        {
-          IsFile: uploadType === 'dragger',
-          IsNew: true,
-          Content: editorValue,
-          FileName: uploadList.map((item) => item.path),
-          Group: group || dictionariesName,
-          Folder: folder || '',
-        },
-        fileToken,
-      )
-    }
-  })
-
-  // 取消数据库任务
-  const cancelSavePayload = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-SavePayload', token)
-  })
-
-  // 取消文件存储任务
-  const cancelSavePayloadFile = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-SavePayloadFile', fileToken)
-  })
-
-  // 取消大文件存储任务
-  const cancelSavePayloadLargeFile = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-SavePayloadLargeFile', fileToken)
-  })
-
-  // 监听数据库任务
-  useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e: any, data: SavePayloadProgress) => {
-      if (data) {
-        try {
-          setStreamData(data)
-          if (data.Message.length > 0) {
-            logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
-          }
-        } catch (error) {}
-      }
-    })
-    ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-      if (error === `group[${group || dictionariesName}] exist`) {
-        messageWarnRef.current = true
+  const payloadTask = usePayloadProgress({
+    onData(data) {
+      setStreamData(data)
+      if (data.Message) logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+      if (data.Message === 'step2' && data.Progress === 1) setStoreType('file')
+    },
+    onError(error) {
+      const message = error instanceof Error ? error.message : String(error)
+      if (message === `group[${group || dictionariesName}] exist`) {
+        setStreamData(undefined)
         warn(t('CreateDictionaries.dictionaryNameExists'))
-        return
-      }
-      failed(`[SavePayload] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
-      if (messageWarnRef.current) {
-        messageWarnRef.current = false
-        return
-      }
+      } else failed(`[SavePayload] error: ${message}`)
+    },
+    onEnd() {
       info('[SavePayload] finished')
       logInfoRef.current = []
       cancelRun()
+    },
+  })
+  const onSavePayload = useMemoizedFn(() => {
+    setStoreType('database')
+    payloadTask.start('SavePayloadStream', {
+      IsFile: uploadType === 'dragger',
+      IsNew: isDictionaries,
+      Content: editorValue,
+      FileName: uploadList.map((item) => item.path),
+      Group: group || dictionariesName,
+      Folder: folder || '',
     })
-
-    return () => {
-      ipcRenderer.invoke('cancel-SavePayload', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-    }
-  }, [group, dictionariesName])
-
-  // 监听文件存储任务
-  useEffect(() => {
-    ipcRenderer.on(`${fileToken}-data`, async (e: any, data: SavePayloadProgress) => {
-      if (data) {
-        try {
-          if (data.Message.length > 0) {
-            logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
-          }
-          if (data.Message === 'step2' && data.Progress === 1) {
-            setStoreType('file')
-          }
-          setStreamData(data)
-        } catch (error) {}
-      }
+  })
+  const onSavePayloadToFile = useMemoizedFn(() => {
+    setStoreType('database')
+    payloadTask.start(uploadType === 'large-dragger' ? 'SaveLargePayloadToFileStream' : 'SavePayloadToFileStream', {
+      IsFile: uploadType !== 'editor',
+      IsNew: true,
+      Content: editorValue,
+      FileName: uploadList.map((item) => item.path),
+      Group: group || dictionariesName,
+      Folder: folder || '',
     })
-    ipcRenderer.on(`${fileToken}-error`, (e: any, error: any) => {
-      if (error === `group[${group || dictionariesName}] exist`) {
-        messageWarnRef.current = true
-        warn(t('CreateDictionaries.dictionaryNameExists'))
-        return
-      }
-      failed(`[SavePayloadFile] error:  ${error}`)
-    })
-    ipcRenderer.on(`${fileToken}-end`, (e: any, data: any) => {
-      if (messageWarnRef.current) {
-        messageWarnRef.current = false
-        return
-      }
-      info('[SavePayloadFile] finished')
-      logInfoRef.current = []
-      cancelRun()
-    })
-
-    return () => {
-      ipcRenderer.invoke('cancel-SavePayloadFile', fileToken)
-      ipcRenderer.removeAllListeners(`${fileToken}-data`)
-      ipcRenderer.removeAllListeners(`${fileToken}-error`)
-      ipcRenderer.removeAllListeners(`${fileToken}-end`)
-    }
-  }, [group, dictionariesName])
+  })
+  const cancelSavePayload = payloadTask.cancel
+  const cancelSavePayloadFile = payloadTask.cancel
+  const cancelSavePayloadLargeFile = payloadTask.cancel
 
   const cancelRun = useMemoizedFn(() => {
     if (isDictionaries) {
@@ -965,8 +869,8 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
     const isEqual: boolean = compareArrays(cacheNodesRef.current, newNodes)
     // 不相等时通知后端顺序变换
     if (!isEqual) {
-      ipcRenderer
-        .invoke('UpdateAllPayloadGroup', {
+      ipc
+        .invoke('grpc', 'UpdateAllPayloadGroup', {
           Nodes: newNodes,
         })
         .then(() => {
@@ -1330,7 +1234,10 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                     icon={<CogOutlined color="currentColor" />}
                     onClick={() => {
                       onClose && onClose()
-                      ipcRenderer.invoke('open-route-page', { route: YakitRoute.PayloadManager })
+                      ipc.invoke('local', 'ForwardMainEvent', {
+                        event: 'open-route-page-callback',
+                        data: { route: YakitRoute.PayloadManager },
+                      })
                     }}
                   />
                 </Tooltip>
@@ -1747,8 +1654,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     if (inputName.length > 0 && !allFolderName.includes(inputName) && pass) {
       // 新建
       if (folder.isCreate) {
-        ipcRenderer
-          .invoke('CreatePayloadFolder', {
+        ipc
+          .invoke('grpc', 'CreatePayloadFolder', {
             Name: inputName,
           })
           .then(() => {
@@ -1764,8 +1671,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
       }
       // 编辑
       else {
-        ipcRenderer
-          .invoke('RenamePayloadFolder', {
+        ipc
+          .invoke('grpc', 'RenamePayloadFolder', {
             Name: folder.name,
             NewName: inputName,
           })
@@ -1813,8 +1720,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
 
   // 删除文件夹
   const onDeleteFolder = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('DeletePayloadByFolder', {
+    ipc
+      .invoke('grpc', 'DeletePayloadByFolder', {
         Name: folder.name,
       })
       .then(() => {
@@ -2378,8 +2285,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     const allFileName = getAllFileName()
     const pass: boolean = !isIncludeSpecial(inputName)
     if (inputName.length > 0 && !allFileName.includes(inputName) && pass) {
-      ipcRenderer
-        .invoke('RenamePayloadGroup', {
+      ipc
+        .invoke('grpc', 'RenamePayloadGroup', {
           Name: file.name,
           NewName: inputName,
         })
@@ -2435,8 +2342,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
 
   // 删除Payload
   const onDeletePayload = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('DeletePayloadByGroup', {
+    ipc
+      .invoke('grpc', 'DeletePayloadByGroup', {
         Group: file.name,
       })
       .then(() => {
@@ -2468,54 +2375,26 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     setUploadVisible(true)
   })
 
-  // 转为数据库存储
+  const conversionTask = usePayloadProgress({
+    onData(data) {
+      setStreamData(data)
+      if (data.Message) logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+    },
+    onError(error) {
+      failed(`[ToDatabase] error: ${error}`)
+    },
+    onEnd() {
+      logInfoRef.current = []
+      onQueryGroup({ Group: file.name, Folder: folder || '' })
+      info('[ToDatabase] finished')
+    },
+  })
   const onGroupToDatabase = useMemoizedFn(() => {
-    ipcRenderer.invoke(
-      'ConvertPayloadGroupToDatabase',
-      {
-        Name: inputName,
-      },
-      token,
-    )
     if (file.id === selectItem && showType === 'local') setContentType(undefined)
     setVisible(true)
+    conversionTask.start('ConvertPayloadGroupToDatabase', { Name: inputName })
   })
-
-  // 取消转为数据库存储
-  const cancelRemoveDuplicate = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-ConvertPayloadGroupToDatabase', token)
-  })
-
-  // 监听转为数据库存储
-  useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e: any, data: SavePayloadProgress) => {
-      if (data) {
-        try {
-          setStreamData(data)
-          if (data.Message.length > 0) {
-            logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
-          }
-        } catch (error) {}
-      }
-    })
-    ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-      failed(`[ToDatabase] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
-      logInfoRef.current = []
-      onQueryGroup({
-        Group: file.name,
-        Folder: folder || '',
-      })
-      info('[ToDatabase] finished')
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-ConvertPayloadGroupToDatabase', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-    }
-  }, [])
+  const cancelRemoveDuplicate = conversionTask.cancel
 
   const fileMenuData = useMemo(() => {
     // 此处数据库导出为csv 文件导出为txt
@@ -2912,9 +2791,10 @@ export const MoveOrCopyPayload: React.FC<MoveOrCopyPayloadProps> = (props) => {
   const [value, setValue] = useState<string>()
   const [fileArr, setFileArr] = useState<MoveOrCopyParamsProps[]>([])
   useEffect(() => {
-    ipcRenderer
-      .invoke('GetAllPayloadGroup')
-      .then((res: { Nodes: PayloadGroupNodeProps[] }) => {
+    ipc
+      .invoke('grpc', 'GetAllPayloadGroup', {})
+      .then(payloadGroupsForUI)
+      .then((res) => {
         const arr: MoveOrCopyParamsProps[] = []
         res.Nodes.forEach((item) => {
           if (item.Type !== 'Folder') {
@@ -2977,7 +2857,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
   const [editorValue, setEditorValue] = useState<string>('')
   const [payloadFileData, setPayloadFileData] = useState<PayloadFileDataProps>()
 
-  const [selectPayloadArr, setSelectPayloadArr] = useState<number[]>([])
+  const [selectPayloadArr, setSelectPayloadArr] = useState<(string | number)[]>([])
   const [params, setParams, getParams] = useGetState<QueryPayloadParams>({
     Keyword: '',
     Folder: '',
@@ -3049,12 +2929,12 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
   const onQueryEditor = useMemoizedFn((Group: string, Folder: string) => {
     setLoading(true)
 
-    ipcRenderer
-      .invoke('QueryPayloadFromFile', {
+    ipc
+      .invoke('grpc', 'QueryPayloadFromFile', {
         Group,
         Folder,
       })
-      .then((data: PayloadFileDataProps) => {
+      .then((data) => {
         setPayloadFileData(data)
         setEditorValue(Uint8ArrayToString(data.Data))
       })
@@ -3071,8 +2951,8 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
       warn(t('PayloadLocalContent.contentCannotBeEmpty'))
       return
     }
-    ipcRenderer
-      .invoke('UpdatePayloadToFile', {
+    ipc
+      .invoke('grpc', 'UpdatePayloadToFile', {
         GroupName: group,
         Content: editorValue,
       })
@@ -3097,9 +2977,11 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
         Limit: limit || getParams().Pagination.Limit,
       },
     }
-    ipcRenderer
-      .invoke('QueryPayload', obj)
-      .then((data: QueryGeneralResponse<Payload>) => {
+    ipc
+      .invoke('grpc', 'QueryPayload', obj)
+      .then(payloadsForUI)
+      .then(grpcPageForUI)
+      .then((data) => {
         setResponse(data)
         if (!isNoRefreshList) {
           // 通知刷新列表
@@ -3112,8 +2994,8 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
   })
 
   const onDeletePayload = useMemoizedFn((deletePayload: DeletePayloadProps) => {
-    ipcRenderer
-      .invoke('DeletePayload', deletePayload)
+    ipc
+      .invoke('grpc', 'DeletePayload', deletePayload)
       .then(() => {
         let page = pagination?.Page
         // 如为当页全部删除回到第一页
@@ -3136,8 +3018,8 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
         resolve(false)
       } else {
         const { folder, file } = copyMoveValueRef.current
-        ipcRenderer
-          .invoke('BackUpOrCopyPayloads', {
+        ipc
+          .invoke('grpc', 'BackUpOrCopyPayloads', {
             Ids: id ? [id] : selectPayloadArr,
             Group: file,
             Folder: folder,
@@ -3209,50 +3091,26 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
   })
   const logInfoRef = useRef<string[]>([])
 
-  // 自动去重
-  const onRemoveDuplicate = useMemoizedFn(() => {
-    ipcRenderer.invoke(
-      'RemoveDuplicatePayloads',
-      {
-        Name: group,
-      },
-      token,
-    )
-    setVisible(true)
-  })
-
-  // 取消去重任务
-  const cancelRemoveDuplicate = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-RemoveDuplicatePayloads', token)
-  })
-
-  // 监听去重任务
-  useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e: any, data: SavePayloadProgress) => {
-      if (data) {
-        try {
-          setStreamData(data)
-          if (data.Message.length > 0) {
-            logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
-          }
-        } catch (error) {}
-      }
-    })
-    ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-      failed(`[RemoveDuplicate] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
+  const deduplicateTask = usePayloadProgress({
+    onData(data) {
+      setStreamData(data)
+      if (data.Message) logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+    },
+    onError(error) {
+      failed(`[RemoveDuplicate] error: ${error}`)
+    },
+    onEnd() {
       logInfoRef.current = []
       info('[RemoveDuplicate] finished')
       onQueryEditor(group, folder)
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-RemoveDuplicatePayloads', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-    }
-  }, [group, folder])
+    },
+  })
+  const onRemoveDuplicate = useMemoizedFn(() => {
+    setVisible(true)
+    deduplicateTask.start('RemoveDuplicatePayloads', { Name: group })
+  })
+  const cancelRemoveDuplicate = deduplicateTask.cancel
+  useEffect(() => deduplicateTask.cancel, [group, folder])
 
   const isNoSelect: boolean = useMemo(() => selectPayloadArr.length === 0, [selectPayloadArr])
 
@@ -3843,114 +3701,73 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
   // 是否显示modal
   const [showModal, setShowModal] = useState<boolean>(false)
 
+  const exportControllerRef = useRef<AbortController>()
+  const cancelExportFile = useMemoizedFn(() => exportControllerRef.current?.abort())
   useEffect(() => {
-    onExportFileFun()
-  }, [])
-
-  const getExportGrpc = useMemo(() => {
-    if (!exportType) {
-      return ''
+    const controller = new AbortController()
+    exportControllerRef.current = controller
+    let progress = 0
+    const timer = setInterval(() => setExportStreamData((value) => ({ ...value, Progress: progress })), 500)
+    const onError = (error: unknown) => {
+      clearInterval(timer)
+      if (controller.signal.aborted) return
+      failed(`[ExportFile] error: ${error}`)
     }
-    const exportObj = {
-      file: 'ExportAllPayloadFromFile',
-      csv: 'ExportAllPayload',
-      all: 'ExportPayloadDBAndFile',
-    }
-    return exportObj[exportType]
-  }, [exportType])
-
-  const getCancleExportGrpc = useMemo(() => {
-    if (!exportType) {
-      return ''
-    }
-    const cancelExportObj = {
-      file: 'cancel-ExportAllPayloadFromFile',
-      csv: 'cancel-ExportAllPayload',
-      all: 'cancel-ExportPayloadDBAndFile',
-    }
-    return cancelExportObj[exportType]
-  }, [exportType])
-
-  // 导出任务
-  const onExportFileFun = useMemoizedFn(() => {
-    handleOpenFileSystemDialog({ title: t('ExportByPayloadGrpc.selectFolder'), properties: ['openDirectory'] }).then(
-      (data) => {
-        if (data.filePaths.length) {
-          const absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
-          if (exportType === 'all') {
-            exportPathRef.current = absolutePath
-            ipcRenderer.invoke(
-              getExportGrpc,
-              {
-                Groups: group.split(','),
-                SavePath: absolutePath,
-              },
-              exportToken,
-            )
-            setShowModal(true)
-          } else {
-            ipcRenderer
-              .invoke('pathJoin', {
-                dir: absolutePath,
-                file: `${group}.${exportType === 'file' ? 'txt' : 'csv'}`,
-              })
-              .then((currentPath: string) => {
-                exportPathRef.current = currentPath
-                ipcRenderer.invoke(
-                  getExportGrpc,
-                  {
-                    Group: group,
-                    Folder: folder,
-                    SavePath: currentPath,
-                  },
-                  exportToken,
-                )
-                setShowModal(true)
-              })
-          }
-        } else {
+    const run = async () => {
+      const data = await handleOpenFileSystemDialog({
+        title: t('ExportByPayloadGrpc.selectFolder'),
+        properties: ['openDirectory'],
+      })
+      if (controller.signal.aborted) return
+      if (!data.filePaths.length || !exportType) {
+        setExportVisible(false)
+        return
+      }
+      const path =
+        exportType === 'all'
+          ? data.filePaths[0]
+          : await ipc.invoke('local', 'pathJoin', {
+              dir: data.filePaths[0],
+              file: `${group}.${exportType === 'file' ? 'txt' : 'csv'}`,
+            })
+      if (controller.signal.aborted) return
+      exportPathRef.current = path
+      setShowModal(true)
+      const options = {
+        token: exportToken,
+        signal: controller.signal,
+        onData(data: { Progress: number }) {
+          if (!controller.signal.aborted) progress = data.Progress
+        },
+        onError,
+        onEnd() {
+          clearInterval(timer)
+          if (controller.signal.aborted) return
+          info('[ExportFile] finished')
+          setShowModal(false)
           setExportVisible(false)
-        }
-      },
-    )
-  })
-  // 取消导出任务
-  const cancelExportFile = useMemoizedFn(() => {
-    ipcRenderer.invoke(getCancleExportGrpc, exportToken)
-  })
-
-  const onExportStreamData = useThrottleFn(
-    (data) => {
-      setExportStreamData({ ...exportStreamData, Progress: data.Progress })
-    },
-    { wait: 500 },
-  ).run
-
-  // 监听导出任务
-  useEffect(() => {
-    ipcRenderer.on(`${exportToken}-data`, async (e: any, data: SavePayloadProgress) => {
-      if (data) {
-        try {
-          onExportStreamData(data)
-        } catch (error) {}
+          exportType === 'all' ? openABSFile(path) : openABSFileLocated(path)
+        },
       }
-    })
-    ipcRenderer.on(`${exportToken}-error`, (e: any, error: any) => {
-      failed(`[ExportFile] error:  ${error}`)
-    })
-    ipcRenderer.on(`${exportToken}-end`, (e: any, data: any) => {
-      info('[ExportFile] finished')
-      setShowModal(false)
-      setExportVisible(false)
-      if (exportPathRef.current) {
-        exportType === 'all' ? openABSFile(exportPathRef.current) : openABSFileLocated(exportPathRef.current)
+      if (exportType === 'all') {
+        await ipc.openStream('grpc', 'ExportPayloadDBAndFile', { Groups: group.split(','), SavePath: path }, options)
+      } else {
+        await ipc.openStream(
+          'grpc',
+          exportType === 'file' ? 'ExportAllPayloadFromFile' : 'ExportAllPayload',
+          {
+            Group: group,
+            Folder: folder,
+            SavePath: path,
+          },
+          options,
+        )
       }
-    })
+    }
+    void run().catch(onError)
     return () => {
-      ipcRenderer.invoke(getCancleExportGrpc, exportToken)
-      ipcRenderer.removeAllListeners(`${exportToken}-data`)
-      ipcRenderer.removeAllListeners(`${exportToken}-error`)
-      ipcRenderer.removeAllListeners(`${exportToken}-end`)
+      controller.abort()
+      clearInterval(timer)
     }
   }, [])
   return (
@@ -4006,62 +3823,52 @@ export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGr
   // 是否显示modal
   const [showModal, setShowModal] = useState<boolean>(false)
 
+  const transferControllerRef = useRef<AbortController>()
+  const cancelExportFile = useMemoizedFn(() => transferControllerRef.current?.abort())
   useEffect(() => {
-    onUploadFileFun()
-  }, [])
-
-  // 上传任务
-  const onUploadFileFun = useMemoizedFn(() => {
-    ipcRenderer.invoke(
-      type === 'upload' ? 'UploadPayloadToOnline' : 'DownloadPayload',
-      {
-        Token: userInfo.token,
-        Group: group,
-        Folder: folder,
-      },
-      exportToken,
-    )
+    const controller = new AbortController()
+    transferControllerRef.current = controller
+    let progress = 0
+    const timer = setInterval(() => setExportStreamData((value) => ({ ...value, Progress: progress })), 500)
+    const onError = (error: unknown) => {
+      clearInterval(timer)
+      if (controller.signal.aborted) return
+      failed(`${type === 'upload' ? '[UploadFile]' : '[DownloadFile]'} error: ${error}`)
+    }
     setShowModal(true)
-  })
-  // 取消上传任务
-  const cancelExportFile = useMemoizedFn(() => {
-    ipcRenderer.invoke(type === 'upload' ? 'cancel-UploadPayloadToOnline' : 'cancel-DownloadPayload', exportToken)
-  })
-
-  const onExportStreamData = useThrottleFn(
-    (data) => {
-      setExportStreamData({ ...exportStreamData, Progress: data.Progress })
-    },
-    { wait: 500 },
-  ).run
-
-  // 监听上传任务
-  useEffect(() => {
-    ipcRenderer.on(`${exportToken}-data`, async (e: any, data: SavePayloadProgress) => {
-      if (data) {
-        try {
-          if (data.Message.length > 0) {
-            logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
-          }
-          onExportStreamData(data)
-        } catch (error) {}
-      }
-    })
-    ipcRenderer.on(`${exportToken}-error`, (e: any, error: any) => {
-      failed(`${type === 'upload' ? '[UploadFile]' : '[DownloadFile]'} error:  ${error}`)
-    })
-    ipcRenderer.on(`${exportToken}-end`, (e: any, data: any) => {
-      info(`${type === 'upload' ? '[UploadFile]' : '[DownloadFile]'} finished`)
-      setShowModal(false)
-      setUploadOrDownloadVisible(false)
-      finished && finished()
-      logInfoRef.current = []
-    })
+    void ipc
+      .openStream(
+        'grpc',
+        type === 'upload' ? 'UploadPayloadToOnline' : 'DownloadPayload',
+        {
+          Token: userInfo.token,
+          Group: group,
+          Folder: folder,
+        },
+        {
+          token: exportToken,
+          signal: controller.signal,
+          onData(data) {
+            if (controller.signal.aborted) return
+            progress = data.Progress
+            if (data.Message) logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+          },
+          onError,
+          onEnd() {
+            clearInterval(timer)
+            if (controller.signal.aborted) return
+            info(`${type === 'upload' ? '[UploadFile]' : '[DownloadFile]'} finished`)
+            setShowModal(false)
+            setUploadOrDownloadVisible(false)
+            finished?.()
+            logInfoRef.current = []
+          },
+        },
+      )
+      .catch(onError)
     return () => {
-      ipcRenderer.invoke(type === 'upload' ? 'cancel-UploadPayloadToOnline' : 'cancel-DownloadPayload', exportToken)
-      ipcRenderer.removeAllListeners(`${exportToken}-data`)
-      ipcRenderer.removeAllListeners(`${exportToken}-error`)
-      ipcRenderer.removeAllListeners(`${exportToken}-end`)
+      controller.abort()
+      clearInterval(timer)
     }
   }, [])
   return (
@@ -4146,9 +3953,10 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
 
   const onQueryGroup = (obj?: { Group: string; Folder: string }) => {
     setListLoading(true)
-    ipcRenderer
-      .invoke('GetAllPayloadGroup')
-      .then((res: { Nodes: PayloadGroupNodeProps[] }) => {
+    ipc
+      .invoke('grpc', 'GetAllPayloadGroup', {})
+      .then(payloadGroupsForUI)
+      .then((res) => {
         cacheNodesRef.current = res.Nodes
         const newData: DataItem[] = nodesToDataFun(res.Nodes)
         setData(newData)
@@ -4179,9 +3987,9 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
   }
 
   useEffect(() => {
-    ipcRenderer.invoke('fetch-code-path').then((path: string) => {
-      ipcRenderer
-        .invoke('is-exists-file', path)
+    ipc.invoke('local', 'fetch-code-path', {}).then((path: string) => {
+      ipc
+        .invoke('local', 'assert-file-absent', path)
         .then(() => {
           setCodePath('')
         })
@@ -4192,12 +4000,12 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
   }, [])
 
   useEffect(() => {
-    ipcRenderer
-      .invoke('YakVersionAtLeast', {
+    ipc
+      .invoke('grpc', 'YakVersionAtLeast', {
         AtLeastVersion: 'v1.2.9-sp3',
         YakVersion: '',
       })
-      .then((res: { Ok: boolean }) => {
+      .then((res) => {
         if (res.Ok) {
           // 页面初次进入时
           getRemoteValue(NewPayloadFirstEnter).then((res) => {
@@ -4221,46 +4029,27 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
     setFolder('')
   })
 
-  // 迁移数据
-  const initNewPayload = useMemoizedFn(() => {
-    ipcRenderer.invoke('MigratePayloads', {}, token)
-    setFirstEnter(false)
-    setVisible(true)
-  })
-
-  // 取消迁移数据
-  const cancelMigratePayloads = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-MigratePayloads', token)
-  })
-
-  // 监听迁移数据
-  useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e: any, data: SavePayloadProgress) => {
-      if (data) {
-        try {
-          setStreamData(data)
-          if (data.Message.length > 0) {
-            logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
-          }
-        } catch (error) {}
-      }
-    })
-    ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-      failed(`[MigratePayloads] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
+  const migrationTask = usePayloadProgress({
+    onData(data) {
+      setStreamData(data)
+      if (data.Message) logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+    },
+    onError(error) {
+      failed(`[MigratePayloads] error: ${error}`)
+    },
+    onEnd() {
       info('[MigratePayloads] finished')
       logInfoRef.current = []
-      setRemoteValue(NewPayloadFirstEnter, JSON.stringify({ import: true }))
+      void setRemoteValue(NewPayloadFirstEnter, JSON.stringify({ import: true }))
       onQueryGroup()
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-MigratePayloads', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-    }
-  }, [])
+    },
+  })
+  const initNewPayload = useMemoizedFn(() => {
+    setFirstEnter(false)
+    setVisible(true)
+    migrationTask.start('MigratePayloads', {})
+  })
+  const cancelMigratePayloads = migrationTask.cancel
 
   const ResizeBoxProps = useCreation(() => {
     const p = {
@@ -4479,9 +4268,9 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
   }
 
   useEffect(() => {
-    ipcRenderer.invoke('fetch-code-path').then((path: string) => {
-      ipcRenderer
-        .invoke('is-exists-file', path)
+    ipc.invoke('local', 'fetch-code-path', {}).then((path: string) => {
+      ipc
+        .invoke('local', 'assert-file-absent', path)
         .then(() => {
           setCodePath('')
         })

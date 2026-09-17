@@ -1,8 +1,8 @@
+import { ipc } from '@/services/ipc'
 // Web Fuzzer 二进制 Fuzztag 折叠：识别 / collapse / expand / 编解码
 // 关键词: binary fuzztag fold, unquote, hexdecode, base64decode, placeholder
 
 // 延迟获取 electron ipcRenderer，避免纯函数在非 electron 环境（如单测）导入即报错
-const getIpcRenderer = (): any => (window as any).require('electron').ipcRenderer
 
 // 占位标记前后缀，确保唯一且为纯 ASCII，便于 expand 时精确回填
 const PLACEHOLDER_PREFIX = '#YBIN_'
@@ -934,7 +934,7 @@ interface CodecResponse {
 }
 
 const runCodec = (text: string, workflow: CodecWorkItem[]): Promise<CodecResponse> =>
-  getIpcRenderer().invoke('NewCodec', { Text: text, WorkFlow: workflow })
+  ipc.invoke('grpc', 'NewCodec', { Text: text, WorkFlow: workflow })
 
 const decodeWorkflowOf = (kind: BinaryTagKind): CodecWorkItem[] => {
   switch (kind) {

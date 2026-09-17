@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import { type IMonacoEditor, NewHTTPPacketEditor } from '@/utils/editors'
 import { insertFileFuzzTag, insertTemporaryFileFuzzTag } from '../InsertFileFuzzTag'
@@ -22,8 +23,6 @@ import {
 } from '@/pages/mitm/MITMManual/largeMultipartReplacement'
 import { LargeRequestFileReplaceModal } from '@/pages/mitm/MITMManual/LargeMultipartFileReplaceModal'
 import styles from './WebFuzzerNewEditor.module.scss'
-const { ipcRenderer } = window.require('electron')
-
 const HTTPFuzzerHotPatch = React.lazy(() =>
   import('../HTTPFuzzerHotPatch').then(({ HTTPFuzzerHotPatch }) => ({
     default: HTTPFuzzerHotPatch,
@@ -298,9 +297,9 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
       copyAsUrl({ Request: newRequest, IsHTTPS: isHttps }, 'withoutQuery')
     })
     const onClickOpenBrowserMenu = useMemoizedFn(() => {
-      ipcRenderer
-        .invoke('ExtractUrl', { Request: newRequest, IsHTTPS: isHttps })
-        .then((data: { Url: string }) => {
+      ipc
+        .invoke('grpc', 'ExtractUrl', { Request: newRequest, IsHTTPS: isHttps })
+        .then((data) => {
           openExternalWebsite(data.Url)
         })
         .catch((e) => {

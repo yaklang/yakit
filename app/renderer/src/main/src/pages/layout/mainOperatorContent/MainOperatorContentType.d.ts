@@ -60,7 +60,7 @@ export interface PageCache {
   verboseKey?: string
   menuName: string
   route: YakitRoute
-  pluginId?: number
+  pluginId?: string | number
   pluginName?: string
   singleNode: boolean | undefined
   multipleNode: MultipleNodeInfo[] | any[]
@@ -76,7 +76,7 @@ export interface PageCache {
 export interface OnlyPageCache {
   menuName: string
   route: YakitRoute
-  pluginId?: number
+  pluginId?: string | number
   pluginName?: string
   /** Plugin_OP 多 Tab 时用于精确关闭单个一级页面 */
   routeKey?: string

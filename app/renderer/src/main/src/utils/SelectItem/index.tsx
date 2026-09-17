@@ -1,11 +1,11 @@
+import { payloadGroupsForUI } from '@/pages/payloadManager/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Form, type FormItemProps } from 'antd'
 import { failed } from '../../utils/notification'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface SelectItemProps {
   label: string | any
@@ -30,9 +30,10 @@ export const SelectItem: React.FC<SelectItemProps> = (props) => {
   const [loading, setLoading] = useState<boolean>(false)
 
   const fetchList = () => {
-    ipcRenderer
-      .invoke('GetAllPayloadGroup')
-      .then((data: { Groups: string[] }) => {
+    ipc
+      .invoke('grpc', 'GetAllPayloadGroup', {})
+      .then(payloadGroupsForUI)
+      .then((data) => {
         setLists(data.Groups || [])
       })
       .catch((e: any) => {
@@ -62,8 +63,8 @@ export const SelectItem: React.FC<SelectItemProps> = (props) => {
           onChange={(value: any) => {
             if (value) {
               setLoading(true)
-              ipcRenderer
-                .invoke('Codec', { Type: 'fuzz', Text: `{{x(${value})}}` })
+              ipc
+                .invoke('grpc', 'Codec', { Type: 'fuzz', Text: `{{x(${value})}}` })
                 .then((res) => {
                   if (props.onChange) props.onChange(value, res?.Result || '')
                 })

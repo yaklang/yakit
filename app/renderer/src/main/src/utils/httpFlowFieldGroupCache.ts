@@ -1,6 +1,5 @@
+import { ipc } from '@/services/ipc'
 import type { HTTPFlowsFieldGroupResponse } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
-
-const { ipcRenderer } = window.require('electron')
 
 const CACHE_TTL_MS = 60_000
 
@@ -19,9 +18,9 @@ export function fetchHTTPFlowsFieldGroup(refreshRequest = true): Promise<HTTPFlo
     return inflight
   }
 
-  const request = ipcRenderer
-    .invoke('HTTPFlowsFieldGroup', { RefreshRequest: refreshRequest, IsAll: true })
-    .then((rsp: HTTPFlowsFieldGroupResponse) => {
+  const request = ipc
+    .invoke('grpc', 'HTTPFlowsFieldGroup', { RefreshRequest: refreshRequest, IsAll: true })
+    .then((rsp) => {
       cachedResponse = rsp
       cachedAt = Date.now()
       return rsp

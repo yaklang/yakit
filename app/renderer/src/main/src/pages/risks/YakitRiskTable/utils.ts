@@ -1,3 +1,5 @@
+import { risksForUI } from '@/pages/risks/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import { yakitNotify } from '@/utils/notification'
 import type { QueryRisksRequest, QueryRisksResponse } from './YakitRiskTableType'
 import type { Risk } from '../schema'
@@ -6,12 +8,12 @@ import { defQueryRisksRequest } from './constants'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, ['yakitUi', 'risk'])
 
-const { ipcRenderer } = window.require('electron')
 /** QueryRisks */
 export const apiQueryRisks: (query?: QueryRisksRequest) => Promise<QueryRisksResponse> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryRisks', query)
+    ipc
+      .invoke('grpc', 'QueryRisks', query ?? {})
+      .then(risksForUI)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.queryFailed', { error: e + '' }))
@@ -31,8 +33,9 @@ export const apiQueryRisksTotalByRuntimeId: (RuntimeId: string) => Promise<Query
       },
       RuntimeId,
     }
-    ipcRenderer
-      .invoke('QueryRisks', params)
+    ipc
+      .invoke('grpc', 'QueryRisks', params ?? {})
+      .then(risksForUI)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitRiskTable.queryRisksTotalFailed') + `${e}`)
@@ -52,8 +55,9 @@ export const apiQueryRisksTotalByRuntimeIds: (RuntimeIds: string[]) => Promise<Q
       },
       RuntimeIds,
     }
-    ipcRenderer
-      .invoke('QueryRisks', params)
+    ipc
+      .invoke('grpc', 'QueryRisks', params ?? {})
+      .then(risksForUI)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitRiskTable.queryRisksTotalFailed') + `${e}`)
@@ -72,14 +76,14 @@ export interface NewRiskReadRequest {
   /**@deprecated */
   AfterId?: string
   /**传空数组代表全部已读 */
-  Ids?: number[]
+  Ids?: (string | number)[]
   Filter?: QueryRisksRequest
 }
 export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('set-risk-info-read', query)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'NewRiskRead', query ?? {})
+      .then(() => resolve(null))
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.readFailed', { error: e + '' }))
         reject(e)
@@ -88,19 +92,19 @@ export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (qu
 }
 
 export interface DeleteRiskRequest {
-  Id?: number
+  Id?: string | number
   Hash?: string
   Filter?: QueryRisksRequest
-  Ids?: number[]
+  Ids?: (string | number)[]
   DeleteAll?: boolean
   DeleteRepetition?: boolean
 }
 /** DeleteRisk */
 export const apiDeleteRisk: (query?: DeleteRiskRequest) => Promise<null> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteRisk', query)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'DeleteRisk', query ?? {})
+      .then(() => resolve(null))
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.deleteFailed', { error: e + '' }))
         reject(e)
@@ -115,8 +119,8 @@ export interface ExportHtmlProps {
 /** export-risk-html */
 export const apiExportHtml: (params: ExportHtmlProps) => Promise<string> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('export-risk-html', params)
+    ipc
+      .invoke('local', 'export-risk-html', params)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.exportFailed', { error: e + '' }))
@@ -135,8 +139,8 @@ export interface FieldGroup {
 /** QueryRiskTags */
 export const apiQueryRiskTags: () => Promise<QueryRiskTagsResponse> = () => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryRiskTags')
+    ipc
+      .invoke('grpc', 'QueryRiskTags', {})
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitRiskTable.queryRiskTagsFailed') + `${e}`)
@@ -148,9 +152,9 @@ export const apiQueryRiskTags: () => Promise<QueryRiskTagsResponse> = () => {
 /** QueryAvailableRiskType */
 export const apiQueryAvailableRiskType: () => Promise<FieldName[]> = () => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryAvailableRiskType')
-      .then((res: Fields) => {
+    ipc
+      .invoke('grpc', 'QueryAvailableRiskType', {})
+      .then((res) => {
         const { Values = [] } = res
         if (Values.length > 0) {
           const data = Values.sort((a, b) => b.Total - a.Total)
@@ -167,16 +171,16 @@ export const apiQueryAvailableRiskType: () => Promise<FieldName[]> = () => {
 }
 
 export interface SetTagForRiskRequest {
-  Id: number
+  Id: string | number
   Hash: string
   Tags: string[]
 }
 /** SetTagForRisk */
-export const apiSetTagForRisk: (params: SetTagForRiskRequest) => Promise<SetTagForRiskRequest> = (params) => {
+export const apiSetTagForRisk: (params: SetTagForRiskRequest) => Promise<void> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('SetTagForRisk', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'SetTagForRisk', params ?? {})
+      .then(() => resolve(undefined))
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.settingFailed', { error: e + '' }))
         reject(e)
@@ -192,8 +196,8 @@ export interface RiskFieldGroupResponse {
 /** RiskFieldGroup */
 export const apiRiskFieldGroup: () => Promise<RiskFieldGroupResponse> = () => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('RiskFieldGroup')
+    ipc
+      .invoke('grpc', 'RiskFieldGroup', {})
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.queryFailed', { error: e + '' }))
@@ -210,8 +214,8 @@ export interface UploadRiskToOnlineRequest {
 /** RiskFeedbackToOnline */
 export const apiRiskFeedbackToOnline: (params: UploadRiskToOnlineRequest) => Promise<unknown> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('RiskFeedbackToOnline', params)
+    ipc
+      .invoke('grpc', 'RiskFeedbackToOnline', params ?? {})
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', tOriginal('YakitNotification.feedbackFailed', { error: e + '' }))

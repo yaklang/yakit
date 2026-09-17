@@ -6,7 +6,7 @@ export const writeXTerm = (xterm: any, data: string) => {
   }
 }
 
-export const writeExecResultXTerm = (xterm: any, result: ExecResult, encoding?: 'utf8' | 'latin1') => {
+export const writeExecResultXTerm = (xterm: any, result: Pick<ExecResult, 'Raw'>, encoding?: 'utf8' | 'latin1') => {
   if ((result?.Raw || []).length > 0) {
     writeXTerm(xterm, Buffer.from(result.Raw).toString(encoding && 'utf8'))
   }

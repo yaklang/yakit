@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../../../shared/communication/window-client'
 import { bindExternalStoreHook, createExternalStore } from '@/utils/createExternalStore'
 import type { HistoryItem } from '../type'
 import { historyStore } from './useHistoryFolder'
@@ -5,8 +6,6 @@ import { mergeOnePath } from '../utils'
 import { onFileNotify } from '../FileTreeSystemListWrapper/FileTreeSystemListWrapper'
 
 const SESSION_KEY = 'current-session-files'
-
-const { ipcRenderer } = window.require('electron')
 
 let addQueue: Promise<void> = Promise.resolve()
 
@@ -38,11 +37,11 @@ const getInitSession = async (): Promise<HistoryItem[]> => {
  */
 export const defaultFolder = async (): Promise<HistoryItem | null> => {
   try {
-    const result = await ipcRenderer.invoke('fetch-code-path')
+    const result = await ipc.invoke('local', 'fetch-code-path', {})
     if (!result) return null
     const item: HistoryItem = {
-      path: result.path ?? result,
-      isFolder: result.isFolder ?? true,
+      path: result,
+      isFolder: true,
     }
 
     return item

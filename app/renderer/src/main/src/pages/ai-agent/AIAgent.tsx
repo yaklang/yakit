@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { AIAgentProps, AIAgentSetting } from './aiAgentType'
@@ -36,8 +37,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useChatIPC } from '../ai-re-act/hooks/useChatIPC'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { globalSessionEngine } from '../ai-re-act/hooks/ChatMultiSessionController'
-
-const { ipcRenderer } = window.require('electron')
 
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
@@ -179,9 +178,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   // 获取数据库 列表数据
   const { run } = useRequest(
     async (Keyword?: string) => {
-      const result: KnowledgeBaseContentProps = await ipcRenderer.invoke('GetKnowledgeBase', {
+      const result: KnowledgeBaseContentProps = await ipc.invoke('grpc', 'GetKnowledgeBase', {
         Keyword,
-        Pagination: { Limit: 9999, Page: 1, OrderBy: 'updated_at', Sort: 'desc' },
+        Pagination: { Limit: 9999, Page: 1, OrderBy: 'updated_at', Order: 'desc' },
       })
       const { KnowledgeBases } = result
       return KnowledgeBases

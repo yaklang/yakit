@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { useEffect, useRef } from 'react'
 import { yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
@@ -8,7 +9,6 @@ import { useMemoizedFn } from 'ahooks'
 import { setClipboardText } from '@/utils/clipboard'
 import { useTheme } from '@/hook/useTheme'
 import { getXtermTheme } from '@/hook/useXTermOptions/useXTermOptions'
-import { yakitEngine, yakitStream, yakitWindow } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export let clickEngineConsoleFlag = false
@@ -23,7 +23,7 @@ export default function useEngineConsole(props: useEngineConsoleHooks) {
   // gRPC stream token，仅驱动订阅/取消，不暴露 UI，用 ref 避免父组件重渲染
   const engineConsoleTokenRef = useRef<string>('')
   const { consoleLog, setConsoleInfo } = useEngineConsoleStore()
-  const streamCleanupRef = useRef<BridgeCleanup[]>([])
+  const controllerRef = useRef<AbortController>()
   const consoleLogRef = useRef<string>(consoleLog)
   useEffect(() => {
     consoleLogRef.current = consoleLog
@@ -31,67 +31,59 @@ export default function useEngineConsole(props: useEngineConsoleHooks) {
 
   useEffect(() => {
     if (engineConsoleWindowHash) {
-      yakitWindow.forwardConsoleTheme({
+      ipc.invoke('local', 'forward-xterm-theme', {
         xtermThemeVars: getXtermTheme(),
       })
     }
   }, [themeGlobal])
 
-  const cleanupEngineConsoleStream = useMemoizedFn(() => {
-    streamCleanupRef.current.forEach((cleanup) => cleanup())
-    streamCleanupRef.current = []
-  })
-
-  // token 变更时手动重建 stream 订阅，替代 state + effect 驱动
-  const setupEngineConsoleStream = useMemoizedFn((token: string) => {
-    cleanupEngineConsoleStream()
-    const offData = yakitStream.onData(token, async (data: ExecResult) => {
-      if (engineConsoleWindowHash) {
-        yakitWindow.forwardConsoleData(Uint8ArrayToString(data.Raw) + '\r\n')
-      }
-    })
-
-    const offError = yakitStream.onError(token, (error) => {
-      yakitNotify('error', `[AttachCombinedOutput] error:  ${error}`)
-    })
-
-    const offEnd = yakitStream.onEnd(token, () => {
-      yakitNotify('info', '[AttachCombinedOutput] finished')
-    })
-
-    streamCleanupRef.current = [offData, offError, offEnd]
-  })
-
   const cancelEngineConsole = useMemoizedFn(() => {
-    const token = engineConsoleTokenRef.current
-    if (token) {
-      yakitStream.cancel('AttachCombinedOutput', token)
-      engineConsoleTokenRef.current = ''
-    }
-    cleanupEngineConsoleStream()
+    controllerRef.current?.abort()
+    engineConsoleTokenRef.current = ''
   })
-
   const onEngineConsoleStart = useMemoizedFn(() => {
-    const newToken = randomString(40)
-    engineConsoleTokenRef.current = newToken
-    setupEngineConsoleStream(newToken)
-    yakitEngine.attachCombinedOutput({}, newToken).then(() => {
-      yakitNotify('info', t('EngineConsole.monitorStarted'))
-    })
+    cancelEngineConsole()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const token = randomString(40)
+    engineConsoleTokenRef.current = token
+    const onError = (error: unknown) => {
+      if (!controller.signal.aborted) yakitNotify('error', `[AttachCombinedOutput] error: ${error}`)
+    }
+    yakitNotify('info', t('EngineConsole.monitorStarted'))
+    void ipc
+      .openStream(
+        'grpc',
+        'AttachCombinedOutput',
+        {},
+        {
+          token,
+          signal: controller.signal,
+          onData(data) {
+            if (!controller.signal.aborted && engineConsoleWindowHash)
+              ipc.invoke('local', 'forward-xterm-data', Uint8ArrayToString(data.Raw) + '\r\n')
+          },
+          onError,
+          onEnd() {
+            if (!controller.signal.aborted) yakitNotify('info', '[AttachCombinedOutput] finished')
+          },
+        },
+      )
+      .catch(onError)
   })
 
   useEffect(() => {
-    const offHash = yakitWindow.onConsoleWindowHash(({ hash }) => {
+    const offHash = ipc.on('engineConsole-window-hash', ({ hash }) => {
       clickEngineConsoleFlag = false
       engineConsoleWindowHash = hash
       // hash存在则证明引擎新窗口已打开
       if (hash) {
-        yakitWindow.forwardConsoleTheme({
+        ipc.invoke('local', 'forward-xterm-theme', {
           xtermThemeVars: getXtermTheme(),
         })
         // 此处历史记录为使用 EngineConsole 组件产生的历史记录
         if (consoleLogRef.current.length) {
-          yakitWindow.forwardConsoleData(consoleLogRef.current)
+          ipc.invoke('local', 'forward-xterm-data', consoleLogRef.current)
         }
         onEngineConsoleStart()
       } else {
@@ -102,13 +94,13 @@ export default function useEngineConsole(props: useEngineConsoleHooks) {
     })
 
     // 监听子窗口的复制操作
-    const offCopy = yakitWindow.onConsoleTerminalCopyData((copyData: string) => {
+    const offCopy = ipc.on('console-terminal-window-copy-data', (copyData: string) => {
       setClipboardText(copyData)
     })
 
     return () => {
       // 菜单常驻父组件意外或主动销毁，子窗口也需要跟着销毁
-      yakitWindow.closeConsoleWindow()
+      ipc.invoke('local', 'close-console-new-window', {})
 
       // 状态需要重置
       clickEngineConsoleFlag = false

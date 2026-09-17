@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef } from 'react'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
@@ -14,7 +15,6 @@ import { useEngineConsoleStore } from '../../store/baseConsole'
 import type { YakitSystem } from '@/yakitGVDefine'
 import { setClipboardText } from '@/utils/clipboard'
 import { useXTermOptions } from '@/hook/useXTermOptions/useXTermOptions'
-import { yakitEngine, yakitStream, yakitSystem } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface EngineConsoleProp {
@@ -49,38 +49,51 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     }
     timeRef.current = setInterval(updateConsoleLog, 300)
 
-    const offData = yakitStream.onData(token, async (data: ExecResult) => {
-      try {
-        consoleLogRef.current += Uint8ArrayToString(data.Raw) + '\r\n'
-        writeXTerm(xtermRef, Uint8ArrayToString(data.Raw) + '\r\n')
-      } catch (e) {
-        console.info(e)
-      }
-    })
-    const offError = yakitStream.onError(token, (error) => {
-      failed(`[AttachCombinedOutput] error:  ${error}`)
-    })
-    const offEnd = yakitStream.onEnd(token, () => {
-      info('[AttachCombinedOutput] finished')
-    })
-
-    yakitEngine.attachCombinedOutput({}, token).then(() => {
-      info(t('EngineConsole.monitorStarted'))
-    })
-
+    const controller = new AbortController()
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      clearInterval(timeRef.current)
+      updateConsoleLog()
+      failed(`[AttachCombinedOutput] error: ${error}`)
+    }
+    info(t('EngineConsole.monitorStarted'))
+    void ipc
+      .openStream(
+        'grpc',
+        'AttachCombinedOutput',
+        {},
+        {
+          token,
+          signal: controller.signal,
+          onData(data) {
+            if (controller.signal.aborted) return
+            try {
+              consoleLogRef.current += Uint8ArrayToString(data.Raw) + '\r\n'
+              writeXTerm(xtermRef, Uint8ArrayToString(data.Raw) + '\r\n')
+            } catch (e) {
+              console.info(e)
+            }
+          },
+          onError,
+          onEnd() {
+            if (controller.signal.aborted) return
+            clearInterval(timeRef.current)
+            updateConsoleLog()
+            info('[AttachCombinedOutput] finished')
+          },
+        },
+      )
+      .catch(onError)
     return () => {
-      yakitStream.cancel('AttachCombinedOutput', token)
-      offData()
-      offError()
-      offEnd()
+      controller.abort()
       clearInterval(timeRef.current)
     }
   }, [xtermRef])
 
   const systemRef = useRef<YakitSystem>('Darwin')
   useEffect(() => {
-    yakitSystem
-      .fetchSystemName()
+    ipc
+      .invoke('local', 'fetch-system-name', {})
       .then((res) => (systemRef.current = res))
       .catch(() => {})
   }, [])

@@ -1,10 +1,9 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
 
 const tOriginal = i18n.getFixedT(null, 'components')
-
-const { ipcRenderer } = window.require('electron')
 
 export interface HttpFileInfoRespose {
   fileName: string
@@ -14,8 +13,8 @@ export interface HttpFileInfoRespose {
 /**通过链接获取文件基本信息 */
 export const getHttpFileLinkInfo: APIFunc<string, HttpFileInfoRespose> = (onlineUrl, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('get-http-file-link-info', encodeURI(onlineUrl))
+    ipc
+      .invoke('local', 'get-http-file-link-info', encodeURI(onlineUrl))
       .then(resolve)
       .catch((error) => {
         if (!hiddenError)
@@ -31,8 +30,8 @@ export interface LocalFileInfoRespose {
 /**通过本地路径获取文件基本信息 */
 export const getLocalFileLinkInfo: APIFunc<string, LocalFileInfoRespose> = (path, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('fetch-file-info-by-path', path)
+    ipc
+      .invoke('local', 'fetch-file-info-by-path', path)
       .then((res) => {
         resolve({
           size: res.size,
@@ -53,8 +52,8 @@ export interface GetLocalFileTypeRespose {
 /**通过本地路径获取文件后缀/类型 */
 export const getLocalFileName: APIFunc<string, GetLocalFileTypeRespose> = (path, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('fetch-file-name-by-path', path)
+    ipc
+      .invoke('local', 'fetch-file-name-by-path', path)
       .then(resolve)
       .catch((error) => {
         if (!hiddenError)

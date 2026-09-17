@@ -1,4 +1,4 @@
 export interface SinglePluginExecutionProps {
-  yakScriptId: number
+  yakScriptId: string | number
   pageId: string
 }

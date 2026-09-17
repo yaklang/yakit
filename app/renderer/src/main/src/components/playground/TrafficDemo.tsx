@@ -1,3 +1,6 @@
+import { trafficSessionsForUI } from '@/models/Traffic'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import React, { useEffect } from 'react'
 import Table from 'rc-table'
 import type { TrafficSession } from '@/models/Traffic'
@@ -6,8 +9,6 @@ import type { QueryGeneralResponse } from '@/pages/invoker/schema'
 import styles from './TrafficSessionTable.module.css'
 
 export interface TrafficDemoProp {}
-
-const { ipcRenderer } = window.require('electron')
 
 export const TrafficDemo: React.FC<TrafficDemoProp> = React.memo((props) => {
   const [data, setData] = React.useState<TrafficSession[]>([])
@@ -22,13 +23,15 @@ export const TrafficDemo: React.FC<TrafficDemoProp> = React.memo((props) => {
       Limit: limit || pagination.Limit,
     }
     setLoading(true)
-    ipcRenderer
-      .invoke('QueryTrafficSession', {
+    ipc
+      .invoke('grpc', 'QueryTrafficSession', {
         ...params,
         ...(extraParam ? extraParam : {}),
         Pagination: paginationProps,
       })
-      .then((r: QueryGeneralResponse<any>) => {
+      .then(trafficSessionsForUI)
+      .then(grpcPageForUI)
+      .then((r) => {
         setData(r.Data)
         setPagination(r.Pagination)
         setTotal(r.Total)

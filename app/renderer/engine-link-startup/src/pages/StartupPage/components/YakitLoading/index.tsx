@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { Checkbox, Divider, Form, Tooltip } from 'antd'
@@ -18,7 +19,6 @@ import { openABSFileLocated } from '@/utils/openWebsite'
 import { EngineModeVerbose } from '../../utils'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { yakitApp } from '@/utils/electronBridge'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { MoreYaklangVersion } from '../MoreYaklangVersion'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -778,7 +778,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
           <span
             className={styles['exit-btn']}
             style={{ fontSize: i18n.language === 'en' ? 11 : 12 }}
-            onClick={() => yakitApp.closeWindow()}
+            onClick={() => ipc.invoke('local', 'UIOperate', 'close')}
           >
             <FigmaIcon28011794Outlined className={styles['exit-icon']} color="currentColor" size={16} />
             {t('YakitLoading.exit')}

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Collapse } from 'antd'
@@ -26,7 +27,6 @@ export interface QueryCVERequest {
 }
 
 export interface CVEViewerProp {}
-const { ipcRenderer } = window.require('electron')
 export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
   const [params, setParams] = useState<QueryCVERequest>(defQueryCVERequest)
   const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
@@ -37,9 +37,9 @@ export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
   }, [])
   const onIsCVEDatabaseReady = useMemoizedFn(() => {
     setLoading(true)
-    ipcRenderer
-      .invoke('IsCVEDatabaseReady')
-      .then((rsp: { Ok: boolean; Reason: string; ShouldUpdate: boolean }) => {
+    ipc
+      .invoke('grpc', 'IsCVEDatabaseReady', {})
+      .then((rsp) => {
         setAvailable(rsp.Ok)
       })
       .catch((err) => {

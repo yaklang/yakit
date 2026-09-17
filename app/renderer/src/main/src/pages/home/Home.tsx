@@ -1,3 +1,6 @@
+import { queryHTTPFlows as requestHTTPFlows } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { projectForUI } from '@/pages/softwareSettings/projectUtils'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState, type ReactElement, type CSSProperties } from 'react'
 import classNames from 'classnames'
@@ -109,8 +112,6 @@ import { getNotepadAdd, getNotepadManage } from '../layout/NotepadMenu/utils'
 import styles from './home.module.scss'
 import { SystemInfo } from '@/constants/hardware'
 import { defHost, defPort } from '../mitm/MITMServerStartForm/MITMServerStartForm'
-
-const { ipcRenderer } = window.require('electron')
 
 export const convertToBytes = (size: number, unit: string) => {
   const units = {
@@ -328,14 +329,15 @@ const Home: React.FC<HomeProp> = (props) => {
         icon: <PublicToolScreenRecordingIcon />,
         desc: t('Home.recordScreenActivities'),
         rightIcon: <ArrowRightOutlined color="currentColor" />,
-        onClick: () => !screenRecorderInfo.isRecording && ipcRenderer.invoke('send-open-screenCap-modal'),
+        onClick: () =>
+          !screenRecorderInfo.isRecording && ipc.invoke('local', 'ForwardMainEvent', { event: 'open-screenCap-modal' }),
       },
       {
         label: t('Home.screenshot'),
         icon: <PublicToolScreenshotIcon />,
         desc: t('Home.captureScreenIntoImage'),
         rightIcon: <ArrowRightOutlined color="currentColor" />,
-        onClick: () => ipcRenderer.invoke('activate-screenshot'),
+        onClick: () => ipc.invoke('local', 'activate-screenshot', {}),
       },
       {
         label: t('YakitRoute.recordingManagement'),
@@ -388,7 +390,7 @@ const Home: React.FC<HomeProp> = (props) => {
     })
 
     // 获取系统
-    ipcRenderer.invoke('fetch-system-name').then((systemName) => {
+    ipc.invoke('local', 'fetch-system-name', {}).then((systemName) => {
       setSystem(systemName)
     })
 
@@ -482,8 +484,8 @@ const Home: React.FC<HomeProp> = (props) => {
   // 获取是否安装MITM证书
   const updateMITMCert = useMemoizedFn(() => {
     return new Promise((resolve, reject) => {
-      ipcRenderer
-        .invoke('VerifySystemCertificate')
+      ipc
+        .invoke('grpc', 'VerifySystemCertificate', {})
         .then((res) => {
           if (res.valid) {
             setShowMITMCertWarn(false)
@@ -531,8 +533,8 @@ const Home: React.FC<HomeProp> = (props) => {
         </div>
       ),
       onOk: () => {
-        ipcRenderer
-          .invoke('generate-install-script', {})
+        ipc
+          .invoke('local', 'generate-install-script', {})
           .then((p: string) => {
             if (p) {
               openABSFileLocated(p)
@@ -597,9 +599,9 @@ const Home: React.FC<HomeProp> = (props) => {
   const handleAutoInstall = useMemoizedFn((e?: React.MouseEvent<HTMLElement>) => {
     e?.stopPropagation()
     yakitNotify('info', t('Home.cert.mitmCertInstallPermissionNotice'))
-    ipcRenderer
-      .invoke('InstallMITMCertificate', {})
-      .then((res: { Ok: boolean; Reason?: string }) => {
+    ipc
+      .invoke('grpc', 'InstallMITMCertificate', {})
+      .then((res) => {
         if (res?.Ok) {
           yakitNotify('success', t('Home.cert.mitmCertInstallSuccess'))
           updateMITMCert()
@@ -650,7 +652,7 @@ const Home: React.FC<HomeProp> = (props) => {
           {modalT('Home.webFuzzerSequenceDemo')}
           <div
             className={styles['subtitle-help-wrapper']}
-            onClick={() => ipcRenderer.invoke('open-url', WebsiteGV.WebFuzzerAddress)}
+            onClick={() => ipc.invoke('local', 'open-url', WebsiteGV.WebFuzzerAddress)}
           >
             <span className={styles['text-style']}>{t('Home.officialDocs')}</span>
             <QuestionMarkCircleOutlined color="currentColor" />
@@ -669,8 +671,8 @@ const Home: React.FC<HomeProp> = (props) => {
   // 获取网卡操作权限
   const updatePcap = useMemoizedFn(() => {
     return new Promise((resolve, reject) => {
-      ipcRenderer
-        .invoke('IsPrivilegedForNetRaw', {})
+      ipc
+        .invoke('grpc', 'IsPrivilegedForNetRaw', {})
         .then((res) => {
           setPcap(res)
           resolve('pcap')
@@ -682,8 +684,8 @@ const Home: React.FC<HomeProp> = (props) => {
   // 开启PCAP权限
   const openPcapPower = useMemoizedFn(() => {
     setPcapHintLoading(true)
-    ipcRenderer
-      .invoke(`PromotePermissionForUserPcap`, {})
+    ipc
+      .invoke('grpc', 'PromotePermissionForUserPcap', {})
       .then(() => {
         setPcapResult(true)
       })
@@ -722,11 +724,12 @@ const Home: React.FC<HomeProp> = (props) => {
 
   // 更新项目数据库大小
   const updateProjectDbSize = async () => {
-    ipcRenderer
-      .invoke('GetCurrentProjectEx', {
+    ipc
+      .invoke('grpc', 'GetCurrentProjectEx', {
         Type: getEnvTypeByProjects(),
       })
-      .then((res: ProjectDescription) => {
+      .then(projectForUI)
+      .then((res) => {
         setCurProjectInfo(res)
       })
   }
@@ -752,14 +755,14 @@ const Home: React.FC<HomeProp> = (props) => {
         OrderBy: 'Id',
       },
     }
-    ipcRenderer.invoke('QueryHTTPFlows', params).then((rsp: YakQueryHTTPFlowResponse) => {
+    requestHTTPFlows(params).then((rsp: YakQueryHTTPFlowResponse) => {
       setHistoryData(rsp.Total)
     })
   }
 
   // 更新漏洞数据
   const undateRiskLevel = () => {
-    ipcRenderer.invoke('QueryAvailableRiskLevel', {}).then((i: Fields) => {
+    ipc.invoke('grpc', 'QueryAvailableRiskLevel', {}).then((i) => {
       setRiskLevelData(i.Values)
     })
   }

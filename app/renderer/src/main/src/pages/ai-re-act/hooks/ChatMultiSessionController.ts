@@ -1,3 +1,5 @@
+import { int64String } from '@/utils/int64'
+import { parse as parseLosslessJSON, parseNumberAndBigInt } from 'lossless-json'
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import {
   AIInputEventSyncTypeEnum,
@@ -47,7 +49,8 @@ import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/ut
 import { clearThoughtDurationCache } from '@/pages/ai-agent/components/thoughtDuration/ThoughtDuration'
 import i18n from '@/i18n/i18n'
 
-const { ipcRenderer } = window.require('electron')
+import { ipc } from '@/services/ipc'
+import type { StreamTask } from '../../../../../../../shared/communication/client'
 const tAgent = i18n.getFixedT(null, 'aiAgent')
 
 /** deleteSessions 入参：按 id / 按 source 列表 / 全库清删（deleteAll） */
@@ -82,9 +85,9 @@ const genAIAgentChatData = (): AIAgentChatData => {
     systemStream: '',
     yaklangCodeChange: undefined,
 
-    grpcOffset: 0,
+    grpcOffset: '0',
 
-    timelineBeforeId: 0,
+    timelineBeforeId: '0',
     timelineNoMore: false,
 
     httpRunTimeIDs: [],
@@ -228,11 +231,15 @@ const collectTopLevelContentTokens = (content: SessionRenderContent, topCount: n
 // #endregion
 
 export class ChatMultiSessionController {
+  private readonly streams = new Map<
+    string,
+    { controller: AbortController; opening?: Promise<StreamTask<'StartAIReAct'>> }
+  >()
+
   // #region 常量定义
   /** 渲染树-element debounce 落库 IDB 延迟时间 */
   private static readonly RENDER_PERSIST_DEBOUNCE_MS = 3000
   /** cancel 后等待真实 session-end 的最长时间，超时则合成 end */
-  private static readonly SESSION_END_FALLBACK_MS = 5000
   /** 恢复会话时首屏灌入 contents 的顶层条数（两侧列表各自截取） */
   private static readonly INITIAL_CONTENT_TOP_COUNT = 20
   /** recovery_history 单次拉取条数 */
@@ -494,13 +501,13 @@ export class ChatMultiSessionController {
   private persistSetSessionRender(
     sessionId: string,
     content: SessionRenderContent,
-    grpcOffset?: number,
+    grpcOffset?: string,
   ): Promise<unknown> {
     // 显式删库窗口：禁止再写，避免与 dispose drain / by-source 扫尾竞态
     if (this.pendingDisposeSessions.get(sessionId) === true) return Promise.resolve()
 
     // 同步计算 offset / source 并闭包捕获，避免 enqueue 后 session 被 teardown 导致取不到
-    const offset = grpcOffset ?? this.rawDataPool.get(sessionId)?.grpcOffset ?? 0
+    const offset = grpcOffset ?? this.rawDataPool.get(sessionId)?.grpcOffset ?? '0'
     const source = this.resolvePersistSource(sessionId)
     return this.enqueueRenderWrite(sessionId, () =>
       aiChatPersistStore.setSessionRender(sessionId, source, content, offset).catch(() => {
@@ -653,7 +660,6 @@ export class ChatMultiSessionController {
    * cancel 后等待 session-end 的兜底定时器：超时则手动走 handleSessionEnd（摘监听 + 收尾）
    * 避免 end 丢失导致监听泄漏 / onEnd 永不触发
    */
-  private sessionEndFallbackTimers = new Map<string, ReturnType<typeof setTimeout>>()
   /** 等待 session-end 的调用方；同一会话可被多个流程同时等待 */
   private sessionEndWaiters = new Map<string, Set<() => void>>()
 
@@ -702,12 +708,6 @@ export class ChatMultiSessionController {
   }
 
   /** 取消已有的 session-end 兜底定时器 */
-  private clearSessionEndFallback(sessionId: string) {
-    const timer = this.sessionEndFallbackTimers.get(sessionId)
-    if (!timer) return
-    clearTimeout(timer)
-    this.sessionEndFallbackTimers.delete(sessionId)
-  }
 
   /**
    * 建立会话时，获取grpc库中最新数据ID和IDB里的数据
@@ -732,7 +732,7 @@ export class ChatMultiSessionController {
 
       const latestId = eventRes?.Events?.[0]?.ID ?? 0
       const final = row?.grpcOffset !== undefined && row.grpcOffset !== null ? row.grpcOffset : latestId
-      rawData.grpcOffset = final
+      rawData.grpcOffset = int64String(final)
 
       if (hasSessionRenderTree(row?.content)) {
         meta.pendingSessionRender = row!.content
@@ -740,7 +740,7 @@ export class ChatMultiSessionController {
         meta.pendingSessionRender = undefined
       }
     } catch {
-      rawData.grpcOffset = rawData.grpcOffset || 0
+      rawData.grpcOffset = rawData.grpcOffset || '0'
       meta.pendingSessionRender = undefined
     }
   }
@@ -846,22 +846,47 @@ export class ChatMultiSessionController {
     }
     meta.onLinkSuccess = cb?.onLinkSuccess
 
-    // 读 IDB + 查最新事件 id（不依赖本会话流），完成后再 IPC start
-    void this.prepareSessionPersistBeforeStart(sessionId).finally(() => {
-      ipcRenderer.invoke('start-ai-re-act', sessionId, params)
-
-      // 建立会话连接时，在主进程进行了一次ping请求
-      // 如果五秒没有返回pong消息，则再次进行ping请求
-      if (meta.pingTimer) clearInterval(meta.pingTimer)
-      meta.pingTimer = setInterval(() => {
-        meta.pingSyncID = uuidv4()
-        this.requestMessage(sessionId, {
-          IsSyncMessage: true,
-          SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PING,
-          SyncID: meta.pingSyncID,
+    const stream: { controller: AbortController; opening?: Promise<StreamTask<'StartAIReAct'>> } = {
+      controller: new AbortController(),
+    }
+    let receivedPong = false
+    this.streams.set(sessionId, stream)
+    const isCurrent = () => this.streams.get(sessionId) === stream && !stream.controller.signal.aborted
+    // 先读取持久化游标。关闭期间不能让这次异步准备重新启动旧会话。
+    void this.prepareSessionPersistBeforeStart(sessionId)
+      .then(async () => {
+        if (!isCurrent()) return
+        stream.opening = ipc.openStream('grpc', 'StartAIReAct', params, {
+          token: sessionId,
+          signal: stream.controller.signal,
+          onData: (event) => {
+            if (event.Type === 'pong') receivedPong = true
+            this.handleGrpcOutputEvent(sessionId, event)
+          },
+          onError: (error) => {
+            this.handleSessionError(sessionId, error)
+            this.handleSessionEnd(sessionId)
+          },
+          onEnd: () => this.handleSessionEnd(sessionId),
         })
-      }, ChatMultiSessionController.PING_POLLING_INTERVAL)
-    })
+        await stream.opening
+        if (!isCurrent() || receivedPong) return
+        // 主进程初始化顺序为 init → ping，后续定时探测从流建立成功后开始。
+        if (meta.pingTimer) clearInterval(meta.pingTimer)
+        meta.pingTimer = setInterval(() => {
+          meta.pingSyncID = uuidv4()
+          this.requestMessage(sessionId, {
+            IsSyncMessage: true,
+            SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PING,
+            SyncID: meta.pingSyncID,
+          })
+        }, ChatMultiSessionController.PING_POLLING_INTERVAL)
+      })
+      .catch((error: unknown) => {
+        if (!isCurrent()) return
+        this.handleSessionError(sessionId, error)
+        this.handleSessionEnd(sessionId)
+      })
     return true
   }
 
@@ -1060,7 +1085,18 @@ export class ChatMultiSessionController {
   /** 向连接中的会话发送请求 */
   private requestMessage(sessionId: string, request: AIInputEvent) {
     // console.log('requestMessage', sessionId, request)
-    ipcRenderer.invoke('send-ai-re-act', sessionId, request)
+    const stream = this.streams.get(sessionId)
+    if (!stream?.opening || stream.controller.signal.aborted) return
+    void stream.opening
+      .then((task) => {
+        if (this.streams.get(sessionId) !== stream || stream.controller.signal.aborted) return
+        return task.write(request)
+      })
+      .catch((error: unknown) => {
+        if (this.streams.get(sessionId) !== stream || stream.controller.signal.aborted) return
+        this.handleSessionError(sessionId, error)
+        this.handleSessionEnd(sessionId)
+      })
   }
 
   /** 发 recovery_history 拉更旧事件（grpcOffset 为起点，向前回溯 RECOVERY_HISTORY_LIMIT 条） */
@@ -1073,10 +1109,8 @@ export class ChatMultiSessionController {
     this.requestMessage(sessionId, {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_HISTORY,
-      SyncJsonInput: JSON.stringify({
-        start_id: rawData.grpcOffset,
-        limit: ChatMultiSessionController.RECOVERY_HISTORY_LIMIT,
-      }),
+      // The nested JSON protocol requires a numeric literal. Validate before interpolation.
+      SyncJsonInput: `{"start_id":${int64String(rawData.grpcOffset)},"limit":${ChatMultiSessionController.RECOVERY_HISTORY_LIMIT}}`,
     })
   }
 
@@ -1102,7 +1136,7 @@ export class ChatMultiSessionController {
           Order: 'desc',
         },
       }
-      if (rawData.timelineBeforeId > 0) {
+      if (rawData.timelineBeforeId !== '0') {
         request.Pagination!.BeforeId = rawData.timelineBeforeId
       }
       const { Events, Total } = await grpcQueryAIEvent(request, true)
@@ -1113,7 +1147,7 @@ export class ChatMultiSessionController {
       }
 
       // 更新游标为最后一条（最旧）的 ID
-      rawData.timelineBeforeId = Number(Events[Events.length - 1].ID)
+      rawData.timelineBeforeId = Events[Events.length - 1].ID
       // 解析为 TimelineItem，reverse 为时间正序（旧→新）
       const timelineItems: AIAgentGrpcApi.TimelineItem[] = Events.map((item) => {
         const ipcContent = Uint8ArrayToString(item.Content) || ''
@@ -1151,7 +1185,7 @@ export class ChatMultiSessionController {
         Pagination: { Page: 1, Limit: -1, OrderBy: 'created_at', Order: 'desc' },
       }
       const { Events, Total } = await grpcQueryAIEvent(request, true)
-      if (Total === 0) return
+      if (Total === '0') return
 
       const files: AIFileSystemPin[] = Events.map((item) => {
         const ipcContent = Uint8ArrayToString(item.Content) || ''
@@ -1255,7 +1289,7 @@ export class ChatMultiSessionController {
         this.finishSessionRestoreLoading(sessionId)
       } else if (needRecoveryHistory) {
         // grpcOffset 为 0：无历史游标可续，不发 recovery_history
-        if (!rawData.grpcOffset) {
+        if (rawData.grpcOffset === '0') {
           const state = store.getState()
           const content: SessionRenderContent = {
             items: { ...state.items },
@@ -1342,9 +1376,13 @@ export class ChatMultiSessionController {
 
       if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
         try {
-          const recoveryHistory = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory
-          if (typeof recoveryHistory.next_start_id === 'number') {
-            rawData.grpcOffset = recoveryHistory.next_start_id
+          const recoveryHistory = parseLosslessJSON(
+            ipcContent,
+            undefined,
+            parseNumberAndBigInt,
+          ) as AIAgentGrpcApi.RecoveryHistory
+          if (['number', 'bigint', 'string'].includes(typeof recoveryHistory.next_start_id)) {
+            rawData.grpcOffset = int64String(recoveryHistory.next_start_id)
             const state = store.getState()
             const content: SessionRenderContent = {
               items: { ...state.items },
@@ -1627,22 +1665,9 @@ export class ChatMultiSessionController {
 
   // 关闭ipc通道连接
   private closeIPCListeners(sessionId: string) {
-    ipcRenderer.removeAllListeners(`${sessionId}-data`)
-    ipcRenderer.removeAllListeners(`${sessionId}-end`)
-    ipcRenderer.removeAllListeners(`${sessionId}-error`)
-  }
-
-  /**
-   * cancel 后武装 5s 兜底：若真实 -end 未到，手动走 handleSessionEnd
-   * 重复 cancel 会重置计时
-   */
-  private armSessionEndFallback(sessionId: string) {
-    this.clearSessionEndFallback(sessionId)
-    const timer = setTimeout(() => {
-      this.sessionEndFallbackTimers.delete(sessionId)
-      this.handleSessionEnd(sessionId)
-    }, ChatMultiSessionController.SESSION_END_FALLBACK_MS)
-    this.sessionEndFallbackTimers.set(sessionId, timer)
+    const stream = this.streams.get(sessionId)
+    this.streams.delete(sessionId)
+    stream?.controller.abort()
   }
 
   // 监听 session-error 事件
@@ -1653,8 +1678,6 @@ export class ChatMultiSessionController {
 
   // 监听 session-end 事件（含 cancel 后 5s 兜底合成）
   public handleSessionEnd(sessionId: string, res?: any) {
-    this.clearSessionEndFallback(sessionId)
-
     // 先取出 onEnd：须在 teardown 之后再调，避免回调里重启时池已被卸掉 / 仍占坑
     let onEnd: (() => void) | undefined
 
@@ -1711,14 +1734,14 @@ export class ChatMultiSessionController {
         meta.onEnd = onEnd
       }
       // 等真实 -end；超时则手动 handleSessionEnd，避免监听泄漏 / onEnd 挂死
-      this.armSessionEndFallback(session)
-      ipcRenderer.invoke('cancel-ai-re-act', session).catch(() => {})
+      this.closeIPCListeners(session)
       const store = this.storePool.get(session)
       if (store) {
         store.getState().updateState({ execute: false })
         store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.sessionClosing') })
       }
       if (meta) this.closeSessionTimers(meta)
+      this.handleSessionEnd(session)
     }
   }
 
@@ -1739,7 +1762,6 @@ export class ChatMultiSessionController {
   private async deletePersistOnlySession(sessionId: string): Promise<void> {
     this.clearSessionRenderPersistTimer(sessionId)
     this.pendingDisposeSessions.delete(sessionId)
-    this.clearSessionEndFallback(sessionId)
     this.closeIPCListeners(sessionId)
     this.readyChannels.delete(sessionId)
     this.sessionRestoreLoading.delete(sessionId)

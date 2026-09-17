@@ -1,8 +1,7 @@
-import { randomString } from '@/utils/randomUtil'
+import { yakitNotify } from '@/utils/notification'
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { deleteAIImageByNode, type DeleteAIImageByNodeRequest } from '../utils'
-const { ipcRenderer } = window.require('electron')
 
 interface UseDeleteAIImageByNodeParams {
   /**是否需要进度条 */
@@ -22,31 +21,20 @@ export interface ClearAIImageEvents {
   onError?: () => void
   onFinish?: () => void
 }
-export const handleClearAIImage = (params: AIClearImageParams, events?: ClearAIImageEvents) => {
-  const token = randomString(8)
-
-  // 提取公共的清除监听器方法，避免内存泄漏
-  const removeListeners = () => {
-    ipcRenderer.removeAllListeners(`delete-ai-image-progress-${token}`)
-    ipcRenderer.removeAllListeners(`delete-ai-image-finish-${token}`)
-    ipcRenderer.removeAllListeners(`delete-ai-image-err-${token}`)
-  }
-  ipcRenderer.on(`delete-ai-image-progress-${token}`, (e, progress: number) => {
-    events?.onData?.(progress)
-  })
-  ipcRenderer.on(`delete-ai-image-err-${token}`, (e, err) => {
+export const handleClearAIImage = async (
+  params: AIClearImageParams,
+  events?: ClearAIImageEvents,
+  signal?: AbortSignal,
+) => {
+  try {
+    await deleteAIImageByNode(params, { signal, onProgress: (progress) => events?.onData?.(progress) })
+  } catch (error) {
+    if (signal?.aborted) return
     events?.onError?.()
-  })
-  ipcRenderer.on(`delete-ai-image-finish-${token}`, (e) => {
-    events?.onFinish?.()
-    removeListeners()
-  })
-
-  const newParams: DeleteAIImageByNodeRequest = {
-    ...params,
-    token,
+    if (!events?.onError) yakitNotify('error', `清理 AI 图片失败: ${error}`)
+  } finally {
+    if (!signal?.aborted) events?.onFinish?.()
   }
-  deleteAIImageByNode(newParams)
 }
 
 function useDeleteAIImageByNode(
@@ -55,15 +43,25 @@ function useDeleteAIImageByNode(
 function useDeleteAIImageByNode(params?: UseDeleteAIImageByNodeParams) {
   const { isShowProgress, onFinish, onError } = params || {}
   const [progress, setProgress] = useState<number>(0)
+  const controllerRef = useRef<AbortController>()
+  useEffect(() => () => controllerRef.current?.abort(), [])
 
   const onClearImage = useMemoizedFn((params: AIClearImageParams) => {
-    handleClearAIImage(params, {
-      onData: (progress) => {
-        if (isShowProgress) setProgress(progress)
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    setProgress(0)
+    void handleClearAIImage(
+      params,
+      {
+        onData: (progress) => {
+          if (isShowProgress) setProgress(progress)
+        },
+        onFinish: () => onFinish?.(),
+        onError: () => onError?.(),
       },
-      onFinish: () => onFinish?.(),
-      onError: () => onError?.(),
-    })
+      controller.signal,
+    )
   })
   const state: UseDeleteAIImageByNodeState = useCreation(() => {
     return {

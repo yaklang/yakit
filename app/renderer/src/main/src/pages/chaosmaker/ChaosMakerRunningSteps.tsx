@@ -16,8 +16,6 @@ export interface ChaosMakerRunningStepsProp {
   params?: ExecuteChaosMakerRuleRequest
 }
 
-const { ipcRenderer } = window.require('electron')
-
 export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (props) => {
   const [token, setToken] = useState(randomString(20))
   const [step, setStep] = useState(0)
@@ -35,7 +33,7 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
   const [msg, setMsg] = useState<string[]>([])
   const [executing, setExecuting] = useState(false)
 
-  const [infoState, { reset, setXtermRef }, xtermRef] = useHoldingIPCRStream(
+  const [infoState, { reset, setXtermRef, open, cancel: cancelStream }, xtermRef] = useHoldingIPCRStream(
     `ExecuteChaosMakerRule`,
     'ExecuteChaosMakerRule',
     token,
@@ -79,7 +77,7 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
                     title={'确定要停止当前进程？'}
                     onConfirm={() => {
                       // cancel 后主进程不再转发 end，需本地收尾
-                      ipcRenderer.invoke('cancel-ExecuteChaosMakerRule', token)
+                      void cancelStream()
                       setExecuting(false)
                       setStep(2)
                     }}
@@ -116,7 +114,10 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
             e.preventDefault()
 
             setStep(1)
-            ipcRenderer.invoke('ExecuteChaosMakerRule', params, token)
+            void open(params).catch(() => {
+              setExecuting(false)
+              setStep(2)
+            })
           }}
         >
           <InputInteger

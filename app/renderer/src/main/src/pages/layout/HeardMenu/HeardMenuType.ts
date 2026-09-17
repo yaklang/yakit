@@ -1,3 +1,4 @@
+import { positiveInt64 } from '@/utils/int64'
 import {
   type DatabaseMenuItemProps,
   PrivateAllMenus,
@@ -253,7 +254,7 @@ const databaseConvertLocal = (local: EnhancedPrivateRouteMenuProps[], database: 
         hoverIcon: getFixedPluginHoverIcon(item.pluginName),
         describe: getFixedPluginDescribe(item.pluginName),
         children: undefined,
-        yakScriptId: +item.pluginId || 0,
+        yakScriptId: positiveInt64(item.pluginId) || 0,
         yakScripName: item.pluginName,
       }
       menus.push(info)
@@ -523,7 +524,7 @@ const cacheConvertLocal = (cache: CacheMenuItemProps[], local: EnhancedPrivateRo
       if (!!info.page && !!info.icon) menus.push(info)
     } else {
       // 记录未下载的插件菜单
-      if ((+item.pluginId || 0) === 0) downloadPlugin.push(item.pluginName)
+      if ((positiveInt64(item.pluginId) || 0) === 0) downloadPlugin.push(item.pluginName)
       // 排除数据库和本地共有的菜单项
       if (localMenuInfo[item.pluginName]) delete localMenuInfo[item.pluginName]
 
@@ -533,7 +534,7 @@ const cacheConvertLocal = (cache: CacheMenuItemProps[], local: EnhancedPrivateRo
           label: item.label,
           menuName: item.menuName,
           children: undefined,
-          yakScriptId: +item.pluginId || 0,
+          yakScriptId: positiveInt64(item.pluginId) || 0,
           yakScripName: item.pluginName,
         }
         if (!!info.page && !!info.icon) menus.push(info)
@@ -546,7 +547,7 @@ const cacheConvertLocal = (cache: CacheMenuItemProps[], local: EnhancedPrivateRo
           hoverIcon: getFixedPluginHoverIcon(item.pluginName),
           describe: '',
           children: undefined,
-          yakScriptId: +item.pluginId || 0,
+          yakScriptId: positiveInt64(item.pluginId) || 0,
           yakScripName: item.pluginName,
         }
         menus.push(info)

@@ -1,3 +1,4 @@
+import { positiveInt64 } from '@/utils/int64'
 import type React from 'react'
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useInViewport, useMemoizedFn, useSize } from 'ahooks'
@@ -39,7 +40,7 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
     if (visible && edit) {
       if (editorRef.current) {
         editorRef.current.setEditPlugin({
-          id: Number(plugin.Id || 0) || 0,
+          id: positiveInt64(plugin.Id) || 0,
           name: plugin.ScriptName,
           uuid: plugin.UUID || '',
         })

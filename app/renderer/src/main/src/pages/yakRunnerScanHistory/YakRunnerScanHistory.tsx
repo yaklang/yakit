@@ -1,3 +1,6 @@
+import { syntaxFlowTasksForUI } from '@/pages/yakRunnerCodeScan/grpcAdapters'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -52,7 +55,6 @@ import { apiQuerySSAPrograms } from './utils'
 import { getGroupNamesTotal } from '../yakRunnerCodeScan/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
 export interface GenerateSSAReportResponse {
   Success: boolean
   Message: string
@@ -188,9 +190,11 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
       setLoading(true)
     }
 
-    ipcRenderer
-      .invoke('QuerySyntaxFlowScanTask', params)
-      .then((res: QuerySyntaxFlowScanTaskResponse) => {
+    ipc
+      .invoke('grpc', 'QuerySyntaxFlowScanTask', params)
+      .then(syntaxFlowTasksForUI)
+      .then(grpcPageForUI)
+      .then((res) => {
         const d = isInit ? res.Data : response.Data.concat(res.Data)
         setResponse({
           ...res,
@@ -244,12 +248,12 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
         m.destroy()
       },
       onOk: () => {
-        ipcRenderer
-          .invoke('GenerateSSAReport', {
+        ipc
+          .invoke('grpc', 'GenerateSSAReport', {
             TaskID: record.TaskId,
             ReportName: reportName,
           })
-          .then((res: GenerateSSAReportResponse) => {
+          .then((res) => {
             yakitNotify('success', res.Message)
             emiter.emit('openPage', JSON.stringify({ route: YakitRoute.DB_Report }))
             m.destroy()
@@ -452,7 +456,7 @@ interface SSAProgramFilter {
   AfterID?: number
   BeforeID?: number
 
-  ProjectIds?: number[]
+  ProjectIds?: (string | number)[]
 }
 
 export interface QuerySSAProgramRequest {
@@ -481,7 +485,7 @@ export interface SSAProgram {
   LowRiskNumber: number
   InfoRiskNumber: number
 
-  SSAProjectID: number
+  SSAProjectID: string | number
 
   // incremental compilation info
   IsIncrementalCompile?: boolean
@@ -684,8 +688,8 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
         DeleteAll: true,
       }
     }
-    ipcRenderer
-      .invoke('DeleteSSAPrograms', params)
+    ipc
+      .invoke('grpc', 'DeleteSSAPrograms', params)
       .then(() => {
         update(1)
         setCheckedList([])
@@ -701,7 +705,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
   const onDelete = useMemoizedFn((params: DeleteSSAProgramRequest, isHasChildren: boolean) => {
     try {
       setLoading(true)
-      ipcRenderer.invoke('DeleteSSAPrograms', params).then(() => {
+      ipc.invoke('grpc', 'DeleteSSAPrograms', params).then(() => {
         if (isHasChildren) {
           update(1)
           setCheckedList([])

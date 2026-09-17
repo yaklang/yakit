@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../../../shared/communication/window-client'
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tree } from 'antd'
 import FileTreeSystemItem from '../FileTreeSystemItem/FileTreeSystemIem'
@@ -10,8 +11,6 @@ import type { FileTreeSystemListProps, FileTreeSystemListRef } from '../type'
 import { TREE_DRAG_KEY } from '@/pages/ai-agent/aiChatWelcome/hooks/useAIChatDrop'
 import { useControllableValue, useMount } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
-
-const { ipcRenderer } = window.require('electron')
 
 const normalizePath = (p: string) => {
   return p
@@ -133,7 +132,7 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
   const processExpand = async (expandKey: string) => {
     if (!expandKey) return
     try {
-      const relevantPaths = await ipcRenderer.invoke('get-relevant-paths', {
+      const relevantPaths = await ipc.invoke('local', 'get-relevant-paths', {
         targetPath: [expandKey],
         basePath: path,
       })

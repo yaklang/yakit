@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useState } from 'react'
 import { Button } from 'antd'
@@ -5,8 +6,6 @@ import { YakitPageHeader } from '../../components/YakitPageHeader'
 import type { YakScript } from '../invoker/schema'
 import MDEditor from '@uiw/react-md-editor'
 import { success } from '../../utils/notification'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface DocumentEditorProp {
   yakScript: YakScript
@@ -26,8 +25,8 @@ export const DocumentEditor: React.FC<DocumentEditorProp> = (props) => {
           <Button
             type={'primary'}
             onClick={(e) => {
-              ipcRenderer
-                .invoke('SaveMarkdownDocument', {
+              ipc
+                .invoke('grpc', 'SaveMarkdownDocument', {
                   YakScriptId: props.yakScript.Id,
                   YakScriptName: props.yakScript.ScriptName,
                   Markdown: markdown,

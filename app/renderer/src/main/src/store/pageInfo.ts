@@ -120,13 +120,13 @@ interface PageParamsInfoProps {
 
 export interface AIForgeEditorPageInfoProps {
   /** 编辑时使用，为 forge 模板 id */
-  id: number
+  id: number | string
   source: YakitRoute
   [key: string]: any
 }
 
 export interface AIToolEditorPageInfoProps {
-  id: number
+  id: string | number
   source: YakitRoute
 }
 
@@ -312,13 +312,13 @@ export interface AuditCodePageInfoProps {
 
 export interface CodeScanPageInfoProps {
   projectName?: string
-  projectId?: number
+  projectId?: string | number
   historyName?: string[]
   codeScanMode?: SyntaxFlowScanModeType
   runtimeId?: string
 
   // rule 相关过滤条件
-  RuleIds?: number[]
+  RuleIds?: (string | number)[]
   GroupNames?: string[]
   Keyword?: string
   FilterLibRuleKind?: FilterLibRuleKind
@@ -343,7 +343,7 @@ export interface ModifyNotepadPageInfoProps {
 
 export interface YakRunnerScanHistoryPageInfoProps {
   Programs: string[]
-  ProjectIds: number[]
+  ProjectIds: (string | number)[]
   SelectedProgramName?: string
 }
 

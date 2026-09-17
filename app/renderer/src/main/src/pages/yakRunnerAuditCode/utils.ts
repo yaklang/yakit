@@ -1,3 +1,9 @@
+import { requestYakURL } from '@/pages/yakURLTree/grpc'
+import { syntaxFlowTasksForUI } from '@/pages/yakRunnerCodeScan/grpcAdapters'
+import { grpcPageForUI } from '@/utils/int64'
+import { ssaRisksForUI } from '@/pages/risks/grpcAdapters'
+import type { GrpcOutput } from '@/services/ipc'
+import { ipc } from '@/services/ipc'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import type { RequestYakURLResponse, YakURLResource } from '../yakURLTree/data'
 import { FileDefault, FileSuffix, FolderDefault } from '../yakRunner/FileTree/icon'
@@ -21,8 +27,6 @@ import { genDefaultPagination } from '../invoker/schema'
 import type { APIFunc } from '@/apiUtils/type'
 import type { JumpToAuditEditorProps } from './BottomEditorDetails/BottomEditorDetailsType'
 import { getNameByPath, initFileTreeData } from '../yakRunner/utils'
-const { ipcRenderer } = window.require('electron')
-
 const getLineFun = (info: YakURLResource) => {
   try {
     if (info.ResourceType === 'risk') {
@@ -99,7 +103,7 @@ export const grpcFetchAuditTree: (path: string) => Promise<{ res: RequestYakURLR
       Url: { Schema: 'ssadb', Query: [{ Key: 'op', Value: 'list' }], Path: path },
     }
     try {
-      const res: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const res: RequestYakURLResponse = await requestYakURL(params)
       const data: FileNodeMapProps[] = initFileTreeData(res, path)
       resolve({ res, data })
     } catch (error) {
@@ -163,7 +167,7 @@ export const grpcFetchRiskOrRuleTree: (
       })
     }
     try {
-      const res: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const res: RequestYakURLResponse = await requestYakURL(params)
       const data: FileNodeMapProps[] = initRiskOrRuleTreeData(res, path === '/' ? program : path)
       resolve({ res, data })
     } catch (error) {
@@ -187,7 +191,10 @@ export const grpcFetchAuditCodeRiskOrRuleList: (Programs: string) => Promise<Que
       },
     }
     try {
-      const res: QuerySyntaxFlowScanTaskResponse = await ipcRenderer.invoke('QuerySyntaxFlowScanTask', params)
+      const res = await ipc
+        .invoke('grpc', 'QuerySyntaxFlowScanTask', params)
+        .then(syntaxFlowTasksForUI)
+        .then(grpcPageForUI)
       resolve(res)
     } catch (error) {
       reject(error)
@@ -205,14 +212,13 @@ export const loadAuditFromYakURLRaw = (
   PageSize?: number,
 ): Promise<RequestYakURLResponse | null> => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('RequestYakURL', {
-        Method: 'GET',
-        Url: params,
-        Body: body,
-        Page,
-        PageSize,
-      })
+    requestYakURL({
+      Method: 'GET',
+      Url: params,
+      Body: body,
+      Page,
+      PageSize,
+    })
       .then((rsp: RequestYakURLResponse) => {
         resolve(rsp)
       })
@@ -502,14 +508,15 @@ export const removeAuditCodeAreaFileInfo = (areaInfo: AreaInfoProps[], info: Fil
  */
 export const onSyntaxRisk = ({ ProgramName, CodeSourceUrl, RuntimeID }) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('QuerySSARisks', {
+    ipc
+      .invoke('grpc', 'QuerySSARisks', {
         Filter: {
           ProgramName,
           CodeSourceUrl,
           RuntimeID,
         },
       })
+      .then(ssaRisksForUI)
       .then((res: QuerySSARisksResponse) => {
         const { Data } = res
         resolve(Data)
@@ -585,7 +592,7 @@ export const grpcFetchAuditCodeRenameFileTree: (
       },
     }
     try {
-      const list: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const list: RequestYakURLResponse = await requestYakURL(params)
       // console.log("文件树重命名", params, list)
       const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
       resolve(data)

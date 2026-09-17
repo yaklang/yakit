@@ -1,19 +1,20 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Button, Form } from 'antd'
 import { InputInteger } from '@/utils/inputUtil'
-import { info } from '@/utils/notification'
+import { info, failed } from '@/utils/notification'
 
 export interface PacketScanFormProp {
   token: string
-  httpFlowIds?: number[]
+  httpFlowIds?: (string | number)[]
   plugins: string[]
   https?: boolean
   httpRequest?: Uint8Array
 }
 
 export interface ExecPacketScanRequest {
-  HTTPFlow: number[]
+  HTTPFlow: (string | number)[]
   HTTPRequest?: Uint8Array
   HTTPS: boolean
   AllowFuzzTag?: boolean
@@ -40,41 +41,38 @@ function defaultPacketScanRequestParams(): ExecPacketScanRequest {
   }
 }
 
-const { ipcRenderer } = window.require('electron')
-
 export const PacketScanForm: React.FC<PacketScanFormProp> = (props) => {
   const [params, setParams] = useState(defaultPacketScanRequestParams())
   const [loading, setLoading] = useState(false)
 
   const { token, httpFlowIds, plugins, https, httpRequest } = props
 
-  useEffect(() => {
-    if (!token) {
-      return
-    }
-    ipcRenderer.on(`${token}-end`, (e, data) => {
-      info('[ExecPacketScan] finished')
-      setLoading(false)
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-ExecPacketScan', token)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-    }
-  }, [token])
+  const controllerRef = useRef<AbortController>()
+  useEffect(() => () => controllerRef.current?.abort(), [token])
 
   return (
     <Form
       onSubmitCapture={(e) => {
         e.preventDefault()
 
-        if (plugins.length < 0) {
+        if (plugins.length === 0) {
           info('未选择插件无法进行扫描')
           return
         }
 
         setLoading(true)
-        ipcRenderer
-          .invoke(
+        controllerRef.current?.abort()
+        const controller = new AbortController()
+        controllerRef.current = controller
+        const onError = (error: unknown) => {
+          if (controller.signal.aborted) return
+          failed(`[ExecPacketScan] error: ${error}`)
+          setLoading(false)
+        }
+        info('开始扫描数据包')
+        void ipc
+          .openStream(
+            'grpc',
             'ExecPacketScan',
             {
               ...params,
@@ -82,12 +80,20 @@ export const PacketScanForm: React.FC<PacketScanFormProp> = (props) => {
               HTTPS: https,
               HTTPRequest: httpRequest,
               PluginList: plugins,
-            } as ExecPacketScanRequest,
-            token,
+            },
+            {
+              token,
+              signal: controller.signal,
+              onError,
+              onEnd() {
+                if (!controller.signal.aborted) {
+                  info('[ExecPacketScan] finished')
+                  setLoading(false)
+                }
+              },
+            },
           )
-          .then(() => {
-            info('开始扫描数据包')
-          })
+          .catch(onError)
       }}
       layout={'horizontal'}
     >
@@ -97,7 +103,8 @@ export const PacketScanForm: React.FC<PacketScanFormProp> = (props) => {
             type={'primary'}
             danger={true}
             onClick={() => {
-              ipcRenderer.invoke('cancel-ExecPacketScan', token)
+              controllerRef.current?.abort()
+              setLoading(false)
             }}
           >
             停止任务

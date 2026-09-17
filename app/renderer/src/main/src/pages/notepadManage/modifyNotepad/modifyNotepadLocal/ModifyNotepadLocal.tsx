@@ -213,8 +213,8 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
 
   const onLocalDataError = useMemoizedFn((value: string) => {
     try {
-      const data: { message: string; noteId: number } = JSON.parse(value)
-      if (+data.noteId === +note.Id) {
+      const data: { message: string; noteId: string | number } = JSON.parse(value)
+      if (String(data.noteId) === String(note.Id)) {
         onShowErrorModal(data.message)
       }
     } catch (error) {}

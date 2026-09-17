@@ -17,7 +17,7 @@ export interface StartBruteParams {
   PasswordFile?: string
   ReplaceDefaultPasswordDict?: boolean
 
-  Prefix?: string
+  Prefix?: string[]
 
   Concurrent?: number
   TargetTaskConcurrent?: number

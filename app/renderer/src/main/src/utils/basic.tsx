@@ -22,7 +22,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { yakitReverse, yakitScript, yakitStream } from '@/services/electronBridge'
 
 export interface YakScriptParam {
   Script: string
@@ -44,7 +43,7 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
   const startToExecYakScriptViewerRef = useRef<any>()
 
   const onCancel = () => {
-    yakitStream.cancel('ExecYakCode', startToExecYakScriptViewerRef.current.token)
+    void startToExecYakScriptViewerRef.current?.cancel()
 
     onClose()
   }
@@ -100,17 +99,16 @@ const StartToExecYakScriptViewer = React.forwardRef(
     const checkErrorsFlagRef = useRef<boolean>(false)
 
     useImperativeHandle(ref, () => ({
-      token,
+      cancel,
     }))
 
-    const [infoState, { reset, setXtermRef }] = useHoldingIPCRStream(
+    const [infoState, { reset, setXtermRef, cancel }] = useHoldingIPCRStream(
       verbose,
-      'ExecYakCode',
+      'Exec',
       token,
       () => setTimeout(() => setLoading(false), 300),
-      () => {
-        yakitScript
-          .execYakCode(script, token)
+      (open) => {
+        open(script)
           .then(() => {
             successInfo && info(t('basic.StartToExecYakScriptViewer.executeSuccess', { verbose }))
           })

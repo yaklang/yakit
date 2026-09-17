@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { type IMonacoCodeEditor, YakEditor } from '@/utils/editors'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import { failed, yakitNotify } from '@/utils/notification'
@@ -12,7 +13,6 @@ import DOMPurify from 'isomorphic-dompurify'
 import i18n from '@/i18n/i18n'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
-const { ipcRenderer } = window.require('electron')
 const plugins = [babelParser as any, htmlParser as any, espreeParser as any, xmlParser]
 
 interface PacketPrettifyHelperResponse {
@@ -138,11 +138,11 @@ const formatCode = async (rsp: PacketPrettifyHelperResponse, option, callback) =
 }
 
 const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: string) => any) => {
-  ipcRenderer
-    .invoke('PacketPrettifyHelper', {
+  ipc
+    .invoke('grpc', 'PacketPrettifyHelper', {
       Packet: StringToUint8Array(packet),
     })
-    .then((rsp: PacketPrettifyHelperResponse) => {
+    .then((rsp) => {
       const contentType = rsp.ContentType.toLowerCase()
       if (contentType.includes('javascript')) {
         formatCode(
@@ -162,13 +162,13 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
           (formattedCode) => {
             if (formattedCode) {
               // 处理格式化后的代码
-              ipcRenderer
-                .invoke('PacketPrettifyHelper', {
+              ipc
+                .invoke('grpc', 'PacketPrettifyHelper', {
                   Packet: rsp.Packet,
                   Body: StringToUint8Array(formattedCode),
                   SetReplaceBody: true,
                 })
-                .then((replacedRsp: PacketPrettifyHelperResponse) => {
+                .then((replacedRsp) => {
                   onFormatted(replacedRsp.Packet, formattedCode)
                 })
                 .catch((e) => {
@@ -196,13 +196,13 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
           },
           (formattedCode) => {
             if (formattedCode) {
-              ipcRenderer
-                .invoke('PacketPrettifyHelper', {
+              ipc
+                .invoke('grpc', 'PacketPrettifyHelper', {
                   Packet: rsp.Packet,
                   Body: StringToUint8Array(formattedCode),
                   SetReplaceBody: true,
                 })
-                .then((replacedRsp: PacketPrettifyHelperResponse) => {
+                .then((replacedRsp) => {
                   onFormatted(replacedRsp.Packet, formattedCode)
                 })
                 .catch((e) => {
@@ -230,13 +230,13 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
           },
           (formattedCode) => {
             if (formattedCode) {
-              ipcRenderer
-                .invoke('PacketPrettifyHelper', {
+              ipc
+                .invoke('grpc', 'PacketPrettifyHelper', {
                   Packet: rsp.Packet,
                   Body: StringToUint8Array(formattedCode),
                   SetReplaceBody: true,
                 })
-                .then((replacedRsp: PacketPrettifyHelperResponse) => {
+                .then((replacedRsp) => {
                   onFormatted(replacedRsp.Packet, formattedCode)
                 })
                 .catch((e) => {
@@ -259,8 +259,8 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
             collapseContent: false, // 关键：属性 & 子节点全部展开
           })
 
-          ipcRenderer
-            .invoke('PacketPrettifyHelper', {
+          ipc
+            .invoke('grpc', 'PacketPrettifyHelper', {
               Packet: rsp.Packet,
               Body: StringToUint8Array(formattedXml),
               SetReplaceBody: true,
@@ -313,11 +313,11 @@ export const prettifyPacketCode = (text: string) => {
 // 渲染功能(Html + Image)
 export const formatPacketRender = (packet: Uint8Array, onFormatted: (packet?: string) => any) => {
   if (packet.length > 0) {
-    ipcRenderer
-      .invoke('PacketPrettifyHelper', {
+    ipc
+      .invoke('grpc', 'PacketPrettifyHelper', {
         Packet: packet,
       })
-      .then((rsp: PacketPrettifyHelperResponse) => {
+      .then((rsp) => {
         const contentType = rsp.ContentType.toLowerCase()
         if (contentType.includes('html')) {
           safeRenderBody(Uint8ArrayToString(rsp.Body), (data: string) => {

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useRef, useState } from 'react'
 import type {
   SimpleDetectForm,
@@ -14,7 +15,7 @@ import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { randomString } from '@/utils/randomUtil'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { failed, warn, yakitNotify } from '@/utils/notification'
-import { type RecordPortScanRequest, apiCancelSimpleDetect, apiSimpleDetect } from '../securityTool/newPortScan/utils'
+import { type RecordPortScanRequest, apiSimpleDetect } from '../securityTool/newPortScan/utils'
 import styles from './SimpleDetect.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import classNames from 'classnames'
@@ -51,12 +52,7 @@ import type { SimpleTabInterface } from '../layout/mainOperatorContent/MainOpera
 import { type CreateReportContentProps, onCreateReportModal } from '../portscan/CreateReport'
 import { defaultSearch } from '../plugins/builtInData'
 import { defaultBruteExecuteExtraFormValue } from '@/defaultConstants/NewBrute'
-import {
-  apiCancelRecoverSimpleDetectTask,
-  apiGetSimpleDetectRecordRequestById,
-  apiRecoverSimpleDetectTask,
-  apiSaveCancelSimpleDetect,
-} from './utils'
+import { apiGetSimpleDetectRecordRequestById, apiRecoverSimpleDetectTask, apiSaveCancelSimpleDetect } from './utils'
 import { defaultSimpleDetectPageInfo } from '@/defaultConstants/SimpleDetectConstants'
 import { YakitRouteToPageInfo } from '@/routes/newRoute'
 import type { StartBruteParams } from '../securityTool/newBrute/NewBruteType'
@@ -64,8 +60,6 @@ import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import('./SimpleDetectExtraParamsDrawer'))
 const SimpleDetectTaskListDrawer = React.lazy(() => import('./SimpleDetectTaskListDrawer'))
-
-const { ipcRenderer } = window.require('electron')
 
 const defaultScanDeep = 3
 
@@ -374,7 +368,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
   /**恢复任务 */
   const onRecoverSimpleDetectTask = useMemoizedFn((runtimeId: string) => {
     recoverSimpleDetectStreamEvent.reset()
-    apiRecoverSimpleDetectTask({ RuntimeId: runtimeId }, recoverTokenRef.current).then(() => {
+    apiRecoverSimpleDetectTask({ RuntimeId: runtimeId }, recoverSimpleDetectStreamEvent.open).then(() => {
+      if (!recoverSimpleDetectStreamEvent.isActive()) return
       setExecuteStatus('process')
       setIsExpand(false)
       setIsRecoverTask(true)
@@ -485,7 +480,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
       params.PortScanRequest.Targets = ''
     }
     /**继续任务后，再次点击开始执行，开启新任务 */
-    apiSimpleDetect(params, tokenRef.current).then(() => {
+    apiSimpleDetect(params, simpleDetectStreamEvent.open).then(() => {
+      if (!simpleDetectStreamEvent.isActive()) return
       setExecuteStatus('process')
       setIsExpand(false)
       setIsRecoverTask(false)
@@ -498,11 +494,11 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     setStopLoading(true)
     if (recoverRuntimeId) {
       /**继续任务情况下,停止任务后需要清除当前页面中的runtimeId */
-      apiCancelRecoverSimpleDetectTask(recoverTokenRef.current).then(() => {
+      recoverSimpleDetectStreamEvent.cancel().then(() => {
         setExecuteStatus('paused')
       })
     } else {
-      apiCancelSimpleDetect(tokenRef.current).then(() => {
+      simpleDetectStreamEvent.cancel().then(() => {
         setRecoverRuntimeId(runtimeId)
         setExecuteStatus('paused')
       })
@@ -955,28 +951,8 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
   // 全部添加进度
   const [percent, setPercent] = useState<number>(0)
   const [taskToken, setTaskToken] = useState(randomString(40))
-  useEffect(() => {
-    if (!taskToken) {
-      return
-    }
-    ipcRenderer.on(`${taskToken}-data`, (_, data: DownloadOnlinePluginAllResProps) => {
-      const p = Math.floor(data.Progress * 100)
-      setPercent(p)
-    })
-    ipcRenderer.on(`${taskToken}-end`, () => {
-      setTimeout(() => {
-        setPercent(0)
-        setDownloadPlugin && setDownloadPlugin(false)
-        onClose && onClose()
-      }, 500)
-    })
-    ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
-    return () => {
-      ipcRenderer.removeAllListeners(`${taskToken}-data`)
-      ipcRenderer.removeAllListeners(`${taskToken}-error`)
-      ipcRenderer.removeAllListeners(`${taskToken}-end`)
-    }
-  }, [taskToken])
+  const controllerRef = useRef<AbortController>()
+  useEffect(() => () => controllerRef.current?.abort(), [])
   const AddAllPlugin = useMemoizedFn(() => {
     if (!userInfo.isLogin) {
       warn(t('SimpleDetect.pleaseLoginToDownload'))
@@ -986,19 +962,36 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
     setAddLoading(true)
     setDownloadPlugin && setDownloadPlugin(true)
     const addParams: DownloadOnlinePluginsRequest = { ListType: '' }
-    ipcRenderer
-      .invoke('DownloadOnlinePlugins', addParams, taskToken)
-      .then(() => {})
-      .catch((e) => {
-        failed(t('YakitNotification.addFailed', { error: `${e}` }))
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      setAddLoading(false)
+      failed(t('YakitNotification.addFailed', { error: String(error) }))
+    }
+    void ipc
+      .openStream('grpc', 'DownloadOnlinePlugins', addParams, {
+        token: taskToken,
+        signal: controller.signal,
+        onData(data) {
+          if (!controller.signal.aborted) setPercent(Math.floor(data.Progress * 100))
+        },
+        onError,
+        onEnd() {
+          if (controller.signal.aborted) return
+          setAddLoading(false)
+          setPercent(0)
+          setDownloadPlugin?.(false)
+          onClose?.()
+        },
       })
+      .catch(onError)
   })
   const StopAllPlugin = () => {
-    onClose && onClose()
+    controllerRef.current?.abort()
+    onClose?.()
     setAddLoading(false)
-    ipcRenderer.invoke('cancel-DownloadOnlinePlugins', taskToken).catch((e) => {
-      failed(t('SimpleDetect.stopAddFailed', { error: `${e}` }))
-    })
   }
   return (
     <div className={styles['download-all-plugin-modal']}>

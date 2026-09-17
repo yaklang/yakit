@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Form, Space, Tooltip } from 'antd'
 import { AutoCard } from '../../components/AutoCard'
@@ -83,8 +84,6 @@ const HotPatchParamsGetterDefault = `__getParams__ = func() {
     }
 }`
 
-const { ipcRenderer } = window.require('electron')
-
 const syncSharedHotReloadOwner = (ownerPageId?: string) => {
   const pageInfoStore = usePageInfo.getState()
   const fuzzerPages = getWebFuzzerPageList()
@@ -143,6 +142,8 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
   const [refreshHotCodeList, setRefreshHotCodeList] = useState<boolean>(true)
   const tempNameRef = useRef<string>('')
   const tokenRef = useRef<string>('')
+  const debugControllerRef = useRef<AbortController>()
+  useEffect(() => () => debugControllerRef.current?.abort(), [])
 
   useEffect(() => {
     getRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
@@ -193,8 +194,8 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
   })
 
   const onUpdateTemplate = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('UpdateHotPatchTemplate', {
+    ipc
+      .invoke('grpc', 'UpdateHotPatchTemplate', {
         Condition: {
           Type: 'fuzzer',
           Name: [tempNameRef.current],
@@ -215,7 +216,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
 
   const onCancel = useMemoizedFn(() => {
     if (tokenRef.current) {
-      ipcRenderer.invoke('cancel-StringFuzzer', tokenRef.current).catch(() => {})
+      debugControllerRef.current?.abort()
       setLoading(false)
       tokenRef.current = ''
       yakitNotify('info', t('HTTPFuzzerHotPatch.debugCancelled'))
@@ -249,10 +250,15 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
           setLoading(true)
           // 生成唯一token
           tokenRef.current = `string-fuzzer-${Date.now()}-${Math.random()}`
+          debugControllerRef.current?.abort()
+          const controller = new AbortController()
+          debugControllerRef.current = controller
 
-          ipcRenderer
-            .invoke('StringFuzzer', { ...params }, tokenRef.current)
+          ipc
+            .invoke('grpc', 'StringFuzzer', { ...params }, { signal: controller.signal })
             .then((response: { Results: Uint8Array[] }) => {
+              if (controller.signal.aborted || debugControllerRef.current !== controller) return
+
               const data: string[] = (response.Results || []).map((buf) => Buffer.from(buf).toString('utf8'))
               showYakitDrawer({
                 title: 'HotPatch Tag Result',
@@ -294,16 +300,20 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
               })
             })
             .catch((err) => {
+              if (controller.signal.aborted || debugControllerRef.current !== controller) return
+
               // 只有非取消的错误才提示
               if (tokenRef.current) {
                 yakitNotify('error', `${t('HTTPFuzzerHotPatch.debugFailed')}: ${err}`)
               }
             })
             .finally(() => {
-              setTimeout(() => {
+              if (controller.signal.aborted || debugControllerRef.current !== controller) return
+
+              if (!controller.signal.aborted && debugControllerRef.current === controller) {
                 setLoading(false)
                 tokenRef.current = ''
-              }, 300)
+              }
             })
         }}
         layout={'vertical'}
@@ -524,6 +534,8 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
   const [sharedHotReloadCode, setSharedHotReloadCodeState] = useState<boolean>(false)
   const tempNameRef = useRef<string>('')
   const tokenRef = useRef<string>('')
+  const debugControllerRef = useRef<AbortController>()
+  useEffect(() => () => debugControllerRef.current?.abort(), [])
   const resizeBodyRef = useRef<HTMLDivElement>(null)
   const resizeBodySize = useSize(resizeBodyRef)
 
@@ -580,12 +592,12 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
       return
     }
 
-    ipcRenderer
-      .invoke('QueryHotPatchTemplate', {
+    ipc
+      .invoke('grpc', 'QueryHotPatchTemplate', {
         Type: 'fuzzer',
         Name: [selectedTemplateNameProp],
       })
-      .then((res: QueryHotPatchTemplateResponse) => {
+      .then((res) => {
         const nextCode = res.Data?.[0]?.Content
         if (nextCode) {
           setCode(nextCode)
@@ -632,8 +644,8 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
 
   const onUpdateTemplate = useMemoizedFn(() => {
     saveCode(code)
-    ipcRenderer
-      .invoke('UpdateHotPatchTemplate', {
+    ipc
+      .invoke('grpc', 'UpdateHotPatchTemplate', {
         Condition: { Type: 'fuzzer', Name: [tempNameRef.current] },
         Data: { Type: 'fuzzer', Content: code, Name: tempNameRef.current },
       })
@@ -647,7 +659,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
 
   const onCancelDebug = useMemoizedFn(() => {
     if (tokenRef.current) {
-      ipcRenderer.invoke('cancel-StringFuzzer', tokenRef.current).catch(() => {})
+      debugControllerRef.current?.abort()
       setLoading(false)
       tokenRef.current = ''
       yakitNotify('info', t('HTTPFuzzerHotPatch.debugCancelled'))
@@ -658,8 +670,12 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
     saveCode(code)
     setLoading(true)
     tokenRef.current = `string-fuzzer-${Date.now()}-${Math.random()}`
-    ipcRenderer
+    debugControllerRef.current?.abort()
+    const controller = new AbortController()
+    debugControllerRef.current = controller
+    ipc
       .invoke(
+        'grpc',
         'StringFuzzer',
         {
           Template: template,
@@ -668,9 +684,11 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
           TimeoutSeconds: 20,
           Limit: 300,
         },
-        tokenRef.current,
+        { signal: controller.signal },
       )
       .then((response: { Results: Uint8Array[] }) => {
+        if (controller.signal.aborted || debugControllerRef.current !== controller) return
+
         const data: string[] = (response.Results || []).map((buf) => Buffer.from(buf).toString('utf8'))
         showYakitDrawer({
           title: 'HotPatch Tag Result',
@@ -699,15 +717,19 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
         })
       })
       .catch((err) => {
+        if (controller.signal.aborted || debugControllerRef.current !== controller) return
+
         if (tokenRef.current) {
           yakitNotify('error', `${t('HTTPFuzzerHotPatch.debugFailed')}: ${err}`)
         }
       })
       .finally(() => {
-        setTimeout(() => {
+        if (controller.signal.aborted || debugControllerRef.current !== controller) return
+
+        if (!controller.signal.aborted && debugControllerRef.current === controller) {
           setLoading(false)
           tokenRef.current = ''
-        }, 300)
+        }
       })
   })
 

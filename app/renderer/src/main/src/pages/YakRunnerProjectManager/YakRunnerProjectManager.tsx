@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import type { YakRunnerProjectManagerProps } from './YakRunnerProjectManagerType'
@@ -13,7 +14,6 @@ import { Progress } from 'antd'
 import { DocumentDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
 
 export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (props) => {
   const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
@@ -75,47 +75,53 @@ export const IRifyUpdateProjectManagerModal: React.FC<IRifyUpdateProjectManagerM
   const { t } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   // 全部添加进度
   const [percent, setPercent] = useState<number>(0)
-  const [token, setTaskToken] = useState(randomString(40))
+  const token = useRef(randomString(40)).current
+  const controllerRef = useRef<AbortController>()
   const logInfoRef = useRef<string[]>([])
+  const close = useMemoizedFn(() => onClose?.())
   useEffect(() => {
-    if (!token) {
-      return
+    if (!visible) return
+    const controller = new AbortController()
+    controllerRef.current = controller
+    let closeTimer: ReturnType<typeof setTimeout> | undefined
+    setPercent(0)
+    const onError = (error: unknown) => {
+      if (!controller.signal.aborted) failed(t('YakitNotification.syncFailed', { error: String(error) }))
     }
-    ipcRenderer.on(`${token}-data`, (_, data: MigrateSSAProjectResponse) => {
-      const p = Math.floor(data.Percent * 100)
-      logInfoRef.current = [...logInfoRef.current, data.Message].slice(0, 8)
-      setPercent(p)
-    })
-    ipcRenderer.on(`${token}-end`, () => {
-      setTimeout(() => {
-        setPercent(0)
-        onClose?.()
-      }, 500)
-    })
-    ipcRenderer.on(`${token}-error`, (_, e) => {
-      failed(t('YakitNotification.syncFailed', { error: e + '' }))
-    })
+    ipc
+      .openStream(
+        'grpc',
+        'MigrateSSAProject',
+        {},
+        {
+          token,
+          signal: controller.signal,
+          onData(data) {
+            if (controller.signal.aborted) return
+            logInfoRef.current = [...logInfoRef.current, data.Message].slice(0, 8)
+            setPercent(Math.floor(data.Percent * 100))
+          },
+          onError,
+          onEnd() {
+            if (controller.signal.aborted) return
+            closeTimer = setTimeout(() => {
+              setPercent(0)
+              close()
+            }, 500)
+          },
+        },
+      )
+      .catch(onError)
     return () => {
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
+      controller.abort()
+      clearTimeout(closeTimer)
     }
-  }, [token])
-
-  const initIRifyUpdate = useMemoizedFn(() => {
-    ipcRenderer.invoke('MigrateSSAProject', token)
-  })
-
-  useEffect(() => {
-    visible && initIRifyUpdate()
-  }, [visible])
+  }, [visible, token])
 
   const StopUpdate = () => {
+    controllerRef.current?.abort()
     setPercent(0)
-    onClose?.()
-    ipcRenderer.invoke('cancel-MigrateSSAProject', token).catch((e) => {
-      failed(t('IRifyUpdateProjectManagerModal.stopFailed', { error: e + '' }))
-    })
+    close()
   }
   return (
     <YakitModal

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Dropdown } from 'antd'
 import { useMemoizedFn } from 'ahooks'
@@ -28,8 +29,6 @@ import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { formatTemplateTeams } from '../configManagement/utils'
-
-const { ipcRenderer } = window.require('electron')
 
 interface HotPatchTemplateRequest {
   Name: string[]
@@ -94,11 +93,11 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
   useEffect(() => {
     if (hotCodeTempVisible || dropdown === false) {
       if (tab === 'local') {
-        ipcRenderer
-          .invoke('QueryHotPatchTemplate', {
+        ipc
+          .invoke('grpc', 'QueryHotPatchTemplate', {
             Type: type,
           })
-          .then((res: QueryHotPatchTemplateResponse) => {
+          .then((res) => {
             const defaultItems = hotPatchTempLocalRef.current.filter(({ isDefault }) => isDefault)
             const list: HotPatchTempItem[] = (res.Data || []).map((item) => {
               const def = defaultItems.find((d) => d.name === item.Name)
@@ -159,9 +158,9 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
           Type: type,
           Name: [item.name],
         }
-        ipcRenderer
-          .invoke('QueryHotPatchTemplate', params)
-          .then((res: QueryHotPatchTemplateResponse) => {
+        ipc
+          .invoke('grpc', 'QueryHotPatchTemplate', params)
+          .then((res) => {
             if (click) {
               onClickHotCode(res.Data[0].Content, item.name)
               setHotCodeTempVisible(false)
@@ -184,9 +183,9 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
           Name: [item.name],
         },
       }
-      ipcRenderer
-        .invoke('DeleteHotPatchTemplate', params)
-        .then((res: { Message: DbOperateMessage }) => {
+      ipc
+        .invoke('grpc', 'DeleteHotPatchTemplate', params)
+        .then((res) => {
           onSetHotPatchTempLocal(hotPatchTempLocal.filter((i) => i.name !== item.name))
           yakitNotify('success', t('YakitNotification.deleted'))
           onDeleteLocalTempOk && onDeleteLocalTempOk()
@@ -275,8 +274,8 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
   const uploadHotPatchTemplateToOnline = (item: HotPatchTempItem) => {
     findHotPatchTemplate(item, true)
       .then(() => {
-        ipcRenderer
-          .invoke('UploadHotPatchTemplateToOnline', {
+        ipc
+          .invoke('grpc', 'UploadHotPatchTemplateToOnline', {
             Type: type,
             Token: userInfo.token,
             Name: item.name,
@@ -294,8 +293,8 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
   const downloadHotPatchTemplate = (item: HotPatchTempItem) => {
     findHotPatchTemplate(item, false)
       .then((r) => {
-        ipcRenderer
-          .invoke('DownloadHotPatchTemplate', {
+        ipc
+          .invoke('grpc', 'DownloadHotPatchTemplate', {
             Type: type,
             Name: item.name,
           })
@@ -544,8 +543,8 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
       Content: hotPatchCode,
       Name: addHotPatchTempNameRef.current,
     }
-    ipcRenderer
-      .invoke('CreateHotPatchTemplate', params)
+    ipc
+      .invoke('grpc', 'CreateHotPatchTemplate', params)
       .then((res) => {
         yakitNotify('success', t('YakitNotification.saved'))
         onSaveHotCodeOk && onSaveHotCodeOk(addHotPatchTempNameRef.current)

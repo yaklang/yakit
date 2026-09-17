@@ -43,7 +43,7 @@ describe('aiStream handlers', () => {
       id: 'ew-1',
       type: AIChatQSDataTypeEnum.STREAM,
       chatType: 'reAct',
-      Timestamp: 1,
+      Timestamp: '1',
       AIService: '',
       AIModelName: '',
       data: {

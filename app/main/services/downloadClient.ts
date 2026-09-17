@@ -1,0 +1,436 @@
+// const https = require("https");
+// const {caBundle} = require("../missedCABundle");
+import axios, { type AxiosRequestConfig } from 'axios'
+import url from 'node:url'
+import process from 'node:process'
+import { requestWithProgress, type ProgressHandler } from './downloadTask'
+import events from 'node:events'
+import fs from 'node:fs'
+import path from 'node:path'
+import { loadExtraFilePath } from '../filePath'
+import { HttpsProxyAgent } from 'hpagent'
+import electronIsDev from 'electron-is-dev'
+import {
+  isSlimEngineVersion,
+  getOssEngineVersion,
+  getLocalEngineCacheName,
+  getYakEngineNamePrefix,
+  SLIM_ENGINE_VERSION_PREFIX,
+} from './engineVersion'
+
+const add_proxy = process.env.https_proxy || process.env.HTTPS_PROXY
+
+const agent = !!add_proxy
+  ? new HttpsProxyAgent({
+      proxy: add_proxy,
+      rejectUnauthorized: false, // 忽略 HTTPS 错误
+    })
+  : undefined
+
+const ossDomains = [
+  'oss-qn.yaklang.com',
+  'aliyun-oss.yaklang.com',
+  'yaklang.oss-cn-beijing.aliyuncs.com',
+  'yaklang.oss-accelerate.aliyuncs.com',
+]
+
+const getHttpsAgentByDomain = (_domain: string | null) => {
+  // if (domain.endsWith('.yaklang.com')) {
+  //     console.info(`use ssl ca-bundle for ${domain}`);
+  //     return new https.Agent({ca: caBundle, rejectUnauthorized: true}) // unsafe...
+  // }
+  return undefined
+}
+
+const config = {
+  initializedOSSDomain: false,
+  currentOSSDomain: '',
+  fetchingOSSDomain: false,
+  fetchOSSDomainEventEmitter: new events.EventEmitter(),
+  loggedCachedDomain: false,
+}
+
+/** 初始化 oss 配置信息 */
+async function getAvailableOSSDomain(): Promise<string> {
+  try {
+    if (config.initializedOSSDomain) {
+      if (!config.currentOSSDomain) {
+        config.loggedCachedDomain = false
+        return 'yaklang.oss-accelerate.aliyuncs.com'
+      } else {
+        if (!config.loggedCachedDomain) {
+          console.info(`(cached) use oss domain: ${config.currentOSSDomain}`)
+          config.loggedCachedDomain = true
+        }
+        return config.currentOSSDomain
+      }
+    }
+
+    if (config.fetchingOSSDomain) {
+      return new Promise<string>((resolve, reject) => {
+        config.fetchOSSDomainEventEmitter.once('done', () => {
+          console.info('fetch oss domain done, resolve the promise.')
+          if (!config.currentOSSDomain) {
+            config.loggedCachedDomain = false
+            resolve('yaklang.oss-accelerate.aliyuncs.com')
+          } else {
+            if (!config.loggedCachedDomain) {
+              console.info(`(cached) use oss domain: ${config.currentOSSDomain}`)
+              config.loggedCachedDomain = true
+            }
+            resolve(config.currentOSSDomain)
+          }
+        })
+      })
+    }
+
+    config.fetchingOSSDomain = true
+
+    try {
+      for (const domain of ossDomains) {
+        const url = `https://${domain}/yak/latest/version.txt`
+        try {
+          console.info(`start to do axios.get to ${url}`)
+          const response = await axios.get(url, {
+            httpsAgent: getHttpsAgentByDomain(domain),
+            ...(agent ? { httpsAgent: agent, proxy: false } : {}),
+          })
+          if (response.status !== 200) {
+            console.error(`Failed to access (StatusCode) ${url}: ${response.status}`)
+            continue
+          }
+          config.currentOSSDomain = domain
+          config.initializedOSSDomain = true
+          break
+        } catch (e) {
+          console.error(`Failed to access ${url}: ${e instanceof Error ? e.message : String(e)}`)
+        }
+      }
+      if (!config.currentOSSDomain) {
+        return 'yaklang.oss-accelerate.aliyuncs.com'
+      }
+      return config.currentOSSDomain
+    } catch (e) {
+      return 'yaklang.oss-accelerate.aliyuncs.com'
+    } finally {
+      config.fetchingOSSDomain = false
+      config.fetchOSSDomainEventEmitter.emit('done')
+    }
+  } catch (e) {
+    return 'yaklang.oss-accelerate.aliyuncs.com'
+  }
+}
+
+/** 获取校验url */
+const getCheckTextUrl = async (version: string) => {
+  const domain = await getAvailableOSSDomain()
+  const prefix = getYakEngineNamePrefix(version)
+  const ossVersion = getOssEngineVersion(version)
+  let system_mode = ''
+  try {
+    system_mode = fs.readFileSync(loadExtraFilePath(path.join('bins', 'yakit-system-mode.txt'))).toString('utf8')
+  } catch (error) {
+    console.log('error', error)
+  }
+  const suffix = system_mode === 'legacy'
+
+  let url = ''
+  switch (process.platform) {
+    case 'darwin':
+      if (process.arch === 'arm64') {
+        url = `https://${domain}/yak/${ossVersion}/${prefix}darwin_arm64.sha256.txt`
+      } else {
+        url = `https://${domain}/yak/${ossVersion}/${prefix}darwin_amd64.sha256.txt`
+      }
+      break
+    case 'win32':
+      url = `https://${domain}/yak/${ossVersion}/${prefix}windows_${suffix ? 'legacy_' : ''}amd64.exe.sha256.txt`
+      break
+    case 'linux':
+      if (process.arch === 'arm64') {
+        url = `https://${domain}/yak/${ossVersion}/${prefix}linux_arm64.sha256.txt`
+      } else {
+        url = `https://${domain}/yak/${ossVersion}/${prefix}linux_amd64.sha256.txt`
+      }
+      break
+    default:
+      break
+  }
+  return url
+}
+/** 获取指定版本号的引擎Hash值 */
+const fetchSpecifiedYakVersionHash = async (version: string, requestConfig?: AxiosRequestConfig): Promise<string> => {
+  const target = await getCheckTextUrl(version)
+  if (!target) throw new Error(`No Find ${version} Hash Url`)
+  try {
+    const response = await axios.get<string>(target, { ...requestConfig, httpsAgent: getHttpsAgentByDomain(target) })
+    const hash = String(response.data).trim()
+    if (!hash) throw new Error('校验值不存在')
+    return hash
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) return ''
+    throw error
+  }
+}
+/** 获取最新 yak 版本号 */
+const fetchLatestYakEngineVersion = () => fetchLatestVersionCommon('yak/latest/version.txt')
+/** 获取最新 yakit 版本号 */
+const fetchLatestYakitVersion = (requestConfig?: AxiosRequestConfig) =>
+  fetchLatestVersionCommon('yak/latest/yakit-version.txt', requestConfig)
+/** 获取最新 yakit EE 版本号 */
+const fetchLatestYakitEEVersion = (requestConfig?: AxiosRequestConfig) =>
+  fetchLatestVersionCommon('vip/latest/yakit-version.txt', requestConfig)
+/** 获取最新 IRify Scan 版本号 */
+const fetchLatestYakitIRifyVersion = (requestConfig?: AxiosRequestConfig) =>
+  fetchLatestVersionCommon('irify/latest/yakit-version.txt', requestConfig)
+/** 获取最新 IRify Scan EE版本号 */
+const fetchLatestYakitIRifyEEVersion = (requestConfig?: AxiosRequestConfig) =>
+  fetchLatestVersionCommon('svip/latest/yakit-version.txt', requestConfig)
+
+/** 获取最新 IRify Scan 版本号 */
+const fetchLatestYakitMemfitVersion = (requestConfig?: AxiosRequestConfig) =>
+  fetchLatestVersionCommon('memfit/latest/yakit-version.txt', requestConfig)
+/** 获取最新版本号 */
+const fetchLatestVersionCommon = async (path: string, requestConfig: AxiosRequestConfig = {}) => {
+  const domain = await getAvailableOSSDomain()
+  const versionUrl = `https://${domain}/${path}`
+  const config: AxiosRequestConfig = {
+    ...requestConfig,
+    httpsAgent: getHttpsAgentByDomain(domain),
+    ...(agent ? { httpsAgent: agent, proxy: false } : {}),
+  }
+  const response = await axios.get(versionUrl, config)
+  const versionData = `${response.data}`.trim()
+  if (!versionData) {
+    throw new Error('Failed to fetch version data')
+  }
+  return versionData.startsWith('v') ? versionData : `v${versionData}`
+}
+/** 引擎下载地址 */
+const getYakEngineDownloadUrl = async (version: string) => {
+  const domain = await getAvailableOSSDomain()
+  const prefix = getYakEngineNamePrefix(version)
+  const ossVersion = getOssEngineVersion(version)
+  let system_mode = ''
+  try {
+    // 开发环境是不添加-legacy
+    if (!electronIsDev) {
+      system_mode = fs.readFileSync(loadExtraFilePath(path.join('bins', 'yakit-system-mode.txt'))).toString('utf8')
+    }
+  } catch (error) {
+    console.log('error', error)
+  }
+  const suffix = system_mode === 'legacy'
+  switch (process.platform) {
+    case 'darwin':
+      if (process.arch === 'arm64') {
+        return `https://${domain}/yak/${ossVersion}/${prefix}darwin_arm64`
+      } else {
+        return `https://${domain}/yak/${ossVersion}/${prefix}darwin_amd64`
+      }
+    case 'win32':
+      return `https://${domain}/yak/${ossVersion}/${prefix}windows_${suffix ? 'legacy_' : ''}amd64.exe`
+    case 'linux':
+      if (process.arch === 'arm64') {
+        return `https://${domain}/yak/${ossVersion}/${prefix}linux_arm64`
+      } else {
+        return `https://${domain}/yak/${ossVersion}/${prefix}linux_amd64`
+      }
+    default:
+      throw new Error(`Unsupported platform: ${process.platform}`)
+  }
+}
+
+const getSuffix = () => {
+  let system_mode = ''
+  // 开发环境是不添加-legacy
+  if (electronIsDev) return ''
+  try {
+    system_mode = fs.readFileSync(loadExtraFilePath(path.join('bins', 'yakit-system-mode.txt'))).toString('utf8')
+  } catch (error) {
+    console.log('error', error)
+  }
+  const suffix = system_mode === 'legacy' ? '-legacy' : ''
+  return suffix
+}
+
+// 目前存在4个版本 IRifyCE 、 IRifyEE 、 YakitCE 、 YakitEE
+// PS: name为软件名 dir为OSS路径
+const DownloadUrlByType = {
+  YakitCE: {
+    name: 'Yakit',
+    dir: 'yak',
+    suffix: getSuffix(),
+  },
+  YakitEE: {
+    name: 'EnpriTrace',
+    dir: 'vip',
+    suffix: getSuffix(),
+  },
+  IRifyCE: {
+    name: 'IRify',
+    dir: 'irify',
+    suffix: getSuffix(),
+  },
+  IRifyEE: {
+    name: 'IRifyEnpriTrace',
+    dir: 'svip',
+    suffix: getSuffix(),
+  },
+  Memfit: {
+    name: 'MemfitAI',
+    dir: 'memfit',
+    suffix: getSuffix(),
+  },
+}
+
+/** 获取 Yakit 下载地址 */
+const getDownloadUrl = async (version: string, type: string) => {
+  const domain = await getAvailableOSSDomain()
+  // 如若识别不到默认识别为Yakit社区版
+  const { name, dir, suffix } =
+    DownloadUrlByType[type as keyof typeof DownloadUrlByType] || DownloadUrlByType['YakitCE']
+  switch (process.platform) {
+    case 'darwin':
+      if (process.arch === 'arm64') {
+        return `https://${domain}/${dir}/${version}/${name}-${version}-darwin${suffix}-arm64.dmg`
+      } else {
+        return `https://${domain}/${dir}/${version}/${name}-${version}-darwin${suffix}-x64.dmg`
+      }
+    case 'win32':
+      return `https://${domain}/${dir}/${version}/${name}-${version}-windows${suffix}-amd64.exe`
+    case 'linux':
+      if (process.arch === 'arm64') {
+        return `https://${domain}/${dir}/${version}/${name}-${version}-linux${suffix}-arm64.AppImage`
+      } else {
+        return `https://${domain}/${dir}/${version}/${name}-${version}-linux${suffix}-amd64.AppImage`
+      }
+  }
+  throw new Error(`Unsupported platform: ${process.platform}`)
+}
+
+/** 下载引擎进度 */
+const downloadYakEngine = async (
+  version: string,
+  destination: string,
+  progressHandler?: ProgressHandler,
+  onFinished?: () => void,
+  onError?: (error: unknown) => void,
+  signal?: AbortSignal,
+) => {
+  const downloadUrl = await getYakEngineDownloadUrl(version)
+  requestWithProgress(
+    downloadUrl,
+    destination,
+    {
+      signal,
+      category: 'engine',
+      httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host),
+    },
+    progressHandler,
+    onFinished,
+    onError,
+  )
+}
+/** 下载 Yakit CE 进度 */
+const downloadYakitCommunity = async (
+  version: string,
+  isIRify: boolean,
+  isMemfit: boolean,
+  destination: string,
+  progressHandler?: ProgressHandler,
+  onFinished?: () => void,
+  onError?: (error: unknown) => void,
+  signal?: AbortSignal,
+) => {
+  let versionType = 'YakitCE'
+  if (isIRify) {
+    versionType = 'IRifyCE'
+  } else if (isMemfit) {
+    versionType = 'Memfit'
+  }
+  const downloadUrl = await getDownloadUrl(version, versionType)
+  console.info(`start to download yakit community: ${downloadUrl}`)
+  requestWithProgress(
+    downloadUrl,
+    destination,
+    {
+      signal,
+      category: 'yakit',
+      httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host),
+    },
+    progressHandler,
+    onFinished,
+    onError,
+  )
+}
+/** 下载 Yakit EE 进度 */
+const downloadYakitEE = async (
+  version: string,
+  isIRify: boolean,
+  destination: string,
+  progressHandler?: ProgressHandler,
+  onFinished?: () => void,
+  onError?: (error: unknown) => void,
+  signal?: AbortSignal,
+) => {
+  const downloadUrl = await getDownloadUrl(version, isIRify ? 'IRifyEE' : 'YakitEE')
+  requestWithProgress(
+    downloadUrl,
+    destination,
+    {
+      signal,
+      category: 'yakit',
+      httpsAgent: getHttpsAgentByDomain(url.parse(downloadUrl).host),
+    },
+    progressHandler,
+    onFinished,
+    onError,
+  )
+}
+
+/** 下载 Yakit 内网版 进度 */
+const downloadIntranetYakit = async (
+  filePath: string,
+  destination: string,
+  progressHandler?: ProgressHandler,
+  onFinished?: () => void,
+  onError?: (error: unknown) => void,
+  signal?: AbortSignal,
+) => {
+  requestWithProgress(
+    filePath,
+    destination,
+    {
+      signal,
+      category: 'yakit',
+      httpsAgent: getHttpsAgentByDomain(url.parse(filePath).host),
+    },
+    progressHandler,
+    onFinished,
+    onError,
+  )
+}
+
+export {
+  getCheckTextUrl,
+  fetchSpecifiedYakVersionHash,
+  fetchLatestYakEngineVersion,
+  fetchLatestYakitVersion,
+  fetchLatestYakitEEVersion,
+  fetchLatestYakitIRifyVersion,
+  fetchLatestYakitIRifyEEVersion,
+  fetchLatestYakitMemfitVersion,
+  downloadYakitCommunity,
+  downloadYakEngine,
+  downloadYakitEE,
+  downloadIntranetYakit,
+  getYakEngineDownloadUrl,
+  getAvailableOSSDomain,
+  getDownloadUrl,
+  getSuffix,
+  isSlimEngineVersion,
+  getOssEngineVersion,
+  getLocalEngineCacheName,
+  SLIM_ENGINE_VERSION_PREFIX,
+}

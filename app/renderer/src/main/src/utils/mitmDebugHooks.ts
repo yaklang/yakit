@@ -1,3 +1,3 @@
 export const areMITMDebugHooksEnabled = () => {
-  return typeof window !== 'undefined' && window.yakitBridge?.app?.isMITMDebugHooksEnabled?.() === true
+  return typeof window !== 'undefined' && window.yakitDebugHooks === true
 }

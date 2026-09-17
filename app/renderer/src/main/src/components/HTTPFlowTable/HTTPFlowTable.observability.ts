@@ -32,7 +32,7 @@ export interface MITMQueryToken {
   startedAtUnixMs: number
   startedAtPerformanceMs: number
   liveCycleId?: number
-  cursorBefore?: number
+  cursorBefore?: string | number
   requestedRows?: number
 }
 
@@ -73,7 +73,7 @@ interface QuerySample {
   id: number
   startedAtUnixMs: number
   liveCycleId?: number
-  cursorBefore?: number
+  cursorBefore?: string | number
   requestedRows?: number
   rows: number
   failed: boolean
@@ -349,7 +349,7 @@ export class MITMFlowObservability {
   private httpFlowLiveStreamModeListeners = new Set<HTTPFlowLiveStreamModeListener>()
   private httpFlowLiveStreamStatus: 'idle' | 'active' | 'recovering' | 'unavailable' | 'ended' = 'idle'
   private httpFlowLiveStreamDatabaseIdentity = ''
-  private httpFlowLiveStreamProjectGeneration = 0
+  private httpFlowLiveStreamProjectGeneration: string | number = '0'
   private httpFlowLiveStreamSubscriptions = 0
   private httpFlowLiveStreamReceived = 0
   private httpFlowLiveStreamCommitted = 0
@@ -434,7 +434,7 @@ export class MITMFlowObservability {
     }
   }
 
-  recordHTTPFlowLiveStreamSubscription(databaseIdentity: string, projectGeneration: number) {
+  recordHTTPFlowLiveStreamSubscription(databaseIdentity: string, projectGeneration: string | number) {
     this.httpFlowLiveStreamSubscriptions += 1
     this.httpFlowLiveStreamStatus = 'active'
     if (
@@ -520,7 +520,7 @@ export class MITMFlowObservability {
     this.httpFlowLiveStreamDirectFallbackRows += Math.max(0, Math.floor(Number(rows) || 0))
   }
 
-  recordHTTPFlowLiveDirectRecovery(required: boolean, highWaterId: number) {
+  recordHTTPFlowLiveDirectRecovery(required: boolean, highWaterId: string | number) {
     if (required && !this.httpFlowLiveStreamDirectRecoveryRequired) {
       this.httpFlowLiveStreamDirectRecoveryEntries += 1
     } else if (!required && this.httpFlowLiveStreamDirectRecoveryRequired) {
@@ -824,7 +824,7 @@ export class MITMFlowObservability {
   }
 
   beginLiveCycle(
-    cursorBefore: number,
+    cursorBefore: string | number,
     requestedRows: number,
     fallbackSource: MITMLiveTriggerSource = 'poll',
   ): MITMLiveCycleToken {
@@ -839,7 +839,7 @@ export class MITMFlowObservability {
       previousCycle.nextQueryDelayMs = Math.max(0, startedAtPerformanceMs - previousCycle.completedAtPerformanceMs)
     }
 
-    const normalizedCursor = Number.isFinite(cursorBefore) ? Math.max(0, cursorBefore) : 0
+    const normalizedCursor = Math.max(0, asNumber(cursorBefore))
     const backendHighWaterBefore = this.latestBackendPersistedId
     const visibleHighWaterBefore = this.latestVisibleId
     appendBounded(
@@ -877,7 +877,9 @@ export class MITMFlowObservability {
     return { id: this.liveSequence }
   }
 
-  beginQuery(context: { liveCycleId?: number; cursorBefore?: number; requestedRows?: number } = {}): MITMQueryToken {
+  beginQuery(
+    context: { liveCycleId?: number; cursorBefore?: string | number; requestedRows?: number } = {},
+  ): MITMQueryToken {
     this.sequence += 1
     const token = {
       id: this.sequence,

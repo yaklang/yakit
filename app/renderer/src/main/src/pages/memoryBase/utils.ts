@@ -1,3 +1,5 @@
+import { grpcPageForUI, int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type { APIFunc } from '@/apiUtils/type'
 import type {
   AIMemoryEntity,
@@ -13,14 +15,12 @@ import type {
 } from './type'
 import { yakitNotify } from '@/utils/notification'
 import type { DbOperateMessage } from '../layout/mainOperatorContent/utils'
-const { ipcRenderer } = window.require('electron')
-
 /**@name 创建AI记忆库数据 */
 export const grpcCreateAIMemoryEntity: APIFunc<CreateAIMemoryEntityRequest, null> = (params, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('CreateAIMemoryEntity', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'CreateAIMemoryEntity', params)
+      .then(() => resolve(null))
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', 'grpcCreateAIMemoryEntity 失败:' + e)
         reject(e)
@@ -34,8 +34,8 @@ export const grpcDeleteAIMemoryEntity: APIFunc<DeleteAIMemoryEntityRequest, DbOp
   hiddenError,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteAIMemoryEntity', params)
+    ipc
+      .invoke('grpc', 'DeleteAIMemoryEntity', params)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', 'grpcDeleteAIMemoryEntity 失败:' + e)
@@ -47,8 +47,8 @@ export const grpcDeleteAIMemoryEntity: APIFunc<DeleteAIMemoryEntityRequest, DbOp
 /**@name 更新AI记忆库数据 */
 export const grpcUpdateAIMemoryEntity: APIFunc<AIMemoryEntity, DbOperateMessage> = (params, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('UpdateAIMemoryEntity', params)
+    ipc
+      .invoke('grpc', 'UpdateAIMemoryEntity', params)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', 'grpcUpdateAIMemoryEntity 失败:' + e)
@@ -112,8 +112,18 @@ export const grpcQueryAIMemoryEntity: APIFunc<QueryAIMemoryEntityRequest, QueryA
   hiddenError,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryAIMemoryEntity', params)
+    ipc
+      .invoke('grpc', 'QueryAIMemoryEntity', params)
+      .then((res) =>
+        grpcPageForUI({
+          ...res,
+          Data: res.Data.map((row) => ({
+            ...row,
+            CreatedAt: int64ToSafeNumber(row.CreatedAt),
+            UpdatedAt: int64ToSafeNumber(row.UpdatedAt),
+          })),
+        }),
+      )
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', 'grpcQueryAIMemoryEntity 失败:' + e)
@@ -130,8 +140,8 @@ export const grpcCountAIMemoryEntityTags: APIFunc<CountAIMemoryEntityTagsRequest
   hiddenError,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('CountAIMemoryEntityTags', {
+    ipc
+      .invoke('grpc', 'CountAIMemoryEntityTags', {
         ...params,
         SessionID: DEFAULT_SESSION_ID,
       })

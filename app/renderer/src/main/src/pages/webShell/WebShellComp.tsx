@@ -1,7 +1,8 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Form, Space } from 'antd'
-import { EncMode, ShellScript, ShellType, type WebShellDetail } from '@/pages/webShell/models'
+import { EncMode, ShellScript, ShellType, webShellForUI, type WebShellDetail } from '@/pages/webShell/models'
 import { useCreation, useDebounceEffect, useGetState, useMemoizedFn } from 'ahooks'
 import { InputItem } from '@/utils/inputUtil'
 import type { YakScript } from '@/pages/invoker/schema'
@@ -40,8 +41,6 @@ export interface WebShellCreatorFormProp {
   isCreate?: boolean
 }
 
-const { ipcRenderer } = window.require('electron')
-
 export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) => {
   const defFromLayout = useCreation(() => {
     const col: FromLayoutProps = {
@@ -62,8 +61,9 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
 
   const createOrUpdateWebShell = useMemoizedFn(() => {
     setCreateLoading(true)
-    ipcRenderer
-      .invoke(props.isCreate ? 'CreateWebShell' : 'UpdateWebShell', params)
+    ipc
+      .invoke('grpc', props.isCreate ? 'CreateWebShell' : 'UpdateWebShell', params)
+      .then(webShellForUI)
       .then((data: WebShellDetail) => {
         success(props.isCreate ? '创建' : '编辑' + ' 网站管理 成功')
         setParams(data)

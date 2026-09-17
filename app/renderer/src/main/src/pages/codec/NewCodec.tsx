@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { Divider, Tooltip, Upload } from 'antd'
 import {
@@ -92,7 +93,6 @@ import { type CodecPageInfoProps, type PageNodeItemProps, usePageInfo } from '@/
 import { shallow } from 'zustand/shallow'
 import { defaultCodecPageInfo, initialRightItems } from '@/defaultConstants/Codec'
 import cloneDeep from 'lodash/cloneDeep'
-const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
 
 const SaveCodecMethods = 'SaveCodecMethods'
@@ -195,8 +195,8 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
 
   // 导入
   const onImport = useMemoizedFn((path: string) => {
-    ipcRenderer
-      .invoke('importCodecByPath', path)
+    ipc
+      .invoke('local', 'importCodecByPath', path)
       .then((r: string) => {
         setInputEditor(r)
       })
@@ -224,8 +224,8 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
       const filesLength = data.filePaths.length
       if (filesLength) {
         const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, '\\')).join(',')
-        ipcRenderer
-          .invoke('SaveCodecOutputToTxt', {
+        ipc
+          .invoke('local', 'SaveCodecOutputToTxt', {
             data: Buffer.from(outputResponse.RawResult),
             outputDir: absolutePath,
             fileName: `Output-${new Date().getTime()}.txt`,
@@ -884,8 +884,8 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
   }, [popoverVisible])
 
   const removeItem = useMemoizedFn((FlowName, DeleteAll = false) => {
-    ipcRenderer
-      .invoke('DeleteCodecFlow', { FlowName, DeleteAll })
+    ipc
+      .invoke('grpc', 'DeleteCodecFlow', { FlowName, DeleteAll })
       .then(() => {
         info(t('YakitNotification.deleted'))
         onMitmSaveFilter()
@@ -1137,8 +1137,8 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
       warn(t('NewCodecMiddleRunList.dragHint'))
       return
     }
-    ipcRenderer
-      .invoke('UpdateCodecFlow', codecParams)
+    ipc
+      .invoke('grpc', 'UpdateCodecFlow', codecParams)
       .then(() => {
         info(t('YakitNotification.updated'))
       })
@@ -1215,8 +1215,8 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
     const codecParams = getCodecParams()
     if (!codecParams) return
 
-    ipcRenderer
-      .invoke('SaveCodecFlow', codecParams)
+    ipc
+      .invoke('grpc', 'SaveCodecFlow', codecParams)
       .then(() => {
         info(t('YakitNotification.saveSuccess'))
         setFilterName(undefined)
@@ -1280,9 +1280,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
     })
     setRunLoading(true)
 
-    ipcRenderer
-      .invoke('NewCodec', newCodecParams)
-      .then((data: CodecResponseProps) => {
+    ipc
+      .invoke('grpc', 'NewCodec', newCodecParams)
+      .then((data) => {
         // 执行完成后 更改Output值
         setOutputResponse(data)
       })
@@ -1426,9 +1426,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
   })
 
   const onMitmSaveFilter = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('GetAllCodecFlow')
-      .then((data: { Flows: CustomizeCodecFlowProps[] }) => {
+    ipc
+      .invoke('grpc', 'GetAllCodecFlow', {})
+      .then((data) => {
         setMitmSaveData(data.Flows)
       })
       .catch((e) => {
@@ -2045,7 +2045,7 @@ export interface CodecParam {
   Desc: string
   Regex: string
   Label: string
-  Connector: CodecParam
+  Connector: CodecParam | null
 }
 export interface CodecMethod {
   Tag: string
@@ -2131,9 +2131,12 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
   const newCodecMiddleRunListRef = useRef<NewCodecMiddleRunListPropsRefProps>(null)
   const { setSubscribeClose, getSubscribeClose } = useSubscribeClose()
   const onCloseTab = useMemoizedFn((m) => {
-    ipcRenderer
-      .invoke('send-close-tab', {
-        router: YakitRoute.Codec,
+    ipc
+      .invoke('local', 'ForwardMainEvent', {
+        event: 'fetch-close-tab',
+        data: {
+          router: YakitRoute.Codec,
+        },
       })
       .then(() => {
         m.destroy()
@@ -2307,7 +2310,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
 
   // 获取codec列表
   const getLeftData = useMemoizedFn(() => {
-    ipcRenderer.invoke('GetAllCodecMethods').then((res: CodecMethods) => {
+    ipc.invoke('grpc', 'GetAllCodecMethods', {}).then((res) => {
       const { Methods } = res
       cacheCodecRef.current = Methods
       getCollectData()
@@ -2385,6 +2388,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
             } as RightItemsSelectProps
           // 联合控件 - Input/Select
           case 'inputSelect':
+            if (!item.Connector) throw new Error('编码控件缺少 Connector 配置')
             return {
               type: 'inputSelect',
               input: {

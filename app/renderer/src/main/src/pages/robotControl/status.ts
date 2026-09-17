@@ -8,7 +8,7 @@ export interface IMControlBadgePlatform {
   Level?: 'ok' | 'warning' | 'error' | 'disabled' | string
   Message?: string
   Transport?: string
-  UpdatedAtUnixMs?: number
+  UpdatedAtUnixMs?: string
 }
 
 export interface IMControlBadgeStatus {

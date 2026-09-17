@@ -1,5 +1,5 @@
 import { type StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { type HybridScanControlAfterRequest } from '@/models/HybridScan'
+import { type HybridScanInputValue } from '@/models/HybridScan'
 import { type GroupCount } from '@/pages/invoker/schema'
 import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import type { PocPageInfoProps } from '@/store/pageInfo'
@@ -47,7 +47,7 @@ export interface YakPoCExecuteContentProps {
   onClearAll: () => void
   pageId: string
   pageInfo: PocPageInfoProps
-  onInitInputValueAfter?: (value: HybridScanControlAfterRequest) => void
+  onInitInputValueAfter?: (value: HybridScanInputValue) => void
   type: 'keyword' | 'group'
 }
 

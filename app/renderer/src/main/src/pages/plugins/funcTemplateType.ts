@@ -364,7 +364,7 @@ export interface CodeScoreSmokingEvaluateResultProps {
   Item: string
   Suggestion: string
   ExtraInfo: Uint8Array
-  Range: GRPCRange
+  Range: GRPCRange | null
   Severity: string
 }
 /** 源码位置信息 */

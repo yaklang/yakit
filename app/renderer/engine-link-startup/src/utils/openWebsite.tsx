@@ -1,5 +1,4 @@
-import { yakitShell } from './electronBridge'
-
+import { ipc } from '../../../../shared/communication/window-client'
 export const openABSFileLocated = (u: string) => {
-  yakitShell.openSpecifiedFile(u)
+  ipc.invoke('local', 'open-specified-file', u)
 }

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn, useGetState, useInViewport } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -49,8 +50,6 @@ import { HotPatchTemplate } from '@/pages/invoker/data/MITMPluginTamplate'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useStore } from '@/store'
 import { formatTemplateTeams } from './utils'
-
-const { ipcRenderer } = window.require('electron')
 
 type PanelHotCodeType = Exclude<HotCodeType, 'global'>
 
@@ -126,7 +125,7 @@ const ensureHotPatchDefaultTemplates = async (
       Tags: [],
     }
     try {
-      await ipcRenderer.invoke('CreateHotPatchTemplate', newTemplate)
+      await ipc.invoke('grpc', 'CreateHotPatchTemplate', newTemplate)
       seededNames.push(newTemplate)
     } catch (error) {
       yakitFailed(error + '')
@@ -175,6 +174,8 @@ export const HotPatchManagement: React.FC = () => {
   const [editorTab, setEditorTab] = useState<'source' | 'result'>('source')
   const [debugResult, setDebugResult] = useState('')
   const tokenRef = useRef('')
+  const debugControllerRef = useRef<AbortController>()
+  useEffect(() => () => debugControllerRef.current?.abort(), [])
   const userInfo = useStore((s) => s.userInfo)
   const selectRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(selectRef)
@@ -271,7 +272,7 @@ export const HotPatchManagement: React.FC = () => {
       const nameToEnable = templateName || selectedTemplate
       // 如果是当前选中的模板，先保存内容
       if (!templateName || templateName === selectedTemplate) {
-        await ipcRenderer.invoke('UpdateHotPatchTemplate', {
+        await ipc.invoke('grpc', 'UpdateHotPatchTemplate', {
           Condition: { Type: activeType, Name: [selectedTemplate] },
           Data: { Type: activeType, Content: getCode(), Name: selectedTemplate },
         })
@@ -290,9 +291,9 @@ export const HotPatchManagement: React.FC = () => {
 
   const loadGlobalTemplateList = useMemoizedFn((selectedName?: string, enabledName?: string) => {
     setGlobalTemplateListLoading(true)
-    ipcRenderer
-      .invoke('QueryHotPatchTemplate', { Type: 'global' })
-      .then(async (res: QueryHotPatchTemplateResponse) => {
+    ipc
+      .invoke('grpc', 'QueryHotPatchTemplate', { Type: 'global' })
+      .then(async (res) => {
         const resData = res.Data || []
         const allNames = await ensureHotPatchDefaultTemplates(
           'global',
@@ -324,9 +325,9 @@ export const HotPatchManagement: React.FC = () => {
     const isWebFuzzer = type === 'fuzzer'
     const defaultTemplates = getDefaultTemplates(type)
     setTemplateListLoading(true)
-    ipcRenderer
-      .invoke('QueryHotPatchTemplate', { Type: type })
-      .then(async (res: QueryHotPatchTemplateResponse) => {
+    ipc
+      .invoke('grpc', 'QueryHotPatchTemplate', { Type: type })
+      .then(async (res) => {
         const resData = res.Data || []
         const allNames = await ensureHotPatchDefaultTemplates(
           type,
@@ -405,9 +406,9 @@ export const HotPatchManagement: React.FC = () => {
       setCode(item.temp)
       return
     }
-    ipcRenderer
-      .invoke('QueryHotPatchTemplate', { Type: type, Name: [item.name] })
-      .then((res: QueryHotPatchTemplateResponse) => {
+    ipc
+      .invoke('grpc', 'QueryHotPatchTemplate', { Type: type, Name: [item.name] })
+      .then((res) => {
         setCode(res.Data[0]?.Content || '')
       })
       .catch((error) => {
@@ -432,8 +433,8 @@ export const HotPatchManagement: React.FC = () => {
     if (!validateTemplateName(newName, createTemplateType)) return
     const defaultTemplateContent = getDefaultTemplateContentByType(createTemplateType)
 
-    ipcRenderer
-      .invoke('CreateHotPatchTemplate', {
+    ipc
+      .invoke('grpc', 'CreateHotPatchTemplate', {
         Type: createTemplateType,
         Content: defaultTemplateContent,
         Name: newName,
@@ -467,7 +468,7 @@ export const HotPatchManagement: React.FC = () => {
     if (!validateTemplateName(newName, currentEditingType)) return
 
     try {
-      await ipcRenderer.invoke('UpdateHotPatchTemplate', {
+      await ipc.invoke('grpc', 'UpdateHotPatchTemplate', {
         Condition: { Type: currentEditingType, Name: [oldName] },
         Data: { Name: newName },
       })
@@ -493,8 +494,8 @@ export const HotPatchManagement: React.FC = () => {
   const onDeleteTemplate = useMemoizedFn((item: HotPatchTempItem, source: 'local' | 'online', type: HotCodeType) => {
     const isCurrentSelected = activeType === type && selectedTemplate === item.name && selectedTemplateSource === source
     if (source === 'local') {
-      ipcRenderer
-        .invoke('DeleteHotPatchTemplate', {
+      ipc
+        .invoke('grpc', 'DeleteHotPatchTemplate', {
           Condition: { Type: type, Name: [item.name] },
         })
         .then(async () => {
@@ -548,7 +549,7 @@ export const HotPatchManagement: React.FC = () => {
 
   const onSaveTemplate = useMemoizedFn(async () => {
     try {
-      await ipcRenderer.invoke('UpdateHotPatchTemplate', {
+      await ipc.invoke('grpc', 'UpdateHotPatchTemplate', {
         Condition: { Type: activeType, Name: [selectedTemplate] },
         Data: { Type: activeType, Content: getCode(), Name: selectedTemplate },
       })
@@ -602,7 +603,7 @@ export const HotPatchManagement: React.FC = () => {
 
   const onCancelDebug = useMemoizedFn(() => {
     if (tokenRef.current) {
-      ipcRenderer.invoke('cancel-StringFuzzer', tokenRef.current).catch(() => {})
+      debugControllerRef.current?.abort()
       setLoading(false)
       tokenRef.current = ''
       yakitNotify('info', t('HTTPFuzzerHotPatch.debugCancelled'))
@@ -612,6 +613,9 @@ export const HotPatchManagement: React.FC = () => {
   const onDebugExecution = useMemoizedFn(async () => {
     setLoading(true)
     tokenRef.current = `hot-patch-debug-${Date.now()}-${Math.random()}`
+    debugControllerRef.current?.abort()
+    const controller = new AbortController()
+    debugControllerRef.current = controller
 
     const params: StringFuzzerParams = {
       Template: getTemplateContent(),
@@ -622,20 +626,23 @@ export const HotPatchManagement: React.FC = () => {
     }
 
     try {
-      const response: StringFuzzerResponse = await ipcRenderer.invoke('StringFuzzer', params, tokenRef.current)
+      const response: StringFuzzerResponse = await ipc.invoke('grpc', 'StringFuzzer', params, {
+        signal: controller.signal,
+      })
+      if (controller.signal.aborted) return
       const data: string[] = (response.Results || []).map((buf) => Buffer.from(buf).toString('utf8'))
       const resultText = data.length > 0 ? data.join('\r\n') : ''
       setDebugResult(resultText)
       setEditorTab('result')
     } catch (err) {
-      if (tokenRef.current) {
+      if (!controller.signal.aborted && tokenRef.current) {
         yakitNotify('error', `${t('HTTPFuzzerHotPatch.debugFailed')}: ${err}`)
       }
     } finally {
-      setTimeout(() => {
+      if (!controller.signal.aborted && debugControllerRef.current === controller) {
         setLoading(false)
         tokenRef.current = ''
-      }, 300)
+      }
     }
   })
 
@@ -682,7 +689,7 @@ export const HotPatchManagement: React.FC = () => {
       Data: { Tags: Tags ? [Tags] : [] },
     }
     try {
-      await ipcRenderer.invoke('UpdateHotPatchTemplate', params)
+      await ipc.invoke('grpc', 'UpdateHotPatchTemplate', params)
       if (type === 'global') {
         loadGlobalTemplateList()
       } else {
@@ -712,7 +719,7 @@ export const HotPatchManagement: React.FC = () => {
     const tag = groupModalValue.trim()
     if (!tag || groupModalSelectedNames.length === 0) return
     try {
-      await ipcRenderer.invoke('UpdateHotPatchTemplate', {
+      await ipc.invoke('grpc', 'UpdateHotPatchTemplate', {
         Condition: { Type: groupModalType, Name: groupModalSelectedNames },
         Data: { Tags: [tag] },
       })

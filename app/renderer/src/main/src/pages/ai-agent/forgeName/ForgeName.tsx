@@ -1,15 +1,15 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import React, { forwardRef, memo, type Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type {
   BatchExportAIforgeProps,
   BatchExportAIforgeRef,
   ExportAIForgeFormValues,
   ExportAIForgeRequest,
-  ExportImportAIForgeProgress,
   ForgeNameProps,
   ImportAIForgeFormValues,
   ImportAIforgeProps,
   ImportAIforgeRef,
-  ImportAIForgeRequest,
 } from './type'
 import {
   PencilAltOutlined,
@@ -62,8 +62,6 @@ import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorP
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'aiAgent')
-const { ipcRenderer } = window.require('electron')
-
 export interface ForgeNameRef {
   openAdd: () => void
   openImport: () => void
@@ -76,7 +74,7 @@ export interface ForgeNameRef {
  * @returns
  */
 export const handleModifyAIForge = (info: AIForge, source?: YakitRoute) => {
-  const id = Number(info.Id) || 0
+  const id = positiveInt64(info.Id) || 0
   if (!id) {
     yakitNotify('error', tOriginal('ForgeName.templateIdError', { id: info.Id }))
     return
@@ -119,10 +117,10 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
   })
 
   // 删除的 forge 队列
-  const [delStatus, setDelStatus] = useState<number[]>([])
+  const [delStatus, setDelStatus] = useState<string[]>([])
   // 删除 forge 模板
   const handleDeleteAIForge = useMemoizedFn((info: AIForge) => {
-    const id = Number(info.Id) || 0
+    const id = positiveInt64(info.Id) || 0
     if (!id) {
       yakitNotify('error', t('ForgeName.templateIdError', { id: info.Id }))
       return
@@ -250,10 +248,10 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
   // 通信触发更新数据请求
   const handleEmiterUpdateData = useMemoizedFn((id: string) => {
     const forgesArr = getData().Data || []
-    const findIndex = forgesArr.findIndex((item) => Number(item.Id) === Number(id))
+    const findIndex = forgesArr.findIndex((item) => int64String(item.Id ?? 0) === int64String(id))
     if (findIndex !== -1) {
       // 存在数据则局部更新
-      grpcGetAIForge({ ID: Number(id) })
+      grpcGetAIForge({ ID: id })
         .then((res) => {
           setData((old) => {
             const newData = { ...old }
@@ -352,9 +350,9 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
           <div ref={containerRef}>
             {list.map(({ data, index }) => {
               const { Id, ForgeName, Description, ToolNames, ForgeVerboseName } = data
-              const key = Number(Id) || index
+              const key = positiveInt64(Id) || index
               const tools = ToolNames ? ToolNames.filter(Boolean) : []
-              const delLoading = delStatus.includes(Number(Id))
+              const delLoading = delStatus.includes(int64String(Id ?? 0))
 
               return (
                 <React.Fragment key={key}>
@@ -497,7 +495,7 @@ export const BatchExportAIforge = memo(
   forwardRef<BatchExportAIforgeRef, BatchExportAIforgeProps>((props, ref) => {
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
-    const [exportExtra, setExportExtra] = useState<ImportExportModalExtra>({
+    const [exportExtra, setExportExtra] = useState<ImportExportModalExtra<'ExportAIForge'>>({
       hint: false,
       title: t('ForgeName.exportForge'),
       type: 'export',
@@ -594,11 +592,11 @@ export const BatchExportAIforge = memo(
     if (!exportExtra.hint) return null
 
     return (
-      <ImportExportModal<ExportAIForgeFormValues, ExportAIForgeRequest, ExportImportAIForgeProgress>
+      <ImportExportModal<ExportAIForgeFormValues, 'ExportAIForge'>
         getContainer={getMainOperatorPageBodyContainerOrBody()}
         extra={exportExtra}
-        getProgressValue={(p: ExportImportAIForgeProgress) => p.Percent / 100}
-        getlogListInfo={(stream: ExportImportAIForgeProgress[]) => {
+        getProgressValue={(p) => p.Percent / 100}
+        getlogListInfo={(stream) => {
           logListRef.current = stream.map((item) => ({
             message: item.Message,
             isError: item.MessageType === 'error',
@@ -660,14 +658,20 @@ export const BatchExportAIforge = memo(
           let name = values.OutputName + '.zip'
           if (values.Password) name += '.enc'
           try {
-            exportPath.current = await ipcRenderer.invoke('GenerateProjectsFilePath', name)
+            exportPath.current = await ipc.invoke('local', 'GenerateProjectsFilePath', name)
           } catch (error) {}
         }}
         onSubmitForm={(values) => ({
           ...forgeExtraParams.current,
           ...values,
+          Filter: forgeExtraParams.current.Filter
+            ? {
+                ...forgeExtraParams.current.Filter,
+                Tag: forgeExtraParams.current.Filter.Tag ? [forgeExtraParams.current.Filter.Tag] : undefined,
+              }
+            : undefined,
         })}
-        isProgressFinished={(p: ExportImportAIForgeProgress) => p.Percent === 100 && p.MessageType === 'success'}
+        isProgressFinished={(p) => p.Percent === 100 && p.MessageType === 'success'}
       />
     )
   }),
@@ -676,7 +680,7 @@ export const ImportAIforge = memo(
   forwardRef<ImportAIforgeRef, ImportAIforgeProps>((props, ref) => {
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
-    const [importExtra, setImportExtra] = useState<ImportExportModalExtra>({
+    const [importExtra, setImportExtra] = useState<ImportExportModalExtra<'ImportAIForge'>>({
       hint: false,
       title: t('ForgeName.importForge'),
       type: 'import',
@@ -710,11 +714,11 @@ export const ImportAIforge = memo(
     if (!importExtra.hint) return null
 
     return (
-      <ImportExportModal<ImportAIForgeFormValues, ImportAIForgeRequest, ExportImportAIForgeProgress>
+      <ImportExportModal<ImportAIForgeFormValues, 'ImportAIForge'>
         getContainer={getMainOperatorPageBodyContainerOrBody()}
         extra={importExtra}
-        getProgressValue={(p: ExportImportAIForgeProgress) => p.Percent / 100}
-        getlogListInfo={(stream: ExportImportAIForgeProgress[]) => {
+        getProgressValue={(p) => p.Percent / 100}
+        getlogListInfo={(stream) => {
           logListRef.current = stream.map((item) => ({
             message: item.Message,
             isError: item.MessageType === 'error',
@@ -744,7 +748,7 @@ export const ImportAIforge = memo(
           Overwrite: true,
           ...values,
         })}
-        isProgressFinished={(p: ExportImportAIForgeProgress) => p.Percent === 100}
+        isProgressFinished={(p) => p.Percent === 100}
       />
     )
   }),

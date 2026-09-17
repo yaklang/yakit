@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { type ReactNode, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Avatar, Layout, Upload, Watermark } from 'antd'
 import CameraOutlined from '@ant-design/icons/lib/icons/CameraOutlined'
@@ -78,8 +79,6 @@ import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 
 import { UsersSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
-const { ipcRenderer } = window.require('electron')
-
 export { defaultUserInfo } from './userInfoDefaults'
 
 export interface MainProp {
@@ -150,10 +149,11 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
       failed(t('SetUserInfo.avatarUpdateFailed', { error: 'missing file path' }))
       return
     }
-    await ipcRenderer
-      .invoke('http-upload-img-path', { path: file.path, type: 'headImg' })
+    await ipc
+      .invoke('local', 'http-upload-img-path', { path: file.path, type: 'headImg' })
       .then((res) => {
-        const imgUrl: string = res.data
+        if (res.code !== 200 || typeof res.data !== 'string') throw new Error('头像上传未返回有效地址')
+        const imgUrl = res.data
         NetWorkApi<API.UpUserInfoRequest, API.ActionSucceeded>({
           method: 'post',
           url: 'urm/up/userinfo',
@@ -346,7 +346,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
   useEffect(() => {
     const cancel = startIdleVisibleInterval(() => {
       // 当服务启动时 请求接口
-      ipcRenderer.invoke('alive-dynamic-control-status').then((is: boolean) => {
+      ipc.invoke('local', 'alive-dynamic-control-status', {}).then((is: boolean) => {
         if (is) {
           getRemoteValue('REMOTE_OPERATION_ID').then((tunnel) => {
             if (tunnel) {
@@ -375,13 +375,13 @@ const Main: React.FC<MainProp> = React.memo((props) => {
       })
     }, 15000)
     // 退出远程控制中页面
-    ipcRenderer.on('lougin-out-dynamic-control-page-callback', async () => {
+    const stopIpcEvent1 = ipc.on('lougin-out-dynamic-control-page-callback', async () => {
       setControlShow(false)
     })
 
     return () => {
       cancel()
-      ipcRenderer.removeAllListeners('lougin-out-dynamic-control-page-callback')
+      stopIpcEvent1()
     }
   }, [])
   /** ---------- 远程控制 end ---------- */
@@ -389,37 +389,37 @@ const Main: React.FC<MainProp> = React.memo((props) => {
   const { userInfo, setStoreUserInfo } = useStore()
 
   useEffect(() => {
-    ipcRenderer.on('fetch-signin-token', (e, res: UserInfoProps) => {
+    const stopIpcEvent2 = ipc.on('fetch-signin-token', (res: UserInfoProps) => {
       // 刷新用户信息
       setStoreUserInfo(res)
       // 刷新引擎
       globalUserLogin(res.token)
     })
     return () => {
-      ipcRenderer.removeAllListeners('fetch-signin-token')
+      stopIpcEvent2()
     }
   }, [])
 
   useEffect(() => {
     // 企业版初始进入页面（已登录）已获取用户信息 因此刷新
     if (isEnterpriseOrSimpleEdition()) {
-      ipcRenderer.send('company-refresh-in')
+      ipc.invoke('local', 'company-refresh-in', {})
     }
   }, [])
 
   /** ---------- 登录状态变化的逻辑 end ---------- */
   // 刷新登录状态的token
   useEffect(() => {
-    ipcRenderer.on('refresh-token', (e, res: any) => {
+    const stopIpcEvent3 = ipc.on('refresh-token', (res: any) => {
       refreshToken(userInfo)
     })
     return () => {
-      ipcRenderer.removeAllListeners('refresh-token')
+      stopIpcEvent3()
     }
   }, [])
   // 加载补全
   useEffect(() => {
-    ipcRenderer.invoke('GetYakitCompletionRaw').then((data: { RawJson: Uint8Array }) => {
+    ipc.invoke('grpc', 'GetYakitCompletionRaw', {}).then((data) => {
       try {
         const completionJson = Buffer.from(data.RawJson).toString('utf8')
         const total = JSONParseLog(completionJson, {
@@ -436,7 +436,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
       // success("加载 Yak 语言自动补全成功 / Load Yak IDE Auto Completion Finished")
     })
     //
-    ipcRenderer.invoke('GetYakVMBuildInMethodCompletion', {}).then((data: { Suggestions: MethodSuggestion[] }) => {
+    ipc.invoke('grpc', 'GetYakVMBuildInMethodCompletion', {}).then((data) => {
       try {
         if (!data) {
           return
@@ -465,11 +465,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
   /** 编辑菜单功能相关逻辑 */
   const [isShowCustomizeMenu, setIsShowCustomizeMenu] = useState<boolean>(false) //是否显示自定义菜单页面
   useEffect(() => {
-    ipcRenderer.on('fetch-open-customize-menu', (e, type: YakitRoute) => {
+    const stopIpcEvent4 = ipc.on('fetch-open-customize-menu', (type: YakitRoute) => {
       setIsShowCustomizeMenu(true)
     })
     return () => {
-      ipcRenderer.removeAllListeners('fetch-open-customize-menu')
+      stopIpcEvent4()
     }
   }, [])
 

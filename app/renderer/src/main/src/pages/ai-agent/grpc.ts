@@ -1,3 +1,6 @@
+import { queryHTTPFlows as requestHTTPFlows } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { aiForgeForUI, aiToolForUI, aiSessionForUI, grpcPagingToUI, int64ToSafeNumber } from './grpcAdapters'
+import { ipc } from '@/services/ipc'
 import type { APIFunc, APINoRequestFunc, APIOptionalFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import type {
@@ -30,13 +33,11 @@ import { convertNodeIdToVerbose } from '../ai-re-act/hooks/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
 import type { DeleteAISessionRequest, QueryAISessionRequest, QueryAISessionResponse } from './type/aiChat'
 
-const { ipcRenderer } = window.require('electron')
-
 /** @name 获取前端可直接选择的内置 ReAct Skill。 */
 export const grpcGetAIReActRecommendedSkills: APINoRequestFunc<GetAIReActRecommendedSkillsResponse> = (hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetAIReActRecommendedSkills')
+    ipc
+      .invoke('grpc', 'GetAIReActRecommendedSkills', {})
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '获取推荐 Skill 失败:' + e)
@@ -51,8 +52,8 @@ export const grpcUpdateAIReActRecommendedSkill: APIFunc<
   AIReActRecommendedSkill
 > = (param, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('UpdateAIReActRecommendedSkill', param)
+    ipc
+      .invoke('grpc', 'UpdateAIReActRecommendedSkill', param)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '保存推荐 Skill 失败:' + e)
@@ -67,8 +68,8 @@ export const grpcResetAIReActRecommendedSkill: APIFunc<{ Name: string }, AIReAct
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('ResetAIReActRecommendedSkill', param)
+    ipc
+      .invoke('grpc', 'ResetAIReActRecommendedSkill', param)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '恢复推荐 Skill 失败:' + e)
@@ -83,8 +84,8 @@ export const grpcResetAIReActRecommendedSkill: APIFunc<{ Name: string }, AIReAct
  */
 export const grpcQueryAIEvent: APIFunc<AIEventQueryRequest, AIEventQueryResponse> = (param, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryAIEvent', param)
+    ipc
+      .invoke('grpc', 'QueryAIEvent', param)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询QueryAIEvent失败:' + e)
@@ -182,10 +183,10 @@ export const grpcQueryAIToolDetails: APIFunc<AIEventQueryRequest, AIChatQSData[]
 
 // #region AI-Forge 相关 grpc 接口
 /** @name 创建 AI-Forge */
-export const grpcCreateAIForge: APIFunc<AIForge, { CreateID: number }> = (param, hiddenError) => {
+export const grpcCreateAIForge: APIFunc<AIForge, { CreateID: string }> = (param, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('CreateAIForge', param)
+    ipc
+      .invoke('grpc', 'CreateAIForge', param)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '创建AI-Forge失败:' + e)
@@ -196,9 +197,9 @@ export const grpcCreateAIForge: APIFunc<AIForge, { CreateID: number }> = (param,
 /** @name 编辑 AI-Forge */
 export const grpcUpdateAIForge: APIFunc<AIForge, undefined> = (param, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('UpdateAIForge', param)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'UpdateAIForge', param)
+      .then(() => resolve(undefined))
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '修改AI-Forge失败:' + e)
         reject(e)
@@ -208,9 +209,9 @@ export const grpcUpdateAIForge: APIFunc<AIForge, undefined> = (param, hiddenErro
 /** @name 删除 AI-Forge */
 export const grpcDeleteAIForge: APIFunc<AIForgeFilter, undefined> = (param, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteAIForge', param)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'DeleteAIForge', { ...param, Tag: param.Tag ? [param.Tag] : [] })
+      .then(() => resolve(undefined))
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '删除AI-Forge失败:' + e)
         reject(e)
@@ -220,9 +221,19 @@ export const grpcDeleteAIForge: APIFunc<AIForgeFilter, undefined> = (param, hidd
 /** @name 查询 AI-Forge 列表 */
 export const grpcQueryAIForge: APIFunc<QueryAIForgeRequest, QueryAIForgeResponse> = (param, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryAIForge', param)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'QueryAIForge', {
+        ...param,
+        Filter: param.Filter ? { ...param.Filter, Tag: param.Filter.Tag ? [param.Filter.Tag] : [] } : undefined,
+      })
+      .then((res) =>
+        resolve({
+          ...res,
+          Data: res.Data.map(aiForgeForUI),
+          Pagination: grpcPagingToUI(res.Pagination),
+          Total: int64ToSafeNumber(res.Total),
+        }),
+      )
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询AI-Forge失败:' + e)
         reject(e)
@@ -232,9 +243,9 @@ export const grpcQueryAIForge: APIFunc<QueryAIForgeRequest, QueryAIForgeResponse
 /** @name 查询 AI-Forge 单个详情 */
 export const grpcGetAIForge: APIFunc<GetAIForgeRequest, AIForge> = (param, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetAIForge', param)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'GetAIForge', param)
+      .then((res) => resolve(aiForgeForUI(res)))
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', 'grpcGetAIForge 查询Forge详情失败:' + e)
         reject(e)
@@ -248,8 +259,7 @@ export const grpcQueryHTTPFlows: APIFunc<YakQueryHTTPFlowRequest, YakQueryHTTPFl
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryHTTPFlows', param)
+    requestHTTPFlows(param)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', 'grpcQueryHTTPFlows 查询HTTP流失败:' + e)
@@ -261,8 +271,8 @@ export const grpcQueryHTTPFlows: APIFunc<YakQueryHTTPFlowRequest, YakQueryHTTPFl
 /** @name 生成temp文件夹下路径 */
 export const GenerateTempFilePath: APIFunc<string, string> = async (fileName, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GenerateTempFilePath', fileName)
+    ipc
+      .invoke('local', 'GenerateTempFilePath', fileName)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', 'GenerateTempFilePath 失败:' + e)
@@ -277,9 +287,11 @@ export const grpcGetRandomAIMaterials: APIFunc<GetRandomAIMaterialsRequest, GetR
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetRandomAIMaterials', param)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'GetRandomAIMaterials', param)
+      .then((res) =>
+        resolve({ ...res, AIForges: res.AIForges.map(aiForgeForUI), AITools: res.AITools.map(aiToolForUI) }),
+      )
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询 GetRandomAIMaterials 失败:' + e)
         reject(e)
@@ -289,8 +301,8 @@ export const grpcGetRandomAIMaterials: APIFunc<GetRandomAIMaterialsRequest, GetR
 
 export const grpcExportAILogs: APIFunc<ExportAILogsRequest, ExportAILogsResponse> = (param, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('ExportAILogs', param)
+    ipc
+      .invoke('local', 'ExportAILogs', param)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '导出 AI 日志失败:' + e)
@@ -301,8 +313,8 @@ export const grpcExportAILogs: APIFunc<ExportAILogsRequest, ExportAILogsResponse
 
 export const grpcQueryAIFocus: APIOptionalFunc<QueryAIFocusRequest, QueryAIFocusResponse> = (param, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryAIFocus', param)
+    ipc
+      .invoke('grpc', 'QueryAIFocus', param ?? {})
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', 'QueryAIFocus 查询详情失败:' + e)
@@ -313,9 +325,16 @@ export const grpcQueryAIFocus: APIOptionalFunc<QueryAIFocusRequest, QueryAIFocus
 
 export const grpcQueryAISession: APIFunc<QueryAISessionRequest, QueryAISessionResponse> = (param, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryAISession', param)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'QueryAISession', param)
+      .then((res) =>
+        resolve({
+          ...res,
+          Data: res.Data.map(aiSessionForUI),
+          Pagination: grpcPagingToUI(res.Pagination),
+          Total: int64ToSafeNumber(res.Total),
+        }),
+      )
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询 AISession 失败:' + e)
         reject(e)
@@ -325,9 +344,9 @@ export const grpcQueryAISession: APIFunc<QueryAISessionRequest, QueryAISessionRe
 
 export const grpcDeleteAISession: APIFunc<DeleteAISessionRequest, undefined> = (param, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteAISession', param)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'DeleteAISession', param)
+      .then(() => resolve(undefined))
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '删除 AISession 失败:' + e)
         reject(e)
@@ -340,9 +359,9 @@ export const grpcUpdateAISessionTitle: APIFunc<{ SessionID: string; Title: strin
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('UpdateAISessionTitle', param)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'UpdateAISessionTitle', param)
+      .then(() => resolve(undefined))
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '修改 AISession Title 失败:' + e)
         reject(e)

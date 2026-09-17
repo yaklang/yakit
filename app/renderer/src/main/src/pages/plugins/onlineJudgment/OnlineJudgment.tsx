@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -13,8 +14,6 @@ import Login from '@/pages/Login'
 import { useStore } from '@/store'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { useTheme } from '@/hook/useTheme'
-
-const { ipcRenderer } = window.require('electron')
 
 export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
   forwardRef((props, ref) => {
@@ -71,8 +70,8 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
 
     const getNetWork = useMemoizedFn(() => {
       setLoading(true)
-      ipcRenderer
-        .invoke('fetch-netWork-status-by-request-interface')
+      ipc
+        .invoke('local', 'fetch-netWork-status-by-request-interface', {})
         .then((res) => {
           if (res.code === -1) {
             yakitNotify('error', '连接失败:' + res.message)

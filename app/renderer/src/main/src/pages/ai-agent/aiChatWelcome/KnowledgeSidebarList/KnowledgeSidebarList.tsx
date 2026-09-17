@@ -88,9 +88,10 @@ const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: 
 
         try {
           setAddMode([])
-          await BuildingKnowledgeBase({ ...kb, chunk: 'Medium', concurrency: 10 })
+          const request = await BuildingKnowledgeBase({ ...kb, chunk: 'Medium', concurrency: 10 })
 
-          api?.createStream?.(kb.streamToken, {
+          await api?.createStream?.(kb.streamToken, {
+            request,
             taskName: 'debug-plugin',
             apiKey: 'DebugPlugin',
             token: kb.streamToken,
@@ -134,9 +135,10 @@ const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: 
 
   const starKnowledgeeBaseEntry = useMemoizedFn(async (updateItems: KnowledgeBaseItem) => {
     try {
-      await BuildingKnowledgeBaseEntry(updateItems)
+      const request = await BuildingKnowledgeBaseEntry(updateItems)
       if (api && typeof api.createStream === 'function') {
-        api.createStream(updateItems.streamToken, {
+        await api.createStream(updateItems.streamToken, {
+          request,
           taskName: 'debug-plugin',
           apiKey: 'DebugPlugin',
           token: updateItems.streamToken,

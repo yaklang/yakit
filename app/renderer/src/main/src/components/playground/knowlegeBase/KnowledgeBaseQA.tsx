@@ -1,3 +1,4 @@
+import { ipc, type GrpcOutput } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState, useRef } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -21,8 +22,6 @@ import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
-
 export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase, queryAllCollectionsDefault }) => {
   const { t } = useI18nNamespaces(['components', 'yakitUi'])
   const [messages, setMessages] = useState<QAMessage[]>([])
@@ -33,7 +32,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
     typeof queryAllCollectionsDefault === 'boolean' ? queryAllCollectionsDefault : true,
   )
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const streamingTokenRef = useRef<string>('')
+  const controllerRef = useRef<AbortController>()
 
   // 滚动到底部
   const scrollToBottom = useMemoizedFn(() => {
@@ -53,7 +52,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
   const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
   // 处理流式响应
-  const handleStreamResponse = useMemoizedFn((token: string, response: QueryKnowledgeBaseByAIResponse) => {
+  const handleStreamResponse = useMemoizedFn((token: string, response: GrpcOutput<'QueryKnowledgeBaseByAI'>) => {
     const { Message, MessageType, Data } = response
 
     setMessages((prev) => {
@@ -172,120 +171,69 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
     setLoading(true)
 
     const token = `qa_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    // 如果之前有未清理的流，先清理
-    if (streamingTokenRef.current) {
-      try {
-        await ipcRenderer.invoke('cancel-QueryKnowledgeBaseByAI', streamingTokenRef.current)
-      } catch {}
-      ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-data`)
-      ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-error`)
-      ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-end`)
-    }
-    streamingTokenRef.current = token
-
-    try {
-      const request: QueryKnowledgeBaseByAIRequest = {
-        Query: inputValue.trim(),
-        EnhancePlan: enhancePlan,
-        KnowledgeBaseID: queryAllCollections ? 0 : knowledgeBase?.ID || 0,
-        QueryAllCollections: queryAllCollections,
-      }
-
-      // 监听流式响应
-      ipcRenderer.on(`${token}-data`, (e, data: QueryKnowledgeBaseByAIResponse) => {
-        handleStreamResponse(token, data)
-      })
-      ipcRenderer.on(`${token}-error`, (e, err) => {
-        failed(t('playground.KnowledgeBaseQA.queryFailed', { error: String(err?.message || err) }))
-        setMessages((prev) => {
-          const newMessages = [...prev]
-          const lastMessage = newMessages[newMessages.length - 1]
-          if (lastMessage && lastMessage.type === 'assistant' && lastMessage.isStreaming) {
-            lastMessage.content += `\n**${t('playground.KnowledgeBaseQA.error')}** ${err?.message || err}`
-            lastMessage.isStreaming = false
-          }
-          return newMessages
-        })
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
-        streamingTokenRef.current = ''
-        setLoading(false)
-      })
-      ipcRenderer.on(`${token}-end`, (e) => {
-        setMessages((prev) => {
-          const newMessages = [...prev]
-          const lastMessage = newMessages[newMessages.length - 1]
-          if (lastMessage && lastMessage.type === 'assistant' && lastMessage.isStreaming) {
-            lastMessage.isStreaming = false
-          }
-          return newMessages
-        })
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
-        streamingTokenRef.current = ''
-        setLoading(false)
-      })
-
-      // 启动流式查询（注意：流式 IPC 约定为 invoke("方法名", params, token)）
-      await ipcRenderer.invoke('QueryKnowledgeBaseByAI', request, token)
-    } catch (error) {
-      failed(t('playground.KnowledgeBaseQA.queryFailed', { error: String(error) }))
-      setMessages((prev) => {
-        const newMessages = [...prev]
-        const lastMessage = newMessages[newMessages.length - 1]
-        if (lastMessage && lastMessage.type === 'assistant' && lastMessage.isStreaming) {
-          lastMessage.content = t('playground.KnowledgeBaseQA.queryFailed', { error: String(error) })
-          lastMessage.isStreaming = false
-        }
-        return newMessages
-      })
-    } finally {
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const finish = (error?: unknown) => {
+      if (controller.signal.aborted) return
+      if (error) failed(t('playground.KnowledgeBaseQA.queryFailed', { error: String(error) }))
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === assistantMessage.id
+            ? {
+                ...message,
+                isStreaming: false,
+                content: error
+                  ? message.content + `\n**${t('playground.KnowledgeBaseQA.error')}** ${String(error)}`
+                  : message.content,
+              }
+            : message,
+        ),
+      )
       setLoading(false)
+    }
+    try {
+      await ipc.openStream(
+        'grpc',
+        'QueryKnowledgeBaseByAI',
+        {
+          Query: inputValue.trim(),
+          EnhancePlan: enhancePlan,
+          KnowledgeBaseID: queryAllCollections ? '0' : knowledgeBase?.ID || '0',
+          QueryAllCollections: queryAllCollections,
+        },
+        {
+          token,
+          signal: controller.signal,
+          onData(data) {
+            if (!controller.signal.aborted) handleStreamResponse(token, data)
+          },
+          onError: finish,
+          onEnd: () => finish(),
+        },
+      )
+    } catch (error) {
+      finish(error)
     }
   })
 
   // 停止查询
-  const handleStop = useMemoizedFn(async () => {
-    if (streamingTokenRef.current) {
-      try {
-        await ipcRenderer.invoke('cancel-QueryKnowledgeBaseByAI', streamingTokenRef.current)
-        setMessages((prev) => {
-          const newMessages = [...prev]
-          const lastMessage = newMessages[newMessages.length - 1]
-          if (lastMessage && lastMessage.type === 'assistant' && lastMessage.isStreaming) {
-            lastMessage.content += `\n\n**${t('playground.KnowledgeBaseQA.queryStopped')}**`
-            lastMessage.isStreaming = false
-          }
-          return newMessages
-        })
-      } catch (error) {
-        console.error(t('playground.KnowledgeBaseQA.stopQueryFailed'), error)
-      } finally {
-        setLoading(false)
-        ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-data`)
-        ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-error`)
-        ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-end`)
-        streamingTokenRef.current = ''
-      }
-    }
+  const handleStop = useMemoizedFn(() => {
+    controllerRef.current?.abort()
+    setMessages((prev) =>
+      prev.map((message) =>
+        message.type === 'assistant' && message.isStreaming
+          ? {
+              ...message,
+              isStreaming: false,
+              content: message.content + `\n\n**${t('playground.KnowledgeBaseQA.queryStopped')}**`,
+            }
+          : message,
+      ),
+    )
+    setLoading(false)
   })
-
-  // 组件卸载时清理流
-  useEffect(() => {
-    return () => {
-      const token = streamingTokenRef.current
-      if (token) {
-        try {
-          ipcRenderer.invoke('cancel-QueryKnowledgeBaseByAI', token)
-        } catch {}
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
-      }
-    }
-  }, [])
+  useEffect(() => () => controllerRef.current?.abort(), [])
 
   // 清空对话
   const handleClear = useMemoizedFn(() => {

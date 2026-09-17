@@ -1,6 +1,6 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { lazy, memo, startTransition, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { yakitAuxWindow } from '@/services/electronBridge'
 import {
   type ConcurrentStreamFramePayload,
   isConcurrentStreamFrame,
@@ -40,7 +40,7 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
   useEffect(() => {
     if (!windowId) return
 
-    const applyFrame = (payload: ConcurrentStreamFramePayload) => {
+    const applyFrame = (payload: unknown) => {
       if (!isConcurrentStreamFrame(payload)) return
       const newFrame: ConcurrentStreamFramePayload = {
         ...payload,
@@ -57,17 +57,17 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
       fetchContents(newFrame)
     }
 
-    const offInit = yakitAuxWindow.onInit((msg) => {
+    const offInit = ipc.on('aux-window:init-data', (msg: { windowId: string; payload: unknown }) => {
       if (msg.windowId !== windowId) return
       applyFrame(msg.payload)
     })
 
-    const offPush = yakitAuxWindow.onPush((msg) => {
+    const offPush = ipc.on('aux-window:push-data', (msg: { windowId: string; payload: unknown }) => {
       if (msg.windowId !== windowId) return
       applyFrame(msg.payload)
     })
 
-    yakitAuxWindow.ready(windowId)
+    ipc.invoke('local', 'aux-window:ready', { windowId: windowId })
 
     return () => {
       offInit()

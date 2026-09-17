@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { failed, yakitNotify } from '@/utils/notification'
@@ -7,7 +8,6 @@ import CopyToClipboard from 'react-copy-to-clipboard'
 import './LicensePage.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
 const { Item } = Form
 
 export interface LicensePageProps {
@@ -27,8 +27,8 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
 
   useEffect(() => {
     setLicensePageLoading(true)
-    ipcRenderer
-      .invoke('GetLicense', {})
+    ipc
+      .invoke('grpc', 'GetLicense', {})
       .then((e) => {
         setLicenseRequest(e.License)
       })

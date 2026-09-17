@@ -97,7 +97,7 @@ const LocalStorageKey = 'yakit-multiple-shortcut-key-events'
 export const getStorageYakitMultipleShortcutKeyEvents = () => {
   getLocalValue(LocalStorageKey)
     .then((res) => {
-      if (!res) return
+      if (typeof res !== 'string' || !res) return
       try {
         const data: EventsType = JSONParseLog(res, {
           page: 'yakitMultiple',

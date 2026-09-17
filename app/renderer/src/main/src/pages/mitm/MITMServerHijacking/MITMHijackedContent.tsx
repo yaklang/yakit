@@ -1,3 +1,5 @@
+import { mitmRulesForUI } from '@/pages/mitm/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { info, yakitFailed, yakitNotify } from '@/utils/notification'
 import { useCreation, useInViewport, useMemoizedFn, useThrottleFn } from 'ahooks'
@@ -66,8 +68,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const MITMManual = React.lazy(() => import('@/pages/mitm/MITMManual/MITMManual'))
 
-const { ipcRenderer } = window.require('electron')
-
 export type MITMStatus = 'hijacking' | 'hijacked' | 'idle'
 interface MITMHijackedContentProps {
   status: MITMStatus
@@ -131,7 +131,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   const [currentPacketInfo, setCurrentPacketInfo] = useState<{
     requestPacket: string
     currentPacket: string
-    currentPacketId: number
+    currentPacketId: string | number
     isHttp: boolean
     traceInfo: TraceInfo
   }>({
@@ -305,9 +305,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       })
   })
   const getRules = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('GetCurrentRules', {})
-      .then((rsp: { Rules: MITMContentReplacerRule[] }) => {
+    ipc
+      .invoke('grpc', 'GetCurrentRules', {})
+      .then(mitmRulesForUI)
+      .then((rsp) => {
         const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
         curRulesRef.current = [...newRules]
         const findOpenRepRule = newRules.find(
@@ -610,14 +611,16 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   useEffect(() => {
     // v1版本的手动劫持处理
     if (mitmVersion !== MITMVersion.V1) return
-    grpcClientMITMHijacked(mitmVersion).on((data: ClientMITMHijackedResponse) => {
-      if (mitmVersion === MITMVersion.V1) {
-        if (!isMITMResponse(data)) return
-        forwardHandler(data)
-      }
-    })
+    const unsubscribegrpcClientMITMHijacked = grpcClientMITMHijacked(mitmVersion).on(
+      (data: ClientMITMHijackedResponse) => {
+        if (mitmVersion === MITMVersion.V1) {
+          if (!isMITMResponse(data)) return
+          forwardHandler(data)
+        }
+      },
+    )
     return () => {
-      grpcClientMITMHijacked(mitmVersion).remove()
+      unsubscribegrpcClientMITMHijacked()
     }
   }, [autoForward])
 
@@ -631,7 +634,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     setCurrentIsForResponse(!!msg?.forResponse)
 
     if (msg.forResponse) {
-      if (!msg.response || !msg.responseId) {
+      if (!msg.response || !msg.responseId || msg.responseId === '0') {
         yakitFailed(t('MITMHijackedContent.bug__mitm_error__failed_to_get_correct_r'))
         return
       }
@@ -714,7 +717,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         setHijackResponseType('never')
       }
       setAutoForward(e)
-      if (currentPacket && currentPacketId) {
+      if (currentPacket && BigInt(currentPacketId) !== BigInt(0)) {
         forward(e === 'manual')
       }
     } catch (e) {
@@ -755,7 +758,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         allowHijackedResponseByRequest(currentPacketId)
         break
       case 'all':
-        if (currentPacketId > 0) {
+        if (BigInt(currentPacketId) > BigInt(0)) {
           allowHijackedResponseByRequest(currentPacketId)
         }
         info(t('MITMHijackedContent.hijack_all_response_content'))
@@ -770,7 +773,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     setHijackResponseType(val)
   })
   useEffect(() => {
-    if (hijackResponseType === 'all' && currentPacketId > 0) {
+    if (hijackResponseType === 'all' && BigInt(currentPacketId) > BigInt(0)) {
       allowHijackedResponseByRequest(currentPacketId)
     }
   }, [hijackResponseType, currentPacketId])
@@ -792,7 +795,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   // 这个 Forward 提交数据、切换tab、编辑器右键菜单会调用
   const forward = useMemoizedFn((isManual: boolean) => {
     // ID 不存在
-    if (!currentPacketId) {
+    if (BigInt(currentPacketId) === BigInt(0)) {
       return
     }
     setStatus('hijacking')
@@ -1187,17 +1190,17 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
 export default MITMHijackedContent
 
-const forwardRequest = (id: number) => {
+const forwardRequest = (id: string | number) => {
   return grpcMITMForwardRequestById(id, true)
 }
 
-const forwardResponse = (id: number) => {
+const forwardResponse = (id: string | number) => {
   return grpcMITMForwardResponseById(id, true)
 }
 
-const allowHijackedResponseByRequest = (id: number) => {
+const allowHijackedResponseByRequest = (id: string | number) => {
   return grpcMITMHijackedCurrentResponseById(id, true)
 }
-const cancelHijackedResponseByRequest = (id: number) => {
+const cancelHijackedResponseByRequest = (id: string | number) => {
   return grpcMITMCancelHijackedCurrentResponseById(id, true)
 }

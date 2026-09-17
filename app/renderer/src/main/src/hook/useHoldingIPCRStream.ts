@@ -4,11 +4,12 @@ import type { ExecResult } from '../pages/invoker/schema'
 import type { StatusCardInfoProps, StatusCardProps } from '../pages/yakitStore/viewers/base'
 import { writeExecResultXTerm } from '../utils/xtermUtils'
 import { failed, info } from '../utils/notification'
-import { useGetState } from 'ahooks'
+import { useGetState, useMemoizedFn } from 'ahooks'
 import type { Risk } from '@/pages/risks/schema'
 import { isEnpriTraceAgent } from '@/utils/envfile'
 import { JSONParseLog } from '@/utils/tool'
-import { yakitStream } from '@/services/electronBridge'
+import { ipc, type GrpcInput, type GrpcOutput, type StreamTask } from '@/services/ipc'
+type StreamApi = 'Exec' | 'FetchPortAssetFromSpaceEngine' | 'ExecuteChaosMakerRule' | 'ExecutePacketYakScript'
 
 export interface InfoState {
   messageState: ExecResultLog[]
@@ -26,12 +27,12 @@ export interface CacheStatusCardProps {
   Tags?: string[]
 }
 
-export default function useHoldingIPCRStream(
+export default function useHoldingIPCRStream<A extends StreamApi>(
   taskName: string,
-  apiKey: string,
+  apiKey: A,
   token: string,
   onEnd?: () => any,
-  onListened?: () => any,
+  onListened?: (open: (params: GrpcInput<A>) => Promise<void>) => unknown,
   dataFilter?: (obj: ExecResultMessage, content: ExecResultLog) => boolean,
   onRuntimeId?: (runtimeId: string) => any,
 ) {
@@ -51,6 +52,67 @@ export default function useHoldingIPCRStream(
   const riskMessages = useRef<Risk[]>([])
   const processKVPair = useRef<Map<string, number>>(new Map<string, number>())
   const statusKVPair = useRef<Map<string, CacheStatusCardProps>>(new Map<string, CacheStatusCardProps>())
+
+  const active = useRef<{ controller: AbortController; opening?: Promise<StreamTask<A>> }>()
+  const callbacks = useRef<{
+    data(data: GrpcOutput<A>): Promise<void>
+    error(error: unknown): void
+    start(): void
+    stop(): void
+    end(): void
+  }>()
+  const cancel = useMemoizedFn(async () => {
+    callbacks.current?.stop()
+    const previous = active.current
+    active.current = undefined
+    previous?.controller.abort()
+    if (previous?.opening)
+      await previous.opening.then(
+        (task) => task.cancel(),
+        () => {},
+      )
+  })
+  const open = useMemoizedFn(async (params: GrpcInput<A>) => {
+    const previous = active.current
+    previous?.controller.abort()
+    const session: { controller: AbortController; opening?: Promise<StreamTask<A>> } = {
+      controller: new AbortController(),
+    }
+    active.current = session
+    if (previous?.opening)
+      await previous.opening.then(
+        (task) => task.cancel(),
+        () => {},
+      )
+    if (active.current !== session) return
+    callbacks.current?.start()
+    session.opening = ipc.openStream('grpc', apiKey, params, {
+      token,
+      signal: session.controller.signal,
+      async onData(data) {
+        if (active.current === session) await callbacks.current?.data(data)
+      },
+      onError(error) {
+        if (active.current !== session) return
+        active.current = undefined
+        callbacks.current?.error(error)
+      },
+      onEnd() {
+        if (active.current !== session) return
+        active.current = undefined
+        callbacks.current?.end()
+      },
+    })
+    try {
+      await session.opening
+    } catch (error) {
+      if (active.current === session) {
+        active.current = undefined
+        if (!session.controller.signal.aborted) callbacks.current?.error(error)
+      }
+      throw error
+    }
+  })
 
   useEffect(() => {
     const syncResults = () => {
@@ -120,7 +182,7 @@ export default function useHoldingIPCRStream(
     }
 
     let runtimeId = ''
-    const offData = yakitStream.onData(token, async (data: ExecResult) => {
+    const onData = async (data: GrpcOutput<A>) => {
       if (runtimeId === '' && !!data?.RuntimeID && runtimeId != data.RuntimeID) {
         runtimeId = data.RuntimeID
         if (onRuntimeId) {
@@ -202,31 +264,45 @@ export default function useHoldingIPCRStream(
         } catch (e) {}
       }
       writeExecResultXTerm(getXtermRef(), data)
-    })
-    const offError = yakitStream.onError(token, (error: any) => {
-      failed(`[Mod] ${taskName} error: ${error}`)
-    })
-    const offEnd = yakitStream.onEnd(token, () => {
+    }
+    let time: ReturnType<typeof setInterval> | undefined
+    const handleEnd = () => {
+      clearInterval(time)
       info(`[Mod] ${taskName} finished`)
       syncResults()
       if (onEnd) {
         onEnd()
       }
-    })
+    }
+
+    callbacks.current = {
+      data: onData,
+      start() {
+        clearInterval(time)
+        time = setInterval(syncResults, 500)
+      },
+      stop() {
+        clearInterval(time)
+      },
+      end: handleEnd,
+      error(error) {
+        failed(`[Mod] ${taskName} error: ${error instanceof Error ? error.message : String(error)}`)
+        clearInterval(time)
+        syncResults()
+        onEnd?.()
+      },
+    }
 
     syncResults()
-    const time = setInterval(() => syncResults(), 500)
 
-    if (onListened) onListened()
+    if (onListened) onListened(open)
 
     return () => {
       if (time) clearInterval(time)
-      yakitStream.cancel(apiKey, token)
-      offData()
-      offError()
-      offEnd()
+      void cancel()
+      callbacks.current = undefined
     }
-  }, [])
+  }, [apiKey, token])
 
   const reset = () => {
     messages.current = []
@@ -261,5 +337,5 @@ export default function useHoldingIPCRStream(
     })
   }
 
-  return [infoState, { reset, setXtermRef, resetAll }, xtermRef] as const
+  return [infoState, { reset, setXtermRef, resetAll, open, cancel }, xtermRef] as const
 }

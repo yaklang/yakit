@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { type Dispatch, type FC, type SetStateAction, useEffect } from 'react'
 import type { VectorStoreEntry } from '../TKnowledgeBase'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
@@ -8,8 +9,6 @@ import { useRequest } from 'ahooks'
 import { useTheme } from '@/hook/useTheme'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
-
-const { ipcRenderer } = window.require('electron')
 
 interface VectorDetailDrawerProps {
   openVectorDetailDrawerData: {
@@ -34,7 +33,7 @@ const VectorDetailDrawer: FC<VectorDetailDrawerProps> = ({
 
   const { data: entryDocument, run } = useRequest(
     async () => {
-      const result = await ipcRenderer.invoke('GetDocumentByVectorStoreEntryID', {
+      const result = await ipc.invoke('grpc', 'GetDocumentByVectorStoreEntryID', {
         ID: openVectorDetailDrawerData.selectedVectorDetail?.ID,
       })
       return result?.Document

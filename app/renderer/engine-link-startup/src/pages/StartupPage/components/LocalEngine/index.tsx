@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 'react'
 import type { AllowSecretLocalJson, LocalEngineProps } from './LocalEngineType'
 import { engineFailureMessage, engineFailureStatus } from '../../engineFailure'
@@ -18,7 +19,6 @@ import { SystemInfo } from '../../utils'
 import { getLocalValue } from '@/utils/kv'
 import { LocalGVS } from '@/enums/yakitGV'
 import { UpdateYakitHint } from '../UpdateYakitHint'
-import { yakitEngine } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 function compare(a: string, b: string) {
@@ -379,7 +379,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
     // 主进程推送 i18n key（如 LocalEngine.xxx），渲染端翻译后输出日志
     useEffect(() => {
-      const offStartUpMessage = yakitEngine.onStartUpEngineMessage((key: string) => {
+      const offStartUpMessage = ipc.on('startUp-engine-msg', (key: string) => {
         if (yakitStatusRef.current === 'break') return
         // Keep the migration hint visible when later progress messages arrive.
         setLog((lines) => [...lines.filter((line) => line !== t(key)), t(key)])

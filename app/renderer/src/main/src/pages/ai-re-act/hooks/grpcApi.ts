@@ -1,3 +1,4 @@
+import type { GrpcInput, GrpcOutput } from '../../../../../../../shared/communication/protocol'
 import type { KnowledgeBaseEntry } from '@/components/playground/knowlegeBase'
 import type { StreamResult, HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { KVPair } from '@/models/kv'
@@ -302,54 +303,14 @@ export interface AIInputEvent {
 export interface AttachedResourceInfo {
   Key: AttachedResourceKeyEnum
   Type: AttachedResourceTypeEnum
-  Value: string | string[]
+  Value: string
 }
 export interface AIOutputI18n {
   Zh: string
   En: string
 }
 
-export interface AIOutputEvent {
-  ID: number
-  CoordinatorId: string
-  Type: string
-  NodeId: string
-  // 系统输出
-  IsSystem: boolean
-  // AI正常输出
-  IsStream: boolean
-  // AI思考输出
-  IsReason: boolean
-  StreamDelta: Uint8Array
-  IsJson: boolean
-  IsResult: boolean
-  Content: Uint8Array
-  Timestamp: number
-  // 任务索引
-  TaskIndex: string
-  /**
-   * TaskId is the logical task identifier (AIStatefulTask.GetId), distinct from TaskUUID.
-   */
-  TaskId: string
-  /** 是否禁用 markdown 渲染 UI */
-  DisableMarkdown: boolean
-  /** 是否是同步消息 */
-  IsSync: boolean
-  /**用于同步消息的 ID */
-  SyncID: string
-  /** 事件的唯一标识 */
-  EventUUID: string
-  /** 节点 ID 的展示内容, 包含18n */
-  NodeIdVerbose: AIOutputI18n
-  /** 内容的类型: markdown / yaklang_code / plain_code / text/plain */
-  ContentType: string
-  /** 如果是调用工具相关的事件，那么这里是调用的ID */
-  CallToolID: string
-  /** 如果是 AI 服务相关的事件，那么这里是 AI 服务的名称 */
-  AIService: string
-  /** 如果是 AI 服务相关的事件，那么这里是 AI 模型的名称 */
-  AIModelName: string
-}
+export type AIOutputEvent = GrpcOutput<'StartAIReAct'>
 // #endregion
 
 /** 任务状态枚举 */
@@ -1199,8 +1160,8 @@ export declare namespace AIAgentGrpcApi {
     block_count: number
     event_count: number
     has_more: boolean
-    next_start_id: number
-    requested_start_id: number
+    next_start_id: string | number | bigint
+    requested_start_id: string | number | bigint
     session_id: string
   }
 
@@ -1237,17 +1198,8 @@ export interface AIEventFilter {
 }
 
 /** QueryAIEvent 接口请求 */
-export interface AIEventQueryRequest {
-  Filter?: AIEventFilter
-  ProcessID?: string
-  Pagination?: PaginationSchema
-}
-/** QueryAIEvent 接口响应 */
-export interface AIEventQueryResponse {
-  Events: AIOutputEvent[]
-  Pagination: PaginationSchema
-  Total: number
-}
+export type AIEventQueryRequest = GrpcInput<'QueryAIEvent'>
+export type AIEventQueryResponse = GrpcOutput<'QueryAIEvent'>
 
 /** DeleteAIEvent 接口请求 */
 // export interface AIEventDeleteRequest {
@@ -1319,7 +1271,7 @@ export interface AIReActSchedulePayload {
 }
 
 export interface AIReActSchedule {
-  Id?: number
+  Id?: string | number
   UUID: string
   Name: string
   /** active | paused | completed */

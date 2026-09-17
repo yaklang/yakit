@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { Progress, Tooltip } from 'antd'
@@ -8,7 +9,6 @@ import type { YakURLResource } from '@/pages/yakURLTree/data'
 import {
   type ApiDocInfo,
   type ApiDocOperationSummary,
-  cancelOpenApiRequest,
   getApiMethodTagStyle,
   getExtra,
   isOpenApiRequestCanceled,
@@ -31,11 +31,9 @@ import { randomString } from '@/utils/randomUtil'
 import emiter from '@/utils/eventBus/eventBus'
 
 const { YakitPanel } = YakitCollapse
-const { ipcRenderer } = window.require('electron')
-
 type DocResult = { docId: string; docInfo: ApiDocInfo; operations: ApiDocOperationSummary[] }
 type ParseStatus = 'idle' | 'parsing' | 'canceling'
-type ParseTask = { id: string; token: string; canceled: boolean }
+type ParseTask = { id: string; controller: AbortController; canceled: boolean }
 
 const parseDocInfo = (docId: string, resource: YakURLResource): ApiDocInfo => {
   const extra = resource.Extra || []
@@ -91,7 +89,7 @@ const uploadApiDoc = async (
     overrideDomain?: string
     overrideIsHttps?: boolean
     parseTaskId?: string
-    token?: string
+    signal?: AbortSignal
   },
 ) => {
   const query: { Key: string; Value: string }[] = []
@@ -100,7 +98,7 @@ const uploadApiDoc = async (
   if (options?.overrideIsHttps) query.push({ Key: 'overrideIsHttps', Value: 'true' })
   if (options?.parseTaskId) query.push({ Key: 'parse_task_id', Value: options.parseTaskId })
 
-  const resources = await openApiRequest('POST', 'upload', query, content, options?.token)
+  const resources = await openApiRequest('POST', 'upload', query, content, options?.signal)
   if (!resources.length) throw new Error('upload api doc failed: empty response')
   const docResource = resources.find((item) => item.ResourceType === 'openapi-document') || resources[0]
   return toDocResult(docResource.ResourceName, resources)
@@ -195,7 +193,7 @@ export const WebFuzzerApiDoc: React.FC<{
       mountedRef.current = false
       if (parseTaskRef.current) {
         parseTaskRef.current.canceled = true
-        cancelOpenApiRequest(parseTaskRef.current.token)
+        parseTaskRef.current.controller.abort()
       }
     }
   }, [])
@@ -247,12 +245,12 @@ export const WebFuzzerApiDoc: React.FC<{
     task.canceled = true
     setParseStatus('canceling')
     setParseProgress((prev) => ({ ...prev, message: t('ApiDoc.canceling') }))
-    await cancelOpenApiRequest(task.token)
+    task.controller.abort()
   })
 
   const onUpload = useMemoizedFn(async () => {
     if (parseTaskRef.current) return
-    const task: ParseTask = { id: '', token: '', canceled: false }
+    const task: ParseTask = { id: '', controller: new AbortController(), canceled: false }
     parseTaskRef.current = task
     try {
       const data = await handleOpenFileSystemDialog({
@@ -265,15 +263,13 @@ export const WebFuzzerApiDoc: React.FC<{
       })
       if (data.canceled || !data.filePaths?.length) return
 
-      const token = randomString(16)
       const parseTaskId = randomString(16)
       task.id = parseTaskId
-      task.token = token
       setParseStatus('parsing')
       setParseProgress({ percent: 1, message: t('ApiDoc.parsing') })
 
       const filePath = data.filePaths[0]
-      const content = await ipcRenderer.invoke('read-file-content', filePath)
+      const content = await ipc.invoke('local', 'read-file-content', filePath)
       if (task.canceled) {
         throw new Error('openapi parse canceled')
       }
@@ -286,7 +282,7 @@ export const WebFuzzerApiDoc: React.FC<{
         overrideDomain: userDomainOverride,
         overrideIsHttps,
         parseTaskId,
-        token,
+        signal: task.controller.signal,
       })
       if (task.canceled) {
         throw new Error('openapi parse canceled')

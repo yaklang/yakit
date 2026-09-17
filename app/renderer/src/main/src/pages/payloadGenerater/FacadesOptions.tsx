@@ -1,10 +1,10 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useState, useEffect } from 'react'
 import { Form, Button } from 'antd'
 import { InputInteger, InputItem, SwitchItem } from '../../utils/inputUtil'
 import { getRemoteValue } from '../../utils/kv'
 import type { NetInterface } from '@/models/Traffic'
-const { ipcRenderer } = window.require('electron')
 export const BRIDGE_ADDR = 'yak-bridge-addr'
 export const BRIDGE_SECRET = 'yak-bridge-secret'
 interface GetTunnelServerExternalIPParams {
@@ -46,7 +46,7 @@ export const FacadeOptions: React.FC<FacadeOptionsProp> = (props) => {
       })
       .finally(() => {
         setOnLoad(false)
-        ipcRenderer.invoke('AvailableLocalAddr', {}).then((data: { Interfaces: NetInterface[] }) => {
+        ipc.invoke('grpc', 'AvailableLocalAddr', {}).then((data) => {
           const arr = (data.Interfaces || []).filter((i) => i.IP !== '127.0.0.1')
           if (arr.length === 1) {
             setParams({ ...params, ReverseHost: arr[0].IP })

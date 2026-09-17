@@ -1,3 +1,4 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
 import type React from 'react'
 import { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
 import { useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport } from 'ahooks'
@@ -389,7 +390,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
         emiter.emit(
           'editorLocalSaveToLocalList',
           JSON.stringify({
-            id: Number(res.Id) || 0,
+            id: positiveInt64(res.Id) || 0,
             name: res.ScriptName,
             uuid: res.UUID || '',
           }),

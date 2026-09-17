@@ -1,3 +1,5 @@
+import { ipc, type GrpcInput, type GrpcOutput } from '@/services/ipc'
+import { int64ToSafeNumber } from '@/utils/int64'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
@@ -19,8 +21,6 @@ import { useXTermOptions } from '@/hook/useXTermOptions/useXTermOptions'
 
 export interface DiagnoseNetworkPageProp {}
 
-const { ipcRenderer } = window.require('electron')
-
 interface DiagnoseNetworkResult {
   Title: string
   DiagnoseType: string
@@ -29,8 +29,7 @@ interface DiagnoseNetworkResult {
 }
 
 export const DiagnoseNetworkPage: React.FC<DiagnoseNetworkPageProp> = (props) => {
-  const [token, setToken] = useState(randomString(60))
-  const [dnsToken, setDNSToken] = useState(randomString(60))
+  const sessionsRef = useRef(new Map<string, AbortController>())
   const [domain, setDomain] = useState('www.example.com')
   const [loading, setLoading] = useState(false)
   const [preHop, setPreHop, GetPreHop] = useGetState(0)
@@ -41,109 +40,66 @@ export const DiagnoseNetworkPage: React.FC<DiagnoseNetworkPageProp> = (props) =>
     getTerminal: () => xtermRef.current?.terminal,
   })
 
+  const onDiagnosticData = useMemoizedFn((data: GrpcOutput<'DiagnoseNetwork'>) => {
+    if (data.DiagnoseType === 'log') {
+      writeXTerm(xtermRef, `[${data.LogLevel}]: ${data.Title} ${data.DiagnoseResult}\n`)
+    } else {
+      writeXTerm(xtermRef, `[${data.DiagnoseType}]: ${data.Title}\n ${data.DiagnoseResult}\n\n\n`)
+    }
+  })
+  const onTraceData = useMemoizedFn((data: GrpcOutput<'TraceRoute'>) => {
+    const hop = int64ToSafeNumber(data.Hop)
+    if (hop !== GetPreHop()) writeXTerm(xtermRef, `hop ${hop}\t`)
+    else if (data.Ip !== GetPreIp()) writeXTerm(xtermRef, '\t')
+    if (data.Reason) {
+      writeXTerm(xtermRef, '*\n')
+      setPreIp('*')
+    } else {
+      if (data.Ip !== GetPreIp()) writeXTerm(xtermRef, `${data.Ip}\t${data.Rtt}ms\n`)
+      setPreIp(data.Ip)
+    }
+    setPreHop(hop)
+  })
+  const begin = useMemoizedFn((api: string) => {
+    sessionsRef.current.get(api)?.abort()
+    const controller = new AbortController()
+    sessionsRef.current.set(api, controller)
+    setLoading(true)
+    yakitInfo(`[${api}] started`)
+    const finish = (error?: unknown) => {
+      if (controller.signal.aborted || sessionsRef.current.get(api) !== controller) return
+      sessionsRef.current.delete(api)
+      setLoading(sessionsRef.current.size > 0)
+      if (error) failed(`[${api}] error: ${error}`)
+      else yakitInfo(`[${api}] finished`)
+    }
+    return { token: randomString(60), signal: controller.signal, onError: finish, onEnd: () => finish() }
+  })
   const submit = useMemoizedFn((params: DiagnoseNetworkParams) => {
-    ipcRenderer.invoke('DiagnoseNetwork', params, token).then(() => {
-      setLoading(true)
-      yakitInfo('[DiagnoseNetwork] started')
-    })
+    const options = begin('DiagnoseNetwork')
+    void ipc
+      .openStream('grpc', 'DiagnoseNetwork', params, { ...options, onData: onDiagnosticData })
+      .catch(options.onError)
   })
-
-  const submitDNSDiag = useMemoizedFn((params: { Domain: string }) => {
-    ipcRenderer.invoke('DiagnoseNetworkDNS', params, token).then(() => {
-      setLoading(true)
-      yakitInfo('[DiagnoseNetworkDNS] started')
-    })
+  const submitDNSDiag = useMemoizedFn((params: GrpcInput<'DiagnoseNetworkDNS'>) => {
+    const options = begin('DiagnoseNetworkDNS')
+    void ipc
+      .openStream('grpc', 'DiagnoseNetworkDNS', params, { ...options, onData: onDiagnosticData })
+      .catch(options.onError)
   })
-
-  const submitTraceroute = useMemoizedFn((params: { Host: string }) => {
-    ipcRenderer.invoke('Traceroute', params, token + '-traceroute').then(() => {
-      setPreHop(0)
-      setPreIp('')
-      setLoading(true)
-      yakitInfo('[Traceroute] started')
-    })
+  const submitTraceroute = useMemoizedFn((params: GrpcInput<'TraceRoute'>) => {
+    setPreHop(0)
+    setPreIp('')
+    const options = begin('TraceRoute')
+    void ipc.openStream('grpc', 'TraceRoute', params, { ...options, onData: onTraceData }).catch(options.onError)
   })
-  useEffect(() => {
-    const tracerouteToken = token + '-traceroute'
-    ipcRenderer.on(
-      `${tracerouteToken}-data`,
-      async (e, data: { Ip: string; Rtt: number; Reason: string; Hop: number }) => {
-        if (data.Hop !== GetPreHop()) {
-          writeXTerm(xtermRef, `hop ${data.Hop}\t`)
-        } else {
-          if (data.Ip !== GetPreIp()) {
-            writeXTerm(xtermRef, `\t`)
-          }
-        }
-        if (data.Reason) {
-          writeXTerm(xtermRef, `*` + '\n')
-          setPreHop(data.Hop)
-          setPreIp('*')
-        } else {
-          if (data.Ip !== GetPreIp()) {
-            writeXTerm(xtermRef, `${data.Ip}\t${data.Rtt}ms` + '\n')
-          }
-          setPreHop(data.Hop)
-          setPreIp(data.Ip)
-        }
-      },
-    )
-    ipcRenderer.on(`${tracerouteToken}-error`, (e, error) => {
-      failed(`[Traceroute] error:  ${error}`)
-    })
-    ipcRenderer.on(`${tracerouteToken}-end`, (e, data) => {
-      setTimeout(() => {
-        yakitInfo('[Traceroute] finished')
-        setLoading(false)
-      }, 300)
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-Traceroute', tracerouteToken)
-      ipcRenderer.removeAllListeners(`${tracerouteToken}-data`)
-      ipcRenderer.removeAllListeners(`${tracerouteToken}-error`)
-      ipcRenderer.removeAllListeners(`${tracerouteToken}-end`)
-    }
-  }, [])
-  useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e, data: DiagnoseNetworkResult) => {
-      if (data.DiagnoseType === 'log') {
-        writeXTerm(xtermRef, `[${data.LogLevel}]: ${data.Title} ${data.DiagnoseResult}` + '\n')
-      } else {
-        writeXTerm(xtermRef, `[${data.DiagnoseType}]: ${data.Title + '\n'} ${data.DiagnoseResult + '\n'}` + '\n\n')
-      }
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      failed(`[DiagnoseNetwork] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {
-      setTimeout(() => {
-        yakitInfo('[DiagnoseNetwork] finished')
-        setLoading(false)
-      }, 300)
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-DiagnoseNetwork', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-    }
-  }, [])
-
-  useEffect(() => {
-    ipcRenderer.on(`${dnsToken}-data`, async (e, data: DiagnoseNetworkResult) => {})
-    ipcRenderer.on(`${dnsToken}-error`, (e, error) => {
-      failed(`[DiagnoseNetworkDNS] error:  ${error}`)
-    })
-    ipcRenderer.on(`${dnsToken}-end`, (e, data) => {
-      yakitInfo('[DiagnoseNetworkDNS] finished')
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-DiagnoseNetworkDNS', dnsToken)
-      ipcRenderer.removeAllListeners(`${dnsToken}-data`)
-      ipcRenderer.removeAllListeners(`${dnsToken}-error`)
-      ipcRenderer.removeAllListeners(`${dnsToken}-end`)
-    }
-  }, [])
+  useEffect(
+    () => () => {
+      for (const controller of sessionsRef.current.values()) controller.abort()
+      sessionsRef.current.clear()
+    },
+    [],
+  )
 
   return (
     <AutoCard

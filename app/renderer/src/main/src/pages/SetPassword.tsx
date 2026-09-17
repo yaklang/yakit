@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../shared/communication/window-client'
 import type React from 'react'
 import { useState } from 'react'
 import { Form } from 'antd'
@@ -10,8 +11,6 @@ import { type UserInfoProps, useYakitDynamicStatus } from '@/store'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { yakitNetwork, yakitUILayout } from '@/services/electronBridge'
-
 export interface SetPasswordProps {
   userInfo: UserInfoProps
   onCancel: () => any
@@ -48,10 +47,13 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
             success(t('SetPassword.updateSuccess'))
             onCancel()
             if (dynamicStatus.isDynamicStatus) {
-              yakitNetwork.logoutDynamicControl({ loginOut: true })
+              ipc.invoke('local', 'ForwardMainEvent', {
+                event: 'login-out-dynamic-control-callback',
+                data: { loginOut: true },
+              })
             } else {
               loginOut(userInfo)
-              yakitUILayout.requestSignOut()
+              ipc.invoke('local', 'ForwardMainEvent', { event: 'ipc-sign-out-callback' })
             }
           }
         })

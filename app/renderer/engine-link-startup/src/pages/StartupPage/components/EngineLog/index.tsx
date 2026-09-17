@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import React, { useEffect, useRef } from 'react'
 import { getReleaseEditionName } from '@/utils/envfile'
 import { xtermFit } from '@/utils/xtermUtils'
@@ -10,7 +11,6 @@ import { DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { yakitNotify } from '@/utils/notification'
 import { Tooltip } from 'antd'
-import { yakitLogs } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import styles from './EngineLog.module.scss'
@@ -41,11 +41,11 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
 
     writeToConsole(t('EngineLog.welcome', { name: getReleaseEditionName() }) + '\n')
 
-    const offLiveStdio = yakitLogs.onLiveEngineStdio((stdout) => {
+    const offLiveStdio = ipc.on('live-engine-stdio', (stdout: string) => {
       writeToConsole(stdout)
     })
 
-    const offLiveLog = yakitLogs.onLiveEngineLog(liveEngineLog)
+    const offLiveLog = ipc.on('live-engine-log', liveEngineLog)
     return () => {
       offLiveLog()
       offLiveStdio()

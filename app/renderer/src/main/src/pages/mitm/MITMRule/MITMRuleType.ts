@@ -23,7 +23,7 @@ export interface MITMContentReplacerRule {
   NoReplace: boolean
   Result: string
   EffectiveURL: string
-  Color: 'red' | 'blue' | 'green' | 'grey' | 'purple' | 'yellow' | 'orange' | 'cyan' | ''
+  Color: string
   EnableForRequest: boolean
   EnableForResponse: boolean
   EnableForBody: boolean

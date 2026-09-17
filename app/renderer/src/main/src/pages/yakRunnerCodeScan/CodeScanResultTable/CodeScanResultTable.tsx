@@ -39,7 +39,7 @@ const defSort: SortProps = {
   orderBy: 'id',
 }
 // 倒序时需要额外处理传给后端顺序
-export const verifyOrder = (pagination: Paging, AfterID?: number) => {
+export const verifyOrder = (pagination: Paging, AfterID?: string | number) => {
   // 是否将返回结果倒序
   let isReverse = false
   if (pagination.Order && ['desc', 'none'].includes(pagination.Order) && AfterID) {
@@ -70,9 +70,9 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
   const [data, setData] = useState<SyntaxFlowResult[]>([])
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
   // 最新一条数据ID
-  const maxIdRef = useRef<number>(0)
+  const maxIdRef = useRef<string | number>(0)
   // 最后一条数据ID
-  const minIdRef = useRef<number>(0)
+  const minIdRef = useRef<string | number>(0)
   // 接口是否正在请求
   const isGrpcRef = useRef<boolean>(false)
   const [currentIndex, setCurrentIndex] = useState<number>()

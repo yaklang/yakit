@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Button, Col, Row, Table, Tag, Tooltip, Checkbox } from 'antd'
@@ -26,8 +27,6 @@ const formatJson = (filterVal, jsonData) => {
     }),
   )
 }
-
-const { ipcRenderer } = window.require('electron')
 
 export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
   const [checkedURL, setCheckedURL] = useState<string[]>([])
@@ -72,7 +71,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
   })
   /** 通知软件打开管理页面 */
   const openMenu = () => {
-    ipcRenderer.invoke('open-route-page', { route: YakitRoute.DB_Ports })
+    ipc.invoke('local', 'ForwardMainEvent', { event: 'open-route-page-callback', data: { route: YakitRoute.DB_Ports } })
   }
   return (
     <Table<YakitPort>

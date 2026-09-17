@@ -1,3 +1,5 @@
+import { grpcPagingToUI, int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
@@ -15,8 +17,6 @@ import type { RagEntryTableProps, VectorStoreEntry, Paging } from './types'
 import styles from './RagEntryTable.module.scss'
 import { SearchOutlined, EyeOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 export const RagEntryTable: React.FC<RagEntryTableProps> = ({ selectedCollection, onRefresh }) => {
   const { t } = useI18nNamespaces(['components', 'yakitUi'])
@@ -44,7 +44,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({ selectedCollection
 
     setLoading(true)
     try {
-      const response = await ipcRenderer.invoke('ListVectorStoreEntries', {
+      const response = await ipc.invoke('grpc', 'ListVectorStoreEntries', {
         CollectionID: selectedCollection.ID,
         Keyword: searchKeyword || undefined,
         Pagination: pagination,
@@ -52,7 +52,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({ selectedCollection
 
       if (response && response.Entries) {
         setEntries(response.Entries)
-        setTotal(response.Total || 0)
+        setTotal(int64ToSafeNumber(response.Total || 0))
       } else {
         setEntries([])
         setTotal(0)
@@ -84,7 +84,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({ selectedCollection
     // 获取条目的完整文档内容
     if (entry.ID) {
       try {
-        const response = await ipcRenderer.invoke('GetDocumentByVectorStoreEntryID', {
+        const response = await ipc.invoke('grpc', 'GetDocumentByVectorStoreEntryID', {
           ID: entry.ID,
         })
         setEntryDocument(response.Document || null)

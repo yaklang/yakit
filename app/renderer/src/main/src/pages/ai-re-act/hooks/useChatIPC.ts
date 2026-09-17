@@ -7,31 +7,16 @@ import { useMemoizedFn } from 'ahooks'
 import type { UseChatIPCStartParams } from '@/pages/ai-agent/useContext/AIAgentContext'
 import type { YakitRouteType } from '@/enums/yakitRoute'
 import { yakitNotify } from '@/utils/notification'
-const { ipcRenderer } = window.require('electron')
 
 export function useChatIPC(route: YakitRouteType, pageId: string) {
   /**
-   * isSessionReady 已连则直接返回（不动已有监听）→ 用入参 token 挂监听 → handleStartSession
-   * prepare 异步，invoke 晚于本同步栈挂监听，不会丢流；token 不依赖 React 闭包里的 SessionID
+   * 会话控制器通过 openStream 原子建立实例和回调，组件只负责业务归属。
    */
   const onStart = useMemoizedFn(({ token, params, localSource, onLinkStart, onLinkSuccess }: UseChatIPCStartParams) => {
     if (globalSessionEngine.isSessionReady(token)) {
       yakitNotify('warning', '会话已经存在，请勿重复建立！')
       return
     }
-
-    ipcRenderer.removeAllListeners(`${token}-data`)
-    ipcRenderer.removeAllListeners(`${token}-error`)
-    ipcRenderer.removeAllListeners(`${token}-end`)
-    ipcRenderer.on(`${token}-data`, (e, res: any) => {
-      globalSessionEngine.handleGrpcOutputEvent(token, res)
-    })
-    ipcRenderer.on(`${token}-error`, (e, res: any) => {
-      globalSessionEngine.handleSessionError(token, res)
-    })
-    ipcRenderer.on(`${token}-end`, (e, res: any) => {
-      globalSessionEngine.handleSessionEnd(token, res)
-    })
 
     let cb: Parameters<ChatMultiSessionController['handleStartSession']>[1] = undefined
     if (onLinkStart || onLinkSuccess) {

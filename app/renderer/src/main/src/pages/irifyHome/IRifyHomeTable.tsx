@@ -19,7 +19,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { getGroupNamesTotal } from '../yakRunnerCodeScan/utils'
 
 export interface IRifyHomeTableRow {
-  ID: number
+  ID: string | number
   ProjectName: string
   Language: string
   Description: string

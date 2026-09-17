@@ -98,7 +98,7 @@ describe('trySettleTaskPlanEnd / handleTaskPlanEnd', () => {
       id: nodeId,
       type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
       chatType: 'task',
-      Timestamp: 1,
+      Timestamp: '1',
       AIService: '',
       AIModelName: '',
       data: { status: AITaskStatus.inProgress, loadingTitle: '' },

@@ -1,3 +1,4 @@
+import type { GrpcInput } from '@/services/ipc'
 import type { ForwardedRef } from 'react'
 import { type Paging } from '@/utils/yakQueryHTTPFlow'
 import { type SyntaxFlowResult } from '../yakRunnerCodeScan/YakRunnerCodeScanType'
@@ -71,7 +72,8 @@ export interface RuleDebugAuditListProps {
 export interface RuleUploadAndDownloadModalProps {
   getContainer?: string | HTMLElement | getContainerFunc | false
   type: string
-  apiKey: string
+  apiKey: 'SyntaxFlowRuleToOnline' | 'DownloadSyntaxFlowRule'
+  params: GrpcInput<'SyntaxFlowRuleToOnline'> | GrpcInput<'DownloadSyntaxFlowRule'>
   token: string
   onCancel: () => void
   onSuccess: () => void
@@ -164,7 +166,7 @@ export interface SyntaxFlowRuleFilter {
   FilterRuleKind?: FilterRuleKind // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
   FilterLibRuleKind?: FilterLibRuleKind // 是否显示Lib规则
 
-  Ids?: number[]
+  Ids?: (string | number)[]
 }
 export interface QuerySyntaxFlowRuleRequest {
   Filter?: SyntaxFlowRuleFilter
@@ -172,7 +174,7 @@ export interface QuerySyntaxFlowRuleRequest {
 }
 
 export interface SyntaxFlowRule {
-  Id: number
+  Id: string | number
 
   RuleName: string
   Content: string

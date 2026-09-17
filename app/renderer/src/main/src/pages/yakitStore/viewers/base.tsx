@@ -26,8 +26,6 @@ import moment from 'moment'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { TabPane } = PluginTabs
-const { ipcRenderer } = window.require('electron')
-
 export interface StatusCardProps {
   Id: string
   Data: string

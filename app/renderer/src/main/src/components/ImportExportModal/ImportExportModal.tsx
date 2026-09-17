@@ -1,3 +1,4 @@
+import { ipc, type GrpcApiOfKind, type GrpcInput, type GrpcOutput } from '@/services/ipc'
 import { memo, useEffect, useMemo, useRef } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitModal, type YakitModalProp } from '@/components/yakitUI/YakitModal/YakitModal'
@@ -8,8 +9,6 @@ import { useMemoizedFn, useSafeState } from 'ahooks'
 import { Form, type FormInstance, type FormProps } from 'antd'
 import styles from './ImportExportModal.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 const ImportExportModalSize = {
   export: {
@@ -27,31 +26,31 @@ const ImportExportModalSize = {
 type IsProgressFinished<P> = (progress: P) => boolean
 type GetProgressValue<P> = (progress: P) => number
 
-export type ImportExportModalExtra = {
+export type ImportExportModalExtra<A extends GrpcApiOfKind<'serverStream'> = GrpcApiOfKind<'serverStream'>> = {
   hint: boolean
 } & {
   title: string
   type: 'export' | 'import'
-  apiKey: string
+  apiKey: A
 }
-interface ImportExportModalProps<F, R, P> {
+interface ImportExportModalProps<F, A extends GrpcApiOfKind<'serverStream'>> {
   getContainer?: HTMLElement
-  extra: ImportExportModalExtra
+  extra: ImportExportModalExtra<A>
   hasDesc?: boolean
   modelProps?: YakitModalProp
   formProps?: FormProps
   renderForm: (form: FormInstance) => React.ReactNode
   onBeforeSubmit?: (values: F) => Promise<void> | void
-  onSubmitForm: (values: F) => R
-  getProgressValue: GetProgressValue<P>
-  isProgressFinished: IsProgressFinished<P>
-  getlogListInfo?: (stream: P[]) => LogListInfo[]
+  onSubmitForm: (values: F) => GrpcInput<A>
+  getProgressValue: GetProgressValue<GrpcOutput<A>>
+  isProgressFinished: IsProgressFinished<GrpcOutput<A>>
+  getlogListInfo?: (stream: GrpcOutput<A>[]) => LogListInfo[]
   onFinished: (result: boolean) => void
 }
 /**
  * 通用导入导出组件，参考ForgeName组件
  */
-const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>) => {
+const ImportExportModalInner = <F, A extends GrpcApiOfKind<'serverStream'>>(props: ImportExportModalProps<F, A>) => {
   const {
     getContainer,
     extra,
@@ -68,15 +67,20 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
   } = props
   const { t, i18nRefresh } = useI18nNamespaces(['components', 'yakitUi'])
 
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<F>()
 
   const token = useRef('')
+  const controllerRef = useRef<AbortController>()
+  const submittingRef = useRef(false)
   const [showProgressStream, setShowProgressStream] = useSafeState(false)
   const timeRef = useRef<ReturnType<typeof setTimeout>>()
-  const importExportStreamRef = useRef<P[]>([])
-  const [progressStream, setProgressStream] = useSafeState<P[]>([])
+  const importExportStreamRef = useRef<GrpcOutput<A>[]>([])
+  const [progressStream, setProgressStream] = useSafeState<GrpcOutput<A>[]>([])
 
   const handleReset = useMemoizedFn(() => {
+    controllerRef.current?.abort()
+    submittingRef.current = false
+    clearInterval(timeRef.current)
     token.current = ''
     setShowProgressStream(false)
     timeRef.current = undefined
@@ -85,26 +89,48 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
   })
 
   const onSubmit = useMemoizedFn(async () => {
+    if (submittingRef.current) return
+    submittingRef.current = true
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const flush = () => setProgressStream([...importExportStreamRef.current])
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      clearInterval(timeRef.current)
+      flush()
+      yakitNotify('error', `[${extra.apiKey}] error: ${error}`)
+    }
     try {
-      const values = form.getFieldsValue() as F
+      const values = await form.validateFields()
       await onBeforeSubmit?.(values)
+      if (controller.signal.aborted) return
       const params = onSubmitForm(values)
       token.current = randomString(40)
-      handleListeners()
-      await ipcRenderer.invoke(extra.apiKey, params, token.current)
       setShowProgressStream(true)
-    } catch (e) {
-      yakitNotify('error', `[${extra.apiKey}] error:  ${e}`)
+      timeRef.current = setInterval(flush, 500)
+      await ipc.openStream('grpc', extra.apiKey, params, {
+        token: token.current,
+        signal: controller.signal,
+        onData(data) {
+          if (!controller.signal.aborted) importExportStreamRef.current.unshift(data)
+        },
+        onError,
+        onEnd() {
+          if (controller.signal.aborted) return
+          clearInterval(timeRef.current)
+          flush()
+          yakitNotify('info', `[${extra.apiKey}] finished`)
+        },
+      })
+    } catch (error) {
+      onError(error)
+    } finally {
+      if (controllerRef.current === controller) submittingRef.current = false
     }
   })
 
   const onCancelStream = useMemoizedFn(() => {
-    if (!token.current) return
-
-    ipcRenderer.invoke(`cancel-${extra.apiKey}`, token.current)
-    ipcRenderer.removeAllListeners(`${token.current}-data`)
-    ipcRenderer.removeAllListeners(`${token.current}-error`)
-    ipcRenderer.removeAllListeners(`${token.current}-end`)
+    controllerRef.current?.abort()
     clearInterval(timeRef.current)
   })
 
@@ -134,26 +160,6 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
           : t('ImportExportModal.importing')
         : t('ImportExportModal.importing')
   }, [extra.type, progressStream.length, i18nRefresh])
-
-  const handleListeners = useMemoizedFn(() => {
-    if (!token.current) {
-      return
-    }
-    const typeTitle = extra.apiKey
-    const updateImportExportHTTPFlowStream = () => {
-      setProgressStream([...importExportStreamRef.current])
-    }
-    timeRef.current = setInterval(updateImportExportHTTPFlowStream, 500)
-    ipcRenderer.on(`${token.current}-data`, async (_, data: P) => {
-      importExportStreamRef.current.unshift(data)
-    })
-    ipcRenderer.on(`${token.current}-error`, (_, error) => {
-      yakitNotify('error', `[${typeTitle}] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token.current}-end`, () => {
-      yakitNotify('info', `[${typeTitle}] finished`)
-    })
-  })
 
   const onCancel = useMemoizedFn(() => {
     onFinished(false)
@@ -265,8 +271,8 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     </>
   )
 }
-const ImportExportModal = memo(<F, R, P>(props: ImportExportModalProps<F, R, P>) => (
+const ImportExportModal = memo(<F, A extends GrpcApiOfKind<'serverStream'>>(props: ImportExportModalProps<F, A>) => (
   <ImportExportModalInner {...props} />
-)) as <F, R, P>(props: ImportExportModalProps<F, R, P>) => JSX.Element
+)) as <F, A extends GrpcApiOfKind<'serverStream'>>(props: ImportExportModalProps<F, A>) => JSX.Element
 
 export default ImportExportModal

@@ -1,3 +1,6 @@
+import { int64ToSafeNumber } from '@/utils/int64'
+import type { GrpcOutput } from '@/services/ipc'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Form } from 'antd'
@@ -10,8 +13,6 @@ import { failed, info } from '@/utils/notification'
 import { debugYakitModal, showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { useMemoizedFn } from 'ahooks'
 import { showByCursorMenu } from '@/utils/showByCursor'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface ChaosMakerOperatorsProp {
   running?: boolean
@@ -44,10 +45,10 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
   const [availableAddrs, setAvailableAddrs] = useState<IsRemoteAddrAvailableResponse[]>([])
 
   const updateAvailableAddrs = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('GetRegisteredVulinboxAgent', {})
-      .then((data: { Agents: IsRemoteAddrAvailableResponse[] }) => {
-        setAvailableAddrs(data.Agents)
+    ipc
+      .invoke('grpc', 'GetRegisteredVulinboxAgent', {})
+      .then((data) => {
+        setAvailableAddrs(data.Agents.map(remoteAddrForUI))
         // debugYakitModal(data)
       })
       .catch((e) => {
@@ -58,10 +59,10 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
   })
 
   const debugUpdateAvailableAddrs = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('GetRegisteredVulinboxAgent', {})
-      .then((data: { Agents: IsRemoteAddrAvailableResponse[] }) => {
-        // setAvailableAddrs(data.Agents)
+    ipc
+      .invoke('grpc', 'GetRegisteredVulinboxAgent', {})
+      .then((data) => {
+        // setAvailableAddrs(data.Agents.map(remoteAddrForUI))
         debugYakitModal(data)
       })
       .catch((e) => {
@@ -113,8 +114,8 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
                         {
                           title: '断开并移除Agent',
                           onClick: () => {
-                            ipcRenderer
-                              .invoke('DisconnectVulinboxAgent', {
+                            ipc
+                              .invoke('grpc', 'DisconnectVulinboxAgent', {
                                 Addr: i.Addr,
                               })
                               .then(() => {
@@ -307,9 +308,10 @@ export const AddBASAgent: React.FC<AddBASAgentProp> = (props) => {
         e.preventDefault()
 
         setLoading(true)
-        ipcRenderer
-          .invoke('IsRemoteAddrAvailable', params)
-          .then((data: IsRemoteAddrAvailableResponse) => {
+        ipc
+          .invoke('grpc', 'IsRemoteAddrAvailable', params)
+          .then(remoteAddrForUI)
+          .then((data) => {
             setResponse(data)
             if (data && !!props.onFinished) {
               props.onFinished(data)
@@ -343,4 +345,13 @@ export const AddBASAgent: React.FC<AddBASAgentProp> = (props) => {
       </Form.Item>
     </Form>
   )
+}
+
+function remoteAddrForUI(value: GrpcOutput<'IsRemoteAddrAvailable'>): IsRemoteAddrAvailableResponse {
+  return {
+    ...value,
+    PingCount: int64ToSafeNumber(value.PingCount),
+    RequestCount: int64ToSafeNumber(value.RequestCount),
+    LastActiveAt: int64ToSafeNumber(value.LastActiveAt),
+  }
 }

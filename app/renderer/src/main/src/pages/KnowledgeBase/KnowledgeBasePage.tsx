@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { useEffect, useMemo, useRef, type FC } from 'react'
 
 import { useAsyncEffect, useDebounceFn, useInViewport, useRequest, useSafeState, useUpdateEffect } from 'ahooks'
@@ -8,7 +9,7 @@ import { failed } from '@/utils/notification'
 
 import KnowledgeBaseContent from './compoment/KnowledgeBaseContent'
 
-import { compareKnowledgeBaseChangeList } from './utils'
+import { compareKnowledgeBaseChangeList, mergeKnowledgeBaseList } from './utils'
 
 import { useKnowledgeBase } from './hooks/useKnowledgeBase'
 
@@ -21,8 +22,6 @@ import type { KnowledgeBaseTableHeaderProps } from './compoment/KnowledgeBaseTab
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { isForcedSetAIModal } from '../ai-agent/aiModelList/utils'
 import { useCheckKnowledgePlugin } from './hooks/useCheckKnowledgePlugin'
-
-const { ipcRenderer } = window.require('electron')
 
 const KnowledgeBase: FC = () => {
   const apiRef = useRef<KnowledgeBaseTableHeaderProps['api']>()
@@ -59,14 +58,14 @@ const KnowledgeBase: FC = () => {
     loading: existsKnowledgeLoading,
   } = useRequest(
     async (Keyword?: string) => {
-      const result: KnowledgeBaseContentProps = await ipcRenderer.invoke('GetKnowledgeBase', {
+      const result: KnowledgeBaseContentProps = await ipc.invoke('grpc', 'GetKnowledgeBase', {
         Keyword,
         // OnlyCreatedFromUI: true,
-        Pagination: { Limit: 9999, Page: 1, OrderBy: 'updated_at', Sort: 'desc' },
+        Pagination: { Limit: 9999, Page: 1, OrderBy: 'updated_at', Order: 'desc' },
       })
       const { KnowledgeBases } = result
 
-      const resultData = KnowledgeBases?.map((it) => ({
+      const resultData = mergeKnowledgeBaseList(KnowledgeBases || [], knowledgeBases).map((it) => ({
         ...createKnwledgeDataRef.current,
         ...it,
       }))

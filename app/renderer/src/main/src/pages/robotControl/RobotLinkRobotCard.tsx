@@ -9,17 +9,9 @@ import { yakitNotify } from '@/utils/notification'
 import type { RobotLinkInfo } from './RobotBoundPanel'
 import type { RobotChannelType } from './RobotControl'
 import { RobotQrCodePlaceholder } from './RobotQrCodePlaceholder'
-import {
-  cancelIMOnboarding,
-  type IMBotConfigLike,
-  type IMPlatform,
-  onIMOnboardingData,
-  onIMOnboardingEnd,
-  onIMOnboardingError,
-  saveIMBot,
-  startIMOnboarding,
-} from './api'
+import { type IMBotConfigLike, type IMPlatform, saveIMBot } from './api'
 import styles from './RobotControl.module.scss'
+import { ipc } from '@/services/ipc'
 
 const QR_REFRESH_SECONDS = 600
 
@@ -42,8 +34,7 @@ export const RobotLinkRobotCard: React.FC<RobotLinkRobotCardProps> = (props) => 
   const [qrImage, setQrImage] = useState<string>('')
   const [scanStatus, setScanStatus] = useState('')
   const [onboarding, setOnboarding] = useState(false)
-  const cleanupRef = useRef<(() => void)[]>([])
-  const tokenRef = useRef('')
+  const onboardingController = useRef<AbortController>()
 
   const hasSavedCredentials = (value?: IMBotConfigLike) => {
     return !!value?.Platform && !!value?.AppId && !!value?.AppSecret
@@ -55,14 +46,9 @@ export const RobotLinkRobotCard: React.FC<RobotLinkRobotCardProps> = (props) => 
     return value === 'feishu' || value === 'dingtalk'
   }
 
-  const cleanupOnboarding = useMemoizedFn((cancel = false) => {
-    cleanupRef.current.forEach((fn) => fn())
-    cleanupRef.current = []
-    const token = tokenRef.current
-    tokenRef.current = ''
-    if (cancel && token) {
-      cancelIMOnboarding(token).catch(() => {})
-    }
+  const cleanupOnboarding = useMemoizedFn((_cancel = false) => {
+    onboardingController.current?.abort()
+    onboardingController.current = undefined
   })
 
   const buildLinkInfo = useMemoizedFn((bot: IMBotConfigLike): RobotLinkInfo => {
@@ -88,68 +74,79 @@ export const RobotLinkRobotCard: React.FC<RobotLinkRobotCardProps> = (props) => 
     }
     cleanupOnboarding(true)
     const token = `im-ob-${channel}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    tokenRef.current = token
+    const controller = new AbortController()
+    onboardingController.current = controller
     setScanVisible(true)
     setOnboarding(true)
     setQrImage('')
     setCountdown(QR_REFRESH_SECONDS)
     setScanStatus('正在创建二维码...')
 
-    const offData = onIMOnboardingData(token, async (ev) => {
-      const state = ev?.State || ''
-      const msg = ev?.Message || ''
-      if (state === 'qr') {
-        setQrImage(getQrImageValue(ev))
-        setScanStatus(msg || '等待扫码确认')
-      } else if (state === 'pending') {
-        setScanStatus(msg || '等待扫码确认')
-      } else if (state === 'success') {
-        const bot = ev.Bot
-        if (!bot) {
-          setScanStatus('扫码成功，但未返回机器人凭据')
-          setOnboarding(false)
-          return
-        }
-        try {
-          const botForSave = { ...bot, Enabled: bot.Enabled !== false }
-          const saved = await saveIMBot(botForSave)
-          const nextBot = saved?.Bot || botForSave
-          onLinkInfoChange?.(buildLinkInfo(nextBot), nextBot)
-          setScanVisible(false)
-          setQrImage('')
-          setScanStatus('')
-          yakitNotify('success', '机器人绑定成功')
-        } catch (e) {
-          setScanStatus(`保存机器人失败：${e}`)
-          yakitNotify('error', `保存机器人失败：${e}`)
-        } finally {
-          setOnboarding(false)
-          cleanupOnboarding(false)
-        }
-      } else if (state === 'expired') {
-        setScanStatus(msg || '二维码已过期，请刷新')
-        setOnboarding(false)
-        cleanupOnboarding(false)
-      } else if (state === 'error') {
-        setScanStatus(msg || '扫码绑定失败')
-        setOnboarding(false)
-        cleanupOnboarding(false)
-      }
-    })
-    const offEnd = onIMOnboardingEnd(token, () => {
-      setOnboarding(false)
-      cleanupOnboarding(false)
-    })
-    const offErr = onIMOnboardingError(token, (err) => {
-      setScanStatus(typeof err === 'string' ? err : (err as any)?.message || `${err}`)
-      setOnboarding(false)
-      cleanupOnboarding(false)
-    })
-    cleanupRef.current = [offData, offEnd, offErr]
-
     try {
-      await startIMOnboarding(token, channel)
+      await ipc.openStream(
+        'grpc',
+        'StartIMOnboarding',
+        { Platform: channel },
+        {
+          token,
+          signal: controller.signal,
+          async onData(ev) {
+            const state = ev?.State || ''
+            const msg = ev?.Message || ''
+            if (state === 'qr') {
+              setQrImage(getQrImageValue(ev))
+              setScanStatus(msg || '等待扫码确认')
+            } else if (state === 'pending') {
+              setScanStatus(msg || '等待扫码确认')
+            } else if (state === 'success') {
+              const bot = ev.Bot
+              if (!bot) {
+                setScanStatus('扫码成功，但未返回机器人凭据')
+                setOnboarding(false)
+                return
+              }
+              try {
+                const botForSave = { ...bot, Enabled: bot.Enabled !== false }
+                const saved = await saveIMBot(botForSave)
+                if (controller.signal.aborted) return
+                const nextBot = saved?.Bot || botForSave
+                onLinkInfoChange?.(buildLinkInfo(nextBot), nextBot)
+                setScanVisible(false)
+                setQrImage('')
+                setScanStatus('')
+                yakitNotify('success', '机器人绑定成功')
+              } catch (e) {
+                if (controller.signal.aborted) return
+                setScanStatus(`保存机器人失败：${e}`)
+                yakitNotify('error', `保存机器人失败：${e}`)
+              } finally {
+                if (controller.signal.aborted) return
+                setOnboarding(false)
+                cleanupOnboarding(false)
+              }
+            } else if (state === 'expired') {
+              setScanStatus(msg || '二维码已过期，请刷新')
+              setOnboarding(false)
+              cleanupOnboarding(false)
+            } else if (state === 'error') {
+              setScanStatus(msg || '扫码绑定失败')
+              setOnboarding(false)
+              cleanupOnboarding(false)
+            }
+          },
+          onEnd() {
+            setOnboarding(false)
+            cleanupOnboarding()
+          },
+          onError(error) {
+            setScanStatus(error.message)
+            setOnboarding(false)
+            cleanupOnboarding()
+          },
+        },
+      )
     } catch (e) {
+      if (controller.signal.aborted) return
       setScanStatus(`${e}`)
       setOnboarding(false)
       cleanupOnboarding(false)

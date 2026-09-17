@@ -25,8 +25,6 @@ import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/Yaki
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 const { YakitPanel } = YakitCollapse
-const { ipcRenderer } = window.require('electron')
-
 export interface MITMFiltersProp {
   filterType: FilterType
   filter?: MITMFilterSchema

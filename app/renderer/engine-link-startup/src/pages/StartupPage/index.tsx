@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../shared/communication/window-client'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
@@ -71,7 +72,6 @@ import { SolidMemfitFontLogoIcon } from '@yakit-libs/yakit-ui-icons/oldicon/Soli
 import { SolidYakitFontLogoIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidYakitFontLogoIcon'
 import { useTheme } from '@/hooks/useTheme'
 import { SoftwareBasics } from './components/SoftwareBasics'
-import { yakitApp, yakitEngine } from '@/utils/electronBridge'
 import { useYakitStatus } from '@/hooks/useYakitStatus'
 import { type Lange, normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './index.module.scss'
@@ -194,27 +194,33 @@ export const StartupPage: React.FC = () => {
   })
 
   const getCachedLocalModePort = async (): Promise<number | undefined> => {
+    const readPort = async (key: string) => {
+      const value = await getLocalValue(key)
+      const port =
+        typeof value === 'number' ? value : typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : NaN
+      return Number.isInteger(port) && port > 0 && port <= 65535 ? port : undefined
+    }
     if (isCommunityEdition()) {
       // CE
       if (isCommunityIRify()) {
-        return getLocalValue(LocalGVS.IrifyPort)
+        return readPort(LocalGVS.IrifyPort)
       } else if (isCommunityMemfit()) {
-        return getLocalValue(LocalGVS.MemfitPort)
+        return readPort(LocalGVS.MemfitPort)
       } else {
-        return getLocalValue(LocalGVS.YakitPort)
+        return readPort(LocalGVS.YakitPort)
       }
     } else if (isEnpriTrace()) {
       // EE
       if (isEnpriTraceIRify()) {
-        return getLocalValue(LocalGVS.IrifyEEPort)
+        return readPort(LocalGVS.IrifyEEPort)
       } else if (isMemfit()) {
         return undefined
       } else {
-        return getLocalValue(LocalGVS.YakitEEPort)
+        return readPort(LocalGVS.YakitEEPort)
       }
     } else if (isEnpriTraceAgent()) {
       // SE
-      return getLocalValue(LocalGVS.SEPort)
+      return readPort(LocalGVS.SEPort)
     }
   }
 
@@ -348,7 +354,7 @@ export const StartupPage: React.FC = () => {
     stoppingOwnedEngineRef.current = true
     setOwnedEngineCleanupBusy(true)
     try {
-      const result = await yakitEngine.cancelAllTasks()
+      const result = await ipc.invoke('local', 'cancel-all-tasks', {})
       if (!result.ok) {
         showStopOwnedEngineError('process_error')
         return false
@@ -500,8 +506,8 @@ export const StartupPage: React.FC = () => {
 
   // 获取更多Yaklang引擎版本
   const fetchMoreYaklangLastVersion = useMemoizedFn(() => {
-    yakitEngine
-      .fetchYaklangVersionList()
+    ipc
+      .invoke('local', 'fetch-yaklang-version-list', {})
       .then((data: string) => {
         const arr = data.split('\n').filter((v) => v)
         const devPrefix: string[] = []
@@ -528,12 +534,12 @@ export const StartupPage: React.FC = () => {
     errCallback: () => void,
   ) => {
     try {
-      const res = await yakitEngine.verifyYakEngineVersion(version)
+      const res = await ipc.invoke('local', 'yak-engine-version-exists-and-correctness', version)
       if (res === true) {
         // 清空主进程yaklang版本缓存
-        yakitEngine.clearLocalYaklangVersionCache()
-        yakitEngine
-          .installYakEngine(version)
+        ipc.invoke('local', 'clear-local-yaklang-version-cache', {})
+        ipc
+          .invoke('local', 'install-yak-engine', version)
           .then(() => {
             yakitNotify('info', t('StartupPage.local_engine_version_found_install'))
             yakitNotify('success', t('StartupPage.install_success_restart_hint', { name: getReleaseEditionName() }))
@@ -1069,7 +1075,7 @@ export const StartupPage: React.FC = () => {
    * 启动引擎进程的监听，用于显示启动进程错误时的报错信息
    */
   useEffect(() => {
-    const offStartEngineError = yakitEngine.onStartYaklangEngineError((error: string) => {
+    const offStartEngineError = ipc.on('start-yaklang-engine-error', (error: string) => {
       setCheckLog((arr) => arr.concat([`${error}`]))
     })
     return () => {
@@ -1086,13 +1092,13 @@ export const StartupPage: React.FC = () => {
   // 引擎连接成功发送数据到主界面
   useEffect(() => {
     if (engineLink && getYakitStatus() === 'link' && getCredential().Port && !isStopSend.current) {
-      yakitApp.completeEngineLink({ credential: getCredential() })
+      ipc.invoke('local', 'engineLinkWin-done', { credential: getCredential() })
     }
   }, [engineLink, yakitStatus])
 
   // 主界面远程连接引擎更新认证信息
   useEffect(() => {
-    const offCredentialUpdate = yakitApp.onCredentialUpdate((data) => {
+    const offCredentialUpdate = ipc.on('from-win-updateCredential', (data: CredentialUpdatePayload) => {
       const credential = data.credential
       setCredential(credential)
       onSetEngineMode(credential.Mode)
@@ -1132,7 +1138,7 @@ export const StartupPage: React.FC = () => {
             breakHandleRef.current = false
             cancelCountdownLinkRef.current = false
             // 清空主进程yaklang版本缓存
-            yakitEngine.clearLocalYaklangVersionCache()
+            ipc.invoke('local', 'clear-local-yaklang-version-cache', {})
           })
           .catch(() => {})
 
@@ -1147,18 +1153,18 @@ export const StartupPage: React.FC = () => {
       }
     } else {
       // 清空主进程yaklang版本缓存
-      yakitEngine.clearLocalYaklangVersionCache()
+      ipc.invoke('local', 'clear-local-yaklang-version-cache', {})
     }
   }, [engineLink])
 
   // 主界面发送有关引擎操作的信息到连接界面
   useEffect(() => {
-    const offFromMainWindow = yakitApp.onFromMainWindow((data) => {
+    const offFromMainWindow = ipc.on('from-win', (data: FromMainWindowPayload) => {
       const type = data.yakitStatus
       if (type) {
         if (!isEnpriTrace()) {
           // 重新获取语言
-          yakitApp.getYakitHomeConfig().then((config) => {
+          ipc.invoke('local', 'get-yakit-home-config', {}).then((config) => {
             const lang = normalizeLang(config.softLange as Lange)
             i18n.changeLanguage(lang)
           })

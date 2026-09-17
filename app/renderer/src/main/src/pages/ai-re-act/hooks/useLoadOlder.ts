@@ -82,7 +82,7 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   }
 
   /** 树外（gRPC）是否还有更旧历史 */
-  const fetchHasMore = useMemoizedFn(() => !!sessionId && rawData.grpcOffset > 0)
+  const fetchHasMore = useMemoizedFn(() => !!sessionId && rawData.grpcOffset !== '0')
 
   const loadMore = useMemoizedFn(() => {
     if (sessionId) globalSessionEngine.requestRecoveryHistory(sessionId)

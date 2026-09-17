@@ -1,7 +1,7 @@
 // 知识库相关类型定义
 
 export interface KnowledgeBase {
-  ID: number
+  ID: string
   KnowledgeBaseName: string
   KnowledgeBaseDescription: string
   KnowledgeBaseType: string
@@ -10,8 +10,8 @@ export interface KnowledgeBase {
 }
 
 export interface KnowledgeBaseEntry {
-  ID: number
-  KnowledgeBaseId: number
+  ID: string
+  KnowledgeBaseId: string
   HiddenIndex: string
   KnowledgeTitle: string
   KnowledgeType: string
@@ -33,7 +33,7 @@ export interface KnowledgeBaseFormData {
 }
 
 export interface KnowledgeEntryFormData {
-  KnowledgeBaseID: number
+  KnowledgeBaseID: string
   KnowledgeTitle: string
   KnowledgeType: string
   ImportanceScore: number
@@ -45,7 +45,7 @@ export interface KnowledgeEntryFormData {
 }
 
 export interface SearchKnowledgeEntryParams {
-  KnowledgeBaseId: number
+  KnowledgeBaseId: string
   Keyword?: string
   Pagination: {
     Page: number
@@ -69,7 +69,7 @@ export interface Pagination {
 
 // 获取知识库请求参数
 export interface GetKnowledgeBaseRequest {
-  KnowledgeBaseId?: number
+  KnowledgeBaseId?: string
   Keyword?: string
   Pagination?: Pagination
 }
@@ -89,7 +89,7 @@ export interface StreamStatus {
 }
 
 export interface KnowledgeBaseListProps {
-  selectedKbId?: number
+  selectedKbId?: string
   onSelectKb: (kb: KnowledgeBase) => void
   onRefresh: () => void
   onOpenQA?: (kb: KnowledgeBase, queryAllCollectionsDefault: boolean) => void
@@ -104,7 +104,7 @@ export interface KnowledgeEntryTableProps {
 export interface QueryKnowledgeBaseByAIRequest {
   Query: string
   EnhancePlan: string
-  KnowledgeBaseID: number
+  KnowledgeBaseID: string
   QueryAllCollections: boolean
 }
 

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef } from 'react'
 import { randomString } from '@/utils/randomUtil'
@@ -8,7 +9,6 @@ import { writeXTerm, xtermFit } from '@/utils/xtermUtils'
 import { XTerm } from 'xterm-for-react'
 import ReactResizeDetector from 'react-resize-detector'
 import { useXTermOptions } from '@/hook/useXTermOptions/useXTermOptions'
-import { yakitEngine, yakitStream } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface EngineConsoleProp {}
@@ -27,29 +27,38 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     }
 
     const token = randomString(40)
-    const offData = yakitStream.onData(token, async (data: ExecResult) => {
-      try {
-        writeXTerm(xtermRef, Uint8ArrayToString(data.Raw) + '\r\n')
-      } catch (e) {
-        console.info(e)
-      }
-    })
-    const offError = yakitStream.onError(token, (error) => {
-      failed(`[AttachCombinedOutput] error:  ${error}`)
-    })
-    const offEnd = yakitStream.onEnd(token, () => {
-      info('[AttachCombinedOutput] finished')
-    })
-
-    yakitEngine.attachCombinedOutput({}, token).then(() => {
-      info(t('EngineConsole.monitorStarted'))
-    })
-
+    const controller = new AbortController()
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      failed(`[AttachCombinedOutput] error: ${error}`)
+    }
+    info(t('EngineConsole.monitorStarted'))
+    void ipc
+      .openStream(
+        'grpc',
+        'AttachCombinedOutput',
+        {},
+        {
+          token,
+          signal: controller.signal,
+          onData(data) {
+            if (controller.signal.aborted) return
+            try {
+              writeXTerm(xtermRef, Uint8ArrayToString(data.Raw) + '\r\n')
+            } catch (e) {
+              console.info(e)
+            }
+          },
+          onError,
+          onEnd() {
+            if (controller.signal.aborted) return
+            info('[AttachCombinedOutput] finished')
+          },
+        },
+      )
+      .catch(onError)
     return () => {
-      yakitStream.cancel('AttachCombinedOutput', token)
-      offData()
-      offError()
-      offEnd()
+      controller.abort()
     }
   }, [xtermRef])
 

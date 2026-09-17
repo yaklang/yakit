@@ -1,6 +1,5 @@
+import { requestYakURL } from '@/pages/yakURLTree/grpc'
 import type { RequestYakURLResponse } from '../yakURLTree/data'
-const { ipcRenderer } = window.require('electron')
-
 /**
  * @name 漏洞树获取
  */
@@ -25,7 +24,7 @@ export const grpcFetchHoleTree: (path: string, search: string) => Promise<Reques
       },
     }
     try {
-      const res: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const res: RequestYakURLResponse = await requestYakURL(params)
       // console.log("RequestYakURLResponse---", params, res)
       resolve(res)
     } catch (error) {

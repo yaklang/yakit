@@ -1,3 +1,5 @@
+import { int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { showModal } from '@/utils/showModal'
@@ -8,7 +10,6 @@ import { PlusOutlined, QuestionOutlined, ReloadOutlined } from '@ant-design/icon
 import { formatTimestamp } from '@/utils/timeUtil'
 import { info } from '@/utils/notification'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { yakitProcessEnv } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import i18n from '@/i18n/i18n'
@@ -46,8 +47,8 @@ const NewEnvKeyForm: React.FC<NewEnvKeyFormProp> = (props) => {
         e.preventDefault()
 
         setLoading(true)
-        yakitProcessEnv
-          .setKey(params)
+        ipc
+          .invoke('grpc', 'SetProcessEnvKey', params)
           .then(() => {
             props.onClose()
           })
@@ -90,8 +91,12 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
 
   const updateKeys = useMemoizedFn(() => {
     setLoading(true)
-    yakitProcessEnv
-      .getAllKeys()
+    ipc
+      .invoke('grpc', 'GetAllProcessEnvKey', {})
+      .then((value) => ({
+        ...value,
+        Results: value.Results.map((row) => ({ ...row, ExpiredAt: int64ToSafeNumber(row.ExpiredAt) })),
+      }))
       .then((e: { Results: EnvKey[] }) => {
         setKeys(e.Results)
       })
@@ -189,7 +194,7 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
                 <YakitPopconfirm
                   title={t('ConfigYaklangEnvironment.deleteThisEnvironmentVariable')}
                   onConfirm={() => {
-                    yakitProcessEnv.deleteKey({ Key: key.Key }).then(() => {
+                    ipc.invoke('grpc', 'DelKey', { Key: key.Key }).then(() => {
                       info(t('YakitNotification.deleted'))
                       updateKeys()
                     })

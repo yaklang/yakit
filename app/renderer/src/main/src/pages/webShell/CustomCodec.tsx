@@ -1,3 +1,5 @@
+import { yakScriptForUI } from '@/pages/invoker/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import httpQueryStyles from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig.module.scss'
 import matcherStyles from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtraction.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -36,8 +38,6 @@ import { useMenuHeight } from '@/store/menuHeight'
 import { WebsiteGV } from '@/enums/website'
 
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
-
-const { ipcRenderer } = window.require('electron')
 
 interface CustomCodecListProps {
   customCodecList: YakScript[]
@@ -171,13 +171,14 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
       warn('请输入插件内容/选择类型!')
       return
     }
-    ipcRenderer
-      .invoke('SaveYakScript', { ...currCodec, Type: 'codec' })
+    ipc
+      .invoke('grpc', 'SaveYakScript', { ...currCodec, Type: 'codec' })
+      .then(yakScriptForUI)
       .then((data) => {
         success(`创建 / 保存 ${title} 脚本成功`)
         setCurrCodec(data)
         setOnchange(!onchange)
-        setTimeout(() => ipcRenderer.invoke('change-main-menu'), 100)
+        setTimeout(() => ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-new-main-menu' }), 100)
       })
       .catch((e: any) => {
         failed(`保存 Yak ${title} 失败: ${e}`)

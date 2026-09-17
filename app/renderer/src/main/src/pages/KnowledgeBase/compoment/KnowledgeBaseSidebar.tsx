@@ -1,3 +1,4 @@
+import { useDownloadTasks } from '../hooks/useDownloadTasks'
 import React, { type Dispatch, type ReactNode, type SetStateAction, useEffect, useRef, useState, type FC } from 'react'
 import { useAsyncEffect, useMemoizedFn, useRequest, useSafeState } from 'ahooks'
 
@@ -18,7 +19,6 @@ import classNames from 'classnames'
 import {
   apiFetchQueryOnlieRageLatest,
   ClearAllKnowledgeBase,
-  downloadWithEvents,
   insertModaOptions,
   KnowledgeTabList,
   KnowledgeTabListEnum,
@@ -48,13 +48,12 @@ import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils
 import type { CreateKnowledgeBaseData, TClearKnowledgeResponse } from '../TKnowledgeBase'
 
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
-import { installWithEvents } from './AllInstallPlugins'
 import { failed, success } from '@/utils/notification'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import { randomString } from '@/utils/randomUtil'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
-import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
+
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { convertBodyLength } from '@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
@@ -64,17 +63,6 @@ import { setLocalValue } from '@/utils/kv'
 import { KnowledgeBaseGV } from '@/yakitGV'
 
 const { YakitPanel } = YakitCollapse
-
-const { ipcRenderer } = window.require('electron')
-
-export const installOnlineRagWithEvents = (
-  url: string,
-  binary: { RagName?: string; Force: boolean; All?: boolean },
-  token: string,
-) => {
-  const invokeArgs = binary.All ? { Force: binary.Force, All: binary.All } : binary
-  return downloadWithEvents(url, invokeArgs, token)
-}
 
 export interface TKnowledgeBaseSidebarProps {
   knowledgeBases: Array<KnowledgeBaseItem & { CreatedFromUI?: boolean }>
@@ -119,6 +107,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
   setRefreshOlineRag,
   setJoyrideRun,
 }) => {
+  const downloads = useDownloadTasks()
   const [active, setActive] = useSafeState<KnowledgeTabListEnum>(KnowledgeTabListEnum.Knowledge)
   const [expand, setExpand] = useSafeState<boolean>(true)
   const [knowledgeBase, setKnowledgeBase] = useSafeState<Array<KnowledgeBaseItem & { CreatedFromUI?: boolean }>>([])
@@ -146,49 +135,15 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
         return prev
       })
 
-      await installWithEvents('InstallThirdPartyBinary', { Name: binary.Name, Force: true }, binary.installToken)
+      await installBinary(binary)
 
       success(`${binary.Name} 下载完成`)
       await binariesToInstallRefreshAsync?.()
-      setInstallTokens([])
     } catch (err) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'ABORTED') return
       failed(`${binary.Name} 下载失败: ${err}`)
     }
   }
-
-  // 监听插件下载进度（单独下载）
-  useEffect(() => {
-    if (!installTokens || installTokens.length === 0) return
-
-    installTokens.forEach((token) => {
-      const onData = (_, data) => {
-        if (data?.Progress > 0) {
-          const progressValue = Math.ceil(data.Progress)
-          setEachProgress((prev) => ({
-            ...prev,
-            [token]: progressValue,
-          }))
-        }
-      }
-
-      const onError = () => {}
-
-      const onEnd = () => {}
-
-      ipcRenderer.on(`${token}-data`, onData)
-      ipcRenderer.on(`${token}-error`, onError)
-      ipcRenderer.on(`${token}-end`, onEnd)
-    })
-
-    return () => {
-      installTokens.forEach((token) => {
-        ipcRenderer.invoke('cancel-InstallThirdPartyBinary', token)
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
-      })
-    }
-  }, [installTokens])
 
   const handleSetActive = useMemoizedFn((value: KnowledgeTabListEnum) => {
     setActive(value)
@@ -214,7 +169,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     // setKnowledgeBaseID(processed?.[0]?.ID ?? "")
   }, [knowledgeBases, addMode])
 
-  const clearAllExecutorRef = useRef<((token: string) => Promise<void>) | null>(null)
+  const clearAllExecutorRef = useRef<ReturnType<typeof ClearAllKnowledgeBase> | null>(null)
   const handleCancelAll = useMemoizedFn(async () => {
     setClearAllContent((pre) => ({
       ...pre,
@@ -254,13 +209,13 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
       if (!clearAllExecutorRef.current) {
         return
       }
-      await clearAllExecutorRef.current(clearAllContent.clearAllStreamToken)
-      api?.createStream(clearAllContent.clearAllStreamToken, {
+      const request = await clearAllExecutorRef.current(clearAllContent.clearAllStreamToken)
+      await api?.createStream(clearAllContent.clearAllStreamToken, {
+        request,
         taskName: 'debug-plugin',
         apiKey: 'DebugPlugin',
         token: clearAllContent.clearAllStreamToken,
         onEnd: async () => {
-          await Promise.all(api.tokens.map((token) => apiCancelDebugPlugin(token)))
           api.clearAllStreams()
           await refreshAsync?.()
           setClearAllVisible(false)
@@ -294,6 +249,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
       const res = await apiFetchQueryOnlieRageLatest()
       setOnlineRagList(Array.isArray(res) ? res.map((it) => ({ ...it, installToken: randomString(50) })) : [])
     } catch (err) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'ABORTED') return
       failed('获取线上知识库失败: ' + err)
       setOnlineRagList([])
     }
@@ -315,10 +271,16 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
       const token = all ? randomString(50) : ragItem?.installToken || ''
 
-      await installOnlineRagWithEvents(
+      await downloads.run(
         'DownloadRAGs',
         all ? { Force: true, All: true } : { RagName: ragItem?.name, Force: true, All: false },
-        token,
+        {
+          key: token,
+          onData: (data) => {
+            if (data.Progress > 0)
+              setOnlineRagProgress((previous) => ({ ...previous, [token]: Math.ceil(data.Progress) }))
+          },
+        },
       )
       await refreshAsync?.()
 
@@ -333,6 +295,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
         success(`${ragItem.name_zh || ragItem.name} 下载完成`)
       }
     } catch (err) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'ABORTED') return
       if (all) {
         failed('下载所有线上知识库失败: ' + err)
       } else if (ragItem) {
@@ -359,7 +322,16 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
         return [...prev, ...newTokens]
       })
 
-      await installOnlineRagWithEvents('DownloadRAGs', { Force: true, All: true }, token)
+      await downloads.run(
+        'DownloadRAGs',
+        { Force: true, All: true },
+        {
+          key: token,
+          onData: (data) => {
+            if (data.Progress > 0) setAllDownloadProgress(Math.ceil(data.Progress))
+          },
+        },
+      )
 
       await binariesToInstallRefreshAsync?.()
       await refreshAsync?.()
@@ -368,6 +340,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
       success('所有线上知识库下载完成')
     } catch (err) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'ABORTED') return
       failed('一键下载所有线上知识库失败: ' + err)
     } finally {
       setAllDownloadToken('')
@@ -375,64 +348,6 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
       setInstallOnlineRagsTokens((prev) => prev.filter((t) => !onlineRagList.some((item) => item.installToken === t)))
     }
   })
-  useEffect(() => {
-    if (!installOnlineRagsTokens || installOnlineRagsTokens.length === 0) return
-
-    installOnlineRagsTokens.forEach((token) => {
-      const onData = (_, data) => {
-        if (data?.Progress > 0) {
-          const progressValue = Math.ceil(data.Progress)
-          setOnlineRagProgress((prev) => ({
-            ...prev,
-            [token]: progressValue,
-          }))
-        }
-      }
-
-      const onError = () => {}
-
-      const onEnd = async () => {}
-
-      ipcRenderer.on(`${token}-data`, onData)
-      ipcRenderer.on(`${token}-error`, onError)
-      ipcRenderer.on(`${token}-end`, onEnd)
-    })
-
-    return () => {
-      installOnlineRagsTokens.forEach((token) => {
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
-      })
-    }
-  }, [installOnlineRagsTokens])
-
-  // 监听一键下载进度
-  useEffect(() => {
-    if (!allDownloadToken) return
-
-    const onData = (_, data) => {
-      if (data?.Progress > 0) {
-        const progressValue = Math.ceil(data.Progress)
-        setAllDownloadProgress(progressValue)
-      }
-    }
-
-    const onError = () => {}
-
-    const onEnd = () => {}
-
-    ipcRenderer.on(`${allDownloadToken}-data`, onData)
-    ipcRenderer.on(`${allDownloadToken}-error`, onError)
-    ipcRenderer.on(`${allDownloadToken}-end`, onEnd)
-
-    return () => {
-      ipcRenderer.removeAllListeners(`${allDownloadToken}-data`)
-      ipcRenderer.removeAllListeners(`${allDownloadToken}-error`)
-      ipcRenderer.removeAllListeners(`${allDownloadToken}-end`)
-    }
-  }, [allDownloadToken])
-
   const [onlineRagRefreshing, setOnlineRagRefreshing] = useSafeState<boolean>(false)
   // 刷新线上知识库列表和本地已下载列表
   const onRefreshOnlineRag = useMemoizedFn(async () => {
@@ -440,6 +355,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
       setOnlineRagRefreshing(true)
       await fetchAndSetOnlineRagList()
     } catch (err) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'ABORTED') return
       failed('刷新失败: ' + err)
     } finally {
       setOnlineRagRefreshing(false)
@@ -457,6 +373,27 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
 
   const [overallProgress, setOverallProgress] = useState(0)
   const progressMap = useRef<Record<string, number>>({})
+  const installBinary = (binary: { Name: string; installToken: string }, batchTokens?: string[]) =>
+    downloads
+      .run(
+        'InstallThirdPartyBinary',
+        { Name: binary.Name, Force: true },
+        {
+          key: binary.installToken,
+          onData: (data) => {
+            if (data.Progress <= 0) return
+            const value = Math.ceil(data.Progress)
+            progressMap.current[binary.installToken] = value
+            setEachProgress((previous) => ({ ...previous, [binary.installToken]: value }))
+            if (batchTokens?.length) {
+              const sum = batchTokens.reduce((total, token) => total + (progressMap.current[token] || 0), 0)
+              setOverallProgress(Math.floor(sum / batchTokens.length))
+            }
+          },
+        },
+      )
+      .finally(() => setInstallTokens((previous) => previous.filter((token) => token !== binary.installToken)))
+
   // 并发安装所有
   const { run: runInstallAll, loading: InstallAllLoading } = useRequest(
     async () => {
@@ -469,13 +406,13 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
         setOverallProgress(0)
         progressMap.current = {}
         const tokens = emptyInstallPathItem.map((it) => it.installToken)
-        setInstallTokens(tokens)
+        setInstallTokens((previous) => [...new Set([...previous, ...tokens])])
 
         // 并发执行安装
-        const promises = emptyInstallPathItem.map((b) =>
-          installWithEvents('InstallThirdPartyBinary', { Name: b.Name, Force: true }, b.installToken),
-        )
-        await Promise.all(promises)
+        const promises = emptyInstallPathItem.map((b) => installBinary(b, tokens))
+        const results = await Promise.allSettled(promises)
+        const failure = results.find((result) => result.status === 'rejected')
+        if (failure?.status === 'rejected') throw failure.reason
       }
 
       return 'ok'
@@ -487,15 +424,14 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
           success('知识库所需插件安装完成')
           setOverallProgress(100)
           // onInstallPlug(false)
-          setInstallTokens([])
           await binariesToInstallRefreshAsync?.()
         } catch (error) {
           failed(error + '')
         }
       },
       onError: (err) => {
+        if ('code' in err && err.code === 'ABORTED') return
         failed(`插件安装失败: ${err}`)
-        setInstallTokens([])
         setOverallProgress(0)
       },
     },

@@ -1012,15 +1012,17 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
   const handleDetailDeleteToLocal = useMemoizedFn((info: string) => {
     if (!info) return
     try {
-      const plugin: { name: string; id: number } = JSONParseLog(info, {
+      const plugin: { name: string; id: number | string } = JSONParseLog(info, {
         page: 'HubListLocal',
         fun: 'handleDetailDeleteToLocal',
       })
       if (!plugin.name) return
-      const index = selectList.findIndex((ele) => ele.ScriptName === plugin.name || ele.Id === Number(plugin.id))
+      const index = selectList.findIndex(
+        (ele) => ele.ScriptName === plugin.name || String(ele.Id) === String(plugin.id),
+      )
       const data: YakScript = {
         ...DefaultLocalPlugin,
-        Id: Number(plugin.id) || 0,
+        Id: plugin.id || 0,
         ScriptName: plugin.name || '',
       }
       if (index !== -1) {

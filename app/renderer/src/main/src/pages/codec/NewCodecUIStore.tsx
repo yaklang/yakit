@@ -19,7 +19,6 @@ import { queryYakScriptList } from '../yakitStore/network'
 import type { YakScript } from '../invoker/schema'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
 export interface NewCodecInputUIProps extends YakitInputProps {
   // 标题
   title?: string

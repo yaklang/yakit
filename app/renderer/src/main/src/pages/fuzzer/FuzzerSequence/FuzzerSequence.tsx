@@ -1,3 +1,6 @@
+import { fuzzerResponseForUI } from '@/pages/fuzzer/grpcAdapters'
+import { useFuzzerSession } from '@/pages/fuzzer/useFuzzerSession'
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type {
   ExtraSettingProps,
@@ -146,8 +149,6 @@ const ConcurrencyAllRes = React.lazy(() =>
   import('./ConcurrencyAllRes').then(({ ConcurrencyAllRes }) => ({ default: ConcurrencyAllRes })),
 )
 
-const { ipcRenderer } = window.require('electron')
-
 // 拖拽功能所需
 const getItemStyle = (isDragging, draggableStyle) => {
   let transform: string = draggableStyle['transform'] || ''
@@ -259,6 +260,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
   const [pluginDebugCode, setPluginDebugCode] = useState<string>('')
 
   const fuzzTokenRef = useRef<string>(randomString(60))
+  const fuzzerSession = useFuzzerSession('HTTPFuzzerSequence', fuzzTokenRef.current)
   const webFuzzerNewEditorRef = useRef<any>()
   const hotPatchCodeRef = useRef<string>('')
   const hotPatchCodeWithParamGetterRef = useRef<string>('')
@@ -331,7 +333,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     startConcurrency,
     cancelConcurrency,
     loading: concurrencyLoading,
-  } = useStreamConcurrency<FuzzerSequenceResponse>({
+  } = useStreamConcurrency({
     onData: (data) => {
       const {
         Response,
@@ -458,16 +460,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     { wait: 200 },
   )
   useEffect(() => {
-    ipcRenderer.on(
+    const stopIpcEvent1 = ipc.on(
       'fetch-extracted-to-table',
-      (e: any, data: { pageId: string; type: string; extractedMap: Map<string, string> }) => {
+      (data: { pageId: string; type: string; extractedMap: Map<string, string> }) => {
         if (data.type === 'fuzzerSequence') {
           setExtractedMap(data.extractedMap)
         }
       },
     )
     return () => {
-      ipcRenderer.removeAllListeners('fetch-extracted-to-table')
+      stopIpcEvent1()
     }
   }, [])
 
@@ -627,7 +629,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       }
     }
 
-    ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
+    fuzzerSession.callbacks.current.onData = (raw) => {
+      if (!raw.Request || !raw.Response) throw new Error('Fuzzer 序列响应缺少请求或响应数据')
+      const data = { Request: raw.Request, Response: fuzzerResponseForUI(raw.Response) }
+
       const { Response, Request } = data
       const { FuzzerIndex = '' } = Request
 
@@ -740,24 +745,18 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       }
 
       r = null as unknown as FuzzerResponse
-    })
-    ipcRenderer.on(endToken, () => {
-      setTimeout(() => {
-        setLoading(false)
-      }, 300)
-    })
-    ipcRenderer.on(errToken, (e, details) => {
+    }
+    fuzzerSession.callbacks.current.onEnd = () => {
+      setLoading(false)
+    }
+    fuzzerSession.callbacks.current.onError = (details) => {
       yakitNotify('error', `${t('FuzzerSequence.fuzz_request_fail')} ${details}`)
-      setTimeout(() => {
-        setLoading(false)
-      }, 300)
-    })
+      setLoading(false)
+    }
 
     return () => {
-      ipcRenderer.invoke('cancel-HTTPFuzzerSequence', token)
-      ipcRenderer.removeAllListeners(errToken)
-      ipcRenderer.removeAllListeners(dataToken)
-      ipcRenderer.removeAllListeners(endToken)
+      void fuzzerSession.cancel().catch(() => {})
+      if (releaseTimer) clearInterval(releaseTimer)
     }
   }, [])
 
@@ -1178,7 +1177,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       }
       startConcurrency(params)
     } else {
-      ipcRenderer.invoke('HTTPFuzzerSequence', { Requests: httpParams }, fuzzTokenRef.current)
+      fuzzerSession.start({ Requests: httpParams })
     }
     setHasExtractorRules(httpParams.some(({ Extractors, Matchers }) => !!(Extractors.length || Matchers.length)))
   })
@@ -1187,7 +1186,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       cancelConcurrency()
     } else {
       setLoading(false)
-      ipcRenderer.invoke('cancel-HTTPFuzzerSequence', fuzzTokenRef.current)
+      fuzzerSession.cancel()
     }
   })
 
@@ -1300,7 +1299,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       if (isConcurrency) {
         startConcurrency(params)
       } else {
-        ipcRenderer.invoke('HTTPFuzzerSequence', params, fuzzTokenRef.current)
+        fuzzerSession.start(params)
       }
       setHasExtractorRules(true)
     } catch (error) {
@@ -1872,7 +1871,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                       {modalT('FuzzerSequence.webfuzzer_sequence_demo')}
                       <div
                         className={styles['subtitle-help-wrapper']}
-                        onClick={() => ipcRenderer.invoke('open-url', WebsiteGV.WebFuzzerAddress)}
+                        onClick={() => ipc.invoke('local', 'open-url', WebsiteGV.WebFuzzerAddress)}
                       >
                         <span className={styles['text-style']}>{modalT('FuzzerSequence.official_documentation')}</span>
                         <QuestionMarkCircleOutlined color="currentColor" />
@@ -2533,15 +2532,15 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
   const handleSkipPluginDebuggerPage = async (tempType: 'path' | 'raw') => {
     const requests = getHttpParams()
     const params = {
-      Requests: { Requests: Array.isArray(requests) ? requests : [getHttpParams()] },
+      Requests: { Requests: Array.isArray(requests) ? requests : [requests] },
       TemplateType: tempType,
     }
     try {
-      const { Status, YamlContent } = await ipcRenderer.invoke('ExportHTTPFuzzerTaskToYaml', params)
-      if (Status.Ok) {
+      const { Status, YamlContent } = await ipc.invoke('grpc', 'ExportHTTPFuzzerTaskToYaml', params)
+      if (Status?.Ok) {
         onPluginDebugger(YamlContent)
       } else {
-        throw new Error(Status.Reason)
+        throw new Error(Status?.Reason || '引擎未返回操作状态')
       }
     } catch (error) {
       yakitFailed(error + '')

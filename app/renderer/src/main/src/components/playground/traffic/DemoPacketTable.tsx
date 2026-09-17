@@ -1,3 +1,6 @@
+import { trafficPacketsForUI } from '@/models/Traffic'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import type { TrafficPacket } from '@/models/Traffic'
 import { DemoVirtualTable } from '@/demoComponents/virtualTable/VirtualTable'
@@ -7,8 +10,6 @@ import { useMemoizedFn } from 'ahooks'
 import styles from './DemoPacketTable.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 export interface DemoPacketTableProp extends TrafficViewerControlIf {}
-
-const { ipcRenderer } = window.require('electron')
 
 export const DemoPacketTable: React.FC<DemoPacketTableProp> = (props) => {
   const { t } = useI18nNamespaces(['components'])
@@ -64,13 +65,15 @@ export const DemoPacketTable: React.FC<DemoPacketTableProp> = (props) => {
           return new Promise((resolve, reject) => {
             if (!data) {
               // info("加载初始化数据")
-              ipcRenderer
-                .invoke('QueryTrafficPacket', {
+              ipc
+                .invoke('grpc', 'QueryTrafficPacket', {
                   TimestampNow: props.fromTimestamp,
                   Pagination: { Limit: 10, Page: 1, OrderBy: 'id', Order: 'asc' }, // genDefaultPagination(),
                   FromId: 0,
                 })
-                .then((rsp: { Data: TrafficPacket[] }) => {
+                .then(trafficPacketsForUI)
+                .then(grpcPageForUI)
+                .then((rsp) => {
                   resolve({
                     data: rsp.Data,
                   })
@@ -78,13 +81,15 @@ export const DemoPacketTable: React.FC<DemoPacketTableProp> = (props) => {
                 })
               return
             } else {
-              ipcRenderer
-                .invoke('QueryTrafficPacket', {
+              ipc
+                .invoke('grpc', 'QueryTrafficPacket', {
                   TimestampNow: props.fromTimestamp,
                   Pagination: { Limit: 10, Page: 1, OrderBy: 'id', Order: 'asc' },
                   FromId: data.Id,
                 })
-                .then((rsp: { Data: TrafficPacket[]; Total: number; Pagination: Paging }) => {
+                .then(trafficPacketsForUI)
+                .then(grpcPageForUI)
+                .then((rsp) => {
                   resolve({
                     data: rsp.Data,
                   })

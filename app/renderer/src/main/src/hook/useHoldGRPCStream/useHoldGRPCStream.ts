@@ -8,7 +8,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { getRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
 import { JSONParseLog } from '@/utils/tool'
-import { yakitStream } from '@/services/electronBridge'
+import { ipc, type GrpcInput, type GrpcOutput } from '@/services/ipc'
+import { BridgeError } from '@/services/ipc'
 
 /** @name 将缓冲区Map对象(卡片类) 转换成 hook数据数据(卡片集合) */
 export const convertCardInfo = (maps: Map<string, HoldGRPCStreamProps.CacheCard>) => {
@@ -38,13 +39,27 @@ export const convertCardInfo = (maps: Map<string, HoldGRPCStreamProps.CacheCard>
   return Object.values(cardObj)
 }
 
-export interface HoldGRPCStreamParams {
+export type HoldStreamApi =
+  | 'DebugPlugin'
+  | 'ExecuteContextMenuAction'
+  | 'FetchPortAssetFromSpaceEngine'
+  | 'AnalyzeHTTPFlow'
+  | 'SimpleDetect'
+  | 'RecoverSimpleDetectTask'
+  | 'PortScan'
+  | 'StartBrute'
+function extractExecResult(data: GrpcOutput<HoldStreamApi>): GrpcOutput<'DebugPlugin'> | null {
+  if ('ExecResult' in data) return data.ExecResult
+  if ('Result' in data) return data.Result
+  return data
+}
+export interface HoldGRPCStreamParams<A extends HoldStreamApi = HoldStreamApi> {
   /** @name 执行结果展示的常驻tab页合集 */
   tabs?: HoldGRPCStreamProps.InfoTab[]
   /** @name 任务名称 */
   taskName: string
   /** @name 后端API */
-  apiKey: string
+  apiKey: A
   /** @name 数据流token */
   token: string
   /** @name 数据流请求间隔(默认:500,单位:ms) */
@@ -52,7 +67,8 @@ export interface HoldGRPCStreamParams {
   /** @name 数据流结束的回调事件 */
   onEnd?: (streamInfo?: HoldGRPCStreamInfo) => any
   /** @name 数据流报错的回调事件 */
-  onError?: (e: any) => void
+  onError?: (e: BridgeError) => void
+  onData?: (data: GrpcOutput<A>) => void | Promise<void>
   /** @name 额外的数据过滤方法 */
   dataFilter?: (obj: StreamResult.Message, content: StreamResult.Log) => boolean
   /** @name 设置run-time-id值 */
@@ -75,7 +91,7 @@ export const checkStreamValidity = (stream: StreamResult.Log) => {
   }
 }
 
-export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
+export default function useHoldGRPCStream<A extends HoldStreamApi>(params: HoldGRPCStreamParams<A>) {
   const {
     tabs: defaultTabs,
     taskName,
@@ -84,6 +100,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     waitTime = 500,
     onEnd,
     onError,
+    onData,
     dataFilter,
     setRuntimeId,
     isShowError = true,
@@ -114,7 +131,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
   })
 
   // 启动数据流处理定时器
-  const timeRef = useRef<any>(null)
+  const timeRef = useRef<ReturnType<typeof setInterval>>()
 
   // runtime-id
   const runTimeId = useRef<{ cache: string; sent: string }>({ cache: '', sent: '' })
@@ -159,207 +176,203 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     }
   })
 
-  useEffect(() => {
-    const offData = yakitStream.onData(token, async (data: StreamResult.BaseProsp) => {
-      // run-time-id
-      if (data?.RuntimeID) {
-        runTimeId.current.cache = data.RuntimeID
-      }
-      // 规则数据
-      if (data.RuleData && data.ExtractedContent !== undefined) {
-        ruleData.current.push({ ...data.RuleData, ExtractedContent: data.ExtractedContent })
-      }
+  const consumeData = useMemoizedFn((raw: GrpcOutput<A>) => {
+    if ('RuleData' in raw && raw.RuleData && raw.ExtractedContent !== undefined) {
+      ruleData.current.push({ ...raw.RuleData, ExtractedContent: raw.ExtractedContent })
+    }
+    const data = extractExecResult(raw)
+    if (!data) return
+    // run-time-id
+    if (data?.RuntimeID) {
+      runTimeId.current.cache = data.RuntimeID
+    }
+    const isMessage = data.IsMessage
+    if (isMessage) {
+      try {
+        const messageArr = data.Message
+        const obj: StreamResult.Message = JSONParseLog(Buffer.from(messageArr).toString(), {
+          page: 'useHoldGRPCStream',
+        })
+        // progress 进度条
+        if (obj.type === 'progress') {
+          const processData = obj.content as StreamResult.Progress
+          if (processData && processData.id) {
+            progressKVPair.current.set(
+              processData.id,
+              Math.max(progressKVPair.current.get(processData.id) || 0, processData.progress),
+            )
+          }
+          return
+        }
 
-      const isMessage = data.IsMessage || data.ExecResult?.IsMessage
-      if (isMessage) {
-        try {
-          const messageArr = data.Message || data.ExecResult?.Message
-          const obj: StreamResult.Message = JSONParseLog(Buffer.from(messageArr).toString(), {
-            page: 'useHoldGRPCStream',
-          })
-          // progress 进度条
-          if (obj.type === 'progress') {
-            const processData = obj.content as StreamResult.Progress
-            if (processData && processData.id) {
-              progressKVPair.current.set(
-                processData.id,
-                Math.max(progressKVPair.current.get(processData.id) || 0, processData.progress),
-              )
+        const logData = obj.content as StreamResult.Log
+
+        // feature-status-card-data 卡片展示
+        if (obj.type === 'log' && logData.level === 'feature-status-card-data') {
+          try {
+            const checkInfo = checkStreamValidity(logData)
+            if (!checkInfo) return
+
+            const obj: StreamResult.Card = checkInfo
+            const { id, data, tags } = obj
+            const { timestamp } = logData
+            const originData = cardKVPair.current.get(id)
+            if (originData && originData.Timestamp > timestamp) {
+              return
             }
-            return
-          }
+            cardKVPair.current.set(id, {
+              Id: id,
+              Data: data,
+              Timestamp: timestamp,
+              Tags: Array.isArray(tags) ? tags : [],
+            })
+          } catch (e) {}
+          return
+        }
 
-          const logData = obj.content as StreamResult.Log
+        // new-tab(插件自增tab页)
+        if (obj.type === 'log' && logData.level === 'json-feature') {
+          try {
+            const checkInfo = checkStreamValidity(logData)
+            if (!checkInfo) return
+            const info: { feature: string; params: any; [key: string]: any } = checkInfo
 
-          // feature-status-card-data 卡片展示
-          if (obj.type === 'log' && logData.level === 'feature-status-card-data') {
-            try {
-              const checkInfo = checkStreamValidity(logData)
-              if (!checkInfo) return
-
-              const obj: StreamResult.Card = checkInfo
-              const { id, data, tags } = obj
-              const { timestamp } = logData
-              const originData = cardKVPair.current.get(id)
-              if (originData && originData.Timestamp > timestamp) {
-                return
+            let tabInfo: HoldGRPCStreamProps.InfoTab = { tabName: '', type: '' }
+            switch (info.feature) {
+              case 'website-trees': {
+                const website = info.params as StreamResult.WebSite
+                // tabInfo = {tabName: "网站树结构", type: "website"}
+                // placeTab(!!info.at_head, tabInfo)
+                tabWebsite.current = website
+                break
               }
-              cardKVPair.current.set(id, {
-                Id: id,
-                Data: data,
-                Timestamp: timestamp,
-                Tags: Array.isArray(tags) ? tags : [],
-              })
-            } catch (e) {}
-            return
-          }
+              case 'fixed-table': {
+                const table = info.params as StreamResult.Table
+                tabInfo = { tabName: table.table_name, type: 'table' }
 
-          // new-tab(插件自增tab页)
-          if (obj.type === 'log' && logData.level === 'json-feature') {
-            try {
-              const checkInfo = checkStreamValidity(logData)
-              if (!checkInfo) return
-              const info: { feature: string; params: any; [key: string]: any } = checkInfo
+                placeTab(!!info.at_head, tabInfo)
 
-              let tabInfo: HoldGRPCStreamProps.InfoTab = { tabName: '', type: '' }
-              switch (info.feature) {
-                case 'website-trees': {
-                  const website = info.params as StreamResult.WebSite
-                  // tabInfo = {tabName: "网站树结构", type: "website"}
-                  // placeTab(!!info.at_head, tabInfo)
-                  tabWebsite.current = website
-                  break
-                }
-                case 'fixed-table': {
-                  const table = info.params as StreamResult.Table
-                  tabInfo = { tabName: table.table_name, type: 'table' }
-
-                  placeTab(!!info.at_head, tabInfo)
-
-                  if (tabTable.current.get(table.table_name)) {
-                    pushLogs(obj)
-                    break
-                  }
-
-                  tabTable.current.set(table.table_name, {
-                    name: table.table_name,
-                    columns: table.columns.map((item) => {
-                      return { title: item, dataKey: item }
-                    }),
-                    data: new Map<string, any[]>(),
-                  } as HoldGRPCStreamProps.CacheTable)
-                  break
-                }
-                case 'text': {
-                  const text = info.params as StreamResult.Text
-                  tabInfo = { tabName: text.tab_name, type: 'text' }
-
-                  placeTab(!!info.at_head, tabInfo)
-                  if (tabsText.current.get(text.tab_name)) {
-                    pushLogs(obj)
-                    break
-                  }
-                  tabsText.current.set(text.tab_name, '')
-                  break
-                }
-                default:
+                if (tabTable.current.get(table.table_name)) {
                   pushLogs(obj)
                   break
+                }
+
+                tabTable.current.set(table.table_name, {
+                  name: table.table_name,
+                  columns: table.columns.map((item) => {
+                    return { title: item, dataKey: item }
+                  }),
+                  data: new Map<string, any[]>(),
+                } as HoldGRPCStreamProps.CacheTable)
+                break
               }
-            } catch (e) {}
-            return
-          }
+              case 'text': {
+                const text = info.params as StreamResult.Text
+                tabInfo = { tabName: text.tab_name, type: 'text' }
 
-          // 自定义table数据
-          if (obj.type === 'log' && logData.level === 'feature-table-data') {
-            try {
-              const checkInfo = checkStreamValidity(logData)
-              if (!checkInfo) return
-
-              const tableOpt: StreamResult.TableDataOpt = checkInfo
-              const originTable = tabTable.current.get(tableOpt.table_name)
-              if (!originTable) {
+                placeTab(!!info.at_head, tabInfo)
+                if (tabsText.current.get(text.tab_name)) {
+                  pushLogs(obj)
+                  break
+                }
+                tabsText.current.set(text.tab_name, '')
+                break
+              }
+              default:
                 pushLogs(obj)
-                return
-              }
+                break
+            }
+          } catch (e) {}
+          return
+        }
 
-              const datas = originTable?.data || (new Map() as HoldGRPCStreamProps.CacheTable['data'])
-              // uuid一定存在，不存在归为脏数据
-              if (!tableOpt.data.uuid) {
-                pushLogs(obj)
-                return
-              }
-              datas.set(tableOpt.data.uuid, tableOpt.data)
-              tabTable.current.set(tableOpt.table_name, {
-                name: originTable.name,
-                columns: originTable.columns,
-                data: datas,
-              })
-            } catch (e) {}
-            return
-          }
+        // 自定义table数据
+        if (obj.type === 'log' && logData.level === 'feature-table-data') {
+          try {
+            const checkInfo = checkStreamValidity(logData)
+            if (!checkInfo) return
 
-          // 自定义text数据
-          if (obj.type === 'log' && logData.level === 'feature-text-data') {
-            try {
-              const checkInfo = checkStreamValidity(logData)
-              if (!checkInfo) return
+            const tableOpt: StreamResult.TableDataOpt = checkInfo
+            const originTable = tabTable.current.get(tableOpt.table_name)
+            if (!originTable) {
+              pushLogs(obj)
+              return
+            }
 
-              const textData: StreamResult.TextData = checkInfo
-              const content = tabsText.current.get(textData.table_name)
-              if (content === undefined) {
-                pushLogs(obj)
-                return
-              }
+            const datas = originTable?.data || (new Map() as HoldGRPCStreamProps.CacheTable['data'])
+            // uuid一定存在，不存在归为脏数据
+            if (!tableOpt.data.uuid) {
+              pushLogs(obj)
+              return
+            }
+            datas.set(tableOpt.data.uuid, tableOpt.data)
+            tabTable.current.set(tableOpt.table_name, {
+              name: originTable.name,
+              columns: originTable.columns,
+              data: datas,
+            })
+          } catch (e) {}
+          return
+        }
 
-              if (content === textData.data) return
-              tabsText.current.set(textData.table_name, textData.data)
-            } catch (e) {}
-            return
-          }
+        // 自定义text数据
+        if (obj.type === 'log' && logData.level === 'feature-text-data') {
+          try {
+            const checkInfo = checkStreamValidity(logData)
+            if (!checkInfo) return
 
-          // risk 风险信息列表
-          if (obj.type === 'log' && logData.level === 'json-risk') {
-            try {
-              const checkInfo = checkStreamValidity(logData)
-              if (!checkInfo) return
-              const risk: StreamResult.Risk = checkInfo
-              riskMessages.current.unshift(risk)
-            } catch (e) {}
-            return
-          }
+            const textData: StreamResult.TextData = checkInfo
+            const content = tabsText.current.get(textData.table_name)
+            if (content === undefined) {
+              pushLogs(obj)
+              return
+            }
 
-          // 外界传入的筛选方法
-          if (dataFilter && dataFilter(obj, logData)) return
-          // 日志信息
-          pushLogs(obj)
-        } catch (e) {}
-      }
-    })
-    // token-error
-    const offError = yakitStream.onError(token, (error: any) => {
-      isShowError && yakitFailed(`[Mod] ${taskName} error: ${error}`, true)
-      if (onError) {
-        onError(error)
-      }
-    })
-    // token-end
-    const offEnd = yakitStream.onEnd(token, () => {
-      isShowEnd && info(`[Mod] ${taskName} finished`)
-      const finalStreamInfo = handleResults()
-      if (onEnd) {
-        onEnd(finalStreamInfo)
-      }
-    })
+            if (content === textData.data) return
+            tabsText.current.set(textData.table_name, textData.data)
+          } catch (e) {}
+          return
+        }
 
-    return () => {
-      stop()
-      cancel()
-      offData()
-      offError()
-      offEnd()
+        // risk 风险信息列表
+        if (obj.type === 'log' && logData.level === 'json-risk') {
+          try {
+            const checkInfo = checkStreamValidity(logData)
+            if (!checkInfo) return
+            const risk: StreamResult.Risk = checkInfo
+            riskMessages.current.unshift(risk)
+          } catch (e) {}
+          return
+        }
+
+        // 外界传入的筛选方法
+        if (dataFilter && dataFilter(obj, logData)) return
+        // 日志信息
+        pushLogs(obj)
+      } catch (e) {}
     }
-  }, [token])
+  })
+  const consumeError = useMemoizedFn((error: BridgeError) => {
+    stop()
+    handleResults()
+    if (isShowError) yakitFailed(`[Mod] ${taskName} error: ${error.message}`, true)
+    onError?.(error)
+  })
+  const consumeEnd = useMemoizedFn(() => {
+    stop()
+    if (isShowEnd) info(`[Mod] ${taskName} finished`)
+    onEnd?.(handleResults())
+  })
+  const active = useRef<{ controller: AbortController; opening?: Promise<{ cancel(): Promise<void> }> }>()
+  useEffect(
+    () => () => {
+      stop()
+      const task = active.current
+      active.current = undefined
+      task?.controller.abort()
+    },
+    [token, apiKey],
+  )
 
   /** @name 数据流处理逻辑 */
   const handleResults = useMemoizedFn((updateState = true) => {
@@ -430,16 +443,17 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
   useEffect(() => {
     if (waitTime > 0 && !!timeRef.current) {
       clearInterval(timeRef.current)
-      timeRef.current = null
+      timeRef.current = undefined
       timeRef.current = setInterval(() => handleResults(), waitTime)
     }
   }, [waitTime])
 
   /** @name 开始处理数据流 */
   const start = useMemoizedFn(() => {
+    if (!active.current) return
     if (timeRef.current) {
       clearInterval(timeRef.current)
-      timeRef.current = null
+      timeRef.current = undefined
     }
     timeRef.current = setInterval(() => handleResults(), waitTime)
   })
@@ -447,12 +461,60 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
   const stop = useMemoizedFn(() => {
     if (timeRef.current) {
       clearInterval(timeRef.current)
-      timeRef.current = null
+      timeRef.current = undefined
     }
   })
   /** @name 关闭处理数据流 */
-  const cancel = useMemoizedFn(() => {
-    yakitStream.cancel(apiKey, token)
+  const cancel = useMemoizedFn(async () => {
+    const task = active.current
+    active.current = undefined
+    stop()
+    task?.controller.abort()
+    await task?.opening?.then(
+      (handle) => handle.cancel(),
+      () => {},
+    )
+  })
+  const open = useMemoizedFn(async (request: GrpcInput<A>): Promise<void> => {
+    const previous = active.current
+    previous?.controller.abort()
+    const task: NonNullable<typeof active.current> = { controller: new AbortController() }
+    active.current = task
+    await previous?.opening?.then(
+      (handle) => handle.cancel(),
+      () => {},
+    )
+    if (active.current !== task || task.controller.signal.aborted) throw new Error('Stream opening cancelled')
+    start()
+    task.opening = ipc.openStream('grpc', apiKey, request, {
+      token,
+      signal: task.controller.signal,
+      onData: async (data) => {
+        if (active.current !== task) return
+        await onData?.(data)
+        if (active.current === task) consumeData(data)
+      },
+      onError: (error) => {
+        if (active.current !== task) return
+        active.current = undefined
+        consumeError(error)
+      },
+      onEnd: () => {
+        if (active.current !== task) return
+        active.current = undefined
+        consumeEnd()
+      },
+    })
+    try {
+      await task.opening
+    } catch (error) {
+      if (active.current === task) {
+        active.current = undefined
+        stop()
+        if (error instanceof BridgeError && error.code !== 'ABORTED') consumeError(error)
+      }
+      throw error
+    }
   })
   /** @name 重置数据流 */
   const reset = useMemoizedFn(() => {
@@ -479,7 +541,9 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     ruleData.current = []
   })
 
+  const isActive = useMemoizedFn(() => !!active.current)
+
   const snapshot = useMemoizedFn(() => handleResults(false))
 
-  return [streamInfo, { start, stop, cancel, reset, snapshot }] as const
+  return [streamInfo, { open, isActive, start, stop, cancel, reset, snapshot }] as const
 }

@@ -107,9 +107,10 @@ const AIPluginComponent: FC<AIPluginComponentProps> = ({ getCodeContent, value, 
 
       apiDebugPlugin({
         params: executeParams,
-        token: token,
+        open: debugPluginStreamEvent.open,
         pluginCustomParams: plugin.Params,
       }).then(() => {
+        if (!debugPluginStreamEvent.isActive()) return
         setExecuteStatus('process')
         debugPluginStreamEvent.start()
       })

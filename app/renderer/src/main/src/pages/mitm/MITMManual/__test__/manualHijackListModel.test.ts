@@ -10,7 +10,7 @@ const item = (taskID: string, action: ManualHijackListAction, arrivalOrder?: num
     arrivalOrder,
     Request: new Uint8Array(),
     Response: new Uint8Array(),
-    HijackResponse: new Uint8Array(),
+    HijackResponse: false,
     Payload: new Uint8Array(),
     Status: ManualHijackListStatus.Hijacking_Request,
     Tags: [],

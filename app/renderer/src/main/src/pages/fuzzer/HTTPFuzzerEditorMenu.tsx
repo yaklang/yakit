@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Avatar, Timeline } from 'antd'
@@ -34,8 +35,6 @@ import { PluginSwitchToTag } from '../pluginEditor/defaultconstants'
 import { setClipboardText } from '@/utils/clipboard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { YakParamProps } from '../plugins/pluginsType'
-const { ipcRenderer } = window.require('electron')
-
 export interface CountDirectionProps {
   x?: 'middle' | 'left' | 'right'
   y?: 'bottom' | 'top'
@@ -163,7 +162,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
   const [menuHeight, setMenuHeight] = useState<number>()
 
   const getData = () => {
-    ipcRenderer.invoke('QueryFuzzerLabel').then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
+    ipc.invoke('grpc', 'QueryFuzzerLabel', {}).then((data) => {
       const { Data } = data
       if (Array.isArray(Data) && Data.length > 0) {
         const defaultMap = new Map(defaultLabel.map((item) => [item.DefaultDescription, item.DescriptionUi]))
@@ -235,16 +234,16 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     }
   }
   const delLabel = (Hash: string) => {
-    ipcRenderer.invoke('DeleteFuzzerLabel', { Hash }).then(() => {
+    ipc.invoke('grpc', 'DeleteFuzzerLabel', { Hash }).then(() => {
       getData()
     })
   }
   const reset = () => {
     // 删除标签后重新添加默认标签
-    ipcRenderer.invoke('DeleteFuzzerLabel', {}).then(() => {
+    ipc.invoke('grpc', 'DeleteFuzzerLabel', {}).then(() => {
       setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({ number: defaultLabel.length }))
-      ipcRenderer
-        .invoke('SaveFuzzerLabel', {
+      ipc
+        .invoke('grpc', 'SaveFuzzerLabel', {
           Data: defaultLabel,
         })
         .then(() => {
@@ -256,9 +255,9 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
 
   const dragList = (newItems) => {
     // 重新排序
-    ipcRenderer.invoke('DeleteFuzzerLabel', {}).then(() => {
+    ipc.invoke('grpc', 'DeleteFuzzerLabel', {}).then(() => {
       setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({ number: newItems.length }))
-      ipcRenderer.invoke('SaveFuzzerLabel', {
+      ipc.invoke('grpc', 'SaveFuzzerLabel', {
         Data: newItems,
       })
     })
@@ -469,8 +468,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                       onClick={(e) => {
                                         e.stopPropagation()
                                         if (inputValue) {
-                                          ipcRenderer
-                                            .invoke('SaveFuzzerLabel', {
+                                          ipc
+                                            .invoke('grpc', 'SaveFuzzerLabel', {
                                               Data: [
                                                 {
                                                   ...item,
@@ -844,7 +843,7 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
         setStatus('none')
         return
       }
-      ipcRenderer.invoke('AutoDecode', { Data: rangeValue }).then((e: { Results: AutoDecodeResult[] }) => {
+      ipc.invoke('grpc', 'AutoDecode', { Data: rangeValue }).then((e) => {
         // console.log("Results", e.Results)
         const { Results } = e
         const successArr: AutoDecodeResult[] = []

@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { useMemo } from 'react'
 import type { YakitStatusType, YaklangEngineMode } from '@/yakitGVDefine'
@@ -27,8 +28,6 @@ import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import IRifyPrimaryBg from '../../assets/uiLayout/IRifyPrimaryBg.png'
 import MemfitAIPrimaryBg from '@/assets/uiLayout/MemfitAIPrimaryBg.png'
 import YakitPrimaryBg from '@/assets/uiLayout/YakitPrimaryBg.png'
-
-const { ipcRenderer } = window.require('electron')
 
 /** 首屏加载蒙层展示语 */
 const LoadingTitle: (t: TFunction) => string[] = (t) => {
@@ -250,7 +249,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
               <div
                 className={styles['engine-help-wrapper']}
                 onClick={() => {
-                  ipcRenderer.invoke('open-yaklang-path')
+                  ipc.invoke('local', 'open-yaklang-path', {})
                 }}
                 style={{ position: 'fixed', bottom: 32 }}
               >

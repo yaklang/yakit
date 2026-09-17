@@ -20,6 +20,11 @@ const electronStub = { ipcRenderer: ipcRendererMock }
 }
 
 export const resetIpcMocks = () => {
+  sdkMock.invoke.mockReset()
+  sdkMock.invoke.mockResolvedValue(undefined)
+  sdkMock.openStream.mockClear()
+  sdkMock.write.mockClear()
+  sdkMock.cancel.mockClear()
   ipcRendererMock.on.mockClear()
   ipcRendererMock.off.mockClear()
   ipcRendererMock.removeAllListeners.mockClear()
@@ -27,3 +32,22 @@ export const resetIpcMocks = () => {
   ipcRendererMock.invoke.mockClear()
   ipcRendererMock.invoke.mockResolvedValue(undefined)
 }
+
+const bridgeMocks = vi.hoisted(() => ({
+  invoke: vi.fn().mockResolvedValue(undefined),
+  openStream: vi.fn(),
+  write: vi.fn().mockResolvedValue(undefined),
+  cancel: vi.fn().mockResolvedValue(undefined),
+}))
+vi.mock('@/services/ipc', () => ({ ipc: bridgeMocks }))
+export const sdkMock = bridgeMocks
+sdkMock.openStream.mockImplementation(async (_namespace, _api, _params, options) => {
+  const token = options.token
+  options.signal.addEventListener('abort', () => sdkMock.cancel(token), { once: true })
+  return {
+    token,
+    instanceId: `instance-${token}`,
+    write: (params: unknown) => sdkMock.write(token, params),
+    cancel: () => sdkMock.cancel(token),
+  }
+})

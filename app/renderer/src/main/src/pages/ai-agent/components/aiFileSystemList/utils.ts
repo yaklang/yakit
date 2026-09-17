@@ -1,14 +1,13 @@
+import { ipc } from '../../../../../../../../shared/communication/window-client'
 import { handleOpenFileSystemDialog, type OpenDialogOptions } from '@/utils/fileSystemDialog'
 import { type HistoryItem, PathIncludeResult } from './type'
 import { historyStore } from './store/useHistoryFolder'
-
-const { ipcRenderer } = window.require('electron')
 
 /**
  * @returns 0：相等；1：A包含B；2：B包含A；3：无包含关系；4：异常
  */
 export const isPathIncluded = async (pathA: string, pathB: string): Promise<PathIncludeResult> => {
-  return await ipcRenderer.invoke('fetch-path-contains-relation', {
+  return await ipc.invoke('local', 'fetch-path-contains-relation', {
     pathA,
     pathB,
   })

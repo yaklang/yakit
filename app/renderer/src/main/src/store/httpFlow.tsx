@@ -1,8 +1,7 @@
+import { ipc } from '../../../../../shared/communication/window-client'
 import type { CompateData } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { randomString } from '@/utils/randomUtil'
 import { create } from 'zustand'
-const { ipcRenderer } = window.require('electron')
-
 export enum CompareTypeEnum {
   default,
   Left,
@@ -73,7 +72,7 @@ export const useHttpFlowStore = create<HttpFlowStoreProps>((set, get) => ({
         dataMap: new Map(dataMap).set(token, newInfo),
       })
 
-      ipcRenderer.invoke('forward-data-compare', {
+      ipc.invoke('local', 'forward-data-compare', {
         token: token,
         info: newInfo,
       })
@@ -85,7 +84,7 @@ export const useHttpFlowStore = create<HttpFlowStoreProps>((set, get) => ({
         })
       }
       if (infoType === 'right') {
-        ipcRenderer.invoke('forward-switch-compare-page', {
+        ipc.invoke('local', 'forward-switch-compare-page', {
           token,
           info: newInfo,
         })
@@ -97,7 +96,7 @@ export const useHttpFlowStore = create<HttpFlowStoreProps>((set, get) => ({
         [infoType]: info,
       }
 
-      ipcRenderer.invoke('forward-main-container-add-compare', {
+      ipc.invoke('local', 'forward-main-container-add-compare', {
         openFlag: infoType === 'right',
       })
 

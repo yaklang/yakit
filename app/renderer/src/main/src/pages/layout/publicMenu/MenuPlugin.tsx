@@ -1,3 +1,6 @@
+import { int64String, positiveInt64, grpcPageForUI } from '@/utils/int64'
+import { yakScriptsForUI } from '@/pages/invoker/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import React, { useMemo, useState } from 'react'
 import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronUpIcon'
 import { SMViewGridAddIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SMViewGridAddIcon'
@@ -33,7 +36,6 @@ import emiter from '@/utils/eventBus/eventBus'
 
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
-const { ipcRenderer } = window.require('electron')
 const defaultSearch: PluginSearchParams = {
   type: 'fieldKeywords',
   keyword: '',
@@ -41,7 +43,7 @@ const defaultSearch: PluginSearchParams = {
   fieldKeywords: '',
   tag: '',
 }
-type SearchPluginItem = { name: string; id?: number; headImg?: string; uuid?: string }
+type SearchPluginItem = { name: string; id?: number | string; headImg?: string; uuid?: string }
 
 interface MenuPluginProps {
   children?: React.ReactNode
@@ -56,7 +58,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
   const { t, i18nRefresh } = useI18nNamespaces(['yakitRoute', 'layout', 'yakitUi'])
 
   /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
-  const onMenu = useMemoizedFn((pluginId: number, pluginName: string, fromRecent?: boolean) => {
+  const onMenu = useMemoizedFn((pluginId: string | number, pluginName: string, fromRecent?: boolean) => {
     if (!pluginName) return
 
     if (fromRecent) {
@@ -74,7 +76,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
 
   const onCustom = useMemoizedFn(() => {
     setListShow(false)
-    ipcRenderer.invoke('open-customize-menu')
+    ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-open-customize-menu', data: undefined })
   })
 
   const [restoreVisible, setRestoreVisible] = useState<boolean>(false)
@@ -87,8 +89,8 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
     setRestoreVisible(true)
   })
   const onRestore = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('DeleteAllNavigation', { Mode: CodeGV.PublicMenuModeValue })
+    ipc
+      .invoke('grpc', 'DeleteAllNavigation', { Mode: CodeGV.PublicMenuModeValue })
       .then(() => {
         restoreCallback()
         let deleteCache: any = {}
@@ -104,7 +106,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
           .finally(() => {
             setRemoteValue(RemoteGV.UserDeleteMenu, JSON.stringify(deleteCache)).finally(() => {
               setTimeout(() => {
-                ipcRenderer.invoke('refresh-public-menu')
+                ipc.invoke('local', 'ForwardMainEvent', { event: 'refresh-public-menu-callback' })
               }, 50)
             })
           })
@@ -115,7 +117,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
   })
 
   const [listShow, setListShow] = useState<boolean>(false)
-  const [recentPlugins, setRecentPlugins] = useState<{ name: string; id?: number; headImg?: string }[]>([])
+  const [recentPlugins, setRecentPlugins] = useState<{ name: string; id?: number | string; headImg?: string }[]>([])
   const [search, setSearch] = useState<PluginSearchParams>(defaultSearch)
   const [searchedKeyword, setSearchedKeyword] = useState('')
   const [searchLocal, setSearchLocal] = useState<SearchPluginItem[]>([])
@@ -139,7 +141,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
     if (!item.uuid) return
     setListShow(false)
     grpcDownloadOnlinePlugin({ uuid: item.uuid }).then((res) => {
-      onMenu(+res.Id || 0, res.ScriptName || item.name)
+      onMenu(positiveInt64(res.Id) || 0, res.ScriptName || item.name)
     })
   })
 
@@ -156,10 +158,14 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
     try {
       const pageParams = { page: 1, limit: 9999 }
       const [localRes, onlineRes] = await Promise.all([
-        ipcRenderer.invoke(
-          'QueryYakScript',
-          convertLocalPluginsRequestParams({ filter: defaultFilter, search: value, pageParams }),
-        ),
+        ipc
+          .invoke(
+            'grpc',
+            'QueryYakScript',
+            convertLocalPluginsRequestParams({ filter: defaultFilter, search: value, pageParams }),
+          )
+          .then(yakScriptsForUI)
+          .then(grpcPageForUI),
         apiFetchOnlineList(convertPluginsRequestParams(defaultFilter, value, pageParams), true),
       ])
       setSearchLocal(
@@ -183,7 +189,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
 
   const renderPluginOpt = useMemoizedFn(
     (
-      item: { name: string; headImg?: string; id?: number; label?: string },
+      item: { name: string; headImg?: string; id?: number | string; label?: string },
       onClick: () => void,
       disabled?: boolean,
       showLoading?: boolean,

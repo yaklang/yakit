@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process'
+import { spawn, execFileSync } from 'node:child_process'
 import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -56,6 +56,8 @@ try {
   console.error(`[electron-e2e] ${error.message}`)
   process.exit(2)
 }
+
+execFileSync(process.execPath, ['scripts/build-electron.mjs'], { cwd: repoRoot, stdio: 'inherit' })
 
 const runId = new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-')
 const artifactsDir = path.join(repoRoot, 'reports', 'e2e-electron', runId)

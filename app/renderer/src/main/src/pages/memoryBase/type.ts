@@ -42,7 +42,7 @@ export interface QueryAIMemoryEntityRequest {
   Filter: AIMemoryEntityFilter
 }
 export interface AIMemoryEntity {
-  Id: number
+  Id: string | number
   CreatedAt: number
   UpdatedAt: number
   MemoryID: string

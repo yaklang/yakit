@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../shared/communication/window-client'
 import type React from 'react'
 import { success, yakitFailed, yakitNotify } from './notification'
 import type { OpenPacketNewWindowItem } from '@/components/OpenPacketNewWindow/OpenPacketNewWindow'
@@ -11,14 +12,11 @@ import i18n from '@/i18n/i18n'
 import type { Risk } from '@/pages/risks/schema'
 import type { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import type { ConcurrentStreamFramePayload } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
-import { yakitDialog, yakitShell, yakitWindow } from '@/services/electronBridge'
 import { normalizeFileExportData } from './fileExport'
 const tOriginal = i18n.getFixedT(null, ['utils', 'yakitUi'])
 
-const { ipcRenderer } = window.require('electron')
-
 export const openExternalWebsite = (u: string) => {
-  yakitShell.openExternal(u)
+  ipc.invoke('local', 'shell-open-external', u)
 }
 
 export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
@@ -26,7 +24,7 @@ export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
     minWinSendToChildWin({ type: 'openPacketNewWindow', data })
   } else {
     yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
-    yakitWindow.openChildWindow({
+    ipc.invoke('local', 'open-new-child-window', {
       type: 'openPacketNewWindow',
       data: data,
     })
@@ -38,7 +36,7 @@ export const openRiskNewWindow = (data?: Risk) => {
     minWinSendToChildWin({ type: 'openRiskNewWindow', data })
   } else {
     yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
-    yakitWindow.openChildWindow({
+    ipc.invoke('local', 'open-new-child-window', {
       type: 'openRiskNewWindow',
       data: data,
     })
@@ -50,7 +48,7 @@ export const openSSARiskNewWindow = (data?: SSARisk) => {
     minWinSendToChildWin({ type: 'openSSARiskNewWindow', data })
   } else {
     yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
-    yakitWindow.openChildWindow({
+    ipc.invoke('local', 'open-new-child-window', {
       type: 'openSSARiskNewWindow',
       data: data,
     })
@@ -67,12 +65,12 @@ export const openAIConcurrentStream = (data: ConcurrentStreamFramePayload, optio
   if (!options?.silent) {
     yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
   }
-  return ipcRenderer.invoke('open-ai-concurrent-stream-window', data)
+  return ipc.invoke('local', 'open-ai-concurrent-stream-window', data)
 }
 
 export const minWinSendToChildWin = (params) => {
-  yakitWindow.focusChildWindow()
-  yakitWindow.sendToChildWindow({
+  ipc.invoke('local', 'onTop-childWin', {})
+  ipc.invoke('local', 'minWin-send-to-childWin', {
     type: params.type,
     hash: getChildWindowHash(),
     data: params.data,
@@ -83,32 +81,32 @@ export const openConsoleNewWindow = () => {
   if (clickEngineConsoleFlag) return
   if (!engineConsoleWindowHash) {
     changeClickEngineConsoleFlag(true)
-    yakitWindow.openConsoleWindow().finally(() => changeClickEngineConsoleFlag(false))
+    ipc.invoke('local', 'open-console-new-window', {}).finally(() => changeClickEngineConsoleFlag(false))
   } else {
-    yakitWindow.focusConsoleWindow()
+    ipc.invoke('local', 'onTop-console-new-window', {})
   }
 }
 
 export const openABSFile = (u: string) => {
-  yakitShell.openAbsoluteFile(u)
+  ipc.invoke('local', 'shell-open-abs-file', u)
 }
 
 export const openABSFileLocated = (u: string) => {
-  yakitShell.openSpecifiedFile(u)
+  ipc.invoke('local', 'open-specified-file', u)
 }
 
 export const saveABSFileToOpen = (name: string, data?: Uint8Array | string) => {
-  yakitDialog.showSaveDialog(name).then((res) => {
+  ipc.invoke('local', 'show-save-dialog', name).then((res) => {
     if (res.canceled || !res.filePath) return
-    yakitDialog
-      .writeFile({
+    ipc
+      .invoke('local', 'write-file', {
         route: res.filePath,
         data: normalizeFileExportData(data),
       })
       .then(() => {
         success(tOriginal('YakitNotification.downloadFinished'))
         if (res.filePath) {
-          yakitShell.openSpecifiedFile(res.filePath)
+          ipc.invoke('local', 'open-specified-file', res.filePath)
         }
       })
   })
@@ -128,16 +126,18 @@ export const saveABSFileAnotherOpen = async (params: {
     errorMsg = tOriginal('YakitNotification.downloadFailedNoError'),
     isOpenSpecifiedFile = false,
   } = params
-  const showSaveDialogRes = await yakitDialog.showSaveDialog(name)
+  const showSaveDialogRes = await ipc.invoke('local', 'show-save-dialog', name)
   if (showSaveDialogRes.canceled || !showSaveDialogRes.filePath) return
-  return yakitDialog
-    .writeFile({
+  return ipc
+    .invoke('local', 'write-file', {
       route: showSaveDialogRes.filePath,
       data: normalizeFileExportData(data),
     })
     .then(() => {
       success(successMsg)
-      isOpenSpecifiedFile && showSaveDialogRes.filePath && yakitShell.openSpecifiedFile(showSaveDialogRes.filePath)
+      isOpenSpecifiedFile &&
+        showSaveDialogRes.filePath &&
+        ipc.invoke('local', 'open-specified-file', showSaveDialogRes.filePath)
       return showSaveDialogRes.filePath
     })
     .catch((e) => {

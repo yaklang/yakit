@@ -1,3 +1,4 @@
+import { positiveInt64 } from '@/utils/int64'
 import React, { type ReactNode, Suspense } from 'react'
 import type { StartFacadeServerParams } from '../pages/reverseServer/ReverseServer_New'
 import { PrivateOutlineAIAgentIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineAIAgentIcon'
@@ -731,7 +732,7 @@ export interface ComponentParams {
   recoverBaseProgress?: number
 
   // Route.PacketScanPage 参数
-  packetScan_FlowIds?: number[]
+  packetScan_FlowIds?: (string | number)[]
   packetScan_Https?: boolean
   packetScan_HttpRequest?: Uint8Array
   packetScan_Keyword?: string
@@ -947,7 +948,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     case YakitRoute.PoC:
       return <YakPoC pageId={params?.id || ''} />
     case YakitRoute.Plugin_OP:
-      if (!yakScriptId || !+yakScriptId) return <div />
+      if (!yakScriptId || !positiveInt64(yakScriptId)) return <div />
       return <SinglePluginExecution yakScriptId={yakScriptId || 0} pageId={params?.id || ''} />
     case YakitRoute.Mod_Brute:
       return <NewBrute id={params?.id || ''} />
@@ -1150,7 +1151,7 @@ export interface DatabaseFirstMenuProps {
 /** @name 数据库二级菜单项属性 */
 export interface DatabaseSecondMenuProps {
   /** @name 插件id */
-  YakScriptId: number
+  YakScriptId: string | number
   /** @name 插件名称 */
   YakScriptName: string
   /** @name 插件头像 */
@@ -1185,7 +1186,7 @@ export interface DatabaseMenuItemProps {
   route: YakitRoute | undefined
   label: string
   menuName: string
-  pluginId: number
+  pluginId: number | string
   pluginName: string
   HeadImg?: string
   children?: DatabaseMenuItemProps[]
@@ -1208,7 +1209,7 @@ export const databaseConvertData = (data: DatabaseFirstMenuProps[]) => {
           route: subItem.Route as YakitRoute,
           label: subItem.Verbose,
           menuName: subItem.VerboseLabel || subItem.YakScriptName || subItem.Verbose,
-          pluginId: +subItem.YakScriptId || 0,
+          pluginId: positiveInt64(subItem.YakScriptId) || 0,
           pluginName: subItem.YakScriptName || '',
           HeadImg: subItem.HeadImg || undefined,
         }
@@ -1229,7 +1230,7 @@ export interface PublicRouteMenuProps {
   labelUi?: string
   describe?: string
   describeUi?: string
-  yakScriptId?: number
+  yakScriptId?: number | string
   yakScripName?: string
   children?: PublicRouteMenuProps[]
 }
@@ -1921,7 +1922,7 @@ export interface PrivateRouteMenuProps {
   hoverIcon?: JSX.Element
   describe?: string
   describeUi?: string
-  yakScriptId?: number
+  yakScriptId?: number | string
   yakScripName?: string
   children?: PrivateRouteMenuProps[]
 }

@@ -1,3 +1,5 @@
+import { requestYakURL } from '@/pages/yakURLTree/grpc'
+import { ipc } from '@/services/ipc'
 import { failed, warn } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
 import type { RequestYakURLResponse } from '../yakURLTree/data'
@@ -22,7 +24,6 @@ import { YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
 import { SyntaxFlowMonacoSpec } from '@/utils/monacoSpec/syntaxflowEditor'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 
-const { ipcRenderer } = window.require('electron')
 const tOriginal = i18n.getFixedT(null, 'yakRunner')
 
 export const initFileTreeData = (list: RequestYakURLResponse, path?: string | null) => {
@@ -63,7 +64,7 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
     }
 
     try {
-      const res: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const res: RequestYakURLResponse = await requestYakURL(params)
       // console.log("文件树获取---", res)
       const data: FileNodeMapProps[] = initFileTreeData(res, path)
       resolve(data)
@@ -97,7 +98,7 @@ export const grpcFetchRenameFileTree: (
       },
     }
     try {
-      const list: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const list: RequestYakURLResponse = await requestYakURL(params)
       // console.log("文件树重命名", params, list)
       const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
       resolve(data)
@@ -170,7 +171,7 @@ export const grpcFetchSaveFile: (path: string, code: string) => Promise<FileNode
       Body: StringToUint8Array(code),
     }
     try {
-      const list: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const list: RequestYakURLResponse = await requestYakURL(params)
       // console.log("文件保存", params, list)
       const data: FileNodeMapProps[] = initFileTreeData(list, path)
       resolve(data)
@@ -209,7 +210,8 @@ export async function saveYakRunnerUnsavedFile(
       return { areaInfo: newAreaInfo, file: savedFile, saved: true }
     }
 
-    const res = await ipcRenderer.invoke(
+    const res = await ipc.invoke(
+      'local',
       'show-save-dialog',
       `${defaultSavePath}${defaultSavePath ? '/' : ''}${file.name}`,
     )
@@ -281,7 +283,7 @@ export const grpcFetchCreateFile: (
       params.Body = StringToUint8Array(code)
     }
     try {
-      const list: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const list: RequestYakURLResponse = await requestYakURL(params)
       // console.log("新建文件", params, list)
       const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
       resolve(data)
@@ -308,7 +310,7 @@ export const grpcFetchCreateFolder: (path: string, parentPath?: string | null) =
       },
     }
     try {
-      const list: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const list: RequestYakURLResponse = await requestYakURL(params)
       // console.log("新建文件夹", params, list)
       const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
       resolve(data)
@@ -332,7 +334,7 @@ export const grpcFetchDeleteFile: (path: string) => Promise<FileNodeMapProps[]> 
       },
     }
     try {
-      const list: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const list: RequestYakURLResponse = await requestYakURL(params)
       // console.log("删除文件", params, list)
       const data: FileNodeMapProps[] = initFileTreeData(list, path)
       resolve(data)
@@ -356,7 +358,7 @@ export const grpcFetchDeleteAudit: (path: string) => Promise<FileNodeMapProps[]>
       },
     }
     try {
-      const list: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const list: RequestYakURLResponse = await requestYakURL(params)
       // console.log("删除已编译项目", params, list)
       const data: FileNodeMapProps[] = initFileTreeData(list, path)
       resolve(data)
@@ -390,7 +392,7 @@ export const grpcFetchPasteFile: (
       params.Body = StringToUint8Array(code)
     }
     try {
-      const list: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const list: RequestYakURLResponse = await requestYakURL(params)
       // console.log("粘贴文件", params, list)
       const data: FileNodeMapProps[] = initFileTreeData(list, parentPath)
       resolve(data)
@@ -422,7 +424,7 @@ export const getCodeSizeByPath = (
       },
     }
     try {
-      const list: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const list: RequestYakURLResponse = await requestYakURL(params)
       const size = parseInt(list.Resources[0].Size + '')
       let isPlainText: boolean = true
       list.Resources[0].Extra.forEach((item) => {
@@ -440,57 +442,7 @@ export const getCodeSizeByPath = (
   })
 }
 
-const getCodeByNode = (path: string): Promise<string> => {
-  return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('read-file-content', path)
-      .then((res) => {
-        resolve(res)
-      })
-      .catch(() => {
-        failed(tOriginal('YakRunner.readFileFailed'))
-        reject()
-      })
-  })
-}
-
-/**
- * @name 根据文件path获取其内容
- */
-export const getCodeByPath = (path: string, loadTreeType?: 'file' | 'audit'): Promise<string> => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      let content: string = ''
-      const token = randomString(60)
-      ipcRenderer.invoke(
-        'ReadFile',
-        { FilePath: path, FileSystem: loadTreeType === 'audit' ? 'ssadb' : 'local' },
-        token,
-      )
-      ipcRenderer.on(`${token}-data`, (e, result: { Data: Uint8Array; EOF: boolean }) => {
-        content += Uint8ArrayToString(result.Data)
-        if (result.EOF) {
-          resolve(content)
-        }
-      })
-      ipcRenderer.on(`${token}-error`, async (e, error) => {
-        // 此处在 ssadb 模式时不做node兼容处理
-        try {
-          const newContent = await getCodeByNode(path)
-          resolve(newContent)
-        } catch (error) {
-          failed(tOriginal('YakRunner.readFileFailedWithError', { error }))
-          reject()
-        }
-      })
-      ipcRenderer.on(`${token}-end`, (e, data) => {
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
-      })
-    } catch (error) {}
-  })
-}
+export { getCodeByPath } from './readFile'
 
 /**
  * @name 更新树数据里某个节点的children数据
@@ -524,9 +476,9 @@ export const updateFileTree: (
 export const onSyntaxCheck = (code: string, type: string) => {
   return new Promise(async (resolve, reject) => {
     // StaticAnalyzeError
-    ipcRenderer
-      .invoke('StaticAnalyzeError', { Code: StringToUint8Array(code), PluginType: type })
-      .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
+    ipc
+      .invoke('grpc', 'StaticAnalyzeError', { Code: StringToUint8Array(code), PluginType: type })
+      .then((e) => {
         if (e && e.Result.length > 0) {
           const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
           // monaco.editor.setModelMarkers(model, "owner", markers)
@@ -1041,8 +993,8 @@ export const getYakRunnerLastAreaFile = (): Promise<{
  */
 export const getPathJoin = (path: string, file: string): Promise<string> => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('pathJoin', {
+    ipc
+      .invoke('local', 'pathJoin', {
         dir: path,
         file,
       })
@@ -1060,8 +1012,8 @@ export const getPathJoin = (path: string, file: string): Promise<string> => {
  */
 export const getPathParent = (filePath: string): Promise<string> => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('pathParent', {
+    ipc
+      .invoke('local', 'pathParent', {
         filePath,
       })
       .then((currentPath: string) => {
@@ -1078,8 +1030,8 @@ export const getPathParent = (filePath: string): Promise<string> => {
  */
 export const getNameByPath = (filePath: string): Promise<string> => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('pathFileName', {
+    ipc
+      .invoke('local', 'pathFileName', {
         filePath,
       })
       .then((currentName: string) => {
@@ -1096,8 +1048,8 @@ export const getNameByPath = (filePath: string): Promise<string> => {
  */
 export const getRelativePath = (basePath: string, filePath: string): Promise<string> => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('relativePathByBase', {
+    ipc
+      .invoke('local', 'relativePathByBase', {
         basePath,
         filePath,
       })

@@ -9,7 +9,7 @@ export interface SessionRenderRecord {
   source: DeleteSessionsAISourceType
   content: SessionRenderContent
   /** 与后端事件游标对齐；写树时一并 put */
-  grpcOffset?: number
+  grpcOffset?: string | number
 }
 
 /** sessionContent 表一行记录（content 内 reference 仅为 token 列表） */

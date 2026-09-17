@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import { type CollabService } from '@milkdown/plugin-collab'
 import { Doc, type Transaction, type YTextEvent } from 'yjs'
 import { WebsocketProvider } from './WebsocketProvider/WebsocketProvider'
@@ -9,7 +10,6 @@ import type { NotepadWsRequest } from './WebsocketProvider/WebsocketProviderType
 import { notepadActions, notepadSaveStatus } from './WebsocketProvider/constants'
 import i18n from '@/i18n/i18n'
 
-const { ipcRenderer } = window.require('electron')
 const tOriginal = i18n.getFixedT(null, 'components')
 export interface CollabUserInfo {
   userId: number
@@ -57,7 +57,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
   flush = async (template: string) => {
     let wsUrl = ''
     try {
-      wsUrl = await ipcRenderer.invoke('get-ws-url')
+      wsUrl = await ipc.invoke('local', 'get-ws-url', {})
     } catch (error) {
       yakitNotify('error', tOriginal('MilkdownEditor.collab.getWSUrlError', { error: String(error) }))
     }

@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -18,8 +19,6 @@ import { grpcMITMDropRequestById, grpcMITMDropResponseById } from '../MITMHacker
 import type { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
 import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/page/yakEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 interface MITMManualHeardExtraProps {
   urlInfo: string
@@ -223,7 +222,7 @@ interface MITMManualEditorProps {
   modifiedPacket: string
   setModifiedPacket: (u: string) => void
   forResponse: boolean
-  currentPacketId: number
+  currentPacketId: string | number
   handleAutoForward: (v: ManualHijackTypeProps) => void
   autoForward: ManualHijackTypeProps
   forward: (isManual: boolean) => void
@@ -260,7 +259,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
   const [system, setSystem] = useState<string>()
 
   useEffect(() => {
-    ipcRenderer.invoke('fetch-system-name').then((res) => setSystem(res))
+    ipc.invoke('local', 'fetch-system-name', {}).then((res) => setSystem(res))
   }, [])
 
   const mitmManualRightMenu: OtherMenuListProps = useMemo(() => {
@@ -389,10 +388,10 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
   )
 })
 
-export const dropRequest = (id: number) => {
+export const dropRequest = (id: string | number) => {
   return grpcMITMDropRequestById(id, true)
 }
 
-export const dropResponse = (id: number) => {
+export const dropResponse = (id: string | number) => {
   return grpcMITMDropResponseById(id, true)
 }

@@ -3,7 +3,6 @@ import { act, render, waitFor } from '@testing-library/react'
 import { YaklangEngineWatchDog } from '../index'
 import type { YaklangEngineWatchDogProps } from '../index'
 import emiter from '@/utils/eventBus/eventBus'
-import { yakitEngine } from '@/utils/electronBridge'
 import { grpcStartLocalEngine, isEngineConnectionAlive } from '../../../grpc'
 import { toEngineHandshakeName } from '@/utils/envfile'
 import type { YaklangEngineMode } from '@/pages/StartupPage/types'
@@ -42,9 +41,16 @@ vi.mock('@/utils/eventBus/eventBus', () => ({
   },
 }))
 
-vi.mock('@/utils/electronBridge', () => ({
-  yakitEngine: {
-    connectYaklangEngine: vi.fn(),
+const yakitEngine = vi.hoisted(() => ({
+  connectYaklangEngine: vi.fn(),
+}))
+vi.mock('../../../../../../../../shared/communication/window-client', () => ({
+  ipc: {
+    invoke: (_namespace: string, api: string, params: unknown) => {
+      if (api === 'connect-yaklang-engine') return yakitEngine.connectYaklangEngine(params)
+      return Promise.resolve(undefined)
+    },
+    on: vi.fn(() => vi.fn()),
   },
 }))
 

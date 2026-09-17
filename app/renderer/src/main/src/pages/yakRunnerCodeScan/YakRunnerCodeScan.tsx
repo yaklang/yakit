@@ -1,3 +1,7 @@
+import { int64ToSafeNumber, grpcPageForUI } from '@/utils/int64'
+import { useSyntaxFlowSession } from './useSyntaxFlowSession'
+import { ssaProjectsForUI } from '@/pages/yakRunnerCodeScan/grpcAdapters'
+import { ipc, type GrpcOutput } from '@/services/ipc'
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type {
   CodeScaMainExecuteContentProps,
@@ -15,7 +19,6 @@ import type {
   SyntaxFlowScanExecuteState,
   SyntaxFlowScanModeType,
   SyntaxFlowScanRequest,
-  SyntaxFlowScanResponse,
   VerifyStartProps,
   YakRunnerCodeScanProps,
   CodeScanRuleByGroupProps,
@@ -65,7 +68,7 @@ import {
 import { randomString } from '@/utils/randomUtil'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { apiCancelSyntaxFlowScan, apiSyntaxFlowScan, type CodeScanComplianceMode, getGroupNamesTotal } from './utils'
+import { type CodeScanComplianceMode, getGroupNamesTotal } from './utils'
 import { YakitRoute } from '@/enums/yakitRoute'
 import {
   type AuditCodePageInfoProps,
@@ -88,7 +91,7 @@ import { grpcFetchLocalPluginDetail } from '../pluginHub/utils/grpc'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { ExtraParamsNodeByType } from '../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParamsNodes'
 import { getValueByType, getYakExecutorParam, ParamsToGroupByGroupName } from '../plugins/editDetails/utils'
-import { apiCancelDebugPlugin, apiDebugPlugin, type DebugPluginRequest } from '../plugins/utils'
+import { apiDebugPlugin, type DebugPluginRequest } from '../plugins/utils'
 import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import { CodeScanTaskListDrawer } from './CodeScanTaskListDrawer/CodeScanTaskListDrawer'
 import emiter from '@/utils/eventBus/eventBus'
@@ -132,8 +135,6 @@ import { getJsonSchemaListResult } from '@/components/JsonFormWrapper/JsonFormWr
 import { JSONParseLog } from '@/utils/tool'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 const { YakitPanel } = YakitCollapse
-const { ipcRenderer } = window.require('electron')
-
 // 数组去重
 const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
@@ -311,7 +312,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
     } catch (error) {}
   })
 
-  const onComplianceModeChange = useMemoizedFn((nextMode: CodeScanComplianceMode) => {
+  const onComplianceModeChange = useMemoizedFn((nextMode) => {
     setRemoteValue(CODE_SCAN_COMPLIANCE_MODE_KEY, nextMode)
     setPageInfo((prev) => ({
       ...prev,
@@ -396,7 +397,7 @@ const CodeScanRuleSetting: React.FC<CodeScanRuleSettingProps> = React.memo((prop
   const { filterLibRuleKind, onFilterLibRuleKindChange, pageInfo, setPageInfo } = props
   const [visible, setVisible] = useState<boolean>(false)
 
-  const onComplianceModeChange = useMemoizedFn((nextMode: CodeScanComplianceMode) => {
+  const onComplianceModeChange = useMemoizedFn((nextMode) => {
     setRemoteValue(CODE_SCAN_COMPLIANCE_MODE_KEY, nextMode)
     setPageInfo((prev) => ({
       ...prev,
@@ -566,7 +567,7 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
       setPageInfo((prev: CodeScanPageInfoProps) => ({
         ...prev,
         ...clearRuleByPageInfo,
-        RuleIds: selectedRules.map((item) => parseInt(item.Id + '')),
+        RuleIds: selectedRules.map((item) => String(item.Id)),
         selectTotal: selectedRules.length,
       }))
     }
@@ -746,7 +747,7 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
   const [pageInfo, setPageInfo] = useState<CodeScanPageInfoProps>(initPageInfo())
 
   useEffect(() => {
-    getRemoteValue(CODE_SCAN_COMPLIANCE_MODE_KEY).then((nextMode: CodeScanComplianceMode) => {
+    getRemoteValue(CODE_SCAN_COMPLIANCE_MODE_KEY).then((nextMode) => {
       if (nextMode) {
         setPageInfo((prev) => ({
           ...prev,
@@ -1093,25 +1094,26 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
   })
 
   const [auditCodeList, setAuditCodeList] = useState<
-    { label: string; value: number; Language: string; JSONStringConfig: string }[]
+    { label: string; value: string | number; Language: string; JSONStringConfig: string }[]
   >([])
-  const [selectProjectId, setSelectProjectId] = useState<number[]>([])
+  const [selectProjectId, setSelectProjectId] = useState<(string | number)[]>([])
   const getAduitList = useMemoizedFn(async () => {
     try {
       // QuerySSAProject
-      ipcRenderer
-        .invoke('QuerySSAProject', {
+      ipc
+        .invoke('grpc', 'QuerySSAProject', {
           Pagination: {
             ...genDefaultPagination(500),
             Order: 'asc',
             OrderBy: 'created_at',
           },
         })
-        .then((item: QueryGeneralResponse<SSAProjectResponse>) => {
-          item.Data = (item as any)?.Projects || []
-          if (item.Data.length > 0) {
-            const projectId: number[] = []
-            const list = item.Data.map((item) => {
+        .then(ssaProjectsForUI)
+        .then(grpcPageForUI)
+        .then((item) => {
+          if (item.Projects.length > 0) {
+            const projectId: (string | number)[] = []
+            const list = item.Projects.map((item) => {
               const { ProjectName, ID, Language, JSONStringConfig } = item
               if (pageInfo.projectId === ID) {
                 projectId.push(ID)
@@ -1516,11 +1518,14 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
           FilterLibRuleKind: filterLibRuleKind,
         },
       }
-      apiSyntaxFlowScan(params, token).then(() => {
-        setIsExpand(false)
-        setExecuteStatus('process')
-        if (setHidden) setHidden(true)
-      })
+      sendScan(params)
+        .then((active) => {
+          if (!active) return
+          setIsExpand(false)
+          setExecuteStatus('process')
+          if (setHidden) setHidden(true)
+        })
+        .catch(() => {})
     })
 
     useImperativeHandle(
@@ -1581,7 +1586,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
       trigger: 'setAuditsExecuting',
     })
 
-    const [token, setToken] = useState(randomString(20))
+    const token = useRef(randomString(20)).current
     // 新项目执行是否报错，如若报错 展示结果
     const [auditError, setAuditError] = useState<boolean>(false)
 
@@ -1708,110 +1713,105 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
       })
     })
 
-    useEffect(() => {
-      ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
-        if (res) {
-          // console.log("token-data:", res)
-          const data = res.ExecResult
-          if (!!res?.ActiveTask && res.ActiveTask.length > 0) {
-            setActiveTask(res.ActiveTask)
-          }
-          if (res.Status) {
-            switch (res.Status) {
-              case 'done':
-                setExecuteStatus('finished')
-                break
-              case 'error':
-                setExecuteStatus('error')
-                break
-              case 'executing':
-                setContinueLoading(false)
-                setExecuteStatus('process')
-                break
-              case 'paused':
-                setExecuteStatus('paused')
-                break
-              default:
-                break
-            }
-          }
-          if (!!data?.RuntimeID && getRuntimeId() !== data.RuntimeID) {
-            setRuntimeId(data.RuntimeID)
-            if (pageInfoCacheRef.current) {
-              setPageInfo({ ...pageInfoCacheRef.current, runtimeId: data.RuntimeID })
-            }
-
-            /**更新该页面最新的runtimeId */
-            onUpdateExecutorPageInfo(data.RuntimeID)
-          }
-          if (data && data.IsMessage) {
-            try {
-              const obj: StreamResult.Message = JSONParseLog(Buffer.from(data.Message).toString(), {
-                page: 'yakRunnerCodeScan',
-                fun: 'streamInfo',
-              })
-              const progressObj = obj.content as StreamResult.Progress
-              if (obj.type === 'progress') {
-                setProgressShow({
-                  type: 'old',
-                  progress: progressObj.progress,
-                })
-                return
-              }
-
-              // feature-status-card-data 卡片展示
-              const logData = obj.content as StreamResult.Log
-              // feature-status-card-data 卡片展示
-              if (obj.type === 'log' && logData.level === 'feature-status-card-data') {
-                try {
-                  const checkInfo = checkStreamValidity(logData)
-                  if (!checkInfo) return
-
-                  const obj: StreamResult.Card = checkInfo
-                  const { id, data, tags } = obj
-                  const { timestamp } = logData
-                  const originData = cardKVPair.current.get(id)
-                  if (originData && originData.Timestamp > timestamp) {
-                    return
-                  }
-                  cardKVPair.current.set(id, {
-                    Id: id,
-                    Data: data,
-                    Timestamp: timestamp,
-                    Tags: Array.isArray(tags) ? tags : [],
-                  })
-                } catch (e) {}
-                return
-              }
-
-              pushLogs(obj)
-            } catch (error) {}
+    const onScanData = useMemoizedFn((res: GrpcOutput<'SyntaxFlowScan'>) => {
+      if (res) {
+        // console.log("token-data:", res)
+        const data = res.ExecResult
+        if (!!res?.ActiveTask && res.ActiveTask.length > 0) {
+          setActiveTask(res.ActiveTask.map((task) => ({ ...task, RunningTime: int64ToSafeNumber(task.RunningTime) })))
+        }
+        if (res.Status) {
+          switch (res.Status) {
+            case 'done':
+              setExecuteStatus('finished')
+              break
+            case 'error':
+              setExecuteStatus('error')
+              break
+            case 'executing':
+              setContinueLoading(false)
+              setExecuteStatus('process')
+              break
+            case 'paused':
+              setExecuteStatus('paused')
+              break
+            default:
+              break
           }
         }
-      })
-      ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-        setTimeout(() => {
-          setExecuteStatus('error')
-          setPauseLoading(false)
-          setStopLoading(false)
-          setContinueLoading(false)
-        }, 200)
-        yakitNotify('error', `[Mod] flow-scan error: ${error}`)
-      })
-      ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
-        info('[SyntaxFlowScan] finished')
-        setTimeout(() => {
-          setPauseLoading(false)
-          setStopLoading(false)
-          setContinueLoading(false)
-        }, 200)
-      })
-      return () => {
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
+        if (!!data?.RuntimeID && getRuntimeId() !== data.RuntimeID) {
+          setRuntimeId(data.RuntimeID)
+          if (pageInfoCacheRef.current) {
+            setPageInfo({ ...pageInfoCacheRef.current, runtimeId: data.RuntimeID })
+          }
+
+          /**更新该页面最新的runtimeId */
+          onUpdateExecutorPageInfo(data.RuntimeID)
+        }
+        if (data && data.IsMessage) {
+          try {
+            const obj: StreamResult.Message = JSONParseLog(Buffer.from(data.Message).toString(), {
+              page: 'yakRunnerCodeScan',
+              fun: 'streamInfo',
+            })
+            const progressObj = obj.content as StreamResult.Progress
+            if (obj.type === 'progress') {
+              setProgressShow({
+                type: 'old',
+                progress: progressObj.progress,
+              })
+              return
+            }
+
+            // feature-status-card-data 卡片展示
+            const logData = obj.content as StreamResult.Log
+            // feature-status-card-data 卡片展示
+            if (obj.type === 'log' && logData.level === 'feature-status-card-data') {
+              try {
+                const checkInfo = checkStreamValidity(logData)
+                if (!checkInfo) return
+
+                const obj: StreamResult.Card = checkInfo
+                const { id, data, tags } = obj
+                const { timestamp } = logData
+                const originData = cardKVPair.current.get(id)
+                if (originData && originData.Timestamp > timestamp) {
+                  return
+                }
+                cardKVPair.current.set(id, {
+                  Id: id,
+                  Data: data,
+                  Timestamp: timestamp,
+                  Tags: Array.isArray(tags) ? tags : [],
+                })
+              } catch (e) {}
+              return
+            }
+
+            pushLogs(obj)
+          } catch (error) {}
+        }
       }
-    }, [])
+    })
+    const onScanError = useMemoizedFn((error: unknown) => {
+      setExecuteStatus('error')
+      setPauseLoading(false)
+      setStopLoading(false)
+      setContinueLoading(false)
+      yakitNotify('error', `[Mod] flow-scan error: ${error}`)
+    })
+    const onScanEnd = useMemoizedFn(() => {
+      info('[SyntaxFlowScan] finished')
+      setPauseLoading(false)
+      setStopLoading(false)
+      setContinueLoading(false)
+    })
+    const { send: sendScan, cancel: cancelScan } = useSyntaxFlowSession({
+      token,
+      onData: onScanData,
+      onError: onScanError,
+      onEnd: onScanEnd,
+    })
 
     const [JSONStringConfig, setJSONStringConfig] = useState<string>()
     const SyntaxFlowScanParamsRef = useRef<SyntaxFlowScanRequest>()
@@ -1820,17 +1820,20 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         failed('获取扫描参数失败，请重试')
         return
       }
-      apiSyntaxFlowScan(SyntaxFlowScanParamsRef.current, token).then(() => {
-        pageInfoCacheRef.current = {
-          ...pageInfo,
-          projectId: SyntaxFlowScanParamsRef.current?.SSAProjectId,
-          historyName: SyntaxFlowScanParamsRef.current?.ProgramName,
-        }
-        setIsExpand(false)
-        setExecuteStatus('process')
-        resetStreamInfo()
-        if (setHidden) setHidden(true)
-      })
+      sendScan(SyntaxFlowScanParamsRef.current)
+        .then((active) => {
+          if (!active) return
+          pageInfoCacheRef.current = {
+            ...pageInfo,
+            projectId: SyntaxFlowScanParamsRef.current?.SSAProjectId,
+            historyName: SyntaxFlowScanParamsRef.current?.ProgramName,
+          }
+          setIsExpand(false)
+          setExecuteStatus('process')
+          resetStreamInfo()
+          if (setHidden) setHidden(true)
+        })
+        .catch(() => {})
     })
 
     /**开始执行 */
@@ -1892,10 +1895,15 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         codeScanAuditExecuteRef.current?.onCancelAudit()
       } else {
         setStopLoading(true)
-        apiCancelSyntaxFlowScan(token).then(() => {
-          setIsExpand(true)
-          setExecuteStatus('finished')
-        })
+        cancelScan()
+          .then(() => {
+            setStopLoading(false)
+            setPauseLoading(false)
+            setContinueLoading(false)
+            setIsExpand(true)
+            setExecuteStatus('finished')
+          })
+          .catch(() => {})
       }
     })
 
@@ -1917,7 +1925,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         },
         ResumeTaskId: runtimeId,
       }
-      apiSyntaxFlowScan(params, token)
+      sendScan(params).catch(() => {})
     })
 
     /**继续 */
@@ -1944,12 +1952,15 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
           },
           ResumeTaskId: runtimeId,
         }
-        apiSyntaxFlowScan(params, token).then(() => {
-          setIsExpand(false)
-          setExecuteStatus('process')
-          resetStreamInfo()
-          if (setHidden) setHidden(true)
-        })
+        sendScan(params)
+          .then((active) => {
+            if (!active) return
+            setIsExpand(false)
+            setExecuteStatus('process')
+            resetStreamInfo()
+            if (setHidden) setHidden(true)
+          })
+          .catch(() => {})
       })
     })
     // 审计结果表格数据
@@ -2429,7 +2440,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         yakitNotify('info', `调试任务启动成功，运行时 ID: ${rId}`)
       },
     })
-    const projectIdCacheRef = useRef<number>()
+    const projectIdCacheRef = useRef<string | number>()
     const jsonCacheRef = useRef<string>('')
 
     // 执行审计
@@ -2437,7 +2448,8 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
       setAuditError(false)
       debugPluginStreamEvent.reset()
       debugCompilePluginStreamEvent.reset()
-      apiDebugPlugin({ params: requestParams, token: tokenRef.current }).then(() => {
+      apiDebugPlugin({ params: requestParams, open: debugPluginStreamEvent.open }).then(() => {
+        if (!debugPluginStreamEvent.isActive()) return
         isRealStartRef.current = false
         resetStreamInfo()
         debugPluginStreamEvent.start()
@@ -2447,8 +2459,8 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
 
     const onCancelAudit = () => {
       // cancel 后主进程不再转发 end，需本地收尾
-      apiCancelDebugPlugin(tokenRef.current)
-      apiCancelDebugPlugin(tokenCompileRef.current)
+      debugPluginStreamEvent.cancel()
+      debugCompilePluginStreamEvent.cancel()
       debugPluginStreamEvent.stop()
       debugCompilePluginStreamEvent.stop()
       setIsExpand(true)
@@ -2514,8 +2526,9 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         ],
         PluginName: 'SSA 项目编译',
       }
-      apiDebugPlugin({ params: requestParams, token: tokenCompileRef.current })
+      apiDebugPlugin({ params: requestParams, open: debugCompilePluginStreamEvent.open })
         .then(() => {
+          if (!debugCompilePluginStreamEvent.isActive()) return
           isStartExecuteRef.current = false
           debugCompilePluginStreamEvent.start()
         })
@@ -2558,11 +2571,12 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
 
     const onCreateSSAProject = useMemoizedFn(async (JSONStringConfig) => {
       return new Promise((resolve, reject) => {
-        ipcRenderer
-          .invoke('CreateSSAProject', {
+        ipc
+          .invoke('grpc', 'CreateSSAProject', {
             JSONStringConfig,
           })
-          .then((res: CreateSSAProjectResponse) => {
+          .then((res) => {
+            if (!res.Project) throw new Error('创建项目未返回项目信息')
             projectIdCacheRef.current = res.Project.ID
             jsonCacheRef.current = res.Project.JSONStringConfig
             resolve(null)

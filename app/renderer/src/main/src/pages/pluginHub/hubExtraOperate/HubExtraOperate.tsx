@@ -1,3 +1,4 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
 import type React from 'react'
 import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
@@ -559,8 +560,8 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
     const handleDelLocal = useMemoizedFn(() => {
       activeOperate.current = ''
       if (!local) return
-      if (!local.Id || !Number(local.Id)) return
-      apiDeleteYakScriptByIds({ Ids: [Number(local.Id)] }, true)
+      if (!positiveInt64(local.Id)) return
+      apiDeleteYakScriptByIds({ Ids: [int64String(local.Id ?? 0)] }, true)
         .then(() => {
           if (onCallback) onCallback('delLocal')
         })

@@ -15,6 +15,7 @@ const checks = [
   },
   { envKey: 'OUTCOME_ESLINT', title: 'ESLint（renderer src/main）', log: 'eslint-output.log' },
   { envKey: 'OUTCOME_TSC', title: 'TypeScript（renderer src/main）', log: 'tsc-output.log' },
+  { envKey: 'OUTCOME_TSC_ELECTRON', title: 'TypeScript、proto 与构建（Electron）', log: 'tsc-electron-output.log' },
   {
     envKey: 'OUTCOME_ESLINT_ENGINE_LINK',
     title: 'ESLint（engine-link-startup）',

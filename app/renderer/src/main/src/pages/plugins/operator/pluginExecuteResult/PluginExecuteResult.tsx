@@ -1,3 +1,4 @@
+import { queryHTTPFlows as requestHTTPFlows } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { HorizontalScrollCard } from '../horizontalScrollCard/HorizontalScrollCard'
@@ -69,8 +70,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { setClipboardText } from '@/utils/clipboard'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-
-const { ipcRenderer } = window.require('electron')
 
 export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.memo((props) => {
   const {
@@ -268,11 +267,10 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
       } else {
         const httpTab = tabs.find((tab) => tab.type === 'http')
         if (httpTab && runtimeId) {
-          ipcRenderer
-            .invoke('QueryHTTPFlows', {
-              RuntimeId: runtimeId,
-              Pagination: { Page: 1, Limit: 1, Order: 'desc', OrderBy: 'Id' },
-            })
+          requestHTTPFlows({
+            RuntimeId: runtimeId,
+            Pagination: { Page: 1, Limit: 1, Order: 'desc', OrderBy: 'Id' },
+          })
             .then((rsp: { Total: number }) => {
               if (rsp.Total > 0) {
                 safeSetActiveKey(httpTab.tabName)

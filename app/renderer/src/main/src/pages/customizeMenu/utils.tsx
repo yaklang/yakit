@@ -22,7 +22,7 @@ export interface EnhancedCustomRouteMenuProps {
   hoverIcon?: JSX.Element
   describe?: string
   describeUi?: string
-  yakScriptId?: number
+  yakScriptId?: number | string
   yakScripName?: string
   headImg?: string
   children?: EnhancedCustomRouteMenuProps[]

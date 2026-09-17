@@ -6,7 +6,7 @@ import classNames from 'classnames'
 import type { KnowledgeBaseTableProps } from './KnowledgeBaseTable'
 import { RoundedStopButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
 import type { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
-import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
+
 import { useKnowledgeBase } from '../hooks/useKnowledgeBase'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -53,7 +53,7 @@ const PluginExecuteDetailDrawer: FC<PluginExecuteDetailDrawerProps> = (props) =>
     if (buildingDrawer.streamToken) {
       props.api?.removeStream(buildingDrawer.streamToken)
       props.onCloseViewBuildProcess()
-      await apiCancelDebugPlugin(buildingDrawer.streamToken)
+
       if (buildingDrawer.type === 'routine') {
         editKnowledgeBase(knowledgeBaseItems.ID, {
           ...knowledgeBaseItems,

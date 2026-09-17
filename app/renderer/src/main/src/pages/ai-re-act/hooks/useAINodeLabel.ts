@@ -2,7 +2,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import type { AIOutputI18n } from './grpcApi'
 
-function useAINodeLabel(params?: AIOutputI18n) {
+function useAINodeLabel(params?: AIOutputI18n | null) {
   const { i18n } = useI18nNamespaces([])
   const language = useCreation(() => {
     try {
@@ -14,8 +14,8 @@ function useAINodeLabel(params?: AIOutputI18n) {
   const nodeLabel = useCreation(() => {
     return params ? params[language] || params['Zh'] : ''
   }, [language, params])
-  const getLabelByParams = useMemoizedFn((value: AIOutputI18n) => {
-    return value[language] || value['Zh'] || ''
+  const getLabelByParams = useMemoizedFn((value: AIOutputI18n | null | undefined) => {
+    return value?.[language] || value?.Zh || ''
   })
   return { nodeLabel, getLabelByParams }
 }

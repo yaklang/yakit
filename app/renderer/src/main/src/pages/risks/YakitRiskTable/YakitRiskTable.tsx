@@ -1,3 +1,4 @@
+import { fetchHTTPFlow as requestHTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import type {
   QueryRisksRequest,
@@ -117,8 +118,6 @@ import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { getDiscoveryTimeColumnFixed } from './riskTableUtils'
-
-const { ipcRenderer } = window.require('electron')
 
 export { isShowCodeScanDetail } from './riskTableUtils'
 
@@ -361,8 +360,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const [inViewport = true] = useInViewport(riskTableRef)
 
   const prePage = useRef<number>(0)
-  const afterId = useRef<number>(0)
-  const beforeId = useRef<number>(0)
+  const afterId = useRef<string | number>(0)
+  const beforeId = useRef<string | number>(0)
   const tableRef = useRef<any>(null)
   const defLimitRef = useRef<number>(defLimit)
   const limitRef = useRef<number>(defLimit)
@@ -1612,8 +1611,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
       try {
         const results = await Promise.all(
           info.PacketPairs.filter((item) => item.HttpflowId).map((item) =>
-            ipcRenderer
-              .invoke('GetHTTPFlowById', { Id: item.HttpflowId })
+            requestHTTPFlow({ Id: item.HttpflowId })
               .then((data: HTTPFlow) => ({
                 HttpflowId: item.HttpflowId,
                 Url: item.Url,

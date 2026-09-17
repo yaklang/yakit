@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 /**
  * 通用第三方应用配置表单组件。
  */
@@ -23,8 +24,6 @@ import { isMemfit } from '@/utils/envfile'
 import { JSONParseLog } from '@/utils/tool'
 import type { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
-
 export interface ThirdPartyAppConfigItemTemplate {
   Required: boolean
   Name: string
@@ -125,7 +124,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
 
     // 获取类型
     useEffect(() => {
-      ipcRenderer.invoke('GetThirdPartyAppConfigTemplate').then((res: GetThirdPartyAppConfigTemplateResponse) => {
+      ipc.invoke('grpc', 'GetThirdPartyAppConfigTemplate', {}).then((res) => {
         const templates = res.Templates
         let newOptions: SelectOptionsProps[] = []
         setTemplates(templates)
@@ -152,8 +151,8 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
         if (!execModelNameOption.current) return
         setModelOptionLoading(true)
         const v = form.getFieldsValue()
-        ipcRenderer
-          .invoke('ListAiModel', { Config: JSON.stringify(v) })
+        ipc
+          .invoke('grpc', 'ListAiModel', { Config: JSON.stringify(v) })
           .then((res) => {
             if (!execModelNameOption.current) return
             const modalNamelist: SelectOptionsProps[] = res.ModelName.map((modelName: string) => ({

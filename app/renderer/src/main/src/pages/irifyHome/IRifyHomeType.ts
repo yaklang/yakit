@@ -98,7 +98,7 @@ export interface SSAWorkbenchRuleHitItem {
 }
 
 export interface SSAWorkbenchRecentProject {
-  ID: number
+  ID: string | number
   ProjectName: string
   Language: string
   HighestRiskSeverity: string

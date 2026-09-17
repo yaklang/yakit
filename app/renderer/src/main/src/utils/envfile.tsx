@@ -1,9 +1,9 @@
+import { ipc } from '../../../../../shared/communication/window-client'
 import { info } from '@/utils/notification'
 import { setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { RemotePrivateDomainGV } from '@/enums/privateDomain'
 import type { Theme } from '@/hook/useTheme'
-import { yakitRelease } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'utils')
 
@@ -197,7 +197,7 @@ export const toEngineHandshakeName = (edition = fetchEnv()) => {
 /*
  * 在导入的时候，就马上设置，不用等到组件加载
  * */
-yakitRelease.setEditionRaw(fetchEnv() || '').then(() => {
+ipc.invoke('local', 'set-release-edition-raw', fetchEnv() || '').then(() => {
   if (isEnpriTraceAgent()) {
     info(tOriginal('envfile.setReleaseEditionSuccess', { edition: getReleaseEditionName() }))
   }

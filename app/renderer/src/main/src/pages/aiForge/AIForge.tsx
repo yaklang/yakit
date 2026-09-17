@@ -1,3 +1,4 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
 import React, { useEffect, useRef, useState } from 'react'
 import type { AIForgePageItemProps, AIForgeProps } from './AIForgeType'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSelections } from 'ahooks'
@@ -176,7 +177,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
   })
   // 删除 forge 模板
   const handleDeleteAIForge = useMemoizedFn((info: AIForge) => {
-    const id = Number(info.Id) || 0
+    const id = positiveInt64(info.Id) || 0
     if (!id) {
       yakitNotify('error', `该模板 ID('${info.Id}') 异常, 无法编辑`)
       return Promise.reject('ID 异常')

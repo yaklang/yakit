@@ -1,7 +1,6 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import { useEffect, useRef, useCallback } from 'react'
 import { formatTimeYMD } from '@/utils/timeUtil'
-
-const { ipcRenderer } = window.require('electron')
 
 /**
  * 日志数据结构
@@ -78,7 +77,7 @@ export function useLogger(
 
   // 封装 log 方法
   const log: LogFn = (msg) => {
-    ipcRenderer.invoke('add-log', {
+    ipc.invoke('local', 'add-log', {
       time: formatTimeYMD(Date.now()),
       ...msg,
     })

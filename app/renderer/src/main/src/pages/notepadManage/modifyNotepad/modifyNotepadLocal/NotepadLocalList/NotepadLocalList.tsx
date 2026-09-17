@@ -58,7 +58,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
     Total: 0,
   })
   const [allCheck, setAllCheck] = useState<boolean>(false)
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
+  const [selectedRowKeys, setSelectedRowKeys] = useState<(string | number)[]>([])
   const [exportVisible, setExportVisible] = useState<boolean>(false)
   const [exportFilter, setExportFilter] = useState<NoteFilter>(cloneDeep(defaultNoteFilter))
   const [importVisible, setImportVisible] = useState<boolean>(false)
@@ -140,7 +140,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
     return { ...cloneDeep(defaultNoteFilter), Id: selectedRowKeys }
   })
 
-  const onToggleSelect = useMemoizedFn((id: number) => {
+  const onToggleSelect = useMemoizedFn((id: string | number) => {
     if (selectedRowKeys.includes(id)) {
       setAllCheck(false)
       setSelectedRowKeys((prev) => prev.filter((k) => k !== id))

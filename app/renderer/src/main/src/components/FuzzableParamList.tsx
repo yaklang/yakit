@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../shared/communication/window-client'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Typography } from 'antd'
@@ -13,7 +14,6 @@ import { v4 as uuidv4 } from 'uuid'
 import styles from './hTTPFlowDetail.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
 const { Text } = Typography
 
 export interface FuzzableParamListProp extends HTTPPacketFuzzable {
@@ -90,11 +90,14 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
             <YakitPopconfirm
               title={t('FuzzableParamList.testParameterInWebFuzzer')}
               onConfirm={(e) => {
-                ipcRenderer.invoke('send-to-tab', {
-                  type: 'fuzzer',
+                ipc.invoke('local', 'ForwardMainEvent', {
+                  event: 'fetch-send-to-tab',
                   data: {
-                    isHttps: i.IsHTTPS,
-                    request: Buffer.from(i.AutoTemplate).toString('utf8'),
+                    type: 'fuzzer',
+                    data: {
+                      isHttps: i.IsHTTPS,
+                      request: Buffer.from(i.AutoTemplate).toString('utf8'),
+                    },
                   },
                 })
                 if (props.sendToWebFuzzer) props.sendToWebFuzzer()

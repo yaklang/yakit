@@ -2,7 +2,7 @@ import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionCon
 import { buildConcurrentStreamFramePayload } from './buildConcurrentStreamFramePayload'
 import type { ConcurrentStreamFramePayload } from '../concurrentStreamFrame'
 
-const { ipcRenderer } = window.require('electron')
+import { ipc } from '@/services/ipc'
 
 const FETCH_REQUEST = 'fetch-concurrent-stream-contents-request'
 
@@ -20,8 +20,19 @@ let teardown: (() => void) | null = null
 export function setupConcurrentStreamMainBridge() {
   if (bridgeReady) return teardown
 
-  const handler = (_event: unknown, payload: ConcurrentStreamFramePayload & { requestId: string }) => {
-    const { requestId, session, token, chatType } = payload
+  const handler = (payload: unknown) => {
+    if (!payload || typeof payload !== 'object') return
+    if (
+      !('requestId' in payload) ||
+      typeof payload.requestId !== 'string' ||
+      !('session' in payload) ||
+      typeof payload.session !== 'string' ||
+      !('token' in payload) ||
+      typeof payload.token !== 'string'
+    )
+      return
+    const chatType = 'chatType' in payload && typeof payload.chatType === 'string' ? payload.chatType : undefined
+    const { requestId, session, token } = payload
     if (!requestId || !session || !token) return
 
     const { store, rawData } = globalSessionEngine.ensureSession(session)
@@ -31,18 +42,23 @@ export function setupConcurrentStreamMainBridge() {
     const execFileRecord = full ? Array.from(full.execFileRecord.entries()) : []
     const childrenTokens = full ? full.childrenTokens : []
 
-    ipcRenderer.send(`fetch-concurrent-stream-contents-response-${requestId}`, {
-      rawData: entries,
-      execFileRecord,
-      childrenTokens,
-    })
+    void ipc
+      .invoke('local', 'reply-concurrent-stream-contents', {
+        requestId,
+        data: {
+          rawData: entries,
+          execFileRecord,
+          childrenTokens,
+        },
+      })
+      .catch((error) => console.error('Concurrent stream reply failed', error))
   }
 
-  ipcRenderer.on(FETCH_REQUEST, handler)
+  const unsubscribe = ipc.on(FETCH_REQUEST, handler)
   bridgeReady = true
 
   teardown = () => {
-    ipcRenderer.removeListener(FETCH_REQUEST, handler)
+    unsubscribe()
     bridgeReady = false
     teardown = null
   }

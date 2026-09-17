@@ -1,3 +1,5 @@
+import { ipc } from '@/services/ipc'
+import { int64String } from '@/utils/int64'
 import React, { useEffect, useRef, useState } from 'react'
 import { Progress } from 'antd'
 import { useMemoizedFn } from 'ahooks'
@@ -6,19 +8,11 @@ import { randomString } from '@/utils/randomUtil'
 import type { ExecResult } from '../invoker/schema'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import {
-  type CreatReportRequest,
-  type GenerateSSAReport,
-  apiCancelSimpleDetectCreatReport,
-  apiGenerateSSAReport,
-  apiSimpleDetectCreatReport,
-} from '../securityTool/newPortScan/utils'
+
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import emiter from '@/utils/eventBus/eventBus'
 import type { ShowModalProps } from '@/utils/showModal'
-
-const { ipcRenderer } = window.require('electron')
 
 export const onCreateReportModal = (createReportContent: CreateReportContentProps, modalProps: ShowModalProps) => {
   const m = showYakitModal({
@@ -48,74 +42,73 @@ const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((prop
   const [reportLoading, setReportLoading] = useState<boolean>(false)
 
   const tokenRef = useRef<string>(randomString(40))
-  const reportIdRef = useRef<number>()
+  const reportIdRef = useRef<string>()
+  const controllerRef = useRef<AbortController>()
+  useEffect(() => () => controllerRef.current?.abort(), [])
 
   /** 下载报告 */
-  const downloadReport = () => {
-    if (type === 'portScan') {
-      const reqParams: CreatReportRequest = {
-        ReportName: reportName,
-        RuntimeId: runtimeId,
-      }
-      apiSimpleDetectCreatReport(reqParams, tokenRef.current)
+  const downloadReport = async () => {
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    reportIdRef.current = undefined
+    setReportPercent(0)
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      setReportLoading(false)
+      failed(`生成报告执行出错: ${error}`)
     }
-    if (type === 'codeScan') {
-      const reqParams: GenerateSSAReport = {
-        ReportName: reportName,
-        TaskID: runtimeId,
+    try {
+      if (type === 'portScan') {
+        await ipc.openStream(
+          'grpc',
+          'SimpleDetectCreatReport',
+          { ReportName: reportName, RuntimeId: runtimeId },
+          {
+            token: tokenRef.current,
+            signal: controller.signal,
+            onData(data) {
+              if (controller.signal.aborted || !data.IsMessage) return
+              const obj = JSON.parse(new TextDecoder().decode(data.Message))
+              if (obj?.type === 'progress') setReportPercent(obj.content.progress)
+              if (obj?.type === 'log' && obj.content?.level === 'report')
+                reportIdRef.current = int64String(obj.content.data)
+            },
+            onError,
+            onEnd() {
+              if (!controller.signal.aborted) onOpenReport()
+            },
+          },
+        )
+      } else {
+        const result = await ipc.invoke(
+          'grpc',
+          'GenerateSSAReport',
+          { ReportName: reportName, TaskID: runtimeId },
+          { signal: controller.signal },
+        )
+        if (controller.signal.aborted) return
+        if (!result.Success) throw new Error(result.Message)
+        setReportPercent(1)
+        yakitNotify('success', result.Message)
+        onCancel?.()
+        emiter.emit('openPage', JSON.stringify({ route: YakitRoute.DB_Report }))
       }
-      apiGenerateSSAReport(reqParams, tokenRef.current)
-        .then((res) => {
-          setReportPercent(1)
-          setTimeout(() => {
-            yakitNotify('success', res.Message)
-            if (onCancel) onCancel()
-            emiter.emit('openPage', JSON.stringify({ route: YakitRoute.DB_Report }))
-          }, 300)
-        })
-        .catch(() => {
-          setReportLoading(false)
-        })
+    } catch (error) {
+      onError(error)
     }
   }
-  /** 获取生成报告返回结果 */
-  useEffect(() => {
-    ipcRenderer.on(`${tokenRef.current}-data`, (e, data: ExecResult) => {
-      if (data.IsMessage) {
-        const obj = JSON.parse(Buffer.from(data.Message).toString())
-        if (obj?.type === 'progress') {
-          const percent = obj.content.progress
-          setReportPercent(Math.trunc(percent * 100))
-        }
-        if (obj?.type === 'log') {
-          if (obj.content?.level === 'report') {
-            reportIdRef.current = parseInt(obj.content.data)
-          }
-        }
-      }
-    })
-    ipcRenderer.on(`${tokenRef.current}-error`, (e: any, error: any) => {
-      setReportLoading(false)
-      failed(`[Mod] SimpleDetectCreatReport error: ${error}`)
-    })
-    ipcRenderer.on(`${tokenRef.current}-end`, (e: any, error: any) => {
-      onOpenReport()
-    })
-
-    return () => {
-      ipcRenderer.removeAllListeners(`${tokenRef.current}-data`)
-      ipcRenderer.removeAllListeners(`${tokenRef.current}-error`)
-      ipcRenderer.removeAllListeners(`${tokenRef.current}-end`)
-    }
-  }, [])
   const onOpenReport = useMemoizedFn(() => {
-    if (!reportIdRef.current) return
+    if (!reportIdRef.current) {
+      setReportLoading(false)
+      return
+    }
     setReportLoading(false)
     setShowReportPercent(false)
     setReportPercent(0)
     emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.DB_Report }))
     setTimeout(() => {
-      ipcRenderer.invoke('simple-open-report', reportIdRef.current)
+      ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-simple-open-report', data: reportIdRef.current })
     }, 300)
     if (onCancel) onCancel()
   })
@@ -144,7 +137,7 @@ const CreateReportContent: React.FC<CreateReportContentProps> = React.memo((prop
         <YakitButton
           style={{ marginRight: 8 }}
           onClick={() => {
-            apiCancelSimpleDetectCreatReport(tokenRef.current)
+            controllerRef.current?.abort()
             if (onCancel) onCancel()
           }}
           type="outline2"

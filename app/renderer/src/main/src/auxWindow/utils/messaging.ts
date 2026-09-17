@@ -1,4 +1,4 @@
-import { yakitApp } from '@/services/electronBridge'
+import { ipc } from '../../../../../../shared/communication/window-client'
 import i18n from '@/i18n/i18n'
 import { useTheme, resolveTheme, type ThemeMode } from '@/hook/useTheme'
 import { applyAuxThemeColors } from '@/auxWindow/utils/applyAuxThemeColors'
@@ -37,7 +37,7 @@ export function registerAppSyncHandlers() {
   if (appSyncRegistered) return () => {}
   appSyncRegistered = true
 
-  const off = yakitApp.onSync(handleAppSyncMessage)
+  const off = ipc.on('aux-window:app-sync', handleAppSyncMessage)
   return () => {
     appSyncRegistered = false
     off()
@@ -46,5 +46,5 @@ export function registerAppSyncHandlers() {
 
 /** 主窗口：广播 theme / i18n 到所有窗口 */
 export function syncAppSettings(message: AppSyncMessage) {
-  return yakitApp.sync(message)
+  return ipc.invoke('local', 'aux-window:app-sync', message)
 }

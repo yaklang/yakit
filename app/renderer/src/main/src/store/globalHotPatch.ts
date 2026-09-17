@@ -1,11 +1,10 @@
+import { ipc } from '@/services/ipc'
 /**
  * @description 全局热加载模板配置 Store
  */
 
 import { create } from 'zustand'
 import { yakitFailed } from '@/utils/notification'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface GlobalHotPatchTemplateRef {
   Name: string
@@ -744,7 +743,7 @@ export const useGlobalHotPatch = create<GlobalHotPatchStore>((set, get) => ({
 
   loadGlobalHotPatchConfig: async () => {
     try {
-      const res: GlobalHotPatchConfig = await ipcRenderer.invoke('GetGlobalHotPatchConfig', {})
+      const res: GlobalHotPatchConfig = await ipc.invoke('grpc', 'GetGlobalHotPatchConfig', {})
       set({ globalHotPatchConfig: res })
     } catch (error) {
       yakitFailed(error + '')
@@ -755,7 +754,7 @@ export const useGlobalHotPatch = create<GlobalHotPatchStore>((set, get) => ({
     const { globalHotPatchConfig, loadGlobalHotPatchConfig } = get()
     const expectedVersion = globalHotPatchConfig?.Version || '0'
     try {
-      const res: GlobalHotPatchConfig = await ipcRenderer.invoke('SetGlobalHotPatchConfig', {
+      const res: GlobalHotPatchConfig = await ipc.invoke('grpc', 'SetGlobalHotPatchConfig', {
         Config: { Enabled: true, Version: expectedVersion, Items: [{ Name: name, Type: 'global', Enabled: true }] },
         ExpectedVersion: expectedVersion,
       })
@@ -770,7 +769,7 @@ export const useGlobalHotPatch = create<GlobalHotPatchStore>((set, get) => ({
     const { globalHotPatchConfig, loadGlobalHotPatchConfig } = get()
     const expectedVersion = globalHotPatchConfig?.Version || '0'
     try {
-      const res: GlobalHotPatchConfig = await ipcRenderer.invoke('SetGlobalHotPatchConfig', {
+      const res: GlobalHotPatchConfig = await ipc.invoke('grpc', 'SetGlobalHotPatchConfig', {
         Config: {
           Enabled: false,
           Version: expectedVersion,

@@ -1,7 +1,6 @@
+import { requestYakURL } from '@/pages/yakURLTree/grpc'
 import type { RequestYakURLResponse, YakURLResource } from '@/pages/yakURLTree/data'
 import { StringToUint8Array } from '@/utils/str'
-
-const { ipcRenderer } = window.require('electron')
 
 type YakQueryItem = { Key: string; Value: string }
 
@@ -109,31 +108,24 @@ export const openApiRequest = async (
   location: string,
   query: YakQueryItem[] = [],
   body?: string,
-  token?: string,
+  signal?: AbortSignal,
 ) => {
-  const resp = (await ipcRenderer.invoke(
-    'RequestYakURL',
+  const resp = await requestYakURL(
     {
       Method: method,
       Url: buildUrl(location, query),
       Body: body === undefined ? undefined : StringToUint8Array(body),
     },
-    token,
-  )) as RequestYakURLResponse
+    { signal },
+  )
   return resp.Resources || []
-}
-
-export const cancelOpenApiRequest = async (token?: string) => {
-  if (!token) return
-  try {
-    await ipcRenderer.invoke('cancel-RequestYakURL', token)
-  } catch {}
 }
 
 export const isOpenApiRequestCanceled = (error: unknown) => {
   const { code, details, message } = (error || {}) as Record<string, unknown>
   return (
     code === 1 ||
+    code === 'ABORTED' ||
     String(details || message || error)
       .toLowerCase()
       .includes('cancel')

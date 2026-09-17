@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
+import { ipc } from '../../../../../../shared/communication/window-client'
 import { create } from 'zustand'
-import { yakitTheme } from '@/services/electronBridge'
-
 export type Theme = 'light' | 'dark'
 export type ThemeMode = Theme | 'system'
 
@@ -45,7 +44,7 @@ const useThemeStore = create<{
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
       if (get().theme !== 'system') return
       applyTheme('system')
-      yakitTheme.setTheme('system')
+      ipc.invoke('local', 'aux-window:app-sync', { type: 'theme', payload: 'system' })
     })
   }
 
@@ -59,7 +58,7 @@ const useThemeStore = create<{
     setTheme: (theme) => {
       applyTheme(theme)
       set({ theme })
-      yakitTheme.setTheme(theme)
+      ipc.invoke('local', 'aux-window:app-sync', { type: 'theme', payload: theme })
     },
   }
 })

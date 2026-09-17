@@ -1,3 +1,5 @@
+import { ipc, type StreamTask } from '@/services/ipc'
+import { int64ToSafeNumber } from '@/utils/int64'
 import type React from 'react'
 import { memo, useEffect, useRef, useState } from 'react'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
@@ -32,8 +34,6 @@ import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { CogOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const tOriginal = i18n.getFixedT(null, ['yakitUi'])
-const { ipcRenderer } = window.require('electron')
-
 interface WebsocketFuzzerProp {
   pageId: string
 }
@@ -94,7 +94,7 @@ interface WebsocketFlowFromFuzzer {
 
   IsJson: boolean
   IsProtobuf: boolean
-  DataFrameIndex: number
+  DataFrameIndex: string
   DataSizeVerbose: string
   DataVerbose: string
 
@@ -125,90 +125,97 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'websocket'])
   const flowsRef = useRef<WebsocketFlowFromFuzzer[]>([])
 
-  useEffect(() => {
-    let hasNewData = false
-    const updateWsFlowList = () => {
-      if (hasNewData && flowsRef.current.length) {
-        onSetWsFlowList([...flowsRef.current])
-        hasNewData = false
-        onSetLoading(false)
-      }
-    }
-    const timer = setInterval(updateWsFlowList, 300)
-    ipcRenderer.on(`${token}-data`, async (e, data: WebsocketFlowFromFuzzer) => {
-      if (data.IsUpgradeResponse) {
-        setUrsp(Uint8ArrayToString(data.UpgradeResponse))
-        setMode('response')
-      }
-
-      if (data.DataLength > 0) {
-        flowsRef.current.unshift(data)
-        hasNewData = true
-      }
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {
-      onSetWsFlowList([...flowsRef.current])
-      onSetLoading(false)
-      setToken(randomString(30))
-      setExecuting(false)
-      setMode('request')
-      yakitNotify('info', '[CreateWebsocketFuzzer] finished')
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      onSetLoading(false)
-      if (`${error}`.includes(`Cancelled on client`)) {
-        return
-      }
-      yakitNotify('error', `[CreateWebsocketFuzzer] error:  ${error}`)
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-CreateWebsocketFuzzer', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-      clearInterval(timer)
-    }
-  }, [token])
-
+  const sessionRef = useRef<{
+    controller: AbortController
+    opening?: Promise<StreamTask<'CreateWebsocketFuzzer'>>
+    timer?: ReturnType<typeof setInterval>
+  }>()
+  const release = () => {
+    sessionRef.current?.controller.abort()
+    clearInterval(sessionRef.current?.timer)
+    sessionRef.current = undefined
+  }
+  useEffect(() => release, [])
   const handleConnect = useMemoizedFn(() => {
-    // 重置
+    release()
+    const session: NonNullable<typeof sessionRef.current> = { controller: new AbortController() }
+    sessionRef.current = session
+    const active = () => sessionRef.current === session && !session.controller.signal.aborted
     flowsRef.current = []
     onSetWsFlowList([])
     setUrsp('')
-    ipcRenderer
-      .invoke(
-        'CreateWebsocketFuzzer',
-        {
-          IsTLS: wsTls,
-          UpgradeRequest: wsRequest,
-          ToServer: StringToUint8Array(wsToServer),
-          Proxy: proxy,
-          TotalTimeoutSeconds: timeoutSeconds,
-        },
+    onSetLoading(true)
+    setExecuting(true)
+    let dirty = false
+    const flush = () => {
+      if (!active() || !dirty) return
+      onSetWsFlowList([...flowsRef.current])
+      onSetLoading(false)
+      dirty = false
+    }
+    session.timer = setInterval(flush, 300)
+    const finish = (error?: unknown) => {
+      clearInterval(session.timer)
+      if (!active()) return
+      flush()
+      sessionRef.current = undefined
+      onSetLoading(false)
+      setExecuting(false)
+      setMode('request')
+      if (error) yakitNotify('error', `[CreateWebsocketFuzzer] error: ${error}`)
+      else yakitNotify('info', '[CreateWebsocketFuzzer] finished')
+    }
+    session.opening = ipc.openStream(
+      'grpc',
+      'CreateWebsocketFuzzer',
+      {
+        IsTLS: wsTls,
+        UpgradeRequest: wsRequest,
+        ToServer: StringToUint8Array(wsToServer),
+        Proxy: proxy,
+        TotalTimeoutSeconds: timeoutSeconds,
+      },
+      {
         token,
-      )
-      .then(() => {
-        onSetLoading(true)
-        setExecuting(true)
-      })
+        signal: session.controller.signal,
+        onData(raw) {
+          if (!active()) return
+          const data = { ...raw, DataLength: int64ToSafeNumber(raw.DataLength) }
+          if (data.IsUpgradeResponse) {
+            setUrsp(Uint8ArrayToString(data.UpgradeResponse))
+            setMode('response')
+          }
+          if (data.DataLength > 0) {
+            flowsRef.current.unshift(data)
+            dirty = true
+          }
+        },
+        onError: finish,
+        onEnd: () => finish(),
+      },
+    )
+    void session.opening.catch(finish)
   })
-
   const handleDisConnect = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-CreateWebsocketFuzzer', token)
+    release()
+    onSetWsFlowList([...flowsRef.current])
+    onSetLoading(false)
+    setExecuting(false)
+    setMode('request')
   })
-
-  const handleSendToServer = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke(
-        'CreateWebsocketFuzzer',
-        {
-          ToServer: StringToUint8Array(wsToServer),
-        },
-        token,
-      )
-      .then(() => {
-        if (clearSendData) setWsToServer('')
-      })
+  const handleSendToServer = useMemoizedFn(async () => {
+    const session = sessionRef.current
+    if (!session?.opening) return
+    try {
+      const task = await session.opening
+      if (sessionRef.current !== session || session.controller.signal.aborted) return
+      await task.write({ ToServer: StringToUint8Array(wsToServer) })
+      if (sessionRef.current === session && clearSendData) setWsToServer('')
+    } catch (error) {
+      if (sessionRef.current !== session || session.controller.signal.aborted) return
+      yakitNotify('error', `[CreateWebsocketFuzzer] error: ${error}`)
+      handleDisConnect()
+    }
   })
 
   return (
@@ -617,10 +624,13 @@ export const newWebsocketFuzzerTab = (
   openFlag?: boolean,
   toServer?: Uint8Array,
 ) => {
-  return ipcRenderer
-    .invoke('send-to-tab', {
-      type: 'websocket-fuzzer',
-      data: { tls: isHttps, request: request, openFlag, toServer },
+  return ipc
+    .invoke('local', 'ForwardMainEvent', {
+      event: 'fetch-send-to-tab',
+      data: {
+        type: 'websocket-fuzzer',
+        data: { tls: isHttps, request: request, openFlag, toServer },
+      },
     })
     .then(() => {
       openFlag === false && yakitNotify('info', tOriginal('YakitNotification.sentSuccessfully'))

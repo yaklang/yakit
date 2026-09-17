@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
@@ -43,8 +44,6 @@ import { HubButton } from '@/pages/pluginHub/hubExtraOperate/funcTemplate'
 
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
-const { ipcRenderer } = window.require('electron')
-
 const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (props) => {
   const {
     knowledgeBaseItems,
@@ -79,7 +78,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
   // 获取实体关系图
   const { data, runAsync, loading } = useRequest(
     async (HiddenIndex: string[], Depth?: number) => {
-      const response = await ipcRenderer.invoke('QuerySubERM', {
+      const response = await ipc.invoke('grpc', 'QuerySubERM', {
         Filter: {
           HiddenIndex,
         },
@@ -129,7 +128,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
     loading: dotCodeLoading,
   } = useRequest(
     async (HiddenIndex: string[]) => {
-      const response: GenerateERMDotResponse = await ipcRenderer.invoke('GenerateERMDot', {
+      const response: GenerateERMDotResponse = await ipc.invoke('grpc', 'GenerateERMDot', {
         Filter: {
           HiddenIndex,
         },
@@ -278,7 +277,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
   // 删除知识列表
   const { run: deleteRunAsunc } = useRequest(
     async (item: KnowledgeBaseEntry) => {
-      await ipcRenderer.invoke('DeleteKnowledgeBaseEntry', {
+      await ipc.invoke('grpc', 'DeleteKnowledgeBaseEntry', {
         KnowledgeBaseEntryId: item.ID,
         KnowledgeBaseId: item.KnowledgeBaseId,
         KnowledgeBaseEntryHiddenIndex: item.HiddenIndex,

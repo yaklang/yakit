@@ -1,3 +1,5 @@
+import { isEnterpriseEdition, isIRify, isMemfit } from '@/utils/envfile'
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import React, { useRef } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { useEffect, useMemo, useState } from 'react'
@@ -8,8 +10,6 @@ import { yakitNotify } from '@/utils/notification'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { Progress } from 'antd'
-import { grpcCancelDownloadYakit, grpcDownloadYakit } from '../../grpc'
-import { yakitApp, yakitEngine, yakitShell } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import styles from './UpdateYakitHint.module.scss'
@@ -28,6 +28,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
     if (visible) {
       handleDownload()
       return () => {
+        downloadController.current?.abort()
         setStatus('install')
         setYakitProgress(undefined)
         setBreakLoading(false)
@@ -41,27 +42,41 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
   })
 
   const [status, setStatus] = useState<'install' | 'installed'>('install')
+  const downloadController = useRef<AbortController>()
   const [yakitProgress, setYakitProgress] = useState<DownloadingState>()
   const [breakLoading, setBreakLoading] = useState<boolean>(false)
   const isBreak = useRef<boolean>(false)
 
-  useEffect(() => {
-    const offProgress = yakitEngine.onDownloadYakitProgress((state: DownloadingState) => {
-      if (isBreak.current) return
-      setYakitProgress(safeFormatDownloadProcessState(state))
-    })
-
-    return () => {
-      offProgress()
-    }
-  }, [])
+  useEffect(() => () => downloadController.current?.abort(), [])
 
   /** 下载 */
   const handleDownload = useMemoizedFn(() => {
+    downloadController.current?.abort()
+    const controller = new AbortController()
+    downloadController.current = controller
     const version = latest.startsWith('v') ? latest.substring(1) : latest
     setStatus('install')
-    grpcDownloadYakit(version, true)
+    ipc
+      .invoke(
+        'local',
+        'download-latest-yakit',
+        {
+          version,
+          edition: {
+            isEnterprise: isEnterpriseEdition(),
+            isIRify: isIRify(),
+            isMemfit: isMemfit(),
+          },
+        },
+        {
+          signal: controller.signal,
+          onProgress(state) {
+            if (!controller.signal.aborted && state !== 100) setYakitProgress(safeFormatDownloadProcessState(state))
+          },
+        },
+      )
       .then(() => {
+        if (controller.signal.aborted) return
         if (isBreak.current) return
         yakitNotify('success', t('UpdateYakitHint.download_complete'))
         setYakitProgress((old) => {
@@ -72,13 +87,14 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
               remaining: 0,
             },
             speed: 0,
-            percent: 100,
+            percent: 1,
             size: old.size,
           }
         })
         setStatus('installed')
       })
       .catch((e: any) => {
+        if (controller.signal.aborted) return
         !isBreak.current && yakitNotify('error', t('UpdateYakitHint.download_failed', { error: e }))
         setYakitProgress(undefined)
         setStatus('install')
@@ -88,7 +104,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
   /** 停止下载 */
   const yakitBreak = useMemoizedFn(() => {
     isBreak.current = true
-    grpcCancelDownloadYakit(true).catch(() => {})
+    downloadController.current?.abort()
     setBreakLoading(true)
     setStatus('install')
     setYakitProgress(undefined)
@@ -100,9 +116,9 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
 
   /** 立即更新-已下载完成 */
   const yakitUpdate = useMemoizedFn(() => {
-    yakitShell.openYakitPath()
+    ipc.invoke('local', 'open-yakit-path', {})
     setTimeout(() => {
-      yakitApp.closeWindow()
+      ipc.invoke('local', 'UIOperate', 'close')
     }, 100)
   })
 

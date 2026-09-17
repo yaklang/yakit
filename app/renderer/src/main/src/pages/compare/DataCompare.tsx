@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffect, useMemo } from 'react'
 import { Space } from 'antd'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
@@ -15,8 +16,6 @@ import { useUpdateEffect, useMemoizedFn } from 'ahooks'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
-
-const { ipcRenderer } = window.require('electron')
 
 interface textModelProps {
   content: string
@@ -327,14 +326,21 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
       )
     }
 
-    ipcRenderer.on(`${res.token}-data`, (e, tokenDataRes) => {
-      const { left, right } = tokenDataRes.info
+    const stopIpcEvent1 = ipc.on(
+      `${res.token}-data`,
+      (tokenDataRes: { info: { type: number; left: textModelProps; right: textModelProps } }) => {
+        const { left, right } = tokenDataRes.info
 
-      setModelEditor(left, right, language || left?.language || right?.language)
+        setModelEditor(left, right, language || left?.language || right?.language)
 
-      if (tokenDataRes.info.type === 1) if (setLeftCode) setLeftCode(left.content)
-      if (tokenDataRes.info.type === 2) if (setRightCode) setRightCode(right.content)
-    })
+        if (tokenDataRes.info.type === 1) if (setLeftCode) setLeftCode(left.content)
+        if (tokenDataRes.info.type === 2) if (setRightCode) setRightCode(right.content)
+      },
+    )
+    return () => {
+      stopIpcEvent1()
+      diffEditorRef.current?.dispose()
+    }
   }, [])
 
   useUpdateEffect(() => {

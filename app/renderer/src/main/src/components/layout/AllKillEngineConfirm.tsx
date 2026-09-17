@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import React, { useState } from 'react'
 import { failed, info, warn } from '@/utils/notification'
 import { useGetState, useMemoizedFn } from 'ahooks'
@@ -5,8 +6,6 @@ import type { yakProcess } from './PerformanceDisplay'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { FigmaIcon5237120699Outlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { yakitEngine } from '@/services/electronBridge'
-
 import styles from './AllKillEngineConfirm.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -43,8 +42,8 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
 
   const fetchProcess = useMemoizedFn((callback: () => any) => {
     setLoading(true)
-    yakitEngine
-      .fetchYaklangEngineAddr()
+    ipc
+      .invoke('local', 'fetch-yaklang-engine-addr', {})
       .then((data) => {
         if (!visible) return
         const hosts: string[] = (data.addr as string).split(':')
@@ -55,8 +54,8 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
         failed(t('AllKillEngineConfirm.fetchPortError', { error: e + '' }))
       })
       .finally(() => {
-        yakitEngine
-          .listYakGrpc()
+        ipc
+          .invoke('local', 'ps-yak-grpc', {})
           .then((i: yakProcess[]) => {
             if (!visible) return
             setProcess(
@@ -96,7 +95,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
     if (otherPS.length > 0) {
       for (const i of otherPS) {
         try {
-          killFlag = await yakitEngine.killYakGrpc(i.pid)
+          killFlag = await ipc.invoke('local', 'kill-yak-grpc', i.pid)
         } catch (error) {}
         if (killFlag) {
           failed(t('AllKillEngineConfirm.killProcessFailed', { pid: i.pid, port: i.port, error: killFlag }))
@@ -110,7 +109,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
     if (currentPS) {
       let killFlag: string = ''
       try {
-        killFlag = await yakitEngine.killYakGrpc(currentPS.pid)
+        killFlag = await ipc.invoke('local', 'kill-yak-grpc', currentPS.pid)
       } catch (error) {}
       if (killFlag) {
         failed(

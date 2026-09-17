@@ -56,7 +56,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
   const { t, i18n } = useI18nNamespaces(['yakitRoute', 'layout'])
   const { resetCompareData } = useHttpFlowStore()
   /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
-  const onMenu = useMemoizedFn((page: YakitRoute, pluginId?: number, pluginName?: string) => {
+  const onMenu = useMemoizedFn((page: YakitRoute, pluginId?: number | string, pluginName?: string) => {
     if (!page) return
 
     if (page === YakitRoute.Plugin_OP) {

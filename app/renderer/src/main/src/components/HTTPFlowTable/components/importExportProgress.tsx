@@ -7,50 +7,53 @@ import { yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { ImportExportProgressProps, ImportExportStreamResponse } from '../HTTPFlowTable.constants'
 
-const { ipcRenderer } = window.require('electron')
-
 const ImportExportProgress: React.FC<ImportExportProgressProps> = React.memo((props) => {
-  const { visible, onClose, getContainer, title, subTitle, token, apiKey } = props
+  const { visible, onClose, getContainer, title, subTitle, token, openStream } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
-  const timeRef = useRef<any>(null)
   const [importExportStream, setImportExportStream] = useState<ImportExportStreamResponse[]>([])
   const importExportStreamRef = useRef<ImportExportStreamResponse[]>([])
+  const activeRef = useRef<{ controller: AbortController; closed: boolean }>()
 
-  const cancelImportExportHTTPFlowStream = () => {
-    ipcRenderer.invoke(`cancel-${apiKey}`, token)
-    ipcRenderer.removeAllListeners(`${token}-data`)
-    ipcRenderer.removeAllListeners(`${token}-error`)
-    ipcRenderer.removeAllListeners(`${token}-end`)
-    clearInterval(timeRef.current)
-  }
-  useEffect(() => {
-    const updateImportExportHTTPFlowStream = () => {
-      setImportExportStream(importExportStreamRef.current.slice())
-    }
-    timeRef.current = setInterval(updateImportExportHTTPFlowStream, 300)
-    ipcRenderer.on(`${token}-data`, async (e, data: ImportExportStreamResponse) => {
-      importExportStreamRef.current.push(data)
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      yakitNotify('error', `error: ${error}`)
-      closeModal()
-    })
-    return () => {
-      cancelImportExportHTTPFlowStream()
-    }
-  }, [token])
-
-  const closeModal = useMemoizedFn(() => {
-    onClose(importExportStream[importExportStream.length - 1]?.Percent === 1, importExportStream)
-    cancelImportExportHTTPFlowStream()
+  const closeModal = useMemoizedFn((failed = false) => {
+    const active = activeRef.current
+    if (!active || active.closed) return
+    active.closed = true
+    active.controller.abort()
+    const data = importExportStreamRef.current.slice()
+    onClose(!failed && data[data.length - 1]?.Percent === 1, data)
   })
   useEffect(() => {
-    if (importExportStream[importExportStream.length - 1]?.Percent === 1) {
-      setTimeout(() => {
-        closeModal()
-      }, 500)
+    const active = { controller: new AbortController(), closed: false }
+    activeRef.current = active
+    importExportStreamRef.current = []
+    setImportExportStream([])
+    let closeTimer: ReturnType<typeof setTimeout> | undefined
+    const update = () => setImportExportStream(importExportStreamRef.current.slice())
+    const timer = setInterval(update, 300)
+    const onError = (error: Error) => {
+      if (active.controller.signal.aborted) return
+      yakitNotify('error', error.message)
+      closeModal(true)
     }
-  }, [JSON.stringify(importExportStream)])
+    void openStream({
+      token,
+      signal: active.controller.signal,
+      onData(data) {
+        importExportStreamRef.current.push(data)
+      },
+      onError,
+      onEnd() {
+        update()
+        closeTimer = setTimeout(() => closeModal(), 500)
+      },
+    }).catch(onError)
+    return () => {
+      active.closed = true
+      active.controller.abort()
+      clearInterval(timer)
+      clearTimeout(closeTimer)
+    }
+  }, [token])
 
   return (
     <YakitModal
@@ -58,7 +61,7 @@ const ImportExportProgress: React.FC<ImportExportProgressProps> = React.memo((pr
       getContainer={getContainer}
       type="white"
       title={title}
-      onCancel={closeModal}
+      onCancel={() => closeModal()}
       width={680}
       closable={true}
       maskClosable={false}
@@ -66,7 +69,7 @@ const ImportExportProgress: React.FC<ImportExportProgressProps> = React.memo((pr
       bodyStyle={{ padding: 0 }}
       footerStyle={{ justifyContent: 'flex-end' }}
       footer={
-        <YakitButton type={'outline2'} onClick={closeModal}>
+        <YakitButton type={'outline2'} onClick={() => closeModal()}>
           {importExportStream[importExportStream.length - 1]?.Percent === 1
             ? t('YakitButton.finish')
             : t('YakitButton.cancel')}

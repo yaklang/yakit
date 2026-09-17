@@ -2,7 +2,7 @@
 
 // 向量存储集合 - 对应 VectorStoreCollection
 export interface VectorStoreCollection {
-  ID: number // int64 ID = 3
+  ID: string // int64 ID = 3
   Name: string // string Name = 1
   Description?: string // string Description = 2
   ModelName?: string // string ModelName = 4
@@ -18,7 +18,7 @@ export interface VectorStoreCollection {
 
 // 向量存储条目 - 对应 VectorStoreEntry
 export interface VectorStoreEntry {
-  ID: number // int64 ID = 1
+  ID: string // int64 ID = 1
   UID?: string // string UID = 2
   Content?: string // string Content = 3
   Metadata?: string // string Metadata = 4 (注意这里是string不是object)
@@ -37,18 +37,18 @@ export interface Paging {
 // API 请求参数
 export interface GetAllVectorStoreCollectionsWithFilterRequest {
   Keyword?: string // string Keyword = 1
-  ID?: number // int64 ID = 2
+  ID?: string // int64 ID = 2
   Pagination?: Paging // Paging Pagination = 3
 }
 
 export interface ListVectorStoreEntriesRequest {
-  CollectionID: number // int64 CollectionID = 1
+  CollectionID: string // int64 CollectionID = 1
   Keyword?: string // string Keyword = 2
   Pagination?: Paging // Paging Pagination = 3
 }
 
 export interface GetDocumentByVectorStoreEntryIDRequest {
-  ID: number // int64 ID = 1
+  ID: string // int64 ID = 1
 }
 
 export interface CreateVectorStoreEntryRequest {
@@ -58,7 +58,7 @@ export interface CreateVectorStoreEntryRequest {
 }
 
 export interface UpdateVectorStoreCollectionRequest {
-  ID: number // int64 ID = 3
+  ID: string // int64 ID = 3
   Name: string // string Name = 1
   Description: string // string Description = 2
 }

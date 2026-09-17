@@ -1,3 +1,5 @@
+import { yakScriptForUI } from '@/pages/invoker/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import type { KVPair } from '@/models/kv'
 import type { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
@@ -8,8 +10,6 @@ import type {
   QueryPluginEnvRequest,
 } from '../pluginEnvVariables/PluginEnvVariablesType'
 
-const { ipcRenderer } = window.require('electron')
-
 interface DownloadOnlinePluginByUUID {
   uuid: string
 }
@@ -18,17 +18,18 @@ export const grpcDownloadOnlinePlugin: APIFunc<DownloadOnlinePluginByUUID, YakSc
   return new Promise(async (resolve, reject) => {
     let token: string = ''
     try {
-      const userInfo = await ipcRenderer.invoke('get-login-user-info', {})
+      const userInfo = await ipc.invoke('local', 'get-login-user-info', {})
       if (userInfo.isLogin) {
-        token = userInfo.token
+        token = userInfo.token ?? ''
       }
     } catch (error) {}
 
-    ipcRenderer
-      .invoke('DownloadOnlinePluginByUUID', { UUID: params.uuid, Token: token || undefined })
+    ipc
+      .invoke('grpc', 'DownloadOnlinePluginByUUID', { UUID: params.uuid, Token: token || undefined })
+      .then(yakScriptForUI)
       .then((res) => {
         // 刷新插件菜单
-        setTimeout(() => ipcRenderer.invoke('change-main-menu'), 100)
+        setTimeout(() => ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-new-main-menu' }), 100)
         resolve(res)
       })
       .catch((e) => {
@@ -52,8 +53,9 @@ export const grpcFetchLocalPluginDetail: APIFunc<FetchLocalPluginDetail, YakScri
       return
     }
 
-    ipcRenderer
-      .invoke('GetYakScriptByName', { UUID: UUID || undefined, Name: Name })
+    ipc
+      .invoke('grpc', 'GetYakScriptByName', { UUID: UUID || undefined, Name: Name })
+      .then(yakScriptForUI)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询本地插件详情失败:' + e)
@@ -71,8 +73,9 @@ export const grpcFetchLocalPluginDetailByID: APIFunc<string | number, YakScript>
       return
     }
 
-    ipcRenderer
-      .invoke('GetYakScriptById', { Id: id })
+    ipc
+      .invoke('grpc', 'GetYakScriptById', { Id: id })
+      .then(yakScriptForUI)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询本地插件详情失败:' + e)
@@ -104,8 +107,8 @@ export const grpcFetchExpressionToResult: APIFunc<FetchExpressionToResultRequest
       return
     }
 
-    ipcRenderer
-      .invoke('EvaluateExpression', { ...request })
+    ipc
+      .invoke('grpc', 'EvaluateExpression', { ...request })
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询表达式失败:' + e)
@@ -117,8 +120,8 @@ export const grpcFetchExpressionToResult: APIFunc<FetchExpressionToResultRequest
 /** @name 查询全部插件环境变量 */
 export const grpcFetchAllPluginEnvVariables: APINoRequestFunc<PluginEnvData> = (hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('GetAllPluginEnv')
+    ipc
+      .invoke('grpc', 'GetAllPluginEnv', {})
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询全部插件环境变量失败:' + e)
@@ -130,8 +133,8 @@ export const grpcFetchAllPluginEnvVariables: APINoRequestFunc<PluginEnvData> = (
 /** @name 查询传入插件环境变量对应的值 */
 export const grpcFetchPluginEnvVariables: APIFunc<QueryPluginEnvRequest, PluginEnvData> = (request, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryPluginEnv', request)
+    ipc
+      .invoke('grpc', 'QueryPluginEnv', request)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询插件环境变量失败:' + e)
@@ -143,9 +146,9 @@ export const grpcFetchPluginEnvVariables: APIFunc<QueryPluginEnvRequest, PluginE
 /** @name 创建插件环境变量 */
 export const grpcCreatePluginEnvVariables: APIFunc<PluginEnvData, undefined> = (request, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('CreatePluginEnv', request)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'CreatePluginEnv', request)
+      .then(() => resolve(undefined))
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '创建插件环境变量失败:' + e)
         reject(e)
@@ -156,9 +159,9 @@ export const grpcCreatePluginEnvVariables: APIFunc<PluginEnvData, undefined> = (
 /** @name 设置插件环境变量 */
 export const grpcSetPluginEnvVariables: APIFunc<PluginEnvData, undefined> = (request, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('SetPluginEnv', request)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'SetPluginEnv', request)
+      .then(() => resolve(undefined))
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '设置插件环境变量失败:' + e)
         reject(e)
@@ -169,9 +172,9 @@ export const grpcSetPluginEnvVariables: APIFunc<PluginEnvData, undefined> = (req
 /** @name 删除插件环境变量 */
 export const grpcDeletePluginEnvVariables: APIFunc<DeletePluginEnvRequest, undefined> = (request, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('DeletePluginEnv', request)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'DeletePluginEnv', request)
+      .then(() => resolve(undefined))
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '删除插件环境变量失败:' + e)
         reject(e)
@@ -187,8 +190,8 @@ export const grpcQueryYakScriptSkipUpdate: APIFunc<QueryYakScriptRequest, QueryY
   request,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryYakScriptSkipUpdate', request)
+    ipc
+      .invoke('grpc', 'QueryYakScriptSkipUpdate', request)
       .then(resolve)
       .catch((e) => {
         reject(e)
@@ -204,8 +207,8 @@ interface SetYakScriptSkipUpdateRequest {
 }
 export const grpcSetYakScriptSkipUpdate: APIFunc<SetYakScriptSkipUpdateRequest, unknown> = (request) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('SetYakScriptSkipUpdate', request)
+    ipc
+      .invoke('grpc', 'SetYakScriptSkipUpdate', request)
       .then(resolve)
       .catch((e) => {
         reject(e)

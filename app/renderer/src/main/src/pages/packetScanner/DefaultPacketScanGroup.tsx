@@ -42,7 +42,7 @@ export const packetScanDefaultValue: { Verbose: string; VerboseUi?: string; Keyw
   { Verbose: 'SQL注入', VerboseUi: 'HTTPFlowTable.RowContextMenu.sQLInjection', Keyword: 'SQL注入' },
 ]
 
-export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps => {
+export const GetPacketScanByCursorMenuItem = (id: string | number): ByCursorMenuItemProps => {
   return {
     title: '数据包扫描',
     onClick: () => {},

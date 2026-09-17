@@ -1,9 +1,11 @@
+import type { RunnerExecution } from '@/pages/yakRunner/hooks/useRunnerExecution'
 import { type Dispatch, type SetStateAction, createContext } from 'react'
 import type { FileTreeListProps } from '../FileTree/FileTreeType'
 import type { AreaInfoProps } from '../YakRunnerIrifyAiCodeAuditType'
 import type { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
 
 export interface YakRunnerContextStore {
+  execution?: RunnerExecution
   fileTree: FileTreeListProps[]
   areaInfo: AreaInfoProps[]
   activeFile: FileDetailInfo | undefined

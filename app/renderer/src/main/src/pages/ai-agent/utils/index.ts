@@ -221,7 +221,7 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
     {
       Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_HTTP_FLOW,
       Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_HTTP_FLOW_ID,
-      Value: [...httpFlowIdSet],
+      Value: [...httpFlowIdSet].join(','),
     },
   ]
 

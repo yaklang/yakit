@@ -1,3 +1,5 @@
+import { int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
@@ -24,8 +26,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface SpaceEngineOperatorProp {}
 
-const { ipcRenderer } = window.require('electron')
-
 export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) => {
   const { t } = useI18nNamespaces(['components', 'yakitUi'])
   const [params, setParams] = useState<SpaceEngineStartParams>(getDefaultSpaceEngineStartParams())
@@ -42,9 +42,9 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
   const [loading, setLoading] = useState(false)
   const noEngine = params.Type === ''
   const [token, setToken] = useState(randomString(50))
-  const [infoState, { reset, setXtermRef }, xtermRef] = useHoldingIPCRStream(
+  const [infoState, { reset, setXtermRef, open, cancel: cancelStream }, xtermRef] = useHoldingIPCRStream(
     'FetchPortAssetFromSpaceEngine',
-    '',
+    'FetchPortAssetFromSpaceEngine',
     token,
     () => {
       setTimeout(() => setLoading(false), 300)
@@ -59,13 +59,13 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
 
     const updateInfo = () => {
       setStatusLoading(true)
-      ipcRenderer
-        .invoke('GetSpaceEngineStatus', {
+      ipc
+        .invoke('grpc', 'GetSpaceEngineStatus', {
           Type: params.Type,
         })
-        .then((value: SpaceEngineStatus) => {
+        .then((value) => {
           setStatusFailed('')
-          setStatus(value)
+          setStatus({ ...value, Used: int64ToSafeNumber(value.Used), Remain: int64ToSafeNumber(value.Remain) })
         })
         .catch((e) => {
           setStatusFailed(`${e}`)
@@ -84,7 +84,7 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
 
   const cancel = useMemoizedFn(() => {
     // cancel 后主进程不再转发 end，需本地收尾
-    ipcRenderer.invoke('cancel-FetchPortAssetFromSpaceEngine', token)
+    void cancelStream()
     setLoading(false)
   })
 
@@ -118,9 +118,8 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
                   disabled={loading}
                   onClick={() => {
                     console.log('SpaceEngineOperator 执行参数:', params)
-                    ipcRenderer.invoke('FetchPortAssetFromSpaceEngine', params, token).then(() => {
-                      setLoading(true)
-                    })
+                    setLoading(true)
+                    void open(params).catch(() => setLoading(false))
                   }}
                 >
                   {t('YakitButton.execute')}

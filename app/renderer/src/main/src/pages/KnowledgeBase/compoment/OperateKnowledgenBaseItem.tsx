@@ -1,3 +1,5 @@
+import { useExportKnowledgeBase } from '../hooks/useExportKnowledgeBase'
+import { ipc } from '@/services/ipc'
 import { type Dispatch, type FC, type SetStateAction, useEffect } from 'react'
 
 import { DotsVerticalSolid } from '@yakit-libs/yakit-ui-icons/solid'
@@ -17,10 +19,8 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import type { TKnowledgeBaseSidebarProps } from './KnowledgeBaseSidebar'
 import type useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
-import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
-import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
 
-const { ipcRenderer } = window.require('electron')
+import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
 
 interface TOperateKnowledgenBaseItemProps {
   setKnowledgeBaseID?: (id: string) => void
@@ -50,61 +50,17 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
     !menuOpen && setMenuSelectedId('')
   }, [menuOpen])
 
-  const [exportToken, setExportToken] = useSafeState('')
-  const exportFile = async (KnowledgeBaseId: string) => {
-    const defaultName = items.KnowledgeBaseName ? `export-${items.KnowledgeBaseName}` : 'default-knowledge'
-    try {
-      const file = await handleSaveFileSystemDialog({
-        title: '导出知识库',
-        defaultPath: defaultName,
-        filters: [{ name: 'Files', extensions: ['rag'] }],
-      })
-
-      if (!file || file.canceled) return
-
-      const filePath = file.filePath
-      if (!filePath) return
-
-      const token = `export-kb-${Date.now()}`
-      setExportToken(token)
-
-      await ipcRenderer.invoke('ExportKnowledgeBase', { KnowledgeBaseId, TargetPath: filePath }, token)
-    } catch (error) {
-      failed('导出知识库失败：' + error)
-    }
-  }
-
-  useEffect(() => {
-    if (!exportToken) return
-
-    const onError = (_: any, err: any) => {
-      failed('导出知识库失败: ' + err)
-      setExportToken('')
-    }
-
-    const onEnd = () => {
-      success('导出知识库成功')
-      setExportToken('')
-    }
-
-    ipcRenderer.on(`${exportToken}-error`, onError)
-    ipcRenderer.on(`${exportToken}-end`, onEnd)
-
-    return () => {
-      ipcRenderer.removeAllListeners(`${exportToken}-error`)
-      ipcRenderer.removeAllListeners(`${exportToken}-end`)
-    }
-  }, [exportToken])
+  const exportKnowledgeBase = useExportKnowledgeBase()
+  const exportFile = (id: string) => exportKnowledgeBase(id, items.KnowledgeBaseName)
 
   const { run } = useRequest(
     async (parmas) => {
-      await ipcRenderer.invoke('UpdateKnowledgeBase', {
+      await ipc.invoke('grpc', 'UpdateKnowledgeBase', {
         KnowledgeBaseId: parmas?.ID,
         KnowledgeBaseName: parmas?.KnowledgeBaseName,
         KnowledgeBaseDescription: parmas?.KnowledgeBaseDescription,
         KnowledgeBaseType: parmas?.KnowledgeBaseType,
         Tags: parmas?.Tags ?? [],
-        CreatedFromUI: parmas?.CreatedFromUI ?? true,
         IsDefault: parmas?.IsDefault,
       })
     },
@@ -228,7 +184,7 @@ const DeleteConfirm: FC<
 
   const { runAsync, loading } = useRequest(
     async () => {
-      await ipcRenderer.invoke('DeleteKnowledgeBase', {
+      await ipc.invoke('grpc', 'DeleteKnowledgeBase', {
         KnowledgeBaseId,
       })
     },
@@ -256,7 +212,6 @@ const DeleteConfirm: FC<
           deleteKnowledgeBase(KnowledgeBaseId)
           const streamToken = knowledgeBase?.find((it) => it.ID === KnowledgeBaseId)?.streamToken
           if (streamToken && api?.tokens.includes(streamToken)) {
-            await apiCancelDebugPlugin(streamToken)
             api?.removeStream(streamToken)
           }
 
@@ -308,13 +263,12 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
 
   const { runAsync: editKnowledgRunAsync, loading: editKnowledgLoading } = useRequest(
     async (parmas) => {
-      await ipcRenderer.invoke('UpdateKnowledgeBase', {
+      await ipc.invoke('grpc', 'UpdateKnowledgeBase', {
         KnowledgeBaseId: items?.ID,
         KnowledgeBaseName: parmas?.KnowledgeBaseName,
         KnowledgeBaseDescription: parmas?.KnowledgeBaseDescription,
         KnowledgeBaseType: parmas?.KnowledgeBaseType,
         Tags: parmas?.Tags ?? [],
-        CreatedFromUI: parmas?.CreatedFromUI ?? true,
         IsDefault: parmas?.IsDefault ?? false,
       })
     },

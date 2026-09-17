@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { Col, Divider, Form, Row, Tooltip } from 'antd'
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import styles from './MITMRuleFromModal.module.scss'
@@ -42,8 +43,6 @@ import {
   AdjustmentsOutlined,
   PencilAltOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-
-const { ipcRenderer } = window.require('electron')
 
 const parseRuleToRuleList = (rule: string = '') => {
   const list = `${rule || ''}`
@@ -426,12 +425,12 @@ const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
         return
       }
 
-      ipcRenderer
-        .invoke('GenerateExtractRule', {
+      ipc
+        .invoke('grpc', 'GenerateExtractRule', {
           Data: StringToUint8Array(_responseStr),
           Selected: StringToUint8Array(selected),
         })
-        .then((e: { PrefixRegexp: string; SuffixRegexp: string; SelectedRegexp: string }) => {
+        .then((e) => {
           setMatchedRegexp(e.SelectedRegexp)
         })
         .catch((e) => {

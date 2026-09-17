@@ -1,3 +1,7 @@
+import { queriedMitmRulesForUI } from '@/pages/mitm/grpcAdapters'
+import { mitmRulesForUI } from '@/pages/mitm/grpcAdapters'
+import { int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import { Divider, Form, Tooltip, Modal } from 'antd'
 import React, { type ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type {
@@ -63,8 +67,6 @@ import { setRemoteValue } from '@/utils/kv'
 import { RemoteMitmGV } from '@/enums/mitm'
 
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
-
-const { ipcRenderer } = window.require('electron')
 
 const HitColor = {
   red: {
@@ -278,32 +280,55 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       setAddRule([])
       clearnSearch()
       // 获取原始规则（用于 onClose 比较）+ 当前规则（用于表格展示），一次 IPC 调用同时完成
-      ipcRenderer.invoke('GetCurrentRules', {}).then((rsp: { Rules: MITMContentReplacerRule[] }) => {
-        const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
-        originalRulesRef.current = newRules
-        const nextWhiteList = newRules?.[0]?.ExcludeSuffix || []
-        originalWhiteListRef.current = nextWhiteList
-        setRules(onSortRules(newRules))
-        setWhiteList(nextWhiteList)
-        setIsRefresh((prev) => !prev)
-      })
+      ipc
+        .invoke('grpc', 'GetCurrentRules', {})
+        .then(mitmRulesForUI)
+        .then((rsp) => {
+          const newRules = rsp.Rules
+          originalRulesRef.current = newRules
+          const nextWhiteList = newRules?.[0]?.ExcludeSuffix || []
+          originalWhiteListRef.current = nextWhiteList
+          setRules(onSortRules(newRules))
+          setWhiteList(nextWhiteList)
+          setIsRefresh((prev) => !prev)
+        })
     }, [visible])
     useEffect(() => {
-      grpcClientMITMContentReplacerUpdate(mitmVersion).on((replacers) => {
-        const newRules = (replacers || []).map((ele) => ({ ...ele, Id: ele.Index }))
-        setRules(onSortRules(newRules))
-        setWhiteList(newRules?.[0]?.ExcludeSuffix || [])
-      })
+      const unsubscribegrpcClientMITMContentReplacerUpdate = grpcClientMITMContentReplacerUpdate(mitmVersion).on(
+        (replacers) => {
+          const newRules = (replacers || []).map((ele) => ({
+            ...ele,
+            Id: ele.Index,
+            RegexpGroups: ele.RegexpGroups.map(int64ToSafeNumber),
+            ExtraCookies: ele.ExtraCookies.map((cookie) => ({
+              ...cookie,
+              Expires: int64ToSafeNumber(cookie.Expires),
+              MaxAge: int64ToSafeNumber(cookie.MaxAge),
+              SameSiteMode:
+                cookie.SameSiteMode === 'lax'
+                  ? ('lax' as const)
+                  : cookie.SameSiteMode === 'strict'
+                    ? ('strict' as const)
+                    : cookie.SameSiteMode === 'none'
+                      ? ('none' as const)
+                      : ('default' as const),
+            })),
+          }))
+          setRules(onSortRules(newRules))
+          setWhiteList(newRules?.[0]?.ExcludeSuffix || [])
+        },
+      )
       return () => {
-        grpcClientMITMContentReplacerUpdate(mitmVersion).remove()
+        unsubscribegrpcClientMITMContentReplacerUpdate()
       }
     }, [])
     const onGetCurrentRules = useMemoizedFn(() => {
       setLoading(true)
-      ipcRenderer
-        .invoke('GetCurrentRules', {})
-        .then((rsp: { Rules: MITMContentReplacerRule[] }) => {
-          const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
+      ipc
+        .invoke('grpc', 'GetCurrentRules', {})
+        .then(mitmRulesForUI)
+        .then((rsp) => {
+          const newRules = rsp.Rules
           setRules(onSortRules(newRules))
           setWhiteList(newRules?.[0]?.ExcludeSuffix || [])
           setIsRefresh(!isRefresh)
@@ -733,8 +758,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       }))
       if (status === 'idle') {
         // 劫持未开启
-        ipcRenderer
-          .invoke('SetCurrentRules', { Rules: newRules })
+        ipc
+          .invoke('grpc', 'SetCurrentRules', { Rules: newRules })
           .then((e) => {
             setVisible(false)
             setAddRule([])
@@ -1097,10 +1122,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         setTimeout(() => setLoading(false), 100)
       } else {
         setSearchFlag(true)
-        ipcRenderer
-          .invoke('QueryMITMReplacerRules', { KeyWord: realValue })
+        ipc
+          .invoke('grpc', 'QueryMITMReplacerRules', { KeyWord: realValue })
+          .then(queriedMitmRulesForUI)
           .then((rsp) => {
-            const newRules = rsp.Rules.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
+            const newRules = rsp.Rules.Rules
             // 确保newRules为最新的rules数据
             rules.forEach((item) => {
               const idx = newRules.findIndex((i) => i.Id == item.Id)

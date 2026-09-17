@@ -1,3 +1,5 @@
+import { grpcPagingToUI, int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
@@ -14,8 +16,6 @@ import type { RagCollectionListProps, VectorStoreCollection, Paging } from './ty
 import styles from './RagCollectionList.module.scss'
 import { RefreshOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 export const RagCollectionList: React.FC<RagCollectionListProps> = ({
   selectedCollection,
@@ -43,16 +43,16 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
         setPagination(currentPagination)
       }
 
-      const response = await ipcRenderer.invoke('GetAllVectorStoreCollectionsWithFilter', {
+      const response = await ipc.invoke('grpc', 'GetAllVectorStoreCollectionsWithFilter', {
         Keyword: searchKeyword || undefined,
         Pagination: currentPagination,
       })
 
       if (response && response.Collections) {
         setCollections(response.Collections)
-        setTotal(response.Total || 0)
+        setTotal(int64ToSafeNumber(response.Total || 0))
         if (response.Pagination) {
-          setPagination(response.Pagination)
+          setPagination(grpcPagingToUI(response.Pagination))
         }
       } else {
         setCollections([])

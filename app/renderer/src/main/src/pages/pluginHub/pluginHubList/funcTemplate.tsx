@@ -65,7 +65,6 @@ import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
 
 interface HubListFilterProps {

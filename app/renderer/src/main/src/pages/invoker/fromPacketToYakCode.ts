@@ -1,7 +1,6 @@
+import { ipc } from '@/services/ipc'
 import { failed } from '../../utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
-
-const { ipcRenderer } = window.require('electron')
 
 export enum RequestToYakCodeTemplate {
   Ordinary = 0,
@@ -14,13 +13,13 @@ export const generateYakCodeByRequest = (
   onResult: (code: string) => any,
   template?: RequestToYakCodeTemplate,
 ) => {
-  ipcRenderer
-    .invoke('GenerateYakCodeByPacket', {
+  ipc
+    .invoke('grpc', 'GenerateYakCodeByPacket', {
       IsHttps: isHttps,
       Request: req,
-      CodeTemplate: template || RequestToYakCodeTemplate.Ordinary,
+      CodeTemplate: template === RequestToYakCodeTemplate.Batch ? 'Batch' : 'Ordinary',
     })
-    .then((r: { Code: Uint8Array }) => {
+    .then((r) => {
       onResult(Buffer.from(r.Code).toString())
     })
     .catch((e) => {
@@ -34,13 +33,13 @@ export const generateCSRFPocByRequest = (
   onResult: (code: string) => any,
   AutoSubmit = false,
 ) => {
-  ipcRenderer
-    .invoke('GenerateCSRFPocByPacket', {
+  ipc
+    .invoke('grpc', 'GenerateCSRFPocByPacket', {
       Request: req,
       IsHttps,
       AutoSubmit,
     })
-    .then((r: { Code: Uint8Array }) => {
+    .then((r) => {
       onResult(Uint8ArrayToString(r.Code, 'utf8'))
     })
     .catch((e) => {

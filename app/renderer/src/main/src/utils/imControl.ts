@@ -1,4 +1,4 @@
-const { ipcRenderer } = window.require('electron')
+import { ipc } from '@/services/ipc'
 
 export type IMControlPlatformLevel = 'ok' | 'warning' | 'error' | 'disabled' | string
 
@@ -11,7 +11,7 @@ export interface IMControlPlatformState {
   Transport?: string
   Level?: IMControlPlatformLevel
   Message: string
-  UpdatedAtUnixMs?: number
+  UpdatedAtUnixMs?: string
 }
 
 export interface IMControlSessionInfo {
@@ -19,7 +19,7 @@ export interface IMControlSessionInfo {
   Platform: string
   ChatID: string
   SenderID: string
-  LastActiveAt: number
+  LastActiveAt: string
   CurrentModel: string
   ChatType?: string
   ChatTitle?: string
@@ -35,10 +35,10 @@ export interface IMControlState {
 }
 
 export interface IMControlStateEvent {
-  Sequence?: number
-  TimestampUnixMs?: number
+  Sequence?: string
+  TimestampUnixMs?: string
   Reason?: string
-  State?: IMControlState
+  State?: IMControlState | null
 }
 
 export type IMReplyGranularity = 'standard' | 'summary' | 'detailed'
@@ -115,52 +115,20 @@ export const startIMControl = (
   platforms?: string[],
   configMap?: IMControlConfigMap,
 ): Promise<{ Started: boolean; Message: string }> =>
-  ipcRenderer.invoke('StartIMControl', {
+  ipc.invoke('local', 'StartIMControl', {
     Platforms: platforms || [],
     ...DEFAULT_IM_CONTROL_CONFIG,
     PlatformConfigs: buildIMControlPlatformConfigs(configMap),
   })
 
 export const stopIMControl = (): Promise<{ Stopped: boolean; Message: string }> =>
-  ipcRenderer.invoke('StopIMControl', {})
-
-export const subscribeIMControlState = (token: string): Promise<void> =>
-  ipcRenderer.invoke('subscribe-im-control-state', token, {})
-
-export const cancelIMControlState = (token: string): Promise<void> =>
-  ipcRenderer.invoke('cancel-im-control-state', token)
-
-export const onIMControlStateData = (
-  token: string,
-  cb: (state: IMControlState, event: IMControlStateEvent) => void,
-) => {
-  const channel = `${token}-data`
-  const handler = (_e: unknown, event: IMControlStateEvent) => {
-    cb(event?.State || { Running: false }, event || {})
-  }
-  ipcRenderer.on(channel, handler)
-  return () => ipcRenderer.removeListener(channel, handler)
-}
-
-export const onIMControlStateEnd = (token: string, cb: () => void) => {
-  const channel = `${token}-end`
-  const handler = () => cb()
-  ipcRenderer.on(channel, handler)
-  return () => ipcRenderer.removeListener(channel, handler)
-}
-
-export const onIMControlStateError = (token: string, cb: (err: unknown) => void) => {
-  const channel = `${token}-error`
-  const handler = (_e: unknown, err: unknown) => cb(err)
-  ipcRenderer.on(channel, handler)
-  return () => ipcRenderer.removeListener(channel, handler)
-}
+  ipc.invoke('grpc', 'StopIMControl', {})
 
 export const updateIMControlConfig = (
   platform: string,
   config: IMControlConfig,
 ): Promise<{ Updated: boolean; Message: string }> =>
-  ipcRenderer.invoke('UpdateIMControlConfig', {
+  ipc.invoke('grpc', 'UpdateIMControlConfig', {
     Platform: platform,
     ...normalizeIMControlConfig(config),
   })

@@ -7,7 +7,7 @@ export interface AITool {
   ToolPath: string
   Keywords: string[]
   IsFavorite: boolean
-  ID: number
+  ID: string | number
   VerboseName: string
   UpdatedAt: number
   CreatedAt: number
@@ -19,7 +19,7 @@ export interface GetAIToolListRequest {
   ToolName: string
   Pagination: PaginationSchema
   OnlyFavorites: boolean
-  ToolID?: number
+  ToolID?: string | number
 }
 export interface GetAIToolListResponse {
   Tools: AITool[]
@@ -29,7 +29,7 @@ export interface GetAIToolListResponse {
 export interface ToggleAIToolFavoriteRequest {
   /**@deprecated */
   ToolName?: string
-  ID: number
+  ID: string | number
 }
 export interface ToggleAIToolFavoriteResponse {
   IsFavorite: boolean
@@ -48,12 +48,12 @@ export interface SaveAIToolV2Response {
   AITool: AITool
 }
 export interface UpdateAIToolRequest extends SaveAIToolRequest {
-  ID: number
+  ID: string | number
 }
 export interface DeleteAIToolRequest {
   /**@deprecated */
   ToolNames?: string
-  IDs: number[]
+  IDs: (string | number)[]
 }
 export interface AIToolGenerateMetadataRequest {
   ToolName: string

@@ -11,8 +11,8 @@ export interface QueryAnalyzedHTTPFlowRuleFilter {
 }
 
 export interface HTTPFlowRuleData {
-  Id: number
-  HTTPFlowId: number
+  Id: string
+  HTTPFlowId: string
   Method: string
   StatusCode: string
   Url: string

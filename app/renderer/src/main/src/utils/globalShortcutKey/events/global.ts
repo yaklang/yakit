@@ -103,7 +103,7 @@ const LocalStorageKey = 'global-shortcut-key-events'
 export const getStorageGlobalShortcutKeyEvents = () => {
   getLocalValue(LocalStorageKey)
     .then((res) => {
-      if (!res) return
+      if (typeof res !== 'string' || !res) return
       try {
         const data: EventsType = JSONParseLog(res, { page: 'global', fun: 'getStorageGlobalShortcutKeyEvents' })
         currentKeyEvents = addScopeShow(data, globalShortcutKeyEvents)

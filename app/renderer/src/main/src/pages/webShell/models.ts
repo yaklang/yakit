@@ -1,3 +1,5 @@
+import type { GrpcOutput } from '@/services/ipc'
+import { int64ToSafeNumber } from '@/utils/int64'
 export enum ShellType {
   Behinder = 'Behinder',
   Godzilla = 'Godzilla',
@@ -30,7 +32,7 @@ export interface WebShellDetail {
   ShellType: 'Behinder' | 'Godzilla'
   ShellScript: string
   Status: boolean
-  Tag: string[]
+  Tag: string
   Proxy: string
   Headers: { [key: string]: string }
   Remark: string
@@ -38,4 +40,18 @@ export interface WebShellDetail {
   UpdatedAt: number
   PacketCodecName: string
   PayloadCodecName: string
+}
+
+export function webShellForUI(row: GrpcOutput<'CreateWebShell'>): WebShellDetail {
+  if (row.ShellType !== 'Behinder' && row.ShellType !== 'Godzilla')
+    throw new Error('未知 WebShell 类型: ' + row.ShellType)
+  return {
+    ...row,
+    ShellType: row.ShellType,
+    CreatedAt: int64ToSafeNumber(row.CreatedAt),
+    UpdatedAt: int64ToSafeNumber(row.UpdatedAt),
+  }
+}
+export function webShellsForUI(value: GrpcOutput<'QueryWebShells'>) {
+  return { ...value, Data: value.Data.map(webShellForUI) }
 }

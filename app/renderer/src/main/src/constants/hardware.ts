@@ -1,5 +1,4 @@
-import { yakitSystem } from '@/services/electronBridge'
-
+import { ipc } from '../../../../../shared/communication/window-client'
 /** 操作系统 */
 export type System = 'Linux' | 'Darwin' | 'Windows_NT'
 /** CPU架构 */
@@ -36,33 +35,33 @@ export const SystemInfo: SystemInfoProps = {
 
 export const handleFetchSystemInfo = async () => {
   try {
-    SystemInfo.system = await yakitSystem.fetchSystemName()
+    SystemInfo.system = await ipc.invoke('local', 'fetch-system-name', {})
   } catch (error) {}
   try {
-    SystemInfo.architecture = await yakitSystem.fetchCpuArch()
+    SystemInfo.architecture = await ipc.invoke('local', 'fetch-cpu-arch', {})
   } catch (error) {}
   try {
-    SystemInfo.isDev = !!(await yakitSystem.isDev())
+    SystemInfo.isDev = !!(await ipc.invoke('local', 'is-dev', {}))
   } catch (error) {}
 }
 
 export const handleFetchSystem = async (callback?: (value: System | undefined) => any) => {
   try {
-    SystemInfo.system = await yakitSystem.fetchSystemName()
+    SystemInfo.system = await ipc.invoke('local', 'fetch-system-name', {})
   } catch (error) {}
   if (callback) callback(SystemInfo.system)
 }
 
 export const handleFetchArchitecture = async (callback?: (value: Architecture | undefined) => any) => {
   try {
-    SystemInfo.architecture = await yakitSystem.fetchCpuArch()
+    SystemInfo.architecture = await ipc.invoke('local', 'fetch-cpu-arch', {})
   } catch (error) {}
   if (callback) callback(SystemInfo.architecture)
 }
 
 export const handleFetchIsDev = async (callback?: (value: boolean | undefined) => any) => {
   try {
-    SystemInfo.isDev = !!(await yakitSystem.isDev())
+    SystemInfo.isDev = !!(await ipc.invoke('local', 'is-dev', {}))
   } catch (error) {}
   if (callback) callback(SystemInfo.isDev)
 }

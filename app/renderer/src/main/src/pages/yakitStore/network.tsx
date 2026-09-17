@@ -1,3 +1,6 @@
+import { yakScriptsForUI } from '@/pages/invoker/grpcAdapters'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import {
   genDefaultPagination,
   type QueryYakScriptRequest,
@@ -5,8 +8,6 @@ import {
   type YakScript,
 } from '../invoker/schema'
 import { failed } from '../../utils/notification'
-
-const { ipcRenderer } = window.require('electron')
 
 export const queryYakScriptList = (
   pluginType: string,
@@ -23,15 +24,17 @@ export const queryYakScriptList = (
     limit = 200
   }
 
-  ipcRenderer
-    .invoke('QueryYakScript', {
+  ipc
+    .invoke('grpc', 'QueryYakScript', {
       Type: pluginType,
       Tag: tag,
       ...(extraParam || {}),
       Keyword: keyword,
       Pagination: genDefaultPagination(limit, page),
     } as QueryYakScriptRequest)
-    .then((rsp: QueryYakScriptsResponse) => {
+    .then(yakScriptsForUI)
+    .then(grpcPageForUI)
+    .then((rsp) => {
       onResult(rsp.Data, rsp.Total)
     })
     .catch((e) => {

@@ -1,4 +1,4 @@
-import { yakitClipboard } from './electronBridge'
+import { ipc } from '../../../../shared/communication/window-client'
 import { yakitNotify } from './notification'
 import i18n from '@/i18n/i18n'
 
@@ -24,8 +24,8 @@ interface SetClipboardTextExtraParams {
 export const setClipboardText = (text?: string, extra?: SetClipboardTextExtraParams) => {
   const { hiddenHint, hintText, successCallback, failedCallback, finalCallback } = extra || {}
   if (text) {
-    yakitClipboard
-      .setText(text)
+    ipc
+      .invoke('local', 'set-clipboard-text', text)
       .then(() => {
         if (!hiddenHint) yakitNotify('success', hintText || tOriginal('YakitNotification.copySuccess'))
         successCallback && successCallback()
@@ -44,7 +44,7 @@ export const setClipboardText = (text?: string, extra?: SetClipboardTextExtraPar
 /** 获取剪切板文本信息 */
 export const getClipboardText = async () => {
   try {
-    return ((await yakitClipboard.getText()) || '') as string
+    return ((await ipc.invoke('local', 'get-clipboard-text', {})) || '') as string
   } catch (error) {
     return ''
   }

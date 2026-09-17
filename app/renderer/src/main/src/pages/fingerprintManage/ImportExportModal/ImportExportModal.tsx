@@ -1,3 +1,4 @@
+import { ipc, type GrpcInput } from '@/services/ipc'
 import { memo, useEffect, useRef } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
@@ -12,8 +13,6 @@ import { Form } from 'antd'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import type { YakitFormDraggerProps } from '@/components/yakitUI/YakitForm/YakitFormType'
 import styles from './ImportExportModal.module.scss'
-
-const { ipcRenderer } = window.require('electron')
 
 const ImportExportModalSize = {
   export: {
@@ -31,24 +30,27 @@ export interface ExportImportProgress {
   Progress: number
   Verbose: string
 }
-interface ExportRequest<T> {
+type ExportFilter =
+  | NonNullable<GrpcInput<'ExportFingerprint'>['Filter']>
+  | NonNullable<GrpcInput<'ExportSyntaxFlows'>['Filter']>
+interface ExportRequest<T extends ExportFilter> {
   Filter: T
-  Password: string
+  Password?: string
   TargetPath: string
 }
 interface ImportRequest {
   InputPath: string
-  Password: string
+  Password?: string
 }
 export type ImportExportModalExtra = {
   hint: boolean
 } & {
   title: string
   type: 'export' | 'import'
-  apiKey: string
+  apiKey: 'ImportFingerprint' | 'ExportFingerprint' | 'ImportSyntaxFlows' | 'ExportSyntaxFlows'
 }
 type ImportExportWhichUse = 'fingerprint' | 'rule'
-interface ImportExportModalComProps<T> {
+interface ImportExportModalComProps<T extends ExportFilter> {
   /** 是否被dom节点包含 */
   getContainer?: HTMLElement
   extra: ImportExportModalExtra
@@ -57,12 +59,14 @@ interface ImportExportModalComProps<T> {
   onCallback: (result: boolean) => void
   yakitFormDraggerProps?: YakitFormDraggerProps
 }
-const ImportExportModalInner = <T,>(props: ImportExportModalComProps<T>) => {
+const ImportExportModalInner = <T extends ExportFilter>(props: ImportExportModalComProps<T>) => {
   const { getContainer, extra, onCallback, filterData, yakitFormDraggerProps = {} } = props
 
   const [form] = Form.useForm()
 
   const [token, setToken] = useSafeState('')
+  const controllerRef = useRef<AbortController>()
+  const submittingRef = useRef(false)
   const [showProgressStream, setShowProgressStream] = useSafeState(false)
   const timeRef = useRef<ReturnType<typeof setTimeout>>()
   const importExportStreamRef = useRef<ExportImportProgress>({
@@ -77,55 +81,56 @@ const ImportExportModalInner = <T,>(props: ImportExportModalComProps<T>) => {
   // 导出路径
   const exportPath = useRef<string>('')
 
-  const onSubmit = useMemoizedFn(() => {
-    const formValue = form.getFieldsValue()
-
-    if (extra.type === 'export') {
-      if (!formValue.TargetPath) {
-        yakitNotify('error', `请填写文件夹名`)
-        return
-      }
-      const request: ExportRequest<T> = {
-        Filter: filterData,
-        TargetPath: formValue?.TargetPath || '',
-        Password: formValue?.Password || undefined,
-      }
-      if (!request.TargetPath.endsWith('.zip')) {
-        request.TargetPath = request.TargetPath + '.zip'
-      }
-      ipcRenderer
-        .invoke('GenerateProjectsFilePath', request.TargetPath)
-        .then((res) => {
-          exportPath.current = res
-          ipcRenderer.invoke(extra.apiKey, request, token).then(() => {
-            setShowProgressStream(true)
-          })
-        })
-        .catch(() => {})
+  const onSubmit = useMemoizedFn(async () => {
+    if (submittingRef.current) return
+    submittingRef.current = true
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const flush = () => setProgressStream({ ...importExportStreamRef.current })
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      clearInterval(timeRef.current)
+      flush()
+      yakitNotify('error', `[${extra.apiKey}] error: ${error}`)
     }
-
-    if (extra.type === 'import') {
-      if (!formValue.InputPath) {
-        yakitNotify('error', `请输入本地路径`)
-        return
-      }
-      const params: ImportRequest = {
-        InputPath: formValue.InputPath,
-        Password: formValue.Password || undefined,
-      }
-      ipcRenderer.invoke(extra.apiKey, params, token).then(() => {
-        setShowProgressStream(true)
+    try {
+      const value = await form.validateFields()
+      const request: ExportRequest<T> | ImportRequest =
+        extra.type === 'export'
+          ? {
+              Filter: filterData,
+              TargetPath: value.TargetPath.endsWith('.zip') ? value.TargetPath : value.TargetPath + '.zip',
+              Password: value.Password || undefined,
+            }
+          : { InputPath: value.InputPath, Password: value.Password || undefined }
+      if ('TargetPath' in request)
+        exportPath.current = await ipc.invoke('local', 'GenerateProjectsFilePath', request.TargetPath)
+      if (controller.signal.aborted) return
+      setShowProgressStream(true)
+      timeRef.current = setInterval(flush, 500)
+      await ipc.openStream('grpc', extra.apiKey, request, {
+        token,
+        signal: controller.signal,
+        onData(value) {
+          if (!controller.signal.aborted) importExportStreamRef.current = value
+        },
+        onError,
+        onEnd() {
+          if (controller.signal.aborted) return
+          clearInterval(timeRef.current)
+          flush()
+          yakitNotify('info', `[${extra.apiKey}] finished`)
+        },
       })
+    } catch (error) {
+      onError(error)
+    } finally {
+      if (controllerRef.current === controller) submittingRef.current = false
     }
   })
 
   const onCancelStream = useMemoizedFn(() => {
-    if (!token) return
-
-    ipcRenderer.invoke(`cancel-${extra.apiKey}`, token)
-    ipcRenderer.removeAllListeners(`${token}-data`)
-    ipcRenderer.removeAllListeners(`${token}-error`)
-    ipcRenderer.removeAllListeners(`${token}-end`)
+    controllerRef.current?.abort()
     clearInterval(timeRef.current)
   })
   const onSuccessStream = useMemoizedFn(() => {
@@ -141,31 +146,6 @@ const ImportExportModalInner = <T,>(props: ImportExportModalComProps<T>) => {
       onSuccessStream()
     }
   }, [progressStreamCom])
-
-  useEffect(() => {
-    if (!token) {
-      return
-    }
-    const typeTitle = extra.apiKey
-    const updateImportExportHTTPFlowStream = () => {
-      setProgressStream({ ...importExportStreamRef.current })
-    }
-    timeRef.current = setInterval(updateImportExportHTTPFlowStream, 500)
-    ipcRenderer.on(`${token}-data`, async (_, data: ExportImportProgress) => {
-      importExportStreamRef.current = data
-    })
-    ipcRenderer.on(`${token}-error`, (_, error) => {
-      yakitNotify('error', `[${typeTitle}] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, () => {
-      yakitNotify('info', `[${typeTitle}] finished`)
-    })
-    return () => {
-      if (token) {
-        onCancelStream()
-      }
-    }
-  }, [token])
 
   const onCancel = useMemoizedFn(() => {
     onCallback(false)
@@ -231,6 +211,8 @@ const ImportExportModalInner = <T,>(props: ImportExportModalComProps<T>) => {
     // 关闭时重置所有数据
     return () => {
       if (extra.hint) {
+        onCancelStream()
+        submittingRef.current = false
         setShowProgressStream(false)
         setProgressStream({ Progress: 0, Verbose: '' })
         importExportStreamRef.current = { Progress: 0, Verbose: '' }
@@ -314,10 +296,8 @@ const ImportExportModalInner = <T,>(props: ImportExportModalComProps<T>) => {
     </>
   )
 }
-const ImportExportModal = memo(<T,>(props: ImportExportModalComProps<T>) => <ImportExportModalInner {...props} />) as <
-  T,
->(
-  props: ImportExportModalComProps<T>,
-) => JSX.Element
+const ImportExportModal = memo(<T extends ExportFilter>(props: ImportExportModalComProps<T>) => (
+  <ImportExportModalInner {...props} />
+)) as <T extends ExportFilter>(props: ImportExportModalComProps<T>) => JSX.Element
 
 export default ImportExportModal

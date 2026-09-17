@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import React, { type CSSProperties, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { Alert, Form, Modal, Space, Tooltip, Typography } from 'antd'
 import { failed, info, yakitNotify } from '../../utils/notification'
@@ -60,7 +61,6 @@ interface MITMChromeLauncherProp {
   callback: (host: string, port: number) => void
 }
 
-const { ipcRenderer } = window.require('electron')
 const { Text } = Typography
 
 const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
@@ -89,8 +89,8 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
 
   useEffect(() => {
     // 获取连接引擎的地址参数
-    ipcRenderer
-      .invoke('fetch-yaklang-engine-addr')
+    ipc
+      .invoke('local', 'fetch-yaklang-engine-addr', {})
       .then((data) => {
         if (data.addr === `${params.host}:${params.port}`) return
         const hosts: string[] = (data.addr as string).split(':')
@@ -118,7 +118,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
     }
     document.addEventListener('mousedown', handleClickOutside)
 
-    ipcRenderer.invoke('getDefaultUserDataDir').then((e: string) => {
+    ipc.invoke('local', 'getDefaultUserDataDir', {}).then((e: string) => {
       setDefUserDataDir(e)
     })
 
@@ -183,8 +183,8 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         } else {
           newParams.chromeFlags = handleChromeLauncherParams(chromeFlags, googleChromePluginPath)
         }
-        ipcRenderer
-          .invoke('LaunchChromeWithParams', newParams)
+        ipc
+          .invoke('local', 'LaunchChromeWithParams', newParams)
           .then((e) => {
             props.callback(params.host, params.port)
           })
@@ -406,7 +406,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
 
   useEffect(() => {
     const id = setInterval(() => {
-      ipcRenderer.invoke('IsChromeLaunched').then((e) => {
+      ipc.invoke('local', 'IsChromeLaunched', {}).then((e) => {
         setStarted(e)
       })
     }, 500)
@@ -423,8 +423,8 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
     // }
   })
   const onCloseChrome = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('StopAllChrome')
+    ipc
+      .invoke('local', 'StopAllChrome', {})
       .then(() => {
         info(t('MITMChromeLauncher.close_all_no_config_chrome_success'))
       })

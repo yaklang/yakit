@@ -178,8 +178,9 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
       PluginName: 'SyntaxFlow Searcher',
     }
     debugPluginStreamEvent.reset()
-    apiDebugPlugin({ params: requestParams, token: tokenRef.current, isShowStartInfo: false })
+    apiDebugPlugin({ params: requestParams, open: debugPluginStreamEvent.open, isShowStartInfo: false })
       .then(() => {
+        if (!debugPluginStreamEvent.isActive()) return
         debugPluginStreamEvent.start()
         setExecuting(true)
       })

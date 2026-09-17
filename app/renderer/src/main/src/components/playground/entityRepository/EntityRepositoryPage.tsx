@@ -1,3 +1,5 @@
+import { grpcPagingToUI, int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Button, Space, Table, Tag, Form, Typography, Card, Tabs, Input } from 'antd'
@@ -16,7 +18,6 @@ import { failed } from '../../../utils/notification'
 import styles from './EntityRepository.module.scss'
 import { instance } from '@viz-js/viz'
 
-const { ipcRenderer } = window.require('electron')
 const { Paragraph, Title } = Typography
 
 const GraphComponent = ({ dot }) => {
@@ -73,29 +74,29 @@ const GraphComponent = ({ dot }) => {
 
 // Entity Repository Types
 export interface EntityRepository {
-  ID: number
+  ID: string
   Name: string
   Description: string
   HiddenIndex: string
 }
 
 export interface Entity {
-  ID: number
+  ID: string
   BaseIndex: string
   Type: string
   Name: string
   Description: string
-  BaseID: number
+  BaseID: string
   Attributes: KVPair[]
   Rationale: string
   HiddenIndex: string
 }
 
 export interface Relationship {
-  ID: number
+  ID: string
   Type: string
-  SourceEntityID: number
-  TargetEntityID: number
+  SourceEntityID: string
+  TargetEntityID: string
   Attributes: KVPair[]
   Rationale: string
   SourceEntityIndex: string
@@ -110,7 +111,7 @@ export interface KVPair {
 export interface EntityFilter {
   BaseID?: number
   BaseIndex?: string
-  IDs?: number[]
+  IDs?: string[]
   Types?: string[]
   Names?: string[]
 }
@@ -118,12 +119,12 @@ export interface EntityFilter {
 export interface RelationshipFilter {
   BaseID?: number
   BaseIndex?: string
-  IDs?: number[]
+  IDs?: string[]
   Types?: string[]
   // 废弃
-  SourceEntityIDs?: number[]
-  TargetEntityIDs?: number[]
-  AboutEntityIDs?: number[]
+  SourceEntityIDs?: string[]
+  TargetEntityIDs?: string[]
+  AboutEntityIDs?: string[]
   // 建议
   SourceEntityIndex?: string[]
   TargetEntityIndex?: string[]
@@ -170,7 +171,7 @@ export const EntityRepositoryPage: React.FC = () => {
   const [selectedRepository, setSelectedRepository] = useState<EntityRepository | null>(null)
   const [ermDot, setErmDot] = useState<string>('')
   const [ermDepth, setErmDepth] = useState<number>(2)
-  const [selectedEntityIds, setSelectedEntityIds] = useState<number[]>([])
+  const [selectedEntityIds, setSelectedEntityIds] = useState<string[]>([])
   const [ermViewMode, setErmViewMode] = useState<'svg' | 'dot'>('svg')
 
   // Pagination states
@@ -197,7 +198,7 @@ export const EntityRepositoryPage: React.FC = () => {
   const loadRepositories = useMemoizedFn(async () => {
     setLoading(true)
     try {
-      const response: ListEntityRepositoryResponse = await ipcRenderer.invoke('ListEntityRepository', {})
+      const response: ListEntityRepositoryResponse = await ipc.invoke('grpc', 'ListEntityRepository', {})
       setRepositories(response.EntityRepositories || [])
     } catch (e) {
       failed(`Failed to load repositories: ${e}`)
@@ -218,7 +219,7 @@ export const EntityRepositoryPage: React.FC = () => {
         OrderBy: 'id',
         Order: 'desc',
       }
-      const response: QueryEntityResponse = await ipcRenderer.invoke('QueryEntity', {
+      const response = await ipc.invoke('grpc', 'QueryEntity', {
         Filter: {
           ...entityFilters,
           BaseIndex: selectedRepository.HiddenIndex,
@@ -227,8 +228,8 @@ export const EntityRepositoryPage: React.FC = () => {
       })
 
       setEntities(response.Entities || [])
-      setEntityPagination(response.Pagination)
-      setEntityTotal(response.Total)
+      setEntityPagination(grpcPagingToUI(response.Pagination))
+      setEntityTotal(int64ToSafeNumber(response.Total))
     } catch (e) {
       failed(`Failed to load entities: ${e}`)
     } finally {
@@ -249,7 +250,7 @@ export const EntityRepositoryPage: React.FC = () => {
         Order: 'desc',
       }
 
-      const response: QueryRelationshipResponse = await ipcRenderer.invoke('QueryRelationship', {
+      const response = await ipc.invoke('grpc', 'QueryRelationship', {
         Filter: {
           ...relationshipFilters,
           BaseIndex: selectedRepository.HiddenIndex,
@@ -257,8 +258,8 @@ export const EntityRepositoryPage: React.FC = () => {
         Pagination: paginationProps,
       })
       setRelationships(response.Relationships || [])
-      setRelationshipPagination(response.Pagination)
-      setRelationshipTotal(response.Total)
+      setRelationshipPagination(grpcPagingToUI(response.Pagination))
+      setRelationshipTotal(int64ToSafeNumber(response.Total))
     } catch (e) {
       failed(`Failed to load relationships: ${e}`)
     } finally {
@@ -267,7 +268,7 @@ export const EntityRepositoryPage: React.FC = () => {
   })
 
   // Generate ERM Dot
-  const generateERMDot = useMemoizedFn(async (entityIds?: number[], depth?: number) => {
+  const generateERMDot = useMemoizedFn(async (entityIds?: string[], depth?: number) => {
     if (!selectedRepository) return
 
     setLoading(true)
@@ -281,7 +282,7 @@ export const EntityRepositoryPage: React.FC = () => {
         filter.IDs = entityIds
       }
 
-      const response: GenerateERMDotResponse = await ipcRenderer.invoke('GenerateERMDot', {
+      const response: GenerateERMDotResponse = await ipc.invoke('grpc', 'GenerateERMDot', {
         Filter: filter,
         Depth: depth || 2,
       })
@@ -309,7 +310,7 @@ export const EntityRepositoryPage: React.FC = () => {
       const ids = values.entityIds
         .split(',')
         .map((id: string) => parseInt(id.trim()))
-        .filter((id: number) => !isNaN(id))
+        .filter((id: string) => /^\d+$/.test(id))
       if (ids.length > 0) {
         newFilters.IDs = ids
       }
@@ -332,7 +333,7 @@ export const EntityRepositoryPage: React.FC = () => {
       const ids = values.sourceEntityIds
         .split(',')
         .map((id: string) => parseInt(id.trim()))
-        .filter((id: number) => !isNaN(id))
+        .filter((id: string) => /^\d+$/.test(id))
       if (ids.length > 0) {
         newFilters.SourceEntityIDs = ids
       }
@@ -341,7 +342,7 @@ export const EntityRepositoryPage: React.FC = () => {
       const ids = values.targetEntityIds
         .split(',')
         .map((id: string) => parseInt(id.trim()))
-        .filter((id: number) => !isNaN(id))
+        .filter((id: string) => /^\d+$/.test(id))
       if (ids.length > 0) {
         newFilters.TargetEntityIDs = ids
       }
@@ -350,7 +351,7 @@ export const EntityRepositoryPage: React.FC = () => {
       const ids = values.relationshipIds
         .split(',')
         .map((id: string) => parseInt(id.trim()))
-        .filter((id: number) => !isNaN(id))
+        .filter((id: string) => /^\d+$/.test(id))
       if (ids.length > 0) {
         newFilters.IDs = ids
       }
@@ -380,7 +381,7 @@ export const EntityRepositoryPage: React.FC = () => {
   })
 
   // Handle entity selection for ERM generation
-  const handleEntitySelectForERM = useMemoizedFn((entityId: number) => {
+  const handleEntitySelectForERM = useMemoizedFn((entityId: string) => {
     setSelectedEntityIds([entityId])
     setActiveTab('erm')
     // 自动生成ERM图
@@ -676,7 +677,7 @@ export const EntityRepositoryPage: React.FC = () => {
                       rowSelection={{
                         selectedRowKeys: selectedEntityIds,
                         onChange: (selectedRowKeys, selectedRows) => {
-                          setSelectedEntityIds(selectedRowKeys as number[])
+                          setSelectedEntityIds(selectedRowKeys.map(String))
                         },
                       }}
                       pagination={{
@@ -838,8 +839,8 @@ export const EntityRepositoryPage: React.FC = () => {
                           onChange={(e) => {
                             const ids = e.target.value
                               .split(',')
-                              .map((id) => parseInt(id.trim()))
-                              .filter((id) => !isNaN(id))
+                              .map((id) => id.trim())
+                              .filter((id) => /^\d+$/.test(id))
                             setSelectedEntityIds(ids)
                           }}
                           style={{ width: 200 }}

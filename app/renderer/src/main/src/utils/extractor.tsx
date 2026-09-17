@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FuzzerResponse } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import { useDebounceEffect, useGetState, useMap } from 'ahooks'
@@ -7,7 +7,6 @@ import { type editor } from 'monaco-editor'
 import { Space } from 'antd'
 import { AutoCard } from '@/components/AutoCard'
 import { failed, info, yakitFailed } from '@/utils/notification'
-import { randomString } from '@/utils/randomUtil'
 import { ResizeBox } from '@/components/ResizeBox'
 import { saveABSFileToOpen } from '@/utils/openWebsite'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -19,7 +18,7 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { yakitExtractor, yakitStream } from '@/services/electronBridge'
+import { ipc } from '@/services/ipc'
 
 export interface WebFuzzerResponseExtractorProp {
   responses: FuzzerResponse[]
@@ -47,8 +46,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
   // 存放提取出来的数据
   const [extracted, setExtracted] = useState<string[]>([])
 
-  // stream token
-  const [_token, setToken, getToken] = useGetState(randomString(40))
+  const activeExtraction = useRef<{ controller: AbortController; timer: ReturnType<typeof setInterval> }>()
 
   useEffect(() => {
     if (!editor) {
@@ -89,8 +87,8 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
         return
       }
 
-      yakitExtractor
-        .generateRule({
+      ipc
+        .invoke('grpc', 'GenerateExtractRule', {
           Data: StringToUint8Array(getResponseStr()),
           Selected: StringToUint8Array(selected),
         })
@@ -107,57 +105,84 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
     { wait: 500 },
   )
   const [extractedMap, { setAll }] = useMap<string, string>()
-  useEffect(() => {
-    if (!_token) {
-      return
-    }
-    const token = getToken()
+  useEffect(
+    () => () => {
+      const active = activeExtraction.current
+      active?.controller.abort()
+      clearInterval(active?.timer)
+    },
+    [],
+  )
+
+  const startExtraction = () => {
+    activeExtraction.current?.controller.abort()
+    clearInterval(activeExtraction.current?.timer)
+    const controller = new AbortController()
     const extractedCache: string[] = []
-    let extractedCountLastUpdated = 0
-    const extractedMap = new Map<string, string>()
-    const offData = yakitStream.onData(token, async (data: { Extracted: Uint8Array; Token: string }) => {
-      const item = extractedMap.get(data.Token)
-      if (item) {
-        extractedMap.set(data.Token, item + ',' + Uint8ArrayToString(data.Extracted))
-      } else {
-        extractedMap.set(data.Token, Uint8ArrayToString(data.Extracted))
-      }
-
-      extractedCache.push(Uint8ArrayToString(data.Extracted))
-    })
-    const offError = yakitStream.onError(token, (error) => {
-      setTimeout(() => {
-        setLoading(false)
-      }, 200)
-      failed(`[ExtractData] error:  ${error}`)
-    })
-    const offEnd = yakitStream.onEnd(token, () => {
-      setAll(extractedMap)
-      setTimeout(() => {
-        setLoading(false)
-      }, 200)
-      info('[ExtractData] finished')
-    })
-
-    const extractedDataCacheId = setInterval(() => {
-      if (extractedCache.length <= 0) {
-        return
-      }
-
-      if (extractedCache.length != extractedCountLastUpdated) {
-        setExtracted([...extractedCache])
-        extractedCountLastUpdated = extractedCache.length
-      }
-    }, 500)
-    return () => {
-      clearInterval(extractedDataCacheId)
-
-      yakitExtractor.cancel(token)
-      offData()
-      offError()
-      offEnd()
+    const resultMap = new Map<string, string>()
+    let countLastUpdated = 0
+    let finished = false
+    setExtracted([])
+    setAll(new Map())
+    setLoading(true)
+    const flush = () => {
+      if (controller.signal.aborted || extractedCache.length === countLastUpdated) return
+      setExtracted([...extractedCache])
+      countLastUpdated = extractedCache.length
     }
-  }, [_token])
+    const active = { controller, timer: setInterval(flush, 500) }
+    activeExtraction.current = active
+    const finish = () => {
+      if (finished || controller.signal.aborted) return false
+      finished = true
+      clearInterval(active.timer)
+      flush()
+      setAll(resultMap)
+      setLoading(false)
+      if (activeExtraction.current === active) activeExtraction.current = undefined
+      return true
+    }
+    const onError = (error: Error) => {
+      if (finish()) failed(`[ExtractData] error: ${error.message}`)
+    }
+    const run = async () => {
+      const requestFor = (response: FuzzerResponse) => ({
+        Mode: mode,
+        PrefixRegexp: prefix,
+        SuffixRegexp: suffix,
+        MatchRegexp: matchedRegexp,
+        Data: response.ResponseRaw,
+        Token: response.UUID,
+      })
+      const task = await ipc.openStream(
+        'grpc',
+        'ExtractData',
+        responses.length ? requestFor(responses[0]) : { End: true },
+        {
+          signal: controller.signal,
+          onData(data) {
+            const text = Uint8ArrayToString(data.Extracted)
+            const item = resultMap.get(data.Token)
+            resultMap.set(data.Token, item ? `${item},${text}` : text)
+            extractedCache.push(text)
+          },
+          onError,
+          onEnd() {
+            if (finish()) info('[ExtractData] finished')
+          },
+        },
+      )
+      for (const response of responses.slice(1)) {
+        if (controller.signal.aborted || finished) return
+        await task.write(requestFor(response))
+      }
+      if (responses.length && !controller.signal.aborted && !finished) await task.write({ End: true })
+    }
+    void run().catch((error: Error) => {
+      onError(error)
+      controller.abort()
+    })
+  }
 
   return (
     <Space style={{ width: '100%', padding: 24 }} direction={'vertical'}>
@@ -188,35 +213,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
           extra={
             <Space>
               <YakitTag>{t('WebFuzzerResponseExtractor.responseCount', { responses: responses.length })}</YakitTag>
-              <YakitButton
-                type={'primary'}
-                size={'small'}
-                onClick={() => {
-                  const t = randomString(46)
-                  setToken(t)
-                  setExtracted([])
-                  setLoading(true)
-                  responses.forEach((i, number) => {
-                    yakitExtractor
-                      .run(
-                        {
-                          Mode: mode,
-                          PrefixRegexp: prefix,
-                          SuffixRegexp: suffix,
-                          MatchRegexp: matchedRegexp,
-                          Data: i.ResponseRaw,
-                          Token: i.UUID,
-                        },
-                        t,
-                      )
-                      .finally(() => {
-                        if (number === responses.length - 1) {
-                          yakitExtractor.run({ End: true }, t)
-                        }
-                      })
-                  })
-                }}
-              >
+              <YakitButton type={'primary'} size={'small'} onClick={startExtraction}>
                 {t('WebFuzzerResponseExtractor.extractData')}
               </YakitButton>
             </Space>
@@ -293,8 +290,12 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                     <YakitPopconfirm
                       title={t('WebFuzzerResponseExtractor.confirmClearExtractedData')}
                       onConfirm={() => {
-                        setToken(randomString(46))
+                        activeExtraction.current?.controller.abort()
+                        clearInterval(activeExtraction.current?.timer)
+                        activeExtraction.current = undefined
+                        setLoading(false)
                         setExtracted([])
+                        setAll(new Map())
                       }}
                     >
                       <YakitButton size={'small'} type="outline1" colors="danger">
@@ -316,10 +317,13 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                         size={'small'}
                         type="text"
                         onClick={() => {
-                          yakitExtractor
-                            .sendToTable({
-                              type: sendPayloadsType,
-                              extractedMap,
+                          ipc
+                            .invoke('local', 'ForwardMainEvent', {
+                              event: 'fetch-extracted-to-table',
+                              data: {
+                                type: sendPayloadsType,
+                                extractedMap,
+                              },
                             })
                             .then(() => {
                               info(t('WebFuzzerResponseExtractor.dataSentSuccessfully'))

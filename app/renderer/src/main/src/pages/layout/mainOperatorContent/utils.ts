@@ -1,8 +1,7 @@
+import { ipc } from '@/services/ipc'
 import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import type { Paging } from '@/utils/yakQueryHTTPFlow'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface SaveFuzzerConfigRequest {
   Data: FuzzerConfig[]
@@ -51,8 +50,8 @@ export interface DbOperateMessage {
 }
 export const apiSaveFuzzerConfig: APIFunc<SaveFuzzerConfigRequest, DbOperateMessage> = (params, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('SaveFuzzerConfig', params)
+    ipc
+      .invoke('grpc', 'SaveFuzzerConfig', params)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '保存fuzzer历史失败:' + e)
@@ -66,8 +65,17 @@ export const apiQueryFuzzerConfig: APIFunc<QueryFuzzerConfigRequest, QueryFuzzer
   hiddenError,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryFuzzerConfig', params)
+    ipc
+      .invoke('grpc', 'QueryFuzzerConfig', params)
+      .then(
+        (res): QueryFuzzerConfigResponse => ({
+          ...res,
+          Data: res.Data.map((row) => {
+            if (row.Type !== 'page' && row.Type !== 'pageGroup') throw new Error('未知的 Fuzzer 配置类型: ' + row.Type)
+            return { ...row, Type: row.Type }
+          }),
+        }),
+      )
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询fuzzer历史失败:' + e)
@@ -82,8 +90,8 @@ export interface DeleteFuzzerConfigRequest {
 }
 export const apiDeleteFuzzerConfig: APIFunc<DeleteFuzzerConfigRequest, DbOperateMessage> = (params, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteFuzzerConfig', params)
+    ipc
+      .invoke('grpc', 'DeleteFuzzerConfig', params)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '删除fuzzer历史失败:' + e)

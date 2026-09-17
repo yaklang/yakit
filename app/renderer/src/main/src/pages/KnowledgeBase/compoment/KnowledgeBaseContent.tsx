@@ -32,7 +32,7 @@ import { failed, success } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
+
 import type { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
 import type { CreateKnowledgeBaseData } from '../TKnowledgeBase'
 
@@ -110,7 +110,6 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
 
     const onOK = async () => {
       try {
-        await Promise.all(api.tokens.map((token) => apiCancelDebugPlugin(token)))
         api.clearAllStreams()
         clearAll()
         emiter.emit('closePage', JSON.stringify({ route: YakitRoute.AI_REPOSITORY }))
@@ -125,9 +124,10 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
         const streamToken = randomString(50)
         setAIModelAvailableTokens(streamToken)
         const plugin = await grpcFetchLocalPluginDetail({ Name: '知识库可用性诊断' }, true)
-        await checkAIModelAvailability(plugin, streamToken)
+        const request = await checkAIModelAvailability(plugin, streamToken)
 
-        api?.createStream(streamToken, {
+        await api?.createStream(streamToken, {
+          request,
           taskName: 'debug-plugin',
           apiKey: 'DebugPlugin',
           autoClear: false,
@@ -182,11 +182,12 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
       buildingSetRef.current.add(key)
 
       try {
-        await BuildingKnowledgeBase(kb)
+        const request = await BuildingKnowledgeBase(kb)
 
         if (!api?.createStream || !kb.streamToken) return
 
-        api.createStream(kb.streamToken, {
+        await api.createStream(kb.streamToken, {
+          request,
           taskName: 'debug-plugin',
           apiKey: 'DebugPlugin',
           token: kb.streamToken,
@@ -225,14 +226,15 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
       buildingSetRef.current.add(key)
 
       try {
-        await BuildingKnowledgeBaseEntry({
+        const request = await BuildingKnowledgeBaseEntry({
           ...kb,
           ...history,
           streamToken: history.token,
         })
         if (!api?.createStream) return
 
-        api.createStream(history.token, {
+        await api.createStream(history.token, {
+          request,
           taskName: 'debug-plugin',
           apiKey: 'DebugPlugin',
           token: history.token,
@@ -319,9 +321,10 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
 
     const starKnowledgeeBaseEntry = useMemoizedFn(async (updateItems: KnowledgeBaseItem) => {
       try {
-        await BuildingKnowledgeBaseEntry(updateItems)
+        const request = await BuildingKnowledgeBaseEntry(updateItems)
         if (api && typeof api.createStream === 'function') {
-          api.createStream(updateItems.streamToken, {
+          await api.createStream(updateItems.streamToken, {
+            request,
             taskName: 'debug-plugin',
             apiKey: 'DebugPlugin',
             token: updateItems.streamToken,

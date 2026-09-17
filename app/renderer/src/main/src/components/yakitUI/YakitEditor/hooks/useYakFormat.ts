@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { useRef } from 'react'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import { v4 as uuidv4 } from 'uuid'
@@ -7,8 +8,6 @@ import { StringToUint8Array } from '@/utils/str'
 import { YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
 import { SyntaxFlowMonacoSpec } from '@/utils/monacoSpec/syntaxflowEditor'
 import type { YakitIMonacoEditor, YakitITextModel } from '../YakitEditorType'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface UseYakFormatParams {
   language?: string
@@ -40,9 +39,9 @@ export const useYakFormat = (params: UseYakFormatParams): UseYakFormatResult => 
     useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
       if (!model || model.isDisposed()) return
       const allContent = model.getValue()
-      ipcRenderer
-        .invoke('YaklangCompileAndFormat', { Code: allContent })
-        .then((e: { Errors: YakStaticAnalyzeErrorResult[]; Code: string }) => {
+      ipc
+        .invoke('grpc', 'YaklangCompileAndFormat', { Code: allContent })
+        .then((e) => {
           if (model.isDisposed()) return
           if (e.Code !== '') {
             model.setValue(e.Code)
@@ -69,13 +68,13 @@ export const useYakFormat = (params: UseYakFormatParams): UseYakFormatResult => 
       if (!model || model.isDisposed()) return
       if (language === YaklangMonacoSpec || language === SyntaxFlowMonacoSpec) {
         const allContent = model.getValue()
-        ipcRenderer
-          .invoke('StaticAnalyzeError', {
+        ipc
+          .invoke('grpc', 'StaticAnalyzeError', {
             Code: StringToUint8Array(allContent),
             PluginType: type,
             SessionID: AnalyzeSessionIDRef.current,
           })
-          .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
+          .then((e) => {
             if (model.isDisposed()) return
             if (e && e.Result.length > 0) {
               const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)

@@ -1,3 +1,5 @@
+import type { GrpcOutput } from '@/services/ipc'
+import { ipc } from '@/services/ipc'
 import { type editor, type IRange, languages, type Position } from 'monaco-editor'
 import type { CancellationToken } from 'typescript'
 import { monaco } from 'react-monaco-editor'
@@ -6,16 +8,14 @@ import { getAllRows } from '@/components/configNetwork/CustomizeCodeTypes'
 import type { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
 import { highlightKinds } from './fuzzHTTPMonacoSpec'
 
-const { ipcRenderer } = window.require('electron')
-
 // 自定义代码片段(QuerySnippets)缓存：补全在每次击键都会触发，
 // 若每次都走 IPC 查询数据库会带来明显的性能开销。这里做一个短 TTL 缓存，
 // 在连续输入期间复用结果，既保证性能，又能在片段被修改后很快刷新。
 const CUSTOM_SNIPPETS_TTL = 5000
-let _customSnippetsCache: { at: number; data: TCustomCodeGeneral<string[]> | undefined } | null = null
-let _customSnippetsInflight: Promise<TCustomCodeGeneral<string[]> | undefined> | null = null
+let _customSnippetsCache: { at: number; data: GrpcOutput<'QuerySnippets'> | undefined } | null = null
+let _customSnippetsInflight: Promise<GrpcOutput<'QuerySnippets'> | undefined> | null = null
 
-const queryCustomSnippetsCached = async (): Promise<TCustomCodeGeneral<string[]> | undefined> => {
+const queryCustomSnippetsCached = async (): Promise<GrpcOutput<'QuerySnippets'> | undefined> => {
   const now = Date.now()
   if (_customSnippetsCache && now - _customSnippetsCache.at < CUSTOM_SNIPPETS_TTL) {
     return _customSnippetsCache.data
@@ -24,9 +24,9 @@ const queryCustomSnippetsCached = async (): Promise<TCustomCodeGeneral<string[]>
   if (_customSnippetsInflight) {
     return _customSnippetsInflight
   }
-  const inflight: Promise<TCustomCodeGeneral<string[]> | undefined> = ipcRenderer
-    .invoke('QuerySnippets', { Filter: {} })
-    .then((data: TCustomCodeGeneral<string[]>) => {
+  const inflight: Promise<GrpcOutput<'QuerySnippets'> | undefined> = ipc
+    .invoke('grpc', 'QuerySnippets', { Filter: {} })
+    .then((data) => {
       _customSnippetsCache = { at: Date.now(), data }
       return data
     })
@@ -640,8 +640,8 @@ export const newYaklangCompletionHandlerProvider = (
       Command: '',
     }))
 
-    await ipcRenderer
-      .invoke('YaklangLanguageSuggestion', {
+    await ipc
+      .invoke('grpc', 'YaklangLanguageSuggestion', {
         InspectType: 'completion',
         YakScriptType: type,
         YakScriptCode: model.getValue(),
@@ -654,7 +654,7 @@ export const newYaklangCompletionHandlerProvider = (
           EndColumn: iWord.endColumn,
         } as Range,
       } as YaklangLanguageSuggestionRequest)
-      .then((r: YaklangLanguageSuggestionResponse) => {
+      .then((r) => {
         if (r.SuggestionMessage.length > 0) {
           const range = {
             startLineNumber: position.lineNumber,
@@ -810,7 +810,7 @@ export const maybeAutoTriggerCallbackOnParen = async (
     // 未知 callee：做一次轻量探测(复用补全接口)。返回里出现 Kind==='Snippet'
     // 即代表后端认为「当前实参期望函数类型」(回调骨架)，仅回调场景才会出现。
     const iWord = getWordWithPointAtPosition(model, position)
-    const resp: YaklangLanguageSuggestionResponse = await ipcRenderer.invoke('YaklangLanguageSuggestion', {
+    const resp: YaklangLanguageSuggestionResponse = await ipc.invoke('grpc', 'YaklangLanguageSuggestion', {
       InspectType: 'completion',
       YakScriptType: scriptType,
       YakScriptCode: model.getValue(),

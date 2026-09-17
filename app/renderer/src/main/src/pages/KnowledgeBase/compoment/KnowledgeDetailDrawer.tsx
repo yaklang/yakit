@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { type Dispatch, type FC, type SetStateAction, useEffect, useMemo } from 'react'
 import { Divider, Form, Tooltip } from 'antd'
 
@@ -50,8 +51,6 @@ interface KnowledgeDetailDrawerProps {
 
 const { Item } = Form
 
-const { ipcRenderer } = window.require('electron')
-
 const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
   knowledgeDrawerDetail,
   setKnowledgeDrawerDetail,
@@ -72,7 +71,7 @@ const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
     loading: dotCodeLoading,
   } = useRequest(
     async (depth?: number) => {
-      const response: GenerateERMDotResponse = await ipcRenderer.invoke('GenerateERMDot', {
+      const response: GenerateERMDotResponse = await ipc.invoke('grpc', 'GenerateERMDot', {
         Filter: {
           HiddenIndex: knowledgeDrawerDetail?.RelatedEntityUUIDS?.split(','),
         },
@@ -91,7 +90,7 @@ const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
   // 获取实体关系图
   const { data, runAsync, loading } = useRequest(
     async (depth?: number) => {
-      const response = await ipcRenderer.invoke('QuerySubERM', {
+      const response = await ipc.invoke('grpc', 'QuerySubERM', {
         Filter: {
           HiddenIndex: knowledgeDrawerDetail?.RelatedEntityUUIDS?.split(','),
         },
@@ -111,7 +110,7 @@ const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
 
   const { runAsync: QueryEntityRunAsync, data: QueryEntityData } = useRequest(
     async () => {
-      const result = await ipcRenderer.invoke('QueryEntity', {
+      const result = await ipc.invoke('grpc', 'QueryEntity', {
         Filter: {
           HiddenIndex: knowledgeDrawerDetail?.RelatedEntityUUIDS?.split(','),
         },
@@ -175,8 +174,8 @@ const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
       PotentialQuestions: result,
     })
 
-    ipcRenderer
-      .invoke('UpdateKnowledgeBaseEntry', transformData)
+    ipc
+      .invoke('grpc', 'UpdateKnowledgeBaseEntry', transformData)
       .then(() => {
         setTData(newTableData)
         setStatus('preview')

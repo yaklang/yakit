@@ -1,13 +1,13 @@
+import { ipc } from '@/services/ipc'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
-import { yakitHost } from '@/services/electronBridge'
 let MachineID: string = ''
 
 /** 获取机器码 */
 const getMachineIDOperation = () => {
   return new Promise(async (resolve, reject) => {
-    yakitHost
-      .getMachineID({})
+    ipc
+      .invoke('grpc', 'GetMachineID', {})
       .then((obj: { MachineID: string }) => {
         MachineID = obj.MachineID
         resolve(true)

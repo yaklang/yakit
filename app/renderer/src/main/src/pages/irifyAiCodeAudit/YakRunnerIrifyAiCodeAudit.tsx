@@ -1,3 +1,5 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
+import { useRunnerExecution } from '@/pages/yakRunner/hooks/useRunnerExecution'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
@@ -73,8 +75,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SplitView } from '../yakRunner/SplitView/SplitView'
 import { getStorageYakRunnerAiCodeAuditShortcutKeyEvents } from '@/utils/globalShortcutKey/events/page/yakRunnerAiCodeAudit'
 import { useIrifyWorkbenchAiAttachRef } from './IrifyWorkbenchAiAttachContext'
-const { ipcRenderer } = window.require('electron')
-
 /**
  * IrifyAICodeAudit页面，打开文件夹注册监听时，绑定监听的唯一ID
  */
@@ -381,15 +381,19 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
     }
   })
 
-  // 是否正在读取中
-  const isReadingRef = useRef<boolean>(false)
+  const readController = useRef<AbortController>()
+  useEffect(() => () => readController.current?.abort(), [])
   const onOpenFileByPathFun = useMemoizedFn(async (data) => {
+    readController.current?.abort()
+    const controller = new AbortController()
+    readController.current = controller
     try {
       const { params, isHistory } = JSON.parse(data) as OpenFileByPathProps
       const { path, name, parent, highLightRange } = params
 
       // 校验是否已存在 如若存在则不创建只定位
       const file = await judgeAreaExistFilePath(areaInfo, path)
+      if (controller.signal.aborted) return
       if (file) {
         let cacheAreaInfo = areaInfo
         // 如若存在高亮显示 则注入
@@ -401,17 +405,13 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
         setActiveFile && setActiveFile({ ...file, highLightRange })
       } else {
         const { size, isPlainText } = await getCodeSizeByPath(path)
+        if (controller.signal.aborted) return
         if (size > MAX_FILE_SIZE_BYTES) {
           setShowFileHint(true)
           return
         }
-        // 取消上一次请求
-        if (isReadingRef.current) {
-          ipcRenderer.invoke('cancel-ReadFile')
-        }
-        isReadingRef.current = true
-        const code = await getCodeByPath(path)
-        isReadingRef.current = false
+        const code = await getCodeByPath(path, undefined, controller.signal)
+        if (controller.signal.aborted) return
         const suffix = name.indexOf('.') > -1 ? name.split('.').pop() : ''
         const scratchFile: FileDetailInfo = {
           name,
@@ -443,18 +443,24 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
         }
       }
     } catch (error) {
+      if (controller.signal.aborted) return
       failed(`error: ${error}`)
     }
   })
 
   const onGetCodeByPathCacheFun = useMemoizedFn(async (data) => {
+    readController.current?.abort()
+    const controller = new AbortController()
+    readController.current = controller
     try {
       const { params } = JSON.parse(data) as OpenFileByPathProps
       const { path, name } = params
       // 校验是否已存在 如若存在则赋予其code
       const file = await judgeAreaExistFilePath(areaInfo, path)
+      if (controller.signal.aborted) return
       if (file) {
         const { size, isPlainText } = await getCodeSizeByPath(path)
+        if (controller.signal.aborted) return
         if (size > MAX_FILE_SIZE_BYTES) {
           !isShowFileHint && setShowFileHint(true)
           // 如若历史文件过大 则移除展示的文件
@@ -465,13 +471,8 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
           }
           return
         }
-        // 取消上一次请求
-        if (isReadingRef.current) {
-          ipcRenderer.invoke('cancel-ReadFile')
-        }
-        isReadingRef.current = true
-        const code = await getCodeByPath(path)
-        isReadingRef.current = false
+        const code = await getCodeByPath(path, undefined, controller.signal)
+        if (controller.signal.aborted) return
         const suffix = name.indexOf('.') > -1 ? name.split('.').pop() : ''
         const newAreaInfo = updateAreaFileInfo(
           areaInfo,
@@ -498,6 +499,7 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
         )
       }
     } catch (error) {
+      if (controller.signal.aborted) return
       failed(`error: ${error}`)
     }
   })
@@ -684,14 +686,17 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
     { wait: 300 },
   )
 
+  const execution = useRunnerExecution(() => setRunnerTabsId(undefined))
+
   const store: YakRunnerContextStore = useMemo(() => {
     return {
       fileTree: fileTree,
       areaInfo: areaInfo,
       activeFile: activeFile,
       runnerTabsId: runnerTabsId,
+      execution,
     }
-  }, [fileTree, areaInfo, activeFile, runnerTabsId])
+  }, [fileTree, areaInfo, activeFile, runnerTabsId, execution])
 
   const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
     return {
@@ -736,9 +741,9 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
   const [codePath, setCodePath] = useState<string>('')
   // 默认保存路径
   useEffect(() => {
-    ipcRenderer.invoke('fetch-code-path').then((path: string) => {
-      ipcRenderer
-        .invoke('is-exists-file', path)
+    ipc.invoke('local', 'fetch-code-path', {}).then((path: string) => {
+      ipc
+        .invoke('local', 'assert-file-absent', path)
         .then(() => {
           setCodePath('')
         })
@@ -753,12 +758,12 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
     try {
       // 如若未保存 则
       if (activeFile && activeFile.isUnSave && activeFile.code && activeFile.code.length > 0) {
-        ipcRenderer
-          .invoke('show-save-dialog', `${codePath}${codePath ? '/' : ''}${activeFile.name}`)
+        ipc
+          .invoke('local', 'show-save-dialog', `${codePath}${codePath ? '/' : ''}${activeFile.name}`)
           .then(async (res) => {
             const path = res.filePath
             const name = res.name
-            if (path.length > 0) {
+            if (!res.canceled && path) {
               const suffix = name.split('.').pop()
 
               const file: FileDetailInfo = {
@@ -1078,24 +1083,14 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
   })
 
   useEffect(() => {
-    // 执行结束
-    ipcRenderer.on('client-yak-end', () => {
-      setRunnerTabsId(undefined)
-    })
-    return () => {
-      ipcRenderer.removeAllListeners('client-yak-end')
-    }
-  }, [])
-
-  useEffect(() => {
     // 调用打开临时文件
-    ipcRenderer.on('fetch-send-to-yak-running', (res: any) => {
+    const stopIpcEvent1 = ipc.on('fetch-send-to-yak-running', (res: any) => {
       const { name = '', code = '' } = res || {}
       if (!name || !code) return
       addFileTab({ name, code })
     })
     return () => {
-      ipcRenderer.removeAllListeners('fetch-send-to-yak-running')
+      stopIpcEvent1()
     }
   }, [])
 

@@ -1,87 +1,54 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { randomString } from '@/utils/randomUtil'
+import { ipc, type GrpcInput, type GrpcOutput } from '@/services/ipc'
+import { fuzzerResponseForUI } from '@/pages/fuzzer/grpcAdapters'
 
-const { ipcRenderer } = window.require('electron')
-
-interface StreamConcurrencyConfig<TData> {
-  onData: (data: TData) => void
+interface StreamConcurrencyConfig {
+  onData: (data: {
+    Request: NonNullable<GrpcOutput<'HTTPFuzzerGroup'>['Request']>
+    Response: ReturnType<typeof fuzzerResponseForUI>
+  }) => void
   onStreamEnd?: () => void
 }
 
-export const useStreamConcurrency = <TData = any, TParams = any>({
-  onData,
-  onStreamEnd,
-}: StreamConcurrencyConfig<TData>) => {
-  const cleanupRef = useRef<(() => void) | null>(null)
-  const tokenRef = useRef<string>(randomString(40))
-  const [loading, setLoading] = useState<boolean>(false)
-  const startConcurrency = useMemoizedFn((params: TParams) => {
-    if (cleanupRef.current) {
-      cleanupRef.current()
-    }
-    setLoading(true)
-
-    const token = tokenRef.current
-
-    const dataToken = `${token}-data`
-    const errToken = `${token}-error`
-    const endToken = `${token}-end`
-
-    const handleData = (_: any, data: TData) => {
-      onData(data)
-    }
-
-    const handleError = () => {
-      onStreamEnd?.()
-    }
-
-    const handleEnd = () => {
-      setLoading(false)
-      onStreamEnd?.()
-      if (cleanupRef.current) {
-        cleanupRef.current()
-        cleanupRef.current = null
-      }
-    }
-
-    ipcRenderer.on(dataToken, handleData)
-    ipcRenderer.on(errToken, handleError)
-    ipcRenderer.on(endToken, handleEnd)
-
-    ipcRenderer.invoke('HTTPFuzzerGroup', params, token).catch(() => {
-      onStreamEnd?.()
-      if (cleanupRef.current) {
-        cleanupRef.current()
-        cleanupRef.current = null
-      }
-    })
-
-    cleanupRef.current = () => {
-      ipcRenderer.invoke('cancel-HTTPFuzzerGroup', token)
-      ipcRenderer.removeAllListeners(dataToken)
-      ipcRenderer.removeAllListeners(errToken)
-      ipcRenderer.removeAllListeners(endToken)
-    }
+export const useStreamConcurrency = ({ onData, onStreamEnd }: StreamConcurrencyConfig) => {
+  const controllerRef = useRef<AbortController>()
+  const [loading, setLoading] = useState(false)
+  const handleData = useMemoizedFn(onData)
+  const handleEnd = useMemoizedFn(() => {
+    setLoading(false)
+    onStreamEnd?.()
   })
-
-  const cancelConcurrency = useMemoizedFn(() => {
-    if (cleanupRef.current) {
-      cleanupRef.current()
-      cleanupRef.current = null
+  const startConcurrency = useMemoizedFn((params: GrpcInput<'HTTPFuzzerGroup'>) => {
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    setLoading(true)
+    let finished = false
+    const finish = () => {
+      if (controller.signal.aborted || finished) return
+      finished = true
+      handleEnd()
     }
+    void ipc
+      .openStream('grpc', 'HTTPFuzzerGroup', params, {
+        token: randomString(40),
+        signal: controller.signal,
+        onData(data) {
+          if (controller.signal.aborted) return
+          if (!data.Request || !data.Response) throw new Error('Fuzzer 并发响应缺少请求或响应数据')
+          handleData({ Request: data.Request, Response: fuzzerResponseForUI(data.Response) })
+        },
+        onError: finish,
+        onEnd: finish,
+      })
+      .catch(finish)
+  })
+  const cancelConcurrency = useMemoizedFn(() => {
+    controllerRef.current?.abort()
     setLoading(false)
   })
-
-  useEffect(() => {
-    return () => {
-      cancelConcurrency()
-    }
-  }, [])
-
-  return {
-    startConcurrency,
-    cancelConcurrency,
-    loading,
-  }
+  useEffect(() => () => controllerRef.current?.abort(), [])
+  return { startConcurrency, cancelConcurrency, loading }
 }

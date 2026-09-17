@@ -1,3 +1,4 @@
+import { ipc, type GrpcOutput, type StreamTask } from '@/services/ipc'
 import React, { useEffect, useState, useImperativeHandle, useMemo, useRef } from 'react'
 import { Form, Progress, Tooltip } from 'antd'
 import { useControllableValue, useCreation, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
@@ -47,7 +48,6 @@ import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
 import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 const { TabPane } = PluginTabs
-const { ipcRenderer } = window.require('electron')
 const CONNECTIVITY_CHECK_PLUGIN_NAME = 'TUN 劫持联通性检测'
 const CONNECTIVITY_CHECK_DEBUG_PARAMS: DebugPluginRequest = {
   Code: '',
@@ -223,10 +223,11 @@ const ConnectivityCheckAction: React.FC = React.memo(() => {
     clearConnectivityCheck()
     apiDebugPlugin({
       params: CONNECTIVITY_CHECK_DEBUG_PARAMS,
-      token: connectivityTokenRef.current,
+      open: connectivityStreamActions.open,
       isShowStartInfo: false,
     })
       .then(() => {
+        if (!connectivityStreamActions.isActive()) return
         setIsConnectivityChecking(true)
         startConnectivityFakeProgress()
         connectivityStreamActions.start()
@@ -806,18 +807,20 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
       },
     ]
 
-    const [token, setToken] = useState<string>(randomString(40))
-    const update = useMemoizedFn((params: WatchProcessRequest = {}) => {
-      const newParams: WatchProcessRequest = {
-        StartParams: {
-          CheckIntervalSeconds: 5,
-          DisableReserveDNS: false,
-        },
-        ...params,
+    const [token] = useState<string>(randomString(40))
+    const sessionRef = useRef<{
+      controller: AbortController
+      opening?: Promise<StreamTask<'WatchProcessConnection'>>
+    }>()
+    const update = useMemoizedFn(async (params: WatchProcessRequest = {}) => {
+      const session = sessionRef.current
+      if (!session?.opening) return
+      try {
+        const task = await session.opening
+        if (!session.controller.signal.aborted) await task.write(params)
+      } catch (error) {
+        if (!session.controller.signal.aborted) onWatchError(error)
       }
-      ipcRenderer.invoke('WatchProcessConnection', newParams, token).catch((err: any) => {
-        yakitNotify('error', `[WatchProcessConnection] error:  ${err}`, true)
-      })
     })
 
     const tableDataRef = React.useRef<ProcessInfo[]>([])
@@ -838,55 +841,76 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
       updateTableDate(true)
     }, [searchVal])
 
-    useEffect(() => {
-      update()
-      ipcRenderer.on(`${token}-data`, async (e, data: WatchProcessResponse) => {
-        switch (data.Action) {
-          case 'start':
-            if (!tableDataRef.current.find((item) => item.Pid === data.Process.Pid)) {
-              tableDataRef.current = tableDataRef.current.concat(data.Process)
+    const onWatchData = useMemoizedFn((data: GrpcOutput<'WatchProcessConnection'>) => {
+      const process = data.Process
+      if (data.Action !== 'refresh_connections' && !process) return
+      switch (data.Action) {
+        case 'start':
+          if (!process) return
+          if (!tableDataRef.current.find((item) => item.Pid === process.Pid)) {
+            tableDataRef.current = tableDataRef.current.concat(process)
+          }
+          break
+        case 'exit':
+          if (!process) return
+          tableDataRef.current = tableDataRef.current.filter((item) => item.Pid !== process.Pid)
+          break
+        case 'refresh':
+          if (!process) return
+          tableDataRef.current = tableDataRef.current.map((item) => {
+            if (item.Pid === process.Pid) {
+              return process
             }
-            break
-          case 'exit':
-            tableDataRef.current = tableDataRef.current.filter((item) => item.Pid !== data.Process.Pid)
-            break
-          case 'refresh':
-            tableDataRef.current = tableDataRef.current.map((item) => {
-              if (item.Pid === data.Process.Pid) {
-                return data.Process
-              }
-              return item
-            })
-            break
-          case 'refresh_connections':
-            {
-              const Connections = data?.Connections
-              if (Connections && Connections.length > 0) {
-                setHijackProcessInfo(data.Connections)
-              } else {
-                warn(t('PluginTunHijack.noNetworkConnection'))
-              }
+            return item
+          })
+          break
+        case 'refresh_connections':
+          {
+            const Connections = data?.Connections
+            if (Connections && Connections.length > 0) {
+              setHijackProcessInfo(data.Connections)
+            } else {
+              warn(t('PluginTunHijack.noNetworkConnection'))
             }
-            break
+          }
+          break
 
-          default:
-            break
-        }
-        updateTableDate()
-      })
-      ipcRenderer.on(`${token}-error`, (e, error) => {
-        yakitNotify('error', `[WatchProcessConnection] error:  ${error}`, true)
-      })
-      ipcRenderer.on(`${token}-end`, (e, data) => {
-        info('[WatchProcessConnection] finished')
+        default:
+          break
+      }
+      updateTableDate()
+    })
+    const onWatchError = useMemoizedFn((error: unknown) => {
+      yakitNotify('error', `[WatchProcessConnection] error: ${error}`, true)
+    })
+    useEffect(() => {
+      const session = {
+        controller: new AbortController(),
+        opening: undefined as Promise<StreamTask<'WatchProcessConnection'>> | undefined,
+      }
+      sessionRef.current = session
+      session.opening = ipc.openStream(
+        'grpc',
+        'WatchProcessConnection',
+        {
+          StartParams: { CheckIntervalSeconds: 5, DisableReserveDNS: false },
+        },
+        {
+          token,
+          signal: session.controller.signal,
+          onData: onWatchData,
+          onError: onWatchError,
+          onEnd: () => info('[WatchProcessConnection] finished'),
+        },
+      )
+      void session.opening.catch((error) => {
+        if (!session.controller.signal.aborted) onWatchError(error)
       })
       return () => {
-        ipcRenderer.invoke('cancel-WatchProcessConnection', token)
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
+        session.controller.abort()
+        if (sessionRef.current === session) sessionRef.current = undefined
       }
-    }, [])
+    }, [token])
     const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: any) => {
       setSearchVal(filter['Name'])
     })

@@ -1,9 +1,8 @@
+import { mitmV2Session } from '../mitmSession'
 import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import i18n from '@/i18n/i18n'
 import { yakitNotify } from '@/utils/notification'
 const tOriginal = i18n.getFixedT(null, 'mitm')
-
-const { ipcRenderer } = window.require('electron')
 
 export interface SingleManualHijackControlMessage {
   TaskID: string
@@ -28,8 +27,7 @@ export interface SingleManualHijackControlMessage {
 /**手动劫持操作 */
 const grpcMITMManualHijackMessage: APIFunc<SingleManualHijackControlMessage, null> = (params) => {
   return new Promise((resolve, reject) => {
-    const url = `mitmV2-manual-hijack-message`
-    ipcRenderer.invoke(url, params).then(resolve).catch(reject)
+    mitmV2Session.write({ ManualHijackControl: true, ManualHijackMessage: params }).then(resolve).catch(reject)
   })
 }
 
@@ -154,22 +152,6 @@ export interface MITMV2ReplaceLargeRequestFileResponse {
   Size: number
 }
 
-/** 分块上传替换文件；文件内容由 Electron 主进程流式发送，不进入 renderer 内存。 */
-export const grpcMITMV2ReplaceLargeRequestFile: APIFunc<
-  MITMV2ReplaceLargeRequestFileRequest,
-  MITMV2ReplaceLargeRequestFileResponse
-> = (params, hiddenError) => {
-  return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('mitmV2-replace-large-request-file', params)
-      .then(resolve)
-      .catch((e) => {
-        if (!hiddenError) yakitNotify('error', tOriginal('MITMManual.replace_large_file_failed') + String(e))
-        reject(e)
-      })
-  })
-}
-
 export interface MITMV2SubmitRequestDataResponseRequest {
   TaskID: string
   Response: Uint8Array
@@ -208,8 +190,8 @@ export const grpcMITMV2SubmitPayloadData: APIFunc<MITMV2SubmitPayloadDataRequest
 /**刷新重置手动劫持列表 */
 export const grpcMITMV2RecoverManualHijack: APINoRequestFunc<null> = (hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('mitmV2-recover-manual-hijack')
+    mitmV2Session
+      .write({ RecoverManualHijack: true })
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', tOriginal('MITMHacker.grpc_mitmv2recovermanualhijack_failed') + e)

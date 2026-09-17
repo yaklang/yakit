@@ -1,3 +1,5 @@
+import { projectsForUI } from '@/pages/softwareSettings/projectUtils'
+import { ipc } from '@/services/ipc'
 import { useState } from 'react'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { useStore } from '@/store'
@@ -44,8 +46,6 @@ interface StartTProps {
 interface useEETaskNotificationHookProps {
   refresh?: () => void
 }
-
-const { ipcRenderer } = window.require('electron')
 
 /** @name 企业版任务通知 */
 export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps) => {
@@ -96,9 +96,10 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
         },
         ProjectName: names.join(','),
       }
-      ipcRenderer
-        .invoke('GetProjects', param)
-        .then((rsp: ProjectsResponse) => {
+      ipc
+        .invoke('grpc', 'GetProjects', param)
+        .then(projectsForUI)
+        .then((rsp) => {
           const newReNames = rsp.Projects.map((item) => {
             return item.ProjectName
           })
@@ -170,8 +171,8 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
             Description: item.description || '',
           }
 
-          return ipcRenderer
-            .invoke('NewProject', params)
+          return ipc
+            .invoke('grpc', 'NewProject', params)
             .then((res) => ({
               status: 'fulfilled',
               value: res,

@@ -1,3 +1,4 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
 import type React from 'react'
 import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
@@ -490,7 +491,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
             emiter.emit(
               'editorLocalSaveToLocalList',
               JSON.stringify({
-                id: Number(i.Id) || 0,
+                id: positiveInt64(i.Id) || 0,
                 name: i.ScriptName,
                 uuid: i.UUID || '',
               }),

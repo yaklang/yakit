@@ -92,7 +92,7 @@ export interface AuditNodeProps {
   // 请求Query
   query?: {
     Key: string
-    Value: number
+    Value: string | number
   }[]
 
   // 前端所需校验属性
@@ -171,7 +171,7 @@ export interface AfreshAuditModalProps {
 }
 
 export interface SSAProjectFilter {
-  IDs?: number[]
+  IDs?: (string | number)[]
   ProjectNames?: string[]
   SearchKeyword?: string
   Languages?: string[]
@@ -207,7 +207,7 @@ export interface SSAProjectCompileConfig {
 }
 
 export interface SSAProjectResponse {
-  ID: number
+  ID: string | number
   CreateAt: number
   UpdateAt: number
   // 项目基础信息
@@ -218,11 +218,11 @@ export interface SSAProjectResponse {
   // 源代码来源
   CodeSourceConfig: string
   // 编译配置选项
-  CompileConfig: SSAProjectCompileConfig
+  CompileConfig: SSAProjectCompileConfig | null
   // 扫描配置选项
-  ScanConfig: SSAProjectScanConfig
+  ScanConfig: SSAProjectScanConfig | null
   // 规则策略配置
-  RuleConfig: SSAProjectScanRuleConfig
+  RuleConfig: import('@/services/ipc').GrpcOutput<'QuerySSAProject'>['Projects'][number]['RuleConfig']
   // JSON字符串配置（用于JSONSchema渲染表单的数据）
   JSONStringConfig: string
   // 漏洞个数
@@ -277,7 +277,7 @@ export interface AuditHistoryListProps {
     textArea?: string,
     Query?: {
       Key: string
-      Value: number
+      Value: string | number
     }[],
   ) => void
   onOpenEditorDetails: (v: ShowItemType) => void

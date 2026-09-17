@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect, useVirtualList } from 'ahooks'
@@ -61,12 +62,10 @@ import { YakitGetOnlinePlugin } from './MITMPluginOnline'
 
 export { YakitGetOnlinePlugin, type YakitGetOnlinePluginProps } from './MITMPluginOnline'
 
-const { ipcRenderer } = window.require('electron')
-
 interface MITMPluginLocalListProps {
   noParamsCheckList: string[]
   setNoParamsCheckList: (s: string[]) => void
-  onSubmitYakScriptId: (id: number, params: YakExecutorParam[]) => any
+  onSubmitYakScriptId: (id: string | number, params: YakExecutorParam[]) => any
   status: MitmStatus
   tags: string[]
   searchKeyword: string
@@ -352,47 +351,47 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
   const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const taskToken = useMemo(() => randomString(40), [])
   const [percent, setPercent] = useState<number>(0)
+  const controllerRef = useRef<AbortController>()
   useEffect(() => {
-    if (!taskToken) {
-      return
-    }
-    ipcRenderer.on(`${taskToken}-data`, (_, data: ApplySyntaxFlowRuleUpdateResponse) => {
-      const p = Math.floor(data.Percent * 100)
-      setPercent(p)
-    })
-    ipcRenderer.on(`${taskToken}-end`, () => {
-      setTimeout(() => {
-        setPercent(0)
-        setVisible(false)
-        onRefLocalRuleList()
-      }, 200)
-    })
-    ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+    if (!visible) return
+    const controller = new AbortController()
+    controllerRef.current = controller
+    let closeTimer: ReturnType<typeof setTimeout> | undefined
+    setPercent(0)
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
       onRefLocalRuleList()
-      yakitNotify('error', t('YakitNotification.updateFailed', { error: e }))
-    })
+      yakitNotify('error', t('YakitNotification.updateFailed', { error: String(error) }))
+    }
+    ipc
+      .openStream(
+        'grpc',
+        'ApplySyntaxFlowRuleUpdate',
+        {},
+        {
+          token: taskToken,
+          signal: controller.signal,
+          onData(data) {
+            if (!controller.signal.aborted) setPercent(Math.floor(data.Percent * 100))
+          },
+          onError,
+          onEnd() {
+            if (controller.signal.aborted) return
+            closeTimer = setTimeout(() => {
+              setPercent(0)
+              setVisible(false)
+              onRefLocalRuleList()
+            }, 200)
+          },
+        },
+      )
+      .catch(onError)
     return () => {
-      ipcRenderer.removeAllListeners(`${taskToken}-data`)
-      ipcRenderer.removeAllListeners(`${taskToken}-error`)
-      ipcRenderer.removeAllListeners(`${taskToken}-end`)
+      controller.abort()
+      clearTimeout(closeTimer)
     }
-  }, [taskToken])
-  useEffect(() => {
-    if (visible) {
-      ipcRenderer
-        .invoke('ApplySyntaxFlowRuleUpdate', taskToken)
-        .then(() => {})
-        .catch((e) => {
-          failed(t('YakitNotification.updateFailed', { error: e }))
-        })
-    }
-  }, [visible])
-  const StopAllRule = () => {
-    ipcRenderer.invoke('cancel-streamApplySyntaxFlowRuleUpdate', taskToken).catch((e) => {
-      failed(t('MITMPluginLocalList.stop_update_failed_e', { e }))
-      onRefLocalRuleList()
-    })
-  }
+  }, [visible, taskToken])
+  const StopAllRule = () => controllerRef.current?.abort()
   /** 更新后需要刷新本地规则管理 */
   const onRefLocalRuleList = useMemoizedFn(() => {
     emiter.emit('onRefreshRuleManagement')
@@ -867,8 +866,8 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
    */
   useEffect(() => {
     if (searchType === 'Tags') {
-      ipcRenderer
-        .invoke('GetYakScriptTags', {})
+      ipc
+        .invoke('grpc', 'GetYakScriptTags', {})
         .then((res) => {
           setAllTag(res.Tag.map((item) => ({ Name: item.Value, Total: item.Total })))
         })

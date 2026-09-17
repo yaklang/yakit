@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useState, useEffect, useRef } from 'react'
 import { Form, Divider, Typography, Row, Col } from 'antd'
@@ -27,7 +28,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
 const { Text } = Typography
 
 export interface FacadeOptionsProp {}
@@ -57,29 +57,10 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
   const [remoteIp, setRemoteIp] = useState<string>('')
 
   const startFacadeServer = useMemoizedFn((params: SettingReverseParamsInfo, remoteIp: string) => {
-    const startFacadeParams: FacadesRequest = {
-      ...params,
-      GenerateClassParams: { Gadget: '', Class: '', Options: [] },
-      Token: token,
-    }
-    if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = remoteIp
-
-    ipcRenderer
-      .invoke('StartFacadesWithYsoObject', startFacadeParams, token)
-      .then(() => {
-        info(t('NewReverseServerPage.startFacadeServer'))
-        setStatus('start')
-      })
-      .catch((e: any) => {
-        failed(t('NewReverseServerPage.startFacadeServerFailed') + `${e}`)
-      })
+    setAddrParams(params)
+    setRemoteIp(remoteIp)
+    setStatus('start')
   })
-
-  useEffect(() => {
-    return () => {
-      ipcRenderer.invoke('cancel-StartFacadesWithYsoObject', getToken())
-    }
-  }, [])
 
   return (
     <div className="reverse-server-page-wrapper">
@@ -106,7 +87,6 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
           addr={addrParams}
           remoteIp={remoteIp}
           stop={(isCancel) => {
-            if (!isCancel) ipcRenderer.invoke('cancel-StartFacadesWithYsoObject', token)
             setStatus('setting')
             setToken(randomString(40))
           }}
@@ -144,9 +124,9 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
             initParams.IsRemote = true
           })
           .finally(() => {
-            ipcRenderer
-              .invoke('AvailableLocalAddr', {})
-              .then((data: { Interfaces: NetInterface[] }) => {
+            ipc
+              .invoke('grpc', 'AvailableLocalAddr', {})
+              .then((data) => {
                 const arr = (data.Interfaces || []).filter((i) => i.IP !== '127.0.0.1')
                 if (arr.length > 0) initParams.ReverseHost = arr[0].IP
               })
@@ -156,9 +136,9 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
               })
           })
       } else {
-        ipcRenderer
-          .invoke('AvailableLocalAddr', {})
-          .then((data: { Interfaces: NetInterface[] }) => {
+        ipc
+          .invoke('grpc', 'AvailableLocalAddr', {})
+          .then((data) => {
             const arr = (data.Interfaces || []).filter((i) => i.IP !== '127.0.0.1')
             if (arr.length > 0) initParams.ReverseHost = arr[0].IP
           })
@@ -185,12 +165,12 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
 
   const remoteAddrConvert = useMemoizedFn(() => {
     setLoading(true)
-    ipcRenderer
-      .invoke('GetTunnelServerExternalIP', {
+    ipc
+      .invoke('grpc', 'GetTunnelServerExternalIP', {
         Addr: params.BridgeParam.Addr,
         Secret: params.BridgeParam.Secret,
       })
-      .then((data: { IP: string }) => (remoteIp.current = data.IP))
+      .then((data) => (remoteIp.current = data.IP))
       .catch((e: any) => {
         failed(t('SettingReverseServer.getRemoteAddrFailed') + `${e}`)
         remoteIp.current = ''
@@ -330,64 +310,82 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
     dataRef.current = []
     totalRef.current = 0
     setData([])
-    ipcRenderer.on(`${token}-data`, (_, data) => {
-      if (!data.IsMessage) {
-        return
-      }
-      const datas = dataRef.current
-      try {
-        const message = ExtractExecResultMessage(data) as ExecResultLog
-        if (message.level !== 'facades-msg') {
-          switch (message.level) {
-            case 'error':
-            case 'mirror_error':
-              failed(`${message.level}: ${message.data}`)
-              stop()
-              break
-            case 'warning':
-              warn(message.data)
-              break
-            default:
-              info(JSON.stringify(message))
-          }
-          return
-        }
-        const obj = JSON.parse(message.data) as ReverseNotification
-        obj.timestamp = message.timestamp
-        let isUpdata = false
-        for (let i = 0; i < datas.length; i++) {
-          if (datas[i].connect_hash === obj.connect_hash) {
-            datas[i] = obj
-            isUpdata = true
-            break
-          }
-        }
-        if (!isUpdata) {
-          datas.unshift(obj)
-          totalRef.current = totalRef.current + 1
-        }
+    const controller = new AbortController()
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      failed(String(error))
+      stop(true)
+    }
+    void ipc
+      .openStream(
+        'grpc',
+        'StartFacadesWithYsoObject',
+        {
+          ...addr,
+          ReverseHost: addr.IsRemote ? remoteIp : addr.ReverseHost,
+          GenerateClassParams: { Gadget: '', Class: '', Options: [] },
+          Token: token,
+        },
+        {
+          token,
+          signal: controller.signal,
+          onData(data) {
+            if (controller.signal.aborted) return
+            if (!data.IsMessage) {
+              return
+            }
+            const datas = dataRef.current
+            try {
+              const message = ExtractExecResultMessage(data) as ExecResultLog
+              if (message.level !== 'facades-msg') {
+                switch (message.level) {
+                  case 'error':
+                  case 'mirror_error':
+                    failed(`${message.level}: ${message.data}`)
+                    stop()
+                    break
+                  case 'warning':
+                    warn(message.data)
+                    break
+                  default:
+                    info(JSON.stringify(message))
+                }
+                return
+              }
+              const obj = JSON.parse(message.data) as ReverseNotification
+              obj.timestamp = message.timestamp
+              let isUpdata = false
+              for (let i = 0; i < datas.length; i++) {
+                if (datas[i].connect_hash === obj.connect_hash) {
+                  datas[i] = obj
+                  isUpdata = true
+                  break
+                }
+              }
+              if (!isUpdata) {
+                datas.unshift(obj)
+                totalRef.current = totalRef.current + 1
+              }
 
-        if (datas.length > 100) datas.pop()
-      } catch (e) {}
-    })
-    ipcRenderer.on(`${token}-error`, (_, data) => {
-      if (data) {
-        failed(`${JSON.stringify(data)}`)
-        stop(true)
-      }
-    })
-    ipcRenderer.on(`${token}-end`, () => stop(true))
+              if (datas.length > 100) datas.pop()
+            } catch (e) {}
+          },
+          onError,
+          onEnd() {
+            if (!controller.signal.aborted) stop(true)
+          },
+        },
+      )
+      .catch(onError)
     const id = setInterval(() => {
       const datas = dataRef.current
 
       if (getData().length === 0) setData([...datas])
-      if (getData().length > 0 && datas[0].uuid !== getData()[0].uuid) setData([...datas])
+      if (getData().length > 0 && datas[0]?.uuid !== getData()[0]?.uuid) setData([...datas])
     }, 1000)
     return () => {
       clearInterval(id)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-data`)
+      controller.abort()
     }
   }, [token])
 
@@ -400,8 +398,8 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
   const onApply = useMemoizedFn((value: ParamsRefProps) => {
     const data = convertRequest(value)
     setClassRequest({ ...value })
-    ipcRenderer
-      .invoke('ApplyClassToFacades', { Token: token, GenerateClassParams: { ...data } })
+    ipc
+      .invoke('grpc', 'ApplyClassToFacades', { Token: token, GenerateClassParams: { ...data } })
       .then((res) => info(t('StartReverseServer.applyToFacadeServerSuccess')))
       .catch((err) => failed(`${t('StartReverseServer.applyToFacadeServerFailed')}${err}`))
       .finally(() => setTimeout(() => setLoading(false), 300))

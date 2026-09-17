@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useState, useRef, useEffect } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { getReleaseEditionName } from '@/utils/envfile'
@@ -8,9 +9,7 @@ import type { DraggableEvent, DraggableData } from 'react-draggable'
 import { yakitNotify } from '@/utils/notification'
 import type { DownloadingState, ModalIsTop, System } from '../../types'
 import {
-  grpcCancelDownloadYakEngineVersion,
   grpcClearLocalYaklangVersionCache,
-  grpcFetchDownloadYak,
   grpcFetchLatestYakVersion,
   grpcInstallYak,
   grpcWriteEngineKeyToYakitProjects,
@@ -19,7 +18,6 @@ import { DragHeaderHeight, safeFormatDownloadProcessState } from '../../utils'
 import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { ShieldExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { QuestionModal } from '../QuestionModal'
-import { yakitEngine } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import classNames from 'classnames'
@@ -48,6 +46,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
 
   /** 远端yaklang引擎版本 */
   const yakLangVersion = useRef<string>('')
+  const downloadController = useRef<AbortController>()
   /** 下载进度条数据 */
   const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
 
@@ -57,6 +56,9 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
   const [isFailed, setIsFailed] = useState<boolean>(false)
 
   const fetchVersion = useMemoizedFn(() => {
+    downloadController.current?.abort()
+    const controller = new AbortController()
+    downloadController.current = controller
     let isTry: boolean = false // 是否需要重试
 
     setIsFailed(false)
@@ -64,24 +66,33 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
 
     grpcFetchLatestYakVersion()
       .then((data: string) => {
+        if (controller.signal.aborted) return
         yakLangVersion.current = data
       })
       .catch((e: any) => {
-        if (isBreakRef.current) return
+        if (isBreakRef.current || controller.signal.aborted) return
         setIsFailed(true)
         isTry = true
       })
       .finally(() => {
-        if (isBreakRef.current) return
+        if (isBreakRef.current || controller.signal.aborted) return
         if (isTry) return
-        downloadYak()
+        downloadYak(controller)
       })
   })
 
-  const downloadYak = () => {
-    grpcFetchDownloadYak(yakLangVersion.current, true)
+  const downloadYak = (controller = new AbortController()) => {
+    if (downloadController.current !== controller) downloadController.current?.abort()
+    downloadController.current = controller
+    ipc
+      .invoke('local', 'download-latest-yak', yakLangVersion.current, {
+        signal: controller.signal,
+        onProgress(state) {
+          if (!controller.signal.aborted && state !== 100) setDownloadProgress(safeFormatDownloadProcessState(state))
+        },
+      })
       .then(() => {
-        if (isBreakRef.current) return
+        if (isBreakRef.current || controller.signal.aborted) return
 
         yakitNotify('success', t('DownloadYaklang.download_complete'))
         if (!getDownloadProgress()?.size) return
@@ -92,19 +103,20 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
             remaining: 0,
           },
           speed: 0,
-          percent: 100,
+          percent: 1,
           size: getDownloadProgress().size,
         })
 
         // 这样在下次启动时，yakit会自动检测到引擎是否一致(用于解决yakit与irify在mac下的引擎冲突)
         grpcWriteEngineKeyToYakitProjects({ version: yakLangVersion.current }, true).finally(() => {
+          if (controller.signal.aborted) return
           // 清空主进程yaklang版本缓存
           grpcClearLocalYaklangVersionCache(true)
           onUpdate()
         })
       })
       .catch((e: any) => {
-        if (isBreakRef.current) return
+        if (isBreakRef.current || controller.signal.aborted) return
         yakitNotify('error', t('DownloadYaklang.download_failed', { version: yakLangVersion.current, error: e }))
         setDownloadProgress(undefined)
         setIsFailed(true)
@@ -126,13 +138,9 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
         fetchVersion()
       }
 
-      const offProgress = yakitEngine.onDownloadYakEngineProgress((state: DownloadingState) => {
-        if (isBreakRef.current) return
-        setDownloadProgress(safeFormatDownloadProcessState(state))
-      })
-
       return () => {
-        offProgress()
+        isBreakRef.current = true
+        downloadController.current?.abort()
       }
     } else {
       isBreakRef.current = true
@@ -173,7 +181,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
   })
 
   const onClose = useMemoizedFn((isOk: boolean) => {
-    grpcCancelDownloadYakEngineVersion(yakLangVersion.current, true)
+    downloadController.current?.abort()
     isBreakRef.current = true
     setDownloadProgress(undefined)
     setQSShow(false)

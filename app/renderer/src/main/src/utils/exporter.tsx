@@ -1,7 +1,6 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
-import { randomString } from './randomUtil'
-import { info } from './notification'
+import { failed, info } from './notification'
 import { Form, Space } from 'antd'
 import { AutoCard } from '../components/AutoCard'
 import { useGetState } from 'ahooks'
@@ -15,7 +14,7 @@ import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { getRemoteValue, setRemoteValue } from './kv'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
-import { yakitExporter, yakitStream } from '@/services/electronBridge'
+import { ipc } from '@/services/ipc'
 import { getReleaseEditionName } from './envfile'
 const tOriginal = i18n.getFixedT(null, ['utils'])
 
@@ -42,40 +41,52 @@ interface basicConfig {
 
 const GeneralExporter: React.FC<GeneralExporterProp> = (props) => {
   const { t, i18n } = useI18nNamespaces(['webFuzzer'])
-  const [token, setToken] = useState(randomString(30))
   const [paths, setPaths, getPaths] = useGetState<string[]>([])
 
   useEffect(() => {
-    if (!token) {
-      return
-    }
-
-    const offData = yakitStream.onData(token, (data: { FilePath: string }) => {
-      const origin = getPaths()
-      origin.push(data.FilePath)
-      setPaths(origin.map((v) => v))
-    })
-    const offEnd = yakitStream.onEnd(token, () => {
-      info(t('GeneralExporter.exportFinished'))
-      props.onFinish()
-    })
-    const offError = yakitStream.onError(token, () => {})
-
+    const controller = new AbortController()
     const { JsonOutput, CSVOutput, DirName, FilePattern } = props
-    yakitExporter.writeToFile({ token, params: { JsonOutput, CSVOutput, DirName, FilePattern } }).then(() => {
-      info(t('GeneralExporter.sendGeneratedFileConfigSuccess'))
-    })
-    props.Data.forEach((value) => {
-      yakitExporter.writeToFile({ token, params: { Data: value } }).then(() => {})
-    })
-    yakitExporter.writeToFile({ token, params: { Finished: true } })
-
-    return () => {
-      offData()
-      offError()
-      offEnd()
+    let errorReported = false
+    const reportError = (error: Error) => {
+      if (controller.signal.aborted || errorReported) return
+      errorReported = true
+      failed(error.message)
     }
-  }, [token])
+    const run = async () => {
+      const task = await ipc.openStream(
+        'grpc',
+        'ExtractDataToFile',
+        {
+          JsonOutput,
+          CSVOutput,
+          DirName,
+          FileNamePattern: FilePattern,
+        },
+        {
+          signal: controller.signal,
+          onData(data) {
+            setPaths([...getPaths(), data.FilePath])
+          },
+          onEnd() {
+            info(t('GeneralExporter.exportFinished'))
+            props.onFinish()
+          },
+          onError: reportError,
+        },
+      )
+      info(t('GeneralExporter.sendGeneratedFileConfigSuccess'))
+      for (const value of props.Data) {
+        if (controller.signal.aborted) return
+        await task.write({ Data: value })
+      }
+      if (!controller.signal.aborted) await task.write({ Finished: true })
+    }
+    void run().catch((error: Error) => {
+      reportError(error)
+      controller.abort()
+    })
+    return () => controller.abort()
+  }, [])
 
   return (
     <AutoCard title={t('GeneralExporter.getGeneratedFileClickToOpen')}>

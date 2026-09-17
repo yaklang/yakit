@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   useDebounceFn,
@@ -1245,9 +1246,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         failed('Remote engine file paths cannot be located in the local file manager')
         return
       }
-      window
-        .require('electron')
-        .ipcRenderer.invoke('is-file-exists', filePath)
+      ipc
+        .invoke('local', 'is-file-exists', filePath)
         .then((exists: boolean) => {
           if (exists) {
             openABSFileLocated(filePath)

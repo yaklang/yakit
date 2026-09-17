@@ -1,3 +1,10 @@
+import {
+  queryHTTPFlows as requestHTTPFlows,
+  fetchHTTPFlow as requestHTTPFlow,
+} from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { compareInt64, nonNegativeInt64, maxInt64 } from '@/utils/int64'
+import { httpFlowsForUI } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { ipc, type GrpcInput } from '@/services/ipc'
 import React, {
   type Ref,
   useEffect,
@@ -106,7 +113,6 @@ import { debugToPrintLogs } from '@/utils/logCollection'
 import { areMITMDebugHooksEnabled } from '@/utils/mitmDebugHooks'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import { JSONParseLog } from '@/utils/tool'
-import { yakitHTTPFlow, yakitStream } from '@/services/electronBridge'
 import {
   defFilterConfig,
   type FilterConfig,
@@ -204,8 +210,6 @@ export * from './HTTPFlowTable.availableColors'
 export * from './HTTPFlowTable.utils'
 export * from './components'
 
-const { ipcRenderer } = window.require('electron')
-
 const HTTP_FLOW_TOTAL_RECONCILE_INTERVAL = 10_000
 const HTTP_FLOW_FIELD_GROUP_REFRESH_INTERVAL = 10_000
 let activeMITMFlowTableInstances = 0
@@ -285,7 +289,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return mitmContent.mitmStore.version
   }, [mitmContent.mitmStore.version])
   const viewAttachIdFirstRef = useRef<boolean>(false)
-  const [viewAttachId, setViewAttachId] = useState<number>(0)
+  const [viewAttachId, setViewAttachId] = useState<string | number>(0)
   const [color, setColor] = useState<string[]>([])
   const [onlyFavorite, setOnlyFavorite] = useState(false)
   const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -395,9 +399,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const extraTimerRef = useRef<ReturnType<typeof setInterval>>()
   const getAddDataByGrpcRef = useRef<(query: YakQueryHTTPFlowRequest, queryEpoch?: number) => void>(() => {})
   const tableQueryEpochRef = useRef(0)
-  const latestPersistedIdRef = useRef(0)
+  const latestPersistedIdRef = useRef('0')
   const latestPersistedProjectKeyRef = useRef('')
-  const mitmResetAfterIdRef = useRef(0)
+  const mitmResetAfterIdRef = useRef('0')
   const mitmResetProjectKeyRef = useRef('')
   const previousInViewportRef = useRef(inViewport)
   const offsetDataRef = useRef<HTTPFlow[]>([])
@@ -407,7 +411,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   )
   const flushHTTPFlowLiveRefreshRef = useRef<() => void>(() => {})
   const flushHTTPFlowLiveDirectRef = useRef<(events: HTTPFlowLiveEvent[]) => void>(() => {})
-  const latestVisibleDataHighWaterRef = useRef(0)
+  const latestVisibleDataHighWaterRef = useRef('0')
   const httpFlowLiveDirectRecoveryGate = useCreation(
     () =>
       createHTTPFlowLiveDirectRecoveryGate({
@@ -434,11 +438,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     () =>
       createHTTPFlowLiveStreamController({
         transport: {
-          start: (request, token) => yakitHTTPFlow.subscribe(request, token),
-          cancel: (token) => yakitHTTPFlow.cancelSubscribe(token),
-          onData: (token, callback) => yakitStream.onData(token, callback),
-          onError: (token, callback) => yakitStream.onError(token, callback),
-          onEnd: (token, callback) => yakitStream.onEnd(token, callback),
+          open: (request, options) =>
+            ipc.openStream('grpc', 'SubscribeHTTPFlows', request, {
+              ...options,
+              onData: (event) =>
+                options.onData({ ...event, Flow: event.Flow ?? undefined, Gap: event.Gap ?? undefined }),
+            }),
         },
         createToken: () => randomString(40),
         getMode: () => mitmFlowObservability.getHTTPFlowLiveStreamMode(),
@@ -565,13 +570,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         pageType === 'MITM'
           ? mitmFlowObservability.beginQuery({
               liveCycleId: liveCycleToken?.id,
-              cursorBefore: Number(AfterId) || 0,
+              cursorBefore: nonNegativeInt64(AfterId) || 0,
               requestedRows: Number(paginationFields.Limit) || 0,
             })
           : undefined
       let rsp: YakQueryHTTPFlowResponse
       try {
-        rsp = (await ipcRenderer.invoke('QueryHTTPFlows', query)) as YakQueryHTTPFlowResponse
+        rsp = (await requestHTTPFlows(query)) as YakQueryHTTPFlowResponse
         if (queryEpoch !== tableQueryEpochRef.current) throw new StaleHTTPFlowTableQueryError()
         rsp.Total = normalizeHTTPFlowTotal(rsp.Total)
         if (pageType === 'MITM' && inViewport) {
@@ -582,7 +587,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           if (projectKey && projectKey !== latestPersistedProjectKeyRef.current) {
             const projectChanged = latestPersistedProjectKeyRef.current !== ''
             latestPersistedProjectKeyRef.current = projectKey
-            latestPersistedIdRef.current = 0
+            latestPersistedIdRef.current = '0'
             if (
               projectChanged &&
               shouldClearMITMResetBoundary(mitmResetAfterIdRef.current, mitmResetProjectKeyRef.current, projectKey)
@@ -591,16 +596,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
               // the database table is recreated, its generation changes even
               // though its path stays the same. Remove the old ID boundary and
               // repeat the bootstrap so lower IDs cannot stay hidden.
-              mitmResetAfterIdRef.current = 0
+              mitmResetAfterIdRef.current = '0'
               mitmResetProjectKeyRef.current = ''
               setParams((current) => ({ ...current, AfterId: undefined }))
               throw new StaleHTTPFlowTableQueryError()
             }
           }
-          const latestResponseId = (rsp.Data || []).reduce((latest, flow) => Math.max(latest, Number(flow.Id) || 0), 0)
-          latestPersistedIdRef.current = Math.max(
+          const latestResponseId = (rsp.Data || []).reduce((latest, flow) => maxInt64(latest, flow.Id), '0')
+          latestPersistedIdRef.current = maxInt64(
             latestPersistedIdRef.current,
-            Number(rsp.SystemTiming?.LatestPersistedId) || 0,
+            nonNegativeInt64(rsp.SystemTiming?.LatestPersistedId),
             latestResponseId,
           )
           httpFlowLiveStreamController.observeQuery(rsp, Filter)
@@ -644,10 +649,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       const viewportRows = Math.max(1, Number(Pagination.Limit) || OFFSET_LIMIT)
       const catchUpMode = mitmLiveAdaptiveBatchRef.current.catchingUp
       const initialPageSize = selectMITMLiveInitialPageSize(viewportRows, mitmLiveAdaptiveBatchRef.current)
-      const liveCycleToken = mitmFlowObservability.beginLiveCycle(Number(AfterId), initialPageSize)
+      const liveCycleToken = mitmFlowObservability.beginLiveCycle(nonNegativeInt64(AfterId), initialPageSize)
       try {
         const result = await drainMITMLiveBacklog<HTTPFlow, YakQueryHTTPFlowResponse>(
-          Number(AfterId),
+          nonNegativeInt64(AfterId),
           {
             initialPageSize,
             ...(catchUpMode
@@ -823,7 +828,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   useLayoutEffect(() => {
     if (pageType !== 'MITM') return
     mitmFlowObservability.markVisible(data)
-    latestVisibleDataHighWaterRef.current = data.reduce((highWaterId, flow) => Math.max(highWaterId, flow.Id), 0)
+    latestVisibleDataHighWaterRef.current = data.reduce((highWaterId, flow) => maxInt64(highWaterId, flow.Id), '0')
     const streamLastSeenId = httpFlowLiveStreamController.snapshot().lastSeenId
     const recovered = httpFlowLiveDirectRecoveryGate.commitVisible(
       latestVisibleDataHighWaterRef.current,
@@ -878,8 +883,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         OrderBy: 'Id',
       },
     }
-    ipcRenderer
-      .invoke('QueryHTTPFlows', copyQuery)
+    requestHTTPFlows(copyQuery)
       .then((rsp: YakQueryHTTPFlowResponse) => {
         if (queryEpoch !== tableQueryEpochRef.current) return
         setTotal(normalizeHTTPFlowTotal(rsp.Total))
@@ -953,8 +957,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const rows = events
       .map((event) => httpFlowLiveSummaryToHTTPFlow(event.Flow))
       .filter((flow): flow is HTTPFlow => !!flow)
-      .filter((flow) => flow.Id > mitmResetAfterIdRef.current)
-      .sort((left, right) => right.Id - left.Id)
+      .filter((flow) => compareInt64(flow.Id, mitmResetAfterIdRef.current) > 0)
+      .sort((left, right) => compareInt64(right.Id, left.Id))
     if (!rows.length) return
     const inserted =
       !httpFlowLiveDirectRecoveryGate.snapshot().required &&
@@ -1202,9 +1206,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   useDebounceEffect(
     () => {
       if (!inViewport) return
-      ipcRenderer
-        .invoke('HTTPFlowsFieldGroup', { RefreshRequest: true, IsAll: true })
-        .then((rsp: HTTPFlowsFieldGroupResponse) => {
+      ipc
+        .invoke('grpc', 'HTTPFlowsFieldGroup', { RefreshRequest: true, IsAll: true })
+        .then((rsp) => {
           setSuffixList(buildHTTPFlowSuffixOptions(rsp.Suffixes || []))
         })
         .catch(() => {})
@@ -1530,15 +1534,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const cleanLogTableData = useMemoizedFn((value: string) => {
     const signal = parseMITMLogResetSignal(value)
     if (signal.version !== mitmVersion) return
-    const resetAfterId = Math.max(
+    const resetAfterId = maxInt64(
       latestPersistedIdRef.current,
       httpFlowLiveStreamController.snapshot().lastSeenId,
-      data.reduce((latest, flow) => Math.max(latest, Number(flow.Id) || 0), 0),
+      data.reduce((latest, flow) => maxInt64(latest, flow.Id), '0'),
     )
     tableQueryEpochRef.current += 1
     mitmResetAfterIdRef.current = resetAfterId
     mitmResetProjectKeyRef.current = latestPersistedProjectKeyRef.current
-    latestVisibleDataHighWaterRef.current = 0
+    latestVisibleDataHighWaterRef.current = '0'
     httpFlowLiveDirectBatcher.cancel()
     httpFlowLiveDirectRecoveryGate.reset()
     httpFlowLiveRefreshScheduler.cancel()
@@ -1565,7 +1569,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setIsAllSelect(false)
     setParams((prev) => ({
       ...prev,
-      AfterId: resetAfterId || undefined,
+      AfterId: resetAfterId === '0' ? undefined : resetAfterId,
       AfterUpdatedAt: undefined,
       BeforeUpdatedAt: undefined,
     }))
@@ -1779,8 +1783,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       },
       onOpenInBrowser: (e: React.MouseEvent, rowData: HTTPFlow) => {
         e.stopPropagation()
-        ipcRenderer
-          .invoke('GetHTTPFlowById', { Id: rowData?.Id })
+        requestHTTPFlow({ Id: rowData?.Id })
           .then((i: HTTPFlow) => {
             i.Url && openExternalWebsite(i.Url)
           })
@@ -1869,8 +1872,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       onRemoveHttpHistoryAll({ isAddQuery: true, query })
       return
     }
-    ipcRenderer
-      .invoke('DeleteHTTPFlows', {
+    ipc
+      .invoke('grpc', 'DeleteHTTPFlows', {
         ...query,
       })
       .then(() => {
@@ -1930,8 +1933,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
       }
       setLoading(true)
-      ipcRenderer
-        .invoke('DeleteHTTPFlows', newParams)
+      ipc
+        .invoke('grpc', 'DeleteHTTPFlows', newParams)
         .then(() => {
           setOnlyShowFirstNode?.(true)
           onResetRefresh()
@@ -2058,7 +2061,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         .filter((item) => exportDataKeyRef.current.includes(item.dataKey))
         .map((item) => item.key)
 
-      const Ids: number[] = list.map((item) => parseInt(item.Id + ''))
+      const Ids = list.map((item) => String(item.Id))
       // 最大请求条数
       const pageSize = getPageSize
       // 需要多少次请求
@@ -2075,8 +2078,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           exportParams.Ids = Ids
         }
         return new Promise((resolve, reject) => {
-          ipcRenderer
-            .invoke('ExportHTTPFlows', exportParams)
+          ipc
+            .invoke('grpc', 'ExportHTTPFlows', exportParams)
+            .then(httpFlowsForUI)
             .then((rsp: YakQueryHTTPFlowResponse) => {
               resolve(rsp)
             })
@@ -2157,9 +2161,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
    * @description 导出为HAR
    */
   const [exportToken, setExportToken] = useState<string>('')
+  const exportRequest = useRef<GrpcInput<'ExportHTTPFlowStream'>>({})
   const [percentVisible, setPercentVisible] = useState<boolean>(false)
   const exportPageContainerRef = useRef<HTMLElement>()
-  const onHarExport = useMemoizedFn((ids: number[]) => {
+  const onHarExport = useMemoizedFn((ids: (string | number)[]) => {
     const m = showYakitModal({
       title: (modalT) => modalT('HTTPFlowTable.exportFields'),
       content: (modalT) => {
@@ -2196,7 +2201,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
   })
 
-  const handleClickHarExport = useMemoizedFn((ids: number[]) => {
+  const handleClickHarExport = useMemoizedFn((ids: (string | number)[]) => {
     handleSaveFileSystemDialog({
       title: t('HTTPFlowTable.saveFile'),
       defaultPath: `History-${Date.now()}`,
@@ -2223,15 +2228,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
             const token = randomString(40)
             setExportToken(token)
-            ipcRenderer
-              .invoke('ExportHTTPFlowStream', exportParams, token)
-              .then(() => {
-                exportPageContainerRef.current = getMainOperatorPageBodyContainer()
-                setPercentVisible(true)
-              })
-              .catch((error) => {
-                yakitNotify('error', `[ExportHTTPFlowStream] error: ${error}`)
-              })
+            exportRequest.current = exportParams
+            exportPageContainerRef.current = getMainOperatorPageBodyContainer()
+            setPercentVisible(true)
           }
         }
       })
@@ -2413,8 +2412,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setEditTagsVisible(true)
   })
   const editTagsSuccess = useMemoizedFn((params: EditTagsInfo) => {
-    ipcRenderer
-      .invoke('SetTagForHTTPFlow', params)
+    ipc
+      .invoke('grpc', 'SetTagForHTTPFlow', params)
       .then(() => {
         yakitNotify('success', t('HTTPFlowTable.editTagSuccess'))
         const newData: HTTPFlow[] = []
@@ -2509,7 +2508,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
    */
   const onShieldRecord = useMemoizedFn((v: HTTPFlow) => {
     if (!(v && v.Id)) return
-    const id = Math.ceil(v.Id)
+    const id = nonNegativeInt64(v.Id)
     appendShieldItem(id)
   })
   /**
@@ -2577,7 +2576,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
     return obj
   }, [props.params, pageType, runTimeId, params])
-  const resetAllFun = useMemoizedFn((filter: YakQueryHTTPFlowRequest, attachId: number = 0) => {
+  const resetAllFun = useMemoizedFn((filter: YakQueryHTTPFlowRequest, attachId: string | number = 0) => {
     tableQueryEpochRef.current += 1
     refreshT(filter, {
       ...tableParams.Pagination,
@@ -2610,9 +2609,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [importRefresh])
 
   /**查看附近数据包 */
-  const onViewAttachmentDataRefresh = useMemoizedFn((id: number) => {
+  const onViewAttachmentDataRefresh = useMemoizedFn((id: string | number) => {
     viewAttachIdFirstRef.current = true
-    resetAllFun({ ...resetParams, SourceType: props.params?.SourceType || '', IncludeId: getFullRange(+id) }, +id)
+    resetAllFun({ ...resetParams, SourceType: props.params?.SourceType || '', IncludeId: getFullRange(id) }, id)
   })
 
   /**
@@ -2681,9 +2680,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
     isUploadingRef.current = true
     yakitNotify('info', t('HTTPFlowTable.dataUploading'))
-    ipcRenderer
-      .invoke('HTTPFlowsToOnlineBatch', query)
-      .then((rsp: HTTPFlowsToOnlineBatchResponse) => {
+    ipc
+      .invoke('grpc', 'HTTPFlowsToOnlineBatch', query)
+      .then((rsp) => {
         yakitNotify(
           'success',
           t('HTTPFlowTable.uploadResult', { SuccessCount: rsp.SuccessCount, FailedCount: rsp.FailedCount }),
@@ -2873,18 +2872,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   useEffect(() => {
     if (!updateCacheData.length || !data.length) return
-    const visibleIds = new Set(data.map((item) => Number(item.Id)))
-    const applicableUpdates = updateCacheData.filter((item) => visibleIds.has(Number(item.id)))
+    const visibleIds = new Set(data.map((item) => String(item.Id)))
+    const applicableUpdates = updateCacheData.filter((item) => visibleIds.has(String(item.id)))
     if (!applicableUpdates.length) return
 
-    const appliedIds = new Set(applicableUpdates.map((item) => Number(item.id)))
+    const appliedIds = new Set(applicableUpdates.map((item) => String(item.id)))
     patchTData((current) =>
       patchHTTPFlowTags(
         current,
         applicableUpdates.map((item) => ({ Id: item.id, Tags: item.tags })),
       ),
     )
-    setUpdateCacheData((current) => current.filter((item) => !appliedIds.has(Number(item.id))))
+    setUpdateCacheData((current) => current.filter((item) => !appliedIds.has(String(item.id))))
   }, [data, patchTData, updateCacheData])
 
   const realData = data
@@ -3471,7 +3470,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           visible={percentVisible}
           title={t('ImportExportProgress.exportHARData')}
           token={exportToken}
-          apiKey="ExportHTTPFlowStream"
+          openStream={(options) => ipc.openStream('grpc', 'ExportHTTPFlowStream', exportRequest.current, options)}
           onClose={onPercentClose}
         />
       )}

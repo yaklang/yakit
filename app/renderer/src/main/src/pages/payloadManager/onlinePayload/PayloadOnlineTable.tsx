@@ -22,8 +22,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { setClipboardText } from '@/utils/clipboard'
 import type { API } from '@/services/swagger/resposeType'
 import { apiUpdateOnlinePayload } from '../utils'
-const { ipcRenderer } = window.require('electron')
-
 interface EditableCellProps {
   editing: boolean
   editable: boolean

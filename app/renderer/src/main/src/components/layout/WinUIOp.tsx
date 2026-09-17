@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useRef, useState } from 'react'
 import { WinUIOpCloseSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WinUIOpCloseSvgIcon'
 import { WinUIOpMaxSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/WinUIOpMaxSvgIcon'
@@ -11,7 +12,6 @@ import { useTemporaryProjectStore } from '@/store/temporaryProject'
 
 import styles from './uiOperate.module.scss'
 import { getReleaseEditionName } from '@/utils/envfile'
-import { yakitApp, yakitWindowControls } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import { MinusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -26,22 +26,30 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
   const [isMax, setIsMax] = useState<boolean>(false)
 
   const operate = useMemoizedFn((type: 'close' | 'min' | 'max') => {
-    yakitWindowControls.operate(type)
+    ipc.invoke('local', 'UIOperate', type)
   })
 
   useEffect(() => {
-    yakitWindowControls.requestMaximizeState()
-    const offMaximizeState = yakitWindowControls.onMaximizeState((value: boolean) => {
-      setIsMax(value)
+    let current = true
+    let changed = false
+    const offEnter = ipc.on('callback-win-maximize', () => {
+      changed = true
+      setIsMax(true)
     })
-
-    const offMaximize = yakitWindowControls.onMaximize(() => setIsMax(true))
-    const offUnmaximize = yakitWindowControls.onUnmaximize(() => setIsMax(false))
-
+    const offLeave = ipc.on('callback-win-unmaximize', () => {
+      changed = true
+      setIsMax(false)
+    })
+    void ipc
+      .invoke('local', 'is-maximize-screen', {})
+      .then((value) => {
+        if (current && !changed) setIsMax(value)
+      })
+      .catch(() => {})
     return () => {
-      offMaximizeState()
-      offMaximize()
-      offUnmaximize()
+      current = false
+      offEnter()
+      offLeave()
     }
   }, [])
 
@@ -89,7 +97,7 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
   const handleKillAllRunNode = async () => {
     const promises: (() => Promise<any>)[] = []
     Array.from(runNodeList).forEach(([key, pid]) => {
-      promises.push(() => yakitApp.killRunNode(Number(pid)))
+      promises.push(() => ipc.invoke('local', 'kill-run-node', { pid: Number(pid) }))
     })
     try {
       await Promise.allSettled(promises.map((promiseFunc) => promiseFunc()))

@@ -1,7 +1,7 @@
+import { ipc } from '@/services/ipc'
+import { useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import { useEffect, useRef } from 'react'
-
-const { ipcRenderer } = window.require('electron')
 
 interface PluginUploadHooks {
   /**是否单个上传 */
@@ -27,60 +27,56 @@ export default function usePluginUploadHooks(props: PluginUploadHooks) {
   const { isSingle, taskToken, onUploadData, onUploadSuccess, onUploadEnd, onUploadError } = props
   const messageListRef = useRef<SaveYakScriptToOnlineResponse[]>([])
   const pluginNameListRef = useRef<string[]>([])
-  useEffect(() => {
-    if (!taskToken) {
-      return
-    }
-    let isSuccess = true
-    ipcRenderer.on(`${taskToken}-data`, (_, data: SaveYakScriptToOnlineResponse) => {
-      isSuccess = true
-      if (data.Progress === 1 && data.MessageType === 'finalError') {
-        isSuccess = false
-      }
-      messageListRef.current = [...messageListRef.current, data]
-      onUploadData(data)
-    })
-    ipcRenderer.on(`${taskToken}-end`, () => {
-      if (isSuccess) {
-        onUploadSuccess()
-        yakitNotify('success', '上传成功')
-      } else {
-        // 单个上传的时候，需要提示
-        if (isSingle && pluginNameListRef.current.length === 1) {
-          const message = messageListRef.current.filter((ele) => ele.MessageType === 'error').map((ele) => ele.Message)
-          yakitNotify('error', '上传失败:' + message)
-          onUploadError()
-        }
-      }
-      onUploadEnd()
-      messageListRef.current = []
-      pluginNameListRef.current = []
-    })
-    ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-      isSuccess = false
-      messageListRef.current = []
-      pluginNameListRef.current = []
-      onUploadError()
-      yakitNotify('error', '上传异常:' + e)
-    })
-    return () => {
-      messageListRef.current = []
-      pluginNameListRef.current = []
-      ipcRenderer.invoke('cancel-SaveYakScriptToOnline', taskToken)
-      ipcRenderer.removeAllListeners(`${taskToken}-data`)
-      ipcRenderer.removeAllListeners(`${taskToken}-error`)
-      ipcRenderer.removeAllListeners(`${taskToken}-end`)
-    }
-  }, [])
-  const onStart = (uploadParams) => {
-    const params: SaveYakScriptToOnlineRequest = {
-      ...uploadParams,
-    }
+  const controllerRef = useRef<AbortController>()
+  useEffect(() => () => controllerRef.current?.abort(), [taskToken])
+  const onStart = useMemoizedFn((params: SaveYakScriptToOnlineRequest) => {
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    messageListRef.current = []
     pluginNameListRef.current = params.ScriptNames
-    ipcRenderer.invoke('SaveYakScriptToOnline', params, taskToken)
-  }
-  const onCancel = () => {
-    ipcRenderer.invoke('cancel-SaveYakScriptToOnline', taskToken)
-  }
+    let isSuccess = true
+    const clear = () => {
+      messageListRef.current = []
+      pluginNameListRef.current = []
+    }
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      clear()
+      onUploadError()
+      onUploadEnd()
+      yakitNotify('error', '上传异常:' + error)
+    }
+    void ipc
+      .openStream('grpc', 'SaveYakScriptToOnline', params, {
+        token: taskToken,
+        signal: controller.signal,
+        onData(data) {
+          if (controller.signal.aborted) return
+          if (data.Progress === 1 && data.MessageType === 'finalError') isSuccess = false
+          messageListRef.current.push(data)
+          onUploadData(data)
+        },
+        onError,
+        onEnd() {
+          if (controller.signal.aborted) return
+          if (isSuccess) {
+            onUploadSuccess()
+            yakitNotify('success', '上传成功')
+          } else if (isSingle && pluginNameListRef.current.length === 1) {
+            yakitNotify(
+              'error',
+              '上传失败:' +
+                messageListRef.current.filter((item) => item.MessageType === 'error').map((item) => item.Message),
+            )
+            onUploadError()
+          }
+          onUploadEnd()
+          clear()
+        },
+      })
+      .catch(onError)
+  })
+  const onCancel = useMemoizedFn(() => controllerRef.current?.abort())
   return { onStart, onCancel } as const
 }

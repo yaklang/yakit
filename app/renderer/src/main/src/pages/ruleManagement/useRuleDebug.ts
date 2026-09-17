@@ -3,17 +3,12 @@ import { useMemoizedFn } from 'ahooks'
 import type { HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { CodeScanStreamInfo } from '../yakRunnerCodeScan/YakRunnerCodeScan'
 import { yakitNotify } from '@/utils/notification'
-import type {
-  SyntaxFlowScanExecuteState,
-  SyntaxFlowScanRequest,
-  SyntaxFlowScanResponse,
-} from '../yakRunnerCodeScan/YakRunnerCodeScanType'
+import type { SyntaxFlowScanExecuteState, SyntaxFlowScanRequest } from '../yakRunnerCodeScan/YakRunnerCodeScanType'
 import { v4 as uuidv4 } from 'uuid'
 import { convertCardInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import cloneDeep from 'lodash/cloneDeep'
-import { apiCancelSyntaxFlowScan, apiSyntaxFlowScan } from '../yakRunnerCodeScan/utils'
-
-const { ipcRenderer } = window.require('electron')
+import { useSyntaxFlowSession } from '../yakRunnerCodeScan/useSyntaxFlowSession'
+import type { GrpcOutput } from '@/services/ipc'
 
 export default function useRuleDebug(params: { token: string; errorCallback?: () => void; endCallback?: () => void }) {
   const { token, errorCallback, endCallback } = params
@@ -89,90 +84,86 @@ export default function useRuleDebug(params: { token: string; errorCallback?: ()
     }
   }, [isStart])
 
-  useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
-      if (res) {
-        const data = res.ExecResult
+  const onData = useMemoizedFn((res: GrpcOutput<'SyntaxFlowScan'>) => {
+    if (res) {
+      const data = res.ExecResult
 
-        if (res.Status) {
-          switch (res.Status) {
-            case 'done':
-              executeStatus !== 'finished' && setExecuteStatus('finished')
-              break
-            case 'error':
-              executeStatus !== 'error' && setExecuteStatus('error')
-              break
-            case 'executing':
-              executeStatus !== 'process' && setExecuteStatus('process')
-              break
-            case 'paused':
-              executeStatus !== 'paused' && setExecuteStatus('paused')
-              break
-            default:
-              break
-          }
-        }
-        if (!!data?.RuntimeID && data?.RuntimeID !== runtimeId) {
-          setRuntimeId(data.RuntimeID)
-        }
-        if (data && data.IsMessage) {
-          try {
-            const obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
-
-            // 进度条
-            const progressObj = obj.content as StreamResult.Progress
-            if (obj.type === 'progress') {
-              setProgress(+progressObj.progress || 0)
-              return
-            }
-
-            // feature-status-card-data 卡片展示
-            const logData = obj.content as StreamResult.Log
-            // feature-status-card-data 卡片展示
-            if (obj.type === 'log' && logData.level === 'feature-status-card-data') {
-              try {
-                const checkInfo = checkStreamValidity(logData)
-                if (!checkInfo) return
-
-                const obj: StreamResult.Card = checkInfo
-                const { id, data, tags } = obj
-                const { timestamp } = logData
-                const originData = cardKVPair.current.get(id)
-                if (originData && originData.Timestamp > timestamp) {
-                  return
-                }
-                cardKVPair.current.set(id, {
-                  Id: id,
-                  Data: data,
-                  Timestamp: timestamp,
-                  Tags: Array.isArray(tags) ? tags : [],
-                })
-              } catch (e) {}
-              return
-            }
-
-            pushLogs(obj)
-          } catch (error) {}
+      if (res.Status) {
+        switch (res.Status) {
+          case 'done':
+            executeStatus !== 'finished' && setExecuteStatus('finished')
+            break
+          case 'error':
+            executeStatus !== 'error' && setExecuteStatus('error')
+            break
+          case 'executing':
+            executeStatus !== 'process' && setExecuteStatus('process')
+            break
+          case 'paused':
+            executeStatus !== 'paused' && setExecuteStatus('paused')
+            break
+          default:
+            break
         }
       }
-    })
-    ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-      setTimeout(() => {
-        setExecuteStatus('error')
-      }, 200)
-      yakitNotify('error', `[Mod] flow-scan error: ${error}`)
-      errorCallback && errorCallback()
-    })
-    ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
-      yakitNotify('info', '[SyntaxFlowScan] finished')
-      endCallback && endCallback()
-    })
-    return () => {
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
+      if (!!data?.RuntimeID && data?.RuntimeID !== runtimeId) {
+        setRuntimeId(data.RuntimeID)
+      }
+      if (data && data.IsMessage) {
+        try {
+          const obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
+
+          // 进度条
+          const progressObj = obj.content as StreamResult.Progress
+          if (obj.type === 'progress') {
+            setProgress(+progressObj.progress || 0)
+            return
+          }
+
+          // feature-status-card-data 卡片展示
+          const logData = obj.content as StreamResult.Log
+          // feature-status-card-data 卡片展示
+          if (obj.type === 'log' && logData.level === 'feature-status-card-data') {
+            try {
+              const checkInfo = checkStreamValidity(logData)
+              if (!checkInfo) return
+
+              const obj: StreamResult.Card = checkInfo
+              const { id, data, tags } = obj
+              const { timestamp } = logData
+              const originData = cardKVPair.current.get(id)
+              if (originData && originData.Timestamp > timestamp) {
+                return
+              }
+              cardKVPair.current.set(id, {
+                Id: id,
+                Data: data,
+                Timestamp: timestamp,
+                Tags: Array.isArray(tags) ? tags : [],
+              })
+            } catch (e) {}
+            return
+          }
+
+          pushLogs(obj)
+        } catch (error) {}
+      }
     }
-  }, [token])
+  })
+  const { send, cancel } = useSyntaxFlowSession({
+    token,
+    onData,
+    onError(error) {
+      setExecuteStatus('error')
+      yakitNotify('error', `[Mod] flow-scan error: ${error}`)
+      errorCallback?.()
+    },
+    onEnd() {
+      setExecuteStatus((status) => (status === 'error' ? status : 'finished'))
+      yakitNotify('info', '[SyntaxFlowScan] finished')
+      endCallback?.()
+    },
+  })
 
   /** 当前执行的参数数据 */
   const currentRequest = useRef<SyntaxFlowScanRequest>()
@@ -182,9 +173,9 @@ export default function useRuleDebug(params: { token: string; errorCallback?: ()
     return new Promise<undefined>((resolve, reject) => {
       handleReset()
       currentRequest.current = cloneDeep(request)
-      apiSyntaxFlowScan(request, token)
-        .then(() => {
-          setExecuteStatus('process')
+      send(request)
+        .then((active) => {
+          if (active) setExecuteStatus('process')
           resolve(undefined)
         })
         .catch((err) => {
@@ -201,7 +192,7 @@ export default function useRuleDebug(params: { token: string; errorCallback?: ()
         reject('暂停失败，请求参数为空!')
         return
       }
-      apiSyntaxFlowScan({ ...currentRequest.current, ControlMode: 'pause', ResumeTaskId: runtimeId }, token)
+      send({ ...currentRequest.current, ControlMode: 'pause', ResumeTaskId: runtimeId })
         .then(() => {
           resolve(undefined)
         })
@@ -219,7 +210,7 @@ export default function useRuleDebug(params: { token: string; errorCallback?: ()
         reject('继续失败，请求参数为空!')
         return
       }
-      apiSyntaxFlowScan({ ...currentRequest.current, ControlMode: 'resume', ResumeTaskId: runtimeId }, token)
+      send({ ...currentRequest.current, ControlMode: 'resume', ResumeTaskId: runtimeId })
         .then(() => {
           // 清空暂停前的数据
           messages.current = []
@@ -235,8 +226,9 @@ export default function useRuleDebug(params: { token: string; errorCallback?: ()
   /** 停止执行 */
   const handleStop = useMemoizedFn(() => {
     return new Promise<undefined>((resolve, reject) => {
-      apiCancelSyntaxFlowScan(token)
+      cancel()
         .then(() => {
+          setExecuteStatus('finished')
           resolve(undefined)
         })
         .catch(reject)

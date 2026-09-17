@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react'
+import { ipc } from '../../../../../../../shared/communication/window-client'
+import React, { useEffect, useRef, useState } from 'react'
 import type { YakitStatusType, YaklangEngineWatchDogCredential } from '../../types'
 import { useMemoizedFn } from 'ahooks'
 import { debugToPrintLog } from '@/utils/logCollection'
@@ -7,7 +8,6 @@ import { __PLATFORM__, FetchSoftwareVersion, isEnpriTraceAgent, toEngineHandshak
 import emiter from '@/utils/eventBus/eventBus'
 import { grpcStartLocalEngine, isEngineConnectionAlive } from '../../grpc'
 import { outputToWelcomeConsole } from '../../utils'
-import { yakitEngine } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { engineFailureMessage, engineFailureStatus } from '../../engineFailure'
 
@@ -66,7 +66,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
     outputToWelcomeConsole(t('YaklangEngineWatchDog.start_connecting_core_engine'))
     try {
       try {
-        await yakitEngine.connectYaklangEngine(credential)
+        await ipc.invoke('local', 'connect-yaklang-engine', credential)
         if (isCurrent()) props.onKeepaliveShouldChange?.(true)
         return
       } catch {

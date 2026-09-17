@@ -1,3 +1,4 @@
+import { nonNegativeInt64, int64String } from '@/utils/int64'
 import type { FilterConfig } from './HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import type { FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import type {
@@ -49,7 +50,7 @@ export interface HTTPFlowTableLegacyValues {
 }
 
 export interface HTTPFlowTableShieldDataSplit {
-  shieldIds: number[]
+  shieldIds: (string | number)[]
   shieldHosts: string[]
 }
 
@@ -81,16 +82,16 @@ export const parseMITMLogResetSignal = (value: string): MITMLogResetSignal => {
 
 export const buildHTTPFlowProjectKey = (databaseIdentity: unknown, projectGeneration: unknown): string => {
   const identity = typeof databaseIdentity === 'string' ? databaseIdentity : ''
-  const generation = Number(projectGeneration)
-  return identity && Number.isSafeInteger(generation) && generation > 0 ? `${identity}:${generation}` : ''
+  const generation = nonNegativeInt64(projectGeneration)
+  return identity && generation !== '0' ? `${identity}:${generation}` : ''
 }
 
 export const shouldClearMITMResetBoundary = (
-  resetAfterId: number,
+  resetAfterId: string | number,
   resetProjectKey: string,
   currentProjectKey: string,
 ): boolean =>
-  Number(resetAfterId) > 0 &&
+  nonNegativeInt64(resetAfterId) !== '0' &&
   resetProjectKey.length > 0 &&
   currentProjectKey.length > 0 &&
   resetProjectKey !== currentProjectKey
@@ -202,7 +203,7 @@ export const hasActiveHTTPFlowTableFilterConfig = (filterConfig: FilterConfig): 
 export const splitHTTPFlowTableShieldData = (data: Array<string | number>): HTTPFlowTableShieldDataSplit => {
   return data.reduce<HTTPFlowTableShieldDataSplit>(
     (acc, item) => {
-      if (typeof item === 'string') {
+      if (typeof item === 'string' && !/^\d+$/.test(item)) {
         acc.shieldHosts.push(item)
       } else {
         acc.shieldIds.push(item)
@@ -457,7 +458,7 @@ const getHTTPFlowTags = (tags?: string) => {
 }
 
 export interface HTTPFlowTagPatch {
-  Id?: number
+  Id?: string | number
   Hash?: string
   Tags: string
 }
@@ -472,11 +473,11 @@ export const buildHTTPFlowColorTags = (tags: string | undefined, color?: string)
 export const patchHTTPFlowTags = (rows: HTTPFlow[], patches: HTTPFlowTagPatch[]): HTTPFlow[] => {
   if (!rows.length || !patches.length) return rows
 
-  const patchesById = new Map<number, HTTPFlowTagPatch>()
+  const patchesById = new Map<string, HTTPFlowTagPatch>()
   const patchesByHash = new Map<string, HTTPFlowTagPatch>()
   for (const patch of patches) {
-    const id = Number(patch.Id)
-    if (Number.isFinite(id) && id > 0) {
+    const id = nonNegativeInt64(patch.Id)
+    if (id !== '0') {
       patchesById.set(id, patch)
     } else if (patch.Hash) {
       patchesByHash.set(patch.Hash, patch)
@@ -485,7 +486,7 @@ export const patchHTTPFlowTags = (rows: HTTPFlow[], patches: HTTPFlowTagPatch[])
 
   let changed = false
   const nextRows = rows.map((row) => {
-    const patch = patchesById.get(Number(row.Id)) || (row.Hash ? patchesByHash.get(row.Hash) : undefined)
+    const patch = patchesById.get(nonNegativeInt64(row.Id)) || (row.Hash ? patchesByHash.get(row.Hash) : undefined)
     if (!patch) return row
     const cellClassName = filterColorTag(patch.Tags) || undefined
     if (row.Tags === patch.Tags && row.cellClassName === cellClassName) return row
@@ -574,31 +575,36 @@ export const getRunTimeIdObj = (runTimeId?: string) => {
 /**
  * 将逗号分隔的字符串解析为不重复的非负整数数组
  * @param input - 例如 "1, 2, 3" 或 "1,2,3"
- * @returns 过滤后的数字数组，例如 [1, 2, 3]
+ * @returns 保留精度的十进制 ID 数组，例如 ['1', '2', '3']
  */
-export function parseIncludeIds(input: string): number[] {
-  if (!input) return []
-  const ids: number[] = []
-  const seen = new Set<number>()
-  input.split(',').forEach((part) => {
-    const trimmed = part.trim()
-    if (!trimmed) return
-    const num = Number(trimmed)
-    if (!Number.isInteger(num) || num < 0) return
-    if (seen.has(num)) return
-    seen.add(num)
-    ids.push(num)
-  })
-  return ids
+export function parseIncludeIds(input: string): string[] {
+  const ids = new Set<string>()
+  for (const part of input.split(',')) {
+    const value = part.trim()
+    if (!/^\d+$/.test(value)) continue
+    try {
+      ids.add(int64String(value))
+    } catch {
+      /* Out-of-range IDs cannot identify a protobuf int64 row. */
+    }
+  }
+  return [...ids]
 }
 
-export function getFullRange(id: number, count = 10, minId = 1, maxId = null) {
-  const range: number[] = []
-  const start = Math.max(minId, id - count)
-  const end = maxId === null ? id + count : Math.min(maxId, id + count)
-  for (let i = start; i <= end; i++) {
-    range.push(i)
-  }
+export function getFullRange(
+  id: string | number,
+  count = 10,
+  minId: string | number = 1,
+  maxId: string | number | null = null,
+): string[] {
+  const center = BigInt(int64String(id))
+  const span = BigInt(count)
+  const minimum = BigInt(int64String(minId))
+  const maximum = maxId === null ? (BigInt(1) << BigInt(63)) - BigInt(1) : BigInt(int64String(maxId))
+  const start = center - span < minimum ? minimum : center - span
+  const end = center + span > maximum ? maximum : center + span
+  const range: string[] = []
+  for (let value = start; value <= end; value += BigInt(1)) range.push(value.toString())
   return range
 }
 

@@ -1,3 +1,5 @@
+import { int64ToSafeNumber } from '@/utils/int64'
+import type { GrpcOutput } from '@/services/ipc'
 import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import type { ExecResult, QueryYakScriptRequest } from '@/pages/invoker/schema'
 
@@ -37,46 +39,26 @@ export interface HybridScanPluginConfig {
   Filter?: QueryYakScriptRequest
 }
 
-export interface HybridScanStatisticResponse {
-  // 计算整体任务进度等信息
-  TotalTargets: number
-  TotalPlugins: number
-  TotalTasks: number
-  FinishedTasks: number
-  FinishedTargets: number
-  ActiveTasks: number
-  ActiveTargets: number
-
-  // 混合扫描任务ID，一般用来恢复任务或者暂停任务
-  HybridScanTaskId: string
-}
-
-export interface HybridScanResponse extends HybridScanStatisticResponse {
-  CurrentPluginName: string
-  ExecResult: ExecResult
-
-  UpdateActiveTask?: HybridScanActiveTask
-  /**@deprecated 后端已废弃 */
-  ScanConfig?: string
-  HybridScanConfig?: HybridScanControlRequest
-}
-
-export interface HybridScanActiveTask {
-  Operator: 'create' | 'remove'
-  Index: string
-
-  IsHttps: boolean
-  HTTPRequest: Uint8Array
-  PluginName: string
-  Url: string
-}
+export type HybridScanResponse = GrpcOutput<'HybridScan'>
+export type HybridScanStatisticResponse = Pick<
+  HybridScanResponse,
+  | 'TotalTargets'
+  | 'TotalPlugins'
+  | 'TotalTasks'
+  | 'FinishedTasks'
+  | 'FinishedTargets'
+  | 'ActiveTasks'
+  | 'ActiveTargets'
+  | 'HybridScanTaskId'
+>
+export type HybridScanActiveTask = NonNullable<GrpcOutput<'HybridScan'>['UpdateActiveTask']>
 
 export interface HybridScanTask {
-  Id: number
+  Id: string | number
   CreatedAt: number
   UpdatedAt: number
   TaskId: string
-  Status: 'executing' | 'paused' | 'done' | 'error' // 如果 Status 有固定的几个值，可以使用联合类型
+  Status: string // 如果 Status 有固定的几个值，可以使用联合类型
   TotalTargets: number
   TotalPlugins: number
   TotalTasks: number
@@ -84,4 +66,27 @@ export interface HybridScanTask {
   FinishedTargets: number
   FirstTarget: string
   Reason: string
+}
+
+export type HybridScanRestoredConfig = Omit<
+  NonNullable<GrpcOutput<'HybridScan'>['HybridScanConfig']>,
+  'Control' | 'HybridScanMode' | 'ResumeTaskId'
+>
+
+export type HybridScanInputValue = HybridScanControlAfterRequest | HybridScanRestoredConfig
+
+export function hybridTasksForUI(value: GrpcOutput<'QueryHybridScanTask'>) {
+  return {
+    ...value,
+    Data: value.Data.map((row) => ({
+      ...row,
+      CreatedAt: int64ToSafeNumber(row.CreatedAt),
+      UpdatedAt: int64ToSafeNumber(row.UpdatedAt),
+      TotalTargets: int64ToSafeNumber(row.TotalTargets),
+      TotalPlugins: int64ToSafeNumber(row.TotalPlugins),
+      TotalTasks: int64ToSafeNumber(row.TotalTasks),
+      FinishedTasks: int64ToSafeNumber(row.FinishedTasks),
+      FinishedTargets: int64ToSafeNumber(row.FinishedTargets),
+    })),
+  }
 }

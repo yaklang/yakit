@@ -1,3 +1,5 @@
+import { ipc } from '@/services/ipc'
+import { randomString } from '@/utils/randomUtil'
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Form } from 'antd'
 import { failed, info, success, yakitFailed, yakitNotify } from '../../utils/notification'
@@ -102,7 +104,11 @@ const YakModuleListHeard = React.lazy(() =>
   import('./MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.YakModuleListHeard })),
 )
 
-const { ipcRenderer } = window.require('electron')
+let reloadingMITMPage = false
+if (import.meta.hot)
+  import.meta.hot.dispose(() => {
+    reloadingMITMPage = true
+  })
 
 export interface MITMPageProp {}
 
@@ -118,11 +124,11 @@ export interface MITMResponse extends MITMFilterSchema {
   request: Uint8Array
   url: string
   RemoteAddr?: string
-  id: number
+  id: string | number
 
   forResponse?: boolean
   response?: Uint8Array
-  responseId?: number
+  responseId?: string | number
 
   justContentReplacer?: boolean
   replacers?: MITMContentReplacerRule[]
@@ -193,19 +199,19 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
   useEffect(() => {
     // 用于启动 MITM 开始之后，接受开始成功之后的第一个消息，如果收到，则认为说 MITM 启动成功了
 
-    grpcClientMITMStartSuccess(mitmVersion).on(() => {
+    const unsubscribegrpcClientMITMStartSuccess = grpcClientMITMStartSuccess(mitmVersion).on(() => {
       setStatus('hijacking')
     })
-    grpcClientMITMNotification(mitmVersion).on((i: Uint8Array) => {
+    const unsubscribegrpcClientMITMNotification = grpcClientMITMNotification(mitmVersion).on((i: Uint8Array) => {
       try {
         yakitNotify('warning', Uint8ArrayToString(i))
       } catch (e) {}
     })
 
     return () => {
-      grpcMITMStopCall(mitmVersion)
-      grpcClientMITMStartSuccess(mitmVersion).remove()
-      grpcClientMITMNotification(mitmVersion).remove()
+      if (!reloadingMITMPage) void grpcMITMStopCall(mitmVersion).catch(() => {})
+      unsubscribegrpcClientMITMStartSuccess()
+      unsubscribegrpcClientMITMNotification()
     }
   }, [])
   // 用于接受后端传回的信息
@@ -224,7 +230,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         recover()
       })
 
-    grpcClientMITMError(mitmVersion).on((msg) => {
+    const unsubscribegrpcClientMITMError = grpcClientMITMError(mitmVersion).on((msg) => {
       if (!msg) {
         info(t('MITMPage.serverClosed'))
       } else {
@@ -249,7 +255,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     })
 
     // 用于 MITM 的 插件输出
-    grpcClientMITMMessage(mitmVersion).on((data: StreamResult.BaseProsp) => {
+    const unsubscribegrpcClientMITMMessage = grpcClientMITMMessage(mitmVersion).on((data: StreamResult.BaseProsp) => {
       pluginStreamManager.consume(data)
     })
 
@@ -264,8 +270,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     return () => {
       emiter.off('onUpdateLimitLogNum', setLimitLogNum)
-      grpcClientMITMError(mitmVersion).remove()
-      grpcClientMITMMessage(mitmVersion).remove()
+      unsubscribegrpcClientMITMError()
+      unsubscribegrpcClientMITMMessage()
     }
   }, [])
 
@@ -721,7 +727,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     }
   }, [status, noParamsCheckList])
 
-  const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
+  const onSubmitYakScriptId = useMemoizedFn((id: string | number, params: YakExecutorParam[]) => {
     info(t('MITMServer.loadingPlugin', { id }))
     const value: MITMExecScriptByIdRequest = {
       id,
@@ -1222,7 +1228,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
   const [loadMode, setLoadMode] = useState<LoadPluginMode>(loadPluginMode || 'giturl')
   const [localNucleiPath, setLocalNucleiPath] = useState<string>('') // localNucleiPath
   const [localPluginPath, setLocalPluginPath] = useState<string>('') // localPluginPath
-  const localPluginSuccessRef = useRef<boolean>(true)
+  const importControllerRef = useRef<AbortController>()
+  useEffect(() => () => importControllerRef.current?.abort(), [visible, loadMode])
   const [startExecYakCodeModalVisible, setStartExecYakCodeModalVisible] = useState<boolean>(false)
   const [startExecYakCodeVerbose, setStartExecYakCodeVerbose] = useState<string>('')
   const [startExecYakCodeParams, setStartExecYakCodeParams] = useState<YakScriptParam>()
@@ -1234,27 +1241,6 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         form.resetFields()
         setLocalNucleiPath('')
         setLocalPluginPath('')
-
-        if (loadMode === 'local') {
-          ipcRenderer.on('import-yak-script-error', (e, data) => {
-            localPluginSuccessRef.current = false
-            yakitNotify('error', data.message)
-          })
-
-          ipcRenderer.on('import-yak-script-end', () => {
-            if (localPluginSuccessRef.current) {
-              onCancel()
-              handleImportLocalPluginFinish()
-            } else {
-              localPluginSuccessRef.current = true
-            }
-          })
-          return () => {
-            ipcRenderer.invoke('cancel-ImportYakScriptStream')
-            ipcRenderer.removeAllListeners('import-yak-script-error')
-            ipcRenderer.removeAllListeners('import-yak-script-end')
-          }
-        }
       }
     },
     [visible, loadMode],
@@ -1423,7 +1409,28 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         Filename: formValue.localPluginPath,
         Password: formValue.Password || '',
       }
-      ipcRenderer.invoke('ImportYakScriptStream', params)
+      importControllerRef.current?.abort()
+      const controller = new AbortController()
+      importControllerRef.current = controller
+      setImportLoading(true)
+      const onError = (error: unknown) => {
+        if (controller.signal.aborted) return
+        setImportLoading(false)
+        yakitNotify('error', String(error))
+      }
+      void ipc
+        .openStream('grpc', 'ImportYakScriptStream', params, {
+          token: randomString(40),
+          signal: controller.signal,
+          onError,
+          onEnd() {
+            if (controller.signal.aborted) return
+            setImportLoading(false)
+            onCancel()
+            handleImportLocalPluginFinish()
+          },
+        })
+        .catch(onError)
     }
 
     if (loadMode === 'local-nuclei') {
@@ -1464,6 +1471,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
   })
 
   const onCancel = useMemoizedFn(() => {
+    importControllerRef.current?.abort()
+    setImportLoading(false)
     setVisible(false)
   })
 

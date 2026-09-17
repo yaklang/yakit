@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import { type FC, useState, useEffect, type MouseEvent, type ReactNode, useCallback } from 'react'
 import {
   MacUIOpCloseSvgIcon,
@@ -10,8 +11,6 @@ import {
 } from '@yakit-libs/yakit-ui-icons/oldicon'
 import styles from './index.module.scss'
 import classNames from 'classnames'
-import { yakitChildWindow, yakitSystem } from '@/services/electronBridge'
-
 import { MinusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 // 平台图标类型
@@ -30,7 +29,7 @@ const TitleBar: FC = () => {
   useEffect(() => {
     const fetchIcons = async () => {
       try {
-        const systemName = await yakitSystem.fetchSystemName()
+        const systemName = await ipc.invoke('local', 'fetch-system-name', {})
         const isMac = systemName === 'Darwin'
         setIsDarwin(isMac)
         setIcons(
@@ -55,22 +54,22 @@ const TitleBar: FC = () => {
     fetchIcons()
   }, [])
 
-  const minimize = () => yakitChildWindow.minimize()
+  const minimize = () => ipc.invoke('local', 'minimize-childWin', {})
 
   const maximizeRestore = useCallback(() => {
     if (isDarwin) {
-      yakitChildWindow.operate('full')
+      ipc.invoke('local', 'UIOperate-childWin', 'full')
     } else {
       if (isMaximized) {
-        yakitChildWindow.restore()
+        ipc.invoke('local', 'restore-childWin', {})
       } else {
-        yakitChildWindow.maximize()
+        ipc.invoke('local', 'maximize-childWin', {})
       }
     }
     setIsMaximized((prev) => !prev)
   }, [isDarwin, isMaximized])
 
-  const close = () => yakitChildWindow.close()
+  const close = () => ipc.invoke('local', 'close-childWin', {})
 
   /** 双击 header 空白处时触发 */
   const handleDoubleClick = (e: MouseEvent<HTMLDivElement>) => {

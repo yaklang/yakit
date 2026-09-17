@@ -15,14 +15,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import type { RouteToPageProps } from '@/pages/layout/publicMenu/PublicMenu'
 import emiter from '@/utils/eventBus/eventBus'
 import { isCommunityEdition, isEnpriTraceAgent, isEnpriTraceIRify, isIRify } from '@/utils/envfile'
-import { yakitEngine, yakitNetwork, yakitUILayout } from '@/services/electronBridge'
-import {
-  cancelIMControlState,
-  onIMControlStateData,
-  onIMControlStateEnd,
-  onIMControlStateError,
-  subscribeIMControlState,
-} from '@/utils/imControl'
+import { ipc } from '@/services/ipc'
 import { deriveIMControlBadge, type IMControlBadgeStatus, type IMControlBadgeView } from '@/pages/robotControl/status'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { UserMenusMap } from './constants'
@@ -167,16 +160,11 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
     }
 
     let disposed = false
-    let currentToken = ''
-    let cleanupListeners: Array<() => void> = []
+    let currentController: AbortController | undefined
 
     function cleanupCurrentStream() {
-      cleanupListeners.forEach((cleanup) => cleanup())
-      cleanupListeners = []
-      if (currentToken) {
-        cancelIMControlState(currentToken).catch(() => {})
-        currentToken = ''
-      }
+      currentController?.abort()
+      currentController = undefined
       if (imControlStateRetryTimerRef.current) {
         window.clearTimeout(imControlStateRetryTimerRef.current)
         imControlStateRetryTimerRef.current = undefined
@@ -197,36 +185,11 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
     function startSubscribe() {
       cleanupCurrentStream()
       if (disposed) return
-      const token = `im-control-state-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-      currentToken = token
+      const controller = new AbortController()
+      currentController = controller
       setIMControlStatusLoading(true)
-      cleanupListeners = [
-        onIMControlStateData(token, (state) => {
-          setIMControlStatus(state)
-          setIMControlStatusLoading(false)
-        }),
-        onIMControlStateError(token, (e) => {
-          setIMControlStatus({
-            Running: true,
-            Platforms: [
-              {
-                Platform: 'im',
-                Label: '移动端控制',
-                Connected: false,
-                Level: 'error',
-                Message: `${e}`,
-              },
-            ],
-          })
-          setIMControlStatusLoading(false)
-          scheduleReconnect()
-        }),
-        onIMControlStateEnd(token, () => {
-          setIMControlStatusLoading(false)
-          scheduleReconnect()
-        }),
-      ]
-      subscribeIMControlState(token).catch((e) => {
+      const onError = (error: unknown) => {
+        if (controller.signal.aborted || disposed) return
         setIMControlStatus({
           Running: true,
           Platforms: [
@@ -235,13 +198,32 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
               Label: '移动端控制',
               Connected: false,
               Level: 'error',
-              Message: `${e}`,
+              Message: error instanceof Error ? error.message : String(error),
             },
           ],
         })
         setIMControlStatusLoading(false)
         scheduleReconnect()
-      })
+      }
+      void ipc
+        .openStream(
+          'grpc',
+          'SubscribeIMControlState',
+          {},
+          {
+            signal: controller.signal,
+            onData(event) {
+              setIMControlStatus(event.State || { Running: false })
+              setIMControlStatusLoading(false)
+            },
+            onError,
+            onEnd() {
+              setIMControlStatusLoading(false)
+              scheduleReconnect()
+            },
+          },
+        )
+        .catch(onError)
     }
 
     startSubscribe()
@@ -544,7 +526,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
 
   useEffect(() => {
     // ipc通信退出登录
-    const cleanup = yakitUILayout.onSignOutRequested(() => {
+    const cleanup = ipc.on('ipc-sign-out-callback', () => {
       setStoreUserInfo(defaultUserInfo)
       loginOut(userInfo)
     })
@@ -555,7 +537,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
 
   useEffect(() => {
     // 强制修改密码
-    const cleanup = yakitUILayout.onResetPassword(() => {
+    const cleanup = ipc.on('reset-password-callback', () => {
       setPasswordShow(true)
       setPasswordClose(false)
     })
@@ -588,18 +570,21 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
           okText: t('YakitButton.exit'),
           onOk() {
             if (dynamicStatus.isDynamicStatus) {
-              yakitNetwork.logoutDynamicControl({
-                loginOut: true,
+              ipc.invoke('local', 'ForwardMainEvent', {
+                event: 'login-out-dynamic-control-callback',
+                data: {
+                  loginOut: true,
+                },
               })
             }
             if (dynamicStatus.isDynamicSelfStatus) {
-              yakitNetwork.killDynamicControl().finally(() => {
+              ipc.invoke('local', 'kill-dynamic-control', {}).finally(() => {
                 setStoreUserInfo(defaultUserInfo)
                 loginOut(userInfo)
                 setTimeout(() => success(t('FuncDomain.signOutSuccess')), 500)
               })
               // 立即退出界面
-              yakitNetwork.exitDynamicControlPage()
+              ipc.invoke('local', 'ForwardMainEvent', { event: 'lougin-out-dynamic-control-page-callback' })
             }
           },
           onCancel() {},
@@ -651,7 +636,10 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
       setDynamicControlModal(true)
     }
     if (key === 'close-dynamic-control') {
-      yakitNetwork.logoutDynamicControl({ loginOut: false })
+      ipc.invoke('local', 'ForwardMainEvent', {
+        event: 'login-out-dynamic-control-callback',
+        data: { loginOut: false },
+      })
     }
     if (key === 'misstatement') {
       onOpenPage({ route: YakitRoute.Misstatement })

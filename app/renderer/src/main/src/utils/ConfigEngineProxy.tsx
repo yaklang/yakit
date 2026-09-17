@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
@@ -8,7 +9,6 @@ import { InputItem } from '@/utils/inputUtil'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { removeRepeatedElement } from '@/utils/str'
 import { JSONParseLog } from './tool'
-import { yakitEngine } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -28,8 +28,8 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
 
   const update = useMemoizedFn(() => {
     setLoading(true)
-    yakitEngine
-      .getDefaultProxy()
+    ipc
+      .invoke('grpc', 'GetEngineDefaultProxy', {})
       .then((e: { Proxy: string }) => {
         setProxy(e.Proxy)
       })
@@ -53,8 +53,8 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
         e.preventDefault()
 
         setLoading(true)
-        yakitEngine
-          .setDefaultProxy({
+        ipc
+          .invoke('grpc', 'SetEngineDefaultProxy', {
             Proxy: proxy,
           })
           .then(() => {

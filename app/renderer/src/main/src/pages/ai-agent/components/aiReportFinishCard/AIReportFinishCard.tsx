@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { memo, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
@@ -12,12 +13,9 @@ import styles from './AIReportFinishCard.module.scss'
 import { FileSuffix } from '@/pages/yakRunner/FileTree/icon'
 import { failed, success, yakitNotify } from '@/utils/notification'
 import { getCodeByPath } from '@/pages/yakRunner/utils'
-import { yakitDialog } from '@/services/electronBridge'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import { Tooltip } from 'antd'
 import ChatCard from '../ChatCard'
-const { ipcRenderer } = window.require('electron')
-
 export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props) => {
   const { item, renderNum, isChildWindow } = props
   const { data } = item
@@ -65,13 +63,12 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
       const baseName = (title || 'report').replace(/\.(md|markdown)$/i, '') || 'report'
       setDownloadLoading(true)
       await new Promise((resolve) => setTimeout(resolve, 0))
-      const saveRes = await yakitDialog.showSaveDialog(`${baseName}.pdf`)
+      const saveRes = await ipc.invoke('local', 'show-save-dialog', `${baseName}.pdf`)
       if (saveRes.canceled || !saveRes.filePath) return
       const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
-      await ipcRenderer.invoke('PrintMarkdownPdfFromTemplate', {
+      await ipc.invoke('local', 'PrintMarkdownPdfFromTemplate', {
         outputPath: saveRes.filePath,
         code,
-        name: title,
         theme,
       })
       success(t('AIReportFinishCard.pdfExportSuccess'))

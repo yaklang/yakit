@@ -1,3 +1,5 @@
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -19,10 +21,7 @@ import { useCampare } from '@/hook/useCompare/useCompare'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { PaperAirplaneSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { yakitAsset } from '@/services/electronBridge'
 import styles from './DomainAssetPage.module.scss'
-const { ipcRenderer } = window.require('electron')
-
 const batchRefreshMenuData = (t: TFunction): YakitMenuItemProps[] => [
   {
     key: 'noResetRefresh',
@@ -35,7 +34,7 @@ const batchRefreshMenuData = (t: TFunction): YakitMenuItemProps[] => [
 ]
 
 interface Domain {
-  ID?: number
+  ID?: string | number
   DomainName: string
   IPAddr: string
   HTTPTitle: string
@@ -183,9 +182,10 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
     }
     const isInit = page === 1
     isInitRequestRef.current = false
-    ipcRenderer
-      .invoke('QueryDomains', finalParams)
-      .then((res: QueryGeneralResponse<Domain>) => {
+    ipc
+      .invoke('grpc', 'QueryDomains', finalParams)
+      .then(grpcPageForUI)
+      .then((res) => {
         const d = isInit ? res.Data : (response?.Data || []).concat(res.Data)
         setResponse({
           ...res,
@@ -206,9 +206,9 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
       })
   })
 
-  const onRemoveSingle = (DomainName: string, ID?: number) => {
-    ipcRenderer
-      .invoke('DeleteDomains', {
+  const onRemoveSingle = (DomainName: string, ID?: string | number) => {
+    ipc
+      .invoke('grpc', 'DeleteDomains', {
         DomainKeyword: DomainName,
       })
       .then(() => {
@@ -226,14 +226,15 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
 
   const getData = useMemoizedFn((params) => {
     return new Promise((resolve) => {
-      ipcRenderer
-        .invoke('QueryDomains', {
+      ipc
+        .invoke('grpc', 'QueryDomains', {
           ...query,
           Pagination: {
             ...params,
           },
         })
-        .then((res: QueryGeneralResponse<any>) => {
+        .then(grpcPageForUI)
+        .then((res) => {
           const { Data } = res
           // 数据导出
           let exportData: any = []
@@ -300,7 +301,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
       selectedRowKeys: response.Total === selectNum ? [] : selectedRowKeys,
       params: query,
       interfaceName: 'DeleteDomains',
-      execute: yakitAsset.deleteDomains,
+      execute: (params) => ipc.invoke('grpc', 'DeleteDomains', params),
       selectedRowKeysNmae: 'IDs',
     }
     setLoading(true)

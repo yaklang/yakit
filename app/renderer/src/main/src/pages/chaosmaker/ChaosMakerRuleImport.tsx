@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useState } from 'react'
 import { Form, Space } from 'antd'
@@ -18,8 +19,6 @@ export interface ChaosMakerRuleImportParams {
   Content: string
 }
 
-const { ipcRenderer } = window.require('electron')
-
 export const ChaosMakerRuleImport: React.FC<ChaosMakerRuleImportProp> = (props) => {
   const [params, setParams] = useState<ChaosMakerRuleImportParams>({
     RuleType: 'suricata',
@@ -32,7 +31,7 @@ export const ChaosMakerRuleImport: React.FC<ChaosMakerRuleImportProp> = (props) 
       return
     }
 
-    ipcRenderer.invoke('ImportChaosMakerRules', { ...params }).then(() => {
+    ipc.invoke('grpc', 'ImportChaosMakerRules', { ...params }).then(() => {
       info('导入成功')
       if (props.onFinished) {
         props.onFinished()

@@ -1,9 +1,9 @@
 export interface InstallLlamaServerModelPromptProps {
-  token: string
-  onStart: () => void
+  onStart: (params: { Proxy: string }) => void
 }
 export interface InstallLlamaServerProps {
-  grpcInterface: string
+  grpcInterface: 'InstallLlamaServer' | 'DownloadLocalModel'
+  params: { Proxy: string; ModelName?: string }
   title: string
   token: string
   onFinished: () => void
@@ -12,8 +12,7 @@ export interface InstallLlamaServerProps {
 }
 export interface DownloadLlamaServerModelPromptProps {
   modelName: string
-  token: string
-  onStart: () => void
+  onStart: (params: { ModelName: string; Proxy: string }) => void
 }
 
 export interface DownloadLlamaServerProps {

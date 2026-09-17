@@ -399,7 +399,7 @@ export interface AIChatQSDataBase<T extends string, U> {
   chatType: ChatListRenderType
   AIService: AIOutputEvent['AIService']
   AIModelName: AIOutputEvent['AIModelName']
-  Timestamp: AIOutputEvent['Timestamp']
+  Timestamp: AIOutputEvent['Timestamp'] | number
   /**
    * 节点信息所属的任务节点索引
    * 索引结构

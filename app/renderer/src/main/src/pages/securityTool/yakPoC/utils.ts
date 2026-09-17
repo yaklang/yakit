@@ -1,7 +1,6 @@
+import { ipc } from '@/services/ipc'
 import type { GroupCount, QueryYakScriptGroupResponse } from '@/pages/invoker/schema'
 import { yakitNotify } from '@/utils/notification'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface QueryYakScriptGroupRequest {
   All?: boolean
@@ -22,9 +21,9 @@ export const apiFetchQueryYakScriptGroupLocalByPoc: (params: QueryYakScriptGroup
       ExcludeType: ['yak', 'codec', 'context-menu'],
       ...params,
     }
-    ipcRenderer
-      .invoke('QueryYakScriptGroup', queryParams)
-      .then((res: QueryYakScriptGroupResponse) => {
+    ipc
+      .invoke('grpc', 'QueryYakScriptGroup', queryParams)
+      .then((res) => {
         resolve(res.Group)
       })
       .catch((e) => {

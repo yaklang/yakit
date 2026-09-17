@@ -1,3 +1,4 @@
+import { ipc, type GrpcInput } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import type {
   YakitRiskSelectTagProps,
@@ -47,10 +48,6 @@ import {
   apiGetSSARiskDisposal,
   type SSARiskDisposalData,
   apiDeleteSSARiskDisposals,
-  type ExportSSARiskRequest,
-  type ImportSSARiskRequest,
-  apiExportSSARisk,
-  apiImportSSARisk,
   openAIForge,
 } from './utils'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -94,8 +91,6 @@ import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import importExportStyles from '@/pages/fingerprintManage/ImportExportModal/ImportExportModal.module.scss'
 import { JSONParseLog } from '@/utils/tool'
-
-const { ipcRenderer } = window.require('electron')
 
 export const defQuerySSARisksRequest: QuerySSARisksRequest = {
   Pagination: { Page: 1, Limit: 20, OrderBy: 'id', Order: 'desc' },
@@ -507,6 +502,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
   const [exportModalVisible, setExportModalVisible] = useState<boolean>(false)
   const [exportProgressVisible, setExportProgressVisible] = useState<boolean>(false)
   const [exportToken, setExportToken] = useState<string>('')
+  const exportRequest = useRef<GrpcInput<'ExportSSARisk'>>({})
+  const exportController = useRef<AbortController>()
+  const importRequest = useRef<GrpcInput<'ImportSSARisk'>>({})
+  const importController = useRef<AbortController>()
   const [importToken, setImportToken] = useState<string>('')
   const exportPathRef = useRef<string>('')
   const [exportForm] = Form.useForm()
@@ -537,11 +536,11 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       targetPath = targetPath + '.json'
     }
     // 生成完整路径
-    ipcRenderer
-      .invoke('GenerateProjectsFilePath', targetPath)
+    ipc
+      .invoke('local', 'GenerateProjectsFilePath', targetPath)
       .then((fullPath: string) => {
         exportPathRef.current = fullPath
-        const exportParams: ExportSSARiskRequest = {
+        const exportParams: GrpcInput<'ExportSSARisk'> = {
           Filter: {
             ...tableParams.Filter,
           },
@@ -555,13 +554,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             ID: selectList.map((item) => item.Id),
           }
         }
-        apiExportSSARisk(exportParams, exportToken)
-          .then(() => {
-            setExportProgressVisible(true)
-          })
-          .catch((error) => {
-            yakitNotify('error', t('YakitNotification.exportFailed', { error: String(error) }))
-          })
+        exportRequest.current = exportParams
+        setExportProgressVisible(true)
       })
       .catch((error) => {
         yakitNotify('error', t('YakitAuditHoleTable.generatePathFailed', { error: String(error) }))
@@ -570,10 +564,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
 
   // 取消导出流
   const cancelExportStream = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-ExportSSARisk', exportToken)
-    ipcRenderer.removeAllListeners(`${exportToken}-data`)
-    ipcRenderer.removeAllListeners(`${exportToken}-error`)
-    ipcRenderer.removeAllListeners(`${exportToken}-end`)
+    exportController.current?.abort()
     if (exportTimeRef.current) {
       clearInterval(exportTimeRef.current)
       exportTimeRef.current = null
@@ -599,13 +590,26 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       setExportProgress({ ...exportProgressRef.current })
     }
     exportTimeRef.current = setInterval(updateProgress, 500)
-    ipcRenderer.on(`${exportToken}-data`, (_, data: { Percent: number; Verbose: string }) => {
-      exportProgressRef.current = { Progress: data.Percent, Verbose: data.Verbose }
-    })
-    ipcRenderer.on(`${exportToken}-error`, (_, error) => {
-      yakitNotify('error', t('YakitNotification.exportFailed', { error: String(error) }))
-    })
-    ipcRenderer.on(`${exportToken}-end`, () => {})
+    const controller = new AbortController()
+    exportController.current = controller
+    const onError = (error: Error) => {
+      if (controller.signal.aborted) return
+      yakitNotify('error', t('YakitNotification.exportFailed', { error: error.message }))
+      setExportProgressVisible(false)
+    }
+    void ipc
+      .openStream('grpc', 'ExportSSARisk', exportRequest.current, {
+        token: exportToken,
+        signal: controller.signal,
+        onData(data) {
+          exportProgressRef.current = { Progress: data.Process, Verbose: data.Verbose }
+        },
+        onError,
+        onEnd() {
+          updateProgress()
+        },
+      })
+      .catch(onError)
     return () => {
       cancelExportStream()
     }
@@ -644,24 +648,16 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       yakitNotify('error', t('YakitAuditHoleTable.enterLocalPath'))
       return
     }
-    const importParams: ImportSSARiskRequest = {
+    const importParams: GrpcInput<'ImportSSARisk'> = {
       InputPath: formValue.InputPath,
     }
-    apiImportSSARisk(importParams, importToken)
-      .then(() => {
-        setImportProgressVisible(true)
-      })
-      .catch((error) => {
-        yakitNotify('error', t('YakitNotification.importFailed', { error: String(error) }))
-      })
+    importRequest.current = importParams
+    setImportProgressVisible(true)
   })
 
   // 取消导入流
   const cancelImportStream = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-ImportSSARisk', importToken)
-    ipcRenderer.removeAllListeners(`${importToken}-data`)
-    ipcRenderer.removeAllListeners(`${importToken}-error`)
-    ipcRenderer.removeAllListeners(`${importToken}-end`)
+    importController.current?.abort()
     if (importTimeRef.current) {
       clearInterval(importTimeRef.current)
       importTimeRef.current = null
@@ -686,13 +682,26 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       setImportProgress({ ...importProgressRef.current })
     }
     importTimeRef.current = setInterval(updateProgress, 500)
-    ipcRenderer.on(`${importToken}-data`, (_, data: { Percent: number; Verbose: string }) => {
-      importProgressRef.current = { Progress: data.Percent, Verbose: data.Verbose }
-    })
-    ipcRenderer.on(`${importToken}-error`, (_, error) => {
-      yakitNotify('error', t('YakitNotification.importFailed', { error: String(error) }))
-    })
-    ipcRenderer.on(`${importToken}-end`, () => {})
+    const controller = new AbortController()
+    importController.current = controller
+    const onError = (error: Error) => {
+      if (controller.signal.aborted) return
+      yakitNotify('error', t('YakitNotification.importFailed', { error: error.message }))
+      setImportProgressVisible(false)
+    }
+    void ipc
+      .openStream('grpc', 'ImportSSARisk', importRequest.current, {
+        token: importToken,
+        signal: controller.signal,
+        onData(data) {
+          importProgressRef.current = { Progress: data.Process, Verbose: data.Verbose }
+        },
+        onError,
+        onEnd() {
+          updateProgress()
+        },
+      })
+      .catch(onError)
     return () => {
       cancelImportStream()
     }
@@ -938,7 +947,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     return p
   }, [currentSelectItem])
   const selectedRowKeys = useCreation(() => {
-    return selectList.map((ele) => ele.Id) || []
+    return selectList.map((ele) => String(ele.Id)) || []
   }, [selectList])
   const onClickIP = useMemoizedFn((info: SSARisk) => {
     const index = tableData.findIndex((item) => item.Id === info.Id)
@@ -1643,7 +1652,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
   const disabled = useMemo(() => {
     return value.length === 0 || selectValue.length === 0
   }, [value, selectValue])
-  const onDeleteSSARiskDisposals = useMemoizedFn((id: number) => {
+  const onDeleteSSARiskDisposals = useMemoizedFn((id: string | number) => {
     apiDeleteSSARiskDisposals({ Filter: { ID: [id] } })
       .then(() => {
         const newDisposalData = disposalData.filter((item) => item.Id !== id)

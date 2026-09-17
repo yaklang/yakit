@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import styles from '@/pages/cve/CVETable.module.scss'
 import fuzzerStyles from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig.module.scss'
@@ -20,7 +21,6 @@ import { YakitRoute } from '@/enums/yakitRoute'
 
 export interface WebShellManagerViewerProp {}
 
-const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
 
 export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
@@ -182,7 +182,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
 
   const onRemove = (index: number, type) => {
     const delId = type === 'packetCodecs' ? packetCodecs[index].Id : payloadCodecs[index].Id
-    ipcRenderer.invoke('DeleteYakScript', { Id: delId }).then((res) => {
+    ipc.invoke('grpc', 'DeleteYakScript', { Id: delId }).then((res) => {
       if (type === 'packetCodecs') {
         const newCodes = packetCodecs.filter((item) => item.Id !== delId)
         setPacketCodecs(newCodes)

@@ -1,3 +1,5 @@
+import { int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
@@ -13,8 +15,6 @@ import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtual
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
-
 interface ICMPSizeLoggerInfo {
   Size: number
   CurrentRemoteAddr: string
@@ -23,7 +23,6 @@ interface ICMPSizeLoggerInfo {
   SizedCachedHistoryConnectionCount: number
   TriggerTimestamp: number
   Timestamp: number
-  Hash: string
 }
 
 export interface ICMPSizeLoggerPageProp {}
@@ -37,13 +36,19 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
   const sizeNow = useDebounce(size, { maxWait: 300 })
 
   const update = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('QueryICMPTrigger', {
+    ipc
+      .invoke('grpc', 'QueryICMPTrigger', {
         Length: sizeNow,
       })
-      .then((data: { Notification?: ICMPSizeLoggerInfo[] }) => {
+      .then((data) => {
         if (data?.Notification) {
-          setRecords(data.Notification)
+          setRecords(
+            data.Notification.map((row) => ({
+              ...row,
+              Timestamp: int64ToSafeNumber(row.Timestamp),
+              TriggerTimestamp: int64ToSafeNumber(row.TriggerTimestamp),
+            })),
+          )
         }
       })
       .catch((e) => {
@@ -53,9 +58,9 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
 
   const refresh = useMemoizedFn(() => {
     setLoading(true)
-    ipcRenderer
-      .invoke('RequireICMPRandomLength', {})
-      .then((d: { Length: number; ExternalHost: string } | any) => {
+    ipc
+      .invoke('grpc', 'RequireICMPRandomLength', {})
+      .then((d) => {
         setSize(d.Length)
         setHost(d.ExternalHost)
         setRecords([])

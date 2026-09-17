@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import classNames from 'classnames'
 import type { PEMExampleProps, RemoteEngineProps, RemoteLinkInfo, YakitAuthInfo } from './RemoteEngineType'
 import React, { useEffect, useState } from 'react'
@@ -21,7 +22,6 @@ import {
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { EngineModeVerbose } from '../../utils'
 const Editor = React.lazy(() => import('@/components/Editor').then((m) => ({ default: m.Editor })))
-import { yakitApp, yakitEngine, yakitShell } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './RemoteEngine.module.scss'
 
@@ -47,8 +47,8 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
   const [showAllow, setShowAllow] = useState<boolean>(false)
 
   useEffect(() => {
-    yakitEngine
-      .getRemoteAuthAll()
+    ipc
+      .invoke('local', 'get-yakit-remote-auth-all', {})
       .then((e: YakitAuthInfo[]) => {
         setAuths(
           e.map((item) => {
@@ -104,8 +104,8 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
       }
       const index = auths.findIndex((item) => item.host === params.host && item.port === params.port)
       if (index === -1) setAuths((arr) => arr.concat([params]))
-      yakitEngine
-        .saveRemoteAuth({ ...params })
+      ipc
+        .invoke('local', 'save-yakit-remote-auth', { ...params })
         .then(() => {})
         .catch(() => {})
     }
@@ -124,8 +124,8 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
   // 删除指定远程历史记录
   const delRemoteHistoryItem = useMemoizedFn((authItem: YakitAuthInfo) => {
     setAuths((prev) => prev.filter((item) => item.name !== authItem.name))
-    yakitEngine
-      .removeRemoteAuth(authItem.name)
+    ipc
+      .invoke('local', 'remove-yakit-remote-auth', authItem.name)
       .then(() => {})
       .catch(() => {})
   })
@@ -317,7 +317,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
             </Form>
           </div>
           <div className={styles['footer-btn']}>
-            <span className={styles['exit-btn']} onClick={() => yakitApp.closeWindow()}>
+            <span className={styles['exit-btn']} onClick={() => ipc.invoke('local', 'UIOperate', 'close')}>
               <FigmaIcon28011794Outlined className={styles['exit-icon']} color="currentColor" size={16} />
               {t('RemoteEngine.exit')}
             </span>
@@ -402,8 +402,8 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
 
   const [remotePath, setRemotePath] = useState<string>('')
   useEffect(() => {
-    yakitShell
-      .getRemoteFilePath()
+    ipc
+      .invoke('local', 'fetch-remote-file-path', {})
       .then((path: string) => {
         setRemotePath(path)
       })
@@ -411,7 +411,7 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
   }, [])
 
   const openFile = () => {
-    yakitShell.openRemoteLink()
+    ipc.invoke('local', 'open-remote-link', {})
   }
 
   const content = (

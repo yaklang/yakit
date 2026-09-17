@@ -1,3 +1,5 @@
+import { int64ToSafeNumber, grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn, useThrottleFn, useVirtualList } from 'ahooks'
@@ -20,8 +22,6 @@ import styles from './WebsocketFrameHistory.module.scss'
 import oneDarkPro from 'react-hex-editor/themes/oneDarkPro'
 import { useTheme } from '@/hook/useTheme'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface WebsocketFrameHistoryProp {
   websocketHash: string
@@ -87,19 +87,24 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
 
     const currentSequence = ++requestSequence.current
 
-    ipcRenderer
-      .invoke('QueryWebsocketFlowByHTTPFlowWebsocketHash', {
+    ipc
+      .invoke('grpc', 'QueryWebsocketFlowByHTTPFlowWebsocketHash', {
         WebsocketRequestHash: websocketHash,
         Pagination: { Page: pageNum, Limit: 20 },
       })
-      .then((r: QueryGeneralResponse<WebsocketFlow>) => {
+      .then(grpcPageForUI)
+      .then((r) => {
         if (currentSequence !== requestSequence.current) {
           return
         }
 
         const newData = r.Data.map((item) => {
-          item.cellClassName = filterColorTag(item.Tags)
-          return item
+          return {
+            ...item,
+            FrameIndex: int64ToSafeNumber(item.FrameIndex),
+            DataLength: int64ToSafeNumber(item.DataLength),
+            cellClassName: filterColorTag(item.Tags),
+          }
         })
 
         if (isInit) {

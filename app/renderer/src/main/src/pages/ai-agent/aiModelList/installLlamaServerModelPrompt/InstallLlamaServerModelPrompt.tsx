@@ -1,10 +1,10 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useRef, useState } from 'react'
 import type {
   DownloadLlamaServerModelPromptProps,
   InstallLlamaServerModelPromptProps,
   InstallLlamaServerProps,
 } from './InstallLlamaServerModelPromptType'
-import type { ExecResult } from '@/pages/invoker/schema'
 import { yakitNotify } from '@/utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
 import { useMemoizedFn } from 'ahooks'
@@ -12,26 +12,17 @@ import { Form, Progress } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from './InstallLlamaServerModelPrompt.module.scss'
-import {
-  grpcCancelDownloadLocalModel,
-  grpcCancelInstallLlamaServer,
-  grpcDownloadLocalModel,
-  grpcInstallLlamaServer,
-} from '../utils'
+
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { CloudDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
-const { ipcRenderer } = window.require('electron')
 
 export const InstallLlamaServerModelPrompt: React.FC<InstallLlamaServerModelPromptProps> = React.memo((props) => {
-  const { onStart, token } = props
+  const { onStart } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const startInstall = useMemoizedFn((value) => {
-    grpcInstallLlamaServer({ Proxy: value.proxy, token }).then(() => {
-      yakitNotify('success', t('InstallLlamaServerModelPrompt.installing'))
-      onStart()
-    })
+    onStart({ Proxy: value.proxy || '' })
   })
 
   return (
@@ -58,58 +49,44 @@ export const InstallLlamaServerModelPrompt: React.FC<InstallLlamaServerModelProm
 })
 
 export const InstallLlamaServer: React.FC<InstallLlamaServerProps> = React.memo((props) => {
-  const { onFinished, onCancel, token, title, grpcInterface, getContainer } = props
+  const { onFinished, onCancel, token, title, grpcInterface, params, getContainer } = props
   const { t } = useI18nNamespaces(['yakitUi'])
 
   const [percent, setPercent] = useState<number>(0)
   const [data, setData] = useState<string[]>([])
 
-  const hasErrorRef = useRef<boolean>(false)
-
-  useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
-      if (data.Progress > 0) {
-        setPercent(data.Progress)
-      }
-
-      if (!data.IsMessage) {
-        return
-      }
-      handleMessage(Uint8ArrayToString(data.Message))
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      yakitNotify('error', `[${grpcInterface}] error: ${error}`)
-      hasErrorRef.current = true
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {
-      if (!hasErrorRef.current) {
-        yakitNotify('info', '[${grpcInterface}] finished')
-        onFinished()
-      }
-    })
-    return () => {
-      onCancelDownload()
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-    }
-  }, [])
+  const controllerRef = useRef<AbortController>()
   const handleMessage = useMemoizedFn((message: string) => {
-    if (!message) return
-    setData((prev) => [...prev, message])
+    if (message) setData((prev) => [...prev, message])
   })
-  const onCancelDownload = useMemoizedFn(() => {
-    switch (grpcInterface) {
-      case 'InstallLlamaServer':
-        grpcCancelInstallLlamaServer(token)
-        break
-      case 'DownloadLocalModel':
-        grpcCancelDownloadLocalModel(token)
-        break
-      default:
-        break
+  const finish = useMemoizedFn(onFinished)
+  useEffect(() => {
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const onError = (error: unknown) => {
+      if (!controller.signal.aborted) yakitNotify('error', `[${grpcInterface}] error: ${error}`)
     }
-  })
+    ipc
+      .openStream('grpc', grpcInterface, params, {
+        token,
+        signal: controller.signal,
+        onData(value) {
+          if (controller.signal.aborted) return
+          if (value.Progress > 0) setPercent(value.Progress)
+          if (value.IsMessage) handleMessage(Uint8ArrayToString(value.Message))
+        },
+        onError,
+        onEnd() {
+          if (!controller.signal.aborted) {
+            yakitNotify('info', `[${grpcInterface}] finished`)
+            finish()
+          }
+        },
+      })
+      .catch(onError)
+    return () => controller.abort()
+  }, [grpcInterface, token, params])
+  const onCancelDownload = useMemoizedFn(() => controllerRef.current?.abort())
   const onBack = useMemoizedFn(() => {
     onCancelDownload()
     onCancel()
@@ -143,14 +120,11 @@ export const InstallLlamaServer: React.FC<InstallLlamaServerProps> = React.memo(
 })
 
 export const DownloadLlamaServerModelPrompt: React.FC<DownloadLlamaServerModelPromptProps> = React.memo((props) => {
-  const { modelName, onStart, token } = props
+  const { modelName, onStart } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const startDownload = useMemoizedFn((value) => {
-    grpcDownloadLocalModel({ ModelName: modelName, Proxy: value.proxy, token }).then(() => {
-      yakitNotify('success', t('InstallLlamaServerModelPrompt.installing'))
-      onStart()
-    })
+    onStart({ ModelName: modelName, Proxy: value.proxy || '' })
   })
 
   return (

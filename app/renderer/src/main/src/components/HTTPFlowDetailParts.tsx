@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useState } from 'react'
 import classNames from 'classnames'
@@ -12,8 +13,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './hTTPFlowDetail.module.scss'
 
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-
-const { ipcRenderer } = window.require('electron')
 
 interface CodingPopoverProps {
   originValue: Uint8Array
@@ -44,9 +43,9 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
       ],
     }
     onSetCodeLoading(true)
-    ipcRenderer
-      .invoke('NewCodec', newCodecParams)
-      .then((data: { Result: string; RawResult: Uint8Array }) => {
+    ipc
+      .invoke('grpc', 'NewCodec', newCodecParams)
+      .then((data) => {
         onSetCodeValue(Uint8ArrayToString(data.RawResult))
         onSetCodeKey(codeVal)
       })

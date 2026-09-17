@@ -1,3 +1,5 @@
+import { projectsForUI } from '@/pages/softwareSettings/projectUtils'
+import { ipc } from '@/services/ipc'
 import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import type { ProjectParamsProp, ProjectsResponse } from '@/pages/softwareSettings/ProjectManage'
 import { apiUpdateGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
@@ -10,8 +12,6 @@ import { aboutLoginUpload, loginHTTPFlowsToOnline } from '@/utils/login'
 import { yakitNotify } from '@/utils/notification'
 import type { DownloadingState } from '@/yakitGVDefine'
 import { useMemoizedFn } from 'ahooks'
-import omit from 'lodash/omit'
-import { yakitProject, yakitUpload } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'layout')
 
@@ -54,44 +54,11 @@ export const apiSystemConfig: APINoRequestFunc<API.SystemConfigResponse> = (hidd
   })
 }
 
-export interface ExportProjectRequest {
-  /**@deprecated 该字段后端已废弃,改用Id后端自己查询 */
-  ProjectName?: string
-  Password?: string
-  Id: number
-  token: string
-}
-export const grpcExportProject: APIFunc<ExportProjectRequest, null> = (params, hiddenError) => {
-  return new Promise((resolve, reject) => {
-    const token = params.token
-    const value = omit(params, 'version')
-    yakitProject
-      .exportProject(value, token)
-      .then(() => resolve(null))
-      .catch((e) => {
-        if (!hiddenError) yakitNotify('error', tOriginal('LayoutUtils.grpcExportProjectFailed', { error: String(e) }))
-        reject(e)
-      })
-  })
-}
-
-export const grpcCancelExportProject: APIFunc<string, null> = (token, hiddenError) => {
-  return new Promise((resolve, reject) => {
-    yakitProject
-      .cancelExportProject(token)
-      .then(() => resolve(null))
-      .catch((e) => {
-        if (!hiddenError)
-          yakitNotify('error', tOriginal('LayoutUtils.grpcCancelExportProjectFailed', { error: String(e) }))
-        reject(e)
-      })
-  })
-}
-
 export const grpcGetProjects: APIFunc<ProjectParamsProp, ProjectsResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    yakitProject
-      .getProjects(params)
+    ipc
+      .invoke('grpc', 'GetProjects', params)
+      .then(projectsForUI)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', tOriginal('LayoutUtils.grpcGetProjectsFailed', { error: String(e) }))
@@ -115,8 +82,8 @@ export interface SplitUploadResponse {
 
 export const apiSplitUpload: APIFunc<SplitUploadRequest, SplitUploadResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    yakitUpload
-      .splitUpload(params)
+    ipc
+      .invoke('local', 'split-upload', params)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', tOriginal('LayoutUtils.apiSplitUploadFailed', { error: String(e) }))

@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../shared/communication/window-client'
 import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import OpenPacketNewWindow from '@/components/OpenPacketNewWindow/OpenPacketNewWindow'
@@ -7,8 +8,6 @@ import { coordinate } from '@/pages/globalVariable'
 import TitleBar from '@/components/BaseTitleBar'
 import { RightBugAuditResult, YakitRiskDetails } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
 
-const { ipcRenderer } = window.require('electron')
-
 interface ParentWindowData {
   type: string
   data: any
@@ -17,17 +16,17 @@ interface ChildNewAppProps {}
 const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
   const [parentWinData, setParentWinData] = useState<ParentWindowData>()
   const requestLatestParentData = useMemoizedFn(() => {
-    ipcRenderer.send('request-parent-data')
+    ipc.invoke('local', 'request-parent-data', {})
   })
 
   useEffect(() => {
     requestLatestParentData()
-    ipcRenderer.on('get-parent-window-data', (e, data) => {
+    const stopIpcEvent1 = ipc.on('get-parent-window-data', (data) => {
       setParentWinData(data as ParentWindowData)
     })
     return () => {
       setParentWinData(undefined)
-      ipcRenderer.removeAllListeners('get-parent-window-data')
+      stopIpcEvent1()
     }
   }, [requestLatestParentData])
   // 全局记录鼠标坐标位置(为右键菜单提供定位)

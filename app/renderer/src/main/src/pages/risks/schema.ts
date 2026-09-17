@@ -4,11 +4,11 @@ export interface PacketHistory extends PacketOrigin, Omit<PacketPair, 'Request' 
 }
 
 interface PacketOrigin {
-  Id?: number
+  Id?: string | number
   Url?: string
 }
 interface PacketPair {
-  HttpflowId?: number
+  HttpflowId?: string | number
   Url?: string
   Request?: string
   Response?: string
@@ -35,7 +35,7 @@ export interface Risk {
   WaitingVerified?: boolean
   ReverseToken?: string
 
-  Id: number
+  Id: string | number
   CreatedAt: number
   UpdatedAt?: number
 
@@ -57,7 +57,7 @@ export interface Risk {
   cellClassName?: string
 
   /** 代码扫描 */
-  ResultID?: number
+  ResultID?: string | number
   SyntaxFlowVariable?: string
   ProgramName?: string
 

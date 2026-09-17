@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useState } from 'react'
 import { Space } from 'antd'
 import type { IMonacoActionDescriptor, IMonacoCodeEditor } from './editors'
@@ -11,7 +12,6 @@ import styles from './encodec.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import classNames from 'classnames'
-import { yakitCodec } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
@@ -81,7 +81,7 @@ export interface MutateHTTPRequestResponse {
 }
 
 export const mutateRequest = (params: MutateHTTPRequestParams, editor?: IMonacoCodeEditor) => {
-  yakitCodec.mutateHttpRequest(params).then((result: MutateHTTPRequestResponse) => {
+  ipc.invoke('grpc', 'HTTPRequestMutate', params).then((result: MutateHTTPRequestResponse) => {
     if (editor) {
       monacoEditorClear(editor)
       monacoEditorReplace(editor, Buffer.from(result.Result).toString('utf8'))
@@ -253,8 +253,8 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
                   const req = getResult()
                   req[index].Modify = true
                   req[index].Result = StringToUint8Array(s)
-                  yakitCodec
-                    .autoDecode({ ModifyResult: req })
+                  ipc
+                    .invoke('grpc', 'AutoDecode', { ModifyResult: req })
                     .then((e: { Results: AutoDecodeResult[] }) => {
                       setResult(e.Results)
                     })
@@ -271,8 +271,8 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
   )
 })
 export const execAutoDecode = async (text: string) => {
-  return yakitCodec
-    .autoDecode({ Data: text })
+  return ipc
+    .invoke('grpc', 'AutoDecode', { Data: text })
     .then((e: { Results: AutoDecodeResult[] }) => {
       const m = showYakitModal({
         title: (modalT) => modalT('Encodec.autoDecodeSmart'),
@@ -299,8 +299,8 @@ export const execCodec = async (
     Value: string
   }[],
 ): Promise<string> => {
-  return yakitCodec
-    .run({ Text: text, Type: typeStr, Params: extraParams })
+  return ipc
+    .invoke('grpc', 'Codec', { Text: text, Type: typeStr, Params: extraParams })
     .then((result: { Result: string }) => {
       if (replaceEditor) {
         const m = showYakitModal({
@@ -375,8 +375,8 @@ export const HTTPFlowCodec: React.FC<HTTPFlowCodecProps> = React.memo((props) =>
   const [codec, setCodec] = useState<AutoDecodeResult[]>([])
 
   useEffect(() => {
-    yakitCodec
-      .autoDecode({ Data: data })
+    ipc
+      .invoke('grpc', 'AutoDecode', { Data: data })
       .then((e: { Results: AutoDecodeResult[] }) => {
         setCodec(e.Results)
       })

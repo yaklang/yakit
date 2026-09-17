@@ -34,7 +34,7 @@ import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSel
 import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import type { PluginExecuteExtraParamsRefProps } from './PluginExecuteExtraParams'
-import { type DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin, apiFetchOnlinePluginInfo } from '../../utils'
+import { type DebugPluginRequest, apiDebugPlugin, apiFetchOnlinePluginInfo } from '../../utils'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { GetPluginLanguage } from '../../builtInData'
@@ -357,9 +357,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     setRuntimeId('')
     apiDebugPlugin({
       params: executeParams,
-      token: token,
+      open: debugPluginStreamEvent.open,
       pluginCustomParams: plugin.Params,
     }).then(() => {
+      if (!debugPluginStreamEvent.isActive()) return
       onCacheExecuteConfig?.(executeConfig)
       setExecuteStatus('process')
       setIsExpand(false)
@@ -369,7 +370,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   /**取消执行 */
   const onStopExecute = useMemoizedFn((e) => {
     e.stopPropagation()
-    apiCancelDebugPlugin(token).then(() => {
+    debugPluginStreamEvent.cancel().then(() => {
       onExecutionStop?.(debugPluginStreamEvent.snapshot())
       debugPluginStreamEvent.stop()
       setExecuteStatus('finished')

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useState } from 'react'
 import { Form } from 'antd'
@@ -22,8 +23,6 @@ const layout = {
 const tailLayout = {
   wrapperCol: { offset: 5, span: 16 },
 }
-
-const { ipcRenderer } = window.require('electron')
 
 interface ShareImportProps {
   onClose: () => void
@@ -123,11 +122,14 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
       })
   })
   const handleWebFuzzerShare = useMemoizedFn((res: API.ExtractResponse) => {
-    ipcRenderer
-      .invoke('send-to-tab', {
-        type: res.module,
+    ipc
+      .invoke('local', 'ForwardMainEvent', {
+        event: 'fetch-send-to-tab',
         data: {
-          shareContent: res.extract_content,
+          type: res.module,
+          data: {
+            shareContent: res.extract_content,
+          },
         },
       })
       .then(() => {
@@ -143,19 +145,25 @@ export const ShareImport: React.FC<ShareImportProps> = (props) => {
       })
   })
   const handleHttpHistoryShare = useMemoizedFn((res: API.ExtractResponse) => {
-    ipcRenderer
-      .invoke('HTTPFlowsExtract', {
+    ipc
+      .invoke('grpc', 'HTTPFlowsExtract', {
         ShareExtractContent: res.extract_content,
       })
       .then(() => {
-        ipcRenderer
-          .invoke('send-to-tab', {
-            type: res.module,
+        ipc
+          .invoke('local', 'ForwardMainEvent', {
+            event: 'fetch-send-to-tab',
+            data: {
+              type: res.module,
+            },
           })
           .then(() => {
             setTimeout(() => {
-              ipcRenderer.invoke('send-positioning-http-history', {
-                activeTab: 'history',
+              ipc.invoke('local', 'ForwardMainEvent', {
+                event: 'fetch-positioning-http-history',
+                data: {
+                  activeTab: 'history',
+                },
               })
             }, 200)
           })

@@ -61,7 +61,6 @@ import { SetVariableItem } from './HttpQueryAdvancedConfigParts'
 
 export { SetVariableItem } from './HttpQueryAdvancedConfigParts'
 
-const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
 
 const WEB_FUZZ_Advanced_Config_ActiveKey = 'WEB_FUZZ_Advanced_Config_ActiveKey'

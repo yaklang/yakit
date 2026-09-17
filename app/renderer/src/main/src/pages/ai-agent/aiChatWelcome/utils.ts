@@ -1,7 +1,6 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import { yakitNotify } from '@/utils/notification'
 import type { HistoryItem } from '../components/aiFileSystemList/type'
-
-const { ipcRenderer } = window.require('electron')
 
 const guessIsFolderByPath = (path: string): boolean => {
   const normalized = path.replace(/\\/g, '/')
@@ -20,9 +19,9 @@ const guessIsFolderByPath = (path: string): boolean => {
 
 export const fetchIsFolderByPath = async (path: string): Promise<boolean | null> => {
   try {
-    const isExists = await ipcRenderer.invoke('is-file-exists', path)
+    const isExists = await ipc.invoke('local', 'is-file-exists', path)
     if (!isExists) return null
-    return await ipcRenderer.invoke('fetch-file-is-dir-by-path', path)
+    return await ipc.invoke('local', 'fetch-file-is-dir-by-path', path)
   } catch (err) {
     return guessIsFolderByPath(path)
   }

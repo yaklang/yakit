@@ -35,7 +35,7 @@ import type { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitS
 import type { CustomPluginExecuteFormValue } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { ParamsToGroupByGroupName, getValueByType, getYakExecutorParam, onCodeToInfo } from '../editDetails/utils'
 import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
-import { type DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin } from '../utils'
+import { type DebugPluginRequest, apiDebugPlugin } from '../utils'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { defPluginExecuteFormValue } from '../operator/localPluginExecuteDetailHeard/constants'
 import cloneDeep from 'lodash/cloneDeep'
@@ -503,9 +503,10 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
           }
           apiDebugPlugin({
             params: requestParams,
-            token: tokenRef.current,
+            open: debugPluginStreamEvent.open,
             pluginCustomParams: params,
           }).then(() => {
+            if (!debugPluginStreamEvent.isActive()) return
             setIsExecuting(true)
             debugPluginStreamEvent.start()
           })
@@ -516,7 +517,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
 
   /**取消执行 */
   const onStopExecute = useMemoizedFn(() => {
-    apiCancelDebugPlugin(tokenRef.current).then(() => {
+    debugPluginStreamEvent.cancel().then(() => {
       debugPluginStreamEvent.stop()
       setIsExecuting(false)
     })

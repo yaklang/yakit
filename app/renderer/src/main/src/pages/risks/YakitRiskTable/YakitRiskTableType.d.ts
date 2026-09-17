@@ -32,15 +32,15 @@ export interface QueryRisksRequest {
   Token: string
   WaitingVerified: boolean
   Severity: string
-  FromId: number
-  UntilId: number
+  FromId: string | number
+  UntilId: string | number
   Tags: string
   BeforeCreatedAt?: number
   AfterCreatedAt?: number
   /** 全部'' 已读:'true'，未读：'false' */
   IsRead: string
   Title: string
-  Ids: number[]
+  Ids: (string | number)[]
 
   /**前端展示使用 列表 */
   RiskTypeList?: string[]

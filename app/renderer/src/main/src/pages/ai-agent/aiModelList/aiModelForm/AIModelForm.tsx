@@ -598,7 +598,7 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
       obj = buildAIConfigHealthCheckFormValues(testResult?.RecommendConfig)
     }
     if (obj) {
-      obj.ExtraParams = testResult?.RecommendConfig.ExtraParams || []
+      obj.ExtraParams = testResult?.RecommendConfig?.ExtraParams || []
     }
     if (obj && aiModelType) {
       obj.model_type = aiModelType
@@ -636,8 +636,8 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
                   size="small"
                   disabled={!testResult?.RecommendConfig}
                   onClick={() => {
-                    if (!testResult) return
-                    onApplyRecommendConfig?.(testResult?.RecommendConfig)
+                    if (!testResult?.RecommendConfig) return
+                    onApplyRecommendConfig?.(testResult.RecommendConfig)
                   }}
                 >
                   {t('AIModelTestResult.applyRecommendConfig')}

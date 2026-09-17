@@ -40,7 +40,7 @@ import {
   PluginExecuteProgress,
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { ExtraParamsNodeByType } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParamsNodes'
-import { apiCancelDebugPlugin, apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
+import { apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
 import { randomString } from '@/utils/randomUtil'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { getJsonSchemaListResult } from '@/components/JsonFormWrapper/JsonFormWrapper'
@@ -83,7 +83,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
   const [form] = Form.useForm()
 
   const infoFormRef = useRef<any>(null)
-  const toolIdRef = useRef<number>(0)
+  const toolIdRef = useRef<string | number>(0)
 
   const isShowCode = useCreation(() => {
     return activeTab === 'code'
@@ -135,7 +135,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
       }
 
       // 如果当前 ID 已经初始化过，不再重复拉取
-      if (toolIdRef.current === id) {
+      if (String(toolIdRef.current) === String(id)) {
         setDelayCancelFetchDataLoading()
         return
       }
@@ -420,7 +420,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
     },
   })
   const onStopExecute = useMemoizedFn(() => {
-    apiCancelDebugPlugin(tokenRef.current).then(() => {
+    debugPluginStreamEvent.cancel().then(() => {
       debugPluginStreamEvent.stop()
       setIsExecuting(false)
     })
@@ -454,9 +454,10 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
           setActiveTab('execResult')
           apiDebugPlugin({
             params: requestParams,
-            token: tokenRef.current,
+            open: debugPluginStreamEvent.open,
             pluginCustomParams: params,
           }).then(() => {
+            if (!debugPluginStreamEvent.isActive()) return
             setIsExecuting(true)
             debugPluginStreamEvent.start()
           })

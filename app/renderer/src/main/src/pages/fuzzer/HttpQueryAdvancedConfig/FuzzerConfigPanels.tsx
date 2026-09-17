@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useRef } from 'react'
 import styles from './HttpQueryAdvancedConfig.module.scss'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
@@ -26,8 +27,6 @@ import { defMatcherAndExtractionCode } from '../MatcherAndExtractionCard/constan
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { YakitPanel } = YakitCollapse
-const { ipcRenderer } = window.require('electron')
-
 export interface MatchersPanelEditProps {
   order: number
   subIndex: number
@@ -304,12 +303,12 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
   /** @description 变量预览 */
   const onRenderVariables = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     e.stopPropagation()
-    ipcRenderer
-      .invoke('RenderVariables', {
+    ipc
+      .invoke('grpc', 'RenderVariables', {
         Params: form.getFieldValue('params') || [],
         HTTPResponse: StringToUint8Array(defaultHttpResponse || defMatcherAndExtractionCode),
       })
-      .then((rsp: { Results: { Key: string; Value: string }[] }) => {
+      .then((rsp) => {
         showYakitModal({
           title: (modalT) => modalT('VariablePanel.renderedVariableContent'),
           footer: <></>,

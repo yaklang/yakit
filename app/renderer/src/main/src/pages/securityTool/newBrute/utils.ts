@@ -1,3 +1,5 @@
+import { payloadGroupsForUI } from '@/pages/payloadManager/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import { yakitNotify } from '@/utils/notification'
 import type { TreeDataNode as DataNode } from 'antd'
 import type { BruteExecuteExtraFormValue, StartBruteParams } from './NewBruteType'
@@ -5,7 +7,6 @@ import type { PayloadGroupNodeProps } from '@/pages/payloadManager/newPayload'
 import cloneDeep from 'lodash/cloneDeep'
 import { defaultBruteExecuteExtraFormValue } from '@/defaultConstants/NewBrute'
 
-const { ipcRenderer } = window.require('electron')
 export interface Tree {
   Name: string
   Data: string
@@ -21,9 +22,9 @@ export interface GetAvailableBruteTypesResponse {
  */
 export const apiGetAvailableBruteTypes: () => Promise<DataNode[]> = () => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetAvailableBruteTypes', {})
-      .then((res: GetAvailableBruteTypesResponse) => {
+    ipc
+      .invoke('grpc', 'GetAvailableBruteTypes', {})
+      .then((res) => {
         const tree: DataNode[] = res.TypesWithChild.map((ele) => ({
           key: ele.Data || `temporary-id-${ele.Name}`,
           title: ele.Name,
@@ -46,9 +47,10 @@ export const apiGetAvailableBruteTypes: () => Promise<DataNode[]> = () => {
  */
 export const apiGetAllPayloadGroup: () => Promise<PayloadGroupNodeProps[]> = () => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetAllPayloadGroup', {})
-      .then((res: { Nodes: PayloadGroupNodeProps[] }) => {
+    ipc
+      .invoke('grpc', 'GetAllPayloadGroup', {})
+      .then(payloadGroupsForUI)
+      .then((res) => {
         resolve(res.Nodes || [])
       })
       .catch((e: any) => {
@@ -68,9 +70,9 @@ export interface CodecResponse {
  */
 export const apiPayloadByType: (value: string) => Promise<string> = (value) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('Codec', { Type: 'fuzz', Text: `{{x(${value})}}` })
-      .then((res: CodecResponse) => {
+    ipc
+      .invoke('grpc', 'Codec', { Type: 'fuzz', Text: `{{x(${value})}}` })
+      .then((res) => {
         resolve(res?.Result || '')
       })
       .catch((err) => {
@@ -123,13 +125,16 @@ export const startBruteParamsConvertToFormValue = (params: StartBruteParams): Br
 /**
  * @description StartBrute 弱口令检测
  */
-export const apiStartBrute: (params: StartBruteParams, token: string) => Promise<null> = (params, token) => {
+export const apiStartBrute: (
+  params: StartBruteParams,
+  open: (params: import('@/services/ipc').GrpcInput<'StartBrute'>) => Promise<unknown>,
+  token: string,
+) => Promise<null> = (params, open, token) => {
   return new Promise((resolve, reject) => {
     const executeParams: StartBruteParams = {
       ...params,
     }
-    ipcRenderer
-      .invoke('StartBrute', executeParams, token)
+    open(executeParams)
       .then(() => {
         yakitNotify('info', `启动成功,任务ID: ${token}`)
         resolve(null)
@@ -137,23 +142,6 @@ export const apiStartBrute: (params: StartBruteParams, token: string) => Promise
       .catch((error) => {
         yakitNotify('error', '弱口令检测执行出错:' + error)
         reject(error)
-      })
-  })
-}
-
-/**
- * @description 取消 StartBrute
- */
-export const apiCancelStartBrute: (token: string) => Promise<null> = (token) => {
-  return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke(`cancel-StartBrute`, token)
-      .then(() => {
-        resolve(null)
-      })
-      .catch((e: any) => {
-        yakitNotify('error', '取消弱口令检测执行出错:' + e)
-        reject(e)
       })
   })
 }

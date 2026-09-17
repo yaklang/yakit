@@ -1,3 +1,4 @@
+import { compareInt64, nonNegativeInt64, maxInt64 } from '@/utils/int64'
 import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import type { HTTPFlow, YakQueryHTTPFlowResponse } from './HTTPFlowTable.constants'
 import { hasHTTPFlowFilterCriteria } from './HTTPFlowTable.utils'
@@ -34,8 +35,8 @@ const asFiniteNumber = (value: unknown): number => {
 const asString = (value: unknown): string => (typeof value === 'string' ? value : '')
 
 export const httpFlowLiveSummaryToHTTPFlow = (summary?: HTTPFlowLiveSummary): HTTPFlow | undefined => {
-  const Id = asSafeNumber(summary?.Id)
-  if (!Id) return
+  const Id = nonNegativeInt64(summary?.Id)
+  if (Id === '0') return
   const Url = asString(summary?.Url)
   return {
     Id,
@@ -126,7 +127,7 @@ export const createHTTPFlowLiveDirectBatcher = (options: HTTPFlowLiveDirectBatch
   const now = options.now || (() => performance.now())
   const setTimer = options.setTimer || ((callback, delayMs) => setTimeout(callback, delayMs))
   const clearTimer = options.clearTimer || ((timer) => clearTimeout(timer))
-  const pending = new Map<number, HTTPFlowLiveEvent>()
+  const pending = new Map<string, HTTPFlowLiveEvent>()
   let lastFlushAt: number | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
   let timerDueAt: number | undefined
@@ -164,8 +165,8 @@ export const createHTTPFlowLiveDirectBatcher = (options: HTTPFlowLiveDirectBatch
   }
 
   const enqueue = (event: HTTPFlowLiveEvent) => {
-    const sequence = asSafeNumber(event.Sequence)
-    if (!sequence) return false
+    const sequence = nonNegativeInt64(event.Sequence)
+    if (sequence === '0') return false
     pending.set(sequence, event)
     if (pending.size >= maxPendingRows) {
       if (timer !== undefined) clearTimer(timer)
@@ -193,29 +194,29 @@ interface HTTPFlowLiveModeTransitionOptions {
   pendingCount: () => number
   cancelPending: () => void
   cancelRefresh: () => void
-  requireRecovery: (highWaterId: number) => void
+  requireRecovery: (highWaterId: string | number) => void
   requestRefresh: () => void
 }
 
 export const handleHTTPFlowLiveModeTransition = (
   previousMode: MITMFlowCommittedMode,
   mode: MITMFlowCommittedMode,
-  streamLastSeenId: number,
+  streamLastSeenId: string | number,
   options: HTTPFlowLiveModeTransitionOptions,
 ) => {
   if (mode === previousMode) return 0
   const pendingRows = options.pendingCount()
   options.cancelPending()
   options.cancelRefresh()
-  options.requireRecovery(asSafeNumber(streamLastSeenId))
+  options.requireRecovery(nonNegativeInt64(streamLastSeenId))
   options.requestRefresh()
   return pendingRows
 }
 
 export interface HTTPFlowLiveDirectRecoverySnapshot {
   required: boolean
-  fallbackHighWaterId: number
-  catchUpCandidateId: number
+  fallbackHighWaterId: string
+  catchUpCandidateId: string
 }
 
 interface HTTPFlowLiveDirectRecoveryGateOptions {
@@ -229,8 +230,8 @@ interface HTTPFlowLiveDirectRecoveryGateOptions {
  */
 export const createHTTPFlowLiveDirectRecoveryGate = (options: HTTPFlowLiveDirectRecoveryGateOptions = {}) => {
   let required = false
-  let fallbackHighWaterId = 0
-  let catchUpCandidateId = 0
+  let fallbackHighWaterId = '0'
+  let catchUpCandidateId = '0'
 
   const snapshot = (): HTTPFlowLiveDirectRecoverySnapshot => ({
     required,
@@ -240,28 +241,31 @@ export const createHTTPFlowLiveDirectRecoveryGate = (options: HTTPFlowLiveDirect
 
   const notify = () => options.onChange?.(snapshot())
 
-  const requireRecovery = (highWaterId = 0) => {
-    const normalizedHighWaterId = asSafeNumber(highWaterId)
-    const changed = !required || normalizedHighWaterId > fallbackHighWaterId || catchUpCandidateId > 0
+  const requireRecovery = (highWaterId: string | number = '0') => {
+    const normalizedHighWaterId = nonNegativeInt64(highWaterId)
+    const changed =
+      !required ||
+      compareInt64(normalizedHighWaterId, fallbackHighWaterId) > 0 ||
+      compareInt64(catchUpCandidateId, '0') > 0
     required = true
-    fallbackHighWaterId = Math.max(fallbackHighWaterId, normalizedHighWaterId)
-    catchUpCandidateId = 0
+    fallbackHighWaterId = maxInt64(fallbackHighWaterId, normalizedHighWaterId)
+    catchUpCandidateId = '0'
     if (changed) notify()
   }
 
   const markFallback = (events: HTTPFlowLiveEvent[]) => {
-    let highWaterId = 0
+    let highWaterId = '0'
     for (const event of events) {
-      highWaterId = Math.max(highWaterId, asSafeNumber(event.Flow?.Id), asSafeNumber(event.HighWaterId))
+      highWaterId = maxInt64(highWaterId, nonNegativeInt64(event.Flow?.Id), nonNegativeInt64(event.HighWaterId))
     }
     requireRecovery(highWaterId)
   }
 
-  const observeQuery = (cursorAfter: number, streamLastSeenId: number, exhausted: boolean) => {
+  const observeQuery = (cursorAfter: string | number, streamLastSeenId: string | number, exhausted: boolean) => {
     if (!required || !exhausted) return false
-    const normalizedCursorAfter = asSafeNumber(cursorAfter)
-    const requiredHighWaterId = Math.max(fallbackHighWaterId, asSafeNumber(streamLastSeenId))
-    if (normalizedCursorAfter < requiredHighWaterId) return false
+    const normalizedCursorAfter = nonNegativeInt64(cursorAfter)
+    const requiredHighWaterId = maxInt64(fallbackHighWaterId, nonNegativeInt64(streamLastSeenId))
+    if (compareInt64(normalizedCursorAfter, requiredHighWaterId) < 0) return false
     if (catchUpCandidateId !== normalizedCursorAfter) {
       catchUpCandidateId = normalizedCursorAfter
       notify()
@@ -269,28 +273,28 @@ export const createHTTPFlowLiveDirectRecoveryGate = (options: HTTPFlowLiveDirect
     return true
   }
 
-  const commitVisible = (visibleHighWaterId: number, streamLastSeenId: number) => {
+  const commitVisible = (visibleHighWaterId: string | number, streamLastSeenId: string | number) => {
     if (
       !required ||
-      catchUpCandidateId === 0 ||
-      catchUpCandidateId < fallbackHighWaterId ||
-      catchUpCandidateId < asSafeNumber(streamLastSeenId) ||
-      asSafeNumber(visibleHighWaterId) < catchUpCandidateId
+      catchUpCandidateId === '0' ||
+      compareInt64(catchUpCandidateId, fallbackHighWaterId) < 0 ||
+      compareInt64(catchUpCandidateId, nonNegativeInt64(streamLastSeenId)) < 0 ||
+      compareInt64(nonNegativeInt64(visibleHighWaterId), catchUpCandidateId) < 0
     ) {
       return false
     }
     required = false
-    fallbackHighWaterId = 0
-    catchUpCandidateId = 0
+    fallbackHighWaterId = '0'
+    catchUpCandidateId = '0'
     notify()
     return true
   }
 
   const reset = () => {
-    if (!required && fallbackHighWaterId === 0 && catchUpCandidateId === 0) return
+    if (!required && fallbackHighWaterId === '0' && catchUpCandidateId === '0') return
     required = false
-    fallbackHighWaterId = 0
-    catchUpCandidateId = 0
+    fallbackHighWaterId = '0'
+    catchUpCandidateId = '0'
     notify()
   }
 
@@ -349,11 +353,16 @@ export const createHTTPFlowLiveRefreshScheduler = (options: HTTPFlowLiveRefreshS
 }
 
 export interface HTTPFlowLiveStreamTransport {
-  start: (request: SubscribeHTTPFlowsRequest, token: string) => Promise<unknown> | unknown
-  cancel: (token: string) => Promise<unknown> | unknown
-  onData: (token: string, callback: (event: HTTPFlowLiveEvent) => void) => () => void
-  onError: (token: string, callback: (error: unknown) => void) => () => void
-  onEnd: (token: string, callback: () => void) => () => void
+  open: (
+    request: SubscribeHTTPFlowsRequest,
+    options: {
+      token: string
+      signal: AbortSignal
+      onData(event: HTTPFlowLiveEvent): void
+      onError(error: unknown): void
+      onEnd(): void
+    },
+  ) => Promise<unknown> | unknown
 }
 
 export interface HTTPFlowLiveStreamControllerOptions {
@@ -365,7 +374,7 @@ export interface HTTPFlowLiveStreamControllerOptions {
   onUnavailable?: (error: unknown) => void
   onReset?: () => void
   observer?: {
-    recordHTTPFlowLiveStreamSubscription: (databaseIdentity: string, projectGeneration: number) => void
+    recordHTTPFlowLiveStreamSubscription: (databaseIdentity: string, projectGeneration: string | number) => void
     recordHTTPFlowLiveStreamEvent: (event: HTTPFlowLiveEvent) => void
     recordHTTPFlowLiveStreamFault: (fault: HTTPFlowLiveStreamFault, reason?: string) => void
     recordHTTPFlowLiveStreamStopped: () => void
@@ -375,8 +384,8 @@ export interface HTTPFlowLiveStreamControllerOptions {
 export interface HTTPFlowLiveStreamSnapshot {
   active: boolean
   projectKey: string
-  lastSeenSequence: number
-  lastSeenId: number
+  lastSeenSequence: string
+  lastSeenId: string
   recovering: boolean
   unavailableForProject: boolean
 }
@@ -394,40 +403,34 @@ export const shouldPreferHTTPFlowLiveRefresh = (
   !snapshot.recovering &&
   !snapshot.unavailableForProject
 
-const responseMaxID = (response: YakQueryHTTPFlowResponse): number => {
-  let maxID = 0
+const responseMaxID = (response: YakQueryHTTPFlowResponse): string => {
+  let maxID = '0'
   for (const flow of response.Data || []) {
-    maxID = Math.max(maxID, asSafeNumber(flow.Id))
+    maxID = maxInt64(maxID, nonNegativeInt64(flow.Id))
   }
   return maxID
 }
 
-const projectKeyOf = (databaseIdentity: string, projectGeneration: number) => `${databaseIdentity}:${projectGeneration}`
+const projectKeyOf = (databaseIdentity: string, projectGeneration: string | number) =>
+  `${databaseIdentity}:${projectGeneration}`
 
 export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamControllerOptions) => {
   let activeToken = ''
   let activeProjectKey = ''
   let databaseIdentity = ''
-  let projectGeneration = 0
-  let lastSeenSequence = 0
-  let lastSeenId = 0
+  let projectGeneration = '0'
+  let lastSeenSequence = '0'
+  let lastSeenId = '0'
   let haveSequenceBaseline = false
   let recovering = false
   let unavailableProjectKey = ''
-  let cleanups: Array<() => void> = []
-
-  const cleanupListeners = () => {
-    cleanups.forEach((cleanup) => cleanup())
-    cleanups = []
-  }
+  let streamController: AbortController | undefined
 
   const stopTransport = (cancel = true) => {
-    const token = activeToken
     activeToken = ''
-    cleanupListeners()
-    if (cancel && token) {
-      Promise.resolve(options.transport.cancel(token)).catch(() => {})
-    }
+    const controller = streamController
+    streamController = undefined
+    if (cancel) controller?.abort()
   }
 
   const buildGapEvent = (reason: string, event?: HTTPFlowLiveEvent): HTTPFlowLiveEvent => ({
@@ -450,7 +453,7 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
   const enterRecovery = (event: HTTPFlowLiveEvent) => {
     if (recovering) return
     recovering = true
-    lastSeenSequence = 0
+    lastSeenSequence = '0'
     haveSequenceBaseline = false
     options.onGap?.(event)
     stopTransport()
@@ -460,7 +463,7 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
     asSafeNumber(event.ProtocolVersion) === HTTP_FLOW_LIVE_PROTOCOL_VERSION &&
     event.SessionId === token &&
     event.DatabaseIdentity === databaseIdentity &&
-    asSafeNumber(event.ProjectGeneration) === projectGeneration
+    nonNegativeInt64(event.ProjectGeneration) === projectGeneration
 
   const handleData = (event: HTTPFlowLiveEvent, token: string) => {
     if (!activeToken || token !== activeToken) return
@@ -477,7 +480,7 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
       return
     }
     const eventType = event.Type || ''
-    const sequence = asSafeNumber(event.Sequence)
+    const sequence = nonNegativeInt64(event.Sequence)
     if (eventType === EVENT_GAP) {
       enterRecovery(event)
       return
@@ -488,7 +491,7 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
         haveSequenceBaseline = true
         return
       }
-      if (sequence > lastSeenSequence) {
+      if (compareInt64(sequence, lastSeenSequence) > 0) {
         options.observer?.recordHTTPFlowLiveStreamFault('sequence-gap', GAP_SEQUENCE_DISCONTINUITY)
         enterRecovery(buildGapEvent(GAP_SEQUENCE_DISCONTINUITY, event))
       }
@@ -500,24 +503,24 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
       return
     }
 
-    const flowID = asSafeNumber(event.Flow?.Id)
-    if (sequence === 0 || flowID === 0) {
+    const flowID = nonNegativeInt64(event.Flow?.Id)
+    if (sequence === '0' || flowID === '0') {
       options.observer?.recordHTTPFlowLiveStreamFault('invalid-event', GAP_SEQUENCE_DISCONTINUITY)
       enterRecovery(buildGapEvent(GAP_SEQUENCE_DISCONTINUITY, event))
       return
     }
-    if (haveSequenceBaseline && sequence > lastSeenSequence + 1) {
+    if (haveSequenceBaseline && BigInt(sequence) > BigInt(lastSeenSequence) + BigInt(1)) {
       options.observer?.recordHTTPFlowLiveStreamFault('sequence-gap', GAP_SEQUENCE_DISCONTINUITY)
       enterRecovery(buildGapEvent(GAP_SEQUENCE_DISCONTINUITY, event))
       return
     }
-    if (haveSequenceBaseline && sequence <= lastSeenSequence) {
+    if (haveSequenceBaseline && compareInt64(sequence, lastSeenSequence) <= 0) {
       options.observer?.recordHTTPFlowLiveStreamFault(sequence === lastSeenSequence ? 'duplicate' : 'out-of-order')
       return
     }
 
     lastSeenSequence = sequence
-    lastSeenId = Math.max(lastSeenId, flowID)
+    lastSeenId = maxInt64(lastSeenId, flowID)
     haveSequenceBaseline = true
     const mode = options.getMode()
     options.onCommitted?.(event, mode)
@@ -539,31 +542,34 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
       SessionId: token,
       Filter: { SourceType: 'mitm' },
     }
-    cleanups = [
-      options.transport.onData(token, (event) => handleData(event, token)),
-      options.transport.onError(token, (error) => {
-        if (activeToken !== token) return
-        unavailableProjectKey = activeProjectKey
-        options.observer?.recordHTTPFlowLiveStreamFault('unavailable')
-        stopTransport(false)
-        options.onUnavailable?.(error)
-      }),
-      options.transport.onEnd(token, () => {
-        if (activeToken !== token) return
-        const gapEvent = buildGapEvent(GAP_SEQUENCE_DISCONTINUITY)
-        options.observer?.recordHTTPFlowLiveStreamFault('ended', GAP_SEQUENCE_DISCONTINUITY)
-        stopTransport(false)
-        if (!recovering) options.onGap?.(gapEvent)
-      }),
-    ]
-    options.observer?.recordHTTPFlowLiveStreamSubscription(databaseIdentity, projectGeneration)
-    Promise.resolve(options.transport.start(request, token)).catch((error) => {
+    const controller = new AbortController()
+    streamController = controller
+    const onError = (error: unknown) => {
       if (activeToken !== token) return
       unavailableProjectKey = activeProjectKey
       options.observer?.recordHTTPFlowLiveStreamFault('unavailable')
       stopTransport(false)
       options.onUnavailable?.(error)
-    })
+    }
+    options.observer?.recordHTTPFlowLiveStreamSubscription(databaseIdentity, projectGeneration)
+    try {
+      const opening = options.transport.open(request, {
+        token,
+        signal: controller.signal,
+        onData: (event) => handleData(event, token),
+        onError,
+        onEnd: () => {
+          if (activeToken !== token) return
+          const gapEvent = buildGapEvent(GAP_SEQUENCE_DISCONTINUITY)
+          options.observer?.recordHTTPFlowLiveStreamFault('ended', GAP_SEQUENCE_DISCONTINUITY)
+          stopTransport(false)
+          if (!recovering) options.onGap?.(gapEvent)
+        },
+      })
+      Promise.resolve(opening).catch(onError)
+    } catch (error) {
+      onError(error)
+    }
   }
 
   const observeQuery = (response: YakQueryHTTPFlowResponse, filter?: YakQueryHTTPFlowRequest) => {
@@ -574,8 +580,8 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
       return
     }
     const identity = response.SystemTiming?.DatabaseIdentity || ''
-    const generation = asSafeNumber(response.SystemTiming?.ProjectGeneration)
-    if (!identity || generation === 0) {
+    const generation = nonNegativeInt64(response.SystemTiming?.ProjectGeneration)
+    if (!identity || generation === '0') {
       stopTransport()
       return
     }
@@ -585,14 +591,14 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
     // Filter.AfterId. Losing it here makes a recovering/new subscription start
     // from ID 0, which can repeatedly hit the replay-window GAP and never
     // deliver post-reset rows.
-    const queryResumeID = Math.max(responseMaxID(response), asSafeNumber(filter?.AfterId))
+    const queryResumeID = maxInt64(responseMaxID(response), nonNegativeInt64(filter?.AfterId))
     if (nextProjectKey !== activeProjectKey) {
       options.onReset?.()
       stopTransport()
       activeProjectKey = nextProjectKey
       databaseIdentity = identity
       projectGeneration = generation
-      lastSeenSequence = 0
+      lastSeenSequence = '0'
       lastSeenId = queryResumeID
       haveSequenceBaseline = false
       recovering = false
@@ -604,10 +610,10 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
         // receive cursor, or those cancelled rows could be skipped forever.
         lastSeenId = queryResumeID
         recovering = false
-        lastSeenSequence = 0
+        lastSeenSequence = '0'
         haveSequenceBaseline = false
       } else {
-        lastSeenId = Math.max(lastSeenId, queryResumeID)
+        lastSeenId = maxInt64(lastSeenId, queryResumeID)
       }
     }
     start()
@@ -619,9 +625,9 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
     options.observer?.recordHTTPFlowLiveStreamStopped()
     activeProjectKey = ''
     databaseIdentity = ''
-    projectGeneration = 0
-    lastSeenSequence = 0
-    lastSeenId = 0
+    projectGeneration = '0'
+    lastSeenSequence = '0'
+    lastSeenId = '0'
     haveSequenceBaseline = false
     recovering = false
     unavailableProjectKey = ''

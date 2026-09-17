@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import { hybridTasksForUI } from '@/models/HybridScan'
+import { ipc, type GrpcInput, type GrpcOutput } from '@/services/ipc'
+import React, { useEffect, useState, useRef } from 'react'
 import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import { DemoVirtualTable } from '@/demoComponents/virtualTable/VirtualTable'
 import type {
@@ -20,8 +22,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface HybridScanTaskTableProp {}
 
-const { ipcRenderer } = window.require('electron')
-
 export const HybridScanTaskTable: React.FC<HybridScanTaskTableProp> = (props) => {
   const { t } = useI18nNamespaces(['components', 'yakitUi'])
   const [selected, setSelected] = React.useState<HybridScanTask>()
@@ -29,54 +29,61 @@ export const HybridScanTaskTable: React.FC<HybridScanTaskTableProp> = (props) =>
   const [loading, setLoading] = useState(false)
 
   const [status, setStatus] = React.useState<HybridScanStatisticResponse>({
-    ActiveTargets: 0,
-    ActiveTasks: 0,
-    FinishedTargets: 0,
-    FinishedTasks: 0,
+    ActiveTargets: '0',
+    ActiveTasks: '0',
+    FinishedTargets: '0',
+    FinishedTasks: '0',
     HybridScanTaskId: '',
-    TotalPlugins: 0,
-    TotalTargets: 0,
-    TotalTasks: 0,
+    TotalPlugins: '0',
+    TotalTargets: '0',
+    TotalTasks: '0',
   })
   const [activeTasks, setActiveTasks, getActiveTasks] = useGetState<HybridScanActiveTask[]>([])
 
-  useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e, data: HybridScanResponse) => {
-      setStatus(data)
-
-      if (data?.UpdateActiveTask) {
-        if (data.UpdateActiveTask.Operator === 'remove') {
-          setActiveTasks(
-            getActiveTasks().filter((v) => {
-              if (data?.UpdateActiveTask !== undefined) {
-                return v.Index !== data?.UpdateActiveTask.Index
-              }
-              return true
-            }),
-          )
-        } else if (data.UpdateActiveTask.Operator === 'create') {
-          setActiveTasks([...getActiveTasks(), data.UpdateActiveTask])
-        }
-      }
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      failed(`[HybridScan] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {
+  const controller = useRef<AbortController>()
+  const startScan = useMemoizedFn(async (request: GrpcInput<'HybridScan'>, config?: GrpcInput<'HybridScan'>) => {
+    controller.current?.abort()
+    const owner = new AbortController()
+    controller.current = owner
+    setLoading(true)
+    setActiveTasks([])
+    try {
+      const task = await ipc.openStream('grpc', 'HybridScan', request, {
+        token,
+        signal: owner.signal,
+        onData: (data) => {
+          if (controller.current !== owner) return
+          setStatus(data)
+          const update = data.UpdateActiveTask
+          if (update?.Operator === 'remove')
+            setActiveTasks(getActiveTasks().filter((entry) => entry.Index !== update.Index))
+          else if (update?.Operator === 'create') setActiveTasks([...getActiveTasks(), update])
+        },
+        onError: (error) => {
+          if (controller.current !== owner) return
+          setLoading(false)
+          failed(`[HybridScan] error: ${error.message}`)
+        },
+        onEnd: () => {
+          if (controller.current !== owner) return
+          setLoading(false)
+          info('[HybridScan] finished')
+        },
+      })
+      if (config) await task.write(config)
+    } catch (error) {
+      if (owner.signal.aborted || controller.current !== owner) return
+      owner.abort()
       setLoading(false)
-      info('[HybridScan] finished')
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-HybridScan', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
+      failed(`[HybridScan] error: ${error}`)
     }
-  }, [token])
-
-  const cancel = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-HybridScan', token)
   })
+  const cancel = useMemoizedFn(() => {
+    controller.current?.abort()
+    controller.current = undefined
+    setLoading(false)
+  })
+  useEffect(() => () => controller.current?.abort(), [])
 
   return (
     <YakitResizeBox
@@ -104,12 +111,13 @@ export const HybridScanTaskTable: React.FC<HybridScanTaskTableProp> = (props) =>
             return new Promise((resolve, reject) => {
               if (!data) {
                 // info("加载初始化数据")
-                ipcRenderer
-                  .invoke('QueryHybridScanTask', {
+                ipc
+                  .invoke('grpc', 'QueryHybridScanTask', {
                     Pagination: { Limit: 10, Page: 1, OrderBy: 'id', Order: 'asc' }, // genDefaultPagination(),
                     FromId: 0,
                   })
-                  .then((rsp: { Data: HybridScanTask[] }) => {
+                  .then(hybridTasksForUI)
+                  .then((rsp) => {
                     resolve({
                       data: rsp.Data,
                     })
@@ -117,12 +125,13 @@ export const HybridScanTaskTable: React.FC<HybridScanTaskTableProp> = (props) =>
                   })
                 return
               } else {
-                ipcRenderer
-                  .invoke('QueryHybridScanTask', {
+                ipc
+                  .invoke('grpc', 'QueryHybridScanTask', {
                     Pagination: { Limit: 10, Page: 1, OrderBy: 'id', Order: 'asc' },
                     FromId: data.Id,
                   })
-                  .then((rsp: { Data: HybridScanTask[]; Total: number; Pagination: Paging }) => {
+                  .then(hybridTasksForUI)
+                  .then((rsp) => {
                     resolve({
                       data: rsp.Data,
                     })
@@ -146,21 +155,7 @@ export const HybridScanTaskTable: React.FC<HybridScanTaskTableProp> = (props) =>
                 <YakitTag>{selected?.Status}</YakitTag>
                 <YakitButton
                   disabled={loading}
-                  onClick={() => {
-                    ipcRenderer
-                      .invoke(
-                        'HybridScan',
-                        {
-                          Control: true,
-                          HybridScanMode: 'resume',
-                          ResumeTaskId: selected?.TaskId,
-                        } as HybridScanControlRequest,
-                        token,
-                      )
-                      .then(() => {
-                        setLoading(true)
-                      })
-                  }}
+                  onClick={() => startScan({ Control: true, HybridScanMode: 'resume', ResumeTaskId: selected?.TaskId })}
                 >
                   {t('playground.HybridScanTaskTable.startTask')}
                 </YakitButton>

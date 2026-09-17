@@ -1,3 +1,4 @@
+import type { GrpcInput } from '@/services/ipc'
 import type React from 'react'
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
@@ -37,14 +38,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import cloneDeep from 'lodash/cloneDeep'
 import { genDefaultPagination } from '../invoker/schema'
-import {
-  grpcDeleteLocalRule,
-  grpcDownloadSyntaxFlowRule,
-  grpcFetchLocalRuleList,
-  grpcSyntaxFlowRuleToOnline,
-  httpDeleteOnlineRule,
-  httpFetchOnlineRuleList,
-} from './api'
+import { grpcDeleteLocalRule, grpcFetchLocalRuleList, httpDeleteOnlineRule, httpFetchOnlineRuleList } from './api'
 import { RuleLanguageList, RuleType, RuleTypeList } from '@/defaultConstants/RuleManagement'
 import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import { Tooltip } from 'antd'
@@ -531,45 +525,41 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
   const infoRef = useRef<{ type: string; title: string; content: string }>({ type: '', title: '', content: '' })
   const [percentShow, setPercentShow] = useState<boolean>(false)
   const tokenRef = useRef<string>(randomString(40))
+  const transferParamsRef = useRef<GrpcInput<'SyntaxFlowRuleToOnline'> | GrpcInput<'DownloadSyntaxFlowRule'>>({})
   const containerRef = useRef<HTMLElement>()
 
   const handleUpload = useMemoizedFn(() => {
     tokenRef.current = randomString(40)
-    grpcSyntaxFlowRuleToOnline(
-      { Filter: { ...cloneDeep(filters), RuleNames: allCheck ? [] : selectKeys }, Token: userInfo.token },
-      tokenRef.current,
-    ).then((res) => {
-      setInfoVisible(false)
-      containerRef.current = getMainOperatorPageBodyContainer()
-      setPercentShow(true)
-    })
+    transferParamsRef.current = {
+      Filter: { ...cloneDeep(filters), RuleNames: allCheck ? [] : selectKeys },
+      Token: userInfo.token,
+    }
+    setInfoVisible(false)
+    containerRef.current = getMainOperatorPageBodyContainer()
+    setPercentShow(true)
   })
   const isDownloadOnlineRuleGroupRef = useRef<boolean>(false)
   const handleDownload = useMemoizedFn(() => {
     tokenRef.current = randomString(40)
-    grpcDownloadSyntaxFlowRule(
-      {
-        Filter: isDownloadOnlineRuleGroupRef.current
-          ? {}
-          : {
-              GroupNames: onlineFilters.groupNames,
-              RuleNames: onlineAllCheck ? [] : onlineSelectKeys,
-              Language: onlineFilters.language,
-              Severity: onlineFilters.severity,
-              Purpose: onlineFilters.purpose,
-              Tag: onlineFilters.tag,
-              Keyword: onlineFilters.keyword,
-              FilterRuleKind: onlineFilters.filterRuleKind as FilterRuleKind,
-              FilterLibRuleKind: onlineFilters.filterLibRuleKind as FilterLibRuleKind,
-            },
-        Token: userInfo.token,
-      },
-      tokenRef.current,
-    ).then((res) => {
-      setInfoVisible(false)
-      containerRef.current = getMainOperatorPageBodyContainer()
-      setPercentShow(true)
-    })
+    transferParamsRef.current = {
+      Filter: isDownloadOnlineRuleGroupRef.current
+        ? {}
+        : {
+            GroupNames: onlineFilters.groupNames,
+            RuleNames: onlineAllCheck ? [] : onlineSelectKeys,
+            Language: onlineFilters.language,
+            Severity: onlineFilters.severity,
+            Purpose: onlineFilters.purpose,
+            Tag: onlineFilters.tag,
+            Keyword: onlineFilters.keyword,
+            FilterRuleKind: onlineFilters.filterRuleKind as FilterRuleKind,
+            FilterLibRuleKind: onlineFilters.filterLibRuleKind as FilterLibRuleKind,
+          },
+      Token: userInfo.token,
+    }
+    setInfoVisible(false)
+    containerRef.current = getMainOperatorPageBodyContainer()
+    setPercentShow(true)
   })
 
   /** ---------- 搜索/获取线上表格数据 Start ---------- */
@@ -1249,6 +1239,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             type={infoRef.current.type}
             apiKey={infoRef.current.type === 'upload' ? 'SyntaxFlowRuleToOnline' : 'DownloadSyntaxFlowRule'}
             token={tokenRef.current}
+            params={transferParamsRef.current}
             onCancel={() => {
               setPercentShow(false)
             }}

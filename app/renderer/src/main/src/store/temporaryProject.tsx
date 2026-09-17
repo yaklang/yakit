@@ -1,10 +1,9 @@
+import { ipc } from '@/services/ipc'
 import { getEnvTypeByProjects } from '@/pages/softwareSettings/projectUtils'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitFailed } from '@/utils/notification'
 import { RemoteGV } from '@/yakitGV'
 import { create } from 'zustand'
-const { ipcRenderer } = window.require('electron')
-
 interface TemporaryProjectStoreProps {
   temporaryProjectId: string
   temporaryProjectNoPromptFlag: boolean
@@ -31,8 +30,8 @@ export const useTemporaryProjectStore = create<TemporaryProjectStoreProps>((set,
     const temporaryProjectId = get().temporaryProjectId
     if (temporaryProjectId) {
       try {
-        await ipcRenderer.invoke('DeleteProject', {
-          Id: +temporaryProjectId,
+        await ipc.invoke('grpc', 'DeleteProject', {
+          Id: temporaryProjectId,
           IsDeleteLocal: true,
           Type: getEnvTypeByProjects(),
         })

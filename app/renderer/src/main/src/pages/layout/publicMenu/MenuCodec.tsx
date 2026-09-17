@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronUpIcon'
@@ -14,8 +15,6 @@ import styles from './MenuCodec.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import { ChevronDownOutlined, SwitchHorizontalOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-
-const { ipcRenderer } = window.require('electron')
 
 interface MenuCodecProps {}
 
@@ -154,8 +153,8 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
       }
       newCodec(newCodecParams)
     } else {
-      ipcRenderer
-        .invoke('Codec', { Type: key, Text: question, Params: [], ScriptName: '' })
+      ipc
+        .invoke('grpc', 'Codec', { Type: key, Text: question, Params: [], ScriptName: '' })
         .then((res) => {
           setAnswer(res?.Result || '')
         })
@@ -167,9 +166,9 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
   })
 
   const newCodec = (params) => {
-    ipcRenderer
-      .invoke('NewCodec', params)
-      .then((data: { Result: string; RawResult: Uint8Array }) => {
+    ipc
+      .invoke('grpc', 'NewCodec', params)
+      .then((data) => {
         setAnswer(data.Result || '')
       })
       .catch((e) => {

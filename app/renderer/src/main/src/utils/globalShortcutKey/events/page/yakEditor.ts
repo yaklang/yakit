@@ -335,7 +335,7 @@ const LocalStorageKey = 'yakit-editor-shortcut-key-events'
 export const getStorageYakEditorShortcutKeyEvents = () => {
   getLocalValue(LocalStorageKey)
     .then((res) => {
-      if (!res) return
+      if (typeof res !== 'string' || !res) return
       try {
         const data: EventsType = JSONParseLog(res, { page: 'yakEditor', fun: 'getStorageYakEditorShortcutKeyEvents' })
         currentKeyEvents = addScopeShow(data, YakEditorShortcutKeyEvents)

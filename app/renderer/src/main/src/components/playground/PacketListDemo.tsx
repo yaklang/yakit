@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import type { TrafficPacket, TrafficSession, TrafficTCPReassembled } from '@/models/Traffic'
@@ -27,8 +28,6 @@ export interface PacketListProp {
   onClickRow?: (row?: TrafficPacket) => void
 }
 
-const { ipcRenderer } = window.require('electron')
-
 interface PacketScrollData {
   list: TrafficPacket[]
   paging: Paging
@@ -56,7 +55,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
   const TreeBoxRef = useRef<any>()
   const { theme } = useTheme()
 
-  const selectIdRef = useRef<number>()
+  const selectIdRef = useRef<string | number>()
   const [show, setShow] = useState<boolean>(false)
 
   useEffect(() => {
@@ -96,7 +95,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
       if ('SessionUuid' in data) {
         typ = 'reassembled'
       }
-      ipcRenderer.invoke('ParseTraffic', { Id: data.Id, Type: typ }).then((data) => {
+      ipc.invoke('grpc', 'ParseTraffic', { Id: data.Id, Type: typ }).then((data) => {
         const res = JSONParseLog(data.Result, { page: 'PacketListDemo', fun: 'parseData' })
         const result = res.Result
         const keyToScope = {}

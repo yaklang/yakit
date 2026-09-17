@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useRef, useState } from 'react'
 import { Form } from 'antd'
@@ -117,8 +118,6 @@ const InsertFileFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
   )
 }
 
-const { ipcRenderer } = window.require('electron')
-
 const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
   const { t, i18n } = useI18nNamespaces(['webFuzzer', 'yakitUi'])
   const [content, setContent] = useState('')
@@ -132,9 +131,9 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
       onSubmitCapture={(e) => {
         e.preventDefault()
 
-        ipcRenderer
-          .invoke('SaveTextToTemporalFile', { Text: StringToUint8Array(content) })
-          .then((rsp: { FileName: string }) => {
+        ipc
+          .invoke('grpc', 'SaveTextToTemporalFile', { Text: StringToUint8Array(content) })
+          .then((rsp) => {
             info(t('InsertTextToFuzzTag.generateTempDictionaryFile') + rsp.FileName)
             const filename = rsp.FileName
             switch (mode) {

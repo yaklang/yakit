@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { DurationMsToColor, RangeInputNumberTable, StatusCodeToColor } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -48,8 +49,6 @@ import type { ExportDataType } from '@/utils/exporter'
 import { ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter } from './extractedFilter'
 import { useChunkAutoScrollToBottom } from '../../hooks/useAutoScrollToBottom'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface HTTPFuzzerPageTableDebugPayload {
   httpResponse: string
@@ -980,7 +979,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       if (currentSelectItem) {
         setCodeKey('utf-8')
         getRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify).then((res) => {
-          if (res) {
+          if (res === 'beautify' || res === 'render' || res === 'hex') {
             setTypeOptionVal(res)
           } else {
             setTypeOptionVal(undefined)
@@ -1034,12 +1033,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     })
     const onClickOpenBrowserMenu = useMemoizedFn(() => {
       if (currentSelectItem?.RequestRaw) {
-        ipcRenderer
-          .invoke('ExtractUrl', {
+        ipc
+          .invoke('grpc', 'ExtractUrl', {
             Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
             IsHTTPS: !!currentSelectItem?.IsHTTPS,
           })
-          .then((data: { Url: string }) => {
+          .then((data) => {
             openExternalWebsite(data.Url)
           })
           .catch((e) => {
@@ -1196,8 +1195,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         onClick: ({ key }) => {
                           switch (key) {
                             case 'tooLargeResponseHeaderFile':
-                              ipcRenderer
-                                .invoke('is-file-exists', currentSelectItem.TooLargeResponseHeaderFile)
+                              ipc
+                                .invoke('local', 'is-file-exists', currentSelectItem.TooLargeResponseHeaderFile)
                                 .then((flag: boolean) => {
                                   if (flag) {
                                     openABSFileLocated(currentSelectItem.TooLargeResponseHeaderFile)
@@ -1208,8 +1207,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                 .catch(() => {})
                               break
                             case 'tooLargeResponseBodyFile':
-                              ipcRenderer
-                                .invoke('is-file-exists', currentSelectItem.TooLargeResponseBodyFile)
+                              ipc
+                                .invoke('local', 'is-file-exists', currentSelectItem.TooLargeResponseBodyFile)
                                 .then((flag: boolean) => {
                                   if (flag) {
                                     openABSFileLocated(currentSelectItem.TooLargeResponseBodyFile)

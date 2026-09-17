@@ -6,10 +6,8 @@ import styles from './AICustomFile.module.scss'
 import classNames from 'classnames'
 
 import { yakitNotify } from '@/utils/notification'
-import { randomString } from '@/utils/randomUtil'
+import { ipc } from '@/services/ipc'
 import { Progress } from 'antd'
-
-const { ipcRenderer } = window.require('electron')
 
 export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
   const { sessionId, chatDataStoreKey } = props
@@ -18,7 +16,7 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
   const [showSrc, setShowSrc] = useState<string>('')
   const [progress, setProgress] = useState<number>(0)
 
-  const tokenRef = useRef<string>(randomString(8))
+  const controllerRef = useRef<AbortController>()
   const attrs = useCreation(() => {
     return node.attrs
   }, [node.attrs])
@@ -32,49 +30,33 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
     } else {
       setShowSrc(attrs?.src)
     }
-  }, [editable])
-
-  const handleIpcFinish = useMemoizedFn((e, path: string) => {
-    setProgress(100)
-    setAttrs({ src: path })
-    setShowSrc(path)
-  })
-
-  useEffect(() => {
-    const token = tokenRef.current
-    ipcRenderer.on(`save-ai-image-progress-${token}`, (e, progress: number) => {
-      setProgress(progress)
-    })
-    ipcRenderer.on(`save-ai-image-finish-${token}`, handleIpcFinish)
-    ipcRenderer.on(`save-ai-image-err-${token}`, (e, err) => {
-      yakitNotify('error', `save-ai-image-err: ${err}`)
-    })
-    return () => {
-      ipcRenderer.removeAllListeners(`save-ai-image-progress-${token}`)
-      ipcRenderer.removeAllListeners(`save-ai-image-finish-${token}`)
-      ipcRenderer.removeAllListeners(`save-ai-image-err-${token}`)
-    }
-  }, [])
+    return () => controllerRef.current?.abort()
+  }, [editable, attrs?.src, sessionId, chatDataStoreKey])
 
   const onSaveLocal = useMemoizedFn(async (blobUrl: string) => {
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
     setShowSrc(blobUrl)
     try {
-      const response = await fetch(blobUrl)
+      const response = await fetch(blobUrl, { signal: controller.signal })
       const blob = await response.blob()
 
       const mimeType = blob.type || 'image/png'
       const suffix = mimeType.split('/')[1] || 'png'
 
       const arrayBuffer = await blob.arrayBuffer()
+      if (controller.signal.aborted) return
       const buffer = new Uint8Array(arrayBuffer)
       setProgress(0)
-      const filename = `image_${Date.now()}.${suffix}`
+      const filename = `image_${crypto.randomUUID()}.${suffix}`
       setAttrs({ alt: filename })
       if (!chatDataStoreKey) {
         yakitNotify('error', '图片保存失败: 无法识别当前 AI 存储路径')
         return
       }
-      ipcRenderer.invoke(
+      const savedPath = await ipc.invoke(
+        'local',
         'save-ai-image',
         {
           buffer,
@@ -82,9 +64,14 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
           sessionID: sessionId,
           chatDataStoreKey,
         },
-        tokenRef.current,
+        { signal: controller.signal, onProgress: setProgress },
       )
+      if (controller.signal.aborted) return
+      setProgress(100)
+      setAttrs({ src: savedPath })
+      setShowSrc(savedPath)
     } catch (error) {
+      if (controller.signal.aborted) return
       yakitNotify('error', `图片上传失败: ${error}`)
     }
   })

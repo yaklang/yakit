@@ -256,7 +256,8 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     if (!selected) return
     switch (key) {
       case 'file-curd-open': {
-        const url = selected.data!.Url
+        const url = selected.data?.Url
+        if (!url) return
         setYakUrl(url)
         showFile(url)
         break

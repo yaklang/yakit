@@ -144,10 +144,10 @@ export interface AIAgentChatData {
    * 与 IDB sessionRender.grpcOffset 同步的事件游标。
    * start 时对齐后写入；仅加载后端存量历史（recovery 等）时更新。
    */
-  grpcOffset: number
+  grpcOffset: string
 
   /** timeline 历史分页游标（grpcQueryAIEvent 的 BeforeId），0 表示未拉过 */
-  timelineBeforeId: number
+  timelineBeforeId: string
   /** timeline 历史是否已到尽头（Total===0 或 Events.length < LIMIT 时置 true） */
   timelineNoMore: boolean
 

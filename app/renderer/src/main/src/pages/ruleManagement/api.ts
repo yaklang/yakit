@@ -1,3 +1,5 @@
+import { grpcPageForUI, grpcPagingToUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import type {
@@ -21,16 +23,15 @@ import type {
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 
-const { ipcRenderer } = window.require('electron')
-
 /** @name 获取本地规则组列表数据 */
 export const grpcFetchLocalRuleGroupList: APIFunc<QuerySyntaxFlowRuleGroupRequest, QuerySyntaxFlowRuleGroupResponse> = (
   request,
   hiddenError,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('QuerySyntaxFlowRuleGroup', request)
+    ipc
+      .invoke('grpc', 'QuerySyntaxFlowRuleGroup', request)
+      .then((res) => ({ ...res, Pagination: grpcPagingToUI(res.Pagination) }))
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询本地规则组失败:' + e)
@@ -42,8 +43,8 @@ export const grpcFetchLocalRuleGroupList: APIFunc<QuerySyntaxFlowRuleGroupReques
 /** @name 创建本地规则组 */
 export const grpcCreateLocalRuleGroup: APIFunc<CreateSyntaxFlowGroupRequest, any> = (request, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('CreateSyntaxFlowRuleGroup', request)
+    ipc
+      .invoke('grpc', 'CreateSyntaxFlowRuleGroup', request)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '创建本地规则组失败:' + e)
@@ -55,8 +56,8 @@ export const grpcCreateLocalRuleGroup: APIFunc<CreateSyntaxFlowGroupRequest, any
 /** @name 更新本地规则组 */
 export const grpcUpdateLocalRuleGroup: APIFunc<UpdateSyntaxFlowRuleGroupRequest, any> = (request, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('UpdateSyntaxFlowRuleGroup', request)
+    ipc
+      .invoke('grpc', 'UpdateSyntaxFlowRuleGroup', request)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '更新本地规则组失败:' + e)
@@ -68,8 +69,8 @@ export const grpcUpdateLocalRuleGroup: APIFunc<UpdateSyntaxFlowRuleGroupRequest,
 /** @name 删除本地规则组 */
 export const grpcDeleteLocalRuleGroup: APIFunc<DeleteSyntaxFlowRuleGroupRequest, any> = (request, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteSyntaxFlowRuleGroup', request)
+    ipc
+      .invoke('grpc', 'DeleteSyntaxFlowRuleGroup', request)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '删除本地规则组失败:' + e)
@@ -84,8 +85,9 @@ export const grpcFetchLocalRuleList: APIFunc<QuerySyntaxFlowRuleRequest, QuerySy
   hiddenError,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('QuerySyntaxFlowRule', request)
+    ipc
+      .invoke('grpc', 'QuerySyntaxFlowRule', request)
+      .then(grpcPageForUI)
       .then((res) => {
         resolve(res)
       })
@@ -102,9 +104,12 @@ export const grpcCreateLocalRule: APIFunc<CreateSyntaxFlowRuleRequest, { Rule: S
   hiddenError,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('CreateSyntaxFlowRuleEx', request)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'CreateSyntaxFlowRuleEx', request)
+      .then((res) => {
+        if (!res.Rule) throw new Error('Rule response is missing Rule')
+        resolve({ Rule: res.Rule })
+      })
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '创建本地规则失败:' + e)
         reject(e)
@@ -118,9 +123,12 @@ export const grpcUpdateLocalRule: APIFunc<UpdateSyntaxFlowRuleRequest, { Rule: S
   hiddenError,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('UpdateSyntaxFlowRuleEx', request)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'UpdateSyntaxFlowRuleEx', request)
+      .then((res) => {
+        if (!res.Rule) throw new Error('Rule response is missing Rule')
+        resolve({ Rule: res.Rule })
+      })
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '更新本地规则失败:' + e)
         reject(e)
@@ -131,8 +139,8 @@ export const grpcUpdateLocalRule: APIFunc<UpdateSyntaxFlowRuleRequest, { Rule: S
 /** @name 删除本地规则 */
 export const grpcDeleteLocalRule: APIFunc<DeleteSyntaxFlowRuleRequest, any> = (request, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteSyntaxFlowRule', request)
+    ipc
+      .invoke('grpc', 'DeleteSyntaxFlowRule', request)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '删除本地规则失败:' + e)
@@ -144,8 +152,8 @@ export const grpcDeleteLocalRule: APIFunc<DeleteSyntaxFlowRuleRequest, any> = (r
 /** @name 更新规则里的本地组 */
 export const grpcUpdateRuleToGroup: APIFunc<UpdateSyntaxFlowRuleAndGroupRequest, any> = (request, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('UpdateSyntaxFlowRuleAndGroup', request)
+    ipc
+      .invoke('grpc', 'UpdateSyntaxFlowRuleAndGroup', request)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '删除本地规则失败:' + e)
@@ -160,43 +168,11 @@ export const grpcFetchRulesForSameGroup: APIFunc<QuerySyntaxFlowSameGroupRequest
   hiddenError,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('QuerySyntaxFlowSameGroup', request)
+    ipc
+      .invoke('grpc', 'QuerySyntaxFlowSameGroup', request)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询规则所属于组交集失败:' + e)
-        reject(e)
-      })
-  })
-}
-
-/** @name 规则上传 */
-export const grpcSyntaxFlowRuleToOnline: (params: SyntaxFlowRuleToOnlineRequest, token: string) => Promise<unknown> = (
-  request,
-  token,
-) => {
-  return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('SyntaxFlowRuleToOnline', request, token)
-      .then(resolve)
-      .catch((e) => {
-        yakitNotify('error', '规则上传失败:' + e)
-        reject(e)
-      })
-  })
-}
-
-/** @name 规则下载 */
-export const grpcDownloadSyntaxFlowRule: (params: DownloadSyntaxFlowRuleRequest, token: string) => Promise<unknown> = (
-  request,
-  token,
-) => {
-  return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('DownloadSyntaxFlowRule', request, token)
-      .then(resolve)
-      .catch((e) => {
-        yakitNotify('error', '规则下载失败:' + e)
         reject(e)
       })
   })

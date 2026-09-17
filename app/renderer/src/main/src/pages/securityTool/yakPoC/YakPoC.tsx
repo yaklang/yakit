@@ -1,3 +1,4 @@
+import type { HybridScanInputValue } from '@/models/HybridScan'
 import React, { useEffect, useReducer, useRef, useState } from 'react'
 import type {
   PluginExecuteLogProps,
@@ -199,7 +200,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     setHidden(false)
   })
   /**设置输入模块的初始值后，根据value刷新列表相关数据 */
-  const onInitInputValueAfter = useMemoizedFn((value: HybridScanControlAfterRequest) => {
+  const onInitInputValueAfter = useMemoizedFn((value: HybridScanInputValue) => {
     try {
       const inputValue: YakPoCExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
       const { pluginInfo } = inputValue

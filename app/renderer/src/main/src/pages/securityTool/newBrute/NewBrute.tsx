@@ -9,7 +9,7 @@ import type {
   StartBruteParams,
 } from './NewBruteType'
 import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
-import { apiCancelStartBrute, apiGetAvailableBruteTypes, apiStartBrute, convertStartBruteParams } from './utils'
+import { apiGetAvailableBruteTypes, apiStartBrute, convertStartBruteParams } from './utils'
 import YakitTree from '@/components/yakitUI/YakitTree/YakitTree'
 import styles from './NewBrute.module.scss'
 import {
@@ -307,7 +307,7 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
 
     /**取消执行 */
     const onStopExecute = useMemoizedFn(() => {
-      apiCancelStartBrute(tokenRef.current).then(() => {
+      streamEvent.cancel().then(() => {
         streamEvent.stop()
         setExecuteStatus('finished')
       })
@@ -328,7 +328,8 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
         params.Targets = ''
       }
       streamEvent.reset()
-      apiStartBrute(params, tokenRef.current).then(() => {
+      apiStartBrute(params, streamEvent.open, tokenRef.current).then(() => {
+        if (!streamEvent.isActive()) return
         setExecuteStatus('process')
         setIsExpand(false)
         streamEvent.start()

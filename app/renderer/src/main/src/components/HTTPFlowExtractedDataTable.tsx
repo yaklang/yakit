@@ -1,3 +1,6 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
+import { extractedDataForUI } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { ipc } from '@/services/ipc'
 import React, { useImperativeHandle, useMemo, useState } from 'react'
 import { Typography } from 'antd'
 import type { Paging } from '@/utils/yakQueryHTTPFlow'
@@ -27,19 +30,17 @@ export interface HTTPFlowExtractedDataTableProp {
   invalidForUTF8Request: boolean
   InvalidForUTF8Response: boolean
   hiddenIndex: string
-  analyzedIds?: number[]
+  analyzedIds?: (number | string)[]
   onSetHighLightText: (highLightText: HistoryHighLightText[]) => void
   onSetExportMITMRuleFilter: (filter: ExtractedDataFilter) => void
   onSetHighLightItem: (highLightItem?: HistoryHighLightText) => void
-  currId?: number
+  currId?: number | string
   onSetCurrId: (currIndex: number | undefined) => void
   onSetExtractedData: (extractedData: HTTPFlowExtractedData[]) => void
 }
 
-const { ipcRenderer } = window.require('electron')
-
 export interface HTTPFlowExtractedData {
-  Id: number
+  Id: string | number
   CreatedAt: number
   SourceType: 'httpflow' | string
   TraceId: string
@@ -54,7 +55,7 @@ export interface HTTPFlowExtractedData {
 export interface ExtractedDataFilter {
   TraceID: string[]
   RuleVerbose: string[]
-  AnalyzedIds?: number[]
+  AnalyzedIds?: (number | string)[]
 }
 export interface QueryMITMRuleExtractedDataRequest extends QueryGeneralRequest {
   Filter: ExtractedDataFilter
@@ -81,7 +82,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
   const [total, setTotal] = useState(0)
   const [ruleVerboseSearchVal, setRuleVerboseSearchVal] = useState<string>('')
   const [tags, setTags] = useState<FiltersItemProps[]>([])
-  const [currId, setCurrId] = useControllableValue<number | undefined>(props, {
+  const [currId, setCurrId] = useControllableValue<number | string | undefined>(props, {
     defaultValue: props.currId,
     valuePropName: 'currId',
     trigger: 'onSetCurrId',
@@ -135,8 +136,9 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
     if (Filter) {
       query.Filter = Filter
     }
-    ipcRenderer
-      .invoke('QueryMITMRuleExtractedData', query)
+    ipc
+      .invoke('grpc', 'QueryMITMRuleExtractedData', query)
+      .then(extractedDataForUI)
       .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
         if (paginationProps.Page === 1) {
           setData(r.Data)
@@ -209,8 +211,9 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
       Limit: 10,
       OnlyName: true,
     }
-    ipcRenderer
-      .invoke('QueryMITMRuleExtractedData', newParams)
+    ipc
+      .invoke('grpc', 'QueryMITMRuleExtractedData', newParams)
+      .then(extractedDataForUI)
       .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
         if (rsp.Data.length) {
           const ruleNames = rsp.Data.map((item) => item.RuleName)
@@ -236,7 +239,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         index = currIndex - 1 < 0 ? 0 : currIndex - 1
       }
       if (index !== -1) {
-        setCurrId(+data[index].Id)
+        setCurrId(int64String(data[index].Id ?? 0))
         props.onSetHighLightItem({
           startOffset: data[index].Index,
           highlightLength: data[index].Length,
@@ -332,7 +335,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
       yakitNotify('info', t('HTTPFlowExtractedDataTable.binaryStreamLocateError'))
       return
     }
-    setCurrId(+i.Id)
+    setCurrId(int64String(i.Id ?? 0))
     props.onSetHighLightItem({
       startOffset: i.Index,
       highlightLength: i.Length,
@@ -342,8 +345,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
   })
 
   const onDeduplicate = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('DeduplicateMITMRuleExtractedData', {
+    ipc
+      .invoke('grpc', 'DeduplicateMITMRuleExtractedData', {
         Filter: {
           TraceID: [props.hiddenIndex],
           AnalyzedIds: props.analyzedIds,
@@ -358,10 +361,10 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
       })
   })
 
-  const onDelete = useMemoizedFn((i?: number) => {
-    const Ids: number[] = i ? [i] : selectedRowKeys.map((item) => parseInt(item))
-    ipcRenderer
-      .invoke('DeleteMITMRuleExtractedData', { Filter: { Ids } })
+  const onDelete = useMemoizedFn((i?: number | string) => {
+    const Ids = i ? [i] : selectedRowKeys
+    ipc
+      .invoke('grpc', 'DeleteMITMRuleExtractedData', { Filter: { Ids } })
       .then(() => {
         yakitNotify('success', t('HTTPFlowExtractedDataTable.deleteSuccess'))
         resetUpdate()
@@ -392,7 +395,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
               onLocation(rowData)
               return
             case 'delete':
-              onDelete(parseInt(rowData.Id + ''))
+              onDelete(rowData.Id)
               return
           }
         },

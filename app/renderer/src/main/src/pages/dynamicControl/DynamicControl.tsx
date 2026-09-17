@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { type ReactNode, useEffect, useState } from 'react'
 import { Button, Input, Radio, Avatar } from 'antd'
@@ -25,7 +26,6 @@ import { YakitDatePicker } from '@/components/yakitUI/YakitDatePicker/YakitDateP
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { setClipboardText } from '@/utils/clipboard'
 const { TextArea } = Input
-const { ipcRenderer } = window.require('electron')
 export interface ControlOperationProps {
   controlName: string
 }
@@ -36,9 +36,9 @@ export const ControlOperation: React.FC<ControlOperationProps> = (props) => {
   const { dynamicStatus } = useYakitDynamicStatus()
   // 关闭远程控制
   const closeControl = () => {
-    ipcRenderer.invoke('kill-dynamic-control')
+    ipc.invoke('local', 'kill-dynamic-control', {})
     // 立即退出界面
-    ipcRenderer.invoke('lougin-out-dynamic-control-page')
+    ipc.invoke('local', 'ForwardMainEvent', { event: 'lougin-out-dynamic-control-page-callback' })
     remoteOperation(false, dynamicStatus)
   }
   return (
@@ -110,8 +110,8 @@ export const ControlMyself: React.FC<ControlMyselfProps> = (props) => {
       .then((data) => {
         const { server, secret, gen_tls_crt } = data
         // 2.启动远程控制服务
-        ipcRenderer
-          .invoke('start-dynamic-control', { note: userInfo.companyName, server, secret, gen_tls_crt })
+        ipc
+          .invoke('local', 'start-dynamic-control', { note: userInfo.companyName || '', server, secret, gen_tls_crt })
           .then((respose: ResposeProps) => {
             // 如若服务已启动 且10秒内获取不到密钥则切换按钮（杀掉进程-重新获取）
             if (respose.alive) {
@@ -189,7 +189,7 @@ export const ControlMyself: React.FC<ControlMyselfProps> = (props) => {
             loading={restartLoading}
             onClick={() => {
               setRestartLoading(true)
-              ipcRenderer.invoke('kill-dynamic-control').finally(() => {
+              ipc.invoke('local', 'kill-dynamic-control', {}).finally(() => {
                 setRestartBtn(false)
                 run()
               })
@@ -238,7 +238,7 @@ export const ControlOther: React.FC<ControlOtherProps> = (props) => {
           warn('由于远程目标已在远程控制中，暂无法连接')
         } else {
           // 如有受控端服务则杀掉
-          ipcRenderer.invoke('kill-dynamic-control')
+          ipc.invoke('local', 'kill-dynamic-control', {})
           setLoading(true)
           getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (!setting) return
@@ -273,7 +273,7 @@ export const ControlOther: React.FC<ControlOtherProps> = (props) => {
             }
 
             setUploadLoading(true)
-            ipcRenderer.invoke('fetch-file-content', (f as any).path).then((res) => {
+            ipc.invoke('local', 'read-file-content', (f as any).path).then((res) => {
               let Targets = res
               // 处理Excel格式文件
               if (f.type !== 'text/plain') {

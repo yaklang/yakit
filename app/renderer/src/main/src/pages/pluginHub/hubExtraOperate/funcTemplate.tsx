@@ -1,3 +1,5 @@
+import { navigationForUI } from '@/pages/invoker/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import React, { type ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { type YakitButtonProp, YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -28,8 +30,6 @@ import classNames from 'classnames'
 import UnLogin from '@/assets/unLogin.png'
 import styles from './HubExtraOperate.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 interface HubButtonProps extends YakitButtonProp {
   /** 按钮文案 */
@@ -138,14 +138,14 @@ export const RemovePluginMenuContent: React.FC<RemovePluginMenuContentProps> = m
 
     try {
       const mode = await getRemoteValue(RemoteMenuGV.PatternMenu)
-      menuMode.current = mode || 'expert'
+      menuMode.current = mode === 'new' ? 'new' : 'expert'
     } catch (error) {}
-    ipcRenderer
-      .invoke('QueryNavigationGroups', {
+    ipc
+      .invoke('grpc', 'QueryNavigationGroups', {
         YakScriptName: pluginName,
         Mode: isCommunityEdition() ? RemoteMenuGV.CommunityMenuMode : menuMode.current,
       })
-      .then((data: { Groups: string[] }) => {
+      .then((data) => {
         setGroups(data.Groups || [])
       })
       .catch((e: any) => {
@@ -154,15 +154,15 @@ export const RemovePluginMenuContent: React.FC<RemovePluginMenuContentProps> = m
       })
   })
   const onClickRemove = useMemoizedFn((element: string) => {
-    ipcRenderer
-      .invoke('DeleteAllNavigation', {
+    ipc
+      .invoke('grpc', 'DeleteAllNavigation', {
         YakScriptName: pluginName,
         Group: element,
         Mode: isCommunityEdition() ? RemoteMenuGV.CommunityMenuMode : menuMode.current,
       })
       .then(() => {
-        if (isCommunityEdition()) ipcRenderer.invoke('refresh-public-menu')
-        else ipcRenderer.invoke('change-main-menu')
+        if (isCommunityEdition()) ipc.invoke('local', 'ForwardMainEvent', { event: 'refresh-public-menu-callback' })
+        else ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-new-main-menu' })
         updateGroups()
       })
       .catch((e: any) => {
@@ -210,18 +210,19 @@ export const AddPluginMenuContent: React.FC<AddPluginMenuContentProps> = (props)
   }, [script])
   useEffect(() => {
     getRemoteValue(RemoteMenuGV.PatternMenu).then((patternMenu) => {
-      menuMode.current = patternMenu || 'expert'
+      menuMode.current = patternMenu === 'new' ? 'new' : 'expert'
       init()
     })
   }, [])
 
   /** 获取一级菜单 */
   const init = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('GetAllNavigationItem', {
+    ipc
+      .invoke('grpc', 'GetAllNavigationItem', {
         Mode: isCommunityEdition() ? RemoteMenuGV.CommunityMenuMode : menuMode.current,
       })
-      .then((rsp: { Data: DatabaseFirstMenuProps[] }) => {
+      .then(navigationForUI)
+      .then((rsp) => {
         menus.current = rsp.Data
         setOption(rsp.Data.map((ele) => ({ label: ele.Group, value: ele.Group })))
         form.setFieldsValue({
@@ -283,11 +284,11 @@ export const AddPluginMenuContent: React.FC<AddPluginMenuContentProps> = (props)
       params.VerboseSort = subIndex === -1 ? groupInfo.Items.length + 1 : groupInfo.Items[subIndex].VerboseSort || 0
     }
 
-    ipcRenderer
-      .invoke('AddOneNavigation', params)
+    ipc
+      .invoke('grpc', 'AddOneNavigation', params)
       .then(() => {
-        if (isCommunityEdition()) ipcRenderer.invoke('refresh-public-menu')
-        else ipcRenderer.invoke('change-main-menu')
+        if (isCommunityEdition()) ipc.invoke('local', 'ForwardMainEvent', { event: 'refresh-public-menu-callback' })
+        else ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-new-main-menu' })
         yakitNotify('success', t('FuncTemplate.addSuccess'))
         onCancel()
       })

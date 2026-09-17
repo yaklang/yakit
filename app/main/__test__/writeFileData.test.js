@@ -1,7 +1,7 @@
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
-const { writeFileData } = require('../handlers/writeFileData')
+import { writeFileData } from '../services/writeFileData'
 
 describe('writeFileData', () => {
   let tempDir

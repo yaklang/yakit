@@ -1,3 +1,4 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
 import React, { memo, useEffect, useRef, useState } from 'react'
 import type { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams } from './type'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
@@ -25,7 +26,7 @@ import { isEqual } from 'lodash'
 import useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
 import { useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
+
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './AIAgentChat.module.scss'
@@ -311,7 +312,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   const handleReplaceActiveForge = useMemoizedFn(async (forge: AIForge, useForge?: boolean) => {
     try {
-      const forgeID = Number(forge.Id) || 0
+      const forgeID = positiveInt64(forge.Id) || 0
       if (!forgeID) {
         yakitNotify('error', t('AIAgentChat.templateErrorWithId', { id: forgeID }))
         return
@@ -341,7 +342,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       }
     } catch (error) {}
   })
-  const handleReplaceActiveTool = useMemoizedFn((id: number) => {
+  const handleReplaceActiveTool = useMemoizedFn((id: string | number) => {
     const toolId = Number(id) || 0
     if (!toolId) {
       yakitNotify('error', t('AIAgentChat.toolErrorWithId', { id }))
@@ -417,7 +418,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   const onOK = async () => {
     try {
-      await Promise.all(api.tokens.map((token) => apiCancelDebugPlugin(token)))
       api.clearAllStreams()
       clearAll()
       emiter.emit('closePage', JSON.stringify({ route: YakitRoute.AI_Agent }))

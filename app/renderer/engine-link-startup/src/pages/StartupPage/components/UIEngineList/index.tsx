@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import type { TypeCallbackExtra, YakitStatusType, YaklangEngineMode } from '../../types'
 import { useInViewport, useMemoizedFn } from 'ahooks'
@@ -14,7 +15,6 @@ import { CheckedSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckedSvgIco
 import { GooglePhotosLogoSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/GooglePhotosLogoSvgIcon'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { grpcRelaunch, grpcUnpackBuildInYak, grpcWriteEngineKeyToYakitProjects } from '../../grpc'
-import { yakitEngine } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './UIEngineList.module.scss'
 
@@ -48,8 +48,8 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     if (psLoading) return
 
     setPSLoading(true)
-    yakitEngine
-      .listYakGrpc()
+    ipc
+      .invoke('local', 'ps-yak-grpc', {})
       .then((i: yakProcess[]) => {
         setProcess(
           i.map((element: yakProcess) => {
@@ -69,8 +69,8 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
       })
   })
   const fetchCurrentPort = () => {
-    yakitEngine
-      .fetchYaklangEngineAddr()
+    ipc
+      .invoke('local', 'fetch-yaklang-engine-addr', {})
       .then((data) => {
         const hosts: string[] = (data.addr as string).split(':')
         if (hosts.length !== 2) return
@@ -95,7 +95,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
 
   const allClose = useMemoizedFn(async () => {
     ;(process || []).forEach((i) => {
-      yakitEngine.killYakGrpc(i.pid).then((val) => {
+      ipc.invoke('local', 'kill-yak-grpc', i.pid).then((val) => {
         if (!val) {
           yakitNotify('info', `KILL yak PROCESS: ${i.pid}`)
           if (+i.port === port && isLocal) typeCallback('break')
@@ -123,7 +123,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                 title={'重置引擎版本会恢复最初引擎出厂版本，同时强制重启'}
                 onConfirm={async () => {
                   process.map((i) => {
-                    yakitEngine.killYakGrpc(i.pid)
+                    ipc.invoke('local', 'kill-yak-grpc', i.pid)
                   })
                   grpcUnpackBuildInYak()
                     .then(() => {
@@ -194,8 +194,8 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                           </>
                         }
                         onConfirm={async () => {
-                          yakitEngine
-                            .killYakGrpc(i.pid)
+                          ipc
+                            .invoke('local', 'kill-yak-grpc', i.pid)
                             .then((val) => {
                               if (!val) {
                                 isLocal && +i.port === port && typeCallback('break')

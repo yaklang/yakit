@@ -455,15 +455,24 @@ program
 /** build：生产构建。--no-license 在 commander 里是 options.license === false */
 program
   .command('build')
-  .description('生产构建渲染端（默认 main + link）')
+  .description('生产构建（默认 main + link + electron）')
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
   .option('--main', '只构建主渲染端', false)
   .option('--link', '只构建 Link 渲染端', false)
+  .option('--electron', '只构建 Electron 主进程及 preload', false)
   .option('--devtools', '产物中打开开发者工具 UI', false)
   .option('--no-license', '企业版跳过 License 校验')
   .option('--analyzer', '打开 bundle 分析', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${BuildCMDExamplesDoc}`)
   .action(async (options) => {
+    if (options.electron && !options.main && !options.link) {
+      try {
+        await runLocal('node', ['scripts/build-electron.mjs', '--production'])
+      } catch (error) {
+        exitOnError(error)
+      }
+      return
+    }
     const version = await requireEdition(options.version)
     const targets = resolveRenderTargets(options.main, options.link)
     const env = buildYakitEnv({
@@ -482,6 +491,9 @@ program
 
     try {
       await runRenderers({ ...targets, build: true, env })
+      if (options.electron || (!options.main && !options.link)) {
+        await runLocal('node', ['scripts/build-electron.mjs', '--production'], { env })
+      }
     } catch (error) {
       exitOnError(error)
     }
@@ -520,6 +532,11 @@ program
     }
 
     try {
+      for (const file of ['app/renderer/pages/main/index.html', 'app/renderer/engine-link-startup/dist/index.html']) {
+        if (!fs.existsSync(path.join(repoRoot, file)))
+          throw new Error(`缺少渲染端产物 ${file}，请先执行 yarn cli build -v ${version}`)
+      }
+      await runLocal('node', ['scripts/build-electron.mjs', '--production'], { env })
       if (system === 'mwl') {
         await packOne('win')
         await packOne('mac')
@@ -540,6 +557,7 @@ program
   .action(async () => {
     console.log(CyanChalk('开始启动 Electron 开发环境...\n'))
     try {
+      await runLocal('node', ['scripts/build-electron.mjs'])
       await runLocal('electron', ['.'])
     } catch (error) {
       exitOnError(error)
@@ -558,7 +576,7 @@ program
 
     console.log(GreenChalk('\n准备执行...'))
     console.log(CyanChalk.bold(`> 业务版本: ${version}`))
-    console.log(CyanChalk.bold(`> start + wait-on :3000/:5173 + electron`))
+    console.log(CyanChalk.bold(`> start + 等待有效 HTML + 编译并启动 electron`))
     console.log('')
 
     try {
@@ -577,7 +595,7 @@ program
             env: withLocalBin(MAIN_RENDER_DIR, env),
           },
           {
-            command: 'wait-on tcp:3000 tcp:5173 && electron .',
+            command: 'node scripts/wait-renderers.mjs && node scripts/build-electron.mjs && electron .',
             name: GreenChalk('electron'),
             cwd: repoRoot,
             env: withLocalBin(repoRoot, env),

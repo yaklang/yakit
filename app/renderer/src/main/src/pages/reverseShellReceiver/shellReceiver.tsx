@@ -24,7 +24,6 @@ import {
   type GenerateReverseShellCommandResponse,
   type GetReverseShellProgramListRequest,
   type SystemType,
-  apiCancelListeningPort,
   apiGenerateReverseShellCommand,
   apiGetReverseShellProgramList,
 } from './utils'
@@ -35,7 +34,6 @@ import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 
 import { setClipboardText } from '@/utils/clipboard'
-const { ipcRenderer } = window.require('electron')
 
 export interface ShellReceiverLeftListProps {
   receiverDetail: GenerateReverseShellCommandRequest
@@ -347,11 +345,13 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
 export interface ShellReceiverRightRunProps {
   loading: boolean
   addr: string
+  endpoint: MonitorFormProps
+  onStarted: () => void
   onCancelMonitor: () => void
 }
 
 export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (props) => {
-  const { loading, addr, onCancelMonitor } = props
+  const { loading, addr, endpoint, onStarted, onCancelMonitor } = props
   const [isOriginalMode, setIsOriginalMode] = useState<boolean>(true)
   const [local, setLocal] = useState<string>('')
   const [remote, setRemote] = useState<string>('')
@@ -424,7 +424,8 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
         <YakitSpin spinning={loading}>
           <ReverseShellTerminal
             isWrite={!isOriginalMode}
-            addr={addr}
+            endpoint={endpoint}
+            onStarted={onStarted}
             setLocal={setLocal}
             setRemote={setRemote}
             onCancelMonitor={onCancelMonitor}
@@ -445,11 +446,8 @@ export interface ShellReceiverProps {}
 export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
   const [isShowStart, setShowStart] = useState<boolean>(true)
 
-  const [addrList, setAddrList] = useState<string[]>([])
-  const [addrLoading, setAddrLoading] = useState<boolean>(true)
+  const [endpoint, setEndpoint] = useState<MonitorFormProps>({ host: '', port: 0 })
   const [loading, setLoading] = useState<boolean>(false)
-
-  const [interval, setInterval] = useState<number | undefined>(1000)
 
   const [receiverDetail, setReceiverDetail] = useState<GenerateReverseShellCommandRequest>({
     ...defaultGenerateReverseShellCommand,
@@ -461,33 +459,14 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
     ...defYakitAutoCompleteRef,
   })
 
-  useInterval(() => {
-    ipcRenderer
-      .invoke('listening-port-query-addrs')
-      .then((r) => {
-        setAddrList(r)
-      })
-      .finally(() => {
-        if (addrLoading) {
-          setAddrLoading(false)
-        }
-      })
-  }, interval)
-
-  useEffect(() => {
-    return () => {
-      onCancelMonitor()
-    }
-  }, [])
-  const addr = useCreation(() => {
-    return `${receiverDetail.IP}:${receiverDetail.port}`
-  }, [receiverDetail.IP, receiverDetail.port])
-
+  const addr = `${endpoint.host}:${endpoint.port}`
   const onCancelMonitor = useMemoizedFn(() => {
-    apiCancelListeningPort(addr).then(() => {
-      setShowStart(true)
-      setInterval(1000)
-    })
+    setShowStart(true)
+    setLoading(false)
+  })
+  const onStarted = useMemoizedFn(() => {
+    setLoading(false)
+    success('监听端口成功')
   })
 
   const onStartMonitor = useMemoizedFn((value: MonitorFormProps) => {
@@ -501,24 +480,12 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
       failed(`无法解析主机/端口`)
       return
     }
-    if (addrList.includes(addr)) {
-      failed('该地址已经被占用: ' + addr)
-      return
-    }
     if (IP) {
       hostRef.current.onSetRemoteValues(IP)
     }
     setLoading(true)
-    ipcRenderer
-      .invoke('listening-port', IP, port)
-      .then(() => {
-        success('监听端口成功')
-        setInterval(undefined)
-        setShowStart(false)
-      })
-      .finally(() => {
-        setTimeout(() => setLoading(false), 300)
-      })
+    setEndpoint({ host: IP, port })
+    setShowStart(false)
   })
 
   return (
@@ -531,7 +498,7 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
             <div className={styles['heard-subTitle-text']}>
               反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互。
             </div>
-            <YakitSpin spinning={addrLoading}>
+            <YakitSpin spinning={loading}>
               <Form layout="vertical" form={form} onFinish={onStartMonitor} className={styles['shellReceiver-form']}>
                 <Form.Item
                   rules={[{ required: true, message: '该项为必填' }]}
@@ -567,7 +534,13 @@ export const ShellReceiver: React.FC<ShellReceiverProps> = (props) => {
             </YakitSpin>
           </div>
         ) : (
-          <ShellReceiverRightRun loading={loading} addr={addr} onCancelMonitor={onCancelMonitor} />
+          <ShellReceiverRightRun
+            endpoint={endpoint}
+            onStarted={onStarted}
+            loading={loading}
+            addr={addr}
+            onCancelMonitor={onCancelMonitor}
+          />
         )}
       </div>
     </div>

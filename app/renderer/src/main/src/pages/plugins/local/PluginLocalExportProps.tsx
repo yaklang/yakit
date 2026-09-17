@@ -1,3 +1,5 @@
+import { ipc } from '@/services/ipc'
+import { randomString } from '@/utils/randomUtil'
 import { type ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
@@ -18,8 +20,6 @@ import { JSONParseLog } from '@/utils/tool'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { getPathJoin } from '@/pages/yakRunner/utils'
 import { SystemInfo } from '@/constants/hardware'
-const { ipcRenderer } = window.require('electron')
-
 declare type getContainerFunc = () => HTMLElement
 interface PluginLocalExportProps {
   visible: boolean
@@ -35,73 +35,64 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
   const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
   const isRemoteEngine = SystemInfo.mode === 'remote'
 
-  useDebounceEffect(
-    () => {
-      let timer
-      if (visible) {
-        // 发送导出流信号
-        const sendExportSignal = async () => {
-          try {
-            await ipcRenderer.invoke('ExportYakScriptStream', exportLocalParams)
-          } catch (error) {
-            yakitFailed(error + '')
-          }
-        }
-        sendExportSignal()
-
-        // 每200毫秒渲染一次数据
-        timer = setInterval(() => {
-          setLocalStreamData(localStreamDataRef.current)
-        }, 200)
-
-        ipcRenderer.on('export-yak-script-data', (e, data: ExecResult) => {
-          const obj: ExecResultMessage = JSONParseLog(Buffer.from(data.Message).toString(), {
+  const controllerRef = useRef<AbortController>()
+  useEffect(() => {
+    if (!visible) return
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const flush = () => {
+      if (!controller.signal.aborted) setLocalStreamData(localStreamDataRef.current)
+    }
+    const timer = setInterval(flush, 200)
+    const onError = (error: unknown) => {
+      clearInterval(timer)
+      if (controller.signal.aborted) return
+      flush()
+      yakitFailed(String(error))
+    }
+    void ipc
+      .openStream('grpc', 'ExportYakScriptStream', exportLocalParams, {
+        token: randomString(40),
+        signal: controller.signal,
+        onData(data) {
+          if (controller.signal.aborted || !data.IsMessage) return
+          const obj: ExecResultMessage = JSONParseLog(new TextDecoder().decode(data.Message), {
             page: 'PluginLocalExportProps',
-            fun: 'export-yak-script-data',
+            fun: 'export',
           })
-          if (obj.type === 'progress') {
-            localStreamDataRef.current = { Progress: obj.content.progress }
-            if (obj.content.progress === 1) {
-              let name = exportLocalParams.OutputFilename
-              if (!exportLocalParams.OutputFilename.endsWith('.zip')) {
-                name += '.zip'
-              }
-              if (exportLocalParams.Password) {
-                name += '.enc'
-              }
-
-              if (!isRemoteEngine) {
-                ipcRenderer.invoke('is-file-exists', exportLocalParams.OutputPluginDir).then((flag: boolean) => {
-                  if (!flag) {
-                    yakitNotify('error', '目标路径不存在，导出失败')
-                  } else {
-                    getPathJoin(exportLocalParams.OutputPluginDir, name).then((path) => {
-                      openABSFileLocated(path)
-                      yakitNotify('success', '导出完毕')
-                    })
-                  }
-                })
-              } else {
-                yakitNotify('success', '导出完毕')
-              }
-
-              setTimeout(() => {
-                handleExportLocalPluginFinish()
-              }, 300)
-            }
-          }
-        })
-
-        return () => {
+          if (obj?.type === 'progress') localStreamDataRef.current = { Progress: obj.content.progress }
+        },
+        onError,
+        async onEnd() {
           clearInterval(timer)
-          ipcRenderer.invoke('cancel-ExportYakScriptStream')
-          ipcRenderer.removeAllListeners('export-yak-script-data')
-        }
-      }
-    },
-    [visible, exportLocalParams],
-    { wait: 300 },
-  )
+          if (controller.signal.aborted) return
+          flush()
+          try {
+            if (!isRemoteEngine) {
+              const exists = await ipc.invoke('local', 'is-file-exists', exportLocalParams.OutputPluginDir)
+              if (controller.signal.aborted) return
+              if (!exists) throw new Error('目标路径不存在，导出失败')
+              let name = exportLocalParams.OutputFilename
+              if (!name.endsWith('.zip')) name += '.zip'
+              if (exportLocalParams.Password) name += '.enc'
+              const path = await getPathJoin(exportLocalParams.OutputPluginDir, name)
+              if (controller.signal.aborted) return
+              openABSFileLocated(path)
+            }
+            yakitNotify('success', '导出完毕')
+            resetLocalExport()
+            onClose()
+          } catch (error) {
+            onError(error)
+          }
+        },
+      })
+      .catch(onError)
+    return () => {
+      controller.abort()
+      clearInterval(timer)
+    }
+  }, [visible, exportLocalParams])
 
   const resetLocalExport = () => {
     setLocalStreamData(undefined)
@@ -110,8 +101,9 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
   }
 
   const handleExportLocalPluginFinish = () => {
+    controllerRef.current?.abort()
     if (localStreamDataRef.current && localStreamDataRef.current.Progress !== 1) {
-      ipcRenderer.invoke('cancel-ExportYakScriptStream')
+      controllerRef.current?.abort()
       yakitNotify('info', '取消导出插件')
     }
     resetLocalExport()
@@ -173,7 +165,7 @@ export const PluginLocalExportForm = forwardRef((props: PluginLocalExportFormPro
 
   useEffect(() => {
     if (!isRemoteEngine) {
-      ipcRenderer.invoke('GetProjectsFilePath').then((path) => {
+      ipc.invoke('local', 'GetProjectsFilePath', {}).then((path) => {
         form.setFieldsValue({ OutputPluginDir: path })
       })
     }

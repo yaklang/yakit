@@ -1,10 +1,10 @@
+import { ipc } from '@/services/ipc'
+import { failed } from '@/utils/notification'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Col, Row } from 'antd'
 import { YakitPageHeader } from '../../components/YakitPageHeader'
 import { YakEditor } from '../../utils/editors'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface AnalyzerPageProp {
   isHttps: boolean
@@ -13,24 +13,24 @@ export interface AnalyzerPageProp {
 }
 
 export const AnalyzerPage: React.FC<AnalyzerPageProp> = (props) => {
-  const [response, setResponse] = useState<any>()
-  const [error, setError] = useState('')
-
   useEffect(() => {
-    ipcRenderer.invoke('http-analyze', {
-      IsHTTPS: props.isHttps,
-      Request: props.request,
-      Response: props.response,
-    })
-  }, [props])
-
-  useEffect(() => {
-    ipcRenderer.on('client-http-analyze-data', (e: any, data: any) => {})
-    ipcRenderer.on('client-http-analyze-error', (e: any, details: any) => {
-      setError(details)
-    })
-    return () => {}
-  }, [])
+    const controller = new AbortController()
+    void ipc
+      .invoke(
+        'grpc',
+        'HTTPRequestAnalyzer',
+        {
+          IsHTTPS: props.isHttps,
+          Request: props.request,
+          Response: props.response,
+        },
+        { signal: controller.signal },
+      )
+      .catch((error) => {
+        if (!controller.signal.aborted) failed(String(error))
+      })
+    return () => controller.abort()
+  }, [props.isHttps, props.request, props.response])
 
   return (
     <div>

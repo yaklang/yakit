@@ -1,3 +1,6 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
+import { yakScriptForUI } from '@/pages/invoker/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import React, {
   type Dispatch,
   type ForwardedRef,
@@ -66,8 +69,6 @@ import '../../plugins/plugins.scss'
 import styles from './PluginEditor.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
-
 export interface PluginEditorRefProps {
   setEditPlugin: (request: KeyParamsFetchPluginDetail) => void
   setNewPlugin: (value: AddYakitScriptPageInfoProps) => void
@@ -124,9 +125,9 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
     const fetchOldData = useMemoizedFn((name: string) => {
       oldParamsRef.current = ''
 
-      ipcRenderer
-        .invoke('YaklangGetCliCodeFromDatabase', { ScriptName: name })
-        .then((res: { Code: string; NeedHandle: boolean }) => {
+      ipc
+        .invoke('grpc', 'YaklangGetCliCodeFromDatabase', { ScriptName: name })
+        .then((res) => {
           if (res.NeedHandle && !oldShow) {
             oldParamsRef.current = res.Code
             if (!oldShow) setOldShow(true)
@@ -345,7 +346,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
     // 打开帮助文档
     const handleOpenHelp = useMemoizedFn((e) => {
       e.stopPropagation()
-      ipcRenderer.invoke('open-url', WebsiteGV.PluginParamsHelp)
+      ipc.invoke('local', 'open-url', WebsiteGV.PluginParamsHelp)
     })
 
     /** ---------- 全局基础逻辑 Start ---------- */
@@ -369,7 +370,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
     // 刷新插件菜单信息
     const handleRefreshMenu = useDebounceFn(
       useMemoizedFn(() => {
-        ipcRenderer.invoke('change-main-menu')
+        ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-new-main-menu' })
       }),
       { wait: 300 },
     ).run
@@ -464,9 +465,10 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
           return
         }
 
-        ipcRenderer
-          .invoke('SaveYakScript', data)
-          .then((res: YakScript) => {
+        ipc
+          .invoke('grpc', 'SaveYakScript', data)
+          .then(yakScriptForUI)
+          .then((res) => {
             handleRefreshMenu()
             resolve(res)
           })
@@ -495,7 +497,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         .then((res) => {
           yakitNotify('success', '保存插件成功')
           const info: KeyParamsFetchPluginDetail = {
-            id: Number(res.Id) || 0,
+            id: positiveInt64(res.Id) || 0,
             name: res.ScriptName,
             uuid: res.UUID || '',
           }
@@ -529,7 +531,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             yakitNotify('success', '保存插件成功')
 
             const info: KeyParamsFetchPluginDetail = {
-              id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
+              id: positiveInt64(res.Id) || positiveInt64(savedPluginInfo.current?.Id) || 0,
               name: res.ScriptName,
               uuid: res.UUID || '',
             }
@@ -568,7 +570,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
           yakitNotify('success', '保存插件成功')
 
           const info: KeyParamsFetchPluginDetail = {
-            id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
+            id: positiveInt64(res.Id) || positiveInt64(savedPluginInfo.current?.Id) || 0,
             name: res.ScriptName,
             uuid: res.UUID || '',
           }
@@ -621,7 +623,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         .then((res) => {
           savedPluginInfo.current = cloneDeep(res)
           const info: KeyParamsFetchPluginDetail = {
-            id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
+            id: positiveInt64(res.Id) || positiveInt64(savedPluginInfo.current?.Id) || 0,
             name: res.ScriptName,
             uuid: res.UUID || '',
           }
@@ -688,7 +690,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         .then((res) => {
           savedPluginInfo.current = cloneDeep(res)
           const info: KeyParamsFetchPluginDetail = {
-            id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
+            id: positiveInt64(res.Id) || positiveInt64(savedPluginInfo.current?.Id) || 0,
             name: res.ScriptName,
             uuid: res.UUID || '',
           }
@@ -728,7 +730,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         if (uploadType.current === 'upload' && result) {
           if (plugin) {
             const info: KeyParamsFetchPluginDetail = {
-              id: Number(plugin.Id) || Number(savedPluginInfo.current?.Id) || 0,
+              id: positiveInt64(plugin.Id) || positiveInt64(savedPluginInfo.current?.Id) || 0,
               name: plugin.ScriptName,
               uuid: plugin.UUID || '',
             }
@@ -751,7 +753,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
 
           if (plugin) {
             const info: KeyParamsFetchPluginDetail = {
-              id: Number(plugin.Id) || Number(savedPluginInfo.current?.Id) || 0,
+              id: positiveInt64(plugin.Id) || positiveInt64(savedPluginInfo.current?.Id) || 0,
               name: plugin.ScriptName,
               uuid: plugin.UUID || '',
             }
@@ -765,7 +767,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
               handleEditSuccessCallback({
                 opType: 'submit',
                 info: {
-                  id: Number(uploadPlugin.current?.Id) || 0,
+                  id: positiveInt64(uploadPlugin.current?.Id) || 0,
                   name: onlinePlugin.script_name,
                   uuid: onlinePlugin.uuid,
                 },
@@ -828,7 +830,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 // 刷新我的列表
                 emiter.emit('onRefreshOwnPluginList')
                 const info: KeyParamsFetchPluginDetail = {
-                  id: Number(localRes.Id) || Number(savedPluginInfo.current?.Id) || 0,
+                  id: positiveInt64(localRes.Id) || positiveInt64(savedPluginInfo.current?.Id) || 0,
                   name: localRes.ScriptName,
                   uuid: localRes.UUID || '',
                 }

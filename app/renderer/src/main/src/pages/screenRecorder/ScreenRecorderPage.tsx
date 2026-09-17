@@ -1,10 +1,10 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Progress } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { randomString } from '@/utils/randomUtil'
-import type { ExecResult } from '@/pages/invoker/schema'
 import { yakitFailed } from '@/utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
 import { ScreenRecorderList } from '@/pages/screenRecorder/ScreenRecorderList'
@@ -21,8 +21,6 @@ import { CloudDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 export interface ScreenRecorderPageProp {}
 
-const { ipcRenderer } = window.require('electron')
-
 export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
   const screcorderEmptyImageTarget = useEmptyImage('screenRecording')
   const { t } = useI18nNamespaces(['screenRecorder'])
@@ -34,9 +32,9 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
 
   const init = () => {
     setLoading(true)
-    ipcRenderer
-      .invoke('IsScrecorderReady', {})
-      .then((data: { Ok: boolean; Reason: string }) => {
+    ipc
+      .invoke('grpc', 'IsScrecorderReady', {})
+      .then((data) => {
         setAvailable(data.Ok)
       })
       .catch((err) => {
@@ -107,60 +105,55 @@ export interface InstallFFmpegProp {
 const InstallFFmpeg: React.FC<InstallFFmpegProp> = (props) => {
   const { onFinish, visible } = props
   const { t } = useI18nNamespaces(['screenRecorder', 'yakitUi'])
-  const [token, setToken] = useState(randomString(40))
+  const token = useRef(randomString(40)).current
   const [results, setResults, getResult] = useGetState<string[]>([])
   const [percent, setPercent, getPercent] = useGetState<number>(0)
 
   const timer = useRef<number>(0) //超时处理
   const prePercent = useRef<number>(0) // 上一次的进度数值
 
+  const finish = useMemoizedFn(onFinish)
   useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
-      if (!data.IsMessage) {
-        return
-      }
-      if (getPercent() === prePercent.current) {
-        timer.current += 1
-      } else {
-        prePercent.current = getPercent()
-        timer.current = 0
-      }
-      if (timer.current > 30) {
-        yakitFailed(`[InstallScrecorder] error:${t('ScreenRecorderPage.timeout')}`)
-        timer.current = 0
-      }
-      setPercent(Math.ceil(data.Progress))
-      setResults([Uint8ArrayToString(data.Message), ...getResult()])
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      yakitFailed(`${t('YakitNotification.downloadFailed', { error: error })}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {
-      onFinish()
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-InstallScrecorder', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-    }
-  }, [])
-
-  const install = useMemoizedFn(() => {
-    ipcRenderer.invoke('InstallScrecorder', {}, token)
-  })
-
-  useEffect(() => {
-    if (visible) {
-      install()
-    } else {
-      ipcRenderer.invoke('cancel-InstallScrecorder', token)
-    }
     setPercent(0)
     setResults([])
     timer.current = 0
     prePercent.current = 0
-  }, [visible])
+    if (!visible) return
+    const controller = new AbortController()
+    const onError = (error: unknown) => {
+      if (!controller.signal.aborted) yakitFailed(t('YakitNotification.downloadFailed', { error: String(error) }))
+    }
+    ipc
+      .openStream(
+        'grpc',
+        'InstallScrecorder',
+        {},
+        {
+          token,
+          signal: controller.signal,
+          onData(data) {
+            if (controller.signal.aborted || !data.IsMessage) return
+            if (getPercent() === prePercent.current) timer.current += 1
+            else {
+              prePercent.current = getPercent()
+              timer.current = 0
+            }
+            if (timer.current > 30) {
+              yakitFailed(`[InstallScrecorder] error:${t('ScreenRecorderPage.timeout')}`)
+              timer.current = 0
+            }
+            setPercent(Math.ceil(data.Progress))
+            setResults([Uint8ArrayToString(data.Message), ...getResult()])
+          },
+          onError,
+          onEnd() {
+            if (!controller.signal.aborted) finish()
+          },
+        },
+      )
+      .catch(onError)
+    return () => controller.abort()
+  }, [visible, token])
 
   return (
     <>

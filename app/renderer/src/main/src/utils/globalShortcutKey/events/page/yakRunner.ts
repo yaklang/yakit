@@ -68,7 +68,7 @@ const LocalStorageKey = 'yak-runner-shortcut-key-events'
 export const getStorageYakRunnerShortcutKeyEvents = () => {
   getLocalValue(LocalStorageKey)
     .then((res) => {
-      if (!res) return
+      if (typeof res !== 'string' || !res) return
       try {
         const data: EventsType = JSONParseLog(res, { page: 'yakRunner', fun: 'getStorageYakRunnerShortcutKeyEvents' })
         currentKeyEvents = addScopeShow(data, YakRunnerShortcutKeyEvents)

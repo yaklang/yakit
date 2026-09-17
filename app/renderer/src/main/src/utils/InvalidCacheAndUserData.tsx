@@ -1,9 +1,9 @@
+import { ipc } from '@/services/ipc'
 import { yakitNotify } from '@/utils/notification'
 import { Space } from 'antd'
 import { getReleaseEditionName } from './envfile'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { yakitHost } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 const tOriginal = i18n.getFixedT(null, 'utils')
@@ -33,8 +33,8 @@ export const invalidCacheAndUserData = (delTemporaryProject) => {
     onOk: async () => {
       m.destroy()
       await delTemporaryProject()
-      yakitHost
-        .resetAndInvalidUserData({ OnlyClearCache: !checked })
+      ipc
+        .invoke('grpc', 'ResetAndInvalidUserData', { OnlyClearCache: !checked })
         .then(() => {})
         .catch((e) => {})
         .finally(() => {

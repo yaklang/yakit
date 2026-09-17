@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { failed, info } from '@/utils/notification'
@@ -14,17 +15,15 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 
-const { ipcRenderer } = window.require('electron')
-
 export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
   const { visible, setVisible } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'mitm'])
   const [value, setValue] = useState<Uint8Array>(new Uint8Array())
   const [loading, setLoading] = useState(true)
   useEffect(() => {
-    ipcRenderer
-      .invoke('ExportMITMReplacerRules', {})
-      .then((r: { JsonRaw: Uint8Array }) => {
+    ipc
+      .invoke('grpc', 'ExportMITMReplacerRules', {})
+      .then((r) => {
         setValue(r.JsonRaw)
       })
       .catch((e) => {
@@ -78,8 +77,8 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
         ...item,
         Index: index + 1,
       }))
-      ipcRenderer
-        .invoke('ImportMITMReplacerRules', { ...params, JsonRaw: Buffer.from(JSON.stringify(rules)) })
+      ipc
+        .invoke('grpc', 'ImportMITMReplacerRules', { ...params, JsonRaw: Buffer.from(JSON.stringify(rules)) })
         .then((e) => {
           if (onOk) {
             onOk()

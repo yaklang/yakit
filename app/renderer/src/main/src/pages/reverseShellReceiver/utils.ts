@@ -1,36 +1,5 @@
+import { ipc } from '@/services/ipc'
 import { yakitNotify } from '@/utils/notification'
-
-const { ipcRenderer } = window.require('electron')
-
-export interface ListeningPortProps {
-  host: string
-  port: number
-}
-/**端口监听 */
-export const apiListeningPort: (params: ListeningPortProps) => Promise<null> = (params) => {
-  return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('listening-port', params.host, params.port)
-      .then(resolve)
-      .catch((e) => {
-        reject(e)
-        yakitNotify('error', '开启端口监听失败：' + e)
-      })
-  })
-}
-
-/**取消端口监听 */
-export const apiCancelListeningPort: (params: string) => Promise<null> = (params) => {
-  return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('listening-port-cancel', params)
-      .then(resolve)
-      .catch((e) => {
-        reject(e)
-        yakitNotify('error', '取消端口监听失败：' + e)
-      })
-  })
-}
 
 export type SystemType = 'Linux' | 'Windows' | 'Mac' | 'All'
 export type CmdType = 'ReverseShell' | 'MSFVenom'
@@ -48,8 +17,8 @@ export const apiGetReverseShellProgramList: (
   params: GetReverseShellProgramListRequest,
 ) => Promise<GetReverseShellProgramListResponse> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetReverseShellProgramList', params)
+    ipc
+      .invoke('grpc', 'GetReverseShellProgramList', params)
       .then(resolve)
       .catch((e) => {
         reject(e)
@@ -75,8 +44,12 @@ export const apiGenerateReverseShellCommand: (
   params: GenerateReverseShellCommandRequest,
 ) => Promise<GenerateReverseShellCommandResponse> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GenerateReverseShellCommand', params)
+    ipc
+      .invoke('grpc', 'GenerateReverseShellCommand', params)
+      .then((res) => {
+        if (!res.Status) throw new Error('命令生成接口未返回状态')
+        return { ...res, Status: res.Status }
+      })
       .then(resolve)
       .catch((e) => {
         reject(e)

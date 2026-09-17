@@ -1,8 +1,8 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import React, { useEffect, useRef, useState } from 'react'
 import type { YaklangEngineMode } from '../../types'
 import { Sparklines, SparklinesCurve } from 'react-sparklines'
 import { UIEngineList } from '../UIEngineList'
-import { yakitPerf } from '@/utils/electronBridge'
 import styles from './PerformanceDisplay.module.scss'
 
 interface PerformanceDisplayProps {
@@ -19,14 +19,14 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo(
   const showLineTime = useRef<any>(null)
 
   useEffect(() => {
-    yakitPerf.startComputePercent()
+    ipc.invoke('local', 'start-compute-percent', {})
     const time = setInterval(() => {
-      yakitPerf.fetchComputePercent().then((res) => setCpu(res))
+      ipc.invoke('local', 'fetch-compute-percent', {}).then((res) => setCpu(res))
     }, 500)
 
     return () => {
       clearInterval(time)
-      yakitPerf.clearComputePercent()
+      ipc.invoke('local', 'clear-compute-percent', {})
     }
   }, [])
 

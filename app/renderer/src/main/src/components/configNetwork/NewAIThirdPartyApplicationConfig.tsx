@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 /**
  * AI 专用第三方应用配置表单组件。
  */
@@ -54,8 +55,6 @@ import type {
   GetThirdPartyAppConfigTemplateResponse,
   ThirdPartyAppConfigItemTemplate,
 } from './NewThirdPartyApplicationConfig'
-
-const { ipcRenderer } = window.require('electron')
 
 /**隐藏字段载体：仅用于注册 Form.Item 字段（如探测缓存），不渲染任何 UI */
 const HiddenFormField: React.FC<{ value?: unknown }> = () => null
@@ -536,8 +535,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
         if (!execModelNameOption.current) return
         setModelOptionLoading(true)
         const v = form.getFieldsValue()
-        ipcRenderer
-          .invoke('ListAiModel', { Config: JSON.stringify(v) })
+        ipc
+          .invoke('grpc', 'ListAiModel', { Config: JSON.stringify(v) })
           .then((res) => {
             if (!execModelNameOption.current) return
             // memfit- 开头的模型名称前置展示（与聊天模型选择器的名称下拉共用排序逻辑）

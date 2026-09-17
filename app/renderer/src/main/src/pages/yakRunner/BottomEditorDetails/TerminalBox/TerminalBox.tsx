@@ -1,19 +1,17 @@
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useGetState, useMap, useMemoizedFn, useUpdateEffect, useVirtualList } from 'ahooks'
+import { useGetState, useMemoizedFn, useUpdateEffect, useVirtualList } from 'ahooks'
 import YakitXterm from '@/components/yakitUI/YakitXterm/YakitXterm'
 import { TerminalOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import styles from './TerminalBox.module.scss'
 import { v4 as uuidv4 } from 'uuid'
-import { failed, warn } from '@/utils/notification'
+import { failed } from '@/utils/notification'
 import { writeExecResultXTerm, writeXTerm, xtermClear } from '@/utils/xtermUtils'
 import { Uint8ArrayToString } from '@/utils/str'
 import type { ExecResult } from '@/pages/invoker/schema'
 import type { TerminalDetailsProps } from './TerminalMap'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
-
+import { ipc, type GrpcInput, type StreamTask } from '@/services/ipc'
 export const defaultTerminaFont = "Consolas, 'Courier New', monospace"
 
 export const defaultTerminalFont = {
@@ -124,7 +122,6 @@ interface useTerminalHookProps {
 /* 终端hook */
 export const useTerminalHook = (props: useTerminalHookProps) => {
   const { type, terminalRef, folderPathRef, terminalSizeRef, terminalFocusRef, onExit, isShowDetails, showItem } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner'])
   // 当前终端打开项
   const [terminalIds, setTerminalIds] = useState<string[]>([])
   // 终端当前展示项
@@ -132,10 +129,23 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
   const [refreshList, setRefreshList, getRefreshList] = useGetState<boolean>(false)
   // 是否需要重新加载终端(终端已被整体关闭)
   const [isReloadTerminal, setReloadTerminal] = useState<boolean>(false)
-  const [terminalMap, { get, set, remove, reset }] = useMap<string, string>()
+  const terminalMap = useRef(new Map<string, string>())
+  const get = (id: string) => terminalMap.current.get(id)
+  const set = (id: string, value: string) => terminalMap.current.set(id, value)
+  const remove = (id: string) => terminalMap.current.delete(id)
+  const reset = () => terminalMap.current.clear()
+  const streams = useRef(
+    new Map<
+      string,
+      {
+        controller: AbortController
+        opening?: Promise<StreamTask<'YaklangTerminal'>>
+      }
+    >(),
+  )
 
   const getMapAllTerminalKey = useMemoizedFn(() => {
-    return Array.from(terminalMap.keys())
+    return Array.from(terminalMap.current.keys())
   })
 
   const onBlur = useMemoizedFn(() => {
@@ -149,32 +159,6 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
       terminalFocusRef.current = true
     }
   })
-
-  // 输出缓存
-  const outputCahceRef = useRef<string>('')
-  // 输出流
-  const xtermRef = useRef<any>(null)
-  useEffect(() => {
-    // xtermClear(xtermRef)
-    ipcRenderer.on('client-yak-data', async (e: any, data: ExecResult) => {
-      if (data.IsMessage) {
-        // ignore
-      }
-      if (data?.Raw) {
-        outputCahceRef.current += Buffer.from(data.Raw).toString('utf8')
-        if (xtermRef.current) {
-          writeExecResultXTerm(xtermRef, data, 'utf8')
-        }
-      }
-    })
-    ipcRenderer.on('client-yak-error', async (e: any, data) => {
-      failed(`${data}`)
-    })
-    return () => {
-      ipcRenderer.removeAllListeners('client-yak-data')
-      ipcRenderer.removeAllListeners('client-yak-error')
-    }
-  }, [xtermRef])
 
   // 构造xtrem列表数据
   const initTerminalListData = useMemo(() => {
@@ -279,64 +263,78 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
     } catch (error) {}
   })
 
-  // 启动终端执行
+  // 先建立缓存和监听，再发送初始化帧，避免丢失终端的首批输出
   const startTerminal = useMemoizedFn(() => {
-    if (!terminalRef) return
-    if (!terminalSizeRef.current) return
+    if (!terminalRef.current || !terminalSizeRef.current) return
     xtermClear(terminalRef)
-    const runnnerId = uuidv4()
-
-    // 启动
-    ipcRenderer
-      .invoke(`runner-terminal-${type}`, {
-        id: runnnerId,
-        path: folderPathRef.current,
-        ...terminalSizeRef.current,
-      })
-      .then(() => {
-        const cache: TerminalDetailsProps = {
-          id: runnnerId,
-          path: folderPathRef.current,
-          content: '',
-          title: '',
-        }
-        // 更新缓存
-        set(runnnerId, JSON.stringify(cache))
-
-        setTerminalRunnerId(runnnerId)
-        setTerminalIds([...terminalIds, runnnerId])
-        // isShowEditorDetails && success(`终端${folderPathRef.current}监听成功`)
-      })
-      .catch((e: any) => {
-        failed(`ERROR: ${JSON.stringify(e)}`)
-      })
-      .finally(() => {})
+    const id = uuidv4()
+    const path = folderPathRef.current
+    const { row, col } = terminalSizeRef.current
+    const controller = new AbortController()
+    set(id, JSON.stringify({ id, path, content: '', title: '' } satisfies TerminalDetailsProps))
+    setTerminalRunnerId(id)
+    setTerminalIds((ids) => [...ids, id])
+    const finish = () => {
+      if (streams.current.get(id)?.controller !== controller) return
+      streams.current.delete(id)
+      onListeningTerminalEnd({ id, path })
+    }
+    // 回调可能早于 openStream 的回复；控制器与缓存必须同步可见
+    const session: { controller: AbortController; opening?: Promise<StreamTask<'YaklangTerminal'>> } = { controller }
+    streams.current.set(id, session)
+    session.opening = ipc.openStream(
+      'grpc',
+      'YaklangTerminal',
+      { path, height: row, width: col },
+      {
+        token: `${type}:${id}`,
+        signal: controller.signal,
+        onData(data) {
+          if (streams.current.get(id) !== session) return
+          if (data.control) {
+            if (data.closed) {
+              controller.abort()
+              finish()
+            }
+          } else if (data.raw?.length) onWriteXTerm(id, path, data.raw)
+        },
+        onError(error) {
+          if (streams.current.get(id) !== session) return
+          failed(error.message)
+          finish()
+        },
+        onEnd: finish,
+      },
+    )
+    void session.opening.catch((error) => {
+      if (streams.current.get(id) !== session) return
+      if (!controller.signal.aborted) failed(error.message)
+      finish()
+    })
   })
 
-  // 写入
+  const writeTerminal = useMemoizedFn(async (params: GrpcInput<'YaklangTerminal'>) => {
+    const id = getTerminalRunnerId()
+    const session = streams.current.get(id)
+    if (!session) return
+    try {
+      const task = await session.opening
+      if (task && streams.current.get(id) === session) await task.write(params)
+    } catch (error) {
+      if (!session.controller.signal.aborted) failed(error instanceof Error ? error.message : String(error))
+    }
+  })
+
   const commandExec = useMemoizedFn((cmd: string) => {
-    if (!terminalRef || !terminalRef.current) {
-      return
-    }
-
-    ipcRenderer.invoke('runner-terminal-input', terminalRunnerId, cmd)
+    if (terminalRef.current) void writeTerminal({ raw: new TextEncoder().encode(cmd) })
   })
 
-  // 行列变化
-  const onChangeSize = useMemoizedFn(({ row, col }) => {
-    if (row && col) {
-      if (terminalSizeRef.current) {
-        ipcRenderer.invoke('runner-terminal-size', terminalRunnerId, {
-          height: row,
-          width: col,
-        })
-      }
-      // 确保第一次执行 带入row、col
-      else {
-        terminalSizeRef.current = { row, col }
-        initTerminal()
-      }
-    }
+  const onChangeSize = useMemoizedFn(({ row, col }: { row: number; col: number }) => {
+    if (!row || !col) return
+    const initialized = !!terminalSizeRef.current
+    terminalSizeRef.current = { row, col }
+    if (initialized) void writeTerminal({ height: row, width: col })
+    else initTerminal()
   })
 
   // 输出
@@ -355,7 +353,7 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
 
         // 更新缓存
         set(id, JSON.stringify(cache))
-        if (id === terminalRunnerId) {
+        if (id === getTerminalRunnerId()) {
           writeXTerm(terminalRef, outPut)
         }
       }
@@ -364,17 +362,18 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
 
   const onListeningTerminalEnd = useMemoizedFn((data: { id: string; path: string }) => {
     const { id, path } = data
-    if (getMapAllTerminalKey().includes(id)) {
+    const ids = getMapAllTerminalKey()
+    if (ids.includes(id)) {
       // isShowEditorDetails && warn(`终端${path}被关闭`)
       // 列表关闭
-      if (terminalIds.length > 1) {
-        if (terminalRunnerId === id) {
-          const itemIndex = terminalIds.indexOf(id)
-          const index = itemIndex === terminalIds.length - 1 ? itemIndex - 1 : itemIndex + 1
-          onSelectTerminalItem(terminalIds[index])
+      if (ids.length > 1) {
+        if (getTerminalRunnerId() === id) {
+          const itemIndex = ids.indexOf(id)
+          const index = itemIndex === ids.length - 1 ? itemIndex - 1 : itemIndex + 1
+          onSelectTerminalItem(ids[index])
         }
         remove(id)
-        setTerminalIds(terminalIds.filter((item) => item !== id))
+        setTerminalIds(ids.filter((item) => item !== id))
         setRefreshList(!refreshList)
       }
       // 整体关闭
@@ -384,48 +383,18 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
     }
   })
 
-  useEffect(() => {
-    const key = `client-listening-terminal-data-${type}`
-    const successKey = `client-listening-terminal-success-${type}`
-    const closeKey = `client-listening-terminal-end-${type}`
-    const errorKey = `client-listening-terminal-error-${type}`
-
-    const onData = (e, data) => {
-      const { id, path, result } = data
-      if (result.control) return
-      if (result?.raw) {
-        onWriteXTerm(id, path, result.raw)
-      }
-    }
-
-    const onSuccess = () => {}
-
-    const onClose = (e, data) => {
-      onListeningTerminalEnd(data)
-    }
-
-    const onError = (e, data) => {
-      warn(t('TerminalBox.terminalError', { path: data.path }))
-    }
-
-    ipcRenderer.on(key, onData)
-    ipcRenderer.on(successKey, onSuccess)
-    ipcRenderer.on(closeKey, onClose)
-    ipcRenderer.on(errorKey, onError)
-
-    return () => {
-      // 移除
-      ipcRenderer.removeAllListeners(key)
-      ipcRenderer.removeAllListeners(successKey)
-      ipcRenderer.removeAllListeners(closeKey)
-      ipcRenderer.removeAllListeners(errorKey)
-      // 清空
+  useEffect(
+    () => () => {
+      for (const session of streams.current.values()) session.controller.abort()
+      streams.current.clear()
+      terminalMap.current.clear()
       xtermClear(terminalRef)
-    }
-  }, [terminalRef])
+    },
+    [],
+  )
 
   const onSelectTerminalItem = useMemoizedFn((id) => {
-    if (terminalRunnerId === id) return
+    if (getTerminalRunnerId() === id) return
     setTerminalRunnerId(id)
     const terminalCache = get(id)
     try {
@@ -439,7 +408,11 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
   })
 
   const onDeleteTerminalItem = useMemoizedFn((id) => {
-    ipcRenderer.invoke('runner-terminal-cancel', id).finally(() => {})
+    const session = streams.current.get(id)
+    if (!session) return
+    streams.current.delete(id)
+    session.controller.abort()
+    onListeningTerminalEnd({ id, path: '' })
   })
 
   return [

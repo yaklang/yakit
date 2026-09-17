@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type { Dispatch, SetStateAction } from 'react'
 import { loadAdvancedConfig } from '@/pages/mitm/MITMAdvancedConfig'
 import { MITMConsts } from '@/pages/mitm/MITMConsts'
@@ -11,7 +12,6 @@ import type { TFunction } from '@/i18n/useI18nNamespaces'
 import type { HTTPFlow } from './HTTPFlowTable.constants'
 import { buildFavoriteTags, buildHTTPFlowColorTags, isHTTPFlowFavorite, patchHTTPFlowTags } from './HTTPFlowTable.utils'
 
-const { ipcRenderer } = window.require('electron')
 const tOriginal = i18n.getFixedT(null, ['yakitUi', 'history'])
 
 /** 发送 Web Fuzzer */
@@ -56,15 +56,18 @@ export const onSendToTab = async (
     }
   }
 
-  ipcRenderer
-    .invoke('send-to-tab', {
-      type: 'fuzzer',
+  ipc
+    .invoke('local', 'ForwardMainEvent', {
+      event: 'fetch-send-to-tab',
       data: {
-        openFlag,
-        isHttps: isHttpUrl ? false : (rowData as HTTPFlow).IsHTTPS,
-        downstreamProxyStr,
-        ...params,
-        request: (rowData as HTTPFlow).SafeHTTPRequest || Buffer.from(rowData.Request).toString('utf8'),
+        type: 'fuzzer',
+        data: {
+          openFlag,
+          isHttps: isHttpUrl ? false : (rowData as HTTPFlow).IsHTTPS,
+          downstreamProxyStr,
+          ...params,
+          request: (rowData as HTTPFlow).SafeHTTPRequest || Buffer.from(rowData.Request).toString('utf8'),
+        },
       },
     })
     .then(() => {
@@ -85,8 +88,8 @@ export const CalloutColor = (
 
   const existedTags = buildHTTPFlowColorTags(flow.Tags, i.color)
 
-  ipcRenderer
-    .invoke('SetTagForHTTPFlow', {
+  ipc
+    .invoke('grpc', 'SetTagForHTTPFlow', {
       Id: flow.Id,
       Hash: flow.Hash,
       Tags: existedTags,
@@ -110,8 +113,8 @@ export const onRemoveCalloutColor = (
 
   const existedTags = buildHTTPFlowColorTags(flow.Tags)
 
-  ipcRenderer
-    .invoke('SetTagForHTTPFlow', {
+  ipc
+    .invoke('grpc', 'SetTagForHTTPFlow', {
       Id: flow.Id,
       Hash: flow.Hash,
       Tags: existedTags,
@@ -134,8 +137,8 @@ export const toggleHTTPFlowFavorite = (
   if (!flow) return
 
   const nextTags = buildFavoriteTags(flow.Tags, favorite)
-  ipcRenderer
-    .invoke('SetTagForHTTPFlow', {
+  ipc
+    .invoke('grpc', 'SetTagForHTTPFlow', {
       Id: flow.Id,
       Hash: flow.Hash,
       Tags: nextTags,
@@ -198,8 +201,8 @@ export const calloutColorBatch = (params: {
     const existedTags = buildHTTPFlowColorTags(flow.Tags, colorItem.color)
     return { Id: flow.Id, Hash: flow.Hash, Tags: existedTags }
   })
-  ipcRenderer
-    .invoke('SetTagForHTTPFlow', {
+  ipc
+    .invoke('grpc', 'SetTagForHTTPFlow', {
       CheckTags: newList,
     })
     .then(() => {
@@ -239,8 +242,8 @@ export const onRemoveCalloutColorBatch = (params: {
     const existedTags = buildHTTPFlowColorTags(flow.Tags)
     return { Id: flow.Id, Hash: flow.Hash, Tags: existedTags }
   })
-  ipcRenderer
-    .invoke('SetTagForHTTPFlow', {
+  ipc
+    .invoke('grpc', 'SetTagForHTTPFlow', {
       CheckTags: newList,
     })
     .then(() => {
@@ -283,8 +286,8 @@ export const toggleHTTPFlowFavoriteBatch = (params: {
     Hash: flow.Hash,
     Tags: buildFavoriteTags(flow.Tags, favorite),
   }))
-  ipcRenderer
-    .invoke('SetTagForHTTPFlow', {
+  ipc
+    .invoke('grpc', 'SetTagForHTTPFlow', {
       CheckTags: newList,
     })
     .then(() => {

@@ -7,8 +7,6 @@ import styles from './BottomSideBar.module.scss'
 
 import useStore from '../hooks/useStore'
 
-const { ipcRenderer } = window.require('electron')
-
 export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
   const { onOpenEditorDetails } = props
   const { activeFile } = useStore()

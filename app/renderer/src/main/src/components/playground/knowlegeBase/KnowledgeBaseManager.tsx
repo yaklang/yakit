@@ -12,8 +12,6 @@ import styles from './KnowledgeBaseManager.module.scss'
 import { ChatAlt2Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
-
 export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props) => {
   const { t } = useI18nNamespaces(['components'])
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<KnowledgeBase>()

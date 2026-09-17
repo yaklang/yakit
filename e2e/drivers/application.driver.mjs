@@ -51,7 +51,14 @@ export const confirmStartupWorkspace = async () => {
 
 export const completeShellHandoff = async (credentials) =>
   browser.execute(async (engineCredentials) => {
-    await window.yakitBridge.app.completeEngineLink({ credential: engineCredentials })
+    const reply = await window.yakitTransport.request({
+      requestId: crypto.randomUUID(),
+      namespace: 'local',
+      api: 'engineLinkWin-done',
+      action: 'call',
+      params: { credential: engineCredentials },
+    })
+    if (!reply.ok) throw new Error(reply.error.message)
   }, credentials)
 
 export const replaceInputValue = async (element, value, label) => {
@@ -173,7 +180,15 @@ export const echoFromMainWindow = async () => {
   await browser.switchToYakitWindow(MAIN_WINDOW_URL)
   const token = `yakit-main-e2e-${randomUUID()}`
   return browser.execute(async (echoToken) => {
-    const response = await window.yakitBridge.engine.echo({ text: echoToken })
+    const reply = await window.yakitTransport.request({
+      requestId: crypto.randomUUID(),
+      namespace: 'grpc',
+      api: 'Echo',
+      action: 'call',
+      params: { text: echoToken },
+    })
+    if (!reply.ok) throw new Error(reply.error.message)
+    const response = reply.data
     return { response, echoToken }
   }, token)
 }

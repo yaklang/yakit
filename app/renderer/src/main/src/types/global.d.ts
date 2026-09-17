@@ -62,7 +62,6 @@ declare global {
   type YakQueryHTTPFlowRequest = YakQueryHTTPFlow.YakQueryHTTPFlowRequest
   type ExtractableData = Exporter.ExtractableData
   type ProjectParamsProp = ProjectManage.ProjectParamsProp
-  type ExportProjectRequest = LayoutUtils.ExportProjectRequest
   type GetSSAWorkbenchDashboardRequest = IRifyHomeType.GetSSAWorkbenchDashboardRequest
   type QueryRisksRequest = YakitRiskTableType.QueryRisksRequest
   type DeleteRiskRequest = YakitRiskTableUtils.DeleteRiskRequest
@@ -159,11 +158,11 @@ declare global {
   }
 
   interface QueryNewRiskRequest {
-    AfterId?: number
+    AfterId?: string | number
   }
 
   interface NewRiskReadRequest {
-    AfterId?: number
+    AfterId?: string | number
     Ids?: number[]
     Filter?: Partial<QueryRisksRequest>
   }
@@ -252,34 +251,10 @@ declare global {
     name: string
   }
 
-  interface ExtractDataToFileRequest {
-    JsonOutput?: boolean
-    CSVOutput?: boolean
-    DirName?: string
-    /** map<string, ExtractableData>，键为字段名 */
-    Data?: Record<string, ExtractableData> | ExtractableData
-    /** 前端传 FilePattern，proto 为 FileNamePattern */
-    FilePattern?: string
-    FileNamePattern?: string
-    Finished?: boolean
-  }
-
-  type ExtractDataToFilePayload = GrpcStreamWritePayload<ExtractDataToFileRequest>
-
   interface GenerateExtractRuleRequest {
     Data?: Uint8Array
     Selected?: Uint8Array
     OffsetSize?: number
-  }
-
-  interface ExtractDataRequest {
-    Data?: Uint8Array
-    Mode?: string
-    PrefixRegexp?: string
-    SuffixRegexp?: string
-    MatchRegexp?: string
-    Token?: string
-    End?: boolean
   }
 
   interface SendExtractedToTablePayload {
@@ -422,8 +397,6 @@ declare global {
       Modify?: boolean
     }>
   }
-
-  type ExportProjectParams = Omit<ExportProjectRequest, 'token'>
 
   interface NewRisk {
     Title: string
@@ -700,335 +673,6 @@ declare global {
 
   interface CodecRunResult {
     Result: string
-  }
-
-  interface YakitBridge {
-    app: {
-      generateStartEngine: () => Promise<unknown>
-      generateChromePlugin: () => Promise<string>
-      generateRunNode: (payload: GenerateRunNodePayload) => Promise<string | number>
-      setEnterpriseToDomain: (flag: boolean) => Promise<unknown>
-      syncEditBaseUrl: (baseUrl: string) => unknown
-      syncUpdateUser: (user: UserInfoProps) => unknown
-      killRunNode: (pid: number) => Promise<unknown>
-      userSignOut: () => void
-      triggerDevtool: () => Promise<unknown>
-      setZoomFactor: (factor: number) => Promise<unknown>
-      reload: () => Promise<unknown>
-      reloadWithCacheBypass: () => Promise<unknown>
-      exitApp: (params: Record<string, unknown>) => Promise<unknown>
-      relaunch: () => Promise<unknown>
-      completeMainWindow: (payload: CompleteMainWindowPayload) => Promise<unknown>
-      updateCredential: (payload: CredentialUpdatePayload) => Promise<unknown>
-      onCloseWindow: (callback: () => void) => BridgeCleanup
-      onMinimizeWindow: (callback: () => void) => BridgeCleanup
-      sync: (message: AppSyncMessage) => Promise<unknown>
-      onSync: (callback: (message: AppSyncMessage) => void) => BridgeCleanup
-      getYakitHomeConfig: () => Promise<YakitHomeConfig>
-      setYakitHomeConfig: (key: string, value: any) => Promise<{ success: boolean }>
-      getDirSize: (dirPath: string) => Promise<number>
-      /** Synchronous build/runtime gate for MITM diagnostic globals; false in packaged builds. */
-      isMITMDebugHooksEnabled?: () => boolean
-    }
-    theme: {
-      setTheme: (theme: 'light' | 'dark' | 'system') => Promise<unknown>
-      onUpdated: (callback: (theme: 'light' | 'dark' | 'system') => void) => BridgeCleanup
-    }
-    system: {
-      fetchSystemName: () => Promise<YakitSystem>
-      fetchCpuArch: () => Promise<YakitArchitecture>
-      isDev: () => Promise<boolean>
-      fetchSystemAndArch: () => Promise<string>
-    }
-    network: {
-      axiosApi: (params: AxiosBridgeParams) => Promise<AxiosResponseProps<AxiosResponseInfoProps>>
-      logoutDynamicControl: (params: LogoutDynamicControlParams) => Promise<unknown>
-      killDynamicControl: () => Promise<unknown>
-      exitDynamicControlPage: () => Promise<unknown>
-      uploadRiskToOnline: (payload: UploadRiskToOnlineRequest) => Promise<GrpcEmptyResponse>
-      httpFlowsToOnline: (payload: HTTPFlowsToOnlineRequest) => Promise<GrpcEmptyResponse>
-    }
-    shell: {
-      openExternal: (url: string) => Promise<unknown>
-      openAbsoluteFile: (targetPath: string) => Promise<unknown>
-      openSpecifiedFile: (targetPath: string) => Promise<unknown>
-      openYakitPath: () => Promise<unknown>
-      checkYakitInstallFile: (filename: string) => Promise<boolean>
-      installIntranetYakit: (filePath: string) => Promise<unknown>
-      openRemoteLink: () => Promise<unknown>
-      getRemoteFilePath: () => Promise<string>
-    }
-    reverse: {
-      getStatus: () => Promise<boolean>
-      cancel: () => Promise<unknown>
-      config: (payload: ConfigGlobalReverseRequest) => Promise<GrpcEmptyResponse>
-      getServer: (params?: GrpcEmptyRequest) => Promise<GetGlobalReverseServerResponse>
-      setYakBridgeLogServer: (payload: YakDNSLogBridgeAddr) => Promise<GrpcEmptyResponse>
-      availableLocalAddr: (params?: GrpcEmptyRequest) => Promise<AvailableLocalAddrResult>
-      onError: (callback: (message: string) => void) => BridgeCleanup
-    }
-    risk: {
-      fetchLatestInfo: (payload: QueryNewRiskRequest) => Promise<QueryNewRiskResponse>
-      queryRisks: (payload: Partial<QueryRisksRequest>) => Promise<QueryRisksResponse>
-      setInfoRead: (payload: NewRiskReadRequest) => Promise<GrpcEmptyResponse>
-      query: (payload: QueryRiskRequest) => Promise<Risk>
-      delete: (payload: DeleteRiskRequest) => Promise<GrpcEmptyResponse>
-    }
-    asset: {
-      deleteDomains: (payload: DeleteDomainsRequest) => Promise<GrpcEmptyResponse>
-      deletePorts: (payload: DeletePortsRequest) => Promise<GrpcEmptyResponse>
-    }
-    httpFlow: {
-      queryHistory: (payload: YakQueryHTTPFlowRequest) => Promise<GrpcEmptyResponse>
-      subscribe: (payload: SubscribeHTTPFlowsRequest, token: string) => Promise<GrpcEmptyResponse>
-      cancelSubscribe: (token: string) => Promise<GrpcEmptyResponse>
-    }
-    host: {
-      getSystemProxy: (params?: GrpcEmptyRequest) => Promise<GetSystemProxyResult>
-      setSystemProxy: (payload: SetSystemProxyRequest) => Promise<GrpcEmptyResponse>
-      getChromePath: () => Promise<string | null>
-      getMachineID: (params?: GrpcEmptyRequest) => Promise<GetMachineIDResponse>
-      resetAndInvalidUserData: (payload: ResetAndInvalidUserDataRequest) => Promise<GrpcEmptyResponse>
-      isPrivilegedForNetRaw: (params?: GrpcEmptyRequest) => Promise<IsPrivilegedForNetRawResponse>
-      promotePermissionForUserPcap: (params?: GrpcEmptyRequest) => Promise<GeneralResponse>
-      verifySystemCertificate: (params?: GrpcEmptyRequest) => Promise<VerifySystemCertificateResponse>
-      installMITMCertificate: (params?: GrpcEmptyRequest) => Promise<GeneralResponse>
-      generateInstallScript: () => Promise<string>
-    }
-    window: {
-      openChildWindow: (payload: ChildWindowPayload) => void
-      focusChildWindow: () => void
-      sendToChildWindow: (payload: ChildWindowPayload) => void
-      openConsoleWindow: () => Promise<unknown>
-      focusConsoleWindow: () => void
-      closeConsoleWindow: () => void
-      forwardConsoleData: (payload: string) => void
-      forwardConsoleTheme: (payload: ConsoleThemePayload) => void
-      onConsoleWindowHash: (callback: (payload: { hash: string }) => void) => BridgeCleanup
-      onConsoleTerminalCopyData: (callback: (payload: string) => void) => BridgeCleanup
-    }
-    windowControls: {
-      operate: (action: 'close' | 'min' | 'max' | 'full') => Promise<unknown>
-      requestMaximizeState: () => Promise<unknown>
-      requestFullScreenState: () => Promise<unknown>
-      onMaximizeState: (callback: (value: boolean) => void) => BridgeCleanup
-      onFullScreenState: (callback: (value: boolean) => void) => BridgeCleanup
-      onMaximize: (callback: () => void) => BridgeCleanup
-      onUnmaximize: (callback: () => void) => BridgeCleanup
-      onEnterFullScreen: (callback: () => void) => BridgeCleanup
-      onLeaveFullScreen: (callback: () => void) => BridgeCleanup
-    }
-    childWindow: {
-      operate: (action: 'close' | 'min' | 'max' | 'full') => Promise<unknown>
-      minimize: () => void
-      maximize: () => void
-      restore: () => void
-      close: () => void
-    }
-    auxWindow: {
-      ready: (windowId: string) => void
-      onInit: (callback: (payload: AuxWindowInitPayload) => void) => BridgeCleanup
-      onPush: (callback: (payload: AuxWindowPushPayload) => void) => BridgeCleanup
-    }
-    dialog: {
-      showSaveDialog: (name: string) => Promise<{ canceled: boolean; filePath?: string }>
-      writeFile: (payload: { route: string; data: string | Uint8Array }) => Promise<unknown>
-      openFileSystemDialog: (options: OpenFileDialogOptions) => Promise<OpenFileDialogReturnValue>
-      saveFileSystemDialog: (options: SaveFileDialogOptions) => Promise<SaveFileDialogReturnValue>
-    }
-    logs: {
-      openEngineLog: () => Promise<unknown>
-      openRenderLog: () => Promise<unknown>
-      openPrintLog: () => Promise<unknown>
-      debugPrintLog: (message: string) => Promise<unknown>
-      onLiveEngineStdio: (callback: (stdout: string) => void) => BridgeCleanup
-      onLiveEngineLog: (callback: (stdout: string) => void) => BridgeCleanup
-    }
-    editorTools: {
-      compileAndFormat: (payload: YaklangCompileAndFormatRequest) => Promise<YaklangCompileAndFormatResponse>
-      staticAnalyze: (payload: StaticAnalyzeErrorRequest) => Promise<StaticAnalyzeErrorResponse>
-    }
-    perf: {
-      startComputePercent: () => Promise<unknown>
-      fetchComputePercent: () => Promise<number[]>
-      clearComputePercent: () => Promise<unknown>
-    }
-    cache: {
-      setLocalCache: (key: string, value: any) => Promise<unknown>
-      getLocalCache: (key: string) => Promise<any>
-      getRemoteKey: (key: string) => Promise<any>
-      setRemoteKey: (key: string, value: string) => Promise<unknown>
-      setRemoteKeyWithTTL: (key: string, value: string, ttl: number) => Promise<unknown>
-      getRemoteProjectKey: (key: string) => Promise<any>
-      setRemoteProjectKey: (key: string, value: string) => Promise<unknown>
-    }
-    clipboard: {
-      setText: (text: string) => Promise<unknown>
-      getText: () => Promise<string>
-    }
-    profile: {
-      getOnlineProfile: (params?: GrpcEmptyRequest) => Promise<OnlineProfileProps>
-      setOnlineProfile: (params: OnlineProfileRequest) => Promise<GrpcEmptyResponse>
-    }
-    auth: {
-      startUserSignIn: (payload: { url: string; type: string }) => void
-      companySignIn: (payload: Record<string, any>) => Promise<{ next?: boolean; info?: string }>
-      editBaseUrl: (baseUrl: string) => Promise<any>
-      requestPasswordReset: () => Promise<unknown>
-      onSignInData: (callback: (payload: SignInDataPayload) => void) => BridgeCleanup
-      onBaseUrlStatus: (callback: () => void) => BridgeCleanup
-    }
-    release: {
-      setEditionRaw: (edition: string) => Promise<unknown>
-    }
-    engine: {
-      fetchLatestYakitVersion: (payload: FetchLatestYakitVersionPayload) => Promise<string>
-      fetchEnterpriseUpdateInfo: () => Promise<FetchEnterpriseUpdateInfoResult>
-      getAvailableOSSDomain: () => Promise<string>
-      fetchLatestYaklangVersion: () => Promise<string>
-      fetchYaklangVersionList: () => Promise<string>
-      fetchYakitVersion: () => Promise<string>
-      getCurrentYak: () => Promise<string>
-      isYaklangEngineInstalled: () => Promise<boolean>
-      initCVEDatabase: () => Promise<unknown>
-      getBuildInEngineVersion: () => Promise<string>
-      restoreEngineAndPlugin: (params?: GrpcEmptyRequest) => Promise<unknown>
-      downloadLatestYak: (version: string) => Promise<unknown>
-      cancelDownloadYakEngineVersion: (version?: string) => Promise<unknown>
-      downloadLatestYakit: (version: string, type?: DownloadYakitOptions) => Promise<unknown>
-      downloadLatestIntranetYakit: (filePath: string) => Promise<any>
-      cancelDownloadYakitVersion: () => Promise<unknown>
-      fetchCheckYaklangSource: (version: string, config?: FetchCheckYaklangSourceConfig) => Promise<string>
-      calcEngineSha265: () => Promise<string[]>
-      isCVEDatabaseReady: (params?: GrpcEmptyRequest) => Promise<IsCVEDatabaseReadyResponse>
-      getDefaultProxy: (params?: GrpcEmptyRequest) => Promise<DefaultProxyResult>
-      setDefaultProxy: (payload: DefaultProxyResult) => Promise<GrpcEmptyResponse>
-      getAvailablePort: () => Promise<number>
-      getRandomLocalEnginePort: () => Promise<number>
-      determineAdaptedVersionEngine: (payload: DetermineAdaptedVersionEngineRequest) => Promise<boolean>
-      getGlobalProxyRulesConfig: () => Promise<GlobalProxyRulesConfig>
-      setGlobalProxyRulesConfig: (config: GlobalProxyRulesConfig) => Promise<GrpcEmptyResponse>
-      clearLocalYaklangVersionCache: () => Promise<unknown>
-      fetchYaklangEngineAddr: () => Promise<YaklangEngineAddr>
-      requestYakVersion: () => Promise<unknown>
-      listYakGrpc: () => Promise<YakProcessInfo[]>
-      killYakGrpc: (pid: number) => Promise<any>
-      killOldEngineProcess: (type?: string) => Promise<any>
-      checkLocalDatabase: () => Promise<unknown>
-      fixLocalDatabase: () => Promise<unknown>
-      isPortAvailable: (port: number) => Promise<unknown>
-      startLocalYaklangEngine: (params: StartLocalYaklangEngineParams) => Promise<unknown>
-      connectYaklangEngine: (credential: YaklangEngineWatchDogCredential) => Promise<unknown>
-      attachCombinedOutput: (params: GrpcEmptyRequest, token: string) => Promise<unknown>
-      echo: (payload: EchoPayload) => Promise<EchoResult>
-      outputLogToWelcomeConsole: (message: string) => Promise<unknown>
-      verifyYakEngineVersion: (version: string) => Promise<boolean>
-      installYakEngine: (version: string) => Promise<unknown>
-      writeEngineKeyToYakitProjects: (version?: string) => Promise<unknown>
-      /** 当前引擎构建类型：full 标准 / slim 轻量 */
-      fetchYakEngineBuildType: (version?: string) => Promise<'full' | 'slim'>
-      getRemoteAuthAll: () => Promise<YakitAuthInfo[]>
-      saveRemoteAuth: (params: YakitAuthInfo) => Promise<unknown>
-      removeRemoteAuth: (name: string) => Promise<unknown>
-      onYakVersion: (callback: (version: string) => void) => BridgeCleanup
-      onDownloadYakEngineProgress: (callback: (payload: DownloadingState) => void) => BridgeCleanup
-      onDownloadYakitProgress: (callback: (payload: DownloadingState) => void) => BridgeCleanup
-    }
-    upload: {
-      splitUpload: (payload: SplitUploadPayload) => Promise<SplitUploadResponse>
-      uploadImgBase64: (payload: UploadImgBase64Payload) => Promise<UploadImgApiResponse>
-      uploadFile: (payload: UploadFilePayload) => Promise<UploadFileApiResponse>
-    }
-    exporter: {
-      writeToFile: (payload: ExtractDataToFilePayload) => Promise<GrpcEmptyResponse>
-    }
-    extractor: {
-      generateRule: (payload: GenerateExtractRuleRequest) => Promise<GenerateExtractRuleResponse>
-      run: (payload: ExtractDataRequest, token: string) => Promise<GrpcEmptyResponse>
-      cancel: (token: string) => Promise<GrpcEmptyResponse>
-      sendToTable: (payload: SendExtractedToTablePayload) => Promise<GrpcEmptyResponse>
-    }
-    processEnv: {
-      getAllKeys: (params?: GrpcEmptyRequest) => Promise<GetProcessEnvKeyResult>
-      setKey: (payload: SetKeyRequest) => Promise<GrpcEmptyResponse>
-      deleteKey: (payload: Pick<SetKeyRequest, 'Key'>) => Promise<GrpcEmptyResponse>
-    }
-    plugin: {
-      queryYakScript: (params: QueryYakScriptRequest) => Promise<QueryYakScriptsResponse>
-      checkSyntaxFlowRuleUpdate: (params?: GrpcEmptyRequest) => Promise<CheckSyntaxFlowRuleUpdateResponse>
-      deleteByUserId: (payload: DeletePluginByUserIDRequest) => Promise<GrpcEmptyResponse>
-    }
-    script: {
-      execYakCode: (params: YakScriptParam, token: string) => Promise<GrpcEmptyResponse>
-    }
-    mcp: {
-      startServer: (params: StartMcpServerRequest, token: string) => Promise<GrpcEmptyResponse>
-    }
-    duplex: {
-      start: (params: DuplexConnectionRequest, token: string) => Promise<GrpcEmptyResponse>
-      write: (payload: DuplexConnectionRequest, token: string) => Promise<GrpcEmptyResponse>
-    }
-    socket: {
-      start: () => Promise<unknown>
-      close: () => Promise<unknown>
-      send: (payload: API.WsRequest) => Promise<unknown>
-      onMessage: (callback: (payload: Uint8Array) => void) => BridgeCleanup
-      onOpen: (callback: () => void) => BridgeCleanup
-      onClose: (callback: () => void) => BridgeCleanup
-      onError: (callback: (payload: unknown) => void) => BridgeCleanup
-    }
-    stream: {
-      onData: (token: string, callback: (payload: any) => void) => BridgeCleanup
-      onError: (token: string, callback: (payload: any) => void) => BridgeCleanup
-      onEnd: (token: string, callback: (payload?: any) => void) => BridgeCleanup
-      onceEnd: (token: string, callback: (payload?: any) => void) => BridgeCleanup
-      cancel: (apiKey: string, token: string) => Promise<unknown>
-    }
-    uiLayout: {
-      markRendererReady: () => void
-      onFromEngineLinkWindow: (callback: (payload: EngineLinkFromMainWindowPayload) => void) => BridgeCleanup
-      clearRunnerTerminal: () => Promise<unknown>
-      refreshMainMenu: () => Promise<unknown>
-      onKillOldEngineProcess: (callback: (payload?: any) => void) => BridgeCleanup
-      onLogoutDynamicControl: (callback: (payload?: any) => void) => BridgeCleanup
-      requestSignOut: () => Promise<unknown>
-      onSignOutRequested: (callback: () => void) => BridgeCleanup
-      onJudgeLicenseLogin: (callback: () => void) => BridgeCleanup
-      onResetPassword: (callback: () => void) => BridgeCleanup
-      setSwitchConnectionRefresh: (flag: boolean) => Promise<unknown>
-      onSwitchConnectionRefresh: (callback: (value: boolean) => void) => BridgeCleanup
-      onOpenScreenCapModal: (callback: () => void) => BridgeCleanup
-      requestOpenScreenCapModal: () => Promise<unknown>
-      isScreenRecorderReady: (params?: GrpcEmptyRequest) => Promise<IsScrecorderReadyResponse>
-      cancelScreenRecorder: (token: string) => Promise<unknown>
-      activateScreenshot: () => Promise<unknown>
-      onStartYaklangEngineError: (callback: (error: string) => void) => BridgeCleanup
-    }
-    project: {
-      setCurrentProject: (params: SetCurrentProjectRequest) => Promise<GrpcEmptyResponse>
-      getCurrentProjectEx: (params: GetCurrentProjectExRequest) => Promise<ProjectDescription>
-      getSSAWorkbenchDashboard: (params: GetSSAWorkbenchDashboardRequest) => Promise<GetSSAWorkbenchDashboardResponse>
-      getDefaultProjectEx: (params: GetDefaultProjectExRequest) => Promise<ProjectDescription>
-      getProjects: (params: ProjectParamsProp) => Promise<ProjectsResponse>
-      exportProject: (params: ExportProjectParams, token: string) => Promise<unknown>
-      cancelExportProject: (token: string) => Promise<unknown>
-    }
-    codec: {
-      run: (params: CodecRunParams) => Promise<CodecRunResult>
-      autoDecode: (payload: AutoDecodeRequest) => Promise<AutoDecodeResponse>
-      mutateHttpRequest: (payload: MutateHTTPRequestParams) => Promise<MutateHTTPRequestResponse>
-    }
-    fileSystem: {
-      isFileExists: (targetPath: string) => Promise<boolean>
-      fetchFileContent: (targetPath: string) => Promise<string>
-    }
-    ai: {
-      checkHahValidConfig: () => Promise<CheckHahValidConfigResult>
-    }
-  }
-
-  interface Window {
-    yakitBridge: YakitBridge
   }
 }
 

@@ -87,7 +87,7 @@ export interface ExecuteContextMenuActionRequest {
   Source: string
   Trigger: ContextMenuTrigger
   HttpsState: ContextMenuHttpsState
-  HTTPFlowIDs: number[]
+  HTTPFlowIDs: (string | number)[]
   Request?: Uint8Array
   Response?: Uint8Array
   HasRequest: boolean

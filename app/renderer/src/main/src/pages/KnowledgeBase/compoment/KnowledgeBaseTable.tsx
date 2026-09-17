@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { type Dispatch, type FC, type SetStateAction, useEffect, useMemo } from 'react'
 import { KnowledgeBaseTableHeader } from './KnowledgeBaseTableHeader'
 import { type IconProps } from '@yakit-libs/yakit-ui-icons/oldicon'
@@ -55,13 +56,11 @@ interface KnowledgeBaseTableProps {
   hasBuildDataProps?: boolean
 }
 
-const { ipcRenderer } = window.require('electron')
-
 // 需要命中 构建知识插件 中 的知识条目([multi-hops]: knowledge) ID
 const targetCardStateRelationshipID = '[multi-hops]: knowledge'
 
 const loadTotals = async (knowledgeBaseItems: KnowledgeBaseTableProps['knowledgeBaseItems']) => {
-  const repoResult = await ipcRenderer.invoke('ListEntityRepository', {})
+  const repoResult = await ipc.invoke('grpc', 'ListEntityRepository', {})
 
   const BaseIndex = repoResult?.EntityRepositories?.find(
     (it) => it.Name === knowledgeBaseItems?.KnowledgeBaseName,

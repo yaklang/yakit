@@ -1,3 +1,4 @@
+import { positiveInt64 } from '@/utils/int64'
 import type { YakScript } from '@/pages/invoker/schema'
 import { GetPluginLanguage } from '@/pages/plugins/builtInData'
 import { onCodeToInfo } from '@/pages/plugins/editDetails/utils'
@@ -157,7 +158,7 @@ export const pluginConvertUIToLocal = (value: YakitPluginInfo, local?: YakScript
   if (local) {
     data = {
       ...data,
-      Id: Number(local.Id || 0) || undefined,
+      Id: positiveInt64(local.Id),
       Level: local.Level,
       IsHistory: local.IsHistory,
       IsIgnore: local.IsIgnore,

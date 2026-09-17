@@ -1,10 +1,15 @@
+import { ipc } from '../../../../../shared/communication/window-client'
 import { yakitNotify } from '@/utils/notification'
 import type { APIFunc } from './type'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import type { UploadImgTypeProps } from '@/hook/useUploadOSS/useUploadOSS'
-import { yakitUpload } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
+const uploadField = (value: unknown, key: string): string => {
+  if (!value || typeof value !== 'object') return ''
+  const field = (value as Record<string, unknown>)[key]
+  return typeof field === 'string' ? field : ''
+}
 const tOriginal = i18n.getFixedT(null, ['apiUtils', 'yakitUi'])
 
 export interface HttpUploadImgBaseRequest {
@@ -41,14 +46,15 @@ export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest | HttpUploadImg
       return
     }
 
-    yakitUpload
-      .splitUpload({ ...request, url: 'fragment/upload' })
+    ipc
+      .invoke('local', 'split-upload', { ...request, type: request.type || 'img', url: 'fragment/upload' })
       .then(({ resArr }) => {
         const res = resArr?.[0]
-        if (res?.code === 200 && (res?.data?.from || typeof res?.data === 'string')) {
-          resolve(res?.data?.from || res?.data)
+        if (res?.code === 200 && (uploadField(res?.data, 'from') || typeof res?.data === 'string')) {
+          resolve(uploadField(res?.data, 'from') || (typeof res?.data === 'string' ? res.data : ''))
         } else {
-          const message = res?.message || res?.data?.reason || tOriginal('YakitNotification.unknown_error')
+          const message =
+            res?.message || uploadField(res?.data, 'reason') || tOriginal('YakitNotification.unknown_error')
           if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { error: message }))
           reject(message)
         }
@@ -71,13 +77,14 @@ export const httpUploadImgBase64: APIFunc<HttpUploadImgBase64Request, string> = 
       reject(tOriginal('apiUtilsHttp.parameterError'))
       return
     }
-    yakitUpload
-      .uploadImgBase64(request)
+    ipc
+      .invoke('local', 'http-upload-img-base64', request)
       .then((res) => {
-        if (res?.code === 200 && (res?.data?.from || typeof res?.data === 'string')) {
-          resolve(res?.data?.from || res?.data)
+        if (res?.code === 200 && (uploadField(res?.data, 'from') || typeof res?.data === 'string')) {
+          resolve(uploadField(res?.data, 'from') || (typeof res?.data === 'string' ? res.data : ''))
         } else {
-          const message = res?.message || res?.data?.reason || tOriginal('YakitNotification.unknown_error')
+          const message =
+            res?.message || uploadField(res?.data, 'reason') || tOriginal('YakitNotification.unknown_error')
           if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { error: message }))
           reject(message)
         }
@@ -100,13 +107,13 @@ export interface httpUploadFileFileInfo {
 export const httpUploadFile: APIFunc<httpUploadFileFileInfo, string> = (request, hiddenError) => {
   return new Promise(async (resolve, reject) => {
     // console.log("api:http-upload-file\n", JSON.stringify(request))
-    yakitUpload
-      .uploadFile(request)
+    ipc
+      .invoke('local', 'http-upload-file', request)
       .then((res) => {
         if (res?.code === 200 && res?.data) {
           resolve(typeof res.data === 'string' ? res.data : '')
         } else {
-          const dataReason = typeof res?.data === 'object' && res?.data ? res.data.reason : undefined
+          const dataReason = uploadField(res?.data, 'reason')
           const message = res?.message || dataReason || tOriginal('YakitNotification.unknown_error')
           if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadFileFailed', { error: message }))
           reject(message)

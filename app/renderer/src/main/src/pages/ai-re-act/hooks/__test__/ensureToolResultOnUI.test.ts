@@ -11,7 +11,7 @@ describe('ensureToolResultOnUI', () => {
       id: 'call-1',
       type: AIChatQSDataTypeEnum.TOOL_RESULT,
       chatType: 'reAct' as const,
-      Timestamp: 1,
+      Timestamp: '1',
       AIService: '',
       AIModelName: '',
       data: { tool: { status: 'success' } },

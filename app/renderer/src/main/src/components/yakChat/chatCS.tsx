@@ -1,3 +1,5 @@
+import type { GrpcOutput } from '@/services/ipc'
+import { ipc } from '@/services/ipc'
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 import {
   useCreation,
@@ -95,9 +97,6 @@ import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
 import {
   type HybridScanRequest,
   type PluginBatchExecutorTaskProps,
-  apiCancelDebugPlugin,
-  apiCancelHybridScan,
-  apiHybridScan,
   convertHybridScanParams,
 } from '@/pages/plugins/utils'
 import type { HybridScanControlAfterRequest } from '@/models/HybridScan'
@@ -133,8 +132,6 @@ import { JSONParseLog } from '@/utils/tool'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
-
 export interface CodecParamsProps {
   text?: string
   scriptName?: string
@@ -593,7 +590,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
       },
       contents: ChatCSMultipleInfoProps,
       group: CacheChatCSProps[],
-      yakData: YakScript[],
+      yakData: GrpcOutput<'QueryYakScriptByNames'>['Data'],
     ) => {
       const cs: ChatCSSingleInfoProps = {
         is_bing: params.is_bing,
@@ -838,7 +835,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         const abort = new AbortController()
         controller.current = abort
         await new Promise((resolve, reject) => {
-          ipcRenderer.invoke('QueryYakScriptLocalAll').then(async (item: QueryYakScriptsResponse) => {
+          ipc.invoke('grpc', 'QueryYakScriptLocalAll', {}).then(async (item) => {
             // 因后端要求 - 限制只要mitm和端口扫描插件
             const scripts: ScriptsProps[] = item.Data.filter(
               (item) => item.Type === 'port-scan' || item.Type === 'mitm',
@@ -2069,18 +2066,19 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
       },
     }
     const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(params, pluginInfo)
-    apiHybridScan({ ...hybridScanParams, HybridScanTaskSource: 'pluginBatch' }, tokenRef.current).then(() => {
+    hybridScanStreamEvent.reset()
+    hybridScanStreamEvent.startTask({ ...hybridScanParams, HybridScanTaskSource: 'pluginBatch' }).then(() => {
+      if (!hybridScanStreamEvent.isActive()) return
       setPluginRun(true)
       setPluginNameList(selectPluginName)
       setShowType('loading')
-      hybridScanStreamEvent.reset()
       hybridScanStreamEvent.start()
     })
   })
   /**取消执行 */
   const onStopExecute = useMemoizedFn((e) => {
     e.stopPropagation()
-    apiCancelHybridScan(tokenRef.current).then(() => {
+    hybridScanStreamEvent.cancel().then(() => {
       setPluginRun(false)
     })
   })
@@ -3079,9 +3077,10 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     }
     debugPluginStreamEvent.reset()
 
-    ipcRenderer
-      .invoke('DebugPlugin', executeParams, tokenRef.current)
+    debugPluginStreamEvent
+      .open(executeParams)
       .then(() => {
+        if (!debugPluginStreamEvent.isActive()) return
         debugPluginStreamEvent.start()
       })
       .catch((e: any) => {
@@ -3122,7 +3121,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
 
   /** 停止回答(断开请求连接) */
   const onStop = useMemoizedFn(() => {
-    apiCancelDebugPlugin(tokenRef.current).then(() => {
+    debugPluginStreamEvent.cancel().then(() => {
       onEndReply()
     })
   })

@@ -1,3 +1,9 @@
+import { grpcPageForUI, int64ToSafeNumber } from '@/utils/int64'
+import { yakScriptGroupForUI } from '@/pages/invoker/grpcAdapters'
+import { yakScriptForUI } from '@/pages/invoker/grpcAdapters'
+import { yakScriptsForUI } from '@/pages/invoker/grpcAdapters'
+import { ipc } from '@/services/ipc'
+import type { HybridScanRestoredConfig } from '@/models/HybridScan'
 import type { PluginFilterParams, PluginListPageMeta, PluginSearchParams } from './baseTemplateType'
 import type { YakitPluginListOnlineResponse } from './online/PluginsOnlineType'
 import { NetWorkApi, type requestConfig } from '@/services/fetch'
@@ -35,8 +41,6 @@ import type { YakParamProps } from './pluginsType'
 import { delInvalidPluginExecuteParams } from '../pluginEditor/utils/convert'
 import type { APIFunc, APIOptionalFunc } from '@/apiUtils/type'
 import { omit } from 'lodash'
-
-const { ipcRenderer } = window.require('electron')
 
 /**
  * 本地插件、插件商店、插件管理页面
@@ -113,9 +117,9 @@ export const convertPluginsRequestParams = (
 function PluginNetWorkApi<T extends { token?: string }, D>(params: requestConfig<T>): Promise<D> {
   return new Promise(async (resolve, reject) => {
     try {
-      const userInfo = await ipcRenderer.invoke('get-login-user-info', {})
+      const userInfo = await ipc.invoke('local', 'get-login-user-info', {})
       if (params.data && userInfo.isLogin) {
-        params.data.token = userInfo.token
+        params.data.token = userInfo.token ?? ''
       }
     } catch (error) {}
 
@@ -450,14 +454,14 @@ export const convertDownloadOnlinePluginBatchRequestParams = (
 /**下载插件 非进度条版本 */
 export const apiDownloadPluginBase: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DownloadOnlinePluginBatch', query)
+    ipc
+      .invoke('local', 'DownloadOnlinePluginBatch', query ?? {})
       .then((res) => {
-        if (isCommunityEdition()) ipcRenderer.invoke('refresh-public-menu')
-        else ipcRenderer.invoke('change-main-menu')
+        if (isCommunityEdition()) ipc.invoke('local', 'ForwardMainEvent', { event: 'refresh-public-menu-callback' })
+        else ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-new-main-menu' })
         // 插件商店、我的插件、插件管理页面 下载插件后需要更新 本地插件列表
         emiter.emit('onRefreshLocalPluginList')
-        resolve(res)
+        resolve(null)
       })
       .catch((e) => {
         reject(e)
@@ -754,9 +758,11 @@ export const convertLocalPluginsRequestParams = (query: {
 export const apiQueryYakScriptBase: (query?: QueryYakScriptRequest) => Promise<QueryYakScriptsResponse> = (query) => {
   return new Promise((resolve, reject) => {
     try {
-      ipcRenderer
-        .invoke('QueryYakScript', query)
-        .then((item: QueryYakScriptsResponse) => {
+      ipc
+        .invoke('grpc', 'QueryYakScript', query ?? {})
+        .then(yakScriptsForUI)
+        .then(grpcPageForUI)
+        .then((item) => {
           resolve(item)
         })
         .catch((e: any) => {
@@ -818,9 +824,9 @@ export const apiFetchGroupStatisticsLocal: (hiddenError?: boolean) => Promise<AP
 ) => {
   return new Promise((resolve, reject) => {
     try {
-      ipcRenderer
-        .invoke('GetYakScriptTagsAndType', {})
-        .then((res: GetYakScriptTagsAndTypeResponse) => {
+      ipc
+        .invoke('grpc', 'GetYakScriptTagsAndType', {})
+        .then((res) => {
           const data = [
             {
               groupKey: 'plugin_type',
@@ -872,7 +878,7 @@ export const apiFetchGroupStatisticsLocal: (hiddenError?: boolean) => Promise<AP
 }
 /** apiDeleteYakScriptByIds 请求参数 */
 export interface DeleteYakScriptRequestByIdsProps {
-  Ids: number[]
+  Ids: (string | number)[]
 }
 /**本地，批量删除插件 */
 export const apiDeleteYakScriptByIds: APIFunc<DeleteYakScriptRequestByIdsProps, null> = (query, hiddenError) => {
@@ -881,11 +887,11 @@ export const apiDeleteYakScriptByIds: APIFunc<DeleteYakScriptRequestByIdsProps, 
       const newQuery: DeleteYakScriptRequestByIdsProps = {
         Ids: query.Ids.map((ele) => Number(ele)) || [],
       }
-      ipcRenderer
-        .invoke('DeleteLocalPluginsByWhere', newQuery)
+      ipc
+        .invoke('grpc', 'DeleteLocalPluginsByWhere', newQuery)
         .then(() => {
-          if (isCommunityEdition()) ipcRenderer.invoke('refresh-public-menu')
-          else ipcRenderer.invoke('change-main-menu')
+          if (isCommunityEdition()) ipc.invoke('local', 'ForwardMainEvent', { event: 'refresh-public-menu-callback' })
+          else ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-new-main-menu' })
           resolve(null)
         })
         .catch((e: any) => {
@@ -940,11 +946,11 @@ export const apiDeleteLocalPluginsByWhere: APIFunc<DeleteLocalPluginsByWhereRequ
 ) => {
   return new Promise((resolve, reject) => {
     try {
-      ipcRenderer
-        .invoke('DeleteLocalPluginsByWhere', query)
+      ipc
+        .invoke('grpc', 'DeleteLocalPluginsByWhere', query)
         .then(() => {
-          if (isCommunityEdition()) ipcRenderer.invoke('refresh-public-menu')
-          else ipcRenderer.invoke('change-main-menu')
+          if (isCommunityEdition()) ipc.invoke('local', 'ForwardMainEvent', { event: 'refresh-public-menu-callback' })
+          else ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-new-main-menu' })
           resolve(null)
         })
         .catch((e: any) => {
@@ -997,11 +1003,12 @@ interface GetYakScriptByOnlineIDRequest {
 export const apiGetYakScriptByOnlineID: (query: GetYakScriptByOnlineIDRequest) => Promise<YakScript> = (query) => {
   return new Promise((resolve, reject) => {
     try {
-      ipcRenderer
-        .invoke('GetYakScriptByOnlineID', {
+      ipc
+        .invoke('grpc', 'GetYakScriptByOnlineID', {
           ...query,
         } as GetYakScriptByOnlineIDRequest)
-        .then((newScript: YakScript) => {
+        .then(yakScriptForUI)
+        .then((newScript) => {
           resolve(newScript)
         })
         .catch((e) => {
@@ -1036,11 +1043,13 @@ export const apiQueryYakScriptByYakScriptName: (query: QueryYakScriptByYakScript
         },
         IncludedScriptNames: [query.pluginName],
       }
-      ipcRenderer
-        .invoke('QueryYakScript', {
+      ipc
+        .invoke('grpc', 'QueryYakScript', {
           ...newQuery,
         })
-        .then((item: QueryYakScriptsResponse) => {
+        .then(yakScriptsForUI)
+        .then(grpcPageForUI)
+        .then((item) => {
           if (item.Data.length > 0) {
             resolve(item.Data[0])
           } else {
@@ -1078,11 +1087,11 @@ export const defaultLinkPluginConfig = {
  */
 export const apiDebugPlugin: (request: {
   params: DebugPluginRequest
-  token: string
+  open: (params: DebugPluginRequest) => Promise<unknown>
   pluginCustomParams?: YakParamProps[]
   isShowStartInfo?: boolean
 }) => Promise<null> = (request) => {
-  const { params, token, pluginCustomParams = [], isShowStartInfo = true } = request
+  const { params, open, pluginCustomParams = [], isShowStartInfo = true } = request
   return new Promise((resolve, reject) => {
     try {
       let executeParams: DebugPluginRequest = {
@@ -1110,8 +1119,7 @@ export const apiDebugPlugin: (request: {
           break
       }
 
-      ipcRenderer
-        .invoke('DebugPlugin', executeParams, token)
+      open(executeParams)
         .then(() => {
           isShowStartInfo && yakitNotify('info', '启动任务成功')
           resolve(null)
@@ -1126,28 +1134,6 @@ export const apiDebugPlugin: (request: {
     }
   })
 }
-
-/**
- * @description 取消DebugPlugin
- */
-export const apiCancelDebugPlugin: (token: string) => Promise<null> = (token) => {
-  return new Promise((resolve, reject) => {
-    try {
-      ipcRenderer
-        .invoke(`cancel-DebugPlugin`, token)
-        .then(() => {
-          resolve(null)
-        })
-        .catch((e: any) => {
-          yakitNotify('error', '取消本地插件执行出错:' + e)
-          reject(e)
-        })
-    } catch (error) {
-      yakitNotify('error', '取消本地插件执行出错:' + error)
-      reject(error)
-    }
-  })
-}
 interface QueryYakScriptByOnlineGroupRequest {
   Data: YakScript[]
 }
@@ -1157,8 +1143,9 @@ export const apiGetPluginByGroup: (OnlineGroup: string[]) => Promise<QueryYakScr
 ) => {
   return new Promise((resolve, reject) => {
     try {
-      ipcRenderer
-        .invoke('QueryYakScriptByOnlineGroup', { OnlineGroup })
+      ipc
+        .invoke('grpc', 'QueryYakScriptByOnlineGroup', { OnlineGroup: OnlineGroup.join(',') })
+        .then(yakScriptGroupForUI)
         .then(resolve)
         .catch((e: any) => {
           yakitNotify('error', '获取组内插件出错:' + e)
@@ -1230,7 +1217,7 @@ export interface YakPoCExecutorInputValueProps {
  * @description HybridScan
  */
 export const hybridScanParamsConvertToInputValue = (
-  value: HybridScanControlAfterRequest,
+  value: HybridScanControlAfterRequest | HybridScanRestoredConfig,
 ): YakPoCExecutorInputValueProps => {
   const data: YakPoCExecutorInputValueProps = {
     params: {
@@ -1248,7 +1235,7 @@ export const hybridScanParamsConvertToInputValue = (
   }
   try {
     // 只需要 HybridScanControlAfterRequest 部分参数
-    const resParams: HybridScanControlAfterRequest = { ...value }
+    const resParams = { ...value }
     let targets = resParams.Targets
     let plugin = resParams.Plugin
     // 确保 plugin targets 一定会有初始值
@@ -1283,7 +1270,7 @@ export const hybridScanParamsConvertToInputValue = (
     // 处理输入的参数，包括额外参数
     data.params.Input = targets.Input
     data.params.Proxy = resParams.Proxy || ''
-    data.params.Concurrent = resParams.Concurrent || 30
+    data.params.Concurrent = int64ToSafeNumber(resParams.Concurrent || 30)
     data.params.TotalTimeoutSecond = resParams.TotalTimeoutSecond || 7200
     data.params.HTTPRequestTemplate = {
       ...cloneDeep(defPluginBatchExecuteExtraFormValue),
@@ -1303,88 +1290,6 @@ export interface HybridScanRequest extends PluginBatchExecutorTaskProps {
   Input: string
   HTTPRequestTemplate: HTTPRequestBuilderParams
 }
-/**
- * @description HybridScan 批量执行
- */
-export const apiHybridScan: (params: HybridScanControlAfterRequest, token: string) => Promise<null> = (
-  params,
-  token,
-) => {
-  return new Promise((resolve, reject) => {
-    try {
-      const executeParams: HybridScanControlAfterRequest = {
-        ...params,
-      }
-      ipcRenderer
-        .invoke(
-          'HybridScan',
-          {
-            Control: true,
-            HybridScanMode: 'new',
-            ResumeTaskId: '',
-            HybridScanTaskSource: params.HybridScanTaskSource ? params.HybridScanTaskSource : 'pluginBatch',
-          } as HybridScanControlRequest,
-          token,
-        )
-        .then(() => {
-          info(`启动成功,任务ID: ${token}`)
-          // send target / plugin
-          ipcRenderer.invoke('HybridScan', executeParams, token).then(() => {
-            info('发送扫描目标与插件成功')
-          })
-          resolve(null)
-        })
-    } catch (error) {
-      yakitNotify('error', '插件批量执行出错:' + error)
-      reject(error)
-    }
-  })
-}
-/**
- * @description 取消 HybridScan
- */
-export const apiCancelHybridScan: (token: string) => Promise<null> = (token) => {
-  return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke(`cancel-HybridScan`, token)
-      .then(() => {
-        resolve(null)
-      })
-      .catch((e: any) => {
-        yakitNotify('error', '取消插件批量执行出错:' + e)
-        reject(e)
-      })
-  })
-}
-
-/**
- * @description HybridScan 批量执行查询/恢复/暂停操作
- */
-export const apiHybridScanByMode: (
-  runtimeId: string,
-  hybridScanMode: HybridScanModeType,
-  token: string,
-) => Promise<null> = (runtimeId, hybridScanMode, token) => {
-  return new Promise((resolve, reject) => {
-    if (hybridScanMode === 'new') return
-    const params: HybridScanControlRequest = {
-      Control: hybridScanMode !== 'pause',
-      HybridScanMode: hybridScanMode,
-      ResumeTaskId: runtimeId,
-    }
-    ipcRenderer
-      .invoke('HybridScan', params, token)
-      .then(() => {
-        info(`任务ID: ${token}`)
-        resolve(null)
-      })
-      .catch((error) => {
-        yakitNotify('error', '插件批量执行出错:' + error)
-        reject(error)
-      })
-  })
-}
-
 /**本地获取插件组数据 */
 export const apiFetchQueryYakScriptGroupLocal: (
   All?: boolean,
@@ -1392,9 +1297,9 @@ export const apiFetchQueryYakScriptGroupLocal: (
   IsMITMParamPlugins?: number,
 ) => Promise<GroupCount[]> = (All = true, ExcludeType = [], IsMITMParamPlugins = 0) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryYakScriptGroup', { All, ExcludeType, IsMITMParamPlugins })
-      .then((res: QueryYakScriptGroupResponse) => {
+    ipc
+      .invoke('grpc', 'QueryYakScriptGroup', { All, ExcludeType, IsMITMParamPlugins })
+      .then((res) => {
         resolve(res.Group)
       })
       .catch((e) => {
@@ -1410,9 +1315,9 @@ export const apiFetchRenameYakScriptGroupLocal: (Group: string, NewGroup: string
   NewGroup,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('RenameYakScriptGroup', { Group, NewGroup })
-      .then((res: null) => {
+    ipc
+      .invoke('grpc', 'RenameYakScriptGroup', { Group, NewGroup })
+      .then(() => {
         resolve(null)
       })
       .catch((e) => {
@@ -1425,9 +1330,9 @@ export const apiFetchRenameYakScriptGroupLocal: (Group: string, NewGroup: string
 /**本地插件组删除 */
 export const apiFetchDeleteYakScriptGroupLocal: (Group: string) => Promise<null> = (Group) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteYakScriptGroup', { Group })
-      .then((res: null) => {
+    ipc
+      .invoke('grpc', 'DeleteYakScriptGroup', { Group })
+      .then(() => {
         resolve(null)
       })
       .catch((e) => {
@@ -1440,9 +1345,9 @@ export const apiFetchDeleteYakScriptGroupLocal: (Group: string) => Promise<null>
 /**本地插件组新增 */
 export const apiFetchAddYakScriptGroupLocal: (GroupName: string) => Promise<null> = (GroupName) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('SetGroup', { GroupName })
-      .then((res: null) => {
+    ipc
+      .invoke('grpc', 'SetGroup', { GroupName })
+      .then(() => {
         resolve(null)
       })
       .catch((e) => {
@@ -1457,9 +1362,9 @@ export const apiFetchGetYakScriptGroupLocal: (params: QueryYakScriptRequest) => 
   params,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetYakScriptGroup', params)
-      .then((res: GetYakScriptGroupResponse) => {
+    ipc
+      .invoke('grpc', 'GetYakScriptGroup', params)
+      .then((res) => {
         resolve(res)
       })
       .catch((e) => {
@@ -1472,9 +1377,9 @@ export const apiFetchGetYakScriptGroupLocal: (params: QueryYakScriptRequest) => 
 /**本地更新插件所在组&新增插件组 */
 export const apiFetchSaveYakScriptGroupLocal: (params: SaveYakScriptGroupRequest) => Promise<null> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('SaveYakScriptGroup', params)
-      .then((res: null) => {
+    ipc
+      .invoke('grpc', 'SaveYakScriptGroup', params)
+      .then(() => {
         resolve(null)
       })
       .catch((e) => {
@@ -1487,9 +1392,9 @@ export const apiFetchSaveYakScriptGroupLocal: (params: SaveYakScriptGroupRequest
 /**本地插件组重置为线上插件组 */
 export const apiFetchResetYakScriptGroup: (params: ResetYakScriptGroupRequest) => Promise<null> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('ResetYakScriptGroup', params)
-      .then((res: null) => {
+    ipc
+      .invoke('grpc', 'ResetYakScriptGroup', params)
+      .then(() => {
         resolve(null)
       })
       .catch((e) => {

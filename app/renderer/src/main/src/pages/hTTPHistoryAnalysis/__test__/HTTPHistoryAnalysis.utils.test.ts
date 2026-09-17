@@ -18,8 +18,8 @@ import {
 } from '@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis.utils'
 
 const makeHTTPFlowRuleRow = (overrides: Partial<HTTPFlowRuleData> = {}): HTTPFlowRuleData => ({
-  Id: 1,
-  HTTPFlowId: 101,
+  Id: '1',
+  HTTPFlowId: '101',
   Method: 'GET',
   StatusCode: '200',
   Url: 'https://example.com/login',
@@ -255,10 +255,10 @@ describe('buildHTTPFlowRuleDetailMiniProps', () => {
   it('builds the HTTPFlowDetailMini props from a rule row', () => {
     expect(buildHTTPFlowRuleDetailMiniProps(makeHTTPFlowRuleRow())).toEqual({
       noHeader: true,
-      id: 101,
-      analyzedIds: [1],
+      id: '101',
+      analyzedIds: ['1'],
       sendToWebFuzzer: true,
-      scrollID: 1,
+      scrollID: '1',
       showEditTag: false,
       showJumpTree: false,
     })
@@ -291,8 +291,8 @@ describe('filterHTTPFlowRuleTableData', () => {
   const rows = [
     makeHTTPFlowRuleRow(),
     makeHTTPFlowRuleRow({
-      Id: 2,
-      HTTPFlowId: 102,
+      Id: '2',
+      HTTPFlowId: '102',
       Method: 'POST',
       StatusCode: '404',
       Url: 'https://example.com/api',
@@ -347,7 +347,7 @@ describe('shouldUpdateHTTPFlowRuleSelection', () => {
     const currentRow = makeHTTPFlowRuleRow()
 
     expect(shouldUpdateHTTPFlowRuleSelection(currentRow, undefined)).toBe(true)
-    expect(shouldUpdateHTTPFlowRuleSelection(currentRow, makeHTTPFlowRuleRow({ Id: 2 }))).toBe(true)
+    expect(shouldUpdateHTTPFlowRuleSelection(currentRow, makeHTTPFlowRuleRow({ Id: '2' }))).toBe(true)
   })
 })
 

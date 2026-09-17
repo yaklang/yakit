@@ -21,7 +21,6 @@ import { RiskDetails, cellColorFontSetting } from '../risks/RiskTable'
 import type { Risk } from '../risks/schema'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-const { ipcRenderer } = window.require('electron')
 const { Paragraph } = Typography
 const { Option } = YakitSelect
 

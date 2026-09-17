@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import MDEditor from '@uiw/react-md-editor'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
@@ -35,7 +36,6 @@ const sanitizeSchemaWithDataImage = {
     src: [...(defaultSchema.protocols?.src || []), 'data'],
   },
 }
-const { ipcRenderer } = window.require('electron')
 const { Markdown } = MDEditor
 
 function PreCode(props: { children?: React.ReactNode }) {
@@ -100,7 +100,7 @@ export const SafeMarkdown: React.FC<SafeMarkdownProp> = (props) => {
                 {...aProps}
                 onClick={(e) => {
                   e.stopPropagation()
-                  ipcRenderer.invoke('open-url', aProps.href || '')
+                  ipc.invoke('local', 'open-url', aProps.href || '')
                 }}
               />
             )
@@ -356,7 +356,7 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
                   {...aProps}
                   onClick={(e) => {
                     e.stopPropagation()
-                    ipcRenderer.invoke('open-url', aProps.href || '')
+                    ipc.invoke('local', 'open-url', aProps.href || '')
                   }}
                 />
               )

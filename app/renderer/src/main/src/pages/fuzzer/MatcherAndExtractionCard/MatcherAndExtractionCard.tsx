@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type {
   ExtractorValueProps,
@@ -79,8 +80,6 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
-
-const { ipcRenderer } = window.require('electron')
 
 const { YakitPanel } = YakitCollapse
 
@@ -363,14 +362,14 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         return
       }
       setExecuteLoading(true)
-      ipcRenderer
-        .invoke('ExtractHTTPResponse', {
+      ipc
+        .invoke('grpc', 'ExtractHTTPResponse', {
           HTTPResponse: httpResponse,
           Extractors: extractor.extractorList,
           HTTPRequest: httpRequest,
           IsHTTPS: isHttps,
         })
-        .then((obj: { Values: { Key: string; Value: string }[] }) => {
+        .then((obj) => {
           if (!obj) {
             yakitNotify('error', t('MatcherAndExtraction.no_valid_match_found'))
             return
@@ -724,9 +723,9 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
         return
       }
       setExecutingItemList((v) => [...v, number])
-      ipcRenderer
-        .invoke('MatchHTTPResponse', matchHTTPResponseParams)
-        .then((data: { Matched: boolean }) => {
+      ipc
+        .invoke('grpc', 'MatchHTTPResponse', matchHTTPResponseParams)
+        .then((data) => {
           if (data.Matched) {
             yakitNotify('success', t('MatcherCollapse.matchSuccess'))
           } else {

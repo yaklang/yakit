@@ -1,3 +1,7 @@
+import { ssaRiskForUI } from '@/pages/risks/grpcAdapters'
+import { syntaxFlowTasksForUI } from '@/pages/yakRunnerCodeScan/grpcAdapters'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useRef, useState } from 'react'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -18,8 +22,6 @@ import { isCellRedSingleColor } from '@/components/TableVirtualResize/utils'
 import type { QuerySyntaxFlowScanTaskResponse } from '../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer'
 import styles from './SsaResDiff.module.scss'
 
-const { ipcRenderer } = window.require('electron')
-
 interface SSARiskDiffItem {
   ProgramName: string
   RuleName?: string
@@ -33,8 +35,8 @@ interface SSARiskDiffRequest {
 }
 type SSARiskDiffStatus = 'Equal' | 'Add' | 'Del'
 interface SSARiskDiffResponse {
-  BaseRisk: SSARisk
-  CompareRisk: SSARisk
+  BaseRisk: SSARisk | null
+  CompareRisk: SSARisk | null
   RuleName: string
   Status: SSARiskDiffStatus
 }
@@ -50,9 +52,11 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
   }, [])
 
   const getSyntaxFlowScanTaskList = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('QuerySyntaxFlowScanTask', { Filter: {} })
-      .then((res: QuerySyntaxFlowScanTaskResponse) => {
+    ipc
+      .invoke('grpc', 'QuerySyntaxFlowScanTask', { Filter: {} })
+      .then(syntaxFlowTasksForUI)
+      .then(grpcPageForUI)
+      .then((res) => {
         if (!res || !Array.isArray(res.Data)) {
           return
         }
@@ -66,6 +70,7 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
   })
 
   const [token, setToken] = useState<string>('')
+  const paramsRef = useRef<SSARiskDiffRequest>()
   const timeRef = useRef<ReturnType<typeof setTimeout>>()
   const [ssaDiffRes, setSsaDiffRes] = useState<SSARiskDiffResponse[]>()
   const ssaDiffResRef = useRef<SSARiskDiffResponse[]>([])
@@ -90,41 +95,54 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
         RiskRuntimeId: compareTaskID,
       },
     }
-    ipcRenderer
-      .invoke('SSARiskDiff', params, t)
-      .then(() => {})
-      .catch((err) => {
-        yakitNotify('error', '对比失败：' + err)
-      })
+    paramsRef.current = params
   })
 
   useEffect(() => {
-    if (!token) return
-    const updateNewSSADiffStream = () => {
-      setSsaDiffRes(ssaDiffResRef.current.slice())
+    if (!token || !paramsRef.current) return
+    const controller = new AbortController()
+    const flush = () => {
+      if (!controller.signal.aborted) setSsaDiffRes([...ssaDiffResRef.current])
     }
-    timeRef.current = setInterval(updateNewSSADiffStream, 200)
-    ipcRenderer.on(`${token}-data`, async (e, data: SSARiskDiffResponse) => {
-      ssaDiffResRef.current.push(data)
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      yakitNotify('error', `error: ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {})
+    const timer = setInterval(flush, 200)
+    const onError = (error: unknown) => {
+      clearInterval(timer)
+      if (controller.signal.aborted) return
+      flush()
+      yakitNotify('error', '对比失败：' + error)
+    }
+    void ipc
+      .openStream('grpc', 'SSARiskDiff', paramsRef.current, {
+        token,
+        signal: controller.signal,
+        onData(data) {
+          if (controller.signal.aborted) return
+          if (data.Status !== 'Equal' && data.Status !== 'Add' && data.Status !== 'Del')
+            throw new Error('未知风险对比状态：' + data.Status)
+          ssaDiffResRef.current.push({
+            ...data,
+            Status: data.Status,
+            BaseRisk: data.BaseRisk ? ssaRiskForUI(data.BaseRisk) : null,
+            CompareRisk: data.CompareRisk ? ssaRiskForUI(data.CompareRisk) : null,
+          })
+        },
+        onError,
+        onEnd() {
+          clearInterval(timer)
+          flush()
+        },
+      })
+      .catch(onError)
     return () => {
-      if (token) {
-        ipcRenderer.invoke(`cancel-SSARiskDiff`, token)
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
-        clearInterval(timeRef.current)
-      }
+      controller.abort()
+      clearInterval(timer)
     }
   }, [token])
 
   const baseRisk = useCreation(() => {
     return (ssaDiffRes || [])
-      .map((item) => {
+      .flatMap((item) => {
+        if (!item.BaseRisk) return []
         const baseRisk = { ...item.BaseRisk }
         if (item.Status === 'Del') {
           baseRisk.cellClassName = 'table-cell-bg-red'
@@ -136,7 +154,8 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
 
   const compareRisk = useCreation(() => {
     return (ssaDiffRes || [])
-      .map((item) => {
+      .flatMap((item) => {
+        if (!item.CompareRisk) return []
         const compareRisk = { ...item.CompareRisk }
         if (item.Status === 'Add') {
           compareRisk.cellClassName = 'table-cell-bg-green'

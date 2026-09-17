@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+import { ipc } from '@/services/ipc'
 import { useEffect, useState, useImperativeHandle, forwardRef } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -20,9 +22,8 @@ import type { IMonacoEditor } from '@/utils/editors'
 import styles from './StringFuzzer.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
 export interface QueryFuzzerLabelResponseProps {
-  Id: number
+  Id: string
   Label: string
   Description: string
   DescriptionUi?: string
@@ -81,33 +82,21 @@ export const StringFuzzer = forwardRef<StringFuzzerRef, StringFuzzerProps>((prop
   const [renderList, setRenderList] = useState<FuzztagInfo[]>([])
   const [searchVal, setSearchVal] = useState<string>('')
 
-  const onSubmit = useMemoizedFn(() => {
+  const controllerRef = useRef<AbortController>()
+  useEffect(() => () => controllerRef.current?.abort(), [])
+  const onSubmit = useMemoizedFn(async () => {
     if (!template) {
       yakitNotify('warning', t('StringFuzzer.fuzz_template_empty'))
       return
     }
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
     setLoading(true)
-    ipcRenderer.invoke('string-fuzzer', { template, token })
-  })
-
-  const handleCancel = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-string-fuzzer', token).then(() => {
-      setLoading(false)
-    })
-  })
-
-  useImperativeHandle(ref, () => ({
-    handleCancel,
-  }))
-
-  useEffect(() => {
-    if (!random) return
-    ipcRenderer.on(token, (e, data: { error: any; data: { Results: string[] } }) => {
-      if (data.error) {
-        yakitNotify('error', data.error?.details || data.error?.detail || t('YakitNotification.unknown_error'))
-        return
-      }
-      const { Results } = data.data
+    try {
+      const response = await ipc.invoke('grpc', 'StringFuzzer', { Template: template }, { signal: controller.signal })
+      if (controller.signal.aborted) return
+      const Results = response.Results.map((data) => new TextDecoder().decode(data))
       showYakitDrawer({
         title: t('StringFuzzer.payload_test_result'),
         content: (
@@ -147,12 +136,17 @@ export const StringFuzzer = forwardRef<StringFuzzerRef, StringFuzzerProps>((prop
         width: '35%',
         mask: true,
       })
-      setLoading(false)
-    })
-    return () => {
-      ipcRenderer.removeAllListeners(token)
+    } catch (error) {
+      if (!controller.signal.aborted) yakitNotify('error', String(error))
+    } finally {
+      if (controllerRef.current === controller) setLoading(false)
     }
-  }, [random])
+  })
+  const handleCancel = useMemoizedFn(() => {
+    controllerRef.current?.abort()
+    setLoading(false)
+  })
+  useImperativeHandle(ref, () => ({ handleCancel }))
 
   const addToCommonTag = useMemoizedFn(() => {
     if (!template) {
@@ -164,8 +158,8 @@ export const StringFuzzer = forwardRef<StringFuzzerRef, StringFuzzerProps>((prop
         return
       }
       const count: number = JSON.parse(data).number
-      ipcRenderer
-        .invoke('SaveFuzzerLabel', {
+      ipc
+        .invoke('grpc', 'SaveFuzzerLabel', {
           Data: [
             {
               Label: template,
@@ -186,9 +180,9 @@ export const StringFuzzer = forwardRef<StringFuzzerRef, StringFuzzerProps>((prop
   })
 
   useEffect(() => {
-    ipcRenderer
-      .invoke('GetAllFuzztagInfo', { Key: '' })
-      .then((res: GetAllFuzztagInfoResponse) => {
+    ipc
+      .invoke('grpc', 'GetAllFuzztagInfo', { Key: '' })
+      .then((res) => {
         setFuzztagList(res.Data || [])
         setRenderList(res.Data || [])
       })
@@ -216,10 +210,10 @@ export const StringFuzzer = forwardRef<StringFuzzerRef, StringFuzzerProps>((prop
       Name: tagItem.Name,
       Range: range,
     }
-    ipcRenderer
-      .invoke('GenerateFuzztag', params)
+    ipc
+      .invoke('grpc', 'GenerateFuzztag', params)
       .then((res) => {
-        if (res.Status.Ok) {
+        if (res.Status?.Ok) {
           setTemplate(res.Result)
         }
       })

@@ -1,3 +1,7 @@
+import { fetchHTTPFlow as requestHTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { mitmRulesForUI } from '@/pages/mitm/grpcAdapters'
+import { int64ToSafeNumber } from '@/utils/int64'
+import { ipc, type GrpcInput } from '@/services/ipc'
 import React, { type ReactNode, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import {
@@ -110,7 +114,6 @@ import styles from './HTTPHistoryAnalysis.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 const MITMRule = React.lazy(() => import('../mitm/MITMRule/MITMRule'))
-const { ipcRenderer } = window.require('electron')
 interface HTTPHistoryAnalysisProps {
   pageId: string
   /** 来自httpFuzzerPage或FuzzerSequence */
@@ -375,15 +378,22 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
   })
   const onSetRules = useMemoizedFn((r?: MITMContentReplacerRule[]) => {
     if (r === undefined) {
-      ipcRenderer.invoke('GetCurrentRules', {}).then((rsp: { Rules: MITMContentReplacerRule[] }) => {
-        const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
-        setCurRules(
-          newRules.map((item) => ({
-            ...item,
-            ...rulesResetFieldsRef.current,
-          })),
-        )
-      })
+      ipc
+        .invoke('grpc', 'GetCurrentRules', {})
+        .then(mitmRulesForUI)
+        .then((rsp) => {
+          const newRules = rsp.Rules.map((ele) => ({
+            ...ele,
+            Id: ele.Index,
+            RegexpGroups: ele.RegexpGroups.map(int64ToSafeNumber),
+          }))
+          setCurRules(
+            newRules.map((item) => ({
+              ...item,
+              ...rulesResetFieldsRef.current,
+            })),
+          )
+        })
     } else {
       setCurRules(
         r.map((item) => ({
@@ -529,8 +539,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     }
     if (isGetRequest) {
       setHttpFlowLoading(true)
-      ipcRenderer
-        .invoke('GetHTTPFlowById', { Id: flow.Id })
+      requestHTTPFlow({ Id: flow.Id })
         .then((i: HTTPFlow) => {
           setHttpFlowRequest(getSafeHTTPRequest(i))
         })
@@ -721,7 +730,8 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         RawResponse: rawResponse,
       }
     }
-    ipcRenderer.invoke('AnalyzeHTTPFlow', execParamsRef.current, tokenRef.current).then(() => {
+    debugPluginStreamEvent.open(execParamsRef.current).then(() => {
+      if (!debugPluginStreamEvent.isActive()) return
       debugPluginStreamEvent.start()
       setExecuteStatus('process')
       setFullScreenSecondNode(true)
@@ -730,8 +740,8 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
   })
 
   const onStopExecute = () => {
-    ipcRenderer
-      .invoke(`cancel-AnalyzeHTTPFlow`, tokenRef.current)
+    debugPluginStreamEvent
+      .cancel()
       .then(() => {
         debugPluginStreamEvent.stop()
         setExecuteStatus('finished')
@@ -1467,7 +1477,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
   const [showList, setShowList] = useState<HTTPFlowRuleData[]>([])
   const [sorterTable, setSorterTable, getSorterTable] = useGetSetState<SortProps>()
   const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
   const onSelectAll = useMemoizedFn(() => {
     if (isAllSelect) {
       setIsAllSelect(false)
@@ -1708,29 +1718,18 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
   }, [i18nRefresh])
 
   const [exportToken, setExportToken] = useState<string>('')
+  const exportRequest = useRef<GrpcInput<'ExportMITMRuleExtractedData'>>({})
   const [exportPercentVisible, setExportPercentVisible] = useState<boolean>(false)
   const exportPageContainerRef = useRef<HTMLElement>()
   const exportMITMRuleExtractedData = useMemoizedFn(() => {
     const token = randomString(40)
     setExportToken(token)
-    ipcRenderer
-      .invoke(
-        'ExportMITMRuleExtractedDataStream',
-        {
-          Type: 'json',
-          Filter: {
-            AnalyzedIds: selectedRowKeys.length ? selectedRowKeys : showList.map((item) => item.Id),
-          },
-        },
-        token,
-      )
-      .then(() => {
-        exportPageContainerRef.current = getMainOperatorPageBodyContainer()
-        setExportPercentVisible(true)
-      })
-      .catch((error) => {
-        yakitNotify('error', `[ExportMITMRuleExtractedData] error: ${error}`)
-      })
+    exportRequest.current = {
+      Type: 'json',
+      Filter: { AnalyzedIds: selectedRowKeys.length ? selectedRowKeys : showList.map((item) => item.Id) },
+    }
+    exportPageContainerRef.current = getMainOperatorPageBodyContainer()
+    setExportPercentVisible(true)
   })
 
   return (
@@ -1781,7 +1780,9 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
           title={t('HttpRuleTable.export_rule_data')}
           subTitle={t('HttpRuleTable.query_in_database')}
           token={exportToken}
-          apiKey="ExportMITMRuleExtractedDataStream"
+          openStream={(options) =>
+            ipc.openStream('grpc', 'ExportMITMRuleExtractedData', exportRequest.current, options)
+          }
           onClose={(finish, streamData) => {
             setExportPercentVisible(false)
             if (finish) {

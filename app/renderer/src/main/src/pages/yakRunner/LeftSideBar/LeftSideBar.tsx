@@ -11,8 +11,6 @@ import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { YakRunnerTab } from '../YakRunner'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
-
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
   const { addFileTab, isUnShow, active, setActive, setIsUnShow } = props
   const { t, i18nRefresh } = useI18nNamespaces(['yakRunner'])

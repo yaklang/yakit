@@ -16,9 +16,11 @@ export interface PluginExecuteDetailHeardProps {
   /**头部右侧额外dom */
   extraNode: ReactNode
   debugPluginStreamEvent: {
+    open: (params: import('@/services/ipc').GrpcInput<'DebugPlugin'>) => Promise<void>
+    isActive: () => boolean
     start: () => void
     stop: () => void
-    cancel: () => void
+    cancel: () => Promise<void>
     reset: () => void
     snapshot: () => HoldGRPCStreamInfo
   }
@@ -93,7 +95,7 @@ export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {
 }
 /**表单的key value类型 */
 export interface CustomPluginExecuteFormValue {
-  [key: string]: number | string | boolean | string[] | Uint8Array | KVPair[] | number[]
+  [key: string]: number | string | boolean | (string | number)[] | Uint8Array | KVPair[]
 }
 
 export interface FormContentItemByTypeProps extends JsonFormSchemaListWrapper {

@@ -1,0 +1,2688 @@
+{
+  "legacyRendererCalls": 0,
+  "rendererCallSites": 1248,
+  "methods": [
+    {
+      "method": "grpc:AIConfigHealthCheck",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:AIToolGenerateMetadata",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:AddLocalModel",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:AddMCPServer",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:AddOneNavigation",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:AddToNavigation",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:ApplyClassToFacades",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:ApplySyntaxFlowRuleUpdate",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:AttachCombinedOutput",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:AutoDecode",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:AvailableLocalAddr",
+      "callSites": 7
+    },
+    {
+      "method": "grpc:BackUpOrCopyPayloads",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:BatchUpdateFingerprintToGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:BuildVectorIndexForKnowledgeBase",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:BuildVectorIndexForKnowledgeBaseEntry",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:BytesToBase64",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:CheckHahValidAiConfig",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CheckLicense",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CheckProxyAlive",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CheckSyntaxFlowRuleUpdate",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ClearAllModels",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:Codec",
+      "callSites": 12
+    },
+    {
+      "method": "grpc:ConfigGlobalReverse",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ConvertFuzzerResponseToHTTPFlow",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CountAIMemoryEntityTags",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateAIForge",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateAIMemoryEntity",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateAIReActSchedule",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateFingerprint",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateFingerprintGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateHotPatchTemplate",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:CreateKnowledgeBase",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateKnowledgeBaseEntry",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateKnowledgeBaseV2",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:CreateNote",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreatePayloadFolder",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreatePluginEnv",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateSSAProject",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:CreateSSARiskDisposals",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateSnippet",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateSyntaxFlowRuleEx",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateSyntaxFlowRuleGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:CreateWebsocketFuzzer",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DebugPlugin",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeduplicateMITMRuleExtractedData",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:DelKey",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteAIForge",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteAIMemoryEntity",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteAIReActSchedule",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteAISession",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteAITool",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteAllNavigation",
+      "callSites": 7
+    },
+    {
+      "method": "grpc:DeleteCodecFlow",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteDomains",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:DeleteFingerprint",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteFingerprintGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteFuzzerConfig",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteFuzzerLabel",
+      "callSites": 5
+    },
+    {
+      "method": "grpc:DeleteHTTPFlows",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:DeleteHistoryHTTPFuzzerTask",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteHotPatchTemplate",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:DeleteHybridScanTask",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteIMBot",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteKnowledgeBase",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:DeleteKnowledgeBaseEntry",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:DeleteLocalModel",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteLocalPluginsByWhere",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:DeleteMCPServer",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteMCPToolCallHistory",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteMITMRuleExtractedData",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteNote",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeletePayload",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeletePayloadByFolder",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeletePayloadByGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeletePluginByUserID",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeletePluginEnv",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeletePorts",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteProject",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:DeleteReport",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteRisk",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:DeleteSSAPrograms",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:DeleteSSAProject",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteSSARiskDisposals",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteSSARisks",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteScreenRecorders",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:DeleteSimpleDetectUnfinishedTask",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteSnippets",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteSyntaxFlowResult",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteSyntaxFlowRule",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteSyntaxFlowRuleGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteSyntaxFlowScanTask",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:DeleteWebShell",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteYakScript",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DeleteYakScriptGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DiagnoseNetwork",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DiagnoseNetworkDNS",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DisconnectVulinboxAgent",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DownloadHotPatchTemplate",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DownloadOnlinePluginByUUID",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DownloadOnlinePlugins",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:DownloadRAGs",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:DuplexConnection",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:Echo",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:EncodeHTTPPacketContent",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:EvaluateExpression",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:Exec",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ExecPacketScan",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ExportHTTPFlowStream",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:ExportHTTPFlows",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:ExportHTTPFuzzerTaskToYaml",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:ExportKnowledgeBase",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ExportMITMReplacerRules",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ExportMITMRuleExtractedData",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:ExportNote",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ExportPayloadDBAndFile",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ExportProject",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:ExportSSARisk",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ExportYakScriptStream",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ExtractData",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ExtractDataToFile",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ExtractHTTPResponse",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ExtractUrl",
+      "callSites": 5
+    },
+    {
+      "method": "grpc:FuzzTagSuggestion",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GenerateCSRFPocByPacket",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GenerateERMDot",
+      "callSites": 5
+    },
+    {
+      "method": "grpc:GenerateExtractRule",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:GenerateFuzztag",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GenerateReverseShellCommand",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GenerateSSAReport",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GenerateWebsiteTree",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GenerateYakCodeByPacket",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GenerateYsoBytes",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:GenerateYsoCode",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAIForge",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAIGlobalConfig",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAIReActRecommendedSkills",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAIReActSchedule",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAIThirdPartyAppConfigTemplate",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAIToolList",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GetAllCodecFlow",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAllCodecMethods",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAllFingerprintGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAllFuzztagInfo",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAllMCPServers",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAllNavigationItem",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:GetAllPayloadGroup",
+      "callSites": 5
+    },
+    {
+      "method": "grpc:GetAllPluginEnv",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAllProcessEnvKey",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAllStartedLocalModels",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAllVectorStoreCollectionsWithFilter",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAllYsoClassGeneraterOptions",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAllYsoClassOptions",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetAvailableBruteTypes",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetBasicInfo",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetCVE",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetCurrentProject",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetCurrentProjectEx",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:GetCurrentRules",
+      "callSites": 5
+    },
+    {
+      "method": "grpc:GetDefaultProjectEx",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetDocumentByVectorStoreEntryID",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GetEngineDefaultProxy",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetFingerprintGroupSetByFilter",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetGlobalHotPatchConfig",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetGlobalNetworkConfig",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:GetGlobalProxyRulesConfig",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetGlobalReverseServer",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetHTTPFlowBare",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetHTTPFlowById",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetHTTPPacketBody",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GetHistoryHTTPFuzzerTask",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetKey",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GetKnowledgeBase",
+      "callSites": 5
+    },
+    {
+      "method": "grpc:GetLicense",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetMCPToolCallHistoryDetail",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetMCPToolList",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetMITMFilter",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetMITMHijackFilter",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetMachineID",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetOneScreenRecorders",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetOnlineProfile",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetPcapMetadata",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:GetPluginExecutionUsageRanking",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetProjectKey",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetProjects",
+      "callSites": 7
+    },
+    {
+      "method": "grpc:GetRandomAIMaterials",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetRegisteredVulinboxAgent",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GetResponseBodyByHTTPFlowID",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GetReverseShellProgramList",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetSSARiskDisposal",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetSSARiskFieldGroupEx",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetSSAWorkbenchDashboard",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetSimpleDetectRecordRequestById",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetSpaceEngineAccountStatusV2",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetSpaceEngineStatus",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GetSupportedLocalModels",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetSystemProxy",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GetTemporaryProjectEx",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetThirdPartyAppConfigTemplate",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GetTunnelServerExternalIP",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GetYakScriptById",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetYakScriptByName",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetYakScriptByOnlineID",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:GetYakScriptGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetYakScriptTags",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetYakScriptTagsAndType",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetYakVMBuildInMethodCompletion",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GetYakitCompletionRaw",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:GroupTableColumn",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:HTTPFlowsExtract",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:HTTPFlowsFieldGroup",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:HTTPFlowsShare",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:HTTPFlowsToOnline",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:HTTPFlowsToOnlineBatch",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:HTTPFuzzer",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:HTTPFuzzerGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:HTTPRequestAnalyzer",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:HTTPRequestMutate",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:HybridScan",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:ImportChaosMakerRules",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ImportFingerprint",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ImportHTTPFlowStream",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ImportHTTPFuzzerTaskFromYaml",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ImportKnowledgeBase",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ImportMITMReplacerRules",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ImportNote",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ImportProject",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ImportSSARisk",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ImportYakScriptStream",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:InstallMITMCertificate",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:InstallScrecorder",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:InstallThirdPartyBinary",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:InstallVulinbox",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:IsCVEDatabaseReady",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:IsLlamaServerReady",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:IsLocalModelReady",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:IsPrivilegedForNetRaw",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:IsProjectNameValid",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:IsRemoteAddrAvailable",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:IsScrecorderReady",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:IsThirdPartyBinaryReady",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:IsVulinboxReady",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ListAiModel",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:ListEntityRepository",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:ListIMBots",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ListThirdPartyBinary",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:ListVectorStoreEntries",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:MatchHTTPResponse",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:MigrateSSAProject",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:NewCodec",
+      "callSites": 5
+    },
+    {
+      "method": "grpc:NewProject",
+      "callSites": 5
+    },
+    {
+      "method": "grpc:NewRiskRead",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:NewSSARiskRead",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:OpenPort",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:PacketPrettifyHelper",
+      "callSites": 6
+    },
+    {
+      "method": "grpc:ParseTraffic",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:PcapX",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:Ping",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:PluginTrace",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:PreviewAIReActScheduleTimes",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ProbeReasoningEffort",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:PromotePermissionForUserPcap",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:QueryAIEvent",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryAIFocus",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryAIForge",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryAIMemoryEntity",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryAIProvider",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryAIReActSchedules",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryAISession",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryAvailableRiskLevel",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryAvailableRiskType",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryCVE",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryChaosMakerRule",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:QueryContextMenuActions",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryDNSLogByToken",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryDNSLogTokenByScript",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryDomains",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryEntity",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:QueryExecHistory",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryFingerprint",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryFuzzerConfig",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryFuzzerLabel",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:QueryHTTPFlows",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryHTTPFlowsProcessNames",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryHistoryHTTPFuzzerTaskEx",
+      "callSites": 6
+    },
+    {
+      "method": "grpc:QueryHotPatchTemplate",
+      "callSites": 6
+    },
+    {
+      "method": "grpc:QueryHybridScanTask",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:QueryICMPTrigger",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryKnowledgeBaseByAI",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryMCPToolCallHistory",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryMITMExtractedAggregate",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryMITMReplacerRules",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryMITMRuleExtractedData",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:QueryNavigationGroups",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryNewRisk",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryNewSSARisks",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryNote",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryPayload",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryPayloadFromFile",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryPluginEnv",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryPorts",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryPortsGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryRandomPortTrigger",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryRelationship",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryReport",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryReports",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryRisk",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryRiskTags",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryRisks",
+      "callSites": 8
+    },
+    {
+      "method": "grpc:QuerySSAPrograms",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:QuerySSAProject",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:QuerySSARisks",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:QueryScreenRecorders",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QuerySimpleDetectUnfinishedTask",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QuerySnippets",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:QuerySubERM",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:QuerySupportedDnsLogPlatforms",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QuerySyntaxFlowResult",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QuerySyntaxFlowRule",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QuerySyntaxFlowRuleGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QuerySyntaxFlowSameGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QuerySyntaxFlowScanTask",
+      "callSites": 5
+    },
+    {
+      "method": "grpc:QueryTrafficPacket",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryTrafficSession",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:QueryTrafficTCPReassembled",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryWebShells",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryWebsocketFlowByHTTPFlowWebsocketHash",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryYakScript",
+      "callSites": 8
+    },
+    {
+      "method": "grpc:QueryYakScriptByNames",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryYakScriptByOnlineGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryYakScriptGroup",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:QueryYakScriptLocalAll",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:QueryYakScriptSkipUpdate",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ReadFile",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RedirectRequest",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RegisterFacadesHTTP",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RenameFingerprintGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RenamePayloadFolder",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RenamePayloadGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RenameYakScriptGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RenderVariables",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RequestYakURL",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RequireDNSLogDomain",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:RequireDNSLogDomainByScript",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:RequireICMPRandomLength",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RequireRandomPortToken",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ResetAIReActRecommendedSkill",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ResetAndInvalidUserData",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ResetGlobalNetworkConfig",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ResetMITMFilter",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ResetYakScriptGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RiskFeedbackToOnline",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RiskFieldGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:RunAIReActScheduleNow",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SSARiskDiff",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SSARiskFeedbackToOnline",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SaveAIToolV2",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SaveCancelSimpleDetect",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SaveCodecFlow",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SaveFuzzerConfig",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SaveFuzzerLabel",
+      "callSites": 6
+    },
+    {
+      "method": "grpc:SaveIMBot",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SaveMarkdownDocument",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SavePluginExecutionHistory",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SaveTextToTemporalFile",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SaveYakScript",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:SaveYakScriptGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SaveYakScriptToOnline",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SearchKnowledgeBaseEntry",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:SearchNoteContent",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetAIGlobalConfig",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetAIReActScheduleEnabled",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetContextMenuActionBinding",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetCurrentProject",
+      "callSites": 7
+    },
+    {
+      "method": "grpc:SetCurrentRules",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetEngineDefaultProxy",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetGlobalHotPatchConfig",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:SetGlobalNetworkConfig",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:SetGlobalProxyRulesConfig",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetKey",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:SetMCPToolEnabled",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetMITMFilter",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetMITMHijackFilter",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetOnlineProfile",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:SetPluginEnv",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetProcessEnvKey",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetProjectKey",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetSystemProxy",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:SetTagForHTTPFlow",
+      "callSites": 10
+    },
+    {
+      "method": "grpc:SetTagForRisk",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SetYakBridgeLogServer",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:SetYakScriptSkipUpdate",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SimpleDetectCreatReport",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SmokingEvaluatePlugin",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SmokingEvaluatePluginBatch",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:StartAIReAct",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:StartFacadesWithYsoObject",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:StartIMOnboarding",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:StartLocalModel",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:StartMcpServer",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:StartScrecorder",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:StartThirdPartyBinary",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:StartVulinbox",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:StaticAnalyzeError",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:StopIMControl",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:StopLocalModel",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:StringFuzzer",
+      "callSites": 4
+    },
+    {
+      "method": "grpc:SubscribeHTTPFlows",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SubscribeIMControlState",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:SyntaxFlowScan",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:ToggleAIToolFavorite",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:TraceRoute",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UninstallThirdPartyBinary",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateAIForge",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateAIMemoryEntity",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateAIReActRecommendedSkill",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateAIReActSchedule",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateAISessionTitle",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateAITool",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateAllPayloadGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateApiKey",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateCVEDatabase",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateCodecFlow",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateEntity",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateFingerprint",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateHotPatchTemplate",
+      "callSites": 8
+    },
+    {
+      "method": "grpc:UpdateIMControlConfig",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateKnowledgeBase",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:UpdateKnowledgeBaseEntry",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:UpdateLocalModel",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateMCPServer",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateNote",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdatePayload",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdatePayloadToFile",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateProject",
+      "callSites": 3
+    },
+    {
+      "method": "grpc:UpdateScreenRecorders",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateSnippet",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateSyntaxFlowRuleAndGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateSyntaxFlowRuleEx",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UpdateSyntaxFlowRuleGroup",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UploadHotPatchTemplateToOnline",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UploadRiskToOnline",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:UploadScreenRecorders",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:ValidP12PassWord",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:VerifySystemCertificate",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:WatchProcessConnection",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:YakVersionAtLeast",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:YaklangCompileAndFormat",
+      "callSites": 2
+    },
+    {
+      "method": "grpc:YaklangGetCliCodeFromDatabase",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:YaklangInspectInformation",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:YaklangLanguageFind",
+      "callSites": 5
+    },
+    {
+      "method": "grpc:YaklangLanguageSuggestion",
+      "callSites": 5
+    },
+    {
+      "method": "grpc:YaklangTerminal",
+      "callSites": 1
+    },
+    {
+      "method": "grpc:YsoDump",
+      "callSites": 1
+    },
+    {
+      "method": "local:CalcEngineSha265",
+      "callSites": 2
+    },
+    {
+      "method": "local:DownloadFingerprint",
+      "callSites": 1
+    },
+    {
+      "method": "local:DownloadHtmlReport",
+      "callSites": 1
+    },
+    {
+      "method": "local:DownloadOnlinePluginBatch",
+      "callSites": 1
+    },
+    {
+      "method": "local:DownloadOnlinePluginByPluginName",
+      "callSites": 4
+    },
+    {
+      "method": "local:ExportAILogs",
+      "callSites": 1
+    },
+    {
+      "method": "local:ForwardMainEvent",
+      "callSites": 67
+    },
+    {
+      "method": "local:GenerateProjectsFilePath",
+      "callSites": 4
+    },
+    {
+      "method": "local:GenerateTempFilePath",
+      "callSites": 1
+    },
+    {
+      "method": "local:GetBuildInEngineVersion",
+      "callSites": 2
+    },
+    {
+      "method": "local:GetChromePath",
+      "callSites": 3
+    },
+    {
+      "method": "local:GetMITMSession",
+      "callSites": 1
+    },
+    {
+      "method": "local:GetMarkdownPdfPrintPayload",
+      "callSites": 1
+    },
+    {
+      "method": "local:GetProjectsFilePath",
+      "callSites": 1
+    },
+    {
+      "method": "local:InitCVEDatabase",
+      "callSites": 1
+    },
+    {
+      "method": "local:IsChromeLaunched",
+      "callSites": 2
+    },
+    {
+      "method": "local:LaunchChromeWithParams",
+      "callSites": 1
+    },
+    {
+      "method": "local:MarkdownPdfPrintReady",
+      "callSites": 1
+    },
+    {
+      "method": "local:PrintMarkdownPdfFromTemplate",
+      "callSites": 3
+    },
+    {
+      "method": "local:PrintReportPdfFromTemplate",
+      "callSites": 1
+    },
+    {
+      "method": "local:QueryHTTPFlowsWithTiming",
+      "callSites": 1
+    },
+    {
+      "method": "local:ReplaceMITMRequestFile",
+      "callSites": 1
+    },
+    {
+      "method": "local:RestoreEngineAndPlugin",
+      "callSites": 4
+    },
+    {
+      "method": "local:SaveCodecOutputToTxt",
+      "callSites": 1
+    },
+    {
+      "method": "local:SaveHTTPFlowBody",
+      "callSites": 1
+    },
+    {
+      "method": "local:ScreenshotCancel",
+      "callSites": 1
+    },
+    {
+      "method": "local:ScreenshotOK",
+      "callSites": 1
+    },
+    {
+      "method": "local:ScreenshotReady",
+      "callSites": 1
+    },
+    {
+      "method": "local:ScreenshotReset",
+      "callSites": 1
+    },
+    {
+      "method": "local:ScreenshotSave",
+      "callSites": 1
+    },
+    {
+      "method": "local:StartIMControl",
+      "callSites": 1
+    },
+    {
+      "method": "local:StopAllChrome",
+      "callSites": 1
+    },
+    {
+      "method": "local:UIOperate",
+      "callSites": 8
+    },
+    {
+      "method": "local:UIOperate-childWin",
+      "callSites": 1
+    },
+    {
+      "method": "local:UploadLocalFileToEngine",
+      "callSites": 1
+    },
+    {
+      "method": "local:activate-screenshot",
+      "callSites": 3
+    },
+    {
+      "method": "local:add-log",
+      "callSites": 2
+    },
+    {
+      "method": "local:alive-dynamic-control-status",
+      "callSites": 1
+    },
+    {
+      "method": "local:app-exit",
+      "callSites": 3
+    },
+    {
+      "method": "local:assert-file-absent",
+      "callSites": 8
+    },
+    {
+      "method": "local:aux-window:app-sync",
+      "callSites": 3
+    },
+    {
+      "method": "local:aux-window:ready",
+      "callSites": 2
+    },
+    {
+      "method": "local:axios-api",
+      "callSites": 1
+    },
+    {
+      "method": "local:call-command-generate-node",
+      "callSites": 1
+    },
+    {
+      "method": "local:cancel-all-tasks",
+      "callSites": 1
+    },
+    {
+      "method": "local:check-allow-secret-local-yaklang-engine",
+      "callSites": 1
+    },
+    {
+      "method": "local:check-yakit-install-file",
+      "callSites": 1
+    },
+    {
+      "method": "local:clear-ai-chat-log-data",
+      "callSites": 1
+    },
+    {
+      "method": "local:clear-compute-percent",
+      "callSites": 2
+    },
+    {
+      "method": "local:clear-local-yaklang-version-cache",
+      "callSites": 8
+    },
+    {
+      "method": "local:close-ai-chat-window",
+      "callSites": 2
+    },
+    {
+      "method": "local:close-childWin",
+      "callSites": 2
+    },
+    {
+      "method": "local:close-console-new-window",
+      "callSites": 1
+    },
+    {
+      "method": "local:company-refresh-in",
+      "callSites": 1
+    },
+    {
+      "method": "local:company-sign-in",
+      "callSites": 1
+    },
+    {
+      "method": "local:connect-yaklang-engine",
+      "callSites": 4
+    },
+    {
+      "method": "local:debug-print-log",
+      "callSites": 3
+    },
+    {
+      "method": "local:delete-ai-image",
+      "callSites": 1
+    },
+    {
+      "method": "local:determine-adapted-version-engine",
+      "callSites": 1
+    },
+    {
+      "method": "local:download-latest-intranet-yakit",
+      "callSites": 1
+    },
+    {
+      "method": "local:download-latest-yak",
+      "callSites": 2
+    },
+    {
+      "method": "local:download-latest-yakit",
+      "callSites": 3
+    },
+    {
+      "method": "local:download-url-to-path",
+      "callSites": 2
+    },
+    {
+      "method": "local:edit-baseUrl",
+      "callSites": 1
+    },
+    {
+      "method": "local:engine-win-render-ok",
+      "callSites": 1
+    },
+    {
+      "method": "local:engineLinkWin-done",
+      "callSites": 1
+    },
+    {
+      "method": "local:export-risk-html",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-certificate-content",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-check-yaklang-source",
+      "callSites": 2
+    },
+    {
+      "method": "local:fetch-code-path",
+      "callSites": 8
+    },
+    {
+      "method": "local:fetch-compute-percent",
+      "callSites": 2
+    },
+    {
+      "method": "local:fetch-computer-name",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-concurrent-stream-contents",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-cpu-arch",
+      "callSites": 4
+    },
+    {
+      "method": "local:fetch-extra-cache",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-file-content",
+      "callSites": 2
+    },
+    {
+      "method": "local:fetch-file-info-by-path",
+      "callSites": 3
+    },
+    {
+      "method": "local:fetch-file-is-dir-by-path",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-file-name-by-path",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-latest-yakit-version",
+      "callSites": 2
+    },
+    {
+      "method": "local:fetch-latest-yaklang-version",
+      "callSites": 2
+    },
+    {
+      "method": "local:fetch-local-cache",
+      "callSites": 3
+    },
+    {
+      "method": "local:fetch-local-engine-path",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-netWork-status-by-request-interface",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-path-contains-relation",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-path-file-name",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-remote-file-path",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-system-and-arch",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-system-name",
+      "callSites": 11
+    },
+    {
+      "method": "local:fetch-yak-engine-build-type",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-yak-version",
+      "callSites": 1
+    },
+    {
+      "method": "local:fetch-yakit-version",
+      "callSites": 2
+    },
+    {
+      "method": "local:fetch-yaklang-engine-addr",
+      "callSites": 7
+    },
+    {
+      "method": "local:fetch-yaklang-version-list",
+      "callSites": 2
+    },
+    {
+      "method": "local:fixup-database",
+      "callSites": 1
+    },
+    {
+      "method": "local:forward-ai-chat-log-data",
+      "callSites": 1
+    },
+    {
+      "method": "local:forward-data-compare",
+      "callSites": 1
+    },
+    {
+      "method": "local:forward-main-container-add-compare",
+      "callSites": 1
+    },
+    {
+      "method": "local:forward-switch-compare-page",
+      "callSites": 1
+    },
+    {
+      "method": "local:forward-xterm-data",
+      "callSites": 2
+    },
+    {
+      "method": "local:forward-xterm-theme",
+      "callSites": 4
+    },
+    {
+      "method": "local:generate-chrome-plugin",
+      "callSites": 1
+    },
+    {
+      "method": "local:generate-install-script",
+      "callSites": 2
+    },
+    {
+      "method": "local:generate-start-engine",
+      "callSites": 2
+    },
+    {
+      "method": "local:get-avaiable-port",
+      "callSites": 1
+    },
+    {
+      "method": "local:get-available-oss-domain",
+      "callSites": 2
+    },
+    {
+      "method": "local:get-clipboard-text",
+      "callSites": 2
+    },
+    {
+      "method": "local:get-current-yak",
+      "callSites": 2
+    },
+    {
+      "method": "local:get-dir-size",
+      "callSites": 1
+    },
+    {
+      "method": "local:get-http-file-link-info",
+      "callSites": 1
+    },
+    {
+      "method": "local:get-login-user-info",
+      "callSites": 4
+    },
+    {
+      "method": "local:get-random-local-engine-port",
+      "callSites": 1
+    },
+    {
+      "method": "local:get-relevant-paths",
+      "callSites": 1
+    },
+    {
+      "method": "local:get-template-file",
+      "callSites": 1
+    },
+    {
+      "method": "local:get-ws-url",
+      "callSites": 1
+    },
+    {
+      "method": "local:get-yakit-home-config",
+      "callSites": 3
+    },
+    {
+      "method": "local:get-yakit-remote-auth-all",
+      "callSites": 1
+    },
+    {
+      "method": "local:getDefaultUserDataDir",
+      "callSites": 1
+    },
+    {
+      "method": "local:http-upload-file",
+      "callSites": 1
+    },
+    {
+      "method": "local:http-upload-img-base64",
+      "callSites": 1
+    },
+    {
+      "method": "local:http-upload-img-path",
+      "callSites": 1
+    },
+    {
+      "method": "local:importCodecByPath",
+      "callSites": 1
+    },
+    {
+      "method": "local:install-intranet-yakit",
+      "callSites": 1
+    },
+    {
+      "method": "local:install-yak-engine",
+      "callSites": 4
+    },
+    {
+      "method": "local:is-dev",
+      "callSites": 4
+    },
+    {
+      "method": "local:is-enpritrace-to-domain",
+      "callSites": 2
+    },
+    {
+      "method": "local:is-file-exists",
+      "callSites": 14
+    },
+    {
+      "method": "local:is-full-screen",
+      "callSites": 1
+    },
+    {
+      "method": "local:is-maximize-screen",
+      "callSites": 1
+    },
+    {
+      "method": "local:is-port-available",
+      "callSites": 1
+    },
+    {
+      "method": "local:is-yaklang-engine-installed",
+      "callSites": 2
+    },
+    {
+      "method": "local:kill-dynamic-control",
+      "callSites": 4
+    },
+    {
+      "method": "local:kill-old-engine-process",
+      "callSites": 1
+    },
+    {
+      "method": "local:kill-run-node",
+      "callSites": 5
+    },
+    {
+      "method": "local:kill-yak-grpc",
+      "callSites": 13
+    },
+    {
+      "method": "local:main-win-uilayout-render-ok",
+      "callSites": 1
+    },
+    {
+      "method": "local:manual-write-file",
+      "callSites": 1
+    },
+    {
+      "method": "local:maximize-childWin",
+      "callSites": 1
+    },
+    {
+      "method": "local:minWin-send-to-childWin",
+      "callSites": 1
+    },
+    {
+      "method": "local:minimize-childWin",
+      "callSites": 1
+    },
+    {
+      "method": "local:onTop-childWin",
+      "callSites": 1
+    },
+    {
+      "method": "local:onTop-console-new-window",
+      "callSites": 1
+    },
+    {
+      "method": "local:open-ai-chat-log-window",
+      "callSites": 1
+    },
+    {
+      "method": "local:open-ai-concurrent-stream-window",
+      "callSites": 1
+    },
+    {
+      "method": "local:open-console-new-window",
+      "callSites": 1
+    },
+    {
+      "method": "local:open-engine-log",
+      "callSites": 2
+    },
+    {
+      "method": "local:open-file-system-dialog",
+      "callSites": 2
+    },
+    {
+      "method": "local:open-new-child-window",
+      "callSites": 3
+    },
+    {
+      "method": "local:open-print-log",
+      "callSites": 2
+    },
+    {
+      "method": "local:open-remote-link",
+      "callSites": 1
+    },
+    {
+      "method": "local:open-render-log",
+      "callSites": 2
+    },
+    {
+      "method": "local:open-specified-file",
+      "callSites": 5
+    },
+    {
+      "method": "local:open-url",
+      "callSites": 6
+    },
+    {
+      "method": "local:open-yakit-path",
+      "callSites": 5
+    },
+    {
+      "method": "local:open-yaklang-path",
+      "callSites": 2
+    },
+    {
+      "method": "local:oss-split-upload",
+      "callSites": 1
+    },
+    {
+      "method": "local:output-log-to-welcome-console",
+      "callSites": 2
+    },
+    {
+      "method": "local:pathFileName",
+      "callSites": 1
+    },
+    {
+      "method": "local:pathJoin",
+      "callSites": 3
+    },
+    {
+      "method": "local:pathParent",
+      "callSites": 1
+    },
+    {
+      "method": "local:ps-yak-grpc",
+      "callSites": 6
+    },
+    {
+      "method": "local:read-file-content",
+      "callSites": 9
+    },
+    {
+      "method": "local:reclaimDatabaseSpace",
+      "callSites": 1
+    },
+    {
+      "method": "local:relativePathByBase",
+      "callSites": 1
+    },
+    {
+      "method": "local:relaunch",
+      "callSites": 4
+    },
+    {
+      "method": "local:relaunch-app",
+      "callSites": 1
+    },
+    {
+      "method": "local:remove-yakit-remote-auth",
+      "callSites": 1
+    },
+    {
+      "method": "local:render-crash-flag",
+      "callSites": 2
+    },
+    {
+      "method": "local:render-error-log",
+      "callSites": 2
+    },
+    {
+      "method": "local:reply-concurrent-stream-contents",
+      "callSites": 1
+    },
+    {
+      "method": "local:request-parent-data",
+      "callSites": 1
+    },
+    {
+      "method": "local:reset-password",
+      "callSites": 2
+    },
+    {
+      "method": "local:restore-childWin",
+      "callSites": 1
+    },
+    {
+      "method": "local:save-ai-image",
+      "callSites": 1
+    },
+    {
+      "method": "local:save-file-system-dialog",
+      "callSites": 1
+    },
+    {
+      "method": "local:save-yakit-remote-auth",
+      "callSites": 1
+    },
+    {
+      "method": "local:set-clipboard-text",
+      "callSites": 2
+    },
+    {
+      "method": "local:set-extra-cache",
+      "callSites": 1
+    },
+    {
+      "method": "local:set-local-cache",
+      "callSites": 4
+    },
+    {
+      "method": "local:set-main-window-zoom-factor",
+      "callSites": 1
+    },
+    {
+      "method": "local:set-release-edition-raw",
+      "callSites": 1
+    },
+    {
+      "method": "local:set-yakit-home-config",
+      "callSites": 7
+    },
+    {
+      "method": "local:shell-open-abs-file",
+      "callSites": 2
+    },
+    {
+      "method": "local:shell-open-external",
+      "callSites": 6
+    },
+    {
+      "method": "local:show-save-dialog",
+      "callSites": 11
+    },
+    {
+      "method": "local:socket-close",
+      "callSites": 2
+    },
+    {
+      "method": "local:socket-send",
+      "callSites": 1
+    },
+    {
+      "method": "local:socket-start",
+      "callSites": 1
+    },
+    {
+      "method": "local:split-upload",
+      "callSites": 4
+    },
+    {
+      "method": "local:start-compute-percent",
+      "callSites": 2
+    },
+    {
+      "method": "local:start-dynamic-control",
+      "callSites": 1
+    },
+    {
+      "method": "local:start-local-yaklang-engine",
+      "callSites": 1
+    },
+    {
+      "method": "local:start-secret-local-yaklang-engine",
+      "callSites": 1
+    },
+    {
+      "method": "local:sync-edit-baseUrl",
+      "callSites": 2
+    },
+    {
+      "method": "local:sync-update-user",
+      "callSites": 1
+    },
+    {
+      "method": "local:trigger-devtool",
+      "callSites": 1
+    },
+    {
+      "method": "local:trigger-reload",
+      "callSites": 1
+    },
+    {
+      "method": "local:trigger-reload-cache",
+      "callSites": 1
+    },
+    {
+      "method": "local:update-enpritrace-info",
+      "callSites": 1
+    },
+    {
+      "method": "local:updateCredential",
+      "callSites": 2
+    },
+    {
+      "method": "local:upload-group-data",
+      "callSites": 1
+    },
+    {
+      "method": "local:user-sign-in",
+      "callSites": 1
+    },
+    {
+      "method": "local:user-sign-out",
+      "callSites": 2
+    },
+    {
+      "method": "local:write-engine-key-to-yakit-projects",
+      "callSites": 5
+    },
+    {
+      "method": "local:write-file",
+      "callSites": 2
+    },
+    {
+      "method": "local:yak-engine-version-exists-and-correctness",
+      "callSites": 2
+    },
+    {
+      "method": "local:yakitMainWin-done",
+      "callSites": 2
+    }
+  ],
+  "mainServices": [
+    "app/main/services/account.ts",
+    "app/main/services/ai.ts",
+    "app/main/services/auxWindows.ts",
+    "app/main/services/browser.ts",
+    "app/main/services/childWindows.ts",
+    "app/main/services/control.ts",
+    "app/main/services/desktop.ts",
+    "app/main/services/downloadClient.ts",
+    "app/main/services/downloadTask.ts",
+    "app/main/services/engine.ts",
+    "app/main/services/engineVersion.ts",
+    "app/main/services/fileDialog.ts",
+    "app/main/services/files.ts",
+    "app/main/services/hardware.ts",
+    "app/main/services/httpFlows.ts",
+    "app/main/services/imControl.ts",
+    "app/main/services/logs.ts",
+    "app/main/services/mitm.ts",
+    "app/main/services/mitmSender.ts",
+    "app/main/services/mitmV2LargeRequestUpload.ts",
+    "app/main/services/network.ts",
+    "app/main/services/plugins.ts",
+    "app/main/services/processList.ts",
+    "app/main/services/processes.ts",
+    "app/main/services/rendererEvents.ts",
+    "app/main/services/reports.ts",
+    "app/main/services/screenshotNative.ts",
+    "app/main/services/screenshots.ts",
+    "app/main/services/startup.ts",
+    "app/main/services/syntaxFlow.ts",
+    "app/main/services/transfers.ts",
+    "app/main/services/updates.ts",
+    "app/main/services/uploadToTemporaryFile.ts",
+    "app/main/services/versions.ts",
+    "app/main/services/windowEvents.ts",
+    "app/main/services/writeFileData.ts"
+  ]
+}

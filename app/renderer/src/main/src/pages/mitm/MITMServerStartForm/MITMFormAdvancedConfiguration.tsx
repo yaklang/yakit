@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import React, { type ForwardedRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import classNames from 'classnames'
 import styles from './MITMServerStartForm.module.scss'
@@ -36,8 +37,6 @@ import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 const MITMAddTLS = React.lazy(() => import('./MITMAddTLS'))
 const MITMFiltersModal = React.lazy(() => import('./MITMFiltersModal'))
 const MITMCertificateDownloadModal = React.lazy(() => import('./MITMCertificateDownloadModal'))
-
-const { ipcRenderer } = window.require('electron')
 
 export interface MITMFormAdvancedConfigurationRef {
   getValue: () => AdvancedConfigurationFromValue
@@ -129,7 +128,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
       saveABSFileToOpen(`TLS-证书.json`, JSON.stringify(newCerts))
     })
     const onImportCerts = useMemoizedFn((file: any) => {
-      ipcRenderer.invoke('fetch-file-content', file.path).then((value) => {
+      ipc.invoke('local', 'read-file-content', file.path).then((value) => {
         try {
           const values = JSON.parse(value)
           const certList: ClientCertificate[] = []

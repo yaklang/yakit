@@ -21,7 +21,7 @@ const makeItem = (id: number, manualHijackListAction: ManualHijackListAction): S
     Status: ManualHijackListStatus.Hijacking_Request,
     Request: new Uint8Array(128),
     Response: new Uint8Array(256),
-    HijackResponse: new Uint8Array(),
+    HijackResponse: false,
     Payload: new Uint8Array(),
     Tags: id % 10 === 0 ? ['YAKIT_COLOR_RED'] : [],
     IsHttps: true,

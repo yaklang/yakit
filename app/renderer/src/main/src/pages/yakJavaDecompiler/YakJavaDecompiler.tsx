@@ -41,7 +41,6 @@ import { FileDefault, FileSuffix, FolderDefault } from '../yakRunner/FileTree/ic
 import moment from 'moment'
 import type { YakURLResource } from '../yakURLTree/data'
 import { getNameByPath, monacaLanguageType } from '../yakRunner/utils'
-const { ipcRenderer } = window.require('electron')
 export interface YakJavaDecompilerProps {}
 export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
   /** ---------- 文件树 ---------- */

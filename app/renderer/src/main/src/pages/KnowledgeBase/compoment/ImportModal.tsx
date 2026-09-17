@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { useMemoizedFn, useRequest, useSafeState } from 'ahooks'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -9,11 +10,9 @@ import { type Dispatch, type SetStateAction, useEffect, useRef } from 'react'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import type { KnowledgeBaseContentProps } from '../TKnowledgeBase'
 import { type KnowledgeBaseItem, useKnowledgeBase } from '../hooks/useKnowledgeBase'
-import { extractFileName, ValidatorFilePath } from '../utils'
+import { extractFileName, ValidatorFilePath, mergeKnowledgeBaseList } from '../utils'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { randomString } from '@/utils/randomUtil'
-
-const { ipcRenderer } = window.require('electron')
 
 interface GeneralProgress {
   Percent: number
@@ -38,6 +37,8 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
   })
   const [token, setToken] = useSafeState<string>('')
   const [hasError, setHasError, getHasError] = useGetSetState(false)
+  const controllerRef = useRef<AbortController>()
+  useEffect(() => () => controllerRef.current?.abort(), [visible])
   const knowledgeBaseNameRef = useRef<string>('')
   const { addKnowledgeBase, knowledgeBases } = useKnowledgeBase()
 
@@ -51,7 +52,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
 
   const { runAsync: existsKnowledgeBaseAsync } = useRequest(
     async () => {
-      const result: KnowledgeBaseContentProps = await ipcRenderer.invoke('GetKnowledgeBase', {
+      const result: KnowledgeBaseContentProps = await ipc.invoke('grpc', 'GetKnowledgeBase', {
         Pagination: { Limit: 9999 },
       })
       const { KnowledgeBases } = result
@@ -67,11 +68,11 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
           const importKnowledgeItem = value.find((item) => item.KnowledgeBaseName === knowledgeBaseNameRef.current)
           if (importKnowledgeItem) {
             addKnowledgeBase({
-              ...importKnowledgeItem,
+              ...mergeKnowledgeBaseList([importKnowledgeItem], [])[0],
               addManuallyItem: false,
               historyGenerateKnowledgeList: [],
               streamstep: 'success',
-            } as KnowledgeBaseItem)
+            })
           }
         }
       },
@@ -79,80 +80,61 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
   )
 
   const handleImport = useMemoizedFn(async () => {
-    let cleanup = () => {}
-    try {
-      setHasError(false)
-      const values = await form.validateFields()
-      setImportLoading(true)
-      setProgress({ Percent: 0, Message: '开始导入...', MessageType: 'info' })
-
-      const handleData = (_: any, data: GeneralProgress) => {
-        setProgress(data)
-      }
-
-      const handleError = (_: any, error: any) => {
-        cleanup()
-        setImportLoading(false)
-        setHasError(true)
-        failed(`${error}`)
-      }
-
-      const handleEnd = async () => {
-        try {
-          setImportLoading(false)
-          if (!getHasError()) {
-            success('导入知识库成功')
-            await existsKnowledgeBaseAsync()
-            onVisible(false)
-            form.resetFields()
-            setAddMode((it) => [...it, 'external'])
-          }
-          setProgress({ Percent: 0, Message: '', MessageType: '' })
-        } catch (error) {
-          failed(error + '')
-        } finally {
-          cleanup()
-        }
-      }
-
-      cleanup = () => {
-        ipcRenderer.removeListener(`${token}-data`, handleData)
-        ipcRenderer.removeListener(`${token}-error`, handleError)
-        ipcRenderer.removeListener(`${token}-end`, handleEnd)
-      }
-
-      ipcRenderer.on(`${token}-data`, handleData)
-      ipcRenderer.on(`${token}-error`, handleError)
-      ipcRenderer.on(`${token}-end`, handleEnd)
-
-      const knowledgeBaseName = values.knowledgeBaseName
-        ? values.knowledgeBaseName
-        : values.importPath.substring(values.importPath.lastIndexOf('/') + 1, values.importPath.lastIndexOf('.'))
-      knowledgeBaseNameRef.current = knowledgeBaseName
-
-      await ipcRenderer.invoke(
-        'ImportKnowledgeBase',
-        {
-          NewKnowledgeBaseName: knowledgeBaseName,
-          InputPath: values.importPath,
-        },
-        token,
-      )
-    } catch (error: any) {
-      cleanup()
-      if (error?.errorFields) {
-        return
-      }
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      if (error && typeof error === 'object' && 'errorFields' in error) return
       setImportLoading(false)
       setHasError(true)
       failed(`${error}`)
     }
+    try {
+      const values = await form.validateFields()
+      if (controller.signal.aborted) return
+      setHasError(false)
+      setImportLoading(true)
+      setProgress({ Percent: 0, Message: '开始导入...', MessageType: 'info' })
+      const name =
+        values.knowledgeBaseName ||
+        values.importPath.substring(values.importPath.lastIndexOf('/') + 1, values.importPath.lastIndexOf('.'))
+      knowledgeBaseNameRef.current = name
+      await ipc.openStream(
+        'grpc',
+        'ImportKnowledgeBase',
+        { NewKnowledgeBaseName: name, InputPath: values.importPath },
+        {
+          token,
+          signal: controller.signal,
+          onData(data) {
+            if (!controller.signal.aborted) setProgress(data)
+          },
+          onError,
+          async onEnd() {
+            if (controller.signal.aborted) return
+            try {
+              setImportLoading(false)
+              success('导入知识库成功')
+              await existsKnowledgeBaseAsync()
+              if (controller.signal.aborted) return
+              onVisible(false)
+              form.resetFields()
+              setAddMode((it) => [...it, 'external'])
+              setProgress({ Percent: 0, Message: '', MessageType: '' })
+            } catch (error) {
+              onError(error)
+            }
+          },
+        },
+      )
+    } catch (error) {
+      onError(error)
+    }
   })
 
   const handleCancel = useMemoizedFn(() => {
-    if (importLoading && token) {
-      ipcRenderer.invoke('cancel-ImportKnowledgeBase', token)
-    }
+    controllerRef.current?.abort()
     onVisible(false)
     form.resetFields()
     setProgress({ Percent: 0, Message: '', MessageType: '' })

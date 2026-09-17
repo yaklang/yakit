@@ -17,8 +17,8 @@ export const RuleEditorBox: React.FC<RuleEditorBoxProps> = (props) => {
   const { projectName, pageInfo } = useStore()
 
   // 获取文本域输入框
-  const onGrpcSetTextArea = useMemoizedFn((arr: { Key: string; Value: number }[]) => {
-    let resultId: number | null = null
+  const onGrpcSetTextArea = useMemoizedFn((arr: { Key: string; Value: string | number }[]) => {
+    let resultId: string | number | null = null
     arr.forEach((item) => {
       if (item.Key === 'result_id') {
         resultId = item.Value

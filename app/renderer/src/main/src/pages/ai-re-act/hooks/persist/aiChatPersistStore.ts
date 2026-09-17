@@ -126,7 +126,7 @@ class AIChatPersistStore {
     sessionId: string,
     source: DeleteSessionsAISourceType,
     content: SessionRenderContent,
-    grpcOffset: number,
+    grpcOffset: string,
   ): Promise<void> {
     const db = await this.open()
     return new Promise((resolve, reject) => {

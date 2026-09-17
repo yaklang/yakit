@@ -50,6 +50,10 @@ export const YakHelpDocItemLoad: React.FC<YakHelpDocItemLoadProps> = (props) => 
   const [loading, setLoading] = useState<boolean>(false)
   const [data, setData] = useState<DataProps[]>([])
   useEffect(() => {
+    if (!info.data.Url) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     requestYakURLList(
       info.data.Url,

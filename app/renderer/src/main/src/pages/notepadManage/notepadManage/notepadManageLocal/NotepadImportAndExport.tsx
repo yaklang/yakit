@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import type { NotepadExportProps, NotepadImportProps } from './NotepadManageLocalType'
 import { randomString } from '@/utils/randomUtil'
@@ -12,8 +13,6 @@ import moment from 'moment'
 import { handleOpenFileSystemDialog, type OpenDialogOptions } from '@/utils/fileSystemDialog'
 
 import styles from './NotepadImportAndExport.module.scss'
-const { ipcRenderer } = window.require('electron')
-
 interface ImportNoteRequest {
   TargetPath: string
 }
@@ -35,50 +34,44 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
 
   const taskToken = useMemo(() => randomString(40), [])
 
+  const controllerRef = useRef<AbortController>()
   useEffect(() => {
-    if (!taskToken) {
-      return
-    }
-    ipcRenderer.on(`${taskToken}-data`, (_, data: ImportNoteResponse) => {
-      const p = Math.floor(data.Percent * 100)
-      setPercent(p)
-    })
-    ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
       successRef.current = false
-      yakitNotify('error', '导入失败:' + e)
-    })
-    ipcRenderer.on(`${taskToken}-end`, () => {
+      yakitNotify('error', '导入失败:' + error)
       onEnd()
-    })
-    return () => {
-      ipcRenderer.removeAllListeners(`${taskToken}-data`)
-      ipcRenderer.removeAllListeners(`${taskToken}-error`)
-      ipcRenderer.removeAllListeners(`${taskToken}-end`)
     }
-  }, [taskToken])
-  useEffect(() => {
-    const data: OpenDialogOptions = {
-      title: '请选择文件',
-      properties: ['openFile'],
-    }
-    handleOpenFileSystemDialog(data).then((data) => {
-      if (data.filePaths.length > 0) {
-        const filePath = data.filePaths[0].replace(/\\/g, '\\')
-        const importParams: ImportNoteRequest = {
-          TargetPath: filePath,
-        }
-        setVisible(true)
-        ipcRenderer
-          .invoke('ImportNote', importParams, taskToken)
-          .then(() => {})
-          .catch((e) => {
-            yakitNotify('error', `导入失败:${e}`)
-          })
-      } else {
+    const run = async () => {
+      const data = await handleOpenFileSystemDialog({ title: '请选择文件', properties: ['openFile'] })
+      if (controller.signal.aborted) return
+      if (!data.filePaths.length) {
         successRef.current = false
         onEnd()
+        return
       }
-    })
+      setVisible(true)
+      await ipc.openStream(
+        'grpc',
+        'ImportNote',
+        { TargetPath: data.filePaths[0] },
+        {
+          token: taskToken,
+          signal: controller.signal,
+          onData(data) {
+            if (!controller.signal.aborted) setPercent(Math.floor(data.Percent * 100))
+          },
+          onError,
+          onEnd() {
+            if (!controller.signal.aborted) onEnd()
+          },
+        },
+      )
+    }
+    void run().catch(onError)
+    return () => controller.abort()
   }, [])
 
   const onEnd = useMemoizedFn(() => {
@@ -91,10 +84,9 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
   })
 
   const stopImport = () => {
+    successRef.current = false
+    controllerRef.current?.abort()
     onEnd()
-    ipcRenderer.invoke('cancel-ImportNote', taskToken).catch((e) => {
-      yakitNotify('error', `停止导入:${e}`)
-    })
   }
   return (
     <YakitHint
@@ -138,57 +130,51 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
   const successRef = useRef<boolean>(true)
   const targetPathRef = useRef<string>('')
 
+  const controllerRef = useRef<AbortController>()
   useEffect(() => {
-    if (!taskToken) {
-      return
-    }
-    ipcRenderer.on(`${taskToken}-data`, (_, data: ExportNoteResponse) => {
-      const p = Math.floor(data.Percent * 100)
-      setPercent(p)
-    })
-    ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
       successRef.current = false
-      yakitNotify('error', '导出失败:' + e)
-    })
-    ipcRenderer.on(`${taskToken}-end`, () => {
+      yakitNotify('error', '导出失败:' + error)
       onEnd()
-    })
-    return () => {
-      ipcRenderer.removeAllListeners(`${taskToken}-data`)
-      ipcRenderer.removeAllListeners(`${taskToken}-error`)
-      ipcRenderer.removeAllListeners(`${taskToken}-end`)
     }
-  }, [taskToken])
-  useEffect(() => {
-    const data: OpenDialogOptions = {
-      title: '请选择文件夹',
-      properties: ['openDirectory'],
-    }
-    handleOpenFileSystemDialog(data).then((data) => {
-      const { filePaths } = data
-      if (filePaths.length > 0) {
-        const selectedPath = filePaths[0]
-        const fileName = `笔记本-${moment().valueOf()}.zip`
-        ipcRenderer
-          .invoke('pathJoin', { dir: selectedPath, file: fileName })
-          .then((currentPath: string) => {
-            targetPathRef.current = currentPath
-            const exportParams: ExportNoteRequest = {
-              TargetPath: currentPath,
-              Filter: filter,
-            }
-            setVisible(true)
-            return ipcRenderer.invoke('ExportNote', exportParams, taskToken)
-          })
-          .catch((e) => {
-            yakitNotify('error', `导出失败:${e}`)
-          })
-      } else {
+    const run = async () => {
+      const data = await handleOpenFileSystemDialog({ title: '请选择文件夹', properties: ['openDirectory'] })
+      if (controller.signal.aborted) return
+      if (!data.filePaths.length) {
         successRef.current = false
         onEnd()
+        return
       }
-    })
+      targetPathRef.current = await ipc.invoke('local', 'pathJoin', {
+        dir: data.filePaths[0],
+        file: `笔记本-${moment().valueOf()}.zip`,
+      })
+      if (controller.signal.aborted) return
+      setVisible(true)
+      await ipc.openStream(
+        'grpc',
+        'ExportNote',
+        { TargetPath: targetPathRef.current, Filter: filter },
+        {
+          token: taskToken,
+          signal: controller.signal,
+          onData(data) {
+            if (!controller.signal.aborted) setPercent(Math.floor(data.Percent * 100))
+          },
+          onError,
+          onEnd() {
+            if (!controller.signal.aborted) onEnd()
+          },
+        },
+      )
+    }
+    void run().catch(onError)
+    return () => controller.abort()
   }, [])
+
   const onEnd = useMemoizedFn(() => {
     if (successRef.current) {
       onOpenLocalFileByPath(targetPathRef.current)
@@ -198,10 +184,9 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
     setPercent(0)
   })
   const stopExport = () => {
+    successRef.current = false
+    controllerRef.current?.abort()
     onEnd()
-    ipcRenderer.invoke('cancel-ExportNote', taskToken).catch((e) => {
-      yakitNotify('error', `停止导出:${e}`)
-    })
   }
   return (
     <YakitHint

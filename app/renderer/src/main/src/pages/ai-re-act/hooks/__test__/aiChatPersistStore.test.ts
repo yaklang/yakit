@@ -38,7 +38,7 @@ describe('aiChatPersistStore API surface (stubbed)', () => {
 
   it('E5: CRUD methods exist and are callable', async () => {
     await aiChatPersistStore.open()
-    await aiChatPersistStore.setSessionRender('s1', 'ai', { items: {} } as any, 0)
+    await aiChatPersistStore.setSessionRender('s1', 'ai', { items: {} } as any, '0')
     await aiChatPersistStore.getSessionRender('s1', 'ai')
     await aiChatPersistStore.setSessionContent('s1', 't1', () => ({ id: 't1' }) as any)
     await aiChatPersistStore.getSessionContent('s1', 't1')

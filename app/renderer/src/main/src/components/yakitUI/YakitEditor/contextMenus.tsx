@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type { OtherMenuListProps, YakitIMonacoEditor } from './YakitEditorType'
 import type { EditorMenuItemType } from './EditorMenu'
 import { Space } from 'antd'
@@ -14,8 +15,6 @@ import { getClipboardText, setClipboardText } from '@/utils/clipboard'
 import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/page/yakEditor'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 /** @name 基础菜单组配置信息 */
 export const baseMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
@@ -300,9 +299,9 @@ const execCodec = async (
   scriptName?: string,
   title?: string,
 ) => {
-  return ipcRenderer
-    .invoke('Codec', { Text: text, Type: typeStr, ScriptName: scriptName })
-    .then((result: { Result: string }) => {
+  return ipc
+    .invoke('grpc', 'Codec', { Text: text, Type: typeStr, ScriptName: scriptName })
+    .then((result) => {
       if (replaceEditor) {
         const m = showModal({
           width: '50%',
@@ -359,7 +358,7 @@ const execCodec = async (
 
 /** @name HTTP数据包变形模块处理函数 */
 const mutateRequest = (params: MutateHTTPRequestParams, editor?: YakitIMonacoEditor) => {
-  ipcRenderer.invoke('NewCodec', params).then((result: CodecResponseProps) => {
+  ipc.invoke('grpc', 'NewCodec', params).then((result) => {
     if (editor) {
       // monacoEditorClear(editor)
       // monacoEditorReplace(editor, Buffer.from(result.Result).toString("utf8"))
@@ -373,8 +372,8 @@ const customMutateRequest = (key: string, text?: string, editor?: YakitIMonacoEd
   if (!editor) {
     return
   }
-  ipcRenderer
-    .invoke('Codec', { Type: key, Text: text, Params: [], ScriptName: key })
+  ipc
+    .invoke('grpc', 'Codec', { Type: key, Text: text, Params: [], ScriptName: key })
     .then((res) => {
       monacoEditorWrite(editor, Buffer.from(res?.Result || '').toString('utf8'), editor.getModel()?.getFullModelRange())
     })

@@ -147,31 +147,44 @@ export const startMCPServerThroughYakit = async ({ toolSets = ['http_fuzzer'] } 
   const result = await browser.execute(
     (streamToken, tools) =>
       new Promise((resolve) => {
+        const transport = window.yakitTransport
+        const base = { namespace: 'grpc', api: 'StartMcpServer', token: streamToken, instanceId: crypto.randomUUID() }
+        const command = (action, extra = {}) =>
+          transport.request({ ...base, action, requestId: crypto.randomUUID(), ...extra })
         let settled = false
         const finish = (value) => {
           if (settled) return
           settled = true
           clearTimeout(timeout)
-          offData()
-          offError()
-          offEnd()
+          if (value.error) {
+            cleanup()
+            void command('cancel')
+          }
           resolve(value)
         }
         const timeout = setTimeout(() => finish({ error: 'Timed out waiting for the MCP server to start' }), 30_000)
-        const offData = window.yakitBridge.stream.onData(streamToken, (data) => {
-          if (data?.Status === 'running') {
-            finish({ endpoint: data.StreamableHttpUrl || String(data.ServerUrl || '').replace(/\/sse$/, '/mcp') })
-          } else if (data?.Status === 'error') {
-            finish({ error: data.Message || 'MCP server failed to start' })
-          }
+        const cleanup = transport.subscribe((event) => {
+          if (event.api !== base.api || event.token !== base.token || event.instanceId !== base.instanceId) return
+          if (event.type === 'data') {
+            for (const data of event.items) {
+              if (data?.Status === 'running')
+                finish({ endpoint: data.StreamableHttpUrl || String(data.ServerUrl || '').replace(/\/sse$/, '/mcp') })
+              else if (data?.Status === 'error') finish({ error: data.Message || 'MCP server failed to start' })
+            }
+            void command('ack', { ack: event.sequence }).catch(() => {})
+          } else if (event.type === 'error') finish({ error: event.error.message })
+          else if (event.type === 'end')
+            finish({ error: 'MCP server stream ended before reporting a running endpoint' })
         })
-        const offError = window.yakitBridge.stream.onError(streamToken, (error) => finish({ error: String(error) }))
-        const offEnd = window.yakitBridge.stream.onEnd(streamToken, () =>
-          finish({ error: 'MCP server stream ended before reporting a running endpoint' }),
-        )
-
-        window.yakitBridge.mcp
-          .startServer({ Host: '127.0.0.1', Port: 0, Tool: tools, EnableAll: false }, streamToken)
+        window.__e2eMcpSessions ??= new Map()
+        window.__e2eMcpSessions.set(streamToken, async () => {
+          cleanup()
+          return command('cancel')
+        })
+        command('open', { params: { Host: '127.0.0.1', Port: 0, Tool: tools, EnableAll: false } })
+          .then((reply) => {
+            if (!reply.ok) finish({ error: reply.error.message })
+          })
           .catch((error) => finish({ error: String(error) }))
       }),
     token,
@@ -187,6 +200,7 @@ export const startMCPServerThroughYakit = async ({ toolSets = ['http_fuzzer'] } 
 export const stopMCPServerThroughYakit = async (token) => {
   if (!token) return
   await browser.execute(async (streamToken) => {
-    await window.yakitBridge.stream.cancel('StartMcpServer', streamToken)
+    await window.__e2eMcpSessions?.get(streamToken)?.()
+    window.__e2eMcpSessions?.delete(streamToken)
   }, token)
 }

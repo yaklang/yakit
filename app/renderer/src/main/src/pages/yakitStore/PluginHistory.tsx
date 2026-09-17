@@ -1,3 +1,5 @@
+import { grpcPageForUI, int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Button, Space, Table, Tag } from 'antd'
@@ -26,8 +28,6 @@ interface QueryPluginHistoryParams extends QueryGeneralRequest {
   YakScriptName?: string
 }
 
-const { ipcRenderer } = window.require('electron')
-
 export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
   const [params, setParams] = useState<QueryPluginHistoryParams>({
     Pagination: genDefaultPagination(10),
@@ -49,8 +49,20 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
     if (limit) newParams.Pagination.Limit = limit
 
     setLoading(true)
-    ipcRenderer
-      .invoke('QueryExecHistory', newParams)
+    ipc
+      .invoke('grpc', 'QueryExecHistory', newParams)
+      .then((res) =>
+        grpcPageForUI({
+          ...res,
+          Data: res.Data.map((row) => ({
+            ...row,
+            Timestamp: int64ToSafeNumber(row.Timestamp),
+            DurationMs: int64ToSafeNumber(row.DurationMs),
+            StderrLen: int64ToSafeNumber(row.StderrLen),
+            StdoutLen: int64ToSafeNumber(row.StdoutLen),
+          })),
+        }),
+      )
       .then((data) => {
         setResponse(data)
       })

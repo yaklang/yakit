@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
@@ -27,7 +28,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 export interface VulinboxManagerProp {}
 
-const { ipcRenderer } = window.require('electron')
 export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
   const { t } = useI18nNamespaces(['vulinbox', 'yakitUi'])
   const [available, setAvailable] = useState(false)
@@ -45,26 +45,48 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
     grpcFetchLatestOSSDomain().then(setOSSDomain)
   }, [])
 
-  useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {})
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      failed(`[StartVulinbox] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {
-      info('[StartVulinbox] finished')
-      setTimeout(() => setStarted(false), 300)
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-StartVulinbox', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
+  const startControllerRef = useRef<AbortController>()
+  useEffect(() => () => startControllerRef.current?.abort(), [])
+  const startVulinbox = async (params: StartVulinboxParams) => {
+    startControllerRef.current?.abort()
+    const controller = new AbortController()
+    startControllerRef.current = controller
+    setCurrentParams(params)
+    setStarted(true)
+    let ended = false
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      ended = true
+      setStarted(false)
+      failed(`[StartVulinbox] error: ${error}`)
     }
-  }, [])
+    try {
+      await ipc.openStream(
+        'grpc',
+        'StartVulinbox',
+        { ...params, Port: String(params.Port) },
+        {
+          token,
+          signal: controller.signal,
+          onError,
+          onEnd() {
+            if (controller.signal.aborted) return
+            ended = true
+            info('[StartVulinbox] finished')
+            setStarted(false)
+          },
+        },
+      )
+      return !ended && !controller.signal.aborted
+    } catch (error) {
+      onError(error)
+      return false
+    }
+  }
 
   const checkVulinboxReady = () => {
-    ipcRenderer
-      .invoke('IsVulinboxReady', {})
+    ipc
+      .invoke('grpc', 'IsVulinboxReady', {})
       .then((res) => {
         if (res.Ok) {
           setAvailable(true)
@@ -95,7 +117,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
 
     return () => {
       timer.current && clearInterval(timer.current)
-      ipcRenderer.invoke('cancel-StartVulinbox', token)
+      startControllerRef.current?.abort()
     }
   }, [])
 
@@ -159,9 +181,8 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                 <YakitPopconfirm
                   title={t('VulinboxManager.confirmClose')}
                   onConfirm={() => {
-                    ipcRenderer.invoke('cancel-StartVulinbox', token).then(() => {
-                      setStarted(false)
-                    })
+                    startControllerRef.current?.abort()
+                    setStarted(false)
                   }}
                 >
                   <YakitButton colors="danger">{t('VulinboxManager.closeVulinbox')}</YakitButton>
@@ -178,17 +199,12 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                         <div style={{ marginTop: 20, marginLeft: 20, marginBottom: 30 }}>
                           <VulinboxStart
                             onSubmit={(param) => {
-                              ipcRenderer
-                                .invoke('StartVulinbox', param, token)
-                                .then(() => {
-                                  setCurrentParams(param)
+                              void startVulinbox(param).then((opened) => {
+                                if (opened) {
                                   info(t('VulinboxManager.startSuccess'))
-                                  setStarted(true)
                                   m.destroy()
-                                })
-                                .catch((e) => {
-                                  failed(`${e}`)
-                                })
+                                }
+                              })
                             }}
                             params={{
                               Host: '127.0.0.1',
@@ -571,40 +587,35 @@ const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
   const [percent, setPercent] = useState(0)
 
   useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
-      if (data.Progress > 0) {
-        setPercent(Math.ceil(data.Progress))
-        return
-      }
-      if (!data.IsMessage) {
-        return
-      }
-      setData([...getData(), Uint8ArrayToString(data.Message)])
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      failed(`[InstallVulinbox] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {
-      info('[InstallVulinbox] finished')
-      props.onFinished()
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-InstallVulinbox', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
+    const controller = new AbortController()
+    const onError = (error: unknown) => {
+      if (!controller.signal.aborted) failed(`[InstallVulinbox] error: ${error}`)
     }
-  }, [])
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    ipcRenderer.invoke('InstallVulinbox', {}, token).then(() => {
-      success(t('InstallVulinboxPrompt.installing'))
-      setLoading(true)
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-InstallVulinbox', token)
-    }
+    success(t('InstallVulinboxPrompt.installing'))
+    void ipc
+      .openStream(
+        'grpc',
+        'InstallVulinbox',
+        {},
+        {
+          token,
+          signal: controller.signal,
+          onData(data) {
+            if (controller.signal.aborted) return
+            if (data.Progress > 0) setPercent(Math.ceil(data.Progress))
+            else if (data.IsMessage) setData((values) => [...values, Uint8ArrayToString(data.Message)])
+          },
+          onError,
+          onEnd() {
+            if (!controller.signal.aborted) {
+              info('[InstallVulinbox] finished')
+              props.onFinished()
+            }
+          },
+        },
+      )
+      .catch(onError)
+    return () => controller.abort()
   }, [])
 
   return (

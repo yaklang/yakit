@@ -1,3 +1,5 @@
+import type { GrpcOutput } from '@/services/ipc'
+import { int64ToSafeNumber } from '@/utils/int64'
 export interface CVEDetail {
   CVE: string
   DescriptionZh: string
@@ -46,4 +48,16 @@ export interface CWEDetail {
 export interface CVEDetailEx {
   CVE: CVEDetail
   CWE: CWEDetail[]
+}
+
+export function cveListForUI(value: GrpcOutput<'QueryCVE'>) {
+  return {
+    ...value,
+    Data: value.Data.map((row) => ({
+      ...row,
+      UpdatedAt: int64ToSafeNumber(row.UpdatedAt),
+      PublishedAt: int64ToSafeNumber(row.PublishedAt),
+      LastModifiedData: int64ToSafeNumber(row.LastModifiedData),
+    })),
+  }
 }

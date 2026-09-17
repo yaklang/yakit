@@ -1,3 +1,6 @@
+import { trafficSessionsForUI } from '@/models/Traffic'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import type { Paging } from '@/utils/yakQueryHTTPFlow'
@@ -7,8 +10,6 @@ import type { TrafficViewerControlIf } from '@/components/playground/traffic/bas
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface DemoTrafficSessionTableProp extends TrafficViewerControlIf {}
-
-const { ipcRenderer } = window.require('electron')
 
 export const DemoTrafficSessionTable: React.FC<DemoTrafficSessionTableProp> = (props) => {
   const { t } = useI18nNamespaces(['components'])
@@ -68,13 +69,15 @@ export const DemoTrafficSessionTable: React.FC<DemoTrafficSessionTableProp> = (p
         return new Promise((resolve, reject) => {
           if (!data) {
             // info("加载初始化数据")
-            ipcRenderer
-              .invoke('QueryTrafficSession', {
+            ipc
+              .invoke('grpc', 'QueryTrafficSession', {
                 TimestampNow: props.fromTimestamp,
                 Pagination: { Limit: 10, Page: 1, OrderBy: 'id', Order: 'asc' }, // genDefaultPagination(),
                 FromId: 0,
               })
-              .then((rsp: { Data: TrafficSession[] }) => {
+              .then(trafficSessionsForUI)
+              .then(grpcPageForUI)
+              .then((rsp) => {
                 resolve({
                   data: rsp.Data,
                 })
@@ -82,13 +85,15 @@ export const DemoTrafficSessionTable: React.FC<DemoTrafficSessionTableProp> = (p
               })
             return
           } else {
-            ipcRenderer
-              .invoke('QueryTrafficSession', {
+            ipc
+              .invoke('grpc', 'QueryTrafficSession', {
                 TimestampNow: props.fromTimestamp,
                 Pagination: { Limit: 10, Page: 1, OrderBy: 'id', Order: 'asc' },
                 FromId: data.Id,
               })
-              .then((rsp: { Data: TrafficSession[]; Total: number; Pagination: Paging }) => {
+              .then(trafficSessionsForUI)
+              .then(grpcPageForUI)
+              .then((rsp) => {
                 resolve({
                   data: rsp.Data,
                 })

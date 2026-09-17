@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type {
@@ -66,7 +67,6 @@ import {
 } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
 import { failed, warn, success, yakitNotify } from '@/utils/notification'
-import { yakitDialog } from '@/services/electronBridge'
 import emiter from '@/utils/eventBus/eventBus'
 import { Divider, Result } from 'antd'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
@@ -86,8 +86,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
 import { useYakRunnerAiAttachRef } from '../YakRunnerAiAttachContext'
-
-const { ipcRenderer } = window.require('electron')
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
   const { tabsId, wrapperClassName } = props
@@ -148,6 +146,8 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     return null
   }, [tabsList])
 
+  const { execution } = useStore()
+
   const onRunYak = useMemoizedFn(async () => {
     const newActiveFile = onActiveItem
     if (newActiveFile && setActiveFile) {
@@ -160,12 +160,12 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         WorkDir: newActiveFile.parent || '',
         ScriptPath: newActiveFile.path,
       }
-      ipcRenderer.invoke('exec-yak', params)
+      await execution?.start(params)
     }
   })
 
   const onStopYak = useMemoizedFn(async () => {
-    ipcRenderer.invoke('cancel-exec-yak')
+    execution?.cancel()
   })
 
   // 方向转名称
@@ -648,13 +648,12 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       const baseName = (activeFile?.name || 'report').replace(/\.(md|markdown)$/i, '') || 'report'
       setDownloadLoading(true)
       await new Promise((resolve) => setTimeout(resolve, 0))
-      const saveRes = await yakitDialog.showSaveDialog(`${baseName}.pdf`)
+      const saveRes = await ipc.invoke('local', 'show-save-dialog', `${baseName}.pdf`)
       if (saveRes.canceled || !saveRes.filePath) return
       const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
-      await ipcRenderer.invoke('PrintMarkdownPdfFromTemplate', {
+      await ipc.invoke('local', 'PrintMarkdownPdfFromTemplate', {
         outputPath: saveRes.filePath,
         code,
-        name: activeFile?.name,
         theme,
       })
       success(t('AIReportFinishCard.pdfExportSuccess'))
@@ -1474,9 +1473,9 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
 
   // 默认保存路径
   useEffect(() => {
-    ipcRenderer.invoke('fetch-code-path').then((path: string) => {
-      ipcRenderer
-        .invoke('is-exists-file', path)
+    ipc.invoke('local', 'fetch-code-path', {}).then((path: string) => {
+      ipc
+        .invoke('local', 'assert-file-absent', path)
         .then(() => {
           setCodePath('')
         })

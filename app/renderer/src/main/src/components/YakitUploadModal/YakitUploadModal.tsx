@@ -4,8 +4,6 @@ import { Progress } from 'antd'
 import styles from './YakitUploadModal.module.scss'
 import { DocumentDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
-
 export interface SaveProgressStream {
   Progress: number
   Speed?: string

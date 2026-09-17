@@ -1,3 +1,4 @@
+import { compareInt64, nonNegativeInt64, maxInt64 } from '@/utils/int64'
 import { useEffect, useLayoutEffect, useRef, useState, type MutableRefObject, useMemo } from 'react'
 import type {
   ParamsTProps,
@@ -41,17 +42,17 @@ const defSort: SortProps = {
 const createDefaultSort = (): SortProps => ({ ...defSort })
 
 // 倒序时需要额外处理传给后端顺序
-export const verifyOrder = (pagination: VirtualPaging, AfterId?: number) => {
+export const verifyOrder = (pagination: VirtualPaging, AfterId?: string | number) => {
   // 是否将返回结果倒序
   let isReverse = false
-  if (pagination.Order && ['desc', 'none'].includes(pagination.Order) && AfterId) {
+  if (pagination.Order && ['desc', 'none'].includes(pagination.Order) && nonNegativeInt64(AfterId) !== '0') {
     pagination.Order = 'asc'
     isReverse = true
   }
   return { pagination, isReverse }
 }
 
-type ScrollPending<T> = { arr: T[]; direction: 'top' | 'bottom'; oldEdgeId: number }
+type ScrollPending<T> = { arr: T[]; direction: 'top' | 'bottom'; oldEdgeId: string }
 
 const clipSlidingData = <T>(arr: T[], max: number, keep: 'head' | 'tail') =>
   arr.length > max ? (keep === 'head' ? arr.slice(0, max) : arr.slice(-max)) : arr
@@ -60,16 +61,16 @@ const syncSlidingEdgeIds = <T extends Record<string, any>>(
   arr: T[],
   order: string,
   idKey: string,
-  maxIdRef: MutableRefObject<number>,
-  minIdRef: MutableRefObject<number>,
+  maxIdRef: MutableRefObject<string | number>,
+  minIdRef: MutableRefObject<string | number>,
 ) => {
   if (!arr.length) {
-    maxIdRef.current = 0
-    minIdRef.current = 0
+    maxIdRef.current = '0'
+    minIdRef.current = '0'
     return
   }
-  const first = Number(arr[0][idKey])
-  const last = Number(arr[arr.length - 1][idKey])
+  const first = nonNegativeInt64(arr[0][idKey])
+  const last = nonNegativeInt64(arr[arr.length - 1][idKey])
   if (['desc', 'none'].includes(order)) {
     maxIdRef.current = first
     minIdRef.current = last
@@ -88,7 +89,7 @@ const buildEdgePagination = (
 ): VirtualPaging | null => {
   if (!data.length) return null
   const isDesc = ['desc', 'none'].includes(sort.order)
-  const edgeId = Number(edge === 'top' ? data[0][idKey] : data[data.length - 1][idKey])
+  const edgeId = nonNegativeInt64(edge === 'top' ? data[0][idKey] : data[data.length - 1][idKey])
   if (edge === 'top') {
     return {
       Page: 1,
@@ -172,9 +173,9 @@ export default function useVirtualTableHook<
   })
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
   // 最新一条数据ID
-  const maxIdRef = useRef<number>(0)
+  const maxIdRef = useRef<string | number>('0')
   // 最后一条数据ID
-  const minIdRef = useRef<number>(0)
+  const minIdRef = useRef<string | number>('0')
   // 接口是否正在请求
   const isGrpcRef = useRef<boolean>(false)
   // Full refresh/reset invalidates older async responses so they cannot write
@@ -235,7 +236,7 @@ export default function useVirtualTableHook<
     return subscribeServerPushStatus(syncServerPushStatus)
   }, [preferServerPush])
 
-  const recoverTopIdRef = useRef(0)
+  const recoverTopIdRef = useRef('0')
   const pendingScrollRef = useRef<ScrollPending<DataT> | null>(null)
 
   const markSlidingClip = (len: number) => {
@@ -261,7 +262,7 @@ export default function useVirtualTableHook<
     pendingScrollRef.current = null
     const el = tableRef.current?.containerRef
     if (!el) return
-    const i = pending.arr.findIndex((item) => Number(item[idKey]) === pending.oldEdgeId)
+    const i = pending.arr.findIndex((item) => nonNegativeInt64(item[idKey]) === pending.oldEdgeId)
     if (i < 0) return
     if (pending.direction === 'bottom') {
       const rowNumber = (el.clientHeight - ROW_HEIGHT) / ROW_HEIGHT
@@ -301,8 +302,8 @@ export default function useVirtualTableHook<
 
         if (type === 'top') {
           if (newData.length <= 0) {
-            if (isSliding && recoverTopIdRef.current > 0) {
-              recoverTopIdRef.current = 0
+            if (isSliding && recoverTopIdRef.current !== '0') {
+              recoverTopIdRef.current = '0'
               return
             }
             // 没有数据
@@ -319,11 +320,16 @@ export default function useVirtualTableHook<
               if (clipped) slidingClippedRef.current = true
               const arr = clipSlidingData(merged, maxDataLength, 'head')
               pendingScrollRef.current =
-                clipped && oldFirstId != null ? { arr, direction: 'top', oldEdgeId: Number(oldFirstId) } : null
-              if (recoverTopIdRef.current && arr.length) {
-                const firstId = Number(arr[0][idKey])
-                const done = order === 'asc' ? firstId <= recoverTopIdRef.current : firstId >= recoverTopIdRef.current
-                if (done) recoverTopIdRef.current = 0
+                clipped && oldFirstId != null
+                  ? { arr, direction: 'top', oldEdgeId: nonNegativeInt64(oldFirstId) }
+                  : null
+              if (recoverTopIdRef.current !== '0' && arr.length) {
+                const firstId = nonNegativeInt64(arr[0][idKey])
+                const done =
+                  order === 'asc'
+                    ? compareInt64(firstId, recoverTopIdRef.current) <= 0
+                    : compareInt64(firstId, recoverTopIdRef.current) >= 0
+                if (done) recoverTopIdRef.current = '0'
               }
               return arr
             }, order)
@@ -332,11 +338,11 @@ export default function useVirtualTableHook<
           }
           if (['desc', 'none'].includes(query.Pagination.Order)) {
             setData((current) => [...newData, ...current])
-            maxIdRef.current = Number(newData[0][responseKey.id])
+            maxIdRef.current = nonNegativeInt64(newData[0][responseKey.id])
           } else {
             // 升序
             setData((current) => (rsp.Pagination.Limit - current.length >= 0 ? [...current, ...newData] : current))
-            maxIdRef.current = Number(newData[newData.length - 1][responseKey.id])
+            maxIdRef.current = nonNegativeInt64(newData[newData.length - 1][responseKey.id])
           }
         } else if (type === 'bottom') {
           if (newData.length <= 0) {
@@ -354,11 +360,13 @@ export default function useVirtualTableHook<
               const clipped = merged.length > maxDataLength
               if (clipped) {
                 slidingClippedRef.current = true
-                if (prevTopId) recoverTopIdRef.current = Math.max(recoverTopIdRef.current, Number(prevTopId))
+                if (prevTopId) recoverTopIdRef.current = maxInt64(recoverTopIdRef.current, nonNegativeInt64(prevTopId))
               }
               const arr = clipSlidingData(merged, maxDataLength, 'tail')
               pendingScrollRef.current =
-                clipped && oldLastId != null ? { arr, direction: 'bottom', oldEdgeId: Number(oldLastId) } : null
+                clipped && oldLastId != null
+                  ? { arr, direction: 'bottom', oldEdgeId: nonNegativeInt64(oldLastId) }
+                  : null
               return arr
             }, order)
             setTotal(rsp.Total)
@@ -389,7 +397,7 @@ export default function useVirtualTableHook<
           // 倒序：maxId 跟着缓冲最新一条走，下次 offset 从这里续，触顶可直接拼回表格。
           // 升序：maxId 必须停在当前窗口最后一行，触底仍按窗口 AfterId 加载。
           if (['desc', 'none'].includes(sortRef.current.order)) {
-            maxIdRef.current = Number(newOffsetData[0][responseKey.id])
+            maxIdRef.current = nonNegativeInt64(newOffsetData[0][responseKey.id])
           }
           setOffsetData(newOffsetData)
         } else {
@@ -477,7 +485,7 @@ export default function useVirtualTableHook<
       return
     }
     // 如无偏移 则直接请求数据
-    if (maxIdRef.current === 0) {
+    if (nonNegativeInt64(maxIdRef.current) === '0') {
       updateData()
       return
     }
@@ -508,7 +516,7 @@ export default function useVirtualTableHook<
       return
     }
     // 如无偏移 则直接请求数据
-    if (minIdRef.current === 0) {
+    if (nonNegativeInt64(minIdRef.current) === '0') {
       updateData()
       return
     }
@@ -540,10 +548,10 @@ export default function useVirtualTableHook<
       onFirst?.(reason)
       setOffsetData([])
       if (showLoading) setLoading(true)
-      maxIdRef.current = 0
-      minIdRef.current = 0
+      maxIdRef.current = '0'
+      minIdRef.current = '0'
       if (isSliding) {
-        recoverTopIdRef.current = 0
+        recoverTopIdRef.current = '0'
         slidingClippedRef.current = false
       }
       const limitCount: number = params.Pagination?.FixedLimit || Math.ceil(boxHeightRef.current / ROW_HEIGHT)
@@ -800,11 +808,11 @@ export default function useVirtualTableHook<
     isGrpcRef.current = false
     notificationRefreshPendingRef.current = false
     viewportReconcilePendingRef.current = false
-    recoverTopIdRef.current = 0
+    recoverTopIdRef.current = '0'
     pendingScrollRef.current = null
     slidingClippedRef.current = false
-    maxIdRef.current = 0
-    minIdRef.current = 0
+    maxIdRef.current = '0'
+    minIdRef.current = '0'
     setOffsetData([])
     setData([])
     setTotal(0)

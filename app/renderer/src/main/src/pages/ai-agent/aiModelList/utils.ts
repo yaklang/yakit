@@ -1,17 +1,22 @@
+import {
+  aiGlobalConfigForUI,
+  localModelForUI,
+  thirdPartyConfigForUI,
+  grpcPagingToUI,
+  int64ToSafeNumber,
+} from '../grpcAdapters'
+import { ipc } from '@/services/ipc'
 import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import type {
   AddLocalModelRequest,
   ClearAllModelsRequest,
   DeleteLocalModelRequest,
-  DownloadLocalModelRequest,
   GetAllStartedLocalModelsResponse,
-  InstallLlamaServerRequest,
   IsLlamaServerReadyResponse,
   IsLocalModelReadyRequest,
   IsLocalModelReadyResponse,
   GeneralResponse,
-  StartLocalModelRequest,
   UpdateLocalModelRequest,
   StartedLocalModelInfo,
   LocalModelConfig,
@@ -19,7 +24,6 @@ import type {
   IsForcedSetAIModalRequest,
   GetAIModelAvailableTotalResponse,
 } from '../type/aiModel'
-import omit from 'lodash/omit'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import type { KVPair } from '@/models/kv'
 import { genDefaultPagination, type PaginationSchema } from '@/pages/invoker/schema'
@@ -28,8 +32,6 @@ import { type AIModelPolicyEnum, defaultAIGlobalConfig } from '../defaultConstan
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 export { AI_API_TYPE_OPTIONS, DEFAULT_AI_API_TYPE, normalizeAIAPIType, type AIAPIType } from './aiApiTypeOptions'
 export { getModelName } from './modelName'
-
-const { ipcRenderer } = window.require('electron')
 
 /**
  * 模型名称是否是memfit开头
@@ -62,11 +64,11 @@ export const isFreeEnd = (name: string) => {
 
 export const grpcGetSupportedLocalModels: APINoRequestFunc<LocalModelConfig[]> = (hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetSupportedLocalModels')
+    ipc
+      .invoke('grpc', 'GetSupportedLocalModels', {})
       .then((res) => {
         const models = res.Models || []
-        resolve(models)
+        resolve(models.map(localModelForUI))
       })
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcGetSupportedLocalModels 失败:' + err)
@@ -77,61 +79,11 @@ export const grpcGetSupportedLocalModels: APINoRequestFunc<LocalModelConfig[]> =
 
 export const grpcIsLlamaServerReady: APINoRequestFunc<IsLlamaServerReadyResponse> = (hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('IsLlamaServerReady')
+    ipc
+      .invoke('grpc', 'IsLlamaServerReady', {})
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcIsLlamaServerReady 失败:' + err)
-        reject(err)
-      })
-  })
-}
-
-export const grpcInstallLlamaServer: APIFunc<InstallLlamaServerRequest, null> = (params, hiddenError) => {
-  return new Promise((resolve, reject) => {
-    const token = params.token
-    const value = omit(params, 'token')
-    ipcRenderer
-      .invoke('InstallLlamaServer', value, token)
-      .then(resolve)
-      .catch((err) => {
-        if (!hiddenError) yakitNotify('error', 'grpcInstallLlamaServer 失败:' + err)
-        reject(err)
-      })
-  })
-}
-export const grpcDownloadLocalModel: APIFunc<DownloadLocalModelRequest, null> = (params, hiddenError) => {
-  return new Promise((resolve, reject) => {
-    const token = params.token
-    const value = omit(params, 'token')
-    ipcRenderer
-      .invoke('DownloadLocalModel', value, token)
-      .then(resolve)
-      .catch((err) => {
-        if (!hiddenError) yakitNotify('error', 'grpcDownloadLocalModel 失败:' + err)
-        reject(err)
-      })
-  })
-}
-export const grpcCancelInstallLlamaServer: APIFunc<string, null> = (token, hiddenError) => {
-  return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('cancel-InstallLlamaServer', token)
-      .then(resolve)
-      .catch((err) => {
-        if (!hiddenError) yakitNotify('error', 'grpcCancelInstallLlamaServer 失败:' + err)
-        reject(err)
-      })
-  })
-}
-
-export const grpcCancelDownloadLocalModel: APIFunc<string, null> = (token, hiddenError) => {
-  return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('cancel-DownloadLocalModel', token)
-      .then(resolve)
-      .catch((err) => {
-        if (!hiddenError) yakitNotify('error', 'grpcCancelDownloadLocalModel 失败:' + err)
         reject(err)
       })
   })
@@ -142,8 +94,8 @@ export const grpcIsLocalModelReady: APIFunc<IsLocalModelReadyRequest, IsLocalMod
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('IsLocalModelReady', params)
+    ipc
+      .invoke('grpc', 'IsLocalModelReady', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcIsLocalModelReady 失败:' + err)
@@ -152,36 +104,10 @@ export const grpcIsLocalModelReady: APIFunc<IsLocalModelReadyRequest, IsLocalMod
   })
 }
 
-export const grpcStartLocalModel: APIFunc<StartLocalModelRequest, null> = (params, hiddenError) => {
-  return new Promise((resolve, reject) => {
-    const token = params.token
-    const value = omit(params, 'token')
-    ipcRenderer
-      .invoke('StartLocalModel', value, token)
-      .then(resolve)
-      .catch((err) => {
-        if (!hiddenError) yakitNotify('error', 'grpcStartLocalModel 失败:' + err)
-        reject(err)
-      })
-  })
-}
-
-export const grpcCancelStartLocalModel: APIFunc<string, null> = (token, hiddenError) => {
-  return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('cancel-StartLocalModel', token)
-      .then(resolve)
-      .catch((err) => {
-        if (!hiddenError) yakitNotify('error', 'grpcCancelStartLocalModel 失败:' + err)
-        reject(err)
-      })
-  })
-}
-
 export const grpcStopLocalModel: APIFunc<StopLocalModelRequest, GeneralResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('StopLocalModel', params)
+    ipc
+      .invoke('grpc', 'StopLocalModel', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcStopLocalModel 失败:' + err)
@@ -222,8 +148,8 @@ export const getAIModelAvailableInfo: APINoRequestFunc<GetAIModelAvailableTotalR
 /**新增本地AI Model */
 export const grpcAddLocalModel: APIFunc<AddLocalModelRequest, GeneralResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('AddLocalModel', params)
+    ipc
+      .invoke('grpc', 'AddLocalModel', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcAddLocalModel 失败:' + err)
@@ -235,9 +161,9 @@ export const grpcAddLocalModel: APIFunc<AddLocalModelRequest, GeneralResponse> =
 /**删除本地AI Model */
 export const grpcDeleteLocalModel: APIFunc<DeleteLocalModelRequest, null> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteLocalModel', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'DeleteLocalModel', params)
+      .then(() => resolve(null))
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcDeleteLocalModel 失败:' + err)
         reject(err)
@@ -247,9 +173,9 @@ export const grpcDeleteLocalModel: APIFunc<DeleteLocalModelRequest, null> = (par
 /**更新本地AI Model */
 export const grpcUpdateLocalModel: APIFunc<UpdateLocalModelRequest, null> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('UpdateLocalModel', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'UpdateLocalModel', params)
+      .then(() => resolve(null))
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcUpdateLocalModel 失败:' + err)
         reject(err)
@@ -259,8 +185,8 @@ export const grpcUpdateLocalModel: APIFunc<UpdateLocalModelRequest, null> = (par
 /**获取所有启动的chat模型列表 */
 export const grpcGetAllStartedLocalModels: APINoRequestFunc<GetAllStartedLocalModelsResponse> = (hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetAllStartedLocalModels')
+    ipc
+      .invoke('grpc', 'GetAllStartedLocalModels', {})
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcGetAllStartedLocalModels 失败:' + err)
@@ -280,11 +206,24 @@ export const reorderApplicationConfig = (list: ThirdPartyApplicationConfig[], st
 /**清空本地ai model */
 export const grpcClearAllModels: APIFunc<ClearAllModelsRequest, GeneralResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('ClearAllModels', params)
+    ipc
+      .invoke('grpc', 'ClearAllModels', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcClearAllModels 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+/**取消本地模型启动流（通过 token 取消对应的 StartLocalModel 流） */
+export const grpcCancelStartLocalModel: APIFunc<string, null> = (token, hiddenError) => {
+  return new Promise((resolve, reject) => {
+    ipc
+      .invoke('grpc', 'abort', { api: 'StartLocalModel', token, targetRequestId: '', namespace: 'grpc' })
+      .then(() => resolve(null))
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcCancelStartLocalModel 失败:' + err)
         reject(err)
       })
   })
@@ -340,8 +279,8 @@ export interface ListAiModelRequest {
 /**获取模型名称列表 */
 export const grpcListAiModel: APIFunc<ListAiModelRequest, ListAiModelResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('ListAiModel', params)
+    ipc
+      .invoke('grpc', 'ListAiModel', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcListAiModel 失败:' + err)
@@ -390,9 +329,9 @@ export interface ServerAIGlobalConfig {
 /**获取ai 全局配置 */
 export const grpcGetAIGlobalConfig: APINoRequestFunc<AIGlobalConfig> = (hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetAIGlobalConfig')
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'GetAIGlobalConfig', {})
+      .then((res) => resolve(aiGlobalConfigForUI(res)))
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcGetAIGlobalConfig 失败:' + err)
         reject(err)
@@ -403,9 +342,9 @@ export const grpcGetAIGlobalConfig: APINoRequestFunc<AIGlobalConfig> = (hiddenEr
 /**设置ai 全局配置 */
 export const grpcSetAIGlobalConfig: APIFunc<AIGlobalConfig, null> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('SetAIGlobalConfig', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'SetAIGlobalConfig', params)
+      .then(() => resolve(null))
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcSetAIGlobalConfig 失败:' + err)
         reject(err)
@@ -432,9 +371,19 @@ export interface AIProviderFilter {
 }
 const grpcQueryAIProvider: APIFunc<QueryAIProvidersRequest, QueryAIProvidersResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryAIProvider', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'QueryAIProvider', params)
+      .then((res) =>
+        resolve({
+          ...res,
+          Pagination: grpcPagingToUI(res.Pagination),
+          Total: int64ToSafeNumber(res.Total),
+          Providers: res.Providers.map((provider) => {
+            if (!provider.Config) throw new Error('AI provider is missing Config')
+            return { ...provider, Config: thirdPartyConfigForUI(provider.Config) }
+          }),
+        }),
+      )
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcQueryAIProvider 失败:' + err)
         reject(err)
@@ -468,8 +417,8 @@ export const grpcGetAIThirdPartyAppConfigTemplate: APINoRequestFunc<GetThirdPart
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetAIThirdPartyAppConfigTemplate')
+    ipc
+      .invoke('grpc', 'GetAIThirdPartyAppConfigTemplate', {})
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcGetAIThirdPartyAppConfigTemplate 失败:' + err)
@@ -491,7 +440,7 @@ export interface AIConfigHealthCheckResponse {
   ResponseContent: string
   ErrorMessage: string
   RawResponse: string
-  RecommendConfig: ThirdPartyApplicationConfig
+  RecommendConfig?: ThirdPartyApplicationConfig
   Success: boolean
 }
 
@@ -500,9 +449,16 @@ export const grpcAIConfigHealthCheck: APIFunc<AIConfigHealthCheckRequest, AIConf
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('AIConfigHealthCheck', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'AIConfigHealthCheck', params)
+      .then((res) =>
+        resolve({
+          ...res,
+          FirstByteCostMs: int64ToSafeNumber(res.FirstByteCostMs),
+          TotalCostMs: int64ToSafeNumber(res.TotalCostMs),
+          RecommendConfig: res.RecommendConfig ? thirdPartyConfigForUI(res.RecommendConfig) : undefined,
+        }),
+      )
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcAIConfigHealthCheck 失败:' + err)
         reject(err)
@@ -528,8 +484,8 @@ export const grpcProbeReasoningEffort: APIFunc<ProbeReasoningEffortRequest, Prob
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('ProbeReasoningEffort', params)
+    ipc
+      .invoke('grpc', 'ProbeReasoningEffort', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcProbeReasoningEffort 失败:' + err)

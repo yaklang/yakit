@@ -37,7 +37,7 @@ const LocalStorageKey = 'chat-cs-shortcut-key-events'
 export const getStorageChatCSShortcutKeyEvents = () => {
   getLocalValue(LocalStorageKey)
     .then((res) => {
-      if (!res) return
+      if (typeof res !== 'string' || !res) return
       try {
         const data: EventsType = JSONParseLog(res, { page: 'chatCS', fun: 'getStorageChatCSShortcutKeyEvents' })
         currentKeyEvents = addScopeShow(data, ChatCSShortcutKeyEvents)

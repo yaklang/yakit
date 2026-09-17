@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Modal } from 'antd'
 import type {
@@ -35,8 +36,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { JSONParseLog } from '@/utils/tool'
 import { fetchCursorContent, fetchEditorFullContent } from './editorUtils'
-const { ipcRenderer } = window.require('electron')
-
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = 'HTTP_PACKET_EDITOR_DisableUnicodeDecode'
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, 'menuType'> {
@@ -110,13 +109,13 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
   const { setCompareLeft, setCompareRight } = useHttpFlowStore()
 
   useEffect(() => {
-    ipcRenderer.invoke('fetch-system-name').then((systemType: YakitSystem) => {
+    ipc.invoke('local', 'fetch-system-name', {}).then((systemType: YakitSystem) => {
       setSystem(systemType)
     })
 
     getRemoteValue(HTTP_PACKET_EDITOR_DisableUnicodeDecode)
       .then((res) => {
-        const boolValue = res === 'true' || res === true
+        const boolValue = res === 'true'
         setDisableUnicodeDecode(boolValue)
       })
       .catch((error) => {
@@ -202,8 +201,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             }
             case 'copyBodyBase64': {
               if (readOnly && downbodyParams?.Id) {
-                ipcRenderer
-                  .invoke('EncodeHTTPPacketContent', {
+                ipc
+                  .invoke('grpc', 'EncodeHTTPPacketContent', {
                     HTTPFlowId: downbodyParams.Id,
                     IsRequest: downbodyParams.IsRequest,
                     Position: 'body',
@@ -225,20 +224,18 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                   yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.noPacketCannotCopyBody'))
                   return
                 }
-                ipcRenderer
-                  .invoke('GetHTTPPacketBody', { Packet: text, ForceRenderFuzztag: true })
-                  .then((bytes: { Raw: Uint8Array }) => {
-                    ipcRenderer
-                      .invoke('BytesToBase64', {
-                        Bytes: bytes.Raw,
-                      })
-                      .then((res: { Base64: string }) => {
-                        setClipboardText(res.Base64)
-                      })
-                      .catch((err) => {
-                        yakitNotify('error', `${err}`)
-                      })
-                  })
+                ipc.invoke('grpc', 'GetHTTPPacketBody', { Packet: text, ForceRenderFuzztag: true }).then((bytes) => {
+                  ipc
+                    .invoke('grpc', 'BytesToBase64', {
+                      Bytes: bytes.Raw,
+                    })
+                    .then((res) => {
+                      setClipboardText(res.Base64)
+                    })
+                    .catch((err) => {
+                      yakitNotify('error', `${err}`)
+                    })
+                })
               }
               return
             }
@@ -480,12 +477,12 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             onRun: (editor: YakitIMonacoEditor, key: string) => {
               try {
                 if (readOnly && downbodyParams) {
-                  ipcRenderer
-                    .invoke('GetHTTPFlowBodyById', {
+                  ipc
+                    .invoke('local', 'SaveHTTPFlowBody', {
                       ...downbodyParams,
-                      uuid: uuidv4(),
                     })
-                    .then(() => {
+                    .then((saved) => {
+                      if (!saved) return
                       yakitNotify('success', t('YakitNotification.downloaded'))
                     })
                     .catch((e) => {
@@ -498,7 +495,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                   yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.noPacketCannotDownloadBody'))
                   return
                 }
-                ipcRenderer.invoke('GetHTTPPacketBody', { Packet: text }).then((bytes: { Raw: Uint8Array }) => {
+                ipc.invoke('grpc', 'GetHTTPPacketBody', { Packet: text }).then((bytes) => {
                   saveABSFileToOpen('packet-body.txt', bytes.Raw)
                 })
               } catch (e) {
@@ -594,12 +591,15 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 advancedConfiguration: advancedConfigValue,
               }
               const openFlag = key === 'send-and-redirect'
-              ipcRenderer
-                .invoke('send-to-tab', {
-                  type: 'fuzzer',
+              ipc
+                .invoke('local', 'ForwardMainEvent', {
+                  event: 'fetch-send-to-tab',
                   data: {
-                    shareContent: JSON.stringify(params),
-                    openFlag,
+                    type: 'fuzzer',
+                    data: {
+                      shareContent: JSON.stringify(params),
+                      openFlag,
+                    },
                   },
                 })
                 .then(() => {

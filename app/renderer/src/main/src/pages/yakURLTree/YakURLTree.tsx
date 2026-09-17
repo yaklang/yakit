@@ -91,7 +91,7 @@ export const YakURLTree: React.FC<YakURLTreeProp> = (props) => {
             loadData={(node) => {
               const originData = node.data
               return new Promise((resolve, reject) => {
-                if (originData === undefined) {
+                if (!originData?.Url) {
                   reject('node.data is empty')
                   return
                 }

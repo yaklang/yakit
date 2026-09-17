@@ -1,3 +1,5 @@
+import { grpcPagingToUI, int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
@@ -25,8 +27,6 @@ import { PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
-
 export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowledgeBase, onRefresh }) => {
   const { t } = useI18nNamespaces(['components', 'yakitUi'])
   const [entries, setEntries] = useState<KnowledgeBaseEntry[]>([])
@@ -42,7 +42,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
     Order: 'desc' as 'asc' | 'desc',
   })
   const [form] = Form.useForm()
-  const [indexingEntries, setIndexingEntries] = useState<Set<number>>(new Set())
+  const [indexingEntries, setIndexingEntries] = useState<Set<string>>(new Set())
 
   // 搜索知识条目
   const searchEntries = useMemoizedFn(async (params?: Partial<SearchKnowledgeEntryParams>) => {
@@ -62,9 +62,9 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
           ...params?.Pagination,
         },
       }
-      const response = await ipcRenderer.invoke('SearchKnowledgeBaseEntry', searchParams)
+      const response = await ipc.invoke('grpc', 'SearchKnowledgeBaseEntry', searchParams)
       setEntries(response.KnowledgeBaseEntries || [])
-      setTotal(response.Total || 0)
+      setTotal(int64ToSafeNumber(response.Total || 0))
     } catch (error) {
       failed(t('playground.KnowledgeEntryTable.searchFailed', { error: String(error) }))
       setEntries([])
@@ -90,7 +90,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
         PotentialQuestions: values.PotentialQuestions.filter((q) => q.trim() !== ''),
         PotentialQuestionsVector: [], // 向量会由后端生成
       }
-      await ipcRenderer.invoke('CreateKnowledgeBaseEntry', params)
+      await ipc.invoke('grpc', 'CreateKnowledgeBaseEntry', params)
       success(t('playground.KnowledgeEntryTable.createSuccess'))
       setModalVisible(false)
       form.resetFields()
@@ -114,7 +114,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
         Keywords: values.Keywords.filter((k) => k.trim() !== ''),
         PotentialQuestions: values.PotentialQuestions.filter((q) => q.trim() !== ''),
       }
-      await ipcRenderer.invoke('UpdateKnowledgeBaseEntry', params)
+      await ipc.invoke('grpc', 'UpdateKnowledgeBaseEntry', params)
       success(t('playground.KnowledgeEntryTable.updateSuccess'))
       setModalVisible(false)
       setEditingEntry(undefined)
@@ -129,7 +129,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
   // 删除知识条目
   const handleDelete = useMemoizedFn(async (entry: KnowledgeBaseEntry) => {
     try {
-      await ipcRenderer.invoke('DeleteKnowledgeBaseEntry', {
+      await ipc.invoke('grpc', 'DeleteKnowledgeBaseEntry', {
         KnowledgeBaseEntryId: entry.ID,
         KnowledgeBaseId: entry.KnowledgeBaseId,
         KnowledgeBaseEntryHiddenIndex: entry.HiddenIndex,
@@ -187,7 +187,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
     try {
       setIndexingEntries((prev) => new Set(prev.add(entry.ID)))
 
-      await ipcRenderer.invoke('BuildVectorIndexForKnowledgeBaseEntry', {
+      await ipc.invoke('grpc', 'BuildVectorIndexForKnowledgeBaseEntry', {
         KnowledgeBaseEntryId: entry.ID,
         KnowledgeBaseId: entry.KnowledgeBaseId,
         KnowledgeBaseEntryHiddenIndex: entry.HiddenIndex,

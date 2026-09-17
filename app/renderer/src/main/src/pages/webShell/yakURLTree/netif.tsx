@@ -1,7 +1,6 @@
+import { requestYakURL } from '@/pages/yakURLTree/grpc'
 import type { RequestYakURLResponse, YakURL } from '@/pages/yakURLTree/data'
 import { yakitFailed } from '@/utils/notification'
-
-const { ipcRenderer } = window.require('electron')
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS'
 
@@ -12,12 +11,11 @@ export const requestYakURLList = (
 ) => {
   if (!method) method = 'GET'
   url.Query = url.Query || []
-  return ipcRenderer
-    .invoke('RequestYakURL', {
-      Url: url,
-      Method: method,
-      Body: body,
-    })
+  return requestYakURL({
+    Url: url,
+    Method: method,
+    Body: body,
+  })
     .then((rsp: RequestYakURLResponse) => {
       if (onResponse) {
         onResponse(rsp)
@@ -38,19 +36,18 @@ export const loadFromYakURLRaw = (
   onResponse?: (response: RequestYakURLResponse) => any,
   onError?: (e) => any,
 ) => {
-  return ipcRenderer
-    .invoke('RequestYakURL', {
-      Url: {
-        FromRaw: url,
-        Schema: '',
-        User: '',
-        Pass: '',
-        Location: '',
-        Path: '',
-        Query: [],
-      },
-      Method: 'GET',
-    })
+  return requestYakURL({
+    Url: {
+      FromRaw: url,
+      Schema: '',
+      User: '',
+      Pass: '',
+      Location: '',
+      Path: '',
+      Query: [],
+    },
+    Method: 'GET',
+  })
     .then((rsp: RequestYakURLResponse) => {
       if (onResponse) {
         onResponse(rsp)

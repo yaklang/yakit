@@ -24,9 +24,9 @@ describe('drainMITMLiveBacklog', () => {
   it('uses the last returned id as the strict cursor and yields at the time budget', async () => {
     const allRows = rows(1_500)
     let now = 0
-    const fetchPage = vi.fn(async (afterId: number, limit: number) => {
+    const fetchPage = vi.fn(async (afterId: string, limit: number) => {
       now += 12
-      return { Data: allRows.filter((row) => row.Id > afterId).slice(0, limit) }
+      return { Data: allRows.filter((row) => BigInt(row.Id) > BigInt(afterId)).slice(0, limit) }
     })
 
     const result = await drainMITMLiveBacklog(
@@ -46,19 +46,19 @@ describe('drainMITMLiveBacklog', () => {
     expect(result.data[0].Id).toBe(1)
     expect(result.data[899].Id).toBe(900)
     expect(result).toMatchObject({
-      cursorAfter: 900,
+      cursorAfter: '900',
       pages: 3,
       hasMore: true,
       shouldContinueImmediately: true,
       stopReason: 'time-budget',
     })
-    expect(fetchPage.mock.calls.map(([afterId]) => afterId)).toEqual([0, 300, 600])
+    expect(fetchPage.mock.calls.map(([afterId]) => afterId)).toEqual(['0', '300', '600'])
   })
 
   it('stops as soon as the available backlog is shorter than a page', async () => {
     const allRows = rows(450)
-    const fetchPage = vi.fn(async (afterId: number, limit: number) => ({
-      Data: allRows.filter((row) => row.Id > afterId).slice(0, limit),
+    const fetchPage = vi.fn(async (afterId: string, limit: number) => ({
+      Data: allRows.filter((row) => BigInt(row.Id) > BigInt(afterId)).slice(0, limit),
     }))
 
     const result = await drainMITMLiveBacklog(
@@ -76,7 +76,7 @@ describe('drainMITMLiveBacklog', () => {
 
     expect(result.data).toEqual(allRows)
     expect(result).toMatchObject({
-      cursorAfter: 450,
+      cursorAfter: '450',
       pages: 2,
       hasMore: false,
       shouldContinueImmediately: false,
@@ -87,8 +87,8 @@ describe('drainMITMLiveBacklog', () => {
 
   it('adapts subsequent page size to a bounded packet-byte budget', async () => {
     const allRows = rows(100).map((row) => ({ ...row, Response: new Uint8Array(64 * 1024) }))
-    const fetchPage = vi.fn(async (afterId: number, limit: number) => ({
-      Data: allRows.filter((row) => row.Id > afterId).slice(0, limit),
+    const fetchPage = vi.fn(async (afterId: string, limit: number) => ({
+      Data: allRows.filter((row) => BigInt(row.Id) > BigInt(afterId)).slice(0, limit),
       SystemTiming: { LatestPersistedId: 100 },
     }))
 
@@ -104,7 +104,7 @@ describe('drainMITMLiveBacklog', () => {
     )
 
     expect(result).toMatchObject({
-      cursorAfter: 32,
+      cursorAfter: '32',
       pages: 2,
       hasMore: true,
       shouldContinueImmediately: true,
@@ -112,8 +112,8 @@ describe('drainMITMLiveBacklog', () => {
     })
     expect(result.payloadBytes).toBe(2 * 1024 * 1024)
     expect(fetchPage.mock.calls).toEqual([
-      [0, 30],
-      [30, 2],
+      ['0', 30],
+      ['30', 2],
     ])
   })
 
@@ -121,7 +121,7 @@ describe('drainMITMLiveBacklog', () => {
     const fetchPage = vi.fn(async () => ({ Data: [{ Id: 9 }, { Id: 10 }] }))
     const result = await drainMITMLiveBacklog(10, { initialPageSize: 30 }, fetchPage)
 
-    expect(result).toMatchObject({ cursorAfter: 10, pages: 1, hasMore: false, stopReason: 'cursor-stalled' })
+    expect(result).toMatchObject({ cursorAfter: '10', pages: 1, hasMore: false, stopReason: 'cursor-stalled' })
     expect(result.data).toEqual([])
   })
 
@@ -133,7 +133,7 @@ describe('drainMITMLiveBacklog', () => {
     })
 
     expect(result).toMatchObject({
-      cursorAfter: 12,
+      cursorAfter: '12',
       hasMore: true,
       shouldContinueImmediately: false,
       stopReason: 'time-budget',
@@ -196,4 +196,23 @@ describe('MITM live adaptive batch sizing', () => {
     const caughtUp = { bytesPerRow: 4 * 1024, catchingUp: false }
     expect(selectMITMLiveInitialPageSize(21, caughtUp)).toBe(256)
   })
+})
+
+it('drains adjacent int64 IDs above the safe integer limit without skipping a row', async () => {
+  const ids = ['9007199254740992', '9007199254740993', '9007199254740994']
+  const fetchPage = vi.fn(async (afterId: string, limit: number) => ({
+    Data: ids
+      .filter((id) => BigInt(id) > BigInt(afterId))
+      .slice(0, limit)
+      .map((Id) => ({ Id })),
+    SystemTiming: { LatestPersistedId: ids[2] },
+  }))
+  const result = await drainMITMLiveBacklog(
+    '9007199254740991',
+    { initialPageSize: 1, maxPageRows: 1, now: () => 0 },
+    fetchPage,
+  )
+  expect(result.data.map((row) => row.Id)).toEqual(ids)
+  expect(result.cursorAfter).toBe(ids[2])
+  expect(fetchPage.mock.calls.map(([cursor]) => cursor)).toEqual(['9007199254740991', ...ids.slice(0, 2)])
 })

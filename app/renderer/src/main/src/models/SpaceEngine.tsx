@@ -10,8 +10,8 @@ export interface SpaceEngineStartParams {
   RetryTimes?: number
 }
 export interface SpaceEngineStatus {
-  Type: 'zoomeye' | 'fofa' | 'hunter' | 'shodan' | 'quake' | ''
-  Status: 'normal' | 'error' | 'empty_key' | 'invalid_type' | ''
+  Type: string
+  Status: string
   Info: string
   Raw: Uint8Array
   Used: number

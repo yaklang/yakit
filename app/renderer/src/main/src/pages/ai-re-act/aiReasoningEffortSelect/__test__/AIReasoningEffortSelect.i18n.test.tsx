@@ -1,3 +1,10 @@
+vi.mock('@/services/ipc', () => ({
+  ipc: {
+    invoke: vi
+      .fn()
+      .mockResolvedValue({ RoutingPolicy: 'auto', IntelligentModels: [], LightweightModels: [], VisionModels: [] }),
+  },
+}))
 import React from 'react'
 import { act, render, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'

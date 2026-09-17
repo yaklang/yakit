@@ -1,3 +1,5 @@
+import { useExportRuleData } from './HTTPFlowTable.grpc'
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useInViewport, useMemoizedFn, useSize } from 'ahooks'
 import { SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -33,8 +35,6 @@ import {
 } from './HTTPFlowTable.utils'
 import styles from './HTTPFlowRuleDataFilter.module.scss'
 import { Tooltip } from 'antd'
-
-const { ipcRenderer } = window.require('electron')
 
 const PAGE_SIZE = 50
 const RULE_NAME_COLUMN_WIDTH = 130
@@ -136,7 +136,7 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
       }
       if (hasFlowFilter) req.HttpFlowFilter = flowFilterForRuleList
 
-      const rsp = await ipcRenderer.invoke('QueryMITMExtractedAggregate', req)
+      const rsp = await ipc.invoke('grpc', 'QueryMITMExtractedAggregate', req)
       if (requestId !== ruleNameRequestIdRef.current) return
       const { rows } = normalizeQueryMITMExtractedAggregateResponse(rsp)
       setRuleNameOptions(uniqStrings(rows.map((row) => row.RuleVerbose)))
@@ -185,7 +185,7 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
       if (ruleVerboseFilter.length > 0) req.RuleVerbose = ruleVerboseFilter
       if (hasFlowFilter) req.HttpFlowFilter = flowFilterForRuleList
 
-      const rsp = await ipcRenderer.invoke('QueryMITMExtractedAggregate', req)
+      const rsp = await ipc.invoke('grpc', 'QueryMITMExtractedAggregate', req)
       const { rows, total } = normalizeQueryMITMExtractedAggregateResponse(rsp)
 
       if (requestId !== requestIdRef.current) return
@@ -285,11 +285,12 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
     return buildRuleScopeFilter(checkedRows, ruleVerboseFilter, activeKeyword)
   })
 
+  const exportRuleData = useExportRuleData()
   const onExportRuleData = useMemoizedFn(async () => {
     const filter = buildScopeFilter()
     setExportLoading(true)
     try {
-      const exportFilePath: string = await ipcRenderer.invoke('ExportMITMRuleExtractedData', { Filter: filter })
+      const exportFilePath: string = await exportRuleData({ Filter: filter })
       if (exportFilePath) openABSFileLocated(exportFilePath)
       yakitNotify('success', t('YakitNotification.exportSuccess'))
     } catch (error) {
@@ -303,8 +304,8 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
     const filter = buildScopeFilter()
     setDeduplicateLoading(true)
     try {
-      const rsp = await ipcRenderer.invoke('DeduplicateMITMRuleExtractedData', { Filter: filter })
-      const n = Number(rsp?.DeletedCount ?? rsp?.deletedCount ?? 0)
+      const rsp = await ipc.invoke('grpc', 'DeduplicateMITMRuleExtractedData', { Filter: filter })
+      const n = Number(rsp.DeletedCount)
       yakitNotify(
         'success',
         n > 0 ? t('HTTPFlowRuleDataFilter.deduplicateDone', { n }) : t('HTTPFlowRuleDataFilter.deduplicateNoRepeat'),

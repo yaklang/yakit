@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, {
   type CSSProperties,
   type ReactElement,
@@ -98,7 +99,6 @@ import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { groupHTTPFlowFieldTags } from './HTTPFlowTable/HTTPFlowTable.utils'
 
-const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
 
 // HTTPFlowDetailMini 含 Monaco 编辑器(2165行)，延迟到选中行后才加载
@@ -115,7 +115,7 @@ export interface HTTPPacketFuzzable {
 }
 
 export interface HTTPFlowBodyByIdRequest {
-  Id?: number
+  Id?: string | number
   IsRequest: boolean
   BufSize?: number
   RuntimeId?: string
@@ -977,8 +977,8 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
     onSetCurProcess([])
     try {
       const query = JSONParseLog(queryparamsStr, { page: 'HTTPHistory', fun: 'refreshProcess' })
-      ipcRenderer
-        .invoke('QueryHTTPFlowsProcessNames', query)
+      ipc
+        .invoke('grpc', 'QueryHTTPFlowsProcessNames', query)
         .then((res) => {
           const processArr = (res.ProcessNames || [])
             .filter((name: string) => name)

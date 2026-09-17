@@ -1,3 +1,4 @@
+import { compareInt64, nonNegativeInt64 } from '@/utils/int64'
 export const MITM_LIVE_CYCLE_TIME_BUDGET_MS = 32
 export const MITM_LIVE_CYCLE_PAYLOAD_BUDGET_BYTES = 2 * 1024 * 1024
 export const MITM_LIVE_TARGET_PAGE_PAYLOAD_BYTES = 1024 * 1024
@@ -10,11 +11,11 @@ export const MITM_LIVE_MAX_PAGE_ROWS = 256
 export const MITM_LIVE_PROJECTED_ROW_ESTIMATE_BYTES = 8 * 1024
 const MITM_LIVE_MAX_PAGES_SAFETY = 32
 
-export const shouldSkipMITMLiveExactTotal = (afterId?: number, beforeId?: number): boolean =>
-  Number(afterId) > 0 && !(Number(beforeId) > 0)
+export const shouldSkipMITMLiveExactTotal = (afterId?: string | number, beforeId?: string | number): boolean =>
+  nonNegativeInt64(afterId) !== '0' && nonNegativeInt64(beforeId) === '0'
 
 export interface MITMLiveRow {
-  Id: number
+  Id: string | number
   Request?: unknown
   Response?: unknown
   RequestLength?: number
@@ -43,7 +44,7 @@ export interface MITMLiveDrainOptions {
 export interface MITMLiveDrainResult<T extends MITMLiveRow, R extends MITMLivePage<T>> {
   data: T[]
   lastResponse?: R
-  cursorAfter: number
+  cursorAfter: string
   pages: number
   payloadBytes: number
   hasMore: boolean
@@ -112,15 +113,15 @@ function positiveInteger(value: number | undefined, fallback: number) {
   return Number.isFinite(normalized) && normalized > 0 ? normalized : fallback
 }
 
-const latestPersistedId = <T extends MITMLiveRow, R extends MITMLivePage<T>>(response: R): number | undefined => {
-  const result = Number(response.SystemTiming?.LatestPersistedId)
-  return Number.isFinite(result) && result >= 0 ? result : undefined
+const latestPersistedId = <T extends MITMLiveRow, R extends MITMLivePage<T>>(response: R): string | undefined => {
+  const value = response.SystemTiming?.LatestPersistedId
+  return value === undefined ? undefined : nonNegativeInt64(value)
 }
 
 export const drainMITMLiveBacklog = async <T extends MITMLiveRow, R extends MITMLivePage<T>>(
-  afterId: number,
+  afterId: string | number,
   options: MITMLiveDrainOptions,
-  fetchPage: (afterId: number, limit: number) => Promise<R>,
+  fetchPage: (afterId: string, limit: number) => Promise<R>,
 ): Promise<MITMLiveDrainResult<T, R>> => {
   const now = options.now || (() => performance.now())
   const startedAt = now()
@@ -130,7 +131,7 @@ export const drainMITMLiveBacklog = async <T extends MITMLiveRow, R extends MITM
   const maxPageRows = positiveInteger(options.maxPageRows, MITM_LIVE_MAX_PAGE_ROWS)
   const maxPagesSafety = positiveInteger(options.maxPagesSafety, MITM_LIVE_MAX_PAGES_SAFETY)
   let pageSize = Math.min(maxPageRows, positiveInteger(options.initialPageSize, 1))
-  let cursor = Number.isFinite(afterId) ? Math.max(0, afterId) : 0
+  let cursor = nonNegativeInt64(afterId)
   let lastResponse: R | undefined
   let pages = 0
   let payloadBytes = 0
@@ -144,15 +145,15 @@ export const drainMITMLiveBacklog = async <T extends MITMLiveRow, R extends MITM
     pages += 1
     lastResponse = rsp
     const rawBatch = rsp.Data || []
-    const batch = rawBatch.filter((row) => Number(row.Id) > cursor)
+    const batch = rawBatch.filter((row) => compareInt64(row.Id, cursor) > 0)
     if (!batch.length) {
       hasMore = false
       stopReason = rawBatch.length ? 'cursor-stalled' : 'exhausted'
       break
     }
 
-    const nextCursor = Number(batch[batch.length - 1]?.Id)
-    if (!Number.isFinite(nextCursor) || nextCursor <= cursor) {
+    const nextCursor = nonNegativeInt64(batch[batch.length - 1]?.Id)
+    if (compareInt64(nextCursor, cursor) <= 0) {
       hasMore = false
       stopReason = 'cursor-stalled'
       break
@@ -166,7 +167,7 @@ export const drainMITMLiveBacklog = async <T extends MITMLiveRow, R extends MITM
     const backendHighWater = latestPersistedId(rsp)
     const pageWasFull = rawBatch.length >= pageSize
     lastPageWasFull = pageWasFull
-    hasMore = backendHighWater === undefined ? pageWasFull : backendHighWater > cursor
+    hasMore = backendHighWater === undefined ? pageWasFull : compareInt64(backendHighWater, cursor) > 0
     if (!hasMore) {
       stopReason = 'exhausted'
       break

@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import moment from 'moment'
 
 import emiter from '@/utils/eventBus/eventBus'
@@ -16,8 +17,6 @@ import {
   monacaLanguageType,
   normalizeYakRunnerFilePath,
 } from './utils'
-
-const { ipcRenderer } = window.require('electron')
 
 export type OpenOrCreateYakRunnerFileParams = {
   targetPath: string
@@ -44,7 +43,7 @@ export type CreateYakRunnerScratchFileParams = {
 
 async function pathExistsOnDisk(filePath: string): Promise<boolean> {
   try {
-    await ipcRenderer.invoke('is-exists-file', filePath)
+    await ipc.invoke('local', 'assert-file-absent', filePath)
     return false
   } catch {
     return true

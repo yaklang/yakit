@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import emiter from '@/utils/eventBus/eventBus'
 import styles from './MITMServerHijacking.module.scss'
@@ -31,7 +32,6 @@ import { RemoteHistoryGV } from '@/enums/history'
 import { cloneDeep } from 'lodash'
 import { MITMPipelineStatus } from '@/components/HTTPFlowTable/MITMPipelineStatus'
 
-const { ipcRenderer } = window.require('electron')
 interface MITMLogHeardExtraProps {
   sourceType: string
   onSetSourceType: (s: string) => void
@@ -153,8 +153,8 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
       setProcessLoading(true)
       try {
         const query = JSONParseLog(queryparamsStrRef.current, { page: 'MITMLog', fun: 'QueryHTTPFlowsProcessNames' })
-        ipcRenderer
-          .invoke('QueryHTTPFlowsProcessNames', query)
+        ipc
+          .invoke('grpc', 'QueryHTTPFlowsProcessNames', query)
           .then((res) => {
             const processArr = (res.ProcessNames || [])
               .filter((name: string) => name)

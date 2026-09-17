@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { type ShellType, type WebShellDetail } from '@/pages/webShell/models'
@@ -26,8 +27,6 @@ interface WebShellDetailOptProps {
   id: string
   webshellInfo: WebShellDetail
 }
-
-const { ipcRenderer } = window.require('electron')
 
 export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
   // console.log("WebShellDetailOpt", props)
@@ -68,13 +67,13 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
   useEffect(() => {
     const { Id, ShellType } = props.webshellInfo
     // 定义一个异步函数来获取基本信息
-    ipcRenderer
-      .invoke('GetBasicInfo', { Id })
+    ipc
+      .invoke('grpc', 'GetBasicInfo', { Id })
       .then((r) => {
         try {
           setShellType(ShellType)
           if (ShellType === 'Behinder') {
-            const obj: { status: string; msg: MsgProps } = JSON.parse(Buffer.from(r.Data, 'utf8').toString())
+            const obj: { status: string; msg: MsgProps } = JSON.parse(Buffer.from(r.Data).toString())
             const { status, msg } = obj
             if (status === 'success') {
               setDefaultPath(msg.currentPath)
@@ -96,7 +95,7 @@ ${msg.currentPath}`
               setBehinderBaseInfo(resultString)
             }
           } else {
-            const obj = JSON.parse(Buffer.from(r.Data, 'utf8').toString())
+            const obj = JSON.parse(Buffer.from(r.Data).toString())
             setDefaultPath(obj.CurrentDir)
             const helloMsg = `OS: ${obj.OS}        
 ${obj.CurrentDir}`

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
@@ -22,7 +23,6 @@ import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInp
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { setClipboardText } from '@/utils/clipboard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
 
 interface EditableCellProps {
   editing: boolean
@@ -217,23 +217,23 @@ export interface Payload {
   ContentBytes: Uint8Array
   Group: string
   HitCount: number
-  Id: number
+  Id: string | number
   IsFile: boolean
 }
 
 export interface UpdatePayloadProps {
-  Id: number
+  Id: string | number
   Data: Payload
 }
 
 export interface DeletePayloadProps {
-  Id?: number
-  Ids?: number[]
+  Id?: string | number
+  Ids?: (string | number)[]
 }
 
 export interface EditingObjProps {
   // 操作的行id
-  Id: number
+  Id: string | number
   // 操作的列
   dataIndex: string
 }
@@ -241,8 +241,8 @@ export interface EditingObjProps {
 export interface NewPayloadTableProps {
   onCopyToOtherPayload?: (v: number) => void
   onMoveToOtherPayload?: (v: number) => void
-  selectPayloadArr: number[]
-  setSelectPayloadArr: (v: number[]) => void
+  selectPayloadArr: (string | number)[]
+  setSelectPayloadArr: (v: (string | number)[]) => void
   onDeletePayload?: (v: DeletePayloadProps) => void
   onQueryPayload: (page?: number, limit?: number) => void
   pagination?: PaginationSchema
@@ -521,8 +521,8 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
 
   const onUpdatePayload = useMemoizedFn((updatePayload: UpdatePayloadProps) => {
     return new Promise((resolve, reject) => {
-      ipcRenderer
-        .invoke('UpdatePayload', updatePayload)
+      ipc
+        .invoke('grpc', 'UpdatePayload', updatePayload)
         .then(() => {
           success(`修改成功`)
           resolve(true)

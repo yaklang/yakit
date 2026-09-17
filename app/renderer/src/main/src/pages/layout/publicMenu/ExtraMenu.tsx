@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useMemo, useRef, useState } from 'react'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -23,7 +24,6 @@ import { type ExtraMenuItem, getExtraMenu } from '@/routes/newRoute'
 import { useSoftMode } from '@/store/softMode'
 import { ManagementTab } from '@/components/managementTab'
 
-const { ipcRenderer } = window.require('electron')
 interface ExtraMenuProps {
   onMenuSelect: (route: RouteToPageProps) => void
   isSecurityExpert?: boolean
@@ -39,6 +39,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
   const [form] = Form.useForm()
   // HAR 导入 stream token，仅进度组件使用，不参与渲染
   const importHistoryharTokenRef = useRef<string>('')
+  const importHistoryPath = useRef('')
   const [percentVisible, setPercentVisible] = useState<boolean>(false)
   const importMenuSelect = useMemoizedFn((type: string) => {
     switch (type) {
@@ -94,20 +95,8 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                       m.destroy()
                       const token = randomString(40)
                       importHistoryharTokenRef.current = token
-                      ipcRenderer
-                        .invoke(
-                          'ImportHTTPFlowStream',
-                          {
-                            InputPath: formValue.historyharPath,
-                          },
-                          token,
-                        )
-                        .then(() => {
-                          setPercentVisible(true)
-                        })
-                        .catch((error) => {
-                          yakitNotify('error', `[ImportHTTPFlowStream] error: ${error}`)
-                        })
+                      importHistoryPath.current = formValue.historyharPath
+                      setPercentVisible(true)
                     }}
                   >
                     {modalT('YakitButton.import')}
@@ -196,7 +185,9 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 visible={percentVisible}
                 title={t('Layout.ExtraMenu.importHARHistoryData')}
                 token={importHistoryharTokenRef.current}
-                apiKey="ImportHTTPFlowStream"
+                openStream={(options) =>
+                  ipc.openStream('grpc', 'ImportHTTPFlowStream', { InputPath: importHistoryPath.current }, options)
+                }
                 onClose={(finish) => {
                   setPercentVisible(false)
                   if (finish) {

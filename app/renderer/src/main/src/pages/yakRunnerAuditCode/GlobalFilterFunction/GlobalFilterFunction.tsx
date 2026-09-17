@@ -93,8 +93,9 @@ const GlobalFilterFunction: React.FC<GlobalFilterFunctionProps> = React.memo((pr
     }
     setData([])
     debugPluginStreamEvent.reset()
-    apiDebugPlugin({ params: requestParams, token: tokenRef.current, isShowStartInfo: false })
+    apiDebugPlugin({ params: requestParams, open: debugPluginStreamEvent.open, isShowStartInfo: false })
       .then(() => {
+        if (!debugPluginStreamEvent.isActive()) return
         debugPluginStreamEvent.start()
         setExecuting(true)
       })

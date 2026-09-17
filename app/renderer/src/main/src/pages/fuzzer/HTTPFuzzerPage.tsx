@@ -1,3 +1,10 @@
+import { int64ToSafeNumber } from '@/utils/int64'
+import { useFuzzerSession } from '@/pages/fuzzer/useFuzzerSession'
+import { fuzzerResponseForUI } from '@/pages/fuzzer/grpcAdapters'
+import { fuzzerHistoriesForUI } from '@/pages/fuzzer/grpcAdapters'
+import { fuzzerHistoryForUI } from '@/pages/fuzzer/grpcAdapters'
+import { payloadGroupsForUI } from '@/pages/payloadManager/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import React, { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState, createRef } from 'react'
 import { Form, Result, Space, Tooltip, Divider, Descriptions } from 'antd'
 import {
@@ -257,8 +264,6 @@ const CodingPopover = React.lazy(() =>
 type TFilterNonUnique = <T>(arr: T[]) => T[]
 const filterNonUnique: TFilterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
 
-const { ipcRenderer } = window.require('electron')
-
 const httpFuzzerLog = ({ name, title, content, status }: Partial<LoggerData>) => {
   return {
     name: name || 'HTTPFuzzerPage',
@@ -270,7 +275,7 @@ const httpFuzzerLog = ({ name, title, content, status }: Partial<LoggerData>) =>
 }
 
 const logger = (log: LoggerData) => {
-  ipcRenderer.invoke('add-log', log)
+  ipc.invoke('local', 'add-log', log)
 }
 
 export type { AdvancedConfigShowProps, FuzzerCacheDataProps } from './fuzzerCacheData'
@@ -350,7 +355,7 @@ export interface FuzzerResponse {
   HeaderSimilarity?: number
   MatchedByFilter?: boolean
   Url?: string
-  TaskId?: number
+  TaskId?: string | number
   DNSDurationMs: number
   FirstByteDurationMs?: number
   TotalDurationMs: number
@@ -519,9 +524,10 @@ export interface FuzzerRequestProps {
 }
 
 export const showDictsAndSelect = (fun: (i: string) => any) => {
-  ipcRenderer
-    .invoke('GetAllPayloadGroup')
-    .then(async (res: { Nodes: PayloadGroupNodeProps[] }) => {
+  ipc
+    .invoke('grpc', 'GetAllPayloadGroup', {})
+    .then(payloadGroupsForUI)
+    .then(async (res) => {
       if (res.Nodes.length === 0) {
         warn(tOriginal('HTTPFuzzerPage.noDictionaryAvailable'))
       } else {
@@ -573,9 +579,9 @@ const stripUrlQueryFallback = (fullUrl: string) => {
 }
 
 export function copyAsUrl(f: { Request: string; IsHTTPS: boolean }, mode: CopyUrlMode = 'withQuery') {
-  ipcRenderer
-    .invoke('ExtractUrl', f)
-    .then((data: ExtractedUrlResult) => {
+  ipc
+    .invoke('grpc', 'ExtractUrl', f)
+    .then((data) => {
       const text = mode === 'withoutQuery' ? data.UrlWithoutQuery || stripUrlQueryFallback(data.Url) : data.Url
       setClipboardText(text)
     })
@@ -752,10 +758,13 @@ export const newWebFuzzerTab = async (params: {
     } catch (e) {}
   }
 
-  return ipcRenderer
-    .invoke('send-to-tab', {
-      type: 'fuzzer',
-      data: { ...params },
+  return ipc
+    .invoke('local', 'ForwardMainEvent', {
+      event: 'fetch-send-to-tab',
+      data: {
+        type: 'fuzzer',
+        data: { ...params },
+      },
     })
     .then(() => {
       params.openFlag && info(tOriginal('YakitNotification.sendSuccess'))
@@ -1134,9 +1143,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   }, [i18nRefresh])
 
   const onCloseTab = useMemoizedFn((m) => {
-    ipcRenderer
-      .invoke('send-close-tab', {
-        router: YakitRoute.HTTPFuzzer,
+    ipc
+      .invoke('local', 'ForwardMainEvent', {
+        event: 'fetch-close-tab',
+        data: {
+          router: YakitRoute.HTTPFuzzer,
+        },
       })
       .then(() => {
         m.destroy()
@@ -1145,12 +1157,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
   const isSaveFuzzerLabelFun = useMemoizedFn(() => {
     // 常用标签默认存储
-    ipcRenderer
-      .invoke('QueryFuzzerLabel')
-      .then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
+    ipc
+      .invoke('grpc', 'QueryFuzzerLabel', {})
+      .then((data) => {
         const { Data } = data
         if (Array.isArray(Data) && Data.length === 0) {
-          ipcRenderer.invoke('SaveFuzzerLabel', {
+          ipc.invoke('grpc', 'SaveFuzzerLabel', {
             Data: defaultLabel,
           })
           // 缓存标签数量 用于添加生成标签Description
@@ -1170,13 +1182,13 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
           arr.forEach((item) => {
             // 需要新添的项
             if (newFixedArr.includes(item)) {
-              ipcRenderer.invoke('SaveFuzzerLabel', {
+              ipc.invoke('grpc', 'SaveFuzzerLabel', {
                 Data: defaultLabel.filter((itemIn) => itemIn.DefaultDescription === item),
               })
             }
             // 需要删除的项
             else {
-              ipcRenderer.invoke('DeleteFuzzerLabel', {
+              ipc.invoke('grpc', 'DeleteFuzzerLabel', {
                 Hash: Data.filter((itemIn) => itemIn.DefaultDescription === item)[0].Hash,
               })
             }
@@ -1191,8 +1203,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     getRemoteValue('IS_DELETE_FUZZ_LABEL')
       .then((remoteData) => {
         if (!remoteData) {
-          ipcRenderer
-            .invoke('DeleteFuzzerLabel', {})
+          ipc
+            .invoke('grpc', 'DeleteFuzzerLabel', {})
             .then(() => {
               isSaveFuzzerLabelFun()
             })
@@ -1238,10 +1250,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     setLoading(true)
     setDroppedCount(0)
     setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
-    ipcRenderer.invoke('HTTPFuzzer', { HistoryWebFuzzerId: id }, tokenRef.current).then(() => {
-      ipcRenderer
-        .invoke('GetHistoryHTTPFuzzerTask', { Id: id })
-        .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
+    fuzzerSession.start({ HistoryWebFuzzerId: id }).then((opened) => {
+      if (!opened) return
+      ipc
+        .invoke('grpc', 'GetHistoryHTTPFuzzerTask', { Id: id })
+        .then(fuzzerHistoryForUI)
+        .then((data) => {
           const { OriginRequest } = data
           if (OriginRequest.Request === '') {
             requestRef.current = Uint8ArrayToString(OriginRequest.RequestRaw, 'utf8')
@@ -1387,19 +1401,19 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       retryRef.current = false
       const retryTaskID = fuzzerTaskId
       if (retryTaskID && (retryTaskID + '').length > 0) {
-        const params = { ...httpParams, RetryTaskID: parseInt(retryTaskID + '', 10) }
+        const params = { ...httpParams, RetryTaskID: retryTaskID }
         const retryParams = _.omit(params, ['Request', 'RequestRaw'])
-        ipcRenderer.invoke('HTTPFuzzer', retryParams, tokenRef.current)
+        fuzzerSession.start(retryParams)
         setIsPause(true)
       }
     } else if (matchRef.current) {
       matchRef.current = false
       const matchTaskID = fuzzerTaskId
-      const params = { ...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID }
+      const params = { ...httpParams, ReMatch: true, HistoryWebFuzzerId: int64ToSafeNumber(matchTaskID) }
       setLoadingText(t('HTTPFuzzerPage.matchingInProgress'))
-      ipcRenderer.invoke('HTTPFuzzer', params, tokenRef.current)
+      fuzzerSession.start(params)
     } else {
-      ipcRenderer.invoke('HTTPFuzzer', httpParams, tokenRef.current)
+      fuzzerSession.start(httpParams)
     }
     setHasExtractorRules(!!(httpParams?.Matchers?.length || httpParams?.Extractors?.length))
     onSaveHTTPFuzzerByPageId()
@@ -1427,15 +1441,49 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     apiSaveFuzzerConfig(params)
   })
 
+  const controlControllersRef = useRef(new Set<AbortController>())
+  useEffect(
+    () => () => {
+      for (const controller of controlControllersRef.current) controller.abort()
+    },
+    [],
+  )
   const [isPause, setIsPause] = useState<boolean>(true) // 暂停或继续请求标识
   const resumeAndPause = useMemoizedFn(async () => {
     try {
       if (!taskIDRef.current) return
-      await ipcRenderer.invoke(
-        'HTTPFuzzer',
-        { PauseTaskID: taskIDRef.current, IsPause: isPause, SetPauseStatus: true },
-        tokenRef.current,
-      )
+      const controller = new AbortController()
+      controlControllersRef.current.add(controller)
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const abort = () => reject(new DOMException('任务已取消', 'AbortError'))
+          controller.signal.addEventListener('abort', abort, { once: true })
+          const finish = (error?: unknown) => {
+            controller.signal.removeEventListener('abort', abort)
+            error ? reject(error) : resolve()
+          }
+          void ipc
+            .openStream(
+              'grpc',
+              'HTTPFuzzer',
+              {
+                PauseTaskID: taskIDRef.current,
+                IsPause: isPause,
+                SetPauseStatus: true,
+              },
+              {
+                token: randomString(60),
+                signal: controller.signal,
+                onError: finish,
+                onEnd: () => finish(),
+              },
+            )
+            .catch(finish)
+        })
+        if (controller.signal.aborted) return
+      } finally {
+        controlControllersRef.current.delete(controller)
+      }
       setLoading(!isPause)
       setIsPause(!isPause)
     } catch (error) {
@@ -1459,7 +1507,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
   const cancelCurrentHTTPFuzzer = useMemoizedFn(async () => {
     try {
-      await ipcRenderer.invoke('cancel-HTTPFuzzer', tokenRef.current)
+      for (const controller of controlControllersRef.current) controller.abort()
+      await fuzzerSession.cancel()
     } finally {
       retryRef.current = false
       matchRef.current = false
@@ -1471,6 +1520,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   })
   const dCountRef = useRef<number>(0)
   const tokenRef = useRef<string>(randomString(60))
+  const fuzzerSession = useFuzzerSession('HTTPFuzzer', tokenRef.current)
   const taskIDRef = useRef<string>('')
   const runtimeIdRef = useRef<string>('')
   /**
@@ -1509,9 +1559,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     /** 流式 firstResponse 待刷：与 count/version 同节流，避免按包打整页 */
     let pendingFirstResponse: FuzzerResponse | null = null
     let firstResponseDirty = false
-    ipcRenderer.on(errToken, (e, details) => {
+    fuzzerSession.callbacks.current.onError = (details) => {
+      setLoading(false)
+      setIsPause(true)
       yakitNotify('error', `${t('HTTPFuzzerPage.fuzzTestRequestFailed')}${details}`)
-    })
+    }
     let count: number = 0 // 用于数据项请求字段
 
     const flushFirstResponse = () => {
@@ -1583,9 +1635,19 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
 
     const updateDataThrottle = throttle(updateData, 500, { leading: false, trailing: true })
+    fuzzerSession.callbacks.current.onReset = () => {
+      updateDataThrottle.cancel()
+      count = 0
+      successCount = 0
+      failedCount = 0
+      pendingFirstResponse = null
+      firstResponseDirty = false
+    }
 
-    ipcRenderer.on(dataToken, (e: any, data: any) => {
-      taskIDRef.current = data.TaskId
+    fuzzerSession.callbacks.current.onData = (raw) => {
+      const data = fuzzerResponseForUI(raw)
+
+      taskIDRef.current = raw.TaskId
 
       if (runtimeIdRef.current) {
         if (!runtimeIdRef.current.includes(data.RuntimeID)) {
@@ -1724,16 +1786,16 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       } else {
         updateData()
       }
-    })
+    }
 
-    ipcRenderer.on(endToken, () => {
+    fuzzerSession.callbacks.current.onEnd = () => {
       updateData()
       count = 0
       successCount = 0
       failedCount = 0
       dCountRef.current = 0
       taskIDRef.current = ''
-      setTimeout(() => {
+      {
         setIsPause(true)
         setLoading(false)
         if (setNewCurrentPageRef.current) {
@@ -1742,28 +1804,30 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
           syncTotal()
         }
-      }, 500)
+      }
       stop()
       logger(httpFuzzerLog({ content: t('HTTPFuzzerPage.send_complete'), status: 'end' }))
-    })
+    }
 
     return () => {
-      ipcRenderer.invoke('cancel-HTTPFuzzer', token)
-      ipcRenderer.removeAllListeners(errToken)
-      ipcRenderer.removeAllListeners(dataToken)
-      ipcRenderer.removeAllListeners(endToken)
+      void fuzzerSession.cancel().catch(() => {})
+      updateDataThrottle.cancel()
+      if (releaseTimer) clearInterval(releaseTimer)
     }
   }, [])
 
   const [extractedMap, { setAll, reset }] = useMap<string, string>()
   useEffect(() => {
-    ipcRenderer.on('fetch-extracted-to-table', (_, data: { type: string; extractedMap: Map<string, string> }) => {
-      if (data.type === 'fuzzer') {
-        setExtractedMap(data.extractedMap)
-      }
-    })
+    const stopIpcEvent1 = ipc.on(
+      'fetch-extracted-to-table',
+      (data: { type: string; extractedMap: Map<string, string> }) => {
+        if (data.type === 'fuzzer') {
+          setExtractedMap(data.extractedMap)
+        }
+      },
+    )
     return () => {
-      ipcRenderer.removeAllListeners('fetch-extracted-to-table')
+      stopIpcEvent1()
     }
   }, [])
 
@@ -1876,9 +1940,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const getList = useMemoizedFn((pageInt: number) => {
     setLoading(true)
     const params = buildHistoryQueryParams(pageInt, 1, showAll)
-    ipcRenderer
-      .invoke('QueryHistoryHTTPFuzzerTaskEx', params)
-      .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+    ipc
+      .invoke('grpc', 'QueryHistoryHTTPFuzzerTaskEx', params)
+      .then(fuzzerHistoriesForUI)
+      .then((data) => {
         setTotal(Number(data.Total) || 0)
         if (data.Data.length > 0) {
           loadHistory(data.Data[0].BasicInfo.Id)
@@ -1905,9 +1970,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       skipNextSyncTotalRef.current = false
       return
     }
-    ipcRenderer.invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, 1, showAll)).then((data) => {
-      setTotal(Number(data.Total) || 0)
-    })
+    ipc
+      .invoke('grpc', 'QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, 1, showAll))
+      .then(fuzzerHistoriesForUI)
+      .then((data) => {
+        setTotal(Number(data.Total) || 0)
+      })
   })
   /**
    * 切换到「查看全部」作用域后，按 currentSelectId 在 all 列表中查找其新的绝对位置并同步 currentPage，
@@ -1918,9 +1986,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
    */
   const resyncCurrentPageInAllScope = useMemoizedFn((id: number) => {
     const LIMIT = 200
-    ipcRenderer
-      .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, LIMIT, true))
-      .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+    ipc
+      .invoke('grpc', 'QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, LIMIT, true))
+      .then(fuzzerHistoriesForUI)
+      .then((data) => {
         const idx = data.Data.findIndex((d) => d.BasicInfo.Id === id)
         if (idx >= 0) {
           setCurrentPage(idx + 1)
@@ -1936,9 +2005,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             setCurrentPage(0)
             return
           }
-          ipcRenderer
-            .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(p, LIMIT, true))
-            .then((res: { Data: HTTPFuzzerTaskDetail[]; Total: number }) => {
+          ipc
+            .invoke('grpc', 'QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(p, LIMIT, true))
+            .then(fuzzerHistoriesForUI)
+            .then((res) => {
               const i = res.Data.findIndex((d) => d.BasicInfo.Id === id)
               if (i >= 0) {
                 setCurrentPage((p - 1) * LIMIT + i + 1)
@@ -2297,8 +2367,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                         ...advancedConfigValue,
                         isHttps: false,
                       })
-                      ipcRenderer
-                        .invoke('Codec', {
+                      ipc
+                        .invoke('grpc', 'Codec', {
                           ...v,
                           Text: v.Text.trim(),
                         })
@@ -2485,12 +2555,13 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       skipNextSyncTotalRef.current = true
       setShowAll(false)
     }
-    ipcRenderer
-      .invoke('QueryHistoryHTTPFuzzerTaskEx', {
+    ipc
+      .invoke('grpc', 'QueryHistoryHTTPFuzzerTaskEx', {
         FuzzerTabIndex: props.id,
         Pagination: { Page: 1, Limit: 1, Order: 'desc', OrderBy: 'created_at' },
       })
-      .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+      .then(fuzzerHistoriesForUI)
+      .then((data) => {
         const t = Number(data.Total) || 0
         setTotal(t)
         if (t <= 0) return
@@ -2515,12 +2586,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       TemplateType: tempType,
     }
     try {
-      const { Status, YamlContent } = await ipcRenderer.invoke('ExportHTTPFuzzerTaskToYaml', params)
-      if (Status.Ok) {
+      const { Status, YamlContent } = await ipc.invoke('grpc', 'ExportHTTPFuzzerTaskToYaml', params)
+      if (Status?.Ok) {
         setVisibleDrawer(true)
         setPluginDebugCode(YamlContent)
       } else {
-        throw new Error(Status.Reason)
+        throw new Error(Status?.Reason || '引擎未返回操作状态')
       }
     } catch (error) {
       yakitFailed(error + '')
@@ -2871,7 +2942,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const [skipSaveHTTPFlow, setSkipSaveHTTPFlow] = useState<boolean>(false)
   useEffect(() => {
     if (inViewport) {
-      ipcRenderer.invoke('GetGlobalNetworkConfig', {}).then((res) => {
+      ipc.invoke('grpc', 'GetGlobalNetworkConfig', {}).then((res) => {
         setSkipSaveHTTPFlow(res.SkipSaveHTTPFlow)
       })
     }
@@ -3201,9 +3272,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           Matchers: advancedConfigValue.matchers,
                           Params: advancedConfigValue.params || [],
                         }
-                        ipcRenderer
-                          .invoke('RedirectRequest', redirectRequestProps)
-                          .then((rsp: FuzzerResponse) => {
+                        ipc
+                          .invoke('grpc', 'RedirectRequest', redirectRequestProps)
+                          .then(fuzzerResponseForUI)
+                          .then((rsp) => {
                             setRedirectedResponse(rsp)
                           })
                           .catch((e) => {
@@ -3578,9 +3650,9 @@ export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
   const [loading, setLoading] = useState<boolean>(true)
   const [value, setValue] = useState<string>('')
   useEffect(() => {
-    ipcRenderer
-      .invoke('Codec', { Text: text, ScriptName: scriptName })
-      .then((result: { Result: string }) => {
+    ipc
+      .invoke('grpc', 'Codec', { Text: text, ScriptName: scriptName })
+      .then((result) => {
         setValue(result.Result)
       })
       .catch((e) => {
@@ -3933,9 +4005,9 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             <ChromeSvgIcon
               className={styles['extra-chrome-btn']}
               onClick={() => {
-                ipcRenderer
-                  .invoke('ExtractUrl', { Request: request, IsHTTPS: isHttps })
-                  .then((data: { Url: string }) => {
+                ipc
+                  .invoke('grpc', 'ExtractUrl', { Request: request, IsHTTPS: isHttps })
+                  .then((data) => {
                     openExternalWebsite(data.Url)
                   })
                   .catch((error) => {
@@ -3960,8 +4032,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
               onClick: ({ key }) => {
                 switch (key) {
                   case 'tooLargeResponseHeaderFile':
-                    ipcRenderer
-                      .invoke('is-file-exists', rsp.TooLargeResponseHeaderFile)
+                    ipc
+                      .invoke('local', 'is-file-exists', rsp.TooLargeResponseHeaderFile)
                       .then((flag: boolean) => {
                         if (flag) {
                           openABSFileLocated(rsp.TooLargeResponseHeaderFile)
@@ -3972,8 +4044,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                       .catch(() => {})
                     break
                   case 'tooLargeResponseBodyFile':
-                    ipcRenderer
-                      .invoke('is-file-exists', rsp.TooLargeResponseBodyFile)
+                    ipc
+                      .invoke('local', 'is-file-exists', rsp.TooLargeResponseBodyFile)
                       .then((flag: boolean) => {
                         if (flag) {
                           openABSFileLocated(rsp.TooLargeResponseBodyFile)
@@ -4818,7 +4890,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
     useEffect(() => {
       if (fuzzerResponse.ResponseRaw) {
         getRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender).then((res) => {
-          if (res) {
+          if (res === 'beautify' || res === 'render' || res === 'hex') {
             setResTypeOptionVal(res)
           } else {
             setResTypeOptionVal(undefined)
@@ -4897,9 +4969,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       copyAsUrl({ Request: request, IsHTTPS: !!isHttps }, 'withoutQuery')
     })
     const onClickOpenBrowserMenu = useMemoizedFn(() => {
-      ipcRenderer
-        .invoke('ExtractUrl', { Request: request, IsHTTPS: !!isHttps })
-        .then((data: { Url: string }) => {
+      ipc
+        .invoke('grpc', 'ExtractUrl', { Request: request, IsHTTPS: !!isHttps })
+        .then((data) => {
           openExternalWebsite(data.Url)
         })
         .catch((e) => {

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { monaco } from 'react-monaco-editor'
@@ -17,8 +18,6 @@ import { onInsertYakFuzzer, showDictsAndSelect } from '@/pages/fuzzer/HTTPFuzzer
 import emiter from '@/utils/eventBus/eventBus'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { YakitIMonacoEditor } from '../YakitEditorType'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface EditerMenuFunParams {
   editor: YakitIMonacoEditor
@@ -203,7 +202,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
                   if (editor) {
                     const selectedText = editor.getModel()?.getValueInRange(editor.getSelection() as any) || ''
                     if (selectedText.length > 0) {
-                      ipcRenderer.invoke('QueryFuzzerLabel').then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
+                      ipc.invoke('grpc', 'QueryFuzzerLabel', {}).then((data) => {
                         const { Data } = data
                         let newSelectedText: string = selectedText
                         if (Array.isArray(Data) && Data.length > 0) {

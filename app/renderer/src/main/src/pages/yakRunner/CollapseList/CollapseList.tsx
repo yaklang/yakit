@@ -1,3 +1,5 @@
+import { languageFindForUI } from '@/utils/monacoSpec/grpcCodeRange'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { type ReactElement, memo, useEffect, useMemo, useState } from 'react'
 import type { CollapseListProp, DefinitionListProps, HelpInfoListProps } from './CollapseListType'
@@ -20,9 +22,7 @@ import type { IMonacoEditor } from '@/utils/editors'
 import { getModelContext } from '@/utils/monacoSpec/yakEditor'
 import { monaco } from 'react-monaco-editor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
-
-export const CollapseList: <T>(props: CollapseListProp<T>) => React.ReactNode = memo((props) => {
+export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | null = memo((props) => {
   const { type = 'sideBar', panelKey, onlyKey = '', list, titleRender, renderItem, collapseProps, isShowBottom } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
 
@@ -199,8 +199,8 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
         const iWord = getWordWithPointAtPosition(model, position)
         const type = getModelContext(model, 'plugin') || 'yak'
         if (iWord.word.length === 0) return
-        ipcRenderer
-          .invoke('YaklangLanguageFind', {
+        ipc
+          .invoke('grpc', 'YaklangLanguageFind', {
             InspectType: 'reference',
             YakScriptType: type,
             YakScriptCode: model.getValue(),
@@ -212,6 +212,7 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
               EndColumn: iWord.endColumn,
             } as Range,
           } as YaklangLanguageSuggestionRequest)
+          .then(languageFindForUI)
           .then((r: YaklangLanguageFindResponse) => {
             if (r.Ranges.length === 0) {
               setReferencesList([])
@@ -242,8 +243,8 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
         const iWord = getWordWithPointAtPosition(model, position)
         if (iWord.word.length === 0) return
         const type = getModelContext(model, 'plugin') || 'yak'
-        ipcRenderer
-          .invoke('YaklangLanguageFind', {
+        ipc
+          .invoke('grpc', 'YaklangLanguageFind', {
             InspectType: 'definition',
             YakScriptType: type,
             YakScriptCode: model.getValue(),
@@ -255,6 +256,7 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
               EndColumn: iWord.endColumn,
             } as Range,
           } as YaklangLanguageSuggestionRequest)
+          .then(languageFindForUI)
           .then((r: YaklangLanguageFindResponse) => {
             if (r.Ranges.length === 0) {
               setDefinitionList([])

@@ -73,7 +73,7 @@ export declare namespace StreamResult {
     Raw: Uint8Array
     IsMessage: boolean
     Message: Uint8Array
-    Id?: number
+    Id?: string | number
     Progress: number
     RuntimeID?: string
     PluginName?: string

@@ -24,7 +24,7 @@ describe('yakExecResult handlers', () => {
       id: nodeId,
       type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
       chatType,
-      Timestamp: 1,
+      Timestamp: '1',
       AIService: '',
       AIModelName: '',
       data: {

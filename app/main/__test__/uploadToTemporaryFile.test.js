@@ -2,7 +2,7 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const { EventEmitter } = require('events')
-const { uploadLocalFileToEngine } = require('../handlers/uploadToTemporaryFile')
+import { uploadLocalFileToEngine } from '../services/uploadToTemporaryFile'
 
 const makeClient = ({ writeError } = {}) => {
   const chunks = []
@@ -87,6 +87,36 @@ describe('uploadLocalFileToEngine', () => {
     await expect(uploadLocalFileToEngine(() => client, source, 3, 20)).rejects.toThrow(
       'UploadToTemporaryFile timed out waiting for engine response',
     )
+    expect(stream.cancelled).toBe(true)
+  })
+  it('aborts a stalled write without waiting for the chunk deadline', async () => {
+    const source = path.join(tempDir, 'stalled.bin')
+    fs.writeFileSync(source, Buffer.from('payload'))
+    const { client, stream } = makeClient()
+    let started
+    const writing = new Promise((resolve) => {
+      started = resolve
+    })
+    stream.write = () => {
+      started()
+      return false
+    }
+    const controller = new AbortController()
+    const result = uploadLocalFileToEngine(() => client, source, 3, 60_000, controller.signal)
+    const rejected = expect(result).rejects.toMatchObject({ code: 'ABORTED' })
+    await writing
+    controller.abort()
+    await rejected
+    expect(stream.cancelled).toBe(true)
+    expect(stream.listenerCount('error')).toBe(1)
+  })
+
+  it('cancels a stalled chunk when its deadline expires', async () => {
+    const source = path.join(tempDir, 'stalled.bin')
+    fs.writeFileSync(source, Buffer.from('payload'))
+    const { client, stream } = makeClient()
+    stream.write = () => false
+    await expect(uploadLocalFileToEngine(() => client, source, 3, 20)).rejects.toThrow('timed out writing a chunk')
     expect(stream.cancelled).toBe(true)
   })
 })

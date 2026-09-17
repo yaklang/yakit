@@ -1,3 +1,7 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
+import { startRecording, stopRecording } from '@/store/screenRecorder'
+import { projectForUI } from '@/pages/softwareSettings/projectUtils'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
@@ -39,7 +43,6 @@ import {
   type ExportProjectProps,
   getEnvTypeByProjects,
   type ProjectDescription,
-  type ProjectIOProgress,
   type ProjectParamsProp,
 } from '@/pages/softwareSettings/projectUtils'
 const NewProjectAndFolder = lazy(() =>
@@ -80,13 +83,7 @@ import { grpcFetchLatestYakVersion, grpcFetchYakInstallResult } from '@/apiUtils
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { handleFetchArchitecture, handleFetchIsDev, SystemInfo } from '@/constants/hardware'
-import {
-  apiSplitUpload,
-  type ExportProjectRequest,
-  grpcExportProject,
-  grpcGetProjects,
-  type SplitUploadRequest,
-} from './utils'
+import { apiSplitUpload, grpcGetProjects, type SplitUploadRequest } from './utils'
 import moment from 'moment'
 import { debugToPrintLog } from '@/utils/logCollection'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
@@ -101,18 +98,6 @@ import { type SoftMode, useSoftMode } from '@/store/softMode'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useSyncYakMcpStream } from '@/store/yakMcpStream'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
-import {
-  yakitAI,
-  yakitApp,
-  yakitCodec,
-  yakitEngine,
-  yakitFileSystem,
-  yakitProject,
-  yakitStream,
-  yakitSystem,
-  yakitUILayout,
-  yakitWindowControls,
-} from '@/services/electronBridge'
 import type {
   CustomPluginExecuteFormValue,
   YakExtraParamProps,
@@ -159,8 +144,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   /** MACOS 上双击放大窗口(不是最大化) */
   const maxScreen = () => {
-    yakitWindowControls
-      .operate('max')
+    ipc
+      .invoke('local', 'UIOperate', 'max')
       .then(() => {})
       .catch(() => {})
   }
@@ -200,7 +185,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   /** 本地引擎自检输出日志 */
   const [newCheckLog, setNewCheckLog] = useState<string[]>([])
   useEffect(() => {
-    const cleanup = yakitUILayout.onFromEngineLinkWindow((data) => {
+    const cleanup = ipc.on('from-engineLinkWin', (data: EngineLinkFromMainWindowPayload) => {
       setNewCheckLog([t('UILayout.entering')])
       handleFetchBaseInfo()
       setCredential(data.credential)
@@ -217,7 +202,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setNewCheckLog([])
       }, 1000)
     })
-    yakitUILayout.markRendererReady()
+    ipc.invoke('local', 'main-win-uilayout-render-ok', {})
     return () => {
       cleanup()
     }
@@ -230,7 +215,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   useUpdateEffect(() => {
     if (getMapAllTerminalKey().length > 0 && !engineLink) {
       clearTerminalMap()
-      yakitUILayout.clearRunnerTerminal()
     }
   }, [engineLink])
 
@@ -272,6 +256,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // #region 企业版登录成功后根据配置信息看是否需要自动上传项目
   const projectListRef = useRef<ProjectDescription[]>([])
+  const projectExportAbortRef = useRef<AbortController>()
+  useEffect(() => () => projectExportAbortRef.current?.abort(), [])
 
   useEffect(() => {
     emiter.on('autoUploadProject', (data) => {
@@ -310,48 +296,45 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     if (!projectListRef.current.length) return
     const value = projectListRef.current.shift()
     if (!value) return
-    const token = `${value.Id}-${moment().valueOf()}`
+    const controller = new AbortController()
+    projectExportAbortRef.current = controller
     let filePath = ''
-    let hasError = false
-    const offData = yakitStream.onData(token, (data: ProjectIOProgress) => {
-      if (data.TargetPath) {
-        filePath = data.TargetPath.replace(/\\/g, '\\')
-      }
-    })
-    const offError = yakitStream.onError(token, () => {
-      hasError = true
+    const onFailure = () => {
+      if (controller.signal.aborted) return
       failed(t('UILayout.projectSyncFailed', { name: value.ProjectName }))
-    })
-    yakitStream.onceEnd(token, () => {
-      offError()
-      offData()
-      if (hasError) {
-        onExportProject()
-        return
-      }
-      const onlineToken = `${filePath}-${moment().valueOf()}`
-      const onlineParams: SplitUploadRequest = {
-        url: 'fragment/upload',
-        path: filePath,
-        token: onlineToken,
-        type: 'Project',
-      }
-      apiSplitUpload(onlineParams, true)
-        .then((TaskStatus) => {
-          if (!TaskStatus) {
-            failed(t('UILayout.projectSyncFailed', { name: projectName }))
-          }
-          onExportProject()
-        })
-        .catch(() => {
-          failed(t('UILayout.projectSyncFailed', { name: projectName }))
-        })
-    })
-    const params: ExportProjectRequest = {
-      Id: value.Id,
-      token,
+      onExportProject()
     }
-    grpcExportProject(params)
+    void ipc
+      .openStream(
+        'grpc',
+        'ExportProject',
+        { Id: value.Id },
+        {
+          token: `${value.Id}-${moment().valueOf()}`,
+          signal: controller.signal,
+          onData(data) {
+            if (data.TargetPath) filePath = data.TargetPath
+          },
+          onError: onFailure,
+          onEnd() {
+            if (controller.signal.aborted) return
+            const onlineParams: SplitUploadRequest = {
+              url: 'fragment/upload',
+              path: filePath,
+              token: `${filePath}-${moment().valueOf()}`,
+              type: 'Project',
+            }
+            void apiSplitUpload(onlineParams, true)
+              .then((TaskStatus) => {
+                if (controller.signal.aborted) return
+                if (!TaskStatus) failed(t('UILayout.projectSyncFailed', { name: value.ProjectName }))
+                onExportProject()
+              })
+              .catch(onFailure)
+          },
+        },
+      )
+      .catch(onFailure)
   })
   // #endregion
 
@@ -370,7 +353,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       if (SystemInfo.isDev === undefined) await handleFetchIsDev()
     } catch (error) {}
     try {
-      const systemName: YakitSystem = await yakitSystem.fetchSystemName()
+      const systemName: YakitSystem = await ipc.invoke('local', 'fetch-system-name', {})
       setSystem(systemName)
     } catch (error) {}
     try {
@@ -381,7 +364,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       isEngineInstalled.current = isInstalled
     } catch (error) {}
     try {
-      const config = await yakitApp.getYakitHomeConfig()
+      const config = await ipc.invoke('local', 'get-yakit-home-config', {})
       if (isCommunityYakit()) {
         const mode = config.yakitMode || 'classic'
         setSoftMode(mode as SoftMode)
@@ -425,13 +408,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             if (isEngineInstalled.current === flag) return
             isEngineInstalled.current = flag
             // 清空主进程yaklang版本缓存
-            yakitEngine.clearLocalYaklangVersionCache()
+            ipc.invoke('local', 'clear-local-yaklang-version-cache', {})
           })
           .catch()
       }, 20000)
     } else {
       // 清空主进程yaklang版本缓存
-      yakitEngine.clearLocalYaklangVersionCache()
+      ipc.invoke('local', 'clear-local-yaklang-version-cache', {})
     }
   }, [engineLink])
   /** ---------- 引擎状态和连接相关逻辑 End ---------- */
@@ -463,7 +446,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       Mode: 'remote',
     } as unknown as YaklangEngineWatchDogCredential
     setCredential(obj)
-    yakitApp.updateCredential({ credential: obj })
+    ipc.invoke('local', 'updateCredential', { credential: obj })
     onStartLinkEngine()
   })
   // 远程切换本地
@@ -516,12 +499,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         // 先销毁 antd 消息通知 弹窗
         emiter.emit('destroyMainWinAntdUiEvent')
         if (type === 'reclaimDatabaseSpace_start') {
-          yakitApp.completeMainWindow({
+          ipc.invoke('local', 'yakitMainWin-done', {
             yakitStatus: type,
             dbPath: currentProject?.DatabasePath ? [currentProject?.DatabasePath] : [],
           })
         } else {
-          yakitApp.completeMainWindow({ yakitStatus: type })
+          ipc.invoke('local', 'yakitMainWin-done', { yakitStatus: type })
         }
       }, 1500)
     }, [GetConnectPort()])
@@ -537,7 +520,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // ---------- 1. 获取 fetch-yaklang-engine-addr 的端口 ----------
     try {
-      const data = await yakitEngine.fetchYaklangEngineAddr()
+      const data = await ipc.invoke('local', 'fetch-yaklang-engine-addr', {})
       const parts = (data.addr as string).split(':')
       if (parts.length === 2) {
         const fetchPort = Number(parts[1]) || 0
@@ -554,8 +537,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     finalPorts = Array.from(new Set(finalPorts))
 
     // ---------- 2. PS 查询所有 yak 进程 ----------
-    yakitEngine
-      .listYakGrpc()
+    ipc
+      .invoke('local', 'ps-yak-grpc', {})
       .then(async (res) => {
         // 查找 PID
         const pidsToKill = res
@@ -571,7 +554,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         // ---------- 4. kill ----------
         for (const pid of pidsToKill) {
           try {
-            await yakitEngine.killYakGrpc(pid)
+            await ipc.invoke('local', 'kill-yak-grpc', pid)
             info(`KILL yak PROCESS: ${pid}`)
           } catch (err) {
             failed(`Kill yak process failed: ${err}`)
@@ -749,12 +732,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     errCallback: () => void,
   ) => {
     try {
-      const res = await yakitEngine.verifyYakEngineVersion(version)
+      const res = await ipc.invoke('local', 'yak-engine-version-exists-and-correctness', version)
       if (res === true) {
         // 清空主进程yaklang版本缓存
-        yakitEngine.clearLocalYaklangVersionCache()
-        yakitEngine
-          .installYakEngine(version)
+        ipc.invoke('local', 'clear-local-yaklang-version-cache', {})
+        ipc
+          .invoke('local', 'install-yak-engine', version)
           .then(() => {
             yakitNotify('info', t('UILayout.detectedLocalEngineInstallDirectly'))
             yakitNotify('success', t('UILayout.installSuccessRestart', { edition: getReleaseEditionName() }))
@@ -777,10 +760,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   }
 
   const initBuildInEngine = () => {
-    yakitEngine
-      .restoreEngineAndPlugin({})
+    ipc
+      .invoke('local', 'RestoreEngineAndPlugin', {})
       .then(() => {
-        yakitEngine.writeEngineKeyToYakitProjects().finally(() => {
+        ipc.invoke('local', 'write-engine-key-to-yakit-projects', undefined).finally(() => {
           yakitNotify('info', t('UILayout.unpackBuiltinEngineSuccess'))
           showYakitModal({
             closable: false,
@@ -792,8 +775,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
               <div style={{ height: 80, padding: 24, display: 'flex', alignItems: 'center' }}>
                 <YakitButton
                   onClick={() => {
-                    yakitApp
-                      .relaunch()
+                    ipc
+                      .invoke('local', 'relaunch', {})
                       .then(() => {})
                       .catch((e) => {
                         failed(t('UILayout.restartFailed', { error: String(e) }))
@@ -877,8 +860,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     if (getEngineLink()) {
       setKillLoading(true)
 
-      yakitEngine
-        .fetchYaklangEngineAddr()
+      ipc
+        .invoke('local', 'fetch-yaklang-engine-addr', {})
         .then((data) => {
           const hosts: string[] = (data.addr as string).split(':')
           if (hosts.length !== 2) return
@@ -893,8 +876,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             setTimeout(() => setKillLoading(false), 300)
             return
           }
-          yakitEngine
-            .listYakGrpc()
+          ipc
+            .invoke('local', 'ps-yak-grpc', {})
             .then((i: yakProcess[]) => {
               const pss = i.find((item) => +item.port === port)
               if (pss) pid = pss.pid || 0
@@ -914,8 +897,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 return
               }
 
-              yakitEngine
-                .killYakGrpc(pid)
+              ipc
+                .invoke('local', 'kill-yak-grpc', pid)
                 .then(() => {
                   info(`KILL yak PROCESS: ${pid}`)
                   setKillOldEngine(false)
@@ -938,7 +921,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     emiter.on('useOfficialEngineByDownload', useOfficialEngineByDownload)
     emiter.on('downYaklangSpecifyVersion', downYaklangSpecifyVersion)
     emiter.on('activeUpdateYakitOrYaklang', handleActiveDownloadModal)
-    const cleanup = yakitUILayout.onKillOldEngineProcess(() => {
+    const cleanup = ipc.on('kill-old-engine-process-callback', () => {
       setKillOldEngine(true)
     })
     return () => {
@@ -956,7 +939,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   useEffect(() => {
     // 监听退出远程控制
-    const cleanup = yakitUILayout.onLogoutDynamicControl(async (params) => {
+    const cleanup = ipc.on('login-out-dynamic-control-callback', async (params: { loginOut?: boolean }) => {
       if (dynamicStatus.isDynamicStatus) {
         // 切换到本地
         setLinkLocalEngine()
@@ -965,7 +948,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         await remoteOperation(false, dynamicStatus)
         // 是否退出登录
         if (params?.loginOut) {
-          yakitUILayout.requestSignOut()
+          ipc.invoke('local', 'ForwardMainEvent', { event: 'ipc-sign-out-callback' })
         }
       }
     })
@@ -980,8 +963,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
       // 缓存远程控制参数
       setDynamicStatus({ ...dynamicStatus, baseUrl, ...resultObj })
-      yakitCodec
-        .run({ Type: 'base64-decode', Text: resultObj.pubpem, Params: [], ScriptName: '' })
+      ipc
+        .invoke('grpc', 'Codec', { Type: 'base64-decode', Text: resultObj.pubpem, Params: [], ScriptName: '' })
         .then((res) => {
           setNewCheckLog([t('UILayout.remoteControlConnecting')])
           setYakitStatus('control-remote')
@@ -996,7 +979,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             Mode: 'remote',
           } as unknown as YaklangEngineWatchDogCredential
           setCredential(obj)
-          yakitApp.updateCredential({ credential: obj })
+          ipc.invoke('local', 'updateCredential', { credential: obj })
           onStartLinkEngine(true)
         })
         .catch((err) => {
@@ -1013,7 +996,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
   useEffect(() => {
     // 用户退出 - 验证license=>展示企业登录
-    const cleanup = yakitUILayout.onJudgeLicenseLogin(() => {
+    const cleanup = ipc.on('again-judge-license-login', () => {
       setJudgeLicense(true)
     })
     return () => {
@@ -1066,7 +1049,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   })
 
   const onOkEnterProjectMag = useMemoizedFn(() => {
-    yakitProject.setCurrentProject({
+    ipc.invoke('grpc', 'SetCurrentProject', {
       Type: getEnvTypeByProjects(),
     })
     setYakitMode('soft')
@@ -1083,10 +1066,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const softwareSettingFinish = useMemoizedFn(() => {
     setYakitMode('')
     setShowProjectManage(false)
-    yakitProject
-      .getCurrentProjectEx({
+    ipc
+      .invoke('grpc', 'GetCurrentProjectEx', {
         Type: getEnvTypeByProjects(),
       })
+      .then(projectForUI)
       .then((rsp: ProjectDescription) => {
         setCurrentProject(rsp || undefined)
         setNowProjectDescription(rsp || undefined)
@@ -1118,8 +1102,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
 
         if (action === 'auto_enter') {
-          yakitProject
-            .setCurrentProject({ Id: projectId, Type: projectType })
+          ipc
+            .invoke('grpc', 'SetCurrentProject', { Id: projectId, Type: projectType })
             .then(() => {
               info(t('ProjectManage.switchDatabaseSuccess'))
               softwareSettingFinish()
@@ -1215,7 +1199,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const [switchEngineLoading, setSwitchEngineLoading] = useState<boolean>(false)
 
   useEffect(() => {
-    const cleanup = yakitUILayout.onSwitchConnectionRefresh((d: boolean) => {
+    const cleanup = ipc.on('fetch-switch-conn-refresh', (d: boolean) => {
       setSwitchEngineLoading(d)
     })
     return () => {
@@ -1302,7 +1286,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     if (!scriptName) return
     try {
       const plugin = await grpcFetchLocalPluginDetail({ Name: scriptName }, true)
-      const pluginId = +plugin.Id || 0
+      const pluginId = positiveInt64(plugin.Id) || 0
       if (!pluginId) {
         yakitNotify('error', '本地未找到该插件')
         return
@@ -1340,7 +1324,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }
     if (fuzzerModalVar.isAiPlugin) {
       try {
-        const res = await yakitAI.checkHahValidConfig()
+        const res = await ipc.invoke('grpc', 'CheckHahValidAiConfig', {})
         apiGetGlobalNetworkConfig().then((obj: GlobalNetworkConfig) => {
           // 如若已配置 则打开执行框
           if (res.Ok) {
@@ -1495,8 +1479,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           <span
                             className={classNames(styles['sampling-info-item'])}
                             onClick={() => {
-                              yakitFileSystem
-                                .isFileExists(item.path)
+                              ipc
+                                .invoke('local', 'is-file-exists', item.path)
                                 .then((flag: boolean) => {
                                   if (flag) {
                                     openABSFileLocated(item.path)
@@ -1586,7 +1570,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           <YakitButton
             onClick={() => {
               setRecording(false)
-              yakitUILayout.cancelScreenRecorder(screenRecorderInfo.token)
+              stopRecording(screenRecorderInfo.token)
             }}
             type="primary"
             colors="danger"
@@ -1617,11 +1601,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       }
       // INFO 开发环境\memfit默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
       if (SystemInfo.isDev || isMemfit()) {
-        const res = await yakitProject.getDefaultProjectEx({
-          Type: getEnvTypeByProjects(),
-        })
+        const res = await ipc
+          .invoke('grpc', 'GetDefaultProjectEx', {
+            Type: getEnvTypeByProjects(),
+          })
+          .then(projectForUI)
         if (res) {
-          yakitProject.setCurrentProject({ Id: +res.Id, Type: getEnvTypeByProjects() })
+          ipc.invoke('grpc', 'SetCurrentProject', { Id: int64String(res.Id ?? 0), Type: getEnvTypeByProjects() })
           setCurrentProject(res)
           setNowProjectDescription(res)
           setShowProjectManage(false)
@@ -2027,8 +2013,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         onOk={() => {
           if (!serverPushEnterProject) return
           setEnterProjectLoading(true)
-          yakitProject
-            .setCurrentProject({ Id: +serverPushEnterProject.id, Type: serverPushEnterProject.type })
+          ipc
+            .invoke('grpc', 'SetCurrentProject', { Id: +serverPushEnterProject.id, Type: serverPushEnterProject.type })
             .then(() => {
               info(t('ProjectManage.switchDatabaseSuccess'))
               setServerPushEnterProject(null)

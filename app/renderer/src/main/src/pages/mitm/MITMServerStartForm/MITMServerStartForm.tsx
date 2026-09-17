@@ -1,3 +1,5 @@
+import { mitmRulesForUI } from '@/pages/mitm/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Form, Divider, Modal } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
@@ -37,8 +39,6 @@ import emiter from '@/utils/eventBus/eventBus'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 const MITMFormAdvancedConfiguration = React.lazy(() => import('./MITMFormAdvancedConfiguration'))
 const ChromeLauncherButton = React.lazy(() => import('../MITMChromeLauncher'))
-
-const { ipcRenderer } = window.require('electron')
 
 export interface MITMServerStartFormProp {
   onStartMITMServer: (
@@ -207,9 +207,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     getRules()
   }, [props.visible])
   const getRules = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('GetCurrentRules', {})
-      .then((rsp: { Rules: MITMContentReplacerRule[] }) => {
+    ipc
+      .invoke('grpc', 'GetCurrentRules', {})
+      .then(mitmRulesForUI)
+      .then((rsp) => {
         const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
         const findOpenRepRule = newRules.find(
           (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat),

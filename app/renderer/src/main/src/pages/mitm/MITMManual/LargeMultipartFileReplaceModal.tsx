@@ -1,10 +1,13 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
-import { grpcMITMV2ReplaceLargeRequestFile, type MITMV2ReplaceLargeRequestFileResponse } from './utils'
+import type { MITMV2ReplaceLargeRequestFileResponse } from './utils'
+import { mitmV2Session } from '../mitmSession'
+import { ipc } from '@/services/ipc'
+import { int64ToSafeNumber } from '@/utils/int64'
 import type { LargeRequestReplacementMarker } from './largeMultipartReplacement'
 import styles from './MITMManual.module.scss'
 
@@ -23,6 +26,8 @@ export const LargeRequestFileReplaceModal: React.FC<LargeRequestFileReplaceModal
   const { t } = useI18nNamespaces(['mitm'])
   const [filePath, setFilePath] = useState('')
   const [loading, setLoading] = useState(false)
+  const controllerRef = useRef<AbortController>()
+  useEffect(() => () => controllerRef.current?.abort(), [])
 
   const replaceFile = async () => {
     if (!filePath) {
@@ -30,31 +35,45 @@ export const LargeRequestFileReplaceModal: React.FC<LargeRequestFileReplaceModal
       return
     }
     setLoading(true)
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
     try {
       let result: MITMV2ReplaceLargeRequestFileResponse
       if (mode === 'fuzzer') {
-        const uploaded = await window.require('electron').ipcRenderer.invoke('UploadToTemporaryFile', {
-          FilePath: filePath,
-        })
+        const uploaded = await ipc.invoke(
+          'local',
+          'UploadLocalFileToEngine',
+          {
+            FilePath: filePath,
+          },
+          { signal: controller.signal },
+        )
         if (!uploaded?.FileName) {
           throw new Error('Yak engine did not return a temporary file path')
         }
-        result = { Filename: uploaded.FileName, Size: Number(uploaded.Size) || 0 }
+        result = { Filename: uploaded.FileName, Size: int64ToSafeNumber(uploaded.Size) }
       } else {
         if (!taskID) {
           throw new Error('MITM mode requires taskID')
         }
-        result = await grpcMITMV2ReplaceLargeRequestFile({
-          TaskID: taskID,
-          ReplaceBody: marker.kind === 'body',
-          PartIndex: marker.kind === 'multipart' ? marker.partIndex : undefined,
-          FilePath: filePath,
-        })
+        result = await mitmV2Session.upload(
+          {
+            TaskID: taskID,
+            ReplaceBody: marker.kind === 'body',
+            PartIndex: marker.kind === 'multipart' ? marker.partIndex : undefined,
+            FilePath: filePath,
+          },
+          controller.signal,
+        )
       }
+      if (controller.signal.aborted) return
       yakitNotify('success', t('MITMManual.replace_large_file_uploaded'))
       onComplete(result)
+    } catch (error) {
+      if (!controller.signal.aborted) yakitNotify('error', t('MITMManual.replace_large_file_failed') + String(error))
     } finally {
-      setLoading(false)
+      if (controllerRef.current === controller && !controller.signal.aborted) setLoading(false)
     }
   }
 
@@ -79,7 +98,13 @@ export const LargeRequestFileReplaceModal: React.FC<LargeRequestFileReplaceModal
         />
       </div>
       <div className={styles['large-request-replace-actions']}>
-        <YakitButton type="outline2" disabled={loading} onClick={onCancel}>
+        <YakitButton
+          type="outline2"
+          onClick={() => {
+            controllerRef.current?.abort()
+            onCancel()
+          }}
+        >
           {t('MITMManual.cancel')}
         </YakitButton>
         <YakitButton type="primary" loading={loading} onClick={replaceFile}>

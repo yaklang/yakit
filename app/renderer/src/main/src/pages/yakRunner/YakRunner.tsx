@@ -1,3 +1,5 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
+import { useRunnerExecution } from '@/pages/yakRunner/hooks/useRunnerExecution'
 import type React from 'react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
@@ -91,8 +93,6 @@ import {
 } from './yakRunnerAiCodeApplyBridge'
 import { syncYakRunnerPatchWorkingDraft } from './yakRunnerAiCodePatchApply'
 import { AISourceEnum } from '../ai-re-act/hooks/grpcApi'
-const { ipcRenderer } = window.require('electron')
-
 // 模拟tabs分块及对应文件
 // 设想方法1：区域4等分，减少其结构嵌套层数，分别用1、2、3、4标注其展示所处区域 例如全屏展示则为[1、2、3、4]
 /**
@@ -331,15 +331,19 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
     }
   })
 
-  // 是否正在读取中
-  const isReadingRef = useRef<boolean>(false)
+  const readController = useRef<AbortController>()
+  useEffect(() => () => readController.current?.abort(), [])
   const onOpenFileByPathFun = useMemoizedFn(async (data) => {
+    readController.current?.abort()
+    const controller = new AbortController()
+    readController.current = controller
     try {
       const { params, isHistory } = JSON.parse(data) as OpenFileByPathProps
       const { path, name, parent, highLightRange } = params
 
       // 校验是否已存在 如若存在则不创建只定位
       const file = await judgeAreaExistFilePath(areaInfo, path)
+      if (controller.signal.aborted) return
       if (file) {
         let cacheAreaInfo = areaInfo
         // 如若存在高亮显示 则注入
@@ -351,17 +355,13 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
         setActiveFile && setActiveFile({ ...file, highLightRange })
       } else {
         const { size, isPlainText } = await getCodeSizeByPath(path)
+        if (controller.signal.aborted) return
         if (size > MAX_FILE_SIZE_BYTES) {
           setShowFileHint(true)
           return
         }
-        // 取消上一次请求
-        if (isReadingRef.current) {
-          ipcRenderer.invoke('cancel-ReadFile')
-        }
-        isReadingRef.current = true
-        const code = await getCodeByPath(path)
-        isReadingRef.current = false
+        const code = await getCodeByPath(path, undefined, controller.signal)
+        if (controller.signal.aborted) return
         const suffix = name.indexOf('.') > -1 ? name.split('.').pop() : ''
         const scratchFile: FileDetailInfo = {
           name,
@@ -393,18 +393,24 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
         }
       }
     } catch (error) {
+      if (controller.signal.aborted) return
       failed(`error: ${error}`)
     }
   })
 
   const onGetCodeByPathCacheFun = useMemoizedFn(async (data) => {
+    readController.current?.abort()
+    const controller = new AbortController()
+    readController.current = controller
     try {
       const { params } = JSON.parse(data) as OpenFileByPathProps
       const { path, name } = params
       // 校验是否已存在 如若存在则赋予其code
       const file = await judgeAreaExistFilePath(areaInfo, path)
+      if (controller.signal.aborted) return
       if (file) {
         const { size, isPlainText } = await getCodeSizeByPath(path)
+        if (controller.signal.aborted) return
         if (size > MAX_FILE_SIZE_BYTES) {
           !isShowFileHint && setShowFileHint(true)
           // 如若历史文件过大 则移除展示的文件
@@ -415,13 +421,8 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
           }
           return
         }
-        // 取消上一次请求
-        if (isReadingRef.current) {
-          ipcRenderer.invoke('cancel-ReadFile')
-        }
-        isReadingRef.current = true
-        const code = await getCodeByPath(path)
-        isReadingRef.current = false
+        const code = await getCodeByPath(path, undefined, controller.signal)
+        if (controller.signal.aborted) return
         const suffix = name.indexOf('.') > -1 ? name.split('.').pop() : ''
         const newAreaInfo = updateAreaFileInfo(
           areaInfo,
@@ -448,6 +449,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
         )
       }
     } catch (error) {
+      if (controller.signal.aborted) return
       failed(`error: ${error}`)
     }
   })
@@ -621,14 +623,17 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
     { wait: 300 },
   )
 
+  const execution = useRunnerExecution(() => setRunnerTabsId(undefined))
+
   const store: YakRunnerContextStore = useMemo(() => {
     return {
       fileTree: fileTree,
       areaInfo: areaInfo,
       activeFile: activeFile,
       runnerTabsId: runnerTabsId,
+      execution,
     }
-  }, [fileTree, areaInfo, activeFile, runnerTabsId])
+  }, [fileTree, areaInfo, activeFile, runnerTabsId, execution])
 
   const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
     return {
@@ -897,9 +902,9 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   const [codePath, setCodePath] = useState<string>('')
   // 默认保存路径
   useEffect(() => {
-    ipcRenderer.invoke('fetch-code-path').then((path: string) => {
-      ipcRenderer
-        .invoke('is-exists-file', path)
+    ipc.invoke('local', 'fetch-code-path', {}).then((path: string) => {
+      ipc
+        .invoke('local', 'assert-file-absent', path)
         .then(() => {
           setCodePath('')
         })
@@ -1197,24 +1202,14 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   })
 
   useEffect(() => {
-    // 执行结束
-    ipcRenderer.on('client-yak-end', () => {
-      setRunnerTabsId(undefined)
-    })
-    return () => {
-      ipcRenderer.removeAllListeners('client-yak-end')
-    }
-  }, [])
-
-  useEffect(() => {
     // 调用打开临时文件
-    ipcRenderer.on('fetch-send-to-yak-running', (e, res: any) => {
+    const stopIpcEvent1 = ipc.on('fetch-send-to-yak-running', (res: any) => {
       const { name = '', code = '' } = res || {}
       if (!name || !code) return
-      addFileTab(e, { name, code })
+      addFileTab(undefined, { name, code })
     })
     return () => {
-      ipcRenderer.removeAllListeners('fetch-send-to-yak-running')
+      stopIpcEvent1()
     }
   }, [])
 

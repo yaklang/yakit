@@ -1,11 +1,16 @@
-import { type HybridScanControlAfterRequest, type HybridScanResponse } from '../../models/HybridScan'
+import {
+  type HybridScanControlAfterRequest,
+  type HybridScanRestoredConfig,
+  type HybridScanResponse,
+} from '../../models/HybridScan'
 import { type HoldGRPCStreamParams } from '../useHoldGRPCStream/useHoldGRPCStream'
 import { type HoldGRPCStreamInfo, type StreamResult } from '../useHoldGRPCStream/useHoldGRPCStreamType'
 
 export type TaskStatus = 'executing' | 'paused' | 'done' | 'error' | 'default'
-export interface HoldBatchGRPCStreamParams extends HoldGRPCStreamParams {
+export interface HoldBatchGRPCStreamParams extends Omit<HoldGRPCStreamParams, 'apiKey' | 'onData'> {
+  apiKey: 'HybridScan'
   /**获取输入值 */
-  onGetInputValue?: (params: HybridScanControlAfterRequest) => void
+  onGetInputValue?: (params: HybridScanRestoredConfig) => void
   setTaskStatus?: (s: TaskStatus) => void
 }
 export interface PluginBatchExecutorResult extends HybridScanResponse {

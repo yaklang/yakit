@@ -1,8 +1,7 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
 import emiter from '@/utils/eventBus/eventBus'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface SubTabPageEventHandlers {
   onSelectSubMenuById?: (resVal: string) => void
@@ -73,7 +72,9 @@ export function initSubTabGlobalListeners() {
   const onCloseSubPageByInfo = (res: string) => dispatchActive('onCloseSubPageByInfo', res)
 
   emiter.on('switchSubMenuItem', onSwitchSubMenuItem)
-  ipcRenderer.on('fetch-add-group', onAddGroup)
+  const stopIpcEvent1 = ipc.on('fetch-add-group', (data: { pageId: string; type: WebFuzzerType }) =>
+    onAddGroup(undefined, data),
+  )
   emiter.on('sendSwitchSequenceToMainOperatorContent', onSetType)
   emiter.on('onRemoveSecondPageByFocus', onRemoveSecondPageByFocus)
   emiter.on('onCloseCurrentPage', onCloseCurrentPage)
@@ -83,7 +84,7 @@ export function initSubTabGlobalListeners() {
 
   return () => {
     emiter.off('switchSubMenuItem', onSwitchSubMenuItem)
-    ipcRenderer.removeListener('fetch-add-group', onAddGroup)
+    stopIpcEvent1()
     emiter.off('sendSwitchSequenceToMainOperatorContent', onSetType)
     emiter.off('onRemoveSecondPageByFocus', onRemoveSecondPageByFocus)
     emiter.off('onCloseCurrentPage', onCloseCurrentPage)

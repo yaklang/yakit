@@ -1,3 +1,9 @@
+import { int64String, positiveInt64 } from '@/utils/int64'
+import { useExportRuleData } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { fetchHTTPFlow as requestHTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { extractedDataForUI } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { httpFlowForUI } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { ipc } from '@/services/ipc'
 import React, {
   useEffect,
   useState,
@@ -65,13 +71,11 @@ import { JSONParseLog } from '@/utils/tool'
 import { HTTPFlowCodec } from '@/utils/encodec'
 import { YakitMenu, type YakitMenuItemType } from './yakitUI/YakitMenu/YakitMenu'
 const { TabPane } = PluginTabs
-const { ipcRenderer } = window.require('electron')
-
 const RandomChunkedDataTable = React.lazy(() => import('./HTTPFlowTable/RandomChunkedDataTable/RandomChunkedDataTable'))
 export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any
 
 export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
-  id: number
+  id: number | string
   payloads?: string[]
   noHeader?: boolean
   onClose?: () => any
@@ -93,7 +97,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
 
   scrollTo?: (id: number | string) => void
   scrollID?: number | string
-  analyzedIds?: number[]
+  analyzedIds?: (number | string)[]
 
   showEditTag?: boolean
   showJumpTree?: boolean
@@ -118,7 +122,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
   const { t, i18n } = useI18nNamespaces(['history'])
   const [response, setResponse] = useState<FuzzerResponse>()
   const [index, setIndex] = useState<number>()
-  const [id, setId] = useState(0)
+  const [id, setId] = useState<string | number>(0)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -131,10 +135,11 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
       return
     }
     setLoading(true)
-    ipcRenderer
-      .invoke('ConvertFuzzerResponseToHTTPFlow', { ...response })
+    ipc
+      .invoke('grpc', 'ConvertFuzzerResponseToHTTPFlow', { ...response })
+      .then(httpFlowForUI)
       .then((d: HTTPFlow) => {
-        if (d.Id <= 0) {
+        if (BigInt(d.Id) <= BigInt(0)) {
           return
         }
         setId(d.Id)
@@ -202,12 +207,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
   }, [props.loading])
 
   useEffect(() => {
-    if (props.id <= 0) {
+    if (BigInt(props.id || 0) <= BigInt(0)) {
       return
     }
     setLoading(true)
-    ipcRenderer
-      .invoke('GetHTTPFlowById', { Id: props.id })
+    requestHTTPFlow({ Id: props.id })
       .then((data: HTTPFlow) => {
         setFlow(data)
       })
@@ -228,10 +232,10 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
   useEffect(() => {
     // 发送webfuzzer后关闭详情
-    ipcRenderer.on('fetch-send-to-tab', onCloseDetails)
+    const stopIpcEvent1 = ipc.on('fetch-send-to-tab', onCloseDetails)
 
     return () => {
-      ipcRenderer.removeListener('fetch-send-to-tab', onCloseDetails)
+      stopIpcEvent1()
     }
   }, [])
 
@@ -451,7 +455,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                 >
                   <div style={{ height: 350 }}>
                     {flow.IsWebsocket ? (
-                      <WebSocketEditor flow={flow} value={flow.RequestString} onSetEditor={setWsReqEditor} />
+                      <WebSocketEditor
+                        flow={flow}
+                        value={flow.RequestString ?? Uint8ArrayToString(flow.Request)}
+                        onSetEditor={setWsReqEditor}
+                      />
                     ) : (
                       <NewHTTPPacketEditor
                         fromMITM={fromMITM}
@@ -459,7 +467,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         foldBinaryFuzztag={binaryDisplayEnabled}
                         onFoldBinaryFuzztagChange={binaryDisplayEnabledStore.setEnabled}
                         noHeader={true}
-                        originValue={flow.RequestString}
+                        originValue={flow.RequestString ?? Uint8ArrayToString(flow.Request)}
                         originalPackage={flow.Request}
                         defaultHttps={flow?.IsHTTPS}
                         // actions={[...actionFuzzer]}
@@ -511,13 +519,17 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                 >
                   <div style={{ height: 350 }}>
                     {flow.IsWebsocket ? (
-                      <WebSocketEditor flow={flow} value={flow.ResponseString} onSetEditor={setWsResEditor} />
+                      <WebSocketEditor
+                        flow={flow}
+                        value={flow.ResponseString ?? Uint8ArrayToString(flow.Response)}
+                        onSetEditor={setWsResEditor}
+                      />
                     ) : (
                       <NewHTTPPacketEditor
                         fromMITM={fromMITM}
                         readOnly={true}
                         noHeader={true}
-                        originValue={flow.ResponseString}
+                        originValue={flow.ResponseString ?? Uint8ArrayToString(flow.Response)}
                         defaultHttps={flow?.IsHTTPS}
                         // actions={[...actionFuzzer]}
                         webFuzzerValue={flow.RequestString || ''}
@@ -697,7 +709,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
   const [infoTypeLoading, setInfoTypeLoading] = useState(false)
   const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
   const [isFold, setFold] = useState<boolean>(true)
-  const lastIdRef = useRef<number>()
+  const lastIdRef = useRef<number | string>()
   const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
   const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
   const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
@@ -787,10 +799,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     if (isGetRequest || isGetResponse || isSkip) {
       isGetRequest && setFlowRequestLoad(true)
       isGetResponse && setFlowResponseLoad(true)
-      ipcRenderer
-        .invoke('GetHTTPFlowById', { Id: id })
+      requestHTTPFlow({ Id: id })
         .then((i: HTTPFlow) => {
-          if (+i.Id == lastIdRef.current) {
+          if (int64String(i.Id ?? 0) == lastIdRef.current) {
             setFlow(i)
             queryMITMRuleExtractedData(i)
           }
@@ -809,8 +820,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
   const queryMITMRuleExtractedData = (i: HTTPFlow) => {
     const existedExtraInfos: HTTPFlowInfoType[] = []
-    ipcRenderer
-      .invoke('QueryMITMRuleExtractedData', {
+    ipc
+      .invoke('grpc', 'QueryMITMRuleExtractedData', {
         Pagination: {
           Page: 1,
           Limit: -1,
@@ -820,6 +831,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
           AnalyzedIds: analyzedIds,
         },
       } as QueryMITMRuleExtractedDataRequest)
+      .then(extractedDataForUI)
       .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
         // 定位高亮需要关掉
         setHighLightItem(undefined)
@@ -885,11 +897,11 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     TraceID: [],
     RuleVerbose: [],
   })
+  const exportRuleData = useExportRuleData()
   const exportMITMRuleExtractedData = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('ExportMITMRuleExtractedData', {
-        Filter: exportMITMRuleFilter,
-      })
+    exportRuleData({
+      Filter: exportMITMRuleFilter,
+    })
       .then((ExportFilePath: string) => {
         openABSFileLocated(ExportFilePath)
         yakitNotify('success', t('YakitNotification.exportSuccess'))
@@ -1315,7 +1327,7 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
 }
 
 interface HTTPFlowBareProps {
-  Id: number
+  Id: string | number
   Data: Uint8Array
 }
 
@@ -1547,12 +1559,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     }
   })
   const handleGetHTTPFlowBare = useMemoizedFn((data: 'request' | 'response') => {
-    ipcRenderer
-      .invoke('GetHTTPFlowBare', {
-        Id: parseInt(id + ''),
+    ipc
+      .invoke('grpc', 'GetHTTPFlowBare', {
+        Id: id,
         BareType: data,
       })
-      .then((res: HTTPFlowBareProps) => {
+      .then((res) => {
         if (res.Data && res.Data.length > 0) {
           if (data === 'request') {
             setBeforeResValue(Uint8ArrayToString(res.Data))
@@ -1608,7 +1620,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     } else {
       if (!getReqTypeOptionVal()) {
         getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
-          if (res) {
+          if (res === 'beautify' || res === 'render' || res === 'hex') {
             setReqTypeOptionVal(res)
           } else {
             setReqTypeOptionVal(undefined)
@@ -1623,7 +1635,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     } else {
       if (!getResTypeOptionVal()) {
         getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then((res) => {
-          if (res) {
+          if (res === 'beautify' || res === 'render' || res === 'hex') {
             setResTypeOptionVal(res)
           } else {
             setResTypeOptionVal(undefined)
@@ -1635,8 +1647,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
 
   // 响应额外按钮
   const openTooLargePacketFile = (filePath: string) => {
-    ipcRenderer
-      .invoke('is-file-exists', filePath)
+    ipc
+      .invoke('local', 'is-file-exists', filePath)
       .then((flag: boolean) => {
         if (flag) {
           openABSFileLocated(filePath)

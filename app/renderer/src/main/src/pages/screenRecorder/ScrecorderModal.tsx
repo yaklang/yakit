@@ -1,3 +1,4 @@
+import { startRecording, stopRecording } from '@/store/screenRecorder'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -13,8 +14,6 @@ import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
-
-const { ipcRenderer } = window.require('electron')
 
 interface ScrecorderModalProp {
   onClose: () => void
@@ -113,8 +112,8 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
     }
     setRemoteValue(Screen_Recorder_Framerate, newValue.Framerate)
     setRemoteValue(Screen_Recorder_CoefficientPTS, newValue.CoefficientPTS)
-    ipcRenderer.invoke('StartScrecorder', newValue, token).then(() => {
-      onStartCallback()
+    startRecording(newValue, token).then((started) => {
+      if (started) onStartCallback()
     })
   })
   return (

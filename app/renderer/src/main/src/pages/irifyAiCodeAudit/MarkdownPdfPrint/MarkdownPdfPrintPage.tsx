@@ -1,10 +1,9 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import { useTheme } from '@/hook/useTheme'
 import styles from './MarkdownPdfPrintPage.module.scss'
-
-const { ipcRenderer } = window.require('electron')
 
 const getPrintId = () => new URLSearchParams(window.location.search).get('printId') || ''
 
@@ -30,8 +29,8 @@ const MarkdownPdfPrintPage: React.FC = () => {
   useEffect(() => {
     const printId = getPrintId()
     if (!printId) return
-    ipcRenderer
-      .invoke('GetMarkdownPdfPrintPayload', printId)
+    ipc
+      .invoke('local', 'GetMarkdownPdfPrintPayload', printId)
       .then((payload: { code?: string; theme?: string } | null) => {
         if (payload?.theme) {
           document.documentElement.setAttribute('data-theme', payload.theme)
@@ -48,7 +47,7 @@ const MarkdownPdfPrintPage: React.FC = () => {
     const signalReady = () => {
       if (signaledRef.current) return
       signaledRef.current = true
-      ipcRenderer.invoke('MarkdownPdfPrintReady', printId).catch(() => {})
+      ipc.invoke('local', 'MarkdownPdfPrintReady', printId).catch(() => {})
     }
 
     let cancelled = false

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type { Dispatch, FC, SetStateAction } from 'react'
 
 import type { FormInstance } from 'antd'
@@ -13,8 +14,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from '../knowledgeBase.module.scss'
 import { useRequest } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 interface TKnowledgeBaseFormModalProps {
   visible: boolean
@@ -38,7 +37,7 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
 
   const { runAsync, loading } = useRequest(
     async (params) => {
-      const result = await ipcRenderer.invoke('CreateKnowledgeBaseV2', {
+      const result = await ipc.invoke('grpc', 'CreateKnowledgeBaseV2', {
         Name: params.KnowledgeBaseName,
         Description: params.KnowledgeBaseDescription,
         Type: params.KnowledgeBaseType,
@@ -47,6 +46,7 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
         IsDefault: params.IsDefault ?? false,
       })
       const KnowledgeBaseID = result?.KnowledgeBase?.ID
+      if (!result.IsSuccess || !KnowledgeBaseID) throw new Error(result.Message || '引擎未返回新建知识库')
       addKnowledgeBase({
         ...params,
         ID: KnowledgeBaseID,

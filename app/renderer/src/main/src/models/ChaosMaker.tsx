@@ -1,5 +1,5 @@
 export interface ChaosMakerRule {
-  Id: number
+  Id: string | number
   RawTrafficBeyondIpPacketBase64: string
   RawTrafficBeyondLinkLayerBase64: string
   RawTrafficBeyondHttpBase64: string

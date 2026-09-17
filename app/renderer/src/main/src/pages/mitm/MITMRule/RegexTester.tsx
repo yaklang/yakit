@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useState } from 'react'
 import { useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { type editor } from 'monaco-editor'
@@ -11,8 +12,6 @@ import { RegexpInput } from './MITMRuleFromModal'
 import { StringToUint8Array } from '@/utils/str'
 import { yakitFailed } from '@/utils/notification'
 import { PositionOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-
-const { ipcRenderer } = window.require('electron')
 
 interface RegexTesterProps {
   onSave: (pattern: string) => void
@@ -62,12 +61,12 @@ export const RegexTester: React.FC<RegexTesterProps> = React.memo((props) => {
     () => {
       if (!selectedText || !testText) return
 
-      ipcRenderer
-        .invoke('GenerateExtractRule', {
+      ipc
+        .invoke('grpc', 'GenerateExtractRule', {
           Data: StringToUint8Array(testText),
           Selected: StringToUint8Array(selectedText),
         })
-        .then((result: { SelectedRegexp: string }) => {
+        .then((result) => {
           setMatchedRegexp(result.SelectedRegexp)
         })
         .catch((e) => {

@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import { Descriptions, Tabs } from 'antd'
 import type { CVEDetail, CWEDetail } from '@/pages/cve/models'
 import classNames from 'classnames'
@@ -6,8 +7,6 @@ import styles from './CVETable.module.scss'
 import { useCreation } from 'ahooks'
 import moment from 'moment'
 import React, { type ReactNode } from 'react'
-const { ipcRenderer } = window.require('electron')
-
 export const CVEDescription = React.memo(
   ({
     CVE,
@@ -45,7 +44,7 @@ export const CVEDescription = React.memo(
     // 过滤掉 ftp 的参考链接 eg: CVE-2001-0830
     const references_links = References ? References.split('\n').filter((link) => !link.startsWith('ftp://')) : []
     const handleClickLink = (link) => {
-      ipcRenderer.invoke('open-url', link)
+      ipc.invoke('local', 'open-url', link)
     }
     return (
       <div className={styles['description-content']}>

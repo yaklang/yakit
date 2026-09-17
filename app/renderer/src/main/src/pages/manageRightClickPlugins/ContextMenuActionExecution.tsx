@@ -32,14 +32,12 @@ import type { ModifyPluginCallback } from '@/pages/pluginEditor/pluginEditor/Plu
 import { ModifyYakitPlugin } from '@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin'
 import { randomString } from '@/utils/randomUtil'
 import { yakitNotify } from '@/utils/notification'
-import { cancelContextMenuAction, executeContextMenuAction, grpcFetchLocalPluginDetailByUUID } from './api'
+import { grpcFetchLocalPluginDetailByUUID } from './api'
 import { getContextMenuExecution, removeContextMenuExecution, updateContextMenuExecution } from './executionRegistry'
-import { ContextMenuResultMode, type ContextMenuActionEvent, type ContextMenuPacketActionResult } from './types'
+import { ContextMenuResultMode, type ContextMenuPacketActionResult } from './types'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import styles from './ContextMenuActionExecution.module.scss'
-
-const { ipcRenderer } = window.require('electron')
 
 const ExecutionStatus = {
   /** 初始/重新发起，等待引擎响应 */
@@ -82,6 +80,7 @@ export const ContextMenuActionExecution: React.FC<{ executionID: string; mode: C
     const [streamInfo, streamActions] = useHoldGRPCStream({
       taskName: execution?.action.PluginName || t('ContextMenuActionExecution.pluginFallbackName'),
       apiKey: 'ExecuteContextMenuAction',
+      onData: (data) => onContextEvent(data),
       token: token.current,
       waitTime: 200,
       isShowEnd: false,
@@ -102,6 +101,39 @@ export const ContextMenuActionExecution: React.FC<{ executionID: string; mode: C
       },
     })
     // #endregion
+
+    const onContextEvent = useMemoizedFn((data: import('@/services/ipc').GrpcOutput<'ExecuteContextMenuAction'>) => {
+      if (data.RuntimeID) setRuntimeID(data.RuntimeID)
+      switch (data.Status) {
+        case 'started':
+          setStatus(ExecutionStatus.Running)
+          break
+        case 'packet-result':
+          if (data.PacketResult) {
+            setPacketResult(data.PacketResult)
+            if (!data.PacketResult.RequireConfirmation) applyPacketResult(data.PacketResult)
+          }
+          break
+        case 'completed':
+          setStatus(ExecutionStatus.Completed)
+          setLoading(false)
+          break
+        case 'cancelled':
+          setStatus(ExecutionStatus.Cancelled)
+          setLoading(false)
+          break
+        case 'timeout':
+          setStatus(ExecutionStatus.Timeout)
+          setLoading(false)
+          break
+        case 'failed':
+          setStatus(ExecutionStatus.Failed)
+          setLoading(false)
+          break
+        default:
+          break
+      }
+    })
 
     // #region 参数表单状态与派生
     const [form] = Form.useForm()
@@ -153,25 +185,24 @@ export const ContextMenuActionExecution: React.FC<{ executionID: string; mode: C
       setRuntimeID('')
       streamActions.reset()
       streamActions.start()
-      executeContextMenuAction(
-        {
+      streamActions
+        .open({
           ...execution.request,
           PluginUUID: execution.action.PluginUUID,
           ActionID: execution.action.ActionID,
           Params: params ?? execution.params ?? [],
-        },
-        token.current,
-      ).catch((error) => {
-        setStatus(ExecutionStatus.Failed)
-        setLoading(false)
-        yakitNotify('error', error + '')
-      })
+        })
+        .catch((error) => {
+          setStatus(ExecutionStatus.Failed)
+          setLoading(false)
+          yakitNotify('error', error + '')
+        })
     })
 
     const onStopExecute = useMemoizedFn((e) => {
       e.stopPropagation()
       cancelRequestedRef.current = true
-      cancelContextMenuAction(token.current)
+      streamActions.cancel()
       setStatus(ExecutionStatus.Cancelled)
       setLoading(false)
     })
@@ -303,60 +334,13 @@ export const ContextMenuActionExecution: React.FC<{ executionID: string; mode: C
         return
       }
 
-      const eventChannel = `${token.current}-context-menu-event`
-      const errorChannel = `${token.current}-context-menu-error`
-      const onEvent = (_event, data: ContextMenuActionEvent) => {
-        if (data.RuntimeID) setRuntimeID(data.RuntimeID)
-        switch (data.Status) {
-          case 'started':
-            setStatus(ExecutionStatus.Running)
-            break
-          case 'packet-result':
-            if (data.PacketResult) {
-              setPacketResult(data.PacketResult)
-              if (!data.PacketResult.RequireConfirmation) applyPacketResult(data.PacketResult)
-            }
-            break
-          case 'completed':
-            setStatus(ExecutionStatus.Completed)
-            setLoading(false)
-            break
-          case 'cancelled':
-            setStatus(ExecutionStatus.Cancelled)
-            setLoading(false)
-            break
-          case 'timeout':
-            setStatus(ExecutionStatus.Timeout)
-            setLoading(false)
-            break
-          case 'failed':
-            setStatus(ExecutionStatus.Failed)
-            setLoading(false)
-            break
-          default:
-            break
-        }
-      }
-      const onError = (_event, error: string) => {
-        if (cancelRequestedRef.current) {
-          setStatus(ExecutionStatus.Cancelled)
-        } else {
-          setStatus(ExecutionStatus.Failed)
-        }
-        setLoading(false)
-      }
-      ipcRenderer.on(eventChannel, onEvent)
-      ipcRenderer.on(errorChannel, onError)
-
       if (!startedRef.current) {
         startedRef.current = true
         startExecute()
       }
 
       return () => {
-        ipcRenderer.removeListener(eventChannel, onEvent)
-        ipcRenderer.removeListener(errorChannel, onError)
-        cancelContextMenuAction(token.current)
+        streamActions.cancel()
         removeContextMenuExecution(executionID)
       }
     }, [executionID])

@@ -1,4 +1,4 @@
-import { yakitApp } from '@/services/electronBridge'
+import { ipc } from '../../../../../shared/communication/window-client'
 import { isCommunityYakit } from '@/utils/envfile'
 import { create } from 'zustand'
 
@@ -26,7 +26,7 @@ export const useSoftMode = create<MenuModeState>((set) => ({
   softMode: getDefaultSoftMode(),
   setSoftMode: (softMode) => {
     if (isCommunityYakit()) {
-      yakitApp.setYakitHomeConfig('yakitMode', softMode).catch((err) => {})
+      ipc.invoke('local', 'set-yakit-home-config', { key: 'yakitMode', value: softMode }).catch((err) => {})
     }
     set({ softMode })
   },

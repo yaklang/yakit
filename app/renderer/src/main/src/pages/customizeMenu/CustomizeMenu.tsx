@@ -1,3 +1,8 @@
+import { int64String, positiveInt64, grpcPageForUI } from '@/utils/int64'
+import { getRemoteObject } from '@/utils/kv'
+import { yakScriptsForUI } from '@/pages/invoker/grpcAdapters'
+import { navigationForUI } from '@/pages/invoker/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import type {
   CustomizeMenuProps,
@@ -86,8 +91,6 @@ import {
   ShieldExclamationSolid,
 } from '@yakit-libs/yakit-ui-icons/solid'
 
-const { ipcRenderer } = window.require('electron')
-
 // 替换指定位置的功能
 const reorder = (list: EnhancedCustomRouteMenuProps[], startIndex: number, endIndex: number) => {
   const result = [...list]
@@ -164,7 +167,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
       getMenuData(CodeGV.PublicMenuModeValue, defaultPluginMenu)
     } else {
       getRemoteValue(RemoteGV.PatternMenu).then((patternMenu) => {
-        const menuMode = patternMenu || 'expert'
+        const menuMode = patternMenu === 'new' ? 'new' : 'expert'
         setPatternMenu(menuMode)
         getMenuData(menuMode, menuMode === 'new' ? ScanMenus : ExpertMenus)
       })
@@ -172,9 +175,10 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
   }, [])
   /** @description: 获取数据库菜单数据 */
   const getMenuData = useMemoizedFn((menuMode: string, localMenus: EnhancedCustomRouteMenuProps[]) => {
-    ipcRenderer
-      .invoke('GetAllNavigationItem', { Mode: menuMode })
-      .then((res: { Data: DatabaseFirstMenuProps[] }) => {
+    ipc
+      .invoke('grpc', 'GetAllNavigationItem', { Mode: menuMode })
+      .then(navigationForUI)
+      .then((res) => {
         const database = databaseConvertData(res.Data || [])
         const caches: DatabaseMenuItemProps[] = []
         for (const item of database) {
@@ -339,7 +343,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         icon: getFixedPluginIcon(currentPluginMenuItem.ScriptName),
         hoverIcon: getFixedPluginHoverIcon(currentPluginMenuItem.ScriptName),
         describe: currentPluginMenuItem.Help,
-        yakScriptId: +currentPluginMenuItem.Id || 0,
+        yakScriptId: positiveInt64(currentPluginMenuItem.Id) || 0,
         yakScripName: currentPluginMenuItem.ScriptName,
         headImg: currentPluginMenuItem.HeadImg || '',
       }
@@ -448,26 +452,22 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     // 过滤出用户删除的系统内定菜单
     const names = filterCodeMenus(menus, isCommunityEdition() ? 'public' : patternMenu)
 
-    ipcRenderer
-      .invoke('DeleteAllNavigation', { Mode: isCommunityEdition() ? CodeGV.PublicMenuModeValue : patternMenu })
+    ipc
+      .invoke('grpc', 'DeleteAllNavigation', { Mode: isCommunityEdition() ? CodeGV.PublicMenuModeValue : patternMenu })
       .then(() => {
-        ipcRenderer
-          .invoke('AddToNavigation', { Data: menus })
+        ipc
+          .invoke('grpc', 'AddToNavigation', { Data: menus })
           .then((rsp) => {
             const cache = { ...deleteCache.current }
             cache[isCommunityEdition() ? 'public' : patternMenu] = names || []
             setRemoteValue(RemoteGV.UserDeleteMenu, JSON.stringify(cache)).finally(async () => {
               onClose()
-              let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
-              try {
-                allowModify = JSON.parse(allowModify) || {}
-              } catch (error) {
-                allowModify = {}
-              }
+              const allowModify = await getRemoteObject(RemoteGV.IsImportJSONMenu)
               delete allowModify[patternMenu]
               setRemoteValue(RemoteGV.IsImportJSONMenu, JSON.stringify(allowModify))
-              if (isCommunityEdition()) ipcRenderer.invoke('refresh-public-menu')
-              else ipcRenderer.invoke('change-main-menu')
+              if (isCommunityEdition())
+                ipc.invoke('local', 'ForwardMainEvent', { event: 'refresh-public-menu-callback' })
+              else ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-new-main-menu' })
             })
           })
           .catch((e) => {
@@ -1201,9 +1201,11 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
     if (page) newParams.Pagination.Page = page
     if (limit) newParams.Pagination.Limit = limit
     setLoading(true)
-    ipcRenderer
-      .invoke('QueryYakScript', newParams)
-      .then(async (item: QueryYakScriptsResponse) => {
+    ipc
+      .invoke('grpc', 'QueryYakScript', newParams)
+      .then(yakScriptsForUI)
+      .then(grpcPageForUI)
+      .then(async (item) => {
         const data = page === 1 ? item.Data : response.Data.concat(item.Data)
         const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
         setHasMore(!isMore)
@@ -1294,7 +1296,7 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
       icon: getFixedPluginIcon(plugin.ScriptName),
       hoverIcon: getFixedPluginHoverIcon(plugin.ScriptName),
       describe: plugin.Help,
-      yakScriptId: +plugin.Id || 0,
+      yakScriptId: positiveInt64(plugin.Id) || 0,
       yakScripName: plugin.ScriptName,
       headImg: plugin.HeadImg || '',
     }
@@ -1308,7 +1310,7 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
       icon: getFixedPluginIcon(plugin.ScriptName),
       hoverIcon: getFixedPluginHoverIcon(plugin.ScriptName),
       describe: plugin.Help,
-      yakScriptId: +plugin.Id || 0,
+      yakScriptId: positiveInt64(plugin.Id) || 0,
       yakScripName: plugin.ScriptName,
       headImg: plugin.HeadImg || '',
     }

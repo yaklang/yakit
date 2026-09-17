@@ -1,81 +1,62 @@
-import { EventEmitter } from 'events'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import registerHTTPFlowSubscription from '../handlers/httpFlowSubscription'
+import { EventEmitter } from 'node:events'
+import { describe, expect, it, vi } from 'vitest'
+import { Router } from '../ipc/router'
 
-const ipcHandlers = new Map()
-
-const createWindow = () => {
-  const webContents = Object.assign(new EventEmitter(), {
-    id: 17,
-    isDestroyed: vi.fn(() => false),
-    send: vi.fn(),
-  })
-  return Object.assign(new EventEmitter(), {
-    isDestroyed: vi.fn(() => false),
-    webContents,
-  })
+function fixture() {
+  const stream = Object.assign(new EventEmitter(), { cancel: vi.fn(), pause: vi.fn(), resume: vi.fn() })
+  const create = vi.fn(() => stream)
+  const events = []
+  const router = new Router(
+    { unary: vi.fn(), stream: () => ({ requestStream: false, responseStream: true, pauseable: true, create }) },
+    () => true,
+    (owner, event) => events.push({ owner, event }),
+    vi.fn(),
+  )
+  const request = {
+    namespace: 'grpc',
+    api: 'SubscribeHTTPFlows',
+    action: 'open',
+    requestId: 'open-1',
+    token: 'liveToken',
+    instanceId: 'live-instance',
+    params: { SessionId: 'liveToken' },
+  }
+  return { router, stream, create, events, request }
 }
 
-const createEvent = (senderId = 17) => ({
-  sender: {
-    id: senderId,
-    getURL: () => 'file:///opt/yakit/index.html',
-  },
-  senderFrame: {
-    url: 'file:///opt/yakit/index.html',
-  },
-})
-
-const createStream = () => {
-  const stream = new EventEmitter()
-  stream.cancel = vi.fn()
-  return stream
-}
-
-describe('SubscribeHTTPFlows IPC ownership', () => {
-  let window
-  let stream
-  let client
-
-  beforeEach(() => {
-    ipcHandlers.clear()
-    window = createWindow()
-    stream = createStream()
-    client = {
-      SubscribeHTTPFlows: vi.fn(() => stream),
-    }
-    const ipcMain = {
-      handle: vi.fn((channel, handler) => ipcHandlers.set(channel, handler)),
-    }
-    registerHTTPFlowSubscription(ipcMain, window, () => client)
+describe('SubscribeHTTPFlows through the unified router', () => {
+  it('delivers data with its owner, token and instance', async () => {
+    const { router, stream, create, events, request } = fixture()
+    expect(await router.handle('window-17', request)).toMatchObject({ ok: true })
+    stream.emit('data', { Sequence: '9007199254740993' })
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    expect(create).toHaveBeenCalledWith(request.params, expect.any(Function))
+    expect(events).toContainEqual({
+      owner: 'window-17',
+      event: expect.objectContaining({
+        type: 'data',
+        token: 'liveToken',
+        instanceId: 'live-instance',
+        items: [{ Sequence: '9007199254740993' }],
+      }),
+    })
+    router.closeOwner('window-17')
   })
 
-  it('keeps the renderer token on event channels while using an owned registry key', () => {
-    const subscribe = ipcHandlers.get('SubscribeHTTPFlows')
-
-    expect(subscribe(createEvent(), { SessionId: 'liveToken' }, 'liveToken')).toBeUndefined()
-    stream.emit('data', { Id: 42 })
-
-    expect(client.SubscribeHTTPFlows).toHaveBeenCalledWith({ SessionId: 'liveToken' })
-    expect(window.webContents.send).toHaveBeenCalledWith('liveToken-data', { Id: 42 })
-  })
-
-  it('allows only the owning renderer to cancel a subscription', async () => {
-    const subscribe = ipcHandlers.get('SubscribeHTTPFlows')
-    const cancel = ipcHandlers.get('cancel-SubscribeHTTPFlows')
-    subscribe(createEvent(), { SessionId: 'ownedToken' }, 'ownedToken')
-
-    expect(() => cancel(createEvent(99), 'ownedToken')).toThrow(/does not belong/)
+  it('keeps cancellation scoped to the owning page and stream instance', async () => {
+    const { router, stream, request } = fixture()
+    await router.handle('window-17', request)
+    await router.handle('window-99', { ...request, action: 'cancel', requestId: 'cancel-other' })
+    await router.handle('window-17', { ...request, action: 'cancel', requestId: 'cancel-stale', instanceId: 'old' })
     expect(stream.cancel).not.toHaveBeenCalled()
-
-    await cancel(createEvent(), 'ownedToken')
+    await router.handle('window-17', { ...request, action: 'cancel', requestId: 'cancel-owner' })
     expect(stream.cancel).toHaveBeenCalledOnce()
   })
 
-  it('rejects a mismatched session before opening a backend stream', () => {
-    const subscribe = ipcHandlers.get('SubscribeHTTPFlows')
-
-    expect(() => subscribe(createEvent(), { SessionId: 'otherToken' }, 'ownedToken')).toThrow(/session does not match/)
-    expect(client.SubscribeHTTPFlows).not.toHaveBeenCalled()
+  it('rejects a backend SessionId that differs from the stream token', async () => {
+    const { router, create, request } = fixture()
+    const result = await router.handle('window-17', { ...request, params: { SessionId: 'other' } })
+    expect(result).toMatchObject({ ok: false, error: { message: expect.stringContaining('does not match') } })
+    expect(create).not.toHaveBeenCalled()
   })
 })

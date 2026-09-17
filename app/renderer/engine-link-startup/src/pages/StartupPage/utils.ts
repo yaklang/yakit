@@ -1,5 +1,5 @@
+import { ipc } from '../../../../../shared/communication/window-client'
 import type { Architecture, DownloadingState, System, SystemInfoProps, YaklangEngineMode } from './types'
-import { yakitEngine, yakitSystem } from '@/utils/electronBridge'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, ['link'])
 
@@ -34,33 +34,33 @@ export const DragHeaderHeight = 50
 
 export const handleFetchSystemInfo = async () => {
   try {
-    SystemInfo.system = await yakitSystem.fetchSystemName()
+    SystemInfo.system = await ipc.invoke('local', 'fetch-system-name', {})
   } catch (error) {}
   try {
-    SystemInfo.architecture = await yakitSystem.fetchCpuArch()
+    SystemInfo.architecture = await ipc.invoke('local', 'fetch-cpu-arch', {})
   } catch (error) {}
   try {
-    SystemInfo.isDev = !!(await yakitSystem.isDev())
+    SystemInfo.isDev = !!(await ipc.invoke('local', 'is-dev', {}))
   } catch (error) {}
 }
 
 export const handleFetchSystem = async (callback?: (value: System | undefined) => any) => {
   try {
-    SystemInfo.system = await yakitSystem.fetchSystemName()
+    SystemInfo.system = await ipc.invoke('local', 'fetch-system-name', {})
   } catch (error) {}
   if (callback) callback(SystemInfo.system)
 }
 
 export const handleFetchArchitecture = async (callback?: (value: Architecture | undefined) => any) => {
   try {
-    SystemInfo.architecture = await yakitSystem.fetchCpuArch()
+    SystemInfo.architecture = await ipc.invoke('local', 'fetch-cpu-arch', {})
   } catch (error) {}
   if (callback) callback(SystemInfo.architecture)
 }
 
 export const handleFetchIsDev = async (callback?: (value: boolean | undefined) => any) => {
   try {
-    SystemInfo.isDev = !!(await yakitSystem.isDev())
+    SystemInfo.isDev = !!(await ipc.invoke('local', 'is-dev', {}))
   } catch (error) {}
   if (callback) callback(SystemInfo.isDev)
 }
@@ -91,8 +91,8 @@ export const safeFormatDownloadProcessState = (state: DownloadingState) => {
 }
 
 export const outputToWelcomeConsole = (msg: any) => {
-  yakitEngine
-    .outputLogToWelcomeConsole(`${msg}`)
+  ipc
+    .invoke('local', 'output-log-to-welcome-console', `${msg}`)
     .then(() => {})
     .catch((e) => {
       console.info(e)

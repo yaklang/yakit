@@ -1,9 +1,9 @@
+import { ipc } from '@/services/ipc'
 import { yakitNotify } from '@/utils/notification'
 import type { APIFunc, APINoRequestFunc, APIOptionalFunc } from './type'
 import { getReleaseEditionName, toEngineHandshakeName } from '@/utils/envfile'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
-import { yakitEngine } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'apiUtils')
 
@@ -36,8 +36,8 @@ export interface GlobalProxyRulesConfig {
 /** @name 获取Yakit最新版本号 */
 export const grpcFetchLatestYakitVersion: APIOptionalFunc<GrpcToHTTPRequestProps, string> = (config, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .fetchLatestYakitVersion({
+    ipc
+      .invoke('local', 'fetch-latest-yakit-version', {
         config: config,
         releaseEditionName: getReleaseEditionName(),
       })
@@ -52,7 +52,7 @@ export const grpcFetchLatestYakitVersion: APIOptionalFunc<GrpcToHTTPRequestProps
 /** @name 获取Yakit内网最新版本号 */
 export const grpcFetchIntranetYakitVersion: APIOptionalFunc<boolean, string> = (hiddenError = false) => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine.fetchEnterpriseUpdateInfo().then(({ version }) => {
+    ipc.invoke('local', 'update-enpritrace-info', {}).then(({ version }) => {
       NetWorkApi<unknown, API.UploadDataResponse>({
         method: 'get',
         url: 'upload/yak/data',
@@ -92,8 +92,8 @@ export const grpcFetchLatestOSSDomain: APINoRequestFunc<string> = (hiddenError) 
       resolve(ossDomain)
       return
     }
-    yakitEngine
-      .getAvailableOSSDomain()
+    ipc
+      .invoke('local', 'get-available-oss-domain', {})
       .then((domain) => {
         ossDomain = domain
         resolve(domain)
@@ -105,8 +105,8 @@ export const grpcFetchLatestOSSDomain: APINoRequestFunc<string> = (hiddenError) 
 /** @name 获取Yak引擎最新版本号 */
 export const grpcFetchLatestYakVersion: APINoRequestFunc<string> = (hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .fetchLatestYaklangVersion()
+    ipc
+      .invoke('local', 'fetch-latest-yaklang-version', {})
       .then((version: string) => {
         const newVersion = version.startsWith('v') ? version.substring(1) : version
         resolve(newVersion)
@@ -121,8 +121,8 @@ export const grpcFetchLatestYakVersion: APINoRequestFunc<string> = (hiddenError)
 /** @name 获取Yakit本地版本号 */
 export const grpcFetchLocalYakitVersion: APINoRequestFunc<string> = (hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .fetchYakitVersion()
+    ipc
+      .invoke('local', 'fetch-yakit-version', {})
       .then((version: string) => {
         let newVersion = version
         // 如果存在-ce，则软件是 CE 版本
@@ -145,8 +145,8 @@ export const grpcFetchLocalYakitVersion: APINoRequestFunc<string> = (hiddenError
 /** @name 获取Yak引擎本地版本号 */
 export const grpcFetchLocalYakVersion: APINoRequestFunc<string> = (hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .getCurrentYak()
+    ipc
+      .invoke('local', 'get-current-yak', {})
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '获取本地引擎版本失败:' + e)
@@ -158,8 +158,8 @@ export const grpcFetchLocalYakVersion: APINoRequestFunc<string> = (hiddenError) 
 /** @name 获取引擎是否安装的结果 */
 export const grpcFetchYakInstallResult: APINoRequestFunc<boolean> = (hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .isYaklangEngineInstalled()
+    ipc
+      .invoke('local', 'is-yaklang-engine-installed', {})
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchYakInstallResultFailed', { error: String(e) }))
@@ -174,8 +174,8 @@ export const grpcFetchYakInstallResult: APINoRequestFunc<boolean> = (hiddenError
  */
 export const grpcFetchBuildInYakVersion: APINoRequestFunc<string> = (hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .getBuildInEngineVersion()
+    ipc
+      .invoke('local', 'GetBuildInEngineVersion', {})
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchBuildInYakVersionFailed', { error: String(e) }))
@@ -192,8 +192,8 @@ export const grpcFetchSpecifiedYakVersionHash: APIFunc<{ version: string; config
   const { version, config } = request
 
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .fetchCheckYaklangSource(version, config)
+    ipc
+      .invoke('local', 'fetch-check-yaklang-source', { version: version, requestConfig: config })
       .then(resolve)
       .catch((e) => {
         if (!hiddenError)
@@ -206,8 +206,8 @@ export const grpcFetchSpecifiedYakVersionHash: APIFunc<{ version: string; config
 /** @name 获取本地Yak引擎的校验Hash值 */
 export const grpcFetchLocalYakVersionHash: APINoRequestFunc<string[]> = (hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .calcEngineSha265()
+    ipc
+      .invoke('local', 'CalcEngineSha265', {})
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchLocalYakVersionHashFailed', { error: String(e) }))
@@ -219,8 +219,8 @@ export const grpcFetchLocalYakVersionHash: APINoRequestFunc<string[]> = (hiddenE
 /** @name 获取本地启动引擎可用的端口号 */
 export const grpcFetchAvaiableProt: APINoRequestFunc<number> = (hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .getAvailablePort()
+    ipc
+      .invoke('local', 'get-avaiable-port', {})
       .then(resolve)
       .catch((e) => {
         try {
@@ -238,8 +238,8 @@ export const grpcFetchAvaiableProt: APINoRequestFunc<number> = (hiddenError) => 
 /** @name 判断已运行的引擎适配版本 */
 export const grpcDetermineAdaptedVersionEngine: APIFunc<number, boolean> = (port, hiddenError) => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .determineAdaptedVersionEngine({ port: port, version: toEngineHandshakeName() })
+    ipc
+      .invoke('local', 'determine-adapted-version-engine', { port: port, version: toEngineHandshakeName() })
       .then(resolve)
       .catch((e) => {
         if (!hiddenError)
@@ -252,8 +252,8 @@ export const grpcDetermineAdaptedVersionEngine: APIFunc<number, boolean> = (port
 /** @name 获取全局代理规则配置 */
 export const grpcGetGlobalProxyRulesConfig: APINoRequestFunc<GlobalProxyRulesConfig> = () => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .getGlobalProxyRulesConfig()
+    ipc
+      .invoke('grpc', 'GetGlobalProxyRulesConfig', {})
       .then((res: GlobalProxyRulesConfig) => {
         if (!res) {
           resolve({ Endpoints: [], Routes: [] })
@@ -270,8 +270,8 @@ export const grpcGetGlobalProxyRulesConfig: APINoRequestFunc<GlobalProxyRulesCon
 /** @name 设置全局代理规则配置 */
 export const grpcSetGlobalProxyRulesConfig: APIFunc<GlobalProxyRulesConfig, null> = (config) => {
   return new Promise(async (resolve, reject) => {
-    yakitEngine
-      .setGlobalProxyRulesConfig(config)
+    ipc
+      .invoke('grpc', 'SetGlobalProxyRulesConfig', { Config: config })
       .then(() => {
         resolve(null)
       })

@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import lightTheme from '@/assets/light-theme.png'
@@ -9,7 +10,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { Tooltip } from 'antd'
-import { yakitApp, yakitShell } from '@/utils/electronBridge'
 import { useCountDown, useInViewport, useMemoizedFn } from 'ahooks'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { isCommunityYakit, isEnpriTrace } from '@/utils/envfile'
@@ -59,18 +59,18 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
     if (!currentPath) return
     try {
       const newHistory = [currentPath, ...workspaceHistory.filter((p) => p !== currentPath)].slice(0, 10)
-      await yakitApp.setYakitHomeConfig('workspaceHistory', newHistory)
-      await yakitApp.setYakitHomeConfig('autoStart', autoStart)
+      await ipc.invoke('local', 'set-yakit-home-config', { key: 'workspaceHistory', value: newHistory })
+      await ipc.invoke('local', 'set-yakit-home-config', { key: 'autoStart', value: autoStart })
       useTheme.getState().persistThemeMode()
       if (isCommunityYakit()) {
-        await yakitApp.setYakitHomeConfig('yakitMode', softMode)
+        await ipc.invoke('local', 'set-yakit-home-config', { key: 'yakitMode', value: softMode })
       }
       if (!isEnpriTrace()) {
-        await yakitApp.setYakitHomeConfig('softLange', softLang)
+        await ipc.invoke('local', 'set-yakit-home-config', { key: 'softLange', value: softLang })
       }
       if (currentPath !== originalHome) {
-        await yakitApp.setYakitHomeConfig('YAKIT_HOME', currentPath)
-        yakitApp.relaunchApp()
+        await ipc.invoke('local', 'set-yakit-home-config', { key: 'YAKIT_HOME', value: currentPath })
+        ipc.invoke('local', 'relaunch-app', {})
       } else {
         onConfirm()
       }
@@ -99,7 +99,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
 
   const loadConfig = useMemoizedFn(async () => {
     try {
-      const config = await yakitApp.getYakitHomeConfig()
+      const config = await ipc.invoke('local', 'get-yakit-home-config', {})
       const home = config.currentHome || ''
       setCurrentPath(home)
       setOriginalHome(home)
@@ -166,7 +166,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
     const map: Record<string, number> = {}
     for (const p of validPaths) {
       try {
-        const size = await yakitApp.getDirSize(p)
+        const size = await ipc.invoke('local', 'get-dir-size', p)
         map[p] = size
       } catch (_) {
         map[p] = 0
@@ -177,7 +177,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
   })
 
   const handleOpenDir = useMemoizedFn((dirPath: string) => {
-    yakitShell.openSpecifiedFile(dirPath)
+    ipc.invoke('local', 'open-specified-file', dirPath)
   })
 
   const handlePathChange = useMemoizedFn((nextValue: string) => {
@@ -226,7 +226,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
   })
 
   const handleExit = useMemoizedFn(() => {
-    yakitApp.closeWindow()
+    ipc.invoke('local', 'UIOperate', 'close')
   })
 
   const history = useMemo(() => {

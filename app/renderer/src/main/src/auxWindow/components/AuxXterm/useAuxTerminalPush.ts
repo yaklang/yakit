@@ -1,5 +1,5 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import { type RefObject, useEffect } from 'react'
-import { yakitAuxWindow } from '@/services/electronBridge'
 import { AUX_XTERM_THEME_SYNC } from '@/auxWindow/utils/applyAuxThemeColors'
 import { getXtermTheme } from './xtermTheme'
 import type { AuxXtermRef } from './AuxXterm'
@@ -43,15 +43,15 @@ export const useAuxTerminalPush = (windowId: string, xtermRef: RefObject<AuxXter
     const sendReady = () => {
       if (readySent || !xtermRef.current?.terminal) return
       readySent = true
-      yakitAuxWindow.ready(windowId)
+      ipc.invoke('local', 'aux-window:ready', { windowId: windowId })
     }
 
-    const offPush = yakitAuxWindow.onPush((msg) => {
+    const offPush = ipc.on('aux-window:push-data', (msg: { windowId: string; payload: unknown }) => {
       if (msg.windowId !== windowId) return
       applyPushPayload((msg.payload || {}) as AuxTerminalPushPayload, xtermRef)
     })
 
-    const offInit = yakitAuxWindow.onInit((msg) => {
+    const offInit = ipc.on('aux-window:init-data', (msg: { windowId: string; payload: unknown }) => {
       if (msg.windowId !== windowId) return
       syncXtermTheme(xtermRef)
     })

@@ -13,13 +13,13 @@ Yakit 是一个基于 Electron + React 的跨平台桌面应用，主要技术�
 
 | 模块 | 路径 | 作用 | 端口 |
 | --- | --- | --- | --- |
-| Electron 主进程 | `app/main/` | 入口 index.js，承载窗口、IPC、gRPC | - |
+| Electron 主进程 | `app/main/` | 入口 index.ts，承载窗口、IPC、gRPC | - |
 | 主渲染端 | `app/renderer/src/main/` | Vite 8 MPA 主界面 | `3000` |
 | Link 渲染端 | `app/renderer/engine-link-startup/` | 引擎链接启动页 | `5173` |
 
 > 主进程在开发模式下会分别加载：
-> - 主窗口：`http://127.0.0.1:3000`（`app/main/index.js:247`）
-> - 引擎链接窗口：`http://127.0.0.1:5173`（`app/main/index.js:143`）
+> - 主窗口：`http://127.0.0.1:3000`（`app/main/index.ts`）
+> - 引擎链接窗口：`http://127.0.0.1:5173`（`app/main/index.ts`）
 >
 > 因此**两个渲染端都必须成功启动后，才能启动 Electron 主进程**，否则窗口会白屏。
 

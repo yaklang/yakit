@@ -1,3 +1,4 @@
+import { useExportKnowledgeBase } from '../hooks/useExportKnowledgeBase'
 import { type FC, memo, useEffect, useMemo, useReducer } from 'react'
 
 import KnowledgeBaseTable from './KnowledgeBaseTable'
@@ -15,15 +16,13 @@ import type { TKnowledgeBaseSidebarProps } from './KnowledgeBaseSidebar'
 
 import styles from '../knowledgeBase.module.scss'
 import { DeleteConfirm, EditKnowledgenBaseModal } from './OperateKnowledgenBaseItem'
-import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
+
 import { randomString } from '@/utils/randomUtil'
 import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
 import { Tooltip } from 'antd'
 import { failed, success } from '@/utils/notification'
 import { useSafeState } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
-
 // 需要命中 构建知识库插件 中 的实体/关系(Entity/Relationship) ID
 const targetCardStateRelationshipID = '实体/关系(Entity/Relationship)'
 
@@ -96,8 +95,6 @@ const KnowledgeBaseContainer: FC<
     try {
       api?.removeStream(findKnowledgeBaseItems.streamToken)
 
-      await apiCancelDebugPlugin(findKnowledgeBaseItems.streamToken)
-
       // 更新业务状态
       if (findKnowledgeBaseItems) {
         editKnowledgeBase(findKnowledgeBaseItems.ID, {
@@ -120,54 +117,8 @@ const KnowledgeBaseContainer: FC<
     dispatch({ ...state, editVisble: visible })
   }
 
-  const [exportToken, setExportToken] = useSafeState('')
-  const onExportKnowledgeBase = async (KnowledgeBaseId: string) => {
-    const defaultName = findKnowledgeBaseItems.KnowledgeBaseName
-      ? `export-${findKnowledgeBaseItems.KnowledgeBaseName}`
-      : 'default-knowledge'
-
-    try {
-      const file = await handleSaveFileSystemDialog({
-        title: '导出知识库',
-        defaultPath: defaultName,
-        filters: [{ name: 'Files', extensions: ['rag'] }],
-      })
-
-      if (!file || file.canceled) return
-
-      const filePath = file.filePath
-      if (!filePath) return
-
-      const token = `export-kb-${Date.now()}`
-      setExportToken(token)
-
-      await ipcRenderer.invoke('ExportKnowledgeBase', { KnowledgeBaseId, TargetPath: filePath }, token)
-    } catch (error) {
-      failed('导出知识库失败：' + error)
-    }
-  }
-
-  useEffect(() => {
-    if (!exportToken) return
-
-    const onError = (_: any, err: any) => {
-      failed('导出知识库失败: ' + err)
-      setExportToken('')
-    }
-
-    const onEnd = () => {
-      success('导出知识库成功')
-      setExportToken('')
-    }
-
-    ipcRenderer.on(`${exportToken}-error`, onError)
-    ipcRenderer.on(`${exportToken}-end`, onEnd)
-
-    return () => {
-      ipcRenderer.removeAllListeners(`${exportToken}-error`)
-      ipcRenderer.removeAllListeners(`${exportToken}-end`)
-    }
-  }, [exportToken])
+  const exportKnowledgeBase = useExportKnowledgeBase()
+  const onExportKnowledgeBase = (id: string) => exportKnowledgeBase(id, findKnowledgeBaseItems.KnowledgeBaseName)
 
   const targetEditKnowledgeBase = useMemo(() => {
     const result = knowledgeBases.find((it) => it.ID === knowledgeBaseID)

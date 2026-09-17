@@ -4,8 +4,6 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import type { TreeNode } from '@/components/WebTree/WebTree'
 
-const { ipcRenderer } = window.require('electron')
-
 // export const showFile = (url: YakURL, content: string, setContent: (value: string) => void, setLoading: (value: boolean) => void) => {
 //     url.Query = url.Query.map(queryItem => {
 //         if (queryItem.Key === 'mode') {

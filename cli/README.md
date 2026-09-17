@@ -25,10 +25,10 @@ node ./cli/cli.mjs <command>
 | `add <electron\|main\|link> <pkg…>` | 给指定子项目加包 | `-D` / `--dev` 及其他 yarn/npm/pnpm 原样 flag | 必须指定一端 |
 | `remove <electron\|main\|link> <pkg…>` | 从指定子项目卸包 | 位置参数 | 必须指定一端 |
 | `start` | 开发态启动渲染端 | `-v`、`--main`、`--link` | 两端都启 |
-| `build` | 生产构建渲染端 | `-v`、`--main`、`--link`、`--devtools`、`--no-license`、`--analyzer` | 两端都构建 |
+| `build` | 生产构建三端 | `-v`、`--main`、`--link`、`--electron`、`--devtools`、`--no-license`、`--analyzer` | 两端渲染 + Electron |
 | `pack` | electron-builder 打安装包 | `-s`、`-v`、`--legacy`、`--sign` | 本机默认不签名 |
-| `electron` | 只起 Electron 主进程（开发） | 无 | 不区分业务版本 |
-| `dev` | `start` + wait-on :3000/:5173 + `electron` | `-v` | 两端渲染 + 主进程 |
+| `electron` | 单次编译后启动 Electron（开发） | 无 | 不区分业务版本 |
+| `dev` | `start` + 等待有效 HTML + 单次编译并启动 Electron | `-v` | 两端渲染 + 主进程 |
 
 短 flag **不跨命令复用**。旧命令名 `render` / `electron -b` 已删除，没有别名。
 
@@ -84,7 +84,7 @@ yarn cli start -v yakit
 yarn cli electron
 ```
 
-一条命令（wait-on 端口后起 Electron；端口 LISTEN ≠ 页面编译完成）：
+一条命令（两端返回有效 HTML 后，单次编译主进程和 preload，再启动 Electron）：
 
 ```bash
 yarn cli dev -v yakit
@@ -124,9 +124,23 @@ yarn cli build --main -v yakit --devtools
 
 默认产物不含 sourcemap。`--devtools` 会注入 `YAKIT_DEVTOOLS=true`。`--no-license` 会注入 `YAKIT_REQUIRE_ENTERPRISE_LICENSE=false`。
 
+主进程及 preload 输出到 `dist/electron`，`tsc --noEmit` 先检查类型，esbuild 再输出 CommonJS。`yarn cli build --electron` 只构建主进程，无需指定业务版本；`--main` / `--link` 仍只构建对应渲染端。
+
+修改主进程或 preload 后，由用户主动关闭 Electron 并重新执行 `yarn cli electron`。保存文件不触发自动重启或重载；编译失败则不启动旧产物。渲染端保持 Vite HMR。
+
+```bash
+yarn generate:grpc       # proto 变更后生成类型及方法描述
+yarn check:grpc          # 验证已提交类型与 proto 一致
+yarn typecheck:electron
+yarn build:electron
+```
+
 ### 打安装包
 
 ```bash
+# 先构建两端渲染静态文件；pack 会重新编译并校验主进程
+yarn cli build -v yakit
+
 # 本机 unsigned
 yarn cli pack -s mac -v yakit
 

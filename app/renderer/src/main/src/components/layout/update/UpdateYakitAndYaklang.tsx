@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import { ipc } from '../../../../../../../shared/communication/window-client'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { Progress } from 'antd'
 import type { DownloadingState, YakitSettingCallbackType, YakitStatusType, YaklangEngineMode } from '@/yakitGVDefine'
@@ -12,8 +13,6 @@ import { LocalGVS } from '@/enums/localGlobal'
 import { safeFormatDownloadProcessState } from '../utils'
 import type { API } from '@/services/swagger/resposeType'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { yakitEngine, yakitShell, yakitWindowControls } from '@/services/electronBridge'
-
 import styles from './UpdateYakitAndYaklang.module.scss'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -51,6 +50,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
   })
 
   const [status, setStatus] = useState<'ready' | 'install' | 'installed'>('ready')
+  const downloadController = useRef<AbortController>()
   const [yakitProgress, setYakitProgress] = useState<DownloadingState>()
   const [breakLoading, setBreakLoading] = useState<boolean>(false)
 
@@ -92,27 +92,36 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
     return yakitUpdateContent.content.split('\n')
   }, [yakitUpdateContent])
 
-  useEffect(() => {
-    const cleanup = yakitEngine.onDownloadYakitProgress((state: DownloadingState) => {
-      setYakitProgress(safeFormatDownloadProcessState(state))
-    })
-
-    return () => {
-      cleanup()
-    }
-  }, [])
+  useEffect(() => () => downloadController.current?.abort(), [])
 
   /** 下载 */
   const handleDownload = useMemoizedFn(() => {
+    downloadController.current?.abort()
+    const controller = new AbortController()
+    downloadController.current = controller
     const version = latest.startsWith('v') ? latest.substring(1) : latest
     setStatus('install')
-    yakitEngine
-      .downloadLatestYakit(version, {
-        isEnterprise: isEnterpriseEdition(),
-        isIRify: isIRify(),
-        isMemfit: isMemfit(),
-      })
+    ipc
+      .invoke(
+        'local',
+        'download-latest-yakit',
+        {
+          version,
+          edition: {
+            isEnterprise: isEnterpriseEdition(),
+            isIRify: isIRify(),
+            isMemfit: isMemfit(),
+          },
+        },
+        {
+          signal: controller.signal,
+          onProgress(state) {
+            if (!controller.signal.aborted && state !== 100) setYakitProgress(safeFormatDownloadProcessState(state))
+          },
+        },
+      )
       .then(() => {
+        if (controller.signal.aborted) return
         success(t('YakitNotification.downloaded'))
         setYakitProgress((old) => {
           if (!old) return undefined
@@ -122,13 +131,14 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
               remaining: 0,
             },
             speed: 0,
-            percent: 100,
+            percent: 1,
             size: old.size,
           }
         })
         setStatus('installed')
       })
       .catch((e: any) => {
+        if (controller.signal.aborted) return
         failed(t('YakitNotification.downloadFailed', { error: e + '' }))
         setYakitProgress(undefined)
         setStatus('ready')
@@ -137,7 +147,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
 
   /** 停止下载 */
   const yakitBreak = useMemoizedFn(() => {
-    yakitEngine.cancelDownloadYakitVersion()
+    downloadController.current?.abort()
     setBreakLoading(true)
     setStatus('ready')
     setYakitProgress(undefined)
@@ -148,9 +158,9 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
 
   /** 立即更新-已下载完成 */
   const yakitUpdate = useMemoizedFn(() => {
-    yakitShell.openYakitPath()
+    ipc.invoke('local', 'open-yakit-path', {})
     setTimeout(() => {
-      yakitWindowControls.operate('close')
+      ipc.invoke('local', 'UIOperate', 'close')
     }, 100)
   })
 
@@ -304,11 +314,11 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
     if (updateLoading) return
 
     setUpdateLoading(true)
-    yakitEngine
-      .restoreEngineAndPlugin({})
+    ipc
+      .invoke('local', 'RestoreEngineAndPlugin', {})
       .then(() => {
         info(`解压内置引擎成功`)
-        yakitEngine.writeEngineKeyToYakitProjects().finally(() => {
+        ipc.invoke('local', 'write-engine-key-to-yakit-projects', undefined).finally(() => {
           // onCallback(true)
           setYakitStatus('')
           setOldLink(false)

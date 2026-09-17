@@ -1,3 +1,4 @@
+import type { GrpcOutput } from '@/services/ipc'
 import type { GetKnowledgeBaseResponse, KnowledgeBase } from '@/components/playground/knowlegeBase'
 import type { VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import type { QueryGeneralResponseProps } from '../invoker/schema'
@@ -22,7 +23,7 @@ interface TKnowledgeBaseProps {
 }
 
 interface TDeleteConfirmProps extends Required<Pick<TKnowledgeBaseProps, 'refreshAsync' | 'visible'>> {
-  KnowledgeBaseId: number
+  KnowledgeBaseId: string | number
   onVisible: (v: boolean) => void
 }
 
@@ -68,7 +69,7 @@ interface TListThirdPartyBinaryResponse {
 }
 
 interface KnowledgeBaseContentProps<T = string> {
-  KnowledgeBases?: (CreateKnowledgeBaseData & { ID: T })[]
+  KnowledgeBases?: (Omit<GrpcOutput<'GetKnowledgeBase'>['KnowledgeBases'][number], 'ID'> & { ID: T })[]
 }
 
 type TExistsKnowledgeBaseAsync = {
@@ -87,8 +88,8 @@ interface SearchKnowledgeBaseEntryRequest {
 }
 
 interface KnowledgeBaseEntry {
-  ID: number
-  KnowledgeBaseId: number
+  ID: string
+  KnowledgeBaseId: string | number
   KnowledgeTitle: string
   KnowledgeType: string
   ImportanceScore: number
@@ -117,7 +118,7 @@ interface ListVectorStoreEntriesFilter {
 
 // 查询知识库-向量表响应
 interface VectorStoreEntry {
-  ID: number
+  ID: string
   UID: string
   Content: string
   Metadata: string
@@ -130,7 +131,7 @@ type VectorStoreEntryResponse = QueryGeneralResponseProps<VectorStoreEntry, 'Ent
 
 // 查询知识库-实体表入参
 interface EntityFilter {
-  BaseID: number
+  BaseID: string
   BaseIndex: string
   ReposName: string
   IDs: number[]
@@ -154,11 +155,11 @@ interface KVPair {
 }
 
 interface Entity {
-  ID: number
+  ID: string
   Type: string
   Name: string
   Description: string
-  BaseID: number
+  BaseID: string
   BaseIndex: string
   Attributes: KVPair[]
   Rationale: string
@@ -171,7 +172,7 @@ interface TClearKnowledgeResponse {
   CollaboratorInfo?: any[]
   RiskInfo?: any[]
   PluginEnvKey?: any[]
-  Id: number
+  Id: string | number
   Content: string
   Type: string
   CreatedAt: number
@@ -188,15 +189,15 @@ interface TClearKnowledgeResponse {
   FromGit?: string
   EnablePluginSelector?: boolean
   PluginSelectorTypes?: string
-  OnlineId?: number
-  UserId: number
+  OnlineId?: string | number
+  UserId: string | number
   OnlineScriptName: string
   OnlineContributors: string
   UUID: string
   OnlineIsPrivate?: boolean
   HeadImg?: string
   OnlineBaseUrl?: string
-  BaseOnlineId?: number
+  BaseOnlineId?: string | number
   OnlineOfficial?: boolean
   OnlineGroup?: string
   IsCorePlugin?: boolean

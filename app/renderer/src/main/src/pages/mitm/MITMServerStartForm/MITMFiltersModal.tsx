@@ -53,8 +53,6 @@ import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const MITMAdvancedFilters = React.lazy(() => import('./MITMFilters'))
-const { ipcRenderer } = window.require('electron')
-
 export type FilterType = 'filter' | 'hijackFilter'
 interface MITMFiltersModalProps {
   filterType: FilterType
@@ -130,7 +128,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
   })
   useEffect(() => {
     if (filterType === 'filter') {
-      grpcClientMITMfilter(mitmVersion).on((filter) => {
+      const unsubscribegrpcClientMITMfilter = grpcClientMITMfilter(mitmVersion).on((filter) => {
         const value = convertMITMFilterUI(filter)
         setMITMFilter({
           ...value.baseFilter,
@@ -138,7 +136,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         setFilterData([...value.advancedFilters])
       })
       return () => {
-        grpcClientMITMfilter(mitmVersion).remove()
+        unsubscribegrpcClientMITMfilter()
       }
     }
   }, [])

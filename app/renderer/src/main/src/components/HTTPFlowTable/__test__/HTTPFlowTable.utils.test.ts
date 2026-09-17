@@ -102,14 +102,14 @@ describe('resolveHTTPFlowTableBatchSelection', () => {
 
 describe('parseIncludeIds', () => {
   it('parses single and comma-separated numbers into an id array', () => {
-    expect(parseIncludeIds('12')).toEqual([12])
-    expect(parseIncludeIds('1,2,10')).toEqual([1, 2, 10])
-    expect(parseIncludeIds('0')).toEqual([0])
+    expect(parseIncludeIds('12')).toEqual(['12'])
+    expect(parseIncludeIds('1,2,10')).toEqual(['1', '2', '10'])
+    expect(parseIncludeIds('0')).toEqual(['0'])
   })
 
   it('drops empty segments, non-integers, negatives and duplicates', () => {
     expect(parseIncludeIds('')).toEqual([])
-    expect(parseIncludeIds('1,,2,abc,-3,1.5,2')).toEqual([1, 2])
+    expect(parseIncludeIds('1,,2,abc,-3,1.5,2')).toEqual(['1', '2'])
   })
 })
 
@@ -264,6 +264,14 @@ describe('HTTP flow color tags', () => {
       Tags: 'YAKIT_COLOR_RED',
       cellClassName: 'table-cell-bg-red',
     })
+  })
+
+  it('keeps adjacent int64 IDs distinct when applying tags', () => {
+    const first = { Id: '9007199254740992', Hash: '', Tags: '' } as HTTPFlow
+    const second = { Id: '9007199254740993', Hash: '', Tags: '' } as HTTPFlow
+    const result = patchHTTPFlowTags([first, second], [{ Id: second.Id, Tags: 'manual' }])
+    expect(result[0]).toBe(first)
+    expect(result[1].Tags).toBe('manual')
   })
 
   it('clears the derived row class when a color is removed', () => {
@@ -475,5 +483,17 @@ describe('shared rule-data helpers remain exported from the unified utils file',
     ])
 
     expect(mergeRuleSummaryItems(prev, next)[0].TraceCount).toBe(3)
+  })
+})
+
+it('preserves decimal IDs in filters and distinguishes them from host names', () => {
+  expect(parseIncludeIds('9007199254740992,9007199254740993,0002,2')).toEqual([
+    '9007199254740992',
+    '9007199254740993',
+    '2',
+  ])
+  expect(splitHTTPFlowTableShieldData(['9007199254740993', 'example.com'])).toEqual({
+    shieldIds: ['9007199254740993'],
+    shieldHosts: ['example.com'],
   })
 })

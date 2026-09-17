@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import React, { useEffect, useRef, useState } from 'react'
 import { useDebounceEffect, useMemoizedFn } from 'ahooks'
 import { isEngineConnectionAlive } from '@/components/layout/WelcomeConsoleUtil'
@@ -9,8 +10,6 @@ import { remoteOperation } from '@/pages/dynamicControl/remoteOperation'
 import { fetchEnv, getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify, toEngineHandshakeName } from '@/utils/envfile'
 import emiter from '@/utils/eventBus/eventBus'
 import { debugToPrintLog } from '@/utils/logCollection'
-import { yakitEngine } from '@/services/electronBridge'
-
 export interface YaklangEngineWatchDogCredential {
   Mode?: YaklangEngineMode
   Host: string
@@ -64,8 +63,8 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
        * 当然引擎没有启动的时候无法连接成功，要准备根据引擎状态选择合适的方式启动引擎
        */
       debugToPrintLog(`------ 测试目标引擎是否存在进程存活情况------`)
-      yakitEngine
-        .connectYaklangEngine(props.credential)
+      ipc
+        .invoke('local', 'connect-yaklang-engine', props.credential)
         .then(() => {
           debugToPrintLog(`------ 目标引擎进程存活------`)
           if (props.onKeepaliveShouldChange) {
@@ -138,15 +137,15 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
           }
         }, 600)
 
-        yakitEngine
-          .isPortAvailable(props.credential.Port)
+        ipc
+          .invoke('local', 'is-port-available', props.credential.Port)
           .then(() => {
             if (startingUp.current) {
               return
             }
             startingUp.current = true
-            yakitEngine
-              .startLocalYaklangEngine({
+            ipc
+              .invoke('local', 'start-local-yaklang-engine', {
                 port: props.credential.Port,
                 version: toEngineHandshakeName(fetchEnv()),
                 isEnpriTraceAgent: isEnpriTraceAgent(),

@@ -1,7 +1,7 @@
 import './setupElectron'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { AIAgentLogEmitter } from '../AIAgentLogEmitter'
-import { ipcRendererMock, resetIpcMocks } from './setupElectron'
+import { sdkMock, resetIpcMocks } from './setupElectron'
 
 describe('AIAgentLogEmitter stream buffer', () => {
   let emitter: AIAgentLogEmitter
@@ -15,18 +15,19 @@ describe('AIAgentLogEmitter stream buffer', () => {
     emitter.dispatch({
       session: 's1',
       type: 'stream',
-      Timestamp: 1,
+      Timestamp: '1',
       stream: { NodeId: 'n1', EventUUID: 'e1', content: 'a', status: 'start' },
     })
-    expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+    expect(sdkMock.invoke).not.toHaveBeenCalled()
 
     emitter.dispatch({
       session: 's1',
       type: 'stream',
-      Timestamp: 1,
+      Timestamp: '1',
       stream: { NodeId: 'n1', EventUUID: 'e1', content: 'b', status: 'end' },
     })
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+    expect(sdkMock.invoke).toHaveBeenCalledWith(
+      'local',
       'forward-ai-chat-log-data',
       expect.objectContaining({
         message: 'ab',
@@ -40,17 +41,18 @@ describe('AIAgentLogEmitter stream buffer', () => {
     emitter.dispatch({
       session: 's1',
       type: 'stream',
-      Timestamp: 1,
+      Timestamp: '1',
       stream: { NodeId: 'n1', EventUUID: 'e1', content: 'x', status: 'start' },
     })
     emitter.clearSessionBuffer('s1')
     emitter.dispatch({
       session: 's1',
       type: 'stream',
-      Timestamp: 1,
+      Timestamp: '1',
       stream: { NodeId: 'n1', EventUUID: 'e1', content: 'y', status: 'end' },
     })
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+    expect(sdkMock.invoke).toHaveBeenCalledWith(
+      'local',
       'forward-ai-chat-log-data',
       expect.objectContaining({ message: 'y' }),
     )

@@ -1,3 +1,7 @@
+import { reportForUI } from '@/pages/assetViewer/models'
+import { reportsForUI } from '@/pages/assetViewer/models'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
@@ -25,7 +29,6 @@ import {
   PRODUCT_RELEASE_EDITION,
 } from '@/utils/envfile'
 import { openABSFileLocated } from '@/utils/openWebsite'
-import { yakitDialog } from '@/services/electronBridge'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import type { ReportItem } from './reportRenders/schema'
 import html2canvas from 'html2canvas'
@@ -57,11 +60,9 @@ import emiter from '@/utils/eventBus/eventBus'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { CodeScanTaskList } from '../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
-
 interface ReportViewerPageProp {}
 export const ReportViewerPage: React.FC<ReportViewerPageProp> = (props) => {
-  const [selectReportId, setSelectReportId] = useState<number>()
+  const [selectReportId, setSelectReportId] = useState<string | number>()
 
   return (
     <div className={styles['reportViewerPage']}>
@@ -88,8 +89,8 @@ interface QueryReportsRequest extends QueryGeneralRequest {
   Type?: 'ssa_project' | 'project'
 }
 interface ReportListProp {
-  selectReportId?: number
-  onSetSelectReportId: (selectReportId?: number) => void
+  selectReportId?: string | number
+  onSetSelectReportId: (selectReportId?: string | number) => void
 }
 const ReportList: React.FC<ReportListProp> = (props) => {
   const { selectReportId, onSetSelectReportId } = props
@@ -140,12 +141,12 @@ const ReportList: React.FC<ReportListProp> = (props) => {
   }, [])
 
   useEffect(() => {
-    ipcRenderer.on('fetch-simple-open-report', (e, reportId: number) => {
+    const stopIpcEvent1 = ipc.on('fetch-simple-open-report', (reportId: number) => {
       update(1)
       reportId && onSetSelectReportId(reportId)
     })
     return () => {
-      ipcRenderer.removeAllListeners('fetch-simple-open-report')
+      stopIpcEvent1()
     }
   }, [])
 
@@ -162,9 +163,11 @@ const ReportList: React.FC<ReportListProp> = (props) => {
       Type: getEnvTypeByProjects(),
     }
     const isInit = page === 1
-    ipcRenderer
-      .invoke('QueryReports', finalParams)
-      .then((res: QueryGeneralResponse<Report>) => {
+    ipc
+      .invoke('grpc', 'QueryReports', finalParams)
+      .then(reportsForUI)
+      .then(grpcPageForUI)
+      .then((res) => {
         if (res.Data.length) {
           setQuery((prevQuery) => ({
             ...prevQuery,
@@ -194,8 +197,8 @@ const ReportList: React.FC<ReportListProp> = (props) => {
 
   const onRemove = useMemoizedFn(() => {
     setLoading(true)
-    ipcRenderer
-      .invoke('DeleteReport', {
+    ipc
+      .invoke('grpc', 'DeleteReport', {
         Type: getEnvTypeByProjects(),
         IDs: selectedRowKeys,
         DeleteAll: selectedRowKeys.length === 0,
@@ -398,7 +401,7 @@ const getEchartsHtml2CanvasOptions = (echartType: string | null) => {
 }
 
 interface ReportViewerProp {
-  reportId?: number
+  reportId?: string | number
 }
 const ReportViewer: React.FC<ReportViewerProp> = (props) => {
   const { reportId } = props
@@ -444,7 +447,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
   }, [wordExportItems])
 
   useEffect(() => {
-    if ((reportId || 0) <= 0) {
+    if (BigInt(reportId || 0) <= BigInt(0)) {
       setReport({
         ...report,
         Id: 0,
@@ -454,9 +457,10 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
 
     isEchartsToImg.current = true
     setLoading(true)
-    ipcRenderer
-      .invoke('QueryReport', { Id: reportId, Type: getEnvTypeByProjects() })
-      .then((r: Report) => {
+    ipc
+      .invoke('grpc', 'QueryReport', { Id: reportId, Type: getEnvTypeByProjects() })
+      .then(reportForUI)
+      .then((r) => {
         if (r) setReport(r)
       })
       .catch((e) => {
@@ -492,11 +496,11 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     try {
       // 先让 loading 渲染一帧，避免系统保存弹窗前无反馈
       await new Promise((resolve) => setTimeout(resolve, 0))
-      const saveRes = await yakitDialog.showSaveDialog(`${report.Title}.pdf`)
+      const saveRes = await ipc.invoke('local', 'show-save-dialog', `${report.Title}.pdf`)
       if (saveRes.canceled || !saveRes.filePath) {
         return
       }
-      await ipcRenderer.invoke('PrintReportPdfFromTemplate', {
+      await ipc.invoke('local', 'PrintReportPdfFromTemplate', {
         outputPath: saveRes.filePath,
         JsonRaw: report.JsonRaw,
         reportName: report.Title,
@@ -517,8 +521,8 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         if (data.filePaths.length) {
           setDownloadLoading(true)
           const absolutePath = data.filePaths[0].replace(/\\/g, '\\')
-          ipcRenderer
-            .invoke('DownloadHtmlReport', {
+          ipc
+            .invoke('local', 'DownloadHtmlReport', {
               JsonRaw: report.JsonRaw,
               outputDir: absolutePath,
               reportName: report.Title,
@@ -669,7 +673,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
 
   return (
     <div className={styles['report-viewer']}>
-      {report.Id <= 0 ? (
+      {BigInt(report.Id) <= BigInt(0) ? (
         <YakitEmpty title={t('ReportViewerPage.selectReport')} className={styles['report-empty']}></YakitEmpty>
       ) : loading ? (
         <YakitSpin spinning={loading} wrapperClassName={styles['loading-wrapper']}></YakitSpin>

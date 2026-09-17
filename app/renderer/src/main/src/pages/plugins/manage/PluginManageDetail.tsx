@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import {
@@ -65,8 +66,6 @@ import styles from './pluginManage.module.scss'
 const { TabPane } = PluginTabs
 
 const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
-
-const { ipcRenderer } = window.require('electron')
 
 /** 详情页返回列表页 时的 关联数据 */
 export interface BackInfoProps {
@@ -716,6 +715,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
       setPreview(true)
     })
 
+    const downloadController = useRef<AbortController>()
     const [downloadFileLoading, setDownloadFileLoading] = useState<boolean>(false)
     // 下载附件里的压缩包
     const downloadSupplementFile = useMemoizedFn(() => {
@@ -732,23 +732,21 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         return
       }
       setDownloadFileLoading(true)
-      ipcRenderer.invoke('download-url-to-path', { url: url, fileName: fileName })
+      const controller = new AbortController()
+      downloadController.current = controller
+      ipc
+        .invoke('local', 'download-url-to-path', { url, fileName }, { signal: controller.signal })
+        .then((openPath) => {
+          if (!controller.signal.aborted) return ipc.invoke('local', 'shell-open-abs-file', openPath)
+        })
+        .catch((error) => {
+          if (!controller.signal.aborted) failed(String(error))
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setDownloadFileLoading(false)
+        })
     })
-    useEffect(() => {
-      ipcRenderer.on(`download-url-to-path-progress`, (e, data: { state: DownloadingState; openPath: string }) => {
-        const { state, openPath } = data
-        if (state.percent >= 1) {
-          ipcRenderer.invoke('shell-open-abs-file', openPath)
-          setTimeout(() => {
-            setDownloadFileLoading(false)
-          }, 200)
-        }
-      })
-
-      return () => {
-        ipcRenderer.removeAllListeners(`download-url-to-path-progress`)
-      }
-    }, [])
+    useEffect(() => () => downloadController.current?.abort(), [])
 
     const extraNode = useMemo(() => {
       if (!plugin) return null

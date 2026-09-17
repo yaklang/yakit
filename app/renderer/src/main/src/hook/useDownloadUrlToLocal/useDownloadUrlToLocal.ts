@@ -1,10 +1,9 @@
 import { safeFormatDownloadProcessState } from '@/components/layout/utils'
 import { yakitNotify } from '@/utils/notification'
 import type { DownloadingState } from '@/yakitGVDefine'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { ipc } from '@/services/ipc'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 interface DownloadUrlToLocalHooks {
   /**为同时多个下载准备 */
@@ -30,50 +29,53 @@ export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHook
   const { path, taskToken, onUploadData, onUploadSuccess, onUploadEnd, onUploadError } = props
   const { t } = useI18nNamespaces(['hook', 'yakitUi'])
 
-  useEffect(() => {
-    let isSuccess = true
-    ipcRenderer.on(`download-url-to-path-progress`, (e, data: { state: DownloadingState; openPath: string }) => {
-      const { state } = data
-      const newState = safeFormatDownloadProcessState(state)
-      isSuccess = true
-      onUploadData(newState)
-    })
-    ipcRenderer.on(`download-url-to-path-progress-error`, (e, error) => {
-      isSuccess = false
-      onUploadError && onUploadError()
-      yakitNotify('error', t('YakitNotification.downloadFailed', { error: String(error) }))
-    })
-    ipcRenderer.on(`download-url-to-path-progress-finished`, (e) => {
-      if (isSuccess) {
-        onUploadSuccess && onUploadSuccess()
-      }
-      onUploadEnd && onUploadEnd()
-    })
-
-    return () => {
-      ipcRenderer.removeAllListeners(`download-url-to-path-progress`)
-      ipcRenderer.removeAllListeners(`download-url-to-path-progress-error`)
-      ipcRenderer.removeAllListeners(`download-url-to-path-progress-finished`)
-    }
-  }, [])
-  const onStart = (uploadParams: DownloadUrlToLocal) => {
-    const params = {
-      url: uploadParams.onlineUrl,
-      path: uploadParams.localPath,
-      isEncodeURI: uploadParams.isEncodeURI === false ? false : true,
-    }
-    ipcRenderer.invoke('download-url-to-path', params)
+  const active = useRef<AbortController>()
+  const pending = useRef<Promise<void>>()
+  useEffect(() => () => active.current?.abort(), [path, taskToken])
+  const onStart = (params: DownloadUrlToLocal) => {
+    active.current?.abort()
+    const controller = new AbortController()
+    active.current = controller
+    pending.current = ipc
+      .invoke(
+        'local',
+        'download-url-to-path',
+        {
+          url: params.onlineUrl,
+          path: params.localPath,
+          isEncodeURI: params.isEncodeURI,
+        },
+        {
+          signal: controller.signal,
+          onProgress({ state }) {
+            if (!controller.signal.aborted)
+              onUploadData(
+                safeFormatDownloadProcessState(
+                  state === 100
+                    ? { percent: 1, size: { total: 0, transferred: 0 }, speed: 0, time: { elapsed: 0, remaining: 0 } }
+                    : state,
+                ),
+              )
+          },
+        },
+      )
+      .then(() => {
+        if (!controller.signal.aborted) onUploadSuccess?.()
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return
+        onUploadError?.()
+        yakitNotify('error', t('YakitNotification.downloadFailed', { error: String(error) }))
+      })
+      .finally(() => {
+        if (active.current !== controller) return
+        active.current = undefined
+        if (!controller.signal.aborted) onUploadEnd?.()
+      })
   }
-  const onCancel = () => {
-    return new Promise((resolve, reject) => {
-      ipcRenderer
-        .invoke('cancel-download-url-to-path', { path })
-        .then(resolve)
-        .catch((e) => {
-          yakitNotify('error', t('useDownloadUrlToLocal.cancelDownloadFailed', { error: String(e) }))
-          reject(e)
-        })
-    })
+  const onCancel = async () => {
+    active.current?.abort()
+    await pending.current
   }
   return { onStart, onCancel } as const
 }

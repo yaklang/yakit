@@ -18,6 +18,7 @@ import {
   getModelName,
   grpcAIConfigHealthCheck,
   grpcCancelStartLocalModel,
+  grpcClearAllModels,
   grpcDeleteLocalModel,
   grpcGetSupportedLocalModels,
   grpcIsLlamaServerReady,
@@ -417,6 +418,7 @@ export const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
     const [visible, setVisible] = useState<boolean>(false)
 
     const tokenRef = useRef(randomString(60))
+    const installParamsRef = useRef({ Proxy: '' })
     useImperativeHandle(
       ref,
       () => ({
@@ -480,8 +482,8 @@ export const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
         type: 'white',
         content: (
           <InstallLlamaServerModelPrompt
-            token={tokenRef.current}
-            onStart={() => {
+            onStart={(params) => {
+              installParamsRef.current = params
               m.destroy()
               setVisible(true)
             }}
@@ -554,6 +556,7 @@ export const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
         {visible && (
           <InstallLlamaServer
             grpcInterface="InstallLlamaServer"
+            params={installParamsRef.current}
             title={t('AILocalModelList.llamaInstalling')}
             token={tokenRef.current}
             onFinished={installFinished}
@@ -598,12 +601,11 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
 
   const tokenRef = useRef<string>(randomString(60))
   const downTokenRef = useRef<string>(randomString(60))
+  const downloadParamsRef = useRef({ ModelName: item.Name, Proxy: '' })
+  const startModelControllerRef = useRef<AbortController>()
 
   useEffect(() => {
-    const token = tokenRef.current
-    return () => {
-      grpcCancelStartLocalModel(token)
-    }
+    return () => startModelControllerRef.current?.abort()
   }, [])
   useUpdateEffect(() => {
     setIsReady(item.IsReady || false)
@@ -617,6 +619,9 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
   })
   const onStart = useMemoizedFn((e) => {
     e.stopPropagation()
+    startModelControllerRef.current?.abort()
+    const controller = new AbortController()
+    startModelControllerRef.current = controller
     const m = showYakitModal({
       title: (modalT) => modalT('AILocalModelListItem.startModel', { name: item.Name }),
       width: '50%',
@@ -624,6 +629,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
         <AIStartModelForm
           item={item}
           token={tokenRef.current}
+          signal={controller.signal}
           onSuccess={() => {
             onRefresh()
             m.destroy()
@@ -660,11 +666,11 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
       content: (
         <DownloadLlamaServerModelPrompt
           modelName={item.Name}
-          onStart={() => {
+          onStart={(params) => {
+            downloadParamsRef.current = params
             m.destroy()
             setDownVisible(true)
           }}
-          token={downTokenRef.current}
         />
       ),
       footer: null,
@@ -864,6 +870,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
       {downVisible && (
         <InstallLlamaServer
           grpcInterface="DownloadLocalModel"
+          params={downloadParamsRef.current}
           title={t('AILocalModelListItem.downloadingModel', { name: item.Name })}
           token={downTokenRef.current}
           onFinished={installFinished}

@@ -1,3 +1,5 @@
+import { int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 import type {
   AuthorImgProps,
@@ -99,8 +101,6 @@ import { Trans } from 'react-i18next'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { setClipboardText } from '@/utils/clipboard'
-
-const { ipcRenderer } = window.require('electron')
 
 /** @name 标题栏的搜索选项组件 */
 export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
@@ -1557,13 +1557,23 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
   // 开始评分
   const onTest = useMemoizedFn(() => {
     setLoading(true)
-    ipcRenderer
-      .invoke('SmokingEvaluatePlugin', { PluginType: type, Code: code })
-      .then((rsp: CodeScoreSmokingEvaluateResponseProps) => {
+    ipc
+      .invoke('grpc', 'SmokingEvaluatePlugin', { PluginType: type, Code: code })
+      .then((rsp) => {
         if (!fetchStartState()) return
-        const newResults = rsp.Results.map((ele) => ({ ...ele, IdKey: uuidv4() }))
+        const newResults = rsp.Results.map((ele) => ({
+          ...ele,
+          IdKey: uuidv4(),
+          Range: ele.Range && {
+            ...ele.Range,
+            StartLine: int64ToSafeNumber(ele.Range.StartLine),
+            StartColumn: int64ToSafeNumber(ele.Range.StartColumn),
+            EndLine: int64ToSafeNumber(ele.Range.EndLine),
+            EndColumn: int64ToSafeNumber(ele.Range.EndColumn),
+          },
+        }))
         setResponse({
-          Score: rsp.Score,
+          Score: int64ToSafeNumber(rsp.Score),
           Results: newResults,
         })
 

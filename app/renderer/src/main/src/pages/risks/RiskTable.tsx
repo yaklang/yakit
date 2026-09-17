@@ -1,3 +1,5 @@
+import { risksForUI } from '@/pages/risks/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import React, { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Space, Table, Tag, Form, Typography, Descriptions, Tooltip } from 'antd'
 import type { Risk } from './schema'
@@ -24,8 +26,6 @@ import { showByContextMenu } from '../../components/functionTemplate/showByConte
 import './RiskTable.css'
 import { Uint8ArrayToString } from '@/utils/str'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { yakitRisk } from '@/services/electronBridge'
-
 export interface RiskTableProp {
   severity?: string
 }
@@ -37,7 +37,6 @@ export interface QueryRisksParams extends QueryGeneralRequest {
   Severity?: string
 }
 
-const { ipcRenderer } = window.require('electron')
 const { Paragraph } = Typography
 
 export interface Fields {
@@ -173,7 +172,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
   const time = useRef<any>(null)
 
   const updateRiskAndLevel = useMemoizedFn(() => {
-    ipcRenderer.invoke('QueryAvailableRiskType', {}).then((f: Fields) => {
+    ipc.invoke('grpc', 'QueryAvailableRiskType', {}).then((f) => {
       setTypes(
         mergeFieldNames(f).sort((a, b) => {
           const diff = a.Total - b.Total
@@ -185,7 +184,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         }),
       )
     })
-    ipcRenderer.invoke('QueryAvailableRiskLevel', {}).then((i: Fields) => {
+    ipc.invoke('grpc', 'QueryAvailableRiskLevel', {}).then((i) => {
       setSeverities(
         mergeFieldNames(i).sort((a, b) => {
           const diff = a.Total - b.Total
@@ -207,12 +206,13 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
       Order: 'desc',
     }
     setLoading(true)
-    ipcRenderer
-      .invoke('QueryRisks', {
+    ipc
+      .invoke('grpc', 'QueryRisks', {
         ...getParams(),
         ...(extraParam ? extraParam : {}),
         Pagination: paginationProps,
       })
+      .then(risksForUI)
       .then((r: QueryGeneralResponse<any>) => {
         setResponse(r)
         updateRiskAndLevel()
@@ -226,8 +226,8 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
 
   const delRisk = useMemoizedFn((hash: string) => {
     setLoading(true)
-    ipcRenderer
-      .invoke('DeleteRisk', { Hash: hash })
+    ipc
+      .invoke('grpc', 'DeleteRisk', { Hash: hash })
       .then(() => {
         update(1)
       })
@@ -467,13 +467,14 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
 
   const getData = useMemoizedFn((query) => {
     return new Promise((resolve) => {
-      ipcRenderer
-        .invoke('QueryRisks', {
+      ipc
+        .invoke('grpc', 'QueryRisks', {
           ...params,
           Pagination: {
             ...query,
           },
         })
+        .then(risksForUI)
         .then((res: QueryGeneralResponse<any>) => {
           const { Data } = res
           //    数据导出
@@ -508,7 +509,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
       selectedRowKeys,
       params,
       interfaceName: 'DeleteRisk',
-      execute: yakitRisk.delete,
+      execute: (params) => ipc.invoke('grpc', 'DeleteRisk', params),
     }
     setLoading(true)
     onRemoveToolFC(transferParams)
@@ -617,8 +618,8 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                           Network: record?.IP,
                         },
                       }
-                      ipcRenderer
-                        .invoke('DeleteRisk', newParams)
+                      ipc
+                        .invoke('grpc', 'DeleteRisk', newParams)
                         .then(() => {
                           update()
                         })

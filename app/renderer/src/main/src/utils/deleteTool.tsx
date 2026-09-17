@@ -1,7 +1,7 @@
 import { failed } from './notification'
 
 interface removeProps<T, R = any> {
-  selectedRowKeys: string[] | number[]
+  selectedRowKeys: (string | number)[]
   params: T
   interfaceName?: string
   execute: (params: any) => Promise<R>

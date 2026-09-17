@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useState, useMemo, useRef, type ReactNode } from 'react'
 import { Descriptions, Space, Divider, Badge } from 'antd'
 import type { QueryGeneralRequest } from '../invoker/schema'
@@ -29,7 +30,6 @@ import type { PortTableRefProps } from './PortTable/PortTableType'
 
 import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
-const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
 export interface PortAssetTableProp {
   closed?: boolean
@@ -46,8 +46,8 @@ export interface QueryPortsRequest extends QueryGeneralRequest {
   Keywords: string
   ComplexSelect: string
   RuntimeId: string
-  AfterId?: number
-  BeforeId?: number
+  AfterId?: string | number
+  BeforeId?: string | number
   All?: boolean
   Order?: string
   OrderBy?: string
@@ -120,9 +120,9 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
 
   const getPortsGroup = useMemoizedFn(() => {
     setAdvancedQueryLoading(true)
-    ipcRenderer
-      .invoke('QueryPortsGroup', {})
-      .then((data: QueryPortsGroupResponse) => {
+    ipc
+      .invoke('grpc', 'QueryPortsGroup', {})
+      .then((data) => {
         setPortsGroup(data.PortsGroupList)
         setAdvancedConfig(data.PortsGroupList.length > 0)
       })

@@ -1,3 +1,5 @@
+import { languageFindForUI } from '@/utils/monacoSpec/grpcCodeRange'
+import { ipc } from '@/services/ipc'
 import { monaco } from 'react-monaco-editor'
 import {
   newYaklangCompletionHandlerProvider,
@@ -20,7 +22,6 @@ export const YaklangMonacoSpec = 'yak'
 
 export const YAK_FORMATTER_COMMAND_ID = 'yak-formatter'
 
-const { ipcRenderer } = window.require('electron')
 const { CompletionItemKind } = monaco.languages
 const modelToEditorMap = new Map<monaco.editor.ITextModel, monaco.editor.ICodeEditor>()
 const editorToSignatureHelpRangeMap = new Map<monaco.editor.ICodeEditor, monaco.Range>()
@@ -741,8 +742,8 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
 
       const type = getModelContext(model, 'plugin') || 'yak'
 
-      await ipcRenderer
-        .invoke('YaklangLanguageSuggestion', {
+      await ipc
+        .invoke('grpc', 'YaklangLanguageSuggestion', {
           InspectType: 'signature',
           YakScriptType: type,
           YakScriptCode: model.getValue(),
@@ -755,7 +756,7 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
             EndColumn: iWord.endColumn,
           } as Range,
         } as YaklangLanguageSuggestionRequest)
-        .then((r: YaklangLanguageSuggestionResponse) => {
+        .then((r) => {
           if (r.SuggestionMessage.length > 0) {
             r.SuggestionMessage.forEach((v) => {
               decl += v.Label ?? '' + '\n'
@@ -884,8 +885,8 @@ monaco.languages.registerHoverProvider(YaklangMonacoSpec, {
       const iWord = getWordWithPointAtPosition(model, position)
       let desc = ''
       const type = getModelContext(model, 'plugin') || 'yak'
-      await ipcRenderer
-        .invoke('YaklangLanguageSuggestion', {
+      await ipc
+        .invoke('grpc', 'YaklangLanguageSuggestion', {
           InspectType: 'hover',
           YakScriptType: type,
           YakScriptCode: model.getValue(),
@@ -898,7 +899,7 @@ monaco.languages.registerHoverProvider(YaklangMonacoSpec, {
             EndColumn: iWord.endColumn,
           } as Range,
         } as YaklangLanguageSuggestionRequest)
-        .then((r: YaklangLanguageSuggestionResponse) => {
+        .then((r) => {
           if (r.SuggestionMessage.length > 0) {
             r.SuggestionMessage.forEach((v) => {
               desc += v.Label ?? '' + '\n'
@@ -931,8 +932,8 @@ monaco.languages.registerDefinitionProvider(YaklangMonacoSpec, {
       const iWord = getWordWithPointAtPosition(model, position)
       const desc = ''
       const type = getModelContext(model, 'plugin') || 'yak'
-      await ipcRenderer
-        .invoke('YaklangLanguageFind', {
+      await ipc
+        .invoke('grpc', 'YaklangLanguageFind', {
           InspectType: 'definition',
           YakScriptType: type,
           YakScriptCode: model.getValue(),
@@ -944,6 +945,7 @@ monaco.languages.registerDefinitionProvider(YaklangMonacoSpec, {
             EndColumn: iWord.endColumn,
           } as Range,
         } as YaklangLanguageSuggestionRequest)
+        .then(languageFindForUI)
         .then((r: YaklangLanguageFindResponse) => {
           if (r.Ranges.length == 0) {
             return
@@ -979,8 +981,8 @@ monaco.languages.registerReferenceProvider(YaklangMonacoSpec, {
       const iWord = getWordWithPointAtPosition(model, position)
       const desc = ''
       const type = getModelContext(model, 'plugin') || 'yak'
-      await ipcRenderer
-        .invoke('YaklangLanguageFind', {
+      await ipc
+        .invoke('grpc', 'YaklangLanguageFind', {
           InspectType: 'reference',
           YakScriptType: type,
           YakScriptCode: model.getValue(),
@@ -992,6 +994,7 @@ monaco.languages.registerReferenceProvider(YaklangMonacoSpec, {
             EndColumn: iWord.endColumn,
           } as Range,
         } as YaklangLanguageSuggestionRequest)
+        .then(languageFindForUI)
         .then((r: YaklangLanguageFindResponse) => {
           if (r.Ranges.length == 0) {
             return

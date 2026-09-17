@@ -6,46 +6,44 @@ import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInp
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from './AIStartModelForm.module.scss'
 import { yakitNotify } from '@/utils/notification'
-import { grpcStartLocalModel } from '../utils'
+import { ipc } from '@/services/ipc'
 import type { StartLocalModelRequest } from '../../type/aiModel'
 import type { AIStartModelFormProps } from './AIStartModelFormType'
 
-const { ipcRenderer } = window.require('electron')
-
 export const AIStartModelForm: React.FC<AIStartModelFormProps> = React.memo((props) => {
-  const { item, token, onSuccess } = props
+  const { item, token, signal, onSuccess } = props
   const [loading, setLoading] = useState(false)
-  const hasErrorRef = useRef<boolean>(false)
+  const mountedRef = useRef(true)
   const [form] = Form.useForm<Omit<StartLocalModelRequest, 'token'>>()
   useEffect(() => {
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      yakitNotify('error', `[StartLocalModel] error: ${error}`)
-      hasErrorRef.current = true
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {
-      if (!hasErrorRef.current) {
-        onSuccess()
-      }
-      hasErrorRef.current = false
-      setLoading(false)
-    })
+    mountedRef.current = true
+    // The list item owns startup, so closing this form only detaches its UI.
     return () => {
-      // 只清理事件监听器，不取消模型启动
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
+      mountedRef.current = false
     }
   }, [])
-
-  const handleSubmit = useMemoizedFn(() => {
-    form.validateFields().then((value: Omit<StartLocalModelRequest, 'token'>) => {
-      const params: StartLocalModelRequest = {
-        ...value,
+  const handleSubmit = useMemoizedFn(async () => {
+    const value = await form.validateFields()
+    setLoading(true)
+    const onError = (error: unknown) => {
+      if (!mountedRef.current || signal.aborted) return
+      yakitNotify('error', `[StartLocalModel] error: ${error}`)
+      setLoading(false)
+    }
+    try {
+      await ipc.openStream('grpc', 'StartLocalModel', value, {
         token,
-      }
-      grpcStartLocalModel(params).then(() => {
-        setLoading(true)
+        signal,
+        onError,
+        onEnd() {
+          if (!mountedRef.current || signal.aborted) return
+          setLoading(false)
+          onSuccess()
+        },
       })
-    })
+    } catch (error) {
+      onError(error)
+    }
   })
   const initialValues = useCreation(() => {
     return {

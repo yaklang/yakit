@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useMap, useSize } from 'ahooks'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
@@ -12,8 +13,6 @@ import {
 import { ReplyOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { emptyFuzzer } from '@/defaultConstants/HTTPFuzzerPage'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 const cachedTotal = 2
 const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
@@ -30,13 +29,16 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
   const secondNodeSize = useSize(secondNodeRef)
 
   useEffect(() => {
-    ipcRenderer.on('fetch-extracted-to-table', (e: any, data: { type: string; extractedMap: Map<string, string> }) => {
-      if (data.type === 'allSequenceList') {
-        setAll(data.extractedMap)
-      }
-    })
+    const stopIpcEvent1 = ipc.on(
+      'fetch-extracted-to-table',
+      (data: { type: string; extractedMap: Map<string, string> }) => {
+        if (data.type === 'allSequenceList') {
+          setAll(data.extractedMap)
+        }
+      },
+    )
     return () => {
-      ipcRenderer.removeAllListeners('fetch-extracted-to-table')
+      stopIpcEvent1()
     }
   }, [])
 

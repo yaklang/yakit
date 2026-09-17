@@ -9,10 +9,6 @@ const I18NEXT_BACKEND_STUB = path.resolve(
   __dirname,
   'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/i18next-resources-to-backend.ts',
 )
-const ELECTRON_BRIDGE_STUB = path.resolve(
-  __dirname,
-  'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/electronBridgeStub.ts',
-)
 const MONACO_EDITOR_STUB = path.resolve(__dirname, 'app/renderer/src/main/src/types/monacoEditorStub.ts')
 const STYLE_STUB = path.resolve(
   __dirname,
@@ -69,7 +65,6 @@ export default defineConfig({
       resolveId(id, importer) {
         if (id === 'i18next-resources-to-backend') return I18NEXT_BACKEND_STUB
         if (id === '@/i18n/i18n' || id === 'i18n/i18n') return I18N_STUB
-        if (id === '@/services/electronBridge') return ELECTRON_BRIDGE_STUB
 
         // React 19 迁移：两个运行时被 shim 替换（vite alias），测试须与运行时一致，按 importer 分发到对应子项目的 shim
         if (id === 'react-resize-detector' || id === 'xterm-for-react') {
@@ -102,7 +97,6 @@ export default defineConfig({
       { find: '@app', replacement: path.resolve(__dirname, 'app') },
       { find: 'i18next-resources-to-backend', replacement: I18NEXT_BACKEND_STUB },
       { find: '@/i18n/i18n', replacement: I18N_STUB },
-      { find: '@/services/electronBridge', replacement: ELECTRON_BRIDGE_STUB },
       // monaco-editor@0.40.0 的 package.json 缺 main/exports 入口，vitest 解析不了裸导入；
       // 字符串 alias 只做精确匹配，react-monaco-editor 还会引 esm 子路径，须用正则一并兜住
       { find: /^monaco-editor(\/.*)?$/, replacement: MONACO_EDITOR_STUB },

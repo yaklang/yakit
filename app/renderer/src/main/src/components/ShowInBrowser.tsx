@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { Alert, Space } from 'antd'
 import { failed } from '@/utils/notification'
@@ -7,8 +8,6 @@ import i18n from '@/i18n/i18n'
 import { showYakitModal } from './yakitUI/YakitModal/YakitModalConfirm'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
 const tOriginal = i18n.getFixedT(null, 'components')
-
-const { ipcRenderer } = window.require('electron')
 
 export const showResponseViaHTTPFlowID = (v: HTTPFlow) => {
   showResponse(v, undefined, true)
@@ -20,7 +19,7 @@ export const showResponseViaResponseRaw = (v: Uint8Array, url?: string) => {
 
 const showResponse = (v: HTTPFlow | Uint8Array | string, url?: string, noConfirm?: boolean) => {
   const params: {
-    HTTPFlowID?: number
+    HTTPFlowID?: string | number
     Url?: string
     HTTPResponse?: Uint8Array
   } = {
@@ -38,9 +37,9 @@ const showResponse = (v: HTTPFlow | Uint8Array | string, url?: string, noConfirm
     return
   }
 
-  ipcRenderer
-    .invoke('RegisterFacadesHTTP', params)
-    .then((res: { FacadesUrl: string }) => {
+  ipc
+    .invoke('grpc', 'RegisterFacadesHTTP', params)
+    .then((res) => {
       if (noConfirm) {
         openExternalWebsite(res.FacadesUrl)
         return

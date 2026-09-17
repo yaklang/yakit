@@ -1,3 +1,5 @@
+import type { GrpcOutput } from '@/services/ipc'
+import { grpcPagingToUI, int64ToSafeNumber } from '@/utils/int64'
 import type { QueryGeneralRequest } from '../invoker/schema'
 import { isIRify } from '@/utils/envfile'
 import type { YaklangEngineMode } from '@/yakitGVDefine'
@@ -14,12 +16,12 @@ export interface ProjectManageProp {
 }
 /** (新建|编辑)项目|文件夹参数 */
 export interface ProjectParamsProps {
-  Id?: number
+  Id?: number | string
   ProjectName: string
   Description?: string
   Type: string
-  FolderId?: number
-  ChildFolderId?: number
+  FolderId?: number | string
+  ChildFolderId?: number | string
   Database?: string
   ExternalModule?: string
   ExternalProjectCode?: string
@@ -29,22 +31,22 @@ export interface ProjectParamsProp extends QueryGeneralRequest {
   ProjectName?: string
   Description?: string
   Type: string
-  FolderId?: number
-  ChildFolderId?: number
+  FolderId?: number | string
+  ChildFolderId?: number | string
   FrontendType?: 'project' | 'ssa_project'
   AfterUpdatedAt?: number
 }
 /** 单条项目数据 */
 export interface ProjectDescription {
-  Id: number
+  Id: number | string
   ProjectName: string
   Description: string
   DatabasePath: string
   CreatedAt: number
   UpdateAt: number
-  FolderId: number
+  FolderId: number | string
   FolderName: string
-  ChildFolderId: number
+  ChildFolderId: number | string
   ChildFolderName: string
   Type: string
   FileSize: string
@@ -61,7 +63,7 @@ export interface ProjectsResponse {
 }
 
 export interface ExportProjectProps {
-  Id: number
+  Id: number | string
   ProjectName: string
   Password: string
 }
@@ -77,4 +79,23 @@ export interface ProjectIOProgress {
   TargetPath: string
   Percent: number
   Verbose: string
+}
+
+export function projectsForUI(value: GrpcOutput<'GetProjects'>): ProjectsResponse {
+  return {
+    ...value,
+    Projects: value.Projects.map((project) => ({
+      ...project,
+      CreatedAt: int64ToSafeNumber(project.CreatedAt),
+      UpdateAt: int64ToSafeNumber(project.UpdateAt),
+    })),
+    Pagination: grpcPagingToUI(value.Pagination),
+    Total: int64ToSafeNumber(value.Total),
+    TotalPage: int64ToSafeNumber(value.TotalPage),
+    ProjectToTal: int64ToSafeNumber(value.ProjectToTal),
+  }
+}
+
+export function projectForUI(value: GrpcOutput<'GetCurrentProjectEx'>): ProjectDescription {
+  return { ...value, CreatedAt: int64ToSafeNumber(value.CreatedAt), UpdateAt: int64ToSafeNumber(value.UpdateAt) }
 }

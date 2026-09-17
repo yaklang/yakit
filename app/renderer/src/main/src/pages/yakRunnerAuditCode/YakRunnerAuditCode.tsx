@@ -64,7 +64,6 @@ import { getCodeByPath, getCodeSizeByPath, getNameByPath, monacaLanguageType } f
 import { openAIForge } from '../yakRunnerAuditHole/YakitAuditHoleTable/utils'
 import { isIRify } from '@/utils/envfile'
 import { YakitRoute } from '@/enums/yakitRoute'
-const { ipcRenderer } = window.require('electron')
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
   const { auditCodePageInfo } = props
   // 页面数据
@@ -326,15 +325,19 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     projectName && onInitTreeFun(`/${projectName}`, false)
   })
 
-  // 是否正在读取中
-  const isReadingRef = useRef<boolean>(false)
+  const readController = useRef<AbortController>()
+  useEffect(() => () => readController.current?.abort(), [])
   const onOpenFileByPathFun = useMemoizedFn(async (data) => {
+    readController.current?.abort()
+    const controller = new AbortController()
+    readController.current = controller
     try {
       const { params, isHistory, isOutside } = JSON.parse(data) as OpenFileByPathProps
       const { path, name, parent, highLightRange } = params
 
       // 校验是否已存在 如若存在则不创建只定位
       const file = await judgeAuditCodeAreaExistFilePath(areaInfo, path)
+      if (controller.signal.aborted) return
       if (file) {
         let cacheAreaInfo = areaInfo
         // 如若存在高亮显示 则注入
@@ -352,17 +355,13 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         // 如若为打开外部文件 则无需校验是否为审计树 直接按照文件树打开
         const fileSourceType = isOutside ? 'file' : 'audit'
         const { size, isPlainText } = await getCodeSizeByPath(path, fileSourceType)
+        if (controller.signal.aborted) return
         //  if (size > MAX_FILE_SIZE_BYTES) {
         //      setShowFileHint(true)
         //      return
         //  }
-        // 取消上一次请求
-        if (isReadingRef.current) {
-          ipcRenderer.invoke('cancel-ReadFile')
-        }
-        isReadingRef.current = true
-        const code = await getCodeByPath(path, 'audit')
-        isReadingRef.current = false
+        const code = await getCodeByPath(path, 'audit', controller.signal)
+        if (controller.signal.aborted) return
         const suffix = name.indexOf('.') > -1 ? name.split('.').pop() : ''
         const scratchFile: FileDetailInfo = {
           name,
@@ -395,6 +394,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         }
       }
     } catch (error) {
+      if (controller.signal.aborted) return
       failed(`error: ${error}`)
     }
   })

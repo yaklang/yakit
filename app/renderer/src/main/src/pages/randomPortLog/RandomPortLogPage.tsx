@@ -1,3 +1,5 @@
+import { int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Col, Divider, Row, Space, Tooltip } from 'antd'
@@ -14,8 +16,6 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import style from './RandomPortLogPage.module.scss'
-
-const { ipcRenderer } = window.require('electron')
 
 interface RandomPortTriggerNotification {
   History?: string[]
@@ -39,9 +39,9 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
 
   const refreshPort = useMemoizedFn(() => {
     setLoading(true)
-    ipcRenderer
-      .invoke('RequireRandomPortToken', {})
-      .then((d: { Token: string; Addr: string; Port: number }) => {
+    ipc
+      .invoke('grpc', 'RequireRandomPortToken', {})
+      .then((d) => {
         setToken(d.Token)
         setExternalAddr(d.Addr)
         setRandomPort(d.Port)
@@ -70,13 +70,19 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
   useEffect(refreshPort, [])
 
   const update = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('QueryRandomPortTrigger', {
+    ipc
+      .invoke('grpc', 'QueryRandomPortTrigger', {
         Token: token,
       })
-      .then((d: RandomPortTriggerNotification) => {
+      .then((d) => {
         if (d?.RemoteAddr !== '') {
-          setNotification([d])
+          setNotification([
+            {
+              ...d,
+              Timestamp: int64ToSafeNumber(d.Timestamp),
+              TriggerTimestamp: int64ToSafeNumber(d.TriggerTimestamp),
+            },
+          ])
         }
       })
       .catch(() => {})

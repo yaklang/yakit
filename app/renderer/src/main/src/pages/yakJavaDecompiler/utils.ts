@@ -1,3 +1,5 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
+import { requestYakURL } from '@/pages/yakURLTree/grpc'
 import { failed, yakitNotify } from '@/utils/notification'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import type { RequestYakURLResponse } from '../yakURLTree/data'
@@ -12,8 +14,6 @@ import emiter from '@/utils/eventBus/eventBus'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { getNameByPath } from '../yakRunner/utils'
 import { isAcceptEligible } from '@/components/yakitUI/YakitForm/YakitForm'
-
-const { ipcRenderer } = window.require('electron')
 
 const initJavaDecompilerFileTreeData = (list: RequestYakURLResponse, path) => {
   return list.Resources.filter((item) => {
@@ -79,7 +79,7 @@ export const grpcFetchJavaDecompilerFileTree: (obj: {
     }
 
     try {
-      const res: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const res: RequestYakURLResponse = await requestYakURL(params)
       const data: FileNodeMapProps[] = initJavaDecompilerFileTreeData(res, innerPath)
       // console.log("文件树获取---", path, res)
       resolve(data)
@@ -109,7 +109,7 @@ export const getJavaDecompilerCodeByPath = (path: string): Promise<string> => {
     }
 
     try {
-      const res: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const res: RequestYakURLResponse = await requestYakURL(params)
       if (res.Resources && res.Resources.length > 0) {
         const decompiled = res.Resources[0].Extra.find((kv) => kv.Key === 'content')
         if (decompiled) {
@@ -153,7 +153,7 @@ export const downloadAsZip = (path: string, projectName: string): Promise<null> 
 
     try {
       yakitNotify('info', '正在后台导出，请等待')
-      const res: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      const res: RequestYakURLResponse = await requestYakURL(params)
       if (!res.Resources || res.Resources.length === 0) {
         failed('导出内容不可用')
         reject('no resources')
@@ -170,7 +170,7 @@ export const downloadAsZip = (path: string, projectName: string): Promise<null> 
       }
 
       try {
-        const exists: boolean = await ipcRenderer.invoke('is-file-exists', zipPath)
+        const exists: boolean = await ipc.invoke('local', 'is-file-exists', zipPath)
         if (!exists) {
           failed('导出的ZIP文件不存在')
           reject('zip not exists')

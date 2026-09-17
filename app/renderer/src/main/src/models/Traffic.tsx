@@ -1,7 +1,8 @@
+import { int64ToSafeNumber } from '@/utils/int64'
 import type { KVPair } from '@/models/kv'
 
 export interface TrafficSession {
-  Id: number
+  Id: string | number
   SessionType: string
   Uuid: string
   DeviceName: string
@@ -22,14 +23,14 @@ export interface TrafficSession {
   IsForceClosed: boolean
   HaveClientHello: boolean
   SNI: string
-  Protocol: string
+  Protocol?: string
 }
 
 export interface TrafficTCPReassembled {
-  Id: number
+  Id: string | number
   SessionUuid: string
   Raw: Uint8Array
-  Seq: number
+  Seq: string | number
   Timestamp: number
 
   Source: string
@@ -55,7 +56,7 @@ export interface TrafficPacket {
   SessionId: string
   Protocol: string
   Info: string
-  Id: number
+  Id: string | number
 }
 
 export interface NetInterface {
@@ -74,5 +75,31 @@ export interface PcapMetadata {
   AvailableLinkLayerTypes: KVPair[]
   AvailableNetworkLayerTypes: KVPair[]
   AvailableTransportLayerTypes: KVPair[]
-  DefaultPublicNetInterface: NetInterface
+  DefaultPublicNetInterface: NetInterface | null
+}
+
+export function trafficPacketsForUI(value: import('@/services/ipc').GrpcOutput<'QueryTrafficPacket'>) {
+  return {
+    ...value,
+    Data: value.Data.map((row) => ({
+      ...row,
+      TransportEndpointPortSrc: int64ToSafeNumber(row.TransportEndpointPortSrc),
+      TransportEndpointPortDst: int64ToSafeNumber(row.TransportEndpointPortDst),
+    })),
+  }
+}
+
+export function trafficSessionsForUI(value: import('@/services/ipc').GrpcOutput<'QueryTrafficSession'>) {
+  return {
+    ...value,
+    Data: value.Data.map((row) => ({
+      ...row,
+      TransportLayerSrcPort: int64ToSafeNumber(row.TransportLayerSrcPort),
+      TransportLayerDstPort: int64ToSafeNumber(row.TransportLayerDstPort),
+    })),
+  }
+}
+
+export function tcpReassembledForUI(value: import('@/services/ipc').GrpcOutput<'QueryTrafficTCPReassembled'>) {
+  return { ...value, Data: value.Data.map((row) => ({ ...row, Timestamp: int64ToSafeNumber(row.Timestamp) })) }
 }

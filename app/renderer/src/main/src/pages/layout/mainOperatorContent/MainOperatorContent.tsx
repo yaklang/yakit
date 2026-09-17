@@ -1,3 +1,6 @@
+import { yakScriptsForUI } from '@/pages/invoker/grpcAdapters'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import React, { useState, useEffect, useRef, useMemo, useImperativeHandle } from 'react'
 import { Layout, Form, Tooltip } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
@@ -209,8 +212,6 @@ const TabRenameModalContent = React.lazy(() => import('./TabRenameModalContent')
 const PageItem = React.lazy(() => import('./PageItem'))
 
 const { Content } = Layout
-const { ipcRenderer } = window.require('electron')
-
 /** 关闭组的提示缓存字段 */
 const Close_Group_Tip = 'close-group_tip'
 
@@ -691,7 +692,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const [loading, setLoading] = useState(false)
 
   useShortcutKeyTrigger('screenshot', () => {
-    ipcRenderer.invoke('activate-screenshot')
+    ipc.invoke('local', 'activate-screenshot', {})
   })
 
   const {
@@ -720,13 +721,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   )
 
   useEffect(() => {
-    ipcRenderer.on('child-window-hash', (event, { hash }) => {
+    const stopIpcEvent1 = ipc.on('child-window-hash', ({ hash }) => {
       setChildWindowHash(hash)
     })
     return () => {
       setChildWindowHash('')
-      ipcRenderer.send('close-childWin')
-      ipcRenderer.removeAllListeners('child-window-hash')
+      ipc.invoke('local', 'close-childWin', {})
+      stopIpcEvent1()
     }
   }, [])
 
@@ -1574,7 +1575,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   // 打开tab页面
   useEffect(() => {
     // 写成HOC是否好点呢，现在一个页面启动就是一个函数
-    ipcRenderer.on('fetch-send-to-tab', (e, res: any) => {
+    const stopIpcEvent2 = ipc.on('fetch-send-to-tab', (res: any) => {
       const { type, data = {} } = res
       if (type === 'fuzzer') addFuzzer(data)
       if (type === 'websocket-fuzzer') addWebsocketFuzzer(data)
@@ -1632,7 +1633,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
 
     return () => {
-      ipcRenderer.removeAllListeners('fetch-send-to-tab')
+      stopIpcEvent2()
     }
   }, [])
 
@@ -1952,10 +1953,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     if ((filter || []).length === 0) {
       openMenuPage({ route: YakitRoute.YakScript })
       setTimeout(() => {
-        ipcRenderer.invoke('send-to-yak-running', { name, code })
+        ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-send-to-yak-running', data: { name, code } })
       }, 300)
     } else {
-      ipcRenderer.invoke('send-to-yak-running', { name, code })
+      ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-send-to-yak-running', data: { name, code } })
       setCurrentTabKey(YakitRoute.YakScript)
     }
   })
@@ -1980,23 +1981,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
    * @name 远程通信打开一个页面(新逻辑)
    */
   useEffect(() => {
-    ipcRenderer.on('open-route-page-callback', (e, info: RouteToPageProps) => {
+    const stopIpcEvent3 = ipc.on('open-route-page-callback', (info: RouteToPageProps) => {
       extraOpenMenuPage(info)
     })
     return () => {
-      ipcRenderer.removeAllListeners('open-route-page-callback')
+      stopIpcEvent3()
     }
   }, [])
   /** ---------- 增加tab页面 end ---------- */
 
   /** ---------- 远程关闭一级页面 end ---------- */
   useEffect(() => {
-    ipcRenderer.on('fetch-close-tab', (e, res: any) => {
+    const stopIpcEvent4 = ipc.on('fetch-close-tab', (res: any) => {
       const { router, name } = res
       removeMenuPage({ route: router, menuName: name || '' })
     })
     return () => {
-      ipcRenderer.removeAllListeners('fetch-close-tab')
+      stopIpcEvent4()
     }
   }, [])
   /** ---------- 远程关闭一级页面 end ---------- */
@@ -2037,7 +2038,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   // 系统类型，仅 addFuzzer pageParams 使用，不参与渲染
   const systemRef = useRef<string>('')
   useEffect(() => {
-    ipcRenderer.invoke('fetch-system-name').then((res) => {
+    ipc.invoke('local', 'fetch-system-name', {}).then((res) => {
       systemRef.current = res
     })
   }, [])
@@ -2759,10 +2760,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   /** ---------- 登录状态变化的逻辑 start ---------- */
   const { userInfo, setStoreUserInfo } = useStore()
   useEffect(() => {
-    ipcRenderer.on('login-out', (e) => {
+    const stopIpcEvent5 = ipc.on('login-out', () => {
       setStoreUserInfo(defaultUserInfo)
       if (isEnterpriseOrSimpleEdition()) {
-        ipcRenderer.invoke('update-judge-license', true)
+        ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-judge-license', data: true })
         // 只要路由不是Plugin_OP,可以把menuName设置为空字符
         removeMenuPage({ route: YakitRoute.AccountAdminPage, menuName: '' })
         removeMenuPage({ route: YakitRoute.RoleAdminPage, menuName: '' })
@@ -2776,7 +2777,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       isEnterpriseOrSimpleEdition() ? setRemoteValue('token-online-enterprise', '') : setRemoteValue('token-online', '')
     })
     return () => {
-      ipcRenderer.removeAllListeners('login-out')
+      stopIpcEvent5()
     }
   }, [])
   // 登录用户非高权限时，软件已打开的高权限页面需自动关闭
@@ -2801,18 +2802,22 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         Pagination: { Limit: 20, Order: 'desc', Page: 1, OrderBy: 'updated_at' },
         UserId: 0,
       }
-      ipcRenderer.invoke('QueryYakScript', newParams).then((item: QueryYakScriptsResponse) => {
-        if (item.Data.length === 0) {
-          const m = showYakitModal({
-            title: (modalT) => modalT('MainOperatorContent.importPlugin'),
-            type: 'white',
-            content: <DownloadAllPlugin onClose={() => m.destroy()} />,
-            bodyStyle: { padding: 24 },
-            footer: null,
-          })
-          return m
-        }
-      })
+      ipc
+        .invoke('grpc', 'QueryYakScript', newParams)
+        .then(yakScriptsForUI)
+        .then(grpcPageForUI)
+        .then((item) => {
+          if (item.Data.length === 0) {
+            const m = showYakitModal({
+              title: (modalT) => modalT('MainOperatorContent.importPlugin'),
+              type: 'white',
+              content: <DownloadAllPlugin onClose={() => m.destroy()} />,
+              bodyStyle: { padding: 24 },
+              footer: null,
+            })
+            return m
+          }
+        })
     }
 
     if (isBreachTrace()) {
@@ -3441,17 +3446,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
   // 新增数据对比页面
   useEffect(() => {
-    ipcRenderer.on('main-container-add-compare', (e, params) => {
+    const stopIpcEvent6 = ipc.on('main-container-add-compare', (params: { openFlag?: boolean }) => {
       openMenuPage({ route: YakitRoute.DataCompare }, { openFlag: params.openFlag ?? true })
       switchComparePage()
     })
-    ipcRenderer.on('switch-compare-page', () => {
+    const stopIpcEvent7 = ipc.on('switch-compare-page', () => {
       setCurrentTabKey(YakitRoute.DataCompare)
       switchComparePage()
     })
     return () => {
-      ipcRenderer.removeAllListeners('main-container-add-compare')
-      ipcRenderer.removeAllListeners('switch-compare-page')
+      stopIpcEvent6()
+      stopIpcEvent7()
     }
   }, [pageCache])
   /**从历史记录中恢复数据 */

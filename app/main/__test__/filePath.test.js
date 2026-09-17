@@ -1,9 +1,15 @@
+// @vitest-environment node
 import { describe, expect, it, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import vm from 'node:vm'
+import { transformSync } from 'esbuild'
 
-const filePathSource = fs.readFileSync(path.resolve(process.cwd(), 'app/main/filePath.js'), 'utf8')
+const filePathSource = transformSync(fs.readFileSync(path.resolve(process.cwd(), 'app/main/filePath.ts'), 'utf8'), {
+  loader: 'ts',
+  format: 'cjs',
+  target: 'node16.17',
+}).code
 
 const loadFilePath = (electronApp, env = {}) => {
   const module = { exports: {} }
@@ -20,6 +26,7 @@ const loadFilePath = (electronApp, env = {}) => {
     exports: module.exports,
     console: { log: vi.fn() },
     require: (id) => {
+      id = id.replace(/^node:/, '')
       if (id === 'electron') return { app: electronApp }
       if (id === 'electron-is-dev') return false
       if (id === 'os') return { homedir: () => '/home/yakit-test', platform: () => 'linux' }
@@ -57,5 +64,26 @@ describe('getYakitInstallDir', () => {
     const { getYakitInstallDir } = loadFilePath({ getName: () => 'yakit', getPath, isPackaged: false })
 
     expect(getYakitInstallDir()).toBe(path.join('/home/yakit-test', 'Downloads'))
+  })
+})
+
+describe('compiled application extra resources', () => {
+  it('resolves production-mode unpackaged resources from the package root', () => {
+    const { loadExtraFilePath } = loadFilePath({
+      getName: () => 'yakit',
+      getPath: () => '/tmp/profile',
+      getAppPath: () => '/workspace/yakit',
+      isPackaged: false,
+    })
+    expect(loadExtraFilePath('report/template.zip')).toBe('/workspace/yakit/report/template.zip')
+  })
+  it('resolves packaged extraFiles outside resources/app.asar', () => {
+    const { loadExtraFilePath } = loadFilePath({
+      getName: () => 'yakit',
+      getPath: () => '/tmp/profile',
+      getAppPath: () => '/installed/resources/app.asar',
+      isPackaged: true,
+    })
+    expect(loadExtraFilePath('report/template.zip')).toBe('/installed/report/template.zip')
   })
 })

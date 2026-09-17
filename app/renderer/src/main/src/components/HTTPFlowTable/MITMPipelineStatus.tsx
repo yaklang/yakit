@@ -1,3 +1,4 @@
+import { mitmV2Session } from '@/pages/mitm/mitmSession'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { ArrowSmDownOutlined, ArrowSmUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -15,9 +16,6 @@ import {
 } from './MITMPipelineStatus.utils'
 import styles from './MITMPipelineStatus.module.scss'
 
-const { ipcRenderer } = window.require('electron')
-
-const PIPELINE_STATS_EVENT = 'client-mitmV2-pipeline-stats'
 const SLOW_ACTIVE_AGE_MS = 2000
 
 interface FrontendPipelineState {
@@ -161,8 +159,7 @@ export const MITMPipelineStatus: React.FC = React.memo(() => {
       previousRef.current = stats
       setView({ stats, rates, frontend: collectFrontendPipelineState() })
     }
-    ipcRenderer.on(PIPELINE_STATS_EVENT, handler)
-    return () => ipcRenderer.removeListener(PIPELINE_STATS_EVENT, handler)
+    return mitmV2Session.on('pipeline', (raw) => handler(undefined, raw))
   }, [])
 
   const health = useMemo(() => resolveHealth(view), [view])

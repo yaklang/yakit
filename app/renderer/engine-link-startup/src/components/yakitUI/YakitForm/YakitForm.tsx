@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import { Spin, Divider } from 'antd'
 import React, { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import styles from './YakitForm.module.scss'
@@ -9,7 +10,6 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { handleOpenFileSystemDialog, type OpenDialogOptions } from '@/utils/fileSystemDialog'
 import type { FileDraggerProps, YakitDraggerProps } from './YakitFormType'
 import { YakitAutoComplete } from '../YakitAutoComplete/YakitAutoComplete'
-import { yakitFileSystem } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /**是否符合接受的文件类型 */
@@ -100,8 +100,8 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     }
     if (selectType === 'file' && setContent) {
       setUploadLoading(true)
-      yakitFileSystem
-        .fetchFileContent(path)
+      ipc
+        .invoke('local', 'read-file-content', path)
         .then((res) => {
           setContent(res)
         })

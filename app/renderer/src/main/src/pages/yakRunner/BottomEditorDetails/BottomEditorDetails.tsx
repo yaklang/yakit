@@ -39,15 +39,13 @@ import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeB
 import { setClipboardText } from '@/utils/clipboard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
-
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
   const { isShowEditorDetails, setEditorDetails, showItem, setShowItem } = props
   const { t } = useI18nNamespaces(['yakRunner'])
 
-  const { activeFile, fileTree } = useStore()
+  const { activeFile, fileTree, execution } = useStore()
   // 不再重新加载的元素
   const [showType, setShowType] = useState<ShowItemType[]>([])
 
@@ -161,27 +159,14 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
   const outputCahceRef = useRef<string>('')
   // 输出流
   const xtermRef = useRef<any>(null)
-  useEffect(() => {
-    // xtermClear(xtermRef)
-    ipcRenderer.on('client-yak-data', async (e: any, data: ExecResult) => {
-      if (data.IsMessage) {
-        // ignore
-      }
-      if (data?.Raw) {
-        outputCahceRef.current += Buffer.from(data.Raw).toString('utf8')
-        if (xtermRef.current) {
-          writeExecResultXTerm(xtermRef, data, 'utf8')
-        }
-      }
-    })
-    ipcRenderer.on('client-yak-error', async (e: any, data) => {
-      failed(`${data}`)
-    })
-    return () => {
-      ipcRenderer.removeAllListeners('client-yak-data')
-      ipcRenderer.removeAllListeners('client-yak-error')
-    }
-  }, [xtermRef])
+  useEffect(
+    () =>
+      execution?.subscribe((data) => {
+        outputCahceRef.current = (outputCahceRef.current + Buffer.from(data.Raw).toString('utf8')).slice(-1024 * 1024)
+        if (xtermRef.current) writeExecResultXTerm(xtermRef, data, 'utf8')
+      }),
+    [execution],
+  )
 
   // 终端路径
   const folderPathRef = useRef<string>('')

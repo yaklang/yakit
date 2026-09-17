@@ -8,7 +8,7 @@ export interface YakURLResource {
   ModifiedTimestamp: number
   Path: string
   YakURLVerbose: string
-  Url: YakURL // Assuming YakURL is another interface
+  Url: YakURL | null // Assuming YakURL is another interface
   Extra: YakURLKVPair[] // Assuming KVPair is another interface
   HaveChildrenNodes: boolean
 }

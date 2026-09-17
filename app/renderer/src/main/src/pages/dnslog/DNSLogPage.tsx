@@ -1,3 +1,5 @@
+import { dnsLogsForUI } from '@/pages/dnslog/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Select, Form, Space, Divider, Row, Col } from 'antd'
@@ -26,8 +28,6 @@ import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 export interface DNSLogPageProp {}
 
-const { ipcRenderer } = window.require('electron')
-
 /*
 * message DNSLogEvent {
   string DNSType = 1;
@@ -48,7 +48,7 @@ export interface DNSLogEvent {
   RemoteIP: string
   RemotePort: number
   Raw: Uint8Array
-  RawStr: string // 前端展示
+  RawStr?: string // 前端展示
   Timestamp: number
   Index?: number
 }
@@ -87,9 +87,9 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
 
   useEffect(() => {
     // 初始化-查看菜单是否开启dnslog并请求获取参数fDNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE
-    ipcRenderer.invoke('dnslog-page-to-menu')
+    ipc.invoke('local', 'ForwardMainEvent', { event: 'dnslog-page-to-menu-callback' })
     // 获取菜单发送的配置参数
-    ipcRenderer.on('dnslog-menu-to-page-callback', (e, data: DnslogMenuToPage) => {
+    const stopIpcEvent1 = ipc.on('dnslog-menu-to-page-callback', (data: DnslogMenuToPage) => {
       if (data.isReset) {
         // 重置
         reset()
@@ -106,7 +106,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
       }
     })
     // 查看单条数据的详情
-    ipcRenderer.on('dnslog-info-details-callback', (e, info: DNSLogEvent) => {
+    const stopIpcEvent2 = ipc.on('dnslog-info-details-callback', (info: DNSLogEvent) => {
       openDetails.current = info
       if (getRecords().length > 0) {
         openDetailsItem()
@@ -118,7 +118,8 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     })
 
     return () => {
-      ipcRenderer.removeAllListeners('dnslog-menu-to-page-callback')
+      stopIpcEvent1()
+      stopIpcEvent2()
     }
   }, [])
 
@@ -149,7 +150,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
 
   // 同步给菜单里dnslog新的参数
   const sendMenuDnslog = useMemoizedFn((data: SendMenuDnslogProps) => {
-    ipcRenderer.invoke('dnslog-page-change-menu', data)
+    ipc.invoke('local', 'ForwardMainEvent', { event: 'dnslog-page-change-menu-callback', data: data })
   })
 
   const updateToken = useMemoizedFn(() => {
@@ -158,13 +159,13 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const DNSMode = selectedMode || ''
     const UseLocal = selectedMode === '内置' ? false : isLocal
 
-    ipcRenderer
-      .invoke('RequireDNSLogDomain', {
-        Addr: '',
+    ipc
+      .invoke('grpc', 'RequireDNSLogDomain', {
+        DNSLogAddr: '',
         DNSMode,
         UseLocal,
       })
-      .then((rsp: { Domain: string; Token: string }) => {
+      .then((rsp) => {
         setToken(rsp.Token)
         setDomain(rsp.Domain)
         sendMenuDnslog({
@@ -187,7 +188,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
           DNS_LOG_PAGE_UPDATE_TOKEN,
           JSON.stringify({
             type: 'builtIn',
-            Addr: '',
+            DNSLogAddr: '',
             DNSMode,
             UseLocal: DNSMode === '内置' ? false : UseLocal,
           }),
@@ -207,13 +208,14 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
   const queryDNSLogByToken = (loading = true) => {
     loading && setLoading(true)
 
-    ipcRenderer
-      .invoke('QueryDNSLogByToken', {
+    ipc
+      .invoke('grpc', 'QueryDNSLogByToken', {
         Token: getToken(),
         DNSMode: getSelectedMode() || '',
         UseLocal: getSelectedMode() === '内置' ? false : getIsLocal(),
       })
-      .then((rsp: { Events: DNSLogEvent[] }) => {
+      .then(dnsLogsForUI)
+      .then((rsp) => {
         const clearTime = clearTimestamp.current
         setRecords(
           rsp.Events.filter((i) => {
@@ -244,8 +246,8 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
 
   const querySupportedDnsLogPlatforms = () => {
     // 调用后端API获取支持的平台
-    ipcRenderer
-      .invoke('QuerySupportedDnsLogPlatforms', {})
+    ipc
+      .invoke('grpc', 'QuerySupportedDnsLogPlatforms', {})
       .then((rsp) => {
         if (rsp && rsp.Platforms) {
           const newArr: string[] = ['内置', ...rsp.Platforms]
@@ -334,9 +336,9 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
   const updateTokenByScript = useMemoizedFn(() => {
     setLoading(true)
     setBtnLoading(true)
-    ipcRenderer
-      .invoke('RequireDNSLogDomainByScript', { ScriptName: params || '' })
-      .then((rsp: { Domain: string; Token: string }) => {
+    ipc
+      .invoke('grpc', 'RequireDNSLogDomainByScript', { ScriptName: params || '' })
+      .then((rsp) => {
         setToken(rsp.Token)
         setDomain(rsp.Domain)
         sendMenuDnslog({
@@ -367,9 +369,10 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
 
   const queryDNSLogTokenByScript = (loading = true) => {
     loading && setLoading(true)
-    ipcRenderer
-      .invoke('QueryDNSLogTokenByScript', { Token: token, ScriptName: params || '' })
-      .then((rsp: { Events: DNSLogEvent[] }) => {
+    ipc
+      .invoke('grpc', 'QueryDNSLogTokenByScript', { Token: token, ScriptName: params || '' })
+      .then(dnsLogsForUI)
+      .then((rsp) => {
         const clearTime = clearTimestamp.current
         setRecords(
           rsp.Events.filter((i) => {

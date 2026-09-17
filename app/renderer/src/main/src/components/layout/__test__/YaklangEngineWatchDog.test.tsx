@@ -3,7 +3,6 @@ import { act, render, waitFor } from '@testing-library/react'
 import { YaklangEngineWatchDog } from '../YaklangEngineWatchDog'
 import type { YaklangEngineWatchDogProps } from '../YaklangEngineWatchDog'
 import emiter from '@/utils/eventBus/eventBus'
-import { yakitEngine } from '@/services/electronBridge'
 import { isEngineConnectionAlive } from '@/components/layout/WelcomeConsoleUtil'
 import { fetchEnv, toEngineHandshakeName } from '@/utils/envfile'
 
@@ -14,11 +13,20 @@ vi.mock('@/utils/eventBus/eventBus', () => ({
   },
 }))
 
-vi.mock('@/services/electronBridge', () => ({
-  yakitEngine: {
-    connectYaklangEngine: vi.fn(),
-    isPortAvailable: vi.fn(),
-    startLocalYaklangEngine: vi.fn(),
+const yakitEngine = vi.hoisted(() => ({
+  connectYaklangEngine: vi.fn(),
+  isPortAvailable: vi.fn(),
+  startLocalYaklangEngine: vi.fn(),
+}))
+vi.mock('../../../../../../../shared/communication/window-client', () => ({
+  ipc: {
+    invoke: (_namespace: string, api: string, params: unknown) => {
+      if (api === 'connect-yaklang-engine') return yakitEngine.connectYaklangEngine(params)
+      if (api === 'is-port-available') return yakitEngine.isPortAvailable(params)
+      if (api === 'start-local-yaklang-engine') return yakitEngine.startLocalYaklangEngine(params)
+      return Promise.resolve(undefined)
+    },
+    on: vi.fn(() => vi.fn()),
   },
 }))
 

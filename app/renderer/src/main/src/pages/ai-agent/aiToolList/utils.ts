@@ -1,3 +1,6 @@
+import { aiToolForUI, grpcPagingToUI, int64ToSafeNumber } from '../grpcAdapters'
+import type { GrpcOutput } from '@/services/ipc'
+import { ipc } from '@/services/ipc'
 import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import type {
@@ -9,13 +12,19 @@ import type {
   ToggleAIToolFavoriteResponse,
 } from '../type/aiTool'
 import { genDefaultPagination } from '@/pages/invoker/schema'
-const { ipcRenderer } = window.require('electron')
 
 export const grpcGetAIToolList: APIFunc<GetAIToolListRequest, GetAIToolListResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetAIToolList', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'GetAIToolList', params)
+      .then((res) =>
+        resolve({
+          ...res,
+          Tools: res.Tools.map(aiToolForUI),
+          Pagination: grpcPagingToUI(res.Pagination),
+          Total: int64ToSafeNumber(res.Total),
+        }),
+      )
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcGetAIToolList 失败:' + err)
         reject(err)
@@ -23,7 +32,7 @@ export const grpcGetAIToolList: APIFunc<GetAIToolListRequest, GetAIToolListRespo
   })
 }
 
-export const grpcGetAIToolById: APIFunc<number, AITool | null> = (toolId, hiddenError) => {
+export const grpcGetAIToolById: APIFunc<string | number, AITool | null> = (toolId, hiddenError) => {
   return new Promise((resolve, reject) => {
     if (!toolId) {
       if (!hiddenError) yakitNotify('error', `获取AITool详情失败: id(${toolId})数据异常`)
@@ -37,11 +46,11 @@ export const grpcGetAIToolById: APIFunc<number, AITool | null> = (toolId, hidden
       OnlyFavorites: false,
       ToolID: toolId,
     }
-    ipcRenderer
-      .invoke('GetAIToolList', query)
-      .then((res: GetAIToolListResponse) => {
+    ipc
+      .invoke('grpc', 'GetAIToolList', query)
+      .then((res) => {
         if (res && res.Tools && res.Tools.length > 0) {
-          resolve(res.Tools[0])
+          resolve(aiToolForUI(res.Tools[0]))
         } else {
           resolve(null)
         }
@@ -53,13 +62,13 @@ export const grpcGetAIToolById: APIFunc<number, AITool | null> = (toolId, hidden
   })
 }
 
-export const grpcToggleAIToolFavorite: APIFunc<ToggleAIToolFavoriteRequest, ToggleAIToolFavoriteResponse> = (
+export const grpcToggleAIToolFavorite: APIFunc<ToggleAIToolFavoriteRequest, GrpcOutput<'ToggleAIToolFavorite'>> = (
   params,
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('ToggleAIToolFavorite', params)
+    ipc
+      .invoke('grpc', 'ToggleAIToolFavorite', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcToggleAIToolFavorite 失败:' + err)
@@ -68,10 +77,10 @@ export const grpcToggleAIToolFavorite: APIFunc<ToggleAIToolFavoriteRequest, Togg
   })
 }
 
-export const grpcDeleteAITool: APIFunc<DeleteAIToolRequest, ToggleAIToolFavoriteResponse> = (params, hiddenError) => {
+export const grpcDeleteAITool: APIFunc<DeleteAIToolRequest, GrpcOutput<'DeleteAITool'>> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteAITool', params)
+    ipc
+      .invoke('grpc', 'DeleteAITool', { ...params, ToolNames: params.ToolNames ? [params.ToolNames] : [] })
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcDeleteAITool 失败:' + err)

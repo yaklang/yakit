@@ -1,3 +1,5 @@
+import { risksForUI } from '@/pages/risks/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useState } from 'react'
 import { DemoVirtualTable } from '@/demoComponents/virtualTable/VirtualTable'
@@ -8,8 +10,6 @@ import { YakEditor } from '@/utils/editors'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface RiskTableDemoProp {}
-
-const { ipcRenderer } = window.require('electron')
 
 export const RiskTableDemo: React.FC<RiskTableDemoProp> = (props) => {
   const { t } = useI18nNamespaces(['components'])
@@ -37,11 +37,12 @@ export const RiskTableDemo: React.FC<RiskTableDemoProp> = (props) => {
               return new Promise((resolve, reject) => {
                 if (!data) {
                   // info("加载初始化数据")
-                  ipcRenderer
-                    .invoke('QueryRisks', {
+                  ipc
+                    .invoke('grpc', 'QueryRisks', {
                       Pagination: { Limit: 10, Page: 1, OrderBy: 'id', Order: 'asc' }, // genDefaultPagination(),
                       FromId: 0,
                     })
+                    .then(risksForUI)
                     .then((rsp: { Data: Risk[] }) => {
                       resolve({
                         data: rsp.Data,
@@ -50,11 +51,12 @@ export const RiskTableDemo: React.FC<RiskTableDemoProp> = (props) => {
                     })
                   return
                 } else {
-                  ipcRenderer
-                    .invoke('QueryRisks', {
+                  ipc
+                    .invoke('grpc', 'QueryRisks', {
                       Pagination: { Limit: 10, Page: 1, OrderBy: 'id', Order: 'asc' },
                       FromId: data.Id,
                     })
+                    .then(risksForUI)
                     .then((rsp: { Data: Risk[]; Total: number; Pagination: Paging }) => {
                       resolve({
                         data: rsp.Data,

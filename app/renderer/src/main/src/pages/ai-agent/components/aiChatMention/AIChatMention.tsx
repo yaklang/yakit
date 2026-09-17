@@ -620,7 +620,7 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
         historyGenerateKnowledgeList: [],
         Type: '',
         Name: '',
-        BaseID: 0,
+        BaseID: '0',
         BaseIndex: '',
         Attributes: [],
         Rationale: '',

@@ -37,7 +37,7 @@ const LocalStorageKey = 'httpFuzzer-shortcut-key-events'
 export const getStorageHttpFuzzerShortcutKeyEvents = () => {
   getLocalValue(LocalStorageKey)
     .then((res) => {
-      if (!res) return
+      if (typeof res !== 'string' || !res) return
       try {
         const data: EventsType = JSONParseLog(res, { page: 'httpFuzzer', fun: 'getStorageHttpFuzzerShortcutKeyEvents' })
         currentKeyEvents = addScopeShow(data, HttpFuzzerShortcutKeyEvents)

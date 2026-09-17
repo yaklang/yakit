@@ -1,5 +1,4 @@
-import { yakitDialog } from '@/services/electronBridge'
-
+import { ipc } from '../../../../../shared/communication/window-client'
 /** 引用 electron.d.ts @OpenDialogOptions */
 export interface OpenDialogOptions {
   title?: string
@@ -66,8 +65,8 @@ export interface OpenDialogReturnValue {
 /** @name 选择文件(夹)-打开系统文件弹窗 */
 export const handleOpenFileSystemDialog: (options: OpenDialogOptions) => Promise<OpenDialogReturnValue> = (options) => {
   return new Promise((resolve, reject) => {
-    yakitDialog
-      .openFileSystemDialog(options)
+    ipc
+      .invoke('local', 'open-file-system-dialog', options)
       .then((res: OpenDialogReturnValue) => {
         resolve(res)
       })
@@ -148,8 +147,8 @@ interface SaveDialogReturnValue {
 /** @name 保存文件-打开系统文件弹窗 */
 export const handleSaveFileSystemDialog: (options: SaveDialogOptions) => Promise<SaveDialogReturnValue> = (options) => {
   return new Promise((resolve, reject) => {
-    yakitDialog
-      .saveFileSystemDialog(options)
+    ipc
+      .invoke('local', 'save-file-system-dialog', options)
       .then((res: SaveDialogReturnValue) => {
         resolve(res)
       })

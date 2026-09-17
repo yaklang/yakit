@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type { CodeToInfoRequestProps, CodeToInfoResponseProps, PluginDataProps, YakParamProps } from '../pluginsType'
 import type { API } from '@/services/swagger/resposeType'
 import { yakitNotify } from '@/utils/notification'
@@ -7,8 +8,6 @@ import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { Uint8ArrayToString } from '@/utils/str'
 import { pluginParamsConvertLocalToOnline, riskDetailConvertLocalToOnline } from '@/pages/pluginEditor/utils/convert'
 import type { APIFunc } from '@/apiUtils/type'
-
-const { ipcRenderer } = window.require('electron')
 
 /** -------------------- 数据结构转换 Start -------------------- */
 /**
@@ -172,9 +171,9 @@ export const onCodeToInfo: APIFunc<PluginCodeToInfoRequest, CodeToInfoResponsePr
       YakScriptCode: params.code,
     }
     // console.log("onCodeToInfo-request", JSON.stringify(request))
-    ipcRenderer
-      .invoke('YaklangInspectInformation', request)
-      .then((res: CodeToInfoResponseProps) => {
+    ipc
+      .invoke('grpc', 'YaklangInspectInformation', request)
+      .then((res) => {
         // console.log("源码提取参数和风险信息", res)
         resolve({
           Information: res.Information || [],

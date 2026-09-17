@@ -1,23 +1,21 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { areMITMDebugHooksEnabled } from '../mitmDebugHooks'
 
-const originalYakitBridge = window.yakitBridge
+const originalDebugHooks = window.yakitDebugHooks
 
 afterEach(() => {
-  window.yakitBridge = originalYakitBridge
+  window.yakitDebugHooks = originalDebugHooks
 })
 
 describe('MITM debug hook gate', () => {
   it('is disabled when preload does not explicitly enable it', () => {
-    window.yakitBridge = { app: {} } as YakitBridge
+    window.yakitDebugHooks = undefined
 
     expect(areMITMDebugHooksEnabled()).toBe(false)
   })
 
   it('is enabled only by the synchronous preload capability', () => {
-    window.yakitBridge = {
-      app: { isMITMDebugHooksEnabled: () => true },
-    } as YakitBridge
+    window.yakitDebugHooks = true
 
     expect(areMITMDebugHooksEnabled()).toBe(true)
   })

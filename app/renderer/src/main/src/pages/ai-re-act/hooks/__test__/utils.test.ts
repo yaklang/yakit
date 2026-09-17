@@ -45,11 +45,11 @@ describe('utils core helpers', () => {
     const base = genBaseAIChatData({
       AIService: 'svc',
       AIModelName: 'model',
-      Timestamp: 123,
+      Timestamp: '123',
     } as any)
     expect(base.AIService).toBe('svc')
     expect(base.AIModelName).toBe('model')
-    expect(base.Timestamp).toBe(123)
+    expect(base.Timestamp).toBe('123')
     expect(base.id).toBeTruthy()
     expect(base.stageSettled).toBe(false)
   })

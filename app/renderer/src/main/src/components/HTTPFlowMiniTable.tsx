@@ -1,3 +1,5 @@
+import { ipc } from '../../../../../shared/communication/window-client'
+import { queryHTTPFlows as requestHTTPFlows } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
 import React, { useEffect, useRef, useState } from 'react'
 import type { YakQueryHTTPFlowRequest } from '../utils/yakQueryHTTPFlow'
 import { genDefaultPagination, type QueryGeneralResponse } from '../pages/invoker/schema'
@@ -10,8 +12,6 @@ import { showDrawer } from '../utils/showModal'
 import ReactResizeDetector from 'react-resize-detector'
 import { useDebounceFn, useInViewport } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface HTTPFlowMiniTableProp {
   simple?: boolean
@@ -196,11 +196,14 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                           onClick={() => {
                             const req = findHTTPFlowById(i)
                             if (req) {
-                              ipcRenderer.invoke('send-to-tab', {
-                                type: 'fuzzer',
+                              ipc.invoke('local', 'ForwardMainEvent', {
+                                event: 'fetch-send-to-tab',
                                 data: {
-                                  isHttps: req.IsHTTPS,
-                                  request: Buffer.from(req.Request).toString(),
+                                  type: 'fuzzer',
+                                  data: {
+                                    isHttps: req.IsHTTPS,
+                                    request: Buffer.from(req.Request).toString(),
+                                  },
                                 },
                               })
                             }
@@ -257,7 +260,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
     if (!inViewport) {
       return
     }
-    ipcRenderer.invoke('QueryHTTPFlows', { ...props.filter }).then((data: QueryGeneralResponse<HTTPFlow>) => {
+    requestHTTPFlows({ ...props.filter }).then((data: QueryGeneralResponse<HTTPFlow>) => {
       // if ((data.Data || []).length > 0 && (response.Data || []).length > 0) {
       //     if (data.Data[0].Id === response.Data[0].Id) {
       //         props.onTotal(data.Total)

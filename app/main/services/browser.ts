@@ -1,0 +1,291 @@
+import { registerMainMethod } from '../ipc/index'
+import type { BrowserWindow } from 'electron'
+import type { YakClient } from '../../shared/generated/grpc/types'
+
+import { launch, killAll, getChromePath, type Options } from 'chrome-launcher'
+import fs from 'node:fs'
+import path from 'node:path'
+import { getYakitHome } from '../filePath'
+const getMyUserDataDir = () => path.join(getYakitHome(), 'chrome-profile')
+
+const disableExtensionsExceptStr = (host: string, port: string | number, username: string, password: string) => `
+var config = {
+    mode: "fixed_servers",
+    rules: {
+      singleProxy: {
+        scheme: "http",
+        host: ${JSON.stringify(host)},
+        port: ${Number(port)}
+      },
+    }
+  };
+
+chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
+
+function callbackFn(details) {
+return {
+    authCredentials: {
+        username: ${JSON.stringify(username)},
+        password: ${JSON.stringify(password)}
+    }
+};
+}
+
+chrome.webRequest.onAuthRequired.addListener(
+        callbackFn,
+        {urls: ["<all_urls>"]},
+        ['blocking']
+);
+`
+
+const manifestStr = `
+{
+    "version": "1.0.0",
+    "manifest_version": 2,
+    "name": "YakitProxy",
+    "permissions": [
+        "proxy",
+        "tabs",
+        "unlimitedStorage",
+        "storage",
+        "<all_urls>",
+        "webRequest",
+        "webRequestBlocking"
+    ],
+    "background": {
+        "scripts": ["background.js"]
+    },
+    "minimum_chrome_version":"22.0.0"
+}
+`
+
+// 生成临时文件夹
+const tempFile = 'yakit-proxy'
+// 生成临时文件名
+const exceptFileName = 'background.js'
+const manifestFileName = 'manifest.json'
+// 创建临时文件的完整路径
+const getExceptFilePath = () => path.join(getYakitHome(), tempFile, exceptFileName)
+const getManifestFilePath = () => path.join(getYakitHome(), tempFile, manifestFileName)
+// 获取文件夹路径
+const getCommonFilePath = () => path.dirname(getExceptFilePath())
+// 是否创建用户名/密码文件
+let isCreateFile = false
+
+function deleteFolderRecursive(folderPath: string) {
+  if (fs.existsSync(folderPath)) {
+    fs.readdirSync(folderPath).forEach((file) => {
+      const filePath = path.join(folderPath, file)
+      const stat = fs.statSync(filePath)
+
+      if (stat.isFile()) {
+        fs.unlinkSync(filePath)
+      } else if (stat.isDirectory()) {
+        deleteFolderRecursive(filePath)
+      }
+    })
+    fs.rmdirSync(folderPath)
+  }
+}
+
+// 删除临时文件夹及文件夹中所有文件
+const deleteCreateFile = () => {
+  if (isCreateFile) {
+    const dirPath = getCommonFilePath()
+    // 判断文件夹是否存在
+    if (fs.existsSync(dirPath)) {
+      // 读取文件夹中的文件和子文件夹
+      fs.readdirSync(dirPath).forEach((file) => {
+        const filePath = path.join(dirPath, file)
+
+        // 检查文件类型
+        const stat = fs.statSync(filePath)
+
+        if (stat.isFile()) {
+          // 如果是文件，则删除文件
+          fs.unlinkSync(filePath)
+        } else if (stat.isDirectory()) {
+          // 如果是文件夹，则递归删除文件夹及其内容
+          deleteFolderRecursive(filePath)
+        }
+      })
+
+      // 删除空文件夹
+      fs.rmdirSync(dirPath)
+    } else {
+      console.log(`not found ${dirPath} .`)
+    }
+    isCreateFile = false
+  }
+}
+
+interface ChromeParams {
+  port: number | string
+  host: string
+  chromePath?: string
+  userDataDir?: string
+  username: string
+  password: string
+  disableCACertPage: boolean
+  chromeFlags: { disabled?: boolean; parameterName: string; variableValues?: string }[]
+}
+export function registerBrowserServices() {
+  // 启动的数量
+  let startNum = 0
+  // 启动的状态
+  let started = false
+  registerMainMethod('IsChromeLaunched', async () => {
+    return started
+  })
+
+  registerMainMethod('getDefaultUserDataDir', async () => {
+    return getMyUserDataDir()
+  })
+
+  registerMainMethod('LaunchChromeWithParams', async (params) => {
+    const { port, host, chromePath, userDataDir, username = '', password = '', disableCACertPage, chromeFlags } = params
+    const portInt = parseInt(`${port}`)
+    const hostRaw = `${host}`
+    if (hostRaw === 'undefined' || hostRaw.includes('/') || hostRaw.split(':').length > 1) {
+      throw Error(`host: ${hostRaw} is invalid or illegal`)
+    }
+
+    // https://peter.sh/experiments/chromium-command-line-switches/
+    // opts:
+    //   --no-system-proxy-config-service ⊗	Do not use system proxy configuration service.
+    //   --no-proxy-server ⊗	Don't use a proxy server, always make direct connections. Overrides any other proxy server flags that are passed. ↪
+    const debugPortItem = chromeFlags.find((item) => !item.disabled && item.parameterName === '--remote-debugging-port')
+    const debugPort = Number(`${debugPortItem?.variableValues || ''}`)
+
+    const launchOpt: Options = {
+      startingUrl: disableCACertPage === false ? 'http://mitm' : 'chrome://newtab', // 确保在启动时打开 chrome://newtab 页面。
+      logLevel: 'verbose',
+      ignoreDefaultFlags: true,
+      chromeFlags: [
+        `--proxy-server=http://${hostRaw}:${portInt}`, // 设置具体的代理服务器地址和端口。
+        // ignoreDefaultFlags 为 true 时 chrome-launcher 不再注入默认抑制参数，
+        // 需手动补上，否则每次启动都会弹出 Chrome 首次运行欢迎框/设为默认浏览器询问
+        '--no-first-run', // 跳过首次运行体验（欢迎页/设为默认浏览器弹框）
+        '--no-default-browser-check', // 不检查是否为默认浏览器
+        ...chromeFlags
+          .filter((item) => !item.disabled && item.parameterName !== '--remote-debugging-port')
+          .map((item) => {
+            if (item.variableValues) {
+              return item.parameterName + '=' + item.variableValues
+            } else {
+              return item.parameterName
+            }
+          }),
+      ],
+    }
+    if (debugPortItem) {
+      if (!Number.isInteger(debugPort) || debugPort < 1 || debugPort > 65535) {
+        throw Error(
+          `--remote-debugging-port 的端口值「${debugPortItem.variableValues || ''}」无效，请填写 1-65535 之间的端口号`,
+        )
+      }
+      launchOpt.port = debugPort
+    }
+    if (userDataDir) {
+      launchOpt['userDataDir'] = userDataDir
+    }
+    if (chromePath) {
+      launchOpt['chromePath'] = chromePath
+    }
+    // 用户名/密码 参数重构
+    if (username.length > 0 && password.length > 0) {
+      try {
+        // 要写入的内容
+        const exceptContent = disableExtensionsExceptStr(host, port, username, password)
+        const manifestContent = manifestStr
+
+        const dirPath = getCommonFilePath()
+        // 创建文件夹 { recursive: true } 选项确保如果文件夹的上级目录也不存在时，一同创建。
+        if (!fs.existsSync(dirPath)) {
+          fs.mkdirSync(dirPath, { recursive: true })
+        }
+
+        // 使用 fs.writeFileSync创建文件 写入内容到临时文件
+        fs.writeFileSync(getExceptFilePath(), exceptContent)
+        fs.writeFileSync(getManifestFilePath(), manifestContent)
+
+        isCreateFile = true
+
+        launchOpt.chromeFlags?.unshift(`--disable-extensions-except=${dirPath}`, `--load-extension=${dirPath}`)
+      } catch (error) {
+        console.log(`操作失败：${error}`)
+      }
+    }
+    return launch(launchOpt).then((chrome) => {
+      if (!chrome.process) {
+        throw Error(
+          `端口 ${debugPort} 已被占用（--remote-debugging-port），浏览器未启动。请关闭占用该端口的进程，或修改启动参数中的端口后重试`,
+        )
+      }
+      chrome.process.on('exit', () => {
+        // 在这里执行您想要的操作，当所有chrome实例都关闭时
+        startNum -= 1
+        if (startNum <= 0) {
+          started = false
+          deleteCreateFile()
+        }
+      })
+      startNum += 1
+      started = true
+      return ''
+    })
+  })
+
+  function canAccess(file: string | undefined) {
+    if (!file) {
+      return false
+    }
+    try {
+      fs.accessSync(file)
+      return true
+    } catch (e) {
+      return false
+    }
+  }
+
+  function darwinFast() {
+    const priorityOptions = [
+      process.env.CHROME_PATH,
+      process.env.LIGHTHOUSE_CHROMIUM_PATH,
+      '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    ]
+    for (const chromePath of priorityOptions) {
+      if (chromePath && canAccess(chromePath)) return chromePath
+    }
+    return null
+  }
+
+  const judgePath = () => {
+    switch (process.platform) {
+      // mac存在卡顿问题 因此需单独处理
+      case 'darwin':
+        return darwinFast()
+      case 'win32':
+        return getChromePath()
+      case 'linux':
+        return getChromePath()
+    }
+  }
+
+  registerMainMethod('GetChromePath', async () => {
+    try {
+      return judgePath() ?? null
+    } catch (e) {
+      return null
+    }
+  })
+
+  registerMainMethod('StopAllChrome', async () => {
+    deleteCreateFile()
+    startNum = 0
+    started = false
+    const errors = await killAll()
+    if (errors.length) throw new AggregateError(errors, errors.map((error) => error.message).join('; '))
+  })
+}

@@ -1,3 +1,4 @@
+import { useDownloadTasks } from '../hooks/useDownloadTasks'
 import { type FC, memo, useEffect, useRef, useState } from 'react'
 
 import { Progress, Tooltip } from 'antd'
@@ -24,15 +25,9 @@ import {
   YakitSpinLogoSvgIcon,
 } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
-import { downloadWithEvents, exclude } from '../utils'
+import { exclude } from '../utils'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
-
-const { ipcRenderer } = window.require('electron')
-
-export const installWithEvents = (url: string, binary: { Name: string; Force: boolean }, token: string) => {
-  return downloadWithEvents(url, binary, token)
-}
 
 const onCloseKnowledgeRepository = () => {
   emiter.emit('closePage', JSON.stringify({ route: YakitRoute.AI_REPOSITORY }))
@@ -44,6 +39,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
   binariesToInstallRefreshAsync,
   isShow = true,
 }) => {
+  const downloads = useDownloadTasks()
   const [installTokens, setInstallTokens] = useState<string[]>([])
   const [overallProgress, setOverallProgress] = useState(0)
   const progressMap = useRef<Record<string, number>>({})
@@ -60,6 +56,27 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
     }
   }, [])
 
+  const installBinary = (binary: { Name: string; installToken: string }, batchTokens?: string[]) =>
+    downloads
+      .run(
+        'InstallThirdPartyBinary',
+        { Name: binary.Name, Force: true },
+        {
+          key: binary.installToken,
+          onData: (data) => {
+            if (data.Progress <= 0) return
+            const value = Math.ceil(data.Progress)
+            progressMap.current[binary.installToken] = value
+            setEachProgress((previous) => ({ ...previous, [binary.installToken]: value }))
+            if (batchTokens?.length) {
+              const sum = batchTokens.reduce((total, token) => total + (progressMap.current[token] || 0), 0)
+              setOverallProgress(Math.floor(sum / batchTokens.length))
+            }
+          },
+        },
+      )
+      .finally(() => setInstallTokens((previous) => previous.filter((token) => token !== binary.installToken)))
+
   // 并发安装所有
   const { run: runInstallAll, loading } = useRequest(
     async () => {
@@ -72,13 +89,13 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
         setOverallProgress(0)
         progressMap.current = {}
         const tokens = emptyInstallPathItem.map((it) => it.installToken)
-        setInstallTokens(tokens)
+        setInstallTokens((previous) => [...new Set([...previous, ...tokens])])
 
         // 并发执行安装
-        const promises = emptyInstallPathItem.map((b) =>
-          installWithEvents('InstallThirdPartyBinary', { Name: b.Name, Force: true }, b.installToken),
-        )
-        await Promise.all(promises)
+        const promises = emptyInstallPathItem.map((b) => installBinary(b, tokens))
+        const results = await Promise.allSettled(promises)
+        const failure = results.find((result) => result.status === 'rejected')
+        if (failure?.status === 'rejected') throw failure.reason
       }
 
       return 'ok'
@@ -90,60 +107,18 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
           success('知识库所需插件安装完成')
           setOverallProgress(100)
           onInstallPlug(false)
-          setInstallTokens([])
           await binariesToInstallRefreshAsync()
         } catch (error) {
           failed(error + '')
         }
       },
       onError: (err) => {
+        if ('code' in err && err.code === 'ABORTED') return
         failed(`插件安装失败: ${err}`)
-        setInstallTokens([])
         setOverallProgress(0)
       },
     },
   )
-
-  // 进度监听
-  useEffect(() => {
-    installTokens.forEach((token) => {
-      const onData = (_, data: ExecResult) => {
-        if (data.Progress > 0) {
-          const progressValue = Math.ceil(data.Progress)
-
-          progressMap.current[token] = progressValue
-
-          setEachProgress({ ...progressMap.current })
-
-          // 计算总进度
-          const values = Object.values(progressMap.current)
-          const sum = values.reduce((a, b) => a + b, 0)
-          const avg = installTokens.length > 0 ? Math.floor(sum / installTokens.length) : 0
-
-          setOverallProgress(avg)
-        }
-      }
-
-      const onError = (_, error) => {
-        failed(`下载失败:${error}`)
-      }
-
-      const onEnd = () => {}
-
-      ipcRenderer.on(`${token}-data`, onData)
-      ipcRenderer.on(`${token}-error`, onError)
-      ipcRenderer.on(`${token}-end`, onEnd)
-    })
-
-    return () => {
-      installTokens.forEach((token) => {
-        ipcRenderer.invoke('cancel-InstallThirdPartyBinary', token)
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
-      })
-    }
-  }, [installTokens])
 
   const showDetail = () => {
     setShowDetailStatus(true)
@@ -159,12 +134,12 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
         return prev
       })
 
-      await installWithEvents('InstallThirdPartyBinary', { Name: binary.Name, Force: true }, binary.installToken)
+      await installBinary(binary)
       await binariesToInstallRefreshAsync()
       success(`${binary.Name} 下载完成`)
       onInstallPlug(false)
-      setInstallTokens([])
     } catch (err) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'ABORTED') return
       failed(`${binary.Name} 下载失败: ${err}`)
     }
   }

@@ -1,5 +1,6 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -19,7 +20,6 @@ import { DownloadOutlined, PlayOutlined, TrashOutlined, RefreshOutlined } from '
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
 const { Text } = Typography
 
 export interface ThirdPartyBinary {
@@ -81,9 +81,9 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
   // Fetch binaries list
   const fetchBinaries = useMemoizedFn(() => {
     setRefreshLoading(true)
-    ipcRenderer
-      .invoke('ListThirdPartyBinary', {})
-      .then((res: { Binaries: ThirdPartyBinary[] }) => {
+    ipc
+      .invoke('grpc', 'ListThirdPartyBinary', {})
+      .then((res) => {
         setBinaries(res.Binaries || [])
       })
       .catch((err) => {
@@ -97,82 +97,73 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
   // Check if binary is ready
   const checkBinaryReady = useMemoizedFn(async (name: string) => {
     try {
-      const res = await ipcRenderer.invoke('IsThirdPartyBinaryReady', { Name: name })
+      const res = await ipc.invoke('grpc', 'IsThirdPartyBinaryReady', { Name: name })
       return res.IsReady
     } catch (err) {
       return false
     }
   })
 
-  // Install progress stream handling
-  useEffect(() => {
-    ipcRenderer.on(`${installToken}-data`, async (e, data: ExecResult) => {
-      if (data.Progress > 0) {
-        setInstallProgress(Math.ceil(data.Progress))
-        return
-      }
-      if (!data.IsMessage) {
-        return
-      }
-      setInstallLogs([...getInstallLogs(), Uint8ArrayToString(data.Message)])
-    })
-    ipcRenderer.on(`${installToken}-error`, (e, error) => {
-      failed(`[InstallThirdPartyBinary] error: ${error}`)
-    })
-    ipcRenderer.on(`${installToken}-end`, (e, data) => {
-      info('[InstallThirdPartyBinary] finished')
+  const installControllerRef = useRef<AbortController>()
+  const startsRef = useRef(new Map<string, AbortController>())
+  useEffect(
+    () => () => {
+      installControllerRef.current?.abort()
+      for (const controller of startsRef.current.values()) controller.abort()
+      startsRef.current.clear()
+    },
+    [],
+  )
+  const handleInstall = useMemoizedFn(async () => {
+    installControllerRef.current?.abort()
+    const controller = new AbortController()
+    installControllerRef.current = controller
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      failed(t('YakitNotification.installFailed', { error: String(error) }))
       setInstallLoading(false)
-      fetchBinaries()
-      setTimeout(() => {
-        setInstallVisible(false)
-        setInstallProgress(0)
-        setInstallLogs([])
-        installForm.resetFields()
-      }, 1000)
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-InstallThirdPartyBinary', installToken)
-      ipcRenderer.removeAllListeners(`${installToken}-data`)
-      ipcRenderer.removeAllListeners(`${installToken}-error`)
-      ipcRenderer.removeAllListeners(`${installToken}-end`)
     }
-  }, [installToken])
-
-  // Install binary
-  const handleInstall = useMemoizedFn(() => {
-    installForm.validateFields().then((values) => {
-      const { name, proxy, force } = values
+    try {
+      const { name, proxy, force } = await installForm.validateFields()
+      if (controller.signal.aborted) return
       setInstallProgress(0)
       setInstallLogs([])
       setInstallLoading(true)
-      const newToken = randomString(50)
-      setInstallToken(newToken)
-
-      ipcRenderer
-        .invoke(
-          'InstallThirdPartyBinary',
-          {
-            Name: name,
-            Proxy: proxy || '',
-            Force: force || false,
+      info(t('playground.ThirdPartyBinaryManager.installStarting', { name }))
+      await ipc.openStream(
+        'grpc',
+        'InstallThirdPartyBinary',
+        { Name: name, Proxy: proxy || '', Force: force || false },
+        {
+          token: randomString(50),
+          signal: controller.signal,
+          onData(data) {
+            if (controller.signal.aborted) return
+            if (data.Progress > 0) setInstallProgress(Math.ceil(data.Progress))
+            else if (data.IsMessage) setInstallLogs((logs) => [...logs, Uint8ArrayToString(data.Message)])
           },
-          newToken,
-        )
-        .then(() => {
-          info(t('playground.ThirdPartyBinaryManager.installStarting', { name }))
-        })
-        .catch((err) => {
-          failed(t('YakitNotification.installFailed', { error: String(err) }))
-          setInstallLoading(false)
-        })
-    })
+          onError,
+          onEnd() {
+            if (controller.signal.aborted) return
+            info('[InstallThirdPartyBinary] finished')
+            setInstallLoading(false)
+            fetchBinaries()
+            setInstallVisible(false)
+            installForm.resetFields()
+          },
+        },
+      )
+    } catch (error) {
+      if (error && typeof error === 'object' && 'errorFields' in error) return
+      onError(error)
+    }
   })
 
   // Uninstall binary
   const handleUninstall = useMemoizedFn((name: string) => {
     setLoading(true)
-    ipcRenderer
-      .invoke('UninstallThirdPartyBinary', { Name: name })
+    ipc
+      .invoke('grpc', 'UninstallThirdPartyBinary', { Name: name })
       .then(() => {
         success(t('playground.ThirdPartyBinaryManager.uninstallSuccess', { name }))
         fetchBinaries()
@@ -185,39 +176,45 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
       })
   })
 
-  // Start binary
-  const handleStart = useMemoizedFn(() => {
-    startForm.validateFields().then((values) => {
-      const { args } = values
-      if (!selectedBinary) return
-
-      const argsArray = args ? args.split(' ').filter((arg: string) => arg.trim()) : []
-      const token = randomString(50)
-
-      ipcRenderer
-        .invoke(
-          'StartThirdPartyBinary',
-          {
-            Name: selectedBinary.Name,
-            Args: argsArray,
+  const handleStart = useMemoizedFn(async () => {
+    const binary = selectedBinary
+    if (!binary) return
+    startsRef.current.get(binary.Name)?.abort()
+    const controller = new AbortController()
+    startsRef.current.set(binary.Name, controller)
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      startsRef.current.delete(binary.Name)
+      failed(t('YakitNotification.startFailed', { error: String(error) }))
+    }
+    try {
+      const { args } = await startForm.validateFields()
+      if (controller.signal.aborted) return
+      await ipc.openStream(
+        'grpc',
+        'StartThirdPartyBinary',
+        { Name: binary.Name, Args: args ? args.split(' ').filter((arg: string) => arg.trim()) : [] },
+        {
+          token: randomString(50),
+          signal: controller.signal,
+          onError,
+          onEnd() {
+            if (!controller.signal.aborted) startsRef.current.delete(binary.Name)
           },
-          token,
-        )
-        .then(() => {
-          info(t('playground.ThirdPartyBinaryManager.startSuccess', { name: selectedBinary.Name }))
-          setStartVisible(false)
-          startForm.resetFields()
-          setSelectedBinary(null)
-        })
-        .catch((err) => {
-          failed(t('YakitNotification.startFailed', { error: String(err) }))
-        })
-    })
+        },
+      )
+      if (controller.signal.aborted || startsRef.current.get(binary.Name) !== controller) return
+      info(t('playground.ThirdPartyBinaryManager.startSuccess', { name: binary.Name }))
+      setStartVisible(false)
+      startForm.resetFields()
+      setSelectedBinary(null)
+    } catch (error) {
+      if (error && typeof error === 'object' && 'errorFields' in error) return
+      onError(error)
+    }
   })
-
-  // Cancel install
   const cancelInstall = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-InstallThirdPartyBinary', installToken)
+    installControllerRef.current?.abort()
     setInstallLoading(false)
   })
 

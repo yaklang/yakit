@@ -1,3 +1,9 @@
+import {
+  fetchHTTPFlow as requestHTTPFlow,
+  queryHTTPFlows as requestHTTPFlows,
+} from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { httpFlowsForUI } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { ipc, type GrpcInput } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import {
@@ -155,8 +161,6 @@ import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/
 import { HTTPFlowRuleDataFilter } from '@/components/HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { isFilterSectionActive, safeParse } from '../HTTPHistoryAnalysis.utils'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
-const { ipcRenderer } = window.require('electron')
-
 interface HTTPHistoryFilterProps {
   onSetClickedHttpFlow: (flow?: HTTPFlow) => void
   onSetFirstHttpFlow: (flow?: HTTPFlow) => void
@@ -767,9 +771,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   useDebounceEffect(
     () => {
       if (!inViewport) return
-      ipcRenderer
-        .invoke('HTTPFlowsFieldGroup', { RefreshRequest: true, IsAll: true })
-        .then((rsp: HTTPFlowsFieldGroupResponse) => {
+      ipc
+        .invoke('grpc', 'HTTPFlowsFieldGroup', { RefreshRequest: true, IsAll: true })
+        .then((rsp) => {
           setSuffixList(buildHTTPFlowSuffixOptions(rsp.Suffixes || []))
         })
         .catch(() => {})
@@ -1398,8 +1402,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 })}
                 onClick={(e) => {
                   e.stopPropagation()
-                  ipcRenderer
-                    .invoke('GetHTTPFlowById', { Id: rowData?.Id })
+                  requestHTTPFlow({ Id: rowData?.Id })
                     .then((i: HTTPFlow) => {
                       i.Url && openExternalWebsite(i.Url)
                     })
@@ -1623,7 +1626,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         default: true,
         webSocket: false,
         onClickSingle: (v) => {
-          ipcRenderer.invoke('GetResponseBodyByHTTPFlowID', { Id: v.Id }).then((bytes: { Raw: Uint8Array }) => {
+          ipc.invoke('grpc', 'GetResponseBodyByHTTPFlowID', { Id: v.Id }).then((bytes) => {
             saveABSFileToOpen(`response-body.txt`, bytes.Raw)
           })
         },
@@ -2005,10 +2008,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         break
       }
       case '导出为Excel':
-        onExcelExport(selectedRowKeys.map((id) => Number(id)))
+        onExcelExport(selectedRowKeys.map(String))
         break
       case '导出为HAR':
-        onHarExport(isAllSelect ? [] : selectedRowKeys.map((id) => Number(id)))
+        onHarExport(isAllSelect ? [] : selectedRowKeys.map(String))
         break
       default: {
         const currentItem = menuData.find((f) => f.onClickBatch && f.key === key)
@@ -2145,8 +2148,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
       return { Id: flow.Id, Hash: flow.Hash, Tags: existedTags }
     })
-    ipcRenderer
-      .invoke('SetTagForHTTPFlow', {
+    ipc
+      .invoke('grpc', 'SetTagForHTTPFlow', {
         CheckTags: newList,
       })
       .then(() => {
@@ -2183,8 +2186,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       const existedTags = flow.Tags ? flow.Tags.split('|').filter((i) => !!i && !i.startsWith('YAKIT_COLOR_')) : []
       return { Id: flow.Id, Hash: flow.Hash, Tags: existedTags }
     })
-    ipcRenderer
-      .invoke('SetTagForHTTPFlow', {
+    ipc
+      .invoke('grpc', 'SetTagForHTTPFlow', {
         CheckTags: newList,
       })
       .then(() => {
@@ -2218,8 +2221,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       Hash: flow.Hash,
       Tags: buildFavoriteTags(flow.Tags, favorite),
     }))
-    ipcRenderer
-      .invoke('SetTagForHTTPFlow', {
+    ipc
+      .invoke('grpc', 'SetTagForHTTPFlow', {
         CheckTags: newList,
       })
       .then(() => {
@@ -2243,7 +2246,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
   // 导出为EXCEL
   const [exportDataKey, setExportDataKey] = useState<string[]>([])
-  const onExcelExport = (list: number[]) => {
+  const onExcelExport = (list: (string | number)[]) => {
     const m = showYakitModal({
       title: (modalT) => modalT('HTTPFlowTable.exportFields'),
       content: (modalT) => {
@@ -2304,7 +2307,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   // 导出字段映射配置
   const arrList = useMemo(() => getHTTPFlowExportFields(t), [t])
 
-  const getExcelData = useMemoizedFn((pagination, list: number[]) => {
+  const getExcelData = useMemoizedFn((pagination, list: (string | number)[]) => {
     return new Promise((resolve) => {
       const params: any = {
         ...query,
@@ -2332,8 +2335,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           exportParams.Ids = Ids
         }
         return new Promise((resolve, reject) => {
-          ipcRenderer
-            .invoke('ExportHTTPFlows', exportParams)
+          ipc
+            .invoke('grpc', 'ExportHTTPFlows', exportParams)
+            .then(httpFlowsForUI)
             .then((rsp: YakQueryHTTPFlowResponse) => {
               resolve(rsp)
             })
@@ -2393,9 +2397,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
   // 导出为HAR
   const [exportToken, setExportToken] = useState<string>('')
+  const exportRequest = useRef<GrpcInput<'ExportHTTPFlowStream'>>({})
   const [percentVisible, setPercentVisible] = useState<boolean>(false)
   const exportPageContainerRef = useRef<HTMLElement>()
-  const onHarExport = (ids: number[]) => {
+  const onHarExport = (ids: (string | number)[]) => {
     const m = showYakitModal({
       title: (modalT) => modalT('HTTPFlowTable.exportFields'),
       content: (modalT) => {
@@ -2432,7 +2437,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     })
   }
 
-  const handleClickHarExport = useMemoizedFn((ids: number[]) => {
+  const handleClickHarExport = useMemoizedFn((ids: (string | number)[]) => {
     handleSaveFileSystemDialog({
       title: t('HTTPFlowTable.saveFile'),
       defaultPath: (!toWebFuzzer ? 'History' : 'WebFuzzer') + `-${Date.now()}`,
@@ -2456,15 +2461,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
           const token = randomString(40)
           setExportToken(token)
-          ipcRenderer
-            .invoke('ExportHTTPFlowStream', exportParams, token)
-            .then(() => {
-              exportPageContainerRef.current = getMainOperatorPageBodyContainer()
-              setPercentVisible(true)
-            })
-            .catch((error) => {
-              yakitNotify('error', `[ExportHTTPFlowStream] error: ${error}`)
-            })
+          exportRequest.current = exportParams
+          exportPageContainerRef.current = getMainOperatorPageBodyContainer()
+          setPercentVisible(true)
         }
       }
     })
@@ -2526,8 +2525,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     )
 
     setQueryParams(tabQueryParams)
-    ipcRenderer
-      .invoke('QueryHTTPFlows', requestParams)
+    requestHTTPFlows(requestParams)
       .then((res: YakQueryHTTPFlowResponse) => {
         const resData = res?.Data || []
         const dataHasClassName: HTTPFlow[] = filterHTTPFlowsByFavoriteAndTags(
@@ -2891,7 +2889,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           visible={percentVisible}
           title={t('ImportExportProgress.exportHARData')}
           token={exportToken}
-          apiKey="ExportHTTPFlowStream"
+          openStream={(options) => ipc.openStream('grpc', 'ExportHTTPFlowStream', exportRequest.current, options)}
           onClose={(finish) => {
             setPercentVisible(false)
             if (finish) {

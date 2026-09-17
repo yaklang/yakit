@@ -17,8 +17,6 @@ import {
 import useStore from '../hooks/useStore'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
-
 export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
   const { onOpenEditorDetails } = props
   const { activeFile } = useStore()

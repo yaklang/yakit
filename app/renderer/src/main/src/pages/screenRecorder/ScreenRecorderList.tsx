@@ -1,3 +1,7 @@
+import { int64ToSafeNumber, grpcPageForUI } from '@/utils/int64'
+import { startRecording, stopRecording } from '@/store/screenRecorder'
+import type { GrpcOutput } from '@/services/ipc'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useCreation, useMemoizedFn, useSelections, useUpdateEffect } from 'ahooks'
@@ -45,8 +49,6 @@ import {
 export interface ScreenRecorderListProp {
   refreshTrigger?: boolean
 }
-
-const { ipcRenderer } = window.require('electron')
 
 export interface ScreenRecorder {
   Id: string
@@ -125,19 +127,21 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     if (reload) {
       setLoading(true)
     }
-    ipcRenderer
-      .invoke('QueryScreenRecorders', {
+    ipc
+      .invoke('grpc', 'QueryScreenRecorders', {
         ...params,
         Pagination: paginationProps,
       })
-      .then((item: QueryGeneralResponse<any>) => {
+      .then(grpcPageForUI)
+      .then((res) => ({ ...res, Data: res.Data.map(screenRecorderForUI) }))
+      .then((item) => {
         const newData = Number(item.Pagination.Page) === 1 ? item.Data : data.concat(item.Data)
         const isMore = item.Data.length < item.Pagination.Limit || newData.length === total
         setHasMore(!isMore)
         if (Number(item.Pagination.Page) === 1) {
           setIsRef(!isRef)
         }
-        if (allSelected) setSelected(newData)
+        if (allSelected) setSelected(newData.map((row) => row.Id))
         setData(newData)
         setPagination(item.Pagination || genDefaultPagination(200))
         setTotal(item.Total)
@@ -187,14 +191,16 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
   })
   const onShowScreenRecording = useMemoizedFn(() => {
     setLoading(true)
-    ipcRenderer
-      .invoke('QueryScreenRecorders', {
+    ipc
+      .invoke('grpc', 'QueryScreenRecorders', {
         Pagination: {
           Page: 1,
           Limit: 1,
         },
       })
-      .then((item: QueryGeneralResponse<any>) => {
+      .then(grpcPageForUI)
+      .then((res) => ({ ...res, Data: res.Data.map(screenRecorderForUI) }))
+      .then((item) => {
         setIsShowScreenRecording(!(item.Total > 0))
       })
       .catch((e) => {
@@ -240,8 +246,8 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
         Ids: selected,
       }
     }
-    ipcRenderer
-      .invoke('UploadScreenRecorders', paramsUpload)
+    ipc
+      .invoke('grpc', 'UploadScreenRecorders', paramsUpload)
       .then(() => {
         yakitNotify('success', t('YakitNotification.uploaded'))
         onSearch()
@@ -263,8 +269,8 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
         Ids: selected,
       }
     }
-    ipcRenderer
-      .invoke('DeleteScreenRecorders', paramsRemove)
+    ipc
+      .invoke('grpc', 'DeleteScreenRecorders', paramsRemove)
       .then((e) => {
         yakitNotify('success', t('YakitNotification.deleted'))
         onSearch()
@@ -324,7 +330,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
               <YakitButton
                 htmlType="button"
                 onClick={() => {
-                  ipcRenderer.invoke('cancel-StartScrecorder', screenRecorderInfo.token)
+                  stopRecording(screenRecorderInfo.token)
                   // 延后切换按钮，避免同一次点击落到刚换成的 submit「开始」上，再次提交表单
                   setTimeout(() => setRecording(false), 0)
                   setTimeout(() => {
@@ -384,9 +390,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
               }
               setRemoteValue(Screen_Recorder_Framerate, v.Framerate)
               setRemoteValue(Screen_Recorder_CoefficientPTS, v.CoefficientPTS)
-              ipcRenderer.invoke('StartScrecorder', newValue, screenRecorderInfo.token).then(() => {
-                setRecording(true)
-              })
+              void startRecording(newValue, screenRecorderInfo.token)
             }}
           >
             <Form.Item
@@ -420,7 +424,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
               <YakitButton
                 htmlType="button"
                 onClick={() => {
-                  ipcRenderer.invoke('cancel-StartScrecorder', screenRecorderInfo.token)
+                  stopRecording(screenRecorderInfo.token)
                   // 延后切换按钮，避免同一次点击落到刚换成的 submit「开始」上，再次提交表单
                   setTimeout(() => setRecording(false), 0)
                 }}
@@ -594,8 +598,8 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
     setUrlVideo(`atom://${item.Filename}`)
   }, [item.Filename])
   const onPlayVideo = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('is-file-exists', item.Filename)
+    ipc
+      .invoke('local', 'is-file-exists', item.Filename)
       .then((flag: boolean) => {
         if (flag) {
           setVideoItem(item)
@@ -612,8 +616,9 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
       Id: videoItem.Id,
       Order: order,
     }
-    ipcRenderer
-      .invoke('GetOneScreenRecorders', params)
+    ipc
+      .invoke('grpc', 'GetOneScreenRecorders', params)
+      .then(screenRecorderForUI)
       .then((data) => {
         setVideoItem(data)
         setUrlVideo(`atom://${data.Filename}`)
@@ -636,8 +641,8 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
               ...val,
               Id: item.Id,
             }
-            ipcRenderer
-              .invoke('UpdateScreenRecorders', editItem)
+            ipc
+              .invoke('grpc', 'UpdateScreenRecorders', editItem)
               .then(() => {
                 onUpdateScreenList({
                   ...item,
@@ -684,8 +689,8 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
         Token: userInfo.token,
         Ids: [item.Id],
       }
-      ipcRenderer
-        .invoke('UploadScreenRecorders', paramsUpload)
+      ipc
+        .invoke('grpc', 'UploadScreenRecorders', paramsUpload)
         .then((e) => {
           yakitNotify('success', t('YakitNotification.uploaded'))
         })
@@ -702,8 +707,8 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
     }
   })
   const onRemove = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('DeleteScreenRecorders', {
+    ipc
+      .invoke('grpc', 'DeleteScreenRecorders', {
         Ids: [item.Id],
       })
       .then((e) => {
@@ -743,8 +748,8 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
               <span
                 className={classNames('content-ellipsis')}
                 onClick={() => {
-                  ipcRenderer
-                    .invoke('is-file-exists', item.Filename)
+                  ipc
+                    .invoke('local', 'is-file-exists', item.Filename)
                     .then((flag: boolean) => {
                       if (flag) {
                         openABSFileLocated(item.Filename)
@@ -802,4 +807,8 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
       </YakitModal>
     </>
   )
+}
+
+function screenRecorderForUI(value: GrpcOutput<'GetOneScreenRecorders'>): ScreenRecorder {
+  return { ...value, CreatedAt: int64ToSafeNumber(value.CreatedAt), UpdatedAt: int64ToSafeNumber(value.UpdatedAt) }
 }

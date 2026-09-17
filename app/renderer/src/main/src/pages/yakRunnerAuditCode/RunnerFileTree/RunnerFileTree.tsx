@@ -265,7 +265,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
           },
           Pagination: { ...genDefaultPagination() },
         }).then((res) => {
-          let projectId = 0
+          let projectId: string | number = 0
           let compileProjectName = ''
           if (res.Data.length > 0) {
             projectId = res.Data[0].SSAProjectID

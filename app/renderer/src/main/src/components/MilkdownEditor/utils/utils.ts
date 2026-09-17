@@ -26,7 +26,6 @@ import { keymap } from 'prosemirror-keymap'
 import { splitBlock } from '@milkdown/kit/prose/commands'
 import i18n from '@/i18n/i18n'
 
-const { ipcRenderer } = window.require('electron')
 const tOriginal = i18n.getFixedT(null, 'components')
 
 export const clearContentAndSetBlockType = (nodeType: NodeType, attrs: Attrs | null = null): Command => {

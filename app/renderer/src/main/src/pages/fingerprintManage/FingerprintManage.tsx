@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -54,16 +55,11 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
-import ImportExportModal, {
-  type ExportImportProgress,
-  type ImportExportModalExtra,
-} from './ImportExportModal/ImportExportModal'
+import ImportExportModal, { type ImportExportModalExtra } from './ImportExportModal/ImportExportModal'
 import { randomString } from '@/utils/randomUtil'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { FingerprintRuleDom } from './FingerprintRuleDom'
 import styles from './FingerprintManage.module.scss'
-
-const { ipcRenderer } = window.require('electron')
 
 // #region 指纹管理入口
 interface FingerprintManageProp {}
@@ -87,7 +83,7 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
   // #region 本地表
   const [localFilter, setLocalFilter] = useState<FingerprintFilter>({})
   const [localFingerprintLen, setLocalFingerprintLen] = useState<number>(0)
-  const [rowSelectionKeys, setRowSelectionKeys] = useState<number[]>([])
+  const [rowSelectionKeys, setRowSelectionKeys] = useState<(string | number)[]>([])
   // #endregion
 
   const showEmptyInitRef = useRef<boolean>(true)
@@ -102,47 +98,50 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
 
   // #region 下载默认指纹并自动导入
   const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
-  const [downToken, setDownToken] = useState<string>('')
+  const importControllerRef = useRef<AbortController>()
   const downloadFingerprint = useMemoizedFn(async () => {
+    importControllerRef.current?.abort()
+    const controller = new AbortController()
+    importControllerRef.current = controller
     setDownloadLoading(true)
-    try {
-      const savePath = await ipcRenderer.invoke('GenerateProjectsFilePath', 'fingerprints.zip')
-      await httpDownloadFingerprint(savePath)
-      const token = randomString(40)
-      setDownToken(token)
-      ipcRenderer.invoke('ImportFingerprint', { InputPath: savePath }, token)
-    } catch (error) {
+    let finished = false
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
       setDownloadLoading(false)
       yakitNotify('error', '下载失败：' + error)
     }
+    try {
+      const savePath = await ipc.invoke('local', 'GenerateProjectsFilePath', 'fingerprints.zip')
+      if (controller.signal.aborted) return
+      await httpDownloadFingerprint(savePath)
+      if (controller.signal.aborted) return
+      await ipc.openStream(
+        'grpc',
+        'ImportFingerprint',
+        { InputPath: savePath },
+        {
+          token: randomString(40),
+          signal: controller.signal,
+          onData(data) {
+            if (controller.signal.aborted || finished || data.Progress !== 1) return
+            finished = true
+            setRefreshLocalGroup((prev) => !prev)
+            setLocalFilter((filter) => ({ ...filter }))
+            yakitNotify('success', '下载成功')
+          },
+          onError,
+          onEnd() {
+            if (controller.signal.aborted) return
+            setDownloadLoading(false)
+            yakitNotify('info', '[ImportFingerprint] finished')
+          },
+        },
+      )
+    } catch (error) {
+      onError(error)
+    }
   })
-  useEffect(() => {
-    if (!downToken) {
-      return
-    }
-    ipcRenderer.on(`${downToken}-data`, async (_, data: ExportImportProgress) => {
-      if (data.Progress === 1) {
-        setRefreshLocalGroup((prev) => !prev)
-        setLocalFilter({ ...localFilter })
-        yakitNotify('success', '下载成功')
-      }
-    })
-    ipcRenderer.on(`${downToken}-error`, (_, error) => {
-      yakitNotify('error', `[ImportFingerprint] error: ${error}`)
-    })
-    ipcRenderer.on(`${downToken}-end`, () => {
-      setDownloadLoading(false)
-      yakitNotify('info', `[ImportFingerprint] finished`)
-    })
-    return () => {
-      if (downToken) {
-        ipcRenderer.invoke(`cancel-ImportFingerprint`, downToken)
-        ipcRenderer.removeAllListeners(`${downToken}-data`)
-        ipcRenderer.removeAllListeners(`${downToken}-error`)
-        ipcRenderer.removeAllListeners(`${downToken}-end`)
-      }
-    }
-  }, [downToken])
+  useEffect(() => () => importControllerRef.current?.abort(), [])
   // #endregion
 
   // #region 指纹导入导出
@@ -153,7 +152,7 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
     type: 'import',
     apiKey: 'ImportFingerprint',
   })
-  const includeIdRef = useRef<number[]>([])
+  const includeIdRef = useRef<(string | number)[]>([])
   const handleOpenImportExportHint = useMemoizedFn((extra: Omit<ImportExportModalExtra, 'hint'>) => {
     if (importExportExtra.hint) return
     importExportContainerRef.current = getMainOperatorPageBodyContainer()
@@ -658,12 +657,12 @@ type ColumnTypes = Exclude<EditableTableProps['columns'], undefined>
 interface LocalFingerprintTableProps {
   filter: FingerprintFilter
   onSetFilter: React.Dispatch<React.SetStateAction<FingerprintFilter>>
-  rowSelectionKeys: number[]
-  onSetRowSelectionKeys: React.Dispatch<React.SetStateAction<number[]>>
+  rowSelectionKeys: (string | number)[]
+  onSetRowSelectionKeys: React.Dispatch<React.SetStateAction<(string | number)[]>>
   onSetRefreshLocalGroup: React.Dispatch<React.SetStateAction<boolean>>
   onSetLocalFingerprintLen: React.Dispatch<React.SetStateAction<number>>
   onImport: () => void
-  onExport: (includeId: number[]) => void
+  onExport: (includeId: (string | number)[]) => void
 }
 const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props) => {
   const {
@@ -1446,7 +1445,7 @@ const EditableCell = <T,>({
 // #region 更新指纹添加到组
 interface UpdateFingerprintToGroupProps {
   allCheck: boolean
-  rules: number[]
+  rules: (string | number)[]
   filters: FingerprintFilter
   /** 完成操作后触发指纹组数据刷新 */
   callback: () => void

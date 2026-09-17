@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Divider, Form, Tooltip, Typography } from 'antd'
 import emiter from '@/utils/eventBus/eventBus'
@@ -88,8 +89,6 @@ export interface MITMServerHijackingProp {
   updatesPlugins?: Map<string, StreamUpdateState>
   pluginOutputRef: React.RefObject<HTMLDivElement>
 }
-
-const { ipcRenderer } = window.require('electron')
 
 export interface CaCertData {
   CaCerts: Uint8Array
@@ -182,7 +181,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = React.memo
           : initPageInfo()?.immediatelyLaunchedInfo
       if (info && status !== 'idle') {
         if (info.host && info.port) {
-          ipcRenderer.invoke('IsChromeLaunched').then((e) => {
+          ipc.invoke('local', 'IsChromeLaunched', {}).then((e) => {
             if (e) {
               const value: MITMHotPortRequest = {
                 host: info?.host!,

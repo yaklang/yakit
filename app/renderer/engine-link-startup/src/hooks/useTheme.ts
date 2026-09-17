@@ -1,6 +1,5 @@
+import { ipc } from '../../../../shared/communication/window-client'
 import { create } from 'zustand'
-import { yakitTheme } from '@/utils/electronBridge'
-
 export type Theme = 'light' | 'dark'
 export type ThemeMode = Theme | 'system'
 let cleanupThemeListener: (() => void) | null = null
@@ -37,7 +36,9 @@ export const useTheme = create<{
   applyDocument(initialTheme)
 
   if (!cleanupThemeListener) {
-    cleanupThemeListener = yakitTheme.onUpdated((theme: string) => {
+    cleanupThemeListener = ipc.on('aux-window:app-sync', (message: { type: string; payload: string }) => {
+      if (message.type !== 'theme') return
+      const theme = message.payload
       const mode: ThemeMode = isThemeMode(theme) ? theme : resolveTheme(theme)
       const resolved = resolveTheme(mode)
       applyDocument(resolved)
@@ -54,7 +55,7 @@ export const useTheme = create<{
       set({ theme, themeMode: theme })
       if (!save) return
       localStorage.setItem('theme', theme)
-      yakitTheme.setTheme(theme)
+      ipc.invoke('local', 'aux-window:app-sync', { type: 'theme', payload: theme })
     },
     persistThemeMode: () => {
       const { themeMode } = get()

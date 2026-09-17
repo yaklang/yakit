@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type {
   NewPortScanExecuteProps,
@@ -44,13 +45,7 @@ import type { PluginFilterParams, PluginSearchParams } from '@/pages/plugins/bas
 import { defaultSearch } from '@/pages/plugins/builtInData'
 import { defaultLinkPluginConfig } from '@/pages/plugins/utils'
 import { getLinkPluginConfig } from '@/pages/plugins/singlePluginExecution/SinglePluginExecution'
-import {
-  type RecordPortScanRequest,
-  apiCancelPortScan,
-  apiCancelSimpleDetect,
-  apiPortScan,
-  apiSimpleDetect,
-} from './utils'
+import { type RecordPortScanRequest, apiPortScan, apiSimpleDetect } from './utils'
 import type { CheckboxValueType } from '@/utils/antdCompat'
 import { PresetPorts } from '@/pages/portscan/schema'
 import { yakitNotify } from '@/utils/notification'
@@ -68,8 +63,6 @@ import { RemotePortScanGV } from '@/enums/portScan'
 import { JSONParseLog } from '@/utils/tool'
 
 const NewPortScanExtraParamsDrawer = React.lazy(() => import('./NewPortScanExtraParamsDrawer'))
-
-const { ipcRenderer } = window.require('electron')
 
 export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['portscan'])
@@ -490,13 +483,15 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
         const simpleDetectPrams: RecordPortScanRequest = {
           PortScanRequest,
         }
-        apiSimpleDetect(simpleDetectPrams, tokenRef.current).then(() => {
+        apiSimpleDetect(simpleDetectPrams, portScanStreamEvent.open).then(() => {
+          if (!portScanStreamEvent.isActive()) return
           setExecuteStatus('process')
           setIsExpand(false)
           portScanStreamEvent.start()
         })
       } else {
-        apiPortScan(executeParams, tokenRef.current).then(() => {
+        apiPortScan(executeParams, portScanStreamEvent.open).then(() => {
+          if (!portScanStreamEvent.isActive()) return
           setExecuteStatus('process')
           setIsExpand(false)
           portScanStreamEvent.start()
@@ -506,12 +501,12 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
     /**取消执行 */
     const onStopExecute = useMemoizedFn(() => {
       if (isEnpriTrace()) {
-        apiCancelSimpleDetect(tokenRef.current).then(() => {
+        portScanStreamEvent.cancel().then(() => {
           portScanStreamEvent.stop()
           setExecuteStatus('finished')
         })
       } else {
-        apiCancelPortScan(tokenRef.current).then(() => {
+        portScanStreamEvent.cancel().then(() => {
           portScanStreamEvent.stop()
           setExecuteStatus('finished')
         })
@@ -625,10 +620,10 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
   }, [inViewport])
 
   const onGetPortTemplates = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('fetch-local-cache', 'ScanPortTemplates')
-      .then((value: string) => {
-        if (value) {
+    ipc
+      .invoke('local', 'fetch-local-cache', 'ScanPortTemplates')
+      .then((value) => {
+        if (typeof value === 'string' && value) {
           try {
             const templates = JSON.parse(value)
             setPortTemplates(templates || {})
@@ -664,21 +659,25 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
       ...portTemplates,
       [templateName.trim()]: ports,
     }
-    ipcRenderer.invoke('set-local-cache', 'ScanPortTemplates', JSON.stringify(newTemplates)).then(() => {
-      yakitNotify('success', t('NewPortScanExecuteForm.saveTemplateSuccess'))
-      setPortTemplates(newTemplates)
-      setSaveTemplateVisible(false)
-      setTemplateName('')
-    })
+    ipc
+      .invoke('local', 'set-local-cache', { key: 'ScanPortTemplates', value: JSON.stringify(newTemplates) })
+      .then(() => {
+        yakitNotify('success', t('NewPortScanExecuteForm.saveTemplateSuccess'))
+        setPortTemplates(newTemplates)
+        setSaveTemplateVisible(false)
+        setTemplateName('')
+      })
   })
 
   const onDeleteTemplate = useMemoizedFn((templateKey: string) => {
     const newTemplates = { ...portTemplates }
     delete newTemplates[templateKey]
-    ipcRenderer.invoke('set-local-cache', 'ScanPortTemplates', JSON.stringify(newTemplates)).then(() => {
-      yakitNotify('success', t('NewPortScanExecuteForm.deleteTemplateSuccess'))
-      setPortTemplates(newTemplates)
-    })
+    ipc
+      .invoke('local', 'set-local-cache', { key: 'ScanPortTemplates', value: JSON.stringify(newTemplates) })
+      .then(() => {
+        yakitNotify('success', t('NewPortScanExecuteForm.deleteTemplateSuccess'))
+        setPortTemplates(newTemplates)
+      })
   })
   /**选择预设端口设置Ports值 */
   const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {

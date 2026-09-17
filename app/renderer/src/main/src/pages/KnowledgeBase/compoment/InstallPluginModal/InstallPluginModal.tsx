@@ -5,67 +5,22 @@ import type { ShowModalProps } from '@/utils/showModal'
 import styles from './InstallPluginModal.module.scss'
 import { useMemoizedFn, useRequest, useSafeState } from 'ahooks'
 import { success, failed } from '@/utils/notification'
-import { installWithEvents } from '../AllInstallPlugins'
+import { useDownloadTasks } from '../../hooks/useDownloadTasks'
 import { useCheckKnowledgePlugin } from '../../hooks/useCheckKnowledgePlugin'
 import { useRef, useEffect } from 'react'
 import { Progress } from 'antd'
-const { ipcRenderer } = window.require('electron')
 
 interface InstallPluginModalProps {
   callback?: () => void
 }
 
 const InstallPluginModalContent: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
+  const downloads = useDownloadTasks()
   const [overallProgress, setOverallProgress] = useSafeState(0)
   const [installTokens, setInstallTokens] = useSafeState<string[]>([])
   const progressMap = useRef<Record<string, number>>({})
 
   const { binariesToInstall, refresh: binariesToInstallRefresh } = useCheckKnowledgePlugin()
-
-  // 监听下载进度
-  useEffect(() => {
-    installTokens.forEach((token) => {
-      const onData = (_: any, data: any) => {
-        if (data.Progress > 0) {
-          const progressValue = Math.ceil(data.Progress)
-
-          progressMap.current[token] = progressValue
-
-          const values = Object.values(progressMap.current)
-          const sum = values.reduce((a, b) => a + b, 0)
-          const avg = installTokens.length > 0 ? Math.floor(sum / installTokens.length) : 0
-
-          setOverallProgress(avg)
-        }
-      }
-
-      const onError = (_: any, error: any) => {
-        failed(`下载失败:${error}`)
-      }
-
-      const onEnd = () => {
-        // 下载完成时清理监听
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
-        binariesToInstallRefresh()
-        // onClose?.()
-      }
-
-      ipcRenderer.on(`${token}-data`, onData)
-      ipcRenderer.on(`${token}-error`, onError)
-      ipcRenderer.on(`${token}-end`, onEnd)
-    })
-
-    return () => {
-      installTokens.forEach((token) => {
-        ipcRenderer.invoke('cancel-InstallThirdPartyBinary', token)
-        ipcRenderer.removeAllListeners(`${token}-data`)
-        ipcRenderer.removeAllListeners(`${token}-error`)
-        ipcRenderer.removeAllListeners(`${token}-end`)
-      })
-    }
-  }, [installTokens])
 
   const { run: runInstallAll, loading } = useRequest(
     async () => {
@@ -84,10 +39,24 @@ const InstallPluginModalContent: React.FC<{ onClose?: () => void }> = ({ onClose
       setInstallTokens(tokens)
 
       const promises = emptyInstallPathItem.map((b) =>
-        installWithEvents('InstallThirdPartyBinary', { Name: b.Name, Force: true }, b.installToken),
+        downloads.run(
+          'InstallThirdPartyBinary',
+          { Name: b.Name, Force: true },
+          {
+            key: b.installToken,
+            onData: (data) => {
+              if (data.Progress <= 0) return
+              progressMap.current[b.installToken] = Math.ceil(data.Progress)
+              const sum = tokens.reduce((total, token) => total + (progressMap.current[token] || 0), 0)
+              setOverallProgress(Math.floor(sum / tokens.length))
+            },
+          },
+        ),
       )
 
-      await Promise.all(promises)
+      const results = await Promise.allSettled(promises)
+      const failure = results.find((result) => result.status === 'rejected')
+      if (failure?.status === 'rejected') throw failure.reason
 
       return 'ok'
     },
@@ -107,6 +76,7 @@ const InstallPluginModalContent: React.FC<{ onClose?: () => void }> = ({ onClose
         }
       },
       onError: (err) => {
+        if ('code' in err && err.code === 'ABORTED') return
         failed(`插件安装失败: ${err}`)
         setInstallTokens([])
         setOverallProgress(0)
@@ -119,13 +89,7 @@ const InstallPluginModalContent: React.FC<{ onClose?: () => void }> = ({ onClose
   })
 
   const hanlClear = useMemoizedFn(() => {
-    // 手动关闭时清理所有监听
-    installTokens.forEach((token) => {
-      ipcRenderer.invoke('cancel-InstallThirdPartyBinary', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-    })
+    downloads.dispose()
 
     setInstallTokens([])
     setOverallProgress(0)

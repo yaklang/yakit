@@ -1,9 +1,8 @@
+import { ipc } from '@/services/ipc'
 import { useRequest } from 'ahooks'
 import { useSafeState } from 'ahooks'
 import { randomString } from '@/utils/randomUtil'
 import { targetInstallList, exclude } from '../utils'
-
-const { ipcRenderer } = window.require('electron')
 
 export const useCheckKnowledgePlugin = () => {
   const [installPlug, setInstallPlug] = useSafeState(false)
@@ -15,7 +14,7 @@ export const useCheckKnowledgePlugin = () => {
     runAsync: ThirdPartyBinaryRunAsync,
   } = useRequest(
     async () => {
-      const result = await ipcRenderer.invoke('ListThirdPartyBinary', {
+      const result = await ipc.invoke('grpc', 'ListThirdPartyBinary', {
         Pagination: { Limit: 999 },
       })
 

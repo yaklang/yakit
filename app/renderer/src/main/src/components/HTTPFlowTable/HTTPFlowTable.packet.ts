@@ -1,12 +1,13 @@
+import { int64String } from '@/utils/int64'
+import { fetchHTTPFlow as requestHTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
 import type { HTTPFlow } from './HTTPFlowTable.constants'
 
-export type HTTPFlowByIdFetcher = (id: number) => Promise<HTTPFlow>
+export type HTTPFlowByIdFetcher = (id: string | number) => Promise<HTTPFlow>
 
-const requestHydrationInFlight = new Map<number, Promise<HTTPFlow>>()
+const requestHydrationInFlight = new Map<string, Promise<HTTPFlow>>()
 
 const defaultHTTPFlowByIdFetcher: HTTPFlowByIdFetcher = async (id) => {
-  const { ipcRenderer } = window.require('electron')
-  return await ipcRenderer.invoke('GetHTTPFlowById', { Id: id })
+  return await requestHTTPFlow({ Id: id })
 }
 
 export const hasHTTPFlowRequestPacket = (flow: HTTPFlow): boolean => !!flow?.Request?.length
@@ -16,17 +17,17 @@ export const hydrateHTTPFlowRequest = async (
   fetchById: HTTPFlowByIdFetcher = defaultHTTPFlowByIdFetcher,
 ): Promise<HTTPFlow> => {
   if (hasHTTPFlowRequestPacket(flow)) return flow
-  if (!Number.isSafeInteger(+flow?.Id) || +flow.Id <= 0) {
+  const id = int64String(flow?.Id)
+  if (BigInt(id) <= BigInt(0)) {
     throw new Error('cannot load an HTTP flow without a valid id')
   }
 
-  const id = +flow.Id
   const existing = requestHydrationInFlight.get(id)
   if (existing) return await existing
 
-  const pending = Promise.resolve(fetchById(id))
+  const pending = Promise.resolve(fetchById(flow.Id))
     .then((detail) => {
-      if (!detail || +detail.Id !== id) {
+      if (!detail || int64String(detail.Id) !== id) {
         throw new Error(`loaded HTTP flow id does not match ${id}`)
       }
       if (!hasHTTPFlowRequestPacket(detail)) {

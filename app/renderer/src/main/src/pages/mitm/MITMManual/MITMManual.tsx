@@ -197,15 +197,17 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
     useEffect(() => {
       // v2版本的手动劫持处理
       if (mitmVersion !== MITMVersion.V2) return
-      grpcClientMITMHijacked(mitmVersion).on((data: ClientMITMHijackedResponse) => {
-        if (mitmVersion === MITMVersion.V2) {
-          if (!isMITMV2Response(data)) return
-          forwardHandlerV2(data)
-        }
-      })
+      const unsubscribegrpcClientMITMHijacked = grpcClientMITMHijacked(mitmVersion).on(
+        (data: ClientMITMHijackedResponse) => {
+          if (mitmVersion === MITMVersion.V2) {
+            if (!isMITMV2Response(data)) return
+            forwardHandlerV2(data)
+          }
+        },
+      )
       return () => {
         stopFlushInterval()
-        grpcClientMITMHijacked(mitmVersion).remove()
+        unsubscribegrpcClientMITMHijacked()
       }
     }, [])
     useEffect(() => {

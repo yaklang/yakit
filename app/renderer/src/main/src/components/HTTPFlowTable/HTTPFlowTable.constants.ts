@@ -1,3 +1,4 @@
+import type { StreamOptions } from '@/services/ipc'
 import type { CSSProperties, ReactNode } from 'react'
 import type { PaginationSchema } from '@/pages/invoker/schema'
 import type { HTTPFlowsToOnlineRequest } from '@/utils/login'
@@ -30,13 +31,13 @@ export interface HTTPHeaderItem {
 }
 
 export interface HTTPFlow {
-  Id: number
+  Id: string | number
   Method: string
   Path: string
   Hash: string
   IsHTTPS: boolean
   Url: string
-  URL: string
+  URL?: string
   Request: Uint8Array
   Response: Uint8Array
   StatusCode: number
@@ -97,8 +98,8 @@ export interface HTTPFlow {
   // 非空时详情页渲染「下载 xxx 文件」下拉，GetHTTPFlowBodyById 带 PartIndex 下载单个文件。
   MultipartFiles?: MultipartFileInfo[]
 
-  RequestString: string
-  ResponseString: string
+  RequestString?: string
+  ResponseString?: string
 
   HiddenIndex?: string
 
@@ -228,8 +229,8 @@ export interface HTTPFlowsToOnlineBatchRequest {
 }
 
 export interface HTTPFlowsToOnlineBatchResponse {
-  SuccessCount: number
-  FailedCount: number
+  SuccessCount: string | number
+  FailedCount: string | number
 }
 
 export interface HTTPFlowsFieldGroupResponse {
@@ -365,7 +366,7 @@ export interface HistorySearchProps {
 }
 
 export interface EditTagsInfo {
-  Id: number
+  Id: string | number
   Hash: string
   Tags: string[]
 }
@@ -386,7 +387,7 @@ export interface ImportExportProgressProps {
   title: string
   subTitle?: string
   token: string
-  apiKey: string
+  openStream: (options: StreamOptions<ImportExportStreamResponse>) => Promise<{ cancel(): Promise<void> }>
 }
 
 export const HTTP_FLOW_FAVORITE_TAG = 'YAKIT_FAVORITE'

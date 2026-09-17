@@ -1,4 +1,6 @@
 import '@ant-design/v5-patch-for-react-19'
+import './services/bootstrapBridge'
+import ReactDOM from 'react-dom'
 /** 该样式必须放在APP组件的前面，因为里面有antd样式，放后面会把APP组件内的样式覆盖 */
 import 'antd/dist/reset.css'
 import './styles/index.css'

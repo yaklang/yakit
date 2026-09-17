@@ -1,3 +1,6 @@
+import { grpcPageForUI, int64ToSafeNumber } from '@/utils/int64'
+import { cveListForUI } from '@/pages/cve/models'
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Divider, Progress } from 'antd'
 import { defQueryCVERequest, type QueryCVERequest } from '@/pages/cve/CVEViewer'
@@ -44,8 +47,6 @@ export interface CVETableProp {
   setAdvancedQuery: (b: boolean) => void
 }
 
-const { ipcRenderer } = window.require('electron')
-
 function emptyCVE() {
   return {} as CVEDetail
 }
@@ -58,9 +59,15 @@ export const CVETable: React.FC<CVETableProp> = React.memo((props) => {
   const [cwe, setCWE] = useState<CWEDetail[]>([])
   useEffect(() => {
     if (!selected) return
-    ipcRenderer.invoke('GetCVE', { CVE: selected }).then((i: CVEDetailEx) => {
+    ipc.invoke('grpc', 'GetCVE', { CVE: selected }).then((i) => {
       const { CVE, CWE } = i
-      setCVE(CVE)
+      if (CVE)
+        setCVE({
+          ...CVE,
+          UpdatedAt: int64ToSafeNumber(CVE.UpdatedAt),
+          PublishedAt: int64ToSafeNumber(CVE.PublishedAt),
+          LastModifiedData: int64ToSafeNumber(CVE.LastModifiedData),
+        })
       setCWE(CWE)
     })
   }, [selected])
@@ -157,11 +164,15 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
       ...params,
       Pagination: pagination,
     }
-    ipcRenderer.invoke('QueryCVE', finalParams).then((r: QueryGeneralResponse<CVEDetail>) => {
-      if (r.Data.length > 0) {
-        setUpdateTime(r.Data[0].UpdatedAt)
-      }
-    })
+    ipc
+      .invoke('grpc', 'QueryCVE', finalParams)
+      .then(cveListForUI)
+      .then(grpcPageForUI)
+      .then((r) => {
+        if (r.Data.length > 0) {
+          setUpdateTime(int64ToSafeNumber(r.Data[0].UpdatedAt))
+        }
+      })
   }, [])
 
   useUpdateEffect(() => {
@@ -199,9 +210,11 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
       ...(extraParam ? extraParam : {}),
       Pagination: paginationProps,
     }
-    ipcRenderer
-      .invoke('QueryCVE', finalParams)
-      .then((r: QueryGeneralResponse<CVEDetail>) => {
+    ipc
+      .invoke('grpc', 'QueryCVE', finalParams)
+      .then(cveListForUI)
+      .then(grpcPageForUI)
+      .then((r) => {
         const d = Number(paginationProps.Page) === 1 ? r.Data : data.concat(r.Data)
         setData(d)
         setPagination(r.Pagination)
@@ -521,50 +534,57 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
   const timer = useRef<number>(0) //超时处理
   const prePercent = useRef<number>(0) // 上一次的进度数值
 
-  useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
-      if (!data.IsMessage) {
-        return
-      }
-      if (getPercent() === prePercent.current) {
-        timer.current += 1
-      } else {
-        prePercent.current = getPercent()
-        timer.current = 0
-      }
-      if (timer.current > 30) {
-        setStatus('init')
-        setMessages([])
-        setError(true)
-        yakitFailed(`[UpdateCVEDatabase] error:连接超时`)
-        timer.current = 0
-      }
-      setPercent(Math.ceil(data.Progress))
-      setMessages([Uint8ArrayToString(data.Message), ...getMessages()])
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      errorMessage.current = JSON.stringify(error).substring(0, 20)
-      yakitFailed(`[UpdateCVEDatabase] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {
-      // if (!errorMessage.current.includes("client failed")) {
-      if (!errorMessage.current) {
-        info('[UpdateCVEDatabase] finished')
-        setStatus('done')
-      } else {
-        setStatus('init')
-        setMessages([])
-        setError(true)
-      }
-      errorMessage.current = ''
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-UpdateCVEDatabase', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
+  const controllerRef = useRef<AbortController>()
+  useEffect(() => () => controllerRef.current?.abort(), [latestMode, visible])
+  const startUpdate = useMemoizedFn((params: { Proxy: string; JustUpdateLatestCVE?: boolean }) => {
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    timer.current = 0
+    prePercent.current = 0
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      setStatus('init')
+      setMessages([])
+      setError(true)
+      yakitFailed(`[UpdateCVEDatabase] error: ${error}`)
     }
-  }, [latestMode])
+    void ipc
+      .openStream('grpc', 'UpdateCVEDatabase', params, {
+        token,
+        signal: controller.signal,
+        onData(data) {
+          if (controller.signal.aborted) return
+          if (!data.IsMessage) {
+            return
+          }
+          if (getPercent() === prePercent.current) {
+            timer.current += 1
+          } else {
+            prePercent.current = getPercent()
+            timer.current = 0
+          }
+          if (timer.current > 30) {
+            setStatus('init')
+            setMessages([])
+            setError(true)
+            yakitFailed(`[UpdateCVEDatabase] error:连接超时`)
+            timer.current = 0
+            controller.abort()
+            return
+          }
+          setPercent(Math.ceil(data.Progress))
+          setMessages([Uint8ArrayToString(data.Message), ...getMessages()])
+        },
+        onError,
+        onEnd() {
+          if (controller.signal.aborted) return
+          info('[UpdateCVEDatabase] finished')
+          setStatus('done')
+        },
+      })
+      .catch(onError)
+  })
   useEffect(() => {
     if (!visible) return
     setStatus('init')
@@ -707,12 +727,12 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
       heardIcon={heardIconRender()}
       onCancel={() => {
         setVisible(false)
-        ipcRenderer.invoke('cancel-UpdateCVEDatabase', token)
+        controllerRef.current?.abort()
       }}
       onOk={() => {
         if (status === 'done') {
-          ipcRenderer
-            .invoke('relaunch')
+          ipc
+            .invoke('local', 'relaunch', {})
             .then(() => {})
             .catch((e) => {
               failed(`重启失败: ${e}`)
@@ -727,12 +747,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
             Proxy: props.latestMode ? proxy : '',
             JustUpdateLatestCVE: props.latestMode,
           }
-          ipcRenderer
-            .invoke('UpdateCVEDatabase', params, token)
-            .then(() => {})
-            .catch((e) => {
-              failed(`更新 CVE 数据库失败！${e}`)
-            })
+          startUpdate(params)
         }
       }}
       okButtonText={okButtonTextRender()}

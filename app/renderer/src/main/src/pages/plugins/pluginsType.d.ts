@@ -89,7 +89,7 @@ export interface YakParamProps extends Partial<YakitPluginBaseAIInfo> {
 
 /** 本地插件信息 */
 export interface localYakInfo extends Partial<YakitPluginBaseAIInfo> {
-  Id?: number
+  Id?: number | string
 
   ScriptName: string
   Content: string

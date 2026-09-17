@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useState, useMemo, useRef, useEffect } from 'react'
 import YakitSteps from './YakitSteps/YakitSteps'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -20,8 +21,6 @@ interface PluginLocalUploadProps {
   pluginNames: string[]
   onClose: () => void
 }
-
-const { ipcRenderer } = window.require('electron')
 
 export const PluginLocalUpload: React.FC<PluginLocalUploadProps> = React.memo((props) => {
   const { pluginNames, onClose } = props
@@ -176,29 +175,13 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
   const [isShowRetry, setIsShowRetry] = useState<boolean>(false)
   const [successPluginNames, setSuccessPluginNames] = useState<string[]>([])
 
-  useEffect(() => {
-    const taskToken = taskTokenRef.current
-    if (!taskToken) {
-      return
-    }
-    ipcRenderer.on(`${taskToken}-data`, onProgressData)
-    ipcRenderer.on(`${taskToken}-end`, () => {})
-    ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-      setIsShowRetry(true)
-      yakitNotify('error', '自动评分异常，请重试')
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-SmokingEvaluatePluginBatch', taskToken)
-      ipcRenderer.removeAllListeners(`${taskToken}-data`)
-      ipcRenderer.removeAllListeners(`${taskToken}-error`)
-      ipcRenderer.removeAllListeners(`${taskToken}-end`)
-    }
-  }, [])
+  const controllerRef = useRef<AbortController>()
   useEffect(() => {
     if (show) {
-      startAutoTest()
       onReset()
+      startAutoTest()
     }
+    return () => controllerRef.current?.abort()
   }, [show])
   /**重置数据 */
   const onReset = useMemoizedFn(() => {
@@ -207,7 +190,7 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
     setIsHaveError(false)
     setIsShowRetry(false)
   })
-  const onProgressData = useMemoizedFn((_, data: SmokingEvaluatePluginBatchResponse) => {
+  const onProgressData = useMemoizedFn((data: SmokingEvaluatePluginBatchResponse) => {
     try {
       if (data.Progress === 2) {
         const pluginNameList: string[] =
@@ -215,8 +198,9 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
         setSuccessPluginNames(pluginNameList)
         if (pluginNameList.length === pluginNames.length) {
           yakitNotify('success', '检测完毕,全部成功,自动进入下一步上传')
+          const controller = controllerRef.current
           setTimeout(() => {
-            onNext(pluginNameList)
+            if (controller && controllerRef.current === controller && !controller.signal.aborted) onNext(pluginNameList)
           }, 200)
         } else if (pluginNameList.length === 0) {
           yakitNotify('error', '检测完毕,全部失败,不能进行上传操作')
@@ -240,18 +224,30 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
     const params: SmokingEvaluatePluginBatchRequest = {
       ScriptNames: pluginNames,
     }
-    ipcRenderer
-      .invoke('SmokingEvaluatePluginBatch', params, taskTokenRef.current)
-      .then(() => {})
-      .catch((e) => {
-        failed(`开始检测失败:${e}`)
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      setIsShowRetry(true)
+      failed(`自动评分异常：${error}`)
+    }
+    void ipc
+      .openStream('grpc', 'SmokingEvaluatePluginBatch', params, {
+        token: taskTokenRef.current,
+        signal: controller.signal,
+        onData(data) {
+          if (!controller.signal.aborted) onProgressData(data)
+        },
+        onError,
       })
+      .catch(onError)
   })
   const onClickNext = useMemoizedFn(() => {
     onNext(successPluginNames)
   })
   const onClickCancel = useMemoizedFn(() => {
-    ipcRenderer.invoke('cancel-SmokingEvaluatePluginBatch', taskTokenRef.current)
+    controllerRef.current?.abort()
     onCancel()
   })
   const onClickRetry = useMemoizedFn(() => {

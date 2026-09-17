@@ -1,8 +1,9 @@
+import { grpcPageForUI } from '@/utils/int64'
+import { hybridTasksForUI } from '@/models/HybridScan'
+import { ipc } from '@/services/ipc'
 import type { HybridScanTask, HybridScanTaskSourceType } from '@/models/HybridScan'
 import { yakitNotify } from '@/utils/notification'
 import type { Paging } from '@/utils/yakQueryHTTPFlow'
-const { ipcRenderer } = window.require('electron')
-
 interface HybridScanTaskFilter {
   TaskId?: string[]
   Status?: string[]
@@ -29,8 +30,10 @@ export const apiQueryHybridScanTask: (query: QueryHybridScanTaskRequest) => Prom
   query,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryHybridScanTask', query)
+    ipc
+      .invoke('grpc', 'QueryHybridScanTask', query)
+      .then(hybridTasksForUI)
+      .then(grpcPageForUI)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', '获取任务列表失败:' + e)
@@ -49,9 +52,9 @@ export interface DeleteHybridScanTaskRequest {
 /**插件批量执行任务 删除接口 */
 export const apiDeleteHybridScanTask: (query: DeleteHybridScanTaskRequest) => Promise<null> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteHybridScanTask', query)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'DeleteHybridScanTask', query)
+      .then(() => resolve(null))
       .catch((e) => {
         yakitNotify('error', '删除任务列表失败:' + e)
         reject(e)

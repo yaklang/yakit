@@ -20,5 +20,5 @@ export interface HTTPRequestBuilderParams {
   MultipartFileParams: KVPair[]
 
   IsHttpFlowId: boolean
-  HTTPFlowId: number[]
+  HTTPFlowId: (number | string)[]
 }

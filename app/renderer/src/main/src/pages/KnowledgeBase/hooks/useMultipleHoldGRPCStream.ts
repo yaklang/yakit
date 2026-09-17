@@ -7,7 +7,8 @@ import type {
 import { DefaultTabs } from '@/hook/useHoldGRPCStream/constant'
 import { yakitFailed, info } from '@/utils/notification'
 
-const { ipcRenderer } = window.require('electron')
+import { ipc, type GrpcOutput, type StreamOptions, type BridgeError } from '@/services/ipc'
+import { apiDebugPlugin } from '@/pages/plugins/utils'
 
 /* ======================== utils ======================== */
 
@@ -45,7 +46,8 @@ const checkStreamValidity = (stream: StreamResult.Log) => {
 
 export interface HoldGRPCStreamParams {
   taskName: string
-  apiKey: string
+  apiKey: 'DebugPlugin'
+  request: Omit<Parameters<typeof apiDebugPlugin>[0], 'open'>
   token: string
   waitTime?: number
 
@@ -59,14 +61,16 @@ export interface HoldGRPCStreamParams {
       requestToken?: string
     },
   ) => any
-  onError?: (e: any & { requestToken?: string }) => void
+  onError?: (e: { error: BridgeError | Error; requestToken: string }) => void
   dataFilter?: (obj: StreamResult.Message, content: StreamResult.Log) => boolean
   setRuntimeId?: (runtimeId: string) => any
 }
 
 type InternalStreamStore = {
   params: HoldGRPCStreamParams
-  timeRef: any
+  timeRef?: ReturnType<typeof setInterval>
+  controller: AbortController
+  opening?: Promise<{ cancel(): Promise<void> }>
   runTimeId: { cache: string; sent: string }
   progressKVPair: Map<string, number>
   cardKVPair: Map<string, HoldGRPCStreamProps.CacheCard>
@@ -84,7 +88,7 @@ type InternalStreamStore = {
 /* ======================== hook ======================== */
 
 export default function useMultipleHoldGRPCStream() {
-  const canceledTokens = useRef<Set<string>>(new Set())
+  const mounted = useRef(true)
   const storesRef = useRef<Map<string, InternalStreamStore>>(new Map())
 
   const [tokens, setTokens] = useState<string[]>([])
@@ -158,24 +162,24 @@ export default function useMultipleHoldGRPCStream() {
 
   /* ======================== listeners ======================== */
 
-  const attachListeners = (token: string) => {
+  const streamOptions = (token: string): StreamOptions<GrpcOutput<'DebugPlugin'>> => {
     const store = storesRef.current.get(token)
-    if (!store) return
+    if (!store) throw new Error('Unknown stream')
     const { params } = store
 
-    const dataHandler = (_: any, data: StreamResult.BaseProsp) => {
-      if (canceledTokens.current.has(token)) return
+    const dataHandler = (data: GrpcOutput<'DebugPlugin'>) => {
+      if (storesRef.current.get(token) !== store || store.controller.signal.aborted) return
 
       if (data?.RuntimeID) {
         store.runTimeId.cache = data.RuntimeID
         params.setRuntimeId?.(data.RuntimeID)
       }
 
-      const isMessage = data.IsMessage || data.ExecResult?.IsMessage
+      const isMessage = data.IsMessage
       if (!isMessage) return
 
       try {
-        const obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message || data.ExecResult?.Message).toString())
+        const obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
         const logData = obj.content as StreamResult.Log
 
         if (obj.type === 'progress') {
@@ -211,12 +215,20 @@ export default function useMultipleHoldGRPCStream() {
       } catch {}
     }
 
-    const errorHandler = (error: string) => {
+    const errorHandler = (error: BridgeError | Error) => {
+      if (storesRef.current.get(token) !== store) return
+      clearInterval(store.timeRef)
+      store.timeRef = undefined
+      handleResultsFor(token)
       yakitFailed(`[Mod] ${params.taskName} error: ${error}`, true)
       params.onError?.({ error, requestToken: token })
+      if (storesRef.current.get(token) === store && params.autoClear !== false) removeStream(token)
     }
 
     const endHandler = () => {
+      if (storesRef.current.get(token) !== store) return
+      clearInterval(store.timeRef)
+      store.timeRef = undefined
       handleResultsFor(token)
 
       const infoParams = {
@@ -226,45 +238,27 @@ export default function useMultipleHoldGRPCStream() {
         requestToken: token,
       }
 
-      ipcRenderer.emit(`${token}-end-client`, null, infoParams)
       params.onEnd?.(infoParams)
       info(`[Mod] ${params.taskName} finished`)
 
       /** ✅ 核心：是否自动清理 */
-      if (params.autoClear !== false) {
+      if (storesRef.current.get(token) === store && params.autoClear !== false) {
         removeStream(token)
       }
     }
 
-    ipcRenderer.on(`${token}-data`, dataHandler)
-    ipcRenderer.on(`${token}-error`, (_, error) => errorHandler(error))
-    ipcRenderer.on(`${token}-end`, endHandler)
-    ;(store as any)._handlers = { dataHandler, errorHandler, endHandler }
-  }
-
-  const detachListeners = (token: string) => {
-    const store = storesRef.current.get(token)
-    if (!store) return
-    const h = (store as any)._handlers
-    if (h) {
-      ipcRenderer.removeListener(`${token}-data`, h.dataHandler)
-      ipcRenderer.removeListener(`${token}-error`, h.errorHandler)
-      ipcRenderer.removeListener(`${token}-end`, h.endHandler)
-    }
-    if (store.timeRef) {
-      clearInterval(store.timeRef)
-      store.timeRef = null
-    }
+    return { token, signal: store.controller.signal, onData: dataHandler, onError: errorHandler, onEnd: endHandler }
   }
 
   /* ======================== API ======================== */
 
-  const createStream = (token: string, params: HoldGRPCStreamParams) => {
-    if (storesRef.current.has(token)) return
+  const createStream = async (token: string, params: HoldGRPCStreamParams): Promise<void> => {
+    if (!mounted.current) throw new Error('Stream owner unmounted')
+    if (storesRef.current.has(token)) throw new Error('Duplicate stream token')
 
     const store: InternalStreamStore = {
       params,
-      timeRef: null,
+      controller: new AbortController(),
       runTimeId: { cache: '', sent: '' },
       progressKVPair: new Map(),
       cardKVPair: new Map(),
@@ -288,36 +282,65 @@ export default function useMultipleHoldGRPCStream() {
     }
 
     storesRef.current.set(token, store)
-    attachListeners(token)
     setStreamEntry(token, store.info, '', true)
 
     store.timeRef = setInterval(() => handleResultsFor(token), params.waitTime ?? 500)
     syncTokens()
+    const options = streamOptions(token)
+    try {
+      await apiDebugPlugin({
+        ...params.request,
+        open: async (request) => {
+          store.opening = ipc.openStream('grpc', 'DebugPlugin', request, options)
+          await store.opening
+        },
+      })
+    } catch (error) {
+      if (storesRef.current.get(token) === store) {
+        clearInterval(store.timeRef)
+        store.timeRef = undefined
+        handleResultsFor(token)
+        params.onError?.({ error: error instanceof Error ? error : new Error(String(error)), requestToken: token })
+        if (storesRef.current.get(token) === store) removeStream(token)
+      }
+      throw error
+    }
   }
 
   const removeStream = (token: string) => {
     const store = storesRef.current.get(token)
     if (!store) return
 
-    canceledTokens.current.add(token)
-    detachListeners(token)
+    clearInterval(store.timeRef)
+    store.timeRef = undefined
+    store.controller.abort()
 
     storesRef.current.delete(token)
     removeStreamEntry(token)
     syncTokens()
-
-    ipcRenderer.invoke(`cancel-${store.params.apiKey}`, token).catch(() => {})
   }
 
   const clearAllStreams = () => {
-    canceledTokens.current = new Set(tokens)
-    storesRef.current.forEach((_, token) => detachListeners(token))
+    storesRef.current.forEach((store) => {
+      clearInterval(store.timeRef)
+      store.controller.abort()
+    })
     storesRef.current.clear()
     setTokens([])
     setStreams({})
   }
 
-  useEffect(() => () => clearAllStreams(), [])
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      storesRef.current.forEach((store) => {
+        clearInterval(store.timeRef)
+        store.controller.abort()
+      })
+      storesRef.current.clear()
+    }
+  }, [])
 
   return [
     streams,

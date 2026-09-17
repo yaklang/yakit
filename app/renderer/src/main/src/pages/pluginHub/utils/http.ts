@@ -1,10 +1,9 @@
+import { ipc } from '../../../../../../../shared/communication/window-client'
 import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import type { HTTPRequestParameters } from '@/types/http-api'
 import { yakitNotify } from '@/utils/notification'
-
-const { ipcRenderer } = window.require('electron')
 
 /**
  * @name 插件同步/提交至云端
@@ -98,9 +97,9 @@ export const httpFetchPluginLogs: APIFunc<FetchPluginLogsRequest, API.PluginsLog
 
     let token: string = ''
     try {
-      const userInfo = await ipcRenderer.invoke('get-login-user-info', {})
+      const userInfo = await ipc.invoke('local', 'get-login-user-info', {})
       if (userInfo.isLogin) {
-        token = userInfo.token
+        token = userInfo.token ?? ''
       }
     } catch (error) {}
 

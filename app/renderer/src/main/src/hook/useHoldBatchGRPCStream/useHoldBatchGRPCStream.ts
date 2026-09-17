@@ -17,7 +17,8 @@ import { DEFAULT_LOG_LIMIT, LIMIT_LOG_NUM_NAME } from '@/defaultConstants/HoldGR
 import { getRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
 import { JSONParseLog } from '@/utils/tool'
-import { yakitStream } from '@/services/electronBridge'
+import { ipc, BridgeError, type GrpcInput, type GrpcOutput, type StreamTask } from '@/services/ipc'
+import type { HybridScanRestoredConfig, HybridScanModeType } from '@/models/HybridScan'
 
 export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams) {
   const {
@@ -58,7 +59,7 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
   })
 
   // 启动数据流处理定时器
-  const timeRef = useRef<any>(null)
+  const timeRef = useRef<ReturnType<typeof setInterval>>()
 
   // runtime-id
   const runTimeId = useRef<{ cache: string; sent: string }>({ cache: '', sent: '' })
@@ -66,8 +67,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
   const taskStatus = useRef<{ cache: TaskStatus; sent: TaskStatus }>({ cache: 'default', sent: 'default' })
   /** 输入模块值 */
   const inputValueRef = useRef<{
-    cache: HybridScanControlAfterRequest | null
-    sent: HybridScanControlAfterRequest | null
+    cache: HybridScanRestoredConfig | null
+    sent: HybridScanRestoredConfig | null
   }>({
     cache: null,
     sent: null,
@@ -111,101 +112,102 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     }
   })
 
-  useEffect(() => {
+  const consumeData = useMemoizedFn((res: GrpcOutput<'HybridScan'>) => {
     const processDataId = 'main'
-    const offData = yakitStream.onData(token, async (res: PluginBatchExecutorResult) => {
-      if (res.HybridScanConfig) {
-        inputValueRef.current.cache = omit(res.HybridScanConfig, ['Control', 'HybridScanMode', 'ResumeTaskId'])
-      }
-      if (res.Status) {
-        taskStatus.current.cache = res.Status
-      }
-      const data = res.ExecResult
-      const { TotalTasks, FinishedTasks } = res
-      const progress = Number(TotalTasks) ? Number(FinishedTasks) / Number(TotalTasks) : 0
-
-      progressKVPair.current.set(processDataId, Math.max(progressKVPair.current.get(processDataId) || 0, progress))
-
-      if (res.UpdateActiveTask) {
-        onHandleActiveTask(res.UpdateActiveTask)
-      }
-      if (!data) return
-      // run-time-id
-      if (data?.RuntimeID) {
-        runTimeId.current.cache = data.RuntimeID
-      }
-      if (data.IsMessage) {
-        try {
-          const obj: StreamResult.Message = JSONParseLog(Buffer.from(data.Message).toString(), {
-            page: 'useHoldBatchGRPCStream',
-          })
-          const logData = obj.content as StreamResult.Log
-          // feature-status-card-data 卡片展示
-          if (obj.type === 'log' && logData.level === 'feature-status-card-data') {
-            try {
-              const checkInfo = checkStreamValidity(logData)
-              if (!checkInfo) return
-
-              const obj: StreamResult.Card = checkInfo
-              const { id, data, tags } = obj
-              const { timestamp } = logData
-              const originData = cardKVPair.current.get(id)
-              if (originData && originData.Timestamp > timestamp) {
-                return
-              }
-              cardKVPair.current.set(id, {
-                Id: id,
-                Data: data,
-                Timestamp: timestamp,
-                Tags: Array.isArray(tags) ? tags : [],
-              })
-            } catch (e) {}
-            return
-          }
-
-          // risk 风险信息列表
-          if (obj.type === 'log' && logData.level === 'json-risk') {
-            try {
-              const checkInfo = checkStreamValidity(logData)
-              if (!checkInfo) return
-              const risk: StreamResult.Risk = checkInfo
-              riskMessages.current.unshift(risk)
-            } catch (e) {}
-            return
-          }
-
-          // 外界传入的筛选方法
-          if (dataFilter && dataFilter(obj, logData)) return
-          // 日志信息
-          pushLogs(obj)
-        } catch (e) {}
-      }
-    })
-    // token-error
-    const offError = yakitStream.onError(token, (error: any) => {
-      if (onError) {
-        onError(error)
-      } else {
-        failed(`[Mod] ${taskName} error: ${error}`)
-      }
-    })
-    // token-end
-    const offEnd = yakitStream.onEnd(token, () => {
-      info(`[Mod] ${taskName} finished`)
-      handleResults()
-      if (onEnd) {
-        onEnd()
-      }
-    })
-
-    return () => {
-      stop()
-      cancel()
-      offData()
-      offError()
-      offEnd()
+    if (res.HybridScanConfig) {
+      inputValueRef.current.cache = omit(res.HybridScanConfig, ['Control', 'HybridScanMode', 'ResumeTaskId'])
     }
-  }, [token])
+    if (
+      res.Status === 'executing' ||
+      res.Status === 'paused' ||
+      res.Status === 'done' ||
+      res.Status === 'error' ||
+      res.Status === 'default'
+    )
+      taskStatus.current.cache = res.Status
+    const data = res.ExecResult
+    const { TotalTasks, FinishedTasks } = res
+    const progress = Number(TotalTasks) ? Number(FinishedTasks) / Number(TotalTasks) : 0
+
+    progressKVPair.current.set(processDataId, Math.max(progressKVPair.current.get(processDataId) || 0, progress))
+
+    if (res.UpdateActiveTask) {
+      onHandleActiveTask(res.UpdateActiveTask)
+    }
+    if (!data) return
+    // run-time-id
+    if (data?.RuntimeID) {
+      runTimeId.current.cache = data.RuntimeID
+    }
+    if (data.IsMessage) {
+      try {
+        const obj: StreamResult.Message = JSONParseLog(Buffer.from(data.Message).toString(), {
+          page: 'useHoldBatchGRPCStream',
+        })
+        const logData = obj.content as StreamResult.Log
+        // feature-status-card-data 卡片展示
+        if (obj.type === 'log' && logData.level === 'feature-status-card-data') {
+          try {
+            const checkInfo = checkStreamValidity(logData)
+            if (!checkInfo) return
+
+            const obj: StreamResult.Card = checkInfo
+            const { id, data, tags } = obj
+            const { timestamp } = logData
+            const originData = cardKVPair.current.get(id)
+            if (originData && originData.Timestamp > timestamp) {
+              return
+            }
+            cardKVPair.current.set(id, {
+              Id: id,
+              Data: data,
+              Timestamp: timestamp,
+              Tags: Array.isArray(tags) ? tags : [],
+            })
+          } catch (e) {}
+          return
+        }
+
+        // risk 风险信息列表
+        if (obj.type === 'log' && logData.level === 'json-risk') {
+          try {
+            const checkInfo = checkStreamValidity(logData)
+            if (!checkInfo) return
+            const risk: StreamResult.Risk = checkInfo
+            riskMessages.current.unshift(risk)
+          } catch (e) {}
+          return
+        }
+
+        // 外界传入的筛选方法
+        if (dataFilter && dataFilter(obj, logData)) return
+        // 日志信息
+        pushLogs(obj)
+      } catch (e) {}
+    }
+  })
+  const active = useRef<{ controller: AbortController; opening?: Promise<StreamTask<'HybridScan'>> }>()
+  const consumeError = useMemoizedFn((error: BridgeError) => {
+    stop()
+    handleResults()
+    if (onError) onError(error)
+    else failed(`[Mod] ${taskName} error: ${error.message}`)
+  })
+  const consumeEnd = useMemoizedFn(() => {
+    stop()
+    handleResults()
+    info(`[Mod] ${taskName} finished`)
+    onEnd?.()
+  })
+  useEffect(
+    () => () => {
+      stop()
+      const task = active.current
+      active.current = undefined
+      task?.controller.abort()
+    },
+    [token],
+  )
   /**处理插件执行日志 */
   const onHandleActiveTask = useMemoizedFn((updateActiveTask: HybridScanActiveTask) => {
     if (updateActiveTask.Operator === 'create') {
@@ -299,22 +301,23 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
   useEffect(() => {
     if (waitTime > 0 && !!timeRef.current) {
       clearInterval(timeRef.current)
-      timeRef.current = null
+      timeRef.current = undefined
       timeRef.current = setInterval(() => handleResults(), waitTime)
     }
     return () => {
       if (timeRef.current) {
         clearInterval(timeRef.current)
-        timeRef.current = null
+        timeRef.current = undefined
       }
     }
   }, [waitTime])
 
   /** @name 开始处理数据流 */
   const start = useMemoizedFn(() => {
+    if (!active.current) return
     if (timeRef.current) {
       clearInterval(timeRef.current)
-      timeRef.current = null
+      timeRef.current = undefined
     }
     timeRef.current = setInterval(() => handleResults(), waitTime)
   })
@@ -322,13 +325,82 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
   const stop = useMemoizedFn(() => {
     if (timeRef.current) {
       clearInterval(timeRef.current)
-      timeRef.current = null
+      timeRef.current = undefined
     }
   })
   /** @name 关闭处理数据流 */
-  const cancel = useMemoizedFn(() => {
-    yakitStream.cancel(apiKey, token)
+  const cancel = useMemoizedFn(async () => {
+    const task = active.current
+    active.current = undefined
+    stop()
+    task?.controller.abort()
+    await task?.opening?.then(
+      (handle) => handle.cancel(),
+      () => {},
+    )
   })
+  const open = useMemoizedFn(async (request: GrpcInput<'HybridScan'>) => {
+    const previous = active.current
+    previous?.controller.abort()
+    const task: NonNullable<typeof active.current> = { controller: new AbortController() }
+    active.current = task
+    await previous?.opening?.then(
+      (handle) => handle.cancel(),
+      () => {},
+    )
+    if (active.current !== task || task.controller.signal.aborted) throw new Error('Stream opening cancelled')
+    start()
+    task.opening = ipc.openStream('grpc', 'HybridScan', request, {
+      token,
+      signal: task.controller.signal,
+      onData: (data) => {
+        if (active.current === task) consumeData(data)
+      },
+      onError: (error) => {
+        if (active.current === task) {
+          active.current = undefined
+          consumeError(error)
+        }
+      },
+      onEnd: () => {
+        if (active.current === task) {
+          active.current = undefined
+          consumeEnd()
+        }
+      },
+    })
+    try {
+      return await task.opening
+    } catch (error) {
+      if (active.current === task) {
+        active.current = undefined
+        stop()
+        if (error instanceof BridgeError && error.code !== 'ABORTED') consumeError(error)
+      }
+      throw error
+    }
+  })
+  const startTask = useMemoizedFn(async (request: HybridScanControlAfterRequest) => {
+    const task = await open({
+      Control: true,
+      HybridScanMode: 'new',
+      ResumeTaskId: '',
+      HybridScanTaskSource: request.HybridScanTaskSource || 'pluginBatch',
+    })
+    await task.write(request)
+    info(`启动成功,任务ID: ${token}`)
+    info('发送扫描目标与插件成功')
+  })
+  const setMode = useMemoizedFn(async (runtimeId: string, mode: HybridScanModeType) => {
+    if (mode === 'new') throw new Error('Use startTask to create a scan')
+    const request = { Control: mode !== 'pause', HybridScanMode: mode, ResumeTaskId: runtimeId }
+    const task = active.current
+    if (mode === 'pause' && !task) return
+    if (task?.opening) await (await task.opening).write(request)
+    else await open(request)
+    info(`任务ID: ${token}`)
+  })
+  const isActive = useMemoizedFn(() => !!active.current)
   /** @name 重置数据流 */
   const reset = useMemoizedFn(() => {
     setStreamInfo({
@@ -354,5 +426,5 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     pluginLog.current = []
   })
 
-  return [streamInfo, { start, stop, cancel, reset }] as const
+  return [streamInfo, { startTask, setMode, isActive, start, stop, cancel, reset }] as const
 }

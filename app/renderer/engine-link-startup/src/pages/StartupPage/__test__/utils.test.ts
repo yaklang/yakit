@@ -1,16 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('@/utils/electronBridge', () => ({
-  yakitEngine: {
-    outputLogToWelcomeConsole: vi.fn().mockResolvedValue(undefined),
-  },
-  yakitSystem: {
-    fetchSystemName: vi.fn(),
-    fetchCpuArch: vi.fn(),
-    isDev: vi.fn(),
-  },
-}))
-
 import { safeFormatDownloadProcessState } from '../utils'
 
 describe('safeFormatDownloadProcessState', () => {

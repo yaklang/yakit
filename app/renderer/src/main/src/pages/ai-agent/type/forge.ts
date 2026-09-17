@@ -2,7 +2,7 @@ import type { PaginationSchema } from '@/pages/invoker/schema'
 
 /** forge 详情数据字段 */
 export interface AIForge {
-  Id: number
+  Id: string | number
   ForgeName: string
   // yak type is yak script, config type is empty
   /** yak 类型为脚本代码, config 类型为空 */
@@ -51,7 +51,7 @@ export interface AIForgeFilter {
   /** 多个字段的内容进行模糊搜索 */
   Keyword?: string
   Tag?: string
-  Id?: number
+  Id?: string | number
 }
 
 /** forge 列表的请求参数 */
@@ -66,7 +66,7 @@ export interface QueryAIForgeResponse {
   Total: number
 }
 export interface GetAIForgeRequest {
-  ID?: number
+  ID?: string | number
   ForgeName?: string
   InflateSkillPath?: boolean
 }

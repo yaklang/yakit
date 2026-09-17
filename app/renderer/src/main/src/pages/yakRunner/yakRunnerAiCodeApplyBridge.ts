@@ -58,11 +58,7 @@ function getDirectoryPathFromAttachedResourceInfo(attachedResourceInfo?: Attache
   const attachedResourceInfoValue = attachedResourceInfo?.find(
     (item) => item.Key === AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
   )?.Value
-  const result =
-    typeof attachedResourceInfoValue === 'string'
-      ? attachedResourceInfoValue?.trim()
-      : attachedResourceInfoValue?.join(',').trim()
-  return result
+  return attachedResourceInfoValue?.trim()
 }
 
 function joinDirectoryAndFileName(directoryPath: string, fileName: string): string {

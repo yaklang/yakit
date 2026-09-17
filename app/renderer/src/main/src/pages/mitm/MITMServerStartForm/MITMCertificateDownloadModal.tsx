@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useState } from 'react'
 import styles from './MITMServerStartForm.module.scss'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
@@ -11,8 +12,6 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-
-const { ipcRenderer } = window.require('electron')
 
 interface MITMCertificateDownloadModalProps {
   visible: boolean
@@ -28,9 +27,14 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
   const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
   useEffect(() => {
     const apiName = isGMState ? 'DownloadMITMGMCert' : 'DownloadMITMCert'
-    ipcRenderer.invoke(apiName, {}).then((data: CaCertData) => {
-      setCaCerts(data)
-    })
+    const controller = new AbortController()
+    void ipc
+      .invoke('grpc', apiName, {}, { signal: controller.signal })
+      .then((data) => {
+        if (!controller.signal.aborted) setCaCerts(data)
+      })
+      .catch(() => {})
+    return () => controller.abort()
   }, [isGMState])
   /**
    * @description 下载证书

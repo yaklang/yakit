@@ -2,7 +2,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
 
 export const execPacketScan = (params: {
-  httpFlowIds: number[]
+  httpFlowIds: (string | number)[]
   https: boolean
   request?: Uint8Array
   value: { Keyword?: string; Verbose: string }
@@ -28,7 +28,7 @@ export const execPacketScanFromRaw = (
 }
 
 export const execPacketScanWithNewTab = (params: {
-  httpFlowIds: number[] | string[]
+  httpFlowIds: (string | number)[]
   https: boolean
   request?: Uint8Array
   keyword: string

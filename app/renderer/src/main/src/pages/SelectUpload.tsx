@@ -1,3 +1,5 @@
+import { projectsForUI } from '@/pages/softwareSettings/projectUtils'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Form, Progress } from 'antd'
@@ -9,8 +11,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface SelectUploadProps {
   onCancel: () => void
@@ -30,8 +30,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
   const { t } = useI18nNamespaces(['core', 'yakitUi'])
   const { onCancel } = props
   const [loading, setLoading] = useState<boolean>(false)
-  const [token, _] = useState(randomString(40))
-  const [uploadToken, __] = useState(randomString(40))
+  const operation = useRef<AbortController>()
   const [form] = Form.useForm()
   const [percent, setPercent] = useState<number>(0.0)
   const filePath = useRef<string>()
@@ -39,130 +38,88 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
 
   const [data, setData, getData] = useGetState<FileProjectInfoProps[]>([])
 
-  /** @name 导出实体项目文件过程是否产生错误(如果产生错误，阻止通道结束后的上传操作) */
-  const hasErrorRef = useRef<boolean>(false)
-  // 是否取消
-  const isCancle = useRef<boolean>(false)
-
-  const uploadFile = useMemoizedFn(async () => {
-    if (isCancle.current) return
-    setPercent(0.51)
-    await ipcRenderer
-      .invoke('split-upload', {
-        url: 'fragment/upload',
-        path: filePath.current,
-        token: uploadToken,
-        type: 'Project',
-      })
-      .then(({ TaskStatus }) => {
-        if (isCancle.current) return
-        if (TaskStatus) {
-          setPercent(1)
-          success(t('SelectUpload.uploadSuccess'))
-          setTimeout(() => {
-            onCancel()
-          }, 200)
-        } else {
-          failed(t('SelectUpload.uploadFailed'))
-        }
-      })
-      .catch((err) => {
-        failed(`${t('SelectUpload.uploadFailed')}:${err}`)
-      })
-      .finally(() => {
-        if (isCancle.current) return
-        setTimeout(() => {
-          setLoading(false)
-          setPercent(0)
-        }, 200)
-      })
-  })
-
-  useEffect(() => {
-    ipcRenderer.on(`callback-split-upload-${uploadToken}`, async (e, res: any) => {
-      if (isCancle.current) return
-      const { progress } = res
-      let newProgress = progress
-      if (newProgress === 100) {
-        newProgress = 99
-      }
-      if (newProgress === 0) {
-        newProgress = 1
-      }
-      const intProgress = newProgress / 100
-
-      setPercent(intProgress * 0.5 + 0.5)
-    })
-    return () => {
-      ipcRenderer.removeAllListeners(`callback-split-upload-${uploadToken}`)
-    }
-  }, [])
-
-  const cancleUpload = () => {
-    ipcRenderer.invoke('cancel-ExportProject', token)
-    ipcRenderer.invoke('cancle-split-upload').then(() => {
-      warn(t('SelectUpload.cancelSuccess'))
-      setLoading(false)
-      setPercent(0)
-      isCancle.current = true
-    })
-  }
-
-  useEffect(() => {
-    if (!token) {
-      return
-    }
-    ipcRenderer.on(`${token}-data`, async (e, data: ProjectIOProgress) => {
-      if (data.TargetPath) {
-        filePath.current = data.TargetPath.replace(/\\/g, '\\')
-      }
-      if (data.Percent > 0) {
-        if (isCancle.current) return
-        setPercent(data.Percent * 0.5)
-      }
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      hasErrorRef.current = true
-      setLoading(false)
-      failed(`[ExportProject] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {
-      if (hasErrorRef.current) return
-      uploadFile()
-    })
-
-    return () => {
-      ipcRenderer.invoke('cancel-ExportProject', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-    }
-  }, [token])
-
-  const onFinish = useMemoizedFn((values) => {
+  const onFinish = useMemoizedFn(async () => {
     if (!cascaderValue) return
+    operation.current?.abort()
+    const controller = new AbortController()
+    operation.current = controller
     setLoading(true)
-    isCancle.current = false
-    hasErrorRef.current = false
-    ipcRenderer.invoke(
-      'ExportProject',
-      {
-        Id: cascaderValue.Id,
-        Password: '',
-      },
-      token,
-    )
+    setPercent(0)
+    try {
+      const targetPath = await new Promise<string>((resolve, reject) => {
+        let output = ''
+        const abort = () => reject(controller.signal.reason)
+        controller.signal.addEventListener('abort', abort, { once: true })
+        ipc
+          .openStream(
+            'grpc',
+            'ExportProject',
+            { Id: cascaderValue.Id, Password: '' },
+            {
+              signal: controller.signal,
+              onData(data) {
+                if (controller.signal.aborted) return
+                if (data.TargetPath) output = data.TargetPath
+                if (data.Percent > 0) setPercent(data.Percent * 0.5)
+              },
+              onError: reject,
+              onEnd() {
+                if (output) resolve(output)
+                else reject(new Error('项目导出没有返回文件路径'))
+              },
+            },
+          )
+          .catch(reject)
+      })
+      controller.signal.throwIfAborted()
+      setPercent(0.51)
+      const { TaskStatus } = await ipc.invoke(
+        'local',
+        'split-upload',
+        {
+          url: 'fragment/upload',
+          path: targetPath,
+          type: 'Project',
+        },
+        {
+          signal: controller.signal,
+          onProgress({ progress }) {
+            if (!controller.signal.aborted) setPercent(Math.min(99, Math.max(1, progress)) / 200 + 0.5)
+          },
+        },
+      )
+      if (controller.signal.aborted) return
+      if (!TaskStatus) throw new Error(t('SelectUpload.uploadFailed'))
+      setPercent(1)
+      success(t('SelectUpload.uploadSuccess'))
+      onCancel()
+    } catch (error) {
+      if (!controller.signal.aborted) failed(`${t('SelectUpload.uploadFailed')}:${error}`)
+    } finally {
+      if (operation.current === controller && !controller.signal.aborted) {
+        operation.current = undefined
+        setLoading(false)
+      }
+    }
   })
+  const cancleUpload = () => {
+    operation.current?.abort()
+    setLoading(false)
+    setPercent(0)
+    warn(t('SelectUpload.cancelSuccess'))
+  }
+  useEffect(() => () => operation.current?.abort(), [])
 
   const fetchChildNode = useMemoizedFn((selectedOptions: FileProjectInfoProps[]) => {
     const targetOption = selectedOptions[selectedOptions.length - 1]
     targetOption.loading = true
-    ipcRenderer
-      .invoke('GetProjects', {
-        FolderId: +targetOption.Id,
+    ipc
+      .invoke('grpc', 'GetProjects', {
+        FolderId: targetOption.Id,
         Pagination: { Page: 1, Limit: 1000, Order: 'desc', OrderBy: 'updated_at' },
       })
-      .then((rsp: ProjectsResponse) => {
+      .then(projectsForUI)
+      .then((rsp) => {
         try {
           setTimeout(() => {
             if (rsp.Projects.length === 0) {
@@ -195,9 +152,10 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
       Pagination: { Page: 1, Limit: 1000, Order: 'desc', OrderBy: 'updated_at' },
     }
 
-    ipcRenderer
-      .invoke('GetProjects', param)
-      .then((rsp: ProjectsResponse) => {
+    ipc
+      .invoke('grpc', 'GetProjects', param)
+      .then(projectsForUI)
+      .then((rsp) => {
         try {
           setData(
             rsp.Projects.map((item) => {

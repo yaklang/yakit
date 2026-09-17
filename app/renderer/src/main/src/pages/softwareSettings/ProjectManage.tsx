@@ -1,3 +1,8 @@
+import { projectForUI } from '@/pages/softwareSettings/projectUtils'
+import { projectsForUI } from '@/pages/softwareSettings/projectUtils'
+import { int64ToSafeNumber, positiveInt64 } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
+import type { GrpcOutput, StreamOptions } from '../../../../../../shared/communication/protocol'
 import React, { memo, type ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useGetState, useMemoizedFn, useScroll, useVirtualList } from 'ahooks'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -52,11 +57,11 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Trans } from 'react-i18next'
 import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
 
-const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
 
 export {
   getEnvTypeByProjects,
+  type ProjectIOProgress,
   type ProjectManageProp,
   type ProjectParamsProps,
   type ProjectParamsProp,
@@ -64,7 +69,6 @@ export {
   type ProjectsResponse,
   type ExportProjectProps,
   type FileProjectInfoProps,
-  type ProjectIOProgress,
 } from './projectUtils'
 import {
   getEnvTypeByProjects,
@@ -75,7 +79,6 @@ import {
   type ProjectsResponse,
   type ExportProjectProps,
   type FileProjectInfoProps,
-  type ProjectIOProgress,
 } from './projectUtils'
 
 import {
@@ -380,8 +383,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 title={data.DatabasePath}
                 onClick={() => {
                   if (data.DatabasePath) {
-                    ipcRenderer
-                      .invoke('is-file-exists', data.DatabasePath)
+                    ipc
+                      .invoke('local', 'is-file-exists', data.DatabasePath)
                       .then((flag: boolean) => {
                         if (flag) {
                           openABSFileLocated(data.DatabasePath)
@@ -471,7 +474,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     return header
   }, [params, typeShow, timeShow, i18nRefresh])
 
-  const [operateShow, setOperateShow] = useState<number>(-1)
+  const [operateShow, setOperateShow] = useState<number | string>(-1)
   const projectOperate = useMemoizedFn((info: ProjectDescription) => {
     const { Id, Type } = info
 
@@ -483,7 +486,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               trigger: ['click'],
               placement: 'bottomRight',
               overlayClassName: styles['dropdown-menu-filter-wrapper'],
-              onOpenChange: (open) => setOperateShow(open ? +Id : -1),
+              onOpenChange: (open) => setOperateShow(open ? Id : -1),
             }}
             menu={{
               data: [
@@ -507,7 +510,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
           >
             <div
               className={classNames(styles['btn-wrapper'], {
-                [styles['btn-focus-style']]: operateShow >= 0 && operateShow === +Id,
+                [styles['btn-focus-style']]: String(operateShow) === String(Id),
               })}
             >
               <PlusOutlined size={16} className={styles['btn-style']} />
@@ -519,7 +522,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               trigger: ['click'],
               placement: 'bottomRight',
               overlayClassName: styles['dropdown-menu-filter-wrapper'],
-              onOpenChange: (open) => setOperateShow(open ? +Id : -1),
+              onOpenChange: (open) => setOperateShow(open ? Id : -1),
             }}
             menu={{
               data: [
@@ -535,7 +538,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
           >
             <div
               className={classNames(styles['btn-wrapper'], {
-                [styles['btn-focus-style']]: operateShow >= 0 && operateShow === +Id,
+                [styles['btn-focus-style']]: String(operateShow) === String(Id),
               })}
             >
               <FigmaIcon2017756Outlined className={styles['btn-style']} />
@@ -561,7 +564,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             <div
               className={styles['btn-wrapper']}
               onClick={() => {
-                setDelId({ Id: +info.Id, Type: info.Type })
+                setDelId({ Id: info.Id, Type: info.Type })
                 setDelShow(true)
               }}
             >
@@ -591,10 +594,16 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
   const getProjectInfo = async () => {
     try {
       await delTemporaryProject()
-      const res2: ProjectDescription = await ipcRenderer.invoke('GetCurrentProjectEx', {
-        Type: getEnvTypeByProjects(),
+      const res2 = await ipc
+        .invoke('grpc', 'GetCurrentProjectEx', {
+          Type: getEnvTypeByProjects(),
+        })
+        .then(projectForUI)
+      setLatestProject({
+        ...res2,
+        CreatedAt: int64ToSafeNumber(res2.CreatedAt),
+        UpdateAt: int64ToSafeNumber(res2.UpdateAt),
       })
-      setLatestProject(res2 || undefined)
     } catch (error) {
       yakitFailed(error + '')
     }
@@ -627,9 +636,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     }
     if (isIRify()) param.FrontendType = 'ssa_project'
     setLoading(true)
-    ipcRenderer
-      .invoke('GetProjects', param)
-      .then((rsp: ProjectsResponse) => {
+    ipc
+      .invoke('grpc', 'GetProjects', param)
+      .then(projectsForUI)
+      .then((rsp) => {
         try {
           if (param.Pagination.Page > 1) {
             const newData = {
@@ -657,7 +667,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
   })
 
   const [delShow, setDelShow] = useState<boolean>(false)
-  const [delId, setDelId] = useState<{ Id: number; Type: string }>({ Id: -1, Type: 'project' })
+  const [delId, setDelId] = useState<{ Id: number | string; Type: string }>({ Id: -1, Type: 'project' })
   const delProjectFolder = useMemoizedFn((isDel: boolean) => {
     if (delId.Id === -1) {
       failed(t('ProjectManage.noDataToDelete'))
@@ -665,22 +675,23 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     }
 
     setLoading(true)
-    ipcRenderer
-      .invoke('DeleteProject', { Id: +delId.Id, IsDeleteLocal: isDel, Type: getEnvTypeByProjects() })
+    ipc
+      .invoke('grpc', 'DeleteProject', { Id: delId.Id, IsDeleteLocal: isDel, Type: getEnvTypeByProjects() })
       .then((e) => {
         setStopUpdate(true)
         info(t('YakitNotification.deleted'))
-        const projects = getData().Projects.filter((item) => +item.Id !== delId.Id)
+        const projects = getData().Projects.filter((item) => String(item.Id) !== String(delId.Id))
         const newData = {
           ...getData(),
           Projects: projects,
         }
         setData(newData)
-        ipcRenderer
-          .invoke('GetCurrentProject', {
+        ipc
+          .invoke('grpc', 'GetCurrentProject', {
             Type: getEnvTypeByProjects(),
           })
-          .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
+          .then(projectForUI)
+          .then((rsp) => setLatestProject(rsp || undefined))
       })
       .catch((e) => {
         failed(t('YakitNotification.deleteFailed', { error: e + '' }))
@@ -746,8 +757,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
           return
         }
         setLoading(true)
-        ipcRenderer
-          .invoke('SetCurrentProject', { Id: data.Id, Type: getEnvTypeByProjects() })
+        ipc
+          .invoke('grpc', 'SetCurrentProject', { Id: data.Id, Type: getEnvTypeByProjects() })
           .then((e) => {
             info(t('ProjectManage.switchDatabaseSuccess'))
             onFinish()
@@ -773,11 +784,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
           setParams({
             Type: params.Type,
             Pagination: { ...params.Pagination, Page: 1 },
-            FolderId: +files[0].Id,
-            ChildFolderId: +data.Id,
+            FolderId: files[0].Id,
+            ChildFolderId: data.Id,
           })
         } else {
-          setParams({ Type: params.Type, Pagination: { ...params.Pagination, Page: 1 }, FolderId: +data.Id })
+          setParams({ Type: params.Type, Pagination: { ...params.Pagination, Page: 1 }, FolderId: data.Id })
         }
         setTimeout(() => {
           update()
@@ -806,7 +817,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
   const getTemporaryProjectId = async () => {
     let id = ''
     try {
-      const res = await ipcRenderer.invoke('GetTemporaryProjectEx', {
+      const res = await ipc.invoke('grpc', 'GetTemporaryProjectEx', {
         Type: getEnvTypeByProjects(),
       })
       if (res) {
@@ -821,13 +832,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
   // 创建临时项目
   const creatTemporaryProject = useMemoizedFn(async () => {
     try {
-      const res = await ipcRenderer.invoke('NewProject', {
+      const res = await ipc.invoke('grpc', 'NewProject', {
         Type: getEnvTypeByProjects(),
         ProjectName: '[temporary]',
       })
       const newTemporaryId = res.Id + ''
       setTemporaryProjectId(newTemporaryId)
-      await ipcRenderer.invoke('SetCurrentProject', { Id: newTemporaryId, Type: getEnvTypeByProjects() })
+      await ipc.invoke('grpc', 'SetCurrentProject', { Id: newTemporaryId, Type: getEnvTypeByProjects() })
       info(t('ProjectManage.switchTemporaryProjectSuccess'))
       onFinish()
     } catch (error) {
@@ -847,17 +858,17 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
           const newProject: ProjectParamsProps = {
             ProjectName: projectInfo.ProjectName,
             Description: projectInfo.Description || '',
-            FolderId: projectInfo.FolderId ? +projectInfo.FolderId : 0,
-            ChildFolderId: projectInfo.ChildFolderId ? +projectInfo.ChildFolderId : 0,
+            FolderId: projectInfo.FolderId ? projectInfo.FolderId : 0,
+            ChildFolderId: projectInfo.ChildFolderId ? projectInfo.ChildFolderId : 0,
             Database: projectInfo.Database,
             Type: getEnvTypeByProjects(),
             ExternalModule: projectInfo.ExternalModule || '',
             ExternalProjectCode: projectInfo.ExternalProjectCode || '',
           }
           if (projectInfo.Id) {
-            newProject.Id = +projectInfo.Id
-            ipcRenderer
-              .invoke('UpdateProject', newProject)
+            newProject.Id = projectInfo.Id
+            ipc
+              .invoke('grpc', 'UpdateProject', newProject)
               .then((res) => {
                 success(t('ProjectManage.editProjectSuccess'))
                 setModalInfo({ visible: false })
@@ -875,8 +886,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }, 300)
               })
           } else {
-            ipcRenderer
-              .invoke('NewProject', newProject)
+            ipc
+              .invoke('grpc', 'NewProject', newProject)
               .then((res) => {
                 success(t('ProjectManage.createProjectSuccess'))
                 setModalInfo({ visible: false })
@@ -904,15 +915,15 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             const newFolder: ProjectParamsProps = {
               ProjectName: folderInfo.ProjectName,
               Description: folderInfo.Description || '',
-              FolderId: folderInfo.FolderId ? +folderInfo.FolderId : 0,
-              ChildFolderId: folderInfo.ChildFolderId ? +folderInfo.ChildFolderId : 0,
+              FolderId: folderInfo.FolderId ? folderInfo.FolderId : 0,
+              ChildFolderId: folderInfo.ChildFolderId ? folderInfo.ChildFolderId : 0,
               Type: 'file',
             }
             if (newFolder.ProjectName === folderInfo.oldName) {
               if (folderInfo.Id) {
-                newFolder.Id = +folderInfo.Id
-                ipcRenderer
-                  .invoke('UpdateProject', newFolder)
+                newFolder.Id = folderInfo.Id
+                ipc
+                  .invoke('grpc', 'UpdateProject', newFolder)
                   .then((res) => {
                     success(t('ProjectManage.editFolderSuccess'))
                     setModalInfo({ visible: false })
@@ -928,8 +939,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     }, 300)
                   })
               } else {
-                ipcRenderer
-                  .invoke('NewProject', newFolder)
+                ipc
+                  .invoke('grpc', 'NewProject', newFolder)
                   .then(() => {
                     success(t('ProjectManage.createFolderSuccess'))
                     setModalInfo({ visible: false })
@@ -946,13 +957,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                   })
               }
             } else {
-              ipcRenderer
-                .invoke('IsProjectNameValid', newFolder)
+              ipc
+                .invoke('grpc', 'IsProjectNameValid', newFolder)
                 .then((e) => {
                   if (folderInfo.Id) {
-                    newFolder.Id = +folderInfo.Id
-                    ipcRenderer
-                      .invoke('UpdateProject', newFolder)
+                    newFolder.Id = folderInfo.Id
+                    ipc
+                      .invoke('grpc', 'UpdateProject', newFolder)
                       .then((res) => {
                         success(t('ProjectManage.editFolderSuccess'))
                         setModalInfo({ visible: false })
@@ -968,27 +979,27 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         }, 300)
                       })
                   } else {
-                    ipcRenderer
-                      .invoke('NewProject', newFolder)
-                      .then(({ Id, ProjectName }: { Id: number; ProjectName: string }) => {
+                    ipc
+                      .invoke('grpc', 'NewProject', newFolder)
+                      .then(({ Id, ProjectName }) => {
                         success(t('ProjectManage.createFolderSuccess'))
                         setModalInfo({ visible: false })
                         if (folderInfo.parent) {
                           setFiles([
                             { ...folderInfo.parent },
-                            { ...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName },
+                            { ...DefaultProjectInfo, Id: Id, ProjectName: ProjectName },
                           ])
                           setParams({
                             Type: 'all',
-                            FolderId: +folderInfo.parent.Id,
-                            ChildFolderId: +Id,
+                            FolderId: folderInfo.parent.Id,
+                            ChildFolderId: Id,
                             Pagination: { ...params.Pagination, Page: 1 },
                           })
                         } else {
-                          setFiles([{ ...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName }])
+                          setFiles([{ ...DefaultProjectInfo, Id: Id, ProjectName: ProjectName }])
                           setParams({
                             Type: 'all',
-                            FolderId: +Id,
+                            FolderId: Id,
                             Pagination: { ...params.Pagination, Page: 1 },
                           })
                         }
@@ -1086,7 +1097,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
       ],
       onClick: ({ key }) => {
         if (key === 'delete') {
-          setDelId({ Id: +project.Id, Type: project.Type })
+          setDelId({ Id: project.Id, Type: project.Type })
           setDelShow(true)
         } else operateFunc(key, project)
       },
@@ -1212,7 +1223,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                       setHeaderShow(false)
                       if (key === 'delete') {
                         if (latestProject) {
-                          setDelId({ Id: +latestProject.Id, Type: latestProject.Type })
+                          setDelId({ Id: latestProject.Id, Type: latestProject.Type })
                           setDelShow(true)
                         }
                       } else operateFunc(key, latestProject)
@@ -1341,7 +1352,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                   setParams({
                     Type: params.Type,
                     Pagination: { ...params.Pagination, Page: 1 },
-                    FolderId: +files[0].Id,
+                    FolderId: files[0].Id,
                   })
                   setTimeout(() => {
                     setFiles([files[0]])
@@ -1447,7 +1458,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             key={i.index}
                             style={{ height: 48 + 1 }}
                             className={classNames(styles['table-opt'], {
-                              [styles['table-opt-selected']]: operateShow >= 0 && operateShow === +i.data.Id,
+                              [styles['table-opt-selected']]: String(operateShow) === String(i.data.Id),
                             })}
                             onClick={(e) => {
                               if (!i.data.Type || i.data.Type === getEnvTypeByProjects()) {
@@ -1543,8 +1554,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         onOk={() => {
           setLoading(true)
           setInquireIntoProjectVisible(false)
-          ipcRenderer
-            .invoke('SetCurrentProject', { Id: newProjectInfo?.Id, Type: getEnvTypeByProjects() })
+          ipc
+            .invoke('grpc', 'SetCurrentProject', { Id: newProjectInfo?.Id, Type: getEnvTypeByProjects() })
             .then((e) => {
               info(t('ProjectManage.switchDatabaseSuccess'))
               setNewProjectInfo({ Id: '', ProjectName: '' })
@@ -1598,12 +1609,12 @@ interface NewProjectAndFolderProps {
   onModalSubmit: (type: string, value: ProjectFolderInfoProps | ExportProjectProps | ImportProjectProps) => any
 }
 interface ProjectFolderInfoProps {
-  Id?: number
+  Id?: number | string
   oldName?: string
   ProjectName: string
   Description?: string
-  FolderId?: number
-  ChildFolderId?: number
+  FolderId?: number | string
+  ChildFolderId?: number | string
   parent?: ProjectDescription
   Database?: string
   ExternalModule?: string
@@ -1613,8 +1624,8 @@ interface ImportProjectProps {
   ProjectFilePath: string
   LocalProjectName?: string
   Password?: string
-  FolderId?: number
-  ChildFolderId?: number
+  FolderId?: number | string
+  ChildFolderId?: number | string
 }
 
 export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => {
@@ -1641,14 +1652,15 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     const targetOption = selectedOptions[selectedOptions.length - 1]
     targetOption.loading = true
 
-    ipcRenderer
-      .invoke('GetProjects', {
-        FolderId: +targetOption.Id,
+    ipc
+      .invoke('grpc', 'GetProjects', {
+        FolderId: targetOption.Id,
         Type: 'file',
         FrontendType: isIRify() ? 'ssa_project' : 'project',
         Pagination: { Page: 1, Limit: 1000, Order: 'desc', OrderBy: 'updated_at' },
       })
-      .then((rsp: ProjectsResponse) => {
+      .then(projectsForUI)
+      .then((rsp) => {
         try {
           setTimeout(() => {
             targetOption.children = [...rsp.Projects]
@@ -1670,9 +1682,10 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
       Pagination: { Page: 1, Limit: 1000, Order: 'desc', OrderBy: 'updated_at' },
     }
     if (isIRify()) param.FrontendType = 'ssa_project'
-    ipcRenderer
-      .invoke('GetProjects', param)
-      .then((rsp: ProjectsResponse) => {
+    ipc
+      .invoke('grpc', 'GetProjects', param)
+      .then(projectsForUI)
+      .then((rsp) => {
         try {
           setData(
             rsp.Projects.map((item) => {
@@ -1720,12 +1733,12 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         } catch (error) {}
       }
       setInfo({
-        Id: +project.Id,
+        Id: project.Id,
         oldName: project.ProjectName,
         ProjectName: project.ProjectName,
         Description: project.Description,
-        FolderId: +project.FolderId,
-        ChildFolderId: +project.ChildFolderId,
+        FolderId: project.FolderId,
+        ChildFolderId: project.ChildFolderId,
         ExternalProjectCode: project.ExternalProjectCode,
         ExternalModule: project.ExternalModule,
       })
@@ -1740,14 +1753,14 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     if (visible && isImport && parentNode) {
       if (parentNode.Id) {
         const data: ImportProjectProps = { ProjectFilePath: '' }
-        if (+parentNode.FolderId === 0) {
-          data.FolderId = +parentNode.Id
+        if (parentNode.FolderId === 0) {
+          data.FolderId = parentNode.Id
         } else {
-          data.FolderId = +parentNode.FolderId
-          if (+parentNode.ChildFolderId === 0) {
-            data.FolderId = +parentNode.Id
+          data.FolderId = parentNode.FolderId
+          if (parentNode.ChildFolderId === 0) {
+            data.FolderId = parentNode.Id
           } else {
-            data.FolderId = +parentNode.ChildFolderId
+            data.FolderId = parentNode.ChildFolderId
           }
         }
         setImportInfo({ ...data })
@@ -1842,14 +1855,14 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
       const data = { ...info }
       if (parentNode && !data.Id) {
         data.parent = { ...parentNode }
-        if (+parentNode.FolderId === 0) {
-          data.FolderId = +parentNode.Id
+        if (parentNode.FolderId === 0) {
+          data.FolderId = parentNode.Id
         } else {
-          data.FolderId = +parentNode.FolderId
-          if (+parentNode.ChildFolderId === 0) {
-            data.FolderId = +parentNode.Id
+          data.FolderId = parentNode.FolderId
+          if (parentNode.ChildFolderId === 0) {
+            data.FolderId = parentNode.Id
           } else {
-            data.FolderId = +parentNode.ChildFolderId
+            data.FolderId = parentNode.ChildFolderId
           }
         }
       }
@@ -1891,15 +1904,15 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
       const newProject: ProjectParamsProps = {
         ProjectName: '',
         Description: '',
-        FolderId: importInfo.FolderId ? +importInfo.FolderId : 0,
-        ChildFolderId: importInfo.ChildFolderId ? +importInfo.ChildFolderId : 0,
+        FolderId: importInfo.FolderId ? importInfo.FolderId : 0,
+        ChildFolderId: importInfo.ChildFolderId ? importInfo.ChildFolderId : 0,
         Type: getEnvTypeByProjects(),
       }
 
       if (importInfo.LocalProjectName) {
         newProject.ProjectName = importInfo.LocalProjectName
-        ipcRenderer
-          .invoke('IsProjectNameValid', newProject)
+        ipc
+          .invoke('grpc', 'IsProjectNameValid', newProject)
           .then((e) => {
             setTransferShow({
               isImport: true,
@@ -1914,8 +1927,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             }, 300)
           })
       } else {
-        ipcRenderer
-          .invoke('fetch-path-file-name', importInfo.ProjectFilePath)
+        ipc
+          .invoke('local', 'fetch-path-file-name', importInfo.ProjectFilePath)
           .then((fileName: string) => {
             if (!fileName) {
               failed(`解析路径内文件名为空`)
@@ -1926,8 +1939,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             }
 
             newProject.ProjectName = fileName
-            ipcRenderer
-              .invoke('IsProjectNameValid', newProject)
+            ipc
+              .invoke('grpc', 'IsProjectNameValid', newProject)
               .then((e) => {
                 setTransferShow({
                   isImport: true,
@@ -2089,7 +2102,11 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                   loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
                   onChange={(value, selectedOptions) => {
                     if (value) {
-                      setInfo({ ...info, FolderId: +(value[0] ?? 0) || 0, ChildFolderId: +(value[1] ?? 0) || 0 })
+                      setInfo({
+                        ...info,
+                        FolderId: positiveInt64(value[0]) || 0,
+                        ChildFolderId: positiveInt64(value[1]) || 0,
+                      })
                     } else {
                       setInfo({ ...info, FolderId: 0, ChildFolderId: 0 })
                     }
@@ -2405,58 +2422,61 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
 
     const hintTitle = isImport ? '[ImportProject]' : isExport ? '[ExportProject]' : ''
 
-    if (isExport) {
-      const exportData: ExportProjectProps = { ...(data as any) }
-      ipcRenderer.invoke(
-        'ExportProject',
-        {
-          Id: exportData.Id,
-          Password: exportData.Password || '',
-        },
-        token,
-      )
-    }
-    if (isImport) {
-      const importData: ImportProjectProps = { ...(data as any) }
-
-      ipcRenderer.invoke(
-        `ImportProject`,
-        {
-          LocalProjectName: importData.LocalProjectName,
-          ProjectFilePath: importData.ProjectFilePath,
-          Password: importData?.Password || '',
-          FolderId: importData.FolderId || 0,
-          ChildFolderId: importData.ChildFolderId || 0,
-          Type: getEnvTypeByProjects(),
-        },
-        token,
-      )
-    }
-
-    ipcRenderer.on(`${token}-data`, async (e, data: ProjectIOProgress) => {
-      if (data.Verbose) {
-        infos.push(data.Verbose)
-      }
-      if (data.Percent > 0) {
-        setPercent(data.Percent * 100)
-      }
-      if (data.TargetPath) {
-        pathRef.current = data.TargetPath
-      }
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      failed(`${hintTitle} error:  ${error}`)
-      infos.push(`${hintTitle} error: ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e) => {
-      info(`${hintTitle} finished`)
-      const isError = infos.filter((item) => item.indexOf('error') > -1).length > 0
-      if (!isError) {
+    const controller = new AbortController()
+    const options: StreamOptions<GrpcOutput<'ExportProject'>> = {
+      token,
+      signal: controller.signal,
+      onData(progress) {
+        if (progress.Verbose) infos.push(progress.Verbose)
+        if (progress.Percent > 0) setPercent(progress.Percent * 100)
+        if (progress.TargetPath) pathRef.current = progress.TargetPath
+      },
+      onError(error) {
+        failed(`${hintTitle} error: ${error.message}`)
+        infos.push(`${hintTitle} error: ${error.message}`)
+        setInfos([...infos])
+      },
+      onEnd() {
+        info(`${hintTitle} finished`)
+        setInfos([...infos])
         if (isImport) onSuccess('isImport')
         if (isExport) {
           onSuccess('isExport')
           if (pathRef.current) openABSFileLocated(pathRef.current)
         }
+      },
+    }
+    const opening =
+      isExport && 'Id' in data
+        ? ipc.openStream(
+            'grpc',
+            'ExportProject',
+            {
+              Id: data.Id,
+              Password: data.Password || '',
+            },
+            options,
+          )
+        : 'ProjectFilePath' in data
+          ? ipc.openStream(
+              'grpc',
+              'ImportProject',
+              {
+                LocalProjectName: data.LocalProjectName,
+                ProjectFilePath: data.ProjectFilePath,
+                Password: data.Password || '',
+                FolderId: data.FolderId || 0,
+                ChildFolderId: data.ChildFolderId || 0,
+                Type: getEnvTypeByProjects(),
+              },
+              options,
+            )
+          : undefined
+    void opening?.catch((error: Error) => {
+      if (!controller.signal.aborted) {
+        failed(`${hintTitle} error: ${error.message}`)
+        infos.push(`${hintTitle} error: ${error.message}`)
+        setInfos([...infos])
       }
     })
 
@@ -2466,11 +2486,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
 
     return () => {
       clearInterval(id)
-      ipcRenderer.invoke('cancel-ExportProject', token)
-      ipcRenderer.invoke('cancel-ImportProject', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
+      controller.abort()
     }
   }, [visible])
 

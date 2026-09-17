@@ -1,3 +1,5 @@
+import { workbenchForUI } from './grpcAdapters'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
@@ -37,7 +39,6 @@ import { getRiskDistributionColors, RiskDistributionChart, RiskGaugeChart, RuleH
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 import { IRifyHomeTable } from './IRifyHomeTable'
 import { useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { yakitProject } from '@/services/electronBridge'
 import { yakitFailed } from '@/utils/notification'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -102,10 +103,11 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
     if (isLoading) {
       setLoading(true)
     }
-    yakitProject
-      .getSSAWorkbenchDashboard({
+    ipc
+      .invoke('grpc', 'GetSSAWorkbenchDashboard', {
         RecentProjectLimit: 10,
       } as GetSSAWorkbenchDashboardRequest)
+      .then(workbenchForUI)
       .then((data: GetSSAWorkbenchDashboardResponse) => {
         setResponseData(data)
       })

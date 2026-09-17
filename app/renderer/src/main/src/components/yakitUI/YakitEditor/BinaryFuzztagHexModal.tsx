@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { FigmaIcon2017756Outlined, DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -11,8 +12,6 @@ import { setClipboardText } from '@/utils/clipboard'
 import { yakitNotify } from '@/utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
 import { saveABSFileToOpen } from '@/utils/openWebsite'
-
-const { ipcRenderer } = window.require('electron')
 
 // 提交结果：只记录是否被修改（不再携带增删改细节）
 export interface BinaryFuzztagSubmitResult {
@@ -50,7 +49,7 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
           return
         }
         case 'copy-base64': {
-          const res = await ipcRenderer.invoke('BytesToBase64', { Bytes: dataRef.current })
+          const res = await ipc.invoke('grpc', 'BytesToBase64', { Bytes: dataRef.current })
           const base64 = res?.Base64 || ''
           if (!base64) {
             yakitNotify('error', 'Base64 编码失败')

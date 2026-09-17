@@ -1,3 +1,4 @@
+import { compareInt64, nonNegativeInt64 } from '@/utils/int64'
 export interface VirtualTableViewportSnapshot {
   scrollTop?: number
   clientHeight?: number
@@ -130,12 +131,12 @@ export const mergeUniqueVirtualTableRows = <T extends Record<string, any>>(
   order: string,
   orderBy: string,
 ): T[] => {
-  const seen = new Set<number>()
+  const seen = new Set<string>()
   const rows: T[] = []
   for (const group of groups) {
     for (const row of group) {
-      const id = Number(row[idKey])
-      if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue
+      const id = nonNegativeInt64(row[idKey])
+      if (id === '0' || seen.has(id)) continue
       seen.add(id)
       rows.push(row)
     }
@@ -143,7 +144,7 @@ export const mergeUniqueVirtualTableRows = <T extends Record<string, any>>(
 
   if (['id', 'created_at'].includes(String(orderBy).toLowerCase())) {
     const direction = order === 'asc' ? 1 : -1
-    rows.sort((left, right) => direction * (Number(left[idKey]) - Number(right[idKey])))
+    rows.sort((left, right) => direction * compareInt64(nonNegativeInt64(left[idKey]), nonNegativeInt64(right[idKey])))
   }
   return rows
 }
@@ -160,16 +161,16 @@ export const selectVirtualTableServerPushRows = <T extends Record<string, any>>(
   incoming: T[],
   idKey: string,
 ): T[] => {
-  const seen = new Set<number>()
+  const seen = new Set<string>()
   for (const row of current) {
-    const id = Number(row[idKey])
-    if (Number.isFinite(id) && id > 0) seen.add(id)
+    const id = nonNegativeInt64(row[idKey])
+    if (id !== '0') seen.add(id)
   }
 
   const insertedRows: T[] = []
   for (const row of incoming) {
-    const id = Number(row[idKey])
-    if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue
+    const id = nonNegativeInt64(row[idKey])
+    if (id === '0' || seen.has(id)) continue
     seen.add(id)
     insertedRows.push(row)
   }

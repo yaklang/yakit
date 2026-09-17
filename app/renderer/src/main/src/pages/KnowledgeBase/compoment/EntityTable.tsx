@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
@@ -40,8 +41,6 @@ import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import { HubButton } from '@/pages/pluginHub/hubExtraOperate/funcTemplate'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
-const { ipcRenderer } = window.require('electron')
-
 const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (props) => {
   const {
     knowledgeBaseItems,
@@ -74,7 +73,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
   // 获取实体关系图
   const { data, runAsync, loading } = useRequest(
     async (HiddenIndex: string[], Depth?: number) => {
-      const response = await ipcRenderer.invoke('QuerySubERM', {
+      const response = await ipc.invoke('grpc', 'QuerySubERM', {
         Filter: {
           HiddenIndex,
         },
@@ -96,7 +95,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
     loading: dotCodeLoading,
   } = useRequest(
     async (HiddenIndex: string[]) => {
-      const response: GenerateERMDotResponse = await ipcRenderer.invoke('GenerateERMDot', {
+      const response: GenerateERMDotResponse = await ipc.invoke('grpc', 'GenerateERMDot', {
         Filter: {
           HiddenIndex,
         },
@@ -145,7 +144,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
 
   const { run: knowledgeBaseIndexRun } = useRequest(
     async () => {
-      const result = await ipcRenderer.invoke('ListEntityRepository', {})
+      const result = await ipc.invoke('grpc', 'ListEntityRepository', {})
 
       const targetBaseIndex = result?.EntityRepositories?.find(
         (it) => it.Name === knowledgeBaseItems?.KnowledgeBaseName,

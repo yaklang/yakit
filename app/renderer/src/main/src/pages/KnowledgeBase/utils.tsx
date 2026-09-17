@@ -1,6 +1,9 @@
+import { grpcPagingToUI, int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
+import type { GrpcOutput } from '@/services/ipc'
 import { grpcFetchLocalPluginDetail } from '../pluginHub/utils/grpc'
 import { defPluginExecuteFormValue } from '../plugins/operator/localPluginExecuteDetailHeard/constants'
-import { apiDebugPlugin, type DebugPluginRequest } from '../plugins/utils'
+import { type DebugPluginRequest } from '../plugins/utils'
 import type {
   ListVectorStoreEntriesRequest,
   QueryEntityRequest,
@@ -45,8 +48,6 @@ import knowledgeJoyrideThree from '@/pages/KnowledgeBase/images/knowledge-joyrid
 import type { Step } from 'react-joyride'
 import styles from './knowledgeBase.module.scss'
 import type { RuleObject } from 'antd/lib/form'
-
-const { ipcRenderer } = window.require('electron')
 
 // 知识库所需安装插件名称列表
 const targetInstallList = [
@@ -304,9 +305,11 @@ const apiSearchKnowledgeBaseEntry: (
   query?: SearchKnowledgeBaseEntryRequest,
 ) => Promise<SearchKnowledgeBaseEntryResponse> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('SearchKnowledgeBaseEntry', query)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'SearchKnowledgeBaseEntry', query ?? {})
+      .then((res) =>
+        resolve({ ...res, Pagination: grpcPagingToUI(res.Pagination), Total: int64ToSafeNumber(res.Total) }),
+      )
       .catch((e) => {
         yakitNotify('error', `查询失败: ${e}`)
         reject(e)
@@ -319,9 +322,11 @@ const apiListVectorStoreEntries: (query?: ListVectorStoreEntriesRequest) => Prom
   query,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('ListVectorStoreEntries', query)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'ListVectorStoreEntries', query ?? {})
+      .then((res) =>
+        resolve({ ...res, Pagination: grpcPagingToUI(res.Pagination), Total: int64ToSafeNumber(res.Total) }),
+      )
       .catch((e) => {
         yakitNotify('error', `查询失败: ${e}`)
         reject(e)
@@ -332,9 +337,11 @@ const apiListVectorStoreEntries: (query?: ListVectorStoreEntriesRequest) => Prom
 // 查询知识库-实体列表
 const apiQueryEntity: (query?: QueryEntityRequest) => Promise<QueryEntityResponse> = (query) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryEntity', query)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'QueryEntity', query ?? {})
+      .then((res) =>
+        resolve({ ...res, Pagination: grpcPagingToUI(res.Pagination), Total: int64ToSafeNumber(res.Total) }),
+      )
       .catch((e) => {
         yakitNotify('error', `查询失败: ${e}`)
         reject(e)
@@ -466,12 +473,11 @@ const BuildingKnowledgeBase = async (targetKnowledgeBase: KnowledgeBaseItem) => 
     PluginName: plugin.ScriptName,
   }
 
-  await apiDebugPlugin({
+  return {
     params: executeParams,
-    token: targetKnowledgeBase.streamToken,
     pluginCustomParams: plugin.Params,
     isShowStartInfo: false,
-  })
+  }
 }
 
 const BuildingKnowledgeBaseEntry = async (targetKnowledgeBase: any, depth?: number) => {
@@ -515,20 +521,21 @@ const BuildingKnowledgeBaseEntry = async (targetKnowledgeBase: any, depth?: numb
       Value: targetKnowledgeBase.isAll ? '' : targetKnowledgeBase?.HiddenIndex,
     },
   ]
-  const executeParams: any = {
+  const executeParams = {
     params: {
       Code: '',
       PluginType: 'yak',
       PluginName: '构建知识条目',
-      ExecParams: executeParam,
+      Input: '',
+      HTTPRequestTemplate: { ...defPluginExecuteFormValue, IsHttpFlowId: false, HTTPFlowId: [] },
+      ExecParams: executeParam.map((param) => ({ ...param, Value: String(param.Value ?? '') })),
     },
     pluginCustomParams: plugin?.Params,
   }
-  await apiDebugPlugin({
+  return {
     ...executeParams,
-    token: targetKnowledgeBase.streamToken,
     isShowStartInfo: false,
-  })
+  }
 }
 
 // 清空知识库插件调用所需参数
@@ -546,12 +553,11 @@ const ClearAllKnowledgeBase = (params: TClearKnowledgeResponse) => async (stream
       },
     ],
   }
-  await apiDebugPlugin({
+  return {
     params: executeParams,
-    token: streamToken,
     pluginCustomParams: params.Params,
     isShowStartInfo: false,
-  })
+  }
 }
 
 const BuildingOnlineKnowledgeBase = async (params: any, streamToken: string) => {
@@ -576,12 +582,11 @@ const BuildingOnlineKnowledgeBase = async (params: any, streamToken: string) => 
       },
     ],
   }
-  await apiDebugPlugin({
+  return {
     params: executeParams,
-    token: streamToken,
     pluginCustomParams: params.Params,
     isShowStartInfo: false,
-  })
+  }
 }
 
 // 知识库可用性诊断
@@ -594,12 +599,11 @@ const checkAIModelAvailability = async (params, streamToken) => {
     PluginName: params.ScriptName,
     ExecParams: [],
   }
-  await apiDebugPlugin({
+  return {
     params: executeParams,
-    token: streamToken,
     pluginCustomParams: params.Params,
     isShowStartInfo: false,
-  })
+  }
 }
 
 const documentType = [
@@ -844,14 +848,44 @@ const extractFileName = (filePath: string) => {
 type KnowledgeBase = Record<string, any>
 
 const DEFAULT_EXTRA = {
+  KnowledgeBaseFile: [],
+  KnowledgeBaseLength: 0,
+  streamToken: '',
+  Tags: [],
+  IsImported: false,
+  disableERM: 'true' as const,
+  chunk: '',
+  concurrency: 0,
+  Type: '',
+  Name: '',
+  Description: '',
+  BaseID: '0',
+  BaseIndex: '',
+  Attributes: [],
+  Rationale: '',
+  HiddenIndex: '',
+  KnowledgeBaseId: 0,
+  KnowledgeTitle: '',
+  KnowledgeType: '',
+  ImportanceScore: 0,
+  Keywords: [],
+  KnowledgeDetails: '',
+  Summary: '',
+  SourcePage: 0,
+  PotentialQuestions: [],
+  PotentialQuestionsVector: [],
+  RelatedEntityUUIDS: '',
   streamstep: 'success' as 1 | 2 | 'success',
   addManuallyItem: false,
   historyGenerateKnowledgeList: [],
 }
 
-const mergeKnowledgeBaseList = (list1: KnowledgeBaseItem[], list2: KnowledgeBaseItem[]): KnowledgeBaseItem[] => {
+const mergeKnowledgeBaseList = (
+  list1: GrpcOutput<'GetKnowledgeBase'>['KnowledgeBases'],
+  list2: KnowledgeBaseItem[],
+): KnowledgeBaseItem[] => {
   // 用 ID 构建 map，方便 O(1) 查找
-  const map2 = new Map<string, KnowledgeBase>(list2.map((item) => [item.ID, item]))
+  const map2 = new Map<string, KnowledgeBaseItem>(list2.map((item) => [item.ID, item]))
 
   return list1.map((item1) => {
     const item2 = map2.get(item1.ID) || {}
@@ -963,53 +997,6 @@ const joyrideSteps: Step[] = [
   },
 ]
 
-const downloadWithEvents = (invokeChannel: string, invokeArgs: any, token: string, onData?: (data: any) => void) => {
-  return new Promise<void>((resolve, reject) => {
-    let settled = false
-
-    const safeResolve = () => {
-      if (!settled) {
-        settled = true
-        resolve()
-      }
-    }
-
-    const safeReject = (err) => {
-      if (!settled) {
-        settled = true
-        reject(err)
-      }
-    }
-
-    ipcRenderer.invoke(invokeChannel, invokeArgs, token).catch(safeReject)
-
-    if (onData) {
-      ipcRenderer.on(`${token}-data`, (_, data) => {
-        console.log(data, 'data')
-        onData(data)
-      })
-    }
-
-    ipcRenderer.once(`${token}-end`, () => {
-      safeResolve()
-    })
-
-    ipcRenderer.once(`${token}-error`, (_, error) => {
-      safeReject(error)
-    })
-  })
-}
-
-const downloadOnlineRagWithEvents = (
-  ragName: string | undefined,
-  all: boolean,
-  token: string,
-  onData?: (data: any) => void,
-) => {
-  const invokeArgs = all ? { Force: true, All: true } : { RagName: ragName, Force: true, All: false }
-  return downloadWithEvents('DownloadRAGs', invokeArgs, token, onData)
-}
-
 const exclude = ['llama-server', 'model-Qwen3-Embedding-0.6B-Q4']
 
 type TValidatorFilePath = (_: RuleObject, value: string) => Promise<any>
@@ -1068,8 +1055,6 @@ export {
   stopList,
   joyrideSteps,
   extractStreamTokenChangedItem,
-  downloadWithEvents,
-  downloadOnlineRagWithEvents,
   exclude,
   ValidatorFilePath,
 }

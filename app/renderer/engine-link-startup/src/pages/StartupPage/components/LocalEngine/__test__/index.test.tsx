@@ -15,7 +15,6 @@ import {
 import { getLocalValue } from '@/utils/kv'
 import { SystemInfo } from '../../../utils'
 import { isEnpriTraceAgent, isCommunityYakit, FetchSoftwareVersion } from '@/utils/envfile'
-import { yakitEngine } from '@/utils/electronBridge'
 
 // ========== Mock 所有外部依赖 ==========
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -80,9 +79,13 @@ vi.mock('../../UpdateYakitHint', () => ({
   UpdateYakitHint: () => null,
 }))
 
-vi.mock('@/utils/electronBridge', () => ({
-  yakitEngine: {
-    onStartUpEngineMessage: vi.fn(() => vi.fn()),
+const yakitEngine = vi.hoisted(() => ({
+  onStartUpEngineMessage: vi.fn((..._args: unknown[]) => vi.fn()),
+}))
+vi.mock('../../../../../../../../shared/communication/window-client', () => ({
+  ipc: {
+    on: (...args: unknown[]) => yakitEngine.onStartUpEngineMessage(...args),
+    invoke: vi.fn(async () => undefined),
   },
 }))
 

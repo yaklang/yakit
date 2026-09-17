@@ -94,7 +94,7 @@ export interface CodeScaMainExecuteContentProps {
   /**进度条信息 */
   setProgressShow: (s?: { type: 'new' | 'old'; progress: number; name?: string }) => void
   // 项目名称列表
-  auditCodeList: { label: string; value: number; Language: string; JSONStringConfig: string }[]
+  auditCodeList: { label: string; value: string | number; Language: string; JSONStringConfig: string }[]
   getAduitList: () => void
   pageInfo: CodeScanPageInfoProps
   executeType: 'new' | 'old'
@@ -113,8 +113,8 @@ export interface CodeScaMainExecuteContentProps {
   extraParamsValue: CodeScanExtraParam
   setActiveTask: (v: SyntaxFlowScanActiveTask[]) => void
   CodeScanByExecuteLastDataRef: React.MutableRefObject<SyntaxFlowScanActiveTaskShow[] | null>
-  selectProjectId: number[]
-  setSelectProjectId: (v: number[]) => void
+  selectProjectId: (string | number)[]
+  setSelectProjectId: (v: (string | number)[]) => void
 }
 
 export interface FlowRuleDetailsListItemProps {
@@ -146,7 +146,7 @@ export interface SyntaxFlowScanRequest {
   Concurrency?: number
   Memory?: boolean
   // 根据项目扫描
-  SSAProjectId?: number
+  SSAProjectId?: string | number
 }
 
 export type SyntaxFlowScanStatus = 'executing' | 'done' | 'paused' | 'error'
@@ -180,8 +180,8 @@ export interface SyntaxFlowResultFilter {
   ProgramNames: string[]
   Keyword: string
   OnlyRisk: boolean
-  AfterID?: number
-  BeforeID?: number
+  AfterID?: string | number
+  BeforeID?: string | number
   Severity?: string[]
   Kind?: string[]
 }
@@ -192,7 +192,7 @@ export interface QuerySyntaxFlowResultRequest {
 }
 
 export interface SyntaxFlowResult {
-  ResultID: number
+  ResultID: string | number
   TaskID: string
   RuleName: string
   Title: string
@@ -204,18 +204,18 @@ export interface SyntaxFlowResult {
   Language: string
   RiskCount: number
   RuleContent: string
-  Kind: 'query' | 'debug' | 'scan'
+  Kind: 'query' | 'scan' | 'debug'
 }
 
 export interface QuerySyntaxFlowResultResponse {
   Pagination: Paging
-  DbMessage: DbOperateMessage
+  DbMessage: DbOperateMessage | null
   Results: SyntaxFlowResult[]
   Total: number
 }
 
 export interface DeleteSyntaxFlowResultResponse {
-  Message: DbOperateMessage
+  Message: DbOperateMessage | null
 }
 
 export interface DeleteSyntaxFlowResultRequest {
@@ -240,7 +240,7 @@ export interface CodeScanAuditExecuteRefProps {
 export interface CodeScanAuditExecuteFormProps {
   ref?: React.ForwardedRef<CodeScanAuditExecuteRefProps>
   plugin?: YakScript
-  onStartExecute: (v: { project: number }, is?: boolean) => void
+  onStartExecute: (v: { project: string | number }, is?: boolean) => void
   /**进度条信息 */
   setProgressShow: (s?: { type: 'new' | 'old'; progress: number; name?: string }) => void
   pushNewLogs: (log: StreamResult.Message[]) => void
@@ -276,7 +276,7 @@ export interface VerifyStartProps {
 }
 
 export interface SSAProject {
-  ID: number
+  ID: string | number
   CreatedAt: number
   UpdatedAt: number
   // 项目基础信息
@@ -304,7 +304,7 @@ export interface SSAProject {
 
 export interface CreateSSAProjectResponse {
   Project: SSAProject
-  Message: DbOperateMessage
+  Message: DbOperateMessage | null
 }
 
 export interface CodeScanRuleSettingProps {

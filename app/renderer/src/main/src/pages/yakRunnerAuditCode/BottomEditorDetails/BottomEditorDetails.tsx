@@ -1,3 +1,5 @@
+import { ssaRisksForUI } from '@/pages/risks/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
@@ -23,8 +25,6 @@ import { openSSARiskNewWindow } from '@/utils/openWebsite'
 import { JSONParseLog } from '@/utils/tool'
 import { yakitNotify } from '@/utils/notification'
 import { openAIForge } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils'
-const { ipcRenderer } = window.require('electron')
-
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
   const { isShowEditorDetails, setEditorDetails, showItem, setShowItem } = props
@@ -98,12 +98,13 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
   })
 
   const onCodeAuditOpenBugDetailFun = useMemoizedFn((hash: string) => {
-    ipcRenderer
-      .invoke('QuerySSARisks', {
+    ipc
+      .invoke('grpc', 'QuerySSARisks', {
         Filter: {
           Hash: [hash],
         },
       })
+      .then(ssaRisksForUI)
       .then((res: QuerySSARisksResponse) => {
         const { Data } = res
         if (Data.length > 0) {

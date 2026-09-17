@@ -62,9 +62,10 @@ const usePluginTunHijack = (params: PluginTunHijackParams) => {
     isManualCancelRef.current = false
     apiDebugPlugin({
       params,
-      token: tokenRef.current,
+      open: debugPluginStreamEvent.open,
       isShowStartInfo: false,
     }).then((res) => {
+      if (!debugPluginStreamEvent.isActive()) return
       setIsExecuting(true)
       debugPluginStreamEvent.start()
     })

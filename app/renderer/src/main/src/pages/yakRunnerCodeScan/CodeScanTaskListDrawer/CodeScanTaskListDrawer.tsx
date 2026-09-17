@@ -1,3 +1,7 @@
+import { syntaxFlowTasksForUI } from '@/pages/yakRunnerCodeScan/grpcAdapters'
+import type { GrpcOutput } from '@/services/ipc'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import React, { type ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Divider, Tooltip } from 'antd'
 import { useControllableValue, useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
@@ -27,7 +31,6 @@ import type { SyntaxFlowScanRequest } from '../YakRunnerCodeScanType'
 import { type CreateReportContentProps, onCreateReportModal } from '@/pages/portscan/CreateReport'
 import moment from 'moment'
 import { apiQuerySSAPrograms } from '@/pages/yakRunnerScanHistory/utils'
-const { ipcRenderer } = window.require('electron')
 interface CodeScanTaskListForwardedRefProps {
   onRemove: () => void
 }
@@ -111,7 +114,7 @@ export interface QuerySyntaxFlowScanTaskRequest {
 }
 
 export interface SyntaxFlowScanTask {
-  Id: number
+  Id: string | number
   CreatedAt: number
   UpdatedAt: number
   TaskId: string
@@ -126,8 +129,8 @@ export interface SyntaxFlowScanTask {
   RiskCount: number
   TotalQuery: number
 
-  Config: SyntaxFlowScanRequest
-  Kind: 'debug' | 'scan'
+  Config: GrpcOutput<'QuerySyntaxFlowScanTask'>['Data'][number]['Config']
+  Kind: 'scan' | 'debug'
 
   // diff
   NewRiskCount: number
@@ -472,9 +475,11 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
         ...params,
         Pagination: paginationProps,
       }
-      ipcRenderer
-        .invoke('QuerySyntaxFlowScanTask', finalParams)
-        .then((res: QuerySyntaxFlowScanTaskResponse) => {
+      ipc
+        .invoke('grpc', 'QuerySyntaxFlowScanTask', finalParams)
+        .then(syntaxFlowTasksForUI)
+        .then(grpcPageForUI)
+        .then((res) => {
           const newPage = +res.Pagination.Page
           const d = newPage === 1 ? res.Data : (response?.Data || []).concat(res.Data)
 
@@ -505,7 +510,7 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
       try {
         const runtimeId = record.TaskId
         const historyName = record.Programs?.[0]
-        const GroupNames = record.Config.Filter?.GroupNames
+        const GroupNames = record.Config?.Filter?.GroupNames
         const route = YakitRoute.YakRunner_Code_Scan
         const current: PageNodeItemProps | undefined = getPageInfoByRuntimeId(route, runtimeId)
         // 查询项目
@@ -513,7 +518,7 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
           Filter: { ProgramNames: record.Programs },
           Pagination: { ...genDefaultPagination() },
         })
-        let projectId = 0
+        let projectId: string | number = 0
         let projectName = ''
         if (res.Data.length > 0) {
           projectId = res.Data[0].SSAProjectID
@@ -587,8 +592,8 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
           TaskIds: [taskId],
         },
       }
-      ipcRenderer
-        .invoke('DeleteSyntaxFlowScanTask', removeParams)
+      ipc
+        .invoke('grpc', 'DeleteSyntaxFlowScanTask', removeParams)
         .then(() => {
           setResponse({
             ...response,
@@ -611,8 +616,8 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
         },
       }
       setLoading(true)
-      ipcRenderer
-        .invoke('DeleteSyntaxFlowScanTask', removeParams)
+      ipc
+        .invoke('grpc', 'DeleteSyntaxFlowScanTask', removeParams)
         .then(() => {
           update(1)
         })

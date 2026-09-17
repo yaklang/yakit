@@ -1,3 +1,6 @@
+import { grpcPageForUI } from '@/utils/int64'
+import { fuzzerHistoriesForUI } from '@/pages/fuzzer/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Card, Divider, List, Space } from 'antd'
 import { formatTimestamp } from '../../utils/timeUtil'
@@ -28,8 +31,6 @@ export interface HTTPFuzzerHistorySelectorProp {
   onShowAllChange: (showAll: boolean) => void
   fuzzerTabIndex: string
 }
-
-const { ipcRenderer } = window.require('electron')
 
 interface HTTPFuzzerTask {
   Id: number
@@ -74,8 +75,8 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
     const removeParams = {
       WebFuzzerIndex: showAll ? '' : fuzzerTabIndex,
     }
-    ipcRenderer
-      .invoke('DeleteHistoryHTTPFuzzerTask', removeParams)
+    ipc
+      .invoke('grpc', 'DeleteHistoryHTTPFuzzerTask', removeParams)
       .then(() => {
         info('Delete History')
         deleteFuzzerConfig()
@@ -106,9 +107,11 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
       Keyword: keyword,
       FuzzerTabIndex: showAll ? '' : fuzzerTabIndex,
     }
-    ipcRenderer
-      .invoke('QueryHistoryHTTPFuzzerTaskEx', params)
-      .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+    ipc
+      .invoke('grpc', 'QueryHistoryHTTPFuzzerTaskEx', params)
+      .then(fuzzerHistoriesForUI)
+      .then(grpcPageForUI)
+      .then((data) => {
         setTasks(data.Data)
         setTotal(data.Total)
         setPaging(data.Pagination)

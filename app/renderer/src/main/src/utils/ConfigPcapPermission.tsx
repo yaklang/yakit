@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { Alert, Form, Tooltip } from 'antd'
@@ -5,7 +6,6 @@ import { yakitNotify } from '@/utils/notification'
 import { getReleaseEditionName } from './envfile'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { yakitHost, yakitSystem } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -25,15 +25,15 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
   const [platform, setPlatform] = useState('')
 
   useEffect(() => {
-    yakitHost
-      .isPrivilegedForNetRaw({})
+    ipc
+      .invoke('grpc', 'IsPrivilegedForNetRaw', {})
       .then(setResponse)
       .catch((e) => {
         yakitNotify('error', t('ConfigPcapPermission.fetchStatusFailed', { error: String(e) }))
       })
       .finally(() => {
-        yakitSystem
-          .fetchSystemAndArch()
+        ipc
+          .invoke('local', 'fetch-system-and-arch', {})
           .then((e: string) => setPlatform(e))
           .catch((e) => {
             yakitNotify(
@@ -54,8 +54,8 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
       onSubmitCapture={(e) => {
         e.preventDefault()
 
-        yakitHost
-          .promotePermissionForUserPcap({})
+        ipc
+          .invoke('grpc', 'PromotePermissionForUserPcap', {})
           .then(() => {
             if (props?.onClose) {
               props.onClose()

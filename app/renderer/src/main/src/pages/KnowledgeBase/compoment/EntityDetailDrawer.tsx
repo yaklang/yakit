@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { type Dispatch, type FC, type SetStateAction, useEffect, useMemo } from 'react'
 import { Divider, Form, Tooltip } from 'antd'
 
@@ -52,8 +53,6 @@ interface EntityDetailDrawerProps {
 
 const { Item } = Form
 
-const { ipcRenderer } = window.require('electron')
-
 const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
   entityDrawerDetail,
   setEntityDrawerDetail,
@@ -74,9 +73,9 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
     loading: dotCodeLoading,
   } = useRequest(
     async (depth?: number) => {
-      const response: GenerateERMDotResponse = await ipcRenderer.invoke('GenerateERMDot', {
+      const response: GenerateERMDotResponse = await ipc.invoke('grpc', 'GenerateERMDot', {
         Filter: {
-          HiddenIndex: [entityDrawerDetail?.HiddenIndex],
+          HiddenIndex: entityDrawerDetail?.HiddenIndex ? [entityDrawerDetail.HiddenIndex] : [],
         },
         Depth: depth ?? 2,
       })
@@ -96,9 +95,9 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
     loading,
   } = useRequest(
     async (depth?: number) => {
-      const response = await ipcRenderer.invoke('QuerySubERM', {
+      const response = await ipc.invoke('grpc', 'QuerySubERM', {
         Filter: {
-          HiddenIndex: [entityDrawerDetail?.HiddenIndex],
+          HiddenIndex: entityDrawerDetail?.HiddenIndex ? [entityDrawerDetail.HiddenIndex] : [],
         },
         Depth: depth ?? 2,
       })
@@ -139,10 +138,10 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
 
   const { data: relationsshipData, run: relationshipRun } = useRequest(
     async (requestData) => {
-      const response: QueryRelationshipResponse = await ipcRenderer.invoke('QueryRelationship', {
+      const response = await ipc.invoke('grpc', 'QueryRelationship', {
         Filter: {
           BaseIndex: requestData.BaseIndex,
-          BaseId: requestData.BaseId,
+          BaseID: requestData.BaseId,
           Types: [requestData.Type],
         },
         Pagination: {
@@ -205,8 +204,8 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
     }
     const newTableData = tableData.map((it) => (it.ID === transformData.ID ? transformData : it))
 
-    await ipcRenderer
-      .invoke('UpdateEntity', transformData)
+    await ipc
+      .invoke('grpc', 'UpdateEntity', transformData)
       .then(() => {
         setTData(newTableData)
         setStatus('preview')

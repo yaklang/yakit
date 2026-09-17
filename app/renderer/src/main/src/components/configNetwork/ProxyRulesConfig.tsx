@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { memo, useMemo, useState } from 'react'
 import { Tooltip, Form, Divider, Table, Modal } from 'antd'
@@ -30,8 +31,6 @@ import styles from './ConfigNetworkPage.module.scss'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import classNames from 'classnames'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
-const { ipcRenderer } = window.require('electron')
-
 const generateEndpointId = () => `ep-${randomString(8)}`
 const generateRouteId = () => `route-${randomString(8)}`
 const PasswordDisplay: React.FC<{
@@ -592,7 +591,7 @@ export const ProxyTest = memo((props: ProxyTestProps) => {
         joined.startsWith('ep') ? { EndpointId: joined } : { Proxy: joined },
       )
 
-      const res = await ipcRenderer.invoke('CheckProxyAlive', params)
+      const res = await ipc.invoke('grpc', 'CheckProxyAlive', params)
       if (res.Ok) {
         //回显节点
         joined && onEchoNode?.(joined.split(','))

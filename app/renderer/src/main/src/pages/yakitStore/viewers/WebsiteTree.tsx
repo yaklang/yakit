@@ -1,3 +1,5 @@
+import { queryHTTPFlows as requestHTTPFlows } from '@/components/HTTPFlowTable/HTTPFlowTable.grpc'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState, useRef } from 'react'
 import { Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu, Popover, Checkbox } from 'antd'
@@ -28,7 +30,6 @@ export interface WebsiteTreeViewerProp {
   maxHeight?: number
 }
 
-const { ipcRenderer } = window.require('electron')
 export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
   const [treeData, setTreeData] = useState<AntDTreeData[]>([])
   const [autoRefresh, setAutoRefresh] = useState(!!props.targets)
@@ -88,11 +89,11 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
 
   const refresh = () => {
     setLoading(true)
-    ipcRenderer
-      .invoke('GenerateWebsiteTree', {
+    ipc
+      .invoke('grpc', 'GenerateWebsiteTree', {
         Targets: searchTarget,
       })
-      .then((data: { TreeDataJson: Uint8Array }) => {
+      .then((data) => {
         const treeDataRaw = ConvertWebsiteForestToTreeData(
           JSON.parse(Buffer.from(data.TreeDataJson).toString('utf8')) as WebsiteForest,
         ) as AntDTreeData[]
@@ -112,7 +113,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
   }
 
   const delReord = (node: AntDTreeData) => {
-    ipcRenderer.invoke('DeleteHTTPFlows', { URLPrefix: fetchDelUrl(node, '') }).then((res) => {
+    ipc.invoke('grpc', 'DeleteHTTPFlows', { URLPrefix: fetchDelUrl(node, '') }).then((res) => {
       refresh()
     })
   }
@@ -126,7 +127,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     if (checkedAll) {
       obj = { DeleteAll: true }
     }
-    ipcRenderer.invoke('DeleteHTTPFlows', obj).then((res) => {
+    ipc.invoke('grpc', 'DeleteHTTPFlows', obj).then((res) => {
       setDelUrlArr([])
       refresh()
     })
@@ -173,15 +174,14 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
         warn('请选择')
         resolve(null)
       } else {
-        ipcRenderer
-          .invoke('QueryHTTPFlows', {
-            IncludeInUrl: downLoadUrlArr,
-            Pagination: {
-              Page: page,
-              Limit: limit,
-              ...query,
-            },
-          })
+        requestHTTPFlows({
+          IncludeInUrl: downLoadUrlArr,
+          Pagination: {
+            Page: page,
+            Limit: limit,
+            ...query,
+          },
+        })
           .then((res: QueryGeneralResponse<HTTPFlow>) => {
             const { Data } = res
             //    数据导出
@@ -440,14 +440,14 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                         const str: string[] = []
                         fetchUrl(node, str)
                         const param = {
-                          SearchURL: str,
+                          IncludeInUrl: str,
                           Pagination: {
                             ...genDefaultPagination(20),
                             Page: 1,
                             Limit: 101,
                           },
                         }
-                        ipcRenderer.invoke('QueryHTTPFlows', param).then((data: QueryGeneralResponse<HTTPFlow>) => {
+                        requestHTTPFlows(param).then((data: QueryGeneralResponse<HTTPFlow>) => {
                           if (data.Total > 100) {
                             failed('该节点下的URL数量超过100个，请缩小范围后再重新操作')
                             return

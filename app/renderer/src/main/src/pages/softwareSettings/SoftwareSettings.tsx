@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { memo, type ReactNode, useEffect, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -23,8 +24,6 @@ import yakitEEProject from '@/assets/yakitFontEE.png'
 import yakitSEProject from '@/assets/yakitFontSE.png'
 import yakitEEMiniProject from '@/assets/yakitEE.png'
 import yakitSEMiniProject from '@/assets/yakitSE.png'
-
-const { ipcRenderer } = window.require('electron')
 
 const { Text } = Typography
 
@@ -92,8 +91,8 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
 
   /** 获取计算机名称 */
   useEffect(() => {
-    ipcRenderer
-      .invoke('fetch-computer-name')
+    ipc
+      .invoke('local', 'fetch-computer-name', {})
       .then((name: string) => setHostName(name || ''))
       .catch(() => {})
 

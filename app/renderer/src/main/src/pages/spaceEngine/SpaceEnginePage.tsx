@@ -15,7 +15,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import {
   type GetSpaceEngineStatusProps,
-  apiCancelFetchPortAssetFromSpaceEngine,
   apiFetchPortAssetFromSpaceEngine,
   apiGetGlobalNetworkConfig,
   apiGetSpaceEngineAccountStatus,
@@ -141,7 +140,8 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
       RetryTimes: value?.RetryTimes ?? 3,
     }
     console.log('SpaceEngine 执行参数:', params)
-    apiFetchPortAssetFromSpaceEngine(params, tokenRef.current).then(() => {
+    apiFetchPortAssetFromSpaceEngine(params, spaceEngineStreamEvent.open).then(() => {
+      if (!spaceEngineStreamEvent.isActive()) return
       setIsExecuting(true)
       setIsExpand(false)
       spaceEngineStreamEvent.start()
@@ -149,7 +149,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
   })
   const onStopExecute = useMemoizedFn((e) => {
     e.stopPropagation()
-    apiCancelFetchPortAssetFromSpaceEngine(tokenRef.current).then(() => {
+    spaceEngineStreamEvent.cancel().then(() => {
       // cancel 后主进程不再转发 end，需本地收尾
       spaceEngineStreamEvent.stop()
       setExecuteStatus('finished')

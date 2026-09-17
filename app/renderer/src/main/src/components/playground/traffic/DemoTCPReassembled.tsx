@@ -1,3 +1,6 @@
+import { tcpReassembledForUI } from '@/models/Traffic'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import type { TrafficTCPReassembled } from '@/models/Traffic'
@@ -7,8 +10,6 @@ import type { TrafficViewerControlIf } from '@/components/playground/traffic/bas
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface DemoTCPReassembledProp extends TrafficViewerControlIf {}
-
-const { ipcRenderer } = window.require('electron')
 
 export const DemoTCPReassembled: React.FC<DemoTCPReassembledProp> = (props) => {
   const { t } = useI18nNamespaces(['components'])
@@ -64,13 +65,15 @@ export const DemoTCPReassembled: React.FC<DemoTCPReassembledProp> = (props) => {
         return new Promise((resolve, reject) => {
           if (!data) {
             // info("加载初始化数据")
-            ipcRenderer
-              .invoke('QueryTrafficTCPReassembled', {
+            ipc
+              .invoke('grpc', 'QueryTrafficTCPReassembled', {
                 TimestampNow: props.fromTimestamp,
                 Pagination: { Limit: 10, Page: 1, OrderBy: 'id', Order: 'asc' }, // genDefaultPagination(),
                 FromId: 0,
               })
-              .then((rsp: { Data: TrafficTCPReassembled[] }) => {
+              .then(tcpReassembledForUI)
+              .then(grpcPageForUI)
+              .then((rsp) => {
                 resolve({
                   data: rsp.Data,
                 })
@@ -78,13 +81,15 @@ export const DemoTCPReassembled: React.FC<DemoTCPReassembledProp> = (props) => {
               })
             return
           } else {
-            ipcRenderer
-              .invoke('QueryTrafficTCPReassembled', {
+            ipc
+              .invoke('grpc', 'QueryTrafficTCPReassembled', {
                 TimestampNow: props.fromTimestamp,
                 Pagination: { Limit: 10, Page: 1, OrderBy: 'id', Order: 'asc' },
                 FromId: data.Id,
               })
-              .then((rsp: { Data: TrafficTCPReassembled[]; Total: number; Pagination: Paging }) => {
+              .then(tcpReassembledForUI)
+              .then(grpcPageForUI)
+              .then((rsp) => {
                 resolve({
                   data: rsp.Data,
                 })

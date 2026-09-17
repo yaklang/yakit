@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useMemo } from 'react'
 import classNames from 'classnames'
@@ -42,8 +43,6 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { runContextMenuAction } from '@/pages/manageRightClickPlugins/runContextMenuAction'
 import { checkContextMenuVersion } from '@/pages/manageRightClickPlugins/utils'
 import { ContextMenuExecutionType, type ContextMenuHttpsState } from '@/pages/manageRightClickPlugins/types'
-
-const { ipcRenderer } = window.require('electron')
 
 const REQUEST_PACKET_SINGLE_MENU_KEYS = new Set([
   'sendToWebFuzzerKey',
@@ -105,14 +104,14 @@ export interface UseHTTPFlowTableContextMenuOptions {
   onEditTags: (flow: HTTPFlow) => void
   onHTTPFlowTableRowDoubleClick: (flow: HTTPFlow) => void
   onExcelExport: (list: HTTPFlow[]) => void
-  onHarExport: (ids: number[]) => void
+  onHarExport: (ids: (string | number)[]) => void
   onPocMould: (flow: HTTPFlow) => void
   onBatchPocMould: (flow: HTTPFlow) => void
   onShieldRecord: (flow: HTTPFlow) => void
   onShieldURL: (flow: HTTPFlow) => void
   onShieldDomain: (flow: HTTPFlow) => void
   onBatch: (f: (element: HTTPFlow) => void, number: number, all?: boolean, rows?: HTTPFlow[]) => void
-  onViewAttachmentDataRefresh: (id: number) => void
+  onViewAttachmentDataRefresh: (id: string | number) => void
   onClearSelection: () => void
 }
 
@@ -308,7 +307,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         default: true,
         webSocket: false,
         onClickSingle: (v) => {
-          ipcRenderer.invoke('GetResponseBodyByHTTPFlowID', { Id: v.Id }).then((bytes: { Raw: Uint8Array }) => {
+          ipc.invoke('grpc', 'GetResponseBodyByHTTPFlowID', { Id: v.Id }).then((bytes) => {
             saveABSFileToOpen(`response-body.txt`, bytes.Raw)
           })
         },

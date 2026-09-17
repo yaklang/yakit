@@ -1,9 +1,10 @@
+import { portsForUI } from '@/pages/assetViewer/models'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type { QueryPortsRequest } from '@/pages/assetViewer/PortAssetPage'
 import type { PortAsset } from '@/pages/assetViewer/models'
 import { type QueryGeneralResponse } from '@/pages/invoker/schema'
 import { yakitNotify } from '@/utils/notification'
-
-const { ipcRenderer } = window.require('electron')
 
 export const defQueryPortsRequest: QueryPortsRequest = {
   Hosts: '',
@@ -27,8 +28,10 @@ export const defQueryPortsRequest: QueryPortsRequest = {
  */
 export const apiQueryPortsBase: (params: QueryPortsRequest) => Promise<QueryGeneralResponse<PortAsset>> = (params) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke(`QueryPorts`, params)
+    ipc
+      .invoke('grpc', 'QueryPorts', params)
+      .then(portsForUI)
+      .then(grpcPageForUI)
       .then(resolve)
       .catch((e: any) => {
         yakitNotify('error', '获取端口列表出错:' + e)

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { info } from '@/utils/notification'
@@ -10,8 +11,6 @@ import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { SystemInfo } from '@/constants/hardware'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
-
 /** 构建期配置：默认需要 License 验证；CI 可设为 false 跳过校验流程 */
 const requireEnterpriseLicense = process.env.YAKIT_REQUIRE_ENTERPRISE_LICENSE !== 'false'
 
@@ -36,8 +35,8 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
   }, [])
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
   const judgeLogin = () => {
-    ipcRenderer
-      .invoke('get-login-user-info', {})
+    ipc
+      .invoke('local', 'get-login-user-info', {})
       .then((e) => {
         if (e?.isLogin) {
           uploadProjectEvent.startUpload({
@@ -71,8 +70,8 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
   }
 
   const judgeLicenseGrpc = (LicenseActivation: string, isCache = false) => {
-    ipcRenderer
-      .invoke('CheckLicense', {
+    ipc
+      .invoke('grpc', 'CheckLicense', {
         LicenseActivation,
         CompanyVersion: isEnpriTraceAgent() ? 'EnpriTraceAgent' : 'EnpriTrace',
       })

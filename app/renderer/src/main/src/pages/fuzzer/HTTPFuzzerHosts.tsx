@@ -1,3 +1,4 @@
+import { ipc } from '../../../../../../shared/communication/window-client'
 import type React from 'react'
 import { useMemo, useState } from 'react'
 import { Form, Space } from 'antd'
@@ -13,8 +14,6 @@ import { saveABSFileToOpen } from '@/utils/openWebsite'
 import { hostsExampleTemplate } from '@/defaultConstants/HTTPFuzzerHosts'
 import styles from './HTTPFuzzerHistory.module.scss'
 const tOriginal = i18n.getFixedT(null, ['webFuzzer'])
-const { ipcRenderer } = window.require('electron')
-
 interface HTTPFuzzerHostInputProp {
   onAdd: (obj: { Key: string; Value: string }) => any
   onBatchAdd?: (items: { Key: string; Value: string }[]) => void
@@ -113,7 +112,7 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
       }
       let currentHostsContent = ''
       try {
-        currentHostsContent = await ipcRenderer.invoke('fetch-file-content', fileName)
+        currentHostsContent = await ipc.invoke('local', 'read-file-content', fileName)
       } catch (error) {
         yakitFailed(t('HTTPFuzzerHosts.fileReadFailed', { error: String(error) }))
         return

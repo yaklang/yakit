@@ -1,3 +1,7 @@
+import { ssaProjectsForUI } from '@/pages/yakRunnerCodeScan/grpcAdapters'
+import { syntaxFlowTasksForUI } from '@/pages/yakRunnerCodeScan/grpcAdapters'
+import { grpcPageForUI } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import React, { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type {
   AfreshAuditModalProps,
@@ -140,8 +144,6 @@ import { apiQuerySSAPrograms } from '@/pages/yakRunnerScanHistory/utils'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 const { YakitPanel } = YakitCollapse
-
-const { ipcRenderer } = window.require('electron')
 
 export const isBugFun = (info: AuditNodeProps) => {
   try {
@@ -544,7 +546,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
   const runQueryRef = useRef<
     {
       Key: string
-      Value: number
+      Value: string | number
     }[]
   >()
 
@@ -784,7 +786,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
 
   const [resultId, setResultId] = useState<string>()
   const onAuditRuleSubmitFun = useMemoizedFn(
-    async (textArea: string = '', Query?: { Key: string; Value: number }[]) => {
+    async (textArea: string = '', Query?: { Key: string; Value: string | number }[]) => {
       try {
         resetMap()
         setResultId(undefined)
@@ -969,8 +971,9 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
       ],
       PluginName: 'SyntaxFlow 规则执行',
     }
-    apiDebugPlugin({ params: requestParams, token: tokenRef.current })
+    apiDebugPlugin({ params: requestParams, open: debugPluginStreamEvent.open })
       .then(() => {
+        if (!debugPluginStreamEvent.isActive()) return
         setAuditType('result')
         setAuditExecuting && setAuditExecuting(true)
         setOnlyFileTree(false)
@@ -1854,7 +1857,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
   // 由于此流还包含表单校验功能 因此需判断校验是否通过，是否已经真正的执行了
   const isRealStartRef = useRef<boolean>(false)
 
-  const projectIdCacheRef = useRef<number>()
+  const projectIdCacheRef = useRef<string | number>()
   const jsonCacheRef = useRef<string>('')
   const path = useRef<string>('')
 
@@ -1863,7 +1866,8 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
     debugPluginStreamEvent.reset()
     setRuntimeId('')
 
-    apiDebugPlugin({ params: requestParams, token: tokenRef.current }).then(() => {
+    apiDebugPlugin({ params: requestParams, open: debugPluginStreamEvent.open }).then(() => {
+      if (!debugPluginStreamEvent.isActive()) return
       const targetItem = requestParams.ExecParams.find((param) => param.Key === 'target')
       if (targetItem) path.current = targetItem.Value
       isRealStartRef.current = false
@@ -1912,8 +1916,9 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
       ],
       PluginName: 'SSA 项目编译',
     }
-    apiDebugPlugin({ params: requestParams, token: tokenCompileRef.current })
+    apiDebugPlugin({ params: requestParams, open: debugCompilePluginStreamEvent.open })
       .then(() => {
+        if (!debugCompilePluginStreamEvent.isActive()) return
         isStartExecuteRef.current = false
         debugCompilePluginStreamEvent.start()
       })
@@ -1941,12 +1946,13 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
 
   const onCreateSSAProject = useMemoizedFn(async (JSONStringConfig) => {
     return new Promise((resolve, reject) => {
-      ipcRenderer
-        .invoke('CreateSSAProject', {
+      ipc
+        .invoke('grpc', 'CreateSSAProject', {
           JSONStringConfig,
         })
-        .then((res: CreateSSAProjectResponse) => {
+        .then((res) => {
           onRefresh?.()
+          if (!res.Project) throw new Error('创建项目未返回项目信息')
           projectIdCacheRef.current = res.Project.ID
           jsonCacheRef.current = res.Project.JSONStringConfig
           resolve(null)
@@ -2194,7 +2200,8 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
       }
       debugPluginStreamEvent.reset()
       setRuntimeId('')
-      apiDebugPlugin({ params: requestParams, token: tokenRef.current }).then(() => {
+      apiDebugPlugin({ params: requestParams, open: debugPluginStreamEvent.open }).then(() => {
+        if (!debugPluginStreamEvent.isActive()) return
         setIsExecuting(true)
         debugPluginStreamEvent.start()
       })
@@ -2335,7 +2342,8 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
     }
     JSONStringConfigCacheRef.current = JSONStringConfig
 
-    apiDebugPlugin({ params, token: tokenRef.current }).then(() => {
+    apiDebugPlugin({ params, open: debugPluginStreamEvent.open }).then(() => {
+      if (!debugPluginStreamEvent.isActive()) return
       debugPluginStreamEvent.start()
     })
   })
@@ -2434,24 +2442,27 @@ const getProgramRiskTotal = (program: SSAProgram) => {
     Number(program.InfoRiskNumber || 0)
   )
 }
-const fetchScanTotals = async (programs: SSAProgram[], projectId: number) => {
+const fetchScanTotals = async (programs: SSAProgram[], projectId: string | number) => {
   const entries = await Promise.all(
     programs.map(async (program) => {
       try {
-        const res = await ipcRenderer.invoke('QuerySyntaxFlowScanTask', {
-          Pagination: {
-            Page: 1,
-            Limit: 1,
-            Order: 'desc',
-            OrderBy: 'created_at',
-          },
-          Filter: {
-            Programs: [program.Name],
-            ProjectIds: [projectId],
-            Kind: ['scan'],
-          },
-          ShowDiffRisk: false,
-        })
+        const res = await ipc
+          .invoke('grpc', 'QuerySyntaxFlowScanTask', {
+            Pagination: {
+              Page: 1,
+              Limit: 1,
+              Order: 'desc',
+              OrderBy: 'created_at',
+            },
+            Filter: {
+              Programs: [program.Name],
+              ProjectIds: [projectId],
+              Kind: ['scan'],
+            },
+            ShowDiffRisk: false,
+          })
+          .then(syntaxFlowTasksForUI)
+          .then(grpcPageForUI)
         return [program.Id, Number(res?.Total || 0)] as const
       } catch {
         return [program.Id, 0] as const
@@ -2487,7 +2498,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
   const [hasMore, setHasMore] = useState<boolean>(false)
 
   const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
+  const [selectedRowKeys, setSelectedRowKeys] = useState<(string | number)[]>([])
   const [deleteParams, setDeleteParams] = useState<{
     titile: string
     params: DeleteSSAProjectRequest
@@ -2495,12 +2506,12 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
   const [isAllowIRifyUpdate, setIsAllowIRifyUpdate] = useState<boolean>(false)
 
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
-  const detailCacheRef = useRef<Map<number, SSAProjectResponseDetail>>(new Map())
-  const loadingMapRef = useRef<Map<number, boolean>>(new Map())
+  const detailCacheRef = useRef<Map<string | number, SSAProjectResponseDetail>>(new Map())
+  const loadingMapRef = useRef<Map<string | number, boolean>>(new Map())
 
   // 接口是否正在请求
   const isGrpcRef = useRef<boolean>(false)
-  const afterId = useRef<number>()
+  const afterId = useRef<string | number>()
   const [schema, setSchema] = useState<RJSFSchema>({})
   // 获取JSONSchema表单
   const handleFetchJSONSchema = useDebounceFn(
@@ -2568,15 +2579,16 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
       clearExpanded()
     }
 
-    ipcRenderer
-      .invoke('QuerySSAProject', {
+    ipc
+      .invoke('grpc', 'QuerySSAProject', {
         Filter: params,
-        Pagination: { ...paginationProps, AfterId: reload ? undefined : parseInt(afterId.current + '') },
+        Pagination: { ...paginationProps, AfterId: reload ? undefined : afterId.current },
       })
-      .then((item: QueryGeneralResponse<SSAProjectResponse>) => {
-        item.Data = (item as any).Projects
-        const newData = reload ? item.Data : data.concat(item.Data)
-        const isMore = item.Data.length < item.Pagination.Limit || newData.length === total
+      .then(ssaProjectsForUI)
+      .then(grpcPageForUI)
+      .then((item) => {
+        const newData = reload ? item.Projects : data.concat(item.Projects)
+        const isMore = item.Projects.length < item.Pagination.Limit || newData.length === total
         setHasMore(!isMore)
         if (isAllSelect) setSelectedRowKeys(newData.map((item) => item.ID))
         setData(newData)
@@ -2604,12 +2616,14 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
       Page: 1,
       Limit: pagination.Limit,
     }
-    ipcRenderer
-      .invoke('QuerySSAProject', {
+    ipc
+      .invoke('grpc', 'QuerySSAProject', {
         Filter: params,
         Pagination: paginationProps,
       })
-      .then((item: QueryGeneralResponse<SSAProjectResponse>) => {
+      .then(ssaProjectsForUI)
+      .then(grpcPageForUI)
+      .then((item) => {
         setTotal(item.Total)
       })
   })
@@ -2617,9 +2631,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
   const onDelete = useMemoizedFn(async (params: DeleteSSAProjectRequest) => {
     setLoading(true)
     try {
-      const resp = await ipcRenderer.invoke('DeleteSSAProject', { ...params })
-      const effectRows = resp?.Message?.EffectRows ?? resp?.message?.EffectRows ?? 0
-      if (effectRows <= 0) {
+      const resp = await ipc.invoke('grpc', 'DeleteSSAProject', { ...params })
+      const effectRows = resp.Message?.EffectRows ?? '0'
+      if (BigInt(effectRows) <= BigInt(0)) {
         failed(t('YakitNotification.deleteFailed', { error: 'no project affected' }))
         return
       }
@@ -2651,7 +2665,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
 
   const onDeleteCompileHistory = useMemoizedFn(async (record: SSAProjectResponse, programId: number) => {
     try {
-      await ipcRenderer.invoke('DeleteSSAPrograms', {
+      await ipc.invoke('grpc', 'DeleteSSAPrograms', {
         Filter: {
           Ids: [programId],
         },
@@ -2913,7 +2927,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                           titile: `确认删除${record.ProjectName}？`,
                           params: {
                             Filter: {
-                              IDs: [parseInt(record.ID + '')],
+                              IDs: [record.ID],
                             },
                           },
                         })

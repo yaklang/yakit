@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import { ipc } from '@/services/ipc'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { Progress } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
@@ -11,8 +12,6 @@ import { failed, yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import style from '../MITMPage.module.scss'
 import { CloudDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
-
-const { ipcRenderer } = window.require('electron')
 
 export interface YakitGetOnlinePluginProps {
   /**@name 'online'默认首页 mine 个人, recycle 回收站 check 审核页面" */
@@ -39,54 +38,48 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
   const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const taskToken = useMemo(() => randomString(40), [])
   const [percent, setPercent] = useState<number>(0)
+  const controllerRef = useRef<AbortController>()
   useEffect(() => {
-    if (!taskToken) {
-      return
-    }
-    ipcRenderer.on(`${taskToken}-data`, (_, data: DownloadOnlinePluginAllResProps) => {
-      const p = Math.floor(data.Progress * 100)
-      setPercent(p)
-    })
-    ipcRenderer.on(`${taskToken}-end`, () => {
-      setTimeout(() => {
-        setPercent(0)
-        setVisible(false)
-        onFinish && onFinish()
-        if (isCommunityEdition()) ipcRenderer.invoke('refresh-public-menu')
-        else ipcRenderer.invoke('change-main-menu')
-        onRefLocalPluginList()
-      }, 200)
-    })
-    ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+    if (!visible) return
+    const controller = new AbortController()
+    controllerRef.current = controller
+    setPercent(0)
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
       onRefLocalPluginList()
-      yakitNotify('error', t('YakitNotification.downloadFailed', { error: e + '' }))
-    })
-    return () => {
-      ipcRenderer.removeAllListeners(`${taskToken}-data`)
-      ipcRenderer.removeAllListeners(`${taskToken}-error`)
-      ipcRenderer.removeAllListeners(`${taskToken}-end`)
+      yakitNotify('error', t('YakitNotification.downloadFailed', { error: String(error) }))
     }
-  }, [taskToken])
-  useEffect(() => {
-    if (visible) {
-      const addParams: DownloadOnlinePluginsRequest = {
-        ListType: listType === 'online' ? '' : listType,
-        PluginType: pluginType ? pluginType : [],
-      }
-      ipcRenderer
-        .invoke('DownloadOnlinePlugins', addParams, taskToken)
-        .then(() => {})
-        .catch((e) => {
-          failed(t('YakitNotification.downloadFailed', { error: e + '' }))
-        })
-    }
+    void ipc
+      .openStream(
+        'grpc',
+        'DownloadOnlinePlugins',
+        {
+          ListType: listType === 'online' ? '' : listType,
+          PluginType: pluginType || [],
+        },
+        {
+          token: taskToken,
+          signal: controller.signal,
+          onData(data) {
+            if (!controller.signal.aborted) setPercent(Math.floor(data.Progress * 100))
+          },
+          onError,
+          onEnd() {
+            if (controller.signal.aborted) return
+            setPercent(0)
+            setVisible(false)
+            onFinish?.()
+            if (isCommunityEdition())
+              void ipc.invoke('local', 'ForwardMainEvent', { event: 'refresh-public-menu-callback' })
+            else void ipc.invoke('local', 'ForwardMainEvent', { event: 'fetch-new-main-menu' })
+            onRefLocalPluginList()
+          },
+        },
+      )
+      .catch(onError)
+    return () => controller.abort()
   }, [visible])
-  const StopAllPlugin = () => {
-    ipcRenderer.invoke('cancel-DownloadOnlinePlugins', taskToken).catch((e) => {
-      failed(t('MITMPluginLocalList.stop_download_failed_e', { e }))
-      onRefLocalPluginList()
-    })
-  }
+  const StopAllPlugin = () => controllerRef.current?.abort()
   const onRefLocalPluginList = useMemoizedFn(() => {
     emiter.emit('onRefreshLocalPluginList', true)
   })

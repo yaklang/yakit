@@ -1,3 +1,4 @@
+import { int64ToSafeNumber } from '@/utils/int64'
 import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
@@ -32,12 +33,12 @@ const handleStatus: AIMessageHandler = (request) => {
     }
   } else {
     const originData = meta.cardKVPair.get(data.key)
-    if (originData && originData.Timestamp > res.Timestamp) return
+    if (originData && originData.Timestamp > int64ToSafeNumber(res.Timestamp)) return
 
     meta.cardKVPair.set(data.key, {
       Id: data.key,
       Data: data.value,
-      Timestamp: res.Timestamp,
+      Timestamp: int64ToSafeNumber(res.Timestamp),
       Tags: [],
     })
 

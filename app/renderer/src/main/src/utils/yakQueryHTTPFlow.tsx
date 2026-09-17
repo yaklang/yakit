@@ -1,5 +1,3 @@
-import { yakitHTTPFlow } from '@/services/electronBridge'
-
 export type HistoryPluginSearchType = 'all' | 'request' | 'response'
 
 /** 与 grpc MITMExtractAggregateFlowFilterRow 一致，用于聚合左栏多选联动流量 */
@@ -29,8 +27,8 @@ export interface YakQueryHTTPFlowRequest {
   ExcludePath?: string[]
   IncludeSuffix?: string[]
   ExcludeSuffix?: string[]
-  ExcludeId?: number[]
-  IncludeId?: number[]
+  ExcludeId?: (string | number)[]
+  IncludeId?: (string | number)[]
   Tags?: string[]
   ExcludeTags?: string[]
   HaveParamsTotal?: string
@@ -47,13 +45,13 @@ export interface YakQueryHTTPFlowRequest {
   Full?: boolean
   ProcessName?: string[]
   ExcludeKeywords?: string[]
-  AnalyzedIds?: number[]
+  AnalyzedIds?: (number | string)[]
   /** 与 extracted_data.trace_id 对应的 http_flows.hidden_index */
   HiddenIndex?: string[]
   /** MITM 提取聚合行多选 OR 过滤 */
   MitmExtractAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]
-  AfterId?: number
-  BeforeId?: number
+  AfterId?: string | number
+  BeforeId?: string | number
   /** 请求后端附带有界的链路诊断数据；不改变查询结果。 */
   IncludeSystemTiming?: boolean
   /** 列表不返回原始响应包；详情通过 GetHTTPFlowById 按需获取。 */
@@ -70,7 +68,7 @@ export interface YakQueryHTTPFlowRequest {
 
 export interface YakDeleteHTTPFlowRequest {
   DeleteAll?: boolean
-  Id?: number[]
+  Id?: (string | number)[]
   ItemHash?: string[]
   URLPrefix?: string
   Filter?: YakQueryHTTPFlowRequest
@@ -135,13 +133,4 @@ export interface Paging {
   Order?: 'asc' | 'desc' | string
   OrderBy?: 'created_at' | 'updated_at' | string
   RawOrder?: string
-}
-
-export const yakQueryHTTPFlow = (
-  params: YakQueryHTTPFlowRequest,
-  onOk?: (rsp: any) => any,
-  onFailed?: (e: any) => any,
-  onFinally?: () => any,
-) => {
-  yakitHTTPFlow.queryHistory(params).then(onOk).catch(onFailed).finally(onFinally)
 }

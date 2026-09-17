@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { type ReactElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import MonacoEditor, { monaco } from 'react-monaco-editor'
 import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
@@ -59,7 +60,6 @@ import { fontSizeOptions, useEditorFontSize } from '@/store/editorFontSize'
 import { useEditorShowLineBreaks } from '@/store/editorShowLineBreaks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { JSONParseLog } from './tool'
-import { yakitEditorTools } from '@/services/electronBridge'
 import { resolveWebFuzzerPacket } from '@/components/yakitUI/YakitEditor/editorUtils'
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor
@@ -317,8 +317,8 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
   const yakCompileAndFormat = useDebounceFn(
     useMemoizedFn((editor: IMonacoEditor, model: ITextModel) => {
       const allContent = model.getValue()
-      yakitEditorTools
-        .compileAndFormat({ Code: allContent })
+      ipc
+        .invoke('grpc', 'YaklangCompileAndFormat', { Code: allContent })
         .then((e: { Errors: YakStaticAnalyzeErrorResult[]; Code: string }) => {
           console.info(e)
           if (e.Code !== '') {
@@ -346,8 +346,8 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
       const allContent = model.getValue()
       const type = props.type || ''
       if (language === 'yak') {
-        yakitEditorTools
-          .staticAnalyze({
+        ipc
+          .invoke('grpc', 'StaticAnalyzeError', {
             Code: StringToUint8Array(allContent),
             PluginType: type,
             SessionID: AnalyzeSessionIDRef.current,

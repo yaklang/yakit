@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"],
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["app/main/**/*.ts", "app/shared/**/*.ts", "app/renderer/screenshots-bridge.ts"],
+  "exclude": ["app/main/**/__test__/**"]
+}

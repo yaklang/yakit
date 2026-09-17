@@ -1,4 +1,4 @@
-const { ipcRenderer } = window.require('electron')
+import { ipc } from '@/services/ipc'
 
 /** 脱敏展示 ApiKey */
 export const maskApiKey = (apiKey: string) => {
@@ -9,5 +9,5 @@ export const maskApiKey = (apiKey: string) => {
 
 /** 将指定 ApiKey 写入本地引擎 */
 export const grpcUpdateApiKey = (apiKey: string) => {
-  return ipcRenderer.invoke('UpdateApiKey', { ApiKey: apiKey })
+  return ipc.invoke('grpc', 'UpdateApiKey', { ApiKey: apiKey })
 }

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { formatTimestamp } from '@/utils/timeUtil'
 
@@ -14,9 +15,7 @@ export class AIAgentLogEmitter {
     message: string,
     isStream?: boolean,
   ) {
-    const { ipcRenderer } = window.require('electron')
-    // 主进程用 ipcMain.handle 注册，必须用 invoke；send 不会触发 handle
-    void ipcRenderer.invoke('forward-ai-chat-log-data', {
+    void ipc.invoke('local', 'forward-ai-chat-log-data', {
       sessionId,
       level: level,
       message: message,
@@ -76,14 +75,12 @@ export class AIAgentLogEmitter {
 
   /** 清空日志窗口里的所有内容 */
   public clearLogsWindow(sessionId: string) {
-    const { ipcRenderer } = window.require('electron')
-    ipcRenderer.invoke('clear-ai-chat-log-data')
+    ipc.invoke('local', 'clear-ai-chat-log-data', {})
   }
   /** 关闭日志窗口 */
   public closeLogsWindow(sessionId: string) {
     this.clearSessionBuffer(sessionId)
-    const { ipcRenderer } = window.require('electron')
-    ipcRenderer.send('close-ai-chat-window')
+    ipc.invoke('local', 'close-ai-chat-window', {})
   }
 }
 

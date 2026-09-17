@@ -22,27 +22,30 @@ class FakeTransport implements HTTPFlowLiveStreamTransport {
   errors = new Map<string, (error: unknown) => void>()
   ends = new Map<string, () => void>()
 
-  start = (request: SubscribeHTTPFlowsRequest, token: string) => {
+  open: HTTPFlowLiveStreamTransport['open'] = (request, options) => {
+    const { token } = options
     this.starts.push({ request, token })
-  }
-
-  cancel = (token: string) => {
-    this.cancels.push(token)
-  }
-
-  onData = (token: string, callback: (event: HTTPFlowLiveEvent) => void) => {
-    this.data.set(token, callback)
-    return () => this.data.delete(token)
-  }
-
-  onError = (token: string, callback: (error: unknown) => void) => {
-    this.errors.set(token, callback)
-    return () => this.errors.delete(token)
-  }
-
-  onEnd = (token: string, callback: () => void) => {
-    this.ends.set(token, callback)
-    return () => this.ends.delete(token)
+    const cleanup = () => {
+      this.data.delete(token)
+      this.errors.delete(token)
+      this.ends.delete(token)
+      options.signal.removeEventListener('abort', abort)
+    }
+    const abort = () => {
+      this.cancels.push(token)
+      cleanup()
+    }
+    options.signal.addEventListener('abort', abort, { once: true })
+    this.data.set(token, options.onData)
+    this.errors.set(token, (error) => {
+      cleanup()
+      options.onError(error)
+    })
+    this.ends.set(token, () => {
+      cleanup()
+      options.onEnd()
+    })
+    return Promise.resolve()
   }
 
   emitData(event: HTTPFlowLiveEvent, index = this.starts.length - 1) {
@@ -130,9 +133,9 @@ describe('HTTPFlow live stream controller', () => {
     expect(transport.starts).toHaveLength(1)
     expect(controller.snapshot().active).toBe(true)
     expect(transport.starts[0].request).toMatchObject({
-      LastSeenSequence: 0,
-      LastSeenId: 12,
-      ProjectGeneration: 7,
+      LastSeenSequence: '0',
+      LastSeenId: '12',
+      ProjectGeneration: '7',
       DatabaseIdentity: 'db-a',
       Filter: { SourceType: 'mitm' },
     })
@@ -155,7 +158,7 @@ describe('HTTPFlow live stream controller', () => {
     transport.emitData(event('stream-1', 5, 11))
     transport.emitData(event('stream-1', 5, 0, heartbeatType))
     expect(committed).toHaveBeenCalledTimes(1)
-    expect(controller.snapshot()).toMatchObject({ lastSeenSequence: 5, lastSeenId: 11, recovering: false })
+    expect(controller.snapshot()).toMatchObject({ lastSeenSequence: '5', lastSeenId: '11', recovering: false })
 
     transport.emitData(event('stream-1', 7, 13))
     expect(gap).toHaveBeenCalledTimes(1)
@@ -164,7 +167,7 @@ describe('HTTPFlow live stream controller', () => {
 
     controller.observeQuery(queryResponse('db-a', 7, [11, 12, 13]), { SourceType: 'mitm' })
     expect(transport.starts).toHaveLength(2)
-    expect(transport.starts[1].request).toMatchObject({ LastSeenSequence: 0, LastSeenId: 13 })
+    expect(transport.starts[1].request).toMatchObject({ LastSeenSequence: '0', LastSeenId: '13' })
   })
 
   it('does not subscribe when the table filter cannot be evaluated by protocol v1', () => {
@@ -196,7 +199,7 @@ describe('HTTPFlow live stream controller', () => {
     controller.observeQuery(queryResponse('db-a', 7, [10]), { SourceType: 'mitm' })
     controller.observeQuery(queryResponse('db-b', 8, [1]), { SourceType: 'mitm' })
     expect(reset).toHaveBeenCalledTimes(2)
-    expect(transport.starts[1].request).toMatchObject({ DatabaseIdentity: 'db-b', LastSeenId: 1 })
+    expect(transport.starts[1].request).toMatchObject({ DatabaseIdentity: 'db-b', LastSeenId: '1' })
   })
 
   it('resumes from the database recovery cursor instead of cancelled direct rows', () => {
@@ -212,7 +215,7 @@ describe('HTTPFlow live stream controller', () => {
     transport.emitData(event('recovery-1', 6, 0, 'HTTP_FLOW_LIVE_EVENT_TYPE_GAP'))
 
     controller.observeQuery(queryResponse('db-a', 7, [10]), { SourceType: 'mitm' })
-    expect(transport.starts[1].request).toMatchObject({ LastSeenSequence: 0, LastSeenId: 10 })
+    expect(transport.starts[1].request).toMatchObject({ LastSeenSequence: '0', LastSeenId: '10' })
   })
 
   it('keeps the MITM reset boundary when recovery query is empty', () => {
@@ -230,14 +233,14 @@ describe('HTTPFlow live stream controller', () => {
 
     controller.observeQuery(queryResponse('db-a', 7, []), { SourceType: 'mitm', AfterId: 6513 })
     expect(transport.starts[1].request).toMatchObject({
-      LastSeenSequence: 0,
-      LastSeenId: 6513,
-      ProjectGeneration: 7,
+      LastSeenSequence: '0',
+      LastSeenId: '6513',
+      ProjectGeneration: '7',
     })
 
     transport.emitData(event('reset-recovery-2', 7, 6514))
     expect(committed).toHaveBeenCalledTimes(1)
-    expect(controller.snapshot()).toMatchObject({ lastSeenSequence: 7, lastSeenId: 6514, recovering: false })
+    expect(controller.snapshot()).toMatchObject({ lastSeenSequence: '7', lastSeenId: '6514', recovering: false })
   })
 
   it('cancels an active shadow stream on the first heartbeat after mode is disabled', () => {
@@ -309,7 +312,7 @@ describe('HTTPFlow live direct summaries', () => {
     })
 
     expect(row).toMatchObject({
-      Id: 42,
+      Id: '42',
       URL: 'https://example.test/a',
       Url: 'https://example.test/a',
       Method: 'POST',
@@ -414,17 +417,17 @@ describe('HTTPFlow live direct recovery gate', () => {
   })
 
   it('keeps direct insertion closed until an exhausted query is visibly committed', () => {
-    const changes: Array<{ required: boolean; fallbackHighWaterId: number; catchUpCandidateId: number }> = []
+    const changes: Array<{ required: boolean; fallbackHighWaterId: string; catchUpCandidateId: string }> = []
     const gate = createHTTPFlowLiveDirectRecoveryGate({ onChange: (snapshot) => changes.push(snapshot) })
 
     gate.markFallback([{ Sequence: 10, HighWaterId: 10, Flow: { Id: 10 } }])
-    expect(gate.snapshot()).toEqual({ required: true, fallbackHighWaterId: 10, catchUpCandidateId: 0 })
+    expect(gate.snapshot()).toEqual({ required: true, fallbackHighWaterId: '10', catchUpCandidateId: '0' })
     expect(gate.observeQuery(9, 10, true)).toBe(false)
     expect(gate.observeQuery(10, 10, false)).toBe(false)
     expect(gate.observeQuery(10, 10, true)).toBe(true)
     expect(gate.commitVisible(9, 10)).toBe(false)
     expect(gate.commitVisible(10, 10)).toBe(true)
-    expect(gate.snapshot()).toEqual({ required: false, fallbackHighWaterId: 0, catchUpCandidateId: 0 })
+    expect(gate.snapshot()).toEqual({ required: false, fallbackHighWaterId: '0', catchUpCandidateId: '0' })
     expect(changes.map((snapshot) => snapshot.required)).toEqual([true, true, false])
   })
 
@@ -435,7 +438,7 @@ describe('HTTPFlow live direct recovery gate', () => {
     expect(gate.observeQuery(10, 10, true)).toBe(true)
     gate.markFallback([{ Sequence: 11, Flow: { Id: 11 } }])
 
-    expect(gate.snapshot()).toEqual({ required: true, fallbackHighWaterId: 11, catchUpCandidateId: 0 })
+    expect(gate.snapshot()).toEqual({ required: true, fallbackHighWaterId: '11', catchUpCandidateId: '0' })
     expect(gate.commitVisible(11, 11)).toBe(false)
     expect(gate.observeQuery(11, 11, true)).toBe(true)
     expect(gate.commitVisible(11, 12)).toBe(false)
@@ -527,8 +530,8 @@ describe('HTTPFlow live refresh preference', () => {
   const activeSnapshot = {
     active: true,
     projectKey: 'db-a:7',
-    lastSeenSequence: 10,
-    lastSeenId: 20,
+    lastSeenSequence: '10',
+    lastSeenId: '20',
     recovering: false,
     unavailableForProject: false,
   }
@@ -550,4 +553,30 @@ describe('HTTPFlow live refresh preference', () => {
       }),
     ).toBe(false)
   })
+})
+
+it('preserves adjacent int64 IDs and sequences through live stream recovery', () => {
+  const transport = new FakeTransport()
+  const committed = vi.fn()
+  const controller = createHTTPFlowLiveStreamController({
+    transport,
+    createToken: () => 'large-ids',
+    getMode: () => 'canary',
+    onCommitted: committed,
+  })
+  const response = queryResponse('db-a', 7, [])
+  response.Data = [{ ...flow(1), Id: '9007199254740992' }]
+  controller.observeQuery(response)
+  expect(transport.starts[0].request.LastSeenId).toBe('9007199254740992')
+  transport.emitData({ ...event('large-ids', 1, 1), Sequence: '9007199254740992', Flow: { Id: '9007199254740993' } })
+  transport.emitData({ ...event('large-ids', 1, 1), Sequence: '9007199254740993', Flow: { Id: '9007199254740994' } })
+  expect(committed).toHaveBeenCalledTimes(2)
+  expect(controller.snapshot()).toMatchObject({
+    lastSeenId: '9007199254740994',
+    lastSeenSequence: '9007199254740993',
+    recovering: false,
+  })
+  transport.emitData({ ...event('large-ids', 1, 1), Sequence: '9007199254740995', Flow: { Id: '9007199254740995' } })
+  expect(controller.snapshot().recovering).toBe(true)
+  expect(committed).toHaveBeenCalledTimes(2)
 })

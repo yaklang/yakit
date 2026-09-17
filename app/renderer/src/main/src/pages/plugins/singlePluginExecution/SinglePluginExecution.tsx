@@ -67,7 +67,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     return undefined
   })
   const [pageInfo, setPageInfo] = useState<PluginOpPageInfoProps | undefined>(initPageInfo())
-  const [yakScriptId, setYakScriptId] = useState<number>(props.yakScriptId)
+  const [yakScriptId, setYakScriptId] = useState<string | number>(props.yakScriptId)
   const [refreshList, setRefreshList] = useState<boolean>(false)
 
   const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
@@ -161,7 +161,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
       const { opType, info } = data
 
       if (['save', 'saveAndExit', 'upload', 'submit'].includes(opType)) {
-        if (yakScriptId === info.id) getPluginById()
+        if (String(yakScriptId) === String(info.id)) getPluginById()
         else setYakScriptId(info.id)
       }
 

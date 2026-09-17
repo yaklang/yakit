@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { PaperAirplaneSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { ExportExcel } from '@/components/DataExport/DataExport'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
@@ -26,9 +27,6 @@ import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { yakitAsset } from '@/services/electronBridge'
-
-const { ipcRenderer } = window.require('electron')
 const defLimit = 20
 export const PortTable: React.FC<PortTableProps> = React.memo(
   React.forwardRef((props, ref) => {
@@ -87,8 +85,8 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
     const tableBodyHeightRef = useRef<number>(0)
     const defLimitRef = useRef<number>(defLimit)
     const limitRef = useRef<number>(defLimit)
-    const afterId = useRef<number>()
-    const beforeId = useRef<number>()
+    const afterId = useRef<string | number>()
+    const beforeId = useRef<string | number>()
     const tableRef = useRef<any>(null)
 
     const allSelected = useCreation(() => {
@@ -159,7 +157,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
           selectedRowKeys: allSelected ? [] : selected.map((ele) => ele.Id),
           params: { ...query },
           interfaceName: 'DeletePorts',
-          execute: yakitAsset.deletePorts,
+          execute: (params) => ipc.invoke('grpc', 'DeletePorts', params),
         }
         setLoading(true)
         onRemoveToolFC(transferParams)

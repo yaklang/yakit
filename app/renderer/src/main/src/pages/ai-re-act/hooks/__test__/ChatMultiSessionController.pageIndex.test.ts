@@ -2,7 +2,7 @@ import './setupElectron'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ChatMultiSessionController } from '../ChatMultiSessionController'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { ipcRendererMock, resetIpcMocks } from './setupElectron'
+import { sdkMock, resetIpcMocks } from './setupElectron'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from '../grpcApi'
 import { DefaultCurrentExecTaskTree } from '../defaultConstant'
 import { makeGrpcJsonRes } from './fixtures'
@@ -166,7 +166,7 @@ describe('ChatMultiSessionController session api / dispatch', () => {
       id: 'q1',
       type: 'question',
       chatType: 'reAct',
-      Timestamp: 1,
+      Timestamp: '1',
       AIService: '',
       AIModelName: '',
       data: 'hi',
@@ -233,11 +233,10 @@ describe('ChatMultiSessionController lifecycle', () => {
     expect(ctrl.isSessionReady('s-life')).toBe(false)
   })
 
-  it('A11: forceClose arms fallback end', () => {
+  it('A11: forceClose finishes a pending connection immediately', () => {
     const onEnd = vi.fn()
     ctrl.forceCloseSession({ sessionIds: ['s-life'], onEnd })
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-life')
-    vi.advanceTimersByTime(5000)
+    expect(ctrl.isSessionReady('s-life')).toBe(false)
     expect(onEnd).toHaveBeenCalled()
   })
 
@@ -246,9 +245,8 @@ describe('ChatMultiSessionController lifecycle', () => {
       sessionIds: ['s-life'],
       source: ['ai'],
     })
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-life')
-    // dispose 等 session-end / 5s 兜底后再卸池
-    await vi.advanceTimersByTimeAsync(5000)
+    expect(ctrl.isSessionReady('s-life')).toBe(false)
+    // 取消由 SDK 本地收尾，持久化清理继续异步等待。
     await done
     expect(ctrl.isSessionReady('s-life')).toBe(false)
   })
@@ -264,7 +262,7 @@ describe('ChatMultiSessionController lifecycle', () => {
       sessionIds: ['orphan-only'],
       source: ['ai'],
     })
-    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', 'orphan-only')
+    expect(sdkMock.cancel).not.toHaveBeenCalledWith('orphan-only')
     expect(aiChatPersistStore.deleteSessionPersist).toHaveBeenCalledWith('orphan-only')
     expect(aiChatPersistStore.deletePersistBySource).not.toHaveBeenCalled()
   })
@@ -279,9 +277,8 @@ describe('ChatMultiSessionController lifecycle', () => {
       source: ['ai'],
     })
 
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-bulk-a')
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-bulk-b')
-    await vi.advanceTimersByTimeAsync(5000)
+    expect(ctrl.isSessionReady('s-bulk-a')).toBe(false)
+    expect(ctrl.isSessionReady('s-bulk-b')).toBe(false)
     await done
     expect(aiChatPersistStore.deletePersistBySource).toHaveBeenCalledWith('ai')
     expect(ctrl.isSessionReady('s-bulk-a')).toBe(false)
@@ -297,7 +294,6 @@ describe('ChatMultiSessionController lifecycle', () => {
     })
 
     const done = ctrl.deleteSessions({ deleteAll: true })
-    await vi.advanceTimersByTimeAsync(5000)
     await done
 
     expect(ctrl.isSessionReady('s-all-a')).toBe(false)
@@ -309,7 +305,7 @@ describe('ChatMultiSessionController lifecycle', () => {
   it('A27: empty sessionIds without source or deleteAll is no-op', async () => {
     const aiChatPersistStore = (await import('../persist/aiChatPersistStore')).default
     await ctrl.deleteSessions({ sessionIds: [] })
-    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', 's-life')
+    expect(sdkMock.cancel).not.toHaveBeenCalledWith('s-life')
     expect(aiChatPersistStore.deletePersistBySource).not.toHaveBeenCalled()
     expect(aiChatPersistStore.deleteAllPersist).not.toHaveBeenCalled()
     expect(ctrl.isSessionReady('s-life')).toBe(true)
@@ -357,12 +353,16 @@ describe('ChatMultiSessionController start / send / history', () => {
 
     ctrl.handleStartSession(startParams('s-recovery', 'page-1', ''))
     await vi.waitFor(() => {
-      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's-recovery', expect.anything())
+      expect(sdkMock.openStream).toHaveBeenCalledWith(
+        'grpc',
+        'StartAIReAct',
+        expect.anything(),
+        expect.objectContaining({ token: 's-recovery' }),
+      )
     })
     ctrl.handleGrpcOutputEvent('s-recovery', makeGrpcJsonRes('pong', {}))
     await vi.waitFor(() => {
-      expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
-        'send-ai-re-act',
+      expect(sdkMock.write).toHaveBeenCalledWith(
         's-recovery',
         expect.objectContaining({ IsSyncMessage: true, SyncType: 'recovery_history' }),
       )
@@ -380,7 +380,12 @@ describe('ChatMultiSessionController start / send / history', () => {
     // 问题仍在执行（queue_info 已回填运行态文案）时不清空，避免覆盖
     ctrl.handleStartSession(startParams('s-recovery-run', 'page-2', ''))
     await vi.waitFor(() => {
-      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's-recovery-run', expect.anything())
+      expect(sdkMock.openStream).toHaveBeenCalledWith(
+        'grpc',
+        'StartAIReAct',
+        expect.anything(),
+        expect.objectContaining({ token: 's-recovery-run' }),
+      )
     })
     const runningStore = ctrl.ensureSession('s-recovery-run').store
     runningStore.getState().updateState({
@@ -389,8 +394,7 @@ describe('ChatMultiSessionController start / send / history', () => {
     })
     ctrl.handleGrpcOutputEvent('s-recovery-run', makeGrpcJsonRes('pong', {}))
     await vi.waitFor(() => {
-      expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
-        'send-ai-re-act',
+      expect(sdkMock.write).toHaveBeenCalledWith(
         's-recovery-run',
         expect.objectContaining({ IsSyncMessage: true, SyncType: 'recovery_history' }),
       )
@@ -512,11 +516,11 @@ describe('ChatMultiSessionController start / send / history', () => {
   it('A14b: requests the runtime queue snapshot after pong', async () => {
     ctrl.handleStartSession(startParams('s-runtime-snapshot', 'page-1', ''))
 
+    await vi.waitFor(() => expect(sdkMock.openStream).toHaveBeenCalled())
     ctrl.handleGrpcOutputEvent('s-runtime-snapshot', makeGrpcJsonRes('pong', {}))
 
     await vi.waitFor(() => {
-      expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
-        'send-ai-re-act',
+      expect(sdkMock.write).toHaveBeenCalledWith(
         's-runtime-snapshot',
         expect.objectContaining({
           IsSyncMessage: true,
@@ -568,14 +572,12 @@ describe('ChatMultiSessionController start / send / history', () => {
     ).not.toThrow()
   })
 
-  it('A19: requestRecoveryHistory invokes send', () => {
+  it('A19: requestRecoveryHistory writes to the current stream', async () => {
     ctrl.handleStartSession(startParams('s-hist'))
+    await vi.waitFor(() => expect(sdkMock.openStream).toHaveBeenCalled())
     ctrl.requestRecoveryHistory('s-hist')
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
-      'send-ai-re-act',
-      's-hist',
-      expect.objectContaining({ IsSyncMessage: true }),
-    )
+    await Promise.resolve()
+    expect(sdkMock.write).toHaveBeenCalledWith('s-hist', expect.objectContaining({ IsSyncMessage: true }))
   })
 
   it('A20: loadTimelineHistory toggles timelinesLoading', async () => {
@@ -751,5 +753,60 @@ describe('ChatMultiSessionController restore / renderPersist / collect', () => {
     ctrl.handleSessionEnd('s-rp')
     expect(store.getState().execute).toBe(false)
     expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.error)
+  })
+})
+
+describe('unified AI stream lifecycle', () => {
+  beforeEach(() => resetIpcMocks())
+
+  it('does not reopen a session closed while IndexedDB preparation is pending', async () => {
+    const ctrl = new ChatMultiSessionController()
+    ctrl.handleStartSession(startParams('closed-during-prepare'))
+    const onEnd = vi.fn()
+    ctrl.forceCloseSession({ sessionIds: ['closed-during-prepare'], onEnd })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(sdkMock.openStream).not.toHaveBeenCalled()
+    expect(ctrl.isSessionReady('closed-during-prepare')).toBe(false)
+    expect(onEnd).toHaveBeenCalledOnce()
+  })
+
+  it('queues a response to an early pong until openStream has returned the task', async () => {
+    const ctrl = new ChatMultiSessionController()
+    let release!: () => void
+    sdkMock.openStream.mockImplementationOnce((_namespace, _api, _params, options) => {
+      queueMicrotask(() => options.onData(makeGrpcJsonRes('pong', {})))
+      return new Promise((resolve) => {
+        release = () => resolve({ write: (params: unknown) => sdkMock.write(options.token, params) })
+      })
+    })
+    ctrl.handleStartSession(startParams('early-pong', 'page-1', 'hello'))
+    await vi.waitFor(() => expect(sdkMock.openStream).toHaveBeenCalled())
+    expect(sdkMock.write).not.toHaveBeenCalled()
+    release()
+    await vi.waitFor(() =>
+      expect(sdkMock.write).toHaveBeenCalledWith('early-pong', expect.objectContaining({ IsFreeInput: true })),
+    )
+    ctrl.forceCloseSession({ sessionIds: ['early-pong'] })
+  })
+
+  it('keeps int64 history cursors exact in memory and the nested JSON request', async () => {
+    const ctrl = new ChatMultiSessionController()
+    ctrl.handleStartSession(startParams('wide-cursor'))
+    await vi.waitFor(() => expect(sdkMock.openStream).toHaveBeenCalled())
+    ctrl.handleGrpcOutputEvent('wide-cursor', {
+      ...makeGrpcJsonRes('structured', {}, { NodeId: 'recovery_history' }),
+      Content: new TextEncoder().encode('{"next_start_id":9223372036854775807}'),
+    })
+    expect(ctrl.ensureSession('wide-cursor').rawData.grpcOffset).toBe('9223372036854775807')
+    ctrl.requestRecoveryHistory('wide-cursor')
+    await vi.waitFor(() =>
+      expect(sdkMock.write).toHaveBeenCalledWith(
+        'wide-cursor',
+        expect.objectContaining({
+          SyncJsonInput: '{"start_id":9223372036854775807,"limit":60}',
+        }),
+      ),
+    )
+    ctrl.forceCloseSession({ sessionIds: ['wide-cursor'] })
   })
 })

@@ -3,7 +3,7 @@ import { yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { yakitMcp, yakitStream } from '@/services/electronBridge'
+import { ipc, type GrpcOutput } from '@/services/ipc'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface mcpStreamHooks {
@@ -41,11 +41,7 @@ interface StartMcpServerRequest {
   EnableBridgeExternalMCP?: boolean
 }
 
-export interface StartMcpServerResponse {
-  Status: 'starting' | 'configured' | 'running' | 'heartbeat' | 'stopped' | 'error'
-  Message: string
-  ServerUrl: string
-}
+export type StartMcpServerResponse = GrpcOutput<'StartMcpServer'>
 
 export const remoteMcpDefalutUrl = '0.0.0.0:11432'
 export const localMcpDefalutUrl = '127.0.0.1:11432'
@@ -55,7 +51,7 @@ export default function useMcpStream(props: useMcpHooks) {
   const { t } = useI18nNamespaces(['layout'])
   // MCP gRPC stream token，仅驱动订阅/取消，不暴露 UI，用 ref 避免无效重渲染
   const mcpTokenRef = useRef<string>(randomString(40))
-  const streamCleanupRef = useRef<BridgeCleanup[]>([])
+  const controllerRef = useRef<AbortController>()
   const [mcpCurrent, setMcpCurrent] = useState<StartMcpServerResponse | undefined>(undefined)
   const [mcpServerUrl, setMcpServerUrl] = useState<string>('')
   const [mcpUrl, setMcpUrl] = useState<string>(localMcpDefalutUrl)
@@ -64,56 +60,26 @@ export default function useMcpStream(props: useMcpHooks) {
     setMcpUrl(SystemInfo.mode === 'remote' ? remoteMcpDefalutUrl : localMcpDefalutUrl)
   }, [SystemInfo.mode])
 
-  const cleanupMcpStream = useMemoizedFn(() => {
-    streamCleanupRef.current.forEach((cleanup) => cleanup())
-    streamCleanupRef.current = []
-  })
-
   const handEnd = useMemoizedFn(() => {
     setMcpServerUrl('')
-    setMcpCurrent({ Status: 'stopped', Message: t('McpHook.serviceStopped'), ServerUrl: '' })
+    setMcpCurrent({ Status: 'stopped', Message: t('McpHook.serviceStopped'), ServerUrl: '', StreamableHttpUrl: '' })
     yakitNotify('info', `[StartMcpServer] finished`)
   })
 
-  // token 变更时手动重建 stream 订阅，替代 state + effect 驱动
-  const setupMcpStream = useMemoizedFn((token: string) => {
-    cleanupMcpStream()
-    const offData = yakitStream.onData(token, async (data: StartMcpServerResponse) => {
-      setMcpCurrent(data)
-      // 后端只在running状态返回地址，此处单独存
-      if (data.Status === 'running' && data.ServerUrl) {
-        setMcpServerUrl(data.ServerUrl)
-        yakitNotify('success', t('McpHook.started', { serverUrl: data.ServerUrl }))
-      } else if (data.Status === 'error') {
-        yakitNotify('error', t('McpHook.error', { message: data.Message }))
-      } else if (data.Status === 'stopped') {
-        yakitNotify('info', t('McpHook.stopped', { message: data.Message }))
-      }
-    })
-
-    const offError = yakitStream.onError(token, (error) => {
+  const onData = useMemoizedFn((data: StartMcpServerResponse) => {
+    setMcpCurrent(data)
+    if (data.Status === 'running' && data.ServerUrl) {
+      setMcpServerUrl(data.ServerUrl)
+      yakitNotify('success', t('McpHook.started', { serverUrl: data.ServerUrl }))
+    } else if (data.Status === 'error') {
       setMcpServerUrl('')
-      setMcpCurrent({ Status: 'error', Message: error + '', ServerUrl: '' })
-      yakitNotify('success', t('McpHook.MCPStopped'))
-    })
-
-    const offEnd = yakitStream.onEnd(token, handEnd)
-
-    streamCleanupRef.current = [offData, offError, offEnd]
-  })
-
-  useEffect(() => {
-    setupMcpStream(mcpTokenRef.current)
-    return () => {
-      const token = mcpTokenRef.current
-      if (token) {
-        yakitStream.cancel('StartMcpServer', token)
-        cleanupMcpStream()
-        setMcpCurrent(undefined)
-        setMcpServerUrl('')
-      }
+      yakitNotify('error', t('McpHook.error', { message: data.Message }))
+    } else if (data.Status === 'stopped') {
+      setMcpServerUrl('')
+      yakitNotify('info', t('McpHook.stopped', { message: data.Message }))
     }
-  }, [])
+  })
+  useEffect(() => () => controllerRef.current?.abort(), [])
 
   const onStart = useMemoizedFn((options: StartMcpServerOptions) => {
     if (mcpUrl.trim() === '') {
@@ -141,20 +107,34 @@ export default function useMcpStream(props: useMcpHooks) {
       EnableBridgeExternalMCP: !!options?.EnableBridgeExternalMCP,
     }
 
-    const oldToken = mcpTokenRef.current
-    if (oldToken) {
-      yakitStream.cancel('StartMcpServer', oldToken)
-    }
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
     const token = randomString(40)
     mcpTokenRef.current = token
-    setupMcpStream(token)
-    yakitMcp.startServer(params, token).catch((err) => {
-      yakitNotify('error', t('McpHook.enableFailed', { error: err + '' }))
-    })
+    setMcpServerUrl('')
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      setMcpServerUrl('')
+      setMcpCurrent({ Status: 'error', Message: String(error), ServerUrl: '', StreamableHttpUrl: '' })
+      yakitNotify('error', t('McpHook.enableFailed', { error: String(error) }))
+    }
+    void ipc
+      .openStream('grpc', 'StartMcpServer', params, {
+        token,
+        signal: controller.signal,
+        onData(data) {
+          if (!controller.signal.aborted) onData(data)
+        },
+        onError,
+        onEnd() {
+          if (!controller.signal.aborted) handEnd()
+        },
+      })
+      .catch(onError)
   })
-
   const onCancel = useMemoizedFn(() => {
-    yakitStream.cancel('StartMcpServer', mcpTokenRef.current)
+    controllerRef.current?.abort()
     handEnd()
   })
 

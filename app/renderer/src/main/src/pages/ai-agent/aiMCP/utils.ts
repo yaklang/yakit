@@ -1,3 +1,5 @@
+import { mcpServerForUI, mcpToolForUI, mcpHistoryForUI, grpcPagingToUI, int64ToSafeNumber } from '../grpcAdapters'
+import { ipc } from '@/services/ipc'
 import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import type {
@@ -19,8 +21,6 @@ import type {
 import type { GeneralResponse } from '../type/aiModel'
 import { normalizeGetMCPToolListResponse, normalizeMCPServer } from './mcpToolNormalize'
 
-const { ipcRenderer } = window.require('electron')
-
 export {
   normalizeGetMCPToolListResponse,
   normalizeMCPToolConfig,
@@ -34,9 +34,16 @@ export const grpcGetAllMCPServers: APIFunc<GetAllMCPServersRequest, GetAllMCPSer
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetAllMCPServers', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'GetAllMCPServers', params)
+      .then((res) =>
+        resolve({
+          ...res,
+          MCPServers: res.MCPServers.map(mcpServerForUI),
+          Pagination: grpcPagingToUI(res.Pagination),
+          Total: int64ToSafeNumber(res.Total),
+        }),
+      )
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcGetAllMCPServers 失败:' + err)
         reject(err)
@@ -44,7 +51,7 @@ export const grpcGetAllMCPServers: APIFunc<GetAllMCPServersRequest, GetAllMCPSer
   })
 }
 
-export const getMCPServersById: APIFunc<number, MCPServer> = (id, hiddenError) => {
+export const getMCPServersById: APIFunc<string | number, MCPServer> = (id, hiddenError) => {
   return new Promise((resolve, reject) => {
     const newQuery: GetAllMCPServersRequest = {
       Keyword: '',
@@ -70,8 +77,8 @@ export const getMCPServersById: APIFunc<number, MCPServer> = (id, hiddenError) =
 }
 export const grpcAddMCPServer: APIFunc<AddMCPServerRequest, GeneralResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('AddMCPServer', params)
+    ipc
+      .invoke('grpc', 'AddMCPServer', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcAddMCPServer 失败:' + err)
@@ -82,8 +89,8 @@ export const grpcAddMCPServer: APIFunc<AddMCPServerRequest, GeneralResponse> = (
 
 export const grpcDeleteMCPServer: APIFunc<DeleteMCPServerRequest, GeneralResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteMCPServer', params)
+    ipc
+      .invoke('grpc', 'DeleteMCPServer', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcDeleteMCPServer 失败:' + err)
@@ -94,8 +101,8 @@ export const grpcDeleteMCPServer: APIFunc<DeleteMCPServerRequest, GeneralRespons
 
 export const grpcUpdateMCPServer: APIFunc<UpdateMCPServerRequest, GeneralResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('UpdateMCPServer', params)
+    ipc
+      .invoke('grpc', 'UpdateMCPServer', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcUpdateMCPServer 失败:' + err)
@@ -106,10 +113,20 @@ export const grpcUpdateMCPServer: APIFunc<UpdateMCPServerRequest, GeneralRespons
 
 export const grpcGetMCPToolList: APIFunc<GetMCPToolListRequest, GetMCPToolListResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetMCPToolList', params)
-      .then((res: GetMCPToolListResponse) => {
-        resolve(normalizeGetMCPToolListResponse(res))
+    ipc
+      .invoke('grpc', 'GetMCPToolList', {
+        ...params,
+        Source: Array.isArray(params.Source) ? params.Source.join(',') : params.Source,
+      })
+      .then((res) => {
+        resolve(
+          normalizeGetMCPToolListResponse({
+            ...res,
+            Tools: res.Tools.map(mcpToolForUI),
+            Pagination: grpcPagingToUI(res.Pagination),
+            Total: int64ToSafeNumber(res.Total),
+          }),
+        )
       })
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcGetMCPToolList 失败:' + err)
@@ -120,8 +137,8 @@ export const grpcGetMCPToolList: APIFunc<GetMCPToolListRequest, GetMCPToolListRe
 
 export const grpcSetMCPToolEnabled: APIFunc<SetMCPToolEnabledRequest, GeneralResponse> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('SetMCPToolEnabled', params)
+    ipc
+      .invoke('grpc', 'SetMCPToolEnabled', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcSetMCPToolEnabled 失败:' + err)
@@ -135,12 +152,14 @@ export const grpcQueryMCPToolCallHistory: APIFunc<QueryMCPToolCallHistoryRequest
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryMCPToolCallHistory', params)
-      .then((res: QueryMCPToolCallHistoryResponse) => {
+    ipc
+      .invoke('grpc', 'QueryMCPToolCallHistory', params)
+      .then((res) => {
         resolve({
           ...res,
-          Histories: res.Histories || [],
+          Histories: res.Histories.map(mcpHistoryForUI),
+          Pagination: grpcPagingToUI(res.Pagination),
+          Total: int64ToSafeNumber(res.Total),
         })
       })
       .catch((err) => {
@@ -155,9 +174,9 @@ export const grpcGetMCPToolCallHistoryDetail: APIFunc<GetMCPToolCallHistoryDetai
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('GetMCPToolCallHistoryDetail', params)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'GetMCPToolCallHistoryDetail', params)
+      .then((res) => resolve({ ...res, ...mcpHistoryForUI(res) }))
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcGetMCPToolCallHistoryDetail 失败:' + err)
         reject(err)
@@ -170,8 +189,8 @@ export const grpcDeleteMCPToolCallHistory: APIFunc<DeleteMCPToolCallHistoryReque
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteMCPToolCallHistory', params)
+    ipc
+      .invoke('grpc', 'DeleteMCPToolCallHistory', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcDeleteMCPToolCallHistory 失败:' + err)

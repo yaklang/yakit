@@ -1,9 +1,9 @@
+import { grpcPageForUI, int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import type { DbOperateMessage } from '../layout/mainOperatorContent/utils'
 import type { Paging } from '@/utils/yakQueryHTTPFlow'
-const { ipcRenderer } = window.require('electron')
-
 export interface FingerprintGroup {
   GroupName: string
   Count: number
@@ -14,9 +14,11 @@ interface FingerprintGroups {
 /** @name 获取本地指纹组列表数据 */
 export const grpcFetchLocalFingerprintGroupList: APINoRequestFunc<FingerprintGroups> = () => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('GetAllFingerprintGroup')
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'GetAllFingerprintGroup', {})
+      .then((res) =>
+        resolve({ ...res, Data: res.Data.map((row) => ({ ...row, Count: int64ToSafeNumber(row.Count) })) }),
+      )
       .catch((e) => {
         yakitNotify('error', '查询本地指纹组失败：' + e)
         reject(e)
@@ -27,8 +29,8 @@ export const grpcFetchLocalFingerprintGroupList: APINoRequestFunc<FingerprintGro
 /** @name 创建本地指纹组 */
 export const grpcCreateLocalFingerprintGroup: APIFunc<FingerprintGroup, DbOperateMessage> = (request) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('CreateFingerprintGroup', request)
+    ipc
+      .invoke('grpc', 'CreateFingerprintGroup', request)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', '创建本地指纹组失败：' + e)
@@ -47,8 +49,8 @@ export const grpcUpdateLocalFingerprintGroup: APIFunc<RenameFingerprintGroupRequ
   hiddenError,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('RenameFingerprintGroup', request)
+    ipc
+      .invoke('grpc', 'RenameFingerprintGroup', request)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '更新本地指纹组失败:' + e)
@@ -66,8 +68,8 @@ export const grpcDeleteLocalFingerprintGroup: APIFunc<DeleteFingerprintGroupRequ
   hiddenError,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteFingerprintGroup', request)
+    ipc
+      .invoke('grpc', 'DeleteFingerprintGroup', request)
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '删除本地指纹组失败:' + e)
@@ -79,7 +81,7 @@ export const grpcDeleteLocalFingerprintGroup: APIFunc<DeleteFingerprintGroupRequ
 export interface FingerprintFilter {
   Vendor?: string[]
   Product?: string[]
-  IncludeId?: number[]
+  IncludeId?: (string | number)[]
   GroupName?: string[]
   RuleName?: string[]
   Keyword?: string
@@ -98,7 +100,7 @@ interface CPE {
   Language: string
 }
 export interface FingerprintRule {
-  Id: number
+  Id: string | number
   RuleName: string
   CPE: CPE
   WebPath: string
@@ -114,8 +116,16 @@ export interface QueryFingerprintResponse {
 /** @name 获取本地指纹列表数据 */
 export const grpcFetchLocalFingerprintList: APIFunc<QueryFingerprintRequest, QueryFingerprintResponse> = (request) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('QueryFingerprint', request)
+    ipc
+      .invoke('grpc', 'QueryFingerprint', request)
+      .then(grpcPageForUI)
+      .then((res) => ({
+        ...res,
+        Data: res.Data.map((row) => ({
+          ...row,
+          CPE: row.CPE ?? { Part: '', Vendor: '', Product: '', Version: '', Update: '', Edition: '', Language: '' },
+        })),
+      }))
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', '查询本地指纹列表数据失败：' + e)
@@ -131,8 +141,8 @@ interface DeleteFingerprintRequest {
 /** @name 删除本地指纹列表数据 */
 export const grpcDeleteFingerprint: APIFunc<DeleteFingerprintRequest, DbOperateMessage> = (request) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('DeleteFingerprint', request)
+    ipc
+      .invoke('grpc', 'DeleteFingerprint', request)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', '删除本地指纹列表数据失败：' + e)
@@ -142,14 +152,14 @@ export const grpcDeleteFingerprint: APIFunc<DeleteFingerprintRequest, DbOperateM
 }
 
 interface UpdateFingerprintRequest {
-  Id: number
+  Id: string | number
   Rule: FingerprintRule
 }
 /** @name 更新本地指纹 */
 export const grpcUpdateFingerprint: APIFunc<UpdateFingerprintRequest, DbOperateMessage> = (request) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('UpdateFingerprint', request)
+    ipc
+      .invoke('grpc', 'UpdateFingerprint', request)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', '更新本地指纹列表数据失败：' + e)
@@ -168,8 +178,8 @@ interface CreateFingerprintRequest {
 /** @name 创建本地指纹 */
 export const grpcCreateFingerprint: APIFunc<CreateFingerprintRequest, DbOperateMessage> = (request) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('CreateFingerprint', request)
+    ipc
+      .invoke('grpc', 'CreateFingerprint', request)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', '创建本地指纹列表数据失败：' + e)
@@ -187,9 +197,11 @@ export const grpcFetchFingerprintForSameGroup: APIFunc<GetFingerprintGroupSetReq
   request,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('GetFingerprintGroupSetByFilter', request)
-      .then(resolve)
+    ipc
+      .invoke('grpc', 'GetFingerprintGroupSetByFilter', request)
+      .then((res) =>
+        resolve({ ...res, Data: res.Data.map((row) => ({ ...row, Count: int64ToSafeNumber(row.Count) })) }),
+      )
       .catch((e) => {
         yakitNotify('error', '查询指纹所属于组交集失败：' + e)
         reject(e)
@@ -207,8 +219,8 @@ export const grpcUpdateFingerprintToGroup: APIFunc<BatchUpdateFingerprintToGroup
   request,
 ) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('BatchUpdateFingerprintToGroup', request)
+    ipc
+      .invoke('grpc', 'BatchUpdateFingerprintToGroup', request)
       .then(resolve)
       .catch((e) => {
         yakitNotify('error', '更新组失败：' + e)
@@ -220,8 +232,8 @@ export const grpcUpdateFingerprintToGroup: APIFunc<BatchUpdateFingerprintToGroup
 /** @name 下载默认指纹压缩包 */
 export const httpDownloadFingerprint: APIFunc<string, string> = (savePath) => {
   return new Promise(async (resolve, reject) => {
-    ipcRenderer
-      .invoke('DownloadFingerprint', savePath)
+    ipc
+      .invoke('local', 'DownloadFingerprint', savePath)
       .then(resolve)
       .catch((e) => {
         reject(e)

@@ -1,3 +1,4 @@
+import { positiveInt64 } from '@/utils/int64'
 import React, {
   type ChangeEventHandler,
   forwardRef,
@@ -110,8 +111,6 @@ import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
 
 import classNames from 'classnames'
 import styles from './ForgeEditor.module.scss'
-const { ipcRenderer } = window.require('electron')
-
 const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
   const { isModify } = props
 
@@ -286,7 +285,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
             .then(async (res) => {
               const resInfo: AIForge = cloneDeep(requestData)
               if (!resInfo.Id) {
-                const resID = Number(res?.CreateID) || 0
+                const resID = positiveInt64(res?.CreateID) || 0
                 if (resID) resInfo.Id = resID
                 else {
                   yakitNotify('error', `新建模板异常, 创建并未生成唯一ID号`)
@@ -1579,28 +1578,31 @@ const AIForgeSkillFileCont: React.FC<{ data?: FileNodeProps }> = ({ data }) => {
     return KeyToIcon[icon]?.iconPath ?? ''
   }, [icon])
 
+  const readController = useRef<AbortController>()
   const fetchFileInfo = useMemoizedFn(async (targetPath: string) => {
     if (!targetPath) return
+    readController.current?.abort()
+    const controller = new AbortController()
+    readController.current = controller
     try {
-      // 取消上一次请求
-      if (loading) {
-        ipcRenderer.invoke('cancel-ReadFile')
-      }
       setLoading(true)
       const { size, isPlainText } = await getCodeSizeByPath(targetPath)
+      if (controller.signal.aborted) return
       if (size > MAX_FILE_SIZE_BYTES) {
         setFileInfo(null)
         setShowFileHint(true)
         return
       }
       setIsBinary(!isPlainText)
-      const content = await getCodeByPath(targetPath)
+      const content = await getCodeByPath(targetPath, undefined, controller.signal)
       const file = await getLocalFileName(targetPath)
+      if (controller.signal.aborted) return
       setFileInfo({ path: targetPath, size, isPlainText, content, language: monacaLanguageType(file.suffix) })
     } catch (err) {
+      if (controller.signal.aborted) return
       yakitNotify('error', `Failed to load file:${err}`)
     } finally {
-      setLoading(false)
+      if (readController.current === controller) setLoading(false)
     }
   })
 
@@ -1609,7 +1611,8 @@ const AIForgeSkillFileCont: React.FC<{ data?: FileNodeProps }> = ({ data }) => {
     setShowFileHint(false)
     if (path) {
       fetchFileInfo(path)
-    }
+    } else setLoading(false)
+    return () => readController.current?.abort()
   }, [path])
 
   useEffect(() => {

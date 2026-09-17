@@ -43,4 +43,30 @@ describe('Yakit Electron startup', () => {
     expect(metrics.length).toBeGreaterThan(0)
     expect(metrics.every((metric) => metric.pid > 0)).toBe(true)
   })
+  it('uses the unified transport and preserves the original local error', async () => {
+    const result = await browser.execute(async () => {
+      const transport = window.yakitTransport
+      const reply = await transport.request({
+        requestId: crypto.randomUUID(),
+        namespace: 'local',
+        api: 'read-file-content',
+        action: 'call',
+        params: '/yakit-e2e-missing-file-' + crypto.randomUUID(),
+      })
+      const denied = await transport.request({
+        requestId: crypto.randomUUID(),
+        namespace: 'grpc',
+        api: 'constructor',
+        action: 'call',
+        params: {},
+      })
+      return { reply, denied, hasLegacyBridge: 'yakitBridge' in window }
+    })
+    expect(result.hasLegacyBridge).toBe(false)
+    expect(result.reply.ok).toBe(false)
+    expect(result.reply.error.code).toBe('ENOENT')
+    expect(result.reply.error.source).toBe('local')
+    expect(result.reply.error.message).not.toContain('Error invoking remote method')
+    expect(result.denied.ok).toBe(false)
+  })
 })

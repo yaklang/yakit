@@ -1,3 +1,5 @@
+import { dnsLogsForUI } from '@/pages/dnslog/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -23,8 +25,6 @@ import { JSONParseLog } from '@/utils/tool'
 import { getReleaseEditionName } from '@/utils/envfile'
 
 import { ArrowNarrowRightOutlined, ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-
-const { ipcRenderer } = window.require('electron')
 
 interface MenuDNSLogProps {}
 
@@ -83,16 +83,16 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
   })
   // 同步给页面里dnslog新的参数
   const sendPageDnslog = useMemoizedFn((data: DnslogMenuToPage) => {
-    ipcRenderer.invoke('dnslog-menu-to-page', data)
+    ipc.invoke('local', 'ForwardMainEvent', { event: 'dnslog-menu-to-page-callback', data: data })
   })
 
   useEffect(() => {
     // 接收dnslog页面发送的请求获取参数请求
-    ipcRenderer.on('dnslog-page-to-menu-callback', () => {
+    const stopIpcEvent1 = ipc.on('dnslog-page-to-menu-callback', () => {
       sendPageDnslog(generateData())
     })
     // 接收dnslog页面改变参数后的新参数
-    ipcRenderer.on('dnslog-page-change-menu-callback', (e, data: SendMenuDnslogProps) => {
+    const stopIpcEvent2 = ipc.on('dnslog-page-change-menu-callback', (data: SendMenuDnslogProps) => {
       const { dnsLogType, onlyARecord, token, domain, DNSMode, UseLocal } = data
       setOnlyARecord(onlyARecord)
       if (dnsLogType === 'builtIn') {
@@ -118,7 +118,8 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     })
 
     return () => {
-      ipcRenderer.removeAllListeners('dnslog-page-to-menu-callback')
+      stopIpcEvent1()
+      stopIpcEvent2()
     }
   }, [])
 
@@ -137,9 +138,9 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     }
 
     setTokenLoading(true)
-    ipcRenderer
-      .invoke('RequireDNSLogDomain', paramsObj)
-      .then((rsp: { Domain: string; Token: string }) => {
+    ipc
+      .invoke('grpc', 'RequireDNSLogDomain', paramsObj)
+      .then((rsp) => {
         setToken(rsp.Token)
         setDomain(rsp.Domain)
         sendPageDnslog({
@@ -164,9 +165,9 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
 
   const updateTokenByScript = (params) => {
     setTokenLoading(true)
-    ipcRenderer
-      .invoke('RequireDNSLogDomainByScript', { ScriptName: params.ScriptName })
-      .then((rsp: { Domain: string; Token: string }) => {
+    ipc
+      .invoke('grpc', 'RequireDNSLogDomainByScript', { ScriptName: params.ScriptName })
+      .then((rsp) => {
         setToken(rsp.Token)
         setDomain(rsp.Domain)
         sendPageDnslog({
@@ -212,9 +213,10 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
   const getQueryDNSLogByToken = useMemoizedFn(() => {
     setLoading(true)
     isQueryDNSLogLoad.current = true
-    ipcRenderer
-      .invoke('QueryDNSLogByToken', { Token: token, DNSMode: getDNSMode(), UseLocal: getUseLocal() })
-      .then((rsp: { Events: DNSLogEvent[] }) => {
+    ipc
+      .invoke('grpc', 'QueryDNSLogByToken', { Token: token, DNSMode: getDNSMode(), UseLocal: getUseLocal() })
+      .then(dnsLogsForUI)
+      .then((rsp) => {
         setTotal(rsp.Events.length)
         const lists = rsp.Events.filter((i) => {
           if (getOnlyARecord()) {
@@ -254,18 +256,24 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
   }, [token])
 
   const onInfoDetails = useMemoizedFn((info: DNSLogEvent) => {
-    ipcRenderer.invoke('send-to-tab', {
-      type: YakitRoute.DNSLog,
-      data: {},
+    ipc.invoke('local', 'ForwardMainEvent', {
+      event: 'fetch-send-to-tab',
+      data: {
+        type: YakitRoute.DNSLog,
+        data: {},
+      },
     })
     setTimeout(() => {
-      ipcRenderer.invoke('dnslog-info-details', info)
+      ipc.invoke('local', 'ForwardMainEvent', { event: 'dnslog-info-details-callback', data: info })
     }, 200)
   })
   const onInfoAll = useMemoizedFn(() => {
-    ipcRenderer.invoke('send-to-tab', {
-      type: YakitRoute.DNSLog,
-      data: {},
+    ipc.invoke('local', 'ForwardMainEvent', {
+      event: 'fetch-send-to-tab',
+      data: {
+        type: YakitRoute.DNSLog,
+        data: {},
+      },
     })
   })
 

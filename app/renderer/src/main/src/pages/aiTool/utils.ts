@@ -1,3 +1,5 @@
+import { aiToolForUI } from '../ai-agent/grpcAdapters'
+import { ipc } from '@/services/ipc'
 import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import type { DbOperateMessage } from '../layout/mainOperatorContent/utils'
@@ -9,19 +11,17 @@ import type {
   SaveAIToolV2Response,
   UpdateAIToolRequest,
 } from '../ai-agent/type/aiTool'
-const { ipcRenderer } = window.require('electron')
-
 export const isAITool = (value: AITool | DbOperateMessage): value is AITool => {
   return 'ID' in value
 }
 
 export const grpcSaveAITool: APIFunc<SaveAIToolRequest, AITool> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('SaveAIToolV2', params)
-      .then((res: SaveAIToolV2Response) => {
-        if (res.IsSuccess) {
-          resolve(res.AITool)
+    ipc
+      .invoke('grpc', 'SaveAIToolV2', params)
+      .then((res) => {
+        if (res.IsSuccess && res.AITool) {
+          resolve(aiToolForUI(res.AITool))
         } else {
           if (!hiddenError) yakitNotify('error', 'grpcSaveAITool 失败: ' + res.Message)
           reject(res.Message)
@@ -36,8 +36,8 @@ export const grpcSaveAITool: APIFunc<SaveAIToolRequest, AITool> = (params, hidde
 
 export const grpcUpdateAITool: APIFunc<UpdateAIToolRequest, DbOperateMessage> = (params, hiddenError) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('UpdateAITool', params)
+    ipc
+      .invoke('grpc', 'UpdateAITool', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcUpdateAITool 失败:' + err)
@@ -51,8 +51,8 @@ export const grpcAIToolGenerateMetadata: APIFunc<AIToolGenerateMetadataRequest, 
   hiddenError,
 ) => {
   return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke('AIToolGenerateMetadata', params)
+    ipc
+      .invoke('grpc', 'AIToolGenerateMetadata', params)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcAIToolGenerateMetadata 失败:' + err)

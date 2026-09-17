@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useState, useRef } from 'react'
 import { Form, Tooltip } from 'antd'
 import './ConfigPrivateDomain.scss'
@@ -18,7 +19,6 @@ import type { YakitAutoCompleteRefProps } from '../yakitUI/YakitAutoComplete/Yak
 import { getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV } from '@/utils/envfile'
 import { useUploadInfoByEnpriTrace } from '../layout/utils'
 import { JSONParseLog } from '@/utils/tool'
-import { yakitAuth, yakitCodec, yakitProfile, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
@@ -81,7 +81,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
   const loginUser = useMemoizedFn(async () => {
     const { user_name, pwd } = getFormValue()
     try {
-      const md5Res = await yakitCodec.run({ Type: 'md5', Text: pwd, Params: [], ScriptName: '' })
+      const md5Res = await ipc.invoke('grpc', 'Codec', { Type: 'md5', Text: pwd, Params: [], ScriptName: '' })
       const res = await NetWorkApi<API.UrmLoginRequest, API.UserData>({
         method: 'post',
         url: 'urm/login',
@@ -90,7 +90,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
           pwd: md5Res.Result,
         },
       })
-      const data = await yakitAuth.companySignIn({ ...res })
+      const data = await ipc.invoke('local', 'company-sign-in', { ...res })
       const user = {
         isLogin: true,
         platform: res.from_platform,
@@ -123,7 +123,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
       }
       // 首次登录强制修改密码
       if (!res.loginTime) {
-        yakitAuth.requestPasswordReset()
+        ipc.invoke('local', 'reset-password', {})
         return
       }
       //超过设置时间 强制修改密码
@@ -131,7 +131,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
       const days = Number(content)
       if (!isOpen || !days || !res.updatedAt || res.from_platform !== 'company') return
       if (Math.floor(Date.now() / 1000) - days * 86400 > res.updatedAt) {
-        yakitAuth.requestPasswordReset()
+        ipc.invoke('local', 'reset-password', {})
       }
     } catch (err) {
       setTimeout(() => setLoading(false), 300)
@@ -152,8 +152,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
       IsCompany: enterpriseLogin,
       BaseUrl,
     }
-    yakitProfile
-      .setOnlineProfile({
+    ipc
+      .invoke('grpc', 'SetOnlineProfile', {
         ...values,
       })
       .then(() => {
@@ -161,19 +161,19 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         addProxyList(values.Proxy)
         setFormValue(values)
         if (!enterpriseLogin) {
-          yakitUILayout.requestSignOut()
+          ipc.invoke('local', 'ForwardMainEvent', { event: 'ipc-sign-out-callback' })
           success(t('ConfigPrivateDomain.privateDomainSetSuccess'))
           syncLoginOut()
           onClose && onClose()
         }
-        yakitAuth.editBaseUrl(values.BaseUrl).catch((err) => {
+        ipc.invoke('local', 'edit-baseUrl', { baseUrl: values.BaseUrl }).catch((err) => {
           failed(t('ConfigPrivateDomain.privateDomainSetFailed', { error: String(err) }))
           setShowSkip(true)
         })
         if (v?.pwd) {
           // 加密
-          yakitCodec
-            .run({ Type: 'base64', Text: v.pwd, Params: [], ScriptName: '' })
+          ipc
+            .invoke('grpc', 'Codec', { Type: 'base64', Text: v.pwd, Params: [], ScriptName: '' })
             .then((res) => {
               setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({ ...values, pwd: res.Result }))
             })
@@ -202,7 +202,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
       })
   })
   useEffect(() => {
-    const cleanup = yakitAuth.onBaseUrlStatus(() => {
+    const cleanup = ipc.on('edit-baseUrl-status', () => {
       enterpriseLogin && loginUser()
       emiter.emit('onSwitchPrivateDomain', '') // 修改私有域成功后发送的信号
     })
@@ -220,8 +220,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
       setDefaultHttpUrl(value.BaseUrl)
       if (value?.pwd && value.pwd.length > 0) {
         // 解密
-        yakitCodec
-          .run({ Type: 'base64-decode', Text: value.pwd, Params: [], ScriptName: '' })
+        ipc
+          .invoke('grpc', 'Codec', { Type: 'base64-decode', Text: value.pwd, Params: [], ScriptName: '' })
           .then((res) => {
             form.setFieldsValue({
               ...value,

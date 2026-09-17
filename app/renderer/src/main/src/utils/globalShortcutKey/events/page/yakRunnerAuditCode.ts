@@ -61,7 +61,7 @@ const LocalStorageKey = 'audit-code-shortcut-key-events'
 export const getStorageAuditCodeShortcutKeyEvents = () => {
   getLocalValue(LocalStorageKey)
     .then((res) => {
-      if (!res) return
+      if (typeof res !== 'string' || !res) return
       try {
         const data: EventsType = JSONParseLog(res, {
           page: 'yakRunnerAuditCode',

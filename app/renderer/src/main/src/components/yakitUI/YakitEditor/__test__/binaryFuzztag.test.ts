@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import {
   buildChipLabel,
@@ -148,28 +149,21 @@ const binaryQuoteCases: { name: string; bytes: number[] }[] = [
   { name: 'null and low bytes', bytes: [0x00, 0x01, 0x1f] },
 ]
 
-let originalRequire: typeof window.require | undefined
-
+let originalTransport: Window['yakitTransport']
 beforeEach(() => {
-  originalRequire = (window as any).require
-  ;(window as any).require = () => ({
-    ipcRenderer: {
-      invoke: async (channel: string, params: { Text: string; WorkFlow: { CodecType: string }[] }) => {
-        if (channel !== 'NewCodec') {
-          throw new Error(`unexpected ipc channel: ${channel}`)
-        }
-        return mockNewCodec(params)
-      },
+  ipc.dispose()
+  originalTransport = window.yakitTransport
+  window.yakitTransport = {
+    subscribe: () => () => {},
+    async request(request) {
+      if (request.namespace !== 'grpc' || request.api !== 'NewCodec') throw new Error(`unexpected API: ${request.api}`)
+      return { ok: true, data: mockNewCodec(request.params as Parameters<typeof mockNewCodec>[0]) }
     },
-  })
-})
-
-afterEach(() => {
-  if (originalRequire) {
-    ;(window as any).require = originalRequire
-  } else {
-    delete (window as any).require
   }
+})
+afterEach(() => {
+  ipc.dispose()
+  window.yakitTransport = originalTransport
 })
 
 const bigUnquoteContent = '"' + '\\xff\\xd8'.repeat(40) + '"' // 远大于阈值

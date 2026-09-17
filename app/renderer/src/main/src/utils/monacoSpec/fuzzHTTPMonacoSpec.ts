@@ -1,3 +1,5 @@
+import type { GrpcOutput } from '@/services/ipc'
+import { ipc } from '@/services/ipc'
 import { monaco } from 'react-monaco-editor'
 import { type editor, languages, type Position } from 'monaco-editor'
 import type { CancellationToken } from 'typescript'
@@ -12,8 +14,6 @@ import { getModelContext } from '@/utils/monacoSpec/yakEditor'
 type IWordAtPosition = editor.IWordAtPosition
 import type { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
 import { getAllRows } from '@/components/configNetwork/CustomizeCodeTypes'
-const { ipcRenderer } = window.require('electron')
-
 export const highlightKinds: string[] = [
   'method',
   'function',
@@ -123,10 +123,11 @@ const httpHeaderSuggestions = [
 
 export const getHTTPHeaderSuggestions = async (position: monaco.Position) => {
   // 获取自定义代码片段
-  const customCodeList: TCustomCodeGeneral<string[]> = await ipcRenderer
-    .invoke('QuerySnippets', { Filter: {} })
-    .catch((err) => console.info(err))
-  const targetCustomCode = getAllRows(customCodeList ?? []).filter((it) => it.State === 'http') ?? []
+  const customCodeList = await ipc.invoke('grpc', 'QuerySnippets', { Filter: {} }).catch((err) => console.info(err))
+  const targetCustomCode =
+    getAllRows(customCodeList ?? { Names: [], Codes: [], Descriptions: [], States: [], Levels: [] }).filter(
+      (it) => it.State === 'http',
+    ) ?? []
 
   const transformCustomCode: any = targetCustomCode.map((it) => {
     return {
@@ -243,13 +244,13 @@ export const newFuzztagCompletionHandlerProvider = (
       endColumn: iWord.endColumn + parenthesesWord.length,
     }
 
-    await ipcRenderer
-      .invoke('FuzzTagSuggestion', {
+    await ipc
+      .invoke('grpc', 'FuzzTagSuggestion', {
         InspectType: 'completion',
         HotPatchCode: getModelContext(model, 'hotPatchCode'),
         FuzztagCode: iWord.word,
       } as FuzzTagSuggestionRequest)
-      .then((r: YaklangLanguageSuggestionResponse) => {
+      .then((r) => {
         if (r.SuggestionMessage.length > 0) {
           const range = {
             startLineNumber: position.lineNumber,
@@ -550,12 +551,12 @@ monaco.languages.registerHoverProvider(fuzzHTTPMonacoSpec, {
       }
 
       let desc = ''
-      await ipcRenderer
-        .invoke('FuzzTagSuggestion', {
+      await ipc
+        .invoke('grpc', 'FuzzTagSuggestion', {
           InspectType: 'hover',
           FuzztagCode: rangeCode,
         } as FuzzTagSuggestionRequest)
-        .then((r: YaklangLanguageSuggestionResponse) => {
+        .then((r) => {
           if (r.SuggestionMessage.length > 0) {
             r.SuggestionMessage.forEach((v) => {
               desc += v.Label ?? '' + '\n'

@@ -1,3 +1,4 @@
+import { ipc } from '../../../shared/communication/window-client'
 import { memo, useEffect, useState } from 'react'
 import { StartupPage } from './pages/StartupPage'
 import './theme/ThemeClass.scss'
@@ -5,7 +6,6 @@ import './theme/yakit.scss'
 import { GetMainColor, getReleaseEditionName, isCommunityEdition, isIRify, isMemfit } from './utils/envfile'
 import { useTheme } from './hooks/useTheme'
 import { applyYakitThemeColors } from './utils/applyYakitThemeColors'
-import { yakitApp } from './utils/electronBridge'
 import styles from './App.module.scss'
 
 const App: React.FC = memo(() => {
@@ -13,20 +13,20 @@ const App: React.FC = memo(() => {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    yakitApp.markRendererReady()
+    ipc.invoke('local', 'engine-win-render-ok', {})
     const titleElement = document.getElementById('app-html-title')
     if (titleElement) {
       titleElement.textContent = getReleaseEditionName()
     }
 
     // 解压命令执行引擎脚本压缩包
-    yakitApp.generateStartEngine()
+    ipc.invoke('local', 'generate-start-engine', {})
     // 告诉主进程软件的版本(CE|EE)
-    yakitApp.setEnterpriseToDomain(!isCommunityEdition())
+    ipc.invoke('local', 'is-enpritrace-to-domain', !isCommunityEdition())
 
     // 通知应用退出
-    const offCloseWindow = yakitApp.onCloseWindow(() => {
-      yakitApp.exitApp({ showCloseMessageBox: true, isIRify: isIRify(), isMemfit: isMemfit() })
+    const offCloseWindow = ipc.on('close-engineLinkWin-renderer', () => {
+      ipc.invoke('local', 'app-exit', { showCloseMessageBox: true, isIRify: isIRify(), isMemfit: isMemfit() })
     })
 
     return () => {

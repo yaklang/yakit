@@ -6,7 +6,6 @@ import type { IMonacoEditorMarker } from '@/utils/editorMarkers'
 import { FigmaIcon22915169930Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { ExclamationSolid, InformationCircleSolid, XCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { Selection } from '../../RunnerTabs/RunnerTabsType'
-const { ipcRenderer } = window.require('electron')
 export interface SyntaxCheckListProps {
   syntaxCheckData: IMonacoEditorMarker[]
   onJumpToEditor: (v: Selection) => void

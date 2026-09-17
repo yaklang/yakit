@@ -1,3 +1,5 @@
+import { ssaRisksForUI } from '@/pages/risks/grpcAdapters'
+import { ipc, type GrpcInput } from '@/services/ipc'
 import React, { memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type {
   EditRuleDrawerProps,
@@ -62,10 +64,8 @@ import {
   grpcCreateLocalRule,
   grpcCreateLocalRuleGroup,
   grpcDeleteLocalRuleGroup,
-  grpcDownloadSyntaxFlowRule,
   grpcFetchLocalRuleGroupList,
   grpcFetchRulesForSameGroup,
-  grpcSyntaxFlowRuleToOnline,
   grpcUpdateLocalRule,
   grpcUpdateLocalRuleGroup,
   grpcUpdateRuleToGroup,
@@ -116,8 +116,6 @@ import { openAIForge } from '../yakRunnerAuditHole/YakitAuditHoleTable/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 const { YakitPanel } = YakitCollapse
-
-const { ipcRenderer } = window.require('electron')
 
 const severityOrder = ['critical', 'high', 'middle', 'low', 'info']
 
@@ -303,19 +301,19 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
     const [uploadInfoVisible, setUploadInfoVisible] = useState<boolean>(false)
     const [uploadPercentShow, setUploadPercentShow] = useState<boolean>(false)
     const uploadTokenRef = useRef<string>(randomString(40))
+    const uploadParamsRef = useRef<GrpcInput<'SyntaxFlowRuleToOnline'>>({})
     const uploadContainerRef = useRef<HTMLElement>()
     const ruleGroupItemRef = useRef<SyntaxFlowGroup>()
     const handleUpload = useMemoizedFn(() => {
       if (ruleGroupItemRef.current) {
         uploadTokenRef.current = randomString(40)
-        grpcSyntaxFlowRuleToOnline(
-          { Filter: { GroupNames: [ruleGroupItemRef.current.GroupName] }, Token: userInfo.token },
-          uploadTokenRef.current,
-        ).then((res) => {
-          setUploadInfoVisible(false)
-          uploadContainerRef.current = getMainOperatorPageBodyContainer()
-          setUploadPercentShow(true)
-        })
+        uploadParamsRef.current = {
+          Filter: { GroupNames: [ruleGroupItemRef.current.GroupName] },
+          Token: userInfo.token,
+        }
+        setUploadInfoVisible(false)
+        uploadContainerRef.current = getMainOperatorPageBodyContainer()
+        setUploadPercentShow(true)
       }
     })
 
@@ -522,6 +520,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
               type="upload"
               apiKey="SyntaxFlowRuleToOnline"
               token={uploadTokenRef.current}
+              params={uploadParamsRef.current}
               onCancel={() => {
                 setUploadPercentShow(false)
               }}
@@ -1955,12 +1954,13 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
   const [ssaRisksinfo, setSSARisksInfo] = useState<SSARisk>()
 
   const getInfoFun = useMemoizedFn((hash) => {
-    ipcRenderer
-      .invoke('QuerySSARisks', {
+    ipc
+      .invoke('grpc', 'QuerySSARisks', {
         Filter: {
           Hash: [hash],
         },
       })
+      .then(ssaRisksForUI)
       .then((res: QuerySSARisksResponse) => {
         const { Data } = res
         if (Data.length > 0) {
@@ -2147,51 +2147,73 @@ const RuleDebugAuditList: React.FC<RuleDebugAuditListProps> = memo((props) => {
 
 /** @name 规则上传下载进度弹窗 */
 export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProps> = memo((props) => {
-  const { getContainer, onCancel, type, apiKey, token, onSuccess } = props
+  const { getContainer, onCancel, type, apiKey, params, token, onSuccess } = props
   const { t } = useI18nNamespaces(['ruleManagement', 'yakitUi'])
 
-  const timeRef = useRef<any>(null)
+  const controllerRef = useRef<AbortController>()
   const streamRef = useRef<SyntaxFlowRuleOnlineProgress[]>([])
   const [stream, setStream] = useState<SyntaxFlowRuleOnlineProgress[]>([])
-
   const onStreamCancel = useMemoizedFn(() => {
-    ipcRenderer.invoke(`cancel-${apiKey}`, token)
-    ipcRenderer.removeAllListeners(`${token}-data`)
-    ipcRenderer.removeAllListeners(`${token}-error`)
-    ipcRenderer.removeAllListeners(`${token}-end`)
-    clearInterval(timeRef.current)
-
+    controllerRef.current?.abort()
     onCancel()
   })
-
+  const notifyError = useMemoizedFn((error: unknown) => {
+    yakitNotify('error', t('RuleUploadAndDownloadModal.streamError', { error: `${error}` }))
+  })
+  const notifySuccess = useMemoizedFn((message: string) => {
+    yakitNotify('success', message)
+    onStreamCancel()
+    onSuccess()
+  })
   useEffect(() => {
-    const updateStream = () => {
-      const data = streamRef.current.slice()
-      setStream(data)
+    const controller = new AbortController()
+    controllerRef.current = controller
+    streamRef.current = []
+    setStream([])
+    let completion: ReturnType<typeof setTimeout> | undefined
+    const flush = () => {
+      if (controller.signal.aborted) return
+      setStream([...streamRef.current])
+      const data = streamRef.current[0]
+      if (
+        !completion &&
+        data?.Progress === 1 &&
+        data.MessageType === 'success' &&
+        !streamRef.current.some((item) => item.MessageType === 'error')
+      ) {
+        completion = setTimeout(() => {
+          if (!controller.signal.aborted) notifySuccess(data.Message)
+        }, 300)
+      }
     }
-    timeRef.current = setInterval(updateStream, 300)
-    ipcRenderer.on(`${token}-data`, async (e, data: SyntaxFlowRuleOnlineProgress) => {
-      streamRef.current.unshift(data)
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      yakitNotify('error', t('RuleUploadAndDownloadModal.streamError', { error: `${error}` }))
-    })
+    const timer = setInterval(flush, 300)
+    const onError = (error: unknown) => {
+      clearInterval(timer)
+      if (controller.signal.aborted) return
+      clearTimeout(completion)
+      setStream([...streamRef.current])
+      notifyError(error)
+    }
+    void ipc
+      .openStream('grpc', apiKey, params, {
+        token,
+        signal: controller.signal,
+        onData(data) {
+          if (!controller.signal.aborted) streamRef.current.unshift(data)
+        },
+        onError,
+        onEnd() {
+          clearInterval(timer)
+          flush()
+        },
+      })
+      .catch(onError)
     return () => {
-      onStreamCancel()
+      controller.abort()
+      clearInterval(timer)
+      clearTimeout(completion)
     }
   }, [token])
-
-  useEffect(() => {
-    const data = stream[0] || {}
-    const isError = stream.some((item) => item.MessageType === 'error')
-    if (data.Progress === 1 && data.MessageType === 'success' && !isError) {
-      setTimeout(() => {
-        yakitNotify('success', data.Message)
-        onStreamCancel()
-        onSuccess()
-      }, 300)
-    }
-  }, [JSON.stringify(stream)])
 
   return (
     <YakitModal
@@ -2353,22 +2375,19 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
     const [downloadInfoVisible, setDownloadInfoVisible] = useState<boolean>(false)
     const [downloadPercentShow, setDownloadPercentShow] = useState<boolean>(false)
     const downloadTokenRef = useRef<string>(randomString(40))
+    const downloadParamsRef = useRef<GrpcInput<'DownloadSyntaxFlowRule'>>({})
     const downloadContainerRef = useRef<HTMLElement>()
     const ruleGroupItemRef = useRef<API.FlowRuleGroupDetail>()
     const handleDownload = useMemoizedFn(() => {
       if (ruleGroupItemRef.current?.groupName) {
         downloadTokenRef.current = randomString(40)
-        grpcDownloadSyntaxFlowRule(
-          {
-            Filter: { GroupNames: [ruleGroupItemRef.current.groupName] },
-            Token: userInfo.token,
-          },
-          downloadTokenRef.current,
-        ).then((res) => {
-          setDownloadInfoVisible(false)
-          downloadContainerRef.current = getMainOperatorPageBodyContainer()
-          setDownloadPercentShow(true)
-        })
+        downloadParamsRef.current = {
+          Filter: { GroupNames: [ruleGroupItemRef.current.groupName] },
+          Token: userInfo.token,
+        }
+        setDownloadInfoVisible(false)
+        downloadContainerRef.current = getMainOperatorPageBodyContainer()
+        setDownloadPercentShow(true)
       }
     })
 
@@ -2519,6 +2538,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                       type="download"
                       apiKey="DownloadSyntaxFlowRule"
                       token={downloadTokenRef.current}
+                      params={downloadParamsRef.current}
                       onCancel={() => {
                         setDownloadPercentShow(false)
                       }}

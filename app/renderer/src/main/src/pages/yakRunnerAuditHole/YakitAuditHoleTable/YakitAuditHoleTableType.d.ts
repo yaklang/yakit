@@ -5,7 +5,7 @@ import { type CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail
 import { type VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import type { CreateSSARiskDisposalsRequest, SSARiskDisposalData } from './utils'
 export interface SSARisk {
-  Id: number
+  Id: string | number
   CreatedAt: number
   UpdatedAt?: number
 
@@ -35,7 +35,7 @@ export interface SSARisk {
 
   IsRead: boolean
 
-  ResultID: number
+  ResultID: string | number
   Variable?: string
   Index?: number
 
@@ -73,7 +73,7 @@ export interface YakitRiskDetailsProps {
 }
 
 export interface YakitRiskSelectTagProps {
-  ids: number[]
+  ids: (string | number)[]
   onClose?: () => void
   onCreate: (params: CreateSSARiskDisposalsRequest) => void
 }
@@ -101,7 +101,7 @@ export interface QuerySSARisksRequest {
 export type QuerySSARisksResponse = QueryGeneralResponse<SSARisk>
 
 export interface SSARisksFilter {
-  ID?: number[]
+  ID?: (string | number)[]
   Search?: string
   ProgramName?: string[]
   CodeSourceUrl?: string[]
@@ -142,7 +142,7 @@ export interface YakitAuditRiskDetailsProps {
 }
 
 export interface QueryNewSSARisksRequest {
-  AfterID: number
+  AfterID: string | number
 }
 
 export interface QueryNewSSARisksResponse {

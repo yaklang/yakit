@@ -1,3 +1,4 @@
+import { ipc, type GrpcOutput } from '@/services/ipc'
 import React, { useRef, useEffect, useState, useMemo } from 'react'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { Form, Tooltip, Space, Typography, Divider } from 'antd'
@@ -41,14 +42,12 @@ import { YakitCopyText } from '@/components/yakitUI/YakitCopyText/YakitCopyText'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { setClipboardText } from '@/utils/clipboard'
 
-const { ipcRenderer } = window.require('electron')
-
 export interface JavaPayloadPageProp {}
 
 export interface YsoGeneraterRequest {
   Gadget: string
   Class: string
-  Options: { Key: string; Value: string | number | boolean }[]
+  Options: { Key: string; Value: string }[]
 }
 
 interface ParamsProps {
@@ -86,7 +85,7 @@ export const convertRequest = (value: ParamsRefProps) => {
     Options: [],
   }
   for (const name in dataRef) {
-    if (!excludeKey.includes(name)) data.Options.push({ Key: name, Value: dataRef[name] })
+    if (!excludeKey.includes(name)) data.Options.push({ Key: name, Value: String(dataRef[name]) })
   }
   return data
 }
@@ -150,9 +149,9 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
             initParams.IsRemote = true
           })
           .finally(() => {
-            ipcRenderer
-              .invoke('AvailableLocalAddr', {})
-              .then((data: { Interfaces: NetInterface[] }) => {
+            ipc
+              .invoke('grpc', 'AvailableLocalAddr', {})
+              .then((data) => {
                 const arr = (data.Interfaces || []).filter((i) => i.IP !== '127.0.0.1')
                 if (arr.length > 0) initParams.ReverseHost = arr[0].IP
               })
@@ -162,9 +161,9 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
               })
           })
       } else {
-        ipcRenderer
-          .invoke('AvailableLocalAddr', {})
-          .then((data: { Interfaces: NetInterface[] }) => {
+        ipc
+          .invoke('grpc', 'AvailableLocalAddr', {})
+          .then((data) => {
             const arr = (data.Interfaces || []).filter((i) => i.IP !== '127.0.0.1')
             if (arr.length > 0) initParams.ReverseHost = arr[0].IP
           })
@@ -175,88 +174,64 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
       }
     })
   }, [])
-  // 实时接收反连数据
-  useEffect(() => {
-    if (!token) return
+  const facadeControllerRef = useRef<AbortController>()
+  const onFacadeData = useMemoizedFn((data: GrpcOutput<'StartFacadesWithYsoObject'>) => {
+    if (!data.IsMessage) {
+      return
+    }
+    const datas = dataRef.current
+    try {
+      const message = ExtractExecResultMessage(data) as ExecResultLog
+      if (message.level !== 'facades-msg') {
+        switch (message.level) {
+          case 'error':
+          case 'mirror_error':
+            failed(`${message.level}: ${message.data}`)
+            stopReverse()
+            break
+          case 'warning':
+            warn(message.data)
+            break
+          default:
+            info(JSON.stringify(message))
+        }
+        return
+      }
+      const obj = JSON.parse(message.data) as ReverseNotification
+      obj.timestamp = message.timestamp
+      let isUpdata = false
+      for (let i = 0; i < datas.length; i++) {
+        if (datas[i].connect_hash === obj.connect_hash) {
+          datas[i] = obj
+          isUpdata = true
+          break
+        }
+      }
 
+      if (!isUpdata) {
+        datas.unshift(obj)
+        totalRef.current = totalRef.current + 1
+      }
+
+      if (datas.length > 100) datas.pop()
+    } catch (e) {}
+  })
+  useEffect(() => {
     dataRef.current = []
     totalRef.current = 0
     setData([])
-    ipcRenderer.on(`${token}-data`, (_, data) => {
-      if (!data.IsMessage) {
-        return
-      }
-      const datas = dataRef.current
-      try {
-        const message = ExtractExecResultMessage(data) as ExecResultLog
-        if (message.level !== 'facades-msg') {
-          switch (message.level) {
-            case 'error':
-            case 'mirror_error':
-              failed(`${message.level}: ${message.data}`)
-              stopReverse()
-              break
-            case 'warning':
-              warn(message.data)
-              break
-            default:
-              info(JSON.stringify(message))
-          }
-          return
-        }
-        const obj = JSON.parse(message.data) as ReverseNotification
-        obj.timestamp = message.timestamp
-        let isUpdata = false
-        for (let i = 0; i < datas.length; i++) {
-          if (datas[i].connect_hash === obj.connect_hash) {
-            datas[i] = obj
-            isUpdata = true
-            break
-          }
-        }
-
-        if (!isUpdata) {
-          datas.unshift(obj)
-          totalRef.current = totalRef.current + 1
-        }
-
-        if (datas.length > 100) datas.pop()
-      } catch (e) {}
-    })
-    ipcRenderer.on(`${token}-error`, (_, data) => {
-      if (data) {
-        failed(`${JSON.stringify(data)}`)
-        stopReverse(true)
-      }
-    })
-    ipcRenderer.on(`${token}-end`, () => stopReverse(true))
-    const id = setInterval(() => {
-      const datas = dataRef.current
-
-      if (getData().length === 0) setData([...datas])
-      if (getData().length > 0 && datas[0].uuid !== getData()[0].uuid) setData([...datas])
+    const timer = setInterval(() => {
+      const items = dataRef.current
+      if (!getData().length || items[0]?.uuid !== getData()[0]?.uuid) setData([...items])
     }, 1000)
     return () => {
-      clearInterval(id)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-data`)
+      clearInterval(timer)
+      facadeControllerRef.current?.abort()
     }
   }, [token])
-  // 关闭页面时关闭Facades反连服务
-  useEffect(() => {
-    return () => {
-      ipcRenderer.invoke('cancel-StartFacadesWithYsoObject', getToken())
-    }
-  }, [])
-
-  // 关闭接收反连数据监听
   const stopReverse = (isCancel?: boolean) => {
-    if (!isCancel) {
-      ipcRenderer.invoke('cancel-StartFacadesWithYsoObject', token).then(() => {
-        success('已关闭FacadeServer')
-      })
-    }
+    facadeControllerRef.current?.abort()
+    if (!isCancel) success('已关闭FacadeServer')
     setToken(randomString(40))
     setIsStart(false)
   }
@@ -280,33 +255,62 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
     if (startFacadeParams.IsRemote) startFacadeParams.ReverseHost = remote
 
     setLoading(true)
-    ipcRenderer
-      .invoke('StartFacadesWithYsoObject', startFacadeParams, token)
+    facadeControllerRef.current?.abort()
+    const controller = new AbortController()
+    facadeControllerRef.current = controller
+    let ended = false
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      ended = true
+      failed('启动FacadeServer失败: ' + String(error))
+      setLoading(false)
+      stopReverse(true)
+    }
+    void ipc
+      .openStream('grpc', 'StartFacadesWithYsoObject', startFacadeParams, {
+        token,
+        signal: controller.signal,
+        onData(data) {
+          if (!controller.signal.aborted) onFacadeData(data)
+        },
+        onError,
+        onEnd() {
+          if (!controller.signal.aborted) {
+            ended = true
+            setLoading(false)
+            stopReverse(true)
+          }
+        },
+      })
       .then(() => {
         setTimeout(() => {
-          ipcRenderer
-            .invoke('ApplyClassToFacades', {
-              Token: getToken(),
-              GenerateClassParams: { ...classData },
-            })
-            .then((res) => {
+          if (controller.signal.aborted || ended) return
+          void ipc
+            .invoke(
+              'grpc',
+              'ApplyClassToFacades',
+              {
+                Token: startFacadeParams.Token,
+                GenerateClassParams: { ...classData },
+              },
+              { signal: controller.signal },
+            )
+            .then(() => {
+              if (controller.signal.aborted || ended) return
               paramsRef.current = { ...value }
               info('启动FacadeServer')
               setIsStart(true)
-              setCodeRefresh(!codeRefresh)
+              setCodeRefresh((value) => !value)
             })
-            .catch((err) => {
-              failed(`应用到FacadeServer失败${err}`)
-              stopReverse()
+            .catch(onError)
+            .finally(() => {
+              if (!controller.signal.aborted) setLoading(false)
             })
-            .finally(() => setTimeout(() => setLoading(false), 300))
         }, 200)
       })
-      .catch((e: any) => {
-        failed('启动FacadeServer失败: ' + `${e}`)
-      })
-      .finally(() => setTimeout(() => setLoading(false), 300))
+      .catch(onError)
   }
+
   /**
    * @name 启动带有payload配置的反连
    */
@@ -335,12 +339,12 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
 
       // 生成启动反连服务器的后端请求参数
       if (reverseAddr.IsRemote) {
-        ipcRenderer
-          .invoke('GetTunnelServerExternalIP', {
+        ipc
+          .invoke('grpc', 'GetTunnelServerExternalIP', {
             Addr: reverseAddr.BridgeParam.Addr,
             Secret: reverseAddr.BridgeParam.Secret,
           })
-          .then((data: { IP: string }) => {
+          .then((data) => {
             setRemoteIp(data.IP)
             startUpFacadeServer(value, reverseAddr, data.IP)
           })
@@ -356,8 +360,8 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
     const data = convertRequest(value)
     paramsRef.current = { ...value }
     if (isStart) {
-      ipcRenderer
-        .invoke('ApplyClassToFacades', { Token: token, GenerateClassParams: { ...data } })
+      ipc
+        .invoke('grpc', 'ApplyClassToFacades', { Token: token, GenerateClassParams: { ...data } })
         .then((res) => info('应用到FacadeServer成功'))
         .catch((err) => failed(`应用到FacadeServer失败${err}`))
         .finally(() => setTimeout(() => setLoading(false), 300))
@@ -700,8 +704,8 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
     } else cleatParams()
   }, [useGadget])
   const loadOptions = (isGadget: boolean) => {
-    ipcRenderer
-      .invoke(isGadget ? 'GetAllYsoGadgetOptions' : 'GetAllYsoClassOptions', isGadget ? undefined : { Gadget: 'None' })
+    ipc
+      .invoke('grpc', isGadget ? 'GetAllYsoGadgetOptions' : 'GetAllYsoClassOptions', isGadget ? {} : { Gadget: 'None' })
       .then((d: { Options: YsoOptionInfo[] }) => {
         const { Options } = d
         const optionArr: OptionInfo[] = Options.map((item) => {
@@ -733,9 +737,9 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
     const targetOption = selectedOptions[selectedOptions.length - 1]
 
     if (selectedOptions.length === 1) {
-      ipcRenderer
-        .invoke('GetAllYsoClassOptions', { Gadget: targetOption.Name })
-        .then((d: { Options: YsoOptionInfo[] }) => {
+      ipc
+        .invoke('grpc', 'GetAllYsoClassOptions', { Gadget: targetOption.Name })
+        .then((d) => {
           const { Options } = d
           const optionArr: OptionInfo[] = Options.map((item) => {
             const info: OptionInfo = {
@@ -768,9 +772,9 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
 
   const loadGeneraterFormList = useMemoizedFn((value: any[]) => {
     setBtnLoading(true)
-    ipcRenderer
-      .invoke('GetAllYsoClassGeneraterOptions', { Class: value[1], Gadget: value[0] })
-      .then((d: { Options: YsoClassGeneraterOptions[] }) => {
+    ipc
+      .invoke('grpc', 'GetAllYsoClassGeneraterOptions', { Class: value[1], Gadget: value[0] })
+      .then((d) => {
         const { Options } = d
 
         const paramsOptions: { [key: string]: string | number | boolean } = {}
@@ -1124,11 +1128,14 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
 
   const codeOperate = useMemoizedFn((value: 'yakRunning' | 'download' | 'copy' | 'extra') => {
     if (value === 'yakRunning') {
-      ipcRenderer.invoke('send-to-tab', {
-        type: 'add-yak-running',
+      ipc.invoke('local', 'ForwardMainEvent', {
+        event: 'fetch-send-to-tab',
         data: {
-          name: `${data.Class}/${data.Gadget}-${new Date().getTime()}`,
-          code: code,
+          type: 'add-yak-running',
+          data: {
+            name: `${data.Class}/${data.Gadget}-${new Date().getTime()}`,
+            code: code,
+          },
         },
       })
     }
@@ -1143,14 +1150,14 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
   const convertBase64 = useMemoizedFn(() => {
     setLoading(true)
     const request = convertRequest(data)
-    ipcRenderer
-      .invoke('GenerateYsoBytes', request)
-      .then((d: { Bytes: Uint8Array; FileName: string }) => {
-        ipcRenderer
-          .invoke('BytesToBase64', {
+    ipc
+      .invoke('grpc', 'GenerateYsoBytes', request)
+      .then((d) => {
+        ipc
+          .invoke('grpc', 'BytesToBase64', {
             Bytes: d.Bytes,
           })
-          .then((res: { Base64: string }) => {
+          .then((res) => {
             success('生成Base64成功')
             setCode(res.Base64)
           })
@@ -1166,9 +1173,9 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
   const convertHex = useMemoizedFn(() => {
     setLoading(true)
     const request = convertRequest(data)
-    ipcRenderer
-      .invoke('GenerateYsoBytes', request)
-      .then((d: { Bytes: Uint8Array; FileName: string }) => {
+    ipc
+      .invoke('grpc', 'GenerateYsoBytes', request)
+      .then((d) => {
         success('生成字节码成功')
         setHex(d.Bytes)
         setCode(Buffer.from(d.Bytes).toString('hex'))
@@ -1184,9 +1191,9 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
   const convertYak = useMemoizedFn(() => {
     setLoading(true)
     const request = convertRequest(data)
-    ipcRenderer
-      .invoke('GenerateYsoCode', request)
-      .then((d: { Code: string }) => {
+    ipc
+      .invoke('grpc', 'GenerateYsoCode', request)
+      .then((d) => {
         success('生成代码成功')
         setCode(d.Code)
       })
@@ -1198,14 +1205,14 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
   const convertDump = useMemoizedFn(() => {
     setLoading(true)
     const request = convertRequest(data)
-    ipcRenderer
-      .invoke('GenerateYsoBytes', request)
-      .then((d: { Bytes: Uint8Array; FileName: string }) => {
-        ipcRenderer
-          .invoke('YsoDump', {
+    ipc
+      .invoke('grpc', 'GenerateYsoBytes', request)
+      .then((d) => {
+        ipc
+          .invoke('grpc', 'YsoDump', {
             Data: d.Bytes,
           })
-          .then((res: { Data: string }) => {
+          .then((res) => {
             success('Dump成功')
             setCode(res.Data)
           })

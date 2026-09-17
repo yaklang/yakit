@@ -272,7 +272,7 @@ const handleNotify: AIMessageHandler = (request) => {
     meta.notifyMessageTimer = null
   }
   const { type, content } = data
-  store.getState().updateState({ notifyMessage: { type, content, label: res.NodeIdVerbose } })
+  store.getState().updateState({ notifyMessage: { type, content, label: res.NodeIdVerbose ?? { Zh: '', En: '' } } })
 
   let durationMs = 0
   if (typeof data.duration_ms === 'number' && !Number.isNaN(data.duration_ms) && data.duration_ms > 0) {

@@ -1,3 +1,4 @@
+import { int64ToSafeNumber } from '@/utils/int64'
 import { MarkerSeverity, MarkerTag } from 'monaco-editor'
 import { Uint8ArrayToString } from '@/utils/str'
 import type { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
@@ -19,10 +20,10 @@ export interface YakStaticAnalyzeErrorResult {
   Message: Uint8Array
   RawMessage: Uint8Array
   Severity: 'Error' | 'Warning' | 'Info' | 'Hint' | string
-  StartLineNumber: number
-  StartColumn: number
-  EndLineNumber: number
-  EndColumn: number
+  StartLineNumber: string | number
+  StartColumn: string | number
+  EndLineNumber: string | number
+  EndColumn: string | number
   Tag: 'Unnecessary' | 'Deprecated' | string
 }
 
@@ -40,10 +41,10 @@ export const ConvertYakStaticAnalyzeErrorToMarker = (i: YakStaticAnalyzeErrorRes
   return {
     message: i.Message.length > 0 ? Uint8ArrayToString(i.Message) : Uint8ArrayToString(i.RawMessage),
     severity: getMarkerSeverity(i.Severity),
-    startLineNumber: parseInt(`${i.StartLineNumber}`),
-    startColumn: parseInt(`${i.StartColumn}`),
-    endLineNumber: parseInt(`${i.EndLineNumber}`),
-    endColumn: parseInt(`${i.EndColumn}`),
+    startLineNumber: int64ToSafeNumber(i.StartLineNumber),
+    startColumn: int64ToSafeNumber(i.StartColumn),
+    endLineNumber: int64ToSafeNumber(i.EndLineNumber),
+    endColumn: int64ToSafeNumber(i.EndColumn),
     tags: getMarkerTags(i.Tag),
   }
 }

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { type FC, useMemo, useRef } from 'react'
 import { Form } from 'antd'
 import { useRequest, useSafeState } from 'ahooks'
@@ -23,8 +24,6 @@ import { getAllRows } from './CustomizeCodeTypes'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { PencilAltOutlined, PlusOutlined, TrashOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
 
 const { Item } = Form
 
@@ -170,7 +169,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps> & { variant?: 'settings'
   // 获取代码接口定义
   const { data: detailCustomCodeData, run: detailCustomCodeRun } = useRequest(
     async () => {
-      const result: TCustomCodeGeneral<string[]> = await ipcRenderer.invoke('QuerySnippets', { Filter: {} })
+      const result = await ipc.invoke('grpc', 'QuerySnippets', { Filter: {} })
       return result
     },
     {
@@ -183,7 +182,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps> & { variant?: 'settings'
   // 创建代码片段接口定义
   const { run: createCustomCodeRun, loading: createCustomCodeLoading } = useRequest(
     async (responseValue: TCustomCodeGeneral<string>) => {
-      await ipcRenderer.invoke('CreateSnippet', responseValue)
+      await ipc.invoke('grpc', 'CreateSnippet', responseValue)
     },
     {
       manual: true,
@@ -202,7 +201,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps> & { variant?: 'settings'
   // 删除代码接口定义
   const { run: runDeleteCode, loading: deleteCustomCodeLoading } = useRequest(
     async (response: TQueryCustomCodeRequest) => {
-      await ipcRenderer.invoke('DeleteSnippets', response)
+      await ipc.invoke('grpc', 'DeleteSnippets', response)
     },
     {
       manual: true,
@@ -219,7 +218,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps> & { variant?: 'settings'
   // 更新代码接口定义
   const { run: updateCustomCodeRun } = useRequest(
     async (response: TCustomEditorCodeGeneral<string>) => {
-      await ipcRenderer.invoke('UpdateSnippet', response)
+      await ipc.invoke('grpc', 'UpdateSnippet', response)
     },
     {
       manual: true,

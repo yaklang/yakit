@@ -52,8 +52,8 @@ const getClientLabel = (item: MCPToolCallHistorySummary | MCPToolCallHistory, un
 }
 
 const dedupeHistoriesByID = (histories: MCPToolCallHistorySummary[]) => {
-  const historyMap = new Map<number, MCPToolCallHistorySummary>()
-  histories.forEach((item) => historyMap.set(item.ID, item))
+  const historyMap = new Map<string, MCPToolCallHistorySummary>()
+  histories.forEach((item) => historyMap.set(String(item.ID), item))
   return Array.from(historyMap.values())
 }
 

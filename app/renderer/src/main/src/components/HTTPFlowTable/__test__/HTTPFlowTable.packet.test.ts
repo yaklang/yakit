@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { HTTPFlow } from '../HTTPFlowTable.constants'
 import { hydrateHTTPFlowRequest, hydrateHTTPFlowRequests } from '../HTTPFlowTable.packet'
 
-const flow = (id: number, request = new Uint8Array()): HTTPFlow =>
+const flow = (id: string | number, request = new Uint8Array()): HTTPFlow =>
   ({
     Id: id,
     Request: request,
@@ -10,6 +10,17 @@ const flow = (id: number, request = new Uint8Array()): HTTPFlow =>
   }) as HTTPFlow
 
 describe('HTTP flow request packet hydration', () => {
+  it('keeps adjacent int64 IDs distinct during concurrent hydration', async () => {
+    const first = '9007199254740992'
+    const second = '9007199254740993'
+    const fetchById = vi.fn(async (id: string | number) => flow(id, new Uint8Array([1])))
+    const result = await hydrateHTTPFlowRequests([flow(first), flow(second)], fetchById)
+    expect(result.map((row) => row.Id)).toEqual([first, second])
+    expect(fetchById).toHaveBeenCalledTimes(2)
+    await expect(hydrateHTTPFlowRequest(flow(second), async () => flow(first, new Uint8Array([1])))).rejects.toThrow(
+      'does not match',
+    )
+  })
   it('does not query details when the list row already contains a request', async () => {
     const existing = flow(1, new Uint8Array([1]))
     const fetchById = vi.fn()
@@ -51,7 +62,7 @@ describe('HTTP flow request packet hydration', () => {
   })
 
   it('hydrates only missing packets and retains batch order', async () => {
-    const fetchById = vi.fn(async (id: number) => flow(id, new Uint8Array([id])))
+    const fetchById = vi.fn(async (id: string | number) => flow(id, new Uint8Array([Number(id)])))
     const loaded = flow(4, new Uint8Array([4]))
 
     const result = await hydrateHTTPFlowRequests([loaded, flow(5)], fetchById)

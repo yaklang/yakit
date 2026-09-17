@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import { useRef, useEffect, Suspense, lazy, useState } from 'react'
 import { failed, warn, yakitFailed } from '@/utils/notification'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
@@ -21,7 +22,6 @@ import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
 import emiter from '@/utils/eventBus/eventBus'
 import { JSONParseLog } from '@/utils/tool'
 import { debugToPrintLogs } from '@/utils/logCollection'
-import { yakitApp, yakitProfile, yakitSocket } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /** 部分页面懒加载 */
@@ -80,10 +80,10 @@ function NewApp() {
     // 设置echarts颜色(替换原始颜色)
     setChartsColorList()
     // 解压命令执行引擎脚本压缩包
-    yakitApp.generateStartEngine()
+    ipc.invoke('local', 'generate-start-engine', {})
     // 解压Google 插件压缩包
-    yakitApp
-      .generateChromePlugin()
+    ipc
+      .invoke('local', 'generate-chrome-plugin', {})
       .then((res) => {
         setGoogleChromePluginPath(res)
       })
@@ -91,7 +91,7 @@ function NewApp() {
     // 获取系统信息
     handleFetchSystemInfo()
     // 告诉主进程软件的版本(CE|EE)
-    yakitApp.setEnterpriseToDomain(!isCommunityEdition())
+    ipc.invoke('local', 'is-enpritrace-to-domain', !isCommunityEdition())
   }, [])
 
   // 全局记录鼠标坐标位置(为右键菜单提供定位)
@@ -144,10 +144,10 @@ function NewApp() {
   const testYak = () => {
     getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
       if (!setting) {
-        yakitProfile
-          .getOnlineProfile({})
-          .then((data: OnlineProfileProps) => {
-            yakitApp.syncEditBaseUrl(data.BaseUrl)
+        ipc
+          .invoke('grpc', 'GetOnlineProfile', {})
+          .then(async (data: OnlineProfileProps) => {
+            await ipc.invoke('local', 'sync-edit-baseUrl', { baseUrl: data.BaseUrl })
             setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({ BaseUrl: data.BaseUrl }))
             refreshLogin()
           })
@@ -156,13 +156,13 @@ function NewApp() {
           })
       } else {
         const values = JSONParseLog(setting, { page: 'NewApp', fun: 'testYak' })
-        yakitProfile
-          .setOnlineProfile({
+        ipc
+          .invoke('grpc', 'SetOnlineProfile', {
             ...values,
             IsCompany: true,
           } as OnlineProfileProps)
-          .then(() => {
-            yakitApp.syncEditBaseUrl(values.BaseUrl)
+          .then(async () => {
+            await ipc.invoke('local', 'sync-edit-baseUrl', { baseUrl: values.BaseUrl })
             setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
             refreshLogin()
           })
@@ -189,7 +189,7 @@ function NewApp() {
             token: resToken,
           },
         })
-          .then((res) => {
+          .then(async (res) => {
             setRemoteValue(TokenSource, resToken)
             const user = {
               isLogin: true,
@@ -206,7 +206,7 @@ function NewApp() {
               user_id: res.user_id,
               token: resToken,
             }
-            yakitApp.syncUpdateUser(user)
+            await ipc.invoke('local', 'sync-update-user', user)
             setStoreUserInfo(user)
             refreshToken(user)
           })
@@ -225,7 +225,7 @@ function NewApp() {
   const handleKillAllRunNode = async () => {
     const promises: (() => Promise<any>)[] = []
     Array.from(runNodeList).forEach(([key, pid]) => {
-      promises.push(() => yakitApp.killRunNode(Number(pid)))
+      promises.push(() => ipc.invoke('local', 'kill-run-node', { pid: Number(pid) }))
     })
     try {
       await Promise.allSettled(promises.map((promiseFunc) => promiseFunc()))
@@ -239,7 +239,7 @@ function NewApp() {
   const { dynamicStatus } = useYakitDynamicStatus()
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
   useEffect(() => {
-    const offCloseWindow = yakitApp.onCloseWindow(async () => {
+    const offCloseWindow = ipc.on('close-windows-renderer', async () => {
       // 如果关闭按钮有其他的弹窗 则不显示 showMessageBox
       const showCloseMessageBox = !(Array.from(runNodeList).length || temporaryProjectIdRef.current)
       // 关闭前的所有接口调用都放到allSettled里面
@@ -250,13 +250,13 @@ function NewApp() {
       if (dynamicStatus.isDynamicStatus) {
         warn(t('NewApp.remoteControlClosing'))
         await remoteOperation(false, dynamicStatus)
-        yakitApp.exitApp({ showCloseMessageBox, isIRify: isIRify(), isMemfit: isMemfit() })
+        ipc.invoke('local', 'app-exit', { showCloseMessageBox, isIRify: isIRify(), isMemfit: isMemfit() })
       } else {
-        yakitApp.exitApp({ showCloseMessageBox, isIRify: isIRify(), isMemfit: isMemfit() })
+        ipc.invoke('local', 'app-exit', { showCloseMessageBox, isIRify: isIRify(), isMemfit: isMemfit() })
       }
     })
 
-    const offMinimizeWindow = yakitApp.onMinimizeWindow(async () => {
+    const offMinimizeWindow = ipc.on('minimize-windows-renderer', async () => {
       const { token } = userInfo
       if (token && token.length > 0) {
         uploadProjectEvent.startUpload({
@@ -275,11 +275,11 @@ function NewApp() {
   useEffect(() => {
     // 登录账号时 连接 WebSocket 服务器
     if (userInfo.isLogin) {
-      yakitSocket.start()
+      ipc.invoke('local', 'socket-start', {})
     }
     // 退出账号时 关闭 WebSocket 服务器
     else {
-      yakitSocket.close()
+      ipc.invoke('local', 'socket-close', {})
     }
   }, [userInfo.isLogin])
 

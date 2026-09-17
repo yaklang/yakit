@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+import { ipc } from '@/services/ipc'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import styles from '../knowledgeSidebarList.module.scss'
 import { Upload } from 'antd'
@@ -14,8 +16,6 @@ import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/Knowled
 import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { CloudDownloadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-
-const { ipcRenderer } = window.require('electron')
 
 const DragKnowledge: FC<{ setAddMode: Dispatch<SetStateAction<string[]>> }> = ({ setAddMode }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
@@ -71,7 +71,7 @@ const DragKnowledge: FC<{ setAddMode: Dispatch<SetStateAction<string[]>> }> = ({
 
   const { runAsync, loading } = useRequest(
     async (params) => {
-      const result = await ipcRenderer.invoke('CreateKnowledgeBaseV2', {
+      const result = await ipc.invoke('grpc', 'CreateKnowledgeBaseV2', {
         Name: params.KnowledgeBaseName,
         Description: params.KnowledgeBaseDescription,
         Type: params.KnowledgeBaseType,
@@ -80,6 +80,7 @@ const DragKnowledge: FC<{ setAddMode: Dispatch<SetStateAction<string[]>> }> = ({
         CreatedFromUI: params.CreatedFromUI ?? true,
       })
       const KnowledgeBaseID = result?.KnowledgeBase?.ID
+      if (!result.IsSuccess || !KnowledgeBaseID) throw new Error(result.Message || '引擎未返回新建知识库')
       const hasKnowledgeBaseById = knowledgeBases.find((it) => it.ID === KnowledgeBaseID)
       if (hasKnowledgeBaseById) {
         editKnowledgeBase(KnowledgeBaseID, {
@@ -98,91 +99,49 @@ const DragKnowledge: FC<{ setAddMode: Dispatch<SetStateAction<string[]>> }> = ({
     },
   )
 
+  const downloadControllerRef = useRef<AbortController>()
+  useEffect(() => () => downloadControllerRef.current?.abort(), [])
   const handleDownloadAllOnlineRag = async () => {
-    try {
-      const token = randomString(50)
-      setAllDownloadToken(token)
-      setAllDownloadProgress(0)
-
-      const invokeArgs = { Force: true, All: true }
-      await new Promise<void>((resolve, reject) => {
-        let settled = false
-
-        const safeResolve = () => {
-          if (!settled) {
-            settled = true
-            ipcRenderer.removeAllListeners(`${token}-data`)
-            ipcRenderer.removeAllListeners(`${token}-end`)
-            ipcRenderer.removeAllListeners(`${token}-error`)
-            resolve()
-          }
-        }
-
-        const safeReject = (err) => {
-          if (!settled) {
-            settled = true
-            ipcRenderer.removeAllListeners(`${token}-data`)
-            ipcRenderer.removeAllListeners(`${token}-end`)
-            ipcRenderer.removeAllListeners(`${token}-error`)
-            reject(err)
-          }
-        }
-
-        ipcRenderer.invoke('DownloadRAGs', invokeArgs, token).catch(safeReject)
-
-        const onData = (_, data) => {
-          if (data?.Progress > 0) {
-            const progressValue = Math.ceil(data.Progress)
-            setAllDownloadProgress(progressValue)
-          }
-        }
-
-        ipcRenderer.on(`${token}-data`, onData)
-
-        ipcRenderer.once(`${token}-end`, () => {
-          safeResolve()
-        })
-
-        ipcRenderer.once(`${token}-error`, (_, error) => {
-          safeReject(error)
-        })
-      })
-      run()
-      success(t('DragKnowledge.downloadAllSuccess'))
-      setAddMode([])
-    } catch (err) {
-      failed(t('DragKnowledge.downloadAllFailed', { error: String(err) }))
-    } finally {
+    downloadControllerRef.current?.abort()
+    const controller = new AbortController()
+    downloadControllerRef.current = controller
+    const token = randomString(50)
+    setAllDownloadToken(token)
+    setAllDownloadProgress(0)
+    const clearProgress = () => {
       setAllDownloadToken('')
       setAllDownloadProgress(0)
     }
+    const onError = (error: unknown) => {
+      if (controller.signal.aborted) return
+      failed(t('DragKnowledge.downloadAllFailed', { error: String(error) }))
+      clearProgress()
+    }
+    try {
+      await ipc.openStream(
+        'grpc',
+        'DownloadRAGs',
+        { Force: true, All: true },
+        {
+          token,
+          signal: controller.signal,
+          onData(data) {
+            if (!controller.signal.aborted && data.Progress > 0) setAllDownloadProgress(Math.ceil(data.Progress))
+          },
+          onError,
+          onEnd() {
+            if (controller.signal.aborted) return
+            run()
+            success(t('DragKnowledge.downloadAllSuccess'))
+            setAddMode([])
+            clearProgress()
+          },
+        },
+      )
+    } catch (error) {
+      onError(error)
+    }
   }
-
-  // 监听下载进度
-  useEffect(() => {
-    if (!allDownloadToken) return
-
-    const onData = (_, data) => {
-      if (data?.Progress > 0) {
-        const progressValue = Math.ceil(data.Progress)
-        setAllDownloadProgress(progressValue)
-      }
-    }
-
-    const onError = () => {}
-
-    const onEnd = () => {}
-
-    ipcRenderer.on(`${allDownloadToken}-data`, onData)
-    ipcRenderer.on(`${allDownloadToken}-error`, onError)
-    ipcRenderer.on(`${allDownloadToken}-end`, onEnd)
-
-    return () => {
-      ipcRenderer.removeAllListeners(`${allDownloadToken}-data`)
-      ipcRenderer.removeAllListeners(`${allDownloadToken}-error`)
-      ipcRenderer.removeAllListeners(`${allDownloadToken}-end`)
-    }
-  }, [allDownloadToken])
 
   useUpdateEffect(() => {
     if (allDownloadProgress === 100) {
@@ -193,9 +152,9 @@ const DragKnowledge: FC<{ setAddMode: Dispatch<SetStateAction<string[]>> }> = ({
   // 获取数据库 列表数据
   const { run } = useRequest(
     async (Keyword?: string) => {
-      const result: KnowledgeBaseContentProps = await ipcRenderer.invoke('GetKnowledgeBase', {
+      const result: KnowledgeBaseContentProps = await ipc.invoke('grpc', 'GetKnowledgeBase', {
         Keyword,
-        Pagination: { Limit: 9999, Page: 1, OrderBy: 'updated_at', Sort: 'desc' },
+        Pagination: { Limit: 9999, Page: 1, OrderBy: 'updated_at', Order: 'desc' },
       })
       const { KnowledgeBases } = result
       return KnowledgeBases

@@ -1,3 +1,4 @@
+import { ipc } from '@/services/ipc'
 import React, { useEffect, useRef, useState } from 'react'
 import { MacUIOpCloseSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/MacUIOpCloseSvgIcon'
 import { MacUIOpMaxSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/MacUIOpMaxSvgIcon'
@@ -12,7 +13,6 @@ import { yakitFailed } from '@/utils/notification'
 import classNames from 'classnames'
 import styles from './uiOperate.module.scss'
 import { getReleaseEditionName } from '@/utils/envfile'
-import { yakitApp, yakitWindowControls } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface MacUIOpProp {
@@ -26,20 +26,30 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
   const [isMax, setIsMax] = useState<boolean>(false)
 
   const operate = useMemoizedFn((type: 'close' | 'min' | 'full') => {
-    yakitWindowControls.operate(type)
+    ipc.invoke('local', 'UIOperate', type)
   })
 
   useEffect(() => {
-    yakitWindowControls.requestFullScreenState()
-    const offFullScreenState = yakitWindowControls.onFullScreenState((value: boolean) => setIsMax(value))
-
-    const offEnterFull = yakitWindowControls.onEnterFullScreen(() => setIsMax(true))
-    const offLeaveFull = yakitWindowControls.onLeaveFullScreen(() => setIsMax(false))
-
+    let current = true
+    let changed = false
+    const offEnter = ipc.on('callback-win-enter-full', () => {
+      changed = true
+      setIsMax(true)
+    })
+    const offLeave = ipc.on('callback-win-leave-full', () => {
+      changed = true
+      setIsMax(false)
+    })
+    void ipc
+      .invoke('local', 'is-full-screen', {})
+      .then((value) => {
+        if (current && !changed) setIsMax(value)
+      })
+      .catch(() => {})
     return () => {
-      offFullScreenState()
-      offEnterFull()
-      offLeaveFull()
+      current = false
+      offEnter()
+      offLeave()
     }
   }, [])
 
@@ -87,7 +97,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
   const handleKillAllRunNode = async () => {
     const promises: (() => Promise<any>)[] = []
     Array.from(runNodeList).forEach(([key, pid]) => {
-      promises.push(() => yakitApp.killRunNode(Number(pid)))
+      promises.push(() => ipc.invoke('local', 'kill-run-node', { pid: Number(pid) }))
     })
     try {
       await Promise.allSettled(promises.map((promiseFunc) => promiseFunc()))

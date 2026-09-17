@@ -1,3 +1,7 @@
+import type { HTTPResponseMatcher } from '../../MatcherAndExtractionCard/MatcherAndExtractionCardType'
+import { int64ToSafeNumber } from '@/utils/int64'
+import type { GrpcOutput } from '@/services/ipc'
+import { ipc } from '@/services/ipc'
 import React, { useState, useRef, useEffect } from 'react'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import {
@@ -36,21 +40,35 @@ import { FuncBtn } from '@/pages/plugins/funcTemplate'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { ipcRenderer } = window.require('electron')
-
-const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
+type ImportedFuzzerRequest = NonNullable<GrpcOutput<'ImportHTTPFuzzerTaskFromYaml'>['Requests']>['Requests'][number]
+const matcherForUI = (matcher: ImportedFuzzerRequest['Matchers'][number]): HTTPResponseMatcher => ({
+  ...matcher,
+  SubMatchers: matcher.SubMatchers.map(matcherForUI),
+  filterMode:
+    matcher.Action === 'discard'
+      ? 'drop'
+      : matcher.Action === 'retain'
+        ? 'match'
+        : matcher.Action === 'fail'
+          ? 'fail'
+          : 'onlyMatch',
+})
+const toFuzzerAdvancedConfigValue = (value: ImportedFuzzerRequest) => {
   const resProps: AdvancedConfigValueProps = {
     isHttps: value.IsHTTPS,
     isGmTLS: value.IsGmTLS,
     randomJA3: value.RandomJA3,
     actualHost: value.ActualAddr,
-    maxBodySize: value.MaxBodySize,
+    maxBodySize: int64ToSafeNumber(value.MaxBodySize),
     proxy: value.Proxy ? value.Proxy.split(',') : [],
     noSystemProxy: value.NoSystemProxy,
     disableUseConnPool: value.DisableUseConnPool,
     disableHotPatch: value.DisableHotPatch,
     resNumlimit: DefFuzzerTableMaxData,
-    fuzzTagMode: value.FuzzTagMode,
+    fuzzTagMode:
+      value.FuzzTagMode === 'standard' || value.FuzzTagMode === 'close' || value.FuzzTagMode === 'legacy'
+        ? value.FuzzTagMode
+        : 'standard',
     sNI: value.SNI,
     overwriteSNI: value.OverwriteSNI === false ? 'auto' : value.SNI ? 'mandatory' : 'clear',
     fuzzTagSyncIndex: value.FuzzTagSyncIndex,
@@ -58,11 +76,11 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
     dialTimeoutSeconds: value.DialTimeoutSeconds,
     timeout: value.PerRequestTimeoutSeconds,
     batchTarget: value.BatchTarget || new Uint8Array(),
-    repeatTimes: value.RepeatTimes,
-    concurrent: value.Concurrent,
+    repeatTimes: int64ToSafeNumber(value.RepeatTimes),
+    concurrent: int64ToSafeNumber(value.Concurrent),
     minDelaySeconds: value.DelayMinSeconds,
     maxDelaySeconds: value.DelayMaxSeconds,
-    maxRetryTimes: value.MaxRetryTimes,
+    maxRetryTimes: int64ToSafeNumber(value.MaxRetryTimes),
     retryWaitSeconds: value.RetryWaitSeconds,
     retryMaxWaitSeconds: value.RetryMaxWaitSeconds,
     retry: !!value.RetryInStatusCode,
@@ -80,7 +98,7 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
     followJSRedirect: value.FollowJSRedirect,
     dnsServers: value.DNSServers,
     etcHosts: value.EtcHosts,
-    matchers: value.Matchers,
+    matchers: value.Matchers.map(matcherForUI),
     extractors: value.Extractors,
     params: value.Params,
     cookie: value.MutateMethods.find((item) => item.Type === 'Cookie')?.Value || [{ Key: '', Value: '' }],
@@ -90,10 +108,14 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
     inheritCookies: value.InheritCookies,
     inheritVariables: value.InheritVariables,
     enableRandomChunked: !!value.EnableRandomChunked,
-    randomChunkedMinLength: value.RandomChunkedMinLength || defaultAdvancedConfigValue.randomChunkedMinLength,
-    randomChunkedMaxLength: value.RandomChunkedMaxLength || defaultAdvancedConfigValue.randomChunkedMaxLength,
-    randomChunkedMinDelay: value.RandomChunkedMinDelay || defaultAdvancedConfigValue.randomChunkedMinDelay,
-    randomChunkedMaxDelay: value.RandomChunkedMaxDelay || defaultAdvancedConfigValue.randomChunkedMaxDelay,
+    randomChunkedMinLength:
+      int64ToSafeNumber(value.RandomChunkedMinLength) || defaultAdvancedConfigValue.randomChunkedMinLength,
+    randomChunkedMaxLength:
+      int64ToSafeNumber(value.RandomChunkedMaxLength) || defaultAdvancedConfigValue.randomChunkedMaxLength,
+    randomChunkedMinDelay:
+      int64ToSafeNumber(value.RandomChunkedMinDelay) || defaultAdvancedConfigValue.randomChunkedMinDelay,
+    randomChunkedMaxDelay:
+      int64ToSafeNumber(value.RandomChunkedMaxDelay) || defaultAdvancedConfigValue.randomChunkedMaxDelay,
   }
   return resProps
 }
@@ -149,13 +171,12 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
   const onExportToYaml = async (tempType: 'path' | 'raw') => {
     const requests = getFuzzerRequestParams()
     const params = {
-      Requests: { Requests: Array.isArray(requests) ? requests : [getFuzzerRequestParams()] },
+      Requests: { Requests: Array.isArray(requests) ? requests : [requests] },
       TemplateType: tempType,
     }
     try {
-      const { Status, YamlContent }: { Status: { Ok: boolean; Reason: string }; YamlContent: string } =
-        await ipcRenderer.invoke('ExportHTTPFuzzerTaskToYaml', params)
-      if (Status.Ok) {
+      const { Status, YamlContent } = await ipc.invoke('grpc', 'ExportHTTPFuzzerTaskToYaml', params)
+      if (Status?.Ok) {
         if (Status.Reason) {
           Status.Reason.split('\n').forEach((msg) => {
             warn(msg)
@@ -168,7 +189,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
           errorMsg: '',
         })
       } else {
-        throw new Error(Status.Reason)
+        throw new Error(Status?.Reason || '引擎未返回操作状态')
       }
     } catch (error) {
       yakitFailed(error + '')
@@ -255,7 +276,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
 
   const readYamlContent = useMemoizedFn(async (absolutePath: string) => {
     try {
-      const yamlContent = await ipcRenderer.invoke('fetch-file-content', absolutePath)
+      const yamlContent = await ipc.invoke('local', 'read-file-content', absolutePath)
       emiter.emit('onImportYamlPopEditorContent', yamlContent)
     } catch (error) {
       yakitFailed(error + '')
@@ -264,13 +285,11 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
 
   const execImportYaml = async () => {
     try {
-      const { Status, Requests }: { Status: { Ok: boolean; Reason: string }; Requests: any } = await ipcRenderer.invoke(
-        'ImportHTTPFuzzerTaskFromYaml',
-        {
-          YamlContent: yamlContRef.current,
-        },
-      )
-      if (Status.Ok) {
+      const { Status, Requests } = await ipc.invoke('grpc', 'ImportHTTPFuzzerTaskFromYaml', {
+        YamlContent: yamlContRef.current,
+      })
+      if (Status?.Ok) {
+        if (!Requests) throw new Error('引擎未返回导入请求')
         if (Status.Reason) {
           Status.Reason.split('\n').forEach((msg) => {
             warn(msg)
@@ -278,19 +297,22 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
         }
         if (Requests.Requests.length === 1) {
           const params = Requests.Requests[0]
-          await ipcRenderer.invoke('send-to-tab', {
-            type: 'fuzzer',
+          await ipc.invoke('local', 'ForwardMainEvent', {
+            event: 'fetch-send-to-tab',
             data: {
-              isCache: false,
-              request: Uint8ArrayToString(params.RequestRaw),
-              advancedConfigValue: toFuzzerAdvancedConfigValue(params),
+              type: 'fuzzer',
+              data: {
+                isCache: false,
+                request: Uint8ArrayToString(params.RequestRaw),
+                advancedConfigValue: toFuzzerAdvancedConfigValue(params),
+              },
             },
           })
         } else {
           assemblyFuzzerSequenceData(Requests.Requests)
         }
       } else {
-        throw new Error(Status.Reason)
+        throw new Error(Status?.Reason || '引擎未返回操作状态')
       }
     } catch (error) {
       yakitFailed(error + '')
@@ -298,7 +320,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
   }
 
   // 序列导出组装数据
-  const assemblyFuzzerSequenceData = (Requests: FuzzerRequestProps[]) => {
+  const assemblyFuzzerSequenceData = (Requests: ImportedFuzzerRequest[]) => {
     // 组装菜单组信息
     const groupId = generateGroupId()
     const groupChildren: MultipleNodeInfo[] = []
@@ -519,9 +541,9 @@ export const ShareModal: React.FC<ShareModalProps> = React.memo((props) => {
         shareHttpHistoryParams.ShareId = shareResData.share_id
       }
       setShareLoading(true)
-      ipcRenderer
-        .invoke('HTTPFlowsShare', shareHttpHistoryParams)
-        .then((res: HTTPFlowsShareResponse) => {
+      ipc
+        .invoke('grpc', 'HTTPFlowsShare', shareHttpHistoryParams)
+        .then((res) => {
           setShareResData({
             share_id: res.ShareId,
             extract_code: res.ExtractCode,

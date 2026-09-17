@@ -40,7 +40,7 @@ import {
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { randomString } from '@/utils/randomUtil'
 import { failed, yakitNotify } from '@/utils/notification'
-import { type DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin } from '@/pages/plugins/utils'
+import { type DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import emiter from '@/utils/eventBus/eventBus'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
@@ -491,9 +491,10 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             }
             apiDebugPlugin({
               params: requestParams,
-              token: tokenRef.current,
+              open: debugPluginStreamEvent.open,
               pluginCustomParams: params,
             }).then(() => {
+              if (!debugPluginStreamEvent.isActive()) return
               setIsExecuting(true)
               debugPluginStreamEvent.start()
             })
@@ -504,7 +505,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
 
     /**取消执行 */
     const onStopExecute = useMemoizedFn(() => {
-      apiCancelDebugPlugin(tokenRef.current).then(() => {
+      debugPluginStreamEvent.cancel().then(() => {
         debugPluginStreamEvent.stop()
         setIsExecuting(false)
       })

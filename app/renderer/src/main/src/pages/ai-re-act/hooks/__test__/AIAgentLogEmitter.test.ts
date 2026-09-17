@@ -1,7 +1,7 @@
 import './setupElectron'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { AIAgentLogEmitter } from '../AIAgentLogEmitter'
-import { ipcRendererMock, resetIpcMocks } from './setupElectron'
+import { sdkMock, resetIpcMocks } from './setupElectron'
 
 describe('AIAgentLogEmitter', () => {
   let emitter: AIAgentLogEmitter
@@ -15,10 +15,11 @@ describe('AIAgentLogEmitter', () => {
     emitter.dispatch({
       session: 's1',
       type: 'log',
-      Timestamp: 100,
+      Timestamp: '100',
       log: { level: 'info', message: 'm' },
     })
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+    expect(sdkMock.invoke).toHaveBeenCalledWith(
+      'local',
       'forward-ai-chat-log-data',
       expect.objectContaining({
         sessionId: 's1',
@@ -30,9 +31,9 @@ describe('AIAgentLogEmitter', () => {
 
   it('F3: clearLogsWindow / closeLogsWindow', () => {
     emitter.clearLogsWindow('s1')
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('clear-ai-chat-log-data')
+    expect(sdkMock.invoke).toHaveBeenCalledWith('local', 'clear-ai-chat-log-data', {})
 
     emitter.closeLogsWindow('s1')
-    expect(ipcRendererMock.send).toHaveBeenCalledWith('close-ai-chat-window')
+    expect(sdkMock.invoke).toHaveBeenCalledWith('local', 'close-ai-chat-window', {})
   })
 })

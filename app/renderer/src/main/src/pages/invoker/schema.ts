@@ -25,7 +25,7 @@ export interface ExecHistoryRecord {
 
 // 保存插件执行历史请求（前端执行结束/停止时 POST 回后端）
 export interface SavePluginExecutionHistoryRequest {
-  PluginId: number
+  PluginId: string | number
   PluginName: string
   PluginUUID: string
   PluginType: string
@@ -53,7 +53,7 @@ export interface QueryPluginExecutionHistoryRequest {
 
 // 插件使用次数排行项
 export interface PluginExecutionUsageItem {
-  PluginId: number
+  PluginId: string | number
   PluginName: string
   PluginUUID: string
   PluginType: string
@@ -72,8 +72,8 @@ export interface PaginationSchema {
   OrderBy: string
   Order: string
   RawOrder?: string
-  BeforeId?: number
-  AfterId?: number
+  BeforeId?: string | number
+  AfterId?: string | number
 }
 
 export type ExecHistoryRecordResponse = QueryGeneralResponse<ExecHistoryRecord>
@@ -123,12 +123,12 @@ export interface YakScriptHooks {
 
 export interface YakScriptHookItem {
   Verbose: string
-  YakScriptId: number
+  YakScriptId: string | number
   YakScriptName: string
 }
 
 export interface YakScript extends Partial<YakitPluginBaseAIInfo> {
-  Id: number
+  Id: string | number
   Content: string
   Type: string
   Params: YakParamProps[]
@@ -146,15 +146,15 @@ export interface YakScript extends Partial<YakitPluginBaseAIInfo> {
   FromGit?: string
   EnablePluginSelector?: boolean
   PluginSelectorTypes?: string
-  OnlineId: number
+  OnlineId: string | number
   OnlineScriptName: string
   OnlineContributors: string
-  UserId: number
+  UserId: string | number
   UUID: string
   OnlineIsPrivate?: boolean
   HeadImg?: string
   OnlineBaseUrl?: string
-  BaseOnlineId?: number
+  BaseOnlineId?: string | number
   OnlineOfficial?: boolean
   OnlineGroup?: string
   IsCorePlugin?: boolean
@@ -190,7 +190,7 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
   IncludedScriptNames?: string[]
   Tag?: string[]
   NoResultReturn?: boolean
-  UserId?: number
+  UserId?: string | number
   UserName?: string
 
   // 展示信息中，插件商店的顺序和本地顺序不应该一样
@@ -224,7 +224,7 @@ export interface ExecResult {
   Raw: Uint8Array
   IsMessage: boolean
   Message: Uint8Array
-  Id?: number
+  Id?: string | number
   Progress: number
   RuntimeID?: string
   PluginName?: string

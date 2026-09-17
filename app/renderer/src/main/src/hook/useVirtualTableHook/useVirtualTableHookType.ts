@@ -41,8 +41,8 @@ export type VirtualPaging = {
   Limit: number
   Order: 'asc' | 'desc' | string
   OrderBy: 'created_at' | 'updated_at' | string
-  AfterId?: number
-  BeforeId?: number
+  AfterId?: string | number
+  BeforeId?: string | number
   // 特定需求场景下 加载时Limit固定，不需要根据页面计算
   FixedLimit?: number
 }
@@ -70,7 +70,7 @@ export type DataResponseProps<T, K extends string = 'Data'> = {
 }
 
 export type DataTProps<IDKey extends string = 'Id'> = {
-  [key in IDKey]?: number
+  [key in IDKey]?: string | number
 } & {
   [key: string]: any
 }

@@ -1,3 +1,5 @@
+import { int64ToSafeNumber } from '@/utils/int64'
+import { ipc } from '@/services/ipc'
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Checkbox, Divider, Form, Input, InputNumber, Space, Tooltip } from 'antd'
@@ -18,7 +20,6 @@ import type { HybridScanPluginConfig } from '@/models/HybridScan'
 import type { StartBruteParams } from '../securityTool/newBrute/NewBruteType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
 export const ScanPortTemplate = 'scan-port-template'
 
 export interface PortScanPageProp {
@@ -147,10 +148,20 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
   const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
   const globalNetworkConfig = useRef<GlobalNetworkConfig>()
   useEffect(() => {
-    ipcRenderer.invoke('GetGlobalNetworkConfig', {}).then((rsp: GlobalNetworkConfig) => {
+    ipc.invoke('grpc', 'GetGlobalNetworkConfig', {}).then((result) => {
+      const rsp = {
+        ...result,
+        MinTlsVersion: int64ToSafeNumber(result.MinTlsVersion),
+        MaxTlsVersion: int64ToSafeNumber(result.MaxTlsVersion),
+        AppConfigs: result.AppConfigs.map((config) => ({
+          ...config,
+          MaxTokens: config.MaxTokens === undefined ? undefined : int64ToSafeNumber(config.MaxTokens),
+          TopK: config.TopK === undefined ? undefined : int64ToSafeNumber(config.TopK),
+        })),
+      }
       globalNetworkConfig.current = rsp
       const { SynScanNetInterface } = rsp
-      ipcRenderer.invoke('GetPcapMetadata', {}).then((data: PcapMetadata) => {
+      ipc.invoke('grpc', 'GetPcapMetadata', {}).then((data) => {
         if (!data || data.AvailablePcapDevices.length === 0) {
           return
         }
@@ -159,7 +170,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
           value: item.Name,
         }))
         if (SynScanNetInterface.length === 0 && !isSetInterface) {
-          setParams({ ...params, SynScanNetInterface: data.DefaultPublicNetInterface.NetInterfaceName })
+          setParams({ ...params, SynScanNetInterface: data.DefaultPublicNetInterface?.NetInterfaceName || '' })
         }
         setNetInterfaceList(interfaceList)
         if (SynScanNetInterface.length !== 0 && !isSetInterface) {
@@ -170,8 +181,8 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
   }, [])
 
   const updateGlobalNetworkConfig = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('SetGlobalNetworkConfig', {
+    ipc
+      .invoke('grpc', 'SetGlobalNetworkConfig', {
         ...globalNetworkConfig.current,
         SynScanNetInterface: params.SynScanNetInterface,
       })

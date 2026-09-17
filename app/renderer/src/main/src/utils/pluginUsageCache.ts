@@ -1,3 +1,6 @@
+import { int64ToSafeNumber } from '@/utils/int64'
+import type { GrpcOutput } from '@/services/ipc'
+import { ipc } from '@/services/ipc'
 import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type {
   SavePluginExecutionHistoryRequest,
@@ -10,9 +13,7 @@ import type {
 // 通过 gRPC 接口 SavePluginExecutionHistory / GetPluginExecutionUsageRanking / QueryExecHistory 落库。
 // 对外函数签名保持兼容，消费方零改动（recordPluginLastExecute 增加可选 meta 参数补全后端字段）。
 
-const { ipcRenderer } = window.require('electron')
-
-type Item = { count: number; lastUsedAt: number; id: number; headImg: string }
+type Item = { count: number; lastUsedAt: number; id: string; headImg: string }
 type Cache = Record<string, Item>
 export type PluginExecuteCacheConfig = {
   formValue: Record<string, any>
@@ -29,7 +30,7 @@ export type PluginLastExecuteRecord = {
 /** recordPluginLastExecute 的可选元数据，用于补全后端 SavePluginExecutionHistory 所需字段。
  *  消费方若能拿到 plugin 对象，应尽量补传，以保证使用次数排行（按 plugin_id 分组）可用。 */
 export type PluginLastExecuteMeta = {
-  pluginId?: number
+  pluginId?: string | number
   pluginType?: string
   pluginUUID?: string
   headImg?: string
@@ -89,14 +90,14 @@ export const takePluginRestoreOnOpen = (name: string) => {
 
 export const getPluginUsageCache = async (): Promise<Cache> => {
   try {
-    const resp = await ipcRenderer.invoke('GetPluginExecutionUsageRanking', {})
-    const data: PluginExecutionUsageItem[] = resp?.Data || []
+    const resp = await ipc.invoke('grpc', 'GetPluginExecutionUsageRanking', {})
+    const data = resp?.Data || []
     const cache: Cache = {}
     for (const it of data) {
       if (!it.PluginName) continue
       cache[it.PluginName] = {
-        count: it.Count,
-        lastUsedAt: it.LastExecutedAt ? it.LastExecutedAt * 1000 : 0,
+        count: int64ToSafeNumber(it.Count),
+        lastUsedAt: it.LastExecutedAt ? int64ToSafeNumber(it.LastExecutedAt) * 1000 : 0,
         id: it.PluginId,
         headImg: it.HeadImg || '',
       }
@@ -112,7 +113,9 @@ export const getPluginUsageCache = async (): Promise<Cache> => {
 // 这里通过 QueryExecHistory(YakScriptName=name, Pagination.Limit=1) 取最新一条，
 // 再从 ExecHistoryRecord.StreamInfo(JSON) 反序列化出 streamInfo 快照恢复现场。
 
-const recordFromHistory = (rec: ExecHistoryRecord): PluginLastExecuteRecord | undefined => {
+const recordFromHistory = (
+  rec: GrpcOutput<'QueryExecHistory'>['Data'][number],
+): PluginLastExecuteRecord | undefined => {
   if (!rec.StreamInfo) return undefined
   // StreamInfo 字段存的是整个 PluginLastExecuteRecord（含 executeConfig + streamInfo + runtimeId）的 JSON，
   // 后端作为 opaque blob 透传，前端整体反序列化恢复现场。
@@ -135,8 +138,8 @@ export const getPluginLastExecuteRecord = async (name: string): Promise<PluginLa
       YakScriptName: name,
       Pagination: { Page: 1, Limit: 1, OrderBy: 'updated_at', Order: 'desc' },
     }
-    const resp = await ipcRenderer.invoke('QueryExecHistory', req)
-    const data: ExecHistoryRecord[] = resp?.Data || []
+    const resp = await ipc.invoke('grpc', 'QueryExecHistory', req)
+    const data = resp?.Data || []
     const latest = data[0]
     if (!latest) return undefined
     return recordFromHistory(latest)
@@ -177,7 +180,7 @@ export const recordPluginLastExecute = async (
         HeadImg: meta?.headImg || '',
       }
       try {
-        await ipcRenderer.invoke('SavePluginExecutionHistory', req)
+        await ipc.invoke('grpc', 'SavePluginExecutionHistory', req)
       } catch {}
     })
   lastExecuteSaveQueue = saveTask

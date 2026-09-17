@@ -219,3 +219,10 @@ describe('prependAcceptedVirtualTableServerPushRows', () => {
     })
   })
 })
+
+it('keeps adjacent int64 rows distinct during sorting and server push de-duplication', () => {
+  const older = { Id: '9007199254740992' }
+  const newer = { Id: '9007199254740993' }
+  expect(mergeUniqueVirtualTableRows([[older], [newer, older]], 'Id', 'desc', 'id')).toEqual([newer, older])
+  expect(selectVirtualTableServerPushRows([older], [newer, older], 'Id')).toEqual([newer])
+})

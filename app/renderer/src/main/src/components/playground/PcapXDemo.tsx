@@ -1,11 +1,11 @@
 import type React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { Form, Space } from 'antd'
-import type { PcapMetadata } from '@/models/Traffic'
+import { ipc } from '@/services/ipc'
+import type { GrpcOutput } from '../../../../../../shared/communication/protocol'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { randomString } from '@/utils/randomUtil'
 import { failed, info } from '@/utils/notification'
 import { useMemoizedFn } from 'ahooks'
 import { PacketListDemo } from '@/components/playground/PacketListDemo'
@@ -14,16 +14,14 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface PcapXDemoProp {}
 
-const { ipcRenderer } = window.require('electron')
-
 interface PcapXRequest {
   NetInterfaceList: string[]
 }
 
 export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
   const { t } = useI18nNamespaces(['components'])
-  const [pcapMeta, setPcapMeta] = useState<PcapMetadata>()
-  const [token, setToken] = useState(randomString(40))
+  const [pcapMeta, setPcapMeta] = useState<GrpcOutput<'GetPcapMetadata'>>()
+  const streamAbort = useRef<AbortController>()
   const [loading, setLoading] = useState(false)
 
   const [firstRequest, setFirstRequest] = useState<PcapXRequest>({
@@ -31,50 +29,55 @@ export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
   })
 
   useEffect(() => {
-    ipcRenderer.invoke('GetPcapMetadata', {}).then((data: PcapMetadata) => {
-      setPcapMeta(data)
-      if (data?.DefaultPublicNetInterface) {
-        setFirstRequest({ ...firstRequest, NetInterfaceList: [data.DefaultPublicNetInterface.Name] })
-      }
-    })
+    const controller = new AbortController()
+    void ipc
+      .invoke('grpc', 'GetPcapMetadata', {}, { signal: controller.signal })
+      .then((data) => {
+        setPcapMeta(data)
+        if (data?.DefaultPublicNetInterface) {
+          setFirstRequest({ ...firstRequest, NetInterfaceList: [data.DefaultPublicNetInterface.Name] })
+        }
+      })
+      .catch((error: Error) => {
+        if (!controller.signal.aborted) failed(error.message)
+      })
+    return () => {
+      controller.abort()
+      streamAbort.current?.abort()
+    }
   }, [])
 
-  useEffect(() => {
-    if (!token) {
-      return
-    }
-    ipcRenderer.on(`${token}-data`, async (e, data: any) => {})
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      failed(`[PcapX] error:  ${error}`)
-    })
-    ipcRenderer.on(`${token}-end`, (e, data) => {
-      info('[PcapX] finished')
-      setTimeout(() => setLoading(false), 300)
-    })
-    return () => {
-      ipcRenderer.invoke('cancel-PcapX', token)
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
-    }
-  }, [token])
-
   const cancel = useMemoizedFn(() => {
-    setToken(randomString(40))
-    ipcRenderer.invoke('cancel-PcapX', token).finally(() => {
-      setTimeout(() => setLoading(false), 300)
-    })
+    streamAbort.current?.abort()
+    streamAbort.current = undefined
+    setLoading(false)
   })
 
   const startSniff = useMemoizedFn(() => {
+    if (streamAbort.current) return
+    const controller = new AbortController()
+    streamAbort.current = controller
     setLoading(true)
-    ipcRenderer.invoke(
-      'PcapX',
-      {
-        ...firstRequest,
-      },
-      token,
-    )
+    const finish = () => {
+      if (streamAbort.current !== controller) return
+      streamAbort.current = undefined
+      setLoading(false)
+    }
+    const onError = (error: Error) => {
+      if (controller.signal.aborted) return
+      failed(`[PcapX] error: ${error.message}`)
+      finish()
+    }
+    void ipc
+      .openStream('grpc', 'PcapX', firstRequest, {
+        signal: controller.signal,
+        onError,
+        onEnd() {
+          info('[PcapX] finished')
+          finish()
+        },
+      })
+      .catch(onError)
   })
 
   return (

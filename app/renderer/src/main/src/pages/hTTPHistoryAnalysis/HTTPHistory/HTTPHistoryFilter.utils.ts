@@ -182,7 +182,7 @@ export const buildHTTPFlowQueryRequestParams = (
   pagination: HTTPHistoryFilterPagination,
   page: number,
   sorter: HTTPHistoryFilterSorter | undefined,
-  currentLastId?: number,
+  currentLastId?: string | number,
 ) => {
   const isInit = page === 1
   const currentOrder = sorter?.order || 'desc'

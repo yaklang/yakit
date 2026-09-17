@@ -1,9 +1,8 @@
+import { ipc } from '@/services/ipc'
 import { randomString } from '@/utils/randomUtil'
-import { yakitEngine } from '@/services/electronBridge'
-
 export const outputToWelcomeConsole = (msg: any) => {
-  yakitEngine
-    .outputLogToWelcomeConsole(`${msg}`)
+  ipc
+    .invoke('local', 'output-log-to-welcome-console', `${msg}`)
     .then(() => {})
     .catch((e) => {
       console.info(e)
@@ -11,8 +10,8 @@ export const outputToWelcomeConsole = (msg: any) => {
 }
 
 export const getRandomLocalEnginePort = (callback: (port: number) => any) => {
-  yakitEngine
-    .getRandomLocalEnginePort()
+  ipc
+    .invoke('local', 'get-random-local-engine-port', {})
     .then((port: number) => {
       callback(port)
     })
@@ -23,7 +22,7 @@ export const getRandomLocalEnginePort = (callback: (port: number) => any) => {
 
 export const isEngineConnectionAlive = () => {
   const text = randomString(30)
-  return yakitEngine.echo({ text }).then((res: { result: string }) => {
+  return ipc.invoke('grpc', 'Echo', { text }).then((res: { result: string }) => {
     if (res.result !== text) {
       throw Error(`Engine dead`)
     }
