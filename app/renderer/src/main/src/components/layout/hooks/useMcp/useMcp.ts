@@ -1,10 +1,20 @@
 import { SystemInfo } from '@/constants/hardware'
+import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import { yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { yakitMcp, yakitStream } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { getRemoteValue } from '@/utils/kv'
+
+export interface YakMCPStartConfig {
+  autoStart: boolean
+  url: string
+  enableLegacyMcpTools: boolean
+  enableAIToolFramework: boolean
+  enableBridgeExternalMcp: boolean
+}
 
 export interface mcpStreamHooks {
   mcpStreamInfo: {
@@ -14,7 +24,7 @@ export interface mcpStreamHooks {
   }
   mcpStreamEvent: {
     onCancel: () => void
-    onStart: (options: StartMcpServerOptions) => void
+    onStart: (options: StartMcpServerOptions, overrideUrl?: string) => void
     onSetMcpUrl: (url: string) => void
   }
 }
@@ -50,19 +60,37 @@ export interface StartMcpServerResponse {
 export const remoteMcpDefalutUrl = '0.0.0.0:11432'
 export const localMcpDefalutUrl = '127.0.0.1:11432'
 
-interface useMcpHooks {}
+interface useMcpHooks {
+  engineLink?: boolean
+}
+
+export const defaultMcpStartConfig: YakMCPStartConfig = {
+  autoStart: false,
+  url: '',
+  enableLegacyMcpTools: true,
+  enableAIToolFramework: true,
+  enableBridgeExternalMcp: false,
+}
+
+export const parseMcpStartConfig = (raw?: string): YakMCPStartConfig | undefined => {
+  if (!raw) return undefined
+  try {
+    return JSON.parse(raw) as YakMCPStartConfig
+  } catch (e) {
+    return undefined
+  }
+}
+
 export default function useMcpStream(props: useMcpHooks) {
+  const { engineLink } = props
   const { t } = useI18nNamespaces(['layout'])
   // MCP gRPC stream token，仅驱动订阅/取消，不暴露 UI，用 ref 避免无效重渲染
   const mcpTokenRef = useRef<string>(randomString(40))
   const streamCleanupRef = useRef<BridgeCleanup[]>([])
   const [mcpCurrent, setMcpCurrent] = useState<StartMcpServerResponse | undefined>(undefined)
   const [mcpServerUrl, setMcpServerUrl] = useState<string>('')
-  const [mcpUrl, setMcpUrl] = useState<string>(localMcpDefalutUrl)
-
-  useEffect(() => {
-    setMcpUrl(SystemInfo.mode === 'remote' ? remoteMcpDefalutUrl : localMcpDefalutUrl)
-  }, [SystemInfo.mode])
+  const [mcpUrl, setMcpUrl] = useState<string>('')
+  const autoStartedRef = useRef<boolean>(false)
 
   const cleanupMcpStream = useMemoizedFn(() => {
     streamCleanupRef.current.forEach((cleanup) => cleanup())
@@ -115,13 +143,14 @@ export default function useMcpStream(props: useMcpHooks) {
     }
   }, [])
 
-  const onStart = useMemoizedFn((options: StartMcpServerOptions) => {
-    if (mcpUrl.trim() === '') {
+  const onStart = useMemoizedFn((options: StartMcpServerOptions, overrideUrl?: string) => {
+    const targetUrl = (overrideUrl ?? mcpUrl).trim()
+    if (targetUrl === '') {
       yakitNotify('error', t('McpHook.urlRequired'))
       return
     }
     // 校验 host:port 格式
-    const match = mcpUrl.match(/^([a-zA-Z0-9.\-]+):(\d{1,5})$/)
+    const match = targetUrl.match(/^([a-zA-Z0-9.\-]+):(\d{1,5})$/)
     if (!match) {
       yakitNotify('error', t('McpHook.urlFormatError'))
       return
@@ -161,6 +190,43 @@ export default function useMcpStream(props: useMcpHooks) {
   const onSetMcpUrl = useMemoizedFn((url: string) => {
     setMcpUrl(url)
   })
+
+  const shouldAutoStartMcp = useMemoizedFn(() => {
+    const isRemote = SystemInfo.mode === 'remote'
+    getRemoteValue(RemoteAIAgentGV.YakMCPStartConfig)
+      .then((raw) => {
+        const config = parseMcpStartConfig(raw)
+        const hasActiveTier =
+          config?.enableLegacyMcpTools || config?.enableAIToolFramework || config?.enableBridgeExternalMcp
+        const isRunning = mcpCurrent && !['stopped', 'error'].includes(mcpCurrent.Status)
+        const url = isRemote ? remoteMcpDefalutUrl : config?.url || localMcpDefalutUrl
+        setMcpUrl(url)
+        if (config?.autoStart && url && hasActiveTier && !isRunning) {
+          yakitNotify('info', t('McpHook.autoStarting'))
+          onStart(
+            {
+              EnableAll: config.enableLegacyMcpTools,
+              EnableAIToolFramework: config.enableAIToolFramework,
+              EnableBridgeExternalMCP: config.enableBridgeExternalMcp,
+            },
+            url,
+          )
+        }
+        autoStartedRef.current = true
+      })
+      .catch((err) => {
+        setMcpUrl(isRemote ? remoteMcpDefalutUrl : localMcpDefalutUrl)
+      })
+  })
+
+  useEffect(() => {
+    if (!engineLink) {
+      autoStartedRef.current = false
+      return
+    }
+    if (autoStartedRef.current) return
+    shouldAutoStartMcp()
+  }, [engineLink])
 
   const mcpStreamInfo = useMemo(() => ({ mcpCurrent, mcpServerUrl, mcpUrl }), [mcpCurrent, mcpServerUrl, mcpUrl])
 

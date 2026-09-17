@@ -103,6 +103,8 @@
     "enable_ai_tool_framework_desc": "Expose AI built-in tools such as fs, ssa, and yakscript",
     "enable_bridge_external_mcp": "Bridge External MCP",
     "enable_bridge_external_mcp_desc": "Bridge tools from external MCP servers enabled in AI Agent",
+    "auto_start": "Yak MCP Auto Start",
+    "auto_start_desc": "Automatically start the MCP service on launch",
     "no_tool_tier_title": "No tool capability enabled",
     "no_tool_tier_desc": "Enable at least one tool capability to configure individual tools",
     "refresh_tools": "Refresh",

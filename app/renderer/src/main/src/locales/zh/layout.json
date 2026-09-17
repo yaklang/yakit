@@ -557,6 +557,7 @@
   },
   "McpHook": {
     "started": "MCP 服务已启动：{{serverUrl}}",
+    "autoStarting": "正在自动启动 MCP 服务",
     "error": "MCP 服务错误：{{message}}",
     "stopped": "MCP 服务已停止：{{message}}",
     "MCPStopped": "Yak Mcp服务已停用",
