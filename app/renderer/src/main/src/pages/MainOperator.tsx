@@ -795,9 +795,11 @@ const Main: React.FC<MainProp> = React.memo((props) => {
           </div>
         }
       />
-      <Suspense fallback={null}>
-        <IRifyUpdateProjectManagerModal visible={isAllowIRifyUpdate} onClose={() => setIsAllowIRifyUpdate(false)} />
-      </Suspense>
+      {isAllowIRifyUpdate && (
+        <Suspense fallback={null}>
+          <IRifyUpdateProjectManagerModal visible={isAllowIRifyUpdate} onClose={() => setIsAllowIRifyUpdate(false)} />
+        </Suspense>
+      )}
       {/* irify-end */}
 
       {/* <UpdateForward
