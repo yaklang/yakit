@@ -185,20 +185,22 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
         if (!overlayEl) return
         if (!overlayEl.parentElement) return
 
-        const overlayRect = overlayEl.getBoundingClientRect()
         const editorDom = modEditor.getDomNode() as HTMLElement | null
         const editorRect = editorDom?.getBoundingClientRect()
-        if (!editorRect) return
+        if (!editorRect || editorRect.height < 8 || editorRect.width < 8) return
 
-        const scrollTopOffset = editorRect.top - overlayRect.top
-        const scrollLeftOffset = editorRect.left - overlayRect.left
+        // Use viewport (fixed) coords clamped to the visible editor box so short
+        // panels / overflow:hidden ancestors cannot clip Keep/Undo.
         const marginX = 10
         const gapX = 8
         const gapY = 4
-        const visibleRanges = modEditor.getVisibleRanges()
         const pad = 4
         const stackGap = 4
-        const maxBottom = overlayRect.height - pad
+        const clipTop = editorRect.top + pad
+        const clipBottom = editorRect.bottom - pad
+        const clipLeft = editorRect.left + marginX
+        const clipRight = editorRect.right - marginX
+        const visibleRanges = modEditor.getVisibleRanges()
         overlayBars.forEach((item) => {
           const visible = visibleRanges.some(
             (r) => item.lineNumber >= r.startLineNumber && item.lineNumber <= r.endLineNumber,
@@ -225,45 +227,52 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
               column: lastCol,
             }) || visCol1
           const visTailWidth = (visTail as unknown as { width: number }).width
-          const rowTop = scrollTopOffset + visTail.top
-          const rowBottom = scrollTopOffset + visTail.top + visTail.height
-          const textRight = scrollLeftOffset + visTail.left + visTailWidth
-          const editorRight = scrollLeftOffset + editorRect.width - marginX
+          const rowTop = editorRect.top + visTail.top
+          const rowBottom = editorRect.top + visTail.top + visTail.height
+          const textRight = editorRect.left + visTail.left + visTailWidth
 
           const barBox = item.dom.getBoundingClientRect()
           const barW = barBox.width > 2 ? barBox.width : item.dom.offsetWidth || 220
 
           let leftPx = textRight + gapX
-          const fitsRightOfText = leftPx + barW <= editorRight
+          const fitsRightOfText = leftPx + barW <= clipRight
           if (!fitsRightOfText) {
-            leftPx = Math.max(scrollLeftOffset + marginX, editorRight - barW)
+            leftPx = Math.max(clipLeft, clipRight - barW)
           }
 
           const stackOffset = item.stackIndex * (barHeight + stackGap)
+          // Narrow / bottom-of-viewport: prefer ABOVE the line. Placing below the
+          // last visible line is what got Keep clipped in the audit bottom panel.
           let baseTop: number
           if (fitsRightOfText) {
             baseTop = rowTop + Math.max(0, (visTail.height - barHeight) / 2)
           } else {
-            baseTop = rowBottom + gapY
+            baseTop = rowTop - barHeight - gapY
           }
-          let topPx = baseTop + stackOffset
+          let topPx = baseTop + (fitsRightOfText ? stackOffset : -stackOffset)
 
-          if (topPx + barHeight > maxBottom) {
-            const aboveTailRow = rowTop - barHeight - 2 - stackOffset
-            const aboveFirstRow = scrollTopOffset + visCol1.top - barHeight - 2 - stackOffset
-            if (aboveTailRow >= pad) {
-              topPx = aboveTailRow
-            } else if (aboveFirstRow >= pad) {
-              topPx = aboveFirstRow
+          if (topPx + barHeight > clipBottom) {
+            const aboveTail = rowTop - barHeight - gapY - (fitsRightOfText ? stackOffset : 0)
+            const aboveFirst = editorRect.top + visCol1.top - barHeight - gapY
+            if (aboveTail >= clipTop) {
+              topPx = aboveTail
+            } else if (aboveFirst >= clipTop) {
+              topPx = aboveFirst
             } else {
-              topPx = Math.max(pad, Math.min(topPx, maxBottom - barHeight))
+              topPx = Math.max(clipTop, clipBottom - barHeight)
             }
           }
+          if (topPx < clipTop) {
+            topPx = clipTop
+          }
+          if (topPx + barHeight > clipBottom) {
+            topPx = Math.max(clipTop, clipBottom - barHeight)
+          }
 
-          item.dom.style.top = `${Math.max(0, topPx)}px`
-          const editorLeftMin = scrollLeftOffset + marginX
-          const editorLeftMax = scrollLeftOffset + editorRect.width - barW - marginX
-          leftPx = Math.max(editorLeftMin, Math.min(leftPx, editorLeftMax, overlayRect.width - barW - marginX))
+          leftPx = Math.max(clipLeft, Math.min(leftPx, clipRight - barW))
+          item.dom.style.position = 'fixed'
+          item.dom.style.zIndex = '1000'
+          item.dom.style.top = `${topPx}px`
           item.dom.style.left = `${leftPx}px`
           item.dom.style.right = 'auto'
         })

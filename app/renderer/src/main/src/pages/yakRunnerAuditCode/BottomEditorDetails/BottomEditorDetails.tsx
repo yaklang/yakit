@@ -324,12 +324,23 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
               [styles['render-show']]: showItem === 'ruleEditor',
             })}
           >
-            <RuleEditorBox
-              ruleEditor={ruleEditor}
-              setRuleEditor={setRuleEditor}
-              disabled={auditExecuting || !!casualReviewQueue[0]}
-              onAuditRuleSubmit={onAuditRuleSubmit}
-            />
+            {/* Keep underlying editor mounted (visibility only) so wrap height stays
+                100%; absolute review overlay still needs an in-flow size host. */}
+            <div
+              style={{
+                height: '100%',
+                width: '100%',
+                visibility: casualReviewQueue[0] ? 'hidden' : 'visible',
+                pointerEvents: casualReviewQueue[0] ? 'none' : 'auto',
+              }}
+            >
+              <RuleEditorBox
+                ruleEditor={ruleEditor}
+                setRuleEditor={setRuleEditor}
+                disabled={auditExecuting || !!casualReviewQueue[0]}
+                onAuditRuleSubmit={onAuditRuleSubmit}
+              />
+            </div>
             {casualReviewQueue[0] ? (
               <YakRunnerCasualCodeReplaceReviewOverlay
                 roundKey={casualReviewQueue[0].id}
