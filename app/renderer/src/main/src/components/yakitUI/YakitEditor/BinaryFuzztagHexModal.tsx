@@ -2,7 +2,18 @@ import { FigmaIcon2017756Outlined, DocumentDuplicateOutlined } from '@yakit-libs
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { type BinaryFuzztagEntry, bytesToHex, encodeBytesToTag } from './binaryFuzztag'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
+import {
+  type BinaryFuzztagEntry,
+  bytesToHex,
+  bytesToText,
+  charsToBytes,
+  encodeBytesToTag,
+  isUtf8Bytes,
+  textToByteMap,
+  textToBytes,
+} from './binaryFuzztag'
 import { BinaryFuzztagHexEditor } from './BinaryFuzztagHexEditor'
 import styles from './BinaryFuzztagModal.module.scss'
 import { YakitDropdownMenu } from '../YakitDropdownMenu/YakitDropdownMenu'
@@ -11,6 +22,8 @@ import { setClipboardText } from '@/utils/clipboard'
 import { yakitNotify } from '@/utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
 import { saveABSFileToOpen } from '@/utils/openWebsite'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import type { TextAreaRef } from 'antd/lib/input/TextArea'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -32,6 +45,7 @@ export interface BinaryFuzztagHexModalProps {
 // 编辑主体复用 BinaryFuzztagHexEditor（与 base64/hex 的 HEX 模式共用）
 export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (props) => {
   const { entry, initialData, readOnly = false, onSubmit, onCancel } = props
+  const { t } = useI18nNamespaces(['yakitUi'])
 
   // 共享字节缓冲（交给可复用编辑器原地修改）
   const dataRef = useRef<Uint8Array>(initialData)
@@ -39,6 +53,54 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
   const changedRef = useRef<boolean>(false)
   // 数据变更后用它刷新头部预览
   const [hostVersion, setHostVersion] = useState<number>(0)
+
+  const [showText, setShowText] = useState<boolean>(false)
+  const textOk = useMemo(() => isUtf8Bytes(dataRef.current), [hostVersion])
+  const curText = useMemo(() => bytesToText(dataRef.current), [hostVersion])
+  const [mountKey, setMountKey] = useState<number>(0)
+  // 文字 tab 编辑草稿：键入期间原样回显，失焦/切 HEX 才回落到归一化文本（bytesToText）。
+  // 若每键立即归一化，单个 \ 会被显示为 \\ 且光标跳到末尾，无法键盘输入 \xNN/\uNNNN 转义序列
+  const [draft, setDraft] = useState<string | null>(null)
+  // 切换到 HEX 时带入的字节选区（文字选区换算而来；仅文字→HEX 单方向）
+  const [hexInitialSel, setHexInitialSel] = useState<[number, number] | undefined>(undefined)
+  // antd TextArea ref：经 resizableTextArea.textArea 取原生 textarea
+  const textRef = useRef<TextAreaRef>(null)
+
+  const handleTextChange = useCallback((value: string) => {
+    dataRef.current = textToBytes(value)
+    changedRef.current = true
+    setDraft(value)
+    setHostVersion((v) => v + 1)
+  }, [])
+
+  // 切 tab：文字→HEX 时读 textarea 当前选区换算成字节区间带入；HEX→文字不做选区恢复
+  const switchView = (next: boolean) => {
+    if (next === showText) return
+    if (next && !textOk) return
+    if (!next) {
+      // 文字 -> HEX：读 textarea 当前光标/选区换算成字节区间带入（光标=单字节定位，选中=区间）
+      const el = textRef.current?.resizableTextArea?.textArea ?? null
+      // 草稿被归一化改写时（如 \x41 -> A），textarea 里的偏移与字节缓冲的文本不一致，选区失效不带入
+      const normalized = bytesToText(dataRef.current)
+      if (el && (draft == null || draft === normalized)) {
+        const map = textToByteMap(normalized)
+        const cs = el.selectionStart
+        const ce = el.selectionEnd
+        if (cs === ce && cs < map.length) {
+          // 光标定位：指向光标所在字符的起始字节（单字节选区，HEX 高亮该字节）
+          // 光标在文本末尾时 map[cs] 已越界一字节，带入 undefined（与 Base64 版守卫对齐）
+          setHexInitialSel(map[cs] < dataRef.current.length ? [map[cs], map[cs]] : undefined)
+        } else {
+          setHexInitialSel(charsToBytes(map, cs, ce) ?? undefined)
+        }
+      } else {
+        setHexInitialSel(undefined)
+      }
+      setDraft(null)
+    }
+    setMountKey((k) => k + 1)
+    setShowText(next)
+  }
 
   const previewHex = useMemo(() => bytesToHex(dataRef.current.slice(0, 8)), [hostVersion])
   const byteLen = useMemo(() => dataRef.current.length, [hostVersion])
@@ -123,12 +185,14 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
   return (
     <div className={styles['modal-root']}>
       <div className={styles['modal-header']}>
-        <div>
-          <span>{`Tag: {{${entry.tagName}(...)}}`}</span>
-          <span>{`Bytes: ${byteLen}`}</span>
-          <span>{`Head: 0x${previewHex}`}</span>
-          {readOnly && <span className={styles['read-only']}>read-only</span>}
-        </div>
+        <YakitSegmented
+          value={showText ? 'text' : 'hex'}
+          onChange={(v) => switchView(v === 'text')}
+          options={[
+            { label: t('YakitEditor.textView'), value: 'text', disabled: !textOk },
+            { label: 'HEX', value: 'hex' },
+          ]}
+        />
         <div className={styles['header-actions']}>
           <YakitDropdownMenu menu={copyMenu}>
             <YakitButton type="outline2" icon={<DocumentDuplicateOutlined size={16} />}>
@@ -143,16 +207,41 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
         </div>
       </div>
       <div className={styles['modal-body']}>
-        <BinaryFuzztagHexEditor
-          dataRef={dataRef}
-          readOnly={readOnly}
-          onChange={() => {
-            changedRef.current = true
-            setHostVersion((v) => v + 1)
-          }}
-        />
+        {showText ? (
+          <div className={styles['text-pane']}>
+            <YakitInput.TextArea
+              key={mountKey}
+              ref={textRef}
+              wrapperStyle={{ height: '100%' }}
+              style={{ height: '100%', resize: 'none' }}
+              className={styles['text-area']}
+              value={draft ?? curText}
+              readOnly={readOnly}
+              isShowResize={false}
+              onChange={(e) => handleTextChange(e.target.value)}
+              onBlur={() => setDraft(null)}
+            />
+          </div>
+        ) : (
+          <BinaryFuzztagHexEditor
+            key={mountKey}
+            dataRef={dataRef}
+            readOnly={readOnly}
+            initialSelection={hexInitialSel}
+            onChange={() => {
+              changedRef.current = true
+              setHostVersion((v) => v + 1)
+            }}
+          />
+        )}
       </div>
       <div className={styles['modal-footer']}>
+        <div className={styles['modal-footer-tag']}>
+          <span>{`Tag: {{${entry.tagName}(...)}}`}</span>
+          <span>{`Bytes: ${byteLen}`}</span>
+          <span>{`Head: 0x${previewHex}`}</span>
+          {readOnly && <span className={styles['read-only']}>read-only</span>}
+        </div>
         <YakitButton type="outline2" onClick={onCancel}>
           取消
         </YakitButton>

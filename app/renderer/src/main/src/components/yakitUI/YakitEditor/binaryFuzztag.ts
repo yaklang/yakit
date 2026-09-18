@@ -509,6 +509,127 @@ export const bytesToUnquoteString = (bytes: Uint8Array | number[]): string => {
   return `${s}"`
 }
 
+// 字节是否为合法 UTF-8（与 bytesToText 的整体解码分支同一判定）：非 UTF-8 时文字 tab 禁用切换
+export const isUtf8Bytes = (bytes: Uint8Array): boolean => {
+  try {
+    new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+    return true
+  } catch {
+    return false
+  }
+}
+
+// 字节 -> 文字 tab 可编辑文本（hex→Text 风格，区别于标签编码）：
+// 合法 UTF-8 整体解码（中文原样可读、保留真实换行/制表符），其余控制符转 \xNN、反斜杠转 \\；
+// 非 UTF-8 二进制逐字节回退。与 textToBytes 配对，round-trip 无损。
+export const bytesToText = (bytes: Uint8Array): string => {
+  try {
+    // ignoreBOM: 默认 false 会剥离开头 BOM（EF BB BF），破坏 round-trip 无损
+    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true })
+      .decode(bytes)
+      .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\\]/g, (ch) =>
+        ch === '\\' ? '\\\\' : `\\x${ch.charCodeAt(0).toString(16).padStart(2, '0')}`,
+      )
+  } catch {
+    let s = ''
+    for (let i = 0; i < bytes.length; i++) {
+      const b = bytes[i]
+      s +=
+        b === 0x5c ? '\\\\' : b >= 0x20 && b <= 0x7e ? String.fromCharCode(b) : `\\x${b.toString(16).padStart(2, '0')}`
+    }
+    return s
+  }
+}
+
+// 文字 tab 可编辑文本 -> 字节（bytesToText 的逆）：
+// 解析 \\(0x5c)、\xNN（单字节）、\uNNNN（码点按 UTF-8 编码），其余按 UTF-8 编码；
+// 其余反斜杠序列（如字面 \n、畸形 \uzz）保持字面原样，不抛错。
+export const textToBytes = (text: string): Uint8Array => {
+  const bytes: number[] = []
+  const encoder = new TextEncoder()
+  let literal = ''
+  const flushLiteral = () => {
+    if (literal) {
+      const enc = encoder.encode(literal)
+      for (let k = 0; k < enc.length; k++) {
+        bytes.push(enc[k])
+      }
+      literal = ''
+    }
+  }
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== '\\') {
+      literal += text[i]
+      continue
+    }
+    const rest = text.slice(i)
+    if (rest.startsWith('\\\\')) {
+      flushLiteral()
+      bytes.push(0x5c)
+      i += 1
+    } else if (/^\\x[0-9a-fA-F]{2}/.test(rest)) {
+      flushLiteral()
+      bytes.push(parseInt(rest.slice(2, 4), 16))
+      i += 3
+    } else if (/^\\u[0-9a-fA-F]{4}/.test(rest)) {
+      flushLiteral()
+      const enc = encoder.encode(String.fromCodePoint(parseInt(rest.slice(2, 6), 16)))
+      for (let k = 0; k < enc.length; k++) {
+        bytes.push(enc[k])
+      }
+      i += 5
+    } else {
+      literal += text[i]
+    }
+  }
+  flushLiteral()
+  return new Uint8Array(bytes)
+}
+
+// 文字 tab 字符前缀 -> 累计字节数映射（与 textToBytes 同一套解析规则）：
+// map[i] = 前 i 个字符对应的字节总数；转义单元内部字符映射到单元起始的字节数
+export const textToByteMap = (text: string): number[] => {
+  const map = new Array<number>(text.length + 1)
+  map[0] = 0
+  const encoder = new TextEncoder()
+  let i = 0
+  while (i < text.length) {
+    const rest = text.slice(i)
+    let unit = 1
+    let bytes = 1
+    if (text[i] === '\\') {
+      if (rest.startsWith('\\\\')) {
+        unit = 2
+      } else if (/^\\x[0-9a-fA-F]{2}/.test(rest)) {
+        unit = 4
+      } else if (/^\\u[0-9a-fA-F]{4}/.test(rest)) {
+        unit = 6
+        bytes = encoder.encode(String.fromCodePoint(parseInt(rest.slice(2, 6), 16))).length
+      }
+    } else {
+      const code = text.codePointAt(i) as number
+      if (code > 0xffff) {
+        unit = 2
+      }
+      bytes = encoder.encode(String.fromCodePoint(code)).length
+    }
+    for (let k = 1; k < unit; k++) {
+      map[i + k] = map[i]
+    }
+    i += unit
+    map[i] = map[i - unit] + bytes
+  }
+  return map
+}
+
+// 字符区间 [cs, ce) -> 字节闭区间（map 来自 textToByteMap）；空区间或不构成完整字节时返回 null
+export const charsToBytes = (map: number[], cs: number, ce: number): [number, number] | null => {
+  if (cs < 0 || ce >= map.length || map[ce] <= map[cs]) {
+    return null
+  }
+  return [map[cs], map[ce] - 1]
+}
+
 const findHeaderBodySplit = (bytes: Uint8Array): number => {
   for (let i = 0; i + 3 < bytes.length; i++) {
     if (bytes[i] === 0x0d && bytes[i + 1] === 0x0a && bytes[i + 2] === 0x0d && bytes[i + 3] === 0x0a) {

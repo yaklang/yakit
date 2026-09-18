@@ -30,6 +30,9 @@ vi.mock('react-hex-editor', () => ({
 
 vi.mock('react-hex-editor/themes/oneDarkPro', () => ({ default: {} }))
 vi.mock('@/hook/useTheme', () => ({ useTheme: () => ({ theme: 'light' }) }))
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({ t: (key: string) => key }),
+}))
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   YakitButton: ({ children, icon, type: _type, size: _size, ...props }: any) => (
     <button type="button" {...props}>
@@ -39,7 +42,13 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   ),
 }))
 vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
-  YakitInput: (props: any) => <input {...props} />,
+  // 组件里用到 YakitInput.TextArea，mock 需挂上子组件
+  YakitInput: Object.assign((props: any) => <input {...props} />, {
+    TextArea: (props: any) => <textarea {...props} />,
+  }),
+}))
+vi.mock('@/components/yakitUI/YakitRadioButtons/YakitRadioButtons', () => ({
+  YakitRadioButtons: () => <div />,
 }))
 vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({
   showYakitModal: vi.fn(),

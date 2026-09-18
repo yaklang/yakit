@@ -321,6 +321,7 @@
     "confirmClearList": "Confirm clearing the list data?"
   },
   "YakitEditor": {
+    "textView": "Text",
     "getPlugin": "Get Plugin",
     "executePlugin": "Execute Plugin",
     "modifyParameters": "Modify Parameters",

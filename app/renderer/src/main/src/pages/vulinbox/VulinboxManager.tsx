@@ -319,6 +319,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
             firstNode={
               <div style={{ marginBottom: 8, overflow: 'auto', height: '100%' }}>
                 <YakitAlert
+                  closable={false}
                   type="info"
                   message={
                     <div>
