@@ -103,7 +103,7 @@ import { ConvertAuditStaticAnalyzeErrorToMarker, type IMonacoEditorMarker } from
 import { getPathParent, grpcFetchCreateFile, grpcFetchSaveFile, monacaLanguageType } from '@/pages/yakRunner/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { setAuditCodeLiveEditorSelection } from '../auditCodeRuleGenAiBridge'
+import { emitAuditCodeRuleGenSendCodeBlock, setAuditCodeLiveEditorSelection } from '../auditCodeRuleGenAiBridge'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -1375,8 +1375,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const range = fetchSelectionRange(ed, true)
     const name = editorInfo?.name
     if (!name) return
-    emiter.emit(
-      'onAuditCodeRuleGenSendCodeBlock',
+    emitAuditCodeRuleGenSendCodeBlock(
       JSON.stringify({
         type: 'codeBlockTag',
         params: {

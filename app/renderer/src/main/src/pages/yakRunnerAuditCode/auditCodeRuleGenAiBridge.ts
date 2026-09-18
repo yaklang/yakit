@@ -160,3 +160,26 @@ export function enqueueAuditCodeRuleReplaceReview(payload: YakRunnerCasualCodeRe
     fileName: payload.fileName || 'rule.sf',
   })
 }
+
+/** 规则生成 tab 未挂载时暂存「发送到AI会话」payload，挂载后消费 */
+let pendingAuditCodeRuleGenSendCodeBlock: string | null = null
+
+export function setPendingAuditCodeRuleGenSendCodeBlock(payload: string): void {
+  pendingAuditCodeRuleGenSendCodeBlock = payload
+}
+
+export function takePendingAuditCodeRuleGenSendCodeBlock(): string | null {
+  const next = pendingAuditCodeRuleGenSendCodeBlock
+  pendingAuditCodeRuleGenSendCodeBlock = null
+  return next
+}
+
+/**
+ * 发送编辑器选区到「规则生成」AI 对话。
+ * 先打开规则生成 tab，再 emit；tab 尚未挂载时由 pending 在挂载后补投。
+ */
+export function emitAuditCodeRuleGenSendCodeBlock(payload: string): void {
+  setPendingAuditCodeRuleGenSendCodeBlock(payload)
+  emiter.emit('onCodeAuditOpenRuleGenerateTab')
+  emiter.emit('onAuditCodeRuleGenSendCodeBlock', payload)
+}

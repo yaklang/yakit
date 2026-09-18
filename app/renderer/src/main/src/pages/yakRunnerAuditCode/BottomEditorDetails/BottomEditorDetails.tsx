@@ -35,6 +35,7 @@ import {
   type YakRunnerCasualCodeReplaceReviewPayload,
 } from '@/pages/yakRunner/yakRunnerAiCodeApplyBridge'
 import { syncYakRunnerPatchWorkingDraft } from '@/pages/yakRunner/yakRunnerAiCodePatchApply'
+import { resolveRuleReviewApplyMerged, resolveRuleReviewEnqueue } from './auditCodeRuleReviewQueue'
 const { ipcRenderer } = window.require('electron')
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -120,48 +121,30 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
   }, [])
 
   const onCasualCodeReplaceReviewEnqueued = useMemoizedFn((payload: YakRunnerCasualCodeReplaceReviewPayload) => {
-    const incoming = unescapeLikelyJsonEscapedText(payload.change.code?.content ?? '')
-    let baseline = unescapeLikelyJsonEscapedText(payload.original ?? '')
-    if (casualReviewSessionIdRef.current != null && casualReviewBaselineRef.current != null) {
-      baseline = casualReviewBaselineRef.current
-    } else {
-      baseline = ruleEditorRef.current
-    }
-
-    const normIncoming = String(incoming).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-    const normOriginal = String(baseline).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-    if (normOriginal === normIncoming) {
-      if (casualReviewSessionIdRef.current != null) {
+    const result = resolveRuleReviewEnqueue({
+      payload,
+      editorNow: ruleEditorRef.current,
+      session: {
+        sessionId: casualReviewSessionIdRef.current,
+        baseline: casualReviewBaselineRef.current,
+        queueId: casualReviewQueueIdRef.current,
+      },
+    })
+    if (result.kind === 'same-content') {
+      if (result.clearSession) {
         setCasualReviewQueue([])
         casualReviewSessionIdRef.current = null
         casualReviewBaselineRef.current = null
       }
       // 内容相同也确保面板打开且草稿已是最新
-      setRuleEditor(normIncoming)
+      setRuleEditor(result.editor)
       return
     }
 
-    const enrichedPayload: YakRunnerCasualCodeReplaceReviewPayload = {
-      ...payload,
-      original: baseline,
-      change: {
-        ...payload.change,
-        code: {
-          ...payload.change.code,
-          content: incoming,
-        },
-      },
-      language: payload.language || 'sf',
-      fileName: payload.fileName || 'rule.sf',
-    }
-
-    if (casualReviewSessionIdRef.current == null) {
-      casualReviewQueueIdRef.current += 1
-      casualReviewSessionIdRef.current = `sf-rule-${casualReviewQueueIdRef.current}`
-    }
-    casualReviewBaselineRef.current = baseline
-    const id = casualReviewSessionIdRef.current
-    setCasualReviewQueue([{ id, payload: enrichedPayload }])
+    casualReviewQueueIdRef.current = result.session.queueId
+    casualReviewSessionIdRef.current = result.session.sessionId
+    casualReviewBaselineRef.current = result.session.baseline
+    setCasualReviewQueue([result.item])
     // 首次交付时立刻挂上 ruleEditor 面板，避免 overlay 等下一轮 effect 才进 DOM
     setShowType((arr) => filterItem([...arr, 'ruleEditor']))
     setShowItem('ruleEditor')
@@ -169,22 +152,22 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
   })
 
   const onCasualRoundApplyMerged = useMemoizedFn((mergedCode: string, done?: boolean) => {
-    const head = casualReviewQueue[0]
-    if (!head) return
-    const next = unescapeLikelyJsonEscapedText(mergedCode)
-    casualReviewBaselineRef.current = next
-    syncYakRunnerPatchWorkingDraft(AUDIT_CODE_RULE_GEN_AI_PAGE_ID, next)
-    setRuleEditor(next)
-    setCasualReviewQueue((prev) => {
-      const cur = prev[0]
-      if (!cur) return prev
-      return [{ ...cur, payload: { ...cur.payload, original: next } }]
+    const next = resolveRuleReviewApplyMerged({
+      mergedCode,
+      done,
+      queue: casualReviewQueue,
+      session: {
+        sessionId: casualReviewSessionIdRef.current,
+        baseline: casualReviewBaselineRef.current,
+        queueId: casualReviewQueueIdRef.current,
+      },
     })
-    if (done) {
-      setCasualReviewQueue([])
-      casualReviewSessionIdRef.current = null
-      casualReviewBaselineRef.current = null
-    }
+    if (!next) return
+    casualReviewSessionIdRef.current = next.session.sessionId
+    casualReviewBaselineRef.current = next.session.baseline
+    syncYakRunnerPatchWorkingDraft(AUDIT_CODE_RULE_GEN_AI_PAGE_ID, next.editor)
+    setRuleEditor(next.editor)
+    setCasualReviewQueue(next.queue)
   })
 
   useEffect(() => {

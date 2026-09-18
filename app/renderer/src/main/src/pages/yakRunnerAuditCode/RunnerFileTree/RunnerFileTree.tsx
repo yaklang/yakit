@@ -358,6 +358,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     setActive(next)
     onActiveTabChange?.(next)
   })
+  const onOpenRuleGenerateTabFun = useMemoizedFn(() => {
+    onSetActive('rule-generate')
+  })
+  useEffect(() => {
+    emiter.on('onCodeAuditOpenRuleGenerateTab', onOpenRuleGenerateTabFun)
+    return () => {
+      emiter.off('onCodeAuditOpenRuleGenerateTab', onOpenRuleGenerateTabFun)
+    }
+  }, [])
   useEffect(() => {
     const activeKey = pageInfo?.leftTabActive || 'all'
     onSetActive(activeKey)

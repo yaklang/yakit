@@ -13,6 +13,7 @@ import { useEditorFontSize } from '@/store/editorFontSize'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 import { YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
+import { clampHunkBarPosition } from './hunkBarPosition'
 import styles from './YakitMonacoDiffInline.module.scss'
 
 const tOriginal = i18n.getFixedT(null, ['yakitUi'])
@@ -191,15 +192,6 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
 
         // Use viewport (fixed) coords clamped to the visible editor box so short
         // panels / overflow:hidden ancestors cannot clip Keep/Undo.
-        const marginX = 10
-        const gapX = 8
-        const gapY = 4
-        const pad = 4
-        const stackGap = 4
-        const clipTop = editorRect.top + pad
-        const clipBottom = editorRect.bottom - pad
-        const clipLeft = editorRect.left + marginX
-        const clipRight = editorRect.right - marginX
         const visibleRanges = modEditor.getVisibleRanges()
         overlayBars.forEach((item) => {
           const visible = visibleRanges.some(
@@ -228,48 +220,25 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
             }) || visCol1
           const visTailWidth = (visTail as unknown as { width: number }).width
           const rowTop = editorRect.top + visTail.top
-          const rowBottom = editorRect.top + visTail.top + visTail.height
           const textRight = editorRect.left + visTail.left + visTailWidth
 
           const barBox = item.dom.getBoundingClientRect()
           const barW = barBox.width > 2 ? barBox.width : item.dom.offsetWidth || 220
 
-          let leftPx = textRight + gapX
-          const fitsRightOfText = leftPx + barW <= clipRight
-          if (!fitsRightOfText) {
-            leftPx = Math.max(clipLeft, clipRight - barW)
-          }
-
-          const stackOffset = item.stackIndex * (barHeight + stackGap)
           // Narrow / bottom-of-viewport: prefer ABOVE the line. Placing below the
           // last visible line is what got Keep clipped in the audit bottom panel.
-          let baseTop: number
-          if (fitsRightOfText) {
-            baseTop = rowTop + Math.max(0, (visTail.height - barHeight) / 2)
-          } else {
-            baseTop = rowTop - barHeight - gapY
-          }
-          let topPx = baseTop + (fitsRightOfText ? stackOffset : -stackOffset)
-
-          if (topPx + barHeight > clipBottom) {
-            const aboveTail = rowTop - barHeight - gapY - (fitsRightOfText ? stackOffset : 0)
-            const aboveFirst = editorRect.top + visCol1.top - barHeight - gapY
-            if (aboveTail >= clipTop) {
-              topPx = aboveTail
-            } else if (aboveFirst >= clipTop) {
-              topPx = aboveFirst
-            } else {
-              topPx = Math.max(clipTop, clipBottom - barHeight)
-            }
-          }
-          if (topPx < clipTop) {
-            topPx = clipTop
-          }
-          if (topPx + barHeight > clipBottom) {
-            topPx = Math.max(clipTop, clipBottom - barHeight)
-          }
-
-          leftPx = Math.max(clipLeft, Math.min(leftPx, clipRight - barW))
+          const { top: topPx, left: leftPx } = clampHunkBarPosition({
+            editorRect,
+            row: {
+              rowTop,
+              rowHeight: visTail.height,
+              textRight,
+              visCol1Top: visCol1.top,
+            },
+            barW,
+            barHeight,
+            stackIndex: item.stackIndex,
+          })
           item.dom.style.position = 'fixed'
           item.dom.style.zIndex = '1000'
           item.dom.style.top = `${topPx}px`

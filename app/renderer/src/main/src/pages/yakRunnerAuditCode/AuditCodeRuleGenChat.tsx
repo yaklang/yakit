@@ -10,6 +10,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './AuditCodeRuleGenChat.module.scss'
 import emiter from '@/utils/eventBus/eventBus'
+import { takePendingAuditCodeRuleGenSendCodeBlock } from './auditCodeRuleGenAiBridge'
 
 export interface AuditCodeRuleGenChatProps {
   className?: string
@@ -28,11 +29,14 @@ export const AuditCodeRuleGenChat: React.FC<AuditCodeRuleGenChatProps> = ({ clas
   }, [setShowFreeChat])
 
   const onSendCodeBlockFun = useMemoizedFn((res: string) => {
+    takePendingAuditCodeRuleGenSendCodeBlock()
     setShowFreeChat(true)
     emiter.emit('setAIInputByType', res)
   })
 
   useEffect(() => {
+    const pending = takePendingAuditCodeRuleGenSendCodeBlock()
+    if (pending) onSendCodeBlockFun(pending)
     emiter.on('onAuditCodeRuleGenSendCodeBlock', onSendCodeBlockFun)
     return () => {
       emiter.off('onAuditCodeRuleGenSendCodeBlock', onSendCodeBlockFun)

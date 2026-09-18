@@ -24,19 +24,24 @@ vi.mock('@/constants/focusMode', () => ({
 
 import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import type { AIAgentGrpcApi, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
+import emiter from '@/utils/eventBus/eventBus'
 import {
   appendAuditCodeRuleGenContextToEvent,
+  emitAuditCodeRuleGenSendCodeBlock,
   getAuditCodeEditorSelection,
   normalizeSyntaxFlowCodeChangeContent,
   registerAuditCodeEditorSelectionGetter,
   registerAuditCodeRuleEditorGetter,
   setAuditCodeLiveEditorSelection,
+  takePendingAuditCodeRuleGenSendCodeBlock,
 } from '../auditCodeRuleGenAiBridge'
 
 const pageId = 'audit-code-rule-gen-test'
 
 afterEach(() => {
   setAuditCodeLiveEditorSelection(null)
+  takePendingAuditCodeRuleGenSendCodeBlock()
+  vi.clearAllMocks()
 })
 
 describe('appendAuditCodeRuleGenContextToEvent', () => {
@@ -113,5 +118,20 @@ describe('getAuditCodeEditorSelection', () => {
     setAuditCodeLiveEditorSelection({ content: 'live-sel' })
     expect(getAuditCodeEditorSelection(pageId)?.content).toBe('live-sel')
     unreg()
+  })
+})
+
+describe('emitAuditCodeRuleGenSendCodeBlock', () => {
+  it('stashes payload then opens the rule-generate tab before emitting the send event', () => {
+    const payload = '{"type":"codeBlockTag"}'
+    emitAuditCodeRuleGenSendCodeBlock(payload)
+    const events = vi.mocked(emiter.emit).mock.calls.map((call) => call[0])
+    expect(events).toContain('onCodeAuditOpenRuleGenerateTab')
+    expect(emiter.emit).toHaveBeenCalledWith('onAuditCodeRuleGenSendCodeBlock', payload)
+    expect(events.indexOf('onCodeAuditOpenRuleGenerateTab')).toBeLessThan(
+      events.indexOf('onAuditCodeRuleGenSendCodeBlock'),
+    )
+    expect(takePendingAuditCodeRuleGenSendCodeBlock()).toBe(payload)
+    expect(takePendingAuditCodeRuleGenSendCodeBlock()).toBeNull()
   })
 })

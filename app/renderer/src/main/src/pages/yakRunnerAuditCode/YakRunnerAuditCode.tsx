@@ -748,6 +748,11 @@ const YakRunnerAuditCodeWorkbench: React.FC<YakRunnerAuditCodeProps> = (props) =
     } catch (error) {}
   })
 
+  const onOpenRuleGenerateTabFun = useMemoizedFn(() => {
+    setUnShow(false)
+    setActive('audit')
+  })
+
   const onWidgetOpenRightAuditFun = useMemoizedFn((value: string) => {
     try {
       const data: JumpSourceDataProps = JSON.parse(value)
@@ -769,9 +774,11 @@ const YakRunnerAuditCodeWorkbench: React.FC<YakRunnerAuditCodeProps> = (props) =
     emiter.on('onCodeAuditOpenRightDetail', onOpenAuditRightDetailFun)
     // monaco查看详情 展开对应审计结果、审计过程
     emiter.on('onWidgetOpenRightAudit', onWidgetOpenRightAuditFun)
+    emiter.on('onCodeAuditOpenRuleGenerateTab', onOpenRuleGenerateTabFun)
     return () => {
       emiter.off('onCodeAuditOpenRightDetail', onOpenAuditRightDetailFun)
       emiter.off('onWidgetOpenRightAudit', onWidgetOpenRightAuditFun)
+      emiter.off('onCodeAuditOpenRuleGenerateTab', onOpenRuleGenerateTabFun)
       // 页面关闭时重置
       onSetSelectedSearchVal('')
     }

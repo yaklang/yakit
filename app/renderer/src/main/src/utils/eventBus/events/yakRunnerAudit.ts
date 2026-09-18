@@ -58,4 +58,6 @@ export type YakRunnerAuditEventProps = {
   onRefreshFileOrRuleTree?: string
   /** 编辑器选中代码发送到「规则生成」AI 对话 */
   onAuditCodeRuleGenSendCodeBlock: string
+  /** 打开左侧「规则生成」tab，确保发送代码块时聊天面板已挂载 */
+  onCodeAuditOpenRuleGenerateTab?: string
 }
