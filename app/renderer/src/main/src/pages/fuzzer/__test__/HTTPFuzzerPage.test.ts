@@ -4,6 +4,7 @@ import ts from 'typescript'
 import _ from 'lodash'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createHTTPFuzzerRun } from '../httpFuzzerRun'
+import { createMcpWebFuzzerExecutionSlot } from '../mcpWebFuzzerExecutionSlot'
 
 // Execute the real page control paths without loading Monaco and the Electron UI.
 // This tests IPC/state integration, not React rendering or end-to-end traffic.
@@ -131,6 +132,9 @@ const setup = () => {
     fuzzerTableMaxDataRef: 100,
     responseSearchDraftRef: '',
     requestRef: '',
+    loadingRef: false,
+    mcpExecutionSlotRef: createMcpWebFuzzerExecutionSlot(),
+    startMcpExecutionRef: () => {},
   }
   Object.entries(refs).forEach(([key, current]) => {
     bindings[key] = key === 'tokenRef' ? tokenRef : { current }
