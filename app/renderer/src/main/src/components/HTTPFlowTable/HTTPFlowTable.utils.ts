@@ -629,3 +629,25 @@ export const resolveHTTPFlowTableBatchSelection = (
   }
   return { ok: true, rows: selectedRows, ids: selectedRowKeys }
 }
+
+/**
+ * 删除通知是否应触发当前页面实例刷新。
+ *
+ * 通过 pageType + historyId 区分实例：
+ * - 来源 pageType 与当前不同：跨页面类型，需刷新。
+ * - 来源 pageType 与当前相同但 historyId 不同：同源多开的不同实例，需刷新。
+ * - 其余情况（同 pageType 且无 historyId 可比较、或 historyId 一致）不刷新，避免误触发。
+ *
+ * historyId 缺失视为无法区分实例，退化为只按 pageType 判断。
+ */
+export const shouldRefreshOnDeleteUpdate = (
+  sourcePage: string | undefined,
+  sourceHistoryId: string | undefined,
+  currentPage: string | undefined,
+  currentHistoryId: string | undefined,
+): boolean => {
+  if (!sourcePage || !currentPage) return false
+  if (sourcePage !== currentPage) return true
+  // 同 pageType：仅当两端 historyId 均存在且不一致时才视为不同实例
+  return !!currentHistoryId && !!sourceHistoryId && sourceHistoryId !== currentHistoryId
+}

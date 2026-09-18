@@ -23,6 +23,7 @@ import {
   uniqStrings,
   parseIncludeIds,
   resolveHTTPFlowTableBatchSelection,
+  shouldRefreshOnDeleteUpdate,
 } from '@/components/HTTPFlowTable/HTTPFlowTable.utils'
 import { HTTP_FLOW_FAVORITE_TAG, type HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
 
@@ -475,5 +476,35 @@ describe('shared rule-data helpers remain exported from the unified utils file',
     ])
 
     expect(mergeRuleSummaryItems(prev, next)[0].TraceCount).toBe(3)
+  })
+})
+
+describe('shouldRefreshOnDeleteUpdate', () => {
+  it('returns false when source page is missing', () => {
+    expect(shouldRefreshOnDeleteUpdate(undefined, 'h1', 'History', 'h2')).toBe(false)
+  })
+
+  it('returns false when current page is missing', () => {
+    expect(shouldRefreshOnDeleteUpdate('History', 'h1', undefined, 'h2')).toBe(false)
+  })
+
+  it('returns true when source and current page types differ', () => {
+    expect(shouldRefreshOnDeleteUpdate('MITM', 'h1', 'History', 'h2')).toBe(true)
+    expect(shouldRefreshOnDeleteUpdate('History', undefined, 'MITM', undefined)).toBe(true)
+  })
+
+  it('returns false when same page type but neither side has a historyId', () => {
+    expect(shouldRefreshOnDeleteUpdate('History', undefined, 'History', undefined)).toBe(false)
+    expect(shouldRefreshOnDeleteUpdate('History', 'h1', 'History', undefined)).toBe(false)
+    expect(shouldRefreshOnDeleteUpdate('History', undefined, 'History', 'h2')).toBe(false)
+  })
+
+  it('returns false when same page type and same historyId (same instance)', () => {
+    expect(shouldRefreshOnDeleteUpdate('History', 'h1', 'History', 'h1')).toBe(false)
+  })
+
+  it('returns true when same page type but different historyId (different instance)', () => {
+    expect(shouldRefreshOnDeleteUpdate('History', 'h1', 'History', 'h2')).toBe(true)
+    expect(shouldRefreshOnDeleteUpdate('MITM', 'm-a', 'MITM', 'm-b')).toBe(true)
   })
 })

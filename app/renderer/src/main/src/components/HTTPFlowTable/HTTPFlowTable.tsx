@@ -130,6 +130,7 @@ import {
   safeParseHTTPFlowTableCache,
   selectHTTPFlowTableResizeAction,
   shouldClearMITMResetBoundary,
+  shouldRefreshOnDeleteUpdate,
   shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
 } from './HTTPFlowTable.utils'
@@ -1895,11 +1896,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           page: 'HTTPFlowTable',
           fun: 'onDeleteToUpdateEvent',
         })
-      if (!sourcePage || !pageType) return
-      const isDifferentPageType = sourcePage !== pageType
-      const isDifferentInstance =
-        sourcePage === pageType && !!historyId && !!sourceHistoryId && sourceHistoryId !== historyId
-      if (isDifferentPageType || isDifferentInstance) {
+      if (shouldRefreshOnDeleteUpdate(sourcePage, sourceHistoryId, pageType, historyId)) {
         if (!isTableActive) {
           return
         }
