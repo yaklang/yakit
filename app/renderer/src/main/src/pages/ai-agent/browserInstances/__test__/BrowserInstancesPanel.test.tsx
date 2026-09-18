@@ -1,19 +1,11 @@
+import type React from 'react'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BrowserPairingRequest } from '@/pages/browserExtension/browserExtensionClient'
 import type { AIBrowserInstance } from '../browserInstanceStore'
 import type * as BrowserInstanceStoreModule from '../browserInstanceStore'
 
-const mocks = vi.hoisted(() => ({
-  requestBrowserExtensionSnapshot: vi.fn(),
-  refreshBrowserInstances: vi.fn(),
-  useBrowserInstances: vi.fn(),
-  success: vi.fn(),
-  failed: vi.fn(),
-  modalConfirm: vi.fn(),
-}))
-
-vi.mock('@/i18n/i18n', () => {
+const { mocks, t } = vi.hoisted(() => {
   const t = (key: string, options?: Record<string, unknown>) => {
     if (!options) return key
     const interpolated = Object.entries(options).reduce(
@@ -24,12 +16,25 @@ vi.mock('@/i18n/i18n', () => {
     return `${key} ${Object.values(options).join(' ')}`.trim()
   }
   return {
-    default: {
-      t,
-      getFixedT: () => t,
+    t,
+    mocks: {
+      requestBrowserExtensionSnapshot: vi.fn(),
+      refreshBrowserInstances: vi.fn(),
+      useBrowserInstances: vi.fn(),
+      success: vi.fn(),
+      failed: vi.fn(),
+      modalConfirm: vi.fn(),
     },
   }
 })
+
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({
+    t,
+    i18n: { language: 'zh' },
+    i18nRefresh: 0,
+  }),
+}))
 vi.mock('@/components/yakitUI/YakitTag/YakitTag', () => ({
   YakitTag: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }))
@@ -192,10 +197,10 @@ describe('renameBrowserDevice / openPairingWindow', () => {
   })
 
   it('renameBrowserDevice skips empty names and posts renamed devices', async () => {
-    expect(await renameBrowserDevice('device-1', '  ')).toBe(false)
+    expect(await renameBrowserDevice('device-1', '  ', t)).toBe(false)
     expect(mocks.requestBrowserExtensionSnapshot).not.toHaveBeenCalled()
 
-    expect(await renameBrowserDevice('device-1', ' New Name ')).toBe(true)
+    expect(await renameBrowserDevice('device-1', ' New Name ', t)).toBe(true)
     expect(mocks.requestBrowserExtensionSnapshot).toHaveBeenCalledWith('POST', '/devices/device-1', {
       name: 'New Name',
     })
@@ -204,12 +209,12 @@ describe('renameBrowserDevice / openPairingWindow', () => {
   })
 
   it('openPairingWindow reports success and failure', async () => {
-    await openPairingWindow()
+    await openPairingWindow(t)
     expect(mocks.requestBrowserExtensionSnapshot).toHaveBeenCalledWith('POST', '/pairing-window', { ttlSeconds: 120 })
     expect(mocks.success).toHaveBeenCalled()
 
     mocks.requestBrowserExtensionSnapshot.mockRejectedValueOnce(new Error('offline'))
-    await openPairingWindow()
+    await openPairingWindow(t)
     expect(mocks.failed).toHaveBeenCalledWith(expect.stringContaining('pairingWindowFailed'))
     expect(mocks.failed).toHaveBeenCalledWith(expect.stringContaining('offline'))
   })
@@ -235,7 +240,7 @@ describe('BrowserInstancesPanel interactions', () => {
       error: 'unavailable',
     })
     render(<BrowserInstancesPanel />)
-    fireEvent.click(screen.getByText('aiAgent:BrowserInstances.goConnect'))
+    fireEvent.click(screen.getByText('BrowserInstances.goConnect'))
     await waitFor(() => {
       expect(mocks.requestBrowserExtensionSnapshot).toHaveBeenCalledWith('POST', '/pairing-window', { ttlSeconds: 120 })
     })
@@ -262,13 +267,13 @@ describe('BrowserInstancesPanel interactions', () => {
     expect(screen.getByText(/确认码|verificationCode/)).toBeInTheDocument()
     expect(screen.queryByText('Offline Browser')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /aiAgent:BrowserInstances.others/ }))
+    fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.others/ }))
     expect(screen.getByText('Offline Browser')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /aiAgent:BrowserInstances.current/ }))
+    fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.current/ }))
     expect(screen.queryByTitle('Current Page')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /aiAgent:BrowserInstances.pendingApproval/ }))
+    fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.pendingApproval/ }))
     expect(screen.queryByText(/确认码|verificationCode/)).not.toBeInTheDocument()
   })
 
@@ -282,18 +287,18 @@ describe('BrowserInstancesPanel interactions', () => {
     mocks.requestBrowserExtensionSnapshot.mockRejectedValueOnce(new Error('rename boom'))
     render(<BrowserInstancesPanel />)
 
-    fireEvent.click(screen.getByRole('button', { name: /aiAgent:BrowserInstances.others/ }))
+    fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.others/ }))
     const row = screen.getByText('Offline Browser').closest('div')?.parentElement
     expect(row).toBeTruthy()
 
-    fireEvent.click(screen.getByLabelText('aiAgent:BrowserInstances.rename'))
+    fireEvent.click(screen.getByLabelText('BrowserInstances.rename'))
     const input = screen.getByDisplayValue('Offline Browser')
     fireEvent.change(input, { target: { value: 'Temp Name' } })
     fireEvent.click(within(row as HTMLElement).getAllByRole('button')[0])
     expect(screen.getByText('Offline Browser')).toBeInTheDocument()
     expect(mocks.requestBrowserExtensionSnapshot).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByLabelText('aiAgent:BrowserInstances.rename'))
+    fireEvent.click(screen.getByLabelText('BrowserInstances.rename'))
     fireEvent.change(screen.getByDisplayValue('Offline Browser'), { target: { value: 'New Offline' } })
     const editActions = screen.getByDisplayValue('New Offline').parentElement!.querySelectorAll('button')
     fireEvent.click(editActions[1])
@@ -314,8 +319,8 @@ describe('BrowserInstancesPanel interactions', () => {
       error: '',
     })
     render(<BrowserInstancesPanel />)
-    fireEvent.click(screen.getByRole('button', { name: /aiAgent:BrowserInstances.others/ }))
-    fireEvent.click(screen.getByLabelText('aiAgent:BrowserInstances.remove'))
+    fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.others/ }))
+    fireEvent.click(screen.getByLabelText('BrowserInstances.remove'))
 
     expect(mocks.modalConfirm).toHaveBeenCalled()
     await waitFor(() => {

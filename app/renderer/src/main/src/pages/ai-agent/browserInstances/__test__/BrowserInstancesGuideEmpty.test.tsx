@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useState } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -7,11 +8,12 @@ import {
   BrowserInstancesGuideManual,
 } from '../BrowserInstancesGuideEmpty/BrowserInstancesGuideEmpty'
 
-vi.mock('@/i18n/i18n', () => ({
-  default: {
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({
     t: (key: string) => key,
-    getFixedT: () => (key: string) => key,
-  },
+    i18n: { language: 'zh' },
+    i18nRefresh: 0,
+  }),
 }))
 vi.mock('@/utils/openWebsite', () => ({
   openExternalWebsite: vi.fn(),
@@ -135,53 +137,47 @@ describe('BrowserInstancesGuideEmpty', () => {
     fireEvent.click(screen.getByRole('link', { name: 'https://yaklang.io/ytray/' }))
     expect(openExternalWebsite).toHaveBeenCalledWith('https://yaklang.io/ytray/')
 
-    fireEvent.click(screen.getByText('aiAgent:BrowserInstances.guideViewManual'))
+    fireEvent.click(screen.getByText('BrowserInstances.guideViewManual'))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: /MacOS/ })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: /Windows/ })).toBeInTheDocument()
     expect(screen.queryByRole('radio', { name: /Linux/ })).not.toBeInTheDocument()
 
-    expect(screen.getByText('aiAgent:BrowserInstances.guideStep1Title')).toBeInTheDocument()
-    expect(screen.getByText('aiAgent:BrowserInstances.guideStep2Title')).toBeInTheDocument()
-    expect(screen.getByText('aiAgent:BrowserInstances.guideStep3Title')).toBeInTheDocument()
-    expect(screen.getByText('aiAgent:BrowserInstances.guideStep4Title')).toBeInTheDocument()
-    expect(screen.getByText('aiAgent:BrowserInstances.guideStep4Desc1')).toBeInTheDocument()
-    expect(screen.getByText('aiAgent:BrowserInstances.guideStep4Desc2')).toBeInTheDocument()
+    expect(screen.getByText('BrowserInstances.guideStep1Title')).toBeInTheDocument()
+    expect(screen.getByText('BrowserInstances.guideStep2Title')).toBeInTheDocument()
+    expect(screen.getByText('BrowserInstances.guideStep3Title')).toBeInTheDocument()
+    expect(screen.getByText('BrowserInstances.guideStep4Title')).toBeInTheDocument()
+    expect(screen.getByText('BrowserInstances.guideStep4Desc1')).toBeInTheDocument()
+    expect(screen.getByText('BrowserInstances.guideStep4Desc2')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('link', { name: 'Chrome for Testing' }))
     expect(openExternalWebsite).toHaveBeenCalledWith('https://googlechromelabs.github.io/chrome-for-testing/')
 
-    expect(screen.getByAltText('aiAgent:BrowserInstances.guideStep1Desc')).toHaveAttribute(
-      'src',
-      'ytray-guide-step1.webp',
-    )
-    expect(screen.getByAltText('aiAgent:BrowserInstances.guideStep4Desc2')).toHaveAttribute(
+    expect(screen.getByAltText('BrowserInstances.guideStep1Desc')).toHaveAttribute('src', 'ytray-guide-step1.webp')
+    expect(screen.getByAltText('BrowserInstances.guideStep4Desc2')).toHaveAttribute(
       'src',
       'ytray-guide-step4-approve.webp',
     )
 
     fireEvent.click(screen.getByRole('radio', { name: /Windows/ }))
     expect(screen.getByRole('radio', { name: /Windows/ })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getByAltText('aiAgent:BrowserInstances.guideStep1Desc')).toHaveAttribute(
-      'src',
-      'ytray-guide-step1.webp',
-    )
-    expect(screen.getByAltText('aiAgent:BrowserInstances.guideStep2Desc')).toHaveAttribute(
+    expect(screen.getByAltText('BrowserInstances.guideStep1Desc')).toHaveAttribute('src', 'ytray-guide-step1.webp')
+    expect(screen.getByAltText('BrowserInstances.guideStep2Desc')).toHaveAttribute(
       'src',
       'ytray-guide-step2-browsers-windows.webp',
     )
-    expect(screen.getByAltText('aiAgent:BrowserInstances.guideStep4Desc2')).toHaveAttribute(
+    expect(screen.getByAltText('BrowserInstances.guideStep4Desc2')).toHaveAttribute(
       'src',
       'ytray-guide-step4-approve.webp',
     )
 
     fireEvent.click(screen.getByRole('radio', { name: /MacOS/ }))
-    expect(screen.getByAltText('aiAgent:BrowserInstances.guideStep2Desc')).toHaveAttribute(
+    expect(screen.getByAltText('BrowserInstances.guideStep2Desc')).toHaveAttribute(
       'src',
       'ytray-guide-step2-browsers-macos.webp',
     )
 
-    fireEvent.click(screen.getByText('aiAgent:BrowserInstances.guideGotIt'))
+    fireEvent.click(screen.getByText('BrowserInstances.guideGotIt'))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(openExternalWebsite).toHaveBeenCalledTimes(2)
   })

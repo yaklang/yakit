@@ -34,7 +34,7 @@ import {
   requestBrowserExtensionSnapshot,
   type BrowserPairingRequest,
 } from '@/pages/browserExtension/browserExtensionClient'
-import i18n from '@/i18n/i18n'
+import { useI18nNamespaces, type TFunction } from '@/i18n/useI18nNamespaces'
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import {
   browserInstanceMentionName,
@@ -68,22 +68,22 @@ export const pairingSubtitle = (request: BrowserPairingRequest) => {
   return parts.join(' · ')
 }
 
-export const renameBrowserDevice = async (id: string, nextName: string) => {
+export const renameBrowserDevice = async (id: string, nextName: string, t: TFunction) => {
   const name = nextName.trim()
   if (!name) return false
   await requestBrowserExtensionSnapshot('POST', `/devices/${id}`, { name })
   await refreshBrowserInstances(true)
-  success(i18n.t('aiAgent:BrowserInstances.renameSuccess'))
+  success(t('BrowserInstances.renameSuccess'))
   return true
 }
 
-export const openPairingWindow = async () => {
+export const openPairingWindow = async (t: TFunction) => {
   try {
     await requestBrowserExtensionSnapshot('POST', '/pairing-window', { ttlSeconds: 120 })
     await refreshBrowserInstances(true)
-    success(i18n.t('aiAgent:BrowserInstances.pairingWindowOpened'))
+    success(t('BrowserInstances.pairingWindowOpened'))
   } catch (error) {
-    failed(i18n.t('aiAgent:BrowserInstances.pairingWindowFailed', { error: `${error}` }))
+    failed(t('BrowserInstances.pairingWindowFailed', { error: `${error}` }))
   }
 }
 
@@ -109,9 +109,10 @@ interface BrowserStatusProps {
 }
 
 const BrowserStatus: React.FC<BrowserStatusProps> = ({ instance }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   return (
     <span className={classNames(styles['status'], { [styles['status-offline']]: !instance.online })}>
-      {i18n.t(instance.online ? 'aiAgent:BrowserInstances.inUse' : 'aiAgent:BrowserInstances.offline')}
+      {t(instance.online ? 'BrowserInstances.inUse' : 'BrowserInstances.offline')}
     </span>
   )
 }
@@ -216,6 +217,7 @@ const BrowserCardPreview: React.FC<{
   instance: AIBrowserInstance
   thumbnail?: AIBrowserThumbnail
 }> = ({ instance, thumbnail }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   return (
     <div className={styles['page-preview']}>
       {thumbnail?.dataUrl ? (
@@ -226,9 +228,7 @@ const BrowserCardPreview: React.FC<{
       {!thumbnail?.dataUrl && (
         <span>
           {instance.tab?.title ||
-            (instance.online
-              ? i18n.t('aiAgent:BrowserInstances.waitingAuthorization')
-              : i18n.t('aiAgent:BrowserInstances.instanceOffline'))}
+            (instance.online ? t('BrowserInstances.waitingAuthorization') : t('BrowserInstances.instanceOffline'))}
         </span>
       )}
     </div>
@@ -236,6 +236,7 @@ const BrowserCardPreview: React.FC<{
 }
 
 const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instance }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const [focusing, setFocusing] = useState(false)
   const thumbnailKey = thumbnailCacheKey(instance)
   const thumbnailRequestId = useRef(0)
@@ -260,7 +261,7 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
         15_000,
       )
     } catch (error) {
-      failed(i18n.t('aiAgent:BrowserInstances.focusFailed', { error: `${error}` }))
+      failed(t('BrowserInstances.focusFailed', { error: `${error}` }))
     } finally {
       setFocusing(false)
     }
@@ -274,16 +275,16 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
   const confirmClose = useMemoizedFn(() => {
     const modal = YakitModalConfirm({
       width: 430,
-      title: i18n.t('aiAgent:BrowserInstances.closeTitle'),
-      content: i18n.t('aiAgent:BrowserInstances.closeConfirm'),
-      onOkText: i18n.t('aiAgent:BrowserInstances.close'),
+      title: t('BrowserInstances.closeTitle'),
+      content: t('BrowserInstances.closeConfirm'),
+      onOkText: t('BrowserInstances.close'),
       showConfirmLoading: true,
       onOk: async () => {
         try {
           await callBrowserExtensionCapability(instance.id, 'browser.instance.close', {}, 8_000)
           modal.destroy()
         } catch (error) {
-          failed(i18n.t('aiAgent:BrowserInstances.closeFailed', { error: `${error}` }))
+          failed(t('BrowserInstances.closeFailed', { error: `${error}` }))
         }
       },
     })
@@ -321,7 +322,7 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
             ? [
                 {
                   key: 'close',
-                  label: i18n.t('aiAgent:BrowserInstances.close'),
+                  label: t('BrowserInstances.close'),
                   itemIcon: <CloseOutlined color="currentColor" />,
                   type: 'danger' as const,
                 },
@@ -338,7 +339,7 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
         type="text2"
         size="small"
         icon={<DotsHorizontalOutlined color="currentColor" />}
-        aria-label={i18n.t('aiAgent:BrowserInstances.more')}
+        aria-label={t('BrowserInstances.more')}
       />
     </YakitDropdownMenu>
   )
@@ -364,7 +365,7 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
             <YakitButton
               type="text2"
               icon={<PaperAirplaneOutlined color="currentColor" />}
-              aria-label={i18n.t('aiAgent:BrowserInstances.reference')}
+              aria-label={t('BrowserInstances.reference')}
               onClick={() => insertBrowserInstanceMention(instance)}
             />
             <YakitButton
@@ -372,7 +373,7 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
               icon={<PositionOutlined color="currentColor" />}
               disabled={!canFocus}
               loading={focusing}
-              aria-label={i18n.t('aiAgent:BrowserInstances.focus')}
+              aria-label={t('BrowserInstances.focus')}
               onClick={focusBrowser}
             />
             {moreMenu}
@@ -381,8 +382,7 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
         <div className={styles['instance-url-row']} title={instance.tab?.url || instance.origin}>
           <BrowserFavicon src={instance.tab?.favIconUrl} />
           <span className={styles['instance-url']}>
-            {instance.tab?.url ||
-              (instance.online ? i18n.t('aiAgent:BrowserInstances.noAuthorizedPage') : instance.origin)}
+            {instance.tab?.url || (instance.online ? t('BrowserInstances.noAuthorizedPage') : instance.origin)}
           </span>
         </div>
         <div className={styles['instance-meta']}>
@@ -395,6 +395,7 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
 }
 
 const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ instance }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const [editing, setEditing] = useState(false)
   const [editingName, setEditingName] = useState(instance.name)
   const [mutating, setMutating] = useState(false)
@@ -413,10 +414,10 @@ const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ 
     }
     setMutating(true)
     try {
-      await renameBrowserDevice(instance.id, editingName)
+      await renameBrowserDevice(instance.id, editingName, t)
       setEditing(false)
     } catch (error) {
-      failed(i18n.t('aiAgent:BrowserInstances.renameFailed', { error: `${error}` }))
+      failed(t('BrowserInstances.renameFailed', { error: `${error}` }))
     } finally {
       setMutating(false)
     }
@@ -425,18 +426,18 @@ const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ 
   const removeDevice = useMemoizedFn(() => {
     const modal = YakitModalConfirm({
       width: 420,
-      title: i18n.t('aiAgent:BrowserInstances.removeOfflineTitle'),
-      content: i18n.t('aiAgent:BrowserInstances.removeOfflineConfirm', { name: instance.name }),
-      onOkText: i18n.t('aiAgent:BrowserInstances.removeOfflineOk'),
+      title: t('BrowserInstances.removeOfflineTitle'),
+      content: t('BrowserInstances.removeOfflineConfirm', { name: instance.name }),
+      onOkText: t('BrowserInstances.removeOfflineOk'),
       showConfirmLoading: true,
       onOk: async () => {
         try {
           await requestBrowserExtensionSnapshot('DELETE', `/devices/${instance.id}`)
           await refreshBrowserInstances(true)
-          success(i18n.t('aiAgent:BrowserInstances.removeOfflineSuccess'))
+          success(t('BrowserInstances.removeOfflineSuccess'))
           modal.destroy()
         } catch (error) {
-          failed(i18n.t('aiAgent:BrowserInstances.removeFailed', { error: `${error}` }))
+          failed(t('BrowserInstances.removeFailed', { error: `${error}` }))
         }
       },
     })
@@ -495,7 +496,7 @@ const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ 
                   <YakitButton
                     type="text2"
                     icon={<PencilOutlined color="currentColor" />}
-                    aria-label={i18n.t('aiAgent:BrowserInstances.rename')}
+                    aria-label={t('BrowserInstances.rename')}
                     onClick={() => {
                       setEditingName(instance.name)
                       setEditing(true)
@@ -505,7 +506,7 @@ const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ 
                     type="text2"
                     danger
                     icon={<TrashOutlined color="currentColor" />}
-                    aria-label={i18n.t('aiAgent:BrowserInstances.remove')}
+                    aria-label={t('BrowserInstances.remove')}
                     onClick={removeDevice}
                   />
                 </div>
@@ -518,7 +519,7 @@ const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ 
           {instance.origin}
         </div>
         <div className={styles['offline-last-seen']}>
-          {i18n.t('aiAgent:BrowserInstances.lastSeen', { time: formatLastSeen(instance.lastSeenAt) })}
+          {t('BrowserInstances.lastSeen', { time: formatLastSeen(instance.lastSeenAt) })}
         </div>
       </div>
     </div>
@@ -526,6 +527,7 @@ const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ 
 }
 
 const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ request }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const [action, setAction] = useState<'approve' | 'reject' | ''>('')
   const [clock, setClock] = useState(request.createdAt)
   const identity = request.managedInstance?.badge
@@ -546,12 +548,12 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
       else await rejectBrowserExtensionPairing(request)
       await refreshBrowserInstances(true)
       success(
-        i18n.t(approved ? 'aiAgent:BrowserInstances.approved' : 'aiAgent:BrowserInstances.rejected', {
+        t(approved ? 'BrowserInstances.approved' : 'BrowserInstances.rejected', {
           identity: identity || '',
         }),
       )
     } catch (error) {
-      failed(i18n.t('aiAgent:BrowserInstances.pairingFailed', { error: `${error}` }))
+      failed(t('BrowserInstances.pairingFailed', { error: `${error}` }))
     } finally {
       setAction('')
     }
@@ -573,10 +575,7 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
         </div>
         <div className={styles['pairing-copy']}>
           <div className={styles['pairing-title']}>
-            {i18n.t(
-              identity ? 'aiAgent:BrowserInstances.pairingTitleManaged' : 'aiAgent:BrowserInstances.pairingTitle',
-              { identity },
-            )}
+            {t(identity ? 'BrowserInstances.pairingTitleManaged' : 'BrowserInstances.pairingTitle', { identity })}
           </div>
           {!!subtitle && (
             <span className={styles['pairing-meta']} title={subtitle}>
@@ -585,11 +584,9 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
           )}
           <div className={styles['pairing-code-row']}>
             <YakitTag size="small" className={styles['pairing-code']}>
-              {i18n.t('aiAgent:BrowserInstances.verificationCode')} {code}
+              {t('BrowserInstances.verificationCode')} {code}
             </YakitTag>
-            <span className={styles['pairing-expire']}>
-              {i18n.t('aiAgent:BrowserInstances.expiresIn', { count: seconds })}
-            </span>
+            <span className={styles['pairing-expire']}>{t('BrowserInstances.expiresIn', { count: seconds })}</span>
           </div>
         </div>
       </div>
@@ -602,7 +599,7 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
           disabled={Boolean(action)}
           onClick={() => void decide(false)}
         >
-          {i18n.t('aiAgent:BrowserInstances.reject')}
+          {t('BrowserInstances.reject')}
         </YakitButton>
         <YakitButton
           type="text2"
@@ -612,7 +609,7 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
           disabled={seconds <= 0 || action === 'reject'}
           onClick={() => void decide(true)}
         >
-          {i18n.t('aiAgent:BrowserInstances.approve')}
+          {t('BrowserInstances.approve')}
         </YakitButton>
       </div>
     </article>
@@ -620,6 +617,7 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
 }
 
 export const BrowserInstancesPanel: React.FC = () => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const { instances, pending, loading, error } = useBrowserInstances()
   const [onlineExpanded, setOnlineExpanded] = useState(true)
   const [pendingExpanded, setPendingExpanded] = useState(true)
@@ -632,7 +630,7 @@ export const BrowserInstancesPanel: React.FC = () => {
     if (pairingLoading) return
     setPairingLoading(true)
     try {
-      await openPairingWindow()
+      await openPairingWindow(t)
     } finally {
       setPairingLoading(false)
     }
@@ -643,19 +641,19 @@ export const BrowserInstancesPanel: React.FC = () => {
       <div className={styles['panel-header']}>
         <div>
           <div className={styles['panel-title-row']}>
-            <div className={styles['panel-title']}>{i18n.t('aiAgent:BrowserInstances.title')}</div>
-            <Tooltip title={i18n.t('aiAgent:BrowserInstances.guideOpenHint')}>
+            <div className={styles['panel-title']}>{t('BrowserInstances.title')}</div>
+            <Tooltip title={t('BrowserInstances.guideOpenHint')}>
               <YakitButton
                 type="text2"
                 size="small"
                 icon={<QuestionMarkCircleOutlined color="currentColor" />}
                 className={styles['panel-guide-icon']}
-                aria-label={i18n.t('aiAgent:BrowserInstances.guideOpenHint')}
+                aria-label={t('BrowserInstances.guideOpenHint')}
                 onClick={() => setManualVisible(true)}
               />
             </Tooltip>
           </div>
-          <div className={styles['panel-subtitle']}>{i18n.t('aiAgent:BrowserInstances.subtitle')}</div>
+          <div className={styles['panel-subtitle']}>{t('BrowserInstances.subtitle')}</div>
         </div>
         <div className={styles['header-actions']}>
           <YakitButton
@@ -663,7 +661,7 @@ export const BrowserInstancesPanel: React.FC = () => {
             icon={<RefreshOutlined color="currentColor" />}
             size="small"
             loading={loading}
-            aria-label={i18n.t('aiAgent:BrowserInstances.refresh')}
+            aria-label={t('BrowserInstances.refresh')}
             onClick={() => void refreshBrowserInstances()}
           />
         </div>
@@ -674,9 +672,9 @@ export const BrowserInstancesPanel: React.FC = () => {
           {error && !instances.length && !pending.length ? (
             <div className={styles['empty-state']}>
               <GlobeOutlined color="currentColor" size={30} />
-              <span>{i18n.t('aiAgent:BrowserInstances.readFailed')}</span>
+              <span>{t('BrowserInstances.readFailed')}</span>
               <YakitButton type="text" loading={pairingLoading} onClick={() => void handleOpenPairingWindow()}>
-                {i18n.t('aiAgent:BrowserInstances.goConnect')}
+                {t('BrowserInstances.goConnect')}
               </YakitButton>
             </div>
           ) : !instances.length && !pending.length ? (
@@ -696,7 +694,7 @@ export const BrowserInstancesPanel: React.FC = () => {
                     ) : (
                       <ChevronRightOutlined color="currentColor" size={9} />
                     )}
-                    <span>{i18n.t('aiAgent:BrowserInstances.pendingApproval')}</span>
+                    <span>{t('BrowserInstances.pendingApproval')}</span>
                     <YakitTag fullRadius size="small">
                       {pending.length}
                     </YakitTag>
@@ -723,7 +721,7 @@ export const BrowserInstancesPanel: React.FC = () => {
                     ) : (
                       <ChevronRightOutlined color="currentColor" size={9} />
                     )}
-                    <span>{i18n.t('aiAgent:BrowserInstances.current')}</span>
+                    <span>{t('BrowserInstances.current')}</span>
                     <YakitTag fullRadius size="small">
                       {online.length}
                     </YakitTag>
@@ -750,7 +748,7 @@ export const BrowserInstancesPanel: React.FC = () => {
                     ) : (
                       <ChevronRightOutlined color="currentColor" size={9} />
                     )}
-                    <span>{i18n.t('aiAgent:BrowserInstances.others')}</span>
+                    <span>{t('BrowserInstances.others')}</span>
                     <YakitTag fullRadius size="small">
                       {offline.length}
                     </YakitTag>

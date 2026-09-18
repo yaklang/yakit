@@ -5,7 +5,7 @@ import { MacOperatingSystemColorful, WindowsOperatingSystemColorful } from '@yak
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import i18n from '@/i18n/i18n'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { openExternalWebsite } from '@/utils/openWebsite'
 import { GUIDE_PLATFORM_IMAGES, ytrayGuidePreview, type GuidePlatform } from './assets/guideImages'
 import styles from './BrowserInstancesGuideEmpty.module.scss'
@@ -24,43 +24,43 @@ type GuideStepBlock = {
 
 const GUIDE_STEPS: GuideStepBlock[] = [
   {
-    titleKey: 'aiAgent:BrowserInstances.guideStep1Title',
+    titleKey: 'BrowserInstances.guideStep1Title',
     items: [
       {
-        subtitleKey: 'aiAgent:BrowserInstances.guideStep1Desc',
+        subtitleKey: 'BrowserInstances.guideStep1Desc',
         link: { href: YTRAY_HOME, label: YTRAY_HOME },
         imageKeys: ['step1'],
       },
     ],
   },
   {
-    titleKey: 'aiAgent:BrowserInstances.guideStep2Title',
+    titleKey: 'BrowserInstances.guideStep2Title',
     items: [
       {
-        subtitleKey: 'aiAgent:BrowserInstances.guideStep2Desc',
+        subtitleKey: 'BrowserInstances.guideStep2Desc',
         link: { href: CHROME_FOR_TESTING, label: 'Chrome for Testing' },
         imageKeys: ['step2'],
       },
     ],
   },
   {
-    titleKey: 'aiAgent:BrowserInstances.guideStep3Title',
+    titleKey: 'BrowserInstances.guideStep3Title',
     items: [
       {
-        subtitleKey: 'aiAgent:BrowserInstances.guideStep3Desc',
+        subtitleKey: 'BrowserInstances.guideStep3Desc',
         imageKeys: ['step3a', 'step3b'],
       },
     ],
   },
   {
-    titleKey: 'aiAgent:BrowserInstances.guideStep4Title',
+    titleKey: 'BrowserInstances.guideStep4Title',
     items: [
       {
-        subtitleKey: 'aiAgent:BrowserInstances.guideStep4Desc1',
+        subtitleKey: 'BrowserInstances.guideStep4Desc1',
         imageKeys: ['step4a'],
       },
       {
-        subtitleKey: 'aiAgent:BrowserInstances.guideStep4Desc2',
+        subtitleKey: 'BrowserInstances.guideStep4Desc2',
         imageKeys: ['step4b'],
       },
     ],
@@ -90,6 +90,7 @@ type BrowserInstancesGuideManualProps = {
 }
 
 export const BrowserInstancesGuideManual: React.FC<BrowserInstancesGuideManualProps> = ({ open, onClose }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const [platform, setPlatform] = useState<GuidePlatform>(detectGuidePlatform)
   const platformOptions = useMemo(
     () => [
@@ -112,7 +113,7 @@ export const BrowserInstancesGuideManual: React.FC<BrowserInstancesGuideManualPr
       wrapClassName={styles['guide-empty-modal-wrap']}
       title={
         <div className={styles['guide-empty-modal-header']}>
-          <span className={styles['guide-empty-modal-title']}>{i18n.t('aiAgent:BrowserInstances.guideTitle')}</span>
+          <span className={styles['guide-empty-modal-title']}>{t('BrowserInstances.guideTitle')}</span>
           <div className={styles['guide-empty-modal-platforms']}>
             <YakitRadioButtons
               buttonStyle="solid"
@@ -124,7 +125,7 @@ export const BrowserInstancesGuideManual: React.FC<BrowserInstancesGuideManualPr
           <YakitButton
             type="text2"
             icon={<XOutlined color="currentColor" />}
-            aria-label={i18n.t('aiAgent:BrowserInstances.guideCloseManual')}
+            aria-label={t('BrowserInstances.guideCloseManual')}
             onClick={onClose}
           />
         </div>
@@ -135,7 +136,7 @@ export const BrowserInstancesGuideManual: React.FC<BrowserInstancesGuideManualPr
       footerStyle={{ justifyContent: 'center' }}
       footer={
         <YakitButton type="primary" onClick={onClose}>
-          {i18n.t('aiAgent:BrowserInstances.guideGotIt')}
+          {t('BrowserInstances.guideGotIt')}
         </YakitButton>
       }
       width={760}
@@ -145,11 +146,11 @@ export const BrowserInstancesGuideManual: React.FC<BrowserInstancesGuideManualPr
       <div className={styles['guide-empty-modal']}>
         {GUIDE_STEPS.map((step) => (
           <section key={step.titleKey} className={styles['guide-empty-step']}>
-            <div className={styles['guide-empty-step-title']}>{i18n.t(step.titleKey)}</div>
+            <div className={styles['guide-empty-step-title']}>{t(step.titleKey)}</div>
             {step.items.map((item) => (
               <div key={item.subtitleKey} className={styles['guide-empty-step-item']}>
                 <div className={styles['guide-empty-step-subtitle']}>
-                  <span>{i18n.t(item.subtitleKey)}</span>
+                  <span>{t(item.subtitleKey)}</span>
                   {item.link && (
                     <a
                       href={item.link.href}
@@ -169,7 +170,7 @@ export const BrowserInstancesGuideManual: React.FC<BrowserInstancesGuideManualPr
                   }
                 >
                   {item.imageKeys.map((imageKey) => (
-                    <img key={imageKey} src={images[imageKey]} alt={i18n.t(item.subtitleKey)} />
+                    <img key={imageKey} src={images[imageKey]} alt={t(item.subtitleKey)} />
                   ))}
                 </div>
               </div>
@@ -186,12 +187,13 @@ type BrowserInstancesGuideEmptyProps = {
 }
 
 export const BrowserInstancesGuideEmpty: React.FC<BrowserInstancesGuideEmptyProps> = ({ onOpenManual }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   return (
     <div className={styles['guide-empty']}>
       <div className={styles['guide-empty-header']}>
-        <div className={styles['guide-empty-header-title']}>{i18n.t('aiAgent:BrowserInstances.guideTitle')}</div>
+        <div className={styles['guide-empty-header-title']}>{t('BrowserInstances.guideTitle')}</div>
         <div className={styles['guide-empty-header-subtitle']}>
-          <span>{i18n.t('aiAgent:BrowserInstances.guideInstallPrefix')}</span>
+          <span>{t('BrowserInstances.guideInstallPrefix')}</span>
           <a href={YTRAY_HOME} target="_blank" rel="noopener noreferrer" onClick={openExternalLink(YTRAY_HOME)}>
             {YTRAY_HOME}
           </a>
@@ -200,7 +202,7 @@ export const BrowserInstancesGuideEmpty: React.FC<BrowserInstancesGuideEmptyProp
       <img
         className={styles['guide-empty-preview']}
         src={ytrayGuidePreview}
-        alt={i18n.t('aiAgent:BrowserInstances.guidePreviewHeadline')}
+        alt={t('BrowserInstances.guidePreviewHeadline')}
       />
       <YakitButton
         type="text"
@@ -208,7 +210,7 @@ export const BrowserInstancesGuideEmpty: React.FC<BrowserInstancesGuideEmptyProp
         className={styles['guide-empty-link']}
         onClick={onOpenManual}
       >
-        {i18n.t('aiAgent:BrowserInstances.guideViewManual')}
+        {t('BrowserInstances.guideViewManual')}
       </YakitButton>
     </div>
   )
