@@ -22,6 +22,7 @@ vi.mock('../AIRightPanel.module.scss', () => ({
     'right-panel-hidden': 'right-panel-hidden',
     'pane-slot-small': 'pane-slot-small',
     'count-badge': 'count-badge',
+    'count-badge-overflow': 'count-badge-overflow',
     'menu-item-icon-small': 'menu-item-icon-small',
   },
 }))
@@ -751,14 +752,21 @@ describe('AIRightPanel', () => {
       const trafficMenu = screen.getByLabelText('流量')
       const riskMenu = screen.getByLabelText('漏洞')
 
-      for (const [index, count] of [42, 58, 0].entries()) {
+      for (const [index, count] of [42, 99, 100, 366, 58, 0].entries()) {
         // 与 session_snapshot 一致：保留任务条目引用，替换 execution 并更新 uuid。
         detail.execution = { http_flow_count: count, risk_level_count: { high: count, total: count } }
         detail.uuid = `snapshot-${index + 1}`
         act(() => vi.advanceTimersByTime(3000))
 
-        expect(trafficMenu.textContent).toBe(`${small ? '' : '流量'}${count || ''}`)
-        expect(riskMenu.textContent).toBe(`${small ? '' : '漏洞'}${count || ''}`)
+        const displayedCount = small && count > 99 ? 99 : count || ''
+        expect(trafficMenu.textContent).toBe(`${small ? '' : '流量'}${displayedCount}`)
+        expect(riskMenu.textContent).toBe(`${small ? '' : '漏洞'}${displayedCount}`)
+        if (small && count > 0) {
+          for (const label of ['流量', '漏洞']) {
+            const badge = screen.getByLabelText(`${label} ${count}`)
+            expect(badge.classList.contains('count-badge-overflow')).toBe(count > 99)
+          }
+        }
       }
     } finally {
       cleanup()
