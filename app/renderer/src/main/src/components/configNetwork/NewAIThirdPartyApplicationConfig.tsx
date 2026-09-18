@@ -25,6 +25,7 @@ import {
   AIConfigAPIKeyFormItem,
   buildAIConfigHealthCheckConfig,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
+import { providerToListAiModelConfig } from '@/pages/ai-agent/aiModelList/aiModelForm/providerConfig'
 import {
   buildReasoningEffortOptions,
   effortProbeResultFromResponse,
@@ -537,7 +538,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
         setModelOptionLoading(true)
         const v = form.getFieldsValue()
         ipcRenderer
-          .invoke('ListAiModel', { Config: JSON.stringify(v) })
+          .invoke('ListAiModel', { Config: providerToListAiModelConfig(buildAIConfigHealthCheckConfig(v)) })
           .then((res) => {
             if (!execModelNameOption.current) return
             // memfit- 开头的模型名称前置展示（与聊天模型选择器的名称下拉共用排序逻辑）
