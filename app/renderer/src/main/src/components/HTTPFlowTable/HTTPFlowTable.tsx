@@ -1881,6 +1881,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         yakitNotify('info', t('YakitNotification.deleted'))
         refreshTabsContRef.current = true
         updateData()
+        onUpdateOtherPage()
       })
       .finally(() => {
         setTimeout(() => setLoading(false), 100)
@@ -1889,11 +1890,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const onDeleteToUpdateEvent = useMemoizedFn((v: string) => {
     try {
-      const { sourcePage }: { sourcePage?: HTTPHistorySourcePageType } = JSONParseLog(v, {
-        page: 'HTTPFlowTable',
-        fun: 'onDeleteToUpdateEvent',
-      })
-      if (sourcePage && pageType && sourcePage !== pageType) {
+      const { sourcePage, historyId: sourceHistoryId }: { sourcePage?: HTTPHistorySourcePageType; historyId?: string } =
+        JSONParseLog(v, {
+          page: 'HTTPFlowTable',
+          fun: 'onDeleteToUpdateEvent',
+        })
+      if (!sourcePage || !pageType) return
+      const isDifferentPageType = sourcePage !== pageType
+      const isDifferentInstance =
+        sourcePage === pageType && !!historyId && !!sourceHistoryId && sourceHistoryId !== historyId
+      if (isDifferentPageType || isDifferentInstance) {
         if (!isTableActive) {
           return
         }
@@ -1909,10 +1915,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   }, [])
 
-  // 删除成功时 通知所有使用该组件的控件更新
+  // 删除成功时 通知所有使用该组件的其余控件更新
+  // 通过 pageType + historyId 区分不同页面实例，避免同源多开时互相误刷新
   const onUpdateOtherPage = useMemoizedFn(() => {
-    // 说明： 此处emit并非是通知当前组件 而是通知复用此组件的其余组件 根据pageType区分
-    emiter.emit('onDeleteToUpdate', JSON.stringify({ sourcePage: pageType }))
+    emiter.emit('onDeleteToUpdate', JSON.stringify({ sourcePage: pageType, historyId }))
     emiter.emit('onDeleteToUpdateHTTPHistoryFilter')
   })
 
