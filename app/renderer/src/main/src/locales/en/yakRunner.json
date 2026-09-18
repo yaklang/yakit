@@ -196,6 +196,8 @@
     "searchPlaceholder": "Search packs or file names",
     "emptyTitle": "No C Headers",
     "emptyDesc": "C project compiles look for system headers here (top-level zip supported). Place CRT / Windows SDK header packs in this directory.",
+    "searchEmptyTitle": "No matching headers",
+    "searchEmptyDesc": "Try a different keyword",
     "importSuccess": "Imported successfully",
     "importFailed": "Import failed",
     "deleteSuccess": "Deleted {{name}}",

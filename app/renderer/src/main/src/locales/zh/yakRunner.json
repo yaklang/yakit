@@ -196,6 +196,8 @@
     "searchPlaceholder": "搜索头文件包或文件名",
     "emptyTitle": "暂无 C 头文件",
     "emptyDesc": "C 项目编译时会在此目录查找系统头文件（支持顶层 zip）。可将 CRT / Windows SDK 等头文件包放在这里。",
+    "searchEmptyTitle": "未找到匹配的头文件",
+    "searchEmptyDesc": "请尝试其他关键词",
     "importSuccess": "导入成功",
     "importFailed": "导入失败",
     "deleteSuccess": "已删除 {{name}}",
