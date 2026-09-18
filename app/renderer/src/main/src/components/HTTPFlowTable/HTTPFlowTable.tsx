@@ -98,6 +98,10 @@ import {
 import { useHTTPFlowTableShortcutKeys } from './useHTTPFlowTableShortcutKeys'
 import { useHTTPFlowTableContextMenu } from './useHTTPFlowTableContextMenu'
 import { onSendToTab, toggleHTTPFlowFavorite } from './HTTPFlowTable.actions'
+import { grpcMITMGetFilter, grpcMITMSetFilter } from '@/pages/mitm/MITMHacker/utils'
+import type { MITMSetFilterRequest } from '@/pages/mitm/MITMHacker/utils'
+import { defaultMITMFilterData } from '@/defaultConstants/mitm'
+import { buildNextMITMFilterData } from '@/pages/mitm/MITMServerStartForm/utils'
 import { NowProjectDescription } from '@/pages/globalVariable'
 import { useStore } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -126,6 +130,7 @@ import {
   safeParseHTTPFlowTableCache,
   selectHTTPFlowTableResizeAction,
   shouldClearMITMResetBoundary,
+  shouldRefreshOnDeleteUpdate,
   shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
 } from './HTTPFlowTable.utils'
@@ -1877,6 +1882,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         yakitNotify('info', t('YakitNotification.deleted'))
         refreshTabsContRef.current = true
         updateData()
+        onUpdateOtherPage()
       })
       .finally(() => {
         setTimeout(() => setLoading(false), 100)
@@ -1885,11 +1891,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const onDeleteToUpdateEvent = useMemoizedFn((v: string) => {
     try {
-      const { sourcePage }: { sourcePage?: HTTPHistorySourcePageType } = JSONParseLog(v, {
-        page: 'HTTPFlowTable',
-        fun: 'onDeleteToUpdateEvent',
-      })
-      if (sourcePage && pageType && sourcePage !== pageType) {
+      const { sourcePage, historyId: sourceHistoryId }: { sourcePage?: HTTPHistorySourcePageType; historyId?: string } =
+        JSONParseLog(v, {
+          page: 'HTTPFlowTable',
+          fun: 'onDeleteToUpdateEvent',
+        })
+      if (shouldRefreshOnDeleteUpdate(sourcePage, sourceHistoryId, pageType, historyId)) {
         if (!isTableActive) {
           return
         }
@@ -1905,10 +1912,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   }, [])
 
-  // 删除成功时 通知所有使用该组件的控件更新
+  // 删除成功时 通知所有使用该组件的其余控件更新
+  // 通过 pageType + historyId 区分不同页面实例，避免同源多开时互相误刷新
   const onUpdateOtherPage = useMemoizedFn(() => {
-    // 说明： 此处emit并非是通知当前组件 而是通知复用此组件的其余组件 根据pageType区分
-    emiter.emit('onDeleteToUpdate', JSON.stringify({ sourcePage: pageType }))
+    emiter.emit('onDeleteToUpdate', JSON.stringify({ sourcePage: pageType, historyId }))
     emiter.emit('onDeleteToUpdateHTTPHistoryFilter')
   })
 
@@ -2529,6 +2536,48 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     appendShieldItem(host)
   })
 
+  /**
+   * @description 将值追加到 MITM 过滤器指定字段并去重，静默保存
+   */
+  const appendMITMFilterItem = useMemoizedFn(
+    async (field: 'excludeUri' | 'excludeHostname', value: string, emptyTip: string) => {
+      if (!value) {
+        yakitNotify('warning', emptyTip)
+        return
+      }
+      try {
+        const current = await grpcMITMGetFilter()
+        const filter = buildNextMITMFilterData(current.FilterData || defaultMITMFilterData, field, value)
+        const req: MITMSetFilterRequest = {
+          FilterData: filter,
+          version: mitmVersion,
+        }
+        await grpcMITMSetFilter(req)
+        yakitNotify('success', t('HTTPFlowTable.filterUpdateSuccess'))
+        emiter.emit('onRefFilterWhiteListEvent', mitmVersion)
+      } catch (err) {
+        yakitFailed(t('HTTPFlowTable.filterUpdateFailed', { err: err + '' }))
+      }
+    },
+  )
+
+  /**
+   * @description 过滤URL：追加到 MITM 过滤器的 excludeUri
+   */
+  const onFilterURL = useMemoizedFn((v: HTTPFlow) => {
+    onRemoveHttpHistory({ URLPrefix: v.Url })
+    appendMITMFilterItem('excludeUri', v.Url, t('HTTPFlowTable.filterURLEmpty'))
+  })
+
+  /**
+   * @description 过滤域名：追加到 MITM 过滤器的 excludeHostname
+   */
+  const onFilterDomain = useMemoizedFn((v: HTTPFlow) => {
+    const host = v?.HostPort?.split(':')[0] || ''
+    onRemoveHttpHistory({ URLPrefix: host })
+    appendMITMFilterItem('excludeHostname', host, t('HTTPFlowTable.filterDomainEmpty'))
+  })
+
   useHTTPFlowTableShortcutKeys({
     inViewport,
     getSelected,
@@ -2738,6 +2787,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onShieldRecord,
     onShieldURL,
     onShieldDomain,
+    onFilterURL,
+    onFilterDomain,
     onBatch,
     onViewAttachmentDataRefresh,
     onClearSelection: resetSelected,
