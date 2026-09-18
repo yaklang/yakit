@@ -102,9 +102,7 @@ export function appendAuditCodeRuleGenContextToEvent(pageId: string, event: AIIn
   return { ...event, AttachedResourceInfo: next }
 }
 
-export function normalizeSyntaxFlowCodeChangeContent(
-  data: AIAgentGrpcApi.CodeChange,
-): AIAgentGrpcApi.CodeChange {
+export function normalizeSyntaxFlowCodeChangeContent(data: AIAgentGrpcApi.CodeChange): AIAgentGrpcApi.CodeChange {
   const content = unescapeLikelyJsonEscapedText(String(data?.code?.content ?? ''))
   const patch = data?.code?.patch
   if (!patch) {
