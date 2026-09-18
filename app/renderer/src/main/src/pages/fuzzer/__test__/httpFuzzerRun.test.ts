@@ -12,7 +12,7 @@ describe('HTTP Fuzzer run lifecycle', () => {
     return { run, onUpdate, onEnd }
   }
 
-  it('starts counters and pending response from zero after a stop without end', () => {
+  it('starts counters and pending response from zero on a fresh run after a stop', () => {
     const { run, onUpdate, onEnd } = setup()
     run.state.count = 3
     run.state.successCount = 2
@@ -25,14 +25,14 @@ describe('HTTP Fuzzer run lifecycle', () => {
     expect(onEnd).toHaveBeenCalledOnce()
     // Stopping preserves the completed portion of this run.
     expect(run.state.successCount).toBe(2)
-    run.reset()
-    expect(run.state).toMatchObject({ count: 0, successCount: 0, failedCount: 0, firstResponseDirty: false })
-    expect(run.state.pendingFirstResponse).toBeNull()
-    expect(run.isActive()).toBe(true)
-    const nextRowIndex = run.state.count++
-    run.state.successCount++
-    expect(nextRowIndex).toBe(0)
-    expect(run.state.successCount).toBe(1)
+    expect(run.isActive()).toBe(false)
+    // A fresh send builds a brand-new run instead of reactivating the old one.
+    const fresh = setup()
+    expect(fresh.run.state).toMatchObject({ count: 0, successCount: 0, failedCount: 0, firstResponseDirty: false })
+    expect(fresh.run.state.pendingFirstResponse).toBeNull()
+    expect(fresh.run.isActive()).toBe(true)
+    expect(fresh.run.state.count++).toBe(0)
+    expect(fresh.run.state.successCount + 1).toBe(1)
     vi.runAllTimers()
     expect(onUpdate).toHaveBeenCalledOnce()
   })
@@ -53,24 +53,24 @@ describe('HTTP Fuzzer run lifecycle', () => {
     expect(onUpdate).toHaveBeenCalledOnce()
   })
 
-  it('cancels an old completion callback when another run starts', () => {
+  it('cancels an old completion callback when the stream rotates', () => {
     const { run, onEnd } = setup()
     run.finish('complete', 500)
-    run.reset()
+    run.dispose()
     vi.advanceTimersByTime(500)
     expect(onEnd).not.toHaveBeenCalled()
-    expect(run.isActive()).toBe(true)
+    expect(run.isActive()).toBe(false)
   })
 
-  it('cancels a pending throttled update on reset', () => {
+  it('drops a pending throttled update when the run is disposed', () => {
     const { run, onUpdate } = setup()
     run.update()
-    run.reset()
+    run.dispose()
     vi.advanceTimersByTime(500)
     expect(onUpdate).not.toHaveBeenCalled()
     run.update()
     vi.advanceTimersByTime(500)
-    expect(onUpdate).toHaveBeenCalledOnce()
+    expect(onUpdate).not.toHaveBeenCalled()
   })
 
   it('flushes completion once and preserves counts for a hidden tab', () => {

@@ -32,15 +32,6 @@ export const createHTTPFuzzerRun = ({
     state,
     isActive: () => active,
     update,
-    reset: () => {
-      cancelPending()
-      state.count = 0
-      state.successCount = 0
-      state.failedCount = 0
-      state.pendingFirstResponse = null
-      state.firstResponseDirty = false
-      active = true
-    },
     finish: (reason: FuzzerRunEndReason, delay = 0) => {
       if (!active && (reason === 'complete' || endTimer === undefined)) return
       cancelPending()

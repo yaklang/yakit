@@ -17,7 +17,7 @@ const source = ts.createSourceFile(
 const findOne = (predicate: (node: ts.Node) => boolean) => {
   const matches: ts.Node[] = []
   const visit = (node: ts.Node) => {
-    if (predicate(node)) matches.push(node)
+    predicate(node) && matches.push(node)
     ts.forEachChild(node, visit)
   }
   visit(source)
@@ -48,15 +48,27 @@ const setup = () => {
   const invoke = vi.fn(async (channel: string) => {
     if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: { Request: 'GET /history' } }
   })
+  const tokenRef = { current: 'test-token' }
+  let tokenSequence = 0
   let firstResponse: any = { RequestRaw: [] }
   let cleanup: () => void = () => {}
+  let streamEffectFn: () => () => void = () => () => {}
   const bindings: Record<string, any> = {
     _,
     createHTTPFuzzerRun,
     useMemoizedFn: (fn: unknown) => fn,
     useEffect: (fn: () => () => void) => {
+      streamEffectFn = fn
       cleanup = fn()
     },
+    // 模拟 token 变化驱动 effect 重挂：先走旧清理（摘旧监听/cancel 旧流/dispose 旧 run），再按新 token 重挂
+    setStreamToken: (value: string) => {
+      tokenRef.current = value
+      cleanup()
+      cleanup = streamEffectFn()
+    },
+    // effect 依赖数组的自由变量，值本身不被使用
+    streamToken: 'test-token',
     ipcRenderer: Object.assign(ipc, { invoke }),
     emptyFuzzer: { RequestRaw: [] },
     setFirstResponse: vi.fn((value) => {
@@ -82,7 +94,8 @@ const setup = () => {
     yakitFailed: vi.fn(),
     t: (value: string) => value,
     filterColorTag: () => undefined,
-    randomString: () => 'generated-id',
+    // 每次发送（resetResponse 轮换 token）都会消耗一个新 token
+    randomString: () => `token-${(tokenSequence += 1)}`,
     ChunkedDataDirection: { UNSPECIFIED: 0 },
     setDefaultResponseSearch: vi.fn(),
     setDroppedCount: vi.fn(),
@@ -102,7 +115,7 @@ const setup = () => {
   }
   const refs = {
     streamRunRef: null,
-    tokenRef: 'test-token',
+    tokenRef,
     taskIDRef: '',
     runtimeIdRef: '',
     dCountRef: 0,
@@ -120,14 +133,15 @@ const setup = () => {
     requestRef: '',
   }
   Object.entries(refs).forEach(([key, current]) => {
-    bindings[key] = { current }
+    bindings[key] = key === 'tokenRef' ? tokenRef : { current }
   })
   const api = new Function(...Object.keys(bindings), `${executable}\nreturn { ${controls.join(', ')} }`)(
     ...Object.values(bindings),
   )
+  const token = () => tokenRef.current as string
   const send = (id: string, ok = true) =>
     ipc.emit(
-      'test-token-data',
+      `${token()}-data`,
       {},
       {
         UUID: id,
@@ -138,7 +152,9 @@ const setup = () => {
         ResponseRaw: new Uint8Array([2]),
       },
     )
-  return { api, bindings, ipc, invoke, send, dispose: () => cleanup() }
+  const emitError = (details = 'stream failed') => ipc.emit(`${token()}-error`, {}, details)
+  const emitEnd = () => ipc.emit(`${token()}-end`)
+  return { api, bindings, ipc, invoke, send, emitError, emitEnd, token, dispose: () => cleanup() }
 }
 
 describe('HTTPFuzzerPage real IPC control paths', () => {
@@ -170,10 +186,10 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
   })
 
   it('handles terminal error immediately, preserves rows and allows another send', () => {
-    const { api, bindings: b, ipc, send, dispose } = setup()
+    const { api, bindings: b, send, emitError, dispose } = setup()
     api.submitToHTTPFuzzer()
     send('a1')
-    ipc.emit('test-token-error', {}, 'unavailable')
+    emitError('unavailable')
     expect(b.yakitNotify).toHaveBeenCalled()
     expect(b.setLoading).toHaveBeenLastCalledWith(false)
     expect(b.setIsPause).toHaveBeenLastCalledWith(true)
@@ -190,13 +206,13 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
   })
 
   it('cancels delayed completion and old first-response updates on a fresh send', () => {
-    const { api, bindings: b, ipc, send, dispose } = setup()
+    const { api, bindings: b, send, emitEnd, dispose } = setup()
     api.submitToHTTPFuzzer()
     send('a1')
     b.inViewportRef.current = false
     send('a1')
     expect(b.streamRunRef.current.state.firstResponseDirty).toBe(true)
-    ipc.emit('test-token-end')
+    emitEnd()
     api.submitToHTTPFuzzer()
     expect(b.taskIDRef.current).toBe('')
     expect(b.streamRunRef.current.state.pendingFirstResponse).toBeNull()
@@ -211,25 +227,25 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
   })
 
   it('does not auto-select latest history when cancellation precedes a history load', async () => {
-    const { api, bindings: b, ipc, invoke, send, dispose } = setup()
+    const { api, bindings: b, invoke, send, emitEnd, token, dispose } = setup()
     api.submitToHTTPFuzzer()
     send('a1')
-    ipc.emit('test-token-end')
+    emitEnd()
     await api.cancelCurrentHTTPFuzzer()
     api.loadHistory(7)
     await vi.runAllTimersAsync()
-    expect(invoke).toHaveBeenCalledWith('HTTPFuzzer', { HistoryWebFuzzerId: 7 }, 'test-token')
+    expect(invoke).toHaveBeenCalledWith('HTTPFuzzer', { HistoryWebFuzzerId: 7 }, token())
     expect(b.setCurrentSelectId).toHaveBeenLastCalledWith(7)
     expect(b.getNewCurrentPage).not.toHaveBeenCalled()
     dispose()
   })
 
   it('preserves retry/rematch parameters and runtime IDs without resetting on pause', async () => {
-    const { api, bindings: b, invoke, send, dispose } = setup()
+    const { api, bindings: b, invoke, send, token, dispose } = setup()
     b.runtimeIdRef.current = 'runtime-old'
     b.retryRef.current = true
     api.submitToHTTPFuzzer()
-    expect(invoke).toHaveBeenLastCalledWith('HTTPFuzzer', { RetryTaskID: 42 }, 'test-token')
+    expect(invoke).toHaveBeenLastCalledWith('HTTPFuzzer', { RetryTaskID: 42 }, token())
     expect(b.runtimeIdRef.current).toBe('runtime-old')
     send('retry1')
     await api.resumeAndPause()
@@ -240,7 +256,7 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
         IsPause: true,
         SetPauseStatus: true,
       },
-      'test-token',
+      token(),
     )
     expect(b.successFuzzerRef.current).toHaveLength(1)
     expect(b.streamRunRef.current.isActive()).toBe(true)
@@ -253,9 +269,46 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
         HistoryWebFuzzerId: '42',
         Request: 'GET /new',
       }),
-      'test-token',
+      token(),
     )
     expect(b.runtimeIdRef.current).toBe('')
+    dispose()
+  })
+
+  it('ignores a late error from the previous stream after a fresh send (A→B)', () => {
+    const { api, bindings: b, ipc, invoke, send, emitError, token, dispose } = setup()
+    api.submitToHTTPFuzzer()
+    send('a1')
+    const staleToken = token()
+    api.submitToHTTPFuzzer()
+    expect(invoke).toHaveBeenCalledWith('cancel-HTTPFuzzer', staleToken)
+    // A 的迟到 error/end/data 都落在已摘除监听的旧频道上
+    ipc.emit(`${staleToken}-error`, {}, 'stale stream failure')
+    ipc.emit(`${staleToken}-end`)
+    ipc.emit(
+      `${staleToken}-data`,
+      {},
+      {
+        UUID: 'late-a',
+        TaskId: '42',
+        RuntimeID: 'runtime-a',
+        Ok: true,
+        RequestRaw: new Uint8Array([1]),
+        ResponseRaw: new Uint8Array([2]),
+      },
+    )
+    expect(b.yakitNotify).not.toHaveBeenCalled()
+    expect(b.setLoading).toHaveBeenLastCalledWith(true)
+    expect(b.streamRunRef.current.isActive()).toBe(true)
+    expect(b.successFuzzerRef.current).toEqual([])
+    // B 的数据仍被正常接受
+    send('b1')
+    expect(b.successFuzzerRef.current.map((r: any) => r.UUID)).toEqual(['b1'])
+    // B 自己的 error 仍会被正常接受并终止 B
+    emitError('real failure')
+    expect(b.yakitNotify).toHaveBeenCalled()
+    expect(b.setLoading).toHaveBeenLastCalledWith(false)
+    expect(b.streamRunRef.current.isActive()).toBe(false)
     dispose()
   })
 })

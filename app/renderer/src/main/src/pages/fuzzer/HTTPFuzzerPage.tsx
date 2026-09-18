@@ -1211,7 +1211,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const streamRunRef = useRef<ReturnType<typeof createHTTPFuzzerRun> | null>(null)
 
   const resetResponse = useMemoizedFn(() => {
-    streamRunRef.current?.reset()
+    // 每次发送都换一个新 token：token 变化会触发流监听 effect 重挂，旧流的迟到
+    // error/end 落在旧频道上无人接收，不会再终止新请求；dispose 让旧 run 立即失效
+    streamRunRef.current?.dispose()
+    tokenRef.current = randomString(60)
+    setStreamToken(tokenRef.current)
     taskIDRef.current = ''
     dCountRef.current = 0
     reset()
@@ -1476,7 +1480,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
   })
   const dCountRef = useRef<number>(0)
-  const tokenRef = useRef<string>(randomString(60))
+  const [streamToken, setStreamToken] = useState<string>(() => randomString(60))
+  const tokenRef = useRef<string>(streamToken)
   const taskIDRef = useRef<string>('')
   const runtimeIdRef = useRef<string>('')
   /**
@@ -1764,7 +1769,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       ipcRenderer.removeAllListeners(dataToken)
       ipcRenderer.removeAllListeners(endToken)
     }
-  }, [])
+  }, [streamToken])
 
   const [extractedMap, { setAll, reset }] = useMap<string, string>()
   useEffect(() => {
