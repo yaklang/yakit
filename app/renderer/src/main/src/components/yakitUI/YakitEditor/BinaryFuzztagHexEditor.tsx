@@ -13,11 +13,12 @@ import { warn } from '@/utils/notification'
 import styles from './BinaryFuzztagModal.module.scss'
 
 type EditMode = 'insert' | 'replace'
-type InputFormat = 'hex' | 'ascii'
+type InputFormat = 'hex' | 'ascii' | 'base64'
 
 const INPUT_PLACEHOLDER: Record<InputFormat, string> = {
   hex: '如 ffd8ff..(偶数位hex)',
   ascii: '直接输入文本',
+  base64: '如 aGVsbG8=..(Base64)',
 }
 
 const HEX_BYTE_WIDTH = 20
@@ -246,6 +247,19 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
       }
       return arr
     }
+    if (inputFormat === 'base64') {
+      const b64 = inputValue.replace(/\s+/g, '')
+      if (b64.length === 0) {
+        return new Uint8Array()
+      }
+      try {
+        const bin = atob(b64)
+        return Uint8Array.from(bin, (ch) => ch.charCodeAt(0))
+      } catch {
+        warn('invalid base64 input')
+        return null
+      }
+    }
     return new TextEncoder().encode(inputValue)
   }
 
@@ -421,6 +435,7 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
                 options={[
                   { label: 'HEX', value: 'hex' },
                   { label: 'ASCII', value: 'ascii' },
+                  { label: 'Base64', value: 'base64' },
                 ]}
               />
               <YakitInput.TextArea

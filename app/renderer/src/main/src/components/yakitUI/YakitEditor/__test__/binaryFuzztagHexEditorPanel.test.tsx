@@ -61,8 +61,17 @@ vi.mock('@/components/yakitUI/YakitInput/YakitInput', async () => {
     YakitInput: Object.assign((props: any) => <input {...props} />, { TextArea }),
   }
 })
+// RadioButtons mock：渲染可点击的 options 按钮，onChange 以 antd Radio.Group 的 e.target.value 形态触发
 vi.mock('@/components/yakitUI/YakitRadioButtons/YakitRadioButtons', () => ({
-  YakitRadioButtons: () => <div />,
+  YakitRadioButtons: ({ options, onChange }: any) => (
+    <div>
+      {options.map((o: any) => (
+        <button key={o.value} type="button" onClick={() => onChange({ target: { value: o.value } })}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  ),
 }))
 vi.mock('@/components/yakitUI/YakitSegmented/YakitSegmented', () => ({
   YakitSegmented: ({ value, options, onChange }: any) => (
@@ -175,6 +184,18 @@ describe('BinaryFuzztagHexEditor 编辑面板交互', () => {
     fireEvent.change(ta, { target: { value: 'ff' } })
     fireEvent.click(screen.getByRole('button', { name: '插入' }))
     await waitFor(() => expect(Array.from(dataRef.current)).toEqual([0xff]))
+  })
+
+  it('面板切 Base64 输入解码后替换选中字节', async () => {
+    const dataRef = makeDataRef([0x41, 0x42, 0x43, 0x44])
+    render(<BinaryFuzztagHexEditor dataRef={dataRef} onChange={() => {}} />)
+    fireEvent.contextMenu(byteAt(1))
+    await screen.findByRole('textbox')
+    fireEvent.click(screen.getByRole('button', { name: 'Base64' }))
+    // '/w==' 是单字节 0xff 的 Base64
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '/w==' } })
+    fireEvent.click(screen.getByRole('button', { name: '替换' }))
+    await waitFor(() => expect(Array.from(dataRef.current)).toEqual([0x41, 0xff, 0x43, 0x44]))
   })
 
   it('面板插入模式在选区字节前插入输入', async () => {
