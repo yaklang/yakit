@@ -158,6 +158,85 @@ const expectModelRequest = (Type: string) =>
   })
 
 describe('AIModelSelect', () => {
+  it('将非空连接字段和 Provider 扩展参数透传给模型列表请求', async () => {
+    const currentModel = config.IntelligentModels[0]
+    config = {
+      ...config,
+      IntelligentModels: [
+        {
+          ...currentModel,
+          ExtraParams: [{ Key: 'isBuildin', Value: 'true' }],
+          Provider: {
+            ...currentModel.Provider,
+            APIType: 'responses',
+            BaseURL: 'https://gateway.example.test/custom/v1',
+            Endpoint: '/deployment/models',
+            EnableEndpoint: true,
+            Headers: [{ Key: 'X-Tenant', Value: 'tenant-a' }],
+            ExtraParams: [{ Key: 'api_version', Value: '2026-01-01' }],
+          },
+        },
+        config.IntelligentModels[1],
+      ],
+    }
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
+
+    await openModels()
+
+    expect(mocks.names).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(mocks.names.mock.calls[0][0].Config)).toEqual({
+      Type: 'current-provider',
+      api_key: 'test-key',
+      api_type: 'responses',
+      domain: 'models.test',
+      no_https: true,
+      proxy: 'http://proxy.test',
+      base_url: 'https://gateway.example.test/custom/v1',
+      endpoint: '/deployment/models',
+      enable_endpoint: true,
+      Headers: [{ Key: 'X-Tenant', Value: 'tenant-a' }],
+      ExtraParams: [{ Key: 'api_version', Value: '2026-01-01' }],
+    })
+  })
+
+  it('只改变 BaseURL 时重新请求模型列表，不沿用旧地址的结果', async () => {
+    config = {
+      ...config,
+      IntelligentModels: [
+        {
+          ...config.IntelligentModels[0],
+          Provider: { ...config.IntelligentModels[0].Provider, BaseURL: 'https://first.example.test/v1' },
+        },
+      ],
+    }
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
+    const dropdown = await openModels()
+    expect(JSON.parse(mocks.names.mock.calls[0][0].Config).base_url).toBe('https://first.example.test/v1')
+    mocks.names.mockResolvedValueOnce({ ModelName: ['second-server-model'] })
+
+    act(() =>
+      useAIGlobalConfigStore.getState().setAIGlobalConfig({
+        ...config,
+        IntelligentModels: [
+          {
+            ...config.IntelligentModels[0],
+            Provider: { ...config.IntelligentModels[0].Provider, BaseURL: 'https://second.example.test/v1' },
+          },
+        ],
+      }),
+    )
+
+    expect(await within(dropdown).findByRole('option', { name: 'second-server-model' })).toBeVisible()
+    expect(mocks.names).toHaveBeenCalledTimes(2)
+    const firstRequest = JSON.parse(mocks.names.mock.calls[0][0].Config)
+    expect(JSON.parse(mocks.names.mock.calls[1][0].Config)).toEqual({
+      ...firstRequest,
+      base_url: 'https://second.example.test/v1',
+    })
+    expect(within(dropdown).queryByRole('option', { name: 'remote-model-1' })).not.toBeInTheDocument()
+    expect(mocks.save).not.toHaveBeenCalled()
+  })
+
   it('用当前显示模型的连接配置调用 grpcListAiModel，下拉只展示响应中的名称', async () => {
     render(<AIModelSelect />)
     expect(await screen.findByTestId('selected-model')).toHaveTextContent('configured-a')
