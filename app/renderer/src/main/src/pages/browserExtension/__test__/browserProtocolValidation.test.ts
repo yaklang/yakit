@@ -170,23 +170,6 @@ describe('browser protocol runtime validation', () => {
     ).toThrow('数组或空值')
   })
 
-  it('rejects malformed typed capability records before component callbacks run', () => {
-    expect(() =>
-      decodeBrowserTaskResult(
-        'capability.call',
-        { method: 'browser.recording.get' },
-        JSON.stringify({ events: [null], traces: [], links: [], callables: [], profileCandidates: [] }),
-      ),
-    ).toThrow('$.events[0]')
-    expect(() =>
-      decodeBrowserTaskResult(
-        'capability.call',
-        { method: 'browser.profile.validation.latest' },
-        JSON.stringify({ contractVersion: 1, id: 'draft-1' }),
-      ),
-    ).toThrow('$.profile')
-  })
-
   it('rejects prototype-pollution keys', () => {
     expect(() =>
       decodeBrowserTaskResult(

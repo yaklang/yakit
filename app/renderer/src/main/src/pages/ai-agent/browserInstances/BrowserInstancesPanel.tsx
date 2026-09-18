@@ -237,18 +237,9 @@ const BrowserCardPreview: React.FC<{
 
 const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instance }) => {
   const [focusing, setFocusing] = useState(false)
-  const [editing, setEditing] = useState(false)
-  const [editingName, setEditingName] = useState(instance.name)
-  const [mutating, setMutating] = useState(false)
-  const nameInputRef = useRef<InputRef>(null)
   const thumbnailKey = thumbnailCacheKey(instance)
   const thumbnailRequestId = useRef(0)
   const [thumbnail, setThumbnail] = useState<AIBrowserThumbnail | undefined>(() => thumbnailCache.get(thumbnailKey))
-  useEffect(() => {
-    if (!editing) return
-    const timer = window.setTimeout(() => nameInputRef.current?.focus({ cursor: 'all' }), 50)
-    return () => window.clearTimeout(timer)
-  }, [editing])
   const canFocus = Boolean(
     instance.online && instance.tab && (instance.connection?.capabilities || []).includes('browser.takeover'),
   )
@@ -320,38 +311,14 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
     }
   }, [canThumbnail, thumbnailKey, refreshThumbnail])
 
-  const saveName = useMemoizedFn(async () => {
-    if (!editingName.trim() || editingName.trim() === instance.name) {
-      setEditing(false)
-      setEditingName(instance.name)
-      return
-    }
-    setMutating(true)
-    try {
-      await renameBrowserDevice(instance.id, editingName)
-      setEditing(false)
-    } catch (error) {
-      failed(i18n.t('aiAgent:BrowserInstances.renameFailed', { error: `${error}` }))
-    } finally {
-      setMutating(false)
-    }
-  })
-
   const productLabel = browserProductLabel(instance)
   const moreMenu = (
     <YakitDropdownMenu
       menu={{
         width: 136,
         data: [
-          // 使用中暂不支持重命名
-          // {
-          //   key: 'rename',
-          //   label: i18n.t('aiAgent:BrowserInstances.rename'),
-          //   itemIcon: <PencilOutlined color="currentColor" />,
-          // },
           ...(canClose
             ? [
-                // { type: 'divider' as const },
                 {
                   key: 'close',
                   label: i18n.t('aiAgent:BrowserInstances.close'),
@@ -363,10 +330,6 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
         ],
         onClick: ({ key }) => {
           if (key === 'close') confirmClose()
-          // if (key === 'rename') {
-          //   setEditingName(instance.name)
-          //   setEditing(true)
-          // }
         },
       }}
       dropdown={{ trigger: ['click'], placement: 'bottomRight' }}
@@ -394,60 +357,25 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
       </BrowserPreviewPopover>
       <div className={styles['card-body']}>
         <div className={styles['card-header']}>
-          {editing ? (
-            <YakitInput
-              ref={nameInputRef}
-              size="small"
-              wrapperClassName={styles['name-input']}
-              value={editingName}
-              maxLength={80}
-              autoFocus
-              onChange={(event) => setEditingName(event.target.value)}
-              onPressEnter={() => void saveName()}
-            />
-          ) : (
-            <span className={styles['instance-title']} title={instance.tab?.title || instance.name}>
-              {instance.tab?.title || instance.name}
-            </span>
-          )}
+          <span className={styles['instance-title']} title={instance.tab?.title || instance.name}>
+            {instance.tab?.title || instance.name}
+          </span>
           <div className={styles['card-actions']}>
-            {editing ? (
-              <>
-                <YakitButton
-                  type="text2"
-                  icon={<XOutlined color="currentColor" />}
-                  disabled={mutating}
-                  onClick={() => {
-                    setEditingName(instance.name)
-                    setEditing(false)
-                  }}
-                />
-                <YakitButton
-                  type="text2"
-                  icon={<CheckOutlined color="currentColor" />}
-                  loading={mutating}
-                  onClick={() => void saveName()}
-                />
-              </>
-            ) : (
-              <>
-                <YakitButton
-                  type="text2"
-                  icon={<PaperAirplaneOutlined color="currentColor" />}
-                  aria-label={i18n.t('aiAgent:BrowserInstances.reference')}
-                  onClick={() => insertBrowserInstanceMention(instance)}
-                />
-                <YakitButton
-                  type="text2"
-                  icon={<PositionOutlined color="currentColor" />}
-                  disabled={!canFocus}
-                  loading={focusing}
-                  aria-label={i18n.t('aiAgent:BrowserInstances.focus')}
-                  onClick={focusBrowser}
-                />
-                {moreMenu}
-              </>
-            )}
+            <YakitButton
+              type="text2"
+              icon={<PaperAirplaneOutlined color="currentColor" />}
+              aria-label={i18n.t('aiAgent:BrowserInstances.reference')}
+              onClick={() => insertBrowserInstanceMention(instance)}
+            />
+            <YakitButton
+              type="text2"
+              icon={<PositionOutlined color="currentColor" />}
+              disabled={!canFocus}
+              loading={focusing}
+              aria-label={i18n.t('aiAgent:BrowserInstances.focus')}
+              onClick={focusBrowser}
+            />
+            {moreMenu}
           </div>
         </div>
         <div className={styles['instance-url-row']} title={instance.tab?.url || instance.origin}>

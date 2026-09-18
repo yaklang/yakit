@@ -42,11 +42,6 @@ export interface AIBrowserInstance {
   tab?: AIBrowserTabPreview
 }
 
-export const browserInstanceDisplayName = (instance: AIBrowserInstance) =>
-  instance.identity
-    ? `${instance.identity} · ${instance.tab?.title || instance.name}`
-    : instance.tab?.title || instance.name
-
 export const browserInstanceMentionName = (instance: AIBrowserInstance) => `${instance.identity || instance.name}`
 
 export const formatLastSeen = (timestamp: number) => {

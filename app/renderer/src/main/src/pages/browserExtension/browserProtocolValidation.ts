@@ -391,19 +391,6 @@ export function validateBrowserTaskEvent(input: unknown): ValidatedBrowserTaskEv
   } as unknown as ValidatedBrowserTaskEvent
 }
 
-function normalizeIsolationInspection(value: unknown, schema: string): JSONObject {
-  const result = objectValue(value, schema, '$')
-  requiredString(result, 'browser', schema, '$')
-  objectValue(result.capabilities, schema, '$.capabilities')
-  return {
-    ...result,
-    contexts: collection(result, 'contexts', schema, '$').map((item, index) =>
-      objectValue(item, schema, `$.contexts[${index}]`),
-    ),
-    tabs: collection(result, 'tabs', schema, '$').map((item, index) => objectValue(item, schema, `$.tabs[${index}]`)),
-  }
-}
-
 function normalizeCapabilityResult(method: string, value: unknown): unknown {
   const schema = `capability.${method || 'unknown'}`
   const objectList = (input: unknown, normalize?: (item: JSONObject, path: string) => JSONObject): JSONObject[] => {
@@ -430,48 +417,13 @@ function normalizeCapabilityResult(method: string, value: unknown): unknown {
       response: { ...response, nodes: collection(response, 'nodes', schema, `${path}.response`) },
     }
   }
+  // 仅保留产品实际调用的 capability 结果规范化
   if (method === 'browser.transform.profile.list') return objectList(value, normalizeProfile)
-  if (['browser.tabs', 'browser.isolation.container.list', 'browser.callable.list'].includes(method)) {
-    return objectList(value)
-  }
+  if (method === 'browser.tabs') return objectList(value)
   if (method.endsWith('.list')) {
     if (value === undefined || value === null) return []
     if (!Array.isArray(value)) fail(schema, '$', '数组或空值')
     return value
-  }
-  if (method === 'browser.isolation.inspect') return normalizeIsolationInspection(value, schema)
-  if (method === 'browser.recording.get') {
-    const result = objectValue(value, schema, '$')
-    const records = (key: string) =>
-      collection(result, key, schema, '$').map((item, index) => objectValue(item, schema, `$.${key}[${index}]`))
-    return {
-      ...result,
-      events: records('events'),
-      traces: records('traces'),
-      links: records('links'),
-      callables: records('callables'),
-      profileCandidates: records('profileCandidates'),
-    }
-  }
-  if (method === 'browser.transform.profile.save') {
-    return normalizeProfile(objectValue(value, schema, '$'), '$')
-  }
-  if (method === 'browser.isolation.container.open') {
-    const result = objectValue(value, schema, '$')
-    const container = objectValue(result.container, schema, '$.container')
-    requiredString(container, 'cookieStoreId', schema, '$.container')
-    requiredString(container, 'name', schema, '$.container')
-    return { ...result, container }
-  }
-  if (method === 'browser.profile.validation.latest') {
-    if (value === undefined || value === null) return null
-    const result = objectValue(value, schema, '$')
-    requiredNumber(result, 'contractVersion', schema, '$')
-    requiredString(result, 'id', schema, '$')
-    const profile = objectValue(result.profile, schema, '$.profile')
-    objectValue(profile.target, schema, '$.profile.target')
-    requiredString(profile, 'failMode', schema, '$.profile')
-    return { ...result, profile }
   }
   return value
 }

@@ -743,22 +743,6 @@ declare global {
     pid?: number
   }
 
-  interface YakitManagedBrowserProfileDefaults {
-    version: 1
-    chromePath: string
-    extensionPath: string
-    profileRoot: string
-    maximumProfiles: number
-  }
-
-  interface YakitManagedBrowserProfileCreateInput {
-    slotHint: YakitManagedBrowserProfileSlot
-    name: string
-    extensionPath: string
-    chromePath?: string
-    startingUrl?: string
-  }
-
   interface YakitBrowserExtensionYakURLRequest {
     Method: string
     Url: {
@@ -872,13 +856,7 @@ declare global {
       generateInstallScript: () => Promise<string>
     }
     managedBrowser: {
-      defaults: () => Promise<YakitManagedBrowserProfileDefaults>
       list: () => Promise<YakitManagedBrowserProfile[]>
-      create: (input: YakitManagedBrowserProfileCreateInput) => Promise<YakitManagedBrowserProfile>
-      bind: (id: string, installationId: string) => Promise<YakitManagedBrowserProfile>
-      launch: (id: string, options?: { showExtensionPage?: boolean }) => Promise<YakitManagedBrowserProfile>
-      stop: (id: string) => Promise<YakitManagedBrowserProfile>
-      remove: (id: string) => Promise<{ removed: boolean; id: string }>
     }
     browserExtension: {
       requestYakURL: (params: YakitBrowserExtensionYakURLRequest) => Promise<unknown>

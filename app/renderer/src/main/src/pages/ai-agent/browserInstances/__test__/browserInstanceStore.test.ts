@@ -9,7 +9,6 @@ vi.mock('@/pages/browserExtension/browserExtensionClient', () => ({
 }))
 
 import {
-  browserInstanceDisplayName,
   browserInstanceMentionName,
   formatLastSeen,
   normalizeBrowserInstances,
@@ -143,25 +142,6 @@ describe('browser instance presentation', () => {
     expect(instances.find((item) => item.id === 'device-c')).toMatchObject({ identity: 'C' })
     expect(instances.find((item) => item.id === 'device-external')?.identity).toBeUndefined()
     expect(browserInstanceMentionName(instances.find((item) => item.id === 'device-c')!)).toBe('C')
-  })
-
-  it('uses the current tab title instead of the generic extension name', () => {
-    expect(
-      browserInstanceDisplayName({
-        id: 'device-a',
-        installationId: 'install-a',
-        name: 'Chrome Browser',
-        client: 'extension',
-        clientVersion: '1.0.0',
-        origin: 'chrome-extension://a',
-        createdAt: 1,
-        lastSeenAt: 2,
-        online: true,
-        running: false,
-        identity: 'A',
-        tab: { id: 1, title: '哔哩哔哩首页', url: 'https://www.bilibili.com/' },
-      }),
-    ).toBe('A · 哔哩哔哩首页')
   })
 
   it('does not request a thumbnail for a background tab', async () => {

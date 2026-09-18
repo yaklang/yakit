@@ -40,15 +40,8 @@
       "executed": "已執行",
       "loadFailed": "載入失敗"
     },
-    "owner": {
-      "unknown": "執行方未記錄",
-      "page": "瀏覽器頁面",
-      "extension": "瀏覽器插件",
-      "engine": "Yak 引擎"
-    },
     "title": "瀏覽器插件 · 明文網關",
     "browser": "實例 {{ref}}",
-    "ownership": "AI 提交測試資料；瀏覽器插件呼叫頁面函數完成轉換；Yak 引擎傳送並儲存流量。",
     "request": "請求轉換",
     "response": "響應轉換",
     "unknown": "此記錄未儲存詳細轉換證據，僅展示已儲存的資料包；不能據此認定已加密或解密。",
@@ -58,7 +51,6 @@
     "loadFailed": "轉換證據載入失敗，仍可查看已儲存的資料包。",
     "responseEnabled": "響應轉換已啟用",
     "responseDisabled": "響應未轉換",
-    "steps": "查看插件執行步驟與欄位映射",
     "requestBefore": "提交給網關的請求",
     "requestAfter": "實際發往伺服器的請求",
     "responseBefore": "伺服器原始響應",

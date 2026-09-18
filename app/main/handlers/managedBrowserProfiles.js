@@ -13,13 +13,7 @@ const PROFILE_NAME_CONTROL_TEST_PATTERN = /[\u0000-\u001f\u007f]/
 const YAKIT_BROWSER_AGENT_EXTENSION_ID = 'mcnaombmlombekhbonfndagbcfhmoail'
 
 const IPC_CHANNELS = {
-  defaults: 'GetManagedBrowserProfileDefaults',
   list: 'ListManagedBrowserProfiles',
-  create: 'CreateManagedBrowserProfile',
-  bind: 'BindManagedBrowserProfile',
-  launch: 'LaunchManagedBrowserProfile',
-  stop: 'StopManagedBrowserProfile',
-  remove: 'RemoveManagedBrowserProfile',
 }
 
 function normalizeManagedProfileName(value) {
@@ -347,36 +341,6 @@ class ManagedBrowserProfileManager {
       .map((record) => this.view(record))
   }
 
-  defaults() {
-    let chromePath = ''
-    try {
-      const candidate = this.chromePathResolver()
-      if (candidate) chromePath = validateChromeExecutable(this.fs, candidate)
-    } catch (error) {
-      chromePath = ''
-    }
-    let extensionPath = `${process.env.YAKIT_BROWSER_EXTENSION_PATH || ''}`.trim()
-    if (!extensionPath) {
-      extensionPath =
-        this.records
-          .slice()
-          .sort((left, right) => (right.updatedAt || 0) - (left.updatedAt || 0))
-          .find((record) => this.fs.existsSync(record.extensionPath))?.extensionPath || ''
-    }
-    try {
-      if (extensionPath) extensionPath = validateManagedExtensionPath(this.fs, extensionPath)
-    } catch (error) {
-      extensionPath = ''
-    }
-    return {
-      version: PROFILE_STORE_VERSION,
-      chromePath,
-      extensionPath,
-      profileRoot: this.profilesDir,
-      maximumProfiles: MAX_MANAGED_PROFILES,
-    }
-  }
-
   create(input) {
     this.refreshStoppedRecords()
     if (this.records.length >= MAX_MANAGED_PROFILES) {
@@ -547,17 +511,7 @@ function registerManagedBrowserProfileHandlers({ ipcMain, rootDir, assertTrusted
       return callback(...args)
     })
   }
-  handle(IPC_CHANNELS.defaults, () => sharedManager.defaults())
   handle(IPC_CHANNELS.list, () => sharedManager.list())
-  handle(IPC_CHANNELS.create, (input) => sharedManager.create(input))
-  handle(IPC_CHANNELS.bind, (input) => sharedManager.bind(input?.id, input?.installationId))
-  handle(IPC_CHANNELS.launch, (input) =>
-    sharedManager.launch(input?.id, {
-      showExtensionPage: input?.showExtensionPage === true,
-    }),
-  )
-  handle(IPC_CHANNELS.stop, (input) => sharedManager.stop(input?.id))
-  handle(IPC_CHANNELS.remove, (input) => sharedManager.remove(input?.id))
   return sharedManager
 }
 

@@ -20,7 +20,6 @@ export enum DeleteSessionsAISourceEnum {
   irify = AISourceEnum.irify,
   irifyRuleGen = AISourceEnum.irifyRuleGen,
   yakRunner = AISourceEnum.yakRunner,
-  browserExtension = AISourceEnum.browserExtension,
   im = AISourceEnum.im,
   other = AISourceEnum.other,
   lark = 'im-Lark', //飞书

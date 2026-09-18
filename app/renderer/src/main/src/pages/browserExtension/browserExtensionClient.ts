@@ -9,7 +9,7 @@ import {
   validateBrowserTaskEvent,
 } from './browserProtocolValidation'
 
-export type BrowserCapabilityDomain =
+type BrowserCapabilityDomain =
   | 'system'
   | 'page'
   | 'isolation'
@@ -22,14 +22,14 @@ export type BrowserCapabilityDomain =
   | 'transform'
   | 'proxy'
 
-export type BrowserCapabilityAccess = 'read' | 'sensitive-read' | 'write' | 'control' | 'execute' | 'dangerous'
+type BrowserCapabilityAccess = 'read' | 'sensitive-read' | 'write' | 'control' | 'execute' | 'dangerous'
 
-export interface BrowserCapabilityScopeCondition {
+interface BrowserCapabilityScopeCondition {
   scope: string
   when: string
 }
 
-export interface BrowserCapabilityDescriptor {
+interface BrowserCapabilityDescriptor {
   method: string
   domain: BrowserCapabilityDomain
   access: BrowserCapabilityAccess
@@ -42,7 +42,7 @@ export interface BrowserCapabilityDescriptor {
   paramsSchema: Record<string, unknown>
 }
 
-export interface BrowserCapabilityCatalog {
+interface BrowserCapabilityCatalog {
   version: number
   schemaDialect: 'http://json-schema.org/draft-07/schema#'
   hash: string

@@ -168,17 +168,7 @@ process.on('loaded', function () {
       generateInstallScript: () => invoke('generate-install-script'),
     },
     managedBrowser: {
-      defaults: () => invoke('GetManagedBrowserProfileDefaults'),
       list: () => invoke('ListManagedBrowserProfiles'),
-      create: (input) => invoke('CreateManagedBrowserProfile', input),
-      bind: (id, installationId) => invoke('BindManagedBrowserProfile', { id, installationId }),
-      launch: (id, options = {}) =>
-        invoke('LaunchManagedBrowserProfile', {
-          id,
-          showExtensionPage: options.showExtensionPage === true,
-        }),
-      stop: (id) => invoke('StopManagedBrowserProfile', { id }),
-      remove: (id) => invoke('RemoveManagedBrowserProfile', { id }),
     },
     browserExtension: {
       requestYakURL: (params) => invoke('RequestYakURL', params),

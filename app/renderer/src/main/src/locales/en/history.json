@@ -40,15 +40,8 @@
       "executed": "Executed",
       "loadFailed": "Load failed"
     },
-    "owner": {
-      "unknown": "Owner not recorded",
-      "page": "Browser page",
-      "extension": "Browser extension",
-      "engine": "Yak engine"
-    },
     "title": "Browser extension · Plaintext gateway",
     "browser": "Browser {{ref}}",
-    "ownership": "AI supplies test data; the browser extension calls page functions to transform it; the Yak engine sends and records HTTP traffic.",
     "request": "Request transformation",
     "response": "Response transformation",
     "unknown": "Detailed transformation evidence was not saved. Packet differences alone do not prove encryption or decryption.",
@@ -58,7 +51,6 @@
     "loadFailed": "Could not load transformation evidence. Saved packets remain available.",
     "responseEnabled": "Response transformation enabled",
     "responseDisabled": "Response not transformed",
-    "steps": "View extension steps and field mappings",
     "requestBefore": "Request submitted to the gateway",
     "requestAfter": "Request sent to the server",
     "responseBefore": "Original server response",

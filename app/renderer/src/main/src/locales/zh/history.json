@@ -40,15 +40,8 @@
       "executed": "已执行",
       "loadFailed": "加载失败"
     },
-    "owner": {
-      "unknown": "执行方未记录",
-      "page": "浏览器页面",
-      "extension": "浏览器插件",
-      "engine": "Yak 引擎"
-    },
     "title": "浏览器插件 · 明文网关",
     "browser": "实例 {{ref}}",
-    "ownership": "AI 提交测试数据；浏览器插件调用页面函数完成转换；Yak 引擎发送并保存流量。",
     "request": "请求转换",
     "response": "响应转换",
     "unknown": "此记录未保存详细转换证据，仅展示已保存的数据包；不能据此认定已加密或解密。",
@@ -58,7 +51,6 @@
     "loadFailed": "转换证据加载失败，仍可查看已保存的数据包。",
     "responseEnabled": "响应转换已启用",
     "responseDisabled": "响应未转换",
-    "steps": "查看插件执行步骤与字段映射",
     "requestBefore": "提交给网关的请求",
     "requestAfter": "实际发往服务器的请求",
     "responseBefore": "服务器原始响应",

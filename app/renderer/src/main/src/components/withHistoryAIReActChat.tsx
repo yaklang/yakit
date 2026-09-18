@@ -22,13 +22,7 @@ import type {
   AISendParams,
   AISendResProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import {
-  AITaskStatus,
-  type AIAgentGrpcApi,
-  type AIInputEvent,
-  type AIOutputEvent,
-  type AISource,
-} from '@/pages/ai-re-act/hooks/grpcApi'
+import { AITaskStatus, type AIAgentGrpcApi, type AIInputEvent, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute, type YakitRouteType } from '@/enums/yakitRoute'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
@@ -192,8 +186,6 @@ export interface HistoryAIReActChatProviderProps {
   resolveStartExtraParams?: (data: AIHandleStartParams) => AIHandleStartExtraProps
   /** 远程 setting 写入前合并，如知识库保留 TimelineSessionID */
   mergeRemoteAIAgentSetting?: (cache: AIAgentSetting, prev: AIAgentSetting) => AIAgentSetting
-  /** 观察原始 AI 输出事件，用于构建不依赖聊天文案的业务状态 */
-  onAIOutputEvent?: (event: AIOutputEvent, content: string) => void
 }
 
 export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProviderInner({
@@ -205,7 +197,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   transformInputEvent,
   resolveStartExtraParams,
   mergeRemoteAIAgentSetting,
-  onAIOutputEvent,
 }: HistoryAIReActChatProviderProps) {
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
@@ -362,7 +353,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     pushAIFuzzStatusRuntimeIdToWebFuzzerPage(pageId, runtimeId, { source: 'auto' })
   })
 
-  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId, onAIOutputEvent)
+  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
 
   const store = globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
   const casualLoading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
