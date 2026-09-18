@@ -133,6 +133,7 @@
     "ruleSummary": "Rule Summary",
     "ruleGenerate": "Rule Generation",
     "globalFilterFn": "Global Filter Function",
+    "cHeaders": "C Headers",
     "codeScan": "Code Scan",
     "compileProject": "Compile Project",
     "recompile": "Recompile",
@@ -187,5 +188,25 @@
     "jumpToScanFailed": "Failed to jump to code scan page: {{error}}",
     "openProject": "Open Project",
     "compileHistory": "Compile History"
+  },
+  "CHeaderManager": {
+    "loadingDir": "Loading C headers directory…",
+    "addZip": "Add Zip Header Pack",
+    "addFolder": "Import Header Folder",
+    "searchPlaceholder": "Search packs or file names",
+    "emptyTitle": "No C Headers",
+    "emptyDesc": "C project compiles look for system headers here (top-level zip supported). Place CRT / Windows SDK header packs in this directory.",
+    "searchEmptyTitle": "No matching headers",
+    "searchEmptyDesc": "Try a different keyword",
+    "importSuccess": "Imported successfully",
+    "importFailed": "Import failed",
+    "deleteSuccess": "Deleted {{name}}",
+    "deleteFailed": "Delete failed",
+    "deleteConfirm": "Delete {{name}}?",
+    "truncated": "File is large; only part of the content is shown",
+    "downloadOfficial": "Download official header pack",
+    "downloadSuccess": "Official header pack downloaded{{version}}",
+    "downloadFailed": "Failed to download official header pack",
+    "downloadOverwrite": "c-std-headers.zip already exists. Overwrite it?"
   }
 }
