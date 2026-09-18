@@ -18,17 +18,18 @@
   min-height: 0;
   padding: clamp(30px, 5vh, 58px) clamp(28px, 4vw, 72px) 34px;
   display: grid;
-  grid-template-columns: minmax(300px, 430px) minmax(380px, 510px);
+  grid-template-columns: minmax(360px, 560px) minmax(320px, 460px);
+  grid-template-areas: 'intro agents' 'input agents';
   grid-template-rows: auto auto;
   align-content: center;
+  align-items: start;
   justify-content: center;
   column-gap: clamp(24px, 3vw, 48px);
   row-gap: 18px;
   overflow: auto;
   background:
     radial-gradient(circle at 50% -6%, rgba(46, 143, 246, 0.11), transparent 40%),
-    radial-gradient(circle at 88% 56%, rgba(89, 179, 255, 0.055), transparent 30%),
-    var(--Colors-Use-Basic-Background);
+    radial-gradient(circle at 88% 56%, rgba(89, 179, 255, 0.055), transparent 30%), var(--Colors-Use-Basic-Background);
 
   .content-copy {
     position: absolute;
@@ -39,6 +40,7 @@
 }
 
 .employee-welcome-copy {
+  grid-area: intro;
   min-width: 0;
   padding-left: 18px;
   text-align: left;
@@ -96,9 +98,15 @@
   }
 }
 
+.employee-agent-wrapper {
+  grid-area: agents;
+  min-width: 0;
+}
+
 .employee-input-wrapper {
-  grid-column: 1 / -1;
-  width: min(940px, 100%);
+  grid-area: input;
+  min-width: 0;
+  width: 100%;
   margin: 2px auto 0;
   padding: 8px;
   border: 1px solid rgba(76, 143, 214, 0.15);
@@ -112,6 +120,7 @@
 @media (max-width: 1060px) {
   .employee-chat-welcome {
     grid-template-columns: minmax(0, 820px);
+    grid-template-areas: 'intro' 'input' 'agents';
     row-gap: 14px;
   }
 

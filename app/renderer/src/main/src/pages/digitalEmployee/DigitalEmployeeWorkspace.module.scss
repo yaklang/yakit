@@ -428,6 +428,11 @@
   }
 }
 
+.agent-selector-search {
+  flex: 0 0 auto;
+  margin-bottom: 12px;
+}
+
 .agent-selector-list {
   min-height: 0;
   max-height: clamp(220px, 38vh, 340px);

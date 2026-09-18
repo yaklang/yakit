@@ -226,6 +226,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     const aiMilkdownInputRef = useRef<AIMilkdownInputRef>(null)
     const handleSubmit = useMemoizedFn(() => {
+      if (props.submitDisabled) return
       const qs = getMarkdownValue()
       if (!qs.trim() || !editorMilkdown.current) return
       const { mentions, imageList, httpFlowList, codeBlockList, plainText } = extractDataWithMilkdown(
@@ -548,7 +549,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 className={styles['round-btn']}
                 radius="50%"
                 loading={loading}
-                disabled={disabled}
+                disabled={disabled || props.submitDisabled}
                 icon={<OutlineArrowupIcon />}
                 onClick={(e) => {
                   e.stopPropagation()

@@ -60,6 +60,8 @@ export interface AIChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>
   /** 提交按钮的 loading 状态 */
   loading?: boolean
+  /** 保留输入内容，但暂时禁止按钮和快捷键提交 */
+  submitDisabled?: boolean
   /**输入框左下角 */
   inputFooterLeft?: ReactNode
   /**输入框右下角 */

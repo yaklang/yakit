@@ -130,14 +130,19 @@ export const DigitalEmployeeProvider: React.FC<DigitalEmployeeProviderProps> = (
     return EMPLOYEES.find((employee) => employee.id === selectedId)
   }, [selectedId])
 
-  const selectedAgent = useMemo(() => {
-    return agents.find((agent) => agent.Id === selectedAgentId)
-  }, [agents, selectedAgentId])
-
   const roleAgents = useMemo(() => {
     if (!selectedId) return []
     return agents.filter((agent) => getDigitalEmployeeRoleId(agent) === selectedId)
   }, [agents, selectedId])
+
+  const selectedAgent = useMemo(() => {
+    return roleAgents.find((agent) => agent.Id === selectedAgentId) || roleAgents[0]
+  }, [roleAgents, selectedAgentId])
+
+  // 固定首次默认选择；列表刷新或重排时保留仍属于当前角色的选择。
+  useEffect(() => {
+    setSelectedAgentId(selectedAgent?.Id)
+  }, [selectedAgent?.Id])
 
   const unassignedAgents = useMemo(() => {
     return agents.filter((agent) => !getDigitalEmployeeRoleId(agent))

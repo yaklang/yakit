@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
@@ -7,6 +7,7 @@ import aiSenSoLogo from '@/assets/newAssets/ai-senpike-logo-transparent-v2.png'
 import { useDigitalEmployee } from './DigitalEmployeeContext'
 import { getVisibleAgentTags } from './roleAssignment'
 import styles from './DigitalEmployeeWorkspace.module.scss'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 
 export interface DigitalEmployeeSidebarProps {
   detailActive?: boolean
@@ -136,6 +137,21 @@ export const DigitalEmployeeProfile: React.FC = () => {
 export const DigitalEmployeeAgentSelector: React.FC = () => {
   const { roleAgents, selectedAgent, selectedEmployee, loading, error, unassignedAgents, selectAgent, retry } =
     useDigitalEmployee()
+  const [search, setSearch] = useState({ roleId: selectedEmployee?.id, value: '' })
+  const searchValue = search.roleId === selectedEmployee?.id ? search.value : ''
+  const keyword = searchValue.trim().toLocaleLowerCase()
+  const filteredAgents = useMemo(() => {
+    if (!keyword) return roleAgents
+    return roleAgents.filter((agent) =>
+      [agent.ForgeName, agent.ForgeVerboseName, agent.Description, ...getVisibleAgentTags(agent.Tag)].some((value) =>
+        value?.toLocaleLowerCase().includes(keyword),
+      ),
+    )
+  }, [roleAgents, keyword])
+
+  useEffect(() => {
+    setSearch({ roleId: selectedEmployee?.id, value: '' })
+  }, [selectedEmployee?.id])
 
   if (!selectedEmployee) return null
 
@@ -146,8 +162,23 @@ export const DigitalEmployeeAgentSelector: React.FC = () => {
           <strong>选择智能体</strong>
           <span>以下智能体归属于“{selectedEmployee.name}”</span>
         </div>
-        <span>{loading ? '加载中…' : `${roleAgents.length} 个`}</span>
+        <span aria-live="polite">
+          {loading
+            ? '加载中…'
+            : keyword
+              ? `${filteredAgents.length} / ${roleAgents.length} 个`
+              : `${roleAgents.length} 个`}
+        </span>
       </div>
+
+      <YakitInput.Search
+        wrapperClassName={styles['agent-selector-search']}
+        aria-label="搜索当前角色的智能体"
+        placeholder="搜索名称、描述或标签"
+        value={searchValue}
+        onChange={(event) => setSearch({ roleId: selectedEmployee.id, value: event.target.value })}
+        allowClear
+      />
 
       {error ? (
         <div className={styles['agent-selector-empty']}>
@@ -156,14 +187,18 @@ export const DigitalEmployeeAgentSelector: React.FC = () => {
             重新加载
           </button>
         </div>
-      ) : roleAgents.length ? (
+      ) : loading && !roleAgents.length ? (
+        <div className={styles['agent-selector-empty']} role="status">
+          正在加载智能体…
+        </div>
+      ) : filteredAgents.length ? (
         <div
           className={styles['agent-selector-list']}
           role="region"
-          aria-label={`${selectedEmployee.name}的智能体列表，共${roleAgents.length}个`}
+          aria-label={`${selectedEmployee.name}的智能体列表，共${filteredAgents.length}个`}
           tabIndex={0}
         >
-          {roleAgents.map((agent) => {
+          {filteredAgents.map((agent) => {
             const active = agent.Id === selectedAgent?.Id
             const tags = getVisibleAgentTags(agent.Tag)
             return (
@@ -198,6 +233,14 @@ export const DigitalEmployeeAgentSelector: React.FC = () => {
               </button>
             )
           })}
+        </div>
+      ) : roleAgents.length ? (
+        <div className={styles['agent-selector-empty']} role="status">
+          <strong>没有找到匹配的智能体</strong>
+          <span>试试其他关键词，或清空搜索查看全部智能体。</span>
+          <button type="button" onClick={() => setSearch({ roleId: selectedEmployee.id, value: '' })}>
+            清空搜索
+          </button>
         </div>
       ) : (
         <div className={styles['agent-selector-empty']}>

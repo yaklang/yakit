@@ -49,8 +49,7 @@ import useGetAIMaterialsData, { getAIRecommendIconByType } from '@/pages/ai-re-a
 import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import memfitLogo from '@/assets/memfit.jpg'
 import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
-import { getDigitalEmployeeDefaultMention } from '@/pages/digitalEmployee/resolver'
-import { DigitalEmployeeAgentSelector } from '@/pages/digitalEmployee/DigitalEmployeeWorkspace'
+import { DigitalEmployeeChatWelcome } from '@/pages/digitalEmployee/DigitalEmployeeChatWelcome'
 
 // const sideberRadioOptions = [
 //     {
@@ -88,11 +87,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
     const { t, i18n } = useI18nNamespaces(['aiAgent'])
     const { onTriageSubmit, onSetReAct, streams, api } = props
-    const { selectedEmployee, selectedAgent, selectionVersion } = useDigitalEmployee()
-    const defaultEmployeeMentions = useMemo(() => {
-      const mention = getDigitalEmployeeDefaultMention(selectedAgent)
-      return mention ? [mention] : []
-    }, [selectedAgent])
+    const { selectedEmployee } = useDigitalEmployee()
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
@@ -101,16 +96,12 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
       getValue: () => {},
     })
 
-    useImperativeHandle(
-      ref,
-      () => {
-        return {
-          ...aiChatTextareaRef.current,
-          handleStart: () => {},
-        }
-      },
-      [],
-    )
+    useImperativeHandle(ref, () => {
+      return {
+        ...aiChatTextareaRef.current,
+        handleStart: () => {},
+      }
+    }, [])
 
     const [{ randomAIMaterials, randomAIMaterialsData, loadingAIMaterials }, { onRefresh }] = useGetAIMaterialsData()
     // #region 问题相关逻辑
@@ -278,30 +269,11 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 
     if (selectedEmployee) {
       return (
-        <div className={styles['employee-chat-welcome']} ref={welcomeRef}>
-          <div className={styles['employee-welcome-copy']}>
-            <span className={styles['employee-welcome-label']}>AI Senso · {selectedEmployee.name}</span>
-            <h2>{selectedAgent ? '请告诉我，你想做什么？' : '请选择一个智能体开始工作'}</h2>
-            <p>
-              {selectedAgent
-                ? `当前使用“${selectedAgent.ForgeVerboseName || selectedAgent.ForgeName}”协助你完成任务`
-                : '每个数字员工角色可以关联多个智能体，选择后即可开始对话。'}
-            </p>
-          </div>
-          <DigitalEmployeeAgentSelector />
-          {selectedAgent && (
-            <div className={styles['employee-input-wrapper']}>
-              <AIChatTextarea
-                key={`digital-employee-input-${selectionVersion}`}
-                ref={aiChatTextareaRef}
-                onSubmit={handleTriageSubmit}
-                defaultMentions={defaultEmployeeMentions}
-                chatDataStoreKey="aiChatDataStore"
-              />
-            </div>
-          )}
-          <div className={styles['content-copy']}>@2026 亚信安全 · AI Senso 数字员工</div>
-        </div>
+        <DigitalEmployeeChatWelcome
+          welcomeRef={welcomeRef}
+          inputRef={aiChatTextareaRef}
+          onSubmit={handleTriageSubmit}
+        />
       )
     }
 
