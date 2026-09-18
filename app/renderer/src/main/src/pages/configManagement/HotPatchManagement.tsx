@@ -1104,21 +1104,23 @@ export const HotPatchManagement: React.FC = () => {
             )}
           </div>
           <div className={styles['editor-header-right']}>
-            <Tooltip title={t('HotPatchTemplateImportExport.export_single')}>
-              <YakitButton
-                type="text2"
-                icon={<FigmaIcon2017756Outlined />}
-                onClick={() => {
-                  batchExportRef.current?.open({
-                    OutputFilename: selectedTemplate,
-                    Filter: {
-                      Type: activeType,
-                      Name: [selectedTemplate],
-                    },
-                  })
-                }}
-              />
-            </Tooltip>
+            {selectedTemplateSource === 'local' && (
+              <Tooltip title={t('HotPatchTemplateImportExport.export_single')}>
+                <YakitButton
+                  type="text2"
+                  icon={<FigmaIcon2017756Outlined />}
+                  onClick={() => {
+                    batchExportRef.current?.open({
+                      OutputFilename: selectedTemplate,
+                      Filter: {
+                        Type: activeType,
+                        Name: [selectedTemplate],
+                      },
+                    })
+                  }}
+                />
+              </Tooltip>
+            )}
             <YakitButton
               type="text2"
               icon={<FigmaIcon6480193584Outlined />}
