@@ -415,13 +415,6 @@ class ManagedBrowserProfileManager {
     return this.view(record)
   }
 
-  async openURL(record, url) {
-    const userDataDir = this.assertProfileDirectory(record)
-    const child = this.spawnProcess(record.chromePath, [`--user-data-dir=${userDataDir}`, url])
-    await waitForSpawn(child)
-    child.unref?.()
-  }
-
   bind(id, installationId) {
     const record = this.record(id)
     const normalized = `${installationId || ''}`.trim()
@@ -444,15 +437,12 @@ class ManagedBrowserProfileManager {
     this.refreshStoppedRecords()
     const record = this.record(id)
     const currentStatus = this.status(record)
+    // 禁止对同一 userDataDir 再起 Chromium：多进程共用 Profile 会锁冲突/损坏数据。
+    // 已在运行：幂等返回现有视图（不二次 spawn，也不再 openURL）。
     if (currentStatus === 'running') {
-      if (options.showExtensionPage) await this.openURL(record, 'chrome://extensions/')
       return this.view(record)
     }
     if (currentStatus === 'detached') {
-      if (options.showExtensionPage) {
-        await this.openURL(record, 'chrome://extensions/')
-        return this.view(record)
-      }
       throw new Error('该测试身份由上一次 Yakit 会话启动；请先在浏览器中关闭该窗口')
     }
     record.extensionPath = validateManagedExtensionPath(this.fs, record.extensionPath)

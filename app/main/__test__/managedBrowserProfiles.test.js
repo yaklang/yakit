@@ -119,6 +119,63 @@ describe('managed Chromium profile lifecycle', () => {
     expect(fs.existsSync(launched.userDataDir)).toBe(false)
   })
 
+  it('does not spawn a second Chromium for the same userDataDir while running', async () => {
+    const { rootDir, extensionPath, chromePath } = fixture()
+    const harness = processHarness()
+    const manager = new ManagedBrowserProfileManager({
+      rootDir,
+      randomUUID: uuidSequence(),
+      now: () => 1_000,
+      chromePathResolver: () => chromePath,
+      ...harness,
+    })
+    const profile = manager.create({
+      slotHint: 'left',
+      name: '身份 A',
+      extensionPath,
+      startingUrl: 'https://example.test/',
+    })
+    const first = await manager.launch(profile.id)
+    expect(first.status).toBe('running')
+    expect(harness.calls).toHaveLength(1)
+
+    const again = await manager.launch(profile.id, { showExtensionPage: true })
+    expect(again.status).toBe('running')
+    expect(again.pid).toBe(first.pid)
+    expect(harness.calls).toHaveLength(1)
+  })
+
+  it('refuses detached relaunch even when showExtensionPage is requested', async () => {
+    const { rootDir, extensionPath, chromePath } = fixture()
+    const harness = processHarness()
+    const first = new ManagedBrowserProfileManager({
+      rootDir,
+      randomUUID: uuidSequence(),
+      chromePathResolver: () => chromePath,
+      ...harness,
+    })
+    const profile = first.create({
+      slotHint: 'right',
+      name: '身份 B',
+      extensionPath,
+      startingUrl: 'https://example.test/',
+    })
+    await first.launch(profile.id)
+    const spawnCountAfterFirst = harness.calls.length
+
+    const second = new ManagedBrowserProfileManager({
+      rootDir,
+      randomUUID: uuidSequence(),
+      chromePathResolver: () => chromePath,
+      ...harness,
+    })
+    expect(second.list()[0].status).toBe('detached')
+    await expect(second.launch(profile.id, { showExtensionPage: true })).rejects.toThrow(
+      '该测试身份由上一次 Yakit 会话启动',
+    )
+    expect(harness.calls).toHaveLength(spawnCountAfterFirst)
+  })
+
   it('does not kill or delete a browser owned by a previous Yakit session', async () => {
     const { rootDir, extensionPath, chromePath } = fixture()
     const harness = processHarness()
