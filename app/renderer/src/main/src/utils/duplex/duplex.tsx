@@ -209,6 +209,9 @@ export const startupDuplexConn = () => {
         case 'web_fuzzer_tab':
           emiter.emit('onServerPushOpenWebFuzzerTab', JSON.stringify(obj))
           break
+        case 'web_fuzzer_execution':
+          emiter.emit('onServerPushExecuteWebFuzzerTab', JSON.stringify(obj))
+          break
         // MCP / 后端通知前端刷新项目列表或进入新建项目
         case 'project':
           emiter.emit('onServerPushProjectChanged', JSON.stringify(obj))

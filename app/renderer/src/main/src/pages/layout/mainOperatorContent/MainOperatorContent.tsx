@@ -179,6 +179,11 @@ import {
   unregisterShortcutFocusHandle,
 } from '@/utils/globalShortcutKey/utils'
 import { keepSearchNameMapStore } from '@/store/keepSearchName'
+import {
+  assertValidMcpWebFuzzerExecution,
+  queueMcpWebFuzzerExecution,
+  type McpWebFuzzerExecution,
+} from '@/utils/eventBus/events/webFuzzer'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useProxy } from '@/hook/useProxy'
@@ -3651,6 +3656,31 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     emiter.on('onServerPushOpenWebFuzzerTab', onServerPushOpenWebFuzzerTab)
     return () => {
       emiter.off('onServerPushOpenWebFuzzerTab', onServerPushOpenWebFuzzerTab)
+    }
+  }, [])
+
+  const onServerPushExecuteWebFuzzerTab = useMemoizedFn((res?: string) => {
+    try {
+      const execution = JSONParseLog(res || '{}', {
+        page: 'MainOperatorContent',
+        fun: 'onServerPushExecuteWebFuzzerTab',
+      }) as McpWebFuzzerExecution
+      assertValidMcpWebFuzzerExecution(execution)
+      queueMcpWebFuzzerExecution(execution)
+      // 立即切换一级/二级菜单并触发执行：queue 已覆盖挂载竞态；
+      // scheduleIdleTask 默认 2s 可能晚于 expiresAt / MCP timeoutSeconds，导致命令被丢且截图停在错误页
+      emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: execution.pageId, forceRefresh: true }))
+      emiter.emit('switchMenuItem', JSON.stringify({ route: YakitRoute.HTTPFuzzer }))
+      emiter.emit('onExecuteWebFuzzerTab', execution.pageId)
+    } catch (error) {
+      yakitNotify('error', t('MainOperatorContent.openWFFailed', { error: `${error}` }))
+    }
+  })
+
+  useEffect(() => {
+    emiter.on('onServerPushExecuteWebFuzzerTab', onServerPushExecuteWebFuzzerTab)
+    return () => {
+      emiter.off('onServerPushExecuteWebFuzzerTab', onServerPushExecuteWebFuzzerTab)
     }
   }, [])
 

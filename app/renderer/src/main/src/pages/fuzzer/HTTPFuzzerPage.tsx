@@ -103,6 +103,7 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { OutlinePayloadIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlinePayloadIcon'
 import emiter from '@/utils/eventBus/eventBus'
+import { createMcpWebFuzzerExecutionSlot } from './mcpWebFuzzerExecutionSlot'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
@@ -964,6 +965,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const [droppedCount, setDroppedCount] = useState(0)
   // state
   const [loading, setLoading] = useState(false)
+  const loadingRef = useRef(loading)
+  const mcpExecutionSlotRef = useRef(createMcpWebFuzzerExecutionSlot())
+  const startMcpExecutionRef = useRef<() => void>(() => {})
   const [loadingText, setLoadingText] = useState<string>('sending packets')
 
   /*
@@ -1346,6 +1350,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
   const loadHistory = useMemoizedFn((id: number) => {
     resetResponse()
+    loadingRef.current = true
     setLoading(true)
     setDroppedCount(0)
     setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
@@ -1457,6 +1462,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
   })
 
+  useEffect(() => {
+    loadingRef.current = loading
+    if (!loading) startMcpExecutionRef.current()
+  }, [loading])
+
   const getFuzzerRequestParams = useMemoizedFn(() => {
     const { proxy = [] } = advancedConfigValue
     const { proxyEndpoints, ProxyRuleIds } = getProxyValue(proxy)
@@ -1465,6 +1475,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       RequestRaw: StringToUint8Array(requestRef.current, 'utf8'),
       HotPatchCode: hotPatchCodeRef.current,
       HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
+      FuzzerIndex: mcpExecutionSlotRef.current.getFuzzerIndex(),
       FuzzerTabIndex: props.id,
       EngineDropPacket: true,
       Proxy: proxyEndpoints,
@@ -1490,10 +1501,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     //  更新默认搜索（用工具栏本地 draft，不依赖页根 state）
     setDefaultResponseSearch(responseSearchDraftRef.current)
 
+    // 同步占 busy，避免 setLoading(true) 与 effect 同步 loadingRef 之间的窗口被 MCP 抢占同 token
+    loadingRef.current = true
     setLoading(true)
     setDroppedCount(0)
 
-    // FuzzerRequestProps
+    // FuzzerRequestProps（loadingRef 已占 busy 后再读，确保 FuzzerIndex 语义正确）
     const httpParams: FuzzerRequestProps = getFuzzerRequestParams()
     //如果有新增的代理配置 则存配置项
     checkProxyEndpoints(advancedConfigValue.proxy)
@@ -1531,6 +1544,25 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       }),
     )
   })
+
+  startMcpExecutionRef.current = () => {
+    if (!mcpExecutionSlotRef.current.tryStart(props.id, loadingRef.current)) return
+    // validate 可能异步；在真正 setLoading 前先占 busy，防止 duplex 再入同 token
+    loadingRef.current = true
+    onValidateHTTPFuzzer()
+  }
+
+  useEffect(() => {
+    const executeMcpWebFuzzerTab = (pageId: string) => {
+      if (pageId === props.id) startMcpExecutionRef.current()
+    }
+    emiter.on('onExecuteWebFuzzerTab', executeMcpWebFuzzerTab)
+    startMcpExecutionRef.current()
+    return () => {
+      emiter.off('onExecuteWebFuzzerTab', executeMcpWebFuzzerTab)
+    }
+  }, [props.id, onValidateHTTPFuzzer])
+
   /**保存当前页面的历史数据 */
   const onSaveHTTPFuzzerByPageId = useMemoizedFn(() => {
     const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
@@ -1583,6 +1615,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     const cancellation = ipcRenderer.invoke('cancel-HTTPFuzzer', tokenRef.current)
     streamRunRef.current?.finish('cancel')
     runtimeIdRef.current = ''
+    // cancel 后主进程 end 事件不再送达；须在此释放 MCP 槽位，否则 inFlight 永久卡住、
+    // 残留 FuzzerIndex 还会污染后续手动发送 / 导出调试 YAML
+    mcpExecutionSlotRef.current.release()
+    loadingRef.current = false
     try {
       await cancellation
     } catch (error) {
@@ -1865,6 +1901,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     ipcRenderer.on(endToken, () => {
       run.finish('complete', 500)
+      // A MCP execution is identified by FuzzerIndex. Release the slot only
+      // after the normal fuzzer completion event, so a queued command cannot
+      // overwrite that identifier while this task is still being persisted.
+      if (mcpExecutionSlotRef.current.release()) {
+        queueMicrotask(() => startMcpExecutionRef.current())
+      }
       stop()
       logger(httpFuzzerLog({ content: t('HTTPFuzzerPage.send_complete'), status: 'end' }))
     })

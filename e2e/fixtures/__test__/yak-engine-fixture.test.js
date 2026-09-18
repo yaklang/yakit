@@ -45,6 +45,16 @@ describe('parseYakGRPCReadyLine', () => {
       host: '127.0.0.1',
       port: 54321,
     })
+    expect(
+      parseYakGRPCReadyLine(
+        `[stdout] ${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 2, transport: 'tcp', address: '127.0.0.1:54322' })}`,
+      ),
+    ).toEqual({
+      schemaVersion: 2,
+      address: '127.0.0.1:54322',
+      host: '127.0.0.1',
+      port: 54322,
+    })
   })
 
   it('rejects malformed, unsupported, or externally bound ready events', () => {
