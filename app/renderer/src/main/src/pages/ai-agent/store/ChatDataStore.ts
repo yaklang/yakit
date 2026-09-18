@@ -4,6 +4,7 @@ export type ChatDataStoreKey =
   | 'histroyAiStore'
   | 'FlowAiStore'
   | 'irifyAiCodeAuditPageAiStore'
+  | 'irifyRuleGenPageAiStore'
   | 'yakRunnerPageAiStore'
   | 'WebFuzzerAiStore'
   | 'unknown'

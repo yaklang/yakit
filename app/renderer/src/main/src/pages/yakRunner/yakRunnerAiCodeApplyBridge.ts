@@ -19,7 +19,7 @@ const lastAppliedCodeByPage = new Map<string, { content: string; path?: string }
 
 export type YakRunnerCasualCodeReplaceReviewPayload = {
   original: string
-  change: AIAgentGrpcApi.YaklangCodeChange
+  change: AIAgentGrpcApi.CodeChange
   language?: string
   fileName?: string
   isCreate?: boolean
@@ -29,14 +29,14 @@ type YakRunnerCasualCodeReplaceReviewHandler = (payload: YakRunnerCasualCodeRepl
 
 const pageCasualReplaceReviewHandlers = new Map<string, YakRunnerCasualCodeReplaceReviewHandler>()
 
-export function resolveYaklangCodeChangePath(change: AIAgentGrpcApi.YaklangCodeChange): string | undefined {
+export function resolveYaklangCodeChangePath(change: AIAgentGrpcApi.CodeChange): string | undefined {
   const path = change.code?.path?.trim()
   if (!path) return undefined
   return normalizeYakRunnerFilePath(path)
 }
 
 /** 从 AI 返回的 `code.path` 解析文件后缀，原样返回（如 `yak`、`sf`、`txt`） */
-export function resolveYaklangCodeChangeLanguage(change: AIAgentGrpcApi.YaklangCodeChange): string | undefined {
+export function resolveYaklangCodeChangeLanguage(change: AIAgentGrpcApi.CodeChange): string | undefined {
   const path = resolveYaklangCodeChangePath(change)
   if (!path) return undefined
   const suffix = getFileSuffixFromPath(path)
@@ -198,7 +198,7 @@ export type ApplyYaklangCodeChangeOptions = {
 
 export function applyYaklangCodeChangeToYakRunnerPage(
   pageId: string,
-  data: AIAgentGrpcApi.YaklangCodeChange,
+  data: AIAgentGrpcApi.CodeChange,
   options?: ApplyYaklangCodeChangeOptions,
 ): void {
   const fn = pageApplyHandlers.get(pageId)

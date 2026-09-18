@@ -34,6 +34,8 @@ export enum AISourceEnum {
   flow = 'flow',
   /** irify 来源 */
   irify = 'irify',
+  /** IRify 代码审计「规则生成」 */
+  irifyRuleGen = 'irifyRuleGen',
   /** Yak Runner 代码审计 */
   yakRunner = 'yakRunner',
   /** IM bot 来源（飞书/钉钉等） */
@@ -1079,7 +1081,11 @@ export declare namespace AIAgentGrpcApi {
     estimated_tokens: number
   }
 
-  export interface YaklangCodeChange {
+  /**
+   * 编辑器代码变更事件的共享 wire 形状（对齐后端 loopinfra.CodeChangeEvent）。
+   * yaklang_code_change / syntaxflow_rule_change 字段一致，仅 EventType 分流到不同页。
+   */
+  export interface CodeChange {
     op: string
     code: {
       content: string
@@ -1088,18 +1094,30 @@ export declare namespace AIAgentGrpcApi {
       version: number
       change_id?: string
       line_base?: number
-      /** op=patch 时描述如何把 content 片段合入文件 */
-      patch?: {
-        kind: 'line_range' | 'snippet' | 'insert' | 'delete' | 'full'
-        start_line?: number
-        end_line?: number
-        insert_line?: number
-        old_snippet?: string
-      }
+      /** op=patch 时描述如何把 content 片段合入文件（对齐 CodePatchMeta） */
+      patch?: CodePatchMeta
     }
     reason?: string
     source_action?: string
   }
+
+  /** op=patch 的合入元数据（对齐后端 loopinfra.CodePatchMeta） */
+  export interface CodePatchMeta {
+    kind: 'line_range' | 'snippet' | 'insert' | 'delete' | 'full'
+    start_line?: number
+    end_line?: number
+    insert_line?: number
+    old_snippet?: string
+  }
+
+  /** @deprecated 请优先使用 CodeChange；保留兼容 Yak Runner 命名 */
+  export type YaklangCodeChange = CodeChange
+
+  /**
+   * syntaxflow_rule_change：与 CodeChange 同结构，
+   * 独立事件类型供 IRify「规则编写」审阅分流，不与 Yak Runner 混用。
+   */
+  export type SyntaxFlowRuleChange = CodeChange
   /** prompt_profile 中按 role 拆分的字节统计项 */
   export interface PromptProfileRoleStat {
     role_name: string

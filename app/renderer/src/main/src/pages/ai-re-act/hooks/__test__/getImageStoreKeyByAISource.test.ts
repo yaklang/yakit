@@ -9,6 +9,8 @@ describe('getImageStoreKeyByAISource', () => {
     expect(getImageStoreKeyByAISource(AISourceEnum.history)).toBe('histroyAiStore')
     expect(getImageStoreKeyByAISource(AISourceEnum.flow)).toBe('FlowAiStore')
     expect(getImageStoreKeyByAISource(AISourceEnum.yakRunner)).toBe('yakRunnerPageAiStore')
+    expect(getImageStoreKeyByAISource(AISourceEnum.irify)).toBe('irifyAiCodeAuditPageAiStore')
+    expect(getImageStoreKeyByAISource(AISourceEnum.irifyRuleGen)).toBe('irifyRuleGenPageAiStore')
     expect(getImageStoreKeyByAISource('unknown' as any)).toBe('unknown')
     expect(AI_AGENT_HISTORY_AI_SOURCES).toEqual(['ai', 'im', ''])
   })

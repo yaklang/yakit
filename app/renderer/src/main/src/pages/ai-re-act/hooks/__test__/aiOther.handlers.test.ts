@@ -305,3 +305,25 @@ describe('aiOther queue_info current task snapshot', () => {
     expect(req.store.getState().currentChatStatus.status).toBe(AITaskStatus.success)
   })
 })
+
+describe('aiOther syntaxflow_rule_change', () => {
+  it('stores payload and bumps syntaxflowRuleChangeUpdate', () => {
+    const payload = { op: 'replace', code: { content: 'rule x {}' } }
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('syntaxflow_rule_change', payload),
+    })
+    expect(req.store.getState().syntaxflowRuleChangeUpdate).toBe(0)
+    aiOtherDataHandlers.syntaxflow_rule_change(req)
+    expect(req.rawData.syntaxflowRuleChange).toEqual(payload)
+    expect(req.store.getState().syntaxflowRuleChangeUpdate).toBe(1)
+  })
+
+  it('ignores IsSync events', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('syntaxflow_rule_change', { op: 'replace', code: { content: 'skip' } }, { IsSync: true }),
+    })
+    aiOtherDataHandlers.syntaxflow_rule_change(req)
+    expect(req.rawData.syntaxflowRuleChange).toBeUndefined()
+    expect(req.store.getState().syntaxflowRuleChangeUpdate).toBe(0)
+  })
+})

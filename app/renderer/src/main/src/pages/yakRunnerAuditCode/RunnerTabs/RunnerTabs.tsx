@@ -41,6 +41,7 @@ import {
   useDebounceFn,
   useLongPress,
   useMemoizedFn,
+  useCreation,
   useSize,
   useThrottleFn,
   useUpdateEffect,
@@ -84,7 +85,12 @@ import {
   updateAuditCodeAreaFileInfo,
 } from '../utils'
 import { editor as newEditor } from 'monaco-editor'
-import type { YakitIMonacoEditor, YakitITextModel } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import type {
+  YakitIMonacoEditor,
+  YakitITextModel,
+  OtherMenuListProps,
+} from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
 import { createRoot } from 'react-dom/client'
 import { monaco } from 'react-monaco-editor'
 import type { JumpToAuditEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
@@ -96,6 +102,8 @@ import { onSetSelectedSearchVal } from '../AuditSearchModal/AuditSearch'
 import { ConvertAuditStaticAnalyzeErrorToMarker, type IMonacoEditorMarker } from '@/utils/editorMarkers'
 import { getPathParent, grpcFetchCreateFile, grpcFetchSaveFile, monacaLanguageType } from '@/pages/yakRunner/utils'
 import { JSONParseLog } from '@/utils/tool'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { emitAuditCodeRuleGenSendCodeBlock, setAuditCodeLiveEditorSelection } from '../auditCodeRuleGenAiBridge'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -889,6 +897,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   const { tabsId } = props
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunner'])
   const { areaInfo, activeFile, projectName, runtimeID } = useStore()
   const { setAreaInfo, setActiveFile } = useDispatcher()
   const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
@@ -1076,6 +1085,17 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
       // 获取选中的字符内容 用于搜索代入
       const selectedText = editor.getModel()?.getValueInRange(selection)
       onSetSelectedSearchVal(selectedText)
+      if (selectedText?.trim()) {
+        setAuditCodeLiveEditorSelection({
+          path: editorInfo?.path,
+          language: editorInfo?.language,
+          startLine: startLineNumber,
+          endLine: endLineNumber,
+          content: selectedText,
+        })
+      } else {
+        setAuditCodeLiveEditorSelection(null)
+      }
     })
     // 监听编辑器是否聚焦
     const focusEditor = editor.onDidFocusEditorWidget(() => {
@@ -1350,6 +1370,46 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     setEditor(editor)
   })
 
+  const onSendAIAction = useMemoizedFn((ed: YakitIMonacoEditor) => {
+    const content = fetchCursorContent(ed, true)
+    const range = fetchSelectionRange(ed, true)
+    const name = editorInfo?.name
+    if (!name) return
+    emitAuditCodeRuleGenSendCodeBlock(
+      JSON.stringify({
+        type: 'codeBlockTag',
+        params: {
+          content,
+          range: range
+            ? {
+                startLineNumber: range.startLineNumber,
+                startColumn: range.startColumn,
+                endLineNumber: range.endLineNumber,
+                endColumn: range.endColumn,
+              }
+            : null,
+          name,
+          language: editorInfo.language || '',
+          path: editorInfo.path,
+          rootPath: '',
+        },
+      }),
+    )
+  })
+
+  const rightContextMenu: OtherMenuListProps = useCreation(() => {
+    return {
+      sendAIActions: {
+        menu: [{ key: 'sendAI', label: t('RunnerTabs.sendAIActions') }],
+        onRun: (ed, key) => {
+          if (key === 'sendAI') {
+            onSendAIAction(ed)
+          }
+        },
+      },
+    }
+  }, [i18nRefresh])
+
   return (
     <div className={styles['runner-tab-pane']}>
       {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -1376,6 +1436,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
           highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
           highLightClass="hight-light-yak-runner-color"
           highLightFind={highLightFind}
+          contextMenu={rightContextMenu}
           // renderValidationDecorations此项为on时可使只读模式下，显示下划线提示
           renderValidationDecorations="on"
         />

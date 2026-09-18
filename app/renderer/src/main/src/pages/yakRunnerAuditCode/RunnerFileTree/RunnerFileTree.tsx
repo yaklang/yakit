@@ -59,6 +59,9 @@ import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const GlobalFilterFunction = React.lazy(() => import('../GlobalFilterFunction/GlobalFilterFunction'))
+const AuditCodeRuleGenChat = React.lazy(() =>
+  import('../AuditCodeRuleGenChat').then((m) => ({ default: m.AuditCodeRuleGenChat })),
+)
 const RunnerFileTreeTab: YakitTabsProps[] = [
   {
     label: 'RunnerFileTree.all',
@@ -73,12 +76,16 @@ const RunnerFileTreeTab: YakitTabsProps[] = [
     value: 'rule',
   },
   {
+    label: 'RunnerFileTree.ruleGenerate',
+    value: 'rule-generate',
+  },
+  {
     label: 'RunnerFileTree.globalFilterFn',
     value: 'global-filtering-function',
   },
 ]
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
-  const { fileTreeLoad, boxHeight } = props
+  const { fileTreeLoad, boxHeight, onActiveTabChange } = props
   const { t, i18nRefresh } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const { fileTree, activeFile, projectName, pageInfo } = useStore()
   const { handleFileLoadData, setRuntimeID } = useDispatcher()
@@ -347,8 +354,19 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     if (!rendered.current.has(type as ActiveProps)) {
       rendered.current.add(type as ActiveProps)
     }
-    setActive(type as ActiveProps)
+    const next = type as ActiveProps
+    setActive(next)
+    onActiveTabChange?.(next)
   })
+  const onOpenRuleGenerateTabFun = useMemoizedFn(() => {
+    onSetActive('rule-generate')
+  })
+  useEffect(() => {
+    emiter.on('onCodeAuditOpenRuleGenerateTab', onOpenRuleGenerateTabFun)
+    return () => {
+      emiter.off('onCodeAuditOpenRuleGenerateTab', onOpenRuleGenerateTabFun)
+    }
+  }, [])
   useEffect(() => {
     const activeKey = pageInfo?.leftTabActive || 'all'
     onSetActive(activeKey)
@@ -360,12 +378,16 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         return t('RunnerFileTree.vulnFile')
       case 'rule':
         return t('RunnerFileTree.ruleSummary')
+      case 'rule-generate':
+        return t('RunnerFileTree.ruleGenerate')
       case 'global-filtering-function':
         return t('RunnerFileTree.globalFilterFn')
       default:
         return t('RunnerFileTree.fileList')
     }
   })
+
+  const isRuleGenerate = active === 'rule-generate'
 
   const [options, setOptions] = useState<SelectOptionsProps[]>([{ label: t('RunnerFileTree.all'), value: '' }])
   const [checkItem, setCheckItem] = useState<string>('')
@@ -468,130 +490,153 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         t={t}
       />
       <div className={styles['container']}>
-        <div className={styles['file-tree']}>
-          <div className={styles['file-tree-container']}>
-            <div className={styles['file-tree-header']}>
-              <div className={styles['title-box']}>
-                <div className={styles['title-style']}>{getActiveName(active)}</div>
-                {fileTreeLoad && active === 'all' && <YakitSpin size="small" />}
+        {isRuleGenerate ? (
+          <div className={styles['file-tree']}>
+            <div className={styles['file-tree-container']}>
+              <div className={styles['file-tree-header']}>
+                <div className={styles['title-box']}>
+                  <div className={styles['title-style']}>{getActiveName(active)}</div>
+                </div>
               </div>
-              <div className={styles['extra']}>
-                {active === 'all' && (
-                  <Tooltip title={t('YakitButton.locate')}>
-                    <YakitButton
-                      disabled={fileTreeLoad || fileTree.length === 0}
-                      type="text2"
-                      icon={<PositionOutlined color="currentColor" />}
-                      onClick={onActiveFileScrollToFileTree}
-                    />
-                  </Tooltip>
+              <div className={styles['file-tree-tree']}>
+                {rendered.current.has('rule-generate') && (
+                  <div className={styles['tree-body']}>
+                    <React.Suspense fallback={<YakitSpin spinning />}>
+                      <AuditCodeRuleGenChat />
+                    </React.Suspense>
+                  </div>
                 )}
-                <Tooltip title={t('YakitInput.search')}>
-                  <YakitButton
-                    disabled={fileTree.length === 0}
-                    type="text2"
-                    icon={<SearchOutlined color="currentColor" />}
-                    onClick={() => {
-                      setSearchVisible(true)
-                    }}
-                  />
-                </Tooltip>
-                <Tooltip title={t('RunnerFileTree.refreshExplorer')}>
-                  <YakitButton
-                    type="text2"
-                    disabled={fileTree.length === 0}
-                    icon={<RefreshOutlined color="currentColor" />}
-                    onClick={() => {
-                      if (active === 'all') {
-                        emiter.emit('onCodeAuditRefreshTree')
-                      } else if (active === 'file') {
-                        setFileRefresh(!fileRefresh)
-                      } else if (active === 'rule') {
-                        setRuleRefresh(!ruleRefresh)
-                      }
-                    }}
-                  />
-                </Tooltip>
-                <YakitDropdownMenu
-                  menu={{
-                    data: menuData,
-                    onClick: ({ key, keyPath }) => menuSelect(key, keyPath),
-                  }}
-                  dropdown={{
-                    trigger: ['click'],
-                    placement: 'bottomLeft',
-                  }}
-                >
-                  <YakitButton type="text2" icon={<PlusCircleOutlined color="currentColor" />} />
-                </YakitDropdownMenu>
               </div>
-            </div>
-
-            <div className={styles['file-tree-tree']}>
-              {rendered.current.has('all') && (
-                <div
-                  className={classNames(styles['tree-body'], {
-                    [styles['hidden-tree-body']]: active !== 'all',
-                  })}
-                >
-                  <FileTree
-                    data={fileDetailTree}
-                    onLoadData={onLoadData}
-                    onSelect={onSelectFileTree}
-                    foucsedKey={foucsedKey}
-                    setFoucsedKey={setFoucsedKey}
-                    expandedKeys={expandedKeys}
-                    setExpandedKeys={setExpandedKeys}
-                  />
-                </div>
-              )}
-              {rendered.current.has('file') && (
-                <div
-                  className={classNames(styles['tree-body'], {
-                    [styles['hidden-tree-body']]: active !== 'file',
-                  })}
-                >
-                  {getSelectDom()}
-                  <RiskTree
-                    type="file"
-                    projectName={projectName}
-                    init={fileRefresh}
-                    task_id={checkItem}
-                    increment={isShowCompare}
-                  />
-                </div>
-              )}
-              {rendered.current.has('rule') && (
-                <div
-                  className={classNames(styles['tree-body'], {
-                    [styles['hidden-tree-body']]: active !== 'rule',
-                  })}
-                >
-                  {getSelectDom()}
-                  <RiskTree
-                    type="rule"
-                    projectName={projectName}
-                    init={ruleRefresh}
-                    task_id={checkItem}
-                    increment={isShowCompare}
-                  />
-                </div>
-              )}
-              {rendered.current.has('global-filtering-function') && (
-                <div
-                  className={classNames(styles['tree-body'], {
-                    [styles['hidden-tree-body']]: active !== 'global-filtering-function',
-                  })}
-                >
-                  <React.Suspense fallback={<YakitSpin spinning />}>
-                    <GlobalFilterFunction projectName={projectName} />
-                  </React.Suspense>
-                </div>
-              )}
             </div>
           </div>
-        </div>
-        <OpenedFile />
+        ) : (
+          <>
+            <div className={styles['file-tree']}>
+              <div className={styles['file-tree-container']}>
+                <div className={styles['file-tree-header']}>
+                  <div className={styles['title-box']}>
+                    <div className={styles['title-style']}>{getActiveName(active)}</div>
+                    {fileTreeLoad && active === 'all' && <YakitSpin size="small" />}
+                  </div>
+                  <div className={styles['extra']}>
+                    {active === 'all' && (
+                      <Tooltip title={t('YakitButton.locate')}>
+                        <YakitButton
+                          disabled={fileTreeLoad || fileTree.length === 0}
+                          type="text2"
+                          icon={<PositionOutlined color="currentColor" />}
+                          onClick={onActiveFileScrollToFileTree}
+                        />
+                      </Tooltip>
+                    )}
+                    <Tooltip title={t('YakitInput.search')}>
+                      <YakitButton
+                        disabled={fileTree.length === 0}
+                        type="text2"
+                        icon={<SearchOutlined color="currentColor" />}
+                        onClick={() => {
+                          setSearchVisible(true)
+                        }}
+                      />
+                    </Tooltip>
+                    <Tooltip title={t('RunnerFileTree.refreshExplorer')}>
+                      <YakitButton
+                        type="text2"
+                        disabled={fileTree.length === 0}
+                        icon={<RefreshOutlined color="currentColor" />}
+                        onClick={() => {
+                          if (active === 'all') {
+                            emiter.emit('onCodeAuditRefreshTree')
+                          } else if (active === 'file') {
+                            setFileRefresh(!fileRefresh)
+                          } else if (active === 'rule') {
+                            setRuleRefresh(!ruleRefresh)
+                          }
+                        }}
+                      />
+                    </Tooltip>
+                    <YakitDropdownMenu
+                      menu={{
+                        data: menuData,
+                        onClick: ({ key, keyPath }) => menuSelect(key, keyPath),
+                      }}
+                      dropdown={{
+                        trigger: ['click'],
+                        placement: 'bottomLeft',
+                      }}
+                    >
+                      <YakitButton type="text2" icon={<PlusCircleOutlined color="currentColor" />} />
+                    </YakitDropdownMenu>
+                  </div>
+                </div>
+
+                <div className={styles['file-tree-tree']}>
+                  {rendered.current.has('all') && (
+                    <div
+                      className={classNames(styles['tree-body'], {
+                        [styles['hidden-tree-body']]: active !== 'all',
+                      })}
+                    >
+                      <FileTree
+                        data={fileDetailTree}
+                        onLoadData={onLoadData}
+                        onSelect={onSelectFileTree}
+                        foucsedKey={foucsedKey}
+                        setFoucsedKey={setFoucsedKey}
+                        expandedKeys={expandedKeys}
+                        setExpandedKeys={setExpandedKeys}
+                      />
+                    </div>
+                  )}
+                  {rendered.current.has('file') && (
+                    <div
+                      className={classNames(styles['tree-body'], {
+                        [styles['hidden-tree-body']]: active !== 'file',
+                      })}
+                    >
+                      {getSelectDom()}
+                      <RiskTree
+                        type="file"
+                        projectName={projectName}
+                        init={fileRefresh}
+                        task_id={checkItem}
+                        increment={isShowCompare}
+                      />
+                    </div>
+                  )}
+                  {rendered.current.has('rule') && (
+                    <div
+                      className={classNames(styles['tree-body'], {
+                        [styles['hidden-tree-body']]: active !== 'rule',
+                      })}
+                    >
+                      {getSelectDom()}
+                      <RiskTree
+                        type="rule"
+                        projectName={projectName}
+                        init={ruleRefresh}
+                        task_id={checkItem}
+                        increment={isShowCompare}
+                      />
+                    </div>
+                  )}
+                  {rendered.current.has('global-filtering-function') && (
+                    <div
+                      className={classNames(styles['tree-body'], {
+                        [styles['hidden-tree-body']]: active !== 'global-filtering-function',
+                      })}
+                    >
+                      <React.Suspense fallback={<YakitSpin spinning />}>
+                        <GlobalFilterFunction projectName={projectName} />
+                      </React.Suspense>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <OpenedFile />
+          </>
+        )}
       </div>
 
       <YakitDrawer

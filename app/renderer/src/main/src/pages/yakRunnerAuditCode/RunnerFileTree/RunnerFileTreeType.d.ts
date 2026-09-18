@@ -2,11 +2,13 @@ import type { FileNodeProps } from '../FileTree/FileTreeType'
 export interface RunnerFileTreeProps {
   fileTreeLoad: boolean
   boxHeight: number
+  /** 左侧文件树 tab 切换（规则生成时需加宽左侧并隐藏审计结果栏） */
+  onActiveTabChange?: (tab: ActiveProps) => void
 }
 
 export interface OpenedFileProps {}
 
-export type ActiveProps = 'all' | 'file' | 'rule' | 'global-filtering-function'
+export type ActiveProps = 'all' | 'file' | 'rule' | 'global-filtering-function' | 'rule-generate'
 
 export interface RiskTreeProps {
   type: 'file' | 'rule' | 'risk'

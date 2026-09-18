@@ -1,4 +1,5 @@
 {
+  "newChat": "New chat",
   "IRifyUpdateProjectManagerModal": {
     "syncingData": "Syncing data, please wait...",
     "stopFailed": "Stop failed: {{error}}",
@@ -130,6 +131,7 @@
     "all": "All",
     "vulnFile": "Vulnerability Files",
     "ruleSummary": "Rule Summary",
+    "ruleGenerate": "Rule Generation",
     "globalFilterFn": "Global Filter Function",
     "codeScan": "Code Scan",
     "compileProject": "Compile Project",

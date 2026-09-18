@@ -69,6 +69,7 @@
   }
   .content {
     flex: 1;
+    min-height: 0;
     overflow: auto;
     .render-hideen {
       height: 100%;
@@ -77,6 +78,18 @@
     }
     .render-show {
       display: block;
+    }
+    // Align with YakRunner `.code-editor-wrap`: absolute review overlay + floating hunk
+    // actions need a fixed-height, overflow-hidden host or the bottom-right bar is clipped.
+    .rule-editor-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      &.render-show {
+        display: block;
+      }
     }
     .no-syntax-check {
       height: 100%;

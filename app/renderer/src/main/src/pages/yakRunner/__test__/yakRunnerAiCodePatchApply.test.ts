@@ -13,7 +13,7 @@ vi.mock('../utils', () => ({
 
 vi.mock('../yakRunnerAiCodeApplyBridge', () => ({
   getYakRunnerPageActiveCodeString: () => getCodeMock(),
-  resolveYaklangCodeChangePath: (change: AIAgentGrpcApi.YaklangCodeChange) => change.code?.path,
+  resolveYaklangCodeChangePath: (change: AIAgentGrpcApi.CodeChange) => change.code?.path,
 }))
 
 import { yakitFailed } from '@/utils/notification'
@@ -29,10 +29,10 @@ const PAGE_ID = 'test-page'
 const baseFile = ['line1', 'line2', 'line3', 'line4'].join('\n')
 
 function patchChange(
-  patch: NonNullable<AIAgentGrpcApi.YaklangCodeChange['code']['patch']>,
+  patch: NonNullable<AIAgentGrpcApi.CodeChange['code']['patch']>,
   content: string,
   version = 1,
-): AIAgentGrpcApi.YaklangCodeChange {
+): AIAgentGrpcApi.CodeChange {
   return {
     op: 'patch',
     code: { content, version, patch },

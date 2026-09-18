@@ -23,6 +23,7 @@ export const createTestRawData = (): AIAgentChatData => {
     memoryList: DefaultMemoryList,
     systemStream: '',
     yaklangCodeChange: undefined,
+    syntaxflowRuleChange: undefined,
     grpcOffset: 0,
     timelineBeforeId: 0,
     timelineNoMore: false,

@@ -40,9 +40,14 @@ import {
   resolveYaklangCreateTargetPath,
 } from '../pages/yakRunner/yakRunnerAiCodeApplyBridge'
 import {
-  normalizeYaklangCodeChangeForReview,
+  normalizeCodeChangeForReview,
   resetYakRunnerPatchWorkingDraft,
 } from '../pages/yakRunner/yakRunnerAiCodePatchApply'
+import {
+  enqueueAuditCodeRuleReplaceReview,
+  getAuditCodeRuleEditorString,
+  normalizeSyntaxFlowCodeChangeContent,
+} from '../pages/yakRunnerAuditCode/auditCodeRuleGenAiBridge'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import emiter from '@/utils/eventBus/eventBus'
 
@@ -220,6 +225,11 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     return route === YakitRoute.YakScript && !!pageId
   }, [route, pageId])
 
+  // IRify 代码审计「规则生成」：`syntaxflow_rule_change` → diff 审阅 →「规则编写」
+  const isHaveAuditCodeRuleGenPageId = useCreation(() => {
+    return route === YakitRoute.YakRunner_Audit_Code && !!pageId
+  }, [route, pageId])
+
   useUpdateEffect(() => {
     // 只有配置变化了才更新，SessionID不管
     if (activeChat?.SessionID) globalSessionEngine.updateSessionConfig(activeChat?.SessionID, getSetting())
@@ -259,7 +269,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     applyHttpFuzzRequestChangeToWebFuzzerPage(pageId, data)
   })
 
-  const onYaklangCodeChange = useMemoizedFn((data: AIAgentGrpcApi.YaklangCodeChange) => {
+  const onYaklangCodeChange = useMemoizedFn((data: AIAgentGrpcApi.CodeChange) => {
     if (!isHaveYakRunnerPageId) return
 
     const editorNow = getYakRunnerPageActiveCodeString(pageId) ?? ''
@@ -273,7 +283,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
             : ''
 
     // op=patch：后端只给片段，这里合并成全量 replace，再走原有 diff UI
-    const normalized = normalizeYaklangCodeChangeForReview(pageId, data, original)
+    const normalized = normalizeCodeChangeForReview(pageId, data, original)
     if (!normalized) return
 
     const nextCode = normalized.code?.content
@@ -303,6 +313,35 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     })
   })
 
+  // IRify「规则生成」：syntaxflow_rule_change → patch 合并 → diff 审阅 →「规则编写」
+  const onSyntaxFlowRuleChange = useMemoizedFn((data: AIAgentGrpcApi.CodeChange) => {
+    if (!isHaveAuditCodeRuleGenPageId) return
+
+    const fixed = normalizeSyntaxFlowCodeChangeContent(data)
+    const editorNow = getAuditCodeRuleEditorString(pageId)
+    const original =
+      editorNow !== ''
+        ? editorNow
+        : casualLoadingRef.current && initialCodeInCasualRef.current != null
+          ? initialCodeInCasualRef.current
+          : ''
+
+    const normalized = normalizeCodeChangeForReview(pageId, fixed, original)
+    if (!normalized) return
+
+    const nextCode = normalized.code?.content
+    if (nextCode == null) return
+    if (normalized.op === 'create' && String(nextCode).trim() === '') return
+
+    enqueueAuditCodeRuleReplaceReview({
+      original,
+      change: normalized,
+      fileName: 'rule.sf',
+      language: 'sf',
+      isCreate: normalized.op === 'create' && original.trim() === '',
+    })
+  })
+
   // AI `http_flow_fuzz_status` 推送：把每次最新的 `runtime_id` 静默推到当前 fuzzer 页签的处理器中。
   // 用户点击「查看详情」会显式再次推送并要求打开抽屉，所以这里不主动打开。
   const onGetHttpFlowFuzzStatus = useMemoizedFn((data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => {
@@ -324,7 +363,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   )
   const isSessionDeleting = deleteStatus === SessionDeleteStatus.Deleting
   useEffect(() => {
-    if (!isHaveWebFuzzerPageId && !isHaveYakRunnerPageId) {
+    if (!isHaveWebFuzzerPageId && !isHaveYakRunnerPageId && !isHaveAuditCodeRuleGenPageId) {
       casualLoadingRef.current = false
       initialRequestInCasualRef.current = null
       initialCodeInCasualRef.current = null
@@ -339,16 +378,20 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         resetYakRunnerPatchWorkingDraft(pageId)
         initialCodeInCasualRef.current = getYakRunnerPageActiveCodeString(pageId) ?? ''
       }
+      if (isHaveAuditCodeRuleGenPageId) {
+        resetYakRunnerPatchWorkingDraft(pageId)
+        initialCodeInCasualRef.current = getAuditCodeRuleEditorString(pageId)
+      }
     } else if (casualLoadingRef.current && !casualLoading) {
       initialRequestInCasualRef.current = null
       initialCodeInCasualRef.current = null
-      if (isHaveYakRunnerPageId) {
+      if (isHaveYakRunnerPageId || isHaveAuditCodeRuleGenPageId) {
         resetYakRunnerPatchWorkingDraft(pageId)
       }
     }
 
     casualLoadingRef.current = casualLoading
-  }, [casualLoading, pageId, isHaveWebFuzzerPageId, isHaveYakRunnerPageId])
+  }, [casualLoading, pageId, isHaveWebFuzzerPageId, isHaveYakRunnerPageId, isHaveAuditCodeRuleGenPageId])
 
   const unsubscribeBridgeEvents = useMemoizedFn(() => {
     bridgeUnsubscribeRef.current?.()
@@ -374,6 +417,12 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       }
       if (state.yaklangCodeChangeUpdate !== previousState.yaklangCodeChangeUpdate && rawData.yaklangCodeChange) {
         onYaklangCodeChange(clone(rawData.yaklangCodeChange))
+      }
+      if (
+        state.syntaxflowRuleChangeUpdate !== previousState.syntaxflowRuleChangeUpdate &&
+        rawData.syntaxflowRuleChange
+      ) {
+        onSyntaxFlowRuleChange(clone(rawData.syntaxflowRuleChange))
       }
     })
   })

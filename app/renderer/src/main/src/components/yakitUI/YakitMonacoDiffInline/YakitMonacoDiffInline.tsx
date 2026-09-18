@@ -13,6 +13,7 @@ import { useEditorFontSize } from '@/store/editorFontSize'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 import { YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
+import { clampHunkBarPosition } from './hunkBarPosition'
 import styles from './YakitMonacoDiffInline.module.scss'
 
 const tOriginal = i18n.getFixedT(null, ['yakitUi'])
@@ -185,20 +186,13 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
         if (!overlayEl) return
         if (!overlayEl.parentElement) return
 
-        const overlayRect = overlayEl.getBoundingClientRect()
         const editorDom = modEditor.getDomNode() as HTMLElement | null
         const editorRect = editorDom?.getBoundingClientRect()
-        if (!editorRect) return
+        if (!editorRect || editorRect.height < 8 || editorRect.width < 8) return
 
-        const scrollTopOffset = editorRect.top - overlayRect.top
-        const scrollLeftOffset = editorRect.left - overlayRect.left
-        const marginX = 10
-        const gapX = 8
-        const gapY = 4
+        // Use viewport (fixed) coords clamped to the visible editor box so short
+        // panels / overflow:hidden ancestors cannot clip Keep/Undo.
         const visibleRanges = modEditor.getVisibleRanges()
-        const pad = 4
-        const stackGap = 4
-        const maxBottom = overlayRect.height - pad
         overlayBars.forEach((item) => {
           const visible = visibleRanges.some(
             (r) => item.lineNumber >= r.startLineNumber && item.lineNumber <= r.endLineNumber,
@@ -225,45 +219,29 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
               column: lastCol,
             }) || visCol1
           const visTailWidth = (visTail as unknown as { width: number }).width
-          const rowTop = scrollTopOffset + visTail.top
-          const rowBottom = scrollTopOffset + visTail.top + visTail.height
-          const textRight = scrollLeftOffset + visTail.left + visTailWidth
-          const editorRight = scrollLeftOffset + editorRect.width - marginX
+          const rowTop = editorRect.top + visTail.top
+          const textRight = editorRect.left + visTail.left + visTailWidth
 
           const barBox = item.dom.getBoundingClientRect()
           const barW = barBox.width > 2 ? barBox.width : item.dom.offsetWidth || 220
 
-          let leftPx = textRight + gapX
-          const fitsRightOfText = leftPx + barW <= editorRight
-          if (!fitsRightOfText) {
-            leftPx = Math.max(scrollLeftOffset + marginX, editorRight - barW)
-          }
-
-          const stackOffset = item.stackIndex * (barHeight + stackGap)
-          let baseTop: number
-          if (fitsRightOfText) {
-            baseTop = rowTop + Math.max(0, (visTail.height - barHeight) / 2)
-          } else {
-            baseTop = rowBottom + gapY
-          }
-          let topPx = baseTop + stackOffset
-
-          if (topPx + barHeight > maxBottom) {
-            const aboveTailRow = rowTop - barHeight - 2 - stackOffset
-            const aboveFirstRow = scrollTopOffset + visCol1.top - barHeight - 2 - stackOffset
-            if (aboveTailRow >= pad) {
-              topPx = aboveTailRow
-            } else if (aboveFirstRow >= pad) {
-              topPx = aboveFirstRow
-            } else {
-              topPx = Math.max(pad, Math.min(topPx, maxBottom - barHeight))
-            }
-          }
-
-          item.dom.style.top = `${Math.max(0, topPx)}px`
-          const editorLeftMin = scrollLeftOffset + marginX
-          const editorLeftMax = scrollLeftOffset + editorRect.width - barW - marginX
-          leftPx = Math.max(editorLeftMin, Math.min(leftPx, editorLeftMax, overlayRect.width - barW - marginX))
+          // Narrow / bottom-of-viewport: prefer ABOVE the line. Placing below the
+          // last visible line is what got Keep clipped in the audit bottom panel.
+          const { top: topPx, left: leftPx } = clampHunkBarPosition({
+            editorRect,
+            row: {
+              rowTop,
+              rowHeight: visTail.height,
+              textRight,
+              visCol1Top: visCol1.top,
+            },
+            barW,
+            barHeight,
+            stackIndex: item.stackIndex,
+          })
+          item.dom.style.position = 'fixed'
+          item.dom.style.zIndex = '1000'
+          item.dom.style.top = `${topPx}px`
           item.dom.style.left = `${leftPx}px`
           item.dom.style.right = 'auto'
         })

@@ -1,4 +1,5 @@
 {
+  "newChat": "新建會話",
   "IRifyUpdateProjectManagerModal": {
     "syncingData": "同步資料中，請耐心等待...",
     "stopFailed": "停止失敗：{{error}}",
@@ -130,6 +131,7 @@
     "all": "全部",
     "vulnFile": "漏洞檔案",
     "ruleSummary": "規則彙總",
+    "ruleGenerate": "規則生成",
     "globalFilterFn": "全域性過濾函式",
     "codeScan": "程式碼掃描",
     "compileProject": "編譯專案",
