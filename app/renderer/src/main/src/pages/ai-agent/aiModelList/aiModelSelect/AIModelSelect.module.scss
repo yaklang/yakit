@@ -71,7 +71,7 @@
 }
 
 .model-name-content {
-  max-height: 60px;
+  min-height: 60px;
   .edit-content-item {
     display: flex;
     flex-direction: column;
@@ -114,7 +114,7 @@
     }
   }
   .model-name-list {
-    height: 194px;
+    max-height: 194px;
     overflow-y: auto;
   }
 }
