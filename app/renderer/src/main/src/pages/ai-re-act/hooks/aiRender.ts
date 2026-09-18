@@ -39,7 +39,7 @@ export interface TodoListCardData {
 
 /** 用户输入框上的AI提示消息 */
 export interface AIInputNotifyMessage {
-  type: 'notify' | 'rate-limit'
+  type: AIAgentGrpcApi.Notify['type']
   content: string
   label: AIOutputI18n
 }

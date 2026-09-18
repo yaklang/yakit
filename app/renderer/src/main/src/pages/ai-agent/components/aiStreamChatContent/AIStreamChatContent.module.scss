@@ -3,6 +3,7 @@
 
 .ai-stream-chat-content-wrapper {
   border-radius: 8px;
+  padding: 0 8px;
   // background: var(--Colors-Use-Neutral-Bg-Hover);
 }
 .ai-stream-chat-content {
@@ -11,8 +12,17 @@
   justify-content: flex-start;
   max-width: 100%;
   gap: 4px;
-  border-left: 2px solid var(--Colors-Use-Neutral-Disable);
-  padding-left: 8px;
+  .stream-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--Colors-Use-Neutral-Disable);
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
   .title {
     padding: 4px 0px;
     border-radius: 8px 0 0 8px;
@@ -21,7 +31,7 @@
     flex-shrink: 0;
     gap: 4px;
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     line-height: 14px;
     // @include mixin.mpb-color-text();
@@ -66,6 +76,7 @@
   flex-direction: column;
   gap: 6px;
   width: 100%;
+  padding: 0 8px;
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   @include thought.thought-stream-header;
 

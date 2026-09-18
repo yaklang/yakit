@@ -1,11 +1,29 @@
 import React from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import get from 'lodash/get'
 import type * as AIReActChatModule from '../AIReActChat'
 import type { AIReActChatContentsRef } from '../../aiReActChatContents/AIReActChatContentsType'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
+import enLayout from '@/locales/en/layout.json'
+import zhLayout from '@/locales/zh/layout.json'
 
-const { scrollToItemIndex } = vi.hoisted(() => ({ scrollToItemIndex: vi.fn() }))
+const { scrollToItemIndex, locale } = vi.hoisted(() => ({ scrollToItemIndex: vi.fn(), locale: { language: 'zh' } }))
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createChatStore } from '../../hooks/chatStore'
+import { AINotifyType } from '../../hooks/grpcApi'
+import emiter from '@/utils/eventBus/eventBus'
+import { isCommunityEdition } from '@/utils/envfile'
+
+let chatStore: ReturnType<typeof createChatStore>
+
+beforeEach(() => {
+  chatStore = createChatStore()
+  vi.clearAllMocks()
+  locale.language = 'zh'
+  vi.mocked(isCommunityEdition).mockReturnValue(true)
+})
+
+vi.mock('@/utils/envfile', () => ({ isCommunityEdition: vi.fn(() => true) }))
 
 vi.mock('ahooks', async () => {
   const actual = await vi.importActual('ahooks')
@@ -38,9 +56,7 @@ vi.mock('@/utils/randomUtil', () => ({ randomString: () => 'test-id' }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: vi.fn() } }))
 
 vi.mock('../../hooks/useCurrentDataBySession', () => ({
-  useCurrentStore: () => ({
-    getState: () => ({ execute: false, currentChatStatus: { questionID: '' }, notifyMessage: undefined }),
-  }),
+  useCurrentStore: () => chatStore,
 }))
 vi.mock('../../hooks/useCurrentSessionId', () => ({ default: () => 'test-session' }))
 vi.mock('../../hooks/useSessionId', () => ({ default: () => ({ getSession: () => 'test-session' }) }))
@@ -51,10 +67,27 @@ vi.mock('../../hooks/ChatMultiSessionController', () => ({
     setActiveShowSession: vi.fn(),
   },
 }))
-vi.mock('zustand', async () => {
-  const actual = await vi.importActual('zustand')
-  return { ...actual, useStore: () => false }
-})
+vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
+  YakitButton: ({
+    type,
+    icon,
+    children,
+    ...props
+  }: Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'type'> & {
+    type: string
+    icon?: React.ReactNode
+  }) => (
+    <button {...props} data-type={type}>
+      {icon}
+      {children}
+    </button>
+  ),
+}))
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({
+    t: (key: string) => get(locale.language === 'en' ? enLayout : zhLayout, key, key),
+  }),
+}))
 
 vi.mock('../../aiReActChatContents/AIReActChatContents', () => ({
   AIReActChatContents: React.forwardRef<AIReActChatContentsRef>((_props, ref) => {
@@ -115,6 +148,74 @@ describe('AIReActChat', () => {
     unmount()
     expect(rightPanelLayoutRef.mock.calls.at(-1)?.[0]).toBeNull()
   })
+  const showNotify = (type: AINotifyType, content = '余额不足') => {
+    act(() => {
+      chatStore.getState().updateState({ notifyMessage: { type, content, label: { Zh: '', En: '' } } })
+    })
+  }
+
+  it('配额耗尽时显示充值和关闭，任务停止后仍显示，关闭后新消息仍可显示', () => {
+    showNotify(AINotifyType.notify429TypeQuotaExceeded)
+    render(<AIReActChat {...baseProps} />)
+
+    const rechargeBtn = screen.getByRole('button', { name: '充值' })
+    const closeBtn = screen.getAllByRole('button').find((btn) => btn.getAttribute('data-type') === 'text')!
+    expect(rechargeBtn).toHaveAttribute('data-type', 'primary')
+    expect(closeBtn).toHaveAttribute('data-type', 'text')
+    expect(closeBtn).toHaveTextContent(/^$/)
+    expect(closeBtn.querySelector('svg')).toBeInTheDocument()
+    fireEvent.click(rechargeBtn)
+    expect(emiter.emit).toHaveBeenCalledWith('onOpenRecharge', '')
+    expect(chatStore.getState().notifyMessage).not.toBeNull()
+
+    fireEvent.click(closeBtn)
+    expect(chatStore.getState().notifyMessage).toBeNull()
+    expect(screen.queryByText('余额不足')).not.toBeInTheDocument()
+
+    showNotify(AINotifyType.notify429TypeQuotaExceeded, '新的配额提示')
+    expect(screen.getByRole('button', { name: '充值' })).toBeInTheDocument()
+  })
+
+  it('英文界面使用翻译后的充值文案，点击仍触发充值入口', () => {
+    locale.language = 'en'
+    showNotify(AINotifyType.notify429TypeQuotaExceeded)
+    render(<AIReActChat {...baseProps} />)
+
+    const rechargeBtn = screen.getByRole('button', { name: 'Recharge' })
+    expect(screen.queryByRole('button', { name: '充值' })).not.toBeInTheDocument()
+    expect(rechargeBtn).toHaveAttribute('data-type', 'primary')
+    fireEvent.click(rechargeBtn)
+    expect(emiter.emit).toHaveBeenCalledWith('onOpenRecharge', '')
+  })
+
+  it.each([true, false])('非社区版 execute=%s 时不提供充值操作，配额提示仅在执行时显示', (execute) => {
+    vi.mocked(isCommunityEdition).mockReturnValue(false)
+    act(() => chatStore.getState().updateState({ execute }))
+    showNotify(AINotifyType.notify429TypeQuotaExceeded)
+    render(<AIReActChat {...baseProps} />)
+
+    expect(screen.queryAllByText('余额不足')).toHaveLength(execute ? 2 : 0)
+    expect(screen.queryByRole('button', { name: '充值' })).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('button').find((btn) => btn.getAttribute('data-type') === 'text')).toBeUndefined()
+    expect(emiter.emit).not.toHaveBeenCalledWith('onOpenRecharge', '')
+
+    act(() => chatStore.getState().updateState({ execute: false }))
+    expect(screen.queryByText('余额不足')).not.toBeInTheDocument()
+  })
+
+  it('限流消息覆盖配额提示后不显示操作按钮，停止执行后隐藏', () => {
+    showNotify(AINotifyType.notify429TypeQuotaExceeded)
+    render(<AIReActChat {...baseProps} />)
+    act(() => chatStore.getState().updateState({ execute: true }))
+    showNotify(AINotifyType.notify429TypeRateLimited, '请求过快')
+
+    expect(screen.queryByRole('button', { name: '充值' })).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('button').find((btn) => btn.getAttribute('data-type') === 'text')).toBeUndefined()
+    expect(screen.getAllByText('请求过快')).toHaveLength(2)
+    act(() => chatStore.getState().updateState({ execute: false }))
+    expect(screen.queryByText('请求过快')).not.toBeInTheDocument()
+  })
+
   it('自由对话收起时不渲染右侧面板', () => {
     render(<AIReActChat {...baseProps} showFreeChat={false} />)
 

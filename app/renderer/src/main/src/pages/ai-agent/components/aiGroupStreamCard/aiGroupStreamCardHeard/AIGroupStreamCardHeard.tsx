@@ -7,8 +7,10 @@ import { useTypedStream } from '../../aiChatListItem/StreamingChatContent/hooks/
 import type { AIGroupStreamCardHeardProps } from '../type'
 import styles from './AIGroupStreamCardHeard.module.scss'
 import { useCreation } from 'ahooks'
+import { getAIStreamIcon } from '../../aiStreamChatContent/icons'
 const AIGroupStreamCardHeard: React.FC<AIGroupStreamCardHeardProps> = memo((props) => {
-  const { expand, setExpand, lastItem, nodeLabel, shouldShowMask, childrenTokensLength } = props
+  const { expand, setExpand, lastItem, nodeId, nodeLabel, shouldShowMask, childrenTokensLength } = props
+  const StreamIcon = getAIStreamIcon(nodeId)
 
   const { content } = useTypedStream({
     getContent: () => lastItem?.data.content ?? '',
@@ -25,7 +27,10 @@ const AIGroupStreamCardHeard: React.FC<AIGroupStreamCardHeardProps> = memo((prop
           setExpand(!expand)
         }}
       >
-        <div className={styles['title-node-label']}>{nodeLabel}</div>
+        <div className={styles['title-node-label']}>
+          <StreamIcon className={styles['stream-icon']} color="currentColor" />
+          {nodeLabel}
+        </div>
         <div className={styles['stream-text']}>
           {shouldShowMask && <div className={styles['ai-mask']} />}
           <p

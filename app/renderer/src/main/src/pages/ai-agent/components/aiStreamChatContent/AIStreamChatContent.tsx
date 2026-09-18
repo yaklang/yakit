@@ -11,6 +11,7 @@ import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConsta
 import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 import { useClickAway } from 'ahooks'
 import ThoughtDuration from '../thoughtDuration/ThoughtDuration'
+import { getAIStreamIcon } from './icons'
 
 const STREAM_MASK_THRESHOLD = 100
 
@@ -74,6 +75,7 @@ export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.mem
   const { content, nodeId, nodeIdVerbose, referenceNode, streaming, token } = props
   const { nodeLabel } = useAINodeLabel(nodeIdVerbose)
   const shouldShowMask = useMemo(() => content.length > STREAM_MASK_THRESHOLD, [content])
+  const StreamIcon = getAIStreamIcon(nodeId)
   if (nodeId === AI_STREAM_THOUGHT_NODE_ID) {
     return (
       <ThoughtStreamContent
@@ -88,6 +90,7 @@ export const AIStreamChatContent: React.FC<AIStreamChatContentProps> = React.mem
   return (
     <div className={classNames(styles['ai-stream-chat-content-wrapper'], 'ai-stream-chat-content-wrapper')}>
       <div className={styles['ai-stream-chat-content']}>
+        <StreamIcon className={styles['stream-icon']} />
         <div className={styles['title']}>{nodeLabel}</div>
         <div className={styles['ai-stream-content']}>
           <Tooltip

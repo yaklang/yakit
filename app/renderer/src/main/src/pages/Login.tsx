@@ -28,11 +28,11 @@ const Login: React.FC<LoginProp> = (props) => {
   const [loading, setLoading] = useState<boolean>(false)
   // 打开企业登录面板
   const openEnterpriseModal = () => {
-    props.onCancel()
     const m = showModal({
       title: '',
       centered: true,
       content: <ConfigPrivateDomain onClose={() => m.destroy()} enterpriseLogin={true} />,
+      modalAfterClose: () => props.onCancel(),
     })
     return m
   }
@@ -69,6 +69,7 @@ const Login: React.FC<LoginProp> = (props) => {
   }
   // 全局监听登录状态
   useEffect(() => {
+    if (isEnterpriseEdition()) return
     const cleanup = yakitAuth.onSignInData((res: any) => {
       const { ok, info } = res
       if (ok) {
@@ -99,6 +100,8 @@ const Login: React.FC<LoginProp> = (props) => {
       cleanup()
     }
   }, [])
+  // 企业登录仍在进行，关闭企业面板后才结束本次登录流程。
+  if (isEnterpriseEdition()) return null
   return (
     <Modal
       open={props.visible}

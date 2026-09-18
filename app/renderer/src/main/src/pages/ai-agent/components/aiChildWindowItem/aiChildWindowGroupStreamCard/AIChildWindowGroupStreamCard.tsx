@@ -86,15 +86,15 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
         return false
     }
   }, [lastToken])
-  const nodeLabel = useCreation(() => {
+  const { nodeId, nodeLabel } = useCreation(() => {
     const groupData = rawData.get(token)
-    if (!groupData) return ''
+    if (!groupData) return { nodeId: undefined, nodeLabel: '' }
     switch (groupData.type) {
       case AIChatQSDataTypeEnum.STREAM_GROUP:
-        return getLabelByParams(groupData.data?.NodeIdVerbose)
+        return { nodeId: groupData.data.NodeId, nodeLabel: getLabelByParams(groupData.data.NodeIdVerbose) }
 
       default:
-        return ''
+        return { nodeId: undefined, nodeLabel: '' }
     }
   }, [renderNum])
   return (
@@ -102,6 +102,7 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
       expand={expand}
       setExpand={setExpand}
       lastItem={lastItem}
+      nodeId={nodeId}
       nodeLabel={nodeLabel}
       shouldShowMask={shouldShowMask}
       childrenTokensLength={childrenTokensLength}

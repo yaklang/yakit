@@ -29,7 +29,6 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { AIModelTypeEnum, type AIModelTypeEnumType, AIModelTypeInterFileNameEnum } from '../../defaultConstant'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { yakitNotify } from '@/utils/notification'
-import emiter from '@/utils/eventBus/eventBus'
 import { cloneDeep, isNil } from 'lodash'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -404,7 +403,6 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       .setAIGlobalConfig(config)
       .then(() => {
         onSuccess?.()
-        emiter.emit('onRefreshAvailableAIModelList', `${isAdd}`)
         onClose?.()
       })
       .finally(() => {

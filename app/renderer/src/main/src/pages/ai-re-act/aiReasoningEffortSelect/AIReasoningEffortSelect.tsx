@@ -14,7 +14,6 @@ import {
   normalizeReasoningEffort,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/reasoningEffort'
 import { type AIModelConfig, grpcProbeReasoningEffort } from '@/pages/ai-agent/aiModelList/utils'
-import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './AIReasoningEffortSelect.module.scss'
 
@@ -40,13 +39,7 @@ export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = R
     const models = aiGlobalConfig?.IntelligentModels || []
     if (!models.length) return
     const nextModels = [mutate({ ...models[0] }), ...models.slice(1)]
-    event
-      .setAIGlobalConfig({ ...aiGlobalConfig, IntelligentModels: nextModels })
-      .then(() => {
-        // AIModelSelect 持有本地副本，通知其刷新，避免后续重排模型时用旧副本覆盖本次修改
-        emiter.emit('onRefreshAvailableAIModelList')
-      })
-      .catch(() => {})
+    event.setAIGlobalConfig({ ...aiGlobalConfig, IntelligentModels: nextModels }).catch(() => {})
   })
 
   /** 懒探测：当前模型未探测过时探测是否支持 xhigh/max；失败不置已探测，下次触发可重试 */

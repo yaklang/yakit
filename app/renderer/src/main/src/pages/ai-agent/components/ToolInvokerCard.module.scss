@@ -25,6 +25,20 @@
     cursor: pointer;
   }
 
+  .stdout-expand-btn {
+    span {
+      margin-left: 0;
+    }
+  }
+
+  .tool-loading-status {
+    padding: 2px 4px;
+    cursor: auto;
+    span {
+      margin-left: 0;
+    }
+  }
+
   .stdout-card-extra {
     display: flex;
     align-items: center;

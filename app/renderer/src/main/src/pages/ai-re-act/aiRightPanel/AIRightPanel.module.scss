@@ -173,8 +173,8 @@
   line-height: 16px;
 }
 
-// 小屏漏洞总数角标：16px × 14px（含左右各 2px 内边距），向右下偏移 8px/6px，与 16px 图标重叠 8px × 8px（面积约四分之一）
-.risk-count-badge {
+// 小屏数据量角标：16px × 14px，超过 99 时通过绝对定位的伪元素显示上标。
+.count-badge {
   position: absolute;
   right: -8px;
   bottom: -6px;
@@ -182,7 +182,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
   min-width: 16px;
   height: 14px;
   padding: 0 2px;
@@ -195,6 +194,21 @@
   background: var(--Colors-Use-Status-High);
   @include themeify.color-mix-border(1px, solid, var(--Colors-Use-Neutral-Bg), 50%);
   border-radius: 4px;
+}
+
+.count-badge-overflow {
+  padding: 0 5px 0 2px;
+}
+
+.count-badge-overflow::after {
+  content: '+';
+  position: absolute;
+  top: 0;
+  right: -1px;
+  color: var(--Colors-Use-Basic-White);
+  font-size: 10px;
+  line-height: 9px;
+  font-weight: bold;
 }
 
 // 「更多/折叠」图标使用帮助文本颜色

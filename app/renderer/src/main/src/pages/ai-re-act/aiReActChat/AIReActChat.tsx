@@ -10,7 +10,13 @@ import { yakitNotify } from '@/utils/notification'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import classNames from 'classnames'
 import { ChevrondownButton } from './AIReActComponent'
-import { type AIInputEvent, AIInputEventSyncTypeEnum, AISourceEnum, type AIStartParams } from '../hooks/grpcApi'
+import {
+  type AIInputEvent,
+  AIInputEventSyncTypeEnum,
+  AINotifyType,
+  AISourceEnum,
+  type AIStartParams,
+} from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
@@ -29,6 +35,10 @@ import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
 import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 import { AIRightPanel } from '../aiRightPanel/AIRightPanel'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isCommunityEdition } from '@/utils/envfile'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -364,10 +374,16 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
   const notifyMessage = useStore(store, (state) => state.notifyMessage)
+  const { t } = useI18nNamespaces(['layout'])
 
   const { nodeLabel } = useAINodeLabel(notifyMessage?.label)
 
-  return execute && notifyMessage?.content ? (
+  const isQuotaExceeded = notifyMessage?.type === AINotifyType.notify429TypeQuotaExceeded && isCommunityEdition() // yakit/IRify/MEMFIT 得社区版才有这个充值按钮
+
+  const onClose = () => {
+    store.getState().updateState({ notifyMessage: null })
+  }
+  return (execute || isQuotaExceeded) && notifyMessage?.content ? (
     <div className={styles['notify-message']}>
       <div>{nodeLabel}</div>
       <div className={styles['content-wrapper']}>
@@ -378,6 +394,14 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
           </div>
         </div>
       </div>
+      {isQuotaExceeded && (
+        <div className={styles['notify-actions']}>
+          <YakitButton size="small" type="primary" onClick={() => emiter.emit('onOpenRecharge', '')}>
+            {t('CeUserMenu.recharge')}
+          </YakitButton>
+          <YakitButton size="small" type="text" icon={<XOutlined />} onClick={onClose} />
+        </div>
+      )}
     </div>
   ) : (
     <></>

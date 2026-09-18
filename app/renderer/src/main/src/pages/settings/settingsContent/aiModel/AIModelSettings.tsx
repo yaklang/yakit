@@ -98,7 +98,6 @@ export const AIModelSettings: React.FC = () => {
   const onRefresh = useMemoizedFn((isShowLoading?: boolean) => {
     if (modelType === 'online') {
       event.onRefresh(isShowLoading)
-      emiter.emit('onRefreshAvailableAIModelList')
       return
     }
     localRef.current?.onRefresh()

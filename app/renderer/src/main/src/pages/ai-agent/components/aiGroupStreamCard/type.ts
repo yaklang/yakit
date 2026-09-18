@@ -5,6 +5,7 @@ export interface AIGroupStreamCardHeardProps {
   expand: boolean
   setExpand: Dispatch<SetStateAction<boolean>>
   lastItem?: ChatStream
+  nodeId?: string
   nodeLabel: string
   shouldShowMask: boolean
   childrenTokensLength: number

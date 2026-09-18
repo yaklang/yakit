@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
 import classNames from 'classnames'
@@ -72,10 +72,11 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
   const execFileRecord = useStore(store, (state) => state.execFileRecord)
-  const httpTabShow = useStore(store, (state) => state.httpTabShow)
   const httpTabUpdate = useStore(store, (state) => state.httpTabUpdate)
-  const riskTabShow = useStore(store, (state) => state.riskTabShow)
   const riskTabUpdate = useStore(store, (state) => state.riskTabUpdate)
+  // 原始数组会原地追加；按更新计数生成快照，确保 React Compiler 能感知数据变化。
+  const httpRunTimeIDs = useCreation(() => [...rawData.httpRunTimeIDs], [rawData.httpRunTimeIDs, httpTabUpdate])
+  const riskRunTimeIDs = useCreation(() => [...rawData.riskRunTimeIDs], [rawData.riskRunTimeIDs, riskTabUpdate])
 
   const { activeChat } = useAIAgentStore()
   const relatedRuntimeIDs = useMemo(() => activeChat?.RelatedRuntimeIDs ?? [], [activeChat?.RelatedRuntimeIDs])
@@ -116,26 +117,11 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     if (filePreviewData) openFilePreview(filePreviewData)
   }, [filePreviewData])
 
-  /** 流量、风险各自首次有数据时自动打开对应 tab，互不影响 */
-  const autoOpenedHttpRef = useRef(false)
-  const autoOpenedRiskRef = useRef(false)
   useEffect(() => {
-    autoOpenedHttpRef.current = false
-    autoOpenedRiskRef.current = false
     setTabs([])
     setActiveTabKey('')
     setFilePreviewData(undefined)
   }, [activeChat?.SessionID])
-  useEffect(() => {
-    if (httpTabShow && !autoOpenedHttpRef.current) {
-      autoOpenedHttpRef.current = true
-      openTab({ key: AITabsEnum.HTTP, type: AITabsEnum.HTTP, label: getDefaultLabel(AITabsEnum.HTTP) })
-    }
-    if (riskTabShow && !autoOpenedRiskRef.current) {
-      autoOpenedRiskRef.current = true
-      openTab({ key: AITabsEnum.Risk, type: AITabsEnum.Risk, label: getDefaultLabel(AITabsEnum.Risk) })
-    }
-  }, [httpTabShow, riskTabShow, activeChat?.SessionID])
 
   const onSwitchAIAgentTab = useMemoizedFn((data?: string) => {
     if (!data) return
@@ -268,10 +254,10 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     if (!activeTab) return null
 
     const runTimeIds = [
-      ...new Set(activeTab.runtimeId ? [activeTab.runtimeId] : rawData.httpRunTimeIDs.concat(relatedRuntimeIDs)),
+      ...new Set(activeTab.runtimeId ? [activeTab.runtimeId] : httpRunTimeIDs.concat(relatedRuntimeIDs)),
     ]
     const riskRunTimeIds = [
-      ...new Set(activeTab.runtimeId ? [activeTab.runtimeId] : rawData.riskRunTimeIDs.concat(relatedRuntimeIDs)),
+      ...new Set(activeTab.runtimeId ? [activeTab.runtimeId] : riskRunTimeIDs.concat(relatedRuntimeIDs)),
     ]
     switch (activeTab.type) {
       case AITabsEnum.File_Preview:
@@ -316,8 +302,8 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     relatedRuntimeIDs,
     filterTagDom,
     operationLogList,
-    rawData.httpRunTimeIDs,
-    rawData.riskRunTimeIDs,
+    httpRunTimeIDs,
+    riskRunTimeIDs,
   ])
 
   return (

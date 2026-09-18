@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 import { aiOtherDataHandlers } from '../grpcStreamHandler/aiOther'
 import { DefaultMemoryList } from '../defaultConstant'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 import { AIChatQSDataTypeEnum, type ChatTaskNodeGroup } from '../aiRender'
-import { AITaskStatus } from '../grpcApi'
+import { AINotifyType, AITaskStatus } from '../grpcApi'
 import i18n from '@/i18n/i18n'
 
 const tAgent = i18n.getFixedT(null, 'aiAgent')
@@ -90,23 +90,31 @@ describe('aiOther other handlers', () => {
   it.each(['active', 'invalidated', 'closing'])('notify expiration respects a %s connection', (state) => {
     vi.useFakeTimers()
     const req = makeHandlerRequest({
-      res: makeGrpcJsonRes('notify', { type: 'notify', content: 'old notice', duration_ms: 100 }),
+      res: makeGrpcJsonRes('notify', {
+        type: AINotifyType.notify429TypeRateLimited,
+        content: 'old notice',
+        duration_ms: 100,
+      }),
     })
     aiOtherDataHandlers.notify(req)
     expect(req.store.getState().notifyMessage?.content).toBe('old notice')
     if (state === 'invalidated') req.meta.lifecycle.current = false
     if (state === 'closing') req.meta.lifecycle.closing = true
     // 新连接或收尾阶段的通知不能被旧定时器清掉。
-    req.store
-      .getState()
-      .updateState({ notifyMessage: { type: 'notify', content: 'latest notice', label: { Zh: '', En: '' } } })
+    req.store.getState().updateState({
+      notifyMessage: {
+        type: AINotifyType.notify429TypeRateLimited,
+        content: 'latest notice',
+        label: { Zh: '', En: '' },
+      },
+    })
     vi.advanceTimersByTime(100)
     expect(req.store.getState().notifyMessage?.content ?? null).toBe(state === 'active' ? null : 'latest notice')
   })
 
   it('D3: notify sets message', () => {
     const req = makeHandlerRequest({
-      res: makeGrpcJsonRes('notify', { type: 'info', content: 'n1', duration_ms: 0 }),
+      res: makeGrpcJsonRes('notify', { type: AINotifyType.notify429TypeRateLimited, content: 'n1', duration_ms: 0 }),
     })
     aiOtherDataHandlers.notify(req)
     expect(req.store.getState().notifyMessage?.content).toBe('n1')
@@ -147,6 +155,44 @@ describe('aiOther other handlers', () => {
     expect(pushLog).toHaveBeenCalledWith(expect.objectContaining({ level: 'error' }))
     expect(req.store.getState().skipSubtaskTaskIDs).toEqual(['sub-keep'])
   })
+})
+
+describe('notify lifetime', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it.each([{ duration_ms: 10 }, { duration_seconds: 1 }, { duration: 1 }])(
+    '配额耗尽忽略后端时长 %o，并清除上一条通知的计时器',
+    (duration) => {
+      vi.useFakeTimers()
+      const req = makeHandlerRequest({
+        res: makeGrpcJsonRes('notify', {
+          type: AINotifyType.notify429TypeRateLimited,
+          content: '限流',
+          duration_ms: 100,
+        }),
+      })
+      aiOtherDataHandlers.notify(req)
+      req.res = makeGrpcJsonRes('notify', {
+        type: AINotifyType.notify429TypeQuotaExceeded,
+        content: '余额不足',
+        ...duration,
+      })
+      aiOtherDataHandlers.notify(req)
+      expect(req.meta.notifyMessageTimer).toBeNull()
+      vi.advanceTimersByTime(60_000)
+      expect(req.store.getState().notifyMessage?.content).toBe('余额不足')
+
+      req.res = makeGrpcJsonRes('notify', {
+        type: AINotifyType.notify429TypeRateLimited,
+        content: '新的限流',
+        ...duration,
+      })
+      aiOtherDataHandlers.notify(req)
+      expect(req.store.getState().notifyMessage?.content).toBe('新的限流')
+      vi.advanceTimersByTime(1000)
+      expect(req.store.getState().notifyMessage).toBeNull()
+    },
+  )
 })
 
 describe('aiOther react_task_dequeue schedule fields', () => {

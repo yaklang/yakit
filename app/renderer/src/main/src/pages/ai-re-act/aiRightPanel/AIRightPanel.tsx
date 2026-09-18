@@ -149,7 +149,7 @@ interface MenuItemProps {
   small?: boolean
   secondary?: boolean
   suffix?: React.ReactNode
-  smallBadge?: React.ReactNode
+  smallBadge?: number
   onClick?: () => void
   onMouseEnter?: () => boolean
   onMouseLeave?: () => void
@@ -221,8 +221,11 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
           >
             {icon}
             {smallBadge && (
-              <span className={styles['risk-count-badge']} aria-label={`漏洞总数 ${smallBadge}`}>
-                {smallBadge}
+              <span
+                className={classNames(styles['count-badge'], smallBadge > 99 && styles['count-badge-overflow'])}
+                aria-label={`${label} ${smallBadge}`}
+              >
+                {Math.min(smallBadge, 99)}
               </span>
             )}
           </span>
@@ -362,6 +365,8 @@ const MenuList: React.FC<{
     if (!small) return undefined
 
     switch (key) {
+      case 'traffic':
+        return (trafficTotal ?? 0) > 0 ? trafficTotal : undefined
       case 'risk':
         return riskTotal > 0 ? riskTotal : undefined
       default:

@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useDebounceFn, useMemoizedFn } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import ExclamationCircleOutlined from '@ant-design/icons/lib/icons/ExclamationCircleOutlined'
 import { lazy, Suspense } from 'react'
 import { useStore, useYakitDynamicStatus } from '@/store'
 import { defaultUserInfo } from '@/pages/userInfoDefaults'
-const SetUserInfo = lazy(() => import('@/pages/MainOperator').then((m) => ({ default: m.SetUserInfo })))
 import { loginOut } from '@/utils/login'
 import { success, yakitFailed } from '@/utils/notification'
 import { NetWorkApi } from '@/services/fetch'
@@ -15,7 +14,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import type { RouteToPageProps } from '@/pages/layout/publicMenu/PublicMenu'
 import emiter from '@/utils/eventBus/eventBus'
 import { isCommunityEdition, isEnpriTraceAgent, isEnpriTraceIRify, isIRify } from '@/utils/envfile'
-import { yakitEngine, yakitNetwork, yakitUILayout } from '@/services/electronBridge'
+import { yakitNetwork, yakitUILayout } from '@/services/electronBridge'
 import {
   cancelIMControlState,
   onIMControlStateData,
@@ -27,6 +26,7 @@ import { deriveIMControlBadge, type IMControlBadgeStatus, type IMControlBadgeVie
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { UserMenusMap } from './constants'
 import { Modal } from 'antd'
+const SetUserInfo = lazy(() => import('@/pages/MainOperator').then((m) => ({ default: m.SetUserInfo })))
 
 export interface UseUserMenuParams {
   isEngineLink: boolean
@@ -105,6 +105,35 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   }, [loginShow])
   const [usageStatisticsShow, setUsageStatisticsShow] = useState<boolean>(false)
   const [rechargeVisible, setRechargeVisible] = useState(false)
+  const rechargeAfterLoginRef = useRef(false) // 登录成功后，是否自动打开充值弹窗
+
+  const onOpenRecharge = useMemoizedFn(() => {
+    setCeUserMenuShow(false)
+    if (!userInfo.isLogin) {
+      rechargeAfterLoginRef.current = true
+      setLoginShow(true)
+      return
+    }
+    setRechargeVisible(true)
+  })
+
+  useEffect(() => {
+    if (!rechargeAfterLoginRef.current) return
+    // 登录弹窗仍打开且未登录时，继续等待
+    if (loginShow && !userInfo.isLogin) return
+
+    // 登录成功或取消登录后，清除本次充值意图
+    rechargeAfterLoginRef.current = false
+    if (userInfo.isLogin) {
+      setLoginShow(false)
+      setRechargeVisible(true)
+    }
+  }, [userInfo.isLogin, loginShow])
+
+  useEffect(() => {
+    emiter.on('onOpenRecharge', onOpenRecharge)
+    return () => emiter.off('onOpenRecharge', onOpenRecharge)
+  }, [])
   const [apiKeys, setApiKeys] = useState<API.ApiKeyDetail>()
   const [apiKeysInfo, setApiKeysInfo] = useState<API.ApiUserUsageResponse>()
   const [apiKeysInfoLoading, setApiKeysInfoLoading] = useState<boolean>(false)

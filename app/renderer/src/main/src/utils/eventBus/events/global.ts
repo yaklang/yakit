@@ -47,6 +47,8 @@ export type GlobalEventProps = {
   onCloseControlMyselfModal?: string
   /** 打开登录弹窗 */
   onOpenLogin: string
+  /** 打开充值弹窗，未登录时先登录 */
+  onOpenRecharge: string
   /** 菜单栏设置菜单选项 */
   onUIOpSettingMenuSelect: string
 }

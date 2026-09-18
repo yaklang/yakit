@@ -70,7 +70,11 @@
     "configDesc": "无可使用AI模型，请配置后使用",
     "selectModel": "AI 模型选择",
     "openConfigTooltip": "打开设置中的模型配置",
-    "manageModels": "管理模型"
+    "manageModels": "管理模型",
+    "resetModel": "重置模型",
+    "resetModelTooltip": "重置回默认的模型",
+    "emptyModels": "未获取到模型，可点击刷新重新获取。",
+    "noBuiltinModel": "未找到内置高质模型"
   },
   "AIModelList": {
     "onlineTooltip": "通过api访问模型,接受AI信息或向AI发送消息,可配置多个",
@@ -448,7 +452,8 @@
     "relatedRisks": "漏洞",
     "httpTraffic": "流量",
     "refreshCodeBlockData": "刷新代码块数据",
-    "paramsGenerating": "参数生成中..."
+    "paramsGenerating": "参数生成中...",
+    "executing": "执行中..."
   },
   "FileTreeSystemItem": {
     "joinPathFailed": "路径拼接失败",
