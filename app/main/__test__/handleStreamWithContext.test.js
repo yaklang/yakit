@@ -12,6 +12,7 @@ const createWindow = () => {
   const webContents = Object.assign(new EventEmitter(), {
     id: 17,
     isDestroyed: vi.fn(() => false),
+    isCrashed: vi.fn(() => false),
     send: vi.fn(),
   })
   return Object.assign(new EventEmitter(), {
@@ -91,6 +92,21 @@ describe('handleStreamWithContext', () => {
     expect(stream.cancel).toHaveBeenCalledOnce()
     expect(streams.has('destroyed-error')).toBe(false)
     expect(window.webContents.send).not.toHaveBeenCalled()
+  })
+
+  it('cancels the stream when the main frame is disposed during send', () => {
+    const streams = new Map()
+    const stream = createStream()
+    const window = createWindow()
+    window.webContents.send.mockImplementation(() => {
+      throw new Error('Render frame was disposed before WebFrameMain could be accessed')
+    })
+
+    handlerHelper.registerHandler(window, stream, streams, 'disposed')
+    expect(() => stream.emit('data', { Id: 1 })).not.toThrow()
+
+    expect(stream.cancel).toHaveBeenCalledOnce()
+    expect(streams.has('disposed')).toBe(false)
   })
 
   it.each([

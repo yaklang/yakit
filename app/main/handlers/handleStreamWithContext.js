@@ -1,4 +1,5 @@
 const STREAM_TOKEN_PATTERN = /^[A-Za-z0-9_-]{1,128}$/
+const { sendToWindow } = require('../rendererRecovery')
 
 const cancelAll = (streamMap, callback) => {
   const streams = [...streamMap.entries()]
@@ -58,29 +59,30 @@ module.exports = {
 
     streamMap.set(token, stream)
     const isCurrent = () => streamMap.get(token) === stream
-    const canSend = () => !!windows && !windows.isDestroyed() && !windows.webContents.isDestroyed()
-    const stopIfWindowUnavailable = () => {
-      if (canSend()) return false
+    const send = (channel, ...args) => {
+      if (sendToWindow(windows, channel, ...args)) return true
       if (isCurrent()) {
         streamMap.delete(token)
         stream?.cancel?.()
       }
-      return true
+      return false
+    }
+    const finish = (channel, ...args) => {
+      streamMap.delete(token)
+      if (!sendToWindow(windows, channel, ...args)) stream?.cancel?.()
     }
 
     stream.on('data', (data) => {
-      if (!isCurrent() || stopIfWindowUnavailable()) return
-      windows.webContents.send(`${eventToken}-data`, data)
+      if (!isCurrent()) return
+      send(`${eventToken}-data`, data)
     })
     stream.on('error', (error) => {
-      if (!isCurrent() || stopIfWindowUnavailable()) return
-      streamMap.delete(token)
-      windows.webContents.send(`${eventToken}-error`, error && error.details)
+      if (!isCurrent()) return
+      finish(`${eventToken}-error`, error && error.details)
     })
     stream.on('end', () => {
-      if (!isCurrent() || stopIfWindowUnavailable()) return
-      streamMap.delete(token)
-      windows.webContents.send(`${eventToken}-end`)
+      if (!isCurrent()) return
+      finish(`${eventToken}-end`)
     })
     return true
   },

@@ -2,6 +2,24 @@ const RECOVERY_TIMEOUT_MS = 20_000
 const CRASH_WINDOW_MS = 60_000
 const MAX_FAILURES = 3
 
+const sendToWindow = (targetWindow, channel, ...args) => {
+  try {
+    if (
+      !targetWindow ||
+      targetWindow.isDestroyed() ||
+      targetWindow.webContents.isDestroyed() ||
+      targetWindow.webContents.isCrashed?.()
+    ) {
+      return false
+    }
+    targetWindow.webContents.send(channel, ...args)
+    return true
+  } catch {
+    // The main frame can be disposed between the checks above and send().
+    return false
+  }
+}
+
 const messages = {
   zh: {
     title: '界面恢复',
@@ -320,4 +338,4 @@ function createRendererRecovery({
   }
 }
 
-module.exports = { createRendererRecovery, RECOVERY_TIMEOUT_MS, CRASH_WINDOW_MS, MAX_FAILURES }
+module.exports = { createRendererRecovery, sendToWindow, RECOVERY_TIMEOUT_MS, CRASH_WINDOW_MS, MAX_FAILURES }
