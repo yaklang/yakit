@@ -3659,10 +3659,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         throw new Error('Web Fuzzer execution push is invalid')
       }
       queueMcpWebFuzzerExecution(execution)
-      scheduleIdleTask(() => {
-        emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: execution.pageId, forceRefresh: true }))
-        emiter.emit('onExecuteWebFuzzerTab', execution.pageId)
-      })
+      // 立即切换一级/二级菜单并触发执行：queue 已覆盖挂载竞态；
+      // scheduleIdleTask 默认 2s 可能晚于 expiresAt / MCP timeoutSeconds，导致命令被丢且截图停在错误页
+      emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: execution.pageId, forceRefresh: true }))
+      emiter.emit('switchMenuItem', JSON.stringify({ route: YakitRoute.HTTPFuzzer }))
+      emiter.emit('onExecuteWebFuzzerTab', execution.pageId)
     } catch (error) {
       yakitNotify('error', t('MainOperatorContent.openWFFailed', { error: `${error}` }))
     }
