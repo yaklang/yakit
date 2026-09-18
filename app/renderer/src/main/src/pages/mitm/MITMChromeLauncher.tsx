@@ -95,7 +95,11 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         if (data.addr === `${params.host}:${params.port}`) return
         const hosts: string[] = (data.addr as string).split(':')
         if (hosts.length !== 2) return
-        setParams({ ...params, host: hosts[0] })
+        const host = hosts[0]
+        // Chrome proxy needs a usable TCP host (IP/domain/localhost); skip unix/invalid and keep MITM default
+        const usable = !!host && host.toLowerCase() !== 'unix' && /^[a-zA-Z0-9.-]+$/.test(host)
+        if (!usable) return
+        setParams({ ...params, host })
       })
       .catch(() => {})
 
