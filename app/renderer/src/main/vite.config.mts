@@ -87,7 +87,7 @@ function noopAntdComponentStylePlugin(): Plugin {
   }
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const sourcemap = process.env.YAKIT_SOURCEMAP === 'true'
 
   return {
@@ -101,7 +101,9 @@ export default defineConfig(({ mode }) => {
       noopAntdComponentStylePlugin(),
       yakitUiIconsPurePlugin(),
       react(),
-      pluginBabel({ presets: [reactCompilerPreset()] }),
+      // React Compiler 仅在 build 启用：dev 下逐模块过 Babel（大文件单次 1~3s）是开发卡顿根因，
+      // 热路径叶子组件已有手写 memo 兜底，打包产物不受影响
+      ...(command === 'build' ? [pluginBabel({ presets: [reactCompilerPreset()] })] : []),
       nodePolyfills({
         // 对齐 CRA fallback.fs=false：不要注入浏览器内存版 fs（主窗口 nodeIntegration 下真 Node fs 可用）
         include: ['buffer', 'process', 'stream', 'util', 'events', 'path', 'crypto', 'timers', 'vm'],

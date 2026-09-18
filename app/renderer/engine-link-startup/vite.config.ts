@@ -20,14 +20,15 @@ function generateThemeCssPlugin(): Plugin {
   }
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   base: './',
   envPrefix: ['YAKIT_'],
   plugins: [
     generateThemeCssPlugin(),
     yakitUiIconsPurePlugin(),
     react(),
-    pluginBabel({ presets: [reactCompilerPreset()] }),
+    // React Compiler 仅在 build 启用：dev 下逐模块过 Babel 是开发卡顿根因，与主渲染端保持一致
+    ...(command === 'build' ? [pluginBabel({ presets: [reactCompilerPreset()] })] : []),
   ],
   server: {
     host: true,
@@ -55,4 +56,4 @@ export default defineConfig({
   json: {
     stringify: true,
   },
-})
+}))
