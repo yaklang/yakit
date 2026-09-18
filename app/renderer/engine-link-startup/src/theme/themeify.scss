@@ -16,7 +16,7 @@ $color-list: (
     color-4: var(--Colors-Use-Success-Hover),
     color-5: var(--Colors-Use-Success-Primary),
     color-6: var(--Colors-Use-Success-Pressed),
-    color-7: var(--Colors-Use-Main-On-Primary),
+    color-7: var(--Colors-Use-Success-On-Primary),
   ),
   danger: (
     color-1: var(--Colors-Use-Error-Bg),
@@ -25,7 +25,7 @@ $color-list: (
     color-4: var(--Colors-Use-Error-Hover),
     color-5: var(--Colors-Use-Error-Primary),
     color-6: var(--Colors-Use-Error-Pressed),
-    color-7: var(--Colors-Use-Main-On-Primary),
+    color-7: var(--Colors-Use-Error-On-Primary),
   ),
   infoBlue: (
     color-1: var(--Colors-Use-Blue-Bg),
@@ -34,7 +34,7 @@ $color-list: (
     color-4: var(--Colors-Use-Blue-Hover),
     color-5: var(--Colors-Use-Blue-Primary),
     color-6: var(--Colors-Use-Blue-Pressed),
-    color-7: var(--Colors-Use-Main-On-Primary),
+    color-7: var(--Colors-Use-Blue-On-Primary),
   ),
 );
 
