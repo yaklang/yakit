@@ -93,12 +93,12 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
       .invoke('fetch-yaklang-engine-addr')
       .then((data) => {
         if (data.addr === `${params.host}:${params.port}`) return
-        const hosts: string[] = (data.addr as string).split(':')
-        if (hosts.length !== 2) return
-        const host = hosts[0]
-        // Chrome proxy needs a usable TCP host (IP/domain/localhost); skip unix/invalid and keep MITM default
-        const usable = !!host && host.toLowerCase() !== 'unix' && /^[a-zA-Z0-9.-]+$/.test(host)
-        if (!usable) return
+        // 引擎地址一般是 127.0.0.1:端口；Unix Socket 则是 unix:/路径，不能当 Chrome 代理
+        const parts = (data.addr as string).split(':')
+        if (parts.length !== 2) return
+        const host = parts[0]
+        // 只有 IP / 域名才能用；否则保留 MITM 默认地址
+        if (!host || host.toLowerCase() === 'unix' || !/^[a-zA-Z0-9.-]+$/.test(host)) return
         setParams({ ...params, host })
       })
       .catch(() => {})
