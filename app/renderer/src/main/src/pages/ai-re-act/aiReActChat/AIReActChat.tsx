@@ -38,6 +38,7 @@ import { AIRightPanel } from '../aiRightPanel/AIRightPanel'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isCommunityEdition } from '@/utils/envfile'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -376,7 +377,8 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
   const { t } = useI18nNamespaces(['layout'])
 
   const { nodeLabel } = useAINodeLabel(notifyMessage?.label)
-  const isQuotaExceeded = notifyMessage?.type === AINotifyType.notify429TypeQuotaExceeded
+
+  const isQuotaExceeded = notifyMessage?.type === AINotifyType.notify429TypeQuotaExceeded && isCommunityEdition() // yakit/IRify/MEMFIT 得社区版才有这个充值按钮
 
   const onClose = () => {
     store.getState().updateState({ notifyMessage: null })

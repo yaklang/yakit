@@ -12,6 +12,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createChatStore } from '../../hooks/chatStore'
 import { AINotifyType } from '../../hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
+import { isCommunityEdition } from '@/utils/envfile'
 
 let chatStore: ReturnType<typeof createChatStore>
 
@@ -19,7 +20,10 @@ beforeEach(() => {
   chatStore = createChatStore()
   vi.clearAllMocks()
   locale.language = 'zh'
+  vi.mocked(isCommunityEdition).mockReturnValue(true)
 })
+
+vi.mock('@/utils/envfile', () => ({ isCommunityEdition: vi.fn(() => true) }))
 
 vi.mock('ahooks', async () => {
   const actual = await vi.importActual('ahooks')
@@ -182,6 +186,21 @@ describe('AIReActChat', () => {
     expect(rechargeBtn).toHaveAttribute('data-type', 'primary')
     fireEvent.click(rechargeBtn)
     expect(emiter.emit).toHaveBeenCalledWith('onOpenRecharge', '')
+  })
+
+  it.each([true, false])('非社区版 execute=%s 时不提供充值操作，配额提示仅在执行时显示', (execute) => {
+    vi.mocked(isCommunityEdition).mockReturnValue(false)
+    act(() => chatStore.getState().updateState({ execute }))
+    showNotify(AINotifyType.notify429TypeQuotaExceeded)
+    render(<AIReActChat {...baseProps} />)
+
+    expect(screen.queryAllByText('余额不足')).toHaveLength(execute ? 2 : 0)
+    expect(screen.queryByRole('button', { name: '充值' })).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('button').find((btn) => btn.getAttribute('data-type') === 'text')).toBeUndefined()
+    expect(emiter.emit).not.toHaveBeenCalledWith('onOpenRecharge', '')
+
+    act(() => chatStore.getState().updateState({ execute: false }))
+    expect(screen.queryByText('余额不足')).not.toBeInTheDocument()
   })
 
   it('限流消息覆盖配额提示后不显示操作按钮，停止执行后隐藏', () => {

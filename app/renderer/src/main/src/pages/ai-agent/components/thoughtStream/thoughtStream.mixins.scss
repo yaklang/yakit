@@ -30,7 +30,7 @@
     svg {
       width: 16px;
       height: 16px;
-      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      color: var(--Colors-Use-Neutral-Disable);
     }
   }
 
@@ -74,7 +74,7 @@
   margin-left: 7px;
   max-height: 240px;
   overflow: hidden;
-  border-left: 2px solid var(--Colors-Use-Neutral-Disable);
+  border-left: 2px solid var(--Colors-Use-Neutral-Border);
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   font-size: 12px;
   font-weight: 400;
