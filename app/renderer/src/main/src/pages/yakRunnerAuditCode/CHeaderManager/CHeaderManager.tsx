@@ -408,7 +408,7 @@ const CHeaderManager: React.FC<CHeaderManagerProps> = React.memo(() => {
       <div ref={wrapper} className={classNames(styles['tree-wrap'], fileTreeStyles['file-tree'])}>
         {loading && treeData.length === 0 ? (
           <YakitSpin spinning />
-        ) : shownTree.length === 0 ? (
+        ) : treeData.length === 0 ? (
           <div className={styles['empty-wrap']}>
             <YakitEmpty title={t('CHeaderManager.emptyTitle')} description={t('CHeaderManager.emptyDesc')} />
             <div style={{ textAlign: 'center', marginTop: 8, display: 'flex', justifyContent: 'center', gap: 8 }}>
@@ -419,6 +419,10 @@ const CHeaderManager: React.FC<CHeaderManagerProps> = React.memo(() => {
                 {t('CHeaderManager.addZip')}
               </YakitButton>
             </div>
+          </div>
+        ) : shownTree.length === 0 ? (
+          <div className={styles['empty-wrap']}>
+            <YakitEmpty title={t('CHeaderManager.searchEmptyTitle')} description={t('CHeaderManager.searchEmptyDesc')} />
           </div>
         ) : (
           <Tree
