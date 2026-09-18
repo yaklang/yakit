@@ -163,7 +163,9 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
     const hint =
       s != null && e != null
         ? `选区: 0x${Math.min(s, e).toString(16)} - 0x${Math.max(s, e).toString(16)} (len ${Math.abs(e - s) + 1})`
-        : '请先选中要替换的字节'
+        : dataRef.current.length === 0
+          ? '空数据：插入将添加为首个字节'
+          : '请先选中要替换的字节'
     panelRef.current = { format: 'hex', value: '' }
     setPanel({ x, y: r.bottom - bodyRect.top + 4, selTop, hint })
   }
@@ -196,6 +198,9 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
       if (last) {
         const first = lo != null ? bodyRef.current?.querySelector(`[data-offset="${lo}"]`) : null
         openPanel(last, first ?? null)
+      } else if (bodyRef.current && dataRef.current.length === 0) {
+        // 空缓冲没有可定位的字节：以容器为锚点弹面板，插入即追加为首个字节（applyEdit 无选区时插入末尾）
+        openPanel(bodyRef.current, null)
       }
     })
   }
@@ -427,7 +432,11 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
                 onChange={(e) => {
                   panelRef.current.value = e.target.value
                 }}
-                onPressEnter={() => applyEdit('replace')}
+                onPressEnter={(e) => {
+                  // TextArea 的 Enter 默认会插入换行：替换失败面板不关时残留脏换行，须拦截
+                  e.preventDefault()
+                  applyEdit('replace')
+                }}
               />
               <div className={styles['hex-hint']}>{panel.hint}</div>
               <div className={styles['hex-panel-footer']}>

@@ -524,7 +524,8 @@ export const isUtf8Bytes = (bytes: Uint8Array): boolean => {
 // 非 UTF-8 二进制逐字节回退。与 textToBytes 配对，round-trip 无损。
 export const bytesToText = (bytes: Uint8Array): string => {
   try {
-    return new TextDecoder('utf-8', { fatal: true })
+    // ignoreBOM: 默认 false 会剥离开头 BOM（EF BB BF），破坏 round-trip 无损
+    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true })
       .decode(bytes)
       .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\\]/g, (ch) =>
         ch === '\\' ? '\\\\' : `\\x${ch.charCodeAt(0).toString(16).padStart(2, '0')}`,

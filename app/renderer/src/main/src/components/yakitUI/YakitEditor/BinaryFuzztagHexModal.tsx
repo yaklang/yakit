@@ -82,7 +82,8 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
         const ce = el.selectionEnd
         if (cs === ce && cs < map.length) {
           // 光标定位：指向光标所在字符的起始字节（单字节选区，HEX 高亮该字节）
-          setHexInitialSel([map[cs], map[cs]])
+          // 光标在文本末尾时 map[cs] 已越界一字节，带入 undefined（与 Base64 版守卫对齐）
+          setHexInitialSel(map[cs] < dataRef.current.length ? [map[cs], map[cs]] : undefined)
         } else {
           setHexInitialSel(charsToBytes(map, cs, ce) ?? undefined)
         }

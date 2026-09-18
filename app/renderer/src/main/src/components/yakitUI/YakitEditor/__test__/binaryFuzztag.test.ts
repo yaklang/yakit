@@ -621,6 +621,12 @@ describe('bytesToText / textToBytes round-trip', () => {
     expect(Array.from(textToBytes(bytesToText(bytes)))).toEqual(Array.from(bytes))
   })
 
+  it('开头 BOM 保留不被剥离，round-trip 无损', () => {
+    // TextDecoder 默认 ignoreBOM:false 会剥掉 EF BB BF，文字 tab 首次编辑即丢 BOM
+    const bytes = new Uint8Array([0xef, 0xbb, 0xbf, 0x41])
+    expect(Array.from(textToBytes(bytesToText(bytes)))).toEqual(Array.from(bytes))
+  })
+
   it('全字节值 0-255（含非法 UTF-8 与控制符）逐字节转义，round-trip 无损', () => {
     const bytes = Uint8Array.from({ length: 256 }, (_, i) => i)
     const text = bytesToText(bytes)
