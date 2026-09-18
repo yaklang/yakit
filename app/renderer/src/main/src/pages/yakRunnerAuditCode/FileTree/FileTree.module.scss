@@ -4,9 +4,6 @@
   flex: 1;
   overflow: hidden;
   :global {
-    .ant-tree {
-      background-color: var(--Colors-Use-Main-Bg);
-    }
     .ant-tree .ant-tree-treenode {
       padding-bottom: 0;
       background-color: var(--Colors-Use-Basic-Background);

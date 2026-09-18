@@ -3,9 +3,6 @@
   height: 100%;
   padding: 0px 0px 0px 4px;
   :global {
-    .ant-tree {
-      background-color: var(--Colors-Use-Main-Bg);
-    }
     .ant-tree .ant-tree-treenode {
       padding-bottom: 0;
       background-color: var(--Colors-Use-Basic-Background);
