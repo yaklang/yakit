@@ -78,7 +78,8 @@ import type {
 } from './MatcherAndExtractionCard/MatcherAndExtractionCardType'
 import type { HTTPHeader } from '../mitm/MITMContentReplacerHeaderOperator'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import _, { throttle } from 'lodash'
+import _ from 'lodash'
+import { createHTTPFuzzerRun } from './httpFuzzerRun'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { FUZZER_LABEL_LIST_NUMBER } from './HTTPFuzzerEditorMenu'
 import { BlastingAnimationAemonstration } from './AnimationAemonstration'
@@ -1207,11 +1208,17 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       .catch((err) => debugToPrintLog(err))
   }, [])
 
-  // 定时器
-  const resetResponse = useMemoizedFn(async () => {
+  const streamRunRef = useRef<ReturnType<typeof createHTTPFuzzerRun> | null>(null)
+
+  const resetResponse = useMemoizedFn(() => {
+    streamRunRef.current?.reset()
+    taskIDRef.current = ''
+    dCountRef.current = 0
+    reset()
     setFirstResponse({ ...emptyFuzzer })
     successFuzzerRef.current = []
     failedFuzzerRef.current = []
+    setFuzzerListVersion((v) => v + 1)
     updateConcurrentLoad('rps', [])
     updateConcurrentLoad('cps', [])
     fuzzerResChartDataBufferRef.current = []
@@ -1458,15 +1465,14 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   }, [isbuttonIsSendReqStatus])
 
   const cancelCurrentHTTPFuzzer = useMemoizedFn(async () => {
+    // Send cancellation before unlocking the UI so a fresh send follows it over IPC.
+    const cancellation = ipcRenderer.invoke('cancel-HTTPFuzzer', tokenRef.current)
+    streamRunRef.current?.finish('cancel')
+    runtimeIdRef.current = ''
     try {
-      await ipcRenderer.invoke('cancel-HTTPFuzzer', tokenRef.current)
-    } finally {
-      retryRef.current = false
-      matchRef.current = false
-      runtimeIdRef.current = ''
-      setLoadingText('sending packets')
-      setLoading(false)
-      setIsPause(true)
+      await cancellation
+    } catch (error) {
+      yakitFailed(error + '')
     }
   })
   const dCountRef = useRef<number>(0)
@@ -1500,63 +1506,49 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     const errToken = `${token}-error`
     const endToken = `${token}-end`
 
-    /*
-     * successCount
-     * failedCount
-     * */
-    let successCount = 0
-    let failedCount = 0
-    /** 流式 firstResponse 待刷：与 count/version 同节流，避免按包打整页 */
-    let pendingFirstResponse: FuzzerResponse | null = null
-    let firstResponseDirty = false
-    ipcRenderer.on(errToken, (e, details) => {
-      yakitNotify('error', `${t('HTTPFuzzerPage.fuzzTestRequestFailed')}${details}`)
-    })
-    let count: number = 0 // 用于数据项请求字段
-
     const flushFirstResponse = () => {
-      if (!firstResponseDirty || !pendingFirstResponse) return
+      if (!run.state.firstResponseDirty || !run.state.pendingFirstResponse) return
       if (!inViewportRef.current) return
-      const src = pendingFirstResponse
+      const src = run.state.pendingFirstResponse
       setFirstResponse({
         ...src,
         Headers: src.Headers ? src.Headers.slice() : [],
         RandomChunkedData: src.RandomChunkedData ? src.RandomChunkedData.slice() : [],
       })
-      firstResponseDirty = false
+      run.state.firstResponseDirty = false
     }
 
     const markFirstResponse = (rsp: FuzzerResponse, immediate = false) => {
-      pendingFirstResponse = rsp
-      firstResponseDirty = true
+      run.state.pendingFirstResponse = rsp
+      run.state.firstResponseDirty = true
       if (!inViewportRef.current) return
       // 首包立即刷一次，避免响应区长时间空白；后续 upsert 走 throttle
       if (immediate) flushFirstResponse()
     }
 
     const updateData = () => {
-      if (count <= 0) {
+      if (run.state.count <= 0) {
         return
       }
 
       if (
         failedFuzzerRef.current.length +
           successFuzzerRef.current.length +
-          failedCount +
-          successCount +
+          run.state.failedCount +
+          run.state.successCount +
           fuzzerResChartDataBufferRef.current.length ===
         0
       ) {
         return
       }
-      successCountRef.current = successCount
-      failedCountRef.current = failedCount
+      successCountRef.current = run.state.successCount
+      failedCountRef.current = run.state.failedCount
       // 非当前可见 Tab：数据仍写入 ref，暂停 UI 刷新，切回时再 flush
       if (!inViewportRef.current) {
         return
       }
-      setFailedCount(failedCount)
-      setSuccessCount(successCount)
+      setFailedCount(run.state.failedCount)
+      setSuccessCount(run.state.successCount)
       setFuzzerListVersion((v) => v + 1)
       flushFirstResponse()
     }
@@ -1582,9 +1574,39 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       }
     }
 
-    const updateDataThrottle = throttle(updateData, 500, { leading: false, trailing: true })
+    const run = createHTTPFuzzerRun({
+      onUpdate: updateData,
+      onEnd: (reason) => {
+        dCountRef.current = 0
+        taskIDRef.current = ''
+        retryRef.current = false
+        matchRef.current = false
+        setIsPause(true)
+        setLoading(false)
+        setLoadingText('sending packets')
+        stop()
+        if (reason !== 'complete') {
+          setNewCurrentPageRef.current = false
+          return
+        }
+        if (setNewCurrentPageRef.current) {
+          setNewCurrentPageRef.current = false
+          getNewCurrentPage()
+        } else {
+          syncTotal()
+        }
+      },
+    })
+    streamRunRef.current = run
+
+    ipcRenderer.on(errToken, (e, details) => {
+      if (!run.isActive()) return
+      yakitNotify('error', `${t('HTTPFuzzerPage.fuzzTestRequestFailed')}${details}`)
+      run.finish('error')
+    })
 
     ipcRenderer.on(dataToken, (e: any, data: any) => {
+      if (!run.isActive()) return
       taskIDRef.current = data.TaskId
 
       if (runtimeIdRef.current) {
@@ -1595,7 +1617,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         runtimeIdRef.current = data.RuntimeID
       }
 
-      if (count === 0) {
+      if (run.state.count === 0) {
         // 重置extractedMap
         reset()
       }
@@ -1604,7 +1626,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         ...data,
         Headers: data.Headers || [],
         UUID: data.UUID || randomString(16), // 新版yakit,成功和失败的数据都有UUID,旧版失败的数据没有UUID,兼容
-        Count: count++,
+        Count: run.state.count++,
         cellClassName: '',
       } as FuzzerResponse
       if (data.MatchedByMatcher) {
@@ -1684,8 +1706,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (upserted) {
           isNewRow = false
         } else {
-          successCount++
-          successCountRef.current = successCount
+          run.state.successCount++
+          successCountRef.current = run.state.successCount
           successFuzzerRef.current.push(r)
           // 超过最大显示 展示最新数据
           if (successFuzzerRef.current.length > fuzzerTableMaxDataRef.current) {
@@ -1698,8 +1720,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (upserted) {
           isNewRow = false
         } else {
-          failedCount++
-          failedCountRef.current = failedCount
+          run.state.failedCount++
+          failedCountRef.current = run.state.failedCount
           failedFuzzerRef.current.push(r)
         }
       }
@@ -1719,35 +1741,24 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
       r = null as unknown as FuzzerResponse
 
-      if (successCount + failedCount >= 1) {
-        updateDataThrottle()
+      if (run.state.successCount + run.state.failedCount >= 1) {
+        run.update()
       } else {
         updateData()
       }
     })
 
     ipcRenderer.on(endToken, () => {
-      updateData()
-      count = 0
-      successCount = 0
-      failedCount = 0
-      dCountRef.current = 0
-      taskIDRef.current = ''
-      setTimeout(() => {
-        setIsPause(true)
-        setLoading(false)
-        if (setNewCurrentPageRef.current) {
-          setNewCurrentPageRef.current = false
-          getNewCurrentPage()
-        } else {
-          syncTotal()
-        }
-      }, 500)
+      run.finish('complete', 500)
       stop()
       logger(httpFuzzerLog({ content: t('HTTPFuzzerPage.send_complete'), status: 'end' }))
     })
 
     return () => {
+      run.dispose()
+      streamRunRef.current = null
+      if (releaseTimer) clearInterval(releaseTimer)
+      releaseQueue.length = 0
       ipcRenderer.invoke('cancel-HTTPFuzzer', token)
       ipcRenderer.removeAllListeners(errToken)
       ipcRenderer.removeAllListeners(dataToken)
