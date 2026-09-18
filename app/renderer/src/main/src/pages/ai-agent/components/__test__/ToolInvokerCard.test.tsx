@@ -1,3 +1,4 @@
+import '@/pages/ai-re-act/hooks/__test__/setupElectron'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
@@ -46,6 +47,8 @@ vi.mock('../FileList', () => ({ default: () => <div data-testid="tool-files">生
 vi.mock('../OperationCardFooter/OperationCardFooter', () => ({
   OperationCardFooter: () => <div data-testid="tool-footer">工具操作</div>,
 }))
+// DataCompare → httpFlow 顶层 window.require('electron')，本用例不测对比抽屉
+vi.mock('@/pages/compare/DataCompare', () => ({ CodeComparison: () => null }))
 vi.mock('@/pages/ai-re-act/aiReActChatContents/AIReActChatContents', () => ({
   AIReferenceNode: () => <div data-testid="tool-references">参考资料</div>,
 }))
