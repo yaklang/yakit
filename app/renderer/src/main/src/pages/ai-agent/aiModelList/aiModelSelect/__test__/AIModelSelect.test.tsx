@@ -145,10 +145,10 @@ const expectModelRequest = (Type: string) =>
     Config: JSON.stringify({
       Type,
       api_key: 'test-key',
+      api_type: '',
       domain: 'models.test',
       no_https: true,
       proxy: 'http://proxy.test',
-      api_type: '',
       base_url: '',
       endpoint: '',
       enable_endpoint: false,

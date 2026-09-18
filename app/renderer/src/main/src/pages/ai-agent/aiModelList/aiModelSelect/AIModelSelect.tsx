@@ -28,26 +28,10 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { providerToListAiModelConfig } from '../aiModelForm/providerConfig'
 import { yakitNotify } from '@/utils/notification'
 
-const getModelListConfig = (model?: AIModelConfig) => {
-  if (!model?.Provider) return undefined
-  const { Type, APIKey, Domain, NoHttps, Proxy, APIType, BaseURL, Endpoint, EnableEndpoint, Headers, ExtraParams } =
-    model.Provider
-  return JSON.stringify({
-    Type,
-    api_key: APIKey,
-    domain: Domain,
-    no_https: NoHttps,
-    proxy: Proxy,
-    api_type: APIType ?? '',
-    base_url: BaseURL ?? '',
-    endpoint: Endpoint ?? '',
-    enable_endpoint: !!EnableEndpoint,
-    Headers: Headers ?? [],
-    ExtraParams: ExtraParams ?? [],
-  })
-}
+const getModelListConfig = (model?: AIModelConfig) => providerToListAiModelConfig(model?.Provider)
 
 export const onOpenConfigModal = (mountContainer, t: TFunction) => {
   const m = YakitModalConfirm({
