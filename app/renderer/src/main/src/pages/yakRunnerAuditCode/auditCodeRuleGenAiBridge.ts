@@ -22,6 +22,7 @@ type GetEditorSelection = () => {
 
 const ruleEditorGetters = new Map<string, GetRuleEditor>()
 const selectionGetters = new Map<string, GetEditorSelection>()
+let liveEditorSelection: ReturnType<GetEditorSelection> = null
 
 export function registerAuditCodeRuleEditorGetter(pageId: string, getter: GetRuleEditor): () => void {
   ruleEditorGetters.set(pageId, getter)
@@ -45,7 +46,12 @@ export function registerAuditCodeEditorSelectionGetter(pageId: string, getter: G
   }
 }
 
+export function setAuditCodeLiveEditorSelection(sel: ReturnType<GetEditorSelection>): void {
+  liveEditorSelection = sel
+}
+
 export function getAuditCodeEditorSelection(pageId: string) {
+  if (liveEditorSelection?.content?.trim()) return liveEditorSelection
   return selectionGetters.get(pageId)?.() ?? null
 }
 
@@ -71,9 +77,7 @@ export function appendAuditCodeRuleGenContextToEvent(pageId: string, event: AIIn
   }
 
   const hasSelectedContent = next.some(
-    (item) =>
-      item.Type === AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content &&
-      item.Key === AttachedResourceKeyEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content,
+    (item) => item.Key === AttachedResourceKeyEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content,
   )
   if (!hasSelectedContent) {
     const sel = getAuditCodeEditorSelection(pageId)

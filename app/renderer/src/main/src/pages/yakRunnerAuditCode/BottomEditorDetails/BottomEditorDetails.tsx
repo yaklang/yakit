@@ -125,7 +125,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     if (casualReviewSessionIdRef.current != null && casualReviewBaselineRef.current != null) {
       baseline = casualReviewBaselineRef.current
     } else {
-      baseline = ruleEditorRef.current || baseline
+      baseline = ruleEditorRef.current
     }
 
     const normIncoming = String(incoming).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
