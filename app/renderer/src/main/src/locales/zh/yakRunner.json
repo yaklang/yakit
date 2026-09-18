@@ -1,4 +1,5 @@
 {
+  "newChat": "新建会话",
   "IRifyUpdateProjectManagerModal": {
     "syncingData": "同步数据中，请耐心等待...",
     "stopFailed": "停止失败：{{error}}",

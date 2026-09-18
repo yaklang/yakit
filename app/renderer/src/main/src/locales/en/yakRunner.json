@@ -1,4 +1,5 @@
 {
+  "newChat": "New chat",
   "IRifyUpdateProjectManagerModal": {
     "syncingData": "Syncing data, please wait...",
     "stopFailed": "Stop failed: {{error}}",
