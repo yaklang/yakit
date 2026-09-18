@@ -649,6 +649,7 @@
     "export_path_help_local": "可手动输入导出路径或点击此处",
     "select_folder": "选择文件夹",
     "filename": "文件名",
+    "filename_placeholder": "请输入文件名",
     "password": "密码",
     "change_path": "修改路径",
     "local_path": "本地路径",

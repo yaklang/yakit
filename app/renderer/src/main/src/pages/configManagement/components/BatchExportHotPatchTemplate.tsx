@@ -140,7 +140,7 @@ export const BatchExportHotPatchTemplate = memo(
             <Form.Item
               label={t('HotPatchTemplateImportExport.filename')}
               name="OutputFilename"
-              rules={[{ required: true }]}
+              rules={[{ required: true, message: t('HotPatchTemplateImportExport.filename_placeholder') }]}
             >
               <YakitInput />
             </Form.Item>

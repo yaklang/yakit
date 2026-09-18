@@ -649,6 +649,7 @@
     "export_path_help_local": "You can manually enter the export path or click here",
     "select_folder": "Select Folder",
     "filename": "File Name",
+    "filename_placeholder": "Please enter the file name",
     "password": "Password",
     "change_path": "Change Path",
     "local_path": "Local Path",
