@@ -355,7 +355,7 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
 
   // 文字→HEX 切换（携带 initialSelection）时：应用选区并弹出编辑面板（仅一次）
   useEffect(() => {
-    if (!initialSelection) {
+    if (readOnly || !initialSelection) {
       return
     }
     applySelection(initialSelection[0], initialSelection[1])

@@ -58,6 +58,9 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
   const textOk = useMemo(() => isUtf8Bytes(dataRef.current), [hostVersion])
   const curText = useMemo(() => bytesToText(dataRef.current), [hostVersion])
   const [mountKey, setMountKey] = useState<number>(0)
+  // 文字 tab 编辑草稿：键入期间原样回显，失焦/切 HEX 才回落到归一化文本（bytesToText）。
+  // 若每键立即归一化，单个 \ 会被显示为 \\ 且光标跳到末尾，无法键盘输入 \xNN/\uNNNN 转义序列
+  const [draft, setDraft] = useState<string | null>(null)
   // 切换到 HEX 时带入的字节选区（文字选区换算而来；仅文字→HEX 单方向）
   const [hexInitialSel, setHexInitialSel] = useState<[number, number] | undefined>(undefined)
   // antd TextArea ref：经 resizableTextArea.textArea 取原生 textarea
@@ -66,6 +69,7 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
   const handleTextChange = useCallback((value: string) => {
     dataRef.current = textToBytes(value)
     changedRef.current = true
+    setDraft(value)
     setHostVersion((v) => v + 1)
   }, [])
 
@@ -76,8 +80,10 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
     if (!next) {
       // 文字 -> HEX：读 textarea 当前光标/选区换算成字节区间带入（光标=单字节定位，选中=区间）
       const el = textRef.current?.resizableTextArea?.textArea ?? null
-      if (el) {
-        const map = textToByteMap(curText)
+      // 草稿被归一化改写时（如 \x41 -> A），textarea 里的偏移与字节缓冲的文本不一致，选区失效不带入
+      const normalized = bytesToText(dataRef.current)
+      if (el && (draft == null || draft === normalized)) {
+        const map = textToByteMap(normalized)
         const cs = el.selectionStart
         const ce = el.selectionEnd
         if (cs === ce && cs < map.length) {
@@ -90,6 +96,7 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
       } else {
         setHexInitialSel(undefined)
       }
+      setDraft(null)
     }
     setMountKey((k) => k + 1)
     setShowText(next)
@@ -208,10 +215,11 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
               wrapperStyle={{ height: '100%' }}
               style={{ height: '100%', resize: 'none' }}
               className={styles['text-area']}
-              value={curText}
+              value={draft ?? curText}
               readOnly={readOnly}
               isShowResize={false}
               onChange={(e) => handleTextChange(e.target.value)}
+              onBlur={() => setDraft(null)}
             />
           </div>
         ) : (

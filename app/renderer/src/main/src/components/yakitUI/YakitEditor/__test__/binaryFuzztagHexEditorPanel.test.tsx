@@ -2,6 +2,7 @@ import React from 'react'
 import { cleanup, createEvent, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import type { BinaryFuzztagHexModal as BinaryFuzztagHexModalComponent } from '../BinaryFuzztagHexModal'
+import type { Base64HexFuzztagModal as Base64HexFuzztagModalComponent } from '../Base64HexFuzztagModal'
 import type { BinaryFuzztagHexEditor as BinaryFuzztagHexEditorComponent } from '../BinaryFuzztagHexEditor'
 import type { BinaryFuzztagEntry } from '../binaryFuzztag'
 
@@ -86,6 +87,7 @@ vi.mock('@/utils/notification', () => ({ warn: vi.fn(), yakitNotify: vi.fn() }))
 vi.mock('@/utils/openWebsite', () => ({ saveABSFileToOpen: vi.fn() }))
 
 let BinaryFuzztagHexModal: typeof BinaryFuzztagHexModalComponent
+let Base64HexFuzztagModal: typeof Base64HexFuzztagModalComponent
 let BinaryFuzztagHexEditor: typeof BinaryFuzztagHexEditorComponent
 
 beforeAll(async () => {
@@ -93,6 +95,7 @@ beforeAll(async () => {
     require: () => ({ ipcRenderer: { invoke: vi.fn() } }),
   })
   ;({ BinaryFuzztagHexModal } = await import('../BinaryFuzztagHexModal'))
+  ;({ Base64HexFuzztagModal } = await import('../Base64HexFuzztagModal'))
   ;({ BinaryFuzztagHexEditor } = await import('../BinaryFuzztagHexEditor'))
 })
 
@@ -110,6 +113,19 @@ const testEntry: BinaryFuzztagEntry = {
   innerContent: '"AB"',
   byteLength: 2,
   previewHex: '4142',
+}
+
+// previewText 非空才会以文本编辑器起步（空则默认 HEX）
+const base64Entry: BinaryFuzztagEntry = {
+  id: 'test-base64',
+  tagName: 'base64',
+  kind: 'base64',
+  editable: true,
+  originalTagText: '{{base64("QUI=")}}',
+  innerContent: '"QUI="',
+  byteLength: 2,
+  previewHex: '4142',
+  previewText: 'AB',
 }
 
 describe('BinaryFuzztagHexEditor 编辑面板交互', () => {
@@ -201,6 +217,44 @@ describe('BinaryFuzztagHexModal 文字→HEX 选区带入', () => {
     renderModal()
     await switchToTextAndSetCursor(2, 2)
     // 等挂载/切换稳定后再断言：不产生越界 setSelectionRange、不弹面板
+    await waitFor(() => expect(screen.getByRole('button', { name: '提交' })).toBeTruthy())
+    expect(setSelectionRangeMock).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: '替换' })).toBeNull()
+  })
+})
+
+describe('Base64HexFuzztagModal 文字→HEX 选区带入', () => {
+  const renderBase64Modal = (initialData: Uint8Array) => {
+    render(
+      <Base64HexFuzztagModal entry={base64Entry} initialData={initialData} onSubmit={() => {}} onCancel={() => {}} />,
+    )
+  }
+  const setSelectionAndSwitchToHex = async (cs: number, ce: number) => {
+    const ta = (await screen.findByRole('textbox')) as HTMLTextAreaElement
+    ta.focus()
+    ta.setSelectionRange(cs, ce)
+    fireEvent.click(screen.getByRole('button', { name: 'HEX' }))
+  }
+
+  it('光标在多字节文本中间切换 HEX 带入单字节选区并弹面板', async () => {
+    // A(1B) + 中(3B) + B(1B) 共 5 字节；光标落在 中 与 B 之间 -> 字节偏移 4
+    renderBase64Modal(new TextEncoder().encode('A中B'))
+    await setSelectionAndSwitchToHex(2, 2)
+    await waitFor(() => expect(setSelectionRangeMock).toHaveBeenCalledWith(4, 5, null, false))
+    expect(await screen.findByRole('button', { name: '替换' })).toBeTruthy()
+  })
+
+  it('选中多字节区间切换 HEX 带入字节区间选区', async () => {
+    // 选中 A中（字符 [0,2) = 4 字节）-> 字节闭区间 [0,3]
+    renderBase64Modal(new TextEncoder().encode('A中B'))
+    await setSelectionAndSwitchToHex(0, 2)
+    await waitFor(() => expect(setSelectionRangeMock).toHaveBeenCalledWith(0, 4, null, false))
+    expect(screen.getByText(/选区: 0x0 - 0x3/)).toBeTruthy()
+  })
+
+  it('光标在文本末尾切换 HEX 不带入越界选区（不弹面板）', async () => {
+    renderBase64Modal(new TextEncoder().encode('AB'))
+    await setSelectionAndSwitchToHex(2, 2)
     await waitFor(() => expect(screen.getByRole('button', { name: '提交' })).toBeTruthy())
     expect(setSelectionRangeMock).not.toHaveBeenCalled()
     expect(screen.queryByRole('button', { name: '替换' })).toBeNull()
