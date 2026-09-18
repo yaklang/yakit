@@ -51,11 +51,13 @@ import {
 } from '../MITMHacker/utils'
 import type { ManualHijackTypeProps, MITMManualRefProps } from '../MITMManual/MITMManualType'
 import { grpcMITMV2RecoverManualHijack } from '../MITMManual/utils'
+import { isHijackEditorMode, shouldSyncAutoForwardMode } from '../MITMManual/conditionalHijackMode'
 import {
-  isConditionalHijackTask,
-  isHijackEditorMode,
-  shouldSyncAutoForwardMode,
-} from '../MITMManual/conditionalHijackMode'
+  resolveV1ConditionalHijackModeAfterCompletion,
+  resolveV1HijackMessageAction,
+  type V1ConditionalHijackCompletion,
+  V1HijackMessageAction,
+} from './conditionalHijackV1'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
@@ -639,27 +641,38 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     }
     setCurrentIsWebsocket(!!msg?.isWebsocket)
     setCurrentIsForResponse(!!msg?.forResponse)
-    const conditionalHijackTask = isConditionalHijackTask(msg.hijackTaskSource, hijackFilterFlag)
+    const decision = resolveV1HijackMessageAction({
+      mode: autoForward,
+      forResponse: !!msg.forResponse,
+      hasRequest: !!msg.request,
+      hasResponse: !!msg.response,
+      responseId: msg.responseId,
+      taskSource: msg.hijackTaskSource,
+      legacyHijackFilterEnabled: hijackFilterFlag,
+    })
 
     if (msg.forResponse) {
-      if (!msg.response || !msg.responseId) {
+      if (decision.action === V1HijackMessageAction.InvalidResponse) {
         yakitFailed(t('MITMHijackedContent.bug__mitm_error__failed_to_get_correct_r'))
         return
       }
-      if (!isHijackEditor && !conditionalHijackTask) {
+      if (decision.action === V1HijackMessageAction.ForwardResponse) {
         forwardResponse(msg.responseId || 0)
         if (currentPacket) {
           clearCurrentPacket()
         }
-      } else {
-        if (!isHijackEditor && conditionalHijackTask) {
+      } else if (decision.action === V1HijackMessageAction.InterceptResponse) {
+        // InvalidResponse above guarantees these fields for this action.
+        const response = msg.response!
+        const responseId = msg.responseId!
+        if (decision.shouldActivateConditionalView) {
           setAutoForward('hijackFilter')
           info(t('MITMManual.conditional_hijack_triggered'))
         }
         setForResponse(true)
         setCurrentPacketInfo({
-          currentPacket: msg?.isWebsocket ? Uint8ArrayToString(msg.Payload) : Uint8ArrayToString(msg.response),
-          currentPacketId: msg.responseId,
+          currentPacket: msg?.isWebsocket ? Uint8ArrayToString(msg.Payload) : Uint8ArrayToString(response),
+          currentPacketId: responseId,
           isHttp: msg.isHttps,
           requestPacket: Uint8ArrayToString(msg.request),
           traceInfo: msg.traceInfo || {
@@ -672,7 +685,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         })
         setStatus('hijacked')
       }
-    } else if (msg.request) {
+    } else if (decision.action === V1HijackMessageAction.InterceptRequest) {
       const updateRequest = () => {
         setForResponse(false)
         setCurrentPacketInfo({
@@ -691,19 +704,16 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         setUrlInfo(msg.url)
         setStatus('hijacked')
       }
-      if (!isManual) {
-        if (conditionalHijackTask) {
-          setAutoForward('hijackFilter')
-          updateRequest()
-          info(t('MITMManual.conditional_hijack_triggered'))
-        } else {
-          forwardRequest(msg.id)
-          if (currentPacket) {
-            clearCurrentPacket()
-          }
-        }
-      } else {
-        updateRequest()
+
+      if (decision.shouldActivateConditionalView) {
+        setAutoForward('hijackFilter')
+        info(t('MITMManual.conditional_hijack_triggered'))
+      }
+      updateRequest()
+    } else if (decision.action === V1HijackMessageAction.ForwardRequest) {
+      forwardRequest(msg.id)
+      if (currentPacket) {
+        clearCurrentPacket()
       }
     }
   })
@@ -723,8 +733,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     })
   }
 
-  const closeConditionalHijackView = useMemoizedFn(() => {
-    setAutoForward((mode) => (mode === 'hijackFilter' ? 'log' : mode))
+  const closeConditionalHijackView = useMemoizedFn((completion: V1ConditionalHijackCompletion) => {
+    setAutoForward((mode) => resolveV1ConditionalHijackModeAfterCompletion(mode, completion))
   })
 
   const handleAutoForward = useMemoizedFn((e: ManualHijackTypeProps) => {
@@ -806,7 +816,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     setCalloutColor('')
     setUrlInfo(t('MITMHijackedContent.listening'))
     setIpInfo('')
-    closeConditionalHijackView()
+    closeConditionalHijackView({ action: 'discard' })
   })
 
   // 这个 Forward 提交数据、切换tab、编辑器右键菜单会调用
@@ -829,10 +839,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       }
       grpcMITMForwardModifiedResponse(value).finally(() => {
         clearCurrentPacket()
-        closeConditionalHijackView()
+        closeConditionalHijackView({ action: 'forward-response' })
       })
     } else {
-      const waitForResponse = hijackResponseType !== 'never'
       const value: MITMForwardModifiedRequest = {
         id: currentPacketId,
         request: modifiedPacketBytes,
@@ -842,9 +851,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       grpcMITMForwardModifiedRequest(value).finally(() => {
         clearCurrentPacket()
         setCalloutColor('')
-        if (!isManual && !waitForResponse) {
-          closeConditionalHijackView()
-        }
+        closeConditionalHijackView({
+          action: 'forward-request',
+          isManual,
+          hijackResponseType,
+        })
       })
     }
   })
