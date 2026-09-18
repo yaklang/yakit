@@ -14,7 +14,7 @@ import {
 } from '../../../grpc'
 import { getLocalValue } from '@/utils/kv'
 import { SystemInfo } from '../../../utils'
-import { isEnpriTraceAgent, isCommunityYakit, FetchSoftwareVersion } from '@/utils/envfile'
+import { isEnpriTraceAgent, isCommunityYakit, FetchSoftwareVersion, isMemfit } from '@/utils/envfile'
 import { yakitEngine } from '@/utils/electronBridge'
 
 // ========== Mock 所有外部依赖 ==========
@@ -41,6 +41,7 @@ vi.mock('@/utils/envfile', () => ({
   getReleaseEditionName: vi.fn(() => 'Yakit'),
   isCommunityYakit: vi.fn(() => true),
   isEnpriTraceAgent: vi.fn(() => false),
+  isMemfit: vi.fn(() => false),
 }))
 
 vi.mock('@/utils/notification', () => ({
@@ -109,6 +110,7 @@ describe('LocalEngine Component', () => {
     ;(grpcFetchLocalYakVersionHash as any).mockResolvedValue(['hash123'])
     ;(grpcFetchSpecifiedYakVersionHash as any).mockResolvedValue('hash123')
     ;(yakitEngine.onStartUpEngineMessage as any).mockReturnValue(() => {})
+    ;(isMemfit as any).mockReturnValue(false)
 
     systemInfoDevSpy = vi.spyOn(SystemInfo, 'isDev', 'get')
     isEnpriTraceAgentSpy = vi.spyOn({ isEnpriTraceAgent }, 'isEnpriTraceAgent')
@@ -256,6 +258,24 @@ describe('LocalEngine Component', () => {
   })
 
   describe('Yakit 版本更新检查', () => {
+    it('AI Senso 应跳过软件和内置引擎更新检测', async () => {
+      ;(isMemfit as any).mockReturnValue(true)
+      ;(grpcFetchLatestYakitVersion as any).mockResolvedValue('9.9.9')
+      ;(grpcFetchBuildInYakVersion as any).mockResolvedValue('9.9.9')
+
+      renderComponent()
+      await initEngine()
+      await startLinkEngine()
+
+      expect(grpcFetchLocalYakitVersion).not.toHaveBeenCalled()
+      expect(grpcFetchLatestYakitVersion).not.toHaveBeenCalled()
+      expect(grpcFetchBuildInYakVersion).not.toHaveBeenCalled()
+      expect(props.setYakitStatus).not.toHaveBeenCalledWith('update_yakit')
+      expect(props.setYakitStatus).not.toHaveBeenCalledWith('update_yak')
+      expect(grpcFetchLocalYakVersionHash).toHaveBeenCalled()
+      expect(grpcFetchSpecifiedYakVersionHash).toHaveBeenCalled()
+    })
+
     it('SE 版本不检查 Yakit 更新，直接检查引擎版本', async () => {
       isEnpriTraceAgentSpy.mockReturnValue(true)
       renderComponent()
@@ -314,7 +334,11 @@ describe('LocalEngine Component', () => {
     })
 
     it('当用户关闭自动检查时应跳过 Yakit 更新检查，但引擎检查仍正常执行', async () => {
-      ;(getLocalValue as any).mockResolvedValue(true) // 跳过 Yakit 检查
+      ;(getLocalValue as any).mockImplementation((key: string) => {
+        if (key === 'no-autoboot-latest-version-check') return Promise.resolve(true)
+        if (key === 'YakitCE-SoftwareBasics') return Promise.resolve(true)
+        return Promise.resolve(false)
+      })
       renderComponent()
       await initEngine()
 

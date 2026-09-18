@@ -695,6 +695,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const [yaklangSpecifyVersion, setYaklangSpecifyVersion] = useState<string>('')
   const yaklangLastVersionRef = useRef<string>('')
   useEffect(() => {
+    if (isMemfit()) return
     grpcFetchLatestYakVersion(true)
       .then((data: string) => {
         const v = data
@@ -704,6 +705,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   }, [])
   // 监听UI上的更新yakit或yaklang更新功能
   const handleActiveDownloadModal = useMemoizedFn((type: string) => {
+    if (isMemfit()) return
     if (yaklangKillPss || yakitDownload) return
     if (type === 'intranetYakit') {
       setYakitDownload(true)
@@ -835,6 +837,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // kill完引擎进程后开始更新指定Yaklang版本引擎
   const downYaklangSpecifyVersion = (res: string) => {
+    if (isMemfit()) return
     try {
       const { version, killPssText = {} } =
         JSONParseLog(res, { page: 'UILayout', fun: 'downYaklangSpecifyVersion' }) || {}
@@ -849,6 +852,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // 使用官方引擎 - 下载最新引擎
   const useOfficialEngineByDownload = () => {
+    if (isMemfit()) return
     downYaklangSpecifyVersion(
       JSON.stringify({
         version: yaklangLastVersionRef.current,
@@ -862,6 +866,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // 使用官方引擎 - 内置引擎
   const useOfficialEngineByDownloadByBuiltIn = () => {
+    if (isMemfit()) return
     setYaklangKillBuildInEngine(true)
     setYaklangKillPssText({
       title: t('UILayout.useOfficialEngineTitle'),

@@ -203,9 +203,18 @@ export const StartupPage: React.FC = () => {
         setBuildInEngineVersion(version)
       }),
     )
-    // 新安装 Yakit ，引擎需检查更新
-    tasks.push(() =>
-      grpcFetchLocalYakitVersion(true).then((appVersion) => {
+    // AI Senso 始终关闭软件和内置引擎的自动更新检测。
+    // 其他发行版在客户端版本变化后，恢复一次内置引擎版本检查。
+    tasks.push(async () => {
+      if (isMemfit()) {
+        await Promise.all([
+          setLocalValue(LocalGVS.NoAutobootLatestVersionCheck, true),
+          setLocalValue(LocalGVS.NoYakVersionCheck, true),
+        ])
+        return
+      }
+
+      return grpcFetchLocalYakitVersion(true).then((appVersion) => {
         return getLocalValue(LocalGVS.LocalAppVersion)
           .then((res) => {
             if (res !== appVersion) {
@@ -214,8 +223,8 @@ export const StartupPage: React.FC = () => {
             }
           })
           .catch(() => {})
-      }),
-    )
+      })
+    })
     // 获取本地缓存端口号
     tasks.push(() =>
       getCachedLocalModePort().then((port) => {

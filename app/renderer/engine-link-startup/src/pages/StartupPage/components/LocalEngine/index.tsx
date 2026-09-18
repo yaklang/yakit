@@ -11,7 +11,13 @@ import {
   grpcFetchLocalYakVersionHash,
   grpcFetchSpecifiedYakVersionHash,
 } from '../../grpc'
-import { FetchSoftwareVersion, getReleaseEditionName, isCommunityYakit, isEnpriTraceAgent } from '@/utils/envfile'
+import {
+  FetchSoftwareVersion,
+  getReleaseEditionName,
+  isCommunityYakit,
+  isEnpriTraceAgent,
+  isMemfit,
+} from '@/utils/envfile'
 import { yakitNotify } from '@/utils/notification'
 import { SystemInfo } from '../../utils'
 import { getLocalValue } from '@/utils/kv'
@@ -141,12 +147,16 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         setLog(['开发环境，直接连接引擎'])
         startYakEngine()
       } else if (checkVersion) {
-        // SE 版本不进行 yakit 更新检查，直接检查引擎和内置的版本
-        if (isEnpriTraceAgent()) {
+        // AI Senso 不允许自动更新检测，仅保留引擎可用性和来源校验。
+        if (isMemfit()) {
+          setLog(['AI Senso 已关闭自动更新检测，正在连接引擎...'])
+          handleCheckEngineVersion()
+        } else if (isEnpriTraceAgent()) {
+          // SE 版本不进行 yakit 更新检查，直接检查引擎和内置的版本
           handleCheckEngineVersion()
         } else {
           setLog(['检查软件是否有更新...'])
-          handleCheckEngineVersion()
+          handleCheckYakitLatestVersion()
         }
       } else {
         startYakEngine()
@@ -158,6 +168,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
      * - 未开启 yakit 更新检查，不进行 yakit 更新检查，直接检查引擎和内置的版本
      */
     const handleCheckYakitLatestVersion = useMemoizedFn(() => {
+      if (isMemfit()) {
+        handleCheckEngineVersion()
+        return
+      }
+
       // 中断连接 后续不执行
       if (yakitStatusRef.current === 'break') {
         debugToPrintLog(`------ 开始检查软件是否有版本更新 被阻止 ------`)
@@ -226,8 +241,8 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       }
 
       try {
-        const res = await getLocalValue(LocalGVS.NoYakVersionCheck)
-        if (res) {
+        const noYakVersionCheck = isMemfit() || (await getLocalValue(LocalGVS.NoYakVersionCheck))
+        if (noYakVersionCheck) {
           setLog(['获取引擎版本号...'])
         } else {
           debugToPrintLog(`------ 开始检查引擎内置版本逻辑 ------`)
@@ -235,9 +250,9 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         }
         const localVersion = allowSecretLocalJson.current.version
         const localVersionPromise = localVersion ? Promise.resolve(localVersion) : grpcFetchLocalYakVersion(true)
-        const buildInVersionPromise = grpcFetchBuildInYakVersion(true)
+        const buildInVersionPromise = noYakVersionCheck ? Promise.resolve('') : grpcFetchBuildInYakVersion(true)
         const [res1, res2] = await Promise.allSettled([localVersionPromise, buildInVersionPromise])
-        if (!res && res2.status === 'fulfilled') {
+        if (!noYakVersionCheck && res2.status === 'fulfilled') {
           let buildIn = res2.value || ''
           buildInYak.current = buildIn.startsWith('v') ? buildIn.substring(1) : buildIn
           debugToPrintLog(`------ 内置版本: ${buildInYak.current} ------`)
@@ -256,7 +271,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             return
           }
 
-          if (res) {
+          if (noYakVersionCheck) {
             handleCheckEngineSource(currentYak.current)
           } else {
             if (!!currentYak.current && !!buildInYak.current && compare(buildInYak.current, currentYak.current) > 0) {
@@ -391,7 +406,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
     return (
       <>
-        {!isEnpriTraceAgent() && (
+        {!isEnpriTraceAgent() && !isMemfit() && (
           <UpdateYakitHint
             visible={yakitUpdate}
             onCallback={() => {
