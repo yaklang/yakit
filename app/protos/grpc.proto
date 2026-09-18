@@ -899,6 +899,9 @@ service Yak {
 
   rpc UploadHotPatchTemplateToOnline(UploadHotPatchTemplateToOnlineRequest) returns (Empty);
   rpc DownloadHotPatchTemplate(DownloadHotPatchTemplateRequest) returns (Empty);
+  // hot-patch template import/export
+  rpc ExportHotPatchTemplateStream(ExportHotPatchTemplateStreamRequest) returns (stream ExecResult);
+  rpc ImportHotPatchTemplateStream(ImportHotPatchTemplateStreamRequest) returns (stream ExecResult);
 
 
   // MITM hijack filter
@@ -9197,6 +9200,17 @@ message DownloadHotPatchTemplateRequest {
   string Name = 1;
   string Type = 2; // fuzzer/mitm/httpflow-analyze
   string Token = 3;
+}
+message ExportHotPatchTemplateStreamRequest {
+  HotPatchTemplateRequest Filter = 1;
+  string OutputFilename = 2;
+  string Password = 3;
+  string OutputPluginDir = 4;
+}
+message ImportHotPatchTemplateStreamRequest {
+  bytes Data = 1;
+  string Password = 2;
+  string Filename = 3;
 }
 message ExportHTTPFlowStreamRequest {
   QueryHTTPFlowRequest Filter = 1;

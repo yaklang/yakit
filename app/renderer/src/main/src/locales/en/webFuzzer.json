@@ -640,6 +640,25 @@
     "remove_from_group": "Remove from Group",
     "remove_from_group_success": "Removed from group"
   },
+  "HotPatchTemplateImportExport": {
+    "export_title": "Export Hot-Reload Template",
+    "import_title": "Import Hot-Reload Template",
+    "export_path": "Export Path",
+    "export_path_placeholder": "Please enter the export path",
+    "export_path_help_remote": "You can manually enter the export path,",
+    "export_path_help_local": "You can manually enter the export path or click here",
+    "select_folder": "Select Folder",
+    "filename": "File Name",
+    "filename_placeholder": "Please enter the file name",
+    "password": "Password",
+    "change_path": "Change Path",
+    "local_path": "Local Path",
+    "local_path_placeholder": "Please enter the local path",
+    "import_desc": "Templates will be imported based on their types stored in the file",
+    "export_all": "Export All",
+    "export_single": "Export Single",
+    "export_template": "Export Template"
+  },
   "AddHotCodeTemplate": {
     "hot_reload_template_name_empty": "Hot-reload template name is empty",
     "hot_reload_template_name_exists": "Hot-reload template name already exists",

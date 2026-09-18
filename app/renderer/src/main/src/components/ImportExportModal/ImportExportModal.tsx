@@ -34,10 +34,13 @@ export type ImportExportModalExtra = {
   type: 'export' | 'import'
   apiKey: string
 }
-interface ImportExportModalProps<F, R, P> {
+export interface ImportExportModalProps<F, R, P> {
   getContainer?: HTMLElement
   extra: ImportExportModalExtra
   hasDesc?: boolean
+  descExtra?: React.ReactNode
+  exportDesc?: React.ReactNode
+  importDesc?: React.ReactNode
   modelProps?: YakitModalProp
   formProps?: FormProps
   renderForm: (form: FormInstance) => React.ReactNode
@@ -56,6 +59,9 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     getContainer,
     extra,
     hasDesc = true,
+    descExtra = null,
+    exportDesc = null,
+    importDesc = null,
     modelProps = {},
     formProps = {},
     renderForm,
@@ -75,6 +81,9 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
   const timeRef = useRef<ReturnType<typeof setTimeout>>()
   const importExportStreamRef = useRef<P[]>([])
   const [progressStream, setProgressStream] = useSafeState<P[]>([])
+  const hasErrorRef = useRef(false)
+  const finishedRef = useRef(false)
+  const logListInfoRef = useRef<LogListInfo[]>([])
 
   const handleReset = useMemoizedFn(() => {
     token.current = ''
@@ -82,11 +91,14 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     timeRef.current = undefined
     importExportStreamRef.current = []
     setProgressStream([])
+    hasErrorRef.current = false
+    finishedRef.current = false
+    logListInfoRef.current = []
   })
 
   const onSubmit = useMemoizedFn(async () => {
     try {
-      const values = form.getFieldsValue() as F
+      const values = (await form.validateFields()) as F
       await onBeforeSubmit?.(values)
       const params = onSubmitForm(values)
       token.current = randomString(40)
@@ -94,6 +106,7 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
       await ipcRenderer.invoke(extra.apiKey, params, token.current)
       setShowProgressStream(true)
     } catch (e) {
+      if (e && typeof e === 'object' && 'errorFields' in e) return
       yakitNotify('error', `[${extra.apiKey}] error:  ${e}`)
     }
   })
@@ -109,8 +122,11 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
   })
 
   useEffect(() => {
-    if (progressStream.length && isProgressFinished(progressStream[0])) {
-      onFinished(true)
+    if (progressStream.length && isProgressFinished(progressStream[0]) && !hasErrorRef.current) {
+      if (!finishedRef.current) {
+        finishedRef.current = true
+        onFinished(true)
+      }
     }
   }, [progressStream.length])
   const streamData = useMemo(() => {
@@ -119,7 +135,9 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     }
   }, [progressStream.length])
   const logListInfo = useMemo(() => {
-    return getlogListInfo?.(progressStream) || []
+    const list = getlogListInfo?.(progressStream) || []
+    logListInfoRef.current = list
+    return list
   }, [progressStream.length])
   const progressTitle = useMemo(() => {
     return extra.type === 'export'
@@ -148,6 +166,11 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
       importExportStreamRef.current.unshift(data)
     })
     ipcRenderer.on(`${token.current}-error`, (_, error) => {
+      hasErrorRef.current = true
+      if (logListInfoRef.current.length === 0 && !finishedRef.current) {
+        finishedRef.current = true
+        onFinished(false)
+      }
       yakitNotify('error', `[${typeTitle}] error:  ${error}`)
     })
     ipcRenderer.on(`${token.current}-end`, () => {
@@ -156,7 +179,10 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
   })
 
   const onCancel = useMemoizedFn(() => {
-    onFinished(false)
+    if (!finishedRef.current) {
+      finishedRef.current = true
+      onFinished(false)
+    }
   })
 
   // modal header 描述文字
@@ -164,9 +190,25 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     if (!hasDesc) return null
     switch (type) {
       case 'export':
-        return <div className={styles['export-hint']}>{t('ImportExportModal.exportHint')}</div>
+        if (exportDesc) {
+          return <div className={styles['export-hint']}>{exportDesc}</div>
+        }
+        return (
+          <div className={styles['export-hint']}>
+            {t('ImportExportModal.exportHint')}
+            {descExtra}
+          </div>
+        )
       case 'import':
-        return <div className={styles['import-hint']}>{t('ImportExportModal.importHint')}</div>
+        if (importDesc) {
+          return <div className={styles['import-hint']}>{importDesc}</div>
+        }
+        return (
+          <div className={styles['import-hint']}>
+            {t('ImportExportModal.importHint')}
+            {descExtra}
+          </div>
+        )
 
       default:
         break
@@ -177,6 +219,10 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     if (extra.hint) {
       handleReset()
       form.resetFields()
+      // 使用当前最新的 initialValues 填充表单，避免 resetFields 只回到 mount 时的旧快照
+      if (formProps.initialValues) {
+        form.setFieldsValue(formProps.initialValues)
+      }
     }
     // 关闭时重置所有数据
     return () => {
