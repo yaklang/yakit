@@ -137,10 +137,10 @@ export interface AIAgentChatData {
   memoryList: AIAgentGrpcApi.MemoryEntryList
   /** 系统流信息(isSystem=true&type=stream) */
   systemStream: string
-  /** yaklang_code_change 数据 */
-  yaklangCodeChange?: AIAgentGrpcApi.YaklangCodeChange
-  /** syntaxflow_rule_change 数据（规则生成 →「规则编写」） */
-  syntaxflowRuleChange?: AIAgentGrpcApi.SyntaxFlowRuleChange
+  /** CodeChange 数据（事件类型 yaklang_code_change） */
+  yaklangCodeChange?: AIAgentGrpcApi.CodeChange
+  /** CodeChange 数据（事件类型 syntaxflow_rule_change →「规则编写」） */
+  syntaxflowRuleChange?: AIAgentGrpcApi.CodeChange
 
   /**
    * 与 IDB sessionRender.grpcOffset 同步的事件游标。

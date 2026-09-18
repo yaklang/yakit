@@ -540,12 +540,12 @@ export interface ChatStoreState {
    */
   updateSystemStream: number
   /**
-   * yaklang_code_change 更新
+   * CodeChange（yaklang_code_change）更新
    * aiChat.d.ts AIAgentChatData yaklangCodeChange
    */
   yaklangCodeChangeUpdate: number
   /**
-   * syntaxflow_rule_change 更新
+   * CodeChange（syntaxflow_rule_change）更新
    * aiChat.d.ts AIAgentChatData syntaxflowRuleChange
    */
   syntaxflowRuleChangeUpdate: number

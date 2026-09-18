@@ -473,7 +473,7 @@ const handleYaklangCodeChange: AIMessageHandler = (requestInfo) => {
   if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
-  const yaklangCodeChange = JSON.parse(ipcContent) as AIAgentGrpcApi.YaklangCodeChange
+  const yaklangCodeChange = JSON.parse(ipcContent) as AIAgentGrpcApi.CodeChange
   rawData.yaklangCodeChange = yaklangCodeChange
   store.getState().updateStateCount('yaklangCodeChangeUpdate')
 }
@@ -484,7 +484,7 @@ const handleSyntaxFlowRuleChange: AIMessageHandler = (requestInfo) => {
   if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
-  const syntaxflowRuleChange = JSON.parse(ipcContent) as AIAgentGrpcApi.SyntaxFlowRuleChange
+  const syntaxflowRuleChange = JSON.parse(ipcContent) as AIAgentGrpcApi.CodeChange
   rawData.syntaxflowRuleChange = syntaxflowRuleChange
   store.getState().updateStateCount('syntaxflowRuleChangeUpdate')
 }

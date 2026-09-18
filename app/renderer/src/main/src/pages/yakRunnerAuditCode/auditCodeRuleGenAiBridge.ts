@@ -103,8 +103,8 @@ export function appendAuditCodeRuleGenContextToEvent(pageId: string, event: AIIn
 }
 
 export function normalizeSyntaxFlowCodeChangeContent(
-  data: AIAgentGrpcApi.SyntaxFlowRuleChange,
-): AIAgentGrpcApi.SyntaxFlowRuleChange {
+  data: AIAgentGrpcApi.CodeChange,
+): AIAgentGrpcApi.CodeChange {
   const content = unescapeLikelyJsonEscapedText(String(data?.code?.content ?? ''))
   const patch = data?.code?.patch
   if (!patch) {
@@ -146,7 +146,7 @@ export function applyAcceptedSyntaxFlowRuleToAuditCode(content: string): void {
 }
 
 /** @deprecated 保留兼容：直接覆盖（无 diff）。新路径请走审阅队列。 */
-export function applySyntaxFlowRuleChangeToAuditCode(data: AIAgentGrpcApi.SyntaxFlowRuleChange): void {
+export function applySyntaxFlowRuleChangeToAuditCode(data: AIAgentGrpcApi.CodeChange): void {
   const normalized = normalizeSyntaxFlowCodeChangeContent(data)
   const content = normalized?.code?.content
   if (content == null || String(content).trim() === '') return

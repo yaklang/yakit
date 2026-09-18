@@ -40,7 +40,7 @@ import {
   resolveYaklangCreateTargetPath,
 } from '../pages/yakRunner/yakRunnerAiCodeApplyBridge'
 import {
-  normalizeYaklangCodeChangeForReview,
+  normalizeCodeChangeForReview,
   resetYakRunnerPatchWorkingDraft,
 } from '../pages/yakRunner/yakRunnerAiCodePatchApply'
 import {
@@ -278,7 +278,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     applyHttpFuzzRequestChangeToWebFuzzerPage(pageId, data)
   })
 
-  const onYaklangCodeChange = useMemoizedFn((data: AIAgentGrpcApi.YaklangCodeChange) => {
+  const onYaklangCodeChange = useMemoizedFn((data: AIAgentGrpcApi.CodeChange) => {
     if (!isHaveYakRunnerPageId) return
 
     const editorNow = getYakRunnerPageActiveCodeString(pageId) ?? ''
@@ -292,7 +292,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
             : ''
 
     // op=patch：后端只给片段，这里合并成全量 replace，再走原有 diff UI
-    const normalized = normalizeYaklangCodeChangeForReview(pageId, data, original)
+    const normalized = normalizeCodeChangeForReview(pageId, data, original)
     if (!normalized) return
 
     const nextCode = normalized.code?.content
@@ -323,7 +323,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   // IRify「规则生成」：syntaxflow_rule_change → patch 合并 → diff 审阅 →「规则编写」
-  const onSyntaxFlowRuleChange = useMemoizedFn((data: AIAgentGrpcApi.SyntaxFlowRuleChange) => {
+  const onSyntaxFlowRuleChange = useMemoizedFn((data: AIAgentGrpcApi.CodeChange) => {
     if (!isHaveAuditCodeRuleGenPageId) return
 
     const fixed = normalizeSyntaxFlowCodeChangeContent(data)
@@ -335,7 +335,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
           ? initialCodeInCasualRef.current
           : ''
 
-    const normalized = normalizeYaklangCodeChangeForReview(pageId, fixed, original)
+    const normalized = normalizeCodeChangeForReview(pageId, fixed, original)
     if (!normalized) return
 
     const nextCode = normalized.code?.content

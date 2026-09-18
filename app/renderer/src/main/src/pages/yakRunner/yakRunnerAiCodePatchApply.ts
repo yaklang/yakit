@@ -10,7 +10,9 @@ type PatchWorkingState = {
   lastVersion: number
 }
 
-export type YaklangPatchApplyResult = { ok: true; content: string } | { ok: false; reason: string }
+export type CodePatchApplyResult = { ok: true; content: string } | { ok: false; reason: string }
+/** @deprecated 请优先使用 CodePatchApplyResult */
+export type YaklangPatchApplyResult = CodePatchApplyResult
 
 const patchWorkingByPage = new Map<string, PatchWorkingState>()
 
@@ -51,7 +53,7 @@ function validateOldSnippet(
   startLine: number,
   endLine: number,
   oldSnippet: string,
-): YaklangPatchApplyResult | null {
+): CodePatchApplyResult | null {
   const actual = extractLineRangeText(base, startLine, endLine)
   if (normNewlines(actual) !== normNewlines(oldSnippet)) {
     return { ok: false, reason: '补丁 old_snippet 与文件内容不一致，已拒绝合并' }
@@ -85,7 +87,8 @@ function isSamePatchTargetPath(a?: string, b?: string): boolean {
   return isSameYakRunnerFilePath(a, b)
 }
 
-export function applyYaklangCodePatch(base: string, change: AIAgentGrpcApi.YaklangCodeChange): YaklangPatchApplyResult {
+/** 将 op=patch 的 CodeChange 合入 base（yaklang / syntaxflow 共用） */
+export function applyCodePatch(base: string, change: AIAgentGrpcApi.CodeChange): CodePatchApplyResult {
   const patch = change.code?.patch
   const fragment = String(change.code?.content ?? '')
   if (!patch) return { ok: true, content: fragment || base }
@@ -130,6 +133,9 @@ export function applyYaklangCodePatch(base: string, change: AIAgentGrpcApi.Yakla
   }
 }
 
+/** @deprecated 请优先使用 applyCodePatch */
+export const applyYaklangCodePatch = applyCodePatch
+
 function resolvePatchMergeBase(
   pageId: string,
   sessionOriginal: string,
@@ -148,14 +154,15 @@ function resolvePatchMergeBase(
 }
 
 /**
- * Collapse backend patch events into full-file replace/create payloads for the existing diff UI.
- * Returns null when the event is a duplicate patch (same or older version) or merge is rejected.
+ * 将后端 CodeChange（含 op=patch）折叠为全量 replace/create，供现有 diff UI 使用。
+ * yaklang_code_change / syntaxflow_rule_change 共用。
+ * 重复/过旧 version 或合入失败时返回 null。
  */
-export function normalizeYaklangCodeChangeForReview(
+export function normalizeCodeChangeForReview(
   pageId: string,
-  data: AIAgentGrpcApi.YaklangCodeChange,
+  data: AIAgentGrpcApi.CodeChange,
   sessionOriginal: string,
-): AIAgentGrpcApi.YaklangCodeChange | null {
+): AIAgentGrpcApi.CodeChange | null {
   if (data.op === 'create') {
     patchWorkingByPage.set(pageId, {
       path: resolveYaklangCodeChangePath(data),
@@ -183,7 +190,7 @@ export function normalizeYaklangCodeChangeForReview(
   }
 
   const base = resolvePatchMergeBase(pageId, sessionOriginal, prev, path)
-  const result = applyYaklangCodePatch(base, data)
+  const result = applyCodePatch(base, data)
   if (!result.ok) {
     yakitFailed(result.reason)
     return null
@@ -201,3 +208,6 @@ export function normalizeYaklangCodeChangeForReview(
     },
   }
 }
+
+/** @deprecated 请优先使用 normalizeCodeChangeForReview */
+export const normalizeYaklangCodeChangeForReview = normalizeCodeChangeForReview
