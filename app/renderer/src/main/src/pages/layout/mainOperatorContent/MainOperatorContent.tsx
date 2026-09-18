@@ -1788,6 +1788,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
               advancedConfigValue: info.advancedConfigValue,
               advancedConfigShow: info.advancedConfigShow,
               hotPatchCode: info.hotPatchCode,
+              browserTransformSelection: info.browserTransformSelection,
             }
           }
           case YakitRoute.Codec: {
@@ -3031,6 +3032,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 advancedConfigShow: cacheData.advancedConfigShow,
                 request: nodeItem.pageParams?.request || defaultPostTemplate,
                 hotPatchCode: nodeItem.pageParams?.hotPatchCode || HotPatchDefaultContent,
+                browserTransformSelection: nodeItem.pageParams?.browserTransformSelection,
               },
             },
             sortFieId: nodeItem.sortFieId,
@@ -3066,6 +3068,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
               advancedConfigShow: cacheData.advancedConfigShow,
               request: parentItem.pageParams?.request || defaultPostTemplate,
               hotPatchCode: parentItem.pageParams?.hotPatchCode || HotPatchDefaultContent,
+              browserTransformSelection: parentItem.pageParams?.browserTransformSelection,
             },
           },
           sortFieId: parentItem.sortFieId,
@@ -3150,6 +3153,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
           advancedConfigShow: node.pageParams?.advancedConfigShow,
           request: node.pageParams?.request || defaultPostTemplate,
           hotPatchCode: node.pageParams?.hotPatchCode || '',
+          browserTransformSelection: node.pageParams?.browserTransformSelection,
         },
       },
       sortFieId: order,
@@ -3201,6 +3205,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 },
                 request: nodeItem.pageParams?.request || '',
                 hotPatchCode: nodeItem.pageParams?.hotPatchCode || '',
+                browserTransformSelection: nodeItem.pageParams?.browserTransformSelection,
               },
             },
             sortFieId: nodeItem.sortFieId,

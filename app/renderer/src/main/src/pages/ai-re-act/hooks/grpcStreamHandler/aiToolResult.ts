@@ -197,6 +197,31 @@ const handleToolCallLogDir: AIMessageHandler = async (requestInfo) => {
   persistToolResultIfTerminal(requestInfo.sessionId, toolResult, requestInfo.meta.lifecycle)
 }
 
+const handleToolExecutionResult: AIMessageHandler = async (requestInfo) => {
+  const { res } = requestInfo
+  if (res.Type !== 'tool_call_result') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const { call_tool_id, result } = JSON.parse(ipcContent) as { call_tool_id?: string; result?: unknown }
+  if (!call_tool_id) {
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
+    return
+  }
+
+  const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!toolResult) {
+    requestInfo.pushLog({
+      level: 'error',
+      message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
+    })
+    return
+  }
+
+  toolResult.data.tool.executionResult = cloneDeep(result)
+  if (toolResult.data.type !== 'create') ensureToolResultOnUI(requestInfo, toolResult)
+  persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
+}
+
 const handleToolCallResult: AIMessageHandler = async (requestInfo) => {
   const { res, meta } = requestInfo
   if (!['tool_call_user_cancel', 'tool_call_done', 'tool_call_error'].includes(res.Type)) return
@@ -351,6 +376,7 @@ export const aiToolResultDataHandlers = {
   tool_call_param: handleToolCallParam,
   tool_call_watcher: handleToolCallWatcher,
   tool_call_log_dir: handleToolCallLogDir,
+  tool_call_result: handleToolExecutionResult,
   tool_call_user_cancel: handleToolCallResult,
   tool_call_done: handleToolCallResult,
   tool_call_error: handleToolCallResult,

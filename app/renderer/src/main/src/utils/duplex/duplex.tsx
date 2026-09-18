@@ -213,6 +213,9 @@ export const startupDuplexConn = () => {
         case 'project':
           emiter.emit('onServerPushProjectChanged', JSON.stringify(obj))
           break
+        case 'browser_extension':
+          emiter.emit('onBrowserExtensionChanged', JSON.stringify(obj))
+          break
         // 通知QuerySSARisks轮询更新
         case 'ssa_risk':
           emiter.emit('onRefreshQuerySSARisks', JSON.stringify(obj))

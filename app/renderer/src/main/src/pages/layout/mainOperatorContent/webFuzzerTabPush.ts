@@ -175,6 +175,7 @@ const toPageNode = (node: WebFuzzerPushNode, current?: PageNodeItemProps): PageN
         advancedConfigShow: currentInfo?.advancedConfigShow,
         request: pageParams.request ?? currentInfo?.request ?? defaultPostTemplate,
         hotPatchCode: pageParams.hotPatchCode ?? currentInfo?.hotPatchCode ?? '',
+        browserTransformSelection: pageParams.browserTransformSelection ?? currentInfo?.browserTransformSelection,
       },
     },
   }

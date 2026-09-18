@@ -357,6 +357,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
     filterTagDom,
     website = false,
     isCrawler = false,
+    sourceType,
     showAdvancedSearch = false,
     showSetting = false,
     pageType,
@@ -371,11 +372,14 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
   const [treeQueryparams, setTreeQueryparams] = useState<string>('')
   const [refreshTreeFlag, setRefreshTreeFlag] = useState<boolean>(false)
   const httpFlowParams = useMemo(() => {
+    if (sourceType !== undefined) {
+      return { SourceType: sourceType }
+    }
     if (pageType === 'History') {
       return { SourceType: SourceType.map(({ value }) => value).join(',') }
     }
     return { SourceType: isCrawler ? 'basic-crawler' : 'scan' }
-  }, [pageType, isCrawler])
+  }, [sourceType, pageType, isCrawler])
   // 流量表筛选条件 改变 控制webtree刷新
   const onQueryParams = useMemoizedFn((queryParams: string, execFlag?: boolean) => {
     const treeQuery = JSONParseLog(queryParams, { page: 'PluginExecuteHttpFlow', fun: 'onQueryParams-treeQuery' }) || {}

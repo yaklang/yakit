@@ -10,6 +10,7 @@ import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import FileTreeList from './aiChatWelcome/FileTreeList/FileTreeList'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import { BrowserInstancesPanel } from './browserInstances/BrowserInstancesPanel'
 
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
 const AIScheduledTasks = React.lazy(() => import('./aiScheduledTasks/AIScheduledTasks'))
@@ -78,6 +79,9 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
             <AIMCP />
           </React.Suspense>
         )
+        break
+      case AIAgentTabListEnum.Browser:
+        content = <BrowserInstancesPanel />
         break
       default:
         break

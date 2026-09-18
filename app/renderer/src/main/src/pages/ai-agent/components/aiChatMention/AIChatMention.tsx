@@ -3,6 +3,7 @@ import type {
   AIChatMentionListRefProps,
   AIChatMentionProps,
   AIMentionSelectItemProps,
+  BrowserListOfMentionProps,
   FileSystemTreeOfMentionProps,
   FocusModeOfMentionProps,
   ForgeNameListOfMentionProps,
@@ -46,6 +47,16 @@ import { type KnowledgeBaseItem, useKnowledgeBase } from '@/pages/KnowledgeBase/
 import type { InputRef } from 'antd'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { mentionWidth } from '../aiMilkdownInput/aiMilkdownMention/AIMilkdownMention'
+import {
+  browserInstanceMentionName,
+  formatLastSeen,
+  refreshBrowserInstances,
+  selectBrowserInstance,
+  useBrowserInstances,
+  type AIBrowserInstance,
+} from '../../browserInstances/browserInstanceStore'
+import { BrowserClientIcon } from '../../browserInstances/BrowserClientIcon'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 
 const defaultRef: AIChatMentionListRefProps = {
   onRefresh: () => {},
@@ -69,6 +80,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
   const toolRef = useRef<AIChatMentionListRefProps>(defaultRef)
   const knowledgeBaseRef = useRef<AIChatMentionListRefProps>(defaultRef)
   const focusModeRef = useRef<AIChatMentionListRefProps>(defaultRef)
+  const browserRef = useRef<AIChatMentionListRefProps>(defaultRef)
 
   const searchRef = useRef<InputRef>(null)
 
@@ -193,6 +205,13 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
       name: focusMode.Name || '',
     })
   })
+  const onSelectBrowser = useMemoizedFn((instance: AIBrowserInstance) => {
+    selectBrowserInstance(instance.id)
+    onSelect('browser', {
+      id: instance.id,
+      name: browserInstanceMentionName(instance),
+    })
+  })
   const renderTabContent = useMemoizedFn((key: AIMentionTabsEnum) => {
     switch (key) {
       case AIMentionTabsEnum.Forge_Name:
@@ -226,6 +245,15 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             getContainer={getContainer}
           />
         )
+      case AIMentionTabsEnum.Browser:
+        return (
+          <BrowserListOfMention
+            ref={browserRef}
+            keyWord={keyWord}
+            onSelect={onSelectBrowser}
+            getContainer={getContainer}
+          />
+        )
       default:
         return null
     }
@@ -243,6 +271,9 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
         break
       case AIMentionTabsEnum.FocusMode:
         focusModeRef.current.onRefresh()
+        break
+      case AIMentionTabsEnum.Browser:
+        browserRef.current.onRefresh()
         break
       default:
         return null
@@ -736,6 +767,106 @@ const AIMentionSelectItem: React.FC<AIMentionSelectItemProps> = React.memo((prop
     </div>
   )
 })
+
+const BrowserListOfMention: React.FC<BrowserListOfMentionProps> = React.memo(
+  forwardRef((props, ref) => {
+    const { t } = useI18nNamespaces(['aiAgent'])
+    const { keyWord, onSelect, getContainer } = props
+    const { instances, selectedId, loading } = useBrowserInstances()
+    const [selected, setSelected] = useState<AIBrowserInstance>()
+    const listRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(listRef)
+    const filtered = useCreation(() => {
+      const keyword = keyWord.trim().toLowerCase()
+      const online = instances.filter((instance) => instance.online)
+      if (!keyword) return online
+      return online.filter((instance) =>
+        [instance.identity, instance.name, instance.origin, instance.tab?.title, instance.tab?.url]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(keyword)),
+      )
+    }, [instances, keyWord])
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        onRefresh: () => void refreshBrowserInstances(true),
+      }),
+      [],
+    )
+
+    useEffect(() => {
+      const current = filtered.find((instance) => instance.id === selectedId) || filtered[0]
+      setSelected(current)
+    }, [filtered, selectedId])
+
+    const onKeyboardSelect = useMemoizedFn((value: number) => {
+      if (value >= 0 && value < filtered.length) setSelected(filtered[value])
+    })
+    const onEnter = useMemoizedFn(() => {
+      if (selected && inViewport) onSelect(selected)
+    })
+    useSwitchSelectByKeyboard<AIBrowserInstance>(listRef, {
+      data: filtered,
+      selected,
+      rowKey: (item) => `AIMentionSelectItem-${item.id}`,
+      onSelectNumber: onKeyboardSelect,
+      onEnter,
+      getContainer,
+    })
+
+    return (
+      <div className={styles['browser-list-of-mention']} ref={listRef}>
+        <YakitSpin spinning={loading && !instances.length}>
+          {!filtered.length ? (
+            <div className={styles['browser-list-empty']}>{t('BrowserInstances.noMentionInstances')}</div>
+          ) : (
+            <div className={styles['browser-mention-list']}>
+              {filtered.map((instance) => (
+                <div
+                  key={instance.id}
+                  id={`AIMentionSelectItem-${instance.id}`}
+                  className={classNames(styles['browser-mention-row'], {
+                    [styles['browser-mention-row-active']]: selected?.id === instance.id,
+                  })}
+                  onClick={() => onSelect(instance)}
+                >
+                  <div className={styles['browser-mention-avatar']}>
+                    <BrowserClientIcon client={instance.client} size={18} />
+                    {!!instance.identity && (
+                      <span className={styles['browser-mention-identity']} data-identity={instance.identity}>
+                        {instance.identity}
+                      </span>
+                    )}
+                  </div>
+                  <div className={styles['browser-mention-copy']}>
+                    <div className={styles['browser-mention-title-row']}>
+                      <span
+                        className={styles['browser-mention-title']}
+                        title={instance.tab?.title || instance.name || instance.client}
+                      >
+                        {instance.tab?.title || instance.name || instance.client}
+                      </span>
+                      <YakitTag size="small" fullRadius color={instance.online ? 'success' : 'danger'}>
+                        {instance.online ? t('BrowserInstances.online') : t('BrowserInstances.offline')}
+                      </YakitTag>
+                    </div>
+                    <div className={styles['browser-mention-url']} title={instance.tab?.url ?? instance.origin}>
+                      {instance.tab?.url ?? instance.origin}
+                    </div>
+                    <div className={styles['browser-mention-last-seen']}>
+                      {t('BrowserInstances.lastSeen', { time: formatLastSeen(instance.lastSeenAt) })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </YakitSpin>
+      </div>
+    )
+  }),
+)
 
 const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.memo((props) => {
   const { onSelect } = props

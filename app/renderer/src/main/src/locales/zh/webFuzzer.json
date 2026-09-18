@@ -773,6 +773,7 @@
     "hit_color": "命中颜色"
   },
   "FuzzerSequence": {
+    "browserGatewayUnsupported": "浏览器明文网关暂不支持序列/并发执行或导出，请在原 Web Fuzzer 页面单独发送。",
     "fuzz_request_fail": "提交模糊测试请求失败：",
     "execute_after_sequence": "请配置序列后再执行",
     "configure_before_adding": "已有空节点，请配置后再添加",
@@ -900,5 +901,21 @@
     "ascii_decode": "'ASCII'解码",
     "ascii_decode_tag_content": "把标签内容按'ASCII'解码",
     "parse_as_string_eg_str_xa0_x45": "解析成字符串（例如{{str(\\xA0\\x45)}}）"
+  },
+  "BrowserTransformSelector": {
+    "entry": "浏览器明文",
+    "title": "浏览器明文网关",
+    "onlineCount": "{{count}} 个在线浏览器",
+    "capabilityUnsupported": "当前插件构建不支持浏览器明文网关",
+    "bridgeNotRunning": "浏览器 Bridge 未运行",
+    "noProfiles": "当前共享文档没有可用转换配置",
+    "emptyTitle": "没有在线浏览器",
+    "emptyHint": "连接插件并共享包含转换配置的页面",
+    "openInstances": "打开浏览器实例",
+    "request": "请求",
+    "response": "响应",
+    "bidirectional": "双向",
+    "requestOnly": "仅请求",
+    "responseOnly": "仅响应"
   }
 }

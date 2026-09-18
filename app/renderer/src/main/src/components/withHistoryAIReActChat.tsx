@@ -86,6 +86,7 @@ export interface HistoryAIReActChatSlotOptions {
 export type HistoryAIReActChatSlotRender = (options: HistoryAIReActChatSlotOptions) => React.ReactNode
 
 export type HistoryAIReActFocusModeLoop = NonNullable<AIInputEvent['FocusModeLoop']>
+export type HistoryAIReviewPolicy = 'manual' | 'ai' | 'yolo'
 
 export interface HistoryAIReActChatContextValue {
   renderHistoryAIReActChat: HistoryAIReActChatSlotRender
@@ -93,6 +94,7 @@ export interface HistoryAIReActChatContextValue {
   setShowFreeChat: React.Dispatch<React.SetStateAction<boolean>>
   historyAIReActChatBridge: HistoryAIReActChatBridge
   focusModeLoop: HistoryAIReActFocusModeLoop
+  reviewPolicy: HistoryAIReviewPolicy
 }
 
 /**
@@ -657,8 +659,16 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       setShowFreeChat,
       historyAIReActChatBridge,
       focusModeLoop,
+      reviewPolicy: (setting.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy || 'manual') as HistoryAIReviewPolicy,
     }),
-    [renderHistoryAIReActChat, showFreeChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop],
+    [
+      renderHistoryAIReActChat,
+      showFreeChat,
+      setShowFreeChat,
+      historyAIReActChatBridge,
+      focusModeLoop,
+      setting.ReviewPolicy,
+    ],
   )
 
   return (

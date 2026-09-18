@@ -89,6 +89,7 @@ import {
 } from '@/utils/envfile'
 import type {
   AddYakitScriptPageInfoProps,
+  WebFuzzerPageInfoProps,
   AuditCodePageInfoProps,
   BrutePageInfoProps,
   CodeScanPageInfoProps,
@@ -701,6 +702,7 @@ export const getDefaultFixedTabsNoSinglPageRoute = (softMode: SoftMode) => {
 export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRoute.Data_Statistics]
 
 export interface ComponentParams {
+  browserTransformSelection?: WebFuzzerPageInfoProps['browserTransformSelection']
   // 是否跳转到新开页面 默认跳转
   openFlag?: boolean
   // Route.HTTPFuzzer 参数---start

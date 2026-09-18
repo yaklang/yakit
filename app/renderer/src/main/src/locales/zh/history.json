@@ -1,4 +1,67 @@
 {
+  "BrowserHTTPGateway": {
+    "envelopeChanges": "报文封装变化",
+    "boundCall": "绑定的页面调用",
+    "sections": {
+      "inputRequest": "提交明文",
+      "inputResponse": "接收服务器响应",
+      "transform": "浏览器插件转换",
+      "sendRequest": "发送实际请求",
+      "returnResponse": "返回处理结果"
+    },
+    "sectionHint": {
+      "0": "查看实际输入内容",
+      "1": "查看数据如何变化",
+      "2": "查看完整输出报文"
+    },
+    "sectionDescription": {
+      "0": "从本次保存的输入报文中读取字段值。",
+      "1": "通过页面函数完成转换，下方展示输入与最终输出报文中的实际字段值。",
+      "2": "这是本次保存的最终报文，可直接核对实际发送或返回的内容。"
+    },
+    "beforeValue": "输入报文中的值",
+    "afterValue": "输出报文中的值",
+    "pageFunction": "页面函数",
+    "technical": "查看底层配置步骤",
+    "valueUnavailable": "此字段未出现，或当前报文编码无法直接读取；请查看完整报文。",
+    "showPacket": "查看完整报文",
+    "hidePacket": "收起完整报文",
+    "railLabel": "明文网关",
+    "process": "插件转换流程",
+    "input": "输入字段",
+    "output": "输出字段",
+    "packet": "完整报文",
+    "before": "转换前",
+    "after": "转换后",
+    "state": {
+      "unknown": "证据未记录",
+      "failed": "转换失败",
+      "disabled": "未转换",
+      "executed": "已执行",
+      "loadFailed": "加载失败"
+    },
+    "title": "浏览器插件 · 明文网关",
+    "browser": "实例 {{ref}}",
+    "request": "请求转换",
+    "response": "响应转换",
+    "unknown": "此记录未保存详细转换证据，仅展示已保存的数据包；不能据此认定已加密或解密。",
+    "failed": "响应转换失败，保留服务器原始响应。",
+    "disabled": "本次未启用此方向的转换；响应中的格式差异可能来自 HTTP 自动整理。",
+    "executed": "插件已执行此方向的转换。转换执行不代表业务成功，请结合响应内容判断。",
+    "loadFailed": "转换证据加载失败，仍可查看已保存的数据包。",
+    "responseEnabled": "响应转换已启用",
+    "responseDisabled": "响应未转换",
+    "requestBefore": "提交给网关的请求",
+    "requestAfter": "实际发往服务器的请求",
+    "responseBefore": "服务器原始响应",
+    "responseAfter": "网关处理后的响应（未转换时保留原响应）",
+    "packetMissing": "转换前后的数据包尚未加载或未保存。",
+    "proof": {
+      "exact": "准备阶段：样本报文一致；不代表本次业务成功。",
+      "structure": "准备阶段：仅结构一致；未证明加密输入语义或业务成功。",
+      "execution": "准备阶段：仅执行通过；未与原生报文验证一致性。"
+    }
+  },
   "HTTPHistory": {
     "websiteTree": "网站树",
     "process": "进程",
@@ -261,10 +324,14 @@
     "selectHttpRecordToView": "选择想要查看的 HTTP 记录请求",
     "request": "请求",
     "rawRequest": "原始请求",
+    "plaintextRequest": "网关输入请求",
+    "wireRequest": "实际发送请求",
     "containsBinaryStream": "含二进制流",
     "selectHttpRecordResponseToView": "选择想要查看的 HTTP 记录响应",
     "response": "响应",
     "rawResponse": "原始响应",
+    "plaintextResponse": "网关处理后响应",
+    "wireResponse": "服务器原始响应",
     "oversizedRequest": "超大请求",
     "oversizedResponse": "超大响应",
     "editTag": "编辑tag",

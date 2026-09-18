@@ -7,6 +7,8 @@ import { useMemoizedFn } from 'ahooks'
 import type { UseChatIPCStartParams } from '@/pages/ai-agent/useContext/AIAgentContext'
 import type { YakitRouteType } from '@/enums/yakitRoute'
 import { yakitNotify } from '@/utils/notification'
+import type { AIOutputEvent } from './grpcApi'
+
 const { ipcRenderer } = window.require('electron')
 
 export function useChatIPC(route: YakitRouteType, pageId: string) {
@@ -28,8 +30,9 @@ export function useChatIPC(route: YakitRouteType, pageId: string) {
     ipcRenderer.removeAllListeners(`${token}-data`)
     ipcRenderer.removeAllListeners(`${token}-error`)
     ipcRenderer.removeAllListeners(`${token}-end`)
-    ipcRenderer.on(`${token}-data`, (e, res: any) => {
-      if (isCurrentConnection()) void globalSessionEngine.handleGrpcOutputEvent(token, res)
+    ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
+      if (!isCurrentConnection()) return
+      void globalSessionEngine.handleGrpcOutputEvent(token, res)
     })
     ipcRenderer.on(`${token}-error`, (e, res: any) => {
       if (isCurrentConnection()) globalSessionEngine.handleSessionError(token, res)

@@ -48,6 +48,8 @@ export interface PluginExecuteWebsiteTreeProps {
   website?: boolean
   filterTagDom?: React.ReactNode
   isCrawler?: boolean
+  /** HTTP 来源筛选；传空字符串时展示该 runtime 的全部来源 */
+  sourceType?: string
   /** 流量表是否展示高级筛选，默认 false */
   showAdvancedSearch?: boolean
   /** 流量表是否展示列设置，默认 false */

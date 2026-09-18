@@ -1,3 +1,4 @@
+import '@/pages/ai-re-act/hooks/__test__/setupElectron'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ToolInvokerCard from '../ToolInvokerCard'
@@ -24,7 +25,10 @@ vi.mock('../aiChatListItem/StreamingChatContent/hooks/useStreamingChatContent', 
   useStreamingChatContent: vi.fn(),
 }))
 vi.mock('../FileList', () => ({ default: () => null }))
+vi.mock('@/components/yakitUI/YakitDrawer/YakitDrawer', () => ({ showYakitDrawer: vi.fn() }))
 vi.mock('../OperationCardFooter/OperationCardFooter', () => ({ OperationCardFooter: () => null }))
+// DataCompare → httpFlow 顶层 window.require('electron')，本用例不测对比抽屉
+vi.mock('@/pages/compare/DataCompare', () => ({ CodeComparison: () => null }))
 
 describe('ToolInvokerCard asynchronous detail refresh', () => {
   beforeEach(() => {
@@ -84,11 +88,16 @@ describe('ToolInvokerCard asynchronous detail refresh', () => {
             NodeId: '',
             NodeIdVerbose: { Zh: '', En: '' },
             ContentType: '',
+            executionResult: { success: true },
           },
         },
       ])
     })
-    if (state === 'active') expect(updateToolResult).toHaveBeenCalledWith('s', 'tool', { resultDetails: 'output' })
+    if (state === 'active')
+      expect(updateToolResult).toHaveBeenCalledWith('s', 'tool', {
+        resultDetails: 'output',
+        executionResult: { success: true },
+      })
     else expect(updateToolResult).not.toHaveBeenCalled()
     await act(async () => {
       await vi.advanceTimersByTimeAsync(100)

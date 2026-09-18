@@ -170,6 +170,9 @@ export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
       case 'tool':
         c = 'lakeBlue'
         break
+      case 'browser':
+        c = 'blue'
+        break
       default:
         break
     }
@@ -179,37 +182,44 @@ export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
     return !readonly && !locked
   }, [readonly, locked])
   return (
-    <YakitTag
-      border={false}
-      closable={closable}
-      icon={<div className={styles['mention-icon-wrapper']}>{iconMap[mentionType] || null}</div>}
-      onClose={onRemove}
-      className={classNames(styles['mention-custom'], {
-        [styles['mention-custom-selected']]: selected && !readonly,
-        [styles['mention-custom-readonly']]: readonly,
-        [styles['mention-custom-no-effect']]: !closable,
+    // padding 计入 getBoundingClientRect，光标才会落在 chip 右侧空隙里（margin 无效）
+    <span
+      className={classNames(styles['mention-custom-host'], {
+        [styles['mention-custom-host-readonly']]: readonly,
       })}
-      color={color}
-      onClick={(e) => {
-        if (closable) {
-          e.stopPropagation()
-          e.preventDefault()
-        }
-      }}
       contentEditable={false}
     >
-      <div
-        className={styles['mention-text']}
-        contentEditable={false}
-        ref={contentRef}
-        title={node?.attrs?.mentionName}
+      <YakitTag
+        border={false}
+        closable={closable}
+        icon={<div className={styles['mention-icon-wrapper']}>{iconMap[mentionType] || null}</div>}
+        onClose={onRemove}
+        className={classNames(styles['mention-custom'], {
+          [styles['mention-custom-selected']]: selected && !readonly,
+          [styles['mention-custom-no-effect']]: !closable,
+        })}
+        color={color}
         onClick={(e) => {
           if (closable) {
             e.stopPropagation()
             e.preventDefault()
           }
         }}
-      ></div>
-    </YakitTag>
+        contentEditable={false}
+      >
+        <div
+          className={styles['mention-text']}
+          contentEditable={false}
+          ref={contentRef}
+          title={node?.attrs?.mentionName}
+          onClick={(e) => {
+            if (closable) {
+              e.stopPropagation()
+              e.preventDefault()
+            }
+          }}
+        ></div>
+      </YakitTag>
+    </span>
   )
 }

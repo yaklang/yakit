@@ -3,6 +3,7 @@ import { type FC, memo } from 'react'
 import { AIModelErrorPrompt } from '../../aiChatListItem/aiModelErrorPrompt/AIModelErrorPrompt'
 import { AIHttpFlowFuzzStatusCard } from '../../aiHttpFlowFuzzStatusCard/AIHttpFlowFuzzStatusCard'
 import { AIReportFinishCard } from '../../aiReportFinishCard/AIReportFinishCard'
+import { AIBrowserHandoffCard } from '../../aiBrowserHandoffCard/AIBrowserHandoffCard'
 import AIChildWindowGroupStreamNode from '../aiChildWindowGroupStreamNode/AIChildWindowGroupStreamNode'
 import AIChildWindowStreamCard from '../aiChildWindowStreamCard/AIChildWindowStreamCard'
 import AIChildWindowToolInvokerCard from '../aiChildWindowToolInvokerCard/AIChildWindowToolInvokerCard'
@@ -27,6 +28,8 @@ const AIChildWindowNodeItemWrapper: FC<AIChildWindowNodeItemWrapperProps> = memo
         return <AIHttpFlowFuzzStatusCard item={itemData} renderNum={renderNum} isChildWindow={true} />
       case AIChatQSDataTypeEnum.REPORT_FINISH:
         return <AIReportFinishCard item={itemData} renderNum={renderNum} isChildWindow={true} />
+      case AIChatQSDataTypeEnum.BROWSER_HANDOFF:
+        return <AIBrowserHandoffCard item={itemData} renderNum={renderNum} />
       case AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED:
         return <AIModelErrorPrompt item={itemData} renderNum={renderNum} isChildWindow={true} />
       case AIChatQSDataTypeEnum.STREAM:

@@ -189,6 +189,11 @@ export interface AIStreamOutput {
   selectors?: ToolStreamSelectors
 }
 
+/** tool_call_result 事件中的结构化工具结果 */
+export interface AIToolCallResultOutput extends AIStreamOutput {
+  executionResult: unknown
+}
+
 /** 工具结果的信息内容 */
 export interface AIToolResult {
   type: 'create' | 'stream' | 'result'
@@ -229,6 +234,8 @@ export interface AIToolResult {
     dirPath: string
     /** 工具执行结果详情数据 */
     resultDetails: string
+    /** 工具回调的结构化结果；不要从 stdout/resultDetails 反向解析 */
+    executionResult?: unknown
     /** review参数信息 */
     reviewParams?: AIAgentGrpcApi.ToolUseReviewRequire['params']
     /** 工具调用理由 */
@@ -334,6 +341,24 @@ export interface HttpFlowFuzzStatusCardData {
   /** working 推送的进度；finish 时保留最后一次 */
   progress?: AIAgentGrpcApi.HttpFlowFuzzStatusProgress
 }
+
+/** UI-only browser handoff metadata. QR pixels are fetched locally and never persisted here. */
+export interface BrowserHandoffCardData {
+  handoffId: string
+  callToolId?: string
+  deviceId: string
+  reason: 'qr_code' | 'mfa' | 'captcha' | 'device_confirmation' | 'other'
+  message?: string
+  state: 'waiting_for_user' | 'completed' | 'cancelled'
+  requestedAt?: number
+  resolvedAt?: number
+  tabId: number
+  frameId: number
+  documentId?: string
+  title?: string
+  url?: string
+  origin?: string
+}
 // #endregion
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)
@@ -386,6 +411,8 @@ export enum AIChatQSDataTypeEnum {
   HTTP_FLOW_FUZZ_STATUS = 'http_flow_fuzz_status',
   /** 报告生成完成（report_finish） */
   REPORT_FINISH = 'report_finish',
+  /** 浏览器本地人工接管卡片（不包含图片数据） */
+  BROWSER_HANDOFF = 'browser_handoff',
   /** 任务规划-未标识组的默认组 */
   TASK_DEFAULT_GROUP = 'task_default_group',
 }
@@ -422,7 +449,7 @@ export interface AIChatQSDataBase<T extends string, U> {
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
-type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIStreamOutput>
+type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIToolCallResultOutput>
 type ChatToolCallParams = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_PARAM, AIAgentGrpcApi.AIToolCallParams>
 type ChatApiRequestFailed = AIChatQSDataBase<
   AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
@@ -456,6 +483,7 @@ type ChatUserManualIntervention = AIChatQSDataBase<
 
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
 type ChatReportFinish = AIChatQSDataBase<AIChatQSDataTypeEnum.REPORT_FINISH, ReportFinishCardData>
+export type ChatBrowserHandoff = AIChatQSDataBase<AIChatQSDataTypeEnum.BROWSER_HANDOFF, BrowserHandoffCardData>
 type ChatTaskDefaultGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP, undefined>
 type ChatStreamGroup = AIChatQSDataBase<
   AIChatQSDataTypeEnum.STREAM_GROUP,
@@ -486,6 +514,7 @@ export type AIChatQSData =
   | ChatApiRequestFailed
   | ChatHttpFlowFuzzStatus
   | ChatReportFinish
+  | ChatBrowserHandoff
   | ChatTaskDefaultGroup
   | ChatStreamGroup
 // #endregion

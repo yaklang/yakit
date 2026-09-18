@@ -285,6 +285,16 @@ describe('applyWebFuzzerTabMutation', () => {
 })
 
 describe('getFuzzerProcessedCacheData', () => {
+  it('preserves the gateway binding through cache serialization and tab restoration', () => {
+    const currentPage = page([tab('tab-a')], 'tab-a')
+    const selection = { deviceId: 'browser', profileId: 'profile', profileName: 'AES' }
+    currentPage.pageList[0].pageParamsInfo.webFuzzerPageInfo!.browserTransformSelection = selection
+    const cached = getFuzzerProcessedCacheData(currentPage.pageList)
+    expect(cached[0].pageParams.browserTransformSelection).toEqual(selection)
+    const restored = applyWebFuzzerTabMutation([], undefined, cached, [])
+    expect(restored.page.pageList[0].pageParamsInfo.webFuzzerPageInfo?.browserTransformSelection).toEqual(selection)
+  })
+
   it('preserves MCP proxy settings when the frontend rewrites the live cache', () => {
     const tabA = tab('tab-a')
     const currentPage = page([tabA], 'tab-a')

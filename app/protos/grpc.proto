@@ -721,6 +721,9 @@ service Yak {
   // YAKURL
   rpc RequestYakURL(RequestYakURLParams) returns (RequestYakURLResponse);
 
+  // Browser extension tasks are routed to one paired browser device.
+  rpc ExecuteBrowserExtensionTask(BrowserExtensionTaskRequest) returns (stream BrowserExtensionTaskEvent);
+
   // 文件IO
   rpc ReadFile(ReadFileRequest) returns (stream ReadFileResponse);
 
@@ -6913,7 +6916,7 @@ message GroupHTTPFuzzerResponse {
   FuzzerResponse Response = 2;
 }
 
-message FuzzerRequest {// last index 68
+message FuzzerRequest {// last index 72
   string Request = 1;
   bytes RequestRaw = 16; // 这里是因为麻将块儿的问题，还是需要处理一下类型
   repeated FuzzerParamItem Params = 2;
@@ -6927,6 +6930,10 @@ message FuzzerRequest {// last index 68
   bool FuzzTagSyncIndex = 51;
   string Proxy = 6;
   string ProxyRuleId = 70;
+  // Browser Transform Gateway: keep the Web Fuzzer editor in plaintext while
+  // request/response conversion runs in the paired browser page context.
+  string BrowserExtensionDeviceId = 71;
+  string BrowserTransformProfileId = 72;
   double PerRequestTimeoutSeconds = 7;
   double DialTimeoutSeconds = 61;
 
@@ -7180,6 +7187,11 @@ message FuzzerResponse {
   repeated RandomChunkedResponse RandomChunkedData = 62;
   // 与 http_flows / web_fuzzer_response 对齐的唯一键，下载 body 用它而不是 RuntimeID。
   string HiddenIndex = 64;
+  // Present only when Browser Transform Gateway is enabled. RequestRaw and
+  // ResponseRaw are the plaintext packets; these fields preserve the wire view.
+  bytes WireRequestRaw = 65;
+  bytes WireResponseRaw = 66;
+  string BrowserTransformProfileId = 67;
 }
 
 enum ChunkedDataDirection {
@@ -10300,4 +10312,22 @@ message ContextMenuActionEvent {
   string PluginName = 5;
   ExecResult Result = 6;
   ContextMenuPacketActionResult PacketResult = 7;
+}
+
+message BrowserExtensionTaskRequest {
+  string TaskId = 1;
+  string DeviceId = 2;
+  string Schema = 3;
+  bytes Payload = 4;
+  int64 TimeoutMilliseconds = 5;
+}
+
+message BrowserExtensionTaskEvent {
+  string TaskId = 1;
+  string DeviceId = 2;
+  string Type = 3;
+  string Message = 4;
+  bytes Data = 5;
+  int64 Timestamp = 6;
+  uint64 Sequence = 7;
 }

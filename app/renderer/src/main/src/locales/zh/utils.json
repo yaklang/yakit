@@ -98,7 +98,7 @@
     "source_aitool": "AI内置",
     "source_bridge": "外部桥接",
     "enable_legacy_mcp_tools": "MCP 内置工具",
-    "enable_legacy_mcp_tools_desc": "开放 port_scan、httpflow 等 Yak 传统 MCP 工具集",
+    "enable_legacy_mcp_tools_desc": "开放 port_scan、httpflow、浏览器插件等 Yak 内置 MCP 工具",
     "enable_ai_tool_framework": "AI Tool Framework",
     "enable_ai_tool_framework_desc": "开放 fs、ssa、yakscript 等 AI 内置工具",
     "enable_bridge_external_mcp": "桥接外部 MCP",
