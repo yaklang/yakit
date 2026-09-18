@@ -22,7 +22,7 @@ export type CreateChatStoreOptions = {
 
 export const createChatStore = (options?: CreateChatStoreOptions) => {
   const onRenderStructureChange = options?.onRenderStructureChange
-  return createStore<ChatStoreState>()(
+  const store = createStore<ChatStoreState>()(
     immer((set) => ({
       execute: false,
 
@@ -408,4 +408,31 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       },
     })),
   )
+  /** 重连使用初始状态清除旧消息，保留 store 实例及原有 action / 结构变化回调。 */
+  const initialState = store.getState()
+  /** UI 使用已提交的渲染树；事件处理和 IDB 持久化仍读取原 store 的最新状态。 */
+  const renderStore = createStore<ChatStoreState>(() => initialState)
+  store.subscribe((state) => {
+    const published = renderStore.getState()
+    // 历史收尾解除 loading 时一次发布整棵树，包含已有分组的变化。
+    // 其他状态照常通知界面，保留 loading、取消及展开操作的响应。
+    renderStore.setState(
+      state.initLoading || state.grpcLoadMoreLoading
+        ? {
+            ...state,
+            items: published.items,
+            groups: published.groups,
+            tasks: published.tasks,
+            chatElements: published.chatElements,
+          }
+        : state,
+      true,
+    )
+  })
+  return Object.assign(store, {
+    /** 仅供界面订阅；action 仍更新原 store，不产生第二套业务状态。 */
+    renderStore,
+    /** 重置会话运行状态；配置和归属保存在 Controller 中，不受影响。 */
+    reset: () => store.setState(cloneDeep(initialState)),
+  })
 }

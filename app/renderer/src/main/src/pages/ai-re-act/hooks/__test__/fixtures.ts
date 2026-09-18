@@ -1,3 +1,4 @@
+import { SessionLifecycle } from '../sessionLifecycle'
 import cloneDeep from 'lodash/cloneDeep'
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import { AIAgentSettingDefault, AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
@@ -77,6 +78,10 @@ export const createTestRawData = (): AIAgentChatData => {
 
 /** 与 Controller 内 genAIAgentChatMetaData 对齐 */
 export const createTestMeta = (): AIAgentChatMetaData => ({
+  lifecycle: new SessionLifecycle(),
+  // 历史预查询字段暂未启用，与生产 meta 保持一致。
+  // planExecutionHistoryEvents: [],
+  // subAgentHistoryEvents: [],
   createChatQuestion: undefined,
   onEnd: undefined,
   pingSyncID: '',

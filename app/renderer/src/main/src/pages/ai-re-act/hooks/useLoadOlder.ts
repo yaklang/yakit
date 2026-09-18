@@ -1,5 +1,5 @@
 import { useMemoizedFn } from 'ahooks'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { useStore } from 'zustand'
 import type { ListRange } from 'react-virtuoso'
 import { globalSessionEngine } from './ChatMultiSessionController'
@@ -22,9 +22,9 @@ const PREPEND_OFFSET = 1000000
 /**
  * 上滑加载更旧历史 + 视窗内存回收（casual / task 通用）。
  *
- * - Virtuoso startReached 触发 handleLoadMore，grpcOffset>0 时发 recovery_history 前插更旧事件
+ * - Virtuoso atTopStateChange 触发 handleLoadMore，grpcOffset>0 时拉取更旧事件
  * - firstItemIndex 前插补偿：数据前插时视口不跳动
- * - loading（grpcLoadMoreLoading）期间请求排队，结束后补发；atTop 兜底探针
+ * - loading 期间忽略重复触顶，前插补偿结束后仍在顶部才补拉
  * - 互斥防后端表死锁：消息处理中（casualLoading / taskStatus.status=processing）禁止 gRPC
  *   向上加载（排队等处理结束补发）；反向由 handleSendMessage 拦 grpcLoadMoreLoading 期间的发送
  *
@@ -35,14 +35,17 @@ const PREPEND_OFFSET = 1000000
  *    contents 里不在 keep 的删除
  *
  * @param chatType 'reAct'（casual 空闲对话）/ 'task'（任务对话）
+ * @param listRootRef 列表根节点，用真实滚动位置复核触顶通知
  */
-const useLoadOlder = (chatType: ChatListRenderType) => {
+const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLDivElement | null>) => {
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
 
   /** recovery_history 在途状态（真实 gRPC loading，由 ChatMultiSessionController 置/关） */
   const loading = useStore(store, (s) => s.grpcLoadMoreLoading)
+  /** 首批恢复只做首次定位，不将空列表的触顶事件排成下一批历史请求。 */
+  const initLoading = useStore(store, (s) => s.initLoading)
   const dataLength = useStore(store, (s) => s.chatElements.length)
   /**
    * 消息处理中（currentChatStatus.status=processing）。
@@ -53,13 +56,15 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   /** 上次 startIndex（数组下标），用于判断滚动方向 */
   const lastStartIndexRef = useRef(-1)
 
-  // #region 向上加载（与官方 useLoadHistory 一致：startReached + firstItemIndex 前插补偿 + 排队锁）
+  // #region 向上加载（触顶 + firstItemIndex 前插补偿 + 处理中排队）
   const [firstItemIndex, setFirstItemIndex] = useState(PREPEND_OFFSET)
 
   const isPrependingRef = useRef(false)
   const atTopRef = useRef(false)
   const wasLoadingRef = useRef(false)
   const wasProcessingRef = useRef(false)
+  /** 本次补载使用的游标；回执未推进游标时不自动重试，等待用户再次触顶。 */
+  const requestedOffsetRef = useRef<number | null>(null)
 
   // 排队锁
   const pendingRequestRef = useRef(false)
@@ -85,20 +90,26 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   const fetchHasMore = useMemoizedFn(() => !!sessionId && rawData.grpcOffset > 0)
 
   const loadMore = useMemoizedFn(() => {
-    if (sessionId) globalSessionEngine.requestRecoveryHistory(sessionId)
+    requestedOffsetRef.current = rawData.grpcOffset
+    return !!sessionId && globalSessionEngine.requestRecoveryHistory(sessionId)
   })
 
   const handleLoadMore = useMemoizedFn(() => {
+    if (initLoading || loading || isPrependingRef.current) return
+    // Virtuoso 的顶部通知可能先于前插布局完成；发请求前以实际滚动位置复核。
+    const scroller = listRootRef.current?.querySelector<HTMLElement>('[data-virtuoso-scroller]')
+    if (!scroller || scroller.scrollTop > 1) return
     if (!fetchHasMore() || !sessionId) return
 
-    // gRPC 加载中或消息处理中：排队等结束，防后端表死锁
-    if (loading || processing) {
+    // 消息处理中才排队；历史加载中的重复触顶由收尾后的顶部检查处理。
+    if (processing) {
       pendingRequestRef.current = true
       return
     }
 
     isPrependingRef.current = true
-    loadMore()
+    // 连接关闭等原因拒绝请求时不会有 loading 收尾，立即释放前插标记。
+    if (!loadMore()) isPrependingRef.current = false
   })
 
   const handleAtTopStateChange = useMemoizedFn((atTop: boolean) => {
@@ -113,27 +124,25 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
 
   // 统一处理加载完成后的副作用
   useEffect(() => {
+    // 两帧用于等待前插补偿，依赖变化或卸载时取消，避免旧列表继续补拉。
+    let releaseFrame = 0
+    let checkFrame = 0
     // 判定条件：刚结束加载（之前是 true，现在是 false）
     if (wasLoadingRef.current && !loading) {
-      // 在 DOM Commit 后安全释放向上插入的标记
-      isPrependingRef.current = false
-
-      // 释放后立刻检查，刚才 loading 期间是不是有被拦截的请求
-      if (pendingRequestRef.current) {
-        pendingRequestRef.current = false
-        handleLoadMore()
-      }
-      // 兜底补拉：延迟探针，loading 结束后仍停在顶部则再拉一次
-      else if (atTopRef.current) {
-        setTimeout(() => {
-          if (atTopRef.current && fetchHasMore()) {
-            handleLoadMore()
-          }
-        }, 50)
-      }
+      // 等 Virtuoso 完成前插补偿，再判断是否仍在顶部；避免中间布局触发连续补拉。
+      releaseFrame = requestAnimationFrame(() => {
+        checkFrame = requestAnimationFrame(() => {
+          isPrependingRef.current = false
+          if (atTopRef.current && fetchHasMore() && rawData.grpcOffset !== requestedOffsetRef.current) handleLoadMore()
+        })
+      })
     }
     wasLoadingRef.current = loading
-  }, [loading, handleLoadMore, fetchHasMore])
+    return () => {
+      cancelAnimationFrame(releaseFrame)
+      cancelAnimationFrame(checkFrame)
+    }
+  }, [loading, handleLoadMore, fetchHasMore, rawData])
 
   // 消息处理结束（processing true→false）后，补发排队中的向上加载
   useEffect(() => {
@@ -153,6 +162,7 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
     isPrependingRef.current = false
     atTopRef.current = false
     pendingRequestRef.current = false
+    requestedOffsetRef.current = null
     const leavingId = sessionId
     return () => {
       if (!leavingId) return
@@ -211,7 +221,9 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   /** 按 token 列表从 IDB 补灌 + 灌内存 + bump renderNum（按 kind） */
   const hydrateTokens = useMemoizedFn(async (tokens: string[]) => {
     if (!tokens.length || !sessionId) return
+    const lifecycle = globalSessionEngine.ensureSession(sessionId).meta.lifecycle
     const rows = await globalSessionEngine.persistGetSessionContents(sessionId, tokens)
+    if (!lifecycle.current) return
     const state = store.getState()
     for (const row of rows) {
       applyHydratedStageSettled(row.content)
@@ -228,7 +240,7 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
       }
     }
     // IDB 仍缺的 token 不在此触发 gRPC——recovery_history 是前插更旧事件，不是按 token 补正文。
-    // 树外更旧历史由 startReached → handleLoadMore（grpcOffset>0）专门处理。
+    // 树外更旧历史由 atTopStateChange → handleLoadMore（grpcOffset>0）专门处理。
   })
 
   /** 计算 keep 集合（视窗 + 向前 LOAD_AHEAD + 向后 KEEP_BEHIND + 最新尾部 TAIL_KEEP） */
@@ -273,7 +285,7 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
 
   /**
    * 视窗变化驱动 hydrate + 淘汰（接 Virtuoso rangeChanged）。
-   * 向上加载（gRPC recovery_history）不走这里，由 startReached → handleLoadMore 承担。
+   * 向上加载（gRPC recovery_history）不走这里，由 atTopStateChange → handleLoadMore 承担。
    */
   const onRangeChange = useMemoizedFn(({ startIndex, endIndex }: ListRange) => {
     if (!sessionId) return

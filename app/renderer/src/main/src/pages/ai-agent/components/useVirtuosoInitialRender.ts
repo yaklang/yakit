@@ -9,15 +9,28 @@ export interface VirtuosoReadyContext {
 interface UseVirtuosoInitialRenderProps {
   dataLength: number
   onHeightChanged: () => void
+  /** 首屏自动补拉未结束时继续隐藏列表，后续回看历史不重新遮罩。 */
+  loading?: boolean
 }
 
 const initialTopMostItemIndex = { index: 'LAST', align: 'end', behavior: 'auto' } as const
 
 /** 管理首屏渲染状态；由调用方的会话 key 在切换会话时重置。 */
-export const useVirtuosoInitialRender = ({ dataLength, onHeightChanged }: UseVirtuosoInitialRenderProps) => {
+export const useVirtuosoInitialRender = ({
+  dataLength,
+  onHeightChanged,
+  loading = false,
+}: UseVirtuosoInitialRenderProps) => {
   const [listReady, setListReady] = useState(false)
   const handleListReady = useMemoizedFn(() => setListReady(true))
-  const virtuosoContext = useMemo<VirtuosoReadyContext>(() => ({ onReady: handleListReady }), [handleListReady])
+  const virtuosoContext = useMemo<VirtuosoReadyContext>(
+    () => ({
+      onReady: () => {
+        if (!loading) handleListReady()
+      },
+    }),
+    [handleListReady, loading],
+  )
   const renderLoading = dataLength > 0 && !listReady
 
   const handleListHeightChanged = useMemoizedFn(() => {

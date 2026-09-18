@@ -5,6 +5,19 @@ import { useVirtuosoInitialRender, useVirtuosoListReady } from '../useVirtuosoIn
 type ListReadyProps = Parameters<typeof useVirtuosoListReady>[0]
 
 describe('useVirtuosoInitialRender', () => {
+  it('首屏补拉结束后才通知就绪，后续补拉保持已显示列表', () => {
+    const { result, rerender } = renderHook(
+      ({ loading }) => useVirtuosoInitialRender({ dataLength: 5, onHeightChanged: vi.fn(), loading }),
+      { initialProps: { loading: true } },
+    )
+    act(() => result.current.virtuosoContext.onReady())
+    expect(result.current.renderLoading).toBe(true)
+    rerender({ loading: false })
+    act(() => result.current.virtuosoContext.onReady())
+    expect(result.current.renderLoading).toBe(false)
+    rerender({ loading: true })
+    expect(result.current.renderLoading).toBe(false)
+  })
   it('空列表不显示 loading，首批数据到达后等待就绪，后续追加不重新加载', () => {
     const onHeightChanged = vi.fn()
     const { result, rerender } = renderHook(

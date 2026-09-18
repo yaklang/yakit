@@ -15,7 +15,7 @@ import { AIChatListItem } from '@/pages/ai-agent/components/aiChatListItem/AICha
 import { AIYaklangCode } from '@/pages/ai-agent/components/aiYaklangCode/AIYaklangCode'
 import type { ModalInfoProps } from '@/pages/ai-agent/components/ModelInfo'
 import { AIStreamContentType } from '../hooks/defaultConstant'
-import { Virtuoso, type Components, type ContextProp, type ListProps } from 'react-virtuoso'
+import { Virtuoso, type Components, type ContextProp, type ListProps, type ItemProps } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
 import useChatStreamLocateHighlight from '../hooks/useChatStreamLocateHighlight'
 import type { ReActChatRenderElement, ChatReferenceMaterialPayload } from '../hooks/aiRender'
@@ -178,7 +178,7 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
     // 向上加载历史（recovery_history）的在途状态，给 Header 转圈提示
     const grpcLoadMoreLoading = useStore(store, (state) => state.grpcLoadMoreLoading)
 
-    const { onRangeChange, firstItemIndex, handleLoadMore, isPrependingRef } = useLoadOlder(TYPE)
+    const { onRangeChange, firstItemIndex, handleAtTopStateChange, isPrependingRef } = useLoadOlder(TYPE, listRootRef)
 
     const {
       virtuosoRef,
@@ -190,10 +190,12 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
     } = useVirtuosoAutoScroll({
       total: chatLength,
       isPrependingRef,
+      historyLoading: grpcLoadMoreLoading,
     })
     const { renderLoading, virtuosoContext, handleListHeightChanged, initialTopMostItemIndex } =
       useVirtuosoInitialRender({
         dataLength: chatLength,
+        loading: grpcLoadMoreLoading,
         onHeightChanged: handleTotalListHeightChanged,
       })
     const initialLoading = !initLoading && renderLoading
@@ -255,14 +257,12 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
     const Item = useCallback(
       ({
         children,
-        style,
-        'data-index': dataIndex,
-      }: {
-        children?: React.ReactNode
-        style?: React.CSSProperties
-        'data-index'?: number
-      }) => (
-        <div style={style} data-index={dataIndex} className={styles['item-wrapper']}>
+        item,
+        context: _context,
+        ...props
+      }: ItemProps<ReActChatRenderElement> & ContextProp<VirtuosoReadyContext>) => (
+        // 保留 data-known-size 等测量属性，避免重复测量已知高度。
+        <div {...props} data-chat-token={item.token} className={styles['item-wrapper']}>
           <div className={styles['item-inner']}>{children}</div>
         </div>
       ),
@@ -285,12 +285,12 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
       )
     }, [casualTitle, planTitle, execute, chatLength, isTaskPlanning])
     const Header = useCallback(
-      () =>
-        grpcLoadMoreLoading ? (
-          <div style={{ height: 20, position: 'relative' }}>
-            <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
-          </div>
-        ) : null,
+      () => (
+        // 固定占位，避免 loading 出现/消失时再次改变当前消息的位置。
+        <div style={{ height: 20, position: 'relative' }}>
+          {grpcLoadMoreLoading && <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />}
+        </div>
+      ),
       [grpcLoadMoreLoading],
     )
     const components = useMemo<Components<ReActChatRenderElement, VirtuosoReadyContext>>(
@@ -306,26 +306,28 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
     return (
       <div ref={listRootRef} className={styles['ai-re-act-chat-contents']}>
         <YakitSpin spinning={initialLoading} tip={t('AIReActChatContents.uiRendering')}>
-          <Virtuoso
-            ref={virtuosoRef}
-            scrollerRef={setScrollerRef}
-            defaultItemHeight={80}
-            atBottomStateChange={handleAtBottomStateChange}
-            data={casualChatElements}
-            context={virtuosoContext}
-            totalListHeightChanged={handleListHeightChanged}
-            itemContent={renderItem}
-            firstItemIndex={firstItemIndex}
-            initialTopMostItemIndex={initialTopMostItemIndex}
-            components={components}
-            increaseViewportBy={{ top: 600, bottom: 200 }}
-            atBottomThreshold={50}
-            skipAnimationFrameInResizeObserver
-            startReached={handleLoadMore}
-            rangeChanged={onRangeChange}
-            className={styles['re-act-contents-list']}
-            style={{ visibility: initialLoading ? 'hidden' : undefined }}
-          />
+          {!initLoading && (
+            <Virtuoso
+              ref={virtuosoRef}
+              scrollerRef={setScrollerRef}
+              defaultItemHeight={80}
+              atBottomStateChange={handleAtBottomStateChange}
+              atTopStateChange={handleAtTopStateChange}
+              data={casualChatElements}
+              context={virtuosoContext}
+              totalListHeightChanged={handleListHeightChanged}
+              itemContent={renderItem}
+              firstItemIndex={firstItemIndex}
+              initialTopMostItemIndex={initialTopMostItemIndex}
+              components={components}
+              increaseViewportBy={{ top: 600, bottom: 200 }}
+              atBottomThreshold={50}
+              skipAnimationFrameInResizeObserver
+              rangeChanged={onRangeChange}
+              className={styles['re-act-contents-list']}
+              style={{ visibility: initialLoading ? 'hidden' : undefined }}
+            />
+          )}
         </YakitSpin>
         {chatLength > 0 && !initialLoading && !isAtBottom && (
           <div className={styles['scroll-to-bottom-wrapper']}>

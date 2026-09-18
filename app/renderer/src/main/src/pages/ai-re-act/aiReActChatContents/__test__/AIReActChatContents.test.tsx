@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { createContext, createRef, useContext } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { VirtuosoMockContext } from 'react-virtuoso'
-import { createStore } from 'zustand/vanilla'
+import { createChatStore } from '../../hooks/chatStore'
 import type { ReActChatRenderElement } from '../../hooks/aiRender'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
 import type useAutoScrollFn from '../../hooks/useVirtuosoAutoScroll'
@@ -11,18 +11,7 @@ import { AIReActChatContents } from '../AIReActChatContents'
 import type { AIReActChatContentsRef } from '../AIReActChatContentsType'
 
 const SessionContext = createContext('session-1')
-const store = createStore(() => ({
-  chatElements: [] as ReActChatRenderElement[],
-  initLoading: false,
-  grpcLoadMoreLoading: false,
-  currentLoadingTitle: { casualTitle: '', planTitle: '' },
-  currentChatStatus: { coordinatorId: '', status: '' },
-  currentReviewDetail: { token: '' },
-  execute: false,
-  items: {},
-  groups: {},
-  tasks: {},
-}))
+const store = createChatStore()
 const initialState = store.getState()
 const rawData = { contents: new Map(), grpcOffset: 0 }
 const { autoScroll, recovery, locate } = vi.hoisted(() => ({
@@ -36,7 +25,7 @@ vi.mock('../../hooks/useCurrentSessionId', () => {
   return { default: useSessionIdMock }
 })
 vi.mock('../../hooks/useCurrentDataBySession', () => ({
-  useCurrentStore: () => store,
+  useCurrentStore: () => store.renderStore,
   useCurrentRawData: () => rawData,
 }))
 vi.mock('../../hooks/ChatMultiSessionController', () => ({
@@ -96,16 +85,27 @@ const scrollTo = vi.fn(function (this: HTMLElement, options: ScrollToOptions) {
 })
 
 beforeEach(() => {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  )
   vi.useFakeTimers()
   vi.clearAllMocks()
   store.setState(initialState, true)
   rawData.contents.clear()
   rawData.grpcOffset = 0
-  recovery.mockImplementation(() => store.setState({ grpcLoadMoreLoading: true }))
+  recovery.mockImplementation(() => {
+    store.setState({ grpcLoadMoreLoading: true })
+    return true
+  })
   // jsdom 无布局，使用 Virtuoso 官方尺寸上下文并模拟滚动容器几何信息。
   vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(VIEWPORT_HEIGHT)
   vi.spyOn(Element.prototype, 'scrollHeight', 'get').mockImplementation(
-    () => store.getState().chatElements.length * ITEM_HEIGHT,
+    () => store.renderStore.getState().chatElements.length * ITEM_HEIGHT,
   )
   vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
     height: VIEWPORT_HEIGHT,
@@ -132,6 +132,7 @@ afterEach(() => {
   vi.clearAllTimers()
   vi.useRealTimers()
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
   if (originalScrollTo) Object.defineProperty(HTMLElement.prototype, 'scrollTo', originalScrollTo)
   else Reflect.deleteProperty(HTMLElement.prototype, 'scrollTo')
   if (originalScrollBy) Object.defineProperty(HTMLElement.prototype, 'scrollBy', originalScrollBy)
@@ -191,10 +192,12 @@ describe('AIReActChatContents 首屏加载', () => {
   it.each([0, 20])('会话恢复期间由外层显示 loading，列表不重复转圈（消息数：%s）', async (count) => {
     store.setState({ initLoading: true, chatElements: createItems(count) })
     render(chatElement())
+    expect(getScroller()).toBeNull()
     expect(isSpinning()).toBe(false)
     await finishPositioning()
     expect(isSpinning()).toBe(false)
     act(() => store.setState({ initLoading: false }))
+    await finishPositioning()
     expect(isSpinning()).toBe(false)
     expect(getScroller()).not.toHaveStyle({ visibility: 'hidden' })
   })
@@ -262,5 +265,50 @@ describe('AIReActChatContents 首屏加载', () => {
     expect(isSpinning()).toBe(false)
     expect(screen.getByText('消息 0')).toBeVisible()
     expect(getScroller().scrollTop).toBeLessThan(25 * ITEM_HEIGHT - VIEWPORT_HEIGHT)
+  })
+
+  it('第一项进入预渲染范围但尚未触顶时，不请求更旧历史', async () => {
+    store.setState({ chatElements: createItems(20) })
+    render(chatElement())
+    await finishPositioning()
+    rawData.grpcOffset = 1
+    fireEvent.wheel(getScroller(), { deltaY: -100 })
+    fireEvent.scroll(getScroller(), { target: { scrollTop: 400 } })
+    await finishPositioning()
+    expect(screen.getByText('消息 0')).toBeInTheDocument()
+    expect(recovery).not.toHaveBeenCalled()
+  })
+
+  it('分批到达的历史只在收尾时前插一次，等待期间保持已有消息和测量属性', async () => {
+    store.setState({ chatElements: createItems(20) })
+    render(chatElement())
+    await finishPositioning()
+    rawData.grpcOffset = 1
+    fireEvent.wheel(getScroller(), { deltaY: -100 })
+    fireEvent.scroll(getScroller(), { target: { scrollTop: 0 } })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200)
+    })
+    expect(recovery).toHaveBeenCalledTimes(1)
+    scrollTo.mockClear()
+
+    for (let count = 1; count <= 5; count++) {
+      act(() => store.setState({ chatElements: [...createItems(count, -count), ...createItems(20)] }))
+      await finishPositioning()
+      expect(store.renderStore.getState().chatElements).toHaveLength(20)
+      expect(scrollTo).not.toHaveBeenCalled()
+      expect(screen.getByText('消息 0')).toBeVisible()
+    }
+
+    rawData.grpcOffset = 0
+    act(() => store.setState({ grpcLoadMoreLoading: false }))
+    await finishPositioning()
+    expect(store.renderStore.getState().chatElements).toHaveLength(25)
+    expect(getScroller().scrollTop).toBe(5 * ITEM_HEIGHT)
+    const item = getScroller().querySelector('[data-chat-token="0"]')
+    // token 用于补载锚定，数组下标仍供任务树定位高亮；测量属性也必须透传。
+    expect(item).toHaveAttribute('data-index', '5')
+    expect(item).toHaveAttribute('data-item-index', '1000000')
+    expect(item).toHaveAttribute('data-known-size', String(ITEM_HEIGHT))
   })
 })

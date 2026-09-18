@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { aiSingleItemDataHandlers } from '../grpcStreamHandler/aiSingleItem'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 import { AIChatQSDataTypeEnum, type ChatTaskNodeGroup } from '../aiRender'
+import { persistIndependentItem } from '../persist/contentPersistHelper'
 import { AITaskStatus } from '../grpcApi'
 
 vi.mock('../persist/contentPersistHelper', () => ({
@@ -16,6 +17,7 @@ describe('aiSingleItem handlers', () => {
     aiSingleItemDataHandlers.thought(req)
     const thoughts = [...req.rawData.contents.values()].filter((c) => c.type === AIChatQSDataTypeEnum.THOUGHT)
     expect(thoughts).toHaveLength(1)
+    expect(persistIndependentItem).toHaveBeenLastCalledWith(req.sessionId, thoughts[0], req.meta.lifecycle)
     expect(req.store.getState().chatElements.length).toBeGreaterThan(0)
   })
 
@@ -49,6 +51,7 @@ describe('aiSingleItem handlers', () => {
     const node = req.rawData.contents.get('q1-leaf-1') as ChatTaskNodeGroup | undefined
     expect(node?.type).toBe(AIChatQSDataTypeEnum.TASK_NODE_GROUP)
     expect(node?.data.loadingTitle).toBe('')
+    expect(persistIndependentItem).toHaveBeenLastCalledWith(req.sessionId, node, req.meta.lifecycle)
   })
 
   it('D5: map registers push/pop/fail handlers', () => {
