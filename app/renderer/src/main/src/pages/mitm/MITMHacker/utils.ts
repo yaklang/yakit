@@ -11,6 +11,7 @@ import type { MITMFilterData, MITMFilterSchema } from '../MITMServerStartForm/MI
 import type { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
 import { MITMVersion } from '../Context/MITMContext'
 import { type ManualHijackListAction, type ManualHijackListStatus } from '@/defaultConstants/mitmV2'
+import type { MITMHijackTaskSource } from '../MITMManual/conditionalHijackMode'
 const tOriginal = i18n.getFixedT(null, 'mitm')
 
 const { ipcRenderer } = window.require('electron')
@@ -427,6 +428,7 @@ export interface SingleManualHijackInfoMessage {
   WebsocketEncode: string[]
   TraceInfo: TraceInfo
   Method: string
+  HijackTaskSource?: MITMHijackTaskSource
 }
 export type ClientMITMHijackedResponse = MITMResponse | MITMV2Response
 export const isMITMResponse = (value: ClientMITMHijackedResponse): value is MITMResponse => {

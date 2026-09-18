@@ -72,6 +72,7 @@ import { getStorageMitmShortcutKeyEvents } from '@/utils/globalShortcutKey/event
 import { JSONParseLog } from '@/utils/tool'
 import type { HoldGRPCStreamInfo, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { ManualHijackTypeProps } from './MITMManual/MITMManualType'
+import type { MITMHijackTaskSource } from './MITMManual/conditionalHijackMode'
 import { LIMIT_LOG_NUM_NAME } from '@/defaultConstants/HoldGRPCStream'
 import {
   StreamProcessorManager,
@@ -130,6 +131,7 @@ export interface MITMResponse extends MITMFilterSchema {
   isWebsocket?: boolean
   Payload: Uint8Array
   traceInfo: TraceInfo
+  hijackTaskSource?: MITMHijackTaskSource
 }
 
 export type TipPart = { key: string; value?: string }
