@@ -48,6 +48,16 @@ export interface McpWebFuzzerExecution {
   expiresAt: number
 }
 
+/**
+ * 校验服务端推送的 Web Fuzzer 执行指令：executionId / pageId 缺失或 expiresAt
+ * 非有限数时抛错。调用方须在校验通过后才入队 / 切页，保证无效推送仅触发错误通知。
+ */
+export const assertValidMcpWebFuzzerExecution = (execution: McpWebFuzzerExecution) => {
+  if (!execution.executionId || !execution.pageId || !Number.isFinite(execution.expiresAt)) {
+    throw new Error('Web Fuzzer execution push is invalid')
+  }
+}
+
 const pendingMcpWebFuzzerExecutions = new Map<string, McpWebFuzzerExecution[]>()
 
 export const queueMcpWebFuzzerExecution = (execution: McpWebFuzzerExecution) => {

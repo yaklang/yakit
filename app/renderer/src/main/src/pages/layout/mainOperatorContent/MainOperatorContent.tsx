@@ -179,7 +179,11 @@ import {
   unregisterShortcutFocusHandle,
 } from '@/utils/globalShortcutKey/utils'
 import { keepSearchNameMapStore } from '@/store/keepSearchName'
-import { queueMcpWebFuzzerExecution, type McpWebFuzzerExecution } from '@/utils/eventBus/events/webFuzzer'
+import {
+  assertValidMcpWebFuzzerExecution,
+  queueMcpWebFuzzerExecution,
+  type McpWebFuzzerExecution,
+} from '@/utils/eventBus/events/webFuzzer'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useProxy } from '@/hook/useProxy'
@@ -3656,9 +3660,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         page: 'MainOperatorContent',
         fun: 'onServerPushExecuteWebFuzzerTab',
       }) as McpWebFuzzerExecution
-      if (!execution.executionId || !execution.pageId || !Number.isFinite(execution.expiresAt)) {
-        throw new Error('Web Fuzzer execution push is invalid')
-      }
+      assertValidMcpWebFuzzerExecution(execution)
       queueMcpWebFuzzerExecution(execution)
       // 立即切换一级/二级菜单并触发执行：queue 已覆盖挂载竞态；
       // scheduleIdleTask 默认 2s 可能晚于 expiresAt / MCP timeoutSeconds，导致命令被丢且截图停在错误页
