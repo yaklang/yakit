@@ -52,13 +52,6 @@
   justify-content: flex-start;
   .content-wrapper {
     background: var(--Colors-Use-Main-Focus);
-    :global {
-      // 仅含 mention chip 的段落做垂直对齐，避免普通长段落被 flex 改换行语义
-      .milkdown .editor p:has([data-node-view-root]) {
-        display: flex;
-        align-items: center;
-      }
-    }
   }
 }
 .triage-chat-answer {

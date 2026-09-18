@@ -1077,6 +1077,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
   const getHttpParams = useMemoizedFn(() => {
     const httpParams: FuzzerRequestProps[] = []
     const pageChildrenList = getCurrentGroupSequence()
+    if (
+      currentList.some((item) =>
+        pageChildrenList.some(
+          (page) => page.pageId === item.pageId && page.pageParamsInfo.webFuzzerPageInfo?.browserTransformSelection,
+        ),
+      )
+    ) {
+      yakitNotify('error', t('FuzzerSequence.browserGatewayUnsupported'))
+      return []
+    }
     currentList.forEach((item) => {
       const requestItem = pageChildrenList.find((ele) => ele.pageId === item.pageId)
       const webFuzzerPageInfo = requestItem?.pageParamsInfo.webFuzzerPageInfo
@@ -1130,12 +1140,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       )
       return
     }
+    const httpParams = getHttpParams()
+    if (!httpParams.length) return
     !isConcurrency && setLoading(true)
     onClearRef()
-    // 只清除当前的buffer配置，不影响另一个
-    currentList.forEach((item) => {
-      fuzzerTableMaxDataRef.current.delete(item.id)
-    })
     resetResponse()
 
     updateConcurrentLoad('rps', [])
@@ -1156,7 +1164,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       fuzzerIndexModeRef.current.set(item.id, isConcurrency)
     })
 
-    const httpParams = getHttpParams()
     if (isConcurrency) {
       const ConcurrencyAdvancedConfigValue = pageGroupData?.pageParamsInfo?.ConcurrencyAdvancedConfigValue
       const params = {
@@ -1207,11 +1214,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     } = ConcurrencyAdvancedConfigValue
 
     try {
+      const requests = getHttpParams()
+      if (!requests.length) return
       onClearRef()
-      // 只清除当前的buffer配置，不影响另一个
-      currentList.forEach((item) => {
-        fuzzerTableMaxDataRef.current.delete(item.id)
-      })
       resetResponse()
       resetDroppedCount()
       droppedSequenceIndexMapRef.current.clear()
@@ -1222,7 +1227,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       const matchTaskID = successFuzzer[0]?.TaskId
 
       const params = {
-        Requests: getHttpParams(),
+        Requests: requests,
         ReMatch: true,
         HistoryWebFuzzerId: matchTaskID,
         Matchers: matchers,
@@ -2532,6 +2537,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
   // 跳转插件调试页面
   const handleSkipPluginDebuggerPage = async (tempType: 'path' | 'raw') => {
     const requests = getHttpParams()
+    if (!requests.length) return
     const params = {
       Requests: { Requests: Array.isArray(requests) ? requests : [getHttpParams()] },
       TemplateType: tempType,

@@ -1,4 +1,5 @@
 import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
+import type { BrowserTransformSelectionContract } from '@/pages/browserExtension/browserTransformContract'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { subscribeWithSelector, persist, type StorageValue } from 'zustand/middleware'
 import debounce from 'lodash/debounce'
@@ -203,6 +204,7 @@ export interface PluginBatchExecutorPageInfoProps {
 }
 export interface WebFuzzerPageInfoProps {
   pageId: string
+  browserTransformSelection?: BrowserTransformSelectionContract
   advancedConfigValue: AdvancedConfigValueProps
   request: string
   advancedConfigShow?: AdvancedConfigShowProps | null
@@ -730,6 +732,7 @@ export const getFuzzerProcessedCacheData = (pageList) => {
         maxDelaySeconds: advancedConfigValue.maxDelaySeconds,
         request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
         hotPatchCode: hotPatchCode,
+        browserTransformSelection: ele.pageParamsInfo?.webFuzzerPageInfo?.browserTransformSelection,
       },
     }
   })

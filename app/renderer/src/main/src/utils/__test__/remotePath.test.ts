@@ -5,6 +5,8 @@ describe('normalizeRemotePath', () => {
   it('normalizes POSIX paths without depending on the Yakit host OS', () => {
     expect(normalizeRemotePath('/var/www/../tmp//index.php')).toBe('/var/tmp/index.php')
     expect(normalizeRemotePath('uploads/./images/../avatar.png')).toBe('uploads/avatar.png')
+    expect(normalizeRemotePath('/var/www/a\\b')).toBe('/var/www/a\\b')
+    expect(normalizeRemotePath('uploads/a\\b/../c\\d')).toBe('uploads/c\\d')
   })
 
   it('normalizes Windows drive paths using the target separator', () => {

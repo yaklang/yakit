@@ -45,7 +45,7 @@ const executable = ts.transpileModule([...declarations, streamEffect].join('\n')
 
 const setup = () => {
   const ipc = new EventEmitter()
-  const invoke = vi.fn(async (channel: string) => {
+  const invoke = vi.fn(async (channel: string): Promise<any> => {
     if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: { Request: 'GET /history' } }
   })
   const tokenRef = { current: 'test-token' }
@@ -165,6 +165,37 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     vi.useRealTimers()
   })
 
+  it('publishes gateway selection and removal to the shared cache immediately', () => {
+    const declaration = findOne(
+      (node) =>
+        ts.isVariableStatement(node) &&
+        node.declarationList.declarations.some(
+          (entry) => entry.name.getText(source) === 'setBrowserTransformSelection',
+        ),
+    )
+    const code = ts.transpileModule(declaration, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText
+    const cached = { pageId: 'page', pageParamsInfo: { webFuzzerPageInfo: { request: 'POST /login' } } }
+    const bindings = {
+      useMemoizedFn: (fn: unknown) => fn,
+      queryPagesDataById: () => cached,
+      updatePagesDataCacheById: vi.fn(),
+      updateBrowserTransformSelection: vi.fn(),
+      YakitRoute: { HTTPFuzzer: 'fuzzer' },
+      props: { id: 'page' },
+    }
+    const setSelection = new Function(...Object.keys(bindings), `${code}\nreturn setBrowserTransformSelection`)(
+      ...Object.values(bindings),
+    )
+    for (const selection of [{ deviceId: 'browser', profileId: 'profile', profileName: 'AES' }, undefined]) {
+      setSelection(selection)
+      expect(bindings.updatePagesDataCacheById).toHaveBeenLastCalledWith('fuzzer', {
+        ...cached,
+        pageParamsInfo: { webFuzzerPageInfo: { request: 'POST /login', browserTransformSelection: selection } },
+      })
+      expect(bindings.updateBrowserTransformSelection).toHaveBeenLastCalledWith(selection)
+    }
+  })
+
   it('stops A and sends B with fresh counters and row indexes without receiving end', async () => {
     const { api, bindings: b, send, dispose } = setup()
     api.submitToHTTPFuzzer()
@@ -237,7 +268,35 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     await vi.runAllTimersAsync()
     expect(invoke).toHaveBeenCalledWith('HTTPFuzzer', { HistoryWebFuzzerId: 7 }, token())
     expect(b.setCurrentSelectId).toHaveBeenLastCalledWith(7)
+    expect(b.setBrowserTransformSelection).toHaveBeenLastCalledWith(undefined)
     expect(b.getNewCurrentPage).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it('restores the gateway from history and clears it when loading ordinary history', async () => {
+    const { api, bindings: b, invoke, dispose } = setup()
+    invoke.mockImplementation(async (channel) =>
+      channel === 'GetHistoryHTTPFuzzerTask'
+        ? {
+            OriginRequest: {
+              Request: 'POST /login',
+              BrowserExtensionDeviceId: 'browser',
+              BrowserTransformProfileId: 'profile',
+            },
+          }
+        : undefined,
+    )
+    api.loadHistory(8)
+    await vi.runAllTimersAsync()
+    expect(b.setBrowserTransformSelection).toHaveBeenLastCalledWith(
+      expect.objectContaining({ deviceId: 'browser', profileId: 'profile' }),
+    )
+    invoke.mockImplementation(async (channel) =>
+      channel === 'GetHistoryHTTPFuzzerTask' ? { OriginRequest: { Request: 'GET /' } } : undefined,
+    )
+    api.loadHistory(9)
+    await vi.runAllTimersAsync()
+    expect(b.setBrowserTransformSelection).toHaveBeenLastCalledWith(undefined)
     dispose()
   })
 

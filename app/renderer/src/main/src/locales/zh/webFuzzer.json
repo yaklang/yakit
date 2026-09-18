@@ -773,6 +773,7 @@
     "hit_color": "命中颜色"
   },
   "FuzzerSequence": {
+    "browserGatewayUnsupported": "浏览器明文网关暂不支持序列/并发执行或导出，请在原 Web Fuzzer 页面单独发送。",
     "fuzz_request_fail": "提交模糊测试请求失败：",
     "execute_after_sequence": "请配置序列后再执行",
     "configure_before_adding": "已有空节点，请配置后再添加",

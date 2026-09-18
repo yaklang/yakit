@@ -138,7 +138,7 @@ export const AIBrowserHandoffCard: React.FC<AIBrowserHandoffCardProps> = memo(({
     const refresh = async () => {
       const next = await loadPresentation(!first)
       first = false
-      if (active && next !== 'error' && next !== 'completed' && next !== 'cancelled' && next !== 'page_changed') {
+      if (active && next !== 'completed' && next !== 'cancelled' && next !== 'page_changed') {
         timer = window.setTimeout(refresh, REFRESH_DELAY)
       }
     }
@@ -265,7 +265,11 @@ export const AIBrowserHandoffCard: React.FC<AIBrowserHandoffCardProps> = memo(({
             {t('AIBrowserHandoffCard.openBrowser', { browser: badge })}
           </YakitButton>
         </div>
-        {error && hasQrCode && <div className={styles.error}>{error}</div>}
+        {error && (!isQrCodeHandoff || hasQrCode) && (
+          <div role="alert" className={styles.error}>
+            {error}
+          </div>
+        )}
       </div>
     </ChatCard>
   )

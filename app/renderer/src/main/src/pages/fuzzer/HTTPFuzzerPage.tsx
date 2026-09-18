@@ -927,7 +927,23 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>(
     initWebFuzzerPageInfo().advancedConfigValue,
   ) //  在新建页面的时候，就将高级配置的初始值存放在数据中心中，所以页面得高级配置得值可以直接通过页面得id在数据中心中获取
-  const [browserTransformSelection, setBrowserTransformSelection] = useState<BrowserTransformSelection>()
+  const [browserTransformSelection, updateBrowserTransformSelection] = useState<BrowserTransformSelection | undefined>(
+    initWebFuzzerPageInfo().browserTransformSelection,
+  )
+  const setBrowserTransformSelection = useMemoizedFn((selection?: BrowserTransformSelection) => {
+    // Publish immediately: switching to a group must not race the debounced page cache.
+    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+    if (currentItem?.pageParamsInfo.webFuzzerPageInfo) {
+      updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
+        ...currentItem,
+        pageParamsInfo: {
+          ...currentItem.pageParamsInfo,
+          webFuzzerPageInfo: { ...currentItem.pageParamsInfo.webFuzzerPageInfo, browserTransformSelection: selection },
+        },
+      })
+    }
+    updateBrowserTransformSelection(selection)
+  })
 
   // 高级配置的隐藏/显示
   const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
@@ -1910,6 +1926,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         request: requestRef.current,
         advancedConfigShow,
         hotPatchCode: hotPatchCodeRef.current,
+        browserTransformSelection,
       }
       onUpdateFuzzerSequenceDueToDataChanges(props.id || '', webFuzzerPageInfo)
     },
@@ -1917,7 +1934,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   ).run
   useUpdateEffect(() => {
     sendFuzzerSettingInfo()
-  }, [advancedConfigValue])
+  }, [advancedConfigValue, browserTransformSelection])
 
   /**
    * 因为页面数据变化更新fuzzer序列化
@@ -1939,6 +1956,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
           },
           request: param.request,
           hotPatchCode: param.hotPatchCode,
+          browserTransformSelection: param.browserTransformSelection,
         },
       },
     }

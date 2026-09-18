@@ -773,6 +773,7 @@
     "hit_color": "Hit Color"
   },
   "FuzzerSequence": {
+    "browserGatewayUnsupported": "Browser plaintext gateways do not yet support sequence/concurrent execution or export. Send from the original Web Fuzzer tab instead.",
     "fuzz_request_fail": "Failed to submit fuzz test request:",
     "execute_after_sequence": "Please configure the sequence before executing",
     "configure_before_adding": "There is an empty node. Please configure it before adding a new one",

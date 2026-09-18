@@ -1,3 +1,4 @@
+import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/services/electronBridge', () => ({
@@ -13,8 +14,13 @@ import {
   formatLastSeen,
   normalizeBrowserInstances,
   readBrowserThumbnail,
+  refreshBrowserInstances,
+  useBrowserInstances,
 } from '../browserInstanceStore'
-import { callBrowserExtensionCapability } from '@/pages/browserExtension/browserExtensionClient'
+import {
+  callBrowserExtensionCapability,
+  getBrowserExtensionSnapshot,
+} from '@/pages/browserExtension/browserExtensionClient'
 
 describe('browser instance presentation', () => {
   it('formatLastSeen returns dash for invalid timestamps and formats valid ones', () => {
@@ -171,5 +177,101 @@ describe('browser instance presentation', () => {
       }),
     ).resolves.toBeUndefined()
     expect(callBrowserExtensionCapability).not.toHaveBeenCalled()
+  })
+
+  it('publishes pairing and fast previews while a slow preview spans polling rounds, and ignores disconnected results', async () => {
+    vi.useFakeTimers()
+    const devices = ['slow', 'fast'].map((id) => ({
+      id,
+      installationId: id,
+      name: id,
+      client: 'extension',
+      clientVersion: '1',
+      origin: 'chrome-extension://test',
+      createdAt: 1,
+      lastSeenAt: 2,
+    }))
+    const connections = devices.map((device) => ({
+      deviceId: device.id,
+      installationId: device.id,
+      client: 'extension',
+      clientVersion: '1',
+      capabilities: ['browser.tabs'],
+      sessionId: device.id,
+      connectionId: device.id,
+      connectedAt: 2,
+    }))
+    const snapshot = {
+      devices,
+      pending: [],
+      status: {
+        revision: 1,
+        running: true,
+        connected: true,
+        protocolVersion: 3,
+        engineIdentityId: 'engine',
+        engineInstanceId: 'engine-instance',
+        connections,
+      },
+    }
+    vi.mocked(getBrowserExtensionSnapshot).mockResolvedValue(snapshot)
+    let resolveSlow!: (value: unknown[]) => void
+    vi.mocked(callBrowserExtensionCapability).mockImplementation(async (id) =>
+      id === 'slow'
+        ? new Promise((resolve) => {
+            resolveSlow = resolve
+          })
+        : [{ id: 1, title: 'Fast', url: 'https://fast.test', active: true }],
+    )
+    const hook = renderHook(useBrowserInstances)
+    try {
+      await act(async () => {})
+      expect(hook.result.current.loading).toBe(false)
+      expect(hook.result.current.instances).toHaveLength(2)
+      expect(hook.result.current.instances.find((item) => item.id === 'fast')?.tab?.title).toBe('Fast')
+      const pending = [
+        {
+          id: 'pair-new',
+          installationId: 'new-install',
+          extensionId: 'extension',
+          client: 'extension',
+          clientVersion: '1',
+          origin: 'chrome-extension://test',
+          code: '123456',
+          createdAt: 1,
+          expiresAt: 60_000,
+        },
+      ]
+      vi.mocked(getBrowserExtensionSnapshot).mockResolvedValue({ ...snapshot, pending })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10_000)
+      })
+      expect(hook.result.current.pending).toEqual(pending)
+      expect(vi.mocked(callBrowserExtensionCapability).mock.calls.filter(([id]) => id === 'slow')).toHaveLength(1)
+      await act(async () => {
+        resolveSlow([{ id: 2, title: 'Slow', url: 'https://slow.test' }])
+      })
+      expect(hook.result.current.instances.find((item) => item.id === 'slow')?.tab?.title).toBe('Slow')
+      await act(async () => {
+        await refreshBrowserInstances(true)
+      })
+      vi.mocked(getBrowserExtensionSnapshot).mockResolvedValue({
+        ...snapshot,
+        status: { ...snapshot.status, connections: [] },
+      })
+      await act(async () => {
+        await refreshBrowserInstances(true)
+      })
+      await act(async () => {
+        resolveSlow([{ id: 3, title: 'Stale', url: 'https://stale.test' }])
+      })
+      expect(hook.result.current.instances.find((item) => item.id === 'slow')).toMatchObject({
+        online: false,
+        tab: { title: 'Slow' },
+      })
+    } finally {
+      hook.unmount()
+      vi.useRealTimers()
+    }
   })
 })

@@ -70,6 +70,7 @@ let state: BrowserInstanceState = {
   error: '',
 }
 let refreshSequence = 0
+const pendingPreviews = new Map<string, string>()
 let consumerCount = 0
 let refreshTimer: number | undefined
 const listeners = new Set<() => void>()
@@ -183,18 +184,29 @@ export const refreshBrowserInstances = async (quiet = false) => {
       yakitManagedBrowser.list().catch(() => []),
     ])
     const connected = snapshot.status?.connections || []
-    const detailEntries = await Promise.all(
-      connected.map(async (connection) => [connection.deviceId, await readTabPreview(connection)] as const),
-    )
     if (sequence !== refreshSequence) return
-    const previews = Object.fromEntries([
-      ...state.instances.filter((instance) => instance.tab).map((instance) => [instance.id, instance.tab] as const),
-      ...detailEntries,
-    ])
+    const previews = Object.fromEntries(state.instances.map((instance) => [instance.id, instance.tab]))
     const instances = normalizeBrowserInstances(snapshot, previews, profiles)
     const selectedId = resolveSelectedId(instances)
     if (selectedId) persistSelectedId(selectedId)
     updateState({ instances, pending: snapshot.pending, selectedId, loading: false, error: '' })
+    for (const connection of connected) {
+      const { deviceId, connectionId } = connection
+      if (pendingPreviews.get(deviceId) === connectionId) continue
+      pendingPreviews.set(deviceId, connectionId)
+      void readTabPreview(connection).then((tab) => {
+        if (pendingPreviews.get(deviceId) !== connectionId) return
+        pendingPreviews.delete(deviceId)
+        if (!tab) return
+        updateState({
+          instances: state.instances.map((instance) =>
+            instance.id === deviceId && instance.connection?.connectionId === connectionId
+              ? { ...instance, tab }
+              : instance,
+          ),
+        })
+      })
+    }
   } catch (error) {
     if (sequence !== refreshSequence) return
     updateState({ loading: false, error: `${error}` })

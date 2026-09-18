@@ -31,12 +31,12 @@ export function normalizeRemotePath(input: string): string {
     rooted = /^[\\/]/.test(remainder)
     remainder = remainder.replace(/^[\\/]+/, '')
   } else {
-    rooted = /^[\\/]/.test(input)
-    remainder = input.replace(/^[\\/]+/, '')
+    rooted = windowsStyle ? /^[\\/]/.test(input) : input.startsWith('/')
+    remainder = input.replace(windowsStyle ? /^[\\/]+/ : /^\/+/, '')
   }
 
   const segments: string[] = []
-  for (const segment of remainder.split(/[\\/]+/)) {
+  for (const segment of remainder.split(windowsStyle ? /[\\/]+/ : /\/+/)) {
     if (!segment || segment === '.') continue
     if (segment === '..') {
       if (segments.length && segments[segments.length - 1] !== '..') {
