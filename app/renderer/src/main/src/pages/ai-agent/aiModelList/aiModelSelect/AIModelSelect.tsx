@@ -32,8 +32,21 @@ import { yakitNotify } from '@/utils/notification'
 
 const getModelListConfig = (model?: AIModelConfig) => {
   if (!model?.Provider) return undefined
-  const { Type, APIKey, Domain, NoHttps, Proxy } = model.Provider
-  return JSON.stringify({ Type, api_key: APIKey, domain: Domain, no_https: NoHttps, proxy: Proxy })
+  const { Type, APIKey, Domain, NoHttps, Proxy, APIType, BaseURL, Endpoint, EnableEndpoint, Headers, ExtraParams } =
+    model.Provider
+  return JSON.stringify({
+    Type,
+    api_key: APIKey,
+    domain: Domain,
+    no_https: NoHttps,
+    proxy: Proxy,
+    api_type: APIType ?? '',
+    base_url: BaseURL ?? '',
+    endpoint: Endpoint ?? '',
+    enable_endpoint: !!EnableEndpoint,
+    Headers: Headers ?? [],
+    ExtraParams: ExtraParams ?? [],
+  })
 }
 
 export const onOpenConfigModal = (mountContainer, t: TFunction) => {

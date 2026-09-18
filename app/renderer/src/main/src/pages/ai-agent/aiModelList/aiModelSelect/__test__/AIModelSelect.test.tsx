@@ -148,6 +148,12 @@ const expectModelRequest = (Type: string) =>
       domain: 'models.test',
       no_https: true,
       proxy: 'http://proxy.test',
+      api_type: '',
+      base_url: '',
+      endpoint: '',
+      enable_endpoint: false,
+      Headers: [],
+      ExtraParams: [],
     }),
   })
 
