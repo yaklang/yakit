@@ -82,6 +82,7 @@ const setup = () => {
     setFailedCount: vi.fn(),
     setFuzzerListVersion: vi.fn(),
     setCurrentSelectId: vi.fn(),
+    setBrowserTransformSelection: vi.fn(),
     updateConcurrentLoad: vi.fn(),
     setRedirectedResponse: vi.fn(),
     getNewCurrentPage: vi.fn(),

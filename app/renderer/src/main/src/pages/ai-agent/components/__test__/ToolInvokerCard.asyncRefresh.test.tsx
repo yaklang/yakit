@@ -1,3 +1,4 @@
+import '@/pages/ai-re-act/hooks/__test__/setupElectron'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ToolInvokerCard from '../ToolInvokerCard'
@@ -25,6 +26,8 @@ vi.mock('../aiChatListItem/StreamingChatContent/hooks/useStreamingChatContent', 
 }))
 vi.mock('../FileList', () => ({ default: () => null }))
 vi.mock('../OperationCardFooter/OperationCardFooter', () => ({ OperationCardFooter: () => null }))
+// DataCompare → httpFlow 顶层 window.require('electron')，本用例不测对比抽屉
+vi.mock('@/pages/compare/DataCompare', () => ({ CodeComparison: () => null }))
 
 describe('ToolInvokerCard asynchronous detail refresh', () => {
   beforeEach(() => {
@@ -84,6 +87,7 @@ describe('ToolInvokerCard asynchronous detail refresh', () => {
             NodeId: '',
             NodeIdVerbose: { Zh: '', En: '' },
             ContentType: '',
+            executionResult: undefined,
           },
         },
       ])
