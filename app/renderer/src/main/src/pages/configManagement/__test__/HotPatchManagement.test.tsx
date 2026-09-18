@@ -45,7 +45,7 @@ const { ipcRendererMock, mocks } = vi.hoisted(() => {
 })
 
 vi.mock('ahooks', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('ahooks')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     useInViewport: () => [true],
@@ -218,7 +218,7 @@ vi.mock('@/components/yakitUI/YakitRadioButtons/YakitRadioButtons', () => ({
 }))
 
 vi.mock('antd', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('antd')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     Tooltip: ({ title, children }: { title?: React.ReactNode; children?: React.ReactNode }) => (
