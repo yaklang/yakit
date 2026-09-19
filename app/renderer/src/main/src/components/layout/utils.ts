@@ -16,8 +16,26 @@ import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'layout')
 
 /** @name 处理进度条数据(防止异常数据) */
-export const safeFormatDownloadProcessState = (state: DownloadingState) => {
+export const safeFormatDownloadProcessState = (state: DownloadingState | number | null | undefined) => {
   try {
+    // 兼容历史 bug：主进程 finish 时曾传数字 100，而不是 DownloadingState
+    if (typeof state === 'number') {
+      const percent = state > 1 ? Math.min(1, state / 100) : Math.min(1, Math.max(0, state))
+      return {
+        percent,
+        size: { total: 0, transferred: 0 },
+        speed: 0,
+        time: { elapsed: 0, remaining: 0 },
+      }
+    }
+    if (!state || typeof state !== 'object') {
+      return {
+        percent: 0,
+        size: { total: 0, transferred: 0 },
+        speed: 0,
+        time: { elapsed: 0, remaining: 0 },
+      }
+    }
     // 使用可选链操作符来安全地访问深层次属性，如果不存在，则默认为0
     const total = state.size?.total || 0
     const transferred = state.size?.transferred || 0

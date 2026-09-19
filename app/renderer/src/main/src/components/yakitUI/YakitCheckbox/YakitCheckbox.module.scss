@@ -11,18 +11,54 @@
   --checkbox-background-color: var(--Colors-Use-Main-Primary);
   --checkbox-background-disabled-color: var(--Colors-Use-Neutral-Disable);
 
-  height: 16px;
-  width: 16px;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  /* 禁止锁死 16x16：否则有 children 时文字被裁、无 children 时 hit area 异常 */
+  width: auto !important;
+  height: auto !important;
+  min-width: 16px;
+  min-height: 16px;
+  overflow: visible !important;
+  line-height: 1;
+  pointer-events: auto;
+  vertical-align: middle;
 
   :global {
+    .ant-checkbox-wrapper {
+      display: inline-flex;
+      align-items: center;
+      width: auto;
+      height: auto !important;
+      min-height: 16px;
+      overflow: visible;
+      line-height: 1;
+      pointer-events: auto;
+      margin-inline-end: 0;
+    }
+
+    .ant-checkbox {
+      top: 0;
+      align-self: center;
+      pointer-events: auto;
+    }
+
     .ant-checkbox-inner {
+      width: 16px;
+      height: 16px;
       border-color: var(--Colors-Use-Neutral-Border);
       background: var(--Colors-Use-Basic-Background);
     }
 
-    .ant-checkbox-wrapper {
-      height: 16px;
-      align-items: center;
+    /* 保证透明 input 覆盖勾选框并可点（Electron/React19 下偶发失效） */
+    .ant-checkbox-input {
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      cursor: pointer;
+      pointer-events: auto !important;
+      opacity: 0;
     }
 
     .ant-checkbox-wrapper:hover .ant-checkbox-inner,
@@ -124,17 +160,26 @@
     border-color: var(--checkbox-border-disabled-color);
   }
 }
+
 .yakit-checkbox-children-wrapper {
-  width: auto;
-  height: auto;
-  display: flex;
+  width: auto !important;
+  height: auto !important;
+  display: inline-flex;
   align-items: center;
+  max-width: 100%;
   :global {
     .ant-checkbox-wrapper {
       color: var(--Colors-Use-Neutral-Text-1-Title);
+      width: auto;
+      max-width: 100%;
       span {
         color: var(--Colors-Use-Neutral-Text-1-Title);
       }
     }
   }
+}
+
+/* className 落到 ant-checkbox-wrapper 上时的兜底（与外层 span 并存） */
+.yakit-checkbox {
+  pointer-events: auto;
 }

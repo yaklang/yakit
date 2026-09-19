@@ -143,43 +143,47 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
     })
   })
 
-  const getContent = useMemoizedFn(() => {
-    return (
+  /**
+   * IMPORTANT: do NOT wrap modal body JSX in useMemoizedFn.
+   * Under React 19 + react-compiler, that pattern keeps a stale `children` closure,
+   * so footerExtra (e.g. NoPromptHint checkbox) state updates never reach the DOM
+   * inside react-draggable — clicks fire / React state toggles, but UI stays unchecked.
+   */
+  const content = (
+    <div
+      className={classNames(styles['yakit-hint-modal-container'], {
+        [styles['yakit-hint-modal-container-box-shadow']]: !isMask,
+        [styles['yakit-hint-modal-container-resize']]: isResize,
+      })}
+      onClick={() => {
+        if (!isTop && setTop) setTop()
+      }}
+    >
       <div
-        className={classNames(styles['yakit-hint-modal-container'], {
-          [styles['yakit-hint-modal-container-box-shadow']]: !isMask,
-          [styles['yakit-hint-modal-container-resize']]: isResize,
-        })}
-        onClick={() => {
-          if (!isTop && setTop) setTop()
-        }}
+        className={classNames(
+          styles['container-wrapper'],
+          {
+            [styles['container-wrapper-resize']]: isResize,
+          },
+          containerClassName,
+        )}
       >
         <div
-          className={classNames(
-            styles['container-wrapper'],
-            {
-              [styles['container-wrapper-resize']]: isResize,
-            },
-            containerClassName,
-          )}
-        >
-          <div
-            className={styles['container-draggle']}
-            onMouseEnter={() => {
-              if (isDrag && disabled) setDisabled(false)
-            }}
-            onMouseLeave={() => {
-              if (isDrag && !disabled) setDisabled(true)
-            }}
-            onMouseDown={() => {
-              if (!isTop && setTop) setTop()
-            }}
-          />
-          {children}
-        </div>
+          className={styles['container-draggle']}
+          onMouseEnter={() => {
+            if (isDrag && disabled) setDisabled(false)
+          }}
+          onMouseLeave={() => {
+            if (isDrag && !disabled) setDisabled(true)
+          }}
+          onMouseDown={() => {
+            if (!isTop && setTop) setTop()
+          }}
+        />
+        {children}
       </div>
-    )
-  })
+    </div>
+  )
 
   return (
     <Draggable
@@ -220,10 +224,10 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
               topLeft: false,
             }}
           >
-            {getContent()}
+            {content}
           </Resizable>
         ) : (
-          getContent()
+          content
         )}
       </div>
     </Draggable>

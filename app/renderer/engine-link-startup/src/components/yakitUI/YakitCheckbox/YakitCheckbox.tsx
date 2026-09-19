@@ -6,31 +6,24 @@ import classNames from 'classnames'
 import './yakitCheckBoxAnimation.scss'
 
 /**
- * 更新说明
- * 1.增加环境变量加载主题色
- * 2.增加颜色变量
- */
-
-/**
- * @description: 两种方式的数字输入
- * @augments CheckboxProps 继承antd的CheckboxProps默认属性
- * @param {string} wrapperClassName
+ * React 19 兼容：
+ * - 外层 span 只做样式宿主，禁止写死 16x16（会裁切/压缩 label 点击区，导致勾选失效）
+ * - 视觉尺寸只约束 .ant-checkbox-inner；input 保持可点
+ * - 调用方不要再包一层 <label>（antd Checkbox 本身已是 label，嵌套会导致点击失效）
  */
 export const YakitCheckbox: React.FC<YakitCheckboxProps> = (props) => {
-  const { wrapperClassName, ...restProps } = props
-  return props.children ? (
+  const { wrapperClassName, className, children, ...restProps } = props
+  return (
     <span
       className={classNames(
-        styles['yakit-checkbox-children-wrapper'],
         styles['yakit-checkbox-wrapper'],
+        children ? styles['yakit-checkbox-children-wrapper'] : undefined,
         wrapperClassName,
       )}
     >
-      <Checkbox {...restProps}>{props.children}</Checkbox>
-    </span>
-  ) : (
-    <span className={classNames(styles['yakit-checkbox-wrapper'], wrapperClassName)}>
-      <Checkbox {...restProps} />
+      <Checkbox {...restProps} className={classNames(styles['yakit-checkbox'], className)}>
+        {children}
+      </Checkbox>
     </span>
   )
 }

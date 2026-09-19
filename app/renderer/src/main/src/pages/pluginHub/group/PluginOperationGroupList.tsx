@@ -20,7 +20,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import styles from './PluginOperationGroupList.module.scss'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import { NoPromptFooterExtra } from '../utilsUI/UtilsTemplate'
 import type { API } from '@/services/swagger/resposeType'
 import { isEnpriTraceAgent } from '@/utils/envfile'
 
@@ -289,15 +289,7 @@ export const DelGroupConfirmPop: React.FC<DelGroupConfirmPopProps> = React.forwa
       visible={visible}
       title="删除组"
       content={`是否确认删除插件组 “${delGroupName}”`}
-      footerExtra={
-        <YakitCheckbox
-          value={delGroupConfirmNoPrompt}
-          checked={delGroupConfirmNoPrompt}
-          onChange={(e) => setDelGroupConfirmNoPrompt(e.target.checked)}
-        >
-          下次不再提醒
-        </YakitCheckbox>
-      }
+      footerExtra={<NoPromptFooterExtra checked={delGroupConfirmNoPrompt} onChange={setDelGroupConfirmNoPrompt} />}
       onOk={onOk}
       onCancel={onCancel}
     />
@@ -334,15 +326,7 @@ export const ListDelGroupConfirmPop: React.FC<ListDelGroupConfirmPopProps> = Rea
       visible={visible}
       title="插件组移除插件"
       content={content}
-      footerExtra={
-        <YakitCheckbox
-          value={delGroupConfirmNoPrompt}
-          checked={delGroupConfirmNoPrompt}
-          onChange={(e) => setDelGroupConfirmNoPrompt(e.target.checked)}
-        >
-          下次不再提醒
-        </YakitCheckbox>
-      }
+      footerExtra={<NoPromptFooterExtra checked={delGroupConfirmNoPrompt} onChange={setDelGroupConfirmNoPrompt} />}
       onOk={onOk}
       onCancel={onCancel}
     />

@@ -70,6 +70,29 @@ function generateThemeCssPlugin(): Plugin {
   }
 }
 
+/**
+ * BizCharts / react-reconciler@0.25 still read React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+ * at module init. React 19 renamed it and freezes the export object, so assigning a polyfill fails.
+ * Rewrite the property access to fall back to a minimal stub so Reports (and other BizCharts pages)
+ * can load under React 19.
+ */
+function react19SecretInternalsCompatPlugin(): Plugin {
+  const TARGET = /[\\/]node_modules[\\/](?:bizcharts|react-reconciler)[\\/]/
+  const PROP = '__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED'
+  const STUB =
+    '{ReactCurrentDispatcher:{current:null},ReactCurrentBatchConfig:{suspense:null},ReactCurrentOwner:{current:null}}'
+  return {
+    name: 'react19-secret-internals-compat',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!TARGET.test(id) || !code.includes(PROP)) return
+      const next = code.replace(new RegExp(`([A-Za-z_$][\\w$]*)\\.${PROP}\\b`, 'g'), `($1.${PROP}||${STUB})`)
+      if (next === code) return
+      return { code: next, map: null }
+    },
+  }
+}
+
 function noopAntdComponentStylePlugin(): Plugin {
   return {
     name: 'noop-antd-component-style',
@@ -99,6 +122,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       generateThemeCssPlugin(),
       noopAntdComponentStylePlugin(),
+      react19SecretInternalsCompatPlugin(),
       yakitUiIconsPurePlugin(),
       react(),
       pluginBabel({ presets: [reactCompilerPreset()] }),
@@ -138,6 +162,7 @@ export default defineConfig(({ mode }) => {
         { find: /^~antd/, replacement: path.resolve(rootDir, 'node_modules/antd') },
         { find: /^~/, replacement: '' },
         // 精确匹配，避免字符串前缀误伤 react-dom / react-dnd
+        { find: /^bizcharts$/, replacement: path.resolve(rootDir, 'node_modules/bizcharts/es/index.js') },
         { find: /^react$/, replacement: path.resolve(rootDir, 'node_modules/react') },
         { find: /^react-dom$/, replacement: path.resolve(rootDir, 'node_modules/react-dom') },
         {
