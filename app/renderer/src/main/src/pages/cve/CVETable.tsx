@@ -606,7 +606,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     [props.latestMode],
   )
 
-  const HintContent = useMemoizedFn(() => {
+  const HintContent = () => {
     switch (status) {
       case 'init':
         return (
@@ -659,8 +659,8 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
       default:
         break
     }
-  })
-  const heardIconRender = useMemoizedFn(() => {
+  }
+  const heardIconRender = () => {
     if (status === 'done') {
       return <CheckCircleSolid style={{ color: 'var(--Colors-Use-Success-Primary)' }} />
     }
@@ -669,8 +669,8 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     } else {
       return <ShieldExclamationSolid size={32} style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />
     }
-  })
-  const titleRender = useMemoizedFn(() => {
+  }
+  const titleRender = () => {
     if (status === 'done') {
       return '更新完成'
     }
@@ -684,8 +684,8 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     } else {
       return 'CVE数据初始化'
     }
-  })
-  const okButtonTextRender = useMemoizedFn(() => {
+  }
+  const okButtonTextRender = () => {
     if (status === 'done') {
       return '重启'
     }
@@ -699,7 +699,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
     } else {
       return '初始化'
     }
-  })
+  }
   return (
     <YakitHint
       visible={visible}

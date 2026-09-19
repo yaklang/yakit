@@ -105,15 +105,17 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                       const checked =
                         (selecteds[item.groupKey] || []).findIndex((ele) => ele.value === listItem.value) !== -1
                       return (
-                        <label
+                        <div
                           className={classNames(styles['list-item'], {
                             [styles['list-item-active']]: checked,
                           })}
                           key={`${item.groupKey}-${listItem.value}`}
+                          onClick={() => onCheck(item.groupKey, listItem, !checked)}
                         >
                           <div className={styles['list-item-left']}>
                             <YakitCheckbox
                               checked={checked}
+                              onClick={(e) => e.stopPropagation()}
                               onChange={(e) => onCheck(item.groupKey, listItem, e.target.checked)}
                             />
                             <span
@@ -124,7 +126,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                             </span>
                           </div>
                           <span className={styles['list-item-extra']}>{listItem.count}</span>
-                        </label>
+                        </div>
                       )
                     })}
                   </YakitPanel>

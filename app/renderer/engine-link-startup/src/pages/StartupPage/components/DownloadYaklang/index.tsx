@@ -92,7 +92,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
             remaining: 0,
           },
           speed: 0,
-          percent: 100,
+          percent: 1,
           size: getDownloadProgress().size,
         })
 

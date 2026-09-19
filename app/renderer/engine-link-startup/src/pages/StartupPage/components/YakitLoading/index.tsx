@@ -113,7 +113,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     [agrCheck],
     { wait: 500 },
   )
-  const agreement = useMemoizedFn(() => {
+  const agreement = () => {
     return (
       <div
         className={classNames(styles['hint-right-agreement'], {
@@ -147,7 +147,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         </span>
       </div>
     )
-  })
+  }
 
   const judgmentAgreement = useMemoizedFn(() => {
     setCheckStatus(true)

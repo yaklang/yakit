@@ -56,7 +56,7 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
                     remaining: 0,
                   },
                   speed: 0,
-                  percent: 100,
+                  percent: 1,
                   // @ts-expect-error 类型定义不完整，需要忽略此行
                   size: getDownloadProgress().size,
                 })
@@ -98,7 +98,7 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
                     remaining: 0,
                   },
                   speed: 0,
-                  percent: 100,
+                  percent: 1,
                   // @ts-expect-error 类型定义不完整，需要忽略此行
                   size: getDownloadProgress().size,
                 })

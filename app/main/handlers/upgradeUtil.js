@@ -1,4 +1,4 @@
-const { ipcMain, shell } = require('electron')
+const { ipcMain, shell, BrowserWindow } = require('electron')
 const childProcess = require('child_process')
 const spawn = require('cross-spawn')
 const process = require('process')
@@ -42,6 +42,7 @@ const {
   getOssEngineVersion,
 } = require('./utils/engineVersion')
 const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = require('./utils/requestWithProgress')
+const { createYakitDownloadTracker } = require('./utils/yakitDownloadTracker')
 const { getCheckTextUrl, fetchSpecifiedYakVersionHash } = require('../handlers/utils/network')
 const { engineLogOutputFileAndUI } = require('../logFile')
 
@@ -338,6 +339,30 @@ const asyncYakEngineVersionExistsAndCorrectness = (version) => {
   })
 }
 
+/** Prefer invoking sender; also broadcast so engine-link / other windows always get progress */
+function sendDownloadProgress(event, channel, state, fallbackWin) {
+  const sent = new Set()
+  const trySend = (wc) => {
+    if (!wc || (typeof wc.isDestroyed === 'function' && wc.isDestroyed())) return
+    if (sent.has(wc.id)) return
+    sent.add(wc.id)
+    try {
+      wc.send(channel, state)
+    } catch (e) {}
+  }
+  try {
+    if (event && event.sender) trySend(event.sender)
+  } catch (e) {}
+  try {
+    for (const w of BrowserWindow.getAllWindows()) {
+      if (w && w.webContents) trySend(w.webContents)
+    }
+  } catch (e) {}
+  try {
+    if (sent.size === 0 && fallbackWin && fallbackWin.webContents) trySend(fallbackWin.webContents)
+  } catch (e) {}
+}
+
 module.exports = {
   getLatestYakLocalEngine,
   initial: async () => {
@@ -494,7 +519,7 @@ module.exports = {
     })
 
     // asyncDownloadLatestYak wrapper
-    const asyncDownloadLatestYak = (version) => {
+    const asyncDownloadLatestYak = (version, event) => {
       return new Promise(async (resolve, reject) => {
         const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
         try {
@@ -504,7 +529,7 @@ module.exports = {
           version,
           dest,
           (state) => {
-            win.webContents.send('download-yak-engine-progress', state)
+            sendDownloadProgress(event, 'download-yak-engine-progress', state, win)
           },
           resolve,
           reject,
@@ -512,7 +537,7 @@ module.exports = {
       })
     }
     ipcMain.handle('download-latest-yak', async (e, version) => {
-      return await asyncDownloadLatestYak(version)
+      return await asyncDownloadLatestYak(version, e)
     })
 
     const asyncWriteEngineKeyToYakitProjects = async (version) => {
@@ -560,88 +585,122 @@ module.exports = {
       return await engineCancelRequestWithProgress(version)
     })
 
+    const yakitDownloadTracker = createYakitDownloadTracker()
+
     // asyncDownloadLatestYakit wrapper
-    async function asyncDownloadLatestYakit(version, type) {
+    async function asyncDownloadLatestYakit(version, type, event) {
       return new Promise(async (resolve, reject) => {
-        const { isEnterprise, isIRify, isMemfit } = type
-        const IRifyCE = isIRify && !isEnterprise
-        const IRifyEE = isIRify && isEnterprise
-        const YakitCE = !isIRify && !isEnterprise
-        const YakitEE = !isIRify && isEnterprise
-        const MemfitCE = isMemfit && !isEnterprise
-        const MemfitEE = isMemfit && isEnterprise
-        // format version，下载的版本号里不能存在 V
-        if (version.startsWith('v')) {
-          version = version.substr(1)
+        const task = yakitDownloadTracker.start(event)
+        if (!task) {
+          reject(new Error('Yakit download already in progress'))
+          return
         }
-
-        console.info('start to fetching download-url for yakit')
-        let downloadUrl = ''
-        if (IRifyCE) {
-          downloadUrl = await getDownloadUrl(version, 'IRifyCE')
-        } else if (IRifyEE) {
-          downloadUrl = await getDownloadUrl(version, 'IRifyEE')
-        } else if (YakitEE) {
-          downloadUrl = await getDownloadUrl(version, 'YakitEE')
-        } else if (MemfitCE) {
-          downloadUrl = await getDownloadUrl(version, 'Memfit')
-        } else if (MemfitEE) {
-          downloadUrl = await getDownloadUrl(version, 'Memfit')
-        } else {
-          downloadUrl = await getDownloadUrl(version, 'YakitCE')
+        const onFinished = () => {
+          yakitDownloadTracker.clear(event, task)
+          resolve()
         }
-        // 确保系统下载目录存在
-        if (!fs.existsSync(getYakitInstallDir())) fs.mkdirSync(getYakitInstallDir(), { recursive: true })
-        const dest = path.join(getYakitInstallDir(), path.basename(downloadUrl))
+        const onError = (error) => {
+          yakitDownloadTracker.clear(event, task)
+          reject(error)
+        }
         try {
-          fs.unlinkSync(dest)
-        } catch (e) {}
+          const { isEnterprise, isIRify, isMemfit } = type
+          const IRifyCE = isIRify && !isEnterprise
+          const IRifyEE = isIRify && isEnterprise
+          const YakitCE = !isIRify && !isEnterprise
+          const YakitEE = !isIRify && isEnterprise
+          const MemfitCE = isMemfit && !isEnterprise
+          const MemfitEE = isMemfit && isEnterprise
+          // format version，下载的版本号里不能存在 V
+          if (version.startsWith('v')) {
+            version = version.substr(1)
+          }
 
-        console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
-        // 企业版下载
-        if (YakitEE || IRifyEE || MemfitEE) {
-          await downloadYakitEE(
-            version,
-            isIRify,
-            dest,
-            (state) => {
-              if (!!state) {
-                win.webContents.send('download-yakit-engine-progress', state)
-              }
-            },
-            resolve,
-            reject,
-          )
-        } else {
-          // 社区版下载
-          await downloadYakitCommunity(
-            version,
-            isIRify,
-            isMemfit,
-            dest,
-            (state) => {
-              if (!!state) {
-                win.webContents.send('download-yakit-engine-progress', state)
-              }
-            },
-            resolve,
-            reject,
-          )
+          console.info('start to fetching download-url for yakit')
+          let downloadUrl = ''
+          if (IRifyCE) {
+            downloadUrl = await getDownloadUrl(version, 'IRifyCE')
+          } else if (IRifyEE) {
+            downloadUrl = await getDownloadUrl(version, 'IRifyEE')
+          } else if (YakitEE) {
+            downloadUrl = await getDownloadUrl(version, 'YakitEE')
+          } else if (MemfitCE) {
+            downloadUrl = await getDownloadUrl(version, 'Memfit')
+          } else if (MemfitEE) {
+            downloadUrl = await getDownloadUrl(version, 'Memfit')
+          } else {
+            downloadUrl = await getDownloadUrl(version, 'YakitCE')
+          }
+          // 确保系统下载目录存在
+          if (!fs.existsSync(getYakitInstallDir())) fs.mkdirSync(getYakitInstallDir(), { recursive: true })
+          const dest = path.join(getYakitInstallDir(), path.basename(downloadUrl))
+          yakitDownloadTracker.setDest(event, task, dest)
+          try {
+            fs.unlinkSync(dest)
+          } catch (e) {}
+
+          console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
+          // 企业版下载
+          if (YakitEE || IRifyEE || MemfitEE) {
+            await downloadYakitEE(
+              version,
+              isIRify,
+              dest,
+              (state) => {
+                if (!!state) {
+                  sendDownloadProgress(event, 'download-yakit-engine-progress', state, win)
+                }
+              },
+              onFinished,
+              onError,
+            )
+          } else {
+            // 社区版下载
+            await downloadYakitCommunity(
+              version,
+              isIRify,
+              isMemfit,
+              dest,
+              (state) => {
+                if (!!state) {
+                  sendDownloadProgress(event, 'download-yakit-engine-progress', state, win)
+                }
+              },
+              onFinished,
+              onError,
+            )
+          }
+        } catch (error) {
+          onError(error)
         }
       })
     }
 
     ipcMain.handle('cancel-download-yakit-version', async (e) => {
-      return await yakitCancelRequestWithProgress()
+      return await yakitCancelRequestWithProgress(yakitDownloadTracker.getDest(e))
     })
 
     ipcMain.handle('download-latest-yakit', async (e, version, type) => {
-      return await asyncDownloadLatestYakit(version, type)
+      return await asyncDownloadLatestYakit(version, type, e)
     })
 
-    const asyncDownloadLatestIntranetYakit = (filePath) => {
+    const asyncDownloadLatestIntranetYakit = (filePath, event) => {
       return new Promise((resolve, reject) => {
+        const task = yakitDownloadTracker.start(event)
+        if (!task) {
+          reject(new Error('Yakit download already in progress'))
+          return
+        }
+        const onFinished = () => {
+          yakitDownloadTracker.clear(event, task)
+          resolve()
+        }
+        const onError = (error) => {
+          yakitDownloadTracker.clear(event, task)
+          reject(error)
+        }
         const dest = path.join(getYakitInstallDir(), path.basename(filePath))
+        yakitDownloadTracker.setDest(event, task, dest)
         // 校验getYakitInstallDir()目录下是否已经存在filePath文件，存在则直接返回
         fs.access(dest, fs.constants.F_OK, async (err) => {
           if (err) {
@@ -651,21 +710,21 @@ module.exports = {
               dest,
               (state) => {
                 if (!!state) {
-                  win.webContents.send('download-yakit-engine-progress', state)
+                  sendDownloadProgress(event, 'download-yakit-engine-progress', state, win)
                 }
               },
-              resolve,
-              reject,
+              onFinished,
+              onError,
             )
           } else {
-            resolve(true)
+            onFinished()
           }
         })
       })
     }
 
     ipcMain.handle('download-latest-intranet-yakit', async (e, filePath) => {
-      return await asyncDownloadLatestIntranetYakit(filePath)
+      return await asyncDownloadLatestIntranetYakit(filePath, e)
     })
 
     ipcMain.handle('download-enpriTrace-latest-yakit', async (e, url) => {
@@ -1193,7 +1252,7 @@ module.exports = {
     })
 
     // asyncDownloadLatestYak wrapper
-    const asyncDownloadLatestYak = (version) => {
+    const asyncDownloadLatestYak = (version, event) => {
       return new Promise(async (resolve, reject) => {
         const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
         try {
@@ -1203,7 +1262,7 @@ module.exports = {
           version,
           dest,
           (state) => {
-            win.webContents.send('download-yak-engine-progress', state)
+            sendDownloadProgress(event, 'download-yak-engine-progress', state, win)
           },
           resolve,
           reject,
@@ -1211,7 +1270,7 @@ module.exports = {
       })
     }
     ipcMain.handle(ipcEventPre + 'download-latest-yak', async (e, version) => {
-      return await asyncDownloadLatestYak(version)
+      return await asyncDownloadLatestYak(version, e)
     })
 
     /** clear latestVersionCache value */
@@ -1355,9 +1414,24 @@ module.exports = {
       return shell.showItemInFolder(resolvedPath)
     })
 
+    const yakitDownloadTracker = createYakitDownloadTracker()
+
     // asyncDownloadLatestYakit wrapper
-    async function asyncDownloadLatestYakit(version, type) {
+    async function asyncDownloadLatestYakit(version, type, event) {
       return new Promise(async (resolve, reject) => {
+        const task = yakitDownloadTracker.start(event)
+        if (!task) {
+          reject(new Error('Yakit download already in progress'))
+          return
+        }
+        const onFinished = () => {
+          yakitDownloadTracker.clear(event, task)
+          resolve()
+        }
+        const onError = (error) => {
+          yakitDownloadTracker.clear(event, task)
+          reject(error)
+        }
         try {
           const { isEnterprise, isIRify, isMemfit } = type
           const IRifyCE = isIRify && !isEnterprise
@@ -1389,6 +1463,7 @@ module.exports = {
           // 确保系统下载目录存在
           if (!fs.existsSync(getYakitInstallDir())) fs.mkdirSync(getYakitInstallDir(), { recursive: true })
           const dest = path.join(getYakitInstallDir(), path.basename(downloadUrl))
+          yakitDownloadTracker.setDest(event, task, dest)
           try {
             fs.unlinkSync(dest)
           } catch (e) {}
@@ -1402,11 +1477,11 @@ module.exports = {
               dest,
               (state) => {
                 if (!!state) {
-                  win.webContents.send('download-yakit-engine-progress', state)
+                  sendDownloadProgress(event, 'download-yakit-engine-progress', state, win)
                 }
               },
-              resolve,
-              reject,
+              onFinished,
+              onError,
             )
           } else {
             // 社区版下载
@@ -1417,24 +1492,24 @@ module.exports = {
               dest,
               (state) => {
                 if (!!state) {
-                  win.webContents.send('download-yakit-engine-progress', state)
+                  sendDownloadProgress(event, 'download-yakit-engine-progress', state, win)
                 }
               },
-              resolve,
-              reject,
+              onFinished,
+              onError,
             )
           }
         } catch (error) {
-          reject(error)
+          onError(error)
         }
       })
     }
     ipcMain.handle(ipcEventPre + 'download-latest-yakit', async (e, version, type) => {
-      return await asyncDownloadLatestYakit(version, type)
+      return await asyncDownloadLatestYakit(version, type, e)
     })
 
     ipcMain.handle(ipcEventPre + 'cancel-download-yakit-version', async (e) => {
-      return await yakitCancelRequestWithProgress()
+      return await yakitCancelRequestWithProgress(yakitDownloadTracker.getDest(e))
     })
 
     // asyncQueryLatestYakEngineVersion wrapper

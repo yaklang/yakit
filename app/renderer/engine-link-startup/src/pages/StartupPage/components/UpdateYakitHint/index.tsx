@@ -72,7 +72,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
               remaining: 0,
             },
             speed: 0,
-            percent: 100,
+            percent: 1,
             size: old.size,
           }
         })

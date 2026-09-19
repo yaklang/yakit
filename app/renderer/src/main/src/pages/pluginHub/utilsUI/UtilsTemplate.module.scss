@@ -129,3 +129,17 @@
   align-items: center;
   gap: 16px;
 }
+
+/* NoPromptHint: checkbox + separate label (avoid nested label / children toggle quirks) */
+.no-prompt-hint-extra {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.no-prompt-hint-label {
+  cursor: pointer;
+  user-select: none;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 14px;
+  line-height: 20px;
+}
