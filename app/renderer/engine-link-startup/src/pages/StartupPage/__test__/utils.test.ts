@@ -67,6 +67,21 @@ describe('safeFormatDownloadProcessState', () => {
     })
   })
 
+  it('should map legacy number 100 to percent 1', () => {
+    const result = safeFormatDownloadProcessState(100 as any)
+    expect(result.percent).toBe(1)
+  })
+
+  it('should pass through fractional percent numbers', () => {
+    const result = safeFormatDownloadProcessState(0.42 as any)
+    expect(result.percent).toBe(0.42)
+  })
+
+  it('should return zeros for null/undefined', () => {
+    expect(safeFormatDownloadProcessState(null as any).percent).toBe(0)
+    expect(safeFormatDownloadProcessState(undefined as any).percent).toBe(0)
+  })
+
   it('should return safe default values when exception occurs', () => {
     const state = {
       get size() {

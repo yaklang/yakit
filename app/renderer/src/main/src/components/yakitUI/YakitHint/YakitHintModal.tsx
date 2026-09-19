@@ -143,6 +143,12 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
     })
   })
 
+  /**
+   * IMPORTANT: do NOT wrap modal body JSX in useMemoizedFn.
+   * Under React 19 + react-compiler, that pattern keeps a stale `children` closure,
+   * so footerExtra (e.g. NoPromptHint checkbox) state updates never reach the DOM
+   * inside react-draggable — clicks fire / React state toggles, but UI stays unchecked.
+   */
   const contentNode = (
     <div
       className={classNames(styles['yakit-hint-modal-container'], {

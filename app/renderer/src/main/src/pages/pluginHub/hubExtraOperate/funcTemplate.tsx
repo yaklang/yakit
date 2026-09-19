@@ -1,7 +1,7 @@
 import React, { type ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { type YakitButtonProp, YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import { NoPromptFooterExtra } from '../utilsUI/UtilsTemplate'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { Form, Tooltip } from 'antd'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
@@ -106,9 +106,7 @@ export const HubOperateHint: React.FC<HubOperateHintProps> = memo((props) => {
       onOk={handleOk}
       cancelButtonProps={{ style: { display: 'none' } }}
       footerExtra={
-        <YakitCheckbox value={cache} onChange={(e) => setCache(e.target.checked)}>
-          {t('YakitCheckbox.dontRemindAgain')}
-        </YakitCheckbox>
+        <NoPromptFooterExtra checked={cache} onChange={setCache} label={t('YakitCheckbox.dontRemindAgain')} />
       }
     />
   )

@@ -4414,6 +4414,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo(
         setSelectSubMenu({ ...newSubPage })
         if (pageItem.route === YakitRoute.HTTPFuzzer) {
           setType('config')
+          // forceRefresh：defer so inViewport/store settle first; same-tab still refreshes
+          if (res.forceRefresh) {
+            queueMicrotask(() => emiter.emit('onRefWebFuzzer'))
+          }
         }
       } catch (error) {}
     })
@@ -6859,10 +6863,14 @@ const CloseGroupContent: React.FC = React.memo(() => {
   return (
     <div className={styles['close-group-content']}>
       <div>{t('MainOperatorContent.closeGroupConfirm')}</div>
-      <label className={styles['close-group-check']}>
-        <YakitCheckbox checked={tipChecked} onChange={(e) => onChecked(e.target.checked)} />
-        {t('YakitCheckbox.dontAskAgain')}
-      </label>
+      <div className={styles['close-group-check']} onClick={() => onChecked(!tipChecked)}>
+        <YakitCheckbox
+          checked={tipChecked}
+          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => onChecked(e.target.checked)}
+        />
+        <span>{t('YakitCheckbox.dontAskAgain')}</span>
+      </div>
     </div>
   )
 })

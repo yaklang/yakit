@@ -14,6 +14,27 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import classNames from 'classnames'
 import styles from './UtilsTemplate.module.scss'
 
+interface NoPromptFooterExtraProps {
+  checked: boolean
+  onChange: (checked: boolean) => void
+  label?: React.ReactNode
+}
+/**
+ * Checkbox + separate text label for modal footers.
+ * Avoid nesting label / putting text as YakitCheckbox children (React 19 + antd label quirks).
+ */
+export const NoPromptFooterExtra: React.FC<NoPromptFooterExtraProps> = memo((props) => {
+  const { checked, onChange, label = '下次不再提醒' } = props
+  return (
+    <div className={styles['no-prompt-hint-extra']}>
+      <YakitCheckbox checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span className={styles['no-prompt-hint-label']} onClick={() => onChange(!checked)}>
+        {label}
+      </span>
+    </div>
+  )
+})
+
 interface RecycleOptFooterExtraProps {
   visible: boolean
   title: string
@@ -53,11 +74,7 @@ export const NoPromptHint: React.FC<RecycleOptFooterExtraProps> = memo((props) =
       content={content || ''}
       onOk={handleOK}
       onCancel={handleCancel}
-      footerExtra={
-        <YakitCheckbox checked={checked} onChange={(e) => setChecked(e.target.checked)}>
-          下次不再提醒
-        </YakitCheckbox>
-      }
+      footerExtra={<NoPromptFooterExtra checked={checked} onChange={setChecked} />}
     />
   )
 })

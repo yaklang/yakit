@@ -147,15 +147,17 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
                 const checked = (selecteds[item.groupKey] || []).findIndex((ele) => ele.value === listItem.value) !== -1
                 const displayLabel = onPluginTagsToName(listItem.label)
                 return (
-                  <label
+                  <div
                     className={classNames(styles['list-item'], {
                       [styles['list-item-active']]: checked,
                     })}
                     key={`${item.groupKey}-${listItem.value}`}
+                    onClick={() => onCheck(item.groupKey, listItem, !checked)}
                   >
                     <div className={styles['list-item-left']}>
                       <YakitCheckbox
                         checked={checked}
+                        onClick={(e) => e.stopPropagation()}
                         onChange={(e) => onCheck(item.groupKey, listItem, e.target.checked)}
                       />
                       <span
@@ -166,7 +168,7 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
                       </span>
                     </div>
                     <span className={styles['list-item-extra']}>{listItem.count}</span>
-                  </label>
+                  </div>
                 )
               })}
             </YakitPanel>
@@ -282,8 +284,9 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                 indeterminate={checkIndeterminate}
                 checked={allChecked}
                 onChange={(e) => setAllChecked(e.target.checked)}
-              />
-              {t('YakitCheckbox.selectAll')}
+              >
+                {t('YakitCheckbox.selectAll')}
+              </YakitCheckbox>
             </div>
 
             <div className={styles['total-and-selected']}>
@@ -802,8 +805,9 @@ export const HubDetailList: <T>(props: HubDetailListProps<T>) => any = memo((pro
                 indeterminate={checkIndeterminate}
                 checked={checked}
                 onChange={(e) => onCheck(e.target.checked)}
-              />
-              {t('YakitCheckbox.selectAll')}
+              >
+                {t('YakitCheckbox.selectAll')}
+              </YakitCheckbox>
             </div>
             <div className={styles['count-num']}>
               Total <span className={styles['num-style']}>{total}</span>

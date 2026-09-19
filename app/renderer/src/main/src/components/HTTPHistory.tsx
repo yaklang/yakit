@@ -1114,7 +1114,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
             if (!isProcess) {
               const checked = curTags.includes(item.value)
               return (
-                <label
+                <div
                   className={classNames(styles['list-item'], {
                     [styles['list-item-active']]: checked,
                   })}
@@ -1131,13 +1131,13 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
                       </Tooltip>
                     </span>
                   </YakitCheckbox>
-                </label>
+                </div>
               )
             }
 
             const checked = curProcess.includes(item.process)
             return (
-              <label
+              <div
                 className={classNames(styles['list-item'], {
                   [styles['list-item-active']]: checked,
                 })}
@@ -1155,7 +1155,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
                     </Tooltip>
                   </span>
                 </YakitCheckbox>
-              </label>
+              </div>
             )
           })
         ) : (
