@@ -43,7 +43,8 @@ describe('AIRightPanel layout contract', () => {
     expect(css).toContain('bottom: -6px')
     expect(css).toContain('width: 16px')
     expect(css).toContain('height: 14px')
-    expect(css).toContain('background: var(--Colors-Use-Status-High)')
+    expect(css).toContain('background-color: var(--Colors-Use-Neutral-Disable)')
+    expect(css).toContain('background-color: var(--Colors-Use-Status-High)')
     expect(css).toContain('border: 1px solid var(--Colors-Use-Neutral-Bg)')
   })
 
@@ -61,8 +62,8 @@ describe('AIRightPanel layout contract', () => {
     expect(chatSource).not.toContain('--ai-right-panel-list-content-shift')
     expect(chatSource).toContain('--ai-right-panel-slot-width: 325px')
     expect(chatSource).toContain('--ai-right-panel-slot-width: 61px')
-    expect(chatSource).toContain(
-      '--ai-right-panel-content-track-width: min(784px, calc(100% - var(--ai-right-panel-slot-width, 0px)))',
+    expect(chatSource.replace(/\s+/g, ' ')).toContain(
+      '--ai-right-panel-content-track-width: min( 784px, calc(100% - var(--ai-right-panel-slot-width, 0px) - 2 * var(--ai-content-gutter, 0px)) )',
     )
     // 轨道的实际声明收敛在共享 mixin，面板态 footer include 同一条轨道
     expect(chatSource).toContain('@include mixin.ai-right-panel-content-track')

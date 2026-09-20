@@ -7,6 +7,7 @@ export type AIRightPanelPaneKey = 'task-list' | 'timeline' | 'session-history'
 export type AIRightPanelMenuKey =
   | 'task-board'
   | 'file-system'
+  | 'browser'
   | 'traffic'
   | 'risk'
   | 'session-history'
@@ -33,7 +34,7 @@ export interface AIRightPanelRiskCounts {
 }
 
 export interface AIRightPanelProps {
-  /** 首页模式：仅展示文件系统、流量、漏洞、会话历史 */
+  /** 首页模式：仅展示文件系统、浏览器实例、流量、漏洞、会话历史 */
   welcome?: boolean
   /** AI 聊天外层容器 ref：用于计算扣除正常态面板槽位后的列表可用宽度 */
   layoutRef?: React.RefObject<HTMLElement | null>

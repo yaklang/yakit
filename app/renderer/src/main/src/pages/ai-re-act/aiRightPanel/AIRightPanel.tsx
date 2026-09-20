@@ -27,6 +27,7 @@ import { grpcExportAILogs } from '@/pages/ai-agent/grpc'
 import {
   BugOutlined,
   ChatAlt2Outlined,
+  ChromeOutlined,
   ChevronDoubleDownOutlined,
   ChevronDoubleUpOutlined,
   CogOutlined,
@@ -66,6 +67,7 @@ const MAIN_MENUS: MenuItemDef[] = [
   { key: 'risk', labelKey: 'AIRightPanel.risk', icon: <BugOutlined /> },
   { key: 'session-history', labelKey: 'AIRightPanel.sessionHistory', icon: <ChatAlt2Outlined /> },
   { key: 'task-list', labelKey: 'AIRightPanel.taskList', icon: <FlagOutlined /> },
+  { key: 'browser', labelKey: 'AIRightPanel.browserInstances', icon: <ChromeOutlined /> },
 ]
 
 const WELCOME_MENUS = MAIN_MENUS.filter((item) => item.key !== 'task-board' && item.key !== 'task-list')
@@ -150,24 +152,21 @@ interface MenuItemProps {
   secondary?: boolean
   suffix?: React.ReactNode
   smallBadge?: number
+  smallBadgeRisk?: boolean
   onClick?: () => void
-  onMouseEnter?: () => boolean
-  onMouseLeave?: () => void
 }
 
 const MenuItem: React.FC<MenuItemProps> = React.memo(
-  ({ icon, label, small, secondary, suffix, smallBadge, onClick, onMouseEnter, onMouseLeave }) => {
+  ({ icon, label, small, secondary, suffix, smallBadge, smallBadgeRisk, onClick }) => {
     const [tooltipOpen, setTooltipOpen] = useState(false)
     const tooltipDismissedRef = useRef(false)
 
     const handleMouseEnter = useMemoizedFn(() => {
-      const paneOpened = onMouseEnter?.() ?? false
-      setTooltipOpen(!!small && !paneOpened && !tooltipDismissedRef.current)
+      setTooltipOpen(!!small && !tooltipDismissedRef.current)
     })
     const handleMouseLeave = useMemoizedFn(() => {
       tooltipDismissedRef.current = false
       setTooltipOpen(false)
-      onMouseLeave?.()
     })
 
     const onItemClick = useMemoizedFn(() => {
@@ -222,7 +221,11 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
             {icon}
             {smallBadge && (
               <span
-                className={classNames(styles['count-badge'], smallBadge > 99 && styles['count-badge-overflow'])}
+                className={classNames(
+                  styles['count-badge'],
+                  smallBadgeRisk && styles['count-badge-risk'],
+                  smallBadge > 99 && styles['count-badge-overflow'],
+                )}
                 aria-label={`${label} ${smallBadge}`}
               >
                 {Math.min(smallBadge, 99)}
@@ -247,8 +250,8 @@ const MenuItem: React.FC<MenuItemProps> = React.memo(
 /**
  * 两种模式共用的面板内核：
  * - 小屏测量（small 未传时监听 layoutRef 宽度）
- * - 内容面板（activePane）的打开、关闭与延时关闭
- * - 小屏悬停打开浮层的交互
+ * - 内容面板（activePane）的打开与关闭
+ * - 小屏点击打开浮层
  */
 const usePanelShared = (props: AIRightPanelProps) => {
   const { layoutRef, small } = props
@@ -278,51 +281,15 @@ const usePanelShared = (props: AIRightPanelProps) => {
   const isSmall = small ?? chatSmall
 
   const [activePane, setActivePane] = useState<AIRightPanelPaneKey>()
-  const closeTimer = useRef<ReturnType<typeof setTimeout>>()
-  const cancelPaneClose = useMemoizedFn(() => clearTimeout(closeTimer.current))
   const closePane = useMemoizedFn(() => {
-    cancelPaneClose()
     setActivePane(undefined)
   })
   const openPane = useMemoizedFn((key: AIRightPanelPaneKey) => {
-    cancelPaneClose()
     setActivePane(key)
-  })
-  const schedulePaneClose = useMemoizedFn(() => {
-    cancelPaneClose()
-    // 留出从入口穿过间距移入浮层的时间。
-    closeTimer.current = setTimeout(closePane, 150)
-  })
-
-  const handleMenuMouseEnter = useMemoizedFn((key: AIRightPanelMenuKey) => {
-    if (!isSmall) return false
-    switch (key) {
-      case 'task-list':
-      case 'timeline':
-      case 'session-history':
-        openPane(key)
-        return true
-      default:
-        return false
-    }
-  })
-
-  const handleMenuMouseLeave = useMemoizedFn((key: AIRightPanelMenuKey) => {
-    if (!isSmall) return
-    switch (key) {
-      case 'task-list':
-      case 'timeline':
-      case 'session-history':
-        schedulePaneClose()
-        break
-      default:
-        break
-    }
   })
 
   useEffect(() => {
     closePane()
-    return cancelPaneClose
   }, [isSmall])
 
   return {
@@ -331,10 +298,6 @@ const usePanelShared = (props: AIRightPanelProps) => {
     setActivePane,
     closePane,
     openPane,
-    cancelPaneClose,
-    schedulePaneClose,
-    handleMenuMouseEnter,
-    handleMenuMouseLeave,
   }
 }
 
@@ -347,19 +310,7 @@ const MenuList: React.FC<{
   riskTotal?: number
   riskCounts?: AIRightPanelRiskCounts
   onMenuClick: (key: AIRightPanelMenuKey) => void
-  onMenuMouseEnter: (key: AIRightPanelMenuKey) => boolean
-  onMenuMouseLeave: (key: AIRightPanelMenuKey) => void
-}> = ({
-  menus,
-  small,
-  dataCards,
-  trafficTotal,
-  riskTotal = 0,
-  riskCounts,
-  onMenuClick,
-  onMenuMouseEnter,
-  onMenuMouseLeave,
-}) => {
+}> = ({ menus, small, dataCards, trafficTotal, riskTotal = 0, riskCounts, onMenuClick }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const renderSmallBadge = (key: AIRightPanelMenuKey) => {
     if (!small) return undefined
@@ -415,9 +366,8 @@ const MenuList: React.FC<{
             small={small}
             suffix={renderMenuSuffix(item.key)}
             smallBadge={renderSmallBadge(item.key)}
+            smallBadgeRisk={item.key === 'risk'}
             onClick={() => onMenuClick(item.key)}
-            onMouseEnter={() => onMenuMouseEnter(item.key)}
-            onMouseLeave={() => onMenuMouseLeave(item.key)}
           />
         ))}
       </div>
@@ -430,9 +380,7 @@ const PaneSlot: React.FC<{
   pane: AIRightPanelPaneKey
   small: boolean
   onClose: () => void
-  onMouseEnter?: () => void
-  onMouseLeave?: () => void
-}> = React.memo(({ pane, small, onClose, onMouseEnter, onMouseLeave }) => {
+}> = React.memo(({ pane, small, onClose }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const renderTitle = () => {
@@ -471,11 +419,7 @@ const PaneSlot: React.FC<{
   }
 
   return (
-    <div
-      className={classNames(styles['pane-slot'], { [styles['pane-slot-small']]: small })}
-      onMouseEnter={small ? onMouseEnter : undefined}
-      onMouseLeave={small ? onMouseLeave : undefined}
-    >
+    <div className={classNames(styles['pane-slot'], { [styles['pane-slot-small']]: small })}>
       <AIRightPanelPane
         title={renderTitle()}
         hideHeader={pane === 'session-history'}
@@ -516,6 +460,15 @@ const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel,
           }),
         )
         break
+      case 'browser':
+        emiter.emit(
+          'switchAIAgentTab',
+          JSON.stringify({
+            type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+            params: { active: AIAgentTabListEnum.Browser, show: true },
+          }),
+        )
+        break
       case 'traffic':
         emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP }))
         break
@@ -535,14 +488,7 @@ const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel,
           [styles['right-panel-hidden']]: !!panel.activePane && !panel.isSmall,
         })}
       >
-        <MenuList
-          menus={WELCOME_MENUS}
-          small={panel.isSmall}
-          {...welcomeStats}
-          onMenuClick={handleMenuClick}
-          onMenuMouseEnter={panel.handleMenuMouseEnter}
-          onMenuMouseLeave={panel.handleMenuMouseLeave}
-        />
+        <MenuList menus={WELCOME_MENUS} small={panel.isSmall} {...welcomeStats} onMenuClick={handleMenuClick} />
       </div>
     </>
   )
@@ -583,7 +529,6 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
 
   useEffect(() => {
     // 切换会话时保留会话历史浮层，其余面板关闭
-    panel.cancelPaneClose()
     panel.setActivePane((pane) => (pane === 'session-history' ? pane : undefined))
   }, [activeChat?.Id])
 
@@ -599,6 +544,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   /**
    * 菜单点击：任务列表、时间线、会话历史打开右侧内容面板；
    * 任务详情、流量、漏洞切换工作区 tab；文件系统打开侧栏文件页；
+   * 浏览器实例打开侧栏浏览器页；
    * AI 设置打开设置页，导出日志打开导出弹窗，查看日志打开日志窗口。
    */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
@@ -618,6 +564,15 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
           JSON.stringify({
             type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
             params: { active: AIAgentTabListEnum.File, show: true },
+          }),
+        )
+        break
+      case 'browser':
+        emiter.emit(
+          'switchAIAgentTab',
+          JSON.stringify({
+            type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+            params: { active: AIAgentTabListEnum.Browser, show: true },
           }),
         )
         break
@@ -697,8 +652,6 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
           riskTotal={riskTotal}
           riskCounts={riskCounts}
           onMenuClick={handleMenuClick}
-          onMenuMouseEnter={panel.handleMenuMouseEnter}
-          onMenuMouseLeave={panel.handleMenuMouseLeave}
         />
         <div className={styles['divider']} />
         <div className={styles['bottom-group']}>
@@ -710,8 +663,6 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
                 label={t(item.labelKey)}
                 small={panel.isSmall}
                 onClick={() => handleMenuClick(item.key)}
-                onMouseEnter={() => panel.handleMenuMouseEnter(item.key)}
-                onMouseLeave={() => panel.handleMenuMouseLeave(item.key)}
               />
             ))}
           {renderMoreToggle()}
@@ -739,21 +690,12 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   const panel = usePanelShared(props)
   useEffect(() => {
     if (!welcome) return
-    panel.cancelPaneClose()
     panel.setActivePane((pane) => (pane === 'session-history' ? pane : undefined))
   }, [welcome])
   return (
     <div className={styles['right-panel-wrapper']} data-ai-right-panel data-ai-right-panel-small={panel.isSmall}>
       {welcome ? <WelcomeRightPanel panel={panel} layoutRef={props.layoutRef} /> : <ChatRightPanel panel={panel} />}
-      {panel.activePane && (
-        <PaneSlot
-          pane={panel.activePane}
-          small={panel.isSmall}
-          onClose={panel.closePane}
-          onMouseEnter={panel.cancelPaneClose}
-          onMouseLeave={panel.schedulePaneClose}
-        />
-      )}
+      {panel.activePane && <PaneSlot pane={panel.activePane} small={panel.isSmall} onClose={panel.closePane} />}
     </div>
   )
 })

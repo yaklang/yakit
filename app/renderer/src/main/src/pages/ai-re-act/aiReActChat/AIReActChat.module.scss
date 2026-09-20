@@ -72,7 +72,7 @@
   // 内容宽度不超过 784px 或扣除面板、左右 gutter 后的可用宽度。
   --ai-right-panel-content-track-width: min(
     784px,
-    calc(100% - var(--ai-right-panel-slot-width, 0px) - 2 * var(--ai-content-gutter))
+    calc(100% - var(--ai-right-panel-slot-width, 0px) - 2 * var(--ai-content-gutter, 0px))
   );
   position: relative;
   overflow: hidden;

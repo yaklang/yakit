@@ -114,8 +114,9 @@ vi.mock('../../../aiChatContent/AIChatContent', () => ({
   }),
 }))
 vi.mock('@/pages/ai-agent/historyChat/HistoryChat', () => ({
-  default: () => (
+  default: ({ headerActionsExtra }: { headerActionsExtra?: React.ReactNode }) => (
     <div data-testid="history-list">
+      <header>{headerActionsExtra}</header>
       <button onClick={() => agentStore.setState({ activeChat: { Id: 'chat-1', SessionID: 'session-1' } })}>
         测试会话
       </button>
@@ -414,27 +415,22 @@ describe('公共右侧面板', () => {
     expect(panel?.querySelector('section')).toBeNull()
   })
 
-  it('小屏切换页面仍保留浮层，移入取消关闭、移出延时关闭', async () => {
+  it('小屏切换页面仍保留浮层，移出不销毁、关闭按钮销毁', async () => {
     layoutWidth = 900
     const { container } = render(<Layout />)
     await screen.findByText('欢迎页')
     const panel = container.querySelector('[data-ai-right-panel]')
     expect(panel).toHaveAttribute('data-ai-right-panel-small', 'true')
-    fireEvent.mouseEnter(screen.getByLabelText('AIRightPanel.sessionHistory'))
+    fireEvent.click(screen.getByLabelText('AIRightPanel.sessionHistory'))
     const history = screen.getByTestId('history-list')
     fireEvent.click(screen.getByText('测试会话'))
     expect(screen.getByTestId('history-list')).toBe(history)
     const pane = history.closest('section')?.parentElement
     expect(pane).not.toBeNull()
-    vi.useFakeTimers()
     fireEvent.mouseLeave(screen.getByLabelText('AIRightPanel.sessionHistory'))
-    fireEvent.mouseEnter(pane!)
-    act(() => vi.advanceTimersByTime(150))
-    expect(screen.getByTestId('history-list')).toBe(history)
     fireEvent.mouseLeave(pane!)
-    act(() => vi.advanceTimersByTime(149))
-    expect(screen.getByTestId('history-list')).toBeInTheDocument()
-    act(() => vi.advanceTimersByTime(1))
+    expect(screen.getByTestId('history-list')).toBe(history)
+    fireEvent.click(history.querySelector('header')!.lastElementChild!)
     expect(screen.queryByTestId('history-list')).not.toBeInTheDocument()
   })
 })
