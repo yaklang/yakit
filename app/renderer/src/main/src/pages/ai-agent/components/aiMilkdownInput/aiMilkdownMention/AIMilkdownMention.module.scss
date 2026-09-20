@@ -22,6 +22,14 @@
   visibility: hidden;
 }
 
+// 整段 :global(...)，避免 :has 里的类名被 CSS Modules 哈希后选不中
+:global(span[data-node-view-root]:has(> .ai-mention-custom-host)) {
+  display: inline-flex;
+  align-items: center;
+  height: 1lh;
+  vertical-align: top;
+}
+
 // ProseMirror 光标按节点 DOM 的 border-box 定位，不含 margin；
 // 用 host 的 padding-right 把光标推到 chip 外侧。
 .mention-custom-host {

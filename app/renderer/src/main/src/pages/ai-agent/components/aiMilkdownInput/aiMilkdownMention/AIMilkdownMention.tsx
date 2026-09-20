@@ -184,7 +184,7 @@ export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
   return (
     // padding 计入 getBoundingClientRect，光标才会落在 chip 右侧空隙里（margin 无效）
     <span
-      className={classNames(styles['mention-custom-host'], {
+      className={classNames('ai-mention-custom-host', styles['mention-custom-host'], {
         [styles['mention-custom-host-readonly']]: readonly,
       })}
       contentEditable={false}
