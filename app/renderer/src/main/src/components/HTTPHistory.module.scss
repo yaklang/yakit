@@ -1,6 +1,6 @@
 @use '../pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect.module.scss';
 
-/** 页内嵌 AI 壳：各业务页共用，须顶层声明以保证定位/高度不依赖 History 左侧祖先 */
+/** 页内嵌 AI 壳：HistoryAIReActChat 共用（History / 知识库 / Fuzzer 等），须顶层声明以保证定位/高度不依赖左侧祖先 */
 .ai-wrapper {
   position: relative;
   width: 100%;

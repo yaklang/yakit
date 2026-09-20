@@ -285,12 +285,12 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
       )
     }, [casualTitle, planTitle, execute, chatLength, isTaskPlanning])
     const Header = useCallback(
-      () => (
-        // 固定占位，避免 loading 出现/消失时再次改变当前消息的位置。
-        <div style={{ height: 20, position: 'relative' }}>
-          {grpcLoadMoreLoading && <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />}
-        </div>
-      ),
+      () =>
+        grpcLoadMoreLoading ? (
+          <div style={{ height: 20, position: 'relative' }}>
+            <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
+          </div>
+        ) : null,
       [grpcLoadMoreLoading],
     )
     const components = useMemo<Components<ReActChatRenderElement, VirtuosoReadyContext>>(

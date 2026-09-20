@@ -244,6 +244,18 @@ describe('AIReActChatContents 首屏加载', () => {
     expect(emiter.all.get('onAITreeLocatePlanningList') ?? []).toHaveLength(0)
   })
 
+  it('未加载更旧历史时不占顶部高度，加载中才出现转圈', async () => {
+    store.setState({ chatElements: createItems(20) })
+    render(chatElement())
+    await finishPositioning()
+    expect(isSpinning()).toBe(false)
+    expect(getScroller().querySelector('[style*="height: 20px"]')).toBeNull()
+
+    act(() => store.setState({ grpcLoadMoreLoading: true }))
+    expect(isSpinning()).toBe(true)
+    expect(getScroller().querySelector('[style*="height: 20px"]')).toHaveStyle({ height: '20px' })
+  })
+
   it('向上加载历史时只使用顶部 loading，前插后保留阅读位置', async () => {
     store.setState({ chatElements: createItems(20) })
     render(chatElement())
