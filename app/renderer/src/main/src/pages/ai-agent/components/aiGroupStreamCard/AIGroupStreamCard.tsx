@@ -16,11 +16,8 @@ import AIGroupStreamCardHeard from './aiGroupStreamCardHeard/AIGroupStreamCardHe
 import AIGroupStreamCardList from './aiGroupStreamCardList/AIGroupStreamCardList'
 import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
-import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineThoughtIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineThoughtIcon'
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
-import ThoughtDuration from '../thoughtDuration/ThoughtDuration'
 
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
   return (
@@ -63,7 +60,11 @@ export const AIGroupStreamNode: FC<{
   }, [renderNum, itemData?.reference?.length])
 
   return (
-    <div className={styles['single-stream-text']}>
+    <div
+      className={classNames(styles['single-stream-text'], {
+        [styles['single-stream-text-thought']]: itemData.data.NodeId === AI_STREAM_THOUGHT_NODE_ID,
+      })}
+    >
       {seqNo}
       {content}
       {!hidden && (
@@ -78,58 +79,6 @@ export const AIGroupStreamNode: FC<{
 })
 
 export const STREAM_MASK_THRESHOLD = 170
-
-const AIGroupThoughtHeader: FC<AIGroupStreamCardHeardWrapperProps> = memo((props) => {
-  const { expand, setExpand, token } = props
-  const { getLabelByParams } = useAINodeLabel()
-  const store = useCurrentStore()
-  const rawData = useCurrentRawData()
-  const renderNum = useStore(store, (state) => state.groups[token]?.renderNum)
-  const groupData = useCreation(() => rawData.contents.get(token), [renderNum])
-
-  const nodeLabel = useCreation(() => {
-    if (!groupData) return ''
-    switch (groupData.type) {
-      case AIChatQSDataTypeEnum.STREAM_GROUP:
-        return getLabelByParams(groupData.data?.NodeIdVerbose)
-      default:
-        return ''
-    }
-  }, [renderNum])
-
-  const lastToken = useCreation(() => {
-    if (!groupData) return ''
-    switch (groupData.type) {
-      case AIChatQSDataTypeEnum.STREAM_GROUP:
-        return groupData.data.lastToken
-      default:
-        return ''
-    }
-  }, [renderNum])
-
-  const lastItemRenderNum = useStore(store, (state) => state.items[lastToken]?.renderNum)
-  const persistKey = useStore(store, (state) => state.groups[token]?.childrenTokens[0] || token)
-  const streaming = useCreation(() => {
-    const lastItem = rawData.contents.get(lastToken)
-    return lastItem?.type === AIChatQSDataTypeEnum.STREAM && lastItem.data.status !== 'end'
-  }, [lastToken, lastItemRenderNum])
-
-  return (
-    <div className={styles['thought-header']} onClick={() => setExpand((open) => !open)}>
-      <OutlineThoughtIcon className={styles['thought-icon']} />
-      <span className={classNames({ [styles['thought-title-blink']]: streaming })}>
-        {nodeLabel}
-        <ThoughtDuration persistKey={persistKey} status={streaming ? 'start' : 'end'} />
-      </span>
-      <ChevronDownOutlined
-        className={classNames(styles['thought-chevron'], {
-          [styles['thought-chevron-collapsed']]: !expand,
-        })}
-        color="currentColor"
-      />
-    </div>
-  )
-})
 
 const AIGroupStreamCard: FC<{
   token: string
@@ -148,11 +97,7 @@ const AIGroupStreamCard: FC<{
       })}
       ref={containerRef}
     >
-      {isThought ? (
-        <AIGroupThoughtHeader expand={expand} setExpand={setExpand} token={token} />
-      ) : (
-        <AIGroupStreamCardHeardWrapper expand={expand} setExpand={setExpand} token={token} />
-      )}
+      <AIGroupStreamCardHeardWrapper expand={expand} setExpand={setExpand} token={token} />
       <AIGroupStreamCardListWrapper expand={expand} token={token} isThought={isThought} />
     </div>
   )
@@ -177,6 +122,7 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
   const chatLength = useStore(store, (state) => state.chatElements.length)
   const renderNum = useStore(store, (state) => state.groups[token]?.renderNum)
   const childrenTokensLength = useStore(store, (state) => state.groups[token]?.childrenTokens.length || 0)
+  const persistKey = useStore(store, (state) => state.groups[token]?.childrenTokens[0] || token)
 
   /** 可能存在第一次拿到的数据为undefined  */
   const groupData = useCreation(() => {
@@ -215,10 +161,11 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
   }, [renderNum])
 
   useEffect(() => {
+    if (nodeId === AI_STREAM_THOUGHT_NODE_ID) return
     if (isLastActiveGroup) {
       setExpand(false)
     }
-  }, [isLastActiveGroup])
+  }, [isLastActiveGroup, nodeId])
 
   const shouldShowMask = useMemo(() => {
     const lastItem = rawData.contents.get(lastToken)
@@ -254,6 +201,7 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
       nodeLabel={nodeLabel}
       shouldShowMask={shouldShowMask}
       childrenTokensLength={childrenTokensLength}
+      persistKey={persistKey}
     />
   )
 })

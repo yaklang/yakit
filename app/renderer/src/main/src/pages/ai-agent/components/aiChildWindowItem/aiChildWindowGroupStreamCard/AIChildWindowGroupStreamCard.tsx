@@ -16,13 +16,13 @@ import classNames from 'classnames'
 import useClickFocus from '@/pages/ai-re-act/hooks/useClickFocus'
 import AIGroupStreamCardList from '../../aiGroupStreamCard/aiGroupStreamCardList/AIGroupStreamCardList'
 import React from 'react'
+import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
 /** 子窗口版 stream group 卡片，从 rawData 中按 parentGroupToken 查找子节点 */
 const AIChildWindowGroupStreamCard: FC<AIChildWindowGroupStreamCardProps> = memo((props) => {
   const { token } = props
   const { rawData, renderNum } = useAIConcurrentStreamStore()
   const { ref: containerRef, isFocus } = useClickFocus<HTMLDivElement>()
 
-  const [expand, setExpand] = useState(true)
   // 按 token + renderNum 缓存该 group 的子节点，避免每次渲染都全量 forEach
   const childItemTokens = useCreation<string[]>(() => {
     if (!rawData) return []
@@ -37,10 +37,17 @@ const AIChildWindowGroupStreamCard: FC<AIChildWindowGroupStreamCardProps> = memo
   const lastToken = useCreation(() => {
     return childItemTokens.length > 0 ? childItemTokens[childItemTokens.length - 1] : ''
   }, [childItemTokens.length])
+  const isThought = useCreation(() => {
+    const groupData = rawData.get(token)
+    return groupData?.type === AIChatQSDataTypeEnum.STREAM_GROUP && groupData.data.NodeId === AI_STREAM_THOUGHT_NODE_ID
+  }, [token, renderNum])
+  const persistKey = childItemTokens[0] || token
+  const [expand, setExpand] = useState(!isThought)
   return (
     <div
       className={classNames(styles.container, {
-        [styles['container-focus']]: isFocus,
+        [styles['container-focus']]: isFocus && !isThought,
+        [styles['container-thought']]: isThought,
       })}
       ref={containerRef}
     >
@@ -50,8 +57,13 @@ const AIChildWindowGroupStreamCard: FC<AIChildWindowGroupStreamCardProps> = memo
         token={token}
         lastToken={lastToken}
         childrenTokensLength={childItemTokens.length}
+        persistKey={persistKey}
       />
-      <AIChildWindowGroupStreamCardListWrapper childItemTokens={childItemTokens} expand={expand} />
+      <AIChildWindowGroupStreamCardListWrapper
+        childItemTokens={childItemTokens}
+        expand={expand}
+        isThought={isThought}
+      />
     </div>
   )
 })
@@ -59,7 +71,7 @@ const AIChildWindowGroupStreamCard: FC<AIChildWindowGroupStreamCardProps> = memo
 export default AIChildWindowGroupStreamCard
 
 const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardHeardWrapperProps> = memo((props) => {
-  const { token, lastToken, childrenTokensLength, setExpand, expand } = props
+  const { token, lastToken, childrenTokensLength, setExpand, expand, persistKey } = props
   const { rawData, renderNum } = useAIConcurrentStreamStore()
   const { getLabelByParams } = useAINodeLabel()
 
@@ -106,19 +118,21 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
       nodeLabel={nodeLabel}
       shouldShowMask={shouldShowMask}
       childrenTokensLength={childrenTokensLength}
+      persistKey={persistKey}
     />
   )
 })
 
 const AIChildWindowGroupStreamCardListWrapper: React.FC<AIChildWindowGroupStreamCardListWrapperProps> = memo(
   (props) => {
-    const { childItemTokens, expand } = props
+    const { childItemTokens, expand, isThought } = props
     const { rawData, renderNum } = useAIConcurrentStreamStore()
     return (
       <>
         <AIGroupStreamCardList
           expand={expand}
           childrenTokens={childItemTokens}
+          isThought={isThought}
           rendItem={(token, index) => {
             const itemData = rawData.get(token)
             if (!itemData) return <React.Fragment key={token}></React.Fragment>

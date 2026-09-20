@@ -9,6 +9,7 @@ export interface AIGroupStreamCardHeardProps {
   nodeLabel: string
   shouldShowMask: boolean
   childrenTokensLength: number
+  persistKey?: string
 }
 
 export interface AIGroupStreamCardHeardWrapperProps {

@@ -7,6 +7,7 @@ export interface AIChildWindowGroupStreamCardProps {
 export interface AIChildWindowGroupStreamCardListWrapperProps {
   childItemTokens: string[]
   expand: boolean
+  isThought?: boolean
 }
 
 export interface AIChildWindowGroupStreamCardHeardWrapperProps {
@@ -15,4 +16,5 @@ export interface AIChildWindowGroupStreamCardHeardWrapperProps {
   childrenTokensLength: number
   expand: boolean
   setExpand: Dispatch<SetStateAction<boolean>>
+  persistKey: string
 }
