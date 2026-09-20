@@ -33,6 +33,8 @@ export type WebFuzzerEventProps = {
   onGetDiscardPackageCount: string
   /** MCP / 后端推送：新建 Web Fuzzer Tab */
   onServerPushOpenWebFuzzerTab: string
+  /** MCP / 后端更新指定 Web Fuzzer Tab 后，同步已挂载页面的运行态 */
+  onRefreshWebFuzzerPage: string
   /** MCP / 后端推送：执行指定 Web Fuzzer Tab */
   onServerPushExecuteWebFuzzerTab: string
   onExecuteWebFuzzerTab: string

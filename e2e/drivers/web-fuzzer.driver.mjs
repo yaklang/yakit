@@ -19,11 +19,16 @@ export const readWebFuzzerTabState = async () =>
         sort: Number(element.getAttribute('data-sort') || 0),
       }
     })
+    const activeTab = tabs.find((tab) => tab.active)
+    const activeRequestText = activeTab
+      ? document.getElementById(activeTab.id)?.querySelector('.monaco-editor .view-lines')?.textContent || ''
+      : ''
     return {
       exists: !!tabList,
       visible: !!tabList && tabList.getClientRects().length > 0,
       tabs,
       groups,
+      activeRequestText,
     }
   })
 
@@ -35,6 +40,12 @@ const includesExpectedNodes = (actual, expected) => {
   if (expected.activeTabId !== undefined) {
     const activeTab = actual.tabs.find((tab) => tab.active)
     if (activeTab?.id !== expected.activeTabId) return false
+  }
+  if (
+    expected.activeRequestTextIncludes !== undefined &&
+    !actual.activeRequestText.includes(expected.activeRequestTextIncludes)
+  ) {
+    return false
   }
   for (const expectedGroup of expected.groups || []) {
     const actualGroup = actual.groups.find((group) => group.id === expectedGroup.id)
