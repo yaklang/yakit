@@ -648,8 +648,10 @@ export const NoScrollRoutes: YakitRoute[] = [
   YakitRoute.YakRunner_ScanHistory,
   YakitRoute.ManageRightClickPlugins,
 ]
-
-/** 每次打开新增一级 Tab、名称 {pluginName}-N 递增的页面路由（key 为 ${YakitRoute}|${插件名}） */
+/**
+ * @name 配置项：支持「一级页面多开」的路由，新增页面在此追加即可
+ * 每次打开新开一级 Tab，名「{页面名}-N」递增，独立缓存、可单独关闭；多实例状态依赖页面按 params.id 隔离
+ */
 export const INDEPENDENT_TAB_ROUTES: YakitRoute[] = [YakitRoute.Plugin_OP, YakitRoute.ContextMenuResult]
 
 export const isIndependentTabRoute = (route: YakitRoute | string) =>

@@ -298,6 +298,12 @@ const getPluginOpNextTabIndex = (pages: PageCache[], pluginName: string) => {
   return max + 1
 }
 
+/** 一级多开页面的菜单名：插件页用插件名（无则回落页面名），其余页面一律用页面名；为空表示不打开 */
+const getMultiOpenMenuName = (route: YakitRoute | string, pluginName?: string) => {
+  const label = YakitRouteToPageInfo[route as YakitRoute]?.label || ''
+  return isIndependentTabRoute(route) ? pluginName || label : label
+}
+
 /**
  * 收集所有的组
  */
@@ -2071,14 +2077,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       }
       const selectSubItem = openFlag ? true : nodeParams?.selectSubItem
       // 菜单在代码内的名字
-      const menuName = isIndependentTabRoute(route) ? pluginName : YakitRouteToPageInfo[route]?.label || ''
+      const menuName = getMultiOpenMenuName(route, pluginName)
       if (!menuName) return
 
-      // Plugin_OP / ContextMenuResult：每次打开新增一级 Tab，名称 {pluginName}-N 递增
+      // 一级多开页面（INDEPENDENT_TAB_ROUTES 配置）：每次打开新开一级 Tab，名「{menuName}-N」递增
       if (isIndependentTabRoute(route)) {
         const baseKey = routeConvertKey(route, pluginName)
         const nextIndex = getPluginOpNextTabIndex(pageCache, menuName)
-        const verbose = `${pluginName}-${nextIndex}`
+        const verbose = `${menuName}-${nextIndex}`
         const { tabId } = generateTabIdentity(baseKey)
         const node: MultipleNodeInfo = {
           id: tabId,
@@ -2605,8 +2611,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   })
   /** @name 打开页面 */
   const extraOpenMenuPage = useMemoizedFn((routeInfo: RouteToPageProps) => {
-    // 插件页面新开一级tab页（特殊处理）
-    if (routeInfo.route === YakitRoute.Plugin_OP) {
+    // 一级多开页面直接新开一级 Tab
+    if (isIndependentTabRoute(routeInfo.route)) {
       openMenuPage(routeInfo)
       return
     }
