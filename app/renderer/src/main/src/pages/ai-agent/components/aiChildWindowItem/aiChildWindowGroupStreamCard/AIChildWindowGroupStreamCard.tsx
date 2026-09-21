@@ -85,7 +85,7 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
       default:
         return undefined
     }
-  }, [lastToken])
+  }, [lastToken, renderNum])
   const shouldShowMask = useCreation(() => {
     const lastItem = rawData.get(lastToken)
     if (!lastItem) return false
@@ -97,7 +97,7 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
       default:
         return false
     }
-  }, [lastToken])
+  }, [lastToken, renderNum])
   const { nodeId, nodeLabel } = useCreation(() => {
     const groupData = rawData.get(token)
     if (!groupData) return { nodeId: undefined, nodeLabel: '' }

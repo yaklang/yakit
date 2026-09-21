@@ -5,11 +5,15 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 const store = createExternalStore(false)
 
 let hydrated = false
+/** 本地已写入时丢弃进行中的 hydrate，避免旧 KV 覆盖用户操作 */
+let localDirty = false
+
 const hydrate = () => {
   if (hydrated) return
   hydrated = true
   void Promise.resolve(getRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode))
     .then((raw) => {
+      if (localDirty) return
       store.setSnapshot(() => raw === 'true')
     })
     .catch(() => {})
@@ -30,6 +34,7 @@ export const isSideAutoHidden = () => {
 }
 
 export const setSideHiddenMode = (autoHidden: boolean) => {
+  localDirty = true
   store.setSnapshot(() => autoHidden)
   setRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode, `${autoHidden}`)
 }
