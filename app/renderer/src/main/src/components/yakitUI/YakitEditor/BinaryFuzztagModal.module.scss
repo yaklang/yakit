@@ -90,7 +90,25 @@
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 16px;
+}
+
+.hex-split-button {
+  display: inline-flex;
+
+  .hex-split-button-main {
+    border-radius: 4px 0 0 4px;
+  }
+
+  .hex-split-button-dropdown,
+  .hex-split-button-dropdown-right {
+    border-radius: 0 4px 4px 0;
+    padding: 0;
+  }
+
+  .hex-split-button-dropdown-right {
+    margin-left: 1px;
+  }
 }
 
 .hex-hint {

@@ -321,7 +321,7 @@
     "confirmClearList": "確定清空列表資料嗎?"
   },
   "YakitEditor": {
-    "textView": "文字",
+    "textView": "文本",
     "getPlugin": "獲取外掛",
     "executePlugin": "執行插件",
     "modifyParameters": "修改參數",
@@ -373,6 +373,18 @@
     "packetChangedDuringPluginExecution": "資料包在外掛執行期間已變化，未應用外掛修改",
     "pluginModifiedPeerPacketNoFillEntry": "外掛同時修改了另一側資料包，但當前頁面未提供回填入口",
     "manualHostConfigTip": "如需手動指定目標地址或 Host 碰撞，請配置\"高階配置-真實Host\"",
+    "BinaryFuzztagHexEditor": {
+      "insert": "插入",
+      "invalidHexInput": "無效的 HEX 輸入，應為偶數長度的十六進位制字串",
+      "invalidBase64Input": "無效的 Base64 輸入",
+      "emptyInput": "輸入內容為空",
+      "selectBytesFirst": "請先在 HEX 檢視中選取要替換的位元組",
+      "insertBefore": "選取區域向前插入",
+      "insertAfter": "選取區域向後插入",
+      "replaceNoPad": "替換(不補空位元組)",
+      "replacePadAfter": "替換(多餘空位向後補空位元組)",
+      "replacePadBefore": "替換(多餘空位向前補空位元組)"
+    },
     "HTTPPacketYakitEditor": {
       "copyCurlCommand": "複製 curl 命令",
       "packetEmpty": "資料包為空",
