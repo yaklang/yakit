@@ -63,6 +63,7 @@ import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { getRemoteValue } from '@/utils/kv'
 import { RemoteHistoryGV } from '@/enums/history'
 import emiter from '@/utils/eventBus/eventBus'
+import type { Dayjs } from 'dayjs'
 const { RangePicker } = YakitDatePicker
 
 /**
@@ -1449,6 +1450,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     })
     if (onChangTable) onChangTable()
   })
+
+  const [panelValue, setPanelValue] = useState<[Dayjs, Dayjs]>()
   const renderDatePicker = useMemoizedFn((columnsItem: ColumnsTypeProps, filterKey: string) => {
     return (
       <>
@@ -1461,6 +1464,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
               [t('YakitDatePicker.oneHour')]: [moment().subtract(1, 'hours'), moment()],
               [t('YakitDatePicker.oneDay')]: [moment().subtract(1, 'day'), moment()],
             }}
+            pickerValue={panelValue} // 独立控制面板显示的月份
+            onPanelChange={(v) => setPanelValue(v as [Dayjs, Dayjs])}
             onChange={(time) => {
               onDateTimeSearch(time as [Moment, Moment] | null, filterKey)
             }}
