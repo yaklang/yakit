@@ -27,6 +27,7 @@ import { MITMRuleFromModal } from './MITMRuleFromModal'
 import { randomString } from '@/utils/randomUtil'
 import { failed, success, warn } from '@/utils/notification'
 import { MITMRuleExport, MITMRuleImport } from './MITMRuleConfigure/MITMRuleConfigure'
+import { sortMitmRules, resetMitmRulesIndex } from './mitmRuleUtils'
 import update from 'immutability-helper'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { YakitProtoSwitch } from '@/components/TableVirtualResize/YakitProtoSwitch/YakitProtoSwitch'
@@ -259,24 +260,6 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       return menuBodyHeight.firstTabMenuBodyHeight - 58
     }, [menuBodyHeight.firstTabMenuBodyHeight])
 
-    const onSortRules = useMemoizedFn((newRule: MITMContentReplacerRule[]) => {
-      const showRules: MITMContentReplacerRule[] = []
-      const banRules: MITMContentReplacerRule[] = []
-      newRule.forEach((item: MITMContentReplacerRule) => {
-        if (item.Disabled) {
-          banRules.push(item)
-        } else {
-          showRules.push(item)
-        }
-      })
-      const newRules: MITMContentReplacerRule[] = [...showRules, ...banRules]
-      return newRules.map((item, index) => ({ ...item, Index: index + 1 }))
-    })
-
-    const resetRulesIndex = useMemoizedFn((list: MITMContentReplacerRule[]) => {
-      return list.map((item, index) => ({ ...item, Index: index + 1 }))
-    })
-
     // 性能优化：合并两个 [visible] useEffect 为一个，避免重复调用 GetCurrentRules IPC 和各自回调触发多次重渲染
     useEffect(() => {
       setAddRule([])
@@ -284,7 +267,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       // 获取原始规则（用于 onClose 比较）+ 当前规则（用于表格展示），一次 IPC 调用同时完成
       ipcRenderer.invoke('GetCurrentRules', {}).then((rsp: { Rules: MITMContentReplacerRule[] }) => {
         const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
-        const sortedRules = onSortRules(newRules)
+        const sortedRules = sortMitmRules(newRules)
         originalRulesRef.current = sortedRules
         const nextWhiteList = sortedRules?.[0]?.ExcludeSuffix || []
         originalWhiteListRef.current = nextWhiteList
@@ -296,7 +279,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     useEffect(() => {
       grpcClientMITMContentReplacerUpdate(mitmVersion).on((replacers) => {
         const newRules = (replacers || []).map((ele) => ({ ...ele, Id: ele.Index }))
-        const sortedRules = onSortRules(newRules)
+        const sortedRules = sortMitmRules(newRules)
         setRules(sortedRules)
         setWhiteList(sortedRules?.[0]?.ExcludeSuffix || [])
       })
@@ -310,7 +293,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         .invoke('GetCurrentRules', {})
         .then((rsp: { Rules: MITMContentReplacerRule[] }) => {
           const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
-          const sortedRules = onSortRules(newRules)
+          const sortedRules = sortMitmRules(newRules)
           setRules(sortedRules)
           setWhiteList(sortedRules?.[0]?.ExcludeSuffix || [])
           setIsRefresh(!isRefresh)
@@ -356,7 +339,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       { wait: 200 },
     ).run
     const onRemove = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
-      setRules(resetRulesIndex(rules.filter((t) => t.Id !== rowDate.Id)))
+      setRules(resetMitmRulesIndex(rules.filter((t) => t.Id !== rowDate.Id)))
     })
 
     const onOpenAddOrEdit = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
@@ -371,7 +354,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       const newRules = rules.map((item) =>
         item.Id === rowDate.Id ? { ...rowDate, Disabled: !rowDate.Disabled } : item,
       )
-      setRules(onSortRules(newRules))
+      setRules(sortMitmRules(newRules))
     })
 
     const rulesRangeList = useCreation(() => {
@@ -705,12 +688,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       if (isEdit) {
         const index = rules.findIndex((item) => item.Id === val.Id)
         if (index === -1) return
-        rules[index] = obj
-        setRules([...rules])
+        setRules(rules.map((item) => (item.Id === val.Id ? obj : { ...item })))
       } else {
         setAddRule((prev) => [obj, ...prev])
         const newRules = [...rules, obj]
-        const sortedRules = onSortRules(newRules)
+        const sortedRules = sortMitmRules(newRules)
         setRules(sortedRules)
         setCurrentIndex(sortedRules.findIndex((item) => item.Id === obj.Id))
       }
@@ -862,7 +844,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         }
         return item
       })
-      setRules(onSortRules([...newRules]))
+      setRules(sortMitmRules([...newRules]))
       setSelectedRowKeys([])
       setIsAllSelect(false)
       setTimeout(() => {
@@ -879,7 +861,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
           newRules.push(item)
         }
       })
-      setRules(resetRulesIndex(newRules))
+      setRules(resetMitmRulesIndex(newRules))
       setSelectedRowKeys([])
       setIsAllSelect(false)
       setIsRefresh(!isRefresh)
@@ -892,7 +874,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       setIsAllBan(checked)
       setLoading(true)
       const newRules: MITMContentReplacerRule[] = rules.map((item) => ({ ...item, Disabled: checked }))
-      setRules(onSortRules(newRules))
+      setRules(sortMitmRules(newRules))
       setSelectedRowKeys([])
       setIsAllSelect(false)
       setTimeout(() => {
