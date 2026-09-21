@@ -152,6 +152,10 @@
   }
 
   .footer-inputs {
+    .milkdown-input {
+      min-height: 64px;
+      max-height: 100px;
+    }
     .footer-inputs-file-list {
       display: flex;
       flex-direction: column;

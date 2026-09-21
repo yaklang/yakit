@@ -48,7 +48,16 @@
     height: 100%;
     padding: 88px 24px 20px;
 
+    .milkdown-input {
+      min-height: 124px;
+      max-height: 124px;
+    }
+
     &-compact {
+      .milkdown-input {
+        min-height: 64px;
+        max-height: 100px;
+      }
       padding-top: 30px;
       gap: 10px;
     }

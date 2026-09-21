@@ -113,6 +113,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                 onHttpFlowRemove={props.onHttpFlowRemove}
                 chatDataStoreKey="aiChatDataStore"
                 className={styles['ai-text-wrapper']}
+                milkdownClassName={styles['milkdown-input']}
               />
             </div>
           </div>
