@@ -12,13 +12,7 @@ import {
   grpcFetchLocalYakVersionHash,
   grpcFetchSpecifiedYakVersionHash,
 } from '../../grpc'
-import {
-  FetchSoftwareVersion,
-  getReleaseEditionName,
-  isCommunityYakit,
-  isEnpriTraceAgent,
-  toDefaultYakEngineDownloadVersion,
-} from '@/utils/envfile'
+import { FetchSoftwareVersion, getReleaseEditionName, isCommunityYakit, isEnpriTraceAgent } from '@/utils/envfile'
 import { yakitNotify } from '@/utils/notification'
 import { SystemInfo } from '../../utils'
 import { getLocalValue } from '@/utils/kv'
@@ -352,10 +346,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const [res1, res2] = await Promise.all([
           // 远端
           Promise.race([
-            grpcFetchSpecifiedYakVersionHash(
-              { version: toDefaultYakEngineDownloadVersion(checkVersion), config: { timeout: 2000 } },
-              true,
-            ),
+            grpcFetchSpecifiedYakVersionHash({ version: checkVersion, config: { timeout: 2000 } }, true),
             promise,
           ]),
           // 本地

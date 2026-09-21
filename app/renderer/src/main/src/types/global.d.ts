@@ -999,8 +999,6 @@ declare global {
       writeEngineKeyToYakitProjects: (version?: string) => Promise<unknown>
       /** 当前引擎构建类型：full 标准 / slim 轻量 */
       fetchYakEngineBuildType: (version?: string) => Promise<'full' | 'slim'>
-      /** 安装包内置引擎构建类型 */
-      fetchBundledEngineBuildType: () => Promise<'full' | 'slim'>
       getRemoteAuthAll: () => Promise<YakitAuthInfo[]>
       saveRemoteAuth: (params: YakitAuthInfo) => Promise<unknown>
       removeRemoteAuth: (name: string) => Promise<unknown>

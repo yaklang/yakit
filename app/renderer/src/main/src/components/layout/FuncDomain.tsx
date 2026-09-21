@@ -1613,7 +1613,6 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const [yaklangLastVersion, setYaklangLastVersion] = useState<string>('') // 官方推荐的最新版
   const [yaklangLocalVersion, setYaklangLocalVersion] = useState<string>('') // 本地引擎文件版本号
   const [yaklangBuildType, setYaklangBuildType] = useState<'full' | 'slim'>('full') // 当前引擎标准/轻量
-  const [yaklangBuildTypeReady, setYaklangBuildTypeReady] = useState(false)
 
   /** 更多引擎列表 */
   const [moreYaklangVersionList, setMoreYaklangVersionList] = useState<string[]>([]) // 更多引擎版本list
@@ -1622,8 +1621,6 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const lowerYaklangLastVersion = useMemo(() => {
     // 如果是远程模式，不显示更新
     if (isRemoteMode) return false
-    // 社区版默认轻量：本地仍是全量时，即使版本号相同也提示更新
-    if (isCommunityYakit() && yaklangBuildTypeReady && yaklangBuildType === 'full' && yaklangLastVersion) return true
     if (!moreYaklangVersionList.length) return false
     if (!yaklangLastVersion) return false
     const index1 = moreYaklangVersionList.indexOf(yaklangLastVersion)
@@ -1631,7 +1628,7 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     if (index2 === -1) return true
     if (index2 > index1) return true
     return false
-  }, [isRemoteMode, moreYaklangVersionList, yaklangLastVersion, yaklangVersion, yaklangBuildType, yaklangBuildTypeReady])
+  }, [isRemoteMode, moreYaklangVersionList, yaklangLastVersion, yaklangVersion])
 
   const [communityYakitContent, setCommunityYakitContent] = useState<UpdateContentProp>({ version: '', content: '' })
   const [communityYaklangContent, setCommunityYaklangContent] = useState<UpdateContentProp>({
@@ -1845,19 +1842,15 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   useEffect(() => {
     if (!isEngineLink || !isYakit() || !yaklangVersion || yaklangVersion === 'dev') {
       setYaklangBuildType('full')
-      setYaklangBuildTypeReady(false)
       return
     }
-    setYaklangBuildTypeReady(false)
     yakitEngine
       .fetchYakEngineBuildType(yaklangVersion)
       .then((type) => {
         setYaklangBuildType(type === 'slim' ? 'slim' : 'full')
-        setYaklangBuildTypeReady(true)
       })
       .catch(() => {
         setYaklangBuildType('full')
-        setYaklangBuildTypeReady(true)
       })
   }, [isEngineLink, yaklangVersion])
 

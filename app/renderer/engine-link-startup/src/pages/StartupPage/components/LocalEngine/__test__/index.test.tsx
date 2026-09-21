@@ -58,7 +58,6 @@ vi.mock('@/utils/envfile', () => ({
   getReleaseEditionName: vi.fn(() => 'Yakit'),
   isCommunityYakit: vi.fn(() => true),
   isEnpriTraceAgent: vi.fn(() => false),
-  toDefaultYakEngineDownloadVersion: vi.fn((version: string) => version),
 }))
 
 vi.mock('@/utils/notification', () => ({

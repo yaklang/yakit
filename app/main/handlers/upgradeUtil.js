@@ -767,10 +767,6 @@ module.exports = {
       return await resolveEngineBuildType(version)
     })
 
-    ipcMain.handle('fetch-bundled-engine-build-type', async () => {
-      return readBundledEngineBuildType()
-    })
-
     // 获取yak code文件根目录路径
     ipcMain.handle('fetch-code-path', () => {
       return getCodeDir()
