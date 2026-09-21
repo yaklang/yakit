@@ -1,4 +1,3 @@
-import { MemfitLogoColorful } from '@yakit-libs/yakit-ui-icons/colorful'
 import React, { type FC, forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type {
   AIChatWelcomeIntroTipsProps,
@@ -97,7 +96,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
           })}
         >
           <div className={styles['input-heard']}>
-            {/* <MemfitLogoColorful className={styles['memfit-icon']} /> */}
             <img src={memfitLogo} width={100} />
             <div className={styles['title']}>信湃 SenPike</div>
             <div className={styles['subtitle']}>AI自主渗透与攻防验证系统</div>

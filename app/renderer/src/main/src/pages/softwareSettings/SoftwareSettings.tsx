@@ -7,8 +7,6 @@ import {
   SoftwareRemoteSvgIcon,
   SolidIrifyFontLogoIcon,
   SolidIrifyMiniLogoIcon,
-  SolidMemfitFontLogoIcon,
-  SolidMemfitMiniLogoIcon,
 } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { Typography } from 'antd'
 import { useMemoizedFn } from 'ahooks'
