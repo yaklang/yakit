@@ -54,25 +54,25 @@
  * 2. padding-inline 变成 7px，盖掉 Yakit 的 6px
  * 3. 前缀图标间距变成 7px（antd 4 / Yakit 是 4px）
  */
-html .ant-tag {
-  display: inline-flex !important;
+html .ant-tag.ant-tag-css-var {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   vertical-align: middle;
-  padding-inline: 6px !important;
+  padding-inline: 6px;
 }
 
-html .ant-tag > .anticon + span,
-html .ant-tag > span + .anticon,
-html .ant-tag > svg + span,
-html .ant-tag > span + svg {
-  margin-inline-start: 4px !important;
-  margin-left: 4px !important;
+html .ant-tag.ant-tag-css-var > .anticon + span,
+html .ant-tag.ant-tag-css-var > span + .anticon,
+html .ant-tag.ant-tag-css-var > svg + span,
+html .ant-tag.ant-tag-css-var > span + svg {
+  margin-inline-start: 4px;
+  margin-left: 4px;
 }
 
-html .ant-tag .ant-tag-close-icon {
-  margin-inline-start: 4px !important;
-  margin-left: 4px !important;
+html .ant-tag.ant-tag-css-var .ant-tag-close-icon {
+  margin-inline-start: 4px;
+  margin-left: 4px;
 }
 
 .ant-tag.ant-tag-has-color {
