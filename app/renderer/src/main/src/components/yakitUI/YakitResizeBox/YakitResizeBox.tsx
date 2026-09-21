@@ -80,25 +80,27 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
   const getIsVer = useMemoizedFn(() => isVer)
   const getDragResize = useMemoizedFn(() => dragResize)
   const onPointerDown = (event: any) => {
-    if (!lineRef.current || !resizeRef.current) return
+    if (!lineRef.current || !resizeRef.current || !bodyRef.current) return
     if (event.button !== 0) return // 只响应左键
     const isVer = getIsVer()
     const line = lineRef.current
     const resize = resizeRef.current
+    const bodyRect = bodyRef.current.getBoundingClientRect()
 
     resize.setPointerCapture(event.pointerId)
     activePointerId.current = event.pointerId
     if (onStart) onStart()
     isMove.current = true
-    start.current = isVer ? event.layerY : event.layerX
+    start.current = isVer ? event.clientY - bodyRect.top : event.clientX - bodyRect.left
     first.current = isVer ? event.clientY : event.clientX
 
-    line.style.willChange = 'transform'
-    line.style.display = 'inline-block'
-
-    // 生成移动分割线的初始坐标
-    if (isVer) line.style.transform = `translateY(${start.current}px)`
-    else line.style.transform = `translateX(${start.current}px)`
+    // 实时拖拽时面板已跟着动，不再画预览线，避免和分割线差几像素叠在一起
+    if (!getDragResize()) {
+      line.style.willChange = 'transform'
+      line.style.display = 'inline-block'
+      if (isVer) line.style.transform = `translateY(${start.current}px)`
+      else line.style.transform = `translateX(${start.current}px)`
+    }
   }
 
   const onPointerMove = (event: PointerEvent) => {
@@ -122,21 +124,18 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
       return
     }
 
-    line.style.display = 'inline-block'
-
     const second = isVer ? event.clientY : event.clientX
     moveLen.current = start.current + second - first.current
-
-    if (isVer) {
-      line.style.transform = `translateY(${moveLen.current}px)`
-    } else {
-      line.style.transform = `translateX(${moveLen.current}px)`
-    }
 
     if (dragResize) {
       const delta = moveLen.current - start.current
       if (delta !== 0) dragMoveSize(delta)
+      return
     }
+
+    line.style.display = 'inline-block'
+    if (isVer) line.style.transform = `translateY(${moveLen.current}px)`
+    else line.style.transform = `translateX(${moveLen.current}px)`
   }
 
   /** 统一结束 */
@@ -216,6 +215,10 @@ export interface YakitResizeBoxProps {
   isRecalculateWH?: boolean
   /** 线条占据空间的方向 */
   lineDirection?: 'top' | 'bottom' | 'left' | 'right'
+  /** 分割线占位宽度/高度，默认 8 */
+  lineSize?: number
+  /** 分割线可拖拽热区宽度/高度，默认 8；视觉线很细时仍可用较大热区拖动 */
+  lineHitSize?: number
   /** 第一块所占比例 支持 百分比/像素 */
   firstRatio?: string
   /** 第一块最小大小 */
@@ -253,6 +256,8 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
     isShowDefaultLineStyle = true,
     isRecalculateWH = true,
     lineDirection,
+    lineSize = 8,
+    lineHitSize = 8,
     firstRatio = '50%',
     firstMinSize = '100px',
     firstNode,
@@ -267,6 +272,9 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
     onMouseUp,
     onClickHiddenBox,
   } = props
+  const lineSizePx = `${lineSize}px`
+  const hitSize = Math.max(lineHitSize, lineSize)
+  const hitSizePx = `${hitSize}px`
   const { t } = useI18nNamespaces(['yakitUi'])
 
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -301,7 +309,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
     const firstMin = convertToNumber(firstMinSize)
     const secondMin = convertToNumber(secondMinSize)
     if (firstMin && secondMin) {
-      const limitMax = size - 8 //(拖拽线条预留 8)
+      const limitMax = size - lineSize
       if (firstMin + secondMin > limitMax) {
         const ratioFirst = firstMin / (firstMin + secondMin)
         const ratioSecond = secondMin / (firstMin + secondMin)
@@ -473,7 +481,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
           minHeight: isVer ? FirstMinSize : 'auto',
           height: isVer
             ? firstRatio === '50%'
-              ? `calc(100% - ${secondRatio} - ${freeze ? '8px' : '0px'})`
+              ? `calc(100% - ${secondRatio} - ${freeze ? lineSizePx : '0px'})`
               : firstRatio
             : '100%',
           padding: `${isVer ? '0 0 2px 0' : '0 2px 0 0 '}`,
@@ -485,11 +493,9 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
       </div>
       {freeze ? (
         <div
-          ref={lineRef}
           style={{
-            width: `${isVer ? '100%' : '8px'}`,
-            height: `${isVer ? '8px' : '100%'}`,
-            cursor: `${isVer ? 'row-resize' : 'col-resize'}`,
+            width: `${isVer ? '100%' : lineSizePx}`,
+            height: `${isVer ? lineSizePx : '100%'}`,
             ...lineStyle,
           }}
           className={classNames(styles['resize-split-line'], {
@@ -499,6 +505,14 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
             [styles['resize-split-line-right']]: lineDirection === 'right' && !isVer,
           })}
         >
+          <div
+            ref={lineRef}
+            className={classNames(styles['resize-split-line-hit'], {
+              [styles['resize-split-line-hit-ver']]: isVer,
+              [styles['resize-split-line-hit-hor']]: !isVer,
+            })}
+            style={isVer ? { height: hitSizePx } : { width: hitSizePx }}
+          />
           {isVer && !!onClickHiddenBox && (
             <div
               className={classNames(
@@ -537,7 +551,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
           height: isVer
             ? firstRatio === '50%'
               ? secondRatio
-              : `calc(100% - ${firstRatio} - ${freeze ? '8px' : '0px'})`
+              : `calc(100% - ${firstRatio} - ${freeze ? lineSizePx : '0px'})`
             : '100%',
           padding: `${isVer ? '2px 0 0 0' : '0 0 0 2px'}`,
           overflow: 'hidden',
