@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import { useInViewport, useMemoizedFn } from 'ahooks'
 import { FlagOutlined, ViewListOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import {
@@ -15,6 +15,8 @@ import type { AIForge } from '../../type/forge'
 import type { AITool } from '../../type/aiTool'
 import { AIChatContent } from '../../aiChatContent/AIChatContent'
 import { AIChatWorkspace } from '../../aiChatContent/AIChatWorkspace/AIChatWorkspace'
+import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
+import useAIAgentStore from '../../useContext/useStore'
 import type { AIChatContentRefProps } from '../../aiChatContent/type'
 import { TaskListPane } from '../../chatTemplate/historyTaskTree/TaskListPane'
 import { useHasTaskTree } from '../../chatTemplate/historyTaskTree/useHasTaskTree'
@@ -77,11 +79,26 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
   const [dockDisabled, setDockDisabled] = useState(false)
   const welcome = mode === 'welcome'
   const [showFreeChat, setShowFreeChat] = useState(true)
+  const chatWrapperRef = useRef<HTMLDivElement>(null)
+  const [inViewPort = true] = useInViewport(chatWrapperRef)
   const chatContentRef = useRef<HTMLDivElement>(null)
   const panelLayoutRef = useRef<HTMLDivElement>(null)
   const [chatLayoutElement, setChatLayoutElement] = useState<HTMLDivElement | null>(null)
   const [panelFrame, setPanelFrame] = useState<React.CSSProperties>()
   const panelVisible = welcome || showFreeChat
+  const { activeChat } = useAIAgentStore()
+  const {
+    selectionScope,
+    onRegisterTableSelectApi,
+    onSetSelectedHttpFlowIds,
+    clearHttpFlowSelection,
+    onHttpFlowRemove,
+  } = useHttpFlowSelection(inViewPort, activeChat?.SessionID, {
+    syncSelectedHttpFlowIds: (ids) => {
+      const input = welcome ? aiChatWelcomeRef : aiReActChatRef
+      input.current?.setHttpFlow(ids)
+    },
+  })
 
   useEffect(() => {
     if (welcome) setShowFreeChat(true)
@@ -151,7 +168,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
   })
 
   return (
-    <div className={styles['chat-wrapper']}>
+    <div ref={chatWrapperRef} className={styles['chat-wrapper']}>
       <div className={styles['chat-content-wrapper']}>
         <YakitResizeBox
           freeze={workspaceVisible}
@@ -170,6 +187,9 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
                 filePreviewData={filePreviewData}
                 setFilePreviewData={setFilePreviewData}
                 onTabsChange={onTabsChange}
+                selectionScope={selectionScope}
+                onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
+                onRegisterTableSelectApi={onRegisterTableSelectApi}
               />
             </div>
           }
@@ -177,7 +197,15 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
             <div ref={chatContentRef} className={styles['chat-content']} data-ai-shared-right-panel={panelVisible}>
               {mode === 'welcome' ? (
                 <React.Suspense fallback={<div>loading...</div>}>
-                  <AIChatWelcome onTriageSubmit={onTriageSubmit} onSetReAct={onSetReAct} ref={aiChatWelcomeRef} />
+                  <AIChatWelcome
+                    onTriageSubmit={(data) => {
+                      clearHttpFlowSelection()
+                      onTriageSubmit(data)
+                    }}
+                    onHttpFlowRemove={onHttpFlowRemove}
+                    onSetReAct={onSetReAct}
+                    ref={aiChatWelcomeRef}
+                  />
                 </React.Suspense>
               ) : (
                 <AIChatContent
@@ -186,6 +214,8 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
                   showFreeChat={showFreeChat}
                   setShowFreeChat={setShowFreeChat}
                   rightPanelLayoutRef={setChatLayoutElement}
+                  onHttpFlowRemove={onHttpFlowRemove}
+                  onAfterSubmit={clearHttpFlowSelection}
                 />
               )}
               <div

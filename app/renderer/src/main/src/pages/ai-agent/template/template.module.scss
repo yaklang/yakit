@@ -129,7 +129,7 @@ textarea.qs-input-textarea {
   gap: 8px;
   border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
   background: var(--Colors-Use-Basic-Background);
-  padding: 8px;
+  padding: 12px;
   border-radius: 12px;
   min-height: 94px;
   flex-shrink: 0;
@@ -169,6 +169,96 @@ textarea.qs-input-textarea {
           width: 14px;
           height: 14px;
         }
+      }
+    }
+  }
+}
+.http-flow-references {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+.http-flow-reference-popover:global(.ant-popover) {
+  :global(.ant-popover-inner) {
+    padding-right: 4px;
+  }
+}
+.http-flow-reference {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  height: 26px;
+  padding: 4px 6px;
+  border: 1px dashed var(--Colors-Use-Neutral-Disable);
+  border-radius: 9999px;
+  background: var(--Colors-Use-Basic-Background);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 14px;
+  letter-spacing: 0.5px;
+
+  .http-flow-reference-icon {
+    flex-shrink: 0;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+  }
+  .http-flow-reference-close {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+}
+.http-flow-reference-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100px;
+}
+.http-flow-reference-ids {
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 204px;
+  max-height: 194px;
+  margin: 0;
+  padding: 0 8px 0 0;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+
+  .http-flow-reference-items {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    width: 180px;
+  }
+
+  .http-flow-reference-id:global(.ant-tag) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    height: 22px;
+    margin: 0;
+    padding: 0 4px;
+    border-radius: 4px;
+
+    &:hover {
+      background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+
+    > span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    :global(.ant-tag-close-icon) {
+      flex-shrink: 0;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      svg {
+        color: inherit;
       }
     }
   }

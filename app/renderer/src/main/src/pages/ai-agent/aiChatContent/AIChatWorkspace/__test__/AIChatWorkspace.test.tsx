@@ -7,6 +7,8 @@ import { AITabs, AITabsEnum } from '../../../defaultConstant'
 import type * as AIChatWorkspaceModule from '../AIChatWorkspace'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import type { PluginExecuteWebsiteTreeProps } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
+import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
+const flowCallbacks: PluginExecuteWebsiteTreeProps[] = []
 
 const { AIChatWorkspace } = await compileReactModule<typeof AIChatWorkspaceModule>(
   import.meta.url,
@@ -56,11 +58,15 @@ vi.mock('@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDet
   AITaskExecutionDetails: ({ taskId }: { taskId: string }) => <div data-testid="task-detail">{taskId}</div>,
 }))
 vi.mock('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult', () => ({
-  PluginExecuteHttpFlow: ({ runtimeId, pageType }: PluginExecuteWebsiteTreeProps) => (
-    <div data-testid="http-flows" data-page-type={pageType}>
-      {runtimeId}
-    </div>
-  ),
+  PluginExecuteHttpFlow: (props: PluginExecuteWebsiteTreeProps) => {
+    flowCallbacks.push(props)
+    const { runtimeId, pageType } = props
+    return (
+      <div data-testid="http-flows" data-page-type={pageType}>
+        {runtimeId}
+      </div>
+    )
+  },
   VulnerabilitiesRisksTable: ({ runTimeIDs }: { runTimeIDs: string[] }) => (
     <div data-testid="risks">{runTimeIDs.join(',')}</div>
   ),
@@ -79,6 +85,7 @@ vi.mock('@/hook/useAiChatLog/useAiChatLog.ts', () => ({ default: () => ({ onOpen
 vi.mock('@/components/yakitUI/YakitEmpty/YakitEmpty', () => ({ YakitEmpty: () => <div>暂无数据</div> }))
 
 beforeEach(() => {
+  flowCallbacks.length = 0
   agentStore.setState({ activeChat: { SessionID: 'session-1', Title: '当前任务', RelatedRuntimeIDs: [] } })
   store.setState(initialState, true)
   rawData.httpRunTimeIDs = []
@@ -86,13 +93,121 @@ beforeEach(() => {
 })
 
 describe('AIChatWorkspace 菜单切换', () => {
+  it('切换页面保留表格实例与勾选，返回后原表格仍能同步和取消勾选', () => {
+    const syncSelectedHttpFlowIds = vi.fn()
+    rawData.httpRunTimeIDs = ['runtime-1']
+    let selection: ReturnType<typeof useHttpFlowSelection>
+    function WorkspaceSelection({ visible }: { visible: boolean }) {
+      selection = useHttpFlowSelection(visible, 'session-1', { syncSelectedHttpFlowIds })
+      return (
+        <div hidden={!visible}>
+          <AIChatWorkspace setFilePreviewData={vi.fn()} {...selection} />
+        </div>
+      )
+    }
+    const { rerender } = render(<WorkspaceSelection visible />)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+    const tableNode = screen.getByTestId('http-flows')
+    const table = flowCallbacks.at(-1)!
+    const api = { reset: vi.fn(), deselectId: vi.fn() }
+    act(() => {
+      table.onRegisterTableSelectApi?.(api)
+      table.onSetSelectedHttpFlowIds?.(['1'])
+    })
+    syncSelectedHttpFlowIds.mockClear()
+
+    rerender(<WorkspaceSelection visible={false} />)
+    expect(screen.getByTestId('http-flows')).toBe(tableNode)
+    rerender(<WorkspaceSelection visible />)
+    expect(screen.getByTestId('http-flows')).toBe(tableNode)
+    expect(api.reset).not.toHaveBeenCalled()
+    expect(syncSelectedHttpFlowIds).not.toHaveBeenCalled()
+    act(() => table.onSetSelectedHttpFlowIds?.(['2']))
+    expect(syncSelectedHttpFlowIds).toHaveBeenCalledExactlyOnceWith(['2'])
+    act(() => selection.onHttpFlowRemove('2', false))
+    expect(api.deselectId).toHaveBeenCalledExactlyOnceWith('2')
+  })
+
+  it('清空选择保留表格实例并允许重新注册，旧回调不能恢复引用', () => {
+    const syncSelectedHttpFlowIds = vi.fn()
+    rawData.httpRunTimeIDs = ['runtime-1']
+    let selection: ReturnType<typeof useHttpFlowSelection>
+    function WorkspaceSelection() {
+      selection = useHttpFlowSelection(true, 'session-1', { syncSelectedHttpFlowIds })
+      return <AIChatWorkspace setFilePreviewData={vi.fn()} {...selection} />
+    }
+    render(<WorkspaceSelection />)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+    const tableNode = screen.getByTestId('http-flows')
+    const previousTable = flowCallbacks.at(-1)!
+    const previousApi = { reset: vi.fn(), deselectId: vi.fn() }
+    act(() => {
+      previousTable.onRegisterTableSelectApi?.(previousApi)
+      previousTable.onSetSelectedHttpFlowIds?.(['1'])
+    })
+    syncSelectedHttpFlowIds.mockClear()
+    act(() => selection.clearHttpFlowSelection())
+    expect(screen.getByTestId('http-flows')).toBe(tableNode)
+    expect(previousApi.reset).toHaveBeenCalledOnce()
+    expect(syncSelectedHttpFlowIds).toHaveBeenCalledExactlyOnceWith([])
+
+    const currentTable = flowCallbacks.at(-1)!
+    const currentApi = { reset: vi.fn(), deselectId: vi.fn() }
+    act(() => currentTable.onRegisterTableSelectApi?.(currentApi))
+    syncSelectedHttpFlowIds.mockClear()
+    act(() => {
+      previousTable.onRegisterTableSelectApi?.(previousApi)
+      previousTable.onSetSelectedHttpFlowIds?.(['late'])
+    })
+    expect(syncSelectedHttpFlowIds).not.toHaveBeenCalled()
+    act(() => currentTable.onSetSelectedHttpFlowIds?.(['2']))
+    expect(syncSelectedHttpFlowIds).toHaveBeenCalledExactlyOnceWith(['2'])
+    act(() => selection.onHttpFlowRemove('2', false))
+    expect(currentApi.deselectId).toHaveBeenCalledExactlyOnceWith('2')
+    expect(previousApi.deselectId).not.toHaveBeenCalled()
+  })
+
+  it('欢迎/会话流量透传勾选，关闭表格及切换筛选后拒绝旧通知与注册', () => {
+    const selected = vi.fn()
+    const register = vi.fn()
+    rawData.httpRunTimeIDs = ['runtime-1']
+    render(
+      <AIChatWorkspace
+        setFilePreviewData={vi.fn()}
+        onSetSelectedHttpFlowIds={selected}
+        onRegisterTableSelectApi={register}
+      />,
+    )
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+    const aggregate = flowCallbacks.at(-1)!
+    act(() => aggregate.onSetSelectedHttpFlowIds?.(['1']))
+    expect(selected).toHaveBeenLastCalledWith(['1'])
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP, value: 'runtime-2' })))
+    const filtered = flowCallbacks.at(-1)!
+    selected.mockClear()
+    register.mockClear()
+    act(() => {
+      aggregate.onSetSelectedHttpFlowIds?.(['late'])
+      aggregate.onRegisterTableSelectApi?.({ reset: vi.fn(), deselectId: vi.fn() })
+    })
+    expect(selected).not.toHaveBeenCalled()
+    expect(register).not.toHaveBeenCalled()
+    act(() => filtered.onSetSelectedHttpFlowIds?.(['2']))
+    expect(selected).toHaveBeenLastCalledWith(['2'])
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk })))
+    expect(register).toHaveBeenLastCalledWith(undefined)
+    selected.mockClear()
+    act(() => filtered.onSetSelectedHttpFlowIds?.(['late-filter']))
+    expect(selected).not.toHaveBeenCalled()
+  })
   it.each([{ runtimeIds: [] }, { runtimeIds: ['stale-runtime'] }])(
-    '欢迎页流量使用 History 模式和空 runtimeId（$runtimeIds）',
+    '欢迎页流量使用 History 模式、空 runtimeId 和空来源（$runtimeIds）',
     ({ runtimeIds }) => {
       agentStore.setState({ activeChat: undefined })
       rawData.httpRunTimeIDs = runtimeIds
       render(<AIChatWorkspace welcome setFilePreviewData={vi.fn()} />)
       act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+      expect(flowCallbacks[flowCallbacks.length - 1].sourceType).toBe('')
       expect(screen.getByTestId('http-flows')).toHaveAttribute('data-page-type', 'History')
       expect(screen.getByTestId('http-flows')).toBeEmptyDOMElement()
       expect(screen.queryByText('暂无数据')).not.toBeInTheDocument()

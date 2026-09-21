@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useState, type FC } from 'react'
+import { memo, useMemo, useRef, useState, type FC, type MouseEvent } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import styles from './HistoryChatList.module.scss'
 import { PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -368,6 +368,7 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
 
   const loading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
   const [delLoading, setDelLoading] = useState<boolean>(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const displayTitle = useCreation(() => {
     return getSessionDisplayTitle(item)
   }, [item])
@@ -381,6 +382,18 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
       setDelLoading(false)
     }
   })
+
+  const handleConfirmDelete = useMemoizedFn((e?: MouseEvent<HTMLElement>) => {
+    e?.stopPropagation()
+    setDeleteConfirmOpen(false)
+    handleDeleteChatItem(item)
+  })
+
+  const handleCancelDelete = useMemoizedFn((e?: MouseEvent<HTMLElement>) => {
+    e?.stopPropagation()
+    setDeleteConfirmOpen(false)
+  })
+
   return (
     <div
       key={item.SessionID}
@@ -400,7 +413,7 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
         </div>
       </div>
 
-      <div className={styles['item-extra']}>
+      <div className={styles['item-extra']} style={deleteConfirmOpen || delLoading ? { display: 'flex' } : undefined}>
         <Tooltip
           title={t('HistoryChatList.editTitle')}
           placement="topRight"
@@ -418,14 +431,13 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
         </Tooltip>
         <YakitPopconfirm
           title={t('HistoryChatList.deleteConfirm')}
+          open={deleteConfirmOpen}
+          onOpenChange={setDeleteConfirmOpen}
           placement="bottom"
           getPopupContainer={getPopupContainer}
           classNames={{ root: overlayClassName }}
-          onConfirm={(e) => {
-            e?.stopPropagation()
-            handleDeleteChatItem(item)
-          }}
-          onCancel={(e) => e?.stopPropagation()}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
         >
           <YakitButton
             loading={delLoading}

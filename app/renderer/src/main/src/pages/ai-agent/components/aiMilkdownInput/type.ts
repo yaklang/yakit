@@ -1,6 +1,5 @@
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import type { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
-import type { AIHttpFlowRemovePayload } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
 import type { AICodeBlockCommandParams } from './aiCodeBlock/aiCustomCodeBlockPlugin'
 import type { AIChatMentionProps } from '../aiChatMention/type'
 
@@ -9,7 +8,6 @@ export interface AIMilkdownInputProps extends AIMilkdownInputBaseProps {}
 export interface AIMilkdownInputRef {
   setMention: (v: AIMentionCommandParams) => void
   setImage: () => void
-  setHttpFlow: (ids: string[]) => void
   setCodeRef: (v: AICodeBlockCommandParams) => void
   getSessionId: () => string
 }
@@ -25,8 +23,6 @@ export interface AIMilkdownInputBaseProps {
   onUpdateEditor?: (s: EditorMilkdownProps) => void
   /** 额外的提及处理 */
   onMemfitExtra?: (v: AIMentionCommandParams) => void
-  /** history 流量标签移除时同步取消表格勾选 */
-  onHttpFlowRemove?: (payload: AIHttpFlowRemovePayload) => void
   // 外部传入需要筛选掉的选项
   filterMode?: AIChatMentionProps['filterMode']
   /**文件缓存路径 */

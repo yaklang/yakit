@@ -177,6 +177,51 @@ describe('HistoryChatList viewport rendering', () => {
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
   })
 
+  it('keeps delete actions visible when moving from the row into its confirmation popup', async () => {
+    render(view('', sessions.slice(0, 2)))
+    await screen.findByText('Session 0')
+    const row = rowFor('Session 0')
+    const button = deleteButtonFor('Session 0')
+    const actions = button.parentElement!
+    expect(actions.style.display).toBe('')
+    fireEvent.mouseEnter(row)
+    fireEvent.click(button)
+    const popup = await screen.findByText('HistoryChatList.deleteConfirm')
+    fireEvent.mouseLeave(row)
+    fireEvent.mouseEnter(popup)
+    expect(actions).toHaveStyle({ display: 'flex' })
+    expect(deleteButtonFor('Session 1').parentElement!.style.display).toBe('')
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.cancel' }))
+    await waitFor(() => expect(actions.style.display).toBe(''))
+    expect(mocks.removeSession).not.toHaveBeenCalled()
+    expect(mocks.setActiveChat).not.toHaveBeenCalled()
+  })
+
+  it.each(['resolved', 'rejected'] as const)(
+    'keeps delete actions visible while pending and releases them when %s',
+    async (outcome) => {
+      let finishDelete!: () => void
+      mocks.removeSession.mockReturnValueOnce(
+        new Promise<void>((resolve, reject) => {
+          finishDelete = () => (outcome === 'resolved' ? resolve() : reject(new Error('offline')))
+        }),
+      )
+      render(view('', sessions.slice(0, 2)))
+      await screen.findByText('Session 0')
+      const button = deleteButtonFor('Session 0')
+      const actions = button.parentElement!
+      fireEvent.click(button)
+      fireEvent.click(await screen.findByRole('button', { name: 'YakitButton.ok' }))
+      fireEvent.mouseLeave(rowFor('Session 0'))
+      expect(button).toHaveClass('ant-btn-loading')
+      expect(actions).toHaveStyle({ display: 'flex' })
+      await act(async () => finishDelete())
+      await waitFor(() => expect(button).not.toHaveClass('ant-btn-loading'))
+      expect(actions.style.display).toBe('')
+      expect(mocks.setActiveChat).not.toHaveBeenCalled()
+    },
+  )
+
   it('requires confirmation and deletes only the selected session after reordering', async () => {
     const data = sessions.slice(0, 2)
     const { rerender } = render(view('', data))

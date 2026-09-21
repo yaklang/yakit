@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
 import classNames from 'classnames'
@@ -29,13 +29,48 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { FileDefault, FileSuffix, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import styles from './AIChatWorkspace.module.scss'
+import type { HttpFlowSelectionApi } from '@/components/useHttpFlowSelection'
 
-interface AIChatWorkspaceProps {
+interface HttpFlowSelectionProps {
+  selectionScope?: object
+  onSetSelectedHttpFlowIds?: (ids: string[]) => void
+  onRegisterTableSelectApi?: (api?: HttpFlowSelectionApi) => void
+}
+
+interface AIChatWorkspaceProps extends HttpFlowSelectionProps {
   /** 欢迎页且没有激活会话时，流量和漏洞页签展示全量数据 */
   welcome?: boolean
   filePreviewData?: FileNodeProps
   setFilePreviewData: (data?: FileNodeProps) => void
   onTabsChange?: (count: number) => void
+}
+
+// 每次表格卸载或输入目标切换后，旧的防抖通知及 API 注册立即失效。
+const WorkspaceHttpFlow: React.FC<
+  Omit<React.ComponentProps<typeof PluginExecuteHttpFlow>, keyof HttpFlowSelectionProps> & HttpFlowSelectionProps
+> = ({ selectionScope, onSetSelectedHttpFlowIds, onRegisterTableSelectApi, ...props }) => {
+  const instance = useMemo(() => ({ active: true }), [selectionScope])
+  const current = useRef(instance)
+  current.current = instance
+  useEffect(() => {
+    instance.active = true
+    return () => {
+      instance.active = false
+      onRegisterTableSelectApi?.(undefined)
+      onSetSelectedHttpFlowIds?.([])
+    }
+  }, [instance, onRegisterTableSelectApi, onSetSelectedHttpFlowIds])
+  return (
+    <PluginExecuteHttpFlow
+      {...props}
+      onSetSelectedHttpFlowIds={(ids) => {
+        if (instance.active && current.current === instance) onSetSelectedHttpFlowIds?.(ids)
+      }}
+      onRegisterTableSelectApi={(api) => {
+        if (instance.active && current.current === instance) onRegisterTableSelectApi?.(api)
+      }}
+    />
+  )
 }
 interface WorkspaceTab {
   key: string
@@ -67,6 +102,14 @@ const getFileTabIcon = (file?: FileNodeProps) => {
 
 export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props) => {
   const { welcome = false, filePreviewData, setFilePreviewData, onTabsChange } = props
+  const selectionProps = useMemo(
+    () => ({
+      selectionScope: props.selectionScope,
+      onSetSelectedHttpFlowIds: props.onSetSelectedHttpFlowIds,
+      onRegisterTableSelectApi: props.onRegisterTableSelectApi,
+    }),
+    [props.selectionScope, props.onSetSelectedHttpFlowIds, props.onRegisterTableSelectApi],
+  )
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
   const store = useCurrentStore()
@@ -250,15 +293,19 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     }
   })
   const showAll = welcome && !activeChat?.SessionID
-  const tabContent = useMemo(() => {
+  const runtimeId = activeTab?.runtimeId
+  const runTimeIds = useMemo(
+    () => [...new Set(runtimeId ? [runtimeId] : httpRunTimeIDs.concat(relatedRuntimeIDs))],
+    [runtimeId, httpRunTimeIDs, relatedRuntimeIDs],
+  )
+  const riskRunTimeIds = useMemo(
+    () => [...new Set(runtimeId ? [runtimeId] : riskRunTimeIDs.concat(relatedRuntimeIDs))],
+    [runtimeId, riskRunTimeIDs, relatedRuntimeIDs],
+  )
+
+  const renderTabContent = () => {
     if (!activeTab) return null
 
-    const runTimeIds = [
-      ...new Set(activeTab.runtimeId ? [activeTab.runtimeId] : httpRunTimeIDs.concat(relatedRuntimeIDs)),
-    ]
-    const riskRunTimeIds = [
-      ...new Set(activeTab.runtimeId ? [activeTab.runtimeId] : riskRunTimeIDs.concat(relatedRuntimeIDs)),
-    ]
     switch (activeTab.type) {
       case AITabsEnum.File_Preview:
         return activeTab.file ? <FilePreview data={activeTab.file} /> : <YakitEmpty style={{ paddingTop: 48 }} />
@@ -277,9 +324,22 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         )
       }
       case AITabsEnum.HTTP:
-        if (showAll) return <PluginExecuteHttpFlow pageType="History" runtimeId="" showAdvancedSearch showSetting />
+        if (showAll)
+          return (
+            <WorkspaceHttpFlow
+              key="welcome"
+              {...selectionProps}
+              pageType="History"
+              runtimeId=""
+              sourceType=""
+              showAdvancedSearch
+              showSetting
+            />
+          )
         return runTimeIds.length ? (
-          <PluginExecuteHttpFlow
+          <WorkspaceHttpFlow
+            key={`${activeChat?.SessionID}:${activeTab.runtimeId || ''}`}
+            {...selectionProps}
             pageType="Plugin"
             filterTagDom={filterTagDom}
             runtimeId={runTimeIds.join(',')}
@@ -295,17 +355,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
       default:
         return null
     }
-  }, [
-    activeTab,
-    showAll,
-    httpTabUpdate,
-    riskTabUpdate,
-    relatedRuntimeIDs,
-    filterTagDom,
-    operationLogList,
-    httpRunTimeIDs,
-    riskRunTimeIDs,
-  ])
+  }
 
   return (
     <div className={styles['workspace']}>
@@ -346,7 +396,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
               activeTab?.type === AITabsEnum.HTTP || activeTab?.type === AITabsEnum.Risk,
           })}
         >
-          {tabContent}
+          {renderTabContent()}
         </div>
       </div>
     </div>

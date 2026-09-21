@@ -1,10 +1,7 @@
 import type { ReactNode } from 'react'
 import type { TextAreaProps } from 'antd/lib/input'
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-import type {
-  AIHttpFlowCommandParams,
-  AIHttpFlowRemovePayload,
-} from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import type { AIHttpFlowCommandParams } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import type { AIChatMentionProps } from '../components/aiChatMention/type'
@@ -23,7 +20,7 @@ export interface AIChatTextareaSubmit {
   mentionList?: AIMentionCommandParams[]
   /**图片 */
   imageList?: string[]
-  /** history 勾选的流量 */
+  /** History、AI 欢迎页和会话页勾选的流量及正文中的流量引用 */
   httpFlowList?: AIHttpFlowCommandParams[]
   /** 编辑器选中的代码块 */
   codeBlockList?: AICodeBlockCommandParams[]
@@ -71,6 +68,8 @@ export interface AIChatTextareaProps {
   footer?: ReactNode
   onSubmit?: (v: AIChatTextareaSubmit) => void
   className?: string
+  /** Milkdown 编辑器外层样式。 */
+  milkdownClassName?: string
   children?: ReactNode
   defaultValue?: string
   /**ai模型不存在时，是否弹窗 */
@@ -80,7 +79,7 @@ export interface AIChatTextareaProps {
   footerRightTypes?: (AIInputFooterRight | FooterRightTypesComponentProps)[]
   /** 图片路径前缀 */
   chatDataStoreKey: string
-  onHttpFlowRemove?: (payload: AIHttpFlowRemovePayload) => void
+  onHttpFlowRemove?: (id: string, isSummary: boolean) => void
 }
 
 export interface FileToChatQuestionList {

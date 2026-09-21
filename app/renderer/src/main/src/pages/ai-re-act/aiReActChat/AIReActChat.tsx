@@ -211,6 +211,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     useImperativeHandle(ref, () => {
       return {
         ...aiChatTextareaRef.current,
+        setHttpFlow: (ids) => aiChatTextareaRef.current?.setHttpFlow(ids),
+        setValue: (value) => aiChatTextareaRef.current?.setValue(value),
+        getValue: () => aiChatTextareaRef.current?.getValue(),
+        setMention: (value) => aiChatTextareaRef.current?.setMention(value),
         handleStart: (value) => handleStart(value),
       }
     }, [])

@@ -1653,9 +1653,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   }, [onRegisterTableSelectApi, resetSelected, deselectHttpFlowId])
   const compareSelectedRowKeys = useCampare(selectedRowKeys)
-  useDebounceEffect(() => {
-    onSetSelectedHttpFlowIds?.(isAllSelect ? [] : selectedRowKeys)
-  }, [isAllSelect, compareSelectedRowKeys])
+  useDebounceEffect(
+    () => {
+      onSetSelectedHttpFlowIds?.(isAllSelect ? [] : selectedRowKeys)
+    },
+    [isAllSelect, compareSelectedRowKeys],
+    { wait: 200, leading: true },
+  )
   const onRowClick = useMemoizedFn((rowDate?: HTTPFlow) => {
     if (rowDate) {
       setSelected(rowDate)
