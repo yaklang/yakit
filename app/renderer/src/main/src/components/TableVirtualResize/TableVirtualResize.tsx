@@ -1451,7 +1451,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     if (onChangTable) onChangTable()
   })
 
-  const [panelValue, setPanelValue] = useState<[Dayjs, Dayjs]>()
+  const [panelValues, setPanelValues] = useState<Record<string, [Dayjs, Dayjs]>>({})
   const renderDatePicker = useMemoizedFn((columnsItem: ColumnsTypeProps, filterKey: string) => {
     return (
       <>
@@ -1464,8 +1464,13 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
               [t('YakitDatePicker.oneHour')]: [moment().subtract(1, 'hours'), moment()],
               [t('YakitDatePicker.oneDay')]: [moment().subtract(1, 'day'), moment()],
             }}
-            pickerValue={panelValue} // 独立控制面板显示的月份
-            onPanelChange={(v) => setPanelValue(v as [Dayjs, Dayjs])}
+            pickerValue={panelValues[filterKey]} // 按列独立控制面板显示的月份
+            onPanelChange={(v) =>
+              setPanelValues((prev) => ({
+                ...prev,
+                [filterKey]: v as [Dayjs, Dayjs],
+              }))
+            }
             onChange={(time) => {
               onDateTimeSearch(time as [Moment, Moment] | null, filterKey)
             }}
