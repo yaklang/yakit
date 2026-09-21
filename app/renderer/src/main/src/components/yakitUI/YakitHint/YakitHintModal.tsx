@@ -143,43 +143,41 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
     })
   })
 
-  const getContent = useMemoizedFn(() => {
-    return (
+  const contentNode = (
+    <div
+      className={classNames(styles['yakit-hint-modal-container'], {
+        [styles['yakit-hint-modal-container-box-shadow']]: !isMask,
+        [styles['yakit-hint-modal-container-resize']]: isResize,
+      })}
+      onClick={() => {
+        if (!isTop && setTop) setTop()
+      }}
+    >
       <div
-        className={classNames(styles['yakit-hint-modal-container'], {
-          [styles['yakit-hint-modal-container-box-shadow']]: !isMask,
-          [styles['yakit-hint-modal-container-resize']]: isResize,
-        })}
-        onClick={() => {
-          if (!isTop && setTop) setTop()
-        }}
+        className={classNames(
+          styles['container-wrapper'],
+          {
+            [styles['container-wrapper-resize']]: isResize,
+          },
+          containerClassName,
+        )}
       >
         <div
-          className={classNames(
-            styles['container-wrapper'],
-            {
-              [styles['container-wrapper-resize']]: isResize,
-            },
-            containerClassName,
-          )}
-        >
-          <div
-            className={styles['container-draggle']}
-            onMouseEnter={() => {
-              if (isDrag && disabled) setDisabled(false)
-            }}
-            onMouseLeave={() => {
-              if (isDrag && !disabled) setDisabled(true)
-            }}
-            onMouseDown={() => {
-              if (!isTop && setTop) setTop()
-            }}
-          />
-          {children}
-        </div>
+          className={styles['container-draggle']}
+          onMouseEnter={() => {
+            if (isDrag && disabled) setDisabled(false)
+          }}
+          onMouseLeave={() => {
+            if (isDrag && !disabled) setDisabled(true)
+          }}
+          onMouseDown={() => {
+            if (!isTop && setTop) setTop()
+          }}
+        />
+        {children}
       </div>
-    )
-  })
+    </div>
+  )
 
   return (
     <Draggable
@@ -220,10 +218,10 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
               topLeft: false,
             }}
           >
-            {getContent()}
+            {contentNode}
           </Resizable>
         ) : (
-          getContent()
+          contentNode
         )}
       </div>
     </Draggable>
