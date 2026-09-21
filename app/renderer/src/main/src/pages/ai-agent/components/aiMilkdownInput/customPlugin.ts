@@ -1,4 +1,4 @@
-import { Ctx } from '@milkdown/kit/ctx'
+import { type Ctx } from '@milkdown/kit/ctx'
 import { prosePluginsCtx } from '@milkdown/kit/core'
 import { Plugin, PluginKey } from 'prosemirror-state'
 import { TextSelection } from 'prosemirror-state'

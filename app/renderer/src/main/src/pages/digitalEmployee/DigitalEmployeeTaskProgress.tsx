@@ -1,9 +1,8 @@
 import React from 'react'
 import classNames from 'classnames'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
-import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 import { formatTaskTimestamp, getDigitalEmployeeTaskProgress } from './taskProgress'
 import styles from './DigitalEmployeeTaskProgress.module.scss'
 
@@ -16,16 +15,15 @@ const statusLabel: Record<AIToDoListStatusEnum, string> = {
 }
 
 export const DigitalEmployeeTaskProgress: React.FC = React.memo(() => {
-  const { activeChat } = useAIAgentStore()
-  const { chatIPCEvents } = useChatIPCDispatcher()
-  const {
-    chatIPCData: { casualChat },
-  } = useChatIPCStore()
-  const planDetails = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.casualChat.planDetails
-  const progress = getDigitalEmployeeTaskProgress(planDetails?.todoList)
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+  const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
+  const todoListUpdate = useStore(store, (state) => state.chatTodoListUpdate)
+  const todoList = questionID ? rawData.taskDetailsMap.get(questionID)?.todoList : undefined
+  const progress = getDigitalEmployeeTaskProgress(todoList)
 
   // toolListRenderNumber 是原版 todo 更新后的渲染信号；读取它保证计划原地更新时这里同步刷新。
-  void casualChat.toolListRenderNumber
+  void todoListUpdate
 
   if (!progress.total) {
     return (

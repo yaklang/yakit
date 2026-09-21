@@ -1,46 +1,29 @@
-import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AIRecommendItem, RandomAIMaterialsDataProps } from '@/pages/ai-agent/aiChatWelcome/type'
-import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-import { ReactNode } from 'react'
-import { AIStartParams } from '../hooks/grpcApi'
+import type { ReactNode } from 'react'
+import type { ChatListRenderType } from '../hooks/aiRender'
 
 export interface AIReActTaskChatProps {
   setShowFreeChat: (show: boolean) => void
   setTimeLine: (show: boolean) => void
-}
-
-export interface AIReActTaskChatContentProps {
-  scrollToBottom: boolean
-  onScrollToBottom: () => void
+  onTaskTabsChange?: (hasTabs: boolean) => void
 }
 
 export interface AIReActTaskChatLeftSideProps {
   leftExpand: boolean
   setLeftExpand: (v: boolean) => void
 }
-export interface AIRenderTaskFooterExtraProps {
+
+export interface AIInputSettingPopoverProps {
   children?: ReactNode
-  btnProps?: YakitButtonProp
-  subTaskBtnProps?: YakitButtonProp
-  onExtraAction: (type: 'stopTask' | 'stopSubTask' | 'recover', syncID: string) => void
+  visible?: boolean
+  setVisible?: (v: boolean) => void
 }
-
-export interface AIReActTaskRecommendProps {
-  title: string
-  data: AIRecommendItem[]
-  onClickItem: (item: AIRecommendItem) => void
-}
-
-export interface AIReActTaskEmptyProps {
-  loadingAIMaterials: boolean
-  randomAIMaterialsData: RandomAIMaterialsDataProps
-  onRefresh: () => void
-  onClickItem: (item: AIRecommendItem, mentionType: AIMentionCommandParams['mentionType']) => void
-}
-
-export interface AIGlobalCommandPopoverProps {
-  children?: ReactNode
-  childrenClass?: string
+export interface AIInputSettingFormProps {
+  SyncPerceptionTrigger: boolean
+  EnablePlan: boolean
+  /** 全局指令 */
+  AIPresetPrompt: string
+  /** 规划提示词 */
+  AIPlanPrompt: string
 }
 
 export interface AIManualAdditionPopoverProps {
@@ -50,38 +33,7 @@ export interface AIManualAdditionPopoverProps {
   chatType: AIManualAdditionProps['chatType']
 }
 
-export interface AIInputSettingPopoverProps {
-  children?: ReactNode
-  visible?: boolean
-  setVisible?: (v: boolean) => void
-}
-export interface AIInputSettingFormProps extends Pick<AIStartParams, 'SyncPerceptionTrigger' | 'EnablePlan'> {}
-
-export interface AIGlobalCommandRefProps {
-  value: string
-}
-export interface AIGlobalCommandProps {
-  ref?: React.ForwardedRef<AIGlobalCommandRefProps>
-  onSave: (v: string) => void
-  onCancel: () => void
-}
-
-export interface AIPlanPromptPopoverProps {
-  children?: ReactNode
-  childrenClass?: string
-}
-
-export interface AIPlanPromptRefProps {
-  value: string
-}
-
-export interface AIPlanPromptProps {
-  ref?: React.ForwardedRef<AIPlanPromptRefProps>
-  onSave: (v: string) => void
-  onCancel: () => void
-}
-
 export interface AIManualAdditionProps {
-  chatType: ReActChatBaseInfo['chatType']
+  chatType: ChatListRenderType
   onCancel: () => void
 }

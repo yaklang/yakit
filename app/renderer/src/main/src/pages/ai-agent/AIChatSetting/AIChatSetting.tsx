@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState } from 'react'
-import { AIChatSettingProps, FormItemSliderProps } from './type'
+import type { AIChatSettingProps, FormItemSliderProps } from './type'
 import { Form, Slider, Tooltip } from 'antd'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { useMemoizedFn } from 'ahooks'
@@ -9,14 +9,13 @@ import cloneDeep from 'lodash/cloneDeep'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { AIAgentSettingDefault, AIReviewRuleOptions } from '../defaultConstant'
-import { YakitRadioButtonsProps } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType'
+import type { YakitRadioButtonsProps } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 
 // import classNames from "classnames"
 import styles from './AIChatSetting.module.scss'
-import emiter from '@/utils/eventBus/eventBus'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
@@ -37,16 +36,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
     form && form.setFieldsValue({ ...(setting || {}) })
   }, [setting])
 
-  const handleFormChange = useMemoizedFn((changedValues, value) => {
-    if (!!changedValues.ReviewPolicy) {
-      emiter.emit('onRefreshAIReviewRuleSelect', JSON.stringify({ reviewPolicy: changedValues.ReviewPolicy }))
-    }
-    if (changedValues.AIReviewRiskControlScore !== undefined) {
-      emiter.emit(
-        'onRefreshAIReviewRuleSelect',
-        JSON.stringify({ AIReviewRiskControlScore: changedValues.AIReviewRiskControlScore }),
-      )
-    }
+  const handleFormChange = useMemoizedFn((changedValues) => {
     setSetting && setSetting((old) => ({ ...old, ...changedValues }))
   })
 
@@ -331,7 +321,6 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 onClick={(e) => {
                   e.stopPropagation()
                   const restValue = {
-                    TimelineItemLimit: AIAgentSettingDefault.TimelineItemLimit,
                     TimelineContentSizeLimit: AIAgentSettingDefault.TimelineContentSizeLimit,
                     AICallTokenLimit: AIAgentSettingDefault.AICallTokenLimit,
                     UserInteractLimit: AIAgentSettingDefault.UserInteractLimit,
@@ -344,9 +333,6 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
               </YakitButton>
             }
           >
-            <Form.Item label={<>时间线上下文限制</>} name="TimelineItemLimit">
-              <YakitInputNumber type="horizontal" size="small" min={0} max={200} />
-            </Form.Item>
             <Form.Item
               label={<>时间线上下文大小</>}
               name="TimelineContentSizeLimit"

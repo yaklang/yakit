@@ -1,11 +1,11 @@
-import { SolidAnnotationIcon, SolidHashtagIcon } from '@/assets/icon/solid'
+import { SolidAnnotationIcon } from '@/assets/icon/solid'
 import { useState, type FC, type ReactNode } from 'react'
 import ChatCard from './ChatCard'
 import FileList from './FileList'
 import styles from './StreamCard.module.scss'
 import ModalInfo, { type ModalInfoProps } from './ModelInfo'
-import { AIYakExecFileRecord } from '@/pages/ai-re-act/hooks/aiRender'
-import { OperationCardFooter, OperationCardFooterProps } from './OperationCardFooter/OperationCardFooter'
+import type { AIYakExecFileRecord } from '@/pages/ai-re-act/hooks/aiRender'
+import { OperationCardFooter, type OperationCardFooterProps } from './OperationCardFooter/OperationCardFooter'
 
 interface StreamCardProps {
   content?: ReactNode

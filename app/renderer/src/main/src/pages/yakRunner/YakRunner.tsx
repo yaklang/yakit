@@ -78,7 +78,7 @@ import { randomString } from '@/utils/randomUtil'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { HistoryAIReActChatProvider } from '@/components/historyAIReActChat'
-import { yakRunnerPageAiStore } from '@/pages/ai-agent/store/ChatDataStore'
+import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YAK_RUNNER_FOCUS_MODE_CODE_SECURITY_AUDIT } from '@/constants/focusMode'
 import { YakRunnerAiAttachProvider, YakRunnerAiAttachRef, useYakRunnerAiAttachRef } from './YakRunnerAiAttachContext'
 import { YakRunnerAiSidePanel } from './YakRunnerAiSidePanel'
@@ -1286,9 +1286,10 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
 const YakRunnerWithAIInner: React.FC<YakRunnerProps> = (props) => {
   return (
     <HistoryAIReActChatProvider
-      cacheDataStore={yakRunnerPageAiStore}
+      source={AISourceEnum.yakRunner}
+      route={YakitRoute.YakScript}
+      pageId={YAK_RUNNER_AI_PAGE_ID}
       focusModeLoop={YAK_RUNNER_FOCUS_MODE_CODE_SECURITY_AUDIT}
-      yakRunnerPageId={YAK_RUNNER_AI_PAGE_ID}
     >
       <YakRunnerAiSidePanel>
         <YakRunnerWorkbench {...props} />

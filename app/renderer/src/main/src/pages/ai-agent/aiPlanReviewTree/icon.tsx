@@ -1,6 +1,6 @@
 import Icon from '@ant-design/icons'
-import { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
-import React from 'react'
+import type { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
+import type React from 'react'
 
 interface IconProps extends CustomIconComponentProps {
   onClick: (e: React.MouseEvent) => void

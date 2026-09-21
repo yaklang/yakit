@@ -1,40 +1,25 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams } from './type'
-import { useCreation, useDebounceFn, useInViewport, useMap, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
+import React, { memo, useEffect, useRef, useState } from 'react'
+import type { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams } from './type'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
-import { AIAgentTriggerEventInfo } from '../aiAgentType'
+import type { AIAgentTriggerEventInfo } from '../aiAgentType'
 import useAIAgentStore from '../useContext/useStore'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import { isForcedSetAIModal } from '../aiModelList/utils'
-import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import cloneDeep from 'lodash/cloneDeep'
-import { randomString } from '@/utils/randomUtil'
-import ChatIPCContent, {
-  AIChatIPCSendParams,
-  AISendConfigHotpatchParams,
-  AISendSyncMessageParams,
-  ChatIPCContextDispatcher,
-  ChatIPCContextStore,
-} from '../useContext/ChatIPCContent/ChatIPCContent'
 import { AIReActChatReview } from '@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon } from '@/assets/icon/outline'
-import { AIChatIPCStartParams, ChatIPCSendType, UseTaskChatState } from '@/pages/ai-re-act/hooks/type'
-import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
-import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
-import { AIAgentGrpcApi, AIInputEvent, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AIChatQSData, AIReviewType } from '@/pages/ai-re-act/hooks/aiRender'
 import { failed, yakitNotify } from '@/utils/notification'
 import { AIForgeForm, AIToolForm } from '../aiTriageChatTemplate/AITriageChatTemplate'
 import { grpcGetAIForge } from '../grpc'
-import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { AIForge } from '../type/forge'
-import { AITool } from '../type/aiTool'
+import type { AIForge } from '../type/forge'
+import type { AITool } from '../type/aiTool'
 import { AIChatContent } from '../aiChatContent/AIChatContent'
 import { AIAgentSettingDefault, AITabsEnum, ReActChatEventEnum } from '../defaultConstant'
 import { grpcGetAIToolById } from '../aiToolList/utils'
@@ -43,31 +28,33 @@ import useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHo
 import { useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
-import { aiChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './AIAgentChat.module.scss'
-import { AIChatContentRefProps } from '../aiChatContent/type'
-import { PageNodeItemProps } from '@/store/pageInfo'
+import type { AIChatContentRefProps } from '../aiChatContent/type'
+import type { PageNodeItemProps } from '@/store/pageInfo'
 import { Trans } from 'react-i18next'
-import { AIInputWithParamsTemplate, aiInputWithParamsTemplate } from '../components/aiMilkdownInput/utils'
+import { type AIInputWithParamsTemplate, aiInputWithParamsTemplate } from '../components/aiMilkdownInput/utils'
+import { useStore } from 'zustand'
+import type { AIForgeFormSubmitParamsProps } from '../aiTriageChatTemplate/type'
+import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { onReStart } from '../utils'
+import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
 
 const AIChatWelcome = React.lazy(() => import('../aiChatWelcome/AIChatWelcome'))
-
-const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
-  if (!taskChat) return false
-
-  const isHavePlan = !!taskChat.plan?.task_tree?.length
-  const isHaveStreams = !!taskChat.elements?.length
-  return isHavePlan || isHaveStreams
-}
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { activeChat } = useAIAgentStore()
-  const { setActiveChat, getSetting, setSetting } = useAIAgentDispatcher()
+  const { setActiveChat, setSetting, onStart, onClose } = useAIAgentDispatcher()
   const { selectAgentByForgeName } = useDigitalEmployee()
+
+  /** 当前对话唯一ID */
+  const sessionId = useCurrentSessionId()
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
 
   const aiReActChatRef = useRef<AIChatContentRefProps>(null)
   const aiChatWelcomeRef = useRef<AIChatContentRefProps>(null)
@@ -87,31 +74,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   }, [activeChat?.StartParams?.ForgeName])
 
   useEffect(() => {
-    const chatData = aiChatDataStore.get(activeChat?.SessionID || '')
-    if (taskChatIsEmpty(chatData?.taskChat)) {
-      onSetKeyTask()
-    } else if (!!activeChat?.Id) {
+    if (activeChat?.SessionID) {
       onSetReAct()
+      onReStart({ activeChat, onStart })
     }
-  }, [activeChat])
-
-  useEffect(() => {
-    if (mode === 'welcome') {
-      events.onReset()
-    }
-  }, [mode])
-
-  /**自由对话中触发任务开始 */
-  const handleTaskStart = useMemoizedFn(() => {
-    onSetKeyTask()
-  })
-
-  const onSetKeyTask = useMemoizedFn(() => {
-    setMode('task')
-    setTimeout(() => {
-      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Task_Content }))
-    }, 100)
-  })
+  }, [activeChat?.SessionID])
 
   const onSetReAct = useMemoizedFn(() => {
     setMode('re-act')
@@ -119,153 +86,17 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Task_Content }))
     }, 100)
   })
-
-  // review数据中树的数据中需要的解释和关键词工具
-  const [planReviewTreeKeywordsMap, { set: setPlanReviewTreeKeywords, reset: resetPlanReviewTreeKeywords }] = useMap<
-    string,
-    AIAgentGrpcApi.PlanReviewRequireExtra
-  >(new Map())
-
-  const [reviewInfo, setReviewInfo] = useState<AIChatQSData>()
-  const [reviewExpand, setReviewExpand] = useState<boolean>(true)
-
-  const handleShowReview = useMemoizedFn((info: AIChatQSData) => {
-    setReviewExpand(true)
-    setReviewInfo(cloneDeep(info))
-  })
-  const handleShowReviewExtra = useMemoizedFn((info: AIAgentGrpcApi.PlanReviewRequireExtra) => {
-    setPlanReviewTreeKeywords(info.index, info)
-  })
-  const handleReleaseReview = useMemoizedFn((type: ChatIPCSendType, id: string) => {
-    if (!reviewInfo) return
-    if ((reviewInfo.data as AIReviewType).id === id) {
-      // if (!delayLoading) yakitNotify("warning", "审阅自动执行，弹框将自动关闭")
-      handleStopAfterChangeState()
-    }
-  })
-
-  /** 当前对话唯一ID */
-  const activeID = useCreation(() => {
-    return activeChat?.SessionID
-  }, [activeChat])
-
-  // 提问结束后缓存数据
-  const handleChatingEnd = useMemoizedFn(() => {
-    handleStopAfterChangeState()
-  })
-
-  const setSessionChatName = (session: string, name: string) => {
-    setActiveChat?.((prev) => {
-      if (!prev) return prev
-      if (prev.SessionID !== session) return prev
-      return { ...prev, Title: name }
-    })
-    emiter.emit(
-      'sessionData',
-      JSON.stringify({
-        type: 'updateSession',
-        sessionId: session,
-        updates: { Title: name },
-      }),
-    )
-  }
-
-  const [syncIdInfoMap, { set: setSyncIdInfoMap, get: getSyncIdInfoMap, remove: removeSyncIdInfoMap }] = useMap<
-    string,
-    boolean
-  >(new Map())
-
-  const onSyncIDChange = useMemoizedFn((syncID: string) => {
-    const item = getSyncIdInfoMap(syncID)
-    if (!!item) {
-      removeSyncIdInfoMap(syncID)
-    }
-  })
-  const [chatIPCData, events] = useChatIPC({
-    autoConnect: true,
-    onEnd: handleChatingEnd,
-    onTaskReview: handleShowReview,
-    onTaskReviewExtra: handleShowReviewExtra,
-    onReviewRelease: handleReleaseReview,
-    onTaskStart: handleTaskStart,
-    setSessionChatName,
-    onSyncIDChange,
-    cacheDataStore: aiChatDataStore,
-    getSetting,
-  })
-  const { execute } = chatIPCData
-
+  /** 等自由对话渲染出来再发送 */
   const handleStart = useMemoizedFn((value: HandleStartParams) => {
     setTimeout(() => {
-      aiReActChatRef.current?.handleStart(value) // 等自由对话渲染出来再发送
+      aiReActChatRef.current?.handleStart(value)
     })
-  })
-
-  const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
-    handleSendInteractiveMessage(params, 'casual')
-  })
-  const handleSendTask = useMemoizedFn((params: AIChatIPCSendParams) => {
-    handleSendInteractiveMessage(params, 'task')
-  })
-  const handleSend = useMemoizedFn((params: AIChatIPCSendParams) => {
-    handleSendInteractiveMessage(params, '')
-  })
-  /**发送 IsInteractiveMessage 消息 */
-  const handleSendInteractiveMessage = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
-    const { value, id, optionValue } = params
-    if (!activeID) return
-    if (!id) return
-
-    const info: AIInputEvent = {
-      IsInteractiveMessage: true,
-      InteractiveId: id,
-      InteractiveJSONInput: value,
-    }
-    events.onSend({ token: activeID, type, params: info, optionValue })
-    handleStopAfterChangeState()
-  })
-  /**发送 IsSyncMessage 消息 */
-  const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
-    if (!activeID) return
-    const { syncType, SyncJsonInput, params, syncID } = data
-    const info: AIInputEvent = {
-      IsSyncMessage: true,
-      SyncType: syncType,
-      SyncJsonInput,
-      Params: params,
-      SyncID: syncID || randomString(8),
-    }
-    info.SyncID && setSyncIdInfoMap(info.SyncID, true)
-    events.onSend({ token: activeID, type: '', params: info })
-  })
-
-  /**发送 IsConfigHotpatch 消息 */
-  const handleSendConfigHotpatch = useMemoizedFn((data: AISendConfigHotpatchParams) => {
-    if (!activeID) return
-    const { hotpatchType, params, taskId } = data
-    const info: AIInputEvent = {
-      IsConfigHotpatch: true,
-      HotpatchType: hotpatchType,
-      Params: params,
-    }
-    if (!!taskId) {
-      info.TaskId = taskId
-    }
-    events.onSend({ token: activeID, type: '', params: info })
   })
 
   const onStop = useMemoizedFn(() => {
-    if (execute && activeID) {
-      events.onClose(activeID)
-      handleStopAfterChangeState()
+    if (execute && sessionId) {
+      onClose([sessionId])
     }
-  })
-  /** 停止回答后的状态调整||清空Review状态 */
-  const handleStopAfterChangeState = useMemoizedFn(() => {
-    // 清空review信息
-    setReviewInfo(undefined)
-    resetPlanReviewTreeKeywords()
-    setReviewExpand(true)
   })
 
   useEffect(() => {
@@ -283,69 +114,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setReplaceToolNoPrompt(replace)
       })
       .catch(() => {})
-    // ai-re-act 页面左侧侧边栏向 chatUI 发送的事件
-    const onEvents = (res: string) => {
-      try {
-        const data = JSON.parse(res) as AIAgentTriggerEventInfo
-        if (!data.type) return
-        switch (data.type as ReActChatEventEnum) {
-          // 新开聊天对话窗
-          case ReActChatEventEnum.NEW_CHAT:
-            setSetting?.((old) => ({
-              ...old,
-              SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
-              EnablePlan: AIAgentSettingDefault.EnablePlan,
-            }))
-            setActiveChat?.(undefined)
-            setTimeout(() => {
-              setMode('welcome')
-            }, 100)
-            break
-          // 替换当前使用的 forge 模板
-          case ReActChatEventEnum.OPEN_FORGE_FORM:
-            const { value: forgeValue } = data.params || {}
-            handleClearActiveTool()
-            handleTriggerExecForge(forgeValue, data.useForge)
-            break
-          // 替换当前使用的 ai tool
-          case ReActChatEventEnum.USE_AI_TOOL:
-            const { value: toolValue } = data.params || {}
-            handleClearActiveForge()
-            handleAITool(toolValue)
-            break
-
-          default:
-            break
-        }
-      } catch (error) {}
-    }
-    emiter.on('onReActChatEvent', onEvents)
-    return () => {
-      emiter.off('onReActChatEvent', onEvents)
-    }
-  }, [])
-
-  useUpdateEffect(() => {
-    onHistoryAfter()
-    events.onSwitchChat(activeChat?.SessionID, activeChat?.isCreate)
-  }, [activeChat])
-
-  /**切换历史后的处理逻辑 */
-  const onHistoryAfter = useMemoizedFn(() => {
-    if (mode === 'welcome') setMode('re-act')
-  })
-
-  const handleDelChats = useMemoizedFn((jsonString: string) => {
-    try {
-      const sessions: string[] = JSON.parse(jsonString)
-      events.onDelChats(sessions)
-    } catch (error) {}
-  })
-  useEffect(() => {
-    emiter.on('onDelChats', handleDelChats)
-    return () => {
-      emiter.off('onDelChats', handleDelChats)
-    }
   }, [])
 
   //#region 使用 AI-Forge 模板/Tool 相关逻辑
@@ -368,13 +136,66 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   // 储存 replaceToolNoPrompt 存放到缓存里值，阻止多次设置重复值
   const replaceToolNoPromptCache = useRef(false)
 
+  useEffect(() => {
+    if (!inViewPort) return
+    // ai-re-act 页面左侧侧边栏向 chatUI 发送的事件
+    emiter.on('onReActChatEvent', onEvents)
+    return () => {
+      emiter.off('onReActChatEvent', onEvents)
+    }
+  }, [inViewPort])
+
+  const onEvents = useMemoizedFn((res) => {
+    try {
+      const data = JSON.parse(res) as AIAgentTriggerEventInfo
+      if (!data.type) return
+      switch (data.type as ReActChatEventEnum) {
+        // 新开聊天对话窗
+        case ReActChatEventEnum.NEW_CHAT:
+          setSetting?.((old) => ({
+            ...old,
+            SyncPerceptionTrigger: false,
+            EnablePlan: false,
+            Strategy: {
+              EnableMultiAgent: false,
+              EnableGoalMode: false,
+              GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
+              MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
+            },
+          }))
+          setActiveChat?.(undefined)
+          setMode('welcome')
+          break
+        // 替换当前使用的 forge 模板
+        case ReActChatEventEnum.OPEN_FORGE_FORM:
+          {
+            const { value: forgeValue } = data.params || {}
+            handleClearActiveTool()
+            handleTriggerExecForge(forgeValue, data.useForge)
+          }
+          break
+        // 替换当前使用的 ai tool
+        case ReActChatEventEnum.USE_AI_TOOL:
+          {
+            const { value: toolValue } = data.params || {}
+            handleClearActiveForge()
+            handleAITool(toolValue)
+          }
+          break
+
+        default:
+          break
+      }
+    } catch (error) {}
+  })
+
   /** 从别的元素上触发使用 forge 模板的功能 */
   const handleTriggerExecForge = useMemoizedFn((forge: AIForge, useForge?: boolean) => {
     if (!forge || !forge.Id) {
       yakitNotify('error', t('AIAgentChat.templateDataError'))
       return
     }
-    if (!chatIPCData.execute) {
+    if (!execute) {
       handleReplaceActiveForge(forge, useForge)
     } else {
       const m = YakitModalConfirm({
@@ -414,7 +235,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       yakitNotify('error', t('AIAgentChat.templateDataError'))
       return
     }
-    if (!chatIPCData.execute) {
+    if (!execute) {
       handleReplaceActiveTool(toolValue.ID)
     } else {
       const m = YakitModalConfirm({
@@ -424,7 +245,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         footerStyle: { padding: '0 24px 24px' },
         content: (modalT) => (
           <div className={styles['forge-modal-content']}>
-            {!!chatIPCData.execute ? (
+            {execute ? (
               <>
                 <Trans
                   i18nKey="AIAgentChat.interruptConfirm"
@@ -466,9 +287,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     setActiveTool(undefined)
   })
 
-  const handleSubmitForge = useMemoizedFn((request: AIStartParams, formValue: AIChatIPCStartParams['extraValue']) => {
+  const handleSubmitForge = useMemoizedFn((data: AIForgeFormSubmitParamsProps) => {
+    const { request, formValue } = data
     setMode('re-act')
-    const description = `${t('AIAgentChat.useForgeTask', { name: request.ForgeName || '' })}${!!formValue ? t('AIAgentChat.params') : ''}`
+    const description = `${t('AIAgentChat.useForgeTask', { name: request.ForgeName || '' })}${formValue ? t('AIAgentChat.params') : ''}`
 
     const params: AIInputWithParamsTemplate = {
       description,
@@ -477,9 +299,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const qs = aiInputWithParamsTemplate(params)
     handleStart({
       qs,
-      extraValue: {
-        showQS: qs,
-      },
     })
     handleClearActiveForge()
   })
@@ -495,9 +314,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     })}${question ? `${t('AIAgentChat.input')}${question}` : ''}`
     handleStart({
       qs,
-      extraValue: {
-        showQS: qs,
-      },
     })
     handleClearActiveTool()
   })
@@ -511,7 +327,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       }
       let forgeInfo = cloneDeep(forge)
       if (!useForge) {
-        let res = await grpcGetAIForge({ ID: forgeID })
+        const res = await grpcGetAIForge({ ID: forgeID })
         forgeInfo = cloneDeep(res)
       }
       if (!activeForge) setActiveForge(forgeInfo)
@@ -587,26 +403,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     setReplaceToolShow(false)
   })
   // #endregion
-  const store: ChatIPCContextStore = useCreation(() => {
-    return {
-      chatIPCData,
-      planReviewTreeKeywordsMap,
-      reviewInfo,
-      reviewExpand,
-      syncIdInfoMap,
-    }
-  }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, syncIdInfoMap])
-  const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
-    return {
-      chatIPCEvents: events,
-      handleSendCasual,
-      handleSendTask,
-      handleStop: onStop,
-      handleSend,
-      handleSendSyncMessage,
-      handleSendConfigHotpatch,
-    }
-  }, [events])
 
   const [visible, setVisible] = useSafeState(false)
   const { clearAll } = useKnowledgeBase()
@@ -646,7 +442,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const onChat = useMemoizedFn(() => {
     onSetReAct()
   })
-  const onChatFromHistory = useMemoizedFn((session: string) => {})
 
   useEffect(() => {
     emiter.on('defualtAIMentionCommandParams', konwledgeInputStringFn)
@@ -691,45 +486,41 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     { leading: true },
   ).run
 
-  const chatIPCContextValue = useMemo(() => ({ store, dispatcher }), [store, dispatcher])
-
   return (
     <div ref={wrapperRef} className={styles['ai-agent-chat']}>
-      <ChatIPCContent.Provider value={chatIPCContextValue}>
-        <div className={styles['chat-wrapper']}>
-          {mode === 'welcome' ? (
-            <React.Suspense fallback={<div>loading...</div>}>
-              <AIChatWelcome
-                onTriageSubmit={handleStartTriageChat}
-                onSetReAct={onSetReAct}
-                api={api}
-                streams={streams}
-                ref={aiChatWelcomeRef}
-              />
-            </React.Suspense>
-          ) : (
-            <AIChatContent ref={aiReActChatRef} onChat={onChat} onChatFromHistory={onChatFromHistory} />
+      <div className={styles['chat-wrapper']}>
+        {mode === 'welcome' ? (
+          <React.Suspense fallback={<div>loading...</div>}>
+            <AIChatWelcome
+              onTriageSubmit={handleStartTriageChat}
+              onSetReAct={onSetReAct}
+              api={api}
+              streams={streams}
+              ref={aiChatWelcomeRef}
+            />
+          </React.Suspense>
+        ) : (
+          <AIChatContent ref={aiReActChatRef} onChat={onChat} />
+        )}
+        <div className={styles['footer-forge-form']}>
+          {activeForge && (
+            <AIForgeForm
+              wrapperRef={wrapperRef}
+              info={activeForge}
+              onBack={handleClearActiveForge}
+              onSubmit={handleSubmitForge}
+            />
           )}
-          <div className={styles['footer-forge-form']}>
-            {activeForge && (
-              <AIForgeForm
-                wrapperRef={wrapperRef}
-                info={activeForge}
-                onBack={handleClearActiveForge}
-                onSubmit={handleSubmitForge}
-              />
-            )}
-            {activeTool && (
-              <AIToolForm
-                wrapperRef={wrapperRef}
-                info={activeTool}
-                onBack={handleClearActiveTool}
-                onSubmit={handleSubmitTool}
-              />
-            )}
-          </div>
+          {activeTool && (
+            <AIToolForm
+              wrapperRef={wrapperRef}
+              info={activeTool}
+              onBack={handleClearActiveTool}
+              onSubmit={handleSubmitTool}
+            />
+          )}
         </div>
-      </ChatIPCContent.Provider>
+      </div>
       <YakitHint
         getContainer={wrapperRef.current || undefined}
         visible={replaceShow}
@@ -776,13 +567,24 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
 export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { reviewInfo, planReviewTreeKeywordsMap, footerExtra } = props
-  const { reviewExpand } = useChatIPCStore()
-  const { handleSendTask, handleSendSyncMessage } = useChatIPCDispatcher()
+  const { footerExtra } = props
   const [expand, setReviewExpand] = useState<boolean>(true)
-  useEffect(() => {
-    setReviewExpand(reviewExpand)
-  }, [reviewExpand])
+
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+  const meta = useCurrentMeta()
+  const currentReviewDetailRenderNum = useStore(store, (state) => state.currentReviewDetail?.renderNum)
+  const currentReviewDetailToken = useStore(store, (state) => state.currentReviewDetail?.token)
+  const currentPlanReviewExtraUpdate = useStore(store, (state) => state.currentPlanReviewExtraUpdate)
+
+  const reviewInfo = useCreation(() => {
+    return rawData.contents.get(currentReviewDetailToken)
+  }, [currentReviewDetailToken, currentReviewDetailRenderNum])
+
+  const planReviewTreeKeywordsMap = useCreation(() => {
+    return meta.planReviewExtraData
+  }, [currentPlanReviewExtraUpdate])
+
   const handleExpand = useMemoizedFn(() => {
     setReviewExpand((old) => !old)
   })
@@ -796,10 +598,11 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
         >
           {expand ? t('AIReActTaskChatReview.hideReview') : t('AIReActTaskChatReview.expandReview')}
         </YakitButton>
-        <div className={styles['review-footer-extra']}>{footerExtra(node)}</div>
+        <div className={styles['review-footer-extra']}>{footerExtra ? footerExtra(node) : node}</div>
       </div>
     )
   })
+  if (!reviewInfo) return null
   return (
     <div className={styles['review-box']}>
       <div
@@ -809,13 +612,13 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
       >
         <div className={styles['review-wrapper']}>
           <AIReActChatReview
+            chatType="task"
             info={reviewInfo}
-            onSendAI={handleSendTask}
-            onSendSyncMessage={handleSendSyncMessage}
             planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
             renderFooterExtra={renderFooter}
             expand={expand}
             className={styles['review-body']}
+            renderNum={currentReviewDetailRenderNum}
           />
         </div>
       </div>

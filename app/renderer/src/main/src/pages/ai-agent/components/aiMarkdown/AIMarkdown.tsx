@@ -1,6 +1,6 @@
-import { AIMarkdownProps } from './type'
-import React, { ReactNode, useRef, useState } from 'react'
-import { ReportItem } from '@/pages/assetViewer/reportRenders/schema'
+import type { AIMarkdownProps } from './type'
+import React, { type ReactNode, useRef, useState } from 'react'
+import type { ReportItem } from '@/pages/assetViewer/reportRenders/schema'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import styles from './AIMarkdown.module.scss'
@@ -11,27 +11,26 @@ import {
   OutlineDownloadIcon,
   OutlineNotebookIcon,
 } from '@/assets/icon/outline'
-import ModalInfo from '../ModelInfo'
 import { ColorsPreViewMDIcon, ColorsSourceCodeIcon } from '@/assets/icon/colors'
-import ChatCard from '../ChatCard'
 import { Tooltip } from 'antd'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import moment from 'moment'
 import { saveABSFileToOpen } from '@/utils/openWebsite'
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
-import { ModifyNotepadPageInfoProps } from '@/store/pageInfo'
+import type { ModifyNotepadPageInfoProps } from '@/store/pageInfo'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
+import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
-  const { content, nodeLabel, className, modalInfo, referenceNode, streaming } = props
+  const { content, nodeLabel, className, referenceNode, streaming, token } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { goAddNotepad } = useGoEditNotepad()
 
   const [type, setType] = useState<'preview' | 'code'>('preview')
-  const [expand, setExpand] = useState<boolean>(true)
+  const [expand, setExpand] = useUiExpand(token || '', true)
   const item: ReportItem = useCreation(() => {
     const value: ReportItem = {
       type: '',
@@ -87,11 +86,9 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
   const isChildWindow = useRef(isAuxOrChildWindow())
 
   return (
-    <ChatCard
-      titleText={nodeLabel}
-      titleExtra={<ModalInfo {...modalInfo} />}
-      titleMore={
-        <div className={styles['header-extra']}>
+    <div className={classNames(styles['ai-milkdown-wrapper'], className)}>
+      <div className={styles['ai-milkdown-body']}>
+        <div className={styles['hover-actions']}>
           {!isChildWindow.current && (
             <Tooltip title={t('AIMarkdown.openFromNotepad')}>
               <YakitButton size="small" type="text" icon={<OutlineNotebookIcon />} onClick={onGoToNote} />
@@ -117,11 +114,9 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
             />
           </Tooltip>
         </div>
-      }
-      className={classNames(styles['ai-milkdown-wrapper'], className)}
-    >
-      {renderContent()}
-      {referenceNode}
-    </ChatCard>
+        {renderContent()}
+        {referenceNode}
+      </div>
+    </div>
   )
 })

@@ -1,6 +1,6 @@
 import type { AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
-import { getFileSuffixFromPath, normalizeYakRunnerFilePath } from '@/pages/yakRunner/utils'
+import { getFileSuffixFromPath, isYaklangScriptDeliveryPath, normalizeYakRunnerFilePath } from '@/pages/yakRunner/utils'
 import { yakitFailed } from '@/utils/notification'
 
 export const YAK_RUNNER_AI_PAGE_ID = 'yak-runner-main'
@@ -55,9 +55,14 @@ export function createYakRunnerGeneratedCodeFileName(date = new Date()): string 
 }
 
 function getDirectoryPathFromAttachedResourceInfo(attachedResourceInfo?: AttachedResourceInfo[]): string | undefined {
-  return attachedResourceInfo
-    ?.find((item) => item.Key === AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID)
-    ?.Value?.trim()
+  const attachedResourceInfoValue = attachedResourceInfo?.find(
+    (item) => item.Key === AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
+  )?.Value
+  const result =
+    typeof attachedResourceInfoValue === 'string'
+      ? attachedResourceInfoValue?.trim()
+      : attachedResourceInfoValue?.join(',').trim()
+  return result
 }
 
 function joinDirectoryAndFileName(directoryPath: string, fileName: string): string {
@@ -141,9 +146,9 @@ export function getYakRunnerPageWorkspaceContext(pageId: string): YakRunnerWorks
 }
 
 /**
- * yaklang writer loop：无选中代码时仍附带工作区上下文
- * - 已打开文件夹 → directory_path
- * - 已打开并停留文件 → 再加 file_path
+ * yaklang writer loop：附带工作区上下文
+ * - 已打开文件夹 → Type=file Key=directory_path
+ * - 当前打开的 .yak → Type=code Key=file_path（可写交付，与 @ 参考附加 Type=file 区分）
  * - 选中代码块由 codeBlockList 附带 selected/content，此处不重复写入
  */
 export function appendYakRunnerWorkspaceContextToEvent(pageId: string, event: AIInputEvent): AIInputEvent {
@@ -155,25 +160,36 @@ export function appendYakRunnerWorkspaceContextToEvent(pageId: string, event: AI
   if (!directoryPath && !filePath) return event
 
   const existing = event.AttachedResourceInfo || []
-  const hasKey = (key: AttachedResourceKeyEnum) => existing.some((item) => item.Key === key)
+  // Drop previous Type=code delivery entries; we upsert the active editor target below.
+  let next = existing.filter((item) => item.Type !== AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE)
 
-  const toAppend: AttachedResourceInfo[] = []
-  if (directoryPath && !hasKey(AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID)) {
-    toAppend.push({
-      Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
-      Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
-      Value: directoryPath,
-    })
+  const hasDirectoryPath = next.some(
+    (item) => item.Key === AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
+  )
+  if (directoryPath && !hasDirectoryPath) {
+    next = [
+      ...next,
+      {
+        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
+        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
+        Value: directoryPath,
+      },
+    ]
   }
-  if (filePath && !hasKey(AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID)) {
-    toAppend.push({
-      Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
-      Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID,
-      Value: filePath,
-    })
+
+  // Writable delivery must use Type=code so @mention Type=file file_path stays reference-only.
+  if (filePath && isYaklangScriptDeliveryPath(filePath)) {
+    next = [
+      ...next,
+      {
+        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE,
+        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
+        Value: filePath,
+      },
+    ]
   }
-  if (toAppend.length === 0) return event
-  return { ...event, AttachedResourceInfo: [...existing, ...toAppend] }
+
+  return { ...event, AttachedResourceInfo: next }
 }
 
 export type ApplyYaklangCodeChangeOptions = {
@@ -187,11 +203,11 @@ export function applyYaklangCodeChangeToYakRunnerPage(
 ): void {
   const fn = pageApplyHandlers.get(pageId)
   if (!fn) {
-    yakitFailed('未找到脚本执行器工作区，请保持该页已打开。')
+    yakitFailed('未找到 Yak Runner 工作区，请保持该页已打开。')
     return
   }
   const content = String(data.code?.content ?? '')
-  if (content.trim() === '') return
+  if (data.op === 'create' && content.trim() === '') return
   const path = resolveYaklangCodeChangePath(data)
   const lastApplied = lastAppliedCodeByPage.get(pageId)
   if (!options?.skipReplaceDedup && lastApplied && lastApplied.content === content && lastApplied.path === path) {

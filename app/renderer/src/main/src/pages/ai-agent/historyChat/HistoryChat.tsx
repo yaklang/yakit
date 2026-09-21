@@ -1,7 +1,6 @@
 import { memo, useEffect, useMemo, useState, type ReactNode } from 'react'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
-import { useDebounce, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import { ReActChatEventEnum } from '../defaultConstant'
 import { OutlineDesktopcomputerIcon, OutlineMessageCirclePlusIcon, OutlineSearchIcon } from '@/assets/icon/outline'
@@ -13,35 +12,49 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import styles from './HistoryChat.module.scss'
-import { AIAgentTriggerEventInfo } from '../aiAgentType'
+import type { AIAgentTriggerEventInfo } from '../aiAgentType'
 import emiter from '@/utils/eventBus/eventBus'
 import { grpcDeleteAISession } from '../grpc'
-import { AISession } from '../type/aiChat'
-import { SideSettingButton } from '../aiChatWelcome/AIChatWelcome'
+import type { AISession, DeleteAISessionRequest } from '../type/aiChat'
+import { SideSettingButton } from '../aiChatWelcome/AIChatWelcomeSideSetting'
 import HistoryChatList, { DAY_MS, getChatTimestamp } from './HistoryChatList/HistoryChatList'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useSessionList from './HistoryChatList/hook/useSessionList'
-import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { YakitRouteType } from '@/enums/yakitRoute'
 import { JSONParseLog } from '@/utils/tool'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
+import { DeleteSessionsAISourceEnum, handAIHistoryChatRemove } from './utils'
+import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import { sessionStatusStore } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
+import classNames from 'classnames'
+import { useUpdateEffect, useMemoizedFn, useDebounce } from 'ahooks'
+import {
+  filterHistorySessionsBySource,
+  getHistorySourceDeleteSessionSource,
+  getHistorySourceQueryPlatform,
+  getHistorySourceQuerySources,
+  type HistorySourceFilter,
+} from './source'
+import type { DeleteSessionsAISourceType } from './utils'
+import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
-import classNames from 'classnames'
-import { filterHistorySessionsBySource, getHistorySourceQuerySources, type HistorySourceFilter } from './source'
-
-const clearLocalChats = (sessions: AISession[]) =>
-  emiter.emit('onDelChats', JSON.stringify(sessions.map((item) => item.SessionID)))
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 const HISTORY_SOURCE_FILTER_OPTIONS: {
   key: HistorySourceFilter
   title: string
   icon: ReactNode
 }[] = [
-  { key: 'local', title: 'AI Senso 本地会话', icon: <OutlineDesktopcomputerIcon /> },
+  { key: 'local', title: 'Yakit 本地会话', icon: <OutlineDesktopcomputerIcon /> },
   { key: 'feishu', title: '飞书会话', icon: <FeishuIcon /> },
   { key: 'dingtalk', title: '钉钉会话', icon: <DingtalkIcon /> },
 ]
 
 const IM_HISTORY_REFRESH_INTERVAL_MS = 5000
+const ALL_DELETE_SESSION_SOURCES = Object.values(DeleteSessionsAISourceEnum) as DeleteSessionsAISourceType[]
 
 const renderClearConfirm = (
   label: string,
@@ -86,13 +99,14 @@ const isSessionMatchSource = (session: AISession, sources: AISource[]) => {
 }
 
 interface HistoryChatProps {
-  /** 会话来源过滤，AI Agent 侧栏为 ['ai', '']，各业务页为 [source] */
+  /** 会话来源过滤，AI Agent 侧栏为 ['ai', '',"im"]，各业务页为 [source] */
   aiSource: AISource[]
   /** 嵌入 Tooltip 等浮层场景：隐藏新建/固定按钮，弹层挂载到当前页面容器 */
   embedded?: boolean
 }
 
 const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
+  const { setActiveChat, getSetting } = useAIAgentDispatcher()
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [historySourceFilter, setHistorySourceFilter] = useState<HistorySourceFilter>('local')
   const enableHistorySourceFilter = useMemo(() => aiSource.includes('im'), [aiSource])
@@ -103,14 +117,16 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     if (!enableHistorySourceFilter) return aiSource
     return getHistorySourceQuerySources(aiSource, historySourceFilter)
   }, [aiSource, enableHistorySourceFilter, historySourceFilter])
-  const [{ sessions }, dispatcher] = useSessionList(historyQuerySources)
+  const historyQueryPlatform = useMemo(() => {
+    if (!enableHistorySourceFilter) return []
+    return getHistorySourceQueryPlatform(historySourceFilter)
+  }, [enableHistorySourceFilter, historySourceFilter])
+  const [{ sessions }, dispatcher] = useSessionList(historyQuerySources, historyQueryPlatform)
   const { activeChat } = useAIAgentStore()
-  const { setActiveChat } = useAIAgentDispatcher()
+
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
-  const getPopupContainer = useMemoizedFn(
-    () => document.getElementById(`main-operator-page-body-${currentRouteKey}`) || document.body,
-  )
+  const getPopupContainer = useMemoizedFn(() => getMainOperatorPageBodyContainer() || document.body)
   const popupContainer = embedded ? getPopupContainer : undefined
   const embeddedOverlayClass = styles['history-chat-embedded-overlay']
   const embeddedPopconfirmClass = styles['history-chat-embedded-popconfirm']
@@ -129,21 +145,48 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   }, [enableHistorySourceFilter, historySourceFilter, sessions])
 
   const [clearLoading, setClearLoading] = useState(false)
+
+  const chatDataStoreKey = useGetChatDataStoreKey()
+
+  /** 补齐尚未写入历史表、但当前路由内已经运行的会话。 */
+  const getRouteSessionIds = useMemoizedFn((sources: AISource[]) => {
+    const route = currentRouteKey as YakitRouteType
+    return sources.flatMap((source) => globalSessionEngine.getSessionIdsBySourceAndRoute(source, route))
+  })
+
   const handleClearAllChat = useMemoizedFn(async () => {
     if (clearLoading) return
-    if (!isGlobalAIAgentHistory && visibleSessions.length === 0) {
+    const sources = isGlobalAIAgentHistory ? aiSource : historyQuerySources
+    if (!isGlobalAIAgentHistory && visibleSessions.length === 0 && getRouteSessionIds(sources).length === 0) {
       yakitNotify('info', t('HistoryChat.noChatsToClear'))
       return
     }
 
     setClearLoading(true)
+    sessionStatusStore.getState().setSourceDeleting(sources, true)
     try {
-      if (isGlobalAIAgentHistory) {
-        await grpcDeleteAISession({ DeleteAll: true }, true)
+      let filter: DeleteAISessionRequest = {}
+      let deleteSessionsSource: DeleteSessionsAISourceType[] = sources
+      if (isGlobalAIAgentHistory && historySourceFilter === 'local') {
+        // Global AI Agent 侧栏 + local 分组：清空全部来源的会话。
+        filter = { DeleteAll: true }
+        deleteSessionsSource = ALL_DELETE_SESSION_SOURCES
+      } else if (isGlobalAIAgentHistory && enableHistorySourceFilter) {
+        // Global AI Agent 侧栏 + IM 平台分组：只删该平台，不波及其它来源/平台。
+        // gRPC 仍按 Source=['im'] + Platform 精确删除；
+        // 本地 deleteSessionsParams.source 用平台区分型（im-Lark/im-DingTalk）以精确命中。
+        filter = { Filter: { Source: ['im'], Platform: historyQueryPlatform } }
+        deleteSessionsSource = [getHistorySourceDeleteSessionSource(historySourceFilter)]
       } else {
-        await grpcDeleteAISession({ Filter: { Source: historyQuerySources } }, true)
+        // 业务页嵌入：按当前分组的 source + platform 删除。
+        filter = { Filter: { Source: historyQuerySources, Platform: historyQueryPlatform } }
       }
-      clearLocalChats(visibleSessions)
+      await handAIHistoryChatRemove({
+        grpcDeleteAISessionParams: filter,
+        handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
+        // 按 source 列表清空；不传 deleteAll，全库清删由其它入口负责
+        deleteSessionsParams: { sessionIds: [], source: deleteSessionsSource },
+      })
       onNewChat()
       setActiveChat?.(undefined)
       dispatcher.setSessions?.([])
@@ -153,6 +196,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     } catch (e) {
       yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
     } finally {
+      sessionStatusStore.getState().setSourceDeleting(sources, false)
       setClearLoading(false)
     }
   })
@@ -161,33 +205,38 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     if (clearLoading) return
 
     const beforeTimestamp = Date.now() - days * DAY_MS
-    const deletedChats = visibleSessions.filter((item) => getChatTimestamp(item) <= beforeTimestamp)
+    const sessionIds = visibleSessions
+      .filter((session) => getChatTimestamp(session) <= beforeTimestamp)
+      .map((session) => session.SessionID)
 
-    if (deletedChats.length === 0) {
+    if (sessionIds.length === 0) {
       yakitNotify('info', t('HistoryChat.noChatsBeforeDays', { days }))
       return
     }
 
     setClearLoading(true)
+    // 按 source 打上批量删除标记，让 AIChatContent 的 sourceDeleting selector 生效
+    sessionStatusStore.getState().setSourceDeleting(historyQuerySources, true)
     try {
       const filter =
         enableHistorySourceFilter && historySourceFilter !== 'local'
           ? {
-              SessionID: deletedChats.map((item) => item.SessionID),
+              SessionID: sessionIds,
               Source: historyQuerySources,
+              Platform: historyQueryPlatform,
             }
           : {
               BeforeTimestamp: beforeTimestamp,
               Source: historyQuerySources,
             }
-      await grpcDeleteAISession({ Filter: filter }, true)
-
-      clearLocalChats(deletedChats)
-
-      const deletedSessionIds = new Set(deletedChats.map((item) => item.SessionID))
-      const nextChats = sessions.filter((item) => !deletedSessionIds.has(item.SessionID))
-      const activeDeleted = !!activeChat && deletedChats.some((item) => item.SessionID === activeChat.SessionID)
-
+      const source = getSetting().Source || 'ai'
+      await handAIHistoryChatRemove({
+        grpcDeleteAISessionParams: { Filter: filter },
+        handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
+        deleteSessionsParams: { sessionIds, source: [] },
+      })
+      const nextChats = sessions.filter((item) => getChatTimestamp(item) > beforeTimestamp)
+      const activeDeleted = !!activeChat && sessionIds.includes(activeChat.SessionID)
       if (nextChats.length === 0) {
         onNewChat()
         setActiveChat?.(undefined)
@@ -202,6 +251,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     } catch (e) {
       yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
     } finally {
+      sessionStatusStore.getState().setSourceDeleting(historyQuerySources, false)
       setClearLoading(false)
     }
   })
@@ -315,7 +365,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       <div className={styles['header-wrapper']}>
         <div className={styles['haeder-first']}>
           <div className={styles['first-title']}>
-            {t('HistoryChat.title')}
+            <span className={styles['title-text']}>{t('HistoryChat.title')}</span>
             <YakitRoundCornerTag wrapperClassName={styles['history-count-tag']}>
               {visibleSessions.length}
             </YakitRoundCornerTag>
@@ -437,17 +487,19 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       </div>
 
       <div className={styles['content']}>
-        <HistoryChatList
-          search={searchDebounce}
-          sessionList={visibleSessions}
-          aiSource={historyQuerySources}
-          setSessions={dispatcher.setSessions}
-          loadHistoryData={dispatcher.loadHistoryData}
-          getSessions={dispatcher.getSessions}
-          getPopupContainer={popupContainer}
-          overlayClassName={embedded ? embeddedPopconfirmClass : undefined}
-          embedded={embedded}
-        />
+        <YakitSpin spinning={clearLoading}>
+          <HistoryChatList
+            search={searchDebounce}
+            sessionList={visibleSessions}
+            aiSource={historyQuerySources}
+            setSessions={dispatcher.setSessions}
+            loadHistoryData={dispatcher.loadHistoryData}
+            getSessions={dispatcher.getSessions}
+            getPopupContainer={popupContainer}
+            overlayClassName={embedded ? embeddedPopconfirmClass : undefined}
+            embedded={embedded}
+          />
+        </YakitSpin>
       </div>
     </div>
   )

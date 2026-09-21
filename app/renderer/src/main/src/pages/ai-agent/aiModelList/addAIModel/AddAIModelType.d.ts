@@ -1,4 +1,4 @@
-import { UpdateLocalModelRequest } from '../../type/aiModel'
+import { type UpdateLocalModelRequest } from '../../type/aiModel'
 
 export interface AddAIModelProps {
   defaultValues?: UpdateLocalModelRequest

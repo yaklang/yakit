@@ -23,7 +23,7 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
   return (
     <div className={classNames(styles['ai-to-do-list-wrapper'], className)}>
       <div className={styles['card']} ref={divRef}>
-        {!!total ? (
+        {total ? (
           <>
             <div className={styles['card-heard']}>
               <div className={styles['card-heard-title']}>

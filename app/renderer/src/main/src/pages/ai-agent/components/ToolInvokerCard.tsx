@@ -1,29 +1,28 @@
-import { FC, memo, ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { type FC, memo, type ReactNode, useEffect, useRef, useState } from 'react'
 import ChatCard from './ChatCard'
 import styles from './ToolInvokerCard.module.scss'
 import classNames from 'classnames'
-import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { grpcQueryAIToolDetails } from '../grpc'
 import {
-  AIChatQSData,
+  type AIChatQSData,
   AIChatQSDataTypeEnum,
-  AIToolResult,
-  AIYakExecFileRecord,
-  ReActChatBaseInfo,
+  type AIToolResult,
+  type AIYakExecFileRecord,
+  type ChatToolResult,
 } from '@/pages/ai-re-act/hooks/aiRender'
 import FileList from './FileList'
-import type { ModalInfoProps } from './ModelInfo'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../defaultConstant'
 import { useClickAway, useCreation, useMemoizedFn } from 'ahooks'
-import { AIAgentGrpcApi, AIEventQueryRequest } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi, AIEventQueryRequest, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { isToolStdoutStream } from '@/pages/ai-re-act/hooks/utils'
 import {
   OutlineArrownarrowrightIcon,
   OutlineChevronsDownUpIcon,
   OutlineChevronsUpDownIcon,
   OutlineClockIcon,
+  OutlineDocumentduplicateIcon,
   OutlineRefreshIcon,
   OutlineWrenchIcon1,
 } from '@/assets/icon/outline'
@@ -31,17 +30,22 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Divider, Tooltip } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { formatTimestamp } from '@/utils/timeUtil'
-import { OperationCardFooter, OperationCardFooterProps } from './OperationCardFooter/OperationCardFooter'
-import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
+import { OperationCardFooter } from './OperationCardFooter/OperationCardFooter'
 import useAIAgentStore from '../useContext/useStore'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { AIChatIPCSendParams } from '../useContext/ChatIPCContent/ChatIPCContent'
 import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
 import { useStreamingChatContent } from './aiChatListItem/StreamingChatContent/hooks/useStreamingChatContent'
-import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { AIReviewParams } from './aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
+import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
+import { setClipboardText } from '@/utils/clipboard'
+import { success } from '@/utils/notification'
+import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import useAIAgentDispatcher from '../useContext/useDispatcher'
+import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -49,13 +53,9 @@ const AIToolToIconMap: Record<string, ReactNode> = {
 }
 
 interface ToolInvokerCardProps {
-  titleText?: string
-  fileList?: AIYakExecFileRecord[]
-  modalInfo?: ModalInfoProps
-  operationInfo: OperationCardFooterProps
-  data: AIToolResult
-  chatType: ReActChatBaseInfo['chatType']
-  token: string
+  itemData: ChatToolResult
+  renderNum: number
+  fileList: AIYakExecFileRecord[]
 }
 interface PreWrapperProps {
   code: string
@@ -64,61 +64,49 @@ interface PreWrapperProps {
   style?: React.CSSProperties
 }
 interface ToolStatusCardProps {
-  status: AIToolResult['tool']['status'] | 'purple'
-  title: ReactNode
+  status: AIToolResult['tool']['status'] | 'purple' | 'neutral'
   children?: ReactNode
 }
-interface ToolStdoutCardProps extends ToolInvokerCardProps {
-  isChildWindow: boolean
-}
-interface ToolResultCardProps extends ToolInvokerCardProps {
-  isChildWindow: boolean
-}
+interface ToolStdoutCardProps extends ToolInvokerCardProps {}
+interface ToolResultCardProps extends ToolInvokerCardProps {}
 
 const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
-  const { data } = props
+  const { itemData } = props
 
-  // 判断路由，子窗口有些功能不展示
-  const isChildWindow = useRef(isAuxOrChildWindow())
-
-  const renderContent = useMemoizedFn(() => {
-    // 过滤掉打开文件
-    const operationInfo = {
-      ...props.operationInfo,
-      aiFilePath: isChildWindow.current ? undefined : props.operationInfo.aiFilePath,
-    }
-    switch (data.type) {
-      case 'stream':
-        return <ToolStdoutCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
-      case 'result':
-        return <ToolResultCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
-      case 'create':
-        return <ToolLoadingCard {...props} />
-      default:
-        return null
-    }
-  })
-
-  return renderContent()
+  switch (itemData?.data?.type) {
+    case 'stream':
+      return <ToolStdoutCard {...props} />
+    case 'result':
+      return <ToolResultCard {...props} />
+    case 'create':
+      return <ToolLoadingCard {...props} />
+    default:
+      return null
+  }
 }
 
 export default memo(ToolInvokerCard)
 
 /** tool loading - processing params */
-const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
-  const { data } = props
+const ToolLoadingCard: React.FC<Omit<ToolInvokerCardProps, 'fileList'>> = memo((props) => {
+  const { itemData, renderNum } = props
   const { t } = useI18nNamespaces(['aiAgent'])
+  const data = useCreation(() => {
+    return itemData.data
+  }, [renderNum])
+
+  const { nodeLabel } = useAINodeLabel(data.verboseName)
 
   const reason = useCreation(() => {
     return data?.tool?.reason || ''
-  }, [data?.tool?.reason])
+  }, [renderNum])
 
   return (
     <ChatCard
       titleIcon={<OutlineWrenchIcon1 />}
-      titleText={data.verboseName ?? data.toolName}
+      titleText={nodeLabel || data.toolName}
       titleExtra={
-        !!reason ? (
+        reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
             {reason}
           </span>
@@ -138,17 +126,29 @@ const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
 
 /**tool_**_stdout */
 const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
-  const { operationInfo, fileList, chatType, data } = props
+  const { fileList, itemData, renderNum } = props
   const { t } = useI18nNamespaces(['aiAgent'])
+  // 判断路由，子窗口有些功能不展示
+  const isChildWindow = useRef(isAuxOrChildWindow())
+  const sessionId = useCurrentSessionId()
+  const { onSend } = useAIAgentDispatcher()
 
-  const { activeChat } = useAIAgentStore()
-  const { handleSend } = useChatIPCDispatcher()
+  const data = useCreation(() => {
+    return itemData.data
+  }, [renderNum])
 
-  // 获取流数据
+  const { nodeLabel } = useAINodeLabel(data.verboseName)
+
+  const operationInfo = useCreation(() => {
+    return {
+      callToolId: data.callToolId,
+      aiFilePath: isChildWindow.current ? '' : data.tool.dirPath,
+    }
+  }, [renderNum])
+
+  // TODO - 可以修改为新版 获取流数据
   const { stream } = useStreamingChatContent({
-    chatType,
     token: data.stream.EventUUID,
-    session: activeChat?.SessionID || '',
   })
 
   const selectors = useCreation(() => {
@@ -157,7 +157,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
   const reason = useCreation(() => {
     return data?.tool?.reason || ''
-  }, [data?.tool?.reason])
+  }, [renderNum])
 
   const onToolExtra = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
     switch (item.value) {
@@ -173,18 +173,16 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
     const jsonInput = {
       suggestion: item.value,
     }
-    const params: AIChatIPCSendParams = {
-      value: JSON.stringify(jsonInput),
-      id: selectors.InteractiveId,
+    const info: AIInputEvent = {
+      IsInteractiveMessage: true,
+      InteractiveId: selectors.InteractiveId,
+      InteractiveJSONInput: JSON.stringify(jsonInput),
     }
-    handleSend(params)
+    onSend({ token: sessionId, type: '', params: info })
   })
-  const referenceNode = useCreation(() => {
-    return !!stream?.reference ? <AIReferenceNode referenceList={stream?.reference} /> : <></>
-  }, [stream?.reference])
   return (
     <ChatCard
-      titleText={data.verboseName ?? data.toolName}
+      titleText={nodeLabel || data.toolName}
       titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
@@ -209,7 +207,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
         </div>
       }
       titleExtra={
-        !!reason ? (
+        reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
             {reason}
           </span>
@@ -217,13 +215,10 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
       }
       footer={<OperationCardFooter {...operationInfo} />}
     >
-      <ToolStatusCard status={'purple'} title={<div className={styles['tool-name']}>{data.toolName}</div>}>
-        <div className={styles['file-system-content']}>
-          {stream?.data?.content && (
-            <PreWrapper code={stream?.data?.content || ''} autoScrollBottom className={styles['pre-max-height']} />
-          )}
-        </div>
-        {referenceNode}
+      <ToolStatusCard status={'purple'}>
+        <ToolParamsLine params={data?.tool?.reviewParams} />
+        <ToolTerminalOutput content={stream?.data?.content || ''} autoScrollBottom />
+        <AIReferenceNode referenceList={stream?.reference || []} sessionId={sessionId} />
       </ToolStatusCard>
       {!!fileList?.length && <FileList fileList={fileList} />}
     </ChatCard>
@@ -232,18 +227,37 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
 /**tool result status:error/success/cancel */
 const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
-  const { modalInfo, operationInfo, fileList, data, chatType, token, isChildWindow } = props
+  const { renderNum, fileList, itemData } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const { activeChat } = useAIAgentStore()
-  const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
 
   const [loading, setLoading] = useState<boolean>(false)
-  const [type, setType] = useState<'outInput' | 'params'>('outInput')
 
-  const [expand, setExpand] = useState<boolean>(false)
-  const expandToggle = useMemoizedFn(() => {
-    setExpand((v) => !v)
-  })
+  const [expand, , expandToggle] = useUiExpand(itemData.id, false)
+
+  // 判断路由，子窗口有些功能不展示
+  const isChildWindow = useRef(isAuxOrChildWindow())
+
+  const data = useCreation(() => {
+    return itemData.data
+  }, [renderNum])
+
+  const { nodeLabel } = useAINodeLabel(data.verboseName)
+
+  const modalInfo = useCreation(() => {
+    return {
+      time: itemData.Timestamp,
+      title: itemData.AIModelName,
+      icon: itemData.AIService,
+    }
+  }, [])
+
+  const operationInfo = useCreation(() => {
+    return {
+      callToolId: data.callToolId,
+      aiFilePath: isChildWindow.current ? '' : data.tool.dirPath,
+    }
+  }, [renderNum])
 
   const httpFlowDataCount = useCreation(() => {
     return data.httpFlowDataCount
@@ -273,22 +287,15 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     return data?.tool?.status
   }, [data?.tool?.status])
 
-  const [statusColor, statusText] = useMemo(() => {
-    if (status === 'success') return ['success', t('ToolInvokerCard.success')]
-    if (status === 'failed') return ['danger', t('ToolInvokerCard.failed')]
-    return ['white', t('ToolInvokerCard.cancelled')]
-  }, [status, i18n.language])
-
   const params = useCreation(() => {
     return data?.callToolId
   }, [data?.callToolId])
   const duration = useCreation(() => {
     return Math.round(data.durationSeconds * 10) / 10
   }, [data.durationSeconds])
-  const startTime = useCreation(() => {
-    return formatTimestamp(data.startTime)
-  }, [data.startTime])
 
+  const sessionId = useCurrentSessionId()
+  const rawData = useCurrentRawData()
   const getListToolList = useMemoizedFn(() => {
     if (!data?.callToolId || !activeChat) return
     setLoading(true)
@@ -297,14 +304,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     }
     grpcQueryAIToolDetails(params)
       .then((res) => {
-        const chatItem = fetchChatDataStore()?.getContentMap({
-          session: activeChat?.SessionID,
-          chatType,
-          mapKey: token,
-        })
-        if (!!chatItem && chatItem.type === AIChatQSDataTypeEnum.TOOL_RESULT) {
-          chatItem.data.tool.resultDetails = getResultDetails(res)
-        }
+        globalSessionEngine.updateToolResult(sessionId, itemData.id, { resultDetails: getResultDetails(res) })
       })
       .finally(() =>
         setTimeout(() => {
@@ -324,7 +324,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   }
 
   const getResultDetails = useMemoizedFn((list: AIChatQSData[]) => {
-    let desc: string[] = []
+    const desc: string[] = []
     list.forEach((ele) => {
       const { type, data } = ele
       switch (type) {
@@ -346,42 +346,16 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     return desc.join('\n')
   })
 
-  const renderContent = useMemoizedFn(() => {
-    switch (type) {
-      case 'params':
-        return <AIReviewParams params={data?.tool?.reviewParams} isPreStyle={true} />
-      default:
-        return (
-          <>
-            <div className={styles['summary']} title={summary}>
-              {summary}
-            </div>
-            {!!resultDetails ? (
-              <>
-                <PreWrapper code={resultDetails} autoScrollBottom className={styles['pre-max-height']} />
-              </>
-            ) : (
-              <>{content && <PreWrapper code={content} autoScrollBottom className={styles['pre-max-height']} />}</>
-            )}
-          </>
-        )
-    }
-  })
+  const outputText = useCreation(() => {
+    return resultDetails || content || ''
+  }, [resultDetails, content])
+
   return (
     <ChatCard
-      titleText={data.verboseName ?? data.toolName}
+      titleText={nodeLabel || data.toolName}
       titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
-          {/* <div className={styles['tool-invoker-card-extra-time']}> */}
-          {/* {!!startTime && (
-              <div>
-                {t('ToolInvokerCard.startTime')}:<span>{startTime}</span>
-              </div>
-            )} */}
-          {/* </div> */}
-
-          {/* <div style={{ marginRight: 12 }}> */}
           {!!riskFlowDataCount && (
             <>
               <label
@@ -404,7 +378,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
             </label>
           )}
           {/* </div> */}
-          {isChildWindow || (
+          {isChildWindow.current || (
             <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
               <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
             </Tooltip>
@@ -422,7 +396,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
         </div>
       }
       titleExtra={
-        !!reason ? (
+        reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
             {reason}
           </span>
@@ -448,39 +422,10 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
       }
     >
       {expand && (
-        <ToolStatusCard
-          status={status}
-          title={
-            <div className={styles['tool-title']}>
-              <div className={styles['tool-title-left']}>
-                <div className={styles['tool-name']}>{data.toolName}</div>
-                <YakitTag size="small" fullRadius color={statusColor as YakitTagColor}>
-                  {statusText}
-                </YakitTag>
-              </div>
-              <YakitRadioButtons
-                size="small"
-                buttonStyle="solid"
-                options={[
-                  {
-                    label: '输出',
-                    value: 'outInput',
-                  },
-                  {
-                    label: '参数',
-                    value: 'params',
-                  },
-                ]}
-                value={type}
-                onChange={(e) => {
-                  setType(e.target.value)
-                }}
-              />
-            </div>
-          }
-        >
+        <ToolStatusCard status={'neutral'}>
           <YakitSpin spinning={loading}>
-            <div className={styles['file-system-content']}>{renderContent()}</div>
+            <ToolParamsLine params={data?.tool?.reviewParams} />
+            <ToolTerminalOutput content={summary ? `${summary}\n${outputText}` : outputText} autoScrollBottom />
           </YakitSpin>
         </ToolStatusCard>
       )}
@@ -490,11 +435,137 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
 })
 
 const ToolStatusCard: React.FC<ToolStatusCardProps> = memo((props) => {
-  const { status, title, children } = props
+  const { status, children } = props
   return (
     <div className={classNames(styles['file-system'], styles[`file-system-${status}`])}>
-      <div className={styles['file-system-title']}>{title}</div>
-      {children}
+      <div className={styles['file-system-content']}>{children}</div>
+    </div>
+  )
+})
+
+/** @name 伪终端参数行：单行 JSON 预览，点击弹框展示完整 JSON */
+const ToolParamsLine: FC<{ params?: Record<string, any> }> = memo(({ params }) => {
+  const [open, setOpen] = useState(false)
+  const { t } = useI18nNamespaces(['yakitUi'])
+
+  if (!params || Object.keys(params).length === 0) return null
+
+  const jsonStr = JSON.stringify(params)
+  const jsonPretty = JSON.stringify(params, null, 2)
+
+  const onCopyAll = () => {
+    setClipboardText(jsonPretty, {
+      hiddenHint: true,
+      finalCallback: () => setTimeout(() => success(t('YakitNotification.copySuccess')), 200),
+    })
+  }
+  const onCopyField = (value: any) => {
+    const text = typeof value === 'string' ? value : JSON.stringify(value, null, 2)
+    setClipboardText(text, {
+      hiddenHint: true,
+      finalCallback: () => setTimeout(() => success(t('YakitNotification.copySuccess')), 200),
+    })
+  }
+
+  return (
+    <>
+      <div className={styles['terminal-params-line']}>
+        <span className={styles['params-label']}>Params:</span>
+        <span className={styles['params-json']} onClick={() => setOpen(true)} title={jsonStr}>
+          {jsonStr}
+        </span>
+      </div>
+      <YakitModal
+        visible={open}
+        title="Params"
+        onCancel={() => setOpen(false)}
+        cancelButtonProps={{ style: { display: 'none' } }}
+        onOk={() => setOpen(false)}
+        width={560}
+      >
+        <div className={styles['params-modal-body']}>
+          <div className={styles['params-modal-json']}>
+            {jsonPretty}
+            <div className={styles['params-modal-copy']} onClick={onCopyAll}>
+              <OutlineDocumentduplicateIcon />
+            </div>
+          </div>
+          {Object.entries(params).map(([key, value]) => (
+            <div className={styles['params-field-item']} key={key}>
+              <span className={styles['field-key']}>{key}:</span>
+              <span className={styles['field-value']}>
+                {typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
+              </span>
+              <Tooltip title={t('YakitButton.copy')}>
+                <span className={styles['field-copy']} onClick={() => onCopyField(value)}>
+                  <OutlineDocumentduplicateIcon style={{ width: 12, height: 12 }} />
+                </span>
+              </Tooltip>
+            </div>
+          ))}
+        </div>
+      </YakitModal>
+    </>
+  )
+})
+
+/** @name 伪终端输出区域 */
+const ToolTerminalOutput: FC<{
+  content: string
+  autoScrollBottom?: boolean
+}> = memo(({ content, autoScrollBottom = false }) => {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [isAtBottom, setIsAtBottom] = useState(true)
+  const [isAtTop, setIsAtTop] = useState(true)
+  const [isScroll, setIsScroll] = useState(false)
+
+  useClickAway(() => {
+    setIsScroll(false)
+  }, containerRef)
+
+  useEffect(() => {
+    if (!autoScrollBottom) return
+    const el = containerRef.current
+    if (!el) return
+    const handleScroll = () => {
+      const threshold = 20
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
+      const atTop = el.scrollTop < threshold
+      setIsAtBottom(atBottom)
+      setIsAtTop(atTop)
+    }
+    handleScroll()
+    el.addEventListener('scroll', handleScroll)
+    return () => el.removeEventListener('scroll', handleScroll)
+  }, [autoScrollBottom])
+
+  useEffect(() => {
+    if (!autoScrollBottom) return
+    const el = containerRef.current
+    if (!el) return
+    if (isAtBottom) {
+      el.scrollTop = el.scrollHeight
+    }
+  }, [content, isAtBottom, autoScrollBottom])
+
+  if (!content) return null
+
+  return (
+    <div className={styles['terminal-output-section']}>
+      <div
+        ref={containerRef}
+        className={classNames(styles['output-content'], {
+          [styles['output-scrollable']]: isScroll,
+          [styles['output-fade-top']]: !isAtTop,
+          [styles['output-fade-bottom']]: !isAtBottom,
+        })}
+        onClick={() => setIsScroll(true)}
+      >
+        {content}
+        <div className={styles['terminal-copy-btn']}>
+          <CopyComponents copyText={content} className={styles['terminal-copy-icon']} />
+        </div>
+      </div>
     </div>
   )
 })

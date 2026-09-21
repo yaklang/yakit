@@ -1,7 +1,15 @@
-import { cloneDeep } from 'lodash'
-import type { AIToolResult, PlanItemDetailsData, TodoListCardData } from './aiRender'
+import type {
+  AgentChatStatus,
+  AgentLoadingTitle,
+  AIQuestionQueues,
+  AIToolResult,
+  CurrentExecTaskTree,
+  PlanItemDetailsData,
+  TodoListCardData,
+} from './aiRender'
+import { AITaskStatus } from './grpcApi'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
-import type { AIQuestionQueues, PlanLoadingStatus, CurrentExecTaskTree } from './type'
+import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {
@@ -31,7 +39,7 @@ export const DefaultAIToolResult: AIToolResult = {
   httpFlowDataCount: 0,
   riskFlowDataCount: 0,
   isProcessingParams: false,
-  verboseName: '',
+  verboseName: { Zh: '', En: '' },
 }
 /** 工作执行结果总结-不同阶段的默认展示内容 */
 export const DefaultToolResultSummary: Record<string, { wait: string; result: string }> = {
@@ -41,6 +49,8 @@ export const DefaultToolResultSummary: Record<string, { wait: string; result: st
 }
 
 /** AI 流式输出中, NodeId 对应展示的内容 */
+export const AI_STREAM_THOUGHT_NODE_ID = 're-act-loop-thought'
+
 const AIStreamNodeIdToLabel: Record<string, { label: string }> = {
   're-act-loop': { label: '推理与行动' },
   'call-forge': { label: '智能应用' },
@@ -61,7 +71,7 @@ const AIStreamNodeIdToLabel: Record<string, { label: string }> = {
   decision: { label: '决策' },
   output: { label: '通用输出' },
   forge: { label: '智能应用' },
-  're-act-loop-thought': { label: '思考' },
+  [AI_STREAM_THOUGHT_NODE_ID]: { label: '思考' },
   're-act-loop-answer-payload': { label: 'AI 响应' },
   'enhance-query': { label: '知识增强' },
 }
@@ -130,11 +140,21 @@ export const DefaultMemoryList: AIAgentGrpcApi.MemoryEntryList = {
   },
 }
 
-/** 任务规划loading-默认值 */
-export const DefaultPlanLoadingStatus: PlanLoadingStatus = {
-  loading: false,
-  plan: '加载中...',
-  task: '加载中...',
+export const DefaultAgentChatStatus: AgentChatStatus = {
+  questionID: '',
+  coordinatorId: '',
+  status: AITaskStatus.created,
+}
+
+export const DefaultAgentLoadingTitle: AgentLoadingTitle = {
+  casualTitle: '会话初始化中...',
+  planTitle: '',
+}
+
+/** end_plan_and_execution & react_task_status_changed 齐了才 settle status */
+export const DefaultTaskPlanEndGate: AIAgentChatMetaData['taskPlanEndGate'] = {
+  endReceived: false,
+  pendingStatus: undefined,
 }
 
 export const DefaultPlanHistoryList: AIAgentGrpcApi.PlanHistoryList = {

@@ -1,10 +1,10 @@
-import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { editorViewCtx, parserCtx } from '@milkdown/kit/core'
-import { AIMentionCommandParams, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
-import { AIHttpFlowCommandParams, aiHttpFlowCustomId } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
-import { AICodeBlockCommandParams, aiCodeBlockCustomId } from './aiCodeBlock/aiCustomCodeBlockPlugin'
-import { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
+import { type AIMentionCommandParams, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
+import { type AIHttpFlowCommandParams, aiHttpFlowCustomId } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { type AICodeBlockCommandParams, aiCodeBlockCustomId } from './aiCodeBlock/aiCustomCodeBlockPlugin'
 import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
+import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 
 /**md编辑器中匹配出提及相关数据/纯文本 */
 export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
@@ -106,6 +106,9 @@ export const parseMentions = (markdown: string): Mention[] => {
 export const setEditorValue = (editor: EditorMilkdownProps, value: string) => {
   editor?.action((ctx) => {
     const view = ctx.get(editorViewCtx)
+    // 关键词: prosemirror view isDestroyed guard, 防止对已销毁 view dispatch
+    // 编辑器卸载后 view 仍可能被外部引用(例如 ref 持有), 此时 dispatch 会抛错或污染内部状态.
+    if (view?.isDestroyed) return
     const parser = ctx.get(parserCtx)
 
     const doc = parser(value)
@@ -119,7 +122,7 @@ export const setEditorValue = (editor: EditorMilkdownProps, value: string) => {
 
 export interface AIInputWithParamsTemplate {
   description: string
-  param: AIChatIPCStartParams['extraValue']
+  param: AIChatQSData['extraValue']
 }
 /**
  *

@@ -10,8 +10,10 @@ export type AIAgentEventProps = {
   onRefreshAvailableAIModelList?: string
   /** 刷新ai模型列表 */
   onRefreshAIModelList?: string
-  /** ai任务树定位规划列表 */
+  /** ai任务树定位规划列表（请求：必要时先打开深度规划） */
   onAITreeLocatePlanningList?: string
+  /** 展开或收起任务问题区 */
+  changeAITaskQueryShow: string
   // 知识库 路由传递的参数
   defualtAIMentionCommandParams: string
   /**ai侧边栏展开收起模式 */
@@ -30,20 +32,12 @@ export type AIAgentEventProps = {
   /** 文件系统默认展开路径 */
   fileSystemDefaultExpand: string
 
-  /** AIReviewRule相关数据发生编发,是否热更新
-   * @name reviewPolicy {AIStartParams["ReviewPolicy"]
-   * @name aiReviewRiskControlScore {AIStartParams["AIReviewRiskControlScore"]
-   */
-  onRefreshAIReviewRuleSelect: string
-
-  /** 删除会话列表里的会话时, 通知useChatIPC-hook对应会话数据已被删除，不需断开保存操作 */
-  onDelChats: string
-  /** 嵌入侧栏 ReviewPolicy 变更，通知其他已挂载 Provider 同步 */
-  onRefreshHistoryAIEmbeddedSetting: string
   /**
    * 会话数据管理
    * @name type "refresh" | "clear" | "prependSession" | "updateSession" | "loadNextPage"
    * @name payload
    */
   sessionData: string
+  /** 服务端推送的 AI 会话状态更新 */
+  onServerPushAISession: string
 }

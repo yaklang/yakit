@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react'
-import { AITaskQueryItemProps, AITaskQueryProps } from './type'
+import React, { useEffect, useRef, useState } from 'react'
+import type { AITaskQueryItemProps, AITaskQueryProps } from './type'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineArrowupIcon,
@@ -9,46 +9,75 @@ import {
   OutlineTrashIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
+import { useMemoizedFn, useDebounceFn, useInViewport } from 'ahooks'
 import styles from './AITaskQuery.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
-import { useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
-import { AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { type AIInputEvent, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { Tooltip } from 'antd'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import useAIAgentDispatcher from '../../useContext/useDispatcher'
+import { randomString } from '@/utils/randomUtil'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import emiter from '@/utils/eventBus/eventBus'
 
-export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
+export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const { chatIPCData } = useChatIPCStore()
-  const { handleSendSyncMessage } = useChatIPCDispatcher()
 
   const [loading, setLoading] = useState<boolean>(false)
 
-  const questionQueue = useMemo(() => {
-    return chatIPCData.questionQueue
-  }, [chatIPCData.questionQueue])
+  const sessionId = useCurrentSessionId()
+  const store = useCurrentStore()
+  const questionQueue = useStore(store, (state) => state.questionQueue)
+  const execute = useStore(store, (state) => state.execute)
+  const { onSend } = useAIAgentDispatcher()
 
   const [showList, setShowList] = useState<boolean>(true)
+  const taskQueryRef = useRef<HTMLDivElement>(null)
+  const [inViewport = true] = useInViewport(taskQueryRef)
 
+  useEffect(() => {
+    if (inViewport) {
+      emiter.on('changeAITaskQueryShow', onActionAITaskContentTab)
+      return () => {
+        emiter.off('changeAITaskQueryShow', onActionAITaskContentTab)
+      }
+    }
+  }, [inViewport])
+  const onActionAITaskContentTab = useMemoizedFn((data: string) => {
+    setShowList(data === 'true')
+  })
   const onClearTaskQueue = useMemoizedFn(() => {
-    if (!chatIPCData.execute) return
+    if (!execute) return
+    if (!sessionId) return
     setLoading(true)
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CLEAR_TASK,
-      params: {},
-    })
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
-      params: {},
-    })
+
+    const clearTaskInfo: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CLEAR_TASK,
+
+      Params: {},
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: '', params: clearTaskInfo })
+
+    const queueInfo: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+
+      Params: {},
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: '', params: queueInfo })
+
     setTimeout(() => {
       setLoading(false)
       setShowList(false)
     }, 500)
   })
-  return (
-    <div className={styles['ai-task-query']}>
+  return execute && questionQueue?.total > 0 ? (
+    <div className={styles['ai-task-query']} ref={taskQueryRef}>
       {showList ? (
         <div className={styles['ai-task-query-list-wrapper']}>
           <div className={styles['ai-task-query-list-header']}>
@@ -85,30 +114,43 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
         </YakitButton>
       )}
     </div>
+  ) : (
+    <></>
   )
 })
 
 const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
   const { item } = props
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { chatIPCData } = useChatIPCStore()
   const [upLoading, setUpLoading] = useState<boolean>(false)
   const [removeLoading, setRemoveLoading] = useState<boolean>(false)
-  const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
-  const { handleSendSyncMessage } = useChatIPCDispatcher()
+
+  const sessionId = useCurrentSessionId()
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+  const { onSend } = useAIAgentDispatcher()
+
   const onTaskUp = useDebounceFn(
     () => {
       if (!execute || upLoading) return
       setUpLoading(true)
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_JUMP_QUEUE,
+      const jumpInfo: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_JUMP_QUEUE,
         SyncJsonInput: JSON.stringify({ task_id: item.id }),
-        params: {},
-      })
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
-        params: {},
-      })
+        Params: {},
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: '', params: jumpInfo })
+
+      const queueInfo: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+        Params: {},
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: '', params: queueInfo })
+
       setTimeout(() => {
         setUpLoading(false)
       }, 500)
@@ -119,15 +161,24 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
     () => {
       if (!execute || removeLoading) return
       setRemoveLoading(true)
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_REMOVE_TASK,
+
+      const jumpInfo: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_REMOVE_TASK,
         SyncJsonInput: JSON.stringify({ task_id: item.id }),
-        params: {},
-      })
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
-        params: {},
-      })
+        Params: {},
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: '', params: jumpInfo })
+
+      const queueInfo: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+        Params: {},
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: '', params: queueInfo })
+
       setTimeout(() => {
         setRemoveLoading(false)
       }, 500)
@@ -138,6 +189,11 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
     <div key={item.id} className={styles['task-query-list-item']}>
       <div className={styles['item-left']}>
         <OutlineChatIcon className={styles['chat-icon']} />
+        {item.is_recovery && (
+          <YakitTag color="info" size="small" fullRadius className={styles['recovery-tag']}>
+            恢复任务
+          </YakitTag>
+        )}
         <span className="content-ellipsis" title={item.user_input}>
           {item.user_input}
         </span>

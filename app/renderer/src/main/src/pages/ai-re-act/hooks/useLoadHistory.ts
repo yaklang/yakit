@@ -1,5 +1,5 @@
 import { useMemoizedFn } from 'ahooks'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const PREPEND_OFFSET = 1000000
 
@@ -90,7 +90,6 @@ const useLoadHistory = ({ loading, dataLength, SessionID, fetchHasMore, loadMore
     isPrependingRef.current = false
     atTopRef.current = false
     pendingRequestRef.current = false
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [SessionID])
 
   return {

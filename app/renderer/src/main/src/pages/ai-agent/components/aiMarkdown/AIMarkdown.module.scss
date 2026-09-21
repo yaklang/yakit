@@ -2,29 +2,38 @@
   display: flex;
   flex-direction: column;
   font-size: 14px;
-  gap: 4px;
   background-color: var(--Colors-Use-Neutral-Bg-Hover);
   border-radius: 8px;
   padding: 8px;
-
   overflow-wrap: break-word;
 
-  .milkdown-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    .header-name {
-      color: var(--Colors-Use-Neutral-Text-1-Title);
-      font-size: 14px;
-      font-weight: 500;
-    }
+  .ai-milkdown-body {
+    position: relative;
+    width: 100%;
+    min-height: 0;
   }
-  .header-extra {
+
+  .hover-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
     display: flex;
     align-items: center;
     gap: 4px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
   }
+
+  .ai-milkdown-body:hover > .hover-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .ai-milkdown {
     font-size: 14px;
     background-color: transparent;

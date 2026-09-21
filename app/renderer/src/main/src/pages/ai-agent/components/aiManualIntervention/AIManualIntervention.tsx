@@ -1,15 +1,15 @@
 import { memo, useRef, useState } from 'react'
 import { useClickAway, useCreation } from 'ahooks'
-import React from 'react'
-import { AIManualInterventionProps } from './type'
+import type React from 'react'
+import type { AIManualInterventionProps } from './type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { AIChatQSDataTypeEnum, UserManualInterventionContext } from '@/pages/ai-re-act/hooks/aiRender'
+import { AIChatQSDataTypeEnum, type UserManualInterventionContext } from '@/pages/ai-re-act/hooks/aiRender'
 import styles from './AIManualIntervention.module.scss'
 import ChatCard from '../ChatCard'
 import { formatTimestamp } from '@/utils/timeUtil'
 
 export const AIManualIntervention: React.FC<AIManualInterventionProps> = memo((props) => {
-  const { info, timestamp } = props
+  const { info, renderNum } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -19,6 +19,9 @@ export const AIManualIntervention: React.FC<AIManualInterventionProps> = memo((p
     setIsScroll(false)
   }, containerRef)
 
+  const timestamp = useCreation(() => {
+    return info.Timestamp
+  }, [renderNum])
   const data: UserManualInterventionContext = useCreation(() => {
     if (info.type === AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION) {
       return info.data
@@ -27,7 +30,7 @@ export const AIManualIntervention: React.FC<AIManualInterventionProps> = memo((p
       type: '',
       content: '',
     }
-  }, [info.data, info.type])
+  }, [renderNum])
 
   return (
     <ChatCard

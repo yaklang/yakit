@@ -84,6 +84,9 @@
           @extend %display-flex-center;
           gap: 4px;
           overflow: hidden;
+          .recovery-tag {
+            margin-right: 0;
+          }
         }
 
         .item-right {

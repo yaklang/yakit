@@ -1,36 +1,88 @@
 import React, { useMemo, useRef, useState } from 'react'
+import { useCreation, useInterval, useMemoizedFn } from 'ahooks'
 import { WebFuzzerAiStoreCardRightHeader } from '@/pages/ai-agent/components/WebFuzzerAiStoreCardRightHeader'
-import { AIYaklangCodeProps } from './type'
+import type { AIYaklangCodeProps } from './type'
 import ChatCard from '../ChatCard'
 // import { OutlinCompileTwoIcon } from '@/assets/icon/outline'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { YakitIMonacoEditor } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import type { YakitIMonacoEditor } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import ModalInfo from '../ModelInfo'
 import styles from './AIYaklangCode.module.scss'
-import { useCreation, useMemoizedFn, useThrottleEffect } from 'ahooks'
 import { NewHTTPPacketEditor } from '@/utils/editors'
 import { monaco as monacoApi } from 'react-monaco-editor'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
-import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
-import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import useAIAgentStore from '../../useContext/useStore'
+import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import { YakitMonacoDiffInline } from '@/components/yakitUI/YakitMonacoDiffInline/YakitMonacoDiffInline'
+import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 
 const CODE_BLOCK_MAX_HEIGHT = 200
 
-export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) => {
-  const { content: defContent, nodeLabel, modalInfo, contentType, referenceNode } = props
+// 将 `*** Begin Patch` 文本块解析为 original / incoming 两份，供 diff 高亮。
+// 约定（unified 风格）：`-` 删除行、`+` 新增行、其余（`*** ` 文件头 / `@@ ` 行 / 上下文）两边都放。
+const parsePatchToDiff = (block: string): { original: string; incoming: string } => {
+  const original: string[] = []
+  const incoming: string[] = []
+  for (const raw of block.split(/\r?\n/)) {
+    if (raw === '*** Begin Patch' || raw === '*** End Patch' || raw.startsWith('@@')) continue
+    const body = raw.slice(1)
+    if (raw.startsWith('-')) original.push(body)
+    else if (raw.startsWith('+')) incoming.push(body)
+    else {
+      const line = raw.startsWith(' ') ? body : raw
+      original.push(line)
+      incoming.push(line)
+    }
+  }
+  return { original: original.join('\n'), incoming: incoming.join('\n') }
+}
 
-  const [content, setContent] = useState(defContent)
+const readStreamContent = (rawData: ReturnType<typeof useCurrentRawData>, streamId: string | undefined): string => {
+  if (streamId) {
+    const item = rawData.contents.get(streamId)
+    if (item?.type === AIChatQSDataTypeEnum.STREAM) {
+      return item.data.content ?? ''
+    }
+  }
+  return ''
+}
+
+export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) => {
+  const { content: defContent, nodeLabel, modalInfo, contentType, referenceNode, streaming, autoApplyStreamId } = props
+
+  const rawData = useCurrentRawData()
   const codeContainerRef = useRef<HTMLDivElement>(null)
-  useThrottleEffect(
+  const heightRafRef = useRef(0)
+  const [streamedContent, setStreamedContent] = useState(() => defContent)
+  const isLiveStreaming = streaming === true
+  // 流式正文在 rawData 里原地累加，React 感知不到；仅在流式进行中轮询取最新驱动渲染。
+  // 结束后（含虚拟列表重挂载的历史卡片）直接用 defContent——它是 renderNum 触发的最终快照，
+  // 不依赖 rawData 是否仍在内存，也不会被轮询到的残缺/陈旧数据覆盖
+  useInterval(
     () => {
-      setContent(defContent)
+      const next = readStreamContent(rawData, autoApplyStreamId)
+      if (!next) return
+      setStreamedContent((prev) => (prev === next ? prev : next))
     },
-    [defContent],
-    { wait: 500 },
+    isLiveStreaming && autoApplyStreamId ? 200 : undefined,
   )
-  const type = useCreation(() => {
-    return contentType.split('/')?.[1] || 'plaintext'
-  }, [contentType])
+
+  const content = autoApplyStreamId && isLiveStreaming ? streamedContent : defContent
+
+  const type = useCreation(() => contentType.split('/')?.[1] || 'plaintext', [contentType])
+
+  const diffLanguage = useCreation(() => (type === 'yaklang' ? 'yak' : type), [type])
+  // 结束后再挂 Diff；流式中途不解析 patch
+  const isPatch = useCreation(
+    () => !isLiveStreaming && content.trimStart().startsWith('*** Begin Patch'),
+    [isLiveStreaming, content],
+  )
+  const { original: patchOriginal, incoming: patchIncoming } = useCreation(
+    () => (isPatch ? parsePatchToDiff(content) : { original: '', incoming: '' }),
+    [isPatch, content],
+  )
 
   const bindContentHeightEditor = useMemoizedFn((editor: YakitIMonacoEditor) => {
     const setEditorScrollActive = (active: boolean) => {
@@ -57,21 +109,31 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
       const lineCount = editor.getModel()?.getLineCount() || 1
       const contentHeight = Math.ceil(editor.getTopForLineNumber(lineCount + 1) + lineHeight)
       const height = Math.min(CODE_BLOCK_MAX_HEIGHT, contentHeight)
+      const nextHeight = `${height}px`
+      if (container.style.height === nextHeight && editorEl.style.height === nextHeight) return
 
-      container.style.height = `${height}px`
-      editorEl.style.height = `${height}px`
+      container.style.height = nextHeight
+      editorEl.style.height = nextHeight
       editor.layout()
+    }
+    const scheduleUpdateHeight = () => {
+      if (heightRafRef.current) return
+      heightRafRef.current = requestAnimationFrame(() => {
+        heightRafRef.current = 0
+        updateHeight()
+      })
     }
 
     updateHeight()
-    editor.onDidChangeModelDecorations(() => {
-      updateHeight()
-      requestAnimationFrame(updateHeight)
-    })
-    editor.onDidContentSizeChange(updateHeight)
+    editor.onDidChangeModelDecorations(scheduleUpdateHeight)
+    editor.onDidContentSizeChange(scheduleUpdateHeight)
   })
 
   const renderCode = useMemoizedFn(() => {
+    if (isLiveStreaming) {
+      return <pre className={styles['ai-yaklang-code-stream-pre']}>{content || ' '}</pre>
+    }
+
     switch (type) {
       case 'http-request':
         return (
@@ -87,6 +149,20 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
       default:
         // case AIStreamContentType.CODE_YAKLANG:
         // case AIStreamContentType.CODE_PYTHON:
+        if (isPatch) {
+          return (
+            <div style={{ height: CODE_BLOCK_MAX_HEIGHT }}>
+              <YakitMonacoDiffInline
+                reuseKey="yaklang-patch-diff"
+                original={patchOriginal}
+                incoming={patchIncoming}
+                hunks={[]}
+                onDecision={() => {}}
+                language={diffLanguage}
+              />
+            </div>
+          )
+        }
         return (
           <YakitEditor
             type={type}
@@ -99,17 +175,24 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
         )
     }
   })
-  const { chatIPCEvents } = useChatIPCDispatcher()
+  // const { chatIPCEvents } = useChatIPCDispatcher()
+  const { setting } = useAIAgentStore()
+
+  const { getCurrentSelectPageId, currentPageTabRouteKey } = usePageInfo(
+    (s) => ({
+      getCurrentSelectPageId: s.getCurrentSelectPageId,
+      currentPageTabRouteKey: s.currentPageTabRouteKey,
+    }),
+    shallow,
+  )
 
   const webFuzzerAiStoreFuzzerPageId = useMemo((): string | undefined => {
-    const store = chatIPCEvents.fetchChatDataStore()
-    return store instanceof WebFuzzerAiStore ? store.fuzzerPageId : undefined
-  }, [chatIPCEvents])
-  const { chatDataStoreKey } = useGetChatDataStoreKey()
+    return getCurrentSelectPageId(currentPageTabRouteKey)
+  }, [currentPageTabRouteKey])
 
   const isWebFuzzerAiStore = useMemo(() => {
-    return chatDataStoreKey === 'WebFuzzerAiStore'
-  }, [chatDataStoreKey])
+    return setting.Source === AISourceEnum.webFuzzer
+  }, [setting.Source])
 
   const titleExtra = useMemo(() => {
     if (!modalInfo) return null

@@ -926,6 +926,16 @@ service Yak {
   rpc GetRandomAIMaterials(GetRandomAIMaterialsRequest) returns (GetRandomAIMaterialsResponse);
   rpc ExportAILogs(ExportAILogsRequest) returns (ExportAILogsResponse);
 
+  // AI ReAct recurring schedules
+  rpc CreateAIReActSchedule(CreateAIReActScheduleRequest) returns (AIReActSchedule);
+  rpc UpdateAIReActSchedule(UpdateAIReActScheduleRequest) returns (AIReActSchedule);
+  rpc DeleteAIReActSchedule(DeleteAIReActScheduleRequest) returns (DbOperateMessage);
+  rpc GetAIReActSchedule(GetAIReActScheduleRequest) returns (AIReActSchedule);
+  rpc QueryAIReActSchedules(QueryAIReActSchedulesRequest) returns (QueryAIReActSchedulesResponse);
+  rpc SetAIReActScheduleEnabled(SetAIReActScheduleEnabledRequest) returns (AIReActSchedule);
+  rpc PreviewAIReActScheduleTimes(PreviewAIReActScheduleTimesRequest) returns (PreviewAIReActScheduleTimesResponse);
+  rpc RunAIReActScheduleNow(RunAIReActScheduleNowRequest) returns (Empty);
+
   // AI Memory CRUD
   rpc CreateAIMemoryEntity(CreateAIMemoryEntityRequest) returns (Empty);
   rpc UpdateAIMemoryEntity(AIMemoryEntity) returns (DbOperateMessage);
@@ -2275,6 +2285,29 @@ message AIStartParams {
   // 为 true 时 request_plan 走 detached plan 审阅流程；默认 false 时走旧版异步 plan-and-execute。
   // 需配合 EnablePlan=true 才会暴露 request_plan 动作。
   bool EnableDetachedPlan = 47;
+
+  // 执行策略集合。用于承载 multi-agent / goal mode 等顶层运行策略。
+  AIExecutionStrategy Strategy = 48;
+
+  // 为 true 时禁用 Memory Triage（智能记忆处理），不创建 AIMemory 实例，
+  // 跳过 embedding/DB/AI 调用。适用于轻量级或无状态会话。
+  bool DisableMemoryTriage = 49;
+}
+
+message AIExecutionStrategy {
+  // 为 true 时启用多 Agent 模式：顶层 ReAct 暴露并偏好 dispatch_sub_react_agents，
+  // 倾向于把复杂任务拆成多个并行子 Agent 执行后再汇总。
+  bool EnableMultiAgent = 1;
+
+  // 为 true 时启用 Goal 模式：在达到 GoalMinIterations 之前禁止 finish 提前退出。
+  bool EnableGoalMode = 2;
+
+  // Goal 模式下允许 finish 的最小迭代次数。<=0 时由服务端使用默认值。
+  int64 GoalMinIterations = 3;
+
+  // Multi 模式下子 Agent 最大并发数（同时运行数量）。
+  // <=0 时由服务端使用默认值；服务端负责执行绝对上限钳制。
+  int64 MaxSubAgents = 4;
 }
 
 message AITaskFilter {
@@ -2518,6 +2551,107 @@ message ExportAILogsRequest {
 
 message ExportAILogsResponse {
   string FilePath = 1;
+}
+
+message AIReActScheduleSpec {
+  // RFC 5545 recurrence rule, for example RRULE:FREQ=DAILY;INTERVAL=1.
+  string RRule = 1;
+  // IANA timezone, for example Asia/Shanghai.
+  string Timezone = 2;
+  // First eligible occurrence as a Unix timestamp in seconds.
+  int64 StartAt = 3;
+}
+
+message AIReActSchedulePayload {
+  string Prompt = 1;
+  AIStartParams StartParams = 2;
+  repeated AttachedResourceInfo AttachedResourceInfos = 3;
+  string FocusModeLoop = 4;
+}
+
+message AIReActSchedule {
+  int64 Id = 1;
+  string UUID = 2;
+  string Name = 3;
+  // active | paused | completed
+  string Status = 4;
+  // continue_session | new_session_per_run
+  string TargetMode = 5;
+  string TargetSessionID = 6;
+  AIReActSchedulePayload Payload = 7;
+  AIReActScheduleSpec Schedule = 8;
+  int64 NextRunAt = 9;
+  int64 LastRunAt = 10;
+  int64 MisfireGraceSeconds = 11;
+  int64 MaxRuntimeSeconds = 12;
+  string PauseReason = 13;
+  string LastError = 14;
+  int64 CreatedAt = 15;
+  int64 UpdatedAt = 16;
+  string OriginalRequest = 17;
+  string CreatedFromSessionID = 18;
+  // succeeded | failed | skipped | cancelled | interrupted | needs_attention
+  string LastOutcome = 19;
+  string LastSkipReason = 20;
+  int64 LastStartedAt = 21;
+  int64 LastFinishedAt = 22;
+}
+
+message CreateAIReActScheduleRequest {
+  AIReActSchedule Schedule = 1;
+}
+
+message UpdateAIReActScheduleRequest {
+  AIReActSchedule Schedule = 1;
+}
+
+message DeleteAIReActScheduleRequest {
+  string UUID = 1;
+}
+
+message GetAIReActScheduleRequest {
+  string UUID = 1;
+}
+
+message AIReActScheduleFilter {
+  repeated string UUIDs = 1;
+  repeated string Status = 2;
+  string Keyword = 3;
+  repeated string TargetSessionIDs = 4;
+  repeated string TargetModes = 5;
+  repeated string CreatedFromSessionIDs = 6;
+}
+
+message QueryAIReActSchedulesRequest {
+  Paging Pagination = 1;
+  AIReActScheduleFilter Filter = 2;
+}
+
+message QueryAIReActSchedulesResponse {
+  Paging Pagination = 1;
+  repeated AIReActSchedule Data = 2;
+  int64 Total = 3;
+  reserved 4;
+}
+
+message SetAIReActScheduleEnabledRequest {
+  string UUID = 1;
+  bool Enabled = 2;
+}
+
+message PreviewAIReActScheduleTimesRequest {
+  AIReActScheduleSpec Schedule = 1;
+  int32 Count = 2;
+  // Preview strictly after this Unix timestamp. Zero means now minus one second.
+  int64 AfterTimestamp = 3;
+}
+
+message PreviewAIReActScheduleTimesResponse {
+  repeated int64 Timestamps = 1;
+}
+
+message RunAIReActScheduleNowRequest {
+  string UUID = 1;
 }
 
 message FloatRange {

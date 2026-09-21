@@ -1,5 +1,5 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import type {
   AILocalModelListItemPromptHintProps,
   AILocalModelListItemProps,
   AILocalModelListProps,
@@ -19,11 +19,11 @@ import {
 import styles from './AIModelList.module.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { useCreation, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { YakitRadioButtonsProps } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType'
+import type { YakitRadioButtonsProps } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
-  AIGlobalConfig,
-  AIModelConfig,
+  type AIGlobalConfig,
+  type AIModelConfig,
   getModelName,
   grpcAIConfigHealthCheck,
   grpcCancelStartLocalModel,
@@ -36,7 +36,7 @@ import {
   grpcStopLocalModel,
 } from './utils'
 import { resetForcedAIModalFlag } from './utils'
-import { LocalModelConfig } from '../type/aiModel'
+import type { LocalModelConfig } from '../type/aiModel'
 import { Divider, Form, Tooltip } from 'antd'
 import { yakitNotify } from '@/utils/notification'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -69,13 +69,13 @@ import {
   InstallLlamaServerModelPrompt,
 } from './installLlamaServerModelPrompt/InstallLlamaServerModelPrompt'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import {
   AILocalModelTypeEnum,
   AIModelPolicyEnum,
   AIModelPolicyOptions,
   AIModelTypeEnum,
-  AIModelTypeEnumType,
+  type AIModelTypeEnumType,
   AIModelTypeInterFileNameEnum,
   AIOnlineModelIconMap,
 } from '../defaultConstant'
@@ -83,24 +83,23 @@ import { randomString } from '@/utils/randomUtil'
 import { AIStartModelForm } from './aiStartModelForm/AIStartModelForm'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AddAIModel } from './addAIModel/AddAIModel'
-import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import classNames from 'classnames'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import emiter from '@/utils/eventBus/eventBus'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import {
   AIModelCheckResult,
   AIModelForm,
   buildAIConfigHealthCheckConfig,
   getModelTypeByFileName,
 } from './aiModelForm/AIModelForm'
-import { AIModelFormProps } from './aiModelForm/AIModelFormType'
+import type { AIModelFormProps } from './aiModelForm/AIModelFormType'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
@@ -112,7 +111,7 @@ export const setAIModal = (params: {
   t: TFunction
 }) => {
   const { modelType, item, onSuccess, mountContainer, t } = params
-  let m = showYakitModal({
+  const m = showYakitModal({
     title: (modalT) => modalT('AIModelList.addThirdPartyApp'),
     width: 600,
     footer: null,
@@ -897,13 +896,6 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
       [],
     )
 
-    const { currentPageTabRouteKey } = usePageInfo(
-      (s) => ({
-        currentPageTabRouteKey: s.currentPageTabRouteKey,
-      }),
-      shallow,
-    )
-
     useEffect(() => {
       init()
     }, [])
@@ -984,14 +976,12 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             title={t('AILocalModelList.myAdded')}
             list={supportedModelsUser}
             onRefresh={getList}
-            currentPageTabRouteKey={currentPageTabRouteKey}
           />
         )}
         <AILocalModelListWrapper
           title={t('AILocalModelList.recommendedModels')}
           list={supportedModels}
           onRefresh={getList}
-          currentPageTabRouteKey={currentPageTabRouteKey}
         />
       </YakitSpin>
     ) : (
@@ -1004,8 +994,10 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             </div>
             <div>
               {t('AILocalModelList.macNotice')}
+              <YakitTag color="purple">sudo xattr -r</YakitTag>
+              <YakitTag color="purple">-d com.apple.quarantine ~/yakit-projects</YakitTag>
               <YakitTag color="purple">
-                复制修复命令
+                /projects/libs/llama-server
                 <CopyComponents copyText={code} className={styles['copy']} />
               </YakitTag>
               {t('AILocalModelList.macNoticeSuffix')}
@@ -1031,7 +1023,7 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             token={tokenRef.current}
             onFinished={installFinished}
             onCancel={installCancel}
-            getContainer={document.getElementById(`main-operator-page-body-${currentPageTabRouteKey}`) || undefined}
+            getContainer={getMainOperatorPageBodyContainerOrBody()}
           />
         )}
       </YakitSpin>
@@ -1039,7 +1031,7 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
   }),
 )
 const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.memo((props) => {
-  const { title, list, onRefresh, currentPageTabRouteKey } = props
+  const { title, list, onRefresh } = props
   return (
     <div className={styles['ai-local-model-list-wrapper']}>
       <div className={styles['ai-local-model-list-title']}>
@@ -1049,11 +1041,7 @@ const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.me
       <div className={styles['ai-local-model-list']}>
         {list.map((rowData) => (
           <div className={styles['ai-local-model-list-row']} key={rowData.Name}>
-            <AILocalModelListItem
-              item={rowData}
-              onRefresh={onRefresh}
-              currentPageTabRouteKey={currentPageTabRouteKey}
-            />
+            <AILocalModelListItem item={rowData} onRefresh={onRefresh} />
           </div>
         ))}
       </div>
@@ -1062,8 +1050,8 @@ const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.me
 })
 
 const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((props) => {
-  const { item, onRefresh, currentPageTabRouteKey } = props
-  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { item, onRefresh } = props
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [isReady, setIsReady] = useState<boolean>(item.IsReady || false)
 
   const [visible, setVisible] = useState<boolean>(false)
@@ -1256,7 +1244,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
       ])
     }
     return menu
-  }, [item.IsLocal, item?.Status?.Status, i18n.language])
+  }, [item.IsLocal, item?.Status?.Status, i18nRefresh])
   const isShowEnable = useCreation(() => {
     return !isReady && !item.IsLocal
   }, [isReady, item.IsLocal])
@@ -1345,7 +1333,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
           token={downTokenRef.current}
           onFinished={installFinished}
           onCancel={installCancel}
-          getContainer={document.getElementById(`main-operator-page-body-${currentPageTabRouteKey}`) || undefined}
+          getContainer={getMainOperatorPageBodyContainerOrBody()}
         />
       )}
       {removeVisible && (

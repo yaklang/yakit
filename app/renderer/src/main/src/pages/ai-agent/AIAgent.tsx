@@ -27,6 +27,10 @@ import { DigitalEmployeeProfile, DigitalEmployeeSidebar } from '@/pages/digitalE
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { omit } from 'lodash'
 import { grpcDeleteAISession } from './grpc'
+import { useChatIPC } from '../ai-re-act/hooks/useChatIPC'
+import { AISourceEnum } from '../ai-re-act/hooks/grpcApi'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { globalSessionEngine } from '../ai-re-act/hooks/ChatMultiSessionController'
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = '20260113'
@@ -89,8 +93,13 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   // 缓存全局配置数据
   useUpdateEffect(() => {
     const cache = omit(getSetting(), ['AIService', 'AIModelName'])
+    if (activeChat?.SessionID) {
+      globalSessionEngine.updateSessionConfig(activeChat.SessionID, getSetting())
+    }
     setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(cache))
   }, [setting])
+
+  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
 
   const store: AIAgentContextStore = useMemo(() => {
     return {
@@ -103,6 +112,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       getSetting: getSetting,
       setSetting: setSetting,
       setActiveChat: setActiveChat,
+      onStart,
+      onSend,
+      onClose,
+      onUpdatePageId,
     }
   }, [])
 
@@ -129,6 +142,13 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                 ...newCache,
                 SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
                 EnablePlan: AIAgentSettingDefault.EnablePlan,
+                Strategy: {
+                  EnableMultiAgent: false,
+                  EnableGoalMode: false,
+                  GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
+                  MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
+                },
+                Source: AISourceEnum.aiAgent,
               })
             } catch (error) {}
           })

@@ -1,16 +1,17 @@
-import { ReactNode } from 'react'
-import { TextAreaProps } from 'antd/lib/input'
-import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-import {
+import type { ReactNode } from 'react'
+import type { TextAreaProps } from 'antd/lib/input'
+import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import type {
   AIHttpFlowCommandParams,
   AIHttpFlowRemovePayload,
 } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
-import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
-import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
-import { AIChatMentionProps } from '../components/aiChatMention/type'
-import { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
-import { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
-import { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
+import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
+import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import type { AIChatMentionProps } from '../components/aiChatMention/type'
+import type { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
+import type { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
+import type { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
+import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
 
@@ -29,6 +30,8 @@ export interface AIChatTextareaSubmit {
   focusMode?: string
   /** 新建会话得 默认sessionId */
   sessionId?: string
+  /** 新建会话时显式预加载的能力，推荐 Skill 使用 Type=skill。 */
+  enabledCapabilities?: AIEnabledCapability[]
 }
 export interface AIChatTextareaRefProps {
   setMention: (v: AIMentionCommandParams) => void
@@ -60,8 +63,6 @@ export interface AIChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>
   /** 提交按钮的 loading 状态 */
   loading?: boolean
-  /** 保留输入内容，但暂时禁止按钮和快捷键提交 */
-  submitDisabled?: boolean
   /**输入框左下角 */
   inputFooterLeft?: ReactNode
   /**输入框右下角 */
@@ -72,12 +73,12 @@ export interface AIChatTextareaProps {
   className?: string
   children?: ReactNode
   defaultValue?: string
-  /** 输入框初始化及清空后自动恢复的默认标签（例如数字员工自带技能） */
+  /** 输入框初始化及清空后自动恢复的默认标签 */
   defaultMentions?: AIMentionCommandParams[]
+  /** 业务侧额外禁用提交按钮 */
+  submitDisabled?: boolean
   /**ai模型不存在时，是否弹窗 */
   isOpen?: boolean
-  /** 数字员工简洁模式隐藏 Plan 开关 */
-  hidePlan?: boolean
   filterMentionType?: AIChatMentionProps['filterMode']
   footerLeftTypes?: (AIInputInnerFeature | FooterLeftTypesComponentProps)[]
   footerRightTypes?: (AIInputFooterRight | FooterRightTypesComponentProps)[]

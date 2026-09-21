@@ -6,11 +6,11 @@ import type { AIForge } from '@/pages/ai-agent/type/forge'
 import type { ExecResult, PaginationSchema } from '@/pages/invoker/schema'
 import type { AITaskInfoProps } from './aiRender'
 
-import {
+import type {
   AIToDoListStatusEnumType,
   AttachedResourceKeyEnum,
   AttachedResourceTypeEnum,
-  type AIModelTypeEnumType,
+  AIModelTypeEnumType,
 } from '@/pages/ai-agent/defaultConstant'
 
 // #region 双工接口请求和响应结构
@@ -121,8 +121,6 @@ export interface AIStartParams {
   /** @deprecated 选择 AI 服务模型名称 */
   AIModelName?: string
   ReActMaxIteration?: number
-  /** 时间线上下文限制（默认100） */
-  TimelineItemLimit?: number
   /** 时间线上下文大小（20*1024） */
   TimelineContentSizeLimit?: number
   /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
@@ -167,9 +165,28 @@ export interface AIStartParams {
    * 需配合 EnablePlan=true 才会暴露 request_plan 动作。
    */
   EnableDetachedPlan?: boolean
+  /**
+   * 执行策略集合（多 Agent / Goal 模式等顶层运行策略）。
+   * 与 EnablePlan 可同时勾选；目前策略侧不支持热更新，变更需下次启动生效。
+   */
+  Strategy?: AIExecutionStrategy
+  /** 禁用记忆分诊 */
+  DisableMemoryTriage?: boolean
 }
 
-interface AIEnabledCapability {
+/** 执行策略，对应后端 AIExecutionStrategy */
+export interface AIExecutionStrategy {
+  /** 启用多 Agent 模式：把复杂任务拆成多个并行子 Agent 执行后再汇总 */
+  EnableMultiAgent?: boolean
+  /** 启用 Goal 模式：达到 GoalMinIterations 之前禁止提前结束 */
+  EnableGoalMode?: boolean
+  /** Goal 模式下允许 finish 的最小迭代次数，<=0 由服务端默认 */
+  GoalMinIterations?: number
+  /** Multi 模式下单次 dispatch 子 Agent 数量，<=0 由服务端默认；服务端硬上限 20 */
+  MaxSubAgents?: number
+}
+
+export interface AIEnabledCapability {
   Name: string
   Type: string
 }
@@ -180,6 +197,12 @@ export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AgreePolicy = 'AgreePolicy',
   HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
   HotPatchType_EnablePlan = 'EnablePlan',
+  /**
+   * 预留：Strategy 执行策略热更新。
+   * 目前策略侧暂不支持热更新，前端 onSetStrategy 仅写回本地 setting 与会话 StartParams；
+   * 后端支持热加载后，在 onSetStrategy 中启用该 hotpatch 调用即可。
+   */
+  HotPatchType_Strategy = 'Strategy',
 
   HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
   HotPatchType_DisabledCapabilities = 'DisabledCapabilities',
@@ -271,7 +294,7 @@ export interface AIInputEvent {
 export interface AttachedResourceInfo {
   Key: AttachedResourceKeyEnum
   Type: AttachedResourceTypeEnum
-  Value: string
+  Value: string | string[]
 }
 export interface AIOutputI18n {
   Zh: string
@@ -486,7 +509,8 @@ export declare namespace AIAgentGrpcApi {
   export interface PlanTask {
     /** 任务id */
     task_id: string
-    index: string
+    /** 审阅树扁平化后的层级（仅前端使用） */
+    level?: number
     /** 任务名 */
     name: string
     /** 正文 */
@@ -496,7 +520,7 @@ export declare namespace AIAgentGrpcApi {
     /** 关联任务名 */
     depends_on?: string[]
     progress?: AITaskStatusType
-    subtasks?: AITaskInfoProps[]
+    subtasks?: PlanTask[]
     /**评阅时树节点是否被删 */
     isRemove: boolean
     /**关联工具 */
@@ -517,7 +541,6 @@ export declare namespace AIAgentGrpcApi {
   /** 改变任务状态 */
   export interface ChangeTask {
     task: {
-      index: string
       /** 任务名 */
       name: string
       /** 正文 */
@@ -560,7 +583,7 @@ export declare namespace AIAgentGrpcApi {
   /** plan_task_analysis 计划树中任务的补充解释和工具数据 */
   export interface PlanReviewRequireExtra {
     description: string
-    index: string
+    task_id: string
     keywords: string[]
     plans_id: string
   }
@@ -755,7 +778,7 @@ export declare namespace AIAgentGrpcApi {
     /** 工具执行总结(不论成功失败) */
     summary?: string
     /** 工具名和工具描述 */
-    tool?: { name?: string; description?: string; verbose_name?: string }
+    tool?: { name?: string; description?: string; verbose_name_i18n?: AIOutputI18n }
     /** 间隔时间(ms) */
     duration_ms: number
     /** 间隔时间(s) */
@@ -847,6 +870,7 @@ export declare namespace AIAgentGrpcApi {
     created_at: string
     focus_mode: string
     id: string
+    is_recovery: boolean
     status: AITaskStatusType
     user_input: string
   }
@@ -861,7 +885,7 @@ export declare namespace AIAgentGrpcApi {
   /** 问题状态变化消息 */
   export interface ReactTaskChanged {
     react_task_id: string
-    react_task_now_status: string
+    react_task_now_status: AITaskStatusType
     react_task_old_status: string
   }
 
@@ -1032,6 +1056,16 @@ export declare namespace AIAgentGrpcApi {
       path?: string
       summary?: string
       version: number
+      change_id?: string
+      line_base?: number
+      /** op=patch 时描述如何把 content 片段合入文件 */
+      patch?: {
+        kind: 'line_range' | 'snippet' | 'insert' | 'delete' | 'full'
+        start_line?: number
+        end_line?: number
+        insert_line?: number
+        old_snippet?: string
+      }
     }
     reason?: string
     source_action?: string
@@ -1145,6 +1179,16 @@ export declare namespace AIAgentGrpcApi {
     title: string
     summary_markdown: string
   }
+
+  /** 跳过计划子任务（skip_subtask_in_plan）请求的响应 */
+  export interface SkipSubtaskInPlan {
+    message: string
+    reason: string
+    subtask_id: string
+    subtask_index: string
+    subtask_name: string
+    success: boolean
+  }
 }
 
 // #region AI相关普通接口的请求和定义结构
@@ -1207,3 +1251,117 @@ export interface ExportAILogsResponse {
   FilePath: string
 }
 // #endregion
+//#region GetAIReActRecommendedSkills/UpdateAIReActRecommendedSkill/ResetAIReActRecommendedSkill接口
+export interface AIReActRecommendedSkill extends AIEnabledCapability {
+  DisplayNameZhCN: string
+  Description: string
+  /** 当前生效的 Markdown 正文（不含 YAML frontmatter），可由用户编辑 */
+  Content: string
+  /** 当前正文是否与内置默认正文不同 */
+  IsModified: boolean
+}
+
+export interface GetAIReActRecommendedSkillsResponse {
+  Data: AIReActRecommendedSkill[]
+}
+
+export interface UpdateAIReActRecommendedSkillRequest {
+  Name: string
+  Content: string
+}
+// #endregion
+
+//#region AIReActSchedule
+export interface AIReActScheduleSpec {
+  RRule: string
+  Timezone: string
+  StartAt: number
+}
+
+export interface AIReActSchedulePayload {
+  Prompt: string
+  StartParams: AIStartParams
+  AttachedResourceInfos?: AttachedResourceInfo[]
+  FocusModeLoop?: string
+}
+
+export interface AIReActSchedule {
+  Id?: number
+  UUID: string
+  Name: string
+  Status: string
+  TargetMode: string
+  TargetSessionID?: string
+  Payload: AIReActSchedulePayload
+  Schedule: AIReActScheduleSpec
+  NextRunAt?: number
+  LastRunAt?: number
+  MisfireGraceSeconds?: number
+  MaxRuntimeSeconds?: number
+  PauseReason?: string
+  LastError?: string
+  CreatedAt?: number
+  UpdatedAt?: number
+  OriginalRequest?: string
+  CreatedFromSessionID?: string
+  LastOutcome?: string
+  LastSkipReason?: string
+  LastStartedAt?: number
+  LastFinishedAt?: number
+}
+
+export interface CreateAIReActScheduleRequest {
+  Schedule: AIReActSchedule
+}
+
+export interface UpdateAIReActScheduleRequest {
+  Schedule: AIReActSchedule
+}
+
+export interface DeleteAIReActScheduleRequest {
+  UUID: string
+}
+
+export interface GetAIReActScheduleRequest {
+  UUID: string
+}
+
+export interface AIReActScheduleFilter {
+  UUIDs?: string[]
+  Status?: string[]
+  Keyword?: string
+  TargetSessionIDs?: string[]
+  TargetModes?: string[]
+  CreatedFromSessionIDs?: string[]
+}
+
+export interface QueryAIReActSchedulesRequest {
+  Pagination: PaginationSchema
+  Filter: AIReActScheduleFilter
+}
+
+export interface QueryAIReActSchedulesResponse {
+  Pagination: PaginationSchema
+  Data: AIReActSchedule[]
+  Total: number
+}
+
+export interface SetAIReActScheduleEnabledRequest {
+  UUID: string
+  Enabled: boolean
+}
+
+export interface PreviewAIReActScheduleTimesRequest {
+  Schedule: AIReActScheduleSpec
+  Count: number
+  AfterTimestamp: number
+}
+
+export interface PreviewAIReActScheduleTimesResponse {
+  Timestamps: number[]
+}
+
+export interface RunAIReActScheduleNowRequest {
+  UUID: string
+}
+//#endregion

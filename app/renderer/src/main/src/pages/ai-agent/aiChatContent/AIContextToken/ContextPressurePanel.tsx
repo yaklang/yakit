@@ -1,6 +1,5 @@
-import React, { memo, useCallback } from 'react'
-import { useCreation } from 'ahooks'
-import { cloneDeep } from 'lodash'
+import type React from 'react'
+import { memo } from 'react'
 import { ContextPressureEcharts } from '../../chatTemplate/AIEcharts'
 import { formatNumberUnits } from '../../utils'
 import { Tooltip } from 'antd'
@@ -8,16 +7,22 @@ import classNames from 'classnames'
 import { getPressuresData, getThreshold, isPressurePerfChanged } from './utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
-import { CONTEXT_PERF_POLL_INTERVAL, ContextPerfPanelProps, useContextPerfStore } from './useContextPerfStore'
+import { CONTEXT_PERF_POLL_INTERVAL, type ContextPerfPanelProps, useContextPerfStore } from './useContextPerfStore'
 import styles from '../AIChatContent.module.scss'
-
-const ContextPressurePanel: React.FC<ContextPerfPanelProps> = ({ session, execute }) => {
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import cloneDeep from 'lodash/cloneDeep'
+import { useCreation } from 'ahooks'
+const ContextPressurePanel: React.FC<ContextPerfPanelProps> = () => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const getPerfData = useContextPerfStore(session)
-  const getData = useCallback(() => getPerfData()?.pressure ?? null, [getPerfData])
+
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+
+  const getPerfData = useContextPerfStore()
 
   const { renderNumber, aiDataRef: pressure } = useRafPolling({
-    getData,
+    getData: () => getPerfData.pressure ?? null,
     interval: CONTEXT_PERF_POLL_INTERVAL,
     shouldStop: () => !execute,
     resetDeps: [execute],

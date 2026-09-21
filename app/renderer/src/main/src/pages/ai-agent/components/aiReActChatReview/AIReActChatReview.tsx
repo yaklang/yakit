@@ -1,5 +1,5 @@
-import React, { type FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { AIReActChatReviewProps, ForgeReviewFormProps, ForgeReviewFormRefProps } from './AIReActChatReviewType'
+import React, { forwardRef, type ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import type { AIReActChatReviewProps, ForgeReviewFormProps, ForgeReviewFormRefProps } from './AIReActChatReviewType'
 import { OutlineArrowrightIcon, OutlineQuestionmarkcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { useCountDown, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { SolidAnnotationIcon, SolidVariableIcon } from '@/assets/icon/solid'
@@ -10,96 +10,105 @@ import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import AIPlanReviewTree from '@/pages/ai-agent/aiPlanReviewTree/AIPlanReviewTree'
-import { handleFlatAITree } from '../../../ai-re-act/hooks/utils'
+import { genExecTasks } from '../../../ai-re-act/hooks/utils'
 import { reviewListToTrees } from '@/pages/ai-agent/utils'
 import { grpcGetAIForge } from '@/pages/ai-agent/grpc'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import { ExecuteEnterNodeByPluginParams } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType } from '@/pages/plugins/editDetails/utils'
-import { AIAgentGrpcApi, AIInputEventSyncTypeEnum } from '../../../ai-re-act/hooks/grpcApi'
+import {
+  type AIAgentGrpcApi,
+  AIInputEventSyncTypeEnum,
+  type AIInputEvent,
+  AITaskStatus,
+} from '../../../ai-re-act/hooks/grpcApi'
 
 import classNames from 'classnames'
 import styles from './AIReActChatReview.module.scss'
-import { AIChatIPCSendParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import { OutlineHandleColorsIcon, ColorsOutlineWarpIcon } from '@/assets/icon/colors'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
-import {
-  AIChatQSData,
-  AIChatQSDataTypeEnum,
-  AIReviewType,
-  UIDetachedPlanReview,
-} from '../../../ai-re-act/hooks/aiRender'
-import { AIForge } from '@/pages/ai-agent/type/forge'
+import { AIChatQSDataTypeEnum, type AIReviewType, type AITaskInfoProps } from '../../../ai-re-act/hooks/aiRender'
+import type { AIForge } from '@/pages/ai-agent/type/forge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import useAIAgentDispatcher from '../../useContext/useDispatcher'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { randomString } from '@/utils/randomUtil'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
-  const {
-    info,
-    onSendAI,
-    onSendSyncMessage,
-    planReviewTreeKeywordsMap,
-    isEmbedded,
-    renderFooterExtra,
-    expand,
-    className,
-  } = props
-  const { type, data: review } = info
-  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const { chatIPCData } = useChatIPCStore()
-  const { chatIPCEvents } = useChatIPCDispatcher()
+  const { info, planReviewTreeKeywordsMap, isEmbedded, renderFooterExtra, expand, className, chatType, renderNum } =
+    props
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+
+  const { onSend } = useAIAgentDispatcher()
+
+  const sessionId = useCurrentSessionId()
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+  const taskStatusRunning = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
+
   const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
-  const [reviewTrees, setReviewTrees] = useState<AIAgentGrpcApi.PlanTask[]>([])
+  const [reviewTrees, setReviewTrees] = useState<AITaskInfoProps[]>([])
   const [currentPlansId, setCurrentPlansId] = useState<string>('')
   const [forgeOption, setForgeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
-  const forgeReviewFormRef = useRef<ForgeReviewFormRefProps>({ validateFields: () => {} })
+  const forgeReviewFormRef = useRef<ForgeReviewFormRefProps>({ validateFields: () => new Promise(() => {}) })
 
-  const initReviewTreesRef = useRef<AIAgentGrpcApi.PlanTask[]>([])
-  /** 取消当前任务后，等待 taskStatus.loading 置为 false 再提交 detached plan */
+  const initReviewTreesRef = useRef<AITaskInfoProps[]>([])
+  /** 取消当前任务后，等待 status 离开 processing 再提交 detached plan */
   const pendingDetachedPlanSubmitRef = useRef(false)
 
   useEffect(() => {
     pendingDetachedPlanSubmitRef.current = false
-    switch (type) {
+    switch (info.type) {
       case 'plan_review_require':
-      case 'detached_plan_require':
-        const data = review as AIAgentGrpcApi.PlanReviewRequire
-        const list: AIAgentGrpcApi.PlanTask[] = []
-        handleFlatAITree(list, data.plans.root_task)
+      case 'detached_plan_require': {
+        const data = info.data as AIAgentGrpcApi.PlanReviewRequire
+        const list = genExecTasks(data.plans.root_task)
         initReviewTreesRef.current = [...list]
         setReviewTrees(list)
         setCurrentPlansId(data.plans_id)
         break
-      case 'require_user_interactive':
-        const { options } = review as AIAgentGrpcApi.AIReviewRequire
-        if (options && options.length > 0) {
-          const value = options[0].prompt || options[0].prompt_title
-          setRequireQS(value ? `${value}:` : '')
-          setAIOptionsSelect(value)
+      }
+      case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
+        {
+          const { options } = info.data
+          if (options && options.length > 0) {
+            const value = options[0].prompt || options[0].prompt_title
+            setRequireQS(value ? `${value}:` : '')
+            setAIOptionsSelect(value)
+          }
         }
         break
       default:
         break
     }
-  }, [type, review])
+  }, [renderNum])
   //#region ai评分
   const [targetDate, setTargetDate] = useState<number>()
   const [countdown] = useCountDown({
     targetDate,
   })
   useEffect(() => {
-    if (!chatIPCData.execute) return
-    const data = review as AIAgentGrpcApi.ToolUseReviewRequire
-    if (!!data?.aiReview?.seconds) {
-      setTargetDate(Date.now() + data.aiReview.seconds * 1000)
+    if (!execute) return
+    switch (info.type) {
+      case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
+        {
+          const data = info.data
+          if (data?.aiReview?.seconds) {
+            setTargetDate(Date.now() + data.aiReview.seconds * 1000)
+          }
+        }
+        break
+      default:
+        break
     }
-  }, [review, chatIPCData.execute])
+  }, [renderNum, execute])
   //#endregion
   const reviewTitle = useCreation(() => {
-    const subTitle = !!countdown ? (
+    const subTitle = countdown ? (
       <>
         <span className={styles['ai-countdown']}>{Math.round(countdown / 1000)}s</span>
         <span>{t('AIReActChatReview.autoExecuteSuffix')}</span>
@@ -108,7 +117,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       <></>
     )
     let title = t('AIReActChatReview.error')
-    switch (type) {
+    switch (info.type) {
       case 'tool_use_review_require':
         title = t('AIReActChatReview.toolCall')
         break
@@ -129,13 +138,14 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         break
     }
     return { title: <span>{title}</span>, subTitle }
-  }, [type, countdown, i18n.language])
+  }, [countdown, i18nRefresh])
   const toolReview = useCreation(() => {
-    if (type !== 'tool_use_review_require') return null
-    const { tool, tool_description, reason, params } = review as AIAgentGrpcApi.ToolUseReviewRequire
+    if (info.type !== 'tool_use_review_require') return null
+
+    const { tool, tool_description, reason, params } = info.data as AIAgentGrpcApi.ToolUseReviewRequire
     let paramsValue = '-'
     try {
-      paramsValue = !!params ? JSON.stringify(params, null, 2) : '-'
+      paramsValue = params ? JSON.stringify(params, null, 2) : '-'
     } catch (error) {}
 
     return (
@@ -163,24 +173,24 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         </div>
       </div>
     )
-  }, [review, i18n.language])
+  }, [renderNum, i18nRefresh])
   const forgeReview = useCreation(() => {
-    if (type !== 'exec_aiforge_review_require') return null
-    const data = review as AIAgentGrpcApi.ExecForgeReview
+    if (info.type !== 'exec_aiforge_review_require') return null
+    const data = info.data as AIAgentGrpcApi.ExecForgeReview
     return <ForgeReviewForm ref={forgeReviewFormRef} editable={!forgeOption} {...data} />
-  }, [review, forgeOption])
+  }, [renderNum, forgeOption])
   const aiRequireReview = useCreation(() => {
-    if (type === 'require_user_interactive') {
-      const data = review as AIAgentGrpcApi.AIReviewRequire
+    if (info.type === 'require_user_interactive') {
+      const data = info.data as AIAgentGrpcApi.AIReviewRequire
       const { prompt } = data
       return <div className={styles['ai-require-ask']}>{prompt}</div>
     }
     return null
-  }, [review])
+  }, [renderNum])
 
   const taskReview = useCreation(() => {
-    if (type === 'task_review_require') {
-      const data = review as AIAgentGrpcApi.TaskReviewRequire
+    if (info.type === 'task_review_require') {
+      const data = info.data as AIAgentGrpcApi.TaskReviewRequire
       const { task, short_summary, long_summary } = data
       return (
         <div className={styles['review-task-tool-data']}>
@@ -214,10 +224,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       )
     }
     return null
-  }, [review, i18n.language])
+  }, [renderNum, i18nRefresh])
   const planReview = useCreation(() => {
     if (reviewTrees.length > 0) {
-      const list = !!reviewTreeOption ? reviewTrees : initReviewTreesRef.current
+      const list = reviewTreeOption ? reviewTrees : initReviewTreesRef.current
       return (
         <AIPlanReviewTree
           defaultList={initReviewTreesRef.current}
@@ -250,7 +260,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   })
 
   const executeDetachedPlan = useMemoizedFn(() => {
-    const detachedReview = review as AIAgentGrpcApi.DetachedPlanRequire
+    const detachedReview = info.data as AIAgentGrpcApi.DetachedPlanRequire
     const syncPayload: { coordinator_id: string; plans?: AIAgentGrpcApi.DetachedPlan } = {
       coordinator_id: detachedReview.coordinator_id,
     }
@@ -264,34 +274,41 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         }
       }
     }
-    onSendSyncMessage?.({
-      syncType: AIInputEventSyncTypeEnum.SYNC_EXECUTE_DETACHED_PLAN,
-      syncID: randomString(8),
+    const params: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_EXECUTE_DETACHED_PLAN,
+      SyncID: randomString(8),
       SyncJsonInput: JSON.stringify(syncPayload),
-    })
-    chatIPCEvents.handleTaskReviewRelease(detachedReview.id)
+    }
+    globalSessionEngine.closeChatReview(sessionId, info.id)
+    onSend({ token: sessionId, type: '', params })
     pendingDetachedPlanSubmitRef.current = false
   })
 
   const submitDetachedPlan = useMemoizedFn(() => {
-    const taskId = chatIPCEvents.fetchCurrentTaskPlanID()?.taskID
-    if (chatIPCData.taskStatus.loading && taskId) {
+    const taskId = store.getState().currentChatStatus.questionID
+    if (taskStatusRunning && taskId) {
       pendingDetachedPlanSubmitRef.current = true
-      chatIPCEvents.handleCancelLoadingChange('task', true)
-      onSendSyncMessage?.({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
-        SyncJsonInput: JSON.stringify({ task_id: taskId }),
+      store.getState().updateState({
+        cancelChatLoading: true,
       })
+      const params: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+        SyncID: randomString(8),
+        SyncJsonInput: JSON.stringify({ task_id: taskId }),
+      }
+      onSend({ token: sessionId, type: '', params })
       return
     }
     executeDetachedPlan()
   })
 
   useUpdateEffect(() => {
-    if (!chatIPCData.taskStatus.loading && pendingDetachedPlanSubmitRef.current) {
+    if (!taskStatusRunning && pendingDetachedPlanSubmitRef.current) {
       executeDetachedPlan()
     }
-  }, [chatIPCData.taskStatus.loading])
+  }, [taskStatusRunning])
 
   /** 继续执行 */
   const handleContinue = useMemoizedFn(() => {
@@ -300,7 +317,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       return
     }
     if (!isContinue) return
-    const find = ((review as AIAgentGrpcApi.ToolUseReviewRequire)?.selectors || []).find(
+    const find = ((info.data as AIAgentGrpcApi.ToolUseReviewRequire)?.selectors || []).find(
       (item) => item.value === 'continue',
     )
     if (!find) return
@@ -310,7 +327,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   })
 
   const noAIOptionsList = useCreation(() => {
-    const { selectors } = review as AIAgentGrpcApi.ToolUseReviewRequire
+    const { selectors } = info.data as AIAgentGrpcApi.ToolUseReviewRequire
     const allowShowInput: AIAgentGrpcApi.ReviewSelector[] = []
     const showButton: AIAgentGrpcApi.ReviewSelector[] = []
     if (
@@ -320,7 +337,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         'detached_plan_require',
         'task_review_require',
         'exec_aiforge_review_require',
-      ].includes(type)
+      ].includes(info.type)
     ) {
       selectors
         ?.filter((item) => item.value !== 'continue')
@@ -333,7 +350,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         })
     }
     return { allowShowInput, showButton }
-  }, [review])
+  }, [renderNum])
 
   const noAIOptionsAllowShowInput = useCreation(() => {
     return (
@@ -350,28 +367,25 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       )
     )
   }, [noAIOptionsList.allowShowInput])
-  const handleShowEdit = useMemoizedFn((info: AIAgentGrpcApi.ReviewSelector) => {
-    switch (info.value) {
+  const handleShowEdit = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
+    switch (item.value) {
       case 'freedom-review':
-        setReviewTreeOption(info)
+        setReviewTreeOption(item)
         break
       case 'input_params':
-        setForgeOption(info)
+        setForgeOption(item)
         break
       case 'close':
-        if (type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
-          chatIPCEvents.handleTaskReviewRelease((review as AIReviewType).id)
-          return
-        }
+        globalSessionEngine.closeChatReview(sessionId, info.id)
         break
       default:
         if (editShow) return
-        if (!info.allow_extra_prompt) {
-          const jsonInput: Record<string, string> = { suggestion: info.value }
-          onSendAIByValue(JSON.stringify(jsonInput), info.value)
+        if (!item.allow_extra_prompt) {
+          const jsonInput: Record<string, string> = { suggestion: item.value }
+          onSendAIByValue(JSON.stringify(jsonInput), item.value)
           return
         }
-        editInfo.current = cloneDeep(info)
+        editInfo.current = cloneDeep(item)
         setEditShow(true)
         break
     }
@@ -416,7 +430,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   })
   /**智能应用用户自己修改ai得提交 */
   const handleSubmitForge = useMemoizedFn(() => {
-    if (!!forgeOption) {
+    if (forgeOption) {
       forgeReviewFormRef.current
         .validateFields()
         .then((value) => {
@@ -430,25 +444,25 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     }
   })
   const aiOptionsLength = useCreation(() => {
-    if (type !== 'require_user_interactive') return 0
+    if (info.type !== 'require_user_interactive') return 0
 
     try {
-      const { options } = review as AIAgentGrpcApi.AIReviewRequire
+      const { options } = info.data as AIAgentGrpcApi.AIReviewRequire
       if (!options || options.length === 0) return 0
       return options.length
     } catch (error) {
       return 0
     }
-  }, [review])
+  }, [renderNum])
   const onSetAIOptionsSelect = useMemoizedFn((value?: string) => {
     setAIOptionsSelect(value)
     setRequireQS(value ? `${value}:` : '')
   })
   const aiOptions = useCreation(() => {
-    if (type !== 'require_user_interactive') {
+    if (info.type !== 'require_user_interactive') {
       return null
     }
-    const { options } = review as AIAgentGrpcApi.AIReviewRequire
+    const { options } = info.data as AIAgentGrpcApi.AIReviewRequire
     return (
       <>
         <div className={styles['ai-require-btns-wrapper']}>
@@ -479,33 +493,31 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         </div>
       </>
     )
-  }, [review, requireQS, aiOptionsSelect, i18n.language])
+  }, [renderNum, requireQS, aiOptionsSelect, i18nRefresh])
   //#endregion
   // 是否显示继续执行按钮
   const isContinue = useCreation(() => {
-    if (type === 'require_user_interactive') return false
+    if (info.type === 'require_user_interactive') return false
 
-    if (!review) return
-    const { selectors } = review as AIAgentGrpcApi.ToolUseReviewRequire
+    if (!info.data) return
+    const { selectors } = info.data as AIAgentGrpcApi.ToolUseReviewRequire
     if (!selectors || !Array.isArray(selectors) || selectors.length === 0) return false
 
-    const findIndex = (review as AIAgentGrpcApi.ToolUseReviewRequire).selectors.findIndex(
-      (item) => item.value === 'continue',
-    )
+    const findIndex = selectors.findIndex((item) => item.value === 'continue')
     return findIndex !== -1
-  }, [review, type])
+  }, [renderNum])
   const onSendAIByValue = useMemoizedFn((value: string, optionValue?: string) => {
-    const params: AIChatIPCSendParams = {
-      value,
-      id: (review as AIReviewType).id,
-      optionValue,
+    const params: AIInputEvent = {
+      IsInteractiveMessage: true,
+      InteractiveId: (info.data as AIReviewType).id,
+      InteractiveJSONInput: value,
     }
-    onSendAI(params)
+    onSend({ token: sessionId, type: chatType, params, optionValue })
   })
   const footerNode = useCreation(() => {
     const renderFooterRightExtra = () => {
       // forge和play不会同时存在
-      if (!!reviewTreeOption) {
+      if (reviewTreeOption) {
         return (
           <>
             <YakitButton type="outline2" onClick={() => setReviewTreeOption(undefined)}>
@@ -517,7 +529,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
           </>
         )
       }
-      if (!!forgeOption) {
+      if (forgeOption) {
         return (
           <>
             <YakitButton type="outline2" onClick={() => setForgeOption(undefined)}>
@@ -552,7 +564,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     return (
       <div className={styles['btn-group']}>
         {isContinue && renderFooterRightExtra()}
-        {type === 'require_user_interactive' && (
+        {info.type === 'require_user_interactive' && (
           <YakitButton disabled={!isRequireQS} loading={requireLoading} onClick={handleAIRequireQSSend}>
             {t('YakitButton.submitted')}
           </YakitButton>
@@ -563,51 +575,51 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     isContinue,
     reviewTreeOption,
     forgeOption,
-    type,
     aiOptionsLength,
     isRequireQS,
     requireLoading,
     noAIOptionsList.showButton,
-    i18n.language,
+    i18nRefresh,
   ])
 
   const reviewHeardExtra = useCreation(() => {
     let node: ReactNode = <></>
-    switch (type) {
+    switch (info.type) {
       case 'tool_use_review_require':
       case 'exec_aiforge_review_require':
-        /**NOTE 定义问题 */
-        const toolReviewData = review as AIAgentGrpcApi.ToolUseReviewRequire
-        if (!!toolReviewData.aiReview) {
-          const { interactive_id, score, level } = toolReviewData.aiReview
-          node = (
-            <>
-              {!!interactive_id && !score && !countdown && <div>{t('AIReActChatReview.evaluating')}</div>}
-              {!!score && (
-                <div>
-                  AI&nbsp;&nbsp;{t('AIReActChatReview.aiRiskScore')}&nbsp;&nbsp;
-                  <span
-                    className={classNames(styles['ai-countdown'], {
-                      [styles['ai-score-low']]: level === 'low',
-                      [styles['ai-score-middle']]: level === 'middle',
-                      [styles['ai-score-high']]: level === 'high',
-                    })}
-                  >
-                    {toolReviewData.aiReview.score || 0}
-                  </span>
-                </div>
-              )}
-            </>
-          )
+        {
+          /**NOTE 定义问题 */
+          const toolReviewData = info.data as AIAgentGrpcApi.ToolUseReviewRequire
+          if (toolReviewData.aiReview) {
+            const { interactive_id, score, level } = toolReviewData.aiReview
+            node = (
+              <>
+                {!!interactive_id && !score && !countdown && <div>{t('AIReActChatReview.evaluating')}</div>}
+                {!!score && (
+                  <div>
+                    AI&nbsp;&nbsp;{t('AIReActChatReview.aiRiskScore')}&nbsp;&nbsp;
+                    <span
+                      className={classNames(styles['ai-countdown'], {
+                        [styles['ai-score-low']]: level === 'low',
+                        [styles['ai-score-middle']]: level === 'middle',
+                        [styles['ai-score-high']]: level === 'high',
+                      })}
+                    >
+                      {toolReviewData.aiReview.score || 0}
+                    </span>
+                  </div>
+                )}
+              </>
+            )
+          }
         }
-
         break
 
       default:
         break
     }
     return node
-  }, [type, review, countdown, i18n.language])
+  }, [renderNum, countdown, i18nRefresh])
 
   return (
     <>

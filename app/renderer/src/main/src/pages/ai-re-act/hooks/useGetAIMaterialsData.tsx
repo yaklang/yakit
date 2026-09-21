@@ -1,8 +1,8 @@
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { GetRandomAIMaterialsResponse } from './grpcApi'
-import { ReactNode, useEffect, useState } from 'react'
+import type { GetRandomAIMaterialsResponse } from './grpcApi'
+import { type ReactNode, useEffect, useState } from 'react'
 import { grpcGetRandomAIMaterials } from '@/pages/ai-agent/grpc'
-import { AIMaterialsData, RandomAIMaterialsDataProps } from '@/pages/ai-agent/aiChatWelcome/type'
+import type { AIMaterialsData, RandomAIMaterialsDataProps } from '@/pages/ai-agent/aiChatWelcome/type'
 import {
   AIForgeIcon,
   AIKnowledgeBaseIcon,
@@ -16,7 +16,7 @@ export interface AIRecommendIconByType {
   hoverIcon: ReactNode
 }
 export const getAIRecommendIconByType = (type: string) => {
-  let icons: AIRecommendIconByType = {
+  const icons: AIRecommendIconByType = {
     icon: null,
     hoverIcon: null,
   }

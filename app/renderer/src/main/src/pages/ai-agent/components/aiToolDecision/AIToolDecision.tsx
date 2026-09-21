@@ -1,5 +1,5 @@
 import React from 'react'
-import { AIToolDecisionProps } from './type'
+import type { AIToolDecisionProps } from './type'
 import { AISingHaveColorText } from '../aiReviewResult/AIReviewResult'
 // import { SolidCursorclickIcon } from '@/assets/icon/solid'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'

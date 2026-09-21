@@ -1,6 +1,6 @@
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { AIOutputI18n } from './grpcApi'
+import type { AIOutputI18n } from './grpcApi'
 
 function useAINodeLabel(params?: AIOutputI18n) {
   const { i18n } = useI18nNamespaces([])

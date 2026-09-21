@@ -1,7 +1,7 @@
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { Selection } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
-import { AICodeRefRange } from './aiCustomCodeBlockPlugin'
+import type { Selection } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
+import type { AICodeRefRange } from './aiCustomCodeBlockPlugin'
 
 export interface OpenCodeBlockRefParams {
   path: string

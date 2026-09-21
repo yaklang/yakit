@@ -110,7 +110,6 @@ import {
 } from '@/assets/icon/outline'
 import emiter from '@/utils/eventBus/eventBus'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
-import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
   registerWebFuzzerPageApplyRequestFromCard,
@@ -120,9 +119,8 @@ import {
   registerWebFuzzerPageOnAIFuzzStatus,
   type WebFuzzerCasualReplaceReviewPayload,
 } from './webFuzzerAiRequestApplyBridge'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
-import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { shallow } from 'zustand/shallow'
 import { usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps, getFuzzerProcessedCacheData } from '@/store/pageInfo'
 import { YakitCopyText } from '@/components/yakitUI/YakitCopyText/YakitCopyText'
@@ -2528,10 +2526,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
     historyAIReActChatBridge.handleStart({
       qs: template.prompt,
+      showQS: template.label,
       focusMode: focusModeLoop,
-      extraValue: {
-        showQS: template.label,
-      },
     })
   })
 
@@ -3279,12 +3275,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
 /** 每个 Web Fuzzer 页签独立 WebFuzzerAiStore，避免多开时共用内存缓存导致会话数据互相覆盖 */
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
-  const fuzzerAiChatDataStore = useCreation(() => new WebFuzzerAiStore(props.id), [props.id])
   return (
     <HistoryAIReActChatProvider
-      cacheDataStore={fuzzerAiChatDataStore}
+      source={AISourceEnum.webFuzzer}
+      route={YakitRoute.HTTPFuzzer}
+      pageId={props.id}
       focusModeLoop="http_fuzztest"
-      httpFuzzTabPageId={props.id}
     >
       <HTTPFuzzerPageCore {...props} />
     </HistoryAIReActChatProvider>

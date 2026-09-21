@@ -1,5 +1,5 @@
 import { $command, $nodeSchema, $nodeAttr } from '@milkdown/utils'
-import { Attrs } from '@milkdown/kit/prose/model'
+import type { Attrs } from '@milkdown/kit/prose/model'
 import { TextSelection } from '@milkdown/kit/prose/state'
 
 export const aiCodeBlockCustomId = 'ai-code-block-custom'

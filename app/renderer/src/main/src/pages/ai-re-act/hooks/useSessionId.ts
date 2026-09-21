@@ -7,9 +7,9 @@ function useSessionId() {
   const getSession = useMemoizedFn((sessionId?: string) => {
     const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
     let session = ''
-    if (!!sessionID) {
+    if (sessionID) {
       session = sessionID
-    } else if (!!setting.TimelineSessionID) {
+    } else if (setting.TimelineSessionID) {
       session = setting.TimelineSessionID
     } else {
       session = sessionId || createActiveChatSessionId()

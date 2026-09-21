@@ -39,6 +39,10 @@
   }
 }
 
+@mixin anticon-color($color) {
+  color: $color;
+}
+
 @mixin mpb-color-text() {
   font-size: 14px;
   font-weight: 400;

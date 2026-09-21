@@ -1,49 +1,42 @@
-import React, {
+import type React from 'react'
+import {
   forwardRef,
   memo,
-  ReactNode,
-  Ref,
-  RefAttributes,
+  type ReactNode,
+  type Ref,
+  type RefAttributes,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
 } from 'react'
 import {
-  AIChatTextareaProps,
-  AIChatTextareaSubmit,
+  type AIChatTextareaProps,
+  type AIChatTextareaSubmit,
   AIInputFooterRightEnum,
   AIInputInnerFeatureEnum,
-  FileToChatQuestionList,
-  FooterLeftTypesComponentProps,
-  FooterRightTypesComponentProps,
-  QSInputTextareaProps,
+  type FileToChatQuestionList,
+  type FooterLeftTypesComponentProps,
+  type FooterRightTypesComponentProps,
+  type QSInputTextareaProps,
 } from './type'
-import { Input, Tooltip } from 'antd'
+import { Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  OutlineArrowupIcon,
-  OutlineAtsymbolIcon,
-  OutlineBanIcon,
-  OutlineBrainCircuitIcon,
-  OutlineCodeIcon,
-  OutlineCogIcon,
-  OutlineHandIcon,
-} from '@/assets/icon/outline'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
-import { TextAreaRef } from 'antd/lib/input/TextArea'
+import { OutlineArrowupIcon, OutlineCogIcon, OutlineHandIcon } from '@/assets/icon/outline'
+import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
 import styles from './template.module.scss'
 import { AIMilkdownInput } from '../components/aiMilkdownInput/AIMilkdownInput'
-import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { callCommand, getMarkdown } from '@milkdown/kit/utils'
 import useAIChatDrop from '../aiChatWelcome/hooks/useAIChatDrop'
 import {
   aiMentionCommand,
-  AIMentionCommandParams,
+  type AIMentionCommandParams,
 } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import emiter from '@/utils/eventBus/eventBus'
-import { AIAgentTriggerEventInfo } from '../aiAgentType'
+import type { AIAgentTriggerEventInfo } from '../aiAgentType'
 import { extractDataWithMilkdown, setEditorValue } from '../components/aiMilkdownInput/utils'
 import { editorViewCtx } from '@milkdown/kit/core'
 import { convertKeyEventToKeyCombination } from '@/utils/globalShortcutKey/utils'
@@ -51,28 +44,16 @@ import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { AIModelSelect } from '../aiModelList/aiModelSelect/AIModelSelect'
 import AIReviewRuleSelect from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
 import { AIFocusMode } from '@/pages/ai-re-act/aiFocusMode/AIFocusMode'
-import useAIAgentStore from '../useContext/useStore'
 import { isString } from 'lodash'
-import OpenFileDropdown, { OpenFileDropdownItem } from '../aiChatWelcome/OpenFileDropdown/OpenFileDropdown'
+import OpenFileDropdown, { type OpenFileDropdownItem } from '../aiChatWelcome/OpenFileDropdown/OpenFileDropdown'
 import { UploadFileButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
-import { insertAtCurrentPosition } from '../components/aiMilkdownInput/customPlugin'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
-import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
-import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import {
-  AIGlobalCommandPopover,
-  AIInputSettingPopover,
-  AIManualAdditionPopover,
-  AIPlanPromptPopover,
-} from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
+import { AIInputSettingPopover, AIManualAdditionPopover } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
-import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
-import useAIAgentDispatcher from '../useContext/useDispatcher'
-import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
-import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
-import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
+import type { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
+import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
+import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -107,22 +88,23 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       children,
       defaultValue,
       defaultMentions,
+      submitDisabled,
       isOpen,
       filterMentionType,
       chatDataStoreKey,
       onHttpFlowRemove,
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-    const { chatIPCData } = useChatIPCStore()
-    const { handleSendConfigHotpatch } = useChatIPCDispatcher()
-    const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
+
+    const store = useCurrentStore()
+    const execute = useStore(store, (state) => state.execute)
 
     const [manualAdditionVisible, setManualAdditionVisible] = useState<boolean>(false)
 
     const [inputSettingVisible, setInputSettingVisible] = useState<boolean>(false)
 
     const footerLeftTypes: FooterLeftTypesComponentProps[] = useCreation(() => {
-      if (!!props.footerLeftTypes?.length) {
+      if (props.footerLeftTypes?.length) {
         const list = props.footerLeftTypes
           .map((item) => {
             let node: FooterLeftTypesComponentProps = {} as FooterLeftTypesComponentProps
@@ -152,7 +134,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     }, [props.footerLeftTypes, isOpen])
 
     const footerRightTypes: FooterRightTypesComponentProps[] = useCreation(() => {
-      if (props.footerRightTypes) {
+      if (props.footerRightTypes?.length) {
         const list = props.footerRightTypes
           .map((item) => {
             let node: FooterRightTypesComponentProps = {} as FooterRightTypesComponentProps
@@ -175,8 +157,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return [{ type: AIInputFooterRightEnum.AIFocusMode }]
     }, [props.footerRightTypes, isOpen])
 
-    const { setting, activeChat } = useAIAgentStore()
-    const { setSetting } = useAIAgentDispatcher()
     const [disabled, setDisabled] = useState<boolean>(false)
 
     const { isHovering, dropRef } = useAIChatDrop({
@@ -209,10 +189,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         const data: AIAgentTriggerEventInfo = JSON.parse(res)
         const { type } = data
         switch (type) {
-          case 'mention':
+          case 'mention': {
             const params = data.params as AIMentionCommandParams
             onSetMention(params)
             break
+          }
           case 'codeBlockTag':
             aiMilkdownInputRef.current?.setCodeRef(data.params as AICodeBlockCommandParams)
             handleSetTextareaFocus()
@@ -226,7 +207,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     const aiMilkdownInputRef = useRef<AIMilkdownInputRef>(null)
     const handleSubmit = useMemoizedFn(() => {
-      if (props.submitDisabled) return
       const qs = getMarkdownValue()
       if (!qs.trim() || !editorMilkdown.current) return
       const { mentions, imageList, httpFlowList, codeBlockList, plainText } = extractDataWithMilkdown(
@@ -307,9 +287,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const onSetValue = useMemoizedFn((value: string) => {
       if (!editorMilkdown.current) return
       setEditorValue(editorMilkdown.current, value)
-      if (!value) {
-        ensureDefaultMentions(editorMilkdown.current)
-      }
+      if (!value) ensureDefaultMentions(editorMilkdown.current)
     })
     const getMarkdownValue = useMemoizedFn(() => {
       const value = editorMilkdown.current?.action(getMarkdown()) || ''
@@ -335,7 +313,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     })
 
     const renderFooterLeftTypes = useMemoizedFn((types: FooterLeftTypesComponentProps[]) => {
-      let node: ReactNode[] = []
+      const node: ReactNode[] = []
       types?.forEach((item, index) => {
         switch (item.type) {
           case AIInputInnerFeatureEnum.AIReviewRuleSelect:
@@ -369,7 +347,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return node
     })
     const renderFooterRightTypes = useMemoizedFn((types: FooterRightTypesComponentProps[]) => {
-      let node: ReactNode[] = []
+      const node: ReactNode[] = []
       types?.forEach((item, index) => {
         switch (item.type) {
           case AIInputFooterRightEnum.AIFocusMode:
@@ -398,52 +376,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         mentionName: data.path,
       })
     })
-    const onMention = useMemoizedFn(() => {
-      editorMilkdown.current?.action(callCommand<string>(insertAtCurrentPosition.key, '@'))
-    })
-
-    const [aiGlobalConfigData, event] = useAIGlobalConfig()
-
-    const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
-    const updateLoading = useCreation(() => aiGlobalConfigData.updateLoading, [aiGlobalConfigData.updateLoading])
 
     const onSelectImage = useMemoizedFn(() => {
       aiMilkdownInputRef.current?.setImage()
     })
 
-    const enablePlan = useCreation(() => {
-      return !!setting?.EnablePlan
-    }, [setting?.EnablePlan])
-    const onSetPlan = useDebounceFn(
-      useMemoizedFn((checked) => {
-        handleSendConfigHotpatch({
-          hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
-          params: {
-            EnablePlan: checked,
-          },
-        })
-        setSetting?.((v) => ({
-          ...v,
-          EnablePlan: checked,
-        }))
-        if (activeChat?.SessionID) {
-          emiter.emit(
-            'sessionData',
-            JSON.stringify({
-              type: 'updateSession',
-              sessionId: activeChat.SessionID,
-              updates: {
-                StartParams: {
-                  ...(activeChat.StartParams || {}),
-                  EnablePlan: checked,
-                },
-              },
-            }),
-          )
-        }
-      }),
-      { wait: 200, leading: true },
-    ).run
     return (
       <div
         className={classNames(
@@ -457,28 +394,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         ref={dropRef}
       >
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
-        <div className={styles['preset-prompt-tags']}>
-          <AIGlobalCommandPopover childrenClass={styles['code-btn-wrapper']}>
-            <YakitSpin spinning={updateLoading} size="small">
-              <YakitTag color="purple" size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
-                <OutlineCodeIcon className={styles['code-icon']} />
-                <span className="content-ellipsis">
-                  {aiGlobalConfig.AIPresetPrompt || t('AIReActTaskChatContent.globalDirectiveDefault')}
-                </span>
-              </YakitTag>
-            </YakitSpin>
-          </AIGlobalCommandPopover>
-          <AIPlanPromptPopover childrenClass={styles['code-btn-wrapper']}>
-            <YakitSpin spinning={updateLoading} size="small">
-              <YakitTag color="blue" size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
-                <OutlineBrainCircuitIcon className={styles['code-icon']} />
-                <span className="content-ellipsis">
-                  {aiGlobalConfig.AIPlanPrompt || t('AIReActTaskChatContent.planPromptDefault')}
-                </span>
-              </YakitTag>
-            </YakitSpin>
-          </AIPlanPromptPopover>
-        </div>
         <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
           <AIMilkdownInput
             ref={aiMilkdownInputRef}
@@ -493,21 +408,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           <div className={styles['footer']}>
             {inputFooterLeft ?? (
               <div className={styles['footer-left']}>
-                {!props.hidePlan && (
-                  <Tooltip title="开启后会进入Plan模式,进行任务规划和执行">
-                    <YakitCheckableTag className={styles['plan-btn']} checked={enablePlan} onChange={onSetPlan}>
-                      {enablePlan ? <OutlineBrainCircuitIcon /> : <OutlineBanIcon />}
-                      Plan
-                    </YakitCheckableTag>
-                  </Tooltip>
-                )}
-                <YakitButton
-                  type="text2"
-                  radius="50%"
-                  icon={<OutlineAtsymbolIcon />}
-                  onClick={onMention}
-                  className={styles['btn-base']}
-                />
+                <AIRunModeSelect />
+
                 <OpenFileDropdown cb={onSetFileMention} onSelectImage={onSelectImage}>
                   <UploadFileButton title={t('YakitButton.openFolder')} className={styles['btn-base']} />
                 </OpenFileDropdown>
@@ -549,7 +451,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 className={styles['round-btn']}
                 radius="50%"
                 loading={loading}
-                disabled={disabled || props.submitDisabled}
+                disabled={disabled || submitDisabled}
                 icon={<OutlineArrowupIcon />}
                 onClick={(e) => {
                   e.stopPropagation()

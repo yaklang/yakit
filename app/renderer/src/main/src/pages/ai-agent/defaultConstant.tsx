@@ -1,11 +1,10 @@
-import { ReactNode } from 'react'
-import { AIAgentSetting } from './aiAgentType'
+import type { ReactNode } from 'react'
+import type { AIAgentSetting } from './aiAgentType'
 import {
   OutlineChipIcon,
   OutlineCogIcon,
   OutlineMCPIcon,
   OutlineSparklesIcon,
-  OutlineTemplateIcon,
   OutlineWrenchIcon,
   OutlineBookOpenTextIcon,
   OutlineBotIcon,
@@ -14,10 +13,11 @@ import {
   OutlinePointerIcon,
   OutlineEarOffIcon,
   OutlineAIIcon,
+  OutlineCalendarIcon,
 } from '@/assets/icon/outline'
-import { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
-import { genDefaultPagination, PaginationSchema } from '../invoker/schema'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import { genDefaultPagination, type PaginationSchema } from '../invoker/schema'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import {
   ChatGLMIcon,
   ComateIcon,
@@ -31,8 +31,8 @@ import {
   TongyiIcon,
   MemfitIcon,
 } from './aiModelList/icon'
-import { UseChatIPCState } from '../ai-re-act/hooks/type'
-import { AIAgentGrpcApi, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi } from '../ai-re-act/hooks/grpcApi'
+import { AISourceEnum, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
 import {
   SolidCursorclickIcon,
   SolidHashtagIcon,
@@ -40,16 +40,10 @@ import {
   SolidLightningboltIcon,
   SolidToolIcon,
 } from '@/assets/icon/solid'
-import { MCPServerType } from './type/aiMCP'
-import {
-  DefaultCurrentExecTaskTree,
-  DefaultMemoryList,
-  DefaultPlanHistoryList,
-} from '../ai-re-act/hooks/defaultConstant'
+import type { MCPServerType } from './type/aiMCP'
 import { ColorsAIIcon } from '@/assets/icon/colors'
-import { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
-import { cloneDeep } from 'lodash'
-import { ExportAIForgeRequest } from './forgeName/type'
+import type { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
+import type { ExportAIForgeRequest } from './forgeName/type'
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = 'yakit-ai-agent'
@@ -62,6 +56,7 @@ export enum AIAgentTabListEnum {
   AI_Model = 'AIModel',
   MCP = 'mcp',
   KnowledgeBase = 'knowledgeBase',
+  Scheduled = 'scheduled',
 }
 export const AiAgentTabList: YakitTabsProps[] = [
   { value: AIAgentTabListEnum.History, label: 'AIAgentTabs.historyChat', icon: <OutlineSparklesIcon /> },
@@ -70,6 +65,7 @@ export const AiAgentTabList: YakitTabsProps[] = [
   // {value: AIAgentTabListEnum.Tool, label: "AIAgentTabs.tool", icon: <OutlineWrenchIcon />},
   { value: AIAgentTabListEnum.AI_Model, label: 'AiAgengt.aiModel', icon: <OutlineChipIcon /> },
   { value: AIAgentTabListEnum.MCP, label: 'MCP', icon: <OutlineMCPIcon /> },
+  { value: AIAgentTabListEnum.Scheduled, label: 'AIAgentTabs.scheduled', icon: <OutlineCalendarIcon /> },
 ]
 export enum AIMentionTabsEnum {
   /** forge 智能体 */
@@ -108,16 +104,23 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   AllowPlanUserInteract: true,
   PlanUserInteractMaxCount: 3,
   ReActMaxIteration: 100,
-  TimelineItemLimit: 100,
   TimelineContentSizeLimit: 60,
   UserInteractLimit: 0,
   TimelineSessionID: '',
   AICallTokenLimit: 40,
   DisableToolIntervalReview: false,
-  SyncPerceptionTrigger: true,
-  EnablePlan: true,
+  SyncPerceptionTrigger: false,
+  EnablePlan: false,
   PlanExecTaskConcurrency: 2,
   EnableDetachedPlan: true,
+  Strategy: {
+    EnableMultiAgent: false,
+    EnableGoalMode: false,
+    GoalMinIterations: 0,
+    MaxSubAgents: 0,
+  },
+  DisableMemoryTriage: false,
+  Source: AISourceEnum.aiAgent,
 }
 
 /** mcp 自定义服务器配置类型选项 */
@@ -131,9 +134,8 @@ export const MCPTransportTypeList: { value: MCPServerType; label: string }[] = [
  * @description 生成的信息内不存在subtasks字段值
  */
 export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAgentGrpcApi.PlanTask = (info) => {
-  let data: AIAgentGrpcApi.PlanTask = {
+  const data: AIAgentGrpcApi.PlanTask = {
     task_id: '',
-    index: '',
     name: '',
     goal: '',
     semantic_identifier: '',
@@ -146,9 +148,8 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
     fail_tool_call_count: 0,
     summary: '',
   }
-  if (!!info) {
+  if (info) {
     data.task_id = info.task_id || ''
-    data.index = info.index || ''
     data.name = info.name || ''
     data.goal = info.goal || ''
     data.progress = info.progress || AITaskStatus.created
@@ -265,49 +266,6 @@ export enum AIMCPServerTypeEnum {
   Stdio = 'stdio',
   StreamableHTTP = 'streamable_http',
 }
-//#region ai hooks 默认值
-export const defaultChatIPCData: UseChatIPCState = {
-  execute: false,
-  httpRunTimeIDs: [],
-  riskRunTimeIDs: [],
-  casualChat: {
-    elements: [],
-    toolListRenderNumber: 0,
-  },
-  yakExecResult: {
-    card: [],
-    execFileRecord: new Map(),
-    yakExecResultLogs: [],
-  },
-  taskChat: {
-    plan: cloneDeep(DefaultCurrentExecTaskTree),
-    elements: [],
-  },
-  grpcFolders: [],
-  questionQueue: {
-    total: 0,
-    data: [],
-  },
-  reActTimelines: [],
-  memoryList: { ...DefaultMemoryList },
-  taskStatus: { loading: false, plan: '', task: '' },
-  focusMode: '',
-  switchLoading: false,
-  planHistoryList: cloneDeep(DefaultPlanHistoryList),
-  cancelCasualLoading: false,
-  cancelTaskLoading: false,
-  notifyMessage: null,
-  requestHistoryState: {
-    initLoading: false,
-    casualLoadMoreLoading: false,
-    taskLoadMoreLoading: false,
-    saveLoading: false,
-    timelinesLoading: false,
-  },
-  casualLoading: false,
-  casualTitle: '',
-}
-//#endregion
 
 /** @name 任务回答类型对应图标 */
 export const taskAnswerToIconMap: Record<string, ReactNode> = {
@@ -338,6 +296,8 @@ export const iconMap = {
 
 export enum AttachedResourceTypeEnum {
   CONTEXT_PROVIDER_TYPE_FILE = 'file',
+  /** Yak Runner 可写脚本交付目标；与 Type=file 只读参考附加区分 */
+  CONTEXT_PROVIDER_TYPE_CODE = 'code',
   CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE = 'knowledge_base',
   CONTEXT_PROVIDER_TYPE_AITOOL = 'aitool',
   CONTEXT_PROVIDER_TYPE_AIFORGE = 'aiforge',

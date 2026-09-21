@@ -1,4 +1,4 @@
-import { YakitButton, YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitButton, type YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from './AIReActChat.module.scss'
 import { SolidStopIcon } from '@/assets/icon/solid'
 import React from 'react'

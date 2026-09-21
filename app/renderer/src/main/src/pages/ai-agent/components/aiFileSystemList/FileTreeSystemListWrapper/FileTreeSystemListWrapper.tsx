@@ -1,4 +1,4 @@
-import { FileListTileMenu, FileTreeSystemListWrapperProps, HistoryItem, PathIncludeResult } from '../type'
+import { FileListTileMenu, type FileTreeSystemListWrapperProps, type HistoryItem, PathIncludeResult } from '../type'
 import { type FC, useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'

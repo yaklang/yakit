@@ -3,7 +3,6 @@ import {
   defaultDispatcherOfChatIPC,
   type ChatIPCContextValue,
 } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
-import { defaultChatIPCData } from '@/pages/ai-agent/defaultConstant'
 import { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
 import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { ConcurrentStreamFramePayload } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
@@ -29,7 +28,7 @@ export function buildConcurrentStreamContext({
 
   return {
     store: {
-      chatIPCData: cloneDeep(defaultChatIPCData),
+      chatIPCData: cloneDeep({}),
       reviewInfo: undefined,
       planReviewTreeKeywordsMap: new Map(),
       reviewExpand: false,

@@ -133,11 +133,11 @@ import {
   FilterConfig,
   HTTPFlowTableFormConfiguration,
 } from '@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
-import { FlowAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { HTTPFlowRuleDataFilter } from '@/components/HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { isFilterSectionActive, safeParse } from '../HTTPHistoryAnalysis.utils'
+import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 const { ipcRenderer } = window.require('electron')
 
 interface HTTPHistoryFilterProps {
@@ -418,7 +418,12 @@ HTTPHistoryFilterInner.displayName = 'HTTPHistoryFilterInner'
 
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = (props) => {
   return (
-    <HistoryAIReActChatProvider cacheDataStore={FlowAiStore} focusModeLoop="http_flow_analyze">
+    <HistoryAIReActChatProvider
+      source={AISourceEnum.flow}
+      route={YakitRoute.DB_HTTPHistoryAnalysis}
+      pageId={YakitRoute.DB_HTTPHistoryAnalysis}
+      focusModeLoop="http_flow_analyze"
+    >
       <HTTPHistoryFilterInner {...props} />
     </HistoryAIReActChatProvider>
   )

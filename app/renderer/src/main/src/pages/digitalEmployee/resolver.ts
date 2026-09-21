@@ -50,7 +50,8 @@ export const applyDigitalEmployeeSkillToInputEvent = <T extends AIInputEvent>(
     (resource) =>
       resource.Type === AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AIFORGE &&
       resource.Key === AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME &&
-      normalizeForgeVerboseName(resource.Value) === skillName,
+      normalizeForgeVerboseName(Array.isArray(resource.Value) ? resource.Value.join(',') : resource.Value) ===
+        skillName,
   )
   if (alreadyAttached) return inputEvent
 

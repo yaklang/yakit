@@ -1,4 +1,5 @@
-import React, { memo, useMemo, useState } from 'react'
+import type React from 'react'
+import { memo, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'
 
@@ -9,8 +10,8 @@ import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExec
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
 
-import { useHistoryAIReActChat } from '../withHistoryAIReActChat'
 import styles from './historyAIReActChat.module.scss'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 
 export interface TaskDetailsPopoverProps {
   taskLabel?: string
@@ -18,13 +19,13 @@ export interface TaskDetailsPopoverProps {
 
 const TaskDetailsPopover: React.FC<TaskDetailsPopoverProps> = ({ taskLabel = '自由对话' }) => {
   const { t } = useI18nNamespaces(['yakitUi'])
-  const { historyAIReActChatBridge } = useHistoryAIReActChat()
   const [visible, setVisible] = useState(false)
   const [aiTaskDetails, setAITaskDetails] = useState<{ key: string; label: string; goal: string }>()
 
+  const store = useCurrentStore()
   const handleOpen = useMemoizedFn(() => {
     if (visible) return
-    const taskId = historyAIReActChatBridge.events.fetchCurrentCasualTaskID()
+    const taskId = store.getState().currentChatStatus.questionID
     if (!taskId) {
       yakitNotify('error', 'taskId不存在')
       return

@@ -1,20 +1,19 @@
-import { FC } from 'react'
+import type { FC } from 'react'
 import styles from './FileList.module.scss'
 import { renderFileTypeIcon } from '@/components/MilkdownEditor/CustomFile/CustomFile'
 import { IconNotepadFileTypeDir } from '@/components/MilkdownEditor/icon/icon'
 import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { AIYakExecFileRecord } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AIYakExecFileRecord } from '@/pages/ai-re-act/hooks/aiRender'
 import { getFileActionStatus } from '@/pages/invoker/utils'
-import { PluginExecuteLogFile } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType.d'
+import type { PluginExecuteLogFile } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType.d'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../defaultConstant'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useMemoizedFn } from 'ahooks'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
 import { YakitRoute } from '@/enums/yakitRoute'
 
 export interface FileListItem {
@@ -50,14 +49,13 @@ const getFileName = (path: string, isDir: boolean): string => {
 }
 
 const FileList: FC<FileListProps> = ({ title, fileList }) => {
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const switchAIActTab = () => {
     emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Operation_Log }))
   }
   const onOpenFileByPath = useMemoizedFn((e: React.MouseEvent<HTMLDivElement>, path: string, isDir: boolean) => {
     e.stopPropagation()
-    if (!isDir && currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
+    if (!isDir && getCurrentPageTabRouteKey() === YakitRoute.Irify_AI_Code_Audit) {
       const name = getFileName(path, isDir)
       emiter.emit('onAiCodeAuditOpenFileByPath', JSON.stringify({ params: { path, name }, isHistory: false }))
     }

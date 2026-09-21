@@ -1,0 +1,33 @@
+// 子窗口并发流卡片样式。
+// 内容对齐 ConcurrentStreamCard.module.scss / ConcurrentStreamContent.module.scss。
+
+.chat-card {
+  position: relative;
+  width: 100%;
+  padding: 4px 8px;
+  background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.child-chat-card {
+  height: 100%;
+  background-color: var(--Colors-Use-Basic-Background);
+}
+
+.goal {
+  color: var(--Colors-Use-Neutral-Text-2-Primary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+  padding: 4px 0;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  word-break: break-all;
+
+  flex-shrink: 0;
+}

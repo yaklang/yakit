@@ -1,61 +1,50 @@
-import type { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
-import {
-  aiChatDataStore,
-  FlowAiStore,
-  histroyAiStore,
-  irifyAiCodeAuditPageAiStore,
-  knowledgeBaseDataStore,
-} from '@/pages/ai-agent/store/ChatDataStore'
-import { collectConcurrentStreamContentEntries } from './collectConcurrentStreamContentEntries'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { buildConcurrentStreamFramePayload } from './buildConcurrentStreamFramePayload'
 import type { ConcurrentStreamFramePayload } from '../concurrentStreamFrame'
 
 const { ipcRenderer } = window.require('electron')
 
 const FETCH_REQUEST = 'fetch-concurrent-stream-contents-request'
 
-const defaultStoreProviders: Array<() => ChatDataStore | undefined> = [
-  () => aiChatDataStore,
-  () => knowledgeBaseDataStore,
-  () => histroyAiStore,
-  () => FlowAiStore,
-  () => irifyAiCodeAuditPageAiStore,
-]
-
-const storeProviders = new Set<() => ChatDataStore | undefined>(defaultStoreProviders)
-
 let bridgeReady = false
+let teardown: (() => void) | null = null
 
-function resolveStoreForSession(session: string): ChatDataStore | undefined {
-  for (const provider of storeProviders) {
-    const store = provider()
-    if (store?.get(session)) return store
-  }
-  for (const provider of storeProviders) {
-    const store = provider()
-    if (store) return store
-  }
-  return undefined
-}
-
-export function registerConcurrentStreamStoreProvider(provider: () => ChatDataStore | undefined) {
-  storeProviders.add(provider)
-  return () => {
-    storeProviders.delete(provider)
-  }
-}
-
-/** 主窗口：响应 aux 子窗的内容拉取 */
+/**
+ * 主窗口：响应 aux 子窗的 rawData 拉取。
+ * 子窗通过 fetch-concurrent-stream-contents 拿到的是仅含元数据的 frame，
+ * 收到请求后从 globalSessionEngine 取最新 store + rawData，复用 buildConcurrentStreamFramePayload
+ * 收集 task 自身 / children / group 孙节点的原始数据，回传给子窗。
+ *
+ * @returns teardown 函数，调用后卸载监听并允许重新 setup。
+ */
 export function setupConcurrentStreamMainBridge() {
-  if (bridgeReady) return
+  if (bridgeReady) return teardown
+
+  const handler = (_event: unknown, payload: ConcurrentStreamFramePayload & { requestId: string }) => {
+    const { requestId, session, token, chatType } = payload
+    if (!requestId || !session || !token) return
+
+    const { store, rawData } = globalSessionEngine.ensureSession(session)
+    // 子窗主动拉取全量数据，必须填充 rawData + execFileRecord
+    const full = buildConcurrentStreamFramePayload({ token, session, chatType, store, rawData, withRawData: true })
+    const entries = full ? Array.from(full.rawData.entries()) : []
+    const execFileRecord = full ? Array.from(full.execFileRecord.entries()) : []
+    const childrenTokens = full ? full.childrenTokens : []
+
+    ipcRenderer.send(`fetch-concurrent-stream-contents-response-${requestId}`, {
+      rawData: entries,
+      execFileRecord,
+      childrenTokens,
+    })
+  }
+
+  ipcRenderer.on(FETCH_REQUEST, handler)
   bridgeReady = true
 
-  ipcRenderer.on(FETCH_REQUEST, (_event, payload: ConcurrentStreamFramePayload & { requestId: string }) => {
-    const { requestId, ...frame } = payload
-    if (!requestId || !frame.session || !frame.token) return
-
-    const store = resolveStoreForSession(frame.session)
-    const contentEntries = collectConcurrentStreamContentEntries(store, frame)
-
-    ipcRenderer.send(`fetch-concurrent-stream-contents-response-${requestId}`, { contentEntries })
-  })
+  teardown = () => {
+    ipcRenderer.removeListener(FETCH_REQUEST, handler)
+    bridgeReady = false
+    teardown = null
+  }
+  return teardown
 }

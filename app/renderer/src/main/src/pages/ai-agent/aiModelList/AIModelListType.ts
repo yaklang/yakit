@@ -1,9 +1,9 @@
-import { LocalModelConfig } from '../type/aiModel'
-import { YakitSizeType } from '@/components/yakitUI/YakitInputNumber/YakitInputNumberType'
+import type { LocalModelConfig } from '../type/aiModel'
+import type { YakitSizeType } from '@/components/yakitUI/YakitInputNumber/YakitInputNumberType'
 import { type ModalProps } from 'antd'
-import { ReactNode } from 'react'
-import { AIModelConfig, AIModelTypeFileName } from './utils'
-import { AIModelTypeEnumType } from '../defaultConstant'
+import type { ReactNode } from 'react'
+import type { AIModelConfig, AIModelTypeFileName } from './utils'
+import type { AIModelTypeEnumType } from '../defaultConstant'
 
 export interface AIModelListProps extends Partial<Pick<AIOnlineModelListProps, 'mountContainer'>> {}
 
@@ -30,7 +30,6 @@ export interface AILocalModelListRefProps {
 export interface AILocalModelListItemProps {
   item: LocalModelConfig
   onRefresh: () => void
-  currentPageTabRouteKey: string
 }
 export interface AIOnlineModelListItemProps {
   item: AIModelConfig
@@ -56,7 +55,6 @@ export interface AILocalModelListWrapperProps {
   title: string
   list: LocalModelConfig[]
   onRefresh: () => void
-  currentPageTabRouteKey: string
 }
 
 export interface AIOnlineModelProps {

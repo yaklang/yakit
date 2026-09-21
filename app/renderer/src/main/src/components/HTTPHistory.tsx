@@ -84,8 +84,9 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitSideTab } from './yakitSideTab/YakitSideTab'
 import { YakitTabsProps } from './yakitSideTab/YakitSideTabType'
 import { JSONParseLog } from '@/utils/tool'
-import { histroyAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from './historyAIReActChat'
+import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { YakitRoute } from '@/enums/yakitRoute'
 import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
 import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
 import { yakitNotify } from '@/utils/notification'
@@ -435,7 +436,12 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
   return (
-    <HistoryAIReActChatProvider cacheDataStore={histroyAiStore} focusModeLoop="http_flow_analyze">
+    <HistoryAIReActChatProvider
+      source={AISourceEnum.history}
+      route={YakitRoute.DB_HTTPHistory}
+      pageId={YakitRoute.DB_HTTPHistory}
+      focusModeLoop="http_flow_analyze"
+    >
       <HTTPHistoryInner {...props} />
     </HistoryAIReActChatProvider>
   )

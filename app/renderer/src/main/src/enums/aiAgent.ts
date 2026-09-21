@@ -8,6 +8,9 @@ export enum RemoteAIAgentGV {
    */
   AIAgentCacheClear = 'ai-agent-cache-clear',
 
+  /** IndexedDB AI 会话缓存版本标记 */
+  AIAgentIDBCacheClear = 'ai-agent-idb-cache-clear',
+
   /** @name 替换 forge 模板时是否隐藏提示框, 直接进行替换 */
   AIAgentReplaceForgeNoPrompt = 'ai-agent-replace-forge-no-prompt',
 

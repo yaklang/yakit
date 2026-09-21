@@ -102,6 +102,39 @@ module.exports = (win, getClient) => {
   )
   // #endregion
 
+  // #region AI ReAct 定时任务
+  const callAIReActScheduleUnary = (method, params) => {
+    return new Promise((resolve, reject) => {
+      const clientMethod = getClient()[method]
+      if (typeof clientMethod !== 'function') {
+        reject(new Error(`Yak engine does not expose ${method}`))
+        return
+      }
+      clientMethod.call(getClient(), params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ;[
+    'CreateAIReActSchedule',
+    'UpdateAIReActSchedule',
+    'DeleteAIReActSchedule',
+    'GetAIReActSchedule',
+    'QueryAIReActSchedules',
+    'SetAIReActScheduleEnabled',
+    'PreviewAIReActScheduleTimes',
+    'RunAIReActScheduleNow',
+  ].forEach((method) => {
+    ipcMain.handle(method, async (e, params) => {
+      return await callAIReActScheduleUnary(method, params || {})
+    })
+  })
+  // #endregion
+
   // #region AI-Forge
   const asyncCreateAIForge = (params) => {
     return new Promise((resolve, reject) => {

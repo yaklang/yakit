@@ -1,14 +1,12 @@
-import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { AIAgentTabPayload, AIChatContentProps } from './type'
+import React, { forwardRef, type ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type { AIAgentTabPayload, AIChatContentProps } from './type'
 import styles from './AIChatContent.module.scss'
-import { ExpandAndRetract } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { HorizontalScrollCard } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import classNames from 'classnames'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { AITabs, AITabsEnum } from '../defaultConstant'
-import { AITabsEnumType } from '../aiAgentType'
-import { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { AITabsEnumType } from '../aiAgentType'
+import type { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { AIReActChat } from '@/pages/ai-re-act/aiReActChat/AIReActChat'
 import { AIFileSystemList } from '../components/aiFileSystemList/AIFileSystemList'
 import {
@@ -18,54 +16,52 @@ import {
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import AIReActTaskChat from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import emiter from '@/utils/eventBus/eventBus'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineClouddownloadIcon, OutlineNewspaperIcon, OutlinePlussmIcon } from '@/assets/icon/outline'
-import { SolidChatalt2Icon } from '@/assets/icon/solid'
-import useAiChatLog from '@/hook/useAiChatLog/useAiChatLog.ts'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { grpcExportAILogs } from '../grpc'
-import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { onNewChat } from '../historyChat/HistoryChat'
 // import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
-import { Divider } from 'antd'
 import useAIAgentStore from '../useContext/useStore'
 import { useAIChatResizeBox } from './hooks/useAIChatResizeBox'
-import { ExportAILogsModal } from '../components/ExportAILogsModal/ExportAILogsModal'
-import { failed, yakitNotify } from '@/utils/notification'
-import {
+import type {
   AIHandleStartParams,
   AIHandleStartResProps,
   AIReActChatRefProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import AIContextToken from './AIContextToken/AIContextToken'
 import OperationLog from '../components/aiFileSystemList/OperationLog/OperationLog'
 import AIGlobalLoading from '../aiGlobalLoading/AIGlobalLoading'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
-import { applyForgeNameToStartParams } from '@/pages/digitalEmployee/resolver'
-import { DigitalEmployeeTaskProgress } from '@/pages/digitalEmployee/DigitalEmployeeTaskProgress'
-import { AITaskContent } from '@/pages/ai-re-act/aiTaskContent/AITaskContent'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import { AIHorizontalScrollCard } from './aiHorizontalScrollCard/AIHorizontalScrollCard'
+import { sessionStatusStore, SessionDeleteStatus } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
-    const { onChat, onChatFromHistory } = props
-    const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
-    const chatIPCStore = useChatIPCStore()
-    const { selectedEmployee, selectedAgent } = useDigitalEmployee()
-    const { httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute, requestHistoryState } =
-      chatIPCStore.chatIPCData
+    const { onChat } = props
+    const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
+
+    const store = useCurrentStore()
+    const rawData = useCurrentRawData()
+    const execFileRecord = useStore(store, (state) => state.execFileRecord)
+    const grpcFolders = useStore(store, (state) => state.grpcFolders)
+
+    const httpTabShow = useStore(store, (state) => state.httpTabShow)
+    const httpTabUpdate = useStore(store, (state) => state.httpTabUpdate)
+    const riskTabShow = useStore(store, (state) => state.riskTabShow)
+    const riskTabUpdate = useStore(store, (state) => state.riskTabUpdate)
+    const initLoading = useStore(store, (state) => state.initLoading)
+
     const { activeChat } = useAIAgentStore()
-    const hasDeepPlanningContent = !!taskChat.elements.length || !!taskChat.plan?.task_tree?.length
-    const [isExpand, setIsExpand] = useState<boolean>(true)
+
     const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.Task_Content)
 
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true) //自由对话展开收起
-    const [timeLine, setTimeLine] = useState<boolean>(true)
+    const [timeLine, setTimeLine] = useState<boolean>(true) //侧边栏展开收起
+    /** 任务规划 tabs 是否有内容（无则自由对话变大） */
+    const [hasTaskTabs, setHasTaskTabs] = useState(false)
+    /** 文件系统是否有文件预览（无则自由对话变大） */
+    const [hasFilePreview, setHasFilePreview] = useState(false)
     const [runTimeId, setRunTimeId] = useState<string>() // 工具卡片跳转自带runTimeID
-
-    const [exportModalVisible, setExportModalVisible] = useState(false)
-    const [exportLoading, setExportLoading] = useState(false)
 
     const RelatedRuntimeIDs = useMemo(() => {
       return activeChat?.RelatedRuntimeIDs ?? []
@@ -87,40 +83,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     // #region 问题相关逻辑
 
-    const onOpenExportModal = useMemoizedFn((e) => {
-      e.stopPropagation()
-      setExportModalVisible(true)
-    })
-
-    const onExportCancel = useMemoizedFn(() => {
-      setExportModalVisible(false)
-    })
-
-    const onExportOk = useMemoizedFn(async (data: { types: string[]; outputPath: string }) => {
-      if (!activeChat?.Id) {
-        failed(t('AIChatContent.noActiveChat'))
-        return
-      }
-      setExportLoading(true)
-      //
-      try {
-        await grpcExportAILogs(
-          {
-            SessionID: activeChat.SessionID,
-            ExportDataTypes: data.types,
-            OutputPath: data.outputPath,
-          },
-          true,
-        )
-        yakitNotify('success', t('YakitNotification.exportSuccess'))
-        setExportModalVisible(false)
-      } catch (error) {
-        failed(t('YakitNotification.exportFailed', { error: error + '' }))
-      } finally {
-        setExportLoading(false)
-      }
-    })
-
     const handleTabStateChange = useMemoizedFn((key: AITabsEnumType, value: AIAgentTabPayload['value']) => {
       setActiveKey(key)
       if (!value) {
@@ -141,8 +103,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       }
       const { key, value } = payload
 
-      if (key === AITabsEnum.HTTP && httpRunTimeIDs.length === 0 && RelatedRuntimeIDs.length === 0) return
-      if (key === AITabsEnum.Risk && riskRunTimeIDs.length === 0 && RelatedRuntimeIDs.length === 0) return
+      if (key === AITabsEnum.HTTP && !httpTabShow && RelatedRuntimeIDs.length === 0) return
+      if (key === AITabsEnum.Risk && !riskTabShow && RelatedRuntimeIDs.length === 0) return
       handleTabStateChange(key, value)
     })
 
@@ -162,26 +124,22 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
           {showId}
         </YakitTag>
       )
-    }, [httpRunTimeIDs, runTimeId])
+    }, [runTimeId])
 
-    const onExpand = useMemoizedFn((e) => {
-      e.stopPropagation()
-      setIsExpand(!isExpand)
-    })
     const yakitTabs = useCreation(() => {
-      let tab: YakitSideTabProps['yakitTabs'] = [AITabs[AITabsEnum.Task_Content], AITabs[AITabsEnum.File_System]]
+      const tab: YakitSideTabProps['yakitTabs'] = [AITabs[AITabsEnum.Task_Content], AITabs[AITabsEnum.File_System]]
 
-      if ((httpRunTimeIDs.length || RelatedRuntimeIDs.length) > 0) {
+      if (httpTabShow || !!RelatedRuntimeIDs.length) {
         tab.push(AITabs[AITabsEnum.HTTP])
       }
-      if ((riskRunTimeIDs.length || RelatedRuntimeIDs.length) > 0) {
+      if (riskTabUpdate || !!RelatedRuntimeIDs.length) {
         tab.push(AITabs[AITabsEnum.Risk])
       }
-      if (yakExecResult.execFileRecord.size > 0) {
+      if (execFileRecord.size > 0) {
         tab.push(AITabs[AITabsEnum.Operation_Log])
       }
       return tab
-    }, [httpRunTimeIDs, riskRunTimeIDs, yakExecResult.execFileRecord, taskChat?.elements?.length])
+    }, [httpTabShow, riskTabUpdate, execFileRecord.size])
 
     const [showHot, setShowHot] = useState(false)
     const prevRef = useRef<{
@@ -230,22 +188,28 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     })
 
     const OperationLogList = useCreation(() => {
-      return Array.from(yakExecResult.execFileRecord.values())
+      return Array.from(execFileRecord.values())
         .flat()
         .sort((a, b) => b.order - a.order)
-    }, [yakExecResult.execFileRecord])
+    }, [execFileRecord])
 
     const tabContent = useMemo(() => {
       if (!activeKey) return null
-      const runTimeIds = [...new Set(!!runTimeId ? [runTimeId] : httpRunTimeIDs.concat(RelatedRuntimeIDs))]
-      const riskRunTimeIds = [...new Set(!!runTimeId ? [runTimeId] : riskRunTimeIDs.concat(RelatedRuntimeIDs))]
+      const runTimeIds = [...new Set(runTimeId ? [runTimeId] : rawData.httpRunTimeIDs.concat(RelatedRuntimeIDs))]
+      const riskRunTimeIds = [...new Set(runTimeId ? [runTimeId] : rawData.riskRunTimeIDs.concat(RelatedRuntimeIDs))]
       switch (activeKey) {
         case AITabsEnum.Task_Content:
-          return <AIReActTaskChat setTimeLine={setTimeLine} setShowFreeChat={setShowFreeChat} />
+          return (
+            <AIReActTaskChat
+              setTimeLine={setTimeLine}
+              setShowFreeChat={setShowFreeChat}
+              onTaskTabsChange={setHasTaskTabs}
+            />
+          )
         case AITabsEnum.File_System:
-          return <AIFileSystemList />
+          return <AIFileSystemList onFilePreviewChange={setHasFilePreview} />
         case AITabsEnum.Risk:
-          return !!riskRunTimeIds.length ? (
+          return riskRunTimeIds.length ? (
             <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={riskRunTimeIds} />
           ) : (
             <>
@@ -253,7 +217,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             </>
           )
         case AITabsEnum.HTTP:
-          return !!runTimeIds.length ? (
+          return runTimeIds.length ? (
             <PluginExecuteHttpFlow filterTagDom={filterTagDom} runtimeId={runTimeIds.join(',')} website={true} />
           ) : (
             <>
@@ -265,9 +229,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         default:
           return null
       }
-    }, [activeKey, runTimeId, httpRunTimeIDs, riskRunTimeIDs, RelatedRuntimeIDs, filterTagDom, OperationLogList])
-
-    const { onOpenLogWindow } = useAiChatLog()
+    }, [activeKey, runTimeId, httpTabUpdate, riskTabUpdate, RelatedRuntimeIDs, filterTagDom, OperationLogList])
 
     const onActiveKey = useMemoizedFn((key: AITabsEnumType) => {
       if (activeKey === key) {
@@ -277,212 +239,82 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         setActiveKey(key)
       }
       setRunTimeId(undefined)
-    })
-    const onOpenLog = useMemoizedFn((e) => {
-      e.stopPropagation()
-      onOpenLogWindow()
+      // 离开文件系统时清掉预览标记，避免宽度计算残留
+      if (key !== AITabsEnum.File_System) {
+        setHasFilePreview(false)
+      }
     })
 
-    const { resizeBoxProps, emitResizeBox } = useAIChatResizeBox({
+    const { resizeBoxProps } = useAIChatResizeBox({
       activeKey,
       showFreeChat,
       timeLine,
-      taskChat,
+      hasTaskTabs,
+      hasFilePreview,
     })
 
-    // useMount(() => {
-    //     const onFilePreviewReady = () => {
-    //         emitResizeBox({
-    //             secondRatio: "432px"
-    //         })
-    //     }
-    //     emiter.on("filePreviewReady", onFilePreviewReady)
-    //     return () => {
-    //         emiter.off("filePreviewReady", onFilePreviewReady)
-    //     }
-    // })
     const startRequest = useMemoizedFn((data: AIHandleStartParams) => {
       return new Promise<AIHandleStartResProps>((resolve) => {
-        const forgeName = selectedAgent?.ForgeName
         resolve({
-          params: forgeName
-            ? {
-                ...data.params,
-                Params: applyForgeNameToStartParams(data.params.Params || {}, forgeName),
-              }
-            : data.params,
+          params: data.params,
           onChat,
-          onChatFromHistory,
         })
       })
     })
-
-    if (selectedEmployee) {
-      return (
-        <div className={styles['employee-chat-content']}>
-          <AIGlobalLoading loopAnimationMode="sequential" loading={requestHistoryState.initLoading}>
-            <div
-              className={classNames(styles['employee-detail-layout'], {
-                [styles['employee-detail-layout-planning']]: hasDeepPlanningContent,
-              })}
-            >
-              <section className={styles['employee-dialog-panel']}>
-                <div className={styles['employee-chat-header']}>
-                  <div>
-                    <strong>对话</strong>
-                    <span>{activeChat?.Title || `${selectedEmployee.name} · 新对话`}</span>
-                  </div>
-                  <div className={styles['employee-chat-actions']}>
-                    <AIContextToken execute={execute} session={activeChat?.SessionID} />
-                    <YakitButton type="secondary2" icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
-                      {t('AIChatContent.newChat')}
-                    </YakitButton>
-                    <YakitButton type="secondary2" icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
-                      {t('AIChatContent.log')}
-                    </YakitButton>
-                    <YakitButton type="secondary2" icon={<OutlineClouddownloadIcon />} onClick={onOpenExportModal}>
-                      {t('AIChatContent.exportLog')}
-                    </YakitButton>
-                  </div>
-                </div>
-                <div className={styles['employee-react-chat']}>
-                  <AIReActChat
-                    mode="welcome"
-                    showFreeChat={true}
-                    setShowFreeChat={setShowFreeChat}
-                    startRequest={startRequest}
-                    ref={aiReActChatRef}
-                  />
-                </div>
-              </section>
-              <aside className={styles['employee-task-panel']}>
-                <div className={styles['employee-task-header']}>
-                  <div>
-                    <strong>思考与执行</strong>
-                    <span>实时同步任务规划与执行过程</span>
-                  </div>
-                  <span className={styles['employee-task-status']}>
-                    <i /> 智能执行
-                  </span>
-                </div>
-                <div className={styles['employee-task-content']}>
-                  <AITaskContent
-                    tabBarExtraContent={null}
-                    emptyNode={null}
-                    hideTaskDetailTabs
-                    taskListNode={<DigitalEmployeeTaskProgress />}
-                    fileSystemNode={<AIFileSystemList />}
-                  />
-                </div>
-              </aside>
-            </div>
-          </AIGlobalLoading>
-          <ExportAILogsModal
-            visible={exportModalVisible}
-            onCancel={onExportCancel}
-            onOk={onExportOk}
-            loading={exportLoading}
-          />
-        </div>
-      )
-    }
-
+    // 当前会话删除状态：删除中时遮罩整个对话区域，阻止用户操作
+    const deleteStatus = useStore(
+      sessionStatusStore,
+      (s) => s.deleteStatuses.get(activeChat?.SessionID || '') ?? SessionDeleteStatus.Idle,
+    )
+    const isSessionDeleting = deleteStatus === SessionDeleteStatus.Deleting
+    const sourceDeleting = useStore(sessionStatusStore, (s) => s.deletingSources.has(activeChat?.Source || ''))
     return (
       <div className={styles['ai-chat-content-wrapper']}>
-        <AIGlobalLoading loopAnimationMode="sequential" loading={requestHistoryState.initLoading}>
-          <ExpandAndRetract
-            isExpand={isExpand}
-            onExpand={onExpand}
-            className={classNames(styles['expand-retract-wrapper'], {
-              [styles['expand-retract-wrapper-collapsed']]: !yakExecResult.card.length,
-            })}
-            animationWrapperClassName={classNames(styles['expand-retract-animation-wrapper'], {
-              [styles['expand-retract-animation-wrapper-hidden']]: !yakExecResult.card.length,
-            })}
-            expandText={t('YakitButton.expand')}
-            retractText={t('YakitButton.collapse')}
-          >
-            <div className={styles['expand-retract-content']}>
-              <div className={styles['header']}>
-                <div className={styles['title']}>
-                  <SolidChatalt2Icon className={styles['chat-alt-icon']} />
-                  <div className={styles['chat-title']}>{activeChat?.Title || t('AIChatContent.newChatTitle')}</div>
-                  <Divider type="vertical" />
-                  <YakitButton type="secondary2" icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
-                    {t('AIChatContent.newChat')}
-                  </YakitButton>
-                  {/* <SideSettingButton /> */}
-                </div>
-                <div className={styles['extra']}>
-                  <AIContextToken execute={execute} session={activeChat?.SessionID} />
-                  <YakitButton type="secondary2" icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
-                    {t('AIChatContent.log')}
-                  </YakitButton>
-                  <YakitButton type="secondary2" icon={<OutlineClouddownloadIcon />} onClick={onOpenExportModal}>
-                    {t('AIChatContent.exportLog')}
-                  </YakitButton>
-                </div>
-              </div>
-              {yakExecResult.card.length > 0 ? (
-                <HorizontalScrollCard
-                  hiddenHeard={true}
-                  data={yakExecResult.card}
-                  className={classNames(styles['card-list-wrapper'], {
-                    [styles['card-list-wrapper-hidden']]: !isExpand,
-                  })}
-                  itemProps={{ size: 'small' }}
-                />
-              ) : null}
-            </div>
-          </ExpandAndRetract>
-          <div className={styles['ai-chat-tab-wrapper']}>
-            <YakitSideTab
-              key={i18n.language}
-              type="horizontal"
-              yakitTabs={yakitTabs}
-              activeKey={activeKey}
-              onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
-              onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
-              className={styles['tab-wrap']}
-              t={t}
-            >
-              <div className={styles['ai-chat-content']}>
-                <YakitResizeBox
-                  firstNode={
-                    activeKey && (
-                      <div
-                        className={classNames(styles['tab-content'], {
-                          [styles['tab-content-right']]: !showFreeChat,
+        <YakitSpin spinning={isSessionDeleting || sourceDeleting}>
+          <AIGlobalLoading loopAnimationMode="sequential" loading={initLoading}>
+            <AIHorizontalScrollCard />
+            <div className={styles['ai-chat-tab-wrapper']}>
+              <YakitSideTab
+                key={i18nRefresh}
+                type="horizontal"
+                yakitTabs={yakitTabs}
+                activeKey={activeKey}
+                onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
+                onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
+                className={styles['tab-wrap']}
+                t={t}
+              >
+                <div className={styles['ai-chat-content']}>
+                  <YakitResizeBox
+                    firstNode={
+                      activeKey && (
+                        <div
+                          className={classNames(styles['tab-content'], {
+                            [styles['tab-content-right']]: !showFreeChat,
+                          })}
+                        >
+                          {tabContent}
+                        </div>
+                      )
+                    }
+                    secondNode={
+                      <AIReActChat
+                        chatContainerHeaderClassName={classNames({
+                          [styles['re-act-chat-container-header']]: !activeKey,
                         })}
-                      >
-                        {tabContent}
-                      </div>
-                    )
-                  }
-                  secondNode={
-                    <AIReActChat
-                      chatContainerHeaderClassName={classNames({
-                        [styles['re-act-chat-container-header']]: !activeKey,
-                      })}
-                      mode={!!activeKey ? 'task' : 'welcome'}
-                      showFreeChat={showFreeChat}
-                      setShowFreeChat={setShowFreeChat}
-                      startRequest={startRequest}
-                      ref={aiReActChatRef}
-                    />
-                  }
-                  {...resizeBoxProps}
-                />
-              </div>
-            </YakitSideTab>
-          </div>
-          <ExportAILogsModal
-            visible={exportModalVisible}
-            onCancel={onExportCancel}
-            onOk={onExportOk}
-            loading={exportLoading}
-          />
-        </AIGlobalLoading>
+                        showFreeChat={showFreeChat}
+                        setShowFreeChat={setShowFreeChat}
+                        startRequest={startRequest}
+                        ref={aiReActChatRef}
+                      />
+                    }
+                    {...resizeBoxProps}
+                  />
+                </div>
+              </YakitSideTab>
+            </div>
+          </AIGlobalLoading>
+        </YakitSpin>
       </div>
     )
   }),

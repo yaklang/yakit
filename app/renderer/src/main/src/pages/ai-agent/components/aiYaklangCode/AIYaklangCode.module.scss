@@ -7,4 +7,20 @@
   background: var(--Colors-Use-Neutral-Bg);
   // padding: 8px;
   border-radius: 4px;
+  overflow: hidden;
+}
+
+.ai-yaklang-code-stream-pre {
+  margin: 0;
+  max-height: 200px;
+  overflow: auto;
+  padding: 8px;
+  box-sizing: border-box;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  background: transparent;
 }

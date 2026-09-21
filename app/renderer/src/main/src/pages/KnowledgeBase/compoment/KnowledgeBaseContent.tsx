@@ -35,10 +35,10 @@ import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
 import { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
 import { CreateKnowledgeBaseData } from '../TKnowledgeBase'
 
-import { knowledgeBaseDataStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIHandleStartParams } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
+import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import Joyride, { ACTIONS, CallBackProps, STATUS } from 'react-joyride'
 import { CustomJoyrideTooltip } from './CustomJoyrideTooltip/CustomJoyrideTooltip'
 import { KnowledgeBaseGV } from '@/yakitGV'
@@ -684,7 +684,9 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
   return (
     <HistoryAIReActChatProvider
-      cacheDataStore={knowledgeBaseDataStore}
+      source={AISourceEnum.knowledgeBase}
+      route={YakitRoute.AI_REPOSITORY}
+      pageId={YakitRoute.AI_REPOSITORY}
       focusModeLoop=""
       resolveStartExtraParams={resolveStartExtraParams}
       mergeRemoteAIAgentSetting={mergeRemoteAIAgentSetting}

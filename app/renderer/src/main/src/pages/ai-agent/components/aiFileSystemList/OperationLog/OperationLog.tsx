@@ -1,5 +1,5 @@
-import { FC, forwardRef, ReactNode, useMemo, useState } from 'react'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { type FC, forwardRef, type ReactNode, useMemo, useState } from 'react'
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import styles from './OperationLog.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { OutlineChevrondownIcon, OutlineClockIcon } from '@/assets/icon/outline'
@@ -8,11 +8,11 @@ import classNames from 'classnames'
 import { formatTime } from '@/utils/timeUtil'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { FileLogShowDataProps } from '@/pages/invoker/YakitLogFormatter'
+import type { FileLogShowDataProps } from '@/pages/invoker/YakitLogFormatter'
 import moment from 'moment'
 import { useMemoizedFn } from 'ahooks'
-import { PluginExecuteLogFile } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
-import { ItemProps, ListProps, Virtuoso } from 'react-virtuoso'
+import type { PluginExecuteLogFile } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
+import { type ItemProps, type ListProps, Virtuoso } from 'react-virtuoso'
 
 interface OperationLogProps {
   loading: boolean
@@ -68,57 +68,68 @@ type TimelineCardProps = {
   onToggle: (id: string) => void
 }
 
-const TimelineCard: FC<TimelineCardProps> = ({ item, isExpanded, onToggle }) => {
+const parseTimelineCardData = (data?: string) => {
   try {
-    const parsed = JSON.parse(item.data ?? '{}')
-    const { color, action, message, content } = getFileActionStatus(parsed.action, parsed.action_message)
-    return (
-      <div className={classNames(styles['timeline-card'], styles[`timeline-card-${color}`])}>
-        <div className={styles['timeline-card-header']}>
-          <div className={styles['timeline-card-header-left']}>
-            <div className={styles['timeline-card-dot']} />
-            <p>{formatTime(item.timestamp)}</p>
-            <YakitTag
-              color={color}
-              fullRadius
-              children={action}
-              border={false}
-              style={
-                color === 'white'
-                  ? { backgroundColor: 'var(--Colors-Use-Neutral-Border)', marginRight: 0 }
-                  : { marginRight: 0 }
-              }
-            />
-            <YakitTag
-              className={styles['timeline-card-header-tag']}
-              color="white"
-              border
-              hidden={!message}
-              children={message}
-            />
-          </div>
-
-          <div className={styles['timeline-card-header-extra']}>
-            {isPluginExecuteLogFileItem(parsed) && (
-              <span
-                onClick={() => onToggle(item.id)}
-                className={classNames(styles['expand-icon'], { [styles.expanded]: isExpanded })}
-              >
-                <OutlineChevrondownIcon />
-              </span>
-            )}
-          </div>
-        </div>
-        {isExpanded && (
-          <div className={styles['timeline-card-content']}>
-            <FilePreview level={item.level} data={parsed} content={content} />
-          </div>
-        )}
-      </div>
-    )
+    return { ok: true as const, parsed: JSON.parse(data ?? '{}') }
   } catch (error) {
-    return <div className={classNames(styles['timeline-card'], styles[`timeline-card-danger`])}>{String(error)}</div>
+    return { ok: false as const, error }
   }
+}
+
+const TimelineCard: FC<TimelineCardProps> = ({ item, isExpanded, onToggle }) => {
+  const result = parseTimelineCardData(item.data)
+  if (!result.ok) {
+    return (
+      <div className={classNames(styles['timeline-card'], styles['timeline-card-danger'])}>{String(result.error)}</div>
+    )
+  }
+
+  const { parsed } = result
+  const { color, action, message, content } = getFileActionStatus(parsed.action, parsed.action_message)
+  return (
+    <div className={classNames(styles['timeline-card'], styles[`timeline-card-${color}`])}>
+      <div className={styles['timeline-card-header']}>
+        <div className={styles['timeline-card-header-left']}>
+          <div className={styles['timeline-card-dot']} />
+          <p>{formatTime(item.timestamp)}</p>
+          <YakitTag
+            color={color}
+            fullRadius
+            children={action}
+            border={false}
+            style={
+              color === 'white'
+                ? { backgroundColor: 'var(--Colors-Use-Neutral-Border)', marginRight: 0 }
+                : { marginRight: 0 }
+            }
+          />
+          <YakitTag
+            className={styles['timeline-card-header-tag']}
+            color="white"
+            border
+            hidden={!message}
+            children={message}
+          />
+        </div>
+
+        <div className={styles['timeline-card-header-extra']}>
+          {isPluginExecuteLogFileItem(parsed) && (
+            <span
+              onClick={() => onToggle(item.id)}
+              className={classNames(styles['expand-icon'], { [styles.expanded]: isExpanded })}
+            >
+              <OutlineChevrondownIcon />
+            </span>
+          )}
+        </div>
+      </div>
+      {isExpanded && (
+        <div className={styles['timeline-card-content']}>
+          <FilePreview level={item.level} data={parsed} content={content} />
+        </div>
+      )}
+    </div>
+  )
 }
 
 const OperationLog: FC<OperationLogProps> = ({ loading, list }) => {

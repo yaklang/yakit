@@ -1,5 +1,5 @@
-import { TodoListCardData } from '../../hooks/aiRender'
-import { AIAgentGrpcApi } from '../../hooks/grpcApi'
+import type { TodoListCardData } from '../../hooks/aiRender'
+import type { AIAgentGrpcApi } from '../../hooks/grpcApi'
 
 export interface AIToDoListProps {
   className?: string

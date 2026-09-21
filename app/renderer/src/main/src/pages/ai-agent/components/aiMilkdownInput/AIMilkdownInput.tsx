@@ -2,15 +2,16 @@ import React, { useEffect, useImperativeHandle } from 'react'
 import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react'
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
 import { $remark, callCommand, getMarkdown } from '@milkdown/kit/utils'
-import { AIMilkdownInputBaseProps, AIMilkdownInputProps } from './type'
+import type { AIMilkdownInputBaseProps, AIMilkdownInputProps } from './type'
 import { defaultValueCtx, Editor, editorViewCtx, editorViewOptionsCtx, parserCtx, rootCtx } from '@milkdown/kit/core'
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
 import { useNodeViewFactory, usePluginViewFactory } from '@prosemirror-adapter/react'
 import { $view } from '@milkdown/kit/utils'
-import { Ctx } from '@milkdown/kit/ctx'
+import { type Ctx } from '@milkdown/kit/ctx'
 import { codeBlockSchema, commonmark, imageSchema, insertImageCommand } from '@milkdown/kit/preset/commonmark'
 import { gfm } from '@milkdown/kit/preset/gfm'
 import classNames from 'classnames'
+import '@/components/MilkdownEditor/css/index.scss'
 import styles from './AIMilkdownInput.module.scss'
 import { gapCursorPlugin } from '@milkdown/kit/plugin/cursor'
 import { history } from '@milkdown/kit/plugin/history'
@@ -19,7 +20,7 @@ import { placeholderConfig, placeholderPlugin } from '@/components/MilkdownEdito
 import { AICustomMention, aiMentionFactory, AIMilkdownMention } from './aiMilkdownMention/AIMilkdownMention'
 import {
   aiMentionCommand,
-  AIMentionCommandParams,
+  type AIMentionCommandParams,
   aiMentionCustomPlugin,
   aiMentionCustomSchema,
 } from './aiMilkdownMention/aiMentionPlugin'
@@ -29,7 +30,7 @@ import { aiCustomPlugin } from './customPlugin'
 import { customShiftEnterPlugin } from '@/components/MilkdownEditor/utils/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload'
-import { Node } from '@milkdown/kit/prose/model'
+import { type Node } from '@milkdown/kit/prose/model'
 import { AICustomFile } from './aiCustomFile/AICustomFile'
 import { yakitNotify } from '@/utils/notification'
 import useSessionId from '@/pages/ai-re-act/hooks/useSessionId'
@@ -49,7 +50,7 @@ import {
   aiCodeBlockCommand,
   aiCodeBlockCustomPlugin,
   aiCodeBlockCustomSchema,
-  AICodeBlockCommandParams,
+  type AICodeBlockCommandParams,
 } from './aiCodeBlock/aiCustomCodeBlockPlugin'
 
 const remarkDirective = $remark(`remark-directive`, () => directive)
@@ -67,7 +68,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
       chatDataStoreKey,
       onHttpFlowRemove,
     } = props
-    const { t, i18n } = useI18nNamespaces(['aiAgent'])
+    const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
 
@@ -241,7 +242,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             .use(customPlugin)
         )
       },
-      [readonly, defaultValue, i18n.language],
+      [readonly, defaultValue, i18nRefresh],
     )
     useEffect(() => {
       if (loading) return

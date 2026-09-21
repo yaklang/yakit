@@ -28,6 +28,13 @@
         font-size: 12px;
         font-weight: 500;
 
+        .title-text {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          min-width: 0;
+        }
+
         .history-count-tag {
           min-width: 24px;
           justify-content: center;

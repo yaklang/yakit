@@ -1,8 +1,8 @@
-import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
-import { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
-import { AIHttpFlowRemovePayload } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
-import { AICodeBlockCommandParams } from './aiCodeBlock/aiCustomCodeBlockPlugin'
-import { AIChatMentionProps } from '../aiChatMention/type'
+import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import type { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
+import type { AIHttpFlowRemovePayload } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import type { AICodeBlockCommandParams } from './aiCodeBlock/aiCustomCodeBlockPlugin'
+import type { AIChatMentionProps } from '../aiChatMention/type'
 
 export interface AIMilkdownInputProps extends AIMilkdownInputBaseProps {}
 

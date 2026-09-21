@@ -1,15 +1,16 @@
-import React, { memo, useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import {
   AICostDetailsEcharts,
-  AICostDetailsEchartsProps,
+  type AICostDetailsEchartsProps,
   AIPressureDetailsEcharts,
-  AIPressureDetailsEchartsProps,
+  type AIPressureDetailsEchartsProps,
   TokenCountEcharts,
   type ContextStatsChartMetric,
 } from '../../chatTemplate/AIEcharts'
-import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AIChatData } from '../../type/aiChat'
+import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIAgentChatData } from '../../type/aiChat'
 import { formatNumberUnits } from '../../utils'
 import {
   OutlineArrowdownIcon,
@@ -25,7 +26,7 @@ import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import ContextTable from './ContextTable/ContextTable'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { AIModelConfig } from '../../aiModelList/utils'
+import type { AIModelConfig } from '../../aiModelList/utils'
 import AITokens from './AITokens'
 import styles from '../AIChatContent.module.scss'
 
@@ -37,10 +38,10 @@ interface CurrentModel {
 export interface AIEchartsDetailsProps {
   overallToken: [number | string, number | string, number | string]
   tierConsumption?: AIAgentGrpcApi.Consumption['tier_consumption']
-  pressure?: AIChatData['aiPerfData']['pressure']
-  firstCost?: AIChatData['aiPerfData']['firstCost']
-  contextStats?: AIChatData['aiPerfData']['contextStats']
-  contextSections?: AIChatData['aiPerfData']['contextSections']
+  pressure?: AIAgentChatData['aiPerfData']['pressure']
+  firstCost?: AIAgentChatData['aiPerfData']['firstCost']
+  contextStats?: AIAgentChatData['aiPerfData']['contextStats']
+  contextSections?: AIAgentChatData['aiPerfData']['contextSections']
   onClose: () => void
   renderNumber: number
 }
@@ -84,8 +85,9 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
     const output = tierConsumption.intelligent.output_consumption || 0
     const cacheHit = tierConsumption.intelligent.cache_hit_token || 0
     let percent = 0
-    if (input !== 0 && cacheHit !== 0) {
-      percent = Number(((Number(cacheHit) / Number(input)) * 100).toFixed(2))
+    const totalInput = Number(cacheHit) + Number(input)
+    if (totalInput !== 0 && cacheHit !== 0) {
+      percent = Number(((Number(cacheHit) / totalInput) * 100).toFixed(2))
     }
     return [formatNumberUnits(input), formatNumberUnits(output), formatNumberUnits(cacheHit), percent]
   }, [renderNumber, tierConsumption?.intelligent])
@@ -96,8 +98,9 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
     const output = tierConsumption.lightweight.output_consumption || 0
     const cacheHit = tierConsumption.lightweight.cache_hit_token || 0
     let percent = 0
-    if (input !== 0 && cacheHit !== 0) {
-      percent = Number(((Number(cacheHit) / Number(input)) * 100).toFixed(2))
+    const totalInput = Number(cacheHit) + Number(input)
+    if (totalInput !== 0 && cacheHit !== 0) {
+      percent = Number(((Number(cacheHit) / totalInput) * 100).toFixed(2))
     }
     return [formatNumberUnits(input), formatNumberUnits(output), formatNumberUnits(cacheHit), percent]
   }, [renderNumber, tierConsumption?.lightweight])

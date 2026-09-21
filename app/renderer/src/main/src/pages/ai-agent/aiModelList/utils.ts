@@ -1,6 +1,6 @@
-import { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
+import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
-import {
+import type {
   AddLocalModelRequest,
   ClearAllModelsRequest,
   DeleteLocalModelRequest,
@@ -20,13 +20,12 @@ import {
   GetAIModelAvailableTotalResponse,
 } from '../type/aiModel'
 import omit from 'lodash/omit'
-import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
-import { onOpenConfigModal } from './aiModelSelect/AIModelSelect'
-import { KVPair } from '@/models/kv'
-import { genDefaultPagination, PaginationSchema } from '@/pages/invoker/schema'
-import { GetThirdPartyAppConfigTemplateResponse } from '@/components/configNetwork/NewThirdPartyApplicationConfig'
-import { AIModelPolicyEnum, defaultAIGlobalConfig } from '../defaultConstant'
-import { TFunction } from '@/i18n/useI18nNamespaces'
+import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import type { KVPair } from '@/models/kv'
+import { genDefaultPagination, type PaginationSchema } from '@/pages/invoker/schema'
+import type { GetThirdPartyAppConfigTemplateResponse } from '@/components/configNetwork/NewThirdPartyApplicationConfig'
+import { type AIModelPolicyEnum, defaultAIGlobalConfig } from '../defaultConstant'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
 export { AI_API_TYPE_OPTIONS, DEFAULT_AI_API_TYPE, normalizeAIAPIType, type AIAPIType } from './aiApiTypeOptions'
 export { getModelName } from './modelName'
 
@@ -181,11 +180,11 @@ export const getAIModelAvailableInfo: APINoRequestFunc<GetAIModelAvailableTotalR
   return new Promise(async (resolve, reject) => {
     try {
       let onlineModelsTotal: number = 0
-      let localModelsTotal: number = 0
+      const localModelsTotal: number = 0
       let onlineModels: AIGlobalConfig = { ...defaultAIGlobalConfig }
-      let localModels: StartedLocalModelInfo[] = []
+      const localModels: StartedLocalModelInfo[] = []
       const config = await grpcGetAIGlobalConfig()
-      if (!!config) {
+      if (config) {
         const intelligentModelsTotal = config.IntelligentModels?.length || 0
         const lightweightModelsTotal = config.LightweightModels?.length || 0
         const visionModelsTotal = config.VisionModels?.length || 0
@@ -292,7 +291,11 @@ export const isForcedSetAIModal: APIFunc<
           // 每个 tab / 页面只弹一次
           if (!openedAIModalMap.get(pageKey)) {
             openedAIModalMap.set(pageKey, true)
-            isOpen && t && onOpenConfigModal(mountContainer, t)
+            isOpen &&
+              t &&
+              import('./aiModelSelect/AIModelSelect').then(({ onOpenConfigModal }) => {
+                onOpenConfigModal(mountContainer, t)
+              })
           }
           noDataCall?.(res)
         } else {

@@ -1,7 +1,7 @@
 import { $command, $nodeSchema, $nodeAttr } from '@milkdown/utils'
-import { Attrs } from '@milkdown/kit/prose/model'
+import type { Attrs } from '@milkdown/kit/prose/model'
 import { TextSelection } from '@milkdown/kit/prose/state'
-import { iconMapType } from '../../aiChatMention/type'
+import type { iconMapType } from '../../aiChatMention/type'
 
 export const aiMentionCustomId = 'ai-mention-custom'
 
@@ -105,10 +105,7 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
     if (!(selection instanceof TextSelection)) return false
     const { mentionType, mentionId, mentionName, lock } = params
     const { from } = selection
-    // @ 弹层选择标签时移除触发字符；程序化插入默认员工标签时不能误删前一个字符。
-    if (from > 1 && state.doc.textBetween(from - 1, from) === '@') {
-      tr.deleteRange(from - 1, from)
-    }
+    tr.deleteRange(from - 1, from)
     const fragment = state.schema.text(`${mentionName}`)
     dispatch?.(
       tr

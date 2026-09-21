@@ -1,5 +1,5 @@
 import { bindExternalStoreHook, createExternalStore } from '@/utils/createExternalStore'
-import { HistoryItem } from '../type'
+import type { HistoryItem } from '../type'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { customFolderStore } from './useCustomFolder'
 

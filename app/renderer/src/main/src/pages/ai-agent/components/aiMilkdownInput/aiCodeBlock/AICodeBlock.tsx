@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 import { useNodeViewContext } from '@prosemirror-adapter/react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
@@ -6,12 +6,10 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { buildCodeRefDisplayText } from './aiCustomCodeBlockPlugin'
 import { openCodeBlockRef } from './openCodeBlockRef'
 import styles from './AICustomCodeBlock.module.scss'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
 
 export const AICustomCodeRef: React.FC = () => {
   const { node, selected, view, contentRef } = useNodeViewContext()
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
   const readonly = useCreation(() => {
     return !view.editable
@@ -59,7 +57,7 @@ export const AICustomCodeRef: React.FC = () => {
     if (!path) return
     e.stopPropagation()
     e.preventDefault()
-    openCodeBlockRef(currentRouteKey, { path, name, range })
+    openCodeBlockRef(getCurrentPageTabRouteKey(), { path, name, range })
   })
 
   const closable = useCreation(() => {

@@ -8,7 +8,7 @@ export type TFunction = (keys: KeyOrKeys, options?: any) => any
 
 export function useI18nNamespaces(namespaces: string[]) {
   const { i18n } = useTranslation(namespaces)
-  const [, setTick] = useState(0) // 强制刷新用
+  const [i18nRefresh, setTick] = useState(0) // 强制刷新用
   const isAllReady = namespaces.every((ns) => i18n.hasResourceBundle(i18n.language, ns))
 
   const nsArrayCom = useCampare(namespaces)
@@ -41,5 +41,5 @@ export function useI18nNamespaces(namespaces: string[]) {
     return options?.defaultValue ?? keyList[keyList.length - 1]
   })
 
-  return { t, i18n, isAllReady }
+  return { t, i18n, isAllReady, i18nRefresh }
 }

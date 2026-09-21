@@ -1,5 +1,5 @@
 import React, { memo, useRef, useState } from 'react'
-import { AITriageChatContentEditProps, AITriageChatContentProps } from './type'
+import type { AITriageChatContentEditProps, AITriageChatContentProps } from './type'
 
 import classNames from 'classnames'
 import styles from './AITriageChat.module.scss'
@@ -9,27 +9,39 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { OutlinePencilaltIcon } from '@/assets/icon/outline'
 import { Tooltip } from 'antd'
-import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { editorViewCtx } from '@milkdown/kit/core'
 import { convertKeyEventToKeyCombination } from '@/utils/globalShortcutKey/utils'
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { TextSelection } from '@milkdown/kit/prose/state'
 import { getMarkdown } from '@milkdown/kit/utils'
 import useAIAgentStore from '../../useContext/useStore'
-import { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AIChatTextareaSubmit } from '../../template/type'
+import type { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIChatTextareaSubmit } from '../../template/type'
 import { getAIReActRequestParams } from '../../utils'
 import { extractDataWithMilkdown } from '../aiMilkdownInput/utils'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
-import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import useAIAgentDispatcher from '../../useContext/useDispatcher'
 
 export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((props) => {
-  const { isAnswer, content, contentClassName, chatClassName, extraValue } = props
-  const { chatDataStoreKey } = useGetChatDataStoreKey()
+  const { isAnswer, contentClassName, chatClassName, itemData, chatDataStoreKey, renderNum } = props
+
   const [edit, setEdit] = useState<boolean>(false)
 
+  const content = useCreation(() => {
+    if (itemData?.data) {
+      return itemData.data
+    }
+    return ''
+  }, [renderNum])
+
+  const extraValue = useCreation(() => {
+    if (itemData?.extraValue) {
+      return itemData.extraValue
+    }
+    return undefined
+  }, [renderNum])
   const renderContent = useMemoizedFn(() => {
-    if (!!extraValue?.showQS) {
+    if (extraValue?.showQS) {
       return (
         <>
           <AIMilkdownInput defaultValue={`${extraValue?.showQS}`} readonly={true} chatDataStoreKey={chatDataStoreKey} />
@@ -42,7 +54,12 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
   return (
     <div className={styles['triage-chat-content-wrapper']}>
       {edit ? (
-        <AITriageChatContentEdit content={content} extraValue={extraValue} onCancel={() => setEdit(false)} />
+        <AITriageChatContentEdit
+          content={content}
+          extraValue={extraValue}
+          onCancel={() => setEdit(false)}
+          chatDataStoreKey={chatDataStoreKey}
+        />
       ) : (
         <>
           <div
@@ -77,13 +94,11 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
   )
 })
 const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.memo((props) => {
-  const { extraValue, content, onCancel } = props
+  const { extraValue, content, onCancel, chatDataStoreKey } = props
   const { activeChat } = useAIAgentStore()
-  const { chatIPCEvents } = useChatIPCDispatcher()
-  const { chatDataStoreKey } = useGetChatDataStoreKey()
-
+  const { onSend } = useAIAgentDispatcher()
   const defaultValue = useCreation(() => {
-    if (!!extraValue?.showQS) {
+    if (extraValue?.showQS) {
       return `${extraValue?.showQS}`
     }
     return content
@@ -117,7 +132,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
     e.stopPropagation()
     onCancel()
   })
-  const onSend = useMemoizedFn(() => {
+  const onSendEdit = useMemoizedFn(() => {
     // 发送消息逻辑
     if (!editorMilkdown.current || !activeChat) return
     const qs = getMarkdownValue()
@@ -131,7 +146,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
       showQS: qs,
       focusMode: '',
     }
-    const { extra, attachedResourceInfo } = getAIReActRequestParams(value)
+    const { attachedResourceInfo } = getAIReActRequestParams(value)
 
     const chatMessage: AIInputEvent = {
       IsFreeInput: true,
@@ -139,14 +154,13 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
       AttachedResourceInfo: attachedResourceInfo,
       FocusModeLoop: value.focusMode,
     }
-    chatIPCEvents.onSend({
+    onSend({
       token: activeChat.SessionID,
       type: 'casual',
       params: {
         IsFreeInput: true,
         ...chatMessage,
       },
-      extraValue: extra,
     })
     onCancel()
   })
@@ -159,7 +173,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
     if (!e.nativeEvent?.isComposing && keys?.join() === YakitKeyBoard.Enter) {
       e.stopPropagation()
       e.preventDefault()
-      onSend()
+      onSendEdit()
     }
   })
 
@@ -187,7 +201,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
           disabled={disabled}
           onClick={(e) => {
             e.stopPropagation()
-            onSend()
+            onSendEdit()
           }}
         >
           发送

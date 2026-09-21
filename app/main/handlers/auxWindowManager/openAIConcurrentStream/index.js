@@ -53,7 +53,19 @@ function register(manager, mainWindow) {
   })
 
   ipcMain.handle('open-ai-concurrent-stream-window', async (_event, data) => {
-    if (!data || typeof data !== 'object' || !Array.isArray(data.elements)) return
+    // 开窗只传轻量元数据（session/token/chatType），子窗再 fetch contents；不再要求 elements
+    if (
+      !data ||
+      typeof data !== 'object' ||
+      typeof data.session !== 'string' ||
+      !data.session ||
+      typeof data.token !== 'string' ||
+      !data.token ||
+      typeof data.chatType !== 'string' ||
+      !data.chatType
+    ) {
+      return
+    }
     const singletonKey = buildSingletonKey(data)
     const title = typeof data.taskName === 'string' && data.taskName ? data.taskName : 'Concurrent Stream'
     return manager.create({

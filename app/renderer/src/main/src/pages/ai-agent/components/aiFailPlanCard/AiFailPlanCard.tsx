@@ -1,26 +1,48 @@
-import type { FailTaskChatError } from '@/pages/ai-re-act/hooks/aiRender'
-import { type FC } from 'react'
+import { type AIChatQSData, type AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
+import { memo, type FC } from 'react'
 import ChatCard from '../ChatCard'
 import styles from './AiFailPlanCard.module.scss'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
-// import { TaskErrorIcon } from '../../aiTree/icon'
 import { PreWrapper } from '../ToolInvokerCard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { Tooltip } from 'antd'
+import { useCreation } from 'ahooks'
+import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 
-const AiFailPlanCard: FC<{ item: FailTaskChatError }> = ({ item }) => {
+const AiFailPlanCard: FC<{
+  itemData: Extract<
+    AIChatQSData,
+    { type: AIChatQSDataTypeEnum.FAIL_REACT | AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION }
+  >
+  renderNum: number
+}> = ({ itemData, renderNum }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { content } = item
-  const { nodeLabel } = useAINodeLabel(item.NodeIdVerbose)
+  const [expand, , toggle] = useUiExpand(itemData.id, false)
+  const { nodeLabel } = useAINodeLabel(itemData.data.NodeIdVerbose)
+
+  const content = useCreation(() => {
+    return itemData.data.content
+  }, [renderNum])
   return (
-    //  titleIcon={<TaskErrorIcon />}
-    <ChatCard className={styles['ai-fail-plan-wrapper']} titleText={nodeLabel}>
-      <div className={styles['ai-fail-plan-card']}>
-        <div className={styles['ai-fail-plan-card-title']}>{t('AiFailPlanCard.failureReason')}</div>
-        <div className={styles['ai-fail-plan-card-content']}>
-          {content && <PreWrapper code={content} autoScrollBottom />}
-        </div>
-      </div>
+    <ChatCard
+      className={styles['ai-fail-plan-wrapper']}
+      titleText={nodeLabel}
+      titleMore={
+        <Tooltip title={expand ? t('AiFailPlanCard.collapse') : t('AiFailPlanCard.expand')}>
+          <YakitButton
+            size="small"
+            type="text"
+            icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+            onClick={toggle}
+            className={styles['expand-btn']}
+          />
+        </Tooltip>
+      }
+    >
+      {expand && content && <PreWrapper code={content} autoScrollBottom className={styles['pre-max-height']} />}
     </ChatCard>
   )
 }
-export default AiFailPlanCard
+export default memo(AiFailPlanCard)

@@ -1,4 +1,4 @@
-import { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import { type YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 
 export interface AIReviewRuleSelectProps extends ReviewRuleSelectProps {}
 

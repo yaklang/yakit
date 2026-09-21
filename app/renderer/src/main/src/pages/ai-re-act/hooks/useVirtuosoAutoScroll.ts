@@ -72,7 +72,6 @@ const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScroll
         scrollerElRef.current.removeEventListener('mousedown', handleMouseDown)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /** 传给 Virtuoso 的 scrollerRef，自动挂载 wheel/touchmove/keydown 监听 */

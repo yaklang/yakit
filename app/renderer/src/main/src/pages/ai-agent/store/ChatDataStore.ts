@@ -1,196 +1,43 @@
-import { SetStateAction } from 'react'
-import type { AIChatData } from '../type/aiChat'
-import { AIChatQSData, ReActChatBaseInfo } from '@/pages/ai-re-act/hooks/aiRender'
-import { AIModelTypeEnum } from '../defaultConstant'
-import { cloneDeep } from 'lodash'
-import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData } from '@/pages/ai-re-act/hooks/defaultConstant'
+import type { SetStateAction } from 'react'
 
-export type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
-}
-
-interface GetContentMapParams {
-  session: string
-  chatType: ReActChatBaseInfo['chatType']
-  mapKey: string
-}
-
-/** 获取精确类型 */
-const getExactType: (value: any) => string = (value: any) => {
-  return Object.prototype.toString.call(value).slice(8, -1)
-}
-
+/**
+ * 旧嵌入式页面仍会把这个对象作为标识传给 Provider；AI 主会话已经迁移到
+ * ChatMultiSessionController。这里仅保留子窗口静态渲染需要的轻量兼容容器。
+ */
 export class ChatDataStore {
-  private map = new Map<string, AIChatData>()
+  private map = new Map<string, any>()
 
-  /** 生成初始化默认数据 */
-  private initDefaultData(): AIChatData {
-    return {
-      beforeID: {
-        timelineID: -1,
-        chatID: -1,
-      },
-      httpRunTimeIDs: [],
-      riskRunTimeIDs: [],
-      yakExecResult: { card: [], execFileRecord: new Map(), yakExecResultLogs: [] },
-      aiPerfData: {
-        consumption: {
-          cache_hit_token: 0,
-          input_consumption: 0,
-          output_consumption: 0,
-          consumption_uuid: '',
-          tier_consumption: {
-            [AIModelTypeEnum.TierIntelligent]: {
-              cache_hit_token: 0,
-              input_consumption: 0,
-              output_consumption: 0,
-            },
-            [AIModelTypeEnum.TierLightweight]: {
-              cache_hit_token: 0,
-              input_consumption: 0,
-              output_consumption: 0,
-            },
-            [AIModelTypeEnum.TierVision]: {
-              cache_hit_token: 0,
-              input_consumption: 0,
-              output_consumption: 0,
-            },
-          },
-        },
-        pressure: {
-          [AIModelTypeEnum.TierIntelligent]: [],
-          [AIModelTypeEnum.TierLightweight]: [],
-          [AIModelTypeEnum.TierVision]: [],
-        },
-        firstCost: {
-          [AIModelTypeEnum.TierIntelligent]: [],
-          [AIModelTypeEnum.TierLightweight]: [],
-          [AIModelTypeEnum.TierVision]: [],
-        },
-        totalCost: {
-          [AIModelTypeEnum.TierIntelligent]: [],
-          [AIModelTypeEnum.TierLightweight]: [],
-          [AIModelTypeEnum.TierVision]: [],
-        },
-        contextStats: {
-          prompt_bytes: 0,
-          prompt_tokens: 0,
-          data: {
-            times: [],
-            total_prompt_bytes: [],
-            total_prompt_tokens: [],
-            role_order: [],
-            role_labels: {},
-            role_series: {},
-            role_tokens: {},
-          },
-        },
-        contextSections: { summary: new Map(), sections: [] },
-      },
-      casualChat: {
-        elements: [],
-        contents: new Map(),
-        planDetails: cloneDeep(DefaultPlanItemDetailsData),
-        planDetailsMap: new Map(),
-      },
-      taskChat: {
-        plan: cloneDeep(DefaultCurrentExecTaskTree),
-        elements: [],
-        contents: new Map(),
-        planDetailsMap: new Map(),
-      },
-      grpcFolders: [],
-      reActTimelines: [],
+  create(session: string) {
+    const data = {
+      casualChat: { elements: [], contents: new Map(), planDetails: {} },
+      taskChat: { elements: [], contents: new Map() },
     }
+    this.map.set(session, data)
+    return data
   }
 
-  /** 创建新的聊天数据 */
-  create(session: string): AIChatData {
-    if (this.map.has(session)) {
-      throw new Error(`Session: ${session} already exists`)
-    }
-
-    const newData = this.initDefaultData()
-    this.map.set(session, newData)
-    return newData
-  }
-
-  /** 判断指定聊天数据是否存在 */
-  has(session: string): boolean {
+  has(session: string) {
     return this.map.has(session)
   }
 
-  /** 获取指定聊天数据 */
-  get(session: string): AIChatData | undefined {
+  get(session: string) {
     return this.map.get(session)
   }
 
-  /** 获取会话聊天列表的数据 */
-  getContentMap({ session, chatType, mapKey }: GetContentMapParams): AIChatQSData | undefined {
-    const chatData = this.get(session)
-    if (!chatData) return undefined
-    try {
-      if (chatType === 'reAct') {
-        return chatData.casualChat.contents.get(mapKey)
-      } else if (chatType === 'task') {
-        return chatData.taskChat.contents.get(mapKey)
-      }
-    } catch (error) {
-      return undefined
-    }
+  set(session: string, value: SetStateAction<any>) {
+    const previous = this.map.get(session)
+    this.map.set(session, typeof value === 'function' ? value(previous) : value)
   }
 
-  /** 设置指定聊天数据 */
-  set(session: string, value: SetStateAction<AIChatData>): void {
-    const prev = this.map.get(session)
-    if (!prev) {
-      throw new Error(`Session: ${session} does not exist`)
-    }
-    const next = typeof value === 'function' ? value(prev) : value
-    this.map.set(session, next)
+  updater(session: string, value: Record<string, any>) {
+    this.map.set(session, { ...this.map.get(session), ...value })
   }
 
-  /**
-   * 增量更新指定聊天数据
-   * @attention 增量更新逻辑只支持第一层和第二层的属性更新，超出需要重新开发逻辑
-   */
-  updater(session: string, updateData: DeepPartial<AIChatData>): void {
-    const prev = this.map.get(session)
-    if (!prev) {
-      throw new Error(`Session: ${session} does not exist`)
-    }
-
-    const result = { ...prev }
-
-    for (const key in updateData) {
-      if (updateData.hasOwnProperty(key)) {
-        const updateValue = updateData[key]
-
-        if (getExactType(updateValue) === 'Object' && !!updateValue) {
-          // 如果是对象且原对象有对应属性，进行深层更新
-          if (key in result && getExactType(result[key]) === 'Object') {
-            result[key] = { ...result[key], ...updateValue }
-          } else {
-            // 直接赋值
-            result[key] = { ...updateValue }
-          }
-        } else {
-          // 直接更新一层属性
-          result[key] = updateValue
-        }
-      }
-    }
-
-    this.map.set(session, result)
-  }
-
-  /** 删除指定聊天数据 */
-  remove(session: string): void {
+  remove(session: string) {
     this.map.delete(session)
   }
 
-  /** 清空所有聊天数据 */
-  clear(): void {
+  clear() {
     this.map.clear()
   }
 }
@@ -199,17 +46,12 @@ export const aiChatDataStore = new ChatDataStore()
 export const knowledgeBaseDataStore = new ChatDataStore()
 export const histroyAiStore = new ChatDataStore()
 export const FlowAiStore = new ChatDataStore()
-/** Irify：独立「AI 代码审计」页 */
 export const irifyAiCodeAuditPageAiStore = new ChatDataStore()
-/** Yak Runner：嵌入代码安全审计 AI 侧栏 */
 export const yakRunnerPageAiStore = new ChatDataStore()
 
-/** Web Fuzzer 每页 `new WebFuzzerAiStore(pageId)`；与上方单例区分需用 `instanceof` */
 export class WebFuzzerAiStore extends ChatDataStore {
-  public readonly fuzzerPageId: string
-  constructor(fuzzerPageId: string) {
+  constructor(public readonly fuzzerPageId: string) {
     super()
-    this.fuzzerPageId = fuzzerPageId
   }
 }
 
