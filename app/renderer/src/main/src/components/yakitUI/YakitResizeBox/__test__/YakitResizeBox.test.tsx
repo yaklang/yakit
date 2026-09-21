@@ -169,7 +169,7 @@ describe('YakitResizeBox', () => {
     expect(onMouseUp.mock.calls[0][0].secondSizeNum).toBe(392)
   })
 
-  it('dragResize 下连续调用面板改宽且预览线不显示', () => {
+  it('dragResize 下连续改宽、预览线不显示，松手上报最终尺寸', () => {
     const onMouseUp = vi.fn()
     const { container } = render(
       <div>
@@ -201,8 +201,13 @@ describe('YakitResizeBox', () => {
     expect(first.style.width).toBe('400px')
     expect(second.style.width).toBe('392px')
 
+    // jsdom 的 clientWidth 不会跟 style 走，结束上报前对齐到拖拽后的实际宽度
+    Object.defineProperty(first, 'clientWidth', { configurable: true, value: 400 })
+    Object.defineProperty(second, 'clientWidth', { configurable: true, value: 392 })
     dispatchPointer(box, 'pointerup', 408)
-    expect(onMouseUp).not.toHaveBeenCalled()
+    expect(onMouseUp).toHaveBeenCalledTimes(1)
+    expect(onMouseUp.mock.calls[0][0].firstSizeNum).toBe(400)
+    expect(onMouseUp.mock.calls[0][0].secondSizeNum).toBe(392)
   })
 
   it('非 dragResize 拖动时显示预览线', () => {

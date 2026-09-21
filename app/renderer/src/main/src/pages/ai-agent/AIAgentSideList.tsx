@@ -38,10 +38,16 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     if (!info?.params) return
     const { type, params } = info
     switch (type) {
-      case SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE:
-        setActive(params.active as AIAgentTabListEnum)
+      case SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE: {
+        const nextActive = params.active as AIAgentTabListEnum
+        if (params.toggle && show && active === nextActive) {
+          setShow(false)
+          break
+        }
+        setActive(nextActive)
         setShow(params.show !== false)
         break
+      }
       case SwitchAIAgentTabEventEnum.SET_TAB_SHOW:
         if (params.show === false && !isSideAutoHidden()) return
         setShow(params.show !== false)

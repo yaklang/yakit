@@ -1051,7 +1051,7 @@ describe('AIRightPanel', () => {
     fireEvent.click(screen.getByText('文件系统'))
     expect(mockEmit).toHaveBeenCalledWith(
       'switchAIAgentTab',
-      JSON.stringify({ type: 'setTabActive', params: { active: 'file', show: true } }),
+      JSON.stringify({ type: 'setTabActive', params: { active: 'file', show: true, toggle: true } }),
     )
     fireEvent.click(screen.getByText('流量'))
     expect(mockEmit).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: 'http' }))
@@ -1060,7 +1060,7 @@ describe('AIRightPanel', () => {
     fireEvent.click(screen.getByText('浏览器实例'))
     expect(mockEmit).toHaveBeenCalledWith(
       'switchAIAgentTab',
-      JSON.stringify({ type: 'setTabActive', params: { active: 'browser', show: true } }),
+      JSON.stringify({ type: 'setTabActive', params: { active: 'browser', show: true, toggle: true } }),
     )
   })
 

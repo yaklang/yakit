@@ -93,6 +93,16 @@ const TOOL_STATS: Array<{ field: keyof AIRightPanelToolStats; labelKey: string; 
 /** 执行时长、工具调用统计等数据缺失时的占位符 */
 const PLACEHOLDER = '—'
 
+const emitToggleAIAgentTab = (active: AIAgentTabListEnum) => {
+  emiter.emit(
+    'switchAIAgentTab',
+    JSON.stringify({
+      type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+      params: { active, show: true, toggle: true },
+    }),
+  )
+}
+
 /** 数据卡片区：执行时长 + 工具调用统计（成功/失败/总尝试）。 */
 const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['execution'] }> = React.memo(
   ({ executionData }) => {
@@ -443,7 +453,8 @@ const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel,
   const welcomeStats = useWelcomePanelStats(inViewport)
   /**
    * 菜单点击：会话历史打开右侧内容面板；
-   * 文件系统展开侧栏文件页，流量、漏洞切换工作区 tab。
+   * 文件系统/浏览器：已展开同一页则收起，否则打开左侧对应页；
+   * 流量、漏洞切换工作区 tab。
    */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
     switch (key) {
@@ -451,23 +462,10 @@ const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel,
         panel.openPane(key)
         break
       case 'file-system':
-        // 文件树位于左侧边栏的文件页，展开侧边栏并切换到该页。
-        emiter.emit(
-          'switchAIAgentTab',
-          JSON.stringify({
-            type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-            params: { active: AIAgentTabListEnum.File, show: true },
-          }),
-        )
+        emitToggleAIAgentTab(AIAgentTabListEnum.File)
         break
       case 'browser':
-        emiter.emit(
-          'switchAIAgentTab',
-          JSON.stringify({
-            type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-            params: { active: AIAgentTabListEnum.Browser, show: true },
-          }),
-        )
+        emitToggleAIAgentTab(AIAgentTabListEnum.Browser)
         break
       case 'traffic':
         emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP }))
@@ -543,7 +541,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
 
   /**
    * 菜单点击：任务列表、时间线、会话历史打开右侧内容面板；
-   * 任务详情、流量、漏洞切换工作区 tab；文件系统打开侧栏文件页；
+   * 任务详情、流量、漏洞切换工作区 tab；文件系统/浏览器已展开则收起否则打开；
    * 浏览器实例打开侧栏浏览器页；
    * AI 设置打开设置页，导出日志打开导出弹窗，查看日志打开日志窗口。
    */
@@ -558,23 +556,10 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
         syncCasualTaskTab()
         break
       case 'file-system':
-        // 文件树位于左侧边栏的文件页，展开侧边栏并切换到该页。
-        emiter.emit(
-          'switchAIAgentTab',
-          JSON.stringify({
-            type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-            params: { active: AIAgentTabListEnum.File, show: true },
-          }),
-        )
+        emitToggleAIAgentTab(AIAgentTabListEnum.File)
         break
       case 'browser':
-        emiter.emit(
-          'switchAIAgentTab',
-          JSON.stringify({
-            type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-            params: { active: AIAgentTabListEnum.Browser, show: true },
-          }),
-        )
+        emitToggleAIAgentTab(AIAgentTabListEnum.Browser)
         break
       case 'traffic':
         emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP }))

@@ -134,6 +134,45 @@ describe('AIAgentSideList', () => {
     expect(screen.getByLabelText('show')).toHaveTextContent('true')
   })
 
+  it('toggle 同一已展开页则收起，其它页或未展开则打开', async () => {
+    render(<SideList />)
+    expect(screen.getByLabelText('show')).toHaveTextContent('true')
+    expect(screen.getByLabelText('active')).toHaveTextContent('file')
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({
+          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+          params: { active: 'file', show: true, toggle: true },
+        }),
+      )
+    })
+    expect(screen.getByLabelText('show')).toHaveTextContent('false')
+    expect(screen.getByLabelText('active')).toHaveTextContent('file')
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({
+          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+          params: { active: 'file', show: true, toggle: true },
+        }),
+      )
+    })
+    expect(screen.getByLabelText('show')).toHaveTextContent('true')
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({
+          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+          params: { active: 'browser', show: true, toggle: true },
+        }),
+      )
+    })
+    expect(screen.getByLabelText('active')).toHaveTextContent('browser')
+    expect(screen.getByLabelText('show')).toHaveTextContent('true')
+    expect(await screen.findByText('浏览器实例')).toBeInTheDocument()
+  })
+
   it('事件切换和显隐仍有效，卸载后移除监听', async () => {
     const off = vi.spyOn(emiter, 'off')
     const result = render(<SideList />)

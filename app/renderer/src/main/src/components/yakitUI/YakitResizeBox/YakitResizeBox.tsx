@@ -413,6 +413,14 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
   const moveEnd = useMemoizedFn(() => {
     if (!maskRef || !maskRef.current) return
     maskRef.current.style.display = 'none'
+    // dragResize 实时改宽已落在 DOM，结束时补上报最终尺寸供外部缓存（非 dragResize 由 moveSize 上报）
+    if (dragResize && onMouseUp && firstRef.current && secondRef.current) {
+      const first = firstRef.current
+      const second = secondRef.current
+      const firstSizeNum = isVer ? first.clientHeight : first.clientWidth
+      const secondSizeNum = isVer ? second.clientHeight : second.clientWidth
+      onMouseUp({ firstSizeNum, secondSizeNum, ...calculatePercentages(firstSizeNum, secondSizeNum) })
+    }
     // 实时拖动缓存-还原
     dragFirstSize.current = undefined
     dragSecondSize.current = undefined
