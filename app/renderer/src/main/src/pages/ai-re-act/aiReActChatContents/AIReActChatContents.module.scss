@@ -16,6 +16,7 @@
     width: 100%;
     max-width: none;
     height: 100%;
+    scrollbar-gutter: stable;
   }
   // Virtuoso 的内部 List 承担内容轨道，外层 re-act-contents-list 只负责滚动。
   .re-act-contents-track {
