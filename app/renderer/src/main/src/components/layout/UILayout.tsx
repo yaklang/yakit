@@ -30,6 +30,7 @@ import {
   isEnpriTraceAgent,
   isEnterpriseEdition,
   isMemfit,
+  toDefaultYakEngineDownloadVersion,
 } from '@/utils/envfile'
 import { AllKillEngineConfirm } from './AllKillEngineConfirm'
 const SoftwareSettings = lazy(() =>
@@ -805,7 +806,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const useOfficialEngineByDownload = () => {
     downYaklangSpecifyVersion(
       JSON.stringify({
-        version: yaklangLastVersionRef.current,
+        version: toDefaultYakEngineDownloadVersion(yaklangLastVersionRef.current),
         killPssText: {
           title: t('UILayout.useOfficialEngineTitle'),
           content: t('UILayout.useOfficialEngineDownloadDesc'),

@@ -58,6 +58,7 @@ vi.mock('@/utils/envfile', () => ({
   getReleaseEditionName: vi.fn(() => 'Yakit'),
   isCommunityYakit: vi.fn(() => true),
   isEnpriTraceAgent: vi.fn(() => false),
+  toDefaultYakEngineDownloadVersion: vi.fn((version: string) => version),
 }))
 
 vi.mock('@/utils/notification', () => ({
@@ -84,6 +85,8 @@ vi.mock('../../UpdateYakitHint', () => ({
 vi.mock('@/utils/electronBridge', () => ({
   yakitEngine: {
     onStartUpEngineMessage: vi.fn(() => vi.fn()),
+    fetchBundledEngineBuildType: vi.fn(),
+    fetchYakEngineBuildType: vi.fn(),
   },
 }))
 
@@ -108,6 +111,8 @@ describe('LocalEngine Component', () => {
     ref = { current: null }
 
     vi.clearAllMocks()
+    vi.mocked(yakitEngine.fetchBundledEngineBuildType).mockReset()
+    vi.mocked(yakitEngine.fetchYakEngineBuildType).mockReset()
 
     // 通用 mock 默认值（确保大多数测试走无更新分支）
     // 注意：默认让 YakitCE-SoftwareBasics 返回 true，避免阻塞引擎连接
@@ -482,6 +487,29 @@ describe('LocalEngine Component', () => {
     })
 
     it('当引擎版本相同时跳过更新并校验来源', async () => {
+      renderComponent()
+      await initEngine()
+
+      await startLinkEngine()
+
+      expect(props.setYakitStatus).not.toHaveBeenCalledWith('update_yak')
+    })
+
+    it('社区版内置轻量且本地同版本全量时提示解压内置引擎', async () => {
+      vi.mocked(yakitEngine.fetchBundledEngineBuildType).mockResolvedValue('slim')
+      vi.mocked(yakitEngine.fetchYakEngineBuildType).mockResolvedValue('full')
+      renderComponent()
+      await initEngine()
+
+      await waitFor(() => {
+        expect(props.setYakitStatus).toHaveBeenCalledWith('update_yak')
+      })
+    })
+
+    it('非社区版即使内置轻量本地全量也不替换', async () => {
+      vi.mocked(isCommunityYakit).mockReturnValue(false)
+      vi.mocked(yakitEngine.fetchBundledEngineBuildType).mockResolvedValue('slim')
+      vi.mocked(yakitEngine.fetchYakEngineBuildType).mockResolvedValue('full')
       renderComponent()
       await initEngine()
 

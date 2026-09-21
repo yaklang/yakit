@@ -15,7 +15,8 @@ const {
   isSlimEngineVersion,
   getOssEngineVersion,
   getLocalEngineCacheName,
-  getYakEngineNamePrefix,
+  getYakEngineArtifactFileName,
+  resolveEngineArtifactVersion,
   SLIM_ENGINE_VERSION_PREFIX,
 } = require('./engineVersion')
 
@@ -125,39 +126,21 @@ async function getAvailableOSSDomain() {
 /** 获取校验url */
 const getCheckTextUrl = async (version) => {
   const domain = await getAvailableOSSDomain()
-  const prefix = getYakEngineNamePrefix(version)
-  const ossVersion = getOssEngineVersion(version)
+  const artifactVersion = resolveEngineArtifactVersion(version)
+  const ossVersion = getOssEngineVersion(artifactVersion)
   let system_mode = ''
   try {
     system_mode = fs.readFileSync(loadExtraFilePath(path.join('bins', 'yakit-system-mode.txt'))).toString('utf8')
   } catch (error) {
     console.log('error', error)
   }
-  const suffix = system_mode === 'legacy'
-
-  let url = ''
-  switch (process.platform) {
-    case 'darwin':
-      if (process.arch === 'arm64') {
-        url = `https://${domain}/yak/${ossVersion}/${prefix}darwin_arm64.sha256.txt`
-      } else {
-        url = `https://${domain}/yak/${ossVersion}/${prefix}darwin_amd64.sha256.txt`
-      }
-      break
-    case 'win32':
-      url = `https://${domain}/yak/${ossVersion}/${prefix}windows_${suffix ? 'legacy_' : ''}amd64.exe.sha256.txt`
-      break
-    case 'linux':
-      if (process.arch === 'arm64') {
-        url = `https://${domain}/yak/${ossVersion}/${prefix}linux_arm64.sha256.txt`
-      } else {
-        url = `https://${domain}/yak/${ossVersion}/${prefix}linux_amd64.sha256.txt`
-      }
-      break
-    default:
-      break
-  }
-  return url
+  const isLegacy = system_mode === 'legacy'
+  const fileName = getYakEngineArtifactFileName(artifactVersion, {
+    platform: process.platform,
+    arch: process.arch,
+    isLegacy,
+  })
+  return fileName ? `https://${domain}/yak/${ossVersion}/${fileName}.sha256.txt` : ''
 }
 /** 获取指定版本号的引擎Hash值 */
 const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
@@ -233,8 +216,8 @@ const fetchLatestVersionCommon = async (path, requestConfig = {}) => {
 /** 引擎下载地址 */
 const getYakEngineDownloadUrl = async (version) => {
   const domain = await getAvailableOSSDomain()
-  const prefix = getYakEngineNamePrefix(version)
-  const ossVersion = getOssEngineVersion(version)
+  const artifactVersion = resolveEngineArtifactVersion(version)
+  const ossVersion = getOssEngineVersion(artifactVersion)
   let system_mode = ''
   try {
     // 开发环境是不添加-legacy
@@ -244,25 +227,13 @@ const getYakEngineDownloadUrl = async (version) => {
   } catch (error) {
     console.log('error', error)
   }
-  const suffix = system_mode === 'legacy'
-  switch (process.platform) {
-    case 'darwin':
-      if (process.arch === 'arm64') {
-        return `https://${domain}/yak/${ossVersion}/${prefix}darwin_arm64`
-      } else {
-        return `https://${domain}/yak/${ossVersion}/${prefix}darwin_amd64`
-      }
-    case 'win32':
-      return `https://${domain}/yak/${ossVersion}/${prefix}windows_${suffix ? 'legacy_' : ''}amd64.exe`
-    case 'linux':
-      if (process.arch === 'arm64') {
-        return `https://${domain}/yak/${ossVersion}/${prefix}linux_arm64`
-      } else {
-        return `https://${domain}/yak/${ossVersion}/${prefix}linux_amd64`
-      }
-    default:
-      throw new Error(`Unsupported platform: ${process.platform}`)
-  }
+  const isLegacy = system_mode === 'legacy'
+  const fileName = getYakEngineArtifactFileName(artifactVersion, {
+    platform: process.platform,
+    arch: process.arch,
+    isLegacy,
+  })
+  return `https://${domain}/yak/${ossVersion}/${fileName}`
 }
 
 const getSuffix = () => {

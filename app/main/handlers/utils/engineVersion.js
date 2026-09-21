@@ -1,41 +1,35 @@
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
-const { getYaklangEngineDir } = require('../../filePath')
-
-/** 轻量引擎版本标记，与 dev/ 类似：slim/1.4.8-beta6 */
-const SLIM_ENGINE_VERSION_PREFIX = 'slim/'
+const { getYaklangEngineDir, loadExtraFilePath } = require('../../filePath')
+const {
+  SLIM_ENGINE_VERSION_PREFIX,
+  isSlimEngineVersion,
+  getOssEngineVersion,
+  resolveEngineArtifactVersion: resolveEngineArtifactVersionWithLegacy,
+  getYakEngineNamePrefix,
+  getLocalEngineCacheName: getLocalEngineCacheNameWithLegacy,
+  getYakEngineArtifactFileName,
+  getYakEngineArtifactOssPath,
+} = require('./engineArtifact')
 
 const ENGINE_BUILD_TYPE_FILE = 'engine-build-type.txt'
 
-/** 是否为轻量引擎版本（前端仅在 Yakit 侧可选） */
-const isSlimEngineVersion = (version) => (version || '').startsWith(SLIM_ENGINE_VERSION_PREFIX)
+const isLegacySystemMode = () => {
+  try {
+    return (
+      `${fs.readFileSync(loadExtraFilePath(path.join('bins', 'yakit-system-mode.txt')), 'utf8')}`.trim() === 'legacy'
+    )
+  } catch (e) {
+    return false
+  }
+}
 
-/** OSS 路径使用的版本号（去掉 slim/ 前缀） */
-const getOssEngineVersion = (version) => (version || '').replace(new RegExp(`^${SLIM_ENGINE_VERSION_PREFIX}`), '')
+/** legacy 包没有 slim 产物，下载/校验时回退到标准版本号 */
+const resolveEngineArtifactVersion = (version) => resolveEngineArtifactVersionWithLegacy(version, isLegacySystemMode())
 
 /** 本地缓存引擎文件名：yak-{version} / yak-dev-xxx / yak-slim-{version} */
-const getLocalEngineCacheName = (version) => {
-  if ((version || '').startsWith('dev/')) {
-    return 'yak-' + version.replace('dev/', 'dev-')
-  }
-  if (isSlimEngineVersion(version)) {
-    return 'yak-slim-' + getOssEngineVersion(version)
-  }
-  return `yak-${version}`
-}
-
-/**
- * 根据版本号获取引擎文件名前缀，与 exp-cross-build 一致：
- * slim -> yak-slim_, yakit -> yaklang_yakit_, irify -> yaklang_irify_, 其它 -> yak_
- */
-const getYakEngineNamePrefix = (version) => {
-  if (isSlimEngineVersion(version)) return 'yak-slim_'
-  const v = getOssEngineVersion(version || '').toLowerCase()
-  if (v.includes('yakit')) return 'yaklang_yakit_'
-  if (v.includes('irify')) return 'yaklang_irify_'
-  return 'yak_'
-}
+const getLocalEngineCacheName = (version) => getLocalEngineCacheNameWithLegacy(version, isLegacySystemMode())
 
 const getEngineBuildTypeFilePath = () => path.join(getYaklangEngineDir(), ENGINE_BUILD_TYPE_FILE)
 
@@ -69,7 +63,7 @@ const writeEngineBuildType = (buildType) => {
 
 /** 根据下载/安装版本号写入构建类型 */
 const writeEngineBuildTypeByVersion = (version) => {
-  writeEngineBuildType(isSlimEngineVersion(version) ? 'slim' : 'full')
+  writeEngineBuildType(isSlimEngineVersion(resolveEngineArtifactVersion(version)) ? 'slim' : 'full')
 }
 
 /**
@@ -106,8 +100,12 @@ module.exports = {
   SLIM_ENGINE_VERSION_PREFIX,
   isSlimEngineVersion,
   getOssEngineVersion,
+  isLegacySystemMode,
+  resolveEngineArtifactVersion,
   getLocalEngineCacheName,
   getYakEngineNamePrefix,
+  getYakEngineArtifactFileName,
+  getYakEngineArtifactOssPath,
   writeEngineBuildType,
   writeEngineBuildTypeByVersion,
   fetchEngineBuildType,

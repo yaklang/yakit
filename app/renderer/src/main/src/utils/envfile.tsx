@@ -130,6 +130,19 @@ export const isYakit = () => {
   )
 }
 
+/** 轻量引擎版本标记，与 dev/ 类似：slim/1.4.8-beta6 */
+export const SLIM_ENGINE_VERSION_PREFIX = 'slim/'
+
+/** 仅社区版 Yakit 默认下载轻量引擎；已带 slim/ 或 dev/ 前缀的版本原样返回 */
+export const toDefaultYakEngineDownloadVersion = (version: string) => {
+  if (!version) return version
+  if (version.startsWith(SLIM_ENGINE_VERSION_PREFIX) || version.startsWith('dev/')) return version
+  return isCommunityYakit() ? `${SLIM_ENGINE_VERSION_PREFIX}${version}` : version
+}
+
+/** 手动下载/复制官方引擎链接时使用的 OSS 文件名前缀 */
+export const getOfficialYakEngineArtifactPrefix = () => (isCommunityYakit() ? 'yak-slim_' : 'yak_')
+
 export const isYakitOrEnpriTrace = () => {
   return (
     GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit || GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace

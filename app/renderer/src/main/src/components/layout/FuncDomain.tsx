@@ -26,6 +26,7 @@ import {
   isMemfit,
   isYakit,
   showDevTool,
+  toDefaultYakEngineDownloadVersion,
 } from '@/utils/envfile'
 import { invalidCacheAndUserData } from '@/utils/InvalidCacheAndUserData'
 import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
@@ -1464,7 +1465,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
   /** 仅 Yakit 开放轻量版本选择；IRify/Memfit 不展示 */
   const showSlimOption = isYakit()
   const [engineBuildType, setEngineBuildType] = useState<'full' | 'slim'>(
-    showSlimOption && currentBuildType === 'slim' ? 'slim' : 'full',
+    isCommunityYakit() || (showSlimOption && currentBuildType === 'slim') ? 'slim' : 'full',
   )
 
   useEffect(() => {
@@ -1472,9 +1473,16 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
   }, [moreYaklangVersionList])
 
   useEffect(() => {
-    if (showSlimOption) {
-      setEngineBuildType(currentBuildType === 'slim' ? 'slim' : 'full')
+    if (!showSlimOption) {
+      setEngineBuildType('full')
+      return
     }
+    // 仅社区版 Yakit 默认轻量；其他版本跟随当前引擎类型
+    if (isCommunityYakit()) {
+      if (currentBuildType === 'slim') setEngineBuildType('slim')
+      return
+    }
+    setEngineBuildType(currentBuildType === 'slim' ? 'slim' : 'full')
   }, [currentBuildType, showSlimOption])
 
   const onSearchVersion = (version: string) => {
@@ -1605,6 +1613,7 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const [yaklangLastVersion, setYaklangLastVersion] = useState<string>('') // 官方推荐的最新版
   const [yaklangLocalVersion, setYaklangLocalVersion] = useState<string>('') // 本地引擎文件版本号
   const [yaklangBuildType, setYaklangBuildType] = useState<'full' | 'slim'>('full') // 当前引擎标准/轻量
+  const [yaklangBuildTypeReady, setYaklangBuildTypeReady] = useState(false)
 
   /** 更多引擎列表 */
   const [moreYaklangVersionList, setMoreYaklangVersionList] = useState<string[]>([]) // 更多引擎版本list
@@ -1613,6 +1622,8 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const lowerYaklangLastVersion = useMemo(() => {
     // 如果是远程模式，不显示更新
     if (isRemoteMode) return false
+    // 社区版默认轻量：本地仍是全量时，即使版本号相同也提示更新
+    if (isCommunityYakit() && yaklangBuildTypeReady && yaklangBuildType === 'full' && yaklangLastVersion) return true
     if (!moreYaklangVersionList.length) return false
     if (!yaklangLastVersion) return false
     const index1 = moreYaklangVersionList.indexOf(yaklangLastVersion)
@@ -1620,7 +1631,7 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     if (index2 === -1) return true
     if (index2 > index1) return true
     return false
-  }, [isRemoteMode, moreYaklangVersionList, yaklangLastVersion, yaklangVersion])
+  }, [isRemoteMode, moreYaklangVersionList, yaklangLastVersion, yaklangVersion, yaklangBuildType, yaklangBuildTypeReady])
 
   const [communityYakitContent, setCommunityYakitContent] = useState<UpdateContentProp>({ version: '', content: '' })
   const [communityYaklangContent, setCommunityYaklangContent] = useState<UpdateContentProp>({
@@ -1834,15 +1845,19 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   useEffect(() => {
     if (!isEngineLink || !isYakit() || !yaklangVersion || yaklangVersion === 'dev') {
       setYaklangBuildType('full')
+      setYaklangBuildTypeReady(false)
       return
     }
+    setYaklangBuildTypeReady(false)
     yakitEngine
       .fetchYakEngineBuildType(yaklangVersion)
       .then((type) => {
         setYaklangBuildType(type === 'slim' ? 'slim' : 'full')
+        setYaklangBuildTypeReady(true)
       })
       .catch(() => {
         setYaklangBuildType('full')
+        setYaklangBuildTypeReady(true)
       })
   }, [isEngineLink, yaklangVersion])
 
@@ -1879,7 +1894,10 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     if (['yakit', 'intranetYakit'].includes(type)) {
       emiter.emit('activeUpdateYakitOrYaklang', type)
     } else {
-      emiter.emit('downYaklangSpecifyVersion', JSON.stringify({ version: yaklangLastVersion }))
+      emiter.emit(
+        'downYaklangSpecifyVersion',
+        JSON.stringify({ version: toDefaultYakEngineDownloadVersion(yaklangLastVersion) }),
+      )
     }
   })
 

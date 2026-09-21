@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { getReleaseEditionName } from '@/utils/envfile'
+import { getReleaseEditionName, toDefaultYakEngineDownloadVersion } from '@/utils/envfile'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { Progress } from 'antd'
 import Draggable from 'react-draggable'
@@ -64,7 +64,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
 
     grpcFetchLatestYakVersion()
       .then((data: string) => {
-        yakLangVersion.current = data
+        yakLangVersion.current = toDefaultYakEngineDownloadVersion(data)
       })
       .catch((e: any) => {
         if (isBreakRef.current) return

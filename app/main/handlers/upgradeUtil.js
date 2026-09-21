@@ -45,6 +45,16 @@ const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = requ
 const { getCheckTextUrl, fetchSpecifiedYakVersionHash } = require('../handlers/utils/network')
 const { engineLogOutputFileAndUI } = require('../logFile')
 
+const readBundledEngineBuildType = () => {
+  try {
+    const p = loadExtraFilePath(path.join('bins', 'engine-build-type.txt'))
+    if (!fs.existsSync(p)) return 'full'
+    return `${fs.readFileSync(p, 'utf8')}`.trim() === 'slim' ? 'slim' : 'full'
+  } catch (e) {
+    return 'full'
+  }
+}
+
 const restoreEngine = (callback) =>
   getEngineSession().withStopped(async () => {
     const platform = process.platform === 'win32' ? 'windows' : process.platform
@@ -55,7 +65,7 @@ const restoreEngine = (callback) =>
       target,
       entry: `bins/yak_${platform}_${arch}${process.platform === 'win32' ? '.exe' : ''}`,
       writeConfig: async () => {
-        writeEngineBuildType('full')
+        writeEngineBuildType(readBundledEngineBuildType())
         if (process.platform === 'darwin') {
           const hash = fs.readFileSync(loadExtraFilePath(path.join('bins', 'engine-sha256.txt')), 'utf8').trim()
           if (!/^[a-f0-9]{64}$/i.test(hash)) throw new Error('Invalid bundled engine hash')
@@ -757,6 +767,10 @@ module.exports = {
       return await resolveEngineBuildType(version)
     })
 
+    ipcMain.handle('fetch-bundled-engine-build-type', async () => {
+      return readBundledEngineBuildType()
+    })
+
     // 获取yak code文件根目录路径
     ipcMain.handle('fetch-code-path', () => {
       return getCodeDir()
@@ -871,7 +885,7 @@ module.exports = {
                   gracefulfs.copyFileSync(buildInPath, targetEngine)
                 }
                 try {
-                  writeEngineBuildType('full')
+                  writeEngineBuildType(readBundledEngineBuildType())
                 } catch (e) {}
                 resolve()
               } catch (e) {
@@ -1168,7 +1182,7 @@ module.exports = {
                   gracefulfs.copyFileSync(buildInPath, targetEngine)
                 }
                 try {
-                  writeEngineBuildType('full')
+                  writeEngineBuildType(readBundledEngineBuildType())
                 } catch (e) {}
                 resolve()
               } catch (e) {
@@ -1317,6 +1331,10 @@ module.exports = {
 
     ipcMain.handle(ipcEventPre + 'fetch-yak-engine-build-type', async (e, version) => {
       return await resolveEngineBuildType(version)
+    })
+
+    ipcMain.handle(ipcEventPre + 'fetch-bundled-engine-build-type', async () => {
+      return readBundledEngineBuildType()
     })
 
     ipcMain.handle(ipcEventPre + 'cancel-download-yak-engine-version', async (e, version) => {

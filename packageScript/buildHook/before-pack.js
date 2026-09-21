@@ -1,4 +1,5 @@
 const packageJson = require('../../package.json')
+require('./write-engine-build-type')()
 
 module.exports = async function (context) {
   const isLegacy = process.env.YAKIT_LEGACY == 'true'

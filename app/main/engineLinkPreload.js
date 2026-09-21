@@ -119,6 +119,7 @@ contextBridge.exposeInMainWorld('yakitBridge', {
     clearLocalYaklangVersionCache: () => invokePrefixed('clear-local-yaklang-version-cache'),
     installYakEngine: (version) => invokePrefixed('install-yak-engine', version),
     fetchYakEngineBuildType: (version) => invokePrefixed('fetch-yak-engine-build-type', version),
+    fetchBundledEngineBuildType: () => invokePrefixed('fetch-bundled-engine-build-type'),
     cancelDownloadYakEngineVersion: (version) => invokePrefixed('cancel-download-yak-engine-version', version),
     getAvailableOSSDomain: () => invokePrefixed('get-available-oss-domain'),
     checkAllowSecretLocalYaklangEngine: (params) => invokePrefixed('check-allow-secret-local-yaklang-engine', params),

@@ -1,3 +1,5 @@
+require('./buildHook/write-engine-build-type')()
+
 // app 信息配置
 let appInfoOption = null
 let files = null
@@ -122,6 +124,7 @@ const configOption = {
     { from: 'bins/scripts/google-chrome-plugin.zip', to: 'bins/scripts/google-chrome-plugin.zip' },
     { from: 'bins/flag.txt', to: 'bins/flag.txt' },
     { from: 'bins/engine-version.txt', to: 'bins/engine-version.txt' },
+    { from: 'bins/engine-build-type.txt', to: 'bins/engine-build-type.txt' },
     {
       from: 'bins/resources',
       to: 'bins/resources',
@@ -146,6 +149,9 @@ const configOption = {
     '**/*',
     ...(files || []),
     '!bins/**/*',
+    '!reports/**/*',
+    '!release/**/*',
+    '!yak.exe',
     '!.github/**/*',
     '!multibuilder/**/*',
     '!scripts/**/*',
