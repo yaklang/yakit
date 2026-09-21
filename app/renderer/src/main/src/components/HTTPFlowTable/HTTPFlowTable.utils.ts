@@ -98,12 +98,6 @@ export const shouldClearMITMResetBoundary = (
 export const isHTTPFlowTableActive = (inViewport: boolean, backgroundRefresh: boolean, pageType?: string): boolean =>
   inViewport || (backgroundRefresh && pageType !== 'MITM')
 
-export const shouldUseHTTPFlowMetadataOnlyQuery = (
-  inViewport: boolean,
-  backgroundRefresh: boolean,
-  pageType?: string,
-): boolean => !inViewport && backgroundRefresh && pageType !== 'MITM'
-
 export type HTTPFlowTableResizeAction = 'none' | 'bootstrap' | 'reconcile'
 
 export const selectHTTPFlowTableResizeAction = (
