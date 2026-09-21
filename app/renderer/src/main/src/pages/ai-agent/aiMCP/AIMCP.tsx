@@ -20,6 +20,7 @@ import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { getMCPServersById, grpcDeleteMCPServer, grpcGetAllMCPServers, grpcUpdateMCPServer } from './utils'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { SideSettingButton } from '../aiChatWelcome/AIChatWelcomeSideSetting'
 import {
   DesktopComputerOutlined,
   DotsVerticalOutlined,
@@ -146,9 +147,12 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
           </Tooltip>
           <YakitRoundCornerTag>{toolLis.length}</YakitRoundCornerTag>
         </div>
-        <YakitButton type="text" icon={<ReplyOutlined color="currentColor" />} onClick={onBack}>
-          {t('YakitButton.back')}
-        </YakitButton>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <SideSettingButton type="text" />
+          <YakitButton type="text" icon={<ReplyOutlined color="currentColor" />} onClick={onBack}>
+            {t('YakitButton.back')}
+          </YakitButton>
+        </div>
       </div>
       <div className={styles['ai-tool-list-container']}>
         {mcpItem.Enable ? (
@@ -353,6 +357,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
           <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
         </div>
         <div style={{ display: 'flex', gap: '4px' }}>
+          <SideSettingButton type="primary" />
           <YakitButton
             onClick={() =>
               emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }))

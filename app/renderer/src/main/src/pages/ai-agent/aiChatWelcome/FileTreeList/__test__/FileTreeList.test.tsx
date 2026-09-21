@@ -18,6 +18,9 @@ const { openFileFolder, emit, setDragSource, aiPaths, openedPaths, session } = v
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key }),
 }))
+vi.mock('../../AIChatWelcomeSideSetting', () => ({
+  SideSettingButton: () => null,
+}))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit } }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => ({}) }))

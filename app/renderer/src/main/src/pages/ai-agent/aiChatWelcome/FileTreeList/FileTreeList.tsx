@@ -11,6 +11,7 @@ import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { SideSettingButton } from '../AIChatWelcomeSideSetting'
 import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
 import styles from './FileTreeList.module.scss'
 
@@ -37,13 +38,16 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected, onCl
     <div className={styles['file-tree-list']}>
       <div className={styles['header']}>
         <span className={styles['header-title']}>{t('AITabs.fileSystem')}</span>
-        <YakitButton
-          type="text2"
-          title={t('YakitButton.close')}
-          aria-label={t('YakitButton.close')}
-          icon={<XOutlined color="currentColor" />}
-          onClick={onClose}
-        />
+        <div className={styles['header-actions']}>
+          <SideSettingButton type="text2" />
+          <YakitButton
+            type="text2"
+            title={t('YakitButton.close')}
+            aria-label={t('YakitButton.close')}
+            icon={<XOutlined color="currentColor" />}
+            onClick={onClose}
+          />
+        </div>
       </div>
       <div className={styles['body']}>
         <SplitView

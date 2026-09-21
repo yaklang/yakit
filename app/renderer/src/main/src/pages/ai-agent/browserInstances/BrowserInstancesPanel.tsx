@@ -20,6 +20,7 @@ import { Tooltip, type InputRef } from 'antd'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { SideSettingButton } from '../aiChatWelcome/AIChatWelcomeSideSetting'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -656,6 +657,7 @@ export const BrowserInstancesPanel: React.FC = () => {
           <div className={styles['panel-subtitle']}>{t('BrowserInstances.subtitle')}</div>
         </div>
         <div className={styles['header-actions']}>
+          <SideSettingButton type="text2" size="small" />
           <YakitButton
             type="text2"
             icon={<RefreshOutlined color="currentColor" />}

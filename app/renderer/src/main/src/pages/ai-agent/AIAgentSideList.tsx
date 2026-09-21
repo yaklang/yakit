@@ -9,6 +9,7 @@ import styles from './AIAgentSideList.module.scss'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import FileTreeList from './aiChatWelcome/FileTreeList/FileTreeList'
+import { isSideAutoHidden } from './store/sideHiddenModeStore'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { BrowserInstancesPanel } from './browserInstances/BrowserInstancesPanel'
 
@@ -42,6 +43,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         setShow(params.show !== false)
         break
       case SwitchAIAgentTabEventEnum.SET_TAB_SHOW:
+        if (params.show === false && !isSideAutoHidden()) return
         setShow(params.show !== false)
         break
       default:

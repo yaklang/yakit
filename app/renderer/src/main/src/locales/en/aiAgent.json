@@ -346,6 +346,7 @@
     "scheduled": "Scheduled",
     "skill": "Skill",
     "tool": "Tool",
+    "fileSystem": "File System",
     "browser": "Browser Instance"
   },
   "AIMentionTabs": {

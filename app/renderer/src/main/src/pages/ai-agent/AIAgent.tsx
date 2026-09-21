@@ -49,7 +49,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   const [show, setShow] = useState<boolean>(false)
 
-  const sideHiddenModeRef = useRef<string>()
+  const sideHiddenModeRef = useRef<string>('false')
 
   const { initialize, knowledgeBases } = useKnowledgeBase()
   const agentRef = useRef<HTMLDivElement>(null)
@@ -153,7 +153,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const initSideHiddenMode = useMemoizedFn(() => {
     getRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode)
       .then((data) => {
-        sideHiddenModeRef.current = data
+        sideHiddenModeRef.current = data === 'true' ? 'true' : 'false'
       })
       .catch(() => {})
   })

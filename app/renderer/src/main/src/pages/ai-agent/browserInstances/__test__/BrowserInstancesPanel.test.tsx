@@ -35,6 +35,9 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
     i18nRefresh: 0,
   }),
 }))
+vi.mock('../../aiChatWelcome/AIChatWelcomeSideSetting', () => ({
+  SideSettingButton: () => null,
+}))
 vi.mock('@/components/yakitUI/YakitTag/YakitTag', () => ({
   YakitTag: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }))

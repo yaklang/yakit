@@ -346,6 +346,7 @@
     "scheduled": "定時任務",
     "skill": "技能",
     "tool": "工具",
+    "fileSystem": "檔案系統",
     "browser": "瀏覽器例項"
   },
   "AIMentionTabs": {

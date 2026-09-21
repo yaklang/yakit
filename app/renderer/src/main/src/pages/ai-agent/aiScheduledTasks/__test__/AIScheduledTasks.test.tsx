@@ -34,6 +34,9 @@ vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key }),
 }))
+vi.mock('../../aiChatWelcome/AIChatWelcomeSideSetting', () => ({
+  SideSettingButton: () => null,
+}))
 vi.mock('ahooks', async (importOriginal) => ({
   ...(await importOriginal<typeof AhooksModule>()),
   useInViewport: () => [true],

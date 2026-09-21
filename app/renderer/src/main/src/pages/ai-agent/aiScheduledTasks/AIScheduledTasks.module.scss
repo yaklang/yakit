@@ -29,6 +29,16 @@
     }
     .ai-schedule-list-header-right {
       @extend %display-flex-center;
+      line-height: 0;
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+      > :global(span) {
+        display: inline-flex;
+        align-items: center;
+        line-height: 0;
+      }
       .question-icon {
         &:hover {
           background-color: transparent;

@@ -54,6 +54,11 @@ export enum AIAgentTabListEnum {
 }
 export const AiAgentTabList: YakitTabsProps[] = [
   {
+    value: AIAgentTabListEnum.File,
+    label: 'AIAgentTabs.fileSystem',
+    icon: <FolderOpenOutlined color="currentColor" />,
+  },
+  {
     value: AIAgentTabListEnum.Browser,
     label: 'AIAgentTabs.browser',
     icon: <ChromeOutlined color="currentColor" />,
