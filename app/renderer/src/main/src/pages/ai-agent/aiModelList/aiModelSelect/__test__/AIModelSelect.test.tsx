@@ -153,12 +153,11 @@ const expectModelRequest = (Type: string) =>
       endpoint: '',
       enable_endpoint: false,
       Headers: [],
-      ExtraParams: [],
     }),
   })
 
 describe('AIModelSelect', () => {
-  it('将非空连接字段和 Provider 扩展参数透传给模型列表请求', async () => {
+  it('将非空连接字段透传给模型列表请求，不发送 Provider 扩展参数', async () => {
     const currentModel = config.IntelligentModels[0]
     config = {
       ...config,
@@ -184,7 +183,9 @@ describe('AIModelSelect', () => {
     await openModels()
 
     expect(mocks.names).toHaveBeenCalledTimes(1)
-    expect(JSON.parse(mocks.names.mock.calls[0][0].Config)).toEqual({
+    const requestConfig = JSON.parse(mocks.names.mock.calls[0][0].Config)
+    expect(requestConfig).not.toHaveProperty('ExtraParams')
+    expect(requestConfig).toEqual({
       Type: 'current-provider',
       api_key: 'test-key',
       api_type: 'responses',
@@ -195,7 +196,6 @@ describe('AIModelSelect', () => {
       endpoint: '/deployment/models',
       enable_endpoint: true,
       Headers: [{ Key: 'X-Tenant', Value: 'tenant-a' }],
-      ExtraParams: [{ Key: 'api_version', Value: '2026-01-01' }],
     })
   })
 
