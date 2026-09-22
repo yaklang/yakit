@@ -40,11 +40,7 @@ import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { getAIImageSuffix } from './utils'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { AICustomHttpFlow } from './aiMilkdownHttpFlow/AICustomHttpFlow'
-import {
-  aiHttpFlowCustomPlugin,
-  aiHttpFlowCustomSchema,
-  setHttpFlowListCommand,
-} from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { aiHttpFlowCustomPlugin, aiHttpFlowCustomSchema } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
 import { AICustomCodeRef } from './aiCodeBlock/AICodeBlock'
 import {
   aiCodeBlockCommand,
@@ -66,7 +62,6 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
       onMemfitExtra,
       filterMode,
       chatDataStoreKey,
-      onHttpFlowRemove,
     } = props
     const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
     const nodeViewFactory = useNodeViewFactory()
@@ -86,9 +81,6 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
         },
         setImage: () => {
           onSetImage()
-        },
-        setHttpFlow: (ids: string[]) => {
-          onSetHttpFlow(ids)
         },
         setCodeRef: (v: AICodeBlockCommandParams) => {
           onSetCodeRef(v)
@@ -174,7 +166,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
           ...aiHttpFlowCustomPlugin(),
           $view(aiHttpFlowCustomSchema.node, () =>
             nodeViewFactory({
-              component: () => <AICustomHttpFlow onHttpFlowRemove={onHttpFlowRemove} />,
+              component: AICustomHttpFlow,
             }),
           ),
         ].flat()
@@ -260,9 +252,6 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
 
     const onSetMention = useMemoizedFn((params: AIMentionCommandParams) => {
       get()?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
-    })
-    const onSetHttpFlow = useMemoizedFn((ids: string[]) => {
-      get()?.action(callCommand<string[]>(setHttpFlowListCommand.key, ids))
     })
     const onSetCodeRef = useMemoizedFn((params: AICodeBlockCommandParams) => {
       get()?.action(callCommand<AICodeBlockCommandParams>(aiCodeBlockCommand.key, params))

@@ -62,7 +62,6 @@ import { LocalList, LocalPluginLog, LocalText } from './LocalPluginLog'
 import { CodeScanResult } from '@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable'
 import { YakitAuditHoleTable } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable'
 import { HTTPFlowRealTimeTableAndEditor } from '@/components/HTTPHistory'
-import { SourceType } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
 import { ErrorBoundary } from 'react-error-boundary'
 import moment from 'moment'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -361,6 +360,8 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
     showAdvancedSearch = false,
     showSetting = false,
     pageType,
+    onSetSelectedHttpFlowIds,
+    onRegisterTableSelectApi,
   } = props
   const { t } = useI18nNamespaces(['plugin'])
 
@@ -375,11 +376,8 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
     if (sourceType !== undefined) {
       return { SourceType: sourceType }
     }
-    if (pageType === 'History') {
-      return { SourceType: SourceType.map(({ value }) => value).join(',') }
-    }
     return { SourceType: isCrawler ? 'basic-crawler' : 'scan' }
-  }, [sourceType, pageType, isCrawler])
+  }, [sourceType, isCrawler])
   // 流量表筛选条件 改变 控制webtree刷新
   const onQueryParams = useMemoizedFn((queryParams: string, execFlag?: boolean) => {
     const treeQuery = JSONParseLog(queryParams, { page: 'PluginExecuteHttpFlow', fun: 'onQueryParams-treeQuery' }) || {}
@@ -433,6 +431,8 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
             runtimeId={runtimeId}
             filterTagDom={filterTagDom}
             params={httpFlowParams}
+            onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
+            onRegisterTableSelectApi={onRegisterTableSelectApi}
             httpHistoryTableTitleStyle={{
               paddingTop: 12,
               paddingLeft: 8,

@@ -53,7 +53,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     useImperativeHandle(ref, () => {
       return {
-        ...aiReActChatRef.current,
+        handleStart: (value) => aiReActChatRef.current?.handleStart(value),
+        setMention: (value) => aiReActChatRef.current?.setMention(value),
+        setValue: (value) => aiReActChatRef.current?.setValue(value),
+        setHttpFlow: (ids) => aiReActChatRef.current?.setHttpFlow(ids),
+        getValue: () => aiReActChatRef.current?.getValue(),
       }
     }, [])
 
@@ -96,6 +100,10 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 showAIRightPanel={!props.rightPanelLayoutRef}
                 rightPanelLayoutRef={props.rightPanelLayoutRef}
                 ref={aiReActChatRef}
+                externalParameters={{
+                  onHttpFlowRemove: props.onHttpFlowRemove,
+                  onAfterSubmit: props.onAfterSubmit,
+                }}
               />
             </div>
           </AIGlobalLoading>

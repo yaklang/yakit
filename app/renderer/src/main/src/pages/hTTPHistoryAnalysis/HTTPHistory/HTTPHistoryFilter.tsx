@@ -387,7 +387,10 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                       },
                     ],
                     filterMentionType: ['focusMode'],
-                    onHttpFlowRemove: clearHttpFlowSelection,
+                    onHttpFlowRemove: (id, isSummary) => {
+                      if (isSummary) clearHttpFlowSelection()
+                      else historyAIReActChatBridge.deselectHttpFlowId(id)
+                    },
                     onAfterSubmit: clearHttpFlowSelection,
                   },
                 })}

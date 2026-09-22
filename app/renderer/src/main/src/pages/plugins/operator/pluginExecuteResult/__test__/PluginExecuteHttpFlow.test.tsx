@@ -6,6 +6,8 @@ import type { HoldGRPCStreamInfo, StreamResult } from '@/hook/useHoldGRPCStream/
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import type * as PluginExecuteResultModule from '../PluginExecuteResult'
 
+const tableSelectApi = vi.hoisted(() => ({ reset: vi.fn(), deselectId: vi.fn() }))
+
 const { PluginExecuteResult, PluginExecuteHttpFlow, PluginExecuteLog } = await compileReactModule<
   typeof PluginExecuteResultModule
 >(import.meta.url, '../PluginExecuteResult.tsx')
@@ -22,13 +24,23 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 }))
 vi.mock('react-resize-detector', () => ({ default: () => null }))
 vi.mock('@/components/HTTPHistory', () => ({
-  HTTPFlowRealTimeTableAndEditor: ({ pageType, runtimeId, params }: HTTPFlowTableProp & { runtimeId?: string }) => (
+  HTTPFlowRealTimeTableAndEditor: ({
+    pageType,
+    runtimeId,
+    params,
+    onSetSelectedHttpFlowIds,
+    onRegisterTableSelectApi,
+  }: HTTPFlowTableProp & { runtimeId?: string }) => (
     <div
       data-testid="http-table"
       data-page-type={pageType}
       data-runtime-id={runtimeId}
       data-source-type={params?.SourceType}
-    />
+    >
+      <button onClick={() => onSetSelectedHttpFlowIds?.(['1', '2'])}>勾选流量</button>
+      <button onClick={() => onSetSelectedHttpFlowIds?.([])}>取消勾选</button>
+      <button onClick={() => onRegisterTableSelectApi?.(tableSelectApi)}>注册选择接口</button>
+    </div>
   ),
 }))
 vi.mock('@/components/yakitUI/YakitResizeBox/YakitResizeBox', () => ({
@@ -101,14 +113,47 @@ vi.mock('@/utils/tool', () => ({ JSONParseLog: vi.fn() }))
 vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 
 describe('PluginExecuteHttpFlow 查询范围', () => {
-  it.each([false, true])('History 模式透传空 runtimeId，并包含所有来源（isCrawler：%s）', (isCrawler) => {
+  it.each(['History', 'Plugin'] as const)('%s 模式透传勾选变化与表格选择接口', (pageType) => {
+    const onSetSelectedHttpFlowIds = vi.fn()
+    const onRegisterTableSelectApi = vi.fn<NonNullable<HTTPFlowTableProp['onRegisterTableSelectApi']>>()
     render(
-      <PluginExecuteHttpFlow pageType="History" runtimeId="" isCrawler={isCrawler} showAdvancedSearch showSetting />,
+      <PluginExecuteHttpFlow
+        pageType={pageType}
+        runtimeId={pageType === 'History' ? '' : 'runtime-1'}
+        onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
+        onRegisterTableSelectApi={onRegisterTableSelectApi}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('勾选流量'))
+    expect(onSetSelectedHttpFlowIds).toHaveBeenLastCalledWith(['1', '2'])
+    fireEvent.click(screen.getByText('取消勾选'))
+    expect(onSetSelectedHttpFlowIds).toHaveBeenLastCalledWith([])
+
+    fireEvent.click(screen.getByText('注册选择接口'))
+    expect(onRegisterTableSelectApi).toHaveBeenCalledWith(tableSelectApi)
+    const [registeredApi] = onRegisterTableSelectApi.mock.calls[0]
+    registeredApi.reset()
+    registeredApi.deselectId('1')
+    expect(tableSelectApi.reset).toHaveBeenCalled()
+    expect(tableSelectApi.deselectId).toHaveBeenLastCalledWith('1')
+  })
+
+  it.each([false, true])('History 模式透传空 runtimeId 和显式空来源（isCrawler：%s）', (isCrawler) => {
+    render(
+      <PluginExecuteHttpFlow
+        pageType="History"
+        runtimeId=""
+        sourceType=""
+        isCrawler={isCrawler}
+        showAdvancedSearch
+        showSetting
+      />,
     )
     const table = screen.getByTestId('http-table')
     expect(table).toHaveAttribute('data-page-type', 'History')
     expect(table).toHaveAttribute('data-runtime-id', '')
-    expect(table).toHaveAttribute('data-source-type', 'mitm,scan,basic-crawler')
+    expect(table).toHaveAttribute('data-source-type', '')
   })
 
   it.each([

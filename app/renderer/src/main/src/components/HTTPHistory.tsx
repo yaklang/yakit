@@ -92,7 +92,7 @@ import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
 import { yakitNotify } from '@/utils/notification'
 import type { FiltersItemProps } from './TableVirtualResize/TableVirtualResizeType'
 import { HTTPFlowRuleDataFilter } from './HTTPFlowTable/HTTPFlowRuleDataFilter'
-import { useCampare } from '@/hook/useCompare/useCompare'
+import { useHttpFlowSelection } from './useHttpFlowSelection'
 import { useBuiltinTagList } from './HTTPFlowTable/useBuiltinTagList'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -227,11 +227,16 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const [rulesQueryparams, setRulesQueryparams] = useState<string>('')
   const [mitmAggregateFilterRows, setMitmAggregateFilterRows] = useState<MitmExtractAggregateFlowFilterRow[]>([])
   const [httpFlowTableDataLength, setHttpFlowTableDataLength] = useState<number>(0)
-  const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
-
-  const clearHttpFlowSelection = useMemoizedFn(() => {
-    historyAIReActChatBridge.clearTableSelection()
+  const { onSetSelectedHttpFlowIds, clearHttpFlowSelection, onHttpFlowRemove } = useHttpFlowSelection(
+    activeKey === 'ai',
+    historyAIReActChatBridge.activeID,
+    historyAIReActChatBridge,
+  )
+  const onNewChat = useMemoizedFn(() => {
+    clearHttpFlowSelection()
+    historyAIReActChatBridge.onNewChat()
   })
+
   // 性能优化：提取 onResize 为 useMemoizedFn，避免每次渲染创建新引用
   const onTreeResize = useMemoizedFn((width?: number, height?: number) => {
     if (!width || !height) return
@@ -240,15 +245,6 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   // 性能优化：提取 onSelectNodesKeys 为 useMemoizedFn
   const onSelectNodesKeys = useMemoizedFn((selectKeys: React.Key[]) => {
     setIncludeInUrl(selectKeys.map((i) => i + ''))
-  })
-
-  const compareSelectedHttpFlowIds = useCampare(selectedHttpFlowIds)
-  useDebounceEffect(() => {
-    historyAIReActChatBridge.syncSelectedHttpFlowIds(selectedHttpFlowIds)
-  }, [compareSelectedHttpFlowIds])
-
-  const onSetSelectedHttpFlowIds = useMemoizedFn((ids: string[]) => {
-    setSelectedHttpFlowIds(ids)
   })
 
   const onRegisterTableSelectApi = useMemoizedFn((api: { reset: () => void; deselectId: (id: string) => void }) => {
@@ -394,7 +390,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                           <YakitButton
                             type="text2"
                             icon={<MessageCirclePlusOutlined color="currentColor" />}
-                            onClick={() => historyAIReActChatBridge.onNewChat()}
+                            onClick={onNewChat}
                           />
                         </Tooltip>
                       ),
@@ -418,7 +414,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                       },
                     ],
                     filterMentionType: ['focusMode'],
-                    onHttpFlowRemove: clearHttpFlowSelection,
+                    onHttpFlowRemove,
                     onAfterSubmit: clearHttpFlowSelection,
                   },
                 })}

@@ -83,13 +83,6 @@
     --ai-right-panel-slot-width: 61px;
   }
 
-  // 面板态下 footer 以 ai-re-act 根容器为坐标基准，与消息项使用相同的内容轨道。
-  &:has([data-ai-right-panel]) .chat-footer,
-  :global([data-ai-shared-right-panel='true']) & .chat-footer {
-    @include mixin.ai-right-panel-content-track;
-    padding: 0;
-  }
-
   // transition: width 0.3s ease-in-out;
   .open-wrapper {
     width: 0;
@@ -140,18 +133,22 @@
 .chat-footer {
   width: 100%;
   min-height: 96px;
-  padding: 0px 12px 0 4px;
+  // 与消息滚动区预留相同的 8px 滚动条宽度（theme/scrollbar.scss）。
+  padding: 0 8px 0 0;
+  box-sizing: border-box;
   display: flex;
   justify-content: center;
   .footer-body {
+    @include mixin.ai-right-panel-content-track;
     height: 100%;
-    width: 100%;
-    max-width: 784px;
-    flex: 1;
     position: relative;
   }
 
   .footer-inputs {
+    .milkdown-input {
+      min-height: 64px;
+      max-height: 100px;
+    }
     .footer-inputs-file-list {
       display: flex;
       flex-direction: column;

@@ -21,6 +21,7 @@ export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.mem
     return (
       <AIChatTextarea
         ref={ref}
+        milkdownClassName={styles['milkdown-input']}
         loading={false}
         onSubmit={handleSubmit}
         inputFooterRight={

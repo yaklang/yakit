@@ -5,20 +5,12 @@
   max-width: 220px;
   margin-right: 4px;
 
-  &:not(.http-flow-custom-no-effect):hover {
+  &:not(.http-flow-custom-readonly):hover {
     background-color: var(--Colors-Use-Neutral-Border);
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
 
     svg {
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    }
-
-    :global {
-      .ant-tag-close-icon {
-        svg {
-          color: var(--Colors-Use-Main-Primary);
-        }
-      }
     }
 
     .http-flow-icon-wrapper {
@@ -39,15 +31,10 @@
   cursor: default;
 }
 
-.http-flow-custom-no-effect {
-  cursor: default;
-}
-
 .http-flow-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--Colors-Use-Success-Primary);
   span {
     svg {
       width: 12px;
@@ -60,4 +47,22 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.http-flow-ids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 120px;
+  max-width: 180px;
+  max-height: 194px;
+  overflow-y: auto;
+
+  > :global(.ant-tag) {
+    max-width: 100%;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

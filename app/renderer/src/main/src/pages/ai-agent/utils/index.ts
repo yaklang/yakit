@@ -13,6 +13,7 @@ import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionCon
 import { DeleteSessionsAISourceEnum, type DeleteSessionsAISourceType } from '../historyChat/utils'
 import { isYaklangScriptDeliveryPath } from '@/pages/yakRunner/utils'
 import { getResourceInfoByMention } from './mentionResources'
+import { parseHttpFlowIds } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/httpFlowIds'
 
 export const getPlanTaskLevel = (task: Pick<AITaskInfoProps, 'level'>) => task.level
 
@@ -170,10 +171,8 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
 
   const httpFlowIdSet = new Set<string>()
   for (const item of httpFlowList) {
-    const ids = (item.flowIds || '')
-      .split(',')
-      .map((id) => id.trim())
-      .filter(Boolean)
+    // 兼容旧 History 资源中的字符串 flowIds 和单条 flowId。
+    const ids = parseHttpFlowIds(item.flowIds || (item as { flowId?: string }).flowId || '')
     ids.forEach((id) => httpFlowIdSet.add(id))
   }
   attachedResourceInfo = [

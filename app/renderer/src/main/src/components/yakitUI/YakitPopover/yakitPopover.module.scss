@@ -1,17 +1,50 @@
 .yakit-popover-wrapper {
+  // 按实际弹出方向向内覆盖 1px 边框，保留箭头的自动定位与旋转。
+  &:global(.ant-popover-placement-top),
+  &:global(.ant-popover-placement-topLeft),
+  &:global(.ant-popover-placement-topRight) {
+    > :global(.ant-popover-arrow) {
+      margin-bottom: 1px;
+    }
+  }
+
+  &:global(.ant-popover-placement-bottom),
+  &:global(.ant-popover-placement-bottomLeft),
+  &:global(.ant-popover-placement-bottomRight) {
+    > :global(.ant-popover-arrow) {
+      margin-top: 1px;
+    }
+  }
+
+  &:global(.ant-popover-placement-left),
+  &:global(.ant-popover-placement-leftTop),
+  &:global(.ant-popover-placement-leftBottom) {
+    > :global(.ant-popover-arrow) {
+      margin-right: 1px;
+    }
+  }
+
+  &:global(.ant-popover-placement-right),
+  &:global(.ant-popover-placement-rightTop),
+  &:global(.ant-popover-placement-rightBottom) {
+    > :global(.ant-popover-arrow) {
+      margin-left: 1px;
+    }
+  }
+
   :global {
     --antd-arrow-background-color: var(--Colors-Use-Basic-Background);
 
     .ant-popover-title {
       padding: 8px 12px 8px 12px;
       color: var(--Colors-Use-Neutral-Text-1-Title);
-      border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+      border-bottom: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
       line-height: 16px;
       min-width: inherit;
     }
 
     .ant-popover-inner {
-      border: 1px solid var(--Colors-Use-Neutral-Border);
+      border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
       background-color: var(--Colors-Use-Basic-Background);
       box-shadow: 0 8px 16px var(--Colors-Use-Basic-Shadow);
       border-radius: 4px;
@@ -21,8 +54,17 @@
       color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 
+    .ant-popover-arrow {
+      // 描边跟随箭头裁剪轮廓和旋转，不绘制与浮层相接的底边。
+      filter: drop-shadow(0 -1px 0 var(--Colors-Use-Neutral-Bg-Hover));
+    }
+
     .ant-popover-arrow::before {
       background: var(--Colors-Use-Basic-Background);
+    }
+
+    .ant-popover-arrow::after {
+      box-shadow: none;
     }
   }
 }

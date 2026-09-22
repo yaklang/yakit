@@ -48,7 +48,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 
     useImperativeHandle(ref, () => {
       return {
-        ...aiChatTextareaRef.current,
+        setMention: (value) => aiChatTextareaRef.current?.setMention(value),
+        setValue: (value) => aiChatTextareaRef.current?.setValue(value),
+        setHttpFlow: (ids) => aiChatTextareaRef.current?.setHttpFlow(ids),
+        getValue: () => aiChatTextareaRef.current?.getValue(),
         handleStart: () => {},
       }
     }, [])
@@ -107,8 +110,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               <AIChatTextarea
                 ref={aiChatTextareaRef}
                 onSubmit={handleTriageSubmit}
+                onHttpFlowRemove={props.onHttpFlowRemove}
                 chatDataStoreKey="aiChatDataStore"
                 className={styles['ai-text-wrapper']}
+                milkdownClassName={styles['milkdown-input']}
               />
             </div>
           </div>

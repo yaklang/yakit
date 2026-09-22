@@ -3,7 +3,7 @@ import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/Con
 import { providerToListAiModelConfig } from '../providerConfig'
 
 describe('providerToListAiModelConfig', () => {
-  it('preserves custom connection fields and provider extension parameters', () => {
+  it('preserves custom connection fields without sending provider extension parameters', () => {
     const provider: ThirdPartyApplicationConfig = {
       Type: 'custom',
       APIKey: 'custom-api-key',
@@ -18,7 +18,9 @@ describe('providerToListAiModelConfig', () => {
       ExtraParams: [{ Key: 'api_version', Value: '2026-01-01' }],
     }
 
-    expect(JSON.parse(providerToListAiModelConfig(provider)!)).toEqual({
+    const config = JSON.parse(providerToListAiModelConfig(provider)!)
+    expect(config).not.toHaveProperty('ExtraParams')
+    expect(config).toEqual({
       Type: 'custom',
       api_key: 'custom-api-key',
       api_type: 'responses',
@@ -29,12 +31,13 @@ describe('providerToListAiModelConfig', () => {
       endpoint: '/deployment/models',
       enable_endpoint: true,
       Headers: [{ Key: 'X-Tenant', Value: 'tenant-a' }],
-      ExtraParams: [{ Key: 'api_version', Value: '2026-01-01' }],
     })
   })
 
   it('supplies defaults for a provider without optional connection fields', () => {
-    expect(JSON.parse(providerToListAiModelConfig({ Type: 'openai' })!)).toEqual({
+    const config = JSON.parse(providerToListAiModelConfig({ Type: 'openai' })!)
+    expect(config).not.toHaveProperty('ExtraParams')
+    expect(config).toEqual({
       Type: 'openai',
       api_key: '',
       api_type: '',
@@ -45,7 +48,6 @@ describe('providerToListAiModelConfig', () => {
       endpoint: '',
       enable_endpoint: false,
       Headers: [],
-      ExtraParams: [],
     })
   })
 

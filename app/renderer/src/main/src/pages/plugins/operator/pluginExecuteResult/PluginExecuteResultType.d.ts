@@ -1,4 +1,5 @@
 import type { HTTPHistorySourcePageType } from '@/components/HTTPHistory'
+import type { HTTPFlowTableProp } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
 import {
   type HoldGRPCStreamInfo,
   type HoldGRPCStreamProps,
@@ -43,7 +44,10 @@ export interface PluginExecuteResultTabContentProps {
   className?: string
 }
 
-export interface PluginExecuteWebsiteTreeProps {
+export interface PluginExecuteWebsiteTreeProps extends Pick<
+  HTTPFlowTableProp,
+  'onSetSelectedHttpFlowIds' | 'onRegisterTableSelectApi'
+> {
   runtimeId: string
   website?: boolean
   filterTagDom?: React.ReactNode

@@ -22,7 +22,9 @@ import {
 } from './type'
 import { Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ArrowUpOutlined, CogOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { ArrowUpOutlined, CogOutlined, Log2Outlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
@@ -38,7 +40,7 @@ import {
 import emiter from '@/utils/eventBus/eventBus'
 import type { AIAgentTriggerEventInfo } from '../aiAgentType'
 import { extractDataWithMilkdown, setEditorValue, unescapeUnderscoreInPath } from '../components/aiMilkdownInput/utils'
-import { editorViewCtx } from '@milkdown/kit/core'
+import { editorViewCtx, serializerCtx } from '@milkdown/kit/core'
 import { convertKeyEventToKeyCombination } from '@/utils/globalShortcutKey/utils'
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { AIModelSelect } from '../aiModelList/aiModelSelect/AIModelSelect'
@@ -53,6 +55,12 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
+import {
+  aiHttpFlowCustomSchema,
+  type AIHttpFlowCommandParams,
+} from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
+
+const HTTP_FLOW_SUMMARY_THRESHOLD = 3
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -84,6 +92,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       footer,
       onSubmit,
       className,
+      milkdownClassName,
       children,
       defaultValue,
       isOpen,
@@ -149,7 +158,16 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return [{ type: AIInputFooterRightEnum.AIFocusMode }]
     }, [props.footerRightTypes, isOpen])
 
-    const [disabled, setDisabled] = useState<boolean>(false)
+    const [disabled, setDisabled] = useState<boolean>(!defaultValue?.trim())
+    const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
+    const httpFlowReference: AIHttpFlowCommandParams = {
+      flowIds: [...selectedHttpFlowIds],
+      displayText:
+        selectedHttpFlowIds.length < HTTP_FLOW_SUMMARY_THRESHOLD
+          ? selectedHttpFlowIds.map((id) => `#${id}`).join(', ')
+          : t('AIMilkdownInput.selectedHttpFlowSummary', { count: selectedHttpFlowIds.length }),
+      isSummary: selectedHttpFlowIds.length >= HTTP_FLOW_SUMMARY_THRESHOLD,
+    }
 
     const { isHovering, dropRef } = useAIChatDrop({
       onFilesChange: (v) => onFilesChange(v),
@@ -199,11 +217,22 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     const aiMilkdownInputRef = useRef<AIMilkdownInputRef>(null)
     const handleSubmit = useMemoizedFn(() => {
-      const qs = getMarkdownValue()
-      if (!qs.trim() || !editorMilkdown.current) return
-      const { mentions, imageList, httpFlowList, codeBlockList, plainText } = extractDataWithMilkdown(
-        editorMilkdown.current,
-      )
+      let qs = getMarkdownValue()
+      if ((!qs.trim() && !selectedHttpFlowIds.length) || !editorMilkdown.current) return
+      const { mentions, imageList, httpFlowList, codeBlockList } = extractDataWithMilkdown(editorMilkdown.current)
+      if (selectedHttpFlowIds.length) {
+        // 为了回显勾选的流量数据，需要在发送消息前将流量数据拼接到用户输入的文本中
+        const referenceMarkdown = editorMilkdown.current.action((ctx) => {
+          const { schema } = ctx.get(editorViewCtx).state
+          const reference = aiHttpFlowCustomSchema
+            .type(ctx)
+            .create(httpFlowReference, schema.text(httpFlowReference.displayText))
+          const doc = schema.topNodeType.create(null, schema.nodes.paragraph.create(null, reference))
+          return ctx.get(serializerCtx)(doc).trim()
+        })
+        qs = [referenceMarkdown, qs].filter(Boolean).join('\n\n')
+        httpFlowList.push(httpFlowReference)
+      }
       const value: AIChatTextareaSubmit = {
         qs,
         mentionList: mentions,
@@ -253,10 +282,20 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       }
     })
     const onSetHttpFlow = useMemoizedFn((ids: string[]) => {
-      aiMilkdownInputRef.current?.setHttpFlow(ids)
+      setSelectedHttpFlowIds([...new Set(ids.filter(Boolean))])
+    })
+    const onHttpFlowTagClose = useMemoizedFn((event: React.MouseEvent, id: string) => {
+      event.stopPropagation()
+      onHttpFlowRemove?.(id, httpFlowReference.isSummary)
+    })
+    const onHttpFlowItemClose = useMemoizedFn((event: React.MouseEvent, id: string) => {
+      event.preventDefault()
+      event.stopPropagation()
+      onHttpFlowRemove?.(id, false)
     })
     /**设置编辑器值 */
     const onSetValue = useMemoizedFn((value: string) => {
+      if (!value) setSelectedHttpFlowIds([])
       if (!editorMilkdown.current) return
       setEditorValue(editorMilkdown.current, value)
     })
@@ -354,6 +393,21 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       aiMilkdownInputRef.current?.setImage()
     })
 
+    const renderHttpFlowTag = (id: string) => (
+      <div key={id} className={styles['http-flow-reference']}>
+        <Log2Outlined className={styles['http-flow-reference-icon']} size={16} />
+        <span className={styles['http-flow-reference-label']}>
+          {httpFlowReference.isSummary ? httpFlowReference.displayText : `#${id}`}
+        </span>
+
+        <XOutlined
+          size={16}
+          className={styles['http-flow-reference-close']}
+          onClick={(event) => onHttpFlowTagClose(event, id)}
+        />
+      </div>
+    )
+
     return (
       <div
         className={classNames(
@@ -368,13 +422,45 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       >
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
         <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
+          {selectedHttpFlowIds.length > 0 && (
+            <div className={styles['http-flow-references']}>
+              {httpFlowReference.isSummary ? (
+                <YakitPopover
+                  trigger="hover"
+                  placement="topLeft"
+                  classNames={{ root: styles['http-flow-reference-popover'] }}
+                  content={
+                    <div className={styles['http-flow-reference-ids']} role="list">
+                      <div className={styles['http-flow-reference-items']}>
+                        {selectedHttpFlowIds.map((id) => (
+                          <YakitTag
+                            key={id}
+                            className={styles['http-flow-reference-id']}
+                            role="listitem"
+                            closable
+                            onClose={(event) => onHttpFlowItemClose(event, id)}
+                          >
+                            <span title={`#${id}`}>#{id}</span>
+                          </YakitTag>
+                        ))}
+                      </div>
+                    </div>
+                  }
+                >
+                  {renderHttpFlowTag(selectedHttpFlowIds.join(','))}
+                </YakitPopover>
+              ) : (
+                selectedHttpFlowIds.map((id) => renderHttpFlowTag(id))
+              )}
+            </div>
+          )}
           <AIMilkdownInput
             ref={aiMilkdownInputRef}
+            classNameWrapper={milkdownClassName}
             defaultValue={defaultValue}
             onUpdateEditor={onUpdateEditor}
             onUpdateContent={onUpdateContent}
             onMemfitExtra={onMemfitExtra}
-            onHttpFlowRemove={onHttpFlowRemove}
             filterMode={filterMentionType}
             chatDataStoreKey={chatDataStoreKey}
           />
@@ -406,7 +492,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 className={styles['round-btn']}
                 radius="50%"
                 loading={loading}
-                disabled={disabled}
+                disabled={disabled && !selectedHttpFlowIds.length}
                 icon={<ArrowUpOutlined color="currentColor" />}
                 onClick={(e) => {
                   e.stopPropagation()

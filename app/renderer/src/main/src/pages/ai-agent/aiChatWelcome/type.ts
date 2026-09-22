@@ -7,6 +7,7 @@ import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 export interface AIChatWelcomeProps {
   onTriageSubmit: (data: HandleStartParams) => void
   onSetReAct: () => void
+  onHttpFlowRemove?: (id: string, isSummary: boolean) => void
   ref?: React.ForwardedRef<AIReActChatRefProps>
 }
 export interface AIRecommendItem {
