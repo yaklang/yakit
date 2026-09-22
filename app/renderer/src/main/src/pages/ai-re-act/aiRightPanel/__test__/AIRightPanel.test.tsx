@@ -176,26 +176,6 @@ vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane', () => ({
 vi.mock('@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard', () => ({
   default: () => <div data-testid="timeline-pane" />,
 }))
-vi.mock('@/pages/ai-agent/historyChat/HistoryChat', () => ({
-  default: ({
-    hidePinButton,
-    headerActionsExtra,
-    aiSource,
-  }: {
-    hidePinButton?: boolean
-    headerActionsExtra?: React.ReactNode
-    aiSource: string[]
-  }) => (
-    <div data-testid="history-chat" data-sources={aiSource.join(',')}>
-      <header>
-        <span>会话列表</span>
-        <button>新建会话</button>
-        {headerActionsExtra}
-        {!hidePinButton && <button>固定</button>}
-      </header>
-    </div>
-  ),
-}))
 
 const WelcomeRightPanel = ({ refresh = true, ...props }: Pick<AIRightPanelProps, 'small'> & { refresh?: boolean }) => {
   return (
@@ -268,7 +248,10 @@ describe('AIRightPanel', () => {
         expect(screen.queryByText('执行时长')).not.toBeInTheDocument()
         expect(screen.queryByText('工具调用统计')).not.toBeInTheDocument()
         fireEvent.click(screen.getByLabelText('会话历史'))
-        expect(screen.getByTestId('history-chat')).toBeInTheDocument()
+        expect(mockEmit).toHaveBeenCalledWith(
+          'switchAIAgentTab',
+          JSON.stringify({ type: 'setTabActive', params: { active: 'session', show: true, toggle: true } }),
+        )
       } finally {
         resetMockStore()
       }
@@ -408,36 +391,6 @@ describe('AIRightPanel', () => {
     expect(screen.queryByLabelText('查看日志')).not.toBeInTheDocument()
   })
 
-  it('点击会话历史打开 HistoryChat，关闭按钮位于原头部最右侧且没有固定按钮', async () => {
-    await renderPanel(<AIRightPanel />)
-    fireEvent.click(screen.getByLabelText('会话历史'))
-    const history = screen.getByTestId('history-chat')
-    expect(history).toHaveAttribute('data-sources', 'ai,im,')
-    const pane = history.closest('section')!
-    expect(pane.querySelectorAll('header')).toHaveLength(1)
-    expect(screen.queryByRole('button', { name: '固定' })).not.toBeInTheDocument()
-    const closeButton = pane.querySelector('header')!.lastElementChild!
-    expect(closeButton).toHaveAttribute('aria-label')
-    fireEvent.click(closeButton)
-    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
-  })
-
-  it.each([false, true])('切换详情会话后保留当前会话列表（small=%s）', (small) => {
-    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-1' } })
-    render(<AIRightPanel small={small} />)
-    fireEvent.click(screen.getByLabelText('会话历史'))
-    const history = screen.getByTestId('history-chat')
-
-    act(() => {
-      mockAgentStore.setState({ activeChat: { Id: 2, SessionID: 'session-2' } })
-    })
-
-    expect(screen.getByTestId('history-chat')).toBe(history)
-    fireEvent.click(history.querySelector('header')!.lastElementChild!)
-    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
-  })
-
   it.each(['任务列表', '时间线'])('切换详情会话后关闭旧会话的%s', (label) => {
     mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-1' } })
     render(<AIRightPanel small />)
@@ -451,20 +404,6 @@ describe('AIRightPanel', () => {
     })
 
     expect(screen.queryByTestId(testId)).not.toBeInTheDocument()
-  })
-
-  it('小屏会话历史点击打开，悬停不打开，关闭按钮销毁', async () => {
-    render(<AIRightPanel small />)
-    const item = screen.getByLabelText('会话历史')
-    fireEvent.mouseEnter(item)
-    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
-    fireEvent.click(item)
-    expect(screen.getByTestId('history-chat')).toBeInTheDocument()
-    fireEvent.mouseLeave(item)
-    expect(screen.getByTestId('history-chat')).toBeInTheDocument()
-    fireEvent.click(screen.getByTestId('history-chat').querySelector('header')!.lastElementChild!)
-    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
   })
 
   it('正常态点击时间线打开面板，关闭后恢复菜单', async () => {
@@ -1045,9 +984,8 @@ describe('AIRightPanel', () => {
     }
   })
 
-  it.each([false, true])('菜单点击：文件系统激活侧边栏 File 页，流量/漏洞打开工作区（首页：%s）', async (welcome) => {
-    await renderPanel(<AIRightPanel welcome={welcome} />)
-    // 首页与会话面板都通过 switchAIAgentTab 激活文件页。
+  it('菜单点击：文件系统/浏览器/会话历史激活侧边栏对应页，流量/漏洞切换工作区（首页：false）', async () => {
+    await renderPanel(<AIRightPanel welcome />)
     fireEvent.click(screen.getByText('文件系统'))
     expect(mockEmit).toHaveBeenCalledWith(
       'switchAIAgentTab',
@@ -1061,6 +999,11 @@ describe('AIRightPanel', () => {
     expect(mockEmit).toHaveBeenCalledWith(
       'switchAIAgentTab',
       JSON.stringify({ type: 'setTabActive', params: { active: 'browser', show: true, toggle: true } }),
+    )
+    fireEvent.click(screen.getByText('会话历史'))
+    expect(mockEmit).toHaveBeenCalledWith(
+      'switchAIAgentTab',
+      JSON.stringify({ type: 'setTabActive', params: { active: 'session', show: true, toggle: true } }),
     )
   })
 

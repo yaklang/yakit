@@ -24,6 +24,8 @@ vi.mock('@/utils/kv', () => ({
 let autoHidden = true
 vi.mock('../store/sideHiddenModeStore', () => ({
   isSideAutoHidden: () => autoHidden,
+  useSideHiddenMode: () => autoHidden,
+  setSideHiddenMode: vi.fn(),
 }))
 vi.mock('@/components/yakitSideTab/YakitSideTab', () => ({
   YakitSideTab: ({ yakitTabs, onActiveKey, activeKey, show, children }: React.PropsWithChildren<YakitSideTabProps>) => (
@@ -74,6 +76,13 @@ vi.mock('../aiScheduledTasks/AIScheduledTasks', () => ({
 vi.mock('../browserInstances/BrowserInstancesPanel', () => ({
   BrowserInstancesPanel: () => <div>浏览器实例</div>,
 }))
+vi.mock('../historyChat/HistoryChat', () => ({
+  default: ({ headerActionsExtra }: { headerActionsExtra?: React.ReactNode }) => (
+    <div data-testid="history-chat">
+      <header>{headerActionsExtra}</header>
+    </div>
+  ),
+}))
 
 const SideList = () => {
   const [show, setShow] = useState(true)
@@ -97,18 +106,41 @@ describe('AIAgentSideList', () => {
     expect(screen.getByTestId('scheduled')).toHaveAttribute('data-visible', 'false')
   })
 
-  it('默认激活 File 页，按文件系统、浏览器、定时任务、MCP 排列入口', async () => {
+  it('默认激活 File 页，按会话、文件系统、浏览器、定时任务、MCP 排列入口', async () => {
     render(<SideList />)
     expect(screen.getByLabelText('active')).toHaveTextContent('file')
-    expect(screen.queryByRole('button', { name: 'session' })).not.toBeInTheDocument()
     expect(
       screen
         .getAllByRole('button')
         .map((button) => button.textContent)
-        .filter((text) => text === 'file' || text === 'browser' || text === 'scheduled' || text === 'mcp'),
-    ).toEqual(['file', 'browser', 'scheduled', 'mcp'])
-    expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
+        .filter(
+          (text) =>
+            text === 'session' || text === 'file' || text === 'browser' || text === 'scheduled' || text === 'mcp',
+        ),
+    ).toEqual(['session', 'file', 'browser', 'scheduled', 'mcp'])
+    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
     expect(screen.getByText('文件列表')).toBeInTheDocument()
+  })
+
+  it('点击 session 打开会话历史，事件可切换激活，关闭按钮收起侧栏', async () => {
+    render(<SideList />)
+    fireEvent.click(screen.getByRole('button', { name: 'session' }))
+    expect(screen.getByLabelText('active')).toHaveTextContent('session')
+    expect(screen.getByTestId('history-chat')).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('history-chat').querySelector('header')!.lastElementChild!)
+    expect(screen.getByLabelText('show')).toHaveTextContent('false')
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({
+          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+          params: { active: 'session', show: true, toggle: true },
+        }),
+      )
+    })
+    expect(screen.getByLabelText('active')).toHaveTextContent('session')
+    expect(screen.getByLabelText('show')).toHaveTextContent('true')
+    expect(screen.getByTestId('history-chat')).toBeInTheDocument()
   })
 
   it('点击 scheduled/browser/mcp 切换对应内容，file 切换显隐文件系统', async () => {
@@ -122,7 +154,7 @@ describe('AIAgentSideList', () => {
     fireEvent.click(screen.getByRole('button', { name: 'file' }))
     expect(screen.getByLabelText('active')).toHaveTextContent('file')
     expect(screen.getByText('文件列表')).toBeInTheDocument()
-    expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '关闭文件系统' }))
     expect(screen.getByLabelText('show')).toHaveTextContent('false')
     act(() => {
@@ -187,7 +219,7 @@ describe('AIAgentSideList', () => {
     expect(screen.getByLabelText('show')).toHaveTextContent('false')
     emit(SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, { active: 'file' })
     expect(screen.getByLabelText('active')).toHaveTextContent('file')
-    expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
     result.unmount()
     expect(off).toHaveBeenCalledWith('switchAIAgentTab', expect.any(Function))
     off.mockRestore()

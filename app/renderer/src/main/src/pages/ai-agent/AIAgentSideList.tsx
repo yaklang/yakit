@@ -12,12 +12,17 @@ import FileTreeList from './aiChatWelcome/FileTreeList/FileTreeList'
 import { isSideAutoHidden } from './store/sideHiddenModeStore'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { BrowserInstancesPanel } from './browserInstances/BrowserInstancesPanel'
+import HistoryChat from './historyChat/HistoryChat'
+import { AI_AGENT_HISTORY_AI_SOURCES } from '../ai-re-act/hooks/useGetChatDataStoreKey'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { SideSettingButton } from './aiChatWelcome/AIChatWelcomeSideSetting'
 
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
 const AIScheduledTasks = React.lazy(() => import('./aiScheduledTasks/AIScheduledTasks'))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
-  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.File)
   const [show, setShow] = useControllableValue<boolean>(props, {
     defaultValue: false,
@@ -67,6 +72,29 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   const renderTabContent = (key: AIAgentTabListEnum) => {
     let content: ReactNode = <></>
     switch (key) {
+      case AIAgentTabListEnum.Session:
+        content = (
+          <div className={styles['session-pane']}>
+            <HistoryChat
+              aiSource={AI_AGENT_HISTORY_AI_SOURCES}
+              title={t('AIRightPanel.sessionHistory')}
+              hidePinButton
+              headerActionsExtra={
+                <>
+                  <SideSettingButton type="text2" />
+                  <YakitButton
+                    type="text2"
+                    title={t('YakitButton.close')}
+                    aria-label={t('YakitButton.close')}
+                    icon={<XOutlined />}
+                    onClick={() => setShow(false)}
+                  />
+                </>
+              }
+            />
+          </div>
+        )
+        break
       case AIAgentTabListEnum.File:
         content = (
           <div className={styles['file-pane']}>

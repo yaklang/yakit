@@ -27,7 +27,8 @@
     border-left: 0;
     overflow: hidden;
   }
-  .file-pane {
+  .file-pane,
+  .session-pane {
     flex: 1;
     min-height: 0;
     min-width: 0;

@@ -1,7 +1,7 @@
 import type React from 'react'
 
 /** 右侧可打开的内容面板标识 */
-export type AIRightPanelPaneKey = 'task-list' | 'timeline' | 'session-history'
+export type AIRightPanelPaneKey = 'task-list' | 'timeline'
 
 /** 右侧面板菜单项标识 */
 export type AIRightPanelMenuKey =

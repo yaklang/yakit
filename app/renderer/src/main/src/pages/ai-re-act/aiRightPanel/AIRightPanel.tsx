@@ -2,9 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import { TaskListPane } from '@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane'
 import { AIRightPanelPane } from './AIRightPanelPane'
 import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard'
-import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
-import { AI_AGENT_HISTORY_AI_SOURCES } from '../hooks/useGetChatDataStoreKey'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
@@ -38,7 +35,6 @@ import {
   NewspaperOutlined,
   ScrollTextOutlined,
   TimelineOutlined,
-  XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tooltip } from 'antd'
 import styles from './AIRightPanel.module.scss'
@@ -305,7 +301,6 @@ const usePanelShared = (props: AIRightPanelProps) => {
   return {
     isSmall,
     activePane,
-    setActivePane,
     closePane,
     openPane,
   }
@@ -385,7 +380,7 @@ const MenuList: React.FC<{
   )
 }
 
-/** 内容面板浮层：按打开的面板渲染标题与内容；会话历史由 HistoryChat 自带头部，隐藏浮层头部 */
+/** 内容面板浮层：按打开的面板渲染标题与内容 */
 const PaneSlot: React.FC<{
   pane: AIRightPanelPaneKey
   small: boolean
@@ -395,8 +390,6 @@ const PaneSlot: React.FC<{
 
   const renderTitle = () => {
     switch (pane) {
-      case 'session-history':
-        return t('AIRightPanel.sessionHistory')
       case 'task-list':
         return t('AIRightPanel.taskList')
       case 'timeline':
@@ -408,17 +401,6 @@ const PaneSlot: React.FC<{
 
   const renderContent = () => {
     switch (pane) {
-      case 'session-history':
-        return (
-          <HistoryChat
-            aiSource={AI_AGENT_HISTORY_AI_SOURCES}
-            title={t('AIRightPanel.sessionHistory')}
-            hidePinButton
-            headerActionsExtra={
-              <YakitButton type="text2" aria-label={t('YakitButton.close')} icon={<XOutlined />} onClick={onClose} />
-            }
-          />
-        )
       case 'task-list':
         return <TaskListPane />
       case 'timeline':
@@ -430,12 +412,7 @@ const PaneSlot: React.FC<{
 
   return (
     <div className={classNames(styles['pane-slot'], { [styles['pane-slot-small']]: small })}>
-      <AIRightPanelPane
-        title={renderTitle()}
-        hideHeader={pane === 'session-history'}
-        noPadding={pane === 'session-history'}
-        onClose={onClose}
-      >
+      <AIRightPanelPane title={renderTitle()} onClose={onClose}>
         {renderContent()}
       </AIRightPanelPane>
     </div>
@@ -443,7 +420,7 @@ const PaneSlot: React.FC<{
 })
 // #endregion
 
-// #region 首页模式：仅文件系统、流量、漏洞、会话历史四个入口，不订阅会话与任务相关数据
+// #region 首页模式：仅文件系统、浏览器实例、流量、漏洞、会话历史五个入口，不订阅会话与任务相关数据
 type PanelState = ReturnType<typeof usePanelShared>
 
 type WelcomeRightPanelProps = Pick<AIRightPanelProps, 'layoutRef'> & { panel: PanelState }
@@ -452,20 +429,19 @@ const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel,
   const [inViewport = true] = useInViewport(layoutRef)
   const welcomeStats = useWelcomePanelStats(inViewport)
   /**
-   * 菜单点击：会话历史打开右侧内容面板；
-   * 文件系统/浏览器：已展开同一页则收起，否则打开左侧对应页；
+   * 菜单点击：文件系统、浏览器、会话历史打开左侧对应页（已展开则收起）；
    * 流量、漏洞切换工作区 tab。
    */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
     switch (key) {
-      case 'session-history':
-        panel.openPane(key)
-        break
       case 'file-system':
         emitToggleAIAgentTab(AIAgentTabListEnum.File)
         break
       case 'browser':
         emitToggleAIAgentTab(AIAgentTabListEnum.Browser)
+        break
+      case 'session-history':
+        emitToggleAIAgentTab(AIAgentTabListEnum.Session)
         break
       case 'traffic':
         emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP }))
@@ -526,8 +502,8 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const [exportLoading, setExportLoading] = useState(false)
 
   useEffect(() => {
-    // 切换会话时保留会话历史浮层，其余面板关闭
-    panel.setActivePane((pane) => (pane === 'session-history' ? pane : undefined))
+    // 切换会话时关闭旧会话的任务列表与时间线浮层
+    panel.closePane()
   }, [activeChat?.Id])
 
   const mainMenus = useCreation(() => {
@@ -540,16 +516,14 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   }, [currentChatStatusQuestionID])
 
   /**
-   * 菜单点击：任务列表、时间线、会话历史打开右侧内容面板；
-   * 任务详情、流量、漏洞切换工作区 tab；文件系统/浏览器已展开则收起否则打开；
-   * 浏览器实例打开侧栏浏览器页；
+   * 菜单点击：任务列表、时间线打开右侧内容面板；
+   * 任务详情、流量、漏洞切换工作区 tab；文件系统、浏览器、会话历史已展开则收起否则打开左侧对应页；
    * AI 设置打开设置页，导出日志打开导出弹窗，查看日志打开日志窗口。
    */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
     switch (key) {
       case 'task-list':
       case 'timeline':
-      case 'session-history':
         panel.openPane(key)
         break
       case 'task-board':
@@ -560,6 +534,9 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
         break
       case 'browser':
         emitToggleAIAgentTab(AIAgentTabListEnum.Browser)
+        break
+      case 'session-history':
+        emitToggleAIAgentTab(AIAgentTabListEnum.Session)
         break
       case 'traffic':
         emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP }))
@@ -666,7 +643,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
 
 /**
  * Memfit AI 右侧功能面板：
- * - 首页模式（welcome）：仅文件系统、流量、漏洞、会话历史四个入口，不订阅会话与任务数据
+ * - 首页模式（welcome）：仅文件系统、浏览器实例、流量、漏洞、会话历史入口，不订阅会话与任务数据
  * - 正常态（宽 301px）：数据卡片 + 主菜单 + 底部「更多」分组，更多分组可在 展开/收起 间切换
  * - 小屏态（正常态面板会使列表可用宽度小于最大宽度时）：仅图标的窄栏（宽 41px）
  */
@@ -674,8 +651,9 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   const { welcome = false } = props
   const panel = usePanelShared(props)
   useEffect(() => {
+    // 回到首页时关闭会话模式遗留的内容浮层
     if (!welcome) return
-    panel.setActivePane((pane) => (pane === 'session-history' ? pane : undefined))
+    panel.closePane()
   }, [welcome])
   return (
     <div className={styles['right-panel-wrapper']} data-ai-right-panel data-ai-right-panel-small={panel.isSmall}>
