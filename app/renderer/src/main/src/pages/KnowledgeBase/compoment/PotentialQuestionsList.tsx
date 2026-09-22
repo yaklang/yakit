@@ -4,7 +4,7 @@ import { PlusOutlined } from '@ant-design/icons'
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
 import { randomString } from '@/utils/randomUtil'
 import styles from '../knowledgeBase.module.scss'
-import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { DragSortSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -54,7 +54,7 @@ const PotentialQuestionsList: React.FC<RelationListProps> = ({ form, disabled })
                                 }}
                               >
                                 <div {...provided.dragHandleProps}>
-                                  <FigmaIcon2281144183Solid className={styles['draggable-icon']} color="currentColor" />
+                                  <DragSortSolid className={styles['draggable-icon']} color="currentColor" />
                                 </div>
                                 <Item
                                   key={`relation-${id}`}

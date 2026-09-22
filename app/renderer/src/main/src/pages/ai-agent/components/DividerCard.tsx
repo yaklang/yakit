@@ -1,7 +1,7 @@
 import styles from './DividerCard.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useMemo, type FC } from 'react'
-import { XOutlined, FigmaIcon5237120699Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { XOutlined, LoadingOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import classNames from 'classnames'
 import { TaskErrorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskErrorIcon'
@@ -62,7 +62,7 @@ const DividerCard: FC<DividerCardProps> = (props) => {
             <span>{name}</span>
             {desc && (
               <YakitTag fullRadius className={styles['divider-content-error']} size="small" color="warning">
-                <FigmaIcon5237120699Outlined color="currentColor" />
+                <LoadingOutlined color="currentColor" />
                 <p className={styles['divider-content-error-text']}>{desc}</p>
               </YakitTag>
             )}

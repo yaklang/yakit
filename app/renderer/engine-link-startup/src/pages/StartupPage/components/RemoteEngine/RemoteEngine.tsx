@@ -14,7 +14,7 @@ import { Divider, Form } from 'antd'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import {
   ArrowCircleRightOutlined,
-  FigmaIcon28011794Outlined,
+  LogOutOutlined,
   QuestionMarkCircleOutlined,
   XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -318,7 +318,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
           </div>
           <div className={styles['footer-btn']}>
             <span className={styles['exit-btn']} onClick={() => yakitApp.closeWindow()}>
-              <FigmaIcon28011794Outlined className={styles['exit-icon']} color="currentColor" size={16} />
+              <LogOutOutlined className={styles['exit-icon']} color="currentColor" size={16} />
               {t('RemoteEngine.exit')}
             </span>
             <Divider type="vertical"></Divider>

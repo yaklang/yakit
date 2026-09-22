@@ -2,7 +2,7 @@ import React from 'react'
 import { failed } from '@/utils/notification'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
-import { FigmaIcon5237120699Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { LoadingOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitEngine } from '@/services/electronBridge'
 
 import styles from './AllKillEngineConfirm.module.scss'
@@ -56,9 +56,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
     <YakitHint
       visible={visible}
       heardIcon={
-        loading ? (
-          <FigmaIcon5237120699Outlined className={styles['icon-rotate-animation']} color="currentColor" />
-        ) : undefined
+        loading ? <LoadingOutlined className={styles['icon-rotate-animation']} color="currentColor" /> : undefined
       }
       title={loading ? t('AllKillEngineConfirm.closing') : title}
       content={content}

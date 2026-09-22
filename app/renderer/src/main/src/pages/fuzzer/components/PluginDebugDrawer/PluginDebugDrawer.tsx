@@ -6,7 +6,7 @@ import classNames from 'classnames'
 import styles from './PluginDebugDrawer.module.scss'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { FigmaIcon16256302540Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { StorageSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import emiter from '@/utils/eventBus/eventBus'
 import { NucleiPluginTemplate } from '@/pages/pluginDebugger/defaultData'
 import { PluginDebugBody } from '@/pages/plugins/pluginDebug/PluginDebug'
@@ -92,7 +92,7 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
         <div className={styles['header-extra-wrapper']}>
           <YakitButton
             type="primary"
-            icon={<FigmaIcon16256302540Solid color="currentColor" />}
+            icon={<StorageSolid color="currentColor" />}
             onClick={handleSkipAddYakitScriptPage}
           >
             {t('PluginDebugDrawer.saveAsPlugin')}

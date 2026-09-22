@@ -8,8 +8,8 @@ import {
   PencilAltOutlined,
   RefreshOutlined,
   TrashOutlined,
-  FigmaIcon5237120699Outlined,
-  FigmaIcon2017756Outlined,
+  LoadingOutlined,
+  ExportOutlined,
   ChevronDownOutlined,
   PlusOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -112,7 +112,7 @@ const KnowledgeBaseTableHeader: FC<
         className={styles['building-knowledge-items']}
         onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken, 'routine')}
       >
-        <FigmaIcon5237120699Outlined className={styles['loading-icon']} color="currentColor" />
+        <LoadingOutlined className={styles['loading-icon']} color="currentColor" />
         构建知识条目中，可点此查看进度
       </div>
     ) : null
@@ -148,7 +148,7 @@ const KnowledgeBaseTableHeader: FC<
               className={styles['build-tag']}
               onClick={() => onViewBuildProcess(knowledgeBaseItems?.streamToken, 'routine')}
             >
-              <FigmaIcon5237120699Outlined className={styles['loading-icon']} color="currentColor" />
+              <LoadingOutlined className={styles['loading-icon']} color="currentColor" />
               知识库生成中，可点此查看进度
             </div>
           ) : null}
@@ -180,7 +180,7 @@ const KnowledgeBaseTableHeader: FC<
                         <div className={styles['content-first']}>
                           <div>{it.name}</div>
                           <div className={styles['tag']}>
-                            <FigmaIcon5237120699Outlined className={styles['loading-icon']} color="currentColor" />
+                            <LoadingOutlined className={styles['loading-icon']} color="currentColor" />
                             生成中
                           </div>
                         </div>
@@ -228,7 +228,7 @@ const KnowledgeBaseTableHeader: FC<
             添加
           </YakitButton>
           <YakitButton
-            icon={<FigmaIcon2017756Outlined />}
+            icon={<ExportOutlined />}
             type="secondary2"
             onClick={async () => {
               knowledgeBaseItems.ID && (await onExportKnowledgeBase?.(knowledgeBaseItems.ID))

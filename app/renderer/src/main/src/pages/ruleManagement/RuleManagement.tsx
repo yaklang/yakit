@@ -26,8 +26,8 @@ import {
   PencilAltOutlined,
   PlusOutlined,
   TrashOutlined,
-  FigmaIcon6480193584Outlined,
-  FigmaIcon2017756Outlined,
+  ImportOutlined,
+  ExportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -993,7 +993,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
                           <YakitButton
                             type="outline2"
-                            icon={<FigmaIcon2017756Outlined />}
+                            icon={<ExportOutlined />}
                             onClick={() =>
                               handleOpenExportHint({
                                 title: '导出规则',
@@ -1007,7 +1007,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
                           <YakitButton
                             type="outline2"
-                            icon={<FigmaIcon6480193584Outlined color="currentColor" />}
+                            icon={<ImportOutlined color="currentColor" />}
                             onClick={() =>
                               handleOpenExportHint({
                                 title: '导入规则',

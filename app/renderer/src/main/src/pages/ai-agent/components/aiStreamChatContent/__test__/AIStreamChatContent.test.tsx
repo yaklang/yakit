@@ -3,16 +3,17 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { AIStreamChatContent } from '../AIStreamChatContent'
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
-import { getAIStreamIcon, IntentionOutlined } from '../icons'
+import { getAIStreamIcon } from '../icons'
 import {
   AnnotationOutlined,
   AtomOutlined,
   BookOpenTextOutlined,
   ClipboardCheckOutlined,
-  FigmaIcon34227111184Outlined,
-  FigmaIcon34227111185Outlined,
+  CompilationOutlined,
+  Compilation2Outlined,
   FolderArchiveOutlined,
   GitMergeOutlined,
+  IntentionOutlined,
   LightBulbOutlined,
   LoaderPinwheelOutlined,
   MCPOutlined,
@@ -43,11 +44,11 @@ describe('AIStreamChatContent', () => {
     ['perception', LightBulbOutlined],
     ['intent', IntentionOutlined],
     ['semantic_search_yaklang_samples', SearchOutlined],
-    ['code_sample_title', FigmaIcon34227111184Outlined],
+    ['code_sample_title', CompilationOutlined],
     ['mcp-loader', MCPOutlined],
     ['grep_yaklang_samples', SearchOutlined],
     ['batch-compress', FolderArchiveOutlined],
-    ['write_yaklang_code', FigmaIcon34227111185Outlined],
+    ['write_yaklang_code', Compilation2Outlined],
     ['re-act-loop', AtomOutlined],
     ['review', StethoscopeOutlined],
     ['directly_answer', AnnotationOutlined],
@@ -56,6 +57,7 @@ describe('AIStreamChatContent', () => {
     ['re-act-verify', ClipboardCheckOutlined],
     ['enhance-query', BookOpenTextOutlined],
   ])('节点 %s 使用设计图对应的图标', (nodeId, expectedIcon) => {
+    expect(expectedIcon).toBeDefined()
     expect(getAIStreamIcon(nodeId)).toBe(expectedIcon)
   })
 
@@ -75,7 +77,7 @@ describe('AIStreamChatContent', () => {
 
   it('IntentionOutlined 渲染意图识别设计图图标', () => {
     const { container } = render(<IntentionOutlined />)
-    expect(container.querySelector('.anticon')).not.toBeNull()
+    expect(container.querySelector('.anticon.yakit-icon')).not.toBeNull()
     const path = container.querySelector('svg path')
     expect(path).not.toBeNull()
     expect(path?.getAttribute('d')).toBe(

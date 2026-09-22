@@ -10,7 +10,7 @@ import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
   BugOutlined,
-  FigmaIcon348196674Outlined,
+  FlowOutlined,
   ListTodoOutlined,
   NewspaperOutlined,
   XOutlined,
@@ -41,7 +41,7 @@ export interface AIChatWorkspaceTabsProps {
 const TabIcons: Record<AITabsEnumType, React.ReactNode> = {
   [AITabsEnum.File_Preview]: null,
   [AITabsEnum.Task_Detail]: <ListTodoOutlined color="currentColor" />,
-  [AITabsEnum.HTTP]: <FigmaIcon348196674Outlined />,
+  [AITabsEnum.HTTP]: <FlowOutlined />,
   [AITabsEnum.Risk]: <BugOutlined color="currentColor" />,
   [AITabsEnum.Operation_Log]: <NewspaperOutlined color="currentColor" />,
 }

@@ -10,7 +10,7 @@ import {
   prioritizeProcessingItems,
   targetIcon,
 } from '@/pages/KnowledgeBase/utils'
-import { SearchOutlined, FigmaIcon5237120699Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { SearchOutlined, LoadingOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { OperateKnowledgenBaseItem } from '@/pages/KnowledgeBase/compoment/OperateKnowledgenBaseItem'
 
@@ -328,7 +328,7 @@ const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: 
                                 onViewBuildProcess(e, items.streamToken, 'routine')
                               }}
                             >
-                              <FigmaIcon5237120699Outlined className={styles['loading-icon']} color="currentColor" />
+                              <LoadingOutlined className={styles['loading-icon']} color="currentColor" />
                               生成中,点击查看进度
                             </div>
                           ) : items.IsDefault ? (

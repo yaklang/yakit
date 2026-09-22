@@ -28,8 +28,8 @@ import {
   ThumbUpOutlined,
   TrashOutlined,
   XOutlined,
-  FigmaIcon5237120699Outlined,
-  FigmaIcon2017756Outlined,
+  LoadingOutlined,
+  ExportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { pluginTypeToName } from '@/pages/plugins/builtInData'
@@ -961,7 +961,7 @@ export const FooterExtraBtn: React.FC<FooterExtraBtnProps> = memo((props) => {
   return (
     <div className={styles['footer-extra-btn']} onClick={handleClick}>
       {loading ? (
-        <FigmaIcon5237120699Outlined className={styles['loading']} color="currentColor" />
+        <LoadingOutlined className={styles['loading']} color="currentColor" />
       ) : (
         <>
           {icon || null}
@@ -1389,7 +1389,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
         {
           key: 'export',
           label: t('YakitButton.export'),
-          itemIcon: <FigmaIcon2017756Outlined />,
+          itemIcon: <ExportOutlined />,
         },
       ]
     }
@@ -1397,7 +1397,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
       {
         key: 'export',
         label: t('YakitButton.export'),
-        itemIcon: <FigmaIcon2017756Outlined />,
+        itemIcon: <ExportOutlined />,
       },
       {
         key: 'del',

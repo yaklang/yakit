@@ -18,10 +18,10 @@ import {
   DocumentDuplicateOutlined,
   PaperAirplaneOutlined,
   QuestionMarkCircleOutlined,
-  FigmaIcon28011794Outlined,
+  LogOutOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { FigmaIcon16256302540Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { StorageSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { HubButton } from '@/pages/pluginHub/hubExtraOperate/funcTemplate'
 import { WebsiteGV } from '@/enums/website'
 import { EditorInfo, type EditorInfoFormRefProps } from '../editorInfo/EditorInfo'
@@ -993,7 +993,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                   loading={localLoading}
                   type="outline1"
                   size={isEdit ? 'middle' : 'large'}
-                  icon={<FigmaIcon28011794Outlined color="currentColor" />}
+                  icon={<LogOutOutlined color="currentColor" />}
                   name={t('PluginEditor.saveAndExit')}
                   onClick={onBtnLocalSaveAndExit}
                 />
@@ -1002,7 +1002,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                   iconWidth={1000}
                   loading={localLoading}
                   size={isEdit ? 'middle' : 'large'}
-                  icon={<FigmaIcon16256302540Solid color="currentColor" />}
+                  icon={<StorageSolid color="currentColor" />}
                   name={t('YakitButton.save')}
                   onClick={onBtnLocalSave}
                 />

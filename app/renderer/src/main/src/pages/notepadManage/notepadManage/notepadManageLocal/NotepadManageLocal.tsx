@@ -24,8 +24,8 @@ import {
   PlusOutlined,
   SearchOutlined,
   TrashOutlined,
-  FigmaIcon6480193584Outlined,
-  FigmaIcon2017756Outlined,
+  ImportOutlined,
+  ExportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
@@ -380,18 +380,14 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
             </YakitPopconfirm>
             <YakitButton
               type="outline2"
-              icon={<FigmaIcon2017756Outlined />}
+              icon={<ExportOutlined />}
               disabled={totalRef.current === 0}
               onClick={onBatchExport}
               loading={pageLoading}
             >
               {t('YakitButton.batchExport')}
             </YakitButton>
-            <YakitButton
-              type="outline2"
-              icon={<FigmaIcon6480193584Outlined color="currentColor" />}
-              onClick={onBatchImport}
-            >
+            <YakitButton type="outline2" icon={<ImportOutlined color="currentColor" />} onClick={onBatchImport}>
               {t('YakitButton.import')}
             </YakitButton>
             <Divider type="vertical" style={{ margin: 0 }} />
@@ -504,7 +500,7 @@ const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props)
 
       <Divider type="vertical" style={{ margin: '0 8px' }} />
 
-      <YakitButton type="text2" icon={<FigmaIcon2017756Outlined />} onClick={onExport} />
+      <YakitButton type="text2" icon={<ExportOutlined />} onClick={onExport} />
 
       <Divider type="vertical" style={{ margin: '0 8px' }} />
       <YakitPopconfirm title={t('NotepadAction.confirmDelete')} onConfirm={() => onSingleRemove()}>

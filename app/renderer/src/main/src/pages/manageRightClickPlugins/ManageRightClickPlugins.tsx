@@ -45,7 +45,7 @@ import type { ContextMenuAction } from './types'
 import { ContextMenuResultMode, LEGACY_CONTEXT_MENU_PLUGIN_TYPE, type ContextMenuScene } from './types'
 import { checkContextMenuShortcutConflict, parseContextMenuShortcut, serializeContextMenuShortcut } from './shortcut'
 import styles from './ManageRightClickPlugins.module.scss'
-import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { DragSortSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 /** 拖拽排序：将 startIndex 项移动到 endIndex */
 const reorder = <T,>(list: T[], startIndex: number, endIndex: number) => {
@@ -716,7 +716,7 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
         })}
       >
         <div className={styles['selected-item-main']}>
-          <FigmaIcon2281144183Solid
+          <DragSortSolid
             size={12}
             className={classNames({
               [styles['drag-icon-active']]: isDragging,
