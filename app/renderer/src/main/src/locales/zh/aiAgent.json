@@ -350,6 +350,7 @@
     "browser": "浏览器实例"
   },
   "AIMentionTabs": {
+    "all": "全部",
     "skill": "技能",
     "tool": "工具",
     "knowledgeBase": "知识库",

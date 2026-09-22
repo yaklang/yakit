@@ -350,6 +350,7 @@
     "browser": "Browser Instance"
   },
   "AIMentionTabs": {
+    "all": "All",
     "skill": "Skill",
     "tool": "Tool",
     "knowledgeBase": "Knowledge Base",
