@@ -25,6 +25,8 @@ export interface LocalEngineLinkFuncProps {
   startYakEngine: () => void
   /** 检查引擎版本后的本地连接 */
   link: (port: number) => void
+  /** 重新 check(拿新 launchId)后跳过版本比对、直接校验引擎来源并连接 */
+  initAndCheckSource: (port: number, version: string) => void
 }
 
 export interface AllowSecretLocalJson {
