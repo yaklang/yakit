@@ -11,7 +11,7 @@ import type {
   ShowItemType,
 } from './BottomEditorDetailsType'
 import { HelpInfoList } from '../CollapseList/CollapseList'
-import { CogOutlined, XOutlined, FigmaIcon28011794Outlined, PlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { CogOutlined, XOutlined, LogOutOutlined, PlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { SyntaxCheckList } from './SyntaxCheckList/SyntaxCheckList'
@@ -352,7 +352,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 <YakitButton
                   type="text2"
                   // danger
-                  icon={<FigmaIcon28011794Outlined color="currentColor" />}
+                  icon={<LogOutOutlined color="currentColor" />}
                   className={styles['yak-runner-terminal-close']}
                   onClick={() => {
                     debugTerminalHookEvent.onDeleteTerminalItem(terminalRunnerId)

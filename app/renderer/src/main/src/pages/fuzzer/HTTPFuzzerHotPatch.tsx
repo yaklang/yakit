@@ -19,8 +19,8 @@ import {
   XOutlined,
   ArrowsExpandOutlined,
   LightningBoltOutlined,
-  FigmaIcon13208172881Outlined,
-  ArrowsOutlined,
+  StorageOutlined,
+  ArrowsCollapseOutlined,
   InformationCircleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
@@ -837,7 +837,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                   disabled={!code}
                   type="text"
                   size="small"
-                  icon={<FigmaIcon13208172881Outlined color="currentColor" />}
+                  icon={<StorageOutlined color="currentColor" />}
                   className={styles['hotPatch-sidebar-icon-button']}
                   onClick={() => setAddHotCodeTemplateVisible(true)}
                 />
@@ -852,7 +852,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                 <YakitSwitch checked={hotPatchEnabled} onChange={onEnabledChange} />
               </div>
               {isFullScreen ? (
-                <ArrowsOutlined className={styles['expand-icon']} onClick={() => setIsFullScreen(false)} />
+                <ArrowsCollapseOutlined className={styles['expand-icon']} onClick={() => setIsFullScreen(false)} />
               ) : (
                 <ArrowsExpandOutlined
                   className={classNames(styles['expand-icon'], styles['expand-icon-active'])}

@@ -31,7 +31,7 @@ import {
   RefreshOutlined,
   ReplyOutlined,
   TrashOutlined,
-  FigmaIcon28011794Outlined,
+  LogOutOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -579,7 +579,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                 trigger={'click'}
                 okButtonProps={{ loading: stopLoading }}
               >
-                <YakitButton type="text" colors="danger" icon={<FigmaIcon28011794Outlined color="currentColor" />}>
+                <YakitButton type="text" colors="danger" icon={<LogOutOutlined color="currentColor" />}>
                   {t('YakitButton.deactivated')}
                 </YakitButton>
               </YakitPopconfirm>

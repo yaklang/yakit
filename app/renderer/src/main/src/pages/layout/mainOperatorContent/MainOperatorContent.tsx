@@ -86,7 +86,7 @@ import {
   PlusOutlined,
   SortAscendingOutlined,
   SortDescendingOutlined,
-  FigmaIcon13208172881Outlined,
+  StorageOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { getHotPatchCodeInfo } from '@/pages/fuzzer/fuzzerHotPatchUtils'
@@ -6393,7 +6393,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                       title={t('MainOperatorContent.save_webfuzzer_history')}
                       placement={isExpand ? 'left' : 'top'}
                     >
-                      <FigmaIcon13208172881Outlined
+                      <StorageOutlined
                         className={styles['extra-operate-icon']}
                         onClick={() => onSaveHistory(pageRouteKey)}
                         color="currentColor"

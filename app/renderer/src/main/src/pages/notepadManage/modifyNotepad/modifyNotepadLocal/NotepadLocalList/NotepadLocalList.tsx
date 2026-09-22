@@ -21,12 +21,7 @@ import classNames from 'classnames'
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
 import { NotepadRemoteGV } from '@/enums/notepad'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  PlusOutlined,
-  TrashOutlined,
-  FigmaIcon6480193584Outlined,
-  FigmaIcon2017756Outlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import { PlusOutlined, TrashOutlined, ImportOutlined, ExportOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { Dropdown, Tooltip } from 'antd'
 import {
@@ -202,7 +197,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
             <YakitButton
               className={styles['icon-16']}
               type="text2"
-              icon={<FigmaIcon6480193584Outlined color="currentColor" />}
+              icon={<ImportOutlined color="currentColor" />}
               size="small"
               onClick={() => setImportVisible(true)}
             />
@@ -229,7 +224,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
             <YakitButton
               className={styles['icon-16']}
               type="text2"
-              icon={<FigmaIcon2017756Outlined />}
+              icon={<ExportOutlined />}
               size="small"
               onClick={() => onExport(getActionFilter())}
               disabled={!response.Total}
@@ -268,7 +263,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
                       {
                         key: 'export',
                         label: t('YakitButton.export'),
-                        itemIcon: <FigmaIcon2017756Outlined />,
+                        itemIcon: <ExportOutlined />,
                       },
                       {
                         key: 'delete',

@@ -68,7 +68,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { setClipboardText } from '@/utils/clipboard'
-import { ArrowLeftOutlined, ArrowRightOutlined, FigmaIcon5237120699Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ArrowLeftOutlined, ArrowRightOutlined, LoadingOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import MITMContext, { MITMVersion } from '../Context/MITMContext'
@@ -672,7 +672,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                 icon = <ArrowLeftOutlined color="currentColor" />
                 break
               case 'wait hijack':
-                icon = <FigmaIcon5237120699Outlined className={styles['icon-rotate-animation']} color="currentColor" />
+                icon = <LoadingOutlined className={styles['icon-rotate-animation']} color="currentColor" />
                 break
             }
             return (

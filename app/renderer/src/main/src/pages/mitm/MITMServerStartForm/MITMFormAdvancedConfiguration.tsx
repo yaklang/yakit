@@ -30,7 +30,7 @@ import {
 } from '../MITMAdvancedConfig'
 import type { KVPair } from '@/models/kv'
 
-import { FigmaIcon2017756Outlined, PlusCircleOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ExportOutlined, PlusCircleOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const MITMAddTLS = React.lazy(() => import('./MITMAddTLS'))
@@ -591,11 +591,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                       }}
                     />
                     <Divider type="vertical" style={{ margin: '0 8px' }} />
-                    <FigmaIcon2017756Outlined
-                      size={16}
-                      className={styles['export-icon']}
-                      onClick={() => onExportCerts(item)}
-                    />
+                    <ExportOutlined size={16} className={styles['export-icon']} onClick={() => onExportCerts(item)} />
                   </div>
                 </div>
               ))}

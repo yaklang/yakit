@@ -7,7 +7,7 @@ import { failed, success } from '@/utils/notification'
 import classNames from 'classnames'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { SearchOutlined, FigmaIcon28011794Outlined, CogOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { SearchOutlined, LogOutOutlined, CogOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -415,7 +415,7 @@ export const ShellReceiverRightRun: React.FC<ShellReceiverRightRunProps> = (prop
           >
             <YakitButton danger={true} type={'primary'}>
               断开
-              <FigmaIcon28011794Outlined color="currentColor" />
+              <LogOutOutlined color="currentColor" />
             </YakitButton>
           </YakitPopconfirm>
         </div>

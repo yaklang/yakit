@@ -236,8 +236,8 @@ vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({
   PlusCircleOutlined: () => <span />,
   DocumentAddOutlined: () => <span />,
   MinusCircleOutlined: () => <span />,
-  FigmaIcon2017756Outlined: () => <span data-testid="export-icon" />,
-  FigmaIcon6480193584Outlined: () => <span data-testid="import-icon" />,
+  ExportOutlined: () => <span data-testid="export-icon" />,
+  ImportOutlined: () => <span data-testid="import-icon" />,
 }))
 
 vi.mock('@yakit-libs/yakit-ui-icons/solid', () => ({

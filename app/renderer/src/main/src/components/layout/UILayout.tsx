@@ -71,7 +71,7 @@ import type { CodecParamsProps, OpenFuzzerModal } from '../yakChat/chatCS'
 const NewThirdPartyApplicationConfig = lazy(() => import('../configNetwork/NewThirdPartyApplicationConfig'))
 import { usePerformanceSampling } from '@/store/performanceSampling'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
-import { RefreshOutlined, FigmaIcon28011794Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { RefreshOutlined, LogOutOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { CopyComponents } from '../yakitUI/YakitTag/YakitTag'
 import { Tooltip } from 'antd'
@@ -1442,7 +1442,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         className={classNames(styles['footer-bottom'], styles['sampling-exit'])}
                         onClick={resetPerformanceSampling}
                       >
-                        <FigmaIcon28011794Outlined color="currentColor" />
+                        <LogOutOutlined color="currentColor" />
                         {t('YakitButton.exit')}
                       </div>
                       <div

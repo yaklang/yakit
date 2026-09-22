@@ -50,7 +50,7 @@ import { setOpenPerformanceTips } from '@/utils/duplex/duplex'
 
 import { GlobalConfigEmbeddedForm } from '@/pages/settings/settingsContent/globalConfig/GlobalConfigEmbeddedForm'
 import gStyles from '@/pages/settings/settingsContent/globalConfig/GlobalConfigSettings.module.scss'
-import { CheckCircleSolid, FigmaIcon2281144183Solid, LockClosedSolid, XSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { CheckCircleSolid, DragSortSolid, LockClosedSolid, XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 export interface ConfigNetworkPageProp {}
 
@@ -1482,7 +1482,7 @@ export const AISortContent: React.FC<AISortContentProps> = (props) => {
                             })}
                           >
                             <div className={styles['menu-list-item-info']}>
-                              <FigmaIcon2281144183Solid size={12} className={styles['drag-sort-icon']} />
+                              <DragSortSolid size={12} className={styles['drag-sort-icon']} />
                               <div className={styles['title']}>{item.Type}</div>
                             </div>
                           </div>

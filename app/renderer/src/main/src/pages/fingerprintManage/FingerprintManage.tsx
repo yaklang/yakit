@@ -10,8 +10,8 @@ import {
   PlusOutlined,
   SearchOutlined,
   TrashOutlined,
-  FigmaIcon6480193584Outlined,
-  FigmaIcon2017756Outlined,
+  ImportOutlined,
+  ExportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect, useVirtualList } from 'ahooks'
@@ -248,7 +248,7 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
             </YakitButton>
             <YakitButton
               type="primary"
-              icon={<FigmaIcon6480193584Outlined color="currentColor" />}
+              icon={<ImportOutlined color="currentColor" />}
               onClick={() => {
                 handleOpenImportExportHint({
                   title: '导入指纹',
@@ -508,7 +508,7 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
                   {
                     key: 'importFingerprint',
                     label: '导入指纹',
-                    itemIcon: <FigmaIcon6480193584Outlined color="currentColor" />,
+                    itemIcon: <ImportOutlined color="currentColor" />,
                   },
                 ],
                 onClick: ({ key }) => {
@@ -1079,7 +1079,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
 
               <YakitButton
                 type="outline2"
-                icon={<FigmaIcon2017756Outlined />}
+                icon={<ExportOutlined />}
                 onClick={() => {
                   onExport(rowSelectionKeys.length === data.Data.length ? [] : rowSelectionKeys)
                 }}
@@ -1087,11 +1087,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                 导出
               </YakitButton>
 
-              <YakitButton
-                type="outline2"
-                icon={<FigmaIcon6480193584Outlined color="currentColor" />}
-                onClick={onImport}
-              >
+              <YakitButton type="outline2" icon={<ImportOutlined color="currentColor" />} onClick={onImport}>
                 导入
               </YakitButton>
 

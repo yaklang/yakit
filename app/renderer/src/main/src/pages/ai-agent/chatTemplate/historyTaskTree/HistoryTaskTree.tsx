@@ -19,7 +19,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { formatTimestamp } from '@/utils/timeUtil'
 import {
   ChevronDownOutlined,
-  FigmaIcon5237120699Outlined,
+  LoadingOutlined,
   Play2Outlined,
   RedoDotOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -274,7 +274,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
           size="small"
         >
           {loading ? (
-            <FigmaIcon5237120699Outlined className={styles['icon-primary']} color="currentColor" />
+            <LoadingOutlined className={styles['icon-primary']} color="currentColor" />
           ) : (
             <Play2Outlined className={styles['play2-icon']} color="currentColor" />
           )}

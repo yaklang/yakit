@@ -11,12 +11,7 @@ import type {
   ImportAIforgeRef,
   ImportAIForgeRequest,
 } from './type'
-import {
-  PencilAltOutlined,
-  SearchOutlined,
-  TrashOutlined,
-  FigmaIcon2017756Outlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import { PencilAltOutlined, SearchOutlined, TrashOutlined, ExportOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import {
@@ -415,7 +410,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                         >
                           <YakitButton
                             type="text2"
-                            icon={<FigmaIcon2017756Outlined />}
+                            icon={<ExportOutlined />}
                             onClick={(e) => {
                               e.stopPropagation()
                               batchExportRef.current?.open({

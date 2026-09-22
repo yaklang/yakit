@@ -22,8 +22,8 @@ import {
   ClipboardListOutlined,
   RefreshOutlined,
   TrashOutlined,
-  FigmaIcon13208172881Outlined,
-  ArrowsOutlined,
+  StorageOutlined,
+  ArrowsCollapseOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import classNames from 'classnames'
@@ -245,7 +245,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
           )}
           <YakitButton
             type="text2"
-            icon={hidden ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
+            icon={hidden ? <ArrowsCollapseOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
             onClick={(e) => {
               e.stopPropagation()
               setHidden(!hidden)
@@ -762,7 +762,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
           <div className={styles['ports-form-extra']}>
             <YakitButton
               type="text"
-              icon={<FigmaIcon13208172881Outlined color="currentColor" />}
+              icon={<StorageOutlined color="currentColor" />}
               style={{ paddingLeft: 0 }}
               onClick={onShowSaveTemplate}
               disabled={disabled}

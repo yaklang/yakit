@@ -30,8 +30,8 @@ import {
   ChevronDoubleDownOutlined,
   ChevronDoubleUpOutlined,
   CogOutlined,
-  FigmaIcon2017756Outlined,
-  FigmaIcon348196674Outlined,
+  ExportOutlined,
+  FlowOutlined,
   FlagOutlined,
   FolderOpenOutlined,
   NewspaperOutlined,
@@ -62,7 +62,7 @@ interface MenuItemDef {
 const MAIN_MENUS: MenuItemDef[] = [
   { key: 'task-board', labelKey: 'AIRightPanel.taskBoard', icon: <ScrollTextOutlined /> },
   { key: 'file-system', labelKey: 'AIRightPanel.fileSystem', icon: <FolderOpenOutlined /> },
-  { key: 'traffic', labelKey: 'AIRightPanel.traffic', icon: <FigmaIcon348196674Outlined /> },
+  { key: 'traffic', labelKey: 'AIRightPanel.traffic', icon: <FlowOutlined /> },
   { key: 'risk', labelKey: 'AIRightPanel.risk', icon: <BugOutlined /> },
   { key: 'session-history', labelKey: 'AIRightPanel.sessionHistory', icon: <ChatAlt2Outlined /> },
   { key: 'task-list', labelKey: 'AIRightPanel.taskList', icon: <FlagOutlined /> },
@@ -74,7 +74,7 @@ const WELCOME_MENUS = MAIN_MENUS.filter((item) => item.key !== 'task-board' && i
 const MORE_MENUS: MenuItemDef[] = [
   { key: 'ai-settings', labelKey: 'AIRightPanel.aiSettings', icon: <CogOutlined /> },
   { key: 'timeline', labelKey: 'AIRightPanel.timeline', icon: <TimelineOutlined /> },
-  { key: 'export-log', labelKey: 'AIRightPanel.exportLog', icon: <FigmaIcon2017756Outlined /> },
+  { key: 'export-log', labelKey: 'AIRightPanel.exportLog', icon: <ExportOutlined /> },
   { key: 'view-log', labelKey: 'AIRightPanel.viewLog', icon: <NewspaperOutlined /> },
 ]
 

@@ -38,7 +38,7 @@ import {
   FileUpOutlined,
   RefreshOutlined,
   TerminalOutlined,
-  FigmaIcon13208172881Outlined,
+  StorageOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import MITMContext, { MITMVersion } from '../Context/MITMContext'
@@ -585,7 +585,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
               <Tooltip placement="top" title={t('MITMPluginHijackContent.save_as_new_template')}>
                 <YakitButton
                   type="text"
-                  icon={<FigmaIcon13208172881Outlined color="currentColor" />}
+                  icon={<StorageOutlined color="currentColor" />}
                   onClick={() => setAddHotCodeTemplateVisible(true)}
                 ></YakitButton>
               </Tooltip>

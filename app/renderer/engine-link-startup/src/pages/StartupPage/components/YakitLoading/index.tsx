@@ -4,7 +4,7 @@ import { Checkbox, Divider, Form, Tooltip } from 'antd'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
 import {
   ArrowCircleRightOutlined,
-  FigmaIcon28011794Outlined,
+  LogOutOutlined,
   QuestionMarkCircleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -783,7 +783,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             style={{ fontSize: i18n.language === 'en' ? 11 : 12 }}
             onClick={() => yakitApp.closeWindow()}
           >
-            <FigmaIcon28011794Outlined className={styles['exit-icon']} color="currentColor" size={16} />
+            <LogOutOutlined className={styles['exit-icon']} color="currentColor" size={16} />
             {t('YakitLoading.exit')}
           </span>
           {showAgreement ? (

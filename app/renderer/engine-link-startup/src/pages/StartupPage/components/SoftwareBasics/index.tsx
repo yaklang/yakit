@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import lightTheme from '@/assets/light-theme.png'
 import darkTheme from '@/assets/dark-theme.png'
-import { FigmaIcon28011794Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { LogOutOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { CheckCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { useTheme, type Theme } from '@/hooks/useTheme'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -400,7 +400,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
           style={{ fontSize: i18n.language === 'en' ? 11 : 12 }}
           onClick={handleExit}
         >
-          <FigmaIcon28011794Outlined className={styles['exit-icon']} color="currentColor" size={16} />
+          <LogOutOutlined className={styles['exit-icon']} color="currentColor" size={16} />
           {t('SoftwareBasics.exit')}
         </span>
       </div>

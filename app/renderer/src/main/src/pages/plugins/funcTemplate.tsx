@@ -47,7 +47,7 @@ import {
   ViewGridOutlined,
   ViewListOutlined,
   XOutlined,
-  ArrowsOutlined,
+  ArrowsCollapseOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { CheckSolid, ExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
@@ -1864,7 +1864,7 @@ export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) 
       centered={true}
       maskClosable={false}
       closable={true}
-      closeIcon={<ArrowsOutlined className={styles['plugin-editor-modal-close-icon']} />}
+      closeIcon={<ArrowsCollapseOutlined className={styles['plugin-editor-modal-close-icon']} />}
       footer={null}
       open={visible}
       onCancel={() => setVisible(content)}
@@ -1909,7 +1909,7 @@ export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo(
       centered={true}
       maskClosable={false}
       closable={true}
-      closeIcon={<ArrowsOutlined className={styles['plugin-editor-modal-close-icon']} />}
+      closeIcon={<ArrowsCollapseOutlined className={styles['plugin-editor-modal-close-icon']} />}
       footer={null}
       open={visible}
       onCancel={() => setVisible(content)}

@@ -18,8 +18,8 @@ import {
   PlaySolid,
   PlusSolid,
   StopSolid,
-  FigmaIcon2281144183Solid,
-  SwitchSolid,
+  DragSortSolid,
+  SwitchConfigurationSolid,
 } from '@yakit-libs/yakit-ui-icons/solid'
 
 import { DragDropContext, Droppable, Draggable, type DropResult, type ResponderProvided } from '@hello-pangea/dnd'
@@ -2280,7 +2280,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
         >
           <div className={styles['fuzzer-sequence-list-item-heard']}>
             <div className={styles['fuzzer-sequence-list-item-heard-title']}>
-              <FigmaIcon2281144183Solid
+              <DragSortSolid
                 className={classNames(styles['drag-sort-icon'], {
                   [styles['drag-sort-disabled-icon']]: disabled,
                 })}
@@ -2415,7 +2415,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                     classNames={{ root: styles['cog-popover'] }}
                   >
                     <YakitButton
-                      icon={<SwitchSolid color="currentColor" />}
+                      icon={<SwitchConfigurationSolid color="currentColor" />}
                       type="text2"
                       disabled={disabled}
                       onClick={(e) => {
