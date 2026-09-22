@@ -9,7 +9,6 @@ import { MessageCirclePlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { ChatAlt2Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ExpandAndRetract } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
-import AIContextToken from '../AIContextToken/AIContextToken'
 import useAIAgentStore from '../../useContext/useStore'
 import { useMemoizedFn } from 'ahooks'
 import ContextDetailPopover from '../AIContextToken/ContextDetailPopover'
@@ -51,7 +50,6 @@ export const AIHorizontalScrollCard = memo(() => {
             <div className={styles['chat-title']}>{activeChat?.Title || t('AIChatContent.newChatTitle')}</div>
           </div>
           <div className={styles['extra']}>
-            <AIContextToken />
             <ContextDetailPopover />
             <Tooltip title={t('AIChatContent.newChat')}>
               <YakitButton type="text2" icon={<MessageCirclePlusOutlined color="currentColor" />} onClick={onNewChat} />
