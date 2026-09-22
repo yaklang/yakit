@@ -82,7 +82,14 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     persistAIAgentChatSetting(getSetting())
   }, [setting])
 
-  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(YakitRoute.AI_Agent, pageId)
+  const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat } = useChatIPC(
+    YakitRoute.AI_Agent,
+    pageId,
+  )
+
+  useEffect(() => {
+    if (activeChat) cancelPendingChat()
+  }, [activeChat?.SessionID])
 
   const store: AIAgentContextStore = useMemo(() => {
     return {
@@ -90,8 +97,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       activeChat: activeChat,
       openChatInNewTab: true,
       pageId,
+      pendingChat,
     }
-  }, [setting, activeChat, pageId])
+  }, [setting, activeChat, pageId, pendingChat])
   const dispatcher: AIAgentContextDispatcher = useMemo(() => {
     return {
       getSetting: getSetting,
@@ -101,6 +109,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       onSend,
       onClose,
       onUpdatePageId,
+      cancelPendingChat,
     }
   }, [])
 

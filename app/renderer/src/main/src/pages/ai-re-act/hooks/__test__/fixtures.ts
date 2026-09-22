@@ -85,8 +85,6 @@ export const createTestMeta = (): AIAgentChatMetaData => ({
   // subAgentHistoryEvents: [],
   createChatQuestion: undefined,
   onEnd: undefined,
-  pingSyncID: '',
-  pingTimer: null,
   casualMemoryList: cloneDeep(DefaultMemoryList),
   taskMemoryList: cloneDeep(DefaultMemoryList),
   notifyMessageTimer: null,

@@ -20,6 +20,7 @@ export interface AIHandleStartResProps {
   params: AIInputEvent
   extraParams?: AIHandleStartExtraProps
   onChat?: () => void
+  onSessionBound?: (sessionId: string) => void
 }
 export interface AISendParams {
   params: AIInputEvent
