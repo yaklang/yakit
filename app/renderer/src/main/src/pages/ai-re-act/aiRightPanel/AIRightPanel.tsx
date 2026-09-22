@@ -62,8 +62,8 @@ interface MenuItemDef {
 /** 主菜单：数据卡片下方常驻展示的六个功能入口（正常态与小屏态共用，小屏态仅渲染图标） */
 const MAIN_MENUS: MenuItemDef[] = [
   { key: 'task-board', labelKey: 'AIRightPanel.taskBoard', icon: <ScrollTextOutlined /> },
-  { key: 'browser', labelKey: 'AIRightPanel.browserInstances', icon: <ChromeOutlined /> },
   { key: 'file-system', labelKey: 'AIRightPanel.fileSystem', icon: <FolderOpenOutlined /> },
+  { key: 'browser', labelKey: 'AIRightPanel.browserInstances', icon: <ChromeOutlined /> },
   { key: 'traffic', labelKey: 'AIRightPanel.traffic', icon: <FigmaIcon348196674Outlined /> },
   { key: 'risk', labelKey: 'AIRightPanel.risk', icon: <BugOutlined /> },
   { key: 'session-history', labelKey: 'AIRightPanel.sessionHistory', icon: <ChatAlt2Outlined /> },
