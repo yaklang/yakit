@@ -116,7 +116,16 @@ import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBod
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
-import { getDiscoveryTimeColumnFixed } from './riskTableUtils'
+import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
+import {
+  countNewRiskIds,
+  getDiscoveryTimeColumnFixed,
+  isRiskTableInitPage,
+  mergeRisksById,
+  nextIncrementFromId,
+  shouldSkipRiskCursorPage,
+  toRiskNumericId,
+} from './riskTableUtils'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -326,7 +335,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const exportPageContainerRef = useRef<HTMLElement>()
 
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
-  const [response, setResponse] = useState<QueryRisksResponse>({
+  const [response, setResponse, getResponse] = useGetSetState<QueryRisksResponse>({
     Data: [],
     Pagination: { ...genDefaultPagination(20) },
     Total: 0,
@@ -350,7 +359,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const [tag, setTag] = useState<FieldGroup[]>([])
 
   const [interval, setInterval] = useState<number | undefined>(undefined) // 控制 Interval
-  const [offsetDataInTop, setOffsetDataInTop] = useState<Risk[]>([])
+  const [offsetDataInTop, setOffsetDataInTop, getOffsetDataInTop] = useGetSetState<Risk[]>([])
   const [allTotal, setAllTotal] = useControllableValue<number>(props, {
     defaultValue: 0,
     valuePropName: 'allTotal',
@@ -368,6 +377,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const limitRef = useRef<number>(defLimit)
   const tableBodyHeightRef = useRef<number>(0)
   const isInitRequestRef = useRef<boolean>(true)
+  const listQueryEpochRef = useRef<number>(0)
+  const incrementInFlightRef = useRef<boolean>(false)
 
   // 选中插件的数量
   const selectNum = useMemo(() => {
@@ -416,14 +427,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   }, [offsetDataInTop, interval])
   useInterval(() => {
     const scrollTop = getScrollTop()
-    if (inViewport && scrollTop < 10 && offsetDataInTop?.length > 0) {
-      // 滚动条滚动到顶部的时候，如果偏移缓存数据中有数据，第一次优先将缓存数据放在总的数据中
-      setResponse({
-        ...response,
-        Data: [...offsetDataInTop, ...response.Data],
-      })
+    if (inViewport && scrollTop < 10 && getOffsetDataInTop().length > 0) {
+      const offsetRows = getOffsetDataInTop()
       setOffsetDataInTop([])
-      return
+      prependRisksToTable(offsetRows)
     }
   }, intervalRedDot)
   /**开启实时数据刷新 */
@@ -433,8 +440,34 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const getScrollTop = useMemoizedFn(() => {
     return tableRef.current?.containerRef?.scrollTop || 0
   })
+  const prependRisksToTable = useMemoizedFn((incoming: Risk[]) => {
+    const prev = getResponse()
+    const nextData = mergeRisksById(incoming, prev.Data, 'prepend')
+    setResponse({
+      ...prev,
+      Data: nextData,
+    })
+    if (allCheck) setSelectList(nextData)
+  })
   /**获取滚动条在顶部的数据 */
   const getIncrementInTop = useMemoizedFn(() => {
+    if (query.Pagination.Order === 'asc' || query.Pagination.OrderBy !== 'id') {
+      // 升序时，顶部不实时刷新，避免数据混乱
+      // 排序字段为Id才实时刷新数据
+      return
+    }
+    const fromId = toRiskNumericId(afterId.current)
+    if (!fromId) return
+    const scrollTop = getScrollTop()
+    if (inViewport && scrollTop < 10 && getOffsetDataInTop().length > 0) {
+      const offsetRows = getOffsetDataInTop()
+      setOffsetDataInTop([])
+      prependRisksToTable(offsetRows)
+      return
+    }
+    if (incrementInFlightRef.current) return
+    incrementInFlightRef.current = true
+    const epoch = listQueryEpochRef.current
     const params: QueryRisksRequest = {
       ...getQuery(),
       Pagination: {
@@ -443,41 +476,33 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         Order: query.Pagination.Order,
         OrderBy: query.Pagination.OrderBy,
       },
-      FromId: afterId.current ? afterId.current : 0,
+      FromId: fromId,
     }
-    if (params.Pagination.Order === 'asc' || params.Pagination.OrderBy !== 'id') {
-      // 升序时，顶部不实时刷新，避免数据混乱
-      // 排序字段为Id才实时刷新数据
-      return
-    }
-    const scrollTop = getScrollTop()
-    if (inViewport && scrollTop < 10 && offsetDataInTop?.length > 0) {
-      // 滚动条滚动到顶部的时候，如果偏移缓存数据中有数据，第一次优先将缓存数据放在总的数据中
-      setResponse({
-        ...response,
-        Data: [...offsetDataInTop, ...response.Data],
+    apiQueryRisksIncrementOrderDesc(params)
+      .then((rsp) => {
+        if (epoch !== listQueryEpochRef.current) return
+        const newData = getResData(rsp.Data)
+        if (newData.length === 0) {
+          serverPushStatus && setInterval(undefined)
+          return
+        }
+        afterId.current = nextIncrementFromId(newData, afterId.current)
+        const existing = [...getOffsetDataInTop(), ...getResponse().Data]
+        const added = countNewRiskIds(newData, existing)
+        if (added > 0) {
+          getTotal()
+        }
+        if (inViewport && getScrollTop() < 10) {
+          const cached = getOffsetDataInTop()
+          setOffsetDataInTop([])
+          prependRisksToTable(mergeRisksById(newData, cached, 'prepend'))
+          return
+        }
+        setOffsetDataInTop(mergeRisksById(newData, getOffsetDataInTop(), 'prepend'))
       })
-      setOffsetDataInTop([])
-      return
-    }
-    apiQueryRisksIncrementOrderDesc(params).then((rsp) => {
-      if (rsp.Data.length > 0) {
-        afterId.current = rsp.Data[0].Id
-      } else {
-        serverPushStatus && setInterval(undefined)
-      }
-      const newData = getResData(rsp.Data)
-      const newTotal = allTotal + rsp.Data.length
-      if (scrollTop < 10) {
-        setResponse({
-          ...response,
-          Data: [...newData, ...response.Data],
-        })
-      } else {
-        setOffsetDataInTop([...newData, ...offsetDataInTop])
-      }
-      setAllTotal(newTotal)
-    })
+      .finally(() => {
+        incrementInFlightRef.current = false
+      })
   })
   const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
     const tagTable = tag.map((item) => ({
@@ -769,23 +794,26 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       Tags: info.Tags ? info.Tags?.split('|') : [],
     }
     apiSetTagForRisk(params).then(() => {
-      const index = response.Data.findIndex((item) => item.Id === info.Id)
+      const current = getResponse()
+      const index = current.Data.findIndex((item) => item.Id === info.Id)
       if (index === -1) return
-      response.Data[index] = {
+      const nextData = [...current.Data]
+      nextData[index] = {
         ...info,
       }
       setResponse({
-        ...response,
-        Data: [...response.Data],
+        ...current,
+        Data: nextData,
       })
       getRiskTags()
     })
   })
   const onRemoveSingle = useMemoizedFn((id) => {
     apiDeleteRisk({ Id: id }).then(() => {
+      const current = getResponse()
       setResponse({
-        ...response,
-        Data: response.Data.filter((item) => item.Id !== id),
+        ...current,
+        Data: current.Data.filter((item) => item.Id !== id),
       })
       emiter.emit('onRefRiskFieldGroup')
     })
@@ -1050,11 +1078,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     return finalParams
   })
   const getResData = useMemoizedFn((data: Risk[]) => {
-    const resData = (data || []).map((ele) => ({
+    return (data || []).map((ele) => ({
       ...ele,
+      Id: toRiskNumericId(ele.Id),
       cellClassName: ele.IsRead ? '' : styles['yakit-risk-table-cell-unread'],
     }))
-    return resData
   })
   const update = useMemoizedFn((page?: number) => {
     const paginationProps = {
@@ -1066,20 +1094,30 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       ...getQuery(),
       Pagination: paginationProps,
     }
-    const isInit = page === 1
-    if (query.Pagination.Order === 'asc') {
-      finalParams.FromId = isInit ? 0 : afterId.current
+    const isInit = isRiskTableInitPage(page)
+    const order = query.Pagination.Order
+    if (shouldSkipRiskCursorPage(isInit, order, afterId.current, beforeId.current)) {
+      return
+    }
+    if (order === 'asc') {
+      finalParams.FromId = isInit ? 0 : toRiskNumericId(afterId.current)
     } else {
-      finalParams.UntilId = isInit ? 0 : beforeId.current
+      finalParams.UntilId = isInit ? 0 : toRiskNumericId(beforeId.current)
     }
     if (isInit) {
+      listQueryEpochRef.current += 1
       prePage.current = 0
+      afterId.current = 0
+      beforeId.current = 0
+      setOffsetDataInTop([])
     }
+    const epoch = listQueryEpochRef.current
 
     apiQueryRisks(finalParams)
       .then((res) => {
+        if (epoch !== listQueryEpochRef.current) return
         const resData = getResData(res.Data)
-        const d = isInit ? resData : (response?.Data || []).concat(resData)
+        const d = isInit ? mergeRisksById(resData, [], 'append') : mergeRisksById(resData, getResponse().Data, 'append')
         prePage.current += 1
         setResponse({
           ...res,
@@ -1101,18 +1139,20 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
 
         limitRef.current = defLimit
-        if (query.Pagination.Order === 'asc') {
+        const firstId = toRiskNumericId(resData[0]?.Id)
+        const lastId = toRiskNumericId(resData[resData.length - 1]?.Id)
+        if (order === 'asc') {
           if (isInit) {
-            beforeId.current = (res.Data[0] && res.Data[0].Id) || 0
+            beforeId.current = firstId
             onTableResize(undefined, tableBodyHeightRef.current)
           }
-          afterId.current = (res.Data[res.Data.length - 1] && res.Data[res.Data.length - 1].Id) || 0
+          if (lastId) afterId.current = lastId
         } else {
           if (isInit) {
-            afterId.current = (res.Data[0] && res.Data[0].Id) || 0
+            afterId.current = firstId
             onTableResize(undefined, tableBodyHeightRef.current)
           }
-          beforeId.current = (res.Data[res.Data.length - 1] && res.Data[res.Data.length - 1].Id) || 0
+          if (lastId) beforeId.current = lastId
         }
       })
       .finally(() => setTimeout(() => setLoading(false), 300))
@@ -1122,6 +1162,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
    * 2.获取数据总数，因为有FromId/UntilId字段查询回来的总数并不是真正的总数
    */
   const getTotal = useMemoizedFn(() => {
+    const epoch = listQueryEpochRef.current
     const params: QueryRisksRequest = {
       ...getQuery(),
       Pagination: {
@@ -1131,6 +1172,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       },
     }
     apiQueryRisks(params).then((allRes) => {
+      if (epoch !== listQueryEpochRef.current) return
       setAllTotal(+allRes.Total)
       if (+allRes.Total !== selectList.length) {
         setAllCheck(false)
@@ -1178,12 +1220,12 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     }
     if (!val.IsRead) {
       apiNewRiskRead({ Filter: { ...query, Ids: [val.Id] } }).then(() => {
+        const current = getResponse()
         setResponse({
-          ...response,
-          Data: response.Data.map((ele) => {
+          ...current,
+          Data: current.Data.map((ele) => {
             if (ele.Id === val.Id) {
-              ele.IsRead = true
-              ele.cellClassName = ''
+              return { ...ele, IsRead: true, cellClassName: '' }
             }
             return ele
           }),
@@ -1280,7 +1322,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       return
     } else if (tableBodyHeightRef.current < height) {
       // 窗口由小变大时 重新拉取数据
-      const length = response.Data.length
+      const length = getResponse().Data.length
       const h = length * tableCellHeight
       if (h < height) {
         update()
