@@ -72,62 +72,65 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         allowSecretLocalJson.current = null
       }
     }, [yakitStatus])
-    const handleAllowSecretLocal = useMemoizedFn(async (port: number, checkVersion: boolean) => {
-      const callId = ++latestCheckCallIdRef.current
-      clearTimeout(startTimer.current)
-      allowSecretLocalJson.current = null
-      // 中断连接 后续不执行
-      if (yakitStatusRef.current === 'break') {
-        debugToPrintLog(`------ 开始 check 被阻止 ------`)
-        setLog([])
-        return
-      }
-
-      debugToPrintLog(`------ 开始执行 check ------`)
-      setLog([t('LocalEngine.checking_secret_password_mode')])
-      try {
-        const savedPolicy = await getLocalValue(policyKey)
-        if (!isCurrentCheck(callId)) return
-        const res = await grpcCheckAllowSecretLocal({
-          port,
-          softwareVersion: FetchSoftwareVersion(),
-          policy: ['auto', 'ipc', 'tcp'].includes(savedPolicy) ? savedPolicy : 'auto',
-        })
-        if (!isCurrentCheck(callId)) return
-        const failureStatus = engineFailureStatus(res.status, 'check')
-        if (!res.ok && failureStatus === null) return
-        setRestartLoading(false)
-        if (res.ok && res.status === 'success') {
-          setLog((arr) => arr.concat([t('EngineManagement.prepared')]))
-          setYakitStatus('')
-          allowSecretLocalJson.current = res.json
-          handlePreCheckForLinkEngine(checkVersion)
+    const handleAllowSecretLocal = useMemoizedFn(
+      async (port: number, checkVersion: boolean, onPrepared?: () => void) => {
+        const callId = ++latestCheckCallIdRef.current
+        clearTimeout(startTimer.current)
+        allowSecretLocalJson.current = null
+        // 中断连接 后续不执行
+        if (yakitStatusRef.current === 'break') {
+          debugToPrintLog(`------ 开始 check 被阻止 ------`)
+          setLog([])
           return
         }
-        allowSecretLocalJson.current = null
-        // 主进程已组装好用户可读的 message，前端只管显示 + 切换 UI 状态
-        setLog((arr) => arr.concat([engineFailureMessage(res, i18n.language, t('LocalEngine.check_failed'), t)]))
-        // 旧版本场景保留特殊处理
-        if (res.status === 'old_version') {
-          setLog((arr) =>
-            arr.concat([
-              buildInEngineVersion
-                ? t('LocalEngine.engine_version_low_reset')
-                : t('LocalEngine.engine_version_low_download'),
-            ]),
-          )
-          setYakitStatus('old_version')
-        } else {
-          setYakitStatus(failureStatus || 'check_error')
+
+        debugToPrintLog(`------ 开始执行 check ------`)
+        setLog([t('LocalEngine.checking_secret_password_mode')])
+        try {
+          const savedPolicy = await getLocalValue(policyKey)
+          if (!isCurrentCheck(callId)) return
+          const res = await grpcCheckAllowSecretLocal({
+            port,
+            softwareVersion: FetchSoftwareVersion(),
+            policy: ['auto', 'ipc', 'tcp'].includes(savedPolicy) ? savedPolicy : 'auto',
+          })
+          if (!isCurrentCheck(callId)) return
+          const failureStatus = engineFailureStatus(res.status, 'check')
+          if (!res.ok && failureStatus === null) return
+          setRestartLoading(false)
+          if (res.ok && res.status === 'success') {
+            setLog((arr) => arr.concat([t('EngineManagement.prepared')]))
+            setYakitStatus('')
+            allowSecretLocalJson.current = res.json
+            if (onPrepared) onPrepared()
+            else handlePreCheckForLinkEngine(checkVersion)
+            return
+          }
+          allowSecretLocalJson.current = null
+          // 主进程已组装好用户可读的 message，前端只管显示 + 切换 UI 状态
+          setLog((arr) => arr.concat([engineFailureMessage(res, i18n.language, t('LocalEngine.check_failed'), t)]))
+          // 旧版本场景保留特殊处理
+          if (res.status === 'old_version') {
+            setLog((arr) =>
+              arr.concat([
+                buildInEngineVersion
+                  ? t('LocalEngine.engine_version_low_reset')
+                  : t('LocalEngine.engine_version_low_download'),
+              ]),
+            )
+            setYakitStatus('old_version')
+          } else {
+            setYakitStatus(failureStatus || 'check_error')
+          }
+        } catch (error) {
+          // 旧调用直接跳过
+          if (!isCurrentCheck(callId)) return
+          setRestartLoading(false)
+          setLog([t('LocalEngine.check_failed')])
+          setYakitStatus('check_error')
         }
-      } catch (error) {
-        // 旧调用直接跳过
-        if (!isCurrentCheck(callId)) return
-        setRestartLoading(false)
-        setLog([t('LocalEngine.check_failed')])
-        setYakitStatus('check_error')
-      }
-    })
+      },
+    )
 
     /**
      * @name 初始化启动-连接引擎的前置版本检查
@@ -406,6 +409,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       handleAllowSecretLocal(port, false)
     })
 
+    // 重新 check 拿新 launchId 后跳过版本比对、直接校验引擎来源并连接
+    const initAndCheckSource = useMemoizedFn((port: number, version: string) => {
+      handleAllowSecretLocal(port, false, () => {
+        handleCheckEngineSource(version)
+      })
+    })
+
     useImperativeHandle(
       ref,
       () => ({
@@ -414,6 +424,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         checkEngineSource: handleCheckEngineSource,
         startYakEngine: startYakEngine,
         link: toLink,
+        initAndCheckSource,
       }),
       [],
     )

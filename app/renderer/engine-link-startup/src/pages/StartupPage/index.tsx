@@ -899,7 +899,7 @@ export const StartupPage: React.FC = () => {
           initializeEngine(() => {
             setCheckLog([t('StartupPage.engine_unpack_success', { version: getBuildInEngineVersion() })])
             if (localEngineRef.current) {
-              localEngineRef.current.checkEngineSource(getBuildInEngineVersion())
+              localEngineRef.current.initAndCheckSource(getCustomPort(), getBuildInEngineVersion())
             }
           })
         } else {

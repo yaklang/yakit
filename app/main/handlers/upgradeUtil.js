@@ -45,7 +45,7 @@ const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = requ
 const { getCheckTextUrl, fetchSpecifiedYakVersionHash } = require('../handlers/utils/network')
 const { engineLogOutputFileAndUI } = require('../logFile')
 
-const restoreEngine = () =>
+const restoreEngine = (callback) =>
   getEngineSession().withStopped(async () => {
     const platform = process.platform === 'win32' ? 'windows' : process.platform
     const arch = process.arch === 'arm64' ? 'arm64' : 'amd64'
@@ -63,7 +63,7 @@ const restoreEngine = () =>
         }
       },
     })
-    latestVersionCache = null
+    callback()
   })
 
 /** 解析当前引擎构建类型：标记文件 -> 本地 slim 缓存比对 -> OSS slim hash 比对 */
@@ -927,7 +927,9 @@ module.exports = {
     // asyncRestoreEngineAndPlugin wrapper
     ipcMain.handle('RestoreEngineAndPlugin', async (e) => {
       assertTrustedAppSender(e, 'RestoreEngineAndPlugin')
-      return restoreEngine()
+      return restoreEngine(() => {
+        latestVersionCache = null
+      })
     })
 
     // 插件压缩包和解压目录
@@ -1189,7 +1191,9 @@ module.exports = {
     // asyncRestoreEngineAndPlugin wrapper
     ipcMain.handle(ipcEventPre + 'RestoreEngineAndPlugin', async (e) => {
       assertTrustedAppSender(e, 'RestoreEngineAndPlugin')
-      return restoreEngine()
+      return restoreEngine(() => {
+        latestVersionCache = null
+      })
     })
 
     // asyncDownloadLatestYak wrapper
