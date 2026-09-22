@@ -534,4 +534,64 @@ describe('LocalEngine Component', () => {
       await startLinkEngine()
     })
   })
+
+  describe('initAndCheckSource', () => {
+    it('check 成功后跳过版本比对，直接校验来源并用新 launchId 连接', async () => {
+      ;(grpcCheckAllowSecretLocal as any).mockResolvedValue({
+        ok: true,
+        status: 'success',
+        json: { port: 9011, launchId: 'fresh-launch-id', version: '1.4.7-beta2' },
+      })
+      renderComponent()
+      await waitFor(() => expect(ref.current).toBeDefined())
+      await act(async () => ref.current!.initAndCheckSource(9011, '1.4.7-beta2'))
+
+      // 跳过版本比对：不查 yakit 版本、不查内置版本
+      expect(grpcFetchLocalYakitVersion).not.toHaveBeenCalled()
+      expect(grpcFetchLatestYakitVersion).not.toHaveBeenCalled()
+      expect(grpcFetchBuildInYakVersion).not.toHaveBeenCalled()
+
+      // 校验来源：用传入的 version 查线上 hash
+      await waitFor(() => {
+        expect(grpcFetchSpecifiedYakVersionHash).toHaveBeenCalledWith(
+          { version: '1.4.7-beta2', config: { timeout: 2000 } },
+          true,
+        )
+      })
+      expect(grpcFetchLocalYakVersionHash).toHaveBeenCalled()
+
+      // 用 check 返回的新 launchId 连接
+      await startLinkEngine()
+      expect(props.onLinkEngine).toHaveBeenCalledWith({ port: 9011, launchId: 'fresh-launch-id' })
+    })
+
+    it('check 失败时不校验来源也不连接', async () => {
+      ;(grpcCheckAllowSecretLocal as any).mockResolvedValue({
+        ok: false,
+        status: 'unknown',
+        message: 'something wrong',
+      })
+      renderComponent()
+      await waitFor(() => expect(ref.current).toBeDefined())
+      await act(async () => ref.current!.initAndCheckSource(9011, '1.4.7-beta2'))
+
+      await waitFor(() => {
+        expect(props.setYakitStatus).toHaveBeenCalledWith('check_error')
+      })
+
+      expect(grpcFetchLocalYakVersionHash).not.toHaveBeenCalled()
+      expect(grpcFetchSpecifiedYakVersionHash).not.toHaveBeenCalled()
+      expect(props.onLinkEngine).not.toHaveBeenCalled()
+    })
+
+    it('yakitStatus 为 break 时应阻止后续检查', async () => {
+      props.yakitStatus = 'break'
+      renderComponent()
+      await waitFor(() => expect(ref.current).toBeDefined())
+      await act(async () => ref.current!.initAndCheckSource(9011, '1.4.7-beta2'))
+
+      expect(grpcCheckAllowSecretLocal).not.toHaveBeenCalled()
+      expect(props.onLinkEngine).not.toHaveBeenCalled()
+    })
+  })
 })
