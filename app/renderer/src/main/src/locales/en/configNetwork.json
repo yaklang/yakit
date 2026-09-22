@@ -94,6 +94,8 @@
     "dbSyncStorageTip": "Enable database sync storage",
     "dumpPacketSize": "Dump packet size",
     "dumpPacketSizeTip": "Packets larger than this will be dumped to files instead of stored directly",
+    "listInlinePacketSize": "List inline packet size",
+    "listInlinePacketSizeTip": "MITM list includes raw packets up to this size so rows do not need a loading fetch. 0 drops all list packets (load on click). Range 0–500K, default 300K",
     "autoPerformanceSampling": "Auto performance sampling",
     "autoPerformanceSamplingTip": "When enabled, high CPU/memory usage triggers performance sampling and saves files under ~yakit-projects/pprof-log",
     "secondaryTabsNum": "Secondary tab count",

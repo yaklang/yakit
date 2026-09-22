@@ -76,6 +76,8 @@ export interface GlobalConfigEmbeddedFormProps {
   onOpenAuth: () => void
   pprofFileAutoAnalyze: boolean
   setPprofFileAutoAnalyze: (v: boolean) => void
+  listInlinePacketSize: number | string
+  setListInlinePacketSize: (v: number | string) => void
   secondaryTabsNum: number | string
   setSecondaryTabsNum: (v: number | string) => void
   limitLogNum: number | string
@@ -117,6 +119,8 @@ export const GlobalConfigEmbeddedForm: React.FC<GlobalConfigEmbeddedFormProps> =
     onOpenAuth,
     pprofFileAutoAnalyze,
     setPprofFileAutoAnalyze,
+    listInlinePacketSize,
+    setListInlinePacketSize,
     secondaryTabsNum,
     setSecondaryTabsNum,
     limitLogNum,
@@ -139,6 +143,13 @@ export const GlobalConfigEmbeddedForm: React.FC<GlobalConfigEmbeddedFormProps> =
     if (!value || value === 0) value = 10
     else if (value > 50) value = 50
     setParams({ ...params, MaxContentLength: value })
+  }
+
+  const clampListInlinePacketSize = () => {
+    let value = parseInt(listInlinePacketSize + '' || '0', 10)
+    if (Number.isNaN(value) || value < 0) value = 0
+    else if (value > 500) value = 500
+    setListInlinePacketSize(value)
   }
 
   const clampSecondaryTabs = () => {
@@ -463,6 +474,23 @@ export const GlobalConfigEmbeddedForm: React.FC<GlobalConfigEmbeddedFormProps> =
               }}
               onPressEnter={clampMaxContent}
               onBlur={clampMaxContent}
+            />
+          </SettingRow>
+          <SettingRow
+            title={t('ConfigNetworkPage.listInlinePacketSize')}
+            desc={t('ConfigNetworkPage.listInlinePacketSizeTip')}
+          >
+            <YakitInput
+              wrapperClassName={styles['compact-input']}
+              suffix="K"
+              value={listInlinePacketSize}
+              onChange={(e) => {
+                let value = e.target.value.replace(/\D/g, '')
+                if (value.length > 1 && value.startsWith('0')) value = value.replace(/^0+/, '')
+                setListInlinePacketSize(value)
+              }}
+              onPressEnter={clampListInlinePacketSize}
+              onBlur={clampListInlinePacketSize}
             />
           </SettingRow>
           <SettingRow

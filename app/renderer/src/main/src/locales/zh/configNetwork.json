@@ -94,6 +94,8 @@
     "dbSyncStorageTip": "开启数据库同步存存储",
     "dumpPacketSize": "转储数据包大小",
     "dumpPacketSizeTip": "超过设置大小的数据包会转储为文件，不会直接入库",
+    "listInlinePacketSize": "列表内联数据包大小",
+    "listInlinePacketSizeTip": "MITM 列表携带不超过该大小的原始包，避免每条都 loading。0 表示列表不带包（点开再拉详情）。范围 0–500K，默认 300K",
     "autoPerformanceSampling": "自动性能采样",
     "autoPerformanceSamplingTip": "开启后cpu、内存过高则会自动触发性能采样，采集到的文件会存在~yakit-projects/pprof-log文件夹里",
     "secondaryTabsNum": "二级页签数量",
