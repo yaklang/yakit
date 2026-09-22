@@ -1,37 +1,42 @@
 import type React from 'react'
-import { Axis, Legend, Chart, Coord, Geom, Tooltip } from 'bizcharts'
+import { useMemo } from 'react'
+import { Bar } from '@ant-design/charts'
+import type { BarConfig } from '@ant-design/charts'
 import type { GraphProps } from './base'
 
 export const BarGraph: React.FC<GraphProps> = (g) => {
-  const color = g.color || []
-  const barData = g.data
-  const direction: boolean = g.direction ?? true
+  const { data = [], color = [], height = 400, direction = true, width = 400 } = g
+
+  const barData = useMemo(() => data.map((item) => ({ name: item.key, value: item.value })), [data])
+
+  const config: BarConfig = {
+    data: barData,
+    xField: 'value',
+    yField: 'name',
+    seriesField: 'name',
+    height,
+    width,
+    autoFit: false,
+    padding: [30, 30, 30, 170],
+    legend: false,
+    transpose: direction,
+    color: color.length === 0 ? undefined : color,
+    tooltip: {
+      formatter: (datum: any) => ({
+        name: datum.name,
+        value: String(datum.value),
+      }),
+    },
+    yAxis: {
+      label: {
+        offset: 12,
+      },
+    },
+  }
+
   return (
-    <div>
-      <Chart
-        padding={{
-          left: 170,
-          top: 30,
-          right: 30,
-          bottom: 30,
-        }}
-        height={g.height || 400}
-        width={g.width || 400}
-        data={barData || []}
-        forceFit
-      >
-        <Coord transpose={direction} />
-        <Axis
-          name="key"
-          label={{
-            offset: 12,
-          }}
-        />
-        <Legend position="right" />
-        <Axis name="value" />
-        <Tooltip />
-        <Geom type="interval" position="key*value" color={color.length === 0 ? undefined : ['name', color]} />
-      </Chart>
+    <div data-type="echarts-box" data-echart-type="vertical-bar" style={{ width, height }}>
+      <Bar {...config} />
     </div>
   )
 }
