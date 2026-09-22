@@ -1,7 +1,7 @@
 import '../../ai-re-act/hooks/__test__/setupElectron'
 import type { ReactNode } from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { AIAgent } from '../AIAgent'
 
@@ -120,19 +120,40 @@ vi.mock('../components/aiFileSystemList/store/useCustomFolder', () => ({
 const getRemoteValueMock = vi.mocked(getRemoteValue)
 const setRemoteValueMock = vi.mocked(setRemoteValue)
 
+/** 可注入宽度的 ResizeObserver mock：notifyWidth 模拟容器宽度变化回调 */
+const roCallbacks = new Set<(width: number) => void>()
+const notifyWidth = (width: number) => {
+  act(() => {
+    roCallbacks.forEach((notify) => notify(width))
+  })
+}
+
 describe('AIAgent 侧栏拖拽宽度', () => {
   beforeEach(() => {
     getRemoteValueMock.mockReset()
     setRemoteValueMock.mockReset()
     getRemoteValueMock.mockResolvedValue('')
     setRemoteValueMock.mockResolvedValue(undefined)
-    if (typeof globalThis.ResizeObserver === 'undefined') {
-      globalThis.ResizeObserver = class {
+    roCallbacks.clear()
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          const notify = (width: number) =>
+            callback([{ contentRect: { width } } as ResizeObserverEntry], this as unknown as ResizeObserver)
+          roCallbacks.add(notify)
+        }
         observe() {}
         unobserve() {}
-        disconnect() {}
-      } as typeof ResizeObserver
-    }
+        disconnect() {
+          roCallbacks.clear()
+        }
+      },
+    )
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it('拖拽结束回写 sideRatio，收起再展开仍保持宽度', () => {
@@ -157,5 +178,54 @@ describe('AIAgent 侧栏拖拽宽度', () => {
     fireEvent.click(screen.getByRole('button', { name: '展开侧栏' }))
     expect(screen.getByLabelText('side-show')).toHaveTextContent('true')
     expect(screen.getByLabelText('first-ratio')).toHaveTextContent('480px')
+  })
+
+  it('宽度越过 1300 切浮层布局，浮层展开宽度沿用拖拽后的 sideRatio', () => {
+    render(<AIAgent pageId="test" />)
+
+    // 大屏：非 mini，走 YakitResizeBox 布局
+    expect(screen.getByLabelText('first-ratio')).toBeInTheDocument()
+
+    // 拖拽改宽，供浮层沿用
+    fireEvent.click(screen.getByRole('button', { name: '展开侧栏' }))
+    fireEvent.click(screen.getByRole('button', { name: '模拟拖拽结束' }))
+
+    // 跌破 1300：切浮层布局，ResizeBox 分支消失
+    notifyWidth(1200)
+    expect(screen.queryByLabelText('first-ratio')).not.toBeInTheDocument()
+
+    // 浮层展开态宽度取 sideRatio（inline style 挂在侧栏容器上，mock 的 SideList 自带一层 wrapper）
+    const sideContainer = screen.getByLabelText('side-show').parentElement!.parentElement!
+    expect(sideContainer).toHaveStyle({ width: '480px' })
+
+    // 收起后展开宽度清空，再展开仍取 sideRatio
+    fireEvent.click(screen.getByRole('button', { name: '收起侧栏' }))
+    expect(screen.getByLabelText('side-show')).toHaveTextContent('false')
+    // 收起后 inline 宽度清空（style 属性保留为空串）
+    expect(sideContainer.style.width).toBe('')
+    fireEvent.click(screen.getByRole('button', { name: '展开侧栏' }))
+    expect(sideContainer).toHaveStyle({ width: '480px' })
+
+    // 回到宽度 > 1300：恢复 ResizeBox 布局且展开宽度仍是拖拽后的 480px
+    notifyWidth(1400)
+    expect(screen.getByLabelText('first-ratio')).toHaveTextContent('480px')
+  })
+
+  it('小屏下宽度跌破 1230 时自动收起已展开的侧栏', () => {
+    render(<AIAgent pageId="test" />)
+
+    // 首次回调只初始化 isMini（skipFirstClose），不触发收起
+    notifyWidth(1200)
+    fireEvent.click(screen.getByRole('button', { name: '展开侧栏' }))
+    expect(screen.getByLabelText('side-show')).toHaveTextContent('true')
+
+    // 跌破 1230：mini 布局下强制收起
+    notifyWidth(1100)
+    expect(screen.getByLabelText('side-show')).toHaveTextContent('false')
+
+    // 回升大屏恢复 ResizeBox 布局，收起态不自动展开
+    notifyWidth(1400)
+    expect(screen.getByLabelText('side-show')).toHaveTextContent('false')
+    expect(screen.getByLabelText('first-ratio')).toHaveTextContent('24px')
   })
 })
