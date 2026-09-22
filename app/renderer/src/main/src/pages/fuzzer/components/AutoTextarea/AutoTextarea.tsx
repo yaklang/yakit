@@ -9,9 +9,11 @@ interface AutoTextareaProps {
   placeholder?: string
   value?: string
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+  /** React 19 下 Form.Item 会把 ref 当普通 prop 注入，需解构避免覆盖内部 textareaRef */
+  ref?: React.Ref<HTMLTextAreaElement>
 }
 export const AutoTextarea: React.FC<AutoTextareaProps> = React.memo((props) => {
-  const { onChange, className = '', autoSizeOnMount = false, ...restProps } = props
+  const { onChange, className = '', autoSizeOnMount = false, ref, ...restProps } = props
   const textareaRef = useRef<any>()
   const heightRef = useRef<number>(0)
   const onChangeText = useMemoizedFn(() => {
@@ -30,7 +32,12 @@ export const AutoTextarea: React.FC<AutoTextareaProps> = React.memo((props) => {
   return (
     <textarea
       rows={1}
-      ref={textareaRef}
+      ref={(node) => {
+        textareaRef.current = node
+        if (typeof ref === 'function') ref(node)
+        else if (ref && typeof ref === 'object')
+          (ref as React.MutableRefObject<HTMLTextAreaElement | null>).current = node
+      }}
       {...restProps}
       spellCheck={false}
       className={classNames(styles['auto-textarea'], className)}
