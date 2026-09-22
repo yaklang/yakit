@@ -10,6 +10,14 @@ function encodeChineseCharacters(url) {
 /** @type {Map<string, import('fs').WriteStream>} */
 const writersByDest = new Map()
 
+/**
+ * 取消先于下载流建立（URL 解析 / axios 在途）时记录的取消意图，按 dest 暂存；
+ * requestWithProgress 在建 writer 前消费，保证「取消永远有效」。
+ * 任务收尾（requestWithProgress 出口 / upgradeUtil onError）时清理，
+ * 避免残留意图毒化用户下一次同 dest 的下载。
+ */
+const cancelRequestedByDest = new Set()
+
 function buildProgressState({ startedAt, totalLength, downloadedLength }) {
   const total = Number(totalLength) || 0
   const state = {
@@ -71,12 +79,20 @@ function requestWithProgress(
     .get(u, config)
     .then((response) => {
       if (response.status === 404) {
+        // 404 不建 writer：清理窗口期暂存的取消意图，避免毒化下次同 dest 下载
+        cancelRequestedByDest.delete(dest)
         onError && onError(new Error(`404 not found in ${downloadUrl}`))
         return
       }
 
       if (writersByDest.has(dest)) {
         throw new Error(`Download already in progress for ${dest}`)
+      }
+
+      // 取消先于流建立到达：消费暂存的取消意图，不建 writer 直接失败
+      if (cancelRequestedByDest.has(dest)) {
+        cancelRequestedByDest.delete(dest)
+        throw new Error('Write operation cancelled')
       }
 
       const writer = fs.createWriteStream(dest)
@@ -135,6 +151,8 @@ function requestWithProgress(
       onFinished && onFinished()
     })
     .catch((error) => {
+      // 窗口期取消后请求失败：同样清理暂存意图，避免毒化下次同 dest 下载
+      cancelRequestedByDest.delete(dest)
       destroyWriter(dest, error)
       console.info(error.message)
       onError && onError(error)
@@ -210,7 +228,11 @@ function yakitCancelRequestWithProgress(destPath) {
     }
     const writer = writersByDest.get(destPath)
     if (!writer) {
-      settle(resolve)
+      // 流尚未建立：暂存取消意图（requestWithProgress 建 writer 前消费），
+      // 并与下载中取消同样 reject，避免取消按钮在窗口期静默失效；
+      // 意图随任务收尾清理（requestWithProgress 出口 / upgradeUtil onFinished/onError）。
+      cancelRequestedByDest.add(destPath)
+      settle(reject, new Error('Write operation stoped'))
       return
     }
     writer.on('close', () => {
@@ -220,10 +242,16 @@ function yakitCancelRequestWithProgress(destPath) {
   })
 }
 
+/** 任务收尾兜底：清除该 dest 暂存的取消意图（upgradeUtil onFinished/onError 调用） */
+function clearCancelIntent(destPath) {
+  if (destPath) cancelRequestedByDest.delete(destPath)
+}
+
 module.exports = {
   requestWithProgress,
   engineCancelRequestWithProgress,
   yakitCancelRequestWithProgress,
   cancelRequestProgress,
   buildProgressState,
+  clearCancelIntent,
 }

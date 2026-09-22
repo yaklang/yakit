@@ -41,7 +41,11 @@ const {
   resolveEngineBuildType,
   resolveLocalDownloadedEngineVersion,
 } = require('./utils/engineVersion')
-const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = require('./utils/requestWithProgress')
+const {
+  engineCancelRequestWithProgress,
+  yakitCancelRequestWithProgress,
+  clearCancelIntent,
+} = require('./utils/requestWithProgress')
 const { createYakitDownloadTracker } = require('./utils/yakitDownloadTracker')
 const { getCheckTextUrl, fetchSpecifiedYakVersionHash, fetchExactYakVersionHash } = require('../handlers/utils/network')
 const { engineLogOutputFileAndUI } = require('../logFile')
@@ -585,10 +589,12 @@ module.exports = {
           return
         }
         const onFinished = () => {
+          clearCancelIntent(task.dest)
           yakitDownloadTracker.clear(event, task)
           resolve()
         }
         const onError = (error) => {
+          clearCancelIntent(task.dest)
           yakitDownloadTracker.clear(event, task)
           reject(error)
         }
@@ -623,6 +629,11 @@ module.exports = {
           // 确保系统下载目录存在
           if (!fs.existsSync(getYakitInstallDir())) fs.mkdirSync(getYakitInstallDir(), { recursive: true })
           const dest = path.join(getYakitInstallDir(), path.basename(downloadUrl))
+          // URL 解析窗口期内已请求取消：不再发起下载，与下载中取消同一错误语义
+          if (yakitDownloadTracker.isCancelRequested(event, task)) {
+            onError(new Error('Write operation stoped'))
+            return
+          }
           yakitDownloadTracker.setDest(event, task, dest)
           try {
             fs.unlinkSync(dest)
@@ -666,7 +677,13 @@ module.exports = {
     }
 
     ipcMain.handle('cancel-download-yakit-version', async (e) => {
-      return await yakitCancelRequestWithProgress(yakitDownloadTracker.getDest(e))
+      const dest = yakitDownloadTracker.getDest(e)
+      // 窗口期（download-url 尚未解析出 dest）取消：置标志并按已取消语义回执，
+      // 由 asyncDownloadLatestYakit 在 await 恢复点消费，避免取消按钮静默失效
+      if (!dest && yakitDownloadTracker.requestCancel(e)) {
+        throw new Error('Write operation stoped')
+      }
+      return await yakitCancelRequestWithProgress(dest)
     })
 
     ipcMain.handle('download-latest-yakit', async (e, version, type) => {
@@ -681,10 +698,12 @@ module.exports = {
           return
         }
         const onFinished = () => {
+          clearCancelIntent(task.dest)
           yakitDownloadTracker.clear(event, task)
           resolve()
         }
         const onError = (error) => {
+          clearCancelIntent(task.dest)
           yakitDownloadTracker.clear(event, task)
           reject(error)
         }
@@ -1433,10 +1452,12 @@ module.exports = {
           return
         }
         const onFinished = () => {
+          clearCancelIntent(task.dest)
           yakitDownloadTracker.clear(event, task)
           resolve()
         }
         const onError = (error) => {
+          clearCancelIntent(task.dest)
           yakitDownloadTracker.clear(event, task)
           reject(error)
         }
@@ -1471,6 +1492,11 @@ module.exports = {
           // 确保系统下载目录存在
           if (!fs.existsSync(getYakitInstallDir())) fs.mkdirSync(getYakitInstallDir(), { recursive: true })
           const dest = path.join(getYakitInstallDir(), path.basename(downloadUrl))
+          // URL 解析窗口期内已请求取消：不再发起下载，与下载中取消同一错误语义
+          if (yakitDownloadTracker.isCancelRequested(event, task)) {
+            onError(new Error('Write operation stoped'))
+            return
+          }
           yakitDownloadTracker.setDest(event, task, dest)
           try {
             fs.unlinkSync(dest)
@@ -1517,7 +1543,11 @@ module.exports = {
     })
 
     ipcMain.handle(ipcEventPre + 'cancel-download-yakit-version', async (e) => {
-      return await yakitCancelRequestWithProgress(yakitDownloadTracker.getDest(e))
+      const dest = yakitDownloadTracker.getDest(e)
+      if (!dest && yakitDownloadTracker.requestCancel(e)) {
+        throw new Error('Write operation stoped')
+      }
+      return await yakitCancelRequestWithProgress(dest)
     })
 
     // asyncQueryLatestYakEngineVersion wrapper
