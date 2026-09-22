@@ -269,7 +269,7 @@
   overflow: hidden;
   .ai-tokens-heard {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 4px;
     .title {
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
@@ -281,6 +281,14 @@
       letter-spacing: 0.5px;
       flex-shrink: 0;
     }
+    .model-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+      max-height: 68px;
+      overflow: auto;
+    }
     .model {
       display: flex;
       gap: 2px;
@@ -289,6 +297,7 @@
       border-radius: 9999px;
       background: var(--Colors-Use-Neutral-Bg-Hover);
       overflow: hidden;
+      flex-shrink: 0;
 
       svg {
         width: 14px;
@@ -307,6 +316,20 @@
         overflow: hidden;
         word-break: break-all;
       }
+      .thinking-level {
+        flex-shrink: 0;
+        padding: 0 4px;
+        border-radius: 4px;
+        color: var(--Colors-Use-Purple-Primary);
+        background: var(--Colors-Use-Purple-Bg);
+        font-size: 10px;
+        line-height: 16px;
+      }
+    }
+    .no-model-record {
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      font-size: 12px;
+      line-height: 20px;
     }
   }
   .diver {

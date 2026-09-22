@@ -101,10 +101,10 @@ export const getModelLabelByModelType = (type: AIModelTypeEnumType) => {
   let label: string = ''
   switch (type) {
     case AIModelTypeEnum.TierIntelligent:
-      label = '高质模型'
+      label = '主模型'
       break
     case AIModelTypeEnum.TierLightweight:
-      label = '轻量模型'
+      label = '辅助模型'
       break
     case AIModelTypeEnum.TierVision:
       label = '视觉模型'
@@ -313,7 +313,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       const haveStandardOfLightweight =
         modelName === 'memfit-standard-free' && type === 'aibalance' && modelType === 'lightweight'
       if (haveStandardOfLightweight) {
-        yakitNotify('error', 'memfit-standard-free 是高质模型,不可设置为轻量模型')
+        yakitNotify('error', 'memfit-standard-free 是主模型,不可设置为辅助模型')
         return
       }
 

@@ -156,8 +156,8 @@
     "modelType": "模型类型",
     "modelConfigTitle": "模型配置",
     "modelConfigTip": "以下值可以为空，为空代表不设置",
-    "highQualityModel": "高质模型:执行复杂任务",
-    "lightweightModel": "轻量模型:用于执行简单任务和会话",
+    "highQualityModel": "主模型:用于主线任务",
+    "lightweightModel": "辅助模型:用于辅助任务",
     "visionModel": "视觉模式:用于识别图片等,生成知识库和任务执行都会用到",
     "userInfo": "用户信息"
   }

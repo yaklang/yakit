@@ -27,7 +27,12 @@ import type {
   AIModelActionProps,
   AIModelType,
 } from '@/pages/ai-agent/aiModelList/AIModelListType'
-import { grpcClearAllModels, type AIModelConfig, type AIModelTypeFileName } from '@/pages/ai-agent/aiModelList/utils'
+import {
+  canEnableSingleModelMode,
+  grpcClearAllModels,
+  type AIModelConfig,
+  type AIModelTypeFileName,
+} from '@/pages/ai-agent/aiModelList/utils'
 import {
   AIModelPolicyEnum,
   AIModelPolicyOptions,
@@ -41,6 +46,7 @@ import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
+import { yakitNotify } from '@/utils/notification'
 import styles from './AIModelSettings.module.scss'
 
 const ModelGroup: React.FC<{
@@ -94,6 +100,18 @@ export const AIModelSettings: React.FC = () => {
   }, [inViewport])
 
   const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
+  const singleModelMode = !!aiGlobalConfig?.SingleModelMode
+
+  const onSetSingleModelMode = useMemoizedFn(async (checked: boolean) => {
+    if (checked && !canEnableSingleModelMode(aiGlobalConfig)) {
+      yakitNotify('error', t('AIOnlineModeSetting.singleModelModeInvalid'))
+      return
+    }
+    try {
+      await event.setAIGlobalConfig({ ...aiGlobalConfig, SingleModelMode: checked })
+      yakitNotify('success', t('AIOnlineModeSetting.singleModelModeSaved'))
+    } catch (_) {}
+  })
 
   const onRefresh = useMemoizedFn((isShowLoading?: boolean) => {
     if (modelType === 'online') {
@@ -182,11 +200,13 @@ export const AIModelSettings: React.FC = () => {
     })
   })
 
-  const isHaveData = !!(
-    aiGlobalConfig?.IntelligentModels?.length ||
-    aiGlobalConfig?.LightweightModels?.length ||
-    aiGlobalConfig?.VisionModels?.length
-  )
+  const isHaveData = singleModelMode
+    ? !!aiGlobalConfig?.IntelligentModels?.length
+    : !!(
+        aiGlobalConfig?.IntelligentModels?.length ||
+        aiGlobalConfig?.LightweightModels?.length ||
+        aiGlobalConfig?.VisionModels?.length
+      )
 
   const renderOnlineGroup = (
     fileName: AIModelTypeFileName,
@@ -258,37 +278,56 @@ export const AIModelSettings: React.FC = () => {
           <div className={styles['list-panel']}>
             <div className={styles['setting-row']}>
               <div className={styles['setting-row-text']}>
-                <div className={styles['setting-row-title']}>{t('AiAgengt.callingMode')}</div>
-              </div>
-              <div className={styles['setting-row-control']}>
-                <div className={styles['control-stack-end']}>
-                  <YakitRadioButtons
-                    buttonStyle="solid"
-                    options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
-                    value={aiGlobalConfig?.RoutingPolicy}
-                    onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
-                  />
-                  <div className={styles['setting-row-desc']}>
-                    {getTipByType(aiGlobalConfig?.RoutingPolicy || AIModelPolicyEnum.PolicyAuto, t)}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className={styles['setting-row']}>
-              <div className={styles['setting-row-text']}>
-                <div className={styles['setting-row-title']}>{t('AIOnlineModeSetting.disableFallback')}</div>
+                <div className={styles['setting-row-title']}>{t('AIOnlineModeSetting.singleModelMode')}</div>
+                <div className={styles['setting-row-desc']}>{t('AIOnlineModeSetting.singleModelModeDesc')}</div>
               </div>
               <div className={styles['setting-row-control']}>
                 <YakitSwitch
                   size="middle"
-                  checked={!!aiGlobalConfig?.DisableFallback}
-                  onChange={(c) => event.setAIGlobalConfig({ DisableFallback: c })}
+                  checked={singleModelMode}
+                  loading={aiGlobalConfigData.updateLoading}
+                  disabled={aiGlobalConfigData.updateLoading}
+                  onChange={onSetSingleModelMode}
                 />
               </div>
             </div>
+            {!singleModelMode && (
+              <>
+                <div className={styles['setting-row']}>
+                  <div className={styles['setting-row-text']}>
+                    <div className={styles['setting-row-title']}>{t('AiAgengt.callingMode')}</div>
+                  </div>
+                  <div className={styles['setting-row-control']}>
+                    <div className={styles['control-stack-end']}>
+                      <YakitRadioButtons
+                        buttonStyle="solid"
+                        options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
+                        value={aiGlobalConfig?.RoutingPolicy}
+                        onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
+                      />
+                      <div className={styles['setting-row-desc']}>
+                        {getTipByType(aiGlobalConfig?.RoutingPolicy || AIModelPolicyEnum.PolicyAuto, t)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles['setting-row']}>
+                  <div className={styles['setting-row-text']}>
+                    <div className={styles['setting-row-title']}>{t('AIOnlineModeSetting.disableFallback')}</div>
+                  </div>
+                  <div className={styles['setting-row-control']}>
+                    <YakitSwitch
+                      size="middle"
+                      checked={!!aiGlobalConfig?.DisableFallback}
+                      onChange={(c) => event.setAIGlobalConfig({ DisableFallback: c })}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
             {isHaveData ? (
               <div className={styles['groups']}>
-                {sameModelAlert && isSameSelectedModel && (
+                {!singleModelMode && sameModelAlert && isSameSelectedModel && (
                   <div className={styles['same-model-alert']}>
                     <YakitAlert
                       type="warning"
@@ -310,7 +349,7 @@ export const AIModelSettings: React.FC = () => {
                     }
                   </ModelGroup>
                 )}
-                {!!aiGlobalConfig?.LightweightModels?.length && (
+                {!singleModelMode && !!aiGlobalConfig?.LightweightModels?.length && (
                   <ModelGroup title={t('AiAgengt.lightweightModels')} desc={t('AIModelList.lightweightModelsDesc')}>
                     {(open) =>
                       renderOnlineGroup(
@@ -322,7 +361,7 @@ export const AIModelSettings: React.FC = () => {
                     }
                   </ModelGroup>
                 )}
-                {!!aiGlobalConfig?.VisionModels?.length && (
+                {!singleModelMode && !!aiGlobalConfig?.VisionModels?.length && (
                   <ModelGroup title={t('AiAgengt.visionModels')} desc={t('AIModelList.visionModelsDesc')}>
                     {(open) =>
                       renderOnlineGroup(

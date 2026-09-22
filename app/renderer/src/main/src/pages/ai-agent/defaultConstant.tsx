@@ -165,6 +165,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     GoalAcceptanceCriteria: '',
   },
   DisableMemoryTriage: false,
+  SingleModelMode: false,
   Source: AISourceEnum.aiAgent,
 }
 
@@ -426,6 +427,7 @@ export const AIModelTypeInterFileNameEnum: { [K in AIModelTypeFileName]: K } = {
 
 export const defaultAIGlobalConfig: AIGlobalConfig = {
   Enabled: false,
+  SingleModelMode: false,
   RoutingPolicy: AIModelPolicyEnum.PolicyAuto,
   DisableFallback: false,
   DefaultModelId: '',

@@ -28,6 +28,7 @@ import has from 'lodash/has'
 import { AITaskContent } from '../aiTaskContent/AITaskContent'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
+import { useStore } from 'zustand'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine, onTaskTabsChange } = props
@@ -129,10 +130,14 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
 
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
 
   const { setting, activeChat } = useAIAgentStore()
   const [aiGlobalConfigData, aiGlobalConfigEvent] = useAIGlobalConfig()
   const aiGlobalConfig = aiGlobalConfigData.aiGlobalConfig
+  const globalSingleModelMode = !!aiGlobalConfig.SingleModelMode
+  const effectiveSingleModelMode = globalSingleModelMode || !!setting.SingleModelMode
+  const singleModelModeLocked = globalSingleModelMode || !!activeChat?.SessionID || execute
 
   const [visible, setVisible] = useControllableValue<boolean>(props, {
     defaultValue: false,
@@ -140,6 +145,11 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     trigger: 'setVisible',
   })
   const [form] = Form.useForm<AIInputSettingFormProps>()
+
+  useEffect(() => {
+    if (!visible) return
+    form.setFieldValue('SingleModelMode', effectiveSingleModelMode)
+  }, [visible, effectiveSingleModelMode])
 
   // 缓存弹窗打开时的文本域初始值，用于关闭时比较是否修改
   const promptSnapshotRef = useRef<{ AIPresetPrompt: string; AIPlanPrompt: string }>({
@@ -175,6 +185,12 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     }
   })
   const onValuesChange = useMemoizedFn((changedValues: AIInputSettingFormProps) => {
+    if (has(changedValues, 'SingleModelMode') && !singleModelModeLocked) {
+      setSetting?.((v) => ({
+        ...v,
+        SingleModelMode: !!changedValues.SingleModelMode,
+      }))
+    }
     if (has(changedValues, 'SyncPerceptionTrigger')) {
       onHotSyncPerceptionTrigger(!!changedValues.SyncPerceptionTrigger)
       setSetting?.((v) => ({
@@ -192,6 +208,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
         AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
       }
       form.setFieldsValue({
+        SingleModelMode: effectiveSingleModelMode,
         AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
         AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
       })
@@ -220,6 +237,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           wrapperCol={{ span: 16 }}
           onValuesChange={onValuesChange}
           initialValues={{
+            SingleModelMode: effectiveSingleModelMode,
             SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
             EnablePlan: setting.EnablePlan,
             AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
@@ -230,6 +248,31 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             e.stopPropagation()
           }}
         >
+          <Form.Item
+            label={
+              <>
+                {globalSingleModelMode
+                  ? t('AIReActTaskChatContent.singleModelModeGlobal')
+                  : t('AIReActTaskChatContent.singleModelMode')}
+                <Tooltip
+                  classNames={{ root: styles['form-info-icon-tooltip'] }}
+                  title={
+                    globalSingleModelMode
+                      ? t('AIReActTaskChatContent.singleModelModeGlobalTip')
+                      : singleModelModeLocked
+                        ? t('AIReActTaskChatContent.singleModelModeSessionTip')
+                        : t('AIReActTaskChatContent.singleModelModeTip')
+                  }
+                >
+                  <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
+                </Tooltip>
+              </>
+            }
+            name="SingleModelMode"
+            valuePropName="checked"
+          >
+            <YakitSwitch disabled={singleModelModeLocked} />
+          </Form.Item>
           <Form.Item
             label={
               <>

@@ -351,6 +351,8 @@ export const grpcListAiModel: APIFunc<ListAiModelRequest, ListAiModelResponse> =
 }
 export interface AIGlobalConfig {
   Enabled: boolean
+  /** 是否让所有新会话只使用首个高质模型 */
+  SingleModelMode: boolean
   /**调用模式 */
   RoutingPolicy: AIModelPolicyEnum
   /**禁用降级轻量模型 */
@@ -367,6 +369,12 @@ export interface AIGlobalConfig {
   AIPresetPrompt: string
   /** 自定义 plan 提示词 */
   AIPlanPrompt: string
+}
+
+/** 单模型模式要求首个高质模型具备可用的厂商类型和模型名。 */
+export const canEnableSingleModelMode = (config: Pick<AIGlobalConfig, 'IntelligentModels'>): boolean => {
+  const model = config.IntelligentModels?.[0]
+  return !!model?.Provider?.Type?.trim() && !!model?.ModelName?.trim()
 }
 export type AIModelTypeFileName = keyof Pick<AIGlobalConfig, 'IntelligentModels' | 'LightweightModels' | 'VisionModels'>
 export interface AIModelConfig {

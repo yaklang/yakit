@@ -64,8 +64,8 @@
       "langZhTW": "Chinese (Traditional) 繁體中文"
     },
     "aiModel": {
-      "intelligent": "高質量模型",
-      "lightweight": "輕量模型",
+      "intelligent": "主模型",
+      "lightweight": "輔助模型",
       "vision": "視覺模型"
     },
     "yakMcp": {

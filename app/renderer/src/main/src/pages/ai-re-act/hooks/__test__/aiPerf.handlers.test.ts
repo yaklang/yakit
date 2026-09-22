@@ -6,16 +6,40 @@ import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 describe('aiPerf handlers', () => {
   it('D9: consumption updates rawData', () => {
     const req = makeHandlerRequest({
-      res: makeGrpcJsonRes('consumption', {
-        input_consumption: 10,
-        output_consumption: 20,
-        cache_hit_token: 1,
-        tier_consumption: {},
-      }),
+      res: {
+        ...makeGrpcJsonRes('consumption', {
+          input_consumption: 10,
+          output_consumption: 20,
+          cache_hit_token: 1,
+          consumption_uuid: 'consumption-id',
+          effective_single_model_mode: true,
+          tier_consumption: {},
+          tier_model_consumption: {
+            lightweight: [
+              {
+                provider_type: 'openai',
+                model_name: 'gpt-5',
+                thinking_level: 'none',
+                input_consumption: 10,
+                output_consumption: 20,
+                cache_hit_token: 1,
+              },
+            ],
+          },
+        }),
+        IsSync: true,
+        SyncID: 'sync-consumption',
+      },
     })
     aiPerfDataHandlers.consumption(req)
     expect(req.rawData.aiPerfData.consumption.input_consumption).toBe(10)
     expect(req.rawData.aiPerfData.consumption.output_consumption).toBe(20)
+    expect(req.rawData.aiPerfData.consumption.consumption_uuid).toBe('consumption-id')
+    expect(req.rawData.aiPerfData.consumption.effective_single_model_mode).toBe(true)
+    expect(req.rawData.aiPerfData.consumption.tier_model_consumption?.lightweight?.[0]).toMatchObject({
+      model_name: 'gpt-5',
+      thinking_level: 'none',
+    })
   })
 
   it('D9: pressure / first / total cost append', () => {

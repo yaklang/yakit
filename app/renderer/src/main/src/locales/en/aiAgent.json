@@ -1,7 +1,7 @@
 {
   "AiAgengt": {
-    "intelligentModels": "High-Quality Models",
-    "lightweightModels": "Lightweight Models",
+    "intelligentModels": "Primary Model",
+    "lightweightModels": "Auxiliary Model",
     "visionModels": "Vision Models",
     "callingMode": "Calling Mode",
     "focusMode": "Focus Mode",
@@ -75,13 +75,13 @@
     "resetModel": "Reset Model",
     "resetModelTooltip": "Reset to the default model",
     "emptyModels": "No models found. Refresh to try again.",
-    "noBuiltinModel": "No built-in high-quality model found"
+    "noBuiltinModel": "No built-in primary model found"
   },
   "AIModelList": {
     "onlineTooltip": "Access models via API, receive AI info or send messages to AI, multiple configurations possible.",
     "localTooltip": "Local AI model manager for managing local AI models, supports one-click download and installation, status monitoring and management. Localized AI services without cloud dependency.",
-    "intelligentModelsDesc": "Used for high-complexity tasks, switchable in dialog",
-    "lightweightModelsDesc": "Used for simple tasks and sessions",
+    "intelligentModelsDesc": "Used for primary tasks",
+    "lightweightModelsDesc": "Used for auxiliary tasks",
     "visionModelsDesc": "Used for image recognition, knowledge base generation, and task execution",
     "addModel": "Add Model",
     "testAndAddBtn": "Test and Add",
@@ -93,14 +93,18 @@
     "clearModelsTitle": "Clear Models",
     "clearModelsDesc": "Are you sure you want to delete all downloaded and added models? Confirming deletion of source files will also delete custom added model files.",
     "policyAuto": "Automatically select the most suitable model based on request content",
-    "policyPerformance": "Prioritize high-intelligence models",
-    "policyCost": "Prioritize lightweight/low-cost models",
+    "policyPerformance": "Prioritize the primary model",
+    "policyCost": "Prioritize the auxiliary model",
     "policyBalance": "Balance between response speed, intelligence, and cost",
-    "sameModelWarning": "Using the same model for lightweight and high-quality is not recommended; lightweight should use a fast-response model"
+    "sameModelWarning": "Using the same model as both primary and auxiliary is not recommended; the auxiliary model should respond quickly"
   },
   "AIOnlineModeSetting": {
-    "disableFallback": "Disable fallback to lightweight models",
-    "configErrorEdit": "Configuration error, cannot edit"
+    "disableFallback": "Disable fallback to the auxiliary model",
+    "configErrorEdit": "Configuration error, cannot edit",
+    "singleModelMode": "Single-model mode",
+    "singleModelModeDesc": "Run the Agent only with the primary model. Auxiliary tasks use the primary model's LiteCall, and some non-critical helpers are disabled.",
+    "singleModelModeInvalid": "Configure the provider type and model name of the primary model first",
+    "singleModelModeSaved": "Saved. The change takes full effect for newly started sessions."
   },
   "AILocalModelList": {
     "llamaServerNotReady": "Llama server not ready: {{reason}}",
@@ -151,11 +155,16 @@
     "globalDirectivePlaceholder": "Global directives apply to all sessions...",
     "planPrompt": "Plan prompt",
     "planPromptDefault": "Custom plan prompt",
-    "planPromptPlaceholder": "Plan prompt applies during task planning as supplementary guidance..."
+    "planPromptPlaceholder": "Plan prompt applies during task planning as supplementary guidance...",
+    "singleModelMode": "Force single model",
+    "singleModelModeGlobal": "Single-model mode (enabled globally)",
+    "singleModelModeTip": "Use only the primary model from the global configuration for this session",
+    "singleModelModeGlobalTip": "Enabled by the global configuration and cannot be disabled for this session",
+    "singleModelModeSessionTip": "Single-model mode can only be changed before starting a new session"
   },
   "AIModelGlobalConfig": {
     "aiModelConfig": "AI model configuration",
-    "disableFallback": "Disable fallback to lightweight model"
+    "disableFallback": "Disable fallback to the auxiliary model"
   },
   "AIToolEditor": {
     "editToolInvalid": "Tool error (ID: {{id}}), please close and try again",
@@ -651,6 +660,18 @@
     "output": "Output",
     "cache": "Cache",
     "cacheTooltip": "Cache hit ratio",
+    "thinkingLevel": "Thinking level",
+    "thinkingLevels": {
+      "auto": "Default",
+      "none": "No thinking",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "xhigh": "Very high",
+      "max": "Maximum"
+    },
+    "noCallRecords": "No call records",
+    "unknownModel": "Unknown model",
     "switchChartMetric": "Switch between Token and Byte"
   },
   "InstallLlamaServerModelPrompt": {

@@ -1,7 +1,7 @@
 {
   "AiAgengt": {
-    "intelligentModels": "高质模型",
-    "lightweightModels": "轻量模型",
+    "intelligentModels": "主模型",
+    "lightweightModels": "辅助模型",
     "visionModels": "视觉模型",
     "callingMode": "调用模式",
     "focusMode": "场景",
@@ -75,13 +75,13 @@
     "resetModel": "重置模型",
     "resetModelTooltip": "重置回默认的模型",
     "emptyModels": "未获取到模型，可点击刷新重新获取。",
-    "noBuiltinModel": "未找到内置高质模型"
+    "noBuiltinModel": "未找到内置主模型"
   },
   "AIModelList": {
     "onlineTooltip": "通过api访问模型,接受AI信息或向AI发送消息,可配置多个",
     "localTooltip": "本地AI模型管理器用于管理本地AI模型,支持一键下载和安装模型,支持模型状态监控和管理。通过本地模型服务,可以实现本地化AI服务,无需依赖云端服务",
-    "intelligentModelsDesc": "用于执行复杂度高的任务,对话框中可切换该模型",
-    "lightweightModelsDesc": "用于执行简单任务和会话",
+    "intelligentModelsDesc": "用于主线任务",
+    "lightweightModelsDesc": "用于辅助任务",
     "visionModelsDesc": "用于识别图片等,生成知识库和任务执行都会用到",
     "addModel": "添加模型",
     "testAndAddBtn": "测试并添加",
@@ -93,14 +93,18 @@
     "clearModelsTitle": "清空模型",
     "clearModelsDesc": "确认要删除所有下载和添加的模型吗？确认删除源文件则自定义添加的模型文件会被一起删除",
     "policyAuto": "根据请求内容自动选择最合适的模型",
-    "policyPerformance": "优先使用高智能模型",
-    "policyCost": "优先使用轻量级/低成本模型",
+    "policyPerformance": "优先使用主模型",
+    "policyCost": "优先使用辅助模型",
     "policyBalance": "在响应速度、智能程度和成本之间取得平衡",
-    "sameModelWarning": "不建议轻量和高质使用同一个模型，轻量适合使用响应快速的模型"
+    "sameModelWarning": "不建议主模型和辅助模型使用同一个模型，辅助模型适合使用响应快速的模型"
   },
   "AIOnlineModeSetting": {
-    "disableFallback": "禁用降级到轻量模型",
-    "configErrorEdit": "配置错误，无法编辑"
+    "disableFallback": "禁用降级到辅助模型",
+    "configErrorEdit": "配置错误，无法编辑",
+    "singleModelMode": "单模型模式",
+    "singleModelModeDesc": "只使用主模型运行 Agent；辅助任务会使用主模型的 LiteCall，部分非关键辅助功能将被关闭。",
+    "singleModelModeInvalid": "请先完整配置主模型的厂商类型和模型名称",
+    "singleModelModeSaved": "保存成功，将对新启动的会话完整生效"
   },
   "AILocalModelList": {
     "llamaServerNotReady": "Llama服务器未准备就绪: {{reason}}",
@@ -151,11 +155,16 @@
     "globalDirectivePlaceholder": "全局命令将对所有会话生效...",
     "planPrompt": "Plan 提示词",
     "planPromptDefault": "自定义Plan提示词",
-    "planPromptPlaceholder": "Plan 提示词将在任务规划阶段生效，用于补充规划说明..."
+    "planPromptPlaceholder": "Plan 提示词将在任务规划阶段生效，用于补充规划说明...",
+    "singleModelMode": "强制单模型",
+    "singleModelModeGlobal": "单模型模式（由全局配置启用）",
+    "singleModelModeTip": "本会话只使用全局配置中的主模型",
+    "singleModelModeGlobalTip": "全局配置已启用，当前会话无法关闭",
+    "singleModelModeSessionTip": "单模型模式只能在新会话启动前修改"
   },
   "AIModelGlobalConfig": {
     "aiModelConfig": "AI模型配置",
-    "disableFallback": "禁用降级到轻量模型"
+    "disableFallback": "禁用降级到辅助模型"
   },
   "AIToolEditor": {
     "editToolInvalid": "尝试编辑的工具异常(ID: {{id}}), 请关闭页面重试",
@@ -651,6 +660,18 @@
     "output": "输出",
     "cache": "缓存",
     "cacheTooltip": "缓存占输入百分比",
+    "thinkingLevel": "思考强度",
+    "thinkingLevels": {
+      "auto": "默认",
+      "none": "无思考",
+      "low": "低",
+      "medium": "中",
+      "high": "高",
+      "xhigh": "极高",
+      "max": "最高"
+    },
+    "noCallRecords": "暂无调用记录",
+    "unknownModel": "未知模型",
     "switchChartMetric": "切换 Token / Byte"
   },
   "InstallLlamaServerModelPrompt": {

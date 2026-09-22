@@ -6,14 +6,21 @@ import { Uint8ArrayToString } from '@/utils/str'
 const handleConsumption: AIMessageHandler = (request) => {
   const { res, rawData } = request
   if (res.Type !== 'consumption') return
-  if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Consumption
-  rawData.aiPerfData.consumption.input_consumption = data.input_consumption
-  rawData.aiPerfData.consumption.output_consumption = data.output_consumption
-  rawData.aiPerfData.consumption.cache_hit_token = data.cache_hit_token
-  rawData.aiPerfData.consumption.tier_consumption = { ...data.tier_consumption }
+  const consumption = rawData.aiPerfData.consumption
+  consumption.input_consumption = data.input_consumption
+  consumption.output_consumption = data.output_consumption
+  consumption.cache_hit_token = data.cache_hit_token
+  consumption.consumption_uuid = data.consumption_uuid
+  consumption.tier_consumption = { ...data.tier_consumption }
+  if (Object.hasOwn(data, 'effective_single_model_mode')) {
+    consumption.effective_single_model_mode = data.effective_single_model_mode
+  }
+  if (Object.hasOwn(data, 'tier_model_consumption')) {
+    consumption.tier_model_consumption = { ...data.tier_model_consumption }
+  }
 }
 
 const handlePressure: AIMessageHandler = (request) => {
