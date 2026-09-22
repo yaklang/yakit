@@ -62,7 +62,7 @@ import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { setRemoteValue } from '@/utils/kv'
 import { RemoteMitmGV } from '@/enums/mitm'
-
+import { v4 as uuidv4 } from 'uuid'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
@@ -642,7 +642,6 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     })
     const onOpenOrCloseModal = useMemoizedFn((b: boolean) => {
       if (b) {
-        const tempId = -Date.now()
         const index = rules.length + 1
         const defRowDate: MITMContentReplacerRule = {
           EffectiveURL: '',
@@ -655,7 +654,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
           Index: index,
           Drop: false,
           ExtraRepeat: false,
-          Id: tempId,
+          Id: uuidv4(),
           NoReplace: false,
           Result: '',
           Rule: '',
