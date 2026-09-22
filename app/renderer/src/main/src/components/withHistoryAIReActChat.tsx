@@ -10,7 +10,7 @@ import AIAgentContext, {
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
-import { createActiveChatSessionId, getAIReActRequestParams, onReStart } from '@/pages/ai-agent/utils'
+import { getAIReActRequestParams, onReStart } from '@/pages/ai-agent/utils'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
 import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import type {
@@ -353,9 +353,13 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     pushAIFuzzStatusRuntimeIdToWebFuzzerPage(pageId, runtimeId, { source: 'auto' })
   })
 
-  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
+  const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat } = useChatIPC(route, pageId)
 
-  const store = globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
+  useEffect(() => {
+    if (activeChat) cancelPendingChat()
+  }, [activeChat?.SessionID])
+
+  const store = pendingChat?.data.store ?? globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
   const casualLoading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
 
   // 当前会话删除状态：删除中时遮罩整个对话区域，阻止用户操作
@@ -471,12 +475,14 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       resolve({
         params,
         extraParams: newChat,
+        onSessionBound: subscribeBridgeEvents,
       })
     })
   })
 
-  /** 新建会话：清空 UI、断开旧连接，并预生成新的 TimelineSessionID */
+  /** 新建会话：清空 UI、断开旧连接，清除旧的 TimelineSessionID */
   const onNewChat = useMemoizedFn(() => {
+    cancelPendingChat()
     const currentID = activeChat?.SessionID
     if (store.getState().execute && currentID) {
       onClose([currentID])
@@ -486,7 +492,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     setActiveChat(undefined)
     setSetting((prev) => ({
       ...prev,
-      TimelineSessionID: createActiveChatSessionId(),
+      TimelineSessionID: '',
       SyncPerceptionTrigger: false,
       EnablePlan: false,
       DisableMemoryTriage: AIAgentSettingDefault.DisableMemoryTriage,
@@ -501,6 +507,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   const onStop = useMemoizedFn(() => {
+    if (pendingChat) {
+      cancelPendingChat()
+      return
+    }
     if (store.getState().execute && activeID) {
       onClose([activeID])
     }
@@ -566,8 +576,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     return {
       setting: setting,
       activeChat: activeChat,
+      pendingChat,
     }
-  }, [setting, activeChat])
+  }, [setting, activeChat, pendingChat])
 
   const dispatchers: AIAgentContextDispatcher = useMemo(() => {
     return {
@@ -578,6 +589,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       onSend,
       onClose,
       onUpdatePageId,
+      cancelPendingChat,
     }
   }, [])
 

@@ -31,8 +31,8 @@ export function appendWebFuzzerRequestRawAttachmentToEvent(
   isHttps: boolean,
 ): AIInputEvent {
   const raw = (requestRaw || '').trim()
-  const sid = (sessionId || '').trim()
-  if (!raw || !sid) return event
+  const sid = (sessionId || '').trim() || randomString(16)
+  if (!raw) return event
   if (!event.IsStart && !event.IsFreeInput) return event
 
   const item = buildWebFuzzerRequestRawAttachment(sid, raw, isHttps)

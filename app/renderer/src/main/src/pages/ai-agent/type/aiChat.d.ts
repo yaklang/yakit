@@ -29,6 +29,8 @@ export interface AIContextSectionsDetail {
 
 /** UI-chat 信息 */
 export interface AISession {
+  /** 本次展示的稳定 key，临时会话正式化时不重建列表。 */
+  viewKey?: string
   /** 唯一标识 */
   Id: string
   /** 对话名称 */
@@ -192,10 +194,6 @@ export interface AIAgentChatMetaData {
   onEnd?: (error?: unknown) => void
   /** 通过用户问题创建会话时的问题 */
   createChatQuestion?: AIInputEvent
-
-  /** 建立会话后的ping请求测试连通性-ping的唯一ID和轮询定时器 */
-  pingSyncID: string
-  pingTimer: ReturnType<typeof setInterval> | null
 
   /** 自由对话的实时记忆列表 */
   casualMemoryList: AIAgentGrpcApi.MemoryEntryList

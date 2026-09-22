@@ -274,10 +274,12 @@ export const onReStart = (props: ReStartParams) => {
       IsStart: true,
       Params: {
         ...request,
+        TimelineSessionID: activeChat.SessionID,
       },
     }
     onStart({
-      token: activeChat?.SessionID,
+      kind: 'resume',
+      sessionId: activeChat.SessionID,
       params: aiInputEvent,
       localSource: resolveLocalSource(activeChat),
     })

@@ -4,13 +4,14 @@ import type { AISession } from '../type/aiChat'
 import type { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
 import { AIAgentSettingDefault } from '../defaultConstant'
 import type { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
-import type { ChatMultiSessionController } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import type { ChatMultiSessionController, PendingAIChat } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 export interface AIAgentContextStore {
   /** 全局配置 */
   setting: AIAgentSetting
   /** 当前展示对话 */
   activeChat?: AISession
+  pendingChat?: PendingAIChat
 }
 
 /** 上层 onStart 入参：route/pageId 由 useChatIPC 注入，调用方无需传递 */
@@ -18,7 +19,7 @@ export interface UseChatIPCStartParams
   extends
     Omit<AIChatIPCStartParams, 'route' | 'pageId'>,
     NonNullable<Parameters<ChatMultiSessionController['handleStartSession']>[1]> {}
-export interface AIAgentContextDispatcher extends ReturnType<typeof useChatIPC> {
+export interface AIAgentContextDispatcher extends Omit<ReturnType<typeof useChatIPC>, 'pendingChat'> {
   setSetting: Dispatch<SetStateAction<AIAgentSetting>>
   getSetting: () => AIAgentSetting
   setActiveChat: Dispatch<SetStateAction<AISession | undefined>>
@@ -39,7 +40,8 @@ export default createContext<AIAgentContextValue>({
     getSetting: () => AIAgentSettingDefault,
     setActiveChat: () => {},
 
-    onStart: () => {},
+    onStart: () => false,
+    cancelPendingChat: () => {},
     onSend: () => {},
     onClose: () => {},
     onUpdatePageId: () => {},

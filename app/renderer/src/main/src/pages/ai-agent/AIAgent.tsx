@@ -40,7 +40,7 @@ import { globalSessionEngine } from '../ai-re-act/hooks/ChatMultiSessionControll
 
 const { ipcRenderer } = window.require('electron')
 
-export const AIAgent: React.FC<AIAgentProps> = (props) => {
+export const AIAgent: React.FC<AIAgentProps> = () => {
   const { t } = useI18nNamespaces(['aiAgent'])
   // #region ai-agent页面全局缓存
   // ai-agent-chat 全局配置
@@ -84,14 +84,22 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     persistAIAgentChatSetting(getSetting())
   }, [setting])
 
-  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
+  const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat } = useChatIPC(
+    YakitRoute.AI_Agent,
+    YakitRoute.AI_Agent,
+  )
+
+  useEffect(() => {
+    if (activeChat) cancelPendingChat()
+  }, [activeChat?.SessionID])
 
   const store: AIAgentContextStore = useMemo(() => {
     return {
       setting: setting,
       activeChat: activeChat,
+      pendingChat,
     }
-  }, [setting, activeChat])
+  }, [setting, activeChat, pendingChat])
   const dispatcher: AIAgentContextDispatcher = useMemo(() => {
     return {
       getSetting: getSetting,
@@ -101,6 +109,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       onSend,
       onClose,
       onUpdatePageId,
+      cancelPendingChat,
     }
   }, [])
 

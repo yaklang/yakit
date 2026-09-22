@@ -3,6 +3,7 @@ const handlerHelper = require('./handleStreamWithContext')
 const { getYakProjects, getYakTemp, getAiImageTemp } = require('../filePath')
 const fs = require('fs')
 const path = require('path')
+const { adoptAIImages, discardAIImageDraft } = require('./utils/adoptAIImages')
 
 module.exports = (win, getClient) => {
   // #region AI-Task
@@ -631,8 +632,22 @@ module.exports = (win, getClient) => {
   // #endregion
 
   // region AI-Image
+  const imageWrites = new Map()
+  ipcMain.handle('discard-ai-image-draft', async (_event, params) => {
+    const writes = imageWrites.get(`${params.chatDataStoreKey}/${params.draftId}`)
+    if (writes) await Promise.allSettled([...writes])
+    return discardAIImageDraft(getAiImageTemp(), params)
+  })
+  ipcMain.handle('adopt-ai-images', async (_event, params) => {
+    const writes = imageWrites.get(`${params.chatDataStoreKey}/${params.draftId}`)
+    if (writes) await Promise.all([...writes])
+    return adoptAIImages(getAiImageTemp(), params)
+  })
   ipcMain.handle('save-ai-image', (event, params, token) => {
-    return new Promise((resolve, reject) => {
+    const key = `${params.chatDataStoreKey}/${params.sessionID}`
+    const writes = imageWrites.get(key) || new Set()
+    imageWrites.set(key, writes)
+    const writing = new Promise((resolve, reject) => {
       const { buffer, filename, sessionID = '', chatDataStoreKey = '' } = params
       const url = path.join(getAiImageTemp(), chatDataStoreKey, sessionID)
       // 确保目录存在
@@ -684,6 +699,11 @@ module.exports = (win, getClient) => {
       })
 
       writeNextChunk()
+    })
+    writes.add(writing)
+    return writing.finally(() => {
+      writes.delete(writing)
+      if (!writes.size) imageWrites.delete(key)
     })
   })
 

@@ -384,7 +384,10 @@ const HistoryChat = memo(
             break
           case 'prependSession':
             if (payload.payload && isSessionVisibleInCurrentSource(payload.payload)) {
-              dispatcher.setSessions((prev) => [payload.payload!, ...prev])
+              dispatcher.setSessions((prev) => [
+                payload.payload!,
+                ...prev.filter((item) => item.SessionID !== payload.payload!.SessionID),
+              ])
             }
             break
           case 'updateSession':

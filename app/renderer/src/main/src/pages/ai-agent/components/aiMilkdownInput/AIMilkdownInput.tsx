@@ -1,3 +1,4 @@
+import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import React, { useEffect, useImperativeHandle } from 'react'
 import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react'
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
@@ -68,8 +69,12 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
     const pluginViewFactory = usePluginViewFactory()
 
     const { getSession } = useSessionId()
+    const { activeChat } = useAIAgentStore()
 
     const sessionIdRef = React.useRef<string>('') // 作为当前对话得文件路径
+    useEffect(() => {
+      sessionIdRef.current = ''
+    }, [activeChat?.SessionID])
     const chatDataStoreKeyRef = React.useRef(chatDataStoreKey)
     chatDataStoreKeyRef.current = chatDataStoreKey
 
@@ -201,7 +206,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
               ctx.set(defaultValueCtx, defaultValue || '')
 
               const listener = ctx.get(listenerCtx)
-              listener.markdownUpdated((ctx, nextMarkdown, prevMarkdown) => {
+              listener.markdownUpdated((_ctx, nextMarkdown, prevMarkdown) => {
                 const isSave = nextMarkdown !== prevMarkdown
                 if (isSave) {
                   onUpdateContent && onUpdateContent(nextMarkdown)

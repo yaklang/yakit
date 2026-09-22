@@ -24,7 +24,6 @@ import type { AISession } from '@/pages/ai-agent/type/aiChat'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
-import useSessionId from '../hooks/useSessionId'
 import emiter from '@/utils/eventBus/eventBus'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
@@ -57,7 +56,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       externalParameters,
       rightPanelLayoutRef,
     } = props
-    const { setActiveChat, getSetting, onStart, onSend } = useAIAgentDispatcher()
+    const { setActiveChat, getSetting, onStart, onSend, cancelPendingChat } = useAIAgentDispatcher()
 
     const sessionId = useCurrentSessionId()
     const store = useCurrentStore()
@@ -71,8 +70,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       trigger: 'setShowFreeChat',
     })
 
-    const { activeChat, setting } = useAIAgentStore()
-    const { getSession } = useSessionId()
+    const { activeChat, setting, pendingChat } = useAIAgentStore()
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
@@ -125,7 +123,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     }, [inViewPort])
     //#endregion
     // #region 问题相关逻辑
+    const lastStart = useRef<HandleStartParams | undefined>(undefined)
     const handleStart = useMemoizedFn((value: HandleStartParams) => {
+      lastStart.current = value
       const { qs, sessionId, enabledCapabilities } = value
       const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
 
@@ -141,9 +141,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         EnabledCapabilities: enabledCapabilities,
       }
 
-      const session = getSession(sessionId)
-
-      request.TimelineSessionID = session
+      if (sessionID) request.TimelineSessionID = sessionID
+      else {
+        delete request.TimelineSessionID
+        request.PreferSessionCachedConfig = false
+      }
       const { attachedResourceInfo } = getAIReActRequestParams(value)
       // 发送初始化参数
       const aiInputEvent: AIInputEvent = {
@@ -155,42 +157,44 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         FocusModeLoop: value.focusMode,
       }
       const onStartChat = (res: AIHandleStartResProps) => {
-        const { params, extraParams, onChat } = res
-        let newChat: AISession | undefined = undefined
-        if (!sessionID) {
-          // 创建新的聊天记录
-          newChat = {
-            Id: extraParams?.chatId || session,
-            Title: qs || `AI Agent - ${new Date().toLocaleString()}`,
-            question: qs,
-            CreatedAt: new Date().getTime(),
-            UpdatedAt: new Date().getTime(),
-            StartParams: request,
-            SessionID: session,
-            TitleInitialized: false,
-            Source: request.Source ?? 'ai',
-            LastUsedAt: new Date().getTime(),
-            isCreate: true,
-          }
-          // setActiveChat && setActiveChat(newChat)
-          emiter.emit(
-            'sessionData',
-            JSON.stringify({ type: 'prependSession', payload: { ...newChat, isCreate: false } }),
-          )
-          // 新建的额外操作
-          onChat?.()
-        }
+        const { params, extraParams, onChat, onSessionBound } = res
+        let streamToken = ''
+        if (!sessionID) onChat?.()
         aiChatTextareaRef.current.setMention({
           mentionId: params.FocusModeLoop || randomString(8),
           mentionType: 'focusMode',
           mentionName: params.FocusModeLoop || '',
         })
         onStart({
-          token: session,
+          kind: sessionID ? 'resume' : 'new',
+          sessionId: sessionID || undefined,
+          draftId: sessionId,
           params,
-          onLinkSuccess: () => {
-            // 必须成功链接后再设置 activeChat
-            if (!sessionID && newChat) setActiveChat && setActiveChat(newChat)
+          onLinkStart: (token) => {
+            streamToken = token
+          },
+          onLinkSuccess: (id) => {
+            onSessionBound?.(id)
+            if (sessionID) return
+            const newChat: AISession = {
+              Id: extraParams?.chatId || id,
+              SessionID: id,
+              viewKey: streamToken,
+              Title: qs || `AI Agent - ${new Date().toLocaleString()}`,
+              question: qs,
+              CreatedAt: Date.now(),
+              UpdatedAt: Date.now(),
+              LastUsedAt: Date.now(),
+              StartParams: { ...params.Params, TimelineSessionID: id, UserQuery: '' },
+              TitleInitialized: false,
+              Source: request.Source ?? 'ai',
+              isCreate: true,
+            }
+            setActiveChat(newChat)
+            emiter.emit(
+              'sessionData',
+              JSON.stringify({ type: 'prependSession', payload: { ...newChat, isCreate: false } }),
+            )
           },
         })
       }
@@ -285,6 +289,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     // 初始化 AI ReAct
     const handleSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
+      if (pendingChat?.status === 'connecting') return
       if (!setting) {
         yakitNotify('error', '请先配置 AI ReAct 参数')
         return
@@ -299,6 +304,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const handleStopCasualTask = useMemoizedFn(() => {
+      if (pendingChat) {
+        cancelPendingChat()
+        return
+      }
       const currentCasualTaskID = store.getState().currentChatStatus.questionID
       if (!store.getState().execute || !currentCasualTaskID) return
 
@@ -347,6 +356,25 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 )}
                 <AIToDoListWrapper />
                 <AIReActChatContents ref={aiReActChatContentsRef} />
+                {pendingChat && (
+                  <div role="status">
+                    {pendingChat.status === 'connecting' ? '正在连接会话…' : pendingChat.error || '连接已停止'}
+                    {pendingChat.status === 'connecting' ? (
+                      <YakitButton type="text" onClick={cancelPendingChat}>
+                        取消连接
+                      </YakitButton>
+                    ) : (
+                      <YakitButton
+                        type="text"
+                        onClick={() => {
+                          if (lastStart.current) handleStart(lastStart.current)
+                        }}
+                      >
+                        重试
+                      </YakitButton>
+                    )}
+                  </div>
+                )}
                 <AIReActTaskChatReview />
               </div>
               <div className={classNames(styles['chat-footer'])}>
@@ -368,7 +396,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             </div>
           </div>
           {showAIRightPanel && showFreeChat && <AIRightPanel layoutRef={wrapperRef} />}
-          <div className={styles['open-wrapper']} onClick={(e) => setShowFreeChat(true)}>
+          <div className={styles['open-wrapper']} onClick={() => setShowFreeChat(true)}>
             <ChevrondownButton />
             <div className={styles['text']}>自由对话</div>
           </div>

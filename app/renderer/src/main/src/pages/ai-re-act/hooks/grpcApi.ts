@@ -130,6 +130,8 @@ export interface AIStartParams {
   UserInteractLimit?: number
   /** timeline sessionID  用于多轮对话保持上下文 */
   TimelineSessionID?: string
+  /** 允许明确控制是否使用附着已有会话的启动方式 */
+  Attach?: boolean
   // Token pressure limit, 当 AI 对话的 token 数量超过这个限制时，需要警告 （40*1024）
   AICallTokenLimit?: number
   /**@deprecated */
@@ -312,6 +314,7 @@ export interface AIOutputI18n {
 }
 
 export interface AIOutputEvent {
+  SessionId?: string
   ID: number
   CoordinatorId: string
   Type: string

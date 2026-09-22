@@ -10,6 +10,7 @@ import {
   type AIStartParams,
 } from './grpcApi'
 import { createChatStore } from './chatStore'
+import { getImageStoreKeyByAISource } from './useGetChatDataStoreKey'
 import { SessionLifecycle } from './sessionLifecycle'
 import { sessionStatusStore, SessionDeleteStatus } from './sessionStatus/sessionStatusStore'
 import { Uint8ArrayToString } from '@/utils/str'
@@ -20,7 +21,7 @@ import {
   AttachedResourceTypeEnum,
 } from '@/pages/ai-agent/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
-import { DefaultAgentChatStatus, DefaultMemoryList, DefaultTaskPlanEndGate } from './defaultConstant'
+import { DefaultMemoryList, DefaultTaskPlanEndGate } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
@@ -149,8 +150,6 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
     // subAgentHistoryEvents: [],
     createChatQuestion: undefined,
     onEnd: undefined,
-    pingSyncID: '',
-    pingTimer: null,
     casualMemoryList: cloneDeep(DefaultMemoryList),
     taskMemoryList: cloneDeep(DefaultMemoryList),
     notifyMessageTimer: null,
@@ -191,7 +190,328 @@ const makePageKey = (route: YakitRouteType, pageId: string): PageKey => `${route
 
 // #endregion
 
+/** 尚未绑定正式 SessionId 的 UI 状态；失败后保留首问，供用户重试或取消。 */
+export interface PendingAIChat {
+  /** 本轮连接标识，用于取消连接和保持聊天列表的 React key 稳定。 */
+  streamToken: string
+  /** 与连接记录共享同一份数据，绑定正式 ID 后继续复用。 */
+  data: ReturnType<ChatMultiSessionController['ensureSession']>
+  status: 'connecting' | 'failed'
+  error?: string
+}
+
+type StartCallbacks = {
+  /** 连接记录创建后同步回传 token，此时实际 gRPC 流可能尚未启动。 */
+  onLinkStart?: (streamToken: string) => void
+  /** 新会话完成正式绑定、历史会话完成首批恢复后，回传业务 ID。 */
+  onLinkSuccess?: (sessionId: string) => void
+  /** 将未绑定会话的连接中/失败状态同步到 React。 */
+  onPendingChange?: (pending: PendingAIChat) => void
+}
+
+/** 一次 gRPC 连接的运行状态；同一历史会话每次重连都会创建新的记录。 */
+type SessionConnection = {
+  /** IPC 通道及主进程流池的 key，与后端业务 SessionId 分开。 */
+  token: string
+  /** 启动时根据 Params.Source 推导，供草稿复制和清理复用。 */
+  imageStoreKey: ReturnType<typeof getImageStoreKeyByAISource>
+  /** 重连时已知；新会话需在 pong 校验、图片处理完成后才能绑定。 */
+  sessionId?: string
+  /** 握手期间收到的 ID，用于检查不同事件返回的 ID 是否一致。 */
+  receivedSessionId?: string
+  /** 保留草稿 ID 和页面归属，失败后取消、关页时仍需使用。 */
+  input: AIChatIPCStartParams
+  data: ReturnType<ChatMultiSessionController['ensureSession']>
+  callbacks?: StartCallbacks
+  /** pong 确认前暂存的事件，绑定完成后按原顺序交给业务处理器。 */
+  buffered: AIOutputEvent[]
+  /** 等待有效 pong 的超时计时器，不覆盖后续图片复制和历史恢复。 */
+  timer?: ReturnType<typeof setTimeout>
+  /** 仅表示 pong 已校验通过，图片处理及正式绑定可能尚未结束。 */
+  confirmed: boolean
+}
+
 export class ChatMultiSessionController {
+  /** 按连接 token 保存运行记录；失败的 pending 也保留到重试或取消。 */
+  private connectionsByToken = new Map<string, SessionConnection>()
+  /** 业务操作使用 SessionId，通过此表找到当前这轮连接的 token。 */
+  private tokenBySessionId = new Map<string, string>()
+
+  /** 创建内存数据；通过回调延迟获取业务 ID，避免把临时 token 当作 IDB 的键。 */
+  private createSessionData(getSessionId: () => string | undefined) {
+    const meta = genAIAgentChatMetaData()
+    meta.lifecycle.writable = false
+    return {
+      request: cloneDeep(AIAgentSettingDefault),
+      store: createChatStore({
+        onRenderStructureChange: () => {
+          const id = getSessionId()
+          if (id) this.markSessionRenderDirty(id)
+        },
+      }),
+      rawData: genAIAgentChatData(),
+      meta,
+    }
+  }
+
+  /** 将已有数据引用登记到正式会话池；保留首问及 React 对原 store 的订阅。 */
+  private registerSessionData(sessionId: string, data: ReturnType<ChatMultiSessionController['createSessionData']>) {
+    this.requestPool.set(sessionId, data.request)
+    this.storePool.set(sessionId, data.store)
+    this.rawDataPool.set(sessionId, data.rawData)
+    this.metaPool.set(sessionId, data.meta)
+  }
+
+  /** 用户取消时删除草稿；重试只释放旧连接，沿用草稿。 */
+  public cancelPendingConnection(token: string, options: { keepDraft?: boolean } = {}) {
+    const connection = this.connectionsByToken.get(token)
+    if (!connection) return
+    if (connection.sessionId) {
+      // 已有业务 ID 的连接走正式会话收尾，不在这里删除会话图片。
+      this.forceCloseSession({ sessionIds: [connection.sessionId] })
+      return
+    }
+    this.stopPendingConnection(connection)
+    if (!options.keepDraft) this.discardConnectionDraft(connection)
+  }
+
+  /** 只清理本连接的草稿目录；正式会话图片由会话删除流程负责。 */
+  private discardConnectionDraft(connection: SessionConnection) {
+    if (!connection.input.draftId) return
+    void ipcRenderer
+      .invoke('discard-ai-image-draft', {
+        draftId: connection.input.draftId,
+        chatDataStoreKey: connection.imageStoreKey,
+      })
+      .catch((error) => console.error('AI image draft cleanup failed', error))
+  }
+
+  /** 失败时停止收发，保留记录以便之后重试、取消或关页时处理草稿。 */
+  private stopPendingConnection(connection: SessionConnection, error?: string) {
+    const { lifecycle } = connection.data.meta
+    const wasCurrent = lifecycle.current
+    lifecycle.current = false
+    lifecycle.closing = true
+    // 先让排队中的回调失效；失败保留记录，用户取消或重试则释放记录。
+    this.releaseConnection(connection, error !== undefined)
+    // 失败后再次取消只需清理草稿，避免重复取消已经停止的流。
+    if (wasCurrent) void ipcRenderer.invoke('cancel-ai-re-act', connection.token).catch(() => {})
+    connection.data.store.getState().updateState({ execute: false, initLoading: false })
+    connection.callbacks?.onPendingChange?.({
+      streamToken: connection.token,
+      data: connection.data,
+      status: 'failed',
+      error,
+    })
+  }
+
+  /** 移除计时器和 IPC 监听；keepPending 仅保留失败记录，不继续接收事件。 */
+  private releaseConnection(connection: SessionConnection, keepPending = false) {
+    if (connection.timer) clearTimeout(connection.timer)
+    for (const suffix of ['data', 'end', 'error']) ipcRenderer.removeAllListeners(`${connection.token}-${suffix}`)
+    if (!keepPending) this.connectionsByToken.delete(connection.token)
+    // 旧连接收尾时，只删除仍指向自己的映射，避免误删新一轮重连的映射。
+    if (connection.sessionId && this.tokenBySessionId.get(connection.sessionId) === connection.token) {
+      this.tokenBySessionId.delete(connection.sessionId)
+    }
+  }
+
+  /** 按是否已有业务 ID 分流错误：正式会话收尾，pending 保留首问和草稿。 */
+  private failConnection(connection: SessionConnection, error: unknown) {
+    if (!connection.data.meta.lifecycle.current || connection.data.meta.lifecycle.closing) return
+    const message = error instanceof Error ? error.message : String(error)
+    if (connection.sessionId) this.handleSessionError(connection.sessionId, error)
+    else {
+      yakitNotify('error', message)
+      this.stopPendingConnection(connection, message)
+    }
+  }
+
+  /** 先注册本轮 token 的监听再启动流，避免遗漏主进程立即回传的事件。 */
+  private startConnection(connection: SessionConnection, params: AIInputEvent) {
+    const { token, data } = connection
+    const { lifecycle } = data.meta
+    const current = () => this.connectionsByToken.get(token) === connection && lifecycle.current && !lifecycle.closing
+    ipcRenderer.on(`${token}-data`, (_event, res: AIOutputEvent) => {
+      if (!current()) return
+      // 同一连接串行处理事件；图片复制等异步步骤完成前，后续事件不能越过它。
+      lifecycle.events = lifecycle.events
+        .then(async () => {
+          // 入队后可能已经被取消，因此执行前再次检查连接是否有效。
+          if (!current()) return
+          await this.processConnectionEvent(connection, res)
+        })
+        .catch((error) => this.failConnection(connection, error))
+    })
+    ipcRenderer.on(`${token}-error`, (_event, error: unknown) => {
+      if (current()) this.failConnection(connection, error)
+    })
+    ipcRenderer.on(`${token}-end`, () => {
+      if (this.connectionsByToken.get(token) !== connection) return
+      if (connection.sessionId) void this.handleSessionEnd(connection.sessionId)
+      else this.failConnection(connection, new Error('会话连接已结束，未获取到会话 ID'))
+    })
+    lifecycle.started = true
+    // 主进程在 start 后发送初始 ping；迟迟收不到有效 pong 时退出等待状态。
+    connection.timer = setTimeout(() => {
+      this.failConnection(connection, new Error('AI 会话初始化超时，请检查引擎连接后重试'))
+    }, 30000)
+    return ipcRenderer.invoke('start-ai-re-act', token, params)
+  }
+
+  /** 先完成握手及业务 ID 绑定，再进入已有的会话事件处理流程。 */
+  private async processConnectionEvent(connection: SessionConnection, res: AIOutputEvent) {
+    const { data, input } = connection
+    if (connection.confirmed) {
+      return this.processGrpcOutputEvent(connection.sessionId!, res, data.meta)
+    }
+
+    const id = res.SessionId?.trim()
+    // 新会话不能使用旧引擎的 default；重连必须匹配指定的历史会话 ID。
+    if (id) {
+      if (id === 'default' && input.kind === 'new') throw new Error('当前引擎不支持自动分配会话 ID，请更新引擎')
+      if (connection.receivedSessionId && id !== connection.receivedSessionId)
+        throw new Error('引擎返回的会话 ID 不一致')
+      if (connection.sessionId && id !== connection.sessionId) throw new Error('引擎返回的会话 ID 与重连会话不一致')
+      connection.receivedSessionId = id
+    }
+    if (res.Type !== 'pong') {
+      // 即使事件已带 SessionId，也先等待 pong 确认，避免提前落库或触发业务回调。
+      connection.buffered.push(res)
+      return
+    }
+    // 要求当前 pong 自身携带 ID，不使用前序事件中的 ID 掩盖协议不兼容。
+    if (!id) throw new Error('当前引擎未返回会话 ID，请更新引擎')
+    connection.confirmed = true
+    if (connection.timer) clearTimeout(connection.timer)
+
+    if (input.kind === 'new') return this.initializeNewSession(connection, id)
+
+    // 历史会话已有正式 ID，回放后继续处理 pong，由原有流程发起历史恢复。
+    for (const event of connection.buffered.splice(0))
+      await this.processGrpcOutputEvent(connection.sessionId!, event, data.meta)
+    await this.processGrpcOutputEvent(connection.sessionId!, res, data.meta)
+  }
+
+  /** 新会话握手后的顺序：图片就绪 → 绑定并补写 IDB → 发布 UI → 回放事件 → 发送首问。 */
+  private async initializeNewSession(connection: SessionConnection, sessionId: string) {
+    const { data, input } = connection
+    // 防止把新会话的内存内容注册到已有会话名下。
+    if (this.storePool.has(sessionId)) throw new Error('引擎返回了已存在的会话 ID')
+    if (input.draftId) await this.adoptConnectionImages(connection, sessionId)
+    if (!data.meta.lifecycle.current || data.meta.lifecycle.closing) {
+      // 在异步图片步骤返回后统一检查，取消时清理目标目录，不发布正式会话。
+      if (input.draftId)
+        await ipcRenderer.invoke('discard-ai-image-draft', {
+          draftId: sessionId,
+          chatDataStoreKey: connection.imageStoreKey,
+        })
+      return
+    }
+
+    // 正式 ID 绑定到当前 token，并接管 pending 的同一份内存数据。
+    connection.sessionId = sessionId
+    this.tokenBySessionId.set(sessionId, connection.token)
+    this.registerSessionData(sessionId, data)
+    this.registerSessionChannel(sessionId, {
+      route: input.route,
+      pageId: input.pageId,
+      source: input.localSource ?? input.params.Params?.Source,
+    })
+    this.discardConnectionDraft(connection)
+    // 新会话直接使用本次成功回调，不进入历史恢复完成后的回调分支。
+    data.meta.onLinkSuccess = undefined
+    data.request.TimelineSessionID = sessionId
+    // 正文与渲染树加入 IDB 写队列，不等待事务提交才发布 UI。
+    data.meta.lifecycle.writable = true
+    data.store.getState().updateState({ initLoading: false })
+    for (const item of data.rawData.contents.values()) persistIndependentItem(sessionId, item, data.meta.lifecycle)
+    void this.flushSessionRender(sessionId)
+
+    // 先发布 UI/桥接订阅，再处理缓冲事件和发送首问。
+    connection.callbacks?.onLinkSuccess?.(sessionId)
+    for (const event of connection.buffered.splice(0)) await this.processGrpcOutputEvent(sessionId, event, data.meta)
+    if (!data.meta.lifecycle.current || data.meta.lifecycle.closing) return
+    const question = data.meta.createChatQuestion
+    // 取出后清空，避免后续重复 pong 等事件再次发送首问。
+    data.meta.createChatQuestion = undefined
+    if (question) {
+      this.requestMessage(sessionId, question)
+      data.store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.waitingReply') })
+    }
+    this.handleSessionStartSuccess(sessionId, true)
+  }
+
+  /** 复制草稿图片并同步发送载荷和展示内容；取消后的目录清理由初始化流程负责。 */
+  private async adoptConnectionImages(connection: SessionConnection, sessionId: string) {
+    const { data, input, imageStoreKey } = connection
+    const paths: Record<string, string> = await ipcRenderer.invoke('adopt-ai-images', {
+      draftId: input.draftId,
+      sessionId,
+      chatDataStoreKey: imageStoreKey,
+    })
+    if (!data.meta.lifecycle.current || data.meta.lifecycle.closing) return
+    const replacePaths = (value: string) =>
+      Object.entries(paths || {}).reduce((text, [before, after]) => text.split(before).join(after), value)
+    // 两处都要换成正式路径，避免发送或重新渲染时仍引用草稿目录。
+    const question = data.meta.createChatQuestion
+    if (question) {
+      question.FreeInput = replacePaths(question.FreeInput || '')
+      for (const item of question.AttachedResourceInfo || []) {
+        if (typeof item.Value === 'string') item.Value = replacePaths(item.Value)
+      }
+    }
+    for (const item of data.rawData.contents.values()) {
+      if (item.type === AIChatQSDataTypeEnum.QUESTION) {
+        item.data = replacePaths(item.data)
+        if (typeof item.extraValue?.showQS === 'string') item.extraValue.showQS = replacePaths(item.extraValue.showQS)
+      }
+    }
+  }
+
+  /** 生成待发送的首问；消息 UUID 同时用于握手前的本地展示，与连接 token 无关。 */
+  private makeFirstQuestion(params: AIInputEvent): AIInputEvent | undefined {
+    const text = (params.Params?.UserQuery || '').trim()
+    if (!text) return
+    return {
+      IsFreeInput: true,
+      FreeInput: text,
+      FocusModeLoop: params.FocusModeLoop,
+      AttachedResourceInfo: [
+        ...(params.AttachedResourceInfo || []),
+        {
+          Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_DEFAULT,
+          Type: AttachedResourceTypeEnum.USER_FREE_INPUT_UUID,
+          Value: uuidv4(),
+        },
+      ],
+    }
+  }
+
+  /** 只更新 pending 的内存正文和渲染树，拿到正式 ID 后再统一补写 IDB。 */
+  private showFirstQuestion(data: ReturnType<ChatMultiSessionController['ensureSession']>) {
+    const question = data.meta.createChatQuestion
+    if (!question) return
+    const id = question.AttachedResourceInfo?.find(
+      (item) => item.Type === AttachedResourceTypeEnum.USER_FREE_INPUT_UUID,
+    )?.Value
+    if (typeof id !== 'string' || !id) return
+    const item: AIChatQSData = {
+      id,
+      chatType: 'reAct',
+      type: AIChatQSDataTypeEnum.QUESTION,
+      Timestamp: moment().unix(),
+      data: question.FreeInput || '',
+      AIService: '',
+      AIModelName: '',
+      extraValue: { showQS: question.FreeInput || '' },
+    }
+    data.rawData.contents.set(id, item)
+    data.store
+      .getState()
+      .dispatchStreamingNode({ chatType: 'reAct', node: { token: id, kind: 'item', type: item.type } })
+  }
+
   // #region 常量定义
   /** 渲染树-element debounce 落库 IDB 延迟时间 */
   private static readonly RENDER_PERSIST_DEBOUNCE_MS = 3000
@@ -199,8 +519,6 @@ export class ChatMultiSessionController {
   private static readonly SESSION_END_FALLBACK_MS = 5000
   /** recovery_history 单次拉取条数 */
   private static readonly RECOVERY_HISTORY_LIMIT = 60
-  /** ping请求探连成功的轮询时间 */
-  private static readonly PING_POLLING_INTERVAL = 3000
   // #endregion
 
   // #region session-source-route-pageId 索引管理相关变量和逻辑
@@ -387,17 +705,10 @@ export class ChatMultiSessionController {
   /** 获取对应会话的所有数据集 */
   public ensureSession(sessionId: string) {
     if (!this.storePool.has(sessionId)) {
-      this.storePool.set(
+      this.registerSessionData(
         sessionId,
-        createChatStore({
-          onRenderStructureChange: () => this.markSessionRenderDirty(sessionId),
-        }),
+        this.createSessionData(() => sessionId),
       )
-      this.rawDataPool.set(sessionId, genAIAgentChatData())
-      this.requestPool.set(sessionId, cloneDeep(AIAgentSettingDefault))
-      const meta = genAIAgentChatMetaData()
-      meta.lifecycle.writable = false
-      this.metaPool.set(sessionId, meta)
     }
     return {
       request: this.requestPool.get(sessionId)!,
@@ -720,90 +1031,101 @@ export class ChatMultiSessionController {
   //   }
   // }
 
-  /** 新建/重连共用入口：同步占位，清库后建联，历史恢复完成后才发送首问。 */
-  public handleStartSession(
-    requestParams: AIChatIPCStartParams,
-    cb?: {
-      onLinkStart?: (sessionId: string) => void
-      onLinkSuccess?: (sessionId: string) => void
-    },
-  ): boolean {
-    const { token: sessionId, params, route, pageId, localSource } = requestParams
+  /**
+   * 新建：先显示 pending 首问，握手拿到正式 ID 后绑定并发送。
+   * 重连：使用已有 ID，清理本地缓存并完成首批历史恢复后再发送。
+   * 同步返回本轮 streamToken；参数无效、删除中或重复连接时返回 false。
+   */
+  public handleStartSession(requestParams: AIChatIPCStartParams, cb?: StartCallbacks): string | false {
+    const { params, route, pageId, localSource, kind } = requestParams
+    // 由 kind 明确区分新旧会话，避免配置中残留的 ID 将新建误判为重连。
+    const sessionId = kind === 'resume' ? requestParams.sessionId?.trim() : undefined
+    if (kind === 'resume' && !sessionId) return false
     const source = localSource ?? params.Params?.Source ?? AISourceEnum.aiAgent
-    const deleting = [...this.pendingDeletes].some(
-      (item) =>
-        item.deleteAll ||
-        (item.sessionIds?.length ? item.sessionIds.includes(sessionId) : item.source?.includes(source)),
-    )
-    if (deleting) {
+    if (
+      [...this.pendingDeletes].some(
+        (item) =>
+          item.deleteAll ||
+          (item.sessionIds?.length
+            ? !!sessionId && item.sessionIds.includes(sessionId)
+            : item.source?.includes(source)),
+      )
+    ) {
       yakitNotify('warning', '会话缓存删除中，请稍后再连接')
       return false
     }
-    if (this.readyChannels.has(sessionId)) {
+    if (sessionId && this.readyChannels.has(sessionId)) {
       yakitNotify('warning', '会话已经存在，请勿重复建立！')
       return false
     }
-    this.registerSessionChannel(sessionId, { route, pageId, source: localSource ?? params.Params?.Source })
-    const { request, store, meta: previous } = this.ensureSession(sessionId)
-    previous.lifecycle.current = false
-    this.closeSessionTimers(previous)
-    this.clearSessionRenderPersistTimer(sessionId)
-    clearThoughtDurationCache(sessionId)
-
-    const meta = genAIAgentChatMetaData()
-    const { lifecycle } = meta
-    lifecycle.writable = false
-    this.metaPool.set(sessionId, meta)
-    Object.assign(request, params.Params)
-    this.sessionRestoreLoading.add(sessionId)
-    store.getState().updateState({ execute: true, initLoading: true })
-    this.setActiveShowSession(sessionId)
-
-    const userQuery = (params.Params?.UserQuery || '').trim()
-    if (userQuery) {
-      meta.createChatQuestion = {
-        IsFreeInput: true,
-        FreeInput: userQuery,
-        AttachedResourceInfo: [
-          ...(params.AttachedResourceInfo || []),
-          {
-            Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_DEFAULT,
-            Type: AttachedResourceTypeEnum.USER_FREE_INPUT_UUID,
-            Value: uuidv4(),
-          },
-        ],
-        FocusModeLoop: params.FocusModeLoop,
-      }
+    // 每一轮连接都有独立 token；历史重连保留业务 ID，但不复用旧 IPC 通道。
+    const token = uuidv4()
+    let connection: SessionConnection
+    // 新会话先独立创建数据，不以 token 注册到正式会话池。
+    const data = sessionId ? this.ensureSession(sessionId) : this.createSessionData(() => connection?.sessionId)
+    if (sessionId) {
+      // 重连复用 store、替换生命周期，让旧回调和未提交的旧写入失效。
+      data.meta.lifecycle.current = false
+      this.closeSessionTimers(data.meta)
+      this.clearSessionRenderPersistTimer(sessionId)
+      clearThoughtDurationCache(sessionId)
+      data.meta = genAIAgentChatMetaData()
+      this.metaPool.set(sessionId, data.meta)
+      this.registerSessionChannel(sessionId, { route, pageId, source })
+      this.tokenBySessionId.set(sessionId, token)
+      this.sessionRestoreLoading.add(sessionId)
+      this.setActiveShowSession(sessionId)
     }
-    meta.onLinkSuccess = cb?.onLinkSuccess
-    cb?.onLinkStart?.(sessionId)
-
-    lifecycle.preparation = this.prepareSessionPersistBeforeStart(sessionId, meta)
-      // .then(() => this.loadSessionHistoryBeforeStart(sessionId, meta))
+    // 清理本次启动参数，避免修改调用方保留的重试入参。
+    const startParams = cloneDeep(params)
+    startParams.IsStart = true
+    startParams.Params = { ...startParams.Params }
+    if (sessionId) startParams.Params.TimelineSessionID = sessionId
+    else {
+      // 让后端创建全新会话，不附着旧会话，也不继承旧会话的缓存配置。
+      delete startParams.Params.TimelineSessionID
+      startParams.Params.Attach = false
+      startParams.Params.PreferSessionCachedConfig = false
+    }
+    Object.assign(data.request, startParams.Params)
+    data.meta.lifecycle.writable = false
+    data.meta.createChatQuestion = this.makeFirstQuestion(startParams)
+    data.meta.onLinkSuccess = cb?.onLinkSuccess
+    data.store.getState().updateState({ execute: true, initLoading: kind === 'resume' })
+    connection = {
+      token,
+      sessionId,
+      // 图片目录按协议 Source 映射；localSource 仅用于本地归属索引。
+      imageStoreKey: getImageStoreKeyByAISource(startParams.Params.Source || AISourceEnum.aiAgent),
+      input: requestParams,
+      data,
+      callbacks: cb,
+      buffered: [],
+      confirmed: false,
+    }
+    this.connectionsByToken.set(token, connection)
+    if (!sessionId) {
+      // 同步发布首问及连接中状态，UI 不需要等后端返回 ID 才能展示。
+      this.showFirstQuestion(data)
+      data.store.getState().updateCurrentLoadingTitle({ casualTitle: '正在连接会话…' })
+      cb?.onPendingChange?.({
+        streamToken: token,
+        data,
+        status: 'connecting',
+      })
+    }
+    cb?.onLinkStart?.(token)
+    const { lifecycle } = data.meta
+    // 只有历史重连需要等待旧写队列并清库；新会话没有本地历史可清理。
+    lifecycle.preparation = (
+      sessionId ? this.prepareSessionPersistBeforeStart(sessionId, data.meta) : Promise.resolve()
+    )
       .then(() => {
         if (!lifecycle.current || lifecycle.closing) return
-        lifecycle.started = true
-        return ipcRenderer.invoke('start-ai-re-act', sessionId, params).then(() => {
-          if (!lifecycle.current || lifecycle.closing) return
-          // 主进程先发一次 ping；后续每 3 秒重试，直到有效 pong 到达。
-          if (!this.sessionRestoreLoading.has(sessionId) || store.getState().grpcLoadMoreLoading) return
-          meta.pingTimer = setInterval(() => {
-            if (!lifecycle.current || lifecycle.closing) return
-            meta.pingSyncID = uuidv4()
-            this.requestMessage(sessionId, {
-              IsSyncMessage: true,
-              SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PING,
-              SyncID: meta.pingSyncID,
-            })
-          }, ChatMultiSessionController.PING_POLLING_INTERVAL)
-        })
+        return this.startConnection(connection, startParams)
       })
-      .catch((error) => {
-        if (!lifecycle.current || lifecycle.closing) return
-        lifecycle.error ??= error
-        this.failSessionStart(sessionId, error)
-      })
-    return true
+      .catch((error) => this.failConnection(connection, error))
+    return token
   }
 
   /** 初始化失败停止连接并释放占位，保留可见问题供用户重试。 */
@@ -1012,7 +1334,8 @@ export class ChatMultiSessionController {
     // console.log('requestMessage', sessionId, request)
     const lifecycle = this.metaPool.get(sessionId)?.lifecycle
     if (!lifecycle?.current || lifecycle.closing || !lifecycle.started) return
-    void ipcRenderer.invoke('send-ai-re-act', sessionId, request).catch((error) => {
+    // 业务层始终传 SessionId，只有操作主进程流池时才转换为本轮 token。
+    void ipcRenderer.invoke('send-ai-re-act', this.tokenBySessionId.get(sessionId), request).catch((error) => {
       if (!lifecycle.current || lifecycle.closing) return
       lifecycle.error ??= error
       this.handleSessionError(sessionId, error)
@@ -1129,15 +1452,17 @@ export class ChatMultiSessionController {
   }
 
   /** 会话建立成功后, 需要做的额外操作 */
-  private handleSessionStartSuccess(sessionId: string) {
-    const { store, meta } = this.ensureSession(sessionId)
+  private handleSessionStartSuccess(sessionId: string, isNew = false) {
+    const { meta } = this.ensureSession(sessionId)
 
-    // 获取任务规划历史任务树
-    this.requestMessage(sessionId, {
-      IsSyncMessage: true,
-      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
-    })
+    // 新会话跳过启动时的规划历史查询；后续任务事件仍可触发实时同步。
+    if (!isNew)
+      this.requestMessage(sessionId, {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
+      })
 
+    // 新旧会话都需要当前状态，快照、记忆和队列同步不属于历史恢复。
     // 会话流建立且 pong 校验通过后，通知后端做一次会话快照同步
     this.requestMessage(sessionId, {
       IsSyncMessage: true,
@@ -1171,9 +1496,11 @@ export class ChatMultiSessionController {
       })
     }, 5000)
 
-    // 拉取 timeline 历史（首批）+ 文件系统历史（全量），不阻塞建连主流程
-    void this.loadTimelineHistory(sessionId)
-    void this.loadFileSystemHistory(sessionId)
+    // 仅重连拉取 timeline 历史和文件系统历史；新会话等待实时事件即可。
+    if (!isNew) {
+      void this.loadTimelineHistory(sessionId)
+      void this.loadFileSystemHistory(sessionId)
+    }
   }
 
   /** 首批历史恢复结束或初始化失败时解除恢复遮罩。 */
@@ -1249,15 +1576,6 @@ export class ChatMultiSessionController {
     // }
 
     if (res.Type === 'pong') {
-      // 如果返回的pong没有值，但是pingSyncID有值，说明该条消息已经过期
-      if (!res.SyncID && meta.pingSyncID) return
-      // 如果返回的pong有值，但是和pingSyncID不一样，说明该条消息已经过期
-      if (res.SyncID && res.SyncID !== meta.pingSyncID) return
-      // 该条消息有效，不需要在轮询ping请求了
-      if (meta.pingTimer) clearInterval(meta.pingTimer)
-      meta.pingTimer = null
-      meta.pingSyncID = ''
-
       if (!meta.lifecycle.closing && this.sessionRestoreLoading.has(sessionId)) this.requestRecoveryHistory(sessionId)
       return
     }
@@ -1507,10 +1825,6 @@ export class ChatMultiSessionController {
 
   /** 关闭会话的所有定时器 */
   private closeSessionTimers(meta: ReturnType<ChatMultiSessionController['ensureSession']>['meta']) {
-    // 取消ping请求相关逻辑
-    if (meta.pingTimer) clearInterval(meta.pingTimer)
-    meta.pingTimer = null
-    meta.pingSyncID = ''
     // 清除通知消息消失的定时器
     if (meta.notifyMessageTimer) clearTimeout(meta.notifyMessageTimer)
     meta.notifyMessageTimer = null
@@ -1526,11 +1840,11 @@ export class ChatMultiSessionController {
     meta.memoryPollingTimer = null
   }
 
-  // 关闭ipc通道连接
+  /** 按业务 ID 找到对应连接，清理 token 命名的监听及连接映射。 */
   private closeIPCListeners(sessionId: string) {
-    ipcRenderer.removeAllListeners(`${sessionId}-data`)
-    ipcRenderer.removeAllListeners(`${sessionId}-end`)
-    ipcRenderer.removeAllListeners(`${sessionId}-error`)
+    const token = this.tokenBySessionId.get(sessionId)
+    const connection = token ? this.connectionsByToken.get(token) : undefined
+    if (connection) this.releaseConnection(connection)
   }
 
   /**
@@ -1558,7 +1872,7 @@ export class ChatMultiSessionController {
    * 真实 end / 兜底共用的收尾：停止接收 → 排完事件 → 最终快照 → 写事务 → 可选删除。
    * ready 占位直到全部收尾结束，保证相同 sessionId 的下一轮不会与旧事务交错。
    */
-  public handleSessionEnd(sessionId: string, res?: unknown): Promise<void> {
+  public handleSessionEnd(sessionId: string): Promise<void> {
     const meta = this.metaPool.get(sessionId)
     if (meta?.lifecycle.ending) return meta.lifecycle.ending
     this.clearSessionEndFallback(sessionId)
@@ -1633,7 +1947,8 @@ export class ChatMultiSessionController {
         void this.handleSessionEnd(session)
       } else {
         this.armSessionEndFallback(session)
-        void ipcRenderer.invoke('cancel-ai-re-act', session).catch(() => {})
+        // 关闭的是当前 gRPC 流，主进程接收连接 token 而非业务 SessionId。
+        void ipcRenderer.invoke('cancel-ai-re-act', this.tokenBySessionId.get(session)).catch(() => {})
       }
     }
   }
@@ -1683,6 +1998,13 @@ export class ChatMultiSessionController {
    */
   public async deleteSessions(params: DeleteSessionsParams): Promise<void> {
     const { sessionIds, source, deleteAll } = params
+    // 未绑定的会话尚不在正式索引中；按来源或全量删除时也要停止它们并清理草稿。
+    for (const connection of [...this.connectionsByToken.values()]) {
+      if (connection.sessionId) continue
+      const source = connection.input.localSource ?? connection.input.params.Params?.Source ?? AISourceEnum.aiAgent
+      if (params.deleteAll || (!params.sessionIds?.length && params.source?.includes(source)))
+        this.cancelPendingConnection(connection.token)
+    }
     const ids = this.resolveDeleteSessionIds(params)
     if (!ids) return
     // 标记目标会话为 deleting（UI 立即显示 loading + 禁用点击）
@@ -1732,6 +2054,11 @@ export class ChatMultiSessionController {
    * 会 flush 渲染树后保留 IDB，供后续恢复；已 rebind 走的 session 不会被旧页清掉
    */
   public onPageUnload(route: YakitRouteType, pageId: string) {
+    // 先处理未绑定/失败的 pending，它们无法通过正式 session 的页面索引找到。
+    for (const connection of [...this.connectionsByToken.values()]) {
+      if (!connection.sessionId && connection.input.route === route && connection.input.pageId === pageId)
+        this.cancelPendingConnection(connection.token)
+    }
     const ids = this.resolvePageSessionIds(route, pageId)
     for (const sessionId of ids) {
       void this.disposeSessionMemory(sessionId, false).catch((error) => {

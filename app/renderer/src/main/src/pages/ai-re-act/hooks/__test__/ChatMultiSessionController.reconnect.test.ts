@@ -47,13 +47,19 @@ const message = (id: string) => ({ id, type: AIChatQSDataTypeEnum.THOUGHT, chatT
 const historyEnd = (offset = 0) =>
   makeGrpcJsonRes('structured', { next_start_id: offset }, { NodeId: 'recovery_history' })
 
+const streamTokenFor = (sessionId: string) =>
+  ipcRendererMock.invoke.mock.calls.find(
+    ([method, , params]) => method === 'start-ai-re-act' && params?.Params?.TimelineSessionID === sessionId,
+  )?.[1]
+
 describe('session reconnect / IDB lifecycle', () => {
   let ctrl: ChatMultiSessionController
   let sessions: Set<string>
   const begin = (id: string, query = '') => {
     sessions.add(id)
     return ctrl.handleStartSession({
-      token: id,
+      kind: 'resume',
+      sessionId: id,
       route: YakitRoute.AI_Agent,
       pageId: 'page',
       params: { Params: { Source: 'ai', UserQuery: query } } as any,
@@ -254,7 +260,7 @@ describe('session reconnect / IDB lifecycle', () => {
     // 预查询方案暂未启用，仍验证正常建联与重连不依赖这些请求。
     await start('s', query)
     expect(grpcQueryAIEvent).not.toHaveBeenCalled()
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's', expect.anything())
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', streamTokenFor('s'), expect.anything())
     const oldMeta = ctrl.ensureSession('s').meta
     // oldMeta.planExecutionHistoryEvents.push({
     //   coordinator_id: 'old-plan',
@@ -521,7 +527,7 @@ describe('session reconnect / IDB lifecycle', () => {
       expect(rawData.grpcOffset).toBe(88)
       expect(ctrl.isSessionReady('s')).toBe(true)
       expect(meta.lifecycle.error).toBeUndefined()
-      expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', 's')
+      expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', streamTokenFor('s'))
 
       expect(ctrl.requestRecoveryHistory('s')).toBe(true)
       expect(requests().at(-1).SyncJsonInput).toBe(JSON.stringify({ start_id: 88, limit: 60 }))

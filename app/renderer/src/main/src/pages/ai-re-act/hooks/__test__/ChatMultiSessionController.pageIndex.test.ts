@@ -40,7 +40,8 @@ vi.mock('../AIAgentLogEmitter', () => ({
 }))
 
 const startParams = (sessionId: string, pageId = 'page-1', userQuery = '') => ({
-  token: sessionId,
+  kind: 'resume' as const,
+  sessionId,
   route: YakitRoute.AI_Agent,
   pageId,
   params: {
@@ -57,6 +58,11 @@ const finishRecovery = (ctrl: ChatMultiSessionController, sessionId: string) =>
     sessionId,
     makeGrpcJsonRes('structured', { next_start_id: 0 }, { NodeId: 'recovery_history' }),
   )
+
+const streamTokenFor = (sessionId: string) =>
+  ipcRendererMock.invoke.mock.calls.find(
+    ([method, , params]) => method === 'start-ai-re-act' && params?.Params?.TimelineSessionID === sessionId,
+  )?.[1]
 
 describe('ChatMultiSessionController page index / ensureSession', async () => {
   let ctrl: ChatMultiSessionController
@@ -79,7 +85,7 @@ describe('ChatMultiSessionController page index / ensureSession', async () => {
   })
 
   it('A1/A4: start registers ready + rebind moves page', async () => {
-    expect(ctrl.handleStartSession(startParams('s-rebind', 'page-a'))).toBe(true)
+    expect(ctrl.handleStartSession(startParams('s-rebind', 'page-a'))).toEqual(expect.any(String))
     await ctrl.ensureSession('s-rebind').meta.lifecycle.preparation
     expect(ctrl.isSessionReady('s-rebind')).toBe(true)
 
@@ -254,7 +260,7 @@ describe('ChatMultiSessionController lifecycle', async () => {
   it('A11: forceClose arms fallback end', async () => {
     const onEnd = vi.fn()
     ctrl.forceCloseSession({ sessionIds: ['s-life'], onEnd })
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-life')
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', streamTokenFor('s-life'))
     await vi.advanceTimersByTimeAsync(5000)
     expect(onEnd).toHaveBeenCalled()
   })
@@ -264,7 +270,7 @@ describe('ChatMultiSessionController lifecycle', async () => {
       sessionIds: ['s-life'],
       source: ['ai'],
     })
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-life')
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', streamTokenFor('s-life'))
     // dispose 等 session-end / 5s 兜底后再卸池
     await vi.advanceTimersByTimeAsync(5000)
     await done
@@ -299,8 +305,8 @@ describe('ChatMultiSessionController lifecycle', async () => {
       source: ['ai'],
     })
 
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-bulk-a')
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-bulk-b')
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', streamTokenFor('s-bulk-a'))
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', streamTokenFor('s-bulk-b'))
     await vi.advanceTimersByTimeAsync(5000)
     await done
     expect(aiChatPersistStore.deletePersistBySource).toHaveBeenCalledWith('ai')
@@ -330,7 +336,7 @@ describe('ChatMultiSessionController lifecycle', async () => {
   it('A27: empty sessionIds without source or deleteAll is no-op', async () => {
     const aiChatPersistStore = (await import('../persist/aiChatPersistStore')).default
     await ctrl.deleteSessions({ sessionIds: [] })
-    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', 's-life')
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', streamTokenFor('s-life'))
     expect(aiChatPersistStore.deletePersistBySource).not.toHaveBeenCalled()
     expect(aiChatPersistStore.deleteAllPersist).not.toHaveBeenCalled()
     expect(ctrl.isSessionReady('s-life')).toBe(true)
@@ -346,7 +352,7 @@ describe('ChatMultiSessionController start / send / history', async () => {
   })
 
   it('A13: duplicate start returns false', async () => {
-    expect(ctrl.handleStartSession(startParams('s-dup'))).toBe(true)
+    expect(ctrl.handleStartSession(startParams('s-dup'))).toEqual(expect.any(String))
     await ctrl.ensureSession('s-dup').meta.lifecycle.preparation
     expect(ctrl.handleStartSession(startParams('s-dup'))).toBe(false)
     await ctrl.ensureSession('s-dup').meta.lifecycle.preparation
@@ -384,13 +390,17 @@ describe('ChatMultiSessionController start / send / history', async () => {
     ctrl.handleStartSession(startParams('s-recovery', 'page-1', ''))
     await ctrl.ensureSession('s-recovery').meta.lifecycle.preparation
     await vi.waitFor(() => {
-      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's-recovery', expect.anything())
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+        'start-ai-re-act',
+        streamTokenFor('s-recovery'),
+        expect.anything(),
+      )
     })
     await ctrl.handleGrpcOutputEvent('s-recovery', makeGrpcJsonRes('pong', {}))
     await vi.waitFor(() => {
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
         'send-ai-re-act',
-        's-recovery',
+        streamTokenFor('s-recovery'),
         expect.objectContaining({ IsSyncMessage: true, SyncType: 'recovery_history' }),
       )
     })
@@ -408,7 +418,11 @@ describe('ChatMultiSessionController start / send / history', async () => {
     ctrl.handleStartSession(startParams('s-recovery-run', 'page-2', ''))
     await ctrl.ensureSession('s-recovery-run').meta.lifecycle.preparation
     await vi.waitFor(() => {
-      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's-recovery-run', expect.anything())
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+        'start-ai-re-act',
+        streamTokenFor('s-recovery-run'),
+        expect.anything(),
+      )
     })
     const runningStore = ctrl.ensureSession('s-recovery-run').store
     runningStore.getState().updateState({
@@ -419,7 +433,7 @@ describe('ChatMultiSessionController start / send / history', async () => {
     await vi.waitFor(() => {
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
         'send-ai-re-act',
-        's-recovery-run',
+        streamTokenFor('s-recovery-run'),
         expect.objectContaining({ IsSyncMessage: true, SyncType: 'recovery_history' }),
       )
     })
@@ -439,9 +453,9 @@ describe('ChatMultiSessionController start / send / history', async () => {
   it('A23: onLinkStart after ensureSession; onLinkSuccess after first history', async () => {
     const onLinkStart = vi.fn()
     const onLinkSuccess = vi.fn()
-    expect(ctrl.handleStartSession(startParams('s-cb'), { onLinkStart, onLinkSuccess })).toBe(true)
+    expect(ctrl.handleStartSession(startParams('s-cb'), { onLinkStart, onLinkSuccess })).toEqual(expect.any(String))
     await ctrl.ensureSession('s-cb').meta.lifecycle.preparation
-    expect(onLinkStart).toHaveBeenCalledWith('s-cb')
+    expect(onLinkStart).toHaveBeenCalledWith(expect.any(String))
     expect(ctrl.ensureSession('s-cb').store).toBeTruthy()
     expect(onLinkSuccess).not.toHaveBeenCalled()
 
@@ -555,7 +569,7 @@ describe('ChatMultiSessionController start / send / history', async () => {
     await vi.waitFor(() => {
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
         'send-ai-re-act',
-        's-runtime-snapshot',
+        streamTokenFor('s-runtime-snapshot'),
         expect.objectContaining({
           IsSyncMessage: true,
           SyncType: 'queue_info',
@@ -570,7 +584,9 @@ describe('ChatMultiSessionController start / send / history', async () => {
     const snapshotCalls = () =>
       ipcRendererMock.invoke.mock.calls.filter(
         ([channel, token, params]) =>
-          channel === 'send-ai-re-act' && token === sessionId && params?.SyncType === 'session_snapshot_sync',
+          channel === 'send-ai-re-act' &&
+          token === streamTokenFor(sessionId) &&
+          params?.SyncType === 'session_snapshot_sync',
       )
 
     try {
@@ -579,18 +595,13 @@ describe('ChatMultiSessionController start / send / history', async () => {
       await Promise.resolve()
       expect(snapshotCalls()).toHaveLength(0)
 
-      await ctrl.handleGrpcOutputEvent(sessionId, makeGrpcJsonRes('pong', {}, { SyncID: 'expired-ping' }))
-      await Promise.resolve()
-      expect(snapshotCalls()).toHaveLength(0)
-
-      const { meta } = ctrl.ensureSession(sessionId)
-      await ctrl.handleGrpcOutputEvent(sessionId, makeGrpcJsonRes('pong', {}, { SyncID: meta.pingSyncID }))
+      await ctrl.handleGrpcOutputEvent(sessionId, makeGrpcJsonRes('pong', {}))
       expect(snapshotCalls()).toHaveLength(0)
       await finishRecovery(ctrl, sessionId)
 
       await vi.waitFor(() => {
         expect(snapshotCalls()).toEqual([
-          ['send-ai-re-act', sessionId, { IsSyncMessage: true, SyncType: 'session_snapshot_sync' }],
+          ['send-ai-re-act', streamTokenFor(sessionId), { IsSyncMessage: true, SyncType: 'session_snapshot_sync' }],
         ])
       })
     } finally {
@@ -615,7 +626,7 @@ describe('ChatMultiSessionController start / send / history', async () => {
     ctrl.requestRecoveryHistory('s-hist')
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
       'send-ai-re-act',
-      's-hist',
+      streamTokenFor('s-hist'),
       expect.objectContaining({ IsSyncMessage: true }),
     )
   })

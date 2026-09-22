@@ -40,11 +40,11 @@ import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { onReStart } from '../utils'
 import { AIAgentChatLayout } from './AIAgentChatLayout/AIAgentChatLayout'
 
-export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
+export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
-  const { activeChat } = useAIAgentStore()
-  const { setActiveChat, setSetting, onStart, onClose } = useAIAgentDispatcher()
+  const { activeChat, pendingChat } = useAIAgentStore()
+  const { setActiveChat, setSetting, onStart, onClose, cancelPendingChat } = useAIAgentDispatcher()
 
   /** 当前对话唯一ID */
   const sessionId = useCurrentSessionId()
@@ -82,6 +82,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   })
 
   const onStop = useMemoizedFn(() => {
+    if (pendingChat) {
+      cancelPendingChat()
+      return
+    }
     if (execute && sessionId) {
       onClose([sessionId])
     }
@@ -140,6 +144,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       switch (data.type as ReActChatEventEnum) {
         // 新开聊天对话窗
         case ReActChatEventEnum.NEW_CHAT:
+          cancelPendingChat()
           setSetting?.((old) => ({
             ...old,
             SyncPerceptionTrigger: false,
