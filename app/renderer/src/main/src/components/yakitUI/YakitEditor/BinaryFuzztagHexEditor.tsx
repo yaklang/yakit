@@ -1,3 +1,4 @@
+import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type React from 'react'
 import { type MutableRefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import HexEditor from 'react-hex-editor'
@@ -9,15 +10,18 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { YakitDropdownMenu } from '../YakitDropdownMenu/YakitDropdownMenu'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { warn } from '@/utils/notification'
 import styles from './BinaryFuzztagModal.module.scss'
 
-type EditMode = 'insert' | 'replace'
-type InputFormat = 'hex' | 'ascii'
+type EditMode = 'insert-before' | 'insert-after' | 'replace' | 'replace-pad-after' | 'replace-pad-before'
+type InputFormat = 'hex' | 'ascii' | 'base64'
 
 const INPUT_PLACEHOLDER: Record<InputFormat, string> = {
   hex: '如 ffd8ff..(偶数位hex)',
   ascii: '直接输入文本',
+  base64: '如 aGVsbG8=..(Base64)',
 }
 
 const HEX_BYTE_WIDTH = 20
@@ -100,6 +104,7 @@ const askOverflow = (): Promise<'append' | 'discard' | 'cancel'> =>
 export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (props) => {
   const { dataRef, readOnly = false, onChange, initialSelection } = props
   const { theme } = useTheme()
+  const { t } = useI18nNamespaces(['yakitUi'])
 
   type HexEditorHandle = React.ComponentRef<typeof HexEditor>
   const editorRef = useRef<HexEditorHandle | null>(null)
@@ -237,7 +242,7 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
         return new Uint8Array()
       }
       if (hex.length % 2 !== 0 || /[^0-9a-fA-F]/.test(hex)) {
-        warn('invalid hex input, expect even-length hex string')
+        warn(t('YakitEditor.BinaryFuzztagHexEditor.invalidHexInput'))
         return null
       }
       const arr = new Uint8Array(hex.length / 2)
@@ -245,6 +250,15 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
         arr[i] = parseInt(hex.substr(i * 2, 2), 16)
       }
       return arr
+    }
+    if (inputFormat === 'base64') {
+      try {
+        const bin = atob(inputValue.replace(/\s+/g, ''))
+        return Uint8Array.from(bin, (ch) => ch.charCodeAt(0))
+      } catch {
+        warn(t('YakitEditor.BinaryFuzztagHexEditor.invalidBase64Input'))
+        return null
+      }
     }
     return new TextEncoder().encode(inputValue)
   }
@@ -258,38 +272,45 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
       return false
     }
     if (input.length === 0) {
-      warn('input is empty')
+      warn(t('YakitEditor.BinaryFuzztagHexEditor.emptyInput'))
       return false
     }
-    if (mode === 'insert') {
+    if (['insert-before', 'insert-after'].includes(mode)) {
       const pos =
         selStartRef.current == null
           ? dataRef.current.length
-          : Math.min(selStartRef.current, selEndRef.current ?? selStartRef.current)
+          : mode === 'insert-before'
+            ? Math.min(selStartRef.current, selEndRef.current ?? selStartRef.current)
+            : Math.max(selStartRef.current, selEndRef.current ?? selStartRef.current) + 1
       spliceData(pos, 0, input)
       setPanel(null)
       return true
     }
     // replace
     if (selStartRef.current == null || selEndRef.current == null) {
-      warn('please select bytes to replace in the hex view first')
+      warn(t('YakitEditor.BinaryFuzztagHexEditor.selectBytesFirst'))
       return false
     }
     const lo = Math.min(selStartRef.current, selEndRef.current)
     const hi = Math.max(selStartRef.current, selEndRef.current)
     const selLen = hi - lo + 1
-    if (input.length > selLen) {
+    let bytes = input
+    if (bytes.length < selLen && mode !== 'replace') {
+      bytes = new Uint8Array(selLen)
+      bytes.set(input, mode === 'replace-pad-after' ? 0 : selLen - input.length)
+    }
+    if (bytes.length > selLen) {
       const choice = await askOverflow()
       if (choice === 'cancel') {
         return false
       }
       if (choice === 'append') {
-        spliceData(lo, selLen, input)
+        spliceData(lo, selLen, bytes)
       } else {
-        spliceData(lo, selLen, input.slice(0, selLen))
+        spliceData(lo, selLen, bytes.slice(0, selLen))
       }
     } else {
-      spliceData(lo, selLen, input)
+      spliceData(lo, selLen, bytes)
     }
     setPanel(null)
     return true
@@ -403,6 +424,7 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
           <Draggable nodeRef={popRef} bounds="parent" handle={`.${styles['hex-edit-pop-drag']}`}>
             <div
               ref={popRef}
+              data-testid="hex-edit-pop"
               className={styles['hex-edit-pop']}
               style={{ left: panel.x, top: panel.y }}
               onMouseDown={(e) => e.stopPropagation()}
@@ -420,7 +442,8 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
                 }}
                 options={[
                   { label: 'HEX', value: 'hex' },
-                  { label: 'ASCII', value: 'ascii' },
+                  { label: t('YakitEditor.textView'), value: 'ascii' },
+                  { label: 'Base64', value: 'base64' },
                 ]}
               />
               <YakitInput.TextArea
@@ -440,12 +463,59 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
               />
               <div className={styles['hex-hint']}>{panel.hint}</div>
               <div className={styles['hex-panel-footer']}>
-                <YakitButton type="outline2" size="small" onClick={() => applyEdit('insert')}>
-                  插入
-                </YakitButton>
-                <YakitButton type="primary" size="small" onClick={() => applyEdit('replace')}>
-                  替换
-                </YakitButton>
+                <div className={styles['hex-split-button']}>
+                  <YakitButton
+                    type="outline2"
+                    className={styles['hex-split-button-main']}
+                    onClick={() => applyEdit('insert-before')}
+                  >
+                    {t('YakitEditor.BinaryFuzztagHexEditor.insert')}
+                  </YakitButton>
+                  <YakitDropdownMenu
+                    dropdown={{ getPopupContainer: () => popRef.current! }}
+                    menu={{
+                      width: 150,
+                      data: [
+                        { key: 'insert-before', label: t('YakitEditor.BinaryFuzztagHexEditor.insertBefore') },
+                        { key: 'insert-after', label: t('YakitEditor.BinaryFuzztagHexEditor.insertAfter') },
+                      ],
+                      onClick: ({ key }: { key: string }) => applyEdit(key as EditMode),
+                    }}
+                  >
+                    <YakitButton
+                      type="outline2"
+                      className={styles['hex-split-button-dropdown']}
+                      icon={<ChevronDownOutlined color="currentColor" />}
+                    />
+                  </YakitDropdownMenu>
+                </div>
+                <div className={styles['hex-split-button']}>
+                  <YakitButton
+                    type="primary"
+                    className={styles['hex-split-button-main']}
+                    onClick={() => applyEdit('replace')}
+                  >
+                    {t('YakitButton.replace')}
+                  </YakitButton>
+                  <YakitDropdownMenu
+                    dropdown={{ getPopupContainer: () => popRef.current! }}
+                    menu={{
+                      width: 220,
+                      data: [
+                        { key: 'replace', label: t('YakitEditor.BinaryFuzztagHexEditor.replaceNoPad') },
+                        { key: 'replace-pad-after', label: t('YakitEditor.BinaryFuzztagHexEditor.replacePadAfter') },
+                        { key: 'replace-pad-before', label: t('YakitEditor.BinaryFuzztagHexEditor.replacePadBefore') },
+                      ],
+                      onClick: ({ key }: { key: string }) => applyEdit(key as EditMode),
+                    }}
+                  >
+                    <YakitButton
+                      type="primary"
+                      className={styles['hex-split-button-dropdown-right']}
+                      icon={<ChevronDownOutlined color="currentColor" />}
+                    />
+                  </YakitDropdownMenu>
+                </div>
               </div>
             </div>
           </Draggable>

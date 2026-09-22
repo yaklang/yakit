@@ -373,6 +373,18 @@
     "packetChangedDuringPluginExecution": "Packet changed during plugin execution, plugin modifications not applied",
     "pluginModifiedPeerPacketNoFillEntry": "Plugin also modified the peer packet, but the current page has no fill-in entry",
     "manualHostConfigTip": "To manually specify the target address or perform Host collision, please configure \"Advanced Settings - Real Host\"",
+    "BinaryFuzztagHexEditor": {
+      "insert": "Insert",
+      "invalidHexInput": "Invalid HEX input, expected an even-length hex string",
+      "invalidBase64Input": "Invalid Base64 input",
+      "emptyInput": "Input is empty",
+      "selectBytesFirst": "Please select the bytes to replace in the HEX view first",
+      "insertBefore": "Insert Before Selection",
+      "insertAfter": "Insert After Selection",
+      "replaceNoPad": "Replace (No Padding)",
+      "replacePadAfter": "Replace (Pad Null Bytes After)",
+      "replacePadBefore": "Replace (Pad Null Bytes Before)"
+    },
     "HTTPPacketYakitEditor": {
       "copyCurlCommand": "Copy cURL Command",
       "packetEmpty": "Packet is empty",
