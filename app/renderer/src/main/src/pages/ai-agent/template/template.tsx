@@ -60,6 +60,8 @@ import {
   type AIHttpFlowCommandParams,
 } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
 
+const HTTP_FLOW_SUMMARY_THRESHOLD = 3
+
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
   forwardRef((props, ref: Ref<TextAreaRef>) => {
@@ -161,10 +163,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const httpFlowReference: AIHttpFlowCommandParams = {
       flowIds: [...selectedHttpFlowIds],
       displayText:
-        selectedHttpFlowIds.length < 3
+        selectedHttpFlowIds.length < HTTP_FLOW_SUMMARY_THRESHOLD
           ? selectedHttpFlowIds.map((id) => `#${id}`).join(', ')
           : t('AIMilkdownInput.selectedHttpFlowSummary', { count: selectedHttpFlowIds.length }),
-      isSummary: selectedHttpFlowIds.length >= 3,
+      isSummary: selectedHttpFlowIds.length >= HTTP_FLOW_SUMMARY_THRESHOLD,
     }
 
     const { isHovering, dropRef } = useAIChatDrop({

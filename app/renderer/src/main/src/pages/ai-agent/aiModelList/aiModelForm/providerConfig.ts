@@ -17,6 +17,6 @@ export const providerToListAiModelConfig = (provider?: ThirdPartyApplicationConf
     endpoint: provider.Endpoint ?? '',
     enable_endpoint: !!provider.EnableEndpoint,
     Headers: provider.Headers ?? [],
-    // ExtraParams: provider.ExtraParams ?? [],// 后端目前没有用这个字段，然后ai输入框中和修改ai的弹窗from中，这两个地方的ExtraParams不一样，暂时注释
+    // ExtraParams: provider.ExtraParams ?? [],// 后端目前没有用这个字段，然后ai输入框中和修改ai的弹窗form中，这两个地方的ExtraParams不一样，暂时注释
   })
 }
