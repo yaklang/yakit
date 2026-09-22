@@ -240,27 +240,63 @@
 .notify-message {
   display: flex;
   align-items: center;
-  color: var(--Colors-Use-Main-Primary);
+  min-width: 0;
+  overflow: hidden;
+  background-color: var(--Colors-Use-Neutral-Bg);
+  border-radius: 12px 12px 0 0;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 12px;
-  margin-bottom: 2px;
-  padding: 0 4px;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+  padding: 10px 12px 8px;
   gap: 8px;
+
+  .notify-label {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 4px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .notify-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .notify-icon-error {
+    padding-top: 1px;
+    color: var(--Colors-Use-Error-Primary);
+  }
+
+  .notify-icon-yellow {
+    color: var(--Colors-Use-Warning-Primary);
+  }
 
   .notify-actions {
     display: flex;
     align-items: center;
     flex-shrink: 0;
-    gap: 8px;
+    gap: 4px;
   }
 
   .content-wrapper {
     display: flex;
     flex: 1;
+    min-width: 0;
     overflow: hidden; // 关键：隐藏滚动出该容器的文本
     white-space: nowrap;
-    // width: 100%;
-    margin: 0 2px;
-    color: var(--Colors-Use-Main-Hover);
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
     .marquee-inner {
       display: flex;
       width: max-content; // 确保宽度紧贴内容撑开
