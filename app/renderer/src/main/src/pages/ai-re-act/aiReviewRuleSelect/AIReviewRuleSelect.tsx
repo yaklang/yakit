@@ -283,7 +283,13 @@ export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
   })
   const onDropdownRender = useMemoizedFn((menu) => <div ref={dropdownRenderRef}>{dropdownRender(menu, setOpen)}</div>)
   return (
-    <div ref={selectWrapperRef} className={classNames(styles['ai-chat-select-wrapper'])} onClick={onSelectWrapperClick}>
+    <div
+      ref={selectWrapperRef}
+      className={classNames(styles['ai-chat-select-wrapper'], {
+        [styles['ai-chat-select-borderless']]: rest.variant === 'borderless',
+      })}
+      onClick={onSelectWrapperClick}
+    >
       <YakitSelect
         {...rest}
         popupMatchSelectWidth={false}

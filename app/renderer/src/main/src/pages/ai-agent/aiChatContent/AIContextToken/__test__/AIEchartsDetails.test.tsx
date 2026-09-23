@@ -56,6 +56,35 @@ const renderAndCollect = (consumption?: Record<string, unknown>) => {
 }
 
 describe('AIEchartsDetails 用量展示回退', () => {
+  it('旧引擎未返回单模型统计时传递类别用量', () => {
+    mocks.config = {
+      IntelligentModels: [createModel('aibalance', 'standard')],
+      LightweightModels: [createModel('openai', 'lite')],
+    }
+    const tierConsumption = {
+      intelligent: { input_consumption: 30, output_consumption: 8, cache_hit_token: 5 },
+      lightweight: { input_consumption: 10, output_consumption: 2, cache_hit_token: 1 },
+    }
+    const props = renderAndCollect({ tier_consumption: tierConsumption })
+    expect(props[0].fallbackConsumption).toEqual(tierConsumption.intelligent)
+    expect(props[1].fallbackConsumption).toEqual(tierConsumption.lightweight)
+  })
+
+  it('新引擎返回空模型统计时不回退到类别用量', () => {
+    mocks.config = {
+      IntelligentModels: [createModel('aibalance', 'standard')],
+      LightweightModels: [createModel('openai', 'lite')],
+    }
+    const props = renderAndCollect({
+      tier_consumption: {
+        intelligent: { input_consumption: 30, output_consumption: 8, cache_hit_token: 5 },
+      },
+      tier_model_consumption: {},
+    })
+    expect(props[0]).toMatchObject({ aiModel: undefined, fallbackConsumption: undefined })
+    expect(props[1]).toMatchObject({ aiModel: undefined, fallbackConsumption: undefined })
+  })
+
   it('无 tier_model_consumption 时回退展示全局配置的首个模型', () => {
     mocks.config = {
       IntelligentModels: [createModel('aibalance', 'standard')],
@@ -115,12 +144,12 @@ describe('AIEchartsDetails 用量展示回退', () => {
     expect(props[0]).toMatchObject({
       aiModel: undefined,
       modelConsumption: intelligentStats,
-      consumption: { input_consumption: 30, output_consumption: 8, cache_hit_token: 5 },
+      fallbackConsumption: undefined,
     })
     expect(props[1]).toMatchObject({
       aiModel: undefined,
       modelConsumption: lightweightStats,
-      consumption: { input_consumption: 10, output_consumption: 2, cache_hit_token: 1 },
+      fallbackConsumption: undefined,
     })
   })
 })

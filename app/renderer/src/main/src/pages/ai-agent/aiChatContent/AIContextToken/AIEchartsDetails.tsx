@@ -67,7 +67,6 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
   }, [event, inViewport])
 
   const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
-  const tierConsumption = consumption?.tier_consumption
   const tierModelConsumption = consumption?.tier_model_consumption
   const hasRuntimeModelConsumption = tierModelConsumption !== undefined
 
@@ -203,13 +202,13 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
               modelType={t('AiAgengt.intelligentModels')}
               aiModel={hasRuntimeModelConsumption ? undefined : currentModel?.intelligentModels}
               modelConsumption={tierModelConsumption?.intelligent}
-              consumption={tierConsumption?.intelligent}
+              fallbackConsumption={hasRuntimeModelConsumption ? undefined : consumption?.tier_consumption?.intelligent}
             />
             <AITokens
               modelType={t('AiAgengt.lightweightModels')}
               aiModel={hasRuntimeModelConsumption ? undefined : currentModel?.lightweightModels}
               modelConsumption={tierModelConsumption?.lightweight}
-              consumption={tierConsumption?.lightweight}
+              fallbackConsumption={hasRuntimeModelConsumption ? undefined : consumption?.tier_consumption?.lightweight}
             />
           </div>
         </div>
