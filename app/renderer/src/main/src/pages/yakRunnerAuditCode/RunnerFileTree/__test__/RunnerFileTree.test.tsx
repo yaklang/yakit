@@ -110,8 +110,7 @@ vi.mock('@/pages/yakRunner/CollapseList/CollapseList', () => ({
 import { RunnerFileTree } from '../RunnerFileTree'
 
 const tabValues = new Set(['all', 'file', 'rule', 'rule-generate', 'global-filtering-function'])
-const toolbarButtons = () =>
-  screen.getAllByRole('button').filter((button) => !tabValues.has(button.textContent || ''))
+const toolbarButtons = () => screen.getAllByRole('button').filter((button) => !tabValues.has(button.textContent || ''))
 
 describe('RunnerFileTree', () => {
   beforeEach(() => {

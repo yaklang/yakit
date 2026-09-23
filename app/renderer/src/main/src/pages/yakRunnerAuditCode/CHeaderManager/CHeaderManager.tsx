@@ -360,7 +360,10 @@ const CHeaderManager: React.FC<CHeaderManagerProps> = React.memo(() => {
           </div>
         ) : shownTree.length === 0 ? (
           <div className={styles['empty-wrap']}>
-            <YakitEmpty title={t('CHeaderManager.searchEmptyTitle')} description={t('CHeaderManager.searchEmptyDesc')} />
+            <YakitEmpty
+              title={t('CHeaderManager.searchEmptyTitle')}
+              description={t('CHeaderManager.searchEmptyDesc')}
+            />
           </div>
         ) : (
           <Tree
