@@ -144,7 +144,10 @@ describe('backend allocated session identity', () => {
     async (id) => {
       const token = await start()
       await emit(token, 'pong', id)
-      expect(yakitNotify).toHaveBeenCalledWith('error', expect.stringContaining('更新引擎'))
+      expect(yakitNotify).toHaveBeenCalledWith(
+        'error',
+        id === 'default' ? 'ChatSessionNotify.engineDefaultSession' : 'ChatSessionNotify.engineMissingSessionId',
+      )
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', token)
       expect(success).not.toHaveBeenCalled()
       expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
@@ -177,7 +180,7 @@ describe('backend allocated session identity', () => {
   it('times out without misdiagnosing a silent engine as an old engine', async () => {
     const token = await start()
     await vi.advanceTimersByTimeAsync(30000)
-    expect(yakitNotify).toHaveBeenCalledWith('error', expect.stringContaining('超时'))
+    expect(yakitNotify).toHaveBeenCalledWith('error', 'ChatSessionNotify.initTimeout')
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', token)
     expect(success).not.toHaveBeenCalled()
   })
@@ -363,7 +366,7 @@ describe('backend allocated session identity', () => {
     expect(success).not.toHaveBeenCalled()
     await emit(token, 'pong', 'ai-session-second')
     expect(success).not.toHaveBeenCalled()
-    expect(pendings.get(token)).toMatchObject({ status: 'failed', error: '引擎返回的会话 ID 不一致' })
+    expect(pendings.get(token)).toMatchObject({ status: 'failed', error: 'ChatSessionNotify.sessionIdMismatch' })
     expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
   })
 })
