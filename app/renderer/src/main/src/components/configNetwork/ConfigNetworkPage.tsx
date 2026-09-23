@@ -969,7 +969,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = () => {
 /**
  * 在全局配置得页面使用这个组件,组件得父元素得Form表单中没有使用自带得设置值,而是采用得state来控制
  */
-const AIModelGlobalConfig: React.FC = React.memo(() => {
+export const AIModelGlobalConfig: React.FC = React.memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const refRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(refRef)
