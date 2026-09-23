@@ -155,6 +155,10 @@ export interface AIAgentChatData {
   httpRunTimeIDs: string[]
   /** 记录数据里所有的riskRunTimeIDs */
   riskRunTimeIDs: string[]
+  /** 按用户问题隔离的 http Runtime IDs，用于当前任务的流量表 */
+  httpRunTimeIDsByQuestionID: Map<string, string[]>
+  /** 按用户问题隔离的 risk Runtime IDs，用于当前任务的风险表 */
+  riskRunTimeIDsByQuestionID: Map<string, string[]>
   /** 性能相关数据 */
   aiPerfData: {
     /** 消耗Token */

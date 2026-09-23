@@ -247,11 +247,14 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             onOpenTools={() => setShow((value) => !value)}
             toolsOpen={show}
           />
-          {show && (
-            <div className={classNames(styles['ai-side-list'], styles['ai-side-list-secondary'])}>
-              <AIAgentSideList show={true} setShow={setShow} />
-            </div>
-          )}
+          <div
+            className={classNames(styles['ai-side-list'], styles['ai-side-list-secondary'], {
+              [styles['ai-side-list-secondary-hidden']]: !show,
+            })}
+            aria-hidden={!show}
+          >
+            <AIAgentSideList show={show} setShow={setShow} />
+          </div>
           <div className={styles['employee-workspace']}>
             <DigitalEmployeeProfile />
             <div className={classNames(styles['ai-agent-chat'])} onClick={onSendSwitchAIAgentTab}>

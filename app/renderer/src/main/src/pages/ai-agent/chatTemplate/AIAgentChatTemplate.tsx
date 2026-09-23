@@ -26,6 +26,7 @@ import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { DigitalEmployeeTaskProgress } from '@/pages/digitalEmployee/DigitalEmployeeTaskProgress'
 
 export enum AIChatLeft {
   TaskTree = 'task-tree',
@@ -43,8 +44,11 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const rawData = useCurrentRawData()
 
   const currentPlan = useStore(store, (state) => state.currentPlan)
+  const planHistoryList = useStore(store, (state) => state.planHistoryList)
   const execute = useStore(store, (state) => state.execute)
   const memoryListUpdate = useStore(store, (state) => state.memoryListUpdate)
+  const chatTodoListUpdate = useStore(store, (state) => state.chatTodoListUpdate)
+  const currentQuestionID = useStore(store, (state) => state.currentChatStatus.questionID)
 
   const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.Timeline)
   const [expand, setExpand] = useControllableValue<boolean>(props, {
@@ -52,15 +56,24 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     valuePropName: 'expand',
     trigger: 'setExpand',
   })
-  // 任务规划和自由对话数据已合并到 chatElements currentPlan.task_tree 判断是否有任务树
-  const hasTaskTree = useCreation(() => {
+  const hasCurrentPlanTaskTree = useCreation(() => {
     return (currentPlan?.task_tree?.length ?? 0) > 0
   }, [currentPlan?.task_tree])
+  const hasHistoryTaskTree = useCreation(() => {
+    return (planHistoryList?.records?.length ?? 0) > 0
+  }, [planHistoryList?.records])
+  // 自由对话中的并发子 Agent 任务不会生成 Plan 树，但会持续更新 todo list。
+  // 左侧“任务列表”需要同时支持这两种数据源。
+  const hasTodoList = useCreation(() => {
+    if (!currentQuestionID) return false
+    return (rawData.taskDetailsMap.get(currentQuestionID)?.todoList?.items?.length ?? 0) > 0
+  }, [currentQuestionID, chatTodoListUpdate])
+  const hasTaskList = hasCurrentPlanTaskTree || hasHistoryTaskTree || hasTodoList
   useEffect(() => {
-    if (hasTaskTree) {
+    if (hasTaskList) {
       setActiveTab(AIChatLeft.TaskTree)
     }
-  }, [hasTaskTree])
+  }, [hasTaskList])
 
   const length = useCreation(() => {
     return rawData?.memoryList?.memories?.length || 0
@@ -83,7 +96,8 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const renderDom = useMemoizedFn(() => {
     switch (activeTab) {
       case AIChatLeft.TaskTree:
-        return <HistoryTaskTree />
+        // 当前自由对话的 todo 优先于旧的历史 Plan；正在执行的 Plan 树仍优先展示。
+        return hasTodoList && !hasCurrentPlanTaskTree ? <DigitalEmployeeTaskProgress /> : <HistoryTaskTree />
       case AIChatLeft.Timeline:
         return <TimelineCard />
       default:

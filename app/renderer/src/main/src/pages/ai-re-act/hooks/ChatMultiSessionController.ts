@@ -91,6 +91,8 @@ const genAIAgentChatData = (): AIAgentChatData => {
 
     httpRunTimeIDs: [],
     riskRunTimeIDs: [],
+    httpRunTimeIDsByQuestionID: new Map(),
+    riskRunTimeIDsByQuestionID: new Map(),
     aiPerfData: {
       consumption: {
         cache_hit_token: 0,

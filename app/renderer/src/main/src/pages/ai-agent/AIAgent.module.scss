@@ -18,8 +18,19 @@
 }
 .ai-side-list-secondary {
   width: 348px;
+  flex: 0 0 348px;
   overflow: hidden;
   border-right: 1px solid var(--Colors-Use-Neutral-Border);
+  transition:
+    width 0.15s ease,
+    flex-basis 0.15s ease,
+    border-color 0.15s ease;
+}
+.ai-side-list-secondary-hidden {
+  width: 0;
+  flex-basis: 0;
+  border-right-color: transparent;
+  pointer-events: none;
 }
 .employee-workspace {
   flex: 1;

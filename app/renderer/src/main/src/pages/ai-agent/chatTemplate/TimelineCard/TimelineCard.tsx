@@ -119,6 +119,7 @@ const TimelineCard: FC = () => {
     >
       <YakitSpin spinning={timelinesLoading}>
         <Virtuoso
+          key={sessionId}
           ref={virtuosoRef}
           firstItemIndex={firstItemIndex}
           data={reActTimelines}
@@ -130,6 +131,7 @@ const TimelineCard: FC = () => {
           style={{ height: '100%', width: '100%' }}
           increaseViewportBy={{ top: 300, bottom: 300 }}
           atBottomThreshold={100}
+          followOutput={(isAtBottom) => (isAtBottom ? 'auto' : false)}
           skipAnimationFrameInResizeObserver
           startReached={handleLoadMore}
           itemContent={itemContent}

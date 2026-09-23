@@ -50,6 +50,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     const riskTabShow = useStore(store, (state) => state.riskTabShow)
     const riskTabUpdate = useStore(store, (state) => state.riskTabUpdate)
     const initLoading = useStore(store, (state) => state.initLoading)
+    const currentQuestionID = useStore(store, (state) => state.currentChatStatus.questionID)
 
     const { activeChat } = useAIAgentStore()
 
@@ -195,8 +196,35 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     const tabContent = useMemo(() => {
       if (!activeKey) return null
-      const runTimeIds = [...new Set(runTimeId ? [runTimeId] : rawData.httpRunTimeIDs.concat(RelatedRuntimeIDs))]
-      const riskRunTimeIds = [...new Set(runTimeId ? [runTimeId] : rawData.riskRunTimeIDs.concat(RelatedRuntimeIDs))]
+      // Runtime ID 数组和 Map 在流式处理中原地更新，版本号用于触发重新计算。
+      void httpTabUpdate
+      void riskTabUpdate
+      const currentHttpRunTimeIDs = currentQuestionID
+        ? rawData.httpRunTimeIDsByQuestionID?.get(currentQuestionID)
+        : undefined
+      const currentRiskRunTimeIDs = currentQuestionID
+        ? rawData.riskRunTimeIDsByQuestionID?.get(currentQuestionID)
+        : undefined
+      // 当前问题已建立 Runtime ID 分组时，只展示该轮数据；
+      // 旧历史会话没有分组信息，仍回退到会话级 RelatedRuntimeIDs。
+      const runTimeIds = [
+        ...new Set(
+          runTimeId
+            ? [runTimeId]
+            : currentHttpRunTimeIDs !== undefined
+              ? currentHttpRunTimeIDs
+              : rawData.httpRunTimeIDs.concat(RelatedRuntimeIDs),
+        ),
+      ]
+      const riskRunTimeIds = [
+        ...new Set(
+          runTimeId
+            ? [runTimeId]
+            : currentRiskRunTimeIDs !== undefined
+              ? currentRiskRunTimeIDs
+              : rawData.riskRunTimeIDs.concat(RelatedRuntimeIDs),
+        ),
+      ]
       switch (activeKey) {
         case AITabsEnum.Task_Content:
           return (
@@ -229,7 +257,20 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         default:
           return null
       }
-    }, [activeKey, runTimeId, httpTabUpdate, riskTabUpdate, RelatedRuntimeIDs, filterTagDom, OperationLogList])
+    }, [
+      activeKey,
+      runTimeId,
+      httpTabUpdate,
+      riskTabUpdate,
+      currentQuestionID,
+      rawData.httpRunTimeIDs,
+      rawData.httpRunTimeIDsByQuestionID,
+      rawData.riskRunTimeIDs,
+      rawData.riskRunTimeIDsByQuestionID,
+      RelatedRuntimeIDs,
+      filterTagDom,
+      OperationLogList,
+    ])
 
     const onActiveKey = useMemoizedFn((key: AITabsEnumType) => {
       if (activeKey === key) {

@@ -344,6 +344,8 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     },
   )
   const openModelTab = useMemoizedFn(() => {
+    // 先收起下拉层，避免它遮住即将打开的配置侧栏。
+    onSetOpen(false)
     if (getCurrentPageTabRouteKey() !== YakitRoute.AI_Agent) {
       emiter.emit(
         'openPage',
@@ -404,7 +406,15 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                   </div>
                   <div className={styles['select-title-right']}>
                     <Tooltip title={t('AIModelSelect.openConfigTooltip')}>
-                      <YakitButton size="small" type="text2" icon={<OutlineCogIcon />} onClick={openModelTab} />
+                      <YakitButton
+                        size="small"
+                        type="text2"
+                        icon={<OutlineCogIcon />}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openModelTab()
+                        }}
+                      />
                     </Tooltip>
                     {aiType === 'online' && (
                       <Tooltip title={t('YakitButton.refresh')}>

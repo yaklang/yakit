@@ -66,6 +66,18 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
     return
   }
 
+  const questionID = startInfo['re-act_task']
+  // Runtime ID 以用户问题为边界。进入任务规划时可能已在自由对话阶段产生数据，
+  // 因此只在该问题尚未初始化时创建空分组，不覆盖已收集的 ID。
+  if (!rawData.httpRunTimeIDsByQuestionID) rawData.httpRunTimeIDsByQuestionID = new Map()
+  if (!rawData.riskRunTimeIDsByQuestionID) rawData.riskRunTimeIDsByQuestionID = new Map()
+  if (questionID && !rawData.httpRunTimeIDsByQuestionID.has(questionID)) {
+    rawData.httpRunTimeIDsByQuestionID.set(questionID, [])
+  }
+  if (questionID && !rawData.riskRunTimeIDsByQuestionID.has(questionID)) {
+    rawData.riskRunTimeIDsByQuestionID.set(questionID, [])
+  }
+
   // 开始任务规划后，刷新历史任务树
   sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
   /** 获取最新任务树状态 */
@@ -77,7 +89,7 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
     showPlanList: true,
     cancelChatLoading: false,
     currentChatStatus: {
-      questionID: startInfo['re-act_task'],
+      questionID,
       status: AITaskStatus.inProgress,
       coordinatorId: startInfo.coordinator_id,
     },
@@ -165,11 +177,9 @@ const handleFileSystemPin: AIMessageHandler = (request) => {
 }
 
 const handleTimelineItem: AIMessageHandler = (request) => {
-  const { res, store, meta } = request
+  const { res, store } = request
   if (res.Type !== 'structured' || res.NodeId !== 'timeline_item') return
   if (res.IsSync) return
-  // 自由对话的成组子agent任务的timeline-item不展示
-  if (meta.casualSubTaskIDs.has(res.TaskId)) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const timelineItem = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
@@ -195,6 +205,16 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
 
   // 实时数据里，记录用户问题的状态和专注模式信息
   if (!res.IsSync) {
+    const questionID = res.TaskId || data.react_task_id
+    if (!rawData.httpRunTimeIDsByQuestionID) rawData.httpRunTimeIDsByQuestionID = new Map()
+    if (!rawData.riskRunTimeIDsByQuestionID) rawData.riskRunTimeIDsByQuestionID = new Map()
+    // 新问题先建立空分组，避免该问题尚未产生数据时回退展示历史 Runtime ID。
+    if (questionID && !rawData.httpRunTimeIDsByQuestionID.has(questionID)) {
+      rawData.httpRunTimeIDsByQuestionID.set(questionID, [])
+    }
+    if (questionID && !rawData.riskRunTimeIDsByQuestionID.has(questionID)) {
+      rawData.riskRunTimeIDsByQuestionID.set(questionID, [])
+    }
     sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO })
     rawData.taskDetailsMap.set(res.TaskId || data.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
     store.getState().updateStateCount('chatTodoListUpdate')
@@ -385,11 +405,26 @@ const handleTrafficCount: AIMessageHandler = (request) => {
 
   // 更新流量表和风险表数据, 历史数据不处理
   if (!res.IsSync) {
+    const questionID = store.getState().currentChatStatus.questionID
     if (res.Type === 'yak_httpflow_count' && !rawData.httpRunTimeIDs.includes(data.runtime_id)) {
       rawData.httpRunTimeIDs.push(data.runtime_id)
+      if (!rawData.httpRunTimeIDsByQuestionID) rawData.httpRunTimeIDsByQuestionID = new Map()
+      if (questionID) {
+        const currentIDs = rawData.httpRunTimeIDsByQuestionID.get(questionID) || []
+        if (!currentIDs.includes(data.runtime_id)) {
+          rawData.httpRunTimeIDsByQuestionID.set(questionID, [...currentIDs, data.runtime_id])
+        }
+      }
       store.getState().updateHttpData()
     } else if (res.Type === 'yak_risk_count' && !rawData.riskRunTimeIDs.includes(data.runtime_id)) {
       rawData.riskRunTimeIDs.push(data.runtime_id)
+      if (!rawData.riskRunTimeIDsByQuestionID) rawData.riskRunTimeIDsByQuestionID = new Map()
+      if (questionID) {
+        const currentIDs = rawData.riskRunTimeIDsByQuestionID.get(questionID) || []
+        if (!currentIDs.includes(data.runtime_id)) {
+          rawData.riskRunTimeIDsByQuestionID.set(questionID, [...currentIDs, data.runtime_id])
+        }
+      }
       store.getState().updateRiskData()
     }
   }

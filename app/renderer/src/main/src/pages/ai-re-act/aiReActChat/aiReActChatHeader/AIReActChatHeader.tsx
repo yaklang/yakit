@@ -41,6 +41,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
 
   // 内部订阅 Store 数据
   const store = useCurrentStore()
+  const rawData = useCurrentRawData()
   const focusMode = useStore(store, (state) => state.focusMode)
   const currentChatStatusQuestionID = useStore(store, (state) => state.currentChatStatus.questionID)
 
@@ -67,6 +68,8 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
     const taskId = currentChatStatusQuestionID
     if (!taskId || !sessionId) return false
     if (getSetting()?.Source !== 'ai') return false
+    const question = rawData.contents.get(taskId)
+    const taskGoal = question?.type === AIChatQSDataTypeEnum.QUESTION ? question.data : ''
     emiter.emit(
       'actionAITaskContentTab',
       JSON.stringify({
@@ -75,7 +78,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
           key: sessionId,
           taskId,
           label: label || activeChat?.Title || defaultTaskTabLabel,
-          goal: '',
+          goal: taskGoal,
         },
       }),
     )
