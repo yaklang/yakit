@@ -197,6 +197,7 @@ import {
   applyWebFuzzerTabMutation,
   countWebFuzzerTabs,
   filterMissingWebFuzzerNodes,
+  getChangedWebFuzzerTabIds,
   type WebFuzzerPushNode,
 } from './webFuzzerTabPush'
 import {
@@ -3592,7 +3593,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const currentPageInfo = usePageInfo.getState().pages.get(YakitRoute.HTTPFuzzer)
 
     // 当 openFlag 为 true 且仅单个标签变更时，将其作为 preferredPageId，使变更后自动聚焦该标签
-    const changedTabIds = changedNodes.filter((node) => !node.id.endsWith('group')).map((node) => node.id)
+    const changedTabIds = getChangedWebFuzzerTabIds(changedNodes as WebFuzzerPushNode[])
     const preferredPageId = openFlag && changedTabIds.length === 1 ? changedTabIds[0] : ''
 
     // 纯函数重建标签树与 page state，优先保留本地未覆盖的配置
@@ -3615,6 +3616,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setPagesData(YakitRoute.HTTPFuzzer, result.page)
     setPageCache(latestPageCache)
     emiter.emit('secondMenuTabDataChange', '')
+    changedTabIds.forEach((pageId) => emiter.emit('onRefreshWebFuzzerPage', pageId))
 
     if (!isSecurityExpert && openFlag) {
       // 将 Web Fuzzer 切换为当前顶层页

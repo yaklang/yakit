@@ -28,6 +28,11 @@ export interface ApplyWebFuzzerTabMutationResult {
 /** 判断节点是否为分组节点（约定 id 以 'group' 结尾）。 */
 const isGroupNode = (node: Pick<WebFuzzerPushNode, 'id'>) => node.id.endsWith('group')
 
+/** 返回推送中实际配置发生变化的标签 id；分组节点没有 HTTP Fuzzer 运行态。 */
+export const getChangedWebFuzzerTabIds = (changedNodes: WebFuzzerPushNode[]) => [
+  ...new Set(changedNodes.filter((node) => node?.id && !isGroupNode(node)).map((node) => node.id)),
+]
+
 /** 深度优先展开整棵树，得到扁平节点列表。 */
 const flattenNodes = (nodes: WebFuzzerPushNode[]): WebFuzzerPushNode[] => {
   const result: WebFuzzerPushNode[] = []

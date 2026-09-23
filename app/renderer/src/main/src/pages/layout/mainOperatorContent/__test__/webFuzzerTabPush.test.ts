@@ -7,6 +7,7 @@ import {
   applyWebFuzzerTabMutation,
   countWebFuzzerTabs,
   filterMissingWebFuzzerNodes,
+  getChangedWebFuzzerTabIds,
   rebuildWebFuzzerTabTree,
   type WebFuzzerPushNode,
 } from '../webFuzzerTabPush'
@@ -281,6 +282,19 @@ describe('applyWebFuzzerTabMutation', () => {
       proxy: ['http://127.0.0.1:9090'],
       actualHost: '127.0.0.1:9080',
     })
+  })
+})
+
+describe('getChangedWebFuzzerTabIds', () => {
+  it('targets every changed tab exactly once and ignores group-only changes', () => {
+    expect(
+      getChangedWebFuzzerTabIds([
+        group('auth-group'),
+        tab('tab-a', 'auth-group'),
+        tab('tab-a', 'auth-group'),
+        tab('tab-b', '0'),
+      ]),
+    ).toEqual(['tab-a', 'tab-b'])
   })
 })
 

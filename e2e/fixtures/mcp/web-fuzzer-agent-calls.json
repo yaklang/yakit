@@ -173,6 +173,7 @@
       "expectResult": { "operation": "updated", "openFlag": true },
       "expectUI": {
         "activeTabId": "$ref:loginTabId",
+        "activeRequestTextIncludes": "/api/login/refresh",
         "tabs": [
           { "id": "$ref:loginTabId", "name": "Login with token", "groupId": "$ref:existingGroupId", "active": true }
         ]

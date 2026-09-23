@@ -133,6 +133,7 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { WebFuzzerCasualReplaceReviewOverlay } from '@/pages/fuzzer/WebFuzzerCasualReplaceReviewOverlay'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
 import type { WebFuzzerType } from './WebFuzzerPage/WebFuzzerPageType'
+import { applyWebFuzzerPageRuntimeRefresh } from './webFuzzerPageRefresh'
 import type { AdvancedConfigShowProps } from './fuzzerCacheData'
 import cloneDeep from 'lodash/cloneDeep'
 import { useGlobalHotPatch, useGlobalHotPatchTag } from '@/store/globalHotPatch'
@@ -1172,8 +1173,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         setHotPatchCodeWithParamGetter(`${remoteData}`)
       }
     })
-    onUpdateRequest()
-    onUpdateAdvancedConfigValue()
+    refreshWebFuzzerPageFromStore()
   })
   /**
    * @description 高级配置得内容展示切换
@@ -1201,26 +1201,29 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       setSelectedHotPatchTemplateName(value?.templateName || '')
     } catch (error) {}
   })
-  /**更新请求包 */
-  const onUpdateRequest = useMemoizedFn(() => {
-    if (!inViewport) return
+  /**从 page store 同步服务端更新后的 Web Fuzzer 运行态。 */
+  const refreshWebFuzzerPageFromStore = useMemoizedFn(() => {
     const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
-    if (!currentItem) return
-    const newRequest = currentItem.pageParamsInfo.webFuzzerPageInfo?.request
-    if (!newRequest) return
-    if (requestRef.current === newRequest) return
-    requestRef.current = newRequest || defaultPostTemplate
-    refreshRequest()
+    const pageInfo = currentItem?.pageParamsInfo.webFuzzerPageInfo
+    if (!pageInfo) return
+
+    applyWebFuzzerPageRuntimeRefresh(pageInfo, {
+      requestRef,
+      hotPatchCodeRef,
+      isHttpsRef,
+      setAdvancedConfigValue,
+      setBrowserTransformSelection: updateBrowserTransformSelection,
+      refreshEditor: refreshRequest,
+    })
   })
-  /**从数据中心获取页面最新得高级配置数据,目前有提取器、匹配器、重复发包、并发配置、随机延迟代码相关数据 */
-  const onUpdateAdvancedConfigValue = useMemoizedFn(() => {
-    if (!inViewport) return
-    const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
-    if (!currentItem) return
-    const newAdvancedConfigValue = currentItem.pageParamsInfo.webFuzzerPageInfo?.advancedConfigValue
-    if (!newAdvancedConfigValue) return
-    setAdvancedConfigValue({ ...newAdvancedConfigValue })
-  })
+
+  useEffect(() => {
+    const onRefreshWebFuzzerPage = (pageId: string) => {
+      if (pageId === props.id) refreshWebFuzzerPageFromStore()
+    }
+    emiter.on('onRefreshWebFuzzerPage', onRefreshWebFuzzerPage)
+    return () => emiter.off('onRefreshWebFuzzerPage', onRefreshWebFuzzerPage)
+  }, [props.id])
 
   useEffect(() => {
     setSubscribeClose(YakitRoute.HTTPFuzzer, {
@@ -1345,7 +1348,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const matchRef = useRef<boolean>(false)
 
   const refreshRequest = useMemoizedFn(() => {
-    setRefreshTrigger(!refreshTrigger)
+    setRefreshTrigger((previous) => !previous)
   })
 
   const loadHistory = useMemoizedFn((id: number) => {
@@ -2201,7 +2204,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   })
   const setHotPatchCode = useMemoizedFn((v: string) => {
     onChangeHotPatchCode(v)
-    setRefreshTrigger(!refreshTrigger)
+    setRefreshTrigger((previous) => !previous)
     sendFuzzerSettingInfo()
   })
   const onChangeHotPatchCodeWithParamGetter = useMemoizedFn((v: string) => {
