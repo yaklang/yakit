@@ -39,11 +39,14 @@ import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '@/pages/ai-r
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { onReStart } from '../utils'
 import { AIAgentChatLayout } from './AIAgentChatLayout/AIAgentChatLayout'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
+import { isEventForPage, takePendingOpenForge } from '../historyChat/HistoryChat'
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
-  const { activeChat } = useAIAgentStore()
+  const { activeChat, pageId } = useAIAgentStore()
   const { setActiveChat, setSetting, onStart, onClose } = useAIAgentDispatcher()
 
   /** 当前对话唯一ID */
@@ -59,11 +62,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   const [mode, setMode] = useState<AIAgentChatMode>('welcome')
 
-  const handleStartTriageChat = useMemoizedFn((data: HandleStartParams) => {
-    setMode('re-act')
-    handleStart(data)
-  })
-
   useEffect(() => {
     if (activeChat?.SessionID) {
       onSetReAct()
@@ -74,11 +72,21 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const onSetReAct = useMemoizedFn(() => {
     setMode('re-act')
   })
-  /** 等自由对话渲染出来再发送 */
+  /** 等自由对话渲染出来再发送；建联被拒时回到欢迎页，避免空白会话 */
   const handleStart = useMemoizedFn((value: HandleStartParams) => {
+    if (!globalSessionEngine.canStartExecutingSession(sessionId, true)) return false
+    setMode('re-act')
     setTimeout(() => {
+      if (!globalSessionEngine.canStartExecutingSession(sessionId, true)) {
+        if (!activeChat?.SessionID) setMode('welcome')
+        return
+      }
       aiReActChatRef.current?.handleStart(value)
     })
+    return true
+  })
+  const handleStartTriageChat = useMemoizedFn((data: HandleStartParams) => {
+    handleStart(data)
   })
 
   const onStop = useMemoizedFn(() => {
@@ -137,6 +145,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     try {
       const data = JSON.parse(res) as AIAgentTriggerEventInfo
       if (!data.type) return
+      if (!isEventForPage(data, pageId)) return
       switch (data.type as ReActChatEventEnum) {
         // 新开聊天对话窗
         case ReActChatEventEnum.NEW_CHAT:
@@ -219,6 +228,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     }
   })
 
+  useEffect(() => {
+    const pending = takePendingOpenForge()
+    if (pending) handleTriggerExecForge(pending.forge, pending.useForge)
+  }, [])
+
   const handleAITool = useMemoizedFn((toolValue: AITool) => {
     if (!toolValue || !toolValue.ID) {
       yakitNotify('error', t('AIAgentChat.templateDataError'))
@@ -278,7 +292,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   const handleSubmitForge = useMemoizedFn((data: AIForgeFormSubmitParamsProps) => {
     const { request, formValue } = data
-    setMode('re-act')
     const description = `${t('AIAgentChat.useForgeTask', { name: request.ForgeName || '' })}${
       formValue ? t('AIAgentChat.params') : ''
     }`
@@ -288,9 +301,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       param: formValue ?? {},
     }
     const qs = aiInputWithParamsTemplate(params)
-    handleStart({
-      qs,
-    })
+    if (!handleStart({ qs })) return
     handleClearActiveForge()
   })
 
@@ -299,13 +310,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       yakitNotify('warning', t('AIAgentChat.toolInfoError'))
       return
     }
-    setMode('re-act')
     const qs = `${t('AIAgentChat.useToolTask', {
       name: `${activeTool.VerboseName || activeTool.Name}`,
     })}${question ? `${t('AIAgentChat.input')}${question}` : ''}`
-    handleStart({
-      qs,
-    })
+    if (!handleStart({ qs })) return
     handleClearActiveTool()
   })
 
@@ -398,14 +406,44 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const [visible, setVisible] = useSafeState(false)
   const { clearAll } = useKnowledgeBase()
 
-  const onClosePageRepository = useMemoizedFn(() => {
+  const closeThisTab = useMemoizedFn(() => {
+    emiter.emit('closePage', JSON.stringify({ route: YakitRoute.AI_Agent, routeKey: pageId || YakitRoute.AI_Agent }))
+  })
+
+  const closePage = useMemoizedFn(() => {
     if (api.tokens.length > 0) {
       setVisible(true)
       return
-    } else {
-      clearAll()
-      emiter.emit('closePage', JSON.stringify({ route: YakitRoute.AI_Agent }))
     }
+    clearAll()
+    closeThisTab()
+  })
+
+  const onClosePageRepository = useMemoizedFn((routeKey?: string) => {
+    if (routeKey && pageId && routeKey !== pageId) return
+    const ownerPageId = pageId || YakitRoute.AI_Agent
+    if (globalSessionEngine.hasWorkingSessionOnPage(YakitRoute.AI_Agent, ownerPageId)) {
+      const m = YakitModalConfirm({
+        width: 420,
+        content: t('AIAgentChat.closeStopsRunningSession'),
+        showConfirmLoading: true,
+        onOk: async () => {
+          // 先停会话再关 Tab：等收尾（引擎 end 回执通常 ~1s）；超时关页不影响正确性——
+          // 冻结已同步生效、剩余收尾转后台、重开有 whenSessionClosed 兜底
+          await Promise.race([
+            globalSessionEngine.onPageUnload(YakitRoute.AI_Agent, ownerPageId),
+            new Promise((resolve) => setTimeout(resolve, 1000)),
+          ])
+          m.destroy()
+          closePage()
+        },
+        onCancel: () => {
+          m.destroy()
+        },
+      })
+      return
+    }
+    closePage()
   })
 
   useEffect(() => {
@@ -420,7 +458,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       await Promise.all(api.tokens.map((token) => apiCancelDebugPlugin(token)))
       api.clearAllStreams()
       clearAll()
-      emiter.emit('closePage', JSON.stringify({ route: YakitRoute.AI_Agent }))
+      closeThisTab()
     } catch (e) {
       failed(t('AIAgentChat.cancelBuildPluginFailed', { error: e + '' }))
     }
@@ -444,8 +482,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const konwledgeInputStringFn = useMemoizedFn((params: string) => {
     const currentRef = mode === 'welcome' ? aiChatWelcomeRef : aiReActChatRef
     try {
-      const data: PageNodeItemProps['pageParamsInfo']['AIRepository'] = JSON.parse(params)
-
+      const data: PageNodeItemProps['pageParamsInfo']['AIRepository'] & { pageId?: string } = JSON.parse(params)
+      if (!isEventForPage(data, pageId)) return
       if (data?.defualtAIMentionCommandParams && Array.isArray(data.defualtAIMentionCommandParams)) {
         data.defualtAIMentionCommandParams.forEach((item) => {
           currentRef.current?.setValue('')
@@ -470,7 +508,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       isForcedSetAIModal({
         t,
         pageKey: 'ai-agent',
-        mountContainer: document.getElementById('main-operator-page-body-ai-agent'),
+        mountContainer: getMainOperatorPageBodyContainer(),
         isOpen: true,
       })
     },

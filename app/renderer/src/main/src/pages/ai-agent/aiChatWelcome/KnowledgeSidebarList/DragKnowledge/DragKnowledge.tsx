@@ -14,6 +14,7 @@ import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/Knowled
 import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { CloudDownloadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -228,7 +229,7 @@ const DragKnowledge: FC<{ setAddMode: Dispatch<SetStateAction<string[]>> }> = ({
               const targetInstallPlugins = reseultKnowledgePlugin(result)
               targetInstallPlugins
                 ? InstallPluginModal({
-                    getContainer: '#main-operator-page-body-ai-agent',
+                    getContainer: getMainOperatorPageBodyContainerOrBody(),
                     callback: () => {
                       refreshPluginStatus()
                     },

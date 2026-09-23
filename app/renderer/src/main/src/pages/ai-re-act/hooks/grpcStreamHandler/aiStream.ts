@@ -35,7 +35,8 @@ const createStreamChatData = (
       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
       CallToolID: res.CallToolID,
       EventUUID: eventWriterId,
-      status: 'start',
+      // 历史回放（IsSync）的流按已结束处理：中断流不会再有 stream-finished，以 start 重建会让「思考中」读秒永久运行
+      status: res.IsSync ? 'end' : 'start',
       content: '',
       ContentType: res.ContentType,
     },

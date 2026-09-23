@@ -30,6 +30,7 @@ import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { providerToListAiModelConfig } from '../aiModelForm/providerConfig'
 import { yakitNotify } from '@/utils/notification'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 
 const getModelListConfig = (model?: AIModelConfig) => providerToListAiModelConfig(model?.Provider)
 
@@ -90,7 +91,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         t,
         pageKey: 'ai-agent',
         isOpen,
-        mountContainer: document.getElementById('main-operator-page-body-ai-agent'),
+        mountContainer: getMainOperatorPageBodyContainer(),
       }).catch(() => undefined)
     },
     { wait: 200, leading: true },

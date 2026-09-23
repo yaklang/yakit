@@ -94,12 +94,17 @@ module.exports = (win, getClient) => {
     }
   })
   // 取消 AI ReAct
-  ipcMain.handle(
-    'cancel-ai-re-act',
-    handlerHelper.cancelHandler(aiReActTaskPool, (token) => {
-      aiWriteChainMap.delete(token)
-    }),
-  )
+  ipcMain.handle('cancel-ai-re-act', async (e, token) => {
+    const hadStream = aiReActTaskPool.has(token)
+    handlerHelper.cancelHandler(aiReActTaskPool, (t) => {
+      aiWriteChainMap.delete(t)
+    })(e, token)
+    // cancelHandler 先摘 map 再 cancel，取消流的 end 不会转发（isCurrent 已 false）；
+    // 有过流则补发 -end，渲染端立即收尾，不再等 5s 兜底占坑
+    if (hadStream && !win.isDestroyed() && !win.webContents.isDestroyed()) {
+      win.webContents.send(`${token}-end`)
+    }
+  })
   // #endregion
 
   // #region ReAct 推荐 Skill

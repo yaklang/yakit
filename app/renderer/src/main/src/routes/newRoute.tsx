@@ -115,6 +115,7 @@ import type {
   ManageRightClickPluginsPageInfoProps,
   ContextMenuResultPageInfoProps,
   SettingsPageInfoProps,
+  AIAgentPageInfoProps,
 } from '@/store/pageInfo'
 import {
   CommunityDeprecatedFirstMenu,
@@ -662,6 +663,9 @@ export const INDEPENDENT_TAB_ROUTES: YakitRoute[] = [YakitRoute.Plugin_OP, Yakit
 export const isIndependentTabRoute = (route: YakitRoute | string) =>
   INDEPENDENT_TAB_ROUTES.includes(route as YakitRoute)
 
+export const isRouteKeyScopedTab = (route: YakitRoute | string) =>
+  isIndependentTabRoute(route) || route === YakitRoute.AI_Agent
+
 /** 通过版本获取一级tab固定展示tab  */
 export const getDefaultFixedTabs = (softMode: SoftMode) => {
   if (isMemfit()) {
@@ -829,6 +833,8 @@ export interface ComponentParams {
   contextMenuResultPageInfo?: ContextMenuResultPageInfoProps
   /** 应用设置页面 */
   settingsPageInfo?: SettingsPageInfoProps
+  /** AI Agent 新开/跳转会话 */
+  aiAgentPageInfo?: AIAgentPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
   return function WithPage(props) {
@@ -1081,7 +1087,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     case YakitRoute.Yak_Java_Decompiler:
       return <YakJavaDecompiler />
     case YakitRoute.AI_Agent:
-      return <AIAgent pageId={params?.id || ''} />
+      return <AIAgent pageId={params?.id || YakitRoute.AI_Agent} initialSession={params?.aiAgentPageInfo?.session} />
     case YakitRoute.ShortcutKey:
       return (
         <Suspense fallback={<PageLoading />}>

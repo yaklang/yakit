@@ -26,6 +26,7 @@
     "warning": "警告",
     "replaceSkillTemplateConfirm": "是否要替换当前使用的技能模板?",
     "replaceToolConfirm": "是否要替换当前使用的工具?",
+    "closeStopsRunningSession": "关闭页面会停止当前进行中的会话，是否确认关闭",
     "knowledgeNotBuiltTitle": "知识库未构建完成",
     "knowledgeNotBuiltDesc": "知识未构建完成，是否确定关闭页面？"
   },
@@ -201,6 +202,7 @@
     "loadingHistory": "获取历史数据中...",
     "waitingReply": "等待AI回复...",
     "questionExecuting": "问题执行中...",
+    "executingSessionsLimit": "进行中会话数已达上限，最多同时 ",
     "sessionClosing": "会话正在关闭...",
     "sessionClosed": "会话已关闭"
   },
