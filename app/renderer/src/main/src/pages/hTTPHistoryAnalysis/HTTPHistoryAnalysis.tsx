@@ -26,7 +26,7 @@ import {
   TerminalOutlined,
   TrashOutlined,
   XOutlined,
-  ArrowsOutlined,
+  ArrowsCollapseOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -906,7 +906,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                             {t('YakitButton.save')}
                           </YakitButton>
                           {fullScreenFirstNode ? (
-                            <ArrowsOutlined
+                            <ArrowsCollapseOutlined
                               className={styles['expand-icon']}
                               onClick={() => setFullScreenFirstNode(false)}
                             />
@@ -1249,7 +1249,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                           {t('YakitButton.back')}
                         </YakitButton>
                         {fullScreenSecondNode ? (
-                          <ArrowsOutlined
+                          <ArrowsCollapseOutlined
                             className={styles['expand-icon']}
                             onClick={() => setFullScreenSecondNode(false)}
                           />

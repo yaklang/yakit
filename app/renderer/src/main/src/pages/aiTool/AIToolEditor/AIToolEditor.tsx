@@ -12,10 +12,10 @@ import {
   IdentificationOutlined,
   RefreshOutlined,
   TagOutlined,
-  FigmaIcon28011794Outlined,
+  LogOutOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { PlaySolid, FigmaIcon16256302540Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { PlaySolid, StorageSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 import { DefaultToolYakToCode } from '../defaultConstant'
 import { Divider, Form } from 'antd'
@@ -479,16 +479,12 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
               <YakitButton
                 loading={saveLoading}
                 type="outline1"
-                icon={<FigmaIcon28011794Outlined color="currentColor" />}
+                icon={<LogOutOutlined color="currentColor" />}
                 onClick={() => handleSaveAndExit()}
               >
                 {t('YakitButton.saveAndExit')}
               </YakitButton>
-              <YakitButton
-                loading={saveLoading}
-                icon={<FigmaIcon16256302540Solid color="currentColor" />}
-                onClick={handleSave}
-              >
+              <YakitButton loading={saveLoading} icon={<StorageSolid color="currentColor" />} onClick={handleSave}>
                 {t('YakitButton.save')}
               </YakitButton>
             </div>

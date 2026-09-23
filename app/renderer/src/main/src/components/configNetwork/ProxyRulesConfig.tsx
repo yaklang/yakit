@@ -8,7 +8,7 @@ import {
   EyeOffOutlined,
   EyeOutlined,
   BanOutlined,
-  FigmaIcon4866167279Outlined,
+  EngineOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { CheckCircleSolid, ExclamationSolid, XCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
@@ -664,7 +664,7 @@ export const ProxyTest = memo((props: ProxyTestProps) => {
       {showIcon ? (
         <Tooltip title={t('ProxyConfig.proxyDetection')}>
           <YakitButton
-            icon={<FigmaIcon4866167279Outlined color="currentColor" />}
+            icon={<EngineOutlined color="currentColor" />}
             type="text2"
             onClick={onShowModal}
             disabled={btnDisabled}

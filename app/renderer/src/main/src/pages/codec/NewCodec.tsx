@@ -15,7 +15,7 @@ import classNames from 'classnames'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { PlaySolid, StarSolid, FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { PlaySolid, StarSolid, DragSortSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 import { ExclamationIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import {
@@ -35,9 +35,9 @@ import {
   StarOutlined,
   TrashOutlined,
   XOutlined,
-  FigmaIcon6480193584Outlined,
-  FigmaIcon13208172881Outlined,
-  ArrowsOutlined,
+  ImportOutlined,
+  StorageOutlined,
+  ArrowsCollapseOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -157,7 +157,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
         setExpand && setExpand(!isExpand)
       }}
     >
-      {isExpand ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
+      {isExpand ? <ArrowsCollapseOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
     </div>
   )
 
@@ -265,7 +265,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
         key: 'import',
         label: (
           <div className={styles['extra-menu']}>
-            <FigmaIcon6480193584Outlined color="currentColor" />
+            <ImportOutlined color="currentColor" />
             <div className={styles['menu-name']}>{t('YakitButton.import')}</div>
           </div>
         ),
@@ -290,7 +290,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
         key: 'save',
         label: (
           <div className={styles['extra-menu']}>
-            <FigmaIcon13208172881Outlined color="currentColor" />
+            <StorageOutlined color="currentColor" />
             <div className={styles['menu-name']}>{t('YakitButton.save')}</div>
           </div>
         ),
@@ -373,7 +373,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                     }}
                   >
                     <div className={styles['extra-icon']} ref={uploadRef}>
-                      <FigmaIcon6480193584Outlined color="currentColor" />
+                      <ImportOutlined color="currentColor" />
                     </div>
                   </Upload>
                 </Tooltip>
@@ -486,7 +486,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                         <>
                           <Tooltip title={t('YakitButton.save')}>
                             <div className={styles['extra-icon']} onClick={onSave}>
-                              <FigmaIcon13208172881Outlined color="currentColor" />
+                              <StorageOutlined color="currentColor" />
                             </div>
                           </Tooltip>
                           <Tooltip title={t('NewCodecRightEditorBox.replaceOutputToInput')}>
@@ -771,7 +771,7 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
       <div className={styles['type-header']} {...provided.dragHandleProps}>
         <div className={styles['type-title']}>
           <div className={styles['drag-icon']}>
-            <FigmaIcon2281144183Solid color="currentColor" />
+            <DragSortSolid color="currentColor" />
           </div>
           <div
             className={classNames(styles['text'], {
@@ -1464,7 +1464,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
           ) : (
             <Tooltip title={t('YakitButton.save')}>
               <div className={styles['extra-icon']} onClick={onSaveCodecRunListHistory}>
-                <FigmaIcon13208172881Outlined color="currentColor" />
+                <StorageOutlined color="currentColor" />
               </div>
             </Tooltip>
           )}
@@ -1665,7 +1665,7 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
       <div className={styles['drag-list-item']} onClick={() => onClickToRunList(item)}>
         <div className={styles['title']}>
           <div className={styles['drag-icon']}>
-            <FigmaIcon2281144183Solid color="currentColor" />
+            <DragSortSolid color="currentColor" />
           </div>
           <span className={styles['text']}>{item.CodecName}</span>
         </div>
@@ -1721,7 +1721,7 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
                 <div className={styles['drag-list-item-clone']}>
                   <div className={styles['title']}>
                     <div className={styles['drag-icon']}>
-                      <FigmaIcon2281144183Solid color="currentColor" />
+                      <DragSortSolid color="currentColor" />
                     </div>
                     <span className={styles['text']}>{item[0].CodecName}</span>
                   </div>

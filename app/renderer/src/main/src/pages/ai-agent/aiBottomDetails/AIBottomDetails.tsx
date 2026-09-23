@@ -4,7 +4,7 @@ import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import styles from './AIBottomDetails.module.scss'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { CogOutlined, PlusOutlined, XOutlined, FigmaIcon28011794Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { CogOutlined, PlusOutlined, XOutlined, LogOutOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -152,7 +152,7 @@ export const AIBottomDetails: React.FC<AIBottomDetailsProps> = (props) => {
             <YakitButton
               type="text2"
               // danger
-              icon={<FigmaIcon28011794Outlined color="currentColor" />}
+              icon={<LogOutOutlined color="currentColor" />}
               className={styles['ai-terminal-close']}
               onClick={() => {
                 debugTerminalHookEvent.onDeleteTerminalItem(terminalRunnerId)

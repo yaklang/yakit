@@ -29,7 +29,7 @@ import {
 
 import { v4 as uuidv4 } from 'uuid'
 import { chromeLauncherMinParams, chromeLauncherParamsArr } from '@/defaultConstants/mitm'
-import { CheckSolid, FigmaIcon16256302540Solid, XSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { CheckSolid, StorageSolid, XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 import { useGoogleChromePluginPath } from '@/store'
 import { RemoteMitmGV } from '@/enums/mitm'
@@ -834,7 +834,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
             <div className={style['table-action-icon']}>
               {record.cellStyle ? (
                 <Tooltip title={t('YakitButton.save')}>
-                  <FigmaIcon16256302540Solid
+                  <StorageSolid
                     className={classNames(style['action-icon'], style['action-icon-save'])}
                     onClick={(e) => {
                       onSave(record)

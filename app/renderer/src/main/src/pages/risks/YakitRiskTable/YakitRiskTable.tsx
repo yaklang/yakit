@@ -39,7 +39,7 @@ import {
   TerminalOutlined,
   TrashOutlined,
   UploadOutlined,
-  FigmaIcon2017756Outlined,
+  ExportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -1445,7 +1445,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                       <FuncBtn
                         maxWidth={1200}
                         type="outline2"
-                        icon={<FigmaIcon2017756Outlined />}
+                        icon={<ExportOutlined />}
                         name={' ' + t('YakitRiskTable.export_as')}
                         disabled={allTotal === 0}
                       />

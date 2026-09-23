@@ -18,8 +18,8 @@ import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import {
   DotsHorizontalOutlined,
   TrashOutlined,
-  FigmaIcon13208172881Outlined,
-  FigmaIcon2017756Outlined,
+  StorageOutlined,
+  ExportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { cataloguePlugin } from '@/components/MilkdownEditor/utils/cataloguePlugin'
@@ -471,15 +471,10 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                         </>
 
                         <Divider type='vertical' /> */}
-            <YakitButton type="outline2" icon={<FigmaIcon2017756Outlined />} size="large" onClick={onExport}>
+            <YakitButton type="outline2" icon={<ExportOutlined />} size="large" onClick={onExport}>
               {t('YakitButton.export')}
             </YakitButton>
-            <YakitButton
-              type="primary"
-              icon={<FigmaIcon13208172881Outlined color="currentColor" />}
-              size="large"
-              onClick={onSave}
-            >
+            <YakitButton type="primary" icon={<StorageOutlined color="currentColor" />} size="large" onClick={onSave}>
               {t('YakitButton.save')}
             </YakitButton>
             <FuncFilterPopover

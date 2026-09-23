@@ -18,8 +18,8 @@ import {
   PlusCircleOutlined,
   DocumentAddOutlined,
   MinusCircleOutlined,
-  FigmaIcon2017756Outlined,
-  FigmaIcon6480193584Outlined,
+  ExportOutlined,
+  ImportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { openConsoleNewWindow } from '@/utils/openWebsite'
 import { Dropdown, Tooltip } from 'antd'
@@ -742,7 +742,7 @@ export const HotPatchManagement: React.FC = () => {
       <Tooltip title={t('HotPatchTemplateImportExport.export_all')}>
         <YakitButton
           type="text2"
-          icon={<FigmaIcon2017756Outlined />}
+          icon={<ExportOutlined />}
           onClick={() => {
             batchExportRef.current?.open({
               Filter: {
@@ -821,7 +821,7 @@ export const HotPatchManagement: React.FC = () => {
         menu.push({
           key: 'export',
           label: t('HotPatchTemplateImportExport.export_template'),
-          itemIcon: <FigmaIcon2017756Outlined color="currentColor" />,
+          itemIcon: <ExportOutlined color="currentColor" />,
         })
       }
       if (type === 'global') {
@@ -1108,7 +1108,7 @@ export const HotPatchManagement: React.FC = () => {
               <Tooltip title={t('HotPatchTemplateImportExport.export_single')}>
                 <YakitButton
                   type="text2"
-                  icon={<FigmaIcon2017756Outlined />}
+                  icon={<ExportOutlined />}
                   onClick={() => {
                     batchExportRef.current?.open({
                       OutputFilename: selectedTemplate,
@@ -1121,11 +1121,7 @@ export const HotPatchManagement: React.FC = () => {
                 />
               </Tooltip>
             )}
-            <YakitButton
-              type="text2"
-              icon={<FigmaIcon6480193584Outlined />}
-              onClick={() => batchImportRef.current?.open()}
-            />
+            <YakitButton type="text2" icon={<ImportOutlined />} onClick={() => batchImportRef.current?.open()} />
             {hideTemplateContent && (
               <Tooltip placement="bottom" title={t('HTTPFuzzerHotPatch.engineConsole')}>
                 <YakitButton

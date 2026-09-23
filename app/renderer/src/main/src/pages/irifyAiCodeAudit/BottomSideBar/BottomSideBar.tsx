@@ -11,7 +11,7 @@ import {
   InformationCircleOutlined,
   StethoscopeOutlined,
   XCircleOutlined,
-  FigmaIcon22915169930Outlined,
+  AbandonOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import useStore from '../hooks/useStore'
@@ -108,7 +108,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
               onOpenEditorDetails('syntaxCheck')
             }}
           >
-            <FigmaIcon22915169930Outlined color="currentColor" />
+            <AbandonOutlined color="currentColor" />
             {showSyntaxInfo.hint}
           </div>
         </div>

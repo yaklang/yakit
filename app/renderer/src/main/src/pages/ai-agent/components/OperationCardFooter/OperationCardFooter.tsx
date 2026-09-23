@@ -1,8 +1,4 @@
-import {
-  LogOutlined,
-  FigmaIcon34227111185Outlined,
-  DocumentDuplicateOutlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import { LogOutlined, Compilation2Outlined, DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { setClipboardText } from '@/utils/clipboard'
 import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
@@ -72,7 +68,7 @@ export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({ copySt
             size="small"
             type="text2"
             color="default"
-            icon={<FigmaIcon34227111185Outlined color="currentColor" />}
+            icon={<Compilation2Outlined color="currentColor" />}
             onClick={handleViewFile}
           />
         </Tooltip>

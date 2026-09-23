@@ -64,7 +64,7 @@ import {
   SearchOutlined,
   TrashOutlined,
   XOutlined,
-  FigmaIcon22915169930Outlined,
+  AbandonOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { OutlineBugIcon, OutlineReloadScanIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 
@@ -182,7 +182,7 @@ const showIcon = (severity) => {
     case 'hint':
       return (
         <div className={classNames(styles['hint-icon'], styles['icon-box'])}>
-          <FigmaIcon22915169930Outlined color="currentColor" />
+          <AbandonOutlined color="currentColor" />
         </div>
       )
     case 'info':

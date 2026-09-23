@@ -15,11 +15,7 @@ import {
   apiQueryHybridScanTask,
 } from './utils'
 import { genDefaultPagination } from '@/pages/invoker/schema'
-import {
-  QuestionMarkCircleOutlined,
-  RefreshOutlined,
-  FigmaIcon5237120699Outlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import { QuestionMarkCircleOutlined, RefreshOutlined, LoadingOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { Divider, Tooltip } from 'antd'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -168,7 +164,7 @@ const HybridScanTaskList: React.FC<HybridScanTaskListProps> = React.memo(
         case 'executing':
           return (
             <div className={styles['table-status-item']}>
-              <FigmaIcon5237120699Outlined className={styles['icon-primary']} color="currentColor" />
+              <LoadingOutlined className={styles['icon-primary']} color="currentColor" />
               <span className={styles['status-text']}>执行中</span>
             </div>
           )

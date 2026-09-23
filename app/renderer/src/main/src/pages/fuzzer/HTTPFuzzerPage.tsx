@@ -97,7 +97,7 @@ import {
   CogOutlined,
   DotsVerticalOutlined,
   ChevronDownOutlined,
-  FigmaIcon2017756Outlined,
+  ExportOutlined,
   ClockOutlined,
   QuestionMarkCircleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -4562,7 +4562,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             }}
           >
             <Tooltip title={t('SecondNodeExtra.exportData')}>
-              <YakitButton type="outline2" icon={<FigmaIcon2017756Outlined />} size={size} />
+              <YakitButton type="outline2" icon={<ExportOutlined />} size={size} />
             </Tooltip>
           </YakitPopover>
         )}
@@ -4593,7 +4593,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             <YakitButton
               style={{ marginRight: 10 }}
               type="outline2"
-              icon={<FigmaIcon2017756Outlined />}
+              icon={<ExportOutlined />}
               size={size}
               onClick={() => {
                 emiter.emit(

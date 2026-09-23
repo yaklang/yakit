@@ -1,4 +1,4 @@
-import { FigmaIcon2017756Outlined, DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ExportOutlined, DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -200,7 +200,7 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
             </YakitButton>
           </YakitDropdownMenu>
           <YakitDropdownMenu menu={exportMenu}>
-            <YakitButton type="outline2" icon={<FigmaIcon2017756Outlined />}>
+            <YakitButton type="outline2" icon={<ExportOutlined />}>
               导出
             </YakitButton>
           </YakitDropdownMenu>

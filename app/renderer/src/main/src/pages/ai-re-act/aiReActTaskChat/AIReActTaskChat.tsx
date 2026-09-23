@@ -10,7 +10,11 @@ import { AIChatLeftSide } from '@/pages/ai-agent/chatTemplate/AIAgentChatTemplat
 import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { ChevrondownButton } from '../aiReActChat/AIReActComponent'
-import { ArrowsExpandOutlined, InformationCircleOutlined, ArrowsOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  ArrowsExpandOutlined,
+  InformationCircleOutlined,
+  ArrowsCollapseOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { type AIInputEvent, AIInputEventHotPatchTypeEnum } from '../hooks/grpcApi'
@@ -108,7 +112,7 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
             tabBarExtraContent={
               <YakitButton
                 type="text2"
-                icon={expand ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
+                icon={expand ? <ArrowsCollapseOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
                 onClick={onIsExpand}
               />
             }

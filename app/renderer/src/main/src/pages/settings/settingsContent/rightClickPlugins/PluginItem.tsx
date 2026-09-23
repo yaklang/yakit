@@ -8,7 +8,7 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { CogOutlined, PencilOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { PrivateOutlineDefaultPluginIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PrivateOutlineDefaultPluginIcon'
-import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { DragSortSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import emiter from '@/utils/eventBus/eventBus'
 import { convertKeyboardToUIKey, setIsActiveShortcutKeyPage } from '@/utils/globalShortcutKey/utils'
@@ -218,7 +218,7 @@ export const PluginItem: React.FC<PluginItemProps> = React.memo((props) => {
       data-plugin-name={plugin.PluginName}
     >
       <div className={styles['drag']} {...dragHandleProps}>
-        <FigmaIcon2281144183Solid size={16} color="currentColor" />
+        <DragSortSolid size={16} color="currentColor" />
       </div>
       <Avatar className={styles['avatar']} src={plugin.HeadImg || ''} icon={<PrivateOutlineDefaultPluginIcon />} />
       <div className={styles['body']}>

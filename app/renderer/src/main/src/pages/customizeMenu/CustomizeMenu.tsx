@@ -79,12 +79,7 @@ import {
   PencilAltOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import {
-  XSolid,
-  FigmaIcon2281144183Solid,
-  PhotographSolid,
-  ShieldExclamationSolid,
-} from '@yakit-libs/yakit-ui-icons/solid'
+import { XSolid, DragSortSolid, PhotographSolid, ShieldExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -796,7 +791,7 @@ const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
       onClick={() => onSelect(menuItem)}
     >
       <div className={classNames(style['display-flex'], style['first-menu-item-left'])}>
-        <FigmaIcon2281144183Solid
+        <DragSortSolid
           size={12}
           className={classNames(style['content-icon'], {
             [style['content-icon-active']]: isDragging,
@@ -936,7 +931,7 @@ const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
           [style['menu-item-drag']]: isDragging,
         })}
       >
-        <FigmaIcon2281144183Solid
+        <DragSortSolid
           size={12}
           className={classNames({
             [style['content-icon-active']]: isDragging,

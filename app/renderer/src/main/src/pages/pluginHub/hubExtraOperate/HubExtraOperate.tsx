@@ -13,7 +13,7 @@ import {
   PlusCircleOutlined,
   ShareOutlined,
   TrashOutlined,
-  FigmaIcon2017756Outlined,
+  ExportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { CodeScoreModule, FuncFilterPopover } from '@/pages/plugins/funcTemplate'
@@ -137,7 +137,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
           {
             key: 'export',
             label: t('YakitButton.export'),
-            itemIcon: <FigmaIcon2017756Outlined />,
+            itemIcon: <ExportOutlined />,
             type: local ? undefined : 'info',
           },
         ]
@@ -184,7 +184,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         {
           key: 'export',
           label: t('YakitButton.export'),
-          itemIcon: <FigmaIcon2017756Outlined />,
+          itemIcon: <ExportOutlined />,
           type: isLocal ? undefined : 'info',
         },
       ])

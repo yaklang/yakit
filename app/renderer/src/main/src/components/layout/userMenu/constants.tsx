@@ -5,7 +5,7 @@ import {
   PresentationChartLineOutlined,
   ShieldExclamationOutlined,
   UserRoundCogOutlined,
-  FigmaIcon28011794Outlined,
+  LogOutOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { getAllYakitColorVars } from '@/utils/yakitColorVars'
 import type { UserMenuItemType } from '../../CeUserMenu/CeUserMenu'
@@ -52,7 +52,7 @@ export const UserMenusMap: Record<string, UserMenuItemType> = {
     key: 'sign-out',
     label: 'FuncDomain.signOut',
     type: 'danger',
-    icon: <FigmaIcon28011794Outlined color="currentColor" />,
+    icon: <LogOutOutlined color="currentColor" />,
   },
   pluginAudit: {
     key: 'plugin-audit',

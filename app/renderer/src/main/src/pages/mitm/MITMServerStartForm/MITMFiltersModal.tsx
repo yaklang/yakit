@@ -19,8 +19,8 @@ import {
   PencilAltOutlined,
   SaveOutlined,
   TrashOutlined,
-  FigmaIcon13208172881Outlined,
-  FigmaIcon2017756Outlined,
+  StorageOutlined,
+  ExportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import {
@@ -420,7 +420,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 <YakitButton
                   style={{ padding: '3px 8px' }}
                   type="text"
-                  icon={<FigmaIcon2017756Outlined />}
+                  icon={<ExportOutlined />}
                   onClick={onFilterExport}
                 />
               </Tooltip>
@@ -454,7 +454,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
 
           <YakitButton
             style={{ padding: '3px 8px' }}
-            icon={<FigmaIcon13208172881Outlined color="currentColor" />}
+            icon={<StorageOutlined color="currentColor" />}
             type="text"
             onClick={onSaveFilter}
           />

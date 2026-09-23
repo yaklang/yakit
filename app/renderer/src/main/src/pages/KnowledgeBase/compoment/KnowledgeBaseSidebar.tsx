@@ -7,7 +7,7 @@ import {
   QuestionMarkCircleOutlined,
   RefreshOutlined,
   StethoscopeOutlined,
-  FigmaIcon5237120699Outlined,
+  LoadingOutlined,
   CloudDownloadOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
@@ -653,10 +653,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                               <div className={styles['title']}>{items.KnowledgeBaseName}</div>
                               {api?.tokens?.includes(items.streamToken) && items.streamstep === 1 ? (
                                 <div className={styles['tag']}>
-                                  <FigmaIcon5237120699Outlined
-                                    className={styles['loading-icon']}
-                                    color="currentColor"
-                                  />
+                                  <LoadingOutlined className={styles['loading-icon']} color="currentColor" />
                                   生成中
                                 </div>
                               ) : items.IsDefault ? (

@@ -17,7 +17,7 @@ import {
   CheckOutlined,
   PencilAltOutlined,
   ShieldExclamationOutlined,
-  FigmaIcon348196674Outlined,
+  FlowOutlined,
   Wrench1Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -189,7 +189,7 @@ const getIconByName = (name: string) => {
     case 'security-engineering': //'安全领域'
       return <ShieldExclamationOutlined className={styles['shield-icon']} color="currentColor" />
     case 'pentest-task-design': //"渗透测试"
-      return <FigmaIcon348196674Outlined className={styles['history-icon']} color="currentColor" />
+      return <FlowOutlined className={styles['history-icon']} color="currentColor" />
     default:
       return <Wrench1Outlined className={styles['default-icon']} color="currentColor" />
   }

@@ -46,7 +46,7 @@ import {
   TrashOutlined,
   ChevronDownOutlined,
   CloudDownloadOutlined,
-  FigmaIcon6480193584Outlined,
+  ImportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { UpdateGroupList, type UpdateGroupListItem } from '@/pages/pluginHub/group/UpdateGroupList'
@@ -214,11 +214,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
             >
               获取云端插件
             </YakitButton>
-            <YakitButton
-              type="outline1"
-              icon={<FigmaIcon6480193584Outlined size={16} />}
-              onClick={() => setVisibleImport(true)}
-            >
+            <YakitButton type="outline1" icon={<ImportOutlined size={16} />} onClick={() => setVisibleImport(true)}>
               导入插件源
             </YakitButton>
           </div>

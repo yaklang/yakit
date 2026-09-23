@@ -59,7 +59,7 @@ import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { shouldRenderVirtualTableCellForHover } from './TableVirtualResize.memo'
 import { FilterOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { DragSortSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { getRemoteValue } from '@/utils/kv'
 import { RemoteHistoryGV } from '@/enums/history'
 import emiter from '@/utils/eventBus/eventBus'
@@ -2458,7 +2458,7 @@ const CellRenderDrop = React.memo((props: CellRenderDropProps) => {
         />
       )}
       {enableDragSort && colIndex === 0 && (
-        <FigmaIcon2281144183Solid
+        <DragSortSolid
           size={12}
           className={classNames(styles['drag-sort-icon'], {
             [styles['drag-sort-icon-active']]: isSelect || isDragging,

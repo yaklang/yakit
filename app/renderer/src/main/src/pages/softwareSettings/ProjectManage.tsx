@@ -30,7 +30,7 @@ import {
   DocumentDuplicateOutlined,
   PencilAltOutlined,
   TrashOutlined,
-  FigmaIcon2017756Outlined,
+  ExportOutlined,
   ChevronDownOutlined,
   DotsVerticalOutlined,
   PlusOutlined,
@@ -80,7 +80,7 @@ import {
 
 import {
   DocumentTextSolid,
-  FigmaIcon6500198204Solid,
+  ExportSolid,
   FolderOpenSolid,
   DocumentDownloadSolid,
   ViewGridSolid,
@@ -538,7 +538,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 [styles['btn-focus-style']]: operateShow >= 0 && operateShow === +Id,
               })}
             >
-              <FigmaIcon2017756Outlined className={styles['btn-style']} />
+              <ExportOutlined className={styles['btn-style']} />
             </div>
           </DropdownMenu>
         )}
@@ -1178,7 +1178,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                       {
                         key: 'export',
                         label: t('YakitButton.export'),
-                        itemIcon: <FigmaIcon2017756Outlined />,
+                        itemIcon: <ExportOutlined />,
                         children: [
                           { key: 'encryption', label: t('ProjectManage.encryptedExport') },
                           { key: 'plaintext', label: t('ProjectManage.plaintextExport') },
@@ -2503,7 +2503,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
           <div className={styles['transfer-project-wrapper']}>
             <div className={styles['modal-left-wrapper']}>
               <div className={styles['modal-icon']}>
-                {isExport && <FigmaIcon6500198204Solid color="#FFB660" size={32} />}
+                {isExport && <ExportSolid color="#FFB660" size={32} />}
                 {isImport && <DocumentDownloadSolid color="#FFB660" size={32} />}
               </div>
             </div>

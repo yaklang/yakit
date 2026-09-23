@@ -33,10 +33,10 @@ import {
   PlusCircleOutlined,
   RefreshOutlined,
   TagOutlined,
-  FigmaIcon28011794Outlined,
+  LogOutOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { FigmaIcon16256302540Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { StorageSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { Form, Result, Tooltip } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
@@ -607,16 +607,12 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
               <YakitButton
                 loading={saveLoading}
                 type="outline1"
-                icon={<FigmaIcon28011794Outlined color="currentColor" />}
+                icon={<LogOutOutlined color="currentColor" />}
                 onClick={handleSaveAndRun}
               >
                 保存并执行
               </YakitButton>
-              <YakitButton
-                loading={saveLoading}
-                icon={<FigmaIcon16256302540Solid color="currentColor" />}
-                onClick={handleSave}
-              >
+              <YakitButton loading={saveLoading} icon={<StorageSolid color="currentColor" />} onClick={handleSave}>
                 保存
               </YakitButton>
             </div>

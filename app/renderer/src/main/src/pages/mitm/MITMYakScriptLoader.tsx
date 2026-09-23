@@ -23,7 +23,7 @@ import {
   PositionOutlined,
   QuestionMarkCircleOutlined,
   TerminalOutlined,
-  FigmaIcon348196674Outlined,
+  FlowOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import emiter from '@/utils/eventBus/eventBus'
@@ -253,7 +253,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
             : t('YakScriptLoader.view_plugin_traffic')
         }
       >
-        <FigmaIcon348196674Outlined
+        <FlowOutlined
           className={classNames(style['history-icon'], {
             [style['history-icon-def']]: !showPluginHistoryList.includes(i.ScriptName),
             [style['history-icon-light']]: showPluginHistoryList.includes(i.ScriptName),
