@@ -727,6 +727,15 @@ service Yak {
   // 文件IO
   rpc ReadFile(ReadFileRequest) returns (stream ReadFileResponse);
 
+  // C 头文件包（$YAKIT_HOME/c-headers），供 c2ssa 外部 include
+  rpc GetCHeadersDir(Empty) returns (GetCHeadersDirResponse);
+  rpc ListCHeaders(Empty) returns (ListCHeadersResponse);
+  rpc ListCHeaderEntries(ListCHeaderEntriesRequest) returns (ListCHeaderEntriesResponse);
+  rpc ImportCHeaderPack(ImportCHeaderPackRequest) returns (GeneralResponse);
+  rpc DeleteCHeaderPack(DeleteCHeaderPackRequest) returns (GeneralResponse);
+  rpc PreviewCHeaderFile(PreviewCHeaderFileRequest) returns (PreviewCHeaderFileResponse);
+  rpc DownloadOfficialCHeaders(DownloadOfficialCHeadersRequest) returns (DownloadOfficialCHeadersResponse);
+
   // Wireshark
   rpc GetPcapMetadata(PcapMetadataRequest) returns (PcapMetadata);
   rpc PcapX(stream PcapXRequest) returns (stream PcapXResponse);
@@ -8230,6 +8239,69 @@ message ReadFileRequest {
 message ReadFileResponse {
   bytes Data = 1;
   bool EOF = 2;
+}
+
+message GetCHeadersDirResponse {
+  string Dir = 1;
+}
+
+message CHeaderPack {
+  string Name = 1;
+  string Kind = 2; // zip | directory | file
+  int64 SizeBytes = 3;
+  int64 ModifiedAt = 4;
+}
+
+message ListCHeadersResponse {
+  repeated CHeaderPack Packs = 1;
+}
+
+message ListCHeaderEntriesRequest {
+  string PackName = 1;
+  string RelativePath = 2;
+}
+
+message CHeaderEntry {
+  string Name = 1;
+  string RelativePath = 2;
+  bool IsDir = 3;
+  int64 SizeBytes = 4;
+}
+
+message ListCHeaderEntriesResponse {
+  repeated CHeaderEntry Entries = 1;
+}
+
+message ImportCHeaderPackRequest {
+  string LocalPath = 1;
+  string DestName = 2;
+  bool ExtractZip = 3;
+}
+
+message DeleteCHeaderPackRequest {
+  string Name = 1;
+}
+
+message PreviewCHeaderFileRequest {
+  string PackName = 1;
+  string RelativePath = 2;
+  int64 MaxBytes = 3;
+}
+
+message PreviewCHeaderFileResponse {
+  bytes Content = 1;
+  bool Truncated = 2;
+}
+
+message DownloadOfficialCHeadersRequest {
+  bool Force = 1; // overwrite existing c-std-headers.zip
+}
+
+message DownloadOfficialCHeadersResponse {
+  bool Ok = 1;
+  string Reason = 2;
+  string Version = 3;
+  string PackPath = 4;
 }
 
 message GetReverseShellProgramListRequest{
