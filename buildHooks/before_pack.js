@@ -1,5 +1,4 @@
 const packageJson = require('../package.json')
-require('../packageScript/buildHook/write-engine-build-type')()
 
 module.exports = async function (context) {
   const archMap = {

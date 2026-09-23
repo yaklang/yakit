@@ -7,10 +7,7 @@ const {
   isSlimEngineVersion,
   getOssEngineVersion,
   resolveEngineArtifactVersion: resolveEngineArtifactVersionWithLegacy,
-  getYakEngineNamePrefix,
   getLocalEngineCacheName: getLocalEngineCacheNameWithLegacy,
-  getYakEngineArtifactFileName,
-  getYakEngineArtifactOssPath,
 } = require('./engineArtifact')
 
 const ENGINE_BUILD_TYPE_FILE = 'engine-build-type.txt'
@@ -103,9 +100,6 @@ module.exports = {
   isLegacySystemMode,
   resolveEngineArtifactVersion,
   getLocalEngineCacheName,
-  getYakEngineNamePrefix,
-  getYakEngineArtifactFileName,
-  getYakEngineArtifactOssPath,
   writeEngineBuildType,
   writeEngineBuildTypeByVersion,
   fetchEngineBuildType,

@@ -12,13 +12,13 @@ const { HttpsProxyAgent } = require('hpagent')
 const electronIsDev = require('electron-is-dev')
 const { HttpSetting } = require('../../state')
 const {
-  isSlimEngineVersion,
   getOssEngineVersion,
   getLocalEngineCacheName,
-  getYakEngineArtifactFileName,
-  resolveEngineArtifactVersion,
+  isLegacySystemMode,
   SLIM_ENGINE_VERSION_PREFIX,
+  isSlimEngineVersion,
 } = require('./engineVersion')
+const { getYakEngineArtifactFileName, resolveEngineArtifactVersion } = require('./engineArtifact')
 
 const add_proxy = process.env.https_proxy || process.env.HTTPS_PROXY
 
@@ -123,25 +123,27 @@ async function getAvailableOSSDomain() {
   }
 }
 
-/** 获取校验url */
-const getCheckTextUrl = async (version) => {
+/** 开发环境不走 legacy 产物；校验地址仍按安装包标记判断 */
+const isLegacyEnginePack = (skipInDev) => {
+  if (skipInDev && electronIsDev) return false
+  return isLegacySystemMode()
+}
+
+const getEngineArtifactUrl = async (version, { skipLegacyInDev = false, checksum = false } = {}) => {
   const domain = await getAvailableOSSDomain()
-  const artifactVersion = resolveEngineArtifactVersion(version)
-  const ossVersion = getOssEngineVersion(artifactVersion)
-  let system_mode = ''
-  try {
-    system_mode = fs.readFileSync(loadExtraFilePath(path.join('bins', 'yakit-system-mode.txt'))).toString('utf8')
-  } catch (error) {
-    console.log('error', error)
-  }
-  const isLegacy = system_mode === 'legacy'
+  const isLegacy = isLegacyEnginePack(skipLegacyInDev)
+  const artifactVersion = resolveEngineArtifactVersion(version, isLegacy)
   const fileName = getYakEngineArtifactFileName(artifactVersion, {
     platform: process.platform,
     arch: process.arch,
     isLegacy,
   })
-  return fileName ? `https://${domain}/yak/${ossVersion}/${fileName}.sha256.txt` : ''
+  const ossVersion = getOssEngineVersion(artifactVersion)
+  return `https://${domain}/yak/${ossVersion}/${fileName}${checksum ? '.sha256.txt' : ''}`
 }
+
+/** 获取校验url */
+const getCheckTextUrl = async (version) => getEngineArtifactUrl(version, { checksum: true })
 /** 获取指定版本号的引擎Hash值 */
 const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
   return new Promise(async (resolve, reject) => {
@@ -213,28 +215,8 @@ const fetchLatestVersionCommon = async (path, requestConfig = {}) => {
   }
   return versionData.startsWith('v') ? versionData : `v${versionData}`
 }
-/** 引擎下载地址 */
-const getYakEngineDownloadUrl = async (version) => {
-  const domain = await getAvailableOSSDomain()
-  const artifactVersion = resolveEngineArtifactVersion(version)
-  const ossVersion = getOssEngineVersion(artifactVersion)
-  let system_mode = ''
-  try {
-    // 开发环境是不添加-legacy
-    if (!electronIsDev) {
-      system_mode = fs.readFileSync(loadExtraFilePath(path.join('bins', 'yakit-system-mode.txt'))).toString('utf8')
-    }
-  } catch (error) {
-    console.log('error', error)
-  }
-  const isLegacy = system_mode === 'legacy'
-  const fileName = getYakEngineArtifactFileName(artifactVersion, {
-    platform: process.platform,
-    arch: process.arch,
-    isLegacy,
-  })
-  return `https://${domain}/yak/${ossVersion}/${fileName}`
-}
+/** 引擎下载地址。开发环境不追加 legacy，避免把 slim 版本误换成标准引擎 */
+const getYakEngineDownloadUrl = async (version) => getEngineArtifactUrl(version, { skipLegacyInDev: true })
 
 const getSuffix = () => {
   let system_mode = ''

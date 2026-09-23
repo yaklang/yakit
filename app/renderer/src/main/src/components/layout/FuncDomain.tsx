@@ -1464,9 +1464,11 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
   const [searchVersionList, setSearchVersionList] = useState<string[]>([])
   /** 仅 Yakit 开放轻量版本选择；IRify/Memfit 不展示 */
   const showSlimOption = isYakit()
-  const [engineBuildType, setEngineBuildType] = useState<'full' | 'slim'>(
-    isCommunityYakit() || (showSlimOption && currentBuildType === 'slim') ? 'slim' : 'full',
-  )
+  const [engineBuildType, setEngineBuildType] = useState<'full' | 'slim'>(() => {
+    if (!showSlimOption) return 'full'
+    if (isCommunityYakit() || currentBuildType === 'slim') return 'slim'
+    return 'full'
+  })
 
   useEffect(() => {
     setVersionList(moreYaklangVersionList)
@@ -1477,11 +1479,8 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
       setEngineBuildType('full')
       return
     }
-    // 仅社区版 Yakit 默认轻量；其他版本跟随当前引擎类型
-    if (isCommunityYakit()) {
-      if (currentBuildType === 'slim') setEngineBuildType('slim')
-      return
-    }
+    // 社区版默认轻量，不随当前全量引擎把选项改回去
+    if (isCommunityYakit()) return
     setEngineBuildType(currentBuildType === 'slim' ? 'slim' : 'full')
   }, [currentBuildType, showSlimOption])
 

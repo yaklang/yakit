@@ -17,10 +17,12 @@ BASE="${OSS_BASE}/yak/${VERSION}"
 
 download_linux() {
   wget -O bins/yak_linux_amd64 "${BASE}/yak-slim_linux_amd64"
+  rm -f bins/yak_linux_amd64.zip
   zip -q bins/yak_linux_amd64.zip bins/yak_linux_amd64
   rm -f bins/yak_linux_amd64
 
   wget -O bins/yak_linux_arm64 "${BASE}/yak-slim_linux_arm64"
+  rm -f bins/yak_linux_arm64.zip
   zip -q bins/yak_linux_arm64.zip bins/yak_linux_arm64
   rm -f bins/yak_linux_arm64
 }
@@ -38,8 +40,8 @@ download_or_fallback() {
 
 download_windows() {
   wget -O bins/yak_windows_amd64.exe "${BASE}/yak-slim_windows_amd64.exe"
+  rm -f bins/yak_windows_normal_amd64.zip
   zip -q bins/yak_windows_normal_amd64.zip bins/yak_windows_amd64.exe
-  zip -q bins/yak_windows_amd64.zip bins/yak_windows_amd64.exe
   rm -f bins/yak_windows_amd64.exe
 
   # OSS 目前没有 yak-slim_windows_legacy_*，legacy 包回退标准引擎
@@ -47,6 +49,7 @@ download_windows() {
     bins/yak_windows_amd64.exe \
     "${BASE}/yak-slim_windows_legacy_amd64.exe" \
     "${BASE}/yak_windows_legacy_amd64.exe"
+  rm -f bins/yak_windows_legacy_amd64.zip
   zip -q bins/yak_windows_legacy_amd64.zip bins/yak_windows_amd64.exe
   rm -f bins/yak_windows_amd64.exe
 }
@@ -73,5 +76,4 @@ case "$PLATFORM" in
     ;;
 esac
 
-printf 'slim' >bins/engine-build-type.txt
 echo "Replaced bundled engine with slim ${VERSION} (${PLATFORM})"

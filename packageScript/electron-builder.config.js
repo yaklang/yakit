@@ -1,5 +1,3 @@
-require('./buildHook/write-engine-build-type')()
-
 // app 信息配置
 let appInfoOption = null
 let files = null
