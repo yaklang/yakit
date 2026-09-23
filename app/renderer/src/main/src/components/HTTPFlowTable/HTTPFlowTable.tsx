@@ -131,7 +131,6 @@ import {
   selectHTTPFlowTableResizeAction,
   shouldClearMITMResetBoundary,
   shouldRefreshOnDeleteUpdate,
-  shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
 } from './HTTPFlowTable.utils'
 import {
@@ -530,15 +529,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       const { AfterId, BeforeId, FixedLimit, ...paginationFields } = Pagination
       // 仅 update（无游标）时更新 total
       const isUpdateRequest = !AfterId && !BeforeId
-      const metadataOnlyBackgroundQuery = shouldUseHTTPFlowMetadataOnlyQuery(inViewport, backgroundRefresh, pageType)
       const query: YakQueryHTTPFlowRequest = {
         ...Filter,
         Pagination: { ...paginationFields },
         ...(AfterId ? { AfterId } : {}),
         ...(BeforeId ? { BeforeId } : {}),
         IncludeSystemTiming: pageType === 'MITM' && mitmFlowObservability.isBackendSystemTimingEnabled(),
-        ExcludeResponseRaw: pageType === 'MITM' || metadataOnlyBackgroundQuery,
-        ExcludeRequestRaw: pageType === 'MITM' || metadataOnlyBackgroundQuery,
         SkipTotal:
           pageType === 'MITM' &&
           mitmFlowObservability.isSkipLiveExactTotalEnabled() &&

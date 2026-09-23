@@ -18,7 +18,6 @@ import {
   safeParseHTTPFlowTableCache,
   shouldClearMITMResetBoundary,
   selectHTTPFlowTableResizeAction,
-  shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
   uniqStrings,
   parseIncludeIds,
@@ -180,23 +179,6 @@ describe('MITM reset project boundary', () => {
   it('does not guess when backend project identity is unavailable', () => {
     expect(buildHTTPFlowProjectKey('project-a', 0)).toBe('')
     expect(shouldClearMITMResetBoundary(6512, '', 'project-a:8')).toBe(false)
-  })
-})
-
-describe('HTTP flow hidden-table policy', () => {
-  it('keeps an ordinary hidden History table idle by default', () => {
-    expect(isHTTPFlowTableActive(false, false, 'History')).toBe(false)
-    expect(shouldUseHTTPFlowMetadataOnlyQuery(false, false, 'History')).toBe(false)
-  })
-
-  it('honors explicit History background refresh without transporting packet bodies', () => {
-    expect(isHTTPFlowTableActive(false, true, 'History')).toBe(true)
-    expect(shouldUseHTTPFlowMetadataOnlyQuery(false, true, 'History')).toBe(true)
-  })
-
-  it('never turns hidden MITM into a background table through the History setting', () => {
-    expect(isHTTPFlowTableActive(false, true, 'MITM')).toBe(false)
-    expect(shouldUseHTTPFlowMetadataOnlyQuery(false, true, 'MITM')).toBe(false)
   })
 })
 

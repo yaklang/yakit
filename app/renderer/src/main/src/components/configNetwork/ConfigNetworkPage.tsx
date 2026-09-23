@@ -380,6 +380,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = () => {
 
     // 更新 二级页签数量
     onSetSecondaryTabsNum()
+    onSetListInlinePacketSize()
 
     // 更新插件日志条数
     onSetLimitLogNum()
@@ -713,6 +714,37 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = () => {
     setRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum, 100 + '')
   }
 
+  const DEFAULT_LIST_INLINE_PACKET_KB = 300
+  const [listInlinePacketSize, setListInlinePacketSize] = useState<number | string>(DEFAULT_LIST_INLINE_PACKET_KB)
+  useEffect(() => {
+    getRemoteValue(GlobalConfigRemoteGV.HTTPFlowListInlineMaxContentLength).then((raw) => {
+      if (raw === '' || raw === undefined || raw === null) {
+        setListInlinePacketSize(DEFAULT_LIST_INLINE_PACKET_KB)
+        return
+      }
+      const bytes = parseInt(raw + '', 10)
+      if (Number.isNaN(bytes) || bytes < 0) {
+        setListInlinePacketSize(DEFAULT_LIST_INLINE_PACKET_KB)
+        return
+      }
+      setListInlinePacketSize(Math.min(500, Math.floor(bytes / 1024)))
+    })
+  }, [])
+  const onSetListInlinePacketSize = () => {
+    let kb = parseInt(listInlinePacketSize + '' || '0', 10)
+    if (Number.isNaN(kb) || kb < 0) kb = 0
+    if (kb > 500) kb = 500
+    setListInlinePacketSize(kb)
+    setRemoteValue(GlobalConfigRemoteGV.HTTPFlowListInlineMaxContentLength, String(kb * 1024))
+  }
+  const onResetListInlinePacketSize = () => {
+    setListInlinePacketSize(DEFAULT_LIST_INLINE_PACKET_KB)
+    setRemoteValue(
+      GlobalConfigRemoteGV.HTTPFlowListInlineMaxContentLength,
+      String(DEFAULT_LIST_INLINE_PACKET_KB * 1024),
+    )
+  }
+
   const [limitLogNum, setLimitLogNum] = useState<number | string>(DEFAULT_LOG_LIMIT)
 
   useEffect(() => {
@@ -774,6 +806,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = () => {
     onResetChromePath()
     onResetPprofFileAutoAnalyze()
     onResetSecondaryTabsNum()
+    onResetListInlinePacketSize()
     onResetLimitLogNum()
     onResetPerformanceTips()
     setCloseConfirmEnabled(true)
@@ -894,6 +927,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = () => {
               onOpenAuth={() => setVisible(true)}
               pprofFileAutoAnalyze={pprofFileAutoAnalyze}
               setPprofFileAutoAnalyze={setPprofFileAutoAnalyze}
+              listInlinePacketSize={listInlinePacketSize}
+              setListInlinePacketSize={setListInlinePacketSize}
               secondaryTabsNum={secondaryTabsNum}
               setSecondaryTabsNum={setSecondaryTabsNum}
               limitLogNum={limitLogNum}
