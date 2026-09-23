@@ -345,11 +345,13 @@ describe('ChatMultiSessionController start / send / history', async () => {
     ctrl = new ChatMultiSessionController()
   })
 
-  it('A13: duplicate start returns false', async () => {
+  it('A13: duplicate start reuses the live session on the new page', async () => {
     expect(ctrl.handleStartSession(startParams('s-dup'))).toBe(true)
     await ctrl.ensureSession('s-dup').meta.lifecycle.preparation
-    expect(ctrl.handleStartSession(startParams('s-dup'))).toBe(false)
-    await ctrl.ensureSession('s-dup').meta.lifecycle.preparation
+    const meta = ctrl.ensureSession('s-dup').meta
+    expect(ctrl.handleStartSession(startParams('s-dup', 'page-2'))).toBe(true)
+    expect(ctrl.ensureSession('s-dup').meta).toBe(meta)
+    expect(ctrl.getSessionPageId('s-dup')).toBe('page-2')
   })
 
   it('A14: no UserQuery enters restore loading', async () => {
