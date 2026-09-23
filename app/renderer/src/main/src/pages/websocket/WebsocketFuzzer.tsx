@@ -194,7 +194,10 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
   })
 
   const handleDisConnect = useMemoizedFn(() => {
+    // cancel 后主进程不再转发 end，需本地收尾
     ipcRenderer.invoke('cancel-CreateWebsocketFuzzer', token)
+    setExecuting(false)
+    onSetLoading(false)
   })
 
   const handleSendToServer = useMemoizedFn(() => {

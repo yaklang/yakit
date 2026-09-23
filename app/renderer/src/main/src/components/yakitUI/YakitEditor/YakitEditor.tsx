@@ -34,6 +34,7 @@ import classNames from 'classnames'
 import styles from './YakitEditor.module.scss'
 import './StaticYakitEditor.scss'
 import { failed } from '@/utils/notification'
+import { setClipboardText } from '@/utils/clipboard'
 import { randomString } from '@/utils/randomUtil'
 import { v4 as uuidv4 } from 'uuid'
 import { openABSFileLocated, openExternalWebsite } from '@/utils/openWebsite'
@@ -345,6 +346,29 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     menuType,
     inViewport,
   })
+
+  // 切页保活后选区仍在但无焦点：捕获 Ctrl+C 直接复制选区
+  useEffect(() => {
+    if (!editor) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!inViewport || editor.hasTextFocus()) return
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'c') return
+      const el = e.target as HTMLElement | null
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
+      const other = el?.closest?.('.monaco-editor')
+      const dom = editor.getDomNode()
+      if (other && dom && el && !dom.contains(el)) return
+      const selection = editor.getSelection()
+      if (!selection || selection.isEmpty()) return
+      const text = editor.getModel()?.getValueInRange(selection)
+      if (!text) return
+      e.preventDefault()
+      e.stopPropagation()
+      setClipboardText(text, { hiddenHint: true })
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [editor, inViewport])
 
   /**
    * 整理右键菜单的对应关系

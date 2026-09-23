@@ -70,6 +70,10 @@ export const Editor: React.FC<EditorProp> = ({
           contextmenu: true,
         }}
         onChange={onSetValue}
+        // react-monaco-editor 0.56.x 是函数组件，React 19 不再读取其 defaultProps，
+        // 可选回调必须显式传，否则 initMonaco / unmount 时抛 TypeError
+        editorWillMount={() => ({})}
+        editorWillUnmount={() => {}}
         editorDidMount={editorDidMount}
       />
     </div>
