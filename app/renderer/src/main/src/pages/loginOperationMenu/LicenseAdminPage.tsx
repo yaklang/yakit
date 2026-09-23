@@ -145,7 +145,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
       fixed: 'right',
       render: (_, record: API.CompanyLicenseConfigList) => (
         <div className={styles['table-action-icon']}>
-          <Tooltip title={t('LicenseAdminPage.generateLicense')} align={{ offset: [-5, 10] }}>
+          <Tooltip title={t('LicenseAdminPage.generateLicense')}>
             <PlusCircleOutlined
               className={styles['action-icon']}
               onClick={() => {
