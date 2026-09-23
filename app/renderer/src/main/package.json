@@ -3,6 +3,7 @@
   "version": "2.09.19",
   "private": true,
   "dependencies": {
+    "@ant-design/charts": "^2.6.7",
     "@ant-design/icons": "^5.6.1",
     "@ant-design/v5-patch-for-react-19": "1.0.3",
     "@dnd-kit/core": "^4.0.1",
@@ -39,7 +40,6 @@
     "ali-react-table": "2.6.1",
     "antd": "5.29.2",
     "axios": "1.4.0",
-    "bizcharts": "^4.1.12",
     "buffer": "^6.0.3",
     "classnames": "^2.3.2",
     "codemirror": "^5.65.2",
