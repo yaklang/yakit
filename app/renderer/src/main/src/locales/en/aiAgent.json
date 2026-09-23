@@ -156,8 +156,7 @@
     "planPrompt": "Plan prompt",
     "planPromptDefault": "Custom plan prompt",
     "planPromptPlaceholder": "Plan prompt applies during task planning as supplementary guidance...",
-    "singleModelMode": "Force single model",
-    "singleModelModeGlobal": "Single-model mode (enabled globally)",
+    "singleModelMode": "Single-model mode",
     "singleModelModeTip": "Use only the primary model from the global configuration for this session",
     "singleModelModeGlobalTip": "Enabled by the global configuration and cannot be disabled for this session",
     "singleModelModeSessionTip": "Single-model mode can only be changed before starting a new session"

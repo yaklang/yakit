@@ -136,7 +136,7 @@ describe('AIInputSettingPopover single-model mode', () => {
     mocks.globalSingleModelMode = true
     render(<AIInputSettingPopover visible />)
 
-    expect(screen.getByText('AIReActTaskChatContent.singleModelModeGlobal')).toBeInTheDocument()
+    expect(screen.getByText('AIReActTaskChatContent.singleModelMode')).toBeInTheDocument()
     expect(screen.getAllByRole('switch')[0]).toBeChecked()
     expect(screen.getAllByRole('switch')[0]).toBeDisabled()
   })

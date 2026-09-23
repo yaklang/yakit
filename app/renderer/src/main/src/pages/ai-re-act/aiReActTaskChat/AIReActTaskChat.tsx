@@ -251,9 +251,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           <Form.Item
             label={
               <>
-                {globalSingleModelMode
-                  ? t('AIReActTaskChatContent.singleModelModeGlobal')
-                  : t('AIReActTaskChatContent.singleModelMode')}
+                {t('AIReActTaskChatContent.singleModelMode')}
                 <Tooltip
                   classNames={{ root: styles['form-info-icon-tooltip'] }}
                   title={
@@ -270,6 +268,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             }
             name="SingleModelMode"
             valuePropName="checked"
+            className={styles['switch-form-item']}
           >
             <YakitSwitch disabled={singleModelModeLocked} />
           </Form.Item>
@@ -287,6 +286,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             }
             name="SyncPerceptionTrigger"
             valuePropName="checked"
+            className={styles['switch-form-item']}
           >
             <YakitSwitch />
           </Form.Item>

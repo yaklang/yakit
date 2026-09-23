@@ -156,8 +156,7 @@
     "planPrompt": "Plan 提示詞",
     "planPromptDefault": "自訂Plan提示詞",
     "planPromptPlaceholder": "Plan 提示詞將在任務規劃階段生效，用於補充規劃說明...",
-    "singleModelMode": "強制單模型",
-    "singleModelModeGlobal": "單模型模式（由全局配置啟用）",
+    "singleModelMode": "單模型模式",
     "singleModelModeTip": "本會話只使用全局配置中的主模型",
     "singleModelModeGlobalTip": "全局配置已啟用，當前會話無法關閉",
     "singleModelModeSessionTip": "單模型模式只能在新會話啟動前修改"
