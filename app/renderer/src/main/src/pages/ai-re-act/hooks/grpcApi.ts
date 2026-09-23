@@ -269,6 +269,21 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_SESSION_SNAPSHOT_SYNC = 'session_snapshot_sync',
 }
 
+/** 只读数据查询类同步：仅拉取展示数据，不修改任务与配置，发送前置条件不满足时可静默丢弃 */
+export const readonlySyncQueryTypes = new Set<`${AIInputEventSyncTypeEnum}`>([
+  AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_CONSUMPTION,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_PING,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_TIMELINE,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
+  AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+])
+
+export const isReadonlySyncQuery = (syncType?: `${AIInputEventSyncTypeEnum}`): boolean =>
+  !!syncType && readonlySyncQueryTypes.has(syncType)
+
 export interface AIInputEvent {
   IsStart?: boolean
   Params?: AIStartParams // 提问问题相关
