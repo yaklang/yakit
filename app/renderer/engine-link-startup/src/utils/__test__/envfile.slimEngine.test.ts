@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { getOfficialYakEngineArtifactPrefix, toDefaultYakEngineDownloadVersion, toEngineSourceHashVersion } from '@/utils/envfile'
+import {
+  getOfficialYakEngineArtifactPrefix,
+  toDefaultYakEngineDownloadVersion,
+  toEngineSourceHashVersion,
+} from '@/utils/envfile'
 
 describe('engine-link slim engine helpers', () => {
   it('defaults community downloads to the slim artifact', () => {
