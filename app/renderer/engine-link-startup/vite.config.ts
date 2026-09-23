@@ -1,7 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { defineConfig, type Plugin } from 'vite'
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
-import pluginBabel from '@rolldown/plugin-babel'
+import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { yakitUiIconsPurePlugin } from '../vite-plugins/yakitUiIconsPurePlugin.mjs'
@@ -23,12 +22,7 @@ function generateThemeCssPlugin(): Plugin {
 export default defineConfig({
   base: './',
   envPrefix: ['YAKIT_'],
-  plugins: [
-    generateThemeCssPlugin(),
-    yakitUiIconsPurePlugin(),
-    react(),
-    pluginBabel({ presets: [reactCompilerPreset()] }),
-  ],
+  plugins: [generateThemeCssPlugin(), yakitUiIconsPurePlugin(), react()],
   server: {
     host: true,
     port: 5173,
