@@ -2,6 +2,7 @@ import type React from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type * as SpaceEngineUtils from '@/pages/spaceEngine/utils'
 // 先于被测模块注册 window.require('electron') stub（ConfigNetworkPage 依赖链顶层会解构 ipcRenderer）
 import '../../../pages/ai-re-act/hooks/__test__/setupElectron'
 
@@ -48,7 +49,7 @@ vi.mock('@/pages/settings/settingsContent/globalConfig/GlobalConfigEmbeddedForm'
   GlobalConfigEmbeddedForm: () => null,
 }))
 vi.mock('@/pages/spaceEngine/utils', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/pages/spaceEngine/utils')>()
+  const actual = await importOriginal<typeof SpaceEngineUtils>()
   return { ...actual, handleAIConfig: vi.fn() }
 })
 
