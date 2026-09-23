@@ -9,6 +9,7 @@ const { ipcRendererMock } = vi.hoisted(() => {
   return { ipcRendererMock }
 })
 
+import type * as Ahooks from 'ahooks'
 import type React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -16,7 +17,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import CHeaderManager from '../CHeaderManager'
 
 vi.mock('ahooks', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('ahooks')>()
+  const actual = await importOriginal<typeof Ahooks>()
   return {
     ...actual,
     useSize: () => ({ width: 400, height: 400 }),
