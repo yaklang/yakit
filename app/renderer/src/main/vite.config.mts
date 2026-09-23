@@ -1,7 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
-import pluginBabel from '@rolldown/plugin-babel'
+import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
@@ -101,8 +100,6 @@ export default defineConfig(({ mode, command }) => {
       noopAntdComponentStylePlugin(),
       yakitUiIconsPurePlugin(),
       react(),
-      // React Compiler 仅在 build 启用
-      ...(command === 'build' ? [pluginBabel({ presets: [reactCompilerPreset()] })] : []),
       nodePolyfills({
         // 对齐 CRA fallback.fs=false：不要注入浏览器内存版 fs（主窗口 nodeIntegration 下真 Node fs 可用）
         include: ['buffer', 'process', 'stream', 'util', 'events', 'path', 'crypto', 'timers', 'vm'],
