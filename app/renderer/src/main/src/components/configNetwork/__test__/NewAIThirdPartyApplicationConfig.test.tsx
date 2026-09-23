@@ -87,6 +87,7 @@ describe('NewAIThirdPartyApplicationConfigBase model discovery', () => {
       fireEvent.click(refresh)
       await waitFor(() => expect(mocks.invoke).toHaveBeenCalledWith('ListAiModel', expect.any(Object)))
       const config = JSON.parse(mocks.invoke.mock.calls.at(-1)![1].Config)
+      // 与 providerToListAiModelConfig 对齐：ExtraParams 不传给 ListAiModel（后端未使用该字段）
       expect(config).not.toHaveProperty('ExtraParams')
       expect(config).toEqual({
         Type: 'custom',
