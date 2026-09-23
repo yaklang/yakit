@@ -56,8 +56,8 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
             value={engineBuildType}
             onChange={(e) => setEngineBuildType(e.target.value)}
             options={[
-              { label: t('MoreYaklangVersion.standard_version'), value: 'full' },
               { label: t('MoreYaklangVersion.slim_version'), value: 'slim' },
+              { label: t('MoreYaklangVersion.standard_version'), value: 'full' },
             ]}
             style={{ width: i18n.language === 'en' ? 240 : undefined }}
           />

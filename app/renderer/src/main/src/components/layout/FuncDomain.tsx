@@ -1527,8 +1527,8 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             value={engineBuildType}
             onChange={(e) => setEngineBuildType(e.target.value)}
             options={[
-              { label: t('MoreYaklangVersion.standardVersion'), value: 'full' },
               { label: t('MoreYaklangVersion.slimVersion'), value: 'slim' },
+              { label: t('MoreYaklangVersion.standardVersion'), value: 'full' },
             ]}
           />
           <Tooltip title={t('MoreYaklangVersion.slimVersionTip')}>
