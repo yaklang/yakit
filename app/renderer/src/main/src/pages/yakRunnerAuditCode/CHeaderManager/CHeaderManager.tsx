@@ -31,77 +31,18 @@ import {
   TrashOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import type { CHeaderEntry, CHeaderManagerProps, CHeaderPack, CHeaderTreeNode } from './CHeaderManagerType'
+import {
+  decodePreviewContent,
+  entryToNode,
+  filterTree,
+  formatSize,
+  hasOfficialCHeaderPack,
+  packToNode,
+} from './CHeaderManagerUtils'
 import fileTreeStyles from '../FileTree/FileTree.module.scss'
 import styles from './CHeaderManager.module.scss'
 
 const { ipcRenderer } = window.require('electron')
-
-const decodePreviewContent = (content: unknown): string => {
-  if (!content) return ''
-  if (typeof content === 'string') return content
-  const packed = content as { type?: string; data?: number[] }
-  if (packed?.data && Array.isArray(packed.data)) {
-    return new TextDecoder().decode(Uint8Array.from(packed.data))
-  }
-  if (content instanceof Uint8Array) {
-    return new TextDecoder().decode(content)
-  }
-  return String(content)
-}
-
-const formatSize = (size: number) => {
-  if (!size || size <= 0) return ''
-  if (size < 1024) return `${size} B`
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
-  return `${(size / 1024 / 1024).toFixed(1)} MB`
-}
-
-const packToNode = (pack: CHeaderPack): CHeaderTreeNode => {
-  const isDir = pack.Kind === 'directory' || pack.Kind === 'zip'
-  return {
-    key: `pack:${pack.Name}`,
-    title: pack.Name,
-    packName: pack.Kind === 'file' ? '' : pack.Name,
-    relativePath: pack.Kind === 'file' ? pack.Name : '',
-    isDir,
-    isPack: true,
-    kind: pack.Kind,
-    sizeBytes: Number(pack.SizeBytes || 0),
-    depth: 1,
-    isLeaf: !isDir,
-  }
-}
-
-const entryToNode = (packName: string, entry: CHeaderEntry, depth: number): CHeaderTreeNode => {
-  return {
-    key: `entry:${packName}:${entry.RelativePath}`,
-    title: entry.Name,
-    packName,
-    relativePath: entry.RelativePath,
-    isDir: !!entry.IsDir,
-    isPack: false,
-    kind: entry.IsDir ? 'directory' : 'file',
-    sizeBytes: Number(entry.SizeBytes || 0),
-    depth,
-    isLeaf: !entry.IsDir,
-  }
-}
-
-const filterTree = (nodes: CHeaderTreeNode[], keyword: string): CHeaderTreeNode[] => {
-  const kw = keyword.trim().toLowerCase()
-  if (!kw) return nodes
-  const walk = (list: CHeaderTreeNode[]): CHeaderTreeNode[] => {
-    const out: CHeaderTreeNode[] = []
-    list.forEach((node) => {
-      const children = node.children ? walk(node.children) : undefined
-      if (node.title.toLowerCase().includes(kw) || (children && children.length > 0)) {
-        out.push({ ...node, children })
-      }
-    })
-    return out
-  }
-  return walk(nodes)
-}
 
 interface CHeaderTreeNodeViewProps {
   info: CHeaderTreeNode
@@ -306,10 +247,7 @@ const CHeaderManager: React.FC<CHeaderManagerProps> = React.memo(() => {
     }
   })
 
-  const hasOfficialPack = useMemo(
-    () => treeData.some((item) => item.title.toLowerCase() === 'c-std-headers.zip'),
-    [treeData],
-  )
+  const hasOfficialPack = useMemo(() => hasOfficialCHeaderPack(treeData), [treeData])
 
   const runDownloadOfficial = useMemoizedFn(async (force: boolean) => {
     setDownloading(true)
