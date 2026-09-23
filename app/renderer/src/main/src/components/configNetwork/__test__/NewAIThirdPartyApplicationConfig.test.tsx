@@ -87,6 +87,7 @@ describe('NewAIThirdPartyApplicationConfigBase model discovery', () => {
       fireEvent.click(refresh)
       await waitFor(() => expect(mocks.invoke).toHaveBeenCalledWith('ListAiModel', expect.any(Object)))
       const config = JSON.parse(mocks.invoke.mock.calls.at(-1)![1].Config)
+      expect(config).not.toHaveProperty('ExtraParams')
       expect(config).toEqual({
         Type: 'custom',
         api_key: 'test-api-key',
@@ -98,11 +99,6 @@ describe('NewAIThirdPartyApplicationConfigBase model discovery', () => {
         endpoint: enableEndpoint ? 'https://endpoint.example.test/responses' : '',
         enable_endpoint: enableEndpoint,
         Headers: [{ Key: 'X-Tenant', Value: 'tenant-a' }],
-        ExtraParams: [
-          { Key: 'model', Value: 'configured-model' },
-          { Key: 'MaxTokens', Value: '4096' },
-          { Key: 'Temperature', Value: '0' },
-        ],
       })
 
       mocks.invoke.mockClear()
