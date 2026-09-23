@@ -253,8 +253,7 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
     ),
     [fuzzerTableMaxData, onShowAll, t],
   )
-  // 勿用 useMemoizedFn 包 JSX：需每轮渲染拿到最新 query 等
-  const secondNodeExtra = () => (
+  const secondNodeExtra = useMemoizedFn(() => (
     <SecondNodeExtra
       onlyOneResponse={false}
       cachedTotal={cachedTotal}
@@ -274,7 +273,7 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
       setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
       onShowAll={onShowAll}
     />
-  )
+  ))
 
   return (
     <div className={styles['concurrency-all-res']}>

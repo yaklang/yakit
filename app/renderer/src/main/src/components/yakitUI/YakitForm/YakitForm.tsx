@@ -153,7 +153,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     }
   })
 
-  const renderContentValue = () => {
+  const renderContentValue = useMemoizedFn(() => {
     switch (renderType) {
       case 'textarea':
         return (
@@ -319,7 +319,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
           />
         )
     }
-  }
+  })
 
   const renderContent = useMemoizedFn((helpNode: ReactNode) => {
     return (

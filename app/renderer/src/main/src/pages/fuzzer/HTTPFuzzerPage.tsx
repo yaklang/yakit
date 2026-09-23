@@ -2609,8 +2609,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
   })
 
-  // 勿用 useMemoizedFn 包 JSX：需每轮渲染拿到最新 response/query 等
-  const secondNodeExtra = () => (
+  const secondNodeExtra = useMemoizedFn(() => (
     <>
       <SecondNodeExtra
         onlyOneResponse={onlyOneResponse}
@@ -2645,7 +2644,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
       </div>
     </>
-  )
+  ))
 
   /** end 结束后选中最新历史：先取总数，再按升序末位（Page=total, Limit=1）取最新一条 */
   const getNewCurrentPage = useMemoizedFn(() => {
@@ -4062,8 +4061,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     }
   })
 
-  // 勿用 useMemoizedFn 包 JSX：size/pageId/t 每轮渲染会变
-  const renderExtractedDataBtn = () => (
+  const renderExtractedDataBtn = useMemoizedFn(() => (
     <YakitButton
       size={size}
       type={'primary'}
@@ -4080,7 +4078,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     >
       {t('SecondNodeExtra.exportExtractedData')}
     </YakitButton>
-  )
+  ))
 
   // const onViewExecResults = useMemoizedFn(() => {
   //     showYakitModal({
