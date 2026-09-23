@@ -198,11 +198,30 @@
   },
   "AIChatLoading": {
     "sessionInitializing": "会话初始化中...",
+    "connectingSession": "正在连接会话...",
     "loadingHistory": "获取历史数据中...",
     "waitingReply": "等待AI回复...",
     "questionExecuting": "问题执行中...",
     "sessionClosing": "会话正在关闭...",
     "sessionClosed": "会话已关闭"
+  },
+  "ChatSessionNotify": {
+    "cacheDeleting": "会话缓存删除中，请稍后再连接",
+    "duplicateSession": "会话已经存在，请勿重复建立！",
+    "initFailed": "AI 会话初始化失败: {{error}}",
+    "sessionMissing": "会话不存在，无法发送消息",
+    "historyLoading": "历史消息加载中，请稍后再发送",
+    "reviewMissing": "未获取到 review 信息, 操作无效",
+    "connectFailed": "AI 会话连接失败: {{error}}",
+    "finalizeFailed": "AI 会话收尾失败: {{error}}",
+    "endedWithoutId": "会话连接已结束，未获取到会话 ID",
+    "initTimeout": "AI 会话初始化超时，请检查引擎连接后重试",
+    "engineDefaultSession": "当前引擎不支持自动分配会话 ID，请更新引擎",
+    "sessionIdMismatch": "引擎返回的会话 ID 不一致",
+    "reconnectSessionIdMismatch": "引擎返回的会话 ID 与重连会话不一致",
+    "engineMissingSessionId": "当前引擎未返回会话 ID，请更新引擎",
+    "sessionIdOccupied": "引擎返回了已存在的会话 ID",
+    "invalidHistoryCursor": "历史恢复未返回有效游标"
   },
   "AIScheduledTasks": {
     "title": "定时任务",

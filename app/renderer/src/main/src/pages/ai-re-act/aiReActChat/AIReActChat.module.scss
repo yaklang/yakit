@@ -121,6 +121,15 @@
   @extend %display-column-center;
 }
 
+.connection-error {
+  @include mixin.ai-right-panel-content-track;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
 .chat-layout-wrapper {
   // 保持滚动容器的父级全宽，避免 Virtuoso 滚动条停在内容轨道右侧。
   width: 100%;

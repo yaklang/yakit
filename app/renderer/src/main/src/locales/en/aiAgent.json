@@ -198,11 +198,30 @@
   },
   "AIChatLoading": {
     "sessionInitializing": "Initializing session...",
+    "connectingSession": "Connecting session...",
     "loadingHistory": "Loading history...",
     "waitingReply": "Waiting for AI reply...",
     "questionExecuting": "Executing question...",
     "sessionClosing": "Closing session...",
     "sessionClosed": "Session closed"
+  },
+  "ChatSessionNotify": {
+    "cacheDeleting": "Session cache is being deleted. Try connecting again later.",
+    "duplicateSession": "This session already exists. Do not connect again.",
+    "initFailed": "Failed to initialize the AI session: {{error}}",
+    "sessionMissing": "Session does not exist. Unable to send the message.",
+    "historyLoading": "History is still loading. Try sending again later.",
+    "reviewMissing": "Review details are unavailable. The action was ignored.",
+    "connectFailed": "AI session connection failed: {{error}}",
+    "finalizeFailed": "Failed to finish the AI session: {{error}}",
+    "endedWithoutId": "The session connection ended before a session ID was received.",
+    "initTimeout": "AI session initialization timed out. Check the engine connection and try again.",
+    "engineDefaultSession": "This engine cannot assign a session ID automatically. Update the engine.",
+    "sessionIdMismatch": "The engine returned inconsistent session IDs.",
+    "reconnectSessionIdMismatch": "The engine session ID does not match the session being reconnected.",
+    "engineMissingSessionId": "The engine did not return a session ID. Update the engine.",
+    "sessionIdOccupied": "The engine returned a session ID that already exists.",
+    "invalidHistoryCursor": "History recovery did not return a valid cursor."
   },
   "AIScheduledTasks": {
     "title": "Scheduled Tasks",

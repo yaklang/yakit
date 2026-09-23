@@ -356,23 +356,17 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 )}
                 <AIToDoListWrapper />
                 <AIReActChatContents ref={aiReActChatContentsRef} />
-                {pendingChat && (
-                  <div role="status">
-                    {pendingChat.status === 'connecting' ? '正在连接会话…' : pendingChat.error || '连接已停止'}
-                    {pendingChat.status === 'connecting' ? (
-                      <YakitButton type="text" onClick={cancelPendingChat}>
-                        取消连接
-                      </YakitButton>
-                    ) : (
-                      <YakitButton
-                        type="text"
-                        onClick={() => {
-                          if (lastStart.current) handleStart(lastStart.current)
-                        }}
-                      >
-                        重试
-                      </YakitButton>
-                    )}
+                {pendingChat?.status === 'failed' && (
+                  <div className={styles['connection-error']} role="status">
+                    {pendingChat.error || '连接已停止'}
+                    <YakitButton
+                      type="text"
+                      onClick={() => {
+                        if (lastStart.current) handleStart(lastStart.current)
+                      }}
+                    >
+                      重试
+                    </YakitButton>
                   </div>
                 )}
                 <AIReActTaskChatReview />

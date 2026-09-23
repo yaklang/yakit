@@ -50,6 +50,7 @@ import i18n from '@/i18n/i18n'
 
 const { ipcRenderer } = window.require('electron')
 const tAgent = i18n.getFixedT(null, 'aiAgent')
+const formatNotifyError = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
 /** deleteSessions 入参：按 id / 按 source 列表 / 全库清删（deleteAll） */
 export type DeleteSessionsParams = {
@@ -349,12 +350,12 @@ export class ChatMultiSessionController {
     ipcRenderer.on(`${token}-end`, () => {
       if (this.connectionsByToken.get(token) !== connection) return
       if (connection.sessionId) void this.handleSessionEnd(connection.sessionId)
-      else this.failConnection(connection, new Error('会话连接已结束，未获取到会话 ID'))
+      else this.failConnection(connection, new Error(tAgent('ChatSessionNotify.endedWithoutId')))
     })
     lifecycle.started = true
     // 主进程在 start 后发送初始 ping；迟迟收不到有效 pong 时退出等待状态。
     connection.timer = setTimeout(() => {
-      this.failConnection(connection, new Error('AI 会话初始化超时，请检查引擎连接后重试'))
+      this.failConnection(connection, new Error(tAgent('ChatSessionNotify.initTimeout')))
     }, 30000)
     return ipcRenderer.invoke('start-ai-re-act', token, params)
   }
@@ -369,10 +370,11 @@ export class ChatMultiSessionController {
     const id = res.SessionId?.trim()
     // 新会话不能使用旧引擎的 default；重连必须匹配指定的历史会话 ID。
     if (id) {
-      if (id === 'default' && input.kind === 'new') throw new Error('当前引擎不支持自动分配会话 ID，请更新引擎')
+      if (id === 'default' && input.kind === 'new') throw new Error(tAgent('ChatSessionNotify.engineDefaultSession'))
       if (connection.receivedSessionId && id !== connection.receivedSessionId)
-        throw new Error('引擎返回的会话 ID 不一致')
-      if (connection.sessionId && id !== connection.sessionId) throw new Error('引擎返回的会话 ID 与重连会话不一致')
+        throw new Error(tAgent('ChatSessionNotify.sessionIdMismatch'))
+      if (connection.sessionId && id !== connection.sessionId)
+        throw new Error(tAgent('ChatSessionNotify.reconnectSessionIdMismatch'))
       connection.receivedSessionId = id
     }
     if (res.Type !== 'pong') {
@@ -381,7 +383,7 @@ export class ChatMultiSessionController {
       return
     }
     // 要求当前 pong 自身携带 ID，不使用前序事件中的 ID 掩盖协议不兼容。
-    if (!id) throw new Error('当前引擎未返回会话 ID，请更新引擎')
+    if (!id) throw new Error(tAgent('ChatSessionNotify.engineMissingSessionId'))
     connection.confirmed = true
     if (connection.timer) clearTimeout(connection.timer)
 
@@ -397,7 +399,7 @@ export class ChatMultiSessionController {
   private async initializeNewSession(connection: SessionConnection, sessionId: string) {
     const { data, input } = connection
     // 防止把新会话的内存内容注册到已有会话名下。
-    if (this.storePool.has(sessionId)) throw new Error('引擎返回了已存在的会话 ID')
+    if (this.storePool.has(sessionId)) throw new Error(tAgent('ChatSessionNotify.sessionIdOccupied'))
     if (input.draftId) await this.adoptConnectionImages(connection, sessionId)
     if (!data.meta.lifecycle.current || data.meta.lifecycle.closing) {
       // 在异步图片步骤返回后统一检查，取消时清理目标目录，不发布正式会话。
@@ -1051,11 +1053,11 @@ export class ChatMultiSessionController {
             : item.source?.includes(source)),
       )
     ) {
-      yakitNotify('warning', '会话缓存删除中，请稍后再连接')
+      yakitNotify('warning', tAgent('ChatSessionNotify.cacheDeleting'))
       return false
     }
     if (sessionId && this.readyChannels.has(sessionId)) {
-      yakitNotify('warning', '会话已经存在，请勿重复建立！')
+      yakitNotify('warning', tAgent('ChatSessionNotify.duplicateSession'))
       return false
     }
     // 每一轮连接都有独立 token；历史重连保留业务 ID，但不复用旧 IPC 通道。
@@ -1107,7 +1109,7 @@ export class ChatMultiSessionController {
     if (!sessionId) {
       // 同步发布首问及连接中状态，UI 不需要等后端返回 ID 才能展示。
       this.showFirstQuestion(data)
-      data.store.getState().updateCurrentLoadingTitle({ casualTitle: '正在连接会话…' })
+      data.store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.connectingSession') })
       cb?.onPendingChange?.({
         streamToken: token,
         data,
@@ -1130,7 +1132,7 @@ export class ChatMultiSessionController {
 
   /** 初始化失败停止连接并释放占位，保留可见问题供用户重试。 */
   private failSessionStart(sessionId: string, error: unknown) {
-    yakitNotify('error', `AI 会话初始化失败: ${error instanceof Error ? error.message : String(error)}`)
+    yakitNotify('error', tAgent('ChatSessionNotify.initFailed', { error: formatNotifyError(error) }))
     this.finishSessionRestoreLoading(sessionId)
     this.storePool.get(sessionId)?.getState().updateState({ initLoading: false, grpcLoadMoreLoading: false })
     this.forceCloseSession({ sessionIds: [sessionId] })
@@ -1143,7 +1145,7 @@ export class ChatMultiSessionController {
       const { token, type, params, optionValue } = payload
       if (!this.readyChannels.has(token)) {
         if (!this.isActiveShowSession(token)) return
-        yakitNotify('warning', '会话不存在，无法发送消息')
+        yakitNotify('warning', tAgent('ChatSessionNotify.sessionMissing'))
         return
       }
 
@@ -1151,7 +1153,7 @@ export class ChatMultiSessionController {
 
       // 向上加载历史（recovery_history）进行中时禁止发送消息，避免与 gRPC 查询并发导致后端表死锁
       if (meta.lifecycle.closing || store.getState().initLoading || store.getState().grpcLoadMoreLoading) {
-        yakitNotify('warning', '历史消息加载中，请稍后再发送')
+        yakitNotify('warning', tAgent('ChatSessionNotify.historyLoading'))
         return
       }
 
@@ -1246,7 +1248,7 @@ export class ChatMultiSessionController {
             const isExist = store.getState().currentReviewDetail.token === params.InteractiveId
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
-              yakitNotify('error', '未获取到 review 信息, 操作无效')
+              yakitNotify('error', tAgent('ChatSessionNotify.reviewMissing'))
               return
             }
 
@@ -1275,7 +1277,7 @@ export class ChatMultiSessionController {
             const isExist = store.getState().currentReviewDetail.token === params.InteractiveId
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
-              yakitNotify('error', '未获取到 review 信息, 操作无效')
+              yakitNotify('error', tAgent('ChatSessionNotify.reviewMissing'))
               return
             }
 
@@ -1583,7 +1585,8 @@ export class ChatMultiSessionController {
     if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
       const recoveryHistory = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory & { error?: string }
       if (recoveryHistory.error) throw new Error(recoveryHistory.error)
-      if (typeof recoveryHistory.next_start_id !== 'number') throw new Error('历史恢复未返回有效游标')
+      if (typeof recoveryHistory.next_start_id !== 'number')
+        throw new Error(tAgent('ChatSessionNotify.invalidHistoryCursor'))
       rawData.grpcOffset = recoveryHistory.next_start_id
       await this.flushSessionRender(sessionId)
       await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
@@ -1729,7 +1732,7 @@ export class ChatMultiSessionController {
     const { store, rawData } = this.ensureSession(sessionId)
     const reviewDetail = rawData.contents.get(reviewToken)
     if (!reviewDetail) {
-      yakitNotify('warning', '未获取到 review 信息, 操作无效')
+      yakitNotify('warning', tAgent('ChatSessionNotify.reviewMissing'))
       return
     }
 
@@ -1864,7 +1867,7 @@ export class ChatMultiSessionController {
   public handleSessionError(sessionId: string, error: unknown) {
     const meta = this.metaPool.get(sessionId)
     if (!meta || meta.lifecycle.closing) return
-    yakitNotify('error', `AI 会话连接失败: ${error instanceof Error ? error.message : String(error)}`)
+    yakitNotify('error', tAgent('ChatSessionNotify.connectFailed', { error: formatNotifyError(error) }))
     this.forceCloseSession({ sessionIds: [sessionId] })
   }
 
@@ -1914,7 +1917,7 @@ export class ChatMultiSessionController {
         if (deletePersist !== true && lifecycle.error) throw lifecycle.error
       } catch (error) {
         failure = error
-        yakitNotify('error', `AI 会话收尾失败: ${error instanceof Error ? error.message : String(error)}`)
+        yakitNotify('error', tAgent('ChatSessionNotify.finalizeFailed', { error: formatNotifyError(error) }))
       } finally {
         lifecycle.writable = false
         this.sessionRestoreLoading.delete(sessionId)
