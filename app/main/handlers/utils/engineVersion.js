@@ -78,7 +78,8 @@ const fetchEngineBuildType = (version) => {
 
   try {
     const ver = getOssEngineVersion(version || '').replace(/^v/, '')
-    if (ver) {
+    // legacy 下 slim/ 会落到全量缓存名，比对成功会把全量引擎误标成轻量
+    if (ver && !isLegacySystemMode()) {
       const local = getLatestYakLocalEnginePath()
       const slimCache = path.join(getYaklangEngineDir(), getLocalEngineCacheName(`slim/${ver}`))
       if (fs.existsSync(local) && fs.existsSync(slimCache) && fileSha256(local) === fileSha256(slimCache)) {
@@ -93,6 +94,43 @@ const fetchEngineBuildType = (version) => {
   return 'full'
 }
 
+const readBundledEngineBuildType = () => {
+  try {
+    const p = loadExtraFilePath(path.join('bins', 'engine-build-type.txt'))
+    if (!fs.existsSync(p)) return 'full'
+    return `${fs.readFileSync(p, 'utf8')}`.trim() === 'slim' ? 'slim' : 'full'
+  } catch (e) {
+    return 'full'
+  }
+}
+
+/**
+ * 标记文件优先。legacy 没有 slim 产物，不能再用 slim hash 判断，否则会和全量 legacy 包撞上。
+ * fetchHash 由调用方传入，避免和 network 循环依赖。
+ */
+const resolveEngineBuildType = async (version, fetchHash) => {
+  const localType = fetchEngineBuildType(version)
+  if (localType === 'slim') return 'slim'
+  if (isLegacySystemMode()) return localType
+
+  const ver = getOssEngineVersion(version || '').replace(/^v/, '')
+  if (!ver || ver === 'dev' || ver.startsWith('dev/')) return localType
+
+  try {
+    const enginePath = getLatestYakLocalEnginePath()
+    if (!fs.existsSync(enginePath) || typeof fetchHash !== 'function') return localType
+    const onlineSlimHash = await fetchHash(`slim/${ver}`, { timeout: 3000 })
+    if (onlineSlimHash && fileSha256(enginePath) === onlineSlimHash) {
+      try {
+        writeEngineBuildType('slim')
+      } catch (e) {}
+      return 'slim'
+    }
+  } catch (e) {}
+
+  return localType
+}
+
 module.exports = {
   SLIM_ENGINE_VERSION_PREFIX,
   isSlimEngineVersion,
@@ -103,6 +141,8 @@ module.exports = {
   writeEngineBuildType,
   writeEngineBuildTypeByVersion,
   fetchEngineBuildType,
+  readBundledEngineBuildType,
+  resolveEngineBuildType,
   getLatestYakLocalEnginePath,
   fileSha256,
 }

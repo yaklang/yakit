@@ -371,6 +371,8 @@ module.exports = {
   downloadYakitEE,
   downloadIntranetYakit,
   getYakEngineDownloadUrl,
+  getEngineArtifactUrl,
+  isLegacyEnginePack,
   getAvailableOSSDomain,
   getDownloadUrl,
   getSuffix,

@@ -36,24 +36,12 @@ const {
   getLocalEngineCacheName,
   writeEngineBuildType,
   writeEngineBuildTypeByVersion,
-  fetchEngineBuildType,
-  getLatestYakLocalEnginePath,
-  fileSha256,
-  getOssEngineVersion,
+  readBundledEngineBuildType,
+  resolveEngineBuildType,
 } = require('./utils/engineVersion')
 const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = require('./utils/requestWithProgress')
 const { getCheckTextUrl, fetchSpecifiedYakVersionHash } = require('../handlers/utils/network')
 const { engineLogOutputFileAndUI } = require('../logFile')
-
-const readBundledEngineBuildType = () => {
-  try {
-    const p = loadExtraFilePath(path.join('bins', 'engine-build-type.txt'))
-    if (!fs.existsSync(p)) return 'full'
-    return `${fs.readFileSync(p, 'utf8')}`.trim() === 'slim' ? 'slim' : 'full'
-  } catch (e) {
-    return 'full'
-  }
-}
 
 const restoreEngine = (callback) =>
   getEngineSession().withStopped(async () => {
@@ -75,29 +63,6 @@ const restoreEngine = (callback) =>
     })
     callback()
   })
-
-/** 解析当前引擎构建类型：标记文件 -> 本地 slim 缓存比对 -> OSS slim hash 比对 */
-const resolveEngineBuildType = async (version) => {
-  const localType = fetchEngineBuildType(version)
-  if (localType === 'slim') return 'slim'
-
-  const ver = getOssEngineVersion(version || '').replace(/^v/, '')
-  if (!ver || ver === 'dev' || ver.startsWith('dev/')) return localType
-
-  try {
-    const enginePath = getLatestYakLocalEnginePath()
-    if (!fs.existsSync(enginePath)) return localType
-    const onlineSlimHash = await fetchSpecifiedYakVersionHash(`slim/${ver}`, { timeout: 3000 })
-    if (onlineSlimHash && fileSha256(enginePath) === onlineSlimHash) {
-      try {
-        writeEngineBuildType('slim')
-      } catch (e) {}
-      return 'slim'
-    }
-  } catch (e) {}
-
-  return localType
-}
 
 const getUserChromeDataDir = () => path.join(getYakitHome(), 'chrome-profile')
 const authMeta = []
@@ -764,7 +729,7 @@ module.exports = {
     })
 
     ipcMain.handle('fetch-yak-engine-build-type', async (e, version) => {
-      return await resolveEngineBuildType(version)
+      return await resolveEngineBuildType(version, fetchSpecifiedYakVersionHash)
     })
 
     // 获取yak code文件根目录路径
@@ -1326,7 +1291,7 @@ module.exports = {
     })
 
     ipcMain.handle(ipcEventPre + 'fetch-yak-engine-build-type', async (e, version) => {
-      return await resolveEngineBuildType(version)
+      return await resolveEngineBuildType(version, fetchSpecifiedYakVersionHash)
     })
 
     ipcMain.handle(ipcEventPre + 'fetch-bundled-engine-build-type', async () => {

@@ -12,7 +12,13 @@ import {
   grpcFetchLocalYakVersionHash,
   grpcFetchSpecifiedYakVersionHash,
 } from '../../grpc'
-import { FetchSoftwareVersion, getReleaseEditionName, isCommunityYakit, isEnpriTraceAgent } from '@/utils/envfile'
+import {
+  FetchSoftwareVersion,
+  getReleaseEditionName,
+  isCommunityYakit,
+  isEnpriTraceAgent,
+  toEngineSourceHashVersion,
+} from '@/utils/envfile'
 import { yakitNotify } from '@/utils/notification'
 import { SystemInfo } from '../../utils'
 import { getLocalValue } from '@/utils/kv'
@@ -340,13 +346,15 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       setLog([t('LocalEngine.checking_engine_source')])
       const checkVersion = version || currentYak.current
       try {
+        const buildType = await yakitEngine.fetchYakEngineBuildType(checkVersion).catch(() => 'full' as const)
+        const hashVersion = toEngineSourceHashVersion(checkVersion, buildType)
         const promise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Fetch engine online hash request timed out')), 2100),
         )
         const [res1, res2] = await Promise.all([
           // 远端
           Promise.race([
-            grpcFetchSpecifiedYakVersionHash({ version: checkVersion, config: { timeout: 2000 } }, true),
+            grpcFetchSpecifiedYakVersionHash({ version: hashVersion, config: { timeout: 2000 } }, true),
             promise,
           ]),
           // 本地

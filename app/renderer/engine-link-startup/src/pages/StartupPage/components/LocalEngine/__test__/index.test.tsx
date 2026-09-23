@@ -58,6 +58,10 @@ vi.mock('@/utils/envfile', () => ({
   getReleaseEditionName: vi.fn(() => 'Yakit'),
   isCommunityYakit: vi.fn(() => true),
   isEnpriTraceAgent: vi.fn(() => false),
+  toEngineSourceHashVersion: (version: string, buildType?: string) =>
+    buildType === 'slim' && version && !version.startsWith('slim/') && !version.startsWith('dev/')
+      ? `slim/${version.replace(/^v/, '')}`
+      : version,
 }))
 
 vi.mock('@/utils/notification', () => ({
@@ -112,6 +116,7 @@ describe('LocalEngine Component', () => {
     vi.clearAllMocks()
     vi.mocked(yakitEngine.fetchBundledEngineBuildType).mockReset()
     vi.mocked(yakitEngine.fetchYakEngineBuildType).mockReset()
+    vi.mocked(yakitEngine.fetchYakEngineBuildType).mockResolvedValue('full')
 
     // 通用 mock 默认值（确保大多数测试走无更新分支）
     // 注意：默认让 YakitCE-SoftwareBasics 返回 true，避免阻塞引擎连接
@@ -540,6 +545,18 @@ describe('LocalEngine Component', () => {
       await initEngine()
 
       await startLinkEngine()
+    })
+
+    it('内置轻量引擎按 slim 产物校验来源', async () => {
+      vi.mocked(yakitEngine.fetchYakEngineBuildType).mockResolvedValue('slim')
+      renderComponent()
+      await initEngine()
+      await startLinkEngine()
+
+      expect(grpcFetchSpecifiedYakVersionHash).toHaveBeenCalledWith(
+        { version: 'slim/1.4.7-beta1', config: { timeout: 2000 } },
+        true,
+      )
     })
 
     it('当本地 hash 不匹配线上 hash 时仍继续连接', async () => {

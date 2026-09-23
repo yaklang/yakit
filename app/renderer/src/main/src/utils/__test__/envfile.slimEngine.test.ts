@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { getOfficialYakEngineArtifactPrefix, toDefaultYakEngineDownloadVersion } from '@/utils/envfile'
+import {
+  getOfficialYakEngineArtifactPrefix,
+  toDefaultYakEngineDownloadVersion,
+  toEngineSourceHashVersion,
+} from '@/utils/envfile'
 
 describe('community Yakit default slim engine', () => {
   const prevEdition = process.env.YAKIT_EDITION
@@ -26,6 +30,15 @@ describe('community Yakit default slim engine', () => {
     expect(toDefaultYakEngineDownloadVersion('1.4.8-beta19')).toBe('1.4.8-beta19')
     process.env.YAKIT_EDITION = 'memfit'
     expect(toDefaultYakEngineDownloadVersion('1.4.8-beta19')).toBe('1.4.8-beta19')
+  })
+
+  it('checks slim engines against the slim artifact hash', () => {
+    expect(toEngineSourceHashVersion('1.4.8-beta19', 'slim')).toBe('slim/1.4.8-beta19')
+    expect(toEngineSourceHashVersion('v1.4.8-beta19', 'slim')).toBe('slim/1.4.8-beta19')
+    expect(toEngineSourceHashVersion('slim/1.4.8-beta19', 'slim')).toBe('slim/1.4.8-beta19')
+    expect(toEngineSourceHashVersion('dev/abc', 'slim')).toBe('dev/abc')
+    expect(toEngineSourceHashVersion('1.4.8-beta19', 'full')).toBe('1.4.8-beta19')
+    expect(toEngineSourceHashVersion('', 'slim')).toBe('')
   })
 
   it('uses yak-slim_ official artifact names only for community Yakit', () => {

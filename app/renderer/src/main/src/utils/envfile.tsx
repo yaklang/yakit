@@ -143,6 +143,14 @@ export const toDefaultYakEngineDownloadVersion = (version: string) => {
 /** 手动下载/复制官方引擎链接时使用的 OSS 文件名前缀 */
 export const getOfficialYakEngineArtifactPrefix = () => (isCommunityYakit() ? 'yak-slim_' : 'yak_')
 
+/** 来源校验要用和本地二进制一致的产物。轻量引擎对 slim/ 版本，不能拿全量包的 hash。 */
+export const toEngineSourceHashVersion = (version: string, buildType?: string) => {
+  if (!version || buildType !== 'slim') return version
+  if (version.startsWith(SLIM_ENGINE_VERSION_PREFIX) || version.startsWith('dev/')) return version
+  const plain = version.startsWith('v') ? version.slice(1) : version
+  return `${SLIM_ENGINE_VERSION_PREFIX}${plain}`
+}
+
 export const isYakitOrEnpriTrace = () => {
   return (
     GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit || GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
