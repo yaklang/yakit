@@ -484,7 +484,8 @@
     "enterModelType": "Please enter the model type",
     "filePath": "File Path",
     "enterFilePath": "Please enter the file path",
-    "modelDescription": "Model Description"
+    "modelDescription": "Model Description",
+    "standardFreeIsIntelligent": "memfit-standard-free is the primary model and cannot be set as an auxiliary model"
   },
   "AIChatListItem": {
     "thinking": "Thinking: ",
@@ -647,6 +648,10 @@
   },
   "AIAgentChatLayout": {
     "dockDisabledTip": "The screen is too small to dock this panel on the right"
+  },
+  "AIModelErrorPrompt": {
+    "modelErrorSuffix": "{{model}} usage error{{suffix}}",
+    "editHint": ", please click Edit in the upper right corner to fix it"
   },
   "AIContextToken": {
     "pressure": "Context Pressure",

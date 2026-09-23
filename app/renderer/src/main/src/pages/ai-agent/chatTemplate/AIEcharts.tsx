@@ -596,7 +596,7 @@ const getResponseSpeedOption = (
     series: [
       {
         ...seriesBase,
-        name: '主模型',
+        name: tOriginal('AiAgengt.intelligentModels'),
         xAxisIndex: 0,
         data: intelligent.data.map((val, index) => {
           if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
@@ -625,7 +625,7 @@ const getResponseSpeedOption = (
       },
       {
         ...seriesBase,
-        name: '辅助模型',
+        name: tOriginal('AiAgengt.lightweightModels'),
         xAxisIndex: 1,
         data: lightweight.data.map((val, index) => {
           if (lightweight.lightweightIndex === index && val >= lightweight.maxValueLightweight) {
@@ -756,7 +756,7 @@ const getResponseSpeedDetailsOption = (
     series: [
       {
         ...seriesBase,
-        name: '主模型',
+        name: tOriginal('AiAgengt.intelligentModels'),
         xAxisIndex: 0,
         data: intelligent.data.map((val, index) => {
           if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
@@ -783,7 +783,7 @@ const getResponseSpeedDetailsOption = (
       },
       {
         ...seriesBase,
-        name: '辅助模型',
+        name: tOriginal('AiAgengt.lightweightModels'),
         xAxisIndex: 1,
         data: lightweight.data.map((val, index) => {
           if (lightweight.lightweightIndex === index && val >= lightweight.maxValueLightweight) {

@@ -484,7 +484,8 @@
     "enterModelType": "请输入模型类型",
     "filePath": "文件地址",
     "enterFilePath": "请输入文件地址",
-    "modelDescription": "模型描述"
+    "modelDescription": "模型描述",
+    "standardFreeIsIntelligent": "memfit-standard-free 是主模型,不可设置为辅助模型"
   },
   "AIChatListItem": {
     "thinking": "思考：",
@@ -647,6 +648,10 @@
   },
   "AIAgentChatLayout": {
     "dockDisabledTip": "屏幕过小，不支持该模块停靠在右边"
+  },
+  "AIModelErrorPrompt": {
+    "modelErrorSuffix": "{{model}}使用错误{{suffix}}",
+    "editHint": ",请点击右上角编辑进行处理"
   },
   "AIContextToken": {
     "pressure": "上下文压力",
