@@ -101,7 +101,12 @@ export const AIChatMentionTabs: React.FC<AIChatMentionTabsProps> = React.memo((p
             <ChevronDoubleLeftOutlined color="currentColor" />
           </button>
         ) : null}
-        <div className={styles['mention-tabs']} ref={tabsRef} onScroll={onScrollTabs}>
+        <div
+          className={styles['mention-tabs']}
+          ref={tabsRef}
+          onScroll={onScrollTabs}
+          data-testid="ai-chat-mention-tabs-scroller"
+        >
           {tabs.map((tab) => {
             const isActive = tab.value === activeKey
             // 「全部」聚合不准（各分区分页/过滤口径不一致），不展示角标

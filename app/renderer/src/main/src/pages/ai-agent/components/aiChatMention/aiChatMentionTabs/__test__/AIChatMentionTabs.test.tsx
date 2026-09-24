@@ -81,12 +81,11 @@ describe('AIChatMentionTabs', () => {
   })
 
   it('溢出时显示右箭头，点击会 scrollBy', () => {
-    const { container, rerender } = render(
+    const { rerender } = render(
       <AIChatMentionTabs tabs={tabs} activeKey={AIMentionTabsEnum.All} tabCounts={{}} onChange={vi.fn()} />,
     )
-    const tabsEl = container.querySelector('[class*="mention-tabs"]:not([class*="wrap"]):not([class*="arrow"])')
-    expect(tabsEl).toBeTruthy()
-    mockTabsOverflow(tabsEl as HTMLElement, { scrollWidth: 500, clientWidth: 120, scrollLeft: 0 })
+    const tabsEl = screen.getByTestId('ai-chat-mention-tabs-scroller')
+    mockTabsOverflow(tabsEl, { scrollWidth: 500, clientWidth: 120, scrollLeft: 0 })
     // 触发 updateTabScroll（tabs length 变化）
     rerender(
       <AIChatMentionTabs
@@ -99,15 +98,15 @@ describe('AIChatMentionTabs', () => {
     const right = screen.getByLabelText('scroll-tabs-right')
     expect(screen.queryByLabelText('scroll-tabs-left')).not.toBeInTheDocument()
     fireEvent.click(right)
-    expect((tabsEl as HTMLElement).scrollBy).toHaveBeenCalledWith({ left: 140 })
+    expect(tabsEl.scrollBy).toHaveBeenCalledWith({ left: 140 })
   })
 
   it('已向右滚动时显示左箭头', () => {
-    const { container, rerender } = render(
+    const { rerender } = render(
       <AIChatMentionTabs tabs={tabs} activeKey={AIMentionTabsEnum.All} tabCounts={{}} onChange={vi.fn()} />,
     )
-    const tabsEl = container.querySelector('[class*="mention-tabs"]:not([class*="wrap"]):not([class*="arrow"])')!
-    mockTabsOverflow(tabsEl as HTMLElement, { scrollWidth: 500, clientWidth: 120, scrollLeft: 80 })
+    const tabsEl = screen.getByTestId('ai-chat-mention-tabs-scroller')
+    mockTabsOverflow(tabsEl, { scrollWidth: 500, clientWidth: 120, scrollLeft: 80 })
     fireEvent.scroll(tabsEl)
     rerender(
       <AIChatMentionTabs tabs={[...tabs]} activeKey={AIMentionTabsEnum.Forge_Name} tabCounts={{}} onChange={vi.fn()} />,
