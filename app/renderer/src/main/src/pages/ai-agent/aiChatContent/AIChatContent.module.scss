@@ -342,21 +342,6 @@
   }
 }
 
-.info-token {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  font-size: 12px;
-  font-weight: 400;
-  .token {
-    color: var(--Colors-Use-Neutral-Text-4-Help-text);
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 16px;
-  }
-}
-
 .echarts-wrapper {
   @extend %display-flex-center;
   gap: 4px;
@@ -394,9 +379,4 @@
   .lightweight-height {
     color: var(--Colors-Use-Error-Primary);
   }
-}
-.divider-style {
-  width: 1px;
-  height: 12px;
-  border-left: 1px solid var(--Colors-Use-Neutral-Border);
 }

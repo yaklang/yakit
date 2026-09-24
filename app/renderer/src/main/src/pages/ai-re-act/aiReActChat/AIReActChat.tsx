@@ -35,10 +35,15 @@ import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
 import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 import { AIRightPanel } from '../aiRightPanel/AIRightPanel'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  ExclamationCircleOutlined,
+  ExclamationOutlined,
+  HourglassOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isCommunityEdition } from '@/utils/envfile'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -348,8 +353,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 <div className={styles['footer-body']}>
                   <div className={styles['footer-inputs']}>
                     <AITaskQuery />
-                    <AINotifyMessage />
                     <div className={classNames(styles['footer-inputs-file-list'])}>
+                      <AINotifyMessage />
                       <AIReactChatTextarea
                         ref={aiChatTextareaRef}
                         handleSubmit={handleSubmit}
@@ -377,9 +382,20 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
   const notifyMessage = useStore(store, (state) => state.notifyMessage)
-  const { t } = useI18nNamespaces(['layout'])
+  const { t } = useI18nNamespaces(['layout', 'yakitUi'])
 
   const { nodeLabel } = useAINodeLabel(notifyMessage?.label)
+
+  const notifyIcon = useCreation(() => {
+    switch (notifyMessage?.type) {
+      case AINotifyType.notify429TypeRateLimited:
+        return <HourglassOutlined className={classNames(styles['notify-icon'], styles['notify-icon-yellow'])} />
+      case AINotifyType.notify429TypeQuotaExceeded:
+        return <ExclamationOutlined className={classNames(styles['notify-icon'], styles['notify-icon-error'])} />
+      default:
+        return <ExclamationCircleOutlined className={classNames(styles['notify-icon'], styles['notify-icon-yellow'])} />
+    }
+  }, [notifyMessage?.type])
 
   const isQuotaExceeded = notifyMessage?.type === AINotifyType.notify429TypeQuotaExceeded && isCommunityEdition() // yakit/IRify/MEMFIT 得社区版才有这个充值按钮
 
@@ -388,7 +404,10 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
   }
   return (execute || isQuotaExceeded) && notifyMessage?.content ? (
     <div className={styles['notify-message']}>
-      <div>{nodeLabel}</div>
+      <div className={styles['notify-label']}>
+        {notifyIcon}
+        {nodeLabel}
+      </div>
       <div className={styles['content-wrapper']}>
         <div className={styles['marquee-inner']}>
           <div className={styles['content']}>{notifyMessage?.content}</div>
@@ -399,10 +418,10 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
       </div>
       {isQuotaExceeded && (
         <div className={styles['notify-actions']}>
-          <YakitButton size="small" type="primary" onClick={() => emiter.emit('onOpenRecharge', '')}>
+          <YakitButton type="primary" onClick={() => emiter.emit('onOpenRecharge', '')}>
             {t('CeUserMenu.recharge')}
           </YakitButton>
-          <YakitButton size="small" type="text" icon={<XOutlined />} onClick={onClose} />
+          <YakitButton type="text" aria-label={t('YakitButton.close')} icon={<XOutlined />} onClick={onClose} />
         </div>
       )}
     </div>

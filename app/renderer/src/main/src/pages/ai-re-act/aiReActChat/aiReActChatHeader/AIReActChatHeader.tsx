@@ -155,9 +155,6 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
   return rightIcon ? (
     <>
       {currentChatStatusQuestionID && rightIcon.taskDetails && <TaskDetailsPopover />}
-      {/* {rightIcon.dataDetails && (
-        <AIContextToken iconOnly buttonProps={rightIcon.dataDetails === true ? undefined : rightIcon.dataDetails} />
-      )} */}
       {rightIcon.history && (
         <YakitPopover
           trigger={['click']}

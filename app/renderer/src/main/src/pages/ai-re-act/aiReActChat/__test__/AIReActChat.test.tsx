@@ -5,8 +5,21 @@ import type { AIReActChatContentsRef } from '../../aiReActChatContents/AIReActCh
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import enLayout from '@/locales/en/layout.json'
 import zhLayout from '@/locales/zh/layout.json'
+import enYakitUi from '@/locales/en/yakitUi.json'
+import zhYakitUi from '@/locales/zh/yakitUi.json'
+import type * as OutlineIcons from '@yakit-libs/yakit-ui-icons/outline'
+import styles from '../AIReActChat.module.scss'
 
 const { scrollToItemIndex, locale } = vi.hoisted(() => ({ scrollToItemIndex: vi.fn(), locale: { language: 'zh' } }))
+
+// CI 的根配置将样式模块替换为空对象；为通知图标用例验证的类名提供稳定映射。
+vi.mock('../AIReActChat.module.scss', () => ({
+  default: {
+    'notify-icon': 'notify-icon',
+    'notify-icon-error': 'notify-icon-error',
+    'notify-icon-yellow': 'notify-icon-yellow',
+  },
+}))
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createChatStore } from '../../hooks/chatStore'
@@ -84,9 +97,22 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   ),
 }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
-  useI18nNamespaces: () => ({
-    t: (key: string) => get(locale.language === 'en' ? enLayout : zhLayout, key, key),
+  useI18nNamespaces: (namespaces: string[]) => ({
+    t: (key: string) => {
+      const resources =
+        locale.language === 'en' ? { layout: enLayout, yakitUi: enYakitUi } : { layout: zhLayout, yakitUi: zhYakitUi }
+      return namespaces.map((namespace) => get(resources, `${namespace}.${key}`)).find(Boolean) ?? key
+    },
   }),
+}))
+
+vi.mock('@yakit-libs/yakit-ui-icons/outline', async (importOriginal) => ({
+  ...(await importOriginal<typeof OutlineIcons>()),
+  HourglassOutlined: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="hourglass-icon" />,
+  ExclamationOutlined: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="exclamation-icon" />,
+  ExclamationCircleOutlined: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} data-testid="exclamation-circle-icon" />
+  ),
 }))
 
 vi.mock('../../aiReActChatContents/AIReActChatContents', () => ({
@@ -159,7 +185,7 @@ describe('AIReActChat', () => {
     render(<AIReActChat {...baseProps} />)
 
     const rechargeBtn = screen.getByRole('button', { name: '充值' })
-    const closeBtn = screen.getAllByRole('button').find((btn) => btn.getAttribute('data-type') === 'text')!
+    const closeBtn = screen.getByRole('button', { name: '关闭' })
     expect(rechargeBtn).toHaveAttribute('data-type', 'primary')
     expect(closeBtn).toHaveAttribute('data-type', 'text')
     expect(closeBtn).toHaveTextContent(/^$/)
@@ -186,6 +212,32 @@ describe('AIReActChat', () => {
     expect(rechargeBtn).toHaveAttribute('data-type', 'primary')
     fireEvent.click(rechargeBtn)
     expect(emiter.emit).toHaveBeenCalledWith('onOpenRecharge', '')
+  })
+
+  it('英文界面可通过关闭按钮的可访问名称关闭通知', () => {
+    locale.language = 'en'
+    showNotify(AINotifyType.notify429TypeQuotaExceeded)
+    render(<AIReActChat {...baseProps} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+    expect(chatStore.getState().notifyMessage).toBeNull()
+    expect(screen.queryByText('余额不足')).not.toBeInTheDocument()
+  })
+
+  it.each([
+    [AINotifyType.notify429TypeRateLimited, 'hourglass-icon', 'notify-icon-yellow'],
+    [AINotifyType.notify429TypeQuotaExceeded, 'exclamation-icon', 'notify-icon-error'],
+    ['unknown' as AINotifyType, 'exclamation-circle-icon', 'notify-icon-yellow'],
+  ] as const)('通知类型 %s 显示对应图标和颜色', (type, icon, color) => {
+    act(() => chatStore.getState().updateState({ execute: true }))
+    showNotify(type)
+    render(<AIReActChat {...baseProps} />)
+
+    expect(screen.getByTestId(icon)).toHaveClass(styles['notify-icon'], styles[color])
+    for (const otherIcon of ['hourglass-icon', 'exclamation-icon', 'exclamation-circle-icon']) {
+      if (otherIcon !== icon) expect(screen.queryByTestId(otherIcon)).not.toBeInTheDocument()
+    }
   })
 
   it.each([true, false])('非社区版 execute=%s 时不提供充值操作，配额提示仅在执行时显示', (execute) => {
