@@ -328,9 +328,7 @@ export const AIMilkdownModeSlash: React.FC = () => {
         return
       }
       if (payload.kind === 'goalDuration') {
-        setDraftDuration(
-          payload.durationKey && isGoalDurationPresetKey(payload.durationKey) ? payload.durationKey : '1h',
-        )
+        setDraftDuration(payload.durationKey || '1h')
         openStep('goalDuration')
         return
       }
