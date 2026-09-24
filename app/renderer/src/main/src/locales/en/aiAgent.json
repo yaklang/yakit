@@ -404,6 +404,8 @@
     "bridgeUnavailable": "Browser connection service is not running",
     "lastSeen": "Last seen: {{time}}",
     "lastStarted": "Last started: {{time}}",
+    "statusStopped": "Stopped",
+    "statusFailed": "Failed",
     "restore": "Restore",
     "restoreStarted": "Restoring “{{name}}”",
     "restoreFailed": "Failed to restore browser instance: {{error}}",

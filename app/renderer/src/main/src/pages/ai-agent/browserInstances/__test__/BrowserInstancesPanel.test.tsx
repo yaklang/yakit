@@ -315,11 +315,29 @@ describe('BrowserInstancesPanel interactions', () => {
     render(<BrowserInstancesPanel />)
 
     fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.others/ }))
+    expect(screen.getByText('BrowserInstances.statusStopped')).toBeInTheDocument()
     fireEvent.click(screen.getByLabelText('BrowserInstances.restore'))
     await waitFor(() => {
       expect(mocks.restoreBrowserHistory).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001')
       expect(mocks.success).toHaveBeenCalledWith(expect.stringContaining('restoreStarted'))
     })
+  })
+
+  it('shows failed status on failed history rows', () => {
+    mocks.useBrowserInstances.mockReturnValue({
+      instances: [],
+      history: [historyInstance({ status: 'failed', pageTitle: 'Broken Browser' })],
+      pending: [],
+      loading: false,
+      error: '',
+      historyError: '',
+      autoApprovalErrors: {},
+    })
+    render(<BrowserInstancesPanel />)
+
+    fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.others/ }))
+    expect(screen.getByText('Broken Browser')).toBeInTheDocument()
+    expect(screen.getByText('BrowserInstances.statusFailed')).toBeInTheDocument()
   })
 
   it('keeps history visible but disables restore when YTray exits', () => {

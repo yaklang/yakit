@@ -465,6 +465,11 @@
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
 }
 
+.status-failed {
+  background: var(--Colors-Use-Error-Bg);
+  color: var(--Colors-Use-Error-Primary);
+}
+
 .browser-card-list {
   display: flex;
   flex-direction: column;

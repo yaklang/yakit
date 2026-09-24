@@ -404,6 +404,8 @@
     "bridgeUnavailable": "浏览器连接服务未运行",
     "lastSeen": "最后在线：{{time}}",
     "lastStarted": "上次启动：{{time}}",
+    "statusStopped": "已停止",
+    "statusFailed": "失败",
     "restore": "恢复",
     "restoreStarted": "正在恢复“{{name}}”",
     "restoreFailed": "恢复浏览器实例失败: {{error}}",

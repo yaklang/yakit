@@ -421,6 +421,14 @@ const BrowserHistoryRow: React.FC<{ instance: YTrayBrowserHistoryInstance; disab
           <span className={styles['instance-title']} title={title}>
             {title}
           </span>
+          <span
+            className={classNames(styles['status'], {
+              [styles['status-offline']]: instance.status === 'stopped',
+              [styles['status-failed']]: instance.status === 'failed',
+            })}
+          >
+            {t(instance.status === 'failed' ? 'BrowserInstances.statusFailed' : 'BrowserInstances.statusStopped')}
+          </span>
           <div className={styles['offline-actions']}>
             <YakitButton
               type="outline2"

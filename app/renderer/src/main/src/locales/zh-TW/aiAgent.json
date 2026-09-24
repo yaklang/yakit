@@ -404,6 +404,8 @@
     "bridgeUnavailable": "瀏覽器連線服務未執行",
     "lastSeen": "最後線上：{{time}}",
     "lastStarted": "上次啟動：{{time}}",
+    "statusStopped": "已停止",
+    "statusFailed": "失敗",
     "restore": "恢復",
     "restoreStarted": "正在恢復「{{name}}」",
     "restoreFailed": "恢復瀏覽器例項失敗: {{error}}",
