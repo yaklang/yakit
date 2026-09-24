@@ -39,10 +39,17 @@ const {
   writeEngineBuildTypeByVersion,
   readBundledEngineBuildType,
   resolveEngineBuildType,
+  resolveLocalDownloadedEngineVersion,
 } = require('./utils/engineVersion')
 const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = require('./utils/requestWithProgress')
 const { getCheckTextUrl, fetchSpecifiedYakVersionHash, fetchExactYakVersionHash } = require('../handlers/utils/network')
 const { engineLogOutputFileAndUI } = require('../logFile')
+
+const resolveEngineVersionForInstall = (version) => {
+  const local = resolveLocalDownloadedEngineVersion(version)
+  if (local) return Promise.resolve(local)
+  return resolveEngineDownloadVersion(version)
+}
 
 const restoreEngine = (callback) =>
   getEngineSession().withStopped(async () => {
@@ -275,7 +282,7 @@ const diagnosingYakVersion = () => {
 const asyncYakEngineVersionExistsAndCorrectness = (version) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const resolved = await resolveEngineDownloadVersion(version, { timeout: 2000 })
+      const resolved = await resolveEngineDownloadVersion(version)
       const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
       const url = await getCheckTextUrl(resolved)
       if (url === '') {
@@ -474,7 +481,7 @@ module.exports = {
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
         try {
-          const resolved = await resolveEngineDownloadVersion(version, { timeout: 2000 })
+          const resolved = await resolveEngineDownloadVersion(version)
           const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
           try {
             fs.unlinkSync(dest)
@@ -489,7 +496,7 @@ module.exports = {
             reject,
           )
         } catch (e) {
-          reject(e)
+          reject(e && e.message ? e.message : e)
         }
       })
     }
@@ -682,7 +689,7 @@ module.exports = {
     })
 
     const installYakEngine = (version) => {
-      return resolveEngineDownloadVersion(version, { timeout: 2000 }).then(
+      return resolveEngineVersionForInstall(version).then(
         (resolved) =>
           new Promise((resolve, reject) => {
             let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
@@ -1185,7 +1192,7 @@ module.exports = {
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
         try {
-          const resolved = await resolveEngineDownloadVersion(version, { timeout: 2000 })
+          const resolved = await resolveEngineDownloadVersion(version)
           const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
           try {
             fs.unlinkSync(dest)
@@ -1200,7 +1207,7 @@ module.exports = {
             reject,
           )
         } catch (e) {
-          reject(e)
+          reject(e && e.message ? e.message : e)
         }
       })
     }
@@ -1252,7 +1259,7 @@ module.exports = {
     })
 
     const installYakEngine = (version) => {
-      return resolveEngineDownloadVersion(version, { timeout: 2000 }).then(
+      return resolveEngineVersionForInstall(version).then(
         (resolved) =>
           new Promise((resolve, reject) => {
             let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))

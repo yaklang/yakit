@@ -8,6 +8,7 @@ const {
   getOssEngineVersion,
   resolveEngineArtifactVersion: resolveEngineArtifactVersionWithLegacy,
   getLocalEngineCacheName: getLocalEngineCacheNameWithLegacy,
+  getFullEngineArtifactVersion,
 } = require('./engineArtifact')
 
 const ENGINE_BUILD_TYPE_FILE = 'engine-build-type.txt'
@@ -27,6 +28,19 @@ const resolveEngineArtifactVersion = (version) => resolveEngineArtifactVersionWi
 
 /** 本地缓存引擎文件名：yak-{version} / yak-dev-xxx / yak-slim-{version} */
 const getLocalEngineCacheName = (version) => getLocalEngineCacheNameWithLegacy(version, isLegacySystemMode())
+
+/** 安装时优先用已经下好的文件，避免再发一次校验请求。slim 缓存没有再看同版本全量缓存。 */
+const resolveLocalDownloadedEngineVersion = (version) => {
+  const dir = getYaklangEngineDir()
+  const exists = (ver) => {
+    const name = getLocalEngineCacheName(ver)
+    return !!(name && fs.existsSync(path.join(dir, name)))
+  }
+  if (exists(version)) return version
+  const full = getFullEngineArtifactVersion(version)
+  if (full && exists(full)) return full
+  return ''
+}
 
 const getEngineBuildTypeFilePath = () => path.join(getYaklangEngineDir(), ENGINE_BUILD_TYPE_FILE)
 
@@ -137,6 +151,7 @@ module.exports = {
   isLegacySystemMode,
   resolveEngineArtifactVersion,
   getLocalEngineCacheName,
+  resolveLocalDownloadedEngineVersion,
   writeEngineBuildType,
   writeEngineBuildTypeByVersion,
   fetchEngineBuildType,
