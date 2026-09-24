@@ -202,7 +202,7 @@
     "loadingHistory": "獲取歷史數據中...",
     "waitingReply": "等待AI回覆...",
     "questionExecuting": "問題執行中...",
-    "executingSessionsLimit": "進行中會話數已達上限，最多同時 ",
+    "executingSessionsLimit": "進行中會話數已達上限，最多同時{{count}}個",
     "sessionClosing": "會話正在關閉...",
     "sessionClosed": "會話已關閉"
   },

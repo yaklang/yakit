@@ -106,7 +106,19 @@ describe('ChatMultiSessionController concurrency / working / close', () => {
     expect(ctrl.getWorkingSessionCount()).toBe(2)
 
     expect(ctrl.canStartExecutingSession(undefined, true)).toBe(false)
-    expect(yakitNotify).toHaveBeenCalledWith('warning', expect.stringContaining('2'))
+    // 未登录：可点登录的 toast，文案在 message 节点里
+    expect(yakitNotify).toHaveBeenCalledWith(
+      'warning',
+      expect.objectContaining({
+        message: expect.anything(),
+      }),
+    )
+    const [, payload] = vi.mocked(yakitNotify).mock.calls[0]
+    const msg =
+      typeof payload === 'object' && payload && 'message' in payload
+        ? (payload as { message: unknown }).message
+        : payload
+    expect(String((msg as { props?: { children?: unknown } })?.props?.children ?? msg)).toContain('2')
 
     // 本会话已在执行中：不受上限拦截
     expect(ctrl.canStartExecutingSession('s1', true)).toBe(true)

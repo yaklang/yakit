@@ -24,7 +24,9 @@ import { DefaultAgentChatStatus, DefaultMemoryList, DefaultTaskPlanEndGate } fro
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
+import { createElement } from 'react'
 import { yakitNotify } from '@/utils/notification'
+import emiter from '@/utils/eventBus/eventBus'
 import {
   type AIChatQSData,
   AIChatQSDataTypeEnum,
@@ -405,7 +407,24 @@ export class ChatMultiSessionController {
     if (sessionId && this.isSessionWorking(sessionId)) return true
     const ok = this.getWorkingSessionCount() < this.getMaxExecutingSessions()
     if (!ok && notify) {
-      yakitNotify('warning', `${tAgent('AIChatLoading.executingSessionsLimit')}${this.getMaxExecutingSessions()}`)
+      const msg = tAgent('AIChatLoading.executingSessionsLimit', { count: this.getMaxExecutingSessions() })
+      const openLogin = !useStore.getState().userInfo.isLogin
+      yakitNotify(
+        'warning',
+        openLogin
+          ? {
+              // object 会被当成 NotificationArgsProps，可点节点放进 message
+              message: createElement(
+                'div',
+                {
+                  style: { whiteSpace: 'pre-wrap', cursor: 'pointer' },
+                  onClick: () => emiter.emit('onOpenLogin', ''),
+                },
+                msg,
+              ),
+            }
+          : msg,
+      )
     }
     return ok
   }
@@ -459,29 +478,6 @@ export class ChatMultiSessionController {
   private storePool = new Map<string, ReturnType<typeof createChatStore>>()
   private rawDataPool = new Map<string, AIAgentChatData>()
   private metaPool = new Map<string, AIAgentChatMetaData>()
-  /** 会话 store 被换掉时通知已打开的页面重新订阅，避免还盯着已卸掉的旧 store */
-  private storeEpoch = 0
-  private storeEpochListeners = new Set<() => void>()
-
-  public subscribeStoreEpoch(listener: () => void) {
-    this.storeEpochListeners.add(listener)
-    return () => {
-      this.storeEpochListeners.delete(listener)
-    }
-  }
-
-  public getStoreEpoch() {
-    return this.storeEpoch
-  }
-
-  private bumpStoreEpoch() {
-    this.storeEpoch += 1
-    const listeners = [...this.storeEpochListeners]
-    queueMicrotask(() => {
-      listeners.forEach((listener) => listener())
-    })
-  }
-
   /** 获取对应会话的所有数据集 */
   public ensureSession(sessionId: string) {
     if (!this.storePool.has(sessionId)) {
@@ -496,7 +492,6 @@ export class ChatMultiSessionController {
       const meta = genAIAgentChatMetaData()
       meta.lifecycle.writable = false
       this.metaPool.set(sessionId, meta)
-      this.bumpStoreEpoch()
     }
     return {
       request: this.requestPool.get(sessionId)!,
@@ -1597,7 +1592,6 @@ export class ChatMultiSessionController {
     this.storePool.delete(sessionId)
     this.rawDataPool.delete(sessionId)
     this.metaPool.delete(sessionId)
-    this.bumpStoreEpoch()
     const owner = this.sessionOwnerMap.get(sessionId)
     if (owner) {
       this.removeFromPageSessionMap(owner, sessionId)

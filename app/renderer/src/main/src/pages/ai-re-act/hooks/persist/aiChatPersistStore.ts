@@ -36,14 +36,75 @@ export class AIChatPersistStore {
    */
   async open(): Promise<IDBDatabase> {
     if (!this.dbPromise) {
-      this.dbPromise = this.openDatabase().catch((error) => {
-        this.dbPromise = null
-        throw error
-      })
+      this.dbPromise = this.openDatabase()
+        .then((db) => {
+          this.bindConnection(db)
+          return db
+        })
+        .catch((error) => {
+          this.dbPromise = null
+          throw error
+        })
     }
     const db = await this.dbPromise
     await this.ensureStartupClear(db)
     return db
+  }
+
+  /** 连接被浏览器关掉时丢掉缓存，下次 open 重建 */
+  private bindConnection(db: IDBDatabase) {
+    db.onversionchange = () => {
+      try {
+        db.close()
+      } catch {
+        // ignore
+      }
+      this.invalidateCachedConnection(db)
+    }
+    db.onclose = () => {
+      this.invalidateCachedConnection(db)
+    }
+  }
+
+  private invalidateCachedConnection(db?: IDBDatabase) {
+    void this.dbPromise?.then(
+      (cached) => {
+        if (!db || cached === db) this.dbPromise = null
+      },
+      () => {
+        this.dbPromise = null
+      },
+    )
+  }
+
+  private isConnectionClosingError(error: unknown): boolean {
+    const name = error instanceof DOMException ? error.name : ''
+    const msg = error instanceof Error ? error.message : String(error ?? '')
+    return name === 'InvalidStateError' || /connection is closing|InvalidStateError/i.test(msg)
+  }
+
+  /** 读写统一：碰到 closing 清缓存并 reopen 重试一次 */
+  private async withDatabase<T>(run: (db: IDBDatabase) => Promise<T>): Promise<T> {
+    let lastError: unknown
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const db = await this.open()
+      try {
+        return await run(db)
+      } catch (error) {
+        lastError = error
+        if (attempt === 0 && this.isConnectionClosingError(error)) {
+          this.dbPromise = null
+          try {
+            db.close()
+          } catch {
+            // ignore
+          }
+          continue
+        }
+        throw error
+      }
+    }
+    throw lastError
   }
 
   private openDatabase(): Promise<IDBDatabase> {
@@ -103,12 +164,17 @@ export class AIChatPersistStore {
     })
   }
 
-  /** 关闭数据库连接并清空缓存的 Promise */
+  /** 关闭数据库连接并清空缓存（测试/显式释放；页面卸载不再调用） */
   async close(): Promise<void> {
     if (!this.dbPromise) return
-    const db = await this.dbPromise
-    db.close()
+    const pending = this.dbPromise
     this.dbPromise = null
+    try {
+      const db = await pending
+      db.close()
+    } catch {
+      // ignore
+    }
   }
 
   /** 写入/覆盖会话渲染快照（content + grpcOffset 同写） */
@@ -118,15 +184,17 @@ export class AIChatPersistStore {
     content: SessionRenderContent,
     grpcOffset: number,
   ): Promise<void> {
-    const db = await this.open()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(SESSION_RENDER_STORE, 'readwrite')
-      const store = tx.objectStore(SESSION_RENDER_STORE)
-      const record: SessionRenderRecord = { sessionId, source, content, grpcOffset }
-      store.put(record)
-      tx.oncomplete = () => resolve()
-      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
-    })
+    return this.withDatabase(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction(SESSION_RENDER_STORE, 'readwrite')
+          const store = tx.objectStore(SESSION_RENDER_STORE)
+          const record: SessionRenderRecord = { sessionId, source, content, grpcOffset }
+          store.put(record)
+          tx.oncomplete = () => resolve()
+          tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
+        }),
+    )
   }
 
   /** 读取会话渲染整行（含 grpcOffset） */
@@ -134,16 +202,18 @@ export class AIChatPersistStore {
     sessionId: string,
     source: DeleteSessionsAISourceType,
   ): Promise<SessionRenderRecord | undefined> {
-    const db = await this.open()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(SESSION_RENDER_STORE, 'readonly')
-      const store = tx.objectStore(SESSION_RENDER_STORE)
-      const req = store.get([sessionId, source])
-      req.onsuccess = () => {
-        resolve(req.result as SessionRenderRecord | undefined)
-      }
-      req.onerror = () => reject(req.error)
-    })
+    return this.withDatabase(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction(SESSION_RENDER_STORE, 'readonly')
+          const store = tx.objectStore(SESSION_RENDER_STORE)
+          const req = store.get([sessionId, source])
+          req.onsuccess = () => {
+            resolve(req.result as SessionRenderRecord | undefined)
+          }
+          req.onerror = () => reject(req.error)
+        }),
+    )
   }
 
   /** 写入/覆盖单条参考资料（token 由调用方在收数时 uuidv4 生成；写入时记录 createdAt） */
@@ -152,20 +222,22 @@ export class AIChatPersistStore {
     token: string,
     content: AIAgentGrpcApi.ReferenceMaterialPayload,
   ): Promise<void> {
-    const db = await this.open()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(SESSION_REFERENCE_STORE, 'readwrite')
-      const store = tx.objectStore(SESSION_REFERENCE_STORE)
-      const record: SessionReferenceRecord = {
-        sessionId,
-        token,
-        createdAt: Date.now(),
-        content,
-      }
-      store.put(record)
-      tx.oncomplete = () => resolve()
-      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
-    })
+    return this.withDatabase(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction(SESSION_REFERENCE_STORE, 'readwrite')
+          const store = tx.objectStore(SESSION_REFERENCE_STORE)
+          const record: SessionReferenceRecord = {
+            sessionId,
+            token,
+            createdAt: Date.now(),
+            content,
+          }
+          store.put(record)
+          tx.oncomplete = () => resolve()
+          tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
+        }),
+    )
   }
 
   /**
@@ -174,66 +246,72 @@ export class AIChatPersistStore {
    */
   async getSessionReferences(sessionId: string, tokens: string[]): Promise<SessionReferenceItem[]> {
     if (!tokens.length) return []
-    const db = await this.open()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(SESSION_REFERENCE_STORE, 'readonly')
-      const store = tx.objectStore(SESSION_REFERENCE_STORE)
-      const result: SessionReferenceItem[] = []
-      let pending = tokens.length
-      let failed = false
+    return this.withDatabase(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction(SESSION_REFERENCE_STORE, 'readonly')
+          const store = tx.objectStore(SESSION_REFERENCE_STORE)
+          const result: SessionReferenceItem[] = []
+          let pending = tokens.length
+          let failed = false
 
-      tokens.forEach((token) => {
-        const req = store.get([sessionId, token])
-        req.onsuccess = () => {
-          if (failed) return
-          const row = req.result as SessionReferenceRecord | undefined
-          if (row) {
-            result.push({
-              token: row.token,
-              createdAt: row.createdAt ?? 0,
-              content: row.content,
-            })
-          }
-          pending -= 1
-          if (pending === 0) {
-            result.sort((a, b) => a.createdAt - b.createdAt)
-            resolve(result)
-          }
-        }
-        req.onerror = () => {
-          if (failed) return
-          failed = true
-          reject(req.error)
-        }
-      })
-    })
+          tokens.forEach((token) => {
+            const req = store.get([sessionId, token])
+            req.onsuccess = () => {
+              if (failed) return
+              const row = req.result as SessionReferenceRecord | undefined
+              if (row) {
+                result.push({
+                  token: row.token,
+                  createdAt: row.createdAt ?? 0,
+                  content: row.content,
+                })
+              }
+              pending -= 1
+              if (pending === 0) {
+                result.sort((a, b) => a.createdAt - b.createdAt)
+                resolve(result)
+              }
+            }
+            req.onerror = () => {
+              if (failed) return
+              failed = true
+              reject(req.error)
+            }
+          })
+        }),
+    )
   }
 
   /** 读取单条会话正文 */
   async getSessionContent(sessionId: string, token: string): Promise<AIChatQSData | undefined> {
-    const db = await this.open()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(SESSION_CONTENT_STORE, 'readonly')
-      const store = tx.objectStore(SESSION_CONTENT_STORE)
-      const req = store.get([sessionId, token])
-      req.onsuccess = () => {
-        const row = req.result as SessionContentRecord | undefined
-        resolve(row?.content)
-      }
-      req.onerror = () => reject(req.error)
-    })
+    return this.withDatabase(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction(SESSION_CONTENT_STORE, 'readonly')
+          const store = tx.objectStore(SESSION_CONTENT_STORE)
+          const req = store.get([sessionId, token])
+          req.onsuccess = () => {
+            const row = req.result as SessionContentRecord | undefined
+            resolve(row?.content)
+          }
+          req.onerror = () => reject(req.error)
+        }),
+    )
   }
 
   /** 删除单条会话正文（如 QUESTION 前端 uuid 被后端 id 替换后清孤儿行） */
   async deleteSessionContent(sessionId: string, token: string): Promise<void> {
-    const db = await this.open()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(SESSION_CONTENT_STORE, 'readwrite')
-      const store = tx.objectStore(SESSION_CONTENT_STORE)
-      store.delete([sessionId, token])
-      tx.oncomplete = () => resolve()
-      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
-    })
+    return this.withDatabase(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction(SESSION_CONTENT_STORE, 'readwrite')
+          const store = tx.objectStore(SESSION_CONTENT_STORE)
+          store.delete([sessionId, token])
+          tx.oncomplete = () => resolve()
+          tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
+        }),
+    )
   }
 
   /**
@@ -242,34 +320,36 @@ export class AIChatPersistStore {
    */
   async getSessionContents(sessionId: string, tokens: string[]): Promise<SessionContentItem[]> {
     if (!tokens.length) return []
-    const db = await this.open()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(SESSION_CONTENT_STORE, 'readonly')
-      const store = tx.objectStore(SESSION_CONTENT_STORE)
-      const result: Array<SessionContentItem | undefined> = new Array(tokens.length)
-      let pending = tokens.length
-      let failed = false
+    return this.withDatabase(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction(SESSION_CONTENT_STORE, 'readonly')
+          const store = tx.objectStore(SESSION_CONTENT_STORE)
+          const result: Array<SessionContentItem | undefined> = new Array(tokens.length)
+          let pending = tokens.length
+          let failed = false
 
-      tokens.forEach((token, index) => {
-        const req = store.get([sessionId, token])
-        req.onsuccess = () => {
-          if (failed) return
-          const row = req.result as SessionContentRecord | undefined
-          if (row) {
-            result[index] = { token: row.token, content: row.content }
-          }
-          pending -= 1
-          if (pending === 0) {
-            resolve(result.filter((item): item is SessionContentItem => !!item))
-          }
-        }
-        req.onerror = () => {
-          if (failed) return
-          failed = true
-          reject(req.error)
-        }
-      })
-    })
+          tokens.forEach((token, index) => {
+            const req = store.get([sessionId, token])
+            req.onsuccess = () => {
+              if (failed) return
+              const row = req.result as SessionContentRecord | undefined
+              if (row) {
+                result[index] = { token: row.token, content: row.content }
+              }
+              pending -= 1
+              if (pending === 0) {
+                resolve(result.filter((item): item is SessionContentItem => !!item))
+              }
+            }
+            req.onerror = () => {
+              if (failed) return
+              failed = true
+              reject(req.error)
+            }
+          })
+        }),
+    )
   }
 
   /**
@@ -277,30 +357,32 @@ export class AIChatPersistStore {
    * updater 收到旧值（可能 undefined），必须返回完整 AIChatQSData。
    */
   async setSessionContent(sessionId: string, token: string, updater: SessionContentUpdater): Promise<AIChatQSData> {
-    const db = await this.open()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(SESSION_CONTENT_STORE, 'readwrite')
-      const store = tx.objectStore(SESSION_CONTENT_STORE)
-      let result: AIChatQSData
-      /** 保留 updater / put 的同步异常，但必须等事务真正中止后才拒绝写入 Promise。 */
-      let updateError: unknown
-      tx.oncomplete = () => resolve(result)
-      tx.onabort = () => reject(updateError ?? tx.error ?? new Error('IDB transaction aborted'))
-      const getReq = store.get([sessionId, token])
+    return this.withDatabase(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction(SESSION_CONTENT_STORE, 'readwrite')
+          const store = tx.objectStore(SESSION_CONTENT_STORE)
+          let result: AIChatQSData
+          /** 保留 updater / put 的同步异常，但必须等事务真正中止后才拒绝写入 Promise。 */
+          let updateError: unknown
+          tx.oncomplete = () => resolve(result)
+          tx.onabort = () => reject(updateError ?? tx.error ?? new Error('IDB transaction aborted'))
+          const getReq = store.get([sessionId, token])
 
-      getReq.onsuccess = () => {
-        const oldRow = getReq.result as SessionContentRecord | undefined
-        try {
-          const next = updater(oldRow?.content)
-          const record: SessionContentRecord = { sessionId, token, content: next }
-          result = next
-          store.put(record)
-        } catch (err) {
-          updateError = err
-          tx.abort()
-        }
-      }
-    })
+          getReq.onsuccess = () => {
+            const oldRow = getReq.result as SessionContentRecord | undefined
+            try {
+              const next = updater(oldRow?.content)
+              const record: SessionContentRecord = { sessionId, token, content: next }
+              result = next
+              store.put(record)
+            } catch (err) {
+              updateError = err
+              tx.abort()
+            }
+          }
+        }),
+    )
   }
 
   /**
@@ -309,37 +391,39 @@ export class AIChatPersistStore {
    * - sessionContent / sessionReference：走 bySessionId 索引
    */
   async deleteSessionPersist(sessionId: string): Promise<void> {
-    const db = await this.open()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
+    return this.withDatabase(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
 
-      tx.oncomplete = () => resolve()
-      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
+          tx.oncomplete = () => resolve()
+          tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
 
-      // 表1：复合主键 [sessionId, source]，用前缀范围删除该 session 全部 source
-      const renderStore = tx.objectStore(SESSION_RENDER_STORE)
-      const renderRange = IDBKeyRange.bound([sessionId, ''], [sessionId, '\uffff'])
-      const renderKeysReq = renderStore.getAllKeys(renderRange)
-      renderKeysReq.onsuccess = () => {
-        for (const key of renderKeysReq.result) {
-          renderStore.delete(key)
-        }
-      }
-
-      // 表2 / 表3：索引批量删
-      const deleteBySessionIndex = (storeName: string) => {
-        const store = tx.objectStore(storeName)
-        const index = store.index(INDEX_BY_SESSION_ID)
-        const keysReq = index.getAllKeys(IDBKeyRange.only(sessionId))
-        keysReq.onsuccess = () => {
-          for (const key of keysReq.result) {
-            store.delete(key)
+          // 表1：复合主键 [sessionId, source]，用前缀范围删除该 session 全部 source
+          const renderStore = tx.objectStore(SESSION_RENDER_STORE)
+          const renderRange = IDBKeyRange.bound([sessionId, ''], [sessionId, '\uffff'])
+          const renderKeysReq = renderStore.getAllKeys(renderRange)
+          renderKeysReq.onsuccess = () => {
+            for (const key of renderKeysReq.result) {
+              renderStore.delete(key)
+            }
           }
-        }
-      }
-      deleteBySessionIndex(SESSION_CONTENT_STORE)
-      deleteBySessionIndex(SESSION_REFERENCE_STORE)
-    })
+
+          // 表2 / 表3：索引批量删
+          const deleteBySessionIndex = (storeName: string) => {
+            const store = tx.objectStore(storeName)
+            const index = store.index(INDEX_BY_SESSION_ID)
+            const keysReq = index.getAllKeys(IDBKeyRange.only(sessionId))
+            keysReq.onsuccess = () => {
+              for (const key of keysReq.result) {
+                store.delete(key)
+              }
+            }
+          }
+          deleteBySessionIndex(SESSION_CONTENT_STORE)
+          deleteBySessionIndex(SESSION_REFERENCE_STORE)
+        }),
+    )
   }
 
   /**
@@ -348,50 +432,51 @@ export class AIChatPersistStore {
    * - 删渲染行后，再按 sessionId 清 sessionContent / sessionReference
    */
   async deletePersistBySource(source: DeleteSessionsAISourceType): Promise<void> {
-    const db = await this.open()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
+    return this.withDatabase(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
 
-      tx.oncomplete = () => resolve()
-      tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
+          tx.oncomplete = () => resolve()
+          tx.onabort = () => reject(tx.error || new Error('IDB transaction aborted'))
 
-      const renderStore = tx.objectStore(SESSION_RENDER_STORE)
-      const sourceIndex = renderStore.index(INDEX_BY_SOURCE)
+          const renderStore = tx.objectStore(SESSION_RENDER_STORE)
+          const sourceIndex = renderStore.index(INDEX_BY_SOURCE)
 
-      // 等价 SQL: SELECT primaryKey FROM sessionRender WHERE source = ?
-      const keysReq = sourceIndex.getAllKeys(IDBKeyRange.only(source))
-      keysReq.onsuccess = () => {
-        const keys = keysReq.result as Array<[string, DeleteSessionsAISourceType]>
-        const sessionIds = new Set<string>()
+          // 等价 SQL: SELECT primaryKey FROM sessionRender WHERE source = ?
+          const keysReq = sourceIndex.getAllKeys(IDBKeyRange.only(source))
+          keysReq.onsuccess = () => {
+            const keys = keysReq.result as Array<[string, DeleteSessionsAISourceType]>
+            const sessionIds = new Set<string>()
 
-        for (const key of keys) {
-          sessionIds.add(key[0])
-          renderStore.delete(key)
-        }
+            for (const key of keys) {
+              sessionIds.add(key[0])
+              renderStore.delete(key)
+            }
 
-        const deleteBySessionIndex = (storeName: string, sessionId: string) => {
-          const store = tx.objectStore(storeName)
-          const index = store.index(INDEX_BY_SESSION_ID)
-          const sessionKeysReq = index.getAllKeys(IDBKeyRange.only(sessionId))
-          sessionKeysReq.onsuccess = () => {
-            for (const key of sessionKeysReq.result) {
-              store.delete(key)
+            const deleteBySessionIndex = (storeName: string, sessionId: string) => {
+              const store = tx.objectStore(storeName)
+              const index = store.index(INDEX_BY_SESSION_ID)
+              const sessionKeysReq = index.getAllKeys(IDBKeyRange.only(sessionId))
+              sessionKeysReq.onsuccess = () => {
+                for (const key of sessionKeysReq.result) {
+                  store.delete(key)
+                }
+              }
+            }
+
+            for (const sessionId of sessionIds) {
+              deleteBySessionIndex(SESSION_CONTENT_STORE, sessionId)
+              deleteBySessionIndex(SESSION_REFERENCE_STORE, sessionId)
             }
           }
-        }
-
-        for (const sessionId of sessionIds) {
-          deleteBySessionIndex(SESSION_CONTENT_STORE, sessionId)
-          deleteBySessionIndex(SESSION_REFERENCE_STORE, sessionId)
-        }
-      }
-    })
+        }),
+    )
   }
 
   /** 清空三表全部持久化数据（全库清删） */
   async deleteAllPersist(): Promise<void> {
-    const db = await this.open()
-    return this.clearAllStores(db)
+    return this.withDatabase((db) => this.clearAllStores(db))
   }
 }
 

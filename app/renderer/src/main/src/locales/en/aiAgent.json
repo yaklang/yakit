@@ -202,7 +202,7 @@
     "loadingHistory": "Loading history...",
     "waitingReply": "Waiting for AI reply...",
     "questionExecuting": "Executing question...",
-    "executingSessionsLimit": "Concurrent AI sessions limit reached. Max ",
+    "executingSessionsLimit": "Concurrent AI sessions limit reached. Max {{count}}",
     "sessionClosing": "Closing session...",
     "sessionClosed": "Session closed"
   },
