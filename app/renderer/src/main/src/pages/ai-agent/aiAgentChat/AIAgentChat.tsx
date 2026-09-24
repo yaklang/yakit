@@ -37,6 +37,7 @@ import { useStore } from 'zustand'
 import type { AIForgeFormSubmitParamsProps } from '../aiTriageChatTemplate/type'
 import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { useStartAIChat } from '@/pages/ai-re-act/hooks/useStartAIChat'
 import { onReStart } from '../utils'
 import { AIAgentChatLayout } from './AIAgentChatLayout/AIAgentChatLayout'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
@@ -63,6 +64,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
 
   const [mode, setMode] = useState<AIAgentChatMode>('welcome')
 
+  const startChat = useStartAIChat()
+
+  const handleStartTriageChat = useMemoizedFn((data: HandleStartParams) => {
+    handleStart({ ...data, target: { kind: 'new' } })
+  })
+
   useEffect(() => {
     const sid = activeChat?.SessionID
     if (!sid) return
@@ -81,21 +88,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   const onSetReAct = useMemoizedFn(() => {
     setMode('re-act')
   })
-  /** 等自由对话渲染出来再发送；建联被拒时回到欢迎页，避免空白会话 */
+  /** 提交直接启动，不等待聊天组件挂载。 */
   const handleStart = useMemoizedFn((value: HandleStartParams) => {
-    if (!globalSessionEngine.canStartExecutingSession(sessionId, true)) return false
+    const targetSessionId = value.target?.kind === 'new' ? undefined : value.target?.sessionId || sessionId
+    if (!globalSessionEngine.canStartExecutingSession(targetSessionId, true)) return false
     setMode('re-act')
-    setTimeout(() => {
-      if (!globalSessionEngine.canStartExecutingSession(sessionId, true)) {
-        if (!activeChat?.SessionID) setMode('welcome')
-        return
-      }
-      aiReActChatRef.current?.handleStart(value)
-    })
+    startChat(value)
     return true
-  })
-  const handleStartTriageChat = useMemoizedFn((data: HandleStartParams) => {
-    handleStart(data)
   })
 
   const onStop = useMemoizedFn(() => {
@@ -162,7 +161,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
       switch (data.type as ReActChatEventEnum) {
         // 新开聊天对话窗
         case ReActChatEventEnum.NEW_CHAT:
-          cancelPendingChat()
           setSetting?.((old) => ({
             ...old,
             SyncPerceptionTrigger: false,
