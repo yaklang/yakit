@@ -7814,6 +7814,10 @@ message MITMFilterData {
 
   // 是否过滤打包/构建产物的静态 JS（默认 true：过滤）
   bool FilterBundledStaticJS = 9;
+
+  // Conditional hijack only: switch the session to manual hijacking on a match.
+  // False (default) intercepts matching requests only.
+  bool HijackToManual = 10;
 }
 
 message Certificate {
@@ -7915,6 +7919,8 @@ enum MITMHijackTaskSource {
   MITM_HIJACK_TASK_SOURCE_UNSPECIFIED = 0;
   MITM_HIJACK_TASK_SOURCE_MANUAL = 1;
   MITM_HIJACK_TASK_SOURCE_CONDITIONAL = 2;
+  // The engine entered manual hijacking after a conditional match.
+  MITM_HIJACK_TASK_SOURCE_CONDITIONAL_MANUAL = 3;
 }
 
 message MITMResponse {

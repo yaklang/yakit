@@ -1,7 +1,7 @@
 import { ManualHijackType } from '@/defaultConstants/mitmV2'
 import type { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
 import { isConditionalHijackTask, isHijackEditorMode } from '../MITMManual/conditionalHijackMode'
-import type { MITMHijackTaskSource } from '../MITMManual/conditionalHijackMode'
+import { MITMHijackTaskSource } from '../MITMManual/conditionalHijackMode'
 
 export enum V1HijackMessageAction {
   Ignore = 'ignore',
@@ -50,7 +50,12 @@ export const resolveV1HijackMessageAction = ({
     const hijackEditor = isHijackEditorMode(mode)
     if (!hijackEditor && !conditionalHijackTask) return decision(V1HijackMessageAction.ForwardResponse)
 
-    return decision(V1HijackMessageAction.InterceptResponse, !hijackEditor && conditionalHijackTask)
+    return decision(
+      V1HijackMessageAction.InterceptResponse,
+      conditionalHijackTask &&
+        (!hijackEditor ||
+          (mode === ManualHijackType.HijackFilter && taskSource === MITMHijackTaskSource.ConditionalManual)),
+    )
   }
 
   if (!hasRequest) return decision(V1HijackMessageAction.Ignore)

@@ -41,8 +41,8 @@ export const convertLocalMITMFilterRequest = (query: MITMFilterUIProps): MITMFil
   Object.entries(baseFilter).forEach(([key, value]) => {
     const field: keyof MITMFilterData = getMITMField(key)
     if (typeof value === 'boolean') {
-      if (field === 'FilterBundledStaticJS') {
-        data.FilterBundledStaticJS = value
+      if (field === 'FilterBundledStaticJS' || field === 'HijackToManual') {
+        data[field] = value
       }
       return
     }
@@ -130,6 +130,10 @@ export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIPro
   Object.entries(FilterData || {}).forEach(([key, value]) => {
     if (key === 'FilterBundledStaticJS' && typeof value === 'boolean') {
       data.baseFilter.filterBundledStaticJS = value
+      return
+    }
+    if (key === 'HijackToManual' && typeof value === 'boolean') {
+      data.baseFilter.hijackToManual = value
       return
     }
     if (key === '_AllowChunkStaticJS') return

@@ -51,7 +51,11 @@ import {
 } from '../MITMHacker/utils'
 import type { ManualHijackTypeProps, MITMManualRefProps } from '../MITMManual/MITMManualType'
 import { grpcMITMV2RecoverManualHijack } from '../MITMManual/utils'
-import { isHijackEditorMode, shouldSyncAutoForwardMode } from '../MITMManual/conditionalHijackMode'
+import {
+  isHijackEditorMode,
+  resolveConditionalHijackViewMode,
+  shouldSyncAutoForwardMode,
+} from '../MITMManual/conditionalHijackMode'
 import {
   resolveV1ConditionalHijackModeAfterCompletion,
   resolveV1HijackMessageAction,
@@ -666,7 +670,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         const response = msg.response!
         const responseId = msg.responseId!
         if (decision.shouldActivateConditionalView) {
-          setAutoForward('hijackFilter')
+          setAutoForward(resolveConditionalHijackViewMode(msg.hijackTaskSource))
           info(t('MITMManual.conditional_hijack_triggered'))
         }
         setForResponse(true)
@@ -706,7 +710,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       }
 
       if (decision.shouldActivateConditionalView) {
-        setAutoForward('hijackFilter')
+        setAutoForward(resolveConditionalHijackViewMode(msg.hijackTaskSource))
         info(t('MITMManual.conditional_hijack_triggered'))
       }
       updateRequest()

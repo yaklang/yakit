@@ -8,6 +8,7 @@ import {
   resolveConditionalHijackModeAfterTaskCount,
   resolveConditionalHijackModeOnMessage,
   shouldSyncAutoForwardMode,
+  resolveConditionalHijackViewMode,
 } from '../conditionalHijackMode'
 
 describe('conditionalHijackMode', () => {
@@ -91,3 +92,23 @@ describe('conditionalHijackMode', () => {
     expect(shouldSyncAutoForwardMode(ManualHijackType.PluginOutput)).toBe(true)
   })
 })
+
+it.each([ManualHijackType.Log, ManualHijackType.PluginOutput, ManualHijackType.HijackFilter])(
+  'switches to persistent manual interception on a conditional-manual task from %s',
+  (mode) => {
+    expect(isConditionalHijackTask(MITMHijackTaskSource.ConditionalManual, false)).toBe(true)
+    expect(resolveConditionalHijackViewMode(MITMHijackTaskSource.ConditionalManual)).toBe(ManualHijackType.Manual)
+    for (const action of [ManualHijackListAction.Hijack_List_Add, ManualHijackListAction.Hijack_List_Reload]) {
+      const nextMode = resolveConditionalHijackModeOnMessage(mode, true, action, true, true)
+      expect(nextMode).toBe(ManualHijackType.Manual)
+      expect(resolveConditionalHijackModeAfterTaskCount(nextMode, 0)).toBe(ManualHijackType.Manual)
+      expect(shouldSyncAutoForwardMode(nextMode)).toBe(true)
+    }
+    for (const action of [ManualHijackListAction.Hijack_List_Update, ManualHijackListAction.Hijack_List_Delete]) {
+      expect(resolveConditionalHijackModeOnMessage(mode, true, action, true, true)).toBe(mode)
+    }
+    expect(
+      resolveConditionalHijackModeOnMessage(mode, true, ManualHijackListAction.Hijack_List_Reload, false, true),
+    ).toBe(mode)
+  },
+)

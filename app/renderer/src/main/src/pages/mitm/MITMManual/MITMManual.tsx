@@ -98,6 +98,7 @@ import {
 } from './largeMultipartReplacement'
 import { resolveManualRequestSubmitAction } from './manualRequestSubmission'
 import {
+  MITMHijackTaskSource,
   isConditionalHijackTask,
   isHijackEditorMode,
   resolveConditionalHijackModeAfterTaskCount,
@@ -230,6 +231,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         conditionalHijackTask,
         value.ManualHijackListAction,
         !!hijackData,
+        value.ManualHijackList.some((task) => task.HijackTaskSource === MITMHijackTaskSource.ConditionalManual),
       )
       if (nextMode !== autoForward) {
         setAutoForward(nextMode)

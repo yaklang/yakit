@@ -80,7 +80,7 @@ export const getAdvancedFlag = (advancedFilters: MITMAdvancedFilter[]): boolean 
 export const getMitmHijackFilter = (baseFilter: MITMFilterSchema, advancedFilters: MITMAdvancedFilter[]): boolean => {
   return (
     !!Object.keys(baseFilter).filter((key) => {
-      if (key === 'filterBundledStaticJS') {
+      if (key === 'filterBundledStaticJS' || key === 'hijackToManual') {
         return false
       } else {
         return baseFilter[key].length > 0
@@ -97,6 +97,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
   const { token } = theme.useToken()
   const filtersRef = useRef<any>()
   const [type, setType] = useState<FilterSettingType>('base-setting')
+  const [hijackToManual, setHijackToManual] = useState(false)
   // filter 过滤器
   const [_mitmFilter, setMITMFilter] = useState<MITMFilterSchema>()
   const [_, setFilterName, getFilterName] = useGetState<string>('')
@@ -226,6 +227,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
       grpcMITMGetFilter()
         .then((val: MITMFilterSchema) => {
           const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
+          setHijackToManual(!!newValue.baseFilter.hijackToManual)
           setMITMFilter(newValue.baseFilter)
           setFilterData(newValue.advancedFilters)
           initialFilterRef.current = {
@@ -240,6 +242,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
       grpcMITMHijackGetFilter()
         .then((val: MITMFilterSchema) => {
           const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
+          setHijackToManual(!!newValue.baseFilter.hijackToManual)
           setMITMFilter(newValue.baseFilter)
           setFilterData(newValue.advancedFilters)
           initialFilterRef.current = {
@@ -346,6 +349,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
   })
 
   const onMenuSelect = useMemoizedFn((v: MITMFilterUIProps) => {
+    setHijackToManual(!!v.baseFilter.hijackToManual)
     filtersRef.current.setFormValue(v.baseFilter)
     setFilterData(v.advancedFilters || [])
   })
@@ -360,7 +364,10 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     const filter: MITMFilterSchema = filtersRef.current.getFormValue()
     const noEmptyFilterData: MITMAdvancedFilter[] = onFilterEmptyMITMAdvancedFilters(filterData)
     return {
-      baseFilter: filter,
+      baseFilter: {
+        ...filter,
+        ...(filterType === 'hijackFilter' ? { hijackToManual } : {}),
+      },
       advancedFilters: noEmptyFilterData,
     }
   })
@@ -504,8 +511,18 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         <div>{t('MITMFiltersModal.tip')}</div>
         {filterType === 'hijackFilter' ? (
           <>
-            <div>1、{t('MITMFiltersModal.hijack_tip_1')}</div>
+            <div>{t('MITMFiltersModal.hijack_behavior')}</div>
+            <YakitRadioButtons
+              value={hijackToManual ? 'manual' : 'matched'}
+              onChange={(event) => setHijackToManual(event.target.value === 'manual')}
+              options={[
+                { value: 'matched', label: t('MITMFiltersModal.hijack_matched_only') },
+                { value: 'manual', label: t('MITMFiltersModal.hijack_switch_manual') },
+              ]}
+            />
+            <div>1、{t(hijackToManual ? 'MITMFiltersModal.hijack_manual_tip' : 'MITMFiltersModal.hijack_tip_1')}</div>
             <div>2、{t('MITMFiltersModal.hijack_tip_2')}</div>
+            <div>3、{t('MITMFiltersModal.hijack_filter_priority_tip')}</div>
           </>
         ) : (
           <div>{t('MITMFiltersModal.hijack_tip_2')}</div>

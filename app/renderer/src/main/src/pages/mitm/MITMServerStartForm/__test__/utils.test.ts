@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MITMFilterData } from '../MITMFilters'
-import { buildNextMITMFilterData } from '../utils'
+import { buildNextMITMFilterData, convertLocalMITMFilterRequest, convertMITMFilterUI } from '../utils'
 
 describe('buildNextMITMFilterData', () => {
   const makeBackendData = (): MITMFilterData => ({
@@ -14,6 +14,17 @@ describe('buildNextMITMFilterData', () => {
     ExcludeMIME: [],
     FilterBundledStaticJS: true,
   })
+
+  it.each([true, false])(
+    'preserves conditional hijack behavior through editing and serialization: %s',
+    (HijackToManual) => {
+      const data = { ...makeBackendData(), HijackToManual }
+      const ui = convertMITMFilterUI(data)
+      expect(ui.baseFilter.hijackToManual).toBe(HijackToManual)
+      expect(convertLocalMITMFilterRequest(ui).HijackToManual).toBe(HijackToManual)
+      expect(buildNextMITMFilterData(data, 'excludeUri', '/new').HijackToManual).toBe(HijackToManual)
+    },
+  )
 
   it('appends URL to ExcludeUri and preserves other fields', () => {
     const next = buildNextMITMFilterData(makeBackendData(), 'excludeUri', '/new')
