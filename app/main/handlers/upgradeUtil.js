@@ -275,7 +275,7 @@ const diagnosingYakVersion = () => {
 const asyncYakEngineVersionExistsAndCorrectness = (version) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const resolved = await resolveEngineDownloadVersion(version)
+      const resolved = await resolveEngineDownloadVersion(version, { timeout: 2000 })
       const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
       const url = await getCheckTextUrl(resolved)
       if (url === '') {
@@ -473,20 +473,24 @@ module.exports = {
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
-        const resolved = await resolveEngineDownloadVersion(version)
-        const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
         try {
-          fs.unlinkSync(dest)
-        } catch (e) {}
-        await downloadYakEngine(
-          resolved,
-          dest,
-          (state) => {
-            win.webContents.send('download-yak-engine-progress', state)
-          },
-          resolve,
-          reject,
-        )
+          const resolved = await resolveEngineDownloadVersion(version, { timeout: 2000 })
+          const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
+          try {
+            fs.unlinkSync(dest)
+          } catch (e) {}
+          await downloadYakEngine(
+            resolved,
+            dest,
+            (state) => {
+              win.webContents.send('download-yak-engine-progress', state)
+            },
+            resolve,
+            reject,
+          )
+        } catch (e) {
+          reject(e)
+        }
       })
     }
     ipcMain.handle('download-latest-yak', async (e, version) => {
@@ -678,7 +682,7 @@ module.exports = {
     })
 
     const installYakEngine = (version) => {
-      return resolveEngineDownloadVersion(version).then(
+      return resolveEngineDownloadVersion(version, { timeout: 2000 }).then(
         (resolved) =>
           new Promise((resolve, reject) => {
             let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
@@ -1180,20 +1184,24 @@ module.exports = {
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
-        const resolved = await resolveEngineDownloadVersion(version)
-        const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
         try {
-          fs.unlinkSync(dest)
-        } catch (e) {}
-        await downloadYakEngine(
-          resolved,
-          dest,
-          (state) => {
-            win.webContents.send('download-yak-engine-progress', state)
-          },
-          resolve,
-          reject,
-        )
+          const resolved = await resolveEngineDownloadVersion(version, { timeout: 2000 })
+          const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
+          try {
+            fs.unlinkSync(dest)
+          } catch (e) {}
+          await downloadYakEngine(
+            resolved,
+            dest,
+            (state) => {
+              win.webContents.send('download-yak-engine-progress', state)
+            },
+            resolve,
+            reject,
+          )
+        } catch (e) {
+          reject(e)
+        }
       })
     }
     ipcMain.handle(ipcEventPre + 'download-latest-yak', async (e, version) => {
@@ -1244,7 +1252,7 @@ module.exports = {
     })
 
     const installYakEngine = (version) => {
-      return resolveEngineDownloadVersion(version).then(
+      return resolveEngineDownloadVersion(version, { timeout: 2000 }).then(
         (resolved) =>
           new Promise((resolve, reject) => {
             let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
