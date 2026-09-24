@@ -1,5 +1,6 @@
 import { useCreation, useDebounceFn, useInViewport, useKeyPress, useMemoizedFn } from 'ahooks'
 import type { RefObject } from 'react'
+import { shouldInterceptMentionEnter } from './mentionKeyboard'
 
 function useSwitchSelectByKeyboard<T>(
   ref: RefObject<HTMLDivElement | null> | null,
@@ -11,15 +12,18 @@ function useSwitchSelectByKeyboard<T>(
     onEnter: () => void
     defItemHeight?: number
     getContainer?: () => HTMLElement | null
+    /** 面板关闭时必须为 false，否则会一直拦截编辑器 Enter */
+    enabled?: boolean
   },
 ): void {
-  const { data, selected, rowKey, onSelectNumber, onEnter, getContainer } = params
+  const { data, selected, rowKey, onSelectNumber, onEnter, getContainer, enabled = true } = params
 
   const defItemHeight = useCreation(() => {
     return params.defItemHeight ?? 24
   }, [params.defItemHeight])
 
   const [inViewport = true] = useInViewport(ref)
+  const active = enabled && inViewport
 
   const getRowKey = useMemoizedFn((item: T) => {
     if (typeof rowKey === 'string') {
@@ -29,7 +33,7 @@ function useSwitchSelectByKeyboard<T>(
   })
 
   useKeyPress(
-    'uparrow',
+    active ? 'uparrow' : () => false,
     (e) => {
       e.stopPropagation()
       e.preventDefault()
@@ -38,11 +42,11 @@ function useSwitchSelectByKeyboard<T>(
     {
       target: getContainer ? getContainer() : undefined,
       exactMatch: true,
-      useCapture: inViewport,
+      useCapture: true,
     },
   )
   useKeyPress(
-    'downarrow',
+    active ? 'downarrow' : () => false,
     (e) => {
       e.stopPropagation()
       e.preventDefault()
@@ -51,12 +55,22 @@ function useSwitchSelectByKeyboard<T>(
     {
       target: getContainer ? getContainer() : undefined,
       exactMatch: true,
-      useCapture: inViewport,
+      useCapture: true,
     },
   )
   useKeyPress(
-    'enter',
+    active ? 'enter' : () => false,
     (e) => {
+      if (
+        !shouldInterceptMentionEnter({
+          enabled,
+          inViewport,
+          dataLength: data.length,
+          hasSelected: selected != null,
+        })
+      ) {
+        return
+      }
       e.stopPropagation()
       e.preventDefault()
       onEnterKey()
@@ -64,13 +78,13 @@ function useSwitchSelectByKeyboard<T>(
     {
       target: getContainer ? getContainer() : undefined,
       exactMatch: true,
-      useCapture: inViewport,
+      useCapture: true,
     },
   )
 
   const onUpArrow = useDebounceFn(
     () => {
-      if (!inViewport) return
+      if (!active) return
       if (!selected) {
         onSelectNumber(0, true)
         return
@@ -92,7 +106,7 @@ function useSwitchSelectByKeyboard<T>(
 
   const onDownArrow = useDebounceFn(
     () => {
-      if (!inViewport) return
+      if (!active) return
       if (!ref?.current) return
       if (!selected) {
         onSelectNumber(0, true)
@@ -142,7 +156,7 @@ function useSwitchSelectByKeyboard<T>(
 
   const onEnterKey = useDebounceFn(
     () => {
-      if (inViewport) onEnter()
+      if (active) onEnter()
     },
     { wait: 200, leading: true },
   ).run

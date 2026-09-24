@@ -350,6 +350,7 @@
     "browser": "瀏覽器例項"
   },
   "AIMentionTabs": {
+    "all": "全部",
     "skill": "技能",
     "tool": "工具",
     "knowledgeBase": "知識庫",
@@ -746,8 +747,35 @@
     "switchToSource": "切換原始碼模式"
   },
   "AIMilkdownInput": {
-    "placeholder": "向我提問，@使用技能、工具、檔案和知識庫",
+    "placeholder": "向我提問，@使用技能、工具、檔案和知識庫，/選擇模式",
     "selectedHttpFlowSummary": "勾選了 {{count}} 條流量"
+  },
+  "AIMilkdownModeSlash": {
+    "selectMode": "請選擇模式",
+    "selectGoalMode": "請選擇目標模式",
+    "plan": "Plan",
+    "multiAgent": "Multi-Agent",
+    "goal": "Goal",
+    "minIterations": "最小迭代次數",
+    "minIterationsTip": "至少為 1",
+    "minIterationsPrefix": "最小迭代次數: {{value}}",
+    "acceptanceOption": "驗收條件（文字描述）",
+    "acceptance": "驗收條件",
+    "acceptancePlaceholder": "請描述一下驗收條件...",
+    "acceptancePrefix": "驗收條件: {{value}}",
+    "durationOption": "持續時間（設定「繼續深入」時間來增加輪次）",
+    "duration": "持續時間",
+    "durationPrefix": "持續時間: {{value}}",
+    "durationNever": "永不停止",
+    "subAgentCount": "子 Agent 數量",
+    "subAgentCountTip": "<=0 時由伺服端使用預設值；最大 20",
+    "subAgentCountPrefix": "子 Agent 數量: {{value}}",
+    "setGoal": "設定目標",
+    "setSubAgentCount": "設定子 Agent 數量"
+  },
+  "AIRunModeSelect": {
+    "mode": "模式",
+    "multiMode": "多模式"
   },
   "AITaskQuery": {
     "taskQueue": "任務佇列",

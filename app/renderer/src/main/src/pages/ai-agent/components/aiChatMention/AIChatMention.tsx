@@ -10,9 +10,7 @@ import type {
   KnowledgeBaseListOfMentionProps,
   ToolListOfMentionProps,
 } from './type'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import styles from './AIChatMention.module.scss'
-import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import {
   useCreation,
   useDebounceEffect,
@@ -37,16 +35,14 @@ import type { AITool, GetAIToolListRequest, GetAIToolListResponse } from '../../
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import { grpcGetAIToolList } from '../../aiToolList/utils'
 import { failed } from '@/utils/notification'
-import useSwitchSelectByKeyboard from './useSwitchSelectByKeyboard'
+import useSwitchSelectByKeyboard from './hooks/useSwitchSelectByKeyboard'
 import classNames from 'classnames'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { useCustomFolder } from '../aiFileSystemList/store/useCustomFolder'
 import FileTreeSystemList from '../aiFileSystemList/FileTreeSystemList/FileTreeSystemList'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { type KnowledgeBaseItem, useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
-import type { InputRef } from 'antd'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { mentionWidth } from '../aiMilkdownInput/aiMilkdownMention/AIMilkdownMention'
 import {
   browserInstanceMentionName,
   formatLastSeen,
@@ -55,48 +51,55 @@ import {
   useBrowserInstances,
   type AIBrowserInstance,
 } from '../../browserInstances/browserInstanceStore'
-import { BrowserClientIcon } from '../../browserInstances/BrowserClientIcon'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { AIChatMentionTabs } from './aiChatMentionTabs/AIChatMentionTabs'
+import { AllListOfMention } from './allListOfMention/AllListOfMention'
+import { buildMentionKnowledgeList } from './allListOfMention/allListOfMentionUtils'
+import { BrowserClientIcon } from '../../browserInstances/BrowserClientIcon'
 
 const defaultRef: AIChatMentionListRefProps = {
   onRefresh: () => {},
 }
-// 所有字母和数字的键代码
-const alphanumericKeys = [
-  ...Array.from({ length: 26 }, (_, i) => `${String.fromCharCode(65 + i)}`),
-  ...Array.from({ length: 10 }, (_, i) => `${i}`),
-  ...Array.from({ length: 10 }, (_, i) => `numpad${i}`), //小键盘数字键
-]
 export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) => {
-  const { onSelect, defaultActiveTab, filterMode } = props
-  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
+  const {
+    onSelect,
+    defaultActiveTab,
+    filterMode,
+    keepEditorFocus,
+    filterKeyword,
+    keyboardTarget,
+    visible = true,
+  } = props
   const [activeKey, setActiveKey, getActiveKey] = useGetSetState<AIMentionTabsEnum>(
-    defaultActiveTab || AIMentionTabsEnum.Forge_Name,
+    defaultActiveTab || AIMentionTabsEnum.All,
   )
   const [keyWord, setKeyWord] = useState<string>('')
-  const [focus, setFocus] = useState<boolean>(false)
+  const [tabCounts, setTabCounts] = useState<Partial<Record<AIMentionTabsEnum, number>>>({})
 
   const forgeRef = useRef<AIChatMentionListRefProps>(defaultRef)
   const toolRef = useRef<AIChatMentionListRefProps>(defaultRef)
   const knowledgeBaseRef = useRef<AIChatMentionListRefProps>(defaultRef)
   const focusModeRef = useRef<AIChatMentionListRefProps>(defaultRef)
   const browserRef = useRef<AIChatMentionListRefProps>(defaultRef)
-
-  const searchRef = useRef<InputRef>(null)
+  const allRef = useRef<AIChatMentionListRefProps>(defaultRef)
 
   const mentionRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(mentionRef)
 
   useEffect(() => {
-    if (inViewport) mentionFocus()
-  }, [inViewport])
+    if (filterKeyword !== undefined) setKeyWord(filterKeyword)
+  }, [filterKeyword])
+
   useEffect(() => {
+    // 保留编辑器焦点时不抢焦
+    if (inViewport && !keepEditorFocus) mentionFocus()
+  }, [inViewport, keepEditorFocus])
+  useEffect(() => {
+    if (keepEditorFocus) return
     if (activeKey === AIMentionTabsEnum.File_System) {
-      // 文件系统没有输入框 当焦点聚焦在输入框中的时候切换tab，在这个情况下需要把焦点聚焦在提及的容器上
-      setFocus(false)
       mentionFocus()
     }
-  }, [activeKey])
+  }, [activeKey, keepEditorFocus])
   useDebounceEffect(
     () => {
       onSearch()
@@ -104,41 +107,33 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
     [keyWord],
     { wait: 300 },
   )
+
+  const getKeyboardTarget = useMemoizedFn(() => {
+    return keyboardTarget?.() || mentionRef.current
+  })
+
   useKeyPress(
-    'leftarrow',
+    visible ? 'leftarrow' : () => false,
     (e) => {
       e.stopPropagation()
       e.preventDefault()
       onLeftArrow()
     },
     {
-      target: mentionRef,
+      target: getKeyboardTarget,
       exactMatch: true,
       useCapture: true,
     },
   )
   useKeyPress(
-    'rightarrow',
+    visible ? 'rightarrow' : () => false,
     (e) => {
       e.stopPropagation()
       e.preventDefault()
       onRightArrow()
     },
     {
-      target: mentionRef,
-      exactMatch: true,
-      useCapture: true,
-    },
-  )
-  useKeyPress(
-    focus ? () => false : alphanumericKeys, //A-Z 0-9
-    (e) => {
-      e.stopPropagation()
-      e.preventDefault()
-      onFocusSearchInput()
-    },
-    {
-      target: mentionRef,
+      target: getKeyboardTarget,
       exactMatch: true,
       useCapture: true,
     },
@@ -172,7 +167,6 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
     return mentionTabs.findIndex((ele) => ele.value === getActiveKey())
   })
   const onActiveKey = useMemoizedFn((k) => {
-    setKeyWord('')
     setActiveKey(k as AIMentionTabsEnum)
   })
   const onSelectForge = useMemoizedFn((forgeItem: AIForge) => {
@@ -212,6 +206,10 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
       name: browserInstanceMentionName(instance),
     })
   })
+  const onSetTabCount = useMemoizedFn((key: AIMentionTabsEnum, count: number) => {
+    setTabCounts((prev) => (prev[key] === count ? prev : { ...prev, [key]: count }))
+  })
+
   const renderTabContent = useMemoizedFn((key: AIMentionTabsEnum) => {
     switch (key) {
       case AIMentionTabsEnum.Forge_Name:
@@ -221,10 +219,21 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             keyWord={keyWord}
             onSelect={onSelectForge}
             getContainer={getContainer}
+            keyboardEnabled={visible}
+            onTotalChange={(n) => onSetTabCount(AIMentionTabsEnum.Forge_Name, n)}
           />
         )
       case AIMentionTabsEnum.Tool:
-        return <ToolListOfMention ref={toolRef} keyWord={keyWord} onSelect={onSelectTool} getContainer={getContainer} />
+        return (
+          <ToolListOfMention
+            ref={toolRef}
+            keyWord={keyWord}
+            onSelect={onSelectTool}
+            getContainer={getContainer}
+            keyboardEnabled={visible}
+            onTotalChange={(n) => onSetTabCount(AIMentionTabsEnum.Tool, n)}
+          />
+        )
       case AIMentionTabsEnum.KnowledgeBase:
         return (
           <KnowledgeBaseListOfMention
@@ -232,6 +241,8 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             keyWord={keyWord}
             onSelect={onSelectKnowledgeBase}
             getContainer={getContainer}
+            keyboardEnabled={visible}
+            onTotalChange={(n) => onSetTabCount(AIMentionTabsEnum.KnowledgeBase, n)}
           />
         )
       case AIMentionTabsEnum.File_System:
@@ -243,6 +254,8 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             keyWord={keyWord}
             onSelect={onSelectFocusMode}
             getContainer={getContainer}
+            keyboardEnabled={visible}
+            onTotalChange={(n) => onSetTabCount(AIMentionTabsEnum.FocusMode, n)}
           />
         )
       case AIMentionTabsEnum.Browser:
@@ -252,6 +265,8 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
             keyWord={keyWord}
             onSelect={onSelectBrowser}
             getContainer={getContainer}
+            keyboardEnabled={visible}
+            onTotalChange={(n) => onSetTabCount(AIMentionTabsEnum.Browser, n)}
           />
         )
       default:
@@ -259,6 +274,10 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
     }
   })
   const onSearch = useMemoizedFn(() => {
+    if (activeKey === AIMentionTabsEnum.All) {
+      allRef.current.onRefresh()
+      return
+    }
     switch (activeKey) {
       case AIMentionTabsEnum.Forge_Name:
         forgeRef.current.onRefresh()
@@ -276,93 +295,71 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
         browserRef.current.onRefresh()
         break
       default:
-        return null
+        break
     }
-  })
-  const onSearchInputChange = useMemoizedFn(() => {
-    onSearch()
-  })
-  const onFocusSearchInput = useMemoizedFn(() => {
-    if (!focus) {
-      searchRef.current?.focus()
-    }
-    setFocus(true)
-  })
-
-  const onSearchBlur = useMemoizedFn((e) => {
-    e.stopPropagation()
-    e.preventDefault()
-    setFocus(false)
-  })
-  const onSearchFocus = useMemoizedFn((e) => {
-    e.stopPropagation()
-    e.preventDefault()
-    setFocus(true)
   })
   const getContainer = useMemoizedFn(() => {
-    return mentionRef.current
+    return keyboardTarget?.() || mentionRef.current
   })
 
   const mentionFocus = useMemoizedFn(() => {
     mentionRef.current?.focus()
   })
 
-  // 用户文件夹
+  // 用户文件夹（仅用于角标数量；文件系统 Tab 始终展示）
   const customFolder = useCustomFolder()
+  useEffect(() => {
+    onSetTabCount(AIMentionTabsEnum.File_System, customFolder?.length || 0)
+  }, [customFolder?.length])
   const mentionTabs = useCreation(() => {
     let tabs = AIMentionTabs
 
-    // 处理 customFolder
-    if (!customFolder?.length) {
-      tabs = tabs.filter((item) => item.value !== AIMentionTabsEnum.File_System)
-    }
-
-    // 处理 filterMode
+    // 处理 filterMode（保留 All）
     if (filterMode?.length) {
-      tabs = tabs.filter((item) => !filterMode.includes(item.value as `${AIMentionTabsEnum}`))
+      tabs = tabs.filter(
+        (item) => item.value === AIMentionTabsEnum.All || !filterMode.includes(item.value as `${AIMentionTabsEnum}`),
+      )
     }
 
     return tabs
-  }, [customFolder?.length, filterMode])
+  }, [filterMode])
+
+  /** All 内展示的分类：不含 All 自身、不含文件系统 */
+  const allSections = useCreation(() => {
+    return mentionTabs
+      .filter((item) => item.value !== AIMentionTabsEnum.All && item.value !== AIMentionTabsEnum.File_System)
+      .map((item) => ({ value: item.value as AIMentionTabsEnum, label: item.label as string }))
+  }, [mentionTabs])
 
   return (
-    <div
-      className={styles['ai-chat-mention']}
-      tabIndex={0}
-      ref={mentionRef}
-      onClick={(e) => e.stopPropagation()}
-      style={{ width: mentionWidth() }}
-    >
-      <YakitSideTab
-        key={i18nRefresh}
-        className={styles['tab-wrapper']}
-        type="horizontal"
-        activeKey={activeKey}
-        yakitTabs={mentionTabs}
-        onActiveKey={onActiveKey}
-        t={t}
-      >
-        {activeKey !== AIMentionTabsEnum.File_System && (
-          <YakitInput.Search
-            ref={searchRef}
-            wrapperClassName={styles['mention-search']}
-            value={keyWord}
-            onChange={(e) => setKeyWord(e.target.value)}
-            onSearch={onSearchInputChange}
-            allowClear={true}
-            onFocus={onSearchFocus}
-            onBlur={onSearchBlur}
+    <div className={styles['ai-chat-mention']} tabIndex={0} ref={mentionRef} onClick={(e) => e.stopPropagation()}>
+      <AIChatMentionTabs tabs={mentionTabs} activeKey={activeKey} tabCounts={tabCounts} onChange={onActiveKey} />
+      <div className={styles['list-body']}>
+        {activeKey === AIMentionTabsEnum.All ? (
+          <AllListOfMention
+            ref={allRef}
+            keyWord={keyWord}
+            sections={allSections}
+            getContainer={getContainer}
+            keyboardEnabled={visible}
+            onSelectForge={onSelectForge}
+            onSelectTool={onSelectTool}
+            onSelectKnowledgeBase={onSelectKnowledgeBase}
+            onSelectFocusMode={onSelectFocusMode}
+            onSelectBrowser={onSelectBrowser}
+            onSectionTotalChange={onSetTabCount}
           />
+        ) : (
+          renderTabContent(activeKey)
         )}
-        <div className={styles['list-body']}>{renderTabContent(activeKey)}</div>
-      </YakitSideTab>
+      </div>
     </div>
   )
 })
 
 const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo(
   forwardRef((props, ref) => {
-    const { keyWord, onSelect, getContainer } = props
+    const { keyWord, onSelect, getContainer, onTotalChange, keyboardEnabled = true } = props
     const [loading, setLoading] = useState<boolean>(false)
     const [spinning, setSpinning] = useState<boolean>(false)
     const [isRef, setIsRef] = useState<boolean>(false)
@@ -410,6 +407,7 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
       onSelectNumber: onKeyboardSelect,
       onEnter: () => onEnter(),
       getContainer,
+      enabled: keyboardEnabled,
     })
 
     const onEnter = useMemoizedFn(() => {
@@ -432,17 +430,23 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
       try {
         const res = await grpcQueryAIForge(newQuery)
         if (!res.Data) res.Data = []
+        const keyword = keyWord.trim().toLowerCase()
+        // 按展示名再过滤，避免服务端命中描述等字段导致「搜 me 出无关项」
+        const filteredData = keyword
+          ? res.Data.filter((item) => (item.ForgeVerboseName || item.ForgeName || '').toLowerCase().includes(keyword))
+          : res.Data
         const newPage = +res.Pagination.Page
-        const length = newPage === 1 ? res.Data.length : res.Data.length + response.Data.length
+        const length = newPage === 1 ? filteredData.length : filteredData.length + response.Data.length
         setHasMore(length < +res.Total)
         const newRes: QueryAIForgeResponse = {
-          Data: newPage === 1 ? res?.Data : [...response.Data, ...(res?.Data || [])],
+          Data: newPage === 1 ? filteredData : [...response.Data, ...filteredData],
           Pagination: res?.Pagination || {
             ...AIForgeListDefaultPagination,
           },
-          Total: res.Total,
+          Total: keyword ? length : res.Total,
         }
         setResponse(newRes)
+        onTotalChange?.(keyword ? length : +res.Total || 0)
         if (newPage === 1) {
           setIsRef(!isRef)
         }
@@ -481,7 +485,7 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
             page={+response.Pagination.Page}
             hasMore={hasMore}
             loading={loading}
-            defItemHeight={24}
+            defItemHeight={32}
             rowKey="Id"
             isRef={isRef}
           />
@@ -493,7 +497,7 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
 
 const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
   forwardRef((props, ref) => {
-    const { keyWord, onSelect, getContainer } = props
+    const { keyWord, onSelect, getContainer, onTotalChange, keyboardEnabled = true } = props
     const [loading, setLoading] = useState<boolean>(false)
     const [spinning, setSpinning] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(false)
@@ -539,6 +543,7 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
       onSelectNumber: onKeyboardSelect,
       onEnter: () => onEnter(),
       getContainer,
+      enabled: keyboardEnabled,
     })
 
     const onEnter = useMemoizedFn(() => {
@@ -562,17 +567,22 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
       try {
         const res = await grpcGetAIToolList(newQuery)
         if (!res.Tools) res.Tools = []
+        const keyword = keyWord.trim().toLowerCase()
+        const filteredTools = keyword
+          ? res.Tools.filter((item) => (item.VerboseName || item.Name || '').toLowerCase().includes(keyword))
+          : res.Tools
         const newPage = +res.Pagination.Page
-        const length = newPage === 1 ? res.Tools.length : res.Tools.length + response.Tools.length
+        const length = newPage === 1 ? filteredTools.length : filteredTools.length + response.Tools.length
         setHasMore(length < +res.Total)
         const newRes: GetAIToolListResponse = {
-          Tools: newPage === 1 ? res?.Tools : [...response.Tools, ...(res?.Tools || [])],
+          Tools: newPage === 1 ? filteredTools : [...response.Tools, ...filteredTools],
           Pagination: res?.Pagination || {
             ...genDefaultPagination(20),
           },
-          Total: res.Total,
+          Total: keyword ? length : res.Total,
         }
         setResponse(newRes)
+        onTotalChange?.(keyword ? length : +res.Total || 0)
         if (newPage === 1) {
           setIsRef(!isRef)
         }
@@ -609,7 +619,7 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
             page={+response.Pagination.Page}
             hasMore={hasMore}
             loading={loading}
-            defItemHeight={24}
+            defItemHeight={32}
             rowKey="ID"
             isRef={isRef}
           />
@@ -623,7 +633,7 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
   forwardRef((props, ref) => {
     const { knowledgeBases } = useKnowledgeBase()
 
-    const { keyWord, onSelect, getContainer } = props
+    const { keyWord, onSelect, getContainer, onTotalChange, keyboardEnabled = true } = props
     const [selected, setSelected] = useState<KnowledgeBaseItem>()
     const toolListRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(toolListRef)
@@ -672,7 +682,7 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
         chunk: 'Medium',
         SerialVersionID: '',
       }
-      return [value, ...(knowledgeBaseList || [])]
+      return buildMentionKnowledgeList(value, knowledgeBaseList || [], '')
     }, [knowledgeBaseList])
     useImperativeHandle(
       ref,
@@ -684,8 +694,12 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
       [],
     )
     useEffect(() => {
-      setKnowledgeBaseList(knowledgeBases)
+      // 与列表渲染一致：按当前 keyWord 过滤后再入库
+      getList()
     }, [knowledgeBases])
+    useEffect(() => {
+      onTotalChange?.(knowledgeList.length)
+    }, [knowledgeList.length])
 
     const onKeyboardSelect = useMemoizedFn((value: number, isScroll: boolean) => {
       if (value >= 0 && value < (knowledgeList || []).length) {
@@ -703,6 +717,7 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
       onSelectNumber: onKeyboardSelect,
       onEnter: () => onEnter(),
       getContainer,
+      enabled: keyboardEnabled,
     })
 
     const onEnter = useMemoizedFn(() => {
@@ -745,7 +760,7 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
           page={1}
           hasMore={false}
           loading={false}
-          defItemHeight={24}
+          defItemHeight={32}
           rowKey="ID"
         />
       </div>
@@ -771,7 +786,7 @@ const AIMentionSelectItem: React.FC<AIMentionSelectItemProps> = React.memo((prop
 const BrowserListOfMention: React.FC<BrowserListOfMentionProps> = React.memo(
   forwardRef((props, ref) => {
     const { t } = useI18nNamespaces(['aiAgent'])
-    const { keyWord, onSelect, getContainer } = props
+    const { keyWord, onSelect, getContainer, onTotalChange, keyboardEnabled = true } = props
     const { instances, selectedId, loading } = useBrowserInstances()
     const [selected, setSelected] = useState<AIBrowserInstance>()
     const listRef = useRef<HTMLDivElement>(null)
@@ -796,6 +811,7 @@ const BrowserListOfMention: React.FC<BrowserListOfMentionProps> = React.memo(
     )
 
     useEffect(() => {
+      onTotalChange?.(filtered.length)
       const current = filtered.find((instance) => instance.id === selectedId) || filtered[0]
       setSelected(current)
     }, [filtered, selectedId])
@@ -813,6 +829,7 @@ const BrowserListOfMention: React.FC<BrowserListOfMentionProps> = React.memo(
       onSelectNumber: onKeyboardSelect,
       onEnter,
       getContainer,
+      enabled: keyboardEnabled,
     })
 
     return (
@@ -901,7 +918,7 @@ const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.me
 
 const FocusModeOfMention: React.FC<FocusModeOfMentionProps> = React.memo(
   forwardRef((props, ref) => {
-    const { keyWord, onSelect, getContainer } = props
+    const { keyWord, onSelect, getContainer, onTotalChange, keyboardEnabled = true } = props
     const [spinning, setSpinning] = useState<boolean>(false)
     const [response, setResponse] = useState<QueryAIFocusResponse>({
       Data: [],
@@ -942,6 +959,7 @@ const FocusModeOfMention: React.FC<FocusModeOfMentionProps> = React.memo(
       onSelectNumber: onKeyboardSelect,
       onEnter: () => onEnter(),
       getContainer,
+      enabled: keyboardEnabled,
     })
 
     const onEnter = useMemoizedFn(() => {
@@ -951,10 +969,16 @@ const FocusModeOfMention: React.FC<FocusModeOfMentionProps> = React.memo(
       setSpinning(true)
       try {
         const res = await grpcQueryAIFocus()
+        const keyword = keyWord.trim().toLowerCase()
         const newRes: QueryAIFocusResponse = {
-          Data: (res?.Data || []).filter((it) => it?.Name?.toLowerCase().includes(keyWord.toLowerCase())),
+          Data: (res?.Data || []).filter((it) => {
+            if (!keyword) return true
+            const name = (it.VerboseNameZh || it.Name || '').toLowerCase()
+            return name.includes(keyword)
+          }),
         }
         setResponse(newRes)
+        onTotalChange?.(newRes.Data.length)
       } catch (error) {}
       setTimeout(() => {
         setSpinning(false)
@@ -984,7 +1008,7 @@ const FocusModeOfMention: React.FC<FocusModeOfMentionProps> = React.memo(
             page={1}
             hasMore={false}
             loading={false}
-            defItemHeight={24}
+            defItemHeight={32}
             rowKey="Name"
           />
         </YakitSpin>

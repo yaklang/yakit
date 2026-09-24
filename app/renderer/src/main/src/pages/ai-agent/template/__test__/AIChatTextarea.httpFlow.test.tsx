@@ -43,6 +43,30 @@ vi.mock('@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect', () 
   AIReasoningEffortSelect: () => null,
 }))
 vi.mock('../../aiRunModeSelect/AIRunModeSelect', () => ({ default: () => null }))
+vi.mock('../../aiRunModeSelect/useAIRunMode', () => ({
+  useAIRunMode: () => ({
+    execute: false,
+    enablePlan: false,
+    enableMultiAgent: false,
+    enableGoalMode: false,
+    goalMinIterations: 0,
+    goalDurationSeconds: 0,
+    goalAcceptanceCriteria: '',
+    strategy: {
+      EnableMultiAgent: false,
+      EnableGoalMode: false,
+      GoalMinIterations: 0,
+      MaxSubAgents: 0,
+      GoalDurationSeconds: 0,
+      GoalAcceptanceCriteria: '',
+    },
+    maxSubAgents: 0,
+    selectedModes: [],
+    isModeSelected: () => false,
+    onToggleMode: vi.fn(),
+    onSetStrategy: vi.fn(),
+  }),
+}))
 vi.mock('../../aiChatWelcome/OpenFileDropdown/OpenFileDropdown', () => ({ default: () => null }))
 vi.mock('@/pages/ai-re-act/aiReActChat/AIReActComponent', () => ({ UploadFileButton: () => null }))
 vi.mock('@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat', () => ({ AIInputSettingPopover: () => null }))

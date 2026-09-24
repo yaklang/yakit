@@ -96,6 +96,8 @@ describe('applyAIAgentChatSettingSessionDefaults', () => {
       EnableGoalMode: false,
       GoalMinIterations: 9,
       MaxSubAgents: 4,
+      GoalDurationSeconds: 0,
+      GoalAcceptanceCriteria: '',
     })
   })
 })

@@ -2,6 +2,7 @@ import { $command, $nodeSchema, $nodeAttr } from '@milkdown/utils'
 import type { Attrs } from '@milkdown/kit/prose/model'
 import { TextSelection } from '@milkdown/kit/prose/state'
 import type { iconMapType } from '../../aiChatMention/type'
+import { getMentionQueryDeleteRange } from './mentionQuery'
 
 export const aiMentionCustomId = 'ai-mention-custom'
 
@@ -105,7 +106,12 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
     if (!(selection instanceof TextSelection)) return false
     const { mentionType, mentionId, mentionName, lock } = params
     const { from } = selection
-    if (from > 0 && state.doc.textBetween(from - 1, from) === '@') tr.deleteRange(from - 1, from)
+    // 删除光标前整段 @query（含 @），兼容 @ 后继续输入筛选词的场景
+    const textBefore = state.doc.textBetween(Math.max(0, from - 500), from, undefined, '\uFFFC')
+    const deleteRange = getMentionQueryDeleteRange(from, textBefore)
+    if (deleteRange) {
+      tr.deleteRange(deleteRange.from, deleteRange.to)
+    }
     const fragment = state.schema.text(`${mentionName}`)
     dispatch?.(
       tr

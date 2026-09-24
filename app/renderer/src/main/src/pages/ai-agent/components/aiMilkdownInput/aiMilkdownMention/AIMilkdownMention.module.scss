@@ -1,13 +1,11 @@
 .ai-mention {
-  // position: absolute;
   position: fixed;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
   border: 1px solid var(--Colors-Use-Neutral-Border);
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  // padding: 0 12px;
   box-shadow:
     0 3px 6px -4px rgba(0, 0, 0, 0.12),
     0 6px 16px 0 rgba(0, 0, 0, 0.08),

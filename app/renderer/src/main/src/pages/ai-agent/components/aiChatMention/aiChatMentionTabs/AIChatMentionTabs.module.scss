@@ -1,0 +1,124 @@
+.mention-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+  flex-shrink: 0;
+}
+
+.mention-tabs-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mention-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.mention-tabs-arrow {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--Colors-Use-Main-Primary);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+
+  :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.mention-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 999px;
+  background: var(--Colors-Use-Neutral-Bg);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+}
+
+.mention-tab-active {
+  background: var(--Colors-Use-Main-Primary);
+  color: var(--Colors-Use-Basic-White);
+
+  &:hover {
+    background: var(--Colors-Use-Main-Hover);
+  }
+
+  .mention-tab-count {
+    background: rgba(255, 255, 255, 0.22);
+    color: var(--Colors-Use-Basic-White);
+  }
+
+  .mention-tab-icon {
+    color: var(--Colors-Use-Basic-White);
+  }
+}
+
+.mention-tab-icon {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
+  :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.mention-tab-label {
+  line-height: 16px;
+}
+
+.mention-tab-count {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+}

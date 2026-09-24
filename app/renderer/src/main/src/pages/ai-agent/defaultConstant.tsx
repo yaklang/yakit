@@ -4,13 +4,16 @@ import {
   AIOutlined,
   BookOpenTextOutlined,
   BotOutlined,
+  BoxOutlined,
   CalendarOutlined,
   ChromeOutlined,
   DocumentTextOutlined,
   EarOffOutlined,
   FolderOpenOutlined,
+  Goal2Outlined,
   MCPOutlined,
   PointerOutlined,
+  TemplateOutlined,
   Wrench1Outlined,
   ChatAlt2Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -30,7 +33,7 @@ import {
   SiliconFlowWithBackgroundAiModelColorful,
   TongyiWithBackgroundAiModelColorful,
 } from '@yakit-libs/yakit-ui-icons/colorful'
-import type { AIAgentGrpcApi } from '../ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi, AIExecutionStrategy } from '../ai-re-act/hooks/grpcApi'
 import { AISourceEnum, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
 import {
   CursorClickSolid,
@@ -78,6 +81,8 @@ export const AiAgentTabList: YakitTabsProps[] = [
   { value: AIAgentTabListEnum.MCP, label: 'MCP', icon: <MCPOutlined color="currentColor" /> },
 ]
 export enum AIMentionTabsEnum {
+  /** 全部 */
+  All = 'all',
   /** forge 智能体 */
   Forge_Name = 'forgeName',
   /** 工具 */
@@ -92,12 +97,37 @@ export enum AIMentionTabsEnum {
   Browser = 'browser',
 }
 export const AIMentionTabs: YakitSideTabProps['yakitTabs'] = [
-  { value: AIMentionTabsEnum.Forge_Name, label: 'AIMentionTabs.skill' },
-  { value: AIMentionTabsEnum.Browser, label: 'AIMentionTabs.browser' },
-  { value: AIMentionTabsEnum.Tool, label: 'AIMentionTabs.tool' },
-  { value: AIMentionTabsEnum.KnowledgeBase, label: 'AIMentionTabs.knowledgeBase' },
-  { value: AIMentionTabsEnum.File_System, label: 'AIMentionTabs.fileSystem' },
-  { value: AIMentionTabsEnum.FocusMode, label: 'AiAgengt.focusMode' },
+  { value: AIMentionTabsEnum.All, label: 'AIMentionTabs.all' },
+  {
+    value: AIMentionTabsEnum.Forge_Name,
+    label: 'AIMentionTabs.skill',
+    icon: <TemplateOutlined color="currentColor" />,
+  },
+  {
+    value: AIMentionTabsEnum.Browser,
+    label: 'AIMentionTabs.browser',
+    icon: <ChromeOutlined color="currentColor" />,
+  },
+  {
+    value: AIMentionTabsEnum.Tool,
+    label: 'AIMentionTabs.tool',
+    icon: <Wrench1Outlined color="currentColor" />,
+  },
+  {
+    value: AIMentionTabsEnum.KnowledgeBase,
+    label: 'AIMentionTabs.knowledgeBase',
+    icon: <BookOpenTextOutlined color="currentColor" />,
+  },
+  {
+    value: AIMentionTabsEnum.File_System,
+    label: 'AIMentionTabs.fileSystem',
+    icon: <FolderOpenOutlined color="currentColor" />,
+  },
+  {
+    value: AIMentionTabsEnum.FocusMode,
+    label: 'AiAgengt.focusMode',
+    icon: <BoxOutlined color="currentColor" />,
+  },
 ]
 
 /** ai-agent 聊天全局配置参数默认值 */
@@ -131,9 +161,25 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     EnableGoalMode: false,
     GoalMinIterations: 0,
     MaxSubAgents: 0,
+    GoalDurationSeconds: 0,
+    GoalAcceptanceCriteria: '',
   },
   DisableMemoryTriage: false,
   Source: AISourceEnum.aiAgent,
+}
+
+/** 关闭 Goal：关 gate 并清空三选一字段（模式切换 / 关标签共用，避免散落字面量漏改） */
+export const clearGoalStrategy = (): Pick<
+  AIExecutionStrategy,
+  'EnableGoalMode' | 'GoalMinIterations' | 'GoalDurationSeconds' | 'GoalAcceptanceCriteria'
+> => {
+  const strategy = AIAgentSettingDefault.Strategy
+  return {
+    EnableGoalMode: false,
+    GoalMinIterations: strategy?.GoalMinIterations ?? 0,
+    GoalDurationSeconds: strategy?.GoalDurationSeconds ?? 0,
+    GoalAcceptanceCriteria: strategy?.GoalAcceptanceCriteria ?? '',
+  }
 }
 
 /** mcp 自定义服务器配置类型选项 */
@@ -306,6 +352,8 @@ export const iconMap = {
   knowledgeBase: <BookOpenTextOutlined color="currentColor" />,
   focusMode: <BookOpenTextOutlined color="currentColor" />,
   browser: <ChromeOutlined color="currentColor" />,
+  goal: <Goal2Outlined color="currentColor" />,
+  multiAgent: <BoxOutlined color="currentColor" />,
 }
 
 export enum AttachedResourceTypeEnum {
