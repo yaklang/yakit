@@ -382,7 +382,7 @@ export class ChatMultiSessionController {
     if (!state.execute) return false
     return (
       state.currentChatStatus.status === AITaskStatus.inProgress ||
-      state.currentLoadingTitle.casualTitle === tAgent('AIChatLoading.waitingReply') ||
+      state.pendingReply ||
       !!(state.initLoading && this.metaPool.get(sessionId)?.createChatQuestion)
     )
   }
@@ -934,9 +934,10 @@ export class ChatMultiSessionController {
         if (isCasualIdle) {
           if (!this.canStartExecutingSession(token, true)) return false
           // 自由对话没有问题进行中时，才改变loading的title
-          store
-            .getState()
-            .updateState({ currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.waitingReply'), planTitle: '' } })
+          store.getState().updateState({
+            pendingReply: true,
+            currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.waitingReply'), planTitle: '' },
+          })
 
           const chatID = uuidv4()
           const AttachedResourceInfos = params.AttachedResourceInfo || []
@@ -1371,6 +1372,7 @@ export class ChatMultiSessionController {
       if (restoring && meta.lifecycle.error) throw meta.lifecycle.error
       store.getState().updateState({ grpcLoadMoreLoading: false })
       if (store.getState().currentChatStatus.status !== AITaskStatus.inProgress) {
+        store.getState().updateState({ pendingReply: false })
         store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
       }
       this.finishSessionRestoreLoading(sessionId)
@@ -1378,6 +1380,7 @@ export class ChatMultiSessionController {
         if (meta.createChatQuestion) {
           this.requestMessage(sessionId, meta.createChatQuestion)
           meta.createChatQuestion = undefined
+          store.getState().updateState({ pendingReply: true })
           store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.waitingReply') })
         }
         this.handleSessionStartSuccess(sessionId)
@@ -1706,7 +1709,9 @@ export class ChatMultiSessionController {
           await finalWrite
         }
         lifecycle.writable = false
-        store.getState().updateState({ execute: false, initLoading: false, grpcLoadMoreLoading: false })
+        store
+          .getState()
+          .updateState({ execute: false, initLoading: false, grpcLoadMoreLoading: false, pendingReply: false })
         store.getState().updateCurrentChatStatus({ status: AITaskStatus.error })
         store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.sessionClosed') })
         await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
@@ -1742,7 +1747,7 @@ export class ChatMultiSessionController {
         this.closeSessionTimers(meta)
       }
       const store = this.storePool.get(session)
-      store?.getState().updateState({ execute: false })
+      store?.getState().updateState({ execute: false, pendingReply: false })
       store?.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.sessionClosing') })
       // cancel 已发出就不会再有 stream-finished：立即冻结，收尾窗口内重开的页面不再显示「思考中」
       this.freezeUnfinishedStreams(session)

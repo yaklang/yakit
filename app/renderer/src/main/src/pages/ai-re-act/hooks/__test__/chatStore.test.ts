@@ -60,6 +60,7 @@ describe('chatStore basics', () => {
     expect(store.getState().execute).toBe(false)
     expect(store.getState().currentChatStatus).toEqual(DefaultAgentChatStatus)
     expect(store.getState().currentLoadingTitle).toEqual(getDefaultAgentLoadingTitle())
+    expect(store.getState().pendingReply).toBe(false)
     expect(store.getState().currentReviewDetail).toEqual({ token: '', renderNum: 0 })
     expect(store.getState().skipSubtaskTaskIDs).toEqual([])
     expect(store.getState().showPlanList).toBe(false)

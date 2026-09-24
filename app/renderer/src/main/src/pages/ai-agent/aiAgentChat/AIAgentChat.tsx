@@ -30,7 +30,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './AIAgentChat.module.scss'
 import type { AIChatContentRefProps } from '../aiChatContent/type'
-import type { PageNodeItemProps } from '@/store/pageInfo'
+import { usePageInfo, type PageNodeItemProps } from '@/store/pageInfo'
 import { Trans } from 'react-i18next'
 import { type AIInputWithParamsTemplate, aiInputWithParamsTemplate } from '../components/aiMilkdownInput/utils'
 import { useStore } from 'zustand'
@@ -229,8 +229,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   })
 
   useEffect(() => {
-    const pending = takePendingOpenForge()
-    if (pending) handleTriggerExecForge(pending.forge, pending.useForge)
+    // StrictMode 双 mount：延后 take，cleanup 清掉定时器，避免第一次就吃掉 pending
+    const timer = window.setTimeout(() => {
+      const pending = takePendingOpenForge()
+      if (pending) handleTriggerExecForge(pending.forge, pending.useForge)
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   const handleAITool = useMemoizedFn((toolValue: AITool) => {
@@ -496,6 +500,22 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       }
     } catch (error) {}
   })
+
+  useEffect(() => {
+    if (!pageId) return
+    const initialAIRepository = usePageInfo.getState().queryPagesDataById(YakitRoute.AI_Agent, pageId)
+      ?.pageParamsInfo.AIRepository
+    if (!initialAIRepository) return
+    // 欢迎页是 lazy 组件，等输入框 ref 挂上再注入；cleanup 清定时器，StrictMode 不会双注入
+    let tries = 0
+    const timer = window.setInterval(() => {
+      const currentRef = mode === 'welcome' ? aiChatWelcomeRef : aiReActChatRef
+      if (!currentRef.current && ++tries < 60) return
+      window.clearInterval(timer)
+      konwledgeInputStringFn(JSON.stringify({ ...initialAIRepository, pageId }))
+    }, 50)
+    return () => window.clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     if (inViewPort) {

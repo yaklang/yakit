@@ -1385,18 +1385,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     )
   })
   const addAIREPOSITORY = useMemoizedFn((data) => {
-    const isExist = pageCache.filter((item) => item.route === YakitRoute.AI_Agent).length
-    if (isExist) {
-      emiter.emit('defualtAIMentionCommandParams', JSON.stringify(data))
-    }
-    openMenuPage(
-      { route: YakitRoute.AI_Agent },
-      {
-        pageParams: {
-          AIRepository: { ...data },
-        },
-      },
-    )
+    openAIAgentPage({ AIRepository: { ...data } })
   })
   const addModifyNotepad = useMemoizedFn((data: ModifyNotepadPageInfoProps) => {
     openMenuPage(

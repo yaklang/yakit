@@ -114,10 +114,7 @@ export const isEventForPage = <T extends { pageId?: string }>(data: T | undefine
 let pendingOpenForge: { forge: AIForge; useForge?: boolean } | undefined
 
 export const openAIAgentWithForge = (forge: AIForge, useForge?: boolean) => {
-  if (pendingOpenForge) {
-    yakitNotify('warning', '正在打开模板执行页，请稍后再试')
-    return
-  }
+  // 后一次覆盖前一次，避免连点被挡；StrictMode 由 AIAgentChat 延后 take 兜底
   pendingOpenForge = { forge, useForge }
   openAIAgentChatTab()
 }

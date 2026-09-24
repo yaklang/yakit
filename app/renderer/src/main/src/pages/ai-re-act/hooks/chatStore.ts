@@ -49,6 +49,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
 
       currentChatStatus: cloneDeep(DefaultAgentChatStatus),
       currentLoadingTitle: getDefaultAgentLoadingTitle(),
+      pendingReply: false,
       focusMode: '',
       showPlanList: false,
 
