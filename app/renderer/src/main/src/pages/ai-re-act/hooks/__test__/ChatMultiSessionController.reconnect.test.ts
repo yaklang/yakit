@@ -282,7 +282,9 @@ describe('session reconnect / IDB lifecycle', () => {
     await tick()
     expect(grpcQueryAIEvent).not.toHaveBeenCalled()
     expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('start-ai-re-act', expect.anything(), expect.anything())
-    expect(begin('s')).toBe(false)
+    // 会话仍占坑（准备期未结束）：不是「重复建立」错误，复用返回 true，也不会重复发起 IPC start
+    expect(begin('s')).toBe(true)
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('start-ai-re-act', 's', expect.anything())
     cleanup.resolve()
     await ctrl.ensureSession('s').meta.lifecycle.preparation
     expect(ctrl.ensureSession('s').store).toBe(old.store)

@@ -208,6 +208,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
     rawData.taskDetailsMap.set(res.TaskId || data.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
     store.getState().updateStateCount('chatTodoListUpdate')
     store.getState().updateState({
+      pendingReply: false,
       currentChatStatus: {
         questionID: res.TaskId || data.react_task_id,
         coordinatorId: '',
@@ -344,6 +345,7 @@ const handleQueueInfo: AIMessageHandler = (request) => {
     const canHydrateCurrentTask = !currentChat.questionID || currentChat.questionID === current_task.id
     if (canHydrateCurrentTask) {
       store.getState().updateState({
+        pendingReply: false,
         currentChatStatus: {
           questionID: current_task.id,
           coordinatorId: currentChat.coordinatorId || '',
@@ -394,7 +396,7 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
         // 该问题对话不存在异步任务
         store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
         store.getState().updateCurrentChatStatus({ status: info.react_task_now_status })
-        store.getState().updateState({ focusMode: '', cancelChatLoading: false })
+        store.getState().updateState({ focusMode: '', cancelChatLoading: false, pendingReply: false })
       }
     }
   }

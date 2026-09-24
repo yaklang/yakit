@@ -57,7 +57,7 @@ import styles from './ForgeName.module.scss'
 import { YakitProtoCheckbox } from '@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { cloneDeep } from 'lodash'
-import type { AIForgeEditorPageInfoProps } from '@/store/pageInfo'
+import { usePageInfo, type AIForgeEditorPageInfoProps } from '@/store/pageInfo'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
@@ -155,6 +155,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
       JSON.stringify({
         type: ReActChatEventEnum.OPEN_FORGE_FORM,
         params: { value: info },
+        pageId: usePageInfo.getState().getCurrentPageTabRouteKey(),
       }),
     )
   })

@@ -4,6 +4,7 @@ import { type AITabsEnum } from './defaultConstant'
 import { type AIStartParams } from '../ai-re-act/hooks/grpcApi'
 export interface AIAgentProps {
   pageId: string
+  initialSession?: AISession
 }
 
 // #region 页面全局变量
@@ -19,6 +20,8 @@ export interface AIAgentTriggerEventInfo {
   params?: Record<string, any>
   // 是否直接使用所传forge
   useForge?: boolean
+  // 所属一级 Tab routeKey，必传；不带则所有实例忽略
+  pageId?: string
 }
 // #endregion
 

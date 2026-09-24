@@ -607,6 +607,8 @@ export interface ChatStoreState {
   currentChatStatus: AgentChatStatus
   /** 当前会话的loading-title内容 */
   currentLoadingTitle: AgentLoadingTitle
+  /** 已发送提问、等待首包/出队（业务态；勿用 i18n casualTitle 判断） */
+  pendingReply: boolean
 
   /** 场景状态(仅供自由对话[reAct])使用 */
   focusMode: string

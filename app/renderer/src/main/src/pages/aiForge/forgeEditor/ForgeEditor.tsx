@@ -62,7 +62,8 @@ import { yakitNotify } from '@/utils/notification'
 import { GenerateTempFilePath, grpcCreateAIForge, grpcGetAIForge, grpcUpdateAIForge } from '@/pages/ai-agent/grpc'
 import emiter from '@/utils/eventBus/eventBus'
 import { useSubscribeClose } from '@/store/tabSubscribe'
-import { AIForgeListDefaultPagination, ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
+import { AIForgeListDefaultPagination } from '@/pages/ai-agent/defaultConstant'
+import { openAIAgentWithForge } from '@/pages/ai-agent/historyChat/HistoryChat'
 import { grpcGetAIToolList } from '@/pages/ai-agent/aiToolList/utils'
 import { QSInputTextarea } from '@/pages/ai-agent/template/template'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
@@ -324,16 +325,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
           yakitNotify('warning', '保存成功但未获取到执行的模板数据')
           return
         }
-        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
-        setTimeout(() => {
-          emiter.emit(
-            'onReActChatEvent',
-            JSON.stringify({
-              type: ReActChatEventEnum.OPEN_FORGE_FORM,
-              params: { value: forgeData.current },
-            }),
-          )
-        }, 100)
+        openAIAgentWithForge(forgeData.current)
       })
       .catch(() => {})
   })

@@ -11,8 +11,7 @@ import type { FieldGroup } from '@/pages/risks/YakitRiskTable/utils'
 import type { FieldName } from '@/pages/risks/RiskTable'
 import type { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
 import { JSONParseLog, type JSONParseLogOption } from '@/utils/tool'
-import emiter from '@/utils/eventBus/eventBus'
-import { YakitRoute } from '@/enums/yakitRoute'
+import { openAIAgentWithForge } from '@/pages/ai-agent/historyChat/HistoryChat'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { GetAIForgeRequest } from '@/pages/ai-agent/type/forge'
 import i18n from '@/i18n/i18n'
@@ -261,11 +260,8 @@ export const openAIForge = (params: {
   jsonParseLogParams: JSONParseLogOption
 }) => {
   const { query, handleParamsUIConfig, jsonParseLogParams } = params
-  Promise.all([
-    import('@/pages/ai-agent/grpc').then(({ grpcGetAIForge }) => grpcGetAIForge(query, true)),
-    import('@/pages/ai-agent/defaultConstant').then(({ ReActChatEventEnum }) => ReActChatEventEnum),
-  ])
-    .then(([res, ReActChatEventEnum]) => {
+  Promise.all([import('@/pages/ai-agent/grpc').then(({ grpcGetAIForge }) => grpcGetAIForge(query, true))])
+    .then(([res]) => {
       if (!res) {
         yakitNotify('warning', tOriginal('YakitAuditHoleTable.noForgeNameMatchesFound'))
         return
@@ -277,17 +273,7 @@ export const openAIForge = (params: {
       let paramsUIConfig: YakParamProps = JSONParseLog(res.ParamsUIConfig, jsonParseLogParams)
       paramsUIConfig = handleParamsUIConfig(paramsUIConfig)
       const newRes = { ...res, ParamsUIConfig: JSON.stringify(paramsUIConfig) }
-      emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
-      setTimeout(() => {
-        emiter.emit(
-          'onReActChatEvent',
-          JSON.stringify({
-            type: ReActChatEventEnum.OPEN_FORGE_FORM,
-            params: { value: newRes },
-            useForge: true,
-          }),
-        )
-      }, 100)
+      openAIAgentWithForge(newRes, true)
     })
     .catch((e) => {
       yakitNotify('error', tOriginal('YakitAuditHoleTable.forgeNameMatchingError') + `${e}`)

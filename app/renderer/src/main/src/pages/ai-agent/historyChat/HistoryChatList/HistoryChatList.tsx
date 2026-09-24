@@ -15,7 +15,7 @@ import { grpcUpdateAISessionTitle } from '../../grpc'
 import useAIAgentStore from '../../useContext/useStore'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { yakitNotify } from '@/utils/notification'
-import { onNewChat } from '../HistoryChat'
+import { onNewChat, openAIAgentChatTab } from '../HistoryChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { SessionListDispatcher } from './hook/useSessionList'
 import { AITaskStatus, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
@@ -135,7 +135,7 @@ const HistoryChatList: FC<{
   embedded,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const { activeChat } = useAIAgentStore()
+  const { activeChat, openChatInNewTab, pageId } = useAIAgentStore()
   const { setActiveChat, setSetting } = useAIAgentDispatcher()
   const listRef = useRef<HTMLDivElement | null>(null)
   const chatTotalRef = useRef(0)
@@ -244,7 +244,7 @@ const HistoryChatList: FC<{
         })
         setSessions && setSessions(newChats)
         if (newChats.length === 0) {
-          onNewChat()
+          onNewChat(false, pageId)
         } else if (activeSessionId === SessionID && active) {
           handleSetActiveChat(active)
         }
@@ -279,6 +279,10 @@ const HistoryChatList: FC<{
   const [closeLoading, setCloseLoading] = useState(false)
   // 如果当前历史在aiagent页面中，直接切换会话；其余页面需要判断对话是否在执行，执行中需要先断开会话再设置新会话
   const handleSetActiveChat = useMemoizedFn((info: AISession) => {
+    if (openChatInNewTab) {
+      openAIAgentChatTab(info)
+      return
+    }
     if (aiSource.some((source) => AI_AGENT_HISTORY_AI_SOURCES.includes(source))) {
       onSetChat(info)
       return

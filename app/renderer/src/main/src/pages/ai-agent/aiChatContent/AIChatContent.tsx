@@ -27,7 +27,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     const store = useCurrentStore()
     const initLoading = useStore(store, (state) => state.initLoading)
-    const { activeChat } = useAIAgentStore()
+    const { activeChat, pageId } = useAIAgentStore()
 
     const [showFreeChat, setShowFreeChat] = useControllableValue<boolean>(props, {
       defaultValue: true,
@@ -85,7 +85,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             loading={initLoading}
             actions={
               showBackToHome && (
-                <YakitButton type="outline2" icon={<ArrowLeftOutlined color="currentColor" />} onClick={onNewChat}>
+                <YakitButton
+                  type="outline2"
+                  icon={<ArrowLeftOutlined color="currentColor" />}
+                  onClick={() => onNewChat(false, pageId)}
+                >
                   {t('AIChatContent.backToHome')}
                 </YakitButton>
               )

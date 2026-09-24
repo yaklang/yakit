@@ -17,16 +17,16 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import styles from './HistoryChat.module.scss'
-import type { AIAgentTriggerEventInfo } from '../aiAgentType'
 import emiter from '@/utils/eventBus/eventBus'
 import { grpcDeleteAISession } from '../grpc'
 import type { AISession, DeleteAISessionRequest } from '../type/aiChat'
+import type { AIForge } from '../type/forge'
 import { SideSettingButton } from '../aiChatWelcome/AIChatWelcomeSideSetting'
 import HistoryChatList, { DAY_MS, getChatTimestamp } from './HistoryChatList/HistoryChatList'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useSessionList from './HistoryChatList/hook/useSessionList'
 import { type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
-import type { YakitRouteType } from '@/enums/yakitRoute'
+import { YakitRoute, type YakitRouteType } from '@/enums/yakitRoute'
 import { JSONParseLog } from '@/utils/tool'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { AISessionDeleteCancelledError, DeleteSessionsAISourceEnum, handAIHistoryChatRemove } from './utils'
@@ -95,10 +95,42 @@ interface SessionDataPayload {
   selectSessionId?: string
 }
 
-/** 向对话框组件进行事件触发的通信 */
-export const onNewChat = () => {
-  const info: AIAgentTriggerEventInfo = { type: ReActChatEventEnum.NEW_CHAT }
-  emiter.emit('onReActChatEvent', JSON.stringify(info))
+/** 向对话框组件进行事件触发的通信；AI Agent 一级页新开 Tab */
+export const openAIAgentChatTab = (session?: AISession) => {
+  emiter.emit(
+    'openPage',
+    JSON.stringify({
+      route: YakitRoute.AI_Agent,
+      params: { aiAgentPageInfo: session ? { session } : {} },
+    }),
+  )
+}
+
+/** 多开 Tab 事件闸门：pageId 一致才放行；pageId 为空的事件与不在本实例注册的（无 pageId）一律丢弃 */
+export const isEventForPage = <T extends { pageId?: string }>(data: T | undefined, pageId: string | undefined) =>
+  !!pageId && data?.pageId === pageId
+
+/** 跨页「保存并执行」：先记下 forge，新 Tab 挂上后再取走（mitt 发早了会被丢掉） */
+let pendingOpenForge: { forge: AIForge; useForge?: boolean } | undefined
+
+export const openAIAgentWithForge = (forge: AIForge, useForge?: boolean) => {
+  // 后一次覆盖前一次，避免连点被挡；StrictMode 由 AIAgentChat 延后 take 兜底
+  pendingOpenForge = { forge, useForge }
+  openAIAgentChatTab()
+}
+
+export const takePendingOpenForge = () => {
+  const next = pendingOpenForge
+  pendingOpenForge = undefined
+  return next
+}
+
+export const onNewChat = (openNewTab?: boolean, pageId?: string) => {
+  if (openNewTab) {
+    openAIAgentChatTab()
+    return
+  }
+  emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT, pageId }))
 }
 
 const isSessionMatchSource = (session: AISession, sources: AISource[]) => {
@@ -149,7 +181,7 @@ const HistoryChat = memo(
       return getHistorySourceQueryPlatform(historySourceFilter)
     }, [enableHistorySourceFilter, historySourceFilter])
     const [{ sessions }, dispatcher] = useSessionList(historyQuerySources, historyQueryPlatform)
-    const { activeChat } = useAIAgentStore()
+    const { openChatInNewTab, activeChat, pageId } = useAIAgentStore()
 
     const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
@@ -218,7 +250,7 @@ const HistoryChat = memo(
             ? []
             : Array.from(new Set([...visibleSessions.map((item) => item.SessionID), ...getRouteSessionIds(sources)])),
         })
-        onNewChat()
+        onNewChat(false, pageId)
         setActiveChat?.(undefined)
         dispatcher.setSessions?.([])
         dispatcher.resetPagination?.()
@@ -271,7 +303,7 @@ const HistoryChat = memo(
         const nextChats = sessions.filter((item) => getChatTimestamp(item) > beforeTimestamp)
         const activeDeleted = !!activeChat && sessionIds.includes(activeChat.SessionID)
         if (nextChats.length === 0) {
-          onNewChat()
+          onNewChat(false, pageId)
           setActiveChat?.(undefined)
           setSearch('')
         } else if (activeDeleted) {
@@ -517,7 +549,7 @@ const HistoryChat = memo(
                     <YakitButton
                       type="text2"
                       icon={<MessageCirclePlusOutlined color="currentColor" />}
-                      onClick={onNewChat}
+                      onClick={() => onNewChat(openChatInNewTab, pageId)}
                     />
                   </Tooltip>
                   {headerActionsExtra}

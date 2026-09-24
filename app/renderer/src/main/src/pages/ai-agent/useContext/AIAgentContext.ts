@@ -11,6 +11,10 @@ export interface AIAgentContextStore {
   setting: AIAgentSetting
   /** 当前展示对话 */
   activeChat?: AISession
+  /** 一级页新建/历史开新 Tab；嵌入页页内切换 */
+  openChatInNewTab?: boolean
+  /** 所属一级 Tab routeKey，多开时事件只回本实例 */
+  pageId?: string
 }
 
 /** 上层 onStart 入参：route/pageId 由 useChatIPC 注入，调用方无需传递 */

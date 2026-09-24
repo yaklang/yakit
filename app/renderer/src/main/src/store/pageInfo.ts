@@ -23,6 +23,7 @@ import type { IrifyAiCodeAuditStyle } from '@/pages/irifyAiCodeAudit/irifyAiCode
 import i18n from '@/i18n/i18n'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import type { CodecResponseProps, RightItemsProps } from '@/pages/codec/NewCodec'
+import type { AISession } from '@/pages/ai-agent/type/aiChat'
 const tOriginal = i18n.getFixedT(null, 'store')
 
 /**
@@ -117,6 +118,8 @@ interface PageParamsInfoProps {
   contextMenuResultPageInfo?: ContextMenuResultPageInfoProps
   /** 应用设置页面 */
   settingsPageInfo?: SettingsPageInfoProps
+  /** AI Agent 多开 Tab */
+  aiAgentPageInfo?: AIAgentPageInfoProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -162,6 +165,10 @@ export interface AIRepositoryProps {
     /** 是否自动执行（无需用户再次点击提交） */
     autoRun?: boolean
   }
+}
+
+export interface AIAgentPageInfoProps {
+  session?: AISession
 }
 
 export interface WebsocketFuzzerPageInfoProps {

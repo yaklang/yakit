@@ -31,6 +31,7 @@ import {
   LogOutCloseRoutes,
   getDefaultFixedTabsNoSinglPageRoute,
   isIndependentTabRoute,
+  isRouteKeyScopedTab,
 } from '@/routes/newRoute'
 import {
   isEnpriTraceAgent,
@@ -58,6 +59,7 @@ import {
 import classNames from 'classnames'
 import _ from 'lodash'
 import { routeConvertKey } from '../publicMenu/utils'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { CheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckIcon'
 import { SolidDocumentTextIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidDocumentTextIcon'
 import type { RouteToPageProps } from '../publicMenu/PublicMenu'
@@ -298,6 +300,37 @@ const getPluginOpNextTabIndex = (pages: PageCache[], pluginName: string) => {
   })
   return max + 1
 }
+
+/** 一级多开页面的菜单名：插件页用插件名（无则回落页面名），其余页面一律用页面名；为空表示不打开 */
+const getMultiOpenMenuName = (route: YakitRoute | string, pluginName?: string) => {
+  const label = YakitRouteToPageInfo[route as YakitRoute]?.label || ''
+  return isIndependentTabRoute(route) ? pluginName || label : label
+}
+
+/** 计算下一个 AIAgent-N 序号；默认页 verbose 无 -N 后缀，不占用编号 */
+const getAIAgentNextTabIndex = (pages: PageCache[]) => {
+  let max = 0
+  pages.forEach((item) => {
+    if (item.route !== YakitRoute.AI_Agent) return
+    const match = item.verbose?.match(/-(\d+)$/)
+    if (match) max = Math.max(max, parseInt(match[1], 10))
+  })
+  return max + 1
+}
+
+/** 历史会话已在某个 AI Agent Tab 中则返回该 Tab */
+const findAIAgentTabBySessionId = (pages: PageCache[], sessionId: string, ownerPageId?: string) => {
+  if (!sessionId) return undefined
+  return pages.find((item) => {
+    if (item.route !== YakitRoute.AI_Agent) return false
+    if (item.pageParams?.aiAgentPageInfo?.session?.SessionID === sessionId) return true
+    return !!(ownerPageId && (item.pageParams?.id || item.routeKey) === ownerPageId)
+  })
+}
+
+/** 一级 Tab 内容已真实挂载：非空且不是懒加载占位文案（i18n 占位由调用方传入） */
+const isTabBodyContentLoaded = (textContent: string, i18nLoadingText: string) =>
+  textContent !== '' && textContent !== 'loading page ...' && textContent !== i18nLoadingText
 
 /**
  * 收集所有的组
@@ -962,7 +995,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         dbReport()
         break
       case YakitRoute.AI_Agent:
-        addAIREPOSITORY(params)
+        if (params?.aiAgentPageInfo) {
+          openAIAgentPage(params)
+        } else {
+          addAIREPOSITORY(params)
+        }
         break
       case YakitRoute.Plugin_OP:
         addPluginOp(params)
@@ -1348,18 +1385,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     )
   })
   const addAIREPOSITORY = useMemoizedFn((data) => {
-    const isExist = pageCache.filter((item) => item.route === YakitRoute.AI_Agent).length
-    if (isExist) {
-      emiter.emit('defualtAIMentionCommandParams', JSON.stringify(data))
-    }
-    openMenuPage(
-      { route: YakitRoute.AI_Agent },
-      {
-        pageParams: {
-          AIRepository: { ...data },
-        },
-      },
-    )
+    openAIAgentPage({ AIRepository: { ...data } })
   })
   const addModifyNotepad = useMemoizedFn((data: ModifyNotepadPageInfoProps) => {
     openMenuPage(
@@ -1535,12 +1561,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }
   }, [])
   const onClosePage = useMemoizedFn((res: string) => {
-    let data: { route: YakitRoute; source?: YakitRoute } | undefined = undefined
+    let data: { route: YakitRoute; source?: YakitRoute; routeKey?: string } | undefined = undefined
     try {
       data = JSONParseLog(res || '{}', { page: 'MainOperatorContent', fun: 'onClosePage' })
     } catch (error) {}
     if (!data || !data?.route) return
-    const { route, source } = data
+    const { route, source, routeKey } = data
     switch (route) {
       case YakitRoute.AddYakitScript:
         {
@@ -1570,7 +1596,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         keepSearchNameMapStore.removeKeepSearchRouteNameMap(YakitRoute.MITMHacker)
         break
       default:
-        removeMenuPage({ route: route, menuName: '' })
+        removeMenuPage({ route: route, menuName: '', routeKey })
         break
     }
   })
@@ -2072,14 +2098,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       }
       const selectSubItem = openFlag ? true : nodeParams?.selectSubItem
       // 菜单在代码内的名字
-      const menuName = isIndependentTabRoute(route) ? pluginName : YakitRouteToPageInfo[route]?.label || ''
+      const menuName = getMultiOpenMenuName(route, pluginName)
       if (!menuName) return
 
-      // Plugin_OP / ContextMenuResult：每次打开新增一级 Tab，名称 {pluginName}-N 递增
+      // 一级多开页面（INDEPENDENT_TAB_ROUTES 配置）：每次打开新开一级 Tab，名「{menuName}-N」递增
       if (isIndependentTabRoute(route)) {
         const baseKey = routeConvertKey(route, pluginName)
         const nextIndex = getPluginOpNextTabIndex(pageCache, menuName)
-        const verbose = `${pluginName}-${nextIndex}`
+        const verbose = `${menuName}-${nextIndex}`
         const { tabId } = generateTabIdentity(baseKey)
         const node: MultipleNodeInfo = {
           id: tabId,
@@ -2112,7 +2138,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         return
       }
 
-      const filterPage = pageCache.filter((item) => item.route === route && item.menuName === menuName)
+      // routeKey 作用域路由（AI Agent 多开）只复用默认页，避免命中 AIAgent-N 使切页悬空
+      const filterPage = pageCache.filter((item) => {
+        if (item.route !== route || item.menuName !== menuName) return false
+        return !isRouteKeyScopedTab(route) || item.routeKey === route
+      })
       // 单开页面
       if (SingletonPageRoute.includes(route)) {
         const key = routeConvertKey(route, pluginName)
@@ -2604,10 +2634,60 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         break
     }
   })
+  const openAIAgentExtraTab = useMemoizedFn((pageParams?: ComponentParams) => {
+    const menuName = YakitRouteToPageInfo[YakitRoute.AI_Agent].label
+    const nextIndex = getAIAgentNextTabIndex(pageCache)
+    const verbose = `${menuName}-${nextIndex}`
+    const { tabId } = generateTabIdentity(routeConvertKey(YakitRoute.AI_Agent, ''))
+    const node: MultipleNodeInfo = {
+      id: tabId,
+      verbose,
+      time: new Date().getTime().toString(),
+      pageParams: {
+        ...pageParams,
+        id: tabId,
+        groupId: '0',
+      },
+      groupId: '0',
+      sortFieId: 1,
+    }
+    onSetPageInfoDataOfSingle(YakitRoute.AI_Agent, node)
+    setPageCache([
+      ...pageCache,
+      {
+        routeKey: tabId,
+        verbose,
+        menuName,
+        route: YakitRoute.AI_Agent,
+        singleNode: true,
+        multipleNode: [],
+        pageParams: node.pageParams,
+      },
+    ])
+    setCurrentTabKey(tabId)
+  })
+
+  const openAIAgentPage = useMemoizedFn((pageParams?: ComponentParams) => {
+    const sessionId = pageParams?.aiAgentPageInfo?.session?.SessionID || ''
+    if (sessionId) {
+      const ownerPageId = globalSessionEngine.getSessionPageId(sessionId, YakitRoute.AI_Agent)
+      const existing = findAIAgentTabBySessionId(pageCache, sessionId, ownerPageId)
+      if (existing) {
+        setCurrentTabKey(existing.routeKey)
+        return
+      }
+    }
+    openAIAgentExtraTab(pageParams)
+  })
+
   /** @name 打开页面 */
   const extraOpenMenuPage = useMemoizedFn((routeInfo: RouteToPageProps) => {
-    // 插件页面新开一级tab页（特殊处理）
-    if (routeInfo.route === YakitRoute.Plugin_OP) {
+    if (routeInfo.route === YakitRoute.AI_Agent) {
+      openAIAgentPage()
+      return
+    }
+    // 一级多开页面直接新开一级 Tab
+    if (isIndependentTabRoute(routeInfo.route)) {
       openMenuPage(routeInfo)
       return
     }
@@ -2629,6 +2709,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }),
     shallow,
   )
+  /** @description 一级 Tab 内容是否已真实挂载（未激活空内容/懒加载占位视为未挂载） */
+  const isTabContentMounted = useMemoizedFn((routeKey: string | undefined) => {
+    if (!routeKey) return false
+    const text = document.getElementById(`main-operator-page-body-${routeKey}`)?.textContent || ''
+    return isTabBodyContentLoaded(text, t('PageLoading.loading'))
+  })
   /** @description 多开页面的一级页面关闭事件 */
   const onBeforeRemovePage = useMemoizedFn((data: OnlyPageCache) => {
     switch (data.route) {
@@ -2677,7 +2763,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         break
 
       case YakitRoute.AI_Agent:
-        emiter.emit('onClosePageRepository')
+        // 懒加载未完成时页面无事件监听者，直接关闭；已挂载才交给页面确认进行中的会话
+        if (!isTabContentMounted(data.routeKey)) {
+          removeMenuPage(data)
+        } else {
+          emiter.emit('onClosePageRepository', data.routeKey || '')
+        }
         break
 
       case YakitRoute.MITMHacker:
@@ -2697,7 +2788,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const removeMenuPage = useMemoizedFn((data: OnlyPageCache, assignPage?: OnlyPageCache) => {
     // 获取需要关闭页面的索引
     const index = pageCache.findIndex((item) => {
-      if (isIndependentTabRoute(data.route)) {
+      if (isRouteKeyScopedTab(data.route)) {
         return item.routeKey === data.routeKey
       } else {
         return item.route === data.route
@@ -2710,7 +2801,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // 如果有指定关闭后展示的页面，执行该逻辑
     if (assignPage) {
       activeIndex = pageCache.findIndex((item) => {
-        if (isIndependentTabRoute(assignPage.route)) {
+        if (isRouteKeyScopedTab(assignPage.route)) {
           return item.routeKey === assignPage.routeKey
         } else {
           return item.route === assignPage.route
@@ -2734,7 +2825,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     setPageCache(
       getPageCache().filter((i) => {
-        if (isIndependentTabRoute(data.route)) {
+        if (isRouteKeyScopedTab(data.route)) {
           return i.routeKey !== data.routeKey
         } else {
           return !(i.route === data.route)
@@ -2743,7 +2834,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     )
     removeSubscribeClose(data.route)
     // 关闭一级页面时,清除缓存
-    if (isIndependentTabRoute(data.route)) {
+    if (isRouteKeyScopedTab(data.route)) {
       if (data.routeKey) {
         removePagesDataCacheById(data.route, data.routeKey)
       }
@@ -4053,10 +4144,11 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
     }),
     shallow,
   )
-  const { clearAllData, clearOtherDataByRoute } = usePageInfo(
+  const { clearAllData, clearOtherDataByRoute, removePagesDataCacheById } = usePageInfo(
     (s) => ({
       clearAllData: s.clearAllData,
       clearOtherDataByRoute: s.clearOtherDataByRoute,
+      removePagesDataCacheById: s.removePagesDataCacheById,
     }),
     shallow,
   )
@@ -4114,7 +4206,12 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
       onOkText: (modalT) => modalT('MainOperatorContent.closeAll'),
       icon: <ExclamationCircleOutlined />,
       onOk: () => {
-        const fixedTabs = pageCache.filter((ele) => getDefaultFixedTabs(softMode).includes(ele.route))
+        // 固定页只保默认 AI Agent Tab：多开的 AIAgent-N 虽是固定路由但要被关闭
+        const fixedTabs = pageCache.filter(
+          (ele) =>
+            getDefaultFixedTabs(softMode).includes(ele.route) &&
+            !(ele.route === YakitRoute.AI_Agent && ele.routeKey !== YakitRoute.AI_Agent),
+        )
         if (fixedTabs.length > 0) {
           const key = fixedTabs[fixedTabs.length - 1].routeKey
           setPageCache([...fixedTabs])
@@ -4122,6 +4219,11 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
         } else {
           setPageCache([])
         }
+        // 关闭的多开 AI Agent Tab 清页面缓存（停流由组件卸载的 onPageUnload 兜底）
+        pageCache
+          .filter((ele) => !fixedTabs.includes(ele))
+          .filter((ele) => ele.route === YakitRoute.AI_Agent && ele.routeKey !== YakitRoute.AI_Agent)
+          .forEach((ele) => removePagesDataCacheById(ele.route, ele.routeKey))
         //关闭所有清除fuzzer和序列化缓存数据
         clearAllData()
         clearFuzzerSequence()
@@ -4143,10 +4245,20 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
       icon: <ExclamationCircleOutlined />,
       onOk: () => {
         if (pageCache.length <= 0) return
-        const fixedTabs = pageCache.filter((ele) => getDefaultFixedTabs(softMode).includes(ele.route))
+        // 固定页只保默认 AI Agent Tab：多开的 AIAgent-N 虽是固定路由但要被关闭
+        const fixedTabs = pageCache.filter(
+          (ele) =>
+            getDefaultFixedTabs(softMode).includes(ele.route) &&
+            !(ele.route === YakitRoute.AI_Agent && ele.routeKey !== YakitRoute.AI_Agent),
+        )
         const newPage: PageCache[] = [...fixedTabs, item]
         setPageCache(newPage)
         setCurrentTabKey(item.routeKey)
+        // 关闭的多开 AI Agent Tab 清页面缓存（停流由组件卸载的 onPageUnload 兜底）
+        pageCache
+          .filter((ele) => !newPage.includes(ele))
+          .filter((ele) => ele.route === YakitRoute.AI_Agent && ele.routeKey !== YakitRoute.AI_Agent)
+          .forEach((ele) => removePagesDataCacheById(ele.route, ele.routeKey))
         clearOtherDataByRoute(item.routeKey)
         if (item.route !== YakitRoute.HTTPFuzzer) {
           //当前item不是YakitRoute.HTTPFuzzer,则清除序列化缓存数据
@@ -4199,7 +4311,9 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
 
   return (
     <>
-      {getDefaultFixedTabs(softMode).includes(item.route) ? (
+      {/* 固定页中的 AI Agent 多开 Tab（routeKey 非 ai-agent）按普通 Tab 渲染，保留关闭钮 */}
+      {getDefaultFixedTabs(softMode).includes(item.route) &&
+      !(item.route === YakitRoute.AI_Agent && item.routeKey !== YakitRoute.AI_Agent) ? (
         <div
           className={classNames(styles['tab-menu-first-item'], styles['tab-menu-item-fixed'], {
             [styles['tab-menu-first-item-active']]: item.routeKey === currentTabKey,

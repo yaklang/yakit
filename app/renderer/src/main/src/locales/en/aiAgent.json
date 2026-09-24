@@ -26,6 +26,7 @@
     "warning": "Warning",
     "replaceSkillTemplateConfirm": "Whether to replace the current skill template?",
     "replaceToolConfirm": "Whether to replace the current tool?",
+    "closeStopsRunningSession": "Closing this page will stop the session in progress. Close anyway?",
     "knowledgeNotBuiltTitle": "Knowledge base not built",
     "knowledgeNotBuiltDesc": "Knowledge not built yet, are you sure to close the page?"
   },
@@ -201,6 +202,7 @@
     "loadingHistory": "Loading history...",
     "waitingReply": "Waiting for AI reply...",
     "questionExecuting": "Executing question...",
+    "executingSessionsLimit": "Concurrent AI sessions limit reached. Max {{count}}",
     "sessionClosing": "Closing session...",
     "sessionClosed": "Session closed"
   },

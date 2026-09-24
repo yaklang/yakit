@@ -264,8 +264,8 @@ const resolveLocalSource = (activeChat: AISession): DeleteSessionsAISourceType |
 export const onReStart = (props: ReStartParams) => {
   const { setting, activeChat, onStart } = props
   if (!activeChat?.SessionID) return
-  const execute = globalSessionEngine.getSessionExecute(activeChat.SessionID)
-  if (!execute) {
+  const sessionId = activeChat.SessionID
+  const start = () => {
     const request: AIStartParams = setting ?? {
       ...AIAgentSettingDefault,
       ...activeChat.StartParams,
@@ -280,9 +280,16 @@ export const onReStart = (props: ReStartParams) => {
       },
     }
     onStart({
-      token: activeChat?.SessionID,
+      token: sessionId,
       params: aiInputEvent,
       localSource: resolveLocalSource(activeChat),
     })
   }
+  // 关页收尾还没结束（cancel 已发、end/落库未完）时重开：等收尾完成再建连，
+  // 否则 onStart 会被占坑拦截静默返回，页面停在空历史的垂死 store
+  if (globalSessionEngine.isSessionClosing(sessionId)) {
+    void globalSessionEngine.whenSessionClosed(sessionId).then(start)
+    return
+  }
+  if (!globalSessionEngine.getSessionExecute(sessionId)) start()
 }

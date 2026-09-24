@@ -108,6 +108,24 @@ describe('aiStream handlers', () => {
     const stream = req.rawData.contents.get('eu-1') as any
     expect(stream?.type).toBe(AIChatQSDataTypeEnum.STREAM)
     expect(stream.data.content).toBe('x')
+    expect(stream.data.status).toBe('start')
     expect(stream.stageSettled).toBe(false)
+  })
+
+  it('D4: IsSync history replay stream is created with status end', async () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcRes({
+        Type: 'stream',
+        NodeId: 're-act-loop-thought',
+        EventUUID: 'eu-sync',
+        Content: new TextEncoder().encode('history'),
+        IsSync: true,
+      }),
+    })
+    await aiStreamDataHandlers.stream(req)
+    const stream = req.rawData.contents.get('eu-sync') as any
+    expect(stream?.type).toBe(AIChatQSDataTypeEnum.STREAM)
+    expect(stream.data.content).toBe('history')
+    expect(stream.data.status).toBe('end')
   })
 })

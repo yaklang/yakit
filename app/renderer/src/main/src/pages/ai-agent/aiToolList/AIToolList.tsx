@@ -30,7 +30,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { ReActChatEventEnum, tagColors } from '../defaultConstant'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { yakitNotify } from '@/utils/notification'
-import type { AIToolEditorPageInfoProps } from '@/store/pageInfo'
+import { usePageInfo, type AIToolEditorPageInfoProps } from '@/store/pageInfo'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'aiAgent')
@@ -207,6 +207,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
       JSON.stringify({
         type: ReActChatEventEnum.USE_AI_TOOL,
         params: { value: record },
+        pageId: usePageInfo.getState().getCurrentPageTabRouteKey(),
       }),
     )
   })

@@ -259,8 +259,13 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       })
     })
 
+    // 编辑器未就绪时的 mention 先排队，就绪后补插（挂载即注入场景）
+    const pendingMentionsRef = useRef<AIMentionCommandParams[]>([])
     const onUpdateEditor = useMemoizedFn((editor: EditorMilkdownProps) => {
       editorMilkdown.current = editor
+      const pending = pendingMentionsRef.current
+      pendingMentionsRef.current = []
+      pending.forEach((item) => editor.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, item)))
     })
 
     const onFilesChange = useMemoizedFn((files: FileToChatQuestionList[]) => {
@@ -279,7 +284,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           onMemfitExtra(params)
           break
         default:
-          editorMilkdown.current?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+          if (!editorMilkdown.current) {
+            pendingMentionsRef.current.push(params)
+            break
+          }
+          editorMilkdown.current.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
           break
       }
     })

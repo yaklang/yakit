@@ -24,7 +24,9 @@ import { DefaultAgentChatStatus, DefaultMemoryList, DefaultTaskPlanEndGate } fro
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
+import { createElement } from 'react'
 import { yakitNotify } from '@/utils/notification'
+import emiter from '@/utils/eventBus/eventBus'
 import {
   type AIChatQSData,
   AIChatQSDataTypeEnum,
@@ -42,10 +44,12 @@ import {
   drainSessionContentWrites,
   persistIndependentItem,
   persistToolResultIfTerminal,
+  upsertSessionContent,
 } from './persist/contentPersistHelper'
 import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
 import { clearThoughtDurationCache } from '@/pages/ai-agent/components/thoughtDuration/ThoughtDuration'
 import i18n from '@/i18n/i18n'
+import { useStore } from '@/store'
 
 const { ipcRenderer } = window.require('electron')
 const tAgent = i18n.getFixedT(null, 'aiAgent')
@@ -201,6 +205,9 @@ export class ChatMultiSessionController {
   private static readonly RECOVERY_HISTORY_LIMIT = 60
   /** ping请求探连成功的轮询时间 */
   private static readonly PING_POLLING_INTERVAL = 3000
+  /** 进行中会话并发上限（跨所有 Tab / source 的连接中会话数，非 Tab 数）：未登录 2、已登录 5 */
+  private static readonly MAX_EXECUTING_SESSIONS_LOGGED_OUT = 2
+  private static readonly MAX_EXECUTING_SESSIONS_LOGGED_IN = 5
   // #endregion
 
   // #region session-source-route-pageId 索引管理相关变量和逻辑
@@ -346,10 +353,80 @@ export class ChatMultiSessionController {
   }
 
   /**
+   * 只读查询 session 归属 pageId；可选按 route 过滤。未注册返回 undefined
+   */
+  public getSessionPageId(sessionId: string, route?: YakitRouteType): string | undefined {
+    const owner = this.sessionOwnerMap.get(sessionId)
+    if (!owner) return undefined
+    if (route && owner.route !== route) return undefined
+    return owner.pageId
+  }
+
+  /**
    * 只读查询 session 是否在执行中；无内存池时返回 false，不会 ensureSession 造空池
    */
   public getSessionExecute(sessionId: string): boolean {
     return this.storePool.get(sessionId)?.getState().execute === true
+  }
+
+  /** 进行中会话并发上限：未登录 2、已登录 5 */
+  public getMaxExecutingSessions(): number {
+    return useStore.getState().userInfo.isLogin
+      ? ChatMultiSessionController.MAX_EXECUTING_SESSIONS_LOGGED_IN
+      : ChatMultiSessionController.MAX_EXECUTING_SESSIONS_LOGGED_OUT
+  }
+
+  /** 会话是否正在执行（提问等待回复 / 任务进行中 / 带首问的建连中）；纯打开历史不算 */
+  public isSessionWorking(sessionId: string): boolean {
+    const store = this.storePool.get(sessionId)
+    if (!store) return false
+    const state = store.getState()
+    if (!state.execute) return false
+    return (
+      state.currentChatStatus.status === AITaskStatus.inProgress ||
+      state.pendingReply ||
+      !!(state.initLoading && this.metaPool.get(sessionId)?.createChatQuestion)
+    )
+  }
+
+  public getWorkingSessionCount(): number {
+    let count = 0
+    for (const id of this.readyChannels) {
+      if (this.isSessionWorking(id)) count++
+    }
+    return count
+  }
+
+  /** 该页是否还有进行中的会话（关页前用来决定要不要确认） */
+  public hasWorkingSessionOnPage(route: YakitRouteType, pageId: string) {
+    return this.resolvePageSessionIds(route, pageId).some((sessionId) => this.isSessionWorking(sessionId))
+  }
+
+  /** 本会话已在执行中可继续；否则按项目内正在执行的会话数判断。notify 为 true 时超限提示 */
+  public canStartExecutingSession(sessionId?: string, notify = false): boolean {
+    if (sessionId && this.isSessionWorking(sessionId)) return true
+    const ok = this.getWorkingSessionCount() < this.getMaxExecutingSessions()
+    if (!ok && notify) {
+      const msg = tAgent('AIChatLoading.executingSessionsLimit', { count: this.getMaxExecutingSessions() })
+      const openLogin = !useStore.getState().userInfo.isLogin
+      yakitNotify(
+        'warning',
+        openLogin
+          ? {
+              // object 会被当成 NotificationArgsProps，可点节点放进 message
+              message: createElement(
+                'div',
+                {
+                  style: { whiteSpace: 'pre-wrap', cursor: 'pointer' },
+                  onClick: () => emiter.emit('onOpenLogin', ''),
+                },
+                msg,
+              ),
+            }
+          : msg,
+      )
+    }
+    return ok
   }
 
   /**
@@ -371,6 +448,23 @@ export class ChatMultiSessionController {
   /** 会话是否仍占坑（已 start 且尚未 end，含 cancel 等待 end 的窗口） */
   public isSessionReady(sessionId: string) {
     return this.readyChannels.has(sessionId)
+  }
+
+  /** 关页后的收尾窗口：连接还在，但已经在停，不能再当成一次新的建立 */
+  public isSessionClosing(sessionId: string) {
+    return !!this.metaPool.get(sessionId)?.lifecycle.closing || this.pendingDisposeSessions.has(sessionId)
+  }
+
+  /** 等这次收尾结束。已经停完则立刻返回。 */
+  public whenSessionClosed(sessionId: string): Promise<void> {
+    if (!this.isSessionReady(sessionId) && !this.isSessionClosing(sessionId)) return Promise.resolve()
+    const ending = this.metaPool.get(sessionId)?.lifecycle.ending
+    if (ending)
+      return ending.then(
+        () => undefined,
+        () => undefined,
+      )
+    return this.waitSessionEnd(sessionId)
   }
   /**
    * 待卸池的 session：forceClose 后保留监听与业务池，等 end / 兜底超时再 teardown
@@ -605,20 +699,6 @@ export class ChatMultiSessionController {
     })
   }
 
-  /**
-   * 停止仍在执行的会话，并等待真实 session-end 或 fallback 完成。
-   * 无执行态会话时立即完成；各会话并发关停，end / 兜底之后继续等待各自写事务。
-   */
-  public async stopExecutingSessionsAndWait(sessionIds: string[]): Promise<void> {
-    const executingSessionIds = [...new Set(this.filterExecutingSessionIds(sessionIds))]
-    if (!executingSessionIds.length) return
-
-    const waitForEnd = executingSessionIds.map((sessionId) => this.waitSessionEnd(sessionId))
-
-    this.forceCloseSession({ sessionIds: executingSessionIds })
-    await Promise.all(waitForEnd)
-  }
-
   /** 取消已有的 session-end 兜底定时器 */
   private clearSessionEndFallback(sessionId: string) {
     const timer = this.sessionEndFallbackTimers.get(sessionId)
@@ -740,7 +820,12 @@ export class ChatMultiSessionController {
       return false
     }
     if (this.readyChannels.has(sessionId)) {
-      yakitNotify('warning', '会话已经存在，请勿重复建立！')
+      if (this.isSessionClosing(sessionId)) return false
+      if (pageId) this.rebindSessionPageId(sessionId, pageId)
+      return true
+    }
+    // 打开历史（空提问）不拦；有提问的新建受并发上限约束
+    if ((params?.Params?.UserQuery || '').trim() && !this.canStartExecutingSession(sessionId, true)) {
       return false
     }
     this.registerSessionChannel(sessionId, { route, pageId, source: localSource ?? params.Params?.Source })
@@ -814,23 +899,26 @@ export class ChatMultiSessionController {
     this.forceCloseSession({ sessionIds: [sessionId] })
   }
 
-  /** 主动向grpc发送请求 */
-  public handleSendMessage(payload: AIChatSendParams) {
+  /** 主动向grpc发送请求；达并发上限时返回 false，不改动当前会话内容 */
+  public handleSendMessage(payload: AIChatSendParams): boolean {
     // console.log('handleSendMessage', payload)
     try {
       const { token, type, params, optionValue } = payload
       if (!this.readyChannels.has(token)) {
-        if (!this.isActiveShowSession(token)) return
+        if (!this.isActiveShowSession(token)) return false
         yakitNotify('warning', '会话不存在，无法发送消息')
-        return
+        return false
       }
 
       const { store, rawData, meta } = this.ensureSession(token)
 
       // 向上加载历史（recovery_history）进行中时禁止发送消息，避免与 gRPC 查询并发导致后端表死锁
+      // 同步/热更新是 UI 自动触发的（如重开会话恢复 setting 时的配置热补丁），静默丢弃不提示
       if (meta.lifecycle.closing || store.getState().initLoading || store.getState().grpcLoadMoreLoading) {
-        yakitNotify('warning', '历史消息加载中，请稍后再发送')
-        return
+        if (!params.IsSyncMessage && !params.IsConfigHotpatch) {
+          yakitNotify('warning', '历史消息加载中，请稍后再发送')
+        }
+        return false
       }
 
       if (params.IsFreeInput) {
@@ -839,10 +927,12 @@ export class ChatMultiSessionController {
         const isCasualIdle = currentChatStatus.status !== AITaskStatus.inProgress
 
         if (isCasualIdle) {
+          if (!this.canStartExecutingSession(token, true)) return false
           // 自由对话没有问题进行中时，才改变loading的title
-          store
-            .getState()
-            .updateState({ currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.waitingReply'), planTitle: '' } })
+          store.getState().updateState({
+            pendingReply: true,
+            currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.waitingReply'), planTitle: '' },
+          })
 
           const chatID = uuidv4()
           const AttachedResourceInfos = params.AttachedResourceInfo || []
@@ -925,7 +1015,7 @@ export class ChatMultiSessionController {
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
-              return
+              return false
             }
 
             switch (review.type) {
@@ -954,7 +1044,7 @@ export class ChatMultiSessionController {
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
-              return
+              return false
             }
 
             store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
@@ -1003,8 +1093,10 @@ export class ChatMultiSessionController {
       }
 
       this.requestMessage(token, params)
+      return true
     } catch (error) {
       console.error('handleSendMessage error', error)
+      return false
     }
   }
   /** 向连接中的会话发送请求 */
@@ -1275,6 +1367,7 @@ export class ChatMultiSessionController {
       if (restoring && meta.lifecycle.error) throw meta.lifecycle.error
       store.getState().updateState({ grpcLoadMoreLoading: false })
       if (store.getState().currentChatStatus.status !== AITaskStatus.inProgress) {
+        store.getState().updateState({ pendingReply: false })
         store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
       }
       this.finishSessionRestoreLoading(sessionId)
@@ -1282,6 +1375,7 @@ export class ChatMultiSessionController {
         if (meta.createChatQuestion) {
           this.requestMessage(sessionId, meta.createChatQuestion)
           meta.createChatQuestion = undefined
+          store.getState().updateState({ pendingReply: true })
           store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.waitingReply') })
         }
         this.handleSessionStartSuccess(sessionId)
@@ -1555,6 +1649,23 @@ export class ChatMultiSessionController {
   }
 
   /**
+   * 冻结仍处于流式中的 STREAM 条目：主动停流时中断流不会再有 stream-finished 跟进
+   * （会话真实 end 时兜底再扫一次），不冻结会让「思考中」读秒在重开页面 / 已停会话上继续跑。
+   */
+  private freezeUnfinishedStreams(sessionId: string) {
+    const store = this.storePool.get(sessionId)
+    const rawData = this.rawDataPool.get(sessionId)
+    const meta = this.metaPool.get(sessionId)
+    if (!store || !rawData || !meta) return
+    for (const item of rawData.contents.values()) {
+      if (item.type !== AIChatQSDataTypeEnum.STREAM || item.data.status === 'end') continue
+      item.data.status = 'end'
+      if (store.getState().items[item.id]) store.getState().incrementNodeVersion(item.id, 'item')
+      upsertSessionContent(sessionId, item.id, item, meta.lifecycle)
+    }
+  }
+
+  /**
    * 真实 end / 兜底共用的收尾：停止接收 → 排完事件 → 最终快照 → 写事务 → 可选删除。
    * ready 占位直到全部收尾结束，保证相同 sessionId 的下一轮不会与旧事务交错。
    */
@@ -1585,12 +1696,16 @@ export class ChatMultiSessionController {
         const { store } = data
         if (lifecycle.current && this.pendingDisposeSessions.get(sessionId) !== true) {
           handleTaskPlanEnd({ ...data, sessionId }, true)
+          // 收尾快照前冻结中断流，保证最终落库与 UI 都不再处于流式态
+          this.freezeUnfinishedStreams(sessionId)
           const finalWrite = this.flushSessionRender(sessionId)
           lifecycle.writable = false
           await finalWrite
         }
         lifecycle.writable = false
-        store.getState().updateState({ execute: false, initLoading: false, grpcLoadMoreLoading: false })
+        store
+          .getState()
+          .updateState({ execute: false, initLoading: false, grpcLoadMoreLoading: false, pendingReply: false })
         store.getState().updateCurrentChatStatus({ status: AITaskStatus.error })
         store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.sessionClosed') })
         await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
@@ -1626,8 +1741,10 @@ export class ChatMultiSessionController {
         this.closeSessionTimers(meta)
       }
       const store = this.storePool.get(session)
-      store?.getState().updateState({ execute: false })
+      store?.getState().updateState({ execute: false, pendingReply: false })
       store?.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.sessionClosing') })
+      // cancel 已发出就不会再有 stream-finished：立即冻结，收尾窗口内重开的页面不再显示「思考中」
+      this.freezeUnfinishedStreams(session)
       if (meta && !meta.lifecycle.started) {
         // 准备阶段没有实际流，立即收尾；preparation 返回后也不能再 start。
         void this.handleSessionEnd(session)
@@ -1728,16 +1845,22 @@ export class ChatMultiSessionController {
   }
 
   /**
-   * 页面生命周期卸载：卸该「当前」page 下所有 source 的 session 内存（非仅 forceClose）
-   * 会 flush 渲染树后保留 IDB，供后续恢复；已 rebind 走的 session 不会被旧页清掉
+   * 页面卸载按归属停流，只处理 route 和 pageId 都对得上的会话
+   * （Fuzzer 页停自己的全部会话；AI 页只停当前页，不碰其他页和 Fuzzer）。
+   * 返回的 Promise 在该页全部会话收尾（end / 兜底、IDB 写、卸池）完成后 resolve：
+   * 确认关页场景 await 它即「先停会话再关 Tab」；组件卸载钩子忽略返回值则不阻塞卸载。
    */
-  public onPageUnload(route: YakitRouteType, pageId: string) {
+  public async onPageUnload(route: YakitRouteType, pageId: string): Promise<void> {
     const ids = this.resolvePageSessionIds(route, pageId)
-    for (const sessionId of ids) {
-      void this.disposeSessionMemory(sessionId, false).catch((error) => {
-        console.error('AI session page unload failed', error)
-      })
-    }
+    await Promise.all(
+      ids.map((sessionId) => {
+        const owner = this.sessionOwnerMap.get(sessionId)
+        if (!owner || owner.route !== route || owner.pageId !== pageId) return
+        return this.disposeSessionMemory(sessionId, false).catch((error) => {
+          console.error('AI session page unload failed', error)
+        })
+      }),
+    )
   }
 }
 

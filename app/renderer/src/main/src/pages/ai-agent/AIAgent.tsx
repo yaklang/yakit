@@ -42,11 +42,12 @@ const { ipcRenderer } = window.require('electron')
 
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
+  const pageId = props.pageId || YakitRoute.AI_Agent
   // #region ai-agent页面全局缓存
   // ai-agent-chat 全局配置
   const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
   // 当前展示对话
-  const [activeChat, setActiveChat] = useState<AISession>()
+  const [activeChat, setActiveChat] = useState<AISession | undefined>(props.initialSession)
 
   const [show, setShow] = useState<boolean>(false)
   const [sideRatio, setSideRatio] = useState('360px')
@@ -84,14 +85,16 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     persistAIAgentChatSetting(getSetting())
   }, [setting])
 
-  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
+  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(YakitRoute.AI_Agent, pageId)
 
   const store: AIAgentContextStore = useMemo(() => {
     return {
       setting: setting,
       activeChat: activeChat,
+      openChatInNewTab: true,
+      pageId,
     }
-  }, [setting, activeChat])
+  }, [setting, activeChat, pageId])
   const dispatcher: AIAgentContextDispatcher = useMemo(() => {
     return {
       getSetting: getSetting,

@@ -8,7 +8,7 @@ import { createRef } from 'react'
 import type { AIChatContentRefProps } from '../type'
 
 const store = createStore(() => ({ initLoading: true }))
-const agentStore = createStore(() => ({ activeChat: { SessionID: 'session-1', Source: 'ai' } }))
+const agentStore = createStore(() => ({ activeChat: { SessionID: 'session-1', Source: 'ai' }, pageId: 'page-1' }))
 const { newChat } = vi.hoisted(() => ({ newChat: vi.fn() }))
 const flowCalls = vi.fn()
 
@@ -129,7 +129,7 @@ describe('AIChatContent 加载超时操作', () => {
     render(<AIChatContent onChat={vi.fn()} />)
     expect(screen.getByText('内部面板')).toBeInTheDocument()
   })
-  it('持续加载 3 秒后在文案下方显示带返回图标的按钮，点击复用新建会话逻辑', () => {
+  it('持续加载 3 秒后在文案下方显示带返回图标的按钮，点击页内重置回欢迎页', () => {
     render(<AIChatContent onChat={vi.fn()} />)
     advance(2999)
     expect(queryBackButton()).not.toBeInTheDocument()
@@ -138,7 +138,7 @@ describe('AIChatContent 加载超时操作', () => {
     expect(screen.getByText('数据加载中，请稍后').nextElementSibling).toBe(button)
     expect(button.querySelector('svg')).not.toBeNull()
     fireEvent.click(button)
-    expect(newChat).toHaveBeenCalledOnce()
+    expect(newChat).toHaveBeenCalledExactlyOnceWith(false, 'page-1')
   })
 
   it('加载提前结束时取消计时，下次加载重新等待 3 秒', () => {
