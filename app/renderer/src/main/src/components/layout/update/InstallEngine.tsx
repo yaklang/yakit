@@ -5,6 +5,7 @@ import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
 import type { YakitSystem } from '@/yakitGVDefine'
 import { grpcFetchLatestOSSDomain, grpcFetchLatestYakVersion } from '@/apiUtils/grpc'
+import { getOfficialYakEngineArtifactPrefix } from '@/utils/envfile'
 import { setClipboardText } from '@/utils/clipboard'
 import classNames from 'classnames'
 import styles from './InstallEngine.module.scss'
@@ -33,17 +34,19 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
     grpcFetchLatestOSSDomain().then(setOSSDomain)
   }, [])
 
+  const enginePrefix = getOfficialYakEngineArtifactPrefix()
+
   const copyCommand = useMemoizedFn((type: YakitSystem) => {
     let link: string = ''
     switch (type) {
       case 'Darwin':
-        link = `https://${ossDomain}/yak/${latestVersion || 'latest'}/yak_darwin_amd64`
+        link = `https://${ossDomain}/yak/${latestVersion || 'latest'}/${enginePrefix}darwin_amd64`
         break
       case 'Linux':
-        link = `https://${ossDomain}/yak/${latestVersion || 'latest'}/yak_linux_amd64`
+        link = `https://${ossDomain}/yak/${latestVersion || 'latest'}/${enginePrefix}linux_amd64`
         break
       case 'Windows_NT':
-        link = `https://${ossDomain}/yak/${latestVersion || 'latest'}/yak_windows_amd64.exe`
+        link = `https://${ossDomain}/yak/${latestVersion || 'latest'}/${enginePrefix}windows_amd64.exe`
         break
     }
     setClipboardText(link)
@@ -137,8 +140,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                     Windows(x64)下载
                   </div>
                   <div className={styles['link-style']}>
-                    https://{ossDomain}/yak/{latestVersion || 'latest'}
-                    /yak_windows_amd64.exe
+                    https://{ossDomain}/yak/{latestVersion || 'latest'}/{enginePrefix}windows_amd64.exe
                     <div className={styles['copy-icon']} onClick={() => copyCommand('Windows_NT')}>
                       <YakitCopySvgIcon />
                     </div>
@@ -149,8 +151,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                     MacOS(intel/m1)下载
                   </div>
                   <div className={styles['link-style']}>
-                    https://{ossDomain}/yak/{latestVersion || 'latest'}
-                    /yak_darwin_amd64
+                    https://{ossDomain}/yak/{latestVersion || 'latest'}/{enginePrefix}darwin_amd64
                     <div className={styles['copy-icon']} onClick={() => copyCommand('Darwin')}>
                       <YakitCopySvgIcon />
                     </div>
@@ -161,8 +162,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                     Linux(x64)下载
                   </div>
                   <div className={styles['link-style']}>
-                    https://{ossDomain}/yak/{latestVersion || 'latest'}
-                    /yak_linux_amd64
+                    https://{ossDomain}/yak/{latestVersion || 'latest'}/{enginePrefix}linux_amd64
                     <div className={styles['copy-icon']} onClick={() => copyCommand('Linux')}>
                       <YakitCopySvgIcon />
                     </div>

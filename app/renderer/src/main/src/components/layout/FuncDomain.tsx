@@ -26,6 +26,7 @@ import {
   isMemfit,
   isYakit,
   showDevTool,
+  toDefaultYakEngineDownloadVersion,
 } from '@/utils/envfile'
 import { invalidCacheAndUserData } from '@/utils/InvalidCacheAndUserData'
 import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
@@ -1455,7 +1456,7 @@ interface MoreYaklangVersionProps {
   onClosePop: (visible: boolean) => void
 }
 /** @name 更多Yaklang版本 */
-const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
+export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
   const { moreYaklangVersionList, currentBuildType = 'full', onClosePop } = props
   const { t } = useI18nNamespaces(['layout'])
   const [versionList, setVersionList] = useState<string[]>(moreYaklangVersionList)
@@ -1463,18 +1464,24 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
   const [searchVersionList, setSearchVersionList] = useState<string[]>([])
   /** 仅 Yakit 开放轻量版本选择；IRify/Memfit 不展示 */
   const showSlimOption = isYakit()
-  const [engineBuildType, setEngineBuildType] = useState<'full' | 'slim'>(
-    showSlimOption && currentBuildType === 'slim' ? 'slim' : 'full',
-  )
+  const [engineBuildType, setEngineBuildType] = useState<'full' | 'slim'>(() => {
+    if (!showSlimOption) return 'full'
+    if (isCommunityYakit() || currentBuildType === 'slim') return 'slim'
+    return 'full'
+  })
 
   useEffect(() => {
     setVersionList(moreYaklangVersionList)
   }, [moreYaklangVersionList])
 
   useEffect(() => {
-    if (showSlimOption) {
-      setEngineBuildType(currentBuildType === 'slim' ? 'slim' : 'full')
+    if (!showSlimOption) {
+      setEngineBuildType('full')
+      return
     }
+    // 社区版默认停在轻量。已经装的是全量也不改回全量选项；轻量包不存在时的回退在主进程下载。
+    if (isCommunityYakit()) return
+    setEngineBuildType(currentBuildType === 'slim' ? 'slim' : 'full')
   }, [currentBuildType, showSlimOption])
 
   const onSearchVersion = (version: string) => {
@@ -1485,7 +1492,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
 
   const renderVersionList = useMemo(() => {
     const base = searchVersionVal ? searchVersionList : versionList
-    // 轻量版仅对正式/预发版本开放（OSS 有 yak-slim_ 产物），过滤掉 dev/ 日常构建
+    // 轻量选项只给正式/预发版本，去掉 dev/。选中后请求 slim/；产物没有时主进程再下同版本全量，这里不改选项。
     if (showSlimOption && engineBuildType === 'slim') {
       return base.filter((v) => !v.startsWith('dev'))
     }
@@ -1520,8 +1527,8 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             value={engineBuildType}
             onChange={(e) => setEngineBuildType(e.target.value)}
             options={[
-              { label: t('MoreYaklangVersion.standardVersion'), value: 'full' },
               { label: t('MoreYaklangVersion.slimVersion'), value: 'slim' },
+              { label: t('MoreYaklangVersion.standardVersion'), value: 'full' },
             ]}
           />
           <Tooltip title={t('MoreYaklangVersion.slimVersionTip')}>
@@ -1879,7 +1886,10 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     if (['yakit', 'intranetYakit'].includes(type)) {
       emiter.emit('activeUpdateYakitOrYaklang', type)
     } else {
-      emiter.emit('downYaklangSpecifyVersion', JSON.stringify({ version: yaklangLastVersion }))
+      emiter.emit(
+        'downYaklangSpecifyVersion',
+        JSON.stringify({ version: toDefaultYakEngineDownloadVersion(yaklangLastVersion) }),
+      )
     }
   })
 

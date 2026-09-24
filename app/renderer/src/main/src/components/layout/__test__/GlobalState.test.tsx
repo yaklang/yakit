@@ -41,6 +41,10 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 vi.mock('@/utils/envfile', () => ({
   isEnpriTraceAgent: () => false,
   isIRify: () => false,
+  toEngineSourceHashVersion: (version: string, buildType?: string) =>
+    buildType === 'slim' && version && !version.startsWith('slim/') && !version.startsWith('dev/')
+      ? `slim/${version.replace(/^v/, '')}`
+      : version,
 }))
 
 vi.mock('@/utils/duplex/duplex', () => ({
@@ -64,6 +68,7 @@ vi.mock('@/store/runNode', () => ({
 
 vi.mock('@/services/electronBridge', () => ({
   yakitApp: { setZoomFactor: vi.fn() },
+  yakitEngine: { fetchYakEngineBuildType: vi.fn().mockResolvedValue('full') },
   yakitHost: {},
   yakitPlugin: { queryYakScript: vi.fn().mockResolvedValue({ Total: 1, Data: [] }) },
   yakitReverse: {

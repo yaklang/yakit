@@ -31,19 +31,25 @@ const {
   downloadYakEngine,
   getDownloadUrl,
   getSuffix,
+  resolveEngineDownloadVersion,
 } = require('./utils/network')
 const {
   getLocalEngineCacheName,
   writeEngineBuildType,
   writeEngineBuildTypeByVersion,
-  fetchEngineBuildType,
-  getLatestYakLocalEnginePath,
-  fileSha256,
-  getOssEngineVersion,
+  readBundledEngineBuildType,
+  resolveEngineBuildType,
+  resolveLocalDownloadedEngineVersion,
 } = require('./utils/engineVersion')
 const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = require('./utils/requestWithProgress')
-const { getCheckTextUrl, fetchSpecifiedYakVersionHash } = require('../handlers/utils/network')
+const { getCheckTextUrl, fetchSpecifiedYakVersionHash, fetchExactYakVersionHash } = require('../handlers/utils/network')
 const { engineLogOutputFileAndUI } = require('../logFile')
+
+const resolveEngineVersionForInstall = (version) => {
+  const local = resolveLocalDownloadedEngineVersion(version)
+  if (local) return Promise.resolve(local)
+  return resolveEngineDownloadVersion(version)
+}
 
 const restoreEngine = (callback) =>
   getEngineSession().withStopped(async () => {
@@ -55,7 +61,7 @@ const restoreEngine = (callback) =>
       target,
       entry: `bins/yak_${platform}_${arch}${process.platform === 'win32' ? '.exe' : ''}`,
       writeConfig: async () => {
-        writeEngineBuildType('full')
+        writeEngineBuildType(readBundledEngineBuildType())
         if (process.platform === 'darwin') {
           const hash = fs.readFileSync(loadExtraFilePath(path.join('bins', 'engine-sha256.txt')), 'utf8').trim()
           if (!/^[a-f0-9]{64}$/i.test(hash)) throw new Error('Invalid bundled engine hash')
@@ -65,29 +71,6 @@ const restoreEngine = (callback) =>
     })
     callback()
   })
-
-/** 解析当前引擎构建类型：标记文件 -> 本地 slim 缓存比对 -> OSS slim hash 比对 */
-const resolveEngineBuildType = async (version) => {
-  const localType = fetchEngineBuildType(version)
-  if (localType === 'slim') return 'slim'
-
-  const ver = getOssEngineVersion(version || '').replace(/^v/, '')
-  if (!ver || ver === 'dev' || ver.startsWith('dev/')) return localType
-
-  try {
-    const enginePath = getLatestYakLocalEnginePath()
-    if (!fs.existsSync(enginePath)) return localType
-    const onlineSlimHash = await fetchSpecifiedYakVersionHash(`slim/${ver}`, { timeout: 3000 })
-    if (onlineSlimHash && fileSha256(enginePath) === onlineSlimHash) {
-      try {
-        writeEngineBuildType('slim')
-      } catch (e) {}
-      return 'slim'
-    }
-  } catch (e) {}
-
-  return localType
-}
 
 const getUserChromeDataDir = () => path.join(getYakitHome(), 'chrome-profile')
 const authMeta = []
@@ -297,10 +280,11 @@ const diagnosingYakVersion = () => {
 
 // 判断历史引擎版本是否存在以及正确性
 const asyncYakEngineVersionExistsAndCorrectness = (version) => {
-  const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
   return new Promise(async (resolve, reject) => {
     try {
-      const url = await getCheckTextUrl(version)
+      const resolved = await resolveEngineDownloadVersion(version)
+      const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
+      const url = await getCheckTextUrl(resolved)
       if (url === '') {
         reject(`Unsupported platform: ${process.platform}`)
         return
@@ -496,19 +480,24 @@ module.exports = {
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
-        const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
         try {
-          fs.unlinkSync(dest)
-        } catch (e) {}
-        await downloadYakEngine(
-          version,
-          dest,
-          (state) => {
-            win.webContents.send('download-yak-engine-progress', state)
-          },
-          resolve,
-          reject,
-        )
+          const resolved = await resolveEngineDownloadVersion(version)
+          const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
+          try {
+            fs.unlinkSync(dest)
+          } catch (e) {}
+          await downloadYakEngine(
+            resolved,
+            dest,
+            (state) => {
+              win.webContents.send('download-yak-engine-progress', state)
+            },
+            resolve,
+            reject,
+          )
+        } catch (e) {
+          reject(e && e.message ? e.message : e)
+        }
       })
     }
     ipcMain.handle('download-latest-yak', async (e, version) => {
@@ -700,52 +689,55 @@ module.exports = {
     })
 
     const installYakEngine = (version) => {
-      return new Promise((resolve, reject) => {
-        let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
-        origin = origin.replaceAll(`"`, `\"`)
+      return resolveEngineVersionForInstall(version).then(
+        (resolved) =>
+          new Promise((resolve, reject) => {
+            let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
+            origin = origin.replaceAll(`"`, `\"`)
 
-        let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
-        dest = dest.replaceAll(`"`, `\"`)
-        // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
-        let flag = false
-        function tryUnlink(retriesLeft) {
-          if (flag) return
-          try {
-            fs.unlinkSync(dest)
-          } catch (err) {
-            if (err.message.indexOf('operation not permitted') > -1) {
-              if (retriesLeft > 0) {
-                setTimeout(() => tryUnlink(retriesLeft - 1), 500)
-              } else {
-                reject('operation not permitted')
+            let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
+            dest = dest.replaceAll(`"`, `\"`)
+            // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
+            let flag = false
+            function tryUnlink(retriesLeft) {
+              if (flag) return
+              try {
+                fs.unlinkSync(dest)
+              } catch (err) {
+                if (err.message.indexOf('operation not permitted') > -1) {
+                  if (retriesLeft > 0) {
+                    setTimeout(() => tryUnlink(retriesLeft - 1), 500)
+                  } else {
+                    reject('operation not permitted')
+                  }
+                }
               }
             }
-          }
-        }
-        tryUnlink(2)
-        childProcess.exec(
-          isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
-          (err) => {
-            flag = true
-            if (err) {
-              if (
-                err.message.indexOf(
-                  'The process cannot access the file because it is being used by another process',
-                ) !== -1
-              ) {
-                reject('operation not permitted')
-              } else {
-                reject(err)
-              }
-              return
-            }
-            try {
-              writeEngineBuildTypeByVersion(version)
-            } catch (e) {}
-            resolve()
-          },
-        )
-      })
+            tryUnlink(2)
+            childProcess.exec(
+              isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
+              (err) => {
+                flag = true
+                if (err) {
+                  if (
+                    err.message.indexOf(
+                      'The process cannot access the file because it is being used by another process',
+                    ) !== -1
+                  ) {
+                    reject('operation not permitted')
+                  } else {
+                    reject(err)
+                  }
+                  return
+                }
+                try {
+                  writeEngineBuildTypeByVersion(resolved)
+                } catch (e) {}
+                resolve()
+              },
+            )
+          }),
+      )
     }
 
     ipcMain.handle('install-yak-engine', async (e, version) => {
@@ -754,7 +746,7 @@ module.exports = {
     })
 
     ipcMain.handle('fetch-yak-engine-build-type', async (e, version) => {
-      return await resolveEngineBuildType(version)
+      return await resolveEngineBuildType(version, fetchExactYakVersionHash)
     })
 
     // 获取yak code文件根目录路径
@@ -871,7 +863,7 @@ module.exports = {
                   gracefulfs.copyFileSync(buildInPath, targetEngine)
                 }
                 try {
-                  writeEngineBuildType('full')
+                  writeEngineBuildType(readBundledEngineBuildType())
                 } catch (e) {}
                 resolve()
               } catch (e) {
@@ -1168,7 +1160,7 @@ module.exports = {
                   gracefulfs.copyFileSync(buildInPath, targetEngine)
                 }
                 try {
-                  writeEngineBuildType('full')
+                  writeEngineBuildType(readBundledEngineBuildType())
                 } catch (e) {}
                 resolve()
               } catch (e) {
@@ -1199,19 +1191,24 @@ module.exports = {
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
-        const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
         try {
-          fs.unlinkSync(dest)
-        } catch (e) {}
-        await downloadYakEngine(
-          version,
-          dest,
-          (state) => {
-            win.webContents.send('download-yak-engine-progress', state)
-          },
-          resolve,
-          reject,
-        )
+          const resolved = await resolveEngineDownloadVersion(version)
+          const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
+          try {
+            fs.unlinkSync(dest)
+          } catch (e) {}
+          await downloadYakEngine(
+            resolved,
+            dest,
+            (state) => {
+              win.webContents.send('download-yak-engine-progress', state)
+            },
+            resolve,
+            reject,
+          )
+        } catch (e) {
+          reject(e && e.message ? e.message : e)
+        }
       })
     }
     ipcMain.handle(ipcEventPre + 'download-latest-yak', async (e, version) => {
@@ -1262,52 +1259,55 @@ module.exports = {
     })
 
     const installYakEngine = (version) => {
-      return new Promise((resolve, reject) => {
-        let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
-        origin = origin.replaceAll(`"`, `\"`)
+      return resolveEngineVersionForInstall(version).then(
+        (resolved) =>
+          new Promise((resolve, reject) => {
+            let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
+            origin = origin.replaceAll(`"`, `\"`)
 
-        let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
-        dest = dest.replaceAll(`"`, `\"`)
-        // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
-        let flag = false
-        function tryUnlink(retriesLeft) {
-          if (flag) return
-          try {
-            fs.unlinkSync(dest)
-          } catch (err) {
-            if (err.message.indexOf('operation not permitted') > -1) {
-              if (retriesLeft > 0) {
-                setTimeout(() => tryUnlink(retriesLeft - 1), 500)
-              } else {
-                reject('operation not permitted')
+            let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
+            dest = dest.replaceAll(`"`, `\"`)
+            // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
+            let flag = false
+            function tryUnlink(retriesLeft) {
+              if (flag) return
+              try {
+                fs.unlinkSync(dest)
+              } catch (err) {
+                if (err.message.indexOf('operation not permitted') > -1) {
+                  if (retriesLeft > 0) {
+                    setTimeout(() => tryUnlink(retriesLeft - 1), 500)
+                  } else {
+                    reject('operation not permitted')
+                  }
+                }
               }
             }
-          }
-        }
-        tryUnlink(2)
-        childProcess.exec(
-          isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
-          (err) => {
-            flag = true
-            if (err) {
-              if (
-                err.message.indexOf(
-                  'The process cannot access the file because it is being used by another process',
-                ) !== -1
-              ) {
-                reject('operation not permitted')
-              } else {
-                reject(err)
-              }
-              return
-            }
-            try {
-              writeEngineBuildTypeByVersion(version)
-            } catch (e) {}
-            resolve()
-          },
-        )
-      })
+            tryUnlink(2)
+            childProcess.exec(
+              isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
+              (err) => {
+                flag = true
+                if (err) {
+                  if (
+                    err.message.indexOf(
+                      'The process cannot access the file because it is being used by another process',
+                    ) !== -1
+                  ) {
+                    reject('operation not permitted')
+                  } else {
+                    reject(err)
+                  }
+                  return
+                }
+                try {
+                  writeEngineBuildTypeByVersion(resolved)
+                } catch (e) {}
+                resolve()
+              },
+            )
+          }),
+      )
     }
 
     ipcMain.handle(ipcEventPre + 'install-yak-engine', async (e, version) => {
@@ -1316,7 +1316,11 @@ module.exports = {
     })
 
     ipcMain.handle(ipcEventPre + 'fetch-yak-engine-build-type', async (e, version) => {
-      return await resolveEngineBuildType(version)
+      return await resolveEngineBuildType(version, fetchExactYakVersionHash)
+    })
+
+    ipcMain.handle(ipcEventPre + 'fetch-bundled-engine-build-type', async () => {
+      return readBundledEngineBuildType()
     })
 
     ipcMain.handle(ipcEventPre + 'cancel-download-yak-engine-version', async (e, version) => {

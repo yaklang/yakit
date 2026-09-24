@@ -66,6 +66,8 @@ jobs:
         env:
             CI: ""
             NODE_OPTIONS: --max_old_space_size=4096
+            # 非 ce 用这个前缀（yak_）。ce 先下 yak-slim_，没有再下 yak_，并写 sidecar。legacy 不改成强制全量；Windows legacy 只是文件名多一段 legacy_。
+            ENGINE_BIN_PREFIX: ${{ inputs.version == 'ce' && 'yak-slim_' || 'yak_' }}
         outputs:
             win_artifact: ${{ steps.export_names.outputs.win_artifact }}
 
@@ -118,7 +120,16 @@ jobs:
               if: ${{ inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
               id: download-darwin-engine
               run: |
-                  wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_amd64
+                  VER="${{ inputs.engineVersion || env.ENGINE_VERSION }}"
+                  DEST="bins/yak_darwin_amd64"
+                  if [ "${{ inputs.version }}" = "ce" ]; then
+                    SLIM="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak-slim_darwin_amd64"
+                    FULL="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak_darwin_amd64"
+                    if wget -O "$DEST" "$SLIM"; then echo slim > bins/engine-build-type.darwin.amd64
+                    else wget -O "$DEST" "$FULL"; echo full > bins/engine-build-type.darwin.amd64; fi
+                  else
+                    wget -O "$DEST" "https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/${{ env.ENGINE_BIN_PREFIX }}darwin_amd64"
+                  fi
                   if [ "${{ inputs.sign }}" != "true" ]; then
                     zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
                   fi
@@ -126,7 +137,16 @@ jobs:
               if: ${{ inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
               id: download-darwin-engine-arm64
               run: |
-                  wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_arm64
+                  VER="${{ inputs.engineVersion || env.ENGINE_VERSION }}"
+                  DEST="bins/yak_darwin_arm64"
+                  if [ "${{ inputs.version }}" = "ce" ]; then
+                    SLIM="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak-slim_darwin_arm64"
+                    FULL="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak_darwin_arm64"
+                    if wget -O "$DEST" "$SLIM"; then echo slim > bins/engine-build-type.darwin.arm64
+                    else wget -O "$DEST" "$FULL"; echo full > bins/engine-build-type.darwin.arm64; fi
+                  else
+                    wget -O "$DEST" "https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/${{ env.ENGINE_BIN_PREFIX }}darwin_arm64"
+                  fi
                   if [ "${{ inputs.sign }}" != "true" ]; then
                     zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
                   fi
@@ -143,27 +163,84 @@ jobs:
             - name: Fetch macOS sha256
               if: ${{ inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
               run: |
-                  wget -O bins/yak_darwin_amd64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_amd64.sha256.txt
-                  wget -O bins/yak_darwin_arm64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_arm64.sha256.txt
+                  VER="${{ inputs.engineVersion || env.ENGINE_VERSION }}"
+                  prefix_for() {
+                    local marker="$1"
+                    if [ "${{ inputs.version }}" = "ce" ] && [ -f "$marker" ] && [ "$(tr -d '[:space:]' < "$marker")" = "slim" ]; then
+                      echo "yak-slim_"
+                    elif [ "${{ inputs.version }}" = "ce" ]; then
+                      echo "yak_"
+                    else
+                      echo "${{ env.ENGINE_BIN_PREFIX }}"
+                    fi
+                  }
+                  AMD_PREFIX="$(prefix_for bins/engine-build-type.darwin.amd64)"
+                  ARM_PREFIX="$(prefix_for bins/engine-build-type.darwin.arm64)"
+                  wget -O bins/yak_darwin_amd64.sha256.txt "https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/${AMD_PREFIX}darwin_amd64.sha256.txt"
+                  wget -O bins/yak_darwin_arm64.sha256.txt "https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/${ARM_PREFIX}darwin_arm64.sha256.txt"
               shell: bash
 
             - name: "Download Yak Engine via wget(Linux)"
               if: ${{ inputs.engine && contains(fromJSON('["linux","uos","mwl"]'), inputs.platform) }}
               id: download-linux-engine
-              run: wget -O bins/yak_linux_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
+              run: |
+                  VER="${{ inputs.engineVersion || env.ENGINE_VERSION }}"
+                  DEST="bins/yak_linux_amd64"
+                  if [ "${{ inputs.version }}" = "ce" ]; then
+                    SLIM="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak-slim_linux_amd64"
+                    FULL="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak_linux_amd64"
+                    if wget -O "$DEST" "$SLIM"; then echo slim > bins/engine-build-type.linux.amd64
+                    else wget -O "$DEST" "$FULL"; echo full > bins/engine-build-type.linux.amd64; fi
+                  else
+                    wget -O "$DEST" "https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/${{ env.ENGINE_BIN_PREFIX }}linux_amd64"
+                  fi
+                  zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
             - name: "Download Yak Engine via wget(Linux-arm64)"
               if: ${{ inputs.engine && contains(fromJSON('["linux","uos","mwl"]'), inputs.platform) }}
               id: download-linux-engine-arm64
-              run: wget -O bins/yak_linux_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
+              run: |
+                  VER="${{ inputs.engineVersion || env.ENGINE_VERSION }}"
+                  DEST="bins/yak_linux_arm64"
+                  if [ "${{ inputs.version }}" = "ce" ]; then
+                    SLIM="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak-slim_linux_arm64"
+                    FULL="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak_linux_arm64"
+                    if wget -O "$DEST" "$SLIM"; then echo slim > bins/engine-build-type.linux.arm64
+                    else wget -O "$DEST" "$FULL"; echo full > bins/engine-build-type.linux.arm64; fi
+                  else
+                    wget -O "$DEST" "https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/${{ env.ENGINE_BIN_PREFIX }}linux_arm64"
+                  fi
+                  zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
 
             - name: "Download Yak Engine via wget(Windows)"
               if: ${{ inputs.engine && !inputs.legacy && contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
               id: download-windows-engine
-              run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+              run: |
+                  VER="${{ inputs.engineVersion || env.ENGINE_VERSION }}"
+                  DEST="bins/yak_windows_amd64.exe"
+                  if [ "${{ inputs.version }}" = "ce" ]; then
+                    SLIM="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak-slim_windows_amd64.exe"
+                    FULL="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak_windows_amd64.exe"
+                    if wget -O "$DEST" "$SLIM"; then echo slim > bins/engine-build-type.windows
+                    else wget -O "$DEST" "$FULL"; echo full > bins/engine-build-type.windows; fi
+                  else
+                    wget -O "$DEST" "https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/${{ env.ENGINE_BIN_PREFIX }}windows_amd64.exe"
+                  fi
+                  zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
             - name: "Download Yak Legacy Engine via wget(Windows)"
               if: ${{ inputs.engine && inputs.legacy && contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
               id: download-windows-leagacy-engine
-              run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+              run: |
+                  VER="${{ inputs.engineVersion || env.ENGINE_VERSION }}"
+                  DEST="bins/yak_windows_amd64.exe"
+                  if [ "${{ inputs.version }}" = "ce" ]; then
+                    SLIM="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak-slim_windows_legacy_amd64.exe"
+                    FULL="https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak_windows_legacy_amd64.exe"
+                    if wget -O "$DEST" "$SLIM"; then echo slim > bins/engine-build-type.windows-legacy
+                    else wget -O "$DEST" "$FULL"; echo full > bins/engine-build-type.windows-legacy; fi
+                  else
+                    wget -O "$DEST" "https://yaklang.oss-accelerate.aliyuncs.com/yak/${VER}/yak_windows_legacy_amd64.exe"
+                  fi
+                  zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
 
             - name: Extract Package.json Version
               id: extract_version

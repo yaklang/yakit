@@ -15,7 +15,7 @@ import { RocketIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RocketIcon'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { Tooltip, Row, Col } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
-import { isEnpriTraceAgent, isIRify } from '@/utils/envfile'
+import { isEnpriTraceAgent, isIRify, toEngineSourceHashVersion } from '@/utils/envfile'
 import type { QueryYakScriptsResponse } from '@/pages/invoker/schema'
 const IRifyApplySyntaxFlowRuleUpdate = lazy(() =>
   import('@/pages/mitm/MITMServerHijacking/MITMPluginLocalList').then((m) => ({
@@ -46,7 +46,7 @@ import {
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { ShieldCheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { yakitApp, yakitHost, yakitPlugin, yakitReverse } from '@/services/electronBridge'
+import { yakitApp, yakitEngine, yakitHost, yakitPlugin, yakitReverse } from '@/services/electronBridge'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { SettingsSections } from '@/pages/settings/constants'
 import { startIdleVisibleInterval } from '@/utils/scheduleIdleTask'
@@ -460,8 +460,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
   }
   const checkEngineSource = async (localYaklang: string) => {
     try {
+      const buildType = await yakitEngine.fetchYakEngineBuildType(localYaklang).catch(() => 'full' as const)
+      const hashVersion = toEngineSourceHashVersion(localYaklang, buildType)
       const [res1, res2] = await Promise.all([
-        grpcFetchSpecifiedYakVersionHash({ version: localYaklang, config: { timeout: 3000 } }, true),
+        grpcFetchSpecifiedYakVersionHash({ version: hashVersion, config: { timeout: 3000 } }, true),
         grpcFetchLocalYakVersionHash(true),
       ])
 

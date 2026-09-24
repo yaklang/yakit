@@ -12,7 +12,13 @@ import {
   grpcFetchLocalYakVersionHash,
   grpcFetchSpecifiedYakVersionHash,
 } from '../../grpc'
-import { FetchSoftwareVersion, getReleaseEditionName, isCommunityYakit, isEnpriTraceAgent } from '@/utils/envfile'
+import {
+  FetchSoftwareVersion,
+  getReleaseEditionName,
+  isCommunityYakit,
+  isEnpriTraceAgent,
+  toEngineSourceHashVersion,
+} from '@/utils/envfile'
 import { yakitNotify } from '@/utils/notification'
 import { SystemInfo } from '../../utils'
 import { getLocalValue } from '@/utils/kv'
@@ -23,6 +29,21 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 function compare(a: string, b: string) {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+}
+
+/** 社区版安装包内置轻量引擎时，同版本（或更旧）的本地全量引擎应被替换 */
+const shouldReplaceLocalFullWithBundledSlim = async (localVersion: string, buildInVersion: string) => {
+  if (!isCommunityYakit() || !localVersion || !buildInVersion) return false
+  if (compare(buildInVersion, localVersion) < 0) return false
+  try {
+    const [bundledType, localType] = await Promise.all([
+      yakitEngine.fetchBundledEngineBuildType(),
+      yakitEngine.fetchYakEngineBuildType(localVersion),
+    ])
+    return bundledType === 'slim' && localType !== 'slim'
+  } catch (e) {
+    return false
+  }
 }
 
 export const LocalEngine: React.FC<LocalEngineProps> = memo(
@@ -281,7 +302,15 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           if (res) {
             handleCheckEngineSource(currentYak.current)
           } else {
-            if (!!currentYak.current && !!buildInYak.current && compare(buildInYak.current, currentYak.current) > 0) {
+            const replaceWithBundledSlim = await shouldReplaceLocalFullWithBundledSlim(
+              currentYak.current,
+              buildInYak.current,
+            )
+            if (!isCurrentCheck(checkId)) return
+            if (
+              replaceWithBundledSlim ||
+              (!!currentYak.current && !!buildInYak.current && compare(buildInYak.current, currentYak.current) > 0)
+            ) {
               setLog([t('LocalEngine.engine_version_detected_install')])
               setYakitStatus('update_yak')
             } else {
@@ -317,13 +346,15 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       setLog([t('LocalEngine.checking_engine_source')])
       const checkVersion = version || currentYak.current
       try {
+        const buildType = await yakitEngine.fetchYakEngineBuildType(checkVersion).catch(() => 'full' as const)
+        const hashVersion = toEngineSourceHashVersion(checkVersion, buildType)
         const promise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Fetch engine online hash request timed out')), 2100),
         )
         const [res1, res2] = await Promise.all([
           // 远端
           Promise.race([
-            grpcFetchSpecifiedYakVersionHash({ version: checkVersion, config: { timeout: 2000 } }, true),
+            grpcFetchSpecifiedYakVersionHash({ version: hashVersion, config: { timeout: 2000 } }, true),
             promise,
           ]),
           // 本地

@@ -2,7 +2,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import React, { useEffect, useMemo, useState } from 'react'
 import { QuestionMarkCircleOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { isYakit } from '@/utils/envfile'
+import { isCommunityYakit, isYakit } from '@/utils/envfile'
 import styles from './MoreYaklangVersion.module.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -22,7 +22,7 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
   const [searchVersionVal, setSearchVersionVal] = useState<string>('')
   /** 仅 Yakit 开放轻量版本选择；IRify/Memfit 不展示 */
   const showSlimOption = isYakit()
-  const [engineBuildType, setEngineBuildType] = useState<'full' | 'slim'>('full')
+  const [engineBuildType, setEngineBuildType] = useState<'full' | 'slim'>(isCommunityYakit() ? 'slim' : 'full')
 
   useEffect(() => {
     setVersionList(moreYaklangVersionList)
@@ -34,7 +34,7 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
 
   const renderVersionList = useMemo(() => {
     const base = !searchVersionVal ? versionList : versionList.filter((v) => v.includes(searchVersionVal))
-    // 轻量版仅对正式/预发版本开放（OSS 有 yak-slim_ 产物），过滤掉 dev/ 日常构建
+    // 轻量选项只给正式/预发版本，去掉 dev/。选中后请求 slim/；产物没有时主进程再下同版本全量，这里不改选项。
     if (showSlimOption && engineBuildType === 'slim') {
       return base.filter((v) => !v.startsWith('dev'))
     }
@@ -56,8 +56,8 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
             value={engineBuildType}
             onChange={(e) => setEngineBuildType(e.target.value)}
             options={[
-              { label: t('MoreYaklangVersion.standard_version'), value: 'full' },
               { label: t('MoreYaklangVersion.slim_version'), value: 'slim' },
+              { label: t('MoreYaklangVersion.standard_version'), value: 'full' },
             ]}
             style={{ width: i18n.language === 'en' ? 240 : undefined }}
           />

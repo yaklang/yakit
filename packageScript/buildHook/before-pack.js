@@ -1,4 +1,5 @@
 const packageJson = require('../../package.json')
+const writeEngineBuildTypeFile = require('./write-engine-build-type')
 
 module.exports = async function (context) {
   const isLegacy = process.env.YAKIT_LEGACY == 'true'
@@ -8,6 +9,11 @@ module.exports = async function (context) {
     3: 'arm64',
   }
   const arch = archMap[context.arch]
+  writeEngineBuildTypeFile({
+    platform: context.electronPlatformName,
+    arch,
+    isLegacy,
+  })
   const baseInfo = context.packager.appInfo
   let productVersion = packageJson.version || baseInfo.version
   // CE

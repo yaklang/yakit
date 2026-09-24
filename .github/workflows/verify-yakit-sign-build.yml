@@ -53,11 +53,11 @@ jobs:
         run: |
           set -euo pipefail
           YAK_BASE="https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}"
-          wget -q -O bins/yak_darwin_amd64 "${YAK_BASE}/yak_darwin_amd64"
-          wget -q -O bins/yak_darwin_arm64 "${YAK_BASE}/yak_darwin_arm64"
+          wget -q -O bins/yak_darwin_amd64 "${YAK_BASE}/yak-slim_darwin_amd64"
+          wget -q -O bins/yak_darwin_arm64 "${YAK_BASE}/yak-slim_darwin_arm64"
           # 下载官方 sha256（打包进 app 的 engine-sha256.txt）；签名会把二进制打成 zip
-          wget -q -O bins/yak_darwin_amd64.sha256.txt "${YAK_BASE}/yak_darwin_amd64.sha256.txt"
-          wget -q -O bins/yak_darwin_arm64.sha256.txt "${YAK_BASE}/yak_darwin_arm64.sha256.txt"
+          wget -q -O bins/yak_darwin_amd64.sha256.txt "${YAK_BASE}/yak-slim_darwin_amd64.sha256.txt"
+          wget -q -O bins/yak_darwin_arm64.sha256.txt "${YAK_BASE}/yak-slim_darwin_arm64.sha256.txt"
           chmod +x ./packageScript/script/signature.sh
           # 无 build 参数：导入证书并对引擎 codesign（验证签名链路需要）
           ./packageScript/script/signature.sh

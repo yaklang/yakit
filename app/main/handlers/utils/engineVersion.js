@@ -1,40 +1,45 @@
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
-const { getYaklangEngineDir } = require('../../filePath')
-
-/** 轻量引擎版本标记，与 dev/ 类似：slim/1.4.8-beta6 */
-const SLIM_ENGINE_VERSION_PREFIX = 'slim/'
+const { getYaklangEngineDir, loadExtraFilePath } = require('../../filePath')
+const {
+  SLIM_ENGINE_VERSION_PREFIX,
+  isSlimEngineVersion,
+  getOssEngineVersion,
+  resolveEngineArtifactVersion: resolveEngineArtifactVersionWithLegacy,
+  getLocalEngineCacheName: getLocalEngineCacheNameWithLegacy,
+  getFullEngineArtifactVersion,
+} = require('./engineArtifact')
 
 const ENGINE_BUILD_TYPE_FILE = 'engine-build-type.txt'
 
-/** 是否为轻量引擎版本（前端仅在 Yakit 侧可选） */
-const isSlimEngineVersion = (version) => (version || '').startsWith(SLIM_ENGINE_VERSION_PREFIX)
-
-/** OSS 路径使用的版本号（去掉 slim/ 前缀） */
-const getOssEngineVersion = (version) => (version || '').replace(new RegExp(`^${SLIM_ENGINE_VERSION_PREFIX}`), '')
-
-/** 本地缓存引擎文件名：yak-{version} / yak-dev-xxx / yak-slim-{version} */
-const getLocalEngineCacheName = (version) => {
-  if ((version || '').startsWith('dev/')) {
-    return 'yak-' + version.replace('dev/', 'dev-')
+const isLegacySystemMode = () => {
+  try {
+    return (
+      `${fs.readFileSync(loadExtraFilePath(path.join('bins', 'yakit-system-mode.txt')), 'utf8')}`.trim() === 'legacy'
+    )
+  } catch (e) {
+    return false
   }
-  if (isSlimEngineVersion(version)) {
-    return 'yak-slim-' + getOssEngineVersion(version)
-  }
-  return `yak-${version}`
 }
 
-/**
- * 根据版本号获取引擎文件名前缀，与 exp-cross-build 一致：
- * slim -> yak-slim_, yakit -> yaklang_yakit_, irify -> yaklang_irify_, 其它 -> yak_
- */
-const getYakEngineNamePrefix = (version) => {
-  if (isSlimEngineVersion(version)) return 'yak-slim_'
-  const v = getOssEngineVersion(version || '').toLowerCase()
-  if (v.includes('yakit')) return 'yaklang_yakit_'
-  if (v.includes('irify')) return 'yaklang_irify_'
-  return 'yak_'
+/** 版本号原样保留。产物缺失时的全量回退在下载侧处理，不在这里按 legacy 改版本。 */
+const resolveEngineArtifactVersion = (version) => resolveEngineArtifactVersionWithLegacy(version, isLegacySystemMode())
+
+/** 本地缓存引擎文件名：yak-{version} / yak-dev-xxx / yak-slim-{version} */
+const getLocalEngineCacheName = (version) => getLocalEngineCacheNameWithLegacy(version, isLegacySystemMode())
+
+/** 安装时优先用已经下好的文件，避免再发一次校验请求。slim 缓存没有再看同版本全量缓存。 */
+const resolveLocalDownloadedEngineVersion = (version) => {
+  const dir = getYaklangEngineDir()
+  const exists = (ver) => {
+    const name = getLocalEngineCacheName(ver)
+    return !!(name && fs.existsSync(path.join(dir, name)))
+  }
+  if (exists(version)) return version
+  const full = getFullEngineArtifactVersion(version)
+  if (full && exists(full)) return full
+  return ''
 }
 
 const getEngineBuildTypeFilePath = () => path.join(getYaklangEngineDir(), ENGINE_BUILD_TYPE_FILE)
@@ -69,7 +74,7 @@ const writeEngineBuildType = (buildType) => {
 
 /** 根据下载/安装版本号写入构建类型 */
 const writeEngineBuildTypeByVersion = (version) => {
-  writeEngineBuildType(isSlimEngineVersion(version) ? 'slim' : 'full')
+  writeEngineBuildType(isSlimEngineVersion(resolveEngineArtifactVersion(version)) ? 'slim' : 'full')
 }
 
 /**
@@ -102,15 +107,56 @@ const fetchEngineBuildType = (version) => {
   return 'full'
 }
 
+const readBundledEngineBuildType = () => {
+  try {
+    const p = loadExtraFilePath(path.join('bins', 'engine-build-type.txt'))
+    if (!fs.existsSync(p)) return 'full'
+    return `${fs.readFileSync(p, 'utf8')}`.trim() === 'slim' ? 'slim' : 'full'
+  } catch (e) {
+    return 'full'
+  }
+}
+
+/**
+ * 标记文件优先。fetchHash 只查 slim 产物本身，404 不能改拿全量 hash。
+ * 否则没有轻量包时（目前是 Windows legacy）全量二进制会被标成 slim。
+ * fetchHash 由调用方传入，避免和 network 循环依赖。
+ */
+const resolveEngineBuildType = async (version, fetchHash) => {
+  const localType = fetchEngineBuildType(version)
+  if (localType === 'slim') return 'slim'
+
+  const ver = getOssEngineVersion(version || '').replace(/^v/, '')
+  if (!ver || ver === 'dev' || ver.startsWith('dev/')) return localType
+
+  try {
+    const enginePath = getLatestYakLocalEnginePath()
+    if (!fs.existsSync(enginePath) || typeof fetchHash !== 'function') return localType
+    const onlineSlimHash = await fetchHash(`slim/${ver}`, { timeout: 3000 })
+    if (onlineSlimHash && fileSha256(enginePath) === onlineSlimHash) {
+      try {
+        writeEngineBuildType('slim')
+      } catch (e) {}
+      return 'slim'
+    }
+  } catch (e) {}
+
+  return localType
+}
+
 module.exports = {
   SLIM_ENGINE_VERSION_PREFIX,
   isSlimEngineVersion,
   getOssEngineVersion,
+  isLegacySystemMode,
+  resolveEngineArtifactVersion,
   getLocalEngineCacheName,
-  getYakEngineNamePrefix,
+  resolveLocalDownloadedEngineVersion,
   writeEngineBuildType,
   writeEngineBuildTypeByVersion,
   fetchEngineBuildType,
+  readBundledEngineBuildType,
+  resolveEngineBuildType,
   getLatestYakLocalEnginePath,
   fileSha256,
 }

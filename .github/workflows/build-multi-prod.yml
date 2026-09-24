@@ -147,8 +147,22 @@ jobs:
           wget -O bins/scripts/google-chrome-plugin.zip https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
         shell: bash
 
+      - name: Use slim engine for community Yakit
+        if: matrix.version == 'ce'
+        run: |
+          chmod +x ./packageScript/script/download-slim-engine.sh
+          ./packageScript/script/download-slim-engine.sh all "${ENGINE_VERSION}"
+        shell: bash
+
       - name: Signature Mac Engine
-        run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh build
+        run: |
+          chmod +x ./packageScript/script/signature.sh
+          if [ "${{ matrix.version }}" = "ce" ]; then
+            ./packageScript/script/signature.sh
+          else
+            ./packageScript/script/signature.sh build
+          fi
+        shell: bash
 
       - name: 'Download MakeSelf'
         run: brew install makeself
