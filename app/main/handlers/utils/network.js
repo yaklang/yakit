@@ -127,7 +127,7 @@ async function getAvailableOSSDomain() {
   }
 }
 
-/** 开发环境不走 legacy 产物；校验地址仍按安装包标记判断 */
+/** 开发环境下载不加 Windows 文件名里的 legacy_。校验地址仍看安装包是不是 legacy。这里不把 slim/ 改成全量。 */
 const isLegacyEnginePack = (skipInDev) => {
   if (skipInDev && electronIsDev) return false
   return isLegacySystemMode()
@@ -218,7 +218,7 @@ const fetchLatestVersionCommon = async (path, requestConfig = {}) => {
   }
   return versionData.startsWith('v') ? versionData : `v${versionData}`
 }
-/** 引擎下载地址。开发环境不追加 legacy，避免把 slim 版本误换成标准引擎 */
+/** 下载地址。开发环境省略 Windows 的 legacy_ 段，slim/ 仍请求轻量产物。校验 404 时退回全量在 resolveEngineDownloadVersion，legacy 也走那里。 */
 const getYakEngineDownloadUrl = async (version) => getEngineArtifactUrl(version, { skipLegacyInDev: true })
 
 const getSuffix = () => {

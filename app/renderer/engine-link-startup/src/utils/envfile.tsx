@@ -102,7 +102,7 @@ export const isYakit = () => {
 /** 轻量引擎版本标记，与 dev/ 类似：slim/1.4.8-beta6 */
 export const SLIM_ENGINE_VERSION_PREFIX = 'slim/'
 
-/** 仅社区版 Yakit 默认下载轻量引擎；已带 slim/ 或 dev/ 前缀的版本原样返回 */
+/** 仅社区版 Yakit 默认加上 slim/。轻量产物不存在时退回全量在主进程，不在这里改版本号。已带 slim/ 或 dev/ 的原样返回。 */
 export const toDefaultYakEngineDownloadVersion = (version: string) => {
   if (!version) return version
   if (version.startsWith(SLIM_ENGINE_VERSION_PREFIX) || version.startsWith('dev/')) return version

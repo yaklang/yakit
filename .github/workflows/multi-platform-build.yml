@@ -66,6 +66,7 @@ jobs:
         env:
             CI: ""
             NODE_OPTIONS: --max_old_space_size=4096
+            # 非 ce 用这个前缀（yak_）。ce 先下 yak-slim_，没有再下 yak_，并写 sidecar。legacy 不改成强制全量；Windows legacy 只是文件名多一段 legacy_。
             ENGINE_BIN_PREFIX: ${{ inputs.version == 'ce' && 'yak-slim_' || 'yak_' }}
         outputs:
             win_artifact: ${{ steps.export_names.outputs.win_artifact }}

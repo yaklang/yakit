@@ -1479,7 +1479,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
       setEngineBuildType('full')
       return
     }
-    // 社区版默认轻量，不随当前全量引擎把选项改回去
+    // 社区版默认停在轻量。已经装的是全量也不改回全量选项；轻量包不存在时的回退在主进程下载。
     if (isCommunityYakit()) return
     setEngineBuildType(currentBuildType === 'slim' ? 'slim' : 'full')
   }, [currentBuildType, showSlimOption])
@@ -1492,7 +1492,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
 
   const renderVersionList = useMemo(() => {
     const base = searchVersionVal ? searchVersionList : versionList
-    // 轻量版仅对正式/预发版本开放（OSS 有 yak-slim_ 产物），过滤掉 dev/ 日常构建
+    // 轻量选项只给正式/预发版本，去掉 dev/。选中后请求 slim/；产物没有时主进程再下同版本全量，这里不改选项。
     if (showSlimOption && engineBuildType === 'slim') {
       return base.filter((v) => !v.startsWith('dev'))
     }

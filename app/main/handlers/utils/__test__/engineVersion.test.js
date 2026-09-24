@@ -65,14 +65,14 @@ describe('engine build type on legacy packs', () => {
     fs.writeFileSync(path.join(paths.engineDir, name), body)
   }
 
-  it('does not mark a full legacy engine as slim when the cache name collapses', () => {
+  it('does not mark a full legacy cache as slim', () => {
     writeMode('legacy')
     writeSameBytes('yak-1.4.8-beta19')
     expect(fetchEngineBuildType('1.4.8-beta19')).toBe('full')
     expect(fs.existsSync(path.join(paths.engineDir, 'engine-build-type.txt'))).toBe(false)
   })
 
-  it('marks a matching slim cache as slim outside legacy mode', () => {
+  it('marks a matching slim cache as slim', () => {
     writeSameBytes('yak-slim-1.4.8-beta19')
     expect(fetchEngineBuildType('1.4.8-beta19')).toBe('slim')
   })

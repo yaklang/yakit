@@ -104,8 +104,9 @@ const readBundledEngineBuildType = () => {
 }
 
 /**
- * 标记文件优先。fetchHash 必须只查 slim 产物本身，不能在 404 时退回全量 hash，
- * 否则 Windows legacy 的全量引擎会被标成 slim。fetchHash 由调用方传入，避免和 network 循环依赖。
+ * 标记文件优先。fetchHash 只查 slim 产物本身，404 不能改拿全量 hash。
+ * 否则没有轻量包时（目前是 Windows legacy）全量二进制会被标成 slim。
+ * fetchHash 由调用方传入，避免和 network 循环依赖。
  */
 const resolveEngineBuildType = async (version, fetchHash) => {
   const localType = fetchEngineBuildType(version)

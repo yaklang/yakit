@@ -34,7 +34,7 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
 
   const renderVersionList = useMemo(() => {
     const base = !searchVersionVal ? versionList : versionList.filter((v) => v.includes(searchVersionVal))
-    // 轻量版仅对正式/预发版本开放（OSS 有 yak-slim_ 产物），过滤掉 dev/ 日常构建
+    // 轻量选项只给正式/预发版本，去掉 dev/。选中后请求 slim/；产物没有时主进程再下同版本全量，这里不改选项。
     if (showSlimOption && engineBuildType === 'slim') {
       return base.filter((v) => !v.startsWith('dev'))
     }
