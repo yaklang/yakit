@@ -19,6 +19,7 @@ import {
   filterByDisplayNameIncludes,
   shouldDiscardStaleResult,
 } from './allListOfMentionUtils'
+import { failed } from '@/utils/notification'
 import styles from './AllListOfMention.module.scss'
 
 type AllFlatItem = {
@@ -170,6 +171,10 @@ export const AllListOfMention: React.FC<AllListOfMentionProps> = React.memo((pro
       onSectionTotalChange(AIMentionTabsEnum.Tool, hasKeyword ? tools.length : +toolRes?.Total || 0)
       onSectionTotalChange(AIMentionTabsEnum.FocusMode, focuses.length)
     } catch (error) {
+      // 过期请求失败不打扰用户；最新请求失败则提示（与 KnowledgeBaseListOfMention 一致）
+      if (!shouldDiscardStaleResult(seq, loadSeqRef.current, mountedRef.current)) {
+        failed(error + '')
+      }
     } finally {
       if (!shouldDiscardStaleResult(seq, loadSeqRef.current, mountedRef.current)) {
         setTimeout(() => {

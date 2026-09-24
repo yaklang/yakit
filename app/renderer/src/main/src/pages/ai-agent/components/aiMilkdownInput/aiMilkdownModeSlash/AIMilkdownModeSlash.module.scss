@@ -145,9 +145,14 @@
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   padding: 0;
 
-  &:hover {
+  &:hover:not(:disabled) {
     color: var(--Colors-Use-Main-Primary);
     background: var(--Colors-Use-Neutral-Bg);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.35;
   }
 
   svg {

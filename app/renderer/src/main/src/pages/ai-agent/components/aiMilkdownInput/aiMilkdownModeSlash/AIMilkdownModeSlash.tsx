@@ -187,8 +187,8 @@ export const AIMilkdownModeSlash: React.FC = () => {
     'enter',
     (e) => {
       if (!visible) return
-      // document capture 先于 textarea 冒泡；验收框内回车应换行，不触发确认
-      if (shouldSkipModeSlashEnterConfirm(step, e.target)) return
+      // document capture 先于 textarea 冒泡；空草稿 / 验收框内回车不触发确认
+      if (shouldSkipModeSlashEnterConfirm(step, e.target, { acceptanceDraft: draftAcceptance })) return
       const canConfirmList = navigableItems.length > 0
       const canConfirmConfig =
         step === 'multiAgentConfig' || step === 'goalIterations' || step === 'goalDuration' || step === 'goalAcceptance'
@@ -719,69 +719,73 @@ export const AIMilkdownModeSlash: React.FC = () => {
     </div>
   )
 
-  const renderAcceptance = () => (
-    <div
-      className={classNames(styles['config-panel'], styles['config-panel-acceptance'])}
-      onMouseDown={(e) => {
-        const el = e.target as HTMLElement
-        if (el.closest('textarea, input, [contenteditable="true"]')) return
-        e.preventDefault()
-      }}
-    >
-      <div className={styles['config-header']}>
-        <div className={styles['config-header-left']}>
-          <button
-            type="button"
-            className={styles['config-icon-btn']}
-            onClick={() => goBackFromConfig('goalModes')}
-            aria-label="back"
-          >
-            <ChevronLeftOutlined color="currentColor" />
-          </button>
-          <span className={styles['config-title']}>{t('AIMilkdownModeSlash.acceptance')}</span>
-        </div>
-        <div className={styles['config-actions']}>
-          <button type="button" className={styles['config-icon-btn']} onClick={onHide} aria-label="cancel">
-            <XOutlined color="currentColor" />
-          </button>
-          <button
-            type="button"
-            className={styles['config-icon-btn']}
-            onClick={onConfirmAcceptance}
-            aria-label="confirm"
-          >
-            <CheckOutlined color="currentColor" />
-          </button>
-        </div>
-      </div>
+  const renderAcceptance = () => {
+    const canConfirmAcceptance = !!draftAcceptance.trim()
+    return (
       <div
-        className={styles['acceptance-box']}
+        className={classNames(styles['config-panel'], styles['config-panel-acceptance'])}
         onMouseDown={(e) => {
-          e.stopPropagation()
-          // 点盒子空白处也抢焦，避免按键落到主输入
-          const t = e.target as HTMLElement
-          if (!t.closest('textarea')) {
-            window.setTimeout(() => focusAcceptanceInput(), 0)
-          }
+          const el = e.target as HTMLElement
+          if (el.closest('textarea, input, [contenteditable="true"]')) return
+          e.preventDefault()
         }}
       >
-        <SparklesOutlined className={styles['acceptance-spark']} color="currentColor" />
-        <YakitInput.TextArea
-          ref={acceptanceTextAreaRef as any}
-          className={styles['acceptance-input']}
-          autoFocus
-          autoSize={{ minRows: 3, maxRows: 8 }}
-          placeholder={t('AIMilkdownModeSlash.acceptancePlaceholder')}
-          value={draftAcceptance}
-          onChange={(e) => setDraftAcceptance(e.target.value)}
-          onKeyDown={(e) => e.stopPropagation()}
-          onKeyUp={(e) => e.stopPropagation()}
-          onKeyPress={(e) => e.stopPropagation()}
-          bordered={false}
-        />
+        <div className={styles['config-header']}>
+          <div className={styles['config-header-left']}>
+            <button
+              type="button"
+              className={styles['config-icon-btn']}
+              onClick={() => goBackFromConfig('goalModes')}
+              aria-label="back"
+            >
+              <ChevronLeftOutlined color="currentColor" />
+            </button>
+            <span className={styles['config-title']}>{t('AIMilkdownModeSlash.acceptance')}</span>
+          </div>
+          <div className={styles['config-actions']}>
+            <button type="button" className={styles['config-icon-btn']} onClick={onHide} aria-label="cancel">
+              <XOutlined color="currentColor" />
+            </button>
+            <button
+              type="button"
+              className={styles['config-icon-btn']}
+              onClick={onConfirmAcceptance}
+              aria-label="confirm"
+              disabled={!canConfirmAcceptance}
+            >
+              <CheckOutlined color="currentColor" />
+            </button>
+          </div>
+        </div>
+        <div
+          className={styles['acceptance-box']}
+          onMouseDown={(e) => {
+            e.stopPropagation()
+            // 点盒子空白处也抢焦，避免按键落到主输入
+            const t = e.target as HTMLElement
+            if (!t.closest('textarea')) {
+              window.setTimeout(() => focusAcceptanceInput(), 0)
+            }
+          }}
+        >
+          <SparklesOutlined className={styles['acceptance-spark']} color="currentColor" />
+          <YakitInput.TextArea
+            ref={acceptanceTextAreaRef as any}
+            className={styles['acceptance-input']}
+            autoFocus
+            autoSize={{ minRows: 3, maxRows: 8 }}
+            placeholder={t('AIMilkdownModeSlash.acceptancePlaceholder')}
+            value={draftAcceptance}
+            onChange={(e) => setDraftAcceptance(e.target.value)}
+            onKeyDown={(e) => e.stopPropagation()}
+            onKeyUp={(e) => e.stopPropagation()}
+            onKeyPress={(e) => e.stopPropagation()}
+            bordered={false}
+          />
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   const renderDuration = () => (
     <div
