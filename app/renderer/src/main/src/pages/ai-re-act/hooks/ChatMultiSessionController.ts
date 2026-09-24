@@ -3,6 +3,7 @@ import {
   AIInputEventSyncTypeEnum,
   AISourceEnum,
   AITaskStatus,
+  isReadonlySyncQuery,
   type AIAgentGrpcApi,
   type AIEventQueryRequest,
   type AIInputEvent,
@@ -904,8 +905,10 @@ export class ChatMultiSessionController {
     // console.log('handleSendMessage', payload)
     try {
       const { token, type, params, optionValue } = payload
+      // 只读同步查询（如弹窗打开时拉取用量）没有用户输入，守卫拦截时不应弹出面向发送操作的警告
+      const readonlySyncQuery = !!params.IsSyncMessage && isReadonlySyncQuery(params.SyncType)
       if (!this.readyChannels.has(token)) {
-        if (!this.isActiveShowSession(token)) return false
+        if (!this.isActiveShowSession(token) || readonlySyncQuery) return false
         yakitNotify('warning', '会话不存在，无法发送消息')
         return false
       }

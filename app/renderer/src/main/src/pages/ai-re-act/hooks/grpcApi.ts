@@ -67,6 +67,9 @@ export interface AIStartParams {
   /** 是否禁用人机交互（AI 可能会主动问人问题）@default true */
   DisallowRequireForUserPrompt?: boolean
 
+  /** 仅当前会话使用全局配置中的首个高质模型；全局单模型模式开启时无法由此关闭 */
+  SingleModelMode?: boolean
+
   /**
    * - Review 政策
    * - 一般来说，如果 Review Handler 被 Forge 接管了，这个就不应该可以设置。
@@ -266,6 +269,21 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_SESSION_SNAPSHOT_SYNC = 'session_snapshot_sync',
 }
 
+/** 只读数据查询类同步：仅拉取展示数据，不修改任务与配置，发送前置条件不满足时可静默丢弃 */
+export const readonlySyncQueryTypes = new Set<`${AIInputEventSyncTypeEnum}`>([
+  AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_CONSUMPTION,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_PING,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_TIMELINE,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
+  AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+])
+
+export const isReadonlySyncQuery = (syncType?: `${AIInputEventSyncTypeEnum}`): boolean =>
+  !!syncType && readonlySyncQueryTypes.has(syncType)
+
 export interface AIInputEvent {
   IsStart?: boolean
   Params?: AIStartParams // 提问问题相关
@@ -370,16 +388,28 @@ export enum AINotifyType {
 }
 
 export declare namespace AIAgentGrpcApi {
-  /** 上传/下载 Token 量 */
-  export interface Consumption {
+  export type AIModelTier = AIModelTypeEnumType | (string & {})
+
+  export interface AIConsumptionStats {
     cache_hit_token: number
     input_consumption: number
     output_consumption: number
+  }
+
+  export interface AIModelConsumptionStats extends AIConsumptionStats {
+    provider_type?: string
+    model_name?: string
+    thinking_level?: string
+  }
+
+  /** 上传/下载 Token 量 */
+  export interface Consumption extends AIConsumptionStats {
     consumption_uuid: string
-    tier_consumption: Record<
-      AIModelTypeEnumType,
-      { cache_hit_token: number; input_consumption: number; output_consumption: number }
-    >
+    tier_consumption: Partial<Record<AIModelTier, AIConsumptionStats>>
+    /** 后端最终生效的会话单模型模式；旧引擎可能不返回 */
+    effective_single_model_mode?: boolean
+    /** 按逻辑 Tier、实际模型和思考强度聚合的用量；旧引擎可能不返回 */
+    tier_model_consumption?: Partial<Record<AIModelTier, AIModelConsumptionStats[]>>
   }
 
   /** 上下文压力 */

@@ -7,6 +7,12 @@ import { formatAIAgentSetting } from '..'
 import { AIAgentSettingDefault } from '../../defaultConstant'
 
 describe('formatAIAgentSetting', () => {
+  it('SingleModelMode 缺字段时回退默认 false，并保留显式 true', () => {
+    const { SingleModelMode: _omit, ...rest } = AIAgentSettingDefault
+    expect(formatAIAgentSetting(rest).SingleModelMode).toBe(false)
+    expect(formatAIAgentSetting({ ...AIAgentSettingDefault, SingleModelMode: true }).SingleModelMode).toBe(true)
+  })
+
   it('DisableMemoryTriage 缺字段时回退默认 false，避免旧缓存漏传', () => {
     const { DisableMemoryTriage: _omit, ...rest } = AIAgentSettingDefault
     const result = formatAIAgentSetting(rest)

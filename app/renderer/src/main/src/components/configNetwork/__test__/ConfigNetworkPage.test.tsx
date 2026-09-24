@@ -1,181 +1,125 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { setRemoteValue, getRemoteValue } from '@/utils/kv'
-import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
-import { ConfigNetworkPage, defaultParams } from '../ConfigNetworkPage'
+import type React from 'react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type * as SpaceEngineUtils from '@/pages/spaceEngine/utils'
+// 先于被测模块注册 window.require('electron') stub（ConfigNetworkPage 依赖链顶层会解构 ipcRenderer）
+import '../../../pages/ai-re-act/hooks/__test__/setupElectron'
 
-const KEY = GlobalConfigRemoteGV.HTTPFlowListInlineMaxContentLength
-
-const mocks = vi.hoisted(() => {
-  const invoke = vi.fn()
-  window.require = (() => ({ ipcRenderer: { invoke } })) as unknown as typeof window.require
-  const remoteStore = new Map<string, string>()
-  return { invoke, remoteStore }
-})
-
-vi.mock('@/utils/kv', () => ({
-  getLocalValue: () => Promise.resolve(undefined),
-  setLocalValue: () => Promise.resolve(),
-  getRemoteValue: vi.fn((k: string) => Promise.resolve(mocks.remoteStore.get(k) ?? '')),
-  setRemoteValue: vi.fn((k: string, v: string) => {
-    mocks.remoteStore.set(k, v)
-    return Promise.resolve()
-  }),
+const mocks = vi.hoisted(() => ({
+  setAIGlobalConfig: vi.fn(),
+  notify: vi.fn(),
+  onRefresh: vi.fn(),
+  config: {} as Record<string, unknown>,
 }))
-vi.mock('@/i18n/useI18nNamespaces', () => ({
-  useI18nNamespaces: () => ({
-    t: (key: string) => key,
-    i18n: { language: 'zh-CN' },
-    i18nRefresh: () => {},
-  }),
-}))
+
 vi.mock('@/utils/notification', () => ({
+  yakitNotify: mocks.notify,
   yakitInfo: vi.fn(),
   warn: vi.fn(),
   failed: vi.fn(),
   success: vi.fn(),
-  yakitNotify: vi.fn(),
 }))
-vi.mock('@/utils/envfile', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
-  return { ...actual, getReleaseEditionName: () => 'Yakit', isIRify: () => false }
-})
-vi.mock('@/utils/duplex/duplex', () => ({ setOpenPerformanceTips: vi.fn() }))
-vi.mock('@/hook/useProxy', () => ({
-  useProxy: () => ({ proxyConfig: { Routes: [], Endpoints: [] } }),
-}))
-vi.mock('@/utils/proxyConfigUtil', () => ({ checkProxyVersion: async () => true }))
+
 vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
-  default: () => [{ aiGlobalConfig: {} }, { onRefresh: vi.fn() }],
-}))
-vi.mock('@/pages/ai-agent/aiModelList/AIModelList', () => ({ getTipByType: () => '' }))
-vi.mock('@/pages/ai-agent/defaultConstant', () => ({ AIModelPolicyOptions: [] }))
-vi.mock('@/pages/spaceEngine/utils', () => ({ handleAIConfig: vi.fn() }))
-vi.mock('../CustomizeCode', () => ({ CodeCustomize: () => null }))
-vi.mock('../ProxyRulesConfig', () => ({ default: () => null }))
-vi.mock('@/pages/mitm/MITMServerStartForm/MITMAddTLS', () => ({
-  InputCertificateForm: () => <div>cert-form</div>,
+  default: () => [
+    { queryLoading: false, updateLoading: false, aiGlobalConfig: mocks.config },
+    { onRefresh: mocks.onRefresh, setAIGlobalConfig: mocks.setAIGlobalConfig },
+  ],
 }))
 
-beforeEach(() => {
-  mocks.invoke.mockReset().mockImplementation((channel: string) => {
-    switch (channel) {
-      case 'GetGlobalNetworkConfig':
-        return Promise.resolve({ ...defaultParams, MaxContentLength: 10 * 1024 * 1024 })
-      case 'GetChromePath':
-        return Promise.resolve('')
-      case 'fetch-extra-cache':
-        return Promise.resolve(true)
-      default:
-        return Promise.resolve(undefined)
-    }
-  })
-  mocks.remoteStore.clear()
-  vi.mocked(getRemoteValue).mockClear()
-  vi.mocked(setRemoteValue).mockClear()
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      observe() {}
-      disconnect() {}
-      unobserve() {}
-    },
-  )
-  vi.stubGlobal(
-    'IntersectionObserver',
-    class {
-      observe() {}
-      disconnect() {}
-      unobserve() {}
-      takeRecords() {
-        return []
-      }
-    },
-  )
-  vi.stubGlobal(
-    'matchMedia',
-    vi.fn(() => ({
-      matches: false,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    })),
-  )
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({ t: (key: string) => key }),
+}))
+
+vi.mock('./ProxyRulesConfig', () => ({ default: () => null }))
+vi.mock('./NewThirdPartyApplicationConfig', () => ({ default: () => null }))
+vi.mock('./CustomizeCode', () => ({ CodeCustomize: () => null }))
+vi.mock('@/components/TableVirtualResize/TableVirtualResize', () => ({ TableVirtualResize: () => null }))
+vi.mock('@/pages/ai-agent/aiModelList/AIModelList', () => ({ getTipByType: () => 'tip' }))
+vi.mock('@/components/AutoSpin', () => ({
+  AutoSpin: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+}))
+// lottie-web 在 jsdom 中加载即访问 canvas 上下文（依赖链经 AI 聊天组件引入），mock 掉以隔离
+vi.mock('lottie-web', () => ({ default: { loadAnimation: vi.fn(), destroy: vi.fn() } }))
+
+vi.mock('@/utils/duplex/duplex', () => ({ setOpenPerformanceTips: vi.fn() }))
+vi.mock('@/utils/imControl', () => ({ startIMControl: vi.fn(), stopIMControl: vi.fn() }))
+vi.mock('@/pages/settings/settingsContent/globalConfig/GlobalConfigEmbeddedForm', () => ({
+  GlobalConfigEmbeddedForm: () => null,
+}))
+vi.mock('@/pages/spaceEngine/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof SpaceEngineUtils>()
+  return { ...actual, handleAIConfig: vi.fn() }
 })
 
-afterEach(() => {
-  cleanup()
-  vi.unstubAllGlobals()
+const { AIModelGlobalConfig } = await import('../ConfigNetworkPage')
+
+const createModel = (type: string, modelName: string) => ({
+  ProviderId: 'provider-id',
+  Provider: { Type: type },
+  ModelName: modelName,
+  ExtraParams: [],
 })
 
-/** 通过设置行标题定位「列表内联包大小」输入框 */
-const getListInlineInput = () => {
-  // 标题本身也是 div，不能用 closest；先到 setting-row-text 再回到整行
-  const row = screen.getByText('ConfigNetworkPage.listInlinePacketSize').parentElement?.parentElement
-  return row?.querySelector('input') as HTMLInputElement
-}
+const createConfig = () => ({
+  Enabled: false,
+  SingleModelMode: false,
+  RoutingPolicy: 'auto',
+  DisableFallback: false,
+  DefaultModelId: '',
+  GlobalWeight: 0,
+  IntelligentModels: [createModel('aibalance', 'standard')],
+  LightweightModels: [createModel('openai', 'lite')],
+  VisionModels: [],
+  AIPresetPrompt: '',
+  AIPlanPrompt: '',
+})
 
-const renderPage = async () => {
-  render(<ConfigNetworkPage />)
-  const input = await waitFor(() => {
-    const el = getListInlineInput()
-    expect(el).toBeTruthy()
-    return el
-  })
-  return input
-}
-
-describe('ConfigNetworkPage 列表内联包大小设置', () => {
-  it.each<[string, string, string | undefined]>([
-    ['key 缺失（回退默认）', '300', undefined],
-    ['0 字节（不带包）', '0', '0'],
-    ['307200 字节（300K）', '300', '307200'],
-    ['512000 字节（500K）', '500', '512000'],
-    ['超过 500K（钳制为 500）', '500', '1024000'],
-    ['非法值（回退默认 300）', '300', 'abc'],
-  ])('读取持久化值 %s → 输入框显示 %s K', async (_name, expected, raw) => {
-    if (raw !== undefined) mocks.remoteStore.set(KEY, raw)
-    const input = await renderPage()
-    // 先确认加载副作用确实读取了该 key，再断言换算后的展示值，
-    // 避免「absent key」用例被初始 state=300 撞对而假通过
-    await waitFor(() => expect(getRemoteValue).toHaveBeenCalledWith(KEY))
-    await waitFor(() => expect(input.value).toBe(expected))
+describe('AIModelGlobalConfig 单模型模式', () => {
+  beforeEach(() => {
+    mocks.config = createConfig()
+    mocks.setAIGlobalConfig.mockReset().mockResolvedValue(undefined)
+    mocks.notify.mockReset()
+    mocks.onRefresh.mockReset()
   })
 
-  it('保存时把 KB 换算为字节写入持久化：0→0、300→307200、500→512000、999→512000', async () => {
-    const input = await renderPage()
-    const submit = () => screen.getByText('ConfigNetworkPage.updateGlobalConfig')
+  it('首个高质模型不完整时拒绝开启并提示', async () => {
+    mocks.config = { ...createConfig(), IntelligentModels: [createModel('', 'standard')] }
+    const user = userEvent.setup()
+    render(<AIModelGlobalConfig />)
 
-    fireEvent.change(input, { target: { value: '0' } })
-    fireEvent.click(submit())
-    await waitFor(() => expect(setRemoteValue).toHaveBeenCalledWith(KEY, '0'))
+    await user.click(screen.getAllByRole('switch')[0])
 
-    fireEvent.change(input, { target: { value: '300' } })
-    fireEvent.click(submit())
-    await waitFor(() => expect(setRemoteValue).toHaveBeenCalledWith(KEY, '307200'))
-
-    fireEvent.change(input, { target: { value: '500' } })
-    fireEvent.click(submit())
-    await waitFor(() => expect(setRemoteValue).toHaveBeenCalledWith(KEY, '512000'))
-
-    fireEvent.change(input, { target: { value: '999' } })
-    fireEvent.click(submit())
-    await waitFor(() => expect(setRemoteValue).toHaveBeenCalledWith(KEY, '512000'))
-    await waitFor(() => expect(input.value).toBe('500'))
-    expect(mocks.remoteStore.get(KEY)).toBe('512000')
+    expect(mocks.setAIGlobalConfig).not.toHaveBeenCalled()
+    expect(mocks.notify).toHaveBeenCalledWith('error', 'AIOnlineModeSetting.singleModelModeInvalid')
   })
 
-  it('重置后写回默认 307200 字节并显示 300K', async () => {
-    mocks.remoteStore.set(KEY, '512000')
-    const input = await renderPage()
-    await waitFor(() => expect(input.value).toBe('500'))
+  it('开启时保留已有全局配置并提示对新会话生效', async () => {
+    const user = userEvent.setup()
+    render(<AIModelGlobalConfig />)
 
-    fireEvent.click(screen.getByText('ConfigNetworkPage.reset'))
-    fireEvent.click(await screen.findByText('YakitButton.ok'))
+    await user.click(screen.getAllByRole('switch')[0])
 
-    await waitFor(() => expect(setRemoteValue).toHaveBeenCalledWith(KEY, '307200'))
-    await waitFor(() => expect(input.value).toBe('300'))
-    expect(mocks.remoteStore.get(KEY)).toBe('307200')
+    await vi.waitFor(() => expect(mocks.setAIGlobalConfig).toHaveBeenCalledTimes(1))
+    expect(mocks.setAIGlobalConfig).toHaveBeenCalledWith({ ...createConfig(), SingleModelMode: true })
+    expect(mocks.setAIGlobalConfig.mock.calls[0][0].LightweightModels).toEqual(createConfig().LightweightModels)
+    expect(mocks.notify).toHaveBeenCalledWith('success', 'AIOnlineModeSetting.singleModelModeSaved')
+  })
+
+  it('单模型模式下隐藏调用模式与降级行', () => {
+    mocks.config = { ...createConfig(), SingleModelMode: true }
+    render(<AIModelGlobalConfig />)
+
+    expect(screen.getByText('AIOnlineModeSetting.singleModelMode')).toBeInTheDocument()
+    expect(screen.queryByText('AiAgengt.callingMode')).not.toBeInTheDocument()
+    expect(screen.queryByText('AIModelGlobalConfig.disableFallback')).not.toBeInTheDocument()
+  })
+
+  it('未开启单模型模式时展示调用模式与降级行', () => {
+    render(<AIModelGlobalConfig />)
+
+    expect(screen.getByText('AiAgengt.callingMode')).toBeInTheDocument()
+    expect(screen.getByText('AIModelGlobalConfig.disableFallback')).toBeInTheDocument()
   })
 })

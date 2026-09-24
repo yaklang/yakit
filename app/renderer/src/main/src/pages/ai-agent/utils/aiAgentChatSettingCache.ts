@@ -8,7 +8,7 @@ import type { AIAgentSetting } from '../aiAgentType'
 import { AIAgentSettingDefault } from '../defaultConstant'
 
 const omitPersistKeys = ['AIService', 'AIModelName'] as const
-const omitSessionRuntimeKeys = ['EnablePlan', 'SyncPerceptionTrigger', 'Source'] as const
+const omitSessionRuntimeKeys = ['EnablePlan', 'SyncPerceptionTrigger', 'SingleModelMode', 'Source'] as const
 
 export const stripAIAgentChatSettingForPersist = (setting: Partial<AIAgentSetting>): Partial<AIAgentSetting> => {
   const data = omit(setting, [...omitPersistKeys, ...omitSessionRuntimeKeys]) as Partial<AIAgentSetting>
@@ -55,6 +55,7 @@ export const applyAIAgentChatSettingSessionDefaults = (setting: AIAgentSetting):
     ...setting,
     SyncPerceptionTrigger: false,
     EnablePlan: false,
+    SingleModelMode: false,
     Source: AISourceEnum.aiAgent,
     Strategy: {
       ...setting.Strategy,

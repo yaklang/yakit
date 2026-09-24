@@ -752,6 +752,60 @@ describe('ChatMultiSessionController start / send / history', async () => {
   })
 })
 
+describe('ChatMultiSessionController handleSendMessage readonly sync guards', async () => {
+  let ctrl: ChatMultiSessionController
+  let yakitNotify: ReturnType<typeof vi.fn>
+
+  beforeEach(async () => {
+    resetIpcMocks()
+    vi.clearAllMocks()
+    ctrl = new ChatMultiSessionController()
+    yakitNotify = (await import('@/utils/notification')).yakitNotify as unknown as ReturnType<typeof vi.fn>
+  })
+
+  it('readonly sync on ended session returns silently without notify', async () => {
+    ctrl.setActiveShowSession('s-ended')
+    ctrl.handleSendMessage({
+      token: 's-ended',
+      type: '',
+      params: {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_CONSUMPTION,
+        SyncID: 'sync-consumption-1',
+      } as any,
+    })
+    expect(yakitNotify).not.toHaveBeenCalled()
+  })
+
+  it('non-readonly send on missing session still notifies warning', async () => {
+    ctrl.setActiveShowSession('s-missing')
+    ctrl.handleSendMessage({ token: 's-missing', type: '', params: { IsFreeInput: true, FreeInput: 'hi' } as any })
+    expect(yakitNotify).toHaveBeenCalledTimes(1)
+    expect(yakitNotify).toHaveBeenCalledWith('warning', '会话不存在，无法发送消息')
+  })
+
+  it('readonly sync during history load returns silently; free input still notifies', async () => {
+    ctrl.handleStartSession(startParams('s-loading'))
+    await ctrl.ensureSession('s-loading').meta.lifecycle.preparation
+    ctrl.ensureSession('s-loading').store.getState().updateState({ initLoading: true })
+
+    ctrl.handleSendMessage({
+      token: 's-loading',
+      type: '',
+      params: {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_CONSUMPTION,
+        SyncID: 'sync-consumption-2',
+      } as any,
+    })
+    expect(yakitNotify).not.toHaveBeenCalled()
+
+    ctrl.handleSendMessage({ token: 's-loading', type: '', params: { IsFreeInput: true, FreeInput: 'hi' } as any })
+    expect(yakitNotify).toHaveBeenCalledTimes(1)
+    expect(yakitNotify).toHaveBeenCalledWith('warning', '历史消息加载中，请稍后再发送')
+  })
+})
+
 describe('ChatMultiSessionController restore / renderPersist / collect', async () => {
   let ctrl: ChatMultiSessionController
 

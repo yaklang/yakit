@@ -145,6 +145,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     data.DisableToolIntervalReview =
       setting.DisableToolIntervalReview ?? AIAgentSettingDefault.DisableToolIntervalReview
     data.DisableMemoryTriage = setting.DisableMemoryTriage ?? AIAgentSettingDefault.DisableMemoryTriage
+    data.SingleModelMode = setting.SingleModelMode ?? AIAgentSettingDefault.SingleModelMode
   } catch (error) {}
   return { ...data }
 }

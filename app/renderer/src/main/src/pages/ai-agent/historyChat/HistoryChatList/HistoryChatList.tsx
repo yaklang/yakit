@@ -266,6 +266,7 @@ const HistoryChatList: FC<{
       ...old,
       SyncPerceptionTrigger: info?.StartParams?.SyncPerceptionTrigger ?? false,
       EnablePlan: info?.StartParams?.EnablePlan ?? false,
+      SingleModelMode: info?.StartParams?.SingleModelMode ?? false,
       DisableMemoryTriage: info?.StartParams?.DisableMemoryTriage ?? false,
       Strategy: {
         EnableMultiAgent: info?.StartParams?.Strategy?.EnableMultiAgent ?? false,

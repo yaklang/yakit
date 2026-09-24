@@ -59,11 +59,8 @@
 // #region AIInputSettingPopover
 .ai-input-setting-form {
   width: 320px;
-  .ant-form-item {
+  .switch-form-item {
     margin-bottom: 8px;
-    &:last-child {
-      margin-bottom: 0;
-    }
   }
 }
 .form-info-icon-tooltip {

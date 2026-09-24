@@ -97,23 +97,17 @@ export const getModelTypeByFileName = (fileName: string) => {
   }
   return modelType
 }
-export const getModelLabelByModelType = (type: AIModelTypeEnumType) => {
-  let label: string = ''
+export const getModelLabelByModelType = (t: (key: string) => string, type: AIModelTypeEnumType) => {
   switch (type) {
     case AIModelTypeEnum.TierIntelligent:
-      label = '高质模型'
-      break
+      return t('AiAgengt.intelligentModels')
     case AIModelTypeEnum.TierLightweight:
-      label = '轻量模型'
-      break
+      return t('AiAgengt.lightweightModels')
     case AIModelTypeEnum.TierVision:
-      label = '视觉模型'
-      break
+      return t('AiAgengt.visionModels')
     default:
-      label = '未知类型'
-      break
+      return t('AIContextToken.unknownModel')
   }
-  return label
 }
 export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationConfig => {
   const config: ThirdPartyApplicationConfig = {
@@ -313,7 +307,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       const haveStandardOfLightweight =
         modelName === 'memfit-standard-free' && type === 'aibalance' && modelType === 'lightweight'
       if (haveStandardOfLightweight) {
-        yakitNotify('error', 'memfit-standard-free 是高质模型,不可设置为轻量模型')
+        yakitNotify('error', t('AddAIModel.standardFreeIsIntelligent'))
         return
       }
 

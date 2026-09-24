@@ -1,6 +1,7 @@
 import React from 'react'
 import get from 'lodash/get'
 import type * as AIReActChatModule from '../AIReActChat'
+import type { AIReActChatRefProps } from '../AIReActChatType'
 import type { AIReActChatContentsRef } from '../../aiReActChatContents/AIReActChatContentsType'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import enLayout from '@/locales/en/layout.json'
@@ -10,7 +11,12 @@ import zhYakitUi from '@/locales/zh/yakitUi.json'
 import type * as OutlineIcons from '@yakit-libs/yakit-ui-icons/outline'
 import styles from '../AIReActChat.module.scss'
 
-const { scrollToItemIndex, locale } = vi.hoisted(() => ({ scrollToItemIndex: vi.fn(), locale: { language: 'zh' } }))
+const { scrollToItemIndex, locale, formattedSetting, latestSetting } = vi.hoisted(() => ({
+  scrollToItemIndex: vi.fn(),
+  locale: { language: 'zh' },
+  formattedSetting: { value: {} as Record<string, unknown> },
+  latestSetting: { value: {} as Record<string, unknown> },
+}))
 
 // CI 的根配置将样式模块替换为空对象；为通知图标用例验证的类名提供稳定映射。
 vi.mock('../AIReActChat.module.scss', () => ({
@@ -20,7 +26,7 @@ vi.mock('../AIReActChat.module.scss', () => ({
     'notify-icon-yellow': 'notify-icon-yellow',
   },
 }))
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createChatStore } from '../../hooks/chatStore'
 import { AINotifyType } from '../../hooks/grpcApi'
@@ -33,6 +39,8 @@ beforeEach(() => {
   chatStore = createChatStore()
   vi.clearAllMocks()
   locale.language = 'zh'
+  formattedSetting.value = {}
+  latestSetting.value = {}
   vi.mocked(isCommunityEdition).mockReturnValue(true)
 })
 
@@ -53,14 +61,14 @@ vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
   default: () => ({
     setActiveChat: vi.fn(),
-    getSetting: () => ({}),
+    getSetting: () => latestSetting.value,
     onStart: vi.fn(),
     onSend: vi.fn(),
   }),
 }))
 
 vi.mock('@/pages/ai-agent/utils', () => ({
-  formatAIAgentSetting: () => ({}),
+  formatAIAgentSetting: (setting: Record<string, unknown>) => ({ ...setting, ...formattedSetting.value }),
   getAIReActRequestParams: () => ({ attachedResourceInfo: undefined }),
 }))
 
@@ -157,6 +165,21 @@ const baseProps = {
 }
 
 describe('AIReActChat', () => {
+  it('首条启动消息透传会话级单模型模式', async () => {
+    latestSetting.value = { SingleModelMode: true }
+    const ref = React.createRef<AIReActChatRefProps>()
+    const startRequest = vi.fn(({ params }) => Promise.resolve({ params }))
+    render(<AIReActChat {...baseProps} ref={ref} startRequest={startRequest} />)
+
+    act(() => ref.current?.handleStart({ qs: 'hello' }))
+
+    await waitFor(() => expect(startRequest).toHaveBeenCalledTimes(1))
+    expect(startRequest.mock.calls[0][0].params).toMatchObject({
+      IsStart: true,
+      Params: { SingleModelMode: true, UserQuery: 'hello' },
+    })
+  })
+
   it('首次挂载后点击任务，通过已挂载的内容引用定位', () => {
     scrollToItemIndex.mockClear()
     render(<AIReActChat {...baseProps} title="会话" />)

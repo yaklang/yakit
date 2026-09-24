@@ -1,6 +1,6 @@
 import type React from 'react'
 import { memo, useCallback, useMemo, useState } from 'react'
-import { useCreation } from 'ahooks'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import { PresentationChartLineOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tooltip } from 'antd'
 import { YakitButton, type YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -17,6 +17,10 @@ import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession
 import { useStore } from 'zustand'
 import cloneDeep from 'lodash/cloneDeep'
 import isEmpty from 'lodash/isEmpty'
+import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { randomString } from '@/utils/randomUtil'
 
 interface ContextDetailPopoverProps extends ContextPerfPanelProps {
   buttonProps?: Omit<YakitButtonProp, 'icon' | 'children'>
@@ -28,14 +32,16 @@ const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ buttonProps
 
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
+  const sessionId = useCurrentSessionId()
+  const { onSend } = useAIAgentDispatcher()
 
   const aiPerfData = useContextPerfStore()
 
   const { renderNumber, aiDataRef: perfData } = useRafPolling<AIAgentChatData['aiPerfData'] | null>({
     getData: () => aiPerfData ?? null,
-    interval: CONTEXT_PERF_POLL_INTERVAL,
-    shouldStop: () => !execute,
-    resetDeps: [execute],
+    interval: visible ? 200 : CONTEXT_PERF_POLL_INTERVAL,
+    shouldStop: () => !execute && !visible,
+    resetDeps: [execute, visible],
     shouldUpdate: (prev, next) => {
       if (!prev) return !!next
       if (!next) return false
@@ -55,12 +61,25 @@ const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ buttonProps
   }, [renderNumber, perfData?.consumption])
 
   const onClose = useCallback(() => setVisible(false), [])
+  const onVisibleChange = useMemoizedFn((nextVisible: boolean) => {
+    setVisible(nextVisible)
+    if (!nextVisible || !sessionId) return
+    onSend({
+      token: sessionId,
+      type: '',
+      params: {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_CONSUMPTION,
+        SyncID: randomString(8),
+      },
+    })
+  })
 
   const popoverContent = useMemo(
     () => (
       <AIEchartsDetails
         overallToken={overallToken}
-        tierConsumption={perfData?.consumption?.tier_consumption}
+        consumption={perfData?.consumption}
         pressure={perfData?.pressure}
         firstCost={perfData?.firstCost}
         onClose={onClose}
@@ -79,7 +98,7 @@ const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ buttonProps
       trigger="click"
       classNames={{ root: styles['echarts-details-popover'] }}
       open={visible}
-      onOpenChange={setVisible}
+      onOpenChange={onVisibleChange}
       arrow={false}
       align={{ offset: [0, 0] }}
     >

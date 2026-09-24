@@ -199,6 +199,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
       ...old,
       SyncPerceptionTrigger: relatedSession.StartParams?.SyncPerceptionTrigger ?? false,
       EnablePlan: relatedSession.StartParams?.EnablePlan ?? false,
+      SingleModelMode: relatedSession.StartParams?.SingleModelMode ?? false,
       DisableMemoryTriage: relatedSession.StartParams?.DisableMemoryTriage ?? false,
       Strategy: {
         EnableMultiAgent: relatedSession.StartParams?.Strategy?.EnableMultiAgent ?? false,

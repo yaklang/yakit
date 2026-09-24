@@ -156,8 +156,8 @@
     "modelType": "Model Type",
     "modelConfigTitle": "Model Configuration",
     "modelConfigTip": "Values can be left empty; empty means not set",
-    "highQualityModel": "High quality model: executes complex tasks",
-    "lightweightModel": "Lightweight model: executes simple tasks and conversations",
+    "highQualityModel": "Primary model: used for primary tasks",
+    "lightweightModel": "Auxiliary model: used for auxiliary tasks",
     "visionModel": "Vision model: used for image recognition and knowledge base/task execution",
     "userInfo": "User Info"
   }

@@ -44,6 +44,8 @@ export const isConsumptionPerfChanged = (
   if (!prev && !next) return false
   if (!prev || !next) return true
   if (
+    prev.consumption_uuid !== next.consumption_uuid ||
+    prev.effective_single_model_mode !== next.effective_single_model_mode ||
     prev.input_consumption !== next.input_consumption ||
     prev.output_consumption !== next.output_consumption ||
     prev.cache_hit_token !== next.cache_hit_token
@@ -52,9 +54,38 @@ export const isConsumptionPerfChanged = (
   }
   const prevTier = prev.tier_consumption
   const nextTier = next.tier_consumption
-  return MODEL_TIERS.some(
-    (tier) => Object.keys(prevTier?.[tier] || {}).length !== Object.keys(nextTier?.[tier] || {}).length,
-  )
+  if (
+    MODEL_TIERS.some(
+      (tier) => Object.keys(prevTier?.[tier] || {}).length !== Object.keys(nextTier?.[tier] || {}).length,
+    )
+  ) {
+    return true
+  }
+  return isTierModelConsumptionChanged(prev.tier_model_consumption, next.tier_model_consumption)
+}
+
+export const isTierModelConsumptionChanged = (
+  prev: AIAgentGrpcApi.Consumption['tier_model_consumption'],
+  next: AIAgentGrpcApi.Consumption['tier_model_consumption'],
+) => {
+  const tiers = new Set([...Object.keys(prev || {}), ...Object.keys(next || {})])
+  return [...tiers].some((tier) => {
+    const prevItems = prev?.[tier] || []
+    const nextItems = next?.[tier] || []
+    if (prevItems.length !== nextItems.length) return true
+    return prevItems.some((item, index) => {
+      const nextItem = nextItems[index]
+      return (
+        !nextItem ||
+        item.provider_type !== nextItem.provider_type ||
+        item.model_name !== nextItem.model_name ||
+        item.thinking_level !== nextItem.thinking_level ||
+        item.input_consumption !== nextItem.input_consumption ||
+        item.output_consumption !== nextItem.output_consumption ||
+        item.cache_hit_token !== nextItem.cache_hit_token
+      )
+    })
+  })
 }
 
 /** 比较 aiPerfData 是否发生了需要触发更新的变化 */
@@ -62,6 +93,8 @@ export const isPerfDataChanged = (prev: PerfData, next: PerfData): boolean => {
   const prevConsumption = prev.consumption
   const nextConsumption = next.consumption
   if (
+    prevConsumption?.consumption_uuid !== nextConsumption?.consumption_uuid ||
+    prevConsumption?.effective_single_model_mode !== nextConsumption?.effective_single_model_mode ||
     prevConsumption?.input_consumption !== nextConsumption?.input_consumption ||
     prevConsumption?.output_consumption !== nextConsumption?.output_consumption ||
     prevConsumption?.cache_hit_token !== nextConsumption?.cache_hit_token
@@ -77,6 +110,9 @@ export const isPerfDataChanged = (prev: PerfData, next: PerfData): boolean => {
       (tier) => Object.keys(prevTier?.[tier] || {}).length !== Object.keys(nextTier?.[tier] || {}).length,
     )
   )
+    return true
+
+  if (isTierModelConsumptionChanged(prevConsumption?.tier_model_consumption, nextConsumption?.tier_model_consumption))
     return true
 
   // 各模型层级的数组类字段长度

@@ -37,7 +37,7 @@ interface CurrentModel {
 
 export interface AIEchartsDetailsProps {
   overallToken: [number | string, number | string, number | string]
-  tierConsumption?: AIAgentGrpcApi.Consumption['tier_consumption']
+  consumption?: AIAgentGrpcApi.Consumption
   pressure?: AIAgentChatData['aiPerfData']['pressure']
   firstCost?: AIAgentChatData['aiPerfData']['firstCost']
   contextStats?: AIAgentChatData['aiPerfData']['contextStats']
@@ -48,7 +48,7 @@ export interface AIEchartsDetailsProps {
 
 const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
   overallToken,
-  tierConsumption,
+  consumption,
   pressure,
   firstCost,
   contextStats,
@@ -67,6 +67,8 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
   }, [event, inViewport])
 
   const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
+  const tierModelConsumption = consumption?.tier_model_consumption
+  const hasRuntimeModelConsumption = tierModelConsumption !== undefined
 
   const currentModel = useCreation((): CurrentModel => {
     const data: CurrentModel = {}
@@ -78,32 +80,6 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
     }
     return data
   }, [aiGlobalConfig.IntelligentModels, aiGlobalConfig.LightweightModels])
-
-  const intelligentToken = useCreation(() => {
-    if (!tierConsumption?.intelligent) return [0, 0, 0, 0]
-    const input = tierConsumption.intelligent.input_consumption || 0
-    const output = tierConsumption.intelligent.output_consumption || 0
-    const cacheHit = tierConsumption.intelligent.cache_hit_token || 0
-    let percent = 0
-    const totalInput = Number(cacheHit) + Number(input)
-    if (totalInput !== 0 && cacheHit !== 0) {
-      percent = Number(((Number(cacheHit) / totalInput) * 100).toFixed(2))
-    }
-    return [formatNumberUnits(input), formatNumberUnits(output), formatNumberUnits(cacheHit), percent]
-  }, [renderNumber, tierConsumption?.intelligent])
-
-  const lightweightToken = useCreation(() => {
-    if (!tierConsumption?.lightweight) return [0, 0, 0, 0]
-    const input = tierConsumption.lightweight.input_consumption || 0
-    const output = tierConsumption.lightweight.output_consumption || 0
-    const cacheHit = tierConsumption.lightweight.cache_hit_token || 0
-    let percent = 0
-    const totalInput = Number(cacheHit) + Number(input)
-    if (totalInput !== 0 && cacheHit !== 0) {
-      percent = Number(((Number(cacheHit) / totalInput) * 100).toFixed(2))
-    }
-    return [formatNumberUnits(input), formatNumberUnits(output), formatNumberUnits(cacheHit), percent]
-  }, [renderNumber, tierConsumption?.lightweight])
 
   const pressuresEcharts: AIPressureDetailsEchartsProps['dataEcharts'] = useCreation(() => {
     return getPressuresData(pressure)
@@ -224,13 +200,15 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
           <div className={styles['token-content']}>
             <AITokens
               modelType={t('AiAgengt.intelligentModels')}
-              aiModel={currentModel?.intelligentModels}
-              token={[intelligentToken[0], intelligentToken[1], intelligentToken[2], intelligentToken[3]]}
+              aiModel={hasRuntimeModelConsumption ? undefined : currentModel?.intelligentModels}
+              modelConsumption={tierModelConsumption?.intelligent}
+              fallbackConsumption={hasRuntimeModelConsumption ? undefined : consumption?.tier_consumption?.intelligent}
             />
             <AITokens
               modelType={t('AiAgengt.lightweightModels')}
-              aiModel={currentModel?.lightweightModels}
-              token={[lightweightToken[0], lightweightToken[1], lightweightToken[2], lightweightToken[3]]}
+              aiModel={hasRuntimeModelConsumption ? undefined : currentModel?.lightweightModels}
+              modelConsumption={tierModelConsumption?.lightweight}
+              fallbackConsumption={hasRuntimeModelConsumption ? undefined : consumption?.tier_consumption?.lightweight}
             />
           </div>
         </div>

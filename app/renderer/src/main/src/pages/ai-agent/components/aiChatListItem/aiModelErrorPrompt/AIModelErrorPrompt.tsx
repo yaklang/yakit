@@ -63,7 +63,10 @@ export const AIModelErrorPrompt: React.FC<AIModelErrorPromptProps> = React.memo(
     >
       <div className={styles['model-error-content']}>
         <div className={styles['model-error-item']}>
-          {getModelLabelByModelType(modelTier)}使用错误{!isChildWindow && ',请点击右上角编辑进行处理'}
+          {t('AIModelErrorPrompt.modelErrorSuffix', {
+            model: getModelLabelByModelType(t, modelTier),
+            suffix: !isChildWindow ? t('AIModelErrorPrompt.editHint') : '',
+          })}
         </div>
         <PreWrapper code={code} />
       </div>

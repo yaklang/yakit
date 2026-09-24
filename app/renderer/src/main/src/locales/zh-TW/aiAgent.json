@@ -1,7 +1,7 @@
 {
   "AiAgengt": {
-    "intelligentModels": "高質模型",
-    "lightweightModels": "輕量模型",
+    "intelligentModels": "主模型",
+    "lightweightModels": "輔助模型",
     "visionModels": "視覺模型",
     "callingMode": "呼叫模式",
     "focusMode": "場景",
@@ -75,13 +75,13 @@
     "resetModel": "重置模型",
     "resetModelTooltip": "重置回預設的模型",
     "emptyModels": "未取得模型，可點擊重新整理再次取得。",
-    "noBuiltinModel": "未找到內建高質模型"
+    "noBuiltinModel": "未找到內建主模型"
   },
   "AIModelList": {
     "onlineTooltip": "透過api訪問模型,接受AI資訊或向AI傳送訊息,可配置多個",
     "localTooltip": "本地AI模型管理器用於管理本地AI模型,支援一鍵下載和安裝模型,支援模型狀態監控和管理。透過本地模型服務,可以實現本地化AI服務,無需依賴雲端服務",
-    "intelligentModelsDesc": "用於執行復雜度高的任務,對話方塊中可切換該模型",
-    "lightweightModelsDesc": "用於執行簡單任務和會話",
+    "intelligentModelsDesc": "用於主線任務",
+    "lightweightModelsDesc": "用於輔助任務",
     "visionModelsDesc": "用於識別圖片等,生成知識庫和任務執行都會用到",
     "addModel": "新增模型",
     "testAndAddBtn": "測試並添加",
@@ -93,14 +93,18 @@
     "clearModelsTitle": "清空模型",
     "clearModelsDesc": "確認要刪除所有下載和新增的模型嗎？確認刪除原始檔則自定義新增的模型檔案會被一起刪除",
     "policyAuto": "根據請求內容自動選擇最合適的模型",
-    "policyPerformance": "優先使用高智慧模型",
-    "policyCost": "優先使用輕量級/低成本模型",
+    "policyPerformance": "優先使用主模型",
+    "policyCost": "優先使用輔助模型",
     "policyBalance": "在響應速度、智慧程度和成本之間取得平衡",
-    "sameModelWarning": "不建議輕量和高質使用同一個模型，輕量適合使用響應快速的模型"
+    "sameModelWarning": "不建議主模型和輔助模型使用同一個模型，輔助模型適合使用響應快速的模型"
   },
   "AIOnlineModeSetting": {
-    "disableFallback": "禁用降級到輕量模型",
-    "configErrorEdit": "配置錯誤，無法編輯"
+    "disableFallback": "禁用降級到輔助模型",
+    "configErrorEdit": "配置錯誤，無法編輯",
+    "singleModelMode": "單模型模式",
+    "singleModelModeDesc": "只使用主模型運行 Agent；輔助任務會使用主模型的 LiteCall，部分非關鍵輔助功能將被關閉。",
+    "singleModelModeInvalid": "請先完整配置主模型的廠商類型和模型名稱",
+    "singleModelModeSaved": "保存成功，將對新啟動的會話完整生效"
   },
   "AILocalModelList": {
     "llamaServerNotReady": "Llama伺服器未準備就緒: {{reason}}",
@@ -151,11 +155,15 @@
     "globalDirectivePlaceholder": "全域命令將對所有會話生效...",
     "planPrompt": "Plan 提示詞",
     "planPromptDefault": "自訂Plan提示詞",
-    "planPromptPlaceholder": "Plan 提示詞將在任務規劃階段生效，用於補充規劃說明..."
+    "planPromptPlaceholder": "Plan 提示詞將在任務規劃階段生效，用於補充規劃說明...",
+    "singleModelMode": "單模型模式",
+    "singleModelModeTip": "本會話只使用全局配置中的主模型",
+    "singleModelModeGlobalTip": "全局配置已啟用，當前會話無法關閉",
+    "singleModelModeSessionTip": "單模型模式只能在新會話啟動前修改"
   },
   "AIModelGlobalConfig": {
     "aiModelConfig": "AI模型配置",
-    "disableFallback": "禁用降級到輕量模型"
+    "disableFallback": "禁用降級到輔助模型"
   },
   "AIToolEditor": {
     "editToolInvalid": "嘗試編輯的工具異常(ID: {{id}}), 請關閉頁面重試",
@@ -475,7 +483,8 @@
     "enterModelType": "請輸入模型型別",
     "filePath": "檔案地址",
     "enterFilePath": "請輸入檔案地址",
-    "modelDescription": "模型描述"
+    "modelDescription": "模型描述",
+    "standardFreeIsIntelligent": "memfit-standard-free 是主模型,不可設定為輔助模型"
   },
   "AIChatListItem": {
     "thinking": "思考：",
@@ -639,6 +648,10 @@
   "AIAgentChatLayout": {
     "dockDisabledTip": "螢幕過小，不支援該模組停靠在右邊"
   },
+  "AIModelErrorPrompt": {
+    "modelErrorSuffix": "{{model}}使用錯誤{{suffix}}",
+    "editHint": ",請點擊右上角編輯進行處理"
+  },
   "AIContextToken": {
     "pressure": "上下文壓力",
     "speed": "響應速度",
@@ -651,6 +664,18 @@
     "output": "輸出",
     "cache": "快取",
     "cacheTooltip": "快取佔輸入百分比",
+    "thinkingLevel": "思考強度",
+    "thinkingLevels": {
+      "auto": "預設",
+      "none": "無思考",
+      "low": "低",
+      "medium": "中",
+      "high": "高",
+      "xhigh": "極高",
+      "max": "最高"
+    },
+    "noCallRecords": "暫無調用記錄",
+    "unknownModel": "未知模型",
     "switchChartMetric": "切換 Token / Byte"
   },
   "InstallLlamaServerModelPrompt": {

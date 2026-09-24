@@ -46,6 +46,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { getTipByType } from '@/pages/ai-agent/aiModelList/AIModelList'
 import { AIModelPolicyOptions } from '@/pages/ai-agent/defaultConstant'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import { canEnableSingleModelMode } from '@/pages/ai-agent/aiModelList/utils'
 import { setOpenPerformanceTips } from '@/utils/duplex/duplex'
 
 import { GlobalConfigEmbeddedForm } from '@/pages/settings/settingsContent/globalConfig/GlobalConfigEmbeddedForm'
@@ -968,7 +969,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = () => {
 /**
  * 在全局配置得页面使用这个组件,组件得父元素得Form表单中没有使用自带得设置值,而是采用得state来控制
  */
-const AIModelGlobalConfig: React.FC = React.memo(() => {
+export const AIModelGlobalConfig: React.FC = React.memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const refRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(refRef)
@@ -980,38 +981,68 @@ const AIModelGlobalConfig: React.FC = React.memo(() => {
   }, [inViewport])
   const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
 
+  const onSetSingleModelMode = useMemoizedFn(async (checked: boolean) => {
+    if (checked && !canEnableSingleModelMode(aiGlobalConfig)) {
+      yakitNotify('error', t('AIOnlineModeSetting.singleModelModeInvalid'))
+      return
+    }
+    try {
+      await event.setAIGlobalConfig({ ...aiGlobalConfig, SingleModelMode: checked })
+      yakitNotify('success', t('AIOnlineModeSetting.singleModelModeSaved'))
+    } catch (_) {}
+  })
+
   return (
     <div ref={refRef} className={gStyles['section']}>
       <div className={gStyles['section-title']}>{t('AIModelGlobalConfig.aiModelConfig')}</div>
       <div className={gStyles['list-panel']}>
         <div className={gStyles['setting-row']}>
           <div className={gStyles['setting-row-text']}>
-            <div className={gStyles['setting-row-title']}>{t('AiAgengt.callingMode')}</div>
-          </div>
-          <div className={classNames(gStyles['setting-row-control'], gStyles['setting-row-control-fit'])}>
-            <div className={gStyles['control-stack-end']}>
-              <YakitRadioButtons
-                buttonStyle="solid"
-                options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
-                value={aiGlobalConfig.RoutingPolicy}
-                onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
-              />
-              <div className={gStyles['setting-row-desc']}>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</div>
-            </div>
-          </div>
-        </div>
-        <div className={gStyles['setting-row']}>
-          <div className={gStyles['setting-row-text']}>
-            <div className={gStyles['setting-row-title']}>{t('AIModelGlobalConfig.disableFallback')}</div>
+            <div className={gStyles['setting-row-title']}>{t('AIOnlineModeSetting.singleModelMode')}</div>
+            <div className={gStyles['setting-row-desc']}>{t('AIOnlineModeSetting.singleModelModeDesc')}</div>
           </div>
           <div className={gStyles['setting-row-control']}>
             <YakitSwitch
               size="middle"
-              checked={aiGlobalConfig.DisableFallback}
-              onChange={(c) => event.setAIGlobalConfig({ DisableFallback: c })}
+              checked={!!aiGlobalConfig.SingleModelMode}
+              loading={aiGlobalConfigData.updateLoading}
+              disabled={aiGlobalConfigData.updateLoading}
+              onChange={onSetSingleModelMode}
             />
           </div>
         </div>
+        {!aiGlobalConfig.SingleModelMode && (
+          <>
+            <div className={gStyles['setting-row']}>
+              <div className={gStyles['setting-row-text']}>
+                <div className={gStyles['setting-row-title']}>{t('AiAgengt.callingMode')}</div>
+              </div>
+              <div className={classNames(gStyles['setting-row-control'], gStyles['setting-row-control-fit'])}>
+                <div className={gStyles['control-stack-end']}>
+                  <YakitRadioButtons
+                    buttonStyle="solid"
+                    options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
+                    value={aiGlobalConfig.RoutingPolicy}
+                    onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
+                  />
+                  <div className={gStyles['setting-row-desc']}>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</div>
+                </div>
+              </div>
+            </div>
+            <div className={gStyles['setting-row']}>
+              <div className={gStyles['setting-row-text']}>
+                <div className={gStyles['setting-row-title']}>{t('AIModelGlobalConfig.disableFallback')}</div>
+              </div>
+              <div className={gStyles['setting-row-control']}>
+                <YakitSwitch
+                  size="middle"
+                  checked={aiGlobalConfig.DisableFallback}
+                  onChange={(c) => event.setAIGlobalConfig({ DisableFallback: c })}
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

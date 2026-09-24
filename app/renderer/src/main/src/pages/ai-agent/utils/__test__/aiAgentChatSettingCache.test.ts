@@ -38,6 +38,7 @@ const settingWithModel: AIAgentSetting = {
   ReviewPolicy: 'yolo',
   SyncPerceptionTrigger: true,
   EnablePlan: true,
+  SingleModelMode: true,
   DisableMemoryTriage: true,
   Strategy: {
     EnableMultiAgent: true,
@@ -54,6 +55,7 @@ describe('serializeAIAgentChatSetting', () => {
     expect(parsed.AIModelName).toBeUndefined()
     expect(parsed.EnablePlan).toBeUndefined()
     expect(parsed.SyncPerceptionTrigger).toBeUndefined()
+    expect(parsed.SingleModelMode).toBeUndefined()
     expect(parsed.Source).toBeUndefined()
     expect(parsed.Strategy?.EnableMultiAgent).toBeUndefined()
     expect(parsed.Strategy?.EnableGoalMode).toBeUndefined()
@@ -89,6 +91,7 @@ describe('applyAIAgentChatSettingSessionDefaults', () => {
     const next = applyAIAgentChatSettingSessionDefaults(mergeAIAgentChatSettingCache(settingWithModel))
     expect(next.SyncPerceptionTrigger).toBe(false)
     expect(next.EnablePlan).toBe(false)
+    expect(next.SingleModelMode).toBe(false)
     expect(next.Source).toBe(AISourceEnum.aiAgent)
     expect(next.DisableMemoryTriage).toBe(true)
     expect(next.Strategy).toEqual({
@@ -147,6 +150,7 @@ describe('applyAIAgentChatSettingBroadcast', () => {
     const current: AIAgentSetting = {
       ...AIAgentSettingDefault,
       EnablePlan: true,
+      SingleModelMode: true,
       ReviewPolicy: 'manual',
       Strategy: {
         EnableMultiAgent: true,
@@ -158,6 +162,7 @@ describe('applyAIAgentChatSettingBroadcast', () => {
     const incoming = JSON.parse(serializeAIAgentChatSetting(settingWithModel)) as Partial<AIAgentSetting>
     const next = applyAIAgentChatSettingBroadcast(current, incoming)
     expect(next.EnablePlan).toBe(true)
+    expect(next.SingleModelMode).toBe(true)
     expect(next.Strategy?.EnableMultiAgent).toBe(true)
     expect(next.Strategy?.EnableGoalMode).toBe(true)
     expect(next.ReviewPolicy).toBe('yolo')
@@ -168,14 +173,17 @@ describe('applyAIAgentChatSettingBroadcast', () => {
     const current: AIAgentSetting = {
       ...AIAgentSettingDefault,
       EnablePlan: true,
+      SingleModelMode: true,
       Strategy: { EnableMultiAgent: true, EnableGoalMode: true },
     }
     const next = applyAIAgentChatSettingBroadcast(current, {
       EnablePlan: false,
+      SingleModelMode: false,
       ReviewPolicy: 'ai',
       Strategy: { EnableMultiAgent: false, EnableGoalMode: false, GoalMinIterations: 8 },
     })
     expect(next.EnablePlan).toBe(true)
+    expect(next.SingleModelMode).toBe(true)
     expect(next.Strategy?.EnableMultiAgent).toBe(true)
     expect(next.Strategy?.EnableGoalMode).toBe(true)
     expect(next.ReviewPolicy).toBe('ai')

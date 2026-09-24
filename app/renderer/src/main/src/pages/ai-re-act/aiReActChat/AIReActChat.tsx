@@ -129,8 +129,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       const { qs, sessionId, enabledCapabilities } = value
       const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
 
-      const source = getSetting().Source ?? AISourceEnum.aiAgent // getSetting保证最新
-      const formattedSetting = formatAIAgentSetting(setting)
+      const latestSetting = getSetting()
+      const source = latestSetting.Source ?? AISourceEnum.aiAgent
+      const formattedSetting = formatAIAgentSetting(latestSetting)
       const request: AIStartParams = {
         ...formattedSetting,
         UserQuery: qs,
