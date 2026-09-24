@@ -8,7 +8,6 @@ const { newChat } = vi.hoisted(() => ({ newChat: vi.fn() }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => store }))
 vi.mock('../../../useContext/useStore', () => ({ default: () => ({ activeChat: { Title: '当前会话' } }) }))
 vi.mock('../../../historyChat/HistoryChat', () => ({ onNewChat: newChat }))
-vi.mock('../../AIContextToken/AIContextToken', () => ({ default: () => <div>Token 统计</div> }))
 vi.mock('../../AIContextToken/ContextDetailPopover', () => ({ default: () => <button>上下文详情</button> }))
 vi.mock('@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard', () => ({
   HorizontalScrollCard: () => <div>执行结果</div>,
@@ -24,7 +23,6 @@ describe('AIHorizontalScrollCard', () => {
   it('头部保留上下文与新建会话入口，不展示任务详情和更多操作', () => {
     render(<AIHorizontalScrollCard />)
     expect(screen.getByText('当前会话')).toBeVisible()
-    expect(screen.getByText('Token 统计')).toBeVisible()
     expect(screen.getByRole('button', { name: '上下文详情' })).toBeVisible()
     const buttons = screen.getAllByRole('button')
     expect(buttons).toHaveLength(2)

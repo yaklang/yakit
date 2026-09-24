@@ -382,7 +382,7 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
   const notifyMessage = useStore(store, (state) => state.notifyMessage)
-  const { t } = useI18nNamespaces(['layout'])
+  const { t } = useI18nNamespaces(['layout', 'yakitUi'])
 
   const { nodeLabel } = useAINodeLabel(notifyMessage?.label)
 
@@ -421,7 +421,7 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
           <YakitButton type="primary" onClick={() => emiter.emit('onOpenRecharge', '')}>
             {t('CeUserMenu.recharge')}
           </YakitButton>
-          <YakitButton type="text" icon={<XOutlined />} onClick={onClose} />
+          <YakitButton type="text" aria-label={t('YakitButton.close')} icon={<XOutlined />} onClick={onClose} />
         </div>
       )}
     </div>
