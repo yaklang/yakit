@@ -38,8 +38,9 @@ const { ipcRendererMock, inViewport } = vi.hoisted(() => {
 import { act, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { startIdleVisibleInterval } = vi.hoisted(() => ({
+const { startIdleVisibleInterval, pendingRef } = vi.hoisted(() => ({
   startIdleVisibleInterval: vi.fn(() => vi.fn()),
+  pendingRef: { current: [] as { id: string }[] },
 }))
 
 vi.mock('@/utils/scheduleIdleTask', () => ({ startIdleVisibleInterval }))
@@ -93,6 +94,16 @@ vi.mock('@/utils/notification', () => ({
   yakitNotify: vi.fn(),
 }))
 
+vi.mock('../../ai-agent/browserInstances/browserInstanceStore', () => ({
+  useBrowserInstances: () => ({
+    instances: [],
+    pending: pendingRef.current,
+    selectedId: '',
+    loading: false,
+    error: '',
+  }),
+}))
+
 vi.mock('@/pages/plugins/utils', () => ({
   apiQueryYakScriptTotal: vi.fn().mockResolvedValue({ Total: 0 }),
 }))
@@ -126,6 +137,10 @@ vi.mock('@/components/yakitUI/YakitResizeBox/YakitResizeBox', () => ({
 }))
 
 import Home from '../Home'
+import { yakitNotify } from '@/utils/notification'
+import emiter from '@/utils/eventBus/eventBus'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from '../../ai-agent/defaultConstant'
 
 describe('Home 离开首页停止轮询', () => {
   beforeEach(() => {
@@ -167,5 +182,64 @@ describe('Home 离开首页停止轮询', () => {
       await vi.advanceTimersByTimeAsync(5000)
     })
     expect(startIdleVisibleInterval).toHaveBeenCalledTimes(callsAfterLeave)
+  })
+})
+
+describe('Home 浏览器配对全局提示', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    pendingRef.current = []
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.clearAllMocks()
+    pendingRef.current = []
+  })
+
+  it('初次出现 pending id 时通知，点击依次打开 AI Agent 浏览器页签', async () => {
+    const { rerender } = render(<Home />)
+    expect(yakitNotify).not.toHaveBeenCalled()
+
+    pendingRef.current = [{ id: 'pair-1' }]
+    await act(async () => {
+      rerender(<Home />)
+    })
+    expect(yakitNotify).toHaveBeenCalledTimes(1)
+    expect(yakitNotify).toHaveBeenCalledWith(
+      'info',
+      expect.objectContaining({
+        onClick: expect.any(Function),
+      }),
+    )
+
+    const payload = vi.mocked(yakitNotify).mock.calls[0][1] as { onClick: () => void }
+    payload.onClick()
+    expect(emiter.emit).toHaveBeenCalledWith('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100)
+    })
+    expect(emiter.emit).toHaveBeenCalledWith(
+      'switchAIAgentTab',
+      JSON.stringify({
+        type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+        params: { active: AIAgentTabListEnum.Browser, show: true },
+      }),
+    )
+  })
+
+  it('pending 更新但无新 id 时不重复通知', async () => {
+    const { rerender } = render(<Home />)
+    pendingRef.current = [{ id: 'pair-1' }]
+    await act(async () => {
+      rerender(<Home />)
+    })
+    expect(yakitNotify).toHaveBeenCalledTimes(1)
+
+    pendingRef.current = [{ id: 'pair-1' }]
+    await act(async () => {
+      rerender(<Home />)
+    })
+    expect(yakitNotify).toHaveBeenCalledTimes(1)
   })
 })

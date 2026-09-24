@@ -381,6 +381,8 @@
     "refresh": "Refresh",
     "noMentionInstances": "No browser instances available to reference",
     "pendingApproval": "Pending review",
+    "pairingRequestNotifyPrefix": "A browser pairing request is waiting. ",
+    "pairingRequestNotifyAction": "Click to view",
     "pairingTitle": "New browser requests access",
     "pairingTitleManaged": "Browser {{identity}} requests access",
     "verificationCode": "Code:",

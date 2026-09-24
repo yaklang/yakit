@@ -381,6 +381,8 @@
     "refresh": "刷新",
     "noMentionInstances": "暂无可引用的浏览器实例",
     "pendingApproval": "等待审批",
+    "pairingRequestNotifyPrefix": "浏览器发起配对申请，请",
+    "pairingRequestNotifyAction": "点击查看",
     "pairingTitle": "新浏览器请求连接",
     "pairingTitleManaged": "浏览器 {{identity}} 请求连接",
     "verificationCode": "确认码：",
