@@ -39,6 +39,7 @@ export function resolveMentionArrowSelect(params: {
  * 是否应滚动、以及滚动量。
  * 可视区内自由移动；目标项进入底部/顶部「约 1 个自身高度」缓冲区后再滚，
  * 使选中停在倒数第二（向下）或正数第二（向上），而不是每按一次都顶到列表顶部。
+ * 若目标已完全离开容器（如鼠标大幅滚动后），整段拉回至对应缓冲线可见。
  */
 export function resolveMentionArrowScroll(params: {
   direction: 'up' | 'down'
@@ -48,16 +49,20 @@ export function resolveMentionArrowScroll(params: {
   const { direction, containerRect, itemRect } = params
   const margin = itemRect.height > 0 ? itemRect.height : 0
   if (direction === 'down') {
-    // 目标底边越过「底边往上一个 item」→ 滚到该缓冲线
     const edge = containerRect.bottom - margin
-    if (itemRect.bottom > edge) {
+    // 完全在容器上方，或越过底部缓冲线 → 对齐到倒数第二缓冲线
+    const fullyAbove = itemRect.bottom < containerRect.top
+    const pastBottomBuffer = itemRect.bottom > edge
+    if (fullyAbove || pastBottomBuffer) {
       return { shouldScroll: true, delta: itemRect.bottom - edge }
     }
     return { shouldScroll: false, delta: 0 }
   }
-  // 向上：目标顶边越过「顶边往下一个 item」→ 滚到该缓冲线
   const edge = containerRect.top + margin
-  if (itemRect.top < edge) {
+  // 完全在容器下方，或越过顶部缓冲线 → 对齐到正数第二缓冲线
+  const fullyBelow = itemRect.top > containerRect.bottom
+  const pastTopBuffer = itemRect.top < edge
+  if (fullyBelow || pastTopBuffer) {
     return { shouldScroll: true, delta: itemRect.top - edge }
   }
   return { shouldScroll: false, delta: 0 }

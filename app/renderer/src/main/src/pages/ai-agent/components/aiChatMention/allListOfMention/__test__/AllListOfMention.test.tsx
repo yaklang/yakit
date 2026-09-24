@@ -6,10 +6,14 @@ import type { AllListOfMentionProps, AIChatMentionListRefProps } from '../../typ
 
 const { mocks } = vi.hoisted(() => {
   const pendingRejects: Array<(reason?: unknown) => void> = []
+  const keyboard = {
+    onSelectNumber: null as null | ((index: number, isScroll: boolean) => void),
+  }
   return {
     mocks: {
       failed: vi.fn(),
       pendingRejects,
+      keyboard,
       grpcQueryAIForge: vi.fn(),
       grpcGetAIToolList: vi.fn(),
       grpcQueryAIFocus: vi.fn(),
@@ -64,7 +68,9 @@ vi.mock('../../../../browserInstances/browserInstanceStore', () => ({
 }))
 
 vi.mock('../../hooks/useSwitchSelectByKeyboard', () => ({
-  default: () => undefined,
+  default: (_ref: unknown, params: { onSelectNumber: (index: number, isScroll: boolean) => void }) => {
+    mocks.keyboard.onSelectNumber = params.onSelectNumber
+  },
 }))
 
 vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => ({
@@ -104,10 +110,12 @@ afterEach(() => {
   cleanup()
   vi.clearAllMocks()
   mocks.resetPending()
+  mocks.keyboard.onSelectNumber = null
 })
 
 beforeEach(() => {
   mocks.resetPending()
+  mocks.keyboard.onSelectNumber = null
 })
 
 describe('AllListOfMention 远程加载错误提示', () => {
@@ -148,5 +156,52 @@ describe('AllListOfMention 远程加载错误提示', () => {
     })
     await waitFor(() => expect(mocks.failed).toHaveBeenCalledTimes(1))
     expect(mocks.failed).toHaveBeenCalledWith(expect.stringContaining('latest fail'))
+  })
+})
+
+describe('AllListOfMention onKeyboardSelect isScroll 门控', () => {
+  function mockListData() {
+    mocks.grpcQueryAIForge.mockResolvedValue({
+      Data: [{ Id: 1, ForgeName: 'skill-a', ForgeVerboseName: 'skill-a' }],
+      Total: 1,
+      Pagination: {},
+    })
+    mocks.grpcGetAIToolList.mockResolvedValue({
+      Tools: [
+        { ID: 10, Name: 'tool-a', VerboseName: 'tool-a' },
+        { ID: 11, Name: 'tool-b', VerboseName: 'tool-b' },
+      ],
+      Total: 2,
+      Pagination: {},
+    })
+    mocks.grpcQueryAIFocus.mockResolvedValue({ Data: [] })
+  }
+
+  it('isScroll=false 不触发 scrollIntoView；true 时触发', async () => {
+    mockListData()
+    const scrollIntoView = vi.fn()
+    const originalGetElementById = document.getElementById.bind(document)
+    vi.spyOn(document, 'getElementById').mockImplementation((id: string) => {
+      const el = originalGetElementById(id)
+      if (el) {
+        el.scrollIntoView = scrollIntoView
+      }
+      return el
+    })
+
+    renderList()
+
+    await waitFor(() => expect(mocks.keyboard.onSelectNumber).toBeTruthy())
+    await waitFor(() => expect(document.getElementById('all-tool-10')).toBeTruthy())
+
+    await act(async () => {
+      mocks.keyboard.onSelectNumber?.(1, false)
+    })
+    expect(scrollIntoView).not.toHaveBeenCalled()
+
+    await act(async () => {
+      mocks.keyboard.onSelectNumber?.(1, true)
+    })
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' })
   })
 })

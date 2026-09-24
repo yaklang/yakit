@@ -107,6 +107,28 @@ describe('resolveMentionArrowScroll', () => {
       }),
     ).toEqual({ shouldScroll: true, delta: -32 })
   })
+
+  it('向下：目标完全在容器上方（鼠标滚走后）→ 整段拉回至倒数第二缓冲线', () => {
+    // 目标在视口上方：bottom=-64；edge=256-32=224 → delta=-288
+    expect(
+      resolveMentionArrowScroll({
+        direction: 'down',
+        containerRect: container,
+        itemRect: { top: -96, bottom: -64, height: h },
+      }),
+    ).toEqual({ shouldScroll: true, delta: -288 })
+  })
+
+  it('向上：目标完全在容器下方（鼠标滚走后）→ 整段拉回至正数第二缓冲线', () => {
+    // 目标在视口下方：top=320；edge=0+32=32 → delta=288
+    expect(
+      resolveMentionArrowScroll({
+        direction: 'up',
+        containerRect: container,
+        itemRect: { top: 320, bottom: 352, height: h },
+      }),
+    ).toEqual({ shouldScroll: true, delta: 288 })
+  })
 })
 
 describe('resolveMentionVirtualScrollTop', () => {
