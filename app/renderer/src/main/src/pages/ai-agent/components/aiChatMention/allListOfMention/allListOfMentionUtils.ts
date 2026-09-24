@@ -28,6 +28,13 @@ export function filterByDisplayNameIncludes<T>(items: T[], getName: (item: T) =>
 }
 
 /**
+ * 关键词异步刷新竞态：请求序号已过期或组件已卸载时，应丢弃本次结果（不写 state / 不回调父组件）。
+ */
+export function shouldDiscardStaleResult(seq: number, currentSeq: number, mounted: boolean): boolean {
+  return seq !== currentSeq || !mounted
+}
+
+/**
  * 与知识库 Tab 一致：占位项恒定置顶，仅过滤真实知识库。
  * 占位项与真实库的 ID 类型可能不同（string vs number），故分两个泛型。
  */

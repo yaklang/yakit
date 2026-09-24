@@ -32,12 +32,13 @@ import {
 } from './store'
 import { PANEL_GAP, PANEL_OFFSET_UP, PANEL_WIDTH_EXTRA_EACH } from '../constants'
 import { tryClaimMilkdownPopup, releaseMilkdownPopup } from '../panelMutex'
+import { shouldSkipModeSlashEnterConfirm, type SlashStep } from './modeSlashEnterGuard'
 
 export const aiModeSlashFactory = slashFactory('ai-mode-slash-commands')
+export type { SlashStep }
 
 const MODE_SLASH_QUERY_REG = /\/([^\s]*)$/
 const MODE_SLASH_TRIGGER = '/'
-type SlashStep = 'root' | 'goalModes' | 'multiAgentConfig' | 'goalIterations' | 'goalAcceptance' | 'goalDuration'
 
 type GoalModeKey = 'iterations' | 'acceptance' | 'duration'
 
@@ -186,6 +187,8 @@ export const AIMilkdownModeSlash: React.FC = () => {
     'enter',
     (e) => {
       if (!visible) return
+      // document capture 先于 textarea 冒泡；验收框内回车应换行，不触发确认
+      if (shouldSkipModeSlashEnterConfirm(step, e.target)) return
       const canConfirmList = navigableItems.length > 0
       const canConfirmConfig =
         step === 'multiAgentConfig' || step === 'goalIterations' || step === 'goalDuration' || step === 'goalAcceptance'
@@ -235,6 +238,8 @@ export const AIMilkdownModeSlash: React.FC = () => {
   useEffect(() => {
     return () => {
       slashProvider.current?.destroy()
+      // 卸载时释放全局弹层锁，避免弹窗开着时切走导致 mention 永久抢不到
+      releaseMilkdownPopup('modeSlash')
     }
   }, [])
 

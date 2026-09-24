@@ -78,6 +78,8 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     return () => {
       // 单独的Effect中卸载，避免报错
       slashProvider.current?.destroy()
+      // 卸载时释放全局弹层锁，避免弹窗开着时切走导致 ModeSlash 永久抢不到
+      releaseMilkdownPopup('mention')
     }
   }, [])
 

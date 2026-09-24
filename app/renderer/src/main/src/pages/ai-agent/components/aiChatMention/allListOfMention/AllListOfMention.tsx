@@ -17,6 +17,7 @@ import {
   buildAllMentionSections,
   buildMentionKnowledgeList,
   filterByDisplayNameIncludes,
+  shouldDiscardStaleResult,
 } from './allListOfMentionUtils'
 import styles from './AllListOfMention.module.scss'
 
@@ -52,7 +53,18 @@ export const AllListOfMention: React.FC<AllListOfMentionProps> = React.memo((pro
   const [selectedKey, setSelectedKey] = useState('')
   const rootRef = useRef<HTMLDivElement>(null)
   const userNavigatedRef = useRef(false)
+  /** 关键词刷新序号：忽略过期请求，避免旧结果覆盖新筛选 */
+  const loadSeqRef = useRef(0)
+  const mountedRef = useRef(true)
   const [inViewport = true] = useInViewport(rootRef)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      loadSeqRef.current += 1
+    }
+  }, [])
 
   const { knowledgeBases } = useKnowledgeBase()
   const { instances } = useBrowserInstances()
@@ -110,15 +122,17 @@ export const AllListOfMention: React.FC<AllListOfMentionProps> = React.memo((pro
   }, [instances, keyWord])
 
   const loadRemoteLists = useMemoizedFn(async () => {
+    const seq = ++loadSeqRef.current
+    const keywordSnapshot = keyWord
     setSpinning(true)
     try {
       const [forgeRes, toolRes, focusRes] = await Promise.all([
         grpcQueryAIForge({
           Pagination: { ...AIForgeListDefaultPagination, Page: 1, Limit: 50 },
-          Filter: { Keyword: keyWord },
+          Filter: { Keyword: keywordSnapshot },
         }),
         grpcGetAIToolList({
-          Query: keyWord,
+          Query: keywordSnapshot,
           ToolName: '',
           Pagination: {
             ...genDefaultPagination(50),
@@ -129,33 +143,39 @@ export const AllListOfMention: React.FC<AllListOfMentionProps> = React.memo((pro
         }),
         grpcQueryAIFocus(),
       ])
+      // 已有更新的请求或组件已卸载：丢弃本次结果
+      if (shouldDiscardStaleResult(seq, loadSeqRef.current, mountedRef.current)) return
       // 服务端可能按描述等字段模糊匹配，这里再按「展示名」收紧（仅影响列表展示）
       const forges = filterByDisplayNameIncludes(
         forgeRes?.Data || [],
         (item) => item.ForgeVerboseName || item.ForgeName || '',
-        keyWord,
+        keywordSnapshot,
       )
       const tools = filterByDisplayNameIncludes(
         toolRes?.Tools || [],
         (item) => item.VerboseName || item.Name || '',
-        keyWord,
+        keywordSnapshot,
       )
       const focuses = filterByDisplayNameIncludes(
         focusRes?.Data || [],
         (it) => it.VerboseNameZh || it.Name || '',
-        keyWord,
+        keywordSnapshot,
       )
       setForgeList(forges)
       setToolList(tools)
       setFocusList(focuses)
       // 角标用后端 Total（无关键词）；有关键词时与单 Tab 一致，用本页展示名过滤后条数
-      const hasKeyword = !!keyWord.trim()
+      const hasKeyword = !!keywordSnapshot.trim()
       onSectionTotalChange(AIMentionTabsEnum.Forge_Name, hasKeyword ? forges.length : +forgeRes?.Total || 0)
       onSectionTotalChange(AIMentionTabsEnum.Tool, hasKeyword ? tools.length : +toolRes?.Total || 0)
       onSectionTotalChange(AIMentionTabsEnum.FocusMode, focuses.length)
     } catch (error) {
     } finally {
-      setTimeout(() => setSpinning(false), 200)
+      if (!shouldDiscardStaleResult(seq, loadSeqRef.current, mountedRef.current)) {
+        setTimeout(() => {
+          if (!shouldDiscardStaleResult(seq, loadSeqRef.current, mountedRef.current)) setSpinning(false)
+        }, 200)
+      }
     }
   })
 

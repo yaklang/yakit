@@ -4,6 +4,7 @@ import {
   buildAllMentionSections,
   buildMentionKnowledgeList,
   filterByDisplayNameIncludes,
+  shouldDiscardStaleResult,
 } from '../allListOfMentionUtils'
 
 describe('filterByDisplayNameIncludes', () => {
@@ -17,6 +18,25 @@ describe('filterByDisplayNameIncludes', () => {
   it('按展示名大小写不敏感包含匹配', () => {
     expect(filterByDisplayNameIncludes(items, (it) => it.name, 'alp')).toEqual([{ name: 'Alpha Tool' }])
     expect(filterByDisplayNameIncludes(items, (it) => it.name, 'HELPER')).toEqual([{ name: 'Beta Helper' }])
+  })
+})
+
+describe('shouldDiscardStaleResult', () => {
+  it('序号一致且仍挂载 → 不丢弃', () => {
+    expect(shouldDiscardStaleResult(3, 3, true)).toBe(false)
+  })
+
+  it('序号过期（旧请求晚到）→ 丢弃', () => {
+    expect(shouldDiscardStaleResult(1, 2, true)).toBe(true)
+    expect(shouldDiscardStaleResult(2, 5, true)).toBe(true)
+  })
+
+  it('组件已卸载 → 丢弃', () => {
+    expect(shouldDiscardStaleResult(3, 3, false)).toBe(true)
+  })
+
+  it('序号过期且已卸载 → 丢弃', () => {
+    expect(shouldDiscardStaleResult(1, 2, false)).toBe(true)
   })
 })
 
