@@ -1,6 +1,6 @@
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
-import { AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from './defaultConstant'
+import { SwitchAIAgentTabEventEnum, type AIAgentTabListEnum } from './defaultConstant'
 
 let pendingTabSwitch = ''
 
