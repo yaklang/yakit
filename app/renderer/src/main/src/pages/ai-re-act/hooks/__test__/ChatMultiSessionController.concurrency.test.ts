@@ -8,9 +8,24 @@ import { ipcRendererMock, resetIpcMocks } from './setupElectron'
 import { makeGrpcJsonRes } from './fixtures'
 import { yakitNotify } from '@/utils/notification'
 import { useStore } from '@/store'
-import i18n from '@/i18n/i18n'
 
-const tAgent = i18n.getFixedT(null, 'aiAgent')
+// key 回显 + 追加插值参数：根配置 i18nStub 只回显 key（不含译文占位符），
+// 这里 mock 成 key:count 形态，保证两种 vitest 配置下文案都携带上限值
+const { tAgent } = vi.hoisted(() => ({
+  tAgent: vi.fn((key: string, opts?: { count?: number }) =>
+    opts && opts.count !== undefined ? `${key}:${opts.count}` : key,
+  ),
+}))
+vi.mock('@/i18n/i18n', () => ({
+  default: {
+    getFixedT: () => tAgent,
+    t: tAgent,
+    language: 'zh',
+    // useI18nNamespaces 模块级绑定 languageChanged 需要
+    on: () => undefined,
+    changeLanguage: async () => undefined,
+  },
+}))
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/pages/ai-agent/grpc', () => ({
