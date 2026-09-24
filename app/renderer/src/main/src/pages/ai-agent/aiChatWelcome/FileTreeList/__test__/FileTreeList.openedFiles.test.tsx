@@ -29,6 +29,9 @@ vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => '
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: translate }) }))
 vi.mock('@/utils/fileSystemDialog', () => ({ handleOpenFileSystemDialog: openDialog }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
+vi.mock('../../AIChatWelcomeSideSetting', () => ({
+  SideSettingButton: () => null,
+}))
 vi.mock('@/utils/kv', () => ({ getRemoteValue: vi.fn(), setRemoteValue: vi.fn(async () => undefined) }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: vi.fn(), on: vi.fn(), off: vi.fn() } }))
 vi.mock('@/utils/duplex/duplex', () => ({ sendDuplexConn: vi.fn() }))
@@ -92,7 +95,7 @@ describe('文件系统添加路径（启用 React Compiler）', () => {
     { isFolder: false, path: 'new-file.txt', button: 'YakitButton.openFile', property: 'openFile' },
   ])('通过标题操作添加 $path 后立即显示', async ({ isFolder, path, button, property }) => {
     openDialog.mockResolvedValue({ filePaths: [path], canceled: false })
-    render(<FileTreeList setSelected={vi.fn()} onClose={vi.fn()} />)
+    render(<FileTreeList setSelected={vi.fn()} />)
     await screen.findByText('existing.txt')
     fireEvent.click(screen.getByRole('button', { name: button }))
     await waitFor(() => expect(customFolderStore.getSnapshot()).toContainEqual({ path, isFolder }))

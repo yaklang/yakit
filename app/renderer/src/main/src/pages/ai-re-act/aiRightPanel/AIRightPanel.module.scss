@@ -191,9 +191,13 @@
   font-weight: 500;
   line-height: 14px;
   white-space: nowrap;
-  background: var(--Colors-Use-Status-High);
+  background-color: var(--Colors-Use-Neutral-Disable);
   @include themeify.color-mix-border(1px, solid, var(--Colors-Use-Neutral-Bg), 50%);
   border-radius: 4px;
+}
+
+.count-badge-risk {
+  background-color: var(--Colors-Use-Status-High);
 }
 
 .count-badge-overflow {

@@ -14,6 +14,7 @@ import { genDefaultPagination } from '@/pages/invoker/schema'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { SideSettingButton } from '../aiChatWelcome/AIChatWelcomeSideSetting'
 import {
   DotsVerticalOutlined,
   FilterOutlined,
@@ -352,6 +353,7 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
           <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
         </div>
         <div className={styles['ai-schedule-list-header-right']}>
+          <SideSettingButton type="text2" />
           <Tooltip title={t('AIScheduledTasks.maxConcurrentRuns')}>
             <YakitButton type="text2" icon={<QuestionMarkCircleOutlined />} className={styles['question-icon']} />
           </Tooltip>

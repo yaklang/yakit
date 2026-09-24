@@ -24,6 +24,14 @@ vi.mock('@/utils/notification', () => ({
 vi.mock('../AIAgentSideList', () => ({
   AIAgentSideList: () => null,
 }))
+vi.mock('@/components/yakitUI/YakitResizeBox/YakitResizeBox', () => ({
+  YakitResizeBox: ({ firstNode, secondNode }: { firstNode: ReactNode; secondNode: ReactNode }) => (
+    <>
+      {firstNode}
+      {secondNode}
+    </>
+  ),
+}))
 
 vi.mock('../aiBottomSideBar/AIBottomSideBar', () => ({
   AIBottomSideBar: () => null,

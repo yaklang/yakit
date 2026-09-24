@@ -1,5 +1,4 @@
 @use '../../../../styles/mixin.scss' as mixin;
-@use '../thoughtStream/thoughtStream.mixins.scss' as thought;
 
 .container {
   width: 100%;
@@ -32,19 +31,7 @@
   &:hover {
     background: transparent;
   }
-
-  .single-stream-text {
-    border-left: none;
-    margin: 0;
-    padding: 0;
-    text-indent: 0;
-    color: var(--Colors-Use-Neutral-Text-4-Help-text);
-    font-size: 12px;
-    line-height: 20px;
-  }
 }
-
-@include thought.thought-stream-header;
 
 .stream-text {
   overflow: hidden;
@@ -109,6 +96,16 @@
     padding: 0;
     line-height: 20px;
   }
+}
+
+.single-stream-text-thought {
+  border-left: none;
+  margin: 0;
+  padding: 0;
+  text-indent: 0;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  font-size: 12px;
+  line-height: 20px;
 }
 
 .popover-reference-wrapper {

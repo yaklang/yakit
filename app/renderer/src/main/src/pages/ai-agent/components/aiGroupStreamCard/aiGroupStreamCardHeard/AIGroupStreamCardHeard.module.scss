@@ -1,3 +1,7 @@
+@use '../../thoughtStream/thoughtStream.mixins.scss' as thought;
+
+@include thought.thought-stream-header;
+
 .title {
   display: flex;
   align-items: center;

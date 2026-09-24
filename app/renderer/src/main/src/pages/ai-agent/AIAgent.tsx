@@ -18,6 +18,7 @@ import {
   serializeAIAgentChatSetting,
 } from './utils/aiAgentChatSettingCache'
 import { AIAgentChat } from './aiAgentChat/AIAgentChat'
+import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { loadRemoteHistory } from './components/aiFileSystemList/store/useHistoryFolder'
 import { initCustomFolderStore } from './components/aiFileSystemList/store/useCustomFolder'
 import type { KnowledgeBaseContentProps } from '../KnowledgeBase/TKnowledgeBase'
@@ -48,23 +49,26 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const [activeChat, setActiveChat] = useState<AISession>()
 
   const [show, setShow] = useState<boolean>(false)
+  const [sideRatio, setSideRatio] = useState('360px')
+  const [isMini, setIsMini] = useState(false)
 
-  const sideHiddenModeRef = useRef<string>()
+  const sideHiddenModeRef = useRef<string>('false')
 
   const { initialize, knowledgeBases } = useKnowledgeBase()
   const agentRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(agentRef)
 
-  // 只在宽度跌破阈值时收起侧栏，避免 useSize 每帧 setState 把整页（含会话列表）打满重渲染
+  // 只在越过阈值时更新 isMini / 收起侧栏，避免每帧 setState
   useEffect(() => {
     const el = agentRef.current
     if (!el || typeof ResizeObserver === 'undefined') return
-    let skipFirst = true
+    let skipFirstClose = true
     const observer = new ResizeObserver((entries) => {
       const width = entries[0]?.contentRect?.width
       if (!width) return
-      if (skipFirst) {
-        skipFirst = false
+      setIsMini(width <= 1300)
+      if (skipFirstClose) {
+        skipFirstClose = false
         return
       }
       if (width < 1230) setShow((prev) => (prev ? false : prev))
@@ -153,7 +157,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const initSideHiddenMode = useMemoizedFn(() => {
     getRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode)
       .then((data) => {
-        sideHiddenModeRef.current = data
+        sideHiddenModeRef.current = data === 'true' ? 'true' : 'false'
       })
       .catch(() => {})
   })
@@ -233,17 +237,59 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     <AIAgentContext.Provider value={{ store, dispatcher }}>
       <div id={YakitAIAgentPageID} className={styles['ai-agent']} ref={agentRef}>
         <div className={styles['ai-agent-wrapper']}>
-          <div className={classNames(styles['ai-side-list'])}>
-            <AIAgentSideList show={show} setShow={setShow} />
-          </div>
-          <div className={styles['split-wrapper']}>
-            <SplitView
-              isVertical={true}
-              isLastHidden={!isShowAIBottomDetails}
-              defaultSizes={splitDefaultSizes}
-              elements={splitElements}
+          {isMini ? (
+            <>
+              <div
+                className={classNames(styles['ai-side-list'], styles['ai-side-list-mini'], {
+                  [styles['ai-side-list-mini-expand']]: show,
+                })}
+                style={show ? { width: sideRatio } : undefined}
+              >
+                <AIAgentSideList show={show} setShow={setShow} />
+              </div>
+              <div className={classNames(styles['split-wrapper'], styles['ai-agent-chat-mini'])}>
+                <SplitView
+                  isVertical={true}
+                  isLastHidden={!isShowAIBottomDetails}
+                  defaultSizes={splitDefaultSizes}
+                  elements={splitElements}
+                />
+              </div>
+            </>
+          ) : (
+            <YakitResizeBox
+              freeze={show}
+              dragResize
+              isVer={false}
+              isRecalculateWH={show}
+              firstRatio={show ? sideRatio : '24px'}
+              lineSize={1}
+              firstMinSize={show ? 260 : 24}
+              secondRatio={show ? '70%' : '100%'}
+              secondMinSize={700}
+              firstNodeStyle={{ padding: 0 }}
+              secondNodeStyle={{ padding: 0 }}
+              lineDirection="right"
+              onMouseUp={(e) => {
+                if (e.firstSizeNum > 24) setSideRatio(`${e.firstSizeNum}px`)
+              }}
+              firstNode={
+                <div className={styles['ai-side-list']}>
+                  <AIAgentSideList show={show} setShow={setShow} />
+                </div>
+              }
+              secondNode={
+                <div className={styles['split-wrapper']}>
+                  <SplitView
+                    isVertical={true}
+                    isLastHidden={!isShowAIBottomDetails}
+                    defaultSizes={splitDefaultSizes}
+                    elements={splitElements}
+                  />
+                </div>
+              }
             />
-          </div>
+          )}
         </div>
         <AIBottomSideBar setShowAIBottomDetails={setShowAIBottomDetails} />
       </div>

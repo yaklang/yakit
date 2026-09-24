@@ -6,9 +6,30 @@
   overflow: hidden;
   background-color: var(--Colors-Use-Basic-Background);
   .resize-split-line {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    .resize-split-line-hit {
+      position: absolute;
+      z-index: 1;
+    }
+    .resize-split-line-hit-hor {
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      cursor: col-resize;
+    }
+    .resize-split-line-hit-ver {
+      left: 0;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: row-resize;
+    }
     .resize-split-line-in {
       background-color: var(--Colors-Use-Neutral-Border);
     }
@@ -24,6 +45,7 @@
       height: 100%;
     }
   }
+  // 视觉线贴轨道边缘；热区仍绝对居中，不受对齐影响
   .resize-split-line-top {
     align-items: flex-start;
   }

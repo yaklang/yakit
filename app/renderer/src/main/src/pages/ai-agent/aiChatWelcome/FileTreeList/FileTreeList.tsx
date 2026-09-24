@@ -4,24 +4,22 @@ import FileTreeSystemListWrapper from '../../components/aiFileSystemList/FileTre
 import FileTreeDrop from '../FileTreeDrop/FileTreeDrop'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useMemoizedFn } from 'ahooks'
-import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../../defaultConstant'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { SideSettingButton } from '../AIChatWelcomeSideSetting'
 import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
 import styles from './FileTreeList.module.scss'
 
 interface FileTreeListProps {
   selected?: FileNodeProps
   setSelected: (selected?: FileNodeProps) => void
-  onClose: () => void
 }
 
-const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected, onClose }) => {
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const store = useCurrentStore()
   const sessionId = useCurrentSessionId()
   const grpcFolders = useStore(store, (state) => state.grpcFolders)
@@ -37,13 +35,9 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected, onCl
     <div className={styles['file-tree-list']}>
       <div className={styles['header']}>
         <span className={styles['header-title']}>{t('AITabs.fileSystem')}</span>
-        <YakitButton
-          type="text2"
-          title={t('YakitButton.close')}
-          aria-label={t('YakitButton.close')}
-          icon={<XOutlined color="currentColor" />}
-          onClick={onClose}
-        />
+        <div className={styles['header-actions']}>
+          <SideSettingButton type="text2" />
+        </div>
       </div>
       <div className={styles['body']}>
         <SplitView

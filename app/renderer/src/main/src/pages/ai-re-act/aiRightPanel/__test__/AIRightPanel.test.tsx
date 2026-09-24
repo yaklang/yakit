@@ -23,6 +23,7 @@ vi.mock('../AIRightPanel.module.scss', () => ({
     'pane-slot-small': 'pane-slot-small',
     'count-badge': 'count-badge',
     'count-badge-overflow': 'count-badge-overflow',
+    'count-badge-risk': 'count-badge-risk',
     'menu-item-icon-small': 'menu-item-icon-small',
   },
 }))
@@ -131,6 +132,7 @@ vi.mock('i18next-resources-to-backend', () => {
         AIRightPanel: {
           taskBoard: '任务详情看板',
           fileSystem: '文件系统',
+          browserInstances: '浏览器实例',
           traffic: '流量',
           risk: '漏洞',
           sessionHistory: '会话历史',
@@ -173,26 +175,6 @@ vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane', () => ({
 }))
 vi.mock('@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard', () => ({
   default: () => <div data-testid="timeline-pane" />,
-}))
-vi.mock('@/pages/ai-agent/historyChat/HistoryChat', () => ({
-  default: ({
-    hidePinButton,
-    headerActionsExtra,
-    aiSource,
-  }: {
-    hidePinButton?: boolean
-    headerActionsExtra?: React.ReactNode
-    aiSource: string[]
-  }) => (
-    <div data-testid="history-chat" data-sources={aiSource.join(',')}>
-      <header>
-        <span>会话列表</span>
-        <button>新建会话</button>
-        {headerActionsExtra}
-        {!hidePinButton && <button>固定</button>}
-      </header>
-    </div>
-  ),
 }))
 
 const WelcomeRightPanel = ({ refresh = true, ...props }: Pick<AIRightPanelProps, 'small'> & { refresh?: boolean }) => {
@@ -252,12 +234,12 @@ describe('AIRightPanel', () => {
         })
     })
 
-    it.each([false, true])('大小屏均只显示四个首页入口（小屏：%s）', async (small) => {
+    it.each([false, true])('大小屏均只显示五个首页入口（小屏：%s）', async (small) => {
       casualTaskState.questionID = 'existing-task'
       try {
         render(<WelcomeRightPanel small={small} />)
         await screen.findByLabelText('文件系统')
-        for (const label of ['文件系统', '流量', '漏洞', '会话历史']) {
+        for (const label of ['文件系统', '浏览器实例', '流量', '漏洞', '会话历史']) {
           expect(screen.getByLabelText(label)).toBeInTheDocument()
         }
         for (const label of ['任务详情看板', '任务列表', '更多', '时间线', '导出日志', '查看日志']) {
@@ -266,7 +248,10 @@ describe('AIRightPanel', () => {
         expect(screen.queryByText('执行时长')).not.toBeInTheDocument()
         expect(screen.queryByText('工具调用统计')).not.toBeInTheDocument()
         fireEvent.click(screen.getByLabelText('会话历史'))
-        expect(screen.getByTestId('history-chat')).toBeInTheDocument()
+        expect(mockEmit).toHaveBeenCalledWith(
+          'switchAIAgentTab',
+          JSON.stringify({ type: 'setTabActive', params: { active: 'session', show: true, toggle: true } }),
+        )
       } finally {
         resetMockStore()
       }
@@ -406,36 +391,6 @@ describe('AIRightPanel', () => {
     expect(screen.queryByLabelText('查看日志')).not.toBeInTheDocument()
   })
 
-  it('点击会话历史打开 HistoryChat，关闭按钮位于原头部最右侧且没有固定按钮', async () => {
-    await renderPanel(<AIRightPanel />)
-    fireEvent.click(screen.getByLabelText('会话历史'))
-    const history = screen.getByTestId('history-chat')
-    expect(history).toHaveAttribute('data-sources', 'ai,im,')
-    const pane = history.closest('section')!
-    expect(pane.querySelectorAll('header')).toHaveLength(1)
-    expect(screen.queryByRole('button', { name: '固定' })).not.toBeInTheDocument()
-    const closeButton = pane.querySelector('header')!.lastElementChild!
-    expect(closeButton).toHaveAttribute('aria-label')
-    fireEvent.click(closeButton)
-    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
-  })
-
-  it.each([false, true])('切换详情会话后保留当前会话列表（small=%s）', (small) => {
-    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-1' } })
-    render(<AIRightPanel small={small} />)
-    fireEvent.click(screen.getByLabelText('会话历史'))
-    const history = screen.getByTestId('history-chat')
-
-    act(() => {
-      mockAgentStore.setState({ activeChat: { Id: 2, SessionID: 'session-2' } })
-    })
-
-    expect(screen.getByTestId('history-chat')).toBe(history)
-    fireEvent.click(history.querySelector('header')!.lastElementChild!)
-    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
-  })
-
   it.each(['任务列表', '时间线'])('切换详情会话后关闭旧会话的%s', (label) => {
     mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-1' } })
     render(<AIRightPanel small />)
@@ -451,19 +406,6 @@ describe('AIRightPanel', () => {
     expect(screen.queryByTestId(testId)).not.toBeInTheDocument()
   })
 
-  it('小屏会话历史支持悬停打开、移出销毁和点击关闭', async () => {
-    render(<AIRightPanel small />)
-    const item = screen.getByLabelText('会话历史')
-    fireEvent.mouseEnter(item)
-    expect(screen.getByTestId('history-chat')).toBeInTheDocument()
-    fireEvent.mouseLeave(item)
-    await waitFor(() => expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument())
-    fireEvent.click(item)
-    fireEvent.click(screen.getByTestId('history-chat').querySelector('header')!.lastElementChild!)
-    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
-  })
-
   it('正常态点击时间线打开面板，关闭后恢复菜单', async () => {
     await renderPanel(<AIRightPanel />)
     fireEvent.click(screen.getByLabelText('更多'))
@@ -474,19 +416,17 @@ describe('AIRightPanel', () => {
     expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
   })
 
-  it('小屏在任务列表和时间线间悬停切换，移出时间线后销毁', async () => {
+  it('小屏点击在任务列表和时间线间切换，移出不销毁', async () => {
     render(<AIRightPanel small />)
     fireEvent.click(screen.getByLabelText('更多'))
     const taskItem = screen.getByLabelText('任务列表')
     const timelineItem = screen.getByLabelText('时间线')
-    fireEvent.mouseEnter(taskItem)
-    fireEvent.mouseLeave(taskItem)
-    fireEvent.mouseEnter(timelineItem)
+    fireEvent.click(taskItem)
+    expect(screen.getByTestId('task-list-pane')).toBeInTheDocument()
+    fireEvent.click(timelineItem)
     expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
     expect(screen.getByTestId('timeline-pane')).toBeInTheDocument()
     fireEvent.mouseLeave(timelineItem)
-    await waitFor(() => expect(screen.queryByTestId('timeline-pane')).not.toBeInTheDocument())
-    fireEvent.click(timelineItem)
     expect(screen.getByTestId('timeline-pane')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button'))
     expect(screen.queryByTestId('timeline-pane')).not.toBeInTheDocument()
@@ -505,21 +445,15 @@ describe('AIRightPanel', () => {
     )
   })
 
-  it('小屏悬停打开，移入浮层保持，移出后销毁', async () => {
+  it('小屏点击打开浮层，移出不销毁', async () => {
     render(<AIRightPanel small />)
     const item = screen.getByLabelText('任务列表')
-    fireEvent.mouseEnter(item)
+    fireEvent.click(item)
     const pane = screen.getByTestId('task-list-pane').closest('section')!.parentElement!
     expect(pane.className).toContain('pane-slot-small')
     fireEvent.mouseLeave(item)
-    fireEvent.mouseEnter(pane)
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 200))
-    })
-    expect(screen.getByTestId('task-list-pane')).toBeInTheDocument()
     fireEvent.mouseLeave(pane)
-    await waitFor(() => expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument())
-    fireEvent.mouseEnter(item)
+    expect(screen.getByTestId('task-list-pane')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button'))
     expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
     expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
@@ -527,7 +461,7 @@ describe('AIRightPanel', () => {
 
   it('切换屏幕模式时清理打开的任务浮层', () => {
     const result = render(<AIRightPanel small />)
-    fireEvent.mouseEnter(screen.getByLabelText('任务列表'))
+    fireEvent.click(screen.getByLabelText('任务列表'))
     result.rerender(<AIRightPanel small={false} />)
     expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
   })
@@ -793,6 +727,8 @@ describe('AIRightPanel', () => {
         const badge = screen.getByLabelText(`${label} ${count}`)
         expect(screen.getByLabelText(label)).toContainElement(badge)
         expect(badge).toHaveClass('count-badge')
+        if (label === '漏洞') expect(badge).toHaveClass('count-badge-risk')
+        else expect(badge).not.toHaveClass('count-badge-risk')
         expect(badge.parentElement).toHaveClass('menu-item-icon-small')
       }
 
@@ -1048,18 +984,27 @@ describe('AIRightPanel', () => {
     }
   })
 
-  it.each([false, true])('菜单点击：文件系统激活侧边栏 File 页，流量/漏洞打开工作区（首页：%s）', async (welcome) => {
-    await renderPanel(<AIRightPanel welcome={welcome} />)
-    // 首页与会话面板都通过 switchAIAgentTab 激活文件页。
+  it('菜单点击：文件系统/浏览器/会话历史激活侧边栏对应页，流量/漏洞切换工作区（首页：false）', async () => {
+    await renderPanel(<AIRightPanel welcome />)
     fireEvent.click(screen.getByText('文件系统'))
     expect(mockEmit).toHaveBeenCalledWith(
       'switchAIAgentTab',
-      JSON.stringify({ type: 'setTabActive', params: { active: 'file', show: true } }),
+      JSON.stringify({ type: 'setTabActive', params: { active: 'file', show: true, toggle: true } }),
     )
     fireEvent.click(screen.getByText('流量'))
     expect(mockEmit).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: 'http' }))
     fireEvent.click(screen.getByText('漏洞'))
     expect(mockEmit).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: 'risk' }))
+    fireEvent.click(screen.getByText('浏览器实例'))
+    expect(mockEmit).toHaveBeenCalledWith(
+      'switchAIAgentTab',
+      JSON.stringify({ type: 'setTabActive', params: { active: 'browser', show: true, toggle: true } }),
+    )
+    fireEvent.click(screen.getByText('会话历史'))
+    expect(mockEmit).toHaveBeenCalledWith(
+      'switchAIAgentTab',
+      JSON.stringify({ type: 'setTabActive', params: { active: 'session', show: true, toggle: true } }),
+    )
   })
 
   it('菜单点击：任务详情入口按条件渲染，点击同步任务 tab', async () => {

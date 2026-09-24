@@ -37,7 +37,7 @@ const ThoughtStreamContent: React.FC<{
   return (
     <div className={styles['ai-stream-chat-content-thought']}>
       <div className={styles['thought-header']} onClick={() => setExpand((open) => !open)}>
-        <OutlineThoughtIcon className={styles['thought-icon']} />
+        <OutlineThoughtIcon className={styles['thought-icon']} color="currentColor" />
         <span className={classNames({ [styles['thought-title-blink']]: streaming })}>
           {nodeLabel}
           <ThoughtDuration persistKey={token} status={streaming ? 'start' : 'end'} />

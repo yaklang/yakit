@@ -22,3 +22,14 @@
   // focus 时取消遮罩：变量置透明，子模块渐变自然透明，等效原 background: initial
   --group-stream-mask-bg: transparent;
 }
+
+.container-thought {
+  padding: 0 8px;
+  border: none;
+  background: transparent;
+  --group-stream-mask-bg: var(--Colors-Use-Basic-Background);
+
+  &:hover {
+    background: transparent;
+  }
+}

@@ -9,14 +9,18 @@ import styles from './AIAgentSideList.module.scss'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import FileTreeList from './aiChatWelcome/FileTreeList/FileTreeList'
+import { isSideAutoHidden } from './store/sideHiddenModeStore'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { BrowserInstancesPanel } from './browserInstances/BrowserInstancesPanel'
+import HistoryChat from './historyChat/HistoryChat'
+import { AI_AGENT_HISTORY_AI_SOURCES } from '../ai-re-act/hooks/useGetChatDataStoreKey'
+import { SideSettingButton } from './aiChatWelcome/AIChatWelcomeSideSetting'
 
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
 const AIScheduledTasks = React.lazy(() => import('./aiScheduledTasks/AIScheduledTasks'))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
-  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.File)
   const [show, setShow] = useControllableValue<boolean>(props, {
     defaultValue: false,
@@ -37,11 +41,18 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     if (!info?.params) return
     const { type, params } = info
     switch (type) {
-      case SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE:
-        setActive(params.active as AIAgentTabListEnum)
+      case SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE: {
+        const nextActive = params.active as AIAgentTabListEnum
+        if (params.toggle && show && active === nextActive) {
+          setShow(false)
+          break
+        }
+        setActive(nextActive)
         setShow(params.show !== false)
         break
+      }
       case SwitchAIAgentTabEventEnum.SET_TAB_SHOW:
+        if (params.show === false && !isSideAutoHidden()) return
         setShow(params.show !== false)
         break
       default:
@@ -59,10 +70,22 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   const renderTabContent = (key: AIAgentTabListEnum) => {
     let content: ReactNode = <></>
     switch (key) {
+      case AIAgentTabListEnum.Session:
+        content = (
+          <div className={styles['session-pane']}>
+            <HistoryChat
+              aiSource={AI_AGENT_HISTORY_AI_SOURCES}
+              title={t('AIRightPanel.sessionHistory')}
+              hidePinButton
+              headerActionsExtra={<SideSettingButton type="text2" />}
+            />
+          </div>
+        )
+        break
       case AIAgentTabListEnum.File:
         content = (
           <div className={styles['file-pane']}>
-            <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} onClose={() => setShow(false)} />
+            <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} />
           </div>
         )
         break

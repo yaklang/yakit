@@ -346,6 +346,7 @@
     "scheduled": "定時任務",
     "skill": "技能",
     "tool": "工具",
+    "fileSystem": "檔案系統",
     "browser": "瀏覽器例項"
   },
   "AIMentionTabs": {
@@ -380,6 +381,9 @@
     "refresh": "重新整理",
     "noMentionInstances": "暫無可引用的瀏覽器例項",
     "pendingApproval": "等待審批",
+    "pairingRequestNotifyPrefix": "瀏覽器發起配對申請，請",
+    "pairingRequestNotifyAction": "點選查看",
+    "pairingRequestNotifyTooltip": "點選查看，跳轉到 AI Agent 頁面",
     "pairingTitle": "新瀏覽器請求連線",
     "pairingTitleManaged": "瀏覽器 {{identity}} 請求連線",
     "verificationCode": "確認碼：",
@@ -599,6 +603,7 @@
     "aiSettings": "AI 設定",
     "taskBoard": "任務詳情看板",
     "fileSystem": "檔案系統",
+    "browserInstances": "瀏覽器實例",
     "traffic": "流量",
     "risk": "漏洞",
     "sessionHistory": "會話歷史",

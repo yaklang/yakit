@@ -68,8 +68,12 @@
   // 预留宽度继承自公共布局，内部面板由下方规则覆盖。
   // 内容左移半个预留宽度，在剩余区域居中。
   --ai-right-panel-content-shift: calc(var(--ai-right-panel-slot-width, 0px) / -2);
-  // 内容宽度不超过 784px 或扣除面板后的可用宽度。
-  --ai-right-panel-content-track-width: min(784px, calc(100% - var(--ai-right-panel-slot-width, 0px)));
+  --ai-content-gutter: 8px;
+  // 内容宽度不超过 784px 或扣除面板、左右 gutter 后的可用宽度。
+  --ai-right-panel-content-track-width: min(
+    784px,
+    calc(100% - var(--ai-right-panel-slot-width, 0px) - 2 * var(--ai-content-gutter, 0px))
+  );
   position: relative;
   overflow: hidden;
 

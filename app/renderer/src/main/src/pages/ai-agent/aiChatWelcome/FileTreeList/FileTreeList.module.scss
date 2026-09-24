@@ -28,6 +28,17 @@
   letter-spacing: 0.5px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  line-height: 0;
+  > :global(span) {
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+  }
+}
+
 .body {
   flex: 1;
   min-height: 0;

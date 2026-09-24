@@ -172,12 +172,13 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
       <div className={styles['chat-content-wrapper']}>
         <YakitResizeBox
           freeze={workspaceVisible}
+          lineSize={1}
           firstRatio={workspaceVisible ? '70%' : '0px'}
           firstMinSize={workspaceVisible ? 280 : 0}
           secondRatio={workspaceVisible ? '30%' : '100%'}
           secondMinSize={MIN_CHAT_CONTENT_WIDTH}
           firstNodeStyle={workspaceVisible ? undefined : { display: 'none', padding: 0 }}
-          secondNodeStyle={{ padding: 0 }}
+          secondNodeStyle={workspaceVisible ? { padding: 0 } : { padding: 0, flex: 1, width: '100%', minWidth: 0 }}
           lineStyle={workspaceVisible ? undefined : { display: 'none' }}
           lineDirection="right"
           firstNode={

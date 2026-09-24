@@ -12,6 +12,7 @@ import {
   MCPOutlined,
   PointerOutlined,
   Wrench1Outlined,
+  ChatAlt2Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { genDefaultPagination, type PaginationSchema } from '../invoker/schema'
@@ -47,12 +48,23 @@ import type { ExportAIForgeRequest } from './forgeName/type'
 export const YakitAIAgentPageID = 'yakit-ai-agent'
 
 export enum AIAgentTabListEnum {
+  Session = 'session',
   File = 'file',
   MCP = 'mcp',
   Scheduled = 'scheduled',
   Browser = 'browser',
 }
 export const AiAgentTabList: YakitTabsProps[] = [
+  {
+    value: AIAgentTabListEnum.Session,
+    label: 'AIAgentTabs.session',
+    icon: <ChatAlt2Outlined color="currentColor" />,
+  },
+  {
+    value: AIAgentTabListEnum.File,
+    label: 'AIAgentTabs.fileSystem',
+    icon: <FolderOpenOutlined color="currentColor" />,
+  },
   {
     value: AIAgentTabListEnum.Browser,
     label: 'AIAgentTabs.browser',

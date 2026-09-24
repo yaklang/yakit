@@ -17,6 +17,16 @@ const { AIAgentSideList } = await compileReactModule<typeof AIAgentSideListModul
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18nRefresh: 0 }),
 }))
+vi.mock('@/utils/kv', () => ({
+  getRemoteValue: vi.fn(async () => ''),
+  setRemoteValue: vi.fn(),
+}))
+let autoHidden = true
+vi.mock('../store/sideHiddenModeStore', () => ({
+  isSideAutoHidden: () => autoHidden,
+  useSideHiddenMode: () => autoHidden,
+  setSideHiddenMode: vi.fn(),
+}))
 vi.mock('@/components/yakitSideTab/YakitSideTab', () => ({
   YakitSideTab: ({ yakitTabs, onActiveKey, activeKey, show, children }: React.PropsWithChildren<YakitSideTabProps>) => (
     <div>
@@ -32,15 +42,7 @@ vi.mock('@/components/yakitSideTab/YakitSideTab', () => ({
   ),
 }))
 vi.mock('../aiChatWelcome/FileTreeList/FileTreeList', () => ({
-  default: ({
-    onClose,
-    selected,
-    setSelected,
-  }: {
-    onClose: () => void
-    selected?: FileNodeProps
-    setSelected: (file: FileNodeProps) => void
-  }) => (
+  default: ({ selected, setSelected }: { selected?: FileNodeProps; setSelected: (file: FileNodeProps) => void }) => (
     <div>
       文件列表
       <output aria-label="selected-file">{selected?.path}</output>
@@ -51,7 +53,6 @@ vi.mock('../aiChatWelcome/FileTreeList/FileTreeList', () => ({
       >
         选择文件
       </button>
-      <button onClick={onClose}>关闭文件系统</button>
     </div>
   ),
 }))
@@ -66,6 +67,13 @@ vi.mock('../aiScheduledTasks/AIScheduledTasks', () => ({
 vi.mock('../browserInstances/BrowserInstancesPanel', () => ({
   BrowserInstancesPanel: () => <div>浏览器实例</div>,
 }))
+vi.mock('../historyChat/HistoryChat', () => ({
+  default: ({ headerActionsExtra }: { headerActionsExtra?: React.ReactNode }) => (
+    <div data-testid="history-chat">
+      <header>{headerActionsExtra}</header>
+    </div>
+  ),
+}))
 
 const SideList = () => {
   const [show, setShow] = useState(true)
@@ -73,6 +81,7 @@ const SideList = () => {
 }
 
 describe('AIAgentSideList', () => {
+  autoHidden = true
   it('当前页签不变时更新选中文件和定时任务的可见状态', async () => {
     render(<SideList />)
     fireEvent.click(screen.getByText('选择文件'))
@@ -88,20 +97,50 @@ describe('AIAgentSideList', () => {
     expect(screen.getByTestId('scheduled')).toHaveAttribute('data-visible', 'false')
   })
 
-  it('默认激活 File 页，按浏览器、定时任务、MCP 排列入口', async () => {
+  it('默认激活 File 页，按会话、文件系统、浏览器、定时任务、MCP 排列入口', async () => {
     render(<SideList />)
     expect(screen.getByLabelText('active')).toHaveTextContent('file')
-    expect(screen.queryByRole('button', { name: 'file' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'session' })).not.toBeInTheDocument()
-    // 侧栏 tab 之外，File 面板 mock 也会渲染按钮，断言时只取入口 tab
     expect(
       screen
         .getAllByRole('button')
         .map((button) => button.textContent)
-        .filter((text) => text === 'browser' || text === 'scheduled' || text === 'mcp'),
-    ).toEqual(['browser', 'scheduled', 'mcp'])
-    expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
+        .filter(
+          (text) =>
+            text === 'session' || text === 'file' || text === 'browser' || text === 'scheduled' || text === 'mcp',
+        ),
+    ).toEqual(['session', 'file', 'browser', 'scheduled', 'mcp'])
+    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
     expect(screen.getByText('文件列表')).toBeInTheDocument()
+  })
+
+  it('点击 session 打开会话历史，事件可切换激活', async () => {
+    render(<SideList />)
+    fireEvent.click(screen.getByRole('button', { name: 'session' }))
+    expect(screen.getByLabelText('active')).toHaveTextContent('session')
+    expect(screen.getByTestId('history-chat')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'YakitButton.close' })).not.toBeInTheDocument()
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({
+          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+          params: { active: 'session', show: true, toggle: true },
+        }),
+      )
+    })
+    expect(screen.getByLabelText('active')).toHaveTextContent('session')
+    expect(screen.getByLabelText('show')).toHaveTextContent('false')
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({
+          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+          params: { active: 'session', show: true, toggle: true },
+        }),
+      )
+    })
+    expect(screen.getByLabelText('show')).toHaveTextContent('true')
+    expect(screen.getByTestId('history-chat')).toBeInTheDocument()
   })
 
   it('点击 scheduled/browser/mcp 切换对应内容，file 切换显隐文件系统', async () => {
@@ -112,17 +151,10 @@ describe('AIAgentSideList', () => {
     expect(await screen.findByText('浏览器实例')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'mcp' }))
     expect(await screen.findByText('MCP 内容')).toBeInTheDocument()
-    act(() => {
-      emiter.emit(
-        'switchAIAgentTab',
-        JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, params: { active: 'file', show: true } }),
-      )
-    })
+    fireEvent.click(screen.getByRole('button', { name: 'file' }))
     expect(screen.getByLabelText('active')).toHaveTextContent('file')
     expect(screen.getByText('文件列表')).toBeInTheDocument()
-    expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '关闭文件系统' }))
-    expect(screen.getByLabelText('show')).toHaveTextContent('false')
+    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
     act(() => {
       emiter.emit(
         'switchAIAgentTab',
@@ -130,6 +162,45 @@ describe('AIAgentSideList', () => {
       )
     })
     expect(screen.getByLabelText('show')).toHaveTextContent('true')
+  })
+
+  it('toggle 同一已展开页则收起，其它页或未展开则打开', async () => {
+    render(<SideList />)
+    expect(screen.getByLabelText('show')).toHaveTextContent('true')
+    expect(screen.getByLabelText('active')).toHaveTextContent('file')
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({
+          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+          params: { active: 'file', show: true, toggle: true },
+        }),
+      )
+    })
+    expect(screen.getByLabelText('show')).toHaveTextContent('false')
+    expect(screen.getByLabelText('active')).toHaveTextContent('file')
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({
+          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+          params: { active: 'file', show: true, toggle: true },
+        }),
+      )
+    })
+    expect(screen.getByLabelText('show')).toHaveTextContent('true')
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({
+          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+          params: { active: 'browser', show: true, toggle: true },
+        }),
+      )
+    })
+    expect(screen.getByLabelText('active')).toHaveTextContent('browser')
+    expect(screen.getByLabelText('show')).toHaveTextContent('true')
+    expect(await screen.findByText('浏览器实例')).toBeInTheDocument()
   })
 
   it('事件切换和显隐仍有效，卸载后移除监听', async () => {
@@ -146,9 +217,22 @@ describe('AIAgentSideList', () => {
     expect(screen.getByLabelText('show')).toHaveTextContent('false')
     emit(SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, { active: 'file' })
     expect(screen.getByLabelText('active')).toHaveTextContent('file')
-    expect(screen.queryByText('会话列表')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
     result.unmount()
     expect(off).toHaveBeenCalledWith('switchAIAgentTab', expect.any(Function))
     off.mockRestore()
+  })
+
+  it('固定后失焦不收起', async () => {
+    autoHidden = false
+    render(<SideList />)
+    act(() => {
+      emiter.emit(
+        'switchAIAgentTab',
+        JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_SHOW, params: { show: false } }),
+      )
+    })
+    expect(screen.getByLabelText('show')).toHaveTextContent('true')
+    autoHidden = true
   })
 })

@@ -11,8 +11,12 @@
   display: flex;
   overflow: hidden;
   position: relative;
+  min-width: 0;
+  min-height: 0;
   .split-wrapper {
-    flex: 1;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
     overflow: hidden;
     isolation: isolate;
   }
@@ -20,6 +24,8 @@
 .ai-side-list {
   height: 100%;
   min-height: 0;
+  min-width: 0;
+  width: 100%;
   background-color: var(--Colors-Use-Basic-Background);
 }
 .ai-side-list-mini {
@@ -27,6 +33,11 @@
   top: 0;
   left: 0;
   z-index: 9;
+  width: 24px;
+  height: 100%;
+}
+.ai-side-list-mini-expand {
+  width: 360px;
 }
 .ai-agent-chat {
   flex: 1;

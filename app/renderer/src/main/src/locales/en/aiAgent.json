@@ -346,6 +346,7 @@
     "scheduled": "Scheduled",
     "skill": "Skill",
     "tool": "Tool",
+    "fileSystem": "File System",
     "browser": "Browser Instance"
   },
   "AIMentionTabs": {
@@ -380,6 +381,9 @@
     "refresh": "Refresh",
     "noMentionInstances": "No browser instances available to reference",
     "pendingApproval": "Pending review",
+    "pairingRequestNotifyPrefix": "A browser pairing request is waiting. ",
+    "pairingRequestNotifyAction": "Click to view",
+    "pairingRequestNotifyTooltip": "Click to open the AI Agent page",
     "pairingTitle": "New browser requests access",
     "pairingTitleManaged": "Browser {{identity}} requests access",
     "verificationCode": "Code:",
@@ -599,6 +603,7 @@
     "aiSettings": "AI Settings",
     "taskBoard": "Task Board",
     "fileSystem": "File System",
+    "browserInstances": "Browser Instances",
     "traffic": "Traffic",
     "risk": "Risks",
     "sessionHistory": "Session History",
