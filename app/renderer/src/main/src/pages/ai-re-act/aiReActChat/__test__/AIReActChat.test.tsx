@@ -11,6 +11,15 @@ import type * as OutlineIcons from '@yakit-libs/yakit-ui-icons/outline'
 import styles from '../AIReActChat.module.scss'
 
 const { scrollToItemIndex, locale } = vi.hoisted(() => ({ scrollToItemIndex: vi.fn(), locale: { language: 'zh' } }))
+
+// CI 的根配置将样式模块替换为空对象；为通知图标用例验证的类名提供稳定映射。
+vi.mock('../AIReActChat.module.scss', () => ({
+  default: {
+    'notify-icon': 'notify-icon',
+    'notify-icon-error': 'notify-icon-error',
+    'notify-icon-yellow': 'notify-icon-yellow',
+  },
+}))
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createChatStore } from '../../hooks/chatStore'
