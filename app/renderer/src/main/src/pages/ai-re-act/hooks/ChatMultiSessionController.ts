@@ -408,24 +408,33 @@ export class ChatMultiSessionController {
     if (sessionId && this.isSessionWorking(sessionId)) return true
     const ok = this.getWorkingSessionCount() < this.getMaxExecutingSessions()
     if (!ok && notify) {
-      const msg = tAgent('AIChatLoading.executingSessionsLimit', { count: this.getMaxExecutingSessions() })
-      const openLogin = !useStore.getState().userInfo.isLogin
-      yakitNotify(
-        'warning',
-        openLogin
-          ? {
-              // object 会被当成 NotificationArgsProps，可点节点放进 message
-              message: createElement(
-                'div',
-                {
-                  style: { whiteSpace: 'pre-wrap', cursor: 'pointer' },
-                  onClick: () => emiter.emit('onOpenLogin', ''),
+      const isLogin = useStore.getState().userInfo.isLogin
+      if (isLogin) {
+        yakitNotify(
+          'warning',
+          tAgent('AIChatLoading.executingSessionsLimitLoggedIn', { count: this.getMaxExecutingSessions() }),
+        )
+      } else {
+        yakitNotify('warning', {
+          message: createElement(
+            'span',
+            null,
+            tAgent('AIChatLoading.executingSessionsLimitLoggedOutPrefix'),
+            createElement(
+              'span',
+              {
+                style: { color: 'var(--Colors-Use-Main-Primary)', cursor: 'pointer' },
+                onClick: (e: { stopPropagation?: () => void }) => {
+                  e.stopPropagation?.()
+                  emiter.emit('onOpenLogin', '')
                 },
-                msg,
-              ),
-            }
-          : msg,
-      )
+              },
+              tAgent('AIChatLoading.executingSessionsLimitLogin'),
+            ),
+            tAgent('AIChatLoading.executingSessionsLimitLoggedOutSuffix'),
+          ),
+        })
+      }
     }
     return ok
   }
