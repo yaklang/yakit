@@ -11,19 +11,32 @@ import {
 
 let server
 let directory
+let socketPath
 
 afterEach(async () => {
   if (server) await new Promise((resolve) => server.close(resolve))
   if (directory) fs.rmSync(directory, { recursive: true, force: true })
   server = undefined
   directory = undefined
+  socketPath = undefined
 })
+
+/** Windows 上 Temp 目录无法 listen Unix socket（EACCES），改用命名管道 */
+function createControlEndpoint() {
+  if (process.platform === 'win32') {
+    return {
+      directory: undefined,
+      socketPath: `\\\\.\\pipe\\ytray-test-${process.pid}-${Date.now()}`,
+    }
+  }
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ytray-control-'))
+  return { directory: dir, socketPath: path.join(dir, 'control.sock') }
+}
 
 describe('YTray native history bridge', () => {
   it('lists history and restores the selected instance over the native protocol', async () => {
     const calls = []
-    directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ytray-control-'))
-    const socketPath = path.join(directory, 'control.sock')
+    ;({ directory, socketPath } = createControlEndpoint())
     server = net.createServer((socket) => {
       let request = ''
       socket.setEncoding('utf8')
@@ -52,7 +65,10 @@ describe('YTray native history bridge', () => {
         socket.end(`${JSON.stringify(response)}\n`)
       })
     })
-    await new Promise((resolve) => server.listen(socketPath, resolve))
+    await new Promise((resolve, reject) => {
+      server.once('error', reject)
+      server.listen(socketPath, resolve)
+    })
 
     await expect(listYTrayBrowserHistory(socketPath)).resolves.toEqual([
       expect.objectContaining({ id: '00000000-0000-4000-8000-000000000001', name: 'Browser A' }),

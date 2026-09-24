@@ -198,7 +198,11 @@ export async function autoApproveYTrayPairings(
     }
     const completed = autoApprovalCompleted.get(request.id)
     if (completed) {
-      snapshot = completed.snapshot
+      // 只从当前快照去掉已批准项，避免旧缓存整份覆盖导致新连接/新 pending 丢失
+      snapshot = {
+        ...snapshot,
+        pending: snapshot.pending.filter((item) => item.id !== request.id),
+      }
       continue
     }
     let approval = autoApprovalInFlight.get(request.id)

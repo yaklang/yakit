@@ -251,6 +251,48 @@ describe('browserExtensionClient', () => {
     expect(staleResult.snapshot.pending).toEqual([])
   })
 
+  it('completed cache only drops that pending id and keeps the fresh snapshot fields', async () => {
+    const approved = {
+      ...pairingRequest,
+      id: 'pairing-ytray-cached',
+      managedInstance: {
+        manager: 'ytray' as const,
+        instanceId: '00000000-0000-4000-8000-000000000010',
+        badge: 'A',
+      },
+      expiresAt: Date.now() + 60_000,
+    }
+    const newerPending = {
+      ...pairingRequest,
+      id: 'pairing-manual-new',
+      managedInstance: { manager: 'yakit' as const, instanceId: 'inst-new', badge: 'B' },
+      expiresAt: Date.now() + 60_000,
+    }
+    claimYTrayApproval.mockResolvedValue({ approved: true, reason: '' })
+    requestYakURL.mockResolvedValue(snapshotResponse([]))
+
+    await autoApproveYTrayPairings({ pending: [approved], devices: [] })
+
+    const device = {
+      id: 'device-new',
+      installationId: 'install-new',
+      name: 'New Browser',
+      client: 'extension',
+      clientVersion: '1',
+      origin: 'chrome-extension://new',
+      createdAt: 1,
+      lastSeenAt: 2,
+    }
+    const result = await autoApproveYTrayPairings({
+      pending: [approved, newerPending],
+      devices: [device],
+    })
+
+    expect(claimYTrayApproval).toHaveBeenCalledTimes(1)
+    expect(result.snapshot.devices).toEqual([device])
+    expect(result.snapshot.pending).toEqual([newerPending])
+  })
+
   it('executeBrowserExtensionTask uses generated token and maps result stream to resolve', async () => {
     let dataHandler: ((input: unknown) => void) | undefined
     onData.mockImplementation((_token: string, handler: (input: unknown) => void) => {
