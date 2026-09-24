@@ -24,7 +24,7 @@ import { useAIRunMode } from '@/pages/ai-agent/aiRunModeSelect/useAIRunMode'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './AIMilkdownModeSlash.module.scss'
 import {
-  setModeSlashReopenHandler,
+  registerModeSlashReopenHandler,
   goalDurationKeyToSeconds,
   GOAL_DURATION_PRESETS,
   isGoalDurationPresetKey,
@@ -307,8 +307,9 @@ export const AIMilkdownModeSlash: React.FC = () => {
     }
   }, [visible, step])
 
-  // tag click -> reopen goal / multi-agent config panel
+  // tag click -> reopen goal / multi-agent config panel（仅输入卡片内的实例注册，避免历史只读编辑器抢 handler）
   useEffect(() => {
+    if (!view?.dom?.closest?.('[data-ai-input-card]')) return
     const handler = (payload: ModeSlashReopenPayload) => {
       ignoreClickAwayUntilRef.current = Date.now() + 300
       const openStep = (stepName: SlashStep) => {
@@ -350,18 +351,32 @@ export const AIMilkdownModeSlash: React.FC = () => {
       setDraftSubAgents(payload.subAgents ?? maxSubAgents)
       openStep('multiAgentConfig')
     }
-    setModeSlashReopenHandler(handler)
-    return () => setModeSlashReopenHandler(null)
-  }, [maxSubAgents, goalMinIterations])
+    return registerModeSlashReopenHandler(handler)
+  }, [maxSubAgents, goalMinIterations, view])
 
   const getInputAnchor = useMemoizedFn((): HTMLElement | null => {
     // CSS Modules 会把 ai-chat-textarea 哈希掉，不能写死 class 名；用 data 锚到整张输入卡片（含标签行）
-    return (
+    const fromView =
       (view.dom.closest('[data-ai-input-card]') as HTMLElement | null) ||
       (view.dom.closest('[class*="ai-chat-textarea"]') as HTMLElement | null) ||
-      (view.dom.closest('[class*="ai-milkdown-input"]') as HTMLElement | null) ||
-      (view.dom.parentElement as HTMLElement | null)
-    )
+      (view.dom.closest('[class*="ai-milkdown-input"]') as HTMLElement | null)
+
+    const isLaidOut = (el: HTMLElement | null) => {
+      if (!el) return false
+      const r = el.getBoundingClientRect()
+      return r.width > 0 && r.height > 0
+    }
+
+    if (isLaidOut(fromView)) return fromView
+
+    // 多实例 / 只读历史编辑器：回落到当前可见的输入卡片
+    const cards = document.querySelectorAll('[data-ai-input-card]')
+    for (let i = cards.length - 1; i >= 0; i--) {
+      const el = cards[i] as HTMLElement
+      if (isLaidOut(el)) return el
+    }
+
+    return fromView || (view.dom.parentElement as HTMLElement | null)
   })
 
   const syncPosition = useMemoizedFn(() => {

@@ -155,16 +155,18 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             })
           },
         ].flat()
-        const modeSlashPlugin = [
-          aiModeSlashFactory,
-          (ctx: Ctx) => () => {
-            ctx.set(aiModeSlashFactory.key, {
-              view: pluginViewFactory({
-                component: () => <AIMilkdownModeSlash />,
-              }),
-            })
-          },
-        ].flat()
+        const modeSlashPlugin = readonly
+          ? []
+          : [
+              aiModeSlashFactory,
+              (ctx: Ctx) => () => {
+                ctx.set(aiModeSlashFactory.key, {
+                  view: pluginViewFactory({
+                    component: () => <AIMilkdownModeSlash />,
+                  }),
+                })
+              },
+            ].flat()
         const codeBlockPlugin = [
           ...aiCodeBlockCustomPlugin(),
           $view(aiCodeBlockCustomSchema.node, () =>
