@@ -313,9 +313,9 @@ export const AIMilkdownModeSlash: React.FC = () => {
     const handler = (payload: ModeSlashReopenPayload) => {
       ignoreClickAwayUntilRef.current = Date.now() + 300
       const openStep = (stepName: SlashStep) => {
+        if (!tryClaimMilkdownPopup('modeSlash')) return
         reopenSessionRef.current = true
         setStep(stepName)
-        if (!tryClaimMilkdownPopup('modeSlash')) return
         setVisible(true)
         // 等 React 提交 DOM 再 show/定位，避免与标签同一点击事件里被关掉或定位失败
         requestAnimationFrame(() => {
