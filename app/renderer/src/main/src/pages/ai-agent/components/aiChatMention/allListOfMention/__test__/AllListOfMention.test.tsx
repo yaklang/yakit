@@ -1,4 +1,4 @@
-import React, { createRef } from 'react'
+import { createRef, type ReactNode } from 'react'
 import { act, cleanup, render, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AIMentionTabsEnum } from '../../../../defaultConstant'
@@ -38,9 +38,9 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 }))
 
 vi.mock('ahooks', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('ahooks')>()
+  const actual = await importOriginal()
   return {
-    ...actual,
+    ...(actual as object),
     useInViewport: () => [true],
   }
 })
@@ -68,7 +68,7 @@ vi.mock('../../hooks/useSwitchSelectByKeyboard', () => ({
 }))
 
 vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => ({
-  YakitSpin: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  YakitSpin: ({ children }: { children: ReactNode }) => <>{children}</>,
 }))
 
 const { AllListOfMention } = await import('../AllListOfMention')

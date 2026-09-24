@@ -1,4 +1,4 @@
-import React from 'react'
+import type { MouseEvent } from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -21,31 +21,29 @@ vi.mock('../../aiRunModeSelect/useAIRunMode', () => ({
 }))
 
 vi.mock('../../components/aiMilkdownInput/aiMilkdownModeSlash/store', async () => {
-  const actual = await vi.importActual<typeof import('../../components/aiMilkdownInput/aiMilkdownModeSlash/store')>(
-    '../../components/aiMilkdownInput/aiMilkdownModeSlash/store',
-  )
+  const actual = await vi.importActual('../../components/aiMilkdownInput/aiMilkdownModeSlash/store')
   return {
-    ...actual,
+    ...(actual as object),
     requestModeSlashReopen: mocks.requestModeSlashReopen,
   }
 })
 
 vi.mock('@yakit-libs/yakit-ui-icons/outline', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@yakit-libs/yakit-ui-icons/outline')>()
+  const actual = await importOriginal()
   return {
-    ...actual,
+    ...(actual as object),
     BoxesOutlined: () => <span data-testid="icon-boxes" />,
     Goal2Outlined: () => <span data-testid="icon-goal" />,
-    PencilAltOutlined: (props: { onClick?: (e: React.MouseEvent) => void }) => (
+    PencilAltOutlined: (props: { onClick?: (e: MouseEvent) => void }) => (
       <button type="button" aria-label="edit-tag" onClick={props.onClick} />
     ),
   }
 })
 
 vi.mock('@yakit-libs/yakit-ui-icons/solid', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@yakit-libs/yakit-ui-icons/solid')>()
+  const actual = await importOriginal()
   return {
-    ...actual,
+    ...(actual as object),
     XCircleSolid: () => <span data-testid="icon-close" />,
   }
 })

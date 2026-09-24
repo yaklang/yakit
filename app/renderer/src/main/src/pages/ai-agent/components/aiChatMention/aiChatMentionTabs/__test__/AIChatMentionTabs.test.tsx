@@ -1,4 +1,3 @@
-import React from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AIMentionTabsEnum } from '../../../../defaultConstant'
@@ -12,9 +11,9 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 }))
 
 vi.mock('@yakit-libs/yakit-ui-icons/outline', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@yakit-libs/yakit-ui-icons/outline')>()
+  const actual = await importOriginal()
   return {
-    ...actual,
+    ...(actual as object),
     ChevronDoubleLeftOutlined: () => <span>left</span>,
     ChevronDoubleRightOutlined: () => <span>right</span>,
   }
