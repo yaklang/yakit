@@ -84,8 +84,7 @@ describe('engine artifact urls', () => {
     writeLegacy()
     const { getCheckTextUrl } = loadNetwork()
     const url = await getCheckTextUrl('slim/1.4.8-beta19')
-    const file =
-      process.platform === 'win32' ? 'yak-slim_windows_legacy_amd64.exe' : `yak-slim_${platformFile()}`
+    const file = process.platform === 'win32' ? 'yak-slim_windows_legacy_amd64.exe' : `yak-slim_${platformFile()}`
     expect(url).toBe(`https://yaklang.oss-accelerate.aliyuncs.com/yak/1.4.8-beta19/${file}.sha256.txt`)
   })
 

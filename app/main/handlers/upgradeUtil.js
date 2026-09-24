@@ -678,52 +678,55 @@ module.exports = {
     })
 
     const installYakEngine = (version) => {
-      return resolveEngineDownloadVersion(version).then((resolved) => new Promise((resolve, reject) => {
-        let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
-        origin = origin.replaceAll(`"`, `\"`)
+      return resolveEngineDownloadVersion(version).then(
+        (resolved) =>
+          new Promise((resolve, reject) => {
+            let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
+            origin = origin.replaceAll(`"`, `\"`)
 
-        let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
-        dest = dest.replaceAll(`"`, `\"`)
-        // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
-        let flag = false
-        function tryUnlink(retriesLeft) {
-          if (flag) return
-          try {
-            fs.unlinkSync(dest)
-          } catch (err) {
-            if (err.message.indexOf('operation not permitted') > -1) {
-              if (retriesLeft > 0) {
-                setTimeout(() => tryUnlink(retriesLeft - 1), 500)
-              } else {
-                reject('operation not permitted')
+            let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
+            dest = dest.replaceAll(`"`, `\"`)
+            // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
+            let flag = false
+            function tryUnlink(retriesLeft) {
+              if (flag) return
+              try {
+                fs.unlinkSync(dest)
+              } catch (err) {
+                if (err.message.indexOf('operation not permitted') > -1) {
+                  if (retriesLeft > 0) {
+                    setTimeout(() => tryUnlink(retriesLeft - 1), 500)
+                  } else {
+                    reject('operation not permitted')
+                  }
+                }
               }
             }
-          }
-        }
-        tryUnlink(2)
-        childProcess.exec(
-          isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
-          (err) => {
-            flag = true
-            if (err) {
-              if (
-                err.message.indexOf(
-                  'The process cannot access the file because it is being used by another process',
-                ) !== -1
-              ) {
-                reject('operation not permitted')
-              } else {
-                reject(err)
-              }
-              return
-            }
-            try {
-              writeEngineBuildTypeByVersion(resolved)
-            } catch (e) {}
-            resolve()
-          },
-        )
-      }))
+            tryUnlink(2)
+            childProcess.exec(
+              isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
+              (err) => {
+                flag = true
+                if (err) {
+                  if (
+                    err.message.indexOf(
+                      'The process cannot access the file because it is being used by another process',
+                    ) !== -1
+                  ) {
+                    reject('operation not permitted')
+                  } else {
+                    reject(err)
+                  }
+                  return
+                }
+                try {
+                  writeEngineBuildTypeByVersion(resolved)
+                } catch (e) {}
+                resolve()
+              },
+            )
+          }),
+      )
     }
 
     ipcMain.handle('install-yak-engine', async (e, version) => {
@@ -1241,52 +1244,55 @@ module.exports = {
     })
 
     const installYakEngine = (version) => {
-      return resolveEngineDownloadVersion(version).then((resolved) => new Promise((resolve, reject) => {
-        let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
-        origin = origin.replaceAll(`"`, `\"`)
+      return resolveEngineDownloadVersion(version).then(
+        (resolved) =>
+          new Promise((resolve, reject) => {
+            let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
+            origin = origin.replaceAll(`"`, `\"`)
 
-        let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
-        dest = dest.replaceAll(`"`, `\"`)
-        // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
-        let flag = false
-        function tryUnlink(retriesLeft) {
-          if (flag) return
-          try {
-            fs.unlinkSync(dest)
-          } catch (err) {
-            if (err.message.indexOf('operation not permitted') > -1) {
-              if (retriesLeft > 0) {
-                setTimeout(() => tryUnlink(retriesLeft - 1), 500)
-              } else {
-                reject('operation not permitted')
+            let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
+            dest = dest.replaceAll(`"`, `\"`)
+            // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
+            let flag = false
+            function tryUnlink(retriesLeft) {
+              if (flag) return
+              try {
+                fs.unlinkSync(dest)
+              } catch (err) {
+                if (err.message.indexOf('operation not permitted') > -1) {
+                  if (retriesLeft > 0) {
+                    setTimeout(() => tryUnlink(retriesLeft - 1), 500)
+                  } else {
+                    reject('operation not permitted')
+                  }
+                }
               }
             }
-          }
-        }
-        tryUnlink(2)
-        childProcess.exec(
-          isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
-          (err) => {
-            flag = true
-            if (err) {
-              if (
-                err.message.indexOf(
-                  'The process cannot access the file because it is being used by another process',
-                ) !== -1
-              ) {
-                reject('operation not permitted')
-              } else {
-                reject(err)
-              }
-              return
-            }
-            try {
-              writeEngineBuildTypeByVersion(resolved)
-            } catch (e) {}
-            resolve()
-          },
-        )
-      }))
+            tryUnlink(2)
+            childProcess.exec(
+              isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
+              (err) => {
+                flag = true
+                if (err) {
+                  if (
+                    err.message.indexOf(
+                      'The process cannot access the file because it is being used by another process',
+                    ) !== -1
+                  ) {
+                    reject('operation not permitted')
+                  } else {
+                    reject(err)
+                  }
+                  return
+                }
+                try {
+                  writeEngineBuildTypeByVersion(resolved)
+                } catch (e) {}
+                resolve()
+              },
+            )
+          }),
+      )
     }
 
     ipcMain.handle(ipcEventPre + 'install-yak-engine', async (e, version) => {
