@@ -401,6 +401,7 @@
     "autoApprovalFailed": "Automatic approval failed: {{error}}. You can still approve this request manually.",
     "pairingWindowOpened": "Pairing window opened for 2 minutes",
     "pairingWindowFailed": "Failed to open pairing window: {{error}}",
+    "bridgeUnavailable": "Browser connection service is not running",
     "lastSeen": "Last seen: {{time}}",
     "lastStarted": "Last started: {{time}}",
     "restore": "Restore",

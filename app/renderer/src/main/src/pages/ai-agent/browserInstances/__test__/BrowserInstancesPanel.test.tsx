@@ -229,7 +229,7 @@ describe('BrowserInstancesPanel interactions', () => {
     })
   })
 
-  it('opens pairing window from empty-state goConnect', async () => {
+  it('shows the Browser Bridge error and retries', async () => {
     mocks.useBrowserInstances.mockReturnValue({
       instances: [],
       history: [],
@@ -240,10 +240,10 @@ describe('BrowserInstancesPanel interactions', () => {
       autoApprovalErrors: {},
     })
     render(<BrowserInstancesPanel />)
-    fireEvent.click(screen.getByText('BrowserInstances.goConnect'))
-    await waitFor(() => {
-      expect(mocks.requestBrowserExtensionSnapshot).toHaveBeenCalledWith('POST', '/pairing-window', { ttlSeconds: 120 })
-    })
+    expect(screen.getByText('BrowserInstances.bridgeUnavailable')).toBeInTheDocument()
+    expect(screen.getByText('unavailable')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('BrowserInstances.retry'))
+    expect(mocks.refreshBrowserInstances).toHaveBeenCalled()
   })
 
   it('opens the guide from connection help', () => {

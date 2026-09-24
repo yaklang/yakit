@@ -401,6 +401,7 @@
     "autoApprovalFailed": "自動批准失敗：{{error}}。你仍可手動批准。",
     "pairingWindowOpened": "已開啟 2 分鐘配對視窗",
     "pairingWindowFailed": "開啟配對視窗失敗: {{error}}",
+    "bridgeUnavailable": "瀏覽器連線服務未執行",
     "lastSeen": "最後線上：{{time}}",
     "lastStarted": "上次啟動：{{time}}",
     "restore": "恢復",

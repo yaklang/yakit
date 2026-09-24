@@ -597,20 +597,24 @@ export const BrowserInstancesPanel: React.FC = () => {
 
       <YakitSpin spinning={loading && !hasContent}>
         <div className={styles['panel-body']}>
-          {error && !hasContent ? (
-            <div className={styles['empty-state']}>
-              <GlobeOutlined color="currentColor" size={30} />
-              <span>{t('BrowserInstances.readFailed')}</span>
-              <YakitButton type="text" loading={pairingLoading} onClick={() => void handleOpenPairingWindow()}>
-                {t('BrowserInstances.goConnect')}
+          {!!error && (
+            <div className={styles['service-unavailable']} role="alert">
+              <GlobeOutlined color="currentColor" />
+              <div>
+                <strong>{t('BrowserInstances.bridgeUnavailable')}</strong>
+                <span title={error}>{error}</span>
+              </div>
+              <YakitButton type="text2" size="small" onClick={() => void refreshBrowserInstances()}>
+                {t('BrowserInstances.retry')}
               </YakitButton>
             </div>
-          ) : !hasContent ? (
+          )}
+          {!hasContent ? (
             <BrowserInstancesGuideEmpty onOpenManual={() => setManualVisible(true)} />
           ) : (
             <>
               {!!historyError && (
-                <div className={styles['ytray-unavailable']} role="status">
+                <div className={styles['service-unavailable']} role="status">
                   <GlobeOutlined color="currentColor" />
                   <div>
                     <strong>{t('BrowserInstances.ytrayUnavailable')}</strong>

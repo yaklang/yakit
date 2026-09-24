@@ -197,6 +197,8 @@ export const refreshBrowserInstances = async (quiet = false) => {
     ])
     if (sequence !== refreshSequence) return
     const { snapshot, errors: autoApprovalErrors } = await autoApproveYTrayPairings(initialSnapshot)
+    const bridgeError =
+      snapshot.status && !snapshot.status.running ? snapshot.status.lastError || 'Browser Bridge 未运行' : ''
     const connected = snapshot.status?.connections || []
     if (sequence !== refreshSequence) return
     const previews = Object.fromEntries(state.instances.map((instance) => [instance.id, instance.tab]))
@@ -211,7 +213,7 @@ export const refreshBrowserInstances = async (quiet = false) => {
       pending: snapshot.pending,
       selectedId,
       loading: false,
-      error: '',
+      error: bridgeError,
     })
     for (const connection of connected) {
       const { deviceId, connectionId } = connection
