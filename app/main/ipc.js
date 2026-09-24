@@ -318,6 +318,13 @@ module.exports = {
       console.error(e)
     }
 
+    try {
+      require('./handlers/ytrayControl').registerYTrayControlHandlers({ ipcMain, assertTrustedAppSender })
+    } catch (e) {
+      console.info('Import YTray native control client failed')
+      console.error(e)
+    }
+
     //代理规则
     require('./handlers/proxyRules')(win, getClient)
 

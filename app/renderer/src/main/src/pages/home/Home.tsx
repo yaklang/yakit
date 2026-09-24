@@ -70,7 +70,8 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
-import { AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from '../ai-agent/defaultConstant'
+import { AIAgentTabListEnum } from '../ai-agent/defaultConstant'
+import { openAIAgentTab } from '../ai-agent/aiAgentTabNavigation'
 import type { RouteToPageProps } from '../layout/publicMenu/PublicMenu'
 import { usePluginToId } from '@/store/publicMenu'
 import { ResidentPluginName } from '@/routes/newRoute'
@@ -141,17 +142,28 @@ const BrowserPairingNotify: React.FC = () => {
   const { pending } = useBrowserInstances()
   const seenPendingIdsRef = useRef(new Set<string>())
   const openBrowserPairing = useMemoizedFn(() => {
-    emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
-    window.setTimeout(() => {
-      emiter.emit(
-        'switchAIAgentTab',
-        JSON.stringify({
-          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-          params: { active: AIAgentTabListEnum.Browser, show: true },
-        }),
-      )
-    }, 100)
+    openAIAgentTab(AIAgentTabListEnum.Browser)
   })
+  useEffect(() => {
+    const onAutoApproved = (identity: string) => {
+      yakitNotify('success', {
+        message: (
+          <span>
+            {t('BrowserInstances.autoConnectedNotifyPrefix', { identity })} &nbsp;
+            <Tooltip title={t('BrowserInstances.pairingRequestNotifyTooltip')}>
+              <span style={{ color: 'var(--Colors-Use-Main-Primary)' }}>
+                {t('BrowserInstances.autoConnectedNotifyAction')}
+              </span>
+            </Tooltip>
+          </span>
+        ),
+        style: { cursor: 'pointer' },
+        onClick: openBrowserPairing,
+      })
+    }
+    emiter.on('onBrowserExtensionAutoApproved', onAutoApproved)
+    return () => emiter.off('onBrowserExtensionAutoApproved', onAutoApproved)
+  }, [t, openBrowserPairing])
   useEffect(() => {
     const nextIds = pending.map((item) => item.id)
     const hasNew = nextIds.some((id) => !seenPendingIdsRef.current.has(id))

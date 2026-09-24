@@ -6,7 +6,8 @@ import emiter from '@/utils/eventBus/eventBus'
 import type * as AIAgentSideListModule from '../AIAgentSideList'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
-import { SwitchAIAgentTabEventEnum } from '../defaultConstant'
+import { AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from '../defaultConstant'
+import { openAIAgentTab } from '../aiAgentTabNavigation'
 import type { YakitSideTabProps } from '@/components/yakitSideTab/YakitSideTabType'
 
 const { AIAgentSideList } = await compileReactModule<typeof AIAgentSideListModule>(
@@ -111,6 +112,15 @@ describe('AIAgentSideList', () => {
     ).toEqual(['session', 'file', 'browser', 'scheduled', 'mcp'])
     expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
     expect(screen.getByText('文件列表')).toBeInTheDocument()
+  })
+
+  it('挂载后消费打开浏览器实例页签的导航意图', () => {
+    openAIAgentTab(AIAgentTabListEnum.Browser)
+    render(<SideList />)
+
+    expect(screen.getByLabelText('active')).toHaveTextContent('browser')
+    expect(screen.getByLabelText('show')).toHaveTextContent('true')
+    expect(screen.getByText('浏览器实例')).toBeInTheDocument()
   })
 
   it('点击 session 打开会话历史，事件可切换激活', async () => {

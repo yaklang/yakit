@@ -11,8 +11,8 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import emiter from '@/utils/eventBus/eventBus'
-import { YakitRoute } from '@/enums/yakitRoute'
-import { AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from '@/pages/ai-agent/defaultConstant'
+import { AIAgentTabListEnum } from '@/pages/ai-agent/defaultConstant'
+import { openAIAgentTab } from '@/pages/ai-agent/aiAgentTabNavigation'
 import {
   callBrowserExtensionCapability,
   getBrowserExtensionSnapshot,
@@ -212,16 +212,7 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
         <YakitButton
           type="text"
           onClick={() => {
-            emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
-            setTimeout(() => {
-              emiter.emit(
-                'switchAIAgentTab',
-                JSON.stringify({
-                  type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-                  params: { active: AIAgentTabListEnum.Browser, show: true },
-                }),
-              )
-            }, 100)
+            openAIAgentTab(AIAgentTabListEnum.Browser)
             setOpen(false)
           }}
         >

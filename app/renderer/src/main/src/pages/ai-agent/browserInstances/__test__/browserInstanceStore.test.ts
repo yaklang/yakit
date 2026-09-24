@@ -2,9 +2,15 @@ import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/services/electronBridge', () => ({
-  yakitManagedBrowser: { list: vi.fn(async () => []) },
+  yakitManagedBrowser: {
+    list: vi.fn(async () => []),
+    listYTrayHistory: vi.fn(async () => []),
+    claimYTrayApproval: vi.fn(),
+    restoreYTray: vi.fn(),
+  },
 }))
 vi.mock('@/pages/browserExtension/browserExtensionClient', () => ({
+  autoApproveYTrayPairings: vi.fn(async (snapshot: unknown) => ({ snapshot, errors: {} })),
   callBrowserExtensionCapability: vi.fn(),
   getBrowserExtensionSnapshot: vi.fn(),
 }))

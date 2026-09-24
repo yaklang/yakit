@@ -2,8 +2,10 @@ import { useEffect, useSyncExternalStore } from 'react'
 import emiter from '@/utils/eventBus/eventBus'
 import { yakitManagedBrowser } from '@/services/electronBridge'
 import {
+  autoApproveYTrayPairings,
   callBrowserExtensionCapability,
   getBrowserExtensionSnapshot,
+  type BrowserAutoApprovalError,
   type BrowserBridgeConnection,
   type BrowserExtensionSnapshot,
   type BrowserPairingRequest,
@@ -53,10 +55,13 @@ export const formatLastSeen = (timestamp: number) => {
 
 interface BrowserInstanceState {
   instances: AIBrowserInstance[]
+  history: YTrayBrowserHistoryInstance[]
   pending: BrowserPairingRequest[]
   selectedId: string
   loading: boolean
   error: string
+  historyError: string
+  autoApprovalErrors: Record<string, BrowserAutoApprovalError>
 }
 
 const BROWSER_INSTANCE_SELECTION_KEY = 'ai-agent.browser-instance.current'
@@ -64,10 +69,13 @@ const REFRESH_INTERVAL = 5_000
 
 let state: BrowserInstanceState = {
   instances: [],
+  history: [],
   pending: [],
   selectedId: '',
   loading: false,
   error: '',
+  historyError: '',
+  autoApprovalErrors: {},
 }
 let refreshSequence = 0
 const pendingPreviews = new Map<string, string>()
@@ -179,17 +187,32 @@ export const refreshBrowserInstances = async (quiet = false) => {
   const sequence = ++refreshSequence
   if (!quiet) updateState({ loading: true })
   try {
-    const [snapshot, profiles] = await Promise.all([
+    const [initialSnapshot, profiles, historyResult] = await Promise.all([
       getBrowserExtensionSnapshot(),
       yakitManagedBrowser.list().catch(() => []),
+      yakitManagedBrowser
+        .listYTrayHistory()
+        .then((history) => ({ history, error: '' }))
+        .catch((error) => ({ history: state.history, error: `${error}` })),
     ])
+    if (sequence !== refreshSequence) return
+    const { snapshot, errors: autoApprovalErrors } = await autoApproveYTrayPairings(initialSnapshot)
     const connected = snapshot.status?.connections || []
     if (sequence !== refreshSequence) return
     const previews = Object.fromEntries(state.instances.map((instance) => [instance.id, instance.tab]))
     const instances = normalizeBrowserInstances(snapshot, previews, profiles)
     const selectedId = resolveSelectedId(instances)
     if (selectedId) persistSelectedId(selectedId)
-    updateState({ instances, pending: snapshot.pending, selectedId, loading: false, error: '' })
+    updateState({
+      instances,
+      history: historyResult.history || [],
+      historyError: historyResult.error,
+      autoApprovalErrors,
+      pending: snapshot.pending,
+      selectedId,
+      loading: false,
+      error: '',
+    })
     for (const connection of connected) {
       const { deviceId, connectionId } = connection
       if (pendingPreviews.get(deviceId) === connectionId) continue
@@ -211,6 +234,10 @@ export const refreshBrowserInstances = async (quiet = false) => {
     if (sequence !== refreshSequence) return
     updateState({ loading: false, error: `${error}` })
   }
+}
+
+export const restoreBrowserHistory = async (id: string) => {
+  await yakitManagedBrowser.restoreYTray(id)
 }
 
 export const readBrowserThumbnail = async (instance: AIBrowserInstance) => {

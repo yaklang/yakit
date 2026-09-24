@@ -8,21 +8,17 @@ import {
   DotsHorizontalOutlined,
   GlobeOutlined,
   PaperAirplaneOutlined,
-  PencilOutlined,
   QuestionMarkCircleOutlined,
   RefreshOutlined,
-  TrashOutlined,
   PositionOutlined,
   XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { BrowserClientIcon } from './BrowserClientIcon'
-import { Tooltip, type InputRef } from 'antd'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { SideSettingButton } from '../aiChatWelcome/AIChatWelcomeSideSetting'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -33,6 +29,7 @@ import {
   callBrowserExtensionCapability,
   rejectBrowserExtensionPairing,
   requestBrowserExtensionSnapshot,
+  type BrowserAutoApprovalError,
   type BrowserPairingRequest,
 } from '@/pages/browserExtension/browserExtensionClient'
 import { useI18nNamespaces, type TFunction } from '@/i18n/useI18nNamespaces'
@@ -42,6 +39,7 @@ import {
   formatLastSeen,
   readBrowserThumbnail,
   refreshBrowserInstances,
+  restoreBrowserHistory,
   selectBrowserInstance,
   useBrowserInstances,
   type AIBrowserInstance,
@@ -67,15 +65,6 @@ export const pairingSubtitle = (request: BrowserPairingRequest) => {
   if (request.managedInstance?.manager === 'ytray') parts.push('YTray')
   else if (request.managedInstance?.manager === 'yakit') parts.push('Yakit')
   return parts.join(' · ')
-}
-
-export const renameBrowserDevice = async (id: string, nextName: string, t: TFunction) => {
-  const name = nextName.trim()
-  if (!name) return false
-  await requestBrowserExtensionSnapshot('POST', `/devices/${id}`, { name })
-  await refreshBrowserInstances(true)
-  success(t('BrowserInstances.renameSuccess'))
-  return true
 }
 
 export const openPairingWindow = async (t: TFunction) => {
@@ -346,7 +335,7 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
   )
 
   return (
-    <div className={styles['browser-card']}>
+    <div className={styles['browser-card']} data-identity={instance.identity || undefined}>
       <BrowserPreviewPopover instance={instance} thumbnail={thumbnail} refreshThumbnail={refreshThumbnail}>
         <span className={styles['preview-shell']}>
           <BrowserCardPreview instance={instance} thumbnail={thumbnail} />
@@ -395,139 +384,72 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
   )
 }
 
-const OfflineBrowserInstanceRow: React.FC<{ instance: AIBrowserInstance }> = ({ instance }) => {
+const BrowserHistoryRow: React.FC<{ instance: YTrayBrowserHistoryInstance; disabled?: boolean }> = ({
+  instance,
+  disabled,
+}) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const [editing, setEditing] = useState(false)
-  const [editingName, setEditingName] = useState(instance.name)
-  const [mutating, setMutating] = useState(false)
-  const nameInputRef = useRef<InputRef>(null)
-  useEffect(() => {
-    if (!editing) return
-    const timer = window.setTimeout(() => nameInputRef.current?.focus({ cursor: 'all' }), 50)
-    return () => window.clearTimeout(timer)
-  }, [editing])
-
-  const saveName = useMemoizedFn(async () => {
-    if (!editingName.trim() || editingName.trim() === instance.name) {
-      setEditing(false)
-      setEditingName(instance.name)
-      return
-    }
-    setMutating(true)
+  const [restoring, setRestoring] = useState(false)
+  const restore = useMemoizedFn(async () => {
+    if (restoring || disabled) return
+    setRestoring(true)
     try {
-      await renameBrowserDevice(instance.id, editingName, t)
-      setEditing(false)
+      await restoreBrowserHistory(instance.id)
+      await refreshBrowserInstances(true)
+      success(t('BrowserInstances.restoreStarted', { name: instance.name }))
     } catch (error) {
-      failed(t('BrowserInstances.renameFailed', { error: `${error}` }))
+      failed(t('BrowserInstances.restoreFailed', { error: `${error}` }))
     } finally {
-      setMutating(false)
+      setRestoring(false)
     }
   })
-
-  const removeDevice = useMemoizedFn(() => {
-    const modal = YakitModalConfirm({
-      width: 420,
-      title: t('BrowserInstances.removeOfflineTitle'),
-      content: t('BrowserInstances.removeOfflineConfirm', { name: instance.name }),
-      onOkText: t('BrowserInstances.removeOfflineOk'),
-      showConfirmLoading: true,
-      onOk: async () => {
-        try {
-          await requestBrowserExtensionSnapshot('DELETE', `/devices/${instance.id}`)
-          await refreshBrowserInstances(true)
-          success(t('BrowserInstances.removeOfflineSuccess'))
-          modal.destroy()
-        } catch (error) {
-          failed(t('BrowserInstances.removeFailed', { error: `${error}` }))
-        }
-      },
-    })
-  })
+  const title = instance.pageTitle || instance.name
+  const url = instance.pageUrl || instance.startUrl
 
   return (
     <div className={styles['offline-row']}>
       <div className={styles['browser-avatar']}>
-        <BrowserClientIcon client={instance.client} size={18} />
-        {instance.identity && (
-          <span className={styles['identity-mark']} data-identity={instance.identity}>
-            {instance.identity}
+        <BrowserClientIcon client={instance.runtime} size={18} />
+        {instance.badge && (
+          <span className={styles['identity-mark']} data-identity={instance.badge}>
+            {instance.badge}
           </span>
         )}
       </div>
       <div className={styles['offline-copy']}>
         <div className={styles['offline-title-row']}>
-          {editing ? (
-            <YakitInput
-              ref={nameInputRef}
-              size="small"
-              wrapperClassName={styles['name-input']}
-              value={editingName}
-              maxLength={80}
-              autoFocus
-              onChange={(event) => setEditingName(event.target.value)}
-              onPressEnter={() => void saveName()}
-            />
-          ) : (
-            <span className={styles['instance-title']} title={instance.name}>
-              {instance.name}
-            </span>
-          )}
+          <span className={styles['instance-title']} title={title}>
+            {title}
+          </span>
           <div className={styles['offline-actions']}>
-            {editing ? (
-              <>
-                <YakitButton
-                  type="text2"
-                  icon={<XOutlined color="currentColor" />}
-                  disabled={mutating}
-                  onClick={() => {
-                    setEditingName(instance.name)
-                    setEditing(false)
-                  }}
-                />
-                <YakitButton
-                  type="text2"
-                  icon={<CheckOutlined color="currentColor" />}
-                  loading={mutating}
-                  onClick={() => void saveName()}
-                />
-              </>
-            ) : (
-              <>
-                <div className={styles['offline-hover-actions']}>
-                  <YakitButton
-                    type="text2"
-                    icon={<PencilOutlined color="currentColor" />}
-                    aria-label={t('BrowserInstances.rename')}
-                    onClick={() => {
-                      setEditingName(instance.name)
-                      setEditing(true)
-                    }}
-                  />
-                  <YakitButton
-                    type="text2"
-                    danger
-                    icon={<TrashOutlined color="currentColor" />}
-                    aria-label={t('BrowserInstances.remove')}
-                    onClick={removeDevice}
-                  />
-                </div>
-                <BrowserStatus instance={instance} />
-              </>
-            )}
+            <YakitButton
+              type="outline2"
+              size="small"
+              icon={<RefreshOutlined color="currentColor" />}
+              loading={restoring}
+              disabled={disabled}
+              aria-label={t('BrowserInstances.restore')}
+              onClick={() => void restore()}
+            >
+              {t('BrowserInstances.restore')}
+            </YakitButton>
           </div>
         </div>
-        <div className={styles['instance-url']} title={instance.origin}>
-          {instance.origin}
+        <div className={styles['instance-url']} title={url}>
+          {url || instance.runtime}
         </div>
         <div className={styles['offline-last-seen']}>
-          {t('BrowserInstances.lastSeen', { time: formatLastSeen(instance.lastSeenAt) })}
+          {t('BrowserInstances.lastStarted', { time: formatLastSeen(instance.startedAt) })}
         </div>
       </div>
     </div>
   )
 }
 
-const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ request }) => {
+const BrowserPairingCard: React.FC<{
+  request: BrowserPairingRequest
+  autoApprovalError?: BrowserAutoApprovalError
+}> = ({ request, autoApprovalError }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const [action, setAction] = useState<'approve' | 'reject' | ''>('')
   const [clock, setClock] = useState(request.createdAt)
@@ -591,6 +513,15 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
           </div>
         </div>
       </div>
+      {autoApprovalError && (
+        <div className={styles['pairing-auto-error']} role="status">
+          {autoApprovalError.kind === 'ytray-unavailable'
+            ? t('BrowserInstances.autoApprovalUnavailable', { error: autoApprovalError.message || '' })
+            : autoApprovalError.kind === 'unverified'
+              ? t('BrowserInstances.autoApprovalUnverified')
+              : t('BrowserInstances.autoApprovalFailed', { error: autoApprovalError.message || '' })}
+        </div>
+      )}
       <div className={styles['pairing-actions']}>
         <YakitButton
           type="text2"
@@ -619,14 +550,14 @@ const BrowserPairingCard: React.FC<{ request: BrowserPairingRequest }> = ({ requ
 
 export const BrowserInstancesPanel: React.FC = () => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { instances, pending, loading, error } = useBrowserInstances()
+  const { instances, history, historyError, pending, loading, error, autoApprovalErrors } = useBrowserInstances()
   const [onlineExpanded, setOnlineExpanded] = useState(true)
   const [pendingExpanded, setPendingExpanded] = useState(true)
-  const [offlineExpanded, setOfflineExpanded] = useState(false)
+  const [historyExpanded, setHistoryExpanded] = useState(false)
   const [pairingLoading, setPairingLoading] = useState(false)
   const [manualVisible, setManualVisible] = useState(false)
   const online = useMemo(() => instances.filter((instance) => instance.online), [instances])
-  const offline = useMemo(() => instances.filter((instance) => !instance.online), [instances])
+  const hasContent = Boolean(online.length || pending.length || history.length || historyError)
   const handleOpenPairingWindow = useMemoizedFn(async () => {
     if (pairingLoading) return
     setPairingLoading(true)
@@ -636,28 +567,23 @@ export const BrowserInstancesPanel: React.FC = () => {
       setPairingLoading(false)
     }
   })
-
   return (
     <div className={styles['browser-instances-panel']}>
       <div className={styles['panel-header']}>
         <div>
-          <div className={styles['panel-title-row']}>
-            <div className={styles['panel-title']}>{t('BrowserInstances.title')}</div>
-            <Tooltip title={t('BrowserInstances.guideOpenHint')}>
-              <YakitButton
-                type="text2"
-                size="small"
-                icon={<QuestionMarkCircleOutlined color="currentColor" />}
-                className={styles['panel-guide-icon']}
-                aria-label={t('BrowserInstances.guideOpenHint')}
-                onClick={() => setManualVisible(true)}
-              />
-            </Tooltip>
-          </div>
+          <div className={styles['panel-title']}>{t('BrowserInstances.title')}</div>
           <div className={styles['panel-subtitle']}>{t('BrowserInstances.subtitle')}</div>
         </div>
         <div className={styles['header-actions']}>
           <SideSettingButton type="text2" size="small" />
+          <YakitButton
+            type="text2"
+            icon={<QuestionMarkCircleOutlined color="currentColor" />}
+            size="small"
+            onClick={() => setManualVisible(true)}
+          >
+            {t('BrowserInstances.connectionHelp')}
+          </YakitButton>
           <YakitButton
             type="text2"
             icon={<RefreshOutlined color="currentColor" />}
@@ -669,9 +595,9 @@ export const BrowserInstancesPanel: React.FC = () => {
         </div>
       </div>
 
-      <YakitSpin spinning={loading && !instances.length && !pending.length}>
+      <YakitSpin spinning={loading && !hasContent}>
         <div className={styles['panel-body']}>
-          {error && !instances.length && !pending.length ? (
+          {error && !hasContent ? (
             <div className={styles['empty-state']}>
               <GlobeOutlined color="currentColor" size={30} />
               <span>{t('BrowserInstances.readFailed')}</span>
@@ -679,10 +605,22 @@ export const BrowserInstancesPanel: React.FC = () => {
                 {t('BrowserInstances.goConnect')}
               </YakitButton>
             </div>
-          ) : !instances.length && !pending.length ? (
+          ) : !hasContent ? (
             <BrowserInstancesGuideEmpty onOpenManual={() => setManualVisible(true)} />
           ) : (
             <>
+              {!!historyError && (
+                <div className={styles['ytray-unavailable']} role="status">
+                  <GlobeOutlined color="currentColor" />
+                  <div>
+                    <strong>{t('BrowserInstances.ytrayUnavailable')}</strong>
+                    <span>{t('BrowserInstances.ytrayUnavailableHint')}</span>
+                  </div>
+                  <YakitButton type="text2" size="small" onClick={() => void refreshBrowserInstances()}>
+                    {t('BrowserInstances.retry')}
+                  </YakitButton>
+                </div>
+              )}
               {!!pending.length && (
                 <section className={styles['instance-section']}>
                   <button
@@ -704,7 +642,11 @@ export const BrowserInstancesPanel: React.FC = () => {
                   {pendingExpanded && (
                     <div className={styles['browser-card-list']}>
                       {pending.map((request) => (
-                        <BrowserPairingCard key={request.id} request={request} />
+                        <BrowserPairingCard
+                          key={request.id}
+                          request={request}
+                          autoApprovalError={autoApprovalErrors[request.id]}
+                        />
                       ))}
                     </div>
                   )}
@@ -737,28 +679,28 @@ export const BrowserInstancesPanel: React.FC = () => {
                   )}
                 </section>
               )}
-              {!!offline.length && (
+              {!!history.length && (
                 <section className={styles['instance-section']}>
                   <button
                     type="button"
                     className={styles['section-toggle']}
-                    onClick={() => setOfflineExpanded((value) => !value)}
-                    aria-expanded={offlineExpanded}
+                    onClick={() => setHistoryExpanded((value) => !value)}
+                    aria-expanded={historyExpanded}
                   >
-                    {offlineExpanded ? (
+                    {historyExpanded ? (
                       <ChevronDownOutlined color="currentColor" size={9} />
                     ) : (
                       <ChevronRightOutlined color="currentColor" size={9} />
                     )}
                     <span>{t('BrowserInstances.others')}</span>
                     <YakitTag fullRadius size="small">
-                      {offline.length}
+                      {history.length}
                     </YakitTag>
                   </button>
-                  {offlineExpanded && (
+                  {historyExpanded && (
                     <div className={styles['offline-list']}>
-                      {offline.map((instance) => (
-                        <OfflineBrowserInstanceRow key={instance.id} instance={instance} />
+                      {history.map((instance) => (
+                        <BrowserHistoryRow key={instance.id} instance={instance} disabled={Boolean(historyError)} />
                       ))}
                     </div>
                   )}
