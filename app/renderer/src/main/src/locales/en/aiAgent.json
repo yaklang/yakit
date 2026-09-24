@@ -398,6 +398,7 @@
     "pairingFailed": "Failed to process pairing request: {{error}}",
     "autoApprovalUnavailable": "Could not connect to the YTray native control service: {{error}}. Make sure YTray is running; restart Yakit completely after updating a local build.",
     "autoApprovalUnverified": "The automatic connection credential expired or did not match. Approve this request manually.",
+    "autoApprovalDisabled": "Automatic connection is turned off. Approve this request manually.",
     "autoApprovalFailed": "Automatic approval failed: {{error}}. You can still approve this request manually.",
     "pairingWindowOpened": "Pairing window opened for 2 minutes",
     "pairingWindowFailed": "Failed to open pairing window: {{error}}",

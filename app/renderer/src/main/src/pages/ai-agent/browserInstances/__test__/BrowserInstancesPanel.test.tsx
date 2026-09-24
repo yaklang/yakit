@@ -302,6 +302,21 @@ describe('BrowserInstancesPanel interactions', () => {
     expect(screen.queryByText(/确认码|verificationCode/)).not.toBeInTheDocument()
   })
 
+  it('shows a distinct message when automatic connection is disabled', () => {
+    mocks.useBrowserInstances.mockReturnValue({
+      instances: [],
+      history: [],
+      pending: [pairingRequest({ id: 'pending-disabled', code: '111222' })],
+      loading: false,
+      error: '',
+      historyError: '',
+      autoApprovalErrors: { 'pending-disabled': { kind: 'disabled' } },
+    })
+    render(<BrowserInstancesPanel />)
+
+    expect(screen.getByText('BrowserInstances.autoApprovalDisabled')).toBeInTheDocument()
+  })
+
   it('restores the selected YTray history instance', async () => {
     mocks.useBrowserInstances.mockReturnValue({
       instances: [],

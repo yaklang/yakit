@@ -113,7 +113,7 @@ export interface BrowserExtensionSnapshot {
 }
 
 export interface BrowserAutoApprovalError {
-  kind: 'ytray-unavailable' | 'unverified' | 'approval-failed'
+  kind: 'ytray-unavailable' | 'unverified' | 'disabled' | 'approval-failed'
   message?: string
 }
 
@@ -216,7 +216,7 @@ export async function autoApproveYTrayPairings(
         }
         if (!claim.approved) {
           autoApprovalRejected.add(request.id)
-          if (claim.reason === 'disabled') autoApprovalErrors.delete(request.id)
+          if (claim.reason === 'disabled') autoApprovalErrors.set(request.id, { kind: 'disabled' })
           else autoApprovalErrors.set(request.id, { kind: 'unverified' })
           return undefined
         }

@@ -398,6 +398,7 @@
     "pairingFailed": "处理配对申请失败: {{error}}",
     "autoApprovalUnavailable": "无法连接 YTray 原生控制服务：{{error}}。请确认 YTray 已启动；若刚更新本地 Yakit，请完整重启 Yakit。",
     "autoApprovalUnverified": "自动连接凭据已失效或不匹配，请手动批准。",
+    "autoApprovalDisabled": "自动连接已关闭，请手动批准。",
     "autoApprovalFailed": "自动批准失败：{{error}}。你仍可手动批准。",
     "pairingWindowOpened": "已开启 2 分钟配对窗口",
     "pairingWindowFailed": "开启配对窗口失败: {{error}}",

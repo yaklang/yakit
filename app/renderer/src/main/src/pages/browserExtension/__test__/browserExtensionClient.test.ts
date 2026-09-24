@@ -197,6 +197,26 @@ describe('browserExtensionClient', () => {
     expect(result.errors[request.id]).toEqual({ kind: 'ytray-unavailable', message: 'YTray exited' })
   })
 
+  it('keeps the pairing manual and reports when automatic connection is disabled', async () => {
+    const request = {
+      ...pairingRequest,
+      id: 'pairing-ytray-disabled',
+      managedInstance: {
+        manager: 'ytray' as const,
+        instanceId: '00000000-0000-4000-8000-000000000004',
+        badge: 'C',
+      },
+      expiresAt: Date.now() + 60_000,
+    }
+    claimYTrayApproval.mockResolvedValue({ approved: false, reason: 'disabled' })
+
+    const result = await autoApproveYTrayPairings({ pending: [request], devices: [] })
+
+    expect(requestYakURL).not.toHaveBeenCalled()
+    expect(result.snapshot.pending).toEqual([request])
+    expect(result.errors[request.id]).toEqual({ kind: 'disabled' })
+  })
+
   it('shares an in-flight YTray approval and returns its final snapshot to concurrent refreshes', async () => {
     const request = {
       ...pairingRequest,

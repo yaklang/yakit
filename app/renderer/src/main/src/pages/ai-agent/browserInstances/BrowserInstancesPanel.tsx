@@ -527,7 +527,9 @@ const BrowserPairingCard: React.FC<{
             ? t('BrowserInstances.autoApprovalUnavailable', { error: autoApprovalError.message || '' })
             : autoApprovalError.kind === 'unverified'
               ? t('BrowserInstances.autoApprovalUnverified')
-              : t('BrowserInstances.autoApprovalFailed', { error: autoApprovalError.message || '' })}
+              : autoApprovalError.kind === 'disabled'
+                ? t('BrowserInstances.autoApprovalDisabled')
+                : t('BrowserInstances.autoApprovalFailed', { error: autoApprovalError.message || '' })}
         </div>
       )}
       <div className={styles['pairing-actions']}>
