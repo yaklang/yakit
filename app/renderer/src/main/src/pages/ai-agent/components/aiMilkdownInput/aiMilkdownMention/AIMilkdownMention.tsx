@@ -7,12 +7,14 @@ import { useInstance } from '@milkdown/react'
 import { useNodeViewContext, usePluginViewContext } from '@prosemirror-adapter/react'
 import { useClickAway, useCreation, useDebounceEffect, useKeyPress, useMemoizedFn } from 'ahooks'
 import styles from './AIMilkdownMention.module.scss'
+import { PANEL_GAP, PANEL_OFFSET_UP, PANEL_WIDTH_EXTRA_EACH } from '../constants'
 import { iconMap } from '@/pages/ai-agent/defaultConstant'
 import { AIChatMention } from '../../aiChatMention/AIChatMention'
 import type { AIChatMentionProps, AIChatMentionSelectItem, AIMentionTypeItem } from '../../aiChatMention/type'
 import { callCommand } from '@milkdown/kit/utils'
 import { aiMentionCommand, type AIMentionCommandParams } from './aiMentionPlugin'
 import { extractMentionFilterKeyword } from './mentionQuery'
+import { tryClaimMilkdownPopup, releaseMilkdownPopup } from '../panelMutex'
 import classNames from 'classnames'
 import { removeAIOffsetCommand } from '../customPlugin'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -26,13 +28,6 @@ interface AIMilkdownMentionProps {
 }
 
 const mentionTarget = '@'
-/** 主聊天输入外壳；无外壳时回退到 milkdown 容器 */
-const PANEL_GAP = 8
-/** 相对输入框再上移，避免贴边 */
-const PANEL_OFFSET_UP = 6
-/** 相对输入框左右各外扩，整体更宽 */
-const PANEL_WIDTH_EXTRA_EACH = 8
-
 export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
   const { onMemfitExtra, filterMode } = props
   const ref = useRef<HTMLDivElement>(null)
@@ -87,10 +82,11 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
   }, [])
 
   const getInputAnchor = useMemoizedFn((): HTMLElement | null => {
-    // 必须先找外层输入框：combined closest 会命中更近的 .ai-milkdown-input
+    // CSS Modules 会把 ai-chat-textarea 哈希掉，不能写死 class 名；用 data 锚到整张输入卡片（含标签行）
     return (
-      (view.dom.closest('.ai-chat-textarea') as HTMLElement | null) ||
-      (view.dom.closest('.ai-milkdown-input') as HTMLElement | null) ||
+      (view.dom.closest('[data-ai-input-card]') as HTMLElement | null) ||
+      (view.dom.closest('[class*="ai-chat-textarea"]') as HTMLElement | null) ||
+      (view.dom.closest('[class*="ai-milkdown-input"]') as HTMLElement | null) ||
       (view.dom.parentElement as HTMLElement | null)
     )
   })
@@ -108,10 +104,47 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     el.style.maxHeight = `${Math.max(180, box.top - gap * 2)}px`
     el.style.left = `${box.left - PANEL_WIDTH_EXTRA_EACH}px`
     el.style.right = 'auto'
+    el.style.position = 'fixed'
     el.style.top = 'auto'
+    el.style.transform = 'none'
     // fixed + bottom：弹层底边固定在输入框上方，内容只往上伸展
     el.style.bottom = `${window.innerHeight - box.top + gap}px`
   })
+
+  // 标签行出现/消失会抬高输入卡片，弹层打开时跟着重算，避免挡住
+  useEffect(() => {
+    if (!visible) return
+    const el = ref.current
+    const anchor = getInputAnchor()
+    if (!el || !anchor) return
+
+    const reassert = () => {
+      // Milkdown SlashProvider 用 floating-ui 按光标写 top，会盖掉贴卡片顶的定位；这里持续压回去
+      requestAnimationFrame(() => syncMentionPosition())
+    }
+
+    const ro = new ResizeObserver(reassert)
+    ro.observe(anchor)
+
+    const mo = new MutationObserver(() => {
+      if (el.style.top && el.style.top !== 'auto') reassert()
+    })
+    mo.observe(el, { attributes: true, attributeFilter: ['style'] })
+
+    window.addEventListener('resize', syncMentionPosition)
+    // 立刻一次，并在 floating-ui 默认 debounce(200) 之后再压一次
+    syncMentionPosition()
+    const t1 = window.setTimeout(reassert, 0)
+    const t2 = window.setTimeout(reassert, 220)
+
+    return () => {
+      ro.disconnect()
+      mo.disconnect()
+      window.removeEventListener('resize', syncMentionPosition)
+      window.clearTimeout(t1)
+      window.clearTimeout(t2)
+    }
+  }, [visible])
 
   useDebounceEffect(
     () => {
@@ -123,9 +156,17 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
         setFilterKeyword('')
         setVisible(false)
         slashProvider.current.hide()
+        releaseMilkdownPopup('mention')
         return
       }
 
+      // 若 / ModeSlash 已占有，@ 只作为 ModeSlash 筛选，不抢开 mention
+      if (!tryClaimMilkdownPopup('mention')) {
+        setFilterKeyword('')
+        setVisible(false)
+        slashProvider.current.hide()
+        return
+      }
       setFilterKeyword(keyword)
       slashProvider.current.show()
       setVisible(true)
@@ -165,6 +206,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     view.focus()
     // 关闭窗口
     slashProvider.current?.hide()
+    releaseMilkdownPopup('mention')
   })
 
   return createPortal(

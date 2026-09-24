@@ -40,4 +40,35 @@ describe('formatAIAgentSetting', () => {
     })
     expect(result.Strategy?.GoalMinIterations).toBe(5)
   })
+
+  it('Strategy.GoalDurationSeconds 缺字段时回落默认 0', () => {
+    const result = formatAIAgentSetting({
+      ...AIAgentSettingDefault,
+      Strategy: { EnableGoalMode: true },
+    })
+    expect(result.Strategy?.GoalDurationSeconds).toBe(AIAgentSettingDefault.Strategy?.GoalDurationSeconds)
+    expect(result.Strategy?.GoalDurationSeconds).toBe(0)
+  })
+
+  it('Strategy.GoalAcceptanceCriteria 缺字段时回落默认空串', () => {
+    const result = formatAIAgentSetting({
+      ...AIAgentSettingDefault,
+      Strategy: { EnableGoalMode: true },
+    })
+    expect(result.Strategy?.GoalAcceptanceCriteria).toBe(AIAgentSettingDefault.Strategy?.GoalAcceptanceCriteria)
+    expect(result.Strategy?.GoalAcceptanceCriteria).toBe('')
+  })
+
+  it('Strategy.GoalDurationSeconds / GoalAcceptanceCriteria 显式值原样透传', () => {
+    const result = formatAIAgentSetting({
+      ...AIAgentSettingDefault,
+      Strategy: {
+        ...AIAgentSettingDefault.Strategy,
+        GoalDurationSeconds: 3600,
+        GoalAcceptanceCriteria: '接口 200',
+      },
+    })
+    expect(result.Strategy?.GoalDurationSeconds).toBe(3600)
+    expect(result.Strategy?.GoalAcceptanceCriteria).toBe('接口 200')
+  })
 })

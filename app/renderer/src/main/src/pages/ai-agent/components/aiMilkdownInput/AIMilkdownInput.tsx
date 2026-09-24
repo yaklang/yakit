@@ -24,6 +24,7 @@ import {
   aiMentionCustomPlugin,
   aiMentionCustomSchema,
 } from './aiMilkdownMention/aiMentionPlugin'
+import { AIMilkdownModeSlash, aiModeSlashFactory } from './aiMilkdownModeSlash/AIMilkdownModeSlash'
 import directive from 'remark-directive'
 import { useMemoizedFn } from 'ahooks'
 import { aiCustomPlugin } from './customPlugin'
@@ -154,6 +155,16 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             })
           },
         ].flat()
+        const modeSlashPlugin = [
+          aiModeSlashFactory,
+          (ctx: Ctx) => () => {
+            ctx.set(aiModeSlashFactory.key, {
+              view: pluginViewFactory({
+                component: () => <AIMilkdownModeSlash />,
+              }),
+            })
+          },
+        ].flat()
         const codeBlockPlugin = [
           ...aiCodeBlockCustomPlugin(),
           $view(aiCodeBlockCustomSchema.node, () =>
@@ -224,6 +235,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             .use(listener)
             // mention 提及@
             .use(mentionPlugin)
+            // 模式选择 /
+            .use(modeSlashPlugin)
             // http flow 流量标签
             .use(httpFlowPlugin)
             // ```codePlugin```

@@ -10,6 +10,7 @@ import {
   DocumentTextOutlined,
   EarOffOutlined,
   FolderOpenOutlined,
+  Goal2Outlined,
   MCPOutlined,
   PointerOutlined,
   TemplateOutlined,
@@ -32,7 +33,7 @@ import {
   SiliconFlowWithBackgroundAiModelColorful,
   TongyiWithBackgroundAiModelColorful,
 } from '@yakit-libs/yakit-ui-icons/colorful'
-import type { AIAgentGrpcApi } from '../ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi, AIExecutionStrategy } from '../ai-re-act/hooks/grpcApi'
 import { AISourceEnum, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
 import {
   CursorClickSolid,
@@ -160,9 +161,25 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     EnableGoalMode: false,
     GoalMinIterations: 0,
     MaxSubAgents: 0,
+    GoalDurationSeconds: 0,
+    GoalAcceptanceCriteria: '',
   },
   DisableMemoryTriage: false,
   Source: AISourceEnum.aiAgent,
+}
+
+/** 关闭 Goal：关 gate 并清空三选一字段（模式切换 / 关标签共用，避免散落字面量漏改） */
+export const clearGoalStrategy = (): Pick<
+  AIExecutionStrategy,
+  'EnableGoalMode' | 'GoalMinIterations' | 'GoalDurationSeconds' | 'GoalAcceptanceCriteria'
+> => {
+  const strategy = AIAgentSettingDefault.Strategy
+  return {
+    EnableGoalMode: false,
+    GoalMinIterations: strategy?.GoalMinIterations ?? 0,
+    GoalDurationSeconds: strategy?.GoalDurationSeconds ?? 0,
+    GoalAcceptanceCriteria: strategy?.GoalAcceptanceCriteria ?? '',
+  }
 }
 
 /** mcp 自定义服务器配置类型选项 */
@@ -335,6 +352,8 @@ export const iconMap = {
   knowledgeBase: <BookOpenTextOutlined color="currentColor" />,
   focusMode: <BookOpenTextOutlined color="currentColor" />,
   browser: <ChromeOutlined color="currentColor" />,
+  goal: <Goal2Outlined color="currentColor" />,
+  multiAgent: <BoxOutlined color="currentColor" />,
 }
 
 export enum AttachedResourceTypeEnum {

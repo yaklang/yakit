@@ -192,6 +192,10 @@ export interface AIExecutionStrategy {
   GoalMinIterations?: number
   /** Multi 模式下单次 dispatch 子 Agent 数量，<=0 由服务端默认；服务端硬上限 20 */
   MaxSubAgents?: number
+  /** Goal 时间窗口（秒）：>0 窗口内拒 finish；-1 永不自动放开；0 不启时间 gate */
+  GoalDurationSeconds?: number
+  /** Goal 验收条件；非空时 finish 需过 LLM review；空串不启验收 gate */
+  GoalAcceptanceCriteria?: string
 }
 
 export interface AIEnabledCapability {
@@ -205,12 +209,7 @@ export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AgreePolicy = 'AgreePolicy',
   HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
   HotPatchType_EnablePlan = 'EnablePlan',
-  /**
-   * 预留：Strategy 执行策略热更新。
-   * 目前策略侧暂不支持热更新，前端 onSetStrategy 仅写回本地 setting 与会话 StartParams；
-   * 后端支持热加载后，在 onSetStrategy 中启用该 hotpatch 调用即可。
-   */
-  HotPatchType_Strategy = 'Strategy',
+  HotPatchType_Strategy = 'ExecutionStrategy',
 
   HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
   HotPatchType_DisabledCapabilities = 'DisabledCapabilities',

@@ -55,6 +55,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
+import { StrategySetupTags, useHasStrategySetupTags } from './StrategySetupTags'
 import {
   aiHttpFlowCustomSchema,
   type AIHttpFlowCommandParams,
@@ -160,6 +161,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     const [disabled, setDisabled] = useState<boolean>(!defaultValue?.trim())
     const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
+    const hasStrategySetupTags = useHasStrategySetupTags()
     const httpFlowReference: AIHttpFlowCommandParams = {
       flowIds: [...selectedHttpFlowIds],
       displayText:
@@ -410,6 +412,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     return (
       <div
+        data-ai-input-card
         className={classNames(
           styles['ai-chat-textarea'],
           {
@@ -422,8 +425,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       >
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
         <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
-          {selectedHttpFlowIds.length > 0 && (
+          {(hasStrategySetupTags || selectedHttpFlowIds.length > 0) && (
             <div className={styles['http-flow-references']}>
+              <StrategySetupTags />
               {httpFlowReference.isSummary ? (
                 <YakitPopover
                   trigger="hover"

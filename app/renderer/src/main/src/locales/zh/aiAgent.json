@@ -747,8 +747,35 @@
     "switchToSource": "切换源码模式"
   },
   "AIMilkdownInput": {
-    "placeholder": "向我提问，@使用技能、工具、文件和知识库",
+    "placeholder": "向我提问，@使用技能、工具、文件和知识库，/选择模式",
     "selectedHttpFlowSummary": "勾选了 {{count}} 条流量"
+  },
+  "AIMilkdownModeSlash": {
+    "selectMode": "请选择模式",
+    "selectGoalMode": "请选择目标模式",
+    "plan": "Plan",
+    "multiAgent": "Multi-Agent",
+    "goal": "Goal",
+    "minIterations": "最小迭代次数",
+    "minIterationsTip": "至少为 1",
+    "minIterationsPrefix": "最小迭代次数: {{value}}",
+    "acceptanceOption": "验收条件（文本描述）",
+    "acceptance": "验收条件",
+    "acceptancePlaceholder": "请描述一下验收条件...",
+    "acceptancePrefix": "验收条件: {{value}}",
+    "durationOption": "持续时间（设置“继续深入”时间来增加轮次）",
+    "duration": "持续时间",
+    "durationPrefix": "持续时间: {{value}}",
+    "durationNever": "永不停止",
+    "subAgentCount": "子 Agent 数量",
+    "subAgentCountTip": "<=0 时由服务端使用默认值；最大 20",
+    "subAgentCountPrefix": "子 Agent 数量: {{value}}",
+    "setGoal": "设置目标",
+    "setSubAgentCount": "设置子 Agent 数量"
+  },
+  "AIRunModeSelect": {
+    "mode": "模式",
+    "multiMode": "多模式"
   },
   "AITaskQuery": {
     "taskQueue": "任务队列",

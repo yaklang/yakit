@@ -115,6 +115,9 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
       EnableGoalMode: setting.Strategy?.EnableGoalMode ?? AIAgentSettingDefault.Strategy?.EnableGoalMode,
       GoalMinIterations: setting.Strategy?.GoalMinIterations ?? AIAgentSettingDefault.Strategy?.GoalMinIterations,
       MaxSubAgents: setting.Strategy?.MaxSubAgents ?? AIAgentSettingDefault.Strategy?.MaxSubAgents,
+      GoalDurationSeconds: setting.Strategy?.GoalDurationSeconds ?? AIAgentSettingDefault.Strategy?.GoalDurationSeconds,
+      GoalAcceptanceCriteria:
+        setting.Strategy?.GoalAcceptanceCriteria ?? AIAgentSettingDefault.Strategy?.GoalAcceptanceCriteria,
     }
 
     if (setting?.AllowPlanUserInteract) {

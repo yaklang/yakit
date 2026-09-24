@@ -747,8 +747,35 @@
     "switchToSource": "Switch to source mode"
   },
   "AIMilkdownInput": {
-    "placeholder": "Ask me anything, @ to use skills, tools, files and knowledge base",
+    "placeholder": "Ask me anything, @ for skills/tools/files/knowledge, / for mode",
     "selectedHttpFlowSummary": "Selected {{count}} HTTP flows"
+  },
+  "AIMilkdownModeSlash": {
+    "selectMode": "Select a mode",
+    "selectGoalMode": "Select a goal mode",
+    "plan": "Plan",
+    "multiAgent": "Multi-Agent",
+    "goal": "Goal",
+    "minIterations": "Minimum iterations",
+    "minIterationsTip": "Must be at least 1",
+    "minIterationsPrefix": "Minimum iterations: {{value}}",
+    "acceptanceOption": "Acceptance criteria (text)",
+    "acceptance": "Acceptance criteria",
+    "acceptancePlaceholder": "Describe the acceptance criteria...",
+    "acceptancePrefix": "Acceptance criteria: {{value}}",
+    "durationOption": "Duration (set a “go deeper” window to add rounds)",
+    "duration": "Duration",
+    "durationPrefix": "Duration: {{value}}",
+    "durationNever": "Never stop",
+    "subAgentCount": "Sub-agent count",
+    "subAgentCountTip": "<=0 uses the server default; max 20",
+    "subAgentCountPrefix": "Sub-agent count: {{value}}",
+    "setGoal": "Set goal",
+    "setSubAgentCount": "Set sub-agent count"
+  },
+  "AIRunModeSelect": {
+    "mode": "Mode",
+    "multiMode": "Multi-mode"
   },
   "AITaskQuery": {
     "taskQueue": "Task Queue",
