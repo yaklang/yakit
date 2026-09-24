@@ -1456,7 +1456,7 @@ interface MoreYaklangVersionProps {
   onClosePop: (visible: boolean) => void
 }
 /** @name 更多Yaklang版本 */
-const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
+export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
   const { moreYaklangVersionList, currentBuildType = 'full', onClosePop } = props
   const { t } = useI18nNamespaces(['layout'])
   const [versionList, setVersionList] = useState<string[]>(moreYaklangVersionList)

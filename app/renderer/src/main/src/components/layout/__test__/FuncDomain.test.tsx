@@ -27,12 +27,13 @@ vi.hoisted(() => {
 
 vi.mock('lottie-web', () => ({ default: vi.fn() }))
 
-import { act, render } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { startIdleVisibleInterval, queryRisks } = vi.hoisted(() => ({
+const { startIdleVisibleInterval, queryRisks, edition } = vi.hoisted(() => ({
   startIdleVisibleInterval: vi.fn(() => vi.fn()),
   queryRisks: vi.fn(),
+  edition: { community: true, yakit: true },
 }))
 
 vi.mock('@/utils/scheduleIdleTask', () => ({ startIdleVisibleInterval }))
@@ -84,11 +85,11 @@ vi.mock('@/utils/envfile', async (importOriginal) => {
     ...actual,
     isIRify: () => false,
     isCommunityEdition: () => true,
-    isCommunityYakit: () => true,
+    isCommunityYakit: () => edition.community,
     isEnpriTrace: () => false,
     isEnpriTraceAgent: () => false,
     isMemfit: () => false,
-    isYakit: () => true,
+    isYakit: () => edition.yakit,
     showDevTool: () => false,
     getReleaseEditionName: () => 'Yakit',
     getCurrentVersionSource: () => 'community',
@@ -218,7 +219,7 @@ vi.mock('@/hook/useHoldGRPCStream/useHoldGRPCStream', () => ({
   ],
 }))
 
-import { FuncDomain } from '../FuncDomain'
+import { FuncDomain, MoreYaklangVersion } from '../FuncDomain'
 import type { FuncDomainProp } from '../FuncDomain'
 
 const baseProps: FuncDomainProp = {
@@ -234,8 +235,39 @@ const baseProps: FuncDomainProp = {
   showProjectManage: false,
 }
 
+describe('MoreYaklangVersion 轻量选项', () => {
+  beforeEach(() => {
+    edition.community = true
+    edition.yakit = true
+  })
+
+  const slimRadio = () => screen.getByRole('radio', { name: 'MoreYaklangVersion.slimVersion' })
+
+  it('社区版初始为轻量，当前引擎变成全量后仍保持轻量', () => {
+    const { rerender } = render(
+      <MoreYaklangVersion moreYaklangVersionList={['1.4.8-beta19']} currentBuildType="slim" onClosePop={vi.fn()} />,
+    )
+    expect(slimRadio()).toBeChecked()
+
+    rerender(
+      <MoreYaklangVersion moreYaklangVersionList={['1.4.8-beta19']} currentBuildType="full" onClosePop={vi.fn()} />,
+    )
+    expect(slimRadio()).toBeChecked()
+  })
+
+  it('非社区版初始为全量', () => {
+    edition.community = false
+    render(
+      <MoreYaklangVersion moreYaklangVersionList={['1.4.8-beta19']} currentBuildType="full" onClosePop={vi.fn()} />,
+    )
+    expect(screen.getByRole('radio', { name: 'MoreYaklangVersion.standardVersion' })).toBeChecked()
+  })
+})
+
 describe('FuncDomain 风险轮询卸载竞态', () => {
   beforeEach(() => {
+    edition.community = true
+    edition.yakit = true
     vi.clearAllMocks()
   })
 

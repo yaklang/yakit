@@ -31,6 +31,7 @@ const {
   fetchEngineBuildType,
   readBundledEngineBuildType,
   resolveEngineBuildType,
+  resolveLocalDownloadedEngineVersion,
   writeEngineBuildType,
 } = require('../engineVersion')
 
@@ -106,6 +107,14 @@ describe('engine build type on legacy packs', () => {
     expect(await resolveEngineBuildType('1.4.8-beta19', fetchHash)).toBe('slim')
     expect(fetchHash).toHaveBeenCalledWith('slim/1.4.8-beta19', { timeout: 3000 })
     expect(fs.readFileSync(path.join(paths.engineDir, 'engine-build-type.txt'), 'utf8')).toBe('slim')
+  })
+
+  it('prefers the slim cache, then the full cache, otherwise empty', () => {
+    expect(resolveLocalDownloadedEngineVersion('slim/1.4.8-beta19')).toBe('')
+    fs.writeFileSync(path.join(paths.engineDir, 'yak-1.4.8-beta19'), 'full')
+    expect(resolveLocalDownloadedEngineVersion('slim/1.4.8-beta19')).toBe('1.4.8-beta19')
+    fs.writeFileSync(path.join(paths.engineDir, 'yak-slim-1.4.8-beta19'), 'slim')
+    expect(resolveLocalDownloadedEngineVersion('slim/1.4.8-beta19')).toBe('slim/1.4.8-beta19')
   })
 
   it('reads the bundled build type and falls back to full', () => {
