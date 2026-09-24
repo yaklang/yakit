@@ -90,14 +90,14 @@ afterEach(() => {
 describe('文件系统侧栏', () => {
   it('仅 AI Artifacts 统计独立文件，排除目录，移除文件后归零', async () => {
     aiPaths.push({ path: 'report.txt', isFolder: false })
-    const result = render(<FileTreeList setSelected={vi.fn()} onClose={vi.fn()} />)
+    const result = render(<FileTreeList setSelected={vi.fn()} />)
     const aiTitle = screen.getByText('FileTreeSystem.aiArtifacts').parentElement!
     const openedTitle = screen.getByText('FileTreeSystem.myOpenedFiles').parentElement!
     await waitFor(() => expect(within(aiTitle).getByText('1')).toBeInTheDocument())
     expect(openedTitle.querySelector('.ant-tag')).toBeNull()
 
     aiPaths.splice(1, 1)
-    result.rerender(<FileTreeList setSelected={vi.fn()} onClose={vi.fn()} />)
+    result.rerender(<FileTreeList setSelected={vi.fn()} />)
     await waitFor(() =>
       expect(within(screen.getByText('FileTreeSystem.aiArtifacts').parentElement!).getByText('0')).toBeInTheDocument(),
     )
@@ -105,7 +105,7 @@ describe('文件系统侧栏', () => {
   })
 
   it('折叠 AI Artifacts 后文件统计仍随路径列表更新', async () => {
-    const result = render(<FileTreeList setSelected={vi.fn()} onClose={vi.fn()} />)
+    const result = render(<FileTreeList setSelected={vi.fn()} />)
     const aiTitle = screen.getByText('FileTreeSystem.aiArtifacts').parentElement!
     await screen.findByText('ai-output')
     expect(within(aiTitle).getByText('0')).toBeInTheDocument()
@@ -113,46 +113,44 @@ describe('文件系统侧栏', () => {
     expect(screen.queryByText('ai-output')).not.toBeInTheDocument()
 
     aiPaths.push({ path: 'report.txt', isFolder: false })
-    result.rerender(<FileTreeList setSelected={vi.fn()} onClose={vi.fn()} />)
+    result.rerender(<FileTreeList setSelected={vi.fn()} />)
     await waitFor(() => expect(within(aiTitle).getByText('1')).toBeInTheDocument())
   })
 
   it('切换到没有文件的新会话后总数归零', async () => {
     aiPaths.push({ path: 'report.txt', isFolder: false })
-    const result = render(<FileTreeList setSelected={vi.fn()} onClose={vi.fn()} />)
+    const result = render(<FileTreeList setSelected={vi.fn()} />)
     await waitFor(() =>
       expect(within(screen.getByText('FileTreeSystem.aiArtifacts').parentElement!).getByText('1')).toBeInTheDocument(),
     )
     session.id = 'empty-session'
     aiPaths.splice(0)
-    result.rerender(<FileTreeList setSelected={vi.fn()} onClose={vi.fn()} />)
+    result.rerender(<FileTreeList setSelected={vi.fn()} />)
     await waitFor(() =>
       expect(within(screen.getByText('FileTreeSystem.aiArtifacts').parentElement!).getByText('0')).toBeInTheDocument(),
     )
     expect(screen.queryByRole('button', { name: 'ai-output' })).not.toBeInTheDocument()
   })
 
-  it('头部独立于分屏且可以关闭，两个打开操作位于我打开的文件标题栏', async () => {
-    const onClose = vi.fn()
-    const { container } = render(<FileTreeList setSelected={vi.fn()} onClose={onClose} />)
+  it('头部独立于分屏，两个打开操作位于我打开的文件标题栏', async () => {
+    const { container } = render(<FileTreeList setSelected={vi.fn()} />)
     await screen.findByRole('button', { name: 'opened-file.txt' })
     const split = container.querySelector('[data-split-view-id]')!
     expect(split).not.toContainElement(screen.getByText('AITabs.fileSystem'))
     expect(split).toContainElement(screen.getByText('FileTreeSystem.aiArtifacts'))
     expect(split).toContainElement(screen.getByText('FileTreeSystem.myOpenedFiles'))
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'YakitButton.close' })).not.toBeInTheDocument()
     const openedHeader = screen.getByText('FileTreeSystem.myOpenedFiles').parentElement!.parentElement!
     fireEvent.click(within(openedHeader).getByRole('button', { name: 'YakitButton.openFile' }))
     expect(openFileFolder).toHaveBeenLastCalledWith(false)
     fireEvent.click(within(openedHeader).getByRole('button', { name: 'YakitButton.openFolder' }))
     expect(openFileFolder).toHaveBeenLastCalledWith(true)
-    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.close' }))
-    expect(onClose).toHaveBeenCalledOnce()
   })
 
   it('拖动真实 SplitView 分隔线调整两块高度，文件选择和拖拽回调仍生效', async () => {
     const setSelected = vi.fn()
-    const { container } = render(<FileTreeList setSelected={setSelected} onClose={vi.fn()} />)
+    const { container } = render(<FileTreeList setSelected={setSelected} />)
     const file = await screen.findByRole('button', { name: 'opened-file.txt' })
     const split = container.querySelector<HTMLElement>('[data-split-view-id]')!
     const sash = split.firstElementChild!.firstElementChild as HTMLElement

@@ -14,8 +14,6 @@ import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { BrowserInstancesPanel } from './browserInstances/BrowserInstancesPanel'
 import HistoryChat from './historyChat/HistoryChat'
 import { AI_AGENT_HISTORY_AI_SOURCES } from '../ai-re-act/hooks/useGetChatDataStoreKey'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { SideSettingButton } from './aiChatWelcome/AIChatWelcomeSideSetting'
 
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
@@ -79,18 +77,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
               aiSource={AI_AGENT_HISTORY_AI_SOURCES}
               title={t('AIRightPanel.sessionHistory')}
               hidePinButton
-              headerActionsExtra={
-                <>
-                  <SideSettingButton type="text2" />
-                  <YakitButton
-                    type="text2"
-                    title={t('YakitButton.close')}
-                    aria-label={t('YakitButton.close')}
-                    icon={<XOutlined />}
-                    onClick={() => setShow(false)}
-                  />
-                </>
-              }
+              headerActionsExtra={<SideSettingButton type="text2" />}
             />
           </div>
         )
@@ -98,7 +85,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
       case AIAgentTabListEnum.File:
         content = (
           <div className={styles['file-pane']}>
-            <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} onClose={() => setShow(false)} />
+            <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} />
           </div>
         )
         break

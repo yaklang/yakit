@@ -95,7 +95,7 @@ describe('文件系统添加路径（启用 React Compiler）', () => {
     { isFolder: false, path: 'new-file.txt', button: 'YakitButton.openFile', property: 'openFile' },
   ])('通过标题操作添加 $path 后立即显示', async ({ isFolder, path, button, property }) => {
     openDialog.mockResolvedValue({ filePaths: [path], canceled: false })
-    render(<FileTreeList setSelected={vi.fn()} onClose={vi.fn()} />)
+    render(<FileTreeList setSelected={vi.fn()} />)
     await screen.findByText('existing.txt')
     fireEvent.click(screen.getByRole('button', { name: button }))
     await waitFor(() => expect(customFolderStore.getSnapshot()).toContainEqual({ path, isFolder }))
