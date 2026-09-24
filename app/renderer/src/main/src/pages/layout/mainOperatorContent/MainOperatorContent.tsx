@@ -6973,10 +6973,10 @@ const CloseGroupContent: React.FC = React.memo(() => {
   return (
     <div className={styles['close-group-content']}>
       <div>{t('MainOperatorContent.closeGroupConfirm')}</div>
-      <label className={styles['close-group-check']}>
+      <div className={styles['close-group-check']}>
         <YakitCheckbox checked={tipChecked} onChange={(e) => onChecked(e.target.checked)} />
-        {t('YakitCheckbox.dontAskAgain')}
-      </label>
+        <span onClick={() => onChecked(!tipChecked)}>{t('YakitCheckbox.dontAskAgain')}</span>
+      </div>
     </div>
   )
 })

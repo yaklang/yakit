@@ -1114,7 +1114,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
             if (!isProcess) {
               const checked = curTags.includes(item.value)
               return (
-                <label
+                <div
                   className={classNames(styles['list-item'], {
                     [styles['list-item-active']]: checked,
                   })}
@@ -1124,20 +1124,19 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
                     checked={checked}
                     onChange={() => onTagItemClick(item)}
                     wrapperClassName={styles['list-item-checkbox']}
-                  >
-                    <span className={styles['list-item-left']}>
-                      <Tooltip title={item.label}>
-                        <span className={styles['item-title']}>{item.label}</span>
-                      </Tooltip>
-                    </span>
-                  </YakitCheckbox>
-                </label>
+                  />
+                  <span className={styles['list-item-left']} onClick={() => onTagItemClick(item)}>
+                    <Tooltip title={item.label}>
+                      <span className={styles['item-title']}>{item.label}</span>
+                    </Tooltip>
+                  </span>
+                </div>
               )
             }
 
             const checked = curProcess.includes(item.process)
             return (
-              <label
+              <div
                 className={classNames(styles['list-item'], {
                   [styles['list-item-active']]: checked,
                 })}
@@ -1147,15 +1146,14 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
                   checked={checked}
                   onChange={() => onProcessItemClick(item)}
                   wrapperClassName={styles['list-item-checkbox']}
-                >
-                  <span className={styles['list-item-left']}>
-                    {item.icon ? <span className={styles['item-icon']}>{item.icon}</span> : null}
-                    <Tooltip title={item.process}>
-                      <span className={styles['item-title']}>{item.process}</span>
-                    </Tooltip>
-                  </span>
-                </YakitCheckbox>
-              </label>
+                />
+                <span className={styles['list-item-left']} onClick={() => onProcessItemClick(item)}>
+                  {item.icon ? <span className={styles['item-icon']}>{item.icon}</span> : null}
+                  <Tooltip title={item.process}>
+                    <span className={styles['item-title']}>{item.process}</span>
+                  </Tooltip>
+                </span>
+              </div>
             )
           })
         ) : (

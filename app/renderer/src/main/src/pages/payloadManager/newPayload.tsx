@@ -2230,9 +2230,10 @@ export const DeleteConfirm: React.FC<DeleteConfirmProps> = (props) => {
         title={t('DeleteConfirm.deleteConfirmTitle')}
         content={t('DeleteConfirm.deleteConfirmContent')}
         footerExtra={
-          <YakitCheckbox value={check} onChange={(e) => onCheck(e.target.checked)}>
-            {t('YakitCheckbox.dontRemindAgain')}
-          </YakitCheckbox>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <YakitCheckbox checked={check} onChange={(e) => onCheck(e.target.checked)} />
+            <span onClick={() => onCheck(!check)}>{t('YakitCheckbox.dontRemindAgain')}</span>
+          </div>
         }
         onOk={() => {
           onFinish()

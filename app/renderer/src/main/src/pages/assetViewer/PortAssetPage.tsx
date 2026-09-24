@@ -391,7 +391,7 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                 {item.GroupLists.map((listItem) => {
                   const checked = (queryList[item.GroupName] || []).includes(listItem.ServiceType)
                   return (
-                    <label
+                    <div
                       className={classNames(styles['list-item'], {
                         [styles['list-item-active']]: checked,
                       })}
@@ -402,10 +402,15 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
                           checked={checked}
                           onChange={(e) => onSelect(item.GroupName, listItem.ServiceType, e.target.checked)}
                         />
-                        <span className="content-ellipsis">{listItem.ShowServiceType}</span>
+                        <span
+                          className="content-ellipsis"
+                          onClick={() => onSelect(item.GroupName, listItem.ServiceType, !checked)}
+                        >
+                          {listItem.ShowServiceType}
+                        </span>
                       </div>
                       <span className={styles['list-item-extra']}>{listItem.Total}</span>
-                    </label>
+                    </div>
                   )
                 })}
               </YakitPanel>

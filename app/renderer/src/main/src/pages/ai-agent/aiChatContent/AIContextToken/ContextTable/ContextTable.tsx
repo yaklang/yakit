@@ -47,7 +47,7 @@ const RoleFilterDropdown: React.FC<{
           const value = String(item.value)
 
           return (
-            <label className={styles['filter-option']} key={value}>
+            <div className={styles['filter-option']} key={value}>
               <YakitCheckbox
                 checked={activeKeys.includes(value)}
                 onChange={(event) => {
@@ -57,10 +57,19 @@ const RoleFilterDropdown: React.FC<{
                     setSelectedKeys(activeKeys.filter((k) => k !== value))
                   }
                 }}
+              />
+              <span
+                onClick={() => {
+                  if (activeKeys.includes(value)) {
+                    setSelectedKeys(activeKeys.filter((k) => k !== value))
+                  } else {
+                    setSelectedKeys([...activeKeys, value])
+                  }
+                }}
               >
                 {item.text}
-              </YakitCheckbox>
-            </label>
+              </span>
+            </div>
           )
         })}
       </div>
