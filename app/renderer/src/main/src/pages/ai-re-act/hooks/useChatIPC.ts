@@ -6,22 +6,16 @@ import type { AIChatSendParams } from './type'
 import { useMemoizedFn } from 'ahooks'
 import type { UseChatIPCStartParams } from '@/pages/ai-agent/useContext/AIAgentContext'
 import type { YakitRouteType } from '@/enums/yakitRoute'
-import { yakitNotify } from '@/utils/notification'
 import type { AIOutputEvent } from './grpcApi'
 
 const { ipcRenderer } = window.require('electron')
 
 export function useChatIPC(route: YakitRouteType, pageId: string) {
   /**
-   * isSessionReady 已连则直接返回（不动已有监听）→ 用入参 token 挂监听 → handleStartSession
+   * 用入参 token 挂监听 → handleStartSession（已连则复用/换绑 pageId）
    * prepare 异步，invoke 晚于本同步栈挂监听，不会丢流；token 不依赖 React 闭包里的 SessionID
    */
   const onStart = useMemoizedFn(({ token, params, localSource, onLinkStart, onLinkSuccess }: UseChatIPCStartParams) => {
-    if (globalSessionEngine.isSessionReady(token)) {
-      yakitNotify('warning', '会话已经存在，请勿重复建立！')
-      return
-    }
-
     /** 监听闭包绑定本轮 meta，已排队的旧 IPC 回调不能操作同 ID 的新连接。 */
     let connection: ReturnType<ChatMultiSessionController['ensureSession']>['meta'] | undefined
     const isCurrentConnection = () =>
