@@ -299,4 +299,24 @@ describe('HistoryChatList viewport rendering', () => {
     expect(mocks.setActiveChat).toHaveBeenCalledWith(data[0])
     expect(errors.mock.calls.some((args) => args.some((value) => String(value).includes('same key')))).toBe(false)
   })
+
+  it('选中历史会话时从 StartParams 恢复 SingleModelMode', async () => {
+    const data = [
+      {
+        ...sessions[0],
+        SessionID: 'sess-single-model',
+        Title: 'Single Model Session',
+        StartParams: { SingleModelMode: true, EnablePlan: false },
+      },
+    ] as AISession[]
+    render(view('', data))
+    fireEvent.click(await screen.findByText('Single Model Session'))
+    expect(mocks.setActiveChat).toHaveBeenCalledWith(data[0])
+    expect(mocks.setSetting).toHaveBeenCalled()
+    const updater = mocks.setSetting.mock.calls[0][0] as (old: Record<string, unknown>) => Record<string, unknown>
+    expect(updater({ SingleModelMode: false, EnablePlan: true })).toMatchObject({
+      SingleModelMode: true,
+      EnablePlan: false,
+    })
+  })
 })

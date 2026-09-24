@@ -1,13 +1,16 @@
 import userEvent from '@testing-library/user-event'
-import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 // 先注册 electron stub，避免 '../utils' 顶层 window.require('electron') 报错
 import '../../../../ai-re-act/hooks/__test__/setupElectron'
 import AIScheduledTasksDetail from '../AIScheduledTasksDetail'
 import type { AIReActSchedule } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AISession } from '../../../type/aiChat'
 
 const mockGetAIReActSchedule = vi.fn()
+const mockQueryAISession = vi.fn()
+const mockSetSetting = vi.fn()
+const mockSetActiveChat = vi.fn()
 
 vi.mock('../../utils', () => ({
   grpcGetAIReActSchedule: (...args: unknown[]) => mockGetAIReActSchedule(...args),
@@ -15,12 +18,16 @@ vi.mock('../../utils', () => ({
   grpcSetAIReActScheduleEnabled: vi.fn(),
 }))
 
+vi.mock('../../../grpc', () => ({
+  grpcQueryAISession: (...args: unknown[]) => mockQueryAISession(...args),
+}))
+
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key }),
 }))
 
 vi.mock('../../../useContext/useDispatcher', () => ({
-  default: () => ({ setSetting: vi.fn(), setActiveChat: vi.fn() }),
+  default: () => ({ setSetting: mockSetSetting, setActiveChat: mockSetActiveChat }),
 }))
 
 const makeSchedule = (overrides: Partial<AIReActSchedule> = {}): AIReActSchedule => ({
@@ -45,6 +52,9 @@ const makeProps = (initialSchedule: AIReActSchedule) => ({
 describe('AIScheduledTasksDetail 数据同步', () => {
   beforeEach(() => {
     mockGetAIReActSchedule.mockReset()
+    mockQueryAISession.mockReset()
+    mockSetSetting.mockReset()
+    mockSetActiveChat.mockReset()
   })
 
   it('详情为纯 prop 视图：直接展示 initialSchedule，挂载不发起拉取与回写', () => {
@@ -117,5 +127,42 @@ describe('AIScheduledTasksDetail 数据同步', () => {
     // 模拟父组件回流新 prop，详情应展示启停后的最新数据
     rerender(<AIScheduledTasksDetail {...makeProps(latest)} onDataChange={onDataChange} />)
     await waitFor(() => expect(screen.getByText('after-toggle-name')).toBeInTheDocument())
+  })
+
+  it('打开关联会话时从 StartParams 恢复 SingleModelMode', async () => {
+    const related = {
+      SessionID: 'sess-linked',
+      Title: 'linked-chat',
+      Source: 'ai',
+      StartParams: { SingleModelMode: true, EnablePlan: true },
+    } as AISession
+    mockQueryAISession.mockResolvedValue({ Data: [related] })
+
+    render(
+      <AIScheduledTasksDetail
+        {...makeProps(
+          makeSchedule({
+            TargetMode: 'continue_session',
+            TargetSessionID: 'sess-linked',
+          }),
+        )}
+      />,
+    )
+
+    await waitFor(() => expect(mockQueryAISession).toHaveBeenCalled())
+    await waitFor(() => expect(screen.getByTitle('linked-chat')).toBeInTheDocument())
+
+    const titleRow = screen.getByTitle('linked-chat').closest('div')
+    const openBtn = titleRow?.querySelector('button')
+    expect(openBtn).toBeTruthy()
+    await userEvent.click(openBtn!)
+
+    await waitFor(() => expect(mockSetSetting).toHaveBeenCalled())
+    const updater = mockSetSetting.mock.calls[0][0] as (old: Record<string, unknown>) => Record<string, unknown>
+    expect(updater({ SingleModelMode: false })).toMatchObject({
+      SingleModelMode: true,
+      EnablePlan: true,
+    })
+    expect(mockSetActiveChat).toHaveBeenCalledWith(related)
   })
 })
