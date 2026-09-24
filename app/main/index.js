@@ -41,7 +41,7 @@ const {
   getCurrentLogFiles,
 } = require('./logFile')
 const { createRendererDiagnostics, settleWithin } = require('./rendererDiagnostics')
-const { createRendererRecovery } = require('./rendererRecovery')
+const { createRendererRecovery, sendToWindow } = require('./rendererRecovery')
 
 const BLOCKED_CHROMIUM_DEBUG_SWITCHES = ['remote-debugging-port', 'remote-debugging-address', 'remote-debugging-pipe']
 const BLOCKED_NODE_DEBUG_ARG_PREFIXES = ['--inspect', '--inspect-brk', '--inspect-port']
@@ -267,7 +267,7 @@ function createEngineLinkWindow() {
 
     e.preventDefault()
     if (engineLinkWin.isVisible()) {
-      engineLinkWin.webContents.send('close-engineLinkWin-renderer')
+      sendToWindow(engineLinkWin, 'close-engineLinkWin-renderer')
     }
   })
 
@@ -381,17 +381,17 @@ function createWindow() {
 
     e.preventDefault()
     if (win.isVisible()) {
-      win.webContents.send('close-windows-renderer')
+      sendToWindow(win, 'close-windows-renderer')
     }
   })
 
   win.on('minimize', () => {
-    win.webContents.send('refresh-token')
-    win.webContents.send('minimize-windows-renderer')
+    sendToWindow(win, 'refresh-token')
+    sendToWindow(win, 'minimize-windows-renderer')
   })
 
   win.on('maximize', () => {
-    win.webContents.send('refresh-token')
+    sendToWindow(win, 'refresh-token')
   })
 
   win.on('closed', () => {
@@ -418,7 +418,7 @@ function safeSend(targetWin, channel, data) {
     messageQueue.get(id).push({ channel, data })
     return
   }
-  targetWin.webContents.send(channel, data)
+  sendToWindow(targetWin, channel, data)
 }
 // render真正渲染出来
 function markRenderOk(curWin) {
@@ -429,7 +429,7 @@ function markRenderOk(curWin) {
   const queue = messageQueue.get(id) || []
 
   queue.forEach(({ channel, data }) => {
-    curWin.webContents.send(channel, data)
+    sendToWindow(curWin, channel, data)
   })
   messageQueue.delete(id)
 }
