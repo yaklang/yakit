@@ -210,7 +210,10 @@
     "loadingHistory": "获取历史数据中...",
     "waitingReply": "等待AI回复...",
     "questionExecuting": "问题执行中...",
-    "executingSessionsLimit": "进行中会话数已达上限，最多同时{{count}}个",
+    "executingSessionsLimitLoggedIn": "进行中会话数已达上限，最多同时{{count}}个",
+    "executingSessionsLimitLoggedOutPrefix": "进行中会话数已达上限，最多同时2个，",
+    "executingSessionsLimitLogin": "登录",
+    "executingSessionsLimitLoggedOutSuffix": "后可同时5个",
     "sessionClosing": "会话正在关闭...",
     "sessionClosed": "会话已关闭"
   },

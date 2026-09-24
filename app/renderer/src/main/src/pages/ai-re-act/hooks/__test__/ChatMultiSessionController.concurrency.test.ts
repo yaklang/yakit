@@ -133,7 +133,18 @@ describe('ChatMultiSessionController concurrency / working / close', () => {
       typeof payload === 'object' && payload && 'message' in payload
         ? (payload as { message: unknown }).message
         : payload
-    expect(String((msg as { props?: { children?: unknown } })?.props?.children ?? msg)).toContain('2')
+    const flattenText = (node: unknown): string => {
+      if (node == null || typeof node === 'boolean') return ''
+      if (typeof node === 'string' || typeof node === 'number') return String(node)
+      if (Array.isArray(node)) return node.map(flattenText).join('')
+      const children = (node as { props?: { children?: unknown } })?.props?.children
+      return flattenText(children)
+    }
+    const text = flattenText(msg)
+    expect(text).toContain('executingSessionsLimitLoggedOutPrefix')
+    expect(text).toContain('executingSessionsLimitLogin')
+    expect(text).toContain('executingSessionsLimitLoggedOutSuffix')
+    expect(tAgent).toHaveBeenCalledWith('AIChatLoading.executingSessionsLimitLogin')
 
     // 本会话已在执行中：不受上限拦截
     expect(ctrl.canStartExecutingSession('s1', true)).toBe(true)
