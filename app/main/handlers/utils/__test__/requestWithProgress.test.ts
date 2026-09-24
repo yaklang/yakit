@@ -49,7 +49,12 @@ Module._load = function (request, parent, isMain) {
   return originalLoad.call(this, request, parent, isMain)
 }
 
-const { requestWithProgress, yakitCancelRequestWithProgress } = require(${JSON.stringify(requestWithProgressPath)})
+const {
+  requestWithProgress,
+  yakitCancelRequestWithProgress,
+  engineCancelRequestWithProgress,
+  isDestBusy,
+} = require(${JSON.stringify(requestWithProgressPath)})
 const { createYakitDownloadTracker } = require(${JSON.stringify(trackerPath)})
 const tick = () => new Promise((resolve) => setImmediate(resolve))
 
@@ -140,6 +145,61 @@ const tick = () => new Promise((resolve) => setImmediate(resolve))
   if (writers.length !== writersBefore + 1) throw new Error('stale cancel intent poisoned the next download for same dest')
   writers.at(-1).emit('finish')
   await tick()
+
+  // pendingByDest：axios 在途时第二路同 dest 须立即 onError，且 isDestBusy 为 true
+  const pendingErrors = []
+  let resolvePending = null
+  pendingAxiosResolve = (resolve) => { resolvePending = resolve }
+  requestWithProgress('https://example.test/pending', 'pending.yakit', {}, undefined, undefined, (error) => pendingErrors.push(error))
+  await tick()
+  if (!isDestBusy('pending.yakit')) throw new Error('dest should be busy while axios pending')
+  requestWithProgress('https://example.test/pending2', 'pending.yakit', {}, undefined, undefined, (error) => pendingErrors.push(error))
+  if (pendingErrors.at(-1).message !== 'Download already in progress for pending.yakit') {
+    throw new Error('second download during pending was not rejected')
+  }
+  const data = new EventEmitter()
+  data.pipe = () => {}
+  resolvePending({ status: 200, headers: { 'content-length': '10' }, data })
+  await tick()
+  writers.at(-1).emit('finish')
+  await tick()
+  if (isDestBusy('pending.yakit')) throw new Error('dest should be free after finish')
+
+  // engineCancel：无 writer 时须 reject（不得静默 resolve），并暂存意图阻止随后建流
+  const engineErrors = []
+  let resolveEngine = null
+  pendingAxiosResolve = (resolve) => { resolveEngine = resolve }
+  // stub filePath / engineVersion for engineCancel dest computation
+  const Module2 = require('module')
+  const prevLoad = Module2._load
+  Module2._load = function (request, parent, isMain) {
+    if (request === '../../filePath' || request.endsWith('/filePath') || request.includes('filePath')) {
+      return { getYaklangEngineDir: () => '/engine' }
+    }
+    if (request === './engineVersion' || request.endsWith('/engineVersion') || request.includes('engineVersion')) {
+      return { getLocalEngineCacheName: (v) => 'yak-' + v }
+    }
+    return prevLoad.call(this, request, parent, isMain)
+  }
+  const pathMod = require('path')
+  const engineDest = pathMod.join('/engine', 'yak-v1.0.0')
+  requestWithProgress('https://example.test/engine', engineDest, {}, undefined, undefined, (error) => engineErrors.push(error))
+  await tick()
+  const writersBeforeEngine = writers.length
+  try {
+    await engineCancelRequestWithProgress('v1.0.0')
+    throw new Error('engine cancel before stream should reject')
+  } catch (error) {
+    if (error.message !== 'Write operation cancelled') throw error
+  }
+  const data2 = new EventEmitter()
+  data2.pipe = () => {}
+  resolveEngine({ status: 200, headers: { 'content-length': '10' }, data: data2 })
+  await tick()
+  if (writers.length !== writersBeforeEngine) throw new Error('engine writer created despite cancel intent')
+  if (engineErrors.at(-1).message !== 'Write operation cancelled') throw new Error('engine stream was not cancelled after window cancel')
+  Module2._load = prevLoad
+  pendingAxiosResolve = null
 })().catch((error) => {
   console.error(error)
   process.exitCode = 1
@@ -168,6 +228,28 @@ const { yakitCancelRequestWithProgress } = require(${JSON.stringify(requestWithP
 yakitCancelRequestWithProgress('never-started.yakit').then(
   () => { console.error('cancel before stream resolved silently'); process.exitCode = 1 },
   (error) => { process.exitCode = error.message === 'Write operation stoped' ? 0 : 1 },
+)
+`
+    expect(() => execFileSync(process.execPath, ['-e', snippet], { cwd: process.cwd(), stdio: 'pipe' })).not.toThrow()
+  })
+
+  it('rejects engine cancellation issued before the download stream is established', () => {
+    const snippet = String.raw`
+const Module = require('module')
+const path = require('path')
+const originalLoad = Module._load
+Module._load = function (request, parent, isMain) {
+  if (request === 'axios') return { get: () => new Promise(() => {}) }
+  if (request === 'fs') return { createWriteStream: () => { throw new Error('writer must not be created') }, unlinkSync: () => {} }
+  if (request === 'throttle-debounce') return { throttle: (_d, cb) => cb }
+  if (request.includes('filePath')) return { getYaklangEngineDir: () => '/engine' }
+  if (request.includes('engineVersion')) return { getLocalEngineCacheName: (v) => 'yak-' + v }
+  return originalLoad.call(this, request, parent, isMain)
+}
+const { engineCancelRequestWithProgress } = require(${JSON.stringify(requestWithProgressPath)})
+engineCancelRequestWithProgress('v1.2.3').then(
+  () => { console.error('engine cancel before stream resolved silently'); process.exitCode = 1 },
+  (error) => { process.exitCode = error.message === 'Write operation cancelled' ? 0 : 1 },
 )
 `
     expect(() => execFileSync(process.execPath, ['-e', snippet], { cwd: process.cwd(), stdio: 'pipe' })).not.toThrow()

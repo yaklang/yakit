@@ -506,26 +506,46 @@ module.exports = {
       return diagnosingYakVersion()
     })
 
+    const yakEngineDownloadTracker = createYakitDownloadTracker()
+
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version, event) => {
       return new Promise(async (resolve, reject) => {
+        const task = yakEngineDownloadTracker.start(event)
+        if (!task) {
+          reject(new Error('Yak engine download already in progress'))
+          return
+        }
+        const onFinished = () => {
+          clearCancelIntent(task.dest)
+          yakEngineDownloadTracker.clear(event, task)
+          resolve()
+        }
+        const onError = (error) => {
+          clearCancelIntent(task.dest)
+          yakEngineDownloadTracker.clear(event, task)
+          reject(error)
+        }
         try {
           const resolved = await resolveEngineDownloadVersion(version)
+          // 版本解析窗口期内已请求取消：不再发起下载
+          if (yakEngineDownloadTracker.isCancelRequested(event, task)) {
+            onError(new Error('Write operation cancelled'))
+            return
+          }
           const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
-          try {
-            fs.unlinkSync(dest)
-          } catch (e) {}
+          yakEngineDownloadTracker.setDest(event, task, dest)
           await downloadYakEngine(
             resolved,
             dest,
             (state) => {
               sendDownloadProgress(event, 'download-yak-engine-progress', state, win)
             },
-            resolve,
-            reject,
+            onFinished,
+            onError,
           )
         } catch (e) {
-          reject(e && e.message ? e.message : e)
+          onError(e && e.message ? e.message : e)
         }
       })
     }
@@ -575,7 +595,18 @@ module.exports = {
       return await asyncYakEngineVersionExistsAndCorrectness(version)
     })
     ipcMain.handle('cancel-download-yak-engine-version', async (e, version) => {
-      return await engineCancelRequestWithProgress(version)
+      // slim 产物缺失时下载会回退到同版本全量（writer 挂在解析后的 dest 上），
+      // 取消须用与下载一致的 resolveEngineDownloadVersion 结果定位 writer；解析失败退回原始版本
+      // 版本解析窗口期：dest 尚未可知时置取消标志并按已取消语义回执
+      const dest = yakEngineDownloadTracker.getDest(e)
+      if (!dest && yakEngineDownloadTracker.requestCancel(e)) {
+        throw new Error('Write operation cancelled')
+      }
+      let resolved = version
+      try {
+        resolved = await resolveEngineDownloadVersion(version)
+      } catch (err) {}
+      return await engineCancelRequestWithProgress(resolved)
     })
 
     const yakitDownloadTracker = createYakitDownloadTracker()
@@ -635,9 +666,6 @@ module.exports = {
             return
           }
           yakitDownloadTracker.setDest(event, task, dest)
-          try {
-            fs.unlinkSync(dest)
-          } catch (e) {}
 
           console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
           // 企业版下载
@@ -1266,26 +1294,46 @@ module.exports = {
       })
     })
 
+    const yakEngineDownloadTracker = createYakitDownloadTracker()
+
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version, event) => {
       return new Promise(async (resolve, reject) => {
+        const task = yakEngineDownloadTracker.start(event)
+        if (!task) {
+          reject(new Error('Yak engine download already in progress'))
+          return
+        }
+        const onFinished = () => {
+          clearCancelIntent(task.dest)
+          yakEngineDownloadTracker.clear(event, task)
+          resolve()
+        }
+        const onError = (error) => {
+          clearCancelIntent(task.dest)
+          yakEngineDownloadTracker.clear(event, task)
+          reject(error)
+        }
         try {
           const resolved = await resolveEngineDownloadVersion(version)
+          // 版本解析窗口期内已请求取消：不再发起下载
+          if (yakEngineDownloadTracker.isCancelRequested(event, task)) {
+            onError(new Error('Write operation cancelled'))
+            return
+          }
           const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
-          try {
-            fs.unlinkSync(dest)
-          } catch (e) {}
+          yakEngineDownloadTracker.setDest(event, task, dest)
           await downloadYakEngine(
             resolved,
             dest,
             (state) => {
               sendDownloadProgress(event, 'download-yak-engine-progress', state, win)
             },
-            resolve,
-            reject,
+            onFinished,
+            onError,
           )
         } catch (e) {
-          reject(e && e.message ? e.message : e)
+          onError(e && e.message ? e.message : e)
         }
       })
     }
@@ -1402,7 +1450,16 @@ module.exports = {
     })
 
     ipcMain.handle(ipcEventPre + 'cancel-download-yak-engine-version', async (e, version) => {
-      return await engineCancelRequestWithProgress(version)
+      // 同上：slim 回退全量时，取消须以解析后的版本定位 writer
+      const dest = yakEngineDownloadTracker.getDest(e)
+      if (!dest && yakEngineDownloadTracker.requestCancel(e)) {
+        throw new Error('Write operation cancelled')
+      }
+      let resolved = version
+      try {
+        resolved = await resolveEngineDownloadVersion(version)
+      } catch (err) {}
+      return await engineCancelRequestWithProgress(resolved)
     })
 
     ipcMain.handle(ipcEventPre + 'get-yakit-remote-auth-all', async (e, name) => {
@@ -1498,9 +1555,6 @@ module.exports = {
             return
           }
           yakitDownloadTracker.setDest(event, task, dest)
-          try {
-            fs.unlinkSync(dest)
-          } catch (e) {}
 
           console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
           // 企业版下载

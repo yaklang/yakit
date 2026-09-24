@@ -11,12 +11,32 @@ function encodeChineseCharacters(url) {
 const writersByDest = new Map()
 
 /**
+ * axios 在途 / 尚未建 writer 时占用 dest，防止第二路下载在建流前抢 dest
+ *（含 upgradeUtil 侧对同路径的 unlinkSync 竞态）。
+ */
+const pendingByDest = new Set()
+
+/**
  * 取消先于下载流建立（URL 解析 / axios 在途）时记录的取消意图，按 dest 暂存；
  * requestWithProgress 在建 writer 前消费，保证「取消永远有效」。
  * 任务收尾（requestWithProgress 出口 / upgradeUtil onError）时清理，
  * 避免残留意图毒化用户下一次同 dest 的下载。
  */
 const cancelRequestedByDest = new Set()
+
+function isDestBusy(dest) {
+  return writersByDest.has(dest) || pendingByDest.has(dest)
+}
+
+function reserveDest(dest) {
+  if (isDestBusy(dest)) return false
+  pendingByDest.add(dest)
+  return true
+}
+
+function releaseDest(dest) {
+  pendingByDest.delete(dest)
+}
 
 function buildProgressState({ startedAt, totalLength, downloadedLength }) {
   const total = Number(totalLength) || 0
@@ -64,6 +84,13 @@ function requestWithProgress(
   onError = undefined,
   isEncodeURI = true,
 ) {
+  // 在 axios.get 之前占用 dest，避免第二路下载在流建立前 unlink / 抢写同一文件
+  if (writersByDest.has(dest) || pendingByDest.has(dest)) {
+    onError && onError(new Error(`Download already in progress for ${dest}`))
+    return
+  }
+  pendingByDest.add(dest)
+
   const config = {
     ...options,
     responseType: 'stream',
@@ -79,23 +106,27 @@ function requestWithProgress(
     .get(u, config)
     .then((response) => {
       if (response.status === 404) {
-        // 404 不建 writer：清理窗口期暂存的取消意图，避免毒化下次同 dest 下载
+        // 404 不建 writer：清理窗口期暂存的取消意图与 pending，避免毒化下次同 dest 下载
+        pendingByDest.delete(dest)
         cancelRequestedByDest.delete(dest)
         onError && onError(new Error(`404 not found in ${downloadUrl}`))
         return
       }
 
       if (writersByDest.has(dest)) {
+        pendingByDest.delete(dest)
         throw new Error(`Download already in progress for ${dest}`)
       }
 
       // 取消先于流建立到达：消费暂存的取消意图，不建 writer 直接失败
       if (cancelRequestedByDest.has(dest)) {
         cancelRequestedByDest.delete(dest)
+        pendingByDest.delete(dest)
         throw new Error('Write operation cancelled')
       }
 
       const writer = fs.createWriteStream(dest)
+      pendingByDest.delete(dest)
       writersByDest.set(dest, writer)
       const totalLength = response.headers['content-length']
       let downloadedLength = 0
@@ -148,10 +179,12 @@ function requestWithProgress(
       })
     })
     .then(() => {
+      pendingByDest.delete(dest)
       onFinished && onFinished()
     })
     .catch((error) => {
-      // 窗口期取消后请求失败：同样清理暂存意图，避免毒化下次同 dest 下载
+      // 窗口期取消后请求失败：同样清理暂存意图与 pending，避免毒化下次同 dest 下载
+      pendingByDest.delete(dest)
       cancelRequestedByDest.delete(dest)
       destroyWriter(dest, error)
       console.info(error.message)
@@ -207,9 +240,11 @@ function engineCancelRequestWithProgress(version) {
       })
       destroyWriter(dest, new Error('Write operation cancelled'))
     } else {
-      // exact dest writer missing — do not guess unrelated writers
+      // exact dest writer missing — 与 yakitCancel 对齐：暂存取消意图并 reject，
+      // 避免 URL/版本解析窗口期内取消静默 resolve
       console.info(`engineCancelRequestWithProgress: no writer for ${dest}`)
-      settle(resolve)
+      cancelRequestedByDest.add(dest)
+      settle(reject, new Error('Write operation cancelled'))
     }
   })
 }
@@ -254,4 +289,7 @@ module.exports = {
   cancelRequestProgress,
   buildProgressState,
   clearCancelIntent,
+  isDestBusy,
+  reserveDest,
+  releaseDest,
 }
