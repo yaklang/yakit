@@ -28,24 +28,10 @@
   width: 100%;
   background-color: var(--Colors-Use-Basic-Background);
 }
-.ai-side-list-mini {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 9;
-  width: 24px;
-  height: 100%;
-}
-.ai-side-list-mini-expand {
-  width: 360px;
-}
 .ai-agent-chat {
   flex: 1;
   height: 100%;
   overflow: hidden;
-}
-.ai-agent-chat-mini {
-  padding-left: 26px;
 }
 
 /* ---------- AIAgentSideList ----------*/
