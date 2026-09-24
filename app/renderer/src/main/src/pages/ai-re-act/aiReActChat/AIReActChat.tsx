@@ -1,7 +1,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 
 import styles from './AIReActChat.module.scss'
-import type { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
+import type { AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
 import { AIReActChatContents } from '../aiReActChatContents/AIReActChatContents'
 import type { AIReActChatContentsRef } from '../aiReActChatContents/AIReActChatContentsType'
 import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
@@ -10,17 +10,10 @@ import { yakitNotify } from '@/utils/notification'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import classNames from 'classnames'
 import { ChevrondownButton } from './AIReActComponent'
-import {
-  type AIInputEvent,
-  AIInputEventSyncTypeEnum,
-  AINotifyType,
-  AISourceEnum,
-  type AIStartParams,
-} from '../hooks/grpcApi'
+import { type AIInputEvent, AIInputEventSyncTypeEnum, AINotifyType } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
-import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
-import type { AISession } from '@/pages/ai-agent/type/aiChat'
+import { getAIReActRequestParams } from '@/pages/ai-agent/utils'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
@@ -41,6 +34,7 @@ import {
   XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useStartAIChat } from '../hooks/useStartAIChat'
 import { isCommunityEdition } from '@/utils/envfile'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
@@ -56,7 +50,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       externalParameters,
       rightPanelLayoutRef,
     } = props
-    const { setActiveChat, getSetting, onStart, onSend, cancelPendingChat } = useAIAgentDispatcher()
+    const { onSend, cancelPendingChat } = useAIAgentDispatcher()
 
     const sessionId = useCurrentSessionId()
     const store = useCurrentStore()
@@ -123,98 +117,20 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     }, [inViewPort])
     //#endregion
     // #region 问题相关逻辑
+    const startChat = useStartAIChat({
+      startRequest,
+      setMention: (value) => aiChatTextareaRef.current?.setMention(value),
+    })
     const lastStart = useRef<HandleStartParams | undefined>(undefined)
     const handleStart = useMemoizedFn((value: HandleStartParams) => {
-      lastStart.current = value
-      const { qs, sessionId, enabledCapabilities } = value
-      const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
-
-      const source = getSetting().Source ?? AISourceEnum.aiAgent // getSetting保证最新
-      const formattedSetting = formatAIAgentSetting(setting)
-      const request: AIStartParams = {
-        ...formattedSetting,
-        UserQuery: qs,
-        CoordinatorId: '',
-        Sequence: 1,
-        PreferSessionCachedConfig: true,
-        Source: source,
-        EnabledCapabilities: enabledCapabilities,
+      const submission: HandleStartParams = {
+        ...value,
+        target:
+          value.target ??
+          (activeChat?.SessionID ? { kind: 'resume', sessionId: activeChat.SessionID } : { kind: 'new' }),
       }
-
-      if (sessionID) request.TimelineSessionID = sessionID
-      else {
-        delete request.TimelineSessionID
-        request.PreferSessionCachedConfig = false
-      }
-      const { attachedResourceInfo } = getAIReActRequestParams(value)
-      // 发送初始化参数
-      const aiInputEvent: AIInputEvent = {
-        IsStart: true,
-        Params: {
-          ...request,
-        },
-        AttachedResourceInfo: attachedResourceInfo,
-        FocusModeLoop: value.focusMode,
-      }
-      const onStartChat = (res: AIHandleStartResProps) => {
-        const { params, extraParams, onChat, onSessionBound } = res
-        let streamToken = ''
-        if (!sessionID) onChat?.()
-        aiChatTextareaRef.current.setMention({
-          mentionId: params.FocusModeLoop || randomString(8),
-          mentionType: 'focusMode',
-          mentionName: params.FocusModeLoop || '',
-        })
-        onStart({
-          kind: sessionID ? 'resume' : 'new',
-          sessionId: sessionID || undefined,
-          draftId: sessionId,
-          params,
-          onLinkStart: (token) => {
-            streamToken = token
-          },
-          onLinkSuccess: (id) => {
-            onSessionBound?.(id)
-            if (sessionID) return
-            const newChat: AISession = {
-              Id: extraParams?.chatId || id,
-              SessionID: id,
-              viewKey: streamToken,
-              Title: qs || `AI Agent - ${new Date().toLocaleString()}`,
-              question: qs,
-              CreatedAt: Date.now(),
-              UpdatedAt: Date.now(),
-              LastUsedAt: Date.now(),
-              StartParams: { ...params.Params, TimelineSessionID: id, UserQuery: '' },
-              TitleInitialized: false,
-              Source: request.Source ?? 'ai',
-              isCreate: true,
-            }
-            setActiveChat(newChat)
-            emiter.emit(
-              'sessionData',
-              JSON.stringify({ type: 'prependSession', payload: { ...newChat, isCreate: false } }),
-            )
-          },
-        })
-      }
-      if (startRequest) {
-        startRequest({
-          params: aiInputEvent,
-        })
-          .then((res) => {
-            onStartChat(res)
-          })
-          .catch(() => {
-            onStartChat({
-              params: aiInputEvent,
-            })
-          })
-      } else {
-        onStartChat({
-          params: aiInputEvent,
-        })
-      }
+      lastStart.current = submission
+      startChat(submission)
     })
 
     useImperativeHandle(ref, () => {
@@ -363,6 +279,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       type="text"
                       onClick={() => {
                         if (lastStart.current) handleStart(lastStart.current)
+                        else pendingChat.retry?.()
                       }}
                     >
                       重试

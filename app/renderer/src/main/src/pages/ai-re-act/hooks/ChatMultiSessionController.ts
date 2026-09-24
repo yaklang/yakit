@@ -199,6 +199,8 @@ export interface PendingAIChat {
   data: ReturnType<ChatMultiSessionController['ensureSession']>
   status: 'connecting' | 'failed'
   error?: string
+  /** UI 使用本次提交的固定参数重试，不依赖原输入组件仍然挂载。 */
+  retry?: () => void
 }
 
 type StartCallbacks = {

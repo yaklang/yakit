@@ -46,7 +46,7 @@ export const AIAgent: React.FC<AIAgentProps> = () => {
   // ai-agent-chat 全局配置
   const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
   // 当前展示对话
-  const [activeChat, setActiveChat] = useState<AISession>()
+  const [activeChat, updateActiveChat] = useState<AISession>()
 
   const [show, setShow] = useState<boolean>(false)
   const [sideRatio, setSideRatio] = useState('360px')
@@ -84,14 +84,16 @@ export const AIAgent: React.FC<AIAgentProps> = () => {
     persistAIAgentChatSetting(getSetting())
   }, [setting])
 
-  const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat } = useChatIPC(
+  const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat, detachPendingChat } = useChatIPC(
     YakitRoute.AI_Agent,
     YakitRoute.AI_Agent,
+    true,
   )
 
-  useEffect(() => {
-    if (activeChat) cancelPendingChat()
-  }, [activeChat?.SessionID])
+  const setActiveChat = useMemoizedFn<AIAgentContextDispatcher['setActiveChat']>((next) => {
+    detachPendingChat()
+    updateActiveChat(next)
+  })
 
   const store: AIAgentContextStore = useMemo(() => {
     return {

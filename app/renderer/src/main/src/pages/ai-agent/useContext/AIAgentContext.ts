@@ -18,8 +18,14 @@ export interface AIAgentContextStore {
 export interface UseChatIPCStartParams
   extends
     Omit<AIChatIPCStartParams, 'route' | 'pageId'>,
-    NonNullable<Parameters<ChatMultiSessionController['handleStartSession']>[1]> {}
-export interface AIAgentContextDispatcher extends Omit<ReturnType<typeof useChatIPC>, 'pendingChat'> {
+    Omit<NonNullable<Parameters<ChatMultiSessionController['handleStartSession']>[1]>, 'onLinkSuccess'> {
+  /** 后台绑定仍发布会话；foreground 为 false 时不得抢占当前视图。 */
+  onLinkSuccess?: (sessionId: string, foreground: boolean) => void
+}
+export interface AIAgentContextDispatcher extends Omit<
+  ReturnType<typeof useChatIPC>,
+  'pendingChat' | 'detachPendingChat'
+> {
   setSetting: Dispatch<SetStateAction<AIAgentSetting>>
   getSetting: () => AIAgentSetting
   setActiveChat: Dispatch<SetStateAction<AISession | undefined>>

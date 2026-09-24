@@ -1,4 +1,7 @@
 import './setupElectron'
+import i18n from '@/i18n/i18n'
+
+const tAgent = i18n.getFixedT(null, 'aiAgent')
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ChatMultiSessionController, type PendingAIChat } from '../ChatMultiSessionController'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -146,7 +149,9 @@ describe('backend allocated session identity', () => {
       await emit(token, 'pong', id)
       expect(yakitNotify).toHaveBeenCalledWith(
         'error',
-        id === 'default' ? 'ChatSessionNotify.engineDefaultSession' : 'ChatSessionNotify.engineMissingSessionId',
+        tAgent(
+          id === 'default' ? 'ChatSessionNotify.engineDefaultSession' : 'ChatSessionNotify.engineMissingSessionId',
+        ),
       )
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', token)
       expect(success).not.toHaveBeenCalled()
@@ -180,7 +185,7 @@ describe('backend allocated session identity', () => {
   it('times out without misdiagnosing a silent engine as an old engine', async () => {
     const token = await start()
     await vi.advanceTimersByTimeAsync(30000)
-    expect(yakitNotify).toHaveBeenCalledWith('error', 'ChatSessionNotify.initTimeout')
+    expect(yakitNotify).toHaveBeenCalledWith('error', tAgent('ChatSessionNotify.initTimeout'))
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', token)
     expect(success).not.toHaveBeenCalled()
   })
@@ -366,7 +371,10 @@ describe('backend allocated session identity', () => {
     expect(success).not.toHaveBeenCalled()
     await emit(token, 'pong', 'ai-session-second')
     expect(success).not.toHaveBeenCalled()
-    expect(pendings.get(token)).toMatchObject({ status: 'failed', error: 'ChatSessionNotify.sessionIdMismatch' })
+    expect(pendings.get(token)).toMatchObject({
+      status: 'failed',
+      error: tAgent('ChatSessionNotify.sessionIdMismatch'),
+    })
     expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
   })
 })
