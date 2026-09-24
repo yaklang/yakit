@@ -383,6 +383,7 @@
     "pendingApproval": "Pending review",
     "pairingRequestNotifyPrefix": "A browser pairing request is waiting. ",
     "pairingRequestNotifyAction": "Click to view",
+    "pairingRequestNotifyTooltip": "Click to open the AI Agent page",
     "pairingTitle": "New browser requests access",
     "pairingTitleManaged": "Browser {{identity}} requests access",
     "verificationCode": "Code:",

@@ -383,6 +383,7 @@
     "pendingApproval": "等待審批",
     "pairingRequestNotifyPrefix": "瀏覽器發起配對申請，請",
     "pairingRequestNotifyAction": "點選查看",
+    "pairingRequestNotifyTooltip": "點選查看，跳轉到 AI Agent 頁面",
     "pairingTitle": "新瀏覽器請求連線",
     "pairingTitleManaged": "瀏覽器 {{identity}} 請求連線",
     "verificationCode": "確認碼：",

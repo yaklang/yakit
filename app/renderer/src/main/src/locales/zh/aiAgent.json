@@ -383,6 +383,7 @@
     "pendingApproval": "等待审批",
     "pairingRequestNotifyPrefix": "浏览器发起配对申请，请",
     "pairingRequestNotifyAction": "点击查看",
+    "pairingRequestNotifyTooltip": "点击查看，跳转到 AI Agent 页面",
     "pairingTitle": "新浏览器请求连接",
     "pairingTitleManaged": "浏览器 {{identity}} 请求连接",
     "verificationCode": "确认码：",

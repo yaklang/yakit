@@ -161,9 +161,11 @@ const BrowserPairingNotify: React.FC = () => {
       message: (
         <span>
           {t('BrowserInstances.pairingRequestNotifyPrefix')} &nbsp;
-          <span style={{ color: 'var(--Colors-Use-Main-Primary)' }}>
-            {t('BrowserInstances.pairingRequestNotifyAction')}
-          </span>
+          <Tooltip title={t('BrowserInstances.pairingRequestNotifyTooltip')}>
+            <span style={{ color: 'var(--Colors-Use-Main-Primary)' }}>
+              {t('BrowserInstances.pairingRequestNotifyAction')}
+            </span>
+          </Tooltip>
         </span>
       ),
       style: { cursor: 'pointer' },
