@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Uint8ArrayToString } from '@/utils/str'
+import emiter from '@/utils/eventBus/eventBus'
 import type { BrowserPairingRequest } from '../browserExtensionClient'
 
 const requestYakURL = vi.fn()
@@ -8,6 +9,7 @@ const executeTask = vi.fn()
 const onData = vi.fn()
 const onError = vi.fn()
 const onEnd = vi.fn()
+const claimYTrayApproval = vi.fn()
 const randomString = vi.fn((_length: number) => 'tok-fixed-browser-extension-task-40c')
 
 vi.mock('@/services/electronBridge', () => ({
@@ -21,6 +23,9 @@ vi.mock('@/services/electronBridge', () => ({
     onError: (...args: unknown[]) => onError(...args),
     onEnd: (...args: unknown[]) => onEnd(...args),
   },
+  yakitManagedBrowser: {
+    claimYTrayApproval: (...args: unknown[]) => claimYTrayApproval(...args),
+  },
 }))
 
 vi.mock('@/utils/randomUtil', () => ({
@@ -29,6 +34,7 @@ vi.mock('@/utils/randomUtil', () => ({
 
 import {
   approveBrowserExtensionPairing,
+  autoApproveYTrayPairings,
   executeBrowserExtensionTask,
   rejectBrowserExtensionPairing,
   requestBrowserExtensionSnapshot,
@@ -65,6 +71,7 @@ describe('browserExtensionClient', () => {
     onData.mockImplementation(() => () => {})
     onError.mockImplementation(() => () => {})
     onEnd.mockImplementation(() => () => {})
+    claimYTrayApproval.mockReset()
   })
 
   afterEach(() => {
@@ -142,6 +149,148 @@ describe('browserExtensionClient', () => {
     expect(snapshot.pending[0].id).toBe('pairing-a')
     expect(snapshot.devices).toHaveLength(1)
     expect(snapshot.devices[0].name).toBe('Browser A')
+  })
+
+  it('auto-approves only a matching launch that YTray validates', async () => {
+    const request = {
+      ...pairingRequest,
+      id: 'pairing-ytray-approved',
+      managedInstance: {
+        manager: 'ytray' as const,
+        instanceId: '00000000-0000-4000-8000-000000000001',
+        badge: 'A',
+      },
+      expiresAt: Date.now() + 60_000,
+    }
+    claimYTrayApproval.mockResolvedValue({ approved: true, reason: '' })
+    requestYakURL.mockResolvedValue(snapshotResponse([]))
+    const onAutoApproved = vi.fn()
+    emiter.on('onBrowserExtensionAutoApproved', onAutoApproved)
+
+    const result = await autoApproveYTrayPairings({ pending: [request], devices: [] })
+    emiter.off('onBrowserExtensionAutoApproved', onAutoApproved)
+
+    expect(claimYTrayApproval).toHaveBeenCalledWith(request.managedInstance.instanceId, request.id)
+    expect(requestYakURL.mock.calls[0][0].Url.Path).toBe('/pairings/pairing-ytray-approved/approve')
+    expect(result.snapshot.pending).toEqual([])
+    expect(result.errors).toEqual({})
+    expect(onAutoApproved).toHaveBeenCalledWith('A')
+  })
+
+  it('keeps the pairing manual and reports when YTray is unavailable', async () => {
+    const request = {
+      ...pairingRequest,
+      id: 'pairing-ytray-unavailable',
+      managedInstance: {
+        manager: 'ytray' as const,
+        instanceId: '00000000-0000-4000-8000-000000000002',
+        badge: 'B',
+      },
+      expiresAt: Date.now() + 60_000,
+    }
+    claimYTrayApproval.mockRejectedValue(new Error('YTray exited'))
+
+    const result = await autoApproveYTrayPairings({ pending: [request], devices: [] })
+
+    expect(requestYakURL).not.toHaveBeenCalled()
+    expect(result.snapshot.pending).toEqual([request])
+    expect(result.errors[request.id]).toEqual({ kind: 'ytray-unavailable', message: 'YTray exited' })
+  })
+
+  it('keeps the pairing manual and reports when automatic connection is disabled', async () => {
+    const request = {
+      ...pairingRequest,
+      id: 'pairing-ytray-disabled',
+      managedInstance: {
+        manager: 'ytray' as const,
+        instanceId: '00000000-0000-4000-8000-000000000004',
+        badge: 'C',
+      },
+      expiresAt: Date.now() + 60_000,
+    }
+    claimYTrayApproval.mockResolvedValue({ approved: false, reason: 'disabled' })
+
+    const result = await autoApproveYTrayPairings({ pending: [request], devices: [] })
+
+    expect(requestYakURL).not.toHaveBeenCalled()
+    expect(result.snapshot.pending).toEqual([request])
+    expect(result.errors[request.id]).toEqual({ kind: 'disabled' })
+  })
+
+  it('shares an in-flight YTray approval and returns its final snapshot to concurrent refreshes', async () => {
+    const request = {
+      ...pairingRequest,
+      id: 'pairing-ytray-concurrent',
+      managedInstance: {
+        manager: 'ytray' as const,
+        instanceId: '00000000-0000-4000-8000-000000000003',
+        badge: 'A',
+      },
+      expiresAt: Date.now() + 60_000,
+    }
+    let resolveClaim!: (value: { approved: boolean; reason: string }) => void
+    claimYTrayApproval.mockImplementation(() => new Promise((resolve) => (resolveClaim = resolve)))
+    requestYakURL.mockResolvedValue(snapshotResponse([]))
+    const onAutoApproved = vi.fn()
+    emiter.on('onBrowserExtensionAutoApproved', onAutoApproved)
+
+    const first = autoApproveYTrayPairings({ pending: [request], devices: [] })
+    const second = autoApproveYTrayPairings({ pending: [request], devices: [] })
+    expect(claimYTrayApproval).toHaveBeenCalledTimes(1)
+
+    resolveClaim({ approved: true, reason: '' })
+    const [firstResult, secondResult] = await Promise.all([first, second])
+    const staleResult = await autoApproveYTrayPairings({ pending: [request], devices: [] })
+    emiter.off('onBrowserExtensionAutoApproved', onAutoApproved)
+
+    expect(requestYakURL).toHaveBeenCalledTimes(1)
+    expect(claimYTrayApproval).toHaveBeenCalledTimes(1)
+    expect(onAutoApproved).toHaveBeenCalledTimes(1)
+    expect(firstResult.snapshot.pending).toEqual([])
+    expect(secondResult.snapshot.pending).toEqual([])
+    expect(staleResult.snapshot.pending).toEqual([])
+  })
+
+  it('completed cache only drops that pending id and keeps the fresh snapshot fields', async () => {
+    const approved = {
+      ...pairingRequest,
+      id: 'pairing-ytray-cached',
+      managedInstance: {
+        manager: 'ytray' as const,
+        instanceId: '00000000-0000-4000-8000-000000000010',
+        badge: 'A',
+      },
+      expiresAt: Date.now() + 60_000,
+    }
+    const newerPending = {
+      ...pairingRequest,
+      id: 'pairing-manual-new',
+      managedInstance: { manager: 'yakit' as const, instanceId: 'inst-new', badge: 'B' },
+      expiresAt: Date.now() + 60_000,
+    }
+    claimYTrayApproval.mockResolvedValue({ approved: true, reason: '' })
+    requestYakURL.mockResolvedValue(snapshotResponse([]))
+
+    await autoApproveYTrayPairings({ pending: [approved], devices: [] })
+
+    const device = {
+      id: 'device-new',
+      installationId: 'install-new',
+      name: 'New Browser',
+      client: 'extension',
+      clientVersion: '1',
+      origin: 'chrome-extension://new',
+      createdAt: 1,
+      lastSeenAt: 2,
+    }
+    const result = await autoApproveYTrayPairings({
+      pending: [approved, newerPending],
+      devices: [device],
+    })
+
+    expect(claimYTrayApproval).toHaveBeenCalledTimes(1)
+    expect(result.snapshot.devices).toEqual([device])
+    expect(result.snapshot.pending).toEqual([newerPending])
   })
 
   it('executeBrowserExtensionTask uses generated token and maps result stream to resolve', async () => {

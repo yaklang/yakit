@@ -1,4 +1,5 @@
-import { yakitBrowserExtension, yakitStream } from '@/services/electronBridge'
+import { yakitBrowserExtension, yakitManagedBrowser, yakitStream } from '@/services/electronBridge'
+import emiter from '@/utils/eventBus/eventBus'
 import { randomString } from '@/utils/randomUtil'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import {
@@ -111,6 +112,16 @@ export interface BrowserExtensionSnapshot {
   devices: PairedBrowserDevice[]
 }
 
+export interface BrowserAutoApprovalError {
+  kind: 'ytray-unavailable' | 'unverified' | 'disabled' | 'approval-failed'
+  message?: string
+}
+
+export interface BrowserAutoApprovalResult {
+  snapshot: BrowserExtensionSnapshot
+  errors: Record<string, BrowserAutoApprovalError>
+}
+
 interface BrowserTaskEvent {
   Type: 'queued' | 'running' | 'log' | 'result' | 'warning' | 'error' | 'cancelled' | 'completed'
   Message?: string
@@ -160,6 +171,82 @@ export const approveBrowserExtensionPairing = (request: BrowserPairingRequest) =
 
 export const rejectBrowserExtensionPairing = (request: BrowserPairingRequest) =>
   requestBrowserExtensionSnapshot('DELETE', `/pairings/${request.id}`, { message: 'Pairing rejected in Yakit' })
+
+const autoApprovalInFlight = new Map<string, Promise<BrowserExtensionSnapshot | undefined>>()
+const autoApprovalCompleted = new Map<string, { snapshot: BrowserExtensionSnapshot; expiresAt: number }>()
+const autoApprovalRejected = new Set<string>()
+const autoApprovalErrors = new Map<string, BrowserAutoApprovalError>()
+
+export async function autoApproveYTrayPairings(
+  initialSnapshot?: BrowserExtensionSnapshot,
+): Promise<BrowserAutoApprovalResult> {
+  let snapshot = initialSnapshot || (await getBrowserExtensionSnapshot())
+  const now = Date.now()
+  const pendingIds = new Set(snapshot.pending.map((request) => request.id))
+  for (const [id, result] of autoApprovalCompleted) if (result.expiresAt <= now) autoApprovalCompleted.delete(id)
+  for (const id of autoApprovalErrors.keys()) if (!pendingIds.has(id)) autoApprovalErrors.delete(id)
+  for (const id of autoApprovalRejected) if (!pendingIds.has(id)) autoApprovalRejected.delete(id)
+
+  for (const request of snapshot.pending) {
+    const managedInstance = request.managedInstance
+    if (
+      managedInstance?.manager !== 'ytray' ||
+      request.expiresAt <= Date.now() ||
+      autoApprovalRejected.has(request.id)
+    ) {
+      continue
+    }
+    const completed = autoApprovalCompleted.get(request.id)
+    if (completed) {
+      // 只从当前快照去掉已批准项，避免旧缓存整份覆盖导致新连接/新 pending 丢失
+      snapshot = {
+        ...snapshot,
+        pending: snapshot.pending.filter((item) => item.id !== request.id),
+      }
+      continue
+    }
+    let approval = autoApprovalInFlight.get(request.id)
+    if (!approval) {
+      approval = (async () => {
+        let claim: { approved: boolean; reason: string }
+        try {
+          claim = await yakitManagedBrowser.claimYTrayApproval(managedInstance.instanceId, request.id)
+        } catch (error) {
+          autoApprovalErrors.set(request.id, {
+            kind: 'ytray-unavailable',
+            message: (error instanceof Error ? error.message : `${error || '未知错误'}`).slice(0, 240),
+          })
+          return undefined
+        }
+        if (!claim.approved) {
+          autoApprovalRejected.add(request.id)
+          if (claim.reason === 'disabled') autoApprovalErrors.set(request.id, { kind: 'disabled' })
+          else autoApprovalErrors.set(request.id, { kind: 'unverified' })
+          return undefined
+        }
+        try {
+          const approvedSnapshot = await approveBrowserExtensionPairing(request)
+          autoApprovalErrors.delete(request.id)
+          autoApprovalCompleted.set(request.id, { snapshot: approvedSnapshot, expiresAt: request.expiresAt })
+          emiter.emit('onBrowserExtensionAutoApproved', managedInstance.badge)
+          return approvedSnapshot
+        } catch (error) {
+          autoApprovalErrors.set(request.id, { kind: 'approval-failed', message: `${error}` })
+          return undefined
+        }
+      })()
+      autoApprovalInFlight.set(request.id, approval)
+    }
+    try {
+      const approvedSnapshot = await approval
+      if (approvedSnapshot) snapshot = approvedSnapshot
+    } finally {
+      if (autoApprovalInFlight.get(request.id) === approval) autoApprovalInFlight.delete(request.id)
+    }
+  }
+
+  return { snapshot, errors: Object.fromEntries(autoApprovalErrors) }
+}
 
 export function executeBrowserExtensionTask<T>(
   deviceId: string,

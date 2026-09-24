@@ -743,6 +743,18 @@ declare global {
     pid?: number
   }
 
+  interface YTrayBrowserHistoryInstance {
+    id: string
+    name: string
+    runtime: string
+    status: 'stopped' | 'failed'
+    startUrl: string
+    pageTitle: string
+    pageUrl: string
+    badge: string
+    startedAt: number
+  }
+
   interface YakitBrowserExtensionYakURLRequest {
     Method: string
     Url: {
@@ -857,6 +869,9 @@ declare global {
     }
     managedBrowser: {
       list: () => Promise<YakitManagedBrowserProfile[]>
+      listYTrayHistory: () => Promise<YTrayBrowserHistoryInstance[]>
+      claimYTrayApproval: (id: string, requestId: string) => Promise<{ approved: boolean; reason: string }>
+      restoreYTray: (id: string) => Promise<unknown>
     }
     browserExtension: {
       requestYakURL: (params: YakitBrowserExtensionYakURLRequest) => Promise<unknown>

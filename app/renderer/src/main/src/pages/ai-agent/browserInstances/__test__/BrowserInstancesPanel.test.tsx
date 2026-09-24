@@ -1,5 +1,5 @@
 import type React from 'react'
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BrowserPairingRequest } from '@/pages/browserExtension/browserExtensionClient'
 import type { AIBrowserInstance } from '../browserInstanceStore'
@@ -19,7 +19,9 @@ const { mocks, t } = vi.hoisted(() => {
     t,
     mocks: {
       requestBrowserExtensionSnapshot: vi.fn(),
+      approveBrowserExtensionPairing: vi.fn(),
       refreshBrowserInstances: vi.fn(),
+      restoreBrowserHistory: vi.fn(),
       useBrowserInstances: vi.fn(),
       success: vi.fn(),
       failed: vi.fn(),
@@ -43,25 +45,6 @@ vi.mock('@/components/yakitUI/YakitTag/YakitTag', () => ({
 }))
 vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => ({
   YakitSpin: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}))
-vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
-  YakitInput: ({
-    value,
-    onChange,
-    onPressEnter,
-  }: {
-    value?: string
-    onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
-    onPressEnter?: () => void
-  }) => (
-    <input
-      value={value}
-      onChange={onChange}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') onPressEnter?.()
-      }}
-    />
-  ),
 }))
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   YakitButton: ({
@@ -90,9 +73,17 @@ vi.mock('@/utils/notification', () => ({
 }))
 vi.mock('@/pages/browserExtension/browserExtensionClient', () => ({
   requestBrowserExtensionSnapshot: mocks.requestBrowserExtensionSnapshot,
-  approveBrowserExtensionPairing: vi.fn(),
+  approveBrowserExtensionPairing: mocks.approveBrowserExtensionPairing,
   rejectBrowserExtensionPairing: vi.fn(),
   callBrowserExtensionCapability: vi.fn(),
+}))
+vi.mock('@/services/electronBridge', () => ({
+  yakitManagedBrowser: {
+    list: vi.fn(async () => []),
+    listYTrayHistory: vi.fn(async () => []),
+    claimYTrayApproval: vi.fn(),
+    restoreYTray: vi.fn(),
+  },
 }))
 vi.mock('../browserInstanceStore', async () => {
   const actual = await vi.importActual<typeof BrowserInstanceStoreModule>('../browserInstanceStore')
@@ -100,6 +91,7 @@ vi.mock('../browserInstanceStore', async () => {
     ...actual,
     useBrowserInstances: mocks.useBrowserInstances,
     refreshBrowserInstances: mocks.refreshBrowserInstances,
+    restoreBrowserHistory: mocks.restoreBrowserHistory,
     readBrowserThumbnail: vi.fn(async () => undefined),
     selectBrowserInstance: vi.fn(),
   }
@@ -131,7 +123,6 @@ import {
   browserProductLabel,
   openPairingWindow,
   pairingSubtitle,
-  renameBrowserDevice,
 } from '../BrowserInstancesPanel'
 
 const baseInstance = (
@@ -158,6 +149,19 @@ const pairingRequest = (partial: Partial<BrowserPairingRequest> = {}): BrowserPa
   code: '123456',
   createdAt: Date.now() - 1_000,
   expiresAt: Date.now() + 60_000,
+  ...partial,
+})
+
+const historyInstance = (partial: Partial<YTrayBrowserHistoryInstance> = {}): YTrayBrowserHistoryInstance => ({
+  id: '00000000-0000-4000-8000-000000000001',
+  name: 'Browser A',
+  runtime: 'Chrome for Testing',
+  status: 'stopped',
+  startUrl: 'https://start.example/',
+  pageTitle: 'Previous Page',
+  pageUrl: 'https://previous.example/',
+  badge: 'A',
+  startedAt: 1_700_000_000_000,
   ...partial,
 })
 
@@ -192,23 +196,12 @@ describe('BrowserInstancesPanel helpers', () => {
   })
 })
 
-describe('renameBrowserDevice / openPairingWindow', () => {
+describe('openPairingWindow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.requestBrowserExtensionSnapshot.mockResolvedValue({ pending: [], devices: [] })
+    mocks.approveBrowserExtensionPairing.mockResolvedValue({ pending: [], devices: [] })
     mocks.refreshBrowserInstances.mockResolvedValue(undefined)
-  })
-
-  it('renameBrowserDevice skips empty names and posts renamed devices', async () => {
-    expect(await renameBrowserDevice('device-1', '  ', t)).toBe(false)
-    expect(mocks.requestBrowserExtensionSnapshot).not.toHaveBeenCalled()
-
-    expect(await renameBrowserDevice('device-1', ' New Name ', t)).toBe(true)
-    expect(mocks.requestBrowserExtensionSnapshot).toHaveBeenCalledWith('POST', '/devices/device-1', {
-      name: 'New Name',
-    })
-    expect(mocks.refreshBrowserInstances).toHaveBeenCalledWith(true)
-    expect(mocks.success).toHaveBeenCalled()
   })
 
   it('openPairingWindow reports success and failure', async () => {
@@ -228,6 +221,7 @@ describe('BrowserInstancesPanel interactions', () => {
     vi.clearAllMocks()
     mocks.requestBrowserExtensionSnapshot.mockResolvedValue({ pending: [], devices: [] })
     mocks.refreshBrowserInstances.mockResolvedValue(undefined)
+    mocks.restoreBrowserHistory.mockResolvedValue(undefined)
     mocks.modalConfirm.mockImplementation((props: { onOk?: () => Promise<void> | void }) => {
       const modal = { destroy: vi.fn() }
       void props.onOk?.()
@@ -235,43 +229,71 @@ describe('BrowserInstancesPanel interactions', () => {
     })
   })
 
-  it('opens pairing window from empty-state goConnect', async () => {
+  it('shows the Browser Bridge error and retries', async () => {
     mocks.useBrowserInstances.mockReturnValue({
       instances: [],
+      history: [],
       pending: [],
       loading: false,
       error: 'unavailable',
+      historyError: '',
+      autoApprovalErrors: {},
     })
     render(<BrowserInstancesPanel />)
-    fireEvent.click(screen.getByText('BrowserInstances.goConnect'))
-    await waitFor(() => {
-      expect(mocks.requestBrowserExtensionSnapshot).toHaveBeenCalledWith('POST', '/pairing-window', { ttlSeconds: 120 })
-    })
+    expect(screen.getByText('BrowserInstances.bridgeUnavailable')).toBeInTheDocument()
+    expect(screen.getByText('unavailable')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('BrowserInstances.retry'))
+    expect(mocks.refreshBrowserInstances).toHaveBeenCalled()
   })
 
-  it('toggles pending / online / offline sections', () => {
+  it('opens the guide from connection help', () => {
+    mocks.useBrowserInstances.mockReturnValue({
+      instances: [],
+      history: [],
+      pending: [],
+      loading: false,
+      error: '',
+      historyError: '',
+      autoApprovalErrors: {},
+    })
+    render(<BrowserInstancesPanel />)
+
+    fireEvent.click(screen.getByText('BrowserInstances.connectionHelp'))
+    expect(screen.getByRole('dialog')).toHaveTextContent('新手引导手册')
+    expect(mocks.requestBrowserExtensionSnapshot).not.toHaveBeenCalled()
+  })
+
+  it('toggles pending, online and restorable history sections', () => {
     mocks.useBrowserInstances.mockReturnValue({
       instances: [
         baseInstance({
           id: 'online-1',
           online: true,
+          identity: 'A',
           name: 'Online Browser',
           tab: { id: 1, title: 'Current Page', url: 'https://example.test/' },
         }),
-        baseInstance({ id: 'offline-1', online: false, name: 'Offline Browser' }),
+        baseInstance({ id: 'offline-pairing', online: false, name: 'Old pairing record' }),
       ],
+      history: [historyInstance()],
       pending: [pairingRequest({ id: 'pending-1', code: '654321' })],
       loading: false,
       error: '',
+      historyError: '',
+      autoApprovalErrors: { 'pending-1': { kind: 'ytray-unavailable' } },
     })
     render(<BrowserInstancesPanel />)
 
     expect(screen.getByTitle('Current Page')).toBeInTheDocument()
+    expect(screen.getByTitle('Current Page').closest('[data-identity="A"]')).toBeInTheDocument()
     expect(screen.getByText(/确认码|verificationCode/)).toBeInTheDocument()
-    expect(screen.queryByText('Offline Browser')).not.toBeInTheDocument()
+    expect(screen.getByText('BrowserInstances.autoApprovalUnavailable')).toBeInTheDocument()
+    expect(screen.queryByText('Previous Page')).not.toBeInTheDocument()
+    expect(screen.queryByText('Old pairing record')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.others/ }))
-    expect(screen.getByText('Offline Browser')).toBeInTheDocument()
+    expect(screen.getByText('Previous Page')).toBeInTheDocument()
+    expect(screen.queryByText('Old pairing record')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.current/ }))
     expect(screen.queryByTitle('Current Page')).not.toBeInTheDocument()
@@ -280,56 +302,73 @@ describe('BrowserInstancesPanel interactions', () => {
     expect(screen.queryByText(/确认码|verificationCode/)).not.toBeInTheDocument()
   })
 
-  it('supports offline rename cancel and save failure rollback', async () => {
+  it('shows a distinct message when automatic connection is disabled', () => {
     mocks.useBrowserInstances.mockReturnValue({
-      instances: [baseInstance({ id: 'offline-1', online: false, name: 'Offline Browser' })],
+      instances: [],
+      history: [],
+      pending: [pairingRequest({ id: 'pending-disabled', code: '111222' })],
+      loading: false,
+      error: '',
+      historyError: '',
+      autoApprovalErrors: { 'pending-disabled': { kind: 'disabled' } },
+    })
+    render(<BrowserInstancesPanel />)
+
+    expect(screen.getByText('BrowserInstances.autoApprovalDisabled')).toBeInTheDocument()
+  })
+
+  it('restores the selected YTray history instance', async () => {
+    mocks.useBrowserInstances.mockReturnValue({
+      instances: [],
+      history: [historyInstance({ name: 'Saved Browser' })],
       pending: [],
       loading: false,
       error: '',
+      historyError: '',
+      autoApprovalErrors: {},
     })
-    mocks.requestBrowserExtensionSnapshot.mockRejectedValueOnce(new Error('rename boom'))
     render(<BrowserInstancesPanel />)
 
     fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.others/ }))
-    const row = screen.getByText('Offline Browser').closest('div')?.parentElement
-    expect(row).toBeTruthy()
-
-    fireEvent.click(screen.getByLabelText('BrowserInstances.rename'))
-    const input = screen.getByDisplayValue('Offline Browser')
-    fireEvent.change(input, { target: { value: 'Temp Name' } })
-    fireEvent.click(within(row as HTMLElement).getAllByRole('button')[0])
-    expect(screen.getByText('Offline Browser')).toBeInTheDocument()
-    expect(mocks.requestBrowserExtensionSnapshot).not.toHaveBeenCalled()
-
-    fireEvent.click(screen.getByLabelText('BrowserInstances.rename'))
-    fireEvent.change(screen.getByDisplayValue('Offline Browser'), { target: { value: 'New Offline' } })
-    const editActions = screen.getByDisplayValue('New Offline').parentElement!.querySelectorAll('button')
-    fireEvent.click(editActions[1])
+    expect(screen.getByText('BrowserInstances.statusStopped')).toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('BrowserInstances.restore'))
     await waitFor(() => {
-      expect(mocks.requestBrowserExtensionSnapshot).toHaveBeenCalledWith('POST', '/devices/offline-1', {
-        name: 'New Offline',
-      })
-      expect(mocks.failed).toHaveBeenCalledWith(expect.stringContaining('renameFailed'))
-      expect(mocks.failed).toHaveBeenCalledWith(expect.stringContaining('rename boom'))
+      expect(mocks.restoreBrowserHistory).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001')
+      expect(mocks.success).toHaveBeenCalledWith(expect.stringContaining('restoreStarted'))
     })
   })
 
-  it('confirms offline device removal', async () => {
+  it('shows failed status on failed history rows', () => {
     mocks.useBrowserInstances.mockReturnValue({
-      instances: [baseInstance({ id: 'offline-1', online: false, name: 'Offline Browser' })],
+      instances: [],
+      history: [historyInstance({ status: 'failed', pageTitle: 'Broken Browser' })],
       pending: [],
       loading: false,
       error: '',
+      historyError: '',
+      autoApprovalErrors: {},
     })
     render(<BrowserInstancesPanel />)
-    fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.others/ }))
-    fireEvent.click(screen.getByLabelText('BrowserInstances.remove'))
 
-    expect(mocks.modalConfirm).toHaveBeenCalled()
-    await waitFor(() => {
-      expect(mocks.requestBrowserExtensionSnapshot).toHaveBeenCalledWith('DELETE', '/devices/offline-1')
-      expect(mocks.refreshBrowserInstances).toHaveBeenCalledWith(true)
-      expect(mocks.success).toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.others/ }))
+    expect(screen.getByText('Broken Browser')).toBeInTheDocument()
+    expect(screen.getByText('BrowserInstances.statusFailed')).toBeInTheDocument()
+  })
+
+  it('keeps history visible but disables restore when YTray exits', () => {
+    mocks.useBrowserInstances.mockReturnValue({
+      instances: [],
+      history: [historyInstance()],
+      pending: [],
+      loading: false,
+      error: '',
+      historyError: 'YTray unavailable',
+      autoApprovalErrors: {},
     })
+    render(<BrowserInstancesPanel />)
+
+    expect(screen.getByText('BrowserInstances.ytrayUnavailable')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /BrowserInstances.others/ }))
+    expect(screen.getByLabelText('BrowserInstances.restore')).toBeDisabled()
   })
 })

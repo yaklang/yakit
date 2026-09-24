@@ -15,6 +15,7 @@ import { BrowserInstancesPanel } from './browserInstances/BrowserInstancesPanel'
 import HistoryChat from './historyChat/HistoryChat'
 import { AI_AGENT_HISTORY_AI_SOURCES } from '../ai-re-act/hooks/useGetChatDataStoreKey'
 import { SideSettingButton } from './aiChatWelcome/AIChatWelcomeSideSetting'
+import { clearPendingAIAgentTabSwitch, takePendingAIAgentTabSwitch } from './aiAgentTabNavigation'
 
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
 const AIScheduledTasks = React.lazy(() => import('./aiScheduledTasks/AIScheduledTasks'))
@@ -39,6 +40,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
       return
     }
     if (!info?.params) return
+    clearPendingAIAgentTabSwitch(data)
     const { type, params } = info
     switch (type) {
       case SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE: {
@@ -61,6 +63,8 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   })
   useEffect(() => {
     emiter.on('switchAIAgentTab', onSwitchAIAgentTab)
+    const pendingTabSwitch = takePendingAIAgentTabSwitch()
+    if (pendingTabSwitch) onSwitchAIAgentTab(pendingTabSwitch)
     return () => {
       emiter.off('switchAIAgentTab', onSwitchAIAgentTab)
     }

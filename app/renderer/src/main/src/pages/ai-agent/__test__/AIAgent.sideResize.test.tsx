@@ -180,50 +180,43 @@ describe('AIAgent 侧栏拖拽宽度', () => {
     expect(screen.getByLabelText('first-ratio')).toHaveTextContent('480px')
   })
 
-  it('宽度越过 1300 切浮层布局，浮层展开宽度沿用拖拽后的 sideRatio', () => {
+  it('窄屏仍走 ResizeBox，拖拽宽度可跨宽度变化保留', () => {
     render(<AIAgent pageId="test" />)
 
-    // 大屏：非 mini，走 YakitResizeBox 布局
     expect(screen.getByLabelText('first-ratio')).toBeInTheDocument()
 
-    // 拖拽改宽，供浮层沿用
     fireEvent.click(screen.getByRole('button', { name: '展开侧栏' }))
     fireEvent.click(screen.getByRole('button', { name: '模拟拖拽结束' }))
+    expect(screen.getByLabelText('first-ratio')).toHaveTextContent('480px')
 
-    // 跌破 1300：切浮层布局，ResizeBox 分支消失
+    // 跌破原小屏阈值后仍保持 ResizeBox，宽度沿用 sideRatio
     notifyWidth(1200)
-    expect(screen.queryByLabelText('first-ratio')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('first-ratio')).toHaveTextContent('480px')
 
-    // 浮层展开态宽度取 sideRatio（inline style 挂在侧栏容器上，mock 的 SideList 自带一层 wrapper）
-    const sideContainer = screen.getByLabelText('side-show').parentElement!.parentElement!
-    expect(sideContainer).toHaveStyle({ width: '480px' })
-
-    // 收起后展开宽度清空，再展开仍取 sideRatio
     fireEvent.click(screen.getByRole('button', { name: '收起侧栏' }))
-    expect(screen.getByLabelText('side-show')).toHaveTextContent('false')
-    // 收起后 inline 宽度清空（style 属性保留为空串）
-    expect(sideContainer.style.width).toBe('')
+    expect(screen.getByLabelText('first-ratio')).toHaveTextContent('24px')
     fireEvent.click(screen.getByRole('button', { name: '展开侧栏' }))
-    expect(sideContainer).toHaveStyle({ width: '480px' })
+    expect(screen.getByLabelText('first-ratio')).toHaveTextContent('480px')
 
-    // 回到宽度 > 1300：恢复 ResizeBox 布局且展开宽度仍是拖拽后的 480px
     notifyWidth(1400)
     expect(screen.getByLabelText('first-ratio')).toHaveTextContent('480px')
   })
 
-  it('小屏下宽度跌破 1230 时自动收起已展开的侧栏', () => {
+  it('宽度跌破 1230 时自动收起已展开的侧栏', () => {
     render(<AIAgent pageId="test" />)
 
-    // 首次回调只初始化 isMini（skipFirstClose），不触发收起
+    // 首次回调只跳过收起（skipFirstClose）
     notifyWidth(1200)
     fireEvent.click(screen.getByRole('button', { name: '展开侧栏' }))
     expect(screen.getByLabelText('side-show')).toHaveTextContent('true')
+    expect(screen.getByLabelText('first-ratio')).toHaveTextContent('360px')
 
-    // 跌破 1230：mini 布局下强制收起
+    // 跌破 1230：强制收起，仍为 ResizeBox 布局
     notifyWidth(1100)
     expect(screen.getByLabelText('side-show')).toHaveTextContent('false')
+    expect(screen.getByLabelText('first-ratio')).toHaveTextContent('24px')
 
-    // 回升大屏恢复 ResizeBox 布局，收起态不自动展开
+    // 回升后保持收起态
     notifyWidth(1400)
     expect(screen.getByLabelText('side-show')).toHaveTextContent('false')
     expect(screen.getByLabelText('first-ratio')).toHaveTextContent('24px')

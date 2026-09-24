@@ -169,6 +169,9 @@ process.on('loaded', function () {
     },
     managedBrowser: {
       list: () => invoke('ListManagedBrowserProfiles'),
+      listYTrayHistory: () => invoke('ListYTrayBrowserHistory'),
+      claimYTrayApproval: (id, requestId) => invoke('ClaimYTrayLaunchApproval', { id, requestId }),
+      restoreYTray: (id) => invoke('RestoreYTrayBrowserInstance', { id }),
     },
     browserExtension: {
       requestYakURL: (params) => invoke('RequestYakURL', params),

@@ -15,6 +15,7 @@ import {
   type MITMFlowCommittedMode,
 } from '@/components/HTTPFlowTable/HTTPFlowTable.observability'
 import { createMITMFlowCommittedRefreshScheduler } from '@/components/HTTPFlowTable/HTTPFlowTable.committed'
+import { autoApproveYTrayPairings } from '@/pages/browserExtension/browserExtensionClient'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 const id = randomString(40)
@@ -26,6 +27,12 @@ const flowCommittedRefreshScheduler = createMITMFlowCommittedRefreshScheduler()
 const FLOW_COMMITTED_MESSAGE_TYPE = 'httpflow/committed'
 const FLOW_COMMITTED_SUBSCRIBE_MESSAGE_TYPE = 'httpflow/committed/subscribe'
 const FLOW_COMMITTED_UNSUBSCRIBE_MESSAGE_TYPE = 'httpflow/committed/unsubscribe'
+
+const autoApproveManagedBrowser = () => {
+  void autoApproveYTrayPairings()
+    .catch(() => undefined)
+    .finally(() => emiter.emit('onBrowserExtensionChanged', ''))
+}
 
 const flowCommittedSubscriptionRequest = (mode: MITMFlowCommittedMode): DuplexConnectionRequest => ({
   MessageType: mode === 'off' ? FLOW_COMMITTED_UNSUBSCRIBE_MESSAGE_TYPE : FLOW_COMMITTED_SUBSCRIBE_MESSAGE_TYPE,
@@ -152,6 +159,7 @@ export const startupDuplexConn = () => {
         // 当前引擎支持推送数据库更新(如若不支持则依然使用轮询请求)
         case 'global':
           updateServerPushStatus(true)
+          autoApproveManagedBrowser()
           break
         // 通知QueryHTTPFlows轮询更新
         case 'httpflow': {
@@ -217,7 +225,7 @@ export const startupDuplexConn = () => {
           emiter.emit('onServerPushProjectChanged', JSON.stringify(obj))
           break
         case 'browser_extension':
-          emiter.emit('onBrowserExtensionChanged', JSON.stringify(obj))
+          autoApproveManagedBrowser()
           break
         // 通知QuerySSARisks轮询更新
         case 'ssa_risk':

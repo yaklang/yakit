@@ -27,7 +27,6 @@ import { failed } from '@/utils/notification'
 import { mergeKnowledgeBaseList } from '../KnowledgeBase/utils'
 
 import emiter from '@/utils/eventBus/eventBus'
-import classNames from 'classnames'
 import styles from './AIAgent.module.scss'
 import { AIBottomSideBar } from './aiBottomSideBar/AIBottomSideBar'
 import { SplitView } from '../yakRunner/SplitView/SplitView'
@@ -51,7 +50,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   const [show, setShow] = useState<boolean>(false)
   const [sideRatio, setSideRatio] = useState('360px')
-  const [isMini, setIsMini] = useState(false)
 
   const sideHiddenModeRef = useRef<string>('false')
 
@@ -59,7 +57,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const agentRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(agentRef)
 
-  // 只在越过阈值时更新 isMini / 收起侧栏，避免每帧 setState
+  // 宽度过窄时收起侧栏，避免与主区争抢空间；与大屏共用同一套 ResizeBox 拖拽布局
   useEffect(() => {
     const el = agentRef.current
     if (!el || typeof ResizeObserver === 'undefined') return
@@ -67,7 +65,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const observer = new ResizeObserver((entries) => {
       const width = entries[0]?.contentRect?.width
       if (!width) return
-      setIsMini(width <= 1300)
       if (skipFirstClose) {
         skipFirstClose = false
         return
@@ -219,7 +216,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     () => [
       {
         element: (
-          <div className={classNames(styles['ai-agent-chat'])} onClick={onSendSwitchAIAgentTab}>
+          <div className={styles['ai-agent-chat']} onClick={onSendSwitchAIAgentTab}>
             <AIAgentChat />
           </div>
         ),
@@ -240,17 +237,29 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     <AIAgentContext.Provider value={{ store, dispatcher }}>
       <div id={YakitAIAgentPageID} className={styles['ai-agent']} ref={agentRef}>
         <div className={styles['ai-agent-wrapper']}>
-          {isMini ? (
-            <>
-              <div
-                className={classNames(styles['ai-side-list'], styles['ai-side-list-mini'], {
-                  [styles['ai-side-list-mini-expand']]: show,
-                })}
-                style={show ? { width: sideRatio } : undefined}
-              >
+          <YakitResizeBox
+            freeze={show}
+            dragResize
+            isVer={false}
+            isRecalculateWH={show}
+            firstRatio={show ? sideRatio : '24px'}
+            lineSize={1}
+            firstMinSize={show ? 260 : 24}
+            secondRatio={show ? '70%' : '100%'}
+            secondMinSize={680}
+            firstNodeStyle={{ padding: 0 }}
+            secondNodeStyle={{ padding: 0 }}
+            lineDirection="right"
+            onMouseUp={(e) => {
+              if (e.firstSizeNum > 24) setSideRatio(`${e.firstSizeNum}px`)
+            }}
+            firstNode={
+              <div className={styles['ai-side-list']}>
                 <AIAgentSideList show={show} setShow={setShow} />
               </div>
-              <div className={classNames(styles['split-wrapper'], styles['ai-agent-chat-mini'])}>
+            }
+            secondNode={
+              <div className={styles['split-wrapper']}>
                 <SplitView
                   isVertical={true}
                   isLastHidden={!isShowAIBottomDetails}
@@ -258,41 +267,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                   elements={splitElements}
                 />
               </div>
-            </>
-          ) : (
-            <YakitResizeBox
-              freeze={show}
-              dragResize
-              isVer={false}
-              isRecalculateWH={show}
-              firstRatio={show ? sideRatio : '24px'}
-              lineSize={1}
-              firstMinSize={show ? 260 : 24}
-              secondRatio={show ? '70%' : '100%'}
-              secondMinSize={700}
-              firstNodeStyle={{ padding: 0 }}
-              secondNodeStyle={{ padding: 0 }}
-              lineDirection="right"
-              onMouseUp={(e) => {
-                if (e.firstSizeNum > 24) setSideRatio(`${e.firstSizeNum}px`)
-              }}
-              firstNode={
-                <div className={styles['ai-side-list']}>
-                  <AIAgentSideList show={show} setShow={setShow} />
-                </div>
-              }
-              secondNode={
-                <div className={styles['split-wrapper']}>
-                  <SplitView
-                    isVertical={true}
-                    isLastHidden={!isShowAIBottomDetails}
-                    defaultSizes={splitDefaultSizes}
-                    elements={splitElements}
-                  />
-                </div>
-              }
-            />
-          )}
+            }
+          />
         </div>
         <AIBottomSideBar setShowAIBottomDetails={setShowAIBottomDetails} />
       </div>

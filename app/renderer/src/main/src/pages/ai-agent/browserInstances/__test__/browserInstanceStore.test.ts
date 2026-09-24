@@ -2,9 +2,15 @@ import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/services/electronBridge', () => ({
-  yakitManagedBrowser: { list: vi.fn(async () => []) },
+  yakitManagedBrowser: {
+    list: vi.fn(async () => []),
+    listYTrayHistory: vi.fn(async () => []),
+    claimYTrayApproval: vi.fn(),
+    restoreYTray: vi.fn(),
+  },
 }))
 vi.mock('@/pages/browserExtension/browserExtensionClient', () => ({
+  autoApproveYTrayPairings: vi.fn(async (snapshot: unknown) => ({ snapshot, errors: {} })),
   callBrowserExtensionCapability: vi.fn(),
   getBrowserExtensionSnapshot: vi.fn(),
 }))
@@ -177,6 +183,30 @@ describe('browser instance presentation', () => {
       }),
     ).resolves.toBeUndefined()
     expect(callBrowserExtensionCapability).not.toHaveBeenCalled()
+  })
+
+  it('exposes the engine Browser Bridge startup error', async () => {
+    vi.mocked(getBrowserExtensionSnapshot).mockResolvedValue({
+      pending: [],
+      devices: [],
+      status: {
+        revision: 1,
+        running: false,
+        connected: false,
+        lastError: 'listen tcp 127.0.0.1:64333: bind: address already in use',
+        protocolVersion: 3,
+        engineIdentityId: 'engine',
+        engineInstanceId: 'engine-instance',
+        connections: [],
+      },
+    })
+    const hook = renderHook(useBrowserInstances)
+    try {
+      await act(async () => {})
+      expect(hook.result.current.error).toContain('address already in use')
+    } finally {
+      hook.unmount()
+    }
   })
 
   it('publishes pairing and fast previews while a slow preview spans polling rounds, and ignores disconnected results', async () => {

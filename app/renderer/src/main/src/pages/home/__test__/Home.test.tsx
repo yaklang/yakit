@@ -214,11 +214,8 @@ describe('Home 浏览器配对全局提示', () => {
     )
 
     const payload = vi.mocked(yakitNotify).mock.calls[0][1] as { onClick: () => void }
-    payload.onClick()
+    act(() => payload.onClick())
     expect(emiter.emit).toHaveBeenCalledWith('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(100)
-    })
     expect(emiter.emit).toHaveBeenCalledWith(
       'switchAIAgentTab',
       JSON.stringify({
@@ -241,5 +238,32 @@ describe('Home 浏览器配对全局提示', () => {
       rerender(<Home />)
     })
     expect(yakitNotify).toHaveBeenCalledTimes(1)
+  })
+
+  it('自动批准后通知，并可进入 AI Agent 浏览器页签', async () => {
+    render(<Home />)
+    const calls = vi.mocked(emiter.on).mock.calls as unknown as Array<[string, (value: string) => void]>
+    const listener = calls.find(([event]) => event === 'onBrowserExtensionAutoApproved')?.[1] as (
+      identity: string,
+    ) => void
+
+    act(() => listener('A'))
+
+    expect(yakitNotify).toHaveBeenCalledWith(
+      'success',
+      expect.objectContaining({
+        onClick: expect.any(Function),
+      }),
+    )
+    const payload = vi.mocked(yakitNotify).mock.calls[0][1] as { onClick: () => void }
+    act(() => payload.onClick())
+    expect(emiter.emit).toHaveBeenCalledWith('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
+    expect(emiter.emit).toHaveBeenCalledWith(
+      'switchAIAgentTab',
+      JSON.stringify({
+        type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+        params: { active: AIAgentTabListEnum.Browser, show: true },
+      }),
+    )
   })
 })
