@@ -1,6 +1,11 @@
 import { useCreation, useDebounceFn, useInViewport, useKeyPress, useMemoizedFn } from 'ahooks'
 import type { RefObject } from 'react'
-import { shouldInterceptMentionEnter } from './mentionKeyboard'
+import {
+  resolveMentionArrowScroll,
+  resolveMentionArrowSelect,
+  resolveMentionVirtualScrollTop,
+  shouldInterceptMentionEnter,
+} from './mentionKeyboard'
 
 function useSwitchSelectByKeyboard<T>(
   ref: RefObject<HTMLDivElement | null> | null,
@@ -10,6 +15,7 @@ function useSwitchSelectByKeyboard<T>(
     rowKey: string | ((v: T) => string)
     onSelectNumber: (m: number, isScroll: boolean) => void
     onEnter: () => void
+    /** 固定行高；目标 DOM 未挂载（虚拟列表）时用于估算 scrollTop */
     defItemHeight?: number
     getContainer?: () => HTMLElement | null
     /** 面板关闭时必须为 false，否则会一直拦截编辑器 Enter */
@@ -18,9 +24,7 @@ function useSwitchSelectByKeyboard<T>(
 ): void {
   const { data, selected, rowKey, onSelectNumber, onEnter, getContainer, enabled = true } = params
 
-  const defItemHeight = useCreation(() => {
-    return params.defItemHeight ?? 24
-  }, [params.defItemHeight])
+  const defItemHeight = useCreation(() => params.defItemHeight ?? 32, [params.defItemHeight])
 
   const [inViewport = true] = useInViewport(ref)
   const active = enabled && inViewport
@@ -82,77 +86,52 @@ function useSwitchSelectByKeyboard<T>(
     },
   )
 
-  const onUpArrow = useDebounceFn(
-    () => {
-      if (!active) return
-      if (!selected) {
-        onSelectNumber(0, true)
-        return
-      }
-      const currentRowKey = getRowKey(selected)
-      const currentIndex = data.findIndex((item) => getRowKey(item) === currentRowKey)
-      if (currentIndex === -1) return
-      const newScrollToNumber = currentIndex - 1
-      const id = data[newScrollToNumber] ? getRowKey(data[newScrollToNumber]) : ''
-      if (!id) return
-      const currentDom = document.getElementById(id)
-      if (!currentDom) return
-      isVisible(currentDom, (isScroll) => {
-        onSelectNumber(newScrollToNumber, isScroll)
+  const applyArrowSelect = useMemoizedFn((direction: 'up' | 'down') => {
+    if (!active) return
+    if (!selected) {
+      onSelectNumber(0, true)
+      return
+    }
+    const currentRowKey = getRowKey(selected)
+    const currentIndex = data.findIndex((item) => getRowKey(item) === currentRowKey)
+    const nextIndex = resolveMentionArrowSelect({ currentIndex, dataLength: data.length, direction })
+    if (nextIndex == null) return
+
+    const id = data[nextIndex] ? getRowKey(data[nextIndex]) : ''
+    const container = ref?.current
+    const el = id ? document.getElementById(id) : null
+
+    // 已挂载：在可视区内移动不高亮滚动；进入顶部/底部一个 item 缓冲区后再滚
+    if (el && container) {
+      const scroll = resolveMentionArrowScroll({
+        direction,
+        containerRect: container.getBoundingClientRect(),
+        itemRect: el.getBoundingClientRect(),
       })
-    },
-    { wait: 100, leading: true },
-  ).run
-
-  const onDownArrow = useDebounceFn(
-    () => {
-      if (!active) return
-      if (!ref?.current) return
-      if (!selected) {
-        onSelectNumber(0, true)
-        return
+      if (scroll.shouldScroll) {
+        container.scrollTop += scroll.delta
       }
-      const currentRowKey = getRowKey(selected)
-      const currentIndex = data.findIndex((item) => getRowKey(item) === currentRowKey)
-      if (currentIndex > -1 && currentIndex < data.length - 1) {
-        const number = currentIndex + 1
-        const id = data[number] ? getRowKey(data[number]) : ''
-        if (!id) return
-        const currentDom = document.getElementById(id)
-        if (!currentDom) return
-        isVisible(currentDom, (isScroll) => {
-          const clientHeight = ref?.current?.clientHeight || 0
-          const dom = ref.current
-          if (dom && clientHeight && isScroll) {
-            const rowNumber = clientHeight / defItemHeight // 24 列表高度
-            const y = 1 - (rowNumber - Math.trunc(rowNumber))
-            dom.scrollTop = (number - Math.floor(rowNumber) + y) * defItemHeight + 6 // +6 让其更多的显示完整
-          }
-          onSelectNumber(number, false)
-        })
-      }
-    },
-    { wait: 100, leading: true },
-  ).run
+      onSelectNumber(nextIndex, false)
+      return
+    }
 
-  const isVisible = useMemoizedFn((dom: HTMLElement, callback: (b: boolean) => void) => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // 观察一次后立即断开连接
-        observer.disconnect()
-        if (entries.length > 0) {
-          const entry = entries[0]
-          return callback(entry.intersectionRatio < 1 && entry.intersectionRatio >= 0)
-        }
+    // 虚拟列表未挂载目标行：按固定行高估算，避免 scrollTo(index) 把项顶到顶部
+    if (container && defItemHeight > 0) {
+      container.scrollTop = resolveMentionVirtualScrollTop({
+        nextIndex,
+        clientHeight: container.clientHeight,
+        itemHeight: defItemHeight,
+        direction,
+      })
+      onSelectNumber(nextIndex, false)
+      return
+    }
 
-        return callback(false)
-      },
-      {
-        threshold: [0, 0.9],
-      },
-    )
-    observer.observe(dom)
+    onSelectNumber(nextIndex, true)
   })
+
+  const onUpArrow = useDebounceFn(() => applyArrowSelect('up'), { wait: 100, leading: true }).run
+  const onDownArrow = useDebounceFn(() => applyArrowSelect('down'), { wait: 100, leading: true }).run
 
   const onEnterKey = useDebounceFn(
     () => {

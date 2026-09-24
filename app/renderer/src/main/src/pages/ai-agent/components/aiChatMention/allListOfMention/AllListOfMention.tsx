@@ -274,12 +274,15 @@ export const AllListOfMention: React.FC<AllListOfMentionProps> = React.memo((pro
     }
   }, [flatItems, selectedKey])
 
-  const onKeyboardSelect = useMemoizedFn((value: number) => {
+  const onKeyboardSelect = useMemoizedFn((value: number, isScroll: boolean) => {
     if (value >= 0 && value < flatItems.length) {
       userNavigatedRef.current = true
       const item = flatItems[value]
       setSelectedKey(item.rowKey)
-      document.getElementById(item.rowKey)?.scrollIntoView({ block: 'nearest' })
+      // 滚动已由 useSwitchSelectByKeyboard 按「倒数第二/正数第二」缓冲处理；仅兜底
+      if (isScroll) {
+        document.getElementById(item.rowKey)?.scrollIntoView({ block: 'nearest' })
+      }
     }
   })
   const onEnter = useMemoizedFn(() => {

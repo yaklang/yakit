@@ -408,6 +408,7 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
       onEnter: () => onEnter(),
       getContainer,
       enabled: keyboardEnabled,
+      defItemHeight: 32,
     })
 
     const onEnter = useMemoizedFn(() => {
@@ -544,6 +545,7 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
       onEnter: () => onEnter(),
       getContainer,
       enabled: keyboardEnabled,
+      defItemHeight: 32,
     })
 
     const onEnter = useMemoizedFn(() => {
@@ -718,6 +720,7 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
       onEnter: () => onEnter(),
       getContainer,
       enabled: keyboardEnabled,
+      defItemHeight: 32,
     })
 
     const onEnter = useMemoizedFn(() => {
@@ -816,8 +819,14 @@ const BrowserListOfMention: React.FC<BrowserListOfMentionProps> = React.memo(
       setSelected(current)
     }, [filtered, selectedId])
 
-    const onKeyboardSelect = useMemoizedFn((value: number) => {
-      if (value >= 0 && value < filtered.length) setSelected(filtered[value])
+    const onKeyboardSelect = useMemoizedFn((value: number, isScroll: boolean) => {
+      if (value >= 0 && value < filtered.length) {
+        const item = filtered[value]
+        setSelected(item)
+        if (isScroll) {
+          document.getElementById(`AIMentionSelectItem-${item.id}`)?.scrollIntoView({ block: 'nearest' })
+        }
+      }
     })
     const onEnter = useMemoizedFn(() => {
       if (selected && inViewport) onSelect(selected)
@@ -960,6 +969,7 @@ const FocusModeOfMention: React.FC<FocusModeOfMentionProps> = React.memo(
       onEnter: () => onEnter(),
       getContainer,
       enabled: keyboardEnabled,
+      defItemHeight: 32,
     })
 
     const onEnter = useMemoizedFn(() => {
