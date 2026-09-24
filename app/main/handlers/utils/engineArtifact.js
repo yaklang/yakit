@@ -6,13 +6,14 @@ const isSlimEngineVersion = (version) => (version || '').startsWith(SLIM_ENGINE_
 
 const getOssEngineVersion = (version) => (version || '').replace(new RegExp(`^${SLIM_ENGINE_VERSION_PREFIX}`), '')
 
-/** legacy 包没有 slim 产物，下载/校验时回退到标准版本号 */
-const resolveEngineArtifactVersion = (version, isLegacy) => {
-  if (isLegacy && isSlimEngineVersion(version)) {
-    return getOssEngineVersion(version)
-  }
-  return version
-}
+/**
+ * 版本号原样保留。legacy 只影响 Windows 文件名里的 legacy_ 段，
+ * 不在这里把 slim/ 改成全量；产物不存在时由下载侧再退回全量。
+ */
+const resolveEngineArtifactVersion = (version) => version || ''
+
+/** slim/x 对应的全量版本号。本身不是轻量版本时返回空串。 */
+const getFullEngineArtifactVersion = (version) => (isSlimEngineVersion(version) ? getOssEngineVersion(version) : '')
 
 /**
  * 根据版本号获取引擎文件名前缀，与 exp-cross-build 一致：
@@ -27,8 +28,8 @@ const getYakEngineNamePrefix = (version) => {
 }
 
 /** 本地缓存引擎文件名：yak-{version} / yak-dev-xxx / yak-slim-{version} */
-const getLocalEngineCacheName = (version, isLegacy) => {
-  const ver = resolveEngineArtifactVersion(version, isLegacy)
+const getLocalEngineCacheName = (version) => {
+  const ver = resolveEngineArtifactVersion(version)
   if ((ver || '').startsWith('dev/')) {
     return 'yak-' + ver.replace('dev/', 'dev-')
   }
@@ -39,7 +40,7 @@ const getLocalEngineCacheName = (version, isLegacy) => {
 }
 
 const getYakEngineArtifactFileName = (version, { platform, arch, isLegacy } = {}) => {
-  const artifactVersion = resolveEngineArtifactVersion(version, isLegacy)
+  const artifactVersion = resolveEngineArtifactVersion(version)
   const prefix = getYakEngineNamePrefix(artifactVersion)
   const plat = platform || 'win32'
   const architecture = arch || 'x64'
@@ -57,7 +58,7 @@ const getYakEngineArtifactFileName = (version, { platform, arch, isLegacy } = {}
 }
 
 const getYakEngineArtifactOssPath = (version, options) => {
-  const artifactVersion = resolveEngineArtifactVersion(version, options && options.isLegacy)
+  const artifactVersion = resolveEngineArtifactVersion(version)
   const ossVersion = getOssEngineVersion(artifactVersion)
   return `${ossVersion}/${getYakEngineArtifactFileName(version, options)}`
 }
@@ -67,6 +68,7 @@ module.exports = {
   isSlimEngineVersion,
   getOssEngineVersion,
   resolveEngineArtifactVersion,
+  getFullEngineArtifactVersion,
   getYakEngineNamePrefix,
   getLocalEngineCacheName,
   getYakEngineArtifactFileName,

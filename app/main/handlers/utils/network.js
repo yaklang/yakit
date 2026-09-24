@@ -18,7 +18,11 @@ const {
   SLIM_ENGINE_VERSION_PREFIX,
   isSlimEngineVersion,
 } = require('./engineVersion')
-const { getYakEngineArtifactFileName, resolveEngineArtifactVersion } = require('./engineArtifact')
+const {
+  getYakEngineArtifactFileName,
+  getFullEngineArtifactVersion,
+  isSlimEngineVersion: isSlimArtifactVersion,
+} = require('./engineArtifact')
 
 const add_proxy = process.env.https_proxy || process.env.HTTPS_PROXY
 
@@ -132,54 +136,53 @@ const isLegacyEnginePack = (skipInDev) => {
 const getEngineArtifactUrl = async (version, { skipLegacyInDev = false, checksum = false } = {}) => {
   const domain = await getAvailableOSSDomain()
   const isLegacy = isLegacyEnginePack(skipLegacyInDev)
-  const artifactVersion = resolveEngineArtifactVersion(version, isLegacy)
-  const fileName = getYakEngineArtifactFileName(artifactVersion, {
+  const fileName = getYakEngineArtifactFileName(version, {
     platform: process.platform,
     arch: process.arch,
     isLegacy,
   })
-  const ossVersion = getOssEngineVersion(artifactVersion)
+  const ossVersion = getOssEngineVersion(version)
   return `https://${domain}/yak/${ossVersion}/${fileName}${checksum ? '.sha256.txt' : ''}`
 }
 
 /** 获取校验url */
 const getCheckTextUrl = async (version) => getEngineArtifactUrl(version, { checksum: true })
-/** 获取指定版本号的引擎Hash值 */
-const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const url = await getCheckTextUrl(version)
-      if (url === '') {
-        throw new Error(`No Find ${version} Hash Url`)
-      }
 
-      axios
-        .get(url, { ...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(url) })
-        .then((response) => {
-          const versionData = Buffer.from(response.data).toString('utf8')
-          if (versionData.length > 0) {
-            let onlineHash = Buffer.from(response.data).toString('utf8')
-            // 去除换行符
-            onlineHash = (onlineHash || '').replace(/\r?\n/g, '')
-            // 去除首尾空格
-            onlineHash = onlineHash.trim()
-            resolve(onlineHash)
-          } else {
-            throw new Error('校验值不存在')
-          }
-        })
-        .catch((err) => {
-          if (err.response && err.response.status === 404) {
-            // 你可以 resolve(null) 或 resolve("")
-            resolve('')
-          } else {
-            reject(err)
-          }
-        })
-    } catch (error) {
-      reject(error)
-    }
-  })
+const readHashBody = (data) => {
+  const onlineHash = Buffer.from(data).toString('utf8').replace(/\r?\n/g, '').trim()
+  if (!onlineHash) throw new Error('校验值不存在')
+  return onlineHash
+}
+
+/** 只查这一个版本。404 返回空串，其它错误抛出。 */
+const fetchExactYakVersionHash = async (version, requestConfig) => {
+  const url = await getCheckTextUrl(version)
+  if (url === '') throw new Error(`No Find ${version} Hash Url`)
+  try {
+    const response = await axios.get(url, { ...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(url) })
+    return readHashBody(response.data)
+  } catch (err) {
+    if (err.response && err.response.status === 404) return ''
+    throw err
+  }
+}
+
+/**
+ * 仅社区版 Yakit 会请求 slim/ 版本。macOS / Linux / Windows（含 legacy）都先查轻量产物，
+ * 校验文件不存在再退回同版本全量产物。目前只有 Windows legacy 没有轻量包。
+ * 企业版 / IRify / Memfit 不带 slim/ 前缀，不会进这条回退。
+ */
+const resolveEngineDownloadVersion = async (version, requestConfig) => {
+  if (!isSlimArtifactVersion(version)) return version
+  const slimHash = await fetchExactYakVersionHash(version, requestConfig)
+  if (slimHash) return version
+  return getFullEngineArtifactVersion(version) || version
+}
+
+/** 获取指定版本号的引擎 Hash。轻量产物缺失时返回全量产物的 Hash。 */
+const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
+  const resolved = await resolveEngineDownloadVersion(version, requestConfig)
+  return fetchExactYakVersionHash(resolved, requestConfig)
 }
 /** 获取最新 yak 版本号 */
 const fetchLatestYakEngineVersion = () => fetchLatestVersionCommon('yak/latest/version.txt')
@@ -359,7 +362,9 @@ const downloadIntranetYakit = async (filePath, destination, progressHandler, onF
 
 module.exports = {
   getCheckTextUrl,
+  fetchExactYakVersionHash,
   fetchSpecifiedYakVersionHash,
+  resolveEngineDownloadVersion,
   fetchLatestYakEngineVersion,
   fetchLatestYakitVersion,
   fetchLatestYakitEEVersion,

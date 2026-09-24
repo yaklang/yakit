@@ -56,10 +56,26 @@ describe('writeEngineBuildTypeFile', () => {
     expect(writeEngineBuildTypeFile()).toBe('full')
   })
 
-  it('keeps community Yakit legacy packs on full because slim legacy artifacts do not exist', () => {
+  it('defaults community Yakit legacy packs to slim when no download sidecar exists', () => {
     process.env.YAKIT_EDITION = 'yakit'
     process.env.YAKIT_LEGACY = 'true'
-    expect(writeEngineBuildTypeFile()).toBe('full')
+    expect(writeEngineBuildTypeFile({ platform: 'darwin', arch: 'arm64', isLegacy: true })).toBe('slim')
+    expect(readType()).toBe('slim')
+  })
+
+  it('marks community Yakit full when the sidecar says the slim artifact was missing', () => {
+    process.env.YAKIT_EDITION = 'yakit'
+    fs.mkdirSync(path.join(cwd, 'bins'), { recursive: true })
+    fs.writeFileSync(path.join(cwd, 'bins', 'engine-build-type.windows-legacy'), 'full')
+    expect(writeEngineBuildTypeFile({ platform: 'win32', arch: 'x64', isLegacy: true })).toBe('full')
+    expect(readType()).toBe('full')
+  })
+
+  it('keeps other editions on full even if a slim sidecar is present', () => {
+    process.env.YAKIT_EDITION = 'yakitEE'
+    fs.mkdirSync(path.join(cwd, 'bins'), { recursive: true })
+    fs.writeFileSync(path.join(cwd, 'bins', 'engine-build-type.darwin.arm64'), 'slim')
+    expect(writeEngineBuildTypeFile({ platform: 'darwin', arch: 'arm64' })).toBe('full')
     expect(readType()).toBe('full')
   })
 })

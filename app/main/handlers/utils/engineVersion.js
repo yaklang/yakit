@@ -22,7 +22,7 @@ const isLegacySystemMode = () => {
   }
 }
 
-/** legacy 包没有 slim 产物，下载/校验时回退到标准版本号 */
+/** 版本号原样保留。产物缺失时的全量回退在下载侧处理，不在这里按 legacy 改版本。 */
 const resolveEngineArtifactVersion = (version) => resolveEngineArtifactVersionWithLegacy(version, isLegacySystemMode())
 
 /** 本地缓存引擎文件名：yak-{version} / yak-dev-xxx / yak-slim-{version} */
@@ -78,8 +78,7 @@ const fetchEngineBuildType = (version) => {
 
   try {
     const ver = getOssEngineVersion(version || '').replace(/^v/, '')
-    // legacy 下 slim/ 会落到全量缓存名，比对成功会把全量引擎误标成轻量
-    if (ver && !isLegacySystemMode()) {
+    if (ver) {
       const local = getLatestYakLocalEnginePath()
       const slimCache = path.join(getYaklangEngineDir(), getLocalEngineCacheName(`slim/${ver}`))
       if (fs.existsSync(local) && fs.existsSync(slimCache) && fileSha256(local) === fileSha256(slimCache)) {
@@ -105,13 +104,12 @@ const readBundledEngineBuildType = () => {
 }
 
 /**
- * 标记文件优先。legacy 没有 slim 产物，不能再用 slim hash 判断，否则会和全量 legacy 包撞上。
- * fetchHash 由调用方传入，避免和 network 循环依赖。
+ * 标记文件优先。fetchHash 必须只查 slim 产物本身，不能在 404 时退回全量 hash，
+ * 否则 Windows legacy 的全量引擎会被标成 slim。fetchHash 由调用方传入，避免和 network 循环依赖。
  */
 const resolveEngineBuildType = async (version, fetchHash) => {
   const localType = fetchEngineBuildType(version)
   if (localType === 'slim') return 'slim'
-  if (isLegacySystemMode()) return localType
 
   const ver = getOssEngineVersion(version || '').replace(/^v/, '')
   if (!ver || ver === 'dev' || ver.startsWith('dev/')) return localType

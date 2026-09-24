@@ -5,6 +5,7 @@ const {
   getYakEngineArtifactFileName,
   getYakEngineArtifactOssPath,
   resolveEngineArtifactVersion,
+  getFullEngineArtifactVersion,
 } = require('../engineArtifact')
 
 describe('community Yakit slim engine artifact names', () => {
@@ -33,14 +34,19 @@ describe('community Yakit slim engine artifact names', () => {
     expect(getLocalEngineCacheName('dev/abc', false)).toBe('yak-dev-abc')
   })
 
-  it('falls back from slim to full artifacts on Windows legacy packs', () => {
-    expect(resolveEngineArtifactVersion('slim/1.4.8-beta19', true)).toBe('1.4.8-beta19')
+  it('keeps slim names on legacy and exposes the matching full version for fallback', () => {
+    expect(resolveEngineArtifactVersion('slim/1.4.8-beta19')).toBe('slim/1.4.8-beta19')
+    expect(getFullEngineArtifactVersion('slim/1.4.8-beta19')).toBe('1.4.8-beta19')
+    expect(getFullEngineArtifactVersion('1.4.8-beta19')).toBe('')
     expect(getYakEngineArtifactFileName('slim/1.4.8-beta19', { platform: 'win32', isLegacy: true })).toBe(
-      'yak_windows_legacy_amd64.exe',
+      'yak-slim_windows_legacy_amd64.exe',
     )
     expect(getYakEngineArtifactOssPath('slim/1.4.8-beta19', { platform: 'win32', isLegacy: true })).toBe(
-      '1.4.8-beta19/yak_windows_legacy_amd64.exe',
+      '1.4.8-beta19/yak-slim_windows_legacy_amd64.exe',
     )
-    expect(getLocalEngineCacheName('slim/1.4.8-beta19', true)).toBe('yak-1.4.8-beta19')
+    expect(getYakEngineArtifactFileName('1.4.8-beta19', { platform: 'win32', isLegacy: true })).toBe(
+      'yak_windows_legacy_amd64.exe',
+    )
+    expect(getLocalEngineCacheName('slim/1.4.8-beta19')).toBe('yak-slim-1.4.8-beta19')
   })
 })

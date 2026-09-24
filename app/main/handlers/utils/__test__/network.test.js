@@ -3,7 +3,7 @@ const os = require('os')
 const path = require('path')
 const Module = require('module')
 
-const flags = { dev: false, extraRoot: '' }
+const flags = { dev: false, extraRoot: '', axiosGet: null }
 const originalRequire = Module.prototype.require
 
 Module.prototype.require = function (id) {
@@ -19,7 +19,9 @@ Module.prototype.require = function (id) {
   }
   if (id === 'electron-is-dev') return flags.dev
   if (id === 'axios') {
-    return { get: () => Promise.reject(new Error('offline')) }
+    return {
+      get: (...args) => (flags.axiosGet ? flags.axiosGet(...args) : Promise.reject(new Error('offline'))),
+    }
   }
   if (id === '../../filePath') {
     return {
@@ -51,6 +53,7 @@ describe('engine artifact urls', () => {
     flags.extraRoot = root
     flags.legacy = false
     flags.dev = false
+    flags.axiosGet = null
     fs.mkdirSync(path.join(root, 'bins'), { recursive: true })
   })
 
@@ -77,12 +80,29 @@ describe('engine artifact urls', () => {
     expect(isLegacyEnginePack(false)).toBe(false)
   })
 
-  it('falls back to the full legacy checksum when the install is legacy', async () => {
+  it('keeps the slim checksum url on legacy installs', async () => {
     writeLegacy()
     const { getCheckTextUrl } = loadNetwork()
     const url = await getCheckTextUrl('slim/1.4.8-beta19')
-    const file = process.platform === 'win32' ? 'yak_windows_legacy_amd64.exe' : `yak_${platformFile()}`
+    const file =
+      process.platform === 'win32' ? 'yak-slim_windows_legacy_amd64.exe' : `yak-slim_${platformFile()}`
     expect(url).toBe(`https://yaklang.oss-accelerate.aliyuncs.com/yak/1.4.8-beta19/${file}.sha256.txt`)
+  })
+
+  it('falls back to the full version when the slim checksum is missing', async () => {
+    writeLegacy()
+    flags.axiosGet = (requestUrl) => {
+      if (String(requestUrl).includes('yak-slim_')) {
+        const err = new Error('missing')
+        err.response = { status: 404 }
+        return Promise.reject(err)
+      }
+      return Promise.resolve({ data: 'abc\n', status: 200 })
+    }
+    const { resolveEngineDownloadVersion, fetchSpecifiedYakVersionHash } = loadNetwork()
+    await expect(resolveEngineDownloadVersion('slim/1.4.8-beta19')).resolves.toBe('1.4.8-beta19')
+    await expect(fetchSpecifiedYakVersionHash('slim/1.4.8-beta19')).resolves.toBe('abc')
+    await expect(resolveEngineDownloadVersion('1.4.8-beta19')).resolves.toBe('1.4.8-beta19')
   })
 
   it('keeps dev downloads off the legacy artifact', async () => {

@@ -31,6 +31,7 @@ const {
   downloadYakEngine,
   getDownloadUrl,
   getSuffix,
+  resolveEngineDownloadVersion,
 } = require('./utils/network')
 const {
   getLocalEngineCacheName,
@@ -40,7 +41,7 @@ const {
   resolveEngineBuildType,
 } = require('./utils/engineVersion')
 const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = require('./utils/requestWithProgress')
-const { getCheckTextUrl, fetchSpecifiedYakVersionHash } = require('../handlers/utils/network')
+const { getCheckTextUrl, fetchSpecifiedYakVersionHash, fetchExactYakVersionHash } = require('../handlers/utils/network')
 const { engineLogOutputFileAndUI } = require('../logFile')
 
 const restoreEngine = (callback) =>
@@ -272,10 +273,11 @@ const diagnosingYakVersion = () => {
 
 // 判断历史引擎版本是否存在以及正确性
 const asyncYakEngineVersionExistsAndCorrectness = (version) => {
-  const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
   return new Promise(async (resolve, reject) => {
     try {
-      const url = await getCheckTextUrl(version)
+      const resolved = await resolveEngineDownloadVersion(version)
+      const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
+      const url = await getCheckTextUrl(resolved)
       if (url === '') {
         reject(`Unsupported platform: ${process.platform}`)
         return
@@ -471,12 +473,13 @@ module.exports = {
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
-        const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
+        const resolved = await resolveEngineDownloadVersion(version)
+        const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
         try {
           fs.unlinkSync(dest)
         } catch (e) {}
         await downloadYakEngine(
-          version,
+          resolved,
           dest,
           (state) => {
             win.webContents.send('download-yak-engine-progress', state)
@@ -675,8 +678,8 @@ module.exports = {
     })
 
     const installYakEngine = (version) => {
-      return new Promise((resolve, reject) => {
-        let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
+      return resolveEngineDownloadVersion(version).then((resolved) => new Promise((resolve, reject) => {
+        let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
         origin = origin.replaceAll(`"`, `\"`)
 
         let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
@@ -715,12 +718,12 @@ module.exports = {
               return
             }
             try {
-              writeEngineBuildTypeByVersion(version)
+              writeEngineBuildTypeByVersion(resolved)
             } catch (e) {}
             resolve()
           },
         )
-      })
+      }))
     }
 
     ipcMain.handle('install-yak-engine', async (e, version) => {
@@ -729,7 +732,7 @@ module.exports = {
     })
 
     ipcMain.handle('fetch-yak-engine-build-type', async (e, version) => {
-      return await resolveEngineBuildType(version, fetchSpecifiedYakVersionHash)
+      return await resolveEngineBuildType(version, fetchExactYakVersionHash)
     })
 
     // 获取yak code文件根目录路径
@@ -1174,12 +1177,13 @@ module.exports = {
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
-        const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
+        const resolved = await resolveEngineDownloadVersion(version)
+        const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
         try {
           fs.unlinkSync(dest)
         } catch (e) {}
         await downloadYakEngine(
-          version,
+          resolved,
           dest,
           (state) => {
             win.webContents.send('download-yak-engine-progress', state)
@@ -1237,8 +1241,8 @@ module.exports = {
     })
 
     const installYakEngine = (version) => {
-      return new Promise((resolve, reject) => {
-        let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
+      return resolveEngineDownloadVersion(version).then((resolved) => new Promise((resolve, reject) => {
+        let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(resolved))
         origin = origin.replaceAll(`"`, `\"`)
 
         let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
@@ -1277,12 +1281,12 @@ module.exports = {
               return
             }
             try {
-              writeEngineBuildTypeByVersion(version)
+              writeEngineBuildTypeByVersion(resolved)
             } catch (e) {}
             resolve()
           },
         )
-      })
+      }))
     }
 
     ipcMain.handle(ipcEventPre + 'install-yak-engine', async (e, version) => {
@@ -1291,7 +1295,7 @@ module.exports = {
     })
 
     ipcMain.handle(ipcEventPre + 'fetch-yak-engine-build-type', async (e, version) => {
-      return await resolveEngineBuildType(version, fetchSpecifiedYakVersionHash)
+      return await resolveEngineBuildType(version, fetchExactYakVersionHash)
     })
 
     ipcMain.handle(ipcEventPre + 'fetch-bundled-engine-build-type', async () => {

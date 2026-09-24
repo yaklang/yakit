@@ -77,15 +77,24 @@ describe('engine build type on legacy packs', () => {
     expect(fetchEngineBuildType('1.4.8-beta19')).toBe('slim')
   })
 
-  it('does not accept a legacy full hash as proof of a slim engine', async () => {
+  it('stays full on legacy when the slim checksum is missing', async () => {
     writeMode('legacy')
     writeSameBytes('yak-1.4.8-beta19')
+    const fetchHash = vi.fn(async () => '')
+    expect(await resolveEngineBuildType('1.4.8-beta19', fetchHash)).toBe('full')
+    expect(fetchHash).toHaveBeenCalledWith('slim/1.4.8-beta19', { timeout: 3000 })
+    expect(fs.existsSync(path.join(paths.engineDir, 'engine-build-type.txt'))).toBe(false)
+  })
+
+  it('marks a legacy install slim when the exact slim checksum matches', async () => {
+    writeMode('legacy')
+    fs.writeFileSync(path.join(paths.engineDir, engineFileName), 'slim-engine')
     const fetchHash = vi.fn(async () => {
       const crypto = require('crypto')
-      return crypto.createHash('sha256').update(Buffer.from('same-engine')).digest('hex')
+      return crypto.createHash('sha256').update(Buffer.from('slim-engine')).digest('hex')
     })
-    expect(await resolveEngineBuildType('1.4.8-beta19', fetchHash)).toBe('full')
-    expect(fetchHash).not.toHaveBeenCalled()
+    expect(await resolveEngineBuildType('1.4.8-beta19', fetchHash)).toBe('slim')
+    expect(fetchHash).toHaveBeenCalledWith('slim/1.4.8-beta19', { timeout: 3000 })
   })
 
   it('persists slim when the online slim hash matches the local engine', async () => {
