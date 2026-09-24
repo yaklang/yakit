@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ManualHijackType } from '@/defaultConstants/mitmV2'
-import { MITMHijackTaskSource } from '../../MITMManual/conditionalHijackMode'
+import { MITMHijackTaskSource, resolveConditionalHijackViewMode } from '../../MITMManual/conditionalHijackMode'
 import {
   resolveV1ConditionalHijackModeAfterCompletion,
   resolveV1HijackMessageAction,
@@ -184,4 +184,40 @@ describe('MITMHijackedContent V1 conditional hijack wiring', () => {
       ).toBe(ManualHijackType.Manual)
     })
   })
+})
+
+it.each([ManualHijackType.Log, ManualHijackType.PluginOutput, ManualHijackType.HijackFilter])(
+  'V1 promotes conditional-manual messages from %s and stays manual after completion',
+  (mode) => {
+    const source = MITMHijackTaskSource.ConditionalManual
+    for (const resolve of [resolveRequest, resolveResponse]) {
+      const decision = resolve({ mode, source })
+      expect(decision.shouldActivateConditionalView).toBe(true)
+      expect(decision.conditionalHijackTask).toBe(true)
+      const nextMode = resolveConditionalHijackViewMode(source)
+      expect(nextMode).toBe(ManualHijackType.Manual)
+      expect(resolveV1ConditionalHijackModeAfterCompletion(nextMode, { action: 'discard' })).toBe(
+        ManualHijackType.Manual,
+      )
+      expect(resolveV1ConditionalHijackModeAfterCompletion(nextMode, { action: 'forward-response' })).toBe(
+        ManualHijackType.Manual,
+      )
+      expect(
+        resolveV1ConditionalHijackModeAfterCompletion(nextMode, {
+          action: 'forward-request',
+          isManual: false,
+          hijackResponseType: 'never',
+        }),
+      ).toBe(ManualHijackType.Manual)
+    }
+  },
+)
+
+it('does not reopen the V1 editor or notify again once conditional-manual mode is active', () => {
+  for (const resolve of [resolveRequest, resolveResponse]) {
+    expect(
+      resolve({ mode: ManualHijackType.Manual, source: MITMHijackTaskSource.ConditionalManual })
+        .shouldActivateConditionalView,
+    ).toBe(false)
+  }
 })

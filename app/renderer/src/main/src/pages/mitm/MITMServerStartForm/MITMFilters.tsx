@@ -42,6 +42,7 @@ export interface MITMFilterSchema {
   includeSuffix?: string[]
   excludeSuffix?: string[]
   filterBundledStaticJS?: boolean
+  hijackToManual?: boolean
   excludeMethod?: string[]
   excludeContentTypes?: string[]
   excludeUri?: string[]
@@ -192,6 +193,7 @@ export interface MITMFilterData {
   ExcludeMIME: FilterDataItem[]
 
   FilterBundledStaticJS?: boolean
+  HijackToManual?: boolean
 }
 
 export interface MITMAdvancedFilter extends FilterDataItem {
