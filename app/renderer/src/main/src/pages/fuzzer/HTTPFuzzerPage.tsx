@@ -961,7 +961,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const responseSearchDraftRef = useRef('')
   const [defaultResponseSearch, setDefaultResponseSearch] = useState('')
 
-  const [currentSelectId, setCurrentSelectId] = useState<number>() // 历史中选中的记录id
+  const [currentSelectId, setCurrentSelectId, getCurrentSelectId] = useGetSetState<number>() // 历史中选中的记录id
 
   const [droppedCount, setDroppedCount] = useState(0)
   // state
@@ -1972,6 +1972,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         advancedConfigShow,
         hotPatchCode: hotPatchCodeRef.current,
         browserTransformSelection,
+        lastSelectedHistory: { id: getCurrentSelectId(), showAll: getShowAll() },
       }
       onUpdateFuzzerSequenceDueToDataChanges(props.id || '', webFuzzerPageInfo)
     },
@@ -2002,6 +2003,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
           request: param.request,
           hotPatchCode: param.hotPatchCode,
           browserTransformSelection: param.browserTransformSelection,
+          lastSelectedHistory: param.lastSelectedHistory,
         },
       },
     }
@@ -2037,7 +2039,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const setNewCurrentPageRef = useRef(false)
   const [currentPage, setCurrentPage] = useState<number>(0)
   const [total, setTotal] = useState<number>(0)
-  const [showAll, setShowAll] = useState<boolean>(false)
+  const [showAll, setShowAll, getShowAll] = useGetSetState<boolean>(false)
   const skipNextSyncTotalRef = useRef(false)
   const buildHistoryQueryParams = useMemoizedFn((pageInt: number, limitInt: number, all: boolean) => {
     return {
@@ -2083,16 +2085,16 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
   })
   /**
-   * 切换到「查看全部」作用域后，按 currentSelectId 在 all 列表中查找其新的绝对位置并同步 currentPage，
-   * 避免上一条/下一条因作用域切换指向错误记录。
+   * 按 id 在指定作用域（all / 当前 tab）的历史列表中查找其绝对位置并同步 currentPage，
+   * 避免上一条/下一条因作用域切换或缓存恢复指向错误记录。
    * 采用「首页大 Limit 命中优先 + 未命中按大 Limit 逐页兜底」：
    * 绝大多数情况下首页一次即可命中；最坏探测次数 ≈ total / LIMIT，相比小 Limit 大幅减少。
-   * 注：currentPage 的语义是「选中记录在全部列表中的绝对位置（1..total）」，
+   * 注：currentPage 的语义是「选中记录在当前作用域列表中的绝对位置（1..total）」，
    */
-  const resyncCurrentPageInAllScope = useMemoizedFn((id: number) => {
+  const resyncCurrentPage = useMemoizedFn((id: number, all: boolean) => {
     const LIMIT = 200
     ipcRenderer
-      .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, LIMIT, true))
+      .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, LIMIT, all))
       .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
         const idx = data.Data.findIndex((d) => d.BasicInfo.Id === id)
         if (idx >= 0) {
@@ -2104,13 +2106,13 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         let p = 2
         const probe = () => {
           if (p > maxPage) {
-            // 选中记录已不在当前 all 列表（如被删除），回到未选中态
+            // 选中记录已不在当前作用域列表（如被删除），回到未选中态
             setCurrentSelectId(undefined)
             setCurrentPage(0)
             return
           }
           ipcRenderer
-            .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(p, LIMIT, true))
+            .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(p, LIMIT, all))
             .then((res: { Data: HTTPFuzzerTaskDetail[]; Total: number }) => {
               const i = res.Data.findIndex((d) => d.BasicInfo.Id === id)
               if (i >= 0) {
@@ -2127,6 +2129,60 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   useEffect(() => {
     syncTotal()
   }, [showAll])
+
+  useUpdateEffect(() => {
+    sendFuzzerSettingInfo()
+  }, [currentSelectId, showAll])
+
+  /**
+   * 初次加载且可见时恢复上次的历史选中状态：
+   * 1. 从页面缓存读取上次的 {id, showAll}，先同步「查看全部」开关；
+   * 2. 有 id 则先探测该记录是否仍存在，存在才恢复选中并加载，不存在则清掉缓存的脏 id；
+   * 3. 没有 id（上次无选中）只恢复 showAll，不自动选中。
+   */
+  const autoSelectHistoryRef = useRef(false)
+  useEffect(() => {
+    if (autoSelectHistoryRef.current) return
+    if (!inViewport) return
+    autoSelectHistoryRef.current = true
+
+    const last = initWebFuzzerPageInfo().lastSelectedHistory
+    if (!last) return
+    setShowAll(last.showAll)
+    if (!last.id) return
+    const id = last.id
+
+    /** 记录已不存在时，清掉缓存里的脏 id（保留 showAll）并提示用户 */
+    const clearStaleId = () => {
+      const current = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+      if (!current?.pageParamsInfo.webFuzzerPageInfo) return
+      updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
+        ...current,
+        pageParamsInfo: {
+          ...current.pageParamsInfo,
+          webFuzzerPageInfo: {
+            ...current.pageParamsInfo.webFuzzerPageInfo,
+            lastSelectedHistory: { id: undefined, showAll: last.showAll },
+          },
+        },
+      })
+      yakitNotify('warning', t('HTTPFuzzerPage.historyNotFound'))
+    }
+
+    // 先探测这条历史是否仍存在（可能已被删除），存在才恢复，避免 loadHistory 拿到空数据卡 loading
+    ipcRenderer
+      .invoke('GetHistoryHTTPFuzzerTask', { Id: id })
+      .then((data: { OriginRequest?: HistoryHTTPFuzzerTask }) => {
+        if (!data?.OriginRequest) {
+          clearStaleId()
+          return
+        }
+        loadHistory(id)
+        // currentPage 是位置信息、不能记缓存，按 id 在当前作用域重新查位置同步
+        resyncCurrentPage(id, last.showAll)
+      })
+      .catch(clearStaleId)
+  }, [inViewport])
 
   const webFuzzerNewEditorRef = useRef<any>()
 
@@ -3312,7 +3368,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     setCurrentSelectId(undefined)
                                   } else if (currentSelectId !== undefined) {
                                     // 切换到「查看全部」时保留选中 id，但 currentPage 需要按 id 在全部列表中的位置重新计算
-                                    resyncCurrentPageInAllScope(currentSelectId)
+                                    resyncCurrentPage(currentSelectId, true)
                                   }
                                   setShowAll(v)
                                 }}

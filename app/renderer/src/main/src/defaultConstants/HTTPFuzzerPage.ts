@@ -2519,6 +2519,7 @@ export const defaultWebFuzzerPageInfo: WebFuzzerPageInfoProps = {
   request: defaultPostTemplate,
   variableActiveKeys: undefined,
   hotPatchCode: HotPatchDefaultContent,
+  lastSelectedHistory: undefined,
 }
 // 注：此处顺序为倒序（新增DefaultDescription记得带-fixed，此处为标识固定项）
 export const defaultLabel: LabelDataProps[] = [
