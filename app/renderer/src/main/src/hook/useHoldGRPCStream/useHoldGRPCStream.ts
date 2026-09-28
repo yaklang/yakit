@@ -145,6 +145,10 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
   // ruleData
   const ruleData = useRef<StreamResult.RuleData[]>([])
 
+  // 数据变更标记：onData 置脏；lastResults 缓存上次发布的快照，无变化时直接复用
+  const dirty = useRef(false)
+  const lastResults = useRef<HoldGRPCStreamInfo | undefined>(undefined)
+
   /** 自定义tab页放前面还是后面 */
   const placeTab = useMemoizedFn((isHead: boolean, info: HoldGRPCStreamProps.InfoTab) => {
     topTabs.current.unshift(info)
@@ -161,6 +165,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
 
   useEffect(() => {
     const offData = yakitStream.onData(token, async (data: StreamResult.BaseProsp) => {
+      dirty.current = true
       // run-time-id
       if (data?.RuntimeID) {
         runTimeId.current.cache = data.RuntimeID
@@ -363,6 +368,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
 
   /** @name 数据流处理逻辑 */
   const handleResults = useMemoizedFn((updateState = true) => {
+    // 无新数据且已发布过快照时跳过重建与 setState，避免定时器空转导致整树重渲染
+    if (updateState && !dirty.current && lastResults.current) return lastResults.current
     // runtime-id
     if (runTimeId.current.sent !== runTimeId.current.cache && setRuntimeId) {
       setRuntimeId(runTimeId.current.cache)
@@ -423,7 +430,11 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
       logState: logs,
       rulesState: rules,
     }
-    if (updateState) setStreamInfo(nextStreamInfo)
+    if (updateState) {
+      dirty.current = false
+      lastResults.current = nextStreamInfo
+      setStreamInfo(nextStreamInfo)
+    }
     return nextStreamInfo
   })
 
@@ -477,6 +488,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     riskMessages.current = []
     messages.current = []
     ruleData.current = []
+    dirty.current = false
+    lastResults.current = undefined
   })
 
   const snapshot = useMemoizedFn(() => handleResults(false))
