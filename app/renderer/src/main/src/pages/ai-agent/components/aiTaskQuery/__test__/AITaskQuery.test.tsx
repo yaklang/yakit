@@ -189,4 +189,32 @@ describe('AITaskQuery 调整方向（原人工介入）', () => {
 
     expect(onSendMock).toHaveBeenCalledTimes(3)
   })
+
+  it('追加待办与调整方向共用 dequeueLoading：连点只发一次 remove_task', () => {
+    const { container } = renderAITaskQuery()
+    setQueue(true, [queueItem('task-shared-lock', '共用 loading 锁用例')])
+
+    clickAddToDoButton(container)
+    // first click sets dequeueLoading; both buttons disabled so second click is a no-op
+    clickAdjustButton(container)
+
+    // one round only: remove + add_todo + queue_info
+    expect(onSendMock).toHaveBeenCalledTimes(3)
+    const syncTypes = onSendMock.mock.calls.map((c) => c[0].params.SyncType)
+    expect(syncTypes).toEqual(['react_remove_task', 'add_todo_sync', 'queue_info'])
+    expect(pushSpy).not.toHaveBeenCalled()
+  })
+
+  it('调整方向后追加待办按钮也被共用 loading 挡住', () => {
+    const { container } = renderAITaskQuery()
+    setQueue(true, [queueItem('task-shared-lock-2', '反向连点共用锁')])
+
+    clickAdjustButton(container)
+    clickAddToDoButton(container)
+
+    expect(onSendMock).toHaveBeenCalledTimes(3)
+    const syncTypes = onSendMock.mock.calls.map((c) => c[0].params.SyncType)
+    expect(syncTypes).toEqual(['react_remove_task', 'user_intervention', 'queue_info'])
+    expect(pushSpy).toHaveBeenCalledTimes(1)
+  })
 })

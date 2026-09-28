@@ -140,8 +140,8 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
 
   const { loading: upLoading, markSending: markUpSending } = useSyncLoadingState()
   const { loading: removeLoading, markSending: markRemoveSending } = useSyncLoadingState()
-  const { loading: immediateLoading, markSending: markInterventionSending } = useSyncLoadingState()
-  const { loading: addToDoLoading, markSending: markAddToDoSending } = useSyncLoadingState()
+  /** 调整方向 / 追加待办共用：任一发送中同时禁用两个按钮，避免连点各发一次 remove_task */
+  const { loading: dequeueLoading, markSending: markDequeueSending } = useSyncLoadingState()
 
   const onTaskUp = useDebounceFn(
     () => {
@@ -192,46 +192,37 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
     { wait: 200, leading: true },
   ).run
   /** 从队列移除当前项后执行主动作，再 QUEUE_INFO 刷新列表（调整方向 / 追加待办共用） */
-  const dequeueThenAct = useMemoizedFn(
-    (opts: {
-      busy: boolean
-      markSending: (syncId: string) => void
-      action: (syncId: string) => void
-      after?: () => void
-    }) => {
-      if (!execute || opts.busy) return
+  const dequeueThenAct = useMemoizedFn((opts: { action: (syncId: string) => void; after?: () => void }) => {
+    if (!execute || dequeueLoading) return
 
-      const removeTaskInfo: AIInputEvent = {
-        IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_REMOVE_TASK,
-        SyncJsonInput: JSON.stringify({ task_id: item.id }),
-        Params: {},
-        SyncID: randomString(8),
-      }
-      onSend({ token: sessionId, type: '', params: removeTaskInfo })
+    const removeTaskInfo: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_REMOVE_TASK,
+      SyncJsonInput: JSON.stringify({ task_id: item.id }),
+      Params: {},
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: '', params: removeTaskInfo })
 
-      const syncId = randomString(8)
-      opts.markSending(syncId)
-      opts.action(syncId)
+    const syncId = randomString(8)
+    markDequeueSending(syncId)
+    opts.action(syncId)
 
-      const queueInfo: AIInputEvent = {
-        IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
-        Params: {},
-        SyncID: randomString(8),
-      }
-      onSend({ token: sessionId, type: '', params: queueInfo })
+    const queueInfo: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+      Params: {},
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: '', params: queueInfo })
 
-      opts.after?.()
-    },
-  )
+    opts.after?.()
+  })
 
   /** 调整方向（原人工介入）：删队列后以 user_input 发介入信号，并写入聊天记录 */
   const onTaskImmediate = useDebounceFn(
     () => {
       dequeueThenAct({
-        busy: immediateLoading,
-        markSending: markInterventionSending,
         action: (syncId) => {
           const interventionInfo: AIInputEvent = {
             IsSyncMessage: true,
@@ -254,8 +245,6 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
       const text = (item.user_input || '').trim()
       if (!text) return
       dequeueThenAct({
-        busy: addToDoLoading,
-        markSending: markAddToDoSending,
         action: (syncId) => {
           const addTodoInfo: AIInputEvent = {
             IsSyncMessage: true,
@@ -301,15 +290,15 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
             <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
           </Tooltip>
         )}
-        <YakitButton size="small" type="text2" onClick={onAddToDo} loading={addToDoLoading} disabled={addToDoLoading}>
+        <YakitButton size="small" type="text2" onClick={onAddToDo} loading={dequeueLoading} disabled={dequeueLoading}>
           {t('AITaskQuery.addToDo')}
         </YakitButton>
         <YakitButton
           size="small"
           type="text2"
           onClick={onTaskImmediate}
-          loading={immediateLoading}
-          disabled={immediateLoading}
+          loading={dequeueLoading}
+          disabled={dequeueLoading}
         >
           {t('AITaskQuery.adjustDirection')}
         </YakitButton>
