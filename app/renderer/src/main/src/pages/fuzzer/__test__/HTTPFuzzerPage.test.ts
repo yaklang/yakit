@@ -376,3 +376,130 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     dispose()
   })
 })
+
+// 恢复 effect 提取：autoSelectHistoryRef 声明 + 含它的 useEffect
+const autoSelectRefDecl = findOne(
+  (node) =>
+    ts.isVariableStatement(node) &&
+    node.declarationList.declarations.some((d) => d.name.getText(source) === 'autoSelectHistoryRef'),
+)
+const autoSelectEffect = findOne(
+  (node) =>
+    ts.isExpressionStatement(node) &&
+    ts.isCallExpression(node.expression) &&
+    node.expression.expression.getText(source) === 'useEffect' &&
+    node.getText(source).includes('autoSelectHistoryRef'),
+)
+const autoSelectCode = ts.transpileModule(`${autoSelectRefDecl}\n${autoSelectEffect}`, {
+  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
+}).outputText
+
+const setupAutoSelect = (
+  overrides: {
+    lastSelectedHistory?: any
+    invokeImpl?: (channel: string) => Promise<any>
+    inViewport?: boolean
+  } = {},
+) => {
+  const invoke = vi.fn(
+    overrides.invokeImpl ||
+      (async (channel: string) => {
+        if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: { Request: 'GET /history' } }
+        if (channel === 'QueryHistoryHTTPFuzzerTaskEx') return { Data: [{ BasicInfo: { Id: 5 } }], Total: 1 }
+        return undefined
+      }),
+  )
+  const cached = {
+    pageParamsInfo: { webFuzzerPageInfo: { lastSelectedHistory: overrides.lastSelectedHistory } },
+  }
+  const bindings: Record<string, any> = {
+    useRef: (init: any) => ({ current: init }),
+    useEffect: (fn: () => any) => fn(),
+    initWebFuzzerPageInfo: () => ({ lastSelectedHistory: overrides.lastSelectedHistory }),
+    setShowAll: vi.fn(),
+    loadHistory: vi.fn(),
+    resyncCurrentPage: vi.fn(),
+    ipcRenderer: { invoke },
+    queryPagesDataById: vi.fn(() => cached),
+    updatePagesDataCacheById: vi.fn(),
+    yakitNotify: vi.fn(),
+    t: (value: string) => value,
+    YakitRoute: { HTTPFuzzer: 'fuzzer' },
+    props: { id: 'page' },
+    inViewport: overrides.inViewport ?? true,
+  }
+  new Function(...Object.keys(bindings), `${autoSelectCode}`)(...Object.values(bindings))
+  return { bindings, invoke }
+}
+
+describe('auto-select history on initial load', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => {
+    vi.clearAllTimers()
+    vi.useRealTimers()
+  })
+
+  it('restores the last selected history when the record still exists', async () => {
+    const { bindings, invoke } = setupAutoSelect({
+      lastSelectedHistory: { id: 5, showAll: false },
+    })
+    await vi.runAllTimersAsync()
+    expect(bindings.setShowAll).toHaveBeenLastCalledWith(false)
+    expect(invoke).toHaveBeenCalledWith('GetHistoryHTTPFuzzerTask', { Id: 5 })
+    expect(bindings.loadHistory).toHaveBeenCalledWith(5)
+    expect(bindings.resyncCurrentPage).toHaveBeenCalledWith(5, false)
+    expect(bindings.yakitNotify).not.toHaveBeenCalled()
+  })
+
+  it('clears stale id and warns when the record no longer exists', async () => {
+    const { bindings, invoke } = setupAutoSelect({
+      lastSelectedHistory: { id: 99, showAll: true },
+      invokeImpl: async (channel: string) => {
+        if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: undefined }
+        return undefined
+      },
+    })
+    await vi.runAllTimersAsync()
+    expect(bindings.setShowAll).toHaveBeenLastCalledWith(true)
+    expect(invoke).toHaveBeenCalledWith('GetHistoryHTTPFuzzerTask', { Id: 99 })
+    expect(bindings.loadHistory).not.toHaveBeenCalled()
+    expect(bindings.resyncCurrentPage).not.toHaveBeenCalled()
+    expect(bindings.updatePagesDataCacheById).toHaveBeenCalledWith(
+      'fuzzer',
+      expect.objectContaining({
+        pageParamsInfo: {
+          webFuzzerPageInfo: { lastSelectedHistory: { id: undefined, showAll: true } },
+        },
+      }),
+    )
+    expect(bindings.yakitNotify).toHaveBeenCalledWith('warning', 'HTTPFuzzerPage.historyNotFound')
+  })
+
+  it('only restores showAll when there is no cached id', async () => {
+    const { bindings, invoke } = setupAutoSelect({
+      lastSelectedHistory: { id: undefined, showAll: true },
+    })
+    await vi.runAllTimersAsync()
+    expect(bindings.setShowAll).toHaveBeenLastCalledWith(true)
+    expect(invoke).not.toHaveBeenCalledWith('GetHistoryHTTPFuzzerTask', expect.anything())
+    expect(bindings.loadHistory).not.toHaveBeenCalled()
+    expect(bindings.resyncCurrentPage).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when there is no cached lastSelectedHistory', async () => {
+    const { bindings } = setupAutoSelect({ lastSelectedHistory: undefined })
+    await vi.runAllTimersAsync()
+    expect(bindings.setShowAll).not.toHaveBeenCalled()
+    expect(bindings.loadHistory).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when not in viewport', async () => {
+    const { bindings } = setupAutoSelect({
+      lastSelectedHistory: { id: 5, showAll: false },
+      inViewport: false,
+    })
+    await vi.runAllTimersAsync()
+    expect(bindings.setShowAll).not.toHaveBeenCalled()
+    expect(bindings.loadHistory).not.toHaveBeenCalled()
+  })
+})
