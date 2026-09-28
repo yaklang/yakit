@@ -5558,7 +5558,7 @@ message BatchSetRiskTagsRequest {
   repeated string Hashes = 7;
   string Token = 8;
   string RiskTypeVerbose = 9;
-  string Severity = 10;
+  string SetSeverity = 10;
   double SeverityScore = 11;
   // 处置原因
   string TagReason = 12;
@@ -10494,13 +10494,4 @@ message BrowserExtensionTaskEvent {
   bytes Data = 5;
   int64 Timestamp = 6;
   uint64 Sequence = 7;
-}
-
-message UploadToTemporaryFileRequest {
-  bytes Data = 1;
-}
-
-message UploadToTemporaryFileResponse {
-  string FileName = 1;
-  int64 Size = 2;
 }
