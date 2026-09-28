@@ -8,6 +8,8 @@ import {
   ListTodoOutlined,
   TrashOutlined,
   XOutlined,
+  GitPullRequestCreateArrowOutlined,
+  Rotate3dOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { useMemoizedFn, useDebounceFn, useInViewport } from 'ahooks'
 import styles from './AITaskQuery.module.scss'
@@ -290,18 +292,28 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
             <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
           </Tooltip>
         )}
-        <YakitButton size="small" type="text2" onClick={onAddToDo} loading={dequeueLoading} disabled={dequeueLoading}>
-          {t('AITaskQuery.addToDo')}
-        </YakitButton>
-        <YakitButton
-          size="small"
-          type="text2"
-          onClick={onTaskImmediate}
-          loading={dequeueLoading}
-          disabled={dequeueLoading}
-        >
-          {t('AITaskQuery.adjustDirection')}
-        </YakitButton>
+        <Tooltip title={t('AITaskQuery.addToDo')}>
+          <YakitButton
+            aria-label={t('AITaskQuery.addToDo')}
+            icon={<GitPullRequestCreateArrowOutlined color="currentColor" />}
+            size="small"
+            type="text2"
+            onClick={onAddToDo}
+            loading={dequeueLoading}
+            disabled={dequeueLoading}
+          />
+        </Tooltip>
+        <Tooltip title={t('AITaskQuery.adjustDirection')}>
+          <YakitButton
+            aria-label={t('AITaskQuery.adjustDirection')}
+            icon={<Rotate3dOutlined color="currentColor" />}
+            size="small"
+            type="text2"
+            onClick={onTaskImmediate}
+            loading={dequeueLoading}
+            disabled={dequeueLoading}
+          />
+        </Tooltip>
         <div className={styles['divider-style']} />
         <YakitButton
           type="text2"

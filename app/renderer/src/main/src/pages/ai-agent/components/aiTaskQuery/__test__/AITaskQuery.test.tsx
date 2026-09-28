@@ -72,8 +72,8 @@ const setQueue = (execute: boolean, items: AIAgentGrpcApi.QuestionQueueItem[]) =
 }
 
 const clickAddToDoButton = (container: HTMLElement, index = 0) => {
-  const buttons = container.querySelectorAll('button')
-  const target = [...buttons].filter((b) => b.textContent?.includes('AITaskQuery.addToDo'))[index]
+  const buttons = container.querySelectorAll('button[aria-label="AITaskQuery.addToDo"]')
+  const target = buttons[index]
   expect(target).toBeTruthy()
   act(() => {
     fireEvent.click(target!)
@@ -81,8 +81,8 @@ const clickAddToDoButton = (container: HTMLElement, index = 0) => {
 }
 
 const clickAdjustButton = (container: HTMLElement, index = 0) => {
-  const buttons = container.querySelectorAll('button')
-  const target = [...buttons].filter((b) => b.textContent?.includes('AITaskQuery.adjustDirection'))[index]
+  const buttons = container.querySelectorAll('button[aria-label="AITaskQuery.adjustDirection"]')
+  const target = buttons[index]
   expect(target).toBeTruthy()
   act(() => {
     fireEvent.click(target!)
