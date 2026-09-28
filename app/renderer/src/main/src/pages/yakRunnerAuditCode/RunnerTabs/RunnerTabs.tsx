@@ -1553,7 +1553,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
     setWaitRemoveAll,
   } = props
   const { setActiveFile, setAreaInfo } = useDispatcher()
-  const { fileTree, areaInfo } = useStore()
+  const { fileTree, areaInfo, showAllFiles } = useStore()
 
   const [codePath, setCodePath] = useState<string>('')
 
@@ -1611,7 +1611,8 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
           // 如若保存路径为文件列表中则需要更新文件树
           if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
             let arr: FileNodeMapProps[] = []
-            const { data } = await grpcFetchAuditTree(parentPath)
+            // 新创建的文件尚未参与增量编译，不在最后一次 diff 中，需走聚合视图刷新
+            const { data } = await grpcFetchAuditTree(parentPath, false)
             arr = data
             if (arr.length > 0) {
               const childArr: string[] = []

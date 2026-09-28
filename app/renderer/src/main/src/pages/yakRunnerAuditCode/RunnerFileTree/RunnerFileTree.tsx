@@ -87,8 +87,8 @@ const RunnerFileTreeTab: YakitTabsProps[] = [
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
   const { fileTreeLoad, boxHeight, onActiveTabChange } = props
   const { t, i18nRefresh } = useI18nNamespaces(['yakRunner', 'yakitUi'])
-  const { fileTree, activeFile, projectName, pageInfo } = useStore()
-  const { handleFileLoadData, setRuntimeID } = useDispatcher()
+  const { fileTree, activeFile, projectName, pageInfo, showAllFiles, isIncrementalProject } = useStore()
+  const { handleFileLoadData, setRuntimeID, setShowAllFiles } = useDispatcher()
   const [afreshName, setAfreshName] = useState<string>()
   const [visible, setVisible] = useState<boolean>(false)
   const [searchVisible, setSearchVisible] = useState<boolean>(false)
@@ -517,6 +517,16 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                   <div className={styles['title-box']}>
                     <div className={styles['title-style']}>{getActiveName(active)}</div>
                     {fileTreeLoad && active === 'all' && <YakitSpin size="small" />}
+                    {active === 'all' && isIncrementalProject && fileTree.length > 0 && (
+                      <YakitCheckbox
+                        checked={showAllFiles}
+                        onChange={(e) => {
+                          setShowAllFiles && setShowAllFiles(e.target.checked)
+                        }}
+                      >
+                        <span style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{t('RunnerFileTree.showAllFiles')}</span>
+                      </YakitCheckbox>
+                    )}
                   </div>
                   <div className={styles['extra']}>
                     {active !== 'global-filtering-function' && (
