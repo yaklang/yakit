@@ -166,6 +166,7 @@ import {
   HTTP_FLOW_FAVORITE_TAG,
 } from './HTTPFlowTable.constants'
 import {
+  buildHTTPFlowDeleteAllQuery,
   buildHTTPFlowQueryTags,
   getClassNameData,
   getHTTPFlowReqAndResToString,
@@ -1871,7 +1872,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const onRemoveHttpHistory = useMemoizedFn((query: YakDeleteHTTPFlowRequest) => {
     setLoading(true)
     if (isAllSelect) {
-      onRemoveHttpHistoryAll({ isAddQuery: true, query: { ...query, Id: [] } })
+      onRemoveHttpHistoryAll({ isAddQuery: true, query: buildHTTPFlowDeleteAllQuery(query) })
       return
     }
     ipcRenderer

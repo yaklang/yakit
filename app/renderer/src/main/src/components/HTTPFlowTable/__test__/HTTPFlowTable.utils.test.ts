@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildHTTPFlowDeleteAllQuery,
   buildHTTPFlowProjectKey,
   buildHTTPFlowColorTags,
   buildHTTPFlowTableAdvancedQuery,
@@ -488,5 +489,24 @@ describe('shouldRefreshOnDeleteUpdate', () => {
   it('returns true when same page type but different historyId (different instance)', () => {
     expect(shouldRefreshOnDeleteUpdate('History', 'h1', 'History', 'h2')).toBe(true)
     expect(shouldRefreshOnDeleteUpdate('MITM', 'm-a', 'MITM', 'm-b')).toBe(true)
+  })
+})
+
+describe('buildHTTPFlowDeleteAllQuery', () => {
+  it('clears explicit ids so all-select delete follows the filter instead of selected rows', () => {
+    expect(buildHTTPFlowDeleteAllQuery({ Id: [1, 2, 3] })).toEqual({ Id: [] })
+  })
+
+  it('keeps other delete conditions untouched while clearing ids', () => {
+    expect(buildHTTPFlowDeleteAllQuery({ URLPrefix: 'https://example.com', Id: [1, 2] })).toEqual({
+      URLPrefix: 'https://example.com',
+      Id: [],
+    })
+  })
+
+  it('does not mutate the original query', () => {
+    const query = { Id: [1, 2], URLPrefix: 'a' }
+    buildHTTPFlowDeleteAllQuery(query)
+    expect(query).toEqual({ Id: [1, 2], URLPrefix: 'a' })
   })
 })

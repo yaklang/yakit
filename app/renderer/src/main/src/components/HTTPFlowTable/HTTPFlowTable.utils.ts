@@ -3,6 +3,7 @@ import type { FiltersItemProps } from '@/components/TableVirtualResize/TableVirt
 import type {
   MitmExtractAggregateFlowFilterRow,
   MitmExtractedAggregateRowNormalized,
+  YakDeleteHTTPFlowRequest,
   YakQueryHTTPFlowRequest,
 } from '@/utils/yakQueryHTTPFlow'
 import { filterColorTag } from '@/components/TableVirtualResize/utils'
@@ -645,3 +646,12 @@ export const shouldRefreshOnDeleteUpdate = (
   // 同 pageType：仅当两端 historyId 均存在且不一致时才视为不同实例
   return !!currentHistoryId && !!sourceHistoryId && sourceHistoryId !== currentHistoryId
 }
+
+/**
+ * 跨页全选时删除请求要清空 Id 列表：携带 Id 会让后端只删除显式选中的记录，
+ * 而非当前筛选条件命中的全部数据；清空后回归「按筛选条件删除全部」语义。
+ */
+export const buildHTTPFlowDeleteAllQuery = (query: YakDeleteHTTPFlowRequest): YakDeleteHTTPFlowRequest => ({
+  ...query,
+  Id: [],
+})
