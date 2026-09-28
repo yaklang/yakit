@@ -143,6 +143,7 @@
     "fileList": "文件列表",
     "viewUnprocessed": "查看未处置",
     "viewNewOnly": "只看新增",
+    "showAllFiles": "展示全部文件",
     "refreshExplorer": "刷新资源管理器",
     "openedEditors": "打开的编辑器",
     "selectLocalFolder": "选择本地文件夹",

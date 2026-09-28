@@ -143,6 +143,7 @@
     "fileList": "File List",
     "viewUnprocessed": "View Unprocessed",
     "viewNewOnly": "New Only",
+    "showAllFiles": "Show All Files",
     "refreshExplorer": "Refresh Explorer",
     "openedEditors": "Opened Editors",
     "selectLocalFolder": "Select local folder",
