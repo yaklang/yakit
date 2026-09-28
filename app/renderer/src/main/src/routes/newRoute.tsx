@@ -714,6 +714,7 @@ export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRo
 
 export interface ComponentParams {
   browserTransformSelection?: WebFuzzerPageInfoProps['browserTransformSelection']
+  lastSelectedHistory?: WebFuzzerPageInfoProps['lastSelectedHistory']
   // 是否跳转到新开页面 默认跳转
   openFlag?: boolean
   // Route.HTTPFuzzer 参数---start
