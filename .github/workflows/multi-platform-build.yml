@@ -236,7 +236,7 @@ jobs:
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     echo "ENV_Software_Name=IRifyEnpriTrace" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "memfit" ]; then
-                    echo "ENV_Software_Name=AI SenSo" >> $GITHUB_ENV
+                    echo "ENV_Software_Name=AI Senso" >> $GITHUB_ENV
                   else
                     echo "No software version obtained" >&2
                     exit 1
@@ -459,7 +459,7 @@ jobs:
                   retention-days: 7
 
             - name: Upload Yakit(CE) Artifacts Mac Amd
-              if: ${{ contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
+              if: ${{ contains(fromJSON('["darwin","mwl"]'), inputs.platform) && (inputs.version != 'memfit' || runner.arch == 'X64') }}
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin${{ inputs.legacy && '-legacy' || '' }}-x64.dmg
@@ -468,7 +468,7 @@ jobs:
                   retention-days: 7
 
             - name: Upload Yakit(CE) Artifacts Mac Arm
-              if: ${{ contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
+              if: ${{ contains(fromJSON('["darwin","mwl"]'), inputs.platform) && (inputs.version != 'memfit' || runner.arch == 'ARM64') }}
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin${{ inputs.legacy && '-legacy' || '' }}-arm64.dmg
@@ -477,7 +477,7 @@ jobs:
                   retention-days: 7
 
             - name: Upload Yakit(CE) Artifacts Linux Amd
-              if: ${{ contains(fromJSON('["linux","mwl"]'), inputs.platform) }}
+              if: ${{ contains(fromJSON('["linux","mwl"]'), inputs.platform) && (inputs.version != 'memfit' || runner.arch == 'X64') }}
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.AppImage
@@ -486,7 +486,7 @@ jobs:
                   retention-days: 7
 
             - name: Upload Yakit(CE) Artifacts Linux Arm
-              if: ${{ contains(fromJSON('["linux","mwl"]'), inputs.platform) }}
+              if: ${{ contains(fromJSON('["linux","mwl"]'), inputs.platform) && (inputs.version != 'memfit' || runner.arch == 'ARM64') }}
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.AppImage
@@ -516,7 +516,7 @@ jobs:
     # 下载 build_yakit 产出的安装包，签名后用 overwrite 覆盖回同名 artifact
     sign_windows:
         needs: build_yakit
-        if: ${{ contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
+        if: ${{ inputs.sign && contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
         runs-on: windows-latest
         steps:
             - uses: actions/checkout@v4
