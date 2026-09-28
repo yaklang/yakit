@@ -9,16 +9,30 @@
 
 .workspace-tab-bar {
   display: flex;
+  flex-wrap: nowrap;
   flex-shrink: 0;
   align-items: center;
+  width: 100%;
+  min-width: 0;
   height: 37px;
   overflow-x: auto;
   overflow-y: hidden;
   background-color: var(--Colors-Use-Basic-Background);
   border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+  scrollbar-width: thin;
+  scrollbar-color: var(--Colors-Use-Neutral-Border) transparent;
 
   &::-webkit-scrollbar {
-    display: none;
+    height: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--Colors-Use-Neutral-Border);
+    border-radius: 2px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
   }
 }
 

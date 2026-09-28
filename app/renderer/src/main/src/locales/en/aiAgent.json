@@ -898,5 +898,11 @@
     "aiCallTokenLimitDesc": "Warn when AI dialogue tokens exceed this limit",
     "userInteractLimit": "User interaction limit",
     "userInteractLimitDesc": "Maximum user interactions; beyond this, AI may no longer ask the user"
+  },
+  "AIChatWorkspace": {
+    "close": "Close",
+    "closeOthers": "Close Others",
+    "closeRight": "Close Tabs to the Right",
+    "closeAll": "Close All"
   }
 }

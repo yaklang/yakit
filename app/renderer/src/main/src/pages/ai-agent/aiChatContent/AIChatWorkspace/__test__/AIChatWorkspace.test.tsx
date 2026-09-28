@@ -1,3 +1,4 @@
+import React from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
@@ -10,12 +11,70 @@ import type { PluginExecuteWebsiteTreeProps } from '@/pages/plugins/operator/plu
 import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
 const flowCallbacks: PluginExecuteWebsiteTreeProps[] = []
 
+beforeEach(() => {
+  Element.prototype.scrollIntoView = vi.fn()
+})
+
 const { AIChatWorkspace } = await compileReactModule<typeof AIChatWorkspaceModule>(
   import.meta.url,
   '../AIChatWorkspace.tsx',
 )
 
-vi.mock('../AIChatWorkspace.module.scss', () => ({ default: { 'workspace-tab-close': 'workspace-tab-close' } }))
+vi.mock('../AIChatWorkspace.module.scss', () => ({
+  default: {
+    'workspace-tab-close': 'workspace-tab-close',
+    'workspace-tab-bar': 'workspace-tab-bar',
+    'workspace-tab': 'workspace-tab',
+    'workspace-tab-active': 'workspace-tab-active',
+  },
+}))
+
+vi.mock('@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu', () => ({
+  YakitDropdownMenu: ({
+    menu,
+    children,
+  }: {
+    menu: {
+      data?: Array<{ key?: string; label?: React.ReactNode; disabled?: boolean; type?: string }>
+      onClick?: (info: { key: string; domEvent: React.MouseEvent }) => void
+    }
+    children?: React.ReactNode
+  }) => {
+    const [open, setOpen] = React.useState(false)
+    return (
+      <div
+        data-testid="workspace-tab-dropdown"
+        onContextMenu={(event) => {
+          event.preventDefault()
+          setOpen(true)
+        }}
+      >
+        {children}
+        {open ? (
+          <div role="menu" data-testid="workspace-tab-context-menu">
+            {(menu.data || []).map((item) =>
+              item.type === 'divider' || !item.key ? null : (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="menuitem"
+                  disabled={!!item.disabled}
+                  data-menu-key={item.key}
+                  onClick={(event) => {
+                    menu.onClick?.({ key: item.key!, domEvent: event })
+                    setOpen(false)
+                  }}
+                >
+                  {item.label}
+                </button>
+              ),
+            )}
+          </div>
+        ) : null}
+      </div>
+    )
+  },
+}))
 
 const store = createStore(() => ({
   currentChatStatus: { questionID: 'task-1' },
@@ -71,7 +130,9 @@ vi.mock('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult', () =
     <div data-testid="risks">{runTimeIDs.join(',')}</div>
   ),
 }))
-vi.mock('@/pages/ai-agent/components/aiFileSystemList/FilePreview/FilePreview', () => ({ default: () => null }))
+vi.mock('@/pages/ai-agent/components/aiFileSystemList/FilePreview/FilePreview', () => ({
+  default: ({ data }: { data: { name: string; path: string } }) => <div data-testid="file-preview">{data.path}</div>,
+}))
 vi.mock('@/pages/ai-agent/components/aiFileSystemList/OperationLog/OperationLog', () => ({ default: () => null }))
 vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane', () => ({ TaskListPane: () => null }))
 vi.mock('@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard', () => ({ default: () => null }))
@@ -430,6 +491,106 @@ describe('AIChatWorkspace 菜单切换', () => {
     expect(setFilePreviewData).toHaveBeenLastCalledWith(undefined)
   })
 
+  it('打开多个文件预览时各自独立页签，关闭其中一个不影响其余', () => {
+    const onTabsChange = vi.fn()
+    const setFilePreviewData = vi.fn()
+    const { rerender, container } = render(
+      <AIChatWorkspace setFilePreviewData={setFilePreviewData} onTabsChange={onTabsChange} />,
+    )
+
+    const fileA = {
+      parent: null,
+      name: 'a.ts',
+      path: '/workspace/a.ts',
+      isFolder: false,
+      icon: 'ts',
+      depth: 0,
+      isLeaf: true,
+    }
+    const fileB = {
+      parent: null,
+      name: 'b.ts',
+      path: '/workspace/b.ts',
+      isFolder: false,
+      icon: 'ts',
+      depth: 0,
+      isLeaf: true,
+    }
+
+    rerender(
+      <AIChatWorkspace
+        filePreviewData={fileA as never}
+        setFilePreviewData={setFilePreviewData}
+        onTabsChange={onTabsChange}
+      />,
+    )
+    expect(screen.getByText('a.ts')).toBeInTheDocument()
+    expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/a.ts')
+    expect(onTabsChange).toHaveBeenLastCalledWith(1)
+
+    rerender(
+      <AIChatWorkspace
+        filePreviewData={fileB as never}
+        setFilePreviewData={setFilePreviewData}
+        onTabsChange={onTabsChange}
+      />,
+    )
+    expect(screen.getByText('a.ts')).toBeInTheDocument()
+    expect(screen.getByText('b.ts')).toBeInTheDocument()
+    expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/b.ts')
+    expect(onTabsChange).toHaveBeenLastCalledWith(2)
+
+    // 再次打开已存在文件应聚焦，不新增页签
+    rerender(
+      <AIChatWorkspace
+        filePreviewData={{ ...fileA } as never}
+        setFilePreviewData={setFilePreviewData}
+        onTabsChange={onTabsChange}
+      />,
+    )
+    expect(screen.getAllByText('a.ts')).toHaveLength(1)
+    expect(screen.getByText('b.ts')).toBeInTheDocument()
+    expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/a.ts')
+    expect(onTabsChange).toHaveBeenLastCalledWith(2)
+
+    fireEvent.click(screen.getByText('b.ts'))
+    expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/b.ts')
+
+    // 关闭当前（b）后，a 仍在
+    const closeButtons = container.querySelectorAll('.workspace-tab-close')
+    fireEvent.click(closeButtons[1]!)
+    expect(screen.queryByText('b.ts')).not.toBeInTheDocument()
+    expect(screen.getByText('a.ts')).toBeInTheDocument()
+    expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/a.ts')
+    expect(onTabsChange).toHaveBeenLastCalledWith(1)
+  })
+
+  it('通过 switchAIActTab 打开文件预览可叠加多个页签', () => {
+    const onTabsChange = vi.fn()
+    function Harness() {
+      const [filePreviewData, setFilePreviewData] = React.useState<undefined | { name: string; path: string }>()
+      return (
+        <AIChatWorkspace
+          filePreviewData={filePreviewData as never}
+          setFilePreviewData={setFilePreviewData as never}
+          onTabsChange={onTabsChange}
+        />
+      )
+    }
+    render(<Harness />)
+
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: '/tmp/one.js' })))
+    expect(screen.getByText('one.js')).toBeInTheDocument()
+    expect(screen.getByTestId('file-preview')).toHaveTextContent('/tmp/one.js')
+    expect(onTabsChange).toHaveBeenLastCalledWith(1)
+
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: '/tmp/two.js' })))
+    expect(screen.getByText('one.js')).toBeInTheDocument()
+    expect(screen.getByText('two.js')).toBeInTheDocument()
+    expect(screen.getByTestId('file-preview')).toHaveTextContent('/tmp/two.js')
+    expect(onTabsChange).toHaveBeenLastCalledWith(2)
+  })
+
   it.each([
     { key: AITabsEnum.HTTP, testId: 'http-flows', ids: 'httpRunTimeIDs', update: 'httpTabUpdate', show: 'httpTabShow' },
     { key: AITabsEnum.Risk, testId: 'risks', ids: 'riskRunTimeIDs', update: 'riskTabUpdate', show: 'riskTabShow' },
@@ -455,5 +616,190 @@ describe('AIChatWorkspace 菜单切换', () => {
     })
     expect(screen.queryByTestId(testId)).not.toBeInTheDocument()
     expect(onTabsChange).toHaveBeenLastCalledWith(0)
+  })
+})
+
+describe('AIChatWorkspace 标签页右键菜单', () => {
+  const openTabs = () => {
+    const onTabsChange = vi.fn()
+    render(
+      <>
+        <AIChatWorkspace setFilePreviewData={vi.fn()} onTabsChange={onTabsChange} />
+      </>,
+    )
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk })))
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Operation_Log })))
+    expect(onTabsChange).toHaveBeenLastCalledWith(3)
+    expect(screen.getByText(AITabs.http.label)).toBeInTheDocument()
+    expect(screen.getByText(AITabs.risk.label)).toBeInTheDocument()
+    expect(screen.getByText(AITabs['operation-log'].label)).toBeInTheDocument()
+    return onTabsChange
+  }
+
+  const openContextMenuOn = (label: string) => {
+    const tab = screen.getByText(label).closest('[data-testid="workspace-tab-dropdown"]') as HTMLElement
+    fireEvent.contextMenu(tab)
+    return screen.getByTestId('workspace-tab-context-menu')
+  }
+
+  it('关闭：关闭当前标签并聚焦相邻标签', () => {
+    const onTabsChange = openTabs()
+    // 当前激活是最后一个（读写日志）
+    openContextMenuOn(AITabs['operation-log'].label)
+    fireEvent.click(screen.getByRole('menuitem', { name: 'AIChatWorkspace.close' }))
+    expect(screen.queryByText(AITabs['operation-log'].label)).not.toBeInTheDocument()
+    expect(screen.getByText(AITabs.http.label)).toBeInTheDocument()
+    expect(screen.getByText(AITabs.risk.label)).toBeInTheDocument()
+    expect(onTabsChange).toHaveBeenLastCalledWith(2)
+    // 关闭后应聚焦前一个（漏洞）
+    expect(screen.getByText('暂无数据')).toBeInTheDocument()
+  })
+
+  it('关闭其他：仅保留被右键的标签', () => {
+    const onTabsChange = openTabs()
+    openContextMenuOn(AITabs.http.label)
+    fireEvent.click(screen.getByRole('menuitem', { name: 'AIChatWorkspace.closeOthers' }))
+    expect(screen.getByText(AITabs.http.label)).toBeInTheDocument()
+    expect(screen.queryByText(AITabs.risk.label)).not.toBeInTheDocument()
+    expect(screen.queryByText(AITabs['operation-log'].label)).not.toBeInTheDocument()
+    expect(onTabsChange).toHaveBeenLastCalledWith(1)
+  })
+
+  it('关闭右侧标签页：按视觉顺序关闭右侧，无右侧时禁用', () => {
+    const onTabsChange = openTabs()
+    // 右键中间的风险标签，应关闭右侧读写日志
+    openContextMenuOn(AITabs.risk.label)
+    fireEvent.click(screen.getByRole('menuitem', { name: 'AIChatWorkspace.closeRight' }))
+    expect(screen.getByText(AITabs.http.label)).toBeInTheDocument()
+    expect(screen.getByText(AITabs.risk.label)).toBeInTheDocument()
+    expect(screen.queryByText(AITabs['operation-log'].label)).not.toBeInTheDocument()
+    expect(onTabsChange).toHaveBeenLastCalledWith(2)
+
+    // 风险已是最右，关闭右侧应禁用
+    openContextMenuOn(AITabs.risk.label)
+    expect(screen.getByRole('menuitem', { name: 'AIChatWorkspace.closeRight' })).toBeDisabled()
+  })
+
+  it('关闭全部：清空所有标签', () => {
+    const onTabsChange = openTabs()
+    openContextMenuOn(AITabs.http.label)
+    fireEvent.click(screen.getByRole('menuitem', { name: 'AIChatWorkspace.closeAll' }))
+    expect(screen.queryByText(AITabs.http.label)).not.toBeInTheDocument()
+    expect(screen.queryByText(AITabs.risk.label)).not.toBeInTheDocument()
+    expect(screen.queryByText(AITabs['operation-log'].label)).not.toBeInTheDocument()
+    expect(onTabsChange).toHaveBeenLastCalledWith(0)
+  })
+
+  it('多文件预览页签支持右键关闭其他', () => {
+    const onTabsChange = vi.fn()
+    const setFilePreviewData = vi.fn()
+    const { rerender } = render(<AIChatWorkspace setFilePreviewData={setFilePreviewData} onTabsChange={onTabsChange} />)
+    const fileA = {
+      parent: null,
+      name: 'a.ts',
+      path: '/workspace/a.ts',
+      isFolder: false,
+      icon: 'ts',
+      depth: 0,
+      isLeaf: true,
+    }
+    const fileB = {
+      parent: null,
+      name: 'b.ts',
+      path: '/workspace/b.ts',
+      isFolder: false,
+      icon: 'ts',
+      depth: 0,
+      isLeaf: true,
+    }
+    rerender(
+      <AIChatWorkspace
+        filePreviewData={fileA as never}
+        setFilePreviewData={setFilePreviewData}
+        onTabsChange={onTabsChange}
+      />,
+    )
+    rerender(
+      <AIChatWorkspace
+        filePreviewData={fileB as never}
+        setFilePreviewData={setFilePreviewData}
+        onTabsChange={onTabsChange}
+      />,
+    )
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+    expect(onTabsChange).toHaveBeenLastCalledWith(3)
+
+    openContextMenuOn('a.ts')
+    fireEvent.click(screen.getByRole('menuitem', { name: 'AIChatWorkspace.closeOthers' }))
+    expect(screen.getByText('a.ts')).toBeInTheDocument()
+    expect(screen.queryByText('b.ts')).not.toBeInTheDocument()
+    expect(screen.queryByText(AITabs.http.label)).not.toBeInTheDocument()
+    expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/a.ts')
+    expect(onTabsChange).toHaveBeenLastCalledWith(1)
+  })
+})
+
+describe('AIChatWorkspace tabs horizontal scroll', () => {
+  it('scrolls active tab into view and converts wheel deltaY to horizontal scroll', () => {
+    const onTabsChange = vi.fn()
+    render(<AIChatWorkspace setFilePreviewData={vi.fn()} onTabsChange={onTabsChange} />)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk })))
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Operation_Log })))
+
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled()
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({ inline: 'nearest', block: 'nearest' })
+
+    const tabBar = screen.getByTestId('workspace-tab-bar') as HTMLDivElement
+    Object.defineProperty(tabBar, 'scrollWidth', { configurable: true, get: () => 800 })
+    Object.defineProperty(tabBar, 'clientWidth', { configurable: true, get: () => 200 })
+    let scrollLeft = 0
+    Object.defineProperty(tabBar, 'scrollLeft', {
+      configurable: true,
+      get: () => scrollLeft,
+      set: (v: number) => {
+        scrollLeft = v
+      },
+    })
+
+    const wheelEvent = new WheelEvent('wheel', { deltaY: 80, deltaX: 0, bubbles: true, cancelable: true })
+    tabBar.dispatchEvent(wheelEvent)
+    expect(scrollLeft).toBe(80)
+  })
+
+  it('scrolls only the newly active tab after manual wheel; tabs identity churn does not re-scroll', () => {
+    const scrollTargets: Element[] = []
+    Element.prototype.scrollIntoView = vi.fn(function (this: Element, ..._args: unknown[]) {
+      scrollTargets.push(this)
+    })
+
+    const onTabsChange = vi.fn()
+    render(<AIChatWorkspace setFilePreviewData={vi.fn()} onTabsChange={onTabsChange} />)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk })))
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Operation_Log })))
+
+    const httpTab = screen.getByText(AITabs.http.label).closest('[data-tab-key]') as HTMLElement
+    const logTab = screen.getByText(AITabs['operation-log'].label).closest('[data-tab-key]') as HTMLElement
+    expect(httpTab).toBeTruthy()
+    expect(logTab).toBeTruthy()
+
+    // Simulate user wheeled tab bar to the start, then clear open-tab scrolls
+    scrollTargets.length = 0
+    ;(Element.prototype.scrollIntoView as ReturnType<typeof vi.fn>).mockClear()
+
+    // Re-open already-active last tab: parent recreates tabs array but activeKey stays —
+    // must NOT re-scroll (would fight manual wheel / jump viewport back to last)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Operation_Log })))
+    expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled()
+
+    // Click first tab: selection changes; scrollIntoView must target first, not stale last
+    fireEvent.click(httpTab)
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1)
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({ inline: 'nearest', block: 'nearest' })
+    expect(scrollTargets).toHaveLength(1)
+    expect(scrollTargets[0]).toBe(httpTab)
+    expect(scrollTargets[0]).not.toBe(logTab)
   })
 })
