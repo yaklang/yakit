@@ -5447,6 +5447,10 @@ message Risk {
 
   // 关联的请求/响应报文对列表
   repeated PacketPair PacketPairs = 34;
+  double SeverityScore = 35;
+  string TagReason = 36;
+  int64 FixTime = 37;
+  string  FixSuggestion = 38;
 }
 
 message QueryRisksRequest {
@@ -7630,6 +7634,10 @@ message HTTPFlow {
   // 前端据此渲染「查看/下载 xxx 文件」下拉，而非整块 body。
   // 非空时 GetHTTPFlowBodyById 可带 PartIndex 流式返回单个文件内容。
   repeated MultipartFileInfo MultipartFiles = 58;
+  string IssueType = 59;
+  string Severity = 60;
+  string Status = 61;
+  string  StatusReason = 62;
 }
 
 // MultipartFileInfo 描述一个落盘的 multipart 文件 part 元数据。
