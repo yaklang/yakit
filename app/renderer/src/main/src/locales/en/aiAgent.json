@@ -827,6 +827,7 @@
   "AITaskQuery": {
     "taskQueue": "Task Queue",
     "adjustDirection": "Adjust Direction",
+    "addToDo": "Add To-Do",
     "focusMode": "Focus Mode: {{mode}}"
   },
   "ForgeName": {

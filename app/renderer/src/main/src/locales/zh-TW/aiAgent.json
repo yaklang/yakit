@@ -827,6 +827,7 @@
   "AITaskQuery": {
     "taskQueue": "任務佇列",
     "adjustDirection": "調整方向",
+    "addToDo": "追加待辦",
     "focusMode": "場景: {{mode}}"
   },
   "ForgeName": {

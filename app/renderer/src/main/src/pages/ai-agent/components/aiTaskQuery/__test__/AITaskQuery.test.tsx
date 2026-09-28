@@ -71,6 +71,15 @@ const setQueue = (execute: boolean, items: AIAgentGrpcApi.QuestionQueueItem[]) =
   })
 }
 
+const clickAddToDoButton = (container: HTMLElement, index = 0) => {
+  const buttons = container.querySelectorAll('button')
+  const target = [...buttons].filter((b) => b.textContent?.includes('AITaskQuery.addToDo'))[index]
+  expect(target).toBeTruthy()
+  act(() => {
+    fireEvent.click(target!)
+  })
+}
+
 const clickAdjustButton = (container: HTMLElement, index = 0) => {
   const buttons = container.querySelectorAll('button')
   const target = [...buttons].filter((b) => b.textContent?.includes('AITaskQuery.adjustDirection'))[index]
@@ -149,5 +158,35 @@ describe('AITaskQuery 调整方向（原人工介入）', () => {
     expect(container.querySelector('[data-testid="loading"]')).toBeNull()
     expect(container.innerHTML).toBe('')
     expect(onSendMock).not.toHaveBeenCalled()
+  })
+
+  it('追加待办先删队列再发 add_todo_sync，text 取 user_input 且 set_current 为 false', () => {
+    const { container } = renderAITaskQuery()
+    setQueue(true, [queueItem('task-todo-1', '对 example.com 执行端口扫描并验证结果')])
+
+    clickAddToDoButton(container)
+
+    expect(onSendMock).toHaveBeenCalledTimes(3)
+    const [removeCall, addCall, queueInfoCall] = onSendMock.mock.calls.map((c) => c[0])
+    expect(removeCall.params.SyncType).toBe('react_remove_task')
+    expect(JSON.parse(removeCall.params.SyncJsonInput || '{}')).toEqual({ task_id: 'task-todo-1' })
+    expect(addCall.params.SyncType).toBe('add_todo_sync')
+    expect(JSON.parse(addCall.params.SyncJsonInput || '{}')).toEqual({
+      text: '对 example.com 执行端口扫描并验证结果',
+      set_current: false,
+    })
+    expect(addCall.params.SyncID).toBeTruthy()
+    expect(queueInfoCall.params.SyncType).toBe('queue_info')
+    expect(pushSpy).not.toHaveBeenCalled()
+  })
+
+  it('追加待办 loading 期间重复点击不重复发送', () => {
+    const { container } = renderAITaskQuery()
+    setQueue(true, [queueItem('task-todo-2', '追加待办防抖用例')])
+
+    clickAddToDoButton(container)
+    clickAddToDoButton(container)
+
+    expect(onSendMock).toHaveBeenCalledTimes(3)
   })
 })
