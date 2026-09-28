@@ -2,12 +2,15 @@ import React from 'react'
 import get from 'lodash/get'
 import type * as AIReActChatModule from '../AIReActChat'
 import type { AIReActChatRefProps } from '../AIReActChatType'
+import type { AIReactChatTextareaProps } from '../aiReactChatTextarea/type'
 import type { AIReActChatContentsRef } from '../../aiReActChatContents/AIReActChatContentsType'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import enLayout from '@/locales/en/layout.json'
 import zhLayout from '@/locales/zh/layout.json'
 import enYakitUi from '@/locales/en/yakitUi.json'
 import zhYakitUi from '@/locales/zh/yakitUi.json'
+import enAiAgent from '@/locales/en/aiAgent.json'
+import zhAiAgent from '@/locales/zh/aiAgent.json'
 import type * as OutlineIcons from '@yakit-libs/yakit-ui-icons/outline'
 import styles from '../AIReActChat.module.scss'
 
@@ -16,6 +19,13 @@ const { scrollToItemIndex, locale, formattedSetting, latestSetting } = vi.hoiste
   locale: { language: 'zh' },
   formattedSetting: { value: {} as Record<string, unknown> },
   latestSetting: { value: {} as Record<string, unknown> },
+}))
+const chat = vi.hoisted(() => ({
+  activeChat: undefined as { SessionID: string } | undefined,
+  pendingChat: undefined as { status: 'connecting' | 'failed'; error?: string; retry?: () => void } | undefined,
+  onStart: vi.fn(),
+  onSend: vi.fn(),
+  cancelPendingChat: vi.fn(),
 }))
 
 // CI 的根配置将样式模块替换为空对象；为通知图标用例验证的类名提供稳定映射。
@@ -38,6 +48,8 @@ let chatStore: ReturnType<typeof createChatStore>
 beforeEach(() => {
   chatStore = createChatStore()
   vi.clearAllMocks()
+  chat.activeChat = undefined
+  chat.pendingChat = undefined
   locale.language = 'zh'
   formattedSetting.value = {}
   latestSetting.value = {}
@@ -55,15 +67,16 @@ vi.mock('ahooks', async () => {
 })
 
 vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
-  default: () => ({ activeChat: undefined, setting: undefined }),
+  default: () => ({ activeChat: chat.activeChat, pendingChat: chat.pendingChat, setting: {} }),
 }))
 
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
   default: () => ({
     setActiveChat: vi.fn(),
     getSetting: () => latestSetting.value,
-    onStart: vi.fn(),
-    onSend: vi.fn(),
+    onStart: chat.onStart,
+    onSend: chat.onSend,
+    cancelPendingChat: chat.cancelPendingChat,
   }),
 }))
 
@@ -108,7 +121,9 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: (namespaces: string[]) => ({
     t: (key: string) => {
       const resources =
-        locale.language === 'en' ? { layout: enLayout, yakitUi: enYakitUi } : { layout: zhLayout, yakitUi: zhYakitUi }
+        locale.language === 'en'
+          ? { layout: enLayout, yakitUi: enYakitUi, aiAgent: enAiAgent }
+          : { layout: zhLayout, yakitUi: zhYakitUi, aiAgent: zhAiAgent }
       return namespaces.map((namespace) => get(resources, `${namespace}.${key}`)).find(Boolean) ?? key
     },
   }),
@@ -137,7 +152,14 @@ vi.mock('../aiReActChatHeader/AIReActChatHeader', () => ({
   ),
 }))
 vi.mock('../aiReactChatTextarea/AIReactChatTextarea', () => ({
-  AIReactChatTextarea: React.forwardRef(() => <div data-testid="chat-textarea" />),
+  AIReactChatTextarea: React.forwardRef<unknown, AIReactChatTextareaProps>(
+    ({ handleSubmit, handleStopCasualTask }, _ref) => (
+      <div data-testid="chat-textarea">
+        <button onClick={() => handleSubmit({ qs: 'question', sessionId: 'draft' })}>提交问题</button>
+        <button onClick={handleStopCasualTask}>停止任务</button>
+      </div>
+    ),
+  ),
 }))
 vi.mock('../aiToDoListWrapper/AIToDoListWrapper', () => ({
   AIToDoListWrapper: () => <div data-testid="todo-list" />,
@@ -178,6 +200,62 @@ describe('AIReActChat', () => {
       IsStart: true,
       Params: { SingleModelMode: true, UserQuery: 'hello' },
     })
+  })
+
+  it('连接中阻止重复提交，并将停止操作交给 pending 取消入口', () => {
+    chat.pendingChat = { status: 'connecting' }
+    render(<AIReActChat {...baseProps} />)
+    fireEvent.click(screen.getByRole('button', { name: '提交问题' }))
+    expect(baseProps.startRequest).not.toHaveBeenCalled()
+    expect(chat.onSend).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: '停止任务' }))
+    expect(chat.cancelPendingChat).toHaveBeenCalledTimes(1)
+  })
+
+  it('欢迎页提交后挂载的失败视图通过 pending 回调重试', () => {
+    const retry = vi.fn()
+    chat.pendingChat = { status: 'failed', error: 'disk full', retry }
+    render(<AIReActChat {...baseProps} />)
+    expect(screen.getByRole('status')).toHaveTextContent('disk full')
+    fireEvent.click(screen.getByRole('button', { name: '重试' }))
+    expect(retry).toHaveBeenCalledTimes(1)
+    expect(baseProps.startRequest).not.toHaveBeenCalled()
+  })
+
+  it('重试组件内的提交时保留原新建意图，不受当前历史会话影响', async () => {
+    const startRequest = vi.fn(async ({ params }) => ({ params }))
+    const ref = React.createRef<AIReActChatRefProps>()
+    const result = render(<AIReActChat {...baseProps} startRequest={startRequest} ref={ref} />)
+    await act(async () => ref.current?.handleStart({ qs: 'original', target: { kind: 'new' }, sessionId: 'draft' }))
+    chat.activeChat = { SessionID: 'other-history' }
+    chat.pendingChat = { status: 'failed', error: 'connect failed' }
+    result.rerender(<AIReActChat {...baseProps} title="changed" startRequest={startRequest} ref={ref} />)
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '重试' })))
+    expect(chat.onStart).toHaveBeenCalledTimes(2)
+    expect(chat.onStart.mock.calls[1][0]).toMatchObject({
+      kind: 'new',
+      draftId: 'draft',
+      params: { Params: { UserQuery: 'original' } },
+    })
+    expect(chat.onStart.mock.calls[1][0].params.Params).not.toHaveProperty('TimelineSessionID')
+  })
+
+  it('已连接会话的自由输入继续经过 sendRequest，不重新建联', async () => {
+    chat.activeChat = { SessionID: 'history-session' }
+    chatStore.setState({ execute: true })
+    const sendRequest = vi.fn(async ({ params }) => ({ params: { ...params, FreeInput: 'prepared question' } }))
+    render(<AIReActChat {...baseProps} sendRequest={sendRequest} />)
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '提交问题' })))
+    expect(sendRequest).toHaveBeenCalledWith({
+      params: expect.objectContaining({ IsFreeInput: true, FreeInput: 'question' }),
+    })
+    expect(chat.onSend).toHaveBeenCalledWith({
+      token: 'history-session',
+      type: 'casual',
+      params: expect.objectContaining({ IsFreeInput: true, FreeInput: 'prepared question' }),
+    })
+    expect(baseProps.startRequest).not.toHaveBeenCalled()
+    expect(chat.onStart).not.toHaveBeenCalled()
   })
 
   it('首次挂载后点击任务，通过已挂载的内容引用定位', () => {

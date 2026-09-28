@@ -793,7 +793,7 @@ describe('ChatMultiSessionController handleSendMessage readonly sync guards', as
     ctrl.setActiveShowSession('s-missing')
     ctrl.handleSendMessage({ token: 's-missing', type: '', params: { IsFreeInput: true, FreeInput: 'hi' } as any })
     expect(yakitNotify).toHaveBeenCalledTimes(1)
-    expect(yakitNotify).toHaveBeenCalledWith('warning', '会话不存在，无法发送消息')
+    expect(yakitNotify).toHaveBeenCalledWith('warning', tAgent('ChatSessionNotify.sessionMissing'))
   })
 
   it('readonly sync during history load returns silently; free input still notifies', async () => {
@@ -814,7 +814,7 @@ describe('ChatMultiSessionController handleSendMessage readonly sync guards', as
 
     ctrl.handleSendMessage({ token: 's-loading', type: '', params: { IsFreeInput: true, FreeInput: 'hi' } as any })
     expect(yakitNotify).toHaveBeenCalledTimes(1)
-    expect(yakitNotify).toHaveBeenCalledWith('warning', '历史消息加载中，请稍后再发送')
+    expect(yakitNotify).toHaveBeenCalledWith('warning', tAgent('ChatSessionNotify.historyLoading'))
   })
 })
 

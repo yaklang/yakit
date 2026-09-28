@@ -304,7 +304,7 @@ export class ChatMultiSessionController {
     this.releaseConnection(connection, error !== undefined)
     // 失败后再次取消只需清理草稿，避免重复取消已经停止的流。
     if (wasCurrent) void ipcRenderer.invoke('cancel-ai-re-act', connection.token).catch(() => {})
-    connection.data.store.getState().updateState({ execute: false, initLoading: false })
+    connection.data.store.getState().updateState({ execute: false, initLoading: false, pendingReply: false })
     connection.callbacks?.onPendingChange?.({
       streamToken: connection.token,
       data: connection.data,
@@ -345,8 +345,8 @@ export class ChatMultiSessionController {
       // 同一连接串行处理事件；图片复制等异步步骤完成前，后续事件不能越过它。
       lifecycle.events = lifecycle.events
         .then(async () => {
-          // 入队后可能已经被取消，因此执行前再次检查连接是否有效。
-          if (!current()) return
+          // 正式会话关闭时排完已接收事件；pending 取消、删除或旧连接替换仍通过 current 使队列失效。
+          if (!lifecycle.current) return
           await this.processConnectionEvent(connection, res)
         })
         .catch((error) => this.failConnection(connection, error))
@@ -371,7 +371,11 @@ export class ChatMultiSessionController {
   private async processConnectionEvent(connection: SessionConnection, res: AIOutputEvent) {
     const { data, input } = connection
     if (connection.confirmed) {
-      return this.processGrpcOutputEvent(connection.sessionId!, res, data.meta)
+      const sessionId = connection.sessionId!
+      // 握手完成后的业务异常按恢复/补载状态处理，不作为传输连接失败。
+      return this.processGrpcOutputEvent(sessionId, res, data.meta).catch((error) =>
+        this.handleGrpcOutputError(sessionId, res, data.meta, error),
+      )
     }
 
     const id = res.SessionId?.trim()
@@ -712,17 +716,34 @@ export class ChatMultiSessionController {
     )
   }
 
+  /** 尚未取得业务 ID 的首问也占用并发名额，绑定后由正式会话接管计数。 */
+  private isPendingConnectionWorking(connection: SessionConnection): boolean {
+    const { lifecycle, createChatQuestion } = connection.data.meta
+    return !connection.sessionId && lifecycle.current && !lifecycle.closing && !!createChatQuestion
+  }
+
   public getWorkingSessionCount(): number {
     let count = 0
     for (const id of this.readyChannels) {
       if (this.isSessionWorking(id)) count++
+    }
+    for (const connection of this.connectionsByToken.values()) {
+      if (this.isPendingConnectionWorking(connection)) count++
     }
     return count
   }
 
   /** 该页是否还有进行中的会话（关页前用来决定要不要确认） */
   public hasWorkingSessionOnPage(route: YakitRouteType, pageId: string) {
-    return this.resolvePageSessionIds(route, pageId).some((sessionId) => this.isSessionWorking(sessionId))
+    return (
+      this.resolvePageSessionIds(route, pageId).some((sessionId) => this.isSessionWorking(sessionId)) ||
+      [...this.connectionsByToken.values()].some(
+        (connection) =>
+          connection.input.route === route &&
+          connection.input.pageId === pageId &&
+          this.isPendingConnectionWorking(connection),
+      )
+    )
   }
 
   /** 本会话已在执行中可继续；否则按项目内正在执行的会话数判断。notify 为 true 时超限提示 */
@@ -1190,7 +1211,11 @@ export class ChatMultiSessionController {
     data.meta.lifecycle.writable = false
     data.meta.createChatQuestion = this.makeFirstQuestion(startParams)
     data.meta.onLinkSuccess = cb?.onLinkSuccess
-    data.store.getState().updateState({ execute: true, initLoading: kind === 'resume' })
+    data.store.getState().updateState({
+      execute: true,
+      initLoading: kind === 'resume',
+      pendingReply: !!data.meta.createChatQuestion,
+    })
     connection = {
       token,
       sessionId,
@@ -1640,25 +1665,29 @@ export class ChatMultiSessionController {
         if (!lifecycle.current) return
         await this.processGrpcOutputEvent(sessionId, res, meta)
       })
-      .catch((error) => {
-        if (!lifecycle.current) return
-        console.error('handleGrpcOutputEvent error', error)
-        if (this.sessionRestoreLoading.has(sessionId)) {
-          lifecycle.error ??= error
-          if (!lifecycle.closing) this.failSessionStart(sessionId, error)
-          return
-        }
-        const store = this.storePool.get(sessionId)
-        if (store?.getState().grpcLoadMoreLoading && !lifecycle.closing) {
-          // 补载坏数据直接跳过，继续处理后续事件；仅结束回执本身异常时结束本批 loading。
-          if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
-            store.getState().updateState({ grpcLoadMoreLoading: false })
-          }
-          return
-        }
-        lifecycle.error ??= error
-      })
+      .catch((error) => this.handleGrpcOutputError(sessionId, res, meta, error))
     return lifecycle.events
+  }
+
+  /** 新旧事件入口共用错误分类；首批恢复失败关闭会话，后续补载失败保留连接。 */
+  private handleGrpcOutputError(sessionId: string, res: AIOutputEvent, meta: AIAgentChatMetaData, error: unknown) {
+    const { lifecycle } = meta
+    if (!lifecycle.current) return
+    console.error('handleGrpcOutputEvent error', error)
+    if (this.sessionRestoreLoading.has(sessionId)) {
+      lifecycle.error ??= error
+      if (!lifecycle.closing) this.failSessionStart(sessionId, error)
+      return
+    }
+    const store = this.storePool.get(sessionId)
+    if (store?.getState().grpcLoadMoreLoading && !lifecycle.closing) {
+      // 补载坏数据直接跳过，继续处理后续事件；仅结束回执本身异常时结束本批 loading。
+      if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
+        store.getState().updateState({ grpcLoadMoreLoading: false })
+      }
+      return
+    }
+    lifecycle.error ??= error
   }
 
   /** 在会话事件队列内分发单条数据；恢复结束回执等待此前 handler 和写入完成。 */

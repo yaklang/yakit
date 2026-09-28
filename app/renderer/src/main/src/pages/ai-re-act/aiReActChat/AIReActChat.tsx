@@ -50,6 +50,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       externalParameters,
       rightPanelLayoutRef,
     } = props
+    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const { onSend, cancelPendingChat } = useAIAgentDispatcher()
 
     const sessionId = useCurrentSessionId()
@@ -274,7 +275,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 <AIReActChatContents ref={aiReActChatContentsRef} />
                 {pendingChat?.status === 'failed' && (
                   <div className={styles['connection-error']} role="status">
-                    {pendingChat.error || '连接已停止'}
+                    {pendingChat.error || t('ChatSessionNotify.connectionStopped')}
                     <YakitButton
                       type="text"
                       onClick={() => {
@@ -282,7 +283,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                         else pendingChat.retry?.()
                       }}
                     >
-                      重试
+                      {t('YakitButton.retry')}
                     </YakitButton>
                   </div>
                 )}

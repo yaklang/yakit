@@ -219,6 +219,7 @@
     "sessionClosed": "Session closed"
   },
   "ChatSessionNotify": {
+    "connectionStopped": "Connection stopped",
     "cacheDeleting": "Session cache is being deleted. Try connecting again later.",
     "duplicateSession": "This session already exists. Do not connect again.",
     "initFailed": "Failed to initialize the AI session: {{error}}",

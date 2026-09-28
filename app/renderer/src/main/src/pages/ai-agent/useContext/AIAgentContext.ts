@@ -52,7 +52,7 @@ export default createContext<AIAgentContextValue>({
 
     onStart: () => false,
     cancelPendingChat: () => {},
-    onSend: () => {},
+    onSend: () => false,
     onClose: () => {},
     onUpdatePageId: () => {},
   },

@@ -4,16 +4,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
 import type { AIHandleStartResProps } from '../../aiReActChat/AIReActChatType'
 import { useStartAIChat } from '../useStartAIChat'
+import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
 
 const mocks = vi.hoisted(() => ({
   activeChat: undefined as AISession | undefined,
   onStart: vi.fn(),
   setActiveChat: vi.fn(),
   emit: vi.fn(),
+  setting: { Source: 'ai', TimelineSessionID: 'stale-setting' },
 }))
 vi.mock('@/pages/ai-agent/useContext/useStore', () => ({ default: () => ({ activeChat: mocks.activeChat }) }))
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
-  default: () => ({ onStart: mocks.onStart, setActiveChat: mocks.setActiveChat, getSetting: () => ({ Source: 'ai' }) }),
+  default: () => ({ onStart: mocks.onStart, setActiveChat: mocks.setActiveChat, getSetting: () => mocks.setting }),
 }))
 vi.mock('@/pages/ai-agent/utils', () => ({
   formatAIAgentSetting: (setting: unknown) => setting,
@@ -24,10 +26,84 @@ vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: mocks.emit } }))
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.activeChat = undefined
+  mocks.setting = { Source: 'ai', TimelineSessionID: 'stale-setting' }
 })
 afterEach(cleanup)
 
 describe('submission identity', () => {
+  it.each(['new', 'resume'] as const)('preserves business preparation and binding callbacks for %s', async (kind) => {
+    const onChat = vi.fn()
+    const onSessionBound = vi.fn()
+    const setMention = vi.fn()
+    const resource = {
+      Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
+      Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
+      Value: '/image.png',
+    }
+    const startRequest = vi.fn(async ({ params }: { params: AIHandleStartResProps['params'] }) => ({
+      params: { ...params, FocusModeLoop: 'prepared-focus', AttachedResourceInfo: [resource] },
+      extraParams: { chatId: 'business-id' },
+      onChat,
+      onSessionBound,
+    }))
+    const { result } = renderHook(() => useStartAIChat({ startRequest, setMention }))
+    // 配置在 render 之后更新，提交仍应读到最新值。
+    mocks.setting = { Source: 'webFuzzer', TimelineSessionID: 'stale-setting' }
+    await act(async () =>
+      result.current({
+        qs: 'hello',
+        target: kind === 'new' ? { kind } : { kind, sessionId: 'history' },
+      }),
+    )
+    const input = mocks.onStart.mock.calls[0][0]
+    expect(input.params.AttachedResourceInfo).toEqual([resource])
+    expect(input.params.Params.Source).toBe('webFuzzer')
+    expect(input.params.Params.PreferSessionCachedConfig).toBe(kind === 'resume')
+    expect(setMention).toHaveBeenCalledWith({
+      mentionId: 'prepared-focus',
+      mentionType: 'focusMode',
+      mentionName: 'prepared-focus',
+    })
+    expect(onChat).toHaveBeenCalledTimes(kind === 'new' ? 1 : 0)
+    const id = kind === 'new' ? 'backend-id' : 'history'
+    input.onLinkStart('stream-token')
+    input.onLinkSuccess(id, true)
+    expect(onSessionBound).toHaveBeenCalledExactlyOnceWith(id)
+    if (kind === 'new') {
+      expect(mocks.setActiveChat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Id: 'business-id',
+          SessionID: id,
+          viewKey: 'stream-token',
+          Source: 'webFuzzer',
+          StartParams: expect.objectContaining({ TimelineSessionID: id, UserQuery: '' }),
+        }),
+      )
+      expect(onSessionBound.mock.invocationCallOrder[0]).toBeLessThan(mocks.setActiveChat.mock.invocationCallOrder[0])
+    } else {
+      expect(mocks.setActiveChat).not.toHaveBeenCalled()
+      expect(mocks.emit).not.toHaveBeenCalled()
+    }
+  })
+
+  it('falls back to the captured target when business preparation rejects after switching history', async () => {
+    let reject!: (error: Error) => void
+    const startRequest = vi.fn(
+      () =>
+        new Promise<AIHandleStartResProps>((_resolve, fail) => {
+          reject = fail
+        }),
+    )
+    const { result, rerender } = renderHook(() => useStartAIChat({ startRequest }))
+    act(() => result.current({ qs: 'first', target: { kind: 'new' } }))
+    mocks.activeChat = { SessionID: 'other-history' } as AISession
+    rerender()
+    await act(async () => reject(new Error('prepare failed')))
+    expect(mocks.onStart).toHaveBeenCalledTimes(1)
+    expect(mocks.onStart.mock.calls[0][0]).toMatchObject({ kind: 'new', params: { Params: { UserQuery: 'first' } } })
+    expect(mocks.onStart.mock.calls[0][0].params.Params).not.toHaveProperty('TimelineSessionID')
+  })
+
   it('starts a welcome submission synchronously with no session ID, even when a history is selected', () => {
     mocks.activeChat = { SessionID: 'history' } as AISession
     const { result } = renderHook(() => useStartAIChat())

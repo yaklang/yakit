@@ -11,6 +11,10 @@ import { AIReActChatContents } from '../AIReActChatContents'
 import type { AIReActChatContentsRef } from '../AIReActChatContentsType'
 
 const SessionContext = createContext('session-1')
+const AgentContext = createContext<{
+  pendingChat?: { streamToken: string }
+  activeChat?: { viewKey?: string }
+}>({})
 const store = createChatStore()
 const initialState = store.getState()
 const rawData = { contents: new Map(), grpcOffset: 0 }
@@ -24,6 +28,7 @@ vi.mock('../../hooks/useCurrentSessionId', () => {
   const useSessionIdMock = () => useContext(SessionContext)
   return { default: useSessionIdMock }
 })
+vi.mock('@/pages/ai-agent/useContext/useStore', () => ({ default: () => useContext(AgentContext) }))
 vi.mock('../../hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => store.renderStore,
   useCurrentRawData: () => rawData,
@@ -155,6 +160,39 @@ const finishPositioning = async () => {
 }
 
 describe('AIReActChatContents 首屏加载', () => {
+  it('pending 绑定正式 ID 时保留列表与滚动位置，切到其他会话时才重新挂载', async () => {
+    store.setState({ chatElements: createItems(20) })
+    const result = render(
+      <AgentContext.Provider value={{ pendingChat: { streamToken: 'transport' } }}>
+        {chatElement('')}
+      </AgentContext.Provider>,
+    )
+    await finishPositioning()
+    const scroller = getScroller()
+    fireEvent.wheel(scroller, { deltaY: -100 })
+    fireEvent.scroll(scroller, { target: { scrollTop: 400 } })
+
+    result.rerender(
+      <AgentContext.Provider value={{ activeChat: { viewKey: 'transport' } }}>
+        {chatElement('backend-session')}
+      </AgentContext.Provider>,
+    )
+    expect(getScroller()).toBe(scroller)
+    expect(getScroller().scrollTop).toBe(400)
+    expect(isSpinning()).toBe(false)
+    expect(emiter.all.get('onAITreeLocatePlanningList')).toHaveLength(1)
+
+    result.rerender(
+      <AgentContext.Provider value={{ activeChat: { viewKey: 'other-transport' } }}>
+        {chatElement('other-session')}
+      </AgentContext.Provider>,
+    )
+    expect(getScroller()).not.toBe(scroller)
+    expect(isSpinning()).toBe(true)
+    await finishPositioning()
+    expect(emiter.all.get('onAITreeLocatePlanningList')).toHaveLength(1)
+  })
+
   it.each([1, 20])('已有 %s 条消息时先显示 loading，定位完成后显示消息', async (count) => {
     store.setState({ chatElements: createItems(count) })
     render(chatElement())

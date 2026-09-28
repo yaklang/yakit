@@ -102,6 +102,66 @@ describe('backend allocated session identity', () => {
     await controller.handleSessionEnd('ai-session-one')
   })
 
+  it.each(['end', 'cancel'] as const)('persists queued IPC messages before %s completes', async (action) => {
+    const token = await start()
+    await emit(token, 'pong', 'queued-session')
+    const { rawData, meta } = controller.ensureSession('queued-session')
+    const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-data`)![1]
+    const end = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-end`)![1]
+    let release!: () => void
+    meta.lifecycle.events = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const thought = (text: string) =>
+      makeGrpcJsonRes('thought', { thought: text }, { SessionId: 'queued-session', CoordinatorId: 'casual' })
+    listener({}, thought('received before closing'))
+    if (action === 'cancel') controller.forceCloseSession({ sessionIds: ['queued-session'] })
+    else end({})
+    // 即使已移除的监听被迟到回调触发，也不能接收关闭后才到达的新消息。
+    listener({}, thought('received after closing'))
+    if (action === 'cancel') end({})
+    release()
+    await meta.lifecycle.ending
+
+    const thoughts = [...rawData.contents.values()].filter((item) => item.type === AIChatQSDataTypeEnum.THOUGHT)
+    expect(thoughts).toHaveLength(1)
+    expect(thoughts[0].data).toBe('received before closing')
+    expect(aiChatPersistStore.setSessionContent).toHaveBeenCalledWith(
+      'queued-session',
+      thoughts[0].id,
+      expect.any(Function),
+    )
+    expect(aiChatPersistStore.setSessionRender).toHaveBeenLastCalledWith(
+      'queued-session',
+      'ai',
+      expect.objectContaining({
+        chatElements: expect.arrayContaining([expect.objectContaining({ token: thoughts[0].id })]),
+      }),
+      0,
+    )
+    expect(controller.isSessionReady('queued-session')).toBe(false)
+  })
+
+  it('drops an already queued handshake when the pending connection is cancelled', async () => {
+    const token = await start()
+    const { meta } = pendings.get(token)!.data
+    let release!: () => void
+    meta.lifecycle.events = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-data`)![1]
+    listener({}, makeGrpcJsonRes('pong', {}, { SessionId: 'cancelled-session' }))
+    controller.cancelPendingConnection(token)
+    release()
+    await meta.lifecycle.events
+
+    expect(success).not.toHaveBeenCalled()
+    expect(controller.isSessionReady('cancelled-session')).toBe(false)
+    expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
+    expect(aiChatPersistStore.setSessionRender).not.toHaveBeenCalled()
+    expect(ipcRendererMock.invoke.mock.calls.some(([, , request]) => request?.IsFreeInput)).toBe(false)
+  })
+
   it('publishes the session before replaying buffered events in order, then accepts live events', async () => {
     const observed: string[] = []
     let unsubscribe = () => {}
@@ -376,5 +436,69 @@ describe('backend allocated session identity', () => {
       error: tAgent('ChatSessionNotify.sessionIdMismatch'),
     })
     expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
+  })
+
+  it.each(['invoke', 'error', 'end'] as const)(
+    'preserves the first question when %s fails before binding',
+    async (failure) => {
+      if (failure === 'invoke') {
+        ipcRendererMock.invoke.mockImplementation((method) =>
+          method === 'start-ai-re-act' ? Promise.reject(new Error('connect failed')) : Promise.resolve(undefined),
+        )
+      }
+      const token = await start()
+      if (failure !== 'invoke') {
+        const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-${failure}`)![1]
+        listener({}, new Error('connect failed'))
+        await tick()
+      }
+      expect(pendings.get(token)).toMatchObject({
+        status: 'failed',
+        error: failure === 'end' ? tAgent('ChatSessionNotify.endedWithoutId') : 'connect failed',
+      })
+      expect([...pendings.get(token)!.data.rawData.contents.values()][0]).toMatchObject({ data: 'first question' })
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', token)
+      expect(pendings.get(token)!.data.store.getState()).toMatchObject({ execute: false, initLoading: false })
+      await emit(token, 'pong', 'late-session')
+      await vi.advanceTimersByTimeAsync(30000)
+      expect(success).not.toHaveBeenCalled()
+      expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
+      expect(ipcRendererMock.invoke.mock.calls.some(([, , input]) => input?.IsFreeInput)).toBe(false)
+      expect(yakitNotify).toHaveBeenCalledTimes(1)
+    },
+  )
+
+  it('refuses an already registered backend ID without replacing its store', async () => {
+    const existing = controller.ensureSession('existing')
+    const token = await start()
+    await emit(token, 'pong', 'existing')
+    expect(pendings.get(token)).toMatchObject({
+      status: 'failed',
+      error: tAgent('ChatSessionNotify.sessionIdOccupied'),
+    })
+    expect(controller.ensureSession('existing').store).toBe(existing.store)
+    expect(success).not.toHaveBeenCalled()
+    expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
+  })
+
+  it('unloading one page leaves another unbound submission running', async () => {
+    const first = await start('first', 'page-one')
+    const second = await start('second', 'page-two')
+    controller.onPageUnload(YakitRoute.AI_Agent, 'page-one')
+    await emit(first, 'pong', 'first-session')
+    await emit(second, 'pong', 'second-session')
+    expect(success).toHaveBeenCalledExactlyOnceWith('second-session')
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', second)
+    await controller.handleSessionEnd('second-session')
+  })
+
+  it('binds an empty new session without sending a blank first question', async () => {
+    const token = await start('')
+    await emit(token, 'pong', 'empty-session')
+    expect(success).toHaveBeenCalledExactlyOnceWith('empty-session')
+    expect(ipcRendererMock.invoke.mock.calls.some(([, , input]) => input?.IsFreeInput)).toBe(false)
+    expect(aiChatPersistStore.deleteSessionPersist).not.toHaveBeenCalled()
+    expect(grpcQueryAIEvent).not.toHaveBeenCalled()
+    await controller.handleSessionEnd('empty-session')
   })
 })

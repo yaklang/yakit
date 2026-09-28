@@ -7,6 +7,15 @@ import emiter from '@/utils/eventBus/eventBus'
 import { serializeAIAgentChatSetting } from '../utils/aiAgentChatSettingCache'
 import { AIAgentSettingDefault } from '../defaultConstant'
 import { AIAgent } from '../AIAgent'
+import type { AISession } from '../type/aiChat'
+import { YakitRoute } from '@/enums/yakitRoute'
+
+const ipc = vi.hoisted(() => ({
+  useChatIPC: vi.fn(),
+  detachPendingChat: vi.fn(),
+  cancelPendingChat: vi.fn(),
+  onClose: vi.fn(),
+}))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18nRefresh: 0 }),
@@ -63,6 +72,11 @@ vi.mock('../aiAgentChat/AIAgentChat', async () => {
           <span data-testid="memory">{String(!!store.setting.DisableMemoryTriage)}</span>
           <span data-testid="goal">{store.setting.Strategy?.GoalMinIterations}</span>
           <span data-testid="enable-plan">{String(!!store.setting.EnablePlan)}</span>
+          <span data-testid="active-session">{store.activeChat?.SessionID || 'welcome'}</span>
+          <button onClick={() => dispatcher.setActiveChat({ SessionID: 'history' } as AISession)}>
+            select-history
+          </button>
+          <button onClick={() => dispatcher.setActiveChat(undefined)}>back-to-welcome</button>
           <button type="button" onClick={() => dispatcher.setSetting((s) => ({ ...s, EnablePlan: true }))}>
             turn-on-plan
           </button>
@@ -73,12 +87,17 @@ vi.mock('../aiAgentChat/AIAgentChat', async () => {
 })
 
 vi.mock('../../ai-re-act/hooks/useChatIPC', () => ({
-  useChatIPC: () => ({
-    onStart: vi.fn(),
-    onSend: vi.fn(),
-    onClose: vi.fn(),
-    onUpdatePageId: vi.fn(),
-  }),
+  useChatIPC: (...args: unknown[]) => {
+    ipc.useChatIPC(...args)
+    return {
+      onStart: vi.fn(),
+      onSend: vi.fn(),
+      onClose: ipc.onClose,
+      onUpdatePageId: vi.fn(),
+      detachPendingChat: ipc.detachPendingChat,
+      cancelPendingChat: ipc.cancelPendingChat,
+    }
+  },
 }))
 
 vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', () => ({
@@ -102,6 +121,7 @@ const setRemoteValueMock = vi.mocked(setRemoteValue)
 
 describe('AIAgent 配置广播', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     getRemoteValueMock.mockReset()
     setRemoteValueMock.mockReset()
     getRemoteValueMock.mockResolvedValue(
@@ -119,6 +139,26 @@ describe('AIAgent 配置广播', () => {
         disconnect() {}
       } as typeof ResizeObserver
     }
+  })
+
+  it('新 Tab 保留传入的历史会话和独立 pageId', async () => {
+    render(<AIAgent pageId="history-tab" initialSession={{ SessionID: 'selected-history' } as AISession} />)
+    await waitFor(() => expect(screen.getByTestId('active-session')).toHaveTextContent('selected-history'))
+    expect(ipc.useChatIPC).toHaveBeenCalledWith(YakitRoute.AI_Agent, 'history-tab', true)
+  })
+
+  it('切历史和欢迎页只脱离 pending 视图，提交继续在后台运行', async () => {
+    render(<AIAgent pageId="test" />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    expect(ipc.useChatIPC).toHaveBeenCalledWith(YakitRoute.AI_Agent, 'test', true)
+    fireEvent.click(screen.getByText('select-history'))
+    expect(screen.getByTestId('active-session')).toHaveTextContent('history')
+    expect(ipc.detachPendingChat).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByText('back-to-welcome'))
+    expect(screen.getByTestId('active-session')).toHaveTextContent('welcome')
+    expect(ipc.detachPendingChat).toHaveBeenCalledTimes(2)
+    expect(ipc.cancelPendingChat).not.toHaveBeenCalled()
+    expect(ipc.onClose).not.toHaveBeenCalled()
   })
 
   it('加载缓存后收到设置广播，会合并已保存项并保留当前会话开关，再写回缓存', async () => {

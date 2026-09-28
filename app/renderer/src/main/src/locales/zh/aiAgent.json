@@ -219,6 +219,7 @@
     "sessionClosed": "会话已关闭"
   },
   "ChatSessionNotify": {
+    "connectionStopped": "连接已停止",
     "cacheDeleting": "会话缓存删除中，请稍后再连接",
     "duplicateSession": "会话已经存在，请勿重复建立！",
     "initFailed": "AI 会话初始化失败: {{error}}",
