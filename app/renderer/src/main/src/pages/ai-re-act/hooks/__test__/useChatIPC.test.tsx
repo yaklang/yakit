@@ -8,6 +8,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 vi.mock('../ChatMultiSessionController', () => ({
   globalSessionEngine: {
     handleStartSession: vi.fn(),
+    handleSendMessage: vi.fn(),
     cancelPendingConnection: vi.fn(),
     onPageUnload: vi.fn(),
   },
@@ -16,6 +17,15 @@ vi.mock('../ChatMultiSessionController', () => ({
 describe('pending chat lifecycle', () => {
   beforeEach(() => vi.resetAllMocks())
   afterEach(cleanup)
+
+  it.each([true, false])('returns the controller send result (%s) to the submitting view', (accepted) => {
+    vi.mocked(globalSessionEngine.handleSendMessage).mockReturnValue(accepted)
+    const { result } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'page'))
+    const message = { token: 'backend-id', type: 'casual' as const, params: { IsFreeInput: true, FreeInput: 'hello' } }
+    expect(result.current.onSend(message)).toBe(accepted)
+    expect(globalSessionEngine.handleSendMessage).toHaveBeenCalledExactlyOnceWith(message)
+  })
+
   it('publishes pending state immediately, prevents double submission and clears it on success', () => {
     let callbacks: any
     vi.mocked(globalSessionEngine.handleStartSession).mockImplementation((_input, cb) => {
@@ -110,6 +120,53 @@ describe('Agent independent connections', () => {
     })
   })
   afterEach(cleanup)
+
+  it('binds a background Tab without clearing another Tab pending state or closing its connection', () => {
+    const first = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'tab-one', true))
+    const second = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'tab-two', true))
+    const firstBound = vi.fn()
+    const secondBound = vi.fn()
+    act(() => first.result.current.onStart({ kind: 'new', params: {}, onLinkSuccess: firstBound }))
+    act(() => second.result.current.onStart({ kind: 'new', params: {}, onLinkSuccess: secondBound }))
+    expect(globalSessionEngine.handleStartSession).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ route: YakitRoute.AI_Agent, pageId: 'tab-one' }),
+      expect.any(Object),
+    )
+    expect(globalSessionEngine.handleStartSession).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ route: YakitRoute.AI_Agent, pageId: 'tab-two' }),
+      expect.any(Object),
+    )
+
+    // 切换 Tab 保留原组件；其绑定回调只更新原 Tab 自己的选中会话。
+    act(() => callbacks[0].onLinkSuccess('first-session'))
+    expect(firstBound).toHaveBeenCalledExactlyOnceWith('first-session', true)
+    expect(first.result.current.pendingChat).toBeUndefined()
+    expect(second.result.current.pendingChat?.streamToken).toBe('transport-1')
+    expect(secondBound).not.toHaveBeenCalled()
+    first.unmount()
+    expect(globalSessionEngine.onPageUnload).toHaveBeenCalledExactlyOnceWith(YakitRoute.AI_Agent, 'tab-one')
+    expect(globalSessionEngine.cancelPendingConnection).not.toHaveBeenCalled()
+
+    act(() => callbacks[1].onLinkSuccess('second-session'))
+    expect(secondBound).toHaveBeenCalledExactlyOnceWith('second-session', true)
+    expect(second.result.current.pendingChat).toBeUndefined()
+  })
+
+  it('cancelling a pending Tab leaves the other Tab able to bind', () => {
+    const first = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'tab-one', true))
+    const second = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'tab-two', true))
+    const secondBound = vi.fn()
+    act(() => first.result.current.onStart({ kind: 'new', params: {} }))
+    act(() => second.result.current.onStart({ kind: 'new', params: {}, onLinkSuccess: secondBound }))
+    first.unmount()
+    expect(globalSessionEngine.cancelPendingConnection).toHaveBeenCalledExactlyOnceWith('transport-0')
+    expect(second.result.current.pendingChat?.streamToken).toBe('transport-1')
+    act(() => callbacks[1].onLinkSuccess('second-session'))
+    expect(secondBound).toHaveBeenCalledExactlyOnceWith('second-session', true)
+    expect(second.result.current.pendingChat).toBeUndefined()
+  })
 
   it('allows history recovery during a new handshake without cancelling either connection', () => {
     const { result } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'page', true))

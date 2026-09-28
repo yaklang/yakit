@@ -356,9 +356,19 @@ describe('ChatMultiSessionController start / send / history', async () => {
     expect(token).toEqual(expect.any(String))
     await ctrl.ensureSession('s-dup').meta.lifecycle.preparation
     const meta = ctrl.ensureSession('s-dup').meta
+    const listenerCount = ipcRendererMock.on.mock.calls.length
+    const removedListenerCount = ipcRendererMock.removeAllListeners.mock.calls.length
     expect(ctrl.handleStartSession(startParams('s-dup', 'page-2'))).toBe(token)
     expect(ctrl.ensureSession('s-dup').meta).toBe(meta)
     expect(ctrl.getSessionPageId('s-dup')).toBe('page-2')
+    expect(ipcRendererMock.invoke.mock.calls.filter(([method]) => method === 'start-ai-re-act')).toHaveLength(1)
+    expect(ipcRendererMock.on).toHaveBeenCalledTimes(listenerCount)
+    expect(ipcRendererMock.removeAllListeners).toHaveBeenCalledTimes(removedListenerCount)
+
+    await ctrl.onPageUnload(YakitRoute.AI_Agent, 'page-1')
+    expect(ctrl.isSessionReady('s-dup')).toBe(true)
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', token)
+    await ctrl.handleSessionEnd('s-dup')
   })
 
   it('A14: no UserQuery enters restore loading', async () => {

@@ -74,12 +74,16 @@ describe('backend allocated session identity', () => {
     const pending = pendings.get(token)!
     const first = [...pending.data.rawData.contents.values()][0]
     expect(first).toMatchObject({ type: AIChatQSDataTypeEnum.QUESTION, data: 'first question' })
+    expect(pending.data.store.getState().pendingReply).toBe(true)
     expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
     const request = ipcRendererMock.invoke.mock.calls.find(([method]) => method === 'start-ai-re-act')![2]
     expect(request.Params).not.toHaveProperty('TimelineSessionID')
     expect(request.Params.PreferSessionCachedConfig).toBe(false)
+    expect(request.Params.Attach).toBe(false)
+    expect(ipcRendererMock.invoke.mock.calls.some(([, , request]) => request?.IsFreeInput)).toBe(false)
     await emit(token, 'pong', 'ai-session-one')
     expect(controller.ensureSession('ai-session-one').store).toBe(pending.data.store)
+    expect(pending.data.store.getState().pendingReply).toBe(true)
     expect(success).toHaveBeenCalledExactlyOnceWith('ai-session-one')
     expect(aiChatPersistStore.deleteSessionPersist).not.toHaveBeenCalled()
     expect(grpcQueryAIEvent).not.toHaveBeenCalled()
@@ -100,6 +104,34 @@ describe('backend allocated session identity', () => {
     expect(success).toHaveBeenCalledTimes(1)
     expect(ipcRendererMock.invoke.mock.calls.filter(([, , request]) => request?.IsFreeInput)).toHaveLength(1)
     await controller.handleSessionEnd('ai-session-one')
+    expect(pending.data.store.getState().pendingReply).toBe(false)
+  })
+
+  it('clears cached attachment settings for a new session without mutating retry parameters', async () => {
+    const params: AIChatIPCStartParams['params'] = {
+      IsStart: true,
+      Params: {
+        Source: 'ai',
+        UserQuery: 'first question',
+        TimelineSessionID: 'old-session',
+        Attach: true,
+        PreferSessionCachedConfig: true,
+      },
+    }
+    const original = structuredClone(params)
+    const token = controller.handleStartSession({
+      kind: 'new',
+      route: YakitRoute.AI_Agent,
+      pageId: 'page',
+      params,
+    }) as string
+    await tick()
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', token, {
+      IsStart: true,
+      Params: { Source: 'ai', UserQuery: 'first question', Attach: false, PreferSessionCachedConfig: false },
+    })
+    expect(params).toEqual(original)
+    controller.cancelPendingConnection(token)
   })
 
   it.each(['end', 'cancel'] as const)('persists queued IPC messages before %s completes', async (action) => {
@@ -458,7 +490,11 @@ describe('backend allocated session identity', () => {
       })
       expect([...pendings.get(token)!.data.rawData.contents.values()][0]).toMatchObject({ data: 'first question' })
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', token)
-      expect(pendings.get(token)!.data.store.getState()).toMatchObject({ execute: false, initLoading: false })
+      expect(pendings.get(token)!.data.store.getState()).toMatchObject({
+        execute: false,
+        initLoading: false,
+        pendingReply: false,
+      })
       await emit(token, 'pong', 'late-session')
       await vi.advanceTimersByTimeAsync(30000)
       expect(success).not.toHaveBeenCalled()
@@ -494,7 +530,11 @@ describe('backend allocated session identity', () => {
 
   it('binds an empty new session without sending a blank first question', async () => {
     const token = await start('')
+    expect(pendings.get(token)!.data.store.getState().pendingReply).toBe(false)
+    expect(controller.getWorkingSessionCount()).toBe(0)
     await emit(token, 'pong', 'empty-session')
+    expect(controller.ensureSession('empty-session').store.getState().pendingReply).toBe(false)
+    expect(controller.getWorkingSessionCount()).toBe(0)
     expect(success).toHaveBeenCalledExactlyOnceWith('empty-session')
     expect(ipcRendererMock.invoke.mock.calls.some(([, , input]) => input?.IsFreeInput)).toBe(false)
     expect(aiChatPersistStore.deleteSessionPersist).not.toHaveBeenCalled()

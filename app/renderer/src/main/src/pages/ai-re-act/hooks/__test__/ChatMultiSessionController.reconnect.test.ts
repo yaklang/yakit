@@ -617,13 +617,17 @@ describe('session reconnect / IDB lifecycle', () => {
     const finalWrite = deferred()
     vi.mocked(aiChatPersistStore.setSessionRender).mockReturnValueOnce(finalWrite.promise)
     const old = ctrl.ensureSession('s')
-    ctrl.onPageUnload(YakitRoute.AI_Agent, 'page')
+    const unloaded = vi.fn()
+    const unloading = ctrl.onPageUnload(YakitRoute.AI_Agent, 'page').then(unloaded)
     const ending = ctrl.handleSessionEnd('s')
     await tick()
+    expect(unloaded).not.toHaveBeenCalled()
     expect(ctrl.isSessionReady('s')).toBe(true)
     expect(ctrl.ensureSession('s').store).toBe(old.store)
     finalWrite.resolve()
     await ending
+    await unloading
+    expect(unloaded).toHaveBeenCalledTimes(1)
     expect(ctrl.isSessionReady('s')).toBe(false)
     expect(ctrl.ensureSession('s').store).not.toBe(old.store)
     expect(aiChatPersistStore.deleteSessionPersist).toHaveBeenCalledTimes(1)
