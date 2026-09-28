@@ -242,8 +242,8 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
   /** 追加待办：删队列后发 add_todo_sync */
   const onAddToDo = useDebounceFn(
     () => {
-      const text = (item.user_input || '').trim()
-      if (!text) return
+      const text = item.user_input || ''
+      if (!text.trim()) return
       dequeueThenAct({
         action: (syncId) => {
           const addTodoInfo: AIInputEvent = {

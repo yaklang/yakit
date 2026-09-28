@@ -217,4 +217,28 @@ describe('AITaskQuery 调整方向（原人工介入）', () => {
     expect(syncTypes).toEqual(['react_remove_task', 'user_intervention', 'queue_info'])
     expect(pushSpy).toHaveBeenCalledTimes(1)
   })
+
+  it('preserves leading and trailing whitespace in add_todo_sync payload', () => {
+    const { container } = renderAITaskQuery()
+    const userInput = '  padded todo  '
+    setQueue(true, [queueItem('task-todo-whitespace', userInput)])
+
+    clickAddToDoButton(container)
+
+    expect(onSendMock).toHaveBeenCalledTimes(3)
+    const addCall = onSendMock.mock.calls[1][0]
+    expect(JSON.parse(addCall.params.SyncJsonInput || '{}')).toEqual({
+      text: userInput,
+      set_current: false,
+    })
+  })
+
+  it('does not add a todo for whitespace-only user_input', () => {
+    const { container } = renderAITaskQuery()
+    setQueue(true, [queueItem('task-todo-blank', ' \t\n ')])
+
+    clickAddToDoButton(container)
+
+    expect(onSendMock).not.toHaveBeenCalled()
+  })
 })
