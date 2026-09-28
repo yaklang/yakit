@@ -166,6 +166,7 @@ import {
   HTTP_FLOW_FAVORITE_TAG,
 } from './HTTPFlowTable.constants'
 import {
+  buildHTTPFlowDeleteAllQuery,
   buildHTTPFlowQueryTags,
   getClassNameData,
   getHTTPFlowReqAndResToString,
@@ -1871,7 +1872,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const onRemoveHttpHistory = useMemoizedFn((query: YakDeleteHTTPFlowRequest) => {
     setLoading(true)
     if (isAllSelect) {
-      onRemoveHttpHistoryAll({ isAddQuery: true, query })
+      onRemoveHttpHistoryAll({ isAddQuery: true, query: buildHTTPFlowDeleteAllQuery(query) })
       return
     }
     ipcRenderer
@@ -2627,6 +2628,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return obj
   }, [props.params, pageType, runTimeId, params])
   const resetAllFun = useMemoizedFn((filter: YakQueryHTTPFlowRequest, attachId: number = 0) => {
+    refreshTabsContRef.current = true
     tableQueryEpochRef.current += 1
     refreshT(filter, {
       ...tableParams.Pagination,
@@ -2645,7 +2647,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setSearchVal('')
     setIdSort(false)
     setIncludeIdSearch('')
-    refreshTabsContRef.current = true
   })
   const onResetRefresh = useMemoizedFn(() => {
     resetAllFun({ ...resetParams })
