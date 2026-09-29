@@ -898,5 +898,11 @@
     "aiCallTokenLimitDesc": "Token pressure limit，當 AI 對話的 token 數量超過這個限制時，需要警告",
     "userInteractLimit": "使用者互動上限",
     "userInteractLimitDesc": "使用者互動的最大次數限制，超過這個次數，AI 將不再被允許問使用者問題"
+  },
+  "AIChatWorkspace": {
+    "close": "關閉",
+    "closeOthers": "關閉其他",
+    "closeRight": "關閉右側標籤頁",
+    "closeAll": "關閉全部"
   }
 }

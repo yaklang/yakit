@@ -1,18 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
 import classNames from 'classnames'
-import { Tooltip } from 'antd'
-import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import {
-  PluginExecuteHttpFlow,
-  VulnerabilitiesRisksTable,
-} from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import { AITaskExecutionDetails } from '../../chatTemplate/aiTaskExecutionDetails/AITaskExecutionDetails'
-import FilePreview from '../../components/aiFileSystemList/FilePreview/FilePreview'
-import OperationLog from '../../components/aiFileSystemList/OperationLog/OperationLog'
 import { AITabs, AITabsEnum } from '../../defaultConstant'
 import type { AITabsEnumType, AIAgentTriggerEventInfo } from '../../aiAgentType'
 import useAIAgentStore from '../../useContext/useStore'
@@ -20,22 +11,10 @@ import type { AIAgentTabPayload } from '../type'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import {
-  BugOutlined,
-  FigmaIcon348196674Outlined,
-  ListTodoOutlined,
-  NewspaperOutlined,
-  XOutlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
-import { FileDefault, FileSuffix, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
+import { FileDefault, FileSuffix } from '@/pages/yakRunner/FileTree/icon'
 import styles from './AIChatWorkspace.module.scss'
-import type { HttpFlowSelectionApi } from '@/components/useHttpFlowSelection'
-
-interface HttpFlowSelectionProps {
-  selectionScope?: object
-  onSetSelectedHttpFlowIds?: (ids: string[]) => void
-  onRegisterTableSelectApi?: (api?: HttpFlowSelectionApi) => void
-}
+import { AIChatWorkspaceTabs, type AIChatWorkspaceTab } from './AIChatWorkspaceTabs/AIChatWorkspaceTabs'
+import { AIChatWorkspaceTabContent, type HttpFlowSelectionProps } from './AIChatWorkspaceTabs/AIChatWorkspaceTabContent'
 
 interface AIChatWorkspaceProps extends HttpFlowSelectionProps {
   /** 欢迎页且没有激活会话时，流量和漏洞页签展示全量数据 */
@@ -45,59 +24,11 @@ interface AIChatWorkspaceProps extends HttpFlowSelectionProps {
   onTabsChange?: (count: number) => void
 }
 
-// 每次表格卸载或输入目标切换后，旧的防抖通知及 API 注册立即失效。
-const WorkspaceHttpFlow: React.FC<
-  Omit<React.ComponentProps<typeof PluginExecuteHttpFlow>, keyof HttpFlowSelectionProps> & HttpFlowSelectionProps
-> = ({ selectionScope, onSetSelectedHttpFlowIds, onRegisterTableSelectApi, ...props }) => {
-  const instance = useMemo(() => ({ active: true }), [selectionScope])
-  const current = useRef(instance)
-  current.current = instance
-  useEffect(() => {
-    instance.active = true
-    return () => {
-      instance.active = false
-      onRegisterTableSelectApi?.(undefined)
-      onSetSelectedHttpFlowIds?.([])
-    }
-  }, [instance, onRegisterTableSelectApi, onSetSelectedHttpFlowIds])
-  return (
-    <PluginExecuteHttpFlow
-      {...props}
-      onSetSelectedHttpFlowIds={(ids) => {
-        if (instance.active && current.current === instance) onSetSelectedHttpFlowIds?.(ids)
-      }}
-      onRegisterTableSelectApi={(api) => {
-        if (instance.active && current.current === instance) onRegisterTableSelectApi?.(api)
-      }}
-    />
-  )
-}
-interface WorkspaceTab {
-  key: string
-  type: AITabsEnumType
-  label: string
-  file?: FileNodeProps
-  taskId?: string
-  taskGoal?: string
-  runtimeId?: string
-}
-
-const TabIcons: Record<AITabsEnumType, React.ReactNode> = {
-  [AITabsEnum.File_Preview]: null,
-  [AITabsEnum.Task_Detail]: <ListTodoOutlined color="currentColor" />,
-  [AITabsEnum.HTTP]: <FigmaIcon348196674Outlined />,
-  [AITabsEnum.Risk]: <BugOutlined color="currentColor" />,
-  [AITabsEnum.Operation_Log]: <NewspaperOutlined color="currentColor" />,
-}
+type WorkspaceTab = AIChatWorkspaceTab
 
 const getFileIconByName = (name: string) => {
   const suffix = name.includes('.') ? name.split('.').pop() || '' : ''
   return suffix ? FileSuffix[suffix] || FileDefault : FileDefault
-}
-
-const getFileTabIcon = (file?: FileNodeProps) => {
-  const iconKey = file?.icon && KeyToIcon[file.icon] ? file.icon : FileDefault
-  return <img src={KeyToIcon[iconKey].iconPath} alt="" />
 }
 
 export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props) => {
@@ -149,7 +80,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   const openFilePreview = useMemoizedFn((file: FileNodeProps) => {
     if (file.isFolder) return
     openTab({
-      key: AITabsEnum.File_Preview,
+      key: `file:${file.path}`,
       type: AITabsEnum.File_Preview,
       label: file.name || file.path,
       file,
@@ -266,7 +197,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
 
   const activeTab = tabs.find((item) => item.key === activeTabKey)
 
-  /** 关闭 runtimeId 筛选标签，恢复为会话聚合视图（旧 AIChatContent 行为） */
+  /** 关闭 runtimeId 筛选标签，恢复为会话聚合视图（同 AIChatContent 行为）*/
   const onClearRuntimeFilter = useMemoizedFn(() => {
     if (!activeTabKey) return
     setTabs((current) => current.map((item) => (item.key === activeTabKey ? { ...item, runtimeId: undefined } : item)))
@@ -282,8 +213,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     )
   }, [activeTab?.runtimeId, onClearRuntimeFilter])
 
-  const onCloseTab = useMemoizedFn((event: React.MouseEvent, key: string) => {
-    event.stopPropagation()
+  const closeTab = useMemoizedFn((key: string) => {
     const index = tabs.findIndex((item) => item.key === key)
     const nextTabs = tabs.filter((item) => item.key !== key)
     setTabs(nextTabs)
@@ -292,6 +222,27 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
       setActiveTabKey(next?.key || '')
     }
   })
+
+  const closeOtherTabs = useMemoizedFn((key: string) => {
+    setTabs((current) => current.filter((item) => item.key === key))
+    setActiveTabKey(key)
+  })
+
+  const closeRightTabs = useMemoizedFn((key: string) => {
+    const index = tabs.findIndex((item) => item.key === key)
+    if (index === -1) return
+    const nextTabs = tabs.slice(0, index + 1)
+    setTabs(nextTabs)
+    if (!nextTabs.some((item) => item.key === activeTabKey)) {
+      setActiveTabKey(key)
+    }
+  })
+
+  const closeAllTabs = useMemoizedFn(() => {
+    setTabs([])
+    setActiveTabKey('')
+  })
+
   const showAll = welcome && !activeChat?.SessionID
   const runtimeId = activeTab?.runtimeId
   const runTimeIds = useMemo(
@@ -303,92 +254,17 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     [runtimeId, riskRunTimeIDs, relatedRuntimeIDs],
   )
 
-  const renderTabContent = () => {
-    if (!activeTab) return null
-
-    switch (activeTab.type) {
-      case AITabsEnum.File_Preview:
-        return activeTab.file ? <FilePreview data={activeTab.file} /> : <YakitEmpty style={{ paddingTop: 48 }} />
-      case AITabsEnum.Task_Detail:
-        return activeTab.taskId ? (
-          <AITaskExecutionDetails taskId={activeTab.taskId} taskName={activeTab.label} taskGoal={activeTab.taskGoal} />
-        ) : (
-          <YakitEmpty style={{ paddingTop: 48 }} />
-        )
-      case AITabsEnum.Risk: {
-        if (showAll) return <VulnerabilitiesRisksTable runTimeIDs={[]} />
-        return riskRunTimeIds.length ? (
-          <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={riskRunTimeIds} />
-        ) : (
-          <YakitEmpty style={{ paddingTop: 48 }} />
-        )
-      }
-      case AITabsEnum.HTTP:
-        if (showAll)
-          return (
-            <WorkspaceHttpFlow
-              key="welcome"
-              {...selectionProps}
-              pageType="History"
-              runtimeId=""
-              sourceType=""
-              showAdvancedSearch
-              showSetting
-            />
-          )
-        return runTimeIds.length ? (
-          <WorkspaceHttpFlow
-            key={`${activeChat?.SessionID}:${activeTab.runtimeId || ''}`}
-            {...selectionProps}
-            pageType="Plugin"
-            filterTagDom={filterTagDom}
-            runtimeId={runTimeIds.join(',')}
-            sourceType=""
-            showAdvancedSearch
-            showSetting
-          />
-        ) : (
-          <YakitEmpty style={{ paddingTop: 48 }} />
-        )
-      case AITabsEnum.Operation_Log:
-        return <OperationLog loading={false} list={operationLogList} />
-      default:
-        return null
-    }
-  }
-
   return (
     <div className={styles['workspace']}>
-      <div className={styles['workspace-tab-bar']}>
-        {tabs.map((tab) => {
-          const isActive = tab.key === activeTabKey
-          return (
-            <Tooltip key={tab.key} title={tab.label} placement="top">
-              <div
-                className={classNames(styles['workspace-tab'], {
-                  [styles['workspace-tab-active']]: isActive,
-                })}
-                onClick={() => setActiveTabKey(tab.key)}
-              >
-                <div className={styles['workspace-tab-main']}>
-                  <span className={styles['workspace-tab-icon']}>
-                    {tab.type === AITabsEnum.File_Preview ? getFileTabIcon(tab.file) : TabIcons[tab.type]}
-                  </span>
-                  <span className={classNames(styles['workspace-tab-label'], 'content-ellipsis')}>{tab.label}</span>
-                </div>
-                <span
-                  className={classNames(styles['workspace-tab-close'], {
-                    [styles['workspace-tab-close-show']]: isActive,
-                  })}
-                  onClick={(event) => onCloseTab(event, tab.key)}
-                >
-                  <XOutlined color="currentColor" />
-                </span>
-              </div>
-            </Tooltip>
-          )
-        })}
-      </div>
+      <AIChatWorkspaceTabs
+        tabs={tabs}
+        activeKey={activeTabKey}
+        onActiveChange={setActiveTabKey}
+        onClose={closeTab}
+        onCloseOthers={closeOtherTabs}
+        onCloseRight={closeRightTabs}
+        onCloseAll={closeAllTabs}
+      />
       <div className={styles['workspace-body']}>
         <div
           className={classNames(styles['workspace-pane'], {
@@ -396,7 +272,16 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
               activeTab?.type === AITabsEnum.HTTP || activeTab?.type === AITabsEnum.Risk,
           })}
         >
-          {renderTabContent()}
+          <AIChatWorkspaceTabContent
+            activeTab={activeTab}
+            showAll={showAll}
+            runTimeIds={runTimeIds}
+            riskRunTimeIds={riskRunTimeIds}
+            filterTagDom={filterTagDom}
+            selectionProps={selectionProps}
+            operationLogList={operationLogList}
+            sessionID={activeChat?.SessionID}
+          />
         </div>
       </div>
     </div>
