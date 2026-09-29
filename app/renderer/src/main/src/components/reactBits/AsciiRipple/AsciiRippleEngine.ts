@@ -88,7 +88,7 @@ const buildGrid = (width: number, height: number, charW: number, lineH: number, 
       line += words[wi % words.length]
       wi++
     }
-    base.push(line.padEnd(cols, '').slice(0, cols).split(''))
+    base.push(line.padEnd(cols, ' ').slice(0, cols).split(''))
   }
   const noise = new Float32Array(cols * rows)
   for (let r = 0; r < rows; r++) {
@@ -355,6 +355,7 @@ export const createRippleEngine = (
       const row = base[r]
       const cy = r * lineH + lineH / 2
       let line = lines[r].slice(0, startColumn)
+      let hasHighlights = false
       for (let c = startColumn; c <= endColumn; c++) {
         const cx = c * charW + charW / 2
         sampleSurface(surface, cx, cy, out)
@@ -377,8 +378,9 @@ export const createRippleEngine = (
           const idx = Math.max(0, Math.min(plen - 1, Math.round(intensity * (plen - 1) + jitter)))
           glyph = palette[idx]
         }
-        if (glyph === '') {
-          line += ''
+        hasHighlights = true
+        if (glyph === ' ') {
+          line += ' '
           continue
         }
         const ramp = hgt >= 0 ? p.ramps.up : p.ramps.down
@@ -409,10 +411,10 @@ export const createRippleEngine = (
             endColumn: c,
             mergeable,
           })
-        line += ''
+        line += ' '
       }
       line += lines[r].slice(endColumn + 1)
-      if (line.length !== row.length) {
+      if (hasHighlights) {
         ctx.clearRect(0, r * lineH, cw, lineH)
         ctx.fillText(line, 0, cy)
       }

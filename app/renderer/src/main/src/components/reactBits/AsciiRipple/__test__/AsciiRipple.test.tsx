@@ -158,6 +158,48 @@ describe('AsciiRipple 背景交互', () => {
     expect(gradient).toHaveBeenCalledTimes(8)
   })
 
+  it('高亮字符保留背景字格，后续文字不左移或与高亮重叠', async () => {
+    const text = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    const ref = createRef<AsciiRippleHandle>()
+    render(<AsciiRipple ref={ref} text={text} chars="@" scramble={100} vignette={0} />)
+    await act(async () => {
+      await Promise.resolve()
+    })
+    context.fillText.mockClear()
+    ref.current!.drop(200, 200)
+    act(() => frame!(performance.now() + 20))
+
+    const calls = context.fillText.mock.calls
+    const highlights = calls.filter(([glyph]) => /^@+$/.test(glyph))
+    const backgrounds = calls.filter(([line, x]) => x === 0 && line.startsWith('0123456789'))
+    expect(highlights.length).toBeGreaterThan(0)
+    expect(backgrounds.length).toBeGreaterThan(0)
+    for (const [line, , y] of backgrounds) {
+      expect(line).toHaveLength(64)
+      for (let column = 0; column < line.length; column++) {
+        expect([' ', text[column % text.length]]).toContain(line[column])
+      }
+      for (const [glyph, x, highlightY] of highlights) {
+        if (highlightY === y) expect(line.slice(x / 10, x / 10 + glyph.length)).toBe(' '.repeat(glyph.length))
+      }
+    }
+  })
+
+  it.each(['', ' \t\n '])('空文案 %j 在点击后不会绘制无效字符', async (text) => {
+    const ref = createRef<AsciiRippleHandle>()
+    render(<AsciiRipple ref={ref} text={text} vignette={0} />)
+    await act(async () => {
+      await Promise.resolve()
+    })
+    ref.current!.drop(200, 200)
+    act(() => frame!(performance.now() + 20))
+    expect(context.fillText).toHaveBeenCalled()
+    for (const [glyph] of context.fillText.mock.calls) {
+      expect(typeof glyph).toBe('string')
+      expect(glyph).not.toContain('undefined')
+    }
+  })
+
   it('高刷新率回调不重复绘制同一个 60Hz 帧', async () => {
     const ref = createRef<AsciiRippleHandle>()
     render(<AsciiRipple ref={ref} vignette={0} />)
