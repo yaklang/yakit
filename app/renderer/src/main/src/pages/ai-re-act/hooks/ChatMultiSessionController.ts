@@ -11,6 +11,7 @@ import {
   type AIStartParams,
 } from './grpcApi'
 import { createChatStore } from './chatStore'
+import { createStore } from 'zustand/vanilla'
 import { getImageStoreKeyByAISource } from './useGetChatDataStoreKey'
 import { SessionLifecycle } from './sessionLifecycle'
 import { sessionStatusStore, SessionDeleteStatus } from './sessionStatus/sessionStatusStore'
@@ -265,9 +266,9 @@ export class ChatMultiSessionController {
   /** 将已有数据引用登记到正式会话池；保留首问及 React 对原 store 的订阅。 */
   private registerSessionData(sessionId: string, data: ReturnType<ChatMultiSessionController['createSessionData']>) {
     this.requestPool.set(sessionId, data.request)
-    this.storePool.set(sessionId, data.store)
     this.rawDataPool.set(sessionId, data.rawData)
     this.metaPool.set(sessionId, data.meta)
+    this.sessionStores.setState(new Map(this.storePool).set(sessionId, data.store), true)
   }
 
   /** 用户取消时删除草稿；重试只释放旧连接，沿用草稿。 */
@@ -828,9 +829,14 @@ export class ChatMultiSessionController {
   private pendingDeletes = new Set<DeleteSessionsParams>()
 
   private requestPool = new Map<string, AIStartParams>()
-  private storePool = new Map<string, ReturnType<typeof createChatStore>>()
+  /** 历史列表只订阅已注册的 store，不为后端提前返回的 ID 创建占位会话。 */
+  public readonly sessionStores = createStore(() => new Map<string, ReturnType<typeof createChatStore>>())
+  private get storePool() {
+    return this.sessionStores.getState()
+  }
   private rawDataPool = new Map<string, AIAgentChatData>()
   private metaPool = new Map<string, AIAgentChatMetaData>()
+
   /** 获取对应会话的所有数据集 */
   public ensureSession(sessionId: string) {
     if (!this.storePool.has(sessionId)) {
@@ -1953,9 +1959,11 @@ export class ChatMultiSessionController {
     this.readyChannels.delete(sessionId)
     if (this.activeShowSession === sessionId) this.activeShowSession = ''
     this.requestPool.delete(sessionId)
-    this.storePool.delete(sessionId)
     this.rawDataPool.delete(sessionId)
     this.metaPool.delete(sessionId)
+    const stores = new Map(this.storePool)
+    stores.delete(sessionId)
+    this.sessionStores.setState(stores, true)
     const owner = this.sessionOwnerMap.get(sessionId)
     if (owner) {
       this.removeFromPageSessionMap(owner, sessionId)

@@ -504,6 +504,42 @@ describe('backend allocated session identity', () => {
     },
   )
 
+  it('binds after history subscribes to the backend ID without allocating a placeholder or losing the pending store', async () => {
+    const token = await start()
+    const pending = pendings.get(token)!
+    const listener = vi.fn()
+    expect(controller.sessionStores.getState().has('listed-before-pong')).toBe(false)
+    const unsubscribe = controller.sessionStores.subscribe(listener)
+
+    await emit(token, 'pong', 'listed-before-pong')
+    expect(success).toHaveBeenCalledExactlyOnceWith('listed-before-pong')
+    expect(yakitNotify).not.toHaveBeenCalled()
+    expect(controller.ensureSession('listed-before-pong').store).toBe(pending.data.store)
+    expect(ipcRendererMock.invoke.mock.calls.filter(([, , request]) => request?.IsFreeInput)).toHaveLength(1)
+
+    expect(controller.sessionStores.getState().get('listed-before-pong')).toBe(pending.data.store)
+    expect(listener).toHaveBeenCalledTimes(1)
+    unsubscribe()
+  })
+
+  it('follows store disposal and re-registration without keeping a stale history subscription', async () => {
+    const token = await start()
+    await emit(token, 'pong', 'history-subscription')
+    const original = controller.ensureSession('history-subscription').store
+    const listener = vi.fn()
+    const unsubscribe = controller.sessionStores.subscribe(listener)
+    const unloading = controller.onPageUnload(YakitRoute.AI_Agent, 'page')
+    await vi.advanceTimersByTimeAsync(5000)
+    await unloading
+    expect(controller.sessionStores.getState().has('history-subscription')).toBe(false)
+    expect(listener).toHaveBeenCalledTimes(1)
+    const restored = controller.ensureSession('history-subscription').store
+    expect(restored).not.toBe(original)
+    expect(controller.sessionStores.getState().get('history-subscription')).toBe(restored)
+    expect(listener).toHaveBeenCalledTimes(2)
+    unsubscribe()
+  })
+
   it('refuses an already registered backend ID without replacing its store', async () => {
     const existing = controller.ensureSession('existing')
     const token = await start()
