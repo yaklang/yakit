@@ -448,6 +448,11 @@ const handleStreamFinished: AIMessageHandler = async (requestInfo) => {
   // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
   streamData.data.status = 'end'
   store.getState().incrementNodeVersion(streamData.id, 'item')
+  // 组内子流不在顶层列表；只 bump item 时组 header（思考读秒）可能收不到重渲染，一并 bump 父组
+  const parentGroup = Object.values(store.getState().groups).find((group) =>
+    group.childrenTokens.includes(streamData.id),
+  )
+  if (parentGroup) store.getState().incrementNodeVersion(parentGroup.token, 'group')
   upsertSessionContent(requestInfo.sessionId, streamData.id, streamData, requestInfo.meta.lifecycle)
 }
 

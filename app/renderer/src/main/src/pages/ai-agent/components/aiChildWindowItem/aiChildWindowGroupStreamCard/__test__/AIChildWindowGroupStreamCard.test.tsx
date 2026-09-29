@@ -26,8 +26,10 @@ vi.mock('@/pages/ai-re-act/hooks/useAINodeLabel', () => ({
   default: () => ({ getLabelByParams: () => '标签' }),
 }))
 vi.mock('../../../aiGroupStreamCard/aiGroupStreamCardHeard/AIGroupStreamCardHeard', () => ({
-  default: ({ lastItem }: { lastItem?: { data?: { status?: string } } }) => (
-    <div data-testid="heard" data-status={lastItem?.data?.status ?? ''} />
+  isThoughtHeaderStreaming: (lastItem?: { data?: { status?: string } }) =>
+    lastItem != null && lastItem.data?.status !== 'end',
+  default: ({ lastItem, streaming }: { lastItem?: { data?: { status?: string } }; streaming?: boolean }) => (
+    <div data-testid="heard" data-status={lastItem?.data?.status ?? ''} data-streaming={String(!!streaming)} />
   ),
 }))
 vi.mock('../../../aiGroupStreamCard/aiGroupStreamCardList/AIGroupStreamCardList', () => ({
@@ -90,7 +92,7 @@ describe('AIChildWindowGroupStreamCard', () => {
     expect(list).toHaveAttribute('data-thought', 'false')
   })
 
-  it('同 lastToken 下 renderNum 递增会刷新思考头 lastItem 状态', () => {
+  it('同 lastToken 下 renderNum 递增会刷新思考头 lastItem 状态与 streaming', () => {
     setGroup('g-thought', AI_STREAM_THOUGHT_NODE_ID)
     rawData.set('child-1', {
       id: 'child-1',
@@ -101,6 +103,7 @@ describe('AIChildWindowGroupStreamCard', () => {
 
     const { rerender } = renderWithStore(<AIChildWindowGroupStreamCard token="g-thought" />, 1)
     expect(screen.getByTestId('heard')).toHaveAttribute('data-status', 'start')
+    expect(screen.getByTestId('heard')).toHaveAttribute('data-streaming', 'true')
 
     const child = rawData.get('child-1')!
     child.data.status = 'end'
@@ -110,5 +113,6 @@ describe('AIChildWindowGroupStreamCard', () => {
       </AIConcurrentStreamValue.Provider>,
     )
     expect(screen.getByTestId('heard')).toHaveAttribute('data-status', 'end')
+    expect(screen.getByTestId('heard')).toHaveAttribute('data-streaming', 'false')
   })
 })

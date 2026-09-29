@@ -9,7 +9,9 @@ import type {
   AIChildWindowGroupStreamCardProps,
 } from './type'
 import styles from './AIChildWindowGroupStreamCard.module.scss'
-import AIGroupStreamCardHeard from '../../aiGroupStreamCard/aiGroupStreamCardHeard/AIGroupStreamCardHeard'
+import AIGroupStreamCardHeard, {
+  isThoughtHeaderStreaming,
+} from '../../aiGroupStreamCard/aiGroupStreamCardHeard/AIGroupStreamCardHeard'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import { STREAM_MASK_THRESHOLD } from '../../aiGroupStreamCard/AIGroupStreamCard'
 import classNames from 'classnames'
@@ -114,6 +116,7 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
       expand={expand}
       setExpand={setExpand}
       lastItem={lastItem}
+      streaming={isThoughtHeaderStreaming(lastItem)}
       nodeId={nodeId}
       nodeLabel={nodeLabel}
       shouldShowMask={shouldShowMask}

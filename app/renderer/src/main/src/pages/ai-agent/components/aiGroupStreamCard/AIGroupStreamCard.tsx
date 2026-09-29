@@ -1,10 +1,10 @@
-import { useCreation } from 'ahooks'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import {
   AIChatQSDataTypeEnum,
   type ChatReferenceMaterialPayload,
   type ChatStream,
 } from '@/pages/ai-re-act/hooks/aiRender'
-import { type CSSProperties, type FC, useRef, useEffect, useMemo, memo } from 'react'
+import { type CSSProperties, type FC, useRef, useEffect, useMemo, memo, useState } from 'react'
 import styles from './AIGroupStreamCard.module.scss'
 import classNames from 'classnames'
 import useClickFocus from '../../../ai-re-act/hooks/useClickFocus'
@@ -12,7 +12,7 @@ import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useC
 import { useStore } from 'zustand'
 import type { AIGroupStreamCardHeardWrapperProps, AIGroupStreamCardListWrapperProps } from './type'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
-import AIGroupStreamCardHeard from './aiGroupStreamCardHeard/AIGroupStreamCardHeard'
+import AIGroupStreamCardHeard, { isThoughtHeaderStreaming } from './aiGroupStreamCardHeard/AIGroupStreamCardHeard'
 import AIGroupStreamCardList from './aiGroupStreamCardList/AIGroupStreamCardList'
 import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
@@ -167,36 +167,32 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
     }
   }, [isLastActiveGroup, nodeId])
 
+  const readLastStream = useMemoizedFn((): ChatStream | undefined => {
+    if (!lastToken) return undefined
+    const item = rawData.contents.get(lastToken)
+    if (!item || item.type !== AIChatQSDataTypeEnum.STREAM) return undefined
+    return item
+  })
+
+  const [lastItem, setLastItem] = useState<ChatStream | undefined>(() => readLastStream())
+  // status 原地改写时 lastItem 引用不变；在本层读出原始布尔下传，才能打穿 ThoughtHeard 的 memo
+  const streaming = isThoughtHeaderStreaming(lastItem)
+
+  useEffect(() => {
+    setLastItem(readLastStream())
+  }, [lastToken, lastItemRenderNum, renderNum])
+
   const shouldShowMask = useMemo(() => {
-    const lastItem = rawData.contents.get(lastToken)
-    if (!lastItem) return false
-    switch (lastItem.type) {
-      case AIChatQSDataTypeEnum.STREAM: {
-        const contentLength = lastItem.data?.content?.length || 0
-        return contentLength > STREAM_MASK_THRESHOLD
-      }
-      default:
-        return false
-    }
-  }, [lastToken, lastItemRenderNum])
-
-  const lastItem = useCreation(() => {
-    const lastItem = rawData.contents.get(lastToken)
-    if (!lastItem) return undefined
-    switch (lastItem.type) {
-      case AIChatQSDataTypeEnum.STREAM:
-        return lastItem
-
-      default:
-        return undefined
-    }
-  }, [lastItemRenderNum])
+    const contentLength = lastItem?.data?.content?.length || 0
+    return contentLength > STREAM_MASK_THRESHOLD
+  }, [lastItem?.data?.content?.length, lastItemRenderNum])
 
   return (
     <AIGroupStreamCardHeard
       expand={expand}
       setExpand={setExpand}
       lastItem={lastItem}
+      streaming={streaming}
       nodeId={nodeId}
       nodeLabel={nodeLabel}
       shouldShowMask={shouldShowMask}

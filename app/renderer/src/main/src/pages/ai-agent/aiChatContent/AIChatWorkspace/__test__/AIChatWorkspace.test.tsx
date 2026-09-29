@@ -1,6 +1,11 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+// 先注册 electron stub：AIRightPanel → @/store 依赖链会顶层 window.require('electron')（imControl）
+import '@/pages/ai-re-act/hooks/__test__/setupElectron'
+// 依赖链经 AI 组件会拉到 lottie-web / xterm，模块加载期探测 canvas，jsdom 不支持
+vi.mock('lottie-web', () => ({ default: { loadAnimation: vi.fn(), destroy: vi.fn() } }))
+vi.mock('@xterm/xterm', () => ({ Terminal: vi.fn() }))
 import React from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
 import emiter from '@/utils/eventBus/eventBus'
@@ -140,7 +145,13 @@ vi.mock('@/pages/ai-agent/historyChat/HistoryChat', () => ({ default: () => null
 vi.mock('@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal', () => ({
   ExportAILogsModal: () => null,
 }))
-vi.mock('@/pages/ai-agent/grpc', () => ({ grpcExportAILogs: vi.fn() }))
+vi.mock('@/pages/ai-agent/aiChatContent/AIContextToken/AIMainModelTokens', () => ({
+  default: () => <div data-testid="main-model-tokens" />,
+}))
+vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
+  default: () => [{ queryLoading: false, updateLoading: false, aiGlobalConfig: {} }, { onRefresh: vi.fn() }],
+}))
+vi.mock('@/pages/ai-agent/grpc', () => ({ grpcExportAILogs: vi.fn(), grpcQueryHTTPFlows: vi.fn() }))
 vi.mock('@/pages/risks/YakitRiskTable/utils', () => ({ apiRiskFieldGroup: vi.fn() }))
 vi.mock('@/hook/useAiChatLog/useAiChatLog.ts', () => ({ default: () => ({ onOpenLogWindow: vi.fn() }) }))
 vi.mock('@/components/yakitUI/YakitEmpty/YakitEmpty', () => ({ YakitEmpty: () => <div>暂无数据</div> }))
