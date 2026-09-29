@@ -119,6 +119,7 @@ describe('ChatMultiSessionController concurrency / working / close', () => {
   const startPending = (pageId: string) => {
     const token = ctrl.handleStartSession({
       kind: 'new',
+      sessionId: pageId,
       route: YakitRoute.AI_Agent,
       pageId,
       params: { Params: { Source: 'ai', UserQuery: 'hello' } },
@@ -151,14 +152,14 @@ describe('ChatMultiSessionController concurrency / working / close', () => {
     const emit = (channel: string, value: unknown) => {
       ipcRendererMock.on.mock.calls.find(([name]) => name === channel)![1]({}, value)
     }
-    emit(`${token}-data`, makeGrpcJsonRes('pong', {}, { SessionId: 'bound' }))
+    emit(`${token}-data`, makeGrpcJsonRes('pong', {}, { SessionId: 'tab-1' }))
     for (let i = 0; i < 30; i++) await Promise.resolve()
-    sessions.add('bound')
+    sessions.add('tab-1')
     expect(ctrl.getWorkingSessionCount()).toBe(2)
-    expect(ctrl.isSessionWorking('bound')).toBe(true)
-    expect(ctrl.handleStartSession(startParams('bound', 'tab-3'))).toBe(token)
+    expect(ctrl.isSessionWorking('tab-1')).toBe(true)
+    expect(ctrl.handleStartSession(startParams('tab-1', 'tab-3'))).toBe(token)
     await ctrl.onPageUnload(YakitRoute.AI_Agent, 'tab-1')
-    expect(ctrl.isSessionReady('bound')).toBe(true)
+    expect(ctrl.isSessionReady('tab-1')).toBe(true)
     expect(ctrl.hasWorkingSessionOnPage(YakitRoute.AI_Agent, 'tab-3')).toBe(true)
 
     emit(`${failedToken}-error`, new Error('offline'))

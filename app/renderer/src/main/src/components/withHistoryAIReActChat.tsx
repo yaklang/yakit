@@ -12,7 +12,7 @@ import type { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkd
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 import { getAIReActRequestParams, onReStart } from '@/pages/ai-agent/utils'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
-import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
+import type { AIChatSubmitParams } from '@/pages/ai-agent/aiAgentChat/type'
 import type {
   AIHandleStartExtraProps,
   AIHandleStartParams,
@@ -74,7 +74,7 @@ export interface HistoryAIReActChatBridge {
   deselectHttpFlowId: (id: string) => void
   setMention: (v: AIMentionCommandParams) => void
   setValue: (v: string) => void
-  handleStart: (value: HandleStartParams) => void
+  handleStart: (value: AIChatSubmitParams) => void
 }
 
 export interface HistoryAIReActChatSlotOptions {
@@ -539,7 +539,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   /** 与输入框提交一致：执行中走自由输入，否则开启新会话 */
-  const handleSubmitQuery = useMemoizedFn((value: HandleStartParams) => {
+  const handleSubmitQuery = useMemoizedFn((value: AIChatSubmitParams) => {
     const sessionID = activeChat?.SessionID
     if (store.getState().execute && sessionID) {
       const { attachedResourceInfo } = getAIReActRequestParams(value)

@@ -6,11 +6,9 @@ import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/ut
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
 export interface AIChatIPCStartParams {
-  /** 新建不传业务 ID；重连必须传入已有会话 ID。 */
-  sessionId?: string
+  /** 新建传前端生成的全新 ID；恢复传已有会话 ID。 */
+  sessionId: string
   kind: 'new' | 'resume'
-  /** 首问图片的本地草稿目录，不作为后端会话 ID。 */
-  draftId?: string
   params: AIInputEvent
   /** 会话归属路由（不可变） */
   route: YakitRouteType

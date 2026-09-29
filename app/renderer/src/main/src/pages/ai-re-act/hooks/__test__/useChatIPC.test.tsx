@@ -37,12 +37,12 @@ describe('pending chat lifecycle', () => {
     const { result } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'page'))
     const onLinkSuccess = vi.fn()
     act(() => {
-      result.current.onStart({ kind: 'new', params: {}, onLinkSuccess })
-      result.current.onStart({ kind: 'new', params: {} })
+      result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {}, onLinkSuccess })
+      result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} })
     })
     expect(result.current.pendingChat?.streamToken).toBe('transport')
     act(() => {
-      result.current.onStart({ kind: 'new', params: {} })
+      result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} })
     })
     expect(globalSessionEngine.handleStartSession).toHaveBeenCalledTimes(1)
     act(() => callbacks.onLinkSuccess('backend-id'))
@@ -58,7 +58,7 @@ describe('pending chat lifecycle', () => {
     })
     const { result } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'page'))
     act(() => {
-      result.current.onStart({ kind: 'new', params: {} })
+      result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} })
     })
     act(() => result.current.cancelPendingChat())
     act(() => callbacks.onPendingChange({ streamToken: 'transport', data: {}, status: 'failed' }))
@@ -78,7 +78,7 @@ describe('pending chat lifecycle', () => {
     const { result } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'page'))
     act(() => {
       result.current.onStart({ kind: 'resume', sessionId: 'history', params: {} })
-      result.current.onStart({ kind: 'new', params: {} })
+      result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} })
     })
     act(() => callbacks[0].onLinkSuccess('history'))
     expect(result.current.pendingChat?.streamToken).toBe('new-transport')
@@ -96,13 +96,49 @@ describe('pending chat lifecycle', () => {
       return token
     })
     const { result, unmount } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'page'))
-    act(() => result.current.onStart({ kind: 'new', draftId: 'draft', params: {} }))
-    act(() => callbacks[0].onPendingChange({ streamToken: 'transport-0', data: {}, status: 'failed' }))
+    const params = { IsStart: true, Params: { TimelineSessionID: 'draft', UserQuery: 'first question' } }
+    act(() => result.current.onStart({ kind: 'new', sessionId: 'draft', params }))
+    act(() =>
+      callbacks[0].onPendingChange({
+        streamToken: 'transport-0',
+        data: { request: { TimelineSessionID: 'draft' } },
+        status: 'failed',
+      }),
+    )
     act(() => result.current.pendingChat?.retry?.())
     expect(globalSessionEngine.cancelPendingConnection).toHaveBeenCalledWith('transport-0', { keepDraft: true })
+    expect(globalSessionEngine.handleStartSession).toHaveBeenNthCalledWith(
+      2,
+      { kind: 'new', sessionId: 'draft', params, route: YakitRoute.AI_Agent, pageId: 'page' },
+      expect.any(Object),
+    )
     expect(result.current.pendingChat?.streamToken).toBe('transport-1')
     unmount()
     expect(globalSessionEngine.cancelPendingConnection).toHaveBeenCalledWith('transport-1')
+  })
+
+  it('cleans up a failed session when a different new submission replaces it', () => {
+    let callbacks: any
+    vi.mocked(globalSessionEngine.handleStartSession).mockImplementation((input, cb) => {
+      callbacks = cb
+      cb?.onPendingChange?.({
+        streamToken: input.sessionId,
+        data: { request: { TimelineSessionID: input.sessionId } } as any,
+        status: 'connecting',
+      })
+      return input.sessionId
+    })
+    const { result } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'page'))
+    act(() => result.current.onStart({ kind: 'new', sessionId: 'old-session', params: {} }))
+    act(() =>
+      callbacks.onPendingChange({
+        streamToken: 'old-session',
+        data: { request: { TimelineSessionID: 'old-session' } },
+        status: 'failed',
+      }),
+    )
+    act(() => result.current.onStart({ kind: 'new', sessionId: 'new-session', params: {} }))
+    expect(globalSessionEngine.cancelPendingConnection).toHaveBeenCalledWith('old-session', { keepDraft: false })
   })
 })
 
@@ -126,8 +162,17 @@ describe('Agent independent connections', () => {
     const second = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'tab-two', true))
     const firstBound = vi.fn()
     const secondBound = vi.fn()
-    act(() => first.result.current.onStart({ kind: 'new', params: {}, onLinkSuccess: firstBound }))
-    act(() => second.result.current.onStart({ kind: 'new', params: {}, onLinkSuccess: secondBound }))
+    act(() =>
+      first.result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {}, onLinkSuccess: firstBound }),
+    )
+    act(() =>
+      second.result.current.onStart({
+        kind: 'new',
+        sessionId: 'client-session',
+        params: {},
+        onLinkSuccess: secondBound,
+      }),
+    )
     expect(globalSessionEngine.handleStartSession).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({ route: YakitRoute.AI_Agent, pageId: 'tab-one' }),
@@ -158,8 +203,15 @@ describe('Agent independent connections', () => {
     const first = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'tab-one', true))
     const second = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'tab-two', true))
     const secondBound = vi.fn()
-    act(() => first.result.current.onStart({ kind: 'new', params: {} }))
-    act(() => second.result.current.onStart({ kind: 'new', params: {}, onLinkSuccess: secondBound }))
+    act(() => first.result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} }))
+    act(() =>
+      second.result.current.onStart({
+        kind: 'new',
+        sessionId: 'client-session',
+        params: {},
+        onLinkSuccess: secondBound,
+      }),
+    )
     first.unmount()
     expect(globalSessionEngine.cancelPendingConnection).toHaveBeenCalledExactlyOnceWith('transport-0')
     expect(second.result.current.pendingChat?.streamToken).toBe('transport-1')
@@ -170,7 +222,7 @@ describe('Agent independent connections', () => {
 
   it('allows history recovery during a new handshake without cancelling either connection', () => {
     const { result } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'page', true))
-    act(() => result.current.onStart({ kind: 'new', params: {} }))
+    act(() => result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} }))
     act(() => result.current.onStart({ kind: 'resume', sessionId: 'history', params: {} }))
     expect(globalSessionEngine.handleStartSession).toHaveBeenCalledTimes(2)
     expect(globalSessionEngine.cancelPendingConnection).not.toHaveBeenCalled()
@@ -183,9 +235,13 @@ describe('Agent independent connections', () => {
     const { result } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'page', true))
     const firstBound = vi.fn()
     const secondBound = vi.fn()
-    act(() => result.current.onStart({ kind: 'new', params: {}, onLinkSuccess: firstBound }))
+    act(() =>
+      result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {}, onLinkSuccess: firstBound }),
+    )
     act(() => result.current.detachPendingChat())
-    act(() => result.current.onStart({ kind: 'new', params: {}, onLinkSuccess: secondBound }))
+    act(() =>
+      result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {}, onLinkSuccess: secondBound }),
+    )
     act(() => callbacks[0].onLinkSuccess('first'))
     expect(firstBound).toHaveBeenCalledWith('first', false)
     expect(result.current.pendingChat?.streamToken).toBe('transport-1')
@@ -197,7 +253,7 @@ describe('Agent independent connections', () => {
 
   it('ignores background failure for the current view and still cleans up all page connections on unmount', () => {
     const { result, unmount } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'page', true))
-    act(() => result.current.onStart({ kind: 'new', params: {} }))
+    act(() => result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} }))
     act(() => result.current.detachPendingChat())
     act(() => callbacks[0].onPendingChange({ streamToken: 'transport-0', status: 'failed', data: {} }))
     expect(result.current.pendingChat).toBeUndefined()
@@ -209,8 +265,8 @@ describe('Agent independent connections', () => {
   it('still rejects duplicate submissions in the current view and supports explicit cancellation', () => {
     const { result } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'page', true))
     act(() => {
-      result.current.onStart({ kind: 'new', params: {} })
-      result.current.onStart({ kind: 'new', params: {} })
+      result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} })
+      result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} })
     })
     expect(globalSessionEngine.handleStartSession).toHaveBeenCalledTimes(1)
     act(() => result.current.cancelPendingChat())
@@ -220,7 +276,7 @@ describe('Agent independent connections', () => {
   it('preserves the existing blocking behavior for other entry points', () => {
     const { result } = renderHook(() => useChatIPC(YakitRoute.AI_Agent, 'embedded-page'))
     act(() => {
-      result.current.onStart({ kind: 'new', params: {} })
+      result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} })
       result.current.onStart({ kind: 'resume', sessionId: 'history', params: {} })
     })
     expect(globalSessionEngine.handleStartSession).toHaveBeenCalledTimes(1)

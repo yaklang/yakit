@@ -2659,8 +2659,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   })
 
   const openAIAgentPage = useOpenAIAgentPage({
-    currentTabKey,
-    pageCache,
     getPageCache,
     setCurrentTabKey,
     openAIAgentExtraTab,

@@ -12,8 +12,8 @@ import classNames from 'classnames'
 import { ChevrondownButton } from './AIReActComponent'
 import { type AIInputEvent, AIInputEventSyncTypeEnum, AINotifyType } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
-import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
-import { getAIReActRequestParams } from '@/pages/ai-agent/utils'
+import type { AIChatSubmitParams } from '@/pages/ai-agent/aiAgentChat/type'
+import { createActiveChatSessionId, getAIReActRequestParams } from '@/pages/ai-agent/utils'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
@@ -122,16 +122,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       startRequest,
       setMention: (value) => aiChatTextareaRef.current?.setMention(value),
     })
-    const lastStart = useRef<HandleStartParams | undefined>(undefined)
-    const handleStart = useMemoizedFn((value: HandleStartParams) => {
-      const submission: HandleStartParams = {
+    const handleStart = useMemoizedFn((input: AIChatSubmitParams) => {
+      const { sessionId, ...value } = input
+      startChat({
         ...value,
-        target:
-          value.target ??
-          (activeChat?.SessionID ? { kind: 'resume', sessionId: activeChat.SessionID } : { kind: 'new' }),
-      }
-      lastStart.current = submission
-      startChat(submission)
+        target: activeChat?.SessionID
+          ? { kind: 'resume', sessionId: activeChat.SessionID }
+          : { kind: 'new', sessionId: sessionId || createActiveChatSessionId() },
+      })
     })
 
     useImperativeHandle(ref, () => {
@@ -144,7 +142,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
     }, [])
     /**自由对话 */
-    const handleSend = useMemoizedFn((data: HandleStartParams) => {
+    const handleSend = useMemoizedFn((data: AIChatSubmitParams) => {
       if (!activeChat?.SessionID) return
       const sendChat = () => {
         const { attachedResourceInfo } = getAIReActRequestParams(data)
@@ -279,8 +277,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                     <YakitButton
                       type="text"
                       onClick={() => {
-                        if (lastStart.current) handleStart(lastStart.current)
-                        else pendingChat.retry?.()
+                        pendingChat.retry?.()
                       }}
                     >
                       {t('YakitButton.retry')}

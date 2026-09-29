@@ -228,12 +228,9 @@
     "reviewMissing": "Review details are unavailable. The action was ignored.",
     "connectFailed": "AI session connection failed: {{error}}",
     "finalizeFailed": "Failed to finish the AI session: {{error}}",
-    "endedWithoutId": "The session connection ended before a session ID was received.",
+    "endedBeforeReady": "The session connection ended before initialization completed",
     "initTimeout": "AI session initialization timed out. Check the engine connection and try again.",
-    "engineDefaultSession": "This engine cannot assign a session ID automatically. Update the engine.",
     "sessionIdMismatch": "The engine returned inconsistent session IDs.",
-    "reconnectSessionIdMismatch": "The engine session ID does not match the session being reconnected.",
-    "engineMissingSessionId": "The engine did not return a session ID. Update the engine.",
     "sessionIdOccupied": "The engine returned a session ID that already exists.",
     "invalidHistoryCursor": "History recovery did not return a valid cursor."
   },

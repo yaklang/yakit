@@ -3,7 +3,7 @@ const handlerHelper = require('./handleStreamWithContext')
 const { getYakProjects, getYakTemp, getAiImageTemp } = require('../filePath')
 const fs = require('fs')
 const path = require('path')
-const { adoptAIImages, discardAIImageDraft } = require('./utils/adoptAIImages')
+const { discardAIImageDraft } = require('./utils/aiImageDraft')
 
 module.exports = (win, getClient) => {
   // #region AI-Task
@@ -642,11 +642,6 @@ module.exports = (win, getClient) => {
     const writes = imageWrites.get(`${params.chatDataStoreKey}/${params.draftId}`)
     if (writes) await Promise.allSettled([...writes])
     return discardAIImageDraft(getAiImageTemp(), params)
-  })
-  ipcMain.handle('adopt-ai-images', async (_event, params) => {
-    const writes = imageWrites.get(`${params.chatDataStoreKey}/${params.draftId}`)
-    if (writes) await Promise.all([...writes])
-    return adoptAIImages(getAiImageTemp(), params)
   })
   ipcMain.handle('save-ai-image', (event, params, token) => {
     const key = `${params.chatDataStoreKey}/${params.sessionID}`

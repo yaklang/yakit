@@ -9,21 +9,19 @@ const source = readFileSync(filename, 'utf8')
 const require = createRequire(filename)
 let handlers
 let streams
-let adopt
 let discard
 let event
 
 beforeEach(() => {
   handlers = new Map()
   streams = []
-  adopt = vi.fn().mockResolvedValue({ '/draft/image.png': '/session/image.png' })
   discard = vi.fn().mockResolvedValue(undefined)
   event = { sender: { send: vi.fn() } }
   const dependencies = {
     electron: { ipcMain: { handle: (name, callback) => handlers.set(name, callback) } },
     './handleStreamWithContext': { cancelHandler: () => vi.fn() },
     '../filePath': { getAiImageTemp: () => '/test-images' },
-    './utils/adoptAIImages': { adoptAIImages: adopt, discardAIImageDraft: discard },
+    './utils/aiImageDraft': { discardAIImageDraft: discard },
     fs: {
       existsSync: () => true,
       createWriteStream: () => {
@@ -53,29 +51,10 @@ const save = (draft = 'draft', filename = 'image.png') =>
     },
     filename,
   )
-const params = { draftId: 'draft', sessionId: 'session', chatDataStoreKey: 'ai' }
+const params = { draftId: 'draft', chatDataStoreKey: 'ai' }
 const flush = async () => {
   for (let i = 0; i < 5; i++) await Promise.resolve()
 }
-
-it('adoption waits for every image in the draft but not another draft', async () => {
-  const first = save('draft', 'one.png')
-  const second = save('draft', 'two.png')
-  const other = save('other')
-  const adoption = handlers.get('adopt-ai-images')(event, params)
-  await flush()
-  expect(adopt).not.toHaveBeenCalled()
-  streams[0].emit('finish')
-  await first
-  expect(adopt).not.toHaveBeenCalled()
-  streams[1].emit('finish')
-  await second
-  await expect(adoption).resolves.toEqual({ '/draft/image.png': '/session/image.png' })
-  expect(adopt).toHaveBeenCalledExactlyOnceWith('/test-images', params)
-  expect(event.sender.send).toHaveBeenCalledWith('save-ai-image-finish-one.png', '/test-images/ai/draft/one.png')
-  streams[2].emit('finish')
-  await other
-})
 
 it('discard waits for unfinished writes before removing the draft', async () => {
   const writing = save()
@@ -88,14 +67,12 @@ it('discard waits for unfinished writes before removing the draft', async () => 
   expect(discard).toHaveBeenCalledExactlyOnceWith('/test-images', params)
 })
 
-it('write failure rejects adoption but still allows cleanup', async () => {
+it('write failure still allows cleanup and later writes', async () => {
   const error = new Error('disk full')
   const writing = expect(save()).rejects.toThrow('disk full')
-  const adoption = expect(handlers.get('adopt-ai-images')(event, params)).rejects.toThrow('disk full')
   const discarding = handlers.get('discard-ai-image-draft')(event, params)
   streams[0].emit('error', error)
-  await Promise.all([writing, adoption, discarding])
-  expect(adopt).not.toHaveBeenCalled()
+  await Promise.all([writing, discarding])
   expect(discard).toHaveBeenCalledExactlyOnceWith('/test-images', params)
   expect(event.sender.send).toHaveBeenCalledWith('save-ai-image-err-image.png', error)
 
@@ -103,6 +80,6 @@ it('write failure rejects adoption but still allows cleanup', async () => {
   const retry = save()
   streams[1].emit('finish')
   await retry
-  await handlers.get('adopt-ai-images')(event, params)
-  expect(adopt).toHaveBeenCalledTimes(1)
+  await handlers.get('discard-ai-image-draft')(event, params)
+  expect(discard).toHaveBeenCalledTimes(2)
 })

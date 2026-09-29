@@ -13,6 +13,7 @@ import { yakitNotify } from '@/utils/notification'
 import { AIChatQSDataTypeEnum } from '../aiRender'
 import { AISourceEnum } from '../grpcApi'
 import type { AIChatIPCStartParams } from '../type'
+import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIEvent: vi.fn().mockResolvedValue({ Events: [] }) }))
@@ -31,14 +32,15 @@ const tick = async () => {
   for (let i = 0; i < 30; i++) await Promise.resolve()
 }
 
-describe('backend allocated session identity', () => {
+describe('frontend allocated session identity', () => {
   let controller: ChatMultiSessionController
   let pendings: Map<string, PendingAIChat>
   const success = vi.fn()
-  const start = async (question = 'first question', pageId = 'page') => {
+  const start = async (question = 'first question', pageId = 'page', sessionId = 'client-session') => {
     const token = controller.handleStartSession(
       {
         kind: 'new',
+        sessionId,
         route: YakitRoute.AI_Agent,
         pageId,
         params: { IsStart: true, Params: { Source: 'ai', UserQuery: question, TimelineSessionID: 'stale-setting' } },
@@ -69,7 +71,7 @@ describe('backend allocated session identity', () => {
     vi.useRealTimers()
   })
 
-  it('shows the first question before handshake, binds the same store and persists only with the backend ID', async () => {
+  it('shows the first question before handshake, binds the same store and persists only with the client ID', async () => {
     const token = await start()
     const pending = pendings.get(token)!
     const first = [...pending.data.rawData.contents.values()][0]
@@ -77,19 +79,19 @@ describe('backend allocated session identity', () => {
     expect(pending.data.store.getState().pendingReply).toBe(true)
     expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
     const request = ipcRendererMock.invoke.mock.calls.find(([method]) => method === 'start-ai-re-act')![2]
-    expect(request.Params).not.toHaveProperty('TimelineSessionID')
+    expect(request.Params.TimelineSessionID).toBe('client-session')
     expect(request.Params.PreferSessionCachedConfig).toBe(false)
     expect(request.Params.Attach).toBe(false)
     expect(ipcRendererMock.invoke.mock.calls.some(([, , request]) => request?.IsFreeInput)).toBe(false)
-    await emit(token, 'pong', 'ai-session-one')
-    expect(controller.ensureSession('ai-session-one').store).toBe(pending.data.store)
+    await emit(token, 'pong', 'client-session')
+    expect(controller.ensureSession('client-session').store).toBe(pending.data.store)
     expect(pending.data.store.getState().pendingReply).toBe(true)
-    expect(success).toHaveBeenCalledExactlyOnceWith('ai-session-one')
+    expect(success).toHaveBeenCalledExactlyOnceWith('client-session')
     expect(aiChatPersistStore.deleteSessionPersist).not.toHaveBeenCalled()
     expect(grpcQueryAIEvent).not.toHaveBeenCalled()
-    expect(aiChatPersistStore.setSessionContent).toHaveBeenCalledWith('ai-session-one', first.id, expect.any(Function))
+    expect(aiChatPersistStore.setSessionContent).toHaveBeenCalledWith('client-session', first.id, expect.any(Function))
     expect(aiChatPersistStore.setSessionRender).toHaveBeenCalledWith(
-      'ai-session-one',
+      'client-session',
       'ai',
       expect.objectContaining({ chatElements: expect.any(Array) }),
       0,
@@ -100,10 +102,10 @@ describe('backend allocated session identity', () => {
       writes.some(([, , request]) => request.SyncType === 'recovery_history' || request.SyncType === 'plan_exec_tasks'),
     ).toBe(false)
     expect(writes.filter(([, , request]) => request.IsFreeInput)).toHaveLength(1)
-    await emit(token, 'pong', 'ai-session-one')
+    await emit(token, 'pong', 'client-session')
     expect(success).toHaveBeenCalledTimes(1)
     expect(ipcRendererMock.invoke.mock.calls.filter(([, , request]) => request?.IsFreeInput)).toHaveLength(1)
-    await controller.handleSessionEnd('ai-session-one')
+    await controller.handleSessionEnd('client-session')
     expect(pending.data.store.getState().pendingReply).toBe(false)
   })
 
@@ -121,6 +123,7 @@ describe('backend allocated session identity', () => {
     const original = structuredClone(params)
     const token = controller.handleStartSession({
       kind: 'new',
+      sessionId: 'client-session',
       route: YakitRoute.AI_Agent,
       pageId: 'page',
       params,
@@ -128,7 +131,13 @@ describe('backend allocated session identity', () => {
     await tick()
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', token, {
       IsStart: true,
-      Params: { Source: 'ai', UserQuery: 'first question', Attach: false, PreferSessionCachedConfig: false },
+      Params: {
+        Source: 'ai',
+        UserQuery: 'first question',
+        TimelineSessionID: 'client-session',
+        Attach: false,
+        PreferSessionCachedConfig: false,
+      },
     })
     expect(params).toEqual(original)
     controller.cancelPendingConnection(token)
@@ -136,8 +145,8 @@ describe('backend allocated session identity', () => {
 
   it.each(['end', 'cancel'] as const)('persists queued IPC messages before %s completes', async (action) => {
     const token = await start()
-    await emit(token, 'pong', 'queued-session')
-    const { rawData, meta } = controller.ensureSession('queued-session')
+    await emit(token, 'pong', 'client-session')
+    const { rawData, meta } = controller.ensureSession('client-session')
     const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-data`)![1]
     const end = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-end`)![1]
     let release!: () => void
@@ -145,9 +154,9 @@ describe('backend allocated session identity', () => {
       release = resolve
     })
     const thought = (text: string) =>
-      makeGrpcJsonRes('thought', { thought: text }, { SessionId: 'queued-session', CoordinatorId: 'casual' })
+      makeGrpcJsonRes('thought', { thought: text }, { SessionId: 'client-session', CoordinatorId: 'casual' })
     listener({}, thought('received before closing'))
-    if (action === 'cancel') controller.forceCloseSession({ sessionIds: ['queued-session'] })
+    if (action === 'cancel') controller.forceCloseSession({ sessionIds: ['client-session'] })
     else end({})
     // 即使已移除的监听被迟到回调触发，也不能接收关闭后才到达的新消息。
     listener({}, thought('received after closing'))
@@ -159,19 +168,19 @@ describe('backend allocated session identity', () => {
     expect(thoughts).toHaveLength(1)
     expect(thoughts[0].data).toBe('received before closing')
     expect(aiChatPersistStore.setSessionContent).toHaveBeenCalledWith(
-      'queued-session',
+      'client-session',
       thoughts[0].id,
       expect.any(Function),
     )
     expect(aiChatPersistStore.setSessionRender).toHaveBeenLastCalledWith(
-      'queued-session',
+      'client-session',
       'ai',
       expect.objectContaining({
         chatElements: expect.arrayContaining([expect.objectContaining({ token: thoughts[0].id })]),
       }),
       0,
     )
-    expect(controller.isSessionReady('queued-session')).toBe(false)
+    expect(controller.isSessionReady('client-session')).toBe(false)
   })
 
   it('drops an already queued handshake when the pending connection is cancelled', async () => {
@@ -216,7 +225,7 @@ describe('backend allocated session identity', () => {
           {
             ID: id,
             NodeId: 'session_title',
-            SessionId: 'ai-session-buffered',
+            SessionId: 'client-session',
           },
         ),
       )
@@ -226,36 +235,34 @@ describe('backend allocated session identity', () => {
     await emitTitle('second', 2)
     expect(pendings.get(token)!.data.rawData.sessionTitle).toBe('')
     expect(observed).toEqual([])
-    await emit(token, 'pong', 'ai-session-buffered')
+    await emit(token, 'pong', 'client-session')
     expect(observed).toEqual(['bound', 'first', 'second'])
     await emitTitle('live', 3)
     expect(observed).toEqual(['bound', 'first', 'second', 'live'])
     unsubscribe()
-    await controller.handleSessionEnd('ai-session-buffered')
+    await controller.handleSessionEnd('client-session')
   })
 
-  it.each([undefined, 'default'])(
-    'rejects an old engine (%s), disconnects and never sends the question',
-    async (id) => {
-      const token = await start()
-      await emit(token, 'pong', id)
-      expect(yakitNotify).toHaveBeenCalledWith(
-        'error',
-        tAgent(
-          id === 'default' ? 'ChatSessionNotify.engineDefaultSession' : 'ChatSessionNotify.engineMissingSessionId',
-        ),
-      )
-      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', token)
-      expect(success).not.toHaveBeenCalled()
-      expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
-      expect(pendings.get(token)?.status).toBe('failed')
-      expect(ipcRendererMock.invoke.mock.calls.some(([, , request]) => request?.IsFreeInput)).toBe(false)
-    },
-  )
+  it('accepts pong without a returned ID while keeping the client identity', async () => {
+    const token = await start()
+    await emit(token, 'pong')
+    expect(success).toHaveBeenCalledExactlyOnceWith('client-session')
+    expect(controller.isSessionReady('client-session')).toBe(true)
+  })
+
+  it.each(['default', 'different-session'])('rejects mismatched identity %s before sending', async (id) => {
+    const token = await start()
+    await emit(token, 'pong', id)
+    expect(yakitNotify).toHaveBeenCalledWith('error', tAgent('ChatSessionNotify.sessionIdMismatch'))
+    expect(pendings.get(token)?.status).toBe('failed')
+    expect(success).not.toHaveBeenCalled()
+    expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
+    expect(ipcRendererMock.invoke.mock.calls.some(([, , request]) => request?.IsFreeInput)).toBe(false)
+  })
 
   it('keeps concurrent connections isolated and ignores late output after cancellation', async () => {
-    const a = await start('a', 'a')
-    const b = await start('b', 'b')
+    const a = await start('a', 'a', 'ai-session-a')
+    const b = await start('b', 'b', 'ai-session-b')
     expect(a).not.toBe(b)
     controller.cancelPendingConnection(a)
     await emit(a, 'pong', 'ai-session-a')
@@ -318,144 +325,82 @@ describe('backend allocated session identity', () => {
     [undefined, 'aiChatDataStore'],
     [AISourceEnum.webFuzzer, 'WebFuzzerAiStore'],
     [AISourceEnum.im, 'aiChatDataStore'],
-  ] as const)(
-    'derives image storage from Source %s and rewrites paths before sending',
-    async (source, imageStoreKey) => {
-      let accept!: (paths: Record<string, string>) => void
-      ipcRendererMock.invoke.mockImplementation((method) =>
-        method === 'adopt-ai-images'
-          ? new Promise((resolve) => {
-              accept = resolve
-            })
-          : Promise.resolve(undefined),
-      )
-      const token = controller.handleStartSession(
-        {
-          kind: 'new',
-          route: YakitRoute.AI_Agent,
-          pageId: 'page',
-          draftId: 'draft',
-          localSource: 'im-Lark',
-          params: {
-            IsStart: true,
-            Params: { Source: source, UserQuery: '![test](/draft/image.png)' },
-            AttachedResourceInfo: [{ Key: 'file_path', Type: 'file', Value: '/draft/image.png' }] as any,
-          },
-        },
-        { onLinkSuccess: success, onPendingChange: (pending) => pendings.set(pending.streamToken, pending) },
-      ) as string
-      await tick()
-      await emit(token, 'pong', 'ai-session-image')
-      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('adopt-ai-images', {
-        draftId: 'draft',
-        sessionId: 'ai-session-image',
-        chatDataStoreKey: imageStoreKey,
-      })
-      expect(success).not.toHaveBeenCalled()
-      expect(ipcRendererMock.invoke.mock.calls.some(([, , request]) => request?.IsFreeInput)).toBe(false)
-      accept({ '/draft/image.png': '/ai-session-image/image.png' })
-      await tick()
-      expect(success).toHaveBeenCalledExactlyOnceWith('ai-session-image')
-      const freeInput = ipcRendererMock.invoke.mock.calls.find(([, , request]) => request?.IsFreeInput)![2]
-      expect(freeInput.FreeInput).toBe('![test](/ai-session-image/image.png)')
-      expect(freeInput.AttachedResourceInfo[0].Value).toBe('/ai-session-image/image.png')
-      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('discard-ai-image-draft', {
-        draftId: 'draft',
-        chatDataStoreKey: imageStoreKey,
-      })
-      await controller.handleSessionEnd('ai-session-image')
-    },
-  )
-
-  it('does not publish or send after cancellation while image adoption is in flight', async () => {
-    let accept!: (paths: Record<string, string>) => void
-    ipcRendererMock.invoke.mockImplementation((method) =>
-      method === 'adopt-ai-images'
-        ? new Promise((resolve) => {
-            accept = resolve
-          })
-        : Promise.resolve(undefined),
-    )
-    const token = controller.handleStartSession(
-      {
-        kind: 'new',
-        route: YakitRoute.AI_Agent,
-        pageId: 'page',
-        draftId: 'draft',
-        params: { IsStart: true, Params: { UserQuery: 'image' } },
-      },
-      { onLinkSuccess: success, onPendingChange: (pending) => pendings.set(pending.streamToken, pending) },
-    ) as string
-    await tick()
-    await emit(token, 'pong', 'ai-session-image')
-    controller.cancelPendingConnection(token)
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('discard-ai-image-draft', {
-      draftId: 'draft',
-      chatDataStoreKey: 'aiChatDataStore',
-    })
-    accept({})
-    await tick()
-    expect(success).not.toHaveBeenCalled()
-    expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('discard-ai-image-draft', {
-      draftId: 'ai-session-image',
-      chatDataStoreKey: 'aiChatDataStore',
-    })
-  })
-
-  it.each(['cancel', 'unload', 'delete', 'retry'] as const)('retains a failed draft until %s', async (action) => {
-    ipcRendererMock.invoke.mockImplementation((method) =>
-      method === 'adopt-ai-images' ? Promise.reject(new Error('disk full')) : Promise.resolve(undefined),
-    )
+  ] as const)('keeps images at the client ID for Source %s without migration', async (source, imageStoreKey) => {
     const input: AIChatIPCStartParams = {
       kind: 'new',
+      sessionId: 'image-session',
       route: YakitRoute.AI_Agent,
       pageId: 'page',
-      draftId: 'draft',
-      params: { IsStart: true, Params: { UserQuery: '![image](/draft/image.png)' } },
+      localSource: 'im-Lark',
+      params: {
+        IsStart: true,
+        Params: { Source: source, UserQuery: '![image](/image-session/image.png)' },
+        AttachedResourceInfo: [
+          {
+            Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
+            Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
+            Value: '/image-session/image.png',
+          },
+        ],
+      },
     }
-    const callbacks = {
+    const token = controller.handleStartSession(input, {
       onLinkSuccess: success,
-      onPendingChange: (pending: PendingAIChat) => pendings.set(pending.streamToken, pending),
-    }
-    const token = controller.handleStartSession(input, callbacks) as string
+      onPendingChange: (pending) => pendings.set(pending.streamToken, pending),
+    }) as string
     await tick()
-    await emit(token, 'pong', 'ai-session-image')
-    expect(pendings.get(token)).toMatchObject({ status: 'failed', error: 'disk full' })
-    expect([...pendings.get(token)!.data.rawData.contents.values()][0]).toMatchObject({
-      data: '![image](/draft/image.png)',
-    })
+    expect(controller.getSessionPageId('image-session', YakitRoute.AI_Agent)).toBe('page')
+    // A failed connection keeps the same directory; explicit cancellation cleans only this source.
+    const error = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-error`)![1]
+    error({}, new Error('connect failed'))
+    expect(ipcRendererMock.invoke.mock.calls.some(([name]) => name === 'discard-ai-image-draft')).toBe(false)
+    controller.cancelPendingConnection(token, { keepDraft: true })
+    const retry = controller.handleStartSession(input, {
+      onLinkSuccess: success,
+      onPendingChange: (pending) => pendings.set(pending.streamToken, pending),
+    }) as string
+    expect(retry).not.toBe(token)
+    await tick()
+    await emit(token, 'pong', 'image-session')
     expect(success).not.toHaveBeenCalled()
-    expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
-    expect(ipcRendererMock.invoke.mock.calls.some(([method]) => method === 'discard-ai-image-draft')).toBe(false)
-    expect(ipcRendererMock.invoke.mock.calls.some(([, , request]) => request?.IsFreeInput)).toBe(false)
-    if (action === 'retry') {
-      controller.cancelPendingConnection(token, { keepDraft: true })
-      expect(ipcRendererMock.invoke.mock.calls.some(([method]) => method === 'discard-ai-image-draft')).toBe(false)
-      ipcRendererMock.invoke.mockImplementation(() => Promise.resolve({}))
-      const retryToken = controller.handleStartSession(input, callbacks) as string
-      expect(retryToken).not.toBe(token)
-      await tick()
-      await emit(token, 'pong', 'ai-session-stale')
-      expect(success).not.toHaveBeenCalled()
-      await emit(retryToken, 'pong', 'ai-session-retry')
-      expect(success).toHaveBeenCalledExactlyOnceWith('ai-session-retry')
-      expect(ipcRendererMock.invoke.mock.calls.filter(([, , request]) => request?.IsFreeInput)).toHaveLength(1)
-      await controller.handleSessionEnd('ai-session-retry')
-    } else if (action === 'unload') {
-      controller.onPageUnload(YakitRoute.AI_Agent, 'page')
-    } else if (action === 'delete') {
-      await controller.deleteSessions({ source: ['ai'] })
-    } else {
-      controller.cancelPendingConnection(token)
-    }
+    await emit(retry, 'pong', 'image-session')
+    expect(success).toHaveBeenCalledExactlyOnceWith('image-session')
+    const question = ipcRendererMock.invoke.mock.calls.find(([, , request]) => request?.IsFreeInput)![2]
+    expect(question.FreeInput).toBe(input.params.Params!.UserQuery)
+    expect(question.AttachedResourceInfo[0].Value).toBe('/image-session/image.png')
+    expect(
+      ipcRendererMock.invoke.mock.calls.some(
+        ([name]) => name === 'adopt-ai-images' || name === 'discard-ai-image-draft',
+      ),
+    ).toBe(false)
+    await controller.handleSessionEnd('image-session')
+    const abandoned = controller.handleStartSession({ ...input, sessionId: 'abandoned' }) as string
+    controller.cancelPendingConnection(abandoned)
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith('discard-ai-image-draft', {
-      draftId: 'draft',
-      chatDataStoreKey: 'aiChatDataStore',
+      draftId: 'abandoned',
+      chatDataStoreKey: imageStoreKey,
     })
-    controller.cancelPendingConnection(token)
-    expect(ipcRendererMock.invoke.mock.calls.filter(([method]) => method === 'discard-ai-image-draft')).toHaveLength(1)
   })
+
+  it.each(['cancel', 'unload', 'delete', 'delete-id'] as const)(
+    'cleans unfinished images on %s, including after failure',
+    async (action) => {
+      const token = await start()
+      await vi.advanceTimersByTimeAsync(30000)
+      expect(pendings.get(token)?.status).toBe('failed')
+      expect(ipcRendererMock.invoke.mock.calls.some(([name]) => name === 'discard-ai-image-draft')).toBe(false)
+      if (action === 'unload') await controller.onPageUnload(YakitRoute.AI_Agent, 'page')
+      else if (action === 'delete') await controller.deleteSessions({ source: ['ai'] })
+      else if (action === 'delete-id') await controller.deleteSessions({ sessionIds: ['client-session'] })
+      else controller.cancelPendingConnection(token)
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('discard-ai-image-draft', {
+        draftId: 'client-session',
+        chatDataStoreKey: 'aiChatDataStore',
+      })
+      controller.cancelPendingConnection(token)
+      expect(ipcRendererMock.invoke.mock.calls.filter(([name]) => name === 'discard-ai-image-draft')).toHaveLength(1)
+    },
+  )
 
   it('does not publish a session if events disagree about its identity', async () => {
     const token = await start()
@@ -486,7 +431,7 @@ describe('backend allocated session identity', () => {
       }
       expect(pendings.get(token)).toMatchObject({
         status: 'failed',
-        error: failure === 'end' ? tAgent('ChatSessionNotify.endedWithoutId') : 'connect failed',
+        error: failure === 'end' ? tAgent('ChatSessionNotify.endedBeforeReady') : 'connect failed',
       })
       expect([...pendings.get(token)!.data.rawData.contents.values()][0]).toMatchObject({ data: 'first question' })
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', token)
@@ -504,193 +449,105 @@ describe('backend allocated session identity', () => {
     },
   )
 
-  it('binds after history subscribes to the backend ID without allocating a placeholder or losing the pending store', async () => {
+  it('registers the pending store after history subscribes to the client ID without allocating a placeholder', async () => {
     const token = await start()
     const pending = pendings.get(token)!
     const listener = vi.fn()
-    expect(controller.sessionStores.getState().has('listed-before-pong')).toBe(false)
+    expect(controller.sessionStores.getState().has('client-session')).toBe(false)
     const unsubscribe = controller.sessionStores.subscribe(listener)
 
-    await emit(token, 'pong', 'listed-before-pong')
-    expect(success).toHaveBeenCalledExactlyOnceWith('listed-before-pong')
+    await emit(token, 'pong', 'client-session')
+    expect(success).toHaveBeenCalledExactlyOnceWith('client-session')
     expect(yakitNotify).not.toHaveBeenCalled()
-    expect(controller.ensureSession('listed-before-pong').store).toBe(pending.data.store)
+    expect(controller.ensureSession('client-session').store).toBe(pending.data.store)
     expect(ipcRendererMock.invoke.mock.calls.filter(([, , request]) => request?.IsFreeInput)).toHaveLength(1)
 
-    expect(controller.sessionStores.getState().get('listed-before-pong')).toBe(pending.data.store)
+    expect(controller.sessionStores.getState().get('client-session')).toBe(pending.data.store)
     expect(listener).toHaveBeenCalledTimes(1)
     unsubscribe()
   })
 
   it('follows store disposal and re-registration without keeping a stale history subscription', async () => {
     const token = await start()
-    await emit(token, 'pong', 'history-subscription')
-    const original = controller.ensureSession('history-subscription').store
+    await emit(token, 'pong', 'client-session')
+    const original = controller.ensureSession('client-session').store
     const listener = vi.fn()
     const unsubscribe = controller.sessionStores.subscribe(listener)
     const unloading = controller.onPageUnload(YakitRoute.AI_Agent, 'page')
     await vi.advanceTimersByTimeAsync(5000)
     await unloading
-    expect(controller.sessionStores.getState().has('history-subscription')).toBe(false)
+    expect(controller.sessionStores.getState().has('client-session')).toBe(false)
     expect(listener).toHaveBeenCalledTimes(1)
-    const restored = controller.ensureSession('history-subscription').store
+    const restored = controller.ensureSession('client-session').store
     expect(restored).not.toBe(original)
-    expect(controller.sessionStores.getState().get('history-subscription')).toBe(restored)
+    expect(controller.sessionStores.getState().get('client-session')).toBe(restored)
     expect(listener).toHaveBeenCalledTimes(2)
     unsubscribe()
   })
 
-  it('locates the pending tab by a received ID before pong without registering a session', async () => {
+  it('locates a pending tab immediately before any event and prevents history from occupying it', async () => {
     const token = await start('first question', 'pending-tab')
-    expect(controller.getSessionPageId('early-session', YakitRoute.AI_Agent)).toBeUndefined()
-    await emit(token, 'notify', 'early-session')
-
-    expect(controller.getSessionPageId('early-session', YakitRoute.AI_Agent)).toBe('pending-tab')
-    expect(controller.getSessionPageId('early-session')).toBe('pending-tab')
-    expect(controller.getSessionPageId('early-session', YakitRoute.HTTPFuzzer)).toBeUndefined()
+    expect(controller.getSessionPageId('client-session', YakitRoute.AI_Agent)).toBe('pending-tab')
+    expect(controller.getSessionPageId('client-session', YakitRoute.HTTPFuzzer)).toBeUndefined()
     expect(controller.getSessionPageId('unrelated', YakitRoute.AI_Agent)).toBeUndefined()
-    expect(controller.sessionStores.getState().has('early-session')).toBe(false)
-    expect(controller.isSessionReady('early-session')).toBe(false)
-    expect(success).not.toHaveBeenCalled()
-    expect(ipcRendererMock.invoke.mock.calls.filter(([, , request]) => request?.IsFreeInput)).toHaveLength(0)
-
-    await emit(token, 'pong', 'early-session')
-    expect(controller.getSessionPageId('early-session', YakitRoute.AI_Agent)).toBe('pending-tab')
-    expect(success).toHaveBeenCalledExactlyOnceWith('early-session')
-    expect(ipcRendererMock.invoke.mock.calls.filter(([, , request]) => request?.IsFreeInput)).toHaveLength(1)
+    expect(controller.sessionStores.getState().has('client-session')).toBe(false)
+    expect(controller.isSessionReady('client-session')).toBe(false)
+    for (const kind of ['new', 'resume'] as const) {
+      expect(
+        controller.handleStartSession({
+          kind,
+          sessionId: 'client-session',
+          route: YakitRoute.AI_Agent,
+          pageId: 'other-tab',
+          params: { IsStart: true, Params: {} },
+        }),
+      ).toBe(false)
+    }
+    expect(controller.sessionStores.getState().has('client-session')).toBe(false)
+    await emit(token, 'pong', 'client-session')
+    expect(success).toHaveBeenCalledExactlyOnceWith('client-session')
+    expect(controller.getSessionPageId('client-session', YakitRoute.AI_Agent)).toBe('pending-tab')
   })
 
   it.each(['cancel', 'timeout', 'mismatch'] as const)(
-    'does not locate a pending tab after %s, while another pending tab remains available',
+    'keeps failed pending ownership until cancel (%s), without affecting other tabs',
     async (reason) => {
-      const first = await start('first', 'first-tab')
-      await emit(first, 'notify', 'first-id')
+      const first = await start('first', 'first-tab', 'first-id')
       if (reason === 'timeout') await vi.advanceTimersByTimeAsync(30000)
       if (reason === 'cancel') controller.cancelPendingConnection(first)
       if (reason === 'mismatch') await emit(first, 'pong', 'different-id')
-      const second = await start('second', 'second-tab')
-      await emit(second, 'notify', 'second-id')
-
-      expect(controller.getSessionPageId('first-id', YakitRoute.AI_Agent)).toBeUndefined()
-      expect(controller.getSessionPageId('different-id', YakitRoute.AI_Agent)).toBeUndefined()
+      await start('second', 'second-tab', 'second-id')
+      expect(controller.getSessionPageId('first-id', YakitRoute.AI_Agent)).toBe(
+        reason === 'cancel' ? undefined : 'first-tab',
+      )
       expect(controller.getSessionPageId('second-id', YakitRoute.AI_Agent)).toBe('second-tab')
-      expect(controller.sessionStores.getState().size).toBe(0)
     },
   )
 
-  it('releases a history lookup on the first matching received ID without waiting for pong or other connections', async () => {
-    const first = await start('first', 'first-tab')
-    await start('second', 'second-tab')
-    const resolved = vi.fn()
-    const lookup = controller.waitForSessionPageId('first-id', YakitRoute.AI_Agent).then(resolved)
-    await tick()
-    expect(resolved).not.toHaveBeenCalled()
-
-    await emit(first, 'notify', 'first-id')
-    await lookup
-    expect(resolved).toHaveBeenCalledExactlyOnceWith('first-tab')
-    expect(success).not.toHaveBeenCalled()
-    expect(controller.sessionStores.getState().size).toBe(0)
-    await emit(first, 'pong', 'first-id')
-    expect(success).toHaveBeenCalledExactlyOnceWith('first-id')
-  })
-
-  it('waits for all initially unknown identities before allowing an unrelated history to open', async () => {
-    const first = await start('first', 'first-tab')
-    const second = await start('second', 'second-tab')
-    const resolved = vi.fn()
-    const lookup = controller.waitForSessionPageId('history-id', YakitRoute.AI_Agent).then(resolved)
-    await emit(first, 'notify', 'first-id')
-    expect(resolved).not.toHaveBeenCalled()
-    await emit(second, 'notify', 'second-id')
-    await lookup
-    expect(resolved).toHaveBeenCalledExactlyOnceWith(undefined)
-    expect(controller.sessionStores.getState().size).toBe(0)
-  })
-
-  it.each(['cancel', 'timeout', 'unload', 'error', 'end'] as const)(
-    'releases an unknown-identity lookup after %s',
-    async (reason) => {
-      const token = await start()
-      const lookup = controller.waitForSessionPageId('history-id', YakitRoute.AI_Agent)
-      if (reason === 'cancel') controller.cancelPendingConnection(token)
-      if (reason === 'timeout') await vi.advanceTimersByTimeAsync(30000)
-      if (reason === 'unload') await controller.onPageUnload(YakitRoute.AI_Agent, 'page')
-      if (reason === 'error' || reason === 'end') {
-        const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-${reason}`)![1]
-        listener({}, new Error('connection stopped'))
-      }
-      await expect(lookup).resolves.toBeUndefined()
-      expect(controller.sessionStores.getState().size).toBe(0)
-    },
-  )
-
-  it('does not wait for already known identities, existing history tabs or another route', async () => {
-    const known = await start('known', 'known-tab')
-    await emit(known, 'notify', 'known-id')
-    await start('unknown', 'unknown-tab')
-    await expect(controller.waitForSessionPageId('known-id', YakitRoute.AI_Agent)).resolves.toBe('known-tab')
-    await expect(controller.waitForSessionPageId('other-route', YakitRoute.HTTPFuzzer)).resolves.toBeUndefined()
-
-    controller.handleStartSession({
-      kind: 'resume',
-      sessionId: 'history-id',
-      route: YakitRoute.AI_Agent,
-      pageId: 'history-tab',
-      params: { IsStart: true, Params: { Source: 'ai' } },
-    })
-    await expect(controller.waitForSessionPageId('history-id', YakitRoute.AI_Agent)).resolves.toBe('history-tab')
-    const closing = controller.onPageUnload(YakitRoute.AI_Agent, 'history-tab')
-    await vi.advanceTimersByTimeAsync(5000)
-    await closing
-  })
-
-  it('locates the pending tab while image adoption is still running', async () => {
-    let finishAdoption!: (paths: Record<string, string>) => void
-    ipcRendererMock.invoke.mockImplementation(async (method) => {
-      if (method === 'adopt-ai-images')
-        return new Promise((resolve) => {
-          finishAdoption = resolve
+  it.each(['before-start', 'before-pong'] as const)(
+    'refuses an occupied client ID (%s) without replacing its store',
+    async (timing) => {
+      const token = timing === 'before-pong' ? await start() : undefined
+      const existing = controller.ensureSession('client-session')
+      if (token) {
+        await emit(token, 'pong', 'client-session')
+        expect(pendings.get(token)).toMatchObject({
+          status: 'failed',
+          error: tAgent('ChatSessionNotify.sessionIdOccupied'),
         })
-    })
-    const token = controller.handleStartSession(
-      {
-        kind: 'new',
-        draftId: 'image-draft',
-        route: YakitRoute.AI_Agent,
-        pageId: 'image-tab',
-        params: { IsStart: true, Params: { Source: 'ai', UserQuery: 'image question' } },
-      },
-      { onLinkSuccess: success, onPendingChange: (pending) => pendings.set(pending.streamToken, pending) },
-    ) as string
-    await tick()
-    const lookup = controller.waitForSessionPageId('image-session', YakitRoute.AI_Agent)
-    await emit(token, 'pong', 'image-session')
-    await expect(lookup).resolves.toBe('image-tab')
-    expect(controller.getSessionPageId('image-session', YakitRoute.AI_Agent)).toBe('image-tab')
-    expect(controller.sessionStores.getState().has('image-session')).toBe(false)
-    expect(success).not.toHaveBeenCalled()
-    finishAdoption({})
-    await tick()
-    expect(success).toHaveBeenCalledExactlyOnceWith('image-session')
-  })
-
-  it('refuses an already registered backend ID without replacing its store', async () => {
-    const existing = controller.ensureSession('existing')
-    const token = await start()
-    await emit(token, 'pong', 'existing')
-    expect(pendings.get(token)).toMatchObject({
-      status: 'failed',
-      error: tAgent('ChatSessionNotify.sessionIdOccupied'),
-    })
-    expect(controller.ensureSession('existing').store).toBe(existing.store)
-    expect(success).not.toHaveBeenCalled()
-    expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
-  })
+      } else {
+        expect(await start()).toBe(false)
+        expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('start-ai-re-act', expect.anything(), expect.anything())
+      }
+      expect(controller.ensureSession('client-session').store).toBe(existing.store)
+      expect(success).not.toHaveBeenCalled()
+      expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
+    },
+  )
 
   it('unloading one page leaves another unbound submission running', async () => {
-    const first = await start('first', 'page-one')
-    const second = await start('second', 'page-two')
+    const first = await start('first', 'page-one', 'first-session')
+    const second = await start('second', 'page-two', 'second-session')
     controller.onPageUnload(YakitRoute.AI_Agent, 'page-one')
     await emit(first, 'pong', 'first-session')
     await emit(second, 'pong', 'second-session')
@@ -703,13 +560,13 @@ describe('backend allocated session identity', () => {
     const token = await start('')
     expect(pendings.get(token)!.data.store.getState().pendingReply).toBe(false)
     expect(controller.getWorkingSessionCount()).toBe(0)
-    await emit(token, 'pong', 'empty-session')
-    expect(controller.ensureSession('empty-session').store.getState().pendingReply).toBe(false)
+    await emit(token, 'pong', 'client-session')
+    expect(controller.ensureSession('client-session').store.getState().pendingReply).toBe(false)
     expect(controller.getWorkingSessionCount()).toBe(0)
-    expect(success).toHaveBeenCalledExactlyOnceWith('empty-session')
+    expect(success).toHaveBeenCalledExactlyOnceWith('client-session')
     expect(ipcRendererMock.invoke.mock.calls.some(([, , input]) => input?.IsFreeInput)).toBe(false)
     expect(aiChatPersistStore.deleteSessionPersist).not.toHaveBeenCalled()
     expect(grpcQueryAIEvent).not.toHaveBeenCalled()
-    await controller.handleSessionEnd('empty-session')
+    await controller.handleSessionEnd('client-session')
   })
 })

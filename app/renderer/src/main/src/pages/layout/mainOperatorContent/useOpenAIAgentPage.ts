@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
@@ -15,43 +14,23 @@ const findAIAgentTabBySessionId = (pages: PageCache[], sessionId: string, ownerP
   })
 }
 
-/** 历史打开请求等待身份判定；切换页面或发起新请求后，旧请求不再导航。 */
+/** 会话 ID 在启动前已确定，直接定位已打开或正在建联的 Tab。 */
 export function useOpenAIAgentPage({
-  currentTabKey,
-  pageCache,
   getPageCache,
   setCurrentTabKey,
   openAIAgentExtraTab,
 }: {
-  currentTabKey: string
-  pageCache: PageCache[]
   getPageCache: () => PageCache[]
   setCurrentTabKey: (key: string) => void
   openAIAgentExtraTab: (pageParams?: ComponentParams) => void
 }) {
-  const aiAgentOpenRequest = useRef(0)
-  useEffect(
-    () => () => {
-      // 切换一级页或卸载后，旧的等待请求不能再抢占当前页面。
-      aiAgentOpenRequest.current++
-    },
-    [currentTabKey],
-  )
-  return useMemoizedFn(async (pageParams?: ComponentParams) => {
-    const request = ++aiAgentOpenRequest.current
+  return useMemoizedFn((pageParams?: ComponentParams) => {
     const sessionId = pageParams?.aiAgentPageInfo?.session?.SessionID || ''
     if (sessionId) {
       const ownerPageId = globalSessionEngine.getSessionPageId(sessionId, YakitRoute.AI_Agent)
-      const existing = findAIAgentTabBySessionId(pageCache, sessionId, ownerPageId)
+      const existing = findAIAgentTabBySessionId(getPageCache(), sessionId, ownerPageId)
       if (existing) {
         setCurrentTabKey(existing.routeKey)
-        return
-      }
-      const pendingPageId = await globalSessionEngine.waitForSessionPageId(sessionId, YakitRoute.AI_Agent)
-      if (request !== aiAgentOpenRequest.current) return
-      const pendingTab = findAIAgentTabBySessionId(getPageCache(), sessionId, pendingPageId)
-      if (pendingTab) {
-        setCurrentTabKey(pendingTab.routeKey)
         return
       }
     }

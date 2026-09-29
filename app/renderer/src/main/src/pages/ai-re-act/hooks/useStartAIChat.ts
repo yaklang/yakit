@@ -2,7 +2,6 @@ import { useMemoizedFn } from 'ahooks'
 import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
 import type { AIChatTextareaRefProps } from '@/pages/ai-agent/template/type'
-import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
 import { AISourceEnum, type AIInputEvent, type AIStartParams } from './grpcApi'
@@ -24,17 +23,11 @@ export function useStartAIChat({
   /** 聊天输入框存在时，同步本次请求的 focusMode；欢迎页直接启动时可不提供。 */
   setMention?: AIChatTextareaRefProps['setMention']
 } = {}) {
-  const { activeChat } = useAIAgentStore()
   const { getSetting, onStart, setActiveChat } = useAIAgentDispatcher()
   return useMemoizedFn((value: HandleStartParams) => {
-    // value.sessionId 是输入草稿 ID，用于图片归档；正式业务 ID 来自下面解析出的 target。
-    const { qs, sessionId, enabledCapabilities } = value
-    // 优先使用调用方固定的意图；未指定时仅在本次调用开始处读取 activeChat。
-    // 后续 startRequest 即使异步完成，也继续使用这里捕获的目标。
-    const target =
-      value.target ??
-      (activeChat?.SessionID ? { kind: 'resume' as const, sessionId: activeChat.SessionID } : { kind: 'new' as const })
-    const sessionID = target.kind === 'resume' ? target.sessionId : ''
+    const { qs, target, enabledCapabilities } = value
+    const { kind, sessionId: sessionID } = target
+    const isNew = kind === 'new'
 
     // 提交时读取最新配置并组装本次请求，避免后续切换页面改变请求参数的取值来源。
     const source = getSetting().Source ?? AISourceEnum.aiAgent
@@ -49,12 +42,9 @@ export function useStartAIChat({
       EnabledCapabilities: enabledCapabilities,
     }
 
-    // 历史会话携带正式 ID 并优先复用会话配置；新会话清除可能残留的 ID，交由引擎分配。
-    if (sessionID) request.TimelineSessionID = sessionID
-    else {
-      delete request.TimelineSessionID
-      request.PreferSessionCachedConfig = false
-    }
+    request.TimelineSessionID = sessionID
+    request.PreferSessionCachedConfig = !isNew
+    if (isNew) request.Attach = false
     const { attachedResourceInfo } = getAIReActRequestParams(value)
     // 这里只构造启动事件；Controller 在完成新会话绑定后负责发送首问。
     const aiInputEvent: AIInputEvent = {
@@ -69,16 +59,15 @@ export function useStartAIChat({
       const { params, extraParams, onChat, onSessionBound } = res
       // token 标识本轮 IPC/gRPC 连接，不是后端 sessionId；绑定后也作为 UI 的稳定 viewKey。
       let streamToken = ''
-      if (!sessionID) onChat?.()
+      if (isNew) onChat?.()
       setMention?.({
         mentionId: params.FocusModeLoop || randomString(8),
         mentionType: 'focusMode',
         mentionName: params.FocusModeLoop || '',
       })
       onStart({
-        kind: sessionID ? 'resume' : 'new',
-        sessionId: sessionID || undefined,
-        draftId: sessionId,
+        kind,
+        sessionId: sessionID,
         params,
         onLinkStart: (token) => {
           streamToken = token
@@ -86,8 +75,8 @@ export function useStartAIChat({
         onLinkSuccess: (id, foreground = true) => {
           // 新建和历史恢复都通知业务入口建立订阅；历史会话已有列表项，不重复添加。
           onSessionBound?.(id)
-          if (sessionID) return
-          // 正式 ID 到达后再创建列表记录，避免把临时连接 token 当作业务会话 ID。
+          if (!isNew) return
+          // 连接成功后再发布列表记录，避免未成功建联的会话污染历史。
           const newChat: AISession = {
             Id: extraParams?.chatId || id,
             SessionID: id,

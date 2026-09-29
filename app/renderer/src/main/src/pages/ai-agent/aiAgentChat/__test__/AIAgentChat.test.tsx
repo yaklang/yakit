@@ -2,13 +2,14 @@ import '../../../ai-re-act/hooks/__test__/setupElectron'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
-import type { HandleStartParams } from '../type'
+import type { AIChatSubmitParams } from '../type'
 import { AIAgentChat } from '../AIAgentChat'
 import emiter from '@/utils/eventBus/eventBus'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { ReActChatEventEnum } from '../../defaultConstant'
 
 const mocks = vi.hoisted(() => ({
+  activeChat: undefined as { SessionID: string } | undefined,
   startChat: vi.fn(),
   cancelPendingChat: vi.fn(),
   onClose: vi.fn(),
@@ -16,11 +17,11 @@ const mocks = vi.hoisted(() => ({
   setSetting: vi.fn(),
 }))
 vi.mock('../../useContext/useStore', () => ({
-  default: () => ({ pageId: 'test-tab', pendingChat: { status: 'connecting' } }),
+  default: () => ({ activeChat: mocks.activeChat, pageId: 'test-tab', pendingChat: { status: 'connecting' } }),
 }))
 vi.mock('../../useContext/useDispatcher', () => ({ default: () => ({ ...mocks, onStart: vi.fn() }) }))
 vi.mock('@/pages/ai-re-act/hooks/useStartAIChat', () => ({ useStartAIChat: () => mocks.startChat }))
-vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => '' }))
+vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => mocks.activeChat?.SessionID || '' }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => {
   const store = createStore(() => ({ execute: false }))
   return { useCurrentStore: () => store }
@@ -30,7 +31,7 @@ vi.mock('@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream', () => ({ defaul
 vi.mock('@/pages/KnowledgeBase/hooks/useKnowledgeBase', () => ({ useKnowledgeBase: () => ({ clearAll: vi.fn() }) }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 vi.mock('../../aiModelList/utils', () => ({ isForcedSetAIModal: vi.fn() }))
-vi.mock('../../utils', () => ({ onReStart: vi.fn() }))
+vi.mock('../../utils', () => ({ onReStart: vi.fn(), createActiveChatSessionId: () => 'client-session' }))
 vi.mock('../../grpc', () => ({ grpcGetAIForge: vi.fn() }))
 vi.mock('../../aiToolList/utils', () => ({ grpcGetAIToolById: vi.fn() }))
 vi.mock('@/pages/plugins/utils', () => ({ apiCancelDebugPlugin: vi.fn() }))
@@ -45,7 +46,7 @@ vi.mock('../AIAgentChatLayout/AIAgentChatLayout', () => ({
     onTriageSubmit,
   }: {
     mode: string
-    onTriageSubmit: (value: HandleStartParams) => void
+    onTriageSubmit: (value: AIChatSubmitParams) => void
   }) => (
     <div>
       <span data-testid="mode">{mode}</span>
@@ -56,6 +57,7 @@ vi.mock('../AIAgentChatLayout/AIAgentChatLayout', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.activeChat = undefined
   vi.useFakeTimers()
 })
 afterEach(() => {
@@ -75,25 +77,28 @@ describe('welcome submission', () => {
     guard.mockRestore()
   })
 
-  it('starts synchronously before the chat ref mounts and survives returning to welcome', async () => {
-    const { unmount } = render(<AIAgentChat />)
-    fireEvent.click(screen.getByRole('button', { name: 'submit' }))
-    // 没有推进任何 timer，旧的 setTimeout + ref 转发会丢失这次提交。
-    expect(mocks.startChat).toHaveBeenCalledExactlyOnceWith({
-      qs: 'first question',
-      sessionId: 'image-draft',
-      target: { kind: 'new' },
-    })
-    expect(screen.getByTestId('mode')).toHaveTextContent('re-act')
-    act(() =>
-      emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT, pageId: 'test-tab' })),
-    )
-    expect(screen.getByTestId('mode')).toHaveTextContent('welcome')
-    expect(mocks.setActiveChat).toHaveBeenCalledWith(undefined)
-    expect(mocks.cancelPendingChat).not.toHaveBeenCalled()
-    expect(mocks.onClose).not.toHaveBeenCalled()
-    unmount()
-    await act(async () => vi.runOnlyPendingTimersAsync())
-    expect(mocks.startChat).toHaveBeenCalledTimes(1)
-  })
+  it.each([undefined, 'history-session'])(
+    'welcome starts a new session even with selected history %s',
+    async (activeId) => {
+      mocks.activeChat = activeId ? { SessionID: activeId } : undefined
+      const { unmount } = render(<AIAgentChat />)
+      fireEvent.click(screen.getByRole('button', { name: 'submit' }))
+      // 没有推进任何 timer，旧的 setTimeout + ref 转发会丢失这次提交。
+      expect(mocks.startChat).toHaveBeenCalledExactlyOnceWith({
+        qs: 'first question',
+        target: { kind: 'new', sessionId: 'image-draft' },
+      })
+      expect(screen.getByTestId('mode')).toHaveTextContent('re-act')
+      act(() =>
+        emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT, pageId: 'test-tab' })),
+      )
+      expect(screen.getByTestId('mode')).toHaveTextContent('welcome')
+      expect(mocks.setActiveChat).toHaveBeenCalledWith(undefined)
+      expect(mocks.cancelPendingChat).not.toHaveBeenCalled()
+      expect(mocks.onClose).not.toHaveBeenCalled()
+      unmount()
+      await act(async () => vi.runOnlyPendingTimersAsync())
+      expect(mocks.startChat).toHaveBeenCalledTimes(1)
+    },
+  )
 })

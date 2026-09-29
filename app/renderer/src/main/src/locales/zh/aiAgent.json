@@ -228,12 +228,9 @@
     "reviewMissing": "未获取到 review 信息, 操作无效",
     "connectFailed": "AI 会话连接失败: {{error}}",
     "finalizeFailed": "AI 会话收尾失败: {{error}}",
-    "endedWithoutId": "会话连接已结束，未获取到会话 ID",
+    "endedBeforeReady": "会话连接已结束，尚未完成初始化",
     "initTimeout": "AI 会话初始化超时，请检查引擎连接后重试",
-    "engineDefaultSession": "当前引擎不支持自动分配会话 ID，请更新引擎",
     "sessionIdMismatch": "引擎返回的会话 ID 不一致",
-    "reconnectSessionIdMismatch": "引擎返回的会话 ID 与重连会话不一致",
-    "engineMissingSessionId": "当前引擎未返回会话 ID，请更新引擎",
     "sessionIdOccupied": "引擎返回了已存在的会话 ID",
     "invalidHistoryCursor": "历史恢复未返回有效游标"
   },

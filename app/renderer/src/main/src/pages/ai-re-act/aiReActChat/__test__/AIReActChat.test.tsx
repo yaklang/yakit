@@ -81,6 +81,7 @@ vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
 }))
 
 vi.mock('@/pages/ai-agent/utils', () => ({
+  createActiveChatSessionId: () => 'client-session',
   formatAIAgentSetting: (setting: Record<string, unknown>) => ({ ...setting, ...formattedSetting.value }),
   getAIReActRequestParams: () => ({ attachedResourceInfo: undefined }),
 }))
@@ -187,19 +188,26 @@ const baseProps = {
 }
 
 describe('AIReActChat', () => {
-  it('首条启动消息透传会话级单模型模式', async () => {
+  it.each([
+    [undefined, undefined, 'new', 'client-session'],
+    [undefined, 'image-session', 'new', 'image-session'],
+    ['history-session', 'image-session', 'resume', 'history-session'],
+  ] as const)('提交入口固定会话目标并透传单模型模式 (%s, %s)', async (activeId, imageId, kind, sessionId) => {
+    chat.activeChat = activeId ? { SessionID: activeId } : undefined
     latestSetting.value = { SingleModelMode: true }
     const ref = React.createRef<AIReActChatRefProps>()
     const startRequest = vi.fn(({ params }) => Promise.resolve({ params }))
     render(<AIReActChat {...baseProps} ref={ref} startRequest={startRequest} />)
 
-    act(() => ref.current?.handleStart({ qs: 'hello' }))
+    act(() => ref.current?.handleStart({ qs: 'hello', sessionId: imageId }))
 
     await waitFor(() => expect(startRequest).toHaveBeenCalledTimes(1))
     expect(startRequest.mock.calls[0][0].params).toMatchObject({
       IsStart: true,
-      Params: { SingleModelMode: true, UserQuery: 'hello' },
+      Params: { SingleModelMode: true, UserQuery: 'hello', TimelineSessionID: sessionId },
     })
+    await waitFor(() => expect(chat.onStart).toHaveBeenCalledTimes(1))
+    expect(chat.onStart.mock.calls[0][0]).toMatchObject({ kind, sessionId })
   })
 
   it('连接中阻止重复提交，并将停止操作交给 pending 取消入口', () => {
@@ -226,18 +234,20 @@ describe('AIReActChat', () => {
     const startRequest = vi.fn(async ({ params }) => ({ params }))
     const ref = React.createRef<AIReActChatRefProps>()
     const result = render(<AIReActChat {...baseProps} startRequest={startRequest} ref={ref} />)
-    await act(async () => ref.current?.handleStart({ qs: 'original', target: { kind: 'new' }, sessionId: 'draft' }))
+    await act(async () => ref.current?.handleStart({ qs: 'original', sessionId: 'draft' }))
     chat.activeChat = { SessionID: 'other-history' }
-    chat.pendingChat = { status: 'failed', error: 'connect failed' }
+    const retry = vi.fn()
+    chat.pendingChat = { status: 'failed', error: 'connect failed', retry }
     result.rerender(<AIReActChat {...baseProps} title="changed" startRequest={startRequest} ref={ref} />)
     await act(async () => fireEvent.click(screen.getByRole('button', { name: '重试' })))
-    expect(chat.onStart).toHaveBeenCalledTimes(2)
-    expect(chat.onStart.mock.calls[1][0]).toMatchObject({
+    expect(retry).toHaveBeenCalledTimes(1)
+    expect(chat.onStart).toHaveBeenCalledTimes(1)
+    expect(startRequest).toHaveBeenCalledTimes(1)
+    expect(chat.onStart.mock.calls[0][0]).toMatchObject({
       kind: 'new',
-      draftId: 'draft',
-      params: { Params: { UserQuery: 'original' } },
+      sessionId: 'draft',
+      params: { Params: { TimelineSessionID: 'draft', UserQuery: 'original' } },
     })
-    expect(chat.onStart.mock.calls[1][0].params.Params).not.toHaveProperty('TimelineSessionID')
   })
 
   it('已连接会话的自由输入继续经过 sendRequest，不重新建联', async () => {

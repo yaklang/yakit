@@ -18,6 +18,7 @@ vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
   default: () => ({ onStart: mocks.onStart, setActiveChat: mocks.setActiveChat, getSetting: () => mocks.setting }),
 }))
 vi.mock('@/pages/ai-agent/utils', () => ({
+  createActiveChatSessionId: () => 'client-session',
   formatAIAgentSetting: (setting: unknown) => setting,
   getAIReActRequestParams: (value: any) => ({ attachedResourceInfo: value.attachedResourceInfo }),
 }))
@@ -52,7 +53,7 @@ describe('submission identity', () => {
     await act(async () =>
       result.current({
         qs: 'hello',
-        target: kind === 'new' ? { kind } : { kind, sessionId: 'history' },
+        target: { kind, sessionId: kind === 'new' ? 'client-session' : 'history' },
       }),
     )
     const input = mocks.onStart.mock.calls[0][0]
@@ -65,7 +66,7 @@ describe('submission identity', () => {
       mentionName: 'prepared-focus',
     })
     expect(onChat).toHaveBeenCalledTimes(kind === 'new' ? 1 : 0)
-    const id = kind === 'new' ? 'backend-id' : 'history'
+    const id = kind === 'new' ? 'client-session' : 'history'
     input.onLinkStart('stream-token')
     input.onLinkSuccess(id, true)
     expect(onSessionBound).toHaveBeenCalledExactlyOnceWith(id)
@@ -95,24 +96,23 @@ describe('submission identity', () => {
         }),
     )
     const { result, rerender } = renderHook(() => useStartAIChat({ startRequest }))
-    act(() => result.current({ qs: 'first', target: { kind: 'new' } }))
+    act(() => result.current({ qs: 'first', target: { kind: 'new', sessionId: 'client-session' } }))
     mocks.activeChat = { SessionID: 'other-history' } as AISession
     rerender()
     await act(async () => reject(new Error('prepare failed')))
     expect(mocks.onStart).toHaveBeenCalledTimes(1)
     expect(mocks.onStart.mock.calls[0][0]).toMatchObject({ kind: 'new', params: { Params: { UserQuery: 'first' } } })
-    expect(mocks.onStart.mock.calls[0][0].params.Params).not.toHaveProperty('TimelineSessionID')
+    expect(mocks.onStart.mock.calls[0][0].params.Params.TimelineSessionID).toBe('client-session')
   })
 
-  it('starts a welcome submission synchronously with no session ID, even when a history is selected', () => {
+  it('starts a welcome submission synchronously with a preallocated session ID, even when a history is selected', () => {
     mocks.activeChat = { SessionID: 'history' } as AISession
     const { result } = renderHook(() => useStartAIChat())
-    act(() => result.current({ qs: 'hello', sessionId: 'image-draft', target: { kind: 'new' } }))
+    act(() => result.current({ qs: 'hello', target: { kind: 'new', sessionId: 'image-draft' } }))
     const input = mocks.onStart.mock.calls[0][0]
     expect(input.kind).toBe('new')
-    expect(input.sessionId).toBeUndefined()
-    expect(input.draftId).toBe('image-draft')
-    expect(input.params.Params.TimelineSessionID).toBeUndefined()
+    expect(input.sessionId).toBe('image-draft')
+    expect(input.params.Params.TimelineSessionID).toBe('image-draft')
     expect(input.params.Params.PreferSessionCachedConfig).toBe(false)
   })
 
@@ -128,29 +128,31 @@ describe('submission identity', () => {
       )
       mocks.activeChat = kind === 'resume' ? ({ SessionID: 'original' } as AISession) : undefined
       const { result, rerender } = renderHook(() => useStartAIChat({ startRequest }))
-      act(() => result.current({ qs: 'hello' }))
+      act(() =>
+        result.current({ qs: 'hello', target: { kind, sessionId: kind === 'resume' ? 'original' : 'client-session' } }),
+      )
       mocks.activeChat = { SessionID: 'other-history' } as AISession
       rerender()
       await act(async () => resolve({ params: {} }))
       const input = mocks.onStart.mock.calls[0][0]
       expect(input.kind).toBe(kind)
-      expect(input.sessionId).toBe(kind === 'resume' ? 'original' : undefined)
-      expect(input.params.Params.TimelineSessionID).toBe(kind === 'resume' ? 'original' : undefined)
+      expect(input.sessionId).toBe(kind === 'resume' ? 'original' : 'client-session')
+      expect(input.params.Params.TimelineSessionID).toBe(kind === 'resume' ? 'original' : 'client-session')
     },
   )
 
   it('publishes a background session without changing selection, even after the submitting view unmounts', () => {
     const { result, unmount } = renderHook(() => useStartAIChat())
-    act(() => result.current({ qs: 'first question', target: { kind: 'new' } }))
+    act(() => result.current({ qs: 'first question', target: { kind: 'new', sessionId: 'client-session' } }))
     const input = mocks.onStart.mock.calls[0][0]
     input.onLinkStart('transport')
     unmount()
-    input.onLinkSuccess('backend-session', false)
+    input.onLinkSuccess('client-session', false)
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
     const message = JSON.parse(mocks.emit.mock.calls[0][1])
     expect(message.type).toBe('prependSession')
     expect(message.payload).toMatchObject({
-      SessionID: 'backend-session',
+      SessionID: 'client-session',
       viewKey: 'transport',
       question: 'first question',
     })
@@ -158,8 +160,8 @@ describe('submission identity', () => {
 
   it('activates a foreground session after binding', () => {
     const { result } = renderHook(() => useStartAIChat())
-    act(() => result.current({ qs: 'hello', target: { kind: 'new' } }))
-    mocks.onStart.mock.calls[0][0].onLinkSuccess('backend-session', true)
-    expect(mocks.setActiveChat).toHaveBeenCalledWith(expect.objectContaining({ SessionID: 'backend-session' }))
+    act(() => result.current({ qs: 'hello', target: { kind: 'new', sessionId: 'client-session' } }))
+    mocks.onStart.mock.calls[0][0].onLinkSuccess('client-session', true)
+    expect(mocks.setActiveChat).toHaveBeenCalledWith(expect.objectContaining({ SessionID: 'client-session' }))
   })
 })

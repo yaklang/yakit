@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useRef, useState } from 'react'
-import type { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams } from './type'
+import type { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, AIChatSubmitParams } from './type'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
 import type { AIAgentTriggerEventInfo } from '../aiAgentType'
@@ -38,7 +38,7 @@ import type { AIForgeFormSubmitParamsProps } from '../aiTriageChatTemplate/type'
 import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { useStartAIChat } from '@/pages/ai-re-act/hooks/useStartAIChat'
-import { onReStart } from '../utils'
+import { createActiveChatSessionId, onReStart } from '../utils'
 import { AIAgentChatLayout } from './AIAgentChatLayout/AIAgentChatLayout'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
@@ -66,8 +66,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
 
   const startChat = useStartAIChat()
 
-  const handleStartTriageChat = useMemoizedFn((data: HandleStartParams) => {
-    handleStart({ ...data, target: { kind: 'new' } })
+  const handleStartTriageChat = useMemoizedFn((data: AIChatSubmitParams) => {
+    handleStart(data, 'new')
   })
 
   useEffect(() => {
@@ -89,13 +89,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
     setMode('re-act')
   })
   /** 提交直接启动，不等待聊天组件挂载。 */
-  const handleStart = useMemoizedFn((value: HandleStartParams) => {
-    const targetSessionId = value.target?.kind === 'new' ? undefined : value.target?.sessionId || sessionId
-    if (!globalSessionEngine.canStartExecutingSession(targetSessionId, true)) return false
-    setMode('re-act')
-    startChat(value)
-    return true
-  })
+  const handleStart = useMemoizedFn(
+    (input: AIChatSubmitParams, kind: 'new' | 'resume' = sessionId ? 'resume' : 'new') => {
+      if (!globalSessionEngine.canStartExecutingSession(kind === 'resume' ? sessionId : undefined, true)) return false
+      const { sessionId: inputSessionId, ...value } = input
+      const target = { kind, sessionId: kind === 'resume' ? sessionId : inputSessionId || createActiveChatSessionId() }
+      setMode('re-act')
+      startChat({ ...value, target })
+      return true
+    },
+  )
 
   const onStop = useMemoizedFn(() => {
     if (pendingChat) {

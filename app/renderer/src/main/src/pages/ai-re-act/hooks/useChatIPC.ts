@@ -26,7 +26,11 @@ export function useChatIPC(route: YakitRouteType, pageId: string, independentSes
     // Agent 的不同会话可以同时连接；其他入口保持原有单 pending 行为。
     if (!independentSessions || input.kind === 'new') {
       if (pendingRef.current?.status === 'connecting') return
-      if (pendingToken.current) globalSessionEngine.cancelPendingConnection(pendingToken.current, { keepDraft: true })
+      if (pendingToken.current) {
+        globalSessionEngine.cancelPendingConnection(pendingToken.current, {
+          keepDraft: pendingRef.current?.data.request?.TimelineSessionID === input.sessionId,
+        })
+      }
       detachPendingChat()
     }
     let streamToken: string | undefined

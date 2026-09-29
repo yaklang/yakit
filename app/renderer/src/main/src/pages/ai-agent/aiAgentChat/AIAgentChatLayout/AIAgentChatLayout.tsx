@@ -23,7 +23,7 @@ import { useHasTaskTree } from '../../chatTemplate/historyTaskTree/useHasTaskTre
 import TimelineCard from '../../chatTemplate/TimelineCard/TimelineCard'
 import { YakitAIAgentPageID } from '../../defaultConstant'
 import { useMultiFuncPaneStore } from '../useMultiFuncPaneStore'
-import type { AIAgentChatMode, HandleStartParams } from '../type'
+import type { AIAgentChatMode, AIChatSubmitParams } from '../type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
 import styles from './AIAgentChatLayout.module.scss'
@@ -35,7 +35,7 @@ const MIN_CHAT_CONTENT_WIDTH = 400
 
 export interface AIAgentChatLayoutProps {
   mode: AIAgentChatMode
-  onTriageSubmit: (data: HandleStartParams) => void
+  onTriageSubmit: (data: AIChatSubmitParams) => void
   onSetReAct: () => void
   aiChatWelcomeRef: RefObject<AIChatContentRefProps>
   aiReActChatRef: RefObject<AIChatContentRefProps>
