@@ -97,6 +97,7 @@ import { useBuiltinTagList } from './HTTPFlowTable/useBuiltinTagList'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { groupHTTPFlowFieldTags } from './HTTPFlowTable/HTTPFlowTable.utils'
+import type { FlowMarkPatchPayload } from './HTTPFlowTable/HTTPFlowMark.constants'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -599,6 +600,13 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     trigger: 'setSecondNodeVisible',
   })
   const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
+  const flowMarkPatchRef = useRef<((payload: FlowMarkPatchPayload) => void) | undefined>(undefined)
+  const onRegisterFlowMarkPatch = useMemoizedFn((patch?: (payload: FlowMarkPatchPayload) => void) => {
+    flowMarkPatchRef.current = patch
+  })
+  const onFlowMarkSuccess = useMemoizedFn((payload: FlowMarkPatchPayload) => {
+    flowMarkPatchRef.current?.(payload)
+  })
   // 性能优化：提取 onSelected 为 useMemoizedFn，避免每次渲染创建新引用破坏 HTTPFlowTable 的 React.memo
   const onSelected = useMemoizedFn((i?: HTTPFlow) => {
     // 子组件关闭详情时会上抛 undefined，这里必须接受 undefined 才能清空父级 selected，释放大响应字符串
@@ -701,6 +709,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
               onSetHasNewData={onSetHasNewData}
               onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
               onRegisterTableSelectApi={onRegisterTableSelectApi}
+              onRegisterFlowMarkPatch={onRegisterFlowMarkPatch}
               httpHistoryTableTitleStyle={httpHistoryTableTitleStyle}
               titleHeight={titleHeight}
               showHistoryAnalysisBtn={showHistoryAnalysisBtn}
@@ -719,6 +728,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                   id={selected?.Id || 0}
                   sendToWebFuzzer={true}
                   selectedFlow={selected}
+                  onFlowMarkSuccess={onFlowMarkSuccess}
                   refresh={refresh}
                   historyId={historyId}
                   downstreamProxyStr={downstreamProxy}

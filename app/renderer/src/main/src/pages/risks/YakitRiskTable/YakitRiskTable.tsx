@@ -922,7 +922,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       VerifierUid: isRepaired ? info.VerifierUid || info.Verifier : undefined,
       FixTime: isRepaired ? info.FixTime : undefined,
       FixSuggestion: isRepaired ? info.FixSuggestion : undefined,
-      TagReason: isRepaired ? undefined : info.DisposalNote,
+      TagReason: isRepaired ? undefined : info.TagReason,
     }
     apiBatchSetRiskTags(params).then(() => {
       const current = getResponse()
@@ -940,7 +940,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         VerifierUid: isRepaired ? info.VerifierUid || info.Verifier : undefined,
         FixTime: isRepaired ? info.FixTime : undefined,
         FixSuggestion: isRepaired ? info.FixSuggestion : undefined,
-        DisposalNote: isRepaired ? undefined : info.DisposalNote,
+        TagReason: isRepaired ? undefined : info.TagReason,
       }
       setResponse({
         ...current,
@@ -1875,7 +1875,7 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
         VerifierUid: verifierUid,
         FixTime: isRepaired ? value.repair_time : undefined,
         FixSuggestion: isRepaired ? value.repair_suggestion : undefined,
-        DisposalNote: isRepaired ? undefined : value.disposal_note,
+        TagReason: isRepaired ? undefined : value.disposal_note,
       })
       if (onClose) onClose()
     },
@@ -1900,7 +1900,7 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
             verifier: info.VerifierUid ? undefined : info.Verifier,
             repair_time: info.FixTime,
             repair_suggestion: info.FixSuggestion,
-            disposal_note: info.DisposalNote,
+            disposal_note: info.TagReason,
           }}
         >
           <Form.Item

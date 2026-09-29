@@ -74,6 +74,6 @@ export interface Risk {
   FixTime?: number
   /** 修复建议（已修复） */
   FixSuggestion?: string
-  /** 处置说明（非已修复） */
-  DisposalNote?: string
+  /** 处置说明（已修复） */
+  TagReason?: string
 }

@@ -90,6 +90,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
   fetchRequest?: (kind: number) => any
   search?: string
   selectedFlow?: HTTPFlow
+  onFlowMarkSuccess?: (payload: FlowMarkPatchPayload) => void
 
   refresh?: boolean
 
@@ -870,8 +871,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         }
 
         // EE：固定加入日志栏并优先展示；CE：行为与原先一致
-        const baseTypes: HTTPFlowInfoType[] =
-          existedExtraInfos.length > 0 ? [...existedExtraInfos, 'codec'] : ['codec']
+        const baseTypes: HTTPFlowInfoType[] = existedExtraInfos.length > 0 ? [...existedExtraInfos, 'codec'] : ['codec']
         const newExistedInfoType: HTTPFlowInfoType[] = isEnterprise ? ['log', ...baseTypes] : baseTypes
         setInfoType(isEnterprise ? 'log' : newExistedInfoType[0])
         setExistedInfoType(newExistedInfoType)
@@ -880,7 +880,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
   const onFlowMarkSuccess = useMemoizedFn((payload: FlowMarkPatchPayload) => {
     setFlow((prev) => {
-      if (!prev) return prev
+      if (!prev || !payload.Ids.includes(Number(prev.Id))) return prev
       return {
         ...prev,
         ...(payload.IssueType !== undefined ? { IssueType: payload.IssueType } : {}),
@@ -889,6 +889,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         ...(payload.StatusReason !== undefined ? { StatusReason: payload.StatusReason } : {}),
       }
     })
+    props.onFlowMarkSuccess?.(payload)
   })
 
   const onOpenMarkEdit = useMemoizedFn(() => {
@@ -1357,11 +1358,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         }
                         children={
                           flow ? (
-                            <FlowDisposalLog
-                              flow={flow}
-                              isLogin={!!userInfo.isLogin}
-                              refreshKey={logRefreshKey}
-                            />
+                            <FlowDisposalLog flow={flow} isLogin={!!userInfo.isLogin} refreshKey={logRefreshKey} />
                           ) : null
                         }
                       />

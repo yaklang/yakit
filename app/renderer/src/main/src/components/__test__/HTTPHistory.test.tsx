@@ -1,13 +1,20 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
-import { HTTPHistory } from '../HTTPHistory'
+import { HTTPFlowRealTimeTableAndEditor, HTTPHistory } from '../HTTPHistory'
+import type { HTTPFlowTableProp } from '../HTTPFlowTable/HTTPFlowTable.constants'
+import type { HTTPFlowDetailProp } from '../HTTPFlowDetail'
 
 const bridge = vi.hoisted(() => ({
   activeID: 'session-1',
   syncSelectedHttpFlowIds: vi.fn(),
   clearTableSelection: vi.fn(),
   deselectHttpFlowId: vi.fn(),
+}))
+
+const flowMark = vi.hoisted(() => ({
+  handlers: new Map<string, ReturnType<typeof vi.fn>>(),
+  payload: { Ids: [40], IssueType: 'SQL注入', Severity: '低危', Status: '确认', StatusReason: '已核实' },
 }))
 
 vi.hoisted(() => {
@@ -85,13 +92,40 @@ vi.mock('../yakitSideTab/YakitSideTab', () => ({
     </>
   ),
 }))
-vi.mock('../HTTPFlowTable/HTTPFlowTable', () => ({
-  HTTPFlowTable: ({ onSetSelectedHttpFlowIds }: { onSetSelectedHttpFlowIds: (ids: string[]) => void }) => (
-    <button onClick={() => onSetSelectedHttpFlowIds(['1', '2'])}>勾选流量</button>
+vi.mock('../HTTPFlowTable/HTTPFlowTable', async () => {
+  const { useEffect } = await import('react')
+  return {
+    HTTPFlowTable: ({
+      onSetSelectedHttpFlowIds,
+      onRegisterFlowMarkPatch,
+      historyId,
+      setOnlyShowFirstNode,
+    }: HTTPFlowTableProp) => {
+      useEffect(() => {
+        const patch = vi.fn()
+        flowMark.handlers.set(historyId!, patch)
+        onRegisterFlowMarkPatch?.(patch)
+        return () => onRegisterFlowMarkPatch?.(undefined)
+      }, [historyId, onRegisterFlowMarkPatch])
+      return (
+        <>
+          <button onClick={() => onSetSelectedHttpFlowIds?.(['1', '2'])}>勾选流量</button>
+          <button onClick={() => setOnlyShowFirstNode?.(false)}>查看详情</button>
+        </>
+      )
+    },
+  }
+})
+vi.mock('../HTTPFlowDetail', () => ({
+  HTTPFlowDetailMini: ({ onFlowMarkSuccess }: HTTPFlowDetailProp) => (
+    <button onClick={() => onFlowMarkSuccess?.(flowMark.payload)}>保存标记</button>
   ),
 }))
 
-beforeEach(() => vi.clearAllMocks())
+beforeEach(() => {
+  vi.clearAllMocks()
+  flowMark.handlers.clear()
+})
 afterEach(cleanup)
 
 describe('HTTPHistory 流量选择同步', () => {
@@ -138,5 +172,40 @@ describe('HTTPHistory 流量选择同步', () => {
     fireEvent.click(screen.getByText('AI 页签'))
     fireEvent.click(screen.getByText('勾选流量'))
     await waitFor(() => expect(bridge.syncSelectedHttpFlowIds).toHaveBeenCalledExactlyOnceWith(['1', '2']))
+  })
+})
+
+describe('流量详情标记同步', () => {
+  it.each(['History', 'MITM'] as const)('%s 详情保存成功后通知当前表格更新标记', async (pageType) => {
+    render(<HTTPFlowRealTimeTableAndEditor pageType={pageType} />)
+    fireEvent.click(screen.getByText('查看详情'))
+    fireEvent.click(await screen.findByText('保存标记'))
+    const [patch] = [...flowMark.handlers.values()]
+    expect(patch).toHaveBeenCalledExactlyOnceWith(flowMark.payload)
+  })
+
+  it('同页多个流量表只更新发起编辑的实例', async () => {
+    render(
+      <>
+        <div data-testid="first-history">
+          <HTTPFlowRealTimeTableAndEditor pageType="History" />
+        </div>
+        <div data-testid="second-history">
+          <HTTPFlowRealTimeTableAndEditor pageType="History" />
+        </div>
+      </>,
+    )
+    const first = within(screen.getByTestId('first-history'))
+    const second = within(screen.getByTestId('second-history'))
+    fireEvent.click(first.getByText('查看详情'))
+    fireEvent.click(await first.findByText('保存标记'))
+    const [firstPatch, secondPatch] = [...flowMark.handlers.values()]
+    expect(firstPatch).toHaveBeenCalledExactlyOnceWith(flowMark.payload)
+    expect(secondPatch).not.toHaveBeenCalled()
+
+    fireEvent.click(second.getByText('查看详情'))
+    fireEvent.click(await second.findByText('保存标记'))
+    expect(secondPatch).toHaveBeenCalledExactlyOnceWith(flowMark.payload)
+    expect(firstPatch).toHaveBeenCalledTimes(1)
   })
 })
