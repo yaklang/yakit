@@ -44,7 +44,8 @@ export function useAIRunMode() {
 
   const onSetPlan = useDebounceFn(
     useMemoizedFn((checked: boolean) => {
-      if (execute) {
+      // pending 的 execute 也为 true；绑定正式会话后才允许发送热补丁。
+      if (execute && sessionId) {
         const info: AIInputEvent = {
           IsConfigHotpatch: true,
           HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
@@ -80,7 +81,7 @@ export function useAIRunMode() {
   const onSetStrategy = useDebounceFn(
     useMemoizedFn((next: AIExecutionStrategy) => {
       const merged: AIExecutionStrategy = { ...(setting?.Strategy || {}), ...next }
-      if (execute) {
+      if (execute && sessionId) {
         const info: AIInputEvent = {
           IsConfigHotpatch: true,
           HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_Strategy,
