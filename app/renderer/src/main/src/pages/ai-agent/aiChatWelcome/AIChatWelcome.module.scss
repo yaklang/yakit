@@ -14,6 +14,7 @@
 .ai-chat-welcome-wrapper {
   @extend %display-column-center;
   --ai-chat-welcome-bg: url('@/assets/aiAgent/ai-agent-welcome-bg.png');
+  container: ai-chat-welcome / inline-size;
   height: 100%;
   position: relative;
   background-image:
@@ -81,6 +82,7 @@
 
     .input-heard {
       @extend %display-column-center;
+      align-items: flex-start;
       gap: 8px;
       flex: 1;
       width: 100%;
@@ -105,6 +107,25 @@
         svg {
           width: 64px;
           height: 64px;
+        }
+      }
+
+      @container ai-chat-welcome (width > 1192px) {
+        .memfit-icon {
+          svg {
+            width: 88px;
+            height: 88px;
+          }
+        }
+
+        .title {
+          font-size: 56px;
+          line-height: 72px;
+        }
+
+        .subtitle {
+          font-size: 24px;
+          line-height: 32px;
         }
       }
     }
