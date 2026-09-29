@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import type { AIChatTextareaProps, AIChatTextareaRefProps } from '../../template/type'
 import type * as WelcomeModule from '../AIChatWelcome'
+import welcomeStyles from '../AIChatWelcome.module.scss'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 
 const createInputHandle = (value: string) => ({
@@ -44,6 +45,17 @@ vi.mock('@/utils/getMainOperatorPageBodyContainer', () => ({
 }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('../AIChatWelcomeSideSetting', () => ({ SideSettingButton: () => null }))
+vi.mock('../AIWelcomeAsciiRipple', () => ({
+  AIWelcomeAsciiRipple: () => <div data-testid="welcome-ascii-ripple" aria-hidden="true" />,
+}))
+// CI 的根配置将样式模块替换为空对象；为滚动兜底结构用例断言的类名提供稳定映射。
+vi.mock('../AIChatWelcome.module.scss', () => ({
+  default: {
+    'ai-chat-welcome-wrapper': 'ai-chat-welcome-wrapper',
+    'welcome-scroll': 'welcome-scroll',
+    'input-wrapper': 'input-wrapper',
+  },
+}))
 
 const { default: AIChatWelcome } = await compileReactModule<typeof WelcomeModule>(
   import.meta.url,
@@ -107,5 +119,20 @@ describe('AIChatWelcome 输入框转发', () => {
       ['101,102', true],
     ])
     expect(onHttpFlowRemove).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('AIChatWelcome 最小高度滚动兜底', () => {
+  it('ASCII 波纹背景挂在 wrapper 上，输入内容包在 welcome-scroll 滚动层内', () => {
+    const { container } = render(<AIChatWelcome ref={createRef()} onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    const wrapper = container.firstElementChild as HTMLElement
+    // 背景固定在可视区域，不随内容滚动。
+    expect(screen.getByTestId('welcome-ascii-ripple').parentElement).toBe(wrapper)
+    // wrapper 下第二个元素是滚动兜底层，input-wrapper 及输入内容整体位于该层内。
+    const scroll = wrapper.children.item(1) as HTMLElement
+    expect(scroll.classList.contains(welcomeStyles['welcome-scroll'])).toBe(true)
+    const inputWrapper = scroll.firstElementChild as HTMLElement
+    expect(inputWrapper.classList.contains(welcomeStyles['input-wrapper'])).toBe(true)
+    expect(scroll).toContainElement(screen.getByRole('button', { name: '更换输入框 ref' }))
   })
 })

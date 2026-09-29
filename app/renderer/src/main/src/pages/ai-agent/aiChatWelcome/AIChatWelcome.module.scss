@@ -29,6 +29,23 @@
     --ai-chat-welcome-bg: url('@/assets/aiAgent/ai-agent-welcome-bg-dark.png');
   }
 
+  .welcome-ascii-ripple {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .welcome-scroll {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    @extend %display-column-center;
+    overflow-y: auto;
+  }
+
   .input-wrapper {
     position: relative;
     z-index: 1;
@@ -110,7 +127,7 @@
         @extend %display-flex-center;
         gap: 4px;
 
-        color: var(--Colors-Use-Neutral-Disable);
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
         font-size: 12px;
         font-weight: 400;
         line-height: 16px; /* 142.857% */

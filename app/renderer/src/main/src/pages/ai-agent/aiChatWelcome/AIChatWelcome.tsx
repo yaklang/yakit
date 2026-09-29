@@ -33,6 +33,7 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { yakitNotify } from '@/utils/notification'
+import { AIWelcomeAsciiRipple } from './AIWelcomeAsciiRipple'
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
@@ -93,28 +94,31 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     })
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
-        <div
-          className={classNames(styles['input-wrapper'], {
-            [styles['input-wrapper-compact']]: isCompact,
-          })}
-        >
-          <div className={styles['input-heard']}>
-            <MemfitLogoColorful className={styles['memfit-icon']} />
-            <div className={styles['title']}>Memfit AI Agent</div>
-            <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
-          </div>
-          <div className={styles['input-body-wrapper']}>
-            <AIChatWelcomeIntroTips onSetInputValue={onSetInputValue} compact={isCompact} />
-            <div className={styles['input-panel']}>
-              <AIChatWelcomeSettingCard ref={settingCardRef} />
-              <AIChatTextarea
-                ref={aiChatTextareaRef}
-                onSubmit={handleTriageSubmit}
-                onHttpFlowRemove={props.onHttpFlowRemove}
-                chatDataStoreKey="aiChatDataStore"
-                className={styles['ai-text-wrapper']}
-                milkdownClassName={styles['milkdown-input']}
-              />
+        <AIWelcomeAsciiRipple targetRef={welcomeRef} />
+        <div className={styles['welcome-scroll']}>
+          <div
+            className={classNames(styles['input-wrapper'], {
+              [styles['input-wrapper-compact']]: isCompact,
+            })}
+          >
+            <div className={styles['input-heard']}>
+              <MemfitLogoColorful className={styles['memfit-icon']} />
+              <div className={styles['title']}>Memfit AI Agent</div>
+              <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
+            </div>
+            <div className={styles['input-body-wrapper']}>
+              <AIChatWelcomeIntroTips onSetInputValue={onSetInputValue} compact={isCompact} />
+              <div className={styles['input-panel']} data-ai-ripple-disabled>
+                <AIChatWelcomeSettingCard ref={settingCardRef} />
+                <AIChatTextarea
+                  ref={aiChatTextareaRef}
+                  onSubmit={handleTriageSubmit}
+                  onHttpFlowRemove={props.onHttpFlowRemove}
+                  chatDataStoreKey="aiChatDataStore"
+                  className={styles['ai-text-wrapper']}
+                  milkdownClassName={styles['milkdown-input']}
+                />
+              </div>
             </div>
           </div>
         </div>
