@@ -52,6 +52,35 @@ export interface ProjectDescription {
   ExternalProjectCode: string
   OnlineSubTaskID: string
 }
+/** 在文件夹里新建/导入时的目录：一级文件夹 → (自己, 0)，二级文件夹 → (一级, 自己) */
+export const resolveParentFolderIds = (parent: Pick<ProjectDescription, 'Id' | 'FolderId'>) =>
+  +parent.FolderId === 0
+    ? { FolderId: +parent.Id, ChildFolderId: 0 }
+    : { FolderId: +parent.FolderId, ChildFolderId: +parent.Id }
+
+/** 文件夹最多两级：只有一级文件夹（FolderId 为 0）下能再建子文件夹 */
+export const canCreateSubFolder = (folder: Pick<ProjectDescription, 'FolderId'>) => +folder.FolderId === 0
+
+/** 新建/导入成功后的目录：undefined 留在当前目录，[] 回根目录，否则进入所选文件夹 */
+export const getSubmitFolderState = (
+  folders: Pick<ProjectDescription, 'Id' | 'ProjectName'>[] | undefined,
+  params: ProjectParamsProp,
+): { files?: Pick<ProjectDescription, 'Id' | 'ProjectName' | 'FolderId'>[]; params: ProjectParamsProp } => {
+  const Pagination = { ...params.Pagination, Page: 1 }
+  if (!folders) return { params: { ...params, Pagination } }
+  const [first, second] = folders
+  return {
+    // 二级文件夹的 FolderId 是一级文件夹 id
+    files: folders.map((f, i) => ({ Id: +f.Id, ProjectName: f.ProjectName, FolderId: i ? +first.Id : 0 })),
+    params: {
+      Type: 'all',
+      Pagination,
+      FolderId: first ? +first.Id : undefined,
+      ChildFolderId: second ? +second.Id : undefined,
+    },
+  }
+}
+
 export interface ProjectsResponse {
   Pagination: { Page: number; Limit: number }
   Projects: ProjectDescription[]
