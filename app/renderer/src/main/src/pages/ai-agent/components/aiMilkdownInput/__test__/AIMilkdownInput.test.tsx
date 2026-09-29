@@ -4,6 +4,7 @@ import { act, render } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { AIMilkdownInputBase } from '../AIMilkdownInput'
 import type { AIMilkdownInputRef } from '../type'
+import type * as MilkdownCore from '@milkdown/kit/core'
 
 const SessionContext = createContext<string | undefined>(undefined)
 const mocks = vi.hoisted(() => ({
@@ -12,7 +13,9 @@ const mocks = vi.hoisted(() => ({
   uploader: undefined as undefined | ((files: FileList, schema: unknown) => Promise<unknown>),
 }))
 vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
-  default: () => ({ activeChat: { SessionID: useContext(SessionContext) } }),
+  default: function useAgentStoreMock() {
+    return { activeChat: { SessionID: useContext(SessionContext) } }
+  },
 }))
 vi.mock('@/pages/ai-agent/utils', () => ({ createActiveChatSessionId: () => `draft-${++mocks.draftSequence}` }))
 vi.mock('lottie-web', () => ({ default: vi.fn() }))
@@ -29,7 +32,7 @@ vi.mock('@prosemirror-adapter/react', () => ({
 }))
 vi.mock('@milkdown/kit/plugin/upload', () => ({ upload: mocks.upload, uploadConfig: { key: 'upload' } }))
 vi.mock('@milkdown/kit/core', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@milkdown/kit/core')>()),
+  ...(await importOriginal<typeof MilkdownCore>()),
   Editor: {
     make: () => {
       const editor = {

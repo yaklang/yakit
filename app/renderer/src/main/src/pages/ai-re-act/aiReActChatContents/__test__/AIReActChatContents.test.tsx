@@ -28,7 +28,11 @@ vi.mock('../../hooks/useCurrentSessionId', () => {
   const useSessionIdMock = () => useContext(SessionContext)
   return { default: useSessionIdMock }
 })
-vi.mock('@/pages/ai-agent/useContext/useStore', () => ({ default: () => useContext(AgentContext) }))
+vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
+  default: function useAgentStoreMock() {
+    return useContext(AgentContext)
+  },
+}))
 vi.mock('../../hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => store.renderStore,
   useCurrentRawData: () => rawData,

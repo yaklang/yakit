@@ -14,7 +14,11 @@ const chatStore = createStore(() => ({
   currentChatStatus: { status: AITaskStatus.created },
 }))
 
-vi.mock('@/pages/ai-agent/useContext/useStore', () => ({ default: () => useStore(agentStore) }))
+vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
+  default: function useAgentStoreMock() {
+    return useStore(agentStore)
+  },
+}))
 vi.mock('../../../hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => chatStore }))
 vi.mock('../../../hooks/useGetChatDataStoreKey', () => ({ default: () => 'ai-agent-chat' }))
 vi.mock('@/pages/ai-agent/template/template', () => ({
