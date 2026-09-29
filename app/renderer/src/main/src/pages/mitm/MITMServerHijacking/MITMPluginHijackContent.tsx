@@ -25,6 +25,7 @@ import { enableMITMPluginMode } from './MITMServerHijacking'
 import styles from './MITMServerHijacking.module.scss'
 import classNames from 'classnames'
 import { RemoteGV } from '@/yakitGV'
+import { emitOpenEngineConsole } from '@/components/baseConsole/openEngineConsole'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import emiter from '@/utils/eventBus/eventBus'
 import { useCampare } from '@/hook/useCompare/useCompare'
@@ -52,7 +53,6 @@ import {
   type MITMRemoveHookRequest,
 } from '../MITMHacker/utils'
 import { Tooltip } from 'antd'
-import { openConsoleNewWindow } from '@/utils/openWebsite'
 import usePluginTrace from './PluginTrace/usePluginTrace'
 import type { PluginTraceRefProps } from './PluginTrace/type'
 import { pluginTraceRefFunDef } from './PluginTrace/PluginTrace'
@@ -556,7 +556,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
               <Tooltip placement="bottom" title={t('MITMPluginHijackContent.engine_console')}>
                 <YakitButton
                   type="text"
-                  onClick={openConsoleNewWindow}
+                  onClick={emitOpenEngineConsole}
                   icon={<TerminalOutlined className={styles['engineConsole-icon-style']} color="currentColor" />}
                   style={{ padding: 0 }}
                 ></YakitButton>

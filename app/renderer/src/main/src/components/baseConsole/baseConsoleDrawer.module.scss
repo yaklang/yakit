@@ -1,0 +1,28 @@
+.base-console-title {
+  height: 32px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  padding: 4px 12px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  background: var(--Colors-Use-Basic-Background);
+  .title {
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .operation {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+  }
+}
+.console-content {
+  flex: 1;
+}
+.base-console-box {
+  height: 100%;
+  display: flex;
+  flex-flow: column;
+}
