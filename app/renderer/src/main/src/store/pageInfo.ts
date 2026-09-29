@@ -221,6 +221,8 @@ export interface WebFuzzerPageInfoProps {
   hotPatchCode: string
   // 共用热加载代码开关
   sharedHotReloadCode?: boolean
+  /** 最后选中的历史记录，用于初次加载时恢复选中与「查看全部」开关状态 */
+  lastSelectedHistory?: { id?: number; showAll: boolean }
 }
 
 export interface PocPageInfoProps {
@@ -740,6 +742,7 @@ export const getFuzzerProcessedCacheData = (pageList) => {
         request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
         hotPatchCode: hotPatchCode,
         browserTransformSelection: ele.pageParamsInfo?.webFuzzerPageInfo?.browserTransformSelection,
+        lastSelectedHistory: ele.pageParamsInfo?.webFuzzerPageInfo?.lastSelectedHistory,
       },
     }
   })

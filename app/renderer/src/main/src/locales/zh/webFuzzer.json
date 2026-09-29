@@ -84,6 +84,7 @@
     "closeMenuPrompt": "关闭一级菜单会关闭一级菜单下的所有二级菜单？",
     "clearOldDataFailed": "清空老数据失败：",
     "wfHistoryDataRestoreFailed": "WF历史数据恢复失败：",
+    "historyNotFound": "上次选中的历史记录已不存在，已清除选中状态",
     "fuzzTestRequestFailed": "提交模糊测试请求失败：",
     "hotReload": "热加载",
     "buildRequest": "构造请求",
