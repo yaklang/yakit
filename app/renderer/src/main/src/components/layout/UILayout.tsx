@@ -4,7 +4,7 @@ import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from '
 import { MacUIOp } from './MacUIOp'
 import type { yakProcess } from './PerformanceDisplay'
 const PerformanceDisplay = lazy(() => import('./PerformanceDisplay').then((m) => ({ default: m.PerformanceDisplay })))
-import { FuncDomain, UIOpNotice } from './FuncDomain'
+import { FuncDomain, UIOpNotice, type EngineConsoleOpenType } from './FuncDomain'
 import { TemporaryProjectPop, WinUIOp } from './WinUIOp'
 import { GlobalState } from './GlobalState'
 import { YakitGlobalHost } from './YakitGlobalHost'
@@ -22,6 +22,8 @@ import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { getRemoteValue, setLocalValue, setRemoteValue } from '@/utils/kv'
 import { YaklangEngineWatchDog, type YaklangEngineWatchDogCredential } from '@/components/layout/YaklangEngineWatchDog'
 import { StringToUint8Array } from '@/utils/str'
+import type { ConsoleDrawerDirection } from '../baseConsole/BaseConsoleDrawer'
+const BaseConsoleDrawer = lazy(() => import('../baseConsole/BaseConsoleDrawer'))
 import {
   GetConnectPort,
   getReleaseEditionName,
@@ -76,7 +78,7 @@ import { RefreshOutlined, FigmaIcon28011794Outlined } from '@yakit-libs/yakit-ui
 
 import { CopyComponents } from '../yakitUI/YakitTag/YakitTag'
 import { Tooltip } from 'antd'
-import { openABSFileLocated } from '@/utils/openWebsite'
+import { openABSFileLocated, openConsoleNewWindow } from '@/utils/openWebsite'
 import { clearTerminalMap, getMapAllTerminalKey } from '@/pages/yakRunner/BottomEditorDetails/TerminalBox/TerminalMap'
 import { grpcFetchLatestYakVersion, grpcFetchYakInstallResult } from '@/apiUtils/grpc'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
@@ -113,6 +115,7 @@ import {
   yakitStream,
   yakitSystem,
   yakitUILayout,
+  yakitWindow,
   yakitWindowControls,
 } from '@/services/electronBridge'
 import type {
@@ -131,6 +134,7 @@ const ContextMenuExecutionHost = lazy(() =>
 )
 import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
+import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
   Host: '127.0.0.1',
@@ -1366,7 +1370,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   }, [])
   // #endregion
 
-  // #region 软件顶部展示采样中、录屏中
+  // #region 软件顶部展示采样中、录屏中、引擎Console
   /** ---------- 软件顶部展示采样中 Start ---------- */
   const { performanceSamplingInfo, setPerformanceSamplingLog, setSampling } = usePerformanceSampling()
   const [isShowSamplingInfo, setIsShowSamplingInfo] = useState<boolean>(false)
@@ -1528,6 +1532,48 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     )
   }, [screenRecorderInfo, i18nRefresh])
   /** ---------- 软件顶部展示录屏中状态 End ---------- */
+
+  // ===== 引擎Console：浮窗(独立窗口) / 左·右·底 抽屉 =====
+  // 抽屉当前停靠方向，null 表示抽屉未展开
+  const [consoleDrawerDirection, setConsoleDrawerDirection] = useState<ConsoleDrawerDirection | null>(null)
+  // 用户上次选择的打开方式（用于菜单标记），默认浮窗
+  const [consoleType, setConsoleType] = useState<EngineConsoleOpenType>('float')
+  // ===== 引擎Console：打开方式处理（浮窗 / 左·右·底 抽屉，互斥） =====
+  // 启动时读取用户上次选择的打开方式，用于菜单标记
+  useEffect(() => {
+    getRemoteValue(GlobalConfigRemoteGV.EngineConsoleType).then((val) => {
+      if (val) {
+        setConsoleType(val)
+      }
+    })
+  }, [])
+
+  const onOpenConsole = useMemoizedFn((type: EngineConsoleOpenType) => {
+    setConsoleType(type)
+    setRemoteValue(GlobalConfigRemoteGV.EngineConsoleType, type)
+
+    if (type === 'float') {
+      // 打开浮窗前，收起抽屉
+      setConsoleDrawerDirection(null)
+      openConsoleNewWindow()
+    } else {
+      // 打开抽屉前，关闭浮窗独立窗口
+      yakitWindow.closeConsoleWindow()
+      setConsoleDrawerDirection(type)
+    }
+  })
+
+  // 监听其他页面触发的打开引擎Console事件（例如 MITM 热加载页）
+  useEffect(() => {
+    const onOpenEngineConsole = (type?: 'float' | 'left' | 'right' | 'bottom') => {
+      const safeType = type || 'float'
+      onOpenConsole(safeType)
+    }
+    emiter.on('openEngineConsole', onOpenEngineConsole)
+    return () => {
+      emiter.off('openEngineConsole', onOpenEngineConsole)
+    }
+  }, [])
   // #endregion
 
   const SELinkedEngine = useMemoizedFn(() => {
@@ -1731,6 +1777,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         system={system}
                         isJudgeLicense={isJudgeLicense}
                         onDevToolRefresh={onDevToolRefresh}
+                        onOpenConsole={onOpenConsole}
+                        consoleType={consoleType}
                       />
                       {!showProjectManage && (
                         <>
@@ -1772,6 +1820,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           system={system}
                           isJudgeLicense={isJudgeLicense}
                           onDevToolRefresh={onDevToolRefresh}
+                          onOpenConsole={onOpenConsole}
+                          consoleType={consoleType}
                           homeIcon={
                             !isEnpriTraceAgent() ? (
                               <div
@@ -1865,6 +1915,23 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                   props.children
                 )}
               </YakitSpin>
+            )}
+
+            {engineLink && consoleDrawerDirection && (
+              <Suspense fallback={null}>
+                <BaseConsoleDrawer
+                  direction={consoleDrawerDirection}
+                  onClose={() => setConsoleDrawerDirection(null)}
+                  onDirectionChange={(direction) => {
+                    setConsoleDrawerDirection(direction)
+                    setConsoleType(direction)
+                    setRemoteValue(GlobalConfigRemoteGV.EngineConsoleType, direction)
+                  }}
+                  onShrinkToFloat={() => {
+                    onOpenConsole('float')
+                  }}
+                />
+              </Suspense>
             )}
 
             {engineLink && (yaklangKillPss || yakitDownload) && (

@@ -5,4 +5,6 @@ export enum GlobalConfigRemoteGV {
   PerformanceTips = 'Performance_Tips',
   /** MITM/历史列表内联原始包上限（字节）。0=不带包，默认 300K，最大 500K */
   HTTPFlowListInlineMaxContentLength = 'YAKIT_HTTPFLOW_LIST_INLINE_MAX_CONTENT_LENGTH',
+  /** @name 引擎Console打开方式（float/left/right/bottom） */
+  EngineConsoleType = 'new-engine-console-type',
 }

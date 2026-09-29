@@ -233,6 +233,8 @@ const baseProps: FuncDomainProp = {
   system: 'Windows_NT',
   onDevToolRefresh: vi.fn(),
   showProjectManage: false,
+  onOpenConsole: vi.fn(),
+  consoleType: 'float',
 }
 
 describe('MoreYaklangVersion 轻量选项', () => {
