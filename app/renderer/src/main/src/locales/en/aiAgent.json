@@ -645,12 +645,11 @@
     "viewLog": "View Logs",
     "collapse": "Collapse",
     "more": "More",
-    "duration": "Duration",
-    "toolCallStats": "Tool Call Stats",
-    "success": "Success",
-    "failed": "Failed",
-    "totalAttempts": "Total Attempts",
-    "running": "Running"
+    "running": "Running",
+    "loginToViewBalance": "Login to view balance",
+    "step": "Step",
+    "runtime": "Runtime",
+    "toolCallCount": "Tool Call Count"
   },
   "AIChatContent": {
     "noActiveChat": "There is no active session",

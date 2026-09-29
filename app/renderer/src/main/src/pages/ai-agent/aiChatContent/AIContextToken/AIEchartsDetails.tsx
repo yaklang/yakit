@@ -28,10 +28,10 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import type { AIModelConfig } from '../../aiModelList/utils'
 import AITokens from './AITokens'
+import AIMainModelTokens from './AIMainModelTokens'
 import styles from '../AIChatContent.module.scss'
 
 interface CurrentModel {
-  intelligentModels?: AIModelConfig
   lightweightModels?: AIModelConfig
 }
 
@@ -72,14 +72,11 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
 
   const currentModel = useCreation((): CurrentModel => {
     const data: CurrentModel = {}
-    if (aiGlobalConfig?.IntelligentModels?.length) {
-      data.intelligentModels = aiGlobalConfig.IntelligentModels[0]
-    }
     if (aiGlobalConfig?.LightweightModels?.length) {
       data.lightweightModels = aiGlobalConfig.LightweightModels[0]
     }
     return data
-  }, [aiGlobalConfig.IntelligentModels, aiGlobalConfig.LightweightModels])
+  }, [aiGlobalConfig.LightweightModels])
 
   const pressuresEcharts: AIPressureDetailsEchartsProps['dataEcharts'] = useCreation(() => {
     return getPressuresData(pressure)
@@ -198,12 +195,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
             </div>
           </div>
           <div className={styles['token-content']}>
-            <AITokens
-              modelType={t('AiAgengt.intelligentModels')}
-              aiModel={hasRuntimeModelConsumption ? undefined : currentModel?.intelligentModels}
-              modelConsumption={tierModelConsumption?.intelligent}
-              fallbackConsumption={hasRuntimeModelConsumption ? undefined : consumption?.tier_consumption?.intelligent}
-            />
+            <AIMainModelTokens />
             <AITokens
               modelType={t('AiAgengt.lightweightModels')}
               aiModel={hasRuntimeModelConsumption ? undefined : currentModel?.lightweightModels}

@@ -3,6 +3,7 @@ import { createContext, useContext } from 'react'
 import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { useStore as useUserStore } from '@/store'
 import { grpcExportAILogs, grpcQueryHTTPFlows } from '@/pages/ai-agent/grpc'
 import { failed, yakitNotify } from '@/utils/notification'
 import type { ExportAILogsModal as ExportAILogsModalComponent } from '@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal'
@@ -35,6 +36,7 @@ import type { StoreApi } from 'zustand/vanilla'
 
 interface MockTaskStoreState {
   currentChatStatus: { questionID: string }
+  execute: boolean
 }
 // 详情条目带 uuid：父级轮询比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
 interface MockTaskDetails {
@@ -45,13 +47,14 @@ const mockTaskDetailsMap = new Map<string, MockTaskDetails>()
 const mockAgentStore = createStore<{ activeChat?: { Id: number; SessionID: string } }>(() => ({}))
 const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreState>(() => ({
   currentChatStatus: { questionID: '' },
+  execute: false,
 }))
 const setMockQuestionID = (questionID: string) => {
   mockTaskStore.setState((state) => ({ currentChatStatus: { ...state.currentChatStatus, questionID } }))
   casualTaskState.questionID = questionID
 }
 const resetMockStore = () => {
-  mockTaskStore.setState({ currentChatStatus: { questionID: '' } })
+  mockTaskStore.setState({ currentChatStatus: { questionID: '' }, execute: false })
   mockTaskDetailsMap.clear()
   casualTaskState.questionID = ''
 }
@@ -60,7 +63,16 @@ vi.mock('../../hooks/useCurrentDataBySession', () => ({
   useCurrentRawData: () => ({
     taskDetailsMap: mockTaskDetailsMap,
     httpRunTimeIDs: [] as string[],
+    aiPerfData: {},
   }),
+}))
+
+vi.mock('@/pages/ai-agent/aiChatContent/AIContextToken/AIMainModelTokens', () => ({
+  default: () => <div data-testid="main-model-tokens" />,
+}))
+
+vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
+  default: () => [{ queryLoading: false, updateLoading: false, aiGlobalConfig: {} }, { onRefresh: vi.fn() }],
 }))
 
 // 隔离日志导出及首页统计查询的 IPC 依赖。
@@ -81,17 +93,38 @@ vi.mock('@/pages/ai-agent/useContext/useStore', async () => {
 })
 
 // 菜单点击交互依赖（vi.hoisted：vi.mock 工厂引用的变量需先于 mock 提升初始化）
-const { mockEmit, casualTaskState, mockSyncCasualTaskTab, mockOpenLogWindow, mockExportModalState, dispatcherState } =
-  vi.hoisted(() => ({
-    mockEmit: vi.fn(),
-    casualTaskState: { questionID: '' },
-    mockSyncCasualTaskTab: vi.fn(),
-    mockOpenLogWindow: vi.fn(),
-    mockExportModalState: { lastVisible: undefined as boolean | undefined },
-    // getSetting 返回的可控配置，「任务详情」入口按 Source 决定是否渲染
-    dispatcherState: { setting: { Source: 'ai' } as { Source: string } },
-  }))
+const {
+  mockEmit,
+  casualTaskState,
+  mockSyncCasualTaskTab,
+  mockOpenLogWindow,
+  mockExportModalState,
+  dispatcherState,
+  mockNetWorkApi,
+  mockIsCommunityEdition,
+} = vi.hoisted(() => ({
+  mockEmit: vi.fn(),
+  casualTaskState: { questionID: '' },
+  mockSyncCasualTaskTab: vi.fn(),
+  mockOpenLogWindow: vi.fn(),
+  mockExportModalState: { lastVisible: undefined as boolean | undefined },
+  // getSetting 返回的可控配置，「任务详情」入口按 Source 决定是否渲染
+  dispatcherState: { setting: { Source: 'ai' } as { Source: string } },
+  mockNetWorkApi: vi.fn<() => Promise<unknown>>(() => Promise.resolve(undefined)),
+  mockIsCommunityEdition: vi.fn(() => true),
+}))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: mockEmit, on: vi.fn(), off: vi.fn() } }))
+
+vi.mock('@/services/fetch', () => ({
+  NetWorkApi: mockNetWorkApi,
+}))
+vi.mock('@/utils/envfile', async () => {
+  const actual = (await vi.importActual('@/utils/envfile')) as Record<string, unknown>
+  return {
+    ...actual,
+    isCommunityEdition: () => mockIsCommunityEdition(),
+  }
+})
 
 // useCasualTaskTab / useAiChatLog / useDispatcher 的模块链含 electron IPC，统一 mock
 vi.mock('@/pages/ai-agent/aiChatContent/hooks/useCasualTaskTab', () => ({
@@ -128,6 +161,19 @@ vi.mock('@/utils/timeUtil', () => ({
 vi.mock('i18next-resources-to-backend', () => {
   const resources: Record<string, Record<string, unknown>> = {
     zh: {
+      yakitUi: {
+        YakitButton: {
+          close: '关闭',
+        },
+      },
+      layout: {
+        CeUserMenu: {
+          balance: '余额',
+          recharge: '充值',
+          unlimited: '无限制',
+          tokenRemaining: '剩余 Token',
+        },
+      },
       aiAgent: {
         AIRightPanel: {
           taskBoard: '任务详情看板',
@@ -143,12 +189,11 @@ vi.mock('i18next-resources-to-backend', () => {
           viewLog: '查看日志',
           collapse: '折叠',
           more: '更多',
-          duration: '执行时长',
-          toolCallStats: '工具调用统计',
-          success: '成功',
-          failed: '失败',
-          totalAttempts: '总尝试次数',
+          step: 'Step',
+          runtime: '运行时间',
+          toolCallCount: '工具调用数',
           running: '执行中',
+          loginToViewBalance: '登录查看余额',
         },
       },
     },
@@ -193,18 +238,132 @@ const renderPanel = async (ui: React.ReactElement) => {
 }
 
 const expectEmptyDataCards = () => {
-  expect(screen.getByText('执行时长')).toBeVisible()
-  expect(screen.getByText('执行时长').nextElementSibling).toHaveTextContent('—')
-  expect(screen.getByText('工具调用统计')).toBeVisible()
-  for (const label of ['成功', '失败', '总尝试次数']) {
-    expect(screen.getByText(label).previousElementSibling).toHaveTextContent('—')
-  }
+  expect(screen.getByText('运行时间')).toBeVisible()
+  expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('—')
+  expect(screen.getByText('Step')).toBeVisible()
+  expect(screen.getByText('Step').nextElementSibling).toHaveTextContent('—')
+  expect(screen.getByText('工具调用数')).toBeVisible()
+  expect(screen.getByText('工具调用数').nextElementSibling).toHaveTextContent('0')
+  expect(screen.getByTestId('main-model-tokens')).toBeInTheDocument()
 }
 
 describe('AIRightPanel', () => {
   beforeEach(() => {
     viewportState.visible = true
     mockAgentStore.setState({ activeChat: undefined })
+    mockTaskStore.setState({ execute: false })
+    useUserStore.getState().setStoreUserInfo({
+      ...useUserStore.getState().userInfo,
+      isLogin: false,
+    })
+    mockIsCommunityEdition.mockReturnValue(true)
+    mockNetWorkApi.mockReset()
+    mockNetWorkApi.mockResolvedValue(undefined)
+  })
+
+  describe('主模型 Tokens 登录入口', () => {
+    it('未登录显示登录查看余额，点击触发 onOpenLogin', async () => {
+      await renderPanel(<AIRightPanel />)
+      const btn = screen.getByRole('button', { name: '登录查看余额' })
+      expect(btn).toBeVisible()
+      fireEvent.click(btn)
+      expect(mockEmit).toHaveBeenCalledWith('onOpenLogin', '')
+    })
+
+    it('已登录无额度数据时不展示余额块', async () => {
+      useUserStore.getState().setStoreUserInfo({
+        ...useUserStore.getState().userInfo,
+        isLogin: true,
+      })
+      mockNetWorkApi.mockResolvedValue({ data: { apiKey: [] } })
+      await renderPanel(<AIRightPanel />)
+      await waitFor(() => {
+        expect(mockNetWorkApi).toHaveBeenCalled()
+      })
+      expect(screen.queryByTestId('ce-user-token-quota')).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: '登录查看余额' })).not.toBeInTheDocument()
+    })
+
+    it('已登录有额度时展示 CeUserMenu 同款余额块，充值触发 onOpenRecharge', async () => {
+      useUserStore.getState().setStoreUserInfo({
+        ...useUserStore.getState().userInfo,
+        isLogin: true,
+      })
+      mockNetWorkApi.mockResolvedValue({
+        data: {
+          apiKey: ['k'],
+          tokenUsed: 0,
+          tokenLimit: 100_000_000,
+          tokenLimitEnable: true,
+        },
+      })
+      await renderPanel(<AIRightPanel />)
+      await waitFor(() => {
+        expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument()
+      })
+      expect(screen.getByText(/余额/)).toBeVisible()
+      expect(screen.getByText('¥10')).toBeVisible()
+      expect(screen.getByText(/剩余 Token/)).toBeVisible()
+      expect(screen.getByText('100/100M')).toBeVisible()
+      fireEvent.click(screen.getByRole('button', { name: '充值' }))
+      expect(mockEmit).toHaveBeenCalledWith('onOpenRecharge', '')
+      fireEvent.click(screen.getByTestId('ce-user-token-quota'))
+      expect(mockEmit).toHaveBeenCalledWith('onOpenUsageStatistics', '')
+    })
+
+    it('polls apikeys every 10s while execute and stops after execute ends', async () => {
+      // Only fake interval APIs so RTL waitFor (setTimeout-based) still works.
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+      try {
+        useUserStore.getState().setStoreUserInfo({
+          ...useUserStore.getState().userInfo,
+          isLogin: true,
+        })
+        mockNetWorkApi.mockResolvedValue({
+          data: {
+            apiKey: ['k'],
+            tokenUsed: 0,
+            tokenLimit: 100_000_000,
+            tokenLimitEnable: true,
+          },
+        })
+        mockTaskStore.setState({ execute: true })
+
+        const result = await renderPanel(<AIRightPanel />)
+        try {
+          await waitFor(() => expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument())
+          await waitFor(() => expect(mockNetWorkApi.mock.calls.length).toBeGreaterThanOrEqual(1))
+          const afterStart = mockNetWorkApi.mock.calls.length
+
+          await act(async () => {
+            await vi.advanceTimersByTimeAsync(10_000)
+          })
+          expect(mockNetWorkApi.mock.calls.length).toBe(afterStart + 1)
+
+          await act(async () => {
+            await vi.advanceTimersByTimeAsync(10_000)
+          })
+          expect(mockNetWorkApi.mock.calls.length).toBe(afterStart + 2)
+
+          await act(async () => {
+            mockTaskStore.setState({ execute: false })
+          })
+          // execute=false re-runs effect: one trailing fetch, interval cleared
+          await waitFor(() => expect(mockNetWorkApi.mock.calls.length).toBe(afterStart + 3))
+
+          const afterEnd = mockNetWorkApi.mock.calls.length
+          await act(async () => {
+            await vi.advanceTimersByTimeAsync(20_000)
+          })
+          expect(mockNetWorkApi.mock.calls.length).toBe(afterEnd)
+        } finally {
+          result.unmount()
+          resetMockStore()
+        }
+      } finally {
+        vi.useRealTimers()
+      }
+    })
   })
 
   describe('首页模式', () => {
@@ -245,7 +404,7 @@ describe('AIRightPanel', () => {
         for (const label of ['任务详情看板', '任务列表', '更多', '时间线', '导出日志', '查看日志']) {
           expect(screen.queryByLabelText(label)).not.toBeInTheDocument()
         }
-        expect(screen.queryByText('执行时长')).not.toBeInTheDocument()
+        expect(screen.queryByText('运行时间')).not.toBeInTheDocument()
         expect(screen.queryByText('工具调用统计')).not.toBeInTheDocument()
         fireEvent.click(screen.getByLabelText('会话历史'))
         expect(mockEmit).toHaveBeenCalledWith(
@@ -411,7 +570,7 @@ describe('AIRightPanel', () => {
     fireEvent.click(screen.getByLabelText('更多'))
     fireEvent.click(screen.getByLabelText('时间线'))
     expect(screen.getByTestId('timeline-pane')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button'))
+    fireEvent.click(screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ }))
     expect(screen.queryByTestId('timeline-pane')).not.toBeInTheDocument()
     expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
   })
@@ -428,7 +587,7 @@ describe('AIRightPanel', () => {
     expect(screen.getByTestId('timeline-pane')).toBeInTheDocument()
     fireEvent.mouseLeave(timelineItem)
     expect(screen.getByTestId('timeline-pane')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button'))
+    fireEvent.click(screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ }))
     expect(screen.queryByTestId('timeline-pane')).not.toBeInTheDocument()
   })
   it('正常态点击任务列表替换菜单，关闭后恢复菜单', async () => {
@@ -438,7 +597,7 @@ describe('AIRightPanel', () => {
     expect(screen.getByLabelText('文件系统').parentElement?.parentElement?.parentElement?.className).toContain(
       'right-panel-hidden',
     )
-    fireEvent.click(screen.getByRole('button'))
+    fireEvent.click(screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ }))
     expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
     expect(screen.getByLabelText('文件系统').parentElement?.parentElement?.parentElement?.className).not.toContain(
       'right-panel-hidden',
@@ -454,7 +613,7 @@ describe('AIRightPanel', () => {
     fireEvent.mouseLeave(item)
     fireEvent.mouseLeave(pane)
     expect(screen.getByTestId('task-list-pane')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button'))
+    fireEvent.click(screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ }))
     expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
     expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
   })
@@ -487,10 +646,11 @@ describe('AIRightPanel', () => {
     })
     const result = await renderPanel(<AIRightPanel />)
     try {
-      expect(screen.getByText('执行时长')).toBeInTheDocument()
-      // timeDiffWithMoment mock 返回差值 "6000s"
-      expect(screen.getByText('6000s')).toBeInTheDocument()
-      expect(screen.getByText('工具调用统计')).toBeInTheDocument()
+      expect(screen.getByText('运行时间')).toBeInTheDocument()
+      // timeDiffWithMoment mock 返回差值 "6000s"；Step 与运行时间均展示时长
+      expect(screen.getAllByText('6000s').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText('工具调用数')).toBeInTheDocument()
+      expect(screen.getByTestId('main-model-tokens')).toBeInTheDocument()
       expect(screen.getByText('任务详情看板')).toBeInTheDocument()
       expect(screen.getByText('文件系统')).toBeInTheDocument()
       expect(screen.getByText('会话历史')).toBeInTheDocument()
@@ -519,7 +679,7 @@ describe('AIRightPanel', () => {
 
   it('small 强制小屏态：仅图标，不渲染数据卡片与文案', () => {
     render(<AIRightPanel small />)
-    expect(screen.queryByText('执行时长')).not.toBeInTheDocument()
+    expect(screen.queryByText('运行时间')).not.toBeInTheDocument()
     expect(screen.queryByText('任务详情看板')).not.toBeInTheDocument()
     expect(screen.queryByText('更多')).not.toBeInTheDocument()
   })
@@ -643,10 +803,10 @@ describe('AIRightPanel', () => {
     const result = await renderPanel(<AIRightPanel />)
     try {
       const riskButton = screen.getByLabelText('漏洞')
-      // 仅展示非零等级：严重 2、低危 1
+      // 仅展示非零等级：严重 2、低危 1（工具调用数可能展示 0，故限定在漏洞入口内断言）
       expect(riskButton).toContainElement(screen.getByText('2'))
       expect(riskButton).toContainElement(screen.getByText('1'))
-      expect(screen.queryByText('0')).not.toBeInTheDocument()
+      expect(riskButton.textContent || '').not.toMatch(/(^|[｜])0([｜]|$)/)
     } finally {
       result.unmount()
       resetMockStore()
@@ -901,13 +1061,10 @@ describe('AIRightPanel', () => {
     })
     const result = await renderPanel(<AIRightPanel />)
     try {
-      // timeDiffWithMoment mock 返回差值 "6000s"
-      expect(screen.getByText('6000s')).toBeInTheDocument()
-      // 统计值与其 label 同属一个 stat 块，经 label 定位避免与 risk 角标写死值（4｜6｜1｜3｜8）撞车
-      const statValue = (label: string) => screen.getByText(label).previousElementSibling?.textContent
-      expect(statValue('成功')).toBe('3')
-      expect(statValue('失败')).toBe('1')
-      expect(statValue('总尝试次数')).toBe('4')
+      // timeDiffWithMoment mock 返回差值 "6000s"；Step 与运行时间均展示时长
+      expect(screen.getAllByText('6000s').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText('工具调用数').nextElementSibling).toHaveTextContent('4')
+      expect(screen.getByTestId('main-model-tokens')).toBeInTheDocument()
 
       // 当前任务无执行数据时保留卡片，旧统计值替换为占位符。
       act(() => setMockQuestionID('task-without-data'))
@@ -934,9 +1091,9 @@ describe('AIRightPanel', () => {
     mockTaskDetailsMap.set('task-empty', { uuid: 'uuid-empty' })
     const result = await renderPanel(<AIRightPanel />)
     try {
-      // 有 started_at 无 ended_at：执行中
-      expect(screen.getByText('执行中')).toBeInTheDocument()
-      expect(screen.getByText('失败').previousElementSibling).toHaveTextContent('0')
+      // 有 started_at 无 ended_at：执行中（Step 与运行时间各一处）
+      expect(screen.getAllByText('执行中').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText('工具调用数').nextElementSibling).toHaveTextContent('2')
 
       // 仅更新 store，由父级订阅自动刷新传参，不手动重渲染或重新挂载卡片。
       act(() => {
@@ -945,8 +1102,8 @@ describe('AIRightPanel', () => {
       expectEmptyDataCards()
       expect(screen.queryByText('执行中')).not.toBeInTheDocument()
       act(() => setMockQuestionID('task-2'))
-      expect(screen.getByText('执行中')).toBeInTheDocument()
-      expect(screen.getByText('成功').previousElementSibling).toHaveTextContent('2')
+      expect(screen.getAllByText('执行中').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText('工具调用数').nextElementSibling).toHaveTextContent('2')
     } finally {
       result.unmount()
       resetMockStore()
@@ -962,7 +1119,7 @@ describe('AIRightPanel', () => {
     mockTaskDetailsMap.set('task-3', taskDetails)
     const result = await renderPanel(<AIRightPanel />)
     try {
-      expect(screen.getByText('执行中')).toBeInTheDocument()
+      expect(screen.getAllByText('执行中').length).toBeGreaterThanOrEqual(1)
 
       // session_snapshot 保留详情对象引用并替换 execution，靠 uuid 轮询（3s 间隔）感知更新。
       taskDetails.uuid = 'uuid-3b'
@@ -974,10 +1131,10 @@ describe('AIRightPanel', () => {
         tool_call_total: 7,
       }
       // 轮询间隔 3s，超时放宽到 5s 预留余量，避免慢环境下 flaky
-      await waitFor(() => expect(screen.getByText('8000s')).toBeInTheDocument(), { timeout: 5000 })
-      expect(screen.getByText('5')).toBeInTheDocument()
-      expect(screen.getByText('2')).toBeInTheDocument()
-      expect(screen.getByText('7')).toBeInTheDocument()
+      await waitFor(() => expect(screen.getAllByText('8000s').length).toBeGreaterThanOrEqual(1), {
+        timeout: 5000,
+      })
+      expect(screen.getByText('工具调用数').nextElementSibling).toHaveTextContent('7')
     } finally {
       result.unmount()
       resetMockStore()

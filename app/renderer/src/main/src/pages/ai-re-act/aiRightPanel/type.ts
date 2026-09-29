@@ -17,13 +17,6 @@ export type AIRightPanelMenuKey =
   | 'export-log'
   | 'view-log'
 
-/** 工具调用统计 */
-export interface AIRightPanelToolStats {
-  success?: number
-  failed?: number
-  total?: number
-}
-
 /** 漏洞各等级计数，展示顺序为 严重/高危/中危/低危/信息，等级色走主题 Status 语义色 */
 export interface AIRightPanelRiskCounts {
   serious?: number

@@ -747,6 +747,8 @@ export declare namespace AIAgentGrpcApi {
         total: number
       }
       modified_file_count: number
+      /** 后端快照上报的 ReAct 主循环迭代轮数 */
+      execution_rounds?: number
     }
     background_processes: {
       type: 'browser' // 枚举，目前值只有 browser

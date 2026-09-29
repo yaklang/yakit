@@ -119,4 +119,77 @@ describe('aiTaskDetail handlers', () => {
 
     expect(req.rawData.taskDetailsMap.has(taskId)).toBe(false)
   })
+
+  it('current_task_todo_list_update records iteration_index as step', () => {
+    const taskId = 'task-iteration-todo'
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'current_task_todo_list_update',
+        { items: [], task_id: taskId, iteration_index: 7 },
+        { NodeId: 'current_task_todo_list', TaskId: taskId },
+      ),
+    })
+    aiTaskDetailDataHandlers.current_task_todo_list_update(req)
+    expect(req.rawData.taskDetailsMap.get(taskId)?.execution?.execution_rounds).toBe(7)
+  })
+
+  it('session_snapshot keeps client-side step when overwriting execution', () => {
+    const taskId = 'task-iteration-snapshot'
+    const todoReq = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'current_task_todo_list_update',
+        { items: [], task_id: taskId, iteration_index: 5 },
+        { NodeId: 'current_task_todo_list', TaskId: taskId },
+      ),
+    })
+    aiTaskDetailDataHandlers.current_task_todo_list_update(todoReq)
+
+    const snapshotReq = makeHandlerRequest({
+      rawData: todoReq.rawData,
+      store: todoReq.store,
+      res: makeGrpcJsonRes(
+        'structured',
+        { revision: 1, execution: { http_flow_count: 1 }, background_processes: [] },
+        { NodeId: 'session_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.session_snapshot(snapshotReq)
+
+    const detail = todoReq.rawData.taskDetailsMap.get(taskId)
+    expect(detail?.execution?.http_flow_count).toBe(1)
+    expect(detail?.execution?.execution_rounds).toBe(5)
+  })
+
+  it('session_snapshot merges execution_rounds into step and never regresses', () => {
+    const taskId = 'task-snapshot-rounds'
+    const firstReq = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { revision: 1, execution: { http_flow_count: 1, execution_rounds: 6 }, background_processes: [] },
+        { NodeId: 'session_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+    const { rawData } = firstReq
+    const makeFollowUpReq = (revision: number, execution_rounds: number) =>
+      makeHandlerRequest({
+        rawData,
+        res: makeGrpcJsonRes(
+          'structured',
+          { revision, execution: { http_flow_count: 1, execution_rounds }, background_processes: [] },
+          { NodeId: 'session_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+        ),
+      })
+
+    // 快照自带的 execution_rounds 应写入 step
+    aiTaskDetailDataHandlers.session_snapshot(firstReq)
+    expect(rawData.taskDetailsMap.get(taskId)?.execution?.execution_rounds).toBe(6)
+
+    // 后续快照 execution_rounds 变小时(事件乱序/回放)不回退已记录的步数
+    aiTaskDetailDataHandlers.session_snapshot(makeFollowUpReq(2, 4))
+    expect(rawData.taskDetailsMap.get(taskId)?.execution?.execution_rounds).toBe(6)
+
+    // execution_rounds 变大时正常前进
+    aiTaskDetailDataHandlers.session_snapshot(makeFollowUpReq(3, 9))
+    expect(rawData.taskDetailsMap.get(taskId)?.execution?.execution_rounds).toBe(9)
+  })
 })

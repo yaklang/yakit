@@ -49,6 +49,8 @@ export type GlobalEventProps = {
   onOpenLogin: string
   /** 打开充值弹窗，未登录时先登录 */
   onOpenRecharge: string
+  /** 打开 CE 用量统计弹窗 */
+  onOpenUsageStatistics: string
   /** 菜单栏设置菜单选项 */
   onUIOpSettingMenuSelect: string
 }

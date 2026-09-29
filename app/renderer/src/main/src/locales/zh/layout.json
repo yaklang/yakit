@@ -337,7 +337,7 @@
     "remoteControlClosing": "远程控制关闭中..."
   },
   "CeUserMenu": {
-    "tokenConsumption": "Token 消耗",
+    "tokenRemaining": "剩余 Token",
     "balance": "余额",
     "recharge": "充值",
     "usageStatistics": "使用统计",

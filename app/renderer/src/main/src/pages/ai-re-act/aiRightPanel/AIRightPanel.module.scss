@@ -262,8 +262,13 @@
 .data-cards {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   padding: 4px 0 8px;
+}
+
+// 顶部三指标卡横向排列
+.data-cards-row {
+  width: 100%;
 }
 
 .data-card {
@@ -278,18 +283,76 @@
   box-sizing: border-box;
 }
 
-.data-card-stats {
-  border-radius: 6px;
+// 顶部三指标卡：等分宽度；内容为数值在上、文案在下
+.data-card-metric {
+  flex: 1;
+  min-width: 0;
+
+  .data-card-row {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px 10px;
+  }
+
+  .data-card-value {
+    order: -1;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 22px;
+  }
+
+  .data-card-label {
+    font-size: 12px;
+    line-height: 16px;
+  }
+}
+
+.data-card-step {
+  background: var(--Colors-Use-Magenta-Bg);
+  border-color: var(--Colors-Use-Magenta-Bg-Hover);
+
+  .data-card-accent {
+    background: var(--Colors-Use-Magenta-Border);
+  }
+
+  .data-card-value {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+
+  .data-card-label {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+}
+
+// 运行时间：浅橙底 + 橙色色条/文案
+.data-card-duration {
+  background: var(--Colors-Use-Warning-Bg-Hover);
+  border-color: var(--Colors-Use-Warning-Focus);
+
+  .data-card-accent {
+    background: var(--Colors-Use-Warning-Border);
+  }
+}
+
+// 工具调用数：浅绿底 + 绿色色条/文案
+.data-card-tool {
+  background: var(--Colors-Use-Green-Bg);
+  border-color: var(--Colors-Use-Green-Bg-Hover);
+
+  .data-card-accent {
+    background: var(--Colors-Use-Green-Border);
+  }
+  .data-card-value {
+    color: var(--Colors-Use-Success-Primary);
+  }
 }
 
 .data-card-accent {
   flex: none;
   width: 2px;
   background: var(--yakit-colors-Lake-blue-50);
-}
-
-.data-card-accent-blue {
-  background: var(--yakit-colors-Blue-50);
 }
 
 .data-card-row {
@@ -313,49 +376,42 @@
   color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 
-.data-card-body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-}
+// 主模型 Tokens 卡：复用 AITokens 样式，在右侧面板占满一行
+.main-model-token {
+  width: 100%;
+  min-width: 0;
+  background-color: var(--Colors-Use-Basic-Background);
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 12px;
+  &-content {
+    border-color: transparent;
+    background-color: transparent;
+  }
 
-.stats-title {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 20px;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-}
+  &-quota {
+    width: 100%;
+    margin: 0;
+    border-radius: 0 0 12px 12px;
+    border: none;
+    border-top: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+    cursor: default;
+    background-color: var(--Colors-Use-Basic-Background);
+  }
 
-.stats-row {
-  display: flex;
-  gap: 20px;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stat-value {
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 24px;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-}
-
-.stat-value-success {
-  color: var(--Colors-Use-Success-Primary);
-}
-
-.stat-value-failed {
-  color: var(--Colors-Use-Error-Primary);
-}
-
-.stat-label {
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  &-login {
+    height: 28px;
+    padding: 6px 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: var(--Colors-Use-Main-Bg);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--Colors-Use-Main-Primary);
+    border-radius: 0 0 12px 12px;
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
 }

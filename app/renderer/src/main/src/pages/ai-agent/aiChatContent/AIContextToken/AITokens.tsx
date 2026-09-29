@@ -19,6 +19,7 @@ interface AITokensProps {
   aiModel?: AIModelConfig
   modelConsumption?: AIAgentGrpcApi.AIModelConsumptionStats[]
   fallbackConsumption?: AIAgentGrpcApi.AIConsumptionStats
+  className?: string
 }
 
 const thinkingLevelKeys: Record<string, string> = {
@@ -40,7 +41,13 @@ export const getThinkingLevelLabel = (t: TFunction, thinkingLevel?: string) => {
 const getModelKey = (model: AIAgentGrpcApi.AIModelConsumptionStats) =>
   JSON.stringify([model.provider_type || '', model.model_name || '', model.thinking_level || ''])
 
-const AITokens: React.FC<AITokensProps> = ({ modelType, aiModel, modelConsumption, fallbackConsumption }) => {
+const AITokens: React.FC<AITokensProps> = ({
+  modelType,
+  aiModel,
+  modelConsumption,
+  fallbackConsumption,
+  className,
+}) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const [open, setOpen] = useState(false)
   const modelList = useCreation<AIAgentGrpcApi.AIModelConsumptionStats[]>(() => {
@@ -94,7 +101,7 @@ const AITokens: React.FC<AITokensProps> = ({ modelType, aiModel, modelConsumptio
   }, [selectedModel, fallbackConsumption])
 
   return (
-    <div className={styles['ai-tokens']}>
+    <div className={classNames(styles['ai-tokens'], className)}>
       <div className={styles['ai-tokens-heard']}>
         <span className={styles['title']}>{modelType}</span>
         <div className={styles['model-list']}>
