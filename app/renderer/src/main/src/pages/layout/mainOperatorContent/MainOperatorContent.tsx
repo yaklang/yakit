@@ -131,6 +131,7 @@ import {
 } from '@/store/pageInfo'
 import { safeParseFuzzerCache, sanitizeFuzzerCachePageParams } from '@/store/parseFuzzerCache'
 import { adoptOrphanCacheTabs } from './adoptOrphanCacheTabs'
+import { useOpenAIAgentPage } from './useOpenAIAgentPage'
 import cloneDeep from 'lodash/cloneDeep'
 import { onToManageGroup } from '@/pages/securityTool/yakPoC/YakPoC'
 import { apiFetchQueryYakScriptGroupLocal } from '@/pages/plugins/utils'
@@ -316,16 +317,6 @@ const getAIAgentNextTabIndex = (pages: PageCache[]) => {
     if (match) max = Math.max(max, parseInt(match[1], 10))
   })
   return max + 1
-}
-
-/** 历史会话已在某个 AI Agent Tab 中则返回该 Tab */
-const findAIAgentTabBySessionId = (pages: PageCache[], sessionId: string, ownerPageId?: string) => {
-  if (!sessionId) return undefined
-  return pages.find((item) => {
-    if (item.route !== YakitRoute.AI_Agent) return false
-    if (item.pageParams?.aiAgentPageInfo?.session?.SessionID === sessionId) return true
-    return !!(ownerPageId && (item.pageParams?.id || item.routeKey) === ownerPageId)
-  })
 }
 
 /** 一级 Tab 内容已真实挂载：非空且不是懒加载占位文案（i18n 占位由调用方传入） */
@@ -2667,33 +2658,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setCurrentTabKey(tabId)
   })
 
-  const aiAgentOpenRequest = useRef(0)
-  useEffect(
-    () => () => {
-      // 切换一级页或卸载后，旧的等待请求不能再抢占当前页面。
-      aiAgentOpenRequest.current++
-    },
-    [currentTabKey],
-  )
-  const openAIAgentPage = useMemoizedFn(async (pageParams?: ComponentParams) => {
-    const request = ++aiAgentOpenRequest.current
-    const sessionId = pageParams?.aiAgentPageInfo?.session?.SessionID || ''
-    if (sessionId) {
-      const ownerPageId = globalSessionEngine.getSessionPageId(sessionId, YakitRoute.AI_Agent)
-      const existing = findAIAgentTabBySessionId(pageCache, sessionId, ownerPageId)
-      if (existing) {
-        setCurrentTabKey(existing.routeKey)
-        return
-      }
-      const pendingPageId = await globalSessionEngine.waitForSessionPageId(sessionId, YakitRoute.AI_Agent)
-      if (request !== aiAgentOpenRequest.current) return
-      const pendingTab = findAIAgentTabBySessionId(getPageCache(), sessionId, pendingPageId)
-      if (pendingTab) {
-        setCurrentTabKey(pendingTab.routeKey)
-        return
-      }
-    }
-    openAIAgentExtraTab(pageParams)
+  const openAIAgentPage = useOpenAIAgentPage({
+    currentTabKey,
+    pageCache,
+    getPageCache,
+    setCurrentTabKey,
+    openAIAgentExtraTab,
   })
 
   /** @name 打开页面 */
