@@ -1565,7 +1565,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // 监听其他页面触发的打开引擎Console事件（例如 MITM 热加载页）
   useEffect(() => {
-    const onOpenEngineConsole = (type?: 'float' | 'left' | 'right' | 'bottom') => {
+    const onOpenEngineConsole = (type?: EngineConsoleOpenType) => {
       const safeType = type || 'float'
       onOpenConsole(safeType)
     }

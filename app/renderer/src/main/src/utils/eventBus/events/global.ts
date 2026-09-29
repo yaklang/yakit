@@ -1,3 +1,4 @@
+import type { EngineConsoleOpenType } from '@/components/layout/FuncDomain'
 import { YakitRoute } from '@/enums/yakitRoute'
 
 export type GlobalEventProps = {
@@ -52,5 +53,5 @@ export type GlobalEventProps = {
   /** 菜单栏设置菜单选项 */
   onUIOpSettingMenuSelect: string
   /** 打开引擎Console（按上次缓存的方式：float/left/right/bottom） */
-  openEngineConsole?: 'float' | 'left' | 'right' | 'bottom'
+  openEngineConsole?: EngineConsoleOpenType
 }
