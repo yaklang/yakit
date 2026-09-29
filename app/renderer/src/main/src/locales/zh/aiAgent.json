@@ -815,7 +815,8 @@
   },
   "AIMilkdownInput": {
     "placeholder": "向我提问，@使用技能、工具、文件和知识库，/选择模式",
-    "selectedHttpFlowSummary": "勾选了 {{count}} 条流量"
+    "selectedHttpFlowSummary": "勾选了 {{count}} 条流量",
+    "imagesNotSaved": "图片尚未保存完成，请稍后重试；若保存失败，请移除失败图片后重新上传"
   },
   "AIMilkdownModeSlash": {
     "selectMode": "请选择模式",

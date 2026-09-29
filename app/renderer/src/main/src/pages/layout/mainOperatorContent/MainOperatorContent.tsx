@@ -2667,13 +2667,29 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setCurrentTabKey(tabId)
   })
 
-  const openAIAgentPage = useMemoizedFn((pageParams?: ComponentParams) => {
+  const aiAgentOpenRequest = useRef(0)
+  useEffect(
+    () => () => {
+      // 切换一级页或卸载后，旧的等待请求不能再抢占当前页面。
+      aiAgentOpenRequest.current++
+    },
+    [currentTabKey],
+  )
+  const openAIAgentPage = useMemoizedFn(async (pageParams?: ComponentParams) => {
+    const request = ++aiAgentOpenRequest.current
     const sessionId = pageParams?.aiAgentPageInfo?.session?.SessionID || ''
     if (sessionId) {
       const ownerPageId = globalSessionEngine.getSessionPageId(sessionId, YakitRoute.AI_Agent)
       const existing = findAIAgentTabBySessionId(pageCache, sessionId, ownerPageId)
       if (existing) {
         setCurrentTabKey(existing.routeKey)
+        return
+      }
+      const pendingPageId = await globalSessionEngine.waitForSessionPageId(sessionId, YakitRoute.AI_Agent)
+      if (request !== aiAgentOpenRequest.current) return
+      const pendingTab = findAIAgentTabBySessionId(getPageCache(), sessionId, pendingPageId)
+      if (pendingTab) {
+        setCurrentTabKey(pendingTab.routeKey)
         return
       }
     }

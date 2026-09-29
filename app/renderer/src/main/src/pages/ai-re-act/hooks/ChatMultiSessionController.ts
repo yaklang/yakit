@@ -228,6 +228,9 @@ type SessionConnection = {
   sessionId?: string
   /** 握手期间收到的 ID，用于检查不同事件返回的 ID 是否一致。 */
   receivedSessionId?: string
+  /** 首次收到有效 ID 或连接结束时释放历史打开请求，无需等待完整绑定。 */
+  identityReady: Promise<void>
+  resolveIdentity: () => void
   /** 保留草稿 ID 和页面归属，失败后取消、关页时仍需使用。 */
   input: AIChatIPCStartParams
   data: ReturnType<ChatMultiSessionController['ensureSession']>
@@ -316,6 +319,7 @@ export class ChatMultiSessionController {
 
   /** 移除计时器和 IPC 监听；keepPending 仅保留失败记录，不继续接收事件。 */
   private releaseConnection(connection: SessionConnection, keepPending = false) {
+    connection.resolveIdentity()
     if (connection.timer) clearTimeout(connection.timer)
     for (const suffix of ['data', 'end', 'error']) ipcRenderer.removeAllListeners(`${connection.token}-${suffix}`)
     if (!keepPending) this.connectionsByToken.delete(connection.token)
@@ -388,6 +392,7 @@ export class ChatMultiSessionController {
       if (connection.sessionId && id !== connection.sessionId)
         throw new Error(tAgent('ChatSessionNotify.reconnectSessionIdMismatch'))
       connection.receivedSessionId = id
+      connection.resolveIdentity()
     }
     if (res.Type !== 'pong') {
       // 即使事件已带 SessionId，也先等待 pong 确认，避免提前落库或触发业务回调。
@@ -680,14 +685,42 @@ export class ChatMultiSessionController {
     return sessionIds.filter((sessionId) => this.getSessionExecute(sessionId))
   }
 
-  /**
-   * 只读查询 session 归属 pageId；可选按 route 过滤。未注册返回 undefined
-   */
+  /** 只读查询正式会话或已获知 ID 的 pending 归属，不创建会话数据。 */
   public getSessionPageId(sessionId: string, route?: YakitRouteType): string | undefined {
     const owner = this.sessionOwnerMap.get(sessionId)
-    if (!owner) return undefined
-    if (route && owner.route !== route) return undefined
-    return owner.pageId
+    if (owner) return !route || owner.route === route ? owner.pageId : undefined
+    for (const connection of this.connectionsByToken.values()) {
+      const { lifecycle } = connection.data.meta
+      if (
+        !connection.sessionId &&
+        connection.receivedSessionId === sessionId &&
+        lifecycle.current &&
+        !lifecycle.closing &&
+        (!route || connection.input.route === route)
+      ) {
+        return connection.input.pageId
+      }
+    }
+    return undefined
+  }
+
+  /** 历史可能先于握手可见；只等待本次查询时身份未知的连接，防止提前恢复同一会话。 */
+  public async waitForSessionPageId(sessionId: string, route: YakitRouteType): Promise<string | undefined> {
+    let pending = [...this.connectionsByToken.values()].filter(
+      (connection) => !connection.sessionId && connection.input.route === route,
+    )
+    while (true) {
+      const pageId = this.getSessionPageId(sessionId, route)
+      if (pageId) return pageId
+      pending = pending.filter(
+        (connection) =>
+          !connection.receivedSessionId &&
+          connection.data.meta.lifecycle.current &&
+          !connection.data.meta.lifecycle.closing,
+      )
+      if (!pending.length) return undefined
+      await Promise.race(pending.map((connection) => connection.identityReady))
+    }
   }
 
   /**
@@ -1222,7 +1255,13 @@ export class ChatMultiSessionController {
       initLoading: kind === 'resume',
       pendingReply: !!data.meta.createChatQuestion,
     })
+    let resolveIdentity!: () => void
+    const identityReady = new Promise<void>((resolve) => {
+      resolveIdentity = resolve
+    })
     connection = {
+      identityReady,
+      resolveIdentity,
       token,
       sessionId,
       // 图片目录按协议 Source 映射；localSource 仅用于本地归属索引。

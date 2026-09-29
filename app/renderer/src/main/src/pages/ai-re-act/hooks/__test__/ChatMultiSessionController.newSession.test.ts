@@ -540,6 +540,141 @@ describe('backend allocated session identity', () => {
     unsubscribe()
   })
 
+  it('locates the pending tab by a received ID before pong without registering a session', async () => {
+    const token = await start('first question', 'pending-tab')
+    expect(controller.getSessionPageId('early-session', YakitRoute.AI_Agent)).toBeUndefined()
+    await emit(token, 'notify', 'early-session')
+
+    expect(controller.getSessionPageId('early-session', YakitRoute.AI_Agent)).toBe('pending-tab')
+    expect(controller.getSessionPageId('early-session')).toBe('pending-tab')
+    expect(controller.getSessionPageId('early-session', YakitRoute.HTTPFuzzer)).toBeUndefined()
+    expect(controller.getSessionPageId('unrelated', YakitRoute.AI_Agent)).toBeUndefined()
+    expect(controller.sessionStores.getState().has('early-session')).toBe(false)
+    expect(controller.isSessionReady('early-session')).toBe(false)
+    expect(success).not.toHaveBeenCalled()
+    expect(ipcRendererMock.invoke.mock.calls.filter(([, , request]) => request?.IsFreeInput)).toHaveLength(0)
+
+    await emit(token, 'pong', 'early-session')
+    expect(controller.getSessionPageId('early-session', YakitRoute.AI_Agent)).toBe('pending-tab')
+    expect(success).toHaveBeenCalledExactlyOnceWith('early-session')
+    expect(ipcRendererMock.invoke.mock.calls.filter(([, , request]) => request?.IsFreeInput)).toHaveLength(1)
+  })
+
+  it.each(['cancel', 'timeout', 'mismatch'] as const)(
+    'does not locate a pending tab after %s, while another pending tab remains available',
+    async (reason) => {
+      const first = await start('first', 'first-tab')
+      await emit(first, 'notify', 'first-id')
+      if (reason === 'timeout') await vi.advanceTimersByTimeAsync(30000)
+      if (reason === 'cancel') controller.cancelPendingConnection(first)
+      if (reason === 'mismatch') await emit(first, 'pong', 'different-id')
+      const second = await start('second', 'second-tab')
+      await emit(second, 'notify', 'second-id')
+
+      expect(controller.getSessionPageId('first-id', YakitRoute.AI_Agent)).toBeUndefined()
+      expect(controller.getSessionPageId('different-id', YakitRoute.AI_Agent)).toBeUndefined()
+      expect(controller.getSessionPageId('second-id', YakitRoute.AI_Agent)).toBe('second-tab')
+      expect(controller.sessionStores.getState().size).toBe(0)
+    },
+  )
+
+  it('releases a history lookup on the first matching received ID without waiting for pong or other connections', async () => {
+    const first = await start('first', 'first-tab')
+    await start('second', 'second-tab')
+    const resolved = vi.fn()
+    const lookup = controller.waitForSessionPageId('first-id', YakitRoute.AI_Agent).then(resolved)
+    await tick()
+    expect(resolved).not.toHaveBeenCalled()
+
+    await emit(first, 'notify', 'first-id')
+    await lookup
+    expect(resolved).toHaveBeenCalledExactlyOnceWith('first-tab')
+    expect(success).not.toHaveBeenCalled()
+    expect(controller.sessionStores.getState().size).toBe(0)
+    await emit(first, 'pong', 'first-id')
+    expect(success).toHaveBeenCalledExactlyOnceWith('first-id')
+  })
+
+  it('waits for all initially unknown identities before allowing an unrelated history to open', async () => {
+    const first = await start('first', 'first-tab')
+    const second = await start('second', 'second-tab')
+    const resolved = vi.fn()
+    const lookup = controller.waitForSessionPageId('history-id', YakitRoute.AI_Agent).then(resolved)
+    await emit(first, 'notify', 'first-id')
+    expect(resolved).not.toHaveBeenCalled()
+    await emit(second, 'notify', 'second-id')
+    await lookup
+    expect(resolved).toHaveBeenCalledExactlyOnceWith(undefined)
+    expect(controller.sessionStores.getState().size).toBe(0)
+  })
+
+  it.each(['cancel', 'timeout', 'unload', 'error', 'end'] as const)(
+    'releases an unknown-identity lookup after %s',
+    async (reason) => {
+      const token = await start()
+      const lookup = controller.waitForSessionPageId('history-id', YakitRoute.AI_Agent)
+      if (reason === 'cancel') controller.cancelPendingConnection(token)
+      if (reason === 'timeout') await vi.advanceTimersByTimeAsync(30000)
+      if (reason === 'unload') await controller.onPageUnload(YakitRoute.AI_Agent, 'page')
+      if (reason === 'error' || reason === 'end') {
+        const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-${reason}`)![1]
+        listener({}, new Error('connection stopped'))
+      }
+      await expect(lookup).resolves.toBeUndefined()
+      expect(controller.sessionStores.getState().size).toBe(0)
+    },
+  )
+
+  it('does not wait for already known identities, existing history tabs or another route', async () => {
+    const known = await start('known', 'known-tab')
+    await emit(known, 'notify', 'known-id')
+    await start('unknown', 'unknown-tab')
+    await expect(controller.waitForSessionPageId('known-id', YakitRoute.AI_Agent)).resolves.toBe('known-tab')
+    await expect(controller.waitForSessionPageId('other-route', YakitRoute.HTTPFuzzer)).resolves.toBeUndefined()
+
+    controller.handleStartSession({
+      kind: 'resume',
+      sessionId: 'history-id',
+      route: YakitRoute.AI_Agent,
+      pageId: 'history-tab',
+      params: { IsStart: true, Params: { Source: 'ai' } },
+    })
+    await expect(controller.waitForSessionPageId('history-id', YakitRoute.AI_Agent)).resolves.toBe('history-tab')
+    const closing = controller.onPageUnload(YakitRoute.AI_Agent, 'history-tab')
+    await vi.advanceTimersByTimeAsync(5000)
+    await closing
+  })
+
+  it('locates the pending tab while image adoption is still running', async () => {
+    let finishAdoption!: (paths: Record<string, string>) => void
+    ipcRendererMock.invoke.mockImplementation(async (method) => {
+      if (method === 'adopt-ai-images')
+        return new Promise((resolve) => {
+          finishAdoption = resolve
+        })
+    })
+    const token = controller.handleStartSession(
+      {
+        kind: 'new',
+        draftId: 'image-draft',
+        route: YakitRoute.AI_Agent,
+        pageId: 'image-tab',
+        params: { IsStart: true, Params: { Source: 'ai', UserQuery: 'image question' } },
+      },
+      { onLinkSuccess: success, onPendingChange: (pending) => pendings.set(pending.streamToken, pending) },
+    ) as string
+    await tick()
+    const lookup = controller.waitForSessionPageId('image-session', YakitRoute.AI_Agent)
+    await emit(token, 'pong', 'image-session')
+    await expect(lookup).resolves.toBe('image-tab')
+    expect(controller.getSessionPageId('image-session', YakitRoute.AI_Agent)).toBe('image-tab')
+    expect(controller.sessionStores.getState().has('image-session')).toBe(false)
+    expect(success).not.toHaveBeenCalled()
+    finishAdoption({})
+    await tick()
+    expect(success).toHaveBeenCalledExactlyOnceWith('image-session')
+  })
+
   it('refuses an already registered backend ID without replacing its store', async () => {
     const existing = controller.ensureSession('existing')
     const token = await start()

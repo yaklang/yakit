@@ -815,7 +815,8 @@
   },
   "AIMilkdownInput": {
     "placeholder": "Ask me anything, @ for skills/tools/files/knowledge, / for mode",
-    "selectedHttpFlowSummary": "Selected {{count}} HTTP flows"
+    "selectedHttpFlowSummary": "Selected {{count}} HTTP flows",
+    "imagesNotSaved": "Images have not finished saving. Please try again shortly. If saving failed, remove the failed images and upload them again."
   },
   "AIMilkdownModeSlash": {
     "selectMode": "Select a mode",

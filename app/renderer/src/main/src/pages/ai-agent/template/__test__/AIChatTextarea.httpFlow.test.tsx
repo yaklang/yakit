@@ -17,6 +17,7 @@ import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../type'
 import type * as TemplateModule from '../template'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
+import { yakitNotify } from '@/utils/notification'
 
 const editors: Editor[] = []
 const { deferEditor } = vi.hoisted(() => ({ deferEditor: { value: false } }))
@@ -34,7 +35,7 @@ vi.mock('../../aiChatWelcome/hooks/useAIChatDrop', () => ({
   },
 }))
 vi.mock('@/components/MilkdownEditor/utils/utils', () => ({ imgTypes: [] }))
-vi.mock('@/utils/notification', () => ({ success: vi.fn() }))
+vi.mock('@/utils/notification', () => ({ success: vi.fn(), yakitNotify: vi.fn() }))
 vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 vi.mock('../../aiModelList/aiModelSelect/AIModelSelect', () => ({ AIModelSelect: () => null }))
 vi.mock('@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect', () => ({ default: () => null }))
@@ -176,6 +177,63 @@ function getHttpFlowTags(container: HTMLElement) {
 function getHttpFlowCloseIcon(label: string) {
   return screen.getByText(label).parentElement!.querySelector('[role="img"][tabindex="-1"]')!
 }
+
+describe('图片保存期间的提交保护', () => {
+  it.each(['点击', '回车'])('%s 提交等待所有图片路径写回后，才读取最新正文和附件', async (method) => {
+    const { ref, onSubmit, send } = await setup('正文')
+    act(() => ref.current?.setValue('正文 ![一](blob:first) ![二](blob:second)'))
+    const submit = () => {
+      if (method === '点击') fireEvent.click(send)
+      else fireEvent.keyDown(screen.getByTestId('editor'), { key: 'Enter', code: 'Enter', keyCode: 13 })
+    }
+    // 转换期间尚未调用保存 IPC，编辑器仍持有 blob 地址。
+    submit()
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(yakitNotify).toHaveBeenLastCalledWith('warning', 'AIMilkdownInput.imagesNotSaved')
+
+    const finishImage = (src: string, path: string) => {
+      act(() => {
+        editors[0].action((ctx) => {
+          const view = ctx.get(editorViewCtx)
+          const tr = view.state.tr
+          view.state.doc.descendants((node, pos) => {
+            if (node.type.name === 'image' && node.attrs.src === src) {
+              tr.setNodeMarkup(pos, undefined, { ...node.attrs, src: path })
+            }
+          })
+          view.dispatch(tr)
+        })
+      })
+    }
+    finishImage('blob:first', '/draft/image_1.png')
+    // 一张保存完成、另一张仍在写盘，不能提前提交。
+    submit()
+    expect(onSubmit).not.toHaveBeenCalled()
+
+    finishImage('blob:second', '/draft/image_2.png')
+    submit()
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    const payload = onSubmit.mock.calls[0][0]
+    expect(payload.imageList).toEqual(['/draft/image_1.png', '/draft/image_2.png'])
+    expect(payload.qs).toContain('/draft/image_1.png')
+    expect(payload.qs).toContain('/draft/image_2.png')
+    expect(payload.qs).not.toContain('blob:')
+    expect(payload.showQS).toBe(payload.qs)
+    expect(payload.sessionId).toBe('draft-session')
+  })
+
+  it('保存失败后残留的 blob 图片持续阻止提交，移除后可发送剩余正文', async () => {
+    const { ref, onSubmit, send } = await setup('正文')
+    act(() => ref.current?.setValue('正文 ![失败图片](blob:failed)'))
+    fireEvent.click(send)
+    fireEvent.click(send)
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(yakitNotify).toHaveBeenCalledTimes(2)
+    act(() => ref.current?.setValue('正文'))
+    fireEvent.click(send)
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ qs: '正文', imageList: [] }))
+  })
+})
 
 describe('流量勾选引用区', () => {
   it.each([1, 2, 3, 5, 6, 10])('%i 条流量按阈值显示 ID 或数量，正文和撤销记录不变', async (count) => {
