@@ -8,6 +8,8 @@ import {
   ListTodoOutlined,
   TrashOutlined,
   XOutlined,
+  GitPullRequestCreateArrowOutlined,
+  Rotate3dOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { useMemoizedFn, useDebounceFn, useInViewport } from 'ahooks'
 import styles from './AITaskQuery.module.scss'
@@ -140,7 +142,8 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
 
   const { loading: upLoading, markSending: markUpSending } = useSyncLoadingState()
   const { loading: removeLoading, markSending: markRemoveSending } = useSyncLoadingState()
-  const { loading: immediateLoading, markSending: markInterventionSending } = useSyncLoadingState()
+  /** 调整方向 / 追加待办共用：任一发送中同时禁用两个按钮，避免连点各发一次 remove_task */
+  const { loading: dequeueLoading, markSending: markDequeueSending } = useSyncLoadingState()
 
   const onTaskUp = useDebounceFn(
     () => {
@@ -190,42 +193,71 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
     },
     { wait: 200, leading: true },
   ).run
-  /** 调整方向（原人工介入）：先发删除该条队列任务的信号，再把该条 user_input 作为
-   * 人工介入消息发给后端，最后补发一次队列快照刷新（QUEUE_INFO）让本条立即消失 */
+  /** 从队列移除当前项后执行主动作，再 QUEUE_INFO 刷新列表（调整方向 / 追加待办共用） */
+  const dequeueThenAct = useMemoizedFn((opts: { action: (syncId: string) => void; after?: () => void }) => {
+    if (!execute || dequeueLoading) return
+
+    const removeTaskInfo: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_REMOVE_TASK,
+      SyncJsonInput: JSON.stringify({ task_id: item.id }),
+      Params: {},
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: '', params: removeTaskInfo })
+
+    const syncId = randomString(8)
+    markDequeueSending(syncId)
+    opts.action(syncId)
+
+    const queueInfo: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+      Params: {},
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: '', params: queueInfo })
+
+    opts.after?.()
+  })
+
+  /** 调整方向（原人工介入）：删队列后以 user_input 发介入信号，并写入聊天记录 */
   const onTaskImmediate = useDebounceFn(
     () => {
-      if (!execute || immediateLoading) return
+      dequeueThenAct({
+        action: (syncId) => {
+          const interventionInfo: AIInputEvent = {
+            IsSyncMessage: true,
+            SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_USER_INTERVENTION,
+            SyncJsonInput: JSON.stringify({ content: item.user_input }),
+            Params: {},
+            SyncID: syncId,
+          }
+          onSend({ token: sessionId, type: 'task', params: interventionInfo })
+        },
+        after: () => onAddToList(item.user_input),
+      })
+    },
+    { wait: 200, leading: true },
+  ).run
 
-      const removeTaskInfo: AIInputEvent = {
-        IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_REMOVE_TASK,
-        SyncJsonInput: JSON.stringify({ task_id: item.id }),
-        Params: {},
-        SyncID: randomString(8),
-      }
-      onSend({ token: sessionId, type: '', params: removeTaskInfo })
-
-      const syncId = randomString(8)
-      markInterventionSending(syncId)
-      const interventionInfo: AIInputEvent = {
-        IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_USER_INTERVENTION,
-        SyncJsonInput: JSON.stringify({ content: item.user_input }),
-        Params: {},
-        SyncID: syncId,
-      }
-      onSend({ token: sessionId, type: 'task', params: interventionInfo })
-
-      // 与置顶/删除一致：补发队列快照刷新，让本条立即从列表消失，不等 5s 轮询
-      const queueInfo: AIInputEvent = {
-        IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
-        Params: {},
-        SyncID: randomString(8),
-      }
-      onSend({ token: sessionId, type: '', params: queueInfo })
-
-      onAddToList(item.user_input)
+  /** 追加待办：删队列后发 add_todo_sync */
+  const onAddToDo = useDebounceFn(
+    () => {
+      const text = item.user_input || ''
+      if (!text.trim()) return
+      dequeueThenAct({
+        action: (syncId) => {
+          const addTodoInfo: AIInputEvent = {
+            IsSyncMessage: true,
+            SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_ADD_TODO,
+            SyncJsonInput: JSON.stringify({ text, set_current: false }),
+            Params: {},
+            SyncID: syncId,
+          }
+          onSend({ token: sessionId, type: '', params: addTodoInfo })
+        },
+      })
     },
     { wait: 200, leading: true },
   ).run
@@ -260,15 +292,28 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
             <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
           </Tooltip>
         )}
-        <YakitButton
-          size="small"
-          type="text2"
-          onClick={onTaskImmediate}
-          loading={immediateLoading}
-          disabled={immediateLoading}
-        >
-          {t('AITaskQuery.adjustDirection')}
-        </YakitButton>
+        <Tooltip title={t('AITaskQuery.addToDo')}>
+          <YakitButton
+            aria-label={t('AITaskQuery.addToDo')}
+            icon={<GitPullRequestCreateArrowOutlined color="currentColor" />}
+            size="small"
+            type="text2"
+            onClick={onAddToDo}
+            loading={dequeueLoading}
+            disabled={dequeueLoading}
+          />
+        </Tooltip>
+        <Tooltip title={t('AITaskQuery.adjustDirection')}>
+          <YakitButton
+            aria-label={t('AITaskQuery.adjustDirection')}
+            icon={<Rotate3dOutlined color="currentColor" />}
+            size="small"
+            type="text2"
+            onClick={onTaskImmediate}
+            loading={dequeueLoading}
+            disabled={dequeueLoading}
+          />
+        </Tooltip>
         <div className={styles['divider-style']} />
         <YakitButton
           type="text2"

@@ -71,9 +71,18 @@ const setQueue = (execute: boolean, items: AIAgentGrpcApi.QuestionQueueItem[]) =
   })
 }
 
+const clickAddToDoButton = (container: HTMLElement, index = 0) => {
+  const buttons = container.querySelectorAll('button[aria-label="AITaskQuery.addToDo"]')
+  const target = buttons[index]
+  expect(target).toBeTruthy()
+  act(() => {
+    fireEvent.click(target!)
+  })
+}
+
 const clickAdjustButton = (container: HTMLElement, index = 0) => {
-  const buttons = container.querySelectorAll('button')
-  const target = [...buttons].filter((b) => b.textContent?.includes('AITaskQuery.adjustDirection'))[index]
+  const buttons = container.querySelectorAll('button[aria-label="AITaskQuery.adjustDirection"]')
+  const target = buttons[index]
   expect(target).toBeTruthy()
   act(() => {
     fireEvent.click(target!)
@@ -148,6 +157,88 @@ describe('AITaskQuery 调整方向（原人工介入）', () => {
     setQueue(false, [queueItem('task-4', '问题D')])
     expect(container.querySelector('[data-testid="loading"]')).toBeNull()
     expect(container.innerHTML).toBe('')
+    expect(onSendMock).not.toHaveBeenCalled()
+  })
+
+  it('追加待办先删队列再发 add_todo_sync，text 取 user_input 且 set_current 为 false', () => {
+    const { container } = renderAITaskQuery()
+    setQueue(true, [queueItem('task-todo-1', '对 example.com 执行端口扫描并验证结果')])
+
+    clickAddToDoButton(container)
+
+    expect(onSendMock).toHaveBeenCalledTimes(3)
+    const [removeCall, addCall, queueInfoCall] = onSendMock.mock.calls.map((c) => c[0])
+    expect(removeCall.params.SyncType).toBe('react_remove_task')
+    expect(JSON.parse(removeCall.params.SyncJsonInput || '{}')).toEqual({ task_id: 'task-todo-1' })
+    expect(addCall.params.SyncType).toBe('add_todo_sync')
+    expect(JSON.parse(addCall.params.SyncJsonInput || '{}')).toEqual({
+      text: '对 example.com 执行端口扫描并验证结果',
+      set_current: false,
+    })
+    expect(addCall.params.SyncID).toBeTruthy()
+    expect(queueInfoCall.params.SyncType).toBe('queue_info')
+    expect(pushSpy).not.toHaveBeenCalled()
+  })
+
+  it('追加待办 loading 期间重复点击不重复发送', () => {
+    const { container } = renderAITaskQuery()
+    setQueue(true, [queueItem('task-todo-2', '追加待办防抖用例')])
+
+    clickAddToDoButton(container)
+    clickAddToDoButton(container)
+
+    expect(onSendMock).toHaveBeenCalledTimes(3)
+  })
+
+  it('追加待办与调整方向共用 dequeueLoading：连点只发一次 remove_task', () => {
+    const { container } = renderAITaskQuery()
+    setQueue(true, [queueItem('task-shared-lock', '共用 loading 锁用例')])
+
+    clickAddToDoButton(container)
+    // first click sets dequeueLoading; both buttons disabled so second click is a no-op
+    clickAdjustButton(container)
+
+    // one round only: remove + add_todo + queue_info
+    expect(onSendMock).toHaveBeenCalledTimes(3)
+    const syncTypes = onSendMock.mock.calls.map((c) => c[0].params.SyncType)
+    expect(syncTypes).toEqual(['react_remove_task', 'add_todo_sync', 'queue_info'])
+    expect(pushSpy).not.toHaveBeenCalled()
+  })
+
+  it('调整方向后追加待办按钮也被共用 loading 挡住', () => {
+    const { container } = renderAITaskQuery()
+    setQueue(true, [queueItem('task-shared-lock-2', '反向连点共用锁')])
+
+    clickAdjustButton(container)
+    clickAddToDoButton(container)
+
+    expect(onSendMock).toHaveBeenCalledTimes(3)
+    const syncTypes = onSendMock.mock.calls.map((c) => c[0].params.SyncType)
+    expect(syncTypes).toEqual(['react_remove_task', 'user_intervention', 'queue_info'])
+    expect(pushSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('preserves leading and trailing whitespace in add_todo_sync payload', () => {
+    const { container } = renderAITaskQuery()
+    const userInput = '  padded todo  '
+    setQueue(true, [queueItem('task-todo-whitespace', userInput)])
+
+    clickAddToDoButton(container)
+
+    expect(onSendMock).toHaveBeenCalledTimes(3)
+    const addCall = onSendMock.mock.calls[1][0]
+    expect(JSON.parse(addCall.params.SyncJsonInput || '{}')).toEqual({
+      text: userInput,
+      set_current: false,
+    })
+  })
+
+  it('does not add a todo for whitespace-only user_input', () => {
+    const { container } = renderAITaskQuery()
+    setQueue(true, [queueItem('task-todo-blank', ' \t\n ')])
+
+    clickAddToDoButton(container)
+
     expect(onSendMock).not.toHaveBeenCalled()
   })
 })

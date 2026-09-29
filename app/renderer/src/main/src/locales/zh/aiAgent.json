@@ -827,7 +827,8 @@
   "AITaskQuery": {
     "taskQueue": "任务队列",
     "adjustDirection": "调整方向",
-    "focusMode": "场景: {{mode}}"
+    "focusMode": "场景: {{mode}}",
+    "addToDo": "追加待办"
   },
   "ForgeName": {
     "exportForge": "导出技能",

@@ -267,6 +267,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_CLOSE_BROWSER = 'close_browser_sync',
   /** 请求后端做一次会话快照同步 */
   SYNC_TYPE_SESSION_SNAPSHOT_SYNC = 'session_snapshot_sync',
+  /** 向当前任务追加待办（text 必填，id / set_current 可选） */
+  SYNC_TYPE_ADD_TODO = 'add_todo_sync',
 }
 
 /** 只读数据查询类同步：仅拉取展示数据，不修改任务与配置，发送前置条件不满足时可静默丢弃 */
