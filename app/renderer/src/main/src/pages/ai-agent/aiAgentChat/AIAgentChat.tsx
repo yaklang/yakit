@@ -42,6 +42,7 @@ import { AIAgentChatLayout } from './AIAgentChatLayout/AIAgentChatLayout'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { isEventForPage, takePendingOpenForge } from '../historyChat/HistoryChat'
+import { sessionStatusStore, SessionDeleteStatus } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -63,10 +64,18 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const [mode, setMode] = useState<AIAgentChatMode>('welcome')
 
   useEffect(() => {
-    if (activeChat?.SessionID) {
-      onSetReAct()
-      onReStart({ activeChat, onStart })
-    }
+    const sid = activeChat?.SessionID
+    if (!sid) return
+    onSetReAct()
+    onReStart({ activeChat, onStart })
+    // 打开期间会话在别处被删除：回欢迎页
+    const isDeleted = (m: Map<string, SessionDeleteStatus>) => m.get(sid) === SessionDeleteStatus.Deleted
+    return sessionStatusStore.subscribe((state, prev) => {
+      if (isDeleted(state.deleteStatuses) && !isDeleted(prev.deleteStatuses)) {
+        setActiveChat?.(undefined)
+        setMode('welcome')
+      }
+    })
   }, [activeChat?.SessionID])
 
   const onSetReAct = useMemoizedFn(() => {

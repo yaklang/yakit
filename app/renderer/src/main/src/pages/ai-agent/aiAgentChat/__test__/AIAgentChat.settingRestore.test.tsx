@@ -29,7 +29,7 @@ vi.mock('ahooks', async (importOriginal) => {
 })
 
 vi.mock('../../useContext/useStore', () => ({
-  default: () => ({ activeChat: undefined }),
+  default: () => ({ activeChat: undefined, pageId: 'tab-1' }),
 }))
 
 vi.mock('../../useContext/useDispatcher', () => ({
@@ -138,7 +138,7 @@ describe('AIAgentChat SingleModelMode 生命周期', () => {
     })
 
     act(() => {
-      emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT }))
+      emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT, pageId: 'tab-1' }))
     })
 
     await waitFor(() => expect(mocks.setSetting).toHaveBeenCalled())
