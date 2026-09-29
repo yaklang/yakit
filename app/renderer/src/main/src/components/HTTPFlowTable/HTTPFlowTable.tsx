@@ -261,6 +261,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onSetHasNewData,
     onSetSelectedHttpFlowIds,
     onRegisterTableSelectApi,
+    onRegisterFlowMarkPatch,
     showHistoryAnalysisBtn = false,
     onHistoryAnalysisClick,
     defaultExcludeColumnsKey,
@@ -1846,6 +1847,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setSelectedRows((prev) => prev.map(patchRow))
     setSelected((prev) => (prev ? patchRow(prev) : prev))
   })
+
+  useEffect(() => {
+    onRegisterFlowMarkPatch?.(patchFlowMark)
+    return () => onRegisterFlowMarkPatch?.(undefined)
+  }, [onRegisterFlowMarkPatch, patchFlowMark])
 
   const onOpenFlowMarkEdit = useMemoizedFn((record: HTTPFlow) => {
     const m = showYakitModal({

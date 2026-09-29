@@ -11,6 +11,7 @@ import type { DebouncedFunc } from 'lodash'
 import type { HistoryPluginSearchType } from '@/utils/yakQueryHTTPFlow'
 import type { MitmExtractAggregateFlowFilterRow } from '@/utils/yakQueryHTTPFlow'
 import { MITM_FLOW_TABLE_OVERSCAN as MITM_FLOW_TABLE_OVERSCAN_VALUE } from './HTTPFlowTable.performance'
+import type { FlowMarkPatchPayload } from './HTTPFlowMark.constants'
 
 export interface codecHistoryPluginProps {
   key: string
@@ -154,6 +155,7 @@ export interface HistoryTableTitleShow {
 }
 
 export interface HTTPFlowTableProp extends HistoryTableTitleShow {
+  onRegisterFlowMarkPatch?: (patch?: (payload: FlowMarkPatchPayload) => void) => void
   onSelected?: (i?: HTTPFlow) => any
   params?: YakQueryHTTPFlowRequest
   mitmAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]
