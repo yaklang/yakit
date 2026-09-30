@@ -133,6 +133,37 @@ describe('aiTaskDetail handlers', () => {
     expect(req.rawData.taskDetailsMap.get(taskId)?.execution?.execution_rounds).toBe(7)
   })
 
+  it('current_task_todo_list_update never regresses execution_rounds on out-of-order iteration_index', () => {
+    const taskId = 'task-iteration-todo-max'
+    const { rawData, store } = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'current_task_todo_list_update',
+        { items: [], task_id: taskId, iteration_index: 7 },
+        { NodeId: 'current_task_todo_list', TaskId: taskId },
+      ),
+    })
+    const makeTodoReq = (iteration_index: number) =>
+      makeHandlerRequest({
+        rawData,
+        store,
+        res: makeGrpcJsonRes(
+          'current_task_todo_list_update',
+          { items: [], task_id: taskId, iteration_index },
+          { NodeId: 'current_task_todo_list', TaskId: taskId },
+        ),
+      })
+
+    aiTaskDetailDataHandlers.current_task_todo_list_update(makeTodoReq(7))
+    expect(rawData.taskDetailsMap.get(taskId)?.execution?.execution_rounds).toBe(7)
+
+    // 乱序迟到的更小 iteration_index 不回退步数
+    aiTaskDetailDataHandlers.current_task_todo_list_update(makeTodoReq(3))
+    expect(rawData.taskDetailsMap.get(taskId)?.execution?.execution_rounds).toBe(7)
+
+    aiTaskDetailDataHandlers.current_task_todo_list_update(makeTodoReq(9))
+    expect(rawData.taskDetailsMap.get(taskId)?.execution?.execution_rounds).toBe(9)
+  })
+
   it('session_snapshot keeps client-side step when overwriting execution', () => {
     const taskId = 'task-iteration-snapshot'
     const todoReq = makeHandlerRequest({

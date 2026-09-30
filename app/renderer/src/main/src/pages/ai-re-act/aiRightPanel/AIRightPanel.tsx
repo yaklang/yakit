@@ -109,32 +109,69 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
         return
       }
       let cancelled = false
-      const fetchApiKeys = () => {
+      // 轮询可能重叠：只采纳最新一次请求的结果，避免慢响应覆盖新余额
+      let requestId = 0
+      const applyApiKeys = (id: number, res?: API.ApiKeysResponse) => {
+        if (cancelled || id !== requestId) return
+        if (res?.data && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
+          setApiKeys(res.data)
+        } else {
+          setApiKeys(undefined)
+        }
+      }
+      /** 与 useUserMenu 一致：新 CE 账号可能尚无 key，创建后再回拉，避免配额区一直空白 */
+      const ensureApiKeys = async () => {
+        const id = ++requestId
+        try {
+          const res = await NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
+            method: 'post',
+            url: 'apikeys',
+            data: { page: 1, pageSize: 5 },
+          })
+          if (cancelled || id !== requestId) return
+          if (res?.data && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
+            setApiKeys(res.data)
+            return
+          }
+          setApiKeys(undefined)
+          const created = await NetWorkApi<null, API.ActionSucceeded>({
+            method: 'post',
+            url: 'apikey',
+          })
+          if (cancelled || id !== requestId || !created?.ok) return
+          const again = await NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
+            method: 'post',
+            url: 'apikeys',
+            data: { page: 1, pageSize: 5 },
+          })
+          applyApiKeys(id, again)
+        } catch {
+          if (cancelled || id !== requestId) return
+          setApiKeys(undefined)
+        }
+      }
+      /** 轮询只刷新，不再创建，避免执行中每 10s 重复建 key */
+      const refreshApiKeys = () => {
+        const id = ++requestId
         NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
           method: 'post',
           url: 'apikeys',
           data: { page: 1, pageSize: 5 },
         })
-          .then((res) => {
-            if (cancelled) return
-            if (res?.data && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
-              setApiKeys(res.data)
-            } else {
-              setApiKeys(undefined)
-            }
-          })
+          .then((res) => applyApiKeys(id, res))
           .catch(() => {
-            if (!cancelled) setApiKeys(undefined)
+            if (cancelled || id !== requestId) return
+            setApiKeys(undefined)
           })
       }
-      fetchApiKeys()
+      ensureApiKeys()
       // 执行中每 10 秒刷新配额，结束后停止轮询
       if (!execute) {
         return () => {
           cancelled = true
         }
       }
-      const timer = window.setInterval(fetchApiKeys, 10_000)
+      const timer = window.setInterval(refreshApiKeys, 10_000)
       return () => {
         cancelled = true
         window.clearInterval(timer)
@@ -189,27 +226,30 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
 
         <div className={styles['main-model-token']}>
           <AIMainModelTokens className={styles['main-model-token-content']} />
-          {isLogin ? (
-            apiKeys ? (
-              <CeUserTokenQuota
-                apiKeys={apiKeys}
-                className={styles['main-model-token-quota']}
-                onClick={onOpenStatisticsClick}
-                onRecharge={onRechargeClick}
-              />
-            ) : null
-          ) : (
-            <div className={styles['main-model-token-login']}>
-              <YakitButton
-                type="text"
-                icon={<UserCircleOutlined />}
-                aria-label={t('AIRightPanel.loginToViewBalance')}
-                onClick={onLoginClick}
-              >
-                {t('AIRightPanel.loginToViewBalance')}
-              </YakitButton>
-            </div>
-          )}
+          {/* CE 专属额度/登录入口；非社区版不展示，与拉取逻辑一致 */}
+          {isCommunityEdition() ? (
+            isLogin ? (
+              apiKeys ? (
+                <CeUserTokenQuota
+                  apiKeys={apiKeys}
+                  className={styles['main-model-token-quota']}
+                  onClick={onOpenStatisticsClick}
+                  onRecharge={onRechargeClick}
+                />
+              ) : null
+            ) : (
+              <div className={styles['main-model-token-login']}>
+                <YakitButton
+                  type="text"
+                  icon={<UserCircleOutlined />}
+                  aria-label={t('AIRightPanel.loginToViewBalance')}
+                  onClick={onLoginClick}
+                >
+                  {t('AIRightPanel.loginToViewBalance')}
+                </YakitButton>
+              </div>
+            )
+          ) : null}
         </div>
       </div>
     )

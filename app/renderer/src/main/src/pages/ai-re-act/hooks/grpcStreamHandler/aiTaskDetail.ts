@@ -146,9 +146,13 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
     target.uuid = uuidv4()
     target.taskId = target.taskId || res.TaskId
     target.todoList = newData
-    // iteration_index 是后端 ReAct 主循环的真实迭代轮数, 快照尚未携带 execution_rounds 时作为其数据源
+    // iteration_index 是后端 ReAct 主循环的真实迭代轮数, 快照尚未携带 execution_rounds 时作为其数据源；
+    // 与 session_snapshot 一致用 Math.max，避免乱序/回放把已展示的步骤回退
     if (typeof data.iteration_index === 'number' && data.iteration_index >= 0) {
-      target.execution = { ...(target.execution || {}), execution_rounds: data.iteration_index }
+      target.execution = {
+        ...(target.execution || {}),
+        execution_rounds: Math.max(target.execution?.execution_rounds ?? 0, data.iteration_index),
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import { memo, useEffect } from 'react'
+import { memo } from 'react'
 import { useCreation } from 'ahooks'
 import { useStore } from 'zustand'
 import cloneDeep from 'lodash/cloneDeep'
@@ -18,7 +18,8 @@ const AIMainModelTokens: FC<{
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
   const aiPerfData = useContextPerfStore()
-  const [aiGlobalConfigData, event] = useAIGlobalConfig()
+  // hook 挂载时已按 isInit 拉取配置，勿再 onRefresh，否则会重复 grpcGetAIGlobalConfig
+  const [aiGlobalConfigData] = useAIGlobalConfig()
 
   const { renderNumber, aiDataRef: consumption } = useRafPolling({
     getData: () => aiPerfData?.consumption ?? null,
@@ -28,10 +29,6 @@ const AIMainModelTokens: FC<{
     shouldUpdate: (prev, next) => isConsumptionPerfChanged(prev, next),
     clone: (data) => cloneDeep(data),
   })
-
-  useEffect(() => {
-    event.onRefresh()
-  }, [event])
 
   const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
   const tierModelConsumption = consumption?.tier_model_consumption
