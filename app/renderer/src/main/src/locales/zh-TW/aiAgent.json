@@ -645,12 +645,11 @@
     "viewLog": "查看日誌",
     "collapse": "折疊",
     "more": "更多",
-    "duration": "執行時長",
-    "toolCallStats": "工具調用統計",
-    "success": "成功",
-    "failed": "失敗",
-    "totalAttempts": "總嘗試次數",
-    "running": "執行中"
+    "running": "執行中",
+    "loginToViewBalance": "登入查看餘額",
+    "step": "Step",
+    "runtime": "運行時間",
+    "toolCallCount": "工具呼叫數"
   },
   "AIChatContent": {
     "noActiveChat": "當前沒有活躍的會話",

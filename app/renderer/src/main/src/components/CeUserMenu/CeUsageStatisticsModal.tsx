@@ -20,36 +20,8 @@ import { WebsiteGV } from '@/enums/website'
 import CeApiKeysListModal from './CeApiKeysListModal'
 import { grpcUpdateApiKey, maskApiKey } from './ceApiKey'
 import styles from './CeUsageStatisticsModal.module.scss'
-
-type TokenQuotaLike = {
-  tokenUsed?: number
-  tokenLimit?: number
-  tokenLimitEnable?: boolean
-}
-
-/** 计算token使用百分比 */
-export const getTokenPercent = (apiKeysInfo: TokenQuotaLike) => {
-  const { tokenUsed = 0, tokenLimit = 0 } = apiKeysInfo || {}
-  if (tokenUsed > 0 && tokenLimit > 0) {
-    return Math.min(100, Math.floor((tokenUsed / tokenLimit) * 100))
-  }
-  return 0
-}
-
-/** 计算token限额 */
-export const getTokenLimit = (apiKeysInfo: TokenQuotaLike) => {
-  if (apiKeysInfo?.tokenLimit && apiKeysInfo.tokenLimit > 0) {
-    return Math.round(apiKeysInfo.tokenLimit / 1000 / 1000)
-  }
-  return 0
-}
-
-export const getTokenUsed = (apiKeysInfo: TokenQuotaLike) => {
-  if (apiKeysInfo?.tokenUsed && apiKeysInfo.tokenUsed > 0) {
-    return (apiKeysInfo.tokenUsed / 1000 / 1000).toFixed(2)
-  }
-  return 0
-}
+import { getTokenLimit, getTokenPercent, getTokenUsed } from './ceTokenQuota'
+export { getTokenLimit, getTokenPercent, getTokenUsed }
 
 const formatPercent = (part: number, total: number) => {
   if (!total || total <= 0) return '0.0'

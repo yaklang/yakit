@@ -52,7 +52,14 @@ describe('isThoughtHeaderStreaming', () => {
 
 describe('AIGroupStreamCardHeard', () => {
   it('thought 节点渲染思考标题，无 lastItem 时不闪烁且时长为 end', () => {
-    render(<AIGroupStreamCardHeard {...heardProps} nodeId={AI_STREAM_THOUGHT_NODE_ID} lastItem={undefined} />)
+    render(
+      <AIGroupStreamCardHeard
+        {...heardProps}
+        nodeId={AI_STREAM_THOUGHT_NODE_ID}
+        lastItem={undefined}
+        streaming={false}
+      />,
+    )
     const title = screen.getByText('思考')
     expect(title.className).not.toMatch(/thought-title-blink/)
     expect(screen.getByTestId('thought-duration')).toHaveTextContent('end')
@@ -60,9 +67,30 @@ describe('AIGroupStreamCardHeard', () => {
   })
 
   it('thought 节点在 stream start 时闪烁并计时', () => {
-    render(<AIGroupStreamCardHeard {...heardProps} nodeId={AI_STREAM_THOUGHT_NODE_ID} lastItem={streamItem('start')} />)
+    render(
+      <AIGroupStreamCardHeard
+        {...heardProps}
+        nodeId={AI_STREAM_THOUGHT_NODE_ID}
+        lastItem={streamItem('start')}
+        streaming
+      />,
+    )
     expect(screen.getByText('思考').className).toMatch(/thought-title-blink/)
     expect(screen.getByTestId('thought-duration')).toHaveTextContent('start')
+  })
+
+  it('同一 lastItem 引用下仅 streaming 变为 false 时时长停为 end（status 原地改写场景）', () => {
+    const item = streamItem('start')
+    const { rerender } = render(
+      <AIGroupStreamCardHeard {...heardProps} nodeId={AI_STREAM_THOUGHT_NODE_ID} lastItem={item} streaming />,
+    )
+    expect(screen.getByTestId('thought-duration')).toHaveTextContent('start')
+    item.data.status = 'end'
+    rerender(
+      <AIGroupStreamCardHeard {...heardProps} nodeId={AI_STREAM_THOUGHT_NODE_ID} lastItem={item} streaming={false} />,
+    )
+    expect(screen.getByTestId('thought-duration')).toHaveTextContent('end')
+    expect(screen.getByText('思考').className).not.toMatch(/thought-title-blink/)
   })
 
   it('thought 标题点击切换展开', () => {
@@ -73,6 +101,7 @@ describe('AIGroupStreamCardHeard', () => {
         setExpand={setExpand}
         nodeId={AI_STREAM_THOUGHT_NODE_ID}
         lastItem={streamItem('end')}
+        streaming={false}
       />,
     )
     fireEvent.click(screen.getByText('思考'))

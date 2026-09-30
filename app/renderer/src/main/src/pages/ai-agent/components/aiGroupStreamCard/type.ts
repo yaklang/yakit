@@ -5,6 +5,8 @@ export interface AIGroupStreamCardHeardProps {
   expand: boolean
   setExpand: Dispatch<SetStateAction<boolean>>
   lastItem?: ChatStream
+  /** 原始布尔：子流 status 原地改写时 lastItem 引用不变，memo 只能靠此字段感知结束 */
+  streaming?: boolean
   nodeId?: string
   nodeLabel: string
   shouldShowMask: boolean

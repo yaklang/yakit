@@ -337,7 +337,7 @@
     "remoteControlClosing": "Remote control is closing..."
   },
   "CeUserMenu": {
-    "tokenConsumption": "Token Usage",
+    "tokenRemaining": "Remaining Token",
     "balance": "Balance",
     "recharge": "Recharge",
     "usageStatistics": "Usage Statistics",

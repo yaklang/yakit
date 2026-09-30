@@ -134,6 +134,17 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
     emiter.on('onOpenRecharge', onOpenRecharge)
     return () => emiter.off('onOpenRecharge', onOpenRecharge)
   }, [])
+
+  const onOpenUsageStatistics = useMemoizedFn(() => {
+    setCeUserMenuShow(false)
+    if (!userInfo.isLogin) return
+    setUsageStatisticsShow(true)
+  })
+
+  useEffect(() => {
+    emiter.on('onOpenUsageStatistics', onOpenUsageStatistics)
+    return () => emiter.off('onOpenUsageStatistics', onOpenUsageStatistics)
+  }, [])
   const [apiKeys, setApiKeys] = useState<API.ApiKeyDetail>()
   const [apiKeysInfo, setApiKeysInfo] = useState<API.ApiUserUsageResponse>()
   const [apiKeysInfoLoading, setApiKeysInfoLoading] = useState<boolean>(false)

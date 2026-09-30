@@ -146,6 +146,14 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
     target.uuid = uuidv4()
     target.taskId = target.taskId || res.TaskId
     target.todoList = newData
+    // iteration_index 是后端 ReAct 主循环的真实迭代轮数, 快照尚未携带 execution_rounds 时作为其数据源；
+    // 与 session_snapshot 一致用 Math.max，避免乱序/回放把已展示的步骤回退
+    if (typeof data.iteration_index === 'number' && data.iteration_index >= 0) {
+      target.execution = {
+        ...(target.execution || {}),
+        execution_rounds: Math.max(target.execution?.execution_rounds ?? 0, data.iteration_index),
+      }
+    }
   }
 
   const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
@@ -177,7 +185,14 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
   const applySnapshotFields = (target: PlanItemDetailsData) => {
     target.uuid = uuidv4()
     target.taskId = target.taskId || res.TaskId
-    target.execution = snapshot.execution
+    const recordedExecutionRounds = Math.max(
+      target.execution?.execution_rounds ?? 0,
+      snapshot.execution?.execution_rounds ?? 0,
+    )
+    target.execution = {
+      ...snapshot.execution,
+      execution_rounds: recordedExecutionRounds > 0 ? recordedExecutionRounds : undefined,
+    }
     target.backgroundProcesses = snapshot.background_processes
     if (typeof snapshot.revision === 'number' && snapshot.revision > 0) {
       target.sessionSnapshotRevision = snapshot.revision

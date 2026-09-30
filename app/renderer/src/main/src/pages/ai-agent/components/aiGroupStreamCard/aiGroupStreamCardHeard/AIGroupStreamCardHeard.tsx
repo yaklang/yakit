@@ -17,10 +17,9 @@ export const isThoughtHeaderStreaming = (lastItem: AIGroupStreamCardHeardProps['
   lastItem != null && lastItem.data.status !== 'end'
 
 const AIGroupStreamCardThoughtHeard: React.FC<
-  Pick<AIGroupStreamCardHeardProps, 'expand' | 'setExpand' | 'nodeLabel' | 'persistKey' | 'lastItem'>
+  Pick<AIGroupStreamCardHeardProps, 'expand' | 'setExpand' | 'nodeLabel' | 'persistKey' | 'lastItem' | 'streaming'>
 > = memo((props) => {
-  const { expand, setExpand, nodeLabel, persistKey, lastItem } = props
-  const streaming = isThoughtHeaderStreaming(lastItem)
+  const { expand, setExpand, nodeLabel, persistKey, lastItem, streaming = false } = props
   return (
     <div className={styles['thought-header']} onClick={() => setExpand((open) => !open)}>
       <OutlineThoughtIcon className={styles['thought-icon']} color="currentColor" />
@@ -104,6 +103,7 @@ const AIGroupStreamCardHeard: React.FC<AIGroupStreamCardHeardProps> = memo((prop
         nodeLabel={props.nodeLabel}
         persistKey={props.persistKey}
         lastItem={props.lastItem}
+        streaming={props.streaming}
       />
     )
   }

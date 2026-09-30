@@ -59,6 +59,57 @@ describe('aiStream handlers', () => {
     expect(stream.data.status).toBe('end')
   })
 
+  it('stream-finished 同时 bump 父组 renderNum，供思考读秒停止', async () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { event_writer_id: 'ew-child', node_id: 're-act-loop-thought', is_reason: false, is_system: false },
+        { NodeId: 'stream-finished' },
+      ),
+    })
+    req.rawData.contents.set('ew-child', {
+      id: 'ew-child',
+      type: AIChatQSDataTypeEnum.STREAM,
+      chatType: 'reAct',
+      Timestamp: 1,
+      AIService: '',
+      AIModelName: '',
+      data: {
+        NodeId: 're-act-loop-thought',
+        EventUUID: 'ew-child',
+        status: 'start',
+        content: 'thinking',
+      },
+    } as any)
+    req.store.setState({
+      items: {
+        'ew-child': {
+          kind: 'item',
+          token: 'ew-child',
+          type: AIChatQSDataTypeEnum.STREAM,
+          renderNum: 1,
+          nodeId: 're-act-loop-thought',
+        },
+      },
+      groups: {
+        'g-thought': {
+          kind: 'group',
+          token: 'g-thought',
+          type: AIChatQSDataTypeEnum.STREAM_GROUP,
+          renderNum: 3,
+          nodeId: 're-act-loop-thought',
+          childrenTokens: ['ew-child'],
+        },
+      },
+    } as any)
+
+    await aiStreamDataHandlers['stream-finished'](req)
+
+    expect((req.rawData.contents.get('ew-child') as any).data.status).toBe('end')
+    expect(req.store.getState().items['ew-child'].renderNum).toBe(2)
+    expect(req.store.getState().groups['g-thought'].renderNum).toBe(4)
+  })
+
   it('ignores a stream finish invalidated while awaiting an in-memory item', async () => {
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes('stream_start', { event_writer_id: 'ew-old' }, { NodeId: 're-act-loop-thought' }),

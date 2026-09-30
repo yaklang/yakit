@@ -12,6 +12,11 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AISourceEnum, type AIAgentGrpcApi } from '../hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
+import { useStore as useUserStore } from '@/store'
+import { NetWorkApi } from '@/services/fetch'
+import type { API } from '@/services/swagger/resposeType'
+import { isCommunityEdition } from '@/utils/envfile'
+import { CeUserTokenQuota } from '@/components/CeUserMenu/CeUserTokenQuota'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { failed, yakitNotify } from '@/utils/notification'
 import { AIAgentTabListEnum, AITabsEnum, SwitchAIAgentTabEventEnum } from '@/pages/ai-agent/defaultConstant'
@@ -35,18 +40,15 @@ import {
   NewspaperOutlined,
   ScrollTextOutlined,
   TimelineOutlined,
+  UserCircleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { Tooltip } from 'antd'
+import { Flex, Tooltip } from 'antd'
 import styles from './AIRightPanel.module.scss'
-import type {
-  AIRightPanelMenuKey,
-  AIRightPanelPaneKey,
-  AIRightPanelProps,
-  AIRightPanelRiskCounts,
-  AIRightPanelToolStats,
-} from './type'
+import type { AIRightPanelMenuKey, AIRightPanelPaneKey, AIRightPanelProps, AIRightPanelRiskCounts } from './type'
 import { AI_RIGHT_PANEL_INPUT_MAX_WIDTH, AI_RIGHT_PANEL_NORMAL_SLOT_WIDTH } from './type'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import AIMainModelTokens from '@/pages/ai-agent/aiChatContent/AIContextToken/AIMainModelTokens'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 /** 菜单项定义：key 为唯一标识（React key 用），labelKey 为 i18n 文案 key，icon 为入口图标 */
 interface MenuItemDef {
@@ -79,13 +81,6 @@ const MORE_MENUS: MenuItemDef[] = [
 /** 漏洞计数角标的展示顺序；后端标准等级映射到设计稿中的五种颜色。 */
 const RISK_TAG_ORDER: Array<keyof AIRightPanelRiskCounts> = ['serious', 'high', 'medium', 'low', 'info']
 
-/** 工具调用统计的三个指标（成功/失败带专属色 tone，对应 stat-value-* 样式；总尝试次数用默认色） */
-const TOOL_STATS: Array<{ field: keyof AIRightPanelToolStats; labelKey: string; tone?: 'success' | 'failed' }> = [
-  { field: 'success', labelKey: 'AIRightPanel.success', tone: 'success' },
-  { field: 'failed', labelKey: 'AIRightPanel.failed', tone: 'failed' },
-  { field: 'total', labelKey: 'AIRightPanel.totalAttempts' },
-]
-
 /** 执行时长、工具调用统计等数据缺失时的占位符 */
 const PLACEHOLDER = '—'
 
@@ -99,10 +94,101 @@ const emitToggleAIAgentTab = (active: AIAgentTabListEnum) => {
   )
 }
 
-/** 数据卡片区：执行时长 + 工具调用统计（成功/失败/总尝试）。 */
 const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['execution'] }> = React.memo(
   ({ executionData }) => {
-    const { t } = useI18nNamespaces(['aiAgent'])
+    const { t } = useI18nNamespaces(['aiAgent', 'layout'])
+    const { userInfo } = useUserStore()
+    const isLogin = !!userInfo.isLogin
+    const store = useCurrentStore()
+    const execute = useStore(store, (state) => state.execute)
+    const [apiKeys, setApiKeys] = useState<API.ApiKeyDetail>()
+
+    useEffect(() => {
+      if (!isLogin || !isCommunityEdition()) {
+        setApiKeys(undefined)
+        return
+      }
+      let cancelled = false
+      // 轮询可能重叠：只采纳最新一次请求的结果，避免慢响应覆盖新余额
+      let requestId = 0
+      const applyApiKeys = (id: number, res?: API.ApiKeysResponse) => {
+        if (cancelled || id !== requestId) return
+        if (res?.data && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
+          setApiKeys(res.data)
+        } else {
+          setApiKeys(undefined)
+        }
+      }
+      /** 与 useUserMenu 一致：新 CE 账号可能尚无 key，创建后再回拉，避免配额区一直空白 */
+      const ensureApiKeys = async () => {
+        const id = ++requestId
+        try {
+          const res = await NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
+            method: 'post',
+            url: 'apikeys',
+            data: { page: 1, pageSize: 5 },
+          })
+          if (cancelled || id !== requestId) return
+          if (res?.data && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
+            setApiKeys(res.data)
+            return
+          }
+          setApiKeys(undefined)
+          const created = await NetWorkApi<null, API.ActionSucceeded>({
+            method: 'post',
+            url: 'apikey',
+          })
+          if (cancelled || id !== requestId || !created?.ok) return
+          const again = await NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
+            method: 'post',
+            url: 'apikeys',
+            data: { page: 1, pageSize: 5 },
+          })
+          applyApiKeys(id, again)
+        } catch {
+          if (cancelled || id !== requestId) return
+          setApiKeys(undefined)
+        }
+      }
+      /** 轮询只刷新，不再创建，避免执行中每 10s 重复建 key */
+      const refreshApiKeys = () => {
+        const id = ++requestId
+        NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
+          method: 'post',
+          url: 'apikeys',
+          data: { page: 1, pageSize: 5 },
+        })
+          .then((res) => applyApiKeys(id, res))
+          .catch(() => {
+            if (cancelled || id !== requestId) return
+            setApiKeys(undefined)
+          })
+      }
+      ensureApiKeys()
+      // 执行中每 10 秒刷新配额，结束后停止轮询
+      if (!execute) {
+        return () => {
+          cancelled = true
+        }
+      }
+      const timer = window.setInterval(refreshApiKeys, 10_000)
+      return () => {
+        cancelled = true
+        window.clearInterval(timer)
+      }
+    }, [isLogin, execute])
+
+    const onLoginClick = useMemoizedFn(() => {
+      emiter.emit('onOpenLogin', '')
+    })
+
+    const onRechargeClick = useMemoizedFn(() => {
+      emiter.emit('onOpenRecharge', '')
+    })
+
+    const onOpenStatisticsClick = useMemoizedFn(() => {
+      emiter.emit('onOpenUsageStatistics', '')
+    })
 
     const executionDuration = useCreation(() => {
       const startedAt = executionData?.started_at || 0
@@ -112,39 +198,58 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
       return timeDiffWithMoment(startedAt, endedAt)
     }, [executionData?.started_at, executionData?.ended_at])
 
-    const toolCallStats = useCreation(() => {
-      if (!executionData) return undefined
-      return {
-        success: executionData.tool_call_success,
-        failed: executionData.tool_call_failed,
-        total: executionData.tool_call_total,
-      }
-    }, [executionData?.tool_call_success, executionData?.tool_call_failed, executionData?.tool_call_total])
-
     return (
       <div className={styles['data-cards']}>
-        <div className={styles['data-card']}>
-          <div className={styles['data-card-accent']} />
-          <div className={styles['data-card-row']}>
-            <span className={styles['data-card-label']}>{t('AIRightPanel.duration')}</span>
-            <span className={styles['data-card-value']}>{executionDuration ?? PLACEHOLDER}</span>
-          </div>
-        </div>
-        <div className={classNames(styles['data-card'], styles['data-card-stats'])}>
-          <div className={classNames(styles['data-card-accent'], styles['data-card-accent-blue'])} />
-          <div className={styles['data-card-body']}>
-            <span className={styles['stats-title']}>{t('AIRightPanel.toolCallStats')}</span>
-            <div className={styles['stats-row']}>
-              {TOOL_STATS.map((stat) => (
-                <div className={styles['stat']} key={stat.field}>
-                  <span className={classNames(styles['stat-value'], stat.tone && styles[`stat-value-${stat.tone}`])}>
-                    {toolCallStats?.[stat.field] ?? PLACEHOLDER}
-                  </span>
-                  <span className={styles['stat-label']}>{t(stat.labelKey)}</span>
-                </div>
-              ))}
+        <Flex gap={4} className={styles['data-cards-row']}>
+          <div className={classNames(styles['data-card'], styles['data-card-metric'], styles['data-card-step'])}>
+            <div className={styles['data-card-accent']} />
+            <div className={styles['data-card-row']}>
+              <span className={styles['data-card-label']}>{t('AIRightPanel.step')}</span>
+              <span className={styles['data-card-value']}>{executionData?.execution_rounds ?? 0}</span>
             </div>
           </div>
+          <div className={classNames(styles['data-card'], styles['data-card-metric'], styles['data-card-duration'])}>
+            <div className={styles['data-card-accent']} />
+            <div className={styles['data-card-row']}>
+              <span className={styles['data-card-label']}>{t('AIRightPanel.runtime')}</span>
+              <span className={styles['data-card-value']}>{executionDuration ?? PLACEHOLDER}</span>
+            </div>
+          </div>
+          <div className={classNames(styles['data-card'], styles['data-card-metric'], styles['data-card-tool'])}>
+            <div className={styles['data-card-accent']} />
+            <div className={styles['data-card-row']}>
+              <span className={styles['data-card-label']}>{t('AIRightPanel.toolCallCount')}</span>
+              <span className={styles['data-card-value']}>{executionData?.tool_call_total || 0}</span>
+            </div>
+          </div>
+        </Flex>
+
+        <div className={styles['main-model-token']}>
+          <AIMainModelTokens className={styles['main-model-token-content']} />
+          {/* CE 专属额度/登录入口；非社区版不展示，与拉取逻辑一致 */}
+          {isCommunityEdition() ? (
+            isLogin ? (
+              apiKeys ? (
+                <CeUserTokenQuota
+                  apiKeys={apiKeys}
+                  className={styles['main-model-token-quota']}
+                  onClick={onOpenStatisticsClick}
+                  onRecharge={onRechargeClick}
+                />
+              ) : null
+            ) : (
+              <div className={styles['main-model-token-login']}>
+                <YakitButton
+                  type="text"
+                  icon={<UserCircleOutlined />}
+                  aria-label={t('AIRightPanel.loginToViewBalance')}
+                  onClick={onLoginClick}
+                >
+                  {t('AIRightPanel.loginToViewBalance')}
+                </YakitButton>
+              </div>
+            )
+          ) : null}
         </div>
       </div>
     )

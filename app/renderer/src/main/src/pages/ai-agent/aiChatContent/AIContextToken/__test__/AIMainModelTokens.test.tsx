@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
   aitokensProps: [] as Array<Record<string, unknown>>,
   config: {} as Record<string, unknown>,
+  consumption: null as Record<string, unknown> | null,
 }))
 
 vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
@@ -18,6 +19,31 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh' } }),
 }))
 
+const mockPerfStore = vi.hoisted(() => {
+  // lazy: createStore imported inside factory after vitest hoist
+  return { store: null as any }
+})
+
+vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', async () => {
+  const { createStore } = await import('zustand/vanilla')
+  mockPerfStore.store = createStore(() => ({ execute: true }))
+  return {
+    useCurrentStore: () => mockPerfStore.store,
+  }
+})
+
+vi.mock('../useContextPerfStore', () => ({
+  CONTEXT_PERF_POLL_INTERVAL: 2000,
+  useContextPerfStore: () => ({ consumption: mocks.consumption }),
+}))
+
+vi.mock('@/hook/useRafPolling/useRafPolling', () => ({
+  useRafPolling: ({ getData }: { getData: () => unknown }) => ({
+    renderNumber: 1,
+    aiDataRef: getData(),
+  }),
+}))
+
 vi.mock('../AITokens', () => ({
   default: (props: Record<string, unknown>) => {
     mocks.aitokensProps.push(props)
@@ -25,20 +51,7 @@ vi.mock('../AITokens', () => ({
   },
 }))
 
-vi.mock('../AIMainModelTokens', () => ({
-  default: () => <div data-testid="main-model-tokens" />,
-}))
-
-vi.mock('../../chatTemplate/AIEcharts', () => ({
-  AICostDetailsEcharts: () => null,
-  AIPressureDetailsEcharts: () => null,
-  TokenCountEcharts: () => null,
-}))
-
-vi.mock('../ContextTable/ContextTable', () => ({ default: () => null }))
-vi.mock('@/pages/ai-agent/utils', () => ({ formatNumberUnits: (value: number) => String(value) }))
-
-const AIEchartsDetails = (await import('../AIEchartsDetails')).default
+const AIMainModelTokens = (await import('../AIMainModelTokens')).default
 
 const createModel = (type: string, modelName: string) => ({
   ProviderId: 'provider-id',
@@ -47,39 +60,34 @@ const createModel = (type: string, modelName: string) => ({
   ExtraParams: [],
 })
 
-const baseProps = {
-  overallToken: [10, 5, 2] as [number | string, number | string, number | string],
-  onClose: vi.fn(),
-  renderNumber: 0,
-}
-
-const renderAndCollect = (consumption?: Record<string, unknown>) => {
+const renderAndCollect = (consumption: Record<string, unknown> | null = null) => {
   mocks.aitokensProps = []
-  render(<AIEchartsDetails {...baseProps} consumption={consumption as never} />)
+  mocks.consumption = consumption
+  render(<AIMainModelTokens />)
   return mocks.aitokensProps
 }
 
-describe('AIEchartsDetails 辅助模型用量展示回退', () => {
+describe('AIMainModelTokens 用量展示回退', () => {
   it('旧引擎未返回单模型统计时传递类别用量', () => {
     mocks.config = {
-      LightweightModels: [createModel('openai', 'lite')],
+      IntelligentModels: [createModel('aibalance', 'standard')],
     }
     const tierConsumption = {
-      lightweight: { input_consumption: 10, output_consumption: 2, cache_hit_token: 1 },
+      intelligent: { input_consumption: 30, output_consumption: 8, cache_hit_token: 5 },
     }
     const props = renderAndCollect({ tier_consumption: tierConsumption })
     expect(props).toHaveLength(1)
-    expect(props[0].fallbackConsumption).toEqual(tierConsumption.lightweight)
-    expect(props[0].modelType).toBe('AiAgengt.lightweightModels')
+    expect(props[0].fallbackConsumption).toEqual(tierConsumption.intelligent)
+    expect(props[0].modelType).toBe('AiAgengt.intelligentModels')
   })
 
   it('新引擎返回空模型统计时不回退到类别用量', () => {
     mocks.config = {
-      LightweightModels: [createModel('openai', 'lite')],
+      IntelligentModels: [createModel('aibalance', 'standard')],
     }
     const props = renderAndCollect({
       tier_consumption: {
-        lightweight: { input_consumption: 10, output_consumption: 2, cache_hit_token: 1 },
+        intelligent: { input_consumption: 30, output_consumption: 8, cache_hit_token: 5 },
       },
       tier_model_consumption: {},
     })
@@ -88,52 +96,42 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
 
   it('无 tier_model_consumption 时回退展示全局配置的首个模型', () => {
     mocks.config = {
-      LightweightModels: [createModel('openai', 'lite')],
+      IntelligentModels: [createModel('aibalance', 'standard')],
     }
-
     const props = renderAndCollect()
-
     expect(props).toHaveLength(1)
     expect(props[0]).toMatchObject({
-      aiModel: createModel('openai', 'lite'),
+      aiModel: createModel('aibalance', 'standard'),
       modelConsumption: undefined,
     })
   })
 
   it('有 tier_model_consumption 时优先展示运行时实际模型', () => {
     mocks.config = {
-      LightweightModels: [createModel('openai', 'lite')],
+      IntelligentModels: [createModel('aibalance', 'standard')],
     }
-    const lightweightStats = [
+    const intelligentStats = [
       {
         provider_type: 'openai',
-        model_name: 'gpt-5-mini',
-        thinking_level: 'none',
-        input_consumption: 3,
-        output_consumption: 1,
-        cache_hit_token: 0,
+        model_name: 'gpt-5',
+        thinking_level: 'high',
+        input_consumption: 10,
+        output_consumption: 5,
+        cache_hit_token: 2,
       },
     ]
-
     const props = renderAndCollect({
       tier_consumption: {
-        lightweight: { input_consumption: 10, output_consumption: 2, cache_hit_token: 1 },
+        intelligent: { input_consumption: 30, output_consumption: 8, cache_hit_token: 5 },
       },
       tier_model_consumption: {
-        lightweight: lightweightStats,
+        intelligent: intelligentStats,
       },
     })
-
     expect(props[0]).toMatchObject({
       aiModel: undefined,
-      modelConsumption: lightweightStats,
+      modelConsumption: intelligentStats,
       fallbackConsumption: undefined,
     })
-  })
-
-  it('渲染主模型共享组件', () => {
-    mocks.config = {}
-    const { getByTestId } = render(<AIEchartsDetails {...baseProps} />)
-    expect(getByTestId('main-model-tokens')).toBeInTheDocument()
   })
 })
