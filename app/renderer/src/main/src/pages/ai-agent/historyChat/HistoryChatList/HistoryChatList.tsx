@@ -70,12 +70,6 @@ const getChatGroupKey = (timestamp?: number | string): ChatGroupKey => {
   return 'thirtyDays'
 }
 
-const getNextActiveChat = (chats: AISession[], currentIndex: number) => {
-  const prev = chats[currentIndex - 1]
-  const next = chats[currentIndex + 1]
-  return prev ?? next
-}
-
 const updateChatTitle = (list: AISession[], info: AISession) => {
   return list.map((item) => {
     if (item.SessionID === info.SessionID) {
@@ -233,7 +227,6 @@ const HistoryChatList: FC<{
       }
 
       const newChats = sessionList.filter((item) => item.SessionID !== SessionID)
-      const active = getNextActiveChat(sessionList, findIndex)
 
       try {
         const sessionIds = [SessionID]
@@ -243,10 +236,10 @@ const HistoryChatList: FC<{
           deleteSessionsParams: { sessionIds, source: [] },
         })
         setSessions && setSessions(newChats)
-        if (newChats.length === 0) {
+        // 删光或删的是当前会话：回欢迎页
+        if (newChats.length === 0 || activeSessionId === SessionID) {
           onNewChat(false, pageId)
-        } else if (activeSessionId === SessionID && active) {
-          handleSetActiveChat(active)
+          setActiveChat?.(undefined) // 嵌入页没有 pageId，NEW_CHAT 事件不会被消费，这里直接清空
         }
         resolve()
       } catch (error) {

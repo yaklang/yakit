@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { yakitNotify } from '@/utils/notification'
@@ -33,7 +33,7 @@ import { AISessionDeleteCancelledError, DeleteSessionsAISourceEnum, handAIHistor
 import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { sessionStatusStore } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
 import classNames from 'classnames'
-import { useUpdateEffect, useMemoizedFn, useDebounce } from 'ahooks'
+import { useUpdateEffect, useMemoizedFn, useDebounce, useInViewport } from 'ahooks'
 import {
   filterHistorySessionsBySource,
   getHistorySourceDeleteSessionSource,
@@ -302,12 +302,11 @@ const HistoryChat = memo(
         })
         const nextChats = sessions.filter((item) => getChatTimestamp(item) > beforeTimestamp)
         const activeDeleted = !!activeChat && sessionIds.includes(activeChat.SessionID)
-        if (nextChats.length === 0) {
+        // 删光或删到当前会话：回欢迎页
+        if (nextChats.length === 0 || activeDeleted) {
           onNewChat(false, pageId)
           setActiveChat?.(undefined)
           setSearch('')
-        } else if (activeDeleted) {
-          setActiveChat?.(nextChats[0])
         }
 
         dispatcher.setSessions?.(nextChats)
@@ -354,6 +353,13 @@ const HistoryChat = memo(
       if (!enableHistorySourceFilter) return
       refreshSessions()
     }, [historySourceFilter])
+
+    // 多开 Tab 切回本页时刷新，同步其它 Tab 的新建/删除
+    const historyRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(historyRef)
+    useUpdateEffect(() => {
+      if (!embedded && inViewport) dispatcher.loadHistoryData?.(true)
+    }, [inViewport])
 
     useEffect(() => {
       if (!enableHistorySourceFilter || embedded || historySourceFilter === 'local') return
@@ -437,7 +443,7 @@ const HistoryChat = memo(
     }, [dispatcher, handleResetSessions, historyQuerySources, isGlobalAIAgentHistory, isSessionVisibleInCurrentSource])
 
     return (
-      <div className={classNames(styles['history-chat'], className)}>
+      <div ref={historyRef} className={classNames(styles['history-chat'], className)}>
         <div className={styles['header-wrapper']}>
           <div className={styles['haeder-first']}>
             <div className={styles['first-title']}>

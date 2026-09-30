@@ -575,6 +575,31 @@
     *:has(> label[title='编译配置']) {
       display: none;
     }
+
+    :global {
+      .ant-form-item .ant-form-item-label {
+        text-align: start;
+      }
+
+      .ant-form-item-feedback-icon {
+        display: none;
+      }
+
+      *:has(> #root_SSACompile_exclude_files__title) > div:last-of-type > div:not(:has(.array-item-add)) {
+        display: flex;
+        align-items: flex-start;
+        gap: 4px;
+
+        > div:first-child {
+          flex: 1;
+          min-width: 0;
+        }
+
+        > div:last-child {
+          margin-top: 44px;
+        }
+      }
+    }
   }
 
   .baseInfo {
