@@ -854,6 +854,8 @@
   "ForgeName": {
     "exportForge": "导出技能",
     "importForge": "导入技能",
+    "exportTool": "导出工具",
+    "importTool": "导入工具",
     "deleteForgeSuccess": "删除Forge模板成功",
     "templateIdError": "该模板 ID('{{id}}') 异常, 无法编辑",
     "noMoreDescription": "暂无更多说明",
