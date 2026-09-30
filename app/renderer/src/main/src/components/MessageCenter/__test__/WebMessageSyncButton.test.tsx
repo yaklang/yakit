@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WebMessageSyncButton } from '../WebMessageSyncButton'
 import { apiHTTPFlowsFromOnline, apiRisksFromOnline } from '../utils'
+import { yakitNotify } from '@/utils/notification'
 
 const mocks = vi.hoisted(() => ({
   cleanupFlow: vi.fn(),
@@ -93,7 +94,43 @@ describe('WebMessageSyncButton', () => {
 
     expect(mocks.cleanupFlow).toHaveBeenCalledTimes(1)
     expect(onSuccess).toHaveBeenCalledTimes(1)
+    expect(yakitNotify).toHaveBeenCalledWith('success', 'MessageCenter.syncSuccess')
     expect(screen.getByRole('button', { name: /MessageCenter\.updateData/ })).not.toHaveAttribute('aria-busy', 'true')
+  })
+
+  it.each([
+    ['MessageCenter.updateFlow', apiHTTPFlowsFromOnline, '同步完成，共同步 12 条流量'],
+    ['MessageCenter.updateRisk', apiRisksFromOnline, '同步完成，共同步 3 条漏洞'],
+  ])('%s 完成后显示后端最后一条非空提示', (label, startApi, message) => {
+    render(<WebMessageSyncButton />)
+    fireEvent.click(screen.getByRole('button', { name: label }))
+    const handlers = vi.mocked(startApi).mock.calls[0][2]
+
+    act(() => {
+      handlers.onProgress(10, '正在同步')
+      handlers.onProgress(100, message)
+      handlers.onProgress(100, '  ')
+      handlers.onProgress(100)
+    })
+    expect(yakitNotify).not.toHaveBeenCalled()
+    act(() => handlers.onEnd())
+    expect(yakitNotify).toHaveBeenCalledExactlyOnceWith('success', message)
+  })
+
+  it('重新同步时不沿用上一次后端提示', () => {
+    render(<WebMessageSyncButton />)
+    const update = screen.getByRole('button', { name: 'MessageCenter.updateFlow' })
+    fireEvent.click(update)
+    const first = vi.mocked(apiHTTPFlowsFromOnline).mock.calls[0][2]
+    act(() => {
+      first.onProgress(100, '同步完成，共同步 12 条流量')
+      first.onEnd()
+    })
+
+    fireEvent.click(update)
+    const second = vi.mocked(apiHTTPFlowsFromOnline).mock.calls[1][2]
+    act(() => second.onEnd())
+    expect(yakitNotify).toHaveBeenLastCalledWith('success', 'MessageCenter.syncSuccess')
   })
 
   it('流报错时清理资源且不回调成功', () => {

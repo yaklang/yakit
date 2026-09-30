@@ -30,9 +30,13 @@ export const WebMessageSyncButton = ({ onSuccess }: { onSuccess?: () => void }) 
       return
     }
     setSyncPercent(0)
+    let syncMessage = ''
     const startApi = type === 'flow' ? apiHTTPFlowsFromOnline : apiRisksFromOnline
     cleanupRef.current = startApi(userInfo.token, randomString(40), {
-      onProgress: (percent) => setSyncPercent(Math.floor(percent)),
+      onProgress: (percent, log) => {
+        setSyncPercent(Math.floor(percent))
+        if (log?.trim()) syncMessage = log.trim()
+      },
       onError: (err) => {
         clearSync()
         failed(`${err}`)
@@ -40,7 +44,7 @@ export const WebMessageSyncButton = ({ onSuccess }: { onSuccess?: () => void }) 
       },
       onEnd: () => {
         clearSync()
-        yakitNotify('success', t('MessageCenter.syncSuccess'))
+        yakitNotify('success', syncMessage || t('MessageCenter.syncSuccess'))
         onSuccess?.()
       },
     })

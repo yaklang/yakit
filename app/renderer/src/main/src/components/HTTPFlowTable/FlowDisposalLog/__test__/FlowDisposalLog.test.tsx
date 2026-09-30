@@ -6,6 +6,8 @@ import { apiGetFlowDisposalLogs } from '../utils'
 
 const mocks = vi.hoisted(() => ({
   getLogs: vi.fn(),
+  publish: vi.fn(),
+  clearComposer: vi.fn(),
 }))
 
 vi.mock('@/store', () => ({ useStore: () => ({ userInfo: { companyName: 'tester' } }) }))
@@ -22,7 +24,23 @@ vi.mock('@/pages/Login', () => ({ default: () => null }))
 vi.mock('@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea', async () => {
   const ReactModule = await import('react')
   return {
-    PluginImageTextarea: ReactModule.forwardRef(() => <div data-testid="composer" />),
+    PluginImageTextarea: ReactModule.forwardRef(({ onSubmit }: { onSubmit: (data: unknown) => void }, ref) => {
+      ReactModule.useImperativeHandle(ref, () => ({ onClear: mocks.clearComposer }))
+      return (
+        <button
+          data-testid="composer"
+          onClick={() =>
+            onSubmit({
+              value: '',
+              imgs: [],
+              files: [{ url: 'https://files.test/report.zip', name: '报告.zip', size: 1024 }],
+            })
+          }
+        >
+          发布附件评论
+        </button>
+      )
+    }),
   }
 })
 vi.mock('../FlowDisposalLogItem', () => ({
@@ -31,7 +49,7 @@ vi.mock('../FlowDisposalLogItem', () => ({
 vi.mock('../utils', () => ({
   apiGetFlowDisposalLogs: mocks.getLogs,
   apiDeleteFlowDisposalComment: vi.fn(),
-  apiPublishFlowDisposalComment: vi.fn(),
+  apiPublishFlowDisposalComment: mocks.publish,
   apiUploadFlowDisposalImage: vi.fn(),
 }))
 
@@ -47,15 +65,35 @@ describe('FlowDisposalLog', () => {
   beforeEach(() => vi.clearAllMocks())
   afterEach(cleanup)
 
+  it('附件评论提交文件节点，切换对象后旧发布响应不清空新编辑框', async () => {
+    const pending = deferred<void>()
+    mocks.getLogs.mockResolvedValue({ data: [] })
+    mocks.publish.mockReturnValue(pending.promise)
+    const { rerender } = render(<FlowDisposalLog flow={{ Id: 1, Hash: 'old-flow' } as never} isLogin />)
+    fireEvent.click(screen.getByRole('button', { name: '发布附件评论' }))
+    expect(mocks.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hash: 'old-flow',
+        description: JSON.stringify([
+          { type: 'file', value: { url: 'https://files.test/report.zip', name: '报告.zip', size: 1024 } },
+        ]),
+      }),
+    )
+    rerender(<FlowDisposalLog flow={{ Id: 2, Hash: 'new-flow' } as never} isLogin />)
+    const clearedOnSwitch = mocks.clearComposer.mock.calls.length
+    pending.resolve()
+    await waitFor(() => expect(mocks.getLogs).toHaveBeenCalledWith(expect.objectContaining({ hash: 'new-flow' })))
+    await pending.promise
+    expect(mocks.clearComposer).toHaveBeenCalledTimes(clearedOnSwitch)
+  })
+
   it('切换流量后忽略旧对象的迟到响应', async () => {
     const oldRequest = deferred<{ data: Array<{ id: number; createdAt: number; logType: 'comment' }> }>()
     mocks.getLogs
       .mockReturnValueOnce(oldRequest.promise)
       .mockResolvedValueOnce({ data: [{ id: 2, createdAt: 200, logType: 'comment' }] })
 
-    const { rerender } = render(
-      <FlowDisposalLog flow={{ Id: 1, Hash: 'old-flow' } as never} isLogin refreshKey={0} />,
-    )
+    const { rerender } = render(<FlowDisposalLog flow={{ Id: 1, Hash: 'old-flow' } as never} isLogin refreshKey={0} />)
     rerender(<FlowDisposalLog flow={{ Id: 2, Hash: 'new-flow' } as never} isLogin refreshKey={0} />)
 
     await waitFor(() => expect(screen.getByText('2')).toBeInTheDocument())
@@ -93,19 +131,15 @@ describe('FlowDisposalLog', () => {
       createdAt: 200 - index,
       logType: 'comment' as const,
     }))
-    mocks.getLogs
-      .mockResolvedValueOnce({ data: firstPage, total: 21 })
-      .mockResolvedValueOnce({
-        data: [
-          { id: 1, createdAt: 181, logType: 'comment' },
-          { id: 21, createdAt: 50, logType: 'comment' },
-        ],
-        total: 21,
-      })
+    mocks.getLogs.mockResolvedValueOnce({ data: firstPage, total: 21 }).mockResolvedValueOnce({
+      data: [
+        { id: 1, createdAt: 181, logType: 'comment' },
+        { id: 21, createdAt: 50, logType: 'comment' },
+      ],
+      total: 21,
+    })
 
-    const { container } = render(
-      <FlowDisposalLog flow={{ Id: 1, Hash: 'flow' } as never} isLogin refreshKey={0} />,
-    )
+    const { container } = render(<FlowDisposalLog flow={{ Id: 1, Hash: 'flow' } as never} isLogin refreshKey={0} />)
     await waitFor(() => expect(apiGetFlowDisposalLogs).toHaveBeenCalledWith(expect.objectContaining({ page: 1 })))
     const list = container.querySelector('[class*="flow-disposal-log-body"]') as HTMLDivElement
     Object.defineProperties(list, {

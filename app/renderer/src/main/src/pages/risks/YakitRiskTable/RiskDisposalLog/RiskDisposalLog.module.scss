@@ -229,11 +229,8 @@
   flex-wrap: wrap;
   gap: 8px;
   .img-thumb {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
     width: 72px;
+    height: 72px;
     :global(.ant-image) {
       width: 72px;
       height: 72px;
@@ -241,10 +238,44 @@
       overflow: hidden;
       border: 1px solid var(--Colors-Use-Neutral-Border);
     }
+    &:focus-within :global(.ant-image-mask) {
+      opacity: 1;
+    }
+    @media (hover: none) {
+      :global(.ant-image-mask) {
+        opacity: 1;
+      }
+    }
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+  }
+}
+
+.img-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    color: #fff;
+    background: transparent;
+    cursor: pointer;
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: -2px;
     }
   }
 }

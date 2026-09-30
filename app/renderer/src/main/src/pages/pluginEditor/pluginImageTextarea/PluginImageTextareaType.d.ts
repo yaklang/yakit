@@ -7,9 +7,16 @@ export interface TextareaForImage {
   height: number
 }
 
+export interface TextareaForFile {
+  url: string
+  name: string
+  size: number
+}
+
 export interface ImageTextareaData {
   value: string
   imgs: TextareaForImage[]
+  files?: TextareaForFile[]
 }
 
 /** 引用内容结构 */
@@ -17,6 +24,7 @@ export interface QuotationInfoProps {
   userName: string
   content: string
   imgs: TextareaForImage[]
+  files?: TextareaForFile[]
 }
 
 export interface UploadDisposalImageRequest {
@@ -36,6 +44,8 @@ export interface PluginImageTextareaProps {
   onSubmit?: (data: ImageTextareaData) => any
   /** 自定义图片上传（如处置日志专用接口）；未传则走默认 httpUploadImgBase64 */
   onUploadImage?: (request: UploadDisposalImageRequest) => Promise<string>
+  /** 处置评论附件：从本地文件路径上传 */
+  onUploadFile?: (path: string) => Promise<string>
 
   /** 引用内容 */
   quotation?: QuotationInfoProps

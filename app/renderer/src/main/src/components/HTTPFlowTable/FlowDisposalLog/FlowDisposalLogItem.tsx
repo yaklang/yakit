@@ -1,10 +1,11 @@
 import type React from 'react'
 import { memo, useMemo } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import { downloadDisposalFile } from '@/utils/disposalDownload'
 import { Image } from 'antd'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { DisposalFileList } from '@/components/DisposalFileList/DisposalFileList'
+import { DownloadOutlined, EyeOutlined, PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { CommentLogColorful } from '@yakit-libs/yakit-ui-icons/colorful'
 import { PopoverArrowIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PopoverArrowIcon'
 import { formatTimestamp } from '@/utils/timeUtil'
@@ -23,7 +24,7 @@ interface FlowDisposalLogItemProps {
 
 export const FlowDisposalLogItemView: React.FC<FlowDisposalLogItemProps> = memo((props) => {
   const { info, hiddenLine, onReply, onDelete } = props
-  const { t } = useI18nNamespaces(['history'])
+  const { t } = useI18nNamespaces(['history', 'yakitUi'])
 
   const isSystem = info.logType === 'system'
   const isReply = !!info.parentComment
@@ -38,17 +39,14 @@ export const FlowDisposalLogItemView: React.FC<FlowDisposalLogItemProps> = memo(
     return disposalCommentJSONConvertToData(info.parentComment.description)
   }, [info.parentComment])
 
-  const handleDownload = useMemoizedFn((url: string) => {
-    const a = document.createElement('a')
-    a.href = url
-    a.download = url.split('/').pop() || 'image.png'
-    a.target = '_blank'
-    a.rel = 'noopener noreferrer'
-    a.click()
-  })
-
-  const showParentQuote = !!(parentContent?.text || (parentContent?.imgs && parentContent.imgs.length > 0))
-  const hasBody = isSystem ? !!info.description : !!(content?.text || content?.imgs?.length || showParentQuote)
+  const showParentQuote = !!(
+    parentContent?.text ||
+    (parentContent?.imgs && parentContent.imgs.length > 0) ||
+    parentContent?.files?.length
+  )
+  const hasBody = isSystem
+    ? !!info.description
+    : !!(content?.text || content?.imgs?.length || content?.files?.length || showParentQuote)
 
   return (
     <div className={styles['log-item']}>
@@ -133,19 +131,51 @@ export const FlowDisposalLogItemView: React.FC<FlowDisposalLogItemProps> = memo(
                           </div>
                         )}
                         {!!parentContent?.imgs?.length && <span>{`[图片] * ${parentContent.imgs.length}`}</span>}
+                        {!!parentContent?.files?.length && (
+                          <span
+                            title={parentContent.files.map((file) => file.name).join('、')}
+                          >{`[附件] * ${parentContent.files.length}`}</span>
+                        )}
                       </div>
                     </div>
                   )}
                   {!!content?.text && <div className={styles['log-item-content']}>{content.text}</div>}
+                  <DisposalFileList files={content?.files} />
                   {!!content?.imgs?.length && (
                     <div className={styles['log-item-imgs']}>
                       <Image.PreviewGroup>
                         {content.imgs.map((img) => (
                           <div key={img.url} className={styles['img-thumb']}>
-                            <Image src={img.url} width={72} height={72} style={{ objectFit: 'cover' }} preview />
-                            <YakitButton type="text" size="small" onClick={() => handleDownload(img.url)}>
-                              {t('HTTPFlowDetailMini.logDownload')}
-                            </YakitButton>
+                            <Image
+                              src={img.url}
+                              width={72}
+                              height={72}
+                              style={{ objectFit: 'cover' }}
+                              preview={{
+                                mask: (
+                                  <div className={styles['img-actions']}>
+                                    <button
+                                      type="button"
+                                      aria-label={t('YakitButton.preview')}
+                                      title={t('YakitButton.preview')}
+                                    >
+                                      <EyeOutlined color="currentColor" size={20} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      aria-label={t('HTTPFlowDetailMini.logDownload')}
+                                      title={t('HTTPFlowDetailMini.logDownload')}
+                                      onClick={(event) => {
+                                        event.stopPropagation()
+                                        void downloadDisposalFile(img.url)
+                                      }}
+                                    >
+                                      <DownloadOutlined color="currentColor" size={20} />
+                                    </button>
+                                  </div>
+                                ),
+                              }}
+                            />
                           </div>
                         ))}
                       </Image.PreviewGroup>
