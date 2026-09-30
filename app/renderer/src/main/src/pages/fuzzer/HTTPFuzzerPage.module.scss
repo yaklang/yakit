@@ -117,8 +117,8 @@
     color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 12px;
     :global {
-      .ant-input-group {
-        padding: 0 !important;
+      .ant-space-compact {
+        padding: 0;
       }
       .ant-input-group.ant-input-group-compact > *:nth-child(3) {
         .ant-input-number {
