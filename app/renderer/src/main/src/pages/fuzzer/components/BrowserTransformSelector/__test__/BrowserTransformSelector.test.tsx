@@ -203,24 +203,24 @@ describe('BrowserTransformSelector', () => {
     expect(screen.queryByText('BrowserTransformSelector.entry')).not.toBeInTheDocument()
   })
 
-  it('renders the entry button while loading snapshot', async () => {
-    let resolveSnapshot: (value: typeof emptySnapshot) => void = () => undefined
+  it('keeps the entry hidden while loading and only shows after online devices are confirmed', async () => {
+    let resolveSnapshot: (value: typeof onlineSnapshot) => void = () => undefined
     mocks.getBrowserExtensionSnapshot.mockReturnValue(
       new Promise((resolve) => {
         resolveSnapshot = resolve
       }),
     )
+    mocks.callBrowserExtensionCapability.mockResolvedValue([enabledProfile])
 
-    render(<BrowserTransformSelector onChange={vi.fn()} />)
+    const { container } = render(<BrowserTransformSelector onChange={vi.fn()} />)
+
+    expect(container).toBeEmptyDOMElement()
+    expect(screen.queryByText('BrowserTransformSelector.entry')).not.toBeInTheDocument()
+
+    resolveSnapshot(onlineSnapshot)
 
     await waitFor(() => {
       expect(screen.getByText('BrowserTransformSelector.entry')).toBeInTheDocument()
-    })
-
-    resolveSnapshot(emptySnapshot)
-
-    await waitFor(() => {
-      expect(screen.queryByText('BrowserTransformSelector.entry')).not.toBeInTheDocument()
     })
   })
 

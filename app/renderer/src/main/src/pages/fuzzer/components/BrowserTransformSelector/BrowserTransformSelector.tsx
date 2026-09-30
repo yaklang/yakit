@@ -131,8 +131,8 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
         : t('BrowserTransformSelector.responseOnly')
     : ''
 
-  // 无在线浏览器且未选中配置时不展示入口
-  if (!loading && !devices.length && !value) {
+  // 默认不展示；仅确认有在线浏览器或已选中配置后才出现
+  if (!devices.length && !value) {
     return null
   }
 

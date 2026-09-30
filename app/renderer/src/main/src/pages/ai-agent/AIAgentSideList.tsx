@@ -22,7 +22,7 @@ const AIScheduledTasks = React.lazy(() => import('./aiScheduledTasks/AIScheduled
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.File)
+  const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.Session)
   const [show, setShow] = useControllableValue<boolean>(props, {
     defaultValue: false,
     valuePropName: 'show',

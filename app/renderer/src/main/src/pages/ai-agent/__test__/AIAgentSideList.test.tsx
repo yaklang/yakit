@@ -85,6 +85,7 @@ describe('AIAgentSideList', () => {
   autoHidden = true
   it('当前页签不变时更新选中文件和定时任务的可见状态', async () => {
     render(<SideList />)
+    fireEvent.click(screen.getByRole('button', { name: 'file' }))
     fireEvent.click(screen.getByText('选择文件'))
     expect(screen.getByLabelText('selected-file')).toHaveTextContent('/report.txt')
     fireEvent.click(screen.getByRole('button', { name: 'scheduled' }))
@@ -98,9 +99,9 @@ describe('AIAgentSideList', () => {
     expect(screen.getByTestId('scheduled')).toHaveAttribute('data-visible', 'false')
   })
 
-  it('默认激活 File 页，按会话、文件系统、浏览器、定时任务、MCP 排列入口', async () => {
+  it('默认激活 session 页（历史会话），并渲染历史会话面板', async () => {
     render(<SideList />)
-    expect(screen.getByLabelText('active')).toHaveTextContent('file')
+    expect(screen.getByLabelText('active')).toHaveTextContent('session')
     expect(
       screen
         .getAllByRole('button')
@@ -110,8 +111,8 @@ describe('AIAgentSideList', () => {
             text === 'session' || text === 'file' || text === 'browser' || text === 'scheduled' || text === 'mcp',
         ),
     ).toEqual(['session', 'file', 'browser', 'scheduled', 'mcp'])
-    expect(screen.queryByTestId('history-chat')).not.toBeInTheDocument()
-    expect(screen.getByText('文件列表')).toBeInTheDocument()
+    expect(screen.getByTestId('history-chat')).toBeInTheDocument()
+    expect(screen.queryByText('文件列表')).not.toBeInTheDocument()
   })
 
   it('挂载后消费打开浏览器实例页签的导航意图', () => {
@@ -177,6 +178,8 @@ describe('AIAgentSideList', () => {
   it('toggle 同一已展开页则收起，其它页或未展开则打开', async () => {
     render(<SideList />)
     expect(screen.getByLabelText('show')).toHaveTextContent('true')
+    expect(screen.getByLabelText('active')).toHaveTextContent('session')
+    fireEvent.click(screen.getByRole('button', { name: 'file' }))
     expect(screen.getByLabelText('active')).toHaveTextContent('file')
     act(() => {
       emiter.emit(
