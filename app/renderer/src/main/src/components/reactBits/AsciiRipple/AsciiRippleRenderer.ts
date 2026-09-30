@@ -3,6 +3,14 @@ import type { RippleOptions } from './AsciiRippleEngine'
 
 type RippleEngine = ReturnType<typeof createRippleEngine>
 
+export type RippleWorkerResponse =
+  | { type: 'ready' }
+  | {
+      type: 'error'
+      phase: 'capability' | 'initialization' | 'runtime'
+      error: { name: string; message: string; stack?: string }
+    }
+
 export type RippleWorkerMessage =
   | {
       type: 'init'
@@ -61,10 +69,15 @@ export function createRippleRenderer(root: HTMLElement, initialOptions: RippleOp
     engine.resize(width, height, dpr)
     if (calmed) engine.calm()
   }
+  const reportFailure = (error: unknown, unsupported = false) => {
+    if (unsupported) console.warn('AsciiRipple Worker failed; falling back to main thread', error)
+    else console.error('AsciiRipple Worker failed; falling back to main thread', error)
+  }
   const send = (message: RippleWorkerMessage, transfer: Transferable[] = []) => {
     try {
       worker?.postMessage(message, transfer)
-    } catch {
+    } catch (error) {
+      reportFailure({ phase: 'postMessage', messageType: message.type, error })
       startMainThread()
     }
   }
@@ -78,15 +91,28 @@ export function createRippleRenderer(root: HTMLElement, initialOptions: RippleOp
     try {
       worker = new Worker(new URL('./AsciiRipple.worker.ts', import.meta.url), { type: 'module' })
       worker.onerror = (event) => {
+        reportFailure({
+          phase: 'runtime',
+          error: event.error ?? {
+            message: event.message,
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+          },
+        })
         event.preventDefault()
         startMainThread()
       }
-      worker.onmessage = (event: MessageEvent<{ type: string }>) => {
-        if (event.data.type === 'error') startMainThread()
+      worker.onmessage = (event: MessageEvent<RippleWorkerResponse>) => {
+        if (event.data.type === 'error') {
+          reportFailure(event.data, event.data.phase === 'capability')
+          startMainThread()
+        }
       }
       const offscreen = canvas.transferControlToOffscreen()
       send({ type: 'init', canvas: offscreen, options, width, height, dpr, reduced }, [offscreen])
-    } catch {
+    } catch (error) {
+      reportFailure({ phase: 'initialization', error })
       startMainThread()
     }
   } else startMainThread()
@@ -141,6 +167,7 @@ export function createRippleRenderer(root: HTMLElement, initialOptions: RippleOp
       engine?.setReducedMotion(value)
     },
     destroy() {
+      if (destroyed) return
       destroyed = true
       worker?.terminate()
       worker = null

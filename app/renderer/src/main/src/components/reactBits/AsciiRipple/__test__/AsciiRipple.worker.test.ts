@@ -51,6 +51,14 @@ function init() {
   send({ type: 'init', canvas, options, width: 640, height: 400, dpr: 1.5, reduced: true })
 }
 
+function expectError(phase: string, message: string) {
+  expect(scope.postMessage).toHaveBeenCalledExactlyOnceWith({
+    type: 'error',
+    phase,
+    error: { name: 'Error', message, stack: expect.stringContaining(message) },
+  })
+}
+
 beforeEach(async () => {
   vi.resetModules()
   vi.mocked(createRippleEngine).mockReset()
@@ -131,14 +139,14 @@ describe('AsciiRipple Worker 消息处理', () => {
     vi.stubGlobal('requestAnimationFrame', undefined)
     init()
     expect(createRippleEngine).not.toHaveBeenCalled()
-    expect(scope.postMessage).toHaveBeenCalledExactlyOnceWith({ type: 'error' })
+    expectError('capability', 'Canvas worker is unavailable')
   })
 
   it('无法取得 2D context 时报告错误，不创建引擎', () => {
     getContext.mockReturnValue(null)
     init()
     expect(createRippleEngine).not.toHaveBeenCalled()
-    expect(scope.postMessage).toHaveBeenCalledExactlyOnceWith({ type: 'error' })
+    expectError('capability', 'Canvas worker is unavailable')
   })
 
   it('帧调度抛错时报告错误，不创建引擎', () => {
@@ -150,7 +158,7 @@ describe('AsciiRipple Worker 消息处理', () => {
     )
     init()
     expect(createRippleEngine).not.toHaveBeenCalled()
-    expect(scope.postMessage).toHaveBeenCalledExactlyOnceWith({ type: 'error' })
+    expectError('capability', 'unavailable')
   })
 
   it('创建引擎抛错时报告错误', () => {
@@ -158,7 +166,7 @@ describe('AsciiRipple Worker 消息处理', () => {
       throw new Error('init failed')
     })
     init()
-    expect(scope.postMessage).toHaveBeenCalledExactlyOnceWith({ type: 'error' })
+    expectError('initialization', 'init failed')
   })
 
   it('初始化尺寸失败时销毁已创建的引擎并报告错误', () => {
@@ -167,7 +175,7 @@ describe('AsciiRipple Worker 消息处理', () => {
     })
     init()
     expect(engine.destroy).toHaveBeenCalledOnce()
-    expect(scope.postMessage).toHaveBeenCalledExactlyOnceWith({ type: 'error' })
+    expectError('initialization', 'resize failed')
   })
 
   it('运行期间处理消息失败时销毁引擎并报告错误', () => {
@@ -178,6 +186,20 @@ describe('AsciiRipple Worker 消息处理', () => {
     })
     send({ type: 'move', x: 100, y: 120 })
     expect(engine.destroy).toHaveBeenCalledOnce()
-    expect(scope.postMessage).toHaveBeenCalledExactlyOnceWith({ type: 'error' })
+    expectError('runtime', 'move failed')
+  })
+
+  it('保留非 Error 异常的内容', () => {
+    init()
+    scope.postMessage.mockClear()
+    vi.mocked(engine.move).mockImplementation(() => {
+      throw 'move failed'
+    })
+    send({ type: 'move', x: 100, y: 120 })
+    expect(scope.postMessage).toHaveBeenCalledExactlyOnceWith({
+      type: 'error',
+      phase: 'runtime',
+      error: { name: 'Error', message: 'move failed' },
+    })
   })
 })

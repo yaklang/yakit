@@ -11,7 +11,7 @@
   },
   "aliases": {
     "components": "@/components",
-    "ui": "@/components/reactbits",
+    "ui": "@/components/reactBits",
     "utils": "@/utils",
     "hooks": "@/hook",
     "lib": "@/lib"

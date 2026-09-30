@@ -1,10 +1,12 @@
 import { createRippleEngine } from './AsciiRippleEngine'
-import type { RippleWorkerMessage } from './AsciiRippleRenderer'
+import type { RippleWorkerMessage, RippleWorkerResponse } from './AsciiRippleRenderer'
 
 let engine: ReturnType<typeof createRippleEngine> | null = null
 
 self.onmessage = (event: MessageEvent<RippleWorkerMessage>) => {
   const message = event.data
+  let phase: Extract<RippleWorkerResponse, { type: 'error' }>['phase'] =
+    message.type === 'init' ? 'capability' : 'runtime'
   try {
     switch (message.type) {
       case 'init': {
@@ -13,6 +15,7 @@ self.onmessage = (event: MessageEvent<RippleWorkerMessage>) => {
         }
         // 启动时验证 Worker 支持帧调度，失败则交给主线程回退。
         cancelAnimationFrame(requestAnimationFrame(() => {}))
+        phase = 'initialization'
         engine = createRippleEngine(message.canvas, message.options, () => new OffscreenCanvas(1, 1))
         engine.setReducedMotion(message.reduced)
         engine.resize(message.width, message.height, message.dpr)
@@ -41,8 +44,17 @@ self.onmessage = (event: MessageEvent<RippleWorkerMessage>) => {
         engine?.setReducedMotion(message.value)
         break
     }
-  } catch {
+  } catch (error) {
     engine?.destroy()
-    self.postMessage({ type: 'error' })
+    engine = null
+    const response: RippleWorkerResponse = {
+      type: 'error',
+      phase,
+      error:
+        error instanceof Error
+          ? { name: error.name, message: error.message, stack: error.stack }
+          : { name: 'Error', message: String(error) },
+    }
+    self.postMessage(response)
   }
 }

@@ -270,14 +270,6 @@ const AsciiRipple = forwardRef<AsciiRippleHandle, AsciiRippleProps>(
       }
     }, [])
 
-    const onPointerLeave = useCallback(() => {
-      insideRef.current = false
-      rendererRef.current?.leave()
-    }, [])
-    useEffect(() => {
-      window.addEventListener('scroll', onPointerLeave, true)
-      return () => window.removeEventListener('scroll', onPointerLeave, true)
-    }, [onPointerLeave])
     const localPoint = useCallback((e: { clientX: number; clientY: number }) => {
       const root = rootRef.current
       if (!root) return null
@@ -316,6 +308,15 @@ const AsciiRipple = forwardRef<AsciiRippleHandle, AsciiRippleProps>(
       [interactive, localPoint],
     )
     useEffect(() => () => onPointerDown.cancel(), [onPointerDown])
+    const onPointerLeave = useCallback(() => {
+      onPointerDown.cancel()
+      insideRef.current = false
+      rendererRef.current?.leave()
+    }, [onPointerDown])
+    useEffect(() => {
+      window.addEventListener('scroll', onPointerLeave, true)
+      return () => window.removeEventListener('scroll', onPointerLeave, true)
+    }, [onPointerLeave])
     useEffect(() => {
       const target = interactionTargetRef?.current
       if (!target) return
@@ -326,7 +327,8 @@ const AsciiRipple = forwardRef<AsciiRippleHandle, AsciiRippleProps>(
         else onPointerMove(event)
       }
       const down = (event: PointerEvent) => {
-        if (!isDisabled(event)) onPointerDown(event)
+        if (isDisabled(event)) onPointerLeave()
+        else onPointerDown(event)
       }
       target.addEventListener('pointermove', move)
       target.addEventListener('pointerdown', down)

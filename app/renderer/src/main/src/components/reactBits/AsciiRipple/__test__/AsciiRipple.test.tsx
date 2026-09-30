@@ -3,6 +3,7 @@ import { createRef, StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import AsciiRipple from '../AsciiRipple'
 import type { AsciiRippleHandle } from '../AsciiRipple'
+import type { RippleWorkerResponse } from '../AsciiRippleRenderer'
 
 let target: HTMLDivElement
 let requestFrame: ReturnType<typeof vi.fn>
@@ -268,13 +269,15 @@ describe('AsciiRipple 后台绘制', () => {
   let workers: Array<{
     postMessage: ReturnType<typeof vi.fn>
     terminate: ReturnType<typeof vi.fn>
-    onerror: ((event: { preventDefault: () => void }) => void) | null
-    onmessage: ((event: { data: { type: string } }) => void) | null
+    onerror: ((event: ErrorEvent) => void) | null
+    onmessage: ((event: { data: RippleWorkerResponse }) => void) | null
   }>
   let transfer: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     workers = []
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
     vi.stubGlobal('OffscreenCanvas', class {})
     vi.stubGlobal(
       'Worker',
@@ -347,7 +350,14 @@ describe('AsciiRipple 后台绘制', () => {
     const { container } = await mount()
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
     const transferred = container.querySelector('canvas')
-    act(() => workers[0].onerror!({ preventDefault: vi.fn() }))
+    const error = new Error('worker failed')
+    const event = new ErrorEvent('error', { error, message: error.message, cancelable: true })
+    act(() => workers[0].onerror!(event))
+    expect(console.error).toHaveBeenCalledWith('AsciiRipple Worker failed; falling back to main thread', {
+      phase: 'runtime',
+      error,
+    })
+    expect(event.defaultPrevented).toBe(true)
     expect(workers[0].terminate).toHaveBeenCalledOnce()
     expect(container.querySelector('canvas')).not.toBe(transferred)
     expect(container.querySelectorAll('canvas')).toHaveLength(1)
@@ -374,6 +384,46 @@ describe('AsciiRipple 后台绘制', () => {
     act(() => vi.advanceTimersByTime(1))
     const drops = workers[0].postMessage.mock.calls.map(([message]) => message).filter(({ type }) => type === 'drop')
     expect(drops).toEqual([{ type: 'drop', x: 300, y: 320 }])
+  })
+
+  it.each([
+    [true, 'leave'],
+    [false, 'leave'],
+    [true, 'scroll'],
+    [false, 'scroll'],
+    [true, 'disabled-move'],
+    [true, 'disabled-down'],
+  ] as const)('外部容器 %s，%s 后取消延迟点击且重新进入使用新坐标', async (external, action) => {
+    const { container } = render(<AsciiRipple interactionTargetRef={external ? { current: target } : undefined} />)
+    await act(async () => {
+      await Promise.resolve()
+    })
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+    const node = external ? target : container.firstElementChild!
+    fireEvent(node, new MouseEvent('pointerdown', { bubbles: true, clientX: 100, clientY: 120 }))
+    fireEvent(node, new MouseEvent('pointerdown', { bubbles: true, clientX: 200, clientY: 220 }))
+    expect(vi.getTimerCount()).toBe(1)
+
+    if (action === 'leave') {
+      fireEvent(node, new MouseEvent(external ? 'pointerleave' : 'pointerout', { bubbles: true }))
+    } else if (action === 'scroll') {
+      fireEvent.scroll(node)
+    } else {
+      const disabled = document.createElement('button')
+      disabled.setAttribute('data-ai-ripple-disabled', '')
+      node.append(disabled)
+      fireEvent(disabled, new MouseEvent(action === 'disabled-move' ? 'pointermove' : 'pointerdown', { bubbles: true }))
+    }
+    expect(vi.getTimerCount()).toBe(0)
+    expect(workers[0].postMessage).toHaveBeenLastCalledWith({ type: 'leave' }, [])
+    workers[0].postMessage.mockClear()
+    act(() => vi.advanceTimersByTime(200))
+    expect(workers[0].postMessage).not.toHaveBeenCalled()
+
+    const bounds = container.firstElementChild!.getBoundingClientRect()
+    vi.mocked(HTMLElement.prototype.getBoundingClientRect).mockReturnValue({ ...bounds, left: 40, top: 30 })
+    fireEvent(node, new MouseEvent('pointermove', { bubbles: true, clientX: 550, clientY: 350 }))
+    expect(workers[0].postMessage).toHaveBeenCalledExactlyOnceWith({ type: 'move', x: 510, y: 320 }, [])
   })
 
   it.each(['unmount', 'disable', 'calm'] as const)('%s 取消待执行的点击', async (action) => {
@@ -430,7 +480,68 @@ describe('AsciiRipple 后台绘制', () => {
       await Promise.resolve()
     })
     ref.current!.calm()
-    act(() => workers[0].onmessage!({ data: { type: 'error' } }))
+    act(() =>
+      workers[0].onmessage!({
+        data: {
+          type: 'error',
+          phase: 'runtime',
+          error: { name: 'Error', message: 'frame failed', stack: 'worker stack' },
+        },
+      }),
+    )
     expect(cancelAnimationFrame).toHaveBeenCalledWith(1)
+  })
+
+  it.each(['capability', 'initialization', 'runtime'] as const)('记录 %s 的错误详情并回退', async (phase) => {
+    const { container } = await mount()
+    const canvas = container.querySelector('canvas')
+    const data: RippleWorkerResponse = {
+      type: 'error',
+      phase,
+      error: { name: 'TypeError', message: 'worker failed', stack: 'original worker stack' },
+    }
+    act(() => workers[0].onmessage!({ data }))
+    const log = phase === 'capability' ? console.warn : console.error
+    expect(log).toHaveBeenCalledWith('AsciiRipple Worker failed; falling back to main thread', data)
+    expect(workers[0].terminate).toHaveBeenCalledOnce()
+    expect(container.querySelector('canvas')).not.toBe(canvas)
+  })
+
+  it('浏览器未提供 Error 对象时保留消息和源码位置', async () => {
+    await mount()
+    const event = new ErrorEvent('error', { message: 'load failed', filename: 'worker.js', lineno: 12, colno: 3 })
+    act(() => workers[0].onerror!(event))
+    expect(console.error).toHaveBeenCalledWith('AsciiRipple Worker failed; falling back to main thread', {
+      phase: 'runtime',
+      error: { message: 'load failed', filename: 'worker.js', lineno: 12, colno: 3 },
+    })
+  })
+
+  it('消息发送失败时保留错误和消息类型', async () => {
+    await mount()
+    const error = new Error('postMessage failed')
+    workers[0].postMessage.mockImplementation(() => {
+      throw error
+    })
+    fireEvent.pointerMove(target, { clientX: 100, clientY: 120 })
+    expect(console.error).toHaveBeenCalledWith('AsciiRipple Worker failed; falling back to main thread', {
+      phase: 'postMessage',
+      messageType: 'move',
+      error,
+    })
+    expect(workers[0].terminate).toHaveBeenCalledOnce()
+  })
+
+  it('画布转移失败时保留初始化异常', async () => {
+    const error = new Error('transfer failed')
+    transfer.mockImplementation(() => {
+      throw error
+    })
+    await mount()
+    expect(console.error).toHaveBeenCalledWith('AsciiRipple Worker failed; falling back to main thread', {
+      phase: 'initialization',
+      error,
+    })
+    expect(workers[0].terminate).toHaveBeenCalledOnce()
   })
 })
