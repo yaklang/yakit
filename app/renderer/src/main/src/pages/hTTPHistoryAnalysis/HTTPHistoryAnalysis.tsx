@@ -48,14 +48,10 @@ import { type HTTPFlow, ImportExportProgress } from '@/components/HTTPFlowTable/
 import { randomString } from '@/utils/randomUtil'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { useCampare } from '@/hook/useCompare/useCompare'
-import {
-  minWinSendToChildWin,
-  openABSFileLocated,
-  openConsoleNewWindow,
-  openPacketNewWindow,
-} from '@/utils/openWebsite'
+import { minWinSendToChildWin, openABSFileLocated, openPacketNewWindow } from '@/utils/openWebsite'
 import { parseStatusCodes, sorterFunction } from '../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
 import emiter from '@/utils/eventBus/eventBus'
+import { emitOpenEngineConsole } from '@/components/baseConsole/openEngineConsole'
 import { type HTTPHistoryAnalysisPageInfo, type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { shallow } from 'zustand/shallow'
@@ -873,7 +869,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                           <Tooltip placement="bottom" title={t('HTTPFuzzerHotPatch.engineConsole')}>
                             <YakitButton
                               type="text"
-                              onClick={openConsoleNewWindow}
+                              onClick={emitOpenEngineConsole}
                               icon={<TerminalOutlined color="currentColor" />}
                             />
                           </Tooltip>

@@ -42,7 +42,7 @@ import classNames from 'classnames'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { openConsoleNewWindow } from '@/utils/openWebsite'
+import { emitOpenEngineConsole } from '@/components/baseConsole/openEngineConsole'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { getWebFuzzerPageList, setSharedHotReloadEnabled } from './fuzzerHotPatchUtils'
@@ -473,7 +473,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             <Tooltip placement="bottom" title={t('HTTPFuzzerHotPatch.engineConsole')}>
               <YakitButton
                 type="text"
-                onClick={openConsoleNewWindow}
+                onClick={emitOpenEngineConsole}
                 icon={<TerminalOutlined className={styles['engineConsole-icon-style']} color="currentColor" />}
                 className={styles['btn-box']}
               ></YakitButton>
@@ -919,7 +919,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                       type="text"
                       size="small"
                       className={styles['hotPatch-sidebar-icon-button']}
-                      onClick={openConsoleNewWindow}
+                      onClick={emitOpenEngineConsole}
                       icon={<TerminalOutlined className={styles['engineConsole-icon-style']} color="currentColor" />}
                     />
                   </Tooltip>

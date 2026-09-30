@@ -21,7 +21,7 @@ import {
   FigmaIcon2017756Outlined,
   FigmaIcon6480193584Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { openConsoleNewWindow } from '@/utils/openWebsite'
+import { emitOpenEngineConsole } from '@/components/baseConsole/openEngineConsole'
 import { Dropdown, Tooltip } from 'antd'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -1130,7 +1130,7 @@ export const HotPatchManagement: React.FC = () => {
               <Tooltip placement="bottom" title={t('HTTPFuzzerHotPatch.engineConsole')}>
                 <YakitButton
                   type="text"
-                  onClick={openConsoleNewWindow}
+                  onClick={emitOpenEngineConsole}
                   icon={<TerminalOutlined color="currentColor" />}
                 />
               </Tooltip>
@@ -1197,7 +1197,7 @@ export const HotPatchManagement: React.FC = () => {
                   <Tooltip placement="bottom" title={t('HTTPFuzzerHotPatch.engineConsole')}>
                     <YakitButton
                       type="text"
-                      onClick={openConsoleNewWindow}
+                      onClick={emitOpenEngineConsole}
                       icon={<TerminalOutlined color="currentColor" />}
                     />
                   </Tooltip>
