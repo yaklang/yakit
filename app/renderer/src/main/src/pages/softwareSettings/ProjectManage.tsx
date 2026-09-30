@@ -68,6 +68,9 @@ export {
 } from './projectUtils'
 import {
   getEnvTypeByProjects,
+  resolveParentFolderIds,
+  canCreateSubFolder,
+  getSubmitFolderState,
   type ProjectManageProp,
   type ProjectParamsProps,
   type ProjectParamsProp,
@@ -497,7 +500,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                   label: t('ProjectManage.newSubfolder'),
                   itemIcon: <FolderOpenSolid size={24} className={styles['floder-icon']} />,
                 },
-              ],
+              ].filter((item) => item.key !== 'newFolder' || canCreateSubFolder(info)),
               className: styles['dropdown-menu-body'],
               onClick: ({ key }) => {
                 setOperateShow(-1)
@@ -638,6 +641,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             }
             setData(newData)
           } else {
+            // 回到顶部，否则虚拟列表沿用旧滚动位置，会显示空白
+            if (containerRef.current) containerRef.current.scrollTop = 0
             setData({ ...rsp })
           }
           setSearch({ name: param.ProjectName || '', total: +rsp.Total })
@@ -693,15 +698,17 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
   })
 
   const operateFunc = useMemoizedFn((type: string, data?: ProjectDescription) => {
+    // 行内/空状态入口带 parentNode；顶部入口回显当前所在文件夹
+    const folderProps = data ? { parentNode: data } : { defaultFolders: files }
     switch (type) {
       case 'newProject':
-        setModalInfo(data ? { visible: true, parentNode: data } : { visible: true })
+        setModalInfo({ visible: true, ...folderProps })
         return
       case 'newFolder':
         setModalInfo(data ? { visible: true, isFolder: true, parentNode: data } : { visible: true, isFolder: true })
         return
       case 'import':
-        setModalInfo({ visible: true, isNew: false, isImport: true, parentNode: data || undefined })
+        setModalInfo({ visible: true, isNew: false, isImport: true, ...folderProps })
         return
       case 'encryption':
         if (!data || !data.Id) {
@@ -796,6 +803,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     isImport?: boolean
     project?: ProjectDescription
     parentNode?: ProjectDescription
+    defaultFolders?: ProjectDescription[]
   }>({ visible: false })
   const [modalLoading, setModalLoading] = useState<boolean>(false)
 
@@ -837,6 +845,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
   const [inquireIntoProjectVisible, setInquireIntoProjectVisible] = useState<boolean>(false)
   const [newProjectInfo, setNewProjectInfo] = useState<{ Id: string; ProjectName: string }>({ Id: '', ProjectName: '' })
+
+  /** 新建/导入成功后按所选文件夹刷新列表（规则见 getSubmitFolderState） */
+  const gotoSubmitFolder = useMemoizedFn((folders?: Pick<ProjectDescription, 'Id' | 'ProjectName'>[]) => {
+    const next = getSubmitFolderState(folders, params)
+    if (next.files) setFiles(next.files.map((f) => ({ ...DefaultProjectInfo, ...f })))
+    setParams(next.params)
+  })
 
   /** 弹窗确认事件的回调 */
   const onModalSubmit = useMemoizedFn(
@@ -880,7 +895,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               .then((res) => {
                 success(t('ProjectManage.createProjectSuccess'))
                 setModalInfo({ visible: false })
-                setParams({ ...params, Pagination: { ...params.Pagination, Page: 1 } })
+                gotoSubmitFolder(projectInfo.folders)
                 setNewProjectInfo(res)
                 setTimeout(() => {
                   setInquireIntoProjectVisible(true)
@@ -973,25 +988,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                       .then(({ Id, ProjectName }: { Id: number; ProjectName: string }) => {
                         success(t('ProjectManage.createFolderSuccess'))
                         setModalInfo({ visible: false })
-                        if (folderInfo.parent) {
-                          setFiles([
-                            { ...folderInfo.parent },
-                            { ...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName },
-                          ])
-                          setParams({
-                            Type: 'all',
-                            FolderId: +folderInfo.parent.Id,
-                            ChildFolderId: +Id,
-                            Pagination: { ...params.Pagination, Page: 1 },
-                          })
-                        } else {
-                          setFiles([{ ...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName }])
-                          setParams({
-                            Type: 'all',
-                            FolderId: +Id,
-                            Pagination: { ...params.Pagination, Page: 1 },
-                          })
-                        }
+                        const created = { Id: +Id, ProjectName }
+                        gotoSubmitFolder(folderInfo.parent ? [folderInfo.parent, created] : [created])
                         setTimeout(() => update(), 300)
                       })
                       .catch((e) => {
@@ -1015,7 +1013,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
           return
         case 'isImport':
           setModalInfo({ visible: false })
-          setParams({ ...params, Pagination: { ...params.Pagination, Page: 1 } })
+          gotoSubmitFolder((value as ImportProjectProps).folders)
           setTimeout(() => {
             update()
             setModalLoading(false)
@@ -1591,6 +1589,8 @@ interface NewProjectAndFolderProps {
   isImport?: boolean
   project?: ProjectDescription
   parentNode?: ProjectDescription
+  /** 顶部新建/导入时的当前所在文件夹（面包屑），用于回显所属文件夹 */
+  defaultFolders?: ProjectDescription[]
   visible: boolean
   setVisible: (open: boolean) => any
   loading: boolean
@@ -1605,6 +1605,7 @@ interface ProjectFolderInfoProps {
   FolderId?: number
   ChildFolderId?: number
   parent?: ProjectDescription
+  folders?: ProjectDescription[]
   Database?: string
   ExternalModule?: string
   ExternalProjectCode?: string
@@ -1615,6 +1616,7 @@ interface ImportProjectProps {
   Password?: string
   FolderId?: number
   ChildFolderId?: number
+  folders?: ProjectDescription[]
 }
 
 export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => {
@@ -1626,6 +1628,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     isImport,
     project,
     parentNode,
+    defaultFolders,
     visible,
     setVisible,
     loading,
@@ -1701,10 +1704,19 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
   const [importInfo, setImportInfo] = useState<ImportProjectProps>({
     ProjectFilePath: '',
   })
+  // 级联选中的所属文件夹，成功后跳转用
+  const [selectedFolders, setSelectedFolders] = useState<ProjectDescription[]>([])
 
   useEffect(() => {
     if (visible) {
       fetchFirstList()
+    }
+    if (visible && defaultFolders?.length) {
+      // 回显当前所在文件夹：提交用的 ids 取面包屑最后一级
+      const ids = resolveParentFolderIds(defaultFolders[defaultFolders.length - 1])
+      setSelectedFolders(defaultFolders)
+      if (isImport) setImportInfo({ ProjectFilePath: '', ...ids })
+      else setInfo({ ProjectName: '', ...ids })
     }
     if (visible && isNew && project) {
       if (!isCommunityEdition()) {
@@ -1737,25 +1749,13 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         Password: '',
       })
     }
-    if (visible && isImport && parentNode) {
-      if (parentNode.Id) {
-        const data: ImportProjectProps = { ProjectFilePath: '' }
-        if (+parentNode.FolderId === 0) {
-          data.FolderId = +parentNode.Id
-        } else {
-          data.FolderId = +parentNode.FolderId
-          if (+parentNode.ChildFolderId === 0) {
-            data.FolderId = +parentNode.Id
-          } else {
-            data.FolderId = +parentNode.ChildFolderId
-          }
-        }
-        setImportInfo({ ...data })
-      }
+    if (visible && isImport && parentNode?.Id) {
+      setImportInfo({ ProjectFilePath: '', ...resolveParentFolderIds(parentNode) })
     }
     if (!visible) {
       setIsCheck(false)
       setInfo({ ProjectName: '' })
+      setSelectedFolders([])
       setExportInfo({
         Id: 0,
         ProjectName: '',
@@ -1775,8 +1775,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
       if (first && second) return [first, second]
       return []
     }
-    return []
-  }, [project])
+    return (defaultFolders || []).map((f) => f.ProjectName)
+  }, [project, defaultFolders])
 
   const [isCheck, setIsCheck] = useState<boolean>(false)
   const { eeSystemConfig } = useEeSystemConfig()
@@ -1842,17 +1842,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
       const data = { ...info }
       if (parentNode && !data.Id) {
         data.parent = { ...parentNode }
-        if (+parentNode.FolderId === 0) {
-          data.FolderId = +parentNode.Id
-        } else {
-          data.FolderId = +parentNode.FolderId
-          if (+parentNode.ChildFolderId === 0) {
-            data.FolderId = +parentNode.Id
-          } else {
-            data.FolderId = +parentNode.ChildFolderId
-          }
-        }
+        Object.assign(data, resolveParentFolderIds(parentNode))
       }
+      data.folders = parentNode ? undefined : selectedFolders
       const type = isFolder ? 'isNewFolder' : 'isNewProject'
 
       if (!isCommunityEdition()) {
@@ -2088,6 +2080,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                   changeOnSelect={true}
                   loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
                   onChange={(value, selectedOptions) => {
+                    setSelectedFolders(selectedOptions || [])
                     if (value) {
                       setInfo({ ...info, FolderId: +(value[0] ?? 0) || 0, ChildFolderId: +(value[1] ?? 0) || 0 })
                     } else {
@@ -2312,11 +2305,13 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             {!parentNode && (
               <Form.Item label={`${t('NewProjectAndFolder.belongToFolder')} :`}>
                 <YakitCascader
+                  defaultValue={cascaderValue}
                   options={data}
                   fieldNames={{ label: 'ProjectName', value: 'Id', children: 'children' }}
                   changeOnSelect={true}
                   loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
                   onChange={(value, selectedOptions) => {
+                    setSelectedFolders(selectedOptions || [])
                     if (value) {
                       setImportInfo({
                         ...importInfo,
@@ -2354,7 +2349,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
           if (type === 'isExport') {
             handleExportTemporaryProject()
           }
-          onModalSubmit(type, {} as any)
+          onModalSubmit(type, { folders: parentNode ? undefined : selectedFolders } as ImportProjectProps)
           setTimeout(() => {
             setTransferShow({ visible: false })
           }, 500)
