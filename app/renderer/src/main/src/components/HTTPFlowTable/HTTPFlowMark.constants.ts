@@ -17,7 +17,7 @@ export const FLOW_PROBLEM_TYPE_OPTIONS = [
 export const FLOW_SEVERITY_OPTIONS = ['低危', '中危', '高危', '严重'] as const
 
 /** 流量标记：处置状态 */
-export const FLOW_DISPOSAL_STATUS_OPTIONS = ['确认', '误报', '待修复'] as const
+export const FLOW_DISPOSAL_STATUS_OPTIONS = ['确认', '误报', '待修复', '已修复'] as const
 
 /** BatchSetHTTPFlowIssueFields 请求（对齐 proto Set* 字段） */
 export interface BatchSetHTTPFlowIssueFieldsRequest {

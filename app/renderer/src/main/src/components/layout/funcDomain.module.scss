@@ -195,6 +195,11 @@
 
   .ui-op-plus-wrapper {
     width: 400px;
+    max-width: calc(100vw - 32px);
+
+    &.ui-op-notice-enterprise {
+      width: 600px;
+    }
 
     .ui-op-notice-body {
       width: 100%;
@@ -249,7 +254,9 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height: 36px;
+        min-height: 36px;
+        flex-wrap: wrap;
+        gap: 8px;
         font-size: 12px;
         .switch-title {
           color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -257,6 +264,11 @@
           align-items: center;
         }
         .message-title {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          margin-left: auto;
+          white-space: nowrap;
         }
       }
 

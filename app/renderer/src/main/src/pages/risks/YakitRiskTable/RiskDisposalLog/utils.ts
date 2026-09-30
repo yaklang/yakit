@@ -85,7 +85,7 @@ const enrichParentComments = <
 /** 处置日志列表 → POST /risk/httpflow/comment/list */
 export const apiGetDisposalLogs = (params: {
   risk_hash: string
-  beforeId?: number
+  page?: number
   limit?: number
 }): Promise<DisposalLogsResponse> => {
   return new Promise((resolve, reject) => {
@@ -95,9 +95,9 @@ export const apiGetDisposalLogs = (params: {
       data: {
         hash: params.risk_hash,
         targetType: 'risk',
-        page: 1,
+        page: params.page ?? 1,
         limit: params.limit ?? 20,
-        order_by: 'id',
+        order_by: 'created_at',
         order: 'desc',
       },
     })
