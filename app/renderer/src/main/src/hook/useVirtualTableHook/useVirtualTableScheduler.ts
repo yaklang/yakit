@@ -87,6 +87,21 @@ export const shouldLoadVirtualTableBottom = (
 }
 
 /**
+ * 解析滚动位置的两个边缘标记：近顶（scrollTop < 10）与触底预取。
+ * scrollUpdate 的取数分支与边缘滚动监听（onlyAtEdge）共用，阈值只此一处。
+ */
+export const resolveVirtualTableEdgeFlags = (
+  scrollTop: number | undefined,
+  clientHeight: number | undefined,
+  scrollHeight: number | undefined,
+  isSliding: boolean,
+  rowHeight: number,
+): { nearTop: boolean; nearBottom: boolean } => ({
+  nearTop: Number.isFinite(scrollTop) && Number(scrollTop) < 10,
+  nearBottom: shouldLoadVirtualTableBottom(scrollTop, clientHeight, scrollHeight, isSliding, rowHeight),
+})
+
+/**
  * 升序时新数据插在底部。内容撑不满视口时没有滚动条，会先命中 scrollTop < 10，
  * 走不到触底分支。此时视为已停在新数据插入边，应向底部补数。
  */

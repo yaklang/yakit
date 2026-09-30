@@ -5,6 +5,7 @@ import {
   mergeUniqueVirtualTableRows,
   prependAcceptedVirtualTableServerPushRows,
   resolveVirtualTableServerPushActive,
+  resolveVirtualTableEdgeFlags,
   selectVirtualTableAutomaticRefreshReason,
   selectVirtualTableViewportFillLimit,
   selectVirtualTableServerPushRows,
@@ -144,6 +145,30 @@ describe('shouldLoadVirtualTableBottom', () => {
 
   it('keeps the legacy ninety-percent trigger for an unbounded table', () => {
     expect(shouldLoadVirtualTableBottom(8500, 600, 10000, false, 28)).toBe(true)
+  })
+})
+
+describe('resolveVirtualTableEdgeFlags', () => {
+  it('marks a scroll near the top while the bottom prefetch stays inactive', () => {
+    expect(resolveVirtualTableEdgeFlags(5, 600, 10000, true, 28)).toEqual({ nearTop: true, nearBottom: false })
+  })
+
+  it('marks a scroll near the bottom while the top edge stays inactive', () => {
+    expect(resolveVirtualTableEdgeFlags(9120, 600, 10000, true, 28)).toEqual({ nearTop: false, nearBottom: true })
+  })
+
+  it('marks neither edge while the scrollbar is in the middle', () => {
+    expect(resolveVirtualTableEdgeFlags(5000, 600, 10000, true, 28)).toEqual({ nearTop: false, nearBottom: false })
+    // The top threshold is absolute: even a non-sliding table only treats the
+    // first ten pixels as the top edge.
+    expect(resolveVirtualTableEdgeFlags(10, 600, 10000, false, 28)).toEqual({ nearTop: false, nearBottom: false })
+  })
+
+  it('keeps both edges inactive for a missing container', () => {
+    expect(resolveVirtualTableEdgeFlags(undefined, 600, 10000, true, 28)).toEqual({
+      nearTop: false,
+      nearBottom: false,
+    })
   })
 })
 

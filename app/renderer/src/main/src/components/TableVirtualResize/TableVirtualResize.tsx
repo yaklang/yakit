@@ -51,7 +51,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import locale from 'antd/es/date-picker/locale/zh_CN'
 import { YakitDatePicker } from '@/components/yakitUI/YakitDatePicker/YakitDatePicker'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
-import { parseColorTag, resetEmptyVirtualTableViewport } from './utils'
+import { getVirtualListWrapperGeometry, parseColorTag, resetEmptyVirtualTableViewport } from './utils'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook'
 import { v4 as uuidv4 } from 'uuid'
@@ -1689,6 +1689,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 <div
                   ref={wrapperRef}
                   className={classNames(styles['virtual-table-list'])}
+                  // 与 list 同一次提交写入偏移（公式同 ahooks），避免它在 passive effect 补写前出现一帧错位/白屏
+                  style={getVirtualListWrapperGeometry(list, data.length, defItemHeight)}
                   onMouseDown={onMouseDownDragSelection}
                 >
                   {columns.map((columnsItem, index) => (

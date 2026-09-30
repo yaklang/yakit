@@ -8,7 +8,7 @@ import type {
   FilterProps,
   VirtualTableRefreshReason,
 } from './useVirtualTableHookType'
-import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn } from 'ahooks'
+import { useDebounceEffect, useEventListener, useGetState, useInViewport, useMemoizedFn, useThrottleFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
 import { serverPushStatus, subscribeServerPushStatus } from '@/utils/duplex/duplex'
 import type { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -24,8 +24,8 @@ import {
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
   selectVirtualTableViewportFillLimit,
+  resolveVirtualTableEdgeFlags,
   shouldRestoreVirtualTableViewport,
-  shouldLoadVirtualTableBottom,
   shouldLoadVirtualTableAscBottomOnViewportFit,
 } from './useVirtualTableScheduler'
 
@@ -581,13 +581,22 @@ export default function useVirtualTableHook<
     getDataByGrpc(query, 'offset')
   })
 
-  const scrollUpdate = useMemoizedFn(() => {
+  const scrollUpdate = useMemoizedFn((onlyAtEdge?: boolean) => {
     if (loopPausedRef.current) return
     if (isGrpcRef.current) return
     const scrollTop = tableRef.current?.containerRef?.scrollTop
     const clientHeight = tableRef.current?.containerRef?.clientHeight
     const scrollHeight = tableRef.current?.containerRef?.scrollHeight
     // let scrollBottom: number|undefined = undefined
+    const { nearTop, nearBottom } = resolveVirtualTableEdgeFlags(
+      scrollTop,
+      clientHeight,
+      scrollHeight,
+      isSliding,
+      ROW_HEIGHT,
+    )
+    // 边缘滚动监听只处理触顶/触底，滚动条在中间时交给轮询
+    if (onlyAtEdge && !nearTop && !nearBottom) return
     // Compatibility polling and push-triggered reconciliation are background
     // work. An empty table must not flash its full loading mask every second.
     if (data.length === 0) {
@@ -602,13 +611,13 @@ export default function useVirtualTableHook<
       setOffsetData([])
     }
     // 滚动条接近触顶
-    else if (scrollTop < 10) {
+    else if (nearTop) {
       updateTopData()
       // 倒序触顶会消费 offsetData；升序新数据在底部，红点提示应保留
       if (isDesc) setOffsetData([])
     }
     // 滚动条接近触底
-    else if (shouldLoadVirtualTableBottom(scrollTop, clientHeight, scrollHeight, isSliding, ROW_HEIGHT)) {
+    else if (nearBottom) {
       updateBottomData()
       setOffsetData([])
     }
@@ -620,6 +629,10 @@ export default function useVirtualTableHook<
       updateOffsetData()
     }
   })
+
+  // 滑窗表格（History/MITM）滚到上下边缘时立即补数，不等 1s 轮询；并发由 scrollUpdate 里的 isGrpcRef 拦截
+  const onEdgeScroll = useThrottleFn(() => scrollUpdate(true), { wait: 200 }).run
+  useEventListener('scroll', onEdgeScroll, { target: () => tableRef.current?.containerRef, enable: isSliding })
 
   /** Restore a cached viewport without replacing its rows with the first page. */
   const restoreViewportT = useMemoizedFn(() => {
