@@ -24,7 +24,8 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 
 ## 1. 前置检查
 
-- `git branch --show-current`：**在 master 上停止**。
+- 获取分支：`pr_branch="$(git branch --show-current)"`；命令失败、分支名为空（detached HEAD）或为 `master` 时停止。
+- 以下 Bash/Zsh 示例通过 `"$pr_branch"` 传递分支名；每次独立 shell 调用须先执行上述赋值并检查结果。不得将读出的分支名回填进 shell 命令文本或交给 `eval`；其他执行工具使用参数数组或对应 shell 的安全变量传参。
 - `git remote -v`：origin 必须是 `yaklang/yakit`，否则停止（fork 按上方提示）。
 - **gh**：`command -v gh` + `gh auth status`（PowerShell：`Get-Command gh`）。已装且已登录则继续；否则走下方降级，**不要直接停止**。
 - **`code-review` skill 必须存在**（第 3 步强制依赖；外部指定范围时直接执行、不弹框）。不存在则**立即停止**，不要自行评审——此时尚未 commit / push。
@@ -33,7 +34,7 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 - gh 可用时先查重并保存旧 PR 快照，供评审历史问题与第 5–7 步复用：
 
   ```bash
-  gh pr view <当前分支> --repo yaklang/yakit --json number,url,state,title,body
+  gh pr view "$pr_branch" --repo yaklang/yakit --json number,url,state,title,body
   ```
 
   仅明确返回「该分支无 PR」才按新建处理；认证、网络或其它查询失败 → 停止并报告错误，不得当作不存在。手动模式跳过查询；用户提供旧描述时采用其内容。
@@ -63,8 +64,8 @@ description: 为 Yakit 仓库一站式完成提 PR 流程：提交工作区改�
 ## 4. 推送远端
 
 - 推送前再 `git rev-parse HEAD`，与第 3 步 SHA 一致才继续；不一致则停止。
-- **禁止裸 `git push`**。执行 `git push -u origin HEAD:refs/heads/<当前分支>`（显式 origin；分支名含 shell 元字符时安全引用）。
-- 推送后：`git ls-remote origin refs/heads/<当前分支>` 的 OID == 本地 HEAD，否则停止。
+- **禁止裸 `git push`**。执行 `git push -u origin "HEAD:refs/heads/$pr_branch"`（显式 origin）。
+- 推送后：`git ls-remote origin "refs/heads/$pr_branch"` 的 OID == 本地 HEAD，否则停止。
 - push 被拒（远端有本地没有的提交）：停止，不要 pull / rebase / force push。
 
 ## 5. 生成 PR 标题与描述
@@ -155,7 +156,7 @@ gh 可用时按第 1 步快照选择以下分支，不重复生成已确定的�
 - **没有 OPEN PR**（not found，或仅有 CLOSED / MERGED）：
 
   ```bash
-  gh pr create --repo yaklang/yakit --base master --head <当前分支> --title '<commit 总结标题>' --body-file /tmp/pr-body.md
+  gh pr create --repo yaklang/yakit --base master --head "$pr_branch" --title '<commit 总结标题>' --body-file /tmp/pr-body.md
   ```
 
   标题为第 5 步基于全部 commit 的 `type: subject`（多 commit 不照搬单条 message）。成功后报告：链接、标题、合并方式、评审结论与统计、关联信息、建议修复项（如有）。
