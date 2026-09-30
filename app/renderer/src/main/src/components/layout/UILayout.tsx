@@ -1541,12 +1541,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   // ===== 引擎Console：打开方式处理（浮窗 / 左·右·底 抽屉，互斥） =====
   // 启动时读取用户上次选择的打开方式，用于菜单标记
   useEffect(() => {
-    getRemoteValue(GlobalConfigRemoteGV.EngineConsoleType).then((val) => {
-      if (val) {
-        setConsoleType(val)
-      }
-    })
-  }, [])
+    if (engineLink) {
+      getRemoteValue(GlobalConfigRemoteGV.EngineConsoleType).then((val) => {
+        if (val) {
+          setConsoleType(val)
+        }
+      })
+    }
+  }, [engineLink])
 
   const onOpenConsole = useMemoizedFn((type: EngineConsoleOpenType) => {
     setConsoleType(type)
