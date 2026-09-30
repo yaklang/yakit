@@ -9,6 +9,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { RefreshOutlined, RotateCcwOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
+import { setWelcomeAnimationDisabled, useWelcomeAnimationDisabled } from '@/pages/ai-agent/store/welcomeAnimationStore'
 import { AIAgentSettingDefault, AIReviewRuleOptions } from '@/pages/ai-agent/defaultConstant'
 import {
   applyAIAgentChatSettingBroadcast,
@@ -82,6 +83,7 @@ const digitsOnly = (raw: string) => {
 
 export const AIConfigSettings: React.FC = () => {
   const { t } = useI18nNamespaces(['setting', 'aiAgent', 'yakitUi'])
+  const welcomeAnimationDisabled = useWelcomeAnimationDisabled()
   const [setting, setSetting] = useState<AIAgentSetting>(() => cloneDeep(AIAgentSettingDefault))
   const [ready, setReady] = useState(false)
   const lastPayloadRef = useRef(serializeAIAgentChatSetting(AIAgentSettingDefault))
@@ -205,6 +207,14 @@ export const AIConfigSettings: React.FC = () => {
                 {setting.AIReviewRiskControlScore ?? AIAgentSettingDefault.AIReviewRiskControlScore}
               </span>
             </div>
+          </SettingRow>
+          <SettingRow title={t('AIChatSetting.disableWelcomeAnimation')}>
+            <YakitSwitch
+              size="middle"
+              aria-label={t('AIChatSetting.disableWelcomeAnimation')}
+              checked={welcomeAnimationDisabled}
+              onChange={setWelcomeAnimationDisabled}
+            />
           </SettingRow>
         </div>
       </div>

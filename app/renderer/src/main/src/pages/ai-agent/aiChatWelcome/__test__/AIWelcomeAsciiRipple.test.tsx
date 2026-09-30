@@ -8,6 +8,9 @@ const mocks = vi.hoisted(() => ({
   theme: 'light' as 'light' | 'dark',
   visibility: 'visible' as 'visible' | 'hidden' | undefined,
   inViewport: true as boolean | undefined,
+  animationDisabled: false,
+  width: undefined as number | undefined,
+  size: vi.fn(),
   calm: vi.fn(),
   renderRipple: vi.fn(),
   viewport: vi.fn(),
@@ -15,11 +18,18 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/hook/useTheme', () => ({ useTheme: () => ({ theme: mocks.theme }) }))
+vi.mock('../../store/welcomeAnimationStore', () => ({
+  useWelcomeAnimationDisabled: () => mocks.animationDisabled,
+}))
 vi.mock('ahooks', () => ({
   useDocumentVisibility: () => mocks.visibility,
   useInViewport: (target: unknown) => {
     mocks.viewport(target)
     return [mocks.inViewport]
+  },
+  useSize: (target: unknown) => {
+    mocks.size(target)
+    return mocks.width === undefined ? undefined : { width: mocks.width, height: 800 }
   },
 }))
 vi.mock('@/utils/yakitColorVars', () => ({ getAllYakitColorVars: mocks.colors }))
@@ -38,6 +48,8 @@ beforeEach(() => {
   mocks.theme = 'light'
   mocks.visibility = 'visible'
   mocks.inViewport = true
+  mocks.animationDisabled = false
+  mocks.width = undefined
   mocks.colors.mockImplementation((theme: string) => ({
     '--yakit-colors-Neutral-20': `${theme}-neutral-20`,
     '--yakit-colors-Neutral-30': `${theme}-neutral-30`,
@@ -49,6 +61,46 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('AIWelcomeAsciiRipple', () => {
+  it('关闭首页动画时保持静止，取消关闭后恢复交互', () => {
+    mocks.animationDisabled = true
+    const { rerender } = render(<AIWelcomeAsciiRipple targetRef={{ current: null }} />)
+    expect(latestProps().interactive).toBe(false)
+    expect(mocks.calm).toHaveBeenCalledOnce()
+
+    mocks.animationDisabled = false
+    rerender(<AIWelcomeAsciiRipple targetRef={{ current: null }} />)
+    expect(latestProps().interactive).toBe(true)
+
+    mocks.animationDisabled = true
+    rerender(<AIWelcomeAsciiRipple targetRef={{ current: null }} />)
+    expect(latestProps().interactive).toBe(false)
+    expect(mocks.calm).toHaveBeenCalledTimes(2)
+
+    mocks.visibility = 'hidden'
+    mocks.animationDisabled = false
+    rerender(<AIWelcomeAsciiRipple targetRef={{ current: null }} />)
+    expect(latestProps().interactive).toBe(false)
+  })
+
+  it('监听 targetRef 宽度，跨越 1192px 时双向调整字号', () => {
+    const targetRef = { current: document.createElement('div') }
+    const { rerender } = render(<AIWelcomeAsciiRipple targetRef={targetRef} />)
+    expect(mocks.size).toHaveBeenCalledWith(targetRef)
+    expect(latestProps().fontSize).toBe(14)
+
+    for (const [width, fontSize] of [
+      [1191, 14],
+      [1192, 14],
+      [1193, 16],
+      [1600, 16],
+      [800, 14],
+    ]) {
+      mocks.width = width
+      rerender(<AIWelcomeAsciiRipple targetRef={{ current: targetRef.current }} />)
+      expect(latestProps().fontSize).toBe(fontSize)
+    }
+  })
+
   it('将观察目标和交互目标传递为同一容器，并隐藏装饰层的无障碍内容', () => {
     const targetRef = { current: document.createElement('div') }
     const { container } = render(<AIWelcomeAsciiRipple targetRef={targetRef} />)
@@ -106,7 +158,7 @@ describe('AIWelcomeAsciiRipple', () => {
       textColor: 'light-neutral-30',
       troughColor: 'light-main-40',
       rippleColor: 'light-neutral-40',
-      textOpacity: 0.2,
+      textOpacity: 0.15,
     })
     mocks.theme = 'dark'
     rerender(<AIWelcomeAsciiRipple targetRef={{ current: null }} />)
