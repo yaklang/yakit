@@ -13,22 +13,10 @@
 }
 .ai-chat-welcome-wrapper {
   @extend %display-column-center;
-  --ai-chat-welcome-bg: url('@/assets/aiAgent/ai-agent-welcome-bg.png');
   container: ai-chat-welcome / inline-size;
   height: 100%;
   position: relative;
-  background-image:
-    var(--ai-chat-welcome-bg),
-    linear-gradient(180deg, var(--Colors-Use-Main-Bg) 0.11%, var(--Colors-Use-Basic-Background) 50%);
-  background-position: left top;
-  background-size:
-    auto,
-    100% 100%;
-  background-repeat: no-repeat;
-
-  :global(html[data-theme='dark']) & {
-    --ai-chat-welcome-bg: url('@/assets/aiAgent/ai-agent-welcome-bg-dark.png');
-  }
+  background: linear-gradient(180deg, var(--Colors-Use-Main-Bg) 0.11%, var(--Colors-Use-Basic-Background) 50%);
 
   .welcome-ascii-ripple {
     position: absolute;
@@ -54,7 +42,6 @@
     align-items: center;
     justify-content: center;
     gap: 64px;
-    flex: 1;
     flex-shrink: 0;
     // 扣除面板预留宽度，内容最多宽 784px。
     width: calc(100% - var(--ai-right-panel-slot-width, 325px));
@@ -63,7 +50,7 @@
     transform: translateX(calc(var(--ai-right-panel-slot-width, 325px) / -2));
     min-width: 0;
     box-sizing: border-box;
-    height: 100%;
+    min-height: 100%;
     padding: 88px 24px 20px;
 
     .milkdown-input {
@@ -82,11 +69,13 @@
 
     .input-heard {
       @extend %display-column-center;
+      padding-left: 16px;
       align-items: flex-start;
       gap: 8px;
       flex: 1;
       width: 100%;
       justify-content: center;
+
       .title {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         text-align: center;
@@ -94,6 +83,7 @@
         font-weight: 400;
         line-height: 56px;
         letter-spacing: 0;
+        user-select: none;
       }
       .subtitle {
         color: var(--Colors-Use-Neutral-Text-4-Help-text);
@@ -102,6 +92,7 @@
         font-weight: 400;
         line-height: 26px;
         letter-spacing: 0;
+        user-select: none;
       }
       .memfit-icon {
         svg {
@@ -134,14 +125,12 @@
       position: relative;
       display: flex;
       flex-direction: column;
-      gap: 24px;
       justify-content: flex-end;
     }
 
     .intro-tips {
       @extend %display-column-center;
       align-items: flex-start;
-      gap: 8px;
       width: 100%;
 
       .intro-tip-item {
@@ -154,11 +143,15 @@
         line-height: 16px; /* 142.857% */
         letter-spacing: 0.1px;
 
-        padding: 4px 16px;
+        padding: 4px 16px 12px;
         align-items: center;
         gap: 8px;
+        user-select: none;
 
         cursor: pointer;
+        &:last-child {
+          padding-bottom: 16px;
+        }
 
         .intro-tip-content {
           @extend %display-flex-center;

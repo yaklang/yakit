@@ -30,7 +30,7 @@ export const AIWelcomeAsciiRipple = memo(({ targetRef }: { targetRef: RefObject<
 
   return (
     <div className={styles['welcome-ascii-ripple']} aria-hidden="true">
-      <AsciiRipple ref={rippleRef} {...colors} interactionTargetRef={targetRef} interactive={active} />
+      <AsciiRipple ref={rippleRef} {...colors} interactionTargetRef={targetRef} interactive={active} resolution={2} />
     </div>
   )
 })

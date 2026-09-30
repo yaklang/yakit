@@ -2,6 +2,7 @@
 import type React from 'react'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
 import classNames from 'classnames'
+import { debounce } from 'lodash'
 import styles from './AsciiRipple.module.scss'
 import { createRippleRenderer } from './AsciiRippleRenderer'
 import type { RippleOptions } from './AsciiRippleEngine'
@@ -296,19 +297,25 @@ const AsciiRipple = forwardRef<AsciiRippleHandle, AsciiRippleProps>(
       },
       [interactive, localPoint],
     )
-    const onPointerDown = useCallback(
-      (e: { clientX: number; clientY: number }) => {
-        if (!interactive) return
-        const point = localPoint(e)
-        if (!point) return
-        insideRef.current = true
-        const renderer = rendererRef.current
-        renderer?.leave()
-        renderer?.move(point.x, point.y)
-        renderer?.drop(point.x, point.y)
-      },
+    const onPointerDown = useMemo(
+      () =>
+        debounce(
+          (e: { clientX: number; clientY: number }) => {
+            if (!interactive) return
+            const point = localPoint(e)
+            if (!point) return
+            insideRef.current = true
+            const renderer = rendererRef.current
+            renderer?.leave()
+            renderer?.move(point.x, point.y)
+            renderer?.drop(point.x, point.y)
+          },
+          200,
+          { leading: true },
+        ),
       [interactive, localPoint],
     )
+    useEffect(() => () => onPointerDown.cancel(), [onPointerDown])
     useEffect(() => {
       const target = interactionTargetRef?.current
       if (!target) return
@@ -335,11 +342,12 @@ const AsciiRipple = forwardRef<AsciiRippleHandle, AsciiRippleProps>(
       () => ({
         drop: (x, y, strength, radius) => rendererRef.current?.drop(x, y, strength, radius),
         calm: () => {
+          onPointerDown.cancel()
           insideRef.current = false
           rendererRef.current?.calm()
         },
       }),
-      [],
+      [onPointerDown],
     )
     return (
       <div

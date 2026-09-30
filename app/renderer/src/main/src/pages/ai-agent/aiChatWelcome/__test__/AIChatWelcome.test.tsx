@@ -54,6 +54,7 @@ vi.mock('../AIChatWelcome.module.scss', () => ({
     'ai-chat-welcome-wrapper': 'ai-chat-welcome-wrapper',
     'welcome-scroll': 'welcome-scroll',
     'input-wrapper': 'input-wrapper',
+    'intro-tip-item': 'intro-tip-item',
   },
 }))
 
@@ -68,6 +69,15 @@ afterEach(() => {
 })
 
 describe('AIChatWelcome 输入框转发', () => {
+  it('推荐项排除波纹交互，同时保留点击填入输入框的行为', () => {
+    const { container } = render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    const tips = container.querySelectorAll('.intro-tip-item')
+    expect(tips.length).toBeGreaterThan(0)
+    for (const tip of tips) expect(tip).toHaveAttribute('data-ai-ripple-disabled')
+    fireEvent.click(tips[0])
+    expect(inputHandles[0].setValue).toHaveBeenCalledWith(tips[0].textContent)
+  })
+
   it('转发输入方法，并在子输入框 handle 更换后使用最新 ref', () => {
     const ref = createRef<AIReActChatRefProps>()
     render(<AIChatWelcome ref={ref} onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)

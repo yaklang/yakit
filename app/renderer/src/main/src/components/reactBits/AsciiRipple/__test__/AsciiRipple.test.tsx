@@ -68,6 +68,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   target.remove()
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
@@ -108,8 +109,9 @@ describe('AsciiRipple 背景交互', () => {
     expect(click).toHaveBeenCalledOnce()
   })
 
-  it('点击覆盖层时启动波纹动画', async () => {
+  it('首次点击覆盖层立即启动波纹动画', async () => {
     await mount()
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
     fireEvent.pointerDown(target, { clientX: 100, clientY: 120 })
     expect(requestFrame).toHaveBeenCalledOnce()
   })
@@ -343,13 +345,56 @@ describe('AsciiRipple 后台绘制', () => {
 
   it('Worker 启动失败后换新画布，回退仍可点击', async () => {
     const { container } = await mount()
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
     const transferred = container.querySelector('canvas')
     act(() => workers[0].onerror!({ preventDefault: vi.fn() }))
     expect(workers[0].terminate).toHaveBeenCalledOnce()
     expect(container.querySelector('canvas')).not.toBe(transferred)
     expect(container.querySelectorAll('canvas')).toHaveLength(1)
     fireEvent.pointerDown(target, { clientX: 100, clientY: 120 })
+    act(() => vi.advanceTimersByTime(200))
     expect(requestFrame).toHaveBeenCalledOnce()
+  })
+
+  it.each([true, false])('首次点击立即执行，连续点击在末次 200ms 后执行，外部容器：%s', async (external) => {
+    const { container } = render(<AsciiRipple interactionTargetRef={external ? { current: target } : undefined} />)
+    await act(async () => {
+      await Promise.resolve()
+    })
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+    workers[0].postMessage.mockClear()
+    const node = external ? target : container.firstElementChild!
+    fireEvent(node, new MouseEvent('pointerdown', { bubbles: true, clientX: 100, clientY: 120 }))
+    expect(workers[0].postMessage).toHaveBeenLastCalledWith({ type: 'drop', x: 100, y: 120 }, [])
+    workers[0].postMessage.mockClear()
+    act(() => vi.advanceTimersByTime(100))
+    fireEvent(node, new MouseEvent('pointerdown', { bubbles: true, clientX: 300, clientY: 320 }))
+    act(() => vi.advanceTimersByTime(199))
+    expect(workers[0].postMessage).not.toHaveBeenCalled()
+    act(() => vi.advanceTimersByTime(1))
+    const drops = workers[0].postMessage.mock.calls.map(([message]) => message).filter(({ type }) => type === 'drop')
+    expect(drops).toEqual([{ type: 'drop', x: 300, y: 320 }])
+  })
+
+  it.each(['unmount', 'disable', 'calm'] as const)('%s 取消待执行的点击', async (action) => {
+    const ref = createRef<AsciiRippleHandle>()
+    const targetRef = { current: target }
+    const { rerender, unmount } = render(<AsciiRipple ref={ref} interactionTargetRef={targetRef} />)
+    await act(async () => {
+      await Promise.resolve()
+    })
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+    fireEvent.pointerDown(target, { clientX: 100, clientY: 120 })
+    fireEvent.pointerDown(target, { clientX: 200, clientY: 220 })
+    expect(vi.getTimerCount()).toBe(1)
+    if (action === 'unmount') unmount()
+    else if (action === 'disable')
+      rerender(<AsciiRipple ref={ref} interactionTargetRef={targetRef} interactive={false} />)
+    else ref.current!.calm()
+    expect(vi.getTimerCount()).toBe(0)
+    workers[0].postMessage.mockClear()
+    act(() => vi.advanceTimersByTime(200))
+    expect(workers[0].postMessage).not.toHaveBeenCalled()
   })
 
   it('StrictMode 与重新挂载不会重复转移同一画布', async () => {

@@ -172,6 +172,7 @@ const AIChatWelcomeIntroTips: FC<AIChatWelcomeIntroTipsProps> = memo(({ onSetInp
           <div
             key={item.text}
             className={classNames(styles['intro-tip-item'])}
+            data-ai-ripple-disabled
             onClick={() => onSetInputValue(item.text)}
           >
             <div className={styles['intro-tip-content']}>
