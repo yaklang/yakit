@@ -241,7 +241,7 @@ const expectEmptyDataCards = () => {
   expect(screen.getByText('运行时间')).toBeVisible()
   expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('—')
   expect(screen.getByText('Step')).toBeVisible()
-  expect(screen.getByText('Step').nextElementSibling).toHaveTextContent('—')
+  expect(screen.getByText('Step').nextElementSibling).toHaveTextContent('0')
   expect(screen.getByText('工具调用数')).toBeVisible()
   expect(screen.getByText('工具调用数').nextElementSibling).toHaveTextContent('0')
   expect(screen.getByTestId('main-model-tokens')).toBeInTheDocument()

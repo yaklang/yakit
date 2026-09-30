@@ -205,7 +205,7 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
             <div className={styles['data-card-accent']} />
             <div className={styles['data-card-row']}>
               <span className={styles['data-card-label']}>{t('AIRightPanel.step')}</span>
-              <span className={styles['data-card-value']}>{executionData?.execution_rounds ?? PLACEHOLDER}</span>
+              <span className={styles['data-card-value']}>{executionData?.execution_rounds ?? 0}</span>
             </div>
           </div>
           <div className={classNames(styles['data-card'], styles['data-card-metric'], styles['data-card-duration'])}>
