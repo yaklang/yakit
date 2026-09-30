@@ -566,7 +566,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   }, [tableRef.current, width])
 
   useClickAway(() => {
-    setSelectedRows([])
+    if (!isRightClickBatchOperate) return
+    setSelectedRows((prev) => (prev.length ? [] : prev))
     preSelectRef.current = undefined
   }, [wrapperRef])
 
@@ -1253,7 +1254,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       if (onSetCurrentRow) onSetCurrentRow(undefined)
       preSelectRef.current = undefined
     } else {
-      setSelectedRows([])
+      setSelectedRows((previous) => (previous.length ? [] : previous))
       setCurrentIndex && setCurrentIndex(rowIndex)
       // if (onSetCurrentRow) onSetCurrentRow(record)
       if (props.onRowClick) {
@@ -1706,9 +1707,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                       isLastItem={index === columns.length - 1}
                       onRowClick={onRowClick}
                       onRowDoubleClick={onRowDoubleClick}
-                      onRowContextMenu={(data, e, rowIndex) => {
-                        onRowContextMenu(data, e, rowIndex)
-                      }}
+                      onRowContextMenu={onRowContextMenu}
                       rowSelection={rowSelection as any}
                       onChangeCheckboxSingle={onChangeCheckboxSingle}
                       scroll={scroll}
@@ -1989,9 +1988,9 @@ interface CellRenderProps {
   columnsItem: ColumnsTypeProps
   number: number
   isLastItem: boolean
-  onRowClick: () => void
-  onRowDoubleClick: () => void
-  onRowContextMenu: (e: any) => void
+  onRowClick: (record: any, rowIndex: number) => void
+  onRowDoubleClick?: (record: any) => void
+  onRowContextMenu: (record: any, e: any, rowIndex: number) => void
   currentRow: any
   /** 由 Table 预构建，CellRender 内 O(1) 判断 checkbox 选中 */
   selectedRowKeysSet: Set<React.Key>
@@ -2015,31 +2014,48 @@ interface CellRenderDropProps extends CellRenderProps {
   checkboxPropsMap: Map<React.Key, Partial<YakitProtoCheckboxProps>>
 }
 
-/** 性能优化：仅在本 cell hover 状态变化时触发重渲染，而非 mouseCellId 任意变化时全表重渲染 */
+/** 按当前行比较选中和 hover 状态，避免其他行的交互触发本单元格重渲染。 */
 function areCellRenderPropsEqual(
   preProps: CellRenderProps | CellRenderDropProps,
   nextProps: CellRenderProps | CellRenderDropProps,
 ) {
-  if (preProps.currentRow !== nextProps.currentRow) {
+  const previousRowKey = preProps.item.data[preProps.renderKey]
+  const nextRowKey = nextProps.item.data[nextProps.renderKey]
+  const wasSelected = !!preProps.currentRow && preProps.currentRow[preProps.renderKey] === previousRowKey
+  const isSelected = !!nextProps.currentRow && nextProps.currentRow[nextProps.renderKey] === nextRowKey
+  if (wasSelected !== isSelected) {
     return false
   }
-  if (preProps.selectedRowsKeySet !== nextProps.selectedRowsKeySet) {
-    return false
-  }
-  if (preProps.selectedRowKeysSet !== nextProps.selectedRowKeysSet) {
+  if (preProps.selectedRowsKeySet.has(previousRowKey) !== nextProps.selectedRowsKeySet.has(nextRowKey)) {
     return false
   }
   if (
-    shouldRenderVirtualTableCellForHover(
-      preProps.mouseCellId,
-      nextProps.mouseCellId,
-      preProps.item.data[preProps.renderKey],
-      nextProps.item.data[nextProps.renderKey],
-    )
+    nextProps.colIndex === 0 &&
+    preProps.selectedRowKeysSet.has(preProps.renderKey ? previousRowKey : preProps.number) !==
+      nextProps.selectedRowKeysSet.has(nextProps.renderKey ? nextRowKey : nextProps.number)
   ) {
     return false
   }
+  if (shouldRenderVirtualTableCellForHover(preProps.mouseCellId, nextProps.mouseCellId, previousRowKey, nextRowKey)) {
+    return false
+  }
   if (preProps.item.data !== nextProps.item.data) {
+    return false
+  }
+  // 跳过无关行时仍需同步列配置、行位置和事件回调，防止复用过期内容。
+  if (preProps.number !== nextProps.number || preProps.renderKey !== nextProps.renderKey) return false
+  if (preProps.columnsItem !== nextProps.columnsItem) return false
+  if (preProps.isLastItem !== nextProps.isLastItem) return false
+  if (preProps.size !== nextProps.size || preProps.lineHighlight !== nextProps.lineHighlight) return false
+  if (!!preProps.rowSelection !== !!nextProps.rowSelection) return false
+  if (preProps.rowSelection?.type !== nextProps.rowSelection?.type) return false
+  if (preProps.onRowDoubleClick !== nextProps.onRowDoubleClick) return false
+  if (preProps.width !== nextProps.width || preProps.enableDragSort !== nextProps.enableDragSort) return false
+  if (
+    'checkboxPropsMap' in preProps &&
+    'checkboxPropsMap' in nextProps &&
+    preProps.checkboxPropsMap.get(previousRowKey) !== nextProps.checkboxPropsMap.get(nextRowKey)
+  ) {
     return false
   }
   return true
@@ -2067,6 +2083,10 @@ function areColRenderPropsEqual(preProps: ColRenderProps, nextProps: ColRenderPr
   if (preProps.enableDragSort !== nextProps.enableDragSort) return false
   if (preProps.width !== nextProps.width) return false
   if (preProps.checkboxPropsMap !== nextProps.checkboxPropsMap) return false
+  if (preProps.renderKey !== nextProps.renderKey) return false
+  if (!!preProps.rowSelection !== !!nextProps.rowSelection) return false
+  if (preProps.rowSelection?.type !== nextProps.rowSelection?.type) return false
+  if (preProps.onRowDoubleClick !== nextProps.onRowDoubleClick) return false
   return true
 }
 
@@ -2132,9 +2152,9 @@ const ColRender = React.memo((props: ColRenderProps) => {
                   columnsItem={columnsItem}
                   number={item.index}
                   isLastItem={isLastItem}
-                  onRowClick={() => onRowClick(item.data, item.index)}
-                  onRowDoubleClick={() => onRowDoubleClick && onRowDoubleClick(item.data)}
-                  onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
+                  onRowClick={onRowClick}
+                  onRowDoubleClick={onRowDoubleClick}
+                  onRowContextMenu={onRowContextMenu}
                   currentRow={currentRow}
                   selectedRowKeysSet={selectedRowKeysSet}
                   selectedRowsKeySet={selectedRowsKeySet}
@@ -2165,9 +2185,9 @@ const ColRender = React.memo((props: ColRenderProps) => {
                   columnsItem={columnsItem}
                   number={item.index}
                   isLastItem={isLastItem}
-                  onRowClick={() => onRowClick(item.data, item.index)}
-                  onRowDoubleClick={() => onRowDoubleClick && onRowDoubleClick(item.data)}
-                  onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
+                  onRowClick={onRowClick}
+                  onRowDoubleClick={onRowDoubleClick}
+                  onRowContextMenu={onRowContextMenu}
                   currentRow={currentRow}
                   selectedRowKeysSet={selectedRowKeysSet}
                   selectedRowsKeySet={selectedRowsKeySet}
@@ -2246,13 +2266,13 @@ const CellRender = React.memo((props: CellRenderProps) => {
       onClick={(e) => {
         // @ts-expect-error 类型定义不完整，需要忽略此行
         if (e.target.nodeName === 'INPUT') return
-        onRowClick()
+        onRowClick(item.data, number)
       }}
       onDoubleClick={() => {
-        onRowDoubleClick()
+        onRowDoubleClick?.(item.data)
       }}
       onContextMenu={(e) => {
-        onRowContextMenu(e)
+        onRowContextMenu(item.data, e, number)
       }}
       id={(isSelect && colIndex === 0 && item.data[renderKey]) || ''}
       onMouseEnter={() => {
@@ -2429,13 +2449,13 @@ const CellRenderDrop = React.memo((props: CellRenderDropProps) => {
       onClick={(e) => {
         // @ts-expect-error 类型定义不完整，需要忽略此行
         if (e.target.nodeName === 'INPUT') return
-        onRowClick()
+        onRowClick(item.data, number)
       }}
       onDoubleClick={() => {
-        onRowDoubleClick()
+        onRowDoubleClick?.(item.data)
       }}
       onContextMenu={(e) => {
-        onRowContextMenu(e)
+        onRowContextMenu(item.data, e, number)
       }}
       id={(isSelect && colIndex === 0 && item.data[renderKey]) || ''}
       onMouseEnter={() => {
@@ -2446,7 +2466,7 @@ const CellRenderDrop = React.memo((props: CellRenderDropProps) => {
       }}
       ref={enableDragSort ? dragRef : null}
       onDragStart={() => {
-        onRowClick()
+        onRowClick(item.data, number)
       }}
     >
       {enableDragSort && isDragging && (

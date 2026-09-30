@@ -133,6 +133,18 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     })
     mo.observe(el, { attributes: true, attributeFilter: ['style'] })
 
+    const onScroll = (event: Event) => {
+      const target = event.target
+      // 只响应输入卡片及其祖先滚动，保留弹层列表自身的滚动交互。
+      if (
+        target === event.currentTarget ||
+        target === document ||
+        (target instanceof Element && target.contains(anchor))
+      ) {
+        onHide()
+      }
+    }
+    window.addEventListener('scroll', onScroll, true)
     window.addEventListener('resize', syncMentionPosition)
     // 立刻一次，并在 floating-ui 默认 debounce(200) 之后再压一次
     syncMentionPosition()
@@ -142,6 +154,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     return () => {
       ro.disconnect()
       mo.disconnect()
+      window.removeEventListener('scroll', onScroll, true)
       window.removeEventListener('resize', syncMentionPosition)
       window.clearTimeout(t1)
       window.clearTimeout(t2)

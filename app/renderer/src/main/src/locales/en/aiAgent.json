@@ -876,6 +876,7 @@
     "disableToolIntervalReview": "Disable AI review during tool execution",
     "disableToolIntervalReviewDesc": "Turn off AI review while tools run to improve execution efficiency",
     "riskThreshold": "Risk threshold",
+    "disableWelcomeAnimation": "Disable home page animation",
     "riskThresholdDesc": "Below this score, AI auto-approves; above it, switch to manual",
     "reviewPolicy": "Review policy",
     "allowPlanUserInteract": "Allow human-computer interaction in plan stage",
