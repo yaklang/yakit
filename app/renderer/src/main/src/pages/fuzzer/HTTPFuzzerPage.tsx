@@ -2640,7 +2640,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         resumeAndPause={resumeAndPause}
         onShowAll={jumpHTTPHistoryAnalysis}
       />
-      <div className={styles['resize-card-icon']} onClick={() => setSecondFull(!secondFull)}>
+      <div className={styles['resize-card-icon']} onClick={() => setSecondFull((prev) => !prev)}>
         {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
       </div>
     </>
