@@ -1,3 +1,4 @@
+import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState, useEffect } from 'react'
 import type {
   AIReActChatContentsPProps,
@@ -146,6 +147,7 @@ VirtuosoListContainer.displayName = 'VirtuosoListContainer'
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo(
   forwardRef((props, ref) => {
     const sessionId = useCurrentSessionId()
+    const { pendingChat, activeChat } = useAIAgentStore()
     const contentsRef = useRef<AIReActChatContentsRef>(null)
     // 头部会保存定位方法的引用，切换会话后仍需转发到当前列表。
     useImperativeHandle(
@@ -155,7 +157,13 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       }),
       [],
     )
-    return <AIReActChatContentsList {...props} key={sessionId} ref={contentsRef} />
+    return (
+      <AIReActChatContentsList
+        {...props}
+        key={pendingChat?.streamToken || activeChat?.viewKey || sessionId}
+        ref={contentsRef}
+      />
+    )
   }),
 )
 

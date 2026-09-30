@@ -4,7 +4,7 @@ import type { AISession } from '../type/aiChat'
 import type { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
 import { AIAgentSettingDefault } from '../defaultConstant'
 import type { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
-import type { ChatMultiSessionController } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import type { ChatMultiSessionController, PendingAIChat } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 export interface AIAgentContextStore {
   /** 全局配置 */
@@ -15,14 +15,21 @@ export interface AIAgentContextStore {
   openChatInNewTab?: boolean
   /** 所属一级 Tab routeKey，多开时事件只回本实例 */
   pageId?: string
+  pendingChat?: PendingAIChat
 }
 
 /** 上层 onStart 入参：route/pageId 由 useChatIPC 注入，调用方无需传递 */
 export interface UseChatIPCStartParams
   extends
     Omit<AIChatIPCStartParams, 'route' | 'pageId'>,
-    NonNullable<Parameters<ChatMultiSessionController['handleStartSession']>[1]> {}
-export interface AIAgentContextDispatcher extends ReturnType<typeof useChatIPC> {
+    Omit<NonNullable<Parameters<ChatMultiSessionController['handleStartSession']>[1]>, 'onLinkSuccess'> {
+  /** 后台绑定仍发布会话；foreground 为 false 时不得抢占当前视图。 */
+  onLinkSuccess?: (sessionId: string, foreground: boolean) => void
+}
+export interface AIAgentContextDispatcher extends Omit<
+  ReturnType<typeof useChatIPC>,
+  'pendingChat' | 'detachPendingChat'
+> {
   setSetting: Dispatch<SetStateAction<AIAgentSetting>>
   getSetting: () => AIAgentSetting
   setActiveChat: Dispatch<SetStateAction<AISession | undefined>>
@@ -43,8 +50,9 @@ export default createContext<AIAgentContextValue>({
     getSetting: () => AIAgentSettingDefault,
     setActiveChat: () => {},
 
-    onStart: () => {},
-    onSend: () => {},
+    onStart: () => false,
+    cancelPendingChat: () => {},
+    onSend: () => false,
     onClose: () => {},
     onUpdatePageId: () => {},
   },

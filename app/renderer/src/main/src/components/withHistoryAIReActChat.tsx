@@ -10,9 +10,9 @@ import AIAgentContext, {
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
-import { createActiveChatSessionId, getAIReActRequestParams, onReStart } from '@/pages/ai-agent/utils'
+import { getAIReActRequestParams, onReStart } from '@/pages/ai-agent/utils'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
-import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
+import type { AIChatSubmitParams } from '@/pages/ai-agent/aiAgentChat/type'
 import type {
   AIHandleStartExtraProps,
   AIHandleStartParams,
@@ -74,7 +74,7 @@ export interface HistoryAIReActChatBridge {
   deselectHttpFlowId: (id: string) => void
   setMention: (v: AIMentionCommandParams) => void
   setValue: (v: string) => void
-  handleStart: (value: HandleStartParams) => void
+  handleStart: (value: AIChatSubmitParams) => void
 }
 
 export interface HistoryAIReActChatSlotOptions {
@@ -353,9 +353,13 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     pushAIFuzzStatusRuntimeIdToWebFuzzerPage(pageId, runtimeId, { source: 'auto' })
   })
 
-  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
+  const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat } = useChatIPC(route, pageId)
 
-  const store = globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
+  useEffect(() => {
+    if (activeChat) cancelPendingChat()
+  }, [activeChat?.SessionID])
+
+  const store = pendingChat?.data.store ?? globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
   const casualLoading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
 
   // 当前会话删除状态：删除中时遮罩整个对话区域，阻止用户操作
@@ -444,9 +448,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   }, [activeID, subscribeBridgeEvents])
 
   const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
-    const sessionId = data.params.Params?.TimelineSessionID || activeChat?.SessionID
-    if (sessionId) subscribeBridgeEvents(sessionId)
-
     const newChat: AIHandleStartExtraProps = resolveStartExtraParams?.(data) ?? {
       chatId: activeChat?.SessionID,
     }
@@ -471,12 +472,15 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       resolve({
         params,
         extraParams: newChat,
+        // 新会话登记后再订阅，避免 ensureSession 提前占用前端生成的 ID。
+        onSessionBound: subscribeBridgeEvents,
       })
     })
   })
 
-  /** 新建会话：清空 UI、断开旧连接，并预生成新的 TimelineSessionID */
+  /** 新建会话：清空 UI、断开旧连接，清除旧的 TimelineSessionID */
   const onNewChat = useMemoizedFn(() => {
+    cancelPendingChat()
     const currentID = activeChat?.SessionID
     if (store.getState().execute && currentID) {
       onClose([currentID])
@@ -486,7 +490,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     setActiveChat(undefined)
     setSetting((prev) => ({
       ...prev,
-      TimelineSessionID: createActiveChatSessionId(),
+      TimelineSessionID: '',
       SyncPerceptionTrigger: false,
       EnablePlan: false,
       DisableMemoryTriage: AIAgentSettingDefault.DisableMemoryTriage,
@@ -501,6 +505,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   const onStop = useMemoizedFn(() => {
+    if (pendingChat) {
+      cancelPendingChat()
+      return
+    }
     if (store.getState().execute && activeID) {
       onClose([activeID])
     }
@@ -529,7 +537,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   /** 与输入框提交一致：执行中走自由输入，否则开启新会话 */
-  const handleSubmitQuery = useMemoizedFn((value: HandleStartParams) => {
+  const handleSubmitQuery = useMemoizedFn((value: AIChatSubmitParams) => {
     const sessionID = activeChat?.SessionID
     if (store.getState().execute && sessionID) {
       const { attachedResourceInfo } = getAIReActRequestParams(value)
@@ -566,8 +574,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     return {
       setting: setting,
       activeChat: activeChat,
+      pendingChat,
     }
-  }, [setting, activeChat])
+  }, [setting, activeChat, pendingChat])
 
   const dispatchers: AIAgentContextDispatcher = useMemo(() => {
     return {
@@ -578,6 +587,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       onSend,
       onClose,
       onUpdatePageId,
+      cancelPendingChat,
     }
   }, [])
 

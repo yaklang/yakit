@@ -1,11 +1,11 @@
 import type { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
-import type { HandleStartParams } from '../aiAgentChat/type'
+import type { AIChatSubmitParams } from '../aiAgentChat/type'
 import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface AIChatWelcomeProps {
-  onTriageSubmit: (data: HandleStartParams) => void
+  onTriageSubmit: (data: AIChatSubmitParams) => void
   onSetReAct: () => void
   onHttpFlowRemove?: (id: string, isSummary: boolean) => void
   ref?: React.ForwardedRef<AIReActChatRefProps>

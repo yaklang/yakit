@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import HistoryChat from '../HistoryChat'
 import emiter from '@/utils/eventBus/eventBus'
 import { ReActChatEventEnum } from '../../defaultConstant'
+import type { AISession } from '../../type/aiChat'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 
 const mocks = vi.hoisted(() => ({
@@ -59,6 +60,43 @@ beforeEach(() => {
 })
 
 describe('HistoryChat 头部操作', () => {
+  it('重复绑定同一 session 时更新并置顶，而同名的其他会话继续保留', () => {
+    const { unmount } = render(<HistoryChat aiSource={['ai']} />)
+    const previous = [
+      { SessionID: 'other', Title: 'same title', Source: 'ai' },
+      { SessionID: 'bound', Title: 'old title', Source: 'ai' },
+      { SessionID: 'older', Title: 'older', Source: 'ai' },
+    ] as AISession[]
+    const payload = { SessionID: 'bound', Title: 'same title', Source: 'ai' }
+    act(() => emiter.emit('sessionData', JSON.stringify({ type: 'prependSession', payload })))
+    const update = mocks.dispatcher.setSessions.mock.lastCall![0]
+    const next = update(previous)
+    expect(next).toEqual([payload, previous[0], previous[2]])
+    expect(update(next)).toEqual(next)
+    expect(previous).toHaveLength(3)
+    expect(previous[1].Title).toBe('old title')
+
+    unmount()
+    mocks.dispatcher.setSessions.mockClear()
+    act(() => emiter.emit('sessionData', JSON.stringify({ type: 'prependSession', payload })))
+    expect(mocks.dispatcher.setSessions).not.toHaveBeenCalled()
+  })
+
+  it('新会话绑定事件不会加入其他来源的列表', () => {
+    render(<HistoryChat aiSource={['webFuzzer']} />)
+    mocks.dispatcher.setSessions.mockClear()
+    act(() =>
+      emiter.emit(
+        'sessionData',
+        JSON.stringify({
+          type: 'prependSession',
+          payload: { SessionID: 'agent-session', Source: 'ai' },
+        }),
+      ),
+    )
+    expect(mocks.dispatcher.setSessions).not.toHaveBeenCalled()
+  })
+
   it('默认保留新建与固定按钮', async () => {
     render(<HistoryChat aiSource={['ai']} />)
 

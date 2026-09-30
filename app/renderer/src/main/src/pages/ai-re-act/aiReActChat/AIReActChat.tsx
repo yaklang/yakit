@@ -1,7 +1,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 
 import styles from './AIReActChat.module.scss'
-import type { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
+import type { AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
 import { AIReActChatContents } from '../aiReActChatContents/AIReActChatContents'
 import type { AIReActChatContentsRef } from '../aiReActChatContents/AIReActChatContentsType'
 import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
@@ -10,21 +10,13 @@ import { yakitNotify } from '@/utils/notification'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import classNames from 'classnames'
 import { ChevrondownButton } from './AIReActComponent'
-import {
-  type AIInputEvent,
-  AIInputEventSyncTypeEnum,
-  AINotifyType,
-  AISourceEnum,
-  type AIStartParams,
-} from '../hooks/grpcApi'
+import { type AIInputEvent, AIInputEventSyncTypeEnum, AINotifyType } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
-import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
-import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
-import type { AISession } from '@/pages/ai-agent/type/aiChat'
+import type { AIChatSubmitParams } from '@/pages/ai-agent/aiAgentChat/type'
+import { createActiveChatSessionId, getAIReActRequestParams } from '@/pages/ai-agent/utils'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
-import useSessionId from '../hooks/useSessionId'
 import emiter from '@/utils/eventBus/eventBus'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
@@ -42,6 +34,7 @@ import {
   XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useStartAIChat } from '../hooks/useStartAIChat'
 import { isCommunityEdition } from '@/utils/envfile'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
@@ -57,7 +50,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       externalParameters,
       rightPanelLayoutRef,
     } = props
-    const { setActiveChat, getSetting, onStart, onSend } = useAIAgentDispatcher()
+    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+    const { onSend, cancelPendingChat } = useAIAgentDispatcher()
 
     const sessionId = useCurrentSessionId()
     const store = useCurrentStore()
@@ -71,8 +65,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       trigger: 'setShowFreeChat',
     })
 
-    const { activeChat, setting } = useAIAgentStore()
-    const { getSession } = useSessionId()
+    const { activeChat, setting, pendingChat } = useAIAgentStore()
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
@@ -125,93 +118,18 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     }, [inViewPort])
     //#endregion
     // #region 问题相关逻辑
-    const handleStart = useMemoizedFn((value: HandleStartParams) => {
-      const { qs, sessionId, enabledCapabilities } = value
-      const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
-
-      const latestSetting = getSetting()
-      const source = latestSetting.Source ?? AISourceEnum.aiAgent
-      const formattedSetting = formatAIAgentSetting(latestSetting)
-      const request: AIStartParams = {
-        ...formattedSetting,
-        UserQuery: qs,
-        CoordinatorId: '',
-        Sequence: 1,
-        PreferSessionCachedConfig: true,
-        Source: source,
-        EnabledCapabilities: enabledCapabilities,
-      }
-
-      const session = getSession(sessionId)
-
-      request.TimelineSessionID = session
-      const { attachedResourceInfo } = getAIReActRequestParams(value)
-      // 发送初始化参数
-      const aiInputEvent: AIInputEvent = {
-        IsStart: true,
-        Params: {
-          ...request,
-        },
-        AttachedResourceInfo: attachedResourceInfo,
-        FocusModeLoop: value.focusMode,
-      }
-      const onStartChat = (res: AIHandleStartResProps) => {
-        const { params, extraParams, onChat } = res
-        let newChat: AISession | undefined = undefined
-        if (!sessionID) {
-          // 创建新的聊天记录
-          newChat = {
-            Id: extraParams?.chatId || session,
-            Title: qs || `AI Agent - ${new Date().toLocaleString()}`,
-            question: qs,
-            CreatedAt: new Date().getTime(),
-            UpdatedAt: new Date().getTime(),
-            StartParams: request,
-            SessionID: session,
-            TitleInitialized: false,
-            Source: request.Source ?? 'ai',
-            LastUsedAt: new Date().getTime(),
-            isCreate: true,
-          }
-          // setActiveChat && setActiveChat(newChat)
-          emiter.emit(
-            'sessionData',
-            JSON.stringify({ type: 'prependSession', payload: { ...newChat, isCreate: false } }),
-          )
-          // 新建的额外操作
-          onChat?.()
-        }
-        aiChatTextareaRef.current.setMention({
-          mentionId: params.FocusModeLoop || randomString(8),
-          mentionType: 'focusMode',
-          mentionName: params.FocusModeLoop || '',
-        })
-        onStart({
-          token: session,
-          params,
-          onLinkSuccess: () => {
-            // 必须成功链接后再设置 activeChat
-            if (!sessionID && newChat) setActiveChat && setActiveChat(newChat)
-          },
-        })
-      }
-      if (startRequest) {
-        startRequest({
-          params: aiInputEvent,
-        })
-          .then((res) => {
-            onStartChat(res)
-          })
-          .catch(() => {
-            onStartChat({
-              params: aiInputEvent,
-            })
-          })
-      } else {
-        onStartChat({
-          params: aiInputEvent,
-        })
-      }
+    const startChat = useStartAIChat({
+      startRequest,
+      setMention: (value) => aiChatTextareaRef.current?.setMention(value),
+    })
+    const handleStart = useMemoizedFn((input: AIChatSubmitParams) => {
+      const { sessionId, ...value } = input
+      startChat({
+        ...value,
+        target: activeChat?.SessionID
+          ? { kind: 'resume', sessionId: activeChat.SessionID }
+          : { kind: 'new', sessionId: sessionId || createActiveChatSessionId() },
+      })
     })
 
     useImperativeHandle(ref, () => {
@@ -224,7 +142,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
     }, [])
     /**自由对话 */
-    const handleSend = useMemoizedFn((data: HandleStartParams) => {
+    const handleSend = useMemoizedFn((data: AIChatSubmitParams) => {
       if (!activeChat?.SessionID) return
       const sendChat = () => {
         const { attachedResourceInfo } = getAIReActRequestParams(data)
@@ -286,6 +204,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     // 初始化 AI ReAct
     const handleSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
+      if (pendingChat?.status === 'connecting') return
       if (!setting) {
         yakitNotify('error', '请先配置 AI ReAct 参数')
         return
@@ -300,6 +219,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const handleStopCasualTask = useMemoizedFn(() => {
+      if (pendingChat) {
+        cancelPendingChat()
+        return
+      }
       const currentCasualTaskID = store.getState().currentChatStatus.questionID
       if (!store.getState().execute || !currentCasualTaskID) return
 
@@ -348,6 +271,19 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 )}
                 <AIToDoListWrapper />
                 <AIReActChatContents ref={aiReActChatContentsRef} />
+                {pendingChat?.status === 'failed' && (
+                  <div className={styles['connection-error']} role="status">
+                    {pendingChat.error || t('ChatSessionNotify.connectionStopped')}
+                    <YakitButton
+                      type="text"
+                      onClick={() => {
+                        pendingChat.retry?.()
+                      }}
+                    >
+                      {t('YakitButton.retry')}
+                    </YakitButton>
+                  </div>
+                )}
                 <AIReActTaskChatReview />
               </div>
               <div className={classNames(styles['chat-footer'])}>
@@ -369,7 +305,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             </div>
           </div>
           {showAIRightPanel && showFreeChat && <AIRightPanel layoutRef={wrapperRef} />}
-          <div className={styles['open-wrapper']} onClick={(e) => setShowFreeChat(true)}>
+          <div className={styles['open-wrapper']} onClick={() => setShowFreeChat(true)}>
             <ChevrondownButton />
             <div className={styles['text']}>自由对话</div>
           </div>

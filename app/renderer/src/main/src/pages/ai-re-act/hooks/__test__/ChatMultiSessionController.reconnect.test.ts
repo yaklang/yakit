@@ -47,13 +47,19 @@ const message = (id: string) => ({ id, type: AIChatQSDataTypeEnum.THOUGHT, chatT
 const historyEnd = (offset = 0) =>
   makeGrpcJsonRes('structured', { next_start_id: offset }, { NodeId: 'recovery_history' })
 
+const streamTokenFor = (sessionId: string) =>
+  ipcRendererMock.invoke.mock.calls.find(
+    ([method, , params]) => method === 'start-ai-re-act' && params?.Params?.TimelineSessionID === sessionId,
+  )?.[1]
+
 describe('session reconnect / IDB lifecycle', () => {
   let ctrl: ChatMultiSessionController
   let sessions: Set<string>
   const begin = (id: string, query = '') => {
     sessions.add(id)
     return ctrl.handleStartSession({
-      token: id,
+      kind: 'resume',
+      sessionId: id,
       route: YakitRoute.AI_Agent,
       pageId: 'page',
       params: { Params: { Source: 'ai', UserQuery: query } } as any,
@@ -62,7 +68,13 @@ describe('session reconnect / IDB lifecycle', () => {
   const start = async (id: string, query = '') => {
     begin(id, query)
     await ctrl.ensureSession(id).meta.lifecycle.preparation
-    await ctrl.handleGrpcOutputEvent(id, makeGrpcJsonRes('pong', {}))
+    await emitIPC(id, makeGrpcJsonRes('pong', {}, { SessionId: id }))
+  }
+  const emitIPC = async (id: string, event: ReturnType<typeof makeGrpcRes>) => {
+    const token = streamTokenFor(id)
+    const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-data`)![1]
+    listener({}, event)
+    await ctrl.ensureSession(id).meta.lifecycle.events
   }
   const requests = () =>
     ipcRendererMock.invoke.mock.calls.filter(([method]) => method === 'send-ai-re-act').map((call) => call[2])
@@ -254,7 +266,7 @@ describe('session reconnect / IDB lifecycle', () => {
     // 预查询方案暂未启用，仍验证正常建联与重连不依赖这些请求。
     await start('s', query)
     expect(grpcQueryAIEvent).not.toHaveBeenCalled()
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's', expect.anything())
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', streamTokenFor('s'), expect.anything())
     const oldMeta = ctrl.ensureSession('s').meta
     // oldMeta.planExecutionHistoryEvents.push({
     //   coordinator_id: 'old-plan',
@@ -278,13 +290,13 @@ describe('session reconnect / IDB lifecycle', () => {
       chatType: 'reAct',
       node: { token: 'old', kind: 'item', type: AIChatQSDataTypeEnum.THOUGHT },
     })
-    begin('s')
+    const token = begin('s')
     await tick()
     expect(grpcQueryAIEvent).not.toHaveBeenCalled()
     expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('start-ai-re-act', expect.anything(), expect.anything())
-    // 会话仍占坑（准备期未结束）：不是「重复建立」错误，复用返回 true，也不会重复发起 IPC start
-    expect(begin('s')).toBe(true)
-    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('start-ai-re-act', 's', expect.anything())
+    // 会话仍占坑（准备期未结束）：不是「重复建立」错误，复用返回本轮 token，也不会重复发起 IPC start
+    expect(begin('s')).toBe(token)
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('start-ai-re-act', token, expect.anything())
     cleanup.resolve()
     await ctrl.ensureSession('s').meta.lifecycle.preparation
     expect(ctrl.ensureSession('s').store).toBe(old.store)
@@ -446,10 +458,8 @@ describe('session reconnect / IDB lifecycle', () => {
 
   it('history error does not send the question and closes loading', async () => {
     await start('s', 'keep this question')
-    await ctrl.handleGrpcOutputEvent(
-      's',
-      makeGrpcJsonRes('structured', { error: 'recovery failed' }, { NodeId: 'recovery_history' }),
-    )
+    await emitIPC('s', makeGrpcJsonRes('structured', { error: 'recovery failed' }, { NodeId: 'recovery_history' }))
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', streamTokenFor('s'))
     await ctrl.handleSessionEnd('s').catch(() => {})
     expect(requests().some((request) => request.IsFreeInput)).toBe(false)
     expect(ctrl.ensureSession('s').store.getState().initLoading).toBe(false)
@@ -462,26 +472,26 @@ describe('session reconnect / IDB lifecycle', () => {
 
   it('skips broken history events and loads the next batch without replaying them', async () => {
     await start('s')
-    await ctrl.handleGrpcOutputEvent('s', historyEnd(88))
+    await emitIPC('s', historyEnd(88))
     ctrl.requestRecoveryHistory('s')
     const { store, rawData, meta } = ctrl.ensureSession('s')
     vi.mocked(yakitNotify).mockClear()
     const broken = makeGrpcRes({ Type: 'thought', IsSync: true, Content: Buffer.from('{') })
-    await ctrl.handleGrpcOutputEvent('s', broken)
+    await emitIPC('s', broken)
     expect(store.getState()).toMatchObject({ grpcLoadMoreLoading: true })
     expect(ctrl.requestRecoveryHistory('s')).toBe(false)
-    await ctrl.handleGrpcOutputEvent('s', broken)
+    await emitIPC('s', broken)
     const write = deferred()
     vi.mocked(aiChatPersistStore.setSessionContent).mockReturnValueOnce(write.promise as any)
-    await ctrl.handleGrpcOutputEvent(
+    await emitIPC(
       's',
       makeGrpcJsonRes('thought', { thought: 'remaining history' }, { EventUUID: 'history-tail', IsSync: true }),
     )
-    await ctrl.handleGrpcOutputEvent(
+    await emitIPC(
       's',
       makeGrpcJsonRes('thought', { thought: 'live answer' }, { EventUUID: 'live-tail', IsSync: false }),
     )
-    const finished = ctrl.handleGrpcOutputEvent('s', historyEnd(22))
+    const finished = emitIPC('s', historyEnd(22))
     try {
       await tick()
       expect(store.getState().grpcLoadMoreLoading).toBe(true)
@@ -500,7 +510,7 @@ describe('session reconnect / IDB lifecycle', () => {
     expect(yakitNotify).not.toHaveBeenCalled()
     expect(ctrl.requestRecoveryHistory('s')).toBe(true)
     expect(requests().at(-1).SyncJsonInput).toBe(JSON.stringify({ start_id: 22, limit: 60 }))
-    await ctrl.handleGrpcOutputEvent('s', historyEnd(10))
+    await emitIPC('s', historyEnd(10))
     expect(rawData.grpcOffset).toBe(10)
     await expect(ctrl.handleSessionEnd('s')).resolves.toBeUndefined()
   })
@@ -509,7 +519,7 @@ describe('session reconnect / IDB lifecycle', () => {
     'keeps the cursor and connection on a %s receipt',
     async (kind) => {
       await start('s')
-      await ctrl.handleGrpcOutputEvent('s', historyEnd(88))
+      await emitIPC('s', historyEnd(88))
       ctrl.requestRecoveryHistory('s')
       const { store, rawData, meta } = ctrl.ensureSession('s')
       const receipt =
@@ -518,19 +528,32 @@ describe('session reconnect / IDB lifecycle', () => {
           : makeGrpcJsonRes('structured', kind === 'backend error' ? { error: 'query failed' } : {}, {
               NodeId: 'recovery_history',
             })
-      await ctrl.handleGrpcOutputEvent('s', receipt)
+      await emitIPC('s', receipt)
       expect(store.getState().grpcLoadMoreLoading).toBe(false)
       expect(rawData.grpcOffset).toBe(88)
       expect(ctrl.isSessionReady('s')).toBe(true)
+      expect(meta.lifecycle.closing).toBe(false)
+      expect(store.getState().execute).toBe(true)
       expect(meta.lifecycle.error).toBeUndefined()
-      expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', 's')
+      expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', streamTokenFor('s'))
 
       expect(ctrl.requestRecoveryHistory('s')).toBe(true)
       expect(requests().at(-1).SyncJsonInput).toBe(JSON.stringify({ start_id: 88, limit: 60 }))
-      await ctrl.handleGrpcOutputEvent('s', historyEnd(22))
+      await emitIPC('s', historyEnd(22))
       expect(rawData.grpcOffset).toBe(22)
     },
   )
+
+  it('still closes the session on a transport error during history loading', async () => {
+    await start('s')
+    await emitIPC('s', historyEnd(88))
+    ctrl.requestRecoveryHistory('s')
+    const token = streamTokenFor('s')
+    const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-error`)![1]
+    listener({}, new Error('connection lost'))
+    expect(ctrl.ensureSession('s').meta.lifecycle.closing).toBe(true)
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', token)
+  })
 
   it.each(['content', 'render'])('retains %s write errors but continues loading later history', async (kind) => {
     await start('s')
@@ -594,13 +617,17 @@ describe('session reconnect / IDB lifecycle', () => {
     const finalWrite = deferred()
     vi.mocked(aiChatPersistStore.setSessionRender).mockReturnValueOnce(finalWrite.promise)
     const old = ctrl.ensureSession('s')
-    ctrl.onPageUnload(YakitRoute.AI_Agent, 'page')
+    const unloaded = vi.fn()
+    const unloading = ctrl.onPageUnload(YakitRoute.AI_Agent, 'page').then(unloaded)
     const ending = ctrl.handleSessionEnd('s')
     await tick()
+    expect(unloaded).not.toHaveBeenCalled()
     expect(ctrl.isSessionReady('s')).toBe(true)
     expect(ctrl.ensureSession('s').store).toBe(old.store)
     finalWrite.resolve()
     await ending
+    await unloading
+    expect(unloaded).toHaveBeenCalledTimes(1)
     expect(ctrl.isSessionReady('s')).toBe(false)
     expect(ctrl.ensureSession('s').store).not.toBe(old.store)
     expect(aiChatPersistStore.deleteSessionPersist).toHaveBeenCalledTimes(1)

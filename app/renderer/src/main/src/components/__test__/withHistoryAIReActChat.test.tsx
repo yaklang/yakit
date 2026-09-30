@@ -1,6 +1,6 @@
 import '../../pages/ai-re-act/hooks/__test__/setupElectron'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 import type lodash from 'lodash'
 import type * as HistoryAIReActChatModule from '../withHistoryAIReActChat'
@@ -8,6 +8,19 @@ import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '../historyAIR
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
+import type { AISession } from '@/pages/ai-agent/type/aiChat'
+import type { PendingAIChat } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+
+const ipc = vi.hoisted(() => ({
+  useChatIPC: vi.fn(),
+  cancelPendingChat: vi.fn(),
+  onClose: vi.fn(),
+  pendingChat: undefined as PendingAIChat | undefined,
+}))
+beforeEach(() => {
+  vi.clearAllMocks()
+  ipc.pendingChat = undefined
+})
 
 vi.mock('lodash', async (importOriginal) => {
   const original = await importOriginal<{ default: typeof lodash }>()
@@ -41,7 +54,17 @@ vi.mock('@/pages/yakRunner/yakRunnerAiCodePatchApply', () => ({
   resetYakRunnerPatchWorkingDraft: vi.fn(),
 }))
 vi.mock('@/pages/ai-re-act/hooks/useChatIPC', () => ({
-  useChatIPC: () => ({ onStart: vi.fn(), onSend: vi.fn(), onClose: vi.fn(), onUpdatePageId: vi.fn() }),
+  useChatIPC: (...args: unknown[]) => {
+    ipc.useChatIPC(...args)
+    return {
+      onStart: vi.fn(),
+      onSend: vi.fn(),
+      onClose: ipc.onClose,
+      onUpdatePageId: vi.fn(),
+      cancelPendingChat: ipc.cancelPendingChat,
+      pendingChat: ipc.pendingChat,
+    }
+  },
 }))
 vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => {
   const store = createStore(() => ({ currentChatStatus: { status: 'idle' }, execute: false }))
@@ -49,8 +72,15 @@ vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => {
 })
 
 function Consumer() {
-  const { showFreeChat, setShowFreeChat } = useHistoryAIReActChat()
-  return <button onClick={() => setShowFreeChat(true)}>{showFreeChat ? 'open' : 'closed'}</button>
+  const { showFreeChat, setShowFreeChat, historyAIReActChatBridge: bridge } = useHistoryAIReActChat()
+  return (
+    <>
+      <button onClick={() => setShowFreeChat(true)}>{showFreeChat ? 'open' : 'closed'}</button>
+      <button onClick={bridge.onNewChat}>new-chat</button>
+      <button onClick={bridge.onStop}>stop-chat</button>
+      <button onClick={() => bridge.setActiveChat({ SessionID: 'history' } as AISession)}>select-history</button>
+    </>
+  )
 }
 
 function verifyProvider(Provider: typeof HistoryAIReActChatProvider) {
@@ -69,6 +99,16 @@ function verifyProvider(Provider: typeof HistoryAIReActChatProvider) {
 }
 
 describe('HistoryAIReActChatProvider', () => {
+  it.each(['new-chat', 'stop-chat', 'select-history'])('非 Agent 入口通过 %s 取消 pending，保持原有行为', (action) => {
+    const store = createStore(() => ({ currentChatStatus: { status: 'idle' }, execute: false }))
+    ipc.pendingChat = { streamToken: 'pending', status: 'connecting', data: { store } } as unknown as PendingAIChat
+    verifyProvider(HistoryAIReActChatProvider)
+    expect(ipc.useChatIPC).toHaveBeenCalledWith(YakitRoute.AI_REPOSITORY, YakitRoute.AI_REPOSITORY)
+    fireEvent.click(screen.getByRole('button', { name: action }))
+    expect(ipc.cancelPendingChat).toHaveBeenCalledTimes(1)
+    expect(ipc.onClose).not.toHaveBeenCalled()
+  })
+
   it('向知识库消费者提供可更新的会话状态', () => {
     verifyProvider(HistoryAIReActChatProvider)
   })
