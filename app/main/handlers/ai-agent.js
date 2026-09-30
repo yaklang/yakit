@@ -280,6 +280,27 @@ module.exports = (win, getClient) => {
     handlerHelper.registerHandler(win, stream, exportAIForgeMap, token)
   })
 
+  // 导入AITool
+  const importAIToolMap = new Map()
+  ipcMain.handle('cancel-ImportAITool', handlerHelper.cancelHandler(importAIToolMap))
+  ipcMain.handle('ImportAITool', (_, params, token) => {
+    let stream = getClient().ImportAITool(params)
+    handlerHelper.registerHandler(win, stream, importAIToolMap, token)
+  })
+
+  // 导出AITool
+  const exportAIToolMap = new Map()
+  ipcMain.handle('cancel-ExportAITool', handlerHelper.cancelHandler(exportAIToolMap))
+  ipcMain.handle('ExportAITool', (_, params, token) => {
+    if (!fs.existsSync(getYakProjects())) {
+      try {
+        fs.mkdirSync(getYakProjects(), { recursive: true })
+      } catch (error) {}
+    }
+    let stream = getClient().ExportAITool(params)
+    handlerHelper.registerHandler(win, stream, exportAIToolMap, token)
+  })
+
   // 生成 yakit-projects 文件夹下 temp 里面的文件路径
   ipcMain.handle('GenerateTempFilePath', async (e, fileName) => {
     return path.join(getYakTemp(), fileName)

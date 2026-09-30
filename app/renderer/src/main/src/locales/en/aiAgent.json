@@ -832,6 +832,8 @@
   "ForgeName": {
     "exportForge": "Export Forge",
     "importForge": "Import Forge",
+    "exportTool": "Export Tool",
+    "importTool": "Import Tool",
     "deleteForgeSuccess": "Forge deleted successfully",
     "templateIdError": "Template ID('{{id}}') is invalid and cannot be edited",
     "noMoreDescription": "No more description",
