@@ -4,6 +4,12 @@ const { execFileSync } = require('child_process')
 
 module.exports = async function (context) {
   if (process.env.PLATFORM === 'memfit') {
+    const targetArch = { 1: 'x64', 3: 'arm64' }[context.arch]
+    if (context.electronPlatformName !== process.platform || targetArch !== process.arch) {
+      throw new Error(
+        'AI Senso bytecode must be built on the target OS and architecture; use the GitHub native build matrix',
+      )
+    }
     execFileSync(process.execPath, [path.resolve(__dirname, '../../scripts/verify-main-bytecode.js')], {
       stdio: 'inherit',
     })
@@ -143,5 +149,13 @@ module.exports = async function (context) {
         break
     }
     context.packager.config.mac = macConfig
+  }
+  if (process.env.BUILD_WITH_ENGINE === 'false') {
+    for (const config of [win32Config, linuxConfig, macConfig]) {
+      if (config)
+        config.extraFiles = config.extraFiles.filter(
+          (file) => !['bins/yak.zip', 'bins/engine-sha256.txt'].includes(file.to),
+        )
+    }
   }
 }

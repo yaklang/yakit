@@ -93,6 +93,20 @@ jobs:
             - name: Show ENV.FILE_PATH
               run: echo "FILE_PATH： $FILE_PATH"
 
+            # AI Senso's tag can have an old date; use the actual version recorded by its successful build.
+            - name: Resolve AI Senso built version
+              if: inputs.version == 'memfit'
+              env:
+                  BUILD_TAG: ${{ github.ref_name }}
+              run: |
+                  set -euo pipefail
+                  SOFTWARE_VERSION=$(curl --fail --silent --show-error --retry 3 "https://yaklang.oss-accelerate.aliyuncs.com/memfit/build-tags/${BUILD_TAG}/build-version.txt")
+                  if [[ ! "$SOFTWARE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]{4}$ ]]; then
+                    echo "No valid completed AI Senso build found for this tag" >&2
+                    exit 1
+                  fi
+                  echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> "$GITHUB_ENV"
+
             - name: Update OSS latest file
               run: echo ${{ env.SOFTWARE_VERSION }} > ./yakit-version.txt
             - name: Upload Yakit Version to oss

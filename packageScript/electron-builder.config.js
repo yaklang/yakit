@@ -249,6 +249,10 @@ const configOption = {
 
 // extraFiles 是否配置-构建兼容旧平台的扩展文件
 const isLegacy = process.env.THE_LEGACY == 'true'
+// CI downloads only the selected architecture's engine; engine-free builds omit it explicitly.
+if (process.env.BUILD_WITH_ENGINE === 'false' || process.env.BUILD_HIDE_ENGINE_VERSION === 'true') {
+  configOption.extraFiles = configOption.extraFiles.filter((file) => file.from !== 'bins/engine-version.txt')
+}
 if (isLegacy) {
   configOption.extraFiles.push({
     from: 'bins/yakit-system-mode.txt',

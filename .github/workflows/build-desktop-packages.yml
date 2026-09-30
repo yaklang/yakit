@@ -1,0 +1,192 @@
+name: Native desktop packages
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        type: string
+        default: mwl
+      edition:
+        type: string
+        default: memfit
+      legacy:
+        type: boolean
+        default: false
+      include_legacy:
+        type: boolean
+        default: false
+      engine:
+        type: boolean
+        default: true
+      engine_version:
+        type: string
+        default: ''
+      hide_engine_version:
+        type: boolean
+        default: false
+      dev_tool:
+        type: boolean
+        default: false
+      skip_enterprise_license:
+        type: boolean
+        default: false
+      sign:
+        type: boolean
+        default: false
+    outputs:
+      version:
+        value: ${{ jobs.plan.outputs.version }}
+      artifact:
+        value: desktop-packages-${{ jobs.plan.outputs.version }}
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+      engine: ${{ steps.plan.outputs.engine }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+      - name: Freeze Beijing build date, engine version and native targets
+        id: plan
+        env:
+          BUILD_PLATFORM: ${{ inputs.platform }}
+          BUILD_LEGACY: ${{ inputs.legacy }}
+          BUILD_INCLUDE_LEGACY: ${{ inputs.include_legacy }}
+          BUILD_WITH_ENGINE: ${{ inputs.engine }}
+          BUILD_ENGINE_VERSION: ${{ inputs.engine_version }}
+        run: node scripts/ci-build-plan.js
+
+  build:
+    needs: plan
+    name: ${{ matrix.id }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      CI: ''
+      NODE_OPTIONS: --max_old_space_size=4096
+      BUILD_PLATFORM: ${{ inputs.platform }}
+      BUILD_EDITION: ${{ inputs.edition }}
+      BUILD_VERSION: ${{ needs.plan.outputs.version }}
+      BUILD_TARGET_PLATFORM: ${{ matrix.platform }}
+      BUILD_TARGET_ARCH: ${{ matrix.arch }}
+      BUILD_TARGET_ID: ${{ matrix.id }}
+      THE_LEGACY: ${{ matrix.legacy }}
+      BUILD_WITH_ENGINE: ${{ inputs.engine }}
+      BUILD_ENGINE_VERSION: ${{ needs.plan.outputs.engine }}
+      BUILD_HIDE_ENGINE_VERSION: ${{ inputs.hide_engine_version }}
+      BUILD_DEV_TOOL: ${{ inputs.dev_tool }}
+      BUILD_SKIP_ENTERPRISE_LICENSE: ${{ inputs.skip_enterprise_license }}
+      BUILD_SIGN: ${{ inputs.sign }}
+      CSC_IDENTITY_AUTO_DISCOVERY: ${{ inputs.sign && matrix.platform == 'darwin' }}
+      # Mac credentials are empty on Windows/Linux and unsigned builds.
+      APPLE_ID: ${{ inputs.sign && matrix.platform == 'darwin' && secrets.APPLE_ACCOUNT_EMAIL || '' }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ inputs.sign && matrix.platform == 'darwin' && secrets.APPLE_APP_PASSWORD || '' }}
+      APPLE_TEAM_ID: ${{ inputs.sign && matrix.platform == 'darwin' && secrets.APPLE_TEAM_ID || '' }}
+      CERT_BASE64: ${{ inputs.sign && matrix.platform == 'darwin' && secrets.APPLE_CERTIFICATE_BASE64 || '' }}
+      CERT_PASSWORD: ${{ inputs.sign && matrix.platform == 'darwin' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+      - name: Install pinned Yarn
+        run: npm install --global yarn@1.22.22 --force
+      - name: Install application and both renderer dependencies
+        run: |
+          yarn install --frozen-lockfile --non-interactive
+          yarn --cwd app/renderer/src/main install --frozen-lockfile --non-interactive
+          yarn --cwd app/renderer/engine-link-startup install --frozen-lockfile --non-interactive
+      - name: Install the same legacy Electron used by this target's compiler and packager
+        if: matrix.legacy
+        run: yarn add --dev --exact electron@22.3.27 --non-interactive
+      - name: Set embedded version and verify native runner
+        run: node scripts/ci-desktop-build.js prepare
+      - name: Validate build date, native guards and artifact collection
+        run: node --test scripts/__test__/desktop-packaging.test.cjs
+      - name: Install Linux runtime and headless display dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libnss3 libatk-bridge2.0-dev libgtk-3-dev libgbm1 libasound2-dev makeself
+      - name: Import Mac certificate for app and engine
+        if: inputs.sign && matrix.platform == 'darwin'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for key in APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID CERT_BASE64 CERT_PASSWORD; do
+            if [ -z "${!key}" ]; then
+              echo "Missing Mac signing secret: $key" >&2
+              exit 1
+            fi
+          done
+          bash packageScript/script/signature.sh build
+      - name: Download target engine and browser extension
+        run: node scripts/ci-desktop-build.js assets
+      - name: Build renderers once, then native bytecode
+        run: node scripts/ci-desktop-build.js render
+      - name: Package only this OS and architecture
+        run: node scripts/ci-desktop-build.js pack
+      - name: Verify packaged bytecode, embedded version and real startup
+        if: matrix.platform != 'linux'
+        run: node scripts/verify-packaged-desktop.js
+      - name: Verify Linux package under a headless display
+        if: matrix.platform == 'linux'
+        run: xvfb-run -a node scripts/verify-packaged-desktop.js
+      - name: Create UOS launcher
+        if: inputs.platform == 'uos'
+        run: node scripts/ci-desktop-build.js uos
+      - name: Sign Windows installer
+        if: inputs.sign && matrix.platform == 'windows'
+        uses: ./.github/actions/sign-windows
+        with:
+          path: release
+          key-vault-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_URI }}
+          key-vault-client-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_APPLICATION_ID }}
+          key-vault-tenant-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_DIRECTORY_ID }}
+          key-vault-client-secret: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CLIENT_SECRET }}
+          key-vault-certificate: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CERT_NAME }}
+          timestamp-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_TIMESTAMP_URL }}
+      - name: Collect installer with checksum and build manifest
+        run: node scripts/ci-desktop-build.js collect
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.id }}
+          path: release/ci-artifacts/*
+          if-no-files-found: error
+          retention-days: 7
+
+  collect:
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: packages
+          merge-multiple: true
+      - name: Require every target and verify installer checksums
+        env:
+          BUILD_MATRIX: ${{ needs.plan.outputs.matrix }}
+          BUILD_VERSION: ${{ needs.plan.outputs.version }}
+        run: node scripts/ci-desktop-build.js aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-packages-${{ needs.plan.outputs.version }}
+          path: packages/*
+          if-no-files-found: error
+          retention-days: 7

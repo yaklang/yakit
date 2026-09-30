@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const { execFileSync } = require('child_process')
 
 const projectRoot = path.resolve(__dirname, '..')
 const sourceDir = path.join(projectRoot, 'app/main')
@@ -79,4 +80,9 @@ if (missingFiles.length || staleFiles.length) {
   throw new Error(`main-process bytecode verification failed\n${details}`)
 }
 
+execFileSync(require('electron'), [path.join(__dirname, 'verify-bytecode-runtime.js'), outputDir], {
+  stdio: 'inherit',
+  timeout: 60000,
+  env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', NODE_OPTIONS: '' },
+})
 console.log(`Verified ${protectedFiles.length} main-process bytecode modules.`)

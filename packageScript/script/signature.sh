@@ -10,7 +10,7 @@ echo "Run mode: ${MODE:-default}"
 security create-keychain -p "" build.keychain
 security default-keychain -s build.keychain
 security unlock-keychain -p "" build.keychain
-security import cert.p12 -k build.keychain -P $CERT_PASSWORD -T /usr/bin/codesign
+security import cert.p12 -k build.keychain -P "$CERT_PASSWORD" -T /usr/bin/codesign
 
 # 设置钥匙链分区列表; 允许这些工具访问: apple-tool:,apple:,codesign:
 security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
