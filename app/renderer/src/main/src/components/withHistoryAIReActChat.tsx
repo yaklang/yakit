@@ -448,9 +448,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   }, [activeID, subscribeBridgeEvents])
 
   const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
-    const sessionId = data.params.Params?.TimelineSessionID || activeChat?.SessionID
-    if (sessionId) subscribeBridgeEvents(sessionId)
-
     const newChat: AIHandleStartExtraProps = resolveStartExtraParams?.(data) ?? {
       chatId: activeChat?.SessionID,
     }
@@ -475,6 +472,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       resolve({
         params,
         extraParams: newChat,
+        // 新会话登记后再订阅，避免 ensureSession 提前占用前端生成的 ID。
         onSessionBound: subscribeBridgeEvents,
       })
     })
