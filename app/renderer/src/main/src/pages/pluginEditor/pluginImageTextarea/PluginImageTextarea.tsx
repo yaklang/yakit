@@ -1,16 +1,25 @@
 import type React from 'react'
-import { forwardRef, memo, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import type { TextareaForImage, PluginImageTextareaProps } from './PluginImageTextareaType'
+import type { TextareaForFile, TextareaForImage, PluginImageTextareaProps } from './PluginImageTextareaType'
 import { failed } from '@/utils/notification'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { PhotographOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PaperClipOutlined, PhotographOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Input, Upload } from 'antd'
 import { PaperAirplaneSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import cloneDeep from 'lodash/cloneDeep'
 import { httpDeleteOSSResource, httpUploadImgBase64 } from '@/apiUtils/http'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import { ImagePreviewList } from '@/pages/pluginHub/utilsUI/UtilsTemplate'
+import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
+import { getLocalFileLinkInfo } from '@/components/MilkdownEditor/CustomFile/utils'
+import {
+  DISPOSAL_ATTACHMENT_EXTENSIONS,
+  DISPOSAL_ATTACHMENT_TYPE_HINT,
+  MAX_ATTACHMENT_SIZE,
+  validateDisposalAttachmentName,
+} from '@/utils/disposalAttachment'
+import { DisposalFileList } from '@/components/DisposalFileList/DisposalFileList'
 
 import classNames from 'classnames'
 import styles from './PluginImageTextarea.module.scss'
@@ -19,7 +28,28 @@ export const ImgMaxSize = 1 * 1024 * 1024
 
 export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
   forwardRef((props, ref) => {
-    const { className, loading, type = 'comment', maxLength = 6, onSubmit, onUploadImage, quotation, delQuotation } = props
+    const {
+      className,
+      loading,
+      type = 'comment',
+      maxLength = 6,
+      onSubmit,
+      onUploadImage,
+      onUploadFile,
+      quotation,
+      delQuotation,
+    } = props
+    const [files, setFiles] = useState<TextareaForFile[]>([])
+    const [fileLoading, setFileLoading] = useState(false)
+    const fileBusyRef = useRef(false)
+    const uploadVersionRef = useRef(0)
+
+    useEffect(
+      () => () => {
+        uploadVersionRef.current += 1
+      },
+      [],
+    )
 
     useImperativeHandle(
       ref,
@@ -31,6 +61,10 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
     )
 
     const getData = useMemoizedFn(() => {
+      if (fileBusyRef.current) {
+        failed('附件正在上传中，请稍候再操作')
+        return null
+      }
       if (imgLoading) {
         failed('图片正在上传中, 请稍候在操作...')
         return null
@@ -43,18 +77,55 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
       return {
         value: value,
         imgs: cloneDeep(imgs),
+        ...(onUploadFile ? { files: cloneDeep(files) } : {}),
       }
     })
     const onClear = useMemoizedFn(() => {
       handleDelQuotation()
       setValue('')
       setImgs([])
+      uploadVersionRef.current += 1
+      fileBusyRef.current = false
+      setFileLoading(false)
+      setFiles([])
     })
 
     const onReply = useMemoizedFn(() => {
+      if (loading) return
       const data = getData()
       if (!data) return
       onSubmit && onSubmit(data)
+    })
+
+    const handleUploadFile = useMemoizedFn(async () => {
+      if (!onUploadFile || fileBusyRef.current || imgLoading || loading) return
+      const upload = onUploadFile
+      const version = uploadVersionRef.current
+      fileBusyRef.current = true
+      setFileLoading(true)
+      try {
+        const selected = await handleOpenFileSystemDialog({
+          title: '上传附件（不超过100MB）',
+          filters: [{ name: '支持的附件', extensions: DISPOSAL_ATTACHMENT_EXTENSIONS }],
+          properties: ['openFile'],
+        })
+        const path = selected.filePaths[0]
+        if (selected.canceled || !path || version !== uploadVersionRef.current) return
+        validateDisposalAttachmentName(path)
+        const { size } = await getLocalFileLinkInfo(path, true)
+        if (version !== uploadVersionRef.current) return
+        if (size > MAX_ATTACHMENT_SIZE) throw new Error('附件大小不能超过100MB')
+        const url = await upload(path)
+        if (version !== uploadVersionRef.current) return
+        setFiles((current) => [...current, { url, size, name: path.split(/[\\/]/).pop() || '附件' }])
+      } catch (error) {
+        if (version === uploadVersionRef.current) failed(`附件上传失败：${String(error)}`)
+      } finally {
+        if (version === uploadVersionRef.current) {
+          fileBusyRef.current = false
+          setFileLoading(false)
+        }
+      }
     })
 
     /** ----------  引用相关功能 Start ---------- */
@@ -89,7 +160,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
       if (!image) {
         return
       }
-      if (imgLoading) {
+      if (imgLoading || fileBusyRef.current || loading) {
         failed('图片正在上传中, 请稍候在操作...')
         return
       }
@@ -216,6 +287,11 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
                 {`回复 ${quotation.userName} : ${quotation.content}`}
               </div>
               {quotation.imgs && quotation.imgs.length > 0 && <div>{`[图片] * ${quotation.imgs?.length}`}</div>}
+              {!!quotation.files?.length && (
+                <div
+                  title={quotation.files.map((file) => file.name).join('、')}
+                >{`[附件] * ${quotation.files.length}`}</div>
+              )}
             </div>
           </div>
         )}
@@ -245,35 +321,58 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
           />
         )}
 
+        <DisposalFileList
+          files={files}
+          onRemove={loading ? undefined : (index) => setFiles((current) => current.filter((_, i) => i !== index))}
+          editable
+        />
+
         <div className={styles['plugin-image-textarea-footer-operate']}>
-          <Upload
-            accept="image/jpeg,image/png,image/jpg,image/gif"
-            multiple={false}
-            disabled={imgLoading || imgsLength >= 6}
-            showUploadList={false}
-            beforeUpload={(file: any) => {
-              if ('image/jpeg,image/png,image/jpg,image/gif'.indexOf(file.type) === -1) {
-                failed('仅支持上传图片格式为：image/jpeg,image/png,image/jpg,image/gif')
+          <div className={styles['upload-actions']}>
+            <Upload
+              accept="image/jpeg,image/png,image/jpg,image/gif"
+              multiple={false}
+              disabled={loading || fileLoading || imgLoading || imgsLength >= 6}
+              showUploadList={false}
+              beforeUpload={(file: any) => {
+                if ('image/jpeg,image/png,image/jpg,image/gif'.indexOf(file.type) === -1) {
+                  failed('仅支持上传图片格式为：image/jpeg,image/png,image/jpg,image/gif')
+                  return false
+                }
+                if (file) {
+                  generateImageInfo(file)
+                }
                 return false
-              }
-              if (file) {
-                generateImageInfo(file)
-              }
-              return false
-            }}
-          >
-            <YakitButton
-              disabled={imgsLength >= 6}
-              loading={imgLoading}
-              icon={<PhotographOutlined color="currentColor" />}
-              type="text2"
-            />
-          </Upload>
+              }}
+            >
+              <YakitButton
+                disabled={loading || fileLoading || imgsLength >= 6}
+                loading={imgLoading}
+                icon={<PhotographOutlined color="currentColor" />}
+                type="text2"
+              />
+            </Upload>
+            {onUploadFile && (
+              <YakitButton
+                title={`${DISPOSAL_ATTACHMENT_TYPE_HINT}，不超过100MB`}
+                aria-label="上传附件"
+                disabled={loading || fileLoading || imgLoading}
+                loading={fileLoading}
+                icon={<PaperClipOutlined color="currentColor" />}
+                type="text2"
+                onClick={handleUploadFile}
+              />
+            )}
+          </div>
 
           <div className={styles['right-footer']}>
             <div className={styles['content-length']}>{contentLength}/150</div>
             {type === 'comment' && (
-              <YakitButton loading={loading} disabled={contentLength === 0 && imgsLength === 0} onClick={onReply}>
+              <YakitButton
+                loading={loading}
+                disabled={imgLoading || fileLoading || (contentLength === 0 && imgsLength === 0 && files.length === 0)}
+                onClick={onReply}
+              >
                 <PaperAirplaneSolid color="currentColor" />
                 {quotation ? '回复' : '发布评论'}
               </YakitButton>

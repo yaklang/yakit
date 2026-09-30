@@ -14,6 +14,7 @@ import type {
 } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { mergeDisposalLogs } from '@/utils/disposalLog'
+import { uploadDisposalAttachment } from '@/utils/disposalAttachment'
 import type { HTTPFlow } from '../HTTPFlowTable.constants'
 import { FlowDisposalLogItemView } from './FlowDisposalLogItem'
 import { disposalCommentConvertToJSON, disposalCommentJSONConvertToData } from './convert'
@@ -44,6 +45,7 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
   const [list, setList] = useState<FlowDisposalLogItem[]>([])
   const [refreshFlag, setRefreshFlag] = useState(false)
   const [quotation, setQuotation] = useState<QuotationInfoProps>()
+  const submissionVersionRef = useRef(0)
   const composerRef = useRef<PluginImageTextareaRefProps>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const pageRef = useRef(0)
@@ -117,7 +119,16 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
     fetchList(true)
   }, [refreshKey])
 
+  useEffect(
+    () => () => {
+      submissionVersionRef.current += 1
+    },
+    [],
+  )
+
   useUpdateEffect(() => {
+    submissionVersionRef.current += 1
+    setSubmitting(false)
     setQuotation(undefined)
     composerRef.current?.onClear()
   }, [flowId, flowHash])
@@ -135,6 +146,7 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
       userName: item.userName || '-',
       content: parsed?.text || '',
       imgs: parsed?.imgs || [],
+      files: parsed?.files || [],
       logId: item.id,
     })
   })
@@ -148,6 +160,7 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
   const onSubmit = useMemoizedFn((data: ImageTextareaData) => {
     const description = disposalCommentConvertToJSON(data)
     if (!description) return
+    const version = submissionVersionRef.current
     setSubmitting(true)
     apiPublishFlowDisposalComment({
       flow_id: flowId || undefined,
@@ -156,11 +169,15 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
       logId: quotation?.logId,
     })
       .then(() => {
+        if (version !== submissionVersionRef.current) return
         composerRef.current?.onClear()
         setQuotation(undefined)
         setRefreshFlag((v) => !v)
       })
-      .finally(() => setSubmitting(false))
+      .catch(() => {})
+      .finally(() => {
+        if (version === submissionVersionRef.current) setSubmitting(false)
+      })
   })
 
   if (!isLogin) {
@@ -204,11 +221,13 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
 
       <div className={styles['flow-disposal-log-footer']}>
         <PluginImageTextarea
+          key={flowHash}
           ref={composerRef}
           loading={submitting}
           quotation={quotation}
           delQuotation={() => setQuotation(undefined)}
           onUploadImage={(req) => apiUploadFlowDisposalImage({ ...req, hash: flowHash })}
+          onUploadFile={(path) => uploadDisposalAttachment({ path, hash: flowHash, type: 'HttpflowComment' })}
           onSubmit={onSubmit}
         />
       </div>

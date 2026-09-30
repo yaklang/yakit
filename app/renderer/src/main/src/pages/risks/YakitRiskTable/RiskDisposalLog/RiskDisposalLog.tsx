@@ -15,6 +15,7 @@ import type {
 } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { mergeDisposalLogs } from '@/utils/disposalLog'
+import { uploadDisposalAttachment } from '@/utils/disposalAttachment'
 import { RiskDisposalLogItem } from './RiskDisposalLogItem'
 import { disposalCommentConvertToJSON, disposalCommentJSONConvertToData } from './convert'
 import {
@@ -42,6 +43,7 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
   const [list, setList] = useState<DisposalLogItem[]>([])
   const [refreshFlag, setRefreshFlag] = useState(false)
   const [quotation, setQuotation] = useState<QuotationInfoProps>()
+  const submissionVersionRef = useRef(0)
   const composerRef = useRef<PluginImageTextareaRefProps>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const pageRef = useRef(0)
@@ -108,7 +110,16 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
     }
   }, [riskHash, refreshFlag, isLogin])
 
+  useEffect(
+    () => () => {
+      submissionVersionRef.current += 1
+    },
+    [],
+  )
+
   useUpdateEffect(() => {
+    submissionVersionRef.current += 1
+    setSubmitting(false)
     setQuotation(undefined)
     composerRef.current?.onClear()
   }, [riskHash])
@@ -126,6 +137,7 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
       userName: item.userName || '-',
       content: parsed?.text || '',
       imgs: parsed?.imgs || [],
+      files: parsed?.files || [],
       logId: item.id,
     })
   })
@@ -139,6 +151,7 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
   const onSubmit = useMemoizedFn((data: ImageTextareaData) => {
     const description = disposalCommentConvertToJSON(data)
     if (!description) return
+    const version = submissionVersionRef.current
     setSubmitting(true)
     apiPublishDisposalComment({
       risk_hash: riskHash,
@@ -146,11 +159,15 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
       logId: quotation?.logId,
     })
       .then(() => {
+        if (version !== submissionVersionRef.current) return
         composerRef.current?.onClear()
         setQuotation(undefined)
         setRefreshFlag((v) => !v)
       })
-      .finally(() => setSubmitting(false))
+      .catch(() => {})
+      .finally(() => {
+        if (version === submissionVersionRef.current) setSubmitting(false)
+      })
   })
 
   if (!isLogin) {
@@ -194,11 +211,13 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
 
       <div className={styles['risk-disposal-log-footer']}>
         <PluginImageTextarea
+          key={riskHash}
           ref={composerRef}
           loading={submitting}
           quotation={quotation}
           delQuotation={() => setQuotation(undefined)}
           onUploadImage={(req) => apiUploadDisposalImage({ ...req, hash: riskHash })}
+          onUploadFile={(path) => uploadDisposalAttachment({ path, hash: riskHash, type: 'RiskComment' })}
           onSubmit={onSubmit}
         />
       </div>

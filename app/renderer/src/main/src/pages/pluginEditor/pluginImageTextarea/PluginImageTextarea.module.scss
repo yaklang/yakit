@@ -77,6 +77,11 @@
 .plugin-image-textarea-footer-operate {
   display: flex;
   justify-content: space-between;
+  .upload-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
   .right-footer {
     display: flex;
     align-items: center;

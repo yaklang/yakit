@@ -1,4 +1,5 @@
-const { ipcMain } = require('electron')
+const { ipcMain, dialog } = require('electron')
+const { downloadDisposalFile } = require('../disposalFileDownload')
 // const axios = require("axios")
 const fs = require('fs')
 const path = require('path')
@@ -12,6 +13,9 @@ const { requestWithProgress, cancelRequestProgress } = require('../handlers/util
 
 module.exports = {
   register: (win, getClient) => {
+    ipcMain.handle('download-disposal-file', (_event, params) =>
+      downloadDisposalFile(params, (options) => dialog.showSaveDialog(win, options)),
+    )
     /**
      * @param {Object} params
      * @param {string} params.url 下载地址

@@ -1,3 +1,5 @@
+import type { TextareaForFile } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType'
+
 /** xxx--- 等待后端联调 */
 
 export interface DisposalImageInfo {
@@ -9,6 +11,7 @@ export interface DisposalImageInfo {
 export interface DisposalCommentContent {
   text: string
   imgs: DisposalImageInfo[]
+  files?: TextareaForFile[]
 }
 
 export type DisposalLogType = 'system' | 'comment'
@@ -50,12 +53,14 @@ export interface PublishFlowDisposalCommentRequest {
 export interface ImageTextareaData {
   value: string
   imgs: DisposalImageInfo[]
+  files?: TextareaForFile[]
 }
 
 export interface QuotationInfoProps {
   userName: string
   content: string
   imgs: DisposalImageInfo[]
+  files?: TextareaForFile[]
   logId: number
 }
 
