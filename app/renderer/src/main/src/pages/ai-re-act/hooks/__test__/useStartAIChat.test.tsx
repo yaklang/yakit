@@ -32,60 +32,64 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('submission identity', () => {
-  it.each(['new', 'resume'] as const)('preserves business preparation and binding callbacks for %s', async (kind) => {
-    const onChat = vi.fn()
-    const onSessionBound = vi.fn()
-    const setMention = vi.fn()
-    const resource = {
-      Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
-      Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
-      Value: '/image.png',
-    }
-    const startRequest = vi.fn(async ({ params }: { params: AIHandleStartResProps['params'] }) => ({
-      params: { ...params, FocusModeLoop: 'prepared-focus', AttachedResourceInfo: [resource] },
-      extraParams: { chatId: 'business-id' },
-      onChat,
-      onSessionBound,
-    }))
-    const { result } = renderHook(() => useStartAIChat({ startRequest, setMention }))
-    // 配置在 render 之后更新，提交仍应读到最新值。
-    mocks.setting = { Source: 'webFuzzer', TimelineSessionID: 'stale-setting' }
-    await act(async () =>
-      result.current({
-        qs: 'hello',
-        target: { kind, sessionId: kind === 'new' ? 'client-session' : 'history' },
-      }),
-    )
-    const input = mocks.onStart.mock.calls[0][0]
-    expect(input.params.AttachedResourceInfo).toEqual([resource])
-    expect(input.params.Params.Source).toBe('webFuzzer')
-    expect(input.params.Params.PreferSessionCachedConfig).toBe(kind === 'resume')
-    expect(setMention).toHaveBeenCalledWith({
-      mentionId: 'prepared-focus',
-      mentionType: 'focusMode',
-      mentionName: 'prepared-focus',
-    })
-    expect(onChat).toHaveBeenCalledTimes(kind === 'new' ? 1 : 0)
-    const id = kind === 'new' ? 'client-session' : 'history'
-    input.onLinkStart('stream-token')
-    input.onLinkSuccess(id, true)
-    expect(onSessionBound).toHaveBeenCalledExactlyOnceWith(id)
-    if (kind === 'new') {
-      expect(mocks.setActiveChat).toHaveBeenCalledWith(
-        expect.objectContaining({
-          Id: 'business-id',
-          SessionID: id,
-          viewKey: 'stream-token',
-          Source: 'webFuzzer',
-          StartParams: expect.objectContaining({ TimelineSessionID: id, UserQuery: '' }),
+  it.each(['new', 'resume'] as const)(
+    'preserves business preparation and only binds a new session: %s',
+    async (kind) => {
+      const onChat = vi.fn()
+      const onSessionBound = vi.fn()
+      const setMention = vi.fn()
+      const resource = {
+        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
+        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
+        Value: '/image.png',
+      }
+      const startRequest = vi.fn(async ({ params }: { params: AIHandleStartResProps['params'] }) => ({
+        params: { ...params, FocusModeLoop: 'prepared-focus', AttachedResourceInfo: [resource] },
+        extraParams: { chatId: 'business-id' },
+        onChat,
+        onSessionBound,
+      }))
+      const { result } = renderHook(() => useStartAIChat({ startRequest, setMention }))
+      // 配置在 render 之后更新，提交仍应读到最新值。
+      mocks.setting = { Source: 'webFuzzer', TimelineSessionID: 'stale-setting' }
+      await act(async () =>
+        result.current({
+          qs: 'hello',
+          target: { kind, sessionId: kind === 'new' ? 'client-session' : 'history' },
         }),
       )
-      expect(onSessionBound.mock.invocationCallOrder[0]).toBeLessThan(mocks.setActiveChat.mock.invocationCallOrder[0])
-    } else {
-      expect(mocks.setActiveChat).not.toHaveBeenCalled()
-      expect(mocks.emit).not.toHaveBeenCalled()
-    }
-  })
+      const input = mocks.onStart.mock.calls[0][0]
+      expect(input.params.AttachedResourceInfo).toEqual([resource])
+      expect(input.params.Params.Source).toBe('webFuzzer')
+      expect(input.params.Params.PreferSessionCachedConfig).toBe(kind === 'resume')
+      expect(setMention).toHaveBeenCalledWith({
+        mentionId: 'prepared-focus',
+        mentionType: 'focusMode',
+        mentionName: 'prepared-focus',
+      })
+      expect(onChat).toHaveBeenCalledTimes(kind === 'new' ? 1 : 0)
+      const id = kind === 'new' ? 'client-session' : 'history'
+      input.onLinkStart('stream-token')
+      input.onLinkSuccess(id, true)
+      if (kind === 'new') {
+        expect(onSessionBound).toHaveBeenCalledExactlyOnceWith(id)
+        expect(mocks.setActiveChat).toHaveBeenCalledWith(
+          expect.objectContaining({
+            Id: 'business-id',
+            SessionID: id,
+            viewKey: 'stream-token',
+            Source: 'webFuzzer',
+            StartParams: expect.objectContaining({ TimelineSessionID: id, UserQuery: '' }),
+          }),
+        )
+        expect(onSessionBound.mock.invocationCallOrder[0]).toBeLessThan(mocks.setActiveChat.mock.invocationCallOrder[0])
+      } else {
+        expect(onSessionBound).not.toHaveBeenCalled()
+        expect(mocks.setActiveChat).not.toHaveBeenCalled()
+        expect(mocks.emit).not.toHaveBeenCalled()
+      }
+    },
+  )
 
   it('falls back to the captured target when business preparation rejects after switching history', async () => {
     let reject!: (error: Error) => void

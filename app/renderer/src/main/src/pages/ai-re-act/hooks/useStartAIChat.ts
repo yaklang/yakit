@@ -73,9 +73,9 @@ export function useStartAIChat({
           streamToken = token
         },
         onLinkSuccess: (id, foreground = true) => {
-          // 新建和历史恢复都通知业务入口建立订阅；历史会话已有列表项，不重复添加。
-          onSessionBound?.(id)
           if (!isNew) return
+          // 仅新建需要等待登记后订阅；历史由当前选中会话维护订阅，避免迟到的恢复回调切回旧会话。
+          onSessionBound?.(id)
           // 连接成功后再发布列表记录，避免未成功建联的会话污染历史。
           const newChat: AISession = {
             Id: extraParams?.chatId || id,

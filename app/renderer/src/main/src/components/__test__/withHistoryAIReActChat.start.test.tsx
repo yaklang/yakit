@@ -14,6 +14,7 @@ import { ipcRendererMock, resetIpcMocks } from '../../pages/ai-re-act/hooks/__te
 import { makeGrpcJsonRes } from '../../pages/ai-re-act/hooks/__test__/fixtures'
 import { applyHttpFuzzRequestChangeToWebFuzzerPage } from '@/pages/fuzzer/webFuzzerAiRequestApplyBridge'
 import { YakitRoute } from '@/enums/yakitRoute'
+import type { AISession } from '@/pages/ai-agent/type/aiChat'
 
 vi.mock('lodash', async (importOriginal) => {
   const original = await importOriginal<{ default: typeof lodash }>()
@@ -74,8 +75,27 @@ vi.mock('../HistroryAIReActChat', () => ({
 }))
 
 function Consumer() {
-  const { renderHistoryAIReActChat } = useHistoryAIReActChat()
-  return renderHistoryAIReActChat({ externalParameters: {} })
+  const { renderHistoryAIReActChat, historyAIReActChatBridge: bridge } = useHistoryAIReActChat()
+  return (
+    <>
+      {['history-a', 'history-b'].map((sessionId) => (
+        <button
+          key={sessionId}
+          onClick={() =>
+            bridge.setActiveChat({
+              SessionID: sessionId,
+              Source: AISourceEnum.webFuzzer,
+              StartParams: { Source: AISourceEnum.webFuzzer },
+            } as AISession)
+          }
+        >
+          {sessionId}
+        </button>
+      ))}
+      <span data-testid="active-session">{bridge.activeID}</span>
+      {renderHistoryAIReActChat({ externalParameters: {} })}
+    </>
+  )
 }
 
 beforeEach(() => {
@@ -85,8 +105,10 @@ beforeEach(() => {
 afterEach(async () => {
   cleanup()
   // 主进程由 IPC mock 替代，不会主动回传 end，因此显式完成收尾并释放定时器。
-  await globalSessionEngine.handleSessionEnd('client-session')
-  await globalSessionEngine.deleteSessions({ sessionIds: ['client-session'] })
+  const sessionIds = ['client-session', 'history-a', 'history-b']
+  // 错误恢复用例会让收尾返回已注入的错误，仍需完成所有会话的清理。
+  await Promise.allSettled(sessionIds.map((sessionId) => globalSessionEngine.handleSessionEnd(sessionId)))
+  await globalSessionEngine.deleteSessions({ sessionIds })
 })
 
 const starts = () => ipcRendererMock.invoke.mock.calls.filter(([method]) => method === 'start-ai-re-act')
@@ -140,4 +162,64 @@ it.each([
   expect(questions()).toHaveLength(1)
   await emit(retryToken, makeGrpcJsonRes('structured', { next_start_id: 0 }, { NodeId: 'recovery_history' }))
   expect(questions()).toHaveLength(2)
+})
+
+it.each([
+  { scenario: '普通历史切换', sendAfterDisconnect: false, recovery: { next_start_id: 0 }, failed: false },
+  { scenario: '断连后发送问题恢复', sendAfterDisconnect: true, recovery: { next_start_id: 0 }, failed: false },
+  { scenario: '恢复返回错误', sendAfterDisconnect: true, recovery: { error: 'recovery failed' }, failed: true },
+  { scenario: '恢复响应缺少游标', sendAfterDisconnect: true, recovery: {}, failed: true },
+])('历史 A 不替换当前 B 的桥接订阅：$scenario', async ({ sendAfterDisconnect, recovery, failed }) => {
+  render(
+    <HistoryAIReActChatProvider
+      source={AISourceEnum.webFuzzer}
+      route={YakitRoute.HTTPFuzzer}
+      pageId="test-page"
+      focusModeLoop=""
+    >
+      <Consumer />
+    </HistoryAIReActChatProvider>,
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'history-a' }))
+  await waitFor(() => expect(starts()).toHaveLength(1))
+  let tokenA = starts()[0][1]
+  if (sendAfterDisconnect) {
+    await emit(tokenA, makeGrpcJsonRes('pong', {}, { SessionId: 'history-a' }))
+    await emit(tokenA, makeGrpcJsonRes('structured', { next_start_id: 0 }, { NodeId: 'recovery_history' }))
+    await act(async () => globalSessionEngine.handleSessionEnd('history-a'))
+    expect(globalSessionEngine.getSessionExecute('history-a')).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: 'submit' }))
+    await waitFor(() => expect(starts()).toHaveLength(2))
+    tokenA = starts()[1][1]
+    expect(starts()[1][2].Params.UserQuery).toBe('first question')
+  }
+
+  fireEvent.click(screen.getByRole('button', { name: 'history-b' }))
+  await waitFor(() => expect(starts()).toHaveLength(sendAfterDisconnect ? 3 : 2))
+  const tokenB = starts()[starts().length - 1][1]
+  await emit(tokenB, makeGrpcJsonRes('pong', {}, { SessionId: 'history-b' }))
+  await emit(tokenB, makeGrpcJsonRes('structured', { next_start_id: 0 }, { NodeId: 'recovery_history' }))
+  const changeB = { op: 'replace', request: { raw: 'GET /from-b HTTP/1.1\r\n\r\n' } }
+  await emit(tokenB, makeGrpcJsonRes('http_fuzz_request_change', changeB, { SessionId: 'history-b' }))
+  expect(applyHttpFuzzRequestChangeToWebFuzzerPage).toHaveBeenCalledExactlyOnceWith('test-page', changeB)
+
+  // A 在 B 之后恢复完成。当前工具页必须继续订阅 B，不能接受 A 的修改。
+  await emit(tokenA, makeGrpcJsonRes('pong', {}, { SessionId: 'history-a' }))
+  await emit(tokenA, makeGrpcJsonRes('structured', recovery, { NodeId: 'recovery_history' }))
+  expect(screen.getByTestId('active-session')).toHaveTextContent('history-b')
+  expect(questions()).toHaveLength(sendAfterDisconnect && !failed ? 1 : 0)
+  if (failed) {
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', tokenA)
+    await act(async () => {
+      await expect(globalSessionEngine.handleSessionEnd('history-a')).rejects.toThrow(
+        'error' in recovery ? recovery.error : 'ChatSessionNotify.invalidHistoryCursor',
+      )
+    })
+  }
+  vi.mocked(applyHttpFuzzRequestChangeToWebFuzzerPage).mockClear()
+  const nextChangeB = { op: 'replace', request: { raw: 'GET /from-b-again HTTP/1.1\r\n\r\n' } }
+  await emit(tokenB, makeGrpcJsonRes('http_fuzz_request_change', nextChangeB, { SessionId: 'history-b' }))
+  const changeA = { op: 'replace', request: { raw: 'GET /from-a HTTP/1.1\r\n\r\n' } }
+  await emit(tokenA, makeGrpcJsonRes('http_fuzz_request_change', changeA, { SessionId: 'history-a' }))
+  expect(vi.mocked(applyHttpFuzzRequestChangeToWebFuzzerPage).mock.calls).toEqual([['test-page', nextChangeB]])
 })
