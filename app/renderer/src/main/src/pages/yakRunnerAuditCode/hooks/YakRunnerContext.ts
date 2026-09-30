@@ -13,6 +13,10 @@ export interface YakRunnerContextStore {
   auditRule: string
   auditExecuting: boolean
   runtimeID: string
+  // 文件树是否展示全部文件（false=仅展示增量最后一次 diff，true=聚合全树）
+  showAllFiles: boolean
+  // 当前打开的 program 是否为增量编译（仅此时展示"展示全部文件"勾选框）
+  isIncrementalProject: boolean
 }
 
 export interface YakRunnerContextDispatcher {
@@ -25,6 +29,8 @@ export interface YakRunnerContextDispatcher {
   setAuditRule?: Dispatch<SetStateAction<string>>
   setAuditExecuting?: Dispatch<SetStateAction<boolean>>
   setRuntimeID?: Dispatch<SetStateAction<string>>
+  setShowAllFiles?: (showAll: boolean) => void
+  setIsIncrementalProject?: Dispatch<SetStateAction<boolean>>
 }
 
 export interface YakRunnerContextValue {
@@ -42,6 +48,8 @@ export default createContext<YakRunnerContextValue>({
     auditRule: '',
     auditExecuting: false,
     runtimeID: '',
+    showAllFiles: false,
+    isIncrementalProject: false,
   },
   dispatcher: {
     setPageInfo: undefined,
@@ -53,5 +61,7 @@ export default createContext<YakRunnerContextValue>({
     setAuditRule: undefined,
     setAuditExecuting: undefined,
     setRuntimeID: undefined,
+    setShowAllFiles: undefined,
+    setIsIncrementalProject: undefined,
   },
 })
