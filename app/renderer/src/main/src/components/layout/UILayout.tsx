@@ -23,6 +23,11 @@ import { getRemoteValue, setLocalValue, setRemoteValue } from '@/utils/kv'
 import { YaklangEngineWatchDog, type YaklangEngineWatchDogCredential } from '@/components/layout/YaklangEngineWatchDog'
 import { StringToUint8Array } from '@/utils/str'
 import type { ConsoleDrawerDirection } from '../baseConsole/BaseConsoleDrawer'
+import {
+  DEFAULT_ENGINE_CONSOLE_OPEN_TYPE,
+  resolveConsoleOpenEffects,
+  resolveEngineConsoleOpenType,
+} from '../baseConsole/engineConsoleOpenType'
 const BaseConsoleDrawer = lazy(() => import('../baseConsole/BaseConsoleDrawer'))
 import {
   GetConnectPort,
@@ -1537,14 +1542,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   // 抽屉当前停靠方向，null 表示抽屉未展开
   const [consoleDrawerDirection, setConsoleDrawerDirection] = useState<ConsoleDrawerDirection | null>(null)
   // 用户上次选择的打开方式（用于菜单标记），默认浮窗
-  const [consoleType, setConsoleType] = useState<EngineConsoleOpenType>('float')
+  const [consoleType, setConsoleType] = useState<EngineConsoleOpenType>(DEFAULT_ENGINE_CONSOLE_OPEN_TYPE)
   // ===== 引擎Console：打开方式处理（浮窗 / 左·右·底 抽屉，互斥） =====
   // 启动时读取用户上次选择的打开方式，用于菜单标记
   useEffect(() => {
     if (engineLink) {
       getRemoteValue(GlobalConfigRemoteGV.EngineConsoleType).then((val) => {
-        if (val) {
-          setConsoleType(val)
+        // 仅当远端偏好为合法打开方式时才覆盖默认浮窗（偏好恢复；读取失败回退默认值）
+        const resolved = resolveEngineConsoleOpenType(val || undefined)
+        if (resolved !== DEFAULT_ENGINE_CONSOLE_OPEN_TYPE) {
+          setConsoleType(resolved)
         }
       })
     }
@@ -1553,22 +1560,31 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const onOpenConsole = useMemoizedFn((type: EngineConsoleOpenType) => {
     setConsoleType(type)
     setRemoteValue(GlobalConfigRemoteGV.EngineConsoleType, type)
-
-    if (type === 'float') {
-      // 打开浮窗前，收起抽屉
-      setConsoleDrawerDirection(null)
-      openConsoleNewWindow()
-    } else {
+    const effects = resolveConsoleOpenEffects(type)
+    if (effects.closeFloatWindow) {
       // 打开抽屉前，关闭浮窗独立窗口
       yakitWindow.closeConsoleWindow()
-      setConsoleDrawerDirection(type)
+    }
+    setConsoleDrawerDirection(effects.drawerDirection)
+    if (type === DEFAULT_ENGINE_CONSOLE_OPEN_TYPE) {
+      openConsoleNewWindow()
     }
   })
+
+  // 抽屉内停靠方向切换
+  const onDrawerDirectionChange = useMemoizedFn((direction: ConsoleDrawerDirection) => {
+    setConsoleDrawerDirection(direction)
+    setConsoleType(direction)
+    setRemoteValue(GlobalConfigRemoteGV.EngineConsoleType, direction)
+  })
+  const onDrawerShrinkToFloat = useMemoizedFn(() => onOpenConsole(DEFAULT_ENGINE_CONSOLE_OPEN_TYPE))
+
+  const onDrawerClose = useMemoizedFn(() => setConsoleDrawerDirection(null))
 
   // 监听其他页面触发的打开引擎Console事件（例如 MITM 热加载页）
   useEffect(() => {
     const onOpenEngineConsole = (type?: EngineConsoleOpenType) => {
-      const safeType = type || 'float'
+      const safeType = type || DEFAULT_ENGINE_CONSOLE_OPEN_TYPE
       onOpenConsole(safeType)
     }
     emiter.on('openEngineConsole', onOpenEngineConsole)
@@ -1923,15 +1939,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
               <Suspense fallback={null}>
                 <BaseConsoleDrawer
                   direction={consoleDrawerDirection}
-                  onClose={() => setConsoleDrawerDirection(null)}
-                  onDirectionChange={(direction) => {
-                    setConsoleDrawerDirection(direction)
-                    setConsoleType(direction)
-                    setRemoteValue(GlobalConfigRemoteGV.EngineConsoleType, direction)
-                  }}
-                  onShrinkToFloat={() => {
-                    onOpenConsole('float')
-                  }}
+                  onClose={onDrawerClose}
+                  onDirectionChange={onDrawerDirectionChange}
+                  onShrinkToFloat={onDrawerShrinkToFloat}
                 />
               </Suspense>
             )}

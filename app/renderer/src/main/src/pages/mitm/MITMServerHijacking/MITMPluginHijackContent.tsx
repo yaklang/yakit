@@ -25,8 +25,7 @@ import { enableMITMPluginMode } from './MITMServerHijacking'
 import styles from './MITMServerHijacking.module.scss'
 import classNames from 'classnames'
 import { RemoteGV } from '@/yakitGV'
-import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
-import type { EngineConsoleOpenType } from '@/components/layout/FuncDomain'
+import { emitOpenEngineConsole } from '@/components/baseConsole/openEngineConsole'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import emiter from '@/utils/eventBus/eventBus'
 import { useCampare } from '@/hook/useCompare/useCompare'
@@ -557,20 +556,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
               <Tooltip placement="bottom" title={t('MITMPluginHijackContent.engine_console')}>
                 <YakitButton
                   type="text"
-                  onClick={async () => {
-                    try {
-                      const consoleType = (await getRemoteValue(GlobalConfigRemoteGV.EngineConsoleType)) as
-                        | EngineConsoleOpenType
-                        | undefined
-                      if (consoleType) {
-                        emiter.emit('openEngineConsole', consoleType)
-                      } else {
-                        emiter.emit('openEngineConsole', 'float')
-                      }
-                    } catch (error) {
-                      emiter.emit('openEngineConsole', 'float')
-                    }
-                  }}
+                  onClick={emitOpenEngineConsole}
                   icon={<TerminalOutlined className={styles['engineConsole-icon-style']} color="currentColor" />}
                   style={{ padding: 0 }}
                 ></YakitButton>

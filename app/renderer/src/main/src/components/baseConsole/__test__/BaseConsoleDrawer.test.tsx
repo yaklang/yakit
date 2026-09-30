@@ -33,8 +33,18 @@ vi.mock('re-resizable', () => ({
   Resizable: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))
 
+// EngineConsole 记录挂载/卸载次数，用于回归「切换方向不应卸载重建终端」
+const engineConsoleMounts = vi.hoisted(() => ({ count: 0 }))
 vi.mock('../BaseConsole', () => ({
-  EngineConsole: () => <div data-testid="engine-console-stub" />,
+  EngineConsole: () => {
+    React.useEffect(() => {
+      engineConsoleMounts.count += 1
+      return () => {
+        engineConsoleMounts.count -= 1
+      }
+    }, [])
+    return <div data-testid="engine-console-stub" />
+  },
 }))
 
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
@@ -59,6 +69,7 @@ vi.mock('@/components/yakitUI/YakitWindow/YakitWindow', () => ({
   ),
 }))
 
+import React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useEngineConsoleStore } from '../../../store/baseConsole'
@@ -74,6 +85,7 @@ const defaultProps = () => ({
 describe('BaseConsoleDrawer', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    engineConsoleMounts.count = 0
     useEngineConsoleStore.setState({ consoleLog: 'some-log' })
   })
 
@@ -122,5 +134,48 @@ describe('BaseConsoleDrawer', () => {
     render(<BaseConsoleDrawer {...props} />)
     fireEvent.click(screen.getByTestId('dock-right'))
     expect(props.onDirectionChange).toHaveBeenCalledWith('right')
+  })
+
+  // 回归（P0）：切换停靠方向不应卸载重建终端实例，否则已显示历史丢失
+  it('切换停靠方向（left→right→bottom）时 EngineConsole 实例不重建', () => {
+    const props = defaultProps()
+    const { rerender } = render(<BaseConsoleDrawer {...props} />)
+    const mountsAfterFirstRender = engineConsoleMounts.count
+    expect(mountsAfterFirstRender).toBe(1)
+
+    // 用户在抽屉内把停靠侧从 left 切到 right：父组件用新 direction 重渲染抽屉
+    rerender(<BaseConsoleDrawer {...props} direction="right" />)
+    expect(engineConsoleMounts.count).toBe(1)
+
+    // 再切到底部停靠，终端实例仍不应重建
+    rerender(<BaseConsoleDrawer {...props} direction="bottom" />)
+    expect(engineConsoleMounts.count).toBe(1)
+  })
+
+  // 回归：方向切换不应清空日志——只有显式关闭才清空
+  it('切换停靠方向时保留 consoleLog（仅关闭按钮清空）', () => {
+    const props = defaultProps()
+    const { rerender } = render(<BaseConsoleDrawer {...props} />)
+    expect(useEngineConsoleStore.getState().consoleLog).toBe('some-log')
+
+    // 用户在抽屉内把停靠侧从 left 切到 right：父组件用新 direction 重渲染抽屉
+    rerender(<BaseConsoleDrawer {...props} direction="right" />)
+    expect(useEngineConsoleStore.getState().consoleLog).toBe('some-log')
+
+    // 再切到底部停靠，日志仍应保留
+    rerender(<BaseConsoleDrawer {...props} direction="bottom" />)
+    expect(useEngineConsoleStore.getState().consoleLog).toBe('some-log')
+
+    // 切回浮窗（父组件关闭抽屉）也不由抽屉清空——抽屉仅在被卸载/关闭按钮触发时清空
+    expect(props.onClose).not.toHaveBeenCalled()
+  })
+
+  it('方向切换为浮窗触发 onShrinkToFloat，但不直接清空 consoleLog', () => {
+    const props = defaultProps()
+    render(<BaseConsoleDrawer {...props} />)
+    fireEvent.click(screen.getByTestId('dock-shrink'))
+    expect(props.onShrinkToFloat).toHaveBeenCalledTimes(1)
+    // 收起为浮窗由父组件负责关闭抽屉；抽屉自身不清空日志
+    expect(useEngineConsoleStore.getState().consoleLog).toBe('some-log')
   })
 })
