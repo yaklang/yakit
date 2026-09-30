@@ -13,6 +13,7 @@ import type {
   PluginImageTextareaRefProps,
 } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { mergeDisposalLogs } from '@/utils/disposalLog'
 import type { HTTPFlow } from '../HTTPFlowTable.constants'
 import { FlowDisposalLogItemView } from './FlowDisposalLogItem'
 import { disposalCommentConvertToJSON, disposalCommentJSONConvertToData } from './convert'
@@ -44,7 +45,9 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
   const [refreshFlag, setRefreshFlag] = useState(false)
   const [quotation, setQuotation] = useState<QuotationInfoProps>()
   const composerRef = useRef<PluginImageTextareaRefProps>(null)
-  const beforeIdRef = useRef<number | undefined>(undefined)
+  const listRef = useRef<HTMLDivElement>(null)
+  const pageRef = useRef(0)
+  const requestIdRef = useRef(0)
   const hasMoreRef = useRef(true)
   const fetchingRef = useRef(false)
 
@@ -53,47 +56,60 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
   const companyName = userInfo.companyName || ''
 
   const fetchList = useMemoizedFn((reset = false) => {
-    if (!isLogin || (!flowId && !flowHash) || fetchingRef.current) return
+    if (!isLogin || !flowHash || (!reset && fetchingRef.current)) return
     if (!reset && !hasMoreRef.current) return
+    const requestId = ++requestIdRef.current
+    const page = reset ? 1 : pageRef.current + 1
     fetchingRef.current = true
     if (reset) {
       setLoading(true)
-      beforeIdRef.current = undefined
+      pageRef.current = 0
       hasMoreRef.current = true
     }
     apiGetFlowDisposalLogs({
       flow_id: flowId || undefined,
       hash: flowHash || undefined,
-      beforeId: reset ? undefined : beforeIdRef.current,
+      page,
       limit: 20,
     })
       .then((res) => {
+        if (requestId !== requestIdRef.current) return
         const data = (res.data || []).map((item) => ({
           ...item,
           isMine: !!companyName && item.logType === 'comment' && item.userName === companyName,
         }))
-        if (data.length > 0) {
-          beforeIdRef.current = data[data.length - 1].id
-        }
-        if (data.length < 20) hasMoreRef.current = false
-        setList((prev) => (reset ? data : [...prev, ...data]))
+        pageRef.current = page
+        hasMoreRef.current =
+          data.length > 0 && (typeof res.total === 'number' ? page * 20 < res.total : data.length === 20)
+        setList((prev) => mergeDisposalLogs(reset ? [] : prev, data))
+        if (reset && listRef.current) listRef.current.scrollTop = 0
       })
       .catch(() => {
-        if (reset) setList([])
+        if (requestId === requestIdRef.current && reset) setList([])
       })
       .finally(() => {
+        if (requestId !== requestIdRef.current) return
         fetchingRef.current = false
         setLoading(false)
       })
   })
 
   useEffect(() => {
-    if (!isLogin) {
+    if (!isLogin || !flowHash) {
+      requestIdRef.current += 1
+      fetchingRef.current = false
+      pageRef.current = 0
+      hasMoreRef.current = true
       setList([])
       setLoading(false)
-      return
+    } else {
+      fetchList(true)
     }
-    fetchList(true)
+
+    return () => {
+      requestIdRef.current += 1
+      fetchingRef.current = false
+    }
   }, [flowId, flowHash, refreshFlag, isLogin])
 
   useUpdateEffect(() => {
@@ -168,7 +184,7 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
 
   return (
     <div className={styles['flow-disposal-log']}>
-      <div className={styles['flow-disposal-log-body']} onScroll={onScroll}>
+      <div className={styles['flow-disposal-log-body']} ref={listRef} onScroll={onScroll}>
         <YakitSpin spinning={loading}>
           {list.length === 0 && !loading ? (
             <div className={styles['flow-disposal-log-empty']}>{t('HTTPFlowDetailMini.logEmpty')}</div>

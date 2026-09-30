@@ -82,7 +82,7 @@ const enrichParentComments = <
 export const apiGetFlowDisposalLogs = (params: {
   flow_id?: number
   hash?: string
-  beforeId?: number
+  page?: number
   limit?: number
 }): Promise<FlowDisposalLogsResponse> => {
   return new Promise((resolve, reject) => {
@@ -96,9 +96,9 @@ export const apiGetFlowDisposalLogs = (params: {
       data: {
         hash: params.hash,
         targetType: 'httpflow',
-        page: 1,
+        page: params.page ?? 1,
         limit: params.limit ?? 20,
-        order_by: 'id',
+        order_by: 'created_at',
         order: 'desc',
       },
     })

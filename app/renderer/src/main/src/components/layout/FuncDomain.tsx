@@ -86,6 +86,7 @@ import yakitImg from '../../assets/yakit.jpg'
 import classNames from 'classnames'
 import styles from './funcDomain.module.scss'
 import { useEETaskNotificationHook } from '../MessageCenter/useEETaskNotificationHook'
+import { WebMessageSyncButton } from '../MessageCenter/WebMessageSyncButton'
 import {
   apiFetchMessageRead,
   apiFetchQueryMessage,
@@ -2115,7 +2116,11 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const isUpdateYaklang = lowerYaklangLastVersion
 
     return (
-      <div className={styles['ui-op-plus-wrapper']}>
+      <div
+        className={classNames(styles['ui-op-plus-wrapper'], {
+          [styles['ui-op-notice-enterprise']]: isEnpriTrace(),
+        })}
+      >
         <div className={styles['ui-op-notice-body']}>
           <div className={styles['notice-version-header']}>
             <YakitRadioButtons
@@ -2144,6 +2149,7 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
               <div className={styles['message-title']}>
                 {userInfo.isLogin && (
                   <>
+                    {isWebNotice && <WebMessageSyncButton onSuccess={onFetchWebUnread} />}
                     {currentMessageList.length > 0 && (
                       <>
                         <YakitButton type="text" style={{ fontWeight: 400 }} onClick={onRedAllMessage}>

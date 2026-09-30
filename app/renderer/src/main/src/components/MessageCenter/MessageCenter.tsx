@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import type { API } from '@/services/swagger/resposeType'
 import styles from './MessageCenter.module.scss'
@@ -18,10 +18,7 @@ import {
   apiFetchQueryWebMessage,
   apiFetchWebMessageClear,
   apiFetchWebMessageRead,
-  apiHTTPFlowsFromOnline,
-  apiRisksFromOnline,
   type MessageQueryDataProps,
-  type WebMessageSyncType,
 } from './utils'
 import { useEETaskNotificationHook } from './useEETaskNotificationHook'
 import emiter from '@/utils/eventBus/eventBus'
@@ -40,10 +37,7 @@ import moment from 'moment'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { YakitDropdownMenu } from '../yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { Progress } from 'antd'
-import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { randomString } from '@/utils/randomUtil'
+import { WebMessageSyncButton } from './WebMessageSyncButton'
 
 const MESSAGE_PAGE_LIMIT = 20
 
@@ -623,10 +617,6 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   const [dataSorce, setDataSorce] = useState<API.MessageLogDetail[]>([])
   const [noRedDataTotal, setNoRedDataTotal] = useState<number>()
   const [isRef, setIsRef] = useState<boolean>(false)
-  const [syncType, setSyncType] = useState<WebMessageSyncType>()
-  const [syncPercent, setSyncPercent] = useState<number>()
-  const syncCleanupRef = useRef<(() => void) | undefined>()
-  const { userInfo } = useStore()
 
   useEffect(() => {
     if (initialChannel === 'web' || initialChannel === 'plugin') {
@@ -646,15 +636,6 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     },
     { wait: 50, leading: false },
   ).run
-
-  const clearSyncProgress = useMemoizedFn(() => {
-    if (syncCleanupRef.current) {
-      syncCleanupRef.current()
-      syncCleanupRef.current = undefined
-    }
-    setSyncType(undefined)
-    setSyncPercent(undefined)
-  })
 
   const update = useMemoizedFn((data?: MessageQueryDataProps, isAdd?: boolean) => {
     setLoading(true)
@@ -704,14 +685,6 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     // 初次加载 / 切换未读全部 / 切换通道
     update()
   }, [activeKey, channel])
-
-  useEffect(() => {
-    return () => {
-      if (syncCleanupRef.current) {
-        syncCleanupRef.current()
-      }
-    }
-  }, [])
 
   const loadMore = useMemoizedFn(() => {
     update(
@@ -883,43 +856,11 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
 
   const onChannelChange = useMemoizedFn((next: MessageChannel) => {
     if (next === channel) return
-    clearSyncProgress()
     setDataSorce([])
     setNoRedDataTotal(undefined)
     setHasMore(true)
     setActiveKey('unread')
     setChannel(next)
-  })
-
-  const onSyncData = useMemoizedFn((type: WebMessageSyncType) => {
-    if (!userInfo.isLogin || !userInfo.token) {
-      yakitNotify('error', t('MessageCenter.syncFailed'))
-      return
-    }
-    clearSyncProgress()
-    setSyncType(type)
-    setSyncPercent(0)
-    const streamToken = randomString(40)
-    let hasError = false
-    const startApi = type === 'flow' ? apiHTTPFlowsFromOnline : apiRisksFromOnline
-    syncCleanupRef.current = startApi(userInfo.token, streamToken, {
-      onProgress: (percent) => {
-        setSyncPercent(percent)
-      },
-      onError: (err) => {
-        hasError = true
-        failed(`${err}`)
-        yakitNotify('error', t('MessageCenter.syncFailed'))
-      },
-      onEnd: () => {
-        const err = hasError
-        clearSyncProgress()
-        if (!err) {
-          yakitNotify('success', t('MessageCenter.syncSuccess'))
-          update()
-        }
-      },
-    })
   })
 
   return (
@@ -967,38 +908,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
             />
             {isWebChannel && (
               <div className={styles['message-channel-actions']}>
-                {syncType && typeof syncPercent === 'number' && (
-                  <div className={styles['message-sync-progress']}>
-                    <Progress
-                      strokeColor="var(--Colors-Use-Main-Primary)"
-                      trailColor="var(--Colors-Use-Neutral-Bg)"
-                      percent={Math.floor(syncPercent)}
-                      size="small"
-                    />
-                  </div>
-                )}
-                <YakitDropdownMenu
-                  menu={{
-                    data: [
-                      { key: 'flow', label: t('MessageCenter.updateFlow') },
-                      { key: 'risk', label: t('MessageCenter.updateRisk') },
-                    ],
-                    onClick: ({ key }) => {
-                      if (key === 'flow' || key === 'risk') {
-                        onSyncData(key)
-                      }
-                    },
-                  }}
-                  dropdown={{
-                    trigger: ['click'],
-                    placement: 'bottomRight',
-                  }}
-                >
-                  <YakitButton type="outline2">
-                    {t('MessageCenter.updateData')}
-                    <ChevronDownOutlined />
-                  </YakitButton>
-                </YakitDropdownMenu>
+                <WebMessageSyncButton onSuccess={refresh} />
               </div>
             )}
           </div>
@@ -1010,8 +920,13 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
           className={styles['message-center-tab']}
           tabBarExtraContent={
             <>
-              {activeKey === 'unread' && dataSorce.length > 0 && (
-                <YakitButton type="outline2" loading={!isWebChannel && taskLoading} onClick={onRedAllMessage}>
+              {activeKey === 'unread' && (
+                <YakitButton
+                  type="outline2"
+                  disabled={loading || dataSorce.length === 0}
+                  loading={!isWebChannel && taskLoading}
+                  onClick={onRedAllMessage}
+                >
                   {t('MessageCenter.markAllRead')}
                 </YakitButton>
               )}
