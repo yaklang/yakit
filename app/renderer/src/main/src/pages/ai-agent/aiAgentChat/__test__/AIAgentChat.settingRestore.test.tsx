@@ -1,19 +1,22 @@
 import type { ReactNode } from 'react'
-import { act, cleanup, render, waitFor } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 // 先注册 electron stub，避免依赖链顶层 window.require('electron') 报错
 import '../../../ai-re-act/hooks/__test__/setupElectron'
 import emiter from '@/utils/eventBus/eventBus'
 import { ReActChatEventEnum } from '../../defaultConstant'
+import { sessionStatusStore, SessionDeleteStatus } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
 
-const { mocks } = vi.hoisted(() => ({
+const { mocks, ctx } = vi.hoisted(() => ({
   mocks: {
     setSetting: vi.fn(),
     setActiveChat: vi.fn(),
     onStart: vi.fn(),
     onClose: vi.fn(),
+    onReStart: vi.fn(),
   },
+  ctx: { activeChat: undefined as { SessionID: string } | undefined },
 }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -29,7 +32,7 @@ vi.mock('ahooks', async (importOriginal) => {
 })
 
 vi.mock('../../useContext/useStore', () => ({
-  default: () => ({ activeChat: undefined, pageId: 'tab-1' }),
+  default: () => ({ activeChat: ctx.activeChat, pageId: 'tab-1' }),
 }))
 
 vi.mock('../../useContext/useDispatcher', () => ({
@@ -37,7 +40,7 @@ vi.mock('../../useContext/useDispatcher', () => ({
 }))
 
 vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({
-  default: () => '',
+  default: () => ctx.activeChat?.SessionID || '',
 }))
 
 const sessionStore = createStore(() => ({
@@ -91,11 +94,11 @@ vi.mock('../../aiToolList/utils', () => ({
 }))
 
 vi.mock('../../utils', () => ({
-  onReStart: vi.fn(),
+  onReStart: mocks.onReStart,
 }))
 
 vi.mock('../AIAgentChatLayout/AIAgentChatLayout', () => ({
-  AIAgentChatLayout: () => <div data-testid="ai-agent-chat-layout" />,
+  AIAgentChatLayout: ({ mode }: { mode: string }) => <div data-testid="ai-agent-chat-layout" data-mode={mode} />,
 }))
 
 vi.mock('@/components/yakitUI/YakitHint/YakitHint', () => ({
@@ -117,10 +120,16 @@ vi.mock('react-i18next', () => ({
 }))
 
 const { AIAgentChat } = await import('../AIAgentChat')
+const initialStatus = sessionStatusStore.getState()
+const mode = () => screen.getByTestId('ai-agent-chat-layout').getAttribute('data-mode')
+const markDeleted = (id: string) =>
+  act(() => sessionStatusStore.getState().setSessionsDeleteStatus([id], SessionDeleteStatus.Deleted))
 
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  ctx.activeChat = undefined
+  sessionStatusStore.setState(initialStatus, true) // zustand 4.4.1 没有 getInitialState
 })
 
 beforeEach(() => {
@@ -159,5 +168,26 @@ describe('AIAgentChat SingleModelMode 生命周期', () => {
       }),
     })
     expect(mocks.setActiveChat).toHaveBeenCalledWith(undefined)
+  })
+})
+
+describe('AIAgentChat 当前会话在别处被删除', () => {
+  it('打开期间当前会话被删除：回欢迎页', () => {
+    ctx.activeChat = { SessionID: 's-live' }
+    render(<AIAgentChat />)
+    expect(mode()).toBe('re-act')
+    markDeleted('s-live')
+    expect(mode()).toBe('welcome')
+    expect(mocks.setActiveChat).toHaveBeenCalledExactlyOnceWith(undefined)
+  })
+
+  it('删除其他会话或卸载后不再响应', () => {
+    ctx.activeChat = { SessionID: 's-keep' }
+    const { unmount } = render(<AIAgentChat />)
+    markDeleted('s-other')
+    expect(mode()).toBe('re-act')
+    unmount()
+    markDeleted('s-keep')
+    expect(mocks.setActiveChat).not.toHaveBeenCalled()
   })
 })

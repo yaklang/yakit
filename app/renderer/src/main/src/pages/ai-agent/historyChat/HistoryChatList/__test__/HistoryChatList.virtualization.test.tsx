@@ -17,7 +17,10 @@ const mocks = vi.hoisted(() => ({
   notify: vi.fn(),
   newChat: vi.fn(),
 }))
-vi.mock('../../../useContext/useStore', () => ({ default: () => ({ setting: { Source: 'ai' } }) }))
+const ctx = vi.hoisted(() => ({ activeChat: undefined as AISession | undefined }))
+vi.mock('../../../useContext/useStore', () => ({
+  default: () => ({ setting: { Source: 'ai' }, activeChat: ctx.activeChat }),
+}))
 vi.mock('../../../useContext/useDispatcher', () => ({ default: () => mocks }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 vi.mock('../../../defaultConstant', () => ({ YakitAIAgentPageID: 'ai-agent' }))
@@ -91,6 +94,7 @@ beforeAll(() => {
 })
 beforeEach(() => {
   vi.clearAllMocks()
+  ctx.activeChat = undefined
   sessionStates.clear()
   mocks.removeSession.mockResolvedValue(undefined)
   mocks.updateTitle.mockResolvedValue(undefined)
@@ -285,6 +289,19 @@ describe('HistoryChatList viewport rendering', () => {
     await act(async () => finishDelete())
     await waitFor(() => expect(mocks.setSessions).toHaveBeenCalledWith([]))
     expect(mocks.newChat).toHaveBeenCalledTimes(1)
+    expect(mocks.setActiveChat).toHaveBeenCalledExactlyOnceWith(undefined)
+  })
+
+  it('删除当前打开的会话后回欢迎页：直接清空 activeChat（嵌入页 NEW_CHAT 无 pageId）', async () => {
+    const data = sessions.slice(0, 2)
+    ctx.activeChat = data[0]
+    render(view('', data))
+    await screen.findByText('Session 0')
+    fireEvent.click(deleteButtonFor('Session 0'))
+    fireEvent.click(await screen.findByRole('button', { name: 'YakitButton.ok' }))
+    await waitFor(() => expect(mocks.setSessions).toHaveBeenCalledWith([data[1]]))
+    expect(mocks.newChat).toHaveBeenCalledExactlyOnceWith(false, undefined)
+    expect(mocks.setActiveChat).toHaveBeenCalledExactlyOnceWith(undefined)
   })
 
   it('renders untrusted long titles as text and separates session keys from date group keys', async () => {

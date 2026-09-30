@@ -237,7 +237,10 @@ const HistoryChatList: FC<{
         })
         setSessions && setSessions(newChats)
         // 删光或删的是当前会话：回欢迎页
-        if (newChats.length === 0 || activeSessionId === SessionID) onNewChat(false, pageId)
+        if (newChats.length === 0 || activeSessionId === SessionID) {
+          onNewChat(false, pageId)
+          setActiveChat?.(undefined) // 嵌入页没有 pageId，NEW_CHAT 事件不会被消费，这里直接清空
+        }
         resolve()
       } catch (error) {
         setSessions?.(sessionList)

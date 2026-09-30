@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import HistoryChat from '../HistoryChat'
 import emiter from '@/utils/eventBus/eventBus'
 import { ReActChatEventEnum } from '../../defaultConstant'
+import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 
 const mocks = vi.hoisted(() => ({
   dispatcher: {
@@ -10,18 +11,27 @@ const mocks = vi.hoisted(() => ({
     resetPagination: vi.fn(),
     loadHistoryData: vi.fn().mockResolvedValue(0),
   },
+  setActiveChat: vi.fn(),
+  ctx: {
+    activeChat: undefined as { SessionID: string } | undefined,
+    sessions: [] as { SessionID: string; UpdatedAt: number }[],
+  },
+  viewport: { visible: true },
 }))
 
-vi.mock('../../useContext/useStore', () => ({ default: () => ({ activeChat: undefined }) }))
-vi.mock('../../useContext/useDispatcher', () => ({ default: () => ({ getSetting: () => ({ Source: 'ai' }) }) }))
+vi.mock('ahooks', async () => ({ ...(await vi.importActual('ahooks')), useInViewport: () => [mocks.viewport.visible] }))
+vi.mock('../../useContext/useStore', () => ({ default: () => ({ activeChat: mocks.ctx.activeChat }) }))
+vi.mock('../../useContext/useDispatcher', () => ({
+  default: () => ({ getSetting: () => ({ Source: 'ai' }), setActiveChat: mocks.setActiveChat }),
+}))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 vi.mock('../HistoryChatList/hook/useSessionList', () => ({
-  default: () => [{ sessions: [] }, mocks.dispatcher],
+  default: () => [{ sessions: mocks.ctx.sessions }, mocks.dispatcher],
 }))
 vi.mock('../HistoryChatList/HistoryChatList', () => ({
   default: () => <div>历史会话内容</div>,
   DAY_MS: 86400000,
-  getChatTimestamp: () => 0,
+  getChatTimestamp: (session: { UpdatedAt?: number }) => session.UpdatedAt ?? 0,
 }))
 vi.mock('../../aiChatWelcome/AIChatWelcomeSideSetting', () => ({
   SideSettingButton: () => <button>固定</button>,
@@ -43,6 +53,9 @@ vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.ctx.activeChat = undefined
+  mocks.ctx.sessions = []
+  mocks.viewport.visible = true
 })
 
 describe('HistoryChat 头部操作', () => {
@@ -95,5 +108,46 @@ describe('HistoryChat 头部操作', () => {
     expect(screen.queryByRole('button', { name: '固定' })).not.toBeInTheDocument()
     expect(screen.getByText('历史会话内容')).toBeInTheDocument()
     expect(mocks.dispatcher.loadHistoryData).toHaveBeenCalledWith(true)
+  })
+})
+
+describe('HistoryChat 删除与多开刷新', () => {
+  it('按天清理删到当前会话：回欢迎页，不再切到剩余会话', async () => {
+    const oldChat = { SessionID: 'old', UpdatedAt: 0 }
+    const recentChat = { SessionID: 'recent', UpdatedAt: Date.now() }
+    mocks.ctx.sessions = [oldChat, recentChat]
+    mocks.ctx.activeChat = oldChat
+    const onChatEvent = vi.fn()
+    emiter.on('onReActChatEvent', onChatEvent)
+    try {
+      render(<HistoryChat aiSource={['ai']} />)
+      fireEvent.click(screen.getAllByRole('button')[0]) // 清空
+      fireEvent.click(await screen.findByText('HistoryChat.oneDay'))
+      fireEvent.click(await screen.findByRole('button', { name: 'YakitButton.ok' }))
+      await waitFor(() => expect(mocks.dispatcher.setSessions).toHaveBeenCalledWith([recentChat]))
+      expect(onChatEvent).toHaveBeenCalledWith(JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT }))
+      expect(mocks.setActiveChat).toHaveBeenCalledExactlyOnceWith(undefined)
+    } finally {
+      emiter.off('onReActChatEvent', onChatEvent)
+    }
+  })
+
+  it('多开 Tab 由隐藏切回可见时刷新历史；embedded 不受可见性影响', () => {
+    mocks.viewport.visible = false
+    const { rerender, unmount } = render(<HistoryChat aiSource={['ai']} />)
+    expect(mocks.dispatcher.loadHistoryData).not.toHaveBeenCalled()
+    mocks.viewport.visible = true
+    rerender(<HistoryChat aiSource={['ai']} />)
+    expect(mocks.dispatcher.loadHistoryData).toHaveBeenCalledExactlyOnceWith(true)
+    unmount()
+
+    // embedded：aiSource 保持同一引用，避免重跑挂载刷新
+    const aiSource: AISource[] = ['ai']
+    mocks.viewport.visible = false
+    const embedded = render(<HistoryChat aiSource={aiSource} embedded />)
+    mocks.dispatcher.loadHistoryData.mockClear() // 排除挂载时的那次刷新
+    mocks.viewport.visible = true
+    embedded.rerender(<HistoryChat aiSource={aiSource} embedded className="visible" />)
+    expect(mocks.dispatcher.loadHistoryData).not.toHaveBeenCalled()
   })
 })
