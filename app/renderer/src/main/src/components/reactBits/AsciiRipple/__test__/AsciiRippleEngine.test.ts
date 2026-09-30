@@ -248,4 +248,24 @@ describe('AsciiRippleEngine 状态转换', () => {
     advanceFrame(60)
     expect(Math.random).toHaveBeenCalled()
   })
+
+  it('背景文字按空格分隔单词填充，避免单词粘连', () => {
+    const sheets: ReturnType<typeof createContext>[] = []
+    const context = createContext()
+    const canvas = document.createElement('canvas')
+    vi.spyOn(canvas, 'getContext').mockReturnValue(context as unknown as CanvasRenderingContext2D)
+    const engine = createRippleEngine(canvas, { ...options, text: 'Low tide' }, () => {
+      const sheet = document.createElement('canvas')
+      const sheetContext = createContext()
+      vi.spyOn(sheet, 'getContext').mockReturnValue(sheetContext as unknown as CanvasRenderingContext2D)
+      sheets.push(sheetContext)
+      return sheet
+    })
+    engines.push(engine)
+    engine.resize(320, 200, 1)
+
+    const lines = sheets[0].fillText.mock.calls.map((call) => call[0] as string)
+    expect(lines.length).toBeGreaterThan(0)
+    expect(lines.some((line) => line.includes('Low tide'))).toBe(true)
+  })
 })

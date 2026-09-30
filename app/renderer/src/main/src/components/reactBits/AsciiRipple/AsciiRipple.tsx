@@ -2,7 +2,7 @@
 import type React from 'react'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
 import classNames from 'classnames'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import styles from './AsciiRipple.module.scss'
 import { createRippleRenderer } from './AsciiRippleRenderer'
 import type { RippleOptions } from './AsciiRippleEngine'

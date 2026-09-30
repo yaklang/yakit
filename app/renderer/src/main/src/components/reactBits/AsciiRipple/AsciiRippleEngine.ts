@@ -84,7 +84,7 @@ const buildGrid = (width: number, height: number, charW: number, lineH: number, 
   for (let r = 0; r < rows; r++) {
     let line = ''
     while (line.length < cols && words.length) {
-      if (line.length > 0) line += ''
+      if (line.length > 0) line += ' '
       line += words[wi % words.length]
       wi++
     }

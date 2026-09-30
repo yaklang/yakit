@@ -177,10 +177,12 @@ describe('AsciiRipple 背景交互', () => {
     const backgrounds = calls.filter(([line, x]) => x === 0 && line.startsWith('0123456789'))
     expect(highlights.length).toBeGreaterThan(0)
     expect(backgrounds.length).toBeGreaterThan(0)
+    // buildGrid 以单空格分隔单词后循环填充，背景列对齐该拼接序列而非原始 text 的循环。
+    const joined = (text + ' ').repeat(2)
     for (const [line, , y] of backgrounds) {
       expect(line).toHaveLength(64)
       for (let column = 0; column < line.length; column++) {
-        expect([' ', text[column % text.length]]).toContain(line[column])
+        expect([' ', joined[column]]).toContain(line[column])
       }
       for (const [glyph, x, highlightY] of highlights) {
         if (highlightY === y) expect(line.slice(x / 10, x / 10 + glyph.length)).toBe(' '.repeat(glyph.length))

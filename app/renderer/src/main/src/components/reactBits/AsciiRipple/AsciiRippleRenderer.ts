@@ -29,7 +29,7 @@ export type RippleWorkerMessage =
   | { type: 'leave' | 'calm' }
 
 // 网页字体未注册到 Worker 时，保留主线程绘制，避免字体变化。
-function usesDocumentFont(font: string) {
+const usesDocumentFont = (font: string) => {
   let matched = false
   document.fonts?.forEach((face) => {
     const family = face.family.replace(/["']/g, '').toLowerCase()
@@ -38,7 +38,7 @@ function usesDocumentFont(font: string) {
   return matched
 }
 
-export function createRippleRenderer(root: HTMLElement, initialOptions: RippleOptions, canvasClass: string) {
+export const createRippleRenderer = (root: HTMLElement, initialOptions: RippleOptions, canvasClass: string) => {
   let options = initialOptions
   const bounds = root.getBoundingClientRect()
   let width = Math.max(1, bounds.width)

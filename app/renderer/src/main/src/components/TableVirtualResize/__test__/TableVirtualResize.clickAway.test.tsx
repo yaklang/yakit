@@ -15,6 +15,14 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'en' } }),
 }))
 vi.mock('@/utils/kv', () => ({ getRemoteValue: async () => undefined }))
+// CI 的根配置将样式模块替换为空对象；为类名断言提供稳定映射。
+vi.mock('../TableVirtualResize.module.scss', () => ({
+  default: {
+    'virtual-table-row-cell': 'virtual-table-row-cell',
+    'virtual-table-active-row': 'virtual-table-active-row',
+    'virtual-table-batch-active-row': 'virtual-table-batch-active-row',
+  },
+}))
 vi.mock('../../yakitUI/YakitInput/YakitInput', () => ({ YakitInput: () => null }))
 vi.mock('../../yakitUI/YakitSelect/YakitSelect', () => ({ YakitSelect: () => null }))
 vi.mock('../../yakitUI/YakitTag/YakitTag', () => ({ YakitTag: () => null }))
