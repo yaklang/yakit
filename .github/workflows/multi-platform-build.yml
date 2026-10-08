@@ -41,9 +41,14 @@ on:
         description: 'Sign packages (requires Apple/Azure secrets)'
         type: boolean
         default: false
+      storage:
+        description: 'Package storage (release avoids Actions artifact quota)'
+        type: choice
+        default: release
+        options: [release, artifact]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   packages:
@@ -58,4 +63,5 @@ jobs:
       dev_tool: ${{ inputs.devTool }}
       skip_enterprise_license: ${{ inputs.skipEnterpriseLicense }}
       sign: ${{ inputs.sign }}
+      storage: ${{ inputs.storage }}
     secrets: inherit

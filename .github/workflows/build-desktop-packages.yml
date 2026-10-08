@@ -33,14 +33,16 @@ on:
       sign:
         type: boolean
         default: false
+      storage:
+        type: string
+        default: artifact
     outputs:
       version:
         value: ${{ jobs.plan.outputs.version }}
       artifact:
         value: desktop-packages-${{ jobs.plan.outputs.version }}
-
-permissions:
-  contents: read
+      release_url:
+        value: ${{ jobs.plan.outputs.release_url }}
 
 jobs:
   plan:
@@ -49,6 +51,8 @@ jobs:
       version: ${{ steps.plan.outputs.version }}
       matrix: ${{ steps.plan.outputs.matrix }}
       engine: ${{ steps.plan.outputs.engine }}
+      release_tag: ${{ steps.release.outputs.release_tag }}
+      release_url: ${{ steps.release.outputs.release_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -63,6 +67,14 @@ jobs:
           BUILD_WITH_ENGINE: ${{ inputs.engine }}
           BUILD_ENGINE_VERSION: ${{ inputs.engine_version }}
         run: node scripts/ci-build-plan.js
+      - name: Create draft release for verified native packages
+        id: release
+        if: inputs.storage == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_VERSION: ${{ steps.plan.outputs.version }}
+          BUILD_EDITION: ${{ inputs.edition }}
+        run: node scripts/ci-release-assets.js create
 
   build:
     needs: plan
@@ -78,6 +90,7 @@ jobs:
       BUILD_PLATFORM: ${{ inputs.platform }}
       BUILD_EDITION: ${{ inputs.edition }}
       BUILD_VERSION: ${{ needs.plan.outputs.version }}
+      BUILD_RELEASE_TAG: ${{ needs.plan.outputs.release_tag }}
       BUILD_TARGET_PLATFORM: ${{ matrix.platform }}
       BUILD_TARGET_ARCH: ${{ matrix.arch }}
       BUILD_TARGET_ID: ${{ matrix.id }}
@@ -112,8 +125,8 @@ jobs:
         run: yarn add --dev --exact electron@22.3.27 --non-interactive
       - name: Set embedded version and verify native runner
         run: node scripts/ci-desktop-build.js prepare
-      - name: Validate build date, native guards and artifact collection
-        run: node --test scripts/__test__/desktop-packaging.test.cjs
+      - name: Validate build date, native guards, collection and release storage
+        run: node --test scripts/__test__/desktop-packaging.test.cjs scripts/__test__/release-assets.test.cjs
       - name: Install Linux runtime and headless display dependencies
         if: matrix.platform == 'linux'
         run: |
@@ -162,33 +175,53 @@ jobs:
       - name: Collect installer with checksum and build manifest
         run: node scripts/ci-desktop-build.js collect
       - uses: actions/upload-artifact@v4
+        if: inputs.storage == 'artifact'
         with:
           name: native-${{ matrix.id }}
           path: release/ci-artifacts/*
           if-no-files-found: error
           retention-days: 7
+      - name: Upload verified installer and manifest to draft release
+        if: inputs.storage == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ci-release-assets.js upload
 
   collect:
     needs: [plan, build]
     runs-on: ubuntu-latest
+    env:
+      BUILD_RELEASE_TAG: ${{ needs.plan.outputs.release_tag }}
+      BUILD_VERSION: ${{ needs.plan.outputs.version }}
+      BUILD_EDITION: ${{ inputs.edition }}
+      BUILD_MATRIX: ${{ needs.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22.12.0
       - uses: actions/download-artifact@v4
+        if: inputs.storage == 'artifact'
         with:
           pattern: native-*
           path: packages
           merge-multiple: true
-      - name: Require every target and verify installer checksums
+      - name: Download native packages from draft release
+        if: inputs.storage == 'release'
         env:
-          BUILD_MATRIX: ${{ needs.plan.outputs.matrix }}
-          BUILD_VERSION: ${{ needs.plan.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ci-release-assets.js download
+      - name: Require every target and verify installer checksums
         run: node scripts/ci-desktop-build.js aggregate
       - uses: actions/upload-artifact@v4
+        if: inputs.storage == 'artifact'
         with:
           name: desktop-packages-${{ needs.plan.outputs.version }}
           path: packages/*
           if-no-files-found: error
           retention-days: 7
+      - name: Publish prerelease after all target checks pass
+        if: inputs.storage == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ci-release-assets.js publish

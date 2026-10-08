@@ -14,6 +14,13 @@
 
 ## 2026-10-08
 
+### 手动流水线改用 GitHub Release 保存安装包
+
+- **原因**：本仓库 `why-2018/AISenso` 的 Actions 日志确认 `Artifact storage quota has been hit`，构建与启动检查通过后仍无法上传产物。
+- **存储**：手动全平台打包新增 `storage` 选项，默认 `release`。每次运行创建独立草稿，平台安装包和清单打成单个 ZIP 上传，保留原始包名；所有目标通过并重新验证清单、文件大小和校验值后才发布为预发布版，不设置为 latest。失败保留草稿，避免交付不完整的一组安装包。
+- **兼容**：仍可选择 `artifact`；正式标签流水线沿用原有 Actions 汇总及 OSS 发布。可复用流程继承调用方权限，仅手动 Release 流程要求 `contents: write`。
+- **验收**：本地辅助逻辑和工作流检查后，将 Linux x64/arm64 修复推送到本仓库进行原生构建、启动及 Release 上传验证。
+
 ### 修复 Linux 字节码编译的空输出与提前成功
 
 - **失败证据**：GitHub `yaklang/yakit` 运行 `37745351452` 中，Linux x64 有 7 个字节码文件显示 `0.00 kB`，首先拒绝 `newUiOperate/hardware.jsc`；arm64 有 12 个，首先拒绝 `menu.jsc`。两个任务在制作安装包前均被 `Empty or truncated bytecode` 拦截。日志没有内存不足或进程终止信号，不能认定为 OOM。
