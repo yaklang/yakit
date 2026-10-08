@@ -10,6 +10,10 @@
 
 一次触发会分别构建 Windows x64、Linux x64/arm64、macOS Intel x64/Apple arm64。每个任务都使用对应系统和架构的原生 GitHub Runner，独立安装依赖、编译、打包。不要在 Mac 上编译主进程字节码后交叉打包 Windows/Linux，也不要把 x64 字节码放进 arm64 包。
 
+主进程字节码由仓库内的构建插件逐个编译，避免同时启动大量 Electron 进程。编译器只在子进程输出完整关闭、退出码正常且缓存有效时接受结果；失败会显示模块文件名和编译错误，空文件不能进入安装包。编译全部成功后才生成缓存和入口，入口保留模块导出及模块间依赖；两种 Linux 架构与 Windows、macOS 共用这一实现。
+
+每个平台在正式构建前会验证输出读取时序、异常退出、空缓存和超时处理，并用该平台的 Electron 测试跨模块加载与大缓存输出。打包后继续执行完整缓存和应用启动检查。
+
 主版本来自根目录 package.json 的 `version`，保留数字版本，例如 `1.4.8`；日期取流水线启动时的北京时间，生成 `1.4.8-MMDD`。日期只计算一次，所有任务使用相同值，包括跨午夜任务。无需每天手动改 package.json；如果要升级主版本，修改其数字部分。标签发布取标签中的数字版本，其旧日期也会替换为实际打包日期。同一天重复打包版本号相同，GitHub 产物按运行记录分开保存。
 
 任务完成后下载汇总产物 **desktop-packages-版本号**，里面有五个安装包、各平台构建清单（含校验值）和 `build-version.txt`。可以单独选 Windows、Linux 或 macOS；`legacy` 使用 Electron 22.3.27，只表示兼容构建，仍需在实际旧系统上测试。`uos` 另外提供 .run 启动包。
@@ -24,4 +28,4 @@ Mac 检查会挂载最终 DMG、复制应用到独立临时安装目录、卸载
 
 自动升级开关未修改。汇总包仅包含安装包和构建清单；Windows 安装包签名完成后再计算校验值。
 
-本地验证构建辅助逻辑：`node --test scripts/__test__/desktop-packaging.test.cjs`。在 Windows 本机不能验证 Linux/macOS 的真实启动，必须查看对应 GitHub 任务的执行结果。
+本地验证构建辅助逻辑：`node --test scripts/__test__/desktop-packaging.test.cjs scripts/__test__/main-bytecode.test.cjs scripts/__test__/bytecode-electron.test.cjs`。在 Windows 本机不能验证 Linux/macOS 的真实启动，必须查看对应 GitHub 任务的执行结果。

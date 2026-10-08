@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
-const { bytecodePlugin, defineConfig, externalizeDepsPlugin } = require('electron-vite')
+const { defineConfig, externalizeDepsPlugin } = require('electron-vite')
+const { mainBytecodePlugin } = require('./scripts/bytecode-plugin')
 
 const mainSourceDir = path.resolve(__dirname, 'app/main')
 
@@ -32,13 +33,7 @@ const collectMainEntries = (dir, entries = {}) => {
 
 module.exports = defineConfig({
   main: {
-    plugins: [
-      externalizeDepsPlugin(),
-      bytecodePlugin({
-        removeBundleJS: true,
-        transformArrowFunctions: false,
-      }),
-    ],
+    plugins: [externalizeDepsPlugin(), mainBytecodePlugin()],
     build: {
       outDir: 'app/main-bytecode',
       emptyOutDir: true,

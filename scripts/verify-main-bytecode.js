@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const { execFileSync } = require('child_process')
+const { createLoaderStub } = require('./bytecode-plugin')
 
 const projectRoot = path.resolve(__dirname, '..')
 const sourceDir = path.join(projectRoot, 'app/main')
@@ -49,10 +50,7 @@ for (const relativePath of protectedFiles) {
   if (fs.statSync(bytecodePath).mtimeMs < fs.statSync(sourcePath).mtimeMs) staleFiles.push(relativePath)
 
   const loader = fs.readFileSync(loaderPath, 'utf8')
-  if (
-    !loader.includes('bytecode-loader.cjs') ||
-    !loader.includes(`module.exports = require("./${path.basename(relativePath)}c")`)
-  ) {
+  if (loader.trim() !== createLoaderStub(relativePath).trim()) {
     missingFiles.push(`${relativePath} (not a bytecode loader)`)
   }
 }
