@@ -4,6 +4,7 @@ import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 import { getDefaultAgentLoadingTitle } from '../defaultConstant'
 import { AITaskStatus } from '../grpcApi'
 import { AIChatQSDataTypeEnum, type ChatTaskNodeGroup } from '../aiRender'
+import i18n from '@/i18n/i18n'
 
 describe('yakExecResult handlers', () => {
   beforeEach(() => {
@@ -139,6 +140,73 @@ describe('yakExecResult handlers', () => {
     })
     aiYakExecResultDataHandlers.status(req)
     expect(req.store.getState().currentLoadingTitle.planTitle).toBe('planning')
+  })
+
+  it.each(['zh', 'zh-TW', 'en'])('selects translated loading status for %s', (language) => {
+    const previous = i18n.resolvedLanguage
+    i18n.resolvedLanguage = language
+    try {
+      const req = makeHandlerRequest({
+        res: makeGrpcJsonRes(
+          'structured',
+          {
+            key: 're-act-loading-status-key',
+            value: '旧版文案',
+            value_i18n: { zh: '正在调用读取文件', en: 'Calling Read file' },
+          },
+          { NodeId: 'status', TaskId: 'q1' },
+        ),
+      })
+      seedTaskNode(req, 'q1', 'sub')
+      aiYakExecResultDataHandlers.status(req)
+      expect(req.store.getState().currentLoadingTitle.casualTitle).toBe(
+        language === 'en' ? 'Calling Read file' : '正在调用读取文件',
+      )
+    } finally {
+      i18n.resolvedLanguage = previous
+    }
+  })
+
+  it('late statuses cannot replace newer task activity; equal timestamps retain stream order', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { key: 're-act-loading-status-key', value: '正在调用读取文件' },
+        { NodeId: 'status', TaskId: 'q1', Timestamp: 20 },
+      ),
+    })
+    seedTaskNode(req, 'q1', 'sub')
+    aiYakExecResultDataHandlers.status(req)
+    req.res = makeGrpcJsonRes(
+      'structured',
+      { key: 're-act-loading-status-key', value: '等待回复' },
+      { NodeId: 'status', TaskId: 'q1', Timestamp: 19 },
+    )
+    aiYakExecResultDataHandlers.status(req)
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('正在调用读取文件')
+    req.res = makeGrpcJsonRes(
+      'structured',
+      { key: 're-act-loading-status-key', value: '正在生成回复正文' },
+      { NodeId: 'status', TaskId: 'q1', Timestamp: 20 },
+    )
+    aiYakExecResultDataHandlers.status(req)
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('正在生成回复正文')
+  })
+
+  it('repeated sub-task statuses do not trigger another render', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { key: 're-act-loading-status-key', value: '读取文件' },
+        { NodeId: 'status', TaskId: 'sub', Timestamp: 20 },
+      ),
+      chatType: 'task',
+    })
+    const nodeId = seedTaskNode(req, 'q1', 'sub', 'task')
+    aiYakExecResultDataHandlers.status(req)
+    const renderNum = req.store.getState().tasks[nodeId].renderNum
+    aiYakExecResultDataHandlers.status(req)
+    expect(req.store.getState().tasks[nodeId].renderNum).toBe(renderNum)
   })
 
   it.each([

@@ -530,7 +530,7 @@ export interface AgentChatStatus {
   status: AITaskStatusType
 }
 
-/** 问题执行中时的loading-title内容 */
+/** 当前请求处理阶段的 loading-title 内容 */
 export interface AgentLoadingTitle {
   /** 自由对话的loading-title内容 */
   casualTitle: string

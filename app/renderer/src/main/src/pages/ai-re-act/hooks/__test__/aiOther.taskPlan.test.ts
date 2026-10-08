@@ -184,7 +184,7 @@ describe('aiOther task plan gate', () => {
       status: AITaskStatus.inProgress,
     })
     // i18n stub 的 t 直接返回 key 本身；与实现使用同一翻译源断言
-    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe(tAgent('AIChatLoading.questionExecuting'))
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe(tAgent('AIChatLoading.processingRequest'))
     expect(req.store.getState().focusMode).toBe('focus-a')
     expect(req.store.getState().currentPlan).toEqual(DefaultCurrentExecTaskTree)
     expect(req.store.getState().chatTodoListUpdate).toBe(1)
@@ -257,5 +257,26 @@ describe('aiOther task plan gate', () => {
     aiOtherDataHandlers.plan(req)
     expect(req.store.getState().currentPlan.root_task_name).toBe('root')
     expect(req.store.getState().currentPlan.task_tree.some((t) => t.task_id === 'leaf-1')).toBe(true)
+  })
+})
+
+describe('queue activity status', () => {
+  it('polling the same task preserves the latest tool activity', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { tasks: [], total_tasks: 1, current_task: { id: 'q1' } },
+        { NodeId: 'queue_info' },
+      ),
+    })
+    req.store
+      .getState()
+      .updateCurrentChatStatus({ questionID: 'q1', coordinatorId: '', status: AITaskStatus.inProgress })
+    req.store.getState().updateCurrentLoadingTitle({ casualTitle: '正在调用读取文件', planTitle: '正在制定计划' })
+    aiOtherDataHandlers.queue_info(req)
+    expect(req.store.getState().currentLoadingTitle).toEqual({
+      casualTitle: '正在调用读取文件',
+      planTitle: '正在制定计划',
+    })
   })
 })

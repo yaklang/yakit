@@ -209,7 +209,7 @@
     "sessionInitializing": "Initializing session...",
     "loadingHistory": "Loading history...",
     "waitingReply": "Waiting for AI reply...",
-    "questionExecuting": "Executing question...",
+    "processingRequest": "Processing your request...",
     "executingSessionsLimitLoggedIn": "Concurrent AI sessions limit reached. Max {{count}} at once",
     "executingSessionsLimitLoggedOutPrefix": "Concurrent AI sessions limit reached. Max 2 at once. ",
     "executingSessionsLimitLogin": "Log in",

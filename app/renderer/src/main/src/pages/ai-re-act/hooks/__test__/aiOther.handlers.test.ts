@@ -281,7 +281,7 @@ describe('aiOther queue_info current task snapshot', () => {
       coordinatorId: '',
       status: AITaskStatus.inProgress,
     })
-    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe(tAgent('AIChatLoading.questionExecuting'))
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe(tAgent('AIChatLoading.processingRequest'))
     expect(req.store.getState().focusMode).toBe('deep')
   })
 
