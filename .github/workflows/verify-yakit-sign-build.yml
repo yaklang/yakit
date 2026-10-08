@@ -66,11 +66,15 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
+      # 必须单独成步：buildPreScript 把版本号写入 GITHUB_ENV，只对后续步骤生效
+      - name: Build pre script
+        run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh yakit
+        shell: bash
+
       - name: Build Yakit
         run: |
           set -euo pipefail
-          chmod +x ./packageScript/script/buildPreScript.sh ./packageScript/script/installRender.sh
-          ./packageScript/script/buildPreScript.sh yakit
+          chmod +x ./packageScript/script/installRender.sh
           rm -rf ./app/renderer/engine-link-startup/dist ./app/renderer/pages ./release
           ./packageScript/script/installRender.sh ce
           # signNormal -> CSC_IDENTITY_AUTO_DISCOVERY=true，具备 Apple 密钥时会走公证
