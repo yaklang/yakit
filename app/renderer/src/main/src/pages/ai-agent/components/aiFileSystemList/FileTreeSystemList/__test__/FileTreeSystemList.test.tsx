@@ -1,16 +1,31 @@
+import type * as Ahooks from 'ahooks'
+import type * as Antd from 'antd'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { useState } from 'react'
+import { useState, type ComponentProps } from 'react'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import FileTreeSystemList from '../FileTreeSystemList'
 
-const { fetchTree } = vi.hoisted(() => {
+type MeasuredSize = { width: number; height: number }
+type DirectoryTreeCapture = { height?: number }
+
+const { fetchTree, measuredSize, directoryTreeProps } = vi.hoisted(() => {
   Object.defineProperty(window, 'require', {
     configurable: true,
     value: () => ({ ipcRenderer: { invoke: vi.fn() } }),
   })
-  return { fetchTree: vi.fn() }
+  const measuredSize: { current: MeasuredSize | undefined } = {
+    current: { width: 240, height: 320 },
+  }
+  const directoryTreeProps: { current: DirectoryTreeCapture | null } = {
+    current: null,
+  }
+  return {
+    fetchTree: vi.fn(),
+    measuredSize,
+    directoryTreeProps,
+  }
 })
 
 vi.mock('@/pages/yakRunner/utils', () => ({
@@ -24,10 +39,37 @@ vi.mock('@/pages/ai-agent/aiChatWelcome/hooks/useAIChatDrop', () => ({ TREE_DRAG
 vi.mock('../../FileTreeSystemItem/FileTreeSystemIem', () => ({
   default: ({ data }: { data: FileNodeProps }) => <span>{data.name}</span>,
 }))
+vi.mock('ahooks', async (importOriginal) => {
+  const actual = await importOriginal<typeof Ahooks>()
+  return {
+    ...actual,
+    useSize: () => measuredSize.current,
+  }
+})
+vi.mock('antd', async (importOriginal) => {
+  const antd = await importOriginal<typeof Antd>()
+  const OriginalDirectoryTree = antd.Tree.DirectoryTree
+  type DirectoryTreeProps = ComponentProps<typeof OriginalDirectoryTree>
+  const DirectoryTree = (props: DirectoryTreeProps) => {
+    directoryTreeProps.current = { height: typeof props.height === 'number' ? props.height : undefined }
+    return <OriginalDirectoryTree {...props} />
+  }
+  const Tree = Object.assign((...args: Parameters<typeof antd.Tree>) => antd.Tree(...args), antd.Tree, {
+    DirectoryTree,
+  })
+  return { ...antd, Tree }
+})
 
 const FileTree = () => {
   const [selected, setSelected] = useState<FileNodeProps>()
   return <FileTreeSystemList path="opened" isFolder isOpen selected={selected} setSelected={setSelected} />
+}
+
+/** 经函数读取，避免 `current = null` 后控制流收窄导致 `?.height` 变成 never */
+const getDirectoryTreeHeight = (): number | undefined => directoryTreeProps.current?.height
+
+const resetDirectoryTreeCapture = () => {
+  directoryTreeProps.current = null
 }
 
 describe('我打开的文件：文件夹展开', () => {
@@ -49,5 +91,40 @@ describe('我打开的文件：文件夹展开', () => {
     )
     await waitFor(() => expect(screen.getByText('file.txt')).toBeVisible())
     expect(fetchTree).toHaveBeenCalledWith('opened/nested')
+  })
+})
+
+describe('fillHeight 虚拟滚动', () => {
+  it('开启 fillHeight 时把测量高度传给 DirectoryTree', async () => {
+    measuredSize.current = { width: 240, height: 320 }
+    resetDirectoryTreeCapture()
+    fetchTree.mockResolvedValue([])
+
+    render(<FileTreeSystemList path="opened" isFolder fillHeight selected={undefined} setSelected={vi.fn()} />)
+    await screen.findByText('opened')
+
+    expect(getDirectoryTreeHeight()).toBe(320)
+  })
+
+  it('未开启 fillHeight 时 DirectoryTree 不设置 height', async () => {
+    measuredSize.current = { width: 240, height: 320 }
+    resetDirectoryTreeCapture()
+    fetchTree.mockResolvedValue([])
+
+    render(<FileTreeSystemList path="opened" isFolder fillHeight={false} selected={undefined} setSelected={vi.fn()} />)
+    await screen.findByText('opened')
+
+    expect(getDirectoryTreeHeight()).toBeUndefined()
+  })
+
+  it('开启 fillHeight 但尚未测到高度时 DirectoryTree 不设置 height', async () => {
+    measuredSize.current = undefined
+    resetDirectoryTreeCapture()
+    fetchTree.mockResolvedValue([])
+
+    render(<FileTreeSystemList path="opened" isFolder fillHeight selected={undefined} setSelected={vi.fn()} />)
+    await screen.findByText('opened')
+
+    expect(getDirectoryTreeHeight()).toBeUndefined()
   })
 })
