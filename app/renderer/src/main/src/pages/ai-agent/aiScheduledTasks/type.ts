@@ -7,7 +7,6 @@ export interface AIScheduledTasksProps {
    */
   visible?: boolean
 }
-export type ScheduleQueryType = 'all' | 'active' | 'paused' | 'completed'
 
 export interface AIScheduledTasksListItemProps {
   item: AIReActSchedule
@@ -15,5 +14,12 @@ export interface AIScheduledTasksListItemProps {
   onRefresh: () => void
   onEdit: (value: AIReActSchedule) => void
   onOpenDetail?: (value: AIReActSchedule) => void
-  onRunNow?: (value: AIReActSchedule) => void
+}
+
+export interface AIScheduledTasksListProps extends Omit<AIScheduledTasksListItemProps, 'item'> {
+  data: AIReActSchedule[]
+  loading: boolean
+  filtered: boolean
+  onClearFilter: () => void
+  onAdd: () => void
 }

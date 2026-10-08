@@ -235,6 +235,9 @@
     "invalidHistoryCursor": "历史恢复未返回有效游标"
   },
   "AIScheduledTasks": {
+    "runningGroup": "运行中",
+    "disabledGroup": "已停用",
+    "nextExecution": "下次执行：{{time}}",
     "title": "定时任务",
     "all": "全部",
     "active": "进行中",
