@@ -904,8 +904,14 @@ const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.me
     if (!nodeData) return
     onSelect(nodeData.path, nodeData.isFolder)
   })
+  const listFillHeight = customFolder.length === 1
+
   return (
-    <div className={styles['file-system-tree-of-mention']}>
+    <div
+      className={classNames(styles['file-system-tree-of-mention'], {
+        [styles['file-system-tree-of-mention-virtual']]: listFillHeight,
+      })}
+    >
       {customFolder.map((item) => (
         <FileTreeSystemList
           key={item.path}
@@ -914,6 +920,8 @@ const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.me
           isShowRightMenu={false}
           checkable={true}
           isFolder={item.isFolder}
+          // 与 Wrapper 一致：仅单根时撑满并虚拟滚动，多根保持自然高度 + 外层滚动
+          fillHeight={listFillHeight}
           selected={selected}
           setSelected={setSelected}
           checkedKeys={[]}

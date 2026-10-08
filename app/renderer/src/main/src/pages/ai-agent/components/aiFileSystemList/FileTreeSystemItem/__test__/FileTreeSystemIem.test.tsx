@@ -14,8 +14,8 @@ import {
 } from '@/pages/yakRunner/utils'
 
 vi.mock('@/pages/yakRunner/FileTree/icon', () => ({ KeyToIcon: { file: { iconPath: 'file.svg' } } }))
-vi.mock('@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu', () => ({
-  YakitDropdownMenu: ({ children }: React.PropsWithChildren) => children,
+vi.mock('@/components/yakitUI/YakitMenu/showByRightContext', () => ({
+  showByRightContext: vi.fn(),
 }))
 vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
   YakitInput: React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(

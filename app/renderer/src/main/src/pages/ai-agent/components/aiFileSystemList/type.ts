@@ -32,6 +32,8 @@ export interface FileTreeSystemListProps {
   treeData?: FileNodeProps[]
   setTreeData?: Dispatch<SetStateAction<FileNodeProps[]>>
   isOpen?: boolean
+  /** 撑满父容器并启用 Tree 虚拟滚动；默认 false，直连调用方需显式传入（多根场景勿开） */
+  fillHeight?: boolean
   selected?: FileTreeSystemListWrapperProps['selected']
   setSelected: FileTreeSystemListWrapperProps['setSelected']
   onTreeDragStart?: FileTreeSystemListWrapperProps['onTreeDragStart']

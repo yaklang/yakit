@@ -223,6 +223,11 @@ $mention-list-height: 280px;
   min-height: 0;
   max-height: none;
   overflow-y: auto;
+  &-virtual {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
   :global {
     .ant-tree-treenode {
       display: flex;
@@ -241,16 +246,16 @@ $mention-list-height: 280px;
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
       }
     }
-    .ant-tree.ant-tree-directory .ant-tree-treenode:hover::before {
+    .ant-tree.ant-tree-directory .ant-tree-treenode:hover .ant-tree-node-content-wrapper::before {
       background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
     .ant-tree {
       background-color: transparent;
     }
-    .ant-tree.ant-tree-directory .ant-tree-treenode-selected:hover::before,
-    .ant-tree.ant-tree-directory .ant-tree-treenode-selected::before {
+    .ant-tree.ant-tree-directory .ant-tree-treenode-selected:hover .ant-tree-node-content-wrapper::before,
+    .ant-tree.ant-tree-directory .ant-tree-treenode-selected .ant-tree-node-content-wrapper::before {
       border: 1px solid var(--Colors-Use-Main-Primary);
-      background-color: var(--Colors-Use-Main-Bg);
+      background-color: var(--Colors-Use-Main-Focus);
       border-radius: 4px;
     }
     .ant-tree.ant-tree-block-node .ant-tree-list-holder-inner .ant-tree-node-content-wrapper {

@@ -1530,6 +1530,7 @@ const AIForgeEditorSkillFiles: React.FC<AIForgeEditorSkillFilesProps> = memo((pr
                 setTreeData={updateTreeData}
                 isOpen={false}
                 isFolder={true}
+                fillHeight
                 selected={selected}
                 setSelected={setSelected}
                 treeMenuData={treeMenuData}
