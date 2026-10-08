@@ -46,8 +46,8 @@ import {
   TrashOutlined,
   SpeechToTextOutlined,
   CheckOutlined,
-  FigmaIcon28011794Outlined,
-  FigmaIcon4866167279Outlined,
+  LogOutOutlined,
+  EngineOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { CheckCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
@@ -363,7 +363,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
         <div className={styles['ai-online-model-list-item-extra-edit']}>
           <YakitButton
             type="text2"
-            icon={<FigmaIcon4866167279Outlined color="currentColor" />}
+            icon={<EngineOutlined color="currentColor" />}
             onClick={onCheckModel}
             loading={testLoading}
           />
@@ -812,7 +812,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                   trigger={'click'}
                   okButtonProps={{ loading: stopLoading }}
                 >
-                  <YakitButton type="text" colors="danger" icon={<FigmaIcon28011794Outlined color="currentColor" />}>
+                  <YakitButton type="text" colors="danger" icon={<LogOutOutlined color="currentColor" />}>
                     {t('YakitButton.deactivated')}
                   </YakitButton>
                 </YakitPopconfirm>

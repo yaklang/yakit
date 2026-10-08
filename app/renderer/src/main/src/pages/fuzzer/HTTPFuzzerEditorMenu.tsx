@@ -24,7 +24,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import type { QueryFuzzerLabelResponseProps } from './StringFuzzer'
 import { setRemoteValue } from '@/utils/kv'
 import { useMemoizedFn, useThrottleFn } from 'ahooks'
-import { TerminalSolid, FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { TerminalSolid, DragSortSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { queryYakScriptList } from '../yakitStore/network'
 import type { YakScript } from '../invoker/schema'
 import { IconSolidAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/IconSolidAIIcon'
@@ -434,7 +434,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                     overflow: 'hidden',
                                   }}
                                 >
-                                  <FigmaIcon2281144183Solid size={12} className={styles['drag-sort-icon']} />
+                                  <DragSortSolid size={12} className={styles['drag-sort-icon']} />
                                   {isSelect(item) ? (
                                     <YakitInput
                                       defaultValue={item.Description}

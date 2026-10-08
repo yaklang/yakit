@@ -54,6 +54,9 @@ vi.mock('@/pages/ai-agent/aiChatContent/hooks/useCasualTaskTab', () => ({
   useCasualTaskTab: () => ({ currentChatStatusQuestionID: '', syncCasualTaskTab: vi.fn() }),
 }))
 vi.mock('@/hook/useAiChatLog/useAiChatLog.ts', () => ({ default: () => ({ onOpenLogWindow: vi.fn() }) }))
+// 布局测试保留真实右侧面板，隔离网络请求和模型用量组件的 Electron 依赖。
+vi.mock('@/services/fetch', () => ({ NetWorkApi: vi.fn(async () => undefined) }))
+vi.mock('@/pages/ai-agent/aiChatContent/AIContextToken/AIMainModelTokens', () => ({ default: () => null }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn(), failed: vi.fn() }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: vi.fn() } }))
 vi.mock('@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal', () => ({ ExportAILogsModal: () => null }))

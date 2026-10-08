@@ -16,7 +16,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import emiter from '@/utils/eventBus/eventBus'
 import type { AdvancedSetProps, ColumnAllInfoItem } from '../HTTPFlowTable.constants'
 import style from '../HTTPFlowTable.module.scss'
-import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
+import { DragSortSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
   const {
@@ -251,7 +251,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                           >
-                            <FigmaIcon2281144183Solid size={12} />
+                            <DragSortSolid size={12} />
                             <div className={style['column-title']}>{item.title}</div>
                             <Tooltip title={item.isShow ? t('YakitButton.disable') : t('YakitButton.enable')}>
                               <BanOutlined

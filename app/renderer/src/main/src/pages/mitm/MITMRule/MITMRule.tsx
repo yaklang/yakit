@@ -52,7 +52,7 @@ import {
   SearchOutlined,
   BanOutlined,
   ChevronDownOutlined,
-  FigmaIcon2017756Outlined,
+  ExportOutlined,
   PencilAltOutlined,
   PlusOutlined,
   SaveOutlined,
@@ -1386,7 +1386,7 @@ export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps>
       <Divider type="vertical" style={{ margin: '0 4px' }} />
       <YakitButton
         type="text"
-        icon={<FigmaIcon2017756Outlined size={16} />}
+        icon={<ExportOutlined size={16} />}
         className={styles['button-export']}
         onClick={() => {
           setExportVisible(true)

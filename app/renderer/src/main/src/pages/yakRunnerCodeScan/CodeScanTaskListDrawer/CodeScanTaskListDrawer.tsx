@@ -7,11 +7,7 @@ import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import {
-  QuestionMarkCircleOutlined,
-  RefreshOutlined,
-  FigmaIcon5237120699Outlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import { QuestionMarkCircleOutlined, RefreshOutlined, LoadingOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -215,7 +211,7 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
         case 'executing':
           return (
             <div className={styles['table-status-item']}>
-              <FigmaIcon5237120699Outlined className={styles['icon-primary']} color="currentColor" />
+              <LoadingOutlined className={styles['icon-primary']} color="currentColor" />
               <span className={styles['status-text']}>执行中</span>
             </div>
           )

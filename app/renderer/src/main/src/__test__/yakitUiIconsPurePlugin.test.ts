@@ -52,8 +52,9 @@ describe('yakitUiIconsPurePlugin consumer import guard', () => {
     )
     const names = collectImports(source)
 
-    expect(names.outline.has('FigmaIcon34227111184Outlined')).toBe(true)
-    expect(names.outline.has('FigmaIcon34227111185Outlined')).toBe(true)
+    expect(names.outline.has('CompilationOutlined')).toBe(true)
+    expect(names.outline.has('Compilation2Outlined')).toBe(true)
+    expect(names.outline.has('IntentionOutlined')).toBe(true)
   })
 
   it('decodes Uint8Array HTML assets before checking oldicon modulepreloads', () => {

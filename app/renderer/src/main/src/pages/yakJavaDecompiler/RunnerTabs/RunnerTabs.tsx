@@ -21,8 +21,8 @@ import {
   ChevronDoubleLeftOutlined,
   ChevronDoubleRightOutlined,
   XOutlined,
-  FigmaIcon6480193584Outlined,
-  FigmaIcon22849134660Outlined,
+  ImportOutlined,
+  SplitScreenOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import {
@@ -267,7 +267,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             placement: 'bottomRight',
           }}
         >
-          <FigmaIcon22849134660Outlined size={16} className={styles['extra-box-icon']} />
+          <SplitScreenOutlined size={16} className={styles['extra-box-icon']} />
         </YakitDropdownMenu>
       )
     }
@@ -983,7 +983,7 @@ export const YakJavaDecompilerWelcomePage: React.FC<YakJavaDecompilerWelcomePage
                 打开 JAR 文件
                 <span className={styles['sub-title']}>支持 .jar, .war, .ear, .zip</span>
               </div>
-              <FigmaIcon6480193584Outlined className={styles['icon-style']} color="currentColor" />
+              <ImportOutlined className={styles['icon-style']} color="currentColor" />
             </div>
             <div className={classNames(styles['btn-style'], styles['btn-open-file'])} onClick={openDirectory}>
               <div className={styles['btn-title']}>
@@ -991,7 +991,7 @@ export const YakJavaDecompilerWelcomePage: React.FC<YakJavaDecompilerWelcomePage
                 打开 JAR 目录
                 <span className={styles['sub-title']}>批量浏览目录内所有 JAR</span>
               </div>
-              <FigmaIcon6480193584Outlined className={styles['icon-style']} color="currentColor" />
+              <ImportOutlined className={styles['icon-style']} color="currentColor" />
             </div>
           </div>
         </div>

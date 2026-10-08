@@ -3,7 +3,7 @@ import { useMemoizedFn } from 'ahooks'
 import styles from './SyntaxCheckList.module.scss'
 import classNames from 'classnames'
 import type { IMonacoEditorMarker } from '@/utils/editorMarkers'
-import { FigmaIcon22915169930Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { AbandonOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { ExclamationSolid, InformationCircleSolid, XCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { Selection } from '../../RunnerTabs/RunnerTabsType'
 const { ipcRenderer } = window.require('electron')
@@ -20,7 +20,7 @@ export const SyntaxCheckList: React.FC<SyntaxCheckListProps> = (props) => {
       case 1:
         return (
           <div className={classNames(styles['hint-icon'], styles['icon-box'])}>
-            <FigmaIcon22915169930Outlined color="currentColor" />
+            <AbandonOutlined color="currentColor" />
           </div>
         )
       // Info

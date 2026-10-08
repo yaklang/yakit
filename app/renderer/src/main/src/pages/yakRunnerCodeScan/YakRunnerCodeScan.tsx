@@ -46,7 +46,7 @@ import {
   CogOutlined,
   QuestionMarkCircleOutlined,
   TerminalOutlined,
-  ArrowsOutlined,
+  ArrowsCollapseOutlined,
   ChevronDownOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
@@ -1302,7 +1302,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
 
             <YakitButton
               type="text2"
-              icon={hidden ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
+              icon={hidden ? <ArrowsCollapseOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
               onClick={(e) => {
                 e.stopPropagation()
                 setHidden(!hidden)

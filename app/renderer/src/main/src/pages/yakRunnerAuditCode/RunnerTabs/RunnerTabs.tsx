@@ -25,8 +25,8 @@ import {
   ChevronDoubleLeftOutlined,
   ChevronDoubleRightOutlined,
   XOutlined,
-  FigmaIcon6480193584Outlined,
-  FigmaIcon22849134660Outlined,
+  ImportOutlined,
+  SplitScreenOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import {
@@ -314,7 +314,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             placement: 'bottomRight',
           }}
         >
-          <FigmaIcon22849134660Outlined size={16} className={styles['extra-box-icon']} />
+          <SplitScreenOutlined size={16} className={styles['extra-box-icon']} />
         </YakitDropdownMenu>
       )
     }
@@ -1498,7 +1498,7 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
                 <YakRunnerOpenFileIcon />
                 打开已有项目
               </div>
-              <FigmaIcon6480193584Outlined className={styles['icon-style']} color="currentColor" />
+              <ImportOutlined className={styles['icon-style']} color="currentColor" />
             </div>
           </div>
         </div>

@@ -25,8 +25,8 @@ import {
   TrashOutlined,
   UploadOutlined,
   BotOutlined,
-  FigmaIcon6480193584Outlined,
-  FigmaIcon2017756Outlined,
+  ImportOutlined,
+  ExportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -1102,7 +1102,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                     <FuncBtn
                       maxWidth={1200}
                       type="outline2"
-                      icon={<FigmaIcon2017756Outlined />}
+                      icon={<ExportOutlined />}
                       onClick={onExportSSARisk}
                       disabled={tableTotal === 0}
                       name={t('YakitButton.export')}
@@ -1110,7 +1110,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                     <FuncBtn
                       maxWidth={1200}
                       type="outline2"
-                      icon={<FigmaIcon6480193584Outlined color="currentColor" />}
+                      icon={<ImportOutlined color="currentColor" />}
                       onClick={onImportSSARisk}
                       name={t('YakitButton.import')}
                     />
