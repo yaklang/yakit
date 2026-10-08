@@ -127,8 +127,8 @@ function createHelper({ env = process.env, cwd = process.cwd(), exec = execFileS
       )
     }
     checkRelease(release, ctx)
-    const url = release.html_url || `https://github.com/${ctx.repo}/releases/tag/${ctx.tag}`
-    if (!/^https:\/\/github\.com\//.test(url) || /[\r\n]/.test(url)) throw new Error('Invalid release URL')
+    // Draft html_url uses a temporary untagged URL that changes at publication.
+    const url = `https://github.com/${ctx.repo}/releases/tag/${ctx.tag}`
     if (env.GITHUB_OUTPUT) fs.appendFileSync(env.GITHUB_OUTPUT, `release_tag=${ctx.tag}\nrelease_url=${url}\n`)
     console.log(`Build release: ${url}`)
     return release

@@ -9,11 +9,11 @@ const AdmZip = require('adm-zip')
 const { createHelper, context, flatName } = require('../ci-release-assets')
 
 const target = { id: 'linux-x64', platform: 'linux', arch: 'x64', legacy: false }
-function fixture(t) {
+function fixture(t, inheritedEnv = process.env) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'release-assets-test-'))
   t.after(() => fs.rmSync(cwd, { recursive: true, force: true }))
   const env = {
-    ...process.env,
+    ...inheritedEnv,
     BUILD_VERSION: '1.4.8-1008',
     BUILD_EDITION: 'memfit',
     GITHUB_REPOSITORY: 'why-2018/AISenso',
@@ -22,6 +22,8 @@ function fixture(t) {
     GITHUB_RUN_ATTEMPT: '1',
     BUILD_TARGET_ID: target.id,
     BUILD_MATRIX: JSON.stringify({ include: [target] }),
+    BUILD_RELEASE_TAG: undefined,
+    BUILD_ARTIFACT_DIR: undefined,
     GITHUB_OUTPUT: path.join(cwd, 'github-output'),
   }
   env.BUILD_RELEASE_TAG = context(env).tag
@@ -68,6 +70,22 @@ function fixture(t) {
   return { cwd, env, release, name, manifest, calls, exec, writePackages, archive }
 }
 
+test('fixtures isolate their release identity and package directory from a real CI environment', (t) => {
+  const inheritedEnv = {
+    ...process.env,
+    BUILD_RELEASE_TAG: 'ci-memfit-1.4.8-1008-37761366144-1',
+    GITHUB_RUN_ID: '37761366144',
+    GITHUB_RUN_ATTEMPT: '1',
+    BUILD_ARTIFACT_DIR: 'ci-collection-directory',
+  }
+  const f = fixture(t, inheritedEnv)
+  assert.equal(f.env.BUILD_RELEASE_TAG, 'ci-memfit-1.4.8-1008-123456-1')
+  assert.equal(f.env.BUILD_ARTIFACT_DIR, undefined)
+  assert.equal(inheritedEnv.BUILD_RELEASE_TAG, 'ci-memfit-1.4.8-1008-37761366144-1')
+  createHelper(f).create()
+  assert.equal(f.calls.length, 1)
+})
+
 test('release tags are unique per run/attempt and failed-job retries accept the original plan tag', (t) => {
   const f = fixture(t)
   assert.equal(context(f.env).tag, 'ci-memfit-1.4.8-1008-123456-1')
@@ -83,11 +101,12 @@ test('release tags are unique per run/attempt and failed-job retries accept the 
 
 test('create reuses an identical draft without a second mutation and emits the tag and URL', (t) => {
   const f = fixture(t)
+  f.release.html_url = 'https://github.com/why-2018/AISenso/releases/untagged-deadbeef'
   createHelper(f).create()
   assert.equal(f.calls.length, 1)
   assert.match(
     fs.readFileSync(f.env.GITHUB_OUTPUT, 'utf8'),
-    /release_tag=ci-memfit-1.4.8-1008-123456-1\nrelease_url=https:/,
+    /release_tag=ci-memfit-1.4.8-1008-123456-1\nrelease_url=https:\/\/github\.com\/why-2018\/AISenso\/releases\/tag\/ci-memfit-1.4.8-1008-123456-1\n/,
   )
 })
 
