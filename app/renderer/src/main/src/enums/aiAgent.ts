@@ -9,6 +9,8 @@ export enum RemoteAIAgentGV {
   AIAgentReplaceToolNoPrompt = 'ai-agent-replace-tool-no-prompt',
   /** @name ai侧边栏展开收起模式 */
   AIAgentSideShowMode = 'ai-agent-side-show-mode',
+  /** @name 关闭首页动画（独立前端偏好） */
+  WelcomeAnimationDisabled = 'ai-agent-welcome-animation-disabled',
   /** @name 记忆库快捷删除 */
   AIMemoryRemove = 'ai-memory-remove',
   /** @name AIModel检测结果中的编辑器的美化 */

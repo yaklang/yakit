@@ -875,6 +875,7 @@
     "disableToolIntervalReview": "停用工具執行時 AI 審查",
     "disableToolIntervalReviewDesc": "在工具執行時關掉 AI 審查，提升工具執行效率",
     "riskThreshold": "風險閾值",
+    "disableWelcomeAnimation": "關閉首頁動畫",
     "riskThresholdDesc": "低於這個分數，AI 自動同意，如果高於這個分數，轉成手動",
     "reviewPolicy": "Review 規則",
     "allowPlanUserInteract": "允許 plan 階段人機互動",

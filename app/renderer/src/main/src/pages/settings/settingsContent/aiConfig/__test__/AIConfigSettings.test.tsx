@@ -10,7 +10,14 @@ import {
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import emiter from '@/utils/eventBus/eventBus'
+import { RemoteAIAgentGV } from '@/enums/aiAgent'
+import { setRemoteValue } from '@/utils/kv'
 import { AIConfigSettings } from '../AIConfigSettings'
+
+vi.mock('@/utils/kv', () => ({
+  getRemoteValue: vi.fn(async () => ''),
+  setRemoteValue: vi.fn(),
+}))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key }),
@@ -53,9 +60,26 @@ const waitLocked = async () => {
 describe('AIConfigSettings', () => {
   beforeEach(() => {
     cleanup()
+    vi.mocked(setRemoteValue).mockClear()
     vi.mocked(loadAIAgentChatSetting).mockReset()
     vi.mocked(loadAIAgentChatSetting).mockResolvedValue(successLoad())
     vi.mocked(persistAIAgentChatSetting).mockReset()
+  })
+
+  it('首页动画开关使用独立缓存，不写入 AI 配置，重置配置不改变动画偏好', async () => {
+    render(<AIConfigSettings />)
+    await waitReady()
+    const animationSwitch = screen.getByRole('switch', { name: 'AIChatSetting.disableWelcomeAnimation' })
+    expect(animationSwitch).toHaveAttribute('aria-checked', 'false')
+    fireEvent.click(animationSwitch)
+    expect(animationSwitch).toHaveAttribute('aria-checked', 'true')
+    expect(setRemoteValue).toHaveBeenCalledWith(RemoteAIAgentGV.WelcomeAnimationDisabled, 'true')
+    expect(persistAIAgentChatSetting).not.toHaveBeenCalled()
+    vi.mocked(setRemoteValue).mockClear()
+    fireEvent.click(screen.getByText('YakitButton.reset'))
+    expect(animationSwitch).toHaveAttribute('aria-checked', 'true')
+    expect(setRemoteValue).not.toHaveBeenCalled()
+    expect(persistAIAgentChatSetting).toHaveBeenCalledWith(AIAgentSettingDefault)
   })
 
   it('加载缓存后展示权限分区，重置会写回默认配置', async () => {
