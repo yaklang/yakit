@@ -1,0 +1,43 @@
+name: pr-label-notify
+
+on:
+  pull_request:
+    types:
+      - labeled
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 检查必填配置
+        id: guard
+        env:
+          PR_LABEL_WEBHOOK_URL: ${{ secrets.PR_LABEL_WEBHOOK_URL }}
+        run: |
+          if [ -z "$PR_LABEL_WEBHOOK_URL" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::未配置 PR_LABEL_WEBHOOK_URL，跳过本次运行"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 发送飞书通知
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          PR_LABEL_WEBHOOK_URL: ${{ secrets.PR_LABEL_WEBHOOK_URL }}
+          PR_LABEL_SECRET: ${{ secrets.PR_LABEL_SECRET }}
+          PR_LABEL_KEYWORD: ${{ vars.PR_LABEL_KEYWORD }}
+          PR_LABEL_MSG_TYPE: ${{ vars.PR_LABEL_MSG_TYPE }}
+          PR_LABEL_MATCH_MODE: ${{ vars.PR_LABEL_MATCH_MODE || 'exact' }}
+        run: node bots/pr-label/pr-label.mjs

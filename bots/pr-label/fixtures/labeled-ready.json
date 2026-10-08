@@ -1,0 +1,43 @@
+{
+  "action": "labeled",
+  "number": 128,
+  "label": {
+    "name": "ready",
+    "color": "0E8A16",
+    "description": "可以合并了"
+  },
+  "pull_request": {
+    "number": 128,
+    "title": "【测试】feat: 支持通过飞书 webhook 推送 PR 标签变更",
+    "state": "open",
+    "draft": false,
+    "merged": false,
+    "html_url": "https://github.com/yaklang/yakit/pull/128",
+    "user": {
+      "login": "nonight"
+    },
+    "base": {
+      "ref": "main"
+    },
+    "head": {
+      "ref": "feat/pr-label-feishu"
+    },
+    "additions": 412,
+    "deletions": 37,
+    "changed_files": 9,
+    "labels": [
+      {
+        "name": "ready",
+        "color": "1D76DB"
+      }
+    ],
+    "body": "监听 PR label 变更后推送飞书。\n\n<!-- 这段注释不会展示 -->\n- 支持签名校验\n- 支持标签白名单"
+  },
+  "repository": {
+    "full_name": "yaklang/yakit",
+    "html_url": "https://github.com/yaklang/yakit"
+  },
+  "sender": {
+    "login": "yakit"
+  }
+}
