@@ -18,6 +18,10 @@
 
 正式发布继续由 `v*-memfit` 标签触发 **Build Memfit Prod**，共用相同流程，并保留普通/兼容两组共十个包及已有签名、公证和 OSS 发布。OSS 目录使用实际包内版本 `/memfit/版本号/`，标签与实际版本的对应关系保存到 `/memfit/build-tags/标签/build-version.txt`。手动发布 latest 时读取这个记录，避免把旧标签日期作为新包版本。缺少已有签名或 OSS Secrets 时正式发布会报错，先用默认不签名的手动流水线测试。
 
+Mac 的无证书测试包也会生成本地 ad-hoc 签名，确保修改 Electron fuses 后二进制仍有效；它不提供开发者身份认证或公证。正式签名模式继续使用 Developer ID、硬化运行时和公证，并要求签名成功。
+
+Mac 检查会挂载最终 DMG、复制应用到独立临时安装目录、卸载 DMG，再验证完整签名、字节码和实际启动。正式签名模式还检查系统评估与公证票据。该流程覆盖拖拽安装，避免只启动构建目录的应用而漏掉签名问题。
+
 自动升级开关未修改。汇总包仅包含安装包和构建清单；Windows 安装包签名完成后再计算校验值。
 
 本地验证构建辅助逻辑：`node --test scripts/__test__/desktop-packaging.test.cjs`。在 Windows 本机不能验证 Linux/macOS 的真实启动，必须查看对应 GitHub 任务的执行结果。

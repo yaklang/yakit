@@ -9,6 +9,7 @@ const v8 = require('v8')
 const { buildVersion, buildMatrix } = require('../ci-build-plan')
 const { installerName, rendererScript, aggregate, settings } = require('../ci-desktop-build')
 const { verifyBuffer } = require('../verify-bytecode-runtime')
+const { installFromDmg } = require('../verify-mac-installation')
 
 test('one Beijing date handles UTC midnight, month/year boundaries and existing suffixes', () => {
   assert.equal(buildVersion('1.4.8-0711', new Date('2026-09-29T16:01:00Z')), '1.4.8-0930')
@@ -101,6 +102,74 @@ test('collection requires every target and detects installer modification', () =
     process.env = previous
     assert.equal(path.dirname(path.resolve(temp)), tempRoot)
     assert.ok(path.basename(temp).startsWith('desktop-collection-test-'))
+    fs.rmSync(temp, { recursive: true, force: true })
+  }
+})
+
+test('certificate-free Mac builds are locally signed after fuses, while release signing stays enabled', () => {
+  const previous = { ...process.env }
+  const configPath = require.resolve('../../packageScript/electron-builder.config')
+  try {
+    process.env.CSC_IDENTITY_AUTO_DISCOVERY = 'false'
+    process.env.BUILD_SIGN = 'false'
+    delete require.cache[configPath]
+    const unsigned = require(configPath)
+    assert.equal(unsigned.mac.identity, '-')
+    assert.equal(unsigned.mac.hardenedRuntime, false)
+    assert.equal(unsigned.mac.notarize, false)
+    assert.equal(unsigned.electronFuses.onlyLoadAppFromAsar, true)
+    assert.equal(unsigned.electronFuses.enableEmbeddedAsarIntegrityValidation, true)
+    process.env.CSC_IDENTITY_AUTO_DISCOVERY = 'true'
+    process.env.BUILD_SIGN = 'true'
+    delete require.cache[configPath]
+    const signed = require(configPath)
+    assert.equal(signed.mac.identity, undefined)
+    assert.equal(signed.mac.hardenedRuntime, true)
+    if (process.platform === 'darwin') assert.equal(signed.forceCodeSigning, true)
+  } finally { process.env = previous; delete require.cache[configPath] }
+})
+
+test('Mac verification copies the final DMG and verifies that copy after unmounting', () => {
+  const tempRoot = fs.realpathSync(os.tmpdir())
+  const temp = fs.mkdtempSync(path.join(tempRoot, 'desktop-dmg-test-'))
+  const previous = { ...process.env }
+  const release = path.join(temp, 'release')
+  const checks = path.join(temp, 'checks')
+  const mount = path.join(checks, 'dmg-mount')
+  const mountedApp = path.join(mount, 'AI Senso.app')
+  const calls = []
+  try {
+    process.env.BUILD_SIGN = 'false'
+    fs.mkdirSync(release)
+    fs.mkdirSync(checks)
+    fs.writeFileSync(path.join(release, 'AI Senso.dmg'), 'fixture')
+    const runner = (command, args) => {
+      calls.push({ command, args })
+      if (command === 'hdiutil' && args[0] === 'attach') fs.mkdirSync(mountedApp)
+      if (command === 'ditto') {
+        assert.equal(args[0], mountedApp)
+        assert.equal(path.dirname(args[1]), path.join(checks, 'installed'))
+        fs.mkdirSync(args[1], { recursive: true })
+      }
+      if (command === 'hdiutil' && args[0] === 'detach') fs.rmdirSync(mountedApp)
+    }
+    const app = installFromDmg(release, checks, runner)
+    assert.equal(app, path.join(checks, 'installed', 'AI Senso.app'))
+    assert.deepEqual(calls.map(c => c.command), ['hdiutil', 'ditto', 'hdiutil', 'codesign'])
+    assert.ok(calls[3].args.includes('--strict'))
+    assert.equal(calls[3].args.at(-1), app)
+    assert.throws(() => installFromDmg(release, checks, (command, args) => {
+      runner(command, args)
+      if (command === 'codesign') throw new Error('invalid code signature')
+    }), /invalid code signature/)
+    process.env.BUILD_SIGN = 'true'
+    calls.length = 0
+    installFromDmg(release, checks, runner)
+    assert.deepEqual(calls.map(c => c.command), ['hdiutil', 'ditto', 'hdiutil', 'codesign', 'spctl', 'xcrun'])
+  } finally {
+    process.env = previous
+    assert.equal(path.dirname(path.resolve(temp)), tempRoot)
+    assert.ok(path.basename(temp).startsWith('desktop-dmg-test-'))
     fs.rmSync(temp, { recursive: true, force: true })
   }
 })

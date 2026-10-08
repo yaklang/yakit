@@ -137,7 +137,7 @@ jobs:
         run: node scripts/ci-desktop-build.js render
       - name: Package only this OS and architecture
         run: node scripts/ci-desktop-build.js pack
-      - name: Verify packaged bytecode, embedded version and real startup
+      - name: Verify final package installation, signatures, bytecode and real startup
         if: matrix.platform != 'linux'
         run: node scripts/verify-packaged-desktop.js
       - name: Verify Linux package under a headless display

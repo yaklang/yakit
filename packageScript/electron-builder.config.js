@@ -13,6 +13,8 @@ let nsisUninstallerIcon = null
 
 // 生成构建包的自定义配置
 const platform = process.env.PLATFORM
+// Certificate-free Mac builds still need a valid local signature after fuses are changed.
+const adHocMacSigning = process.env.CSC_IDENTITY_AUTO_DISCOVERY === 'false'
 /**
  * @synchronize [IDENTIFIER_NAME]
  * 注意：case的选项必须全局保持一致。
@@ -207,7 +209,7 @@ const configOption = {
   ],
   mac: {
     // category: "public.app-category.developer-tools",
-    hardenedRuntime: true,
+    ...(adHocMacSigning ? { identity: '-', hardenedRuntime: false, notarize: false } : { hardenedRuntime: true }),
     gatekeeperAssess: false,
     entitlements: 'packageScript/plist/entitlements.mac.plist',
     entitlementsInherit: 'packageScript/plist/entitlements.mac.plist',
@@ -262,6 +264,9 @@ if (isLegacy) {
 
 // 是否执行公证流程
 const autoDiscoveryIdentity = process.env.CSC_IDENTITY_AUTO_DISCOVERY
+if (process.platform === 'darwin' && process.env.BUILD_SIGN === 'true') {
+  configOption.forceCodeSigning = true
+}
 if (autoDiscoveryIdentity == 'true') {
   /** 提取公证关键信息，判断是否有执行公证的环境 */
   const { APPLE_ID, APPLE_TEAM_ID, APPLE_APP_SPECIFIC_PASSWORD, CERT_BASE64, CERT_PASSWORD } = process.env

@@ -116,15 +116,17 @@ async function smoke(exe, temp) {
 
 async function main() {
   const root = path.resolve(process.argv[2] || 'release')
-  const archives = findAsar(root)
-  if (archives.length !== 1) throw new Error('Expected exactly one packaged app, found ' + archives.length)
-  const archive = archives[0]
-  const pkg = JSON.parse(asar.extractFile(archive, 'package.json').toString())
-  if (pkg.version !== process.env.BUILD_VERSION) throw new Error('Embedded package version mismatch: ' + pkg.version)
-  const exe = executable(archive)
   const tempRoot = fs.realpathSync(os.tmpdir())
   const temp = fs.mkdtempSync(path.join(tempRoot, 'desktop-build-check-'))
   try {
+    const installedRoot =
+      process.platform === 'darwin' ? require('./verify-mac-installation').installFromDmg(root, temp) : root
+    const archives = findAsar(installedRoot)
+    if (archives.length !== 1) throw new Error('Expected exactly one packaged app, found ' + archives.length)
+    const archive = archives[0]
+    const pkg = JSON.parse(asar.extractFile(archive, 'package.json').toString())
+    if (pkg.version !== process.env.BUILD_VERSION) throw new Error('Embedded package version mismatch: ' + pkg.version)
+    const exe = executable(archive)
     if (process.env.BUILD_EDITION === 'memfit') {
       if (pkg.main !== 'app/main-bytecode/index.js')
         throw new Error('Packaged AI Senso must use the bytecode entry point')
@@ -154,6 +156,10 @@ async function main() {
   } finally {
     if (path.dirname(path.resolve(temp)) !== tempRoot || !path.basename(temp).startsWith('desktop-build-check-')) {
       throw new Error('Refusing to clean up an unexpected temporary path')
+    }
+    const mount = path.join(temp, 'dmg-mount')
+    if (fs.existsSync(mount) && fs.readdirSync(mount).length) {
+      throw new Error('DMG could still be mounted; preserving temporary directory: ' + temp)
     }
     fs.rmSync(temp, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
   }
