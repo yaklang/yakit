@@ -6,19 +6,19 @@ export const getHtmlTemplate = () => {
     <head>
         <meta charset="UTF-8" />
         <title>Yakit</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.21.7/antd.min.css" />
+        <link rel="stylesheet" href="./modules/antd/antd.min.css" />
 
     </head>
 
     <body>
         <div id="root"></div>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.19.3/babel.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+        <script src="./modules/react/react.production.min.js"></script>
+        <script src="./modules/react/react-dom.production.min.js"></script>
+        <script src="./modules/babel/babel.min.js"></script>
+        <script src="./modules/moment/moment.min.js"></script>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/4.21.7/antd.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/ant-design-icons/5.3.7/index.umd.min.js"></script>
+        <script src="./modules/antd/antd.min.js"></script>
+        <script src="./modules/icons/index.umd.min.js"></script>
 
         <script src="./data.js"></script>
 
@@ -285,19 +285,19 @@ export const getHtmlZhTWTemplate = () => {
 <head>
   <meta charset="UTF-8" />
   <title>Yakit</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.21.7/antd.min.css" />
+  <link rel="stylesheet" href="./modules/antd/antd.min.css" />
 
 </head>
 
 <body>
   <div id="root"></div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.19.3/babel.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <script src="./modules/react/react.production.min.js"></script>
+  <script src="./modules/react/react-dom.production.min.js"></script>
+  <script src="./modules/babel/babel.min.js"></script>
+  <script src="./modules/moment/moment.min.js"></script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/4.21.7/antd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ant-design-icons/5.3.7/index.umd.min.js"></script>
+  <script src="./modules/antd/antd.min.js"></script>
+  <script src="./modules/icons/index.umd.min.js"></script>
 
   <script src="./data.js"></script>
 
@@ -567,19 +567,19 @@ export const getHtmlEnTemplate = () => {
 <head>
   <meta charset="UTF-8" />
   <title>Yakit</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.21.7/antd.min.css" />
+  <link rel="stylesheet" href="./modules/antd/antd.min.css" />
 
 </head>
 
 <body>
   <div id="root"></div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.19.3/babel.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <script src="./modules/react/react.production.min.js"></script>
+  <script src="./modules/react/react-dom.production.min.js"></script>
+  <script src="./modules/babel/babel.min.js"></script>
+  <script src="./modules/moment/moment.min.js"></script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/4.21.7/antd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ant-design-icons/5.3.7/index.umd.min.js"></script>
+  <script src="./modules/antd/antd.min.js"></script>
+  <script src="./modules/icons/index.umd.min.js"></script>
 
   <script src="./data.js"></script>
 

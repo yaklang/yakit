@@ -137,6 +137,10 @@ const configOption = {
       from: 'report/template.zip',
       to: 'report/template.zip',
     },
+    {
+      from: 'report/risk-html.zip',
+      to: 'report/risk-html.zip',
+    },
   ],
   directories: {
     buildResources: 'resources',

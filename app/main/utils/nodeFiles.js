@@ -1,7 +1,9 @@
 const { app, ipcMain } = require('electron')
 const FS = require('fs')
 const path = require('path')
+const compressing = require('compressing')
 const { handleSaveFileSystem } = require('./fileSystemDialog')
+const { getHtmlTemplateDir } = require('../filePath')
 
 module.exports = {
   register: (win, getClient) => {
@@ -36,6 +38,10 @@ module.exports = {
               FS.mkdirSync(folderPath)
             }
 
+            const outputZip = path.join(folderPath, 'risk-html.zip')
+            FS.copyFileSync(path.join(getHtmlTemplateDir(), 'risk-html.zip'), outputZip)
+            await compressing.zip.uncompress(outputZip, folderPath)
+            FS.unlinkSync(outputZip)
             const filePath1 = path.join(folderPath, `${fileName}.html`)
             const filePath2 = path.join(folderPath, 'data.js')
             FS.writeFileSync(filePath1, htmlContent, 'utf-8')
