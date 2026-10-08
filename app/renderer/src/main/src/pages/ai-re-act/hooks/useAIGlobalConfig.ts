@@ -154,7 +154,9 @@ function useAIGlobalConfig(params) {
       if (!aiConfig?.content) return
 
       let serverConfig: ServerAIGlobalConfig = {}
-      serverConfig = JSON.parse(aiConfig.content)
+      try {
+        serverConfig = JSON.parse(aiConfig.content)
+      } catch (error) {}
 
       // 必须同步遍历：forEach(async) 不会被外层 await，会导致 merge 未完成就 setAIGlobalConfig
       for (const key of AI_MODEL_CONFIG_KEYS) {

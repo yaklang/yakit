@@ -1,3 +1,6 @@
+/** 固定私有域地址，进入 app 时自动设置 */
+export const FIXED_PRIVATE_DOMAIN_BASE_URL = 'http://pentest.dev.ftss.jh'
+
 export enum RemotePrivateDomainGV {
   eeHttpSetting = 'httpSetting',
   ceHttpSetting = 'httpSetting_Yakit',
