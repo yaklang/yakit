@@ -58,7 +58,8 @@ vi.mock('../AIAgentLogEmitter', () => ({
 }))
 
 const startParams = (sessionId: string, pageId = 'page-1', userQuery = '') => ({
-  token: sessionId,
+  kind: 'resume' as const,
+  sessionId,
   route: YakitRoute.AI_Agent,
   pageId,
   params: {
@@ -83,10 +84,11 @@ const setLogin = (isLogin: boolean) => {
 describe('ChatMultiSessionController concurrency / working / close', () => {
   let ctrl: ChatMultiSessionController
   const sessions = new Set<string>()
+  const pendingTokens = new Set<string>()
 
   const start = async (id: string, pageId = 'page-1') => {
     sessions.add(id)
-    expect(ctrl.handleStartSession(startParams(id, pageId))).toBe(true)
+    expect(ctrl.handleStartSession(startParams(id, pageId))).toEqual(expect.any(String))
     await ctrl.ensureSession(id).meta.lifecycle.preparation
     await finishRecovery(ctrl, id)
   }
@@ -104,12 +106,66 @@ describe('ChatMultiSessionController concurrency / working / close', () => {
   })
 
   afterEach(async () => {
+    for (const token of pendingTokens) ctrl.cancelPendingConnection(token)
+    pendingTokens.clear()
     for (const id of sessions) {
       if (ctrl.isSessionReady(id) || ctrl.isSessionClosing(id)) {
         await ctrl.handleSessionEnd(id).catch(() => {})
       }
     }
     setLogin(false)
+  })
+
+  const startPending = (pageId: string) => {
+    const token = ctrl.handleStartSession({
+      kind: 'new',
+      sessionId: pageId,
+      route: YakitRoute.AI_Agent,
+      pageId,
+      params: { Params: { Source: 'ai', UserQuery: 'hello' } },
+    })
+    if (token) pendingTokens.add(token)
+    return token
+  }
+
+  it('counts pending first questions across Tabs and only cancels the closing Tab', async () => {
+    const first = startPending('tab-1')
+    const second = startPending('tab-2')
+    expect(first).toEqual(expect.any(String))
+    expect(second).toEqual(expect.any(String))
+    expect(ctrl.getWorkingSessionCount()).toBe(2)
+    expect(ctrl.hasWorkingSessionOnPage(YakitRoute.AI_Agent, 'tab-1')).toBe(true)
+    expect(ctrl.hasWorkingSessionOnPage(YakitRoute.AI_Agent, 'tab-2')).toBe(true)
+    expect(startPending('tab-3')).toBe(false)
+
+    await ctrl.onPageUnload(YakitRoute.AI_Agent, 'tab-1')
+    expect(ctrl.getWorkingSessionCount()).toBe(1)
+    expect(ctrl.hasWorkingSessionOnPage(YakitRoute.AI_Agent, 'tab-1')).toBe(false)
+    expect(ctrl.hasWorkingSessionOnPage(YakitRoute.AI_Agent, 'tab-2')).toBe(true)
+    expect(startPending('tab-3')).toEqual(expect.any(String))
+  })
+
+  it('keeps one working slot after binding, rebinds ownership, and releases failed pending slots', async () => {
+    const token = startPending('tab-1') as string
+    const failedToken = startPending('tab-2') as string
+    for (let i = 0; i < 30; i++) await Promise.resolve()
+    const emit = (channel: string, value: unknown) => {
+      ipcRendererMock.on.mock.calls.find(([name]) => name === channel)![1]({}, value)
+    }
+    emit(`${token}-data`, makeGrpcJsonRes('pong', {}, { SessionId: 'tab-1' }))
+    for (let i = 0; i < 30; i++) await Promise.resolve()
+    sessions.add('tab-1')
+    expect(ctrl.getWorkingSessionCount()).toBe(2)
+    expect(ctrl.isSessionWorking('tab-1')).toBe(true)
+    expect(ctrl.handleStartSession(startParams('tab-1', 'tab-3'))).toBe(token)
+    await ctrl.onPageUnload(YakitRoute.AI_Agent, 'tab-1')
+    expect(ctrl.isSessionReady('tab-1')).toBe(true)
+    expect(ctrl.hasWorkingSessionOnPage(YakitRoute.AI_Agent, 'tab-3')).toBe(true)
+
+    emit(`${failedToken}-error`, new Error('offline'))
+    expect(ctrl.getWorkingSessionCount()).toBe(1)
+    expect(ctrl.hasWorkingSessionOnPage(YakitRoute.AI_Agent, 'tab-2')).toBe(false)
+    expect(startPending('tab-4')).toEqual(expect.any(String))
   })
 
   it('canStartExecutingSession blocks at logged-out limit(2) and allows already-working session; notify warns', async () => {
@@ -227,7 +283,7 @@ describe('ChatMultiSessionController concurrency / working / close', () => {
     // end 后 ready 摘除即可重开；meta.closing 可能仍残留至下次 ensure 换 meta
     expect(ctrl.isSessionReady('s-close')).toBe(false)
 
-    expect(ctrl.handleStartSession(startParams('s-close'))).toBe(true)
+    expect(ctrl.handleStartSession(startParams('s-close'))).toEqual(expect.any(String))
     await ctrl.ensureSession('s-close').meta.lifecycle.preparation
     expect(ctrl.isSessionClosing('s-close')).toBe(false)
   })

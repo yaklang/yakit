@@ -42,6 +42,9 @@ vi.mock('../../utils', () => ({
   AISessionDeleteCancelledError: class extends Error {},
 }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: mocks.notify }))
+vi.mock('@/components/yakitUI/YakitSolidLoading/YakitSolidLoading', () => ({
+  YakitSolidLoading: () => <span role="status">session running</span>,
+}))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => '' }))
 vi.mock('@/pages/ai-re-act/hooks/useGetChatDataStoreKey', () => ({
   default: () => 'aiChatDataStore',
@@ -52,7 +55,13 @@ vi.mock('@/pages/ai-re-act/hooks/grpcApi', () => ({
   AISourceEnum: { aiAgent: 'ai', im: 'im', other: '' },
 }))
 vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({
-  globalSessionEngine: { ensureSession: mocks.ensureSession, getSessionExecute: () => false },
+  globalSessionEngine: {
+    ensureSession: mocks.ensureSession,
+    get sessionStores() {
+      return sessionStores
+    },
+    getSessionExecute: () => false,
+  },
 }))
 
 const makeSessionState = () => {
@@ -67,6 +76,11 @@ const makeSessionState = () => {
   return { store, unsubscribers }
 }
 const sessionStates = new Map<string, ReturnType<typeof makeSessionState>>()
+
+const sessionStores = createStore(() => new Map<string, ReturnType<typeof makeSessionState>['store']>())
+const publishSessionStores = () => {
+  sessionStores.setState(new Map([...sessionStates].map(([id, state]) => [id, state.store])), true)
+}
 
 const sessions = Array.from({ length: 1960 }, (_, index) => ({
   SessionID: `session-${index}`,
@@ -102,6 +116,7 @@ beforeEach(() => {
     if (!sessionStates.has(id)) sessionStates.set(id, makeSessionState())
     return sessionStates.get(id)
   })
+  publishSessionStores()
 })
 afterEach(() => {
   cleanup()
@@ -117,7 +132,8 @@ describe('HistoryChatList viewport rendering', () => {
     expect(await screen.findByText('Session 0')).toBeInTheDocument()
     expect(screen.queryByText('Session 1959')).not.toBeInTheDocument()
     expect(screen.getAllByText(/^Session \d+$/).length).toBeLessThan(40)
-    expect(mocks.ensureSession.mock.calls.length).toBeLessThan(40)
+    expect(mocks.ensureSession).not.toHaveBeenCalled()
+    expect(sessionStates.size).toBe(0)
     expect(screen.getByText('HistoryChatList.justNow')).toBeInTheDocument()
   })
 
@@ -141,8 +157,36 @@ describe('HistoryChatList viewport rendering', () => {
     expect(mocks.ensureSession).not.toHaveBeenCalled()
   })
 
+  it('starts observing a store registered after the row mounts and releases it on removal', async () => {
+    render(view('', sessions.slice(0, 1)))
+    await screen.findByText('Session 0')
+    expect(within(rowFor('Session 0')).queryByRole('status')).not.toBeInTheDocument()
+    const first = makeSessionState()
+    first.store.setState({ currentChatStatus: { status: 'inProgress' } })
+    act(() => {
+      sessionStates.set('session-0', first)
+      publishSessionStores()
+    })
+    expect(within(rowFor('Session 0')).getByRole('status')).toBeInTheDocument()
+    act(() => {
+      sessionStates.clear()
+      publishSessionStores()
+    })
+    expect(within(rowFor('Session 0')).queryByRole('status')).not.toBeInTheDocument()
+    expect(first.unsubscribers.every((fn) => fn.mock.calls.length === 1)).toBe(true)
+    const restored = makeSessionState()
+    act(() => {
+      sessionStates.set('session-0', restored)
+      publishSessionStores()
+    })
+    act(() => restored.store.setState({ currentChatStatus: { status: 'inProgress' } }))
+    expect(within(rowFor('Session 0')).getByRole('status')).toBeInTheDocument()
+  })
+
   it('releases subscriptions when a row leaves the filtered viewport and keeps session stores isolated', async () => {
     const data = sessions.slice(0, 2)
+    for (const item of data) sessionStates.set(item.SessionID, makeSessionState())
+    publishSessionStores()
     const { rerender, unmount } = render(view('', data))
     await screen.findByText('Session 0')
     const first = sessionStates.get(data[0].SessionID)!
@@ -151,6 +195,8 @@ describe('HistoryChatList viewport rendering', () => {
     const originalSubscriptions = [...first.unsubscribers]
     expect(originalSubscriptions.length).toBeGreaterThan(0)
     act(() => first.store.setState({ currentChatStatus: { status: 'inProgress' } }))
+    expect(within(rowFor('Session 0')).getByRole('status')).toBeInTheDocument()
+    expect(within(rowFor('Session 1')).queryByRole('status')).not.toBeInTheDocument()
     expect(second.store.getState().currentChatStatus.status).toBe('idle')
     rerender(view('Session 1', data))
     await waitFor(() => expect(screen.queryByText('Session 0')).not.toBeInTheDocument())
@@ -159,6 +205,9 @@ describe('HistoryChatList viewport rendering', () => {
     await screen.findByText('Session 0')
     expect(sessionStates.get(data[0].SessionID)).toBe(first)
     expect(first.store.getState().currentChatStatus.status).toBe('inProgress')
+    expect(within(rowFor('Session 0')).getByRole('status')).toBeInTheDocument()
+    act(() => first.store.setState({ currentChatStatus: { status: 'idle' } }))
+    expect(within(rowFor('Session 0')).queryByRole('status')).not.toBeInTheDocument()
     unmount()
     expect([...sessionStates.values()].flatMap((s) => s.unsubscribers).every((fn) => fn.mock.calls.length === 1)).toBe(
       true,

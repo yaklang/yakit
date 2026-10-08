@@ -1,4 +1,4 @@
-import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
+import type { AIChatSubmitParams } from '@/pages/ai-agent/aiAgentChat/type'
 import type { AIChatQSData } from '../hooks/aiRender'
 import type { AIInputEvent } from '../hooks/grpcApi'
 import type React from 'react'
@@ -8,7 +8,7 @@ import type { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButt
 export type DataDetailsButtonProps = Omit<YakitButtonProp, 'icon' | 'children'>
 
 export interface AIReActChatRefProps extends AIChatTextareaRefProps {
-  handleStart: (value: HandleStartParams) => void
+  handleStart: (value: AIChatSubmitParams) => void
 }
 export interface AIHandleStartParams {
   params: AIInputEvent
@@ -20,6 +20,7 @@ export interface AIHandleStartResProps {
   params: AIInputEvent
   extraParams?: AIHandleStartExtraProps
   onChat?: () => void
+  onSessionBound?: (sessionId: string) => void
 }
 export interface AISendParams {
   params: AIInputEvent

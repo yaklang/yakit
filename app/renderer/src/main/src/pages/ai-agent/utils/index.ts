@@ -3,9 +3,9 @@ import isNil from 'lodash/isNil'
 import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '../defaultConstant'
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
 import type { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
-import type { HandleStartParams } from '../aiAgentChat/type'
+import type { AIChatSubmitParams } from '../aiAgentChat/type'
 import { omit } from 'lodash'
-import { randomString } from '@/utils/randomUtil'
+import { v4 as uuidv4 } from 'uuid'
 import { isIRify } from '@/utils/envfile'
 import type { UseChatIPCStartParams } from '../useContext/AIAgentContext'
 import type { AISession } from '../type/aiChat'
@@ -151,7 +151,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
 }
 
 /** @name 将前端的结构转化为符合定义的结构 */
-export const getAIReActRequestParams = (value: HandleStartParams) => {
+export const getAIReActRequestParams = (value: AIChatSubmitParams) => {
   const { mentionList = [], imageList = [], httpFlowList = [], codeBlockList = [] } = value
 
   let attachedResourceInfo: AIInputEvent['AttachedResourceInfo'] = []
@@ -235,7 +235,7 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
 
 /** 生成对话得 SessionId */
 export const createActiveChatSessionId = () => {
-  return randomString(40)
+  return uuidv4()
 }
 
 interface ReStartParams {
@@ -278,10 +278,12 @@ export const onReStart = (props: ReStartParams) => {
       IsStart: true,
       Params: {
         ...request,
+        TimelineSessionID: activeChat.SessionID,
       },
     }
     onStart({
-      token: sessionId,
+      kind: 'resume',
+      sessionId: sessionId,
       params: aiInputEvent,
       localSource: resolveLocalSource(activeChat),
     })

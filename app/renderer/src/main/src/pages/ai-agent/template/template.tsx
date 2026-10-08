@@ -52,6 +52,7 @@ import OpenFileDropdown, { type OpenFileDropdownItem } from '../aiChatWelcome/Op
 import { UploadFileButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
 import { AIInputSettingPopover } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { yakitNotify } from '@/utils/notification'
 import type { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
@@ -219,9 +220,15 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     const aiMilkdownInputRef = useRef<AIMilkdownInputRef>(null)
     const handleSubmit = useMemoizedFn(() => {
-      let qs = getMarkdownValue()
-      if ((!qs.trim() && !selectedHttpFlowIds.length) || !editorMilkdown.current) return
+      if (!editorMilkdown.current) return
       const { mentions, imageList, httpFlowList, codeBlockList } = extractDataWithMilkdown(editorMilkdown.current)
+      // 保存完成事件写回图片路径前，不能将 blob 地址交给会话绑定和图片采纳流程。
+      if (imageList.some((src) => src.startsWith('blob:'))) {
+        yakitNotify('warning', t('AIMilkdownInput.imagesNotSaved'))
+        return
+      }
+      let qs = getMarkdownValue()
+      if (!qs.trim() && !selectedHttpFlowIds.length) return
       if (selectedHttpFlowIds.length) {
         // 为了回显勾选的流量数据，需要在发送消息前将流量数据拼接到用户输入的文本中
         const referenceMarkdown = editorMilkdown.current.action((ctx) => {

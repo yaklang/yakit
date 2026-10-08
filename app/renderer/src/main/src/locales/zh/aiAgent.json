@@ -207,6 +207,7 @@
   },
   "AIChatLoading": {
     "sessionInitializing": "会话初始化中...",
+    "connectingSession": "正在连接会话...",
     "loadingHistory": "获取历史数据中...",
     "waitingReply": "等待AI回复...",
     "questionExecuting": "问题执行中...",
@@ -216,6 +217,22 @@
     "executingSessionsLimitLoggedOutSuffix": "后可同时5个",
     "sessionClosing": "会话正在关闭...",
     "sessionClosed": "会话已关闭"
+  },
+  "ChatSessionNotify": {
+    "connectionStopped": "连接已停止",
+    "cacheDeleting": "会话缓存删除中，请稍后再连接",
+    "duplicateSession": "会话已经存在，请勿重复建立！",
+    "initFailed": "AI 会话初始化失败: {{error}}",
+    "sessionMissing": "会话不存在，无法发送消息",
+    "historyLoading": "历史消息加载中，请稍后再发送",
+    "reviewMissing": "未获取到 review 信息, 操作无效",
+    "connectFailed": "AI 会话连接失败: {{error}}",
+    "finalizeFailed": "AI 会话收尾失败: {{error}}",
+    "endedBeforeReady": "会话连接已结束，尚未完成初始化",
+    "initTimeout": "AI 会话初始化超时，请检查引擎连接后重试",
+    "sessionIdMismatch": "引擎返回的会话 ID 不一致",
+    "sessionIdOccupied": "引擎返回了已存在的会话 ID",
+    "invalidHistoryCursor": "历史恢复未返回有效游标"
   },
   "AIScheduledTasks": {
     "title": "定时任务",
@@ -794,7 +811,8 @@
   },
   "AIMilkdownInput": {
     "placeholder": "向我提问，@使用技能、工具、文件和知识库，/选择模式",
-    "selectedHttpFlowSummary": "勾选了 {{count}} 条流量"
+    "selectedHttpFlowSummary": "勾选了 {{count}} 条流量",
+    "imagesNotSaved": "图片尚未保存完成，请稍后重试；若保存失败，请移除失败图片后重新上传"
   },
   "AIMilkdownModeSlash": {
     "selectMode": "请选择模式",

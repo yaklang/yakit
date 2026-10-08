@@ -46,7 +46,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   // ai-agent-chat 全局配置
   const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
   // 当前展示对话
-  const [activeChat, setActiveChat] = useState<AISession | undefined>(props.initialSession)
+  const [activeChat, updateActiveChat] = useState<AISession | undefined>(props.initialSession)
 
   const [show, setShow] = useState<boolean>(false)
   const [sideRatio, setSideRatio] = useState('360px')
@@ -82,7 +82,16 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     persistAIAgentChatSetting(getSetting())
   }, [setting])
 
-  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(YakitRoute.AI_Agent, pageId)
+  const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat, detachPendingChat } = useChatIPC(
+    YakitRoute.AI_Agent,
+    pageId,
+    true,
+  )
+
+  const setActiveChat = useMemoizedFn<AIAgentContextDispatcher['setActiveChat']>((next) => {
+    detachPendingChat()
+    updateActiveChat(next)
+  })
 
   const store: AIAgentContextStore = useMemo(() => {
     return {
@@ -90,8 +99,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       activeChat: activeChat,
       openChatInNewTab: true,
       pageId,
+      pendingChat,
     }
-  }, [setting, activeChat, pageId])
+  }, [setting, activeChat, pageId, pendingChat])
   const dispatcher: AIAgentContextDispatcher = useMemo(() => {
     return {
       getSetting: getSetting,
@@ -101,6 +111,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       onSend,
       onClose,
       onUpdatePageId,
+      cancelPendingChat,
     }
   }, [])
 

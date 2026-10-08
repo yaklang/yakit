@@ -1,3 +1,4 @@
+import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import React, { forwardRef } from 'react'
 import type { AIReactChatTextareaProps } from './type'
 import { AIChatTextarea } from '@/pages/ai-agent/template/template'
@@ -13,6 +14,7 @@ export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.mem
   forwardRef((props, ref) => {
     const { handleSubmit, externalParameters, handleStopCasualTask } = props
 
+    const { pendingChat } = useAIAgentStore()
     const store = useCurrentStore()
     const cancelChatLoading = useStore(store, (state) => state.cancelChatLoading)
     const casualLoading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
@@ -22,7 +24,7 @@ export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.mem
       <AIChatTextarea
         ref={ref}
         milkdownClassName={styles['milkdown-input']}
-        loading={false}
+        loading={pendingChat?.status === 'connecting'}
         onSubmit={handleSubmit}
         inputFooterRight={
           <div className={styles['extra-footer-right']}>

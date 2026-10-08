@@ -207,6 +207,7 @@
   },
   "AIChatLoading": {
     "sessionInitializing": "Initializing session...",
+    "connectingSession": "Connecting session...",
     "loadingHistory": "Loading history...",
     "waitingReply": "Waiting for AI reply...",
     "questionExecuting": "Executing question...",
@@ -216,6 +217,22 @@
     "executingSessionsLimitLoggedOutSuffix": " to run up to 5",
     "sessionClosing": "Closing session...",
     "sessionClosed": "Session closed"
+  },
+  "ChatSessionNotify": {
+    "connectionStopped": "Connection stopped",
+    "cacheDeleting": "Session cache is being deleted. Try connecting again later.",
+    "duplicateSession": "This session already exists. Do not connect again.",
+    "initFailed": "Failed to initialize the AI session: {{error}}",
+    "sessionMissing": "Session does not exist. Unable to send the message.",
+    "historyLoading": "History is still loading. Try sending again later.",
+    "reviewMissing": "Review details are unavailable. The action was ignored.",
+    "connectFailed": "AI session connection failed: {{error}}",
+    "finalizeFailed": "Failed to finish the AI session: {{error}}",
+    "endedBeforeReady": "The session connection ended before initialization completed",
+    "initTimeout": "AI session initialization timed out. Check the engine connection and try again.",
+    "sessionIdMismatch": "The engine returned inconsistent session IDs.",
+    "sessionIdOccupied": "The engine returned a session ID that already exists.",
+    "invalidHistoryCursor": "History recovery did not return a valid cursor."
   },
   "AIScheduledTasks": {
     "title": "Scheduled Tasks",
@@ -794,7 +811,8 @@
   },
   "AIMilkdownInput": {
     "placeholder": "Ask me anything, @ for skills/tools/files/knowledge, / for mode",
-    "selectedHttpFlowSummary": "Selected {{count}} HTTP flows"
+    "selectedHttpFlowSummary": "Selected {{count}} HTTP flows",
+    "imagesNotSaved": "Images have not finished saving. Please try again shortly. If saving failed, remove the failed images and upload them again."
   },
   "AIMilkdownModeSlash": {
     "selectMode": "Select a mode",

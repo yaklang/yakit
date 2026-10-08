@@ -18,7 +18,7 @@ import { yakitNotify } from '@/utils/notification'
 import { onNewChat, openAIAgentChatTab } from '../HistoryChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { SessionListDispatcher } from './hook/useSessionList'
-import { AITaskStatus, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AITaskStatus, type AITaskStatusType, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
 import { handAIHistoryChatRemove, AISessionDeleteCancelledError } from '../utils'
 import useGetChatDataStoreKey, { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
@@ -26,8 +26,14 @@ import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionCon
 import type { HistoryChatListItemProps } from './type'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
+import { createStore } from 'zustand/vanilla'
 import { YakitSolidLoading } from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+
+// 未在前端绑定的历史记录共用空状态，不创建完整的会话数据。
+const idleSessionStore = createStore<{ currentChatStatus: { status?: AITaskStatusType } }>(() => ({
+  currentChatStatus: {},
+}))
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -360,11 +366,11 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const activeSessionId = useCurrentSessionId()
 
-  const store = useCreation(() => {
-    return globalSessionEngine?.ensureSession(item.SessionID)?.store
-  }, [item.SessionID])
-
-  const loading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
+  const store = useStore(globalSessionEngine.sessionStores, (stores) => stores.get(item.SessionID))
+  const loading = useStore(
+    store ?? idleSessionStore,
+    (state) => state.currentChatStatus.status === AITaskStatus.inProgress,
+  )
   const [delLoading, setDelLoading] = useState<boolean>(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const displayTitle = useCreation(() => {

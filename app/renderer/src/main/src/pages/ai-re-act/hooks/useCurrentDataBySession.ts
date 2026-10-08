@@ -1,3 +1,4 @@
+import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import { globalSessionEngine } from './ChatMultiSessionController'
 import useCurrentSessionId from './useCurrentSessionId'
 
@@ -6,7 +7,8 @@ import useCurrentSessionId from './useCurrentSessionId'
  */
 function useCurrentDataBySession() {
   const sessionId = useCurrentSessionId()
-  return globalSessionEngine.ensureSession(sessionId)
+  const { pendingChat } = useAIAgentStore()
+  return pendingChat?.data ?? globalSessionEngine.ensureSession(sessionId)
 }
 
 /**
