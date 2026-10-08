@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import cloneDeep from 'lodash/cloneDeep'
 import type { PlanItemDetailsData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
@@ -130,5 +130,72 @@ describe('AITaskExecutionDetails 快照刷新', () => {
     expect(todoDetail.mock.calls.at(-1)![0].todoData).toBe(renderedTodo)
     expect(renderedTodo.items[0]).toMatchObject({ content: '原始感知待办', status: 'PENDING' })
     expect(renderedTodo.stats).toMatchObject({ pending: 1, done: 0 })
+  })
+})
+
+/** 漏洞个数为真实 DOM（HorizontalScrollCard 已 mock），限定在该卡片内断言避免与其它「暂无」冲突 */
+const getRiskMetric = () => screen.getByText('漏洞个数').parentElement as HTMLElement
+
+describe('AITaskExecutionDetails 漏洞个数', () => {
+  it('risk_level_count 按严重/高危/中危/低危/信息映射，info 与 other 合并', () => {
+    const data = createTask('task-risk', '漏洞映射感知')
+    data.execution.risk_level_count = {
+      critical: 4,
+      high: 6,
+      warning: 1,
+      low: 3,
+      info: 5,
+      other: 3,
+      total: 22,
+    }
+    render(<AITaskExecutionDetails taskId="task-risk" />)
+
+    const riskMetric = getRiskMetric()
+    expect(riskMetric).toHaveTextContent('4｜6｜1｜3｜8')
+    for (const value of ['4', '6', '1', '3', '8']) {
+      expect(within(riskMetric).getByText(value)).toBeInTheDocument()
+    }
+  })
+
+  it('等级计数为 0 时不展示该等级', () => {
+    const data = createTask('task-risk-partial-zero', '漏洞过滤感知')
+    data.execution.risk_level_count = {
+      critical: 2,
+      high: 0,
+      warning: 0,
+      low: 1,
+      info: 0,
+      other: 0,
+      total: 3,
+    }
+    render(<AITaskExecutionDetails taskId="task-risk-partial-zero" />)
+
+    const riskMetric = getRiskMetric()
+    expect(within(riskMetric).getByText('2')).toBeInTheDocument()
+    expect(within(riskMetric).getByText('1')).toBeInTheDocument()
+    expect(riskMetric.textContent || '').not.toMatch(/(^|[｜])0([｜]|$)/)
+    expect(riskMetric).toHaveTextContent('2｜1')
+  })
+
+  it('缺 risk_level_count 时回退展示 risk_count', () => {
+    const data = createTask('task-risk-fallback', '漏洞回退感知')
+    // 模拟后端未下发等级明细，仅有总数
+    delete (data.execution as { risk_level_count?: unknown }).risk_level_count
+    data.execution.risk_count = 9
+    render(<AITaskExecutionDetails taskId="task-risk-fallback" />)
+
+    const riskMetric = getRiskMetric()
+    expect(riskMetric).toHaveTextContent('漏洞个数9')
+    expect(within(riskMetric).getByText('9')).toBeInTheDocument()
+  })
+
+  it('无 execution 时显示「暂无」', () => {
+    const data = createTask('task-risk-empty', '无执行感知')
+    delete (data as { execution?: unknown }).execution
+    render(<AITaskExecutionDetails taskId="task-risk-empty" />)
+
+    const riskMetric = getRiskMetric()
+    expect(riskMetric).toHaveTextContent('漏洞个数暂无')
+    expect(within(riskMetric).getByText('暂无')).toBeInTheDocument()
   })
 })

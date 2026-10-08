@@ -68,6 +68,7 @@ import useCurrentTaskData from '@/pages/ai-re-act/hooks/useCurrentTaskData/useCu
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
+import { getSessionRiskTagEntries } from '@/pages/ai-re-act/aiRightPanel/riskLevelCount'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName, onClose } = props
@@ -158,7 +159,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
 
   const toolCall = useCreation(() => {
     if (!planItemDetailsData?.execution)
-      return ['成功', '失败次数', '总次数'].map((item) => ({ Id: item, Data: '暂无', Timestamp: 0 }))
+      return ['成功', '失败', '总尝试次数'].map((item) => ({ Id: item, Data: '暂无', Timestamp: 0 }))
     return [
       {
         Data: `${planItemDetailsData?.execution?.tool_call_success ?? `0`}`,
@@ -167,12 +168,12 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
       },
       {
         Data: `${planItemDetailsData?.execution?.tool_call_failed ?? `0`}`,
-        Id: '失败次数',
+        Id: '失败',
         Timestamp: 0,
       },
       {
         Data: `${planItemDetailsData?.execution?.tool_call_total ?? `0`}`,
-        Id: '总次数',
+        Id: '总尝试次数',
         Timestamp: 0,
       },
     ]
@@ -197,10 +198,14 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     if (!planItemDetailsData?.execution) return '暂无'
     return `${planItemDetailsData?.execution.http_flow_count ?? `0`}`
   }, [planItemDetailsData?.execution?.http_flow_count])
-  const riskCount = useCreation(() => {
+  const riskLevelEntries = useCreation(
+    () => getSessionRiskTagEntries(planItemDetailsData?.execution?.risk_level_count),
+    [planItemDetailsData?.execution?.risk_level_count],
+  )
+  const riskCountFallback = useCreation(() => {
     if (!planItemDetailsData?.execution) return '暂无'
-    return `${planItemDetailsData?.execution.risk_count ?? `0`}`
-  }, [planItemDetailsData?.execution?.risk_count])
+    return `${planItemDetailsData.execution.risk_level_count?.total ?? planItemDetailsData.execution.risk_count ?? 0}`
+  }, [planItemDetailsData?.execution?.risk_count, planItemDetailsData?.execution?.risk_level_count?.total])
 
   const showForge = useCreation(() => {
     if (!planItemDetailsData) return false
@@ -243,81 +248,95 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
 
       <div className={styles['content-body']}>
         <div className={styles['summary-section']}>
-          <HorizontalScrollCardItemInfoMultiple info={toolCall} tag={'工具调用'} />
-          <HorizontalScrollCardItemInfoSingle
-            item={{ Id: '执行时长', Data: executionMinutes, Timestamp: 0 }}
-            tag="执行时长"
-            compact={false}
+          <HorizontalScrollCardItemInfoMultiple
+            info={toolCall}
+            tag={'工具调用统计'}
+            className={styles['summary-tool-card']}
           />
-
-          <HorizontalScrollCardItemInfoSingle
-            item={{ Id: '产生流量数', Data: httpFlowCount, Timestamp: 0 }}
-            tag="产生流量数"
-            compact={false}
-          />
-
-          <HorizontalScrollCardItemInfoSingle
-            item={{ Id: '漏洞数', Data: riskCount, Timestamp: 0 }}
-            tag="漏洞数"
-            compact={false}
+          <div className={styles['summary-metric-stack']}>
+            <HorizontalScrollCardItemInfoSingle
+              item={{ Id: '执行时长', Data: executionMinutes, Timestamp: 0 }}
+              tag="执行时长"
+              compact
+              className={styles['summary-metric-lake-blue']}
+            />
+            <HorizontalScrollCardItemInfoSingle
+              item={{ Id: '产生流量数', Data: httpFlowCount, Timestamp: 0 }}
+              tag="产生流量数"
+              compact
+              className={styles['summary-metric-purple']}
+            />
+            <div className={classNames(styles['summary-metric-risk'], styles['summary-metric-magenta'])}>
+              <div className={styles['summary-metric-label']}>漏洞个数</div>
+              {riskLevelEntries.length > 0 ? (
+                <span className={styles['risk-tag']}>
+                  {riskLevelEntries.map((entry, index) => (
+                    <React.Fragment key={entry.field}>
+                      {index > 0 && <span className={styles['risk-tag-separator']}>｜</span>}
+                      <span className={classNames(styles['risk-tag-value'], styles[`risk-tag-value-${entry.field}`])}>
+                        {entry.value}
+                      </span>
+                    </React.Fragment>
+                  ))}
+                </span>
+              ) : (
+                <div className={styles['summary-metric-data']}>{riskCountFallback}</div>
+              )}
+            </div>
+          </div>
+          <AITaskExecutionDetailsCard title="任务目标" content={taskGoal} className={styles['summary-info-card']} />
+          <AITaskExecutionDetailsCard
+            title="意图感知"
+            content={perception?.summary}
+            className={styles['summary-info-card']}
           />
         </div>
-        {/* 左侧目标与意图 + 右侧统计 */}
-        <div className={styles['top-section']}>
-          <div className={styles['top-left']}>
-            <AITaskExecutionDetailsCard title="任务目标" content={taskGoal} />
-            <AITaskExecutionDetailsCard title="意图感知" content={perception?.summary} />
+        <div className={styles['task-statistics']}>
+          <div className={styles['stats-header']}>
+            <span className={styles['title']}>待办任务</span>
+            {!!total && todoListCardData && <AIToDoListDetail todoData={todoListCardData} />}
           </div>
-          <div className={styles['task-statistics']}>
-            <div className={styles['stats-header']}>
-              <span className={styles['title']}>待办任务</span>
-              {!!total && todoListCardData && <AIToDoListDetail todoData={todoListCardData} />}
-            </div>
-            {total ? (
-              <>
-                {/* 状态统计区块 */}
-                <AITaskStatisticsStatus list={todoData.progressNumber} />
-                <div className={styles['stats-content']}>
-                  {/* 待办列表区块 */}
-                  <div className={styles['todo-list-wrapper']}>
-                    <div className={styles['todo-list-header']}>
-                      <span className={styles['todo-title']}>待办</span>
-                      <YakitTag border={false} fullRadius size="small">
-                        {todoData.unFinish.length}
-                      </YakitTag>
-                    </div>
-                    <div className={styles['todo-list']}>
-                      {todoData.unFinish.map((item, index) => (
-                        <AIToDoListItem key={index} item={item} />
-                      ))}
-                    </div>
+          {total ? (
+            <>
+              <AITaskStatisticsStatus list={todoData.progressNumber} />
+              <div className={styles['stats-content']}>
+                <div className={styles['todo-list-wrapper']}>
+                  <div className={styles['todo-list-header']}>
+                    <span className={styles['todo-title']}>待办</span>
+                    <YakitTag border={false} fullRadius size="small">
+                      {todoData.unFinish.length}
+                    </YakitTag>
                   </div>
-                  {/* 已结束 */}
-                  <div className={styles['todo-list-wrapper']}>
-                    <div className={styles['todo-list-header']}>
-                      <span className={styles['todo-title']}>已结束</span>
-                      <YakitTag border={false} fullRadius size="small">
-                        {todoData.finished.length}
-                      </YakitTag>
-                    </div>
-                    <div className={styles['todo-list']}>
-                      {todoData.finished.map((item, index) => (
-                        <AIToDoListItem key={index} item={item} />
-                      ))}
-                    </div>
+                  <div className={styles['todo-list']}>
+                    {todoData.unFinish.map((item, index) => (
+                      <AIToDoListItem key={index} item={item} />
+                    ))}
                   </div>
                 </div>
-              </>
-            ) : (
-              <div className={styles['empty-body']}>
-                <YakitEmpty
-                  styles={{ image: { width: 160, height: 140 } }}
-                  title="暂无待办任务"
-                  description="当前任务暂未生成待办任务，请稍后查看"
-                />
+                <div className={styles['todo-list-wrapper']}>
+                  <div className={styles['todo-list-header']}>
+                    <span className={styles['todo-title']}>已结束</span>
+                    <YakitTag border={false} fullRadius size="small">
+                      {todoData.finished.length}
+                    </YakitTag>
+                  </div>
+                  <div className={styles['todo-list']}>
+                    {todoData.finished.map((item, index) => (
+                      <AIToDoListItem key={index} item={item} />
+                    ))}
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
+            </>
+          ) : (
+            <div className={styles['empty-body']}>
+              <YakitEmpty
+                styles={{ image: { width: 160, height: 140 } }}
+                title="暂无待办任务"
+                description="当前任务暂未生成待办任务，请稍后查看"
+              />
+            </div>
+          )}
         </div>
         {showBackgroundProcesses && (
           <div className={styles['section']}>

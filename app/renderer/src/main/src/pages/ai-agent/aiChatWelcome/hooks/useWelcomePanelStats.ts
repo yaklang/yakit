@@ -5,8 +5,8 @@ import type { AIRightPanelRiskCounts } from '@/pages/ai-re-act/aiRightPanel/type
 
 /**
  * 与漏洞列表的等级别名保持一致，其余等级汇入信息。
- * 注意：任务快照侧另有固定字段的等级映射（AIRightPanel.tsx 的 ChatRightPanel），
- * 两处语义不同未合并——这里归并后端 RiskLevelGroup 的多别名，那边映射快照 risk_level_count 的固定字段；
+ * 注意：任务快照侧另有固定字段映射（aiRightPanel/riskLevelCount.mapSessionRiskLevelCount），
+ * 两处语义不同未合并——这里归并后端 RiskLevelGroup 的多别名，那边映射快照 risk_level_count；
  * 调整等级归并规则时两处需同步检查。
  */
 const getRiskCounts = (groups: RiskFieldGroupResponse['RiskLevelGroup']): AIRightPanelRiskCounts => {
