@@ -1,4 +1,5 @@
 const { randomBytes } = require('crypto')
+const os = require('os')
 const { createEngineStartup, stopEngineChild } = require('./engineStartup')
 const { ENGINE_TIMEOUTS, createLocalEndpoint, endpointAddress, validPort } = require('./engineEndpoint')
 const { redactEngineData } = require('./engineDiagnostics')
@@ -16,6 +17,8 @@ function mayFallback(result) {
     return false
   const code = result.reasonCode || result.engineEvent?.reasonCode
   if (['database', 'auth', 'dial', 'version_rpc', 'wait_connect'].includes(result.engineEvent?.phase)) return false
+  // Win7 named-pipe listen is reported as ipc_bind_failed, not an unknown flag.
+  if (code === 'ipc_bind_failed' && process.platform === 'win32' && /^6\.1\./.test(os.release())) return true
   // General bind_failed, UNAVAILABLE, timeout and silent exits are NOT capability evidence.
   return ['ipc_cli_unsupported', 'ipc_bind_in_use', 'ipc_bind_denied'].includes(code)
 }
