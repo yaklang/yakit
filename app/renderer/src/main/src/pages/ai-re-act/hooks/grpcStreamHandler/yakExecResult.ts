@@ -20,7 +20,7 @@ const handleStatus: AIMessageHandler = (request) => {
 
   const isLoadingStatus = ['re-act-loading-status-key', 'plan-executing-loading-status-key'].includes(data.key)
   if (isLoadingStatus) {
-    const statusKey = JSON.stringify([data.key, res.TaskId, res.CoordinatorId])
+    const statusKey = JSON.stringify([data.key, res.TaskId])
     const latestTimestamp = meta.loadingStatusTimestamps.get(statusKey)
     if (latestTimestamp !== undefined && latestTimestamp > res.Timestamp) return
     meta.loadingStatusTimestamps.set(statusKey, res.Timestamp)

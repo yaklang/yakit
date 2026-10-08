@@ -180,7 +180,7 @@ describe('yakExecResult handlers', () => {
     req.res = makeGrpcJsonRes(
       'structured',
       { key: 're-act-loading-status-key', value: '等待回复' },
-      { NodeId: 'status', TaskId: 'q1', Timestamp: 19 },
+      { NodeId: 'status', TaskId: 'q1', CoordinatorId: 'previous-response', Timestamp: 19 },
     )
     aiYakExecResultDataHandlers.status(req)
     expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('正在调用读取文件')
