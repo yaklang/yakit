@@ -37,11 +37,7 @@ module.exports = {
             if (!FS.existsSync(folderPath)) {
               FS.mkdirSync(folderPath)
             }
-
-            const outputZip = path.join(folderPath, 'risk-html.zip')
-            FS.copyFileSync(path.join(getHtmlTemplateDir(), 'risk-html.zip'), outputZip)
-            await compressing.zip.uncompress(outputZip, folderPath)
-            FS.unlinkSync(outputZip)
+            await compressing.zip.uncompress(path.join(getHtmlTemplateDir(), 'risk-html.zip'), folderPath)
             const filePath1 = path.join(folderPath, `${fileName}.html`)
             const filePath2 = path.join(folderPath, 'data.js')
             FS.writeFileSync(filePath1, htmlContent, 'utf-8')
