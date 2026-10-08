@@ -37,7 +37,7 @@ workflow 只在**目标分支是 `master`** 的 PR 上监听 `labeled` 事件。
 │ Labels：ready                                            │  <- 绿色 text_tag
 │ ──────────────────────────────────────────────────────── │
 │ 触发时间 2026/10/07 02:06                                │
-│ [打开 PR]  [复制 PR 链接]                                │  <- footer，只能 open_url
+│ [打开 PR]                                                │  <- footer，只能 open_url
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -47,7 +47,7 @@ workflow 只在**目标分支是 `master`** 的 PR 上监听 `labeled` 事件。
 | --- | --- | --- |
 | 标题 | `ready`：请值班人员审阅并合并；`need more test`：请产品进行测试。其它标签用 PR title。没有副标题 | 本次打上的标签 |
 | 内容 | 第一行是 PR title，接着是作者、分支、本次标签 | `pull_request.title` / `user.login` / `base.ref`+`head.ref` / `label.name` |
-| 按钮 | 「打开 PR」和「复制 PR 链接」放在同一行。schema 2.0 的按钮只能 `open_url`，没有复制到剪贴板的交互 | `html_url` |
+| 按钮 | 只有「打开 PR」。schema 2.0 的按钮只能 `open_url` | `html_url` |
 | footer | 触发时间（默认 Asia/Shanghai，24 小时制；可用 `PR_LABEL_TZ` 覆盖）。schema 2.0 不支持 `note`，用小字 markdown | `text_size: notation` |
 
 Labels 只展示这次被打上的那一个标签，用 `<text_tag color='green'>ready</text_tag>` 渲染成彩色 tag。没有标签时显示「无」。
@@ -77,7 +77,7 @@ Labels：ready
 | `fixtures/labeled-ready.json` | 示例事件，只有一个标签 `ready`，会推送。卡片标题由代码生成，不写在这个文件里 |
 | `fixtures/labeled-need-more-test.json` | 示例事件，只有一个标签 `need more test`，会推送。卡片标题由代码生成 |
 | `fixtures/labeled.json` | 示例事件，只有一个标签 `needs-review`，会跳过 |
-| `test/smoke.mjs` | 75 条冒烟用例，用本地 mock 飞书，不打真实 webhook |
+| `test/smoke.mjs` | 77 条冒烟用例，用本地 mock 飞书，不打真实 webhook。不接入 CI，合并前在本地执行 `npm test` |
 
 仓库里的 workflow 不在这个目录，而在 `.github/workflows/pr-label-notify.yml`。
 它 `checkout` 之后执行 `node bots/pr-label/pr-label.mjs`。
@@ -124,7 +124,7 @@ Variables（同一页面的 Variables 标签）可选：
 
 | Name | 默认 | 说明 |
 | --- | --- | --- |
-| `PR_LABEL_MATCH_MODE` | `exact` | `exact`（完全相等，默认）/ `contains`（包含即命中）/ `all`（任何标签都通知）。比较时忽略大小写。标签名单本身不在这里配 |
+| `PR_LABEL_MATCH_MODE` | `exact` | `exact`（完全相等，默认）/ `contains`（包含即命中）/ `all`（任何标签都通知）。比较时忽略大小写。写错或留空都回到 `exact`。标签名单本身不在这里配 |
 | `PR_LABEL_MSG_TYPE` | `interactive` | 填 `text` 降级为纯文本 |
 | `PR_LABEL_KEYWORD` | 空 | 安全设置开了**关键词**才需要，会拼到文本或卡片标题前 |
 
@@ -196,7 +196,7 @@ npm run dry                   # 同一条 ready 事件，只打印卡片，不�
 npm run dry:test              # need more test，只打印卡片，不发送
 npm run dry:skip              # needs-review，日志里会写跳过
 npm run probe                 # 打印连通性测试消息，不发送
-npm test                      # 75 条冒烟用例（本地 mock，不访问飞书）
+npm test                      # 77 条冒烟用例（本地 mock，不访问飞书；CI 不跑这组）
 ```
 
 不经过 npm，直接调脚本：

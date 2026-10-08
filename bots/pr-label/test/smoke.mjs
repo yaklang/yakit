@@ -142,7 +142,14 @@ console.log('\n[3a] 只精确匹配 ready 与 need more test')
   )
   check('标签为空时不命中', isWatched({ label: '' }, watched, { mode: 'exact' }) === false)
 
-  check('contains 模式下 ready-to-merge 仍命中 ready', isWatched({ label: 'ready-to-merge' }, ['ready']) === true)
+  check(
+    'contains 模式下 ready-to-merge 仍命中 ready',
+    isWatched({ label: 'ready-to-merge' }, ['ready'], { mode: 'contains' }) === true,
+  )
+  check(
+    '未知匹配模式按 exact，ready-to-merge 不命中',
+    isWatched({ label: 'ready-to-merge' }, ['ready'], { mode: 'excat' }) === false,
+  )
   check('all 模式任何标签都放行', isWatched(other, watched, { mode: 'all' }) === true)
 
   check(
@@ -159,6 +166,10 @@ console.log('\n[3a] 只精确匹配 ready 与 need more test')
   check(
     'PR_LABEL_MATCH_MODE 可切成 contains',
     resolveConfig({}, { PR_LABEL_MATCH_MODE: 'contains' }).matchMode === 'contains',
+  )
+  check(
+    '写错的 PR_LABEL_MATCH_MODE 回到 exact',
+    resolveConfig({}, { PR_LABEL_MATCH_MODE: 'excat' }).matchMode === 'exact',
   )
 }
 
@@ -199,20 +210,16 @@ console.log('\n[3b] 消息结构：标题=PR title / 内容=作者+分支+URL+la
     markdown.includes("<text_tag color='blue'>needs-review</text_tag>") && !markdown.includes('enhancement') && !markdown.includes('ready'),
   )
 
-  const row = card.card.body.elements.find((el) => el.tag === 'column_set')
-  const buttons = row.columns.flatMap((col) => col.elements)
+  const buttons = card.card.body.elements.filter((el) => el.tag === 'button')
   check(
-    'footer 按钮同一行，只能 open_url，且不包 action',
-    row.flex_mode === 'none' &&
-      buttons.map((btn) => btn.text.content).join('|') === '打开 PR|复制 PR 链接' &&
-      buttons.every(
-        (btn) =>
-          btn.tag === 'button' &&
-          btn.behaviors.length === 1 &&
-          btn.behaviors[0].type === 'open_url' &&
-          btn.behaviors[0].default_url === 'https://github.com/yaklang/yakit/pull/128',
-      ) &&
-      !card.card.body.elements.some((el) => el.tag === 'action' || el.tag === 'button'),
+    'footer 只有打开 PR，只能 open_url，且不包 action',
+    buttons.length === 1 &&
+      buttons[0].text.content === '打开 PR' &&
+      buttons[0].behaviors.length === 1 &&
+      buttons[0].behaviors[0].type === 'open_url' &&
+      buttons[0].behaviors[0].default_url === 'https://github.com/yaklang/yakit/pull/128' &&
+      !card.card.body.elements.some((el) => el.tag === 'action' || el.tag === 'column_set') &&
+      !JSON.stringify(card).includes('复制 PR 链接'),
   )
 
   const footer = card.card.body.elements.find((el) => el.text_size === 'notation')

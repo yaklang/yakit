@@ -68,6 +68,15 @@ export function parseNumber(value, fallback) {
  * 以后要多通知一个标签，直接在这里加一项。
  */
 export const WATCH_LABELS = ['ready', 'need more test']
+const MATCH_MODES = new Set(['exact', 'contains', 'all'])
+
+/** 只接受 exact / contains / all。空值或拼写错误都回到 exact，避免误放宽成包含匹配。 */
+export function normalizeMatchMode(value) {
+  const mode = String(value ?? '')
+    .trim()
+    .toLowerCase()
+  return MATCH_MODES.has(mode) ? mode : 'exact'
+}
 
 /**
  * 飞书只给一个 webhook URL，整条填进 PR_LABEL_WEBHOOK_URL 即可。
@@ -171,8 +180,9 @@ export function normalizeEvent(input) {
  * contains：标签名包含白名单某项即命中。
  * all：任何标签都通知（白名单失效）。
  */
-export function isWatched(event, labels, { mode = 'contains' } = {}) {
-  if (mode === 'all') return true
+export function isWatched(event, labels, { mode = 'exact' } = {}) {
+  const matchMode = normalizeMatchMode(mode)
+  if (matchMode === 'all') return true
   if (!Array.isArray(labels) || labels.length === 0) return true
   const target = String(event.label ?? '')
     .trim()
@@ -183,7 +193,7 @@ export function isWatched(event, labels, { mode = 'contains' } = {}) {
       .trim()
       .toLowerCase()
     if (needle === '') return false
-    return mode === 'exact' ? target === needle : target.includes(needle)
+    return matchMode === 'contains' ? target.includes(needle) : target === needle
   })
 }
 
@@ -230,7 +240,7 @@ function openUrlButton(text, url, type) {
 /**
  * 卡片 JSON 2.0。webhook 机器人不能挂请求回调，按钮只能 open_url。
  * 内容第一行是 PR title，随后是作者、分支、本次标签。
- * footer 的「打开 PR」和「复制 PR 链接」放在同一行，都只能 open_url。
+ * footer 只有「打开 PR」，只能 open_url。
  */
 export function buildCard(event, { msgType = 'interactive' } = {}) {
   const prTitle = truncate(event.title || `#${event.number}`, 80)
@@ -270,26 +280,7 @@ export function buildCard(event, { msgType = 'interactive' } = {}) {
     },
   ]
 
-  if (event.url) {
-    elements.push({
-      tag: 'column_set',
-      flex_mode: 'none',
-      horizontal_align: 'left',
-      horizontal_spacing: '8px',
-      columns: [
-        {
-          tag: 'column',
-          width: 'auto',
-          elements: [openUrlButton('打开 PR', event.url, 'primary')],
-        },
-        {
-          tag: 'column',
-          width: 'auto',
-          elements: [openUrlButton('复制 PR 链接', event.url, 'default')],
-        },
-      ],
-    })
-  }
+  if (event.url) elements.push(openUrlButton('打开 PR', event.url, 'primary'))
 
   return {
     msg_type: 'interactive',
@@ -427,7 +418,7 @@ export function resolveConfig(argv = {}, env = process.env) {
     timeoutMs: parseNumber(pickNonEmpty(env.PR_LABEL_TIMEOUT_MS), 10000),
     retries: parseNumber(pickNonEmpty(env.PR_LABEL_RETRIES), 3),
     labels: WATCH_LABELS,
-    matchMode: pickNonEmpty(argv.matchMode, env.PR_LABEL_MATCH_MODE) || 'exact',
+    matchMode: normalizeMatchMode(pickNonEmpty(argv.matchMode, env.PR_LABEL_MATCH_MODE)),
     dryRun: Boolean(argv.dryRun),
     probe: Boolean(argv.probe),
     eventFile: pickNonEmpty(argv.eventFile, env.GITHUB_EVENT_PATH),
@@ -524,7 +515,7 @@ export async function main(argv = {}, deps = {}) {
     return { skipped: true }
   }
   if (!isWatched(event, config.labels, { mode: config.matchMode })) {
-    const why = config.matchMode === 'exact' ? '不等于' : '不包含'
+    const why = config.matchMode === 'contains' ? '不包含' : '不等于'
     logger.info(`标签 ${event.label} ${why} [${config.labels.join(', ')}]（mode=${config.matchMode}），跳过`)
     return { skipped: true }
   }
