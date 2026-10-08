@@ -1,5 +1,8 @@
-/** @ 后允许紧跟筛选字符，遇空白结束 */
-export const MENTION_QUERY_REG = /@([^\s]*)$/
+/**
+ * `@` 仅在行首或空白后视为 mention 触发（排除邮箱 `a@b.com`、URL 内 `@` 等）。
+ * lookbehind 不消耗空白，删除区间只含 `@query`。
+ */
+export const MENTION_QUERY_REG = /(?<=^|\s)@([^\s]*)$/
 
 /**
  * 从编辑器 slash content / 光标前文中提取 @ 后的筛选词。
