@@ -1,7 +1,7 @@
 # pr-label：PR 被打上 `ready` 或 `need more test` → 飞书群机器人
 
 脚本在 `bots/pr-label/pr-label.mjs`，由 `.github/workflows/pr-label-notify.yml` 在
-`pull_request` 的 `labeled` 事件里调用。GitHub 把完整事件写进 `GITHUB_EVENT_PATH`，
+`pull_request_target` 的 `labeled` 事件里调用。GitHub 把完整事件写进 `GITHUB_EVENT_PATH`，
 脚本直接读这个文件，**不调 GitHub API**，不需要 PAT，也不需要轮询。
 
 ## 触发条件（默认）
@@ -52,6 +52,7 @@ workflow 只在**目标分支是 `master`** 的 PR 上监听 `labeled` 事件。
 
 Labels 只展示这次被打上的那一个标签，用 `<text_tag color='green'>ready</text_tag>` 渲染成彩色 tag。没有标签时显示「无」。
 标题栏和正文 tag 只分三种颜色：`ready` 绿、`need more test` 橙，其它标签蓝。
+卡片正文中的 PR 标题、作者、分支和标签会做 HTML 实体转义，防止外部文本被解析为 @ 标签、链接或 Markdown 格式。
 
 设 `PR_LABEL_MSG_TYPE=text` 会降级成纯文本，字段顺序相同：
 
@@ -77,10 +78,10 @@ Labels：ready
 | `fixtures/labeled-ready.json` | 示例事件，只有一个标签 `ready`，会推送。卡片标题由代码生成，不写在这个文件里 |
 | `fixtures/labeled-need-more-test.json` | 示例事件，只有一个标签 `need more test`，会推送。卡片标题由代码生成 |
 | `fixtures/labeled.json` | 示例事件，只有一个标签 `needs-review`，会跳过 |
-| `test/smoke.mjs` | 77 条冒烟用例，用本地 mock 飞书，不打真实 webhook。不接入 CI，合并前在本地执行 `npm test` |
+| `test/smoke.mjs` | 83 条冒烟用例，用本地 mock 飞书，不打真实 webhook。不接入 CI，合并前在本地执行 `npm test` |
 
 仓库里的 workflow 不在这个目录，而在 `.github/workflows/pr-label-notify.yml`。
-它 `checkout` 之后执行 `node bots/pr-label/pr-label.mjs`。
+它只 `checkout` 主仓库可信快照中的机器人脚本，然后执行 `node bots/pr-label/pr-label.mjs`。
 
 ---
 
@@ -88,9 +89,9 @@ Labels：ready
 
 `.github/workflows/pr-label-notify.yml` 已经放在本仓库：
 
-- `pull_request` 的 `labeled`，且 PR 目标分支是 `master`：读 `GITHUB_EVENT_PATH`，命中白名单才发飞书。
+- `pull_request_target` 的 `labeled`，且 PR 目标分支是 `master`：读 `GITHUB_EVENT_PATH`，命中白名单才发飞书，支持 fork PR。
 
-`on: pull_request: types: [labeled]` 就是 GitHub 投递给 Actions 的事件，
+`on: pull_request_target: types: [labeled]` 就是 GitHub 投递给 Actions 的事件，
 **不需要公网 webhook 地址**。只有不在 Actions 上跑、改成自建服务时，才要到
 Settings → Webhooks 配 outbound URL。
 
@@ -168,15 +169,17 @@ npm run probe
 
 ---
 
-## 四、触发器的选择
+## 四、触发器与密钥安全
 
-workflow 默认 `pull_request`。但：
+workflow 使用 `pull_request_target`，让 fork PR 的标签事件也能使用主仓库的通知密钥。
 
-- **PR 来自 fork 时，`pull_request` 拿不到 secrets**。GitHub 的安全限制会导致发不出去。
-  开源仓库接外部贡献时，把 `on.pull_request` 改成 `pull_request_target`，并同样限制 `branches: [master]`。
-- `pull_request_target` 跑在**基础分支**上下文、token 有写权限，
-  所以 workflow 显式收紧了 `permissions: contents: read`。本脚本只读事件、发消息。
-- 两者的 `github.event` 结构一样，脚本不用改。
+- checkout 固定主仓库 `${{ github.repository }}` 和事件对应的可信提交 `${{ github.sha }}`，仅取出 `bots/pr-label/pr-label.mjs`。禁止改为 PR 的 head、merge ref 或 fork 仓库，禁止下载并执行 PR 产物。
+- `permissions: contents: read` 限制 GitHub token 权限，`persist-credentials: false` 防止 checkout 将 token 留在 Git 配置中。
+- checkout 与 setup-node 固定完整提交 SHA。workflow 不安装项目依赖、不运行 PR 测试、不恢复缓存。
+- webhook 仅注入配置检查和发送步骤，签名密钥仅注入发送步骤；不输出密钥或完整 webhook。
+- PR 标题、分支和标签只作为 `GITHUB_EVENT_PATH` 中的 JSON 数据读取，不拼接进 shell 命令；卡片正文按普通文本转义。
+
+workflow 和机器人脚本必须先进入主仓库默认分支（当前为 `master`）；仅修改 PR 分支不会改变实际执行的通知脚本。仓库或组织的 Actions 事件策略也需要允许 `pull_request_target`。
 
 ---
 
@@ -196,7 +199,7 @@ npm run dry                   # 同一条 ready 事件，只打印卡片，不�
 npm run dry:test              # need more test，只打印卡片，不发送
 npm run dry:skip              # needs-review，日志里会写跳过
 npm run probe                 # 打印连通性测试消息，不发送
-npm test                      # 77 条冒烟用例（本地 mock，不访问飞书；CI 不跑这组）
+npm test                      # 83 条冒烟用例（本地 mock，不访问飞书；CI 不跑这组）
 ```
 
 不经过 npm，直接调脚本：
@@ -227,7 +230,7 @@ node pr-label.mjs --probe --dry-run
 | Actions 是绿的，但群里没消息 | workflow 的 guard 发现没配 secret，打了 warning 就跳过了 | 看 job 日志里的 `::warning::`，补配 `PR_LABEL_WEBHOOK_URL` |
 | Actions 是绿的，日志写「标签 xxx 不等于 [ready, need more test]」 | 打上的标签不在 `WATCH_LABELS` 里 | 把标签名加进 `pr-label.mjs` 的 `WATCH_LABELS`；想放行全部设 `PR_LABEL_MATCH_MODE=all` |
 | job 根本没触发 | workflow 不在 `.github/workflows/` 下、事件类型不是 `labeled`，或 PR 不是合进 `master` | 检查 `pr-label-notify.yml` 的 `types: [labeled]` 和 `branches: [master]` |
-| fork 的 PR 收不到，本仓库分支的 PR 收得到 | `pull_request` 拿不到 secrets | 换 `pull_request_target` |
+| fork PR 的通知没有触发 | 主仓库仍是旧 workflow，或 Actions 策略限制了事件 | 确认默认分支已合入 `pull_request_target` workflow，并检查仓库或组织的 Actions 事件策略 |
 | 日志含 `19021` | 签名不匹配，或时间戳超过 1 小时 | 核对 `PR_LABEL_SECRET`；本机时间偏差过大也会失败 |
 | 日志含 `19024` | 未命中自定义关键词。关键词只校验标题和文本 | 配 `PR_LABEL_KEYWORD`，或关掉飞书侧的关键词校验 |
 | 日志含 `19022` | 出口 IP 不在飞书白名单 | CI 出口 IP 不固定，不要用 IP 白名单 |

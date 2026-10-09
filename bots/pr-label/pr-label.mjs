@@ -215,15 +215,20 @@ function colorForLabel(name) {
   return 'blue'
 }
 
-function escapeTagText(value) {
-  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+/** 飞书 Markdown 使用 HTML 实体转义；外部文本不能生成标签、链接或格式。 */
+function escapeMarkdownText(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/[\\`*_{}\[\]()#+.!|~:/"'-]/g, (char) => `&#${char.charCodeAt(0)};`)
 }
 
 /** 只展示本次命中的那一个标签。飞书用 text_tag 渲染成彩色 tag。 */
 function labelTag(name) {
   const value = String(name ?? '').trim()
   if (!value) return '无'
-  return `<text_tag color='${colorForLabel(value)}'>${escapeTagText(value)}</text_tag>`
+  return `<text_tag color='${colorForLabel(value)}'>${escapeMarkdownText(value)}</text_tag>`
 }
 
 function openUrlButton(text, url, type) {
@@ -265,7 +270,7 @@ export function buildCard(event, { msgType = 'interactive' } = {}) {
   const elements = [
     {
       tag: 'markdown',
-      content: `${prTitle}\n**作者**：${event.author || '未知'}\n**分支**：${branchText}\n**Labels**：${labelsText}`,
+      content: `${escapeMarkdownText(prTitle)}\n**作者**：${escapeMarkdownText(event.author || '未知')}\n**分支**：${escapeMarkdownText(branchText)}\n**Labels**：${labelsText}`,
       text_align: 'left',
       text_size: 'normal_v2',
       margin: '0px 0px 0px 0px',

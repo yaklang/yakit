@@ -185,7 +185,7 @@ console.log('\n[3b] 消息结构：标题=PR title / 内容=作者+分支+URL+la
   check('标题栏没有副标题', readyHeader.subtitle === undefined)
   check(
     '内容第一行是 PR title',
-    buildCard({ ...event, label: 'ready' }).card.body.elements[0].content.startsWith(event.title),
+    buildCard({ ...event, label: 'ready' }).card.body.elements[0].content.startsWith('feat&#58; 支持通过飞书 webhook 推送 PR 标签变更\n'),
   )
   const testHeader = buildCard({ ...event, label: 'need more test' }).card.header
   check('need more test 标题请产品进行测试', testHeader.title.content === '请产品进行测试')
@@ -203,11 +203,11 @@ console.log('\n[3b] 消息结构：标题=PR title / 内容=作者+分支+URL+la
   )
   check(
     '分支含 head → base',
-    markdown.includes('feat/pr-label-feishu') && markdown.includes('→') && markdown.includes('main'),
+    markdown.includes('feat&#47;pr&#45;label&#45;feishu → main'),
   )
   check(
     '只展示本次标签，并渲染成 text_tag',
-    markdown.includes("<text_tag color='blue'>needs-review</text_tag>") && !markdown.includes('enhancement') && !markdown.includes('ready'),
+    markdown.includes("<text_tag color='blue'>needs&#45;review</text_tag>") && !markdown.includes('enhancement') && !markdown.includes('ready'),
   )
 
   const buttons = card.card.body.elements.filter((el) => el.tag === 'button')
@@ -249,6 +249,41 @@ console.log('\n[3b] 消息结构：标题=PR title / 内容=作者+分支+URL+la
   check('没写标题时回落到 PR 号', buildCard({ title: '', number: 7, labels: [] }).card.header.title.content === '#7')
 }
 
+console.log('\n[3c] 外部文本不能成为卡片标记')
+{
+  const event = {
+    ...normalizeEvent(READY_FIXTURE),
+    title: '<at id=all></at> [打开 PR](https://example.com) **修复**',
+    author: '<at id=ou_test></at>',
+    head: 'feat/<at id=all></at>',
+    base: 'release_[test]',
+    label: '</text_tag><at id=all></at>',
+  }
+  const card = buildCard(event)
+  const markdown = card.card.body.elements[0].content
+  check('标题中的 @ 标签被转义', markdown.startsWith('&lt;at id=all&gt;&lt;&#47;at&gt;'))
+  check(
+    '标题中的链接和加粗被转义',
+    markdown.includes('&#91;打开 PR&#93;&#40;https&#58;&#47;&#47;example&#46;com&#41; &#42;&#42;修复&#42;&#42;'),
+  )
+  check(
+    '作者和两端分支均按普通文本显示',
+    markdown.includes('**作者**：&lt;at id=ou&#95;test&gt;&lt;&#47;at&gt;') &&
+      markdown.includes('**分支**：feat&#47;&lt;at id=all&gt;&lt;&#47;at&gt; → release&#95;&#91;test&#93;'),
+  )
+  check(
+    '标签不能闭合 text_tag 或注入 @ 标签',
+    markdown.includes("<text_tag color='blue'>&lt;&#47;text&#95;tag&gt;&lt;at id=all&gt;&lt;&#47;at&gt;</text_tag>") &&
+      !markdown.includes('<at '),
+  )
+  check('plain_text 标题不做 Markdown 转义', card.card.header.title.content === event.title)
+  const literal = buildCard({ ...event, title: '&lt;at&gt; \\ * _ ` # - + ! | ~ {x}' }).card.body.elements[0].content
+  check(
+    '已有实体、反斜杠和 Markdown 分隔符只按字面值展示',
+    literal.startsWith('&amp;lt;at&amp;gt; &#92; &#42; &#95; &#96; &#35; &#45; &#43; &#33; &#124; &#126; &#123;x&#125;\n'),
+  )
+}
+
 console.log('\n[4] 端到端：dry-run / 真实发送 / 过滤')
 {
   const mock = await startMock()
@@ -270,7 +305,7 @@ console.log('\n[4] 端到端：dry-run / 真实发送 / 过滤')
   check('标题栏没有副标题', mock.calls[0].card?.header?.subtitle === undefined)
   check(
     '正文第一行是 PR title',
-    mock.calls[0].card?.body?.elements?.[0]?.content?.startsWith(normalizeEvent(READY_FIXTURE).title),
+    mock.calls[0].card?.body?.elements?.[0]?.content?.startsWith('【测试】feat&#58; 支持通过飞书 webhook 推送 PR 标签变更\n'),
   )
   check(
     '正文含作者/分支/URL/labels',
