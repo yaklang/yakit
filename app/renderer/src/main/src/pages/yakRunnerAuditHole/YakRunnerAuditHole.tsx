@@ -372,7 +372,13 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
           {t('YakitButton.reset')}
         </YakitButton>
       </div>
-      <VulnerabilityTypePie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} />
+      <VulnerabilityTypePie
+        ref={pieRef}
+        selectList={selectList}
+        list={data}
+        valueField="Name"
+        setSelectList={onSelect}
+      />
     </div>
   )
 })

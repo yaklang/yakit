@@ -1,5 +1,5 @@
 import type React from 'react'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { QueryRisksRequest } from '../YakitRiskTableType'
 import type { Risk } from '../../schema'
@@ -21,6 +21,10 @@ const mocks = vi.hoisted(() => ({
   emit: vi.fn(),
   intervalCallbacks: [] as Array<() => void>,
   queryIncrement: vi.fn(),
+  queryRiskTypes: vi.fn(),
+  queryRiskTags: vi.fn(),
+  columns: [] as any[],
+  refreshRisks: undefined as (() => void) | undefined,
 }))
 
 vi.hoisted(() => {
@@ -82,27 +86,30 @@ vi.mock('@yakit-libs/yakit-ui-icons/colorful', async (importOriginal) => ({
 }))
 
 vi.mock('@/components/TableVirtualResize/TableVirtualResize', () => ({
-  TableVirtualResize: ({ renderTitle, rowSelection, data, pagination }) => (
-    <div>
-      {renderTitle}
-      <span data-testid="loaded-count">{data.length}</span>
-      <button type="button" onClick={() => pagination.onChange(1)}>
-        load-table
-      </button>
-      <button type="button" onClick={() => rowSelection.onChangeCheckboxSingle(true, '11', rows[0])}>
-        select-first
-      </button>
-      <button type="button" onClick={() => rowSelection.onChangeCheckboxSingle(true, '22', rows[1])}>
-        select-second
-      </button>
-      <button type="button" onClick={() => rowSelection.onSelectAll([], rows, true)}>
-        select-all
-      </button>
-      <button type="button" onClick={() => rowSelection.onSelectAll([], [], false)}>
-        clear-selection
-      </button>
-    </div>
-  ),
+  TableVirtualResize: ({ renderTitle, rowSelection, data, pagination, columns }) => {
+    mocks.columns = columns
+    return (
+      <div>
+        {renderTitle}
+        <span data-testid="loaded-count">{data.length}</span>
+        <button type="button" onClick={() => pagination.onChange(1)}>
+          load-table
+        </button>
+        <button type="button" onClick={() => rowSelection.onChangeCheckboxSingle(true, '11', rows[0])}>
+          select-first
+        </button>
+        <button type="button" onClick={() => rowSelection.onChangeCheckboxSingle(true, '22', rows[1])}>
+          select-second
+        </button>
+        <button type="button" onClick={() => rowSelection.onSelectAll([], rows, true)}>
+          select-all
+        </button>
+        <button type="button" onClick={() => rowSelection.onSelectAll([], [], false)}>
+          clear-selection
+        </button>
+      </div>
+    )
+  },
 }))
 
 vi.mock('../RiskBatchOperationsMenu', () => ({
@@ -126,8 +133,8 @@ vi.mock('../utils', () => ({
   apiDeleteRisk: mocks.deleteRisk,
   apiExportHtml: vi.fn().mockResolvedValue(''),
   apiNewRiskRead: vi.fn().mockResolvedValue(null),
-  apiQueryAvailableRiskType: vi.fn().mockResolvedValue([]),
-  apiQueryRiskTags: vi.fn().mockResolvedValue({ RiskTags: [] }),
+  apiQueryAvailableRiskType: mocks.queryRiskTypes,
+  apiQueryRiskTags: mocks.queryRiskTags,
   apiQueryRisks: mocks.queryRisks,
   apiQueryRisksIncrementOrderDesc: mocks.queryIncrement,
   apiRiskFeedbackToOnline: vi.fn().mockResolvedValue(undefined),
@@ -205,7 +212,13 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh' }, i18nRefresh: 0 }),
 }))
 vi.mock('@/utils/eventBus/eventBus', () => ({
-  default: { emit: mocks.emit, on: vi.fn(), off: vi.fn() },
+  default: {
+    emit: mocks.emit,
+    on: (name: string, callback: () => void) => {
+      if (name === 'onRefRiskList') mocks.refreshRisks = callback
+    },
+    off: vi.fn(),
+  },
 }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/utils/kv', () => ({ getRemoteValue: vi.fn().mockResolvedValue('true') }))
@@ -257,6 +270,8 @@ const openBatchEdit = () => {
 describe('YakitRiskTable 批量操作', () => {
   beforeEach(() => {
     mocks.enterprise = true
+    mocks.queryRiskTypes.mockResolvedValue([])
+    mocks.queryRiskTags.mockResolvedValue({ RiskTags: [] })
     mocks.intervalCallbacks.length = 0
     mocks.queryRisks.mockResolvedValue({
       Data: rows,
@@ -273,6 +288,40 @@ describe('YakitRiskTable 批量操作', () => {
   })
 
   afterEach(cleanup)
+
+  it.each([false, true])('类型筛选保持显示名查询合同，缺失时回退，不展示空白项（企业版 %s）', async (enterprise) => {
+    mocks.enterprise = enterprise
+    mocks.queryRiskTypes.mockResolvedValue([
+      { Name: 'info', Verbose: '', Total: 3 },
+      { Name: 'sqli', Verbose: 'SQL注入', Total: 2 },
+      { Name: 'sqli-other', Verbose: 'SQL注入', Total: 1 },
+      { Name: 'custom', Verbose: '   ', Total: 1 },
+      { Name: '', Verbose: '', Total: 1 },
+    ])
+    await renderTable()
+    const filters = mocks.columns.find((column) => column.dataKey === 'RiskTypeVerbose').filterProps.filters
+    expect(filters).toEqual([
+      { value: 'info', label: 'info', total: 3 },
+      { value: 'SQL注入', label: 'SQL注入', total: 3 },
+      { value: 'custom', label: 'custom', total: 1 },
+    ])
+  })
+
+  it('刷新风险列表时同步刷新类型和处置状态选项', async () => {
+    mocks.enterprise = false
+    await renderTable()
+    mocks.queryRiskTypes.mockResolvedValue([{ Name: 'ssrf', Verbose: 'SSRF', Total: 2 }])
+    mocks.queryRiskTags.mockResolvedValue({ RiskTags: [{ Name: '待验证', Total: 2 }] })
+    act(() => mocks.refreshRisks?.())
+    await waitFor(() => {
+      expect(mocks.columns.find((column) => column.dataKey === 'RiskTypeVerbose').filterProps.filters).toEqual([
+        { value: 'SSRF', label: 'SSRF', total: 2 },
+      ])
+      expect(mocks.columns.find((column) => column.dataKey === 'Tags').filterProps.filters).toEqual([
+        { value: '待验证', label: '待验证', total: 2 },
+      ])
+    })
+  })
 
   it('显式选择只提交 IDs，成功后刷新列表与分组', async () => {
     await renderTable()

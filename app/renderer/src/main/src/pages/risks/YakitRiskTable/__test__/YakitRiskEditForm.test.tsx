@@ -1,6 +1,9 @@
 import type React from 'react'
+import { cloneElement, isValidElement } from 'react'
+import moment from 'moment'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import userEvent from '@testing-library/user-event'
 import { YakitRiskEditForm } from '../YakitRiskTable'
 
 const mocks = vi.hoisted(() => ({
@@ -10,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   setFieldsValue: vi.fn(),
   getFieldValue: vi.fn(() => undefined),
   finishValues: vi.fn(),
+  initialValues: {} as Record<string, unknown>,
 }))
 
 vi.hoisted(() => {
@@ -27,18 +31,44 @@ vi.mock('lottie-web', () => ({ default: { loadAnimation: vi.fn(), destroy: vi.fn
 
 vi.mock('antd', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>()
-  const Form = (({ children, onFinish }: React.PropsWithChildren<{ onFinish?: (value: unknown) => void }>) => (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault()
-        onFinish?.(mocks.finishValues())
-      }}
-    >
-      {children}
-      <button type="submit">测试提交</button>
-    </form>
-  )) as unknown as React.FC<React.PropsWithChildren> & Record<string, unknown>
-  Form.Item = ({ children }: React.PropsWithChildren) => <div>{children}</div>
+  const Form = (({
+    children,
+    onFinish,
+    onKeyDown,
+    initialValues,
+  }: React.PropsWithChildren<{
+    onFinish?: (value: unknown) => void
+    onKeyDown?: React.KeyboardEventHandler<HTMLFormElement>
+    initialValues: Record<string, unknown>
+  }>) => {
+    mocks.initialValues = initialValues
+    return (
+      <form
+        onKeyDown={onKeyDown}
+        onSubmit={(event) => {
+          event.preventDefault()
+          onFinish?.(mocks.finishValues())
+        }}
+      >
+        {children}
+        <button type="submit">测试提交</button>
+      </form>
+    )
+  }) as unknown as React.FC<React.PropsWithChildren> & Record<string, unknown>
+  Form.Item = ({
+    children,
+    name,
+    getValueProps,
+  }: React.PropsWithChildren<{
+    name?: string
+    getValueProps?: (value: unknown) => Record<string, unknown>
+  }>) => (
+    <div>
+      {name === 'repair_time' && getValueProps && isValidElement(children)
+        ? cloneElement(children, getValueProps(mocks.initialValues[name]))
+        : children}
+    </div>
+  )
   Form.useForm = () => [
     {
       setFieldsValue: mocks.setFieldsValue,
@@ -76,10 +106,29 @@ vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => {
   YakitInput.TextArea = () => <textarea />
   return { YakitInput }
 })
-vi.mock('@/components/yakitUI/YakitInputNumber/YakitInputNumber', () => ({ YakitInputNumber: () => <input /> }))
-vi.mock('@/components/yakitUI/YakitDatePicker/YakitDatePicker', () => ({ YakitDatePicker: () => <input /> }))
+vi.mock('@/components/yakitUI/YakitInputNumber/YakitInputNumber', () => ({
+  YakitInputNumber: () => <input data-testid="cvss-input" />,
+}))
+vi.mock('@/components/yakitUI/YakitDatePicker/YakitDatePicker', () => ({
+  YakitDatePicker: ({ value }: { value?: moment.Moment }) => (
+    <input aria-label="修复时间" value={value?.format('YYYY-MM-DD') || ''} readOnly />
+  ),
+}))
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
-  YakitButton: ({ children }: React.PropsWithChildren) => <button type="button">{children}</button>,
+  YakitButton: ({
+    children,
+    htmlType = 'button',
+    onClick,
+    disabled,
+  }: React.PropsWithChildren<{
+    htmlType?: 'button' | 'submit'
+    onClick?: () => void
+    disabled?: boolean
+  }>) => (
+    <button type={htmlType} onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  ),
 }))
 
 const deferred = <T,>() => {
@@ -101,7 +150,60 @@ describe('YakitRiskEditForm 验证人回填', () => {
       return lastCall?.verifier
     })
   })
-  afterEach(cleanup)
+  afterEach(() => {
+    cleanup()
+    vi.restoreAllMocks()
+  })
+
+  it.each([undefined, null, 0, '0', '', -1, 'invalid'])(
+    '未设置或无效修复时间 %s 默认当天，并提交实际默认值',
+    async (FixTime) => {
+      vi.spyOn(Date, 'now').mockReturnValue(new Date('2026-10-09T14:00:00+08:00').getTime())
+      const onSave = vi.fn().mockResolvedValue(undefined)
+      render(<YakitRiskEditForm info={{ Hash: '', FixTime } as never} onSave={onSave} />)
+      expect(screen.getByLabelText('修复时间')).toHaveValue(moment().format('YYYY-MM-DD'))
+      expect(mocks.initialValues.repair_time).toBe(moment().unix())
+      mocks.finishValues.mockReturnValue({
+        ...mocks.initialValues,
+        risk_type: 'SQL注入',
+        cvss: 7,
+        disposal_status: ['已修复'],
+        verifier: 'uid-1',
+      })
+      fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+      await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ FixTime: moment().unix() })))
+    },
+  )
+
+  it.each([1700000000, '1700000000'])('已有有效修复时间 %s 保留原日期并统一为数字时间戳', (FixTime) => {
+    render(<YakitRiskEditForm info={{ Hash: '', FixTime } as never} onSave={vi.fn()} />)
+    expect(screen.getByLabelText('修复时间')).toHaveValue(moment.unix(1700000000).format('YYYY-MM-DD'))
+    expect(mocks.initialValues.repair_time).toBe(1700000000)
+  })
+
+  it('批量修改无修复时间时也默认当天', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(new Date('2026-10-09T14:00:00+08:00').getTime())
+    render(<YakitRiskEditForm info={{ Hash: '' } as never} batchCount={2} onSave={vi.fn()} />)
+    expect(screen.getByLabelText('修复时间')).toHaveValue(moment().format('YYYY-MM-DD'))
+    expect(mocks.initialValues.repair_time).toBe(moment().unix())
+  })
+
+  it.each([undefined, 2])('CVSS 回车不保存或关闭，点击确定仍保存（批量数 %s）', async (batchCount) => {
+    const user = userEvent.setup()
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 7, disposal_status: ['待验证'] })
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    const onClose = vi.fn()
+    render(<YakitRiskEditForm info={{ Hash: '' } as never} batchCount={batchCount} onSave={onSave} onClose={onClose} />)
+
+    await user.click(screen.getByTestId('cvss-input'))
+    await user.keyboard('{Enter}')
+    expect(onSave).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'YakitButton.ok' }))
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
+  })
 
   it('已有 uid 时直接查询姓名，不请求线上风险', async () => {
     mocks.userSearch.mockResolvedValue({ data: [{ id: 1, uid: 'uid-1', name: '张三' }] })

@@ -5,6 +5,7 @@ import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import moment from 'moment'
+import { getDateFromUnixTimestamp } from '@/utils/timeUtil'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
@@ -368,7 +369,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
         company: editInfo.company,
         maxActivationNum: editInfo.maxActivationNum,
         maxUser: editInfo.maxUser,
-        durationDate: moment.unix(editInfo.durationDate),
+        durationDate: getDateFromUnixTimestamp(editInfo.durationDate),
       })
     }
   }, [])

@@ -44,7 +44,8 @@ import {
 
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import cloneDeep from 'lodash/cloneDeep'
-import { formatTimestamp } from '@/utils/timeUtil'
+import { formatTimestamp, getDateFromUnixTimestamp } from '@/utils/timeUtil'
+import { preventImplicitFormSubmit } from '@/utils/formKeyboard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
@@ -90,6 +91,7 @@ import { getHtmlEnTemplate, getHtmlTemplate, getHtmlZhTWTemplate } from './htmlT
 import { yakitNotify } from '@/utils/notification'
 import moment from 'moment'
 import type { FieldName } from '../RiskTable'
+import { mergeFieldNames } from '../riskFieldNames'
 import {
   DEFAULT_RISK_TYPE_OPTIONS,
   DISPOSAL_STATUS_OPTIONS,
@@ -519,7 +521,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       })
   })
   const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
-    const riskTypeVerboseTable = riskTypeVerbose.map((item) => ({
+    const riskTypeVerboseTable = mergeFieldNames({ Values: riskTypeVerbose }).map((item) => ({
       value: item.Verbose,
       label: item.Verbose,
       total: item.Total,
@@ -832,6 +834,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       setOffsetDataInTop([])
       update(1)
       getTotal()
+      getRiskType()
+      getRiskTags()
     },
     { wait: 200, leading: true },
   ).run
@@ -917,8 +921,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     return apiBatchSetRiskTags(params).then(() => {
       if (scope) {
         onRefRiskList()
-        getRiskType()
-        getRiskTags()
         emiter.emit('onRefRiskFieldGroup')
         return
       }
@@ -1757,7 +1759,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
   })
   return (
     <div className={styles['yakit-risk-select-tag']}>
-      <Form onFinish={onFinish}>
+      <Form onFinish={onFinish} onKeyDown={preventImplicitFormSubmit}>
         <Form.Item label="Tags" name="TagList" initialValue={initSelectTags}>
           <YakitSelect mode="tags" allowClear>
             {tags.map((item) => {
@@ -1968,12 +1970,13 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
           {...layout}
           form={form}
           onFinish={onFinish}
+          onKeyDown={preventImplicitFormSubmit}
           initialValues={{
             risk_type: initRiskType,
             cvss: initCvss,
             disposal_status: initDisposal,
             verifier: info.VerifierUid ? undefined : info.Verifier,
-            repair_time: info.FixTime,
+            repair_time: getDateFromUnixTimestamp(info.FixTime)?.unix() ?? moment().unix(),
             repair_suggestion: info.FixSuggestion,
             disposal_note: info.TagReason,
           }}
@@ -2067,7 +2070,7 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
                 name="repair_time"
                 rules={[{ required: true, message: t('YakitRiskEditForm.repair_time_required') }]}
                 getValueFromEvent={(date) => (date ? moment(date).unix() : undefined)}
-                getValueProps={(value) => ({ value: value ? moment.unix(value) : undefined })}
+                getValueProps={(value) => ({ value: getDateFromUnixTimestamp(value) })}
               >
                 <YakitDatePicker
                   locale={locale}

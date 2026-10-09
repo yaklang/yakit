@@ -8,14 +8,18 @@ beforeEach(() => vi.clearAllMocks())
 
 describe('风险验证人回读', () => {
   it.each(['hash', 'risk_hash'])('按当前风险查询并读取 %s 匹配记录的验证人', async (field) => {
-    vi.mocked(NetWorkApi).mockResolvedValue({ data: [{ [field]: 'risk-1', verifierUid: 'user-1' }] })
+    vi.mocked(NetWorkApi).mockImplementation(async ({ data }) => {
+      for (const key of ['page', 'limit', 'order_by', 'order']) {
+        if (!data?.[key]) throw new Error(`${key} in body is required`)
+      }
+      return { data: [{ [field]: 'risk-1', verifierUid: 'user-1' }] }
+    })
 
     expect(await apiGetRiskVerifierUid('risk-1')).toBe('user-1')
     expect(NetWorkApi).toHaveBeenCalledWith({
       method: 'post',
       url: 'risk',
-      params: { page: 1, limit: 1 },
-      data: { hash: ['risk-1'] },
+      data: { hash: ['risk-1'], page: 1, limit: 1, order_by: 'id', order: 'desc' },
     })
   })
 

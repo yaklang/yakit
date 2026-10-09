@@ -7,6 +7,7 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+import { preventImplicitFormSubmit } from '@/utils/formKeyboard'
 import {
   FLOW_DISPOSAL_STATUS_OPTIONS,
   FLOW_PROBLEM_TYPE_OPTIONS,
@@ -75,6 +76,7 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
         {...layout}
         form={form}
         onFinish={onFinish}
+        onKeyDown={preventImplicitFormSubmit}
         initialValues={
           batch
             ? {}

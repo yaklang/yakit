@@ -278,7 +278,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     },
   ]
   return (
-    <div className="private-domain">
+    <div className={enterpriseLogin ? 'private-domain private-domain-enterprise' : 'private-domain'}>
       {enterpriseLogin && (
         <div className="login-title-show">
           <div className="icon-box">
@@ -288,7 +288,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         </div>
       )}
       <Form
-        {...layout}
+        {...(enterpriseLogin ? {} : layout)}
+        layout={enterpriseLogin ? 'vertical' : 'horizontal'}
         form={form}
         name="control-hooks"
         initialValues={{ BaseUrl: enterpriseLogin ? ENTERPRISE_DEFAULT_PRIVATE_DOMAIN : '' }}
@@ -301,6 +302,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
           rules={[{ required: true, message: t('YakitForm.requiredField') }, ...judgeUrl()]}
         >
           <YakitAutoComplete
+            size={enterpriseLogin ? 'large' : 'middle'}
             ref={httpHistoryRef}
             cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
             initValue={defaultHttpUrl}
@@ -334,7 +336,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             label={t('ConfigPrivateDomain.username')}
             rules={[{ required: true, message: t('YakitForm.requiredField') }]}
           >
-            <YakitInput placeholder={t('ConfigPrivateDomain.enterUsername')} allowClear />
+            <YakitInput size="large" placeholder={t('ConfigPrivateDomain.enterUsername')} allowClear />
           </Form.Item>
         )}
         {enterpriseLogin && (
@@ -343,14 +345,15 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             label={t('ConfigPrivateDomain.password')}
             rules={[{ required: true, message: t('YakitForm.requiredField') }, ...judgePass()]}
           >
-            <YakitInput.Password placeholder={t('ConfigPrivateDomain.enterPassword')} allowClear />
+            <YakitInput.Password size="large" placeholder={t('ConfigPrivateDomain.enterPassword')} allowClear />
           </Form.Item>
         )}
         {enterpriseLogin ? (
-          <Form.Item label={' '} colon={false} className="form-item-submit">
+          <Form.Item wrapperCol={{ span: 24, offset: 0 }} className="form-item-submit">
             {isShowSkip && (
               <YakitButton
-                style={{ width: 165, marginRight: 12 }}
+                type="outline2"
+                className="enterprise-login-action"
                 onClick={() => {
                   onSuccee && onSuccee()
                 }}
@@ -363,7 +366,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
               size="large"
               type="primary"
               htmlType="submit"
-              style={{ width: 165, marginLeft: isShowSkip ? 0 : 43 }}
+              className="enterprise-login-action"
               loading={loading}
             >
               {t('YakitButton.login')}

@@ -1,6 +1,7 @@
 import React, { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Space, Table, Tag, Form, Typography, Descriptions, Tooltip } from 'antd'
 import type { Risk } from './schema'
+import { mergeFieldNames } from './riskFieldNames'
 import { genDefaultPagination, type QueryGeneralRequest, type QueryGeneralResponse } from '../invoker/schema'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { formatTimestamp } from '../../utils/timeUtil'
@@ -55,26 +56,6 @@ export interface FieldNameSelectItem {
   Total: number
   Names: string[]
   Verbose: string
-}
-
-const mergeFieldNames = (f: Fields) => {
-  const m = new Map<string, FieldNameSelectItem>()
-  ;(f.Values || []).forEach((v) => {
-    const i = m.get(v.Verbose)
-    if (!i) {
-      m.set(v.Verbose, { Total: v.Total, Verbose: v.Verbose, Names: [v.Name] })
-      return
-    } else {
-      i.Total += v.Total
-      i.Names.push(v.Name)
-      i.Names.sort()
-    }
-  })
-  const items: FieldNameSelectItem[] = []
-  m.forEach((value) => {
-    items.push(value)
-  })
-  return items
 }
 
 export const cellColorFontSetting = {

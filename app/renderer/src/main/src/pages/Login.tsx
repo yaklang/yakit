@@ -85,6 +85,7 @@ const Login: React.FC<LoginProp> = (props) => {
         title=""
         type="white"
         footer={null}
+        headerStyle={{ position: 'absolute', top: 0, right: 0, width: 'auto', zIndex: 1 }}
         bodyStyle={{ padding: 0 }}
         maskClosable={false}
         destroyOnHidden={true}
@@ -98,6 +99,7 @@ const Login: React.FC<LoginProp> = (props) => {
   return (
     <Modal
       open={props.visible}
+      keyboard={false}
       closable={false}
       footer={null}
       onCancel={() => props.onCancel()}
