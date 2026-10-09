@@ -159,7 +159,7 @@ describe('AIScheduledTasksDetail 数据同步', () => {
     expect(screen.getByText('paused by system')).toBeInTheDocument()
   })
 
-  it('打开关联会话时从 StartParams 恢复 SingleModelMode', async () => {
+  it.each([undefined, 0, 1700000000])('LastRunAt=%s 时可打开关联会话并恢复 SingleModelMode', async (LastRunAt) => {
     const related = {
       SessionID: 'sess-linked',
       Title: 'linked-chat',
@@ -174,7 +174,7 @@ describe('AIScheduledTasksDetail 数据同步', () => {
           makeSchedule({
             TargetMode: 'continue_session',
             TargetSessionID: 'sess-linked',
-            LastRunAt: 1700000000,
+            LastRunAt,
           }),
         )}
       />,
@@ -183,11 +183,16 @@ describe('AIScheduledTasksDetail 数据同步', () => {
     await waitFor(() => expect(mockQueryAISession).toHaveBeenCalled())
     await waitFor(() => expect(screen.getByTitle('linked-chat')).toBeInTheDocument())
 
-    const recentExecutionHeader = screen.getByText('AIScheduledTasks.lastExecution').parentElement!
-    const openBtn = within(recentExecutionHeader).getByRole('button', { name: 'AIScheduledTasks.openChat' })
+    const openBtn = screen.getByRole('button', { name: 'AIScheduledTasks.openChat' })
+    if (LastRunAt) {
+      const recentExecutionHeader = screen.getByText('AIScheduledTasks.lastExecution').parentElement!
+      expect(within(recentExecutionHeader).getByRole('button', { name: 'AIScheduledTasks.openChat' })).toBe(openBtn)
+    } else {
+      expect(screen.queryByText('AIScheduledTasks.lastExecution')).not.toBeInTheDocument()
+      expect(screen.getByTitle('linked-chat').parentElement).toContainElement(openBtn)
+    }
     expect(screen.queryByRole('button', { name: 'linked-chat' })).not.toBeInTheDocument()
-    expect(openBtn).toBeTruthy()
-    await userEvent.click(openBtn!)
+    await userEvent.click(openBtn)
 
     await waitFor(() => expect(mockSetSetting).toHaveBeenCalled())
     const updater = mockSetSetting.mock.calls[0][0] as (old: Record<string, unknown>) => Record<string, unknown>
@@ -196,6 +201,19 @@ describe('AIScheduledTasksDetail 数据同步', () => {
       EnablePlan: true,
     })
     expect(mockSetActiveChat).toHaveBeenCalledWith(related)
+  })
+
+  it('关联会话不存在时不显示跳转入口', async () => {
+    mockQueryAISession.mockResolvedValue({ Data: [] })
+    render(
+      <AIScheduledTasksDetail
+        {...makeProps(makeSchedule({ TargetMode: 'continue_session', TargetSessionID: 'missing-session' }))}
+      />,
+    )
+
+    await waitFor(() => expect(mockQueryAISession).toHaveBeenCalled())
+    expect(screen.queryByRole('button', { name: 'AIScheduledTasks.openChat' })).not.toBeInTheDocument()
+    expect(mockSetActiveChat).not.toHaveBeenCalled()
   })
 })
 

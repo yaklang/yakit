@@ -133,10 +133,13 @@
 
 .schedule-card-controls,
 .schedule-card-actions {
-  display: flex;
   flex-shrink: 0;
   align-items: center;
   gap: 4px;
+}
+
+.schedule-card-controls {
+  display: flex;
 }
 
 .schedule-card-actions {

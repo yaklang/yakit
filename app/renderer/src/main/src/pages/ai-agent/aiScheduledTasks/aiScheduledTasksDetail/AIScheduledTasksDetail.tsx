@@ -324,6 +324,17 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
               <DetailRow label={t('AIScheduledTasks.relatedChat')}>
                 <div className={styles['detail-related-chat']}>
                   <span title={relatedSessionTitle}>{relatedSessionTitle}</span>
+                  {showRelatedChatLink && !hasLastExecution && (
+                    <Tooltip title={t('AIScheduledTasks.openChat')}>
+                      <YakitButton
+                        type="text"
+                        size="middle"
+                        aria-label={t('AIScheduledTasks.openChat')}
+                        icon={<ArrowUpRightOutlined />}
+                        onClick={openRelatedChat}
+                      />
+                    </Tooltip>
+                  )}
                 </div>
               </DetailRow>
             )}
