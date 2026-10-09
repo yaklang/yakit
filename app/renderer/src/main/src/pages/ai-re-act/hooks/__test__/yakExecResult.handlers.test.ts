@@ -234,11 +234,7 @@ describe('yakExecResult handlers', () => {
       ['plan-executing-loading-status-key', 10, 'plan stale', 'tool updated', 'plan updated'],
     ] as const
     for (const [key, timestamp, value, loadingTitle, planTitle] of events) {
-      req.res = makeGrpcJsonRes(
-        'structured',
-        { key, value },
-        { NodeId: 'status', TaskId: 'sub', Timestamp: timestamp },
-      )
+      req.res = makeGrpcJsonRes('structured', { key, value }, { NodeId: 'status', TaskId: 'sub', Timestamp: timestamp })
       aiYakExecResultDataHandlers.status(req)
       expect(node.data.loadingTitle).toBe(loadingTitle)
       expect(req.store.getState().currentLoadingTitle.planTitle).toBe(planTitle)
