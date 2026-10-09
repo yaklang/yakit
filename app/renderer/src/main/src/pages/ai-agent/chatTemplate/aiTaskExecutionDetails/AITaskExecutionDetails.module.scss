@@ -87,7 +87,6 @@
   .card {
     border-radius: 8px;
     border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-    padding: 4px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -108,7 +107,7 @@
     .card-content {
       flex: 1;
       min-height: 0;
-      border-radius: 6px;
+      border-radius: 0 0 6px 6px;
       padding: 8px;
       border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
       background: var(--Colors-Use-Neutral-Bg);
@@ -262,33 +261,75 @@
   }
 
   .task-statistics {
-    max-height: 272px;
-    height: 272px;
+    height: 515px;
+    max-height: 515px;
+    min-height: 515px;
     border-radius: 8px;
     border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-    padding: 4px;
     display: flex;
     flex-direction: column;
     gap: 4px;
     width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 
     .title {
       color: var(--Colors-Use-Neutral-Text-1-Title);
-
       font-size: 14px;
       font-weight: 500;
-      line-height: 20px; /* 142.857% */
+      line-height: 20px;
       letter-spacing: 0.1px;
     }
 
     .stats-header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
       gap: 12px;
       width: 100%;
-
+      padding: 6px 12px;
+      flex-shrink: 0;
+      .stats-header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
       .title {
         flex-shrink: 0;
+      }
+      :global {
+        .ant-segmented-item-label {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+        }
+      }
+
+      .todo-view-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        // ant-segmented 自定义 label 视觉上偏上，略下移对齐
+        transform: translateY(1px);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+
+        :global(.yakit-icon),
+        :global(.anticon) {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 0;
+        }
+
+        svg {
+          width: 16px;
+          height: 16px;
+          font-size: 16px;
+        }
       }
     }
     .empty-body {
@@ -301,19 +342,12 @@
       justify-content: center;
       flex: 1;
     }
-    .stats-content {
-      display: grid;
-      gap: 4px;
-      overflow: hidden;
-      grid-template-columns: repeat(2, 1fr);
-      width: 100%;
-      height: 100%;
-    }
-
     .stats-overview {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(6, 1fr);
       gap: 8px;
+      flex-shrink: 0;
+      padding: 0 12px;
 
       .stat-box {
         padding: 8px 12px;
@@ -324,6 +358,19 @@
         border: 1px solid transparent;
         border-left: 2px solid transparent;
 
+        .stat-footer-left {
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+          font-size: 14px;
+          font-style: normal;
+          font-weight: 600;
+          line-height: 20px; /* 142.857% */
+          letter-spacing: 0.1px;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          word-break: break-all;
+        }
+
         .stat-footer {
           display: flex;
           align-items: center;
@@ -331,21 +378,6 @@
           gap: 4px;
           flex: 1;
 
-          .stat-footer-left {
-            font-size: 18px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-
-            font-size: 14px;
-            font-style: normal;
-            font-weight: 600;
-            line-height: 20px; /* 142.857% */
-            letter-spacing: 0.1px;
-
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            word-break: break-all;
-          }
           .stat-footer-right {
             display: flex;
             align-items: center;
@@ -373,7 +405,7 @@
         &.stat-green {
           background: var(--yakit-colors-Success-20);
           border-left-color: var(--yakit-colors-Success-40);
-          .stat-count {
+          .stat-footer-left {
             color: var(--Colors-Use-Success-Primary);
           }
         }
@@ -384,47 +416,10 @@
         &.stat-red {
           background: var(--yakit-colors-Error-20);
           border-left-color: var(--yakit-colors-Error-40);
-          .stat-count {
+          .stat-footer-left {
             color: var(--Colors-Use-Error-Primary);
           }
         }
-      }
-    }
-
-    .todo-list-wrapper {
-      border-radius: 8px;
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      background: var(--Colors-Use-Neutral-Bg);
-      padding: 4px 8px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      overflow: hidden;
-
-      .todo-list-header {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 4px 0;
-        height: 28px;
-        overflow: hidden;
-
-        .todo-title {
-          color: var(--Colors-Use-Neutral-Text-3-Secondary);
-
-          font-size: 12px;
-          font-style: normal;
-          font-weight: 500;
-          line-height: 16px; /* 133.333% */
-          letter-spacing: 0.5px;
-        }
-      }
-
-      .todo-list {
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-        flex: 1;
       }
     }
   }
@@ -500,12 +495,10 @@
     }
 
     .task-statistics {
-      max-height: none; /* 取消固定高度，允许内容撑开 */
-      height: fit-content; /* 根据内容自动调整高度 */
-      .stats-content {
-        /* 取消两列分栏，强制单列垂直排列 */
-        grid-template-columns: 1fr;
-      }
+      // 窄屏仍保持 515px 高度；看板列排布见 AITaskBoard.module.scss
+      height: 515px;
+      max-height: 515px;
+      min-height: 515px;
       .stats-overview .stat-box .stat-footer .stat-footer-right {
         display: none; /* 极窄时隐藏右侧操作按钮，保留核心信息展示 */
       }

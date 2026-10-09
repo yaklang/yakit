@@ -1,0 +1,125 @@
+@use '../../../../../styles/mixin.scss' as mixin;
+
+.ai-task-board {
+  display: grid;
+  overflow: hidden;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  border-radius: 0 0 8px 8px;
+}
+
+.todo-list-wrapper {
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  background: var(--Colors-Use-Neutral-Bg);
+  padding: 4px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+  min-height: 0;
+  height: 100%;
+
+  .todo-list-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 0;
+    height: 28px;
+    overflow: hidden;
+
+    .todo-column-icon {
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      line-height: 0;
+
+      :global(svg) {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .todo-title {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 16px;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+.board-todo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  background: var(--Colors-Use-Basic-Background);
+
+  .board-card-desc {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    @include mixin.text-ellipsis(2, false, false, true);
+  }
+
+  .board-card-footer {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  .board-card-meta {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+  }
+
+  .board-card-range {
+    display: inline-flex;
+    flex-direction: column;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+  }
+
+  &.board-todo-card-muted {
+    opacity: 0.72;
+
+    .board-card-desc,
+    .board-card-meta,
+    .board-card-range {
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 14px;
+    }
+  }
+}
+
+@container task-details (max-width: 800px) {
+  .ai-task-board {
+    grid-template-columns: 1fr;
+  }
+}
