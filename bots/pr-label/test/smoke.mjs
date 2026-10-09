@@ -184,6 +184,7 @@ console.log('\n[3b] 消息结构：标题=PR title / 内容=作者+分支+URL+la
   )
 
   check('卡片是 JSON 2.0', card.card.schema === '2.0' && Array.isArray(card.card.body.elements))
+  check('正文使用飞书内置字号 normal', card.card.body.elements[0].text_size === 'normal')
   const markdown = card.card.body.elements[0].content
   check('内容含作者', markdown.includes('nonight'))
   check(

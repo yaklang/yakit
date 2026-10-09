@@ -274,7 +274,7 @@ export function buildCard(event, { msgType = 'interactive' } = {}) {
       tag: 'markdown',
       content: `${escapeMarkdownText(prTitle)}\n**作者**：${escapeMarkdownText(event.author || '未知')}\n**分支**：${escapeMarkdownText(branchText)}\n**Labels**：${labelsText}`,
       text_align: 'left',
-      text_size: 'normal_v2',
+      text_size: 'normal',
       margin: '0px 0px 0px 0px',
     },
     { tag: 'hr' },
