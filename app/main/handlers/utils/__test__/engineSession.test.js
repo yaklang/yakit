@@ -1,9 +1,19 @@
 const { EventEmitter } = require('events')
+const os = require('os')
 const { createEngineSession, mayFallback } = require('../engineSession')
 const { observedEngine } = require('../engineProcessDTO')
 const marker = '50551aa97b5aa5ae8a3c3243ac60a8a7'
 const flush = async () => {
   for (let i = 0; i < 12; i++) await Promise.resolve()
+}
+const stubWindowsKernel = (release) => {
+  const original = process.platform
+  Object.defineProperty(process, 'platform', { value: 'win32', configurable: true })
+  const spy = vi.spyOn(os, 'release').mockReturnValue(release)
+  return () => {
+    Object.defineProperty(process, 'platform', { value: original, configurable: true })
+    spy.mockRestore()
+  }
 }
 
 function fixture(options = {}) {
@@ -123,6 +133,26 @@ describe('session orchestration', () => {
     await f.session.stopAll()
   })
 
+  it('falls back to TCP when a Win7 kernel fails to bind the named pipe', async () => {
+    const restore = stubWindowsKernel('6.1.7601')
+    try {
+      const f = fixture()
+      const pending = f.session.launch({ port: 9011 })
+      f.children[0].checked({ ok: false, reasonCode: 'ipc_bind_failed' })
+      await flush()
+      expect(f.children[1].args).toContain('--port')
+      expect(f.children[1].args).not.toContain('--transport')
+      f.children[1].checked({ port: 9011 })
+      await flush()
+      f.children[2].ready()
+      const result = await pending
+      expect(result).toMatchObject({ ok: true, fallback: true, instance: { transport: 'tcp' } })
+      await f.session.stopAll()
+    } finally {
+      restore()
+    }
+  })
+
   it.each(['ipc', 'tcp'])('honors explicit %s policy without fallback', async (policy) => {
     const f = fixture()
     const pending = f.session.launch({ port: 9011, policy })
@@ -133,13 +163,18 @@ describe('session orchestration', () => {
   })
 
   it.each(['ipc_bind_failed', 'database_error', 'ipc_endpoint_invalid'])(
-    'does not hide %s using TCP',
+    'does not hide %s using TCP on a modern kernel',
     async (reasonCode) => {
-      const f = fixture()
-      const pending = f.session.launch({ port: 9011 })
-      f.children[0].checked({ ok: false, reasonCode })
-      expect((await pending).ok).toBe(false)
-      expect(f.children).toHaveLength(1)
+      const restore = stubWindowsKernel('10.0.26200')
+      try {
+        const f = fixture()
+        const pending = f.session.launch({ port: 9011 })
+        f.children[0].checked({ ok: false, reasonCode })
+        expect((await pending).ok).toBe(false)
+        expect(f.children).toHaveLength(1)
+      } finally {
+        restore()
+      }
     },
   )
 
@@ -251,6 +286,22 @@ describe('process boundary and fallback allowlist', () => {
   it('rejects contradictory bind diagnostics from database or authentication stages', () => {
     for (const phase of ['database', 'auth', 'dial', 'version_rpc', 'wait_connect'])
       expect(mayFallback({ stopped: true, engineEvent: { phase, reasonCode: 'ipc_bind_denied' } })).toBe(false)
+  })
+  it('allows named-pipe bind failure only on the Win7 kernel', () => {
+    const win7 = stubWindowsKernel('6.1.7601')
+    try {
+      expect(mayFallback({ stopped: true, reasonCode: 'ipc_bind_failed' })).toBe(true)
+    } finally {
+      win7()
+    }
+    for (const release of ['10.0.26200', '6.2.9200']) {
+      const modern = stubWindowsKernel(release)
+      try {
+        expect(mayFallback({ stopped: true, reasonCode: 'ipc_bind_failed' })).toBe(false)
+      } finally {
+        modern()
+      }
+    }
   })
   it('does not leak argv, guess a port, or take ownership of discovery', () => {
     const result = observedEngine({
