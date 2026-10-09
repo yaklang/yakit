@@ -54,7 +54,7 @@ Labels 只展示这次被打上的那一个标签，用 `<text_tag color='green'
 标题栏和正文 tag 只分三种颜色：`ready` 绿、`need more test` 橙，其它标签蓝。
 卡片正文中的 PR 标题、作者、分支和标签会做 HTML 实体转义，防止外部文本被解析为 @ 标签、链接或 Markdown 格式。
 
-设 `PR_LABEL_MSG_TYPE=text` 会降级成纯文本，字段顺序相同：
+设 `PR_LABEL_MSG_TYPE=text` 会降级成纯文本，字段顺序相同。消息字段中的尖括号会显示为全角 `＜`、`＞`，防止外部文本中的 `at` 标签触发提醒；普通字符、URL 和换行保持原样：
 
 ```
 请值班人员审阅并合并
@@ -78,7 +78,7 @@ Labels：ready
 | `fixtures/labeled-ready.json` | 示例事件，只有一个标签 `ready`，会推送。卡片标题由代码生成，不写在这个文件里 |
 | `fixtures/labeled-need-more-test.json` | 示例事件，只有一个标签 `need more test`，会推送。卡片标题由代码生成 |
 | `fixtures/labeled.json` | 示例事件，只有一个标签 `needs-review`，会跳过 |
-| `test/smoke.mjs` | 83 条冒烟用例，用本地 mock 飞书，不打真实 webhook。不接入 CI，合并前在本地执行 `npm test` |
+| `test/smoke.mjs` | 89 条冒烟用例，用本地 mock 飞书，不打真实 webhook。不接入 CI，合并前在本地执行 `npm test` |
 
 仓库里的 workflow 不在这个目录，而在 `.github/workflows/pr-label-notify.yml`。
 它只 `checkout` 主仓库可信快照中的机器人脚本，然后执行 `node bots/pr-label/pr-label.mjs`。
@@ -199,7 +199,7 @@ npm run dry                   # 同一条 ready 事件，只打印卡片，不�
 npm run dry:test              # need more test，只打印卡片，不发送
 npm run dry:skip              # needs-review，日志里会写跳过
 npm run probe                 # 打印连通性测试消息，不发送
-npm test                      # 83 条冒烟用例（本地 mock，不访问飞书；CI 不跑这组）
+npm test                      # 89 条冒烟用例（本地 mock，不访问飞书；CI 不跑这组）
 ```
 
 不经过 npm，直接调脚本：

@@ -284,6 +284,41 @@ console.log('\n[3c] 外部文本不能成为卡片标记')
   )
 }
 
+console.log('\n[3d] text 模式不能注入 @ 标签')
+{
+  const mention = '<at user_id="all">所有人</at>'
+  const literalMention = '＜at user_id="all"＞所有人＜/at＞'
+  const event = { ...normalizeEvent(READY_FIXTURE), title: mention }
+  const text = buildCard(event, { msgType: 'text' }).content.text
+  check(
+    '固定标题下的 PR 标题不能触发全员提醒',
+    text.startsWith(`请值班人员审阅并合并\n${literalMention}\n`) && !text.includes('<at'),
+  )
+  const fallback = buildCard({ ...event, label: 'other' }, { msgType: 'text' }).content.text
+  check('回落到 PR 标题时也不能注入 @ 标签', fallback.startsWith(`${literalMention}\n`))
+  check(
+    '作者、两端分支、标签和 URL 中的标签均失效',
+    ['author', 'head', 'base', 'label', 'url'].every((field) => {
+      const value = buildCard({ ...event, title: '正常标题', [field]: mention }, { msgType: 'text' }).content.text
+      return value.includes(literalMention) && !/[<>]/.test(value)
+    }),
+  )
+  const normalTitle = 'fix: **文本** & [链接](https://example.com) _test_'
+  const normal = buildCard({ ...event, title: normalTitle }, { msgType: 'text' }).content.text
+  check(
+    'text 模式保留普通字符、链接和换行，不应用 Markdown 转义',
+    normal.startsWith(`请值班人员审阅并合并\n${normalTitle}\n作者：nonight\n`) &&
+      normal.includes(`PR：${event.url}\n`),
+  )
+  check(
+    '大小写、单引号及空白变体均不能保留标签边界',
+    ["<AT user_id='all'>所有人</AT>", '<at\nuser_id = "all">所有人</at>', '<at user_id="ou_test">用户</at>'].every((title) => {
+      const value = buildCard({ ...event, title }, { msgType: 'text' }).content.text
+      return value.includes('＜') && value.includes('＞') && !/[<>]/.test(value)
+    }),
+  )
+}
+
 console.log('\n[4] 端到端：dry-run / 真实发送 / 过滤')
 {
   const mock = await startMock()
@@ -341,6 +376,24 @@ console.log('\n[4] 端到端：dry-run / 真实发送 / 过滤')
     '传入 --labels 仍然按代码里的名单跳过',
     explicit.skipped === true && mock.calls.length === 2,
     JSON.stringify(explicit),
+  )
+
+  const textResult = await main(
+    {
+      webhookUrl: mock.url,
+      eventJson: JSON.stringify({
+        ...READY_FIXTURE,
+        pull_request: { ...READY_FIXTURE.pull_request, title: '<at user_id="all">所有人</at>' },
+      }),
+    },
+    { logger: quiet, env: { PR_LABEL_MSG_TYPE: 'text' } },
+  )
+  const textMessage = mock.calls[mock.calls.length - 1]
+  check(
+    '环境变量切换 text 后，实际发送的消息不含可执行 @ 标签',
+    textResult.ok === true && textMessage.msg_type === 'text' &&
+      textMessage.content.text.includes('＜at user_id="all"＞所有人＜/at＞') &&
+      !/[<>]/.test(textMessage.content.text),
   )
 
   const probe = await main({ webhookUrl: mock.url, probe: true }, { logger: quiet })

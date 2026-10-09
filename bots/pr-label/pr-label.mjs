@@ -264,7 +264,9 @@ export function buildCard(event, { msgType = 'interactive' } = {}) {
       `Labels：${String(event.label ?? '').trim() || '无'}`,
       `触发时间：${formatTime(new Date().toISOString())}`,
     ]
-    return { msg_type: 'text', content: { text: lines.join('\n') } }
+    // text 消息也会解析 at 标签，使用全角尖括号展示内容，避免形成标签语法。
+    const text = lines.join('\n').replace(/</g, '＜').replace(/>/g, '＞')
+    return { msg_type: 'text', content: { text } }
   }
 
   const elements = [
