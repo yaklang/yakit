@@ -51,6 +51,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { apiQuerySSAPrograms } from '@/pages/yakRunnerScanHistory/utils'
+import type { SSAProgram } from '@/pages/yakRunnerScanHistory/YakRunnerScanHistory'
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import { warn } from '@/utils/notification'
 import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
@@ -62,6 +63,13 @@ const GlobalFilterFunction = React.lazy(() => import('../GlobalFilterFunction/Gl
 const AuditCodeRuleGenChat = React.lazy(() =>
   import('../AuditCodeRuleGenChat').then((m) => ({ default: m.AuditCodeRuleGenChat })),
 )
+
+/** 最近编译列表条目：增量组折叠后只保留组根，isIncremental 标记展示"增量"Tag */
+interface AduitListItem {
+  path: string
+  name: string
+  isIncremental?: boolean
+}
 const RunnerFileTreeTab: YakitTabsProps[] = [
   {
     label: 'RunnerFileTree.all',
@@ -92,7 +100,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
   const [afreshName, setAfreshName] = useState<string>()
   const [visible, setVisible] = useState<boolean>(false)
   const [searchVisible, setSearchVisible] = useState<boolean>(false)
-  const [aduitList, setAduitList] = useState<{ path: string; name: string }[]>([])
+  const [aduitList, setAduitList] = useState<AduitListItem[]>([])
   // 选中的文件或文件夹
   const [foucsedKey, setFoucsedKey] = React.useState<string>('')
   // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
@@ -179,13 +187,45 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
 
   const getAduitList = useMemoizedFn(async () => {
     try {
-      const { res } = await grpcFetchAuditTree('/')
-      const arr = res.Resources.map(({ Path, ResourceName }) => ({
-        path: Path,
-        name: ResourceName,
-      }))
+      // 优先走 QuerySSAPrograms：能拿到增量编译分组信息，增量产物折叠进组根（带"增量"标记）
+      const res = await apiQuerySSAPrograms({
+        Filter: {},
+        Pagination: { ...genDefaultPagination(100, 1) },
+      })
+      const programs: SSAProgram[] = res.Data || []
+      // 识别真正的增量组：后端对所有 program 都填 IncrementalGroupId（普通全量 groupId=自身名），
+      // 只有组内存在 IsIncrementalCompile 成员的才是增量链；链的全量 base 层该值为 false 但 groupId 与链一致
+      const incrementalGroupIds = new Set<string>()
+      for (const p of programs) {
+        if (p.IsIncrementalCompile && p.IncrementalGroupId) incrementalGroupIds.add(p.IncrementalGroupId)
+      }
+      // 按增量组折叠：同 IncrementalGroupId 的只保留组根（HeadProgramName）作为一条
+      const seenGroups = new Set<string>()
+      const arr: AduitListItem[] = []
+      for (const p of programs) {
+        if (p.IncrementalGroupId && incrementalGroupIds.has(p.IncrementalGroupId)) {
+          const groupId = p.IncrementalGroupId
+          if (seenGroups.has(groupId)) continue
+          seenGroups.add(groupId)
+          const rootName = p.HeadProgramName || p.Name
+          arr.push({ path: rootName, name: rootName, isIncremental: true })
+        } else {
+          arr.push({ path: p.Name, name: p.Name })
+        }
+      }
+      arr.sort((a, b) => (a.name < b.name ? 1 : a.name > b.name ? -1 : 0))
       setAduitList(arr)
-    } catch (error) {}
+    } catch (error) {
+      // 兜底：退回 ssadb 根目录平铺列表（无增量分组信息）
+      try {
+        const { res } = await grpcFetchAuditTree('/')
+        const arr: AduitListItem[] = res.Resources.map(({ Path, ResourceName }) => ({
+          path: Path,
+          name: ResourceName,
+        }))
+        setAduitList(arr)
+      } catch (e) {}
+    }
   })
 
   const onOpenSearchModalFun = useMemoizedFn(() => {
@@ -230,7 +270,19 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
 
     if (aduitList.length > 0) {
       const children: any = [
-        ...aduitList.slice(0, 10).map((item) => ({ key: `aduit-${item.name}`, label: item.name })),
+        ...aduitList.slice(0, 10).map((item) => ({
+          key: `aduit-${item.name}`,
+          label: (
+            <span className={styles['recent-compile-item']}>
+              <span className='yakit-single-line-ellipsis'>{item.name}</span>
+              {item.isIncremental && (
+                <YakitTag size='small' color='info' className={styles['incremental-tag']}>
+                  {t('RunnerFileTree.incrementalCompile')}
+                </YakitTag>
+              )}
+            </span>
+          ),
+        })),
         {
           type: 'divider',
         },

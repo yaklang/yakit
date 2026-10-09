@@ -138,6 +138,7 @@
     "compileProject": "編譯專案",
     "recompile": "重新編譯",
     "recentCompile": "最近編譯",
+    "incrementalCompile": "增量",
     "projectConfigMissing": "未找到對應的專案配置，由於專案管理功能更新，請重新編譯專案",
     "openProjectFailed": "開啟專案資料庫失敗：{{error}}",
     "fileList": "檔案列表",

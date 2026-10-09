@@ -507,14 +507,16 @@ export interface CompileHistoryDisplayItem {
   isGroupChild?: boolean
 }
 
-/** 将 programs 聚合为展示列表：IsIncrementalCompile 且 IncrementalGroupId 相同的聚成 2 层树，HeadProgramName 为根 */
+/** 将 programs 聚合为展示列表：IncrementalGroupId 相同的（含全量 base 层）聚成 2 层树，组根统一为 HeadProgramName */
 export function buildCompileHistoryDisplayList(programs: SSAProgram[]): CompileHistoryDisplayItem[] {
   if (!programs.length) return []
   const incrementalGroups = new Map<string, SSAProgram[]>()
   const nonIncremental: SSAProgram[] = []
 
   for (const p of programs) {
-    if (p.IsIncrementalCompile && p.IncrementalGroupId) {
+    // 组的判定不看 IsIncrementalCompile：增量链的全量 base 层 IsIncrementalCompile=false，
+    // 但后端保证同链所有层的 IncrementalGroupId 一致（=链 OverlayLayers[0]）
+    if (p.IncrementalGroupId) {
       const group = incrementalGroups.get(p.IncrementalGroupId) || []
       group.push(p)
       incrementalGroups.set(p.IncrementalGroupId, group)
@@ -526,6 +528,13 @@ export function buildCompileHistoryDisplayList(programs: SSAProgram[]): CompileH
   type GroupInfo = { groupId: string; root: SSAProgram; children: SSAProgram[] }
   const groups: GroupInfo[] = []
   for (const [groupId, groupPrograms] of incrementalGroups) {
+    // 单成员且非增量的组（如独立全量）直接平铺，不渲染成可展开组
+    const hasIncrementalMember = groupPrograms.some((p) => p.IsIncrementalCompile)
+    if (!hasIncrementalMember) {
+      nonIncremental.push(...groupPrograms)
+      continue
+    }
+    // 组根用 HeadProgramName 定位（后端对组内所有成员统一填充，与返回顺序无关）
     const headName = groupPrograms[0]?.HeadProgramName || groupPrograms[0]?.Name
     const rootProgram = groupPrograms.find((p) => p.Name === headName) || groupPrograms[0]
     const childPrograms = groupPrograms.filter((p) => p.Name !== headName)
