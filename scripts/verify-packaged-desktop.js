@@ -3,6 +3,7 @@ const path = require('path')
 const os = require('os')
 const { spawn, execFileSync } = require('child_process')
 const asar = require('@electron/asar')
+const { verifyPackagedReportTemplate } = require('./report-template')
 
 function findAsar(dir, depth = 0) {
   if (depth > 5) return []
@@ -124,6 +125,8 @@ async function main() {
     const archives = findAsar(installedRoot)
     if (archives.length !== 1) throw new Error('Expected exactly one packaged app, found ' + archives.length)
     const archive = archives[0]
+    verifyPackagedReportTemplate(archive)
+    console.log('Installed HTML/PDF report template verified')
     const pkg = JSON.parse(asar.extractFile(archive, 'package.json').toString())
     if (pkg.version !== process.env.BUILD_VERSION) throw new Error('Embedded package version mismatch: ' + pkg.version)
     const exe = executable(archive)

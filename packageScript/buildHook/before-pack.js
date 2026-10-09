@@ -1,8 +1,10 @@
 const packageJson = require('../../package.json')
 const path = require('path')
 const { execFileSync } = require('child_process')
+const { verifyReportTemplate } = require('../../scripts/report-template')
 
 module.exports = async function (context) {
+  verifyReportTemplate()
   if (process.env.PLATFORM === 'memfit') {
     const targetArch = { 1: 'x64', 3: 'arm64' }[context.arch]
     if (context.electronPlatformName !== process.platform || targetArch !== process.arch) {

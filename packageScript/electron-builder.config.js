@@ -135,7 +135,7 @@ const configOption = {
       filter: ['**/*', '*.txt', '*.gzip', '!*.db'],
     },
     {
-      from: 'report/template.zip',
+      from: 'build/report-template.zip',
       to: 'report/template.zip',
     },
   ],
