@@ -534,6 +534,7 @@
     "scheduledTrigger": "由定時任務啟動"
   },
   "AIReportFinishCard": {
+    "viewReport": "查看完整報告",
     "openInAICodeAudit": "AI代碼審計中打開",
     "openInAICodeAuditError": "當前頁面無法打開AI代碼審計",
     "reportContentEmpty": "報告內容為空，無法導出",

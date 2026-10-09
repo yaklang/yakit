@@ -16,6 +16,7 @@ import { yakitDialog } from '@/services/electronBridge'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import { Tooltip } from 'antd'
 import ChatCard from '../ChatCard'
+import { AITabsEnum } from '../../defaultConstant'
 const { ipcRenderer } = window.require('electron')
 
 export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props) => {
@@ -50,7 +51,7 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
         }),
       )
     } else {
-      yakitNotify('error', t('AIReportFinishCard.openInAICodeAuditError'))
+      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: reportPath }))
     }
   })
 
@@ -88,7 +89,7 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
       titleMore={
         !isChildWindow && (
           <div className={styles['header-extra']}>
-            <Tooltip title={t('AIReportFinishCard.openInAICodeAudit')}>
+            <Tooltip title={t('AIReportFinishCard.viewReport')}>
               <YakitButton
                 size="small"
                 type="text"
