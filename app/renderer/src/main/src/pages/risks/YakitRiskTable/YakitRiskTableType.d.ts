@@ -82,6 +82,8 @@ export interface YakitRiskDetailsProps {
   setShowType?: (v: 'detail' | 'code' | 'history') => void
   boxStyle?: React.CSSProperties
   detailClassName?: string
+  /** 风险处置成功后刷新处置日志 */
+  disposalRefreshKey?: number
 }
 
 export interface YakitRiskSelectTagProps {

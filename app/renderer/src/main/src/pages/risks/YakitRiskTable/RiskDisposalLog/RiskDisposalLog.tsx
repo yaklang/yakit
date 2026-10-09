@@ -30,10 +30,12 @@ import styles from './RiskDisposalLog.module.scss'
 export interface RiskDisposalLogProps {
   info: Risk
   isLogin: boolean
+  /** 外部触发刷新（如风险处置成功） */
+  refreshKey?: number
 }
 
 export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
-  const { info, isLogin } = props
+  const { info, isLogin, refreshKey } = props
   const { t } = useI18nNamespaces(['risk', 'yakitUi'])
   const { userInfo } = useStore()
   const powerEmptyImage = useEmptyImage('power')
@@ -109,6 +111,11 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
       fetchingRef.current = false
     }
   }, [riskHash, refreshFlag, isLogin])
+
+  useUpdateEffect(() => {
+    if (!isLogin) return
+    fetchList(true)
+  }, [refreshKey])
 
   useEffect(
     () => () => {
@@ -191,7 +198,12 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
 
   return (
     <div className={styles['risk-disposal-log']}>
-      <div className={styles['risk-disposal-log-body']} ref={listRef} onScroll={onScroll}>
+      <div
+        data-testid="risk-disposal-log-list"
+        className={styles['risk-disposal-log-body']}
+        ref={listRef}
+        onScroll={onScroll}
+      >
         <YakitSpin spinning={loading}>
           {list.length === 0 && !loading ? (
             <div className={styles['risk-disposal-log-empty']}>{t('RiskDisposalLog.empty')}</div>

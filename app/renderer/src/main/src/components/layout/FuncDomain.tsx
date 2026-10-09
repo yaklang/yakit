@@ -396,6 +396,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     }}
                   >
                     <div
+                      data-testid="user-menu-trigger"
                       className={classNames(styles['user-wrapper'], {
                         [styles['user-wrapper-dynamic']]: dynamicConnect,
                       })}
@@ -444,6 +445,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     }}
                   >
                     <div
+                      data-testid="user-menu-trigger"
                       className={classNames(styles['user-wrapper'], {
                         [styles['user-wrapper-dynamic']]: dynamicConnect,
                       })}
@@ -466,6 +468,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
               </>
             ) : (
               <div
+                data-testid="user-menu-trigger"
                 className={classNames(styles['user-wrapper'], {
                   [styles['user-wrapper-dynamic']]: dynamicConnect,
                 })}

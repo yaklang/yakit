@@ -356,8 +356,8 @@ describe('FuncDomain 头像按钮点击区域', () => {
   it.each(['company', 'github'])('%s 点击头像周围留白也打开菜单', (platform) => {
     userInfo.isLogin = true
     userInfo.platform = platform
-    const { container } = render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
-    fireEvent.click(container.querySelector('[class*="user-wrapper"]')!)
+    render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
+    fireEvent.click(screen.getByTestId('user-menu-trigger'))
     expect(
       platform === 'company' ? menuActions.setDynamicMenuOpen : menuActions.setCeUserMenuShow,
     ).toHaveBeenCalledWith(true)
@@ -366,8 +366,8 @@ describe('FuncDomain 头像按钮点击区域', () => {
 
   it('未登录时点击头像周围留白打开登录', () => {
     userInfo.isLogin = false
-    const { container } = render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
-    fireEvent.click(container.querySelector('[class*="user-wrapper"]')!)
+    render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
+    fireEvent.click(screen.getByTestId('user-menu-trigger'))
     expect(menuActions.setLoginShow).toHaveBeenCalledWith(true)
   })
 })

@@ -115,6 +115,8 @@ export interface UseHTTPFlowTableContextMenuOptions {
   onFilterDomain?: (flow: HTTPFlow) => void
   onBatch: (f: (element: HTTPFlow) => void, number: number, all?: boolean, rows?: HTTPFlow[]) => void
   onViewAttachmentDataRefresh: (id: number) => void
+  /** EE：单条修改标记 */
+  onOpenFlowMarkEdit?: (flow: HTTPFlow) => void
   /** EE：批量修改标记 */
   onOpenBatchMarkEdit?: (list: HTTPFlow[]) => void
   onClearSelection: () => void
@@ -163,6 +165,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onFilterDomain,
     onBatch,
     onViewAttachmentDataRefresh,
+    onOpenFlowMarkEdit,
     onOpenBatchMarkEdit,
     onClearSelection,
   } = options
@@ -591,6 +594,9 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
               label: t('HTTPFlowTable.RowContextMenu.modifyMark'),
               default: true,
               webSocket: true,
+              onClickSingle: (flow: HTTPFlow) => {
+                onOpenFlowMarkEdit?.(flow)
+              },
               onClickBatch: (list: HTTPFlow[]) => {
                 onOpenBatchMarkEdit?.(list)
               },
@@ -639,6 +645,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onlyFavorite,
     getUrlWithoutQuery,
     total,
+    onOpenFlowMarkEdit,
     onOpenBatchMarkEdit,
   ])
 

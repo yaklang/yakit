@@ -112,11 +112,9 @@ describe('FlowDisposalLog', () => {
         ],
       })
 
-    const { container, rerender } = render(
-      <FlowDisposalLog flow={{ Id: 1, Hash: 'flow' } as never} isLogin refreshKey={0} />,
-    )
+    const { rerender } = render(<FlowDisposalLog flow={{ Id: 1, Hash: 'flow' } as never} isLogin refreshKey={0} />)
     await waitFor(() => expect(screen.getByText('1')).toBeInTheDocument())
-    const list = container.querySelector('[class*="flow-disposal-log-body"]') as HTMLDivElement
+    const list = screen.getByTestId('flow-disposal-log-list')
     list.scrollTop = 120
 
     rerender(<FlowDisposalLog flow={{ Id: 1, Hash: 'flow' } as never} isLogin refreshKey={1} />)
@@ -139,9 +137,9 @@ describe('FlowDisposalLog', () => {
       total: 21,
     })
 
-    const { container } = render(<FlowDisposalLog flow={{ Id: 1, Hash: 'flow' } as never} isLogin refreshKey={0} />)
+    render(<FlowDisposalLog flow={{ Id: 1, Hash: 'flow' } as never} isLogin refreshKey={0} />)
     await waitFor(() => expect(apiGetFlowDisposalLogs).toHaveBeenCalledWith(expect.objectContaining({ page: 1 })))
-    const list = container.querySelector('[class*="flow-disposal-log-body"]') as HTMLDivElement
+    const list = screen.getByTestId('flow-disposal-log-list')
     Object.defineProperties(list, {
       scrollTop: { configurable: true, value: 100 },
       clientHeight: { configurable: true, value: 100 },

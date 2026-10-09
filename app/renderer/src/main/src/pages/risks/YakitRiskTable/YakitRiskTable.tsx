@@ -123,6 +123,7 @@ import { RemoteRiskGV } from '@/enums/risk'
 import { useStore } from '@/store'
 import { isEnterpriseEdition } from '@/utils/envfile'
 import { RiskDisposalLog } from './RiskDisposalLog'
+import { apiGetRiskVerifierUid } from '../riskVerifier'
 import { minWinSendToChildWin, openRiskNewWindow } from '@/utils/openWebsite'
 import type { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
 import type { JumpToAuditEditorProps } from '@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType'
@@ -370,7 +371,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const [type, setType] = useState<'all' | 'unread'>('all')
   const [allCheck, setAllCheck] = useState<boolean>(false)
   const [selectList, setSelectList] = useState<Risk[]>([])
-  const [currentSelectItem, setCurrentSelectItem] = useState<Risk>()
+  const [currentSelectItem, setCurrentSelectItem, getCurrentSelectItem] = useGetSetState<Risk>()
+  const [disposalRefreshKey, setDisposalRefreshKey] = useState(0)
   const [query, setQuery] = useControllableValue<QueryRisksRequest>(props, {
     defaultValue: cloneDeep(defQueryRisksRequest),
     valuePropName: 'query',
@@ -929,7 +931,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       const index = current.Data.findIndex((item) => item.Id === info.Id)
       if (index === -1) return
       const nextData = [...current.Data]
-      nextData[index] = {
+      const updatedRisk: Risk = {
         ...info,
         RiskType: riskType,
         RiskTypeVerbose: riskType,
@@ -942,10 +944,15 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         FixSuggestion: isRepaired ? info.FixSuggestion : undefined,
         TagReason: isRepaired ? undefined : info.TagReason,
       }
+      nextData[index] = updatedRisk
       setResponse({
         ...current,
         Data: nextData,
       })
+      if (getCurrentSelectItem()?.Id === updatedRisk.Id) {
+        setCurrentSelectItem(updatedRisk)
+        setDisposalRefreshKey((key) => key + 1)
+      }
       getRiskType()
     })
   })
@@ -1662,6 +1669,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
               border={yakitRiskDetailsBorder}
               isShowExtra={!excludeColumnsKey.includes('action')}
               onRetest={onRetest}
+              disposalRefreshKey={disposalRefreshKey}
               onDispose={(record) => {
                 if (!userInfo.isLogin) {
                   yakitNotify('info', t('RiskDisposalLog.please_login'))
@@ -1761,15 +1769,21 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
     </div>
   )
 })
-const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) => {
+export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) => {
   const { info, onClose, onSave } = props
   const { t, i18nRefresh } = useI18nNamespaces(['risk', 'yakitUi'])
+  const { userInfo } = useStore()
   const [form] = Form.useForm()
   const initRiskType = info.RiskTypeVerbose || info.RiskType || undefined
   const initCvss = typeof info.SeverityScore === 'number' ? info.SeverityScore : undefined
   const initDisposal = getDisposalStatusFromTags(info.Tags)
   const [typeSearch, setTypeSearch] = useState('')
-  const [verifierLoading, setVerifierLoading] = useState(() => !!info.VerifierUid)
+  const verifierChangedRef = useRef(false)
+  const [verifierLoading, setVerifierLoading] = useState(
+    () =>
+      !!info.VerifierUid ||
+      (initDisposal.includes(DISPOSAL_STATUS_REPAIRED) && isEnterpriseEdition() && userInfo.isLogin && !!info.Hash),
+  )
   const [verifierOptions, setVerifierOptions] = useState<{ label: string; value: string }[]>(() => {
     if (info.VerifierUid) return []
     if (info.Verifier) return [{ label: info.Verifier, value: info.Verifier }]
@@ -1777,19 +1791,44 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
   })
 
   useEffect(() => {
-    const uid = info.VerifierUid
-    if (!uid) return
-    apiGetUserSearch({ uid })
-      .then((res) => {
+    let cancelled = false
+    const loadVerifier = async () => {
+      let uid = info.VerifierUid
+      try {
+        if (
+          !uid &&
+          initDisposal.includes(DISPOSAL_STATUS_REPAIRED) &&
+          isEnterpriseEdition() &&
+          userInfo.isLogin &&
+          info.Hash
+        ) {
+          uid = await apiGetRiskVerifierUid(info.Hash)
+        }
+        if (cancelled || !uid || verifierChangedRef.current) return
+
+        setVerifierOptions([{ label: uid, value: uid }])
+        form.setFieldsValue({ verifier: uid })
+
+        const res = await apiGetUserSearch({ uid })
+        if (cancelled || verifierChangedRef.current || form.getFieldValue('verifier') !== uid) return
         const matched = (res?.data || []).find((item) => (item.uid || String(item.id)) === uid)
         if (matched) {
           const opt = { label: matched.name, value: matched.uid || String(matched.id) }
           setVerifierOptions([opt])
           form.setFieldsValue({ verifier: opt.value })
         }
-      })
-      .catch(() => {})
-      .finally(() => setVerifierLoading(false))
+      } catch (e) {
+        if (!cancelled) {
+          yakitNotify('error', t('YakitNotification.queryFailed', { error: String(e) }))
+        }
+      } finally {
+        if (!cancelled) setVerifierLoading(false)
+      }
+    }
+    loadVerifier()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const disposalStatus = Form.useWatch('disposal_status', form)
@@ -1831,6 +1870,10 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
     },
     { wait: 300 },
   ).run
+  const handleSearchVerifier = useMemoizedFn((keywords: string) => {
+    verifierChangedRef.current = true
+    onSearchVerifier(keywords)
+  })
 
   const onFinish = useMemoizedFn(
     (value: {
@@ -1975,7 +2018,10 @@ const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) =
                   allowClear
                   placeholder={t('YakitRiskEditForm.verifier_placeholder')}
                   filterOption={false}
-                  onSearch={onSearchVerifier}
+                  onSearch={handleSearchVerifier}
+                  onChange={() => {
+                    verifierChangedRef.current = true
+                  }}
                 >
                   {verifierOptions.map((item) => (
                     <YakitSelect.Option key={item.value} value={item.value}>
@@ -2032,6 +2078,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     isShowExtra,
     onRetest,
     onDispose,
+    disposalRefreshKey,
     boxStyle,
     detailClassName = '',
   } = props
@@ -2444,7 +2491,9 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
           />
         )}
 
-        {showType === 'history' && isEnterprise && <RiskDisposalLog info={info} isLogin={userInfo.isLogin} />}
+        {showType === 'history' && isEnterprise && (
+          <RiskDisposalLog info={info} isLogin={userInfo.isLogin} refreshKey={disposalRefreshKey} />
+        )}
       </div>
     </>
   )

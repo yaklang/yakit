@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn, useThrottleFn } from 'ahooks'
 import type { API } from '@/services/swagger/resposeType'
 import styles from './MessageCenter.module.scss'
@@ -496,6 +496,14 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   const [dataSorce, setDataSorce] = useState<API.MessageLogDetail[]>([])
   const [noRedDataTotal, setNoRedDataTotal] = useState<number>()
   const [isRef, setIsRef] = useState<boolean>(false)
+  const requestIdRef = useRef(0)
+  const readMessageRef = useRef(new Set<string>())
+
+  useEffect(() => {
+    return () => {
+      requestIdRef.current += 1
+    }
+  }, [])
 
   useEffect(() => {
     if (initialChannel === 'web' || initialChannel === 'plugin') {
@@ -517,6 +525,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   ).run
 
   const update = useMemoizedFn((data?: MessageQueryDataProps, isAdd?: boolean) => {
+    const requestId = ++requestIdRef.current
     setLoading(true)
     if (!isAdd) {
       setDataSorce([])
@@ -536,6 +545,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
       },
     )
       .then((res) => {
+        if (requestId !== requestIdRef.current) return
         if (newQueryData?.isRead === 'false') {
           setNoRedDataTotal(res.pagemeta.total)
         }
@@ -553,9 +563,11 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
         setHasMore((res.data || []).length >= MESSAGE_PAGE_LIMIT)
       })
       .catch((err) => {
+        if (requestId !== requestIdRef.current) return
         failed(err)
       })
       .finally(() => {
+        if (requestId !== requestIdRef.current) return
         setLoading(false)
       })
   })
@@ -616,13 +628,20 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     debugTaskEvent.startT({ item })
   })
 
-  const removeItem = useMemoizedFn((item: API.MessageLogDetail) => {
-    if (activeKey === 'unread' && !item.isRead) {
-      const newList = dataSorce.filter((i) => i.hash !== item.hash)
-      setDataSorce(newList)
-      if (isWebChannel) {
-        setNoRedDataTotal((prev) => Math.max(0, (prev || 0) - 1))
-      }
+  const removeItem = useMemoizedFn((item: API.MessageLogDetail, sourceChannel: MessageChannel) => {
+    if (sourceChannel !== channel) return
+    if (item.isRead) return
+    if (!dataSorce.some((current) => current.hash === item.hash && !current.isRead)) return
+    const messageKey = `${sourceChannel}:${item.hash}`
+    if (readMessageRef.current.has(messageKey)) return
+    readMessageRef.current.add(messageKey)
+    if (activeKey === 'unread') {
+      setDataSorce((prev) => prev.filter((i) => i.hash !== item.hash))
+    } else {
+      setDataSorce((prev) => prev.map((i) => (i.hash === item.hash ? { ...i, isRead: true } : i)))
+    }
+    if (isWebChannel) {
+      setNoRedDataTotal((prev) => Math.max(0, (prev || 0) - 1))
     }
   })
 
@@ -641,7 +660,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                 isEllipsis={true}
                 onClose={() => setVisible(false)}
                 onRedTaskItem={onRedTaskItem}
-                removeItem={removeItem}
+                removeItem={(item) => removeItem(item, channel)}
                 useWebApi={isWebChannel}
               />
             )
@@ -735,11 +754,18 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
 
   const onChannelChange = useMemoizedFn((next: MessageChannel) => {
     if (next === channel) return
+    requestIdRef.current += 1
     setDataSorce([])
     setNoRedDataTotal(undefined)
     setHasMore(true)
     setActiveKey('unread')
     setChannel(next)
+  })
+
+  const onActiveKeyChange = useMemoizedFn((next: 'unread' | 'all') => {
+    if (next === activeKey) return
+    requestIdRef.current += 1
+    setActiveKey(next)
   })
 
   return (
@@ -794,7 +820,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
         )}
         <YakitTabs
           activeKey={activeKey}
-          onChange={(v: any) => setActiveKey(v)}
+          onChange={(v: any) => onActiveKeyChange(v)}
           tabBarStyle={{ marginBottom: 5 }}
           className={styles['message-center-tab']}
           tabBarExtraContent={

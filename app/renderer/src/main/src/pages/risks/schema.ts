@@ -66,9 +66,9 @@ export interface Risk {
 
   /** CVSS 评分 0.0–10.0（对齐 SeverityScore） */
   SeverityScore?: number
-  /** 验证人（已修复） */
+  /** 前端补充：验证人姓名，由线上验证人 uid 查询 */
   Verifier?: string
-  /** 验证人 uid（已修复，提交 BatchSetRiskTags） */
+  /** 前端补充：线上风险接口返回的验证人 uid，gRPC Risk 不包含此字段 */
   VerifierUid?: string
   /** 修复时间 unix 秒（已修复） */
   FixTime?: number

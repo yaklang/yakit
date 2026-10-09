@@ -2880,6 +2880,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onFilterDomain,
     onBatch,
     onViewAttachmentDataRefresh,
+    onOpenFlowMarkEdit,
     onOpenBatchMarkEdit,
     onClearSelection: resetSelected,
   })

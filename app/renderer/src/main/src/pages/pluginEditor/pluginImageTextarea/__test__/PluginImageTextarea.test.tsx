@@ -2,8 +2,8 @@ import { createRef } from 'react'
 import type React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { PluginImageTextarea } from './PluginImageTextarea'
-import type { PluginImageTextareaRefProps } from './PluginImageTextareaType'
+import { PluginImageTextarea } from '../PluginImageTextarea'
+import type { PluginImageTextareaRefProps } from '../PluginImageTextareaType'
 import { DISPOSAL_ATTACHMENT_EXTENSIONS, MAX_ATTACHMENT_SIZE } from '@/utils/disposalAttachment'
 vi.mock('@/utils/disposalDownload', () => ({ downloadDisposalFile: vi.fn() }))
 

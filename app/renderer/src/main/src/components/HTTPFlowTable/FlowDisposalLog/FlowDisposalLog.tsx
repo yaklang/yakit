@@ -201,7 +201,12 @@ export const FlowDisposalLog: React.FC<FlowDisposalLogProps> = memo((props) => {
 
   return (
     <div className={styles['flow-disposal-log']}>
-      <div className={styles['flow-disposal-log-body']} ref={listRef} onScroll={onScroll}>
+      <div
+        data-testid="flow-disposal-log-list"
+        className={styles['flow-disposal-log-body']}
+        ref={listRef}
+        onScroll={onScroll}
+      >
         <YakitSpin spinning={loading}>
           {list.length === 0 && !loading ? (
             <div className={styles['flow-disposal-log-empty']}>{t('HTTPFlowDetailMini.logEmpty')}</div>
