@@ -193,6 +193,58 @@ describe('yakExecResult handlers', () => {
     expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('正在生成回复正文')
   })
 
+  it('interleaved tasks keep independent loading-status timestamps', () => {
+    const req = makeHandlerRequest({ chatType: 'task', res: makeGrpcJsonRes('structured', {}) })
+    const firstId = seedTaskNode(req, 'q1', 'sub-1')
+    const secondId = seedTaskNode(req, 'q1', 'sub-2')
+    const firstNode = req.rawData.contents.get(firstId) as ChatTaskNodeGroup
+    const secondNode = req.rawData.contents.get(secondId) as ChatTaskNodeGroup
+
+    const events = [
+      ['sub-1', 20, 'first working', 'first working', ''],
+      ['sub-2', 10, 'second working', 'first working', 'second working'],
+      ['sub-1', 19, 'first stale', 'first working', 'second working'],
+      ['sub-2', 11, 'second updated', 'first working', 'second updated'],
+      ['sub-1', 21, 'first updated', 'first updated', 'second updated'],
+      ['sub-2', 10, 'second stale', 'first updated', 'second updated'],
+    ] as const
+    for (const [taskId, timestamp, value, firstTitle, secondTitle] of events) {
+      req.res = makeGrpcJsonRes(
+        'structured',
+        { key: 're-act-loading-status-key', value },
+        { NodeId: 'status', TaskId: taskId, Timestamp: timestamp },
+      )
+      aiYakExecResultDataHandlers.status(req)
+      expect(firstNode.data.loadingTitle).toBe(firstTitle)
+      expect(secondNode.data.loadingTitle).toBe(secondTitle)
+    }
+  })
+
+  it('interleaved status keys for one task keep independent timestamps', () => {
+    const req = makeHandlerRequest({ chatType: 'task', res: makeGrpcJsonRes('structured', {}) })
+    const nodeId = seedTaskNode(req, 'q1', 'sub')
+    const node = req.rawData.contents.get(nodeId) as ChatTaskNodeGroup
+
+    const events = [
+      ['re-act-loading-status-key', 20, 'tool working', 'tool working', ''],
+      ['plan-executing-loading-status-key', 10, 'planning', 'tool working', 'planning'],
+      ['re-act-loading-status-key', 19, 'tool stale', 'tool working', 'planning'],
+      ['plan-executing-loading-status-key', 11, 'plan updated', 'tool working', 'plan updated'],
+      ['re-act-loading-status-key', 21, 'tool updated', 'tool updated', 'plan updated'],
+      ['plan-executing-loading-status-key', 10, 'plan stale', 'tool updated', 'plan updated'],
+    ] as const
+    for (const [key, timestamp, value, loadingTitle, planTitle] of events) {
+      req.res = makeGrpcJsonRes(
+        'structured',
+        { key, value },
+        { NodeId: 'status', TaskId: 'sub', Timestamp: timestamp },
+      )
+      aiYakExecResultDataHandlers.status(req)
+      expect(node.data.loadingTitle).toBe(loadingTitle)
+      expect(req.store.getState().currentLoadingTitle.planTitle).toBe(planTitle)
+    }
+  })
+
   it('repeated sub-task statuses do not trigger another render', () => {
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes(
