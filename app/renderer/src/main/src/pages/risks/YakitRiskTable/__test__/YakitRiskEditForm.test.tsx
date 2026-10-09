@@ -1,5 +1,5 @@
 import type React from 'react'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { YakitRiskEditForm } from '../YakitRiskTable'
 
@@ -158,7 +158,7 @@ describe('YakitRiskEditForm 验证人回填', () => {
     expect(mocks.userSearch).not.toHaveBeenCalled()
   })
 
-  it('保存已修复风险时映射验证人与修复字段', () => {
+  it('保存已修复风险时映射验证人与修复字段', async () => {
     mocks.finishValues.mockReturnValue({
       risk_type: '命令执行',
       cvss: 8.8,
@@ -175,7 +175,7 @@ describe('YakitRiskEditForm 验证人回填', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '测试提交' })))
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -210,7 +210,8 @@ describe('YakitRiskEditForm 验证人回填', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+    await waitFor(() => expect(mocks.userSearch).toHaveBeenCalledWith({ uid: 'old-uid' }))
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '测试提交' })))
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -222,6 +223,49 @@ describe('YakitRiskEditForm 验证人回填', () => {
         TagReason: '等待排期',
       }),
     )
-    await waitFor(() => expect(mocks.userSearch).toHaveBeenCalledWith({ uid: 'old-uid' }))
+  })
+
+  it('批量保存等待接口完成再关闭，重复提交不会发出第二次请求', async () => {
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 0, disposal_status: [] })
+    const pending = deferred<void>()
+    const onSave = vi.fn(() => pending.promise)
+    const onClose = vi.fn()
+    render(<YakitRiskEditForm info={{} as never} batchCount={20} onSave={onSave} onClose={onClose} />)
+
+    expect(screen.getByText('YakitRiskTable.batch_mark_hint')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+    fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ SeverityScore: 0, Tags: '' }))
+    expect(onClose).not.toHaveBeenCalled()
+    pending.resolve()
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+  })
+
+  it('批量保存失败保留弹窗，重试成功后关闭', async () => {
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 5, disposal_status: ['确认'] })
+    const onSave = vi.fn().mockRejectedValueOnce(new Error('保存失败')).mockResolvedValueOnce(undefined)
+    const onClose = vi.fn()
+    render(<YakitRiskEditForm info={{} as never} batchCount={2} onSave={onSave} onClose={onClose} />)
+
+    fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1))
+    expect(onClose).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+  })
+
+  it.each([
+    [{ cvss: 5 }, 'YakitRiskEditForm.risk_type_required'],
+    [{ risk_type: 'SQL注入' }, 'YakitRiskEditForm.cvss_required'],
+    [{ risk_type: 'SQL注入', cvss: 11 }, 'YakitRiskEditForm.cvss_range'],
+  ])('批量编辑校验必填类型和 CVSS 范围 %j', (values, error) => {
+    mocks.finishValues.mockReturnValue(values)
+    const onSave = vi.fn()
+    render(<YakitRiskEditForm info={{} as never} batchCount={2} onSave={onSave} />)
+    fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(mocks.notify).toHaveBeenCalledWith('error', error)
   })
 })

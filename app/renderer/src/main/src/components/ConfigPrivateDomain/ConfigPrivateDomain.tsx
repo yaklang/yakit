@@ -23,6 +23,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ENTERPRISE_DEFAULT_PRIVATE_DOMAIN, resolvePrivateDomainDefault } from './privateDomainDefault'
 
 interface OnlineProfileProps {
   BaseUrl: string
@@ -53,12 +54,12 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
   const httpHistoryRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
     ...defYakitAutoCompleteRef,
   })
-  const [defaultHttpUrl, setDefaultHttpUrl] = useState<string>('')
+  const [defaultHttpUrl, setDefaultHttpUrl] = useState<string>(enterpriseLogin ? ENTERPRISE_DEFAULT_PRIVATE_DOMAIN : '')
   const httpProxyRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
     ...defYakitAutoCompleteRef,
   })
   const [formValue, setFormValue, getFormValue] = useGetState<OnlineProfileProps>({
-    BaseUrl: '',
+    BaseUrl: enterpriseLogin ? ENTERPRISE_DEFAULT_PRIVATE_DOMAIN : '',
     Proxy: '',
     user_name: '',
     pwd: '',
@@ -215,26 +216,31 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
   })
   const getHttpSetting = useMemoizedFn(() => {
     getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
-      if (!setting) return
-      const value = JSONParseLog(setting, { page: 'ConfigPrivateDomain', fun: 'getHttpSetting' })
-      setDefaultHttpUrl(value.BaseUrl)
+      if (!setting && !enterpriseLogin) return
+      const value = setting ? JSONParseLog(setting, { page: 'ConfigPrivateDomain', fun: 'getHttpSetting' }) : {}
+      const nextValue = {
+        ...getFormValue(),
+        ...value,
+        BaseUrl: resolvePrivateDomainDefault(value?.BaseUrl, enterpriseLogin),
+      }
+      setDefaultHttpUrl(nextValue.BaseUrl)
       if (value?.pwd && value.pwd.length > 0) {
         // 解密
         yakitCodec
           .run({ Type: 'base64-decode', Text: value.pwd, Params: [], ScriptName: '' })
           .then((res) => {
             form.setFieldsValue({
-              ...value,
+              ...nextValue,
               pwd: res.Result,
             })
-            setFormValue({ ...value, pwd: res.Result })
+            setFormValue({ ...nextValue, pwd: res.Result })
           })
           .catch(() => {})
       } else {
         form.setFieldsValue({
-          ...value,
+          ...nextValue,
         })
-        setFormValue({ ...value })
+        setFormValue({ ...nextValue })
       }
     })
   })
@@ -281,7 +287,14 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
           <div className="title-box">{t('ConfigPrivateDomain.enterpriseLogin')}</div>
         </div>
       )}
-      <Form {...layout} form={form} name="control-hooks" onFinish={(v) => onFinish(v)} size="small">
+      <Form
+        {...layout}
+        form={form}
+        name="control-hooks"
+        initialValues={{ BaseUrl: enterpriseLogin ? ENTERPRISE_DEFAULT_PRIVATE_DOMAIN : '' }}
+        onFinish={(v) => onFinish(v)}
+        size="small"
+      >
         <Form.Item
           name="BaseUrl"
           label={t('ConfigPrivateDomain.privateDomainAddress')}
@@ -291,6 +304,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             ref={httpHistoryRef}
             cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
             initValue={defaultHttpUrl}
+            isCacheDefaultValue={!enterpriseLogin}
             placeholder={t('ConfigPrivateDomain.enterPrivateDomain')}
             defaultOpen={!enterpriseLogin}
           />

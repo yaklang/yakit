@@ -34,7 +34,7 @@ const { startIdleVisibleInterval, queryRisks, edition, messageState, userInfo, m
   startIdleVisibleInterval: vi.fn(() => vi.fn()),
   queryRisks: vi.fn(),
   edition: { community: true, yakit: true },
-  messageState: { unread: false },
+  messageState: { unread: 0, menuOpen: false },
   menuActions: {
     setDynamicMenuOpen: vi.fn(),
     setCeUserMenuShow: vi.fn(),
@@ -137,8 +137,8 @@ vi.mock('@/store/performanceSampling', () => ({
 
 vi.mock('../userMenu/useUserMenu', () => ({
   useUserMenu: () => ({
-    userMenu: [],
-    ceUserMenuShow: false,
+    userMenu: [{ key: 'message-center', label: 'FuncDomain.messageCenter' }],
+    ceUserMenuShow: messageState.menuOpen,
     setCeUserMenuShow: menuActions.setCeUserMenuShow,
     usageStatisticsShow: false,
     setUsageStatisticsShow: vi.fn(),
@@ -159,7 +159,7 @@ vi.mock('../userMenu/useUserMenu', () => ({
     setControlMyselfModal: vi.fn(),
     controlOtherModal: false,
     setControlOtherModal: vi.fn(),
-    dynamicMenuOpen: false,
+    dynamicMenuOpen: messageState.menuOpen,
     setDynamicMenuOpen: menuActions.setDynamicMenuOpen,
     robotControlModal: false,
     setRobotControlModal: vi.fn(),
@@ -326,19 +326,44 @@ describe('FuncDomain 风险轮询卸载竞态', () => {
 describe('FuncDomain 头像消息提示接线', () => {
   afterEach(() => {
     userInfo.isLogin = false
-    messageState.unread = false
+    messageState.unread = 0
+    messageState.menuOpen = false
   })
 
   it.each(['github', 'company'])('%s 头像随未读状态更新，未读消除后移除红点', (platform) => {
     userInfo.isLogin = true
     userInfo.platform = platform
-    messageState.unread = true
+    messageState.unread = 3
     queryRisks.mockResolvedValue({ Data: [] })
     const { rerender } = render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
     expect(screen.getByTestId('avatar-unread')).toHaveAttribute('data-unread', 'true')
-    messageState.unread = false
+    messageState.unread = 0
     rerender(<FuncDomain {...baseProps} isJudgeLicense={false} onDevToolRefresh={vi.fn()} />)
     expect(screen.getByTestId('avatar-unread')).toHaveAttribute('data-unread', 'false')
+  })
+
+  it.each([
+    ['github', 0, null],
+    ['github', 12, '12'],
+    ['github', 99, '99'],
+    ['github', 120, '99+'],
+    ['company', 0, null],
+    ['company', 12, '12'],
+    ['company', 99, '99'],
+    ['company', 120, '99+'],
+  ] as const)('%s 消息菜单显示未读总数 %s', async (platform, count, display) => {
+    userInfo.isLogin = true
+    userInfo.platform = platform
+    messageState.unread = count
+    messageState.menuOpen = true
+    queryRisks.mockResolvedValue({ Data: [] })
+    render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
+    expect(await screen.findByText('FuncDomain.messageCenter')).toBeInTheDocument()
+    if (display) {
+      expect(await screen.findByLabelText(`FuncDomain.unreadMessages: ${count}`)).toHaveTextContent(display)
+    } else {
+      expect(screen.queryByLabelText(/FuncDomain.unreadMessages:/)).not.toBeInTheDocument()
+    }
   })
 })
 

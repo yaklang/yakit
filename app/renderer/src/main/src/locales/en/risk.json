@@ -13,6 +13,10 @@
     "resetTipAfterManualSelection": "After manually selecting all vulnerability types, click reset to view all data"
   },
   "YakitRiskTable": {
+    "batch_modify_mark": "Modify Marks",
+    "delete_selected_risks": "Delete Selected Risks",
+    "confirm_clear_filtered_risks": "Clear all vulnerabilities and risks matching the current filters? This cannot be undone.",
+    "batch_mark_hint": "Apply the same marks to {{count}} risks. Empty optional fields will clear existing values.",
     "title": "Title",
     "type": "Type",
     "level": "Level",

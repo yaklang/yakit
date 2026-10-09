@@ -1,5 +1,12 @@
 @use '../../../theme/themeify.scss' as tools;
 
+.risk-batch-mark-hint {
+  margin-bottom: 16px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
 %display-flex-center {
   display: flex;
   align-items: center;

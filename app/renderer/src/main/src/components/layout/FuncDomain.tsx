@@ -108,7 +108,6 @@ import { useDownloadYakit } from './update/useDownloadYakit'
 import { JSONParseLog } from '@/utils/tool'
 import { SystemInfo } from '@/constants/hardware'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import cloneDeep from 'lodash/cloneDeep'
 import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
 import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
 import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
@@ -257,7 +256,32 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     avatarColor,
   })
 
-  const hasUnreadMessage = useMessageUnread()
+  const unreadMessageCount = useMessageUnread()
+  const hasUnreadMessage = unreadMessageCount > 0
+  const userMenuWithUnread = useMemo(
+    () =>
+      userMenu.map((item) => {
+        if (!('key' in item) || item.key !== 'message-center') return item
+        return {
+          ...item,
+          label: (
+            <span className={styles['message-center-menu-label']}>
+              <span>{t('FuncDomain.messageCenter')}</span>
+              {unreadMessageCount > 0 && (
+                <span
+                  className={styles['message-center-menu-count']}
+                  aria-label={`${t('FuncDomain.unreadMessages')}: ${unreadMessageCount}`}
+                  title={String(unreadMessageCount)}
+                >
+                  {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                </span>
+              )}
+            </span>
+          ),
+        }
+      }),
+    [userMenu, unreadMessageCount, t, i18nRefresh],
+  )
 
   const { screenRecorderInfo, setRecording } = useScreenRecorder()
   useEffect(() => {
@@ -371,8 +395,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     key={i18nRefresh}
                     menu={{
                       width: 206,
-                      data: userMenu.map((item) => {
-                        const obj = cloneDeep(item)
+                      data: userMenuWithUnread.map((item) => {
+                        const obj = { ...item }
                         // @ts-expect-error 类型定义不完整，需要忽略此行
                         if (obj?.label && typeof obj.label === 'string') {
                           // @ts-expect-error 类型定义不完整，需要忽略此行
@@ -425,7 +449,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     destroyOnHidden={true}
                     content={
                       <CeUserMenuContent
-                        menu={userMenu}
+                        menu={userMenuWithUnread}
                         onItemClick={(key) => {
                           setCeUserMenuShow(false)
                           onUserMenuClick(key)
@@ -1994,11 +2018,7 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const isUpdateYaklang = lowerYaklangLastVersion
 
     return (
-      <div
-        className={classNames(styles['ui-op-plus-wrapper'], {
-          [styles['ui-op-notice-enterprise']]: isEnpriTrace(),
-        })}
-      >
+      <div className={styles['ui-op-plus-wrapper']}>
         <div className={styles['ui-op-notice-body']}>
           <div className={styles['notice-version-header']}>
             <span className={styles['notice-version-title']}>更新通知</span>

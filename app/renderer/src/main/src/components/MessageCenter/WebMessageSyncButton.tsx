@@ -46,6 +46,8 @@ export const WebMessageSyncButton = ({ onSuccess }: { onSuccess?: () => void }) 
       onEnd: () => {
         clearSync()
         yakitNotify('success', syncMessage || t('MessageCenter.syncSuccess'))
+        if (type === 'flow') emiter.emit('onRefreshQueryHTTPFlows', JSON.stringify({ action: 'sync-complete' }))
+        if (type === 'risk') emiter.emit('onRefRiskList')
         onSuccess?.()
         emiter.emit('onRefreshMessageUnread', 'web')
       },

@@ -200,6 +200,29 @@
 .ui-op-submenu.ui-op-submenu:global(.ant-menu-submenu-popup) {
   padding: 0 6px;
 }
+.message-center-menu-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.message-center-menu-count {
+  flex-shrink: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  background: var(--Colors-Use-Error-Primary);
+  color: var(--Colors-Use-Basic-White);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  text-align: center;
+}
+
 .ui-op-plus-dropdown {
   :global {
     .ant-popover-inner {
@@ -210,10 +233,6 @@
   .ui-op-plus-wrapper {
     width: 400px;
     max-width: calc(100vw - 32px);
-
-    &.ui-op-notice-enterprise {
-      width: 600px;
-    }
 
     .ui-op-notice-body {
       width: 100%;

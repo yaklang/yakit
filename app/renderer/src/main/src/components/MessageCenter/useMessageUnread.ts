@@ -5,17 +5,17 @@ import emiter from '@/utils/eventBus/eventBus'
 import { failed } from '@/utils/notification'
 import { apiFetchQueryMessage, apiFetchQueryWebMessage } from './utils'
 
-/** 顶栏头像的未读状态，与更新通知和消息侧栏的挂载状态无关。 */
+/** 顶栏头像的未读总数，与更新通知和消息侧栏的挂载状态无关。 */
 export const useMessageUnread = () => {
   const { userInfo } = useStore()
   const { isLogin, platform, user_id, token } = userInfo
   const hasWebChannel = isEnpriTrace()
-  const [pluginUnread, setPluginUnread] = useState(false)
-  const [webUnread, setWebUnread] = useState(false)
+  const [pluginUnreadCount, setPluginUnreadCount] = useState(0)
+  const [webUnreadCount, setWebUnreadCount] = useState(0)
 
   useEffect(() => {
-    setPluginUnread(false)
-    setWebUnread(false)
+    setPluginUnreadCount(0)
+    setWebUnreadCount(0)
     if (!isLogin) return
 
     let disposed = false
@@ -26,7 +26,7 @@ export const useMessageUnread = () => {
       try {
         const res = await apiFetchQueryMessage({ page: 1, limit: 20 }, { isRead: 'false' })
         if (!disposed && request === pluginRequest) {
-          setPluginUnread((res.data || []).some((item) => !item.isRead))
+          setPluginUnreadCount(Math.max(0, Number(res.pagemeta?.total) || 0))
         }
       } catch (error) {
         if (!disposed && request === pluginRequest) failed(String(error))
@@ -38,7 +38,7 @@ export const useMessageUnread = () => {
       try {
         const res = await apiFetchQueryWebMessage({ page: 1, limit: 20 }, { isRead: 'false' })
         if (!disposed && request === webRequest) {
-          setWebUnread((res.data || []).some((item) => !item.isRead))
+          setWebUnreadCount(Math.max(0, Number(res.pagemeta?.total) || 0))
         }
       } catch {
         // 暂时请求失败时保留最近一次成功查询的未读状态。
@@ -51,9 +51,9 @@ export const useMessageUnread = () => {
     const onMessage = (data: string) => {
       try {
         if (JSON.parse(data)?.isRead === false) {
-          // 新推送不能被更早发起的查询覆盖。
-          pluginRequest++
-          setPluginUnread(true)
+          // 推送先保底显示未读，再通过权威查询更新总数；重复推送不会无界累加。
+          setPluginUnreadCount((count) => Math.max(count, 1))
+          void fetchPlugin()
         }
       } catch {
         // 忽略无效推送。
@@ -72,5 +72,5 @@ export const useMessageUnread = () => {
     }
   }, [isLogin, platform, user_id, token, hasWebChannel])
 
-  return isLogin && (pluginUnread || webUnread)
+  return isLogin ? pluginUnreadCount + webUnreadCount : 0
 }

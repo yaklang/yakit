@@ -101,6 +101,33 @@ describe('WebMessageSyncButton', () => {
     expect(screen.getByRole('button', { name: /MessageCenter\.updateData/ })).not.toHaveAttribute('aria-busy', 'true')
   })
 
+  it('仅更新已有流量且没有新增时，同步完成后也刷新 History 列表', () => {
+    const emit = vi.spyOn(emiter, 'emit')
+    render(<WebMessageSyncButton />)
+    fireEvent.click(screen.getByRole('button', { name: 'MessageCenter.updateFlow' }))
+    const handlers = vi.mocked(apiHTTPFlowsFromOnline).mock.calls[0][2]
+
+    act(() => handlers.onProgress(100, '更新: 6条, 新增: 0条'))
+    expect(emit).not.toHaveBeenCalledWith('onRefreshQueryHTTPFlows', expect.anything())
+    act(() => handlers.onEnd())
+
+    expect(emit.mock.calls.filter(([event]) => event === 'onRefreshQueryHTTPFlows')).toEqual([
+      ['onRefreshQueryHTTPFlows', JSON.stringify({ action: 'sync-complete' })],
+    ])
+  })
+
+  it('漏洞同步完成刷新风险列表，不触发流量列表刷新', () => {
+    const emit = vi.spyOn(emiter, 'emit')
+    render(<WebMessageSyncButton />)
+    fireEvent.click(screen.getByRole('button', { name: 'MessageCenter.updateRisk' }))
+    const handlers = vi.mocked(apiRisksFromOnline).mock.calls[0][2]
+
+    act(() => handlers.onEnd())
+
+    expect(emit).toHaveBeenCalledWith('onRefRiskList')
+    expect(emit).not.toHaveBeenCalledWith('onRefreshQueryHTTPFlows', expect.anything())
+  })
+
   it.each([
     ['MessageCenter.updateFlow', apiHTTPFlowsFromOnline, '同步完成，共同步 12 条流量'],
     ['MessageCenter.updateRisk', apiRisksFromOnline, '同步完成，共同步 3 条漏洞'],
@@ -136,18 +163,23 @@ describe('WebMessageSyncButton', () => {
     expect(yakitNotify).toHaveBeenLastCalledWith('success', 'MessageCenter.syncSuccess')
   })
 
-  it('流报错时清理资源且不回调成功', () => {
+  it.each([
+    ['MessageCenter.updateFlow', apiHTTPFlowsFromOnline, mocks.cleanupFlow],
+    ['MessageCenter.updateRisk', apiRisksFromOnline, mocks.cleanupRisk],
+  ] as const)('%s 报错时清理资源且不回调成功或刷新列表', (label, startApi, cleanupSync) => {
     const onSuccess = vi.fn()
     const emit = vi.spyOn(emiter, 'emit')
     render(<WebMessageSyncButton onSuccess={onSuccess} />)
-    fireEvent.click(screen.getByRole('button', { name: 'MessageCenter.updateRisk' }))
+    fireEvent.click(screen.getByRole('button', { name: label }))
 
-    const handlers = vi.mocked(apiRisksFromOnline).mock.calls[0][2]
+    const handlers = vi.mocked(startApi).mock.calls[0][2]
     act(() => handlers.onError(new Error('sync failed')))
 
-    expect(mocks.cleanupRisk).toHaveBeenCalledTimes(1)
+    expect(cleanupSync).toHaveBeenCalledTimes(1)
     expect(onSuccess).not.toHaveBeenCalled()
     expect(emit).not.toHaveBeenCalledWith('onRefreshMessageUnread', 'web')
+    expect(emit).not.toHaveBeenCalledWith('onRefreshQueryHTTPFlows', expect.anything())
+    expect(emit).not.toHaveBeenCalledWith('onRefRiskList')
     expect(screen.getByRole('button', { name: /MessageCenter\.updateData/ })).not.toHaveAttribute('aria-busy', 'true')
   })
 

@@ -94,8 +94,9 @@ export interface YakitRiskSelectTagProps {
 
 export interface YakitRiskEditFormProps {
   info: Risk
+  batchCount?: number
   onClose?: () => void
-  onSave: (info: Risk) => void
+  onSave: (info: Risk) => void | Promise<void>
 }
 
 export interface YakitCodeScanRiskDetailsProps {

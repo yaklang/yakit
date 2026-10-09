@@ -1467,9 +1467,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }).run
 
   const onRefreshQueryHTTPFlowsFun = useMemoizedFn((data) => {
-    if (!isTableActive) {
-      return
-    }
     try {
       const parsedData = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'onRefreshQueryHTTPFlowsFun' })
       const isEnvelope =
@@ -1478,6 +1475,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         parsedData.__yakitHTTPFlowRefreshEnvelope === 1 &&
         'payload' in parsedData
       const updateData = isEnvelope ? parsedData.payload : parsedData
+      if (updateData?.action === 'sync-complete') {
+        if (pageType === 'History') {
+          // 同步会修改已有记录，按当前筛选完整重查；后台页面在重新显示时查询。
+          setParams((prev) => ({ ...prev }))
+        }
+        return
+      }
+      if (!isTableActive) return
       const envelopeTimestamp = Number(isEnvelope ? parsedData.serverSentAtUnixMs : undefined)
       if (Number.isFinite(envelopeTimestamp) && envelopeTimestamp > 0) {
         const previousTimestamp = pendingPushServerSentAtUnixMsRef.current
@@ -1489,6 +1494,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         pendingTagUpdatesRef.current.push(updateData)
       }
     } catch (error) {}
+    if (!isTableActive) return
     if (inViewport) refreshFieldGroups()
     schedulePushRefresh()
   })
@@ -1855,6 +1861,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const onOpenFlowMarkEdit = useMemoizedFn((record: HTTPFlow) => {
     const m = showYakitModal({
+      maskClosable: false,
       title: `ID: ${record.Id}`,
       content: (
         <FlowMarkEditForm
@@ -1876,6 +1883,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     if (ids.length === 0) return
     const m = showYakitModal({
       title: t('HTTPFlowTable.batchModifyMark'),
+      maskClosable: false,
       content: (
         <FlowMarkEditForm
           batch

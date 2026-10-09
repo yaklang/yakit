@@ -897,6 +897,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const flowId = Number(flow.Id) || 0
     const m = showYakitModal({
       title: `ID: ${flow.Id}`,
+      maskClosable: false,
       content: (
         <FlowMarkEditForm
           info={flow}

@@ -13,6 +13,10 @@
     "resetTipAfterManualSelection": "手動選擇所有漏洞型別後，點選重置即可檢視所有資料"
   },
   "YakitRiskTable": {
+    "batch_modify_mark": "修改標記",
+    "delete_selected_risks": "刪除所選漏洞",
+    "confirm_clear_filtered_risks": "確定清空目前篩選結果中的所有漏洞與風險嗎？此操作無法復原。",
+    "batch_mark_hint": "將統一修改 {{count}} 條漏洞的標記，留空的選填項將清空原值。",
     "title": "標題",
     "type": "型別",
     "level": "等級",
