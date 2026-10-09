@@ -1,8 +1,5 @@
 import { yakitNotify } from '@/utils/notification'
-import type {
-  BatchSetHTTPFlowIssueFieldsRequest,
-  BatchSetHTTPFlowIssueFieldsResponse,
-} from './HTTPFlowMark.constants'
+import type { BatchSetHTTPFlowIssueFieldsRequest, BatchSetHTTPFlowIssueFieldsResponse } from './HTTPFlowMark.constants'
 
 const { ipcRenderer } = window.require('electron')
 
