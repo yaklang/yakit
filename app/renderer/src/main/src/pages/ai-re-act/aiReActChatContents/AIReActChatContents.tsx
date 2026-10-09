@@ -37,6 +37,7 @@ import { AITaskStatus } from '../hooks/grpcApi'
 import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import emiter from '@/utils/eventBus/eventBus'
 import { PositionOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { CheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { useDebounceFn, useCreation, useMemoizedFn } from 'ahooks'
 import {
   useVirtuosoInitialRender,
@@ -167,6 +168,17 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   }),
 )
 
+const renderFooterStatus = (text: string) => (
+  <div className={styles['footer-loading']}>
+    <div className={styles['footer-status']} style={{ marginTop: 8, padding: '0 8px' }}>
+      <CheckSolid size={16} color="currentColor" className={styles['footer-status-icon']} />
+      <div className={styles['footer-loading-title']}>
+        <ScrollText text={text} />
+      </div>
+    </div>
+  </div>
+)
+
 const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
   forwardRef((_props, ref) => {
     const { t } = useI18nNamespaces(['aiAgent'])
@@ -278,10 +290,11 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
     )
 
     const Footer = useCallback(() => {
-      if (!execute) return chatLength ? <div className={styles['end']}>当前会话已停止</div> : null
-      // 任务规划进行中时从 planTitle 取值，否则从 casualTitle 取值
-      const mainTitle = isTaskPlanning ? planTitle : casualTitle
-      if (!mainTitle) return <div className={styles['end']}>当前会话已结束</div>
+      if (!execute) return chatLength ? renderFooterStatus('当前会话已停止') : null
+      // 任务规划与自由对话都结束（两侧 loading 文案皆空）才显示「当前会话已结束」
+      if (!casualTitle && !planTitle) return renderFooterStatus('当前会话已结束')
+      // 任务规划进行中优先 planTitle，否则优先 casualTitle；一侧已空时回退另一侧
+      const mainTitle = (isTaskPlanning ? planTitle : casualTitle) || casualTitle || planTitle
       return (
         <div className={styles['footer-loading']}>
           <Loading size={16} style={{ marginTop: 8, padding: '0 8px' }}>
