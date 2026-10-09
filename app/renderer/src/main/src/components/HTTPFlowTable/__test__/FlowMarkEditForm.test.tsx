@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { HTTPFlow } from '../HTTPFlowTable.constants'
 
@@ -33,7 +33,9 @@ vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
   YakitInput: { TextArea: () => <textarea /> },
 }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
-  useI18nNamespaces: () => ({ t: (key: string) => key }),
+  useI18nNamespaces: () => ({
+    t: (key: string) => (key === 'HTTPFlowTable.markOptions.SQL注入' ? 'SQL injection' : key),
+  }),
 }))
 vi.mock('../HTTPFlowMark.utils', () => ({
   apiBatchSetHTTPFlowIssueFields: mocks.apiBatchSetHTTPFlowIssueFields,
@@ -82,5 +84,69 @@ describe('FlowMarkEditForm', () => {
       Filter: undefined,
       Token: 'token',
     })
+  })
+
+  it('clears all single-record fields in the request and successful local patch', async () => {
+    const onSuccess = vi.fn()
+    const onClose = vi.fn()
+    render(
+      <FlowMarkEditForm
+        info={{ IssueType: 'SQL注入', Severity: '高危', Status: '确认', StatusReason: 'old' }}
+        ids={[7]}
+        onSuccess={onSuccess}
+        onClose={onClose}
+      />,
+    )
+
+    await mocks.formProps?.onFinish({ StatusReason: '   ' })
+
+    expect(mocks.apiBatchSetHTTPFlowIssueFields).toHaveBeenCalledWith(
+      expect.objectContaining({ SetIssueType: '', SetSeverity: '', SetStatus: '', StatusReason: '' }),
+    )
+    await waitFor(() =>
+      expect(onSuccess).toHaveBeenCalledWith({
+        Ids: [7],
+        IssueType: '',
+        Severity: '',
+        Status: '',
+        StatusReason: '',
+      }),
+    )
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('translates labels while preserving the API values', async () => {
+    render(<FlowMarkEditForm ids={[7]} />)
+    expect(screen.getByRole('option', { name: 'SQL injection' })).toHaveValue('SQL注入')
+    await mocks.formProps?.onFinish({ IssueType: 'SQL注入' })
+    expect(mocks.apiBatchSetHTTPFlowIssueFields).toHaveBeenCalledWith(
+      expect.objectContaining({ SetIssueType: 'SQL注入' }),
+    )
+  })
+
+  it('patches only filled batch fields after the save succeeds', async () => {
+    let finishSave!: (value: { UpdatedCount: number }) => void
+    mocks.apiBatchSetHTTPFlowIssueFields.mockReturnValue(
+      new Promise((resolve) => {
+        finishSave = resolve
+      }),
+    )
+    const onSuccess = vi.fn()
+    const onClose = vi.fn()
+    render(<FlowMarkEditForm batch ids={[7, 8]} onSuccess={onSuccess} onClose={onClose} />)
+
+    mocks.formProps?.onFinish({ Severity: '高危', StatusReason: '  investigate  ' })
+    expect(onSuccess).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+
+    finishSave({ UpdatedCount: 2 })
+    await waitFor(() =>
+      expect(onSuccess).toHaveBeenCalledWith({
+        Ids: [7, 8],
+        Severity: '高危',
+        StatusReason: 'investigate',
+      }),
+    )
+    expect(onClose).toHaveBeenCalledOnce()
   })
 })

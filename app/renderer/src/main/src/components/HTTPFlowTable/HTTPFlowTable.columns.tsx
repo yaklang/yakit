@@ -241,7 +241,10 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
               filterKey: 'IssueType',
               filtersType: 'select',
               filterMultiple: true,
-              filters: FLOW_PROBLEM_TYPE_OPTIONS.map((item) => ({ value: item, label: item })),
+              filters: FLOW_PROBLEM_TYPE_OPTIONS.map((item) => ({
+                value: item,
+                label: t(`HTTPFlowTable.markOptions.${item}`),
+              })),
             },
             render: (text: string, record: HTTPFlow) => (
               <div
@@ -251,7 +254,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
                   onOpenFlowMarkEdit?.(record)
                 }}
               >
-                <span>{text || '-'}</span>
+                <span>{text ? t(`HTTPFlowTable.markOptions.${text}`, { defaultValue: text }) : '-'}</span>
                 <ChevronDownOutlined className={markStyles['table-tag-icon']} />
               </div>
             ),
@@ -264,7 +267,10 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
               filterKey: 'Severity',
               filtersType: 'select',
               filterMultiple: true,
-              filters: FLOW_SEVERITY_OPTIONS.map((item) => ({ value: item, label: item })),
+              filters: FLOW_SEVERITY_OPTIONS.map((item) => ({
+                value: item,
+                label: t(`HTTPFlowTable.markOptions.${item}`),
+              })),
             },
             render: (text: string, record: HTTPFlow) => (
               <div
@@ -274,7 +280,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
                   onOpenFlowMarkEdit?.(record)
                 }}
               >
-                <span>{text || '-'}</span>
+                <span>{text ? t(`HTTPFlowTable.markOptions.${text}`, { defaultValue: text }) : '-'}</span>
                 <ChevronDownOutlined className={markStyles['table-tag-icon']} />
               </div>
             ),
@@ -287,7 +293,10 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
               filterKey: 'Status',
               filtersType: 'select',
               filterMultiple: true,
-              filters: FLOW_DISPOSAL_STATUS_OPTIONS.map((item) => ({ value: item, label: item })),
+              filters: FLOW_DISPOSAL_STATUS_OPTIONS.map((item) => ({
+                value: item,
+                label: t(`HTTPFlowTable.markOptions.${item}`),
+              })),
             },
             render: (text: string, record: HTTPFlow) => (
               <div
@@ -297,7 +306,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
                   onOpenFlowMarkEdit?.(record)
                 }}
               >
-                <span>{text || '-'}</span>
+                <span>{text ? t(`HTTPFlowTable.markOptions.${text}`, { defaultValue: text }) : '-'}</span>
                 <ChevronDownOutlined className={markStyles['table-tag-icon']} />
               </div>
             ),

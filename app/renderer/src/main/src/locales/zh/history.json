@@ -186,7 +186,27 @@
     "filterDomainEmpty": "域名为空，无法过滤",
     "shieldLimitReached": "为保护数据库性能,屏蔽只允许5条生效,可以使用\"删除\"数据来移除不感兴趣的数据包",
     "shieldTooManyOnlyLatestTitle": "屏蔽条件过多",
-    "shieldTooManyOnlyLatest": "为保护性能，只生效最新5条屏蔽条件，用户可以通过\"删除\"特定数据包来移除不感兴趣的数据包。"
+    "shieldTooManyOnlyLatest": "为保护性能，只生效最新5条屏蔽条件，用户可以通过\"删除\"特定数据包来移除不感兴趣的数据包。",
+    "markOptions": {
+      "SQL注入": "SQL注入",
+      "XSS": "XSS",
+      "SSRF": "SSRF",
+      "未授权访问": "未授权访问",
+      "CSRF": "CSRF",
+      "文件上传漏洞": "文件上传漏洞",
+      "文件包含": "文件包含",
+      "反序列化漏洞": "反序列化漏洞",
+      "目录遍历": "目录遍历",
+      "低危": "低危",
+      "中危": "中危",
+      "高危": "高危",
+      "严重": "严重",
+      "确认": "确认",
+      "误报": "误报",
+      "待修复": "待修复",
+      "已修复": "已修复"
+    },
+    "modifyMarkFailed": "修改流量标记失败: {{error}}"
   },
   "ImportExportProgress": {
     "exportHARData": "导出HAR流量数据"

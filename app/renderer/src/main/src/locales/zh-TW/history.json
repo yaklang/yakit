@@ -186,7 +186,27 @@
     "filterDomainEmpty": "域名為空，無法過濾",
     "shieldLimitReached": "為保護資料庫效能,遮蔽只允許5條生效,可以使用\"刪除\"資料來移除不感興趣的資料包",
     "shieldTooManyOnlyLatestTitle": "遮蔽條件過多",
-    "shieldTooManyOnlyLatest": "為保護效能，只生效最新5條遮蔽條件，使用者可以透過\"刪除\"特定資料包來移除不感興趣的資料包。"
+    "shieldTooManyOnlyLatest": "為保護效能，只生效最新5條遮蔽條件，使用者可以透過\"刪除\"特定資料包來移除不感興趣的資料包。",
+    "markOptions": {
+      "SQL注入": "SQL注入",
+      "XSS": "XSS",
+      "SSRF": "SSRF",
+      "未授权访问": "未授權存取",
+      "CSRF": "CSRF",
+      "文件上传漏洞": "檔案上傳漏洞",
+      "文件包含": "檔案包含",
+      "反序列化漏洞": "反序列化漏洞",
+      "目录遍历": "目錄遍歷",
+      "低危": "低危",
+      "中危": "中危",
+      "高危": "高危",
+      "严重": "嚴重",
+      "确认": "確認",
+      "误报": "誤報",
+      "待修复": "待修復",
+      "已修复": "已修復"
+    },
+    "modifyMarkFailed": "修改流量標記失敗: {{error}}"
   },
   "ImportExportProgress": {
     "exportHARData": "匯出HAR流量資料"

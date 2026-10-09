@@ -45,10 +45,10 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
         if (value.Status) payload.SetStatus = value.Status
         if (value.StatusReason?.trim()) payload.StatusReason = value.StatusReason.trim()
       } else {
-        payload.SetIssueType = value.IssueType
-        payload.SetSeverity = value.Severity
-        payload.SetStatus = value.Status
-        payload.StatusReason = value.StatusReason?.trim() || undefined
+        payload.SetIssueType = value.IssueType ?? ''
+        payload.SetSeverity = value.Severity ?? ''
+        payload.SetStatus = value.Status ?? ''
+        payload.StatusReason = value.StatusReason?.trim() || ''
       }
       apiBatchSetHTTPFlowIssueFields(payload).then(() => {
         const patch: FlowMarkPatchPayload = {
@@ -90,7 +90,7 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
           <YakitSelect allowClear placeholder={t('HTTPFlowTable.selectProblemType')}>
             {FLOW_PROBLEM_TYPE_OPTIONS.map((item) => (
               <YakitSelect.Option key={item} value={item}>
-                {item}
+                {t(`HTTPFlowTable.markOptions.${item}`)}
               </YakitSelect.Option>
             ))}
           </YakitSelect>
@@ -99,7 +99,7 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
           <YakitSelect allowClear placeholder={t('HTTPFlowTable.selectSeverity')}>
             {FLOW_SEVERITY_OPTIONS.map((item) => (
               <YakitSelect.Option key={item} value={item}>
-                {item}
+                {t(`HTTPFlowTable.markOptions.${item}`)}
               </YakitSelect.Option>
             ))}
           </YakitSelect>
@@ -108,7 +108,7 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
           <YakitSelect allowClear placeholder={t('HTTPFlowTable.selectDisposalStatus')}>
             {FLOW_DISPOSAL_STATUS_OPTIONS.map((item) => (
               <YakitSelect.Option key={item} value={item}>
-                {item}
+                {t(`HTTPFlowTable.markOptions.${item}`)}
               </YakitSelect.Option>
             ))}
           </YakitSelect>

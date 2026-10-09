@@ -981,6 +981,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     switch (key) {
       case 'modify-mark': {
         if (!isEnterpriseEdition()) return
+        const batchEditInfo =
+          !allCheck && selectList.length === 1
+            ? cloneDeep(selectList[0])
+            : { Id: 0, Hash: '', IP: '', Title: '', RiskType: '', CreatedAt: 0 }
         const m = showYakitModal({
           title: (modalT) => modalT('YakitRiskTable.batch_modify_mark'),
           maskClosable: false,
@@ -988,7 +992,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
           onCancel: () => m.destroy(),
           content: (
             <YakitRiskEditForm
-              info={{ Id: 0, Hash: '', IP: '', Title: '', RiskType: '', CreatedAt: 0 }}
+              info={batchEditInfo}
               batchCount={selectNum}
               onClose={() => m.destroy()}
               onSave={(info) => onSaveRiskEdit(info, scope)}

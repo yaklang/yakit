@@ -1,4 +1,5 @@
 import { yakitNotify } from '@/utils/notification'
+import i18n from '@/i18n/i18n'
 import type { BatchSetHTTPFlowIssueFieldsRequest, BatchSetHTTPFlowIssueFieldsResponse } from './HTTPFlowMark.constants'
 
 const { ipcRenderer } = window.require('electron')
@@ -12,7 +13,7 @@ export const apiBatchSetHTTPFlowIssueFields = (
       .invoke('BatchSetHTTPFlowIssueFields', data)
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', `修改流量标记失败: ${e}`)
+        yakitNotify('error', i18n.t('HTTPFlowTable.modifyMarkFailed', { ns: 'history', error: `${e}` }))
         reject(e)
       })
   })

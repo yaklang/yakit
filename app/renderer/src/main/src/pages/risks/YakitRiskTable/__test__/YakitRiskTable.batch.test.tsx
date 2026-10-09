@@ -290,6 +290,42 @@ describe('YakitRiskTable 批量操作', () => {
     expect(mocks.emit).toHaveBeenCalledWith('onRefRiskFieldGroup')
   })
 
+  it('显式只选一条时回填该条风险快照', async () => {
+    await renderTable()
+    fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
+
+    const formProps = openBatchEdit()
+
+    expect(formProps.batchCount).toBe(1)
+    expect(formProps.info).toEqual(rows[0])
+    expect(formProps.info).not.toBe(rows[0])
+  })
+
+  it('显式选择多条时使用空白批量模板', async () => {
+    await renderTable()
+    fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
+    fireEvent.click(screen.getByRole('button', { name: 'select-second' }))
+
+    const formProps = openBatchEdit()
+
+    expect(formProps.info).toEqual({ Id: 0, Hash: '', IP: '', Title: '', RiskType: '', CreatedAt: 0 })
+  })
+
+  it('全选即使总数为一也使用空白批量模板', async () => {
+    render(
+      <YakitRiskTable query={query} setQuery={vi.fn()} setRiskLoading={vi.fn()} allTotal={1} setAllTotal={vi.fn()} />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
+    await waitFor(() => expect(screen.getByTestId('loaded-count')).toHaveTextContent('2'))
+    vi.clearAllMocks()
+    fireEvent.click(screen.getByRole('button', { name: 'select-all' }))
+
+    const formProps = openBatchEdit()
+
+    expect(formProps.batchCount).toBe(1)
+    expect(formProps.info).toEqual({ Id: 0, Hash: '', IP: '', Title: '', RiskType: '', CreatedAt: 0 })
+  })
+
   it('全选按当前未读过滤提交，不退化为已加载行 IDs', async () => {
     await renderTable()
     fireEvent.click(screen.getByRole('button', { name: 'type-false' }))
