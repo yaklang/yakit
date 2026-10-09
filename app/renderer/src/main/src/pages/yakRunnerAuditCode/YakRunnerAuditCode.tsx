@@ -15,7 +15,9 @@ import {
   addAuditCodeAreaFileInfo,
   grpcFetchAuditTree,
   grpcFetchAuditTreeInfo,
+  isIncrementalProgramByQuery,
   isIncrementalProgramFromInfo,
+  projectNameFromPath,
   judgeAreaExistAuditPath,
   judgeAuditCodeAreaExistFilePath,
   removeAuditCodeAreaFilesInfo,
@@ -174,11 +176,19 @@ const YakRunnerAuditCodeWorkbench: React.FC<YakRunnerAuditCodeProps> = (props) =
       resetMap(isFirst)
       onResetAuditStatusFun()
       // 查询当前 program 是否为增量编译，决定是否展示"展示全部文件"勾选框
+      // 链路1：ssadb 资源 Extra 中的 IsIncremental；后端未返回时走链路2（QuerySSAPrograms 的 IsIncrementalCompile）
       grpcFetchAuditTreeInfo(rootPath)
-        .then((res) => {
-          setIsIncrementalProject(isIncrementalProgramFromInfo(res))
+        .then(async (res) => {
+          if (isIncrementalProgramFromInfo(res)) {
+            setIsIncrementalProject(true)
+            return
+          }
+          setIsIncrementalProject(await isIncrementalProgramByQuery(projectNameFromPath(rootPath)))
         })
-        .catch(() => setIsIncrementalProject(false))
+        .catch(async () => {
+          // grpcFetchAuditTreeInfo 失败时也走 QuerySSAPrograms 兜底
+          setIsIncrementalProject(await isIncrementalProgramByQuery(projectNameFromPath(rootPath)))
+        })
       const lastFolder = await getNameByPath(rootPath)
       if (rootPath.length > 0 && lastFolder.length > 0) {
         const node: FileNodeMapProps = {

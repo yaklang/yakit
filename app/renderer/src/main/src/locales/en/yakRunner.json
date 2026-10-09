@@ -138,6 +138,7 @@
     "compileProject": "Compile Project",
     "recompile": "Recompile",
     "recentCompile": "Recent Compile",
+    "incrementalCompile": "Incremental",
     "projectConfigMissing": "No matching project configuration was found. Due to project management updates, please recompile the project.",
     "openProjectFailed": "Failed to open project database: {{error}}",
     "fileList": "File List",

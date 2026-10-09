@@ -141,6 +141,30 @@ export const isIncrementalProgramFromInfo = (res: RequestYakURLResponse): boolea
   return item?.Value === 'true' || item?.Value === '1'
 }
 
+/** 从 ssadb 根路径（如 "/Java_DVWA(2026-10-08 17:14:45)"）提取 program 名称 */
+export const projectNameFromPath = (path: string): string => {
+  return (path || '').split('/').filter(Boolean).pop() || ''
+}
+
+/**
+ * @name 通过 QuerySSAPrograms 判断 program 是否为增量编译
+ * @description ssadb Extra 未返回 IsIncremental 时的兜底链路：
+ * 后端 QuerySSAPrograms 返回 IsIncrementalCompile / IncrementalGroupId
+ */
+export const isIncrementalProgramByQuery = async (programName: string): Promise<boolean> => {
+  if (!programName) return false
+  try {
+    const { apiQuerySSAPrograms } = await import('@/pages/yakRunnerScanHistory/utils')
+    const res = await apiQuerySSAPrograms({
+      Filter: { ProgramNames: [programName] },
+      Pagination: { ...genDefaultPagination(10, 1) },
+    })
+    return (res.Data || []).some((p) => p.Name === programName && !!p.IsIncrementalCompile)
+  } catch (error) {
+    return false
+  }
+}
+
 /**
  * @name 漏洞文件/规则汇总树获取
  */

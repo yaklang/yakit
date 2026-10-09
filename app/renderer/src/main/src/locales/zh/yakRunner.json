@@ -138,6 +138,7 @@
     "compileProject": "编译项目",
     "recompile": "重新编译",
     "recentCompile": "最近编译",
+    "incrementalCompile": "增量",
     "projectConfigMissing": "未找到对应的项目配置，由于项目管理功能更新，请重新编译项目",
     "openProjectFailed": "打开项目数据库失败：{{error}}",
     "fileList": "文件列表",
