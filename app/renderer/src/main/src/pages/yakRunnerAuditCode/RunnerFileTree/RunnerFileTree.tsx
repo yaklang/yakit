@@ -274,9 +274,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
           key: `aduit-${item.name}`,
           label: (
             <span className={styles['recent-compile-item']}>
-              <span className='yakit-single-line-ellipsis'>{item.name}</span>
+              <span className="yakit-single-line-ellipsis">{item.name}</span>
               {item.isIncremental && (
-                <YakitTag size='small' color='info' className={styles['incremental-tag']}>
+                <YakitTag size="small" color="info" className={styles['incremental-tag']}>
                   {t('RunnerFileTree.incrementalCompile')}
                 </YakitTag>
               )}
