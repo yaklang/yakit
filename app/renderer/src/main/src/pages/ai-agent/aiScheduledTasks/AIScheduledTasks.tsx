@@ -13,18 +13,17 @@ import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/Ya
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { yakitNotify } from '@/utils/notification'
-import emiter from '@/utils/eventBus/eventBus'
 import type { AIReActSchedule } from '../../ai-re-act/hooks/grpcApi'
-import { grpcQueryAISession } from '../grpc'
-import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { grpcGetAIReActSchedule, grpcQueryAIReActSchedules, grpcRunAIReActScheduleNow } from './utils'
 import type { AIScheduledTasksProps } from './type'
 import ScheduledTasksForm from './scheduledTasksForm/ScheduledTasksForm'
-import AIScheduledTasksDetail from './aiScheduledTasksDetail/AIScheduledTasksDetail'
 import AIScheduledTasksList from './AIScheduledTasksList'
-import { waitForAISessionPush } from './waitForAISessionPush'
 import { SideSettingButton } from '../aiChatWelcome/AIChatWelcomeSideSetting'
+import { yakitNotify } from '@/utils/notification'
+import emiter from '@/utils/eventBus/eventBus'
+import { grpcQueryAISession } from '../grpc'
+import useAIAgentDispatcher from '../useContext/useDispatcher'
+import { waitForAISessionPush } from './waitForAISessionPush'
 import styles from './AIScheduledTasks.module.scss'
 
 const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => {
@@ -34,7 +33,6 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
 
   const [keyWord, setKeyWord] = useState<string>('')
   const [loading, setLoading] = useState(false)
-  const [selectedSchedule, setSelectedSchedule] = useState<AIReActSchedule | null>(null)
   const [schedules, setSchedules] = useState<AIReActSchedule[]>([])
   const requestIdRef = useRef(0)
   const listRef = useRef<HTMLDivElement>(null)
@@ -74,10 +72,9 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
     prevVisibleRef.current = visible
     if (visible && prev === false) getList()
   }, [visible])
+
   const onSetData = useMemoizedFn((item: AIReActSchedule) => {
     setSchedules((previous) => previous.map((schedule) => (schedule.UUID === item.UUID ? item : schedule)))
-    // 选中项与列表解耦后，单条更新（编辑保存、详情自身启停回写）需同步刷新打开中的详情
-    setSelectedSchedule((preV) => (preV?.UUID === item.UUID ? { ...item } : preV))
   })
   const openForm = useMemoizedFn((editing?: AIReActSchedule) => {
     const m = showYakitModal({
@@ -91,7 +88,7 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
           onSuccess={() => {
             if (editing?.UUID) {
               // 编辑成功只拉取该任务最新数据，经 onSetData 原位更新列表行，
-              // 并在 editing.UUID 与选中项一致时同步刷新打开中的详情；不整表刷新以保留当前滚动位置
+              // 同时由列表项同步打开中的详情；不整表刷新以保留当前滚动位置
               grpcGetAIReActSchedule({ UUID: editing.UUID }, true)
                 .then((latest) => {
                   if (latest?.UUID) onSetData(latest)
@@ -138,22 +135,8 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
       .catch(() => {})
   })
 
-  const onDeleteAfter = useMemoizedFn(() => {
-    // 删除逻辑已内聚在详情组件中，这里只需刷新列表
-    getList()
-  })
   return (
     <div className={styles['ai-schedule-list-wrapper']} ref={listRef}>
-      {selectedSchedule && (
-        <AIScheduledTasksDetail
-          initialSchedule={selectedSchedule}
-          onClose={() => setSelectedSchedule(null)}
-          onDataChange={onSetData}
-          onEdit={openForm}
-          onRunNow={runScheduleNow}
-          onDeleteAfter={onDeleteAfter}
-        />
-      )}
       <div className={styles['ai-schedule-list-header']}>
         <div className={styles['ai-schedule-list-header-left']}>
           <span className={styles['ai-schedule-list-header-title']}>{t('AIScheduledTasks.title')}</span>
@@ -190,7 +173,7 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
         onSetData={onSetData}
         onRefresh={getList}
         onEdit={openForm}
-        onOpenDetail={setSelectedSchedule}
+        onRunNow={runScheduleNow}
       />
     </div>
   )

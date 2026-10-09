@@ -235,6 +235,7 @@
     "invalidHistoryCursor": "History recovery did not return a valid cursor."
   },
   "AIScheduledTasks": {
+    "executionCycle": "Execution cycle",
     "runningGroup": "Running",
     "disabledGroup": "Disabled",
     "nextExecution": "Next run: {{time}}",

@@ -1,5 +1,5 @@
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 // 先注册 electron stub，避免 '../utils' 顶层 window.require('electron') 报错
 import '../../../../ai-re-act/hooks/__test__/setupElectron'
@@ -51,6 +51,7 @@ const makeProps = (initialSchedule: AIReActSchedule) => ({
 
 describe('AIScheduledTasksDetail 数据同步', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     mockGetAIReActSchedule.mockReset()
     mockQueryAISession.mockReset()
     mockSetSetting.mockReset()
@@ -104,29 +105,58 @@ describe('AIScheduledTasksDetail 数据同步', () => {
     expect(screen.getByText('orig-text')).toBeInTheDocument()
   })
 
-  it('详情内启停后拉取最新数据仅经 onDataChange 上抛，由父组件 prop 回流刷新详情', async () => {
+  it('启停使用接口返回记录立即刷新详情并通知父组件', async () => {
     const { grpcSetAIReActScheduleEnabled } = await import('../../utils')
-    mockGetAIReActSchedule.mockResolvedValue(undefined)
-    const onDataChange = vi.fn()
-    const { rerender } = render(<AIScheduledTasksDetail {...makeProps(makeSchedule())} onDataChange={onDataChange} />)
-
-    // 详情头部动作区第一个按钮为启停（返回按钮在前，但动作区依次为：启停/编辑/运行/删除）
-    const pauseButton = screen.getAllByRole('button')[1]
-    await userEvent.click(pauseButton)
-
-    await waitFor(() => {
-      expect(grpcSetAIReActScheduleEnabled).toHaveBeenCalledWith({ UUID: 'u-1', Enabled: false })
-      expect(mockGetAIReActSchedule).toHaveBeenCalledWith({ UUID: 'u-1' }, true)
-    })
-
-    // 启停路径只上抛数据；详情自身不直接 setSchedule，刷新经父组件 prop 回流实现
     const latest = makeSchedule({ Name: 'after-toggle-name', Status: 'paused' })
-    mockGetAIReActSchedule.mockResolvedValue(latest)
-    await userEvent.click(pauseButton)
+    vi.mocked(grpcSetAIReActScheduleEnabled).mockResolvedValue(latest)
+    const onDataChange = vi.fn()
+    render(<AIScheduledTasksDetail {...makeProps(makeSchedule())} onDataChange={onDataChange} />)
+
+    await userEvent.click(screen.getByRole('switch', { name: 'AIScheduledTasks.pause' }))
     await waitFor(() => expect(onDataChange).toHaveBeenCalledWith(latest))
-    // 模拟父组件回流新 prop，详情应展示启停后的最新数据
-    rerender(<AIScheduledTasksDetail {...makeProps(latest)} onDataChange={onDataChange} />)
-    await waitFor(() => expect(screen.getByText('after-toggle-name')).toBeInTheDocument())
+    expect(grpcSetAIReActScheduleEnabled).toHaveBeenCalledWith({ UUID: 'u-1', Enabled: false })
+    expect(mockGetAIReActSchedule).not.toHaveBeenCalled()
+    expect(screen.getByText('after-toggle-name')).toBeInTheDocument()
+    expect(screen.getByRole('switch', { name: 'AIScheduledTasks.resume' })).not.toBeChecked()
+    expect(screen.queryByText('AIScheduledTasks.nextRun')).not.toBeInTheDocument()
+  })
+
+  it.each(['active', 'paused', 'completed'])('%s 状态正确显示开关和下次执行', (status) => {
+    render(<AIScheduledTasksDetail {...makeProps(makeSchedule({ Status: status }))} />)
+    expect(screen.queryByRole('switch') !== null).toBe(status !== 'completed')
+    expect(screen.queryByText('AIScheduledTasks.nextRun') !== null).toBe(status === 'active')
+    expect(screen.getByText('AIScheduledTasks.executionCycle')).toBeInTheDocument()
+    expect(screen.queryByText('AIScheduledTasks.timezone')).not.toBeInTheDocument()
+    expect(screen.queryByText('AIScheduledTasks.taskIntro')).not.toBeInTheDocument()
+    expect(screen.queryByText('AIScheduledTasks.runNow')).not.toBeInTheDocument()
+  })
+
+  it('编辑传递当前任务', async () => {
+    const schedule = makeSchedule()
+    const onEdit = vi.fn()
+    render(<AIScheduledTasksDetail {...makeProps(schedule)} onEdit={onEdit} />)
+    await userEvent.click(screen.getByRole('button', { name: 'YakitButton.edit' }))
+    expect(onEdit).toHaveBeenCalledWith(schedule)
+  })
+
+  it('保留最近执行结果、错误及停止原因', () => {
+    render(
+      <AIScheduledTasksDetail
+        {...makeProps(
+          makeSchedule({
+            Status: 'paused',
+            LastOutcome: 'failed',
+            LastError: 'execution failed',
+            PauseReason: 'paused by system',
+            LastStartedAt: 1700000000,
+            LastFinishedAt: 1700000060,
+          }),
+        )}
+      />,
+    )
+    expect(screen.getByText('AIScheduledTasks.outcome.failed')).toBeInTheDocument()
+    expect(screen.getByText('execution failed')).toBeInTheDocument()
+    expect(screen.getByText('paused by system')).toBeInTheDocument()
   })
 
   it('打开关联会话时从 StartParams 恢复 SingleModelMode', async () => {
@@ -144,6 +174,7 @@ describe('AIScheduledTasksDetail 数据同步', () => {
           makeSchedule({
             TargetMode: 'continue_session',
             TargetSessionID: 'sess-linked',
+            LastRunAt: 1700000000,
           }),
         )}
       />,
@@ -152,8 +183,9 @@ describe('AIScheduledTasksDetail 数据同步', () => {
     await waitFor(() => expect(mockQueryAISession).toHaveBeenCalled())
     await waitFor(() => expect(screen.getByTitle('linked-chat')).toBeInTheDocument())
 
-    const titleRow = screen.getByTitle('linked-chat').closest('div')
-    const openBtn = titleRow?.querySelector('button')
+    const recentExecutionHeader = screen.getByText('AIScheduledTasks.lastExecution').parentElement!
+    const openBtn = within(recentExecutionHeader).getByRole('button', { name: 'AIScheduledTasks.openChat' })
+    expect(screen.queryByRole('button', { name: 'linked-chat' })).not.toBeInTheDocument()
     expect(openBtn).toBeTruthy()
     await userEvent.click(openBtn!)
 
@@ -164,5 +196,15 @@ describe('AIScheduledTasksDetail 数据同步', () => {
       EnablePlan: true,
     })
     expect(mockSetActiveChat).toHaveBeenCalledWith(related)
+  })
+})
+
+describe('AIScheduledTasksDetail 立即运行', () => {
+  it.each(['active', 'paused', 'completed'])('%s 状态可以从详情立即运行', async (Status) => {
+    const schedule = makeSchedule({ Status })
+    const onRunNow = vi.fn()
+    render(<AIScheduledTasksDetail {...makeProps(schedule)} onRunNow={onRunNow} />)
+    await userEvent.click(screen.getByRole('button', { name: 'AIScheduledTasks.runNow' }))
+    expect(onRunNow).toHaveBeenCalledExactlyOnceWith(schedule)
   })
 })
