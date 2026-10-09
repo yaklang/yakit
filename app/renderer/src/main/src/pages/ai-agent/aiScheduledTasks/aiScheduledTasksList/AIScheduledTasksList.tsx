@@ -23,10 +23,10 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
 import type { AIScheduledTasksListItemProps, AIScheduledTasksListProps } from './type'
-import { grpcDeleteAIReActSchedule, grpcSetAIReActScheduleEnabled } from './utils'
+import { grpcDeleteAIReActSchedule, grpcSetAIReActScheduleEnabled } from '../utils'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { formatScheduleRule } from './scheduleDisplay'
-import AIScheduledTasksDetail from './aiScheduledTasksDetail/AIScheduledTasksDetail'
+import { formatScheduleRule } from '../scheduleDisplay'
+import AIScheduledTasksDetail from '../aiScheduledTasksDetail/AIScheduledTasksDetail'
 import styles from './AIScheduledTasksList.module.scss'
 
 const scheduleGroups = [

@@ -5,7 +5,7 @@ import { act, cleanup, fireEvent, render as renderComponent, screen, waitFor, wi
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '../../../ai-re-act/hooks/__test__/setupElectron'
 import AIScheduledTasks from '../AIScheduledTasks'
-import AIScheduledTasksList from '../AIScheduledTasksList'
+import AIScheduledTasksList from '../aiScheduledTasksList/AIScheduledTasksList'
 import {
   grpcGetAIReActSchedule,
   grpcQueryAIReActSchedules,
