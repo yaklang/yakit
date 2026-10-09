@@ -23,6 +23,13 @@
         font-weight: 600;
         line-height: 16px;
       }
+      .info-icon {
+        svg {
+          width: 16px;
+          height: 16px;
+          color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        }
+      }
     }
     .ai-schedule-list-header-right {
       @extend %display-flex-center;
@@ -35,11 +42,6 @@
         display: inline-flex;
         align-items: center;
         line-height: 0;
-      }
-      .question-icon {
-        &:hover {
-          background-color: transparent;
-        }
       }
     }
   }

@@ -3,7 +3,7 @@ import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'
 import {
   PlusOutlined,
-  QuestionMarkCircleOutlined,
+  InformationCircleOutlined,
   RefreshOutlined,
   SearchOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -144,13 +144,13 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
       <div className={styles['ai-schedule-list-header']}>
         <div className={styles['ai-schedule-list-header-left']}>
           <span className={styles['ai-schedule-list-header-title']}>{t('AIScheduledTasks.title')}</span>
+          <Tooltip title={t('AIScheduledTasks.maxConcurrentRuns')}>
+            <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
+          </Tooltip>
           <YakitRoundCornerTag>{schedules.length}</YakitRoundCornerTag>
         </div>
         <div className={styles['ai-schedule-list-header-right']}>
           <SideSettingButton type="text2" />
-          <Tooltip title={t('AIScheduledTasks.maxConcurrentRuns')}>
-            <YakitButton type="text2" icon={<QuestionMarkCircleOutlined />} className={styles['question-icon']} />
-          </Tooltip>
           <Tooltip title={t('YakitButton.add')}>
             <YakitButton type="text2" icon={<PlusOutlined />} onClick={onAdd} />
           </Tooltip>

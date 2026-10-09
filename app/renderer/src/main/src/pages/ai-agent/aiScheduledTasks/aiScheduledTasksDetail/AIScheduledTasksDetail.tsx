@@ -9,15 +9,10 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Tooltip } from 'antd'
-import {
-  ArrowUpRightOutlined,
-  MessageCirclePlusOutlined,
-  PencilOutlined,
-  TimerOutlined,
-  TrashOutlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import { ArrowUpRightOutlined, PencilOutlined, TimerOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { formatScheduleRule } from '../scheduleDisplay'
+import { OutlineArrowUpFromDotIcon } from '../icon'
 import type { AIReActSchedule } from '../../../ai-re-act/hooks/grpcApi'
 import { grpcDeleteAIReActSchedule, grpcSetAIReActScheduleEnabled } from '../utils'
 import { yakitNotify } from '@/utils/notification'
@@ -262,7 +257,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
               type="text2"
               size="middle"
               aria-label={t('AIScheduledTasks.runNow')}
-              icon={<MessageCirclePlusOutlined />}
+              icon={<OutlineArrowUpFromDotIcon />}
               onClick={handleRunNow}
             />
           </Tooltip>
