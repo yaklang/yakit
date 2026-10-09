@@ -1,7 +1,6 @@
 import React, { type ReactNode, lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { Avatar, Layout, Upload, Watermark } from 'antd'
-import CameraOutlined from '@ant-design/icons/lib/icons/CameraOutlined'
-import { failed, success, yakitFailed } from '../utils/notification'
+import { Layout, Watermark } from 'antd'
+import { yakitFailed } from '../utils/notification'
 import {
   type CompletionTotal,
   type MethodSuggestion,
@@ -45,7 +44,6 @@ const YakChatCS = lazy(() => import('@/components/yakChat/chatCS').then((m) => (
 import { MainOperatorContent } from './layout/mainOperatorContent/MainOperatorContent'
 import type { MultipleNodeInfo } from './layout/mainOperatorContent/MainOperatorContentType'
 import emiter from '@/utils/eventBus/eventBus'
-import { httpDeleteOSSResource } from '@/apiUtils/http'
 import { setUpSyntaxFlowMonaco } from '../utils/monacoSpec/syntaxflowEditor'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 const MessageCenterModal = lazy(() =>
@@ -75,8 +73,6 @@ import { JSONParseLog } from '@/utils/tool'
 import { Trans } from 'react-i18next'
 import aiChatPersistStore from './ai-re-act/hooks/persist/aiChatPersistStore'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
-
-import { UsersSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -109,123 +105,10 @@ export interface MenuItemType {
   disabled?: boolean
 }
 
-export const judgeAvatar = (userInfo, size: number, avatarColor: string) => {
-  const { companyHeadImg, companyName } = userInfo
+// 保留既有导出路径，用户菜单直接引用独立组件。
+export { judgeAvatar, SetUserInfo } from '@/components/layout/userMenu/SetUserInfo'
+export type { SetUserInfoProp } from '@/components/layout/userMenu/SetUserInfo'
 
-  return companyHeadImg && !!companyHeadImg.length ? (
-    <Avatar size={size} style={{ cursor: 'pointer' }} src={companyHeadImg} />
-  ) : (
-    <Avatar size={size} style={{ backgroundColor: avatarColor, cursor: 'pointer' }}>
-      {companyName && companyName.slice(0, 1)}
-    </Avatar>
-  )
-}
-
-export interface SetUserInfoProp {
-  userInfo: UserInfoProps
-  setStoreUserInfo: (info: any) => void
-  avatarColor: string
-}
-
-// 可上传文件类型
-const FileType = ['image/png', 'image/jpeg', 'image/png']
-
-// 用户信息
-export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['layout'])
-  const { userInfo, setStoreUserInfo, avatarColor } = props
-
-  // OSS远程头像删除
-  const deleteAvatar = useMemoizedFn((imgName) => {
-    httpDeleteOSSResource({ file_name: [imgName] }, true)
-      .then(() => {})
-      .catch((err) => {
-        failed(t('SetUserInfo.avatarUpdateFailed', { error: err }))
-      })
-  })
-
-  // 修改头像
-  const setAvatar = useMemoizedFn(async (file: File) => {
-    if (!file.path) {
-      failed(t('SetUserInfo.avatarUpdateFailed', { error: 'missing file path' }))
-      return
-    }
-    await ipcRenderer
-      .invoke('http-upload-img-path', { path: file.path, type: 'headImg' })
-      .then((res) => {
-        const imgUrl: string = res.data
-        NetWorkApi<API.UpUserInfoRequest, API.ActionSucceeded>({
-          method: 'post',
-          url: 'urm/up/userinfo',
-          data: {
-            head_img: imgUrl,
-          },
-        })
-          .then((result) => {
-            if (result.ok) {
-              success(t('SetUserInfo.avatarUpdateSuccess'))
-              setStoreUserInfo({
-                ...userInfo,
-                companyHeadImg: imgUrl,
-              })
-              const imgName = imgUrl.split('/').reverse()[0]
-              deleteAvatar(imgName)
-            }
-          })
-          .catch((err) => {
-            failed(t('SetUserInfo.avatarUpdateFailed', { error: err }))
-          })
-          .finally(() => {})
-      })
-      .catch((err) => {
-        failed(t('SetUserInfo.avatarUploadFailed'))
-      })
-      .finally(() => {})
-  })
-  return (
-    <div className="dropdown-menu-user-info">
-      <Upload.Dragger
-        className="author-upload-dragger"
-        accept={FileType.join(',')}
-        // accept=".jpg, .jpeg, .png"
-        multiple={false}
-        maxCount={1}
-        showUploadList={false}
-        beforeUpload={(f) => {
-          if (!FileType.includes(f.type)) {
-            failed(t('SetUserInfo.avatarFileTypeLimit', { name: f.name }))
-            return false
-          }
-          setAvatar(f)
-          return false
-        }}
-      >
-        <div className="img-box">
-          <div className="img-box-mask">{judgeAvatar(userInfo, 40, avatarColor)}</div>
-          <CameraOutlined className="hover-icon" />
-        </div>
-      </Upload.Dragger>
-      <div
-        className="content-box"
-        style={
-          userInfo.role !== 'admin'
-            ? { display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: 16 }
-            : {}
-        }
-      >
-        <div className="user-name">{userInfo.companyName}</div>
-        {userInfo.role === 'admin' && (
-          <>
-            <div className="permission-show">{t('SetUserInfo.admin')}</div>
-            <span className="user-admin-icon">
-              <UsersSolid color="#9D9AFB" size={16} />
-            </span>
-          </>
-        )}
-      </div>
-    </div>
-  )
-})
 // web-fuzzer页面缓存数据属性
 export interface fuzzerInfoProp {
   time: string

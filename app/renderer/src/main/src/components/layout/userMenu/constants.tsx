@@ -1,5 +1,6 @@
 import {
   DeviceMobileOutlined,
+  BellOutlined,
   OfficeBuildingOutlined,
   PuzzleOutlined,
   PresentationChartLineOutlined,
@@ -83,6 +84,11 @@ export const UserMenusMap: Record<string, UserMenuItemType> = {
     key: 'robot-control',
     label: 'FuncDomain.mobileControl',
     icon: <DeviceMobileOutlined color="currentColor" />,
+  },
+  messageCenter: {
+    key: 'message-center',
+    label: 'FuncDomain.messageCenter',
+    icon: <BellOutlined color="currentColor" />,
   },
   roleAdmin: { key: 'role-admin', label: 'FuncDomain.roleAdmin' },
   accountAdmin: { key: 'account-admin', label: 'FuncDomain.accountAdmin' },

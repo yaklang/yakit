@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
+import { useMemoizedFn, useThrottleFn } from 'ahooks'
 import type { API } from '@/services/swagger/resposeType'
 import styles from './MessageCenter.module.scss'
 import { failed, yakitNotify } from '@/utils/notification'
@@ -9,7 +9,6 @@ import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { Resizable } from 're-resizable'
 import YakitTabs from '../yakitUI/YakitTabs/YakitTabs'
 import { formatTimestampJudge } from '@/utils/timeUtil'
-import { useStore } from '@/store'
 import { AuthorImg } from '@/pages/plugins/funcTemplate'
 import {
   apiFetchMessageClear,
@@ -28,13 +27,11 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { pluginSupplementJSONConvertToData } from '@/pages/pluginEditor/utils/convert'
 import { apiGetNotepadDetail } from '@/pages/notepadManage/notepadManage/utils'
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
-import { LoginMessageIcon, NoLoginMessageIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { JSONParseLog } from '@/utils/tool'
 import { isEnpriTrace } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import moment from 'moment'
-import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { WebMessageSyncButton } from './WebMessageSyncButton'
@@ -480,128 +477,10 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
   )
 }
 
-export interface MessageCenterProps {
-  messageList: API.MessageLogDetail[]
-  /** 系统通知走 /web/info 已读 API */
-  useWebApi?: boolean
-  getAllMessage: () => void
-  onLogin: () => void
-  onClose: () => void
-}
-export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
-  const { messageList, useWebApi, getAllMessage, onLogin, onClose } = props
-  const { t } = useI18nNamespaces(['yakitUi', 'components'])
-  const { userInfo } = useStore()
-  const [newMessageList, setNewMessageList] = useState<API.MessageLogDetail[]>(messageList)
-  const [taskLoading, taskModalInfo, taskErrModalInfo, debugTaskEvent] = useEETaskNotificationHook({})
-  const [loading, setLoading] = useState(false)
-  useUpdateEffect(() => {
-    setNewMessageList(messageList)
-  }, [messageList])
-
-  const onRedTaskItem = useMemoizedFn((item: API.MessageLogDetail) => {
-    debugTaskEvent.startT({ item })
-    onClose()
-  })
-
-  // 移除列表中的某一项
-  const removeItem = useMemoizedFn((item: API.MessageLogDetail) => {
-    setLoading(true)
-    const fetchRead = useWebApi ? apiFetchWebMessageRead : apiFetchMessageRead
-    fetchRead({
-      isAll: false,
-      hash: item.hash,
-    })
-      .then((ok) => {
-        if (ok) {
-          setNewMessageList((prev) => prev.filter((i) => i.hash !== item.hash))
-        }
-      })
-      .catch((err) => {
-        failed(err)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  })
-
-  return (
-    <>
-      {userInfo.isLogin ? (
-        <>
-          {newMessageList.length > 0 ? (
-            <YakitSpin spinning={loading}>
-              <div className={styles['message-center']}>
-                {newMessageList.map((item) => (
-                  <MessageItem
-                    data={item}
-                    key={item.hash}
-                    onClose={onClose}
-                    onRedTaskItem={onRedTaskItem}
-                    removeItem={removeItem}
-                    useWebApi={useWebApi}
-                  />
-                ))}
-
-                <div className={styles['footer-btn']}>
-                  <YakitButton type="text2" onClick={getAllMessage}>
-                    {t('YakitButton.view_all_button')}
-                  </YakitButton>
-                </div>
-              </div>
-            </YakitSpin>
-          ) : (
-            <div className={styles['meeage-no-data']}>
-              {/* <img src={LoginMessage} alt='' /> */}
-              <LoginMessageIcon />
-              <div className={styles['text']}>{t('MessageCenter.noMessages')}</div>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className={styles['meeage-no-login']}>
-          {/* <img src={LightIconNoLoginMessage} alt='' /> */}
-          <NoLoginMessageIcon />
-          <div className={styles['text']}>{t('MessageCenter.loginToView')}</div>
-          <div>
-            <YakitButton type="primary" onClick={onLogin}>
-              {t('YakitButton.loginNow')}
-            </YakitButton>
-          </div>
-        </div>
-      )}
-      {/* 任务通知 */}
-      <YakitHint
-        visible={taskModalInfo.visible}
-        title={taskModalInfo.title}
-        content={<TaskNotification taskList={taskModalInfo.data} />}
-        okButtonText={taskModalInfo.okButtonText}
-        onOk={debugTaskEvent.sureT}
-        cancelButtonProps={taskModalInfo.cancelButtonProps}
-        okButtonProps={{ loading: taskModalInfo.loading }}
-        wrapClassName={styles['task-notification-wrap']}
-        width={600}
-      />
-      {/* 创建任务重名 */}
-      <YakitHint
-        visible={taskErrModalInfo.visible}
-        title={taskErrModalInfo.title}
-        content={<TaskErrNotification reNames={taskErrModalInfo.data} />}
-        okButtonText={taskErrModalInfo.okButtonText}
-        cancelButtonText={taskErrModalInfo.cancelButtonText}
-        onOk={debugTaskEvent.coverP}
-        onCancel={debugTaskEvent.waitP}
-        wrapClassName={styles['task-notification-wrap']}
-        width={600}
-      />
-    </>
-  )
-}
-
 export interface MessageCenterModalProps {
   visible: boolean
   setVisible: (v: boolean) => void
-  /** 打开时初始通道（与铃铛当前 Tab 对齐） */
+  /** 打开时初始通道，由消息中心入口指定 */
   initialChannel?: MessageChannel
 }
 export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => {

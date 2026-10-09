@@ -18,6 +18,7 @@
     .user-wrapper {
       box-sizing: border-box;
       padding: 3px 9px;
+      cursor: pointer;
       .user-show {
         width: 30px;
         height: 30px;
@@ -63,6 +64,19 @@
           width: 9px;
           height: 9px;
         }
+      }
+      .message-unread-badge {
+        position: absolute;
+        top: -3px;
+        left: 16px;
+        z-index: 3;
+        width: 8px;
+        height: 8px;
+        box-sizing: border-box;
+        border: 1px solid var(--Colors-Use-Basic-Background);
+        border-radius: 50%;
+        background: var(--Colors-Use-Error-Primary);
+        pointer-events: none;
       }
       .im-control-badge-gray {
         background: var(--Colors-Use-Neutral-Disable);
@@ -258,17 +272,16 @@
         flex-wrap: wrap;
         gap: 8px;
         font-size: 12px;
+        .notice-version-title {
+          font-size: 14px;
+          font-weight: 600;
+          line-height: 20px;
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
         .switch-title {
           color: var(--Colors-Use-Neutral-Text-1-Title);
           display: flex;
           align-items: center;
-        }
-        .message-title {
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          margin-left: auto;
-          white-space: nowrap;
         }
       }
 
@@ -321,13 +334,6 @@
           }
         }
       }
-
-      .notice-info-wrapper {
-        padding: 12px 8px 16px;
-        max-height: 80vh;
-        overflow: auto;
-      }
-
       .notice-footer {
         margin: 16px;
         box-sizing: border-box;

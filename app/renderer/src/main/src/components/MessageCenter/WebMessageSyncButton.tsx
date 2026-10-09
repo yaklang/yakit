@@ -5,6 +5,7 @@ import { useStore } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { failed, yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
+import emiter from '@/utils/eventBus/eventBus'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitDropdownMenu } from '../yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { apiHTTPFlowsFromOnline, apiRisksFromOnline, type WebMessageSyncType } from './utils'
@@ -46,6 +47,7 @@ export const WebMessageSyncButton = ({ onSuccess }: { onSuccess?: () => void }) 
         clearSync()
         yakitNotify('success', syncMessage || t('MessageCenter.syncSuccess'))
         onSuccess?.()
+        emiter.emit('onRefreshMessageUnread', 'web')
       },
     })
   })

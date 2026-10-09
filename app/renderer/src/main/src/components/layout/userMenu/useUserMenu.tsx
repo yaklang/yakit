@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import ExclamationCircleOutlined from '@ant-design/icons/lib/icons/ExclamationCircleOutlined'
-import { lazy, Suspense } from 'react'
 import { useStore, useYakitDynamicStatus } from '@/store'
 import { defaultUserInfo } from '@/pages/userInfoDefaults'
 import { loginOut } from '@/utils/login'
@@ -13,7 +12,7 @@ import { CeUserInfo, type CeUserItemProps, type UserMenuItemType } from '../../C
 import { YakitRoute } from '@/enums/yakitRoute'
 import type { RouteToPageProps } from '@/pages/layout/publicMenu/PublicMenu'
 import emiter from '@/utils/eventBus/eventBus'
-import { isCommunityEdition, isEnpriTraceAgent, isEnpriTraceIRify, isIRify } from '@/utils/envfile'
+import { isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isEnpriTraceIRify, isIRify } from '@/utils/envfile'
 import { yakitNetwork, yakitUILayout } from '@/services/electronBridge'
 import {
   cancelIMControlState,
@@ -26,7 +25,7 @@ import { deriveIMControlBadge, type IMControlBadgeStatus, type IMControlBadgeVie
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { UserMenusMap } from './constants'
 import { Modal } from 'antd'
-const SetUserInfo = lazy(() => import('@/pages/MainOperator').then((m) => ({ default: m.SetUserInfo })))
+import { SetUserInfo } from './SetUserInfo'
 
 export interface UseUserMenuParams {
   isEngineLink: boolean
@@ -297,9 +296,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
     // EE|SE 版本
     if (userInfo.platform === 'company') {
       const SetUserInfoModule = () => (
-        <Suspense fallback={null}>
-          <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
-        </Suspense>
+        <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
       )
 
       // 用户头像
@@ -318,6 +315,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
             UserMenusMap['setPassword'],
             UserMenusMap['pluginAudit'],
             UserMenusMap['robotControl'],
+            UserMenusMap['messageCenter'],
             ...signOutMenu,
           ])
         } else {
@@ -334,6 +332,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
             UserMenusMap['misstatement'],
             UserMenusMap['systemConfig'],
             UserMenusMap['robotControl'],
+            UserMenusMap['messageCenter'],
             ...signOutMenu,
           ]
           // 仅在 IRify 企业版本时显示系统配置
@@ -364,6 +363,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
           UserMenusMap['pluginAudit'],
           UserMenusMap['misstatement'],
           UserMenusMap['robotControl'],
+          UserMenusMap['messageCenter'],
           ...signOutMenu,
         ]
         if (userInfo.role !== 'auditor') {
@@ -399,7 +399,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
           setUserMenu([...cacheMenus])
         } else {
           // 非权限人员
-          setUserMenu([UserMenusMap['robotControl'], ...signOutMenu])
+          setUserMenu([UserMenusMap['robotControl'], UserMenusMap['messageCenter'], ...signOutMenu])
         }
       }
     }
@@ -433,6 +433,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
           UserMenusMap['dataStatistics'],
           UserMenusMap['misstatement'],
           UserMenusMap['robotControl'],
+          UserMenusMap['messageCenter'],
           UserMenusMap['divider'],
           UserMenusMap['trustList'],
           UserMenusMap['licenseAdmin'],
@@ -452,6 +453,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
           UserMenusMap['dataStatistics'],
           UserMenusMap['misstatement'],
           UserMenusMap['robotControl'],
+          UserMenusMap['messageCenter'],
         ].concat(signOutMenu)
         // IRify 版本时管理员不显示插件管理
         if (isIRify()) {
@@ -462,7 +464,14 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
       // CE-操作员
       if (userInfo.role === 'operate') {
         isNew = true
-        setUserMenu([...userAvatar, UserMenusMap['dataStatistics'], UserMenusMap['robotControl']].concat(signOutMenu))
+        setUserMenu(
+          [
+            ...userAvatar,
+            UserMenusMap['dataStatistics'],
+            UserMenusMap['robotControl'],
+            UserMenusMap['messageCenter'],
+          ].concat(signOutMenu),
+        )
       }
       // CE-license管理员
       if (userInfo.role === 'licenseAdmin') {
@@ -470,6 +479,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
         setUserMenu([
           ...userAvatar,
           UserMenusMap['robotControl'],
+          UserMenusMap['messageCenter'],
           UserMenusMap['divider'],
           UserMenusMap['licenseAdmin'],
           UserMenusMap['singOut'],
@@ -483,6 +493,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
           UserMenusMap['pluginAudit'],
           UserMenusMap['misstatement'],
           UserMenusMap['robotControl'],
+          UserMenusMap['messageCenter'],
         ].concat(signOutMenu)
         // IRify 版本时管理员不显示插件管理
         if (isIRify()) {
@@ -492,7 +503,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
       }
       // CE-非权限人员
       if (!isNew) {
-        setUserMenu([...userAvatar, UserMenusMap['robotControl'], ...signOutMenu])
+        setUserMenu([...userAvatar, UserMenusMap['robotControl'], UserMenusMap['messageCenter'], ...signOutMenu])
       }
     }
   }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect, apiKeysInfo, apiKeys])
@@ -698,6 +709,11 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
     }
     if (key === 'robot-control') {
       setRobotControlModal(true)
+    }
+    if (key === 'message-center') {
+      setCeUserMenuShow(false)
+      setDynamicMenuOpen(false)
+      emiter.emit('openAllMessageNotification', isEnpriTrace() ? 'web' : 'plugin')
     }
   })
 

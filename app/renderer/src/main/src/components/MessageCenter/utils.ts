@@ -1,5 +1,6 @@
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
+import emiter from '@/utils/eventBus/eventBus'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -53,6 +54,7 @@ export const apiFetchMessageRead: (data: MessageQueryReadProps) => Promise<boole
       data,
     })
       .then((res) => {
+        if (res.ok) emiter.emit('onRefreshMessageUnread', 'plugin')
         resolve(res.ok)
       })
       .catch((err) => {
@@ -71,6 +73,7 @@ export const apiFetchMessageClear: (data: MessageQueryReadProps) => Promise<bool
       data,
     })
       .then((res) => {
+        if (res.ok) emiter.emit('onRefreshMessageUnread', 'plugin')
         resolve(res.ok)
       })
       .catch((err) => {
@@ -159,26 +162,12 @@ const startFromOnlineStream = (
 }
 
 /** 消息中心更新流量：HTTPFlowsFromOnline */
-export const apiHTTPFlowsFromOnline = (
-  loginToken: string,
-  streamToken: string,
-  handlers: FromOnlineStreamHandlers,
-) => {
-  return startFromOnlineStream(
-    'HTTPFlowsFromOnline',
-    'cancel-HTTPFlowsFromOnline',
-    loginToken,
-    streamToken,
-    handlers,
-  )
+export const apiHTTPFlowsFromOnline = (loginToken: string, streamToken: string, handlers: FromOnlineStreamHandlers) => {
+  return startFromOnlineStream('HTTPFlowsFromOnline', 'cancel-HTTPFlowsFromOnline', loginToken, streamToken, handlers)
 }
 
 /** 消息中心更新漏洞：RisksFromOnline */
-export const apiRisksFromOnline = (
-  loginToken: string,
-  streamToken: string,
-  handlers: FromOnlineStreamHandlers,
-) => {
+export const apiRisksFromOnline = (loginToken: string, streamToken: string, handlers: FromOnlineStreamHandlers) => {
   return startFromOnlineStream('RisksFromOnline', 'cancel-RisksFromOnline', loginToken, streamToken, handlers)
 }
 
@@ -243,6 +232,7 @@ export const apiFetchWebMessageRead: (data: MessageQueryReadProps) => Promise<bo
       data,
     })
       .then((res) => {
+        if (res.ok) emiter.emit('onRefreshMessageUnread', 'web')
         resolve(res.ok)
       })
       .catch((err) => {
@@ -260,6 +250,7 @@ export const apiFetchWebMessageClear: (data: MessageQueryReadProps) => Promise<b
       data,
     })
       .then((res) => {
+        if (res.ok) emiter.emit('onRefreshMessageUnread', 'web')
         resolve(res.ok)
       })
       .catch((err) => {

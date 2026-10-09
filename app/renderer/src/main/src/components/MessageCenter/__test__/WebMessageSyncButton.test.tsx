@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WebMessageSyncButton } from '../WebMessageSyncButton'
 import { apiHTTPFlowsFromOnline, apiRisksFromOnline } from '../utils'
 import { yakitNotify } from '@/utils/notification'
+import emiter from '@/utils/eventBus/eventBus'
 
 const mocks = vi.hoisted(() => ({
   cleanupFlow: vi.fn(),
@@ -86,6 +87,7 @@ describe('WebMessageSyncButton', () => {
 
   it('流结束时清理资源并回调成功', () => {
     const onSuccess = vi.fn()
+    const emit = vi.spyOn(emiter, 'emit')
     render(<WebMessageSyncButton onSuccess={onSuccess} />)
     fireEvent.click(screen.getByRole('button', { name: 'MessageCenter.updateFlow' }))
 
@@ -94,6 +96,7 @@ describe('WebMessageSyncButton', () => {
 
     expect(mocks.cleanupFlow).toHaveBeenCalledTimes(1)
     expect(onSuccess).toHaveBeenCalledTimes(1)
+    expect(emit).toHaveBeenCalledWith('onRefreshMessageUnread', 'web')
     expect(yakitNotify).toHaveBeenCalledWith('success', 'MessageCenter.syncSuccess')
     expect(screen.getByRole('button', { name: /MessageCenter\.updateData/ })).not.toHaveAttribute('aria-busy', 'true')
   })
@@ -135,6 +138,7 @@ describe('WebMessageSyncButton', () => {
 
   it('流报错时清理资源且不回调成功', () => {
     const onSuccess = vi.fn()
+    const emit = vi.spyOn(emiter, 'emit')
     render(<WebMessageSyncButton onSuccess={onSuccess} />)
     fireEvent.click(screen.getByRole('button', { name: 'MessageCenter.updateRisk' }))
 
@@ -143,6 +147,7 @@ describe('WebMessageSyncButton', () => {
 
     expect(mocks.cleanupRisk).toHaveBeenCalledTimes(1)
     expect(onSuccess).not.toHaveBeenCalled()
+    expect(emit).not.toHaveBeenCalledWith('onRefreshMessageUnread', 'web')
     expect(screen.getByRole('button', { name: /MessageCenter\.updateData/ })).not.toHaveAttribute('aria-busy', 'true')
   })
 
