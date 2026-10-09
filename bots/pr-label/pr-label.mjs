@@ -398,8 +398,8 @@ export async function sendToFeishu(payload, options = {}) {
       // 只有 11232 表示飞书没收下。9499 / 19021 / 19022 / 19024 再发一次也不会成功。
       const retryable = response.status === 429 || code === RATE_LIMIT_CODE
       const hint = FEISHU_ERROR[code]
-      const msg = json?.msg ?? json?.message ?? `HTTP ${response.status}`
-      lastReason = hint ? `${code} ${msg}：${hint}` : msg
+      // 服务端消息可能回显请求凭据；仅记录状态、错误码和本地固定说明。
+      lastReason = `HTTP ${response.status}${code === undefined ? '' : `，飞书错误码 ${code}`}${hint ? `：${hint}` : ''}`
       if (!retryable) {
         logger?.error?.(`发送失败且不可重试：${lastReason}`)
         return { ok: false, attempts: attempt, reason: lastReason }
@@ -410,7 +410,9 @@ export async function sendToFeishu(payload, options = {}) {
       logger?.warn?.(`${lastReason}，${waitMs}ms 后重试（${attempt}/${maxAttempts}）`)
       await sleepFn(waitMs)
     } catch (error) {
-      lastReason = error?.name === 'TimeoutError' ? `请求超时 ${timeoutMs}ms` : String(error?.message ?? error)
+      // fetch 的异常原文可能包含完整 URL，不写入日志或返回给调用方。
+      lastReason =
+        error?.name === 'TimeoutError' ? `请求超时 ${timeoutMs}ms` : '网络请求失败，请检查 webhook 地址及网络连接'
       logger?.error?.(`网络异常 ${lastReason}，不再重试，避免飞书已收下后重复发卡片`)
       return { ok: false, attempts: attempt, reason: lastReason }
     }

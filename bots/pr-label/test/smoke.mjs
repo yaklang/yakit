@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { createHmac } from 'node:crypto'
+import { spawnSync } from 'node:child_process'
 
 import {
   buildCard,
@@ -505,6 +506,130 @@ console.log('\n[5] 发送健壮性')
     },
   )
   check('网络异常不重试，避免重复卡片', network.ok === false && networkCalls === 1, String(networkCalls))
+}
+
+console.log('\n[5a] 失败日志与返回原因不暴露凭据')
+{
+  const token = 'abcd1234-0000-0000-0000-000000000000'
+  const webhookUrl = `https://open.feishu.cn/open-apis/bot/v2/hook/${token}`
+  const secret = 'fake-signing-secret'
+  const sensitiveMessage = `${webhookUrl} ${secret} ${encodeURIComponent(webhookUrl)}`
+  const cases = [
+    {
+      name: '缺少协议的 URL',
+      url: webhookUrl.slice('https://'.length),
+      fetchImpl: fetch,
+      attempts: 1,
+      hint: '网络请求失败',
+    },
+    {
+      name: '网络异常',
+      fetchImpl: async () => {
+        throw new Error(sensitiveMessage)
+      },
+      attempts: 1,
+      hint: '网络请求失败',
+    },
+    {
+      name: '读取响应体异常',
+      fetchImpl: async () => ({
+        status: 200,
+        text: async () => {
+          throw new Error(sensitiveMessage)
+        },
+      }),
+      attempts: 1,
+      hint: '网络请求失败',
+    },
+    {
+      name: '请求超时',
+      fetchImpl: async () => {
+        throw new DOMException(sensitiveMessage, 'TimeoutError')
+      },
+      attempts: 1,
+      hint: '请求超时 10000ms',
+    },
+    {
+      name: '签名校验失败',
+      fetchImpl: async () => ({
+        status: 200,
+        text: async () => JSON.stringify({ code: 19021, msg: sensitiveMessage }),
+      }),
+      attempts: 1,
+      hint: '19021',
+    },
+    {
+      name: '未知服务端错误',
+      fetchImpl: async () => ({
+        status: 500,
+        text: async () => JSON.stringify({ code: 99999, message: sensitiveMessage }),
+      }),
+      attempts: 1,
+      hint: '99999',
+    },
+    {
+      name: '限流重试',
+      fetchImpl: async () => ({
+        status: 429,
+        text: async () => JSON.stringify({ code: 11232, msg: sensitiveMessage }),
+      }),
+      attempts: 2,
+      hint: '11232',
+    },
+  ]
+  for (const test of cases) {
+    const logs = []
+    let calls = 0
+    const record = (message) => logs.push(message)
+    const result = await sendToFeishu(
+      { msg_type: 'text', content: { text: 'test' } },
+      {
+        webhookUrl: test.url ?? webhookUrl,
+        secret,
+        retries: 2,
+        logger: { info: record, warn: record, error: record },
+        sleepFn: async () => {},
+        fetchImpl: async (...args) => {
+          calls += 1
+          return test.fetchImpl(...args)
+        },
+      },
+    )
+    check(
+      `${test.name}保留失败状态、诊断信息和重试次数`,
+      result.ok === false &&
+        result.attempts === test.attempts &&
+        calls === test.attempts &&
+        result.reason.includes(test.hint),
+    )
+    const output = JSON.stringify({ logs, reason: result.reason })
+    check(
+      `${test.name}日志及返回原因不包含凭据`,
+      logs.length > 0 &&
+        [webhookUrl, token, secret, encodeURIComponent(webhookUrl)].every((value) => !output.includes(value)),
+    )
+  }
+}
+
+console.log('\n[5b] CLI 失败出口')
+{
+  const token = 'abcd1234-0000-0000-0000-000000000000'
+  const secret = 'fake-cli-signing-secret'
+  const result = spawnSync(process.execPath, [join(HERE, '..', 'pr-label.mjs'), `--event-file=${READY_FILE}`], {
+    encoding: 'utf8',
+    timeout: 5000,
+    env: {
+      PR_LABEL_WEBHOOK_URL: `open.feishu.cn/open-apis/bot/v2/hook/${token}`,
+      PR_LABEL_SECRET: secret,
+      SystemRoot: process.env.SystemRoot ?? '',
+    },
+  })
+  check('真实 CLI 地址错误以退出码 1 结束', !result.error && result.status === 1)
+  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`
+  check(
+    '真实 CLI 最终输出保留诊断且不泄漏凭据',
+    output.includes('网络请求失败') && !output.includes(token) && !output.includes(secret),
+  )
 }
 
 console.log(`\n结果：${passed} 通过 / ${failed} 失败\n`)
