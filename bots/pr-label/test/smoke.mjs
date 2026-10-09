@@ -100,11 +100,7 @@ console.log('\n[3] 事件解析与白名单')
   check('白名单大小写不敏感', isWatched(event, ['Needs-Review']) === true)
   check('不在白名单被过滤', isWatched(event, ['ready-to-merge']) === false)
   check('白名单为空 = 放行全部', isWatched(event, []) === true)
-  check(
-    '示例事件只有本次这一个标签',
-    JSON.stringify(event.labels) === '["needs-review"]',
-    JSON.stringify(event.labels),
-  )
+  check('示例事件只有本次这一个标签', JSON.stringify(event.labels) === '["needs-review"]', JSON.stringify(event.labels))
   check('缺字段的事件返回 null', normalizeEvent({ action: 'labeled' }) === null)
 }
 
@@ -123,19 +119,10 @@ console.log('\n[3a] 只精确匹配 ready 与 need more test')
     'need more test 命中',
     needMore.label === 'need more test' && isWatched(needMore, watched, { mode: 'exact' }) === true,
   )
-  check(
-    'Need More Test 大小写不敏感',
-    isWatched({ label: 'Need More Test' }, watched, { mode: 'exact' }) === true,
-  )
+  check('Need More Test 大小写不敏感', isWatched({ label: 'Need More Test' }, watched, { mode: 'exact' }) === true)
   check('needs-review 不命中', isWatched(other, watched, { mode: 'exact' }) === false)
-  check(
-    'ready-to-merge 不算 ready',
-    isWatched({ label: 'ready-to-merge' }, watched, { mode: 'exact' }) === false,
-  )
-  check(
-    'ready-for-review 不算 ready',
-    isWatched({ label: 'ready-for-review' }, watched, { mode: 'exact' }) === false,
-  )
+  check('ready-to-merge 不算 ready', isWatched({ label: 'ready-to-merge' }, watched, { mode: 'exact' }) === false)
+  check('ready-for-review 不算 ready', isWatched({ label: 'ready-for-review' }, watched, { mode: 'exact' }) === false)
   check(
     'need more testing 不算 need more test',
     isWatched({ label: 'need more testing' }, watched, { mode: 'exact' }) === false,
@@ -185,7 +172,9 @@ console.log('\n[3b] 消息结构：标题=PR title / 内容=作者+分支+URL+la
   check('标题栏没有副标题', readyHeader.subtitle === undefined)
   check(
     '内容第一行是 PR title',
-    buildCard({ ...event, label: 'ready' }).card.body.elements[0].content.startsWith('feat&#58; 支持通过飞书 webhook 推送 PR 标签变更\n'),
+    buildCard({ ...event, label: 'ready' }).card.body.elements[0].content.startsWith(
+      'feat&#58; 支持通过飞书 webhook 推送 PR 标签变更\n',
+    ),
   )
   const testHeader = buildCard({ ...event, label: 'need more test' }).card.header
   check('need more test 标题请产品进行测试', testHeader.title.content === '请产品进行测试')
@@ -201,13 +190,12 @@ console.log('\n[3b] 消息结构：标题=PR title / 内容=作者+分支+URL+la
     '作者、分支、Labels 各占一行',
     markdown.includes('**作者**：') && markdown.includes('\n**分支**：') && markdown.includes('\n**Labels**：'),
   )
-  check(
-    '分支含 head → base',
-    markdown.includes('feat&#47;pr&#45;label&#45;feishu → main'),
-  )
+  check('分支含 head → base', markdown.includes('feat&#47;pr&#45;label&#45;feishu → main'))
   check(
     '只展示本次标签，并渲染成 text_tag',
-    markdown.includes("<text_tag color='blue'>needs&#45;review</text_tag>") && !markdown.includes('enhancement') && !markdown.includes('ready'),
+    markdown.includes("<text_tag color='blue'>needs&#45;review</text_tag>") &&
+      !markdown.includes('enhancement') &&
+      !markdown.includes('ready'),
   )
 
   const buttons = card.card.body.elements.filter((el) => el.tag === 'button')
@@ -224,11 +212,7 @@ console.log('\n[3b] 消息结构：标题=PR title / 内容=作者+分支+URL+la
 
   const footer = card.card.body.elements.find((el) => el.text_size === 'notation')
   check('footer 是小字 markdown', footer.tag === 'markdown', footer.tag)
-  check(
-    'footer 内容是触发时间',
-    /触发时间 \d{4}\/\d{2}\/\d{2}/.test(footer.content),
-    footer.content,
-  )
+  check('footer 内容是触发时间', /触发时间 \d{4}\/\d{2}\/\d{2}/.test(footer.content), footer.content)
 
   // 不该再出现被删掉的字段
   check('不再出现变更行数/文件数', !flat.includes('个文件') && !flat.includes('+412'))
@@ -280,7 +264,9 @@ console.log('\n[3c] 外部文本不能成为卡片标记')
   const literal = buildCard({ ...event, title: '&lt;at&gt; \\ * _ ` # - + ! | ~ {x}' }).card.body.elements[0].content
   check(
     '已有实体、反斜杠和 Markdown 分隔符只按字面值展示',
-    literal.startsWith('&amp;lt;at&amp;gt; &#92; &#42; &#95; &#96; &#35; &#45; &#43; &#33; &#124; &#126; &#123;x&#125;\n'),
+    literal.startsWith(
+      '&amp;lt;at&amp;gt; &#92; &#42; &#95; &#96; &#35; &#45; &#43; &#33; &#124; &#126; &#123;x&#125;\n',
+    ),
   )
 }
 
@@ -307,15 +293,16 @@ console.log('\n[3d] text 模式不能注入 @ 标签')
   const normal = buildCard({ ...event, title: normalTitle }, { msgType: 'text' }).content.text
   check(
     'text 模式保留普通字符、链接和换行，不应用 Markdown 转义',
-    normal.startsWith(`请值班人员审阅并合并\n${normalTitle}\n作者：nonight\n`) &&
-      normal.includes(`PR：${event.url}\n`),
+    normal.startsWith(`请值班人员审阅并合并\n${normalTitle}\n作者：nonight\n`) && normal.includes(`PR：${event.url}\n`),
   )
   check(
     '大小写、单引号及空白变体均不能保留标签边界',
-    ["<AT user_id='all'>所有人</AT>", '<at\nuser_id = "all">所有人</at>', '<at user_id="ou_test">用户</at>'].every((title) => {
-      const value = buildCard({ ...event, title }, { msgType: 'text' }).content.text
-      return value.includes('＜') && value.includes('＞') && !/[<>]/.test(value)
-    }),
+    ["<AT user_id='all'>所有人</AT>", '<at\nuser_id = "all">所有人</at>', '<at user_id="ou_test">用户</at>'].every(
+      (title) => {
+        const value = buildCard({ ...event, title }, { msgType: 'text' }).content.text
+        return value.includes('＜') && value.includes('＞') && !/[<>]/.test(value)
+      },
+    ),
   )
 }
 
@@ -340,7 +327,9 @@ console.log('\n[4] 端到端：dry-run / 真实发送 / 过滤')
   check('标题栏没有副标题', mock.calls[0].card?.header?.subtitle === undefined)
   check(
     '正文第一行是 PR title',
-    mock.calls[0].card?.body?.elements?.[0]?.content?.startsWith('【测试】feat&#58; 支持通过飞书 webhook 推送 PR 标签变更\n'),
+    mock.calls[0].card?.body?.elements?.[0]?.content?.startsWith(
+      '【测试】feat&#58; 支持通过飞书 webhook 推送 PR 标签变更\n',
+    ),
   )
   check(
     '正文含作者/分支/URL/labels',
@@ -391,7 +380,8 @@ console.log('\n[4] 端到端：dry-run / 真实发送 / 过滤')
   const textMessage = mock.calls[mock.calls.length - 1]
   check(
     '环境变量切换 text 后，实际发送的消息不含可执行 @ 标签',
-    textResult.ok === true && textMessage.msg_type === 'text' &&
+    textResult.ok === true &&
+      textMessage.msg_type === 'text' &&
       textMessage.content.text.includes('＜at user_id="all"＞所有人＜/at＞') &&
       !/[<>]/.test(textMessage.content.text),
   )
