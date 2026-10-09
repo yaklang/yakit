@@ -12,10 +12,10 @@ import type {
 } from './type'
 import {
   PresentationChartBarOutlined,
-  PresentationChartLineOutlined,
   TrashOutlined,
   XOutlined,
   ViewBoardsOutlined,
+  SquareGanttChartOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import styles from './AITaskExecutionDetails.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -353,7 +353,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                   {
                     label: (
                       <span className={styles['todo-view-option']}>
-                        <PresentationChartLineOutlined size={16} color="currentColor" />
+                        <SquareGanttChartOutlined size={16} color="currentColor" />
                         甘特图
                       </span>
                     ),
