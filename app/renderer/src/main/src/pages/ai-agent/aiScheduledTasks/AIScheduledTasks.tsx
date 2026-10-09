@@ -50,7 +50,9 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
         if (requestId === requestIdRef.current) setSchedules(res.Data || [])
       } catch {
       } finally {
-        if (requestId === requestIdRef.current) setLoading(false)
+        setTimeout(() => {
+          if (requestId === requestIdRef.current) setLoading(false)
+        }, 200)
       }
     },
     { wait: 500 },
