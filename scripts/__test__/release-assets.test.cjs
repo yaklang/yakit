@@ -202,6 +202,8 @@ test('publish uploads the aggregate marker then creates a prerelease without lat
   assert.equal(mutations.length, 2)
   assert.equal(mutations[0].args[3], path.join(dir, 'build-version.txt'))
   assert.ok(mutations[1].args.includes('PATCH'))
+  assert.ok(mutations[1].args.includes('tag_name=' + f.env.BUILD_RELEASE_TAG))
+  assert.ok(mutations[1].args.includes('target_commitish=' + f.env.GITHUB_SHA))
   assert.ok(mutations[1].args.includes('draft=false'))
   assert.ok(mutations[1].args.includes('prerelease=true'))
   assert.ok(mutations[1].args.includes('make_latest=false'))
