@@ -55,17 +55,19 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
         }, 200)
       }
     },
-    { wait: 500 },
+    { wait: 500, leading: true },
   )
 
   useEffect(() => {
     if (inViewPort) getList()
-    // 关键词变化、离开视口或卸载后，取消待执行查询并忽略旧请求。
+    // 关键词变化、离开视口或卸载后，忽略旧请求。
     return () => {
-      cancelGetList()
       requestIdRef.current += 1
     }
-  }, [inViewPort, keyWord, getList, cancelGetList])
+  }, [inViewPort, keyWord, getList])
+
+  // 保留关键词变化期间的防抖计时，仅在视口变化或卸载时取消待执行查询。
+  useEffect(() => () => cancelGetList(), [inViewPort, cancelGetList])
 
   // 侧栏通过 width:0 折叠，重新展开时主动刷新。
   const prevVisibleRef = useRef<boolean>(undefined)
