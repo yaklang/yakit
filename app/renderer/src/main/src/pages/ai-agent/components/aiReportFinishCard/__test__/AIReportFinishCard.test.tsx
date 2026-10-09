@@ -6,6 +6,7 @@ import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import { YakitRoute } from '@/enums/yakitRoute'
 import type * as ReportCardModule from '../AIReportFinishCard'
 import type { AIReportFinishCardProps } from '../AIReportFinishCardType'
+import type { StreamdownProps } from 'streamdown'
 
 const { route, emit, notify } = vi.hoisted(() => ({ route: vi.fn(), emit: vi.fn(), notify: vi.fn() }))
 
@@ -16,9 +17,14 @@ vi.mock('@/pages/yakRunner/utils', () => ({ getCodeByPath: vi.fn() }))
 vi.mock('@/pages/yakRunner/FileTree/icon', () => ({ FileSuffix: { md: 'markdown-icon' } }))
 vi.mock('@/pages/ai-agent/defaultConstant', () => ({ AITabsEnum: { File_Preview: 'file-preview' } }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
-vi.mock('@/pages/assetViewer/reportRenders/markdownRender', () => ({
-  StreamMarkdown: ({ content }: { content: string }) => <div>{content}</div>,
-}))
+vi.mock('@/pages/assetViewer/reportRenders/markdownRender', async () => {
+  const { Streamdown } = await import('streamdown')
+  return {
+    StreamMarkdown: ({ content, ...props }: StreamdownProps & { content?: string }) => (
+      <Streamdown {...props}>{content}</Streamdown>
+    ),
+  }
+})
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   YakitButton: ({ onClick, 'aria-label': label }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button onClick={onClick} aria-label={label} />
@@ -56,6 +62,22 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('报告文件打开入口（启用 React Compiler）', () => {
+  it('完成后的报告不因路径通配符在末尾补出 Markdown 符号', () => {
+    const props = reportProps()
+    const note = '完整目录结构、入口点明细和关键配置见报告文件。'
+    props.item.data.content = `建议阅读 internal/server/install_*.go 与 redhaze-resolver/x{NNN}_*_test.go。\n\n${note}`
+    const { container } = render(<AIReportFinishCard {...props} />)
+    expect(container.querySelector('p:last-child')?.textContent).toBe(note)
+  })
+
+  it('报告内的行内代码保留文件名通配符', () => {
+    const props = reportProps()
+    props.item.data.content = '阅读 `x{NNN}_*_test.go`。'
+    const { container } = render(<AIReportFinishCard {...props} />)
+    expect(container.querySelector('code')?.textContent).toBe('x{NNN}_*_test.go')
+    expect(container.textContent).toBe('阅读 x{NNN}_*_test.go。')
+  })
+
   it('普通 AI 会话打开落盘报告文件，不触发审计页报错或传递受限正文', () => {
     render(<AIReportFinishCard {...reportProps()} />)
     fireEvent.click(screen.getByRole('button', { name: 'AIReportFinishCard.viewReport' }))

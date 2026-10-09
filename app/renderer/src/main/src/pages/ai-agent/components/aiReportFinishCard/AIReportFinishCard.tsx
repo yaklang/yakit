@@ -108,7 +108,7 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
         )
       }
     >
-      {content && <StreamMarkdown content={content || ''} />}
+      {content && <StreamMarkdown content={content || ''} mode="static" />}
     </ChatCard>
   )
 })
