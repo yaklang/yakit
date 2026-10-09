@@ -78,7 +78,7 @@ Labels：ready
 | `fixtures/labeled-ready.json` | 示例事件，只有一个标签 `ready`，会推送。卡片标题由代码生成，不写在这个文件里 |
 | `fixtures/labeled-need-more-test.json` | 示例事件，只有一个标签 `need more test`，会推送。卡片标题由代码生成 |
 | `fixtures/labeled.json` | 示例事件，只有一个标签 `needs-review`，会跳过 |
-| `test/smoke.mjs` | 89 条冒烟用例，用本地 mock 飞书，不打真实 webhook。不接入 CI，合并前在本地执行 `npm test` |
+| `test/smoke.mjs` | 本地冒烟用例，覆盖消息、发送、日志脱敏及输入边界；用 mock 飞书，不打真实 webhook。不接入 CI，合并前在本地执行 `npm test` |
 
 仓库里的 workflow 不在这个目录，而在 `.github/workflows/pr-label-notify.yml`。
 它只 `checkout` 主仓库可信快照中的机器人脚本，然后执行 `node bots/pr-label/pr-label.mjs`。
@@ -199,7 +199,7 @@ npm run dry                   # 同一条 ready 事件，只打印卡片，不�
 npm run dry:test              # need more test，只打印卡片，不发送
 npm run dry:skip              # needs-review，日志里会写跳过
 npm run probe                 # 打印连通性测试消息，不发送
-npm test                      # 89 条冒烟用例（本地 mock，不访问飞书；CI 不跑这组）
+npm test                      # 本地冒烟用例（mock，不访问飞书；CI 不跑这组）
 ```
 
 不经过 npm，直接调脚本：
@@ -214,7 +214,7 @@ node pr-label.mjs --probe --dry-run
 ```
 
 在 Actions 里不需要这些参数：脚本自动读 `GITHUB_EVENT_PATH`。
-`--dry-run` 时日志里的 webhook 只保留 UUID 前 4 位。
+日志里的标准飞书 webhook 只保留 UUID 前 4 位，查询参数和片段不显示；无法识别的地址整体隐藏。
 
 常用参数：`--dry-run`、`--probe`、`--stdin`、`--event-file`、`--event-json`、
 `--match-mode`、`--webhook-url`、`--secret`、`--keyword`、`--msg-type`。

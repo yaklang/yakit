@@ -113,7 +113,11 @@ export function formatTime(iso) {
 export function maskUrl(url) {
   const value = pickNonEmpty(url)
   if (!value) return '(未配置 webhook)'
-  return value.replace(/([0-9a-f-]{4})[0-9a-f-]*$/i, '$1****')
+  // 只展示已知格式的地址前缀；查询参数、片段和无法识别的地址均不进入日志。
+  const match = String(value).match(
+    /^(https:\/\/open\.feishu\.cn\/open-apis\/bot\/v2\/hook\/)([0-9a-f]{4})[0-9a-f]{4}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\/?(?:[?#].*)?$/i,
+  )
+  return match ? `${match[1]}${match[2]}****` : '(webhook 已隐藏)'
 }
 
 export function truncate(text, max = 120) {

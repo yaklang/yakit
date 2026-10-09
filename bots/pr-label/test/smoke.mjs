@@ -8,8 +8,10 @@ import {
   buildCard,
   buildSign,
   decoratePayload,
+  formatTime,
   isWatched,
   main,
+  maskUrl,
   normalizeEvent,
   resolveConfig,
   resolveWebhookUrl,
@@ -68,6 +70,61 @@ console.log('\n[1] webhook URL 变量')
   check('前后空白会被去掉', resolveWebhookUrl({ PR_LABEL_WEBHOOK_URL: `  ${url}  ` }) === url)
   check('没填返回 undefined', resolveWebhookUrl({}) === undefined)
   check('空串不算已配置', resolveWebhookUrl({ PR_LABEL_WEBHOOK_URL: '' }) === undefined)
+}
+
+console.log('\n[1a] webhook 日志脱敏')
+{
+  const url = 'https://open.feishu.cn/open-apis/bot/v2/hook/abcd1234-0000-0000-0000-000000000000'
+  const masked = 'https://open.feishu.cn/open-apis/bot/v2/hook/abcd****'
+  check('标准 UUID 只保留前 4 位', maskUrl(url) === masked)
+  for (const suffix of ['/', '?key=xyz', '?v=abcd', '#private-token']) {
+    check(`URL 带 ${suffix} 仍隐藏 token 和附加内容`, maskUrl(`${url}${suffix}`) === masked)
+  }
+  check('非 hex token 整体隐藏', maskUrl(`${url}xyz`) === '(webhook 已隐藏)')
+  check('无法识别的地址整体隐藏', maskUrl('not-a-url/private-token') === '(webhook 已隐藏)')
+  check(
+    '未配置时显示占位文案',
+    [undefined, '', '  '].every((value) => maskUrl(value) === '(未配置 webhook)'),
+  )
+
+  const logs = []
+  const result = await sendToFeishu(
+    { msg_type: 'text', content: { text: 'test' } },
+    {
+      webhookUrl: `${url}?key=xyz`,
+      logger: { info: (message) => logs.push(message) },
+      fetchImpl: async () => ({ status: 200, text: async () => '{"code":0}' }),
+    },
+  )
+  check(
+    '发送成功日志不包含完整 token 或查询参数',
+    result.ok &&
+      logs.length === 1 &&
+      logs[0].includes(masked) &&
+      !logs[0].includes('abcd1234') &&
+      !logs[0].includes('key=xyz'),
+  )
+}
+
+console.log('\n[1b] 时间与事件来源边界')
+{
+  check('空时间显示未知时间', formatTime('') === '未知时间')
+  check('非法时间保留原文', formatTime('invalid-date') === 'invalid-date')
+  const previousEventPath = process.env.GITHUB_EVENT_PATH
+  let errorMessage = ''
+  try {
+    delete process.env.GITHUB_EVENT_PATH
+    await main({}, { env: {}, logger: quiet })
+  } catch (error) {
+    errorMessage = error.message
+  } finally {
+    if (previousEventPath === undefined) delete process.env.GITHUB_EVENT_PATH
+    else process.env.GITHUB_EVENT_PATH = previousEventPath
+  }
+  check(
+    '无事件来源时明确报错',
+    errorMessage === '找不到事件数据：请在 Actions 中运行，或用 --event-file / --event-json / --stdin 指定',
+  )
 }
 
 console.log('\n[2] 签名')
