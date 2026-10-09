@@ -28,8 +28,11 @@ export const clearThoughtDurationCache = (sessionId?: string) => {
   durationCache.delete(sessionId)
 }
 
-/** 开始瞬间展示 1 秒，之后按墙钟取整 */
+/** 开始瞬间记为 1 秒，之后按墙钟取整 */
 const deriveSeconds = (startedAt: number) => Math.max(1, 1 + Math.floor((Date.now() - startedAt) / 1000))
+
+/** 前 4 秒不展示「持续了 x 秒」，从第 5 秒起才显示 */
+const MIN_DISPLAY_SECONDS = 5
 
 const ThoughtDuration: FC<ThoughtDurationProps> = memo((props) => {
   const { persistKey, status } = props
@@ -92,7 +95,7 @@ const ThoughtDuration: FC<ThoughtDurationProps> = memo((props) => {
     return t('AIChatListItem.thoughtDurationMinutesSeconds', { minutes, seconds: rest })
   }, [seconds, t])
 
-  if (!seenStartRef.current) return null
+  if (!seenStartRef.current || seconds < MIN_DISPLAY_SECONDS) return null
 
   return <> {text}</>
 })
