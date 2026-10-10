@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import React, { Suspense, lazy, memo, useEffect, useMemo, useRef, useState } from 'react'
 import type {
   AuthorImgProps,
   CodeScoreModalProps,
@@ -87,8 +87,12 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { funcSearchType, pluginTypeToName } from './builtInData'
 import UnLogin from '@/assets/unLogin.png'
 import { v4 as uuidv4 } from 'uuid'
-import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { YakitDiffEditor } from '@/components/yakitUI/YakitDiffEditor/YakitDiffEditor'
+const YakitEditor = lazy(() =>
+  import('@/components/yakitUI/YakitEditor/YakitEditor').then((m) => ({ default: m.YakitEditor })),
+)
+const YakitDiffEditor = lazy(() =>
+  import('@/components/yakitUI/YakitDiffEditor/YakitDiffEditor').then((m) => ({ default: m.YakitDiffEditor })),
+)
 import has from 'lodash/has'
 import { onPluginTagsToName } from './baseTemplate'
 import classNames from 'classnames'
@@ -1871,7 +1875,9 @@ export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) 
       bodyStyle={{ padding: 0 }}
     >
       <div className={styles['plugin-editor-modal-body']}>
-        <YakitEditor type={language} value={content} setValue={setContent} />
+        <Suspense fallback={null}>
+          <YakitEditor type={language} value={content} setValue={setContent} />
+        </Suspense>
       </div>
     </YakitModal>
   )
@@ -1916,14 +1922,16 @@ export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo(
       bodyStyle={{ padding: 0 }}
     >
       <div className={styles['plugin-editor-modal-body']}>
-        <YakitDiffEditor
-          leftDefaultCode={oldCode}
-          leftReadOnly={true}
-          rightDefaultCode={content}
-          setRightCode={setContent}
-          triggerUpdate={update}
-          language={language}
-        />
+        <Suspense fallback={null}>
+          <YakitDiffEditor
+            leftDefaultCode={oldCode}
+            leftReadOnly={true}
+            rightDefaultCode={content}
+            setRightCode={setContent}
+            triggerUpdate={update}
+            language={language}
+          />
+        </Suspense>
       </div>
     </YakitModal>
   )

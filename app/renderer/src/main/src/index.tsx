@@ -35,9 +35,6 @@ import('@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concur
     })
   })
 
-import { setupMonacoWorkers } from './utils/monacoSpec/setupMonacoWorkers'
-setupMonacoWorkers()
-
 const getQueryParam = (param) => {
   return new URLSearchParams(window.location.search).get(param)
 }

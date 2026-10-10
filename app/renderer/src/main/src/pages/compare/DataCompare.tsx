@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffect, useMemo } from 'react'
 import { Space } from 'antd'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
+import '@/utils/monacoSpec/yakEditor'
 import { AutoCard } from '../../components/AutoCard'
 import { LineConversionIcon } from '@yakit-libs/yakit-ui-icons/oldicon/LineConversionIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'

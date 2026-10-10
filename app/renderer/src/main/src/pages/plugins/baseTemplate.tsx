@@ -1,4 +1,4 @@
-import React, { type ReactNode, memo, useEffect, useImperativeHandle, useMemo, useState } from 'react'
+import React, { Suspense, lazy, type ReactNode, memo, useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import type {
   CollaboratorInfoProps,
   PluginContributesListItemProps,
@@ -47,11 +47,15 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import type { PluginBaseParamProps, PluginSettingParamProps, YakRiskInfoProps } from './pluginsType'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { YakEditor } from '@/utils/editors'
+const YakEditor = lazy(() => import('@/utils/editors').then((m) => ({ default: m.YakEditor })))
 import { BuiltInTags, RiskLevelToTag } from './editDetails/builtInData'
-import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
+const YakitEditor = lazy(() =>
+  import('@/components/yakitUI/YakitEditor/YakitEditor').then((m) => ({ default: m.YakitEditor })),
+)
 import { aduitStatusToName, pluginTypeToName } from './builtInData'
-import { YakitDiffEditor } from '@/components/yakitUI/YakitDiffEditor/YakitDiffEditor'
+const YakitDiffEditor = lazy(() =>
+  import('@/components/yakitUI/YakitDiffEditor/YakitDiffEditor').then((m) => ({ default: m.YakitDiffEditor })),
+)
 import UnLogin from '@/assets/unLogin.png'
 import YakitLogo from '@/assets/yakitLogo.png'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
@@ -811,20 +815,24 @@ export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) =>
           </div>
           {oldCode && newCode && (
             <div className={styles['edit-diff-wrapper']}>
-              <YakitDiffEditor
-                leftDefaultCode={oldCode}
-                leftReadOnly={true}
-                rightDefaultCode={newCode}
-                setRightCode={setCode}
-                triggerUpdate={update}
-                language={language}
-              />
+              <Suspense fallback={null}>
+                <YakitDiffEditor
+                  leftDefaultCode={oldCode}
+                  leftReadOnly={true}
+                  rightDefaultCode={newCode}
+                  setRightCode={setCode}
+                  triggerUpdate={update}
+                  language={language}
+                />
+              </Suspense>
             </div>
           )}
         </>
       ) : (
         <div className={styles['edit-new-wrapper']}>
-          <YakitEditor type={language} value={newCode} setValue={setCode} />
+          <Suspense fallback={null}>
+            <YakitEditor type={language} value={newCode} setValue={setCode} />
+          </Suspense>
         </div>
       )}
 
@@ -930,7 +938,11 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
           <YakitPopover
             placement="topRight"
             classNames={{ root: 'terminal-popover' }}
-            content={<YakEditor type={pluginType} value={content} readOnly={true} />}
+            content={
+              <Suspense fallback={null}>
+                <YakEditor type={pluginType} value={content} readOnly={true} />
+              </Suspense>
+            }
           >
             <TerminalOutlined className={'plugin-details-item-show-icon-style'} color="currentColor" />
           </YakitPopover>

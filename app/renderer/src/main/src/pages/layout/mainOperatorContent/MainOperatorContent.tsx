@@ -69,7 +69,9 @@ import { defaultUserInfo } from '@/pages/userInfoDefaults'
 import { useStore } from '@/store'
 import { getRemoteProjectValue, getRemoteValue, setRemoteProjectValue, setRemoteValue } from '@/utils/kv'
 import type { GroupCount, QueryYakScriptsResponse } from '@/pages/invoker/schema'
-import { DownloadAllPlugin } from '@/pages/simpleDetect/SimpleDetect'
+const DownloadAllPlugin = React.lazy(() =>
+  import('@/pages/simpleDetect/SimpleDetect').then((m) => ({ default: m.DownloadAllPlugin })),
+)
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
@@ -93,7 +95,7 @@ import {
 
 import { getHotPatchCodeInfo } from '@/pages/fuzzer/fuzzerHotPatchUtils'
 import { type FuzzerCacheDataProps, getFuzzerCacheData } from '@/pages/fuzzer/fuzzerCacheData'
-import { type ShareValueProps } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type { ShareValueProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { RenderFuzzerSequence, RenderSubPage } from './renderSubPage/RenderSubPage'
 import {
@@ -133,7 +135,6 @@ import { safeParseFuzzerCache, sanitizeFuzzerCachePageParams } from '@/store/par
 import { adoptOrphanCacheTabs } from './adoptOrphanCacheTabs'
 import { useOpenAIAgentPage } from './useOpenAIAgentPage'
 import cloneDeep from 'lodash/cloneDeep'
-import { onToManageGroup } from '@/pages/securityTool/yakPoC/YakPoC'
 import { apiFetchQueryYakScriptGroupLocal } from '@/pages/plugins/utils'
 import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import {
@@ -2888,7 +2889,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
           const m = showYakitModal({
             title: (modalT) => modalT('MainOperatorContent.importPlugin'),
             type: 'white',
-            content: <DownloadAllPlugin onClose={() => m.destroy()} />,
+            content: (
+              <React.Suspense fallback={null}>
+                <DownloadAllPlugin onClose={() => m.destroy()} />
+              </React.Suspense>
+            ),
             bodyStyle: { padding: 24 },
             footer: null,
           })
@@ -3858,7 +3863,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     className={styles['bug-test-help-active']}
                     onClick={() => {
                       setBugTestShow(false)
-                      onToManageGroup()
+                      emiter.emit(
+                        'openPage',
+                        JSON.stringify({
+                          route: YakitRoute.Plugin_Hub,
+                          params: { tabActive: 'local', openGroupDrawer: true },
+                        }),
+                      )
                     }}
                   >
                     {t('MainOperatorContent.manage')}

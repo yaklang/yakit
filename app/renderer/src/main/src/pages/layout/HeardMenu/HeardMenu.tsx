@@ -4,7 +4,7 @@ import {
   ChevronDownOutlined,
   DotsHorizontalOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import {
   type HeardMenuProps,
   type RouteMenuDataItemProps,
@@ -61,10 +61,13 @@ import style from './HeardMenu.module.scss'
 import { ExtraMenu } from '../publicMenu/ExtraMenu'
 import { PayloadSolid, AcademicCapSolid, CursorClickSolid, UserSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { usePluginToId } from '@/store/publicMenu'
 import { JSONParseLog } from '@/utils/tool'
+
+const YakitEditor = lazy(() =>
+  import('@/components/yakitUI/YakitEditor/YakitEditor').then((m) => ({ default: m.YakitEditor })),
+)
 
 const { ipcRenderer } = window.require('electron')
 
@@ -895,7 +898,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         bodyStyle={{ padding: 0 }}
       >
         <div style={{ height: 400 }}>
-          <YakitEditor type="json" value={menuDataString} setValue={setMenuDataString}></YakitEditor>
+          {visibleImport && (
+            <Suspense fallback={null}>
+              <YakitEditor type="json" value={menuDataString} setValue={setMenuDataString} />
+            </Suspense>
+          )}
         </div>
       </YakitModal>
     </div>

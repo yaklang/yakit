@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import React, { Suspense, lazy, memo, useEffect, useMemo, useRef, useState } from 'react'
 import {
   useCreation,
   useDebounceEffect,
@@ -115,7 +115,11 @@ import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
 import emiter from '@/utils/eventBus/eventBus'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { defPluginBatchExecuteExtraFormValue } from '@/defaultConstants/PluginBatchExecutor'
-import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
+const PluginExecuteResult = lazy(() =>
+  import('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult').then((m) => ({
+    default: m.PluginExecuteResult,
+  })),
+)
 import { YakitResizeBox } from '../yakitUI/YakitResizeBox/YakitResizeBox'
 import { getRemoteHttpSettingGV } from '@/utils/envfile'
 import {
@@ -3197,13 +3201,15 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                 }
                 secondNode={
                   <div className={styles['result-box']} style={{ height: '100%' }}>
-                    <PluginExecuteResult
-                      streamInfo={streamInfo}
-                      runtimeId={runtimeId}
-                      loading={loading}
-                      pluginType="codec"
-                      pluginExecuteResultWrapper={styles['plugin-execute-result-wrapper']}
-                    />
+                    <Suspense fallback={null}>
+                      <PluginExecuteResult
+                        streamInfo={streamInfo}
+                        runtimeId={runtimeId}
+                        loading={loading}
+                        pluginType="codec"
+                        pluginExecuteResultWrapper={styles['plugin-execute-result-wrapper']}
+                      />
+                    </Suspense>
                   </div>
                 }
               />

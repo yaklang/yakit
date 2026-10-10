@@ -2,13 +2,6 @@ import React, { type ReactNode, lazy, Suspense, useEffect, useRef, useState } fr
 import { Avatar, Layout, Upload, Watermark } from 'antd'
 import CameraOutlined from '@ant-design/icons/lib/icons/CameraOutlined'
 import { failed, success, yakitFailed } from '../utils/notification'
-import {
-  type CompletionTotal,
-  type MethodSuggestion,
-  setYaklangBuildInMethodCompletion,
-  setYaklangCompletions,
-} from '../utils/monacoSpec/yakCompletionSchema'
-import { setUpYaklangMonaco } from '../utils/monacoSpec/yakEditor'
 import { useGetState, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { AutoSpin } from '../components/AutoSpin'
 import { addToTab } from './MainTabs'
@@ -46,7 +39,6 @@ import { MainOperatorContent } from './layout/mainOperatorContent/MainOperatorCo
 import type { MultipleNodeInfo } from './layout/mainOperatorContent/MainOperatorContentType'
 import emiter from '@/utils/eventBus/eventBus'
 import { httpDeleteOSSResource } from '@/apiUtils/http'
-import { setUpSyntaxFlowMonaco } from '../utils/monacoSpec/syntaxflowEditor'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 const MessageCenterModal = lazy(() =>
   import('@/components/MessageCenter/MessageCenter').then((m) => ({ default: m.MessageCenterModal })),
@@ -416,39 +408,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     return () => {
       ipcRenderer.removeAllListeners('refresh-token')
     }
-  }, [])
-  // 加载补全
-  useEffect(() => {
-    ipcRenderer.invoke('GetYakitCompletionRaw').then((data: { RawJson: Uint8Array }) => {
-      try {
-        const completionJson = Buffer.from(data.RawJson).toString('utf8')
-        const total = JSONParseLog(completionJson, {
-          page: 'MainOperator',
-          fun: 'GetYakitCompletionRaw',
-        }) as CompletionTotal
-        setYaklangCompletions(total)
-        setUpYaklangMonaco()
-        setUpSyntaxFlowMonaco()
-      } catch (e) {
-        console.info(e)
-      }
-
-      // success("加载 Yak 语言自动补全成功 / Load Yak IDE Auto Completion Finished")
-    })
-    //
-    ipcRenderer.invoke('GetYakVMBuildInMethodCompletion', {}).then((data: { Suggestions: MethodSuggestion[] }) => {
-      try {
-        if (!data) {
-          return
-        }
-        if (data.Suggestions.length <= 0) {
-          return
-        }
-        setYaklangBuildInMethodCompletion(data.Suggestions)
-      } catch (e) {
-        console.info(e)
-      }
-    })
   }, [])
   /** ---------- 其余逻辑 end ---------- */
 

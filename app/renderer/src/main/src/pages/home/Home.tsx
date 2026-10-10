@@ -100,7 +100,7 @@ import { getReleaseEditionName, isCommunityYakit, isEnpriTrace, isEnpriTraceAgen
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import ReactResizeDetector from 'react-resize-detector'
-import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN } from '../mitm/MITMPage'
+import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, defHost, defPort } from '../mitm/mitmDefaults'
 import type { PluginHubPageInfoProps } from '@/store/pageInfo'
 import { WebsiteGV } from '@/enums/website'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -110,7 +110,6 @@ import { useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { getNotepadAdd, getNotepadManage } from '../layout/NotepadMenu/utils'
 import styles from './home.module.scss'
 import { SystemInfo } from '@/constants/hardware'
-import { defHost, defPort } from '../mitm/MITMServerStartForm/MITMServerStartForm'
 import { useBrowserInstances } from '../ai-agent/browserInstances/browserInstanceStore'
 
 const { ipcRenderer } = window.require('electron')

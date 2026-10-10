@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { Suspense, lazy, useMemo, useRef, useState } from 'react'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
@@ -7,13 +7,14 @@ import { onImportShare } from '@/pages/fuzzer/components/ShareImport'
 import { useMemoizedFn } from 'ahooks'
 import type { RouteToPageProps } from './PublicMenu'
 import { ChevronDownOutlined, ChevronUpOutlined, SaveOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { ImportLocalPlugin, type LoadPluginMode } from '@/pages/mitm/MITMPage'
+import type { LoadPluginMode } from '@/pages/mitm/MITMPage'
+const ImportLocalPlugin = lazy(() => import('@/pages/mitm/MITMPage').then((m) => ({ default: m.ImportLocalPlugin })))
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { Form } from 'antd'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { randomString } from '@/utils/randomUtil'
 import { yakitNotify } from '@/utils/notification'
-import { ImportExportProgress } from '@/components/HTTPFlowTable/HTTPFlowTable'
+const ImportExportProgress = lazy(() => import('@/components/HTTPFlowTable/components/importExportProgress'))
 import emiter from '@/utils/eventBus/eventBus'
 import styles from './ExtraMenu.module.scss'
 import { isMemfit, isYakit } from '@/utils/envfile'
@@ -94,20 +95,24 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                       m.destroy()
                       const token = randomString(40)
                       importHistoryharTokenRef.current = token
-                      ipcRenderer
-                        .invoke(
-                          'ImportHTTPFlowStream',
-                          {
-                            InputPath: formValue.historyharPath,
-                          },
-                          token,
-                        )
-                        .then(() => {
-                          setPercentVisible(true)
-                        })
-                        .catch((error) => {
-                          yakitNotify('error', `[ImportHTTPFlowStream] error: ${error}`)
-                        })
+                      // ImportExportProgress 是 lazy 组件，挂载后才注册 token-data 监听；
+                      // 必须在启动导入流之前预热 chunk，否则小文件的前几批流事件会在监听注册前送达而丢失
+                      void import('@/components/HTTPFlowTable/components/importExportProgress').then(() => {
+                        ipcRenderer
+                          .invoke(
+                            'ImportHTTPFlowStream',
+                            {
+                              InputPath: formValue.historyharPath,
+                            },
+                            token,
+                          )
+                          .then(() => {
+                            setPercentVisible(true)
+                          })
+                          .catch((error) => {
+                            yakitNotify('error', `[ImportHTTPFlowStream] error: ${error}`)
+                          })
+                      })
                     }}
                   >
                     {modalT('YakitButton.import')}
@@ -183,29 +188,35 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 {t('YakitButton.importResources')}
               </YakitButton>
             </YakitPopover>
-            <ImportLocalPlugin
-              visible={visibleImport}
-              setVisible={(v) => {
-                setVisibleImport(v)
-              }}
-              loadPluginMode={loadPluginMode}
-              sendPluginLocal={true}
-            />
+            {visibleImport && (
+              <Suspense fallback={null}>
+                <ImportLocalPlugin
+                  visible={visibleImport}
+                  setVisible={(v) => {
+                    setVisibleImport(v)
+                  }}
+                  loadPluginMode={loadPluginMode}
+                  sendPluginLocal={true}
+                />
+              </Suspense>
+            )}
             {percentVisible && (
-              <ImportExportProgress
-                visible={percentVisible}
-                title={t('Layout.ExtraMenu.importHARHistoryData')}
-                token={importHistoryharTokenRef.current}
-                apiKey="ImportHTTPFlowStream"
-                onClose={(finish) => {
-                  setPercentVisible(false)
-                  if (finish) {
-                    yakitNotify('success', t('YakitNotification.imported'))
-                    emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.DB_HTTPHistory }))
-                    emiter.emit('onRefreshImportHistoryTable')
-                  }
-                }}
-              />
+              <Suspense fallback={null}>
+                <ImportExportProgress
+                  visible={percentVisible}
+                  title={t('Layout.ExtraMenu.importHARHistoryData')}
+                  token={importHistoryharTokenRef.current}
+                  apiKey="ImportHTTPFlowStream"
+                  onClose={(finish) => {
+                    setPercentVisible(false)
+                    if (finish) {
+                      yakitNotify('success', t('YakitNotification.imported'))
+                      emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.DB_HTTPHistory }))
+                      emiter.emit('onRefreshImportHistoryTable')
+                    }
+                  }}
+                />
+              </Suspense>
             )}
           </>
         )}

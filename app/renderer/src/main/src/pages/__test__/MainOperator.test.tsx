@@ -94,12 +94,6 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
 vi.mock('@/pages/YakRunnerProjectManager/YakRunnerProjectManager', () => ({
   IRifyUpdateProjectManagerModal: () => null,
 }))
-vi.mock('@/utils/monacoSpec/yakCompletionSchema', () => ({
-  setYaklangBuildInMethodCompletion: vi.fn(),
-  setYaklangCompletions: vi.fn(),
-}))
-vi.mock('@/utils/monacoSpec/yakEditor', () => ({ setUpYaklangMonaco: vi.fn() }))
-vi.mock('@/utils/monacoSpec/syntaxflowEditor', () => ({ setUpSyntaxFlowMonaco: vi.fn() }))
 vi.mock('@/pages/ai-re-act/hooks/persist/aiChatPersistStore', () => ({
   default: {
     open: () => Promise.resolve(),

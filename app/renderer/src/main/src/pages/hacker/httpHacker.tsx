@@ -1,5 +1,5 @@
 import type React from 'react'
-import { MITMPage } from '../mitm/MITMPage'
+import { lazy, Suspense } from 'react'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import MITMContext, { type MITMContextStore, MITMVersion } from '../mitm/Context/MITMContext'
@@ -7,6 +7,8 @@ import { useCreation } from 'ahooks'
 import type { MITMHackerPageInfoProps } from '@/store/pageInfo'
 
 export interface HTTPHackerProp {}
+
+const MITMPage = lazy(() => import('../mitm/MITMPage').then((m) => ({ default: m.MITMPage })))
 
 const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
   const mitmStore: MITMContextStore = useCreation(() => {
@@ -18,7 +20,9 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
   return (
     <div style={{ margin: 0, height: '100%' }}>
       <MITMContext.Provider value={{ mitmStore }}>
-        <MITMPage />
+        <Suspense fallback={null}>
+          <MITMPage />
+        </Suspense>
       </MITMContext.Provider>
     </div>
   )

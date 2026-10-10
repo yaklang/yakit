@@ -292,13 +292,11 @@ const MemoryBase = React.lazy(() => import('@/pages/memoryBase/MemoryBase'))
 const ConfigManagement = React.lazy(() => import('@/pages/configManagement/ConfigManagement'))
 const AITool = React.lazy(() => import('@/pages/aiTool/AITool'))
 const AIForge = React.lazy(() => import('@/pages/aiForge/AIForge'))
-// HTTPHistory 被 HTTPFlowTable / editors 等广泛 sync import，route 级 lazy 无法 code-split
-import { HTTPHistory } from '../components/HTTPHistory'
+const HTTPHistory = React.lazy(() => import('../components/HTTPHistory').then((m) => ({ default: m.HTTPHistory })))
 const HTTPHistoryAnalysis = React.lazy(() =>
   import('@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis').then((m) => ({ default: m.HTTPHistoryAnalysis })),
 )
-// HTTPFuzzerPage 仍被 extraYakitEditor / FuzzerSequence / Home 等 sync import，route lazy 无法 code-split
-import HTTPFuzzerPage from '@/pages/fuzzer/HTTPFuzzerPage'
+const HTTPFuzzerPage = React.lazy(() => import('@/pages/fuzzer/HTTPFuzzerPage'))
 const ManageRightClickPlugins = React.lazy(() => import('@/pages/manageRightClickPlugins/ManageRightClickPlugins'))
 const ContextMenuActionExecution = React.lazy(
   () => import('@/pages/manageRightClickPlugins/ContextMenuActionExecution'),
