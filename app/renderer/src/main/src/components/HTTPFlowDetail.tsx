@@ -69,6 +69,7 @@ import { isEnterpriseEdition } from '@/utils/envfile'
 import { useStore } from '@/store'
 import { FlowDisposalLog } from './HTTPFlowTable/FlowDisposalLog'
 import type { FlowMarkPatchPayload } from './HTTPFlowTable/HTTPFlowMark.constants'
+import { mergeHTTPFlowDetailMark } from './HTTPFlowTable/HTTPFlowMark.helpers'
 import { FlowMarkEditForm } from './HTTPFlowTable/FlowMarkEditForm'
 import { showYakitModal } from './yakitUI/YakitModal/YakitModalConfirm'
 const { TabPane } = PluginTabs
@@ -734,6 +735,14 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
   useUpdateEffect(() => {
     update(true)
   }, [refresh])
+
+  useUpdateEffect(() => {
+    const current = getFlow()
+    const next = mergeHTTPFlowDetailMark(current, selectedFlow)
+    if (next === current) return
+    setFlow(next)
+    setLogRefreshKey((key) => key + 1)
+  }, [selectedFlow])
 
   useUpdateEffect(() => {
     setRemoteValue('HISTORY_FOLD', JSON.stringify(isFold))

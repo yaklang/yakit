@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useStore } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -15,6 +15,10 @@ export const WebMessageSyncButton = ({ onSuccess }: { onSuccess?: () => void }) 
   const { userInfo } = useStore()
   const [syncPercent, setSyncPercent] = useState<number>()
   const cleanupRef = useRef<(() => void) | undefined>(undefined)
+  const syncIdRef = useRef(0)
+  const accountKey = userInfo.isLogin && userInfo.token ? `${userInfo.user_id ?? ''}:${userInfo.token}` : ''
+  const accountKeyRef = useRef(accountKey)
+  accountKeyRef.current = accountKey
 
   const clearSync = useMemoizedFn(() => {
     cleanupRef.current?.()
@@ -22,7 +26,20 @@ export const WebMessageSyncButton = ({ onSuccess }: { onSuccess?: () => void }) 
     setSyncPercent(undefined)
   })
 
-  useEffect(() => () => cleanupRef.current?.(), [])
+  useUpdateEffect(() => {
+    syncIdRef.current += 1
+    cleanupRef.current?.()
+    cleanupRef.current = undefined
+    setSyncPercent(undefined)
+  }, [accountKey])
+
+  useEffect(
+    () => () => {
+      syncIdRef.current += 1
+      cleanupRef.current?.()
+    },
+    [],
+  )
 
   const onSyncData = useMemoizedFn((type: WebMessageSyncType) => {
     if (cleanupRef.current) return
@@ -31,19 +48,25 @@ export const WebMessageSyncButton = ({ onSuccess }: { onSuccess?: () => void }) 
       return
     }
     setSyncPercent(0)
+    const syncId = ++syncIdRef.current
+    const sourceAccountKey = accountKey
+    const isCurrentSync = () => syncId === syncIdRef.current && sourceAccountKey === accountKeyRef.current
     let syncMessage = ''
     const startApi = type === 'flow' ? apiHTTPFlowsFromOnline : apiRisksFromOnline
     cleanupRef.current = startApi(userInfo.token, randomString(40), {
       onProgress: (percent, log) => {
+        if (!isCurrentSync()) return
         setSyncPercent(Math.floor(percent))
         if (log?.trim()) syncMessage = log.trim()
       },
       onError: (err) => {
+        if (!isCurrentSync()) return
         clearSync()
         failed(`${err}`)
         yakitNotify('error', t('MessageCenter.syncFailed'))
       },
       onEnd: () => {
+        if (!isCurrentSync()) return
         clearSync()
         yakitNotify('success', syncMessage || t('MessageCenter.syncSuccess'))
         if (type === 'flow') emiter.emit('onRefreshQueryHTTPFlows', JSON.stringify({ action: 'sync-complete' }))

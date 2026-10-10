@@ -9,10 +9,11 @@ import emiter from '@/utils/eventBus/eventBus'
 const mocks = vi.hoisted(() => ({
   cleanupFlow: vi.fn(),
   cleanupRisk: vi.fn(),
+  userInfo: { isLogin: true, token: 'login-token', user_id: 1 },
 }))
 
 vi.mock('@/store', () => ({
-  useStore: () => ({ userInfo: { isLogin: true, token: 'login-token' } }),
+  useStore: () => ({ userInfo: mocks.userInfo }),
 }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -64,6 +65,7 @@ vi.mock('../utils', () => ({
 describe('WebMessageSyncButton', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.userInfo = { isLogin: true, token: 'login-token', user_id: 1 }
   })
 
   afterEach(cleanup)
@@ -190,5 +192,25 @@ describe('WebMessageSyncButton', () => {
     unmount()
 
     expect(mocks.cleanupFlow).toHaveBeenCalledTimes(1)
+  })
+
+  it('切换账号时取消旧同步并忽略旧账号的完成回调', () => {
+    const onSuccess = vi.fn()
+    const emit = vi.spyOn(emiter, 'emit')
+    const view = render(<WebMessageSyncButton onSuccess={onSuccess} />)
+    fireEvent.click(screen.getByRole('button', { name: 'MessageCenter.updateFlow' }))
+    const oldHandlers = vi.mocked(apiHTTPFlowsFromOnline).mock.calls[0][2]
+
+    mocks.userInfo = { isLogin: true, token: 'next-token', user_id: 2 }
+    view.rerender(<WebMessageSyncButton onSuccess={onSuccess} />)
+    mocks.userInfo = { isLogin: true, token: 'login-token', user_id: 1 }
+    view.rerender(<WebMessageSyncButton onSuccess={onSuccess} />)
+
+    expect(mocks.cleanupFlow).toHaveBeenCalledTimes(1)
+    act(() => oldHandlers.onEnd())
+    expect(onSuccess).not.toHaveBeenCalled()
+    expect(yakitNotify).not.toHaveBeenCalledWith('success', expect.anything())
+    expect(emit).not.toHaveBeenCalledWith('onRefreshQueryHTTPFlows', expect.anything())
+    expect(emit).not.toHaveBeenCalledWith('onRefreshMessageUnread', 'web')
   })
 })

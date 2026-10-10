@@ -104,6 +104,7 @@ import { defaultMITMFilterData } from '@/defaultConstants/mitm'
 import { buildNextMITMFilterData } from '@/pages/mitm/MITMServerStartForm/utils'
 import { FlowMarkEditForm } from './FlowMarkEditForm'
 import type { FlowMarkPatchPayload } from './HTTPFlowMark.constants'
+import { resolveHTTPFlowMarkScope } from './HTTPFlowMark.helpers'
 import { isEnterpriseEdition } from '@/utils/envfile'
 import { NowProjectDescription } from '@/pages/globalVariable'
 import { useStore } from '@/store'
@@ -1879,19 +1880,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
 
   const onOpenBatchMarkEdit = useMemoizedFn((list: HTTPFlow[]) => {
-    const ids = list.map((item) => Number(item.Id)).filter((id) => !Number.isNaN(id))
-    if (ids.length === 0) return
+    const selectedIds = list.map((item) => Number(item.Id)).filter((id) => !Number.isNaN(id))
+    const scope = resolveHTTPFlowMarkScope(isAllSelect, selectedIds, getParams())
+    if (!isAllSelect && scope.ids.length === 0) return
     const m = showYakitModal({
       title: t('HTTPFlowTable.batchModifyMark'),
       maskClosable: false,
       content: (
         <FlowMarkEditForm
           batch
-          ids={ids}
-          filter={getParams()}
+          ids={scope.ids}
+          filter={scope.filter}
           token={userInfo.token}
           onClose={() => m.destroy()}
-          onSuccess={patchFlowMark}
+          onSuccess={isAllSelect ? () => updateData() : patchFlowMark}
         />
       ),
       footer: null,

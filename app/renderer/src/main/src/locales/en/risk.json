@@ -158,6 +158,7 @@
     "reply_prefix": "Reply to {{user}}: {{content}}",
     "image_count": " [images] * {{count}}",
     "fetch_logs_failed": "Failed to fetch disposal logs",
+    "fetch_flow_logs_failed": "Failed to fetch flow disposal logs",
     "publish_comment_failed": "Failed to publish comment",
     "delete_comment_failed": "Failed to delete comment"
   }

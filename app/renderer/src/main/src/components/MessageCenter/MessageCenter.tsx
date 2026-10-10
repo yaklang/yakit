@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useMemoizedFn, useThrottleFn } from 'ahooks'
+import { useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import type { API } from '@/services/swagger/resposeType'
 import styles from './MessageCenter.module.scss'
 import { failed, yakitNotify } from '@/utils/notification'
@@ -35,6 +35,7 @@ import moment from 'moment'
 import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { WebMessageSyncButton } from './WebMessageSyncButton'
+import { useStore } from '@/store'
 
 const MESSAGE_PAGE_LIMIT = 20
 
@@ -48,10 +49,12 @@ export interface MessageItemProps {
   removeItem?: (data: API.MessageLogDetail) => void
   /** Web 端通知走 /web/info，插件走 /message/log */
   useWebApi?: boolean
+  /** 异步已读请求返回时，确认消息仍属于当前账号与通道 */
+  isResponseCurrent?: () => boolean
 }
 
 export const MessageItem: React.FC<MessageItemProps> = (props) => {
-  const { onClose, data, isEllipsis, onRedTaskItem, removeItem, useWebApi } = props
+  const { onClose, data, isEllipsis, onRedTaskItem, removeItem, useWebApi, isResponseCurrent } = props
   const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'components'])
   const { goEditNotepad } = useGoEditNotepad()
   const getDescription = useMemo(() => {
@@ -344,7 +347,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
       hash: data.hash,
     })
       .then((ok) => {
-        if (ok) {
+        if (ok && (!isResponseCurrent || isResponseCurrent())) {
           if (useWebApi) {
             removeItem && removeItem(data)
             return
@@ -442,6 +445,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
         }
       })
       .catch((err) => {
+        if (isResponseCurrent && !isResponseCurrent()) return
         failed(err)
       })
   })
@@ -486,6 +490,8 @@ export interface MessageCenterModalProps {
 export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => {
   const { visible, setVisible, initialChannel } = props
   const { t } = useI18nNamespaces(['yakitUi', 'components'])
+  const { userInfo } = useStore()
+  const accountKey = userInfo.isLogin && userInfo.token ? `${userInfo.user_id ?? ''}:${userInfo.token}` : ''
   const showChannelTabs = isEnpriTrace()
   const [channel, setChannel] = useState<MessageChannel>(initialChannel || 'web')
   const isWebChannel = showChannelTabs && channel === 'web'
@@ -497,11 +503,17 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   const [noRedDataTotal, setNoRedDataTotal] = useState<number>()
   const [isRef, setIsRef] = useState<boolean>(false)
   const requestIdRef = useRef(0)
+  const contextGenerationRef = useRef(0)
   const readMessageRef = useRef(new Set<string>())
+  const accountKeyRef = useRef(accountKey)
+  const channelRef = useRef(channel)
+  accountKeyRef.current = accountKey
+  channelRef.current = channel
 
   useEffect(() => {
     return () => {
       requestIdRef.current += 1
+      contextGenerationRef.current += 1
     }
   }, [])
 
@@ -525,6 +537,12 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   ).run
 
   const update = useMemoizedFn((data?: MessageQueryDataProps, isAdd?: boolean) => {
+    const sourceAccountKey = accountKey
+    const sourceGeneration = contextGenerationRef.current
+    if (!sourceAccountKey) {
+      setLoading(false)
+      return
+    }
     const requestId = ++requestIdRef.current
     setLoading(true)
     if (!isAdd) {
@@ -545,7 +563,12 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
       },
     )
       .then((res) => {
-        if (requestId !== requestIdRef.current) return
+        if (
+          requestId !== requestIdRef.current ||
+          sourceGeneration !== contextGenerationRef.current ||
+          sourceAccountKey !== accountKeyRef.current
+        )
+          return
         if (newQueryData?.isRead === 'false') {
           setNoRedDataTotal(res.pagemeta.total)
         }
@@ -563,19 +586,44 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
         setHasMore((res.data || []).length >= MESSAGE_PAGE_LIMIT)
       })
       .catch((err) => {
-        if (requestId !== requestIdRef.current) return
+        if (
+          requestId !== requestIdRef.current ||
+          sourceGeneration !== contextGenerationRef.current ||
+          sourceAccountKey !== accountKeyRef.current
+        )
+          return
         failed(err)
       })
       .finally(() => {
-        if (requestId !== requestIdRef.current) return
+        if (
+          requestId !== requestIdRef.current ||
+          sourceGeneration !== contextGenerationRef.current ||
+          sourceAccountKey !== accountKeyRef.current
+        )
+          return
         setLoading(false)
       })
   })
 
+  useUpdateEffect(() => {
+    requestIdRef.current += 1
+    contextGenerationRef.current += 1
+    readMessageRef.current.clear()
+    setLoading(false)
+    setDataSorce([])
+    setNoRedDataTotal(undefined)
+    setHasMore(true)
+  }, [accountKey])
+
+  useUpdateEffect(() => {
+    requestIdRef.current += 1
+    contextGenerationRef.current += 1
+  }, [channel])
+
   useEffect(() => {
     // 初次加载 / 切换未读全部 / 切换通道
-    update()
-  }, [activeKey, channel])
+    if (accountKey) update()
+  }, [activeKey, channel, accountKey])
 
   const loadMore = useMemoizedFn(() => {
     update(
@@ -588,7 +636,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
 
   const onRefreshMessageSocketFun = useMemoizedFn((data: string) => {
     // socket 仅刷新插件通道列表
-    if (isWebChannel) return
+    if (!accountKey || isWebChannel) return
     try {
       const obj: API.MessageLogDetail = JSONParseLog(data, {
         page: 'MessageCenterModal',
@@ -628,24 +676,31 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     debugTaskEvent.startT({ item })
   })
 
-  const removeItem = useMemoizedFn((item: API.MessageLogDetail, sourceChannel: MessageChannel) => {
-    if (sourceChannel !== channel) return
-    if (item.isRead) return
-    if (!loading && !dataSorce.some((current) => current.hash === item.hash && !current.isRead)) return
-    const messageKey = `${sourceChannel}:${item.hash}`
-    if (readMessageRef.current.has(messageKey)) return
-    readMessageRef.current.add(messageKey)
-    if (activeKey === 'unread') {
-      setDataSorce((prev) => prev.filter((i) => i.hash !== item.hash))
-    } else {
-      setDataSorce((prev) => prev.map((i) => (i.hash === item.hash ? { ...i, isRead: true } : i)))
-    }
-    if (isWebChannel) {
-      setNoRedDataTotal((prev) => Math.max(0, (prev || 0) - 1))
-    }
-    // 已读前发出的列表请求可能仍带旧状态，重新查询并使旧响应失效。
-    if (loading) update()
-  })
+  const removeItem = useMemoizedFn(
+    (item: API.MessageLogDetail, sourceChannel: MessageChannel, sourceAccountKey: string, sourceGeneration: number) => {
+      if (
+        sourceChannel !== channel ||
+        sourceAccountKey !== accountKey ||
+        sourceGeneration !== contextGenerationRef.current
+      )
+        return
+      if (item.isRead) return
+      if (!loading && !dataSorce.some((current) => current.hash === item.hash && !current.isRead)) return
+      const messageKey = `${sourceChannel}:${item.hash}`
+      if (readMessageRef.current.has(messageKey)) return
+      readMessageRef.current.add(messageKey)
+      if (activeKey === 'unread') {
+        setDataSorce((prev) => prev.filter((i) => i.hash !== item.hash))
+      } else {
+        setDataSorce((prev) => prev.map((i) => (i.hash === item.hash ? { ...i, isRead: true } : i)))
+      }
+      if (isWebChannel) {
+        setNoRedDataTotal((prev) => Math.max(0, (prev || 0) - 1))
+      }
+      // 已读前发出的列表请求可能仍带旧状态，重新查询并使旧响应失效。
+      if (loading) update()
+    },
+  )
 
   const virtualList = useMemoizedFn(() => {
     return (
@@ -655,6 +710,9 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
           data={dataSorce}
           loadMoreData={loadMore}
           renderRow={(rowData: API.MessageLogDetail, index: number) => {
+            const sourceChannel = channel
+            const sourceAccountKey = accountKey
+            const sourceGeneration = contextGenerationRef.current
             return (
               <MessageItem
                 data={rowData}
@@ -662,8 +720,13 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                 isEllipsis={true}
                 onClose={() => setVisible(false)}
                 onRedTaskItem={onRedTaskItem}
-                removeItem={(item) => removeItem(item, channel)}
+                removeItem={(item) => removeItem(item, sourceChannel, sourceAccountKey, sourceGeneration)}
                 useWebApi={isWebChannel}
+                isResponseCurrent={() =>
+                  sourceChannel === channelRef.current &&
+                  sourceAccountKey === accountKeyRef.current &&
+                  sourceGeneration === contextGenerationRef.current
+                }
               />
             )
           }}
@@ -702,18 +765,26 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   })
 
   const onRedAllMessage = useMemoizedFn(() => {
+    const sourceChannel = channel
+    const sourceAccountKey = accountKey
+    const sourceGeneration = contextGenerationRef.current
+    const isOperationCurrent = () =>
+      sourceChannel === channelRef.current &&
+      sourceAccountKey === accountKeyRef.current &&
+      sourceGeneration === contextGenerationRef.current
     if (isWebChannel) {
       apiFetchWebMessageRead({
         isAll: true,
         hash: '',
       })
         .then((ok) => {
-          if (ok) {
+          if (ok && isOperationCurrent()) {
             update()
             setNoRedDataTotal(0)
           }
         })
         .catch((err) => {
+          if (!isOperationCurrent()) return
           failed(err)
         })
       return
@@ -727,29 +798,38 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
         hash: '',
       })
         .then((ok) => {
-          if (ok) {
+          if (ok && isOperationCurrent()) {
             update()
             setNoRedDataTotal(0)
           }
         })
         .catch((err) => {
+          if (!isOperationCurrent()) return
           failed(err)
         })
     }
   })
 
   const onClearAllMessage = useMemoizedFn(() => {
+    const sourceChannel = channel
+    const sourceAccountKey = accountKey
+    const sourceGeneration = contextGenerationRef.current
+    const isOperationCurrent = () =>
+      sourceChannel === channelRef.current &&
+      sourceAccountKey === accountKeyRef.current &&
+      sourceGeneration === contextGenerationRef.current
     const fetchClear = isWebChannel ? apiFetchWebMessageClear : apiFetchMessageClear
     fetchClear({
       isAll: true,
       hash: '',
     })
       .then((ok) => {
-        if (ok) {
+        if (ok && isOperationCurrent()) {
           update()
         }
       })
       .catch((err) => {
+        if (!isOperationCurrent()) return
         failed(err)
       })
   })
@@ -757,6 +837,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   const onChannelChange = useMemoizedFn((next: MessageChannel) => {
     if (next === channel) return
     requestIdRef.current += 1
+    contextGenerationRef.current += 1
     setDataSorce([])
     setNoRedDataTotal(undefined)
     setHasMore(true)

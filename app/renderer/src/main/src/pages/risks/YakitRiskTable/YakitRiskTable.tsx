@@ -42,7 +42,11 @@ import {
   UploadOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type {
+  ColumnsTypeProps,
+  FiltersItemProps,
+  SortProps,
+} from '@/components/TableVirtualResize/TableVirtualResizeType'
 import cloneDeep from 'lodash/cloneDeep'
 import { formatTimestamp, getDateFromUnixTimestamp } from '@/utils/timeUtil'
 import { preventImplicitFormSubmit } from '@/utils/formKeyboard'
@@ -526,11 +530,21 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       label: item.Verbose,
       total: item.Total,
     }))
-    const tagTable = tag.map((item) => ({
+    let tagTable: FiltersItemProps[] = tag.map((item) => ({
       value: item.Name,
       label: item.Name,
       total: item.Total,
     }))
+    if (isEnterprise) {
+      const mergedTags = new Map<string, FiltersItemProps>(
+        DISPOSAL_STATUS_OPTIONS.map((item) => [item.value, { value: item.value, label: t(item.labelKey) }]),
+      )
+      tagTable.forEach((item) => {
+        if (!item.value.trim()) return
+        mergedTags.set(item.value, { ...item, label: mergedTags.get(item.value)?.label ?? item.label })
+      })
+      tagTable = Array.from(mergedTags.values())
+    }
     const severityFilters = [
       { value: 'critical', label: t('YakitTag.critical') },
       { value: 'high', label: t('YakitTag.high') },
@@ -667,12 +681,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
           filterKey: 'TagList',
           filtersType: 'select',
           filterMultiple: true,
-          filters: isEnterprise
-            ? DISPOSAL_STATUS_OPTIONS.map((item) => ({
-                value: item.value,
-                label: t(item.labelKey),
-              }))
-            : tagTable,
+          filters: tagTable,
         },
         minWidth: 120,
         render: (text, record: Risk) =>
@@ -947,11 +956,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         ...current,
         Data: nextData,
       })
+      setSelectList((selected) => selected.map((item) => (item.Id === updatedRisk.Id ? updatedRisk : item)))
       if (getCurrentSelectItem()?.Id === updatedRisk.Id) {
         setCurrentSelectItem(updatedRisk)
         setDisposalRefreshKey((key) => key + 1)
       }
       getRiskType()
+      getRiskTags()
     })
   })
   const onRemoveSingle = useMemoizedFn((id) => {

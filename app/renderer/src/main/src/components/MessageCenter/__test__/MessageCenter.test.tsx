@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { API } from '@/services/swagger/resposeType'
 import { MessageCenterModal } from '../MessageCenter'
+import emiter from '@/utils/eventBus/eventBus'
 
 const mocks = vi.hoisted(() => ({
   queryWeb: vi.fn(),
@@ -11,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   readWeb: vi.fn(),
   readPlugin: vi.fn(),
   failed: vi.fn(),
+  userInfo: { isLogin: true, token: 'login-token', user_id: 1 },
 }))
 
 vi.mock('../utils', () => ({
@@ -23,6 +25,7 @@ vi.mock('../utils', () => ({
 }))
 
 vi.mock('@/utils/envfile', () => ({ isEnpriTrace: () => true }))
+vi.mock('@/store', () => ({ useStore: () => ({ userInfo: mocks.userInfo }) }))
 vi.mock('@/utils/notification', () => ({ failed: (...args: unknown[]) => mocks.failed(...args), yakitNotify: vi.fn() }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18nRefresh: false }),
@@ -56,10 +59,15 @@ vi.mock('../../yakitUI/YakitRadioButtons/YakitRadioButtons', () => ({
   ),
 }))
 vi.mock('../../yakitUI/YakitTabs/YakitTabs', () => {
-  const YakitTabs = ({ children, onChange }: React.PropsWithChildren<{ onChange: (key: string) => void }>) => (
+  const YakitTabs = ({
+    children,
+    onChange,
+    tabBarExtraContent,
+  }: React.PropsWithChildren<{ onChange: (key: string) => void; tabBarExtraContent?: React.ReactNode }>) => (
     <div>
       <button onClick={() => onChange('unread')}>unread-tab</button>
       <button onClick={() => onChange('all')}>all-tab</button>
+      {tabBarExtraContent}
       {children}
     </div>
   )
@@ -110,6 +118,7 @@ const currentState = () => JSON.parse(screen.getAllByTestId('message-list')[0].g
 describe('MessageCenterModal request lifecycle', () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    mocks.userInfo = { isLogin: true, token: 'login-token', user_id: 1 }
     mocks.readWeb.mockResolvedValue(true)
     mocks.readPlugin.mockResolvedValue(true)
   })
@@ -154,11 +163,45 @@ describe('MessageCenterModal request lifecycle', () => {
     expect(mocks.failed).not.toHaveBeenCalled()
     consoleError.mockRestore()
   })
+
+  it('clears messages and ignores an old response after switching accounts', async () => {
+    const oldAccount = deferred<ReturnType<typeof response>>()
+    mocks.queryWeb
+      .mockReturnValueOnce(oldAccount.promise)
+      .mockResolvedValueOnce(response([message('next-account')], 1))
+      .mockResolvedValueOnce(response([message('current-account')], 2))
+    const view = render(<MessageCenterModal visible={true} setVisible={vi.fn()} initialChannel="web" />)
+
+    mocks.userInfo = { isLogin: true, token: 'next-token', user_id: 2 }
+    view.rerender(<MessageCenterModal visible={true} setVisible={vi.fn()} initialChannel="web" />)
+    await waitFor(() => expect(currentState()).toEqual([expect.objectContaining({ hash: 'next-account' })]))
+
+    mocks.userInfo = { isLogin: true, token: 'login-token', user_id: 1 }
+    view.rerender(<MessageCenterModal visible={true} setVisible={vi.fn()} initialChannel="web" />)
+    await waitFor(() => expect(currentState()).toEqual([expect.objectContaining({ hash: 'current-account' })]))
+
+    await act(async () => oldAccount.resolve(response([message('old-account')], 9)))
+    expect(currentState()).toEqual([expect.objectContaining({ hash: 'current-account' })])
+    expect(screen.getByText('2')).toBeInTheDocument()
+  })
+
+  it('ignores plugin socket messages after logout', async () => {
+    mocks.queryPlugin.mockResolvedValueOnce(response([message('account-message')], 1))
+    const view = render(<MessageCenterModal visible={true} setVisible={vi.fn()} initialChannel="plugin" />)
+    await waitFor(() => expect(currentState()).toEqual([expect.objectContaining({ hash: 'account-message' })]))
+
+    mocks.userInfo = { isLogin: false, token: '', user_id: 1 }
+    view.rerender(<MessageCenterModal visible={true} setVisible={vi.fn()} initialChannel="plugin" />)
+    act(() => emiter.emit('onRefreshMessageSocket', JSON.stringify(message('stale-socket'))))
+
+    expect(currentState()).toEqual([])
+  })
 })
 
 describe('MessageCenterModal web read state', () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    mocks.userInfo = { isLogin: true, token: 'login-token', user_id: 1 }
   })
 
   it('marks a web message read in the all tab and decreases the unread count', async () => {
@@ -240,5 +283,47 @@ describe('MessageCenterModal web read state', () => {
     await waitFor(() => expect(mocks.readWeb).toHaveBeenCalledTimes(1))
     expect(currentState()).toEqual([expect.objectContaining({ hash: 'read-failed', isRead: false })])
     expect(screen.getByText('2')).toBeInTheDocument()
+  })
+
+  it('ignores a web mark-all-read callback after switching to the plugin channel', async () => {
+    const readAll = deferred<boolean>()
+    mocks.queryWeb.mockResolvedValueOnce(response([message('web-unread')], 2))
+    mocks.queryPlugin
+      .mockResolvedValueOnce(response([message('plugin-unread')], 3))
+      .mockResolvedValueOnce(response([message('plugin-all', true)], 5))
+    mocks.readWeb.mockReturnValueOnce(readAll.promise)
+
+    render(<MessageCenterModal visible={true} setVisible={vi.fn()} initialChannel="web" />)
+    await waitFor(() => expect(currentState()).toEqual([expect.objectContaining({ hash: 'web-unread' })]))
+    fireEvent.click(screen.getByRole('button', { name: 'MessageCenter.markAllRead' }))
+    fireEvent.click(screen.getByRole('button', { name: 'plugin-channel' }))
+    await waitFor(() => expect(currentState()).toEqual([expect.objectContaining({ hash: 'plugin-unread' })]))
+    fireEvent.click(screen.getByRole('button', { name: 'all-tab' }))
+    await waitFor(() => expect(currentState()).toEqual([expect.objectContaining({ hash: 'plugin-all' })]))
+
+    await act(async () => readAll.resolve(true))
+    expect(currentState()).toEqual([expect.objectContaining({ hash: 'plugin-all' })])
+    expect(screen.getByText('3')).toBeInTheDocument()
+  })
+
+  it('does not accept an old mark-all-read callback after switching away and back', async () => {
+    const readAll = deferred<boolean>()
+    mocks.queryWeb
+      .mockResolvedValueOnce(response([message('web-old')], 2))
+      .mockResolvedValueOnce(response([message('web-current')], 7))
+    mocks.queryPlugin.mockResolvedValueOnce(response([message('plugin-current')], 3))
+    mocks.readWeb.mockReturnValueOnce(readAll.promise)
+
+    render(<MessageCenterModal visible={true} setVisible={vi.fn()} initialChannel="web" />)
+    await waitFor(() => expect(currentState()).toEqual([expect.objectContaining({ hash: 'web-old' })]))
+    fireEvent.click(screen.getByRole('button', { name: 'MessageCenter.markAllRead' }))
+    fireEvent.click(screen.getByRole('button', { name: 'plugin-channel' }))
+    await waitFor(() => expect(currentState()).toEqual([expect.objectContaining({ hash: 'plugin-current' })]))
+    fireEvent.click(screen.getByRole('button', { name: 'web-channel' }))
+    await waitFor(() => expect(currentState()).toEqual([expect.objectContaining({ hash: 'web-current' })]))
+
+    await act(async () => readAll.resolve(true))
+    expect(currentState()).toEqual([expect.objectContaining({ hash: 'web-current' })])
+    expect(screen.getByText('7')).toBeInTheDocument()
   })
 })

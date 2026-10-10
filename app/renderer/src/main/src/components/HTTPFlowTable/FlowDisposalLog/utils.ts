@@ -3,12 +3,15 @@ import type { API } from '@/services/swagger/resposeType'
 import { yakitNotify } from '@/utils/notification'
 import { yakitUpload } from '@/services/electronBridge'
 import { mergeDisposalLogs } from '@/utils/disposalLog'
+import i18n from '@/i18n/i18n'
 import type {
   FlowDisposalLogItem,
   FlowDisposalLogsResponse,
   PublishFlowDisposalCommentRequest,
   UploadDisposalImageRequest,
 } from './types'
+
+const tOriginal = i18n.getFixedT(null, ['risk', 'components', 'apiUtils'])
 
 const parseFragmentUploadUrl = (res: UploadImgApiResponse | undefined): string => {
   if (res?.code === 200) {
@@ -17,7 +20,10 @@ const parseFragmentUploadUrl = (res: UploadImgApiResponse | undefined): string =
     if (url) return url
   }
   const data = res?.data
-  const message = res?.message || (typeof data === 'object' && data ? data.reason : undefined) || '上传图片失败'
+  const message =
+    res?.message ||
+    (typeof data === 'object' && data ? data.reason : undefined) ||
+    tOriginal('DisposalAttachment.imageUploadFailed', { ns: 'components' })
   throw new Error(String(message))
 }
 
@@ -25,8 +31,8 @@ const parseFragmentUploadUrl = (res: UploadImgApiResponse | undefined): string =
 export const apiUploadFlowDisposalImage = (request: UploadDisposalImageRequest): Promise<string> => {
   return new Promise((resolve, reject) => {
     if (!request.hash) {
-      const err = '缺少流量 hash'
-      yakitNotify('error', `上传图片失败: ${err}`)
+      const err = tOriginal('DisposalAttachment.missingFlowHash', { ns: 'components' })
+      yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { ns: 'apiUtils', error: err }))
       reject(err)
       return
     }
@@ -42,7 +48,7 @@ export const apiUploadFlowDisposalImage = (request: UploadDisposalImageRequest):
         resolve(parseFragmentUploadUrl(resArr?.[0]))
       })
       .catch((e) => {
-        yakitNotify('error', `上传图片失败: ${e}`)
+        yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { ns: 'apiUtils', error: e }))
         reject(e)
       })
   })
@@ -74,7 +80,7 @@ export const apiGetFlowDisposalLogs = (params: {
 }): Promise<FlowDisposalLogsResponse> => {
   return new Promise((resolve, reject) => {
     if (!params.hash) {
-      reject(new Error('缺少流量 hash'))
+      reject(new Error(tOriginal('DisposalAttachment.missingFlowHash', { ns: 'components' })))
       return
     }
     NetWorkApi<API.CommentListRequest, API.CommentListResponse>({
@@ -96,7 +102,7 @@ export const apiGetFlowDisposalLogs = (params: {
         })
       })
       .catch((e) => {
-        yakitNotify('error', `查询流量处置日志失败: ${e}`)
+        yakitNotify('error', `${tOriginal('RiskDisposalLog.fetch_flow_logs_failed', { ns: 'risk' })}: ${e}`)
         reject(e)
       })
   })
@@ -108,7 +114,7 @@ export const apiPublishFlowDisposalComment = (
 ): Promise<API.ActionSucceeded> => {
   return new Promise((resolve, reject) => {
     if (!data.hash) {
-      reject(new Error('缺少流量 hash'))
+      reject(new Error(tOriginal('DisposalAttachment.missingFlowHash', { ns: 'components' })))
       return
     }
     const payload: API.CommentRequest = {
@@ -124,7 +130,7 @@ export const apiPublishFlowDisposalComment = (
     })
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', `发布评论失败: ${e}`)
+        yakitNotify('error', `${tOriginal('RiskDisposalLog.publish_comment_failed', { ns: 'risk' })}: ${e}`)
         reject(e)
       })
   })
@@ -140,7 +146,7 @@ export const apiDeleteFlowDisposalComment = (logId: number): Promise<API.ActionS
     })
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', `删除评论失败: ${e}`)
+        yakitNotify('error', `${tOriginal('RiskDisposalLog.delete_comment_failed', { ns: 'risk' })}: ${e}`)
         reject(e)
       })
   })

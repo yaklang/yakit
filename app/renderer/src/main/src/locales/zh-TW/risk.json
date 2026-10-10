@@ -158,6 +158,7 @@
     "reply_prefix": "回覆 {{user}} : {{content}}",
     "image_count": " [圖片] * {{count}}",
     "fetch_logs_failed": "查詢處置日誌失敗",
+    "fetch_flow_logs_failed": "查詢流量處置日誌失敗",
     "publish_comment_failed": "發布評論失敗",
     "delete_comment_failed": "刪除評論失敗"
   }

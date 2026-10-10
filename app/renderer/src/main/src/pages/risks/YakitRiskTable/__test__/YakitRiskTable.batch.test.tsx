@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { QueryRisksRequest } from '../YakitRiskTableType'
 import type { Risk } from '../../schema'
 import { YakitRiskTable } from '../YakitRiskTable'
+import { DISPOSAL_STATUS_OPTIONS } from '../constants'
 
 const rows: Risk[] = [
   { Id: 11, Hash: 'risk-11', IP: '127.0.0.1', Title: 'risk 11', RiskType: 'SQL注入', CreatedAt: 1 },
@@ -94,6 +95,9 @@ vi.mock('@/components/TableVirtualResize/TableVirtualResize', () => ({
         <span data-testid="loaded-count">{data.length}</span>
         <button type="button" onClick={() => onChange(1, 20, undefined, { SeverityList: ['none'] })}>
           filter-none
+        </button>
+        <button type="button" onClick={() => onChange(1, 20, undefined, { TagList: ['自定义状态', '历史标签'] })}>
+          filter-custom-status
         </button>
         <button type="button" onClick={() => pagination.onChange(1)}>
           load-table
@@ -346,6 +350,70 @@ describe('YakitRiskTable 批量操作', () => {
     ])
   })
 
+  it('企业版处置状态合并预设、自定义状态和历史标签，保留翻译及统计并去重', async () => {
+    mocks.queryRiskTags.mockResolvedValue({
+      RiskTags: [
+        { Name: '确认', Total: 3 },
+        { Name: '自定义状态', Total: 2 },
+        { Name: '历史标签', Total: 1 },
+        { Name: '自定义状态', Total: 2 },
+        { Name: ' ', Total: 1 },
+      ],
+    })
+    await renderTable()
+    expect(mocks.columns.find((column) => column.dataKey === 'Tags').filterProps.filters).toEqual([
+      ...DISPOSAL_STATUS_OPTIONS.map((item) => ({
+        value: item.value,
+        label: item.labelKey,
+        ...(item.value === '确认' ? { total: 3 } : {}),
+      })),
+      { value: '自定义状态', label: '自定义状态', total: 2 },
+      { value: '历史标签', label: '历史标签', total: 1 },
+    ])
+  })
+
+  it('自定义处置状态筛选将原始标签值传给风险查询', async () => {
+    const setQuery = vi.fn()
+    const props = { setQuery, setRiskLoading: vi.fn(), allTotal: 100, setAllTotal: vi.fn() }
+    const { rerender } = render(<YakitRiskTable {...props} query={query} />)
+    fireEvent.click(screen.getByRole('button', { name: 'filter-custom-status' }))
+    const nextQuery = setQuery.mock.calls.at(-1)?.[0]
+    expect(nextQuery.TagList).toEqual(['自定义状态', '历史标签'])
+    rerender(<YakitRiskTable {...props} query={nextQuery} />)
+    fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
+    await waitFor(() =>
+      expect(mocks.queryRisks).toHaveBeenCalledWith(
+        expect.objectContaining({ TagList: ['自定义状态', '历史标签'], Tags: '自定义状态|历史标签' }),
+      ),
+    )
+  })
+
+  it.each(['single', 'batch'])('%s 保存自定义状态后刷新列头筛选选项', async (mode) => {
+    await renderTable()
+    mocks.queryRiskTags.mockResolvedValue({ RiskTags: [{ Name: '自定义状态', Total: 1 }] })
+    let formProps
+    if (mode === 'single') {
+      const column = mocks.columns.find((item) => item.dataKey === 'RiskTypeVerbose')
+      const cell = render(column.render('', rows[0]))
+      fireEvent.click(cell.getByText('SQL注入'))
+      formProps = mocks.showModal.mock.calls[0][0].content.props
+    } else {
+      fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
+      formProps = openBatchEdit()
+    }
+    await act(async () => {
+      await formProps.onSave({ ...rows[0], SeverityScore: 7, Tags: '自定义状态' })
+    })
+    await waitFor(() => {
+      expect(mocks.queryRiskTags).toHaveBeenCalled()
+      expect(mocks.columns.find((column) => column.dataKey === 'Tags').filterProps.filters).toContainEqual({
+        value: '自定义状态',
+        label: '自定义状态',
+        total: 1,
+      })
+    })
+  })
+
   it('刷新风险列表时同步刷新类型和处置状态选项', async () => {
     mocks.enterprise = false
     await renderTable()
@@ -387,6 +455,34 @@ describe('YakitRiskTable 批量操作', () => {
     expect(formProps.batchCount).toBe(1)
     expect(formProps.info).toEqual(rows[0])
     expect(formProps.info).not.toBe(rows[0])
+  })
+
+  it.each(['batch-modify', 'batch-export-csv'])('单条保存后 %s 使用最新勾选数据', async (action) => {
+    await renderTable()
+    fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
+    const typeColumn = mocks.columns.find((column) => column.dataKey === 'RiskTypeVerbose')
+    const cell = render(typeColumn.render('', rows[0]))
+    fireEvent.click(cell.getByText('SQL注入'))
+    const editProps = mocks.showModal.mock.calls[0][0].content.props
+    await act(async () => {
+      await editProps.onSave({ ...rows[0], RiskType: 'SSRF', SeverityScore: 8.8, Tags: '确认', TagReason: '已核实' })
+    })
+    mocks.showModal.mockClear()
+
+    fireEvent.click(screen.getByRole('button', { name: action }))
+    const nextProps = mocks.showModal.mock.calls[0][0].content.props
+    const savedRisk = action === 'batch-modify' ? nextProps.info : (await nextProps.getData()).response.Data[0]
+    expect(savedRisk).toEqual(
+      expect.objectContaining({
+        Id: 11,
+        RiskType: 'SSRF',
+        RiskTypeVerbose: 'SSRF',
+        SeverityScore: 8.8,
+        Severity: 'high',
+        Tags: '确认',
+        TagReason: '已核实',
+      }),
+    )
   })
 
   it('显式选择多条时使用空白批量模板', async () => {

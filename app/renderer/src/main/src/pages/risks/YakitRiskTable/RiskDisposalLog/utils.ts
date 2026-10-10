@@ -11,7 +11,7 @@ import type {
   UploadDisposalImageRequest,
 } from './types'
 
-const tOriginal = i18n.getFixedT(null, 'risk')
+const tOriginal = i18n.getFixedT(null, ['risk', 'components', 'apiUtils'])
 
 const parseFragmentUploadUrl = (res: UploadImgApiResponse | undefined): string => {
   if (res?.code === 200) {
@@ -20,7 +20,10 @@ const parseFragmentUploadUrl = (res: UploadImgApiResponse | undefined): string =
     if (url) return url
   }
   const data = res?.data
-  const message = res?.message || (typeof data === 'object' && data ? data.reason : undefined) || 'unknown'
+  const message =
+    res?.message ||
+    (typeof data === 'object' && data ? data.reason : undefined) ||
+    tOriginal('DisposalAttachment.imageUploadFailed', { ns: 'components' })
   throw new Error(String(message))
 }
 
@@ -28,8 +31,8 @@ const parseFragmentUploadUrl = (res: UploadImgApiResponse | undefined): string =
 export const apiUploadDisposalImage = (request: UploadDisposalImageRequest): Promise<string> => {
   return new Promise((resolve, reject) => {
     if (!request.hash) {
-      const err = '缺少 risk hash'
-      yakitNotify('error', `上传图片失败: ${err}`)
+      const err = tOriginal('DisposalAttachment.missingRiskHash', { ns: 'components' })
+      yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { ns: 'apiUtils', error: err }))
       reject(err)
       return
     }
@@ -45,7 +48,7 @@ export const apiUploadDisposalImage = (request: UploadDisposalImageRequest): Pro
         resolve(parseFragmentUploadUrl(resArr?.[0]))
       })
       .catch((e) => {
-        yakitNotify('error', `上传图片失败: ${e}`)
+        yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { ns: 'apiUtils', error: e }))
         reject(e)
       })
   })

@@ -158,6 +158,7 @@
     "reply_prefix": "回复 {{user}} : {{content}}",
     "image_count": " [图片] * {{count}}",
     "fetch_logs_failed": "查询处置日志失败",
+    "fetch_flow_logs_failed": "查询流量处置日志失败",
     "publish_comment_failed": "发布评论失败",
     "delete_comment_failed": "删除评论失败"
   }
