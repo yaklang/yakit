@@ -38,9 +38,10 @@ const BoardCardTimeRange: React.FC<{
 /** 看板卡片：内容 + 按状态展示耗时/存活与时间段 */
 const AITaskBoardTodoCard: React.FC<AITaskBoardTodoCardProps> = React.memo(({ item }) => {
   const createdTs = useCreation(() => (isValidUnixSec(item.created_ts) ? item.created_ts! : 0), [item.created_ts])
+  // 执行开始仅认 focus_started_ts，不用 created_ts 冒充（否则会把排队时间算进耗时）
   const startTs = useCreation(
-    () => (isValidUnixSec(item.focus_started_ts) ? item.focus_started_ts! : createdTs),
-    [item.focus_started_ts, createdTs],
+    () => (isValidUnixSec(item.focus_started_ts) ? item.focus_started_ts! : 0),
+    [item.focus_started_ts],
   )
   const endTs = useCreation(() => (isValidUnixSec(item.closed_ts) ? item.closed_ts! : 0), [item.closed_ts])
 
@@ -48,7 +49,7 @@ const AITaskBoardTodoCard: React.FC<AITaskBoardTodoCardProps> = React.memo(({ it
   const startText = useCreation(() => (startTs ? formatTime(startTs) : '—'), [startTs])
   const endText = useCreation(() => (endTs ? formatTime(endTs) : '—'), [endTs])
 
-  // 耗时：优先后端 focus_seconds；运行中无值时用 now - focus_started_ts 兜底
+  // 耗时：优先后端 focus_seconds；无值时仅在有 focus_started_ts 时用墙钟兜底
   const focusDurationText = useCreation(() => {
     if (typeof item.focus_seconds === 'number' && item.focus_seconds >= 0) {
       return formatDurationSeconds(item.focus_seconds)

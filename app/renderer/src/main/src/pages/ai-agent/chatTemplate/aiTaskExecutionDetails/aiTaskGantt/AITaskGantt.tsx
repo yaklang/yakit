@@ -4,16 +4,9 @@ import moment from 'moment'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
-import type {
-  AITaskGanttProps,
-  AITaskGanttSegment,
-  AITaskGanttSegmentKind,
-  AITaskGanttStatusMap,
-  AITaskGanttTodoItem,
-} from './type'
+import { buildSegments, isValidUnixSec } from './ganttUtils'
+import type { AITaskGanttProps, AITaskGanttSegment, AITaskGanttSegmentKind, AITaskGanttStatusMap } from './type'
 import styles from './AITaskGantt.module.scss'
-
-const isValidUnixSec = (ts?: number) => typeof ts === 'number' && Number.isFinite(ts) && ts > 1e9
 
 const STATUS_META: AITaskGanttStatusMap = {
   [AIToDoListStatusEnum.Pending]: { label: '待处理' },
@@ -43,84 +36,6 @@ const TICK_CANDIDATES_SEC = [
   12 * 3600,
   24 * 3600,
 ]
-
-/** 按状态拼甘特条：等待 → 执行/成功/跳过/失败 */
-const buildSegments = (item: AITaskGanttTodoItem, nowSec: number): AITaskGanttSegment[] => {
-  const created = isValidUnixSec(item.created_ts) ? item.created_ts! : 0
-  if (!created) return []
-
-  const focus = isValidUnixSec(item.focus_started_ts) ? item.focus_started_ts! : 0
-  const closed = isValidUnixSec(item.closed_ts) ? item.closed_ts! : 0
-  const end = closed || nowSec
-  const segments: AITaskGanttSegment[] = []
-
-  const push = (kind: AITaskGanttSegmentKind, startTs: number, endTs: number) => {
-    if (endTs < startTs) return
-    segments.push({ kind, startTs, endTs: Math.max(endTs, startTs) })
-  }
-
-  switch (item.status) {
-    case AIToDoListStatusEnum.Pending: {
-      push('wait', created, end)
-      break
-    }
-    case AIToDoListStatusEnum.Doing: {
-      if (focus && focus > created) {
-        push('wait', created, focus)
-        push('execute', focus, end)
-      } else if (focus) {
-        push('execute', focus, end)
-      } else {
-        push('wait', created, end)
-      }
-      break
-    }
-    case AIToDoListStatusEnum.Done: {
-      // 等待 + 执行过程 + 成功收尾（无独立成功时间戳时取执行尾部约 15%）
-      const processEnd = closed || end
-      if (focus && focus > created) {
-        push('wait', created, focus)
-        const processDur = Math.max(processEnd - focus, 0)
-        const tipStart =
-          processDur > 0 ? Math.max(focus, processEnd - Math.max(1, Math.floor(processDur * 0.25))) : processEnd
-        if (tipStart > focus) push('execute', focus, tipStart)
-        push('success', tipStart, processEnd)
-      } else if (focus) {
-        push('success', focus, processEnd)
-      } else {
-        push('wait', created, processEnd)
-        push('success', processEnd, processEnd)
-      }
-      break
-    }
-    case AIToDoListStatusEnum.Skipped: {
-      if (focus && focus > created) {
-        push('wait', created, focus)
-        push('skipped', focus, end)
-      } else {
-        const mid = created + Math.max(1, Math.floor((end - created) * 0.35))
-        push('wait', created, Math.min(mid, end))
-        push('skipped', Math.min(mid, end), end)
-      }
-      break
-    }
-    case AIToDoListStatusEnum.Deleted: {
-      if (focus && focus > created) {
-        push('wait', created, focus)
-        push('failed', focus, end)
-      } else {
-        const mid = created + Math.max(1, Math.floor((end - created) * 0.35))
-        push('wait', created, Math.min(mid, end))
-        push('failed', Math.min(mid, end), end)
-      }
-      break
-    }
-    default:
-      push('wait', created, end)
-  }
-
-  return segments.filter((seg) => seg.endTs >= seg.startTs)
-}
 
 const pickTickInterval = (spanSec: number) => {
   const targetTicks = 8
