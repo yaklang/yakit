@@ -1354,6 +1354,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const loadHistory = useMemoizedFn((id: number) => {
     resetResponse()
     loadingRef.current = true
+    setLoadingText('loading packets')
     setLoading(true)
     setDroppedCount(0)
     setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
