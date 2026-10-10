@@ -322,6 +322,15 @@ function main() {
 
   const changed = readChangedList()
   const results = new Set()
+  if (
+    changed.some((file) =>
+      /^(app\/main\/|scripts\/(build-electron|start-electron)|tsconfig\.(electron|preload)|cli\/|packageScript\/|package\.json$|yarn\.lock$)/.test(
+        file,
+      ),
+    )
+  ) {
+    results.add('e2e/fixtures/__test__/electron-build.test.mjs')
+  }
   const DEBUG = isVitestSelectDebug()
   const debugLines = DEBUG ? [] : null
 

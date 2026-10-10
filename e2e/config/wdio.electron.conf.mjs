@@ -1,11 +1,13 @@
-import { mkdir, writeFile } from 'node:fs/promises'
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const configDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(configDir, '../..')
 const artifactsDir = process.env.YAKIT_E2E_ARTIFACTS_DIR || path.join(repoRoot, 'reports/e2e-electron/manual')
-const appEntryPoint = path.join(repoRoot, 'app/main/index.js')
+const manifest = JSON.parse(await readFile(path.join(repoRoot, 'package.json'), 'utf8'))
+const appEntryPoint = path.resolve(repoRoot, manifest.main)
+await access(appEntryPoint)
 const isolatedUserData = process.env.YAKIT_E2E_USER_DATA
 const rendererHeapMB = process.env.YAKIT_E2E_RENDERER_HEAP_MB
 if (rendererHeapMB && (!/^\d+$/.test(rendererHeapMB) || Number(rendererHeapMB) < 64 || Number(rendererHeapMB) > 512)) {

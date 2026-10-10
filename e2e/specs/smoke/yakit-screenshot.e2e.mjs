@@ -1,8 +1,5 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-const specDir = path.dirname(fileURLToPath(import.meta.url))
-const screenshotModulePath = path.resolve(specDir, '../../../app/main/yakitScreenshot.js')
+const screenshotModulePath = process.env.YAKIT_E2E_SCREENSHOT_MODULE
+if (!screenshotModulePath) throw new Error('Run through scripts/run-electron-e2e.mjs to build the screenshot fixture')
 const syntheticPage = `<!doctype html>
 <html>
   <head>

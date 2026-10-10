@@ -1,10 +1,10 @@
+const { appResourcePath, preloadPath } = require('../../runtimePaths')
 const { BrowserWindow } = require('electron')
-const path = require('path')
 const crypto = require('crypto')
 const isDev = require('electron-is-dev')
 const { CHANNEL_INIT, CHANNEL_PUSH, CHANNEL_OPENED, CHANNEL_CLOSED, CHANNEL_APP_SYNC } = require('./channels')
 
-const AUX_APP_HTML = path.resolve(__dirname, '../../../renderer/pages/main/yakit-aux.html')
+const AUX_APP_HTML = appResourcePath('renderer', 'pages', 'main', 'yakit-aux.html')
 
 const lastAppSync = {
   theme: null,
@@ -143,7 +143,7 @@ class AuxWindowManager {
       minHeight,
       titleBarStyle: titleBar,
       webPreferences: {
-        preload: path.join(__dirname, '../../preload.js'),
+        preload: preloadPath('main'),
         nodeIntegration: true,
         contextIsolation: false,
         sandbox: true,
