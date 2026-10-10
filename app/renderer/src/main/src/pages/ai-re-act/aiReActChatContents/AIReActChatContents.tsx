@@ -178,7 +178,6 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
     const chatLength = useStore(store, (state) => state.chatElements.length)
     const casualTitle = useStore(store, (state) => state.currentLoadingTitle.casualTitle)
     const planTitle = useStore(store, (state) => state.currentLoadingTitle.planTitle)
-    const execute = useStore(store, (state) => state.execute)
     // 任务规划运行态：进入任务规划后底部 loading 从 planTitle 取值
     const taskCoordinatorId = useStore(store, (state) => state.currentChatStatus.coordinatorId)
     const taskStatus = useStore(store, (state) => state.currentChatStatus.status)
@@ -278,10 +277,9 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
     )
 
     const Footer = useCallback(() => {
-      if (!execute) return chatLength ? <div className={styles['end']}>当前会话已停止</div> : null
-      // 任务规划进行中时从 planTitle 取值，否则从 casualTitle 取值
-      const mainTitle = isTaskPlanning ? planTitle : casualTitle
-      if (!mainTitle) return <div className={styles['end']}>当前会话已结束</div>
+      // 结束/停止等文案由后端写入 loading title，前端只做展示
+      const mainTitle = (isTaskPlanning ? planTitle : casualTitle) || casualTitle || planTitle
+      if (!mainTitle) return null
       return (
         <div className={styles['footer-loading']}>
           <Loading size={16} style={{ marginTop: 8, padding: '0 8px' }}>
@@ -291,7 +289,7 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
           </Loading>
         </div>
       )
-    }, [casualTitle, planTitle, execute, chatLength, isTaskPlanning])
+    }, [casualTitle, planTitle, isTaskPlanning])
     const Header = useCallback(
       () =>
         grpcLoadMoreLoading ? (

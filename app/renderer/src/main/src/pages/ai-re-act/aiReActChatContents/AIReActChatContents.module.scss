@@ -59,17 +59,28 @@
       font-size: 12px;
     }
   }
-  // Virtuoso 的 Footer 与内部 List 是兄弟节点，父级是全宽 viewport；
-  // 需要单独套用内容轨道，面板态下才能与消息列表对齐。
-  .end {
-    font-size: 12px;
-    font-weight: bold;
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    @include mixin.ai-right-panel-content-track;
-  }
   .footer-loading {
     @include mixin.ai-right-panel-content-track;
     padding-bottom: 24px;
+    // 结束/停止态：布局对齐 Loading（flex + gap + 字重/透明度），icon 换成勾
+    .footer-status {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: bold;
+      opacity: 0.8;
+      line-height: 1;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      .footer-status-icon {
+        flex-shrink: 0;
+      }
+      // 对齐 Loading 内部 .text：占满剩余宽度，便于 ScrollText 截断滚动
+      .footer-loading-title {
+        flex: 1;
+        width: 0;
+      }
+    }
     .footer-loading-title {
       width: 100%;
       display: flex;

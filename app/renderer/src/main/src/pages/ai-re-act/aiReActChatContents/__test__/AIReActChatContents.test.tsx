@@ -5,6 +5,7 @@ import { VirtuosoMockContext } from 'react-virtuoso'
 import { createChatStore } from '../../hooks/chatStore'
 import type { ReActChatRenderElement } from '../../hooks/aiRender'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
+import { AITaskStatus } from '../../hooks/grpcApi'
 import type useAutoScrollFn from '../../hooks/useVirtuosoAutoScroll'
 import emiter from '@/utils/eventBus/eventBus'
 import { AIReActChatContents } from '../AIReActChatContents'
@@ -76,7 +77,9 @@ vi.mock('@/pages/ai-agent/components/StreamCard', () => ({ default: () => null }
 vi.mock('@/pages/ai-agent/components/aiYaklangCode/AIYaklangCode', () => ({ AIYaklangCode: () => null }))
 vi.mock('@/pages/ai-agent/components/aiTextSyntaxFlow/AITextSyntaxFlow', () => ({ default: () => null }))
 vi.mock('@/pages/ai-agent/components/aiGroupStreamCard/AIGroupStreamCard', () => ({ Code: () => null }))
-vi.mock('@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading', () => ({ ScrollText: () => null }))
+vi.mock('@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading', () => ({
+  ScrollText: ({ text }: { text?: string }) => (text ? <>{text}</> : null),
+}))
 
 const VIEWPORT_HEIGHT = 400
 const ITEM_HEIGHT = 80
@@ -202,7 +205,7 @@ describe('AIReActChatContents 首屏加载', () => {
     render(chatElement())
     expect(isSpinning()).toBe(true)
     expect(getScroller()).toHaveStyle({ visibility: 'hidden' })
-    expect(screen.getByText('当前会话已停止')).not.toBeVisible()
+    expect(screen.queryByText('当前会话已停止')).not.toBeInTheDocument()
     expect(autoScroll).not.toHaveBeenCalled()
 
     await finishPositioning()
@@ -364,5 +367,43 @@ describe('AIReActChatContents 首屏加载', () => {
     expect(item).toHaveAttribute('data-index', '5')
     expect(item).toHaveAttribute('data-item-index', '1000000')
     expect(item).toHaveAttribute('data-known-size', String(ITEM_HEIGHT))
+  })
+})
+
+describe('AIReActChatContents Footer loading 文案', () => {
+  it('双标题皆空时不渲染 Footer', async () => {
+    store.setState({
+      chatElements: createItems(1),
+      currentLoadingTitle: { casualTitle: '', planTitle: '' },
+    })
+    render(chatElement())
+    await finishPositioning()
+    expect(screen.queryByText('当前会话已结束')).not.toBeInTheDocument()
+    expect(screen.queryByText('当前会话已停止')).not.toBeInTheDocument()
+  })
+
+  it('任务规划中 planTitle 为空时回退显示 casualTitle', async () => {
+    store.setState({
+      chatElements: createItems(1),
+      currentLoadingTitle: { casualTitle: '加载中', planTitle: '' },
+      currentChatStatus: {
+        questionID: '',
+        coordinatorId: 'coord-1',
+        status: AITaskStatus.inProgress,
+      },
+    })
+    render(chatElement())
+    await finishPositioning()
+    expect(screen.getByText('加载中')).toBeVisible()
+  })
+
+  it('自由对话中 casualTitle 为空时回退显示 planTitle', async () => {
+    store.setState({
+      chatElements: createItems(1),
+      currentLoadingTitle: { casualTitle: '', planTitle: '规划中' },
+    })
+    render(chatElement())
+    await finishPositioning()
+    expect(screen.getByText('规划中')).toBeVisible()
   })
 })
