@@ -4,6 +4,34 @@ import moment from 'moment'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AITaskBoard } from '../AITaskBoard'
 
+// i18n：插值模板用中文，保证耗时/存活等断言与产品文案一致
+const i18nTemplates: Record<string, string> = {
+  'AITaskExecutionDetails.createdTime': '创建时间 {{time}}',
+  'AITaskExecutionDetails.duration': '耗时 {{time}}',
+  'AITaskExecutionDetails.survival': '存活 {{time}}',
+  'AITaskExecutionDetails.startOngoing': '开始 {{time}} —',
+  'AITaskExecutionDetails.labelStart': '开始',
+  'AITaskExecutionDetails.labelEnd': '结束',
+  'AITaskExecutionDetails.labelCreated': '创建',
+  'AITaskExecutionDetails.labelSkipped': '跳过',
+  'AITaskExecutionDetails.labelDeleted': '删除',
+}
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({
+    t: (key: string, options?: Record<string, unknown>) => {
+      let text = i18nTemplates[key] ?? key
+      if (!options) return text
+      return Object.entries(options).reduce((acc, [k, v]) => {
+        if (typeof v === 'string' || typeof v === 'number') {
+          return acc.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v))
+        }
+        return acc
+      }, text)
+    },
+    i18nRefresh: 0,
+  }),
+}))
+
 // 类名原样返回，便于按 class 断言跳过/删除卡片的置灰态
 vi.mock('../AITaskBoard.module.scss', () => ({
   default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),

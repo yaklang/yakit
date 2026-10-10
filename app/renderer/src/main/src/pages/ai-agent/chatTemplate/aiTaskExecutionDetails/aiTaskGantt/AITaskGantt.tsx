@@ -4,38 +4,46 @@ import moment from 'moment'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { buildGanttTicks, buildSegments, collectGanttContentBounds, computeGanttTimeRange } from './ganttUtils'
 import type { AITaskGanttProps, AITaskGanttSegment, AITaskGanttSegmentKind, AITaskGanttStatusMap } from './type'
 import styles from './AITaskGantt.module.scss'
 
-const STATUS_META: AITaskGanttStatusMap = {
-  [AIToDoListStatusEnum.Pending]: { label: '待处理' },
-  [AIToDoListStatusEnum.Doing]: { label: '运行中', tagColor: 'warning' },
-  [AIToDoListStatusEnum.Done]: { label: '已完成', tagColor: 'success' },
-  [AIToDoListStatusEnum.Skipped]: { label: '已跳过', tagColor: 'purple' },
-  [AIToDoListStatusEnum.Deleted]: { label: '已删除', tagColor: 'danger' },
-}
-
-const LEGEND_ITEMS: { kind: AITaskGanttSegmentKind; label: string }[] = [
-  { kind: 'wait', label: '等待' },
-  { kind: 'execute', label: '执行过程' },
-  { kind: 'success', label: '成功' },
-  { kind: 'skipped', label: '跳过' },
-  { kind: 'failed', label: '失败' },
-]
-
 /** 任务统计甘特图：左侧 Todo list + 右侧时间轴条 */
 export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(({ items, className }) => {
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const [selectedId, setSelectedId] = useState<string>('')
   const sidebarListRef = useRef<HTMLDivElement>(null)
   const timelineBodyRef = useRef<HTMLDivElement>(null)
   const syncingScroll = useRef(false)
 
+  const statusMeta = useCreation<AITaskGanttStatusMap>(
+    () => ({
+      [AIToDoListStatusEnum.Pending]: { label: t('AITaskExecutionDetails.columnPending') },
+      [AIToDoListStatusEnum.Doing]: { label: t('AITaskExecutionDetails.columnDoing'), tagColor: 'warning' },
+      [AIToDoListStatusEnum.Done]: { label: t('AITaskExecutionDetails.columnDone'), tagColor: 'success' },
+      [AIToDoListStatusEnum.Skipped]: { label: t('AITaskExecutionDetails.statusSkipped'), tagColor: 'purple' },
+      [AIToDoListStatusEnum.Deleted]: { label: t('AITaskExecutionDetails.statusDeleted'), tagColor: 'danger' },
+    }),
+    [i18nRefresh],
+  )
+
+  const legendItems = useCreation<{ kind: AITaskGanttSegmentKind; label: string }[]>(
+    () => [
+      { kind: 'wait', label: t('AITaskExecutionDetails.ganttWait') },
+      { kind: 'execute', label: t('AITaskExecutionDetails.ganttExecute') },
+      { kind: 'success', label: t('AITaskExecutionDetails.ganttSuccess') },
+      { kind: 'skipped', label: t('AITaskExecutionDetails.ganttSkipped') },
+      { kind: 'failed', label: t('AITaskExecutionDetails.ganttFailed') },
+    ],
+    [i18nRefresh],
+  )
+
   const nowSec = useCreation(() => Math.floor(Date.now() / 1000), [items])
 
   const rowModels = useCreation(() => {
     return items.map((item, index) => {
-      const meta = STATUS_META[item.status] || STATUS_META[AIToDoListStatusEnum.Pending]
+      const meta = statusMeta[item.status] || statusMeta[AIToDoListStatusEnum.Pending]
       return {
         key: item.id || `gantt-row-${index}`,
         item,
@@ -43,7 +51,7 @@ export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(({ items, clas
         segments: buildSegments(item, nowSec),
       }
     })
-  }, [items, nowSec])
+  }, [items, nowSec, statusMeta])
 
   const timeRange = useCreation(() => {
     const bounds = collectGanttContentBounds(
@@ -170,7 +178,7 @@ export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(({ items, clas
                           key={`${row.key}-${seg.kind}-${idx}`}
                           className={classNames(styles['bar-segment'], styles[`bar-segment-${seg.kind}`])}
                           style={segmentStyle(seg)}
-                          title={`${LEGEND_ITEMS.find((l) => l.kind === seg.kind)?.label || seg.kind}`}
+                          title={`${legendItems.find((l) => l.kind === seg.kind)?.label || seg.kind}`}
                         />
                       ))}
                     </div>
@@ -183,7 +191,7 @@ export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(({ items, clas
       </div>
 
       <div className={styles['gantt-legend']}>
-        {LEGEND_ITEMS.map((item) => (
+        {legendItems.map((item) => (
           <div key={item.kind} className={styles['legend-item']}>
             <span className={classNames(styles['legend-dot'], styles[`legend-dot-${item.kind}`])} />
             <span>{item.label}</span>

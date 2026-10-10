@@ -4,6 +4,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AITaskGantt } from '../AITaskGantt'
 
+// i18n 直接回 key，避免测试环境加载懒资源
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({
+    t: (key: string) => key,
+    i18nRefresh: 0,
+  }),
+}))
+
 // 类名原样返回，便于按 class 断言选中态与分段条类型
 vi.mock('../AITaskGantt.module.scss', () => ({
   default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
@@ -50,14 +58,20 @@ describe('AITaskGantt 渲染', () => {
     expect(screen.getByText('删除任务')).toBeInTheDocument()
 
     // 状态标签
-    expect(screen.getAllByText('待处理').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('运行中').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('已完成').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('已跳过').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('已删除').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('AITaskExecutionDetails.columnPending').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('AITaskExecutionDetails.columnDoing').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('AITaskExecutionDetails.columnDone').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('AITaskExecutionDetails.statusSkipped').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('AITaskExecutionDetails.statusDeleted').length).toBeGreaterThan(0)
 
     // 图例五类齐全
-    for (const label of ['等待', '执行过程', '成功', '跳过', '失败']) {
+    for (const label of [
+      'AITaskExecutionDetails.ganttWait',
+      'AITaskExecutionDetails.ganttExecute',
+      'AITaskExecutionDetails.ganttSuccess',
+      'AITaskExecutionDetails.ganttSkipped',
+      'AITaskExecutionDetails.ganttFailed',
+    ]) {
       expect(screen.getAllByText(label).length).toBeGreaterThan(0)
     }
 
@@ -86,7 +100,7 @@ describe('AITaskGantt 渲染', () => {
     const gantt = document.querySelector('.ai-task-gantt') as HTMLElement
     // 空数据：MIN=4 格 ×15min → 含起止共 5 个 tick
     expect(gantt.querySelectorAll('.timeline-tick')).toHaveLength(5)
-    expect(screen.getByText('等待')).toBeInTheDocument()
+    expect(screen.getByText('AITaskExecutionDetails.ganttWait')).toBeInTheDocument()
   })
 
   it('窄跨度至少 5 个刻度；3 天宽跨度不超过 9 个刻度', () => {
@@ -182,9 +196,9 @@ describe('AITaskGantt 选中交互', () => {
     const gantt = document.querySelector('.ai-task-gantt') as HTMLElement
     const segments = Array.from(gantt.querySelectorAll('.bar-segment')) as HTMLElement[]
     expect(segments.length).toBe(3)
-    expect(segments[0].title).toBe('等待')
-    expect(segments[1].title).toBe('执行过程')
-    expect(segments[2].title).toBe('成功')
+    expect(segments[0].title).toBe('AITaskExecutionDetails.ganttWait')
+    expect(segments[1].title).toBe('AITaskExecutionDetails.ganttExecute')
+    expect(segments[2].title).toBe('AITaskExecutionDetails.ganttSuccess')
 
     await user.click(screen.getByText('完成任务'))
     expect(document.querySelector('.timeline-row-selected')).not.toBeNull()

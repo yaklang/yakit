@@ -10,6 +10,34 @@ const todoDetail = vi.fn(({ todoData }: { todoData: TodoListCardData }) => (
   <div data-testid="todo-detail">{todoData.items.map((item) => item.content).join(',')}</div>
 ))
 
+/** 可变 i18n 状态：模拟语言切换时 t 结果变、i18nRefresh 抬升（t 引用本身稳定） */
+const { i18nState } = vi.hoisted(() => ({
+  i18nState: {
+    refresh: 0,
+    prefix: '',
+    translate(key: string, options?: Record<string, unknown>) {
+      let text = `${this.prefix}${key}`
+      if (!options) return text
+      return Object.entries(options).reduce((acc, [k, v]) => {
+        if (typeof v === 'string' || typeof v === 'number') {
+          return acc.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v))
+        }
+        return acc
+      }, text)
+    },
+  },
+}))
+
+// i18n 直接回 key，避免测试环境加载懒资源
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({
+    t: (key: string, options?: Record<string, unknown>) => i18nState.translate(key, options),
+    get i18nRefresh() {
+      return i18nState.refresh
+    },
+  }),
+}))
+
 // 保留真实的数据读取、轮询和快照逻辑，只隔离会话来源及无关子组件。
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
   useCurrentRawData: () => ({ taskDetailsMap }),
@@ -58,6 +86,8 @@ beforeEach(() => {
   vi.useFakeTimers()
   taskDetailsMap.clear()
   todoDetail.mockClear()
+  i18nState.refresh = 0
+  i18nState.prefix = ''
 })
 
 afterEach(() => {
@@ -89,7 +119,7 @@ describe('AITaskExecutionDetails 快照刷新', () => {
 
     expect(screen.queryByText('旧任务感知')).not.toBeInTheDocument()
     expect(screen.queryByTestId('todo-detail')).not.toBeInTheDocument()
-    expect(screen.getByText('暂无待办任务')).toBeInTheDocument()
+    expect(screen.getByText('AITaskExecutionDetails.emptyTodoTitle')).toBeInTheDocument()
   })
 
   it('uuid 变化后在 5 秒轮询时生成新快照并刷新详情', () => {
@@ -137,7 +167,7 @@ describe('AITaskExecutionDetails 快照刷新', () => {
 })
 
 /** 漏洞个数为真实 DOM（HorizontalScrollCard 已 mock），限定在该卡片内断言避免与其它「暂无」冲突 */
-const getRiskMetric = () => screen.getByText('漏洞个数').parentElement as HTMLElement
+const getRiskMetric = () => screen.getByText('AITaskExecutionDetails.riskCount').parentElement as HTMLElement
 
 describe('AITaskExecutionDetails 漏洞个数', () => {
   it('risk_level_count 按严重/高危/中危/低危/信息映射，info 与 other 合并', () => {
@@ -188,7 +218,7 @@ describe('AITaskExecutionDetails 漏洞个数', () => {
     render(<AITaskExecutionDetails taskId="task-risk-fallback" />)
 
     const riskMetric = getRiskMetric()
-    expect(riskMetric).toHaveTextContent('漏洞个数9')
+    expect(riskMetric).toHaveTextContent('AITaskExecutionDetails.riskCount9')
     expect(within(riskMetric).getByText('9')).toBeInTheDocument()
   })
 
@@ -198,8 +228,8 @@ describe('AITaskExecutionDetails 漏洞个数', () => {
     render(<AITaskExecutionDetails taskId="task-risk-empty" />)
 
     const riskMetric = getRiskMetric()
-    expect(riskMetric).toHaveTextContent('漏洞个数暂无')
-    expect(within(riskMetric).getByText('暂无')).toBeInTheDocument()
+    expect(riskMetric).toHaveTextContent('AITaskExecutionDetails.riskCountAITaskExecutionDetails.noData')
+    expect(within(riskMetric).getByText('AITaskExecutionDetails.noData')).toBeInTheDocument()
   })
 })
 
@@ -233,16 +263,16 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     render(<AITaskExecutionDetails taskId="task-board" />)
 
     // 统计卡计数与状态分组一致
-    expect(getStatCount('已创建')).toBe('5')
-    expect(getStatCount('待处理')).toBe('1')
-    expect(getStatCount('进行中')).toBe('1')
-    expect(getStatCount('已完成')).toBe('1')
-    expect(getStatCount('已跳过')).toBe('1')
-    expect(getStatCount('已删除')).toBe('1')
+    expect(getStatCount('AITaskExecutionDetails.statusCreated')).toBe('5')
+    expect(getStatCount('AITaskExecutionDetails.statusPending')).toBe('1')
+    expect(getStatCount('AITaskExecutionDetails.statusDoing')).toBe('1')
+    expect(getStatCount('AITaskExecutionDetails.statusDone')).toBe('1')
+    expect(getStatCount('AITaskExecutionDetails.statusSkipped')).toBe('1')
+    expect(getStatCount('AITaskExecutionDetails.statusDeleted')).toBe('1')
 
     // 看板列头与列卡片（看板列标题与统计卡标题重名，用重名仅存在于看板的列定位）
-    expect(screen.getByText('运行中')).toBeInTheDocument()
-    expect(screen.getByText('已跳过/已删除')).toBeInTheDocument()
+    expect(screen.getByText('AITaskExecutionDetails.columnDoing')).toBeInTheDocument()
+    expect(screen.getByText('AITaskExecutionDetails.columnSkippedOrDeleted')).toBeInTheDocument()
     expect(screen.getByText('排队任务')).toBeInTheDocument()
     expect(screen.getByText('执行任务')).toBeInTheDocument()
     expect(screen.getByText('完成任务')).toBeInTheDocument()
@@ -260,22 +290,22 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     expect(screen.queryByText('Todo list')).not.toBeInTheDocument()
 
     // Segmented 选项 label 点击触发底层 radio change（fake timers 下不走 userEvent）
-    fireEvent.click(screen.getByText('甘特图'))
+    fireEvent.click(screen.getByText('AITaskExecutionDetails.gantt'))
 
     // 甘特图侧栏渲染每条待办
     expect(screen.getByText('Todo list')).toBeInTheDocument()
     expect(screen.getByText('排队任务')).toBeInTheDocument()
     expect(screen.getByText('删除任务')).toBeInTheDocument()
     // 甘特图图例与统计计数不因视图切换丢失
-    expect(screen.getByText('执行过程')).toBeInTheDocument()
-    expect(getStatCount('已创建')).toBe('5')
+    expect(screen.getByText('AITaskExecutionDetails.ganttExecute')).toBeInTheDocument()
+    expect(getStatCount('AITaskExecutionDetails.statusCreated')).toBe('5')
     // 看板列头不再渲染（「待处理」在甘特图侧栏状态标签中仍存在，用看板独有的列头断言）
-    expect(screen.queryByText('已跳过/已删除')).not.toBeInTheDocument()
+    expect(screen.queryByText('AITaskExecutionDetails.columnSkippedOrDeleted')).not.toBeInTheDocument()
 
     // 切回看板
-    fireEvent.click(screen.getByText('看板'))
+    fireEvent.click(screen.getByText('AITaskExecutionDetails.board'))
     expect(screen.queryByText('Todo list')).not.toBeInTheDocument()
-    expect(screen.getByText('已跳过/已删除')).toBeInTheDocument()
+    expect(screen.getByText('AITaskExecutionDetails.columnSkippedOrDeleted')).toBeInTheDocument()
   })
 
   it('无待办时两种视图均不渲染', () => {
@@ -286,8 +316,33 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     taskDetailsMap.set('task-empty', data)
     render(<AITaskExecutionDetails taskId="task-empty" />)
 
-    expect(screen.getByText('暂无待办任务')).toBeInTheDocument()
+    expect(screen.getByText('AITaskExecutionDetails.emptyTodoTitle')).toBeInTheDocument()
     expect(document.querySelector('.ai-task-board')).toBeNull()
     expect(document.querySelector('.ai-task-gantt')).toBeNull()
+  })
+
+  it('i18nRefresh 变化后统计卡与看板列标题重算（items 不变）', () => {
+    createTaskWithStatuses('task-i18n-refresh')
+    // taskName 仅用于冲破 React.memo，不参与 todo 缓存派生
+    const { rerender } = render(<AITaskExecutionDetails taskId="task-i18n-refresh" taskName="lang-0" />)
+
+    expect(getStatCount('AITaskExecutionDetails.statusCreated')).toBe('5')
+    expect(screen.getByText('AITaskExecutionDetails.columnDoing')).toBeInTheDocument()
+
+    // 仅改 t 输出并触发重渲、不抬升 i18nRefresh：渲染期文案更新，useCreation 缓存标题仍旧
+    i18nState.prefix = 'en:'
+    rerender(<AITaskExecutionDetails taskId="task-i18n-refresh" taskName="lang-1" />)
+    expect(screen.getByText('en:AITaskExecutionDetails.title')).toBeInTheDocument()
+    expect(getStatCount('AITaskExecutionDetails.statusCreated')).toBe('5')
+    expect(screen.getByText('AITaskExecutionDetails.columnDoing')).toBeInTheDocument()
+
+    // 抬升 i18nRefresh 后缓存文案才重算
+    i18nState.refresh += 1
+    rerender(<AITaskExecutionDetails taskId="task-i18n-refresh" taskName="lang-2" />)
+    expect(getStatCount('en:AITaskExecutionDetails.statusCreated')).toBe('5')
+    expect(getStatCount('en:AITaskExecutionDetails.statusPending')).toBe('1')
+    expect(screen.getByText('en:AITaskExecutionDetails.columnDoing')).toBeInTheDocument()
+    expect(screen.getByText('en:AITaskExecutionDetails.columnSkippedOrDeleted')).toBeInTheDocument()
+    expect(screen.queryByText('AITaskExecutionDetails.statusCreated')).not.toBeInTheDocument()
   })
 })
