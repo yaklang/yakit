@@ -60,6 +60,14 @@ $color-mix-supports: '(background: color-mix(in srgb, #000 50%, #fff))';
   }
 }
 
+// drop-shadow 混色：不支持 color-mix 时回退为原色阴影
+@mixin color-mix-drop-shadow($offset-x, $offset-y, $blur, $color, $alpha) {
+  filter: drop-shadow($offset-x $offset-y $blur $color);
+  @supports #{$color-mix-supports} {
+    filter: drop-shadow($offset-x $offset-y $blur color-mix(in srgb, #{$color} #{$alpha}, transparent));
+  }
+}
+
 // 线性渐变 + 底层背景：不支持 color-mix 时渐变停点使用原色
 @mixin color-mix-linear-gradient-layered($direction, $color, $alpha, $base) {
   background:
