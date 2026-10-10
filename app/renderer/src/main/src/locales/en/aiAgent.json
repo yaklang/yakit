@@ -538,6 +538,7 @@
     "scheduledTrigger": "Started by scheduled task"
   },
   "AIReportFinishCard": {
+    "viewReport": "View full report",
     "openInAICodeAudit": "Open in AI code audit",
     "openInAICodeAuditError": "Current page cannot open AI code audit",
     "reportContentEmpty": "Report content is empty, cannot export",

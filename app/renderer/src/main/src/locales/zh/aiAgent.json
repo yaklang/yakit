@@ -538,6 +538,7 @@
     "scheduledTrigger": "由定时任务启动"
   },
   "AIReportFinishCard": {
+    "viewReport": "查看完整报告",
     "openInAICodeAudit": "AI代码审计中打开",
     "openInAICodeAuditError": "当前页面无法打开AI代码审计",
     "reportContentEmpty": "报告内容为空，无法导出",
