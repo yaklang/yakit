@@ -198,6 +198,32 @@ describe('MessageCenterModal web read state', () => {
     expect(screen.getByText('3')).toBeInTheDocument()
   })
 
+  it('refreshes a pending list when a read succeeds after switching tabs', async () => {
+    const read = deferred<boolean>()
+    const staleList = deferred<ReturnType<typeof response>>()
+    const freshList = deferred<ReturnType<typeof response>>()
+    mocks.queryWeb
+      .mockResolvedValueOnce(response([message('pending-read')], 2))
+      .mockReturnValueOnce(staleList.promise)
+      .mockReturnValueOnce(freshList.promise)
+    mocks.readWeb.mockReturnValueOnce(read.promise)
+
+    render(<MessageCenterModal visible={true} setVisible={vi.fn()} initialChannel="web" />)
+    await waitFor(() => expect(currentState()).toHaveLength(1))
+    fireEvent.click(screen.getAllByText('pending-read')[0])
+    fireEvent.click(screen.getByRole('button', { name: 'all-tab' }))
+    await waitFor(() => expect(mocks.queryWeb).toHaveBeenCalledTimes(2))
+    expect(currentState()).toEqual([])
+
+    await act(async () => read.resolve(true))
+    await waitFor(() => expect(mocks.queryWeb).toHaveBeenCalledTimes(3))
+    await act(async () => freshList.resolve(response([message('pending-read', true)])))
+    await act(async () => staleList.resolve(response([message('pending-read')], 2)))
+
+    expect(currentState()).toEqual([expect.objectContaining({ hash: 'pending-read', isRead: true })])
+    expect(screen.getByText('1')).toBeInTheDocument()
+  })
+
   it('keeps a web message unread when the read API reports failure', async () => {
     const unreadMessage = message('read-failed')
     mocks.queryWeb

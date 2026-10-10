@@ -4,7 +4,7 @@ import moment from 'moment'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import userEvent from '@testing-library/user-event'
-import { YakitRiskEditForm } from '../YakitRiskTable'
+import { YakitRiskDetails, YakitRiskEditForm } from '../YakitRiskTable'
 
 const mocks = vi.hoisted(() => ({
   verifierUid: vi.fn(),
@@ -92,6 +92,7 @@ vi.mock('@/utils/notification', () => ({ yakitNotify: mocks.notify }))
 vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => ({
   YakitSpin: ({ children }: React.PropsWithChildren) => children,
 }))
+vi.mock('@/pages/pluginHub/hooks/useListenWidth', () => ({ default: () => 800 }))
 vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => {
   const YakitSelect = ({ children, onChange }: React.PropsWithChildren<{ onChange?: () => void }>) => (
     <button type="button" data-testid="select" onClick={onChange}>
@@ -129,6 +130,9 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
       {children}
     </button>
   ),
+}))
+vi.mock('../RiskDisposalLog', () => ({
+  RiskDisposalLog: () => <div>risk-disposal-log</div>,
 }))
 
 const deferred = <T,>() => {
@@ -369,5 +373,32 @@ describe('YakitRiskEditForm 验证人回填', () => {
     fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
     expect(onSave).not.toHaveBeenCalled()
     expect(mocks.notify).toHaveBeenCalledWith('error', error)
+  })
+})
+
+describe('YakitRiskDetails 处置入口', () => {
+  afterEach(cleanup)
+
+  const risk = {
+    Id: 1,
+    Hash: 'risk-hash',
+    RiskType: 'SQL注入',
+    Severity: 'high',
+    Request: new Uint8Array([1]),
+  } as never
+
+  it('未提供处置能力时保留日志阅读但不显示无效按钮', () => {
+    render(<YakitRiskDetails info={risk} showType="history" />)
+
+    expect(screen.getByText('risk-disposal-log')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'YakitRiskDetails.dispose_risk' })).not.toBeInTheDocument()
+  })
+
+  it('提供处置能力时显示按钮并回传当前风险', () => {
+    const onDispose = vi.fn()
+    render(<YakitRiskDetails info={risk} showType="history" onDispose={onDispose} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitRiskDetails.dispose_risk' }))
+    expect(onDispose).toHaveBeenCalledExactlyOnceWith(risk)
   })
 })

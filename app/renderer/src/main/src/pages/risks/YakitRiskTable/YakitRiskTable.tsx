@@ -2457,9 +2457,9 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
               buttonStyle="solid"
               options={getOptions}
             />
-            {isEnterprise && showType === 'history' && (
+            {isEnterprise && showType === 'history' && onDispose && (
               <div className={styles['content-tab-actions']}>
-                <YakitButton type="primary" onClick={() => onDispose?.(info)}>
+                <YakitButton type="primary" onClick={() => onDispose(info)}>
                   {t('YakitRiskDetails.dispose_risk')}
                 </YakitButton>
               </div>

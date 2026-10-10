@@ -631,7 +631,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
   const removeItem = useMemoizedFn((item: API.MessageLogDetail, sourceChannel: MessageChannel) => {
     if (sourceChannel !== channel) return
     if (item.isRead) return
-    if (!dataSorce.some((current) => current.hash === item.hash && !current.isRead)) return
+    if (!loading && !dataSorce.some((current) => current.hash === item.hash && !current.isRead)) return
     const messageKey = `${sourceChannel}:${item.hash}`
     if (readMessageRef.current.has(messageKey)) return
     readMessageRef.current.add(messageKey)
@@ -643,6 +643,8 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     if (isWebChannel) {
       setNoRedDataTotal((prev) => Math.max(0, (prev || 0) - 1))
     }
+    // 已读前发出的列表请求可能仍带旧状态，重新查询并使旧响应失效。
+    if (loading) update()
   })
 
   const virtualList = useMemoizedFn(() => {

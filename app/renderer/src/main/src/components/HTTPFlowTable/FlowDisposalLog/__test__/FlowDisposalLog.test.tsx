@@ -1,11 +1,12 @@
 import type React from 'react'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FlowDisposalLog } from '../FlowDisposalLog'
 import { apiGetFlowDisposalLogs } from '../utils'
 
 const mocks = vi.hoisted(() => ({
   getLogs: vi.fn(),
+  deleteLog: vi.fn(),
   publish: vi.fn(),
   clearComposer: vi.fn(),
 }))
@@ -44,11 +45,22 @@ vi.mock('@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea', async ()
   }
 })
 vi.mock('../FlowDisposalLogItem', () => ({
-  FlowDisposalLogItemView: ({ info }: { info: { id: number } }) => <div data-testid="log-item">{info.id}</div>,
+  FlowDisposalLogItemView: ({
+    info,
+    onDelete,
+  }: {
+    info: { id: number }
+    onDelete?: (info: { id: number }) => void
+  }) => (
+    <div data-testid="log-item">
+      {info.id}
+      <button aria-label={`删除 ${info.id}`} onClick={() => onDelete?.(info)} />
+    </div>
+  ),
 }))
 vi.mock('../utils', () => ({
   apiGetFlowDisposalLogs: mocks.getLogs,
-  apiDeleteFlowDisposalComment: vi.fn(),
+  apiDeleteFlowDisposalComment: mocks.deleteLog,
   apiPublishFlowDisposalComment: mocks.publish,
   apiUploadFlowDisposalImage: vi.fn(),
 }))
@@ -149,5 +161,81 @@ describe('FlowDisposalLog', () => {
 
     await waitFor(() => expect(apiGetFlowDisposalLogs).toHaveBeenCalledWith(expect.objectContaining({ page: 2 })))
     await waitFor(() => expect(screen.getAllByTestId('log-item')).toHaveLength(21))
+  })
+
+  it('删除成功后从第一页重新加载并重置分页', async () => {
+    const pendingSecondPage = deferred<{
+      data: Array<{ id: number; createdAt: number; logType: 'comment' }>
+      total: number
+    }>()
+    const firstPage = Array.from({ length: 20 }, (_, index) => ({
+      id: 20 - index,
+      createdAt: 200 - index,
+      logType: 'comment' as const,
+    }))
+    const refreshedPage = Array.from({ length: 20 }, (_, index) => ({
+      id: 19 - index,
+      createdAt: 199 - index,
+      logType: 'comment' as const,
+    }))
+    mocks.getLogs
+      .mockResolvedValueOnce({ data: firstPage, total: 21 })
+      .mockReturnValueOnce(pendingSecondPage.promise)
+      .mockResolvedValueOnce({ data: refreshedPage, total: 20 })
+    mocks.deleteLog.mockResolvedValue(undefined)
+
+    render(<FlowDisposalLog flow={{ Id: 1, Hash: 'flow' } as never} isLogin />)
+    await waitFor(() => expect(screen.getByRole('button', { name: '删除 20' })).toBeInTheDocument())
+    const list = screen.getByTestId('flow-disposal-log-list')
+    Object.defineProperties(list, {
+      scrollTop: { configurable: true, value: 100 },
+      clientHeight: { configurable: true, value: 100 },
+      scrollHeight: { configurable: true, value: 200 },
+    })
+    fireEvent.scroll(list)
+    await waitFor(() => expect(mocks.getLogs).toHaveBeenCalledTimes(2))
+
+    fireEvent.click(screen.getByRole('button', { name: '删除 20' }))
+
+    await waitFor(() => expect(mocks.getLogs).toHaveBeenCalledTimes(3))
+    expect(mocks.getLogs.mock.calls.map(([request]) => request.page)).toEqual([1, 2, 1])
+    await act(async () => {
+      pendingSecondPage.resolve({ data: [{ id: 99, createdAt: 99, logType: 'comment' }], total: 21 })
+      await pendingSecondPage.promise
+    })
+    expect(screen.queryByText('99')).not.toBeInTheDocument()
+  })
+
+  it('切换流量后旧删除回调不刷新新流量', async () => {
+    const pendingDelete = deferred<void>()
+    mocks.getLogs
+      .mockResolvedValueOnce({ data: [{ id: 1, createdAt: 100, logType: 'comment' }] })
+      .mockResolvedValueOnce({ data: [{ id: 2, createdAt: 200, logType: 'comment' }] })
+    mocks.deleteLog.mockReturnValue(pendingDelete.promise)
+
+    const { rerender } = render(<FlowDisposalLog flow={{ Id: 1, Hash: 'old-flow' } as never} isLogin />)
+    await waitFor(() => expect(screen.getByRole('button', { name: '删除 1' })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: '删除 1' }))
+
+    rerender(<FlowDisposalLog flow={{ Id: 2, Hash: 'new-flow' } as never} isLogin />)
+    await waitFor(() => expect(screen.getByText('2')).toBeInTheDocument())
+    pendingDelete.resolve()
+
+    await pendingDelete.promise
+    await waitFor(() => expect(mocks.getLogs).toHaveBeenCalledTimes(2))
+    expect(mocks.getLogs).toHaveBeenLastCalledWith(expect.objectContaining({ hash: 'new-flow', page: 1 }))
+  })
+
+  it('删除失败时保留当前列表且不刷新', async () => {
+    mocks.getLogs.mockResolvedValue({ data: [{ id: 1, createdAt: 100, logType: 'comment' }], total: 1 })
+    mocks.deleteLog.mockRejectedValue(new Error('delete failed'))
+
+    render(<FlowDisposalLog flow={{ Id: 1, Hash: 'flow' } as never} isLogin />)
+    await waitFor(() => expect(screen.getByRole('button', { name: '删除 1' })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: '删除 1' }))
+
+    await waitFor(() => expect(mocks.deleteLog).toHaveBeenCalledWith(1))
+    expect(mocks.getLogs).toHaveBeenCalledOnce()
+    expect(screen.getByText('1')).toBeInTheDocument()
   })
 })

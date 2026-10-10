@@ -150,9 +150,13 @@ export const RiskDisposalLog: React.FC<RiskDisposalLogProps> = memo((props) => {
   })
 
   const onDelete = useMemoizedFn((item: DisposalLogItem) => {
-    apiDeleteDisposalComment(item.id).then(() => {
-      setList((prev) => prev.filter((ele) => ele.id !== item.id))
-    })
+    const version = submissionVersionRef.current
+    apiDeleteDisposalComment(item.id)
+      .then(() => {
+        if (version !== submissionVersionRef.current) return
+        fetchList(true)
+      })
+      .catch(() => {})
   })
 
   const onSubmit = useMemoizedFn((data: ImageTextareaData) => {
