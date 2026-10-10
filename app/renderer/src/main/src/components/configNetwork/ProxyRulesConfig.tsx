@@ -83,8 +83,8 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
             Id: editId || generateEndpointId(),
             Url,
             Name: Url,
-            ...(UserName ? { UserName } : null),
-            ...(Password ? { Password } : null),
+            UserName,
+            Password,
           }
         : {
             Id: editId || generateRouteId(),
