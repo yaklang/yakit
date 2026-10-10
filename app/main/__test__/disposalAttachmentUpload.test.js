@@ -1,3 +1,4 @@
+const path = require('node:path')
 const {
   DISPOSAL_ATTACHMENT_MAX_SIZE,
   DISPOSAL_ATTACHMENT_CHUNK_SIZE,
@@ -10,7 +11,7 @@ describe('disposal attachment split upload', () => {
     const createReadStream = vi.fn((path, range) => ({ path, range, destroy: vi.fn() }))
     const request = uploadDisposalAttachmentFile({
       url: 'fragment/upload',
-      path: 'C:\\tmp\\attachment.zip',
+      path: path.join('tmp', 'attachment.zip'),
       filedHash: 'risk-hash',
       type: 'RiskComment',
       postChunk,
