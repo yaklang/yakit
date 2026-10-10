@@ -188,3 +188,16 @@
     }
   }
 }
+
+/* ---------- 最近编译菜单条目 ---------- */
+.recent-compile-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+
+  .incremental-tag {
+    flex: none;
+    margin-right: 0;
+  }
+}

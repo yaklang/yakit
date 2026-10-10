@@ -14,6 +14,10 @@ import { useGetState, useInViewport, useMemoizedFn } from 'ahooks'
 import {
   addAuditCodeAreaFileInfo,
   grpcFetchAuditTree,
+  grpcFetchAuditTreeInfo,
+  isIncrementalProgramByQuery,
+  isIncrementalProgramFromInfo,
+  projectNameFromPath,
   judgeAreaExistAuditPath,
   judgeAuditCodeAreaExistFilePath,
   removeAuditCodeAreaFilesInfo,
@@ -90,6 +94,16 @@ const YakRunnerAuditCodeWorkbench: React.FC<YakRunnerAuditCodeProps> = (props) =
   const [runtimeID, setRuntimeID] = useState<string>('')
   /** ---------- 审计运行状态 ---------- */
   const [auditExecuting, setAuditExecuting] = useState<boolean>(false)
+  /** ---------- 文件树展示模式：false=仅增量最后一次 diff，true=展示全部文件 ---------- */
+  const [showAllFiles, setShowAllFilesState, getShowAllFiles] = useGetState<boolean>(false)
+  /** ---------- 当前 program 是否为增量编译（仅此时展示"展示全部文件"勾选框） ---------- */
+  const [isIncrementalProject, setIsIncrementalProject] = useState<boolean>(false)
+  const setShowAllFiles = useMemoizedFn((showAll: boolean) => {
+    if (showAll === getShowAllFiles()) return
+    setShowAllFilesState(showAll)
+    // 切换视图模式后重新加载文件树
+    projectName && onInitTreeFun(`/${projectName}`, false)
+  })
 
   const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
 
@@ -161,6 +175,20 @@ const YakRunnerAuditCodeWorkbench: React.FC<YakRunnerAuditCodeProps> = (props) =
     try {
       resetMap(isFirst)
       onResetAuditStatusFun()
+      // 查询当前 program 是否为增量编译，决定是否展示"展示全部文件"勾选框
+      // 链路1：ssadb 资源 Extra 中的 IsIncremental；后端未返回时走链路2（QuerySSAPrograms 的 IsIncrementalCompile）
+      grpcFetchAuditTreeInfo(rootPath)
+        .then(async (res) => {
+          if (isIncrementalProgramFromInfo(res)) {
+            setIsIncrementalProject(true)
+            return
+          }
+          setIsIncrementalProject(await isIncrementalProgramByQuery(projectNameFromPath(rootPath)))
+        })
+        .catch(async () => {
+          // grpcFetchAuditTreeInfo 失败时也走 QuerySSAPrograms 兜底
+          setIsIncrementalProject(await isIncrementalProgramByQuery(projectNameFromPath(rootPath)))
+        })
       const lastFolder = await getNameByPath(rootPath)
       if (rootPath.length > 0 && lastFolder.length > 0) {
         const node: FileNodeMapProps = {
@@ -225,7 +253,8 @@ const YakRunnerAuditCodeWorkbench: React.FC<YakRunnerAuditCodeProps> = (props) =
       if (callback) callback([])
       return
     }
-    grpcFetchAuditTree(path)
+    // 默认仅展示增量最后一次 diff 的文件树；勾选"展示全部文件"后拉取聚合全树
+    grpcFetchAuditTree(path, !getShowAllFiles())
       .then((res) => {
         if (callback) callback(res.data)
       })
@@ -703,8 +732,21 @@ const YakRunnerAuditCodeWorkbench: React.FC<YakRunnerAuditCodeProps> = (props) =
       auditRule,
       auditExecuting,
       runtimeID,
+      showAllFiles,
+      isIncrementalProject,
     }
-  }, [pageInfo, fileTree, projectName, areaInfo, activeFile, auditRule, auditExecuting, runtimeID])
+  }, [
+    pageInfo,
+    fileTree,
+    projectName,
+    areaInfo,
+    activeFile,
+    auditRule,
+    auditExecuting,
+    runtimeID,
+    showAllFiles,
+    isIncrementalProject,
+  ])
 
   const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
     return {
@@ -717,6 +759,8 @@ const YakRunnerAuditCodeWorkbench: React.FC<YakRunnerAuditCodeProps> = (props) =
       setAuditRule,
       setAuditExecuting,
       setRuntimeID,
+      setShowAllFiles,
+      setIsIncrementalProject,
     }
   }, [])
 

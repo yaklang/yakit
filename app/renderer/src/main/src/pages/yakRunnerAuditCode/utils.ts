@@ -88,15 +88,22 @@ const initRiskOrRuleTreeData = (list: RequestYakURLResponse, path) => {
 
 /**
  * @name 审计完整树获取
+ * @param path ssadb 路径
+ * @param diffOnly 仅展示增量编译最后一次 diff 的文件树（默认开启）；为 false 时展示聚合全树
  */
-export const grpcFetchAuditTree: (path: string) => Promise<{ res: RequestYakURLResponse; data: FileNodeMapProps[] }> = (
-  path,
-) => {
+export const grpcFetchAuditTree: (
+  path: string,
+  diffOnly?: boolean,
+) => Promise<{ res: RequestYakURLResponse; data: FileNodeMapProps[] }> = (path, diffOnly = true) => {
   return new Promise(async (resolve, reject) => {
     // ssadb path为/时 展示最近编译
+    const query: { Key: string; Value: string }[] = [{ Key: 'op', Value: 'list' }]
+    if (diffOnly) {
+      query.push({ Key: 'diffOnly', Value: 'true' })
+    }
     const params = {
       Method: 'GET',
-      Url: { Schema: 'ssadb', Query: [{ Key: 'op', Value: 'list' }], Path: path },
+      Url: { Schema: 'ssadb', Query: query, Path: path },
     }
     try {
       const res: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
@@ -106,6 +113,56 @@ export const grpcFetchAuditTree: (path: string) => Promise<{ res: RequestYakURLR
       reject(error)
     }
   })
+}
+
+/**
+ * @name 获取审计项目元信息（不带 op，返回路径自身资源）
+ * @description 用于判断 program 是否为增量编译（IsIncremental），仅增量 program 展示"展示全部文件"勾选框
+ */
+export const grpcFetchAuditTreeInfo: (path: string) => Promise<RequestYakURLResponse> = (path) => {
+  return new Promise(async (resolve, reject) => {
+    const params = {
+      Method: 'GET',
+      Url: { Schema: 'ssadb', Path: path },
+    }
+    try {
+      const res: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', params)
+      resolve(res)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
+/** 从项目元信息资源 Extra 中读取 IsIncremental（读不到视为非增量） */
+export const isIncrementalProgramFromInfo = (res: RequestYakURLResponse): boolean => {
+  const extra = res?.Resources?.[0]?.Extra || []
+  const item = extra.find((kv) => kv.Key === 'IsIncremental')
+  return item?.Value === 'true' || item?.Value === '1'
+}
+
+/** 从 ssadb 根路径（如 "/Java_DVWA(2026-10-08 17:14:45)"）提取 program 名称 */
+export const projectNameFromPath = (path: string): string => {
+  return (path || '').split('/').filter(Boolean).pop() || ''
+}
+
+/**
+ * @name 通过 QuerySSAPrograms 判断 program 是否为增量编译
+ * @description ssadb Extra 未返回 IsIncremental 时的兜底链路：
+ * 后端 QuerySSAPrograms 返回 IsIncrementalCompile / IncrementalGroupId
+ */
+export const isIncrementalProgramByQuery = async (programName: string): Promise<boolean> => {
+  if (!programName) return false
+  try {
+    const { apiQuerySSAPrograms } = await import('@/pages/yakRunnerScanHistory/utils')
+    const res = await apiQuerySSAPrograms({
+      Filter: { ProgramNames: [programName] },
+      Pagination: { ...genDefaultPagination(10, 1) },
+    })
+    return (res.Data || []).some((p) => p.Name === programName && !!p.IsIncrementalCompile)
+  } catch (error) {
+    return false
+  }
 }
 
 /**
