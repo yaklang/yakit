@@ -22,6 +22,14 @@ import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { getRemoteValue, setLocalValue, setRemoteValue } from '@/utils/kv'
 import { YaklangEngineWatchDog, type YaklangEngineWatchDogCredential } from '@/components/layout/YaklangEngineWatchDog'
 import { StringToUint8Array } from '@/utils/str'
+import type { ConsoleDrawerDirection } from '../baseConsole/BaseConsoleDrawer'
+import {
+  DEFAULT_ENGINE_CONSOLE_OPEN_TYPE,
+  resolveConsoleOpenEffects,
+  resolveEngineConsoleOpenType,
+  type EngineConsoleOpenType,
+} from '../baseConsole/engineConsoleOpenType'
+const BaseConsoleDrawer = lazy(() => import('../baseConsole/BaseConsoleDrawer'))
 import {
   GetConnectPort,
   getReleaseEditionName,
@@ -76,7 +84,7 @@ import { RefreshOutlined, LogOutOutlined } from '@yakit-libs/yakit-ui-icons/outl
 
 import { CopyComponents } from '../yakitUI/YakitTag/YakitTag'
 import { Tooltip } from 'antd'
-import { openABSFileLocated } from '@/utils/openWebsite'
+import { openABSFileLocated, openConsoleNewWindow } from '@/utils/openWebsite'
 import { clearTerminalMap, getMapAllTerminalKey } from '@/pages/yakRunner/BottomEditorDetails/TerminalBox/TerminalMap'
 import { grpcFetchLatestYakVersion, grpcFetchYakInstallResult } from '@/apiUtils/grpc'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
@@ -113,6 +121,7 @@ import {
   yakitStream,
   yakitSystem,
   yakitUILayout,
+  yakitWindow,
   yakitWindowControls,
 } from '@/services/electronBridge'
 import type {
@@ -131,6 +140,8 @@ const ContextMenuExecutionHost = lazy(() =>
 )
 import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
+import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
+import { useEngineConsoleStore } from '@/store/baseConsole'
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
   Host: '127.0.0.1',
@@ -1366,7 +1377,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   }, [])
   // #endregion
 
-  // #region 软件顶部展示采样中、录屏中
+  // #region 软件顶部展示采样中、录屏中、引擎Console
   /** ---------- 软件顶部展示采样中 Start ---------- */
   const { performanceSamplingInfo, setPerformanceSamplingLog, setSampling } = usePerformanceSampling()
   const [isShowSamplingInfo, setIsShowSamplingInfo] = useState<boolean>(false)
@@ -1528,6 +1539,65 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     )
   }, [screenRecorderInfo, i18nRefresh])
   /** ---------- 软件顶部展示录屏中状态 End ---------- */
+
+  // ===== 引擎Console：浮窗(独立窗口) / 左·右·底 抽屉 =====
+  const { setConsoleInfo } = useEngineConsoleStore()
+  // 抽屉当前停靠方向，null 表示抽屉未展开
+  const [consoleDrawerDirection, setConsoleDrawerDirection] = useState<ConsoleDrawerDirection | null>(null)
+  // 用户上次选择的打开方式（用于菜单标记），默认浮窗
+  const [consoleType, setConsoleType] = useState<EngineConsoleOpenType>(DEFAULT_ENGINE_CONSOLE_OPEN_TYPE)
+  // ===== 引擎Console：打开方式处理（浮窗 / 左·右·底 抽屉，互斥） =====
+  // 启动时读取用户上次选择的打开方式，用于菜单标记
+  useEffect(() => {
+    if (engineLink) {
+      getRemoteValue(GlobalConfigRemoteGV.EngineConsoleType)
+        .then((val) => {
+          // 仅当远端偏好为合法打开方式时才覆盖默认浮窗（偏好恢复；读取失败回退默认值）
+          const resolved = resolveEngineConsoleOpenType(val || undefined)
+          if (resolved !== DEFAULT_ENGINE_CONSOLE_OPEN_TYPE) {
+            setConsoleType(resolved)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [engineLink])
+
+  const onOpenConsole = useMemoizedFn((type: EngineConsoleOpenType) => {
+    setConsoleType(type)
+    setRemoteValue(GlobalConfigRemoteGV.EngineConsoleType, type)
+    const effects = resolveConsoleOpenEffects(type)
+    if (effects.closeFloatWindow) {
+      // 打开抽屉前，关闭浮窗独立窗口
+      yakitWindow.closeConsoleWindow()
+    }
+    setConsoleDrawerDirection(effects.drawerDirection)
+    if (type === DEFAULT_ENGINE_CONSOLE_OPEN_TYPE) {
+      setConsoleInfo('')
+      openConsoleNewWindow()
+    }
+  })
+
+  // 抽屉内停靠方向切换
+  const onDrawerDirectionChange = useMemoizedFn((direction: ConsoleDrawerDirection) => {
+    setConsoleDrawerDirection(direction)
+    setConsoleType(direction)
+    setRemoteValue(GlobalConfigRemoteGV.EngineConsoleType, direction)
+  })
+  const onDrawerShrinkToFloat = useMemoizedFn(() => onOpenConsole(DEFAULT_ENGINE_CONSOLE_OPEN_TYPE))
+
+  const onDrawerClose = useMemoizedFn(() => setConsoleDrawerDirection(null))
+
+  // 监听其他页面触发的打开引擎Console事件（例如 MITM 热加载页）
+  useEffect(() => {
+    const onOpenEngineConsole = (type?: EngineConsoleOpenType) => {
+      const safeType = type || DEFAULT_ENGINE_CONSOLE_OPEN_TYPE
+      onOpenConsole(safeType)
+    }
+    emiter.on('openEngineConsole', onOpenEngineConsole)
+    return () => {
+      emiter.off('openEngineConsole', onOpenEngineConsole)
+    }
+  }, [])
   // #endregion
 
   const SELinkedEngine = useMemoizedFn(() => {
@@ -1731,6 +1801,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         system={system}
                         isJudgeLicense={isJudgeLicense}
                         onDevToolRefresh={onDevToolRefresh}
+                        onOpenConsole={onOpenConsole}
+                        consoleType={consoleType}
                       />
                       {!showProjectManage && (
                         <>
@@ -1772,6 +1844,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           system={system}
                           isJudgeLicense={isJudgeLicense}
                           onDevToolRefresh={onDevToolRefresh}
+                          onOpenConsole={onOpenConsole}
+                          consoleType={consoleType}
                           homeIcon={
                             !isEnpriTraceAgent() ? (
                               <div
@@ -1865,6 +1939,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                   props.children
                 )}
               </YakitSpin>
+            )}
+
+            {engineLink && consoleDrawerDirection && (
+              <Suspense fallback={null}>
+                <BaseConsoleDrawer
+                  direction={consoleDrawerDirection}
+                  onClose={onDrawerClose}
+                  onDirectionChange={onDrawerDirectionChange}
+                  onShrinkToFloat={onDrawerShrinkToFloat}
+                />
+              </Suspense>
             )}
 
             {engineLink && (yaklangKillPss || yakitDownload) && (

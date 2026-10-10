@@ -743,6 +743,22 @@
   }
 }
 
+.engine-console-menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+  .engine-console-menu-check {
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+  &:hover {
+    .engine-console-menu-check {
+      color: var(--Colors-Use-Main-On-Primary);
+    }
+  }
+}
+
 .stop-screen-menu-item {
   color: var(--Colors-Use-Error-Primary);
   &:hover {

@@ -22,12 +22,6 @@ import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
 import { YakitButton } from '../YakitButton/YakitButton'
 import { DotsHorizontalOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import {
-  SolidFloatwinIcon,
-  SolidTodownIcon,
-  SolidToleftIcon,
-  SolidTorightIcon,
-} from '@yakit-libs/yakit-ui-icons/oldicon'
 import { Tooltip } from 'antd'
 import { YakitPopover } from '../YakitPopover/YakitPopover'
 import { Resizable } from 're-resizable'
@@ -38,6 +32,7 @@ import classNames from 'classnames'
 import styles from './YakitWindow.module.scss'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { FloatingSolid, ParkBelowSolid, ParkLeftSolid, ParkRightSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const DefaultCacheSize: YakitWindowCacheSizes = {
   shrink: { width: 0, height: 0 },
@@ -481,7 +476,7 @@ export const WindowPositionOP: React.FC<WindowPositionOPProps> = memo((props) =>
           <YakitButton
             type="text2"
             isActive={activeDockSide === 'shrink'}
-            icon={<SolidFloatwinIcon />}
+            icon={<FloatingSolid />}
             onClick={() => onType('shrink')}
           />
         )}
@@ -492,7 +487,7 @@ export const WindowPositionOP: React.FC<WindowPositionOPProps> = memo((props) =>
           <YakitButton
             type="text2"
             isActive={activeDockSide === 'bottom'}
-            icon={<SolidTodownIcon />}
+            icon={<ParkBelowSolid />}
             onClick={() => onType('bottom')}
           />
         )}
@@ -503,7 +498,7 @@ export const WindowPositionOP: React.FC<WindowPositionOPProps> = memo((props) =>
           <YakitButton
             type="text2"
             isActive={activeDockSide === 'left'}
-            icon={<SolidToleftIcon />}
+            icon={<ParkLeftSolid />}
             onClick={() => onType('left')}
           />
         )}
@@ -514,7 +509,7 @@ export const WindowPositionOP: React.FC<WindowPositionOPProps> = memo((props) =>
           <YakitButton
             type="text2"
             isActive={activeDockSide === 'right'}
-            icon={<SolidTorightIcon />}
+            icon={<ParkRightSolid />}
             onClick={() => onType('right')}
           />
         )}

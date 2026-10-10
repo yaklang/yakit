@@ -39,6 +39,7 @@ import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { addToTab } from '@/pages/MainTabs'
 import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
+import { CheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { WinKeyborad } from '../yakitUI/YakitEditor/keyboardConstants'
 import { useScreenRecorder } from '@/store/screenRecorder'
@@ -101,7 +102,6 @@ import type {
   SSARisk,
 } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import { useCampare } from '@/hook/useCompare/useCompare'
-import { openConsoleNewWindow } from '@/utils/openWebsite'
 import useEngineConsole from './hooks/useEngineConsole/useEngineConsole'
 import { grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder } from '@/utils/logCollection'
 import { useDownloadYakit } from './update/useDownloadYakit'
@@ -161,6 +161,7 @@ import { judgeDynamic } from './userMenu/judgeDynamic'
 import { useUserMenu } from './userMenu/useUserMenu'
 import { UserMenuModals } from './userMenu/UserMenuModals'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
+import type { EngineConsoleOpenType } from '../baseConsole/engineConsoleOpenType'
 
 // re-export 保持外部导入路径兼容
 export { randomAvatarColor }
@@ -192,6 +193,11 @@ export interface FuncDomainProp {
    * 分隔线跟用户区走；房子自身 border-left 充当与用户区的分隔。
    */
   homeIcon?: React.ReactNode
+
+  /** @name 打开引擎Console（按指定方式） */
+  onOpenConsole: (type: EngineConsoleOpenType) => void
+  /** @name 当前选中的引擎Console打开方式（用于菜单标记） */
+  consoleType: EngineConsoleOpenType
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
@@ -209,6 +215,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     isJudgeLicense,
     onDevToolRefresh,
     homeIcon,
+    onOpenConsole,
+    consoleType,
   } = props
 
   /** 登录用户信息 */
@@ -343,6 +351,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             system={system}
             token={screenRecorderInfo.token}
             isRecording={screenRecorderInfo.isRecording}
+            onOpenConsole={onOpenConsole}
+            consoleType={consoleType}
           />
           {!showProjectManage && isIRify() && <UIOpIRifyRisk isEngineLink={isEngineLink} />}
           {!showProjectManage && (
@@ -2884,14 +2894,60 @@ interface ScreenAndScreenshotProps {
   system: YakitSystem
   isRecording: boolean
   token: string
+  /** 打开引擎Console（按指定方式） */
+  onOpenConsole: (type: EngineConsoleOpenType) => void
+  /** 当前选中的引擎Console打开方式（用于菜单标记） */
+  consoleType: EngineConsoleOpenType
 }
 const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((props) => {
-  const { system, isRecording, token } = props
+  const { system, isRecording, token, onOpenConsole, consoleType } = props
   const [show, setShow] = useState<boolean>(false)
   /** 截图功能的loading */
   const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
   const { setRecording } = useScreenRecorder()
   const { t } = useI18nNamespaces(['layout'])
+
+  const engineConsoleMenuChildren = useCreation(
+    () => [
+      {
+        label: (
+          <div className={styles['engine-console-menu-item']}>
+            <span>浮窗</span>
+            {consoleType === 'float' && <CheckOutlined className={styles['engine-console-menu-check']} />}
+          </div>
+        ),
+        key: 'engine-console-float',
+      },
+      {
+        label: (
+          <div className={styles['engine-console-menu-item']}>
+            <span>左侧抽屉</span>
+            {consoleType === 'left' && <CheckOutlined className={styles['engine-console-menu-check']} />}
+          </div>
+        ),
+        key: 'engine-console-left',
+      },
+      {
+        label: (
+          <div className={styles['engine-console-menu-item']}>
+            <span>右侧抽屉</span>
+            {consoleType === 'right' && <CheckOutlined className={styles['engine-console-menu-check']} />}
+          </div>
+        ),
+        key: 'engine-console-right',
+      },
+      {
+        label: (
+          <div className={styles['engine-console-menu-item']}>
+            <span>底部抽屉</span>
+            {consoleType === 'bottom' && <CheckOutlined className={styles['engine-console-menu-check']} />}
+          </div>
+        ),
+        key: 'engine-console-bottom',
+      },
+    ],
+    [consoleType],
+  )
 
   const yakitMenuData = useCreation(() => {
     if (system === 'Darwin' || system === 'Windows_NT') {
@@ -2960,6 +3016,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         {
           label: '引擎 Console',
           key: 'engine-console',
+          children: engineConsoleMenuChildren,
         },
       ]
     }
@@ -3000,12 +3057,17 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
       {
         label: '引擎 Console',
         key: 'engine-console',
+        children: engineConsoleMenuChildren,
       },
     ]
-  }, [system, screenshotLoading, isRecording])
+  }, [system, screenshotLoading, isRecording, consoleType])
   const menuSelect = useMemoizedFn((type: string) => {
     setShow(false)
     switch (type) {
+      case 'engine-console':
+        // 点击父项标题，按上次选中的方式自动打开
+        onOpenConsole(consoleType)
+        break
       case 'performance-sampling':
         handlePerformanceSampling()
         break
@@ -3032,8 +3094,17 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
       case 'screen-recorder':
         addToTab('**screen-recorder')
         break
-      case 'engine-console':
-        openConsoleNewWindow()
+      case 'engine-console-float':
+        onOpenConsole('float')
+        break
+      case 'engine-console-left':
+        onOpenConsole('left')
+        break
+      case 'engine-console-right':
+        onOpenConsole('right')
+        break
+      case 'engine-console-bottom':
+        onOpenConsole('bottom')
         break
       default:
         break
@@ -3208,6 +3279,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
       selectedKeys={[]}
       data={yakitMenuData as YakitMenuItemProps[]}
       onClick={({ key }) => menuSelect(key)}
+      parentTitleClick
     />
   )
   return (

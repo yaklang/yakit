@@ -18,17 +18,18 @@
     border-color: fetch-color($type, 'color-6');
   }
 
-  &:focus {
+  // 排除激活态与禁用态：激活态下 :focus/:hover 会盖住 active 高亮；禁用态下交互色会盖过 [disabled] 灰态
+  &:not(.yakit-active-button):not([disabled]):focus {
     background: fetch-color($type, 'color-5');
     color: fetch-color($type, 'color-7');
     border-color: fetch-color($type, 'color-5');
   }
-  &:hover {
+  &:not(.yakit-active-button):not([disabled]):hover {
     background: fetch-color($type, 'color-4');
     color: fetch-color($type, 'color-7');
     border-color: fetch-color($type, 'color-4');
   }
-  &:active {
+  &:not(.yakit-active-button):not([disabled]):active {
     background: fetch-color($type, 'color-6');
     color: fetch-color($type, 'color-7');
     border-color: fetch-color($type, 'color-6');
@@ -62,7 +63,7 @@
     }
   }
 
-  &:focus {
+  &:not(.yakit-active-button):not([disabled]):focus {
     background: var(--Colors-Use-Neutral-Bg);
     color: var(--Colors-Use-Neutral-Text-1-Title);
     border-color: var(--Colors-Use-Neutral-Border);
@@ -70,7 +71,7 @@
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
   }
-  &:hover {
+  &:not(.yakit-active-button):not([disabled]):hover {
     background: fetch-color($type, 'color-1');
     color: fetch-color($type, 'color-4');
     border-color: transparent;
@@ -78,7 +79,7 @@
       color: fetch-color($type, 'color-5');
     }
   }
-  &:active {
+  &:not(.yakit-active-button):not([disabled]):active {
     background: fetch-color($type, 'color-1');
     color: fetch-color($type, 'color-6');
     border-color: fetch-color($type, 'color-3');
@@ -106,17 +107,17 @@
     border-color: fetch-color($type, 'color-6');
   }
 
-  &:focus {
+  &:not(.yakit-active-button):not([disabled]):focus {
     background: transparent;
     color: fetch-color($type, 'color-5');
     border-color: fetch-color($type, 'color-3');
   }
-  &:hover {
+  &:not(.yakit-active-button):not([disabled]):hover {
     background: fetch-color($type, 'color-1');
     color: fetch-color($type, 'color-4');
     border-color: fetch-color($type, 'color-4');
   }
-  &:active {
+  &:not(.yakit-active-button):not([disabled]):active {
     background: fetch-color($type, 'color-1');
     color: fetch-color($type, 'color-6');
     border-color: fetch-color($type, 'color-6');
@@ -137,7 +138,7 @@
     stroke-width: 1.5;
   }
 
-  &:focus {
+  &:not(.yakit-active-button):not([disabled]):focus {
     background: var(--Colors-Use-Basic-Background);
     color: fetch-color($type, 'color-6');
     border-color: fetch-color($type, 'color-6');
@@ -146,7 +147,7 @@
     }
   }
 
-  &:hover {
+  &:not(.yakit-active-button):not([disabled]):hover {
     background: var(--Colors-Use-Basic-Background);
     color: fetch-color($type, 'color-5');
     border-color: fetch-color($type, 'color-5');
@@ -154,7 +155,7 @@
       color: fetch-color($type, 'color-5');
     }
   }
-  &:active {
+  &:not(.yakit-active-button):not([disabled]):active {
     background: var(--Colors-Use-Basic-Background);
     color: fetch-color($type, 'color-6');
     border-color: fetch-color($type, 'color-6');
@@ -199,17 +200,17 @@
     border-color: transparent;
   }
 
-  &:focus {
+  &:not(.yakit-active-button):not([disabled]):focus {
     background: transparent;
     color: fetch-color($type, 'color-5');
     border-color: transparent;
   }
-  &:hover {
+  &:not(.yakit-active-button):not([disabled]):hover {
     background: transparent;
     color: fetch-color($type, 'color-4');
     border-color: transparent;
   }
-  &:active {
+  &:not(.yakit-active-button):not([disabled]):active {
     background: transparent;
     color: fetch-color($type, 'color-6');
     border-color: transparent;
@@ -243,7 +244,7 @@
     }
   }
 
-  &:focus {
+  &:not(.yakit-active-button):not([disabled]):focus {
     background: transparent;
     color: var(--Colors-Use-Neutral-Text-1-Title);
     border-color: transparent;
@@ -251,7 +252,7 @@
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
   }
-  &:hover {
+  &:not(.yakit-active-button):not([disabled]):hover {
     background: var(--Colors-Use-Neutral-Bg-Hover);
     color: var(--Colors-Use-Neutral-Text-1-Title);
     border-color: var(--Colors-Use-Neutral-Bg-Hover);
@@ -259,7 +260,7 @@
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
   }
-  &:active {
+  &:not(.yakit-active-button):not([disabled]):active {
     background: var(--Colors-Use-Neutral-Bg);
     color: fetch-color($type, 'color-5');
     border-color: var(--Colors-Use-Neutral-Border);
