@@ -346,6 +346,15 @@ jobs:
                   # IRifyEnpriTrace -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # EnpriTrace      -1.4.1-0426-linux-legacy-arm64.run
 
+            - name: Save Electron source maps
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                name: electron-sourcemaps-manual-${{ inputs.platform }}
+                path: reports/electron-build
+                if-no-files-found: ignore
+                retention-days: 30
+
             - name: Upload Yakit(CE) Artifacts Windows
               if: ${{ contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
               uses: actions/upload-artifact@v4

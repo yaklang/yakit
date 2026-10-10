@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "lib": ["ES2021"],
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "rootDir": ".",
+    "allowJs": true,
+    "checkJs": false,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["app/main/**/*.js", "app/main/**/*.ts"],
+  "exclude": [
+    "app/main/**/__test__/**",
+    "app/main/handlers/libs/**",
+    "app/main/preload.js",
+    "app/main/preload.ts",
+    "app/main/engineLinkPreload.js",
+    "app/main/engineLinkPreload.ts",
+    "app/main/screenshots/preload.js",
+    "app/main/screenshots/preload.ts"
+  ]
+}

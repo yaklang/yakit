@@ -1,6 +1,9 @@
 const packageJson = require('../../package.json')
 
 module.exports = async function (context) {
+  const { prepareElectronPack } = await import('../../scripts/build-electron.mjs')
+  await prepareElectronPack(context)
+
   const isLegacy = process.env.YAKIT_LEGACY == 'true'
 
   const archMap = {

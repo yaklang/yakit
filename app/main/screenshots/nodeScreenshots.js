@@ -1,3 +1,4 @@
+const { resourcePath } = require('../runtimePaths')
 const { platform, arch } = process
 
 let nativeBinding = null
@@ -9,21 +10,21 @@ try {
       switch (arch) {
         case 'x64':
           try {
-            nativeBinding = require('./lib/node-screenshots.win32-x64-msvc.node')
+            nativeBinding = require(resourcePath('screenshots', 'node-screenshots.win32-x64-msvc.node'))
           } catch (e) {
             loadError = e
           }
           break
         case 'ia32':
           try {
-            nativeBinding = require('./lib/node-screenshots.win32-ia32-msvc.node')
+            nativeBinding = require(resourcePath('screenshots', 'node-screenshots.win32-ia32-msvc.node'))
           } catch (e) {
             loadError = e
           }
           break
         case 'arm64':
           try {
-            nativeBinding = require('./lib/node-screenshots.win32-arm64-msvc.node')
+            nativeBinding = require(resourcePath('screenshots', 'node-screenshots.win32-arm64-msvc.node'))
           } catch (e) {
             loadError = e
           }
@@ -36,14 +37,14 @@ try {
       switch (arch) {
         case 'x64':
           try {
-            nativeBinding = require('./lib/node-screenshots.darwin-x64.node')
+            nativeBinding = require(resourcePath('screenshots', 'node-screenshots.darwin-x64.node'))
           } catch (e) {
             loadError = e
           }
           break
         case 'arm64':
           try {
-            nativeBinding = require('./lib/node-screenshots.darwin-arm64.node')
+            nativeBinding = require(resourcePath('screenshots', 'node-screenshots.darwin-arm64.node'))
           } catch (e) {
             loadError = e
           }

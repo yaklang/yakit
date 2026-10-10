@@ -1,7 +1,9 @@
 const { ipcMain, nativeImage, Notification, app } = require('electron')
 const path = require('path')
 const fs = require('fs')
-const PROTO_PATH = path.join(__dirname, '../protos/grpc.proto')
+const { appResourcePath } = require('./runtimePaths')
+const ipcModules = require('./ipcModules')
+const PROTO_PATH = appResourcePath('protos', 'grpc.proto')
 const { HttpSetting } = require('./state')
 const grpc = require('@grpc/grpc-js')
 const { createEngineGrpcClient } = require('./handlers/utils/engineGrpcClient')
@@ -387,21 +389,18 @@ module.exports = {
     require('./handlers/openNewChildWindow/index').register(win, getClient)
 
     // 接口注册
-    const api = fs.readdirSync(path.join(__dirname, './api'))
-    api.forEach((item) => {
-      require(path.join(__dirname, `./api/${item}`))(win, getClient)
+    Object.values(ipcModules.api).forEach((load) => {
+      load()(win, getClient)
     })
 
     // 各类UI层面用户操作
-    const uiOp = fs.readdirSync(path.join(__dirname, './uiOperate'))
-    uiOp.forEach((item) => {
-      require(path.join(__dirname, `./uiOperate/${item}`))(win, getClient)
+    Object.values(ipcModules.uiOperate).forEach((load) => {
+      load()(win, getClient)
     })
 
     // 工具类 例如node文件处理
-    const utils = fs.readdirSync(path.join(__dirname, './utils'))
-    utils.forEach((item) => {
-      require(path.join(__dirname, `./utils/${item}`)).register(win, getClient)
+    Object.values(ipcModules.utils).forEach((load) => {
+      load().register(win, getClient)
     })
 
     // new plugins store
@@ -478,9 +477,8 @@ module.exports = {
     require('./handlers/newMisc').registerNewIPC(win, getClient, ipcEventPre)
 
     // 各类UI层面用户操作
-    const uiOp = fs.readdirSync(path.join(__dirname, './newUiOperate'))
-    uiOp.forEach((item) => {
-      require(path.join(__dirname, `./newUiOperate/${item}`)).registerNewIPC(win, getClient, ipcEventPre)
+    Object.values(ipcModules.newUiOperate).forEach((load) => {
+      load().registerNewIPC(win, getClient, ipcEventPre)
     })
 
     // (render|print)-error-log
@@ -551,9 +549,8 @@ module.exports = {
     })
 
     // 工具类 例如node文件处理
-    const utils = fs.readdirSync(path.join(__dirname, './utils'))
-    utils.forEach((item) => {
-      require(path.join(__dirname, `./utils/${item}`)).registerNewIPC(win, getClient, ipcEventPre)
+    Object.values(ipcModules.utils).forEach((load) => {
+      load().registerNewIPC(win, getClient, ipcEventPre)
     })
 
     require('./handlers/portScan2')(win, getClient, ipcEventPre)

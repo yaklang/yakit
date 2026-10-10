@@ -51,3 +51,14 @@ jobs:
           name: ${{ inputs.artifact_name }}
           path: ${{ inputs.log_filename }}
           if-no-files-found: warn
+
+      - name: Save Electron bundle diagnostics
+        if: always() && inputs.artifact_name == 'ci-log-electron-build'
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-build-diagnostics
+          path: |
+            dist/electron/**/*.map
+            dist/electron/build-info.json
+          if-no-files-found: ignore
+          retention-days: 14

@@ -2,7 +2,7 @@
   "name": "yakit",
   "version": "1.4.8-0919",
   "description": "Yakit is for yaklang.io Electron GUI Entry",
-  "main": "app/main/index.js",
+  "main": "dist/electron/main/index.js",
   "scripts": {
     "cli": "node ./cli/cli.mjs",
     "check-deps": "node scripts/check-deps.js",
@@ -52,7 +52,12 @@
     "ci:renderer-boundary": "node scripts/check-renderer-boundaries.js",
     "ci:tsc": "node scripts/check-renderer-boundaries.js && cd app/renderer/src/main && yarn type-check",
     "ci:media-size": "node scripts/check-media-size.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "typecheck:electron": "tsc -p tsconfig.electron.json && tsc -p tsconfig.preload.json",
+    "build:electron": "node scripts/build-electron.mjs --mode production",
+    "build:electron:dev": "node scripts/build-electron.mjs --mode development",
+    "test:electron-build": "vitest run e2e/fixtures/__test__/electron-build.test.mjs --maxWorkers=1",
+    "ci:electron": "yarn typecheck:electron && yarn test:electron-build"
   },
   "keywords": [],
   "author": "",
@@ -85,7 +90,9 @@
     "vitest": "4.1.10",
     "wait-on": "^6.0.0",
     "webdriverio": "9.30.0",
-    "yarn": "^1.22.11"
+    "typescript": "6.0.3",
+    "esbuild": "0.28.1",
+    "@types/node": "16.18.126"
   },
   "resolutions": {
     "@wdio/native-utils": "2.5.0"

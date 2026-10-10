@@ -13,7 +13,7 @@ Yakit 是一个基于 Electron + React 的跨平台桌面应用，主要技术�
 
 | 模块 | 路径 | 作用 | 端口 |
 | --- | --- | --- | --- |
-| Electron 主进程 | `app/main/` | 入口 index.js，承载窗口、IPC、gRPC | - |
+| Electron 主进程 | `app/main/` | 源码 index.js，构建入口 dist/electron/main/index.js，承载窗口、IPC、gRPC | - |
 | 主渲染端 | `app/renderer/src/main/` | Vite 8 MPA 主界面 | `3000` |
 | Link 渲染端 | `app/renderer/engine-link-startup/` | 引擎链接启动页 | `5173` |
 
@@ -130,7 +130,7 @@ yarn cli electron
 >
 > 两端都通过上述检查后，再执行 `yarn cli electron`。
 >
-> 也可用 `yarn cli dev -v <edition>` 一条命令（start + wait-on 端口 + electron）。Agent 启动仍优先走上面的 curl 内容轮询，因为端口 LISTEN 不等于页面可访问。
+> 也可用 `yarn cli dev -v <edition>` 一条命令（start + 页面内容检查 + 单次构建 + electron）。CLI 已内置 HTTP 200 和 HTML 内容检查；Agent 可用上面的 curl 额外诊断。
 
 ## 多版本/多平台变体
 
@@ -158,7 +158,7 @@ yarn cli start -v yakitEE --link
 # 按上文「启动步骤」确认两端真正就绪后
 yarn cli electron
 
-# 或一条命令（wait-on 端口后起 Electron）
+# 或一条命令（页面内容就绪后构建并启动 Electron）
 yarn cli dev -v yakitEE
 ```
 
@@ -173,7 +173,7 @@ yarn cli dev -v yakitEE
 
 ## 构建渲染端产物
 
-若需打包发布，需先构建两个渲染端的静态产物，再执行 electron-builder：
+若需打包发布，默认 build 构建两个渲染端和主进程，再执行 electron-builder（打包前会重新检查并构建主进程）：
 
 ```bash
 yarn cli build -v yakit
@@ -181,6 +181,15 @@ yarn cli pack -s mac -v yakit
 ```
 
 完整参数（`--devtools` / `--no-license` / `--legacy` / `--sign` 等）见 [`cli/README.md`](cli/README.md)。终端里先看 `yarn cli -h` / `yarn cli <cmd> -h`。
+
+## 主进程工程化与手动重启
+
+- 主进程及 preload 支持 JS / TS 混合开发：`yarn typecheck:electron` 独立检查，新 TS 使用严格检查，历史 JS 暂不全面检查。
+- 开发使用 esbuild bundle + source map，跳过 tsc；类型检查可独立运行 `yarn typecheck:electron`。发布先执行 tsc，再使用 bundle + minify。产物统一位于 `dist/electron`。
+- 保存主进程或 preload 不自动构建、不自动重启、不重载窗口。用户关闭 Electron 后重跑 `yarn cli electron`，命令先等待页面就绪、执行开发构建（跳过 tsc），再启动；失败不启动旧产物。
+- `yarn cli build --electron` 只构建发布主进程，无需 `-v`；`--main/--link` 保持只构建相应渲染端。默认 `build` 构建三端。
+- 新增动态注册模块必须更新 `app/main/ipcModules.js`，保持延迟加载；运行资源通过 `runtimePaths.js` 定位并加入构建资源清单。
+- 验证优先执行 `yarn ci:electron` 及相关现有 Vitest。E2E 默认运行压缩主进程；安装包不包含第一方主进程源码和 map。
 
 ## 常见问题排查
 
@@ -286,8 +295,8 @@ yarn cli pack -s mac -v yakit
 | `yarn cli remove <electron\|main\|link> <pkg…>` | 从指定子项目卸包 |
 | `yarn cli start -v <edition>` | 开发态启动两端渲染（`--main` / `--link` 只启一端） |
 | `yarn cli electron` | 启动 Electron 主进程（不区分版本） |
-| `yarn cli dev -v <edition>` | start + wait-on :3000/:5173 + electron |
-| `yarn cli build -v <edition>` | 生产构建两端渲染 |
+| `yarn cli dev -v <edition>` | start + 页面检查 + 主进程构建 + electron |
+| `yarn cli build -v <edition>` | 生产构建两端渲染及压缩主进程 |
 | `yarn cli pack -s <os> -v <edition>` | electron-builder 打安装包（`win\|mac\|linux\|mwl`） |
 
 `-v` 取值：`yakit` / `yakitEE` / `yakitSE` / `irify` / `irifyEE` / `memfit`（另有 `breachtrace`）。

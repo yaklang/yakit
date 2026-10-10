@@ -201,6 +201,15 @@ jobs:
           makeself --gzip "${folder_arm64}" "${folder_arm64}.run" "${folder_arm64}" ./uos-legacy-arm.sh
         shell: bash
 
+      - name: Save Electron source maps
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-sourcemaps-${{ matrix.artifact_name }}
+          path: reports/electron-build
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: Upload ${{ matrix.artifact_name }} Artifacts
         uses: actions/upload-artifact@v4
         with:

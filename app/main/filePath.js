@@ -1,5 +1,5 @@
 const { app } = require('electron')
-const electronIsDev = require('electron-is-dev')
+const { appRootPath } = require('./runtimePaths')
 const os = require('os')
 const path = require('path')
 const process = require('process')
@@ -210,8 +210,9 @@ const getLocalYaklangEngine = () => {
 }
 
 const loadExtraFilePath = (s) => {
-  if (electronIsDev) {
-    return s
+  // E2E can load an ASAR through the stock Electron binary (isPackaged remains false).
+  if (!app.isPackaged && path.extname(appRootPath()) !== '.asar') {
+    return appRootPath(s)
   }
 
   switch (os.platform()) {

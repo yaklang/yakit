@@ -19,6 +19,7 @@ const { configureE2EEnvironment } = require('./e2eEnvironment')
 // create files below Electron's userData directory during module startup.
 const e2eEnvironment = configureE2EEnvironment(app)
 
+const { appResourcePath, preloadPath } = require('./runtimePaths')
 const { registerIPC, registerNewIPC } = require('./ipc')
 const {
   initExtraLocalCache,
@@ -198,7 +199,7 @@ function createEngineLinkWindow() {
     autoHideMenuBar: true,
     resizable: false,
     webPreferences: {
-      preload: path.join(__dirname, 'engineLinkPreload.js'),
+      preload: preloadPath('engine-link'),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
@@ -214,7 +215,7 @@ function createEngineLinkWindow() {
 
   if (!hasPos) engineLinkWin.center()
   if (isDev) engineLinkWin.loadURL('http://127.0.0.1:5173')
-  else engineLinkWin.loadFile(path.join(__dirname, '../renderer/engine-link-startup/dist/index.html'))
+  else engineLinkWin.loadFile(appResourcePath('renderer', 'engine-link-startup', 'dist', 'index.html'))
 
   engineLinkWin.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
 
@@ -282,7 +283,7 @@ function createEngineLinkWindow() {
 let readyWinShow = false
 function loadMainWindow() {
   if (isDev) void win.loadURL('http://127.0.0.1:3000').catch(() => {})
-  else void win.loadFile(path.resolve(__dirname, '../renderer/pages/main/index.html')).catch(() => {})
+  else void win.loadFile(appResourcePath('renderer', 'pages', 'main', 'index.html')).catch(() => {})
 }
 
 function createWindow() {
@@ -309,7 +310,7 @@ function createWindow() {
     frame: false,
     autoHideMenuBar: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: preloadPath('main'),
       additionalArguments: mitmDebugHooksEnabled ? [MITM_DEBUG_HOOKS_ARGUMENT] : [],
       nodeIntegration: true,
       contextIsolation: false,
@@ -620,7 +621,7 @@ function registerGlobalIPC() {
 
       dialog
         .showMessageBox(parentWindow, {
-          icon: nativeImage.createFromPath(path.join(__dirname, showIcon)),
+          icon: nativeImage.createFromPath(appResourcePath('assets', path.basename(showIcon))),
           type: 'none',
           title: '提示',
           defaultId: 0,

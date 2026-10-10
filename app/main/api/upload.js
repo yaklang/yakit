@@ -1,3 +1,4 @@
+const { appResourcePath } = require('../runtimePaths')
 const { service, httpApi } = require('../httpServer')
 const { ipcMain } = require('electron')
 const fs = require('fs')
@@ -30,7 +31,7 @@ module.exports = (win, getClient) => {
   })
 
   ipcMain.handle('get-template-file', async (event, args) => {
-    const filePath = customPath.join(__dirname, '../../assets/导入模板.xlsx')
+    const filePath = appResourcePath('assets', '导入模板.xlsx')
     const fileData = fs.readFileSync(filePath)
     return fileData.toString('base64')
   })

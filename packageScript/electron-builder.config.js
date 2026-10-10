@@ -144,6 +144,15 @@ const configOption = {
   },
   files: [
     '**/*',
+    '!app/main/**/*',
+    'dist/electron/**/*',
+    '!dist/.electron-*/**/*',
+    '!dist/electron/**/*.map',
+    '!dist/electron/metafile.json',
+    '!tsconfig.electron.json',
+    '!tsconfig.preload.json',
+    '!e2e/**/*',
+    '!reports/**/*',
     ...(files || []),
     '!bins/**/*',
     '!.github/**/*',
@@ -168,6 +177,7 @@ const configOption = {
     '!README*',
   ],
   asar: true,
+  asarUnpack: ['dist/electron/resources/screenshots/*.node', 'dist/electron/resources/vendor/extVendor/**/*'],
   publish: [
     {
       provider: 'generic',

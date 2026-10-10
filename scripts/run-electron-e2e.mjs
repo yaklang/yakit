@@ -1,3 +1,5 @@
+import { build } from 'esbuild'
+import { buildElectron, codeOptions } from './build-electron.mjs'
 import { spawn } from 'node:child_process'
 import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -19,8 +21,16 @@ const rawArgs = process.argv.slice(2)
 const withYakEngine = rawArgs.includes('--with-yak-engine')
 const withCdnEngine = rawArgs.includes('--with-cdn-engine')
 const devRenderers = rawArgs.includes('--dev-renderers')
+const modeIndex = rawArgs.indexOf('--electron-build-mode')
+const electronBuildMode = modeIndex === -1 ? 'production' : rawArgs[modeIndex + 1]
+if (!['production', 'development'].includes(electronBuildMode))
+  throw new Error('Expected --electron-build-mode production|development')
 if (withYakEngine && withCdnEngine) throw new Error('Choose either a source engine or a pinned CDN engine')
-const wdioArgs = rawArgs.filter((arg) => !['--with-yak-engine', '--with-cdn-engine', '--dev-renderers'].includes(arg))
+const wdioArgs = rawArgs.filter(
+  (arg, index) =>
+    !['--with-yak-engine', '--with-cdn-engine', '--dev-renderers'].includes(arg) &&
+    (modeIndex === -1 || (index !== modeIndex && index !== modeIndex + 1)),
+)
 const rendererBuildMetadataPath = path.join(repoRoot, 'app/renderer/pages/main/yakit-e2e-build.json')
 const requiredRendererArtifacts = [
   path.join(repoRoot, 'app/renderer/pages/main/index.html'),
@@ -72,6 +82,14 @@ try {
 
 const runId = new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-')
 const artifactsDir = path.join(repoRoot, 'reports', 'e2e-electron', runId)
+await buildElectron({ mode: electronBuildMode })
+const screenshotModule = path.join(artifactsDir, 'yakit-screenshot.cjs')
+await build({
+  ...codeOptions(electronBuildMode),
+  entryPoints: ['app/main/yakitScreenshot.js'],
+  outfile: screenshotModule,
+})
+process.env.YAKIT_E2E_SCREENSHOT_MODULE = screenshotModule
 const temporaryRoot = await mkdtemp(temporaryPrefix)
 const userDataDir = path.join(temporaryRoot, 'user-data')
 const yakitHomeDir = path.join(temporaryRoot, 'yakit-home')
@@ -90,6 +108,7 @@ const metadata = {
     withCdnEngine,
   },
   rendererBuild: rendererBuildMetadata,
+  electronBuildMode,
 }
 await writeFile(path.join(artifactsDir, 'run-metadata.json'), `${JSON.stringify(metadata, null, 2)}\n`)
 

@@ -187,6 +187,15 @@ jobs:
         run: ./packageScript/script/check-build-package.sh ${{ matrix.artifact_name }}
         shell: bash
 
+      - name: Save Electron source maps
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-sourcemaps-${{ matrix.artifact_name }}
+          path: reports/electron-build
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: Upload ${{ matrix.artifact_name }} Artifacts
         uses: actions/upload-artifact@v4
         with:

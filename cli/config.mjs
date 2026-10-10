@@ -68,8 +68,11 @@ const StartCMDExamplesDoc = `
 
 /** build -h：--devtools / --no-license / --link / --analyzer */
 const BuildCMDExamplesDoc = `
-  # 构建两端生产产物
+  # 构建两端渲染及压缩后的主进程产物
   $ yarn cli build -v yakit
+
+  # 只构建主进程（不需要 -v）
+  $ yarn cli build --electron
 
   # 企业版构建并打开开发者工具、跳过 License
   $ yarn cli build -v yakitEE --devtools --no-license
@@ -92,13 +95,13 @@ const PackCMDExamplesDoc = `
 
 /** electron -h：只起主进程（渲染端需已就绪） */
 const ElectronCMDExamplesDoc = `
-  # 启动 Electron 主进程（需渲染端已就绪）
+  # 等待渲染页面就绪，单次开发构建，再启动 Electron
   $ yarn cli electron
 `
 
 /** dev -h：start + 等 :3000/:5173 + electron */
 const DevCMDExamplesDoc = `
-  # 启动两端渲染 + 等待端口 + Electron
+  # 启动两端渲染 + 等待页面 + 单次构建并启动 Electron
   $ yarn cli dev -v yakit
 `
 

@@ -73,3 +73,8 @@ pr-ci-changed-files-list.txt
 app/renderer/src/main/public/theme.css
 app/main/handlers/openNewChildWindow/theme.css
 app/renderer/engine-link-startup/public/theme.css
+
+# Electron build outputs
+/dist/electron/
+/dist/.electron-*/
+/reports/electron-build/

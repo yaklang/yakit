@@ -1,6 +1,6 @@
 # yarn cli
 
-仓库唯一的启动 / 构建 / 打包入口。解析参数后由 Node 注入同一套 `YAKIT_*`，再直接 spawn 本地 `node_modules/.bin`（vite / tsc / electron / electron-builder / concurrently / wait-on），不经过 yarn/npm/pnpm。`install` / `add` / `remove` 会调用当前包管理器。
+仓库唯一的启动 / 构建 / 打包入口。解析参数后由 Node 注入同一套 `YAKIT_*`，再直接 spawn 本地 `node_modules/.bin`（vite / tsc / electron / electron-builder / concurrently），不经过 yarn/npm/pnpm。`install` / `add` / `remove` 会调用当前包管理器。
 
 终端里先看 `-h`，细节以本文为准。
 
@@ -25,18 +25,18 @@ node ./cli/cli.mjs <command>
 | `add <electron\|main\|link> <pkg…>` | 给指定子项目加包 | `-D` / `--dev` 及其他 yarn/npm/pnpm 原样 flag | 必须指定一端 |
 | `remove <electron\|main\|link> <pkg…>` | 从指定子项目卸包 | 位置参数 | 必须指定一端 |
 | `start` | 开发态启动渲染端 | `-v`、`--main`、`--link` | 两端都启 |
-| `build` | 生产构建渲染端 | `-v`、`--main`、`--link`、`--devtools`、`--no-license`、`--analyzer` | 两端都构建 |
+| `build` | 生产构建三端 | `-v`、`--electron`、`--main`、`--link`、`--devtools`、`--no-license`、`--analyzer` | 三端都构建 |
 | `pack` | electron-builder 打安装包 | `-s`、`-v`、`--legacy`、`--sign` | 本机默认不签名 |
-| `electron` | 只起 Electron 主进程（开发） | 无 | 不区分业务版本 |
-| `dev` | `start` + wait-on :3000/:5173 + `electron` | `-v` | 两端渲染 + 主进程 |
+| `electron` | 页面就绪后单次开发构建并启动 Electron | 无 | 不区分业务版本 |
+| `dev` | `start` + 等待页面 + 编译并启动 `electron` | `-v` | 两端渲染 + 主进程 |
 
 短 flag **不跨命令复用**。旧命令名 `render` / `electron -b` 已删除，没有别名。
 
 ### 交互规则
 
-- 仅 TTY 且缺**该命令必需项**时才 inquirer：`start` / `build` / `dev` 缺 `-v`，`pack` 缺 `-s` 或 `-v`
+- 仅 TTY 且缺**该命令必需项**时才 inquirer：`start` / `build` / `dev` 缺 `-v`（`build --electron` 除外），`pack` 缺 `-s` 或 `-v`
 - 非 TTY（CI）缺参直接 `exit 1`，禁止交互
-- `--main` 与 `--link` 不能同时使用；都不传则两端都跑
+- `--main` 与 `--link` 不能同时使用；`build --electron` 与两者互斥。`start` 默认两端渲染，`build` 默认三端。
 
 ```bash
 yarn cli -h
@@ -84,7 +84,7 @@ yarn cli start -v yakit
 yarn cli electron
 ```
 
-一条命令（wait-on 端口后起 Electron；端口 LISTEN ≠ 页面编译完成）：
+一条命令（确认两端返回 HTTP 200 且包含页面内容，单次构建后启动 Electron）：
 
 ```bash
 yarn cli dev -v yakit
@@ -178,3 +178,22 @@ yarn cli pack -s mwl -v yakitEE
 | `env-cmd -e enterprise` / Vite `--mode enterprise` | 删除；只设 `YAKIT_EDITION` |
 
 `-v` 对照：`enterprise` → `yakitEE`，`simple-enterprise` → `yakitSE`，`irify-enterprise` → `irifyEE`。
+
+## 主进程 JS / TS 工程
+
+- `yarn typecheck:electron`：检查主进程和 preload，现有 JS 暂不开启 `checkJs`，新 TS 使用严格检查。
+- `yarn build:electron:dev`：开发 bundle，不压缩，带 source map；跳过 tsc 类型检查，`cli electron` / `cli dev` 也采用此流程。
+- `yarn build:electron` / `yarn cli build --electron`：先执行 tsc 类型检查，再生成发布 bundle，压缩语法、空白和局部变量名；不混淆协议属性、不删除日志。
+- `yarn test:electron-build`：验证开发／发布构建、混合类型、资源路径、沙箱 preload 和压缩后的截图执行。
+
+主进程及三个 preload 的输出位于 `dist/electron`，两种模式布局一致。启动前检查两端渲染内容，最多等待 120 秒。构建失败不启动旧产物。仅保存代码不会编译、重启 Electron 或重载窗口；请主动关闭 Electron 后再运行 `yarn cli electron`。需要保留渲染服务时，分别运行 `cli start` 与 `cli electron`；`cli dev` 仍在 Electron 退出时清理它启动的渲染服务。
+
+独立构建需要子窗口主题 CSS：开发使用主渲染 Vite 已生成的文件，发布优先使用主渲染产物内的 `theme.css`。缺失时先启动或构建主渲染端。仅 `--main/--link` 的 CI 仍不要求安装主进程构建工具。
+
+新增 JS／TS 业务模块时更新 `app/main/ipcModules.js` 的字面量、延迟加载清单；不要同时保留同名 JS 和 TS。保持相对模块引用。新增运行资源时更新 `scripts/build-electron.mjs` 的资源清单和 `app/main/runtimePaths.js`，不要依赖源码位置的 `__dirname`。E2E 初始化必须早于用户目录、缓存和业务模块加载。
+
+E2E 默认测试压缩主进程：`yarn test:e2e:build` 后运行 `yarn test:e2e:electron:smoke`。调试时可执行 `node scripts/run-electron-e2e.mjs --suite smoke --electron-build-mode development`；该选项与 `--dev-renderers` 独立。
+
+`pack` 和直接运行 electron-builder 均通过 beforePack 重新构建 production 产物。安装包排除第一方主进程源码、测试、source map；生产依赖和原生资源仍独立保留。发布 map 与产物哈希保存在 `reports/electron-build/<版本-发行版-平台-架构-Electron版本-哈希>/`，发布 CI 单独保存为诊断 artifact，不随安装包发布。
+
+构建边界、验证结果和发布限制见 [主进程工程化](../docs/electron-main-engineering.md)。

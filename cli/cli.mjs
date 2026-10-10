@@ -455,8 +455,9 @@ program
 /** build：生产构建。--no-license 在 commander 里是 options.license === false */
 program
   .command('build')
-  .description('生产构建渲染端（默认 main + link）')
+  .description('生产构建（默认 main + link + electron）')
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
+  .option('--electron', '只构建主进程（bundle + minify）', false)
   .option('--main', '只构建主渲染端', false)
   .option('--link', '只构建 Link 渲染端', false)
   .option('--devtools', '产物中打开开发者工具 UI', false)
@@ -464,6 +465,18 @@ program
   .option('--analyzer', '打开 bundle 分析', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${BuildCMDExamplesDoc}`)
   .action(async (options) => {
+    if (options.electron) {
+      if (options.main || options.link) {
+        exitOnError(new Error('--electron cannot be combined with --main/--link'))
+        return
+      }
+      try {
+        await runLocal(process.execPath, ['scripts/build-electron.mjs', '--mode', 'production'])
+      } catch (error) {
+        exitOnError(error)
+      }
+      return
+    }
     const version = await requireEdition(options.version)
     const targets = resolveRenderTargets(options.main, options.link)
     const env = buildYakitEnv({
@@ -482,6 +495,9 @@ program
 
     try {
       await runRenderers({ ...targets, build: true, env })
+      if (!options.main && !options.link) {
+        await runLocal(process.execPath, ['scripts/build-electron.mjs', '--mode', 'production'], { env })
+      }
     } catch (error) {
       exitOnError(error)
     }
@@ -535,18 +551,18 @@ program
 /** electron：只起主进程。不注入版本；窗口加载当前已运行的 :3000/:5173 */
 program
   .command('electron')
-  .description('启动 Electron 主进程（开发，不区分业务版本）')
+  .description('等待渲染页面、单次开发构建并启动 Electron（手动重启）')
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${ElectronCMDExamplesDoc}`)
   .action(async () => {
     console.log(CyanChalk('开始启动 Electron 开发环境...\n'))
     try {
-      await runLocal('electron', ['.'])
+      await runLocal(process.execPath, ['scripts/start-electron.mjs'])
     } catch (error) {
       exitOnError(error)
     }
   })
 
-/** dev：两端 vite + wait-on 端口 LISTEN 后起 Electron（端口就绪 ≠ 页面编译完成） */
+/** dev：两端 Vite 页面就绪后单次构建并启动 Electron，无 watch 或自动重启 */
 program
   .command('dev')
   .description('启动两端渲染，等待 :3000/:5173 后启动 Electron')
@@ -558,7 +574,7 @@ program
 
     console.log(GreenChalk('\n准备执行...'))
     console.log(CyanChalk.bold(`> 业务版本: ${version}`))
-    console.log(CyanChalk.bold(`> start + wait-on :3000/:5173 + electron`))
+    console.log(CyanChalk.bold(`> start + wait for renderer HTML + build electron + electron`))
     console.log('')
 
     try {
@@ -577,7 +593,7 @@ program
             env: withLocalBin(MAIN_RENDER_DIR, env),
           },
           {
-            command: 'wait-on tcp:3000 tcp:5173 && electron .',
+            command: 'node scripts/start-electron.mjs',
             name: GreenChalk('electron'),
             cwd: repoRoot,
             env: withLocalBin(repoRoot, env),

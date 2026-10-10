@@ -7,6 +7,7 @@ const fs = require('fs')
 const delim = 'PR_CI_COMMENT_BODY_' + Math.random().toString(36).slice(2, 11)
 
 const checks = [
+  { envKey: 'OUTCOME_ELECTRON', title: 'Electron 类型与构建', log: 'electron-build-output.log' },
   { envKey: 'OUTCOME_I18N', title: 'i18n（renderer src/main zh/zh-TW/en）', log: 'i18n-output.log' },
   {
     envKey: 'OUTCOME_I18N_ENGINE_LINK',
