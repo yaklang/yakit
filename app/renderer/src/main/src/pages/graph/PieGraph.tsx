@@ -37,13 +37,13 @@ export const PieGraph: React.FC<PieGraphProps> = (graph) => {
           position: 'outside',
           offset: 8,
           formatter: (datum: any) => {
-            return `${datum.name}: ${(((datum.value || 0) / total) * 100).toFixed(2)}%`
+            return `${datum?.name}: ${(((datum?.value || 0) / total) * 100).toFixed(2)}%`
           },
         },
     tooltip: {
       formatter: (datum: any) => ({
-        name: datum.name,
-        value: String(datum.value),
+        name: datum?.name,
+        value: String(datum?.value),
       }),
     },
     onReady: (chart) => {
