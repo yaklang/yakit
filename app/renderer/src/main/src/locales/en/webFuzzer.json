@@ -84,6 +84,8 @@
     "closeMenuPrompt": "Closing the primary menu will close all secondary menus under it. Are you sure?",
     "clearOldDataFailed": "Failed to clear old data:",
     "wfHistoryDataRestoreFailed": "Failed to restore WF history data:",
+    "historyNotFound": "The previously selected history record no longer exists; the selection has been cleared",
+    "historyRestoreFailed": "Restore failed",
     "fuzzTestRequestFailed": "Failed to submit fuzz test request:",
     "hotReload": "Hot Reload",
     "buildRequest": "Construct Request",

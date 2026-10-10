@@ -84,6 +84,8 @@
     "closeMenuPrompt": "關閉一級選單會關閉一級選單下的所有二級選單？",
     "clearOldDataFailed": "清空老資料失敗：",
     "wfHistoryDataRestoreFailed": "WF歷史資料恢復失敗：",
+    "historyNotFound": "上次選中的歷史記錄已不存在，已清除選中狀態",
+    "historyRestoreFailed": "恢復失敗",
     "fuzzTestRequestFailed": "提交模糊測試請求失敗：",
     "hotReload": "熱載入",
     "buildRequest": "構造請求",

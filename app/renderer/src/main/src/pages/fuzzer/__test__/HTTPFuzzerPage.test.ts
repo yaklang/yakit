@@ -130,6 +130,7 @@ const setup = () => {
     matchRef: false,
     setNewCurrentPageRef: true,
     inViewportRef: true,
+    restoreOpRef: 0,
     fuzzerTableMaxDataRef: 100,
     responseSearchDraftRef: '',
     requestRef: '',
@@ -374,5 +375,327 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     expect(b.setLoading).toHaveBeenLastCalledWith(false)
     expect(b.streamRunRef.current.isActive()).toBe(false)
     dispose()
+  })
+})
+
+// 恢复 effect 提取：autoSelectHistoryRef 声明 + 含它的 useEffect
+const autoSelectRefDecl = findOne(
+  (node) =>
+    ts.isVariableStatement(node) &&
+    node.declarationList.declarations.some((d) => d.name.getText(source) === 'autoSelectHistoryRef'),
+)
+const autoSelectEffect = findOne(
+  (node) =>
+    ts.isExpressionStatement(node) &&
+    ts.isCallExpression(node.expression) &&
+    node.expression.expression.getText(source) === 'useEffect' &&
+    node.getText(source).includes('autoSelectHistoryRef'),
+)
+const autoSelectCode = ts.transpileModule(`${autoSelectRefDecl}\n${autoSelectEffect}`, {
+  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
+}).outputText
+
+const setupAutoSelect = (
+  overrides: {
+    lastSelectedHistory?: any
+    invokeImpl?: (channel: string) => Promise<any>
+    inViewport?: boolean
+  } = {},
+) => {
+  const invoke = vi.fn(
+    overrides.invokeImpl ||
+      (async (channel: string) => {
+        if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: { Request: 'GET /history' } }
+        if (channel === 'QueryHistoryHTTPFuzzerTaskEx') return { Data: [{ BasicInfo: { Id: 5 } }], Total: 1 }
+        return undefined
+      }),
+  )
+  const cached = {
+    pageParamsInfo: { webFuzzerPageInfo: { lastSelectedHistory: overrides.lastSelectedHistory } },
+  }
+  const bindings: Record<string, any> = {
+    useRef: (init: any) => ({ current: init }),
+    useEffect: (fn: () => any) => fn(),
+    initWebFuzzerPageInfo: () => ({ lastSelectedHistory: overrides.lastSelectedHistory }),
+    setShowAll: vi.fn(),
+    loadHistory: vi.fn(),
+    resyncCurrentPage: vi.fn(),
+    ipcRenderer: { invoke },
+    queryPagesDataById: vi.fn(() => cached),
+    updatePagesDataCacheById: vi.fn(),
+    yakitNotify: vi.fn(),
+    t: (value: string) => value,
+    YakitRoute: { HTTPFuzzer: 'fuzzer' },
+    props: { id: 'page' },
+    inViewport: overrides.inViewport ?? true,
+    restoreOpRef: { current: 0 },
+  }
+  new Function(...Object.keys(bindings), `${autoSelectCode}`)(...Object.values(bindings))
+  return { bindings, invoke }
+}
+
+describe('auto-select history on initial load', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => {
+    vi.clearAllTimers()
+    vi.useRealTimers()
+  })
+
+  it('restores the last selected history when the record still exists', async () => {
+    const { bindings, invoke } = setupAutoSelect({
+      lastSelectedHistory: { id: 5, showAll: false },
+    })
+    await vi.runAllTimersAsync()
+    expect(bindings.setShowAll).toHaveBeenLastCalledWith(false)
+    expect(invoke).toHaveBeenCalledWith('GetHistoryHTTPFuzzerTask', { Id: 5 })
+    expect(bindings.loadHistory).toHaveBeenCalledWith(5)
+    expect(bindings.resyncCurrentPage).toHaveBeenCalledWith(5, false)
+    expect(bindings.yakitNotify).not.toHaveBeenCalled()
+  })
+
+  it('clears stale id and warns when the record no longer exists', async () => {
+    const { bindings, invoke } = setupAutoSelect({
+      lastSelectedHistory: { id: 99, showAll: true },
+      invokeImpl: async (channel: string) => {
+        if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: undefined }
+        return undefined
+      },
+    })
+    await vi.runAllTimersAsync()
+    expect(bindings.setShowAll).toHaveBeenLastCalledWith(true)
+    expect(invoke).toHaveBeenCalledWith('GetHistoryHTTPFuzzerTask', { Id: 99 })
+    expect(bindings.loadHistory).not.toHaveBeenCalled()
+    expect(bindings.resyncCurrentPage).not.toHaveBeenCalled()
+    expect(bindings.updatePagesDataCacheById).toHaveBeenCalledWith(
+      'fuzzer',
+      expect.objectContaining({
+        pageParamsInfo: {
+          webFuzzerPageInfo: { lastSelectedHistory: { id: undefined, showAll: true } },
+        },
+      }),
+    )
+    expect(bindings.yakitNotify).toHaveBeenCalledWith('warning', 'HTTPFuzzerPage.historyNotFound')
+  })
+
+  it('only restores showAll when there is no cached id', async () => {
+    const { bindings, invoke } = setupAutoSelect({
+      lastSelectedHistory: { id: undefined, showAll: true },
+    })
+    await vi.runAllTimersAsync()
+    expect(bindings.setShowAll).toHaveBeenLastCalledWith(true)
+    expect(invoke).not.toHaveBeenCalledWith('GetHistoryHTTPFuzzerTask', expect.anything())
+    expect(bindings.loadHistory).not.toHaveBeenCalled()
+    expect(bindings.resyncCurrentPage).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when there is no cached lastSelectedHistory', async () => {
+    const { bindings } = setupAutoSelect({ lastSelectedHistory: undefined })
+    await vi.runAllTimersAsync()
+    expect(bindings.setShowAll).not.toHaveBeenCalled()
+    expect(bindings.loadHistory).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when not in viewport', async () => {
+    const { bindings } = setupAutoSelect({
+      lastSelectedHistory: { id: 5, showAll: false },
+      inViewport: false,
+    })
+    await vi.runAllTimersAsync()
+    expect(bindings.setShowAll).not.toHaveBeenCalled()
+    expect(bindings.loadHistory).not.toHaveBeenCalled()
+  })
+
+  it('skips restore when the user sends a new request during the probe', async () => {
+    const { bindings, invoke } = setupAutoSelect({
+      lastSelectedHistory: { id: 5, showAll: false },
+    })
+    // 模拟探测期间用户发起新请求（resetResponse 自增 restoreOpRef）
+    bindings.restoreOpRef.current += 1
+    await vi.runAllTimersAsync()
+    expect(invoke).toHaveBeenCalledWith('GetHistoryHTTPFuzzerTask', { Id: 5 })
+    expect(bindings.loadHistory).not.toHaveBeenCalled()
+    expect(bindings.resyncCurrentPage).not.toHaveBeenCalled()
+    expect(bindings.yakitNotify).not.toHaveBeenCalled()
+  })
+
+  it('skips stale-id cleanup when the user sends a new request during the probe', async () => {
+    const { bindings } = setupAutoSelect({
+      lastSelectedHistory: { id: 99, showAll: true },
+      invokeImpl: async (channel: string) => {
+        if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: undefined }
+        return undefined
+      },
+    })
+    bindings.restoreOpRef.current += 1
+    await vi.runAllTimersAsync()
+    expect(bindings.loadHistory).not.toHaveBeenCalled()
+    expect(bindings.updatePagesDataCacheById).not.toHaveBeenCalled()
+    expect(bindings.yakitNotify).not.toHaveBeenCalled()
+  })
+
+  it('keeps the cached id and shows a different notice when the probe fails', async () => {
+    const { bindings } = setupAutoSelect({
+      lastSelectedHistory: { id: 5, showAll: false },
+      invokeImpl: async (channel: string) => {
+        if (channel === 'GetHistoryHTTPFuzzerTask') throw new Error('timeout')
+        return undefined
+      },
+    })
+    await vi.runAllTimersAsync()
+    expect(bindings.loadHistory).not.toHaveBeenCalled()
+    expect(bindings.resyncCurrentPage).not.toHaveBeenCalled()
+    expect(bindings.updatePagesDataCacheById).not.toHaveBeenCalled()
+    expect(bindings.yakitNotify).toHaveBeenCalledWith('warning', 'HTTPFuzzerPage.historyRestoreFailed')
+  })
+
+  it('skips the probe-error notice when the user sends a new request during the probe', async () => {
+    const { bindings } = setupAutoSelect({
+      lastSelectedHistory: { id: 5, showAll: true },
+      invokeImpl: async (channel: string) => {
+        if (channel === 'GetHistoryHTTPFuzzerTask') throw new Error('disconnected')
+        return undefined
+      },
+    })
+    bindings.restoreOpRef.current += 1
+    await vi.runAllTimersAsync()
+    expect(bindings.updatePagesDataCacheById).not.toHaveBeenCalled()
+    expect(bindings.yakitNotify).not.toHaveBeenCalled()
+  })
+})
+
+// 把真实的 resetResponse / loadHistory 和恢复 effect 接到同一次执行里。
+// 桩掉 loadHistory 时，草稿被写成历史包、迟到回调换 token、连接失败清缓存都不会被测到。
+const restoreFlowCode = ts.transpileModule(
+  [declarations[0], declarations[4], autoSelectRefDecl, autoSelectEffect].join('\n'),
+  { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } },
+).outputText
+
+const setupRestoreFlow = (
+  options: {
+    deferProbe?: boolean
+    failProbe?: boolean
+  } = {},
+) => {
+  const page = {
+    pageParamsInfo: {
+      webFuzzerPageInfo: {
+        request: 'POST /draft-b',
+        lastSelectedHistory: { id: 5, showAll: false },
+      },
+    },
+  }
+  let tokenSequence = 0
+  const tokenRef = { current: 'token-0' }
+  const requestRef = { current: 'POST /draft-b' }
+  const restoreOpRef = { current: 0 }
+  let resolveProbe: (value: unknown) => void = () => {}
+  const probe = new Promise((resolve) => {
+    resolveProbe = resolve
+  })
+  const invoke = vi.fn(async (channel: string) => {
+    if (channel === 'GetHistoryHTTPFuzzerTask') {
+      if (options.failProbe) throw new Error('timeout')
+      if (options.deferProbe) return probe
+      return { OriginRequest: { Request: 'GET /history-a', IsHTTPS: false } }
+    }
+    return undefined
+  })
+  const cleanups: Array<() => void> = []
+  const bindings: Record<string, any> = {
+    useMemoizedFn: (fn: unknown) => fn,
+    useRef: (init: any) => ({ current: init }),
+    useEffect: (fn: () => any) => {
+      const cleanup = fn()
+      if (typeof cleanup === 'function') cleanups.push(cleanup)
+    },
+    ipcRenderer: { invoke },
+    randomString: () => `token-${++tokenSequence}`,
+    setStreamToken: (value: string) => {
+      tokenRef.current = value
+    },
+    emptyFuzzer: { RequestRaw: [] },
+    setFirstResponse: vi.fn(),
+    setLoading: vi.fn(),
+    setLoadingText: vi.fn(),
+    setSuccessCount: vi.fn(),
+    setFailedCount: vi.fn(),
+    setFuzzerListVersion: vi.fn(),
+    setCurrentSelectId: vi.fn(),
+    setBrowserTransformSelection: vi.fn(),
+    updateConcurrentLoad: vi.fn(),
+    setRedirectedResponse: vi.fn(),
+    setDroppedCount: vi.fn(),
+    setFuzzerTableMaxData: vi.fn(),
+    advancedConfigValue: { resNumlimit: 100 },
+    onSetFuzzerConfig: vi.fn(),
+    refreshRequest: vi.fn(),
+    Uint8ArrayToString: () => 'GET /raw-history',
+    reset: vi.fn(),
+    initWebFuzzerPageInfo: () => page.pageParamsInfo.webFuzzerPageInfo,
+    setShowAll: vi.fn(),
+    resyncCurrentPage: vi.fn(),
+    queryPagesDataById: () => page,
+    updatePagesDataCacheById: (_route: string, next: { pageParamsInfo: typeof page.pageParamsInfo }) => {
+      page.pageParamsInfo = next.pageParamsInfo
+    },
+    yakitNotify: vi.fn(),
+    t: (value: string) => value,
+    YakitRoute: { HTTPFuzzer: 'fuzzer' },
+    props: { id: 'page' },
+    inViewport: true,
+    streamRunRef: { current: null },
+    tokenRef,
+    taskIDRef: { current: '' },
+    runtimeIdRef: { current: '' },
+    dCountRef: { current: 0 },
+    successFuzzerRef: { current: [] },
+    failedFuzzerRef: { current: [] },
+    fuzzerResChartDataBufferRef: { current: [] },
+    successCountRef: { current: 0 },
+    failedCountRef: { current: 0 },
+    retryRef: { current: false },
+    restoreOpRef,
+    loadingRef: { current: false },
+    requestRef,
+  }
+  const api = new Function(...Object.keys(bindings), `${restoreFlowCode}\nreturn { resetResponse, loadHistory }`)(
+    ...Object.values(bindings),
+  )
+  return { api, bindings, invoke, page, requestRef, tokenRef, resolveProbe }
+}
+
+describe('history restore through the real loadHistory path', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => {
+    vi.clearAllTimers()
+    vi.useRealTimers()
+  })
+
+  it('drops a late history restore after the user has already started another request', async () => {
+    const { api, bindings, invoke, requestRef, tokenRef, resolveProbe } = setupRestoreFlow({ deferProbe: true })
+    api.resetResponse()
+    const tokenAfterSend = tokenRef.current
+    resolveProbe({ OriginRequest: { Request: 'GET /history-a' } })
+    await vi.runAllTimersAsync()
+    expect(tokenRef.current).toBe(tokenAfterSend)
+    expect(requestRef.current).toBe('POST /draft-b')
+    expect(invoke).not.toHaveBeenCalledWith('HTTPFuzzer', { HistoryWebFuzzerId: 5 }, expect.anything())
+    expect(bindings.onSetFuzzerConfig).not.toHaveBeenCalled()
+    expect(bindings.refreshRequest).not.toHaveBeenCalled()
+    expect(bindings.setCurrentSelectId).not.toHaveBeenCalledWith(5)
+  })
+
+  it('keeps the draft and selected id when the history probe cannot connect', async () => {
+    const { bindings, invoke, page, requestRef, tokenRef } = setupRestoreFlow({ failProbe: true })
+    await vi.runAllTimersAsync()
+    expect(requestRef.current).toBe('POST /draft-b')
+    expect(tokenRef.current).toBe('token-0')
+    expect(page.pageParamsInfo.webFuzzerPageInfo.request).toBe('POST /draft-b')
+    expect(page.pageParamsInfo.webFuzzerPageInfo.lastSelectedHistory.id).toBe(5)
+    expect(invoke).not.toHaveBeenCalledWith('HTTPFuzzer', expect.anything(), expect.anything())
+    expect(bindings.onSetFuzzerConfig).not.toHaveBeenCalled()
+    expect(bindings.refreshRequest).not.toHaveBeenCalled()
+    expect(bindings.yakitNotify).toHaveBeenCalledWith('warning', 'HTTPFuzzerPage.historyRestoreFailed')
+    expect(bindings.yakitNotify).not.toHaveBeenCalledWith('warning', 'HTTPFuzzerPage.historyNotFound')
   })
 })
