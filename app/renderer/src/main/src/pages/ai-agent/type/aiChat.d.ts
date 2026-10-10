@@ -226,6 +226,9 @@ export interface AIAgentChatMetaData {
   systemEventUUID: string[]
 
   /** 顶部卡片临时缓冲区 */
+  /** 各任务加载状态的最新事件时间，防止迟到状态覆盖当前阶段 */
+  loadingStatusTimestamps: Map<string, number>
+
   cardKVPair: Map<string, AIAgentGrpcApi.AICacheCard>
   cardKVPaidTimer: NodeJS.Timeout | null
 

@@ -167,6 +167,7 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
     toolStderrStreamData: new Map(),
     systemEventUUID: [],
     cardKVPair: new Map(),
+    loadingStatusTimestamps: new Map(),
     cardKVPaidTimer: null,
     execFileRecordOrder: 1,
     syncIDMap: new Map(),

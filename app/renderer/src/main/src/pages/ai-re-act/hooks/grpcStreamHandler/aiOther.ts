@@ -214,7 +214,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
         coordinatorId: '',
         status: AITaskStatus.inProgress,
       },
-      currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.questionExecuting'), planTitle: '' },
+      currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.processingRequest'), planTitle: '' },
       focusMode: data.focus_mode ? data.focus_mode : '',
     })
     // 重置当前任务树详情
@@ -351,7 +351,9 @@ const handleQueueInfo: AIMessageHandler = (request) => {
           coordinatorId: currentChat.coordinatorId || '',
           status: currentChat.status || AITaskStatus.inProgress,
         },
-        currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.questionExecuting'), planTitle: '' },
+        ...(!currentChat.questionID
+          ? { currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.processingRequest'), planTitle: '' } }
+          : {}),
         focusMode: current_task.focus_mode || focusMode || '',
       })
     }

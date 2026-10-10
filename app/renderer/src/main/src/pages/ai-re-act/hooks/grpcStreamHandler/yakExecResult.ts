@@ -4,6 +4,7 @@ import { Uint8ArrayToString } from '@/utils/str'
 import { checkStreamValidity, convertCardInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { AIChatQSDataTypeEnum } from '../aiRender'
+import i18n from '@/i18n/i18n'
 
 const handleStatus: AIMessageHandler = (request) => {
   const { res, chatType, store, rawData, meta } = request
@@ -11,24 +12,42 @@ const handleStatus: AIMessageHandler = (request) => {
   if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
-  const data = JSON.parse(ipcContent) as { key: string; value: string }
+  const data = JSON.parse(ipcContent) as {
+    key: string
+    value: string
+    value_i18n?: { zh?: string; en?: string }
+  }
+
+  const isLoadingStatus = ['re-act-loading-status-key', 'plan-executing-loading-status-key'].includes(data.key)
+  if (isLoadingStatus) {
+    const statusKey = JSON.stringify([data.key, res.TaskId])
+    const latestTimestamp = meta.loadingStatusTimestamps.get(statusKey)
+    if (latestTimestamp !== undefined && latestTimestamp > res.Timestamp) return
+    meta.loadingStatusTimestamps.set(statusKey, res.Timestamp)
+  }
+  const language = i18n.resolvedLanguage || i18n.language
+  const value = isLoadingStatus
+    ? (language?.startsWith('en') ? data.value_i18n?.en : data.value_i18n?.zh)?.trim() || data.value
+    : data.value
 
   const currentChatID = store.getState().currentChatStatus.questionID
   if (data.key === 're-act-loading-status-key') {
     if (!currentChatID) return
     if (chatType === 'reAct' && res.TaskId === currentChatID) {
       // 问题的loading-title
-      store.getState().updateCurrentLoadingTitle({ casualTitle: data.value })
+      store.getState().updateCurrentLoadingTitle({ casualTitle: value })
     } else {
       const chatDetail = rawData.contents.get(`${currentChatID}-${res.TaskId}`)
       if (!chatDetail || chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return
-      chatDetail.data.loadingTitle = data.value || '加载中...'
+      const loadingTitle = value || '加载中...'
+      if (chatDetail.data.loadingTitle === loadingTitle) return
+      chatDetail.data.loadingTitle = loadingTitle
       store.getState().incrementNodeVersion(chatDetail.id, 'task')
     }
   } else if (data.key === 'plan-executing-loading-status-key') {
     if (chatType === 'task') {
       // 任务规划-loading展示标题
-      store.getState().updateCurrentLoadingTitle({ planTitle: data.value || '加载中...' })
+      store.getState().updateCurrentLoadingTitle({ planTitle: value || '加载中...' })
     }
   } else {
     const originData = meta.cardKVPair.get(data.key)
