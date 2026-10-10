@@ -1,0 +1,14 @@
+.gradient-bars-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.gradient-bars-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.gradient-bars-content {
+  position: relative;
+  z-index: 1;
+}

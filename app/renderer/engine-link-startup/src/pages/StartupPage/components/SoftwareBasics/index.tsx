@@ -217,8 +217,8 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       type: 'white',
       title: t('SoftwareBasics.switchTitle'),
       content: <div style={{ padding: 15 }}>{message}</div>,
-      onOkText: t('SoftwareBasics.ok'),
-      onCancelText: t('SoftwareBasics.cancel'),
+      okText: t('SoftwareBasics.ok'),
+      cancelText: t('SoftwareBasics.cancel'),
       onOk: () => {
         doConfirm()
       },
