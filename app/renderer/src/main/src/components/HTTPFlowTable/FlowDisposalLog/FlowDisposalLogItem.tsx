@@ -24,7 +24,7 @@ interface FlowDisposalLogItemProps {
 
 export const FlowDisposalLogItemView: React.FC<FlowDisposalLogItemProps> = memo((props) => {
   const { info, hiddenLine, onReply, onDelete } = props
-  const { t } = useI18nNamespaces(['history', 'yakitUi', 'components'])
+  const { t } = useI18nNamespaces(['history', 'yakitUi', 'components', 'risk'])
 
   const isSystem = info.logType === 'system'
   const isReply = !!info.parentComment
@@ -130,7 +130,9 @@ export const FlowDisposalLogItemView: React.FC<FlowDisposalLogItemProps> = memo(
                             {parentContent.text}
                           </div>
                         )}
-                        {!!parentContent?.imgs?.length && <span>{`[图片] * ${parentContent.imgs.length}`}</span>}
+                        {!!parentContent?.imgs?.length && (
+                          <span>{t('RiskDisposalLog.image_count', { count: parentContent.imgs.length })}</span>
+                        )}
                         {!!parentContent?.files?.length && (
                           <span title={parentContent.files.map((file) => file.name).join('、')}>
                             {t('DisposalAttachment.quote', { count: parentContent.files.length })}

@@ -3,16 +3,24 @@ vi.mock('@/i18n/i18n', async () => {
   const { createInstance } = await import('i18next')
   const { default: zh } = await import('@/locales/zh/components.json')
   const { default: en } = await import('@/locales/en/components.json')
+  const { default: zhTW } = await import('@/locales/zh-TW/components.json')
+  const { default: zhRisk } = await import('@/locales/zh/risk.json')
+  const { default: enRisk } = await import('@/locales/en/risk.json')
+  const { default: zhTWRisk } = await import('@/locales/zh-TW/risk.json')
   const instance = createInstance()
   await instance.init({
     lng: 'zh',
-    fallbackLng: 'zh',
-    resources: { zh: { components: zh }, en: { components: en } },
+    fallbackLng: false,
+    resources: {
+      zh: { components: zh, risk: zhRisk },
+      en: { components: en, risk: enRisk },
+      'zh-TW': { components: zhTW, risk: zhTWRisk },
+    },
     interpolation: { escapeValue: false },
   })
   return { default: instance }
 })
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as flow from '@/components/HTTPFlowTable/FlowDisposalLog/convert'
@@ -25,8 +33,12 @@ vi.mock('@/utils/disposalDownload', () => ({ downloadDisposalFile: vi.fn() }))
 
 vi.mock('@/i18n/useI18nNamespaces', async () => {
   const { default: i18n } = await import('@/i18n/i18n')
+  const { useTranslation } = await import('react-i18next')
   return {
-    useI18nNamespaces: () => ({ t: (key: string, options?: object) => i18n.t(key, { ns: 'components', ...options }) }),
+    useI18nNamespaces: (namespaces: string[]) => {
+      useTranslation(namespaces, { i18n })
+      return { t: (key: string, options?: object) => i18n.t(key, { ns: namespaces, ...options }) }
+    },
   }
 })
 
@@ -60,6 +72,31 @@ describe.each([
   ['流量', flow, FlowDisposalLogItemView],
   ['漏洞', risk, RiskDisposalLogItem],
 ] as const)('%s 附件评论', (_, convert, Item) => {
+  it('图片回复引用在切换语言后使用对应翻译并保留图片数量', async () => {
+    const description = convert.disposalCommentConvertToJSON({ value: '', imgs: [image, image] })
+    render(
+      <Item
+        info={{
+          id: 1,
+          logType: 'comment',
+          createdAt: 1,
+          description: '',
+          parentComment: { id: 2, userName: 'Admin', description },
+        }}
+      />,
+    )
+    expect(screen.getByText('[图片] * 2')).toBeInTheDocument()
+    await act(async () => {
+      await i18n.changeLanguage('en')
+    })
+    expect(screen.getByText('[images] * 2')).toBeInTheDocument()
+    expect(screen.queryByText('[图片] * 2')).not.toBeInTheDocument()
+    await act(async () => {
+      await i18n.changeLanguage('zh-TW')
+    })
+    expect(screen.getByText('[圖片] * 2')).toBeInTheDocument()
+  })
+
   it('renders attachment download and quote labels in English', async () => {
     await i18n.changeLanguage('en')
     const description = convert.disposalCommentConvertToJSON({ value: '', imgs: [], files: [file] })
