@@ -620,6 +620,7 @@ export const BatchExportAIforge = memo(
               rules={[{ required: !!props.isTool && !!forgeExtraParams.current?.ToolNames?.length }]}
             >
               <YakitSelect
+                wrapperClassName={styles['tool-names-select']}
                 showSearch
                 placeholder={t('ForgeName.chooseTool')}
                 optionFilterProp="children"

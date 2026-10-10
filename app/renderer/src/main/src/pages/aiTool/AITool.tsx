@@ -15,8 +15,8 @@ import {
   RefreshOutlined,
   SearchOutlined,
   StarOutlined,
-  FigmaIcon6480193584Outlined,
-  FigmaIcon2017756Outlined,
+  ImportOutlined,
+  ExportOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -53,6 +53,7 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
   // 搜索条件
   const [keyWord, setKeyWord] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
+  const [allChecked, setAllChecked] = useState<boolean>(false)
 
   // 是否为获取列表第一页的加载状态
   const isInitLoading = useRef<boolean>(false)
@@ -97,6 +98,7 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
     if (loading) return
     if (isInit) {
       clearAll()
+      setAllChecked(false)
       hasMore.current = true
       isInitLoading.current = true
     }
@@ -141,16 +143,38 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
     return Number(response.Total) || 0
   }, [response.Total])
 
-  const { selected, allSelected, isSelected, toggle, toggleAll, unSelect, clearAll, partiallySelected } = useSelections(
-    response.Tools,
-    { itemKey: 'ID' },
-  )
+  const { selected, isSelected, toggle, unSelect, clearAll, setSelected } = useSelections(response.Tools, {
+    itemKey: 'ID',
+  })
+  const onCheck = useMemoizedFn((value: boolean) => {
+    setAllChecked(value)
+    clearAll()
+  })
+  const optCheck = useMemoizedFn((data: AIToolPageItemProps['data']) => {
+    if (allChecked) {
+      setAllChecked(false)
+      setSelected((response.Tools || []).filter((item) => item.ID !== data.ID))
+      return
+    }
+    toggle(data)
+  })
   const onBatchExport = useMemoizedFn(() => {
-    batchExportRef.current?.open(
-      allSelected
-        ? { Filter: { Keyword: keyWord, OnlyFavorites: toolQueryType === 'collect' } }
-        : { ToolNames: selected.map((item) => item.Name) },
-    )
+    if (!allChecked) {
+      batchExportRef.current?.open({ ToolNames: selected.map((item) => item.Name) })
+      return
+    }
+    const filter = { Keyword: keyWord, OnlyFavorites: toolQueryType === 'collect' }
+    grpcGetAIToolList({
+      Query: keyWord,
+      ToolName: '',
+      OnlyFavorites: filter.OnlyFavorites,
+      Pagination: genDefaultPagination(listLength || 1, 1),
+    }).then((res) => {
+      batchExportRef.current?.open({
+        Filter: filter,
+        ToolNames: (res.Tools || []).map((item) => item.Name),
+      })
+    })
   })
   const onExport = useMemoizedFn((data: AIToolPageItemProps['data']) => {
     batchExportRef.current?.open({ ToolNames: [data.Name], OutputName: data.VerboseName || data.Name })
@@ -162,6 +186,8 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
   const onToolQueryTypeChange = useMemoizedFn((e) => {
     setToolQueryType(e.target.value as ToolQueryType)
     setKeyWord('')
+    const listEl = toolRef.current?.querySelector('[class*="hub-grid-list"]')
+    if (listEl) listEl.scrollTop = 0
     setTimeout(() => {
       fetchData(true)
     }, 200)
@@ -213,10 +239,10 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
           />
           <Divider type="vertical" className={styles['diver-style']} />
           <YakitButton
-            disabled={!selected.length}
+            disabled={!allChecked && !selected.length}
             type="outline2"
             size="large"
-            icon={<FigmaIcon2017756Outlined />}
+            icon={<ExportOutlined />}
             onClick={onBatchExport}
           >
             {t('YakitButton.batchExport')}
@@ -224,7 +250,7 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
           <YakitButton
             type="outline2"
             size="large"
-            icon={<FigmaIcon6480193584Outlined color="currentColor" />}
+            icon={<ImportOutlined color="currentColor" />}
             onClick={() => importRef.current?.open()}
           >
             {t('YakitButton.import')}
@@ -244,10 +270,14 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
             onChange={onToolQueryTypeChange}
           />
           <div className={styles['select-all']}>
-            <YakitCheckbox checked={allSelected} onChange={() => toggleAll()} indeterminate={partiallySelected} />
+            <YakitCheckbox
+              checked={allChecked}
+              onChange={(e) => onCheck(e.target.checked)}
+              indeterminate={!allChecked && selected.length > 0}
+            />
             <span>{t('YakitCheckbox.selectAll')}</span>
           </div>
-          <TableTotalAndSelectNumber total={listLength} selectNum={selected.length} />
+          <TableTotalAndSelectNumber total={listLength} selectNum={allChecked ? listLength : selected.length} />
         </div>
         <div className={styles['hub-list-wrapper']}>
           <YakitSpin spinning={loading && isInitLoading.current}>
@@ -265,8 +295,8 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
                       key={data.ID}
                       index={index}
                       data={data}
-                      checked={isSelected(data)}
-                      onCheck={toggle}
+                      checked={allChecked || isSelected(data)}
+                      onCheck={optCheck}
                       onExport={onExport}
                       onFavorite={onFavorite}
                       onRemove={onRemove}
@@ -353,7 +383,7 @@ const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
     const exportItem: YakitMenuItemProps = {
       key: 'export',
       label: t('YakitButton.export'),
-      itemIcon: <FigmaIcon2017756Outlined color="currentColor" />,
+      itemIcon: <ExportOutlined color="currentColor" />,
     }
     return isBuiltin ? [copyItem, exportItem] : [copyItem, exportItem, deleteItem]
   }, [isBuiltin, i18nRefresh])

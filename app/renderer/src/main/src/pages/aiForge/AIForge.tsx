@@ -47,6 +47,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
   // 搜索条件
   const [search, setSearch] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
+  const [allChecked, setAllChecked] = useState<boolean>(false)
 
   const batchExportRef = useRef<BatchExportAIforgeRef>(null)
   const importRef = useRef<ImportAIforgeRef>(null)
@@ -96,6 +97,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
     if (loading) return
     if (isInit) {
       unSelectAll()
+      setAllChecked(false)
       hasMore.current = true
       isInitLoading.current = true
     }
@@ -136,9 +138,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
     return Number(response.Total) || 0
   }, [response.Total])
 
-  const { selected, allSelected, isSelected, toggle, toggleAll, unSelectAll, partiallySelected } = useSelections(
-    response.Data,
-  )
+  const { selected, isSelected, toggle, unSelectAll, setSelected } = useSelections(response.Data)
   const selectedLength = useCreation(() => {
     return selected.length
   }, [selected.length])
@@ -150,7 +150,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
         Keyword: '',
       },
     }
-    if (allSelected) {
+    if (allChecked) {
       query.Filter = {
         Keyword: search,
       }
@@ -171,7 +171,16 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
     importRef.current?.open()
   })
   /** 单项勾选 */
+  const onCheck = useMemoizedFn((value: boolean) => {
+    setAllChecked(value)
+    unSelectAll()
+  })
   const optCheck = useMemoizedFn((data: AIForge) => {
+    if (allChecked) {
+      setAllChecked(false)
+      setSelected(response.Data.filter((item) => item.Id !== data.Id))
+      return
+    }
     toggle(data)
   })
   // 删除 forge 模板
@@ -210,7 +219,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
           />
           <Divider type="vertical" className={styles['diver-style']} />
           <YakitButton
-            disabled={!selectedLength}
+            disabled={!allChecked && !selectedLength}
             type="outline2"
             size="large"
             icon={<ExportOutlined />}
@@ -230,10 +239,14 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
       <div className={styles['ai-forge-content']}>
         <div className={styles['hub-list-subTitle']}>
           <div className={styles['select-all']}>
-            <YakitCheckbox checked={allSelected} onChange={() => toggleAll()} indeterminate={partiallySelected} />
+            <YakitCheckbox
+              checked={allChecked}
+              onChange={(e) => onCheck(e.target.checked)}
+              indeterminate={!allChecked && selectedLength > 0}
+            />
             <span>全选</span>
           </div>
-          <TableTotalAndSelectNumber total={listLength} selectNum={selectedLength} />
+          <TableTotalAndSelectNumber total={listLength} selectNum={allChecked ? listLength : selectedLength} />
         </div>
         <div className={styles['hub-list-wrapper']}>
           <YakitSpin spinning={loading && isInitLoading.current}>
@@ -246,7 +259,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
                 updateList={onUpdateList}
                 gridNode={(info) => {
                   const { index, data } = info
-                  const check = isSelected(data)
+                  const check = allChecked || isSelected(data)
                   return (
                     <AIForgePageItem
                       key={data.Id || index}

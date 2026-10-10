@@ -196,6 +196,16 @@ describe('AITool 批量选择与导入导出', () => {
     expect(openExportMock).toHaveBeenCalledWith({ ToolNames: ['tool-a'] })
   })
 
+  it('全选：未加载的后续页也计入已选数量', async () => {
+    mockGetAIToolList.mockImplementation(async () => ({ ...makeListResponse(), Total: 5 }))
+    await renderAndWaitReady()
+    fireEvent.click(screen.getByTestId('select-all-checkbox'))
+    expect(selectNum()).toBe('5')
+    expect(screen.getByTestId('opt-1')).toHaveAttribute('data-checked', 'true')
+    expect(screen.getByTestId('opt-2')).toHaveAttribute('data-checked', 'true')
+    expect(screen.getByTestId('select-all-checkbox')).toHaveProperty('checked', true)
+  })
+
   it('全选：批量导出按当前过滤条件传 Filter（默认 tab、空关键词）', async () => {
     await renderAndWaitReady()
     const selectAll = screen.getByTestId('select-all-checkbox')
@@ -205,7 +215,12 @@ describe('AITool 批量选择与导入导出', () => {
     expect(selectAll).toHaveProperty('checked', true)
 
     clickBatchExport()
-    expect(openExportMock).toHaveBeenCalledWith({ Filter: { Keyword: '', OnlyFavorites: false } })
+    await waitFor(() => {
+      expect(openExportMock).toHaveBeenCalledWith({
+        Filter: { Keyword: '', OnlyFavorites: false },
+        ToolNames: ['tool-a', 'tool-b'],
+      })
+    })
   })
 
   it('带关键词搜索后全选导出：Filter 携带 Keyword', async () => {
@@ -217,7 +232,12 @@ describe('AITool 批量选择与导入导出', () => {
 
     fireEvent.click(screen.getByTestId('select-all-checkbox'))
     clickBatchExport()
-    expect(openExportMock).toHaveBeenCalledWith({ Filter: { Keyword: 'kw', OnlyFavorites: false } })
+    await waitFor(() => {
+      expect(openExportMock).toHaveBeenCalledWith({
+        Filter: { Keyword: 'kw', OnlyFavorites: false },
+        ToolNames: ['tool-a', 'tool-b'],
+      })
+    })
   })
 
   it('切到收藏 tab 后全选导出：Filter.OnlyFavorites 为 true 且关键词被清空', async () => {
@@ -231,7 +251,12 @@ describe('AITool 批量选择与导入导出', () => {
 
     fireEvent.click(screen.getByTestId('select-all-checkbox'))
     clickBatchExport()
-    expect(openExportMock).toHaveBeenCalledWith({ Filter: { Keyword: '', OnlyFavorites: true } })
+    await waitFor(() => {
+      expect(openExportMock).toHaveBeenCalledWith({
+        Filter: { Keyword: '', OnlyFavorites: true },
+        ToolNames: ['tool-a', 'tool-b'],
+      })
+    })
   })
 
   it('单项导出：按工具名组装 ToolNames 与 OutputName', async () => {
