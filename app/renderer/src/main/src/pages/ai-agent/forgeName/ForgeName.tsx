@@ -495,9 +495,9 @@ export const BatchExportAIforge = memo(
 
     const [exportExtra, setExportExtra] = useState<ImportExportModalExtra>({
       hint: false,
-      title: t('ForgeName.exportForge'),
+      title: props.isTool ? t('ForgeName.exportTool') : t('ForgeName.exportForge'),
       type: 'export',
-      apiKey: 'ExportAIForge',
+      apiKey: props.isTool ? 'ExportAITool' : 'ExportAIForge',
     })
     const logListRef = useRef<LogListInfo[]>([])
     const forgeExtraParams = useRef<ExportAIForgeRequest>(cloneDeep(defaultExportAIForgeRequest))
@@ -614,8 +614,13 @@ export const BatchExportAIforge = memo(
             <Form.Item label={t('ForgeName.fileName')} name="OutputName" rules={[{ required: true }]}>
               <YakitInput />
             </Form.Item>
-            <Form.Item label={t('ForgeName.tool')} name="ToolNames">
+            <Form.Item
+              label={t('ForgeName.tool')}
+              name="ToolNames"
+              rules={[{ required: !!props.isTool && !!forgeExtraParams.current?.ToolNames?.length }]}
+            >
               <YakitSelect
+                wrapperClassName={styles['tool-names-select']}
                 showSearch
                 placeholder={t('ForgeName.chooseTool')}
                 optionFilterProp="children"
@@ -674,9 +679,9 @@ export const ImportAIforge = memo(
 
     const [importExtra, setImportExtra] = useState<ImportExportModalExtra>({
       hint: false,
-      title: t('ForgeName.importForge'),
+      title: props.isTool ? t('ForgeName.importTool') : t('ForgeName.importForge'),
       type: 'import',
-      apiKey: 'ImportAIForge',
+      apiKey: props.isTool ? 'ImportAITool' : 'ImportAIForge',
     })
     const logListRef = useRef<LogListInfo[]>([])
 

@@ -33,13 +33,16 @@ export interface ExportImportAIForgeProgress {
   MessageType: string
 }
 export interface BatchExportAIforgeRef {
-  open: (params: Partial<ExportAIForgeRequest>) => void
+  open: (params: Partial<ExportAIForgeRequest> & { Filter?: { OnlyFavorites?: boolean } }) => void
 }
-export interface BatchExportAIforgeProps {}
+export interface BatchExportAIforgeProps {
+  isTool?: boolean
+}
 export interface ImportAIforgeRef {
   open: () => void
 }
 
 export interface ImportAIforgeProps {
   onSuccess?: () => void
+  isTool?: boolean
 }
