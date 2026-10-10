@@ -15,7 +15,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 vi.mock('@/utils/kv', () => ({ getRemoteValue: async () => undefined }))
 // jsdom 无布局，ahooks useVirtualList 拿不到容器高度导致列表恒为空；测试只关选项渲染与点击，直接平铺全部选项
 vi.mock('ahooks', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('ahooks')>()
+  const mod = await importOriginal<any>()
   return {
     ...mod,
     useVirtualList: (data: any[]) => [data.map((data, index) => ({ data, index }))],

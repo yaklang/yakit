@@ -5,7 +5,8 @@ import MITMRule from '../MITMRule'
 const { ipcInvoke } = vi.hoisted(() => ({ ipcInvoke: vi.fn() }))
 // MITMRule.tsx 模块顶层执行 window.require('electron')，必须在模块导入前就位
 vi.hoisted(() => {
-  ;(window as any).require = (name: string) => (name === 'electron' ? { ipcRenderer: { invoke: ipcInvoke } } : {})
+  const w = window as any
+  w.require = (name: string) => (name === 'electron' ? { ipcRenderer: { invoke: ipcInvoke } } : {})
 })
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
