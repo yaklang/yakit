@@ -48,6 +48,15 @@
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
+  // 只保留右侧时间轴滚动条，左侧仍可滚轮/程序同步滚动
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 }
 
 .sidebar-item {
@@ -137,11 +146,16 @@
 }
 
 .timeline-body {
-  position: relative;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.timeline-content {
+  position: relative;
+  // 行少时铺满可视区；行多时随内容增高，网格随之覆盖全部滚动高度
+  min-height: 100%;
 }
 
 .timeline-grid {
