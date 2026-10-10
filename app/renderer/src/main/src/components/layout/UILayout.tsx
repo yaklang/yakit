@@ -4,7 +4,7 @@ import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from '
 import { MacUIOp } from './MacUIOp'
 import type { yakProcess } from './PerformanceDisplay'
 const PerformanceDisplay = lazy(() => import('./PerformanceDisplay').then((m) => ({ default: m.PerformanceDisplay })))
-import { FuncDomain, UIOpNotice, type EngineConsoleOpenType } from './FuncDomain'
+import { FuncDomain, UIOpNotice } from './FuncDomain'
 import { TemporaryProjectPop, WinUIOp } from './WinUIOp'
 import { GlobalState } from './GlobalState'
 import { YakitGlobalHost } from './YakitGlobalHost'
@@ -27,6 +27,7 @@ import {
   DEFAULT_ENGINE_CONSOLE_OPEN_TYPE,
   resolveConsoleOpenEffects,
   resolveEngineConsoleOpenType,
+  type EngineConsoleOpenType,
 } from '../baseConsole/engineConsoleOpenType'
 const BaseConsoleDrawer = lazy(() => import('../baseConsole/BaseConsoleDrawer'))
 import {

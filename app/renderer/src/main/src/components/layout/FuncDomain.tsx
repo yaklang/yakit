@@ -161,6 +161,7 @@ import { judgeDynamic } from './userMenu/judgeDynamic'
 import { useUserMenu } from './userMenu/useUserMenu'
 import { UserMenuModals } from './userMenu/UserMenuModals'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
+import type { EngineConsoleOpenType } from '../baseConsole/engineConsoleOpenType'
 
 // re-export 保持外部导入路径兼容
 export { randomAvatarColor }
@@ -168,9 +169,6 @@ export { randomAvatarColor }
 const removePrefixV = (version: string) => {
   return version.startsWith('v') ? version.substring(1) : version
 }
-
-/** 引擎Console打开方式：浮窗(独立窗口) / 左侧抽屉 / 右侧抽屉 / 底部抽屉 */
-export type EngineConsoleOpenType = 'float' | 'left' | 'right' | 'bottom'
 
 export interface FuncDomainProp {
   isEngineLink: boolean

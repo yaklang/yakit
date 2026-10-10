@@ -9,6 +9,7 @@ import { WindowPositionOP } from '../yakitUI/YakitWindow/YakitWindow'
 import type { WindowPositionType } from '../yakitUI/YakitWindow/YakitWindowType'
 import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import styles from './baseConsoleDrawer.module.scss'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /** 引擎Console停靠抽屉支持的方向 */
 export type ConsoleDrawerDirection = 'left' | 'right' | 'bottom'
@@ -91,6 +92,7 @@ const layoutByDirection: Record<ConsoleDrawerDirection, DrawerLayout> = {
 
 const BaseConsoleDrawer: React.FC<BaseConsoleDrawerProps> = memo((props) => {
   const { direction, onClose, onDirectionChange, onShrinkToFloat } = props
+  const { t } = useI18nNamespaces(['layout'])
   const { setConsoleInfo } = useEngineConsoleStore()
 
   const handleClose = useMemoizedFn(() => {
@@ -113,7 +115,7 @@ const BaseConsoleDrawer: React.FC<BaseConsoleDrawerProps> = memo((props) => {
   const body = (
     <div className={styles['base-console-box']}>
       <div className={styles['base-console-title']}>
-        <div className={styles['title']}>引擎 Console</div>
+        <div className={styles['title']}>{t('FuncDomain.engineConsole')}</div>
         <div className={styles['operation']}>
           <WindowPositionOP activeDockSide={direction} onDockSide={handleDockSide} />
           <YakitButton type="text2" icon={<XOutlined />} onClick={handleClose} />

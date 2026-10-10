@@ -1,8 +1,7 @@
 import { getRemoteValue } from '@/utils/kv'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import emiter from '@/utils/eventBus/eventBus'
-import { resolveEngineConsoleOpenType } from './engineConsoleOpenType'
-import type { EngineConsoleOpenType } from '@/components/layout/FuncDomain'
+import { resolveEngineConsoleOpenType, type EngineConsoleOpenType } from './engineConsoleOpenType'
 
 /**
  * 经事件总线触发「打开引擎 Console」，由 UILayout 统一管理浮窗 / 抽屉互斥。

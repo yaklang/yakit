@@ -1,5 +1,7 @@
-import type { EngineConsoleOpenType } from '@/components/layout/FuncDomain'
 import type { ConsoleDrawerDirection } from './BaseConsoleDrawer'
+
+/** 引擎Console打开方式：浮窗(独立窗口) / 左侧抽屉 / 右侧抽屉 / 底部抽屉 */
+export type EngineConsoleOpenType = 'float' | 'left' | 'right' | 'bottom'
 
 export const DEFAULT_ENGINE_CONSOLE_OPEN_TYPE: EngineConsoleOpenType = 'float'
 

@@ -61,9 +61,8 @@ vi.mock('@/utils/notification', () => ({
   yakitFailed: vi.fn(),
 }))
 
-vi.mock('@/utils/openWebsite', () => ({
-  openConsoleNewWindow: vi.fn(),
-  openABSFileLocated: vi.fn(),
+vi.mock('@/components/baseConsole/openEngineConsole', () => ({
+  emitOpenEngineConsole: vi.fn(),
 }))
 
 vi.mock('@/utils/envfile', () => ({

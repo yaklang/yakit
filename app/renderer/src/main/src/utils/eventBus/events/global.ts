@@ -1,4 +1,4 @@
-import type { EngineConsoleOpenType } from '@/components/layout/FuncDomain'
+import type { EngineConsoleOpenType } from '@/components/baseConsole/engineConsoleOpenType'
 import { YakitRoute } from '@/enums/yakitRoute'
 
 export type GlobalEventProps = {
