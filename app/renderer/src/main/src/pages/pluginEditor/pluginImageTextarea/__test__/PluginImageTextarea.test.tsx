@@ -1,3 +1,23 @@
+vi.mock('@/i18n/useI18nNamespaces', async () => {
+  const { default: i18n } = await import('@/i18n/i18n')
+  return {
+    useI18nNamespaces: () => ({ t: (key: string, options?: object) => i18n.t(key, { ns: 'components', ...options }) }),
+  }
+})
+import i18n from '@/i18n/i18n'
+vi.mock('@/i18n/i18n', async () => {
+  const { createInstance } = await import('i18next')
+  const { default: zh } = await import('@/locales/zh/components.json')
+  const { default: en } = await import('@/locales/en/components.json')
+  const instance = createInstance()
+  await instance.init({
+    lng: 'zh',
+    fallbackLng: 'zh',
+    resources: { zh: { components: zh }, en: { components: en } },
+    interpolation: { escapeValue: false },
+  })
+  return { default: instance }
+})
 import { createRef } from 'react'
 import type React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
@@ -64,12 +84,44 @@ const deferred = <T,>() => {
 }
 
 describe('处置评论附件编辑', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('zh')
     vi.clearAllMocks()
     mocks.dialog.mockResolvedValue({ canceled: false, filePaths: ['D:\\reports\\修复报告.pdf'] })
     mocks.stat.mockResolvedValue({ size: 2048 })
   })
   afterEach(cleanup)
+
+  it('uses English attachment actions, dialog labels, quotes and size errors', async () => {
+    await i18n.changeLanguage('en')
+    mocks.stat.mockResolvedValueOnce({ size: MAX_ATTACHMENT_SIZE + 1 }).mockResolvedValue({ size: 100 })
+    render(
+      <PluginImageTextarea
+        onUploadFile={vi.fn().mockResolvedValue('https://files.test/report.pdf')}
+        quotation={{
+          userName: 'Admin',
+          content: '',
+          imgs: [],
+          files: [{ url: 'https://files.test/old.pdf', name: 'old.pdf', size: 1 }],
+        }}
+      />,
+    )
+    const uploadButton = screen.getByRole('button', { name: 'Upload attachment' })
+    expect(uploadButton).toHaveAttribute('title', expect.stringContaining('Only .jpg'))
+    expect(screen.getByText('[Attachment] * 1')).toBeInTheDocument()
+    fireEvent.click(uploadButton)
+    await waitFor(() =>
+      expect(mocks.failed).toHaveBeenCalledWith(expect.stringContaining('Attachment size must not exceed 100MB')),
+    )
+    expect(mocks.dialog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Upload attachment (up to 100MB)',
+        filters: [{ name: 'Supported attachments', extensions: DISPOSAL_ATTACHMENT_EXTENSIONS }],
+      }),
+    )
+    fireEvent.click(uploadButton)
+    expect(await screen.findByRole('button', { name: 'Remove attachment 修复报告.pdf' })).toBeInTheDocument()
+  })
 
   it('允许100MB附件单独发布并保留原文件名和大小', async () => {
     mocks.stat.mockResolvedValue({ size: MAX_ATTACHMENT_SIZE })

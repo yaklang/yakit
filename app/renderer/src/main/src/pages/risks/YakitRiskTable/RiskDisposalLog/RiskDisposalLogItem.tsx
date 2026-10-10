@@ -24,7 +24,7 @@ interface RiskDisposalLogItemProps {
 
 export const RiskDisposalLogItem: React.FC<RiskDisposalLogItemProps> = memo((props) => {
   const { info, hiddenLine, onReply, onDelete } = props
-  const { t } = useI18nNamespaces(['risk', 'yakitUi'])
+  const { t } = useI18nNamespaces(['risk', 'yakitUi', 'components'])
 
   const isSystem = info.logType === 'system'
   const isReply = !!info.parentComment
@@ -156,9 +156,9 @@ export const RiskDisposalLogItem: React.FC<RiskDisposalLogItemProps> = memo((pro
                           <span>{t('RiskDisposalLog.image_count', { count: parentContent.imgs.length })}</span>
                         )}
                         {!!parentContent?.files?.length && (
-                          <span
-                            title={parentContent.files.map((file) => file.name).join('、')}
-                          >{`[附件] * ${parentContent.files.length}`}</span>
+                          <span title={parentContent.files.map((file) => file.name).join('、')}>
+                            {t('DisposalAttachment.quote', { count: parentContent.files.length })}
+                          </span>
                         )}
                       </div>
                     </div>

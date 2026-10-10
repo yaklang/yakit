@@ -1,6 +1,20 @@
+import i18n from '@/i18n/i18n'
+vi.mock('@/i18n/i18n', async () => {
+  const { createInstance } = await import('i18next')
+  const { default: zh } = await import('@/locales/zh/components.json')
+  const { default: en } = await import('@/locales/en/components.json')
+  const instance = createInstance()
+  await instance.init({
+    lng: 'zh',
+    fallbackLng: 'zh',
+    resources: { zh: { components: zh }, en: { components: en } },
+    interpolation: { escapeValue: false },
+  })
+  return { default: instance }
+})
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type React from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as flow from '@/components/HTTPFlowTable/FlowDisposalLog/convert'
 import * as risk from '@/pages/risks/YakitRiskTable/RiskDisposalLog/convert'
 import { FlowDisposalLogItemView } from '@/components/HTTPFlowTable/FlowDisposalLog/FlowDisposalLogItem'
@@ -9,7 +23,13 @@ import { downloadDisposalFile } from '@/utils/disposalDownload'
 
 vi.mock('@/utils/disposalDownload', () => ({ downloadDisposalFile: vi.fn() }))
 
-vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
+vi.mock('@/i18n/useI18nNamespaces', async () => {
+  const { default: i18n } = await import('@/i18n/i18n')
+  return {
+    useI18nNamespaces: () => ({ t: (key: string, options?: object) => i18n.t(key, { ns: 'components', ...options }) }),
+  }
+})
+
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   YakitButton: ({ children }: React.PropsWithChildren) => <button>{children}</button>,
 }))
@@ -25,6 +45,10 @@ vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({
 vi.mock('@yakit-libs/yakit-ui-icons/colorful', () => ({ CommentLogColorful: () => null }))
 vi.mock('@yakit-libs/yakit-ui-icons/oldicon/PopoverArrowIcon', () => ({ PopoverArrowIcon: () => null }))
 
+beforeEach(async () => {
+  await i18n.changeLanguage('zh')
+})
+
 const file = { url: 'https://files.test/report.zip', name: '修复材料.zip', size: 2048 }
 const image = { url: 'https://files.test/screen.png', width: 100, height: 100 }
 afterEach(() => {
@@ -36,6 +60,23 @@ describe.each([
   ['流量', flow, FlowDisposalLogItemView],
   ['漏洞', risk, RiskDisposalLogItem],
 ] as const)('%s 附件评论', (_, convert, Item) => {
+  it('renders attachment download and quote labels in English', async () => {
+    await i18n.changeLanguage('en')
+    const description = convert.disposalCommentConvertToJSON({ value: '', imgs: [], files: [file] })
+    render(
+      <Item
+        info={{
+          id: 1,
+          logType: 'comment',
+          createdAt: 1,
+          description,
+          parentComment: { id: 2, userName: 'Admin', description },
+        }}
+      />,
+    )
+    expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute('download', file.name)
+    expect(screen.getByText('[Attachment] * 1')).toBeInTheDocument()
+  })
   it('支持附件单独发布和两端约定的文件节点格式', () => {
     const json = convert.disposalCommentConvertToJSON({ value: '', imgs: [], files: [file] })
     expect(JSON.parse(json)).toEqual([{ type: 'file', value: file }])

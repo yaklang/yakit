@@ -1,4 +1,20 @@
 {
+  "DisposalAttachment": {
+    "attachment": "Attachment",
+    "upload": "Upload attachment",
+    "remove": "Remove attachment {{name}}",
+    "download": "Download",
+    "quote": "[Attachment] * {{count}}",
+    "uploading": "An attachment is uploading. Please wait before continuing.",
+    "uploadDialogTitle": "Upload attachment (up to 100MB)",
+    "supportedFiles": "Supported attachments",
+    "sizeLimit": "Attachment size must not exceed 100MB",
+    "uploadFailed": "Attachment upload failed",
+    "uploadFailedWithReason": "Attachment upload failed: {{error}}",
+    "pathAndHashRequired": "Attachment path and business identifier are required",
+    "typeHint": "Only {{extensions}} attachments are supported",
+    "uploadHint": "{{types}}; up to 100MB"
+  },
   "ExportExcel": {
     "dataExport": "Data Export",
     "pageNumber": "Page {{page}}",

@@ -1,6 +1,21 @@
+import i18n from '@/i18n/i18n'
+vi.mock('@/i18n/i18n', async () => {
+  const { createInstance } = await import('i18next')
+  const { default: zh } = await import('@/locales/zh/components.json')
+  const { default: en } = await import('@/locales/en/components.json')
+  const instance = createInstance()
+  await instance.init({
+    lng: 'zh',
+    fallbackLng: 'zh',
+    resources: { zh: { components: zh }, en: { components: en } },
+    interpolation: { escapeValue: false },
+  })
+  return { default: instance }
+})
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   DISPOSAL_ATTACHMENT_EXTENSIONS,
+  getDisposalAttachmentTypeHint,
   MAX_ATTACHMENT_SIZE,
   uploadDisposalAttachment,
   validateDisposalAttachmentName,
@@ -15,7 +30,23 @@ vi.mock('@/services/electronBridge', () => ({
 }))
 
 describe('uploadDisposalAttachment', () => {
-  beforeEach(() => vi.clearAllMocks())
+  it('uses the current language for validation and upload errors after switching languages', async () => {
+    expect(getDisposalAttachmentTypeHint()).toContain('仅支持')
+    await i18n.changeLanguage('en')
+    expect(getDisposalAttachmentTypeHint()).toContain('Only .jpg')
+    expect(() => validateDisposalAttachmentName('file.exe')).toThrow('attachments are supported')
+    await expect(uploadDisposalAttachment({ path: '', hash: '', type: 'RiskComment' })).rejects.toThrow(
+      'Attachment path and business identifier are required',
+    )
+    mocks.splitUpload.mockResolvedValue({ TaskStatus: false, resArr: [] })
+    await expect(uploadDisposalAttachment({ path: 'file.pdf', hash: 'risk', type: 'RiskComment' })).rejects.toThrow(
+      'Attachment upload failed',
+    )
+  })
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    await i18n.changeLanguage('zh')
+  })
 
   it('uses the final chunk response URL', async () => {
     mocks.splitUpload.mockResolvedValue({

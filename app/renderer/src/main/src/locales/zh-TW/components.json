@@ -1,4 +1,20 @@
 {
+  "DisposalAttachment": {
+    "attachment": "附件",
+    "upload": "上傳附件",
+    "remove": "移除附件 {{name}}",
+    "download": "下載",
+    "quote": "[附件] * {{count}}",
+    "uploading": "附件正在上傳中，請稍候再操作",
+    "uploadDialogTitle": "上傳附件（不超過100MB）",
+    "supportedFiles": "支援的附件",
+    "sizeLimit": "附件大小不能超過100MB",
+    "uploadFailed": "附件上傳失敗",
+    "uploadFailedWithReason": "附件上傳失敗：{{error}}",
+    "pathAndHashRequired": "附件路徑和業務識別碼必填",
+    "typeHint": "僅支援 {{extensions}} 格式的附件",
+    "uploadHint": "{{types}}，不超過100MB"
+  },
   "ExportExcel": {
     "dataExport": "資料匯出",
     "pageNumber": "第{{page}}頁",

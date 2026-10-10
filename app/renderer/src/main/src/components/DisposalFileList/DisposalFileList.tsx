@@ -1,5 +1,6 @@
 import { PaperClipOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import numeral from 'numeral'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { downloadDisposalFile } from '@/utils/disposalDownload'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { TextareaForFile } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType'
@@ -12,6 +13,7 @@ interface DisposalFileListProps {
 }
 
 export const DisposalFileList = ({ files, editable, onRemove }: DisposalFileListProps) => {
+  const { t } = useI18nNamespaces(['components'])
   if (!files?.length) return null
   return (
     <div className={styles.files}>
@@ -26,7 +28,7 @@ export const DisposalFileList = ({ files, editable, onRemove }: DisposalFileList
             <YakitButton
               type="text2"
               disabled={!onRemove}
-              aria-label={`移除附件 ${file.name}`}
+              aria-label={t('DisposalAttachment.remove', { name: file.name })}
               icon={<XOutlined />}
               onClick={() => onRemove?.(index)}
             />
@@ -40,7 +42,7 @@ export const DisposalFileList = ({ files, editable, onRemove }: DisposalFileList
                 void downloadDisposalFile(file.url, file.name)
               }}
             >
-              下载
+              {t('DisposalAttachment.download')}
             </a>
           )}
         </div>

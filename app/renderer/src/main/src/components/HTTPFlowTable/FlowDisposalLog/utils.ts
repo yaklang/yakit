@@ -2,6 +2,7 @@ import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { yakitNotify } from '@/utils/notification'
 import { yakitUpload } from '@/services/electronBridge'
+import { mergeDisposalLogs } from '@/utils/disposalLog'
 import type {
   FlowDisposalLogItem,
   FlowDisposalLogsResponse,
@@ -64,20 +65,6 @@ const mapCommentDetail = (item: CommentDetailExtra): FlowDisposalLogItem => {
   }
 }
 
-const enrichParentComments = <
-  T extends { id: number; description?: string; parentComment?: { id: number; description: string } },
->(
-  list: T[],
-): T[] => {
-  const byId = new Map(list.map((item) => [item.id, item]))
-  list.forEach((item) => {
-    if (!item.parentComment?.id) return
-    const parent = byId.get(item.parentComment.id)
-    if (parent?.description) item.parentComment.description = parent.description
-  })
-  return list
-}
-
 /** 流量处置日志列表 → POST /risk/httpflow/comment/list */
 export const apiGetFlowDisposalLogs = (params: {
   flow_id?: number
@@ -104,7 +91,7 @@ export const apiGetFlowDisposalLogs = (params: {
     })
       .then((res) => {
         resolve({
-          data: enrichParentComments((res.data || []).map(mapCommentDetail)),
+          data: mergeDisposalLogs([], (res.data || []).map(mapCommentDetail)),
           total: res.pagemeta?.total,
         })
       })

@@ -3,6 +3,7 @@ import { yakitNotify } from '@/utils/notification'
 import type { API } from '@/services/swagger/resposeType'
 import i18n from '@/i18n/i18n'
 import { yakitUpload } from '@/services/electronBridge'
+import { mergeDisposalLogs } from '@/utils/disposalLog'
 import type {
   DisposalLogItem,
   DisposalLogsResponse,
@@ -67,21 +68,6 @@ const mapCommentDetail = (item: CommentDetailExtra): DisposalLogItem => {
   }
 }
 
-/** 同页按 parentId 回填父评论正文 */
-const enrichParentComments = <
-  T extends { id: number; description?: string; parentComment?: { id: number; description: string } },
->(
-  list: T[],
-): T[] => {
-  const byId = new Map(list.map((item) => [item.id, item]))
-  list.forEach((item) => {
-    if (!item.parentComment?.id) return
-    const parent = byId.get(item.parentComment.id)
-    if (parent?.description) item.parentComment.description = parent.description
-  })
-  return list
-}
-
 /** 处置日志列表 → POST /risk/httpflow/comment/list */
 export const apiGetDisposalLogs = (params: {
   risk_hash: string
@@ -103,7 +89,7 @@ export const apiGetDisposalLogs = (params: {
     })
       .then((res) => {
         resolve({
-          data: enrichParentComments((res.data || []).map(mapCommentDetail)),
+          data: mergeDisposalLogs([], (res.data || []).map(mapCommentDetail)),
           total: res.pagemeta?.total,
         })
       })

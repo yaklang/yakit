@@ -2,6 +2,7 @@ import type React from 'react'
 import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import type { TextareaForFile, TextareaForImage, PluginImageTextareaProps } from './PluginImageTextareaType'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { failed } from '@/utils/notification'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { PaperClipOutlined, PhotographOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -15,7 +16,7 @@ import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { getLocalFileLinkInfo } from '@/components/MilkdownEditor/CustomFile/utils'
 import {
   DISPOSAL_ATTACHMENT_EXTENSIONS,
-  DISPOSAL_ATTACHMENT_TYPE_HINT,
+  getDisposalAttachmentTypeHint,
   MAX_ATTACHMENT_SIZE,
   validateDisposalAttachmentName,
 } from '@/utils/disposalAttachment'
@@ -39,6 +40,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
       quotation,
       delQuotation,
     } = props
+    const { t } = useI18nNamespaces(['components'])
     const [files, setFiles] = useState<TextareaForFile[]>([])
     const [fileLoading, setFileLoading] = useState(false)
     const fileBusyRef = useRef(false)
@@ -62,7 +64,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
 
     const getData = useMemoizedFn(() => {
       if (fileBusyRef.current) {
-        failed('附件正在上传中，请稍候再操作')
+        failed(t('DisposalAttachment.uploading'))
         return null
       }
       if (imgLoading) {
@@ -105,8 +107,8 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
       setFileLoading(true)
       try {
         const selected = await handleOpenFileSystemDialog({
-          title: '上传附件（不超过100MB）',
-          filters: [{ name: '支持的附件', extensions: DISPOSAL_ATTACHMENT_EXTENSIONS }],
+          title: t('DisposalAttachment.uploadDialogTitle'),
+          filters: [{ name: t('DisposalAttachment.supportedFiles'), extensions: DISPOSAL_ATTACHMENT_EXTENSIONS }],
           properties: ['openFile'],
         })
         const path = selected.filePaths[0]
@@ -114,12 +116,16 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
         validateDisposalAttachmentName(path)
         const { size } = await getLocalFileLinkInfo(path, true)
         if (version !== uploadVersionRef.current) return
-        if (size > MAX_ATTACHMENT_SIZE) throw new Error('附件大小不能超过100MB')
+        if (size > MAX_ATTACHMENT_SIZE) throw new Error(t('DisposalAttachment.sizeLimit'))
         const url = await upload(path)
         if (version !== uploadVersionRef.current) return
-        setFiles((current) => [...current, { url, size, name: path.split(/[\\/]/).pop() || '附件' }])
+        setFiles((current) => [
+          ...current,
+          { url, size, name: path.split(/[\\/]/).pop() || t('DisposalAttachment.attachment') },
+        ])
       } catch (error) {
-        if (version === uploadVersionRef.current) failed(`附件上传失败：${String(error)}`)
+        if (version === uploadVersionRef.current)
+          failed(t('DisposalAttachment.uploadFailedWithReason', { error: String(error) }))
       } finally {
         if (version === uploadVersionRef.current) {
           fileBusyRef.current = false
@@ -288,9 +294,9 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
               </div>
               {quotation.imgs && quotation.imgs.length > 0 && <div>{`[图片] * ${quotation.imgs?.length}`}</div>}
               {!!quotation.files?.length && (
-                <div
-                  title={quotation.files.map((file) => file.name).join('、')}
-                >{`[附件] * ${quotation.files.length}`}</div>
+                <div title={quotation.files.map((file) => file.name).join('、')}>
+                  {t('DisposalAttachment.quote', { count: quotation.files.length })}
+                </div>
               )}
             </div>
           </div>
@@ -354,8 +360,8 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
             </Upload>
             {onUploadFile && (
               <YakitButton
-                title={`${DISPOSAL_ATTACHMENT_TYPE_HINT}，不超过100MB`}
-                aria-label="上传附件"
+                title={t('DisposalAttachment.uploadHint', { types: getDisposalAttachmentTypeHint() })}
+                aria-label={t('DisposalAttachment.upload')}
                 disabled={loading || fileLoading || imgLoading}
                 loading={fileLoading}
                 icon={<PaperClipOutlined color="currentColor" />}

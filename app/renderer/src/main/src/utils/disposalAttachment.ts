@@ -1,3 +1,4 @@
+import i18n from '@/i18n/i18n'
 import { yakitUpload } from '@/services/electronBridge'
 
 export const MAX_ATTACHMENT_SIZE = 100 * 1024 * 1024
@@ -14,14 +15,16 @@ export const DISPOSAL_ATTACHMENT_EXTENSIONS = [
   'word',
   'docx',
 ]
-export const DISPOSAL_ATTACHMENT_TYPE_HINT = `仅支持 ${DISPOSAL_ATTACHMENT_EXTENSIONS.map(
-  (extension) => `.${extension}`,
-).join('、')} 格式的附件`
+export const getDisposalAttachmentTypeHint = () =>
+  i18n.t('DisposalAttachment.typeHint', {
+    ns: 'components',
+    extensions: DISPOSAL_ATTACHMENT_EXTENSIONS.map((extension) => `.${extension}`).join(', '),
+  })
 
 export const validateDisposalAttachmentName = (name: string) => {
   const extension = /\.([^./\\]+)$/.exec(name)?.[1].toLowerCase()
   if (!extension || !DISPOSAL_ATTACHMENT_EXTENSIONS.includes(extension)) {
-    throw new Error(DISPOSAL_ATTACHMENT_TYPE_HINT)
+    throw new Error(getDisposalAttachmentTypeHint())
   }
 }
 
@@ -39,7 +42,7 @@ export const uploadDisposalAttachment = async ({
   type,
 }: UploadDisposalAttachmentRequest): Promise<string> => {
   if (!path || !hash) {
-    throw new Error('附件路径和业务标识必填')
+    throw new Error(i18n.t('DisposalAttachment.pathAndHashRequired', { ns: 'components' }))
   }
   validateDisposalAttachmentName(path)
   const { TaskStatus, resArr } = await yakitUpload.splitUpload({
@@ -53,7 +56,10 @@ export const uploadDisposalAttachment = async ({
   const url = typeof data === 'string' ? data : data?.from || ''
 
   if (!TaskStatus || response?.code !== 200 || !url) {
-    const reason = response?.message || (typeof data === 'object' && data ? data.reason : undefined) || '附件上传失败'
+    const reason =
+      response?.message ||
+      (typeof data === 'object' && data ? data.reason : undefined) ||
+      i18n.t('DisposalAttachment.uploadFailed', { ns: 'components' })
     throw new Error(String(reason))
   }
 
