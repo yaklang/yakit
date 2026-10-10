@@ -1,0 +1,52 @@
+name: pr-label-notify
+
+on:
+  pull_request_target:
+    types:
+      - labeled
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # 只执行可信主仓库快照中的脚本，禁止改为 PR 的 head / merge ref。
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout: bots/pr-label/pr-label.mjs
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: 检查必填配置
+        id: guard
+        env:
+          PR_LABEL_WEBHOOK_URL: ${{ secrets.PR_LABEL_WEBHOOK_URL }}
+        run: |
+          if [ -z "$PR_LABEL_WEBHOOK_URL" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::未配置 PR_LABEL_WEBHOOK_URL，跳过本次运行"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 发送飞书通知
+        if: steps.guard.outputs.skip != 'true'
+        # 签名密钥仅提供给发送步骤；PR 内容通过事件 JSON 读取，不拼入 shell。
+        env:
+          PR_LABEL_WEBHOOK_URL: ${{ secrets.PR_LABEL_WEBHOOK_URL }}
+          PR_LABEL_SECRET: ${{ secrets.PR_LABEL_SECRET }}
+          PR_LABEL_KEYWORD: ${{ vars.PR_LABEL_KEYWORD }}
+          PR_LABEL_MSG_TYPE: ${{ vars.PR_LABEL_MSG_TYPE }}
+          PR_LABEL_MATCH_MODE: ${{ vars.PR_LABEL_MATCH_MODE || 'exact' }}
+        run: node bots/pr-label/pr-label.mjs

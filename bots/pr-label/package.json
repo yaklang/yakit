@@ -1,0 +1,22 @@
+{
+  "name": "@yakit/pr-label",
+  "version": "0.1.0",
+  "private": true,
+  "description": "放在 PR 所在仓库，由 GitHub Actions 的 pull_request.labeled 事件触发，把命中标签的 PR 推送到飞书",
+  "type": "module",
+  "bin": "./pr-label.mjs",
+  "main": "./pr-label.mjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test/smoke.mjs",
+    "send": "node pr-label.mjs --event-file=./fixtures/labeled-ready.json",
+    "send:test": "node pr-label.mjs --event-file=./fixtures/labeled-need-more-test.json",
+    "skip": "node pr-label.mjs --event-file=./fixtures/labeled.json",
+    "dry": "node pr-label.mjs --event-file=./fixtures/labeled-ready.json --dry-run",
+    "dry:test": "node pr-label.mjs --event-file=./fixtures/labeled-need-more-test.json --dry-run",
+    "dry:skip": "node pr-label.mjs --event-file=./fixtures/labeled.json --dry-run",
+    "probe": "node pr-label.mjs --probe --dry-run"
+  }
+}
