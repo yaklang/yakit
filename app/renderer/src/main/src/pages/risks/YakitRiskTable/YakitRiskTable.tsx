@@ -537,6 +537,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       { value: 'warning', label: t('YakitTag.warning') },
       { value: 'low', label: t('YakitTag.low') },
       { value: 'info', label: t('YakitTag.info') },
+      { value: 'none', label: t('YakitTag.none') },
     ]
     const columnArr: ColumnsTypeProps[] = [
       {
@@ -1798,6 +1799,7 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
   const initDisposal = getDisposalStatusFromTags(info.Tags)
   const [typeSearch, setTypeSearch] = useState('')
   const verifierChangedRef = useRef(false)
+  const verifierSearchIdRef = useRef(0)
   const [verifierLoading, setVerifierLoading] = useState(
     () =>
       !!info.VerifierUid ||
@@ -1847,6 +1849,7 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
     loadVerifier()
     return () => {
       cancelled = true
+      verifierSearchIdRef.current += 1
     }
   }, [])
 
@@ -1875,10 +1878,11 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
   }, [initDisposal])
 
   const onSearchVerifier = useDebounceFn(
-    (keywords: string) => {
+    (keywords: string, searchId: number) => {
       if (!keywords?.trim()) return
       apiGetUserSearch({ keywords: keywords.trim() })
         .then((res) => {
+          if (searchId !== verifierSearchIdRef.current) return
           const list = (res?.data || []).map((item) => ({
             label: item.name,
             value: item.uid || String(item.id),
@@ -1891,7 +1895,9 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
   ).run
   const handleSearchVerifier = useMemoizedFn((keywords: string) => {
     verifierChangedRef.current = true
-    onSearchVerifier(keywords)
+    // 输入变化立即使旧请求失效，包括新请求尚在防抖等待及清空关键词的情况。
+    verifierSearchIdRef.current += 1
+    onSearchVerifier(keywords, verifierSearchIdRef.current)
   })
 
   const onFinish = useMemoizedFn(

@@ -86,12 +86,15 @@ vi.mock('@yakit-libs/yakit-ui-icons/colorful', async (importOriginal) => ({
 }))
 
 vi.mock('@/components/TableVirtualResize/TableVirtualResize', () => ({
-  TableVirtualResize: ({ renderTitle, rowSelection, data, pagination, columns }) => {
+  TableVirtualResize: ({ renderTitle, rowSelection, data, pagination, columns, onChange }) => {
     mocks.columns = columns
     return (
       <div>
         {renderTitle}
         <span data-testid="loaded-count">{data.length}</span>
+        <button type="button" onClick={() => onChange(1, 20, undefined, { SeverityList: ['none'] })}>
+          filter-none
+        </button>
         <button type="button" onClick={() => pagination.onChange(1)}>
           load-table
         </button>
@@ -288,6 +291,42 @@ describe('YakitRiskTable 批量操作', () => {
   })
 
   afterEach(cleanup)
+
+  it.each([false, true])('等级筛选包含无，并将 none 传给风险查询（企业版 %s）', async (enterprise) => {
+    mocks.enterprise = enterprise
+    const setQuery = vi.fn()
+    const { rerender } = render(
+      <YakitRiskTable
+        query={query}
+        setQuery={setQuery}
+        setRiskLoading={vi.fn()}
+        allTotal={100}
+        setAllTotal={vi.fn()}
+      />,
+    )
+    expect(mocks.columns.find((column) => column.dataKey === 'Severity').filterProps.filters).toContainEqual({
+      value: 'none',
+      label: 'YakitTag.none',
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'filter-none' }))
+    const nextQuery = setQuery.mock.calls.at(-1)?.[0]
+    expect(nextQuery).toEqual(expect.objectContaining({ SeverityList: ['none'] }))
+    rerender(
+      <YakitRiskTable
+        query={nextQuery}
+        setQuery={setQuery}
+        setRiskLoading={vi.fn()}
+        allTotal={100}
+        setAllTotal={vi.fn()}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
+    await waitFor(() =>
+      expect(mocks.queryRisks).toHaveBeenCalledWith(
+        expect.objectContaining({ SeverityList: ['none'], Severity: 'none' }),
+      ),
+    )
+  })
 
   it.each([false, true])('类型筛选保持显示名查询合同，缺失时回退，不展示空白项（企业版 %s）', async (enterprise) => {
     mocks.enterprise = enterprise

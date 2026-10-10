@@ -94,10 +94,24 @@ vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => ({
 }))
 vi.mock('@/pages/pluginHub/hooks/useListenWidth', () => ({ default: () => 800 }))
 vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => {
-  const YakitSelect = ({ children, onChange }: React.PropsWithChildren<{ onChange?: () => void }>) => (
-    <button type="button" data-testid="select" onClick={onChange}>
-      {children}
-    </button>
+  const YakitSelect = ({
+    children,
+    onChange,
+    onSearch,
+    placeholder,
+  }: React.PropsWithChildren<{
+    onChange?: () => void
+    onSearch?: (value: string) => void
+    placeholder?: string
+  }>) => (
+    <>
+      {placeholder === 'YakitRiskEditForm.verifier_placeholder' && (
+        <input aria-label="搜索验证人" onChange={(event) => onSearch?.(event.target.value)} />
+      )}
+      <button type="button" data-testid="select" onClick={onChange}>
+        {children}
+      </button>
+    </>
   )
   YakitSelect.Option = ({ children }: React.PropsWithChildren) => <div>{children}</div>
   return { YakitSelect }
@@ -156,7 +170,48 @@ describe('YakitRiskEditForm 验证人回填', () => {
   })
   afterEach(() => {
     cleanup()
+    vi.useRealTimers()
     vi.restoreAllMocks()
+  })
+
+  it('验证人搜索只展示最新关键词结果，忽略较晚返回的旧请求', async () => {
+    vi.useFakeTimers()
+    const first = deferred<{ data: { uid: string; name: string }[] }>()
+    const second = deferred<{ data: { uid: string; name: string }[] }>()
+    mocks.userSearch.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
+    render(<YakitRiskEditForm info={{ Hash: '' } as never} onSave={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText('搜索验证人'), { target: { value: 'first' } })
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    fireEvent.change(screen.getByLabelText('搜索验证人'), { target: { value: 'second' } })
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    expect(mocks.userSearch.mock.calls).toEqual([[{ keywords: 'first' }], [{ keywords: 'second' }]])
+    await act(async () => second.resolve({ data: [{ uid: 'second', name: '新结果' }] }))
+    await act(async () => first.resolve({ data: [{ uid: 'first', name: '旧结果' }] }))
+    expect(screen.getByText('新结果')).toBeInTheDocument()
+    expect(screen.queryByText('旧结果')).not.toBeInTheDocument()
+  })
+
+  it.each(['second', '   '])('输入变化即使旧搜索失效，不等待防抖请求发出：%s', async (nextKeyword) => {
+    vi.useFakeTimers()
+    const pending = deferred<{ data: { uid: string; name: string }[] }>()
+    mocks.userSearch.mockReturnValueOnce(pending.promise)
+    render(<YakitRiskEditForm info={{ Hash: '' } as never} onSave={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText('搜索验证人'), { target: { value: 'first' } })
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    fireEvent.change(screen.getByLabelText('搜索验证人'), { target: { value: nextKeyword } })
+    await act(async () => pending.resolve({ data: [{ uid: 'first', name: '旧结果' }] }))
+    expect(screen.queryByText('旧结果')).not.toBeInTheDocument()
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    expect(mocks.userSearch).toHaveBeenCalledTimes(nextKeyword.trim() ? 2 : 1)
+  })
+
+  it('卸载后取消尚未发出的验证人搜索', async () => {
+    vi.useFakeTimers()
+    const { unmount } = render(<YakitRiskEditForm info={{ Hash: '' } as never} onSave={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText('搜索验证人'), { target: { value: 'pending' } })
+    unmount()
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    expect(mocks.userSearch).not.toHaveBeenCalled()
   })
 
   it.each([undefined, null, 0, '0', '', -1, 'invalid'])(
