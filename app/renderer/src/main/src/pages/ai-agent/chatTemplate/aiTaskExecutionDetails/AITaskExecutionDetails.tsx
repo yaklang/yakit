@@ -10,7 +10,13 @@ import type {
   AITaskExecutionDetailsProps,
   AITaskStatisticsStatusProps,
 } from './type'
-import { PresentationChartBarOutlined, TrashOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  PresentationChartBarOutlined,
+  TrashOutlined,
+  XOutlined,
+  ViewBoardsOutlined,
+  SquareGanttChartOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import styles from './AITaskExecutionDetails.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AIDeleteNodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIDeleteNodeIcon'
@@ -20,7 +26,6 @@ import { AIPendingNodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIPendingN
 import { AISkippedNodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AISkippedNodeIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { AIToDoListItem } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoList'
 import { useCreation, useMemoizedFn, useSelections } from 'ahooks'
 import type {
   ForgesAndSkillsDynamicItem,
@@ -63,14 +68,21 @@ import {
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
+import { AITaskBoard } from './aiTaskBoard/AITaskBoard'
+import { AITaskGantt } from './aiTaskGantt/AITaskGantt'
 import { AIToDoListDetail } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoListDetail'
 import useCurrentTaskData from '@/pages/ai-re-act/hooks/useCurrentTaskData/useCurrentTaskData'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
+import { getSessionRiskTagEntries } from '@/pages/ai-re-act/aiRightPanel/riskLevelCount'
+import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
+
+type TodoViewMode = 'board' | 'gantt'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName, onClose } = props
+  const [todoViewMode, setTodoViewMode] = useState<TodoViewMode>('board')
   const taskData = useCurrentTaskData(taskId, 5)
   // taskDetailsMap 中的数据会原地更新，使用 uuid 作为快照变更信号，避免详情组件持有可变引用。
   const planItemDetailsData = useCreation<PlanItemDetailsData | undefined>(
@@ -89,9 +101,19 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   const todoListCardData = useCreation(() => planItemDetailsData?.todoList, [planItemDetailsData?.todoList])
 
   const todoData = useCreation(() => {
-    const unFinish: TodoListCardData['items'] = []
-    const finished: TodoListCardData['items'] = []
+    const items = planItemDetailsData?.todoList?.items || []
+    const pending: TodoListCardData['items'] = []
+    const doing: TodoListCardData['items'] = []
+    const done: TodoListCardData['items'] = []
+    const skippedOrDeleted: TodoListCardData['items'] = []
     const progressNumber: AITaskStatisticsStatusProps['list'] = [
+      {
+        key: 'created',
+        color: 'neutral-with-border',
+        title: '已创建',
+        footerLeft: items.length,
+        footerRight: null,
+      },
       {
         key: 'pending',
         color: 'neutral-with-border',
@@ -104,38 +126,58 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
       { key: 'skipped', color: 'neutral', title: '已跳过', footerLeft: 0, footerRight: <AISkippedNodeIcon /> },
       { key: 'deleted', color: 'red', title: '已删除', footerLeft: 0, footerRight: <AIDeleteNodeIcon /> },
     ]
+    const progressByKey = Object.fromEntries(progressNumber.map((item) => [item.key, item])) as Record<
+      string,
+      AITaskStatisticsStatusProps['list'][number]
+    >
 
-    for (const item of planItemDetailsData?.todoList?.items || []) {
+    for (const item of items) {
       switch (item.status) {
         case 'PENDING':
-          progressNumber[0].footerLeft = progressNumber[0].footerLeft + 1
-          unFinish.push(item)
+          progressByKey.pending.footerLeft += 1
+          pending.push(item)
           break
 
         case 'DOING':
-          progressNumber[1].footerLeft = progressNumber[1].footerLeft + 1
-          unFinish.push(item)
+          progressByKey.doing.footerLeft += 1
+          doing.push(item)
           break
 
         case 'DONE':
-          progressNumber[2].footerLeft = progressNumber[2].footerLeft + 1
-          finished.push(item)
+          progressByKey.done.footerLeft += 1
+          done.push(item)
           break
 
         case 'SKIPPED':
-          progressNumber[3].footerLeft = progressNumber[3].footerLeft + 1
-          finished.push(item)
+          progressByKey.skipped.footerLeft += 1
+          skippedOrDeleted.push(item)
           break
 
         case 'DELETED':
-          progressNumber[4].footerLeft = progressNumber[4].footerLeft + 1
-          finished.push(item)
+          progressByKey.deleted.footerLeft += 1
+          skippedOrDeleted.push(item)
           break
         default:
           break
       }
     }
-    return { unFinish, finished, progressNumber }
+    const boardColumns = [
+      { key: 'pending', title: '待处理', icon: <AIPendingNodeIcon />, items: pending },
+      { key: 'doing', title: '运行中', icon: <AIDoingNodeIcon />, items: doing },
+      { key: 'done', title: '已完成', icon: <AIDoneNodeIcon />, items: done },
+      {
+        key: 'skippedOrDeleted',
+        title: '已跳过/已删除',
+        icon: (
+          <>
+            <AISkippedNodeIcon />
+            <AIDeleteNodeIcon />
+          </>
+        ),
+        items: skippedOrDeleted,
+      },
+    ]
+    return { boardColumns, progressNumber }
   }, [planItemDetailsData?.todoList?.items])
 
   const forgeFixedList = useCreation(() => {
@@ -158,7 +200,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
 
   const toolCall = useCreation(() => {
     if (!planItemDetailsData?.execution)
-      return ['成功', '失败次数', '总次数'].map((item) => ({ Id: item, Data: '暂无', Timestamp: 0 }))
+      return ['成功', '失败', '总尝试次数'].map((item) => ({ Id: item, Data: '暂无', Timestamp: 0 }))
     return [
       {
         Data: `${planItemDetailsData?.execution?.tool_call_success ?? `0`}`,
@@ -167,12 +209,12 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
       },
       {
         Data: `${planItemDetailsData?.execution?.tool_call_failed ?? `0`}`,
-        Id: '失败次数',
+        Id: '失败',
         Timestamp: 0,
       },
       {
         Data: `${planItemDetailsData?.execution?.tool_call_total ?? `0`}`,
-        Id: '总次数',
+        Id: '总尝试次数',
         Timestamp: 0,
       },
     ]
@@ -197,10 +239,14 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     if (!planItemDetailsData?.execution) return '暂无'
     return `${planItemDetailsData?.execution.http_flow_count ?? `0`}`
   }, [planItemDetailsData?.execution?.http_flow_count])
-  const riskCount = useCreation(() => {
+  const riskLevelEntries = useCreation(
+    () => getSessionRiskTagEntries(planItemDetailsData?.execution?.risk_level_count),
+    [planItemDetailsData?.execution?.risk_level_count],
+  )
+  const riskCountFallback = useCreation(() => {
     if (!planItemDetailsData?.execution) return '暂无'
-    return `${planItemDetailsData?.execution.risk_count ?? `0`}`
-  }, [planItemDetailsData?.execution?.risk_count])
+    return `${planItemDetailsData.execution.risk_level_count?.total ?? planItemDetailsData.execution.risk_count ?? 0}`
+  }, [planItemDetailsData?.execution?.risk_count, planItemDetailsData?.execution?.risk_level_count?.total])
 
   const showForge = useCreation(() => {
     if (!planItemDetailsData) return false
@@ -243,81 +289,99 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
 
       <div className={styles['content-body']}>
         <div className={styles['summary-section']}>
-          <HorizontalScrollCardItemInfoMultiple info={toolCall} tag={'工具调用'} />
-          <HorizontalScrollCardItemInfoSingle
-            item={{ Id: '执行时长', Data: executionMinutes, Timestamp: 0 }}
-            tag="执行时长"
-            compact={false}
+          <HorizontalScrollCardItemInfoMultiple
+            info={toolCall}
+            tag={'工具调用统计'}
+            className={styles['summary-tool-card']}
           />
-
-          <HorizontalScrollCardItemInfoSingle
-            item={{ Id: '产生流量数', Data: httpFlowCount, Timestamp: 0 }}
-            tag="产生流量数"
-            compact={false}
-          />
-
-          <HorizontalScrollCardItemInfoSingle
-            item={{ Id: '漏洞数', Data: riskCount, Timestamp: 0 }}
-            tag="漏洞数"
-            compact={false}
+          <div className={styles['summary-metric-stack']}>
+            <HorizontalScrollCardItemInfoSingle
+              item={{ Id: '执行时长', Data: executionMinutes, Timestamp: 0 }}
+              tag="执行时长"
+              compact
+              className={styles['summary-metric-lake-blue']}
+            />
+            <HorizontalScrollCardItemInfoSingle
+              item={{ Id: '产生流量数', Data: httpFlowCount, Timestamp: 0 }}
+              tag="产生流量数"
+              compact
+              className={styles['summary-metric-purple']}
+            />
+            <div className={classNames(styles['summary-metric-risk'], styles['summary-metric-magenta'])}>
+              <div className={styles['summary-metric-label']}>漏洞个数</div>
+              {riskLevelEntries.length > 0 ? (
+                <span className={styles['risk-tag']}>
+                  {riskLevelEntries.map((entry, index) => (
+                    <React.Fragment key={entry.field}>
+                      {index > 0 && <span className={styles['risk-tag-separator']}>｜</span>}
+                      <span className={classNames(styles['risk-tag-value'], styles[`risk-tag-value-${entry.field}`])}>
+                        {entry.value}
+                      </span>
+                    </React.Fragment>
+                  ))}
+                </span>
+              ) : (
+                <div className={styles['summary-metric-data']}>{riskCountFallback}</div>
+              )}
+            </div>
+          </div>
+          <AITaskExecutionDetailsCard title="任务目标" content={taskGoal} className={styles['summary-info-card']} />
+          <AITaskExecutionDetailsCard
+            title="意图感知"
+            content={perception?.summary}
+            className={styles['summary-info-card']}
           />
         </div>
-        {/* 左侧目标与意图 + 右侧统计 */}
-        <div className={styles['top-section']}>
-          <div className={styles['top-left']}>
-            <AITaskExecutionDetailsCard title="任务目标" content={taskGoal} />
-            <AITaskExecutionDetailsCard title="意图感知" content={perception?.summary} />
-          </div>
-          <div className={styles['task-statistics']}>
-            <div className={styles['stats-header']}>
-              <span className={styles['title']}>待办任务</span>
-              {!!total && todoListCardData && <AIToDoListDetail todoData={todoListCardData} />}
+        <div className={styles['task-statistics']}>
+          <div className={styles['stats-header']}>
+            <div className={styles['stats-header-left']}>
+              <span className={styles['title']}>任务统计</span>
+              <YakitSegmented
+                size="small"
+                value={todoViewMode}
+                onChange={(v) => setTodoViewMode(v as TodoViewMode)}
+                options={[
+                  {
+                    label: (
+                      <span className={styles['todo-view-option']}>
+                        <ViewBoardsOutlined size={16} color="currentColor" />
+                        看板
+                      </span>
+                    ),
+                    value: 'board',
+                  },
+                  {
+                    label: (
+                      <span className={styles['todo-view-option']}>
+                        <SquareGanttChartOutlined size={16} color="currentColor" />
+                        甘特图
+                      </span>
+                    ),
+                    value: 'gantt',
+                  },
+                ]}
+              />
             </div>
-            {total ? (
-              <>
-                {/* 状态统计区块 */}
-                <AITaskStatisticsStatus list={todoData.progressNumber} />
-                <div className={styles['stats-content']}>
-                  {/* 待办列表区块 */}
-                  <div className={styles['todo-list-wrapper']}>
-                    <div className={styles['todo-list-header']}>
-                      <span className={styles['todo-title']}>待办</span>
-                      <YakitTag border={false} fullRadius size="small">
-                        {todoData.unFinish.length}
-                      </YakitTag>
-                    </div>
-                    <div className={styles['todo-list']}>
-                      {todoData.unFinish.map((item, index) => (
-                        <AIToDoListItem key={index} item={item} />
-                      ))}
-                    </div>
-                  </div>
-                  {/* 已结束 */}
-                  <div className={styles['todo-list-wrapper']}>
-                    <div className={styles['todo-list-header']}>
-                      <span className={styles['todo-title']}>已结束</span>
-                      <YakitTag border={false} fullRadius size="small">
-                        {todoData.finished.length}
-                      </YakitTag>
-                    </div>
-                    <div className={styles['todo-list']}>
-                      {todoData.finished.map((item, index) => (
-                        <AIToDoListItem key={index} item={item} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className={styles['empty-body']}>
-                <YakitEmpty
-                  styles={{ image: { width: 160, height: 140 } }}
-                  title="暂无待办任务"
-                  description="当前任务暂未生成待办任务，请稍后查看"
-                />
-              </div>
-            )}
+            {!!total && todoListCardData && <AIToDoListDetail todoData={todoListCardData} />}
           </div>
+          {total ? (
+            <>
+              <AITaskStatisticsStatus list={todoData.progressNumber} />
+              {todoViewMode === 'board' ? (
+                <AITaskBoard columns={todoData.boardColumns} />
+              ) : (
+                <AITaskGantt items={planItemDetailsData?.todoList?.items || []} />
+              )}
+            </>
+          ) : (
+            <div className={styles['empty-body']}>
+              <YakitEmpty
+                styles={{ image: { width: 160, height: 140 } }}
+                title="暂无待办任务"
+                description="当前任务暂未生成待办任务，请稍后查看"
+              />
+            </div>
+          )}
         </div>
         {showBackgroundProcesses && (
           <div className={styles['section']}>
@@ -885,9 +949,9 @@ const AITaskStatisticsStatus: React.FC<AITaskStatisticsStatusProps> = React.memo
     <div className={styles['stats-overview']}>
       {list.map((item) => (
         <div key={item.key} className={classNames(styles['stat-box'], styles[`stat-${item.color}`])}>
-          <div className={styles['stat-label']}>{item.title}</div>
+          <div className={styles['stat-footer-left']}>{item.footerLeft}</div>
           <div className={styles['stat-footer']}>
-            <div className={styles['stat-footer-left']}>{item.footerLeft}</div>
+            <div className={styles['stat-label']}>{item.title}</div>
             <div className={styles['stat-footer-right']}> {item.footerRight} </div>
           </div>
         </div>

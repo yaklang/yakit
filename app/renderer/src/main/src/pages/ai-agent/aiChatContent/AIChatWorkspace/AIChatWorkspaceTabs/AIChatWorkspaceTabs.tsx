@@ -11,8 +11,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
   BugOutlined,
   FlowOutlined,
-  ListTodoOutlined,
   NewspaperOutlined,
+  PresentationChartLineOutlined,
   XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { FileDefault, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
@@ -40,7 +40,7 @@ export interface AIChatWorkspaceTabsProps {
 
 const TabIcons: Record<AITabsEnumType, React.ReactNode> = {
   [AITabsEnum.File_Preview]: null,
-  [AITabsEnum.Task_Detail]: <ListTodoOutlined color="currentColor" />,
+  [AITabsEnum.Task_Detail]: <PresentationChartLineOutlined color="currentColor" />,
   [AITabsEnum.HTTP]: <FlowOutlined />,
   [AITabsEnum.Risk]: <BugOutlined color="currentColor" />,
   [AITabsEnum.Operation_Log]: <NewspaperOutlined color="currentColor" />,

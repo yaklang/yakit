@@ -33,11 +33,11 @@ import {
 import { PANEL_GAP, PANEL_OFFSET_UP, PANEL_WIDTH_EXTRA_EACH } from '../constants'
 import { tryClaimMilkdownPopup, releaseMilkdownPopup } from '../panelMutex'
 import { shouldSkipModeSlashEnterConfirm, type SlashStep } from './modeSlashEnterGuard'
+import { extractModeSlashFilterKeyword, getModeSlashQueryDeleteRange } from './modeSlashQuery'
 
 export const aiModeSlashFactory = slashFactory('ai-mode-slash-commands')
 export type { SlashStep }
 
-const MODE_SLASH_QUERY_REG = /\/([^\s]*)$/
 const MODE_SLASH_TRIGGER = '/'
 
 type GoalModeKey = 'iterations' | 'acceptance' | 'duration'
@@ -448,9 +448,9 @@ export const AIMilkdownModeSlash: React.FC = () => {
     const { state, dispatch } = view
     const { from } = state.selection
     const textBefore = state.doc.textBetween(Math.max(0, from - 64), from, undefined, '\uFFFC')
-    const match = textBefore.match(MODE_SLASH_QUERY_REG)
-    if (!match) return
-    dispatch(state.tr.deleteRange(from - match[0].length, from).scrollIntoView())
+    const range = getModeSlashQueryDeleteRange(from, textBefore)
+    if (!range) return
+    dispatch(state.tr.deleteRange(range.from, range.to).scrollIntoView())
   })
 
   const resetDraft = useMemoizedFn(() => {
@@ -581,8 +581,8 @@ export const AIMilkdownModeSlash: React.FC = () => {
         return
       }
       const content = slashProvider.current.getContent(view)
-      const match = content?.match(MODE_SLASH_QUERY_REG)
-      if (!match) {
+      const query = extractModeSlashFilterKeyword(content)
+      if (query == null) {
         // 从标签点编辑打开的会话：无 / 也保持面板（返回上一级根/Goal 菜单）
         if (reopenSessionRef.current && visible) {
           keepPanelOpen()
@@ -595,7 +595,6 @@ export const AIMilkdownModeSlash: React.FC = () => {
         releaseMilkdownPopup('modeSlash')
         return
       }
-      const query = match[1] || ''
       // 若 @ mention 已占有，/ 只作为 mention 筛选，不抢开 ModeSlash
       if (!tryClaimMilkdownPopup('modeSlash')) {
         setSlashQuery('')

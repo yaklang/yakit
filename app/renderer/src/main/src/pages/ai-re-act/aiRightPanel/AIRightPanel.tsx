@@ -46,6 +46,7 @@ import { Flex, Tooltip } from 'antd'
 import styles from './AIRightPanel.module.scss'
 import type { AIRightPanelMenuKey, AIRightPanelPaneKey, AIRightPanelProps, AIRightPanelRiskCounts } from './type'
 import { AI_RIGHT_PANEL_INPUT_MAX_WIDTH, AI_RIGHT_PANEL_NORMAL_SLOT_WIDTH } from './type'
+import { getRiskTagEntries, mapSessionRiskLevelCount } from './riskLevelCount'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import AIMainModelTokens from '@/pages/ai-agent/aiChatContent/AIContextToken/AIMainModelTokens'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -77,9 +78,6 @@ const MORE_MENUS: MenuItemDef[] = [
   { key: 'export-log', labelKey: 'AIRightPanel.exportLog', icon: <ExportOutlined /> },
   { key: 'view-log', labelKey: 'AIRightPanel.viewLog', icon: <NewspaperOutlined /> },
 ]
-
-/** 漏洞计数角标的展示顺序；后端标准等级映射到设计稿中的五种颜色。 */
-const RISK_TAG_ORDER: Array<keyof AIRightPanelRiskCounts> = ['serious', 'high', 'medium', 'low', 'info']
 
 /** 执行时长、工具调用统计等数据缺失时的占位符 */
 const PLACEHOLDER = '—'
@@ -444,9 +442,7 @@ const MenuList: React.FC<{
       )
     }
     if (key === 'risk' && riskCounts) {
-      const entries = RISK_TAG_ORDER.map((field) => ({ field, value: riskCounts[field] })).filter(
-        (entry) => !!entry.value,
-      )
+      const entries = getRiskTagEntries(riskCounts)
       if (!entries.length) return null
       return (
         <span className={styles['risk-tag']}>
@@ -583,17 +579,10 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
   const executionData = useCurrentTaskExecution(questionID)
   const levelCount = executionData?.risk_level_count
-  // 快照 risk_level_count 为固定字段，直接映射展示等级；
-  // 首页全量统计侧的多别名归并见 useWelcomePanelStats.getRiskCounts，两处语义不同未合并，调整归并时需同步检查。
+  // 快照映射见 riskLevelCount.mapSessionRiskLevelCount；首页全量别名归并见 useWelcomePanelStats。
   const riskCounts = useCreation<AIRightPanelRiskCounts | undefined>(() => {
     if (!levelCount) return undefined
-    return {
-      serious: levelCount.critical,
-      high: levelCount.high,
-      medium: levelCount.warning,
-      low: levelCount.low,
-      info: levelCount.info + levelCount.other,
-    }
+    return mapSessionRiskLevelCount(levelCount)
   }, [levelCount])
   const riskTotal = levelCount?.total ?? Object.values(riskCounts ?? {}).reduce((total, count) => total + count, 0)
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])

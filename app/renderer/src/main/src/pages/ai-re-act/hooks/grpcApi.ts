@@ -519,11 +519,27 @@ export declare namespace AIAgentGrpcApi {
   }
 
   export interface TodoListUpdateItem {
-    content: string
-    created_at: number
     id: string
+    content: string
     status: AIToDoListStatusEnumType
+    /** 历史序号类字段，常为占位 0/1/递增计数，展示时间请用 *_ts / *_seconds */
+    created_at: number
     updated_at: number
+    /** 真实创建时间（Unix 秒） */
+    created_ts?: number
+    /** 关闭/结束时间（Unix 秒） */
+    closed_ts?: number
+    /** 开始执行/获得焦点时间（Unix 秒） */
+    focus_started_ts?: number
+    /** 已存活秒数（创建至今或至关闭） */
+    age_seconds?: number
+    /** 存活秒数（与 age_seconds 语义接近，跳过/删除展示用） */
+    survival_seconds?: number
+    /** 实际执行/聚焦耗时秒数 */
+    focus_seconds?: number
+    outcome?: string
+    reason?: string
+    refs?: string[]
     scope_task_id?: string
     scope_task_index?: string
   }
