@@ -27,7 +27,14 @@ import { MITMRuleFromModal } from './MITMRuleFromModal'
 import { randomString } from '@/utils/randomUtil'
 import { failed, success, warn } from '@/utils/notification'
 import { MITMRuleExport, MITMRuleImport } from './MITMRuleConfigure/MITMRuleConfigure'
-import { sortMitmRules, resetMitmRulesIndex } from './mitmRuleUtils'
+import {
+  sortMitmRules,
+  resetMitmRulesIndex,
+  filterMitmRuleRows,
+  moveMitmRuleToTop,
+  canDragMitmRules,
+  canMoveMitmRuleToTop,
+} from './mitmRuleUtils'
 import update from 'immutability-helper'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { YakitProtoSwitch } from '@/components/TableVirtualResize/YakitProtoSwitch/YakitProtoSwitch'
@@ -57,6 +64,7 @@ import {
   PlusOutlined,
   SaveOutlined,
   TrashOutlined,
+  ArrowUpToLineOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
@@ -220,6 +228,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     const [modalVisible, setModalVisible] = useState<boolean>(false)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const [isReset, setIsReset] = useState<boolean>(false)
 
     const [isEdit, setIsEdit] = useState<boolean>(false)
     const [isAllBan, setIsAllBan] = useState<boolean>(false)
@@ -231,6 +240,19 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     const [whiteList, setWhiteList] = useState<string[]>([])
     const originalWhiteListRef = useRef<string[]>([])
     const ruleButtonRef = useRef<RuleExportAndImportHandle | null>(null)
+
+    const [addRule, setAddRule] = useState<MITMContentReplacerRule[]>([])
+    const [tableTitleBodyWidth, setTableTitleBodyWidth] = useState<number>(0)
+    const [valueSearch, setValueSearch] = useState<string>('')
+    const [searchFlag, setSearchFlag] = useState<boolean>(false)
+    const [searchRules, setSearchRules] = useState<MITMContentReplacerRule[]>([])
+    const [colorFilter, setColorFilter] = useState<string[]>([])
+    const [noReplaceFilter, setNoReplaceFilter] = useState<string[]>([])
+
+    const enableDrag = useMemo(
+      () => canDragMitmRules(searchFlag, colorFilter, noReplaceFilter),
+      [searchFlag, colorFilter, noReplaceFilter],
+    )
 
     const disableTrafficGuardRef = useRef<boolean>(disableTrafficGuard)
     useUpdateEffect(() => {
@@ -315,7 +337,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     const onSelectAll = useMemoizedFn(
       (newSelectedRowKeys: string[], selected: MITMContentReplacerRule[], checked: boolean) => {
         if (checked) {
-          const rows = searchFlag ? searchRules.filter((ele) => !ele.Disabled) : rules.filter((ele) => !ele.Disabled)
+          // selected 为 TableVirtualResize 当前展示的行（已含搜索与列筛选），避免全选命中被筛选隐藏的规则
+          const rows = selected.filter((ele) => !ele.Disabled)
           setSelectedRowKeys(rows.map((ele: any) => ele.Id))
         } else {
           setSelectedRowKeys([])
@@ -355,6 +378,9 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         item.Id === rowDate.Id ? { ...rowDate, Disabled: !rowDate.Disabled } : item,
       )
       setRules(sortMitmRules(newRules))
+    })
+    const onMoveToTop = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
+      setRules(moveMitmRuleToTop(rules, rowDate))
     })
 
     const rulesRangeList = useCreation(() => {
@@ -415,6 +441,18 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
           width: 350,
           tip: t('MITMRule.http_header_cookie_priority_tip'),
           beforeIconExtra: <div className={styles['table-result-extra']}>{t('MITMRule.on_off')}</div>,
+          filterProps: {
+            filterKey: 'NoReplace',
+            filtersType: 'select',
+            filtersSelectAll: {
+              isAll: true,
+              textAll: t('MITMRule.all'),
+            },
+            filters: [
+              { label: t('YakitButton.replace'), value: 'false' },
+              { label: t('YakitButton.do_not_replace'), value: 'true' },
+            ],
+          },
           render: (_, i: MITMContentReplacerRule) => (
             <YakitSwitchMemo
               ExtraCookies={i.ExtraCookies}
@@ -499,13 +537,35 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
           title: t('MITMRule.hit_color'),
           dataKey: 'Color',
           ellipsis: false,
-          width: 85,
+          width: 100,
           render: (text, record: MITMContentReplacerRule) => (
             <div className={classNames(styles['table-hit-color-content'])}>
               <div className={classNames(styles['table-hit-color'], HitColor[text]?.className)} />
               {(HitColor[text]?.titleUi ? t(HitColor[text]?.titleUi) : HitColor[text]?.title) || '-'}
             </div>
           ),
+          filterProps: {
+            filterKey: 'Color',
+            filtersType: 'select',
+            filterMultiple: true,
+            filters: [
+              { label: t('YakitTable.noColor'), value: '' },
+              ...Object.values(HitColor).map((item) => ({
+                label: item.titleUi ? t(item.titleUi) : item.title,
+                value: item.value,
+              })),
+            ],
+            filterOptionRender: (d: { value: string; label: string }) => (
+              <div className={classNames(styles['table-hit-color-content'])}>
+                {HitColor[d.value] ? (
+                  <div className={classNames(styles['table-hit-color'], HitColor[d.value].className)} />
+                ) : (
+                  <BanOutlined size={10} color="currentColor" style={{ marginRight: 5 }} />
+                )}
+                {d.label}
+              </div>
+            ),
+          },
         },
         {
           title: t('MITMRule.append_tag'),
@@ -525,7 +585,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
           title: t('YakitTable.action'),
           dataKey: 'action',
           fixed: 'right',
-          width: 128,
+          width: 168,
           render: (_, record: MITMContentReplacerRule) => {
             return (
               <div className={styles['table-action-icon']}>
@@ -544,7 +604,22 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                   })}
                   onClick={(e) => {
                     e.stopPropagation()
+                    if (record.Disabled) {
+                      return
+                    }
                     onOpenAddOrEdit(record)
+                  }}
+                />
+                <ArrowUpToLineOutlined
+                  size={16}
+                  className={classNames(styles['action-icon'], {
+                    [styles['action-icon-edit-disabled']]: !canMoveMitmRuleToTop(record.Disabled, enableDrag),
+                  })}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (canMoveMitmRuleToTop(record.Disabled, enableDrag)) {
+                      onMoveToTop(record)
+                    }
                   }}
                 />
                 <BanOutlined
@@ -570,7 +645,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       } catch (error) {
         return columnArr
       }
-    }, [excludeColumnsKey, i18nRefresh])
+    }, [excludeColumnsKey, i18nRefresh, enableDrag])
 
     const onEditRuleAction = useMemoizedFn((checked: boolean, record: MITMContentReplacerRule, item) => {
       record[item.value] = checked
@@ -690,7 +765,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         setRules(rules.map((item) => (item.Id === val.Id ? obj : { ...item })))
       } else {
         setAddRule((prev) => [obj, ...prev])
-        const newRules = [...rules, obj]
+        const newRules = [obj, ...rules]
         const sortedRules = sortMitmRules(newRules)
         setRules(sortedRules)
         setCurrentIndex(sortedRules.findIndex((item) => item.Id === obj.Id))
@@ -1052,17 +1127,26 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       )
     }
 
-    const [addRule, setAddRule] = useState<MITMContentReplacerRule[]>([])
-    const [tableTitleBodyWidth, setTableTitleBodyWidth] = useState<number>(0)
-    const [valueSearch, setValueSearch] = useState<string>('')
-    const [searchRules, setSearchRules] = useState<MITMContentReplacerRule[]>([])
-    const [searchFlag, setSearchFlag] = useState<boolean>(false)
-    const clearnSearch = useMemoizedFn(() => {
+    const onTableChange = useMemoizedFn((_page: number, _limit: number, _sorter: any, filters: any) => {
+      const color = filters?.Color
+      const noReplace = filters?.NoReplace
+      setColorFilter(Array.isArray(color) ? [...color] : [])
+      // NoReplace 为单选筛选，filters 里是字符串：'' 表示全部
+      setNoReplaceFilter(typeof noReplace === 'string' && noReplace !== '' ? [noReplace] : [])
+      // 筛选变化后可见行集合变化，清空选中，避免批量操作命中被筛选隐藏的行
+      setSelectedRowKeys([])
+      setIsAllSelect(false)
+      setIsRefresh((prev) => !prev)
+    })
+    const clearnSearch = useMemoizedFn((flag?: boolean) => {
+      if (!flag) {
+        setColorFilter([])
+        setNoReplaceFilter([])
+        setIsReset(!isReset)
+      }
       setValueSearch('')
       setSearchFlag(false)
       setSearchRules([])
-      setIsRefresh(!isRefresh)
-
       setSelectedRowKeys([])
       setIsAllSelect(false)
     })
@@ -1070,7 +1154,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       setLoading(true)
       const realValue = (searchValue || '').trim()
       if (realValue === '') {
-        clearnSearch()
+        clearnSearch(true)
         setTimeout(() => setLoading(false), 100)
       } else {
         setSearchFlag(true)
@@ -1142,14 +1226,18 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       }),
       [isAllSelect, selectedRowKeys, onSelectAll, onSelectChange],
     )
+    const tableData = useMemo(
+      () => filterMitmRuleRows(rules, searchFlag, searchRules, colorFilter, noReplaceFilter),
+      [searchFlag, searchRules, rules, colorFilter, noReplaceFilter],
+    )
     const pagination = useMemo(
       () => ({
-        total: searchFlag ? searchRules.length : rules.length,
+        total: tableData.length,
         limit: 20,
         page: 1,
         onChange: () => {},
       }),
-      [searchFlag, searchRules.length, rules.length],
+      [tableData.length],
     )
 
     const content = () => {
@@ -1168,6 +1256,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
           <TableVirtualResize<MITMContentReplacerRule>
             currentIndex={currentIndex}
             isRefresh={isRefresh}
+            isReset={isReset}
             titleHeight={42}
             title={
               <div className={styles['table-title-body']}>
@@ -1247,7 +1336,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
               </div>
             }
             renderKey="Id"
-            data={searchFlag ? searchRules : rules}
+            data={tableData}
             rowSelection={rowSelection}
             pagination={pagination}
             loading={loading}
@@ -1255,10 +1344,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             currentSelectItem={currentItem}
             onRowClick={onSetCurrentRow}
             onMoveRow={onMoveRow}
-            enableDragSort={true}
-            enableDrag={true}
+            enableDragSort={enableDrag}
+            enableDrag={enableDrag}
             inMouseEnterTable={inMouseEnterTable}
             onMoveRowEnd={onMoveRowEnd}
+            onChange={onTableChange}
           />
         </div>
       )

@@ -2725,12 +2725,16 @@ export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
                     })}
                     onClick={() => onSelectMultiple(item.data)}
                   >
-                    <span
-                      className={classNames(styles['select-item-text'], 'content-ellipsis')}
-                      title={item.data.label}
-                    >
-                      {item.data.label}
-                    </span>
+                    {filterOptionRender ? (
+                      filterOptionRender(item.data)
+                    ) : (
+                      <span
+                        className={classNames(styles['select-item-text'], 'content-ellipsis')}
+                        title={item.data.label}
+                      >
+                        {item.data.label}
+                      </span>
+                    )}
                     {checked && <CheckIcon className={styles['check-icon']} />}
                   </div>
                 )

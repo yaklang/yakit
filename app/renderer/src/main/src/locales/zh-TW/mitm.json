@@ -8,6 +8,7 @@
     "Literal_matching": "字面量匹配",
     "Literal_matching_desc": "開啟後會將規則內容按“普通文字”處理，並自動轉義正則特殊字元。例如 1.0 會被轉換為 1\\.0，避免 .*+ 等字元被當作正規表示式解析。",
     "replacement_result": "替換結果",
+    "all": "全部",
     "http_header_cookie_priority_tip": "HTTP Header 與 HTTP Cookie 優先順序較高，會覆蓋文字內容",
     "on_off": "開/關",
     "discard_result": "丟棄結果",
