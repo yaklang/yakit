@@ -37,7 +37,6 @@ import { AITaskStatus } from '../hooks/grpcApi'
 import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import emiter from '@/utils/eventBus/eventBus'
 import { PositionOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { CheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { useDebounceFn, useCreation, useMemoizedFn } from 'ahooks'
 import {
   useVirtuosoInitialRender,
@@ -168,17 +167,6 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   }),
 )
 
-const renderFooterStatus = (text: string) => (
-  <div className={styles['footer-loading']}>
-    <div className={styles['footer-status']} style={{ marginTop: 8, padding: '0 8px' }}>
-      <CheckSolid size={16} color="currentColor" className={styles['footer-status-icon']} />
-      <div className={styles['footer-loading-title']}>
-        <ScrollText text={text} />
-      </div>
-    </div>
-  </div>
-)
-
 const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
   forwardRef((_props, ref) => {
     const { t } = useI18nNamespaces(['aiAgent'])
@@ -190,7 +178,6 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
     const chatLength = useStore(store, (state) => state.chatElements.length)
     const casualTitle = useStore(store, (state) => state.currentLoadingTitle.casualTitle)
     const planTitle = useStore(store, (state) => state.currentLoadingTitle.planTitle)
-    const execute = useStore(store, (state) => state.execute)
     // 任务规划运行态：进入任务规划后底部 loading 从 planTitle 取值
     const taskCoordinatorId = useStore(store, (state) => state.currentChatStatus.coordinatorId)
     const taskStatus = useStore(store, (state) => state.currentChatStatus.status)
@@ -290,11 +277,9 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
     )
 
     const Footer = useCallback(() => {
-      if (!execute) return chatLength ? renderFooterStatus('当前会话已停止') : null
-      // 任务规划与自由对话都结束（两侧 loading 文案皆空）才显示「当前会话已结束」
-      if (!casualTitle && !planTitle) return renderFooterStatus('当前会话已结束')
-      // 任务规划进行中优先 planTitle，否则优先 casualTitle；一侧已空时回退另一侧
+      // 结束/停止等文案由后端写入 loading title，前端只做展示
       const mainTitle = (isTaskPlanning ? planTitle : casualTitle) || casualTitle || planTitle
+      if (!mainTitle) return null
       return (
         <div className={styles['footer-loading']}>
           <Loading size={16} style={{ marginTop: 8, padding: '0 8px' }}>
@@ -304,7 +289,7 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
           </Loading>
         </div>
       )
-    }, [casualTitle, planTitle, execute, chatLength, isTaskPlanning])
+    }, [casualTitle, planTitle, isTaskPlanning])
     const Header = useCallback(
       () =>
         grpcLoadMoreLoading ? (

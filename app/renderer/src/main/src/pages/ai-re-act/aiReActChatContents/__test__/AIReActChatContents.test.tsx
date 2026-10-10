@@ -205,7 +205,7 @@ describe('AIReActChatContents 首屏加载', () => {
     render(chatElement())
     expect(isSpinning()).toBe(true)
     expect(getScroller()).toHaveStyle({ visibility: 'hidden' })
-    expect(screen.getByText('当前会话已停止')).not.toBeVisible()
+    expect(screen.queryByText('当前会话已停止')).not.toBeInTheDocument()
     expect(autoScroll).not.toHaveBeenCalled()
 
     await finishPositioning()
@@ -371,21 +371,19 @@ describe('AIReActChatContents 首屏加载', () => {
 })
 
 describe('AIReActChatContents Footer loading 文案', () => {
-  it('execute 且双标题皆空时显示「当前会话已结束」', async () => {
+  it('双标题皆空时不渲染 Footer', async () => {
     store.setState({
-      execute: true,
       chatElements: createItems(1),
       currentLoadingTitle: { casualTitle: '', planTitle: '' },
     })
     render(chatElement())
     await finishPositioning()
-    expect(screen.getByText('当前会话已结束')).toBeVisible()
+    expect(screen.queryByText('当前会话已结束')).not.toBeInTheDocument()
     expect(screen.queryByText('当前会话已停止')).not.toBeInTheDocument()
   })
 
   it('任务规划中 planTitle 为空时回退显示 casualTitle', async () => {
     store.setState({
-      execute: true,
       chatElements: createItems(1),
       currentLoadingTitle: { casualTitle: '加载中', planTitle: '' },
       currentChatStatus: {
@@ -397,18 +395,15 @@ describe('AIReActChatContents Footer loading 文案', () => {
     render(chatElement())
     await finishPositioning()
     expect(screen.getByText('加载中')).toBeVisible()
-    expect(screen.queryByText('当前会话已结束')).not.toBeInTheDocument()
   })
 
   it('自由对话中 casualTitle 为空时回退显示 planTitle', async () => {
     store.setState({
-      execute: true,
       chatElements: createItems(1),
       currentLoadingTitle: { casualTitle: '', planTitle: '规划中' },
     })
     render(chatElement())
     await finishPositioning()
     expect(screen.getByText('规划中')).toBeVisible()
-    expect(screen.queryByText('当前会话已结束')).not.toBeInTheDocument()
   })
 })
