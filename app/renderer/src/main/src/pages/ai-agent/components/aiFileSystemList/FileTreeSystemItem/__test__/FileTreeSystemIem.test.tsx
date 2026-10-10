@@ -6,6 +6,8 @@ import type * as FileTreeSystemItemModule from '../FileTreeSystemIem'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import emiter from '@/utils/eventBus/eventBus'
 import { yakitNotify } from '@/utils/notification'
+import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
+import { setClipboardText } from '@/utils/clipboard'
 import {
   getPathJoin,
   grpcFetchCreateFile,
@@ -14,8 +16,8 @@ import {
 } from '@/pages/yakRunner/utils'
 
 vi.mock('@/pages/yakRunner/FileTree/icon', () => ({ KeyToIcon: { file: { iconPath: 'file.svg' } } }))
-vi.mock('@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu', () => ({
-  YakitDropdownMenu: ({ children }: React.PropsWithChildren) => children,
+vi.mock('@/components/yakitUI/YakitMenu/showByRightContext', () => ({
+  showByRightContext: vi.fn(),
 }))
 vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
   YakitInput: React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
@@ -157,5 +159,64 @@ describe('FileTreeSystemItem（启用 React Compiler）', () => {
     expect(yakitNotify).toHaveBeenCalledWith('error', expect.any(String))
     expect(setSelected).not.toHaveBeenCalled()
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+
+  describe('右键菜单', () => {
+    it('右键应调用 showByRightContext，并带上节点菜单与回调', () => {
+      const treeMenuData = vi.fn(() => [{ key: 'custom', label: '自定义' }])
+      const handleTreeDropdown = vi.fn()
+      render(
+        <FileTreeSystemItem
+          watchToken="watch"
+          data={base}
+          setSelected={vi.fn()}
+          treeMenuData={treeMenuData}
+          handleTreeDropdown={handleTreeDropdown}
+        />,
+      )
+
+      fireEvent.contextMenu(screen.getByText('old.txt'))
+
+      expect(treeMenuData).toHaveBeenCalledWith(base)
+      expect(showByRightContext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          width: 180,
+          data: [{ key: 'custom', label: '自定义' }],
+          onClick: expect.any(Function),
+        }),
+      )
+
+      const menuProps = vi.mocked(showByRightContext).mock.calls[0][0] as unknown as {
+        onClick: (info: { key: string }) => void
+      }
+      menuProps.onClick({ key: 'custom' })
+      expect(handleTreeDropdown).toHaveBeenCalledWith(base, 'custom')
+    })
+
+    it('未传自定义菜单时右键应使用默认菜单项并分发内置动作', () => {
+      render(<FileTreeSystemItem watchToken="watch" data={base} setSelected={vi.fn()} />)
+
+      fireEvent.contextMenu(screen.getByText('old.txt'))
+
+      expect(showByRightContext).toHaveBeenCalledTimes(1)
+      const menuProps = vi.mocked(showByRightContext).mock.calls[0][0] as unknown as {
+        data: Array<{ key?: string }>
+        onClick: (info: { key: string }) => void
+      }
+      expect(menuProps.data.map((item) => item.key).filter(Boolean)).toEqual(
+        expect.arrayContaining(['sendToChat', 'path', 'openFolder']),
+      )
+
+      menuProps.onClick({ key: 'path' })
+      expect(setClipboardText).toHaveBeenCalledWith(base.path)
+    })
+
+    it('isShowRightMenu=false 时右键不应弹出菜单', () => {
+      render(<FileTreeSystemItem watchToken="watch" data={base} setSelected={vi.fn()} isShowRightMenu={false} />)
+
+      fireEvent.contextMenu(screen.getByText('old.txt'))
+
+      expect(showByRightContext).not.toHaveBeenCalled()
+    })
   })
 })

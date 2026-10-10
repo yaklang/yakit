@@ -1,12 +1,12 @@
 import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import { FolderOpenOutlined, FolderOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { type FC, useEffect, useMemo, useRef, useState } from 'react'
+import { type FC, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import styles from './FileTreeSystemItem.module.scss'
-import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import { setClipboardText } from '@/utils/clipboard'
 import type { FileTreeSystemItemProps } from '../type'
 import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { YakitProtoCheckbox } from '@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox'
 import type { AIMentionCommandParams } from '../../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import emiter from '@/utils/eventBus/eventBus'
@@ -309,63 +309,60 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
         break
     }
   }
+
+  const onContextMenu = useMemoizedFn((e: MouseEvent) => {
+    if (isShowRightMenu === false) return
+    e.preventDefault()
+    e.stopPropagation()
+    showByRightContext({
+      width: 180,
+      data: treeMenuData?.(data) || menuData,
+      onClick: ({ key }) => {
+        handleDropdown(key)
+      },
+    })
+  })
+
   return (
-    <YakitDropdownMenu
-      menu={{
-        data: treeMenuData?.(data) || menuData,
-        onClick({ domEvent, key }) {
-          domEvent.preventDefault()
-          domEvent.stopPropagation()
-          handleDropdown(key)
-        },
-      }}
-      dropdown={{
-        trigger: ['contextMenu'],
-        placement: 'bottomRight',
-        getPopupContainer: () => document.body,
-        open: isShowRightMenu,
-      }}
-    >
-      <div className={styles['file-tree-system-item']}>
-        {checkable && (
-          <YakitProtoCheckbox
-            wrapperStyle={{ marginBottom: 2 }}
-            checked={checked}
+    <div className={styles['file-tree-system-item']} onContextMenu={onContextMenu}>
+      {checkable && (
+        <YakitProtoCheckbox
+          wrapperStyle={{ marginBottom: 2 }}
+          checked={checked}
+          onChange={(e) => {
+            e.stopPropagation()
+            setChecked?.(e.target.checked)
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        />
+      )}
+      {data.isFolder ? (
+        <FolderIcon className={styles['folder-icon']} color="currentColor" />
+      ) : (
+        <img src={KeyToIcon[data.icon].iconPath} alt="" />
+      )}
+      {isInput ? (
+        <div className={styles['file-tree-input-wrapper']}>
+          <YakitInput
+            ref={inputRef}
+            wrapperClassName={styles['file-tree-input']}
+            className={styles['file-tree-input']}
+            value={inputVal}
             onChange={(e) => {
-              e.stopPropagation()
-              setChecked?.(e.target.checked)
+              setInputVal(e.target.value)
             }}
-            onClick={(e) => {
-              e.stopPropagation()
-            }}
+            autoFocus
+            onBlur={onInputOk}
+            onPressEnter={onInputOk}
+            size="small"
           />
-        )}
-        {data.isFolder ? (
-          <FolderIcon className={styles['folder-icon']} color="currentColor" />
-        ) : (
-          <img src={KeyToIcon[data.icon].iconPath} alt="" />
-        )}
-        {isInput ? (
-          <div className={styles['file-tree-input-wrapper']}>
-            <YakitInput
-              ref={inputRef}
-              wrapperClassName={styles['file-tree-input']}
-              className={styles['file-tree-input']}
-              value={inputVal}
-              onChange={(e) => {
-                setInputVal(e.target.value)
-              }}
-              autoFocus
-              onBlur={onInputOk}
-              onPressEnter={onInputOk}
-              size="small"
-            />
-          </div>
-        ) : (
-          <span>{data.name}</span>
-        )}
-      </div>
-    </YakitDropdownMenu>
+        </div>
+      ) : (
+        <span>{data.name}</span>
+      )}
+    </div>
   )
 }
 

@@ -530,7 +530,10 @@
     .fileTree-tree {
       padding: 0 12px;
       flex: 1;
-      overflow: auto;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
   }
 }

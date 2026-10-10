@@ -70,6 +70,9 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
     return count
   }, [showFileCount, uniquePaths])
 
+  // 多根路径时保持内容自适应 + 外层滚动；仅单根时撑满并启用 Tree 虚拟滚动
+  const listFillHeight = fillHeight && uniquePaths.length === 1
+
   const renderContent = () => {
     if (isOpen && uniquePaths.length === 0) {
       return (
@@ -93,6 +96,7 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
         path={item.path}
         isOpen={isOpen}
         isFolder={item.isFolder}
+        fillHeight={listFillHeight}
         selected={selected}
         setSelected={setSelected}
         onTreeDragStart={onTreeDragStart}
@@ -180,7 +184,15 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
           </div>
         )}
       </div>
-      {expanded && <div className={styles['file-tree-system-body']}>{renderContent()}</div>}
+      {expanded && (
+        <div
+          className={classNames(styles['file-tree-system-body'], {
+            [styles['file-tree-system-body-virtual']]: listFillHeight,
+          })}
+        >
+          {renderContent()}
+        </div>
+      )}
     </div>
   )
 }

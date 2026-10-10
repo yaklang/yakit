@@ -1,17 +1,20 @@
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tree } from 'antd'
 import FileTreeSystemItem from '../FileTreeSystemItem/FileTreeSystemIem'
-import { forwardRef, memo, useCallback, useImperativeHandle, useState, useTransition } from 'react'
+import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useRef, useState, useTransition } from 'react'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import useFileTree from '@/pages/ai-re-act/hooks/useFileTree'
 import { cloneDeep } from 'lodash'
+import classNames from 'classnames'
 import styles from './FileTreeSystemList.module.scss'
 import type { FileTreeSystemListProps, FileTreeSystemListRef } from '../type'
 import { TREE_DRAG_KEY } from '@/pages/ai-agent/aiChatWelcome/hooks/useAIChatDrop'
-import { useControllableValue, useMount } from 'ahooks'
+import { useControllableValue, useMemoizedFn, useMount, useSize } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
 
 const { ipcRenderer } = window.require('electron')
+
+const TREE_ITEM_HEIGHT = 24
 
 const normalizePath = (p: string) => {
   return p
@@ -30,6 +33,7 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
     path,
     isOpen,
     isFolder = true,
+    fillHeight = false,
     selected,
     setSelected,
     onTreeDragStart,
@@ -50,7 +54,11 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
     getDetailMap,
   }))
 
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const size = useSize(wrapperRef)
+
   const [expandedKeys, setExpandedKeys] = useState<string[]>([])
+  const expandedKeySet = useMemo(() => new Set(expandedKeys), [expandedKeys])
 
   const [loadedKeys, setLoadedKeys] = useState<string[]>([])
   const [data, setData] = useControllableValue<FileNodeProps[]>(props, {
@@ -157,10 +165,40 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
       emiter.off('fileSystemDefaultExpand', processExpand)
     }
   })
+
+  const treeHeight = fillHeight && size?.height ? size.height : undefined
+
+  const titleRender = useMemoizedFn((nodeData: FileNodeProps) => {
+    return (
+      <FileTreeSystemItem
+        watchToken={fileTree.watchToken.current!}
+        data={nodeData}
+        isOpen={isOpen}
+        isShowRightMenu={isShowRightMenu}
+        treeMenuData={treeMenuData}
+        handleTreeDropdown={handleTreeDropdown}
+        onResetTree={onResetTreeList}
+        expanded={expandedKeySet.has(nodeData.path)}
+        checkable={checkable}
+        checked={!!checkedKeys?.find((ele) => ele?.path === nodeData.path)}
+        setChecked={(c) => setCheckedKeys?.(c, nodeData)}
+        selected={selected}
+        setSelected={setSelected}
+      />
+    )
+  })
+
   return (
-    <div className={styles['file-tree-system-list']}>
+    <div
+      ref={wrapperRef}
+      className={classNames(styles['file-tree-system-list'], {
+        [styles['file-tree-system-list-fill']]: fillHeight,
+      })}
+    >
       <Tree.DirectoryTree
         draggable
+        height={treeHeight}
+        itemHeight={TREE_ITEM_HEIGHT}
         switcherIcon={<ChevronDownOutlined color="currentColor" />}
         expandedKeys={expandedKeys}
         fieldNames={{ title: 'name', key: 'path', children: 'children' }}
@@ -197,23 +235,7 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
         }}
         loadedKeys={loadedKeys}
         loadData={loadData}
-        titleRender={(nodeData) => (
-          <FileTreeSystemItem
-            watchToken={fileTree.watchToken.current!}
-            data={nodeData}
-            isOpen={isOpen}
-            isShowRightMenu={isShowRightMenu}
-            treeMenuData={treeMenuData}
-            handleTreeDropdown={handleTreeDropdown}
-            onResetTree={onResetTreeList}
-            expanded={expandedKeys.includes(nodeData.path)}
-            checkable={checkable}
-            checked={!!checkedKeys?.find((ele) => ele?.path === nodeData.path)}
-            setChecked={(c) => setCheckedKeys?.(c, nodeData)}
-            selected={selected}
-            setSelected={setSelected}
-          />
-        )}
+        titleRender={titleRender}
       />
     </div>
   )

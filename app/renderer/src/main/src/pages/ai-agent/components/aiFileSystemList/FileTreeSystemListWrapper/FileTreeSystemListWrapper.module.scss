@@ -5,6 +5,11 @@
   flex-direction: column;
   &-body {
     overflow: auto;
+    &-virtual {
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
   }
   &-fill {
     height: 100%;

@@ -1,5 +1,10 @@
 .file-tree-system-list {
-  // overflow: hidden auto;
+  &-fill {
+    flex: 1 1 0;
+    min-height: 80px;
+    height: 100%;
+    overflow: hidden;
+  }
 
   :global(.ant-tree-treenode-draggable .ant-tree-draggable-icon) {
     display: none;
