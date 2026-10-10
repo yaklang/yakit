@@ -87,7 +87,7 @@ describe('AIRightPanel layout contract', () => {
     const agentChatSource = readFileSync(agentChatStylePath, 'utf8')
 
     // Virtuoso 的 Footer 与内部 List 是兄弟节点，脱离 List 轨道后需自行套用轨道 mixin
-    // （原 .end 已合并进 .footer-loading / .footer-status）
+    // （原 .end 已合并进 .footer-loading）
     const footerLoadingBlock = contentsSource.match(/\.footer-loading\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? ''
     expect(footerLoadingBlock).toContain('@include mixin.ai-right-panel-content-track')
 
