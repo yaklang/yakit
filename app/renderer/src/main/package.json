@@ -1,6 +1,6 @@
 {
   "name": "main",
-  "version": "2.09.25",
+  "version": "2.10.10",
   "private": true,
   "dependencies": {
     "@ant-design/charts": "^2.6.7",
