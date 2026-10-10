@@ -446,6 +446,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             filtersType: 'select',
             filtersSelectAll: {
               isAll: true,
+              textAll: t('MITMRule.all'),
             },
             filters: [
               { label: t('YakitButton.replace'), value: 'false' },
@@ -1132,6 +1133,10 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       setColorFilter(Array.isArray(color) ? [...color] : [])
       // NoReplace 为单选筛选，filters 里是字符串：'' 表示全部
       setNoReplaceFilter(typeof noReplace === 'string' && noReplace !== '' ? [noReplace] : [])
+      // 筛选变化后可见行集合变化，清空选中，避免批量操作命中被筛选隐藏的行
+      setSelectedRowKeys([])
+      setIsAllSelect(false)
+      setIsRefresh((prev) => !prev)
     })
     const clearnSearch = useMemoizedFn((flag?: boolean) => {
       if (!flag) {
