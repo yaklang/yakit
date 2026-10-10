@@ -184,6 +184,39 @@ export const apiSetTagForRisk: (params: SetTagForRiskRequest) => Promise<SetTagF
   })
 }
 
+export interface BatchSetRiskTagsRequest {
+  Filter?: QueryRisksRequest
+  SetTags?: string[]
+  VerifierUid?: string
+  FixTime?: number
+  FixSuggestion?: string
+  Ids?: number[]
+  Hashes?: string[]
+  Token?: string
+  RiskTypeVerbose?: string
+  SetSeverity?: string
+  SeverityScore?: number
+  /** 处置原因（对齐 proto TagReason，表单处置说明） */
+  TagReason?: string
+}
+
+export interface BatchSetRiskTagsResponse {
+  UpdatedCount?: number
+}
+
+/** BatchSetRiskTags：批量/单条更新风险编辑字段 */
+export const apiBatchSetRiskTags: (params: BatchSetRiskTagsRequest) => Promise<BatchSetRiskTagsResponse> = (params) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('BatchSetRiskTags', params)
+      .then(resolve)
+      .catch((e) => {
+        yakitNotify('error', tOriginal('YakitNotification.settingFailed', { error: e + '' }))
+        reject(e)
+      })
+  })
+}
+
 export interface RiskFieldGroupResponse {
   RiskIPGroup: FieldGroup[]
   RiskLevelGroup: FieldName[]

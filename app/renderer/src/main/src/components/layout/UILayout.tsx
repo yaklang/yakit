@@ -1504,13 +1504,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   const engineNotice = useCreation(() => {
     if (!engineLink || isEnpriTraceAgent()) return null
-    return (
-      <UIOpNotice
-        isEngineLink={engineLink}
-        isRemoteMode={isRemoteEngine}
-        onLogin={() => emiter.emit('onOpenLogin', '')}
-      />
-    )
+    return <UIOpNotice isEngineLink={engineLink} isRemoteMode={isRemoteEngine} />
   }, [engineLink, isRemoteEngine])
 
   /** ---------- 软件顶部展示录屏中状态 Start ---------- */

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Badge, Tooltip, Form, Divider } from 'antd'
+import { Badge, Tooltip, Form } from 'antd'
 import { UISettingSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/UISettingSvgIcon'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
@@ -87,7 +87,7 @@ import yakitImg from '../../assets/yakit.jpg'
 import classNames from 'classnames'
 import styles from './funcDomain.module.scss'
 import { useEETaskNotificationHook } from '../MessageCenter/useEETaskNotificationHook'
-import { apiFetchMessageRead, apiFetchQueryMessage } from '../MessageCenter/utils'
+import { useMessageUnread } from '../MessageCenter/useMessageUnread'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { randomString } from '@/utils/randomUtil'
 import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
@@ -108,13 +108,9 @@ import { useDownloadYakit } from './update/useDownloadYakit'
 import { JSONParseLog } from '@/utils/tool'
 import { SystemInfo } from '@/constants/hardware'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import cloneDeep from 'lodash/cloneDeep'
 import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
 import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
 import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
-const MessageCenter = React.lazy(() =>
-  import('../MessageCenter/MessageCenter').then((m) => ({ default: m.MessageCenter })),
-)
 const TaskNotification = React.lazy(() =>
   import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskNotification })),
 )
@@ -268,6 +264,33 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     avatarColor,
   })
 
+  const unreadMessageCount = useMessageUnread()
+  const hasUnreadMessage = unreadMessageCount > 0
+  const userMenuWithUnread = useMemo(
+    () =>
+      userMenu.map((item) => {
+        if (!('key' in item) || item.key !== 'message-center') return item
+        return {
+          ...item,
+          label: (
+            <span className={styles['message-center-menu-label']}>
+              <span>{t('FuncDomain.messageCenter')}</span>
+              {unreadMessageCount > 0 && (
+                <span
+                  className={styles['message-center-menu-count']}
+                  aria-label={`${t('FuncDomain.unreadMessages')}: ${unreadMessageCount}`}
+                  title={String(unreadMessageCount)}
+                >
+                  {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                </span>
+              )}
+            </span>
+          ),
+        }
+      }),
+    [userMenu, unreadMessageCount, t, i18nRefresh],
+  )
+
   const { screenRecorderInfo, setRecording } = useScreenRecorder()
   useEffect(() => {
     const offData = yakitStream.onData(screenRecorderInfo.token, async () => {})
@@ -375,96 +398,121 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         {!showProjectManage && !isJudgeLicense && (
           <>
             <div className={styles['divider-wrapper']}></div>
-            <div
-              className={classNames(styles['user-wrapper'], {
-                [styles['user-wrapper-dynamic']]: dynamicConnect,
-              })}
-            >
-              {userInfo.isLogin ? (
-                <>
-                  {userInfo.platform === 'company' ? (
+            {userInfo.isLogin ? (
+              <>
+                {userInfo.platform === 'company' ? (
+                  <YakitDropdownMenu
+                    key={i18nRefresh}
+                    menu={{
+                      width: 206,
+                      data: userMenuWithUnread.map((item) => {
+                        const obj = { ...item }
+                        // @ts-expect-error 类型定义不完整，需要忽略此行
+                        if (obj?.label && typeof obj.label === 'string') {
+                          // @ts-expect-error 类型定义不完整，需要忽略此行
+                          obj.label = t(obj.label)
+                        }
+                        return obj
+                      }),
+                      onClick: (e) => {
+                        const { key } = e
+                        setDynamicMenuOpen(false)
+                        onUserMenuClick(key)
+                      },
+                    }}
+                    dropdown={{
+                      placement: 'bottom',
+                      trigger: ['click'],
+                      open: dynamicMenuOpen,
+                      onOpenChange: (value: boolean) => {
+                        setDynamicMenuOpen(value)
+                      },
+                    }}
+                  >
                     <div
-                      className={classNames({
-                        [styles['user-info']]: !dynamicConnect,
-                        [styles['user-info-dynamic']]: dynamicConnect,
+                      data-testid="user-menu-trigger"
+                      className={classNames(styles['user-wrapper'], {
+                        [styles['user-wrapper-dynamic']]: dynamicConnect,
                       })}
                     >
-                      <YakitDropdownMenu
-                        key={i18nRefresh}
-                        menu={{
-                          width: 206,
-                          data: userMenu.map((item) => {
-                            const obj = cloneDeep(item)
-                            // @ts-expect-error 类型定义不完整，需要忽略此行
-                            if (obj?.label && typeof obj.label === 'string') {
-                              // @ts-expect-error 类型定义不完整，需要忽略此行
-                              obj.label = t(obj.label)
-                            }
-                            return obj
-                          }),
-                          onClick: (e) => {
-                            const { key } = e
-                            setDynamicMenuOpen(false)
-                            onUserMenuClick(key)
-                          },
-                        }}
-                        dropdown={{
-                          placement: 'bottom',
-                          trigger: ['click'],
-                          onOpenChange: (value: boolean) => {
-                            setDynamicMenuOpen(value)
-                          },
-                        }}
+                      <div
+                        className={classNames({
+                          [styles['user-info']]: !dynamicConnect,
+                          [styles['user-info-dynamic']]: dynamicConnect,
+                        })}
                       >
-                        <UserAvatarIMBadge badge={imControlBadge} onBadgeClick={() => setRobotControlModal(true)}>
+                        <UserAvatarIMBadge
+                          hasUnreadMessage={hasUnreadMessage}
+                          badge={imControlBadge}
+                          onBadgeClick={() => setRobotControlModal(true)}
+                        >
                           {judgeDynamic(userInfo, avatarColor.current, dynamicMenuOpen, dynamicConnect, t)}
                         </UserAvatarIMBadge>
-                      </YakitDropdownMenu>
+                      </div>
                     </div>
-                  ) : (
-                    <div className={styles['user-info']}>
-                      <YakitPopover
-                        classNames={{ root: classNames(styles['ui-op-plus-dropdown']) }}
-                        placement={'bottomRight'}
-                        trigger={'click'}
-                        destroyOnHidden={true}
-                        content={
-                          <CeUserMenuContent
-                            menu={userMenu}
-                            onItemClick={(key) => {
-                              setCeUserMenuShow(false)
-                              onUserMenuClick(key)
-                            }}
-                          />
-                        }
-                        open={ceUserMenuShow && !loginShow}
-                        onOpenChange={(visible) => {
-                          if (loginShow) {
-                            setCeUserMenuShow(false)
-                            return
-                          }
-                          if (visible) {
-                            onUpdateApiKey()
-                          }
-                          setCeUserMenuShow(visible)
+                  </YakitDropdownMenu>
+                ) : (
+                  <YakitPopover
+                    classNames={{ root: classNames(styles['ui-op-plus-dropdown']) }}
+                    placement={'bottomRight'}
+                    trigger={'click'}
+                    destroyOnHidden={true}
+                    content={
+                      <CeUserMenuContent
+                        menu={userMenuWithUnread}
+                        onItemClick={(key) => {
+                          setCeUserMenuShow(false)
+                          onUserMenuClick(key)
                         }}
-                      >
-                        <UserAvatarIMBadge badge={imControlBadge} onBadgeClick={() => setRobotControlModal(true)}>
+                      />
+                    }
+                    open={ceUserMenuShow && !loginShow}
+                    onOpenChange={(visible) => {
+                      if (loginShow) {
+                        setCeUserMenuShow(false)
+                        return
+                      }
+                      if (visible) {
+                        onUpdateApiKey()
+                      }
+                      setCeUserMenuShow(visible)
+                    }}
+                  >
+                    <div
+                      data-testid="user-menu-trigger"
+                      className={classNames(styles['user-wrapper'], {
+                        [styles['user-wrapper-dynamic']]: dynamicConnect,
+                      })}
+                    >
+                      <div className={styles['user-info']}>
+                        <UserAvatarIMBadge
+                          hasUnreadMessage={hasUnreadMessage}
+                          badge={imControlBadge}
+                          onBadgeClick={() => setRobotControlModal(true)}
+                        >
                           <img
                             src={userInfo[UserPlatformType[userInfo.platform || ''].img] || yakitImg}
                             style={{ width: 24, height: 24, borderRadius: '50%' }}
                           />
                         </UserAvatarIMBadge>
-                      </YakitPopover>
+                      </div>
                     </div>
-                  )}
-                </>
-              ) : (
-                <div className={styles['user-show']} onClick={() => setLoginShow(true)}>
+                  </YakitPopover>
+                )}
+              </>
+            ) : (
+              <div
+                data-testid="user-menu-trigger"
+                className={classNames(styles['user-wrapper'], {
+                  [styles['user-wrapper-dynamic']]: dynamicConnect,
+                })}
+                onClick={() => setLoginShow(true)}
+              >
+                <div className={styles['user-show']}>
                   <UserCircleSolid color="#CCD2DE" size={30} />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -1579,7 +1627,6 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
 interface UIOpNoticeProp {
   isEngineLink: boolean
   isRemoteMode: boolean
-  onLogin: () => void
 }
 
 export interface UpdateContentProp {
@@ -1606,8 +1653,8 @@ interface SetUpdateContentProp extends FetchUpdateContentProp {
 }
 
 export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
-  const { isEngineLink, isRemoteMode, onLogin } = props
-  const { t } = useI18nNamespaces(['layout', 'yakitUi'])
+  const { isEngineLink, isRemoteMode } = props
+  const { t, i18nRefresh } = useI18nNamespaces(['layout', 'yakitUi', 'components'])
 
   const { userInfo } = useStore()
 
@@ -1970,87 +2017,9 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       })
   })
 
-  const [messageList, setMessageList] = useState<API.MessageLogDetail[]>([])
-  const isUpdate = useMemo(() => {
-    const unRead = messageList.filter((item) => !item.isRead).length > 0
-    return (
-      (yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
-      lowerYaklangLastVersion ||
-      unRead
-    )
-  }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, messageList])
-
-  const [noticeType, setNoticeType] = useState<'message' | 'update'>('update')
-  useUpdateEffect(() => {
-    if (userInfo.isLogin) {
-      setNoticeType('message')
-    } else {
-      setNoticeType('update')
-    }
-  }, [userInfo.isLogin])
-
-  const getAllMessage = useMemoizedFn(() => {
-    setShow(false)
-    emiter.emit('openAllMessageNotification')
-  })
-
-  const onFetchMessage = useMemoizedFn(() => {
-    apiFetchQueryMessage(
-      {
-        page: 1,
-        limit: 20,
-      },
-      {
-        isRead: 'false',
-      },
-    )
-      .then((res) => {
-        setMessageList(res.data || [])
-      })
-      .catch((err) => {
-        failed(err)
-      })
-  })
-
-  // 初始化获取消息中心
-  useEffect(() => {
-    if (userInfo.isLogin) {
-      onFetchMessage()
-    }
-  }, [userInfo.isLogin, show])
-
-  const onRefreshMessageSocketFun = useMemoizedFn((data: string) => {
-    try {
-      const obj: API.MessageLogDetail = JSONParseLog(data, { page: 'FuncDomain', fun: 'onRefreshMessageSocketFun' })
-      if (obj.isRead === false) {
-        setMessageList((prev) => {
-          return [obj, ...prev]
-        })
-      }
-    } catch (error) {}
-  })
-
-  useEffect(() => {
-    emiter.on('onRefreshMessageSocket', onRefreshMessageSocketFun)
-    return () => {
-      emiter.off('onRefreshMessageSocket', onRefreshMessageSocketFun)
-    }
-  }, [])
-
-  const onRedAllMessage = useMemoizedFn(() => {
-    apiFetchMessageRead({
-      isAll: true,
-      hash: '',
-    })
-      .then((ok) => {
-        if (ok) {
-          onFetchMessage()
-        }
-      })
-      .catch((err) => {
-        failed(err)
-      })
-  })
+  const isUpdate =
+    (yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
+    lowerYaklangLastVersion
 
   const notice = useMemo(() => {
     const isUpdateYakit = yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)
@@ -2062,128 +2031,75 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       <div className={styles['ui-op-plus-wrapper']}>
         <div className={styles['ui-op-notice-body']}>
           <div className={styles['notice-version-header']}>
-            <YakitRadioButtons
-              value={noticeType}
-              onChange={(e) => {
-                const value = e.target.value
-                setNoticeType(value as 'message' | 'update')
-              }}
-              buttonStyle="solid"
-              options={[
-                {
-                  label: '消息中心',
-                  value: 'message',
-                },
-                {
-                  label: '更新通知',
-                  value: 'update',
-                },
-              ]}
-            />
-            {noticeType === 'update' ? (
-              <div className={styles['switch-title']}>
-                启动检测更新
-                <YakitSwitch
-                  style={{ marginLeft: 4 }}
-                  showInnerText={true}
-                  size="large"
-                  checked={!isCheck}
-                  onChange={(val: boolean) => {
-                    setLocalValue(LocalGV.NoAutobootLatestVersionCheck, !val)
-                    setIsCheck(!val)
-                  }}
-                />
-              </div>
-            ) : (
-              <div className={styles['message-title']}>
-                {userInfo.isLogin && (
-                  <>
-                    {messageList.length > 0 && (
-                      <>
-                        <YakitButton type="text" style={{ fontWeight: 400 }} onClick={onRedAllMessage}>
-                          全部已读
-                        </YakitButton>
-                        <Divider type={'vertical'} style={{ margin: '0px 8px 0px' }} />
-                      </>
-                    )}
-                    <YakitButton type="text" style={{ fontWeight: 400, color: '#85899E' }} onClick={getAllMessage}>
-                      查看全部
-                    </YakitButton>
-                  </>
-                )}
-              </div>
-            )}
+            <span className={styles['notice-version-title']}>更新通知</span>
+            <div className={styles['switch-title']}>
+              启动检测更新
+              <YakitSwitch
+                style={{ marginLeft: 4 }}
+                showInnerText={true}
+                size="large"
+                checked={!isCheck}
+                onChange={(val: boolean) => {
+                  setLocalValue(LocalGV.NoAutobootLatestVersionCheck, !val)
+                  setIsCheck(!val)
+                }}
+              />
+            </div>
           </div>
 
-          {noticeType === 'update' ? (
-            <div className={styles['notice-version-wrapper']}>
-              <div className={styles['version-wrapper']}>
-                {/* 企业版内网Yakit更新 - 无需显示更新内容 */}
-                {isEnpriTrace() && !isYakitIntranetDownloading && (
-                  <UIOpUpdateYakit
-                    version={yakitVersion}
-                    lastVersion={yakitLastIntranetVersion}
-                    isUpdateWait={isIntranetYakitUpdateWait}
-                    onDownload={onDownload}
-                    role={userInfo.role}
-                    isUpdate={isUpdateYakitIntranet}
-                    intranet={true}
-                    onResetUpdateWait={() => setIsIntranetYakitUpdateWait(false)}
-                    fetchIntranetYakitVersion={fetchIntranetYakitVersion}
-                  />
-                )}
-
+          <div className={styles['notice-version-wrapper']}>
+            <div className={styles['version-wrapper']}>
+              {/* 企业版内网Yakit更新 - 无需显示更新内容 */}
+              {isEnpriTrace() && !isYakitIntranetDownloading && (
                 <UIOpUpdateYakit
                   version={yakitVersion}
-                  lastVersion={yakitLastVersion}
-                  isUpdateWait={isYakitUpdateWait}
+                  lastVersion={yakitLastIntranetVersion}
+                  isUpdateWait={isIntranetYakitUpdateWait}
                   onDownload={onDownload}
                   role={userInfo.role}
-                  updateContent={communityYakit}
-                  onUpdateEdit={UpdateContentEdit}
-                  isUpdate={isUpdateYakit}
-                  onResetUpdateWait={() => setIsYakitUpdateWait(false)}
+                  isUpdate={isUpdateYakitIntranet}
+                  intranet={true}
+                  onResetUpdateWait={() => setIsIntranetYakitUpdateWait(false)}
+                  fetchIntranetYakitVersion={fetchIntranetYakitVersion}
                 />
-                <UIOpUpdateYaklang
-                  version={yaklangVersion}
-                  lastVersion={yaklangLastVersion}
-                  localVersion={yaklangLocalVersion}
-                  moreYaklangVersionList={moreYaklangVersionList}
-                  isRemoteMode={isRemoteMode}
-                  onDownload={onDownload}
-                  role={userInfo.role}
-                  updateContent={communityYaklang}
-                  onUpdateEdit={UpdateContentEdit}
-                  onNoticeShow={setShow}
-                  isUpdate={isUpdateYaklang}
-                  isUpdateYakit={isUpdateYakit}
-                  engineBuildType={yaklangBuildType}
-                />
-              </div>
-              <div className={styles['history-version']}>
-                <div
-                  className={styles['content-style']}
-                  onClick={() => yakitShell.openExternal(WebsiteGV.YakitHistoryVersionAddress)}
-                >
-                  <GitHubSolid className={styles['icon-style']} /> 历史版本
-                </div>
+              )}
+
+              <UIOpUpdateYakit
+                version={yakitVersion}
+                lastVersion={yakitLastVersion}
+                isUpdateWait={isYakitUpdateWait}
+                onDownload={onDownload}
+                role={userInfo.role}
+                updateContent={communityYakit}
+                onUpdateEdit={UpdateContentEdit}
+                isUpdate={isUpdateYakit}
+                onResetUpdateWait={() => setIsYakitUpdateWait(false)}
+              />
+              <UIOpUpdateYaklang
+                version={yaklangVersion}
+                lastVersion={yaklangLastVersion}
+                localVersion={yaklangLocalVersion}
+                moreYaklangVersionList={moreYaklangVersionList}
+                isRemoteMode={isRemoteMode}
+                onDownload={onDownload}
+                role={userInfo.role}
+                updateContent={communityYaklang}
+                onUpdateEdit={UpdateContentEdit}
+                onNoticeShow={setShow}
+                isUpdate={isUpdateYaklang}
+                isUpdateYakit={isUpdateYakit}
+                engineBuildType={yaklangBuildType}
+              />
+            </div>
+            <div className={styles['history-version']}>
+              <div
+                className={styles['content-style']}
+                onClick={() => yakitShell.openExternal(WebsiteGV.YakitHistoryVersionAddress)}
+              >
+                <GitHubSolid className={styles['icon-style']} /> 历史版本
               </div>
             </div>
-          ) : (
-            <div className={styles['notice-info-wrapper']}>
-              <React.Suspense fallback={null}>
-                <MessageCenter
-                  messageList={messageList}
-                  getAllMessage={getAllMessage}
-                  onLogin={() => {
-                    setShow(false)
-                    onLogin()
-                  }}
-                  onClose={() => setShow(false)}
-                />
-              </React.Suspense>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     )
@@ -2204,8 +2120,6 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     lowerYaklangLastVersion,
     isRemoteMode,
     communityYaklang,
-    noticeType,
-    messageList,
     isIntranetYakitUpdateWait,
   ])
 

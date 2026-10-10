@@ -1,15 +1,15 @@
 import type React from 'react'
-import { useEffect, useState, useLayoutEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Modal } from 'antd'
 import { ExclamationCircleOutlined, GithubOutlined, RightOutlined, WechatOutlined } from '@ant-design/icons'
 import { failed } from '@/utils/notification'
 import './Login.scss'
 import { NetWorkApi } from '@/services/fetch'
 import { ConfigPrivateDomain } from '@/components/ConfigPrivateDomain/ConfigPrivateDomain'
-import { showModal } from '../utils/showModal'
 import { isEnterpriseEdition } from '@/utils/envfile'
 import { apiDownloadPluginMine } from './plugins/utils'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitAuth } from '@/services/electronBridge'
@@ -24,48 +24,26 @@ interface LoginParamsProp {
 }
 
 const Login: React.FC<LoginProp> = (props) => {
-  const { t } = useI18nNamespaces(['core'])
+  const { t, i18n } = useI18nNamespaces(['core'])
   const [loading, setLoading] = useState<boolean>(false)
-  // 打开企业登录面板
-  const openEnterpriseModal = () => {
-    const m = showModal({
-      title: '',
-      centered: true,
-      content: <ConfigPrivateDomain onClose={() => m.destroy()} enterpriseLogin={true} />,
-      modalAfterClose: () => props.onCancel(),
-    })
-    return m
-  }
-  {
-    /* 屏蔽企业登录选择 将登录直接替换为企业登录 */
-  }
-  useLayoutEffect(() => {
-    if (isEnterpriseEdition()) {
-      openEnterpriseModal()
-    }
-  }, [])
   const fetchLogin = (type: string) => {
     setLoading(true)
-    if (type === 'login') {
-      openEnterpriseModal()
-    } else {
-      NetWorkApi<LoginParamsProp, string>({
-        method: 'get',
-        url: 'auth/from',
-        params: {
-          source: type,
-        },
+    NetWorkApi<LoginParamsProp, string>({
+      method: 'get',
+      url: 'auth/from',
+      params: {
+        source: type,
+      },
+    })
+      .then((res) => {
+        if (res) yakitAuth.startUserSignIn({ url: res, type })
       })
-        .then((res) => {
-          if (res) yakitAuth.startUserSignIn({ url: res, type })
-        })
-        .catch((err) => {
-          failed(t('Login.loginError', { error: err }))
-        })
-        .finally(() => {
-          setTimeout(() => setLoading(false), 200)
-        })
-    }
+      .catch((err) => {
+        failed(t('Login.loginError', { error: err }))
+      })
+      .finally(() => {
+        setTimeout(() => setLoading(false), 200)
+      })
   }
   // 全局监听登录状态
   useEffect(() => {
@@ -100,11 +78,28 @@ const Login: React.FC<LoginProp> = (props) => {
       cleanup()
     }
   }, [])
-  // 企业登录仍在进行，关闭企业面板后才结束本次登录流程。
-  if (isEnterpriseEdition()) return null
+  if (isEnterpriseEdition()) {
+    return (
+      <YakitModal
+        open={props.visible}
+        title=""
+        type="white"
+        footer={null}
+        headerStyle={{ position: 'absolute', top: 0, right: 0, width: 'auto', zIndex: 1 }}
+        bodyStyle={{ padding: 0 }}
+        maskClosable={false}
+        destroyOnHidden={true}
+        width={i18n.language.startsWith('zh') ? 500 : 650}
+        onCancel={props.onCancel}
+      >
+        <ConfigPrivateDomain onClose={props.onCancel} enterpriseLogin={true} />
+      </YakitModal>
+    )
+  }
   return (
     <Modal
       open={props.visible}
+      keyboard={false}
       closable={false}
       footer={null}
       onCancel={() => props.onCancel()}

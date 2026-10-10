@@ -13,6 +13,10 @@
     "resetTipAfterManualSelection": "手动选择所有漏洞类型后，点击重置即可查看所有数据"
   },
   "YakitRiskTable": {
+    "batch_modify_mark": "修改标记",
+    "delete_selected_risks": "删除所选漏洞",
+    "confirm_clear_filtered_risks": "确定清空当前筛选结果中的所有漏洞与风险吗？此操作不可恢复。",
+    "batch_mark_hint": "将统一修改 {{count}} 条漏洞的标记，留空的可选项将清空原值。",
     "title": "标题",
     "type": "类型",
     "level": "等级",
@@ -49,7 +53,35 @@
     },
     "queryRisksTotalFailed": "apiQueryRisksTotalByRuntimeId 获取总数失败：",
     "queryRiskTagsFailed": "查询QueryRiskTags失败：",
-    "queryAvailableRiskTypeFailed": "查询QueryAvailableRiskType失败："
+    "queryAvailableRiskTypeFailed": "查询QueryAvailableRiskType失败：",
+    "cvss_score": "CVSS评分",
+    "enter_cvss": "请输入 CVSS 评分",
+    "select_disposal_status": "请选择处置状态"
+  },
+  "YakitRiskEditForm": {
+    "risk_type": "问题类型",
+    "risk_type_required": "请选择或输入问题类型",
+    "cvss_score": "CVSS评分",
+    "cvss_required": "请输入 CVSS 评分",
+    "cvss_range": "CVSS 评分范围为 0.0-10.0",
+    "level": "等级",
+    "disposal_status": "处置状态",
+    "disposal_required": "请选择处置状态",
+    "disposal_placeholder": "请选择或输入处置状态",
+    "pending_verify": "待验证",
+    "confirmed": "确认",
+    "repaired": "已修复",
+    "false_positive": "误报",
+    "closed": "关闭",
+    "verifier": "验证人",
+    "verifier_required": "请选择验证人",
+    "verifier_placeholder": "请搜索并选择验证人",
+    "repair_time": "修复时间",
+    "repair_time_required": "请选择修复时间",
+    "repair_suggestion": "修复建议",
+    "repair_suggestion_placeholder": "请输入修复建议",
+    "disposal_note": "处置说明",
+    "disposal_note_placeholder": "请输入处置说明"
   },
   "YakitRiskSelectTag": {
     "false_positive": "误报",
@@ -60,6 +92,8 @@
   "YakitRiskDetails": {
     "vulnerability_details": "漏洞详情",
     "data_packet": "数据包",
+    "disposal_log": "处置日志",
+    "dispose_risk": "处置漏洞",
     "port_colon": "端口：",
     "discovery_time_colon": "发现时间：",
     "no_data_packet": "无数据包",
@@ -106,5 +140,26 @@
   },
   "AuditResultCollapse": {
     "open_in_code_audit": "在代码审计中打开"
+  },
+  "RiskDisposalLog": {
+    "please_login": "请登录",
+    "no_access_title": "暂无访问权限",
+    "no_access_desc": "登录后即可访问该页面",
+    "empty": "暂无处置日志",
+    "dispose_risk": "处置漏洞",
+    "system": "系统",
+    "publish_comment": "发布评论",
+    "reply_comment": "回复评论",
+    "reply": "回复",
+    "download": "下载",
+    "repair_time": "修复时间：",
+    "repair_department": "修复部门：",
+    "repairer": "修复人：",
+    "reply_prefix": "回复 {{user}} : {{content}}",
+    "image_count": " [图片] * {{count}}",
+    "fetch_logs_failed": "查询处置日志失败",
+    "fetch_flow_logs_failed": "查询流量处置日志失败",
+    "publish_comment_failed": "发布评论失败",
+    "delete_comment_failed": "删除评论失败"
   }
 }

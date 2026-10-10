@@ -11,6 +11,7 @@ import type { DebouncedFunc } from 'lodash'
 import type { HistoryPluginSearchType } from '@/utils/yakQueryHTTPFlow'
 import type { MitmExtractAggregateFlowFilterRow } from '@/utils/yakQueryHTTPFlow'
 import { MITM_FLOW_TABLE_OVERSCAN as MITM_FLOW_TABLE_OVERSCAN_VALUE } from './HTTPFlowTable.performance'
+import type { FlowMarkPatchPayload } from './HTTPFlowMark.constants'
 
 export interface codecHistoryPluginProps {
   key: string
@@ -27,6 +28,11 @@ export interface codecHistoryPluginProps {
 export interface HTTPHeaderItem {
   Header: string
   Value: string
+}
+
+export interface HTTPFlowTester {
+  TesterUid?: string
+  TesterName?: string
 }
 
 export interface HTTPFlow {
@@ -103,6 +109,17 @@ export interface HTTPFlow {
   HiddenIndex?: string
 
   FromPlugin: string
+
+  /** 问题类型（对齐 IssueType） */
+  IssueType?: string
+  /** 严重程度 */
+  Severity?: string
+  /** 处置状态（对齐 Status） */
+  Status?: string
+  /** 处置说明（对齐 StatusReason） */
+  StatusReason?: string
+  /** 测试人员列表（仅企业版） */
+  Testers?: HTTPFlowTester[]
 }
 
 export interface FuzzableParams {
@@ -138,6 +155,7 @@ export interface HistoryTableTitleShow {
 }
 
 export interface HTTPFlowTableProp extends HistoryTableTitleShow {
+  onRegisterFlowMarkPatch?: (patch?: (payload: FlowMarkPatchPayload) => void) => void
   onSelected?: (i?: HTTPFlow) => any
   params?: YakQueryHTTPFlowRequest
   mitmAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]

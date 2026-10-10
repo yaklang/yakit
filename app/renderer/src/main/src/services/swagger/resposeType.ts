@@ -60,6 +60,29 @@ export declare namespace API {
     isJson: boolean
     isProtobuf: boolean
   }
+  export interface WebInfoWhereRequest {
+    isAll: boolean
+    hash: string
+    /**
+     * 排除一些不设置为已读
+     */
+    excludeHash?: string
+  }
+  export interface WebInfoResponse extends Paging {
+    data: WebInfoDetail[]
+  }
+  export interface WebInfoRequest extends Pagination {
+    isRead?: string
+    logType?: string
+  }
+  export interface WebInfoDetail extends GormBaseModel {
+    handlerUserName?: string
+    handlerHeadImag?: string
+    handlerRole?: string
+    webInfoType?: string
+    isRead?: boolean
+    hash?: string
+  }
   export interface UserOrdinaryResponse {
     data: UserList[]
   }
@@ -245,6 +268,44 @@ export declare namespace API {
      */
     searchTime: string
   }
+  export interface TouristGainResponse {
+    /**
+     * 日增量
+     */
+    dayNew: number
+    /**
+     * 日增率
+     */
+    dayGain: string
+    /**
+     * up 增 down 减
+     */
+    dayGainUpOrDown: string
+    /**
+     * 周增量
+     */
+    weekNew: number
+    /**
+     * 周增率
+     */
+    weekGain: string
+    /**
+     * up 增 down 减
+     */
+    weekGainUpOrDown: string
+    /**
+     * 月增量
+     */
+    monthNew: number
+    /**
+     * 月增率
+     */
+    monthGain: string
+    /**
+     * up 增 down 减
+     */
+    monthGainUpOrDown: string
+  }
   export interface TouristDetailWhere {
     /**
      * ip搜索
@@ -285,84 +346,9 @@ export declare namespace API {
      */
     loginTotal: number
     /**
-     * 日增量
-     */
-    dayNew: number
-    /**
-     * 日增率
-     */
-    dayGain: string
-    /**
-     * up 增 down 减
-     */
-    dayGainUpOrDown: string
-    /**
-     * 周增量
-     */
-    weekNew: number
-    /**
-     * 周增率
-     */
-    weekGain: string
-    /**
-     * up 增 down 减
-     */
-    weekGainUpOrDown: string
-    /**
-     * 月增量
-     */
-    monthNew: number
-    /**
-     * 月增率
-     */
-    monthGain: string
-    /**
-     * up 增 down 减
-     */
-    monthGainUpOrDown: string
-    /**
      * 机构总数
      */
     institutionTotal: number
-  }
-
-  export interface TouristGainResponse {
-    /**
-     * 日增量
-     */
-    dayNew: number
-    /**
-     * 日增率
-     */
-    dayGain: string
-    /**
-     * up 增 down 减
-     */
-    dayGainUpOrDown: string
-    /**
-     * 周增量
-     */
-    weekNew: number
-    /**
-     * 周增率
-     */
-    weekGain: string
-    /**
-     * up 增 down 减
-     */
-    weekGainUpOrDown: string
-    /**
-     * 月增量
-     */
-    monthNew: number
-    /**
-     * 月增率
-     */
-    monthGain: string
-    /**
-     * up 增 down 减
-     */
-    monthGainUpOrDown: string
   }
   export interface TouristActivityRateResponse {
     /**
@@ -519,6 +505,34 @@ export declare namespace API {
      * 0 待下发 1已下发 2 结束
      */
     status: number
+    /**
+     * 版本线
+     */
+    versionLine?: string
+    /**
+     * 投产类型
+     */
+    releaseType?: string
+    /**
+     * 系统中文名
+     */
+    sysChi?: string
+    /**
+     * 系统英文名
+     */
+    sysEng?: string
+    /**
+     * 测试经理
+     */
+    testManagers?: string
+    /**
+     * 开发机构名称
+     */
+    devOrgName?: string
+    /**
+     * 开发机构ID(去重校验)
+     */
+    devOrgId?: string
   }
   export interface SystemLogWhere {
     userName?: string
@@ -623,6 +637,40 @@ export declare namespace API {
   export interface RiskUploadResponse extends Paging {
     data: RiskLists[]
   }
+  export interface RiskUpdateTagsRequest extends GetRiskWhere {
+    /**
+     * 处置状态标签
+     */
+    setTags?: string[]
+    /**
+     * 验证人 uid
+     */
+    verifierUid?: string
+    /**
+     * 修复时间 Unix 时间戳（秒）
+     */
+    fixTime?: number
+    /**
+     * 修复建议
+     */
+    fixSuggestion?: string
+    /**
+     * 风险类型描述
+     */
+    riskTypeVerbose?: string
+    /**
+     * 严重程度
+     */
+    setSeverity?: string
+    /**
+     * 等级评分（小数）
+     */
+    severityScore?: number
+    /**
+     * 处置原因
+     */
+    tagReason?: string
+  }
   export interface RiskTypes {
     risk_type: string
     total: number
@@ -692,6 +740,34 @@ export declare namespace API {
      */
     department?: string
     tags?: string
+    /**
+     * 验证人 uid
+     */
+    verifierUid?: string
+    /**
+     * 修复时间 Unix 时间戳（秒）
+     */
+    fixTime?: number
+    /**
+     * 修复建议
+     */
+    fixSuggestion?: string
+    /**
+     * 等级评分（小数）
+     */
+    severityScore?: number
+    /**
+     * 处置原因
+     */
+    tagReason?: string
+    /**
+     * 测试人员列表 (uid+姓名)
+     */
+    testers?: RiskListTesters[]
+  }
+  export interface RiskListTesters {
+    testerUid?: string
+    testerName?: string
   }
   export interface RiskFeedBackResponse extends Paging {
     data: RiskFeedBackData[]
@@ -730,6 +806,41 @@ export declare namespace API {
     programName: string
     syntaxFlowVariable: string
   }
+  export interface RiskDownloadRequest extends GetRiskRequest {}
+  export interface RiskAssociationRequest {
+    /**
+     * 主 risk 的 hash
+     */
+    riskHash: string
+    /**
+     * 关联的漏洞 risk ID 列表，逗号分隔
+     */
+    riskIds?: string
+    /**
+     * 关联的流量 httpflow ID 列表，逗号分隔
+     */
+    httpflowIds?: string
+  }
+  export interface RiskAssociationListResponse {
+    riskHash?: string
+    /**
+     * 关联的漏洞 risk ID 列表，逗号分隔
+     */
+    riskIds?: string
+    /**
+     * 关联的流量 httpflow ID 列表，逗号分隔
+     */
+    httpflowIds?: string
+  }
+  export interface RiskAssociationListRequest {
+    riskHash: string
+  }
+  export interface RiskAssignTestersRequest extends GetRiskWhere {
+    /**
+     * 测试人员 uid 列表（全量覆盖） 逗号分割
+     */
+    testerUids?: string
+  }
   export interface RenamePayloadRequest {
     /**
      * 修改文件夹名 folder 修改文件名 group
@@ -737,6 +848,12 @@ export declare namespace API {
     type: string
     name: string
     newName: string
+  }
+  export interface RemoteWhere extends Pagination {
+    user_name?: string
+    start_time?: number
+    end_time?: number
+    status?: string
   }
   export interface RemoteTunnelResponse {
     server: string
@@ -1385,6 +1502,7 @@ export declare namespace API {
     data: Operation[]
   }
   export interface Operation extends GormBaseModel, NewOperation {}
+  export interface NotepadListRequest extends GetNotepadRequest, Pagination {}
   export interface NotepadEitRequest {
     notepadHash?: string
     eitUser?: number
@@ -1616,6 +1734,35 @@ export declare namespace API {
     beforeHttpFlowUpdatedAt?: number
     afterHttpFlowUpdatedAt?: number
     departmentName?: string
+    /**
+     * 问题类型
+     */
+    issueType?: string
+    /**
+     * 严重程度
+     */
+    severity?: string
+    /**
+     * 处置状态
+     */
+    status?: string
+  }
+  export interface HTTPFlowUpdateTagsRequest extends HTTPFlowWhere {
+    deleteAll?: boolean
+    hash?: string
+    /**
+     * 问题类型
+     */
+    setIssueType?: string
+    /**
+     * 严重程度
+     */
+    setSeverity?: string
+    /**
+     * 处置状态
+     */
+    setStatus?: string
+    statusReason?: string
   }
   export interface HTTPFlowRequest {
     projectName: string
@@ -1635,6 +1782,7 @@ export declare namespace API {
     data: HTTPFlowList[]
   }
   export interface HTTPFlowList extends GormBaseModel, HTTPFlowDetail {}
+  export interface HTTPFlowDownloadRequest extends HTTPFlowListWhere {}
   export interface HTTPFlowDetail {
     isHTTPS?: boolean
     url?: string
@@ -1704,6 +1852,27 @@ export declare namespace API {
     fromPlugin?: string
     host?: string
     operationType?: string
+    /**
+     * 问题类型
+     */
+    issueType?: string
+    /**
+     * 严重程度
+     */
+    severity?: string
+    /**
+     * 处置状态
+     */
+    status?: string
+    statusReason?: string
+    /**
+     * 测试人员列表 (uid+姓名)
+     */
+    testers?: HTTPFlowDetailTesters[]
+  }
+  export interface HTTPFlowDetailTesters {
+    testerUid?: string
+    testerName?: string
   }
   export interface HTTPFlowDeleteWhere {
     deleteAll?: boolean
@@ -1716,6 +1885,16 @@ export declare namespace API {
   export interface HTTPFlowBareResponse {
     id: number
     data: string
+  }
+  export interface HTTPFlowAssignTestersRequest extends HTTPFlowWhere {
+    /**
+     * 受影响的 httpflow hash，逗号分隔（批量）
+     */
+    hash?: string
+    /**
+     * 测试人员 uid 列表（全量覆盖） 逗号分割
+     */
+    testerUids?: string
   }
   export interface HotPatchTemplateResponse extends Paging {
     data: TemplateDetail[]
@@ -1796,14 +1975,9 @@ export declare namespace API {
     afterRiskCreatedAt?: number
     beforeCreatedAt?: number
     afterCreatedAt?: number
+    includeId?: number[]
   }
   export interface GetRiskRequest extends Pagination, GetRiskWhere {}
-  export interface GetRemoteWhere {
-    user_name?: string
-    start_time?: number
-    end_time?: number
-    status?: string
-  }
   export interface GetNotepadResponse extends Paging {
     data: GetNotepadList[]
   }
@@ -2044,10 +2218,67 @@ export declare namespace API {
     durationDate: number
     currentTime?: number
   }
+  export interface CommentRequest {
+    /**
+     * 关联的 risk/httpflow hash
+     */
+    hash: string
+    /**
+     * risk | httpflow
+     */
+    targetType: string
+    /**
+     * 评论内容
+     */
+    content: string
+    /**
+     * 父级评论ID，0为顶级评论
+     */
+    parentId?: number
+  }
   export interface CommentLogRequest {
     uuid: string
     logId?: number
     description?: string
+  }
+  export interface CommentListResponse extends Paging {
+    data: CommentDetail[]
+  }
+  export interface CommentListRequest extends Pagination {
+    hash: string
+    /**
+     * risk | httpflow
+     */
+    targetType: string
+  }
+  export interface CommentDetail {
+    id?: number
+    hash?: string
+    targetType?: string
+    /**
+     * comment | operation_log
+     */
+    recordType?: string
+    content?: string
+    /**
+     * 父级评论ID，0为顶级评论
+     */
+    parentId?: number
+    /**
+     * 评论人用户名
+     */
+    userName?: string
+    /**
+     * 父级评论用户名（回复了谁）
+     */
+    parentUserName?: string
+    createdAt?: number
+  }
+  export interface CommentDeleteRequest {
+    /**
+     * 评论ID
+     */
+    id: number
   }
   export interface CollaboratorInfo {
     user_id: number

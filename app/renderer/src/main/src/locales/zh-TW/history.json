@@ -116,6 +116,15 @@
     "doNotResetRequestID": "不重置請求 ID",
     "keepOnlyFavorites": "僅保留收藏數據",
     "saveFile": "儲存檔案",
+    "problemType": "問題類型",
+    "severity": "嚴重程度",
+    "disposalStatus": "處置狀態",
+    "disposalNote": "處置說明",
+    "selectProblemType": "請選擇問題類型",
+    "selectSeverity": "請選擇嚴重程度",
+    "selectDisposalStatus": "請選擇處置狀態",
+    "inputDisposalNote": "請輸入處置說明",
+    "batchModifyMark": "批次修改",
     "RowContextMenu": {
       "sendToWebFuzzer": "傳送到 Web Fuzzer",
       "sendAndRedirect": "傳送並跳轉",
@@ -155,6 +164,7 @@
       "exportData": "匯出資料",
       "exportToExcel": "匯出為Excel",
       "exportToHAR": "匯出為HAR",
+      "modifyMark": "修改標記",
       "editTag": "編輯tag",
       "openInNewWindow": "新視窗開啟",
       "uploadData": "上傳資料",
@@ -176,7 +186,27 @@
     "filterDomainEmpty": "域名為空，無法過濾",
     "shieldLimitReached": "為保護資料庫效能,遮蔽只允許5條生效,可以使用\"刪除\"資料來移除不感興趣的資料包",
     "shieldTooManyOnlyLatestTitle": "遮蔽條件過多",
-    "shieldTooManyOnlyLatest": "為保護效能，只生效最新5條遮蔽條件，使用者可以透過\"刪除\"特定資料包來移除不感興趣的資料包。"
+    "shieldTooManyOnlyLatest": "為保護效能，只生效最新5條遮蔽條件，使用者可以透過\"刪除\"特定資料包來移除不感興趣的資料包。",
+    "markOptions": {
+      "SQL注入": "SQL注入",
+      "XSS": "XSS",
+      "SSRF": "SSRF",
+      "未授权访问": "未授權存取",
+      "CSRF": "CSRF",
+      "文件上传漏洞": "檔案上傳漏洞",
+      "文件包含": "檔案包含",
+      "反序列化漏洞": "反序列化漏洞",
+      "目录遍历": "目錄遍歷",
+      "低危": "低危",
+      "中危": "中危",
+      "高危": "高危",
+      "严重": "嚴重",
+      "确认": "確認",
+      "误报": "誤報",
+      "待修复": "待修復",
+      "已修复": "已修復"
+    },
+    "modifyMarkFailed": "修改流量標記失敗: {{error}}"
   },
   "ImportExportProgress": {
     "exportHARData": "匯出HAR流量資料"
@@ -310,6 +340,15 @@
     "object": "物件",
     "rule": "規則",
     "codec": "編解碼",
+    "log": "日誌",
+    "logEmpty": "暫無處置日誌",
+    "logSystem": "系統",
+    "logUpdateMark": "更新標記",
+    "logReplyComment": "回覆評論",
+    "logPublishComment": "發佈評論",
+    "logReply": "回覆",
+    "logNone": "無",
+    "logDownload": "下載",
     "more": "更多"
   },
   "CodingPopover": {

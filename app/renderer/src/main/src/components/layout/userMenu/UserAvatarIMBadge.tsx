@@ -4,19 +4,25 @@ import { MobileSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import classNames from 'classnames'
 import styles from '../funcDomain.module.scss'
 import type { IMControlBadgeView } from '@/pages/robotControl/status'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export type UserAvatarIMBadgeProps = React.HTMLAttributes<HTMLSpanElement> & {
   badge: IMControlBadgeView
+  hasUnreadMessage?: boolean
   onBadgeClick: () => void
   children: React.ReactNode
 }
 
 export const UserAvatarIMBadge = React.forwardRef<HTMLSpanElement, UserAvatarIMBadgeProps>((props, ref) => {
-  const { badge, onBadgeClick, children, className, ...restProps } = props
+  const { badge, hasUnreadMessage = false, onBadgeClick, children, className, ...restProps } = props
+  const { t } = useI18nNamespaces(['layout'])
   const tooltip = badge.detail ? `${badge.label}\n${badge.detail}` : badge.label
   return (
     <span {...restProps} ref={ref} className={classNames(styles['user-avatar-im-wrapper'], className)}>
       {children}
+      {hasUnreadMessage && (
+        <span className={styles['message-unread-badge']} role="status" aria-label={t('FuncDomain.unreadMessages')} />
+      )}
       {badge.visible && (
         <Tooltip title={<span style={{ whiteSpace: 'pre-line' }}>{tooltip}</span>}>
           <span

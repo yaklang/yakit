@@ -18,6 +18,7 @@
     .user-wrapper {
       box-sizing: border-box;
       padding: 3px 9px;
+      cursor: pointer;
       .user-show {
         width: 30px;
         height: 30px;
@@ -63,6 +64,19 @@
           width: 9px;
           height: 9px;
         }
+      }
+      .message-unread-badge {
+        position: absolute;
+        top: -3px;
+        left: 16px;
+        z-index: 3;
+        width: 8px;
+        height: 8px;
+        box-sizing: border-box;
+        border: 1px solid var(--Colors-Use-Basic-Background);
+        border-radius: 50%;
+        background: var(--Colors-Use-Error-Primary);
+        pointer-events: none;
       }
       .im-control-badge-gray {
         background: var(--Colors-Use-Neutral-Disable);
@@ -186,6 +200,29 @@
 .ui-op-submenu.ui-op-submenu:global(.ant-menu-submenu-popup) {
   padding: 0 6px;
 }
+.message-center-menu-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.message-center-menu-count {
+  flex-shrink: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  background: var(--Colors-Use-Error-Primary);
+  color: var(--Colors-Use-Basic-White);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  text-align: center;
+}
+
 .ui-op-plus-dropdown {
   :global {
     .ant-popover-inner {
@@ -195,6 +232,7 @@
 
   .ui-op-plus-wrapper {
     width: 400px;
+    max-width: calc(100vw - 32px);
 
     .ui-op-notice-body {
       width: 100%;
@@ -211,7 +249,7 @@
           display: flex;
           font-weight: 500;
           font-size: 12px;
-          color: var(--Colors-Use-Neutral-Text-1-Title) f;
+          color: var(--Colors-Use-Neutral-Text-1-Title);
 
           .tabs-opt {
             width: 50%;
@@ -224,7 +262,7 @@
               .ant-badge {
                 font-weight: 500;
                 font-size: 12px;
-                color: var(--Colors-Use-Neutral-Text-1-Title) f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
               }
             }
           }
@@ -249,14 +287,20 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height: 36px;
+        min-height: 36px;
+        flex-wrap: wrap;
+        gap: 8px;
         font-size: 12px;
+        .notice-version-title {
+          font-size: 14px;
+          font-weight: 600;
+          line-height: 20px;
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
         .switch-title {
           color: var(--Colors-Use-Neutral-Text-1-Title);
           display: flex;
           align-items: center;
-        }
-        .message-title {
         }
       }
 
@@ -309,13 +353,6 @@
           }
         }
       }
-
-      .notice-info-wrapper {
-        padding: 12px 8px 16px;
-        max-height: 80vh;
-        overflow: auto;
-      }
-
       .notice-footer {
         margin: 16px;
         box-sizing: border-box;
@@ -652,7 +689,7 @@
         max-height: 32px;
         font-size: 12px;
         line-height: 16px;
-        color: var(--Colors-Use-Neutral-Text-1-Title) f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
       }
       .content-time {
         margin-top: 2px;

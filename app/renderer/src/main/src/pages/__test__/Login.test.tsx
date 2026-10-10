@@ -1,5 +1,5 @@
 import type React from 'react'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ModalProps } from 'antd'
 import Login from '../Login'
@@ -34,12 +34,24 @@ vi.mock('@/services/electronBridge', () => ({ yakitAuth: { onSignInData } }))
 vi.mock('@/services/fetch', () => ({ NetWorkApi: vi.fn() }))
 vi.mock('@/utils/notification', () => ({ failed: vi.fn() }))
 vi.mock('@/pages/plugins/utils', () => ({ apiDownloadPluginMine: vi.fn() }))
-vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({ YakitModalConfirm: vi.fn() }))
+vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({
+  showYakitModal: showModal,
+  YakitModalConfirm: vi.fn(),
+}))
+vi.mock('@/components/yakitUI/YakitModal/YakitModal', () => ({
+  YakitModal: ({ open, children, onCancel }: ModalProps) =>
+    open ? (
+      <div role="dialog">
+        <button onClick={onCancel}>关闭登录</button>
+        {children}
+      </div>
+    ) : null,
+}))
 vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => ({
   YakitSpin: ({ children }: { children: React.ReactNode }) => children,
 }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
-  useI18nNamespaces: () => ({ t: (key: string) => key }),
+  useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh-CN' } }),
 }))
 
 beforeEach(() => {
@@ -48,33 +60,27 @@ beforeEach(() => {
 })
 
 describe('Login', () => {
-  it('企业登录打开面板时不结束登录，也不订阅社区登录事件', () => {
+  it('企业登录由 visible 控制，关闭后可再次显示，不依赖首次挂载或动画回调', () => {
     edition.enterprise = true
     const onCancel = vi.fn()
-    const { container, rerender } = render(<Login visible onCancel={onCancel} />)
+    const { rerender } = render(<Login visible={false} onCancel={onCancel} />)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     rerender(<Login visible onCancel={onCancel} />)
-
-    expect(showModal).toHaveBeenCalledTimes(1)
-    expect(container).toBeEmptyDOMElement()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(onCancel).not.toHaveBeenCalled()
     expect(onSignInData).not.toHaveBeenCalled()
-
-    act(() => showModal.mock.calls[0][0].modalAfterClose?.())
-    expect(onCancel).toHaveBeenCalledTimes(1)
+    rerender(<Login visible={false} onCancel={onCancel} />)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    rerender(<Login visible onCancel={onCancel} />)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(showModal).not.toHaveBeenCalled()
   })
 
-  it('企业面板请求关闭时先销毁弹窗，关闭完成后再通知上层', () => {
+  it('企业登录成功或取消时立即通知上层关闭登录流程', () => {
     edition.enterprise = true
     const onCancel = vi.fn()
     render(<Login visible onCancel={onCancel} />)
-    const modalProps = showModal.mock.calls[0][0]
-    render(<>{modalProps.content}</>)
-
     fireEvent.click(screen.getByRole('button', { name: '完成企业登录' }))
-    expect(showModal.mock.results[0].value.destroy).toHaveBeenCalledTimes(1)
-    expect(onCancel).not.toHaveBeenCalled()
-
-    act(() => modalProps.modalAfterClose?.())
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
 

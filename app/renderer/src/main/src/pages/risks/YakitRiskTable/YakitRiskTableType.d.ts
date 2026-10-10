@@ -77,14 +77,26 @@ export interface YakitRiskDetailsProps {
   border?: boolean
   isShowExtra?: boolean
   onRetest?: (info: Risk) => void
+  onDispose?: (info: Risk) => void
+  showType?: 'detail' | 'code' | 'history'
+  setShowType?: (v: 'detail' | 'code' | 'history') => void
   boxStyle?: React.CSSProperties
   detailClassName?: string
+  /** 风险处置成功后刷新处置日志 */
+  disposalRefreshKey?: number
 }
 
 export interface YakitRiskSelectTagProps {
   info: Risk
   onClose?: () => void
   onSave: (info: Risk) => void
+}
+
+export interface YakitRiskEditFormProps {
+  info: Risk
+  batchCount?: number
+  onClose?: () => void
+  onSave: (info: Risk) => void | Promise<void>
 }
 
 export interface YakitCodeScanRiskDetailsProps {

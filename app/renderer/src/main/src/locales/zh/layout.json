@@ -431,6 +431,8 @@
     "licenseAdmin": "License管理",
     "dataStatistics": "数据统计",
     "mobileControl": "移动端控制",
+    "messageCenter": "消息中心",
+    "unreadMessages": "有未读消息",
     "roleAdmin": "角色管理",
     "accountAdmin": "用户管理",
     "uploadData": "上传数据",

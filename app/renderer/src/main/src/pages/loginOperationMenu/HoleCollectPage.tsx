@@ -85,13 +85,14 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
     const paginationProps = {
       page: page || 1,
       limit: limit || 20,
+      order_by: 'id',
+      order: 'desc',
     }
     setLoading(true)
-    NetWorkApi<any, API.RiskUploadResponse>({
+    NetWorkApi<API.GetRiskRequest, API.RiskUploadResponse>({
       method: 'post',
       url: 'risk',
-      params: { ...paginationProps },
-      data: newbodyParams.current,
+      data: { ...newbodyParams.current, ...paginationProps },
     })
       .then((res) => {
         setResponse(res.data || [])
@@ -280,12 +281,13 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
       const paginationProps = {
         page: query.Page || 1,
         limit: query.Limit || 20,
+        order_by: 'id',
+        order: 'desc',
       }
-      NetWorkApi<any, API.RiskUploadResponse>({
+      NetWorkApi<API.GetRiskRequest, API.RiskUploadResponse>({
         method: 'post',
         url: 'risk',
-        params: { ...paginationProps },
-        data: newbodyParams.current,
+        data: { ...newbodyParams.current, ...paginationProps },
       })
         .then((res) => {
           const newRes = {

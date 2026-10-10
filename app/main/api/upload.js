@@ -5,6 +5,7 @@ const customPath = require('path')
 const FormData = require('form-data')
 const { Readable } = require('stream')
 const { hashChunk, formatApiErrorDetail } = require('../toolsFunc')
+const { DISPOSAL_ATTACHMENT_TYPES, uploadDisposalAttachmentFile } = require('../disposalAttachmentUpload')
 
 module.exports = (win, getClient) => {
   ipcMain.handle('upload-group-data', async (event, params) => {
@@ -46,6 +47,7 @@ module.exports = (win, getClient) => {
     base64,
     imgInfo,
     token,
+    isDisposalAttachment = false,
   }) => {
     return new Promise((resolve, reject) => {
       const percent = (chunkIndex + 1) / totalChunks
@@ -53,6 +55,8 @@ module.exports = (win, getClient) => {
       if (base64 && imgInfo) {
         let readable = getBase64ImgToFormData(base64)
         formData.append('file', readable, { ...imgInfo })
+      } else if (isDisposalAttachment) {
+        formData.append('file', chunkStream, { filename: fileName })
       } else {
         formData.append('file', chunkStream)
       }
@@ -60,16 +64,21 @@ module.exports = (win, getClient) => {
       formData.append('totalChunks', totalChunks)
       formData.append('fileName', fileName)
       formData.append('type', type)
-      fileHash && formData.append('fileHash', fileHash)
+      // 与 Web postPackage 对齐：业务 hash 走 hash 字段；保留 fileHash 兼容旧接口
+      if (fileHash) {
+        formData.append('hash', fileHash)
+        formData.append('fileHash', fileHash)
+      }
       // console.log("参数---", fileName, fileHash)
       httpApi({
         method: 'post',
         url,
         data: formData,
         headers: { 'Content-Type': `multipart/form-data; boundary=${formData.getBoundary()}` },
-        timeout: percent === 1 && totalChunks > 3 ? 60 * 1000 * 10 : 60 * 1000,
+        timeout: isDisposalAttachment ? 5 * 60 * 1000 : percent === 1 && totalChunks > 3 ? 60 * 1000 * 10 : 60 * 1000,
         argParams: {
-          retryCount: 3,
+          // 附件分片使用文件流，失败后需重新选择上传，不能重用已消费的流。
+          retryCount: isDisposalAttachment ? 1 : 3,
         },
       })
         .then(async (res) => {
@@ -103,7 +112,7 @@ module.exports = (win, getClient) => {
           resolve(res)
         })
         .catch((err) => {
-          reject(`重传三次失败：${err}`)
+          reject(isDisposalAttachment ? `附件上传失败：${err}` : `重传三次失败：${err}`)
         })
     })
   }
@@ -140,7 +149,7 @@ module.exports = (win, getClient) => {
             url,
             chunkIndex: 0,
             totalChunks: 1,
-            fileName: '',
+            fileName: imgInfo.filename || 'image.png',
             type,
             fileHash: filedHash,
             base64,
@@ -152,6 +161,27 @@ module.exports = (win, getClient) => {
           reject(error)
         }
 
+        return
+      }
+      if (DISPOSAL_ATTACHMENT_TYPES.has(type)) {
+        if (!path || !filedHash) {
+          reject('附件路径和业务标识必填')
+          return
+        }
+        try {
+          resolve(
+            await uploadDisposalAttachmentFile({
+              path,
+              url,
+              token,
+              type,
+              filedHash,
+              postChunk: postProject,
+            }),
+          )
+        } catch (error) {
+          reject(error)
+        }
         return
       }
       // 获取文件名

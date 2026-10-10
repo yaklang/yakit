@@ -134,6 +134,21 @@ module.exports = (win, getClient) => {
     return await asyncSetTagForRisk(params)
   })
 
+  const asyncBatchSetRiskTags = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().BatchSetRiskTags(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('BatchSetRiskTags', async (e, params) => {
+    return await asyncBatchSetRiskTags(params)
+  })
+
   const asyncQueryRiskTags = (params) => {
     return new Promise((resolve, reject) => {
       getClient().QueryRiskTags(params, (err, data) => {
@@ -638,6 +653,13 @@ td {
   })
 
   const handlerHelper = require('./handleStreamWithContext')
+
+  const streamRisksFromOnlineMap = new Map()
+  ipcMain.handle('cancel-RisksFromOnline', handlerHelper.cancelHandler(streamRisksFromOnlineMap))
+  ipcMain.handle('RisksFromOnline', (e, params, token) => {
+    let stream = getClient().RisksFromOnline(params)
+    handlerHelper.registerHandler(win, stream, streamRisksFromOnlineMap, token)
+  })
 
   const streamExecuteChaosMakerRuleMap = new Map()
   ipcMain.handle('cancel-ExecuteChaosMakerRule', handlerHelper.cancelHandler(streamExecuteChaosMakerRuleMap))

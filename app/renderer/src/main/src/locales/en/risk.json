@@ -13,6 +13,10 @@
     "resetTipAfterManualSelection": "After manually selecting all vulnerability types, click reset to view all data"
   },
   "YakitRiskTable": {
+    "batch_modify_mark": "Modify Marks",
+    "delete_selected_risks": "Delete Selected Risks",
+    "confirm_clear_filtered_risks": "Clear all vulnerabilities and risks matching the current filters? This cannot be undone.",
+    "batch_mark_hint": "Apply the same marks to {{count}} risks. Empty optional fields will clear existing values.",
     "title": "Title",
     "type": "Type",
     "level": "Level",
@@ -49,7 +53,35 @@
     },
     "queryRisksTotalFailed": "Failed to get total count in apiQueryRisksTotalByRuntimeId: ",
     "queryRiskTagsFailed": "Query QueryRiskTags failed: ",
-    "queryAvailableRiskTypeFailed": "Query QueryAvailableRiskType failed: "
+    "queryAvailableRiskTypeFailed": "Query QueryAvailableRiskType failed: ",
+    "cvss_score": "CVSS Score",
+    "enter_cvss": "Please enter CVSS score",
+    "select_disposal_status": "Please select disposal status"
+  },
+  "YakitRiskEditForm": {
+    "risk_type": "Issue Type",
+    "risk_type_required": "Please select or enter issue type",
+    "cvss_score": "CVSS Score",
+    "cvss_required": "Please enter CVSS score",
+    "cvss_range": "CVSS score must be between 0.0 and 10.0",
+    "level": "Level",
+    "disposal_status": "Disposal Status",
+    "disposal_required": "Please select disposal status",
+    "disposal_placeholder": "Select or enter disposal status",
+    "pending_verify": "Pending Verification",
+    "confirmed": "Confirmed",
+    "repaired": "Fixed",
+    "false_positive": "False Positive",
+    "closed": "Closed",
+    "verifier": "Verifier",
+    "verifier_required": "Please select a verifier",
+    "verifier_placeholder": "Search and select a verifier",
+    "repair_time": "Fix Time",
+    "repair_time_required": "Please select fix time",
+    "repair_suggestion": "Fix Suggestion",
+    "repair_suggestion_placeholder": "Enter fix suggestion",
+    "disposal_note": "Disposal Note",
+    "disposal_note_placeholder": "Enter disposal note"
   },
   "YakitRiskSelectTag": {
     "false_positive": "False Positive",
@@ -60,6 +92,8 @@
   "YakitRiskDetails": {
     "vulnerability_details": "Vulnerability Details",
     "data_packet": "Data Packet",
+    "disposal_log": "Disposal Log",
+    "dispose_risk": "Dispose Risk",
     "port_colon": "Port:",
     "discovery_time_colon": "Discovery Time:",
     "no_data_packet": "No data packet",
@@ -106,5 +140,26 @@
   },
   "AuditResultCollapse": {
     "open_in_code_audit": "Open in Code Audit"
+  },
+  "RiskDisposalLog": {
+    "please_login": "Please log in",
+    "no_access_title": "No access permission",
+    "no_access_desc": "Log in to access this page",
+    "empty": "No disposal logs yet",
+    "dispose_risk": "Dispose Risk",
+    "system": "System",
+    "publish_comment": "Posted comment",
+    "reply_comment": "Replied to comment",
+    "reply": "Reply",
+    "download": "Download",
+    "repair_time": "Repair time: ",
+    "repair_department": "Repair department: ",
+    "repairer": "Repairer: ",
+    "reply_prefix": "Reply to {{user}}: {{content}}",
+    "image_count": " [images] * {{count}}",
+    "fetch_logs_failed": "Failed to fetch disposal logs",
+    "fetch_flow_logs_failed": "Failed to fetch flow disposal logs",
+    "publish_comment_failed": "Failed to publish comment",
+    "delete_comment_failed": "Failed to delete comment"
   }
 }

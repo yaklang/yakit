@@ -1,0 +1,194 @@
+import type React from 'react'
+import { memo, useMemo } from 'react'
+import { downloadDisposalFile } from '@/utils/disposalDownload'
+import { Image } from 'antd'
+import classNames from 'classnames'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { DisposalFileList } from '@/components/DisposalFileList/DisposalFileList'
+import { DownloadOutlined, EyeOutlined, PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { CommentLogColorful } from '@yakit-libs/yakit-ui-icons/colorful'
+import { PopoverArrowIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PopoverArrowIcon'
+import { formatTimestamp } from '@/utils/timeUtil'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+// import { AuthorImg } from '@/pages/plugins/funcTemplate'
+import { disposalCommentJSONConvertToData } from './convert'
+import type { FlowDisposalLogItem } from './types'
+import styles from './FlowDisposalLog.module.scss'
+
+interface FlowDisposalLogItemProps {
+  info: FlowDisposalLogItem
+  hiddenLine?: boolean
+  onReply?: (info: FlowDisposalLogItem) => void
+  onDelete?: (info: FlowDisposalLogItem) => void
+}
+
+export const FlowDisposalLogItemView: React.FC<FlowDisposalLogItemProps> = memo((props) => {
+  const { info, hiddenLine, onReply, onDelete } = props
+  const { t } = useI18nNamespaces(['history', 'yakitUi', 'components', 'risk'])
+
+  const isSystem = info.logType === 'system'
+  const isReply = !!info.parentComment
+
+  const content = useMemo(() => {
+    if (isSystem) return null
+    return disposalCommentJSONConvertToData(info.description)
+  }, [info.description, isSystem])
+
+  const parentContent = useMemo(() => {
+    if (!info.parentComment?.description) return null
+    return disposalCommentJSONConvertToData(info.parentComment.description)
+  }, [info.parentComment])
+
+  const showParentQuote = !!(
+    parentContent?.text ||
+    (parentContent?.imgs && parentContent.imgs.length > 0) ||
+    parentContent?.files?.length
+  )
+  const hasBody = isSystem
+    ? !!info.description
+    : !!(content?.text || content?.imgs?.length || content?.files?.length || showParentQuote)
+
+  return (
+    <div className={styles['log-item']}>
+      <div className={styles['log-item-icon']}>
+        <PopoverArrowIcon className={styles['arrow-icon']} />
+        <div className={styles['icon-wrapper']}>
+          <CommentLogColorful />
+        </div>
+        <div className={classNames(styles['line-tail'], { [styles['hidden-line-tail']]: !!hiddenLine })}>
+          <div className={styles['line-wrapper']}>
+            <div className={styles['line-top-dot']} />
+            <div className={styles['line-style']} />
+            <div className={styles['line-bottom-dot']} />
+          </div>
+        </div>
+      </div>
+      <div className={styles['log-item-info']}>
+        <div className={styles['info-body']}>
+          <div
+            className={classNames(styles['info-header'], {
+              [styles['info-header-with-body']]: hasBody,
+            })}
+          >
+            <div className={styles['header-content']}>
+              {/* {!isSystem && (
+                <AuthorImg src={info.headImg || UnLogin} size="small" wrapperClassName={styles['header-avatar']} />
+              )} */}
+              <span className={styles['name']}>
+                {info.userName || (isSystem ? t('HTTPFlowDetailMini.logSystem') : '-')}
+              </span>
+              {isSystem ? (
+                <span className={styles['action']}>{t('HTTPFlowDetailMini.logUpdateMark')}</span>
+              ) : isReply ? (
+                <>
+                  <span className={styles['action']}>{t('HTTPFlowDetailMini.logReply')}</span>
+                  <span className={styles['reply-name']}>{info.parentComment?.userName || '-'}</span>
+                </>
+              ) : (
+                <span className={styles['action']}>{t('HTTPFlowDetailMini.logPublishComment')}</span>
+              )}
+              <span className={styles['time']}>{` · ${formatTimestamp(info.createdAt)}`}</span>
+            </div>
+            {!isSystem && (
+              <div className={styles['header-operate']}>
+                <YakitButton
+                  className={styles['reply-btn']}
+                  type="outline2"
+                  icon={<PencilAltOutlined color="currentColor" />}
+                  onClick={() => onReply?.(info)}
+                >
+                  {t('HTTPFlowDetailMini.logReply')}
+                </YakitButton>
+                {info.isMine && (
+                  <YakitButton
+                    className={styles['reply-btn']}
+                    type="text"
+                    colors="danger"
+                    icon={<TrashOutlined color="currentColor" />}
+                    onClick={() => onDelete?.(info)}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+
+          {hasBody && (
+            <div className={styles['info-additional']}>
+              {isSystem ? (
+                <div className={styles['log-item-content']}>{info.description || '-'}</div>
+              ) : (
+                <>
+                  {showParentQuote && (
+                    <div className={styles['reply-style']}>
+                      <div className={styles['reply-line']} />
+                      <div className={styles['reply-content']}>
+                        {!!parentContent?.text && (
+                          <div
+                            className={classNames(styles['content-style'], 'yakit-content-single-ellipsis')}
+                            title={parentContent.text}
+                          >
+                            {parentContent.text}
+                          </div>
+                        )}
+                        {!!parentContent?.imgs?.length && (
+                          <span>{t('RiskDisposalLog.image_count', { count: parentContent.imgs.length })}</span>
+                        )}
+                        {!!parentContent?.files?.length && (
+                          <span title={parentContent.files.map((file) => file.name).join('、')}>
+                            {t('DisposalAttachment.quote', { count: parentContent.files.length })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {!!content?.text && <div className={styles['log-item-content']}>{content.text}</div>}
+                  <DisposalFileList files={content?.files} />
+                  {!!content?.imgs?.length && (
+                    <div className={styles['log-item-imgs']}>
+                      <Image.PreviewGroup>
+                        {content.imgs.map((img) => (
+                          <div key={img.url} className={styles['img-thumb']}>
+                            <Image
+                              src={img.url}
+                              width={72}
+                              height={72}
+                              style={{ objectFit: 'cover' }}
+                              preview={{
+                                mask: (
+                                  <div className={styles['img-actions']}>
+                                    <button
+                                      type="button"
+                                      aria-label={t('YakitButton.preview')}
+                                      title={t('YakitButton.preview')}
+                                    >
+                                      <EyeOutlined color="currentColor" size={20} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      aria-label={t('HTTPFlowDetailMini.logDownload')}
+                                      title={t('HTTPFlowDetailMini.logDownload')}
+                                      onClick={(event) => {
+                                        event.stopPropagation()
+                                        void downloadDisposalFile(img.url)
+                                      }}
+                                    >
+                                      <DownloadOutlined color="currentColor" size={20} />
+                                    </button>
+                                  </div>
+                                ),
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </Image.PreviewGroup>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+})

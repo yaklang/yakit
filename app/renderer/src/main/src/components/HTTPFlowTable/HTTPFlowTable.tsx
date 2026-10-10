@@ -102,6 +102,10 @@ import { grpcMITMGetFilter, grpcMITMSetFilter } from '@/pages/mitm/MITMHacker/ut
 import type { MITMSetFilterRequest } from '@/pages/mitm/MITMHacker/utils'
 import { defaultMITMFilterData } from '@/defaultConstants/mitm'
 import { buildNextMITMFilterData } from '@/pages/mitm/MITMServerStartForm/utils'
+import { FlowMarkEditForm } from './FlowMarkEditForm'
+import type { FlowMarkPatchPayload } from './HTTPFlowMark.constants'
+import { resolveHTTPFlowMarkScope } from './HTTPFlowMark.helpers'
+import { isEnterpriseEdition } from '@/utils/envfile'
 import { NowProjectDescription } from '@/pages/globalVariable'
 import { useStore } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -258,6 +262,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onSetHasNewData,
     onSetSelectedHttpFlowIds,
     onRegisterTableSelectApi,
+    onRegisterFlowMarkPatch,
     showHistoryAnalysisBtn = false,
     onHistoryAnalysisClick,
     defaultExcludeColumnsKey,
@@ -306,6 +311,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const selectionReconcilePendingRef = useRef(false)
 
   const { setCompareLeft, setCompareRight } = useHttpFlowStore()
+  const { userInfo } = useStore()
 
   // 屏蔽数据
   const [shieldData, setShieldData, getShieldData] = useGetSetState<ShieldData>({
@@ -543,6 +549,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       }
       if (Array.isArray(query.Methods)) {
         query.Methods = query.Methods.join(',')
+      }
+      if (Array.isArray(query.IssueType)) {
+        query.IssueType = query.IssueType.join(',')
+      }
+      if (Array.isArray(query.Severity)) {
+        query.Severity = query.Severity.join(',')
+      }
+      if (Array.isArray(query.Status)) {
+        query.Status = query.Status.join(',')
       }
       if ('bodyLength' in query) {
         delete query.bodyLength
@@ -1373,6 +1388,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     if (Array.isArray(copyQuery.Methods)) {
       copyQuery.Methods = copyQuery.Methods.join(',')
     }
+    if (Array.isArray(copyQuery.IssueType)) {
+      copyQuery.IssueType = copyQuery.IssueType.join(',')
+    }
+    if (Array.isArray(copyQuery.Severity)) {
+      copyQuery.Severity = copyQuery.Severity.join(',')
+    }
+    if (Array.isArray(copyQuery.Status)) {
+      copyQuery.Status = copyQuery.Status.join(',')
+    }
     setQueryParams(JSON.stringify(copyQuery))
   }, [tableParams.Filter])
 
@@ -1444,9 +1468,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }).run
 
   const onRefreshQueryHTTPFlowsFun = useMemoizedFn((data) => {
-    if (!isTableActive) {
-      return
-    }
     try {
       const parsedData = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'onRefreshQueryHTTPFlowsFun' })
       const isEnvelope =
@@ -1455,6 +1476,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         parsedData.__yakitHTTPFlowRefreshEnvelope === 1 &&
         'payload' in parsedData
       const updateData = isEnvelope ? parsedData.payload : parsedData
+      if (updateData?.action === 'sync-complete') {
+        if (pageType === 'History') {
+          // 同步会修改已有记录，按当前筛选完整重查；后台页面在重新显示时查询。
+          setParams((prev) => ({ ...prev }))
+        }
+        return
+      }
+      if (!isTableActive) return
       const envelopeTimestamp = Number(isEnvelope ? parsedData.serverSentAtUnixMs : undefined)
       if (Number.isFinite(envelopeTimestamp) && envelopeTimestamp > 0) {
         const previousTimestamp = pendingPushServerSentAtUnixMsRef.current
@@ -1466,6 +1495,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         pendingTagUpdatesRef.current.push(updateData)
       }
     } catch (error) {}
+    if (!isTableActive) return
     if (inViewport) refreshFieldGroups()
     schedulePushRefresh()
   })
@@ -1806,6 +1836,71 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     [downstreamProxyStr, onlyFavorite, pageType, t],
   )
 
+  const isEnterprise = isEnterpriseEdition()
+
+  const patchFlowMark = useMemoizedFn((payload: FlowMarkPatchPayload) => {
+    const idSet = new Set(payload.Ids.map(String))
+    const patchRow = (row: HTTPFlow): HTTPFlow => {
+      if (!idSet.has(String(row.Id))) return row
+      return {
+        ...row,
+        ...(payload.IssueType !== undefined ? { IssueType: payload.IssueType } : {}),
+        ...(payload.Severity !== undefined ? { Severity: payload.Severity } : {}),
+        ...(payload.Status !== undefined ? { Status: payload.Status } : {}),
+        ...(payload.StatusReason !== undefined ? { StatusReason: payload.StatusReason } : {}),
+      }
+    }
+    setData((prev) => prev.map(patchRow))
+    setSelectedRows((prev) => prev.map(patchRow))
+    setSelected((prev) => (prev ? patchRow(prev) : prev))
+  })
+
+  useEffect(() => {
+    onRegisterFlowMarkPatch?.(patchFlowMark)
+    return () => onRegisterFlowMarkPatch?.(undefined)
+  }, [onRegisterFlowMarkPatch, patchFlowMark])
+
+  const onOpenFlowMarkEdit = useMemoizedFn((record: HTTPFlow) => {
+    const m = showYakitModal({
+      maskClosable: false,
+      title: `ID: ${record.Id}`,
+      content: (
+        <FlowMarkEditForm
+          info={record}
+          ids={[Number(record.Id)]}
+          filter={getParams()}
+          token={userInfo.token}
+          onClose={() => m.destroy()}
+          onSuccess={patchFlowMark}
+        />
+      ),
+      footer: null,
+      onCancel: () => m.destroy(),
+    })
+  })
+
+  const onOpenBatchMarkEdit = useMemoizedFn((list: HTTPFlow[]) => {
+    const selectedIds = list.map((item) => Number(item.Id)).filter((id) => !Number.isNaN(id))
+    const scope = resolveHTTPFlowMarkScope(isAllSelect, selectedIds, getParams())
+    if (!isAllSelect && scope.ids.length === 0) return
+    const m = showYakitModal({
+      title: t('HTTPFlowTable.batchModifyMark'),
+      maskClosable: false,
+      content: (
+        <FlowMarkEditForm
+          batch
+          ids={scope.ids}
+          filter={scope.filter}
+          token={userInfo.token}
+          onClose={() => m.destroy()}
+          onSuccess={isAllSelect ? () => updateData() : patchFlowMark}
+        />
+      ),
+      footer: null,
+      onCancel: () => m.destroy(),
+    })
+  })
+
   const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
     debugToPrintLogs({
       page: 'HTTPFlowTable',
@@ -1834,6 +1929,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       onIncludeIdSearchSure,
       actionHandlers: columnActionHandlers,
       comBuiltinTagList,
+      isEnterprise,
+      onOpenFlowMarkEdit,
     })
     const { columns: realColumns, configColumns } = resolveHTTPFlowTableColumns({
       columnArr,
@@ -1855,6 +1952,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     comSuffixList,
     comBuiltinTagList,
     columnActionHandlers,
+    isEnterprise,
+    onOpenFlowMarkEdit,
   ])
   // #endregion
 
@@ -2456,7 +2555,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   }, [])
 
-  const { userInfo } = useStore()
   const codecMultipleHistoryPluginCom = useCampare(codecMultipleHistoryPlugin)
   const codecSingleHistoryPluginCom = useCampare(codecSingleHistoryPlugin)
   const selectedRowKeysCom = useCampare(selectedRowKeys)
@@ -2792,6 +2890,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onFilterDomain,
     onBatch,
     onViewAttachmentDataRefresh,
+    onOpenFlowMarkEdit,
+    onOpenBatchMarkEdit,
     onClearSelection: resetSelected,
   })
 

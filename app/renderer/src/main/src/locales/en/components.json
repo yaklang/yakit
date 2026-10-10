@@ -1,4 +1,26 @@
 {
+  "DisposalAttachment": {
+    "attachment": "Attachment",
+    "upload": "Upload attachment",
+    "remove": "Remove attachment {{name}}",
+    "download": "Download",
+    "downloading": "Downloading. Please choose a save location…",
+    "downloadComplete": "Download complete: {{path}}",
+    "downloadFailed": "Download failed: {{error}}",
+    "missingFlowHash": "Flow hash is required",
+    "missingRiskHash": "Risk hash is required",
+    "imageUploadFailed": "Image upload failed",
+    "quote": "[Attachment] * {{count}}",
+    "uploading": "An attachment is uploading. Please wait before continuing.",
+    "uploadDialogTitle": "Upload attachment (up to 100MB)",
+    "supportedFiles": "Supported attachments",
+    "sizeLimit": "Attachment size must not exceed 100MB",
+    "uploadFailed": "Attachment upload failed",
+    "uploadFailedWithReason": "Attachment upload failed: {{error}}",
+    "pathAndHashRequired": "Attachment path and business identifier are required",
+    "typeHint": "Only {{extensions}} attachments are supported",
+    "uploadHint": "{{types}}; up to 100MB"
+  },
   "ExportExcel": {
     "dataExport": "Data Export",
     "pageNumber": "Page {{page}}",
@@ -196,7 +218,18 @@
     "judgeRepeatError": "Task name duplicate check error: {{error}}",
     "getTaskNotificationError": "Failed to get task notification: {{error}}",
     "createTaskProjectSuccess": "Task project created successfully: {{successInfo}}",
-    "createTaskProjectFailed": "Task project creation failed: {{failedInfo}}"
+    "createTaskProjectFailed": "Task project creation failed: {{failedInfo}}",
+    "webNotification": "System Notifications",
+    "httpflowTagsUpdate": "{{user}} modified your traffic tags. Click Update Data in the top right.",
+    "httpflowTesterAssign": "{{user}} shared traffic with you. Click Update Data in the top right.",
+    "riskTagsUpdate": "{{user}} modified your vulnerability tags. Click Update Data in the top right.",
+    "riskTesterAssign": "{{user}} shared vulnerabilities with you. Click Update Data in the top right.",
+    "plugin": "Plugin",
+    "updateData": "Update Data",
+    "updateFlow": "Update Traffic",
+    "updateRisk": "Update Risks",
+    "syncSuccess": "Data sync completed",
+    "syncFailed": "Data sync failed"
   },
   "JsonFormWrapper": {
     "EditTable": {

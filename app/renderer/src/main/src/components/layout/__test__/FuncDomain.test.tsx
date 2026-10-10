@@ -27,13 +27,21 @@ vi.hoisted(() => {
 
 vi.mock('lottie-web', () => ({ default: vi.fn() }))
 
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { startIdleVisibleInterval, queryRisks, edition } = vi.hoisted(() => ({
+const { startIdleVisibleInterval, queryRisks, edition, messageState, userInfo, menuActions } = vi.hoisted(() => ({
   startIdleVisibleInterval: vi.fn(() => vi.fn()),
   queryRisks: vi.fn(),
   edition: { community: true, yakit: true },
+  messageState: { unread: 0, menuOpen: false },
+  menuActions: {
+    setDynamicMenuOpen: vi.fn(),
+    setCeUserMenuShow: vi.fn(),
+    setLoginShow: vi.fn(),
+    onUpdateApiKey: vi.fn(),
+  },
+  userInfo: { isLogin: false, platform: 'github' },
 }))
 
 vi.mock('@/utils/scheduleIdleTask', () => ({ startIdleVisibleInterval }))
@@ -97,7 +105,7 @@ vi.mock('@/utils/envfile', async (importOriginal) => {
 })
 
 vi.mock('@/store', () => ({
-  useStore: () => ({ userInfo: { isLogin: false } }),
+  useStore: () => ({ userInfo }),
   useYakitDynamicStatus: () => ({
     dynamicStatus: { isDynamicStatus: false },
   }),
@@ -129,9 +137,9 @@ vi.mock('@/store/performanceSampling', () => ({
 
 vi.mock('../userMenu/useUserMenu', () => ({
   useUserMenu: () => ({
-    userMenu: [],
-    ceUserMenuShow: false,
-    setCeUserMenuShow: vi.fn(),
+    userMenu: [{ key: 'message-center', label: 'FuncDomain.messageCenter' }],
+    ceUserMenuShow: messageState.menuOpen,
+    setCeUserMenuShow: menuActions.setCeUserMenuShow,
     usageStatisticsShow: false,
     setUsageStatisticsShow: vi.fn(),
     rechargeVisible: false,
@@ -139,7 +147,7 @@ vi.mock('../userMenu/useUserMenu', () => ({
     apiKeys: '',
     apiKeysInfo: {},
     apiKeysInfoLoading: false,
-    onUpdateApiKey: vi.fn(),
+    onUpdateApiKey: menuActions.onUpdateApiKey,
     passwordShow: false,
     setPasswordShow: vi.fn(),
     passwordClose: vi.fn(),
@@ -151,8 +159,8 @@ vi.mock('../userMenu/useUserMenu', () => ({
     setControlMyselfModal: vi.fn(),
     controlOtherModal: false,
     setControlOtherModal: vi.fn(),
-    dynamicMenuOpen: false,
-    setDynamicMenuOpen: vi.fn(),
+    dynamicMenuOpen: messageState.menuOpen,
+    setDynamicMenuOpen: menuActions.setDynamicMenuOpen,
     robotControlModal: false,
     setRobotControlModal: vi.fn(),
     imControlBadge: 0,
@@ -160,7 +168,7 @@ vi.mock('../userMenu/useUserMenu', () => ({
     refreshIMControlStatus: vi.fn(),
     onUserMenuClick: vi.fn(),
     loginShow: false,
-    setLoginShow: vi.fn(),
+    setLoginShow: menuActions.setLoginShow,
   }),
 }))
 
@@ -189,7 +197,13 @@ vi.mock('../userMenu/UserMenuModals', () => ({
 }))
 
 vi.mock('../userMenu/UserAvatarIMBadge', () => ({
-  UserAvatarIMBadge: () => null,
+  UserAvatarIMBadge: ({ hasUnreadMessage }: { hasUnreadMessage: boolean }) => (
+    <span data-testid="avatar-unread" data-unread={String(hasUnreadMessage)} />
+  ),
+}))
+
+vi.mock('../../MessageCenter/useMessageUnread', () => ({
+  useMessageUnread: () => messageState.unread,
 }))
 
 vi.mock('../../CeUserMenu/CeRechargeModal', () => ({
@@ -308,5 +322,79 @@ describe('FuncDomain 风险轮询卸载竞态', () => {
       await Promise.resolve()
     })
     expect(startIdleVisibleInterval).toHaveBeenCalled()
+  })
+})
+
+describe('FuncDomain 头像消息提示接线', () => {
+  afterEach(() => {
+    userInfo.isLogin = false
+    messageState.unread = 0
+    messageState.menuOpen = false
+  })
+
+  it.each(['github', 'company'])('%s 头像随未读状态更新，未读消除后移除红点', (platform) => {
+    userInfo.isLogin = true
+    userInfo.platform = platform
+    messageState.unread = 3
+    queryRisks.mockResolvedValue({ Data: [] })
+    const { rerender } = render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
+    expect(screen.getByTestId('avatar-unread')).toHaveAttribute('data-unread', 'true')
+    messageState.unread = 0
+    rerender(<FuncDomain {...baseProps} isJudgeLicense={false} onDevToolRefresh={vi.fn()} />)
+    expect(screen.getByTestId('avatar-unread')).toHaveAttribute('data-unread', 'false')
+  })
+
+  it.each([
+    ['github', 0, null],
+    ['github', 12, '12'],
+    ['github', 99, '99'],
+    ['github', 120, '99+'],
+    ['company', 0, null],
+    ['company', 12, '12'],
+    ['company', 99, '99'],
+    ['company', 120, '99+'],
+  ] as const)('%s 消息菜单显示未读总数 %s', async (platform, count, display) => {
+    userInfo.isLogin = true
+    userInfo.platform = platform
+    messageState.unread = count
+    messageState.menuOpen = true
+    queryRisks.mockResolvedValue({ Data: [] })
+    render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
+    expect(await screen.findByText('FuncDomain.messageCenter')).toBeInTheDocument()
+    if (display) {
+      expect(await screen.findByLabelText(`FuncDomain.unreadMessages: ${count}`)).toHaveTextContent(display)
+    } else {
+      expect(screen.queryByLabelText(/FuncDomain.unreadMessages:/)).not.toBeInTheDocument()
+    }
+  })
+})
+
+describe('FuncDomain 头像按钮点击区域', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+  })
+
+  afterEach(() => {
+    userInfo.isLogin = false
+    userInfo.platform = 'github'
+  })
+
+  it.each(['company', 'github'])('%s 点击头像周围留白也打开菜单', (platform) => {
+    userInfo.isLogin = true
+    userInfo.platform = platform
+    render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
+    fireEvent.click(screen.getByTestId('user-menu-trigger'))
+    expect(
+      platform === 'company' ? menuActions.setDynamicMenuOpen : menuActions.setCeUserMenuShow,
+    ).toHaveBeenCalledWith(true)
+    if (platform === 'github') expect(menuActions.onUpdateApiKey).toHaveBeenCalledOnce()
+  })
+
+  it('未登录时点击头像周围留白打开登录', () => {
+    userInfo.isLogin = false
+    render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
+    fireEvent.click(screen.getByTestId('user-menu-trigger'))
+    expect(menuActions.setLoginShow).toHaveBeenCalledWith(true)
   })
 })

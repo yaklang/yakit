@@ -1,4 +1,26 @@
 {
+  "DisposalAttachment": {
+    "attachment": "附件",
+    "upload": "上传附件",
+    "remove": "移除附件 {{name}}",
+    "download": "下载",
+    "downloading": "正在下载，请选择保存位置…",
+    "downloadComplete": "下载完成：{{path}}",
+    "downloadFailed": "下载失败：{{error}}",
+    "missingFlowHash": "缺少流量 hash",
+    "missingRiskHash": "缺少 risk hash",
+    "imageUploadFailed": "上传图片失败",
+    "quote": "[附件] * {{count}}",
+    "uploading": "附件正在上传中，请稍候再操作",
+    "uploadDialogTitle": "上传附件（不超过100MB）",
+    "supportedFiles": "支持的附件",
+    "sizeLimit": "附件大小不能超过100MB",
+    "uploadFailed": "附件上传失败",
+    "uploadFailedWithReason": "附件上传失败：{{error}}",
+    "pathAndHashRequired": "附件路径和业务标识必填",
+    "typeHint": "仅支持 {{extensions}} 格式的附件",
+    "uploadHint": "{{types}}，不超过100MB"
+  },
   "ExportExcel": {
     "dataExport": "数据导出",
     "pageNumber": "第{{page}}页",
@@ -196,7 +218,18 @@
     "judgeRepeatError": "校验任务重名错误：{{error}}",
     "getTaskNotificationError": "获取任务通知错误：{{error}}",
     "createTaskProjectSuccess": "创建任务项目成功：{{successInfo}}",
-    "createTaskProjectFailed": "创建任务项目失败：{{failedInfo}}"
+    "createTaskProjectFailed": "创建任务项目失败：{{failedInfo}}",
+    "webNotification": "系统通知",
+    "httpflowTagsUpdate": "{{user}}修改了你的流量标记，可点击右上角更新数据",
+    "httpflowTesterAssign": "{{user}}向你分享了流量，可点击右上角更新数据",
+    "riskTagsUpdate": "{{user}}修改了你的漏洞标记，可点击右上角更新数据",
+    "riskTesterAssign": "{{user}}向你分享了漏洞，可点击右上角更新数据",
+    "plugin": "插件",
+    "updateData": "更新数据",
+    "updateFlow": "更新流量",
+    "updateRisk": "更新漏洞",
+    "syncSuccess": "数据更新完成",
+    "syncFailed": "数据更新失败"
   },
   "JsonFormWrapper": {
     "EditTable": {

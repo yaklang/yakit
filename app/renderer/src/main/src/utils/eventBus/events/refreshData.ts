@@ -19,6 +19,8 @@ export type RefreshDataEventProps = {
 
   // WebSocket通知
   onRefreshMessageSocket: string
+  // 消息已读状态变化，通知未读标记重新查询
+  onRefreshMessageUnread?: string
 
   // 通知rps
   onRefreshRps?: string

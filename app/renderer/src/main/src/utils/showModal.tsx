@@ -28,6 +28,7 @@ export const BaseModal: React.FC<BaseModalProp> = (props) => {
   return (
     <Modal
       {...props}
+      keyboard={false}
       footer={false}
       open={visible}
       onCancel={() => setVisible(false)}

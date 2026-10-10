@@ -116,6 +116,15 @@
     "doNotResetRequestID": "Do Not Reset Request ID",
     "keepOnlyFavorites": "Retain only collection data",
     "saveFile": "Save File",
+    "problemType": "Problem Type",
+    "severity": "Severity",
+    "disposalStatus": "Disposal Status",
+    "disposalNote": "Disposal Note",
+    "selectProblemType": "Select problem type",
+    "selectSeverity": "Select severity",
+    "selectDisposalStatus": "Select disposal status",
+    "inputDisposalNote": "Enter disposal note",
+    "batchModifyMark": "Batch Modify",
     "RowContextMenu": {
       "sendToWebFuzzer": "Send to Web Fuzzer",
       "sendAndRedirect": "Send and Redirect",
@@ -155,6 +164,7 @@
       "exportData": "Export Data",
       "exportToExcel": "Export to Excel",
       "exportToHAR": "Export to HAR",
+      "modifyMark": "Modify Mark",
       "editTag": "Edit Tag",
       "openInNewWindow": "Open in New Window",
       "uploadData": "Upload Data",
@@ -176,7 +186,27 @@
     "filterDomainEmpty": "Domain is empty, cannot filter",
     "shieldLimitReached": "To protect database performance, only 5 block rules can be active. Use \"Delete\" to remove packets you are not interested in.",
     "shieldTooManyOnlyLatestTitle": "Too Many Block Rules",
-    "shieldTooManyOnlyLatest": "For performance, only the latest 5 block rules are active. You can use \"Delete\" on specific packets to remove ones you are not interested in."
+    "shieldTooManyOnlyLatest": "For performance, only the latest 5 block rules are active. You can use \"Delete\" on specific packets to remove ones you are not interested in.",
+    "markOptions": {
+      "SQL注入": "SQL Injection",
+      "XSS": "XSS",
+      "SSRF": "SSRF",
+      "未授权访问": "Unauthorized Access",
+      "CSRF": "CSRF",
+      "文件上传漏洞": "File Upload Vulnerability",
+      "文件包含": "File Inclusion",
+      "反序列化漏洞": "Deserialization Vulnerability",
+      "目录遍历": "Directory Traversal",
+      "低危": "Low",
+      "中危": "Medium",
+      "高危": "High",
+      "严重": "Critical",
+      "确认": "Confirmed",
+      "误报": "False Positive",
+      "待修复": "Pending Fix",
+      "已修复": "Fixed"
+    },
+    "modifyMarkFailed": "Failed to modify traffic marks: {{error}}"
   },
   "ImportExportProgress": {
     "exportHARData": "Export HAR traffic data"
@@ -310,6 +340,15 @@
     "object": "Object",
     "rule": "Rule",
     "codec": "Codec",
+    "log": "Log",
+    "logEmpty": "No disposal logs yet",
+    "logSystem": "System",
+    "logUpdateMark": "Updated mark",
+    "logReplyComment": "Replied to comment",
+    "logPublishComment": "Published comment",
+    "logReply": "Reply",
+    "logNone": "None",
+    "logDownload": "Download",
     "more": "More"
   },
   "CodingPopover": {

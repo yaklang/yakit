@@ -91,6 +91,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
   return (
     <Modal
       {...resetProps}
+      keyboard={false}
       wrapClassName={classNames(
         styles['yakit-modal-wrapper'],
         'yakit-modal-wrapper-progress',

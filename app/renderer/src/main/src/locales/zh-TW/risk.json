@@ -13,6 +13,10 @@
     "resetTipAfterManualSelection": "手動選擇所有漏洞型別後，點選重置即可檢視所有資料"
   },
   "YakitRiskTable": {
+    "batch_modify_mark": "修改標記",
+    "delete_selected_risks": "刪除所選漏洞",
+    "confirm_clear_filtered_risks": "確定清空目前篩選結果中的所有漏洞與風險嗎？此操作無法復原。",
+    "batch_mark_hint": "將統一修改 {{count}} 條漏洞的標記，留空的選填項將清空原值。",
     "title": "標題",
     "type": "型別",
     "level": "等級",
@@ -49,7 +53,35 @@
     },
     "queryRisksTotalFailed": "apiQueryRisksTotalByRuntimeId 獲取總數失敗：",
     "queryRiskTagsFailed": "查詢QueryRiskTags失敗：",
-    "queryAvailableRiskTypeFailed": "查詢QueryAvailableRiskType失敗："
+    "queryAvailableRiskTypeFailed": "查詢QueryAvailableRiskType失敗：",
+    "cvss_score": "CVSS評分",
+    "enter_cvss": "請輸入 CVSS 評分",
+    "select_disposal_status": "請選擇處置狀態"
+  },
+  "YakitRiskEditForm": {
+    "risk_type": "問題類型",
+    "risk_type_required": "請選擇或輸入問題類型",
+    "cvss_score": "CVSS評分",
+    "cvss_required": "請輸入 CVSS 評分",
+    "cvss_range": "CVSS 評分範圍為 0.0-10.0",
+    "level": "等級",
+    "disposal_status": "處置狀態",
+    "disposal_required": "請選擇處置狀態",
+    "disposal_placeholder": "請選擇或輸入處置狀態",
+    "pending_verify": "待驗證",
+    "confirmed": "確認",
+    "repaired": "已修復",
+    "false_positive": "誤報",
+    "closed": "關閉",
+    "verifier": "驗證人",
+    "verifier_required": "請選擇驗證人",
+    "verifier_placeholder": "請搜尋並選擇驗證人",
+    "repair_time": "修復時間",
+    "repair_time_required": "請選擇修復時間",
+    "repair_suggestion": "修復建議",
+    "repair_suggestion_placeholder": "請輸入修復建議",
+    "disposal_note": "處置說明",
+    "disposal_note_placeholder": "請輸入處置說明"
   },
   "YakitRiskSelectTag": {
     "false_positive": "誤報",
@@ -60,6 +92,8 @@
   "YakitRiskDetails": {
     "vulnerability_details": "漏洞詳情",
     "data_packet": "資料包",
+    "disposal_log": "處置日誌",
+    "dispose_risk": "處置漏洞",
     "port_colon": "port：",
     "discovery_time_colon": "發現時間：",
     "no_data_packet": "無資料包",
@@ -106,5 +140,26 @@
   },
   "AuditResultCollapse": {
     "open_in_code_audit": "在程式碼審計中開啟"
+  },
+  "RiskDisposalLog": {
+    "please_login": "請登入",
+    "no_access_title": "暫無訪問權限",
+    "no_access_desc": "登入後即可訪問該頁面",
+    "empty": "暫無處置日誌",
+    "dispose_risk": "處置漏洞",
+    "system": "系統",
+    "publish_comment": "發布評論",
+    "reply_comment": "回覆評論",
+    "reply": "回覆",
+    "download": "下載",
+    "repair_time": "修復時間：",
+    "repair_department": "修復部門：",
+    "repairer": "修復人：",
+    "reply_prefix": "回覆 {{user}} : {{content}}",
+    "image_count": " [圖片] * {{count}}",
+    "fetch_logs_failed": "查詢處置日誌失敗",
+    "fetch_flow_logs_failed": "查詢流量處置日誌失敗",
+    "publish_comment_failed": "發布評論失敗",
+    "delete_comment_failed": "刪除評論失敗"
   }
 }

@@ -229,6 +229,9 @@ service Yak {
   rpc HTTPFlowsToOnline(HTTPFlowsToOnlineRequest) returns (Empty);
   rpc QueryHTTPFlowsProcessNames(QueryHTTPFlowRequest) returns (QueryHTTPFlowsProcessNamesResponse);
   rpc HTTPFlowsToOnlineBatch(HTTPFlowsToOnlineBatchRequest) returns (HTTPFlowsToOnlineBatchResponse);
+  rpc HTTPFlowsFromOnline(HTTPFlowsFromOnlineRequest) returns (stream HTTPFlowsFromOnlineProgress);
+  rpc BatchSetHTTPFlowIssueFields(BatchSetHTTPFlowIssueFieldsRequest) returns (BatchSetHTTPFlowIssueFieldsResponse);
+
 
   // 流量分析器
   rpc AnalyzeHTTPFlow(AnalyzeHTTPFlowRequest) returns (stream AnalyzeHTTPFlowResponse);
@@ -474,6 +477,9 @@ service Yak {
   rpc RiskFieldGroup(Empty) returns (RiskFieldGroupResponse);
   // 误报反馈
   rpc RiskFeedbackToOnline(UploadRiskToOnlineRequest) returns (Empty);
+
+  rpc RisksFromOnline(RisksFromOnlineRequest) returns (stream RisksFromOnlineProgress);
+  rpc BatchSetRiskTags(BatchSetRiskTagsRequest) returns (BatchSetRiskTagsResponse);
 
   // Report
   rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
@@ -5441,6 +5447,10 @@ message Risk {
 
   // 关联的请求/响应报文对列表
   repeated PacketPair PacketPairs = 34;
+  double SeverityScore = 35;
+  string TagReason = 36;
+  int64 FixTime = 37;
+  string  FixSuggestion = 38;
 }
 
 message QueryRisksRequest {
@@ -5530,6 +5540,36 @@ message SetTagForRiskRequest {
   int64 Id = 1;
   string Hash = 2;
   repeated string Tags = 3;
+}
+
+message RisksFromOnlineRequest {
+  string Token = 1;
+}
+
+message RisksFromOnlineProgress {
+  double Progress = 1;
+  string Log = 2;
+}
+
+message BatchSetRiskTagsRequest {
+  QueryRisksRequest Filter = 1;
+  // 设置 处置状态标签   QueryRisksRequest中tags为筛选条件
+  repeated string SetTags = 2;
+  string VerifierUid = 3;
+  int64 FixTime = 4;
+  string FixSuggestion = 5;
+  repeated int64 Ids = 6;
+  repeated string Hashes = 7;
+  string Token = 8;
+  string RiskTypeVerbose = 9;
+  string SetSeverity = 10;
+  double SeverityScore = 11;
+  // 处置原因
+  string TagReason = 12;
+}
+
+message BatchSetRiskTagsResponse {
+  int64 UpdatedCount = 1;
 }
 
 
@@ -7370,6 +7410,9 @@ message QueryHTTPFlowRequest {
   // 显式跳过精确 Total；用于已有游标的实时增量查询。
   // Data/Pagination 仍正常返回，但 Total 为 0。初始化、历史与周期校准不得开启。
   bool SkipTotal = 55;
+  string IssueType = 56;
+  string Severity = 57;
+  string Status = 58;
 }
 
 message HTTPFlowsToOnlineRequest {
@@ -7388,6 +7431,33 @@ message HTTPFlowsToOnlineBatchRequest {
 message HTTPFlowsToOnlineBatchResponse {
   int64 SuccessCount = 1;
   int64 FailedCount = 2;
+}
+
+message HTTPFlowsFromOnlineRequest {
+  string Token = 1;
+}
+
+message HTTPFlowsFromOnlineProgress {
+  double Progress = 1;
+  string Log = 2;
+}
+
+message BatchSetHTTPFlowIssueFieldsRequest {
+  // 批量更新 条件筛选
+  QueryHTTPFlowRequest Filter = 1;
+  string SetIssueType = 2;
+  string SetSeverity = 3;
+  string SetStatus = 4;
+  string StatusReason = 5;
+  // 按 ID 批量更新
+  repeated int64 Ids = 6;
+  // 按 Hash 批量更新
+  repeated string Hashes = 7;
+  string Token = 8;
+}
+
+message BatchSetHTTPFlowIssueFieldsResponse {
+  int64 UpdatedCount = 1;
 }
 
 message AnalyzeHTTPFlowRequest{
@@ -7564,6 +7634,10 @@ message HTTPFlow {
   // 前端据此渲染「查看/下载 xxx 文件」下拉，而非整块 body。
   // 非空时 GetHTTPFlowBodyById 可带 PartIndex 流式返回单个文件内容。
   repeated MultipartFileInfo MultipartFiles = 58;
+  string IssueType = 59;
+  string Severity = 60;
+  string Status = 61;
+  string  StatusReason = 62;
 }
 
 // MultipartFileInfo 描述一个落盘的 multipart 文件 part 元数据。

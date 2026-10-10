@@ -2,6 +2,14 @@ import moment from 'moment'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'utils')
 
+/** 业务日期的零值表示未设置，避免把 0 或 "0" 回填成 1970 年。 */
+export const getDateFromUnixTimestamp = (value?: number | string | null): moment.Moment | undefined => {
+  const timestamp = Number(value)
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return undefined
+  const date = moment.unix(timestamp)
+  return date.isValid() ? date : undefined
+}
+
 /** @name 将unix时间戳转换为 YYYY-MM-DD HH:mm:ss */
 export const formatTimestamp = (i: number, onlyTime?: boolean) => {
   if (onlyTime) {

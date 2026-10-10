@@ -515,10 +515,12 @@ declare global {
   interface UploadImgApiResponse {
     code?: number
     message?: string
-    data?: {
-      from?: string
-      reason?: string
-    } & string
+    data?:
+      | string
+      | {
+          from?: string
+          reason?: string
+        }
   }
 
   interface UploadFileApiResponse {
@@ -1106,6 +1108,10 @@ declare global {
       mutateHttpRequest: (payload: MutateHTTPRequestParams) => Promise<MutateHTTPRequestResponse>
     }
     fileSystem: {
+      downloadDisposalFile: (params: {
+        url: string
+        fileName?: string
+      }) => Promise<{ canceled: boolean; filePath?: string }>
       isFileExists: (targetPath: string) => Promise<boolean>
       fetchFileContent: (targetPath: string) => Promise<string>
     }

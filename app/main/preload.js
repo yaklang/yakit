@@ -405,6 +405,7 @@ process.on('loaded', function () {
       mutateHttpRequest: (payload) => invoke('HTTPRequestMutate', payload),
     },
     fileSystem: {
+      downloadDisposalFile: (params) => invoke('download-disposal-file', params),
       isFileExists: (targetPath) => invoke('is-file-exists', targetPath),
       fetchFileContent: (targetPath) => invoke('fetch-file-content', targetPath),
     },

@@ -65,6 +65,13 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import { JSONParseLog } from '@/utils/tool'
 import { HTTPFlowCodec } from '@/utils/encodec'
 import { YakitMenu, type YakitMenuItemType } from './yakitUI/YakitMenu/YakitMenu'
+import { isEnterpriseEdition } from '@/utils/envfile'
+import { useStore } from '@/store'
+import { FlowDisposalLog } from './HTTPFlowTable/FlowDisposalLog'
+import type { FlowMarkPatchPayload } from './HTTPFlowTable/HTTPFlowMark.constants'
+import { mergeHTTPFlowDetailMark } from './HTTPFlowTable/HTTPFlowMark.helpers'
+import { FlowMarkEditForm } from './HTTPFlowTable/FlowMarkEditForm'
+import { showYakitModal } from './yakitUI/YakitModal/YakitModalConfirm'
 const { TabPane } = PluginTabs
 const { ipcRenderer } = window.require('electron')
 
@@ -84,6 +91,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
   fetchRequest?: (kind: number) => any
   search?: string
   selectedFlow?: HTTPFlow
+  onFlowMarkSuccess?: (payload: FlowMarkPatchPayload) => void
 
   refresh?: boolean
 
@@ -679,7 +687,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
   )
 }
 
-type HTTPFlowInfoType = 'domains' | 'json' | 'rules' | 'codec'
+type HTTPFlowInfoType = 'log' | 'domains' | 'json' | 'rules' | 'codec'
 
 export interface HistoryHighLightText extends HighLightText {
   IsMatchRequest?: boolean
@@ -688,6 +696,8 @@ export interface HistoryHighLightText extends HighLightText {
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
   const { id, selectedFlow, refresh, analyzedIds, showHeaderInfo = false, showFlod = true } = props
   const { t, i18nRefresh } = useI18nNamespaces(['history', 'yakitUi'])
+  const { userInfo } = useStore()
+  const isEnterprise = isEnterpriseEdition()
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(ref)
   const [flow, setFlow, getFlow] = useGetSetState<HTTPFlow>()
@@ -698,6 +708,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
   const [infoTypeLoading, setInfoTypeLoading] = useState(false)
   const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
   const [isFold, setFold] = useState<boolean>(true)
+  const [logRefreshKey, setLogRefreshKey] = useState(0)
   const lastIdRef = useRef<number>()
   const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
   const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
@@ -724,6 +735,14 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
   useUpdateEffect(() => {
     update(true)
   }, [refresh])
+
+  useUpdateEffect(() => {
+    const current = getFlow()
+    const next = mergeHTTPFlowDetailMark(current, selectedFlow)
+    if (next === current) return
+    setFlow(next)
+    setLogRefreshKey((key) => key + 1)
+  }, [selectedFlow])
 
   useUpdateEffect(() => {
     setRemoteValue('HISTORY_FOLD', JSON.stringify(isFold))
@@ -860,16 +879,50 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
           existedExtraInfos.push('json')
         }
 
-        if (existedExtraInfos.length > 0) {
-          const newExistedInfoType: HTTPFlowInfoType[] = [...existedExtraInfos, 'codec']
-          setInfoType(newExistedInfoType[0])
-          setExistedInfoType(newExistedInfoType)
-        } else {
-          setInfoType('codec')
-          setExistedInfoType(['codec'])
-        }
+        // EE：固定加入日志栏并优先展示；CE：行为与原先一致
+        const baseTypes: HTTPFlowInfoType[] = existedExtraInfos.length > 0 ? [...existedExtraInfos, 'codec'] : ['codec']
+        const newExistedInfoType: HTTPFlowInfoType[] = isEnterprise ? ['log', ...baseTypes] : baseTypes
+        setInfoType(isEnterprise ? 'log' : newExistedInfoType[0])
+        setExistedInfoType(newExistedInfoType)
       })
   }
+
+  const onFlowMarkSuccess = useMemoizedFn((payload: FlowMarkPatchPayload) => {
+    setFlow((prev) => {
+      if (!prev || !payload.Ids.includes(Number(prev.Id))) return prev
+      return {
+        ...prev,
+        ...(payload.IssueType !== undefined ? { IssueType: payload.IssueType } : {}),
+        ...(payload.Severity !== undefined ? { Severity: payload.Severity } : {}),
+        ...(payload.Status !== undefined ? { Status: payload.Status } : {}),
+        ...(payload.StatusReason !== undefined ? { StatusReason: payload.StatusReason } : {}),
+      }
+    })
+    props.onFlowMarkSuccess?.(payload)
+  })
+
+  const onOpenMarkEdit = useMemoizedFn(() => {
+    if (!flow) return
+    const flowId = Number(flow.Id) || 0
+    const m = showYakitModal({
+      title: `ID: ${flow.Id}`,
+      maskClosable: false,
+      content: (
+        <FlowMarkEditForm
+          info={flow}
+          ids={[flowId]}
+          token={userInfo.token}
+          onClose={() => m.destroy()}
+          onSuccess={(payload) => {
+            onFlowMarkSuccess(payload)
+            setLogRefreshKey((k) => k + 1)
+          }}
+        />
+      ),
+      footer: null,
+      onCancel: () => m.destroy(),
+    })
+  })
 
   useEffect(() => {
     if (!infoType) {
@@ -1064,8 +1117,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                   </div>
                 ) : (
                   <div className={styles['http-history-detail-wrapper']}>
-                    {!['rules', 'codec'].includes(infoType || '') &&
-                      existedInfoType.filter((i) => i !== 'rules').length > 0 && (
+                    {!['rules', 'codec', 'log'].includes(infoType || '') &&
+                      existedInfoType.filter((i) => i !== 'rules' && i !== 'log').length > 0 && (
                         <NewHTTPPacketEditor
                           fromMITM={props.pageType === 'MITM'}
                           title={
@@ -1268,6 +1321,56 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                           </div>
                         }
                         children={<HTTPFlowCodec data={decodeStr} />}
+                      />
+                    )}
+                    {infoType === 'log' && isEnterprise && (
+                      <NewHTTPCard
+                        title={
+                          <div className={styles['table-header']} style={{ width: '100%' }}>
+                            <Space>
+                              <Button.Group size={'small'}>
+                                {existedInfoType.map((i) => {
+                                  return (
+                                    <YakitButton
+                                      size="small"
+                                      type={infoType === i ? 'primary' : 'outline2'}
+                                      onClick={() => {
+                                        setInfoType(i)
+                                      }}
+                                      key={i}
+                                    >
+                                      {infoTypeVerbose(i, t)}
+                                    </YakitButton>
+                                  )
+                                })}
+                              </Button.Group>
+                            </Space>
+                            <Space>
+                              <YakitButton type="text" size="small" onClick={onOpenMarkEdit}>
+                                {t('HTTPFlowTable.RowContextMenu.modifyMark')}
+                              </YakitButton>
+                              <div className={classNames(styles['http-history-fold-box'])}>
+                                <div className={styles['http-history-icon-box']}>
+                                  <Tooltip placement="top" title={t('HTTPFlowDetailMini.collapseRight')}>
+                                    <OpenOutlined
+                                      className={styles['fold-icon']}
+                                      onClick={() => {
+                                        setRemoteValue('IsFoldValue', JSON.stringify({ is: true, id }))
+                                        setFold(true)
+                                      }}
+                                      color="currentColor"
+                                    />
+                                  </Tooltip>
+                                </div>
+                              </div>
+                            </Space>
+                          </div>
+                        }
+                        children={
+                          flow ? (
+                            <FlowDisposalLog flow={flow} isLogin={!!userInfo.isLogin} refreshKey={logRefreshKey} />
+                          ) : null
+                        }
                       />
                     )}
                     {existedInfoType.length === 0 && (
@@ -2153,6 +2256,8 @@ export { CodingPopover } from './HTTPFlowDetailParts'
 
 function infoTypeVerbose(i: HTTPFlowInfoType, t: TFunction) {
   switch (i) {
+    case 'log':
+      return t('HTTPFlowDetailMini.log')
     case 'domains':
       return t('HTTPFlowDetailMini.domain')
     case 'json':

@@ -7,6 +7,7 @@ import {
   StarOutlined,
   ArrowCircleRightOutlined,
   ChromeOutlined,
+  ChevronDownOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { CheckCircleSolid, StarSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
@@ -21,6 +22,12 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import { formatHTTPFlowPathSuffix } from './HTTPFlowPathSuffix'
 import { contentType, HTTP_FLOW_FAVORITE_TAG } from './HTTPFlowTable.constants'
 import type { ColumnAllInfoItem, HTTPFlow } from './HTTPFlowTable.constants'
+import {
+  FLOW_DISPOSAL_STATUS_OPTIONS,
+  FLOW_PROBLEM_TYPE_OPTIONS,
+  FLOW_SEVERITY_OPTIONS,
+} from './HTTPFlowMark.constants'
+import markStyles from './HTTPFlowMark.module.scss'
 import { isHTTPFlowFavorite, onConvertBodySizeByUnit } from './HTTPFlowTable.utils'
 import { RangeInputNumberTableWrapper, SearchInputTableWrapper } from './components'
 import style from './HTTPFlowTable.module.scss'
@@ -67,6 +74,8 @@ export interface BuildHTTPFlowTableColumnsContext {
   onIncludeIdSearchSure: () => void
   actionHandlers: HTTPFlowTableColumnActionHandlers
   comBuiltinTagList: FiltersItemProps[]
+  isEnterprise?: boolean
+  onOpenFlowMarkEdit?: (record: HTTPFlow) => void
 }
 
 export interface ResolveHTTPFlowTableColumnsOptions {
@@ -103,6 +112,8 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
     onIncludeIdSearchSure,
     actionHandlers,
     comBuiltinTagList,
+    isEnterprise,
+    onOpenFlowMarkEdit,
   } = ctx
 
   return [
@@ -220,6 +231,105 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
               .join(', ')
           : '',
     },
+    ...(isEnterprise
+      ? ([
+          {
+            title: t('HTTPFlowTable.problemType'),
+            dataKey: 'IssueType',
+            width: 140,
+            filterProps: {
+              filterKey: 'IssueType',
+              filtersType: 'select',
+              filterMultiple: true,
+              filters: FLOW_PROBLEM_TYPE_OPTIONS.map((item) => ({
+                value: item,
+                label: t(`HTTPFlowTable.markOptions.${item}`),
+              })),
+            },
+            render: (text: string, record: HTTPFlow) => (
+              <div
+                className={markStyles['table-tag']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenFlowMarkEdit?.(record)
+                }}
+              >
+                <span>{text ? t(`HTTPFlowTable.markOptions.${text}`, { defaultValue: text }) : '-'}</span>
+                <ChevronDownOutlined className={markStyles['table-tag-icon']} />
+              </div>
+            ),
+          },
+          {
+            title: t('HTTPFlowTable.severity'),
+            dataKey: 'Severity',
+            width: 100,
+            filterProps: {
+              filterKey: 'Severity',
+              filtersType: 'select',
+              filterMultiple: true,
+              filters: FLOW_SEVERITY_OPTIONS.map((item) => ({
+                value: item,
+                label: t(`HTTPFlowTable.markOptions.${item}`),
+              })),
+            },
+            render: (text: string, record: HTTPFlow) => (
+              <div
+                className={markStyles['table-tag']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenFlowMarkEdit?.(record)
+                }}
+              >
+                <span>{text ? t(`HTTPFlowTable.markOptions.${text}`, { defaultValue: text }) : '-'}</span>
+                <ChevronDownOutlined className={markStyles['table-tag-icon']} />
+              </div>
+            ),
+          },
+          {
+            title: t('HTTPFlowTable.disposalStatus'),
+            dataKey: 'Status',
+            width: 100,
+            filterProps: {
+              filterKey: 'Status',
+              filtersType: 'select',
+              filterMultiple: true,
+              filters: FLOW_DISPOSAL_STATUS_OPTIONS.map((item) => ({
+                value: item,
+                label: t(`HTTPFlowTable.markOptions.${item}`),
+              })),
+            },
+            render: (text: string, record: HTTPFlow) => (
+              <div
+                className={markStyles['table-tag']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenFlowMarkEdit?.(record)
+                }}
+              >
+                <span>{text ? t(`HTTPFlowTable.markOptions.${text}`, { defaultValue: text }) : '-'}</span>
+                <ChevronDownOutlined className={markStyles['table-tag-icon']} />
+              </div>
+            ),
+          },
+          {
+            title: t('HTTPFlowTable.disposalNote'),
+            dataKey: 'StatusReason',
+            width: 160,
+            render: (text: string, record: HTTPFlow) => (
+              <div
+                className={markStyles['table-tag']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenFlowMarkEdit?.(record)
+                }}
+              >
+                <span>{text || '-'}</span>
+                <ChevronDownOutlined className={markStyles['table-tag-icon']} />
+              </div>
+            ),
+          },
+        ] as ColumnsTypeProps[])
+      : []),
     {
       title: 'IP',
       dataKey: 'IPAddress',

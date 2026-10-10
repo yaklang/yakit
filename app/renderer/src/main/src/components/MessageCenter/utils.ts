@@ -1,5 +1,8 @@
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
+import emiter from '@/utils/eventBus/eventBus'
+
+const { ipcRenderer } = window.require('electron')
 
 export interface MessageQueryParamsProps {
   page: number
@@ -51,6 +54,7 @@ export const apiFetchMessageRead: (data: MessageQueryReadProps) => Promise<boole
       data,
     })
       .then((res) => {
+        if (res.ok) emiter.emit('onRefreshMessageUnread', 'plugin')
         resolve(res.ok)
       })
       .catch((err) => {
@@ -69,6 +73,7 @@ export const apiFetchMessageClear: (data: MessageQueryReadProps) => Promise<bool
       data,
     })
       .then((res) => {
+        if (res.ok) emiter.emit('onRefreshMessageUnread', 'plugin')
         resolve(res.ok)
       })
       .catch((err) => {
@@ -100,5 +105,156 @@ export const apiFetchQueryAllTask: () => Promise<API.MessageLogResponse> = () =>
         reject(err)
       })
       .finally(() => {})
+  })
+}
+
+export type WebMessageSyncType = 'flow' | 'risk'
+
+export interface FromOnlineProgress {
+  Progress?: number
+  Log?: string
+}
+
+/** Progress 归一化为 0–100 */
+export const normalizeFromOnlinePercent = (progress?: number): number => {
+  const raw = Number(progress) || 0
+  const percent = raw <= 1 ? raw * 100 : raw
+  return Math.max(0, Math.min(100, percent))
+}
+
+export interface FromOnlineStreamHandlers {
+  onProgress: (percent: number, log?: string) => void
+  onError: (error: unknown) => void
+  onEnd: () => void
+}
+
+const startFromOnlineStream = (
+  channel: 'HTTPFlowsFromOnline' | 'RisksFromOnline',
+  cancelChannel: 'cancel-HTTPFlowsFromOnline' | 'cancel-RisksFromOnline',
+  loginToken: string,
+  streamToken: string,
+  handlers: FromOnlineStreamHandlers,
+) => {
+  const onData = (_: unknown, data: FromOnlineProgress) => {
+    handlers.onProgress(normalizeFromOnlinePercent(data?.Progress), data?.Log)
+  }
+  const onError = (_: unknown, error: unknown) => {
+    handlers.onError(error)
+  }
+  const onEnd = () => {
+    handlers.onEnd()
+  }
+
+  ipcRenderer.on(`${streamToken}-data`, onData)
+  ipcRenderer.on(`${streamToken}-error`, onError)
+  ipcRenderer.on(`${streamToken}-end`, onEnd)
+
+  ipcRenderer.invoke(channel, { Token: loginToken }, streamToken).catch((err) => {
+    handlers.onError(err)
+  })
+
+  return () => {
+    ipcRenderer.invoke(cancelChannel, streamToken).catch(() => {})
+    ipcRenderer.removeListener(`${streamToken}-data`, onData)
+    ipcRenderer.removeListener(`${streamToken}-error`, onError)
+    ipcRenderer.removeListener(`${streamToken}-end`, onEnd)
+  }
+}
+
+/** 消息中心更新流量：HTTPFlowsFromOnline */
+export const apiHTTPFlowsFromOnline = (loginToken: string, streamToken: string, handlers: FromOnlineStreamHandlers) => {
+  return startFromOnlineStream('HTTPFlowsFromOnline', 'cancel-HTTPFlowsFromOnline', loginToken, streamToken, handlers)
+}
+
+/** 消息中心更新漏洞：RisksFromOnline */
+export const apiRisksFromOnline = (loginToken: string, streamToken: string, handlers: FromOnlineStreamHandlers) => {
+  return startFromOnlineStream('RisksFromOnline', 'cancel-RisksFromOnline', loginToken, streamToken, handlers)
+}
+
+const mapWebInfoToMessageLog = (item: API.WebInfoDetail): API.MessageLogDetail => {
+  return {
+    id: item.id || 0,
+    created_at: item.created_at || 0,
+    updated_at: item.updated_at || 0,
+    handlerUserName: item.handlerUserName || '',
+    handlerHeadImag: item.handlerHeadImag || '',
+    handlerRole: item.handlerRole || '',
+    upPluginType: item.webInfoType || 'web',
+    scriptName: '',
+    uuid: '',
+    upPluginLogId: 0,
+    isRead: !!item.isRead,
+    hash: item.hash || '',
+    description: item.webInfoType || '',
+    status: 0,
+  }
+}
+
+/** Web 端通知列表 → POST /web/info/list */
+export const apiFetchQueryWebMessage: (
+  params: MessageQueryParamsProps,
+  data?: MessageQueryDataProps,
+) => Promise<API.MessageLogResponse> = (params, data) => {
+  return new Promise((resolve, reject) => {
+    const payload: API.WebInfoRequest = {
+      page: params.page,
+      limit: params.limit,
+      order_by: 'id',
+      order: 'desc',
+      isRead: data?.isRead,
+      logType: data?.logType,
+      ...(data?.beforeId ? { before_id: data.beforeId } : {}),
+      ...(data?.afterId ? { after_id: data.afterId } : {}),
+    }
+    NetWorkApi<API.WebInfoRequest, API.WebInfoResponse>({
+      method: 'post',
+      url: 'web/info/list',
+      data: payload,
+    })
+      .then((res) => {
+        resolve({
+          pagemeta: res.pagemeta,
+          data: (res.data || []).map(mapWebInfoToMessageLog),
+        })
+      })
+      .catch((err) => {
+        reject(err)
+      })
+  })
+}
+
+/** Web 端通知已读 → POST /web/info */
+export const apiFetchWebMessageRead: (data: MessageQueryReadProps) => Promise<boolean> = (data) => {
+  return new Promise((resolve, reject) => {
+    NetWorkApi<API.WebInfoWhereRequest, API.ActionSucceeded>({
+      method: 'post',
+      url: 'web/info',
+      data,
+    })
+      .then((res) => {
+        if (res.ok) emiter.emit('onRefreshMessageUnread', 'web')
+        resolve(res.ok)
+      })
+      .catch((err) => {
+        reject(err)
+      })
+  })
+}
+
+/** Web 端通知清空 → DELETE /web/info */
+export const apiFetchWebMessageClear: (data: MessageQueryReadProps) => Promise<boolean> = (data) => {
+  return new Promise((resolve, reject) => {
+    NetWorkApi<API.WebInfoWhereRequest, API.ActionSucceeded>({
+      method: 'delete',
+      url: 'web/info',
+      data,
+    })
+      .then((res) => {
+        if (res.ok) emiter.emit('onRefreshMessageUnread', 'web')
+        resolve(res.ok)
+      })
+      .catch((err) => {
+        reject(err)
+      })
   })
 }
