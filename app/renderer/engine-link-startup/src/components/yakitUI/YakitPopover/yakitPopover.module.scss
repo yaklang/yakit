@@ -1,3 +1,5 @@
+@use '../../../theme/themeify.scss' as themeify;
+
 .yakit-popover-wrapper {
   // 按实际弹出方向向内覆盖 1px 边框，保留箭头的自动定位与旋转。
   &:global(.ant-popover-placement-top),
@@ -44,7 +46,7 @@
     }
 
     .ant-popover-inner {
-      border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+      @include themeify.color-mix-border(1px, solid, var(--Colors-Use-Neutral-Disable), 50%);
       background-color: var(--Colors-Use-Basic-Background);
       box-shadow: 0 8px 16px var(--Colors-Use-Basic-Shadow);
       border-radius: 4px;
@@ -56,7 +58,7 @@
 
     .ant-popover-arrow {
       // 描边跟随箭头裁剪轮廓和旋转，不绘制与浮层相接的底边。
-      filter: drop-shadow(0 -1px 0 var(--Colors-Use-Neutral-Bg-Hover));
+      @include themeify.color-mix-drop-shadow(0, -1px, 0, var(--Colors-Use-Neutral-Disable), 50%);
     }
 
     .ant-popover-arrow::before {

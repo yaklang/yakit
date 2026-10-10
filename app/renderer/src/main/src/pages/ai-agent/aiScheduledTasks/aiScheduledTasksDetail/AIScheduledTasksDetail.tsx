@@ -9,33 +9,18 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Tooltip } from 'antd'
-import {
-  ChevronLeftOutlined,
-  DocumentOutlined,
-  DocumentTextOutlined,
-  ExternalLinkOutlined,
-  InformationCircleOutlined,
-  MessageCirclePlusOutlined,
-  PauseOutlined,
-  PencilAltOutlined,
-  PlayOutlined,
-  TagOutlined,
-  TrashOutlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import { ArrowUpRightOutlined, PencilOutlined, TimerOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
+import { formatScheduleRule } from '../scheduleDisplay'
+import { OutlineArrowUpFromDotIcon } from '../icon'
 import type { AIReActSchedule } from '../../../ai-re-act/hooks/grpcApi'
-import { grpcGetAIReActSchedule, grpcDeleteAIReActSchedule, grpcSetAIReActScheduleEnabled } from '../utils'
+import { grpcDeleteAIReActSchedule, grpcSetAIReActScheduleEnabled } from '../utils'
 import { yakitNotify } from '@/utils/notification'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import styles from './AIScheduledTasksDetail.module.scss'
 import classNames from 'classnames'
 import type { AIScheduledTasksDetailProps } from './type'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
-
-const scheduleStatusColor: Record<string, YakitTagColor> = {
-  active: 'success',
-  paused: 'warning',
-  completed: 'info',
-}
 
 const scheduleOutcomeColor: Record<string, YakitTagColor> = {
   succeeded: 'success',
@@ -123,23 +108,17 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
       .catch(() => undefined)
   })
 
-  const handleClose = useMemoizedFn(() => {
-    onClose()
-  })
-
   const handleToggleEnabled = useMemoizedFn(async () => {
-    if (toggling) return
+    if (toggling || schedule.Status === 'completed') return
     setToggling(true)
     try {
-      // 1. 调用启停接口
-      await grpcSetAIReActScheduleEnabled({ UUID: schedule.UUID, Enabled: schedule.Status !== 'active' })
+      const latest = await grpcSetAIReActScheduleEnabled({ UUID: schedule.UUID, Enabled: schedule.Status !== 'active' })
       yakitNotify(
         'success',
         t(schedule.Status === 'active' ? 'AIScheduledTasks.pausedSuccess' : 'AIScheduledTasks.resumedSuccess'),
       )
-      // 2. 启停成功后拉取最新任务数据，经 onDataChange 由父组件同步列表与选中项，prop 回流刷新详情
-      const latest = await grpcGetAIReActSchedule({ UUID: schedule.UUID }, true)
       if (latest?.UUID) {
+        setSchedule(latest)
         onDataChange?.(latest)
       }
     } catch {
@@ -212,6 +191,8 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
   })
 
   const isCompleted = schedule.Status === 'completed'
+  const isActive = schedule.Status === 'active'
+  const scheduleRule = formatScheduleRule(schedule, t)
 
   const hasOriginalRequest = useCreation(() => {
     return (
@@ -255,70 +236,61 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
   return (
     <div className={styles['detail-overlay']}>
       <div className={styles['detail-header']}>
-        <YakitButton type="text2" size="small" icon={<ChevronLeftOutlined />} onClick={handleClose}>
-          <span className={styles['detail-header-back']}>{t('AIScheduledTasks.taskIntro')}</span>
-        </YakitButton>
+        <span
+          className={classNames(styles['detail-status-dot'], { [styles['detail-status-dot-inactive']]: !isActive })}
+        />
+        <div className={styles['detail-name']} title={schedule.Name}>
+          {schedule.Name}
+        </div>
         <div className={styles['detail-header-actions']}>
-          <Tooltip
-            title={
-              isCompleted
-                ? t('AIScheduledTasks.completedNoToggle')
-                : schedule.Status === 'active'
-                  ? t('AIScheduledTasks.pause')
-                  : t('AIScheduledTasks.resume')
-            }
-          >
+          <Tooltip title={t('YakitButton.edit')}>
             <YakitButton
               type="text2"
-              size="small"
-              icon={schedule.Status === 'active' ? <PauseOutlined /> : <PlayOutlined />}
-              loading={toggling}
-              disabled={isCompleted || toggling}
-              onClick={handleToggleEnabled}
+              size="middle"
+              aria-label={t('YakitButton.edit')}
+              icon={<PencilOutlined />}
+              onClick={handleEdit}
             />
           </Tooltip>
-          <Tooltip title={t('YakitButton.edit')}>
-            <YakitButton type="text2" size="small" icon={<PencilAltOutlined />} onClick={handleEdit} />
-          </Tooltip>
           <Tooltip title={t('AIScheduledTasks.runNow')}>
-            <YakitButton type="text2" size="small" icon={<MessageCirclePlusOutlined />} onClick={handleRunNow} />
+            <YakitButton
+              type="text2"
+              size="middle"
+              aria-label={t('AIScheduledTasks.runNow')}
+              icon={<OutlineArrowUpFromDotIcon />}
+              onClick={handleRunNow}
+            />
           </Tooltip>
-          {showRelatedChatLink && (
-            <Tooltip title={t('AIScheduledTasks.openChat')}>
-              <YakitButton type="text2" size="small" icon={<ExternalLinkOutlined />} onClick={openRelatedChat} />
-            </Tooltip>
-          )}
           <Tooltip title={t('YakitButton.delete')}>
             <YakitButton
               type="text2"
-              size="small"
+              size="middle"
+              aria-label={t('YakitButton.delete')}
               icon={<TrashOutlined />}
               loading={deleting}
               disabled={deleting}
               onClick={handleDelete}
             />
           </Tooltip>
+          {!isCompleted && (
+            <Tooltip title={t(isActive ? 'AIScheduledTasks.pause' : 'AIScheduledTasks.resume')}>
+              <YakitSwitch
+                wrapperClassName={styles['detail-switch']}
+                size="middle"
+                checked={isActive}
+                loading={toggling}
+                disabled={toggling}
+                aria-label={t(isActive ? 'AIScheduledTasks.pause' : 'AIScheduledTasks.resume')}
+                onChange={handleToggleEnabled}
+              />
+            </Tooltip>
+          )}
         </div>
       </div>
+      <div role="separator" className={styles['detail-divider']} />
       <div className={styles['detail-content']}>
-        <section className={classNames(styles['detail-section'], styles['detail-name-section'])}>
-          <div className={styles['detail-section-title']}>
-            <TagOutlined className={styles['detail-section-icon']} />
-            <span>{t('AIScheduledTasks.taskName')}</span>
-          </div>
-          <div className={styles['detail-name-card']}>
-            <div className={styles['detail-name']} title={schedule.Name}>
-              {schedule.Name}
-            </div>
-            <YakitTag size="small" color={scheduleStatusColor[schedule.Status]} fullRadius>
-              {t(`AIScheduledTasks.${schedule.Status}`)}
-            </YakitTag>
-          </div>
-        </section>
-
         <section className={styles['detail-section']}>
           <div className={styles['detail-section-title']}>
-            <DocumentTextOutlined className={styles['detail-section-icon']} />
             <span>{t('AIScheduledTasks.prompt')}</span>
           </div>
           <div className={styles['detail-panel']}>{schedule.Payload.Prompt}</div>
@@ -327,7 +299,6 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
         {hasOriginalRequest && (
           <section className={styles['detail-section']}>
             <div className={styles['detail-section-title']}>
-              <DocumentOutlined className={styles['detail-section-icon']} />
               <span>{t('AIScheduledTasks.originalRequest')}</span>
             </div>
             <div className={styles['detail-panel']}>{schedule.OriginalRequest}</div>
@@ -336,7 +307,6 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
 
         <section className={styles['detail-section']}>
           <div className={styles['detail-section-title']}>
-            <InformationCircleOutlined className={styles['detail-section-icon']} />
             <span>{t('AIScheduledTasks.detail')}</span>
           </div>
           <div className={styles['detail-card']}>
@@ -349,12 +319,13 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
               <DetailRow label={t('AIScheduledTasks.relatedChat')}>
                 <div className={styles['detail-related-chat']}>
                   <span title={relatedSessionTitle}>{relatedSessionTitle}</span>
-                  {showRelatedChatLink && (
+                  {showRelatedChatLink && !hasLastExecution && (
                     <Tooltip title={t('AIScheduledTasks.openChat')}>
                       <YakitButton
-                        type="text2"
-                        size="small"
-                        icon={<ExternalLinkOutlined />}
+                        type="text"
+                        size="middle"
+                        aria-label={t('AIScheduledTasks.openChat')}
+                        icon={<ArrowUpRightOutlined />}
                         onClick={openRelatedChat}
                       />
                     </Tooltip>
@@ -362,16 +333,44 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
                 </div>
               </DetailRow>
             )}
-            <DetailRow label={t('AIScheduledTasks.timezone')}>{schedule.Schedule.Timezone || '-'}</DetailRow>
-            <DetailRow label={t('AIScheduledTasks.nextRun')}>{formatTime(schedule.NextRunAt)}</DetailRow>
+            <DetailRow label={t('AIScheduledTasks.executionCycle')}>
+              <Tooltip title={scheduleRule === undefined ? schedule.Schedule.RRule : undefined}>
+                <YakitTag
+                  size="small"
+                  fullRadius
+                  border={false}
+                  className={classNames(styles['detail-cycle-tag'], {
+                    [styles['detail-cycle-tag-inactive']]: !isActive,
+                  })}
+                >
+                  <TimerOutlined />
+                  {scheduleRule ?? t('AIScheduledTasks.frequencyOptions.custom')}
+                </YakitTag>
+              </Tooltip>
+            </DetailRow>
+            {isActive && <DetailRow label={t('AIScheduledTasks.nextRun')}>{formatTime(schedule.NextRunAt)}</DetailRow>}
           </div>
         </section>
 
         {hasLastExecution && (
           <section className={styles['detail-section']}>
             <div className={styles['detail-section-title']}>
-              <InformationCircleOutlined className={styles['detail-section-icon']} />
               <span>{t('AIScheduledTasks.lastExecution')}</span>
+              {showRelatedChatLink && (
+                <div className={styles['detail-section-actions']}>
+                  <Tooltip title={t('AIScheduledTasks.openChat')}>
+                    <YakitButton
+                      type="text"
+                      size="middle"
+                      className={styles['detail-chat-link']}
+                      onClick={openRelatedChat}
+                    >
+                      {t('AIScheduledTasks.openChat')}
+                      <ArrowUpRightOutlined />
+                    </YakitButton>
+                  </Tooltip>
+                </div>
+              )}
             </div>
             <div className={styles['detail-card']}>
               {hasTimestamp(schedule.LastRunAt) && (
