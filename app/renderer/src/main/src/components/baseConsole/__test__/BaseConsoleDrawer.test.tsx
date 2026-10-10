@@ -96,7 +96,7 @@ describe('BaseConsoleDrawer', () => {
 
   it('渲染标题「引擎 Console」与引擎内容', () => {
     render(<BaseConsoleDrawer {...defaultProps()} />)
-    expect(screen.getByText('引擎 Console')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.engineConsole')).toBeInTheDocument()
     expect(screen.getByTestId('engine-console-stub')).toBeInTheDocument()
   })
 
@@ -104,7 +104,7 @@ describe('BaseConsoleDrawer', () => {
     const props = defaultProps()
     render(<BaseConsoleDrawer {...props} />)
     // operation 区域有两个 button：WindowPositionOP 整体 + 关闭按钮；关闭按钮是最后一个
-    const consoleTitle = screen.getByText('引擎 Console')
+    const consoleTitle = screen.getByText('FuncDomain.engineConsole')
     const operation = consoleTitle.parentElement!
     const buttons = operation.querySelectorAll('button')
     // WindowPositionOP 内部 4 个按钮 + 1 个关闭按钮，关闭按钮在 operation 直接子级最后
