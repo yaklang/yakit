@@ -113,3 +113,21 @@ export const resetEmptyVirtualTableViewport = (
   }
   return true
 }
+
+/**
+ * 虚拟列表 wrapper 的几何（公式与 ahooks useVirtualList 一致）：
+ * margin = 首行 index × 行高，height = 剩余总高（下限 0）。
+ * 渲染期以内联 style 写入，使其与 list 同一次提交生效，避免 ahooks 在
+ * passive effect 补写前出现一帧错位/白屏。
+ */
+export const getVirtualListWrapperGeometry = (
+  list: { index: number }[],
+  dataLength: number,
+  itemHeight: number,
+): { marginTop: number; height: number } => {
+  const startIndex = list[0]?.index ?? 0
+  return {
+    marginTop: startIndex * itemHeight,
+    height: Math.max(0, (dataLength - startIndex) * itemHeight),
+  }
+}
