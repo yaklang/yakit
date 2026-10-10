@@ -64,8 +64,7 @@ import yakitSELogo from '@/assets/yakitSELogo.png'
 import yakitSEDarkLogo from '@/assets/yakitSEDarkLogo.png'
 import irifyRight from '@/assets/irify-right.png'
 import yakitRight from '@/assets/yakit-right.png'
-import memfitRight from '@/assets/memfit-right.webm'
-import memfitRightDark from '@/assets/memfit-right-dark.webm'
+import RollingBlinds from '@/components/reactBits/rolling-blinds'
 import { SolidIrifyFontLogoIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidIrifyFontLogoIcon'
 import { SolidMemfitFontLogoIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidMemfitFontLogoIcon'
 import { SolidYakitFontLogoIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidYakitFontLogoIcon'
@@ -1214,10 +1213,7 @@ export const StartupPage: React.FC = () => {
     if (isIRify()) {
       return <img src={irifyRight} alt={t('StartupPage.no_image')} />
     }
-    if (isCommunityMemfit() || isMemfit())
-      return (
-        <video src={theme === 'light' ? memfitRight : memfitRightDark} autoPlay loop muted playsInline preload="auto" />
-      )
+    if (isCommunityMemfit() || isMemfit()) return <RollingBlinds className={styles['startup-blinds']} theme={theme} />
     return <img src={yakitRight} alt={t('StartupPage.no_image')} />
   }, [theme, i18nRefresh])
 
