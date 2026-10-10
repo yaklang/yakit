@@ -81,12 +81,50 @@ describe('AITaskGantt 渲染', () => {
     expect(gantt.querySelector('.bar-segment')).toBeNull()
   })
 
-  it('items 为空时渲染默认时间窗与图例', () => {
+  it('items 为空时渲染默认时间窗与图例，恰好 5 个刻度（4 格）', () => {
     render(<AITaskGantt items={[]} />)
     const gantt = document.querySelector('.ai-task-gantt') as HTMLElement
-    // 默认时间窗从 now-2h 起至少产生 1 个刻度
-    expect(gantt.querySelector('.timeline-tick')).not.toBeNull()
+    // 空数据：MIN=4 格 ×15min → 含起止共 5 个 tick
+    expect(gantt.querySelectorAll('.timeline-tick')).toHaveLength(5)
     expect(screen.getByText('等待')).toBeInTheDocument()
+  })
+
+  it('窄跨度至少 5 个刻度；3 天宽跨度不超过 9 个刻度', () => {
+    // 终态用 closed_ts 控跨度，避免 PENDING 拖到 Date.now()
+    const { unmount } = render(
+      <AITaskGantt
+        items={[
+          createItem({
+            id: 'narrow',
+            content: '窄跨度',
+            status: 'DONE',
+            created_ts: BASE_TS,
+            focus_started_ts: BASE_TS,
+            closed_ts: BASE_TS + 90,
+          }),
+        ]}
+      />,
+    )
+    let gantt = document.querySelector('.ai-task-gantt') as HTMLElement
+    expect(gantt.querySelectorAll('.timeline-tick').length).toBeGreaterThanOrEqual(5)
+    unmount()
+
+    render(
+      <AITaskGantt
+        items={[
+          createItem({
+            id: 'wide',
+            content: '宽跨度',
+            status: 'DONE',
+            created_ts: BASE_TS,
+            focus_started_ts: BASE_TS + 100,
+            closed_ts: BASE_TS + 3 * 24 * 3600,
+          }),
+        ]}
+      />,
+    )
+    gantt = document.querySelector('.ai-task-gantt') as HTMLElement
+    expect(gantt.querySelectorAll('.timeline-tick').length).toBeLessThanOrEqual(9)
   })
 
   it('缺 id 的条目回退用行序号作为 key 渲染', () => {

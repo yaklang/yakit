@@ -4,7 +4,7 @@ import moment from 'moment'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
-import { buildSegments, isValidUnixSec } from './ganttUtils'
+import { buildGanttTicks, buildSegments, collectGanttContentBounds, computeGanttTimeRange } from './ganttUtils'
 import type { AITaskGanttProps, AITaskGanttSegment, AITaskGanttSegmentKind, AITaskGanttStatusMap } from './type'
 import styles from './AITaskGantt.module.scss'
 
@@ -23,27 +23,6 @@ const LEGEND_ITEMS: { kind: AITaskGanttSegmentKind; label: string }[] = [
   { kind: 'skipped', label: '跳过' },
   { kind: 'failed', label: '失败' },
 ]
-
-const TICK_CANDIDATES_SEC = [
-  5 * 60,
-  10 * 60,
-  15 * 60,
-  20 * 60,
-  30 * 60,
-  60 * 60,
-  2 * 3600,
-  6 * 3600,
-  12 * 3600,
-  24 * 3600,
-]
-
-const pickTickInterval = (spanSec: number) => {
-  const targetTicks = 8
-  for (const candidate of TICK_CANDIDATES_SEC) {
-    if (spanSec / candidate <= targetTicks) return candidate
-  }
-  return TICK_CANDIDATES_SEC[TICK_CANDIDATES_SEC.length - 1]
-}
 
 /** 任务统计甘特图：左侧 Todo list + 右侧时间轴条 */
 export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(({ items, className }) => {
@@ -67,42 +46,13 @@ export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(({ items, clas
   }, [items, nowSec])
 
   const timeRange = useCreation(() => {
-    let minTs = Infinity
-    let maxTs = -Infinity
-    for (const row of rowModels) {
-      for (const seg of row.segments) {
-        minTs = Math.min(minTs, seg.startTs)
-        maxTs = Math.max(maxTs, seg.endTs)
-      }
-      const created = isValidUnixSec(row.item.created_ts) ? row.item.created_ts! : 0
-      if (created) {
-        minTs = Math.min(minTs, created)
-        maxTs = Math.max(maxTs, created)
-      }
-    }
-    if (!Number.isFinite(minTs) || !Number.isFinite(maxTs)) {
-      const fallbackEnd = nowSec
-      const fallbackStart = fallbackEnd - 2 * 3600
-      return { start: fallbackStart, end: fallbackEnd, interval: 20 * 60 }
-    }
-    if (maxTs <= minTs) maxTs = minTs + 20 * 60
-    // 两端略留白
-    const paddedStart = minTs - 5 * 60
-    const paddedEnd = maxTs + 5 * 60
-    const span = Math.max(paddedEnd - paddedStart, 20 * 60)
-    const interval = pickTickInterval(span)
-    const start = Math.floor(paddedStart / interval) * interval
-    const end = Math.ceil(paddedEnd / interval) * interval
-    return { start, end: Math.max(end, start + interval), interval }
+    const bounds = collectGanttContentBounds(
+      rowModels.map((row) => ({ segments: row.segments, created_ts: row.item.created_ts })),
+    )
+    return computeGanttTimeRange(bounds, nowSec)
   }, [rowModels, nowSec])
 
-  const ticks = useCreation(() => {
-    const list: number[] = []
-    for (let t = timeRange.start; t <= timeRange.end; t += timeRange.interval) {
-      list.push(t)
-    }
-    return list
-  }, [timeRange])
+  const ticks = useCreation(() => buildGanttTicks(timeRange), [timeRange])
 
   const rangeSpan = timeRange.end - timeRange.start || 1
   const timelineWidthPx = Math.max(ticks.length * 80, 480)

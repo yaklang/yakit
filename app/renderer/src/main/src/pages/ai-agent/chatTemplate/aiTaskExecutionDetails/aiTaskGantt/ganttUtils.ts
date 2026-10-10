@@ -4,6 +4,117 @@ import type { AITaskGanttSegment, AITaskGanttSegmentKind, AITaskGanttTodoItem } 
 /** 有效 Unix 秒时间戳（排除 created_at/updated_at 这类占位序号） */
 export const isValidUnixSec = (ts?: number) => typeof ts === 'number' && Number.isFinite(ts) && ts > 1e9
 
+/** 时间轴刻度候选间隔（秒），含最小 2 分钟 */
+export const GANTT_TICK_CANDIDATES_SEC = [
+  2 * 60,
+  5 * 60,
+  10 * 60,
+  15 * 60,
+  20 * 60,
+  30 * 60,
+  60 * 60,
+  2 * 3600,
+  6 * 3600,
+  12 * 3600,
+  24 * 3600,
+]
+
+/** 时间轴格数：最少 MIN、最多 MAX */
+export const GANTT_MIN_COLUMNS = 4
+export const GANTT_MAX_COLUMNS = 8
+
+export interface GanttTimeRange {
+  start: number
+  end: number
+  interval: number
+}
+
+/** 取能覆盖跨度且不超过 MAX 格的最细候选间隔 */
+export const pickTickInterval = (spanSec: number) => {
+  for (const candidate of GANTT_TICK_CANDIDATES_SEC) {
+    if (candidate * GANTT_MAX_COLUMNS >= spanSec) return candidate
+  }
+  return GANTT_TICK_CANDIDATES_SEC[GANTT_TICK_CANDIDATES_SEC.length - 1]
+}
+
+/** 从分段与 created_ts 收集内容时间范围；无有效时间返回 null */
+export const collectGanttContentBounds = (
+  rows: Array<{ segments: AITaskGanttSegment[]; created_ts?: number }>,
+): { minTs: number; maxTs: number } | null => {
+  let minTs = Infinity
+  let maxTs = -Infinity
+  for (const row of rows) {
+    for (const seg of row.segments) {
+      minTs = Math.min(minTs, seg.startTs)
+      maxTs = Math.max(maxTs, seg.endTs)
+    }
+    if (isValidUnixSec(row.created_ts)) {
+      minTs = Math.min(minTs, row.created_ts!)
+      maxTs = Math.max(maxTs, row.created_ts!)
+    }
+  }
+  if (!Number.isFinite(minTs) || !Number.isFinite(maxTs)) return null
+  return { minTs, maxTs }
+}
+
+/**
+ * 计算甘特时间轴起止与间隔：
+ * - 无内容：now 回退 MIN×15min
+ * - 格数夹在 [MIN, MAX]；超限升档间隔，不足则右侧补空
+ */
+export const computeGanttTimeRange = (
+  bounds: { minTs: number; maxTs: number } | null,
+  nowSec: number,
+): GanttTimeRange => {
+  if (!bounds) {
+    const interval = 15 * 60
+    const end = nowSec
+    return { start: end - GANTT_MIN_COLUMNS * interval, end, interval }
+  }
+
+  let { minTs, maxTs } = bounds
+  if (maxTs <= minTs) maxTs = minTs + GANTT_MIN_COLUMNS * (2 * 60)
+
+  const span = Math.max(maxTs - minTs, 2 * 60)
+  let interval = pickTickInterval(span)
+  let start = Math.floor(minTs / interval) * interval
+  let end = Math.ceil(maxTs / interval) * interval
+  end = Math.max(end, start + interval)
+  let columns = (end - start) / interval
+
+  while (columns > GANTT_MAX_COLUMNS) {
+    const next = GANTT_TICK_CANDIDATES_SEC.find((c) => c > interval)
+    if (!next) break
+    interval = next
+    start = Math.floor(minTs / interval) * interval
+    end = Math.ceil(maxTs / interval) * interval
+    end = Math.max(end, start + interval)
+    columns = (end - start) / interval
+  }
+
+  if (columns < GANTT_MIN_COLUMNS) {
+    end = start + GANTT_MIN_COLUMNS * interval
+  }
+
+  return { start, end, interval }
+}
+
+/** 格数 = (end - start) / interval */
+export const ganttColumnCount = (range: GanttTimeRange) => {
+  if (!range.interval) return 0
+  return (range.end - range.start) / range.interval
+}
+
+/** 由时间范围生成含起止的刻度列表 */
+export const buildGanttTicks = (range: GanttTimeRange): number[] => {
+  const list: number[] = []
+  if (!range.interval || range.end < range.start) return list
+  for (let t = range.start; t <= range.end; t += range.interval) {
+    list.push(t)
+  }
+  return list
+}
+
 const isNonNegSec = (n?: number) => typeof n === 'number' && Number.isFinite(n) && n >= 0
 
 /**

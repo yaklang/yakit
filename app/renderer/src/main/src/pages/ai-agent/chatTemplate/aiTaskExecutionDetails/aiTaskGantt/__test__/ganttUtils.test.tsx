@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
-import { buildSegments, isValidUnixSec } from '../ganttUtils'
+import {
+  buildGanttTicks,
+  buildSegments,
+  collectGanttContentBounds,
+  computeGanttTimeRange,
+  GANTT_MAX_COLUMNS,
+  GANTT_MIN_COLUMNS,
+  ganttColumnCount,
+  isValidUnixSec,
+  pickTickInterval,
+} from '../ganttUtils'
 
 const BASE_TS = 1750000000
 const NOW = BASE_TS + 3600
@@ -197,5 +207,82 @@ describe('buildSegments 时间戳回退', () => {
       NOW,
     )
     expect(segments).toEqual([{ kind: 'wait', startTs: BASE_TS, endTs: NOW }])
+  })
+})
+
+describe('pickTickInterval', () => {
+  it('短跨度优先使用 2 分钟间隔', () => {
+    expect(pickTickInterval(2 * 60)).toBe(2 * 60)
+    expect(pickTickInterval(10 * 60)).toBe(2 * 60)
+  })
+
+  it('跨度增大时升档，保证不超过 MAX 格', () => {
+    // 8×5min=40min，刚好可由 5min 覆盖
+    expect(pickTickInterval(40 * 60)).toBe(5 * 60)
+    // 超过 40min 升到 10min
+    expect(pickTickInterval(41 * 60)).toBe(10 * 60)
+  })
+
+  it('超长跨度回退到最大候选 24h', () => {
+    expect(pickTickInterval(9 * 24 * 3600)).toBe(24 * 3600)
+  })
+})
+
+describe('computeGanttTimeRange / buildGanttTicks', () => {
+  it('空内容：回退为 MIN×15min，刻度数 = MIN+1', () => {
+    const range = computeGanttTimeRange(null, NOW)
+    expect(range.interval).toBe(15 * 60)
+    expect(ganttColumnCount(range)).toBe(GANTT_MIN_COLUMNS)
+    expect(range.end).toBe(NOW)
+    expect(range.start).toBe(NOW - GANTT_MIN_COLUMNS * 15 * 60)
+    expect(buildGanttTicks(range)).toHaveLength(GANTT_MIN_COLUMNS + 1)
+  })
+
+  it('窄跨度：格数至少 MIN，刻度数 ≥ MIN+1', () => {
+    // 仅 3 分钟内容，自然格数不足，右侧补到 MIN
+    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs: BASE_TS + 3 * 60 }, NOW)
+    const columns = ganttColumnCount(range)
+    const ticks = buildGanttTicks(range)
+    expect(columns).toBeGreaterThanOrEqual(GANTT_MIN_COLUMNS)
+    expect(columns).toBeLessThanOrEqual(GANTT_MAX_COLUMNS)
+    expect(ticks.length).toBe(columns + 1)
+    expect(ticks.length).toBeGreaterThanOrEqual(GANTT_MIN_COLUMNS + 1)
+  })
+
+  it('中等跨度：格数落在 [MIN, MAX]', () => {
+    // 约 50 分钟 → 间隔 10min，对齐后约 5～6 格
+    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs: BASE_TS + 50 * 60 }, NOW)
+    const columns = ganttColumnCount(range)
+    expect(columns).toBeGreaterThanOrEqual(GANTT_MIN_COLUMNS)
+    expect(columns).toBeLessThanOrEqual(GANTT_MAX_COLUMNS)
+    expect(buildGanttTicks(range).length).toBe(columns + 1)
+  })
+
+  it('3 天宽跨度：格数 ≤ MAX，刻度数 ≤ MAX+1', () => {
+    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs: BASE_TS + 3 * 24 * 3600 }, NOW)
+    const columns = ganttColumnCount(range)
+    const ticks = buildGanttTicks(range)
+    expect(columns).toBeLessThanOrEqual(GANTT_MAX_COLUMNS)
+    expect(ticks.length).toBeLessThanOrEqual(GANTT_MAX_COLUMNS + 1)
+    expect(ticks.length).toBe(columns + 1)
+  })
+
+  it('起止相等：扩展到至少 MIN×2min 后再算轴', () => {
+    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs: BASE_TS }, NOW)
+    expect(ganttColumnCount(range)).toBeGreaterThanOrEqual(GANTT_MIN_COLUMNS)
+  })
+})
+
+describe('collectGanttContentBounds', () => {
+  it('综合分段与 created_ts 取极值；无有效时间返回 null', () => {
+    expect(collectGanttContentBounds([])).toBeNull()
+    expect(
+      collectGanttContentBounds([
+        {
+          segments: [{ kind: 'wait', startTs: BASE_TS + 100, endTs: BASE_TS + 500 }],
+          created_ts: BASE_TS,
+        },
+      ]),
+    ).toEqual({ minTs: BASE_TS, maxTs: BASE_TS + 500 })
   })
 })
