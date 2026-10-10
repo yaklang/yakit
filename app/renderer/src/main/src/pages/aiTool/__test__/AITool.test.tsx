@@ -206,6 +206,30 @@ describe('AITool 批量选择与导入导出', () => {
     expect(screen.getByTestId('select-all-checkbox')).toHaveProperty('checked', true)
   })
 
+  it('全选后取消单项：allChecked 复位，选中数回落到已加载列表，导出改为剩余 ToolNames', async () => {
+    // Total 大于已加载条数：全选计数走 Total，取消单项后只保留当前页已加载项
+    mockGetAIToolList.mockImplementation(async () => ({ ...makeListResponse(), Total: 5 }))
+    await renderAndWaitReady()
+
+    const selectAll = screen.getByTestId('select-all-checkbox')
+    fireEvent.click(selectAll)
+    expect(selectNum()).toBe('5')
+    expect(selectAll).toHaveProperty('checked', true)
+    expect(selectAll).toHaveAttribute('data-indeterminate', 'false')
+
+    fireEvent.click(screen.getByTestId('opt-1'))
+
+    expect(selectAll).toHaveProperty('checked', false)
+    expect(selectAll).toHaveAttribute('data-indeterminate', 'true')
+    expect(selectNum()).toBe('1')
+    expect(screen.getByTestId('opt-1')).toHaveAttribute('data-checked', 'false')
+    expect(screen.getByTestId('opt-2')).toHaveAttribute('data-checked', 'true')
+
+    clickBatchExport()
+    expect(openExportMock).toHaveBeenCalledTimes(1)
+    expect(openExportMock).toHaveBeenCalledWith({ ToolNames: ['tool-b'] })
+  })
+
   it('全选：批量导出按当前过滤条件传 Filter（默认 tab、空关键词）', async () => {
     await renderAndWaitReady()
     const selectAll = screen.getByTestId('select-all-checkbox')
