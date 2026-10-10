@@ -354,8 +354,8 @@ export const HollowPie: React.FC<HollowPieProps> = (props) => {
     return {
       title: {
         show: true,
-        text: centerData[0].name,
-        subtext: [`{text|${centerData[0].value}}{small|台}`],
+        text: centerData[0]?.name ?? '',
+        subtext: [`{text|${centerData[0]?.value ?? 0}}{small|台}`],
         top: '44%',
         left: '37%',
         textAlign: 'center',
@@ -440,8 +440,10 @@ export const HollowPie: React.FC<HollowPieProps> = (props) => {
           label: {
             show: true,
             formatter: function (obj: any) {
-              const { value, name } = obj
-              return `${name}：${((value * 100) / centerData[0].value).toFixed(0)}%`
+              const { value = 0, name = '' } = obj || {}
+              const centerValue = Number(centerData[0]?.value) || 0
+              const percentage = centerValue > 0 ? (((Number(value) || 0) * 100) / centerValue).toFixed(0) : '0'
+              return `${name}：${percentage}%`
             },
             fontSize: 12,
             color: titleColor,
