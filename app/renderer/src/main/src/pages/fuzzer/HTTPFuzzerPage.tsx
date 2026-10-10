@@ -1316,6 +1316,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   }, [])
 
   const streamRunRef = useRef<ReturnType<typeof createHTTPFuzzerRun> | null>(null)
+  // 恢复历史选中的操作版本。发送、切历史（resetResponse）会自增，
+  // 迟到的探测回调只在版本仍一致时继续，避免覆盖用户新发起的任务。
+  const restoreOpRef = useRef(0)
 
   const resetResponse = useMemoizedFn(() => {
     // 每次发送都换一个新 token：token 变化会触发流监听 effect 重挂，旧流的迟到
@@ -1323,6 +1326,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     streamRunRef.current?.dispose()
     tokenRef.current = randomString(60)
     setStreamToken(tokenRef.current)
+    restoreOpRef.current += 1
     taskIDRef.current = ''
     dCountRef.current = 0
     reset()
@@ -2152,9 +2156,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     setShowAll(last.showAll)
     if (!last.id) return
     const id = last.id
+    const opGen = restoreOpRef.current
 
     /** 记录已不存在时，清掉缓存里的脏 id（保留 showAll）并提示用户 */
     const clearStaleId = () => {
+      if (restoreOpRef.current !== opGen) return
       const current = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
       if (!current?.pageParamsInfo.webFuzzerPageInfo) return
       updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
@@ -2170,10 +2176,14 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       yakitNotify('warning', t('HTTPFuzzerPage.historyNotFound'))
     }
 
-    // 先探测这条历史是否仍存在（可能已被删除），存在才恢复，避免 loadHistory 拿到空数据卡 loading
+    // 先探测这条历史是否仍存在（可能已被删除），存在才恢复，避免 loadHistory 拿到空数据卡 loading。
+    // 探测期间用户可能发送新请求或切换历史，这些都会自增 restoreOpRef。
+    // 迟到回调须核对操作版本，避免销毁当前响应流。
+    // 只有响应里明确没有记录才清缓存；超时、断连等错误只提示，保留选中状态，下次进入可再恢复。
     ipcRenderer
       .invoke('GetHistoryHTTPFuzzerTask', { Id: id })
       .then((data: { OriginRequest?: HistoryHTTPFuzzerTask }) => {
+        if (restoreOpRef.current !== opGen) return
         if (!data?.OriginRequest) {
           clearStaleId()
           return
@@ -2182,7 +2192,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         // currentPage 是位置信息、不能记缓存，按 id 在当前作用域重新查位置同步
         resyncCurrentPage(id, last.showAll)
       })
-      .catch(clearStaleId)
+      .catch(() => {
+        if (restoreOpRef.current !== opGen) return
+        yakitNotify('warning', t('HTTPFuzzerPage.historyRestoreFailed'))
+      })
   }, [inViewport])
 
   const webFuzzerNewEditorRef = useRef<any>()

@@ -85,6 +85,7 @@
     "clearOldDataFailed": "清空老数据失败：",
     "wfHistoryDataRestoreFailed": "WF历史数据恢复失败：",
     "historyNotFound": "上次选中的历史记录已不存在，已清除选中状态",
+    "historyRestoreFailed": "恢复失败",
     "fuzzTestRequestFailed": "提交模糊测试请求失败：",
     "hotReload": "热加载",
     "buildRequest": "构造请求",
