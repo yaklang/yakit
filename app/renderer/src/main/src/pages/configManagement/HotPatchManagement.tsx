@@ -44,11 +44,13 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import {
   DEFAULT_GLOBAL_TEMPLATE_CONTENT,
   DEFAULT_GLOBAL_TEMPLATES,
+  GLOBAL_HOT_PATCH_AUTO_START,
   useGlobalHotPatch,
   useGlobalHotPatchTag,
 } from '@/store/globalHotPatch'
 import { HotPatchTemplate } from '@/pages/invoker/data/MITMPluginTamplate'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { useStore } from '@/store'
 import { formatTemplateTeams } from './utils'
 import type { BatchExportHotPatchTemplateRef, BatchImportHotPatchTemplateRef } from './components/type'
@@ -161,6 +163,7 @@ export const HotPatchManagement: React.FC = () => {
   const [templateContent, setTemplateContent, getTemplateContent] = useGetState(DEFAULT_TEMPLATE_CONTENT)
   const { globalHotPatchConfig, loadGlobalHotPatchConfig: loadGlobalHotPatchConfigStore } = useGlobalHotPatch()
   const { globalEnabledTemplateName } = useGlobalHotPatchTag()
+  const [autoStartName, setAutoStartName] = useState('')
   const [globalConfigLoading, setGlobalConfigLoading] = useState(false)
   const [globalConfigLoaded, setGlobalConfigLoaded] = useState(false)
   const [globalTemplateListLoading, setGlobalTemplateListLoading] = useState(false)
@@ -397,6 +400,22 @@ export const HotPatchManagement: React.FC = () => {
     loadGlobalHotPatchConfig()
   }, [loadGlobalHotPatchConfig])
 
+  useEffect(() => {
+    ipcRenderer
+      .invoke('GetKey', { Key: GLOBAL_HOT_PATCH_AUTO_START })
+      .then((name: string) => setAutoStartName(name || ''))
+      .catch(() => {})
+  }, [])
+
+  const saveAutoStartName = useMemoizedFn(async (name: string) => {
+    try {
+      setAutoStartName(name)
+      await ipcRenderer.invoke('SetKey', { Key: GLOBAL_HOT_PATCH_AUTO_START, Value: name })
+    } catch (error) {
+      yakitFailed(error + '')
+    }
+  })
+
   const resetDebug = useMemoizedFn(() => {
     setDebugResult('')
     setEditorTab('source')
@@ -481,7 +500,7 @@ export const HotPatchManagement: React.FC = () => {
 
       yakitNotify('success', t('YakitNotification.reName_success'))
       if (currentEditingType === 'global') {
-        loadGlobalTemplateList(newName)
+        loadGlobalTemplateList(newName, globalEnabledTemplateName === oldName ? newName : undefined)
       } else {
         loadTemplateList(currentEditingType, newName)
       }
@@ -492,6 +511,7 @@ export const HotPatchManagement: React.FC = () => {
       if (currentEditingType === 'global' && globalEnabledTemplateName === oldName) {
         await useGlobalHotPatch.getState().enableGlobalHotPatch(newName)
       }
+      if (currentEditingType === 'global' && autoStartName === oldName) await saveAutoStartName(newName)
     } catch (error) {
       yakitFailed(error + '')
     }
@@ -520,6 +540,7 @@ export const HotPatchManagement: React.FC = () => {
           if (type === 'global' && globalEnabledTemplateName === item.name) {
             await useGlobalHotPatch.getState().disableGlobalHotPatch()
           }
+          if (type === 'global' && autoStartName === item.name) await saveAutoStartName('')
         })
         .catch((error) => {
           yakitFailed(error + '')
@@ -1104,6 +1125,16 @@ export const HotPatchManagement: React.FC = () => {
             )}
           </div>
           <div className={styles['editor-header-right']}>
+            {isGlobalType && selectedTemplate && (
+              <div className={styles['auto-start-switch']}>
+                <span>{t('GlobalHotPatch.auto_start')}</span>
+                <YakitSwitch
+                  aria-label={t('GlobalHotPatch.auto_start')}
+                  checked={autoStartName === selectedTemplate}
+                  onChange={(checked) => saveAutoStartName(checked ? selectedTemplate : '')}
+                />
+              </div>
+            )}
             {selectedTemplateSource === 'local' && (
               <Tooltip title={t('HotPatchTemplateImportExport.export_single')}>
                 <YakitButton

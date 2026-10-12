@@ -73,6 +73,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { Trans } from 'react-i18next'
 import aiChatPersistStore from './ai-re-act/hooks/persist/aiChatPersistStore'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
+import { autoEnableGlobalHotPatch } from '@/store/globalHotPatch'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -173,6 +174,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
   // 首页加载时初始化
   useEffect(() => {
     checkAndShowDataMigration()
+    autoEnableGlobalHotPatch()
   }, [])
 
   // 会话缓存：本次主渲染端首次 open 清空三表，组件重挂只复用初始化结果
