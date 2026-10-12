@@ -129,6 +129,10 @@ export declare namespace API {
      * 用户更新时间
      */
     updatedAt?: number
+    /**
+     * 模块权限点(非内置角色), 格式 module:action, 如 httpflow:view
+     */
+    modulePermissions?: string[]
   }
   export interface UrmUserListResponse extends Paging {
     data: UrmUserList[]
@@ -610,6 +614,16 @@ export declare namespace API {
     description: string
     ssaRiskCreatedAt: number
   }
+  export interface Sm2PublicKeyResponse {
+    /**
+     * 04 || X || Y 的十六进制公钥
+     */
+    publicKey?: string
+    /**
+     * 固定为 C1C3C2，sm-crypto 加密时模式传 1
+     */
+    cipherMode?: string
+  }
   export interface ShareResponse {
     share_id: string
     extract_code?: string
@@ -633,6 +647,14 @@ export declare namespace API {
     createdAt: number
     checkPlugin: boolean
     builtIn?: boolean
+    /**
+     * 模块权限点, 格式 module:action, 如 httpflow:view
+     */
+    modulePermissions?: string[]
+    /**
+     * 模块权限项数量
+     */
+    modulePermissionCount?: number
   }
   export interface RiskUploadResponse extends Paging {
     data: RiskLists[]
@@ -655,6 +677,10 @@ export declare namespace API {
      */
     fixSuggestion?: string
     /**
+     * 处置原因
+     */
+    tagReason?: string
+    /**
      * 风险类型描述
      */
     riskTypeVerbose?: string
@@ -666,10 +692,6 @@ export declare namespace API {
      * 等级评分（小数）
      */
     severityScore?: number
-    /**
-     * 处置原因
-     */
-    tagReason?: string
   }
   export interface RiskTypes {
     risk_type: string
@@ -753,15 +775,15 @@ export declare namespace API {
      */
     fixSuggestion?: string
     /**
-     * 等级评分（小数）
-     */
-    severityScore?: number
-    /**
      * 处置原因
      */
     tagReason?: string
     /**
-     * 测试人员列表 (uid+姓名)
+     * 等级评分（小数）
+     */
+    severityScore: number
+    /**
+     * 测试人员列表（uid+姓名）
      */
     testers?: RiskListTesters[]
   }
@@ -1528,6 +1550,10 @@ export declare namespace API {
     pluginType?: string
     pluginIds?: string
     plugin?: PluginTypeList[]
+    /**
+     * 模块权限点, 格式 module:action, 如 httpflow:view
+     */
+    modulePermissions?: string[]
   }
   export interface NewOperation {
     type: string
@@ -1746,6 +1772,9 @@ export declare namespace API {
      * 处置状态
      */
     status?: string
+    beforeCreatedAt?: number
+    afterCreatedAt?: number
+    testerName?: string
   }
   export interface HTTPFlowUpdateTagsRequest extends HTTPFlowWhere {
     deleteAll?: boolean
@@ -1764,6 +1793,129 @@ export declare namespace API {
     setStatus?: string
     statusReason?: string
   }
+  export interface HTTPFlowTestTypeMatch {
+    /**
+     * 客户端非颜色流量标签，去除首尾空白；保留完整原文，不重命名或合并
+     */
+    tag?: string
+    typeName?: string
+    matched?: boolean
+    hitCount?: number
+    evidence?: string[]
+  }
+  export interface HTTPFlowTestReportUser {
+    /**
+     * 稳定的人员标识；历史快照可能缺省
+     */
+    userUid?: string
+    /**
+     * 带有至少一个非空且非颜色的流量标签的请求数，同请求多个标签只计一次
+     */
+    taggedRequests?: number
+    userName?: string
+    department?: string
+    totalRequests?: number
+    pathCount?: number
+    hostCount?: number
+    paramTotal?: number
+    activeDays?: number
+    firstRequestAt?: number
+    lastRequestAt?: number
+    sourceTypeStats?: HTTPFlowTestReportNameCount[]
+    testTypes?: HTTPFlowTestTypeMatch[]
+    topPaths?: HTTPFlowTestReportPath[]
+    /**
+     * 按北京时间逐日统计；旧快照缺省，不等同于零请求
+     */
+    dailyStats?: HTTPFlowTestReportDay[]
+    aiSummary?: string
+    /**
+     * AI 总结状态：disabled、unavailable、completed、failed、timeout；旧报告缺省
+     */
+    aiSummaryStatus?: string
+    ruleSummary?: string
+  }
+  export interface HTTPFlowTestReportResponse {
+    /**
+     * client_tags 表示读取客户端所有非空且非颜色的流量标签，按完整字符串独立去重计数；标签不证明实际测试动作或漏洞
+     */
+    classificationSource?: string
+    /**
+     * 报告 JSON Schema 版本, 当前为 1
+     */
+    schemaVersion: number
+    reportId: string
+    title?: string
+    createdBy?: string
+    createdAt?: number
+    projectName?: string
+    startTime?: number
+    endTime?: number
+    totalRequests?: number
+    userCount?: number
+    pathCount?: number
+    hostCount?: number
+    aiAvailable?: boolean
+    users?: HTTPFlowTestReportUser[]
+    paths?: HTTPFlowTestReportPath[]
+  }
+  export interface HTTPFlowTestReportRequest {
+    /**
+     * 所属项目(企业版为客户被测系统)
+     */
+    projectName?: string
+    afterTime?: number
+    beforeTime?: number
+    enableAI?: boolean
+    userNames?: string[]
+    /**
+     * 自定义报告标题(留空自动生成)
+     */
+    title?: string
+  }
+  export interface HTTPFlowTestReportPath {
+    /**
+     * 接口参与人员的稳定标识，与 users 显示名称分开
+     */
+    userUids?: string[]
+    /**
+     * 按 userUid 保存该人员在此接口上的全部非空且非颜色的流量标签
+     */
+    userTestTagsByUid?: { [key: string]: string[] }
+    /**
+     * 旧快照按显示名称保存的标签；新报告使用 userTestTagsByUid
+     */
+    userTestTags?: { [key: string]: string[] }
+    /**
+     * 该接口流量上全部非空且非颜色标签的去重集合
+     */
+    testTags?: string[]
+    method?: string
+    path?: string
+    sampleURL?: string
+    sampleHost?: string
+    count?: number
+    userCount?: number
+    users?: string[]
+    paramTotal?: number
+  }
+  export interface HTTPFlowTestReportNameCount {
+    name?: string
+    count?: number
+  }
+  export interface HTTPFlowTestReportDay {
+    /**
+     * 带有至少一个非空且非颜色的流量标签的请求数，同请求多个标签只计一次
+     */
+    taggedRequests?: number
+    date?: string
+    totalRequests?: number
+    pathCount?: number
+    paramTotal?: number
+    sourceTypeStats?: HTTPFlowTestReportNameCount[]
+    testTypes?: HTTPFlowTestTypeMatch[]
+    topPaths?: HTTPFlowTestReportPath[]
+  }
   export interface HTTPFlowRequest {
     projectName: string
     content: string
@@ -1776,6 +1928,41 @@ export declare namespace API {
      * 外部 项目编号
      */
     externalProjectCode?: string
+  }
+  export interface HTTPFlowReportMetaResponse {
+    projects?: string[]
+    users?: string[]
+    testTypes?: string[]
+    reportProjects?: string[]
+    reportCreators?: string[]
+  }
+  export interface HTTPFlowReportListResponse extends Paging {
+    data: HTTPFlowReportList[]
+  }
+  export interface HTTPFlowReportList {
+    id?: number
+    reportId?: string
+    title?: string
+    projectName?: string
+    startTime?: number
+    endTime?: number
+    createdBy?: string
+    totalRequests?: number
+    userCount?: number
+    pathCount?: number
+    hostCount?: number
+    aiEnabled?: boolean
+    createdAt?: number
+  }
+  export interface HTTPFlowReportExportRequest {
+    reportId: string
+    /**
+     * json / html, 默认 json
+     */
+    exportType?: string
+  }
+  export interface HTTPFlowReportDeleteRequest {
+    ids?: number[]
   }
   export interface HTTPFlowListWhere extends Pagination, HTTPFlowWhere {}
   export interface HTTPFlowListResponse extends Paging {
@@ -1866,7 +2053,7 @@ export declare namespace API {
     status?: string
     statusReason?: string
     /**
-     * 测试人员列表 (uid+姓名)
+     * 测试人员列表（uid+姓名）
      */
     testers?: HTTPFlowDetailTesters[]
   }
@@ -1976,6 +2163,7 @@ export declare namespace API {
     beforeCreatedAt?: number
     afterCreatedAt?: number
     includeId?: number[]
+    testerName?: string
   }
   export interface GetRiskRequest extends Pagination, GetRiskWhere {}
   export interface GetNotepadResponse extends Paging {

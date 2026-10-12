@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { Form, Tooltip } from 'antd'
 import './ConfigPrivateDomain.scss'
 import { NetWorkApi } from '@/services/fetch'
+import { encryptEnterprisePasswords } from '@/services/enterprisePassword'
 import { failed, success } from '@/utils/notification'
 import { loginOut } from '@/utils/login'
 import { useMemoizedFn, useGetState } from 'ahooks'
@@ -82,13 +83,13 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
   const loginUser = useMemoizedFn(async () => {
     const { user_name, pwd } = getFormValue()
     try {
-      const md5Res = await yakitCodec.run({ Type: 'md5', Text: pwd, Params: [], ScriptName: '' })
+      const [encryptedUserName, encryptedPwd] = await encryptEnterprisePasswords([user_name.trim(), pwd])
       const res = await NetWorkApi<API.UrmLoginRequest, API.UserData>({
         method: 'post',
         url: 'urm/login',
         data: {
-          user_name: user_name.trim(),
-          pwd: md5Res.Result,
+          user_name: encryptedUserName,
+          pwd: encryptedPwd,
         },
       })
       const data = await yakitAuth.companySignIn({ ...res })

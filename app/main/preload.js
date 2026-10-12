@@ -401,6 +401,20 @@ process.on('loaded', function () {
     },
     codec: {
       run: (params) => invoke('Codec', params),
+      encryptSM2: ({ text, publicKey }) =>
+        invoke('NewCodec', {
+          Text: text,
+          WorkFlow: [
+            {
+              CodecType: 'SM2Encrypt',
+              Params: [
+                { Key: 'pubKey', Value: publicKey },
+                { Key: 'encryptSchema', Value: 'C1C3C2' },
+              ],
+            },
+            { CodecType: 'HexEncode', Params: [] },
+          ],
+        }),
       autoDecode: (payload) => invoke('AutoDecode', payload),
       mutateHttpRequest: (payload) => invoke('HTTPRequestMutate', payload),
     },

@@ -1104,6 +1104,7 @@ declare global {
     }
     codec: {
       run: (params: CodecRunParams) => Promise<CodecRunResult>
+      encryptSM2: (params: { text: string; publicKey: string }) => Promise<CodecRunResult>
       autoDecode: (payload: AutoDecodeRequest) => Promise<AutoDecodeResponse>
       mutateHttpRequest: (payload: MutateHTTPRequestParams) => Promise<MutateHTTPRequestResponse>
     }
