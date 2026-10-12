@@ -92,24 +92,24 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
       {
         data: [],
         type: 'line',
-        symbol: 'circle', // 设置连接点的形状为圆形
-        symbolSize: 14, // 设置连接点的大小为 14
-        itemStyle: {
-          color: '#4A3AFF', // 设置连接点的颜色为黑色
-          borderColor: '#FFFFFF', // 设置连接点的边框颜色
-          borderWidth: 2, // 设置连接点的边框宽度
-        },
-        lineStyle: {
-          color: '#C893FD', // 设置折线的颜色
-        },
-      },
-      {
-        type: 'bar',
-        stack: '1',
-        barWidth: 8,
-        data: [],
-        itemStyle: {
-          color: '#EAECF3', // 设置柱状图的背景颜色，这里使用灰色的背景
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              {
+                offset: 0,
+                color: 'rgba(74, 58, 255, 0.5)',
+              },
+              {
+                offset: 1,
+                color: 'rgba(255, 255, 255, 0.5)',
+              },
+            ],
+          },
         },
       },
     ],
@@ -175,7 +175,6 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
           })
           optionRef.current.xAxis.data = XData
           optionRef.current.series[0].data = YData
-          optionRef.current.series[1].data = YData
           setEcharts(optionRef.current)
         }
       })
