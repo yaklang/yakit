@@ -22,14 +22,13 @@ import { SideSettingButton } from '../aiChatWelcome/AIChatWelcomeSideSetting'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { grpcQueryAISession } from '../grpc'
-import useAIAgentDispatcher from '../useContext/useDispatcher'
+import { openAIAgentChatTab } from '../historyChat/HistoryChat'
 import { waitForAISessionPush } from './waitForAISessionPush'
 import styles from './AIScheduledTasks.module.scss'
 
 const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => {
   const { visible } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const { setActiveChat } = useAIAgentDispatcher()
 
   const [keyWord, setKeyWord] = useState<string>('')
   const [loading, setLoading] = useState(false)
@@ -128,7 +127,7 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
           )
           const session = sessionId ? Data.find((item) => item.SessionID === sessionId) : Data[0]
           if (session) {
-            setActiveChat(session)
+            openAIAgentChatTab(session)
           } else {
             yakitNotify('warning', t('AIScheduledTasks.openRunSessionFailed'))
           }
