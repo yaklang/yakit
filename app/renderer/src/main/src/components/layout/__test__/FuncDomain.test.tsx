@@ -30,19 +30,45 @@ vi.mock('lottie-web', () => ({ default: vi.fn() }))
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { startIdleVisibleInterval, queryRisks, edition, messageState, userInfo, menuActions } = vi.hoisted(() => ({
-  startIdleVisibleInterval: vi.fn(() => vi.fn()),
-  queryRisks: vi.fn(),
-  edition: { community: true, yakit: true },
-  messageState: { unread: 0, menuOpen: false },
-  menuActions: {
-    setDynamicMenuOpen: vi.fn(),
-    setCeUserMenuShow: vi.fn(),
-    setLoginShow: vi.fn(),
-    onUpdateApiKey: vi.fn(),
-  },
-  userInfo: { isLogin: false, platform: 'github' },
-}))
+const {
+  startIdleVisibleInterval,
+  queryRisks,
+  edition,
+  messageState,
+  userInfo,
+  menuActions,
+  eeConfig,
+  versionSlots,
+  engineList,
+  engineFetchList,
+} = vi.hoisted(() => {
+  // UIOpNotice 更新链路的可变 mock 状态（describe「UIOpNotice 更新按钮状态与文案」中按用例赋值）
+  const eeConfig = { value: [] as Array<{ configName: string; isOpen: boolean }> }
+  const versionSlots = {
+    latestYakit: { version: 'v1.4.9', ok: true },
+    localYakit: '1.4.9',
+    latestYak: '1.4.9',
+    intranetFile: '',
+  }
+  const engineList = { value: [] as string[] }
+  return {
+    startIdleVisibleInterval: vi.fn(() => vi.fn()),
+    queryRisks: vi.fn(),
+    edition: { community: true, yakit: true, enterprise: false },
+    messageState: { unread: 0, menuOpen: false },
+    menuActions: {
+      setDynamicMenuOpen: vi.fn(),
+      setCeUserMenuShow: vi.fn(),
+      setLoginShow: vi.fn(),
+      onUpdateApiKey: vi.fn(),
+    },
+    userInfo: { isLogin: false, platform: 'github' },
+    eeConfig,
+    versionSlots,
+    engineList,
+    engineFetchList: vi.fn(() => Promise.resolve(engineList.value.join('\n'))),
+  }
+})
 
 vi.mock('@/utils/scheduleIdleTask', () => ({ startIdleVisibleInterval }))
 
@@ -68,9 +94,12 @@ vi.mock('@/services/electronBridge', async (importOriginal) => {
       activateScreenshot: vi.fn(),
     },
     yakitEngine: new Proxy(
-      {},
+      { fetchYaklangVersionList: engineFetchList },
       {
-        get: (_target, prop) => {
+        get: (target, prop) => {
+          if (Object.prototype.hasOwnProperty.call(target, prop)) {
+            return (target as Record<string, unknown>)[prop as string]
+          }
           if (String(prop).startsWith('on')) return vi.fn(() => vi.fn())
           return vi.fn().mockResolvedValue(undefined)
         },
@@ -78,6 +107,45 @@ vi.mock('@/services/electronBridge', async (importOriginal) => {
     ),
   }
 })
+
+vi.mock('@/apiUtils/grpc', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>
+  return {
+    ...actual,
+    grpcFetchLatestYakitVersion: vi.fn(() =>
+      versionSlots.latestYakit.ok
+        ? Promise.resolve(versionSlots.latestYakit.version)
+        : Promise.reject(new Error('network unreachable')),
+    ),
+    grpcFetchLatestYakVersion: vi.fn(() => Promise.resolve(versionSlots.latestYak)),
+    grpcFetchLocalYakVersion: vi.fn(() => Promise.resolve(versionSlots.latestYak)),
+    grpcFetchLocalYakitVersion: vi.fn(() => Promise.resolve(versionSlots.localYakit)),
+    grpcFetchIntranetYakitVersion: vi.fn(() =>
+      versionSlots.intranetFile ? Promise.resolve(versionSlots.intranetFile) : Promise.reject(new Error('no file')),
+    ),
+  }
+})
+
+vi.mock('@/utils/kv', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>
+  return {
+    ...actual,
+    getLocalValue: vi.fn(() => Promise.resolve(undefined)),
+    setLocalValue: vi.fn(() => Promise.resolve(undefined)),
+  }
+})
+
+vi.mock('@/services/fetch', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>
+  return {
+    ...actual,
+    NetWorkApi: vi.fn(() => Promise.resolve(undefined)),
+  }
+})
+
+vi.mock('@/utils/visitorsStatistics', () => ({
+  visitorsStatisticsFun: vi.fn(),
+}))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh' }, i18nRefresh: 0 }),
@@ -94,7 +162,7 @@ vi.mock('@/utils/envfile', async (importOriginal) => {
     isIRify: () => false,
     isCommunityEdition: () => true,
     isCommunityYakit: () => edition.community,
-    isEnpriTrace: () => false,
+    isEnpriTrace: () => edition.enterprise,
     isEnpriTraceAgent: () => false,
     isMemfit: () => false,
     isYakit: () => edition.yakit,
@@ -109,7 +177,7 @@ vi.mock('@/store', () => ({
   useYakitDynamicStatus: () => ({
     dynamicStatus: { isDynamicStatus: false },
   }),
-  useEeSystemConfig: () => ({ eeSystemConfig: [] }),
+  useEeSystemConfig: () => ({ eeSystemConfig: eeConfig.value }),
 }))
 
 vi.mock('@/store/screenRecorder', () => ({
@@ -177,15 +245,18 @@ vi.mock('../hooks/useEngineConsole/useEngineConsole', () => ({
 }))
 
 vi.mock('../update/useDownloadYakit', () => ({
-  useDownloadYakit: () => ({ downloadProgress: 0 }),
+  // UIOpNotice 按 [state, { onDownloadStart }] 数组解构
+  useDownloadYakit: () => [{ downloadProgress: 0 }, { onDownloadStart: vi.fn() }],
 }))
 
 vi.mock('../../MessageCenter/useEETaskNotificationHook', () => ({
-  useEETaskNotificationHook: () => ({
-    taskModalInfo: {},
-    taskErrModalInfo: {},
-    debugTaskEvent: {},
-  }),
+  // UIOpNotice 按 [loading, taskModalInfo, taskErrModalInfo, debugTaskEvent] 数组解构
+  useEETaskNotificationHook: () => [
+    false,
+    { visible: false, title: '', okButtonText: '', data: [] },
+    { visible: false, title: '', okButtonText: '', data: [] },
+    { startT: vi.fn(), sureT: vi.fn(), coverP: vi.fn(), waitP: vi.fn() },
+  ],
 }))
 
 vi.mock('@/pages/layout/NotepadMenu/NotepadMenu', () => ({
@@ -233,7 +304,7 @@ vi.mock('@/hook/useHoldGRPCStream/useHoldGRPCStream', () => ({
   ],
 }))
 
-import { FuncDomain, MoreYaklangVersion } from '../FuncDomain'
+import { FuncDomain, MoreYaklangVersion, UIOpNotice } from '../FuncDomain'
 import type { FuncDomainProp } from '../FuncDomain'
 
 const baseProps: FuncDomainProp = {
@@ -396,5 +467,77 @@ describe('FuncDomain 头像按钮点击区域', () => {
     render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
     fireEvent.click(screen.getByTestId('user-menu-trigger'))
     expect(menuActions.setLoginShow).toHaveBeenCalledWith(true)
+  })
+})
+
+describe('UIOpNotice 更新按钮状态与文案', () => {
+  beforeEach(() => {
+    edition.community = true
+    edition.yakit = true
+    edition.enterprise = false
+    eeConfig.value = []
+    versionSlots.latestYakit = { version: 'v1.4.9', ok: true }
+    versionSlots.localYakit = '1.4.9'
+    versionSlots.latestYak = '1.4.9'
+    versionSlots.intranetFile = ''
+    engineList.value = []
+    // 挂载时立即执行一次版本拉取（替代真实轮询的 runImmediately）
+    ;(startIdleVisibleInterval as unknown as { mockImplementation: (fn?: () => void) => unknown }).mockImplementation(
+      (fn?: () => void) => {
+        fn?.()
+        return () => {}
+      },
+    )
+  })
+
+  afterEach(() => {
+    ;(startIdleVisibleInterval as unknown as { mockImplementation: (fn?: () => void) => unknown }).mockImplementation(
+      () => () => {},
+    )
+    edition.enterprise = false
+    eeConfig.value = []
+  })
+
+  // css modules 在 vitest 中被 stub 为空对象（见 vitest.config.ts stub-style-modules），
+  // 无法断言 yakit-button-primary 类名，这里以按钮文案区分：有更新显示“更新”，无更新显示版本号。
+  it('社区版官方有新版时按钮显示更新', async () => {
+    versionSlots.latestYakit = { version: 'v1.4.10', ok: true }
+    render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
+    expect(await screen.findByRole('button', { name: 'FuncDomain.update' })).toBeInTheDocument()
+  })
+
+  it('社区版无更新时按钮显示官方最新版本号', async () => {
+    render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
+    expect(await screen.findByRole('button', { name: 'v1.4.9' })).toBeInTheDocument()
+  })
+
+  it('官方版本拉取失败时按钮回退显示本地版本号', async () => {
+    versionSlots.latestYakit = { version: '', ok: false }
+    render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
+    expect(await screen.findByRole('button', { name: 'v1.4.9' })).toBeInTheDocument()
+  })
+
+  it('引擎低于主推版本时按钮显示更新', async () => {
+    engineList.value = ['v1.4.9', 'v1.4.8']
+    render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
+    expect(await screen.findByRole('button', { name: 'FuncDomain.update' })).toBeInTheDocument()
+  })
+
+  it('内网模式下官方不可达但内网有新版时按钮仍显示更新', async () => {
+    edition.enterprise = true
+    eeConfig.value = [{ configName: 'clientUpdateType', isOpen: true }]
+    versionSlots.latestYakit = { version: '', ok: false }
+    versionSlots.intranetFile = 'D:/release/EnpriTrace-1.4.10-windows-amd64.exe'
+    render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
+    // 内网配置经 200ms 防抖生效后再拉取内网版本号
+    expect(await screen.findByRole('button', { name: 'FuncDomain.update' }, { timeout: 3000 })).toBeInTheDocument()
+  })
+
+  it('内网模式下无更新时按钮显示内网版本号', async () => {
+    edition.enterprise = true
+    eeConfig.value = [{ configName: 'clientUpdateType', isOpen: true }]
+    versionSlots.intranetFile = 'D:/release/EnpriTrace-1.4.9-windows-amd64.exe'
+    render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
+    expect(await screen.findByRole('button', { name: 'v1.4.9' }, { timeout: 3000 })).toBeInTheDocument()
   })
 })
