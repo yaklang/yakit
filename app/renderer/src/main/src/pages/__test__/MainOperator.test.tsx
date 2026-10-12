@@ -25,6 +25,12 @@ const { startIdleVisibleInterval } = vi.hoisted(() => ({
 
 vi.mock('@/utils/scheduleIdleTask', () => ({ startIdleVisibleInterval }))
 
+const { autoEnableMock } = vi.hoisted(() => ({ autoEnableMock: vi.fn().mockResolvedValue(undefined) }))
+vi.mock('@/store/globalHotPatch', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>
+  return { ...actual, autoEnableGlobalHotPatch: autoEnableMock }
+})
+
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh' } }),
 }))
@@ -128,6 +134,7 @@ describe('MainOperator 远程控制轮询', () => {
     mockHidden = false
     Object.defineProperty(document, 'hidden', { configurable: true, get: () => mockHidden })
     startIdleVisibleInterval.mockClear()
+    autoEnableMock.mockClear()
     ipcRendererMock.invoke.mockImplementation(async (channel: string) => {
       if (channel === 'GetYakitCompletionRaw') return { RawJson: new Uint8Array([123, 125]) }
       if (channel === 'GetYakVMBuildInMethodCompletion') return { Suggestions: [] }
@@ -146,6 +153,11 @@ describe('MainOperator 远程控制轮询', () => {
   it('挂载后启动远程控制状态轮询', () => {
     render(<Main />)
     expect(startIdleVisibleInterval).toHaveBeenCalled()
+  })
+
+  it('首页挂载时触发全局热加载自启动', () => {
+    render(<Main />)
+    expect(autoEnableMock).toHaveBeenCalledTimes(1)
   })
 
   it('卸载后停止轮询，不再请求 alive-dynamic-control-status', async () => {
