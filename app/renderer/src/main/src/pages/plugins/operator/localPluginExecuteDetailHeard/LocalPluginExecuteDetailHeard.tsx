@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
 import type {
   ExecuteEnterNodeByPluginParamsProps,
   FormExtraSettingProps,
@@ -20,7 +20,9 @@ import type { PluginParamDataEditorProps, YakParamProps } from '../../pluginsTyp
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { HTTPPacketYakitEditor } from '@/components/yakitUI/YakitEditor/extraYakitEditor'
+const HTTPPacketYakitEditor = lazy(() =>
+  import('@/components/yakitUI/YakitEditor/extraYakitEditor').then((m) => ({ default: m.HTTPPacketYakitEditor })),
+)
 import {
   YakitFormDragger,
   YakitFormDraggerContent,
@@ -35,7 +37,9 @@ import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import type { PluginExecuteExtraParamsRefProps } from './PluginExecuteExtraParams'
 import { type DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin, apiFetchOnlinePluginInfo } from '../../utils'
-import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
+const YakitEditor = lazy(() =>
+  import('@/components/yakitUI/YakitEditor/YakitEditor').then((m) => ({ default: m.YakitEditor })),
+)
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { GetPluginLanguage } from '../../builtInData'
 import { ParamsToGroupByGroupName, getValueByType, getYakExecutorParam } from '../../editDetails/utils'
@@ -877,14 +881,16 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
           validateStatus={validateStatus}
           help={validateStatus === 'error' ? t('YakitForm.field_required_with_label', { label: formProps.label }) : ''}
         >
-          <HTTPPacketYakitEditor
-            type="http"
-            originValue={defaultValue}
-            readOnly={disabled}
-            onlyBasicMenu={true}
-            noLineNumber={true}
-            noMiniMap={true}
-          />
+          <Suspense fallback={null}>
+            <HTTPPacketYakitEditor
+              type="http"
+              originValue={defaultValue}
+              readOnly={disabled}
+              onlyBasicMenu={true}
+              noLineNumber={true}
+              noMiniMap={true}
+            />
+          </Suspense>
         </Form.Item>
       )
     }
@@ -924,7 +930,9 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
           validateStatus={validateStatus}
           help={validateStatus === 'error' ? t('YakitForm.field_required_with_label', { label: formProps.label }) : ''}
         >
-          <YakitEditor type={language} readOnly={disabled} noLineNumber={true} noMiniMap={true} />
+          <Suspense fallback={null}>
+            <YakitEditor type={language} readOnly={disabled} noLineNumber={true} noMiniMap={true} />
+          </Suspense>
         </Form.Item>
       )
     }

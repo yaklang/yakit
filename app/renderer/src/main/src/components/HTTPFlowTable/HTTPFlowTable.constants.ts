@@ -405,6 +405,8 @@ export interface ImportExportProgressProps {
   subTitle?: string
   token: string
   apiKey: string
+  /** token 的 data/error 监听注册完成后调用，调用方在此之后再启动流 */
+  onListening?: () => void
 }
 
 export const HTTP_FLOW_FAVORITE_TAG = 'YAKIT_FAVORITE'

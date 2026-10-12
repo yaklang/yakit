@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffect, useMemo } from 'react'
 import { Space } from 'antd'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
+// 加载时注册 yak / syntaxflow 语言，对比页自己不会走到那个入口
+import '@/utils/monacoSpec/yakEditor'
 import { AutoCard } from '../../components/AutoCard'
 import { LineConversionIcon } from '@yakit-libs/yakit-ui-icons/oldicon/LineConversionIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'

@@ -3,13 +3,20 @@ import {
   newYaklangCompletionHandlerProvider,
   getCompletions,
   getGlobalCompletions,
+  type CompletionTotal,
+  type MethodSuggestion,
   type Range,
   type YaklangLanguageSuggestionRequest,
   type YaklangLanguageSuggestionResponse,
   getWordWithPointAtPosition,
   type YaklangLanguageFindResponse,
   maybeAutoTriggerCallbackOnParen,
+  setYaklangBuildInMethodCompletion,
+  setYaklangCompletions,
 } from './yakCompletionSchema'
+import { JSONParseLog } from '@/utils/tool'
+import { setupMonacoWorkers } from './setupMonacoWorkers'
+import { setUpSyntaxFlowMonaco } from './syntaxflowEditor'
 import { setupCompletionHint } from './yakCompletionHint'
 import { KeyCode, KeyMod, type languages } from 'monaco-editor'
 type CodeAction = languages.CodeAction
@@ -1052,3 +1059,32 @@ monaco.languages.registerReferenceProvider(YaklangMonacoSpec, {
 //         }
 //     }
 // })
+
+// yakCompletionSchema 会引回本文件。等本文件执行完再注册，否则 getCompletions 还没准备好。
+queueMicrotask(() => {
+  setupMonacoWorkers()
+  setUpYaklangMonaco()
+  setUpSyntaxFlowMonaco()
+  void ipcRenderer.invoke('GetYakitCompletionRaw').then((data: { RawJson: Uint8Array }) => {
+    try {
+      const completionJson = Buffer.from(data.RawJson).toString('utf8')
+      const total = JSONParseLog(completionJson, {
+        page: 'yakEditor',
+        fun: 'GetYakitCompletionRaw',
+      }) as CompletionTotal
+      setYaklangCompletions(total)
+      // 库函数名是在 setUp 时写进高亮规则的，数据到了再刷一次
+      setUpYaklangMonaco()
+    } catch (e) {
+      console.info(e)
+    }
+  })
+  void ipcRenderer.invoke('GetYakVMBuildInMethodCompletion', {}).then((data: { Suggestions: MethodSuggestion[] }) => {
+    try {
+      if (!data || data.Suggestions.length <= 0) return
+      setYaklangBuildInMethodCompletion(data.Suggestions)
+    } catch (e) {
+      console.info(e)
+    }
+  })
+})

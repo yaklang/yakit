@@ -10,7 +10,7 @@ import type { ImportExportProgressProps, ImportExportStreamResponse } from '../H
 const { ipcRenderer } = window.require('electron')
 
 const ImportExportProgress: React.FC<ImportExportProgressProps> = React.memo((props) => {
-  const { visible, onClose, getContainer, title, subTitle, token, apiKey } = props
+  const { visible, onClose, getContainer, title, subTitle, token, apiKey, onListening } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
   const timeRef = useRef<any>(null)
   const [importExportStream, setImportExportStream] = useState<ImportExportStreamResponse[]>([])
@@ -35,6 +35,8 @@ const ImportExportProgress: React.FC<ImportExportProgressProps> = React.memo((pr
       yakitNotify('error', `error: ${error}`)
       closeModal()
     })
+    // 监听已经挂上，这时再让调用方启动流
+    onListening?.()
     return () => {
       cancelImportExportHTTPFlowStream()
     }
