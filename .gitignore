@@ -18,6 +18,9 @@ bins/scripts/google-chrome-plugin.zip
 *.db
 *.sock
 *.exe
+# Windows process enumeration helpers are required application assets.
+!app/main/handlers/libs/extVendor/fastlist-0.3.0-x64.exe
+!app/main/handlers/libs/extVendor/fastlist-0.3.0-x86.exe
 *.exe~
 releases/*
 releases/

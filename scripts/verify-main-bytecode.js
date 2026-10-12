@@ -2,18 +2,13 @@ const fs = require('fs')
 const path = require('path')
 const { execFileSync } = require('child_process')
 const { createLoaderStub } = require('./bytecode-plugin')
+const { plaintextRuntimeFiles, verifyCopiedRuntimeAssets } = require('./main-runtime-assets')
 
 const projectRoot = path.resolve(__dirname, '..')
 const sourceDir = path.join(projectRoot, 'app/main')
 const outputDir = path.join(projectRoot, 'app/main-bytecode')
 
-const plaintextRuntimeFiles = new Set([
-  'engineLinkPreload.js',
-  'preload.js',
-  'screenshots/preload.js',
-  'handlers/libs/xterm@5.3.0/xterm.js',
-  'handlers/libs/xterm-addon-fit@0.7.0/xterm-addon-fit.js',
-])
+verifyCopiedRuntimeAssets(sourceDir, outputDir)
 
 const protectedFiles = []
 const collectProtectedFiles = (dir) => {

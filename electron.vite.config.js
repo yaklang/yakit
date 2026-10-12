@@ -2,16 +2,9 @@ const fs = require('fs')
 const path = require('path')
 const { defineConfig, externalizeDepsPlugin } = require('electron-vite')
 const { mainBytecodePlugin } = require('./scripts/bytecode-plugin')
+const { plaintextRuntimeFiles } = require('./scripts/main-runtime-assets')
 
 const mainSourceDir = path.resolve(__dirname, 'app/main')
-
-const plaintextRuntimeFiles = new Set([
-  'engineLinkPreload.js',
-  'preload.js',
-  'screenshots/preload.js',
-  'handlers/libs/xterm@5.3.0/xterm.js',
-  'handlers/libs/xterm-addon-fit@0.7.0/xterm-addon-fit.js',
-])
 
 const collectMainEntries = (dir, entries = {}) => {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

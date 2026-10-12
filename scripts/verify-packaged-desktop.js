@@ -4,6 +4,7 @@ const os = require('os')
 const { spawn, execFileSync } = require('child_process')
 const asar = require('@electron/asar')
 const { verifyPackagedReportTemplate } = require('./report-template')
+const { verifyPackagedRuntimeAssets } = require('./main-runtime-assets')
 
 function findAsar(dir, depth = 0) {
   if (depth > 5) return []
@@ -129,6 +130,9 @@ async function main() {
     console.log('Installed HTML/PDF report template verified')
     const pkg = JSON.parse(asar.extractFile(archive, 'package.json').toString())
     if (pkg.version !== process.env.BUILD_VERSION) throw new Error('Embedded package version mismatch: ' + pkg.version)
+    const mainDir = path.posix.dirname(pkg.main.replaceAll('\\', '/'))
+    const assetCount = verifyPackagedRuntimeAssets(archive, path.resolve(__dirname, '../app/main'), mainDir)
+    console.log(`Verified ${assetCount} packaged main-process runtime assets`)
     const exe = executable(archive)
     if (process.env.BUILD_EDITION === 'memfit') {
       if (pkg.main !== 'app/main-bytecode/index.js')
