@@ -1,4 +1,3 @@
-@use './styleFunction.scss' as tools;
 @use '../../theme/themeify.scss' as theme;
 .virtual-table {
   height: 100%;
@@ -402,9 +401,6 @@
         .virtual-table-batch-active-row:not(.virtual-table-row-content :has(+ .virtual-table-batch-active-row)) {
           border-bottom: 1px solid var(--Colors-Use-Main-Border) !important;
         }
-
-        $allColorTypes: map-keys(tools.$allColors);
-        @include tools.generate-permutations-class-name($allColorTypes);
 
         .virtual-table-active-row + .virtual-table-row-cell {
           border-top: 0 !important;

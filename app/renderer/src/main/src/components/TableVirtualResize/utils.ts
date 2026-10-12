@@ -2,6 +2,7 @@
  * @name 单元格背景色类型
  * @description 该类型必须按照升序排列
  */
+import type { CSSProperties } from 'react'
 type CellColor = 'BLUE' | 'CYAN' | 'GREEN' | 'GREY' | 'ORANGE' | 'PURPLE' | 'RED' | 'YELLOW'
 
 /** @name 单元格背景色类型对应Tag */
@@ -112,6 +113,121 @@ export const resetEmptyVirtualTableViewport = (
     wrapper.style.marginTop = '0px'
   }
   return true
+}
+
+type CellPaint = { bg: string; hover: string; text: string; activeText?: string; bold?: boolean }
+
+const CELL_PAINT: Record<string, CellPaint> = {
+  blue: {
+    bg: 'var(--Colors-Use-Blue-Border)',
+    hover: 'var(--Colors-Use-Blue-Hover)',
+    text: 'var(--yakit-colors-Blue-100)',
+  },
+  cyan: {
+    bg: 'var(--Colors-Use-Cyan-Border)',
+    hover: 'var(--yakit-colors-Cyan-50)',
+    text: 'var(--yakit-colors-Cyan-100)',
+  },
+  green: {
+    bg: 'var(--Colors-Use-Green-Border)',
+    hover: 'var(--yakit-colors-Green-50)',
+    text: 'var(--yakit-colors-Green-100)',
+  },
+  grey: {
+    bg: 'var(--Colors-Use-Grey-Border)',
+    hover: 'var(--yakit-colors-Neutral-50)',
+    text: 'var(--yakit-colors-Neutral-100)',
+  },
+  orange: {
+    bg: 'var(--Colors-Use-Orange-Border)',
+    hover: 'var(--yakit-colors-Orange-50)',
+    text: 'var(--yakit-colors-Orange-100)',
+  },
+  purple: {
+    bg: 'var(--Colors-Use-Purple-Border)',
+    hover: 'var(--yakit-colors-Purple-50)',
+    text: 'var(--yakit-colors-Purple-100)',
+  },
+  red: {
+    bg: 'var(--Colors-Use-Error-Primary)',
+    hover: 'var(--Colors-Use-Error-Pressed)',
+    text: 'var(--Colors-Use-Error-On-Primary)',
+    activeText: 'var(--yakit-colors-Error-100)',
+    bold: true,
+  },
+  yellow: {
+    bg: 'var(--Colors-Use-Yellow-Border)',
+    hover: 'var(--yakit-colors-Yellow-50)',
+    text: 'var(--yakit-colors-Yellow-100)',
+  },
+}
+
+const CELL_GRADIENT: Record<string, string> = {
+  blue: 'var(--Colors-Use-Blue-Primary)',
+  cyan: 'var(--Colors-Use-Cyan-Primary)',
+  green: 'var(--Colors-Use-Green-Primary)',
+  grey: 'var(--Colors-Use-Grey-Primary)',
+  orange: 'var(--Colors-Use-Orange-Primary)',
+  purple: 'var(--Colors-Use-Purple-Primary)',
+  red: 'var(--Colors-Use-Error-Primary)',
+  yellow: 'var(--Colors-Use-Yellow-Primary)',
+}
+
+const mixStops = (names: string[], alpha: number) =>
+  names
+    .map((name) => CELL_GRADIENT[name])
+    .filter(Boolean)
+    .map((color) => `color-mix(in srgb, ${color} ${alpha}%, transparent)`)
+    .join(', ')
+
+/** 虚拟表格单元格颜色。单色用描边色，多色用主色渐变，代替全排列类名。 */
+export const virtualTableCellColorStyle = (
+  colorTypes: string,
+  state: { hover: boolean; active: boolean },
+): CSSProperties | undefined => {
+  if (!colorTypes) return
+  const names = colorTypes.split('-')
+  if (names.length === 1) {
+    const paint = CELL_PAINT[names[0]]
+    if (!paint) return
+    const emphasized = state.hover || state.active
+    return {
+      background: emphasized ? paint.hover : paint.bg,
+      color: names[0] === 'red' && state.active ? paint.activeText : paint.text,
+      fontWeight: paint.bold ? 'bold' : undefined,
+    }
+  }
+  const alpha = state.active ? 40 : state.hover ? 30 : 20
+  const stops = mixStops(names, alpha)
+  if (!stops) return
+  return {
+    background: `linear-gradient(${stops})`,
+    color: 'var(--Colors-Use-Neutral-Text-1-Title)',
+  }
+}
+
+/** WebSocket 帧列表行颜色，hover 交给 CSS 变量。 */
+export const websocketRowColorVars = (colorTypes: string): CSSProperties | undefined => {
+  if (!colorTypes) return
+  const names = colorTypes.split('-')
+  if (names.length === 1) {
+    const paint = CELL_PAINT[names[0]]
+    if (!paint) return
+    return {
+      '--ws-row-bg': paint.bg,
+      '--ws-row-hover-bg': paint.hover,
+      '--ws-row-fg': 'var(--Colors-Use-Neutral-Text-1-Title)',
+      '--ws-row-weight': paint.bold ? 'bold' : 'normal',
+    } as CSSProperties
+  }
+  const base = mixStops(names, 20)
+  const hover = mixStops(names, 30)
+  if (!base) return
+  return {
+    '--ws-row-bg': `linear-gradient(${base})`,
+    '--ws-row-hover-bg': `linear-gradient(${hover})`,
+    '--ws-row-fg': 'var(--Colors-Use-Neutral-Text-1-Title)',
+  } as CSSProperties
 }
 
 /**

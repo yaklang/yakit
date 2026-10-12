@@ -1,5 +1,3 @@
-@use '../../components/TableVirtualResize/styleFunction.scss' as tools;
-
 .websocket-frame-history {
   width: 100%;
   height: 100%;
@@ -75,59 +73,14 @@
     }
   }
 
-  @mixin generate-permutations-class-name($allTypes: (), $prefix: ()) {
-    // 剩余需要遍历的变量数组为空
-    @if length($allTypes) != 0 {
-      @each $type in $allTypes {
-        $pre: append($prefix, $type, $separator: comma);
-        @if length($pre) == 1 {
-          // 单色情况
-          @if $type == red {
-            // 单色-红色单独处理
-            .table-tr.table-row-red {
-              background: var(--Colors-Use-Error-Primary);
-              color: var(--Colors-Use-Neutral-Text-1-Title);
-              font-weight: bold;
-              &:hover {
-                background: var(--Colors-Use-Error-Pressed);
-              }
-            }
-          } @else {
-            // 单色-其他颜色处理
-            .table-tr.table-row-#{$type} {
-              @include tools.background-color-mix(#{tools.fetch-color($type, 'backgroundColor')}, 20%);
-              color: var(--Colors-Use-Neutral-Text-1-Title);
-              &:hover {
-                @include tools.background-color-mix(#{tools.fetch-color($type, 'backgroundColor')}, 30%);
-              }
-            }
-          }
-        } @else {
-          // 多色情况
-          $gbColors: tools.generate-colors($pre);
-          .table-tr.table-row-#{tools.generate-class-name($pre)} {
-            @include tools.background-gradient-mix($gbColors, 20%);
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            &:hover {
-              @include tools.background-gradient-mix($gbColors, 30%);
-            }
-          }
-        }
-
-        $remaining: if(
-          index($allTypes, $type) == length($allTypes),
-          (),
-          tools.get-range($allTypes, index($allTypes, $type) + 1)
-        );
-        @if length($pre) <3 {
-          @include generate-permutations-class-name($remaining, $pre);
-        } @else {
-        }
-      }
+  .table-tr-colored {
+    background: var(--ws-row-bg);
+    color: var(--ws-row-fg);
+    font-weight: var(--ws-row-weight, normal);
+    &:hover {
+      background: var(--ws-row-hover-bg);
     }
   }
-  $allColorTypes: map-keys(tools.$allColors);
-  @include generate-permutations-class-name($allColorTypes);
 }
 
 .websocket-detail-modal {
