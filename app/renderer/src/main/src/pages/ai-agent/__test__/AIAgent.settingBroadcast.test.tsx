@@ -9,12 +9,17 @@ import { AIAgentSettingDefault } from '../defaultConstant'
 import { AIAgent } from '../AIAgent'
 import type { AISession } from '../type/aiChat'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { globalSessionEngine } from '../../ai-re-act/hooks/ChatMultiSessionController'
 
 const ipc = vi.hoisted(() => ({
   useChatIPC: vi.fn(),
   detachPendingChat: vi.fn(),
   cancelPendingChat: vi.fn(),
   onClose: vi.fn(),
+  queryPagesDataById: vi.fn(),
+  updatePagesDataCacheById: vi.fn(),
+  pages: new Map(),
+  sessions: new Map(),
 }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -100,9 +105,24 @@ vi.mock('../../ai-re-act/hooks/useChatIPC', () => ({
   },
 }))
 
-vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', () => ({
-  globalSessionEngine: { updateSessionConfig: vi.fn() },
-}))
+vi.mock('@/store/pageInfo', () => ({ usePageInfo: { getState: () => ipc } }))
+vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', async () => {
+  const { createStore } = await import('zustand/vanilla')
+  return {
+    globalSessionEngine: {
+      updateSessionConfig: vi.fn(),
+      ensureSession: (id: string) => {
+        if (!ipc.sessions.has(id)) {
+          ipc.sessions.set(id, {
+            store: createStore(() => ({ sessionTitleUpdate: 0, execute: false })),
+            rawData: { sessionTitle: '' },
+          })
+        }
+        return ipc.sessions.get(id)
+      },
+    },
+  }
+})
 
 vi.mock('../../KnowledgeBase/hooks/useKnowledgeBase', () => ({
   useKnowledgeBase: () => ({ initialize: vi.fn(), knowledgeBases: [] }),
@@ -122,6 +142,9 @@ const setRemoteValueMock = vi.mocked(setRemoteValue)
 describe('AIAgent 配置广播', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    ipc.pages.clear()
+    ipc.sessions.clear()
+    ipc.queryPagesDataById.mockReturnValue({ pageId: 'test', pageName: 'AI Agent', pageParamsInfo: {} })
     getRemoteValueMock.mockReset()
     setRemoteValueMock.mockReset()
     getRemoteValueMock.mockResolvedValue(
@@ -145,18 +168,168 @@ describe('AIAgent 配置广播', () => {
     render(<AIAgent pageId="history-tab" initialSession={{ SessionID: 'selected-history' } as AISession} />)
     await waitFor(() => expect(screen.getByTestId('active-session')).toHaveTextContent('selected-history'))
     expect(ipc.useChatIPC).toHaveBeenCalledWith(YakitRoute.AI_Agent, 'history-tab', true)
+    expect(ipc.detachPendingChat).not.toHaveBeenCalled()
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+  })
+
+  it('默认页挂载后保持欢迎页，不补同步随后传入的初始会话', async () => {
+    const { rerender } = render(<AIAgent pageId="test" />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    expect(screen.getByTestId('active-session')).toHaveTextContent('welcome')
+
+    rerender(<AIAgent pageId="test" initialSession={{ SessionID: 'restored' } as AISession} />)
+
+    expect(screen.getByTestId('active-session')).toHaveTextContent('welcome')
+    expect(ipc.detachPendingChat).not.toHaveBeenCalled()
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+  })
+
+  it('回到欢迎页后，同一初始会话的重渲染和标题更新不会重新打开会话', async () => {
+    const session = { SessionID: 'restored', Title: '原名称' } as AISession
+    const { rerender } = render(<AIAgent pageId="test" initialSession={session} />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    fireEvent.click(screen.getByText('back-to-welcome'))
+    ipc.detachPendingChat.mockClear()
+    ipc.updatePagesDataCacheById.mockClear()
+
+    rerender(<AIAgent pageId="test" initialSession={session} />)
+    rerender(<AIAgent pageId="test" initialSession={{ ...session, Title: '新名称' }} />)
+
+    expect(screen.getByTestId('active-session')).toHaveTextContent('welcome')
+    expect(ipc.detachPendingChat).not.toHaveBeenCalled()
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+  })
+
+  it('新建会话直接使用初始数据，不等待恢复查询', async () => {
+    render(<AIAgent pageId="test" initialSession={{ SessionID: 'created', isCreate: true } as AISession} />)
+    expect(screen.getByTestId('active-session')).toHaveTextContent('created')
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    expect(ipc.detachPendingChat).not.toHaveBeenCalled()
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+  })
+
+  it('已在当前页面选中会话时，迟到的初始缓存不会覆盖当前会话', async () => {
+    const { rerender } = render(<AIAgent pageId="test" />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    fireEvent.click(screen.getByText('select-history'))
+    ipc.detachPendingChat.mockClear()
+    ipc.updatePagesDataCacheById.mockClear()
+
+    rerender(<AIAgent pageId="test" initialSession={{ SessionID: 'restored' } as AISession} />)
+
+    expect(screen.getByTestId('active-session')).toHaveTextContent('history')
+    expect(ipc.detachPendingChat).not.toHaveBeenCalled()
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+  })
+
+  it('仅在 sessionTitleUpdate 变化时按 SessionID 更新标签名称和缓存标题', async () => {
+    const session = { SessionID: 'selected-history', Title: '原名称' } as AISession
+    const inputParams = { defualtAIMentionCommandParams: [], forgeExec: { ruleContent: 'rule' } }
+    const node = {
+      pageId: 'history-tab',
+      pageName: session.Title,
+      pageParamsInfo: { aiAgentPageInfo: { ...inputParams, session } },
+    }
+    ipc.pages.set(YakitRoute.AI_Agent, {
+      pageList: [
+        { ...node, pageId: 'other-tab', pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'other' } } } },
+        node,
+      ],
+    })
+    render(<AIAgent pageId="history-tab" initialSession={session} />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    const data = globalSessionEngine.ensureSession(session.SessionID)
+    data.rawData.sessionTitle = '新名称'
+
+    act(() => data.store.setState({ execute: true }))
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+
+    act(() => data.store.setState({ sessionTitleUpdate: 1 }))
+    expect(ipc.updatePagesDataCacheById).toHaveBeenCalledExactlyOnceWith(YakitRoute.AI_Agent, {
+      ...node,
+      pageName: '新名称',
+      pageParamsInfo: { aiAgentPageInfo: { ...inputParams, session: { ...session, Title: '新名称' } } },
+    })
+
+    data.rawData.sessionTitle = '   '
+    act(() => data.store.setState({ sessionTitleUpdate: 2 }))
+    expect(ipc.updatePagesDataCacheById).toHaveBeenCalledTimes(1)
+  })
+
+  it('切换会话和卸载时取消旧标题订阅', async () => {
+    const sessions = ['original', 'history'].map((SessionID) => ({ SessionID, Title: SessionID }) as AISession)
+    ipc.pages.set(YakitRoute.AI_Agent, {
+      pageList: sessions.map((session) => ({
+        pageId: session.SessionID,
+        pageName: session.Title,
+        pageParamsInfo: { aiAgentPageInfo: { session } },
+      })),
+    })
+    const { unmount } = render(<AIAgent pageId="test" initialSession={sessions[0]} />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    const original = globalSessionEngine.ensureSession('original')
+    fireEvent.click(screen.getByText('select-history'))
+    const history = globalSessionEngine.ensureSession('history')
+    ipc.updatePagesDataCacheById.mockClear()
+
+    original.rawData.sessionTitle = '旧会话更新'
+    act(() => original.store.setState({ sessionTitleUpdate: 1 }))
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+
+    history.rawData.sessionTitle = '当前会话更新'
+    act(() => history.store.setState({ sessionTitleUpdate: 1 }))
+    expect(ipc.updatePagesDataCacheById).toHaveBeenCalledExactlyOnceWith(
+      YakitRoute.AI_Agent,
+      expect.objectContaining({ pageId: 'history', pageName: '当前会话更新' }),
+    )
+
+    unmount()
+    ipc.updatePagesDataCacheById.mockClear()
+    history.rawData.sessionTitle = '卸载后更新'
+    act(() => history.store.setState({ sessionTitleUpdate: 2 }))
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+  })
+
+  it('相同 SessionID 跳过标签缓存更新，仍更新当前会话并脱离 pending 视图', async () => {
+    ipc.queryPagesDataById.mockReturnValue({
+      pageId: 'test',
+      pageName: '已更新的标题',
+      pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'history', Title: '已更新的标题' } } },
+    })
+    render(<AIAgent pageId="test" initialSession={{ SessionID: 'original' } as AISession} />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+
+    fireEvent.click(screen.getByText('select-history'))
+
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+    expect(screen.getByTestId('active-session')).toHaveTextContent('history')
+    expect(ipc.detachPendingChat).toHaveBeenCalledOnce()
   })
 
   it('切历史和欢迎页只脱离 pending 视图，提交继续在后台运行', async () => {
+    const inputParams = { defualtAIMentionCommandParams: [], forgeExec: { ruleContent: 'rule' } }
+    ipc.queryPagesDataById.mockReturnValue({ pageId: 'test', pageParamsInfo: { aiAgentPageInfo: inputParams } })
     render(<AIAgent pageId="test" />)
     await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
     expect(ipc.useChatIPC).toHaveBeenCalledWith(YakitRoute.AI_Agent, 'test', true)
     fireEvent.click(screen.getByText('select-history'))
     expect(screen.getByTestId('active-session')).toHaveTextContent('history')
     expect(ipc.detachPendingChat).toHaveBeenCalledTimes(1)
+    expect(ipc.queryPagesDataById).toHaveBeenCalledWith(YakitRoute.AI_Agent, 'test')
+    expect(ipc.updatePagesDataCacheById).toHaveBeenLastCalledWith(
+      YakitRoute.AI_Agent,
+      expect.objectContaining({
+        pageId: 'test',
+        pageParamsInfo: { aiAgentPageInfo: { ...inputParams, session: { SessionID: 'history' } } },
+      }),
+    )
     fireEvent.click(screen.getByText('back-to-welcome'))
     expect(screen.getByTestId('active-session')).toHaveTextContent('welcome')
     expect(ipc.detachPendingChat).toHaveBeenCalledTimes(2)
+    expect(ipc.updatePagesDataCacheById).toHaveBeenLastCalledWith(
+      YakitRoute.AI_Agent,
+      expect.objectContaining({ pageParamsInfo: { aiAgentPageInfo: { ...inputParams, session: undefined } } }),
+    )
     expect(ipc.cancelPendingChat).not.toHaveBeenCalled()
     expect(ipc.onClose).not.toHaveBeenCalled()
   })

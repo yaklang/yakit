@@ -29,6 +29,8 @@ import { useStore } from 'zustand'
 import { createStore } from 'zustand/vanilla'
 import { YakitSolidLoading } from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { usePageInfo } from '@/store/pageInfo'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 // 未在前端绑定的历史记录共用空状态，不创建完整的会话数据。
 const idleSessionStore = createStore<{ currentChatStatus: { status?: AITaskStatusType } }>(() => ({
@@ -211,6 +213,23 @@ const HistoryChatList: FC<{
     if (result && info) {
       try {
         await grpcUpdateAISessionTitle({ SessionID: info.SessionID, Title: info.Title })
+        const { pages, updatePagesDataCacheById } = usePageInfo.getState()
+        const node = pages
+          .get(YakitRoute.AI_Agent)
+          ?.pageList.find((item) => item.pageParamsInfo.aiAgentPageInfo?.session?.SessionID === info.SessionID)
+        if (node && info.Title.trim()) {
+          updatePagesDataCacheById(YakitRoute.AI_Agent, {
+            ...node,
+            pageName: info.Title,
+            pageParamsInfo: {
+              ...node.pageParamsInfo,
+              aiAgentPageInfo: {
+                ...node.pageParamsInfo.aiAgentPageInfo,
+                session: { ...node.pageParamsInfo.aiAgentPageInfo!.session!, Title: info.Title },
+              },
+            },
+          })
+        }
         setSessions?.((old) => updateChatTitle(old, info))
       } catch (error) {
         yakitNotify('error', t('HistoryChatList.updateTitleFailed', { error: String(error) }))

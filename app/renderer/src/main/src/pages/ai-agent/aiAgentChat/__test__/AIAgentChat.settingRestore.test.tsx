@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useImperativeHandle, type ReactNode, type Ref } from 'react'
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
@@ -15,8 +15,13 @@ const { mocks, ctx } = vi.hoisted(() => ({
     onStart: vi.fn(),
     onClose: vi.fn(),
     onReStart: vi.fn(),
+    queryPagesDataById: vi.fn(),
+    setValue: vi.fn(),
+    setMention: vi.fn(),
   },
-  ctx: { activeChat: undefined as { SessionID: string } | undefined },
+  ctx: {
+    activeChat: undefined as { SessionID: string } | undefined,
+  },
 }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -32,7 +37,7 @@ vi.mock('ahooks', async (importOriginal) => {
 })
 
 vi.mock('../../useContext/useStore', () => ({
-  default: () => ({ activeChat: ctx.activeChat, pageId: 'tab-1' }),
+  default: () => ({ ...ctx, pageId: 'tab-1' }),
 }))
 
 vi.mock('../../useContext/useDispatcher', () => ({
@@ -97,8 +102,17 @@ vi.mock('../../utils', () => ({
   onReStart: mocks.onReStart,
 }))
 
+vi.mock('@/store/pageInfo', () => ({
+  usePageInfo: {
+    getState: () => ({ queryPagesDataById: mocks.queryPagesDataById, getCurrentPageTabRouteKey: () => '' }),
+  },
+}))
+
 vi.mock('../AIAgentChatLayout/AIAgentChatLayout', () => ({
-  AIAgentChatLayout: ({ mode }: { mode: string }) => <div data-testid="ai-agent-chat-layout" data-mode={mode} />,
+  AIAgentChatLayout: ({ mode, aiChatWelcomeRef }: { mode: string; aiChatWelcomeRef: Ref<unknown> }) => {
+    useImperativeHandle(aiChatWelcomeRef, () => ({ setValue: mocks.setValue, setMention: mocks.setMention }), [])
+    return <div data-testid="ai-agent-chat-layout" data-mode={mode} />
+  },
 }))
 
 vi.mock('@/components/yakitUI/YakitHint/YakitHint', () => ({
@@ -128,6 +142,9 @@ const markDeleted = (id: string) =>
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  vi.restoreAllMocks()
+  vi.useRealTimers()
+  mocks.queryPagesDataById.mockReset()
   ctx.activeChat = undefined
   sessionStatusStore.setState(initialStatus, true) // zustand 4.4.1 没有 getInitialState
 })
@@ -135,6 +152,73 @@ afterEach(() => {
 beforeEach(() => {
   mocks.setSetting.mockClear()
   mocks.setActiveChat.mockClear()
+})
+
+describe('AIAgentChat page input parameters', () => {
+  const mention = { mentionId: 'knowledge-1', mentionType: 'knowledgeBase', mentionName: 'Knowledge' }
+
+  it('injects mentions from the current page merged parameters', () => {
+    vi.useFakeTimers()
+    mocks.queryPagesDataById.mockReturnValue({
+      pageParamsInfo: {
+        aiAgentPageInfo: { session: { SessionID: 's-1' }, defualtAIMentionCommandParams: [mention] },
+      },
+    })
+    render(<AIAgentChat />)
+    act(() => vi.advanceTimersByTime(50))
+    expect(mocks.queryPagesDataById).toHaveBeenCalledWith(expect.any(String), 'tab-1')
+    expect(mocks.setValue).toHaveBeenCalledExactlyOnceWith('')
+    expect(mocks.setMention).toHaveBeenCalledExactlyOnceWith(mention)
+  })
+
+  it('accepts existing mention events only for the current page', () => {
+    render(<AIAgentChat />)
+    act(() => {
+      emiter.emit(
+        'defualtAIMentionCommandParams',
+        JSON.stringify({ pageId: 'tab-2', defualtAIMentionCommandParams: [mention] }),
+      )
+    })
+    expect(mocks.setMention).not.toHaveBeenCalled()
+    act(() => {
+      emiter.emit(
+        'defualtAIMentionCommandParams',
+        JSON.stringify({ pageId: 'tab-1', defualtAIMentionCommandParams: [mention] }),
+      )
+    })
+    expect(mocks.setMention).toHaveBeenCalledExactlyOnceWith(mention)
+  })
+
+  it('does not poll for input when page parameters only contain a session', () => {
+    const setInterval = vi.spyOn(window, 'setInterval')
+    mocks.queryPagesDataById.mockReturnValue({ pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 's-1' } } } })
+    render(<AIAgentChat />)
+    expect(setInterval).not.toHaveBeenCalled()
+    expect(mocks.setMention).not.toHaveBeenCalled()
+  })
+})
+
+describe('AIAgentChat delayed connection cancellation', () => {
+  it('invalidates a delayed attempt when the page unmounts', () => {
+    ctx.activeChat = { SessionID: 'restoring' }
+    const { unmount } = render(<AIAgentChat />)
+    const attempt = mocks.onReStart.mock.calls[0][0]
+    expect(attempt.shouldStart()).toBe(true)
+    unmount()
+    expect(attempt.shouldStart()).toBe(false)
+  })
+
+  it('invalidates the previous delayed connection when the session changes', () => {
+    ctx.activeChat = { SessionID: 'restoring' }
+    const { rerender } = render(<AIAgentChat data-revision={0} />)
+    const attempt = mocks.onReStart.mock.calls[0][0]
+    ctx.activeChat = { SessionID: 'later-user-session' }
+    // 模拟 Context 更新；该测试的 Context hook 是静态 mock，需越过 memo。
+    rerender(<AIAgentChat data-revision={1} />)
+    const nextAttempt = mocks.onReStart.mock.calls.at(-1)![0]
+    expect(nextAttempt.shouldStart()).toBe(true)
+    expect(attempt.shouldStart()).toBe(false)
+  })
 })
 
 describe('AIAgentChat SingleModelMode 生命周期', () => {

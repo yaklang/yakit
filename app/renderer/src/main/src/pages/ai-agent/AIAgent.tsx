@@ -36,6 +36,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useChatIPC } from '../ai-re-act/hooks/useChatIPC'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { globalSessionEngine } from '../ai-re-act/hooks/ChatMultiSessionController'
+import { usePageInfo } from '@/store/pageInfo'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -47,6 +48,32 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
   // 当前展示对话
   const [activeChat, updateActiveChat] = useState<AISession | undefined>(props.initialSession)
+
+  /**更新页面tab的标题 */
+  useEffect(() => {
+    if (!activeChat?.SessionID) return
+    const sessionId = activeChat.SessionID
+    const data = globalSessionEngine.ensureSession(sessionId)
+    const unsubscribe = data.store.subscribe((state, prevState) => {
+      if (state.sessionTitleUpdate === prevState.sessionTitleUpdate) return
+      const title = data.rawData.sessionTitle || ''
+      const { pages, updatePagesDataCacheById } = usePageInfo.getState()
+      const node = pages
+        .get(YakitRoute.AI_Agent)
+        ?.pageList.find((item) => item.pageParamsInfo.aiAgentPageInfo?.session?.SessionID === sessionId)
+      if (!node || !title.trim() || node.pageName === title) return
+      const session = node.pageParamsInfo.aiAgentPageInfo!.session!
+      updatePagesDataCacheById(YakitRoute.AI_Agent, {
+        ...node,
+        pageName: title,
+        pageParamsInfo: {
+          ...node.pageParamsInfo,
+          aiAgentPageInfo: { ...node.pageParamsInfo.aiAgentPageInfo, session: { ...session, Title: title } },
+        },
+      })
+    })
+    return unsubscribe
+  }, [activeChat?.SessionID])
 
   const [show, setShow] = useState<boolean>(false)
   const [sideRatio, setSideRatio] = useState('360px')
@@ -88,9 +115,23 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     true,
   )
 
-  const setActiveChat = useMemoizedFn<AIAgentContextDispatcher['setActiveChat']>((next) => {
+  const setActiveChat = useMemoizedFn<AIAgentContextDispatcher['setActiveChat']>((session) => {
+    // 同步绑定，确保随后回放的首个标题事件可以按 SessionID 找到页面。
+    const { queryPagesDataById, updatePagesDataCacheById } = usePageInfo.getState()
+    const node = queryPagesDataById(YakitRoute.AI_Agent, pageId)
+    const sameSession = !!session && node?.pageParamsInfo.aiAgentPageInfo?.session?.SessionID === session.SessionID
+    if (node && !sameSession) {
+      updatePagesDataCacheById(YakitRoute.AI_Agent, {
+        ...node,
+        pageName: session?.Title || node.pageName,
+        pageParamsInfo: {
+          ...node.pageParamsInfo,
+          aiAgentPageInfo: { ...node.pageParamsInfo.aiAgentPageInfo, session },
+        },
+      })
+    }
     detachPendingChat()
-    updateActiveChat(next)
+    updateActiveChat(session)
   })
 
   const store: AIAgentContextStore = useMemo(() => {

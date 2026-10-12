@@ -74,15 +74,25 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
     const sid = activeChat?.SessionID
     if (!sid) return
     onSetReAct()
-    onReStart({ activeChat, onStart })
+    // 卸载或切换会话后，取消延迟建联。
+    let valid = true
+    onReStart({
+      activeChat,
+      onStart,
+      shouldStart: () => valid,
+    })
     // 打开期间会话在别处被删除：回欢迎页
     const isDeleted = (m: Map<string, SessionDeleteStatus>) => m.get(sid) === SessionDeleteStatus.Deleted
-    return sessionStatusStore.subscribe((state, prev) => {
+    const unsubscribe = sessionStatusStore.subscribe((state, prev) => {
       if (isDeleted(state.deleteStatuses) && !isDeleted(prev.deleteStatuses)) {
         setActiveChat?.(undefined)
         setMode('welcome')
       }
     })
+    return () => {
+      valid = false
+      unsubscribe()
+    }
   }, [activeChat?.SessionID])
 
   const onSetReAct = useMemoizedFn(() => {
@@ -502,7 +512,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   const konwledgeInputStringFn = useMemoizedFn((params: string) => {
     const currentRef = mode === 'welcome' ? aiChatWelcomeRef : aiReActChatRef
     try {
-      const data: PageNodeItemProps['pageParamsInfo']['AIRepository'] & { pageId?: string } = JSON.parse(params)
+      const data: PageNodeItemProps['pageParamsInfo']['aiAgentPageInfo'] & { pageId?: string } = JSON.parse(params)
       if (!isEventForPage(data, pageId)) return
       if (data?.defualtAIMentionCommandParams && Array.isArray(data.defualtAIMentionCommandParams)) {
         data.defualtAIMentionCommandParams.forEach((item) => {
@@ -519,16 +529,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
 
   useEffect(() => {
     if (!pageId) return
-    const initialAIRepository = usePageInfo.getState().queryPagesDataById(YakitRoute.AI_Agent, pageId)
-      ?.pageParamsInfo.AIRepository
-    if (!initialAIRepository) return
+    const initialPageInfo = usePageInfo.getState().queryPagesDataById(YakitRoute.AI_Agent, pageId)
+      ?.pageParamsInfo.aiAgentPageInfo
+    if (!initialPageInfo?.defualtAIMentionCommandParams) return
     // 欢迎页是 lazy 组件，等输入框 ref 挂上再注入；cleanup 清定时器，StrictMode 不会双注入
     let tries = 0
     const timer = window.setInterval(() => {
       const currentRef = mode === 'welcome' ? aiChatWelcomeRef : aiReActChatRef
       if (!currentRef.current && ++tries < 60) return
       window.clearInterval(timer)
-      konwledgeInputStringFn(JSON.stringify({ ...initialAIRepository, pageId }))
+      konwledgeInputStringFn(JSON.stringify({ ...initialPageInfo, pageId }))
     }, 50)
     return () => window.clearInterval(timer)
   }, [])

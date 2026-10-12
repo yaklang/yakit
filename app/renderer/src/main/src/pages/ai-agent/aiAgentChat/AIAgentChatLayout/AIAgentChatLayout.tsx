@@ -184,6 +184,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
           firstNode={
             <div className={styles['chat-workspace']}>
               <AIChatWorkspace
+                inViewPort={inViewPort}
                 welcome={mode === 'welcome'}
                 filePreviewData={filePreviewData}
                 setFilePreviewData={setFilePreviewData}

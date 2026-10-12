@@ -51,13 +51,25 @@ function setup(initialPages: PageCache[] = []) {
   const openTab = vi.fn<(params?: ComponentParams) => void>()
   const hook = renderHook(() => {
     const [, setPageCache, getPageCache] = useGetState(initialPages)
-    const open = useOpenAIAgentPage({ getPageCache, setCurrentTabKey: navigate, openAIAgentExtraTab: openTab })
+    const open = useOpenAIAgentPage({
+      getPageCache,
+      setCurrentTabKey: navigate,
+      openAIAgentExtraTab: openTab,
+    })
     return { open, setPageCache }
   })
   return { ...hook, navigate, openTab }
 }
 
 describe('AI Agent 页面按已知身份打开', () => {
+  it('activates an unmounted restored tab by its cached session without opening a duplicate', () => {
+    const restored = tab('restored-tab', history('cached-session'))
+    const { result, navigate, openTab } = setup([restored])
+    act(() => result.current.open(history('cached-session')))
+    expect(navigate).toHaveBeenCalledExactlyOnceWith('restored-tab')
+    expect(openTab).not.toHaveBeenCalled()
+  })
+
   it.each(['会话 ID', 'pending 页面 ID', 'routeKey 回退'])('通过%s同步定位已有 Tab，不等待后端事件', (match) => {
     const pages = [
       tab(

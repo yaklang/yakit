@@ -243,6 +243,7 @@ interface ReStartParams {
   setting?: AIStartParams
   activeChat: AISession
   onStart: (params: UseChatIPCStartParams) => void
+  shouldStart?: () => boolean
 }
 
 /** 把 IMSourceMeta.Platform 折算成本地区分型 source（仅写本地 sessionOwnerMap 索引，不进 gRPC）。
@@ -263,10 +264,12 @@ const resolveLocalSource = (activeChat: AISession): DeleteSessionsAISourceType |
 
 /** 重启会话 */
 export const onReStart = (props: ReStartParams) => {
-  const { setting, activeChat, onStart } = props
+  const { setting, activeChat, onStart, shouldStart } = props
   if (!activeChat?.SessionID) return
   const sessionId = activeChat.SessionID
   const start = () => {
+    // 等待旧连接关闭期间，页面可能已卸载或切换会话。
+    if (shouldStart && !shouldStart()) return
     const request: AIStartParams = setting ?? {
       ...AIAgentSettingDefault,
       ...activeChat.StartParams,

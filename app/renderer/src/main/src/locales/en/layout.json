@@ -162,6 +162,7 @@
     "save_fuzzer_history_success": "Fuzzer history saved successfully",
     "switchTab": "Switch tab",
     "SelectFirstMenuTabKeyFailed": "Failed to fetch SelectFirstMenuTabKey data: {{error}}",
+    "restoreAIAgentTabsFailed": "Failed to restore AI Agent tabs: {{error}}",
     "noWFHistoryData": "No WebFuzzer history data available",
     "restoreHistoryFailed": "WebFuzzer history restore failed: {{error}}",
     "switchMenuItemFailed": "Failed to switch menu item: {{error}}",

@@ -2,10 +2,11 @@ import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedC
 import type { BrowserTransformSelectionContract } from '@/pages/browserExtension/browserTransformContract'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { subscribeWithSelector, persist, type StorageValue } from 'zustand/middleware'
-import debounce from 'lodash/debounce'
 import type { AdvancedConfigShowProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { yakitNotify } from '@/utils/notification'
 import { setRemoteProjectValue } from '@/utils/kv'
+import debounce from 'lodash/debounce'
+import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import cloneDeep from 'lodash/cloneDeep'
 import { createWithEqualityFn } from 'zustand/traditional'
 import type { HybridScanControlAfterRequest, HybridScanModeType } from '@/models/HybridScan'
@@ -102,8 +103,6 @@ interface PageParamsInfoProps {
   ruleManagementPageInfo?: RuleManagementPageInfoProps
   /** 审计漏洞页面 */
   auditHoleInfo?: AuditHoleInfoProps
-  /** 知识库页面 */
-  AIRepository?: AIRepositoryProps
   /** 配置管理页面 */
   configManagementParams?: {
     tab?: configManagementTabType
@@ -118,7 +117,7 @@ interface PageParamsInfoProps {
   contextMenuResultPageInfo?: ContextMenuResultPageInfoProps
   /** 应用设置页面 */
   settingsPageInfo?: SettingsPageInfoProps
-  /** AI Agent 多开 Tab */
+  /** AI Agent 页面参数 */
   aiAgentPageInfo?: AIAgentPageInfoProps
 }
 
@@ -149,8 +148,9 @@ export interface SimpleDetectPageInfoProps {
   runtimeId: string
 }
 
-export interface AIRepositoryProps {
-  defualtAIMentionCommandParams: AIMentionCommandParams[]
+export interface AIAgentPageInfoProps {
+  session?: AISession
+  defualtAIMentionCommandParams?: AIMentionCommandParams[]
   /**
    * 可选：从其他页面跳转到 AI Agent 并自动触发 Forge 执行
    * - 主要用于 SyntaxFlow 规则美化等场景
@@ -165,10 +165,6 @@ export interface AIRepositoryProps {
     /** 是否自动执行（无需用户再次点击提交） */
     autoRun?: boolean
   }
-}
-
-export interface AIAgentPageInfoProps {
-  session?: AISession
 }
 
 export interface WebsocketFuzzerPageInfoProps {
@@ -425,8 +421,8 @@ interface PageInfoStoreProps {
   getCurrentSelectGroup: (key) => PageNodeItemProps | undefined
   clearAllData: () => void
   clearDataByRoute: (key: string) => void
-  /**只保留routeKey的数据，删除除此routeKey之外的数据 */
-  clearOtherDataByRoute: (routeKey: string) => void
+  /**只保留指定路由的数据 */
+  clearOtherDataByRoute: (routeKey: string | string[]) => void
   /** 设置当前激活的页面id */
   setCurrentSelectPageId: (routeKey: string, pageId: string) => void
   /** 获取当前激活的页面id */
@@ -600,11 +596,10 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
         },
         clearOtherDataByRoute: (key) => {
           const { selectGroupId, pages } = get()
-          const newSelectGroupId = selectGroupId.get(key)
-          const newPages = pages.get(key)
+          const keys = Array.isArray(key) ? key : [key]
           set({
-            pages: new Map().set(key, newPages),
-            selectGroupId: new Map().set(key, newSelectGroupId),
+            pages: new Map([...pages].filter(([route]) => keys.includes(route))),
+            selectGroupId: new Map([...selectGroupId].filter(([route]) => keys.includes(route))),
           })
         },
         setCurrentSelectPageId: (key, pageId) => {
@@ -694,6 +689,17 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
     ),
   ),
   Object.is,
+)
+
+// 与 Web Fuzzer 一样，由路由数据订阅触发防抖保存。
+export const saveAIAgentCache = debounce(
+  (page?: PageProps) => {
+    setRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs, JSON.stringify(page?.pageList || [])).catch((error) => {
+      yakitNotify('error', `AI Agent 标签保存失败：${error}`)
+    })
+  },
+  500,
+  { leading: true },
 )
 
 export const saveFuzzerCache = debounce(
