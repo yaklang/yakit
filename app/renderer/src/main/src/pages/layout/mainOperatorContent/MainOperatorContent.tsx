@@ -2923,21 +2923,53 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setPageCache(stayOnSettings && settingsPage ? [...initCache, settingsPage] : initCache)
 
     const syncAI = (page?: PageProps) => {
-      if (disposed || !aiCacheLoaded.current) return
+      if (disposed) return
       setPageCache((current) => mergeAIAgentPageTabs(current, page || { ...defPage, routeKey: YakitRoute.AI_Agent }))
-      saveAIAgentCache(page)
+      // 恢复成功前只同步界面，避免用不完整的标签列表覆盖缓存。
+      if (aiCacheLoaded.current) saveAIAgentCache(page)
     }
     const unsubscribeAI = usePageInfo.subscribe((state) => state.pages.get(YakitRoute.AI_Agent), syncAI)
-    const aiReady = (async () => {
-      if (aiCacheLoaded.current) {
-        syncAI(usePageInfo.getState().pages.get(YakitRoute.AI_Agent))
-        return
+    let recoveryModal: ReturnType<typeof showYakitModal> | undefined
+    let retryingAI = false
+    const initialAINodes = new Map(
+      usePageInfo
+        .getState()
+        .pages.get(YakitRoute.AI_Agent)
+        ?.pageList.map((node) => [node.pageId, node]),
+    )
+    const restoreAI = async () => {
+      try {
+        if (aiCacheLoaded.current) {
+          syncAI(usePageInfo.getState().pages.get(YakitRoute.AI_Agent))
+          return
+        }
+        const getLocalNodes = retryingAI
+          ? () =>
+              usePageInfo
+                .getState()
+                .pages.get(YakitRoute.AI_Agent)
+                ?.pageList.filter((node) => !_.isEqual(node, initialAINodes.get(node.pageId))) || []
+          : undefined
+        await onInitAIAgent(initCache, stayOnSettings, () => disposed, getLocalNodes)
+      } catch (error) {
+        if (disposed) return
+        yakitNotify('error', t('MainOperatorContent.restoreAIAgentTabsFailed', { error: error + '' }))
+        recoveryModal = showYakitModal({
+          title: (modalT) => modalT('MainOperatorContent.restoreTab'),
+          content: (modalT) => modalT('MainOperatorContent.retryRestoreAIAgentTabs'),
+          onOk: async () => {
+            if (disposed || retryingAI) return
+            retryingAI = true
+            recoveryModal?.destroy()
+            setInitializing(true)
+            await Promise.allSettled([restoreAI(), fuzzerReady])
+            retryingAI = false
+            if (!disposed) setInitializing(false)
+          },
+        })
       }
-      await onInitAIAgent(initCache, stayOnSettings, () => disposed)
-    })().catch((error) => {
-      if (disposed) return
-      yakitNotify('error', t('MainOperatorContent.restoreAIAgentTabsFailed', { error: error + '' }))
-    })
+    }
+    const aiReady = restoreAI()
     const fuzzerReady = (async () => {
       if (softMode !== YakitModeEnum.SecurityExpert) {
         if (!stayOnSettings) setCurrentTabKey(getInitActiveTabKey(softMode))
@@ -2952,7 +2984,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       yakitNotify('error', t('MainOperatorContent.SelectFirstMenuTabKeyFailed', { error: error + '' }))
     })
     void Promise.allSettled([aiReady, fuzzerReady]).then(() => {
-      if (!disposed) setInitializing(false)
+      if (!disposed && !retryingAI) setInitializing(false)
     })
     const unsubscribeFuzzer = isWFCacheEdition()
       ? usePageInfo.subscribe(
@@ -2965,28 +2997,26 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       : undefined
     return () => {
       disposed = true
+      recoveryModal?.destroy()
       unsubscribeAI()
       unsubscribeFuzzer?.()
       saveAIAgentCache.cancel()
     }
   }, [softMode])
   const onInitAIAgent = useMemoizedFn(
-    async (initCache: PageCache[], stayOnSettings: boolean, isDisposed: () => boolean) => {
-      let cached: PageNodeItemProps[] = []
-      try {
-        const raw = await getRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs)
-        if (isDisposed()) return
-        const parsed = JSONParseLog(raw || '[]', {
-          page: 'MainOperatorContent',
-          fun: 'restoreAITabs',
-        })
-        if (!Array.isArray(parsed)) throw new Error('Invalid AI Agent tab cache')
-        cached = parsed
-      } catch (error) {
-        if (isDisposed()) return
-        // 读取失败按空缓存初始化，后续同步和保存继续正常工作。
-        yakitNotify('error', t('MainOperatorContent.restoreAIAgentTabsFailed', { error: error + '' }))
-      }
+    async (
+      initCache: PageCache[],
+      stayOnSettings: boolean,
+      isDisposed: () => boolean,
+      getLocalNodes: () => PageNodeItemProps[] = () => [],
+    ) => {
+      const raw = await getRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs)
+      if (isDisposed()) return
+      const cached: PageNodeItemProps[] = JSONParseLog(raw || '[]', {
+        page: 'MainOperatorContent',
+        fun: 'restoreAITabs',
+      })
+      if (!Array.isArray(cached)) throw new Error('Invalid AI Agent tab cache')
       const nodes = new Map(cached.map((node) => [node.pageId, node]))
       const fixed = nodes.get(YakitRoute.AI_Agent)
       if (isMemfit() && fixed) {
@@ -3009,10 +3039,19 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
           sortFieId: 0,
         })
       }
+      // 手动重试时保留读取失败后新建或修改的标签。
+      const restoredNodes = new Map(pageList.map((node) => [node.pageId, node]))
+      getLocalNodes().forEach((node) => restoredNodes.set(node.pageId, node))
+      const restoredPageList = [...restoredNodes.values()].sort((a, b) => a.sortFieId - b.sortFieId)
       aiCacheLoaded.current = true
-      setPagesData(YakitRoute.AI_Agent, { ...defPage, routeKey: YakitRoute.AI_Agent, singleNode: true, pageList })
+      setPagesData(YakitRoute.AI_Agent, {
+        ...defPage,
+        routeKey: YakitRoute.AI_Agent,
+        singleNode: true,
+        pageList: restoredPageList,
+      })
       if (isMemfit() && !stayOnSettings) {
-        setCurrentTabKey(pageList.at(-1)?.pageId || YakitRoute.AI_Agent)
+        setCurrentTabKey(restoredPageList.at(-1)?.pageId || YakitRoute.AI_Agent)
       }
     },
   )
@@ -3218,25 +3257,31 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openFlag,
         selectSubItem: false,
       }
-      const oldPageCache = cloneDeep(pageCache)
-      const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
-      if (index === -1) {
-        oldPageCache.push(webFuzzerPage)
-      } else {
-        if (add) {
-          oldPageCache[index].multipleNode.push(...multipleNodeList)
-          oldPageCache[index].multipleLength = (oldPageCache[index]?.multipleLength || 0) + multipleNodeListLength
-          oldPageCache[index].openFlag = openFlag
-          oldPageCache[index].selectSubItem = false
-          if (getSubPageTotal(oldPageCache[index].multipleNode) >= secondaryTabsNum) {
-            yakitNotify('info', t('MainOperatorContent.maxTabsReached'))
-          }
-        } else {
-          oldPageCache.splice(index, 1, webFuzzerPage)
-        }
+      const currentFuzzerPage = getPageCache().find((ele) => ele.menuName === menuName)
+      if (
+        add &&
+        currentFuzzerPage &&
+        getSubPageTotal([...currentFuzzerPage.multipleNode, ...multipleNodeList]) >= secondaryTabsNum
+      ) {
+        yakitNotify('info', t('MainOperatorContent.maxTabsReached'))
       }
       setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
-      setPageCache(oldPageCache)
+      // 函数式合并保留同批次恢复、尚未渲染的 AI 标签。
+      setPageCache((current) => {
+        const next = cloneDeep(current)
+        const index = next.findIndex((ele) => ele.menuName === menuName)
+        if (index === -1) {
+          next.push(webFuzzerPage)
+        } else if (add) {
+          next[index].multipleNode.push(...multipleNodeList)
+          next[index].multipleLength = (next[index].multipleLength || 0) + multipleNodeListLength
+          next[index].openFlag = openFlag
+          next[index].selectSubItem = false
+        } else {
+          next.splice(index, 1, webFuzzerPage)
+        }
+        return next
+      })
       if (!isSecurityExpert && openFlag) {
         setCurrentTabKey(key)
       }

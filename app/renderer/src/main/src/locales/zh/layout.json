@@ -163,6 +163,7 @@
     "switchTab": "切换标签页",
     "SelectFirstMenuTabKeyFailed": "SelectFirstMenuTabKey获取数据失败: {{error}}",
     "restoreAIAgentTabsFailed": "AI Agent 标签恢复失败：{{error}}",
+    "retryRestoreAIAgentTabs": "AI Agent 标签页读取失败，原有记录已保留。点击确定重新读取并恢复标签页。",
     "noWFHistoryData": "暂无WF历史数据",
     "restoreHistoryFailed": "WF历史数据恢复失败: {{error}}",
     "switchMenuItemFailed": "切换一级菜单选中key失败: {{error}}",

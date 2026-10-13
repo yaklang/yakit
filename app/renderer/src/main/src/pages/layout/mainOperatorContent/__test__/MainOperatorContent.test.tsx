@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import ts from 'typescript'
+import isEqual from 'lodash/isEqual'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // 执行实际初始化 Effect、AI 恢复方法和新开入口；不加载 Electron、Monaco，也不模拟浏览器的 inert 行为。
@@ -81,6 +82,7 @@ const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = fa
     initializing = value
   })
   const bindings = {
+    _: { isEqual },
     useEffect: (fn: () => () => void) => {
       cleanup = fn()
     },
@@ -120,6 +122,7 @@ const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = fa
     setPagesData: vi.fn(),
     setCurrentTabKey: vi.fn(),
     yakitNotify: vi.fn(),
+    showYakitModal: vi.fn((_props: Record<string, any>) => ({ destroy: vi.fn() })),
     onInitFuzzer: vi.fn(() => wf.promise),
     isSecurityExpert: mode === 'expert',
     getRemoteValue: vi.fn(async () => savedKey),
@@ -199,13 +202,9 @@ describe('MainOperatorContent initial cache loading', () => {
     app.open()
     expect(app.bindings.onSetPageInfoDataOfSingle).toHaveBeenCalledOnce()
     if (failed === 'ai') {
-      expect(app.bindings.setPagesData).toHaveBeenCalledWith(
-        'ai',
-        expect.objectContaining({
-          pageList: [expect.objectContaining({ pageId: 'ai' })],
-        }),
-      )
-      expect(app.bindings.aiCacheLoaded.current).toBe(true)
+      expect(app.bindings.setPagesData).not.toHaveBeenCalled()
+      expect(app.bindings.aiCacheLoaded.current).toBe(false)
+      expect(app.bindings.showYakitModal).toHaveBeenCalledOnce()
     }
     app.dispose()
   })
@@ -226,7 +225,7 @@ describe('MainOperatorContent initial cache loading', () => {
   })
 
   it.each([true, false])(
-    'initializes an empty cache after read failure and keeps syncing and saving (Memfit=%s)',
+    'preserves the saved cache after read failure while allowing local title sync (Memfit=%s)',
     async (memfit) => {
       const app = setup({ memfit })
       app.bindings.setPagesData.mockImplementation((route, page) => {
@@ -238,33 +237,133 @@ describe('MainOperatorContent initial cache loading', () => {
       app.ai.reject(new Error('read failed'))
       app.wf.resolve('[]')
       await settle()
-      const initial = app.bindings.setPagesData.mock.lastCall![1]
-      expect(initial.pageList).toEqual(memfit ? [expect.objectContaining({ pageId: 'ai', pageParamsInfo: {} })] : [])
-      expect(app.bindings.saveAIAgentCache).toHaveBeenCalledWith(initial)
+      expect(app.bindings.setPagesData).not.toHaveBeenCalled()
+      expect(app.bindings.saveAIAgentCache).not.toHaveBeenCalled()
+      expect(app.bindings.showYakitModal).toHaveBeenCalledOnce()
       expect(app.locked()).toBe(false)
 
       const sync = app.bindings.usePageInfo.subscribe.mock.calls[0][1] as (page: unknown) => void
       const local = { pageId: 'local', pageName: 'New title', sortFieId: 1, pageParamsInfo: {} }
       sync({ pageList: [local] })
       expect(app.bindings.mergeAIAgentPageTabs).toHaveBeenLastCalledWith(expect.any(Array), { pageList: [local] })
-      expect(app.bindings.saveAIAgentCache).toHaveBeenLastCalledWith({ pageList: [local] })
+      expect(app.bindings.saveAIAgentCache).not.toHaveBeenCalled()
       await vi.advanceTimersByTimeAsync(6000)
       expect(app.bindings.getRemoteProjectValue).toHaveBeenCalledOnce()
       app.dispose()
     },
   )
 
-  it.each(['{', '{}'])('treats invalid cache data as empty and completes initialization: %s', async (raw) => {
+  it.each(['{', '{}'])('aborts restoration and opens recovery for invalid cache data: %s', async (raw) => {
     const app = setup({ memfit: false })
     app.mount()
     app.ai.resolve(raw)
     app.wf.resolve('[]')
     await settle()
-    expect(app.bindings.setPagesData).toHaveBeenCalledWith('ai', expect.objectContaining({ pageList: [] }))
-    expect(app.bindings.aiCacheLoaded.current).toBe(true)
+    expect(app.bindings.setPagesData).not.toHaveBeenCalled()
+    expect(app.bindings.aiCacheLoaded.current).toBe(false)
+    expect(app.bindings.saveAIAgentCache).not.toHaveBeenCalled()
+    expect(app.bindings.showYakitModal).toHaveBeenCalledOnce()
     expect(app.locked()).toBe(false)
     expect(app.bindings.yakitNotify).toHaveBeenCalledOnce()
     app.dispose()
+  })
+
+  it('retries AI recovery without losing local tabs or unlocking while WF is pending', async () => {
+    const app = setup({ memfit: false })
+    app.bindings.setPagesData.mockImplementation((route, page) => {
+      app.bindings.usePageInfo.getState().pages.set(route, page)
+      const sync = app.bindings.usePageInfo.subscribe.mock.calls[0][1] as (page: unknown) => void
+      sync(page)
+    })
+    app.mount()
+    app.ai.reject(new Error('read failed'))
+    await settle()
+    const local = { pageId: 'local', pageName: 'Local title', sortFieId: 2, pageParamsInfo: {} }
+    app.bindings.usePageInfo.getState().pages.set('ai', { pageList: [local] })
+    const cached = { pageId: 'cached', sortFieId: 1, pageParamsInfo: {} }
+    app.bindings.getRemoteProjectValue.mockResolvedValue(JSON.stringify([cached]))
+    const modal = app.bindings.showYakitModal.mock.calls[0][0]
+    expect(modal.title((key: string) => key)).toBe('MainOperatorContent.restoreTab')
+    const retry = modal.onOk()
+    await settle()
+    expect(app.locked()).toBe(true)
+    expect(app.bindings.saveAIAgentCache).toHaveBeenCalledWith(expect.objectContaining({ pageList: [cached, local] }))
+    app.wf.resolve('[]')
+    await retry
+    expect(app.locked()).toBe(false)
+    expect(app.bindings.aiCacheLoaded.current).toBe(true)
+    app.dispose()
+  })
+
+  it('keeps interaction locked if WF finishes before the AI retry', async () => {
+    const app = setup()
+    const pending = deferred()
+    app.mount()
+    app.ai.reject(new Error('read failed'))
+    await settle()
+    app.bindings.getRemoteProjectValue.mockReturnValue(pending.promise)
+    const retry = app.bindings.showYakitModal.mock.calls[0][0].onOk()
+    app.wf.resolve('[]')
+    await settle()
+    expect(app.locked()).toBe(true)
+    pending.resolve('[]')
+    await retry
+    expect(app.locked()).toBe(false)
+    app.dispose()
+  })
+
+  it('preserves live title updates received while an AI retry is pending', async () => {
+    const app = setup({ memfit: false })
+    const pending = deferred()
+    app.mount()
+    app.ai.reject(new Error('read failed'))
+    app.wf.resolve('[]')
+    await settle()
+    const local = { pageId: 'local', pageName: 'Initial title', sortFieId: 1, pageParamsInfo: {} }
+    app.bindings.usePageInfo.getState().pages.set('ai', { pageList: [local] })
+    app.bindings.getRemoteProjectValue.mockReturnValue(pending.promise)
+    const retry = app.bindings.showYakitModal.mock.calls[0][0].onOk()
+    const updated = { ...local, pageName: 'Live title' }
+    app.bindings.usePageInfo.getState().pages.set('ai', { pageList: [updated] })
+    pending.resolve('[]')
+    await retry
+    expect(app.bindings.setPagesData).toHaveBeenCalledWith('ai', expect.objectContaining({ pageList: [updated] }))
+    app.dispose()
+  })
+
+  it('ignores an AI retry response after unmount', async () => {
+    const app = setup()
+    const pending = deferred()
+    app.mount()
+    app.ai.reject(new Error('read failed'))
+    app.wf.resolve('[]')
+    await settle()
+    app.bindings.getRemoteProjectValue.mockReturnValue(pending.promise)
+    const retry = app.bindings.showYakitModal.mock.calls[0][0].onOk()
+    app.dispose()
+    app.bindings.setInitializing.mockClear()
+    pending.resolve('[]')
+    await retry
+    expect(app.bindings.setInitializing).not.toHaveBeenCalled()
+    expect(app.bindings.setPagesData).not.toHaveBeenCalled()
+    expect(app.bindings.saveAIAgentCache).not.toHaveBeenCalled()
+  })
+
+  it('keeps cache writes disabled when a retry also fails and closes recovery on unmount', async () => {
+    const app = setup()
+    app.mount()
+    app.ai.reject(new Error('read failed'))
+    app.wf.resolve('[]')
+    await settle()
+    await app.bindings.showYakitModal.mock.calls[0][0].onOk()
+    expect(app.bindings.showYakitModal).toHaveBeenCalledTimes(2)
+    expect(app.bindings.saveAIAgentCache).not.toHaveBeenCalled()
+    expect(app.bindings.aiCacheLoaded.current).toBe(false)
+    const modal = app.bindings.showYakitModal.mock.results[1].value
+    app.dispose()
+    expect(modal.destroy).toHaveBeenCalled()
+    await app.bindings.showYakitModal.mock.calls[1][0].onOk()
+    expect(app.bindings.getRemoteProjectValue).toHaveBeenCalledTimes(2)
   })
 
   it('appends a new AI tab after surviving tabs with larger historical sort values', () => {
@@ -284,6 +383,37 @@ describe('MainOperatorContent initial cache loading', () => {
     expect(created.sortFieId).toBeGreaterThan(existing.sortFieId)
     expect([existing, created].sort((a, b) => a.sortFieId - b.sortFieId).map((node) => node.pageId)).toEqual(['C', 'D'])
   })
+
+  it.each([false, true])(
+    'migrates the fixed session without restoring the stale store copy (retry=%s)',
+    async (retry) => {
+      const app = setup()
+      const old = {
+        id: 'ai',
+        pageId: 'ai',
+        pageName: 'Old chat',
+        sortFieId: 0,
+        pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'old-session' } } },
+      }
+      app.bindings.usePageInfo.getState().pages.set('ai', { pageList: [old] })
+      app.mount()
+      app.wf.resolve('[]')
+      if (retry) {
+        app.ai.reject(new Error('read failed'))
+        await settle()
+        app.bindings.getRemoteProjectValue.mockResolvedValue(JSON.stringify([old]))
+        await app.bindings.showYakitModal.mock.calls[0][0].onOk()
+      } else {
+        app.ai.resolve(JSON.stringify([old]))
+        await settle()
+      }
+      const restored = app.bindings.setPagesData.mock.calls[0][1].pageList
+      expect(restored).toHaveLength(2)
+      expect(restored.find((node: any) => node.pageId === 'ai').pageParamsInfo).toEqual({})
+      expect(restored.filter((node: any) => node.pageParamsInfo.aiAgentPageInfo?.session)).toHaveLength(1)
+      app.dispose()
+    },
+  )
 
   it('moves the cached fixed-page session into a separate tab and keeps the default page blank', async () => {
     const app = setup()
@@ -394,7 +524,7 @@ describe('MainOperatorContent initial cache loading', () => {
   it.each([false, true])('cleans AI and WF store data with the same edition rule (enterprise=%s)', (enterprise) => {
     const app = setup({ enterprise })
     const store = app.bindings.usePageInfo.getState()
-    for (const route of ['ai', 'wf', 'other']) store.pages.set(route, {})
+    for (const route of ['ai', 'wf', 'other']) store.pages.set(route, { pageList: [] })
     app.mount()
     expect([...store.pages.keys()]).toEqual(enterprise ? [] : ['ai', 'wf'])
     expect(app.bindings.clearFuzzerSequence).toHaveBeenCalledTimes(enterprise ? 1 : 0)
@@ -473,6 +603,62 @@ describe('MainOperatorContent initial cache loading', () => {
     expect(app.bindings.saveFuzzerCache).toHaveBeenCalledExactlyOnceWith(page)
     app.dispose()
   })
+
+  it.each([false, true])(
+    'preserves AI tabs restored while WF config is pending (existing WF=%s)',
+    async (existingWF) => {
+      let resolveConfig!: (value: object) => void
+      const config = new Promise<object>((resolve) => {
+        resolveConfig = resolve
+      })
+      const initial = existingWF ? [{ routeKey: 'wf', menuName: 'Web Fuzzer' }] : []
+      let currentTabs: any[] = initial
+      const updates: any[] = []
+      const cached = [{ id: 'wf-1', groupId: '0', verbose: 'WF', sortFieId: 1, pageParams: {} }]
+      const notify = vi.fn()
+      const restore = execute(
+        `return (${declaration('fetchFuzzerList')!.initializer!.getText(source)})(cached, false)`,
+        {
+          cached,
+          useMemoizedFn: (fn: unknown) => fn,
+          getFuzzerCacheData: () => config,
+          clearDataByRoute: vi.fn(),
+          clearFuzzerSequence: vi.fn(),
+          YakitRoute: { HTTPFuzzer: 'wf' },
+          YakitRouteToPageInfo: { wf: { label: 'Web Fuzzer' } },
+          routeConvertKey: () => 'wf',
+          routeKeyToLabel: new Map(),
+          cloneDeep: structuredClone,
+          defPage: { pageList: [] },
+          getCurrentSelectPageId: () => '',
+          adoptOrphanCacheTabs: (value: unknown) => value,
+          randomString: () => 'random',
+          defaultAdvancedConfigValue: {},
+          sanitizeFuzzerCachePageParams: (value: unknown) => value,
+          defaultPostTemplate: 'request',
+          HotPatchDefaultContent: '',
+          compareAsc: (a: any, b: any, key: string) => a[key] - b[key],
+          pageCache: initial,
+          getPageCache: () => currentTabs,
+          setPagesData: vi.fn(),
+          setPageCache: (value: any) => updates.push(value),
+          isSecurityExpert: true,
+          yakitNotify: notify,
+          t: (key: string) => key,
+        },
+      )
+      const ai = { routeKey: 'restored-ai', verbose: 'Saved AI conversation' }
+      // 模拟 React 同批次排队：AI 已提交更新，但 getter 在渲染前仍返回旧值。
+      updates.push((current: any[]) => [...current, ai])
+      resolveConfig({})
+      await restore
+      for (const update of updates) currentTabs = typeof update === 'function' ? update(currentTabs) : update
+      expect(notify).not.toHaveBeenCalled()
+      expect(currentTabs.find((page) => page.routeKey === 'restored-ai')).toEqual(ai)
+      expect(currentTabs.filter((page) => page.routeKey === 'wf')).toHaveLength(1)
+      expect(currentTabs.find((page) => page.routeKey === 'wf').multipleNode[0].id).toBe('wf-1')
+    },
+  )
 
   it('restores WF with the default page selection behavior', async () => {
     const fetchFuzzerList = vi.fn(async () => {})
