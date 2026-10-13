@@ -1,8 +1,9 @@
 import type React from 'react'
+import { YakitAntdProvider } from '@/theme/antdTheme'
 import { v4 as uuidv4 } from 'uuid'
 import { monaco } from 'react-monaco-editor'
 import { editor as newEditor } from 'monaco-editor'
-import { createRoot } from 'react-dom/client'
+import { createRoot, type Root } from 'react-dom/client'
 import type { QueryFuzzerLabelResponseProps } from '@/pages/fuzzer/StringFuzzer'
 import {
   type CountDirectionProps,
@@ -19,6 +20,19 @@ import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { YakitIMonacoEditor } from '../YakitEditorType'
 
 const { ipcRenderer } = window.require('electron')
+
+// 浮层是独立 createRoot，要自己带上主题，按钮样式才会生效
+const mountEditorMenu = (domNode: HTMLElement, node: React.ReactNode) => {
+  const root = createRoot(domNode)
+  root.render(<YakitAntdProvider>{node}</YakitAntdProvider>)
+  return root
+}
+
+// 关闭动作来自菜单内部的点击，不能在这次渲染里同步 unmount
+const unmountMenuRoot = (root: Root | null) => {
+  if (!root) return
+  queueMicrotask(() => root.unmount())
+}
 
 export interface EditerMenuFunParams {
   editor: YakitIMonacoEditor
@@ -108,17 +122,24 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
     }
   }
 
+  let selectRoot: Root | null = null
+  let rangeRoot: Root | null = null
+
   // 关闭点击的菜单
   const closeFizzSelectWidget = () => {
     fizzSelectWidget.isOpen = false
     fizzSelectTimeoutIdRef.current && clearTimeout(fizzSelectTimeoutIdRef.current)
     editor.removeContentWidget(fizzSelectWidget)
+    unmountMenuRoot(selectRoot)
+    selectRoot = null
   }
   // 关闭选中的菜单
   const closeFizzRangeWidget = () => {
     fizzRangeWidget.isOpen = false
     fizzRangeTimeoutIdRef.current && clearTimeout(fizzRangeTimeoutIdRef.current)
     editor.removeContentWidget(fizzRangeWidget)
+    unmountMenuRoot(rangeRoot)
+    rangeRoot = null
   }
 
   // 编辑器点击显示的菜单
@@ -132,10 +153,12 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
       const domNode = document.createElement('div')
       // 解决弹窗内鼠标滑轮无法滚动的问题
       domNode.onwheel = (e) => e.stopPropagation()
+      unmountMenuRoot(selectRoot)
       if (selectNode) {
-        createRoot(domNode).render(selectNode(closeFizzSelectWidget, editorInfoRef.current))
+        selectRoot = mountEditorMenu(domNode, selectNode(closeFizzSelectWidget, editorInfoRef.current))
       } else {
-        createRoot(domNode).render(
+        selectRoot = mountEditorMenu(
+          domNode,
           <HTTPFuzzerClickEditorMenu
             editorInfo={editorInfoRef.current}
             close={() => closeFizzSelectWidget()}
@@ -182,11 +205,13 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
       const domNode = document.createElement('div')
       // 解决弹窗内鼠标滑轮无法滚动的问题
       domNode.onwheel = (e) => e.stopPropagation()
+      unmountMenuRoot(rangeRoot)
       if (rangeNode) {
-        createRoot(domNode).render(rangeNode(closeFizzRangeWidget, editorInfoRef.current))
+        rangeRoot = mountEditorMenu(domNode, rangeNode(closeFizzRangeWidget, editorInfoRef.current))
       } else {
         readOnly
-          ? createRoot(domNode).render(
+          ? (rangeRoot = mountEditorMenu(
+              domNode,
               <HTTPFuzzerRangeReadOnlyEditorMenu
                 editorInfo={editorInfoRef.current}
                 rangeValue={(editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ''}
@@ -194,8 +219,9 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
                 fizzRangeTimeoutId={fizzRangeTimeoutIdRef}
                 execAutoDecodeCallback={execAutoDecodeCallback}
               />,
-            )
-          : createRoot(domNode).render(
+            ))
+          : (rangeRoot = mountEditorMenu(
+              domNode,
               <HTTPFuzzerRangeEditorMenu
                 editorInfo={editorInfoRef.current}
                 close={() => closeFizzRangeWidget()}
@@ -247,7 +273,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
                       }
                 }
               />,
-            )
+            ))
       }
       return domNode
     },
@@ -452,4 +478,9 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
     // const { position } = e;
     // console.log('当前光标位置：', position);
   })
+
+  return () => {
+    closeFizzSelectWidget()
+    closeFizzRangeWidget()
+  }
 }

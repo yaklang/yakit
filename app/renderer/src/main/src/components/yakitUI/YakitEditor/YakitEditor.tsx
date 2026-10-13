@@ -1437,7 +1437,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const editorInfo = useRef<any>()
   useEffect(() => {
     if (editor && isShowSelectRangeMenu) {
-      editerMenuFun({
+      return editerMenuFun({
         editor,
         selectNode,
         rangeNode,

@@ -331,6 +331,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
             <YakitPopconfirm
               title={t('EngineManagement.restoreConfirm', { version: builtIn || '—' })}
               onConfirm={restore}
+              classNames={{ root: styles['restore-confirm'] }}
             >
               <YakitButton type="outline2" disabled={busy || !builtIn}>
                 {t('EngineManagement.restore')}
