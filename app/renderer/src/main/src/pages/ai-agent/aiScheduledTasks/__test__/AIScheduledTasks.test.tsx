@@ -25,8 +25,8 @@ const render = (ui: React.ReactElement) =>
     <VirtuosoMockContext.Provider value={{ viewportHeight: 480, itemHeight: 104 }}>{ui}</VirtuosoMockContext.Provider>,
   )
 
-const { setActiveChat } = vi.hoisted(() => ({ setActiveChat: vi.fn() }))
-vi.mock('../../useContext/useDispatcher', () => ({ default: () => ({ setActiveChat }) }))
+const { openAIAgentChatTab } = vi.hoisted(() => ({ openAIAgentChatTab: vi.fn() }))
+vi.mock('../../historyChat/HistoryChat', () => ({ openAIAgentChatTab }))
 vi.mock('../../grpc', () => ({ grpcQueryAISession: vi.fn() }))
 vi.mock('../waitForAISessionPush', () => ({ waitForAISessionPush: vi.fn() }))
 vi.mock('../utils', () => ({
@@ -127,14 +127,14 @@ describe('AIScheduledTasks 立即运行跳转', () => {
     vi.mocked(grpcQueryAIReActSchedules).mockResolvedValue({ Data: [item], Total: 1, Pagination: pagination })
     render(<AIScheduledTasks visible />)
     fireEvent.click(await screen.findByRole('button', { name: 'AIScheduledTasks.runNow' }))
-    await waitFor(() => expect(setActiveChat).toHaveBeenCalledWith(session))
+    await waitFor(() => expect(openAIAgentChatTab).toHaveBeenCalledWith(session))
     expect(grpcRunAIReActScheduleNow).toHaveBeenCalledExactlyOnceWith({ UUID: item.UUID })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('历史面板未挂载时，按推送 ID 查询并激活任务会话', async () => {
     await runNow()
-    await waitFor(() => expect(setActiveChat).toHaveBeenCalledWith(session))
+    await waitFor(() => expect(openAIAgentChatTab).toHaveBeenCalledWith(session))
     expect(grpcRunAIReActScheduleNow).toHaveBeenCalledWith({ UUID: schedule.UUID })
     expect(refreshHistory).toHaveBeenCalledExactlyOnceWith(
       JSON.stringify({ type: 'refresh', sessionId: session.SessionID }),
@@ -151,7 +151,7 @@ describe('AIScheduledTasks 立即运行跳转', () => {
   it('推送等待超时时，查询最新的本地 AI 会话并激活', async () => {
     vi.mocked(waitForAISessionPush).mockResolvedValue(undefined)
     await runNow()
-    await waitFor(() => expect(setActiveChat).toHaveBeenCalledWith(session))
+    await waitFor(() => expect(openAIAgentChatTab).toHaveBeenCalledWith(session))
     expect(waitForAISessionPush).toHaveBeenCalledWith(2000)
     expect(refreshHistory).toHaveBeenCalledExactlyOnceWith(JSON.stringify({ type: 'refresh' }))
     expect(grpcQueryAISession).toHaveBeenCalledWith(
@@ -173,7 +173,7 @@ describe('AIScheduledTasks 立即运行跳转', () => {
       })
     await runNow()
     await waitFor(() => expect(yakitNotify).toHaveBeenCalledWith('warning', 'AIScheduledTasks.openRunSessionFailed'))
-    expect(setActiveChat).not.toHaveBeenCalled()
+    expect(openAIAgentChatTab).not.toHaveBeenCalled()
     expect(yakitNotify).toHaveBeenCalledWith('success', 'AIScheduledTasks.runStarted')
     expect(refreshHistory).toHaveBeenCalledExactlyOnceWith(
       JSON.stringify({ type: 'refresh', sessionId: session.SessionID }),
@@ -186,7 +186,7 @@ describe('AIScheduledTasks 立即运行跳转', () => {
     await waitFor(() => expect(grpcRunAIReActScheduleNow).toHaveBeenCalled())
     expect(waitForAISessionPush).not.toHaveBeenCalled()
     expect(grpcQueryAISession).not.toHaveBeenCalled()
-    expect(setActiveChat).not.toHaveBeenCalled()
+    expect(openAIAgentChatTab).not.toHaveBeenCalled()
     expect(yakitNotify).not.toHaveBeenCalledWith('success', 'AIScheduledTasks.runStarted')
     expect(refreshHistory).not.toHaveBeenCalled()
   })
