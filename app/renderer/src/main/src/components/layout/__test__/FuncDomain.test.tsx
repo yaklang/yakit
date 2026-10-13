@@ -27,7 +27,7 @@ vi.hoisted(() => {
 
 vi.mock('lottie-web', () => ({ default: vi.fn() }))
 
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const {
@@ -148,7 +148,7 @@ vi.mock('@/utils/visitorsStatistics', () => ({
 }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
-  useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh' }, i18nRefresh: 0 }),
+  useI18nNamespaces: () => ({ t: tMock, i18n: { language: 'zh' }, i18nRefresh: 0 }),
 }))
 
 vi.mock('@/utils/duplex/duplex', () => ({
@@ -182,7 +182,7 @@ vi.mock('@/store', () => ({
 
 vi.mock('@/store/screenRecorder', () => ({
   useScreenRecorder: () => ({
-    screenRecorderInfo: { token: 't', isRecording: false },
+    screenRecorderInfo: { token: 't', isRecording: screenRecorderState.isRecording },
     setRecording: vi.fn(),
   }),
 }))
@@ -300,12 +300,15 @@ vi.mock('@/utils/notification', () => ({
 vi.mock('@/hook/useHoldGRPCStream/useHoldGRPCStream', () => ({
   default: () => [
     { progressState: [], logState: [] },
-    { stop: vi.fn(), start: vi.fn(), reset: vi.fn() },
+    { stop: vi.fn(), start: vi.fn(), reset: vi.fn(), cancel: vi.fn() },
   ],
 }))
 
 import { FuncDomain, MoreYaklangVersion, UIOpNotice } from '../FuncDomain'
 import type { FuncDomainProp } from '../FuncDomain'
+import { yakitUILayout } from '@/services/electronBridge'
+import emiter from '@/utils/eventBus/eventBus'
+import { yakitNotify } from '@/utils/notification'
 
 const baseProps: FuncDomainProp = {
   isEngineLink: true,
@@ -348,6 +351,207 @@ describe('MoreYaklangVersion 轻量选项', () => {
       <MoreYaklangVersion moreYaklangVersionList={['1.4.8-beta19']} currentBuildType="full" onClosePop={vi.fn()} />,
     )
     expect(screen.getByRole('radio', { name: 'MoreYaklangVersion.standardVersion' })).toBeChecked()
+  })
+})
+
+describe('FuncDomain 引擎Console终端图标下拉', () => {
+  const openConsole = vi.fn()
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+  })
+
+  it('点击终端图标展开四种打开方式并回调 onOpenConsole', async () => {
+    render(<FuncDomain {...baseProps} onOpenConsole={openConsole} />)
+
+    fireEvent.click(screen.getByTestId('engine-console-trigger'))
+    // i18n mock 的 t 返回 key 本身
+    expect(await screen.findByText('FuncDomain.engineConsoleFloat')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.engineConsoleLeft')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.engineConsoleRight')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.engineConsoleBottom')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('FuncDomain.engineConsoleBottom'))
+    await waitFor(() => expect(openConsole).toHaveBeenCalledWith('bottom'))
+  })
+
+  it('当前打开方式的菜单项带选中标记', async () => {
+    render(<FuncDomain {...baseProps} onOpenConsole={openConsole} consoleType="right" />)
+
+    fireEvent.click(screen.getByTestId('engine-console-trigger'))
+    await screen.findByText('FuncDomain.engineConsoleFloat', { selector: 'span' })
+    // 仅当前 consoleType 的菜单项渲染 CheckOutlined 的 svg
+    const checked = [
+      'FuncDomain.engineConsoleFloat',
+      'FuncDomain.engineConsoleLeft',
+      'FuncDomain.engineConsoleRight',
+      'FuncDomain.engineConsoleBottom',
+    ]
+      .map((label) => screen.getByText(label).closest('div'))
+      .filter((div) => div?.querySelector('svg'))
+    expect(checked).toHaveLength(1)
+    expect(checked[0]).toHaveTextContent('FuncDomain.engineConsoleRight')
+  })
+})
+
+describe('FuncDomain 设置菜单（UIOpSetting）', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+    screenRecorderState.isRecording = false
+  })
+
+  /** 设置入口（UIOpSetting 触发按钮）是页面最后一个 ui-op-btn-wrapper */
+  const openSettingMenu = () => {
+    const wrappers = document.querySelectorAll('[class*="ui-op-btn-wrapper"]')
+    fireEvent.click(wrappers[wrappers.length - 1])
+  }
+
+  it('设置菜单按顺序展示 i18n 后的菜单项', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    expect(await screen.findByText('FuncDomain.pcapfix')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.project')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.dbCacheManager')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.cveDatabase')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.explab')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.link')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.refreshMenu')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.performanceSampling')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.logs')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.diagnoseNetwork')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.screen')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.screenshot')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.settings')).toBeInTheDocument()
+    expect(screen.getByText('HelpDoc.officialWebsite')).toBeInTheDocument()
+    expect(screen.getByText('Github')).toBeInTheDocument()
+    expect(screen.getByText('HelpDoc.aboutUs')).toBeInTheDocument()
+  })
+
+  it('点击「刷新菜单」触发 refreshMainMenu', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    fireEvent.click(await screen.findByText('FuncDomain.refreshMenu'))
+    await waitFor(() => expect(yakitUILayout.refreshMainMenu).toHaveBeenCalled())
+  })
+
+  it('父级菜单标题点击不动作：点「切换连接模式」不触发切换也不收层', async () => {
+    const onEngineModeChange = vi.fn()
+    render(<FuncDomain {...baseProps} onEngineModeChange={onEngineModeChange} />)
+    openSettingMenu()
+
+    fireEvent.click(await screen.findByText('FuncDomain.link'))
+    expect(onEngineModeChange).not.toHaveBeenCalled()
+    // 弹层未收起
+    expect(screen.getByText('FuncDomain.pcapfix')).toBeInTheDocument()
+  })
+
+  it('点击「全局设置」发出 openPage 事件', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    fireEvent.click(await screen.findByText('FuncDomain.settings'))
+    const calls = (emiter.emit as ReturnType<typeof vi.fn>).mock.calls.filter(([name]) => name === 'openPage')
+    expect(calls.length).toBeGreaterThan(0)
+    const payload = calls[calls.length - 1][1] as string
+    // route 枚举序列化形式与转换器有关，只断言锚点参数
+    expect(payload).toContain('"anchor":"general"')
+  })
+})
+
+describe('FuncDomain 设置菜单录屏/截屏', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+    screenRecorderState.isRecording = false
+  })
+
+  /** 设置入口（UIOpSetting 触发按钮）是页面最后一个 ui-op-btn-wrapper */
+  const openSettingMenu = () => {
+    const wrappers = document.querySelectorAll('[class*="ui-op-btn-wrapper"]')
+    fireEvent.click(wrappers[wrappers.length - 1])
+  }
+
+  it('一级「录屏」与二级「录屏」点击同效：未录制时拉起录屏弹窗', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    expect(await screen.findByText('FuncDomain.screen')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.screenshot')).toBeInTheDocument()
+
+    // 点击一级「录屏」标题（parentTitleClick 与二级同效）
+    fireEvent.click(screen.getByText('FuncDomain.screen'))
+    await waitFor(() => expect(yakitUILayout.requestOpenScreenCapModal).toHaveBeenCalled())
+  })
+
+  it('录制中一级与二级显示停止录屏，点击即停止', async () => {
+    screenRecorderState.isRecording = true
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    // 一级「录屏」变为停止录屏
+    const stopItem = await screen.findByText('FuncDomain.stopScreen')
+    fireEvent.click(stopItem)
+    await waitFor(() => expect(yakitUILayout.cancelScreenRecorder).toHaveBeenCalledWith('t'))
+  })
+
+  it('点击截屏触发 activateScreenshot，1 秒内 loading 不重复触发', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    const screenshotItem = await screen.findByText('FuncDomain.screenshot')
+    fireEvent.click(screenshotItem)
+    await waitFor(() => expect(yakitUILayout.activateScreenshot).toHaveBeenCalledTimes(1))
+
+    // loading 期间再次点击不触发第二次
+    fireEvent.click(screen.getByText('FuncDomain.screenshot'))
+    expect(yakitUILayout.activateScreenshot).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('FuncDomain 性能采样与崩溃日志', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+    grpcFetchLocalPluginDetail.mockRejectedValue(new Error('not found'))
+  })
+
+  /** 设置入口（UIOpSetting 触发按钮）是页面最后一个 ui-op-btn-wrapper */
+  const openSettingMenu = () => {
+    const wrappers = document.querySelectorAll('[class*="ui-op-btn-wrapper"]')
+    fireEvent.click(wrappers[wrappers.length - 1])
+  }
+
+  it('插件不存在时性能采样提示带原文插件名', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    fireEvent.click(await screen.findByText('FuncDomain.performanceSampling'))
+    await waitFor(() => expect(grpcFetchLocalPluginDetail).toHaveBeenCalledWith({ Name: '核心引擎性能采样' }, true))
+    // 插件名不进翻译，作为插值原样传入
+    await waitFor(() =>
+      expect(yakitNotify).toHaveBeenCalledWith('info', 'FuncDomain.samplingPluginNotFound?name=核心引擎性能采样'),
+    )
+  })
+
+  it('onUIOpSettingMenuSelect 事件可触发崩溃日志收集（Home.tsx 复用路径）', async () => {
+    render(<FuncDomain {...baseProps} />)
+
+    // UIOpSetting 通过 emiter 监听 onUIOpSettingMenuSelect；直接调用监听回调等价于 emit
+    const calls = (emiter.on as ReturnType<typeof vi.fn>).mock.calls.filter(
+      ([name]) => name === 'onUIOpSettingMenuSelect',
+    )
+    expect(calls.length).toBeGreaterThan(0)
+    const handler = calls[calls.length - 1][1] as (key: string) => void
+    await act(async () => {
+      handler('crash-log')
+    })
+    await waitFor(() => expect(grpcFetchLocalPluginDetail).toHaveBeenCalledWith({ Name: '崩溃日志收集' }, true))
+    await waitFor(() =>
+      expect(yakitNotify).toHaveBeenCalledWith('info', 'FuncDomain.crashLogPluginNotFound?name=崩溃日志收集'),
+    )
   })
 })
 

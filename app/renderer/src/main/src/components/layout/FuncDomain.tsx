@@ -6,7 +6,6 @@ import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from '
 import { showModal } from '@/utils/showModal'
 import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
-import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
 import { useEeSystemConfig, useStore, useYakitDynamicStatus } from '@/store'
 import { UserPlatformType } from '@/pages/globalVariable'
 import { genDefaultPagination, type QueryGeneralResponse } from '@/pages/invoker/schema'
@@ -39,9 +38,8 @@ import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { addToTab } from '@/pages/MainTabs'
 import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
-import { CheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { CheckOutlined, TerminalOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
-import { WinKeyborad } from '../yakitUI/YakitEditor/keyboardConstants'
 import { useScreenRecorder } from '@/store/screenRecorder'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useRunNodeStore } from '@/store/runNode'
@@ -55,7 +53,6 @@ import {
   QuestionMarkCircleOutlined,
   RefreshOutlined,
   SearchOutlined,
-  Wrench1Outlined,
   CloudDownloadOutlined,
   DotsCircleHorizontalOutlined,
   BugOutlined,
@@ -107,7 +104,7 @@ import { grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolde
 import { useDownloadYakit } from './update/useDownloadYakit'
 import { JSONParseLog } from '@/utils/tool'
 import { SystemInfo } from '@/constants/hardware'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useI18nNamespaces, type TFunction } from '@/i18n/useI18nNamespaces'
 import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
 import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
 import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
@@ -360,38 +357,17 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         {showDevTool() && <UIDevTool onDevToolRefresh={onDevToolRefresh} />}
         {!showProjectManage && <NotepadMenu />}
         {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
-        {/* {!showProjectManage && (
-          <div className={styles['ui-op-btn-wrapper']} onClick={openConsoleNewWindow}>
-            <div className={styles['op-btn-body']}>
-              <Tooltip placement="bottom" title={t('FuncDomain.engineConsole')}>
-                <TerminalOutlined size={16} className={classNames(styles['icon-style'], styles['size-style'])} />
-              </Tooltip>
-            </div>
-          </div>
-        )} */}
         <div className={styles['state-setting-wrapper']}>
-          <ScreenAndScreenshot
-            system={system}
-            token={screenRecorderInfo.token}
-            isRecording={screenRecorderInfo.isRecording}
-            onOpenConsole={onOpenConsole}
-            consoleType={consoleType}
-          />
           {!showProjectManage && isIRify() && <UIOpIRifyRisk isEngineLink={isEngineLink} />}
+          {!showProjectManage && <UIOpEngineConsole onOpenConsole={onOpenConsole} consoleType={consoleType} />}
           {!showProjectManage && (
-            <UIOpSetting engineMode={engineMode} onEngineModeChange={onEngineModeChange} typeCallback={typeCallback} />
-          )}
-          {!showProjectManage && (
-            <div
-              className={styles['ui-op-btn-wrapper']}
-              onClick={() => {
-                emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'general' } }))
-              }}
-            >
-              <div className={styles['op-btn-body']}>
-                <UISettingSvgIcon className={classNames(styles['icon-style'], styles['size-style'])} />
-              </div>
-            </div>
+            <UIOpSetting
+              engineMode={engineMode}
+              onEngineModeChange={onEngineModeChange}
+              typeCallback={typeCallback}
+              token={screenRecorderInfo.token}
+              isRecording={screenRecorderInfo.isRecording}
+            />
           )}
         </div>
         {homeIcon}
@@ -684,57 +660,113 @@ interface UIOpSettingProp {
   /** yaklang引擎切换启动模式 */
   onEngineModeChange: (type: YaklangEngineMode) => any
   typeCallback: (type: YakitSettingCallbackType) => any
+  /** 录屏token（用于停止录屏） */
+  token: string
+  /** 是否正在录屏 */
+  isRecording: boolean
 }
 
-const DBCacheManager = () => {
+const DBCacheManager = (t: TFunction) => {
   if (SystemInfo.mode === 'local') {
     return {
       key: 'db-cache-manager',
-      label: '数据库与缓存管理',
+      label: t('FuncDomain.dbCacheManager'),
       children: [
-        { key: 'invalidCache', label: '删除缓存数据' },
-        { key: 'reclaimDatabaseSpace', label: '回收数据库空间' },
+        { key: 'invalidCache', label: t('FuncDomain.invalidCache') },
+        { key: 'reclaimDatabaseSpace', label: t('FuncDomain.reclaimDatabaseSpace') },
       ],
     }
   }
   return {
     key: 'db-cache-manager',
-    label: '数据库与缓存管理',
-    children: [{ key: 'invalidCache', label: '删除缓存数据' }],
+    label: t('FuncDomain.dbCacheManager'),
+    children: [{ key: 'invalidCache', label: t('FuncDomain.invalidCache') }],
   }
 }
 
-const GetUIOpSettingMenu = (t: (key: string) => string) => {
+/** 录屏/截屏菜单项：一级「录屏」点击与二级「录屏」效果相同 */
+const GetScreenAndScreenshotMenuItems = (
+  t: TFunction,
+  isRecording: boolean,
+  screenshotLoading: boolean,
+): YakitMenuItemProps[] => [
+  {
+    key: 'screen',
+    label: isRecording ? (
+      <span className={styles['stop-screen-menu-item']}>{t('FuncDomain.stopScreen')}</span>
+    ) : (
+      t('FuncDomain.screen')
+    ),
+    children: [
+      {
+        key: 'screenCap',
+        label: isRecording ? (
+          <div className={styles['stop-screen-menu-item']}>{t('FuncDomain.stopScreen')}</div>
+        ) : (
+          <div className={styles['screen-and-screenshot-menu-item']}>
+            <span>{t('FuncDomain.screen')}</span>
+          </div>
+        ),
+      },
+      { key: 'screen-recorder', label: t('FuncDomain.screenRecorder') },
+    ],
+  },
+  {
+    key: 'screenshot',
+    label: (
+      <div className={styles['screen-and-screenshot-menu-item']}>
+        <span>{t('FuncDomain.screenshot')}</span>
+        {screenshotLoading && (
+          <div className={styles['icon-loading-wrapper']} onClick={(e) => e.stopPropagation()}>
+            <LoadingOutlined className={styles['icon-hover-style']} />
+          </div>
+        )}
+      </div>
+    ),
+  },
+]
+
+const GetUIOpSettingMenu = (t: TFunction, isRecording: boolean, screenshotLoading: boolean) => {
   // 便携版
   if (isEnpriTraceAgent()) {
     return [
       {
         key: 'pcapfix',
-        label: '网卡权限修复',
+        label: t('FuncDomain.pcapfix'),
       },
-      DBCacheManager(),
-      {
-        key: 'diagnose-network',
-        label: '网络诊断',
-      },
+      DBCacheManager(t),
       {
         key: 'link',
-        label: '切换连接模式',
+        label: t('FuncDomain.link'),
         children: [
-          { label: '本地', key: 'local' },
-          { label: '远程', key: 'remote' },
+          { label: t('FuncDomain.local'), key: 'local' },
+          { label: t('FuncDomain.remote'), key: 'remote' },
         ],
       },
       { type: 'divider' },
       {
+        key: 'performance-sampling',
+        label: t('FuncDomain.performanceSampling'),
+      },
+      {
         key: 'logs',
-        label: ' 日志收集',
+        label: t('FuncDomain.logs'),
         children: [
-          { label: '渲染端日志', key: 'renderLog' },
-          { label: '引擎日志', key: 'engineLog' },
-          { label: '调试信息日志', key: 'printLog' },
+          { label: t('FuncDomain.renderLog'), key: 'renderLog' },
+          { label: t('FuncDomain.engineLog'), key: 'engineLog' },
+          { label: t('FuncDomain.printLog'), key: 'printLog' },
+          { type: 'divider' },
+          {
+            key: 'crash-log',
+            label: t('FuncDomain.crashLog'),
+          },
         ],
       },
+      {
+        key: 'diagnose-network',
+        label: t('FuncDomain.diagnoseNetwork'),
+      },
+      ...GetScreenAndScreenshotMenuItems(t, isRecording, screenshotLoading),
       { type: 'divider' },
       {
         key: 'official_website',
@@ -759,53 +791,53 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
   return [
     {
       key: 'pcapfix',
-      label: '网卡权限修复',
+      label: t('FuncDomain.pcapfix'),
     },
     {
       key: 'project',
-      label: '项目管理',
+      label: t('FuncDomain.project'),
       children: [
-        { label: '切换项目', key: 'changeProject' },
-        { label: '加密导出', key: 'encryptionProject' },
-        { label: '明文导出', key: 'plaintextProject' },
+        { label: t('FuncDomain.changeProject'), key: 'changeProject' },
+        { label: t('FuncDomain.encryptionProject'), key: 'encryptionProject' },
+        { label: t('FuncDomain.plaintextProject'), key: 'plaintextProject' },
       ],
     },
-    DBCacheManager(),
+    DBCacheManager(t),
     {
       key: 'cve-database',
-      label: 'CVE 数据库',
+      label: t('FuncDomain.cveDatabase'),
       children: [
-        { label: '全量更新', key: 'cve-database-all-update' },
-        { label: '差量更新', key: 'cve-database-differential-update' },
+        { label: t('FuncDomain.cveDatabaseAllUpdate'), key: 'cve-database-all-update' },
+        { label: t('FuncDomain.cveDatabaseDifferentialUpdate'), key: 'cve-database-differential-update' },
       ],
     },
     {
       key: 'explab',
-      label: '试验性功能',
+      label: t('FuncDomain.explab'),
       children: [
         {
           key: 'bas-chaosmaker',
-          label: 'BAS实验室',
+          label: t('FuncDomain.basChaosmaker'),
         },
         {
           key: 'debug-monaco-editor',
-          label: '(DEV)调试Playground',
+          label: t('FuncDomain.debugMonacoEditor'),
         },
         {
           key: 'vulinbox-manager',
-          label: '(靶场)Vulinbox',
+          label: t('FuncDomain.vulinboxManager'),
         },
         {
           key: 'debug-traffic-analize',
-          label: '流量分析',
+          label: t('FuncDomain.debugTrafficAnalize'),
         },
         {
           key: 'run-node',
-          label: '运行节点',
+          label: t('FuncDomain.runNode'),
         },
         {
           key: 'webshell-manager',
-          label: '网站管理',
+          label: t('FuncDomain.webshellManager'),
         },
         {
           key: 'mcp',
@@ -817,37 +849,52 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         },
         { key: 'ai-agent', label: 'AI Agent' },
         { key: 'ssa-result-diff', label: 'ssa-result-diff' },
-        { key: 'ai-repository', label: '知识库' },
-        { key: 'ssa-compile-history', label: 'SSA项目编译历史' },
-        { key: 'c-headers', label: 'C 头文件' },
-        { key: 'memory-base', label: '记忆库' },
+        { key: 'ai-repository', label: t('FuncDomain.aiRepository') },
+        { key: 'ssa-compile-history', label: t('FuncDomain.ssaCompileHistory') },
+        { key: 'c-headers', label: t('FuncDomain.cHeaders') },
+        { key: 'memory-base', label: t('FuncDomain.memoryBase') },
       ],
     },
     {
-      key: 'logs',
-      label: ' 日志收集',
+      key: 'link',
+      label: t('FuncDomain.link'),
       children: [
-        { label: '渲染端日志', key: 'renderLog' },
-        { label: '引擎日志', key: 'engineLog' },
-        { label: '调试信息日志', key: 'printLog' },
+        { label: t('FuncDomain.local'), key: 'local' },
+        { label: t('FuncDomain.remote'), key: 'remote' },
       ],
+    },
+    {
+      key: 'refreshMenu',
+      label: t('FuncDomain.refreshMenu'),
     },
     { type: 'divider' },
     {
-      key: 'link',
-      label: '切换连接模式',
+      key: 'performance-sampling',
+      label: t('FuncDomain.performanceSampling'),
+    },
+    {
+      key: 'logs',
+      label: t('FuncDomain.logs'),
       children: [
-        { label: '本地', key: 'local' },
-        { label: '远程', key: 'remote' },
+        { label: t('FuncDomain.renderLog'), key: 'renderLog' },
+        { label: t('FuncDomain.engineLog'), key: 'engineLog' },
+        { label: t('FuncDomain.printLog'), key: 'printLog' },
+        { type: 'divider' },
+        {
+          key: 'crash-log',
+          label: t('FuncDomain.crashLog'),
+        },
       ],
     },
     {
       key: 'diagnose-network',
-      label: '网络诊断',
+      label: t('FuncDomain.diagnoseNetwork'),
     },
+    ...GetScreenAndScreenshotMenuItems(t, isRecording, screenshotLoading),
+    { type: 'divider' },
     {
-      key: 'refreshMenu',
-      label: '刷新菜单',
+      key: 'settings',
+      label: t('FuncDomain.settings'),
     },
     { type: 'divider' },
     {
@@ -870,8 +917,8 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
 }
 
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
-  const { engineMode, onEngineModeChange, typeCallback } = props
-
+  const { engineMode, onEngineModeChange, typeCallback, token, isRecording } = props
+  const { t } = useI18nNamespaces(['home', 'layout'])
   const [runNodeModalVisible, setRunNodeModalVisible] = useState<boolean>(false)
   const [show, setShow] = useState<boolean>(false)
   const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
@@ -880,7 +927,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const { dynamicStatus } = useYakitDynamicStatus()
   const { delTemporaryProject } = useTemporaryProjectStore()
   const [reclaimHint, setReclaimHint] = useState<boolean>(false)
-  const { t } = useI18nNamespaces(['home', 'layout'])
+  const { setRecording } = useScreenRecorder()
+  /** 截屏功能的loading */
+  const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
 
   useEffect(() => {
     onIsCVEDatabaseReady()
@@ -896,9 +945,198 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       })
   })
 
+  // #region 性能采样
+  const performanceModalRef = useRef<any>(null)
+  const performanceModalLoading = useRef(false)
+  const performanceParamsRef = useRef<{ timeout: string }>({ timeout: '10' })
+  const { performanceSamplingInfo, setPerformanceSamplingLog, setSampling } = usePerformanceSampling()
+  const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+    taskName: 'debug-plugin',
+    apiKey: 'DebugPlugin',
+    token: performanceSamplingInfo.token,
+    onEnd: () => {
+      debugPluginStreamEvent.stop()
+      setSampling(false)
+    },
+  })
+  const streamInfoCom = useCampare(streamInfo)
+  useEffect(() => {
+    try {
+      if (
+        streamInfo.progressState.length &&
+        streamInfo.progressState[0].id === 'main' &&
+        streamInfo.progressState[0].progress === 1
+      ) {
+        const logs: PerformanceSamplingLog[] = []
+        streamInfo.logState.forEach((item) => {
+          if (item.level === 'file') {
+            const { title, path, dir } = JSONParseLog(item.data, { page: 'FuncDomain', fun: 'useEffect' }) || {}
+            logs.push({ title, path, dir })
+          }
+        })
+        setPerformanceSamplingLog(logs)
+        yakitNotify('success', t('FuncDomain.samplingDone'))
+      }
+    } catch (error) {
+      setPerformanceSamplingLog([])
+    }
+  }, [streamInfoCom])
+
+  const handlePerformanceSampling = () => {
+    if (performanceSamplingInfo.isPerformanceSampling) return
+    if (performanceModalRef.current || performanceModalLoading.current) return // 已有弹窗或正在请求
+    performanceModalLoading.current = true
+    grpcFetchLocalPluginDetail({ Name: '核心引擎性能采样' }, true)
+      .then((res) => {
+        const samplingPlugin = res
+        const requiredParams = samplingPlugin.Params.filter((item) => item.Required && item.Field === 'timeout').map(
+          (item) => {
+            item.TypeVerbose = 'uint'
+            return item
+          },
+        )
+        let initRequiredFormValue: CustomPluginExecuteFormValue = {}
+        samplingPlugin.Params.forEach((ele) => {
+          const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
+          initRequiredFormValue = {
+            ...initRequiredFormValue,
+            [ele.Field]: value,
+          }
+        })
+        const m = showYakitModal({
+          title: (modalT) => modalT('FuncDomain.performanceSampling'),
+          width: 400,
+          closable: true,
+          centered: true,
+          maskClosable: false,
+          content: (
+            <PerformanceSampleForm
+              onPerformanceParams={(params) => {
+                performanceParamsRef.current = params
+              }}
+              initRequiredFormValue={initRequiredFormValue}
+              requiredParams={requiredParams}
+            ></PerformanceSampleForm>
+          ),
+          okButtonProps: { icon: <PlaySolid color="currentColor" /> },
+          onOkText: (modalT) => modalT('FuncDomain.startSampling'),
+          onOk: () => {
+            const yakExecutorParams: YakExecutorParam[] = []
+            initRequiredFormValue['timeout'] = Number(performanceParamsRef.current.timeout) || 0
+            if (!initRequiredFormValue['timeout']) {
+              yakitNotify('error', t('FuncDomain.samplingTimeoutMustBePositive'))
+              return
+            }
+            const executeParams: DebugPluginRequest = {
+              Code: '',
+              PluginType: samplingPlugin.Type,
+              Input: '',
+              HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
+              ExecParams: yakExecutorParams,
+              PluginName: samplingPlugin.ScriptName,
+            }
+            executeParams.ExecParams = getYakExecutorParam({ ...initRequiredFormValue })
+            setPerformanceSamplingLog([])
+            debugPluginStreamEvent.reset()
+            apiDebugPlugin({
+              params: executeParams,
+              token: performanceSamplingInfo.token,
+              pluginCustomParams: samplingPlugin.Params,
+            }).then(() => {
+              debugPluginStreamEvent.start()
+              setSampling(true)
+              m.destroy()
+              performanceModalRef.current = null
+              performanceModalLoading.current = false
+            })
+          },
+          onCancel: () => {
+            m.destroy()
+            performanceModalRef.current = null
+            performanceModalLoading.current = false
+          },
+        })
+        performanceModalRef.current = m
+      })
+      .catch(() => {
+        performanceModalLoading.current = false
+        yakitNotify('info', t('FuncDomain.samplingPluginNotFound', { name: '核心引擎性能采样' }))
+      })
+  }
+  const cancelPerformanceSampling = () => {
+    // cancel 后主进程不再转发 end，需本地收尾
+    debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
+    debugPluginStreamEvent.reset()
+    setSampling(false)
+  }
+  useEffect(() => {
+    emiter.on('performanceSampling', handlePerformanceSampling)
+    emiter.on('cancelPerformanceSampling', cancelPerformanceSampling)
+    return () => {
+      emiter.off('cancelPerformanceSampling', cancelPerformanceSampling)
+      emiter.off('performanceSampling', handlePerformanceSampling)
+    }
+  }, [])
+  // #endregion
+
+  // #region 崩溃日志收集
+  const [crashLogVisible, setCrashLogVisible] = useState<boolean>(false)
+  const crashLogParamsRef = useRef<{
+    params: DebugPluginRequest
+    pluginCustomParams?: YakParamProps[]
+  }>()
+  const handleCrashLog = () => {
+    grpcFetchLocalPluginDetail({ Name: '崩溃日志收集' }, true)
+      .then((res) => {
+        const executeParams: DebugPluginRequest = {
+          Code: '',
+          PluginType: res.Type,
+          Input: '',
+          HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
+          ExecParams: [],
+          PluginName: res.ScriptName,
+        }
+        crashLogParamsRef.current = {
+          params: executeParams,
+          pluginCustomParams: res.Params,
+        }
+        setCrashLogVisible(true)
+      })
+      .catch(() => {
+        yakitNotify('info', t('FuncDomain.crashLogPluginNotFound', { name: '崩溃日志收集' }))
+      })
+  }
+  // #endregion
+
   const menuSelect = useMemoizedFn((type: string) => {
+    // 「录屏」父级标题点击与二级「录屏」同效，其余父级标题点击不动作、不收起弹层
+    if (type === 'screen') {
+      menuSelect('screenCap')
+      return
+    }
+    const parentKeys = ['link', 'project', 'db-cache-manager', 'cve-database', 'explab', 'logs', 'Github', 'mcp']
+    if (parentKeys.includes(type)) return
     if (show) setShow(false)
     switch (type) {
+      // 网卡权限修复
+      case 'pcapfix':
+        showPcapPermission()
+        return
+      // 项目管理
+      case 'changeProject':
+      case 'encryptionProject':
+      case 'plaintextProject':
+        typeCallback(type)
+        return
+      // 数据库与缓存管理
+      case 'invalidCache':
+        invalidCacheAndUserData(delTemporaryProject)
+        return
+      case 'reclaimDatabaseSpace':
+        setReclaimHint(true)
+        return
+      // CVE 数据库
       case 'cve-database-all-update':
         setDataBaseUpdateVisible(true)
         setIsDiffUpdate(false)
@@ -907,101 +1145,31 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         setDataBaseUpdateVisible(true)
         setIsDiffUpdate(true)
         return
-      case 'mcp':
-      case 'mcp-toggle':
-        emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }))
-        return
-      case 'mcp-history':
-        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.MCP_History }))
-        return
-      case 'engineVar':
-        showConfigYaklangEnvironment()
-        return
-      case 'remote':
-        if (dynamicStatus.isDynamicStatus) {
-          warn(t('UIOpSetting.remoteModeCannotModify'))
-          return
-        }
-        onEngineModeChange(type)
-        return
-      case 'local':
-        if (dynamicStatus.isDynamicStatus) {
-          warn(t('UIOpSetting.remoteModeCannotModify'))
-          return
-        }
-        if (type === engineMode) {
-          warn(t('UIOpSetting.alreadyLocalMode'))
-          return
-        }
-        onEngineModeChange(type)
-        return
-      case 'refreshMenu':
-        yakitUILayout.refreshMainMenu()
-        return
+      // 试验性功能
       case 'bas-chaosmaker':
         addToTab('**chaos-maker')
         return
-      case 'screen-recorder':
-        addToTab('**screen-recorder')
-        return
-      // case "matcher-extractor":
-      //     addToTab("**matcher-extractor")
-      //     return
       case 'debug-monaco-editor':
         addToTab('**debug-monaco-editor')
         return
       case 'vulinbox-manager':
         addToTab('**vulinbox-manager')
         return
-      case 'diagnose-network':
-        addToTab('**diagnose-network')
-        return
       case 'debug-traffic-analize':
         addToTab('**beta-debug-traffic-analize')
-        return
-      case 'webshell-manager':
-        addToTab('**webshell-manager')
-        return
-      case 'invalidCache':
-        invalidCacheAndUserData(delTemporaryProject)
-        return
-      case 'reclaimDatabaseSpace':
-        setReclaimHint(true)
-        return
-      case 'pcapfix':
-        showPcapPermission()
-        return
-      case 'changeProject':
-      case 'encryptionProject':
-      case 'plaintextProject':
-        typeCallback(type)
         return
       case 'run-node':
         setRunNodeModalVisible(true)
         return
-      case 'manageRightClickPlugins':
-        emiter.emit('openPage', JSON.stringify({ route: YakitRoute.ManageRightClickPlugins }))
+      case 'webshell-manager':
+        addToTab('**webshell-manager')
         return
-      case 'renderLog':
-        grpcOpenRenderLogFolder()
+      case 'mcp':
+      case 'mcp-toggle':
+        emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }))
         return
-      case 'engineLog':
-        grpcOpenEngineLogFolder()
-        return
-      case 'printLog':
-        grpcOpenPrintLogFolder()
-        return
-      case 'report_bug':
-        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=bug_report.yml`)
-        return
-      case 'feature_request':
-        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=feature_request.yml`)
-        return
-      case 'official_website':
-        yakitShell.openExternal(isMemfit() ? WebsiteGV.MemfitWebsite : WebsiteGV.YakHelpDocAddress)
-        return
-      case 'aboutUs':
-        yakitShell.openExternal(WebsiteGV.AboutUsWebsite)
+      case 'mcp-history':
+        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.MCP_History }))
         return
       case 'ai-agent':
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
@@ -1021,6 +1189,90 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'memory-base':
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Memory }))
         return
+      // 切换连接模式
+      case 'local':
+        if (dynamicStatus.isDynamicStatus) {
+          warn(t('UIOpSetting.remoteModeCannotModify'))
+          return
+        }
+        if (type === engineMode) {
+          warn(t('UIOpSetting.alreadyLocalMode'))
+          return
+        }
+        onEngineModeChange(type)
+        return
+      case 'remote':
+        if (dynamicStatus.isDynamicStatus) {
+          warn(t('UIOpSetting.remoteModeCannotModify'))
+          return
+        }
+        onEngineModeChange(type)
+        return
+      // 刷新菜单
+      case 'refreshMenu':
+        yakitUILayout.refreshMainMenu()
+        return
+      // 性能采样
+      case 'performance-sampling':
+        handlePerformanceSampling()
+        break
+      // 日志收集
+      case 'renderLog':
+        grpcOpenRenderLogFolder()
+        return
+      case 'engineLog':
+        grpcOpenEngineLogFolder()
+        return
+      case 'printLog':
+        grpcOpenPrintLogFolder()
+        return
+      case 'crash-log':
+        handleCrashLog()
+        break
+      // 网络诊断
+      case 'diagnose-network':
+        addToTab('**diagnose-network')
+        return
+      // 录屏
+      case 'screenCap':
+        if (isRecording) {
+          setRecording(false)
+          yakitUILayout.cancelScreenRecorder(token)
+        } else {
+          yakitUILayout.requestOpenScreenCapModal()
+        }
+        return
+      case 'screen-recorder':
+        addToTab('**screen-recorder')
+        return
+      // 截屏
+      case 'screenshot':
+        if (screenshotLoading) return
+        setScreenshotLoading(true)
+        yakitUILayout.activateScreenshot()
+        setTimeout(() => {
+          setScreenshotLoading(false)
+        }, 1000)
+        return
+      // 全局设置
+      case 'settings':
+        emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'general' } }))
+        break
+      // 官网
+      case 'official_website':
+        yakitShell.openExternal(isMemfit() ? WebsiteGV.MemfitWebsite : WebsiteGV.YakHelpDocAddress)
+        return
+      // Github
+      case 'feature_request':
+        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=feature_request.yml`)
+        return
+      case 'report_bug':
+        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=bug_report.yml`)
+        return
+      // 关于我们
+      case 'aboutUs':
+        yakitShell.openExternal(WebsiteGV.AboutUsWebsite)
+        return
       default:
         return
     }
@@ -1037,10 +1289,10 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       width={206}
       submenuWidth={142}
       selectedKeys={[]}
-      // triggerSubMenuAction={'click'}
-      data={GetUIOpSettingMenu(t) as YakitMenuItemProps[]}
+      data={GetUIOpSettingMenu(t, isRecording, screenshotLoading) as YakitMenuItemProps[]}
       popupClassName={styles['ui-op-submenu']}
       onClick={({ key }) => menuSelect(key)}
+      parentTitleClick
     />
   )
 
@@ -1083,6 +1335,14 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
           setReclaimHint(false)
         }}
       />
+      {crashLogVisible && (
+        <CrashLogModal
+          crashLogParams={crashLogParamsRef.current}
+          onClose={() => {
+            setCrashLogVisible(false)
+          }}
+        ></CrashLogModal>
+      )}
     </>
   )
 })
@@ -2803,210 +3063,61 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
   )
 })
 
-interface ScreenAndScreenshotProps {
-  system: YakitSystem
-  isRecording: boolean
-  token: string
+/** 引擎 Console 打开方式菜单项 */
+const getEngineConsoleMenuChildren = (t: TFunction, consoleType: EngineConsoleOpenType): YakitMenuItemProps[] => [
+  {
+    label: (
+      <div className={styles['engine-console-menu-item']}>
+        <span>{t('FuncDomain.engineConsoleFloat')}</span>
+        {consoleType === 'float' && <CheckOutlined className={styles['engine-console-menu-check']} />}
+      </div>
+    ),
+    key: 'engine-console-float',
+  },
+  {
+    label: (
+      <div className={styles['engine-console-menu-item']}>
+        <span>{t('FuncDomain.engineConsoleLeft')}</span>
+        {consoleType === 'left' && <CheckOutlined className={styles['engine-console-menu-check']} />}
+      </div>
+    ),
+    key: 'engine-console-left',
+  },
+  {
+    label: (
+      <div className={styles['engine-console-menu-item']}>
+        <span>{t('FuncDomain.engineConsoleRight')}</span>
+        {consoleType === 'right' && <CheckOutlined className={styles['engine-console-menu-check']} />}
+      </div>
+    ),
+    key: 'engine-console-right',
+  },
+  {
+    label: (
+      <div className={styles['engine-console-menu-item']}>
+        <span>{t('FuncDomain.engineConsoleBottom')}</span>
+        {consoleType === 'bottom' && <CheckOutlined className={styles['engine-console-menu-check']} />}
+      </div>
+    ),
+    key: 'engine-console-bottom',
+  },
+]
+
+interface UIOpEngineConsoleProps {
   /** 打开引擎Console（按指定方式） */
   onOpenConsole: (type: EngineConsoleOpenType) => void
   /** 当前选中的引擎Console打开方式（用于菜单标记） */
   consoleType: EngineConsoleOpenType
 }
-const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((props) => {
-  const { system, isRecording, token, onOpenConsole, consoleType } = props
+/** @name 顶栏引擎Console入口：点击终端图标下拉选择打开方式 */
+const UIOpEngineConsole: React.FC<UIOpEngineConsoleProps> = React.memo((props) => {
+  const { onOpenConsole, consoleType } = props
   const [show, setShow] = useState<boolean>(false)
-  /** 截图功能的loading */
-  const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
-  const { setRecording } = useScreenRecorder()
   const { t } = useI18nNamespaces(['layout'])
 
-  const engineConsoleMenuChildren = useCreation(
-    () => [
-      {
-        label: (
-          <div className={styles['engine-console-menu-item']}>
-            <span>浮窗</span>
-            {consoleType === 'float' && <CheckOutlined className={styles['engine-console-menu-check']} />}
-          </div>
-        ),
-        key: 'engine-console-float',
-      },
-      {
-        label: (
-          <div className={styles['engine-console-menu-item']}>
-            <span>左侧抽屉</span>
-            {consoleType === 'left' && <CheckOutlined className={styles['engine-console-menu-check']} />}
-          </div>
-        ),
-        key: 'engine-console-left',
-      },
-      {
-        label: (
-          <div className={styles['engine-console-menu-item']}>
-            <span>右侧抽屉</span>
-            {consoleType === 'right' && <CheckOutlined className={styles['engine-console-menu-check']} />}
-          </div>
-        ),
-        key: 'engine-console-right',
-      },
-      {
-        label: (
-          <div className={styles['engine-console-menu-item']}>
-            <span>底部抽屉</span>
-            {consoleType === 'bottom' && <CheckOutlined className={styles['engine-console-menu-check']} />}
-          </div>
-        ),
-        key: 'engine-console-bottom',
-      },
-    ],
-    [consoleType],
-  )
-
-  const yakitMenuData = useCreation(() => {
-    if (system === 'Darwin' || system === 'Windows_NT') {
-      return [
-        {
-          label: '性能采样',
-          key: 'performance-sampling',
-        },
-        {
-          label: '崩溃日志收集',
-          key: 'crash-log',
-        },
-        { type: 'divider' },
-        {
-          label: isRecording ? (
-            <div
-              className={styles['stop-screen-menu-item']}
-              onClick={() => {
-                setRecording(false)
-                yakitUILayout.cancelScreenRecorder(token)
-              }}
-            >
-              停止录屏
-            </div>
-          ) : (
-            <div className={styles['screen-and-screenshot-menu-item']}>
-              <span>录屏</span>
-              {/* <span className={styles["shortcut-keys"]}>
-                                {system === "Darwin"
-                                    ? `${MacKeyborad[17]} ${MacKeyborad[16]} X`
-                                    : `${WinKeyborad[17]} ${WinKeyborad[16]} X`}
-                            </span> */}
-            </div>
-          ),
-          key: 'screenCap',
-        },
-        {
-          label: (
-            <div className={styles['screen-and-screenshot-menu-item']}>
-              <span>截屏</span>
-              {
-                screenshotLoading && (
-                  <div className={styles['icon-loading-wrapper']} onClick={(e) => e.stopPropagation()}>
-                    <LoadingOutlined className={styles['icon-hover-style']} />
-                  </div>
-                )
-                // : (
-                //     <span className={styles["shortcut-keys"]}>
-                //         {system === "Darwin"
-                //             ? `${MacKeyborad[17]} ${MacKeyborad[16]} B`
-                //             : `${WinKeyborad[17]} ${WinKeyborad[16]} B`}
-                //     </span>
-                // )
-              }
-            </div>
-          ),
-          key: 'screenshot',
-        },
-        {
-          label: '录屏管理',
-          key: 'screen-recorder',
-        },
-        {
-          type: 'divider',
-        },
-        {
-          label: '引擎 Console',
-          key: 'engine-console',
-          children: engineConsoleMenuChildren,
-        },
-      ]
-    }
-    return [
-      {
-        label: '性能采样',
-        key: 'performance-sampling',
-      },
-      {
-        label: isRecording ? (
-          <div
-            className={styles['stop-screen-menu-item']}
-            onClick={() => {
-              setRecording(false)
-              yakitUILayout.cancelScreenRecorder(token)
-            }}
-          >
-            停止录屏
-          </div>
-        ) : (
-          <div className={styles['screen-and-screenshot-menu-item']}>
-            <span>录屏</span>
-            <span className={styles['shortcut-keys']}>{`${WinKeyborad[17]} ${WinKeyborad[16]} X`}</span>
-          </div>
-        ),
-        key: 'screenCap',
-      },
-      {
-        type: 'divider',
-      },
-      {
-        label: <span>录屏管理</span>,
-        key: 'screen-recorder',
-      },
-      {
-        type: 'divider',
-      },
-      {
-        label: '引擎 Console',
-        key: 'engine-console',
-        children: engineConsoleMenuChildren,
-      },
-    ]
-  }, [system, screenshotLoading, isRecording, consoleType])
   const menuSelect = useMemoizedFn((type: string) => {
     setShow(false)
     switch (type) {
-      case 'engine-console':
-        // 点击父项标题，按上次选中的方式自动打开
-        onOpenConsole(consoleType)
-        break
-      case 'performance-sampling':
-        handlePerformanceSampling()
-        break
-      case 'crash-log':
-        handleCrashLog()
-        break
-      case 'screenCap':
-        if (isRecording) {
-          setRecording(false)
-          yakitUILayout.cancelScreenRecorder(token)
-        } else {
-          yakitUILayout.requestOpenScreenCapModal()
-        }
-
-        break
-      case 'screenshot':
-        if (screenshotLoading) return
-        setScreenshotLoading(true)
-        yakitUILayout.activateScreenshot()
-        setTimeout(() => {
-          setScreenshotLoading(false)
-        }, 1000)
-        break
-      case 'screen-recorder':
-        addToTab('**screen-recorder')
-        break
       case 'engine-console-float':
         onOpenConsole('float')
         break
@@ -3024,206 +3135,35 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
     }
   })
 
-  // 性能采样
-  const performanceModalRef = useRef<any>(null)
-  const performanceModalLoading = useRef(false)
-  const performanceParamsRef = useRef<{ timeout: string }>({ timeout: '10' })
-  const { performanceSamplingInfo, setPerformanceSamplingLog, setSampling } = usePerformanceSampling()
-  const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
-    taskName: 'debug-plugin',
-    apiKey: 'DebugPlugin',
-    token: performanceSamplingInfo.token,
-    onEnd: () => {
-      debugPluginStreamEvent.stop()
-      setSampling(false)
-    },
-  })
-  const streamInfoCom = useCampare(streamInfo)
-  useEffect(() => {
-    try {
-      if (
-        streamInfo.progressState.length &&
-        streamInfo.progressState[0].id === 'main' &&
-        streamInfo.progressState[0].progress === 1
-      ) {
-        const logs: PerformanceSamplingLog[] = []
-        streamInfo.logState.forEach((item) => {
-          if (item.level === 'file') {
-            const { title, path, dir } = JSONParseLog(item.data, { page: 'FuncDomain', fun: 'useEffect' }) || {}
-            logs.push({ title, path, dir })
-          }
-        })
-        setPerformanceSamplingLog(logs)
-        yakitNotify('success', '采样完成，点击顶部绿色按钮可查看结果')
-      }
-    } catch (error) {
-      setPerformanceSamplingLog([])
-    }
-  }, [streamInfoCom])
-
-  const handlePerformanceSampling = () => {
-    if (performanceSamplingInfo.isPerformanceSampling) return
-    if (performanceModalRef.current || performanceModalLoading.current) return // 已有弹窗或正在请求
-    performanceModalLoading.current = true
-    grpcFetchLocalPluginDetail({ Name: '核心引擎性能采样' }, true)
-      .then((res) => {
-        const samplingPlugin = res
-        const requiredParams = samplingPlugin.Params.filter((item) => item.Required && item.Field === 'timeout').map(
-          (item) => {
-            item.TypeVerbose = 'uint'
-            return item
-          },
-        )
-        let initRequiredFormValue: CustomPluginExecuteFormValue = {}
-        samplingPlugin.Params.forEach((ele) => {
-          const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
-          initRequiredFormValue = {
-            ...initRequiredFormValue,
-            [ele.Field]: value,
-          }
-        })
-        const m = showYakitModal({
-          title: '性能采样',
-          width: 400,
-          closable: true,
-          centered: true,
-          maskClosable: false,
-          content: (
-            <PerformanceSampleForm
-              onPerformanceParams={(params) => {
-                performanceParamsRef.current = params
-              }}
-              initRequiredFormValue={initRequiredFormValue}
-              requiredParams={requiredParams}
-            ></PerformanceSampleForm>
-          ),
-          okButtonProps: { icon: <PlaySolid color="currentColor" /> },
-          onOkText: '开始检测',
-          onOk: () => {
-            const yakExecutorParams: YakExecutorParam[] = []
-            initRequiredFormValue['timeout'] = Number(performanceParamsRef.current.timeout) || 0
-            if (!initRequiredFormValue['timeout']) {
-              yakitNotify('error', '检测时间必须大于0')
-              return
-            }
-            const executeParams: DebugPluginRequest = {
-              Code: '',
-              PluginType: samplingPlugin.Type,
-              Input: '',
-              HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
-              ExecParams: yakExecutorParams,
-              PluginName: samplingPlugin.ScriptName,
-            }
-            executeParams.ExecParams = getYakExecutorParam({ ...initRequiredFormValue })
-            setPerformanceSamplingLog([])
-            debugPluginStreamEvent.reset()
-            apiDebugPlugin({
-              params: executeParams,
-              token: performanceSamplingInfo.token,
-              pluginCustomParams: samplingPlugin.Params,
-            }).then(() => {
-              debugPluginStreamEvent.start()
-              setSampling(true)
-              m.destroy()
-              performanceModalRef.current = null
-              performanceModalLoading.current = false
-            })
-          },
-          onCancel: () => {
-            m.destroy()
-            performanceModalRef.current = null
-            performanceModalLoading.current = false
-          },
-        })
-        performanceModalRef.current = m
-      })
-      .catch(() => {
-        performanceModalLoading.current = false
-        yakitNotify('info', '找不到Yak 原生插件：核心引擎性能采样')
-      })
-  }
-  const cancelPerformanceSampling = () => {
-    // cancel 后主进程不再转发 end，需本地收尾
-    debugPluginStreamEvent.cancel()
-    debugPluginStreamEvent.stop()
-    debugPluginStreamEvent.reset()
-    setSampling(false)
-  }
-  useEffect(() => {
-    emiter.on('performanceSampling', handlePerformanceSampling)
-    emiter.on('cancelPerformanceSampling', cancelPerformanceSampling)
-    return () => {
-      emiter.off('cancelPerformanceSampling', cancelPerformanceSampling)
-      emiter.off('performanceSampling', handlePerformanceSampling)
-    }
-  }, [])
-
-  // 崩溃日志收集
-  const [crashLogVisible, setCrashLogVisible] = useState<boolean>(false)
-  const crashLogParamsRef = useRef<{
-    params: DebugPluginRequest
-    pluginCustomParams?: YakParamProps[]
-  }>()
-  const handleCrashLog = () => {
-    grpcFetchLocalPluginDetail({ Name: '崩溃日志收集' }, true)
-      .then((res) => {
-        const executeParams: DebugPluginRequest = {
-          Code: '',
-          PluginType: res.Type,
-          Input: '',
-          HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
-          ExecParams: [],
-          PluginName: res.ScriptName,
-        }
-        crashLogParamsRef.current = {
-          params: executeParams,
-          pluginCustomParams: res.Params,
-        }
-        setCrashLogVisible(true)
-      })
-      .catch(() => {
-        yakitNotify('info', '找不到Yak 原生插件：崩溃日志收集')
-      })
-  }
-
   const menu = (
     <YakitMenu
       width={206}
       selectedKeys={[]}
-      data={yakitMenuData as YakitMenuItemProps[]}
+      data={getEngineConsoleMenuChildren(t, consoleType)}
       onClick={({ key }) => menuSelect(key)}
-      parentTitleClick
     />
   )
+
   return (
-    <>
-      <YakitPopover
-        classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown']) }}
-        styles={{ root: { paddingBottom: 0 } }}
-        placement={'bottom'}
-        content={menu}
-        open={show}
-        onOpenChange={(visible) => setShow(visible)}
-        trigger={'click'}
-      >
-        <div className={styles['ui-op-btn-wrapper']}>
-          <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
-            <Wrench1Outlined
-              className={classNames(show ? styles['icon-hover-style'] : styles['icon-style'], styles['wrench-icon'])}
-              color="currentColor"
+    <YakitPopover
+      classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown']) }}
+      placement={'bottom'}
+      content={menu}
+      open={show}
+      onOpenChange={(visible) => setShow(visible)}
+      trigger={'click'}
+    >
+      <div data-testid="engine-console-trigger" className={styles['ui-op-btn-wrapper']}>
+        <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
+          <Tooltip placement="bottom" title={t('FuncDomain.engineConsole')}>
+            <TerminalOutlined
+              size={16}
+              className={classNames(styles['size-style'], show ? styles['icon-hover-style'] : styles['icon-style'])}
             />
-          </div>
+          </Tooltip>
         </div>
-      </YakitPopover>
-      {crashLogVisible && (
-        <CrashLogModal
-          crashLogParams={crashLogParamsRef.current}
-          onClose={() => {
-            setCrashLogVisible(false)
-          }}
-        ></CrashLogModal>
-      )}
-    </>
+      </div>
+    </YakitPopover>
   )
 })
 
@@ -3236,7 +3176,7 @@ interface CrashLogModalProps {
 }
 const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
   const { crashLogParams, onClose } = props
-  const { t } = useI18nNamespaces(['plugin'])
+  const { t } = useI18nNamespaces(['plugin', 'layout', 'yakitUi'])
 
   const tokenRef = useRef<string>(randomString(40))
   const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>('default')
@@ -3253,7 +3193,7 @@ const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
       }, 300)
     },
     setRuntimeId: (rId) => {
-      yakitNotify('info', `调试任务启动成功，运行时 ID: ${rId}`)
+      yakitNotify('info', t('FuncDomain.debugTaskStarted', { id: rId }))
       setRuntimeId(rId)
     },
   })
@@ -3289,14 +3229,14 @@ const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
 
   return (
     <YakitModal
-      title="崩溃日志采集"
+      title={t('FuncDomain.crashLogCollect')}
       width={'70%'}
       open={!!runtimeId}
       destroyOnHidden
       onCancel={onCancel}
       footer={
         <div className={styles['crash-log-footer']}>
-          <YakitButton onClick={onCancel}>取消</YakitButton>
+          <YakitButton onClick={onCancel}>{t('YakitButton.cancel')}</YakitButton>
         </div>
       }
     >

@@ -2,7 +2,7 @@ import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { CheckCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
-import { isCommunityYakit } from '@/utils/envfile'
+import { isCommunityYakit, isEnpriTrace } from '@/utils/envfile'
 import { useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { useTheme, type ThemeMode } from '@/hook/useTheme'
 import { yakitApp } from '@/services/electronBridge'
@@ -123,24 +123,26 @@ export const AppearanceSettings: React.FC = () => {
         </div>
       )}
 
-      <div className={styles['appearance-section']} data-settings-section={SettingsSections.appearance.language}>
-        <div className={styles['appearance-section-title']}>{t('SettingsPage.appearance.language')}</div>
-        <div className={styles['list-panel']}>
-          <div className={styles['language-row']}>
-            <div className={styles['language-label']}>{t('SettingsPage.appearance.languageSetting')}</div>
-            <YakitSelect
-              size="small"
-              value={i18n.language}
-              onChange={onSelectLang}
-              wrapperClassName={styles['language-select']}
-            >
-              <YakitSelect.Option value="zh">{t('SettingsPage.appearance.langZh')}</YakitSelect.Option>
-              <YakitSelect.Option value="en">{t('SettingsPage.appearance.langEn')}</YakitSelect.Option>
-              <YakitSelect.Option value="zh-TW">{t('SettingsPage.appearance.langZhTW')}</YakitSelect.Option>
-            </YakitSelect>
+      {!isEnpriTrace() && (
+        <div className={styles['appearance-section']} data-settings-section={SettingsSections.appearance.language}>
+          <div className={styles['appearance-section-title']}>{t('SettingsPage.appearance.language')}</div>
+          <div className={styles['list-panel']}>
+            <div className={styles['language-row']}>
+              <div className={styles['language-label']}>{t('SettingsPage.appearance.languageSetting')}</div>
+              <YakitSelect
+                size="small"
+                value={i18n.language}
+                onChange={onSelectLang}
+                wrapperClassName={styles['language-select']}
+              >
+                <YakitSelect.Option value="zh">{t('SettingsPage.appearance.langZh')}</YakitSelect.Option>
+                <YakitSelect.Option value="en">{t('SettingsPage.appearance.langEn')}</YakitSelect.Option>
+                <YakitSelect.Option value="zh-TW">{t('SettingsPage.appearance.langZhTW')}</YakitSelect.Option>
+              </YakitSelect>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
