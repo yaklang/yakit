@@ -337,7 +337,7 @@ const runRenderers = async ({ main, link, build, env }) => {
     return
   }
 
-  const { result } = concurrently(
+  await concurrently(
     jobs.map((job) => {
       const binEnv = withLocalBin(job.cwd, env)
       const command = build && job.cwd === LINK_RENDER_DIR ? 'tsc -b && vite build' : build ? 'vite build' : 'vite'
@@ -353,7 +353,6 @@ const runRenderers = async ({ main, link, build, env }) => {
       prefix: '[{name}]',
     },
   )
-  await result
 }
 
 /** commander 程序：注册子命令并解析 argv（install/add/remove 的 action 实际不会跑到） */
@@ -578,7 +577,7 @@ program
     console.log('')
 
     try {
-      const { result } = concurrently(
+      await concurrently(
         [
           {
             command: 'vite',
@@ -607,7 +606,6 @@ program
           prefix: '[{name}]',
         },
       )
-      await result
     } catch (error) {
       exitOnError(error)
     }

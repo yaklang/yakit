@@ -56,7 +56,7 @@
     "typecheck:electron": "tsc -p tsconfig.electron.json && tsc -p tsconfig.preload.json",
     "build:electron": "node scripts/build-electron.mjs --mode production",
     "build:electron:dev": "node scripts/build-electron.mjs --mode development",
-    "test:electron-build": "vitest run e2e/fixtures/__test__/electron-build.test.mjs --maxWorkers=1",
+    "test:electron-build": "vitest run e2e/fixtures/__test__/electron-build.test.mjs e2e/fixtures/__test__/cli-build.test.mjs --maxWorkers=1",
     "ci:electron": "yarn typecheck:electron && yarn test:electron-build"
   },
   "keywords": [],
@@ -92,7 +92,8 @@
     "webdriverio": "9.30.0",
     "typescript": "6.0.3",
     "esbuild": "0.28.1",
-    "@types/node": "16.18.126"
+    "@types/node": "16.18.126",
+    "@yakit-libs/color": "1.4.1"
   },
   "resolutions": {
     "@wdio/native-utils": "2.5.0"

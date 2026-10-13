@@ -330,6 +330,7 @@ function main() {
     )
   ) {
     results.add('e2e/fixtures/__test__/electron-build.test.mjs')
+    results.add('e2e/fixtures/__test__/cli-build.test.mjs')
   }
   const DEBUG = isVitestSelectDebug()
   const debugLines = DEBUG ? [] : null

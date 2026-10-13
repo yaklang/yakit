@@ -3,25 +3,32 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { build } from 'esbuild'
 import ts from 'typescript'
 import { createRequire } from 'node:module'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import { EventEmitter } from 'node:events'
 import { createServer } from 'node:http'
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import vm from 'node:vm'
-import { buildElectron, checkRegistry, codeOptions, exists, repoRoot, run } from '../../../scripts/build-electron.mjs'
+import {
+  buildChildWindowTheme,
+  buildElectron,
+  checkRegistry,
+  codeOptions,
+  exists,
+  repoRoot,
+} from '../../../scripts/build-electron.mjs'
 import { waitForRenderers } from '../../../scripts/start-electron.mjs'
 
 const require = createRequire(import.meta.url)
 let temporary
 let developmentSize
 const output = path.join(repoRoot, 'dist/electron')
+const execFileAsync = promisify(execFile)
 
 beforeAll(async () => {
   await mkdir(path.join(repoRoot, 'dist'), { recursive: true })
   temporary = await mkdtemp(path.join(repoRoot, 'dist/.electron-test-'))
-  if (!(await exists(path.join(repoRoot, 'app/main/handlers/openNewChildWindow/theme.css')))) {
-    await run(process.execPath, ['app/renderer/src/main/scripts/generate-theme-css.cjs'])
-  }
   await buildElectron({ mode: 'development' })
   developmentSize = (await readFile(path.join(output, 'main/index.js'))).length
   await writeFile(path.join(output, 'obsolete.js'), 'obsolete output')
@@ -39,6 +46,66 @@ async function bundleFixture(entry, name, options = {}) {
 }
 
 describe('Electron bundle contract', () => {
+  it('builds with only root dependencies and main sources, then reuses its own theme', async () => {
+    const isolated = path.join(temporary, 'standalone')
+    await mkdir(path.join(isolated, 'scripts'), { recursive: true })
+    for (const file of [
+      'package.json',
+      'tsconfig.electron.json',
+      'tsconfig.preload.json',
+      'scripts/build-electron.mjs',
+    ]) {
+      await cp(path.join(repoRoot, file), path.join(isolated, file))
+    }
+    await cp(path.join(repoRoot, 'app/main'), path.join(isolated, 'app/main'), {
+      recursive: true,
+      filter: (file) => !['theme.css', '__test__'].includes(path.basename(file)),
+    })
+    await symlink(path.join(repoRoot, 'node_modules'), path.join(isolated, 'node_modules'), 'junction')
+    const cold = await execFileAsync(process.execPath, ['scripts/build-electron.mjs', '--mode', 'production'], {
+      cwd: isolated,
+    })
+    expect(cold.stdout).toContain('theme: generated')
+    const cssPath = path.join(isolated, 'dist/electron/resources/child-window/theme.css')
+    const css = await readFile(cssPath, 'utf8')
+    expect(css).toBe(require('@yakit-libs/color/css').generateThemeCss('#F17F30'))
+    const warm = await execFileAsync(process.execPath, ['scripts/build-electron.mjs', '--mode', 'development'], {
+      cwd: isolated,
+    })
+    expect(warm.stdout).toContain('theme: cached')
+    expect(await readFile(cssPath, 'utf8')).toBe(css)
+    expect(await exists(path.join(isolated, 'app/renderer'))).toBe(false)
+    expect(await exists(path.join(isolated, 'app/main/handlers/openNewChildWindow/theme.css'))).toBe(false)
+  }, 30000)
+
+  it.each(['valid', 'missing-css', 'corrupt-css', 'color', 'version', 'invalid-metadata'])(
+    'validates the %s theme cache before reusing it',
+    async (state) => {
+      const previous = path.join(temporary, `theme-cache-${state}`)
+      const next = path.join(temporary, `theme-next-${state}`)
+      const info = await buildChildWindowTheme(previous, path.join(temporary, 'no-cache'))
+      const cssPath = path.join(previous, 'resources/child-window/theme.css')
+      const css = await readFile(cssPath, 'utf8')
+      const theme = { ...info }
+      if (state === 'missing-css') await rm(cssPath)
+      if (state === 'corrupt-css') await writeFile(cssPath, 'stale theme')
+      if (state === 'color') theme.mainColor = '#000000'
+      if (state === 'version') theme.colorVersion = '0.0.0'
+      await writeFile(
+        path.join(previous, 'build-info.json'),
+        state === 'invalid-metadata' ? '{' : JSON.stringify({ theme }),
+      )
+      const generate = vi.spyOn(require('@yakit-libs/color/node'), 'writeThemeCss')
+      try {
+        expect(await buildChildWindowTheme(next, previous)).toEqual(info)
+        expect(generate).toHaveBeenCalledTimes(state === 'valid' ? 0 : 1)
+        expect(await readFile(path.join(next, 'resources/child-window/theme.css'), 'utf8')).toBe(css)
+      } finally {
+        generate.mockRestore()
+      }
+    },
+  )
+
   it('creates compressed production entries and removes stale development files', async () => {
     const source = await readFile(path.join(output, 'main/index.js'), 'utf8')
     expect(Buffer.byteLength(source)).toBeLessThan(developmentSize)

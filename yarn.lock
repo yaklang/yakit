@@ -1493,6 +1493,11 @@
   resolved "https://registry.yarnpkg.com/@xmldom/xmldom/-/xmldom-0.9.10.tgz#a0ad5a26fe8aa996310870726e1704977f769dee"
   integrity sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==
 
+"@yakit-libs/color@1.4.1":
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/@yakit-libs/color/-/color-1.4.1.tgz#876a8314dab6bd9d83256eff6ab768a228c89f4a"
+  integrity sha512-RK/Qm8IUaLrCBgfYn33411qpTu3JQ07EHc7jFYfeUxALDhwo4JqxST60CkOS2Mx0EY13mJLg6f/o7yPI+oe+Qw==
+
 "@zip.js/zip.js@^2.8.11":
   version "2.8.33"
   resolved "https://registry.yarnpkg.com/@zip.js/zip.js/-/zip.js-2.8.33.tgz#b3f613cb2287f70f444cfaa4373207b6fdebd87b"

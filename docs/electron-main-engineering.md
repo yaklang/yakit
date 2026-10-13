@@ -25,7 +25,7 @@
 - preload 分别打包，本地共用代码内联，并检查沙箱外部引用。
 - 使用 `runtimePaths.js` 定位页面、preload、Proto 和资源，避免按原源码文件位置解释 `__dirname`。
 - 第三方预构建文件、原生模块和可执行文件按资源清单复制；`.node` 与进程枚举可执行文件配置 ASAR 解包。
-- 子窗口主题来自主渲染构建或开发服务生成的 CSS；缺失时先构建或启动主渲染端。
+- 子窗口主题由根目录构建依赖 `@yakit-libs/color` 独立生成，不依赖渲染端依赖或产物。主题色、颜色库版本和内容哈希与 `build-info.json` 一致时复用上次 `dist/electron/resources/child-window/theme.css`，否则重新生成；删除 `dist/electron` 可清除缓存。
 - E2E 初始化保持早于用户目录、缓存和业务模块加载；源码和 ASAR 启动均使用正确的资源根目录。
 
 发布压缩包括局部标识符、语法和空白，不混淆协议属性，不删除日志。安装包排除第一方主进程源码、测试、source map 和构建分析文件。source map 连同版本、Electron 版本及产物 SHA-256 单独归档到 `reports/electron-build`，发布 CI 保存为独立诊断 artifact。
@@ -36,21 +36,3 @@
 - `yarn test:vitest app/main/__test__ --run`：既有主进程回归。
 - `yarn test:e2e:build` 后执行 `yarn test:e2e:electron:smoke`：默认测试压缩主进程。
 - 调试 E2E 可传 `--electron-build-mode development`，与 `--dev-renderers` 独立。
-
-2026-09-20，本机 macOS arm64 实施验证结果：
-
-| 验证 | 结果 |
-| --- | --- |
-| 类型检查、开发和发布构建 | 通过 |
-| 主进程回归及构建测试 | 15 个文件、127 项通过 |
-| Electron 27 E2E | 主窗口／Link 切换、进程指标、截图及水印共 7 项通过 |
-| 开发 bundle 基础冒烟 | Electron 27 主窗口、Link、preload、原生模块通过 |
-| macOS arm64 未签名目录包 | electron-builder 成功生成 |
-| ASAR 内容检查 | 无第一方主进程源码和构建 map，入口为 production bundle，原生模块已解包 |
-| 同一 ASAR 的兼容冒烟 | 使用 stock Electron 27.0.0 和 22.3.27，隔离用户数据，主窗口／Link／preload／原生模块通过 |
-
-主进程开发 bundle 为 857,565 字节，发布 bundle 为 368,727 字节，减少约 57%（仅主进程 JS，不代表安装包体积变化）。
-
-本机基线测试曾因 `/var` 与 `/private/var` 临时目录别名比较失败；回归使用 `TMPDIR=/private/tmp` 规范化测试环境，未修改浏览器配置业务或该已有测试。
-
-本地缺少内置引擎 ZIP、引擎版本／校验文件及浏览器扩展 ZIP，electron-builder 对这些发布资源给出了缺失提示；本次目录包只用于工程化验证，不是可交付的正式安装包。未执行签名、公证、正式发布，也未完成 Windows／Linux 或完整 Electron 22 业务回归。ASAR 兼容冒烟由 stock Electron 加载归档执行，不等同于对 Electron 22 完整安装包的验证。

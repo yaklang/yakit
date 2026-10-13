@@ -188,7 +188,7 @@ yarn cli pack -s mwl -v yakitEE
 
 主进程及三个 preload 的输出位于 `dist/electron`，两种模式布局一致。启动前检查两端渲染内容，最多等待 120 秒。构建失败不启动旧产物。仅保存代码不会编译、重启 Electron 或重载窗口；请主动关闭 Electron 后再运行 `yarn cli electron`。需要保留渲染服务时，分别运行 `cli start` 与 `cli electron`；`cli dev` 仍在 Electron 退出时清理它启动的渲染服务。
 
-独立构建需要子窗口主题 CSS：开发使用主渲染 Vite 已生成的文件，发布优先使用主渲染产物内的 `theme.css`。缺失时先启动或构建主渲染端。仅 `--main/--link` 的 CI 仍不要求安装主进程构建工具。
+主进程独立生成子窗口主题 CSS，仅需根目录依赖，无需安装或构建渲染端。开发和发布均先检查上次 `dist/electron` 中的主题：主题色、颜色库版本和内容哈希一致时复用，否则重新生成。日志中的 `theme: cached/generated` 表示复用或生成；清理 `dist/electron` 后下次自动生成。仅 `--main/--link` 的 CI 仍不要求安装主进程构建工具；打安装包仍需准备两个渲染端产物。
 
 新增 JS／TS 业务模块时更新 `app/main/ipcModules.js` 的字面量、延迟加载清单；不要同时保留同名 JS 和 TS。保持相对模块引用。新增运行资源时更新 `scripts/build-electron.mjs` 的资源清单和 `app/main/runtimePaths.js`，不要依赖源码位置的 `__dirname`。E2E 初始化必须早于用户目录、缓存和业务模块加载。
 
@@ -196,4 +196,4 @@ E2E 默认测试压缩主进程：`yarn test:e2e:build` 后运行 `yarn test:e2e
 
 `pack` 和直接运行 electron-builder 均通过 beforePack 重新构建 production 产物。安装包排除第一方主进程源码、测试、source map；生产依赖和原生资源仍独立保留。发布 map 与产物哈希保存在 `reports/electron-build/<版本-发行版-平台-架构-Electron版本-哈希>/`，发布 CI 单独保存为诊断 artifact，不随安装包发布。
 
-构建边界、验证结果和发布限制见 [主进程工程化](../docs/electron-main-engineering.md)。
+开发约定、构建说明和验证命令见 [主进程工程化](../docs/electron-main-engineering.md)。
