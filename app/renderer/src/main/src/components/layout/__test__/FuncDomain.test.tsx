@@ -436,15 +436,18 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     await waitFor(() => expect(yakitUILayout.refreshMainMenu).toHaveBeenCalled())
   })
 
-  it('父级菜单标题点击不动作：点「切换连接模式」不触发切换也不收层', async () => {
+  it('父级菜单标题点击收起弹层但不触发动作：点「切换连接模式」不切换', async () => {
     const onEngineModeChange = vi.fn()
     render(<FuncDomain {...baseProps} onEngineModeChange={onEngineModeChange} />)
     openSettingMenu()
 
-    fireEvent.click(await screen.findByText('FuncDomain.link'))
+    const trigger = screen.getByTestId('ui-op-setting-trigger')
+    await waitFor(() => expect(trigger).toHaveClass('ant-popover-open'))
+
+    fireEvent.click(screen.getByText('FuncDomain.link'))
     expect(onEngineModeChange).not.toHaveBeenCalled()
-    // 弹层未收起
-    expect(screen.getByText('FuncDomain.pcapfix')).toBeInTheDocument()
+    // 父级标题点击也收起弹层；Popover 关闭后内容仍挂载 DOM，用触发器 open class 移除断言
+    await waitFor(() => expect(trigger).not.toHaveClass('ant-popover-open'))
   })
 
   it('点击「全局设置」发出 openPage 事件', async () => {

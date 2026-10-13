@@ -1110,13 +1110,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   // #endregion
 
   const menuSelect = useMemoizedFn((type: string) => {
-    // 「录屏」父级标题点击与二级「录屏」同效，其余父级标题点击不动作、不收起弹层
-    if (type === 'screen') {
-      menuSelect('screenCap')
-      return
-    }
-    const parentKeys = ['link', 'project', 'db-cache-manager', 'cve-database', 'explab', 'logs', 'Github', 'mcp']
-    if (parentKeys.includes(type)) return
     if (show) setShow(false)
     switch (type) {
       // 网卡权限修复
@@ -1235,6 +1228,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       // 录屏
       case 'screenCap':
+      case 'screen':
         if (isRecording) {
           setRecording(false)
           yakitUILayout.cancelScreenRecorder(token)
