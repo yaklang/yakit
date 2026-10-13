@@ -13,6 +13,7 @@ export interface SubTabPageEventHandlers {
   onUpdateSubMenuNameFormPage?: (val: string) => void
   onUpdateSecondaryTabsNum?: (num: number) => void
   onCloseSubPageByInfo?: (res: string) => void
+  onExpandGroupByPageId?: (pageId: string) => void
 }
 
 const handlersByRouteKey = new Map<string, SubTabPageEventHandlers>()
@@ -71,6 +72,7 @@ export function initSubTabGlobalListeners() {
   const onUpdateSubMenuNameFormPage = (val: string) => dispatchActive('onUpdateSubMenuNameFormPage', val)
   const onUpdateSecondaryTabsNum = (num: number) => dispatchActive('onUpdateSecondaryTabsNum', num)
   const onCloseSubPageByInfo = (res: string) => dispatchActive('onCloseSubPageByInfo', res)
+  const onExpandGroupByPageId = (pageId: string) => dispatchAllHandlers('onExpandGroupByPageId', pageId)
 
   emiter.on('switchSubMenuItem', onSwitchSubMenuItem)
   ipcRenderer.on('fetch-add-group', onAddGroup)
@@ -80,6 +82,7 @@ export function initSubTabGlobalListeners() {
   emiter.on('onUpdateSubMenuNameFormPage', onUpdateSubMenuNameFormPage)
   emiter.on('onUpdateSecondaryTabsNum', onUpdateSecondaryTabsNum)
   emiter.on('onCloseSubPageByInfo', onCloseSubPageByInfo)
+  emiter.on('expandSubTabGroupByPageId', onExpandGroupByPageId)
 
   return () => {
     emiter.off('switchSubMenuItem', onSwitchSubMenuItem)
@@ -90,5 +93,6 @@ export function initSubTabGlobalListeners() {
     emiter.off('onUpdateSubMenuNameFormPage', onUpdateSubMenuNameFormPage)
     emiter.off('onUpdateSecondaryTabsNum', onUpdateSecondaryTabsNum)
     emiter.off('onCloseSubPageByInfo', onCloseSubPageByInfo)
+    emiter.off('expandSubTabGroupByPageId', onExpandGroupByPageId)
   }
 }
