@@ -198,7 +198,15 @@ describe('MainOperatorContent initial cache loading', () => {
     expect(app.spinning()).toBe(false)
     app.open()
     expect(app.bindings.onSetPageInfoDataOfSingle).toHaveBeenCalledOnce()
-    if (failed === 'ai') expect(app.bindings.setPagesData).not.toHaveBeenCalled()
+    if (failed === 'ai') {
+      expect(app.bindings.setPagesData).toHaveBeenCalledWith(
+        'ai',
+        expect.objectContaining({
+          pageList: [expect.objectContaining({ pageId: 'ai' })],
+        }),
+      )
+      expect(app.bindings.aiCacheLoaded.current).toBe(true)
+    }
     app.dispose()
   })
 
@@ -215,6 +223,66 @@ describe('MainOperatorContent initial cache loading', () => {
     app.open()
     expect(app.bindings.onSetPageInfoDataOfSingle).toHaveBeenCalledOnce()
     app.dispose()
+  })
+
+  it.each([true, false])(
+    'initializes an empty cache after read failure and keeps syncing and saving (Memfit=%s)',
+    async (memfit) => {
+      const app = setup({ memfit })
+      app.bindings.setPagesData.mockImplementation((route, page) => {
+        app.bindings.usePageInfo.getState().pages.set(route, page)
+        const sync = app.bindings.usePageInfo.subscribe.mock.calls[0][1] as (page: unknown) => void
+        sync(page)
+      })
+      app.mount()
+      app.ai.reject(new Error('read failed'))
+      app.wf.resolve('[]')
+      await settle()
+      const initial = app.bindings.setPagesData.mock.lastCall![1]
+      expect(initial.pageList).toEqual(memfit ? [expect.objectContaining({ pageId: 'ai', pageParamsInfo: {} })] : [])
+      expect(app.bindings.saveAIAgentCache).toHaveBeenCalledWith(initial)
+      expect(app.locked()).toBe(false)
+
+      const sync = app.bindings.usePageInfo.subscribe.mock.calls[0][1] as (page: unknown) => void
+      const local = { pageId: 'local', pageName: 'New title', sortFieId: 1, pageParamsInfo: {} }
+      sync({ pageList: [local] })
+      expect(app.bindings.mergeAIAgentPageTabs).toHaveBeenLastCalledWith(expect.any(Array), { pageList: [local] })
+      expect(app.bindings.saveAIAgentCache).toHaveBeenLastCalledWith({ pageList: [local] })
+      await vi.advanceTimersByTimeAsync(6000)
+      expect(app.bindings.getRemoteProjectValue).toHaveBeenCalledOnce()
+      app.dispose()
+    },
+  )
+
+  it.each(['{', '{}'])('treats invalid cache data as empty and completes initialization: %s', async (raw) => {
+    const app = setup({ memfit: false })
+    app.mount()
+    app.ai.resolve(raw)
+    app.wf.resolve('[]')
+    await settle()
+    expect(app.bindings.setPagesData).toHaveBeenCalledWith('ai', expect.objectContaining({ pageList: [] }))
+    expect(app.bindings.aiCacheLoaded.current).toBe(true)
+    expect(app.locked()).toBe(false)
+    expect(app.bindings.yakitNotify).toHaveBeenCalledOnce()
+    app.dispose()
+  })
+
+  it('appends a new AI tab after surviving tabs with larger historical sort values', () => {
+    const existing = { pageId: 'C', sortFieId: 8 }
+    const added = { id: 'D', verbose: 'D', groupId: '0', pageParams: {} }
+    const addPagesDataCache = vi.fn()
+    execute(`return (${declaration('onSetYakAIAgent')!.initializer!.getText(source)})(node)`, {
+      useMemoizedFn: (fn: unknown) => fn,
+      getPageCache: () => [{ routeKey: 'C' }],
+      usePageInfo: { getState: () => ({ pages: new Map([['ai', { pageList: [existing] }]]) }) },
+      YakitRoute: { AI_Agent: 'ai' },
+      randomString: () => 'random',
+      addPagesDataCache,
+      node: added,
+    })
+    const created = addPagesDataCache.mock.calls[0][1]
+    expect(created.sortFieId).toBeGreaterThan(existing.sortFieId)
+    expect([existing, created].sort((a, b) => a.sortFieId - b.sortFieId).map((node) => node.pageId)).toEqual(['C', 'D'])
   })
 
   it('moves the cached fixed-page session into a separate tab and keeps the default page blank', async () => {
@@ -297,17 +365,19 @@ describe('MainOperatorContent initial cache loading', () => {
     app.dispose()
   })
 
-  it('ignores late cache completion after unmount', async () => {
+  it.each(['success', 'failure'])('ignores late cache %s after unmount', async (result) => {
     const app = setup()
     app.mount()
     app.dispose()
     app.bindings.setInitializing.mockClear()
-    app.ai.resolve('[]')
+    if (result === 'success') app.ai.resolve('[]')
+    else app.ai.reject(new Error('read failed'))
     app.wf.resolve('[]')
     await settle()
     expect(app.bindings.setPagesData).not.toHaveBeenCalled()
     expect(app.bindings.setInitializing).not.toHaveBeenCalled()
     expect(app.bindings.onInitFuzzer).not.toHaveBeenCalled()
+    expect(app.bindings.yakitNotify).not.toHaveBeenCalled()
   })
 
   it('resets both AI and WF tabs to the mode defaults before restoring caches', () => {

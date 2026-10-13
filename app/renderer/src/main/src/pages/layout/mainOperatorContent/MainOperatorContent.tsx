@@ -2520,7 +2520,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   })
 
   const onSetYakAIAgent = useMemoizedFn((node: MultipleNodeInfo) => {
-    const order = getPageCache().length
+    const aiPages = usePageInfo.getState().pages.get(YakitRoute.AI_Agent)?.pageList || []
+    const order = aiPages.reduce((max, page) => Math.max(max, page.sortFieId), -1) + 1
     const newPageNode: PageNodeItemProps = {
       id: `${randomString(8)}-${order}`,
       routeKey: YakitRoute.AI_Agent,
@@ -2971,13 +2972,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   }, [softMode])
   const onInitAIAgent = useMemoizedFn(
     async (initCache: PageCache[], stayOnSettings: boolean, isDisposed: () => boolean) => {
-      const raw = await getRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs)
-      if (isDisposed()) return
-      const cached: PageNodeItemProps[] = JSONParseLog(raw || '[]', {
-        page: 'MainOperatorContent',
-        fun: 'restoreAITabs',
-      })
-      if (!Array.isArray(cached)) throw new Error('Invalid AI Agent tab cache')
+      let cached: PageNodeItemProps[] = []
+      try {
+        const raw = await getRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs)
+        if (isDisposed()) return
+        const parsed = JSONParseLog(raw || '[]', {
+          page: 'MainOperatorContent',
+          fun: 'restoreAITabs',
+        })
+        if (!Array.isArray(parsed)) throw new Error('Invalid AI Agent tab cache')
+        cached = parsed
+      } catch (error) {
+        if (isDisposed()) return
+        // 读取失败按空缓存初始化，后续同步和保存继续正常工作。
+        yakitNotify('error', t('MainOperatorContent.restoreAIAgentTabsFailed', { error: error + '' }))
+      }
       const nodes = new Map(cached.map((node) => [node.pageId, node]))
       const fixed = nodes.get(YakitRoute.AI_Agent)
       if (isMemfit() && fixed) {

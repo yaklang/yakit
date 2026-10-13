@@ -54,8 +54,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     if (!activeChat?.SessionID) return
     const sessionId = activeChat.SessionID
     const data = globalSessionEngine.ensureSession(sessionId)
-    const unsubscribe = data.store.subscribe((state, prevState) => {
-      if (state.sessionTitleUpdate === prevState.sessionTitleUpdate) return
+    const syncTitle = () => {
       const title = data.rawData.sessionTitle || ''
       const { pages, updatePagesDataCacheById } = usePageInfo.getState()
       const node = pages
@@ -71,7 +70,13 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
           aiAgentPageInfo: { ...node.pageParamsInfo.aiAgentPageInfo, session: { ...session, Title: title } },
         },
       })
+    }
+    const unsubscribe = data.store.subscribe((state, prevState) => {
+      if (state.sessionTitleUpdate === prevState.sessionTitleUpdate) return
+      syncTitle()
     })
+    // 连接成功后的同步回放可能早于 effect，订阅后补齐已有标题。
+    syncTitle()
     return unsubscribe
   }, [activeChat?.SessionID])
 

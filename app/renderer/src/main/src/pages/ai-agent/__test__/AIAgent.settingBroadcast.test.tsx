@@ -256,6 +256,55 @@ describe('AIAgent 配置广播', () => {
     expect(ipc.updatePagesDataCacheById).toHaveBeenCalledTimes(1)
   })
 
+  it('绑定会话后同步回放的标题在订阅建立时写入标签缓存', async () => {
+    const node = { pageId: 'test', pageName: 'AI Agent', pageParamsInfo: {} }
+    ipc.queryPagesDataById.mockReturnValue(node)
+    ipc.updatePagesDataCacheById.mockImplementationOnce((route, boundNode) => {
+      ipc.pages.set(route, { pageList: [boundNode] })
+    })
+    render(<AIAgent pageId="test" />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    const data = globalSessionEngine.ensureSession('history')
+    ipc.detachPendingChat.mockImplementationOnce(() => {
+      data.rawData.sessionTitle = '首个回放标题'
+      data.store.setState({ sessionTitleUpdate: 1 })
+    })
+
+    fireEvent.click(screen.getByText('select-history'))
+
+    expect(ipc.updatePagesDataCacheById).toHaveBeenCalledTimes(2)
+    expect(ipc.updatePagesDataCacheById).toHaveBeenLastCalledWith(YakitRoute.AI_Agent, {
+      ...node,
+      pageName: '首个回放标题',
+      pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'history', Title: '首个回放标题' } } },
+    })
+  })
+
+  it('挂载时同步已有标题，后续普通渲染和无关事件保留手动标题', async () => {
+    const session = { SessionID: 'history', Title: '原名称' } as AISession
+    const node = {
+      pageId: 'history-tab',
+      pageName: session.Title,
+      pageParamsInfo: { aiAgentPageInfo: { session } },
+    }
+    ipc.pages.set(YakitRoute.AI_Agent, { pageList: [node] })
+    const data = globalSessionEngine.ensureSession(session.SessionID)
+    data.rawData.sessionTitle = '已有标题'
+    data.store.setState({ sessionTitleUpdate: 1 })
+
+    const { rerender } = render(<AIAgent pageId="history-tab" initialSession={session} />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    expect(ipc.updatePagesDataCacheById).toHaveBeenCalledExactlyOnceWith(
+      YakitRoute.AI_Agent,
+      expect.objectContaining({ pageName: '已有标题' }),
+    )
+
+    node.pageName = '手动标题'
+    rerender(<AIAgent pageId="history-tab" initialSession={{ ...session, Title: '手动标题' }} />)
+    act(() => data.store.setState({ execute: true }))
+    expect(ipc.updatePagesDataCacheById).toHaveBeenCalledTimes(1)
+  })
+
   it('切换会话和卸载时取消旧标题订阅', async () => {
     const sessions = ['original', 'history'].map((SessionID) => ({ SessionID, Title: SessionID }) as AISession)
     ipc.pages.set(YakitRoute.AI_Agent, {
