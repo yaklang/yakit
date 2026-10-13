@@ -1,5 +1,6 @@
 {
   "pageInfo": {
+    "aiAgentCacheFailed": "Failed to save AI Agent tabs: {{error}}",
     "parseFailed": "page-info parse data error: {{error}}",
     "webFuzzerCacheFailed": "webFuzzer cache data failed: {{error}}"
   },

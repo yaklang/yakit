@@ -34,7 +34,9 @@ const effect = find(
     node.getText(source).includes('const aiReady ='),
 )[0].getText(source)
 const execute = (code: string, bindings: Record<string, unknown>) => {
-  const js = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText
+  const js = ts.transpileModule(code, {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React },
+  }).outputText
   return new Function(...Object.keys(bindings), js)(...Object.values(bindings))
 }
 const attribute = (tag: string, name: string, bindings: Record<string, unknown>) => {
@@ -57,6 +59,161 @@ const deferred = () => {
   return { promise, resolve, reject }
 }
 const settle = () => vi.advanceTimersByTimeAsync(500)
+
+const setupTabActions = () => {
+  const fixed = { route: 'ai', routeKey: 'ai' }
+  const knowledge = { route: 'knowledge', routeKey: 'knowledge' }
+  const first = { route: 'ai', routeKey: 'ai-first' }
+  const second = { route: 'ai', routeKey: 'ai-second' }
+  const fuzzer = { route: 'wf', routeKey: 'wf' }
+  const settings = { route: 'settings', routeKey: 'settings' }
+  const tabs = [fixed, knowledge, first, fuzzer, second, settings]
+  const aiPage = {
+    routeKey: 'ai',
+    singleNode: true,
+    currentSelectPageId: first.routeKey,
+    pageList: [fixed, first, second].map((tab, index) => ({
+      pageId: tab.routeKey,
+      pageName: tab.routeKey,
+      pageParamsInfo: {},
+      sortFieId: index,
+    })),
+  }
+  const store = {
+    pages: new Map([['ai', aiPage]]),
+    setPagesData: vi.fn(),
+    removePagesDataCacheById: vi.fn(),
+    clearDataByRoute: vi.fn(),
+  }
+  const destroy = vi.fn()
+  const confirm = vi.fn((_options: { onOk: () => void; onCancel?: () => void }) => ({ destroy }))
+  const bindings = {
+    pageCache: tabs,
+    useMemoizedFn: (fn: unknown) => fn,
+    usePageInfo: { getState: () => store },
+    YakitRoute: { AI_Agent: 'ai', HTTPFuzzer: 'wf' },
+    getDefaultFixedTabs: () => ['ai', 'knowledge'],
+    isRouteKeyScopedTab: (route: string) => route === 'ai',
+    softMode: 'classic',
+    setPageCache: vi.fn(),
+    setCurrentTabKey: vi.fn(),
+    clearFuzzerSequence: vi.fn(),
+    YakitModalConfirm: confirm,
+    React: { createElement: vi.fn() },
+    ExclamationCircleOutlined: () => null,
+    reorder: execute(`return ${declaration('reorder')!.initializer!.getText(source)}`, {}),
+  }
+  const callback = (name: 'onDragEnd' | 'onRemoveAllTabs' | 'onRemoveOtherTabs') =>
+    execute(`return ${declaration(name)!.initializer!.getText(source)}`, bindings)
+  return {
+    tabs,
+    fixed,
+    knowledge,
+    first,
+    second,
+    fuzzer,
+    settings,
+    aiPage,
+    store,
+    bindings,
+    confirm,
+    destroy,
+    callback,
+  }
+}
+
+describe('MainOperatorContent first-level tab actions', () => {
+  it('persists AI ordering from the actual drag result while preserving page metadata', () => {
+    const app = setupTabActions()
+    app.callback('onDragEnd')({
+      source: { droppableId: 'droppable1', index: 4 },
+      destination: { droppableId: 'droppable1', index: 2 },
+    })
+
+    expect(app.bindings.setPageCache).toHaveBeenCalledExactlyOnceWith([
+      app.fixed,
+      app.knowledge,
+      app.second,
+      app.first,
+      app.fuzzer,
+      app.settings,
+    ])
+    expect(app.store.setPagesData).toHaveBeenCalledExactlyOnceWith('ai', {
+      ...app.aiPage,
+      pageList: app.aiPage.pageList.map((node, index) => ({ ...node, sortFieId: [0, 3, 2][index] })),
+    })
+    expect(app.aiPage.pageList.map((node) => node.sortFieId)).toEqual([0, 1, 2])
+  })
+
+  it.each([undefined, { droppableId: 'droppable2', index: 0 }])(
+    'does not update tabs or cache for a cancelled or unrelated drag: %s',
+    (destination) => {
+      const app = setupTabActions()
+      app.callback('onDragEnd')({ source: { droppableId: 'droppable1', index: 2 }, destination })
+      expect(app.bindings.setPageCache).not.toHaveBeenCalled()
+      expect(app.store.setPagesData).not.toHaveBeenCalled()
+    },
+  )
+
+  it('closes all optional tabs and retains both fixed Memfit pages', () => {
+    const app = setupTabActions()
+    app.callback('onRemoveAllTabs')(app.first, 2)
+    app.confirm.mock.calls[0][0].onOk()
+
+    expect(app.bindings.setPageCache).toHaveBeenCalledExactlyOnceWith([app.fixed, app.knowledge])
+    expect(app.bindings.setCurrentTabKey).toHaveBeenCalledExactlyOnceWith('knowledge')
+    expect(app.store.removePagesDataCacheById.mock.calls).toEqual([
+      ['ai', 'ai-first'],
+      ['ai', 'ai-second'],
+    ])
+    expect(app.store.clearDataByRoute.mock.calls).toEqual([['wf'], ['settings']])
+    expect(app.bindings.clearFuzzerSequence).toHaveBeenCalledTimes(1)
+    expect(app.destroy).toHaveBeenCalledTimes(1)
+  })
+
+  it.each(['first', 'fixed', 'fuzzer'] as const)(
+    'closes other tabs while retaining the selected %s and fixed pages without duplicates',
+    (selection) => {
+      const app = setupTabActions()
+      const selected = app[selection]
+      app.callback('onRemoveOtherTabs')(selected)
+      app.confirm.mock.calls[0][0].onOk()
+
+      const expectedTabs = selection === 'fixed' ? [app.knowledge, app.fixed] : [app.fixed, app.knowledge, selected]
+      expect(app.bindings.setPageCache).toHaveBeenCalledExactlyOnceWith(expectedTabs)
+      expect(app.bindings.setCurrentTabKey).toHaveBeenCalledExactlyOnceWith(selected.routeKey)
+      expect(app.store.removePagesDataCacheById.mock.calls).toEqual(
+        selection === 'first'
+          ? [['ai', 'ai-second']]
+          : [
+              ['ai', 'ai-first'],
+              ['ai', 'ai-second'],
+            ],
+      )
+      expect(app.store.clearDataByRoute.mock.calls).toEqual(
+        selection === 'fuzzer' ? [['settings']] : [['wf'], ['settings']],
+      )
+      expect(app.bindings.clearFuzzerSequence).toHaveBeenCalledTimes(selection === 'fuzzer' ? 0 : 1)
+      expect(app.destroy).toHaveBeenCalledTimes(1)
+    },
+  )
+
+  it.each(['onRemoveAllTabs', 'onRemoveOtherTabs'] as const)(
+    '%s leaves tabs and persisted state untouched when confirmation is cancelled',
+    (name) => {
+      const app = setupTabActions()
+      app.callback(name)(app.first, 2)
+      expect(app.confirm).toHaveBeenCalledTimes(1)
+      app.confirm.mock.calls[0][0].onCancel?.()
+
+      expect(app.bindings.setPageCache).not.toHaveBeenCalled()
+      expect(app.bindings.setCurrentTabKey).not.toHaveBeenCalled()
+      expect(app.store.removePagesDataCacheById).not.toHaveBeenCalled()
+      expect(app.store.clearDataByRoute).not.toHaveBeenCalled()
+      expect(app.bindings.clearFuzzerSequence).not.toHaveBeenCalled()
+    },
+  )
+})
 
 const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = false } = {}) => {
   const ai = deferred()

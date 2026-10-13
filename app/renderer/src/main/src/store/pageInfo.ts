@@ -695,7 +695,7 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
 export const saveAIAgentCache = debounce(
   (page?: PageProps) => {
     setRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs, JSON.stringify(page?.pageList || [])).catch((error) => {
-      yakitNotify('error', `AI Agent 标签保存失败：${error}`)
+      yakitNotify('error', tOriginal('pageInfo.aiAgentCacheFailed', { error: String(error) }))
     })
   },
   500,

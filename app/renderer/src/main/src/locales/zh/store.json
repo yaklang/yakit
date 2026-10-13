@@ -1,5 +1,6 @@
 {
   "pageInfo": {
+    "aiAgentCacheFailed": "AI Agent 标签保存失败：{{error}}",
     "parseFailed": "page-info解析数据错误: {{error}}",
     "webFuzzerCacheFailed": "webFuzzer缓存数据失败: {{error}}"
   },

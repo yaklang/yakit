@@ -7,10 +7,14 @@ import type * as PageInfoModule from '../pageInfo'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
 
 const kv = vi.hoisted(() => ({ set: vi.fn(), project: vi.fn() }))
+const notifications = vi.hoisted(() => ({
+  notify: vi.fn(),
+  translate: vi.fn((key: string, options?: { error: string }) => `${key}: ${options?.error ?? ''}`),
+}))
 vi.mock('@/utils/kv', () => ({ setRemoteValue: kv.set, setRemoteProjectValue: kv.project }))
-vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
+vi.mock('@/utils/notification', () => ({ yakitNotify: notifications.notify }))
 vi.mock('@/utils/tool', () => ({ JSONParseLog: JSON.parse }))
-vi.mock('@/i18n/i18n', () => ({ default: { getFixedT: () => (key: string) => key } }))
+vi.mock('@/i18n/i18n', () => ({ default: { getFixedT: () => notifications.translate } }))
 vi.mock('@/defaultConstants/HTTPFuzzerPage', () => ({ defaultAdvancedConfigValue: {}, defaultPostTemplate: '' }))
 
 const session: AISession = {
@@ -40,6 +44,8 @@ beforeEach(async () => {
   vi.resetModules()
   vi.useFakeTimers()
   sessionStorage.clear()
+  notifications.notify.mockClear()
+  notifications.translate.mockClear()
   kv.set.mockReset().mockResolvedValue(undefined)
   kv.project.mockReset().mockResolvedValue(undefined)
   api = await import('../pageInfo')
@@ -56,6 +62,17 @@ const savedPages = (): PageNodeItemProps[] =>
   JSON.parse(kv.project.mock.calls.filter(([key]) => key === RemoteAIAgentGV.AIAgentTabs).at(-1)![1])
 
 describe('AI pageInfo route persistence through existing actions', () => {
+  it('reports cache failures with the translated message and error details', async () => {
+    kv.project.mockRejectedValueOnce(new Error('offline'))
+    api.usePageInfo.getState().addPagesDataCache(YakitRoute.AI_Agent, node('ai-one'))
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(notifications.translate).toHaveBeenCalledExactlyOnceWith('pageInfo.aiAgentCacheFailed', {
+      error: 'Error: offline',
+    })
+    expect(notifications.notify).toHaveBeenCalledExactlyOnceWith('error', 'pageInfo.aiAgentCacheFailed: Error: offline')
+  })
+
   it('saves an added page to the project cache with its existing full session metadata', () => {
     const page = node('ai-one')
     const info = { session, defualtAIMentionCommandParams: [], forgeExec: { ruleContent: 'rule' } }

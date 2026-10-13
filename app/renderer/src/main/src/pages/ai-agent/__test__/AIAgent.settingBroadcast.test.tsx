@@ -127,8 +127,10 @@ vi.mock('../../ai-re-act/hooks/useChatIPC', () => ({
 vi.mock('@/store/pageInfo', () => ({ usePageInfo: { getState: () => ipc } }))
 vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', async () => {
   const { createStore } = await import('zustand/vanilla')
+  const sessionStores = createStore(() => new Map())
   return {
     globalSessionEngine: {
+      sessionStores,
       updateSessionConfig: vi.fn(),
       ensureSession: (id: string) => {
         if (!ipc.sessions.has(id)) {
@@ -136,6 +138,7 @@ vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', async () => {
             store: createStore(() => ({ sessionTitleUpdate: 0, execute: false })),
             rawData: { sessionTitle: '' },
           })
+          sessionStores.setState(new Map(sessionStores.getState()).set(id, ipc.sessions.get(id).store), true)
         }
         return ipc.sessions.get(id)
       },
@@ -176,6 +179,7 @@ describe('AIAgent 配置广播', () => {
     vi.clearAllMocks()
     ipc.pages.clear()
     ipc.sessions.clear()
+    globalSessionEngine.sessionStores.setState(new Map(), true)
     ipc.updatePagesDataCacheById.mockReset().mockImplementation((route, node) => {
       const pageList = ipc.pages.get(route)?.pageList || []
       const otherPages = pageList.filter((item) => item.pageId !== node.pageId)
@@ -776,6 +780,65 @@ describe('AIAgent 配置广播', () => {
     rerender(<AIAgent pageId="history-tab" initialSession={{ ...session, Title: '手动标题' }} />)
     act(() => data.store.setState({ execute: true }))
     expect(ipc.updatePagesDataCacheById).toHaveBeenCalledTimes(1)
+  })
+
+  it('关页收尾后重建同一会话 store 时重新订阅标题，并释放旧订阅', async () => {
+    const session = { SessionID: 'history', Title: '原名称' } as AISession
+    const node = {
+      pageId: 'history-tab',
+      pageName: session.Title,
+      pageParamsInfo: { aiAgentPageInfo: { session } },
+    }
+    ipc.pages.set(YakitRoute.AI_Agent, { pageList: [node] })
+    const oldData = globalSessionEngine.ensureSession(session.SessionID)
+    const { unmount } = render(<AIAgent pageId="history-tab" initialSession={session} />)
+    await waitFor(() => expect(querySessionMock).toHaveBeenCalledOnce())
+    ipc.updatePagesDataCacheById.mockClear()
+
+    // 模拟后台收尾卸池；相同 SessionID 的页面仍挂载，不能重新创建占位 store。
+    act(() => {
+      ipc.sessions.delete(session.SessionID)
+      globalSessionEngine.sessionStores.setState(new Map(), true)
+      oldData.rawData.sessionTitle = '已销毁会话的标题'
+      oldData.store.setState({ sessionTitleUpdate: 1 })
+    })
+    expect(ipc.sessions.has(session.SessionID)).toBe(false)
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+
+    // 重新注册前已有回放标题，注册后再到达一个实时标题。
+    const { createStore } = await import('zustand/vanilla')
+    const newData = {
+      store: createStore(() => ({ sessionTitleUpdate: 1, execute: false })) as typeof oldData.store,
+      rawData: { sessionTitle: '重连回放标题' },
+    }
+    act(() => {
+      ipc.sessions.set(session.SessionID, newData)
+      globalSessionEngine.sessionStores.setState(new Map([[session.SessionID, newData.store]]), true)
+    })
+    expect(ipc.pages.get(YakitRoute.AI_Agent).pageList[0].pageName).toBe('重连回放标题')
+    act(() => {
+      newData.rawData.sessionTitle = '重连实时标题'
+      newData.store.setState({ sessionTitleUpdate: 2 })
+    })
+    const updated = ipc.pages.get(YakitRoute.AI_Agent).pageList[0]
+    expect(updated.pageName).toBe('重连实时标题')
+    expect(updated.pageParamsInfo.aiAgentPageInfo.session.Title).toBe('重连实时标题')
+    ipc.updatePagesDataCacheById.mockClear()
+
+    act(() => {
+      oldData.rawData.sessionTitle = '迟到的旧标题'
+      oldData.store.setState({ sessionTitleUpdate: 2 })
+      globalSessionEngine.ensureSession('unrelated')
+    })
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+
+    unmount()
+    act(() => {
+      newData.rawData.sessionTitle = '卸载后标题'
+      newData.store.setState({ sessionTitleUpdate: 3 })
+      globalSessionEngine.sessionStores.setState(new Map([[session.SessionID, oldData.store]]), true)
+    })
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
   })
 
   it('切换会话和卸载时取消旧标题订阅', async () => {

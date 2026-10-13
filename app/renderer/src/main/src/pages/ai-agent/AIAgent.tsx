@@ -60,17 +60,33 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   useEffect(() => {
     if (!activeChat?.SessionID) return
     const sessionId = activeChat.SessionID
-    const data = globalSessionEngine.ensureSession(sessionId)
-    const syncTitle = () => {
-      syncAIAgentPageInfo({ sessionId, title: data.rawData.sessionTitle || '' })
-    }
-    const unsubscribe = data.store.subscribe((state, prevState) => {
-      if (state.sessionTitleUpdate === prevState.sessionTitleUpdate) return
+    globalSessionEngine.ensureSession(sessionId)
+    const bindTitle = () => {
+      const store = globalSessionEngine.sessionStores.getState().get(sessionId)
+      // 收尾卸池后等待重连注册新实例，不创建占位 store。
+      if (!store) return
+      const { rawData } = globalSessionEngine.ensureSession(sessionId)
+      const syncTitle = () => {
+        syncAIAgentPageInfo({ sessionId, title: rawData.sessionTitle || '' })
+      }
+      const unsubscribe = store.subscribe((state, prevState) => {
+        if (state.sessionTitleUpdate === prevState.sessionTitleUpdate) return
+        syncTitle()
+      })
+      // 连接成功后的同步回放可能早于订阅，补齐已有标题。
       syncTitle()
+      return unsubscribe
+    }
+    let unsubscribeTitle = bindTitle()
+    const unsubscribeStores = globalSessionEngine.sessionStores.subscribe((stores, prevStores) => {
+      if (stores.get(sessionId) === prevStores.get(sessionId)) return
+      unsubscribeTitle?.()
+      unsubscribeTitle = bindTitle()
     })
-    // 连接成功后的同步回放可能早于 effect，订阅后补齐已有标题。
-    syncTitle()
-    return unsubscribe
+    return () => {
+      unsubscribeStores()
+      unsubscribeTitle?.()
+    }
   }, [activeChat?.SessionID])
 
   const [show, setShow] = useState<boolean>(false)
