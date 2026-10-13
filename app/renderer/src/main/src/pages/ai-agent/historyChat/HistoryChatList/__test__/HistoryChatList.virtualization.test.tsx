@@ -7,6 +7,8 @@ import HistoryChatList from '../HistoryChatList'
 import type { AISession } from '../../../type/aiChat'
 import { AISessionDeleteCancelledError } from '../../utils'
 import { YakitRoute } from '@/enums/yakitRoute'
+import type { EditChatNameModalProps } from '../../../aiAgentType'
+import type * as UtilModals from '../../../UtilModals'
 
 const mocks = vi.hoisted(() => ({
   setActiveChat: vi.fn(),
@@ -19,6 +21,8 @@ const mocks = vi.hoisted(() => ({
   newChat: vi.fn(),
   updatePagesDataCacheById: vi.fn(),
   pages: new Map(),
+  getCurrentPageTabRouteKey: () => 'active-ai',
+  realEditModal: false,
 }))
 const ctx = vi.hoisted(() => ({ activeChat: undefined as AISession | undefined }))
 vi.mock('../../../useContext/useStore', () => ({
@@ -27,17 +31,18 @@ vi.mock('../../../useContext/useStore', () => ({
 vi.mock('../../../useContext/useDispatcher', () => ({ default: () => mocks }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 vi.mock('../../../defaultConstant', () => ({ YakitAIAgentPageID: 'ai-agent' }))
-vi.mock('../../../UtilModals', () => ({
-  EditChatNameModal: ({
-    visible,
-    info,
-    onCallback,
-  }: {
-    visible: boolean
-    info: AISession
-    onCallback: (ok: boolean, info: AISession) => void
-  }) => (visible ? <button onClick={() => onCallback(true, { ...info, Title: 'Renamed' })}>Save title</button> : null),
-}))
+vi.mock('../../../UtilModals', async (importOriginal) => {
+  const actual = await importOriginal<typeof UtilModals>()
+  return {
+    EditChatNameModal: (props: EditChatNameModalProps) => {
+      if (mocks.realEditModal) return <actual.EditChatNameModal {...props} />
+      const { visible, info, onCallback } = props
+      return visible ? (
+        <button onClick={() => onCallback(true, { ...info, Title: 'Renamed' })}>Save title</button>
+      ) : null
+    },
+  }
+})
 vi.mock('../../../grpc', () => ({ grpcUpdateAISessionTitle: mocks.updateTitle }))
 vi.mock('@/store/pageInfo', () => ({ usePageInfo: { getState: () => mocks } }))
 vi.mock('../../HistoryChat', () => ({ onNewChat: mocks.newChat }))
@@ -112,6 +117,7 @@ beforeAll(() => {
 })
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.realEditModal = false
   mocks.pages.set(YakitRoute.AI_Agent, {
     pageList: sessions.slice(0, 2).map((session, index) => ({
       pageId: `tab-${index}`,
@@ -138,6 +144,49 @@ const rowFor = (title: string) => screen.getByText(title).parentElement!.parentE
 const deleteButtonFor = (title: string) => within(rowFor(title)).getAllByRole('button')[1]
 
 describe('HistoryChatList viewport rendering', () => {
+  it('多开 AI Tab 时，编辑弹窗在当前可见页打开并可保存', async () => {
+    mocks.realEditModal = true
+    render(
+      <>
+        <div id="main-operator-page-body-hidden-ai" style={{ display: 'none' }}>
+          <div id="ai-agent" />
+        </div>
+        <div id="main-operator-page-body-active-ai">
+          <div id="ai-agent">
+            <VirtuosoMockContext.Provider value={{ viewportHeight: 480, itemHeight: 32 }}>
+              <HistoryChatList
+                search=""
+                sessionList={sessions.slice(0, 1)}
+                aiSource={['ai']}
+                setSessions={mocks.setSessions}
+              />
+            </VirtuosoMockContext.Provider>
+          </div>
+        </div>
+      </>,
+    )
+    await screen.findByText('Session 0')
+    fireEvent.click(within(rowFor('Session 0')).getAllByRole('button')[0])
+
+    const input = await screen.findByRole('textbox', { name: '对话框标题' })
+    await waitFor(() => expect(input).toBeVisible())
+    expect(document.getElementById('main-operator-page-body-active-ai')).toContainElement(input)
+    expect(input).toHaveValue('Session 0')
+    fireEvent.change(input, { target: { value: '修改后的标题' } })
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.ok' }))
+    await waitFor(() =>
+      expect(mocks.updateTitle).toHaveBeenCalledExactlyOnceWith({
+        SessionID: sessions[0].SessionID,
+        Title: '修改后的标题',
+      }),
+    )
+    expect(mocks.updatePagesDataCacheById).toHaveBeenCalledWith(
+      YakitRoute.AI_Agent,
+      expect.objectContaining({ pageName: '修改后的标题' }),
+    )
+    expect(mocks.setActiveChat).not.toHaveBeenCalled()
+  })
+
   it('bounds mounted rows and session subscriptions for 1960 sessions', async () => {
     render(view())
     expect(await screen.findByText('Session 0')).toBeInTheDocument()

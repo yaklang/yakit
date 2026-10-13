@@ -7,7 +7,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { Tooltip } from 'antd'
 import classNames from 'classnames'
-import { YakitAIAgentPageID } from '../../defaultConstant'
+import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { EditChatNameModal } from '../../UtilModals'
 import type { AISession } from '../../type/aiChat'
 import { useCreation, useInfiniteScroll, useMemoizedFn } from 'ahooks'
@@ -29,8 +29,7 @@ import { useStore } from 'zustand'
 import { createStore } from 'zustand/vanilla'
 import { YakitSolidLoading } from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { usePageInfo } from '@/store/pageInfo'
-import { YakitRoute } from '@/enums/yakitRoute'
+import { syncAIAgentPageInfo } from '../../utils/syncAIAgentPageInfo'
 
 // 未在前端绑定的历史记录共用空状态，不创建完整的会话数据。
 const idleSessionStore = createStore<{ currentChatStatus: { status?: AITaskStatusType } }>(() => ({
@@ -213,23 +212,7 @@ const HistoryChatList: FC<{
     if (result && info) {
       try {
         await grpcUpdateAISessionTitle({ SessionID: info.SessionID, Title: info.Title })
-        const { pages, updatePagesDataCacheById } = usePageInfo.getState()
-        const node = pages
-          .get(YakitRoute.AI_Agent)
-          ?.pageList.find((item) => item.pageParamsInfo.aiAgentPageInfo?.session?.SessionID === info.SessionID)
-        if (node && info.Title.trim()) {
-          updatePagesDataCacheById(YakitRoute.AI_Agent, {
-            ...node,
-            pageName: info.Title,
-            pageParamsInfo: {
-              ...node.pageParamsInfo,
-              aiAgentPageInfo: {
-                ...node.pageParamsInfo.aiAgentPageInfo,
-                session: { ...node.pageParamsInfo.aiAgentPageInfo!.session!, Title: info.Title },
-              },
-            },
-          })
-        }
+        syncAIAgentPageInfo({ sessionId: info.SessionID, title: info.Title, emitSessionData: false })
         setSessions?.((old) => updateChatTitle(old, info))
       } catch (error) {
         yakitNotify('error', t('HistoryChatList.updateTitleFailed', { error: String(error) }))
@@ -362,9 +345,7 @@ const HistoryChatList: FC<{
         {editInfo.current && (
           <EditChatNameModal
             getContainer={
-              embedded && getPopupContainer
-                ? getPopupContainer()
-                : document.getElementById(YakitAIAgentPageID) || undefined
+              embedded && getPopupContainer ? getPopupContainer() : getMainOperatorPageBodyContainerOrBody()
             }
             zIndex={embedded ? 1110 : undefined}
             info={editInfo.current}

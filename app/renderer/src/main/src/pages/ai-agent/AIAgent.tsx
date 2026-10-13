@@ -10,6 +10,8 @@ import type { AISession } from './type/aiChat'
 import { useDebounceFn, useInViewport, useMemoizedFn, useRequest, useUpdateEffect } from 'ahooks'
 import { AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
+import omit from 'lodash/omit'
+import { grpcQueryAISession } from './grpc'
 import {
   applyAIAgentChatSettingBroadcast,
   applyAIAgentChatSettingSessionDefaults,
@@ -37,6 +39,8 @@ import { useChatIPC } from '../ai-re-act/hooks/useChatIPC'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { globalSessionEngine } from '../ai-re-act/hooks/ChatMultiSessionController'
 import { usePageInfo } from '@/store/pageInfo'
+import { YakitRouteToPageInfo } from '@/routes/newRoute'
+import { syncAIAgentPageInfo } from './utils/syncAIAgentPageInfo'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -46,30 +50,19 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   // #region ai-agent页面全局缓存
   // ai-agent-chat 全局配置
   const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
+  const initializedSettingRef = useRef<AIAgentSetting>()
   // 当前展示对话
   const [activeChat, updateActiveChat] = useState<AISession | undefined>(props.initialSession)
+  // 仅记录本页刚创建并绑定的会话，不使用缓存中可能残留的 isCreate 标记。
+  const locallyCreatedSessionIdRef = useRef<string>()
 
-  /**更新页面tab的标题 */
+  /**同步页面标签和历史列表的会话标题 */
   useEffect(() => {
     if (!activeChat?.SessionID) return
     const sessionId = activeChat.SessionID
     const data = globalSessionEngine.ensureSession(sessionId)
     const syncTitle = () => {
-      const title = data.rawData.sessionTitle || ''
-      const { pages, updatePagesDataCacheById } = usePageInfo.getState()
-      const node = pages
-        .get(YakitRoute.AI_Agent)
-        ?.pageList.find((item) => item.pageParamsInfo.aiAgentPageInfo?.session?.SessionID === sessionId)
-      if (!node || !title.trim() || node.pageName === title) return
-      const session = node.pageParamsInfo.aiAgentPageInfo!.session!
-      updatePagesDataCacheById(YakitRoute.AI_Agent, {
-        ...node,
-        pageName: title,
-        pageParamsInfo: {
-          ...node.pageParamsInfo,
-          aiAgentPageInfo: { ...node.pageParamsInfo.aiAgentPageInfo, session: { ...session, Title: title } },
-        },
-      })
+      syncAIAgentPageInfo({ sessionId, title: data.rawData.sessionTitle || '' })
     }
     const unsubscribe = data.store.subscribe((state, prevState) => {
       if (state.sessionTitleUpdate === prevState.sessionTitleUpdate) return
@@ -85,7 +78,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   const sideHiddenModeRef = useRef<string>('false')
 
-  const { initialize, knowledgeBases } = useKnowledgeBase()
+  const { initialize: initializeKnowledgeBase, knowledgeBases } = useKnowledgeBase()
   const agentRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(agentRef)
 
@@ -109,6 +102,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   // 缓存全局配置数据
   useUpdateEffect(() => {
+    // 初始化只恢复当前页面配置，不更新引擎或写回全局缓存。
+    if (setting === initializedSettingRef.current) return
     // 只有配置变化了才更新，SessionID不管
     if (activeChat?.SessionID) globalSessionEngine.updateSessionConfig(activeChat?.SessionID, getSetting())
     persistAIAgentChatSetting(getSetting())
@@ -122,20 +117,26 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   const setActiveChat = useMemoizedFn<AIAgentContextDispatcher['setActiveChat']>((session) => {
     // 同步绑定，确保随后回放的首个标题事件可以按 SessionID 找到页面。
-    const { queryPagesDataById, updatePagesDataCacheById } = usePageInfo.getState()
+    const { pages, queryPagesDataById } = usePageInfo.getState()
     const node = queryPagesDataById(YakitRoute.AI_Agent, pageId)
     const sameSession = !!session && node?.pageParamsInfo.aiAgentPageInfo?.session?.SessionID === session.SessionID
     if (node && !sameSession) {
-      updatePagesDataCacheById(YakitRoute.AI_Agent, {
-        ...node,
-        pageName: session?.Title || node.pageName,
-        pageParamsInfo: {
-          ...node.pageParamsInfo,
-          aiAgentPageInfo: { ...node.pageParamsInfo.aiAgentPageInfo, session },
-        },
+      let title = session?.Title
+      // 返回欢迎页时，按当前 AI Tab 数量重置标签名称。
+      if (!session && activeChat) {
+        const menuName = YakitRouteToPageInfo[YakitRoute.AI_Agent].label
+        const nextIndex = pages.get(YakitRoute.AI_Agent)?.pageList.length ?? 1
+        title = `${menuName}-${nextIndex}`
+      }
+      syncAIAgentPageInfo({
+        pageId,
+        title,
+        aiAgentPageInfo: { session },
+        emitSessionData: false,
       })
     }
     detachPendingChat()
+    locallyCreatedSessionIdRef.current = session?.isCreate ? session.SessionID : undefined
     updateActiveChat(session)
   })
 
@@ -161,27 +162,86 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     }
   }, [])
 
-  /**
-   * 读取缓存并设置数据
-   * 读取全局配置 setting
-   */
-  const initToCacheData = useMemoizedFn(async () => {
+  const initializeSetting = useMemoizedFn((value: AIAgentSetting) => {
+    initializedSettingRef.current = value
+    setSetting(value)
+  })
+
+  /** 读取全局配置缓存，初始化无会话页面 */
+  const initToCacheData = useMemoizedFn(async (isDisposed: () => boolean) => {
     const result = await loadAIAgentChatSetting()
-    if (result.status !== 'success') return
-    setSetting(applyAIAgentChatSettingSessionDefaults(result.setting))
+    if (isDisposed() || result.status !== 'success') return
+    initializeSetting(applyAIAgentChatSettingSessionDefaults(result.setting))
+  })
+
+  const initialize = useMemoizedFn(async (sessionId: string | undefined, isDisposed: () => boolean) => {
+    try {
+      if (!sessionId) {
+        await initToCacheData(isDisposed)
+        return
+      }
+
+      const initialPageName = usePageInfo.getState().queryPagesDataById(YakitRoute.AI_Agent, pageId)?.pageName
+      const initialSetting = getSetting()
+      const result = await grpcQueryAISession({
+        Pagination: { Page: 1, Limit: 1, OrderBy: 'last_used_at', Order: 'desc' },
+        Filter: { SessionID: [sessionId] },
+      })
+      if (isDisposed()) return
+      const session = result.Data.find((item) => item.SessionID === sessionId)
+      if (!session) return
+      // grpcQueryAISession长时间无响应： 查询期间配置已被修改时，保留当前配置。
+      if (getSetting() === initialSetting) {
+        const params = session.StartParams
+        initializeSetting({
+          ...cloneDeep(AIAgentSettingDefault),
+          ...omit(params, ['CoordinatorId', 'Sequence', 'McpServers', 'UserQuery']),
+          // 启动参数使用字节，页面设置使用 KB。
+          TimelineContentSizeLimit:
+            params?.TimelineContentSizeLimit == null
+              ? AIAgentSettingDefault.TimelineContentSizeLimit
+              : params.TimelineContentSizeLimit / 1024,
+          AICallTokenLimit:
+            params?.AICallTokenLimit == null ? AIAgentSettingDefault.AICallTokenLimit : params.AICallTokenLimit / 1024,
+          Strategy: { ...AIAgentSettingDefault.Strategy, ...params?.Strategy },
+        })
+      }
+      const { queryPagesDataById } = usePageInfo.getState()
+      const node = queryPagesDataById(YakitRoute.AI_Agent, pageId)
+      if (!node) return
+      // 查询期间实时事件或历史刷新已更新标题时，保留新标题。
+      const title = node.pageName !== initialPageName ? node.pageName : session.Title || node.pageName
+      syncAIAgentPageInfo({
+        pageId,
+        title,
+        aiAgentPageInfo: {
+          session: { ...node.pageParamsInfo.aiAgentPageInfo?.session, ...session },
+        },
+        emitSessionData: false,
+      })
+    } catch {
+      // 初始化失败时保留当前页面状态，不影响其他操作。
+    }
   })
 
   useEffect(() => {
-    initToCacheData().catch(() => {})
+    const sessionId = activeChat?.SessionID
+    // 本页新建会话已有配置和标题，跳过初始化查询。
+    if (sessionId && sessionId === locallyCreatedSessionIdRef.current) return
+    let disposed = false
+    void initialize(sessionId, () => disposed)
+    return () => {
+      disposed = true
+    }
+  }, [activeChat?.SessionID])
 
+  useEffect(() => {
     // 加载历史文件数据
     const bootstrap = async () => {
       await loadRemoteHistory()
       await initCustomFolderStore()
     }
     bootstrap().catch(() => {})
-
-    return () => {}
   }, [])
 
   useEffect(() => {
@@ -254,7 +314,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       onSuccess: (value) => {
         if (value) {
           const initKnowledgeBase = mergeKnowledgeBaseList(value, knowledgeBases)
-          initialize(initKnowledgeBase)
+          initializeKnowledgeBase(initKnowledgeBase)
         }
       },
     },

@@ -14,6 +14,8 @@ vi.mock('@/utils/kv', () => ({
   setRemoteValue: vi.fn(),
 }))
 
+vi.mock('@/routes/newRoute', () => ({ YakitRouteToPageInfo: { 'ai-agent': { label: 'AIAgent' } } }))
+
 vi.mock('@/utils/notification', () => ({
   failed: vi.fn(),
 }))
