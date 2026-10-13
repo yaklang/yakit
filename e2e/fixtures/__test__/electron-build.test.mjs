@@ -83,6 +83,67 @@ describe('Electron bundle contract', () => {
     expect(loaded).toEqual(['./api/index'])
   })
 
+  it.each([
+    ['development', 'uiOperate'],
+    ['production', 'uiOperate'],
+    ['development', 'newUiOperate'],
+    ['production', 'newUiOperate'],
+  ])('updates CPU samples in the strict %s bundle for %s', async (mode, group) => {
+    const result = await build({
+      ...codeOptions(mode),
+      entryPoints: [`app/main/${group}/hardware.js`],
+      outfile: path.join(temporary, `${group}-${mode}.cjs`),
+      tsconfig: path.join(repoRoot, 'tsconfig.electron.json'),
+      external: ['*'],
+      write: false,
+    })
+    const source = result.outputFiles.find((file) => file.path.endsWith('.cjs')).text
+    expect(source).toMatch(/^["']use strict["']/)
+
+    const handlers = new Map()
+    let tick = 0
+    const cpus = vi.fn(() => {
+      tick += 1
+      // Two cores with 20% and 30% idle time produce 75% total CPU usage.
+      return [{ times: { idle: tick * 20, user: tick * 80 } }, { times: { idle: tick * 30, user: tick * 70 } }]
+    })
+    vi.useFakeTimers()
+    try {
+      const context = {
+        module: { exports: {} },
+        setInterval,
+        clearInterval,
+        require: (id) => {
+          if (id === 'electron') return { ipcMain: { handle: (channel, callback) => handlers.set(channel, callback) } }
+          if (id === 'os') return { cpus }
+          if (id === '../filePath' || id === '../logFile') return {}
+          return require(id)
+        },
+      }
+      vm.runInNewContext(source, context)
+      const prefix = group === 'newUiOperate' ? 'Child:' : ''
+      if (prefix) context.module.exports.registerNewIPC({}, vi.fn(), prefix)
+      else context.module.exports({}, vi.fn())
+
+      const samples = () => Array.from(handlers.get(`${prefix}fetch-compute-percent`)())
+      expect(samples()).toEqual(Array(10).fill(0))
+      handlers.get(`${prefix}start-compute-percent`)()
+      // Advancing timers also flushes Promise callbacks; Vitest fails on unhandled rejections.
+      await vi.advanceTimersByTimeAsync(2000)
+      expect(samples()).toHaveLength(10)
+      expect(samples()).toContain(75)
+      expect(samples().every((value) => value === 0 || value === 75)).toBe(true)
+      expect(Object.hasOwn(context, 'type')).toBe(false)
+
+      handlers.get(`${prefix}clear-compute-percent`)()
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(vi.getTimerCount()).toBe(0)
+    } finally {
+      vi.clearAllTimers()
+      vi.useRealTimers()
+    }
+  })
+
   it.each(['main', 'engine-link', 'screenshots'])(
     'runs %s preload with only the sandbox Electron bridge',
     async (name) => {

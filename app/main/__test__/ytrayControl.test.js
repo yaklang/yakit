@@ -1,8 +1,11 @@
+// @vitest-environment node
 import fs from 'fs'
 import net from 'net'
 import os from 'os'
 import path from 'path'
-import { afterEach, describe, expect, it } from 'vitest'
+import vm from 'node:vm'
+import { createRequire } from 'node:module'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   claimYTrayLaunchApproval,
   listYTrayBrowserHistory,
@@ -12,6 +15,39 @@ import {
 let server
 let directory
 let socketPath
+
+function loadHistoryBridge(endpoint, assertTrustedAppSender = vi.fn()) {
+  const handlers = new Map()
+  const ipcMain = {
+    removeHandler: (channel) => handlers.delete(channel),
+    handle: (channel, callback) => handlers.set(channel, callback),
+  }
+  const require = createRequire(import.meta.url)
+  const mainContext = {
+    module: { exports: {} },
+    process: { platform: 'darwin' },
+    Buffer,
+    require: (name) => (name === 'net' ? { createConnection: () => net.createConnection(endpoint) } : require(name)),
+  }
+  vm.runInNewContext(fs.readFileSync(new URL('../handlers/ytrayControl.js', import.meta.url), 'utf8'), mainContext)
+  mainContext.module.exports.registerYTrayControlHandlers({ ipcMain, assertTrustedAppSender })
+
+  const invoke = vi.fn((channel) => handlers.get(channel)({}))
+  let onLoaded
+  const preloadContext = {
+    process: {
+      argv: [],
+      on: (_event, callback) => {
+        onLoaded = callback
+      },
+    },
+    window: { addEventListener: vi.fn() },
+    require: () => ({ ipcRenderer: { on: vi.fn(), invoke } }),
+  }
+  vm.runInNewContext(fs.readFileSync(new URL('../preload.js', import.meta.url), 'utf8'), preloadContext)
+  onLoaded()
+  return { invoke, listHistory: preloadContext.window.yakitBridge.managedBrowser.listYTrayHistory }
+}
 
 afterEach(async () => {
   if (server) await new Promise((resolve) => server.close(resolve))
@@ -88,5 +124,35 @@ describe('YTray native history bridge', () => {
         requestId: 'pairing-1',
       },
     ])
+
+    const bridge = loadHistoryBridge(socketPath)
+    await expect(bridge.listHistory()).resolves.toEqual([
+      expect.objectContaining({ id: '00000000-0000-4000-8000-000000000001', name: 'Browser A' }),
+    ])
+    await expect(bridge.invoke.mock.results[0].value).resolves.toMatchObject({ ok: true })
+  })
+
+  it('resolves the IPC request when YTray is absent but still rejects the renderer call', async () => {
+    ;({ directory, socketPath } = createControlEndpoint())
+    const bridge = loadHistoryBridge(socketPath)
+
+    await expect(bridge.listHistory()).rejects.toThrow(
+      "Error invoking remote method 'ListYTrayBrowserHistory': Error: 无法连接 YTray，请确认 YTray 已启动：",
+    )
+    await expect(bridge.invoke.mock.results[0].value).resolves.toEqual({
+      ok: false,
+      error: expect.stringContaining('无法连接 YTray，请确认 YTray 已启动：'),
+    })
+  })
+
+  it('keeps untrusted sender failures outside the quiet history response', async () => {
+    const assertTrustedAppSender = vi.fn(() => {
+      throw new Error('Untrusted sender')
+    })
+    const bridge = loadHistoryBridge(undefined, assertTrustedAppSender)
+
+    await expect(bridge.listHistory()).rejects.toThrow('Untrusted sender')
+    await expect(bridge.invoke.mock.results[0].value).rejects.toThrow('Untrusted sender')
+    expect(assertTrustedAppSender).toHaveBeenCalledWith({}, 'ListYTrayBrowserHistory')
   })
 })
