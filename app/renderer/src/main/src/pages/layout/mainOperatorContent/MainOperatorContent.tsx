@@ -102,6 +102,7 @@ import {
   registerSubTabPageHandlers,
   unregisterSubTabPageHandlers,
 } from './subTabEventRegistry'
+import { isSubTabGroupNode } from './subTabOverview'
 import { isPageRouteActive } from '@/utils/getMainOperatorPageBodyContainer'
 import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 import { type FuzzerSequenceCacheDataProps, useFuzzerSequence } from '@/store/fuzzerSequence'
@@ -371,7 +372,7 @@ const filterTabByIds = (data: MultipleNodeInfo[], idsToRemove: string[]) => {
       return item
     })
     .filter((item) => {
-      const isGroup = typeof item.id === 'string' && item.id.endsWith('-group')
+      const isGroup = isSubTabGroupNode(item)
       const shouldRemoveById = idsToRemove.includes(item.id)
       const shouldRemoveEmptyGroup = isGroup && item.groupChildren?.length === 0
       return !shouldRemoveById && !shouldRemoveEmptyGroup
