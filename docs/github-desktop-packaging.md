@@ -29,8 +29,10 @@ HTML/PDF 报告模板固定保存为受 Git 跟踪的 `build/report-template.zip
 
 Mac 的无证书测试包也会生成本地 ad-hoc 签名，确保修改 Electron fuses 后二进制仍有效；它不提供开发者身份认证或公证。正式签名模式继续使用 Developer ID、硬化运行时和公证，并要求签名成功。
 
+正式签名的 Mac 包由 `afterSign` 统一处理公证，关闭 electron-builder 的重复自动公证入口。Apple 审核成功后，如果票据附加返回 `68` 且包含明确的网络错误，则只对同一个已签名应用重试票据附加，不重复上传或编译。含首次尝试最多执行 5 次，重试等待为 15、30、60、120 秒，每个额外命令超时为 60 秒。票据附加成功后必须通过 `stapler validate`；凭证错误、审核拒绝、其他错误或重试耗尽仍使构建失败，日志保留尝试次数与网络错误。
+
 Mac 检查会挂载最终 DMG、复制应用到独立临时安装目录、卸载 DMG，再验证完整签名、字节码和实际启动。正式签名模式还检查系统评估与公证票据。该流程覆盖拖拽安装，避免只启动构建目录的应用而漏掉签名问题。
 
 自动升级开关未修改。汇总包仅包含安装包和构建清单；Windows 安装包签名完成后再计算校验值。
 
-本地验证构建辅助逻辑：`node --test scripts/__test__/desktop-packaging.test.cjs scripts/__test__/main-bytecode.test.cjs scripts/__test__/bytecode-electron.test.cjs scripts/__test__/release-assets.test.cjs scripts/__test__/report-template.test.cjs`。在 Windows 本机不能验证 Linux/macOS 的真实启动，必须查看对应 GitHub 任务的执行结果。
+本地验证构建辅助逻辑：`node --test scripts/__test__/desktop-packaging.test.cjs scripts/__test__/main-bytecode.test.cjs scripts/__test__/bytecode-electron.test.cjs scripts/__test__/main-runtime-assets.test.cjs scripts/__test__/mac-notarization.test.cjs scripts/__test__/release-assets.test.cjs scripts/__test__/report-template.test.cjs`。公证重试测试用模拟命令覆盖原始 CloudKit 错误、成功恢复、次数耗尽与永久失败，不访问 Apple 服务。在 Windows 本机不能验证 Linux/macOS 的真实启动，必须查看对应 GitHub 任务的执行结果。

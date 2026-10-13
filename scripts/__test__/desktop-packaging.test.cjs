@@ -121,10 +121,19 @@ test('certificate-free Mac builds are locally signed after fuses, while release 
     assert.equal(unsigned.electronFuses.enableEmbeddedAsarIntegrityValidation, true)
     process.env.CSC_IDENTITY_AUTO_DISCOVERY = 'true'
     process.env.BUILD_SIGN = 'true'
+    Object.assign(process.env, {
+      APPLE_ID: 'build@example.test',
+      APPLE_APP_SPECIFIC_PASSWORD: 'test-password',
+      APPLE_TEAM_ID: 'TESTTEAM',
+      CERT_BASE64: 'test-certificate',
+      CERT_PASSWORD: 'test-certificate-password',
+    })
     delete require.cache[configPath]
     const signed = require(configPath)
     assert.equal(signed.mac.identity, undefined)
     assert.equal(signed.mac.hardenedRuntime, true)
+    assert.equal(signed.mac.notarize, false)
+    assert.equal(signed.afterSign, 'packageScript/buildHook/after-sign.js')
     if (process.platform === 'darwin') assert.equal(signed.forceCodeSigning, true)
   } finally { process.env = previous; delete require.cache[configPath] }
 })

@@ -264,14 +264,19 @@ if (isLegacy) {
 
 // 是否执行公证流程
 const autoDiscoveryIdentity = process.env.CSC_IDENTITY_AUTO_DISCOVERY
-if (process.platform === 'darwin' && process.env.BUILD_SIGN === 'true') {
+const signedMacBuild = process.platform === 'darwin' && process.env.BUILD_SIGN === 'true'
+if (signedMacBuild) {
   configOption.forceCodeSigning = true
 }
-if (autoDiscoveryIdentity == 'true') {
+if (signedMacBuild || autoDiscoveryIdentity == 'true') {
   /** 提取公证关键信息，判断是否有执行公证的环境 */
   const { APPLE_ID, APPLE_TEAM_ID, APPLE_APP_SPECIFIC_PASSWORD, CERT_BASE64, CERT_PASSWORD } = process.env
   if (APPLE_ID && APPLE_TEAM_ID && APPLE_APP_SPECIFIC_PASSWORD && CERT_BASE64 && CERT_PASSWORD) {
     configOption.afterSign = 'packageScript/buildHook/after-sign.js'
+    // The hook owns notarization and staple recovery; do not submit the same app twice.
+    configOption.mac.notarize = false
+  } else if (signedMacBuild) {
+    throw new Error('Signed Mac builds require Apple signing and notarization credentials')
   }
 }
 

@@ -126,7 +126,7 @@ jobs:
       - name: Set embedded version and verify native runner
         run: node scripts/ci-desktop-build.js prepare
       - name: Validate build date, native guards, collection and release storage
-        run: node --test scripts/__test__/desktop-packaging.test.cjs scripts/__test__/release-assets.test.cjs scripts/__test__/report-template.test.cjs
+        run: node --test scripts/__test__/desktop-packaging.test.cjs scripts/__test__/release-assets.test.cjs scripts/__test__/report-template.test.cjs scripts/__test__/mac-notarization.test.cjs
       - name: Install Linux runtime and headless display dependencies
         if: matrix.platform == 'linux'
         run: |
