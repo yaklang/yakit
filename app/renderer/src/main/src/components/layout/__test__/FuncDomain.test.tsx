@@ -41,6 +41,7 @@ const {
   versionSlots,
   engineList,
   engineFetchList,
+  screenRecorderState,
 } = vi.hoisted(() => {
   // UIOpNotice 更新链路的可变 mock 状态（describe「UIOpNotice 更新按钮状态与文案」中按用例赋值）
   const eeConfig = { value: [] as Array<{ configName: string; isOpen: boolean }> }
@@ -63,6 +64,7 @@ const {
       onUpdateApiKey: vi.fn(),
     },
     userInfo: { isLogin: false, platform: 'github' },
+    screenRecorderState: { isRecording: false },
     eeConfig,
     versionSlots,
     engineList,
@@ -147,6 +149,16 @@ vi.mock('@/utils/visitorsStatistics', () => ({
   visitorsStatisticsFun: vi.fn(),
 }))
 
+// i18n mock：无参数返回 key 本身；带插值参数返回 `key?k=v&k2=v2`，供插件名等插值断言
+const tMock = vi.hoisted(() =>
+  vi.fn((key: string, params?: Record<string, unknown>) => {
+    if (!params) return key
+    const qs = Object.entries(params)
+      .map(([k, v]) => `${k}=${String(v)}`)
+      .join('&')
+    return `${key}?${qs}`
+  }),
+)
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: tMock, i18n: { language: 'zh' }, i18nRefresh: 0 }),
 }))
@@ -302,6 +314,18 @@ vi.mock('@/hook/useHoldGRPCStream/useHoldGRPCStream', () => ({
     { progressState: [], logState: [] },
     { stop: vi.fn(), start: vi.fn(), reset: vi.fn(), cancel: vi.fn() },
   ],
+}))
+
+// 插件详情 mock：性能采样/崩溃日志收集的 grpcFetchLocalPluginDetail
+const grpcFetchLocalPluginDetail = vi.hoisted(() => vi.fn().mockRejectedValue(new Error('not found')))
+vi.mock('@/pages/pluginHub/utils/grpc', () => ({
+  grpcFetchLocalPluginDetail,
+}))
+
+vi.mock('@/utils/logCollection', () => ({
+  grpcOpenRenderLogFolder: vi.fn(),
+  grpcOpenEngineLogFolder: vi.fn(),
+  grpcOpenPrintLogFolder: vi.fn(),
 }))
 
 import { FuncDomain, MoreYaklangVersion, UIOpNotice } from '../FuncDomain'
