@@ -300,7 +300,11 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                         {t('EngineManagement.settings')}
                       </YakitButton>
                     )}
-                    <YakitPopconfirm title={t('EngineManagement.stopConfirm')} onConfirm={() => stop(item)}>
+                    <YakitPopconfirm
+                      title={t('EngineManagement.stopConfirm')}
+                      onConfirm={() => stop(item)}
+                      classNames={{ root: styles['restore-confirm'] }}
+                    >
                       <YakitButton
                         data-testid="engine-stop"
                         type="outline1"
@@ -320,7 +324,11 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
               {t('EngineManagement.troubleshoot')}
               <span aria-hidden="true">{recoveryOpen ? ' −' : ' +'}</span>
             </YakitButton>
-            <YakitPopconfirm title={t('EngineManagement.stopConfirm')} onConfirm={stopAll}>
+            <YakitPopconfirm
+              title={t('EngineManagement.stopConfirm')}
+              onConfirm={stopAll}
+              classNames={{ root: styles['restore-confirm'] }}
+            >
               <YakitButton type="text" colors="danger" disabled={busy || !managed.length}>
                 {t('EngineManagement.stopAllShort', { count: managed.length })}
               </YakitButton>
