@@ -500,28 +500,29 @@ describe('UIOpNotice 更新按钮状态与文案', () => {
 
   // css modules 在 vitest 中被 stub 为空对象（见 vitest.config.ts stub-style-modules），
   // 无法断言 yakit-button-primary 类名，这里以按钮文案区分：有更新显示“更新”，无更新显示版本号。
+  // 冷缓存环境首例要承担模块懒编译成本，测试超时给足余量（CI 同为冷环境）。
   it('社区版官方有新版时按钮显示更新', async () => {
     versionSlots.latestYakit = { version: 'v1.4.10', ok: true }
     render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
-    expect(await screen.findByRole('button', { name: 'FuncDomain.update' })).toBeInTheDocument()
-  })
+    expect(await screen.findByRole('button', { name: 'FuncDomain.update' }, { timeout: 3000 })).toBeInTheDocument()
+  }, 15000)
 
-  it('社区版无更新时按钮显示官方最新版本号', async () => {
+  it('社区版无更新时按钮显示当前本地版本号', async () => {
     render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
-    expect(await screen.findByRole('button', { name: 'v1.4.9' })).toBeInTheDocument()
-  })
+    expect(await screen.findByRole('button', { name: 'v1.4.9' }, { timeout: 3000 })).toBeInTheDocument()
+  }, 15000)
 
-  it('官方版本拉取失败时按钮回退显示本地版本号', async () => {
+  it('官方版本拉取失败时按钮仍显示本地版本号', async () => {
     versionSlots.latestYakit = { version: '', ok: false }
     render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
-    expect(await screen.findByRole('button', { name: 'v1.4.9' })).toBeInTheDocument()
-  })
+    expect(await screen.findByRole('button', { name: 'v1.4.9' }, { timeout: 3000 })).toBeInTheDocument()
+  }, 15000)
 
   it('引擎低于主推版本时按钮显示更新', async () => {
     engineList.value = ['v1.4.9', 'v1.4.8']
     render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
-    expect(await screen.findByRole('button', { name: 'FuncDomain.update' })).toBeInTheDocument()
-  })
+    expect(await screen.findByRole('button', { name: 'FuncDomain.update' }, { timeout: 3000 })).toBeInTheDocument()
+  }, 15000)
 
   it('内网模式下官方不可达但内网有新版时按钮仍显示更新', async () => {
     edition.enterprise = true
@@ -531,13 +532,13 @@ describe('UIOpNotice 更新按钮状态与文案', () => {
     render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
     // 内网配置经 200ms 防抖生效后再拉取内网版本号
     expect(await screen.findByRole('button', { name: 'FuncDomain.update' }, { timeout: 3000 })).toBeInTheDocument()
-  })
+  }, 15000)
 
-  it('内网模式下无更新时按钮显示内网版本号', async () => {
+  it('内网模式下无更新时按钮显示本地版本号', async () => {
     edition.enterprise = true
     eeConfig.value = [{ configName: 'clientUpdateType', isOpen: true }]
     versionSlots.intranetFile = 'D:/release/EnpriTrace-1.4.9-windows-amd64.exe'
     render(<UIOpNotice isEngineLink={true} isRemoteMode={false} />)
     expect(await screen.findByRole('button', { name: 'v1.4.9' }, { timeout: 3000 })).toBeInTheDocument()
-  })
+  }, 15000)
 })

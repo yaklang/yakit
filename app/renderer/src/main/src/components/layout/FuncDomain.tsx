@@ -2141,7 +2141,7 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       }}
     >
       <YakitButton radius type={isUpdate ? 'primary' : 'secondary2'} size="small">
-        {isUpdate ? t('FuncDomain.update') : (isIntranet ? yakitLastIntranetVersion : yakitLastVersion) || yakitVersion}
+        {isUpdate ? t('FuncDomain.update') : yakitVersion}
       </YakitButton>
       <YakitModal
         title={
