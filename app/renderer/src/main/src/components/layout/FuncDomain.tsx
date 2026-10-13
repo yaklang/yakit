@@ -2017,16 +2017,13 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       })
   })
 
-  const isUpdate =
-    (yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
-    lowerYaklangLastVersion
+  const isUpdateYakit = yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)
+  const isUpdateYakitIntranet =
+    yakitLastIntranetVersion !== '' && removePrefixV(yakitLastIntranetVersion) !== removePrefixV(yakitVersion)
+  const isUpdateYaklang = lowerYaklangLastVersion
+  const isUpdate = isUpdateYakitIntranet || isUpdateYakit || isUpdateYaklang
 
   const notice = useMemo(() => {
-    const isUpdateYakit = yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)
-    const isUpdateYakitIntranet =
-      yakitLastIntranetVersion !== '' && removePrefixV(yakitLastIntranetVersion) !== removePrefixV(yakitVersion)
-    const isUpdateYaklang = lowerYaklangLastVersion
-
     return (
       <div className={styles['ui-op-plus-wrapper']}>
         <div className={styles['ui-op-notice-body']}>
@@ -2106,21 +2103,23 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   }, [
     isCheck,
     userInfo.role,
-    userInfo.isLogin,
+    isYakitIntranetDownloading,
     yakitVersion,
+    yakitLastIntranetVersion,
+    isIntranetYakitUpdateWait,
+    isUpdateYakitIntranet,
     yakitLastVersion,
     isYakitUpdateWait,
     communityYakit,
-
+    isUpdateYakit,
     yaklangVersion,
     yaklangLastVersion,
     yaklangLocalVersion,
-    yaklangBuildType,
     moreYaklangVersionList,
-    lowerYaklangLastVersion,
     isRemoteMode,
     communityYaklang,
-    isIntranetYakitUpdateWait,
+    isUpdateYaklang,
+    yaklangBuildType,
   ])
 
   const [__, taskModalInfo, taskErrModalInfo, debugTaskEvent] = useEETaskNotificationHook({})
@@ -2142,7 +2141,7 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       }}
     >
       <YakitButton radius type={isUpdate ? 'primary' : 'secondary2'} size="small">
-        {t('FuncDomain.update')}
+        {isUpdate ? t('FuncDomain.update') : yakitVersion}
       </YakitButton>
       <YakitModal
         title={
