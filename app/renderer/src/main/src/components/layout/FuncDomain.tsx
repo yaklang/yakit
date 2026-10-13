@@ -108,6 +108,7 @@ import { useDownloadYakit } from './update/useDownloadYakit'
 import { JSONParseLog } from '@/utils/tool'
 import { SystemInfo } from '@/constants/hardware'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import escapeRegExp from 'lodash/escapeRegExp'
 import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
 import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
 import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
@@ -1794,9 +1795,12 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       // 从内网读取版本号
       grpcFetchIntranetYakitVersion()
         .then((filePath: string) => {
-          const match = filePath.match(/EnpriTrace-([\d.-]+)/)
+          const editionName = escapeRegExp(getReleaseEditionName().replace(/\s+/g, ''))
+          const match =
+            filePath.match(new RegExp(`${editionName}-([\\d.-]+)`)) || filePath.match(/EnpriTrace-([\d.-]+)/)
           const version = match ? match[1] : ''
-          const data = `v${version.endsWith('-') ? version.slice(0, -1) : version}` // 去掉末尾的'-'符号
+          const cleanVersion = version.replace(/-$/, '')
+          const data = cleanVersion ? `v${cleanVersion}` : ''
 
           // 企业版初次进入时 如若配置文件为强制更新则隐藏下载更新内容后弹出提示框
           if (isUpdateEnpriTraceRef.current && data.length > 0) {
