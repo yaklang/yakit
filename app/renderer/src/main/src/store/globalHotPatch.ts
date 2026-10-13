@@ -792,3 +792,25 @@ export const useGlobalHotPatchTag = () => {
   const onDisableGlobalHotPatch = () => useGlobalHotPatch.getState().disableGlobalHotPatch()
   return { globalEnabledTemplateName, onDisableGlobalHotPatch }
 }
+
+export const GLOBAL_HOT_PATCH_AUTO_START = 'global-hot-patch-auto-start'
+
+export const autoEnableGlobalHotPatch = async () => {
+  try {
+    const name = ((await ipcRenderer.invoke('GetKey', { Key: GLOBAL_HOT_PATCH_AUTO_START })) || '').trim()
+    if (!name) return
+    const res: { Data?: Array<{ Name?: string }> } = await ipcRenderer.invoke('QueryHotPatchTemplate', {
+      Type: 'global',
+      Name: [name],
+    })
+    if (!res?.Data?.some((item) => item.Name === name)) {
+      await ipcRenderer.invoke('SetKey', { Key: GLOBAL_HOT_PATCH_AUTO_START, Value: '' })
+      return
+    }
+    await useGlobalHotPatch.getState().loadGlobalHotPatchConfig()
+    if (!useGlobalHotPatch.getState().globalHotPatchConfig) return
+    await useGlobalHotPatch.getState().enableGlobalHotPatch(name)
+  } catch (error) {
+    yakitFailed(error + '')
+  }
+}

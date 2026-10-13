@@ -677,6 +677,7 @@
   "GlobalHotPatch": {
     "Global_hot_template": "全域熱加載",
     "Global_hot_template_tip": "啟用全域熱加載後，會對全域所有流量統一處理",
+    "auto_start": "自啟動",
     "started": "(已啟動)",
     "MITM_hot_patch": "MITM熱加載",
     "default": "全域預設模板",

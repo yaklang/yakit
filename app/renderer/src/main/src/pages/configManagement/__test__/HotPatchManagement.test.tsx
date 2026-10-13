@@ -91,6 +91,7 @@ vi.mock('@/store/globalHotPatch', () => {
   return {
     DEFAULT_GLOBAL_TEMPLATE_CONTENT: '',
     DEFAULT_GLOBAL_TEMPLATES: [],
+    GLOBAL_HOT_PATCH_AUTO_START: 'global-hot-patch-auto-start',
     useGlobalHotPatch,
     useGlobalHotPatchTag: () => ({ globalEnabledTemplateName: '' }),
   }
@@ -169,6 +170,26 @@ vi.mock('@/components/yakitUI/YakitTag/YakitTag', () => ({
 
 vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
   YakitInput: (props: Record<string, unknown>) => <input {...props} />,
+}))
+
+vi.mock('@/components/yakitUI/YakitSwitch/YakitSwitch', () => ({
+  YakitSwitch: ({
+    checked,
+    onChange,
+    'aria-label': ariaLabel,
+  }: {
+    checked?: boolean
+    onChange?: (checked: boolean) => void
+    'aria-label'?: string
+  }) => (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked ? 'true' : 'false'}
+      aria-label={ariaLabel}
+      onClick={() => onChange?.(!checked)}
+    />
+  ),
 }))
 
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
@@ -264,6 +285,7 @@ vi.mock('../components/BatchImportHotPatchTemplate', () => ({
   BatchImportHotPatchTemplate: () => <div data-testid="batch-import" />,
 }))
 
+import { yakitFailed } from '@/utils/notification'
 import { HotPatchManagement } from '../HotPatchManagement'
 
 const LOCAL_GLOBAL = 'local-global-tpl'
@@ -431,5 +453,138 @@ describe('HotPatchManagement 导出入口', () => {
     openTemplateContextMenu(ONLINE_FUZZER)
     expect(menuKeys()).not.toContain('export')
     expect(mocks.exportOpen).not.toHaveBeenCalled()
+  })
+})
+
+const AUTO_START_KEY = 'global-hot-patch-auto-start'
+
+const queryHotPatchResponse = (params?: { Type?: string; Name?: string[] }) => {
+  if (params?.Name?.length) {
+    return {
+      Data: [
+        {
+          Name: params.Name[0],
+          Content: `${params.Name[0]}-code`,
+          Type: params.Type,
+          Tags: [],
+        },
+      ],
+    }
+  }
+  return { Data: templatesByType[params?.Type || ''] || [] }
+}
+
+describe('HotPatchManagement 全局热加载自启动', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.capturedMenu.current = null
+    mocks.userRole.current = 'admin'
+    mocks.netWorkApi.mockResolvedValue({ data: [] })
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  const mockIpc = (autoStartName = '') => {
+    ipcRendererMock.invoke.mockImplementation(async (channel: string, params?: { Type?: string; Name?: string[] }) => {
+      if (channel === 'GetKey') return autoStartName
+      if (channel === 'QueryHotPatchTemplate') return queryHotPatchResponse(params)
+      return undefined
+    })
+  }
+
+  it('选中全局模板时显示开关，打开后把模板名写入自启动', async () => {
+    mockIpc('')
+    await renderPage()
+
+    const autoStart = screen.getByRole('switch', { name: 'GlobalHotPatch.auto_start' })
+    expect(autoStart).toHaveAttribute('aria-checked', 'false')
+
+    fireEvent.click(autoStart)
+    await waitFor(() =>
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('SetKey', {
+        Key: AUTO_START_KEY,
+        Value: LOCAL_GLOBAL,
+      }),
+    )
+    expect(screen.getByRole('switch', { name: 'GlobalHotPatch.auto_start' })).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('写入自启动失败时开关保持关闭', async () => {
+    ipcRendererMock.invoke.mockImplementation(async (channel: string, params?: { Type?: string; Name?: string[] }) => {
+      if (channel === 'GetKey') return ''
+      if (channel === 'SetKey') throw new Error('save failed')
+      if (channel === 'QueryHotPatchTemplate') return queryHotPatchResponse(params)
+      return undefined
+    })
+    await renderPage()
+
+    fireEvent.click(screen.getByRole('switch', { name: 'GlobalHotPatch.auto_start' }))
+    await waitFor(() => expect(yakitFailed).toHaveBeenCalledWith('Error: save failed'))
+    expect(screen.getByRole('switch', { name: 'GlobalHotPatch.auto_start' })).toHaveAttribute('aria-checked', 'false')
+  })
+
+  it('已保存的自启动模板会让开关处于打开，再点一次则清空', async () => {
+    mockIpc(LOCAL_GLOBAL)
+    await renderPage()
+
+    const autoStart = await screen.findByRole('switch', { name: 'GlobalHotPatch.auto_start' })
+    await waitFor(() => expect(autoStart).toHaveAttribute('aria-checked', 'true'))
+
+    fireEvent.click(autoStart)
+    await waitFor(() =>
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('SetKey', {
+        Key: AUTO_START_KEY,
+        Value: '',
+      }),
+    )
+  })
+
+  it('切到非全局模板后不显示自启动开关', async () => {
+    mockIpc('')
+    await renderPage()
+    expect(screen.getByRole('switch', { name: 'GlobalHotPatch.auto_start' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('radio-fuzzer'))
+    await waitFor(() => expect(screen.getByTitle(LOCAL_FUZZER)).toBeInTheDocument())
+    fireEvent.click(screen.getByTitle(LOCAL_FUZZER))
+    await flushAsync()
+    expect(screen.queryByRole('switch', { name: 'GlobalHotPatch.auto_start' })).toBeNull()
+  })
+
+  it('重命名正在自启动的全局模板时，把开关改到新名字', async () => {
+    mockIpc(LOCAL_GLOBAL)
+    await renderPage()
+    await screen.findByRole('switch', { name: 'GlobalHotPatch.auto_start' })
+
+    openTemplateContextMenu(LOCAL_GLOBAL)
+    mocks.capturedMenu.current?.onClick?.({ key: 'rename', keyPath: ['rename'] } as never)
+    const input = await screen.findByDisplayValue(LOCAL_GLOBAL)
+    fireEvent.change(input, { target: { value: 'renamed-global' } })
+    fireEvent.blur(input)
+
+    await waitFor(() =>
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('SetKey', {
+        Key: AUTO_START_KEY,
+        Value: 'renamed-global',
+      }),
+    )
+  })
+
+  it('删除正在自启动的全局模板时清空自启动', async () => {
+    mockIpc(LOCAL_GLOBAL)
+    await renderPage()
+    await screen.findByRole('switch', { name: 'GlobalHotPatch.auto_start' })
+
+    openTemplateContextMenu(LOCAL_GLOBAL)
+    mocks.capturedMenu.current?.onClick?.({ key: 'delete', keyPath: ['delete'] } as never)
+
+    await waitFor(() =>
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('SetKey', {
+        Key: AUTO_START_KEY,
+        Value: '',
+      }),
+    )
   })
 })
