@@ -401,10 +401,9 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     screenRecorderState.isRecording = false
   })
 
-  /** 设置入口（UIOpSetting 触发按钮）是页面最后一个 ui-op-btn-wrapper */
+  /** 设置入口（UIOpSetting 触发按钮）；定位用 testid，勿用 class 选择器（根 vitest 配置会把 scss stub 成空对象） */
   const openSettingMenu = () => {
-    const wrappers = document.querySelectorAll('[class*="ui-op-btn-wrapper"]')
-    fireEvent.click(wrappers[wrappers.length - 1])
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
   }
 
   it('设置菜单按顺序展示 i18n 后的菜单项', async () => {
@@ -468,10 +467,9 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     screenRecorderState.isRecording = false
   })
 
-  /** 设置入口（UIOpSetting 触发按钮）是页面最后一个 ui-op-btn-wrapper */
+  /** 设置入口（UIOpSetting 触发按钮）；定位用 testid，勿用 class 选择器（根 vitest 配置会把 scss stub 成空对象） */
   const openSettingMenu = () => {
-    const wrappers = document.querySelectorAll('[class*="ui-op-btn-wrapper"]')
-    fireEvent.click(wrappers[wrappers.length - 1])
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
   }
 
   it('一级「录屏」与二级「录屏」点击同效：未录制时拉起录屏弹窗', async () => {
@@ -518,10 +516,9 @@ describe('FuncDomain 性能采样与崩溃日志', () => {
     grpcFetchLocalPluginDetail.mockRejectedValue(new Error('not found'))
   })
 
-  /** 设置入口（UIOpSetting 触发按钮）是页面最后一个 ui-op-btn-wrapper */
+  /** 设置入口（UIOpSetting 触发按钮）；定位用 testid，勿用 class 选择器（根 vitest 配置会把 scss stub 成空对象） */
   const openSettingMenu = () => {
-    const wrappers = document.querySelectorAll('[class*="ui-op-btn-wrapper"]')
-    fireEvent.click(wrappers[wrappers.length - 1])
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
   }
 
   it('插件不存在时性能采样提示带原文插件名', async () => {

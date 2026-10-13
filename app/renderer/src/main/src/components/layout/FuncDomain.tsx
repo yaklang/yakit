@@ -1306,7 +1306,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         onOpenChange={(visible) => setShow(visible)}
         trigger="click"
       >
-        <div className={styles['ui-op-btn-wrapper']}>
+        <div data-testid="ui-op-setting-trigger" className={styles['ui-op-btn-wrapper']}>
           <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
             <DotsCircleHorizontalOutlined
               className={classNames(styles['size-style'], show ? styles['icon-hover-style'] : styles['icon-style'])}
