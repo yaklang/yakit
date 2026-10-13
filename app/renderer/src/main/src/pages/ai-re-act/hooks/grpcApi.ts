@@ -269,6 +269,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_CLOSE_BROWSER = 'close_browser_sync',
   /** 请求后端做一次会话快照同步 */
   SYNC_TYPE_SESSION_SNAPSHOT_SYNC = 'session_snapshot_sync',
+  /** 按 task_id 查询已物化的任务详情快照 */
+  SYNC_TYPE_TASK_SNAPSHOT = 'task_snapshot_sync',
   /** 向当前任务追加待办（text 必填，id / set_current 可选） */
   SYNC_TYPE_ADD_TODO = 'add_todo_sync',
 }
@@ -283,6 +285,7 @@ export const readonlySyncQueryTypes = new Set<`${AIInputEventSyncTypeEnum}`>([
   AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT,
   AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
   AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
 ])
 
 export const isReadonlySyncQuery = (syncType?: `${AIInputEventSyncTypeEnum}`): boolean =>
@@ -742,6 +745,45 @@ export declare namespace AIAgentGrpcApi {
     timestamp: number
   }
 
+  /** session_snapshot.tasks 中的轻量任务索引 */
+  export interface SessionSnapshotTaskSummary {
+    task_id: string
+    task_index?: string
+    task_name?: string
+    attempt: number
+    status: string
+    is_final: boolean
+    updated_at: number
+    todo_stats?: TodoListUpdateStats
+  }
+
+  /** session_snapshot / task_snapshot 内的扁平能力清单项 */
+  export interface CapabilityInventoryItem {
+    name: string
+    verbose_name?: string
+    description?: string
+    /** mcp | aitool | plugin | skill | forge | mcp_server */
+    type: string
+    /** loaded | metadata | schema | description */
+    stage: string
+    /** FrozenBlock | Dynamic | SemiDynamic */
+    position: string
+    is_fixed?: boolean
+    data?: Record<string, unknown>
+  }
+
+  export interface SessionSnapshotPerception {
+    summary?: string
+    topics?: string[]
+    keywords?: string[]
+    confidence?: number
+    changed?: boolean
+    epoch?: number
+    last_trigger?: string
+    intent_shift?: PerceptionData['intent_shift']
+    last_update_at?: number
+  }
+
   export interface SessionSnapshot {
     revision: number
     updated_at: number
@@ -776,9 +818,32 @@ export declare namespace AIAgentGrpcApi {
       status: 'running' // 枚举，目前只有 running
       started_at: number
     }[]
-    /** 下面两个字段暂时没有用，故不添加 */
-    // perception
-    // capabilities
+    perception?: SessionSnapshotPerception
+    capabilities?: CapabilityInventoryItem[]
+    tasks?: SessionSnapshotTaskSummary[]
+  }
+
+  /** task_snapshot_sync 回包中的待办投影 */
+  export interface SessionTaskTodoSnapshot {
+    items: TodoListUpdateItem[]
+    stats: TodoListUpdateStats
+    open_todos?: unknown[]
+    current_todo_id?: string
+    closed_todos?: unknown[]
+  }
+
+  /** task_snapshot_sync 回包：按 task_id 物化的任务详情 */
+  export interface SessionTaskSnapshot {
+    task_id: string
+    task_index?: string
+    task_name?: string
+    attempt: number
+    status: string
+    is_final: boolean
+    revision: number
+    updated_at: number
+    snapshot?: SessionSnapshot
+    todo?: SessionTaskTodoSnapshot
   }
 
   /** task_review_require */

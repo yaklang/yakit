@@ -590,6 +590,8 @@ export interface ChatStoreState {
   notifyMessage: AIInputNotifyMessage | null
   /** 任务规划历史数据-任务树 */
   planHistoryList: AIAgentGrpcApi.PlanHistoryList
+  /** 会话内任务索引（来自 session_snapshot.tasks，供任务详情下拉切换） */
+  sessionTaskList: AIAgentGrpcApi.SessionSnapshotTaskSummary[]
   /** 问题队列信息 */
   questionQueue: AIQuestionQueues
 

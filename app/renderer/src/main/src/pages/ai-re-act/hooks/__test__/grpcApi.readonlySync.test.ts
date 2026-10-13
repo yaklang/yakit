@@ -13,6 +13,7 @@ describe('readonlySyncQueryTypes', () => {
         AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT,
         AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
         AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+        AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
       ]
         .map((value) => `${value}` as const)
         .sort(),

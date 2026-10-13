@@ -14,6 +14,7 @@ describe('aiTaskDetail handlers', () => {
       'perception',
       'current_task_todo_list_update',
       'session_snapshot',
+      'task_snapshot',
     ] as const) {
       expect(typeof aiTaskDetailDataHandlers[key]).toBe('function')
     }
@@ -189,6 +190,162 @@ describe('aiTaskDetail handlers', () => {
     const detail = todoReq.rawData.taskDetailsMap.get(taskId)
     expect(detail?.execution?.http_flow_count).toBe(1)
     expect(detail?.execution?.execution_rounds).toBe(5)
+  })
+
+  it('session_snapshot writes sessionTaskList from tasks', () => {
+    const tasks = [
+      {
+        task_id: 'task-list-1',
+        task_name: '列表任务一',
+        attempt: 1,
+        status: 'running',
+        is_final: false,
+        updated_at: 11,
+      },
+      {
+        task_id: 'task-list-2',
+        task_name: '列表任务二',
+        attempt: 2,
+        status: 'done',
+        is_final: true,
+        updated_at: 22,
+      },
+    ]
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { revision: 1, execution: { http_flow_count: 1 }, background_processes: [], tasks },
+        { NodeId: 'session_snapshot', TaskId: 'task-list-1', IsJson: true, IsSystem: true },
+      ),
+    })
+
+    aiTaskDetailDataHandlers.session_snapshot(req)
+
+    expect(req.store.getState().sessionTaskList).toEqual(tasks)
+  })
+
+  it('task_snapshot writes execution/todo/perception into taskDetailsMap', () => {
+    const taskId = 'task-full-snapshot'
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          attempt: 1,
+          status: 'running',
+          is_final: false,
+          revision: 3,
+          updated_at: 100,
+          snapshot: {
+            execution: {
+              task_name: '完整任务',
+              http_flow_count: 8,
+              risk_count: 2,
+              execution_rounds: 4,
+            },
+            perception: {
+              summary: '快照感知摘要',
+              last_trigger: 'tool_call',
+              last_update_at: 12345,
+              confidence: 0.9,
+            },
+            capabilities: [],
+          },
+          todo: {
+            items: [{ id: 'todo-1', status: AIToDoListStatusEnum.Pending, content: '待办一', scope_task_id: taskId }],
+            stats: { pending: 1, doing: 0, done: 0, skipped: 0, deleted: 0 },
+          },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+
+    aiTaskDetailDataHandlers.task_snapshot(req)
+
+    const detail = req.rawData.taskDetailsMap.get(taskId)
+    expect(detail).toBeDefined()
+    expect(detail?.execution?.task_name).toBe('完整任务')
+    expect(detail?.execution?.http_flow_count).toBe(8)
+    expect(detail?.execution?.execution_rounds).toBe(4)
+    expect(detail?.perception?.summary).toBe('快照感知摘要')
+    expect(detail?.perception?.trigger).toBe('tool_call')
+    expect(detail?.perception?.timestamp).toBe(12345)
+    expect(detail?.todoList?.items?.length).toBe(1)
+    expect(detail?.todoList?.items?.[0]?.content).toBe('待办一')
+    expect(detail?.sessionSnapshotRevision).toBe(3)
+  })
+
+  it('task_snapshot capabilities：各 type/position 落入 fixed/dynamic，skill_load_state 按 stage/data 回退', () => {
+    const taskId = 'task-capabilities'
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          attempt: 1,
+          status: 'running',
+          is_final: false,
+          revision: 1,
+          updated_at: 1,
+          snapshot: {
+            execution: { task_name: '能力清单任务' },
+            capabilities: [
+              // 空名跳过
+              { name: '  ', type: 'tool', stage: '', position: 'Fixed' },
+              // skill：Fixed / Dynamic(stage=loaded) / Dynamic(data 回退) / Dynamic(默认 metadata)
+              { name: 'skill-fixed', type: 'skill', stage: '', position: 'Fixed' },
+              { name: 'skill-loaded', type: 'skill', stage: 'loaded', position: 'Dynamic' },
+              {
+                name: 'skill-from-data',
+                type: 'skill',
+                stage: 'metadata',
+                position: 'Dynamic',
+                data: { skill_load_state: 'loaded' },
+              },
+              { name: 'skill-default', type: 'skill', stage: 'schema', position: 'Dynamic' },
+              // forge
+              { name: 'forge-fixed', type: 'forge', stage: '', position: 'Fixed' },
+              { name: 'forge-dynamic', type: 'forge', stage: '', position: 'Dynamic' },
+              // mcp_server：有意不进 UI 桶（legacy 一致，见 planItemDetailsToCapabilityFields 注释）
+              { name: 'mcp-server-1', type: 'mcp_server', stage: '', position: 'Fixed' },
+              // tool / plugin / mcp → tools 再按 category 分桶
+              { name: 'tool-fixed', type: 'tool', stage: '', position: 'Fixed' },
+              { name: 'tool-dynamic', type: 'aitool', stage: '', position: 'Dynamic' },
+              { name: 'plugin-fixed', type: 'plugin', stage: '', position: 'Fixed' },
+              { name: 'plugin-dynamic', type: 'plugin', stage: '', position: 'Dynamic' },
+              { name: 'mcp-fixed', type: 'mcp', stage: '', position: 'Fixed' },
+              { name: 'mcp-dynamic', type: 'mcp', stage: '', position: 'Dynamic' },
+            ],
+          },
+          todo: {
+            items: [],
+            stats: { pending: 0, doing: 0, done: 0, skipped: 0, deleted: 0 },
+          },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+
+    aiTaskDetailDataHandlers.task_snapshot(req)
+    const detail = req.rawData.taskDetailsMap.get(taskId)
+    expect(detail).toBeDefined()
+
+    expect(detail!.skills.fixed.map((i) => i.name)).toEqual(['skill-fixed'])
+    expect(detail!.skills.dynamic.map((i) => ({ name: i.name, state: i.skill_load_state }))).toEqual([
+      { name: 'skill-loaded', state: 'loaded' },
+      { name: 'skill-from-data', state: 'loaded' },
+      { name: 'skill-default', state: 'metadata' },
+    ])
+
+    expect(detail!.forges.fixed.map((i) => i.name)).toEqual(['forge-fixed'])
+    expect(detail!.forges.dynamic.map((i) => i.name)).toEqual(['forge-dynamic'])
+
+    expect(detail!.tool.fixed.map((i) => i.name)).toEqual(['tool-fixed'])
+    expect(detail!.tool.dynamic.map((i) => i.name)).toEqual(['tool-dynamic'])
+    expect(detail!.plugins.fixed.map((i) => i.name)).toEqual(['plugin-fixed'])
+    expect(detail!.plugins.dynamic.map((i) => i.name)).toEqual(['plugin-dynamic'])
+    expect(detail!.mcp.fixed.map((i) => i.name)).toEqual(['mcp-fixed'])
+    expect(detail!.mcp.dynamic.map((i) => i.name)).toEqual(['mcp-dynamic'])
   })
 
   it('session_snapshot merges execution_rounds into step and never regresses', () => {

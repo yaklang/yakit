@@ -947,7 +947,7 @@
     "noInfo": "No information...",
     "taskStatistics": "Task Statistics",
     "board": "Board",
-    "gantt": "Gantt",
+    "progress": "Progress",
     "statusCreated": "Created",
     "statusPending": "Pending",
     "statusDoing": "In Progress",
@@ -960,6 +960,8 @@
     "columnSkippedOrDeleted": "Skipped/Deleted",
     "emptyTodoTitle": "No todos yet",
     "emptyTodoDesc": "No todos have been generated for this task yet. Please check back later",
+    "noTasks": "No tasks",
+    "selectTask": "Select task",
     "skill": "Skills",
     "tool": "Tools",
     "plugin": "Plugins",
@@ -983,7 +985,8 @@
     "ganttExecute": "Execution",
     "ganttSuccess": "Success",
     "ganttSkipped": "Skipped",
-    "ganttFailed": "Failed"
+    "ganttFailed": "Failed",
+    "ganttToNow": "to now"
   },
   "AIToDoListDetail": {
     "progress": "Progress",

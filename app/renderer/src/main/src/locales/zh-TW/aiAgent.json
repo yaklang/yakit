@@ -947,7 +947,7 @@
     "noInfo": "暫無資訊...",
     "taskStatistics": "任務統計",
     "board": "看板",
-    "gantt": "甘特圖",
+    "progress": "進度",
     "statusCreated": "已建立",
     "statusPending": "待處理",
     "statusDoing": "進行中",
@@ -960,6 +960,8 @@
     "columnSkippedOrDeleted": "已跳過/已刪除",
     "emptyTodoTitle": "暫無待辦任務",
     "emptyTodoDesc": "目前任務暫未產生待辦任務，請稍後查看",
+    "noTasks": "暫無任務",
+    "selectTask": "選擇任務",
     "skill": "技能",
     "tool": "工具",
     "plugin": "外掛",
@@ -983,7 +985,8 @@
     "ganttExecute": "執行過程",
     "ganttSuccess": "成功",
     "ganttSkipped": "跳過",
-    "ganttFailed": "失敗"
+    "ganttFailed": "失敗",
+    "ganttToNow": "現在"
   },
   "AIToDoListDetail": {
     "progress": "進度",

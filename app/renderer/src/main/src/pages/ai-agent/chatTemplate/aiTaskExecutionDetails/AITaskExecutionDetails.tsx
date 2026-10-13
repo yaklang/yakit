@@ -61,10 +61,7 @@ import {
 import { apiQueryYakScript } from '@/pages/plugins/utils'
 import { grpcGetAllMCPServers } from '../../aiMCP/utils'
 import type { GetAllMCPServersRequest, MCPServerTool } from '../../type/aiMCP'
-import {
-  HorizontalScrollCardItemInfoMultiple,
-  HorizontalScrollCardItemInfoSingle,
-} from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
+import { HorizontalScrollCardItemInfoMultiple } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
@@ -78,6 +75,7 @@ import { randomString } from '@/utils/randomUtil'
 import { getSessionRiskTagEntries } from '@/pages/ai-re-act/aiRightPanel/riskLevelCount'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { AITaskSelectDropdown } from './aiTaskSelectDropdown/AITaskSelectDropdown'
 
 type TodoViewMode = 'board' | 'gantt'
 
@@ -85,12 +83,19 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   const { taskId, taskGoal, taskName, onClose } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [todoViewMode, setTodoViewMode] = useState<TodoViewMode>('board')
-  const taskData = useCurrentTaskData(taskId, 5)
+  const [selectedTaskId, setSelectedTaskId] = useState(taskId)
+
+  useEffect(() => {
+    setSelectedTaskId(taskId)
+  }, [taskId])
+
+  const taskData = useCurrentTaskData(selectedTaskId, 5)
   // taskDetailsMap 中的数据会原地更新，使用 uuid 作为快照变更信号，避免详情组件持有可变引用。
   const planItemDetailsData = useCreation<PlanItemDetailsData | undefined>(
     () => (taskData ? cloneDeep(taskData) : undefined),
-    [taskId, taskData?.uuid],
+    [selectedTaskId, taskData?.uuid],
   )
+
   const perception = useCreation(() => {
     if (!planItemDetailsData) return
     return planItemDetailsData.perception
@@ -111,45 +116,39 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     const progressNumber: AITaskStatisticsStatusProps['list'] = [
       {
         key: 'created',
-        color: 'neutral-with-border',
+        color: 'neutral',
         title: t('AITaskExecutionDetails.statusCreated'),
         footerLeft: items.length,
-        footerRight: null,
       },
       {
         key: 'pending',
-        color: 'neutral-with-border',
+        color: 'neutral',
         title: t('AITaskExecutionDetails.statusPending'),
         footerLeft: 0,
-        footerRight: <AIPendingNodeIcon />,
       },
       {
         key: 'doing',
         color: 'main',
         title: t('AITaskExecutionDetails.statusDoing'),
         footerLeft: 0,
-        footerRight: <AIDoingNodeIcon />,
       },
       {
         key: 'done',
         color: 'green',
         title: t('AITaskExecutionDetails.statusDone'),
         footerLeft: 0,
-        footerRight: <AIDoneNodeIcon />,
       },
       {
         key: 'skipped',
         color: 'neutral',
         title: t('AITaskExecutionDetails.statusSkipped'),
         footerLeft: 0,
-        footerRight: <AISkippedNodeIcon />,
       },
       {
         key: 'deleted',
         color: 'red',
         title: t('AITaskExecutionDetails.statusDeleted'),
         footerLeft: 0,
-        footerRight: <AIDeleteNodeIcon />,
       },
     ]
     const progressByKey = Object.fromEntries(progressNumber.map((item) => [item.key, item])) as Record<
@@ -285,7 +284,6 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     if (!planItemDetailsData?.execution) return t('AITaskExecutionDetails.noData')
     return `${planItemDetailsData.execution.risk_level_count?.total ?? planItemDetailsData.execution.risk_count ?? 0}`
   }, [planItemDetailsData?.execution?.risk_count, planItemDetailsData?.execution?.risk_level_count?.total, i18nRefresh])
-
   const showForge = useCreation(() => {
     if (!planItemDetailsData) return false
     return forgeFixedList.length > 0 || forgeDynamicList.length > 0
@@ -319,7 +317,13 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           <div className={styles['header-title']}>
             <PresentationChartBarOutlined className={styles['header-icon']} color="currentColor" />
             <span className={styles['title-text']}>{t('AITaskExecutionDetails.title')}</span>
-            <div className={styles['header-subtitle']}>{taskName}</div>
+            <AITaskSelectDropdown
+              taskId={taskId}
+              taskName={taskName}
+              value={selectedTaskId}
+              onChange={setSelectedTaskId}
+              taskDataUuid={taskData?.uuid}
+            />
           </div>
           {onClose && <YakitButton icon={<XOutlined color="currentColor" />} type="text2" onClick={onClose} />}
         </div>
@@ -332,25 +336,17 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
             tag={t('AITaskExecutionDetails.toolCallStats')}
             className={styles['summary-tool-card']}
           />
-          <div className={styles['summary-metric-stack']}>
-            <HorizontalScrollCardItemInfoSingle
-              item={{
-                Id: t('AITaskExecutionDetails.executionDuration'),
-                Data: executionMinutes,
-                Timestamp: 0,
-              }}
-              tag={t('AITaskExecutionDetails.executionDuration')}
-              compact
-              className={styles['summary-metric-lake-blue']}
-            />
-            <HorizontalScrollCardItemInfoSingle
-              item={{ Id: t('AITaskExecutionDetails.httpFlowCount'), Data: httpFlowCount, Timestamp: 0 }}
-              tag={t('AITaskExecutionDetails.httpFlowCount')}
-              compact
-              className={styles['summary-metric-purple']}
-            />
-            <div className={classNames(styles['summary-metric-risk'], styles['summary-metric-magenta'])}>
-              <div className={styles['summary-metric-label']}>{t('AITaskExecutionDetails.riskCount')}</div>
+          <div className={styles['summary-metric-list']}>
+            <div className={styles['summary-metric-row']}>
+              <span className={styles['summary-metric-label']}>{t('AITaskExecutionDetails.executionDuration')}</span>
+              <span className={styles['summary-metric-value']}>{executionMinutes}</span>
+            </div>
+            <div className={styles['summary-metric-row']}>
+              <span className={styles['summary-metric-label']}>{t('AITaskExecutionDetails.httpFlowCount')}</span>
+              <span className={styles['summary-metric-value']}>{httpFlowCount}</span>
+            </div>
+            <div className={styles['summary-metric-row']}>
+              <span className={styles['summary-metric-label']}>{t('AITaskExecutionDetails.riskCount')}</span>
               {riskLevelEntries.length > 0 ? (
                 <span className={styles['risk-tag']}>
                   {riskLevelEntries.map((entry, index) => (
@@ -363,7 +359,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                   ))}
                 </span>
               ) : (
-                <div className={styles['summary-metric-data']}>{riskCountFallback}</div>
+                <span className={styles['summary-metric-value']}>{riskCountFallback}</span>
               )}
             </div>
           </div>
@@ -400,7 +396,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                     label: (
                       <span className={styles['todo-view-option']}>
                         <SquareGanttChartOutlined size={16} color="currentColor" />
-                        {t('AITaskExecutionDetails.gantt')}
+                        {t('AITaskExecutionDetails.progress')}
                       </span>
                     ),
                     value: 'gantt',
@@ -999,12 +995,16 @@ const AITaskStatisticsStatus: React.FC<AITaskStatisticsStatusProps> = React.memo
   return (
     <div className={styles['stats-overview']}>
       {list.map((item) => (
-        <div key={item.key} className={classNames(styles['stat-box'], styles[`stat-${item.color}`])}>
-          <div className={styles['stat-footer-left']}>{item.footerLeft}</div>
-          <div className={styles['stat-footer']}>
-            <div className={styles['stat-label']}>{item.title}</div>
-            <div className={styles['stat-footer-right']}> {item.footerRight} </div>
-          </div>
+        <div
+          key={item.key}
+          className={classNames(styles['stat-item'], {
+            [styles['stat-main']]: item.color === 'main',
+            [styles['stat-green']]: item.color === 'green',
+            [styles['stat-red']]: item.color === 'red',
+          })}
+        >
+          <span className={styles['stat-count']}>{item.footerLeft}</span>
+          <span className={styles['stat-label']}>{item.title}</span>
         </div>
       ))}
     </div>

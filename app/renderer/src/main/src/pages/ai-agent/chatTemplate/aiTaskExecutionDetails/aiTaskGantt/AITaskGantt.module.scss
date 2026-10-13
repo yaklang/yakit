@@ -12,85 +12,6 @@
   background: var(--Colors-Use-Basic-Background);
 }
 
-.gantt-main {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.gantt-sidebar {
-  display: flex;
-  flex-direction: column;
-  flex: none;
-  width: 200px;
-  min-width: 160px;
-  background: var(--Colors-Use-Basic-Background);
-  overflow: hidden;
-}
-
-.sidebar-header {
-  flex: none;
-  height: 28px;
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 16px;
-  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-  background: var(--Colors-Use-Neutral-Bg);
-}
-
-.sidebar-list {
-  flex: 1;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  // 只保留右侧时间轴滚动条，左侧仍可滚轮/程序同步滚动
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
-  }
-}
-
-.sidebar-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  min-height: 56px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-  border-right: 4px solid transparent;
-  cursor: pointer;
-  box-sizing: border-box;
-  background-color: var(--Colors-Use-Neutral-Bg);
-
-  &:hover {
-    background: var(--Colors-Use-Neutral-Bg);
-  }
-
-  &.sidebar-item-selected {
-    background: var(--Colors-Use-Basic-Background);
-    border-right-color: var(--Colors-Use-Main-Primary);
-  }
-
-  .sidebar-item-name {
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 16px;
-    width: 100%;
-    @include mixin.text-ellipsis(1, false, false, true);
-  }
-}
-
 .gantt-timeline {
   flex: 1;
   min-width: 0;
@@ -113,7 +34,7 @@
   position: relative;
   z-index: 2;
   flex: none;
-  height: 28px;
+  height: 40px;
   border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
   background: var(--Colors-Use-Neutral-Bg);
 }
@@ -121,27 +42,40 @@
 .timeline-tick {
   position: absolute;
   top: 0;
-  height: 32px;
+  height: 100%;
   padding-left: 4px;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   font-size: 12px;
   font-weight: 400;
-  line-height: 16px;
+  line-height: 14px;
   transform: translateX(-50%);
   white-space: nowrap;
   pointer-events: none;
 
   &:first-child:not(:last-child) {
     transform: translateX(0);
+    align-items: flex-start;
   }
 
   &:last-child:not(:first-child) {
     transform: translateX(-100%);
     padding-left: 0;
     padding-right: 4px;
-    justify-content: flex-end;
+    align-items: flex-end;
+  }
+
+  .timeline-tick-time,
+  .timeline-tick-tonow {
+    display: block;
+  }
+
+  .timeline-tick-tonow {
+    font-size: 11px;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
   }
 }
 
@@ -188,23 +122,45 @@
   position: relative;
   z-index: 1;
   height: 56px;
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
   box-sizing: border-box;
   cursor: pointer;
+  border-left: 2px solid transparent;
 
   &.timeline-row-selected {
-    border-top: 1px solid var(--Colors-Use-Main-Border);
-    border-right: 1px solid var(--Colors-Use-Main-Border);
-    border-bottom: 1px solid var(--Colors-Use-Main-Border);
+    border-left-color: var(--Colors-Use-Main-Primary);
     background: var(--yakit-colors-Main-0);
   }
 }
 
+.bar-label {
+  position: absolute;
+  top: 8px;
+  // left 由条带起点决定；right 卡死右边界，保证过长文字能省略
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+
+  .bar-label-name {
+    flex: 1;
+    min-width: 0;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    @include mixin.text-ellipsis(1, false, false, true);
+  }
+}
+
 .bar-track {
-  position: relative;
-  width: 100%;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
   height: 10px;
 }
 
@@ -292,12 +248,5 @@
 
   &.legend-dot-failed {
     background: var(--yakit-colors-Error-40);
-  }
-}
-
-@container task-details (max-width: 800px) {
-  .gantt-sidebar {
-    width: 160px;
-    min-width: 140px;
   }
 }

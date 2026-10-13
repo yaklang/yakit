@@ -55,10 +55,9 @@ export interface AITaskExecutionDetailsCardProps {
 
 export interface AITaskStatisticsStatusItem {
   key: string
-  color: Uncapitalize<ThemeColorName> | 'neutral-with-border'
+  color: Uncapitalize<ThemeColorName>
   title: ReactNode
   footerLeft: number
-  footerRight: ReactNode
 }
 export interface AITaskStatisticsStatusProps {
   list: AITaskStatisticsStatusItem[]
