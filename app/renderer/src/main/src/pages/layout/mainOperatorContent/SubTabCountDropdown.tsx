@@ -36,6 +36,7 @@ export const SubTabCountDropdown: React.FC<SubTabCountDropdownProps> = React.mem
         width={206}
         selectedKeys={[]}
         data={menuData}
+        menuWrapperClassName={styles['sub-tab-count-menu']}
         popupClassName={styles['sub-tab-count-submenu']}
         onClick={({ key }) => onMenuClick(key)}
         getPopupContainer={() => menuAnchorRef.current || document.body}

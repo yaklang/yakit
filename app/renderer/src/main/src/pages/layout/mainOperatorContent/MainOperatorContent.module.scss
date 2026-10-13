@@ -42,8 +42,15 @@
   }
 }
 
+.sub-tab-count-menu {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 .sub-tab-count-submenu.sub-tab-count-submenu:global(.ant-menu-submenu-popup) {
   padding: 0 6px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .tab-menu-sub-group-hidden {
