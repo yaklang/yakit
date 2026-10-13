@@ -293,8 +293,6 @@ export interface DroppableCloneProps {
 }
 
 export interface SwitchSubMenuItemProps {
-  /**强制刷新二级菜单选中项目 不管inViewport */
-  forceRefresh?: boolean
   /**二级菜单页面id */
   pageId: string
 }
