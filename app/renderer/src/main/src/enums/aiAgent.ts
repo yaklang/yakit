@@ -1,4 +1,6 @@
 export enum RemoteAIAgentGV {
+  /** @name AI Agent 已打开标签页缓存 */
+  AIAgentTabs = 'ai-agent-open-tabs-v1',
   /** @name ai-agent-chat 全局配置 */
   AIAgentChatSetting = 'ai-agent-chat-setting',
 

@@ -61,3 +61,20 @@ it('waits for the previous Tab to finish closing before reopening its session', 
   await Promise.resolve()
   expect(onStart).toHaveBeenCalledWith(expect.objectContaining({ kind: 'resume', sessionId: 'closing' }))
 })
+
+it('cancels a delayed connection when its page unmounts or session changes', async () => {
+  let finish!: () => void
+  let valid = true
+  mocks.isSessionClosing.mockReturnValue(true)
+  mocks.whenSessionClosed.mockReturnValue(
+    new Promise<void>((resolve) => {
+      finish = resolve
+    }),
+  )
+  const onStart = vi.fn()
+  onReStart({ activeChat: { SessionID: 'closing' } as AISession, onStart, shouldStart: () => valid })
+  valid = false
+  finish()
+  await Promise.resolve()
+  expect(onStart).not.toHaveBeenCalled()
+})

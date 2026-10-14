@@ -109,7 +109,6 @@ import type {
   YakRunnerScanHistoryPageInfoProps,
   RuleManagementPageInfoProps,
   AuditHoleInfoProps,
-  AIRepositoryProps,
   PluginOpPageInfoProps,
   CodecPageInfoProps,
   ManageRightClickPluginsPageInfoProps,
@@ -821,9 +820,6 @@ export interface ComponentParams {
   /** 规则管理页面 */
   ruleManagementPageInfo?: RuleManagementPageInfoProps
 
-  // TODO  后续补充
-  AIRepository?: AIRepositoryProps
-
   /** 插件执行页（Plugin_OP）初始参数 */
   pluginOpPageInfo?: PluginOpPageInfoProps
 
@@ -834,7 +830,7 @@ export interface ComponentParams {
   contextMenuResultPageInfo?: ContextMenuResultPageInfoProps
   /** 应用设置页面 */
   settingsPageInfo?: SettingsPageInfoProps
-  /** AI Agent 新开/跳转会话 */
+  /** AI Agent 页面参数 */
   aiAgentPageInfo?: AIAgentPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {

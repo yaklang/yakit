@@ -17,6 +17,7 @@ import { AIChatWorkspaceTabs, type AIChatWorkspaceTab } from './AIChatWorkspaceT
 import { AIChatWorkspaceTabContent, type HttpFlowSelectionProps } from './AIChatWorkspaceTabs/AIChatWorkspaceTabContent'
 
 interface AIChatWorkspaceProps extends HttpFlowSelectionProps {
+  inViewPort?: boolean
   /** 欢迎页且没有激活会话时，流量和漏洞页签展示全量数据 */
   welcome?: boolean
   filePreviewData?: FileNodeProps
@@ -32,7 +33,7 @@ const getFileIconByName = (name: string) => {
 }
 
 export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props) => {
-  const { welcome = false, filePreviewData, setFilePreviewData, onTabsChange } = props
+  const { welcome = false, inViewPort = true, filePreviewData, setFilePreviewData, onTabsChange } = props
   const selectionProps = useMemo(
     () => ({
       selectionScope: props.selectionScope,
@@ -181,13 +182,14 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   })
 
   useEffect(() => {
+    if (!inViewPort) return
     emiter.on('switchAIActTab', onSwitchAIAgentTab)
     emiter.on('actionAITaskContentTab', onOpenTaskDetail)
     return () => {
       emiter.off('switchAIActTab', onSwitchAIAgentTab)
       emiter.off('actionAITaskContentTab', onOpenTaskDetail)
     }
-  }, [])
+  }, [inViewPort])
 
   const operationLogList = useCreation(() => {
     return Array.from(execFileRecord.values())

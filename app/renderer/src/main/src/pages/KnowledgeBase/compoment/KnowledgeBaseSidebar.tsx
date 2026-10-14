@@ -957,13 +957,15 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
             JSON.stringify({
               route: YakitRoute.AI_Agent,
               params: {
-                defualtAIMentionCommandParams: [
-                  {
-                    mentionId: '@所有知识库',
-                    mentionType: 'knowledgeBase',
-                    mentionName: '@所有知识库',
-                  },
-                ],
+                aiAgentPageInfo: {
+                  defualtAIMentionCommandParams: [
+                    {
+                      mentionId: '@所有知识库',
+                      mentionType: 'knowledgeBase',
+                      mentionName: '@所有知识库',
+                    },
+                  ],
+                },
               },
             }),
           )

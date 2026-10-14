@@ -6,6 +6,9 @@ import { createStore } from 'zustand/vanilla'
 import HistoryChatList from '../HistoryChatList'
 import type { AISession } from '../../../type/aiChat'
 import { AISessionDeleteCancelledError } from '../../utils'
+import { YakitRoute } from '@/enums/yakitRoute'
+import type { EditChatNameModalProps } from '../../../aiAgentType'
+import type * as UtilModals from '../../../UtilModals'
 
 const mocks = vi.hoisted(() => ({
   setActiveChat: vi.fn(),
@@ -16,6 +19,10 @@ const mocks = vi.hoisted(() => ({
   updateTitle: vi.fn(),
   notify: vi.fn(),
   newChat: vi.fn(),
+  updatePagesDataCacheById: vi.fn(),
+  pages: new Map(),
+  getCurrentPageTabRouteKey: () => 'active-ai',
+  realEditModal: false,
 }))
 const ctx = vi.hoisted(() => ({ activeChat: undefined as AISession | undefined }))
 vi.mock('../../../useContext/useStore', () => ({
@@ -24,18 +31,20 @@ vi.mock('../../../useContext/useStore', () => ({
 vi.mock('../../../useContext/useDispatcher', () => ({ default: () => mocks }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 vi.mock('../../../defaultConstant', () => ({ YakitAIAgentPageID: 'ai-agent' }))
-vi.mock('../../../UtilModals', () => ({
-  EditChatNameModal: ({
-    visible,
-    info,
-    onCallback,
-  }: {
-    visible: boolean
-    info: AISession
-    onCallback: (ok: boolean, info: AISession) => void
-  }) => (visible ? <button onClick={() => onCallback(true, { ...info, Title: 'Renamed' })}>Save title</button> : null),
-}))
+vi.mock('../../../UtilModals', async (importOriginal) => {
+  const actual = await importOriginal<typeof UtilModals>()
+  return {
+    EditChatNameModal: (props: EditChatNameModalProps) => {
+      if (mocks.realEditModal) return <actual.EditChatNameModal {...props} />
+      const { visible, info, onCallback } = props
+      return visible ? (
+        <button onClick={() => onCallback(true, { ...info, Title: 'Renamed' })}>Save title</button>
+      ) : null
+    },
+  }
+})
 vi.mock('../../../grpc', () => ({ grpcUpdateAISessionTitle: mocks.updateTitle }))
+vi.mock('@/store/pageInfo', () => ({ usePageInfo: { getState: () => mocks } }))
 vi.mock('../../HistoryChat', () => ({ onNewChat: mocks.newChat }))
 vi.mock('../../utils', () => ({
   handAIHistoryChatRemove: mocks.removeSession,
@@ -65,7 +74,7 @@ vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({
 }))
 
 const makeSessionState = () => {
-  const store = createStore(() => ({ currentChatStatus: { status: 'idle' } }))
+  const store = createStore(() => ({ currentChatStatus: { status: 'idle' }, sessionTitleUpdate: 0 }))
   const subscribe = store.subscribe
   const unsubscribers: ReturnType<typeof vi.fn>[] = []
   store.subscribe = vi.fn((listener) => {
@@ -108,6 +117,14 @@ beforeAll(() => {
 })
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.realEditModal = false
+  mocks.pages.set(YakitRoute.AI_Agent, {
+    pageList: sessions.slice(0, 2).map((session, index) => ({
+      pageId: `tab-${index}`,
+      pageName: session.Title,
+      pageParamsInfo: { aiAgentPageInfo: { session } },
+    })),
+  })
   ctx.activeChat = undefined
   sessionStates.clear()
   mocks.removeSession.mockResolvedValue(undefined)
@@ -127,6 +144,49 @@ const rowFor = (title: string) => screen.getByText(title).parentElement!.parentE
 const deleteButtonFor = (title: string) => within(rowFor(title)).getAllByRole('button')[1]
 
 describe('HistoryChatList viewport rendering', () => {
+  it('多开 AI Tab 时，编辑弹窗在当前可见页打开并可保存', async () => {
+    mocks.realEditModal = true
+    render(
+      <>
+        <div id="main-operator-page-body-hidden-ai" style={{ display: 'none' }}>
+          <div id="ai-agent" />
+        </div>
+        <div id="main-operator-page-body-active-ai">
+          <div id="ai-agent">
+            <VirtuosoMockContext.Provider value={{ viewportHeight: 480, itemHeight: 32 }}>
+              <HistoryChatList
+                search=""
+                sessionList={sessions.slice(0, 1)}
+                aiSource={['ai']}
+                setSessions={mocks.setSessions}
+              />
+            </VirtuosoMockContext.Provider>
+          </div>
+        </div>
+      </>,
+    )
+    await screen.findByText('Session 0')
+    fireEvent.click(within(rowFor('Session 0')).getAllByRole('button')[0])
+
+    const input = await screen.findByRole('textbox', { name: '对话框标题' })
+    await waitFor(() => expect(input).toBeVisible())
+    expect(document.getElementById('main-operator-page-body-active-ai')).toContainElement(input)
+    expect(input).toHaveValue('Session 0')
+    fireEvent.change(input, { target: { value: '修改后的标题' } })
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.ok' }))
+    await waitFor(() =>
+      expect(mocks.updateTitle).toHaveBeenCalledExactlyOnceWith({
+        SessionID: sessions[0].SessionID,
+        Title: '修改后的标题',
+      }),
+    )
+    expect(mocks.updatePagesDataCacheById).toHaveBeenCalledWith(
+      YakitRoute.AI_Agent,
+      expect.objectContaining({ pageName: '修改后的标题' }),
+    )
+    expect(mocks.setActiveChat).not.toHaveBeenCalled()
+  })
+
   it('bounds mounted rows and session subscriptions for 1960 sessions', async () => {
     render(view())
     expect(await screen.findByText('Session 0')).toBeInTheDocument()
@@ -216,6 +276,8 @@ describe('HistoryChatList viewport rendering', () => {
 
   it('keeps a pending rename attached to its original session after reordering and filtering', async () => {
     const data = sessions.slice(0, 2)
+    const inputParams = { defualtAIMentionCommandParams: [], forgeExec: { ruleContent: 'rule' } }
+    Object.assign(mocks.pages.get(YakitRoute.AI_Agent)!.pageList[0].pageParamsInfo.aiAgentPageInfo, inputParams)
     const { rerender } = render(view('', data))
     await screen.findByText('Session 0')
     fireEvent.click(within(rowFor('Session 0')).getAllByRole('button')[0])
@@ -227,7 +289,25 @@ describe('HistoryChatList viewport rendering', () => {
     )
     const update = mocks.setSessions.mock.calls[0][0]
     expect(update(data)).toEqual([{ ...data[0], Title: 'Renamed' }, data[1]])
+    expect(mocks.updatePagesDataCacheById).toHaveBeenCalledExactlyOnceWith(
+      YakitRoute.AI_Agent,
+      expect.objectContaining({
+        pageId: 'tab-0',
+        pageName: 'Renamed',
+        pageParamsInfo: { aiAgentPageInfo: { ...inputParams, session: { ...data[0], Title: 'Renamed' } } },
+      }),
+    )
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
+  })
+
+  it('keeps the page title unchanged when manual rename fails', async () => {
+    mocks.updateTitle.mockRejectedValue(new Error('offline'))
+    render(view('', sessions.slice(0, 1)))
+    fireEvent.click(within(rowFor('Session 0')).getAllByRole('button')[0])
+    fireEvent.click(await screen.findByRole('button', { name: 'Save title' }))
+    await waitFor(() => expect(mocks.notify).toHaveBeenCalled())
+    expect(mocks.updatePagesDataCacheById).not.toHaveBeenCalled()
+    expect(mocks.setSessions).not.toHaveBeenCalled()
   })
 
   it('keeps delete actions visible when moving from the row into its confirmation popup', async () => {

@@ -14,6 +14,8 @@ vi.mock('@/utils/kv', () => ({
   setRemoteValue: vi.fn(),
 }))
 
+vi.mock('@/routes/newRoute', () => ({ YakitRouteToPageInfo: { 'ai-agent': { label: 'AIAgent' } } }))
+
 vi.mock('@/utils/notification', () => ({
   failed: vi.fn(),
 }))
@@ -101,9 +103,10 @@ vi.mock('../../ai-re-act/hooks/useChatIPC', () => ({
   }),
 }))
 
-vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', () => ({
-  globalSessionEngine: { updateSessionConfig: vi.fn() },
-}))
+vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', async () => {
+  const { createStore } = await import('zustand/vanilla')
+  return { globalSessionEngine: { updateSessionConfig: vi.fn(), sessionStores: createStore(() => new Map()) } }
+})
 
 vi.mock('../../KnowledgeBase/hooks/useKnowledgeBase', () => ({
   useKnowledgeBase: () => ({ initialize: vi.fn(), knowledgeBases: [] }),

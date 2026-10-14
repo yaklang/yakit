@@ -59,7 +59,6 @@ import {
 import classNames from 'classnames'
 import _ from 'lodash'
 import { routeConvertKey } from '../publicMenu/utils'
-import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { CheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckIcon'
 import { SolidDocumentTextIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidDocumentTextIcon'
 import type { RouteToPageProps } from '../publicMenu/PublicMenu'
@@ -122,6 +121,7 @@ import {
   defPage,
   getFuzzerProcessedCacheData,
   saveFuzzerCache,
+  saveAIAgentCache,
   usePageInfo,
   type AIForgeEditorPageInfoProps,
   type AIToolEditorPageInfoProps,
@@ -132,6 +132,8 @@ import {
 import { safeParseFuzzerCache, sanitizeFuzzerCachePageParams } from '@/store/parseFuzzerCache'
 import { adoptOrphanCacheTabs } from './adoptOrphanCacheTabs'
 import { useOpenAIAgentPage } from './useOpenAIAgentPage'
+import { mergeAIAgentPageTabs } from './mergeAIAgentPageTabs'
+import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import cloneDeep from 'lodash/cloneDeep'
 import { onToManageGroup } from '@/pages/securityTool/yakPoC/YakPoC'
 import { apiFetchQueryYakScriptGroupLocal } from '@/pages/plugins/utils'
@@ -211,6 +213,7 @@ import {
   useWebFuzzerGroupColorStyle,
   webFuzzerGroupColorList,
 } from './webFuzzerGroupColor'
+import { generateGroupId } from './groupIdUtils'
 
 const BatchAddNewGroup = React.lazy(() => import('./BatchAddNewGroup'))
 const BatchEditGroup = React.lazy(() => import('./BatchEditGroup/BatchEditGroup'))
@@ -282,7 +285,6 @@ const getDeletedItems = (oldArray: MultipleNodeInfo[], newArray: MultipleNodeInf
  * @returns {string} 生成的组id
  */
 export { generateGroupId } from './groupIdUtils'
-import { generateGroupId } from './groupIdUtils'
 
 const generateTabIdentity = (key: string, index?: number) => {
   const time = `${Date.now()}${typeof index === 'number' ? `-${index}` : ''}`
@@ -308,16 +310,9 @@ const getMultiOpenMenuName = (route: YakitRoute | string, pluginName?: string) =
   return isIndependentTabRoute(route) ? pluginName || label : label
 }
 
-/** 计算下一个 AIAgent-N 序号；默认页 verbose 无 -N 后缀，不占用编号 */
-const getAIAgentNextTabIndex = (pages: PageCache[]) => {
-  let max = 0
-  pages.forEach((item) => {
-    if (item.route !== YakitRoute.AI_Agent) return
-    const match = item.verbose?.match(/-(\d+)$/)
-    if (match) max = Math.max(max, parseInt(match[1], 10))
-  })
-  return max + 1
-}
+/** 当前 AI Agent 标签数量加一，作为新标签序号 */
+const getAIAgentNextTabIndex = (pages: PageCache[]) =>
+  pages.filter((item) => item.route === YakitRoute.AI_Agent).length + 1
 
 /** 一级 Tab 内容已真实挂载：非空且不是懒加载占位文案（i18n 占位由调用方传入） */
 const isTabBodyContentLoaded = (textContent: string, i18nLoadingText: string) =>
@@ -719,6 +714,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const { theme } = useTheme()
 
   const [loading, setLoading] = useState(false)
+  // 缓存恢复完成前禁止操作，避免覆盖新标签。
+  const [initializing, setInitializing] = useState(true)
 
   useShortcutKeyTrigger('screenshot', () => {
     ipcRenderer.invoke('activate-screenshot')
@@ -729,22 +726,18 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setSelectGroupId,
     addPagesDataCache,
     pages,
-    clearAllData,
     getCurrentSelectPageId,
     queryPagesDataById,
     setCurrentPageTabRouteKey,
-    clearOtherDataByRoute,
   } = usePageInfo(
     (s) => ({
       setPagesData: s.setPagesData,
       setSelectGroupId: s.setSelectGroupId,
       addPagesDataCache: s.addPagesDataCache,
       pages: s.pages,
-      clearAllData: s.clearAllData,
       getCurrentSelectPageId: s.getCurrentSelectPageId,
       queryPagesDataById: s.queryPagesDataById,
       setCurrentPageTabRouteKey: s.setCurrentPageTabRouteKey,
-      clearOtherDataByRoute: s.clearOtherDataByRoute,
     }),
     shallow,
   )
@@ -986,11 +979,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         dbReport()
         break
       case YakitRoute.AI_Agent:
-        if (params?.aiAgentPageInfo) {
-          openAIAgentPage(params)
-        } else {
-          addAIREPOSITORY(params)
-        }
+        openAIAgentPage(params)
         break
       case YakitRoute.Plugin_OP:
         addPluginOp(params)
@@ -1374,9 +1363,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         },
       },
     )
-  })
-  const addAIREPOSITORY = useMemoizedFn((data) => {
-    openAIAgentPage({ AIRepository: { ...data } })
   })
   const addModifyNotepad = useMemoizedFn((data: ModifyNotepadPageInfoProps) => {
     openMenuPage(
@@ -2287,7 +2273,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         onSetYakRunnerScanHistory(singleUpdateNode, 1)
         break
       case YakitRoute.AI_Agent:
-        onSetYakAIAgent(singleUpdateNode, 1)
+        onSetYakAIAgent(singleUpdateNode)
         break
       case YakitRoute.Plugin_OP:
         onSetPluginOp(singleUpdateNode, 1)
@@ -2533,7 +2519,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setPagesData(YakitRoute.ManageRightClickPlugins, pageNodeInfo)
   })
 
-  const onSetYakAIAgent = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+  const onSetYakAIAgent = useMemoizedFn((node: MultipleNodeInfo) => {
+    const aiPages = usePageInfo.getState().pages.get(YakitRoute.AI_Agent)?.pageList || []
+    const order = aiPages.reduce((max, page) => Math.max(max, page.sortFieId), -1) + 1
     const newPageNode: PageNodeItemProps = {
       id: `${randomString(8)}-${order}`,
       routeKey: YakitRoute.AI_Agent,
@@ -2541,20 +2529,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       pageId: node.id,
       pageName: node.verbose,
       pageParamsInfo: {
-        AIRepository: node.pageParams?.AIRepository
-          ? {
-              ...node.pageParams.AIRepository,
-            }
-          : undefined,
+        aiAgentPageInfo: node.pageParams?.aiAgentPageInfo,
       },
       sortFieId: order,
     }
-    const pageNodeInfo: PageProps = {
-      ...cloneDeep(defPage),
-      pageList: [newPageNode],
-      routeKey: YakitRoute.AI_Agent,
-    }
-    setPagesData(YakitRoute.AI_Agent, pageNodeInfo)
+    addPagesDataCache(YakitRoute.AI_Agent, newPageNode)
   })
 
   const onBatchExecutorPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
@@ -2626,6 +2605,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }
   })
   const openAIAgentExtraTab = useMemoizedFn((pageParams?: ComponentParams) => {
+    if (initializing) return
     const menuName = YakitRouteToPageInfo[YakitRoute.AI_Agent].label
     const nextIndex = getAIAgentNextTabIndex(pageCache)
     const verbose = `${menuName}-${nextIndex}`
@@ -2685,8 +2665,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }
   })
   const { getSubscribeClose, removeSubscribeClose } = useSubscribeClose()
-  const { clearDataByRoute, removePagesDataCacheById, cachePages } = usePageInfo(
+  const { clearAllData, clearOtherDataByRoute, clearDataByRoute, removePagesDataCacheById } = usePageInfo(
     (s) => ({
+      clearAllData: s.clearAllData,
+      clearOtherDataByRoute: s.clearOtherDataByRoute,
       clearDataByRoute: s.clearDataByRoute,
       removePagesDataCacheById: s.removePagesDataCacheById,
       cachePages: s.pages,
@@ -2921,68 +2903,158 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   //     1000 * 60 * 5 /** 每5分钟执行一次*/,
   //     {immediate: true}
   // )
-  // fuzzer-tab页数据订阅事件
-  const unFuzzerCacheData = useRef<any>(null)
-  // web-fuzzer多开页面缓存数据、
+  // AI 标签缓存是否已加载。
+  const aiCacheLoaded = useRef(false)
+  // AI 与 Web Fuzzer 分别订阅各自的路由数据，互不覆盖。
   useEffect(() => {
+    let disposed = false
+    setInitializing(true)
     const stayOnSettings = currentTabKey === YakitRoute.Settings
     const settingsPage = stayOnSettings ? getPageCache().find((item) => item.route === YakitRoute.Settings) : undefined
 
     if (isEnterpriseEdition()) {
-      // 不是社区版的时候，每次进来都需要清除页面数据中心数据和FuzzerSequence数据
       clearAllData()
       clearFuzzerSequence()
+      aiCacheLoaded.current = false
     } else {
-      // 社区版需要清除:非wf和FuzzerSequence数据
-      clearOtherDataByRoute(YakitRoute.HTTPFuzzer)
+      clearOtherDataByRoute([YakitRoute.HTTPFuzzer, YakitRoute.AI_Agent])
     }
-
     const initCache = getInitPageCache(softMode)
     setPageCache(stayOnSettings && settingsPage ? [...initCache, settingsPage] : initCache)
-    // yakit 安全专家模式选中上次默认选中key
-    if (softMode === YakitModeEnum.SecurityExpert) {
-      setTimeout(() => {
-        onInitFuzzer(true)
-      }, 500)
-    } else {
-      if (!stayOnSettings) {
-        setCurrentTabKey(getInitActiveTabKey(softMode))
-      }
-      getRemoteValue(RemoteGV.SelectFirstMenuTabKey)
-        .then((cacheTabKey) => {
-          /**没有缓存数据或者缓存数据的tab key为HTTPFuzzer，初始化WF缓存数据 */
-          if (!cacheTabKey || cacheTabKey === YakitRoute.HTTPFuzzer) {
-            setTimeout(() => {
-              onInitFuzzer(false)
-            }, 500)
-          }
-        })
-        .catch((error) => {
-          yakitNotify('error', t('MainOperatorContent.SelectFirstMenuTabKeyFailed', { error: error + '' }))
-        })
-    }
-    // 开启fuzzer-tab页内数据的订阅事件
-    if (unFuzzerCacheData.current) {
-      unFuzzerCacheData.current()
-    }
-    if (isWFCacheEdition()) {
-      unFuzzerCacheData.current = usePageInfo.subscribe(
-        (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
-        (selectedState, previousSelectedState) => {
-          if (Array.isArray(selectedState) && Array.isArray(previousSelectedState)) return
-          saveFuzzerCache(selectedState as PageProps)
-        },
-      )
-    }
 
-    return () => {
-      // 注销fuzzer-tab页内数据的订阅事件
-      if (unFuzzerCacheData.current) {
-        unFuzzerCacheData.current()
-        unFuzzerCacheData.current = null
+    const syncAI = (page?: PageProps) => {
+      if (disposed) return
+      setPageCache((current) => mergeAIAgentPageTabs(current, page || { ...defPage, routeKey: YakitRoute.AI_Agent }))
+      // 恢复成功前只同步界面，避免用不完整的标签列表覆盖缓存。
+      if (aiCacheLoaded.current) saveAIAgentCache(page)
+    }
+    const unsubscribeAI = usePageInfo.subscribe((state) => state.pages.get(YakitRoute.AI_Agent), syncAI)
+    let recoveryModal: ReturnType<typeof showYakitModal> | undefined
+    let retryingAI = false
+    const initialAINodes = new Map(
+      usePageInfo
+        .getState()
+        .pages.get(YakitRoute.AI_Agent)
+        ?.pageList.map((node) => [node.pageId, node]),
+    )
+    const restoreAI = async () => {
+      try {
+        if (aiCacheLoaded.current) {
+          syncAI(usePageInfo.getState().pages.get(YakitRoute.AI_Agent))
+          return
+        }
+        const getLocalNodes = retryingAI
+          ? () =>
+              usePageInfo
+                .getState()
+                .pages.get(YakitRoute.AI_Agent)
+                ?.pageList.filter((node) => !_.isEqual(node, initialAINodes.get(node.pageId))) || []
+          : undefined
+        await onInitAIAgent(initCache, stayOnSettings, () => disposed, getLocalNodes)
+      } catch (error) {
+        if (disposed) return
+        yakitNotify('error', t('MainOperatorContent.restoreAIAgentTabsFailed', { error: error + '' }))
+        recoveryModal = showYakitModal({
+          title: (modalT) => modalT('MainOperatorContent.restoreTab'),
+          content: (modalT) => modalT('MainOperatorContent.retryRestoreAIAgentTabs'),
+          onOk: async () => {
+            if (disposed || retryingAI) return
+            retryingAI = true
+            recoveryModal?.destroy()
+            setInitializing(true)
+            await Promise.allSettled([restoreAI(), fuzzerReady])
+            retryingAI = false
+            if (!disposed) setInitializing(false)
+          },
+        })
       }
+    }
+    const aiReady = restoreAI()
+    const fuzzerReady = (async () => {
+      if (softMode !== YakitModeEnum.SecurityExpert) {
+        if (!stayOnSettings) setCurrentTabKey(getInitActiveTabKey(softMode))
+        const cacheTabKey = await getRemoteValue(RemoteGV.SelectFirstMenuTabKey)
+        if (cacheTabKey && cacheTabKey !== YakitRoute.HTTPFuzzer) return
+      }
+      await new Promise<void>((resolve) => setTimeout(resolve, 500))
+      if (disposed) return
+      await onInitFuzzer(softMode === YakitModeEnum.SecurityExpert)
+    })().catch((error) => {
+      if (disposed) return
+      yakitNotify('error', t('MainOperatorContent.SelectFirstMenuTabKeyFailed', { error: error + '' }))
+    })
+    void Promise.allSettled([aiReady, fuzzerReady]).then(() => {
+      if (!disposed && !retryingAI) setInitializing(false)
+    })
+    const unsubscribeFuzzer = isWFCacheEdition()
+      ? usePageInfo.subscribe(
+          (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
+          (selectedState, previousSelectedState) => {
+            if (Array.isArray(selectedState) && Array.isArray(previousSelectedState)) return
+            saveFuzzerCache(selectedState as PageProps)
+          },
+        )
+      : undefined
+    return () => {
+      disposed = true
+      recoveryModal?.destroy()
+      unsubscribeAI()
+      unsubscribeFuzzer?.()
+      saveAIAgentCache.flush()
     }
   }, [softMode])
+  const onInitAIAgent = useMemoizedFn(
+    async (
+      initCache: PageCache[],
+      stayOnSettings: boolean,
+      isDisposed: () => boolean,
+      getLocalNodes: () => PageNodeItemProps[] = () => [],
+    ) => {
+      const raw = await getRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs)
+      if (isDisposed()) return
+      const cached: PageNodeItemProps[] = JSONParseLog(raw || '[]', {
+        page: 'MainOperatorContent',
+        fun: 'restoreAITabs',
+      })
+      if (!Array.isArray(cached)) throw new Error('Invalid AI Agent tab cache')
+      const nodes = new Map(cached.map((node) => [node.pageId, node]))
+      const fixed = nodes.get(YakitRoute.AI_Agent)
+      if (isMemfit() && fixed) {
+        nodes.delete(YakitRoute.AI_Agent)
+        if (fixed.pageParamsInfo.aiAgentPageInfo?.session) {
+          const { tabId: pageId } = generateTabIdentity(routeConvertKey(YakitRoute.AI_Agent, ''))
+          nodes.set(pageId, { ...fixed, id: pageId, pageId })
+        }
+      }
+      const pageList = [...nodes.values()].sort((a, b) => a.sortFieId - b.sortFieId)
+      const defaultAIPage = initCache.find((page) => page.route === YakitRoute.AI_Agent)
+      if (defaultAIPage) {
+        pageList.unshift({
+          id: defaultAIPage.routeKey,
+          pageId: defaultAIPage.routeKey,
+          routeKey: YakitRoute.AI_Agent,
+          pageGroupId: '0',
+          pageName: defaultAIPage.verbose,
+          pageParamsInfo: {},
+          sortFieId: 0,
+        })
+      }
+      // 手动重试时保留读取失败后新建或修改的标签。
+      const restoredNodes = new Map(pageList.map((node) => [node.pageId, node]))
+      getLocalNodes().forEach((node) => restoredNodes.set(node.pageId, node))
+      const restoredPageList = [...restoredNodes.values()].sort((a, b) => a.sortFieId - b.sortFieId)
+      aiCacheLoaded.current = true
+      setPagesData(YakitRoute.AI_Agent, {
+        ...defPage,
+        routeKey: YakitRoute.AI_Agent,
+        singleNode: true,
+        pageList: restoredPageList,
+      })
+      if (isMemfit() && !stayOnSettings) {
+        setCurrentTabKey(restoredPageList.at(-1)?.pageId || YakitRoute.AI_Agent)
+      }
+    },
+  )
   const onInitFuzzer = useMemoizedFn(async (newOpen: boolean) => {
     if (isWFCacheEdition()) {
       // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
@@ -3185,25 +3257,31 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openFlag,
         selectSubItem: false,
       }
-      const oldPageCache = cloneDeep(pageCache)
-      const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
-      if (index === -1) {
-        oldPageCache.push(webFuzzerPage)
-      } else {
-        if (add) {
-          oldPageCache[index].multipleNode.push(...multipleNodeList)
-          oldPageCache[index].multipleLength = (oldPageCache[index]?.multipleLength || 0) + multipleNodeListLength
-          oldPageCache[index].openFlag = openFlag
-          oldPageCache[index].selectSubItem = false
-          if (getSubPageTotal(oldPageCache[index].multipleNode) >= secondaryTabsNum) {
-            yakitNotify('info', t('MainOperatorContent.maxTabsReached'))
-          }
-        } else {
-          oldPageCache.splice(index, 1, webFuzzerPage)
-        }
+      const currentFuzzerPage = getPageCache().find((ele) => ele.menuName === menuName)
+      if (
+        add &&
+        currentFuzzerPage &&
+        getSubPageTotal([...currentFuzzerPage.multipleNode, ...multipleNodeList]) >= secondaryTabsNum
+      ) {
+        yakitNotify('info', t('MainOperatorContent.maxTabsReached'))
       }
       setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
-      setPageCache(oldPageCache)
+      // 函数式合并保留同批次恢复、尚未渲染的 AI 标签。
+      setPageCache((current) => {
+        const next = cloneDeep(current)
+        const index = next.findIndex((ele) => ele.menuName === menuName)
+        if (index === -1) {
+          next.push(webFuzzerPage)
+        } else if (add) {
+          next[index].multipleNode.push(...multipleNodeList)
+          next[index].multipleLength = (next[index].multipleLength || 0) + multipleNodeListLength
+          next[index].openFlag = openFlag
+          next[index].selectSubItem = false
+        } else {
+          next.splice(index, 1, webFuzzerPage)
+        }
+        return next
+      })
       if (!isSecurityExpert && openFlag) {
         setCurrentTabKey(key)
       }
@@ -3812,8 +3890,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }
   }, [])
   return (
-    <Content>
-      <YakitSpin spinning={loading}>
+    <Content inert={initializing ? true : undefined}>
+      <YakitSpin spinning={loading || initializing}>
         <TabContent
           softMode={softMode}
           pageCache={pageCache}
@@ -3917,6 +3995,16 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
     if (result.source.droppableId === 'droppable1' && result.destination.droppableId === 'droppable1') {
       const menuList: PageCache[] = reorder(pageCache, result.source.index, result.destination.index)
       setPageCache(menuList)
+      const store = usePageInfo.getState()
+      const aiPage = store.pages.get(YakitRoute.AI_Agent)
+      if (aiPage)
+        store.setPagesData(YakitRoute.AI_Agent, {
+          ...aiPage,
+          pageList: aiPage.pageList.map((node) => ({
+            ...node,
+            sortFieId: menuList.findIndex((page) => page.routeKey === node.pageId),
+          })),
+        })
     }
   })
   const onSetPageCache = useMemoizedFn((subMenuList: MultipleNodeInfo[], index: number) => {
@@ -4132,14 +4220,6 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
     }),
     shallow,
   )
-  const { clearAllData, clearOtherDataByRoute, removePagesDataCacheById } = usePageInfo(
-    (s) => ({
-      clearAllData: s.clearAllData,
-      clearOtherDataByRoute: s.clearOtherDataByRoute,
-      removePagesDataCacheById: s.removePagesDataCacheById,
-    }),
-    shallow,
-  )
   const onRightClickOperation = useMemoizedFn((event: React.MouseEvent, index: number) => {
     const currentPageItem: PageCache = pageCache[index]
     showByRightContext(
@@ -4207,13 +4287,13 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
         } else {
           setPageCache([])
         }
-        // 关闭的多开 AI Agent Tab 清页面缓存（停流由组件卸载的 onPageUnload 兜底）
+        const store = usePageInfo.getState()
         pageCache
-          .filter((ele) => !fixedTabs.includes(ele))
-          .filter((ele) => ele.route === YakitRoute.AI_Agent && ele.routeKey !== YakitRoute.AI_Agent)
-          .forEach((ele) => removePagesDataCacheById(ele.route, ele.routeKey))
-        //关闭所有清除fuzzer和序列化缓存数据
-        clearAllData()
+          .filter((page) => !fixedTabs.includes(page))
+          .forEach((page) => {
+            if (isRouteKeyScopedTab(page.route)) store.removePagesDataCacheById(page.route, page.routeKey)
+            else store.clearDataByRoute(page.route)
+          })
         clearFuzzerSequence()
         m.destroy()
       },
@@ -4239,15 +4319,16 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             getDefaultFixedTabs(softMode).includes(ele.route) &&
             !(ele.route === YakitRoute.AI_Agent && ele.routeKey !== YakitRoute.AI_Agent),
         )
-        const newPage: PageCache[] = [...fixedTabs, item]
+        const newPage: PageCache[] = [...fixedTabs.filter((page) => page.routeKey !== item.routeKey), item]
         setPageCache(newPage)
         setCurrentTabKey(item.routeKey)
-        // 关闭的多开 AI Agent Tab 清页面缓存（停流由组件卸载的 onPageUnload 兜底）
+        const store = usePageInfo.getState()
         pageCache
-          .filter((ele) => !newPage.includes(ele))
-          .filter((ele) => ele.route === YakitRoute.AI_Agent && ele.routeKey !== YakitRoute.AI_Agent)
-          .forEach((ele) => removePagesDataCacheById(ele.route, ele.routeKey))
-        clearOtherDataByRoute(item.routeKey)
+          .filter((page) => !newPage.includes(page))
+          .forEach((page) => {
+            if (isRouteKeyScopedTab(page.route)) store.removePagesDataCacheById(page.route, page.routeKey)
+            else store.clearDataByRoute(page.route)
+          })
         if (item.route !== YakitRoute.HTTPFuzzer) {
           //当前item不是YakitRoute.HTTPFuzzer,则清除序列化缓存数据
           clearFuzzerSequence()

@@ -162,6 +162,8 @@
     "save_fuzzer_history_success": "儲存fuzzer歷史成功",
     "switchTab": "切換標籤頁",
     "SelectFirstMenuTabKeyFailed": "SelectFirstMenuTabKey獲取資料失敗: {{error}}",
+    "restoreAIAgentTabsFailed": "AI Agent 分頁還原失敗：{{error}}",
+    "retryRestoreAIAgentTabs": "AI Agent 分頁讀取失敗，原有記錄已保留。點擊確定重新讀取並還原分頁。",
     "noWFHistoryData": "暫無WF歷史資料",
     "restoreHistoryFailed": "WF歷史資料恢復失敗: {{error}}",
     "switchMenuItemFailed": "切換一級選單選中key失敗: {{error}}",

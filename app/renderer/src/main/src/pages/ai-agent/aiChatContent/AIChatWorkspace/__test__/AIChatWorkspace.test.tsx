@@ -5,7 +5,7 @@ import '@/pages/ai-re-act/hooks/__test__/setupElectron'
 vi.mock('lottie-web', () => ({ default: { loadAnimation: vi.fn(), destroy: vi.fn() } }))
 vi.mock('@xterm/xterm', () => ({ Terminal: vi.fn() }))
 import React from 'react'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { createStore } from 'zustand/vanilla'
 import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
 import emiter from '@/utils/eventBus/eventBus'
@@ -165,6 +165,34 @@ beforeEach(() => {
 })
 
 describe('AIChatWorkspace 菜单切换', () => {
+  it('任务详情事件仅由当前可见页面接收，切页后保留各自的详情', () => {
+    const setFilePreviewData = vi.fn()
+    const pages = (firstVisible: boolean) => (
+      <>
+        <div data-testid="page-1" hidden={!firstVisible}>
+          <div style={{ display: 'none' }}>
+            <AIChatWorkspace inViewPort={firstVisible} setFilePreviewData={setFilePreviewData} />
+          </div>
+        </div>
+        <div data-testid="page-2" hidden={firstVisible}>
+          <AIChatWorkspace inViewPort={!firstVisible} setFilePreviewData={setFilePreviewData} />
+        </div>
+      </>
+    )
+    const openTask = (key: string) =>
+      act(() => emiter.emit('actionAITaskContentTab', JSON.stringify({ type: 'add', params: { key } })))
+    const { rerender } = render(pages(true))
+    openTask('task-1')
+    expect(within(screen.getByTestId('page-1')).getByTestId('task-detail')).toHaveTextContent('task-1')
+    expect(within(screen.getByTestId('page-2')).queryByTestId('task-detail')).not.toBeInTheDocument()
+
+    rerender(pages(false))
+    openTask('task-2')
+    expect(within(screen.getByTestId('page-1')).getAllByTestId('task-detail')).toHaveLength(1)
+    expect(within(screen.getByTestId('page-1')).getByTestId('task-detail')).toHaveTextContent('task-1')
+    expect(within(screen.getByTestId('page-2')).getByTestId('task-detail')).toHaveTextContent('task-2')
+  })
+
   it('切换页面保留表格实例与勾选，返回后原表格仍能同步和取消勾选', () => {
     const syncSelectedHttpFlowIds = vi.fn()
     rawData.httpRunTimeIDs = ['runtime-1']

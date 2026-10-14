@@ -5,14 +5,18 @@ import emiter from '@/utils/eventBus/eventBus'
 import { ReActChatEventEnum } from '../../defaultConstant'
 import type { AISession } from '../../type/aiChat'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 const mocks = vi.hoisted(() => ({
   dispatcher: {
     setSessions: vi.fn(),
     resetPagination: vi.fn(),
     loadHistoryData: vi.fn().mockResolvedValue(0),
+    getSessions: vi.fn(),
   },
   setActiveChat: vi.fn(),
+  pages: new Map(),
+  updatePagesDataCacheById: vi.fn(),
   ctx: {
     activeChat: undefined as { SessionID: string } | undefined,
     sessions: [] as { SessionID: string; UpdatedAt: number }[],
@@ -47,7 +51,9 @@ vi.mock('@/pages/ai-re-act/hooks/useGetChatDataStoreKey', () => ({
   default: () => 'ai',
   getImageStoreKeyByAISource: () => 'ai',
 }))
-vi.mock('@/store/pageInfo', () => ({ usePageInfo: () => 'ai-agent' }))
+vi.mock('@/store/pageInfo', () => ({
+  usePageInfo: Object.assign(() => 'ai-agent', { getState: () => mocks }),
+}))
 vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({
   globalSessionEngine: { getSessionIdsBySourceAndRoute: () => [] },
 }))
@@ -57,9 +63,73 @@ beforeEach(() => {
   mocks.ctx.activeChat = undefined
   mocks.ctx.sessions = []
   mocks.viewport.visible = true
+  mocks.pages.clear()
+  mocks.dispatcher.getSessions.mockReturnValue([])
 })
 
 describe('HistoryChat 头部操作', () => {
+  it.each([{ selectSessionId: 'target' }, { selectFirst: true }])(
+    '刷新后选中会话时同步对应 Tab 标题：%j',
+    async (selection) => {
+      const session = { SessionID: 'target', Title: '刷新后的标题', Source: 'ai' } as AISession
+      const node = {
+        pageId: 'target-tab',
+        pageName: '<未命名>',
+        pageParamsInfo: { aiAgentPageInfo: { session: { ...session, Title: '<未命名>' }, query: '保留输入' } },
+      }
+      const other = {
+        ...node,
+        pageId: 'other-tab',
+        pageParamsInfo: { aiAgentPageInfo: { session: { ...session, SessionID: 'other' } } },
+      }
+      mocks.pages.set(YakitRoute.AI_Agent, { pageList: [other, node] })
+      mocks.dispatcher.getSessions.mockReturnValue([session])
+      render(<HistoryChat aiSource={['ai']} />)
+
+      await act(async () => emiter.emit('sessionData', JSON.stringify({ type: 'refresh', ...selection })))
+
+      expect(mocks.setActiveChat).toHaveBeenCalledExactlyOnceWith(session)
+      expect(mocks.updatePagesDataCacheById).toHaveBeenCalledExactlyOnceWith(YakitRoute.AI_Agent, {
+        ...node,
+        pageName: session.Title,
+        pageParamsInfo: { aiAgentPageInfo: { ...node.pageParamsInfo.aiAgentPageInfo, session } },
+      })
+      expect(mocks.setActiveChat.mock.invocationCallOrder[0]).toBeLessThan(
+        mocks.updatePagesDataCacheById.mock.invocationCallOrder[0],
+      )
+      // 刷新分支只写 Tab 缓存，不广播 updateSession 触发列表更新。
+      expect(mocks.dispatcher.setSessions).not.toHaveBeenCalledWith(expect.any(Function))
+    },
+  )
+
+  it('标题广播同步所有列表实例，仅更新对应 SessionID', () => {
+    render(
+      <>
+        <HistoryChat aiSource={['ai']} />
+        <HistoryChat aiSource={['ai']} />
+      </>,
+    )
+    mocks.dispatcher.setSessions.mockClear()
+    const previous = [
+      { SessionID: 'target', Title: '同名会话', Source: 'ai' },
+      { SessionID: 'other', Title: '同名会话', Source: 'ai' },
+    ] as AISession[]
+    act(() =>
+      emiter.emit(
+        'sessionData',
+        JSON.stringify({
+          type: 'updateSession',
+          sessionId: 'target',
+          updates: { Title: '新标题' },
+        }),
+      ),
+    )
+    expect(mocks.dispatcher.setSessions).toHaveBeenCalledTimes(2)
+    for (const [update] of mocks.dispatcher.setSessions.mock.calls) {
+      expect(update(previous)).toEqual([{ ...previous[0], Title: '新标题' }, previous[1]])
+    }
+  })
+
   it('重复绑定同一 session 时更新并置顶，而同名的其他会话继续保留', () => {
     const { unmount } = render(<HistoryChat aiSource={['ai']} />)
     const previous = [

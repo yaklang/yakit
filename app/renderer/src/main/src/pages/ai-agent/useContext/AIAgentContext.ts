@@ -32,7 +32,7 @@ export interface AIAgentContextDispatcher extends Omit<
 > {
   setSetting: Dispatch<SetStateAction<AIAgentSetting>>
   getSetting: () => AIAgentSetting
-  setActiveChat: Dispatch<SetStateAction<AISession | undefined>>
+  setActiveChat: (session: AISession | undefined) => void
 }
 
 export interface AIAgentContextValue {

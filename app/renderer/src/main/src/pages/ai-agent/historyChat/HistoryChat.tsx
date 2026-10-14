@@ -47,6 +47,7 @@ import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { syncAIAgentPageInfo } from '../utils/syncAIAgentPageInfo'
 
 const HISTORY_SOURCE_FILTER_OPTIONS: {
   key: HistorySourceFilter
@@ -399,7 +400,14 @@ const HistoryChat = memo(
                 : payload?.selectFirst && sessions.length > 0
                   ? sessions[0]
                   : undefined
-              if (nextActive) setActiveChat?.(nextActive)
+              if (nextActive) {
+                setActiveChat?.(nextActive)
+                syncAIAgentPageInfo({
+                  sessionId: nextActive.SessionID,
+                  title: nextActive.Title,
+                  emitSessionData: false,
+                })
+              }
             }
             break
           case 'loadNextPage':
