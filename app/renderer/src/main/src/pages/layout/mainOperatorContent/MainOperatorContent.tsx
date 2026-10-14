@@ -102,7 +102,7 @@ import {
   registerSubTabPageHandlers,
   unregisterSubTabPageHandlers,
 } from './subTabEventRegistry'
-import { isSubTabGroupNode } from './subTabOverview'
+import { isSubTabGroupNode, scrollSubTabIntoView } from './subTabOverview'
 import { isPageRouteActive } from '@/utils/getMainOperatorPageBodyContainer'
 import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 import { type FuzzerSequenceCacheDataProps, useFuzzerSequence } from '@/store/fuzzerSequence'
@@ -6372,8 +6372,20 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
     const onExpandGroupByPageId = useMemoizedFn((pageId: string) => {
       const group = subPage.find((ele) => (ele.groupChildren || []).some((child) => child.id === pageId))
-      if (!group || group.expand) return
-      onUpdateGroup({ ...group, expand: true })
+      if (!group && !subPage.some((ele) => ele.id === pageId)) return
+      const scrollTargetIntoView = () => {
+        if (!tabMenuSubRef.current) {
+          tabMenuSubRef.current = document.getElementById(`tab-menu-sub-${pageItem.route}`)
+        }
+        scrollSubTabIntoView(tabMenuSubRef.current, pageId)
+      }
+      if (group && !group.expand) {
+        onUpdateGroup({ ...group, expand: true })
+        // 组展开宽度有 0.2s 过渡动画，等动画结束后再定位
+        setTimeout(scrollTargetIntoView, 220)
+        return
+      }
+      scrollTargetIntoView()
     })
 
     useEffect(() => {

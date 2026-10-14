@@ -55,3 +55,23 @@ export const isSubTabLeaf = (nodes: MultipleNodeInfo[] = [], pageId: string) => 
   }
   return false
 }
+
+/** 概览菜单跳转后，把目标二级标签滚动到二级标签栏可视区（组刚展开时需等宽度动画结束再调用）。 */
+export const scrollSubTabIntoView = (container: HTMLElement | null | undefined, pageId: string, margin = 60) => {
+  if (!container) return
+  const scroll = () => {
+    // 跨一级页签切换时页体暂为 display:none（rect 宽度为 0），等下一帧布局恢复后再定位
+    if (container.getBoundingClientRect().width <= 0) {
+      requestAnimationFrame(scroll)
+      return
+    }
+    const target = document.querySelector(`[data-rfd-draggable-id="${pageId}"]`)
+    const targetRect = target?.getClientRects().length ? target.getClientRects()[0] : null
+    if (!targetRect || targetRect.width <= 0) return
+    const containerLeft = container.getBoundingClientRect().left
+    const leftInView = targetRect.left - containerLeft
+    if (leftInView >= 0 && targetRect.right - containerLeft <= container.clientWidth) return
+    container.scrollLeft += leftInView - margin
+  }
+  scroll()
+}

@@ -31,7 +31,7 @@ export const SubTabCountDropdown: React.FC<SubTabCountDropdownProps> = React.mem
   if (!isSubTabOverviewRoute(item.route) || count <= 0) return null
 
   const menu = (
-    <div ref={menuAnchorRef}>
+    <div ref={menuAnchorRef} onClick={(e) => e.stopPropagation()}>
       <YakitMenu
         width={206}
         selectedKeys={[]}
