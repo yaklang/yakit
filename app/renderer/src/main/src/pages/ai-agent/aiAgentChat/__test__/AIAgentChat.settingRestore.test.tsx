@@ -219,6 +219,37 @@ describe('AIAgentChat delayed connection cancellation', () => {
     expect(nextAttempt.shouldStart()).toBe(true)
     expect(attempt.shouldStart()).toBe(false)
   })
+
+  it('invalidates a delayed connection when its session is deleted', async () => {
+    ctx.activeChat = { SessionID: 'restoring' }
+    await act(async () => {
+      render(<AIAgentChat />)
+    })
+    const attempt = mocks.onReStart.mock.calls[0][0]
+    expect(attempt.shouldStart()).toBe(true)
+
+    markDeleted('restoring')
+
+    expect(attempt.shouldStart()).toBe(false)
+    expect(mode()).toBe('welcome')
+  })
+
+  it('returns to welcome when a missing restored session is cleared', async () => {
+    ctx.activeChat = { SessionID: 'missing-session' }
+    let view!: ReturnType<typeof render>
+    await act(async () => {
+      view = render(<AIAgentChat data-revision={0} />)
+    })
+    expect(mode()).toBe('re-act')
+    const attempt = mocks.onReStart.mock.calls[0][0]
+
+    ctx.activeChat = undefined
+    view.rerender(<AIAgentChat data-revision={1} />)
+
+    expect(mode()).toBe('welcome')
+    expect(attempt.shouldStart()).toBe(false)
+    expect(mocks.onReStart).toHaveBeenCalledOnce()
+  })
 })
 
 describe('AIAgentChat SingleModelMode 生命周期', () => {
@@ -256,6 +287,35 @@ describe('AIAgentChat SingleModelMode 生命周期', () => {
 })
 
 describe('AIAgentChat 当前会话在别处被删除', () => {
+  it.each(['restored-session', 'other-session'])(
+    '恢复标签首次激活前 %s 已删除：只将已删除的当前会话退回欢迎页',
+    async (deletedSessionId) => {
+      const restoredTab = {
+        pageId: 'tab-1',
+        pageName: '恢复的会话',
+        pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'restored-session' } } },
+      }
+      mocks.queryPagesDataById.mockReturnValue(restoredTab)
+      ctx.activeChat = restoredTab.pageParamsInfo.aiAgentPageInfo.session
+      // 恢复标签尚未激活时不会挂载聊天组件，删除状态早于首次订阅。
+      markDeleted(deletedSessionId)
+
+      await act(async () => {
+        render(<AIAgentChat />)
+      })
+
+      if (deletedSessionId === ctx.activeChat.SessionID) {
+        expect.soft(mode()).toBe('welcome')
+        expect.soft(mocks.setActiveChat).toHaveBeenCalledExactlyOnceWith(undefined)
+        expect(mocks.onReStart).not.toHaveBeenCalled()
+      } else {
+        expect(mode()).toBe('re-act')
+        expect(mocks.setActiveChat).not.toHaveBeenCalled()
+        expect(mocks.onReStart).toHaveBeenCalledOnce()
+      }
+    },
+  )
+
   it('打开期间当前会话被删除：回欢迎页', () => {
     ctx.activeChat = { SessionID: 's-live' }
     render(<AIAgentChat />)

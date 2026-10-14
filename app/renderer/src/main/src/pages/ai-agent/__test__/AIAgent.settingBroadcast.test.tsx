@@ -188,7 +188,8 @@ describe('AIAgent 配置广播', () => {
     ipc.queryPagesDataById.mockReturnValue({ pageId: 'test', pageName: 'AI Agent', pageParamsInfo: {} })
     getRemoteValueMock.mockReset()
     setRemoteValueMock.mockReset()
-    querySessionMock.mockReset().mockResolvedValue(sessionResponse([]))
+    // 未关注初始化结果的用例保留查询中状态，避免隐式模拟会话已删除。
+    querySessionMock.mockReset().mockImplementation(() => deferred<QueryAISessionResponse>().promise)
     getRemoteValueMock.mockResolvedValue(
       JSON.stringify({
         ReviewPolicy: 'yolo',
@@ -514,7 +515,7 @@ describe('AIAgent 配置广播', () => {
     await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalled())
   })
 
-  it('切换会话后忽略旧会话查询响应', async () => {
+  it.each(['found', 'empty'])('切换会话后忽略旧会话查询响应：%s', async (result) => {
     const pending = deferred<QueryAISessionResponse>()
     querySessionMock.mockReturnValueOnce(pending.promise)
     querySessionMock.mockResolvedValueOnce(
@@ -533,9 +534,11 @@ describe('AIAgent 配置广播', () => {
     ipc.updatePagesDataCacheById.mockClear()
     await act(async () =>
       pending.resolve(
-        sessionResponse([
-          { SessionID: 'original', Title: '过期标题', StartParams: { ReviewPolicy: 'yolo' } } as AISession,
-        ]),
+        sessionResponse(
+          result === 'empty'
+            ? []
+            : [{ SessionID: 'original', Title: '过期标题', StartParams: { ReviewPolicy: 'yolo' } } as AISession],
+        ),
       ),
     )
     expect(screen.getByTestId('active-session')).toHaveTextContent('history')
@@ -584,19 +587,57 @@ describe('AIAgent 配置广播', () => {
     expect(screen.getByTestId('enable-plan')).toHaveTextContent('true')
   })
 
-  it.each(['empty', 'unmatched', 'error'])('查询 %s 时保留已有会话标题和页面数据', async (result) => {
-    if (result === 'error') querySessionMock.mockRejectedValueOnce(new Error('query failed'))
-    if (result === 'unmatched')
-      querySessionMock.mockResolvedValueOnce(
-        sessionResponse([{ SessionID: 'unrelated', Title: '无关标题' } as AISession]),
-      )
+  it.each(['empty', 'unmatched'])('查询确认会话不存在（%s）时仅清空本页会话并保留其他参数', async (result) => {
+    querySessionMock.mockResolvedValueOnce(
+      sessionResponse(result === 'empty' ? [] : [{ SessionID: 'unrelated', Title: '无关标题' } as AISession]),
+    )
+    const session = { SessionID: 'deleted', Title: '已删除会话' } as AISession
+    const inputParams = { defualtAIMentionCommandParams: [], forgeExec: { ruleContent: '保留规则' } }
+    const node = {
+      pageId: 'test',
+      pageName: session.Title,
+      pageParamsInfo: { aiAgentPageInfo: { ...inputParams, session } },
+    }
+    const otherPage = {
+      pageId: 'other',
+      pageName: '其他会话',
+      pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'other' } } },
+    }
+    ipc.pages.set(YakitRoute.AI_Agent, { pageList: [node, otherPage] })
+    ipc.queryPagesDataById.mockImplementation((route, id) =>
+      ipc.pages.get(route)?.pageList.find((page) => page.pageId === id),
+    )
+
+    render(<AIAgent pageId="test" initialSession={session} />)
+    await waitFor(() => expect(screen.getByTestId('active-session')).toHaveTextContent('welcome'))
+
+    expect(querySessionMock).toHaveBeenCalledOnce()
+    expect(ipc.updatePagesDataCacheById).toHaveBeenCalledExactlyOnceWith(YakitRoute.AI_Agent, {
+      ...node,
+      pageName: `${YakitRouteToPageInfo[YakitRoute.AI_Agent].label}-2`,
+      pageParamsInfo: { aiAgentPageInfo: { ...inputParams, session: undefined } },
+    })
+    expect(ipc.pages.get(YakitRoute.AI_Agent).pageList.find((page) => page.pageId === 'other')).toEqual(otherPage)
+    expect(ipc.detachPendingChat).toHaveBeenCalledOnce()
+    expect(ipc.cancelPendingChat).not.toHaveBeenCalled()
+    expect(ipc.onClose).not.toHaveBeenCalled()
+  })
+
+  it('查询失败时保留已有会话标题和页面数据', async () => {
+    querySessionMock.mockRejectedValueOnce(new Error('query failed'))
     const session = { SessionID: 'original', Title: '已有标题' } as AISession
+    const node = { pageId: 'test', pageName: session.Title, pageParamsInfo: { aiAgentPageInfo: { session } } }
+    ipc.pages.set(YakitRoute.AI_Agent, { pageList: [node] })
+    ipc.queryPagesDataById.mockReturnValue(node)
     render(<AIAgent pageId="test" initialSession={session} />)
     await act(async () => {})
     expect(querySessionMock).toHaveBeenCalledOnce()
     expect(screen.getByTestId('active-title')).toHaveTextContent('已有标题')
+    expect(screen.getByTestId('active-session')).toHaveTextContent('original')
     expect(screen.getByTestId('review-policy')).toHaveTextContent(AIAgentSettingDefault.ReviewPolicy!)
     expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+    expect(ipc.pages.get(YakitRoute.AI_Agent).pageList).toEqual([node])
+    expect(ipc.detachPendingChat).not.toHaveBeenCalled()
   })
 
   it('新 Tab 保留传入的历史会话和独立 pageId', async () => {

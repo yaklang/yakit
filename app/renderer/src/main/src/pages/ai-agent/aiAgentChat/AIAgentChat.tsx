@@ -72,17 +72,26 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
 
   useEffect(() => {
     const sid = activeChat?.SessionID
-    if (!sid) return
+    if (!sid) {
+      setMode('welcome')
+      return
+    }
+    const isDeleted = (m: Map<string, SessionDeleteStatus>) => m.get(sid) === SessionDeleteStatus.Deleted
+    // 恢复标签可能在首次挂载前已被删除，不能只监听后续状态变化。
+    if (isDeleted(sessionStatusStore.getState().deleteStatuses)) {
+      setActiveChat?.(undefined)
+      setMode('welcome')
+      return
+    }
     onSetReAct()
     // 卸载或切换会话后，取消延迟建联。
     let valid = true
     onReStart({
       activeChat,
       onStart,
-      shouldStart: () => valid,
+      shouldStart: () => valid && !isDeleted(sessionStatusStore.getState().deleteStatuses),
     })
     // 打开期间会话在别处被删除：回欢迎页
-    const isDeleted = (m: Map<string, SessionDeleteStatus>) => m.get(sid) === SessionDeleteStatus.Deleted
     const unsubscribe = sessionStatusStore.subscribe((state, prev) => {
       if (isDeleted(state.deleteStatuses) && !isDeleted(prev.deleteStatuses)) {
         setActiveChat?.(undefined)

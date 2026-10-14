@@ -205,7 +205,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       })
       if (isDisposed()) return
       const session = result.Data.find((item) => item.SessionID === sessionId)
-      if (!session) return
+      if (!session) {
+        setActiveChat(undefined)
+        return
+      }
       // grpcQueryAISession长时间无响应： 查询期间配置已被修改时，保留当前配置。
       if (getSetting() === initialSetting) {
         const params = session.StartParams

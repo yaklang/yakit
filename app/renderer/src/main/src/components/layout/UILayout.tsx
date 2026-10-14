@@ -2,8 +2,6 @@ import type React from 'react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { MacUIOp } from './MacUIOp'
-import type { yakProcess } from './PerformanceDisplay'
-const PerformanceDisplay = lazy(() => import('./PerformanceDisplay').then((m) => ({ default: m.PerformanceDisplay })))
 import { FuncDomain, UIOpNotice } from './FuncDomain'
 import { TemporaryProjectPop, WinUIOp } from './WinUIOp'
 import { GlobalState } from './GlobalState'
@@ -29,9 +27,7 @@ import {
   resolveEngineConsoleOpenType,
   type EngineConsoleOpenType,
 } from '../baseConsole/engineConsoleOpenType'
-const BaseConsoleDrawer = lazy(() => import('../baseConsole/BaseConsoleDrawer'))
 import {
-  GetConnectPort,
   getReleaseEditionName,
   isCommunityYakit,
   isEnpriTrace,
@@ -41,10 +37,6 @@ import {
   toDefaultYakEngineDownloadVersion,
 } from '@/utils/envfile'
 import { AllKillEngineConfirm } from './AllKillEngineConfirm'
-const SoftwareSettings = lazy(() =>
-  import('@/pages/softwareSettings/SoftwareSettings').then((m) => ({ default: m.SoftwareSettings })),
-)
-const EnterpriseJudgeLogin = lazy(() => import('@/pages/EnterpriseJudgeLogin'))
 import {
   type ExportProjectProps,
   getEnvTypeByProjects,
@@ -52,12 +44,6 @@ import {
   type ProjectIOProgress,
   type ProjectParamsProp,
 } from '@/pages/softwareSettings/projectUtils'
-const NewProjectAndFolder = lazy(() =>
-  import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.NewProjectAndFolder })),
-)
-const TransferProject = lazy(() =>
-  import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.TransferProject })),
-)
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { useScreenRecorder } from '@/store/screenRecorder'
@@ -66,21 +52,33 @@ import { useEeSystemConfig, useStore, useYakitDynamicStatus } from '@/store'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import emiter from '@/utils/eventBus/eventBus'
 import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
-const DownloadYakit = lazy(() => import('./update/DownloadYakit').then((m) => ({ default: m.DownloadYakit })))
-const DownloadYaklang = lazy(() => import('./update/DownloadYaklang').then((m) => ({ default: m.DownloadYaklang })))
-const YakitGetOnlinePlugin = lazy(() =>
-  import('@/pages/mitm/MITMServerHijacking/MITMPluginOnline').then((m) => ({ default: m.YakitGetOnlinePlugin })),
-)
 import { CheckCircleSolid, HomeSolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { setNowProjectDescription } from '@/pages/globalVariable'
 import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import type { GlobalNetworkConfig } from '../configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import type { CodecParamsProps, OpenFuzzerModal } from '../yakChat/chatCS'
-const NewThirdPartyApplicationConfig = lazy(() => import('../configNetwork/NewThirdPartyApplicationConfig'))
 import { usePerformanceSampling } from '@/store/performanceSampling'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 import { RefreshOutlined, LogOutOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+const PerformanceDisplay = lazy(() => import('./PerformanceDisplay').then((m) => ({ default: m.PerformanceDisplay })))
+const BaseConsoleDrawer = lazy(() => import('../baseConsole/BaseConsoleDrawer'))
+const SoftwareSettings = lazy(() =>
+  import('@/pages/softwareSettings/SoftwareSettings').then((m) => ({ default: m.SoftwareSettings })),
+)
+const EnterpriseJudgeLogin = lazy(() => import('@/pages/EnterpriseJudgeLogin'))
+const NewProjectAndFolder = lazy(() =>
+  import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.NewProjectAndFolder })),
+)
+const TransferProject = lazy(() =>
+  import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.TransferProject })),
+)
+const DownloadYakit = lazy(() => import('./update/DownloadYakit').then((m) => ({ default: m.DownloadYakit })))
+const DownloadYaklang = lazy(() => import('./update/DownloadYaklang').then((m) => ({ default: m.DownloadYaklang })))
+const YakitGetOnlinePlugin = lazy(() =>
+  import('@/pages/mitm/MITMServerHijacking/MITMPluginOnline').then((m) => ({ default: m.YakitGetOnlinePlugin })),
+)
+const NewThirdPartyApplicationConfig = lazy(() => import('../configNetwork/NewThirdPartyApplicationConfig'))
 
 import { CopyComponents } from '../yakitUI/YakitTag/YakitTag'
 import { Tooltip } from 'antd'
@@ -130,6 +128,11 @@ import type {
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType, ParamsToGroupByGroupName } from '@/pages/plugins/editDetails/utils'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
+import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
+import { useEngineConsoleStore } from '@/store/baseConsole'
+import { saveAIAgentCache } from '@/store/pageInfo'
 const PluginHasParamsModal = lazy(() =>
   import('../pluginHasParamsDrawer/PluginHasParamsDrawer').then((m) => ({ default: m.PluginHasParamsModal })),
 )
@@ -138,11 +141,6 @@ const ContextMenuExecutionHost = lazy(() =>
     default: m.ContextMenuExecutionHost,
   })),
 )
-import { YakitRoute } from '@/enums/yakitRoute'
-import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
-import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
-import { useEngineConsoleStore } from '@/store/baseConsole'
-import { saveAIAgentCache } from '@/store/pageInfo'
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
   Host: '127.0.0.1',
