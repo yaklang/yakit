@@ -478,12 +478,17 @@ describe('AITaskExecutionDetails 任务下拉切换', () => {
         },
       ],
     })
-    render(<AITaskExecutionDetails taskId="task-a" taskName="任务甲" />)
+    render(<AITaskExecutionDetails taskId="task-a" taskName="任务甲" taskGoal="任务甲目标" />)
+
+    expect(screen.getByText('任务甲目标')).toBeInTheDocument()
 
     fireEvent.click(within(screen.getByTestId('task-dropdown-menu')).getByText('任务乙'))
 
     expect(screen.getByText('任务 B 感知')).toBeInTheDocument()
     expect(screen.queryByText('任务 A 感知')).not.toBeInTheDocument()
+    // 快照无 goal：切换后清空，避免仍展示初始任务目标
+    expect(screen.queryByText('任务甲目标')).not.toBeInTheDocument()
+    expect(screen.getByText('AITaskExecutionDetails.noInfo')).toBeInTheDocument()
     expect(onSend).toHaveBeenCalledTimes(1)
     const payload = onSend.mock.calls[0][0]
     expect(payload.token).toBe('session-1')

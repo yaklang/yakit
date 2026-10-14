@@ -297,6 +297,14 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
   if (!payload.snapshot && !payload.todo) return
 
   const oldData = rawData.taskDetailsMap.get(taskId) || cloneDeep(DefaultPlanItemDetailsData)
+  if (
+    typeof payload.revision === 'number' &&
+    payload.revision > 0 &&
+    payload.revision <= (oldData.sessionSnapshotRevision ?? 0)
+  ) {
+    return
+  }
+
   oldData.uuid = uuidv4()
   oldData.taskId = taskId
 
@@ -315,7 +323,7 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
     oldData.backgroundProcesses = nested.background_processes
   }
   if (typeof payload.revision === 'number' && payload.revision > 0) {
-    oldData.sessionSnapshotRevision = Math.max(oldData.sessionSnapshotRevision ?? 0, payload.revision)
+    oldData.sessionSnapshotRevision = payload.revision
   }
 
   const perception = mapSessionPerceptionToPerceptionData(nested?.perception)

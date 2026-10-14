@@ -275,6 +275,58 @@ describe('aiTaskDetail handlers', () => {
     expect(detail?.sessionSnapshotRevision).toBe(3)
   })
 
+  it('task_snapshot ignores stale revisions before mutating cached details', () => {
+    const taskId = 'task-stale-snapshot'
+    const newerReq = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          revision: 5,
+          snapshot: {
+            execution: { task_name: '新快照', http_flow_count: 10 },
+            perception: { summary: '新感知', last_update_at: 200 },
+          },
+          todo: {
+            items: [{ id: 'todo-new', status: AIToDoListStatusEnum.Doing, content: '新待办', scope_task_id: taskId }],
+          },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.task_snapshot(newerReq)
+    expect(newerReq.rawData.taskDetailsMap.get(taskId)?.execution?.http_flow_count).toBe(10)
+    expect(newerReq.rawData.taskDetailsMap.get(taskId)?.sessionSnapshotRevision).toBe(5)
+
+    const staleReq = makeHandlerRequest({
+      rawData: newerReq.rawData,
+      store: newerReq.store,
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          revision: 3,
+          snapshot: {
+            execution: { task_name: '旧快照', http_flow_count: 1 },
+            perception: { summary: '旧感知', last_update_at: 100 },
+          },
+          todo: {
+            items: [{ id: 'todo-old', status: AIToDoListStatusEnum.Pending, content: '旧待办', scope_task_id: taskId }],
+          },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.task_snapshot(staleReq)
+
+    const detail = newerReq.rawData.taskDetailsMap.get(taskId)
+    expect(detail?.execution?.task_name).toBe('新快照')
+    expect(detail?.execution?.http_flow_count).toBe(10)
+    expect(detail?.perception?.summary).toBe('新感知')
+    expect(detail?.todoList?.items?.[0]?.content).toBe('新待办')
+    expect(detail?.sessionSnapshotRevision).toBe(5)
+  })
+
   it('task_snapshot capabilities：各 type/position 落入 fixed/dynamic，skill_load_state 按 stage/data 回退', () => {
     const taskId = 'task-capabilities'
     const req = makeHandlerRequest({

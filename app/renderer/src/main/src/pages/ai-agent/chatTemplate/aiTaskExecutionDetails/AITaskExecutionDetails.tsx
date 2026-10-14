@@ -121,6 +121,9 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     return planItemDetailsData.perception
   }, [planItemDetailsData?.perception])
 
+  // props.taskGoal 仅对应打开详情时的初始任务；切换下拉后快照无 goal，清空避免串任务
+  const selectedTaskGoal = selectedTaskId === taskId ? taskGoal : undefined
+
   const total = useCreation(
     () => planItemDetailsData?.todoList?.items?.length || 0,
     [planItemDetailsData?.todoList?.items?.length],
@@ -390,7 +393,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           </div>
           <AITaskExecutionDetailsCard
             title={t('AITaskExecutionDetails.taskGoal')}
-            content={taskGoal}
+            content={selectedTaskGoal}
             className={styles['summary-info-card']}
           />
           <AITaskExecutionDetailsCard
@@ -474,7 +477,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                 key="forge"
                 type="forge"
                 colTitle={t('AITaskExecutionDetails.skill')}
-                taskId={taskId}
+                taskId={selectedTaskId}
                 fixedList={forgeFixedList}
                 dynamicList={forgeDynamicList}
               />
@@ -484,7 +487,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                 key="tool"
                 type="tool"
                 colTitle={t('AITaskExecutionDetails.tool')}
-                taskId={taskId}
+                taskId={selectedTaskId}
                 fixedList={planItemDetailsData?.tool.fixed || []}
                 dynamicList={planItemDetailsData?.tool.dynamic || []}
               />
@@ -494,7 +497,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                 key="yak_plugin"
                 type="yak_plugin"
                 colTitle={t('AITaskExecutionDetails.plugin')}
-                taskId={taskId}
+                taskId={selectedTaskId}
                 fixedList={planItemDetailsData?.plugins.fixed || []}
                 dynamicList={planItemDetailsData?.plugins.dynamic || []}
               />
@@ -504,7 +507,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                 key="mcp"
                 type="mcp"
                 colTitle={t('AITaskExecutionDetails.mcp')}
-                taskId={taskId}
+                taskId={selectedTaskId}
                 fixedList={planItemDetailsData?.mcp.fixed || []}
                 dynamicList={planItemDetailsData?.mcp.dynamic || []}
               />
