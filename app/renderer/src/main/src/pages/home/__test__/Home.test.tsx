@@ -204,9 +204,9 @@ describe('Home 工具箱截屏入口平台过滤', () => {
       return {}
     })
     render(<Home />)
-    // 等待 fetch-system-name 异步回填 system 后再断言
-    await waitFor(() => expect(screen.getByText('Home.screenRecording')).toBeInTheDocument())
-    expect(screen.queryByText('Home.screenshot')).not.toBeInTheDocument()
+    // 初始 system 为 Darwin，截屏入口会先出现；等 fetch-system-name 回填 Linux 后再断言
+    await waitFor(() => expect(screen.queryByText('Home.screenshot')).not.toBeInTheDocument())
+    expect(screen.getByText('Home.screenRecording')).toBeInTheDocument()
   })
 
   it('Windows 系统保留截屏工具入口', async () => {
