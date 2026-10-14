@@ -3000,7 +3000,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       recoveryModal?.destroy()
       unsubscribeAI()
       unsubscribeFuzzer?.()
-      saveAIAgentCache.cancel()
+      saveAIAgentCache.flush()
     }
   }, [softMode])
   const onInitAIAgent = useMemoizedFn(

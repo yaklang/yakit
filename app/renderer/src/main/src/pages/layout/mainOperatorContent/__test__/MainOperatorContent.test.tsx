@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import ts from 'typescript'
+import debounce from 'lodash/debounce'
 import isEqual from 'lodash/isEqual'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -269,7 +270,7 @@ const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = fa
     aiCacheLoaded: { current: false },
     defPage: {},
     YakitRouteToPageInfo: { ai: { label: 'AI' } },
-    saveAIAgentCache: Object.assign(vi.fn(), { cancel: vi.fn() }),
+    saveAIAgentCache: Object.assign(vi.fn(), { cancel: vi.fn(), flush: vi.fn() }),
     saveFuzzerCache: Object.assign(vi.fn(), { cancel: vi.fn() }),
     getRemoteProjectValue: vi.fn(() => ai.promise),
     mergeAIAgentPageTabs: vi.fn((current) => current),
@@ -304,6 +305,129 @@ const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = fa
 describe('MainOperatorContent initial cache loading', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
+
+  it.each(['unmount', 'switch-project'] as const)('preserves final AI caches on %s', async (action) => {
+    // 执行生产保存函数，保留真实的 500ms 防抖，仅替换项目缓存的读写边界。
+    const cacheSource = ts.createSourceFile(
+      'pageInfo.ts',
+      readFileSync('app/renderer/src/main/src/store/pageInfo.ts', 'utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+    )
+    const saver = cacheSource.statements
+      .filter(ts.isVariableStatement)
+      .flatMap((statement) => [...statement.declarationList.declarations])
+      .find((node) => node.name.getText(cacheSource) === 'saveAIAgentCache')!
+    const targetCache = JSON.stringify([
+      { pageId: 'target-ai', pageName: 'Target conversation', pageParamsInfo: {}, sortFieId: 1 },
+    ])
+    const projectCaches = new Map([
+      ['original', '[]'],
+      ['target', targetCache],
+    ])
+    let activeProject = 'original'
+    let cacheAtSwitch: string | undefined
+    const write = vi.fn(async (_key: string, value: string) => {
+      const project = activeProject
+      await new Promise<void>((resolve) => setTimeout(resolve, 100))
+      projectCaches.set(project, value)
+    })
+    const app = setup({ memfit: false })
+    Object.assign(app.bindings, {
+      saveAIAgentCache: execute(`return ${saver.initializer!.getText(cacheSource)}`, {
+        debounce,
+        setRemoteProjectValue: write,
+        RemoteAIAgentGV: app.bindings.RemoteAIAgentGV,
+        yakitNotify: app.bindings.yakitNotify,
+        tOriginal: app.bindings.t,
+      }),
+    })
+    app.bindings.getRemoteProjectValue.mockImplementation(async () => projectCaches.get(activeProject)!)
+    app.mount()
+    app.wf.resolve('[]')
+    await settle()
+
+    const sync = app.bindings.usePageInfo.subscribe.mock.calls[0][1] as (page: unknown) => void
+    const removed = { pageId: 'removed-ai', pageName: 'Old conversation', pageParamsInfo: {}, sortFieId: 1 }
+    const added = {
+      pageId: 'new-ai',
+      pageName: 'New conversation',
+      pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'new-session', Title: 'New conversation' } } },
+      sortFieId: 2,
+    }
+    const updated = {
+      ...added,
+      pageName: 'Final title',
+      pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'new-session', Title: 'Final title' } } },
+    }
+    sync({ pageList: [removed] })
+    sync({ pageList: [removed, added] })
+    sync({ pageList: [added] })
+    sync({ pageList: [updated] })
+    expect(projectCaches.get('original')).toBe('[]')
+    await vi.advanceTimersByTimeAsync(100)
+    expect(write).toHaveBeenCalledOnce()
+    expect(JSON.parse(projectCaches.get('original')!)).toEqual([removed])
+
+    let switching: Promise<void> | undefined
+    if (action === 'switch-project') {
+      const layoutSource = ts.createSourceFile(
+        'UILayout.tsx',
+        readFileSync('app/renderer/src/main/src/components/layout/UILayout.tsx', 'utf8'),
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TSX,
+      )
+      let switchProjectDeclaration: ts.VariableDeclaration | undefined
+      const visit = (node: ts.Node) => {
+        if (ts.isVariableDeclaration(node) && node.name.getText(layoutSource) === 'onOkEnterProjectMag') {
+          switchProjectDeclaration = node
+        }
+        ts.forEachChild(node, visit)
+      }
+      visit(layoutSource)
+      // 执行真实切库入口；模拟切库请求先完成，随后页面提交触发卸载的合法顺序。
+      const switchProject = execute(`return ${switchProjectDeclaration!.initializer!.getText(layoutSource)}`, {
+        useMemoizedFn: (fn: unknown) => fn,
+        yakitProject: {
+          setCurrentProject: vi.fn(async () => {
+            cacheAtSwitch = projectCaches.get('original')
+            activeProject = 'target'
+          }),
+        },
+        getEnvTypeByProjects: () => 'project',
+        setYakitMode: vi.fn(),
+        showProjectManage: false,
+        emiter: { emit: vi.fn() },
+        setShowProjectManage: (visible: boolean) => {
+          if (visible) app.dispose()
+        },
+        setCurrentProject: vi.fn(),
+        setNowProjectDescription: vi.fn(),
+      })
+      switching = switchProject()
+    } else {
+      app.dispose()
+    }
+    await vi.advanceTimersByTimeAsync(100)
+    await switching
+    if (action === 'switch-project') expect.soft(JSON.parse(cacheAtSwitch!)).toEqual([updated])
+    expect(write).toHaveBeenCalledTimes(2)
+    expect.soft(JSON.parse(projectCaches.get('original')!)).toEqual([updated])
+    expect.soft(projectCaches.get('target')).toBe(targetCache)
+
+    const restored = setup({ memfit: false })
+    restored.bindings.getRemoteProjectValue.mockImplementation(async () => projectCaches.get('original')!)
+    restored.mount()
+    restored.wf.resolve('[]')
+    await settle()
+    expect
+      .soft(restored.bindings.setPagesData)
+      .toHaveBeenCalledExactlyOnceWith('ai', expect.objectContaining({ pageList: [updated] }))
+    expect(write).toHaveBeenCalledTimes(2)
+    restored.dispose()
+  })
+
   it('locks the default Memfit page before the restore effect runs', () => {
     const app = setup()
     expect(app.locked()).toBe(true)
