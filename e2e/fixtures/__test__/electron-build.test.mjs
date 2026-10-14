@@ -17,6 +17,7 @@ import {
   codeOptions,
   exists,
   repoRoot,
+  validateRendererArtifacts,
 } from '../../../scripts/build-electron.mjs'
 import { waitForRenderers } from '../../../scripts/start-electron.mjs'
 
@@ -345,4 +346,155 @@ describe('Electron bundle contract', () => {
       await new Promise((resolve) => server.close(resolve))
     }
   })
+})
+
+const rendererResources = [
+  'app/renderer/pages/main/index.html',
+  'app/renderer/pages/main/yakit-aux.html',
+  'app/renderer/pages/main/theme.css',
+  'app/renderer/engine-link-startup/dist/index.html',
+  'app/renderer/electron/electron.html',
+  'app/protos/grpc.proto',
+  'app/assets/导入模板.xlsx',
+]
+
+async function writeFixtureFile(root, file, contents = 'fixture') {
+  const target = path.join(root, file)
+  await mkdir(path.dirname(target), { recursive: true })
+  await writeFile(target, contents)
+}
+
+// Run the unchanged build script in a fresh Node process so packBuild is isolated.
+// Small source/resource fixtures exercise the real build and filesystem without packaging Electron.
+async function createPackFixture() {
+  const root = await mkdtemp(path.join(temporary, 'pack-'))
+  await mkdir(path.join(root, 'scripts'))
+  for (const file of ['scripts/build-electron.mjs', 'tsconfig.electron.json', 'tsconfig.preload.json']) {
+    await cp(path.join(repoRoot, file), path.join(root, file))
+  }
+  await symlink(path.join(repoRoot, 'node_modules'), path.join(root, 'node_modules'), 'junction')
+  await writeFixtureFile(root, 'package.json', JSON.stringify({ version: '1.2.3', dependencies: {} }))
+  for (const file of ['index.js', 'preload.js', 'engineLinkPreload.js', 'screenshots/preload.js', 'ipcModules.js']) {
+    await writeFixtureFile(root, `app/main/${file}`, 'module.exports = {}\n')
+  }
+  await mkdir(path.join(root, 'app/main/screenshots/lib'), { recursive: true })
+  await writeFixtureFile(root, 'app/main/handlers/libs/fixture.js', 'module.exports = {}\n')
+  await writeFixtureFile(root, 'app/main/handlers/openNewChildWindow/index.html', '<html></html>')
+  for (const file of rendererResources) await writeFixtureFile(root, file)
+  return {
+    root,
+    run: async (body) => {
+      await writeFixtureFile(
+        root,
+        'verify.mjs',
+        `
+import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
+import { createRequire } from 'node:module'
+import { readFile, rm, writeFile } from 'node:fs/promises'
+import path from 'node:path'
+import { prepareElectronPack, repoRoot } from './scripts/build-electron.mjs'
+const require = createRequire(import.meta.url)
+const context = (platform, arch, config = {}) => ({ electronPlatformName: platform, arch, packager: { config } })
+const output = path.join(repoRoot, 'dist/electron')
+${body}
+`,
+      )
+      return execFileAsync(process.execPath, ['verify.mjs'], {
+        cwd: root,
+        env: { ...process.env, YAKIT_EDITION: 'memfit' },
+      })
+    },
+  }
+}
+
+describe('Electron package preparation', () => {
+  it('shares one build across concurrent architectures and archives matching maps and metadata', async () => {
+    const fixture = await createPackFixture()
+    const result = await fixture.run(`
+const targets = [context('linux', 1, { electronVersion: '22.3.27' }), context('linux', 3)]
+await Promise.all(targets.map((target) => prepareElectronPack(target)))
+await prepareElectronPack(targets[0])
+const info = JSON.parse(await readFile(path.join(output, 'build-info.json'), 'utf8'))
+assert.equal(info.mode, 'production')
+assert.equal(info.version, '1.2.3')
+assert.equal(Object.keys(info.hashes).length, 4)
+for (const [index, architecture] of ['x64', 'arm64'].entries()) {
+  const electronVersion = index === 0 ? '22.3.27' : require('electron/package.json').version
+  const archive = path.join(repoRoot, 'reports/electron-build',
+    '1.2.3-memfit-linux-' + architecture + '-' + electronVersion + '-' + info.hashes['main/index.js'].slice(0, 12))
+  assert.deepEqual(JSON.parse(await readFile(path.join(archive, 'build-info.json'), 'utf8')),
+    { ...info, electronVersion, platform: 'linux', architecture })
+  for (const [entry, hash] of Object.entries(info.hashes)) {
+    assert.equal(createHash('sha256').update(await readFile(path.join(output, entry))).digest('hex'), hash)
+    assert.deepEqual(await readFile(path.join(archive, entry + '.map')), await readFile(path.join(output, entry + '.map')))
+  }
+}
+`)
+    expect(result.stdout.match(/\[electron-build\] production:/g)).toHaveLength(1)
+  }, 30000)
+
+  it.each(['renderer', 'build'])(
+    'allows retry after a %s failure',
+    async (failure) => {
+      const fixture = await createPackFixture()
+      const missing = failure === 'renderer' ? rendererResources[3] : 'app/main/screenshots/preload.js'
+      const expected = failure === 'renderer' ? 'Missing runtime resource:' : 'Expected one JS/TS entry'
+      const result = await fixture.run(`
+const missing = ${JSON.stringify(missing)}
+const original = await readFile(missing)
+await rm(missing)
+const target = context('linux', 1)
+await assert.rejects(prepareElectronPack(target), (error) => error.message.includes(${JSON.stringify(expected)}))
+await writeFile(missing, original)
+await prepareElectronPack(target)
+assert.equal(JSON.parse(await readFile(path.join(output, 'build-info.json'), 'utf8')).mode, 'production')
+`)
+      expect(result.stdout.match(/\[electron-build\] production:/g)).toHaveLength(1)
+    },
+    30000,
+  )
+
+  it.each(rendererResources)('rejects packaging resources missing %s', async (missing) => {
+    const fixture = await createPackFixture()
+    await expect(validateRendererArtifacts(fixture.root)).resolves.toBeUndefined()
+    await rm(path.join(fixture.root, missing))
+    await expect(validateRendererArtifacts(fixture.root)).rejects.toThrow(`Missing runtime resource: ${missing};`)
+  })
+
+  it.each([
+    ['darwin', 1, 'node-screenshots.darwin-x64.node', null],
+    ['darwin', 3, 'node-screenshots.darwin-arm64.node', null],
+    ['win32', 0, 'node-screenshots.win32-ia32-msvc.node', 'fastlist-0.3.0-x86.exe'],
+    ['win32', 1, 'node-screenshots.win32-x64-msvc.node', 'fastlist-0.3.0-x64.exe'],
+    ['win32', 3, 'node-screenshots.win32-arm64-msvc.node', null],
+    ['linux', 1, null, null],
+    ['linux', 3, null, null],
+  ])(
+    'checks only the required resources for %s architecture %s',
+    async (platform, arch, nativeFile, helper) => {
+      const fixture = await createPackFixture()
+      if (nativeFile) await writeFixtureFile(fixture.root, `app/main/screenshots/lib/${nativeFile}`)
+      if (helper) await writeFixtureFile(fixture.root, `app/main/handlers/libs/extVendor/${helper}`)
+      await fixture.run(`
+const target = context(${JSON.stringify(platform)}, ${arch})
+await prepareElectronPack(target)
+const nativeFile = ${JSON.stringify(nativeFile)}
+if (nativeFile) {
+  const file = path.join(output, 'resources/screenshots', nativeFile)
+  const original = await readFile(file)
+  await rm(file)
+  await assert.rejects(prepareElectronPack(target), { message: 'Missing native resource: ' + file })
+  await writeFile(file, original)
+}
+const helper = ${JSON.stringify(helper)}
+if (helper) {
+  const file = path.join(output, 'resources/vendor/extVendor', helper)
+  await rm(file)
+  await assert.rejects(prepareElectronPack(target), { message: 'Missing Windows process helper: ' + file })
+}
+`)
+    },
+    30000,
+  )
 })
