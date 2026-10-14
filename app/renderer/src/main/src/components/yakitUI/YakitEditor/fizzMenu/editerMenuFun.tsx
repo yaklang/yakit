@@ -1,8 +1,9 @@
 import type React from 'react'
+import { YakitAntdProvider } from '@/theme/antdTheme'
 import { v4 as uuidv4 } from 'uuid'
 import { monaco } from 'react-monaco-editor'
 import { editor as newEditor } from 'monaco-editor'
-import { createRoot } from 'react-dom/client'
+import { createRoot, type Root } from 'react-dom/client'
 import type { QueryFuzzerLabelResponseProps } from '@/pages/fuzzer/StringFuzzer'
 import {
   type CountDirectionProps,
@@ -19,6 +20,19 @@ import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { YakitIMonacoEditor } from '../YakitEditorType'
 
 const { ipcRenderer } = window.require('electron')
+
+// 浮层是独立 createRoot，要自己带上主题，按钮样式才会生效
+const mountEditorMenu = (domNode: HTMLElement, node: React.ReactNode) => {
+  const root = createRoot(domNode)
+  root.render(<YakitAntdProvider>{node}</YakitAntdProvider>)
+  return root
+}
+
+// 关闭动作来自菜单内部的点击，不能在这次渲染里同步 unmount
+const unmountMenuRoot = (root: Root | null) => {
+  if (!root) return
+  queueMicrotask(() => root.unmount())
+}
 
 export interface EditerMenuFunParams {
   editor: YakitIMonacoEditor
@@ -108,17 +122,24 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
     }
   }
 
+  let selectRoot: Root | null = null
+  let rangeRoot: Root | null = null
+
   // 关闭点击的菜单
   const closeFizzSelectWidget = () => {
     fizzSelectWidget.isOpen = false
     fizzSelectTimeoutIdRef.current && clearTimeout(fizzSelectTimeoutIdRef.current)
     editor.removeContentWidget(fizzSelectWidget)
+    unmountMenuRoot(selectRoot)
+    selectRoot = null
   }
   // 关闭选中的菜单
   const closeFizzRangeWidget = () => {
     fizzRangeWidget.isOpen = false
     fizzRangeTimeoutIdRef.current && clearTimeout(fizzRangeTimeoutIdRef.current)
     editor.removeContentWidget(fizzRangeWidget)
+    unmountMenuRoot(rangeRoot)
+    rangeRoot = null
   }
 
   // 编辑器点击显示的菜单
@@ -132,10 +153,12 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
       const domNode = document.createElement('div')
       // 解决弹窗内鼠标滑轮无法滚动的问题
       domNode.onwheel = (e) => e.stopPropagation()
+      unmountMenuRoot(selectRoot)
       if (selectNode) {
-        createRoot(domNode).render(selectNode(closeFizzSelectWidget, editorInfoRef.current))
+        selectRoot = mountEditorMenu(domNode, selectNode(closeFizzSelectWidget, editorInfoRef.current))
       } else {
-        createRoot(domNode).render(
+        selectRoot = mountEditorMenu(
+          domNode,
           <HTTPFuzzerClickEditorMenu
             editorInfo={editorInfoRef.current}
             close={() => closeFizzSelectWidget()}
@@ -182,11 +205,13 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
       const domNode = document.createElement('div')
       // 解决弹窗内鼠标滑轮无法滚动的问题
       domNode.onwheel = (e) => e.stopPropagation()
+      unmountMenuRoot(rangeRoot)
       if (rangeNode) {
-        createRoot(domNode).render(rangeNode(closeFizzRangeWidget, editorInfoRef.current))
+        rangeRoot = mountEditorMenu(domNode, rangeNode(closeFizzRangeWidget, editorInfoRef.current))
       } else {
         readOnly
-          ? createRoot(domNode).render(
+          ? (rangeRoot = mountEditorMenu(
+              domNode,
               <HTTPFuzzerRangeReadOnlyEditorMenu
                 editorInfo={editorInfoRef.current}
                 rangeValue={(editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ''}
@@ -194,8 +219,9 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
                 fizzRangeTimeoutId={fizzRangeTimeoutIdRef}
                 execAutoDecodeCallback={execAutoDecodeCallback}
               />,
-            )
-          : createRoot(domNode).render(
+            ))
+          : (rangeRoot = mountEditorMenu(
+              domNode,
               <HTTPFuzzerRangeEditorMenu
                 editorInfo={editorInfoRef.current}
                 close={() => closeFizzRangeWidget()}
@@ -247,7 +273,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
                       }
                 }
               />,
-            )
+            ))
       }
       return domNode
     },
@@ -274,52 +300,56 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
   closeFizzRangeWidget()
 
   editor?.getModel()?.pushEOL(newEditor.EndOfLineSequence.CRLF)
-  editor.onMouseMove((e) => {
-    try {
-      // const pos = e.target.position
-      // if (pos?.lineNumber) {
-      //     const lineOffset = pos.lineNumber - (editor.getPosition()?.lineNumber || 0)
-      //     // 超出范围移除菜单
-      //     if (lineOffset > 2 || lineOffset < -2) {
-      //         // console.log("移出两行内");
-      //         closeFizzSelectWidget()
-      //         closeFizzRangeWidget()
-      //     }
-      // }
+  // 监听器要随清理函数释放：编辑器实例仍存活时（如关闭浮层菜单功能），旧回调不能再开浮层
+  const editorListeners: { dispose: () => void }[] = []
+  editorListeners.push(
+    editor.onMouseMove((e) => {
+      try {
+        // const pos = e.target.position
+        // if (pos?.lineNumber) {
+        //     const lineOffset = pos.lineNumber - (editor.getPosition()?.lineNumber || 0)
+        //     // 超出范围移除菜单
+        //     if (lineOffset > 2 || lineOffset < -2) {
+        //         // console.log("移出两行内");
+        //         closeFizzSelectWidget()
+        //         closeFizzRangeWidget()
+        //     }
+        // }
 
-      const { target, event } = e
-      const { posy } = event
-      const detail =
-        target.type === newEditor.MouseTargetType.CONTENT_WIDGET ||
-        target.type === newEditor.MouseTargetType.OVERLAY_WIDGET
-          ? target.detail
-          : undefined
-      const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
-      if (detail !== selectId && detail !== rangeId && downPosYRef.current && upPosYRef.current) {
-        const overHeight = overLine * lineHeight
-        if (fizzSelectWidget.isOpen) {
-          if (posy < upPosYRef.current - overHeight || posy > upPosYRef.current + overHeight) {
-            closeFizzSelectWidget()
-          }
-        } else if (fizzRangeWidget.isOpen) {
-          // 从上到下的选择范围
-          if (
-            downPosYRef.current < upPosYRef.current &&
-            (posy < downPosYRef.current - overHeight || posy > upPosYRef.current + overHeight)
-          ) {
-            closeFizzRangeWidget()
-          }
-          // 从下到上的选择范围
-          else if (
-            downPosYRef.current > upPosYRef.current &&
-            (posy < upPosYRef.current - overHeight || posy > downPosYRef.current + overHeight)
-          ) {
-            closeFizzRangeWidget()
+        const { target, event } = e
+        const { posy } = event
+        const detail =
+          target.type === newEditor.MouseTargetType.CONTENT_WIDGET ||
+          target.type === newEditor.MouseTargetType.OVERLAY_WIDGET
+            ? target.detail
+            : undefined
+        const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
+        if (detail !== selectId && detail !== rangeId && downPosYRef.current && upPosYRef.current) {
+          const overHeight = overLine * lineHeight
+          if (fizzSelectWidget.isOpen) {
+            if (posy < upPosYRef.current - overHeight || posy > upPosYRef.current + overHeight) {
+              closeFizzSelectWidget()
+            }
+          } else if (fizzRangeWidget.isOpen) {
+            // 从上到下的选择范围
+            if (
+              downPosYRef.current < upPosYRef.current &&
+              (posy < downPosYRef.current - overHeight || posy > upPosYRef.current + overHeight)
+            ) {
+              closeFizzRangeWidget()
+            }
+            // 从下到上的选择范围
+            else if (
+              downPosYRef.current > upPosYRef.current &&
+              (posy < upPosYRef.current - overHeight || posy > downPosYRef.current + overHeight)
+            ) {
+              closeFizzRangeWidget()
+            }
           }
         }
-      }
-    } catch (e) {}
-  })
+      } catch (e) {}
+    }),
+  )
 
   // 移出编辑器时触发
   // editor.onMouseLeave(() => {
@@ -327,129 +357,143 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
   //     closeFizzRangeWidget()
   // })
 
-  editor.onMouseDown((e) => {
-    const { leftButton, posy } = e.event
-    // 当两者都没有打开时
-    if (leftButton && !fizzSelectWidget.isOpen && !fizzRangeWidget.isOpen) {
-      // 记录posy位置
-      downPosYRef.current = posy
-    }
-  })
+  editorListeners.push(
+    editor.onMouseDown((e) => {
+      const { leftButton, posy } = e.event
+      // 当两者都没有打开时
+      if (leftButton && !fizzSelectWidget.isOpen && !fizzRangeWidget.isOpen) {
+        // 记录posy位置
+        downPosYRef.current = posy
+      }
+    }),
+  )
 
-  editor.onMouseUp((e) => {
-    // @ts-expect-error 类型定义不完整，需要忽略此行
-    const { leftButton, rightButton, posy, editorPos } = e.event
-    // 获取编辑器所处x，y轴,并获取其长宽
-    const { x, y } = editorPos
+  editorListeners.push(
+    editor.onMouseUp((e) => {
+      // @ts-expect-error 类型定义不完整，需要忽略此行
+      const { leftButton, rightButton, posy, editorPos } = e.event
+      // 获取编辑器所处x，y轴,并获取其长宽
+      const { x, y } = editorPos
 
-    // 计算焦点的坐标位置
-    const a: monaco.Position | null = editor.getPosition()
-    if (!a) return
-    const position = editor.getScrolledVisiblePosition(a)
-    if (position) {
-      // 获取焦点在编辑器中所处位置，height为每行所占高度（随字体大小改变）
-      const { top, left, height } = position
+      // 计算焦点的坐标位置
+      const a: monaco.Position | null = editor.getPosition()
+      if (!a) return
+      const position = editor.getScrolledVisiblePosition(a)
+      if (position) {
+        // 获取焦点在编辑器中所处位置，height为每行所占高度（随字体大小改变）
+        const { top, left, height } = position
 
-      // 解决方法1
-      // 获取焦点位置判断焦点所处于编辑器的位置（上下左右）从而决定弹出层显示方向
-      // 问题  需要焦点位置进行计算 如何获取焦点位置？  目前仅找到行列号 无法定位到其具体坐标位置
-      // console.log("焦点位置：", e, x, left, y, top, x + left, y + top)
-      const focusX = x + left
-      const focusY = y + top
+        // 解决方法1
+        // 获取焦点位置判断焦点所处于编辑器的位置（上下左右）从而决定弹出层显示方向
+        // 问题  需要焦点位置进行计算 如何获取焦点位置？  目前仅找到行列号 无法定位到其具体坐标位置
+        // console.log("焦点位置：", e, x, left, y, top, x + left, y + top)
+        const focusX = x + left
+        const focusY = y + top
 
-      // 焦点与抬起坐标是否超出限制
-      const isOver: boolean = overLine * height < Math.abs(focusY - posy)
-      if (leftButton && !isOver) {
-        // 获取编辑器容器的相关信息并判断其处于编辑器的具体方位
-        const editorContainer = editor.getDomNode()
-        if (editorContainer) {
-          const editorContainerInfo = editorContainer.getBoundingClientRect()
-          const { top, bottom, left, right } = editorContainerInfo
-          // 通过判断编辑器长宽限制是否显示 (宽度小于250或者长度小于200则不展示)
-          const isShowByLimit = right - left > 250 && bottom - top > 200
-          // 判断焦点位置
-          const isTopHalf = focusY < (top + bottom) / 2
-          const isLeftHalf = focusX < (left + right) / 2
-          // 行高
-          // const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
+        // 焦点与抬起坐标是否超出限制
+        const isOver: boolean = overLine * height < Math.abs(focusY - posy)
+        if (leftButton && !isOver) {
+          // 获取编辑器容器的相关信息并判断其处于编辑器的具体方位
+          const editorContainer = editor.getDomNode()
+          if (editorContainer) {
+            const editorContainerInfo = editorContainer.getBoundingClientRect()
+            const { top, bottom, left, right } = editorContainerInfo
+            // 通过判断编辑器长宽限制是否显示 (宽度小于250或者长度小于200则不展示)
+            const isShowByLimit = right - left > 250 && bottom - top > 200
+            // 判断焦点位置
+            const isTopHalf = focusY < (top + bottom) / 2
+            const isLeftHalf = focusX < (left + right) / 2
+            // 行高
+            // const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
 
-          const countDirection: CountDirectionProps = {}
-          if (isTopHalf) {
-            // 鼠标位于编辑器上半部分
-            countDirection.y = 'top'
-          } else {
-            // 鼠标位于编辑器下半部分
-            countDirection.y = 'bottom'
-          }
-          if (Math.abs(focusX - (left + right) / 2) < 50) {
-            // 鼠标位于编辑器中间部分
-            countDirection.x = 'middle'
-          } else if (isLeftHalf) {
-            // 鼠标位于编辑器左半部分
-            countDirection.x = 'left'
-          } else {
-            // 鼠标位于编辑器右半部分
-            countDirection.x = 'right'
-          }
+            const countDirection: CountDirectionProps = {}
+            if (isTopHalf) {
+              // 鼠标位于编辑器上半部分
+              countDirection.y = 'top'
+            } else {
+              // 鼠标位于编辑器下半部分
+              countDirection.y = 'bottom'
+            }
+            if (Math.abs(focusX - (left + right) / 2) < 50) {
+              // 鼠标位于编辑器中间部分
+              countDirection.x = 'middle'
+            } else if (isLeftHalf) {
+              // 鼠标位于编辑器左半部分
+              countDirection.x = 'left'
+            } else {
+              // 鼠标位于编辑器右半部分
+              countDirection.x = 'right'
+            }
 
-          editorInfoRef.current = {
-            direction: countDirection,
-            top,
-            bottom,
-            left,
-            right,
-            focusX,
-            focusY,
-            lineHeight: height,
-            scrollTop: onScrollTopRef.current,
-          }
+            editorInfoRef.current = {
+              direction: countDirection,
+              top,
+              bottom,
+              left,
+              right,
+              focusX,
+              focusY,
+              lineHeight: height,
+              scrollTop: onScrollTopRef.current,
+            }
 
-          upPosYRef.current = posy
-          const selection = editor.getSelection()
-          if (selection && isShowByLimit) {
-            const selectedText = editor.getModel()?.getValueInRange(selection) || ''
-            if (fizzSelectWidget.isOpen && selectedText.length === 0) {
-              // 更新点击菜单小部件的位置
-              fizzSelectWidget.update()
-            } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
-              fizzRangeWidget.update()
-            } else if (selectedText.length === 0) {
-              if (!readOnly && getShowActionBar()) {
-                closeFizzRangeWidget()
-                // 展示点击的菜单
-                selectId && editor.addContentWidget(fizzSelectWidget)
-                fizzSelectWidget.isOpen = true
+            upPosYRef.current = posy
+            const selection = editor.getSelection()
+            if (selection && isShowByLimit) {
+              const selectedText = editor.getModel()?.getValueInRange(selection) || ''
+              if (fizzSelectWidget.isOpen && selectedText.length === 0) {
+                // 更新点击菜单小部件的位置
+                fizzSelectWidget.update()
+              } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
+                fizzRangeWidget.update()
+              } else if (selectedText.length === 0) {
+                if (!readOnly && getShowActionBar()) {
+                  closeFizzRangeWidget()
+                  // 展示点击的菜单
+                  selectId && editor.addContentWidget(fizzSelectWidget)
+                  fizzSelectWidget.isOpen = true
+                }
+              } else {
+                closeFizzSelectWidget()
+                if (getShowActionBar()) {
+                  // 展示选中的菜单
+                  rangeId && editor.addContentWidget(fizzRangeWidget)
+                  fizzRangeWidget.isOpen = true
+                }
               }
             } else {
+              closeFizzRangeWidget()
               closeFizzSelectWidget()
-              if (getShowActionBar()) {
-                // 展示选中的菜单
-                rangeId && editor.addContentWidget(fizzRangeWidget)
-                fizzRangeWidget.isOpen = true
-              }
             }
-          } else {
-            closeFizzRangeWidget()
-            closeFizzSelectWidget()
           }
         }
+        if (rightButton) {
+          closeFizzRangeWidget()
+          closeFizzSelectWidget()
+        }
       }
-      if (rightButton) {
-        closeFizzRangeWidget()
-        closeFizzSelectWidget()
-      }
-    }
-  })
-  editor.onDidScrollChange((e) => {
-    const { scrollTop } = e
-    onScrollTopRef.current = scrollTop
-  })
+    }),
+  )
+  editorListeners.push(
+    editor.onDidScrollChange((e) => {
+      const { scrollTop } = e
+      onScrollTopRef.current = scrollTop
+    }),
+  )
 
   // 监听光标移动
-  editor.onDidChangeCursorPosition((e) => {
-    closeFizzRangeWidget()
+  editorListeners.push(
+    editor.onDidChangeCursorPosition((e) => {
+      closeFizzRangeWidget()
+      closeFizzSelectWidget()
+      // const { position } = e;
+      // console.log('当前光标位置：', position);
+    }),
+  )
+
+  return () => {
     closeFizzSelectWidget()
-    // const { position } = e;
-    // console.log('当前光标位置：', position);
-  })
+    closeFizzRangeWidget()
+    editorListeners.forEach((d) => d.dispose())
+  }
 }

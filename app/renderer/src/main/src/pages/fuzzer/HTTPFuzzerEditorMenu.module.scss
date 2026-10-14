@@ -96,7 +96,10 @@
         top: 6px;
       }
       .add-icon {
-        padding-top: 2px;
+        svg {
+          height: 12px;
+          width: 12px;
+        }
       }
     }
   }

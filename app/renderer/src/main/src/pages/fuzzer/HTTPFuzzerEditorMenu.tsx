@@ -379,7 +379,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             </div>
             <div className={styles['menu-header-opt']}>
               <YakitButton style={{ paddingLeft: 2, paddingRight: 2 }} type="text" onClick={() => addLabel()}>
-                {t('YakitButton.add')} <PlusOutlined />
+                {t('YakitButton.add')} <PlusOutlined className={styles['add-icon']} />
               </YakitButton>
               <div className={styles['line']}></div>
               <YakitButton type="text2" style={{ color: '#85899E' }} onClick={() => reset()}>
