@@ -28,6 +28,10 @@
         }
       }
 
+      .startup-logo-memfit {
+        margin-bottom: 0;
+      }
+
       .startup-desc {
         color: var(--Colors-Use-Neutral-Disable);
         letter-spacing: 2px;
@@ -64,9 +68,11 @@
       width: 100%;
       height: 100%;
     }
-    video {
+
+    .startup-blinds {
       border-radius: 12px;
       width: 100%;
+      height: 100%;
     }
   }
 }

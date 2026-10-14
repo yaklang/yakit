@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   localLink: vi.fn(),
   installYakEngine: vi.fn(),
   emit: vi.fn(),
+  isMemfit: false,
   mainWindowHandler: undefined as undefined | ((data: { yakitStatus: string }) => void),
 }))
 
@@ -37,7 +38,7 @@ vi.mock('@/utils/envfile', () => ({
   isEnpriTraceAgent: () => false,
   isEnpriTraceIRify: () => false,
   isIRify: () => false,
-  isMemfit: () => false,
+  isMemfit: () => mocks.isMemfit,
 }))
 vi.mock('@/utils/electronBridge', () => ({
   yakitEngine: {
@@ -439,5 +440,34 @@ describe('StartupPage owned-engine recovery', () => {
   ])('provides a localized owned-engine cleanup failure message for %s', (_language, message) => {
     expect(message.trim()).not.toBe('')
     expect(message).not.toContain('raw ipc failure')
+  })
+})
+
+describe('StartupPage memfit right panel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.mainWindowHandler = undefined
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
+  })
+
+  afterEach(() => {
+    mocks.isMemfit = false
+    vi.restoreAllMocks()
+  })
+
+  it('renders the rolling blinds canvas instead of a static image in memfit mode', () => {
+    mocks.isMemfit = true
+    const { container } = render(<StartupPage />)
+
+    const canvasList = container.querySelectorAll('canvas')
+    expect(canvasList.length).toBe(1)
+    expect(container.querySelectorAll('img').length).toBe(0)
+  })
+
+  it('keeps the static image for non-memfit editions', () => {
+    const { container } = render(<StartupPage />)
+
+    expect(container.querySelectorAll('canvas').length).toBe(0)
+    expect(container.querySelectorAll('img').length).toBeGreaterThan(0)
   })
 })
