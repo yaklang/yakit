@@ -353,6 +353,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
 
   return (
     <div className={styles['func-domain-wrapper']} onDoubleClick={(e) => e.stopPropagation()}>
+      <PerformanceSamplingController />
       <div className={classNames(styles['func-domain-body'], { [styles['func-domain-reverse-body']]: isReverse })}>
         {showDevTool() && <UIDevTool onDevToolRefresh={onDevToolRefresh} />}
         {!showProjectManage && <NotepadMenu />}
@@ -769,6 +770,11 @@ const GetUIOpSettingMenu = (t: TFunction, isRecording: boolean, screenshotLoadin
       ...GetScreenAndScreenshotMenuItems(t, isRecording, screenshotLoading),
       { type: 'divider' },
       {
+        key: 'settings',
+        label: t('FuncDomain.settings'),
+      },
+      { type: 'divider' },
+      {
         key: 'official_website',
         label: t('HelpDoc.officialWebsite'),
       },
@@ -916,36 +922,8 @@ const GetUIOpSettingMenu = (t: TFunction, isRecording: boolean, screenshotLoadin
   ].filter((item) => item)
 }
 
-const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
-  const { engineMode, onEngineModeChange, typeCallback, token, isRecording } = props
+const PerformanceSamplingController: React.FC = React.memo(() => {
   const { t } = useI18nNamespaces(['home', 'layout'])
-  const [runNodeModalVisible, setRunNodeModalVisible] = useState<boolean>(false)
-  const [show, setShow] = useState<boolean>(false)
-  const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
-  const [available, setAvailable] = useState(false) // cve数据库是否可用
-  const [isDiffUpdate, setIsDiffUpdate] = useState(false)
-  const { dynamicStatus } = useYakitDynamicStatus()
-  const { delTemporaryProject } = useTemporaryProjectStore()
-  const [reclaimHint, setReclaimHint] = useState<boolean>(false)
-  const { setRecording } = useScreenRecorder()
-  /** 截屏功能的loading */
-  const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
-
-  useEffect(() => {
-    onIsCVEDatabaseReady()
-  }, [])
-  const onIsCVEDatabaseReady = useMemoizedFn(() => {
-    yakitEngine
-      .isCVEDatabaseReady()
-      .then((rsp: { Ok: boolean; Reason: string; ShouldUpdate: boolean }) => {
-        setAvailable(rsp.Ok)
-      })
-      .catch((err) => {
-        yakitFailed('IsCVEDatabaseReady失败：' + err)
-      })
-  })
-
-  // #region 性能采样
   const performanceModalRef = useRef<any>(null)
   const performanceModalLoading = useRef(false)
   const performanceParamsRef = useRef<{ timeout: string }>({ timeout: '10' })
@@ -1076,9 +1054,40 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     return () => {
       emiter.off('cancelPerformanceSampling', cancelPerformanceSampling)
       emiter.off('performanceSampling', handlePerformanceSampling)
+      setSampling(false)
     }
   }, [])
-  // #endregion
+  return null
+})
+
+const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
+  const { engineMode, onEngineModeChange, typeCallback, token, isRecording } = props
+  const { t } = useI18nNamespaces(['home', 'layout'])
+  const [runNodeModalVisible, setRunNodeModalVisible] = useState<boolean>(false)
+  const [show, setShow] = useState<boolean>(false)
+  const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
+  const [available, setAvailable] = useState(false) // cve数据库是否可用
+  const [isDiffUpdate, setIsDiffUpdate] = useState(false)
+  const { dynamicStatus } = useYakitDynamicStatus()
+  const { delTemporaryProject } = useTemporaryProjectStore()
+  const [reclaimHint, setReclaimHint] = useState<boolean>(false)
+  const { setRecording } = useScreenRecorder()
+  /** 截屏功能的loading */
+  const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
+
+  useEffect(() => {
+    onIsCVEDatabaseReady()
+  }, [])
+  const onIsCVEDatabaseReady = useMemoizedFn(() => {
+    yakitEngine
+      .isCVEDatabaseReady()
+      .then((rsp: { Ok: boolean; Reason: string; ShouldUpdate: boolean }) => {
+        setAvailable(rsp.Ok)
+      })
+      .catch((err) => {
+        yakitFailed('IsCVEDatabaseReady失败：' + err)
+      })
+  })
 
   // #region 崩溃日志收集
   const [crashLogVisible, setCrashLogVisible] = useState<boolean>(false)
@@ -1207,7 +1216,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       // 性能采样
       case 'performance-sampling':
-        handlePerformanceSampling()
+        emiter.emit('performanceSampling')
         break
       // 日志收集
       case 'renderLog':

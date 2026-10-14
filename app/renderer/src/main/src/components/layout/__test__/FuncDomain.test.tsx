@@ -42,6 +42,8 @@ const {
   engineList,
   engineFetchList,
   screenRecorderState,
+  performanceSamplingState,
+  setSampling,
 } = vi.hoisted(() => {
   // UIOpNotice 更新链路的可变 mock 状态（describe「UIOpNotice 更新按钮状态与文案」中按用例赋值）
   const eeConfig = { value: [] as Array<{ configName: string; isOpen: boolean }> }
@@ -52,10 +54,17 @@ const {
     intranetFile: '',
   }
   const engineList = { value: [] as string[] }
+  // 性能采样全局状态（模拟 zustand store 的共享对象语义，setSampling 回写）
+  const performanceSamplingState = {
+    isSampling: false,
+    isPerformanceSampling: false,
+    token: '',
+    log: [],
+  }
   return {
     startIdleVisibleInterval: vi.fn(() => vi.fn()),
     queryRisks: vi.fn(),
-    edition: { community: true, yakit: true, enterprise: false },
+    edition: { community: true, yakit: true, enterprise: false, agent: false },
     messageState: { unread: 0, menuOpen: false },
     menuActions: {
       setDynamicMenuOpen: vi.fn(),
@@ -65,6 +74,10 @@ const {
     },
     userInfo: { isLogin: false, platform: 'github' },
     screenRecorderState: { isRecording: false },
+    performanceSamplingState,
+    setSampling: vi.fn((b: boolean) => {
+      performanceSamplingState.isPerformanceSampling = b
+    }),
     eeConfig,
     versionSlots,
     engineList,
@@ -175,7 +188,7 @@ vi.mock('@/utils/envfile', async (importOriginal) => {
     isCommunityEdition: () => true,
     isCommunityYakit: () => edition.community,
     isEnpriTrace: () => edition.enterprise,
-    isEnpriTraceAgent: () => false,
+    isEnpriTraceAgent: () => edition.agent,
     isMemfit: () => false,
     isYakit: () => edition.yakit,
     showDevTool: () => false,
@@ -209,9 +222,9 @@ vi.mock('@/store/temporaryProject', () => ({
 
 vi.mock('@/store/performanceSampling', () => ({
   usePerformanceSampling: () => ({
-    performanceSamplingInfo: { isSampling: false, isPerformanceSampling: false, token: '', log: [] },
+    performanceSamplingInfo: performanceSamplingState,
     setPerformanceSamplingLog: vi.fn(),
-    setSampling: vi.fn(),
+    setSampling,
   }),
 }))
 
@@ -297,9 +310,25 @@ vi.mock('../userMenu/constants', () => ({
   randomAvatarColor: () => '#000',
 }))
 
-vi.mock('@/utils/eventBus/eventBus', () => ({
-  default: { on: vi.fn(), off: vi.fn(), emit: vi.fn() },
-}))
+// 事件总线 mock：保留 vi.fn 调用记录的同时让 on/off/emit 真正联动，
+// 以便断言「组件卸载后 performanceSampling 等监听是否存活」
+vi.mock('@/utils/eventBus/eventBus', () => {
+  const handlers = new Map<string, Set<(...args: unknown[]) => void>>()
+  return {
+    default: {
+      on: vi.fn((name: string, handler: (...args: unknown[]) => void) => {
+        if (!handlers.has(name)) handlers.set(name, new Set())
+        handlers.get(name)!.add(handler)
+      }),
+      off: vi.fn((name: string, handler: (...args: unknown[]) => void) => {
+        handlers.get(name)?.delete(handler)
+      }),
+      emit: vi.fn((name: string, ...args: unknown[]) => {
+        handlers.get(name)?.forEach((handler) => handler(...args))
+      }),
+    },
+  }
+})
 
 vi.mock('@/utils/notification', () => ({
   failed: vi.fn(),
@@ -576,6 +605,63 @@ describe('FuncDomain 性能采样与崩溃日志', () => {
     await waitFor(() =>
       expect(yakitNotify).toHaveBeenCalledWith('info', 'FuncDomain.crashLogPluginNotFound?name=崩溃日志收集'),
     )
+  })
+})
+
+describe('FuncDomain 切页采样常驻与便携版设置入口（回归）', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+    grpcFetchLocalPluginDetail.mockRejectedValue(new Error('not found'))
+    screenRecorderState.isRecording = false
+    edition.agent = false
+    performanceSamplingState.isPerformanceSampling = false
+  })
+
+  afterEach(() => {
+    edition.agent = false
+    performanceSamplingState.isPerformanceSampling = false
+  })
+
+  it('采样期间切换项目管理页：设置菜单卸载但取消采样监听存活，切页不清采样状态', () => {
+    const { rerender } = render(<FuncDomain {...baseProps} />)
+    // 模拟采样进行中（真实链路由采样启动成功写入全局 store）
+    performanceSamplingState.isPerformanceSampling = true
+
+    // 切到项目管理页：UIOpSetting（设置菜单）随之卸载，采样控制器常驻 FuncDomain 不受影响
+    rerender(<FuncDomain {...baseProps} showProjectManage={true} />)
+    expect(screen.queryByTestId('ui-op-setting-trigger')).not.toBeInTheDocument()
+    // 切页本身不应清除采样状态（采样仍在进行）
+    expect(setSampling).not.toHaveBeenCalled()
+
+    // 顶栏「采样中」停止按钮发出取消事件，监听仍能收尾全局状态
+    act(() => {
+      emiter.emit('cancelPerformanceSampling')
+    })
+    expect(setSampling).toHaveBeenCalledWith(false)
+  })
+
+  it('采样期间 FuncDomain 整体卸载时收尾采样状态，避免残留「采样中」', () => {
+    performanceSamplingState.isPerformanceSampling = true
+    const { unmount } = render(<FuncDomain {...baseProps} />)
+    unmount()
+    expect(setSampling).toHaveBeenCalledWith(false)
+  })
+
+  it('便携版设置菜单含全局设置入口，点击发出 openPage 事件', async () => {
+    edition.agent = true
+    render(<FuncDomain {...baseProps} />)
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
+
+    // 「刷新菜单」仅社区版菜单存在，缺失可证明当前走的是便携版分支
+    expect(await screen.findByText('FuncDomain.settings')).toBeInTheDocument()
+    expect(screen.queryByText('FuncDomain.refreshMenu')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('FuncDomain.settings'))
+    const calls = (emiter.emit as ReturnType<typeof vi.fn>).mock.calls.filter(([name]) => name === 'openPage')
+    expect(calls.length).toBeGreaterThan(0)
+    const payload = calls[calls.length - 1][1] as string
+    expect(payload).toContain('"anchor":"general"')
   })
 })
 
