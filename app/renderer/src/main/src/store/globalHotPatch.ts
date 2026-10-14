@@ -735,6 +735,171 @@ if YAK_MAIN {
 // ===== HOT PATCH TEMPLATE END =====
 `,
   },
+  {
+    name: '[全局] HTTP流量测试项打标',
+    nameUi: 'GlobalHotPatch.http_flow_test_tags',
+    content: `// 全局 HTTP 流量候选测试项标记器。
+//
+// 这个插件只做“值得测什么”的流量分类，不代表已经确认存在漏洞。
+// 标签统一使用 TEST: 前缀，便于前端筛选、二次 Fuzz 和报表统计。
+
+// 全局加载时预编译，避免在每条流量上重复编译正则。
+inputContentTypeRe = re2.Compile(\`content-type:.*(form-urlencoded|multipart/form-data|json)\`)~
+inputBodyRe = re2.Compile(\`\\r?\\n\\r?\\n.+\`)~
+htmlResponseRe = re2.Compile(\`content-type:.*(text/html|application/xhtml)|<html[\\s>]|<script[\\s>]\`)~
+injectionParamRe = re2.Compile(\`(^|[?&"'])((id|name|q|query|search|keyword|filter|sort|order|where|value|input|data|cmd|command|exec|template|expr)([=:"']))\`)~
+injectionPayloadRe = re2.Compile(\`(union(?:%20|\\s)+select|select(?:%20|\\s)+.+from|sleep\\s*\\(|waitfor\\s+delay|pg_sleep\\s*\\(|\\b(and|or)\\b(?:%20|\\s)+\\d+(?:%20|\\s)*=|;\\s*(cat|id|whoami|curl|wget)|\\$\\{[^}]+\\}|\\{\\{[^}]+\\}\\}|<%[^>]+%>)\`)~
+commandParamRe = re2.Compile(\`(^|[?&"'])((cmd|command|exec|execute|shell|ping|host|ip)([=:"']))\`)~
+commandPayloadRe = re2.Compile(\`(;|\\||&&)(cat|id|whoami|uname|curl|wget)(\\s|%20)\`)~
+sstiRe = re2.Compile(\`(\\$\\{|\\{\\{|<%|#\\{).*(\\}|%>)\`)~
+authRe = re2.Compile(\`authorization:|cookie:|token=|session=|jwt=|x-api-key:\`)~
+resourceIDRe = re2.Compile(\`(^|[/?&=_-])(id|uid|user_?id|account_?id|order_?id|tenant_?id|project_?id|role|permission)([/?&=_-]|\\d)\`)~
+resourcePathIDRe = re2.Compile(\`/[0-9]{1,12}(/|$)\`)~
+massAssignmentRe = re2.Compile(\`("|')?(role|isadmin|is_admin|permission|permissions|privilege|owner_?id)("|')?\\s*[:=]\`)~
+sensitiveResponseRe = re2.Compile(\`(password|passwd|secret|access[_-]?token|refresh[_-]?token|api[_-]?key|private[_-]?key|client[_-]?secret|authorization)\\s*[:=]|-----begin (rsa |ec |openssh )?private key-----|aws_access_key_id|akia[0-9a-z]{12,}|eyj[a-z0-9_-]{10,}\\.[a-z0-9_-]{10,}\\.\`)~
+errorDisclosureRe = re2.Compile(\`stack trace|traceback \\(|exception in thread|sql syntax.*error|未处理异常|debug=true|development mode\`)~
+corsRe = re2.Compile(\`access-control-allow-origin:\\s*\\*\`)~
+originRe = re2.Compile(\`origin:\`)~
+xssInputRe = re2.Compile(\`(q|query|search|keyword|name|title|content|comment|message|html|value|input)(=|:|%3d|")\`)~
+xssPayloadRe = re2.Compile(\`<script|javascript:|onerror\\s*=|onload\\s*=|%3cscript\`)~
+uploadRe = re2.Compile(\`content-type:\\s*multipart/form-data|content-disposition:\\s*form-data;[^\\r\\n]*filename=\`)~
+downloadURLRe = re2.Compile(\`/download|/export|/attachment|/file|/archive|\\.((zip|tar|gz|7z|rar|pdf|csv|xlsx?)($|[?/#]))\`)~
+downloadResponseRe = re2.Compile(\`content-disposition:\\s*attachment|content-type:\\s*application/(octet-stream|zip|pdf)\`)~
+traversalRe = re2.Compile(\`\\.\\./|%2e%2e|%252e%252e|/etc/passwd|boot\\.ini|win\\.ini\`)~
+fileSchemeRe = re2.Compile(\`file://|php://|zip://|phar://\`)~
+ssrfRe = re2.Compile(\`(url|uri|link|callback|webhook|redirect|next|dest|target|image|avatar|feed|proxy|src)([=:]|%3d|")([^\\r\\n]{0,80})(https?://|file://|gopher://|dict://|127\\.0\\.0\\.1|localhost|169\\.254\\.169\\.254|0x7f000001)\`)~
+redirectRe = re2.Compile(\`(redirect|next|return|dest|url)([=:]|%3d|")https?://\`)~
+xmlRe = re2.Compile(\`content-type:.*(xml|soap)|<!doctype|<!entity\`)~
+deserializationRe = re2.Compile(\`java\\.lang|ac\\s*ed|__viewstate|@type\\s*[:=]|o:\\d+:"|php serialized\`)~
+authenticationRe = re2.Compile(\`authorization:|set-cookie:|cookie:.*(session|token|sid)\`)~
+cookieRe = re2.Compile(\`cookie:\`)~
+csrfTokenRe = re2.Compile(\`csrf|xsrf|x-csrf-token|x-xsrf-token|nonce\`)~
+
+match = func(pattern, source) {
+    return pattern.MatchString(source)~
+}
+
+tag = func(flow, name) {
+    flow.AddTag("TEST:" + name)
+}
+
+containsAny = func(source, words) {
+    for word in words {
+        if str.Contains(source, word) {
+            return true
+        }
+    }
+    return false
+}
+
+hasInput = func(req) {
+    return str.Contains(req, "?") || match(inputContentTypeRe, req) || match(inputBodyRe, req)
+}
+
+hijackSaveHTTPFlow = func(flow, modify, drop) {
+    req = flow.GetRequest()
+    rsp = flow.GetResponse()
+    url = str.ToLower(flow.Url)
+    requestLower = str.ToLower(req)
+    responseLower = str.ToLower(rsp)
+    method = ""
+    requestLines = str.ParseStringToLines(req)
+    if len(requestLines) > 0 {
+        methodParts = str.Split(requestLines[0], " ")
+        if len(methodParts) > 0 {
+            method = str.ToUpper(methodParts[0])
+        }
+    }
+
+    input = hasInput(requestLower)
+    stateChanging = method == "POST" || method == "PUT" || method == "PATCH" || method == "DELETE"
+    htmlResponse = match(htmlResponseRe, responseLower)
+
+    // A05 Injection: SQL、命令、模板、表达式和高风险参数输入。
+    injectionParam = match(injectionParamRe, requestLower)
+    injectionPayload = match(injectionPayloadRe, requestLower)
+    if input && (injectionParam || injectionPayload) {
+        tag(flow, "Injection")
+    }
+    if injectionParam || injectionPayload {
+        tag(flow, "SQLi")
+    }
+    // re2 默认多行匹配，参数识别避开普通 Host 请求头。
+    commandInput = url + "\\n" + str.ToLower(string(poc.GetHTTPPacketBody(req)))
+    if match(commandParamRe, commandInput) || match(commandPayloadRe, requestLower) {
+        tag(flow, "CommandInjection")
+    }
+    if match(sstiRe, requestLower) {
+        tag(flow, "SSTI")
+    }
+
+    // A01 Broken Access Control / IDOR: 带身份态的资源 ID、租户和角色操作。
+    hasAuth = match(authRe, requestLower)
+    resourceID = match(resourceIDRe, url+requestLower) || match(resourcePathIDRe, url)
+    if resourceID && (hasAuth || stateChanging) {
+        tag(flow, "AccessControl")
+        tag(flow, "IDOR")
+    }
+    if match(massAssignmentRe, requestLower) {
+        tag(flow, "MassAssignment")
+    }
+
+    // 敏感信息、密钥、调试信息和不安全的跨域配置。
+    if match(sensitiveResponseRe, responseLower) {
+        tag(flow, "SensitiveInformation")
+    }
+    if match(errorDisclosureRe, responseLower) {
+        tag(flow, "InformationDisclosure")
+    }
+    if match(corsRe, responseLower) && match(originRe, requestLower) {
+        tag(flow, "CORS")
+    }
+
+    // HTML 响应与用户可控输入同时出现，进入反射/存储 XSS 测试队列。
+    if htmlResponse && (match(xssInputRe, requestLower) || match(xssPayloadRe, requestLower)) {
+        tag(flow, "XSS")
+    }
+
+    // 文件上传、下载与路径穿越/LFI。
+    if match(uploadRe, requestLower) {
+        tag(flow, "FileUpload")
+    }
+    if match(downloadURLRe, url) || match(downloadResponseRe, responseLower) {
+        tag(flow, "FileDownload")
+    }
+    if match(traversalRe, requestLower) ||
+        (containsAny(requestLower, ["filename", "filepath", "path", "file", "template", "page"]) && match(fileSchemeRe, requestLower)) {
+        tag(flow, "PathTraversal")
+        tag(flow, "FileInclusion")
+    }
+
+    // SSRF、重定向和 XML/反序列化输入。
+    if match(ssrfRe, requestLower) {
+        tag(flow, "SSRF")
+        if match(redirectRe, requestLower) {
+            tag(flow, "OpenRedirect")
+        }
+    }
+    if match(xmlRe, requestLower) {
+        tag(flow, "XXE")
+    }
+    if match(deserializationRe, requestLower) {
+        tag(flow, "Deserialization")
+    }
+
+    // 登录、令牌和带 Cookie 的状态变更请求。
+    if containsAny(url, ["/login", "/signin", "/oauth", "/token", "/session", "/password", "/reset"]) ||
+        match(authenticationRe, requestLower+responseLower) {
+        tag(flow, "Authentication")
+    }
+    if stateChanging && match(cookieRe, requestLower) && !match(csrfTokenRe, requestLower) {
+        tag(flow, "CSRF")
+    }
+
+    // 保存链路要求 hook 必须显式放行修改后的 flow。
+    modify(flow)
+}`,
+  },
 ]
 
 export const useGlobalHotPatch = create<GlobalHotPatchStore>((set, get) => ({
