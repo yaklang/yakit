@@ -40,6 +40,7 @@ const { ipcRendererMock, mocks } = vi.hoisted(() => {
       netWorkApi: vi.fn(),
       capturedMenu: { current: null as YakitMenuProp | null },
       userRole: { current: 'admin' },
+      globalTemplates: [] as Array<{ name: string; nameUi: string; content: string }>,
     },
   }
 })
@@ -90,7 +91,7 @@ vi.mock('@/store/globalHotPatch', () => {
   )
   return {
     DEFAULT_GLOBAL_TEMPLATE_CONTENT: '',
-    DEFAULT_GLOBAL_TEMPLATES: [],
+    DEFAULT_GLOBAL_TEMPLATES: mocks.globalTemplates,
     GLOBAL_HOT_PATCH_AUTO_START: 'global-hot-patch-auto-start',
     useGlobalHotPatch,
     useGlobalHotPatchTag: () => ({ globalEnabledTemplateName: '' }),
@@ -586,5 +587,65 @@ describe('HotPatchManagement 全局热加载自启动', () => {
         Value: '',
       }),
     )
+  })
+})
+
+describe('HotPatchManagement 全局模板本地化', () => {
+  const storedTemplateName = '[全局] HTTP流量测试项打标'
+  const localizedTemplateName = 'GlobalHotPatch.http_flow_test_tags'
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.globalTemplates.splice(0)
+    mocks.globalTemplates.push({
+      name: storedTemplateName,
+      nameUi: localizedTemplateName,
+      content: 'global-template-code',
+    })
+    ipcRendererMock.invoke.mockImplementation(async (channel: string, params?: { Type?: string; Name?: string[] }) => {
+      if (channel === 'QueryHotPatchTemplate') {
+        if (params?.Name?.length) {
+          return {
+            Data: [
+              {
+                Name: params.Name[0],
+                Content: 'global-template-code',
+                Type: params.Type,
+                Tags: [],
+              },
+            ],
+          }
+        }
+        return { Data: [] }
+      }
+      return undefined
+    })
+  })
+
+  afterEach(() => {
+    cleanup()
+    mocks.globalTemplates.splice(0)
+  })
+
+  it('renders the localized label while retaining the stored name for IPC', async () => {
+    render(<HotPatchManagement />)
+
+    await waitFor(() => expect(screen.getByText(localizedTemplateName)).toBeInTheDocument())
+
+    expect(screen.getByTitle(localizedTemplateName)).toBeInTheDocument()
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('CreateHotPatchTemplate', {
+      Type: 'global',
+      Content: 'global-template-code',
+      Name: storedTemplateName,
+      Tags: [],
+    })
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('QueryHotPatchTemplate', {
+      Type: 'global',
+      Name: [storedTemplateName],
+    })
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('QueryHotPatchTemplate', {
+      Type: 'global',
+      Name: [localizedTemplateName],
+    })
   })
 })
