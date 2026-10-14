@@ -27,7 +27,7 @@ vi.hoisted(() => {
 
 vi.mock('lottie-web', () => ({ default: vi.fn() }))
 
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const {
@@ -41,6 +41,9 @@ const {
   versionSlots,
   engineList,
   engineFetchList,
+  screenRecorderState,
+  performanceSamplingState,
+  setSampling,
 } = vi.hoisted(() => {
   // UIOpNotice 更新链路的可变 mock 状态（describe「UIOpNotice 更新按钮状态与文案」中按用例赋值）
   const eeConfig = { value: [] as Array<{ configName: string; isOpen: boolean }> }
@@ -51,10 +54,17 @@ const {
     intranetFile: '',
   }
   const engineList = { value: [] as string[] }
+  // 性能采样全局状态（模拟 zustand store 的共享对象语义，setSampling 回写）
+  const performanceSamplingState = {
+    isSampling: false,
+    isPerformanceSampling: false,
+    token: '',
+    log: [],
+  }
   return {
     startIdleVisibleInterval: vi.fn(() => vi.fn()),
     queryRisks: vi.fn(),
-    edition: { community: true, yakit: true, enterprise: false },
+    edition: { community: true, yakit: true, enterprise: false, agent: false },
     messageState: { unread: 0, menuOpen: false },
     menuActions: {
       setDynamicMenuOpen: vi.fn(),
@@ -63,6 +73,11 @@ const {
       onUpdateApiKey: vi.fn(),
     },
     userInfo: { isLogin: false, platform: 'github' },
+    screenRecorderState: { isRecording: false },
+    performanceSamplingState,
+    setSampling: vi.fn((b: boolean) => {
+      performanceSamplingState.isPerformanceSampling = b
+    }),
     eeConfig,
     versionSlots,
     engineList,
@@ -147,8 +162,18 @@ vi.mock('@/utils/visitorsStatistics', () => ({
   visitorsStatisticsFun: vi.fn(),
 }))
 
+// i18n mock：无参数返回 key 本身；带插值参数返回 `key?k=v&k2=v2`，供插件名等插值断言
+const tMock = vi.hoisted(() =>
+  vi.fn((key: string, params?: Record<string, unknown>) => {
+    if (!params) return key
+    const qs = Object.entries(params)
+      .map(([k, v]) => `${k}=${String(v)}`)
+      .join('&')
+    return `${key}?${qs}`
+  }),
+)
 vi.mock('@/i18n/useI18nNamespaces', () => ({
-  useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh' }, i18nRefresh: 0 }),
+  useI18nNamespaces: () => ({ t: tMock, i18n: { language: 'zh' }, i18nRefresh: 0 }),
 }))
 
 vi.mock('@/utils/duplex/duplex', () => ({
@@ -163,7 +188,7 @@ vi.mock('@/utils/envfile', async (importOriginal) => {
     isCommunityEdition: () => true,
     isCommunityYakit: () => edition.community,
     isEnpriTrace: () => edition.enterprise,
-    isEnpriTraceAgent: () => false,
+    isEnpriTraceAgent: () => edition.agent,
     isMemfit: () => false,
     isYakit: () => edition.yakit,
     showDevTool: () => false,
@@ -182,7 +207,7 @@ vi.mock('@/store', () => ({
 
 vi.mock('@/store/screenRecorder', () => ({
   useScreenRecorder: () => ({
-    screenRecorderInfo: { token: 't', isRecording: false },
+    screenRecorderInfo: { token: 't', isRecording: screenRecorderState.isRecording },
     setRecording: vi.fn(),
   }),
 }))
@@ -197,9 +222,10 @@ vi.mock('@/store/temporaryProject', () => ({
 
 vi.mock('@/store/performanceSampling', () => ({
   usePerformanceSampling: () => ({
-    performanceSamplingInfo: { isSampling: false, isPerformanceSampling: false, token: '', log: [] },
+    // 与真实 store 一致：状态更新是替换对象而非原地修改，监听闭包捕获的旧对象不会随后续 set 变化
+    performanceSamplingInfo: { ...performanceSamplingState },
     setPerformanceSamplingLog: vi.fn(),
-    setSampling: vi.fn(),
+    setSampling,
   }),
 }))
 
@@ -285,9 +311,25 @@ vi.mock('../userMenu/constants', () => ({
   randomAvatarColor: () => '#000',
 }))
 
-vi.mock('@/utils/eventBus/eventBus', () => ({
-  default: { on: vi.fn(), off: vi.fn(), emit: vi.fn() },
-}))
+// 事件总线 mock：保留 vi.fn 调用记录的同时让 on/off/emit 真正联动，
+// 以便断言「组件卸载后 performanceSampling 等监听是否存活」
+vi.mock('@/utils/eventBus/eventBus', () => {
+  const handlers = new Map<string, Set<(...args: unknown[]) => void>>()
+  return {
+    default: {
+      on: vi.fn((name: string, handler: (...args: unknown[]) => void) => {
+        if (!handlers.has(name)) handlers.set(name, new Set())
+        handlers.get(name)!.add(handler)
+      }),
+      off: vi.fn((name: string, handler: (...args: unknown[]) => void) => {
+        handlers.get(name)?.delete(handler)
+      }),
+      emit: vi.fn((name: string, ...args: unknown[]) => {
+        handlers.get(name)?.forEach((handler) => handler(...args))
+      }),
+    },
+  }
+})
 
 vi.mock('@/utils/notification', () => ({
   failed: vi.fn(),
@@ -300,12 +342,27 @@ vi.mock('@/utils/notification', () => ({
 vi.mock('@/hook/useHoldGRPCStream/useHoldGRPCStream', () => ({
   default: () => [
     { progressState: [], logState: [] },
-    { stop: vi.fn(), start: vi.fn(), reset: vi.fn() },
+    { stop: vi.fn(), start: vi.fn(), reset: vi.fn(), cancel: vi.fn() },
   ],
+}))
+
+// 插件详情 mock：性能采样/崩溃日志收集的 grpcFetchLocalPluginDetail
+const grpcFetchLocalPluginDetail = vi.hoisted(() => vi.fn().mockRejectedValue(new Error('not found')))
+vi.mock('@/pages/pluginHub/utils/grpc', () => ({
+  grpcFetchLocalPluginDetail,
+}))
+
+vi.mock('@/utils/logCollection', () => ({
+  grpcOpenRenderLogFolder: vi.fn(),
+  grpcOpenEngineLogFolder: vi.fn(),
+  grpcOpenPrintLogFolder: vi.fn(),
 }))
 
 import { FuncDomain, MoreYaklangVersion, UIOpNotice } from '../FuncDomain'
 import type { FuncDomainProp } from '../FuncDomain'
+import { yakitUILayout } from '@/services/electronBridge'
+import emiter from '@/utils/eventBus/eventBus'
+import { yakitNotify } from '@/utils/notification'
 
 const baseProps: FuncDomainProp = {
   isEngineLink: true,
@@ -348,6 +405,329 @@ describe('MoreYaklangVersion 轻量选项', () => {
       <MoreYaklangVersion moreYaklangVersionList={['1.4.8-beta19']} currentBuildType="full" onClosePop={vi.fn()} />,
     )
     expect(screen.getByRole('radio', { name: 'MoreYaklangVersion.standardVersion' })).toBeChecked()
+  })
+})
+
+describe('FuncDomain 引擎Console终端图标下拉', () => {
+  const openConsole = vi.fn()
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+  })
+
+  it('点击终端图标展开四种打开方式并回调 onOpenConsole', async () => {
+    render(<FuncDomain {...baseProps} onOpenConsole={openConsole} />)
+
+    fireEvent.click(screen.getByTestId('engine-console-trigger'))
+    // i18n mock 的 t 返回 key 本身
+    expect(await screen.findByText('FuncDomain.engineConsoleFloat')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.engineConsoleLeft')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.engineConsoleRight')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.engineConsoleBottom')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('FuncDomain.engineConsoleBottom'))
+    await waitFor(() => expect(openConsole).toHaveBeenCalledWith('bottom'))
+  })
+
+  it('当前打开方式的菜单项带选中标记', async () => {
+    render(<FuncDomain {...baseProps} onOpenConsole={openConsole} consoleType="right" />)
+
+    fireEvent.click(screen.getByTestId('engine-console-trigger'))
+    await screen.findByText('FuncDomain.engineConsoleFloat', { selector: 'span' })
+    // 仅当前 consoleType 的菜单项渲染 CheckOutlined 的 svg
+    const checked = [
+      'FuncDomain.engineConsoleFloat',
+      'FuncDomain.engineConsoleLeft',
+      'FuncDomain.engineConsoleRight',
+      'FuncDomain.engineConsoleBottom',
+    ]
+      .map((label) => screen.getByText(label).closest('div'))
+      .filter((div) => div?.querySelector('svg'))
+    expect(checked).toHaveLength(1)
+    expect(checked[0]).toHaveTextContent('FuncDomain.engineConsoleRight')
+  })
+})
+
+describe('FuncDomain 设置菜单（UIOpSetting）', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+    screenRecorderState.isRecording = false
+  })
+
+  /** 设置入口（UIOpSetting 触发按钮）；定位用 testid，勿用 class 选择器（根 vitest 配置会把 scss stub 成空对象） */
+  const openSettingMenu = () => {
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
+  }
+
+  it('设置菜单按顺序展示 i18n 后的菜单项', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    expect(await screen.findByText('FuncDomain.pcapfix')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.project')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.dbCacheManager')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.cveDatabase')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.explab')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.link')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.refreshMenu')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.performanceSampling')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.logs')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.diagnoseNetwork')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.screen')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.screenshot')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.settings')).toBeInTheDocument()
+    expect(screen.getByText('HelpDoc.officialWebsite')).toBeInTheDocument()
+    expect(screen.getByText('Github')).toBeInTheDocument()
+    expect(screen.getByText('HelpDoc.aboutUs')).toBeInTheDocument()
+  })
+
+  it('点击「刷新菜单」触发 refreshMainMenu', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    fireEvent.click(await screen.findByText('FuncDomain.refreshMenu'))
+    await waitFor(() => expect(yakitUILayout.refreshMainMenu).toHaveBeenCalled())
+  })
+
+  it('父级菜单标题点击收起弹层但不触发动作：点「切换连接模式」不切换', async () => {
+    const onEngineModeChange = vi.fn()
+    render(<FuncDomain {...baseProps} onEngineModeChange={onEngineModeChange} />)
+    openSettingMenu()
+
+    const trigger = screen.getByTestId('ui-op-setting-trigger')
+    await waitFor(() => expect(trigger).toHaveClass('ant-popover-open'))
+
+    fireEvent.click(screen.getByText('FuncDomain.link'))
+    expect(onEngineModeChange).not.toHaveBeenCalled()
+    // 父级标题点击也收起弹层；Popover 关闭后内容仍挂载 DOM，用触发器 open class 移除断言
+    await waitFor(() => expect(trigger).not.toHaveClass('ant-popover-open'))
+  })
+
+  it('点击「全局设置」发出 openPage 事件', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    fireEvent.click(await screen.findByText('FuncDomain.settings'))
+    const calls = (emiter.emit as ReturnType<typeof vi.fn>).mock.calls.filter(([name]) => name === 'openPage')
+    expect(calls.length).toBeGreaterThan(0)
+    const payload = calls[calls.length - 1][1] as string
+    // route 枚举序列化形式与转换器有关，只断言锚点参数
+    expect(payload).toContain('"anchor":"general"')
+  })
+})
+
+describe('FuncDomain 设置菜单录屏/截屏', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+    screenRecorderState.isRecording = false
+  })
+
+  /** 设置入口（UIOpSetting 触发按钮）；定位用 testid，勿用 class 选择器（根 vitest 配置会把 scss stub 成空对象） */
+  const openSettingMenu = () => {
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
+  }
+
+  it('一级「录屏」与二级「录屏」点击同效：未录制时拉起录屏弹窗', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    expect(await screen.findByText('FuncDomain.screen')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.screenshot')).toBeInTheDocument()
+
+    // 点击一级「录屏」标题（parentTitleClick 与二级同效）
+    fireEvent.click(screen.getByText('FuncDomain.screen'))
+    await waitFor(() => expect(yakitUILayout.requestOpenScreenCapModal).toHaveBeenCalled())
+  })
+
+  it('录制中一级与二级显示停止录屏，点击即停止', async () => {
+    screenRecorderState.isRecording = true
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    // 一级「录屏」变为停止录屏
+    const stopItem = await screen.findByText('FuncDomain.stopScreen')
+    fireEvent.click(stopItem)
+    await waitFor(() => expect(yakitUILayout.cancelScreenRecorder).toHaveBeenCalledWith('t'))
+  })
+
+  it('点击截屏触发 activateScreenshot，1 秒内 loading 不重复触发', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    const screenshotItem = await screen.findByText('FuncDomain.screenshot')
+    fireEvent.click(screenshotItem)
+    await waitFor(() => expect(yakitUILayout.activateScreenshot).toHaveBeenCalledTimes(1))
+
+    // loading 期间再次点击不触发第二次
+    fireEvent.click(screen.getByText('FuncDomain.screenshot'))
+    expect(yakitUILayout.activateScreenshot).toHaveBeenCalledTimes(1)
+  })
+
+  it('Linux 不展示截屏入口（主进程未注册处理器），录屏入口保留', async () => {
+    render(<FuncDomain {...baseProps} system="Linux" />)
+    openSettingMenu()
+
+    expect(await screen.findByText('FuncDomain.screen')).toBeInTheDocument()
+    expect(screen.queryByText('FuncDomain.screenshot')).not.toBeInTheDocument()
+  })
+})
+
+describe('FuncDomain 性能采样与崩溃日志', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+    grpcFetchLocalPluginDetail.mockRejectedValue(new Error('not found'))
+  })
+
+  /** 设置入口（UIOpSetting 触发按钮）；定位用 testid，勿用 class 选择器（根 vitest 配置会把 scss stub 成空对象） */
+  const openSettingMenu = () => {
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
+  }
+
+  it('插件不存在时性能采样提示带原文插件名', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+
+    fireEvent.click(await screen.findByText('FuncDomain.performanceSampling'))
+    await waitFor(() => expect(grpcFetchLocalPluginDetail).toHaveBeenCalledWith({ Name: '核心引擎性能采样' }, true))
+    // 插件名不进翻译，作为插值原样传入
+    await waitFor(() =>
+      expect(yakitNotify).toHaveBeenCalledWith('info', 'FuncDomain.samplingPluginNotFound?name=核心引擎性能采样'),
+    )
+  })
+
+  it('onUIOpSettingMenuSelect 事件可触发崩溃日志收集（Home.tsx 复用路径）', async () => {
+    render(<FuncDomain {...baseProps} />)
+
+    // UIOpSetting 通过 emiter 监听 onUIOpSettingMenuSelect；直接调用监听回调等价于 emit
+    const calls = (emiter.on as ReturnType<typeof vi.fn>).mock.calls.filter(
+      ([name]) => name === 'onUIOpSettingMenuSelect',
+    )
+    expect(calls.length).toBeGreaterThan(0)
+    const handler = calls[calls.length - 1][1] as (key: string) => void
+    await act(async () => {
+      handler('crash-log')
+    })
+    await waitFor(() => expect(grpcFetchLocalPluginDetail).toHaveBeenCalledWith({ Name: '崩溃日志收集' }, true))
+    await waitFor(() =>
+      expect(yakitNotify).toHaveBeenCalledWith('info', 'FuncDomain.crashLogPluginNotFound?name=崩溃日志收集'),
+    )
+  })
+})
+
+describe('FuncDomain 切页采样常驻与便携版设置入口（回归）', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+    grpcFetchLocalPluginDetail.mockRejectedValue(new Error('not found'))
+    screenRecorderState.isRecording = false
+    edition.agent = false
+    performanceSamplingState.isPerformanceSampling = false
+  })
+
+  afterEach(() => {
+    edition.agent = false
+    performanceSamplingState.isPerformanceSampling = false
+  })
+
+  it('采样期间切换项目管理页：设置菜单卸载但取消采样监听存活，切页不清采样状态', () => {
+    const { rerender } = render(<FuncDomain {...baseProps} />)
+    // 模拟采样进行中（真实链路由采样启动成功写入全局 store）
+    performanceSamplingState.isPerformanceSampling = true
+
+    // 切到项目管理页：UIOpSetting（设置菜单）随之卸载，采样控制器常驻 FuncDomain 不受影响
+    rerender(<FuncDomain {...baseProps} showProjectManage={true} />)
+    expect(screen.queryByTestId('ui-op-setting-trigger')).not.toBeInTheDocument()
+    // 切页本身不应清除采样状态（采样仍在进行）
+    expect(setSampling).not.toHaveBeenCalled()
+
+    // 顶栏「采样中」停止按钮发出取消事件，监听仍能收尾全局状态
+    act(() => {
+      emiter.emit('cancelPerformanceSampling')
+    })
+    expect(setSampling).toHaveBeenCalledWith(false)
+  })
+
+  it('采样期间 FuncDomain 整体卸载时收尾采样状态，避免残留「采样中」', () => {
+    performanceSamplingState.isPerformanceSampling = true
+    const { unmount } = render(<FuncDomain {...baseProps} />)
+    unmount()
+    expect(setSampling).toHaveBeenCalledWith(false)
+  })
+
+  it('便携版设置菜单含全局设置入口，点击发出 openPage 事件', async () => {
+    edition.agent = true
+    render(<FuncDomain {...baseProps} />)
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
+
+    // 「刷新菜单」仅社区版菜单存在，缺失可证明当前走的是便携版分支
+    expect(await screen.findByText('FuncDomain.settings')).toBeInTheDocument()
+    expect(screen.queryByText('FuncDomain.refreshMenu')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('FuncDomain.settings'))
+    const calls = (emiter.emit as ReturnType<typeof vi.fn>).mock.calls.filter(([name]) => name === 'openPage')
+    expect(calls.length).toBeGreaterThan(0)
+    const payload = calls[calls.length - 1][1] as string
+    expect(payload).toContain('"anchor":"general"')
+  })
+})
+
+describe('FuncDomain 性能采样防重与停止入口', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+    grpcFetchLocalPluginDetail.mockRejectedValue(new Error('not found'))
+    performanceSamplingState.isPerformanceSampling = false
+  })
+
+  afterEach(() => {
+    performanceSamplingState.isPerformanceSampling = false
+  })
+
+  it('采样进行中重复触发启动事件不会再次打开采样流程', () => {
+    const { rerender } = render(<FuncDomain {...baseProps} />)
+    performanceSamplingState.isPerformanceSampling = true
+    // 模拟真实 store 替换状态对象后引发的重渲染（onOpenConsole 传新值以穿透 FuncDomain 的 memo）
+    rerender(<FuncDomain {...baseProps} onOpenConsole={vi.fn()} />)
+
+    act(() => {
+      emiter.emit('performanceSampling')
+    })
+    // 防重检查读到最新状态，不再拉取插件详情打开启动弹窗
+    expect(grpcFetchLocalPluginDetail).not.toHaveBeenCalled()
+  })
+
+  it('采样中菜单项变为「停止性能采样」，点击发出取消事件并复位状态', async () => {
+    performanceSamplingState.isPerformanceSampling = true
+    render(<FuncDomain {...baseProps} />)
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
+
+    const stopItem = await screen.findByText('FuncDomain.stopPerformanceSampling')
+    expect(screen.queryByText('FuncDomain.performanceSampling')).not.toBeInTheDocument()
+
+    fireEvent.click(stopItem)
+    const cancels = (emiter.emit as ReturnType<typeof vi.fn>).mock.calls.filter(
+      ([name]) => name === 'cancelPerformanceSampling',
+    )
+    expect(cancels.length).toBeGreaterThan(0)
+    expect(setSampling).toHaveBeenCalledWith(false)
+  })
+
+  it('未采样时菜单项保持「性能采样」，点击发出启动事件', async () => {
+    render(<FuncDomain {...baseProps} />)
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
+
+    const startItem = await screen.findByText('FuncDomain.performanceSampling')
+    expect(screen.queryByText('FuncDomain.stopPerformanceSampling')).not.toBeInTheDocument()
+
+    fireEvent.click(startItem)
+    const starts = (emiter.emit as ReturnType<typeof vi.fn>).mock.calls.filter(
+      ([name]) => name === 'performanceSampling',
+    )
+    expect(starts.length).toBeGreaterThan(0)
+    await waitFor(() => expect(grpcFetchLocalPluginDetail).toHaveBeenCalledWith({ Name: '核心引擎性能采样' }, true))
   })
 })
 

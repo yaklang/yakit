@@ -35,7 +35,7 @@ const { ipcRendererMock, inViewport } = vi.hoisted(() => {
   return { ipcRendererMock, inViewport: { current: true } }
 })
 
-import { act, render } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { startIdleVisibleInterval, pendingRef } = vi.hoisted(() => ({
@@ -182,6 +182,36 @@ describe('Home 离开首页停止轮询', () => {
       await vi.advanceTimersByTimeAsync(5000)
     })
     expect(startIdleVisibleInterval).toHaveBeenCalledTimes(callsAfterLeave)
+  })
+})
+
+describe('Home 工具箱截屏入口平台过滤', () => {
+  afterEach(() => {
+    vi.clearAllMocks()
+    // 还原默认 mock（fetch-system-name 返回 Windows_NT），避免 Linux 实现泄漏到其他用例
+    ipcRendererMock.invoke.mockImplementation(async (channel: string) => {
+      if (channel === 'QueryAvailableRiskLevel') return { Values: [] }
+      if (channel === 'QueryHTTPFlows') return { Total: 0 }
+      if (channel === 'fetch-system-name') return 'Windows_NT'
+      if (channel === 'IsPrivileged') return { IsPrivileged: true }
+      return {}
+    })
+  })
+
+  it('Linux 系统不展示截屏工具入口（主进程未注册处理器），录屏入口保留', async () => {
+    ipcRendererMock.invoke.mockImplementation(async (channel: string) => {
+      if (channel === 'fetch-system-name') return 'Linux'
+      return {}
+    })
+    render(<Home />)
+    // 初始 system 为 Darwin，截屏入口会先出现；等 fetch-system-name 回填 Linux 后再断言
+    await waitFor(() => expect(screen.queryByText('Home.screenshot')).not.toBeInTheDocument())
+    expect(screen.getByText('Home.screenRecording')).toBeInTheDocument()
+  })
+
+  it('Windows 系统保留截屏工具入口', async () => {
+    render(<Home />)
+    await waitFor(() => expect(screen.getByText('Home.screenshot')).toBeInTheDocument())
   })
 })
 
