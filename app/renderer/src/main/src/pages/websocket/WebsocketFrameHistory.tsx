@@ -11,7 +11,12 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import HexEditor from 'react-hex-editor'
 import { Uint8ArrayToString } from '@/utils/str'
-import { filterColorTag, isCellRedSingleColor, parseColorTag } from '@/components/TableVirtualResize/utils'
+import {
+  filterColorTag,
+  isCellRedSingleColor,
+  parseCellStyleVars,
+  parseColorTag,
+} from '@/components/TableVirtualResize/utils'
 import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tooltip } from 'antd'
 
@@ -230,8 +235,9 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                       key={`${websocketHash}-${FrameIndex}`}
                       // key={FrameIndex}
                       className={classNames(styles['table-tr'], {
-                        [styles[`table-row-${colorClassName}`]]: !!colorClassName,
+                        [styles['table-colored-row']]: !!colorClassName,
                       })}
+                      style={colorClassName ? parseCellStyleVars(cellClassName) : undefined}
                     >
                       <div
                         style={{
