@@ -1,6 +1,7 @@
 import type React from 'react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useContextMenuBoot } from './useContextMenuBoot'
 import { MacUIOp } from './MacUIOp'
 import { FuncDomain, UIOpNotice } from './FuncDomain'
 import { TemporaryProjectPop, WinUIOp } from './WinUIOp'
@@ -1332,6 +1333,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // 判断打开 新开一级tab插件执行/全局网络配置第三方应用框/带参弹窗
   const [coedcPluginShow, setCoedcPluginShow] = useState<boolean>(false)
+  // 右键宿主比较重，第一次收到执行事件再挂上，首发事件由 onReady 回放（见 useContextMenuBoot）
+  const { hostOn: contextMenuHostOn, replay: replayContextMenuAction } = useContextMenuBoot()
   const codecPluginContainerRef = useRef<HTMLElement>()
   const onFuzzerModal = useMemoizedFn(async (value) => {
     try {
@@ -2058,38 +2061,44 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         onCancel={() => setServerPushEnterProject(null)}
       />
 
-      <Suspense fallback={null}>
-        <YakitGetOnlinePlugin
-          visible={coedcPluginShow}
-          pluginType={openFuzzerModalVarRef.current?.pluginType || ['codec']}
-          setVisible={(v) => {
-            setCoedcPluginShow(v)
-          }}
-          onFinish={() => {
-            // 此处通知刷新各类基于codec插件菜单
-            emiter.emit('refreshContextMenuActions')
-            emiter.emit('refreshContextMenuPlugins')
-          }}
-          getContainer={codecPluginContainerRef.current}
-        />
-      </Suspense>
+      {coedcPluginShow && (
+        <Suspense fallback={null}>
+          <YakitGetOnlinePlugin
+            visible={coedcPluginShow}
+            pluginType={openFuzzerModalVarRef.current?.pluginType || ['codec']}
+            setVisible={(v) => {
+              setCoedcPluginShow(v)
+            }}
+            onFinish={() => {
+              // 此处通知刷新各类基于codec插件菜单
+              emiter.emit('refreshContextMenuActions')
+              emiter.emit('refreshContextMenuPlugins')
+            }}
+            getContainer={codecPluginContainerRef.current}
+          />
+        </Suspense>
+      )}
 
       {/* 带参插件参数 */}
-      <Suspense fallback={null}>
-        <PluginHasParamsModal
-          visible={hasParamsOpen}
-          pluginType={'codec'}
-          scriptName={openFuzzerModalVarRef.current?.scriptName || ''}
-          onCloseParamsModal={setHasParamsOpen}
-          onOkParamsModal={onOkParamsDrawer}
-          {...paramsValueRef.current}
-        />
-      </Suspense>
+      {hasParamsOpen && (
+        <Suspense fallback={null}>
+          <PluginHasParamsModal
+            visible={hasParamsOpen}
+            pluginType={'codec'}
+            scriptName={openFuzzerModalVarRef.current?.scriptName || ''}
+            onCloseParamsModal={setHasParamsOpen}
+            onOkParamsModal={onOkParamsDrawer}
+            {...paramsValueRef.current}
+          />
+        </Suspense>
+      )}
 
-      {/* 右键插件(context-menu)执行宿主：参数弹窗 + 执行结果分发 */}
-      <Suspense fallback={null}>
-        <ContextMenuExecutionHost />
-      </Suspense>
+      {/* 右键插件执行宿主：第一次执行时才加载 */}
+      {contextMenuHostOn && (
+        <Suspense fallback={null}>
+          <ContextMenuExecutionHost onReady={replayContextMenuAction} />
+        </Suspense>
+      )}
     </div>
   )
 }

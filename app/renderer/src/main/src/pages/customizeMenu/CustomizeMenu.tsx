@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import type {
   CustomizeMenuProps,
   FeaturesAndPluginProps,
@@ -36,7 +36,7 @@ import type { QueryYakScriptsResponse, YakScript } from '../invoker/schema'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { YakEditor } from '@/utils/editors'
+const YakEditor = lazy(() => import('@/utils/editors').then((m) => ({ default: m.YakEditor })))
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
@@ -1387,7 +1387,11 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
   const { theme } = useTheme()
 
   const YakitEditor = useMemo(() => {
-    return <YakEditor type={plugin.Type} value={plugin.Content} readOnly={true} />
+    return (
+      <Suspense fallback={null}>
+        <YakEditor type={plugin.Type} value={plugin.Content} readOnly={true} />
+      </Suspense>
+    )
   }, [plugin.Content, plugin.Type, theme])
 
   return (
