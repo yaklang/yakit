@@ -737,7 +737,13 @@ const GetScreenAndScreenshotMenuItems = (
   return items
 }
 
-const GetUIOpSettingMenu = (t: TFunction, isRecording: boolean, screenshotLoading: boolean, system: YakitSystem) => {
+const GetUIOpSettingMenu = (
+  t: TFunction,
+  isRecording: boolean,
+  screenshotLoading: boolean,
+  system: YakitSystem,
+  isPerformanceSampling: boolean,
+) => {
   // 便携版
   if (isEnpriTraceAgent()) {
     return [
@@ -757,7 +763,11 @@ const GetUIOpSettingMenu = (t: TFunction, isRecording: boolean, screenshotLoadin
       { type: 'divider' },
       {
         key: 'performance-sampling',
-        label: t('FuncDomain.performanceSampling'),
+        label: isPerformanceSampling ? (
+          <span className={styles['stop-screen-menu-item']}>{t('FuncDomain.stopPerformanceSampling')}</span>
+        ) : (
+          t('FuncDomain.performanceSampling')
+        ),
       },
       {
         key: 'logs',
@@ -886,7 +896,11 @@ const GetUIOpSettingMenu = (t: TFunction, isRecording: boolean, screenshotLoadin
     { type: 'divider' },
     {
       key: 'performance-sampling',
-      label: t('FuncDomain.performanceSampling'),
+      label: isPerformanceSampling ? (
+        <span className={styles['stop-screen-menu-item']}>{t('FuncDomain.stopPerformanceSampling')}</span>
+      ) : (
+        t('FuncDomain.performanceSampling')
+      ),
     },
     {
       key: 'logs',
@@ -932,7 +946,7 @@ const GetUIOpSettingMenu = (t: TFunction, isRecording: boolean, screenshotLoadin
   ].filter((item) => item)
 }
 
-const PerformanceSamplingController: React.FC = React.memo(() => {
+const PerformanceSamplingController: React.FC = () => {
   const { t } = useI18nNamespaces(['home', 'layout'])
   const performanceModalRef = useRef<any>(null)
   const performanceModalLoading = useRef(false)
@@ -970,7 +984,7 @@ const PerformanceSamplingController: React.FC = React.memo(() => {
     }
   }, [streamInfoCom])
 
-  const handlePerformanceSampling = () => {
+  const handlePerformanceSampling = useMemoizedFn(() => {
     if (performanceSamplingInfo.isPerformanceSampling) return
     if (performanceModalRef.current || performanceModalLoading.current) return // 已有弹窗或正在请求
     performanceModalLoading.current = true
@@ -1050,14 +1064,14 @@ const PerformanceSamplingController: React.FC = React.memo(() => {
         performanceModalLoading.current = false
         yakitNotify('info', t('FuncDomain.samplingPluginNotFound', { name: '核心引擎性能采样' }))
       })
-  }
-  const cancelPerformanceSampling = () => {
+  })
+  const cancelPerformanceSampling = useMemoizedFn(() => {
     // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
     debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
     setSampling(false)
-  }
+  })
   useEffect(() => {
     emiter.on('performanceSampling', handlePerformanceSampling)
     emiter.on('cancelPerformanceSampling', cancelPerformanceSampling)
@@ -1068,7 +1082,7 @@ const PerformanceSamplingController: React.FC = React.memo(() => {
     }
   }, [])
   return null
-})
+}
 
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const { engineMode, onEngineModeChange, typeCallback, token, isRecording, system } = props
@@ -1082,6 +1096,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const { delTemporaryProject } = useTemporaryProjectStore()
   const [reclaimHint, setReclaimHint] = useState<boolean>(false)
   const { setRecording } = useScreenRecorder()
+  const { performanceSamplingInfo } = usePerformanceSampling()
   /** 截屏功能的loading */
   const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
 
@@ -1226,7 +1241,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       // 性能采样
       case 'performance-sampling':
-        emiter.emit('performanceSampling')
+        emiter.emit(performanceSamplingInfo.isPerformanceSampling ? 'cancelPerformanceSampling' : 'performanceSampling')
         break
       // 日志收集
       case 'renderLog':
@@ -1302,7 +1317,15 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       width={206}
       submenuWidth={142}
       selectedKeys={[]}
-      data={GetUIOpSettingMenu(t, isRecording, screenshotLoading, system) as YakitMenuItemProps[]}
+      data={
+        GetUIOpSettingMenu(
+          t,
+          isRecording,
+          screenshotLoading,
+          system,
+          performanceSamplingInfo.isPerformanceSampling,
+        ) as YakitMenuItemProps[]
+      }
       popupClassName={styles['ui-op-submenu']}
       onClick={({ key }) => menuSelect(key)}
       parentTitleClick

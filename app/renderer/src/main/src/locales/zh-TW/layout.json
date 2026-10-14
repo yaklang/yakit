@@ -480,6 +480,7 @@
     "refreshMenu": "重新整理選單",
     "performanceSampling": "效能取樣",
     "samplingDone": "取樣完成，點選頂部綠色按鈕可查看結果",
+    "stopPerformanceSampling": "停止效能取樣",
     "samplingTimeoutMustBePositive": "檢測時間必須大於0",
     "startSampling": "開始檢測",
     "samplingPluginNotFound": "找不到Yak 原生插件：{{name}}",

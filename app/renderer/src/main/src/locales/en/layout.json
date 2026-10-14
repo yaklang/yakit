@@ -480,6 +480,7 @@
     "refreshMenu": "Refresh Menu",
     "performanceSampling": "Performance Sampling",
     "samplingDone": "Sampling completed, click the green button at the top to view the results",
+    "stopPerformanceSampling": "Stop Performance Sampling",
     "samplingTimeoutMustBePositive": "Detection time must be greater than 0",
     "startSampling": "Start Detection",
     "samplingPluginNotFound": "Yak native plugin not found: {{name}}",

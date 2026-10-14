@@ -222,7 +222,8 @@ vi.mock('@/store/temporaryProject', () => ({
 
 vi.mock('@/store/performanceSampling', () => ({
   usePerformanceSampling: () => ({
-    performanceSamplingInfo: performanceSamplingState,
+    // 与真实 store 一致：状态更新是替换对象而非原地修改，监听闭包捕获的旧对象不会随后续 set 变化
+    performanceSamplingInfo: { ...performanceSamplingState },
     setPerformanceSamplingLog: vi.fn(),
     setSampling,
   }),
@@ -670,6 +671,63 @@ describe('FuncDomain 切页采样常驻与便携版设置入口（回归）', ()
     expect(calls.length).toBeGreaterThan(0)
     const payload = calls[calls.length - 1][1] as string
     expect(payload).toContain('"anchor":"general"')
+  })
+})
+
+describe('FuncDomain 性能采样防重与停止入口', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+    grpcFetchLocalPluginDetail.mockRejectedValue(new Error('not found'))
+    performanceSamplingState.isPerformanceSampling = false
+  })
+
+  afterEach(() => {
+    performanceSamplingState.isPerformanceSampling = false
+  })
+
+  it('采样进行中重复触发启动事件不会再次打开采样流程', () => {
+    const { rerender } = render(<FuncDomain {...baseProps} />)
+    performanceSamplingState.isPerformanceSampling = true
+    // 模拟真实 store 替换状态对象后引发的重渲染（onOpenConsole 传新值以穿透 FuncDomain 的 memo）
+    rerender(<FuncDomain {...baseProps} onOpenConsole={vi.fn()} />)
+
+    act(() => {
+      emiter.emit('performanceSampling')
+    })
+    // 防重检查读到最新状态，不再拉取插件详情打开启动弹窗
+    expect(grpcFetchLocalPluginDetail).not.toHaveBeenCalled()
+  })
+
+  it('采样中菜单项变为「停止性能采样」，点击发出取消事件并复位状态', async () => {
+    performanceSamplingState.isPerformanceSampling = true
+    render(<FuncDomain {...baseProps} />)
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
+
+    const stopItem = await screen.findByText('FuncDomain.stopPerformanceSampling')
+    expect(screen.queryByText('FuncDomain.performanceSampling')).not.toBeInTheDocument()
+
+    fireEvent.click(stopItem)
+    const cancels = (emiter.emit as ReturnType<typeof vi.fn>).mock.calls.filter(
+      ([name]) => name === 'cancelPerformanceSampling',
+    )
+    expect(cancels.length).toBeGreaterThan(0)
+    expect(setSampling).toHaveBeenCalledWith(false)
+  })
+
+  it('未采样时菜单项保持「性能采样」，点击发出启动事件', async () => {
+    render(<FuncDomain {...baseProps} />)
+    fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
+
+    const startItem = await screen.findByText('FuncDomain.performanceSampling')
+    expect(screen.queryByText('FuncDomain.stopPerformanceSampling')).not.toBeInTheDocument()
+
+    fireEvent.click(startItem)
+    const starts = (emiter.emit as ReturnType<typeof vi.fn>).mock.calls.filter(
+      ([name]) => name === 'performanceSampling',
+    )
+    expect(starts.length).toBeGreaterThan(0)
+    await waitFor(() => expect(grpcFetchLocalPluginDetail).toHaveBeenCalledWith({ Name: '核心引擎性能采样' }, true))
   })
 })
 
