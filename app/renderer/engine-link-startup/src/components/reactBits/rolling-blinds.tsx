@@ -117,45 +117,56 @@ const RollingBlinds = ({ className, theme }: RollingBlindsProps) => {
       }
       return shader
     }
-    const vs = compile(gl.VERTEX_SHADER, VERT)
-    const fs = compile(gl.FRAGMENT_SHADER, FRAG)
-    const disposeShaders = () => {
-      if (vs) gl.deleteShader(vs)
-      if (fs) gl.deleteShader(fs)
-    }
-    if (!vs || !fs) {
-      disposeShaders()
-      return
-    }
-    const program = gl.createProgram()
-    if (!program) {
-      disposeShaders()
-      return
-    }
-    gl.attachShader(program, vs)
-    gl.attachShader(program, fs)
-    gl.linkProgram(program)
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      gl.deleteProgram(program)
-      disposeShaders()
-      return
-    }
-    gl.useProgram(program)
 
-    const buffer = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
-    const pos = gl.getAttribLocation(program, 'aPos')
-    gl.enableVertexAttribArray(pos)
-    gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
+    /** 上下文恢复后旧 program/buffer/shader 均已失效，须整套重建（WebGL 规范） */
+    const buildScene = () => {
+      const vs = compile(gl.VERTEX_SHADER, VERT)
+      const fs = compile(gl.FRAGMENT_SHADER, FRAG)
+      const disposeShaders = () => {
+        if (vs) gl.deleteShader(vs)
+        if (fs) gl.deleteShader(fs)
+      }
+      if (!vs || !fs) {
+        disposeShaders()
+        return null
+      }
+      const program = gl.createProgram()
+      if (!program) {
+        disposeShaders()
+        return null
+      }
+      gl.attachShader(program, vs)
+      gl.attachShader(program, fs)
+      gl.linkProgram(program)
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        gl.deleteProgram(program)
+        disposeShaders()
+        return null
+      }
+      gl.useProgram(program)
 
-    const uCanvas = gl.getUniformLocation(program, 'uCanvas')
-    const uClock = gl.getUniformLocation(program, 'uClock')
-    const uGrainSize = gl.getUniformLocation(program, 'uGrainSize')
-    const uInk = gl.getUniformLocation(program, 'uInk')
-    const uHot = gl.getUniformLocation(program, 'uHot')
-    const uBackdrop = gl.getUniformLocation(program, 'uBackdrop')
+      const buffer = gl.createBuffer()
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
+      const pos = gl.getAttribLocation(program, 'aPos')
+      gl.enableVertexAttribArray(pos)
+      gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
 
+      return {
+        program,
+        buffer,
+        vs,
+        fs,
+        uCanvas: gl.getUniformLocation(program, 'uCanvas'),
+        uClock: gl.getUniformLocation(program, 'uClock'),
+        uGrainSize: gl.getUniformLocation(program, 'uGrainSize'),
+        uInk: gl.getUniformLocation(program, 'uInk'),
+        uHot: gl.getUniformLocation(program, 'uHot'),
+        uBackdrop: gl.getUniformLocation(program, 'uBackdrop'),
+      }
+    }
+
+    let scene = buildScene()
     let raf = 0
     let clock = 0
     let last = performance.now()
@@ -164,6 +175,7 @@ const RollingBlinds = ({ className, theme }: RollingBlindsProps) => {
       const dt = Math.min((now - last) / 1000, 0.05)
       last = now
       if (document.hidden) return
+      if (!scene) return
       clock += dt
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
       const width = Math.max(1, Math.floor(canvas.clientWidth * dpr))
@@ -174,29 +186,39 @@ const RollingBlinds = ({ className, theme }: RollingBlindsProps) => {
         gl.viewport(0, 0, width, height)
       }
       const paint = colorRef.current
-      gl.uniform2f(uCanvas, width, height)
-      gl.uniform1f(uClock, clock)
-      gl.uniform1f(uGrainSize, dpr)
-      gl.uniform3fv(uInk, hexToRgb(paint.color))
-      gl.uniform3fv(uHot, hexToRgb(paint.hotColor))
-      gl.uniform3fv(uBackdrop, hexToRgb(paint.backgroundColor))
+      gl.uniform2f(scene.uCanvas, width, height)
+      gl.uniform1f(scene.uClock, clock)
+      gl.uniform1f(scene.uGrainSize, dpr)
+      gl.uniform3fv(scene.uInk, hexToRgb(paint.color))
+      gl.uniform3fv(scene.uHot, hexToRgb(paint.hotColor))
+      gl.uniform3fv(scene.uBackdrop, hexToRgb(paint.backgroundColor))
       gl.drawArrays(gl.TRIANGLES, 0, 3)
     }
-    raf = requestAnimationFrame(frame)
+    if (scene) raf = requestAnimationFrame(frame)
 
     const onLost = (event: Event) => {
       event.preventDefault()
       cancelAnimationFrame(raf)
     }
+    const onRestored = () => {
+      cancelAnimationFrame(raf)
+      scene = buildScene()
+      last = performance.now()
+      if (scene) raf = requestAnimationFrame(frame)
+    }
     canvas.addEventListener('webglcontextlost', onLost)
+    canvas.addEventListener('webglcontextrestored', onRestored)
 
     return () => {
       cancelAnimationFrame(raf)
       canvas.removeEventListener('webglcontextlost', onLost)
-      gl.deleteBuffer(buffer)
-      gl.deleteProgram(program)
-      gl.deleteShader(vs)
-      gl.deleteShader(fs)
+      canvas.removeEventListener('webglcontextrestored', onRestored)
+      if (scene) {
+        gl.deleteBuffer(scene.buffer)
+        gl.deleteProgram(scene.program)
+        gl.deleteShader(scene.vs)
+        gl.deleteShader(scene.fs)
+      }
     }
   }, [])
 

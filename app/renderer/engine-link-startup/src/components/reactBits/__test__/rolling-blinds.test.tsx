@@ -19,7 +19,7 @@ const THEME_RGB = {
   darkHot: hexToLinear('#90b2de'),
 }
 
-const createFakeGL = () => {
+const createFakeGL = (status: { compileOk?: boolean; linkOk?: boolean } = {}) => {
   const uniform3fv = vi.fn((_location: { name: string }, _value: number[]) => {})
   const gl = {
     VERTEX_SHADER: 1,
@@ -33,12 +33,12 @@ const createFakeGL = () => {
     createShader: vi.fn(() => ({})),
     shaderSource: vi.fn(),
     compileShader: vi.fn(),
-    getShaderParameter: vi.fn(() => true),
+    getShaderParameter: vi.fn(() => status.compileOk !== false),
     deleteShader: vi.fn(),
     createProgram: vi.fn(() => ({})),
     attachShader: vi.fn(),
     linkProgram: vi.fn(),
-    getProgramParameter: vi.fn(() => true),
+    getProgramParameter: vi.fn(() => status.linkOk !== false),
     useProgram: vi.fn(),
     createBuffer: vi.fn(() => ({})),
     bindBuffer: vi.fn(),
@@ -75,6 +75,8 @@ describe('RollingBlinds', () => {
     vi.clearAllTimers()
     vi.useRealTimers()
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    Reflect.deleteProperty(document, 'hidden')
   })
 
   it('renders a plain canvas when WebGL is unavailable', () => {
@@ -138,5 +140,115 @@ describe('RollingBlinds', () => {
       vi.advanceTimersByTime(64)
     })
     expect(gl.drawArrays.mock.calls.length).toBe(draws)
+  })
+
+  it('releases failed shaders and never starts drawing when compilation fails', () => {
+    const { gl } = createFakeGL({ compileOk: false })
+    stubGetContext(gl)
+    render(<RollingBlinds theme="dark" />)
+
+    expect(gl.deleteShader).toHaveBeenCalledTimes(2)
+    expect(gl.createProgram).not.toHaveBeenCalled()
+    expect(gl.createBuffer).not.toHaveBeenCalled()
+    act(() => {
+      vi.advanceTimersByTime(32)
+    })
+    expect(gl.drawArrays).not.toHaveBeenCalled()
+  })
+
+  it('releases the program and shaders when linking fails', () => {
+    const { gl } = createFakeGL({ linkOk: false })
+    stubGetContext(gl)
+    render(<RollingBlinds theme="dark" />)
+
+    expect(gl.deleteProgram).toHaveBeenCalledTimes(1)
+    expect(gl.deleteShader).toHaveBeenCalledTimes(2)
+    expect(gl.useProgram).not.toHaveBeenCalled()
+    expect(gl.createBuffer).not.toHaveBeenCalled()
+    act(() => {
+      vi.advanceTimersByTime(32)
+    })
+    expect(gl.drawArrays).not.toHaveBeenCalled()
+  })
+
+  it('skips drawing while the page is hidden and resumes when visible', () => {
+    const { gl } = createFakeGL()
+    stubGetContext(gl)
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => true })
+    render(<RollingBlinds theme="light" />)
+
+    act(() => {
+      vi.advanceTimersByTime(64)
+    })
+    expect(gl.drawArrays).not.toHaveBeenCalled()
+
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => false })
+    act(() => {
+      vi.advanceTimersByTime(32)
+    })
+    expect(gl.drawArrays.mock.calls.length).toBeGreaterThan(0)
+  })
+
+  it('resizes the drawing buffer to CSS size times devicePixelRatio', () => {
+    const { gl } = createFakeGL()
+    stubGetContext(gl)
+    const { container } = render(<RollingBlinds theme="light" />)
+
+    const canvas = container.querySelector('canvas')
+    expect(canvas).not.toBeNull()
+    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 300 })
+    Object.defineProperty(canvas, 'clientHeight', { configurable: true, value: 200 })
+    vi.stubGlobal('devicePixelRatio', 1.5)
+
+    act(() => {
+      vi.advanceTimersByTime(32)
+    })
+    expect(canvas?.width).toBe(450)
+    expect(canvas?.height).toBe(300)
+    expect(gl.viewport).toHaveBeenCalledWith(0, 0, 450, 300)
+  })
+
+  it('rebuilds GL resources and resumes a single render loop after context restore', () => {
+    const { gl } = createFakeGL()
+    stubGetContext(gl)
+    const { container, unmount } = render(<RollingBlinds theme="light" />)
+    act(() => {
+      vi.advanceTimersByTime(32)
+    })
+    expect(gl.createProgram).toHaveBeenCalledTimes(1)
+
+    const canvas = container.querySelector('canvas')
+    expect(canvas).not.toBeNull()
+    act(() => {
+      canvas?.dispatchEvent(new Event('webglcontextlost', { cancelable: true }))
+    })
+    const drawsAfterLost = gl.drawArrays.mock.calls.length
+    act(() => {
+      vi.advanceTimersByTime(64)
+    })
+    expect(gl.drawArrays.mock.calls.length).toBe(drawsAfterLost)
+
+    act(() => {
+      canvas?.dispatchEvent(new Event('webglcontextrestored'))
+    })
+    expect(gl.createShader).toHaveBeenCalledTimes(4)
+    expect(gl.createProgram).toHaveBeenCalledTimes(2)
+    expect(gl.createBuffer).toHaveBeenCalledTimes(2)
+    expect(gl.useProgram).toHaveBeenCalledTimes(2)
+
+    const drawsAfterRestore = gl.drawArrays.mock.calls.length
+    act(() => {
+      vi.advanceTimersByTime(32)
+    })
+    const frames = gl.drawArrays.mock.calls.length - drawsAfterRestore
+    expect(frames).toBeGreaterThan(0)
+    // 32ms 内至多 2 帧（fake rAF 16ms/帧）；若恢复后出现重复循环会翻倍到 4
+    expect(frames).toBeLessThanOrEqual(2)
+
+    unmount()
+    expect(gl.deleteProgram).toHaveBeenCalledWith(gl.createProgram.mock.results[1].value)
+    expect(gl.deleteBuffer).toHaveBeenCalledWith(gl.createBuffer.mock.results[1].value)
+    expect(gl.deleteShader).toHaveBeenCalledWith(gl.createShader.mock.results[2].value)
+    expect(gl.deleteShader).toHaveBeenCalledWith(gl.createShader.mock.results[3].value)
   })
 })
