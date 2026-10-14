@@ -750,7 +750,7 @@ htmlResponseRe = re2.Compile(\`content-type:.*(text/html|application/xhtml)|<htm
 injectionParamRe = re2.Compile(\`(^|[?&"'])((id|name|q|query|search|keyword|filter|sort|order|where|value|input|data|cmd|command|exec|template|expr)([=:"']))\`)~
 injectionPayloadRe = re2.Compile(\`(union(?:%20|\\s)+select|select(?:%20|\\s)+.+from|sleep\\s*\\(|waitfor\\s+delay|pg_sleep\\s*\\(|\\b(and|or)\\b(?:%20|\\s)+\\d+(?:%20|\\s)*=|;\\s*(cat|id|whoami|curl|wget)|\\$\\{[^}]+\\}|\\{\\{[^}]+\\}\\}|<%[^>]+%>)\`)~
 commandParamRe = re2.Compile(\`(^|[?&"'])((cmd|command|exec|execute|shell|ping|host|ip)([=:"']))\`)~
-commandPayloadRe = re2.Compile(\`(;|\\||&&)(cat|id|whoami|uname|curl|wget)(\\s|%20)\`)~
+commandPayloadRe = re2.Compile(\`(;|\\||&&)(\\s|%20|%09)*(cat|id|whoami|uname|curl|wget)(\\s|%20|%09|[&]|$)\`)~
 sstiRe = re2.Compile(\`(\\$\\{|\\{\\{|<%|#\\{).*(\\}|%>)\`)~
 authRe = re2.Compile(\`authorization:|cookie:|token=|session=|jwt=|x-api-key:\`)~
 resourceIDRe = re2.Compile(\`(^|[/?&=_-])(id|uid|user_?id|account_?id|order_?id|tenant_?id|project_?id|role|permission)([/?&=_-]|\\d)\`)~
@@ -876,9 +876,9 @@ hijackSaveHTTPFlow = func(flow, modify, drop) {
     // SSRF、重定向和 XML/反序列化输入。
     if match(ssrfRe, requestLower) {
         tag(flow, "SSRF")
-        if match(redirectRe, requestLower) {
-            tag(flow, "OpenRedirect")
-        }
+    }
+    if match(redirectRe, requestLower) {
+        tag(flow, "OpenRedirect")
     }
     if match(xmlRe, requestLower) {
         tag(flow, "XXE")
@@ -898,6 +898,50 @@ hijackSaveHTTPFlow = func(flow, modify, drop) {
 
     // 保存链路要求 hook 必须显式放行修改后的 flow。
     modify(flow)
+}
+
+// 命令行运行模板时执行；作为热加载加载时不执行。
+func runSelfTest() {
+    cases = [
+        {"path": "/health", "body": "", "expected": []},
+        {"path": "/ping?host=example.com", "body": "", "expected": ["CommandInjection"]},
+        {"path": "/ping", "body": "host=example.com", "expected": ["CommandInjection"]},
+        {"path": "/run?cmd=whoami", "body": "", "expected": ["Injection", "SQLi", "CommandInjection"]},
+        {"path": "/run", "body": "cmd=whoami", "expected": ["Injection", "SQLi", "CommandInjection"]},
+        {"path": "/run", "body": "foo; id", "expected": ["Injection", "SQLi", "CommandInjection"]},
+        {"path": "/run", "body": "foo && whoami", "expected": ["CommandInjection"]},
+        {"path": "/run", "body": "foo;%20id", "expected": ["CommandInjection"]},
+        {"path": "/run", "body": "foo&&%09whoami", "expected": ["CommandInjection"]},
+        {"path": "/run", "body": "foo; identity", "expected": ["Injection", "SQLi"]},
+        {"path": "/?return=https://evil.example", "body": "", "expected": ["OpenRedirect"]},
+        {"path": "/?redirect=https://evil.example", "body": "", "expected": ["SSRF", "OpenRedirect"]},
+    ]
+    for c in cases {
+        request = "POST " + c.path + " HTTP/1.1\\r\\nHost: example.com\\r\\n\\r\\n" + c.body
+        response = "HTTP/1.1 200 OK\\r\\n\\r\\nok"
+        flow = make(map[string]any)
+        flow["Url"] = "http://example.com" + c.path
+        flow["GetRequest"] = func() { return request }
+        flow["GetResponse"] = func() { return response }
+        flow["tags"] = ["existing"]
+        flow["AddTag"] = func(name) { flow["tags"] = append(flow["tags"], name) }
+        forwarded = 0
+        hijackSaveHTTPFlow(flow, func(f) {
+            assert f == flow, "must forward the original flow"
+            forwarded++
+        }, func() { die("must not drop flow") })
+        assert forwarded == 1, "must explicitly forward once"
+        assert "existing" in flow.tags, "must preserve existing tags"
+        assert len(flow.tags) == len(c.expected) + 1, sprintf("unexpected tags: %v for %v", flow.tags, c)
+        for name in c.expected {
+            assert ("TEST:" + name) in flow.tags, sprintf("missing %v for %v", name, c)
+        }
+    }
+    log.info("HTTP flow test tagging self test passed: 12 cases")
+}
+
+if YAK_MAIN {
+    runSelfTest()
 }`,
   },
 ]
