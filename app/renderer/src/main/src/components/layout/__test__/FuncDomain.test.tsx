@@ -563,6 +563,14 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     fireEvent.click(screen.getByText('FuncDomain.screenshot'))
     expect(yakitUILayout.activateScreenshot).toHaveBeenCalledTimes(1)
   })
+
+  it('Linux 不展示截屏入口（主进程未注册处理器），录屏入口保留', async () => {
+    render(<FuncDomain {...baseProps} system="Linux" />)
+    openSettingMenu()
+
+    expect(await screen.findByText('FuncDomain.screen')).toBeInTheDocument()
+    expect(screen.queryByText('FuncDomain.screenshot')).not.toBeInTheDocument()
+  })
 })
 
 describe('FuncDomain 性能采样与崩溃日志', () => {

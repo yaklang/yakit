@@ -368,6 +368,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
               typeCallback={typeCallback}
               token={screenRecorderInfo.token}
               isRecording={screenRecorderInfo.isRecording}
+              system={system}
             />
           )}
         </div>
@@ -665,6 +666,8 @@ interface UIOpSettingProp {
   token: string
   /** 是否正在录屏 */
   isRecording: boolean
+  /** 操作系统类型（截屏仅 macOS/Windows 支持，主进程未在 Linux 注册处理器） */
+  system: YakitSystem
 }
 
 const DBCacheManager = (t: TFunction) => {
@@ -685,49 +688,56 @@ const DBCacheManager = (t: TFunction) => {
   }
 }
 
-/** 录屏/截屏菜单项：一级「录屏」点击与二级「录屏」效果相同 */
+/** 录屏/截屏菜单项：一级「录屏」点击与二级「录屏」效果相同；截屏仅 macOS/Windows 提供入口 */
 const GetScreenAndScreenshotMenuItems = (
   t: TFunction,
   isRecording: boolean,
   screenshotLoading: boolean,
-): YakitMenuItemProps[] => [
-  {
-    key: 'screen',
-    label: isRecording ? (
-      <span className={styles['stop-screen-menu-item']}>{t('FuncDomain.stopScreen')}</span>
-    ) : (
-      t('FuncDomain.screen')
-    ),
-    children: [
-      {
-        key: 'screenCap',
-        label: isRecording ? (
-          <div className={styles['stop-screen-menu-item']}>{t('FuncDomain.stopScreen')}</div>
-        ) : (
-          <div className={styles['screen-and-screenshot-menu-item']}>
-            <span>{t('FuncDomain.screen')}</span>
-          </div>
-        ),
-      },
-      { key: 'screen-recorder', label: t('FuncDomain.screenRecorder') },
-    ],
-  },
-  {
-    key: 'screenshot',
-    label: (
-      <div className={styles['screen-and-screenshot-menu-item']}>
-        <span>{t('FuncDomain.screenshot')}</span>
-        {screenshotLoading && (
-          <div className={styles['icon-loading-wrapper']} onClick={(e) => e.stopPropagation()}>
-            <LoadingOutlined className={styles['icon-hover-style']} />
-          </div>
-        )}
-      </div>
-    ),
-  },
-]
+  system: YakitSystem,
+): YakitMenuItemProps[] => {
+  const items: YakitMenuItemProps[] = [
+    {
+      key: 'screen',
+      label: isRecording ? (
+        <span className={styles['stop-screen-menu-item']}>{t('FuncDomain.stopScreen')}</span>
+      ) : (
+        t('FuncDomain.screen')
+      ),
+      children: [
+        {
+          key: 'screenCap',
+          label: isRecording ? (
+            <div className={styles['stop-screen-menu-item']}>{t('FuncDomain.stopScreen')}</div>
+          ) : (
+            <div className={styles['screen-and-screenshot-menu-item']}>
+              <span>{t('FuncDomain.screen')}</span>
+            </div>
+          ),
+        },
+        { key: 'screen-recorder', label: t('FuncDomain.screenRecorder') },
+      ],
+    },
+  ]
+  // 主进程仅在 macOS/Windows 注册 activate-screenshot 处理器，Linux 下不展示截屏入口
+  if (system === 'Darwin' || system === 'Windows_NT') {
+    items.push({
+      key: 'screenshot',
+      label: (
+        <div className={styles['screen-and-screenshot-menu-item']}>
+          <span>{t('FuncDomain.screenshot')}</span>
+          {screenshotLoading && (
+            <div className={styles['icon-loading-wrapper']} onClick={(e) => e.stopPropagation()}>
+              <LoadingOutlined className={styles['icon-hover-style']} />
+            </div>
+          )}
+        </div>
+      ),
+    })
+  }
+  return items
+}
 
-const GetUIOpSettingMenu = (t: TFunction, isRecording: boolean, screenshotLoading: boolean) => {
+const GetUIOpSettingMenu = (t: TFunction, isRecording: boolean, screenshotLoading: boolean, system: YakitSystem) => {
   // 便携版
   if (isEnpriTraceAgent()) {
     return [
@@ -767,7 +777,7 @@ const GetUIOpSettingMenu = (t: TFunction, isRecording: boolean, screenshotLoadin
         key: 'diagnose-network',
         label: t('FuncDomain.diagnoseNetwork'),
       },
-      ...GetScreenAndScreenshotMenuItems(t, isRecording, screenshotLoading),
+      ...GetScreenAndScreenshotMenuItems(t, isRecording, screenshotLoading, system),
       { type: 'divider' },
       {
         key: 'settings',
@@ -896,7 +906,7 @@ const GetUIOpSettingMenu = (t: TFunction, isRecording: boolean, screenshotLoadin
       key: 'diagnose-network',
       label: t('FuncDomain.diagnoseNetwork'),
     },
-    ...GetScreenAndScreenshotMenuItems(t, isRecording, screenshotLoading),
+    ...GetScreenAndScreenshotMenuItems(t, isRecording, screenshotLoading, system),
     { type: 'divider' },
     {
       key: 'settings',
@@ -1061,7 +1071,7 @@ const PerformanceSamplingController: React.FC = React.memo(() => {
 })
 
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
-  const { engineMode, onEngineModeChange, typeCallback, token, isRecording } = props
+  const { engineMode, onEngineModeChange, typeCallback, token, isRecording, system } = props
   const { t } = useI18nNamespaces(['home', 'layout'])
   const [runNodeModalVisible, setRunNodeModalVisible] = useState<boolean>(false)
   const [show, setShow] = useState<boolean>(false)
@@ -1292,7 +1302,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       width={206}
       submenuWidth={142}
       selectedKeys={[]}
-      data={GetUIOpSettingMenu(t, isRecording, screenshotLoading) as YakitMenuItemProps[]}
+      data={GetUIOpSettingMenu(t, isRecording, screenshotLoading, system) as YakitMenuItemProps[]}
       popupClassName={styles['ui-op-submenu']}
       onClick={({ key }) => menuSelect(key)}
       parentTitleClick

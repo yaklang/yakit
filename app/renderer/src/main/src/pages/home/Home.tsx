@@ -384,13 +384,18 @@ const Home: React.FC<HomeProp> = (props) => {
         rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => !screenRecorderInfo.isRecording && ipcRenderer.invoke('send-open-screenCap-modal'),
       },
-      {
-        label: t('Home.screenshot'),
-        icon: <PublicToolScreenshotIcon />,
-        desc: t('Home.captureScreenIntoImage'),
-        rightIcon: <ArrowRightOutlined color="currentColor" />,
-        onClick: () => ipcRenderer.invoke('activate-screenshot'),
-      },
+      // 主进程仅在 macOS/Windows 注册 activate-screenshot 处理器，Linux 不展示截屏入口
+      ...(system === 'Darwin' || system === 'Windows_NT'
+        ? [
+            {
+              label: t('Home.screenshot'),
+              icon: <PublicToolScreenshotIcon />,
+              desc: t('Home.captureScreenIntoImage'),
+              rightIcon: <ArrowRightOutlined color="currentColor" />,
+              onClick: () => ipcRenderer.invoke('activate-screenshot'),
+            },
+          ]
+        : []),
       {
         label: t('YakitRoute.recordingManagement'),
         icon: <PublicToolScreenRecorderPageIcon />,
@@ -398,8 +403,8 @@ const Home: React.FC<HomeProp> = (props) => {
         rightIcon: <ArrowRightOutlined color="currentColor" />,
         onClick: () => onMenu({ route: YakitRoute.ScreenRecorderPage }),
       },
-    ] as ToolInfo[]
-  }, [screenRecorderInfo, i18nRefresh, pluginToId])
+    ] satisfies ToolInfo[]
+  }, [screenRecorderInfo, i18nRefresh, pluginToId, system])
   const [curProjectInfo, setCurProjectInfo] = useState<ProjectDescription>()
   const [historyData, setHistoryData] = useState<number>(0)
   const [riskLevelData, setRiskLevelData] = useState<FieldName[]>([])
