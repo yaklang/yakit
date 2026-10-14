@@ -14,7 +14,7 @@ import './assets/global.scss'
 import './theme/scrollbar.scss'
 import './pages/GlobalClass.scss'
 import './theme/componentsTheme/formItemHelp.css'
-import { Suspense, lazy, useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useLayoutEffect, useState } from 'react'
 const ChildNewApp = lazy(() => import('./newApp/ChildNewApp'))
 const MarkdownPdfPrintPage = lazy(() => import('./pages/irifyAiCodeAudit/MarkdownPdfPrint/MarkdownPdfPrintPage'))
 import { GetMainColor } from './utils/envfile'
@@ -40,6 +40,10 @@ const getQueryParam = (param) => {
 }
 
 const App = () => {
+  useLayoutEffect(() => {
+    document.getElementById('initial-loading')?.remove()
+  }, [])
+
   const [windowType, setWindowType] = useState(getQueryParam('window'))
 
   useEffect(() => {
