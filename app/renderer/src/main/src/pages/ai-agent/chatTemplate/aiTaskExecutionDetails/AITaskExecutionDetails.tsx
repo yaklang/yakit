@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import classNames from 'classnames'
-import type {
-  AIBrowserProcessesProps,
-  AITaskDetailsAddListItem,
-  AITaskDetailsAddPopoverProps,
-  AITaskDetailsAddPopoverResponse,
-  AITaskDetailsCardListProps,
-  AITaskExecutionDetailsCardProps,
-  AITaskExecutionDetailsProps,
-  AITaskStatisticsStatusProps,
+import {
+  FILTER_KEY_TO_GANTT_LEGEND,
+  GANTT_LEGEND_TO_FILTER_KEY,
+  TODO_STATUS_FILTER_KEYS,
+  TODO_STATUS_TO_FILTER_KEY,
+  type AIBrowserProcessesProps,
+  type AITaskDetailsAddListItem,
+  type AITaskDetailsAddPopoverProps,
+  type AITaskDetailsAddPopoverResponse,
+  type AITaskDetailsCardListProps,
+  type AITaskExecutionDetailsCardProps,
+  type AITaskExecutionDetailsProps,
+  type AITaskStatisticsStatusItem,
+  type AITaskStatisticsStatusProps,
+  type TodoStatusFilterKey,
+  type TodoViewMode,
 } from './type'
 import {
   PresentationChartBarOutlined,
@@ -77,12 +84,25 @@ import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegment
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AITaskSelectDropdown } from './aiTaskSelectDropdown/AITaskSelectDropdown'
 
-type TodoViewMode = 'board' | 'gantt'
+/** 顶部状态统计项配置（title 在渲染时用 t 注入） */
+const TODO_STAT_META: Array<{
+  key: string
+  color: AITaskStatisticsStatusItem['color']
+  titleKey: string
+}> = [
+  { key: 'created', color: 'neutral', titleKey: 'AITaskExecutionDetails.statusCreated' },
+  { key: 'pending', color: 'neutral', titleKey: 'AITaskExecutionDetails.statusPending' },
+  { key: 'doing', color: 'main', titleKey: 'AITaskExecutionDetails.statusDoing' },
+  { key: 'done', color: 'green', titleKey: 'AITaskExecutionDetails.statusDone' },
+  { key: 'skipped', color: 'neutral', titleKey: 'AITaskExecutionDetails.statusSkipped' },
+  { key: 'deleted', color: 'red', titleKey: 'AITaskExecutionDetails.statusDeleted' },
+]
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName, onClose } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [todoViewMode, setTodoViewMode] = useState<TodoViewMode>('board')
+  const [hiddenStatusKeys, setHiddenStatusKeys] = useState<TodoStatusFilterKey[]>([])
   const [selectedTaskId, setSelectedTaskId] = useState(taskId)
 
   useEffect(() => {
@@ -107,80 +127,85 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   )
   const todoListCardData = useCreation(() => planItemDetailsData?.todoList, [planItemDetailsData?.todoList])
 
+  const toggleStatusFilter = useMemoizedFn((key: string) => {
+    // 已创建：在「全显示」与「全隐藏」之间切换
+    if (key === 'created') {
+      setHiddenStatusKeys((prev) =>
+        TODO_STATUS_FILTER_KEYS.every((k) => prev.includes(k)) ? [] : [...TODO_STATUS_FILTER_KEYS],
+      )
+      return
+    }
+    if (!TODO_STATUS_FILTER_KEYS.includes(key as TodoStatusFilterKey)) return
+    const filterKey = key as TodoStatusFilterKey
+    setHiddenStatusKeys((prev) =>
+      prev.includes(filterKey) ? prev.filter((k) => k !== filterKey) : [...prev, filterKey],
+    )
+  })
+
+  const hiddenStatusKeySet = useCreation(() => new Set(hiddenStatusKeys), [hiddenStatusKeys])
+
+  const hiddenLegendKinds = useCreation(
+    () => hiddenStatusKeys.map((key) => FILTER_KEY_TO_GANTT_LEGEND[key]),
+    [hiddenStatusKeys],
+  )
+
   const todoData = useCreation(() => {
-    const items = planItemDetailsData?.todoList?.items || []
+    const allItems = planItemDetailsData?.todoList?.items || []
+    const visibleItems: TodoListCardData['items'] = []
     const pending: TodoListCardData['items'] = []
     const doing: TodoListCardData['items'] = []
     const done: TodoListCardData['items'] = []
     const skippedOrDeleted: TodoListCardData['items'] = []
-    const progressNumber: AITaskStatisticsStatusProps['list'] = [
-      {
-        key: 'created',
-        color: 'neutral',
-        title: t('AITaskExecutionDetails.statusCreated'),
-        footerLeft: items.length,
-      },
-      {
-        key: 'pending',
-        color: 'neutral',
-        title: t('AITaskExecutionDetails.statusPending'),
-        footerLeft: 0,
-      },
-      {
-        key: 'doing',
-        color: 'main',
-        title: t('AITaskExecutionDetails.statusDoing'),
-        footerLeft: 0,
-      },
-      {
-        key: 'done',
-        color: 'green',
-        title: t('AITaskExecutionDetails.statusDone'),
-        footerLeft: 0,
-      },
-      {
-        key: 'skipped',
-        color: 'neutral',
-        title: t('AITaskExecutionDetails.statusSkipped'),
-        footerLeft: 0,
-      },
-      {
-        key: 'deleted',
-        color: 'red',
-        title: t('AITaskExecutionDetails.statusDeleted'),
-        footerLeft: 0,
-      },
-    ]
+    const progressNumber: AITaskStatisticsStatusProps['list'] = TODO_STAT_META.map((meta) => ({
+      key: meta.key,
+      color: meta.color,
+      title: t(meta.titleKey),
+      footerLeft: meta.key === 'created' ? allItems.length : 0,
+    }))
     const progressByKey = Object.fromEntries(progressNumber.map((item) => [item.key, item])) as Record<
       string,
       AITaskStatisticsStatusProps['list'][number]
     >
 
-    for (const item of items) {
+    // 一次遍历：统计全量、收集可见项（保序）、填充看板列
+    for (const item of allItems) {
+      const filterKey = TODO_STATUS_TO_FILTER_KEY[item.status]
+      const visible = !filterKey || !hiddenStatusKeySet.has(filterKey)
       switch (item.status) {
         case 'PENDING':
           progressByKey.pending.footerLeft += 1
-          pending.push(item)
+          if (visible) {
+            visibleItems.push(item)
+            pending.push(item)
+          }
           break
-
         case 'DOING':
           progressByKey.doing.footerLeft += 1
-          doing.push(item)
+          if (visible) {
+            visibleItems.push(item)
+            doing.push(item)
+          }
           break
-
         case 'DONE':
           progressByKey.done.footerLeft += 1
-          done.push(item)
+          if (visible) {
+            visibleItems.push(item)
+            done.push(item)
+          }
           break
-
         case 'SKIPPED':
           progressByKey.skipped.footerLeft += 1
-          skippedOrDeleted.push(item)
+          if (visible) {
+            visibleItems.push(item)
+            skippedOrDeleted.push(item)
+          }
           break
-
         case 'DELETED':
           progressByKey.deleted.footerLeft += 1
-          skippedOrDeleted.push(item)
+          if (visible) {
+            visibleItems.push(item)
+            skippedOrDeleted.push(item)
+          }
           break
         default:
           break
@@ -207,8 +232,8 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         items: skippedOrDeleted,
       },
     ]
-    return { boardColumns, progressNumber }
-  }, [planItemDetailsData?.todoList?.items, i18nRefresh])
+    return { boardColumns, progressNumber, visibleItems }
+  }, [planItemDetailsData?.todoList?.items, hiddenStatusKeySet, i18nRefresh])
 
   const forgeFixedList = useCreation(() => {
     const forgeFixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[] =
@@ -408,11 +433,22 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           </div>
           {total ? (
             <>
-              <AITaskStatisticsStatus list={todoData.progressNumber} />
+              <AITaskStatisticsStatus
+                list={todoData.progressNumber}
+                hiddenKeys={hiddenStatusKeys}
+                onToggle={toggleStatusFilter}
+              />
               {todoViewMode === 'board' ? (
                 <AITaskBoard columns={todoData.boardColumns} />
               ) : (
-                <AITaskGantt items={planItemDetailsData?.todoList?.items || []} />
+                <AITaskGantt
+                  items={todoData.visibleItems}
+                  hiddenLegendKinds={hiddenLegendKinds}
+                  onLegendToggle={(kind) => {
+                    const key = GANTT_LEGEND_TO_FILTER_KEY[kind]
+                    if (key) toggleStatusFilter(key)
+                  }}
+                />
               )}
             </>
           ) : (
@@ -991,22 +1027,44 @@ const AITaskExecutionDetailsCard: React.FC<AITaskExecutionDetailsCardProps> = Re
 })
 
 const AITaskStatisticsStatus: React.FC<AITaskStatisticsStatusProps> = React.memo((props) => {
-  const { list } = props
+  const { list, hiddenKeys = [], onToggle } = props
+  const hiddenSet = useCreation(() => new Set(hiddenKeys), [hiddenKeys])
+  const allHidden = useCreation(() => TODO_STATUS_FILTER_KEYS.every((key) => hiddenSet.has(key)), [hiddenSet])
   return (
     <div className={styles['stats-overview']}>
-      {list.map((item) => (
-        <div
-          key={item.key}
-          className={classNames(styles['stat-item'], {
-            [styles['stat-main']]: item.color === 'main',
-            [styles['stat-green']]: item.color === 'green',
-            [styles['stat-red']]: item.color === 'red',
-          })}
-        >
-          <span className={styles['stat-count']}>{item.footerLeft}</span>
-          <span className={styles['stat-label']}>{item.title}</span>
-        </div>
-      ))}
+      {list.map((item) => {
+        const filterable = !!onToggle
+        // 已创建：全隐藏时灰显；单项：自身在 hiddenKeys 中时灰显
+        const hidden = item.key === 'created' ? allHidden : hiddenSet.has(item.key)
+        return (
+          <div
+            key={item.key}
+            className={classNames(styles['stat-item'], {
+              [styles['stat-main']]: item.color === 'main',
+              [styles['stat-green']]: item.color === 'green',
+              [styles['stat-red']]: item.color === 'red',
+              [styles['stat-item-clickable']]: filterable,
+              [styles['stat-item-hidden']]: hidden,
+            })}
+            onClick={filterable ? () => onToggle?.(item.key) : undefined}
+            role={filterable ? 'button' : undefined}
+            tabIndex={filterable ? 0 : undefined}
+            onKeyDown={
+              filterable
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onToggle?.(item.key)
+                    }
+                  }
+                : undefined
+            }
+          >
+            <span className={styles['stat-count']}>{item.footerLeft}</span>
+            <span className={styles['stat-label']}>{item.title}</span>
+          </div>
+        )
+      })}
     </div>
   )
 })

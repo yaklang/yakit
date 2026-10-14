@@ -107,6 +107,12 @@ vi.mock('@/pages/ai-agent/aiMCP/utils', () => ({ grpcGetAllMCPServers: vi.fn() }
 vi.mock('../AITaskExecutionDetails.module.scss', () => ({
   default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
 }))
+vi.mock('../aiTaskGantt/AITaskGantt.module.scss', () => ({
+  default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
+}))
+vi.mock('../aiTaskBoard/AITaskBoard.module.scss', () => ({
+  default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
+}))
 
 const createTask = (taskId: string, summary: string) => {
   const data = cloneDeep(DefaultPlanItemDetailsData)
@@ -319,8 +325,38 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     expect(screen.getByText('完成任务')).toBeInTheDocument()
     expect(screen.getByText('跳过任务')).toBeInTheDocument()
     expect(screen.getByText('删除任务')).toBeInTheDocument()
-    // 甘特图未渲染（图例尚未出现）
-    expect(screen.queryByText('AITaskExecutionDetails.ganttExecute')).not.toBeInTheDocument()
+    // 甘特图未渲染
+    expect(document.querySelector('.ai-task-gantt')).toBeNull()
+  })
+
+  it('点击状态统计可隐藏对应待办，再次点击恢复', () => {
+    createTaskWithStatuses('task-filter')
+    render(<AITaskExecutionDetails taskId="task-filter" />)
+
+    expect(screen.getByText('排队任务')).toBeInTheDocument()
+    expect(screen.getByText('执行任务')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('AITaskExecutionDetails.statusPending'))
+    expect(screen.queryByText('排队任务')).not.toBeInTheDocument()
+    expect(screen.getByText('执行任务')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('AITaskExecutionDetails.statusPending'))
+    expect(screen.getByText('排队任务')).toBeInTheDocument()
+  })
+
+  it('点击已创建在全隐藏与全显示之间切换', () => {
+    createTaskWithStatuses('task-filter-all')
+    render(<AITaskExecutionDetails taskId="task-filter-all" />)
+
+    expect(screen.getByText('排队任务')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('AITaskExecutionDetails.statusCreated'))
+    expect(screen.queryByText('排队任务')).not.toBeInTheDocument()
+    expect(screen.queryByText('执行任务')).not.toBeInTheDocument()
+    expect(screen.queryByText('完成任务')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('AITaskExecutionDetails.statusCreated'))
+    expect(screen.getByText('排队任务')).toBeInTheDocument()
+    expect(screen.getByText('执行任务')).toBeInTheDocument()
   })
 
   it('切换到甘特图视图：渲染时间轴并保留状态分组统计', () => {
@@ -328,7 +364,7 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     render(<AITaskExecutionDetails taskId="task-gantt" />)
 
     // 甘特图尚未出现
-    expect(screen.queryByText('AITaskExecutionDetails.ganttExecute')).not.toBeInTheDocument()
+    expect(document.querySelector('.ai-task-gantt')).toBeNull()
 
     // Segmented 选项 label 点击触发底层 radio change（fake timers 下不走 userEvent）
     fireEvent.click(screen.getByText('AITaskExecutionDetails.progress'))
@@ -337,15 +373,15 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     expect(screen.queryByText('Todo list')).not.toBeInTheDocument()
     expect(screen.getByText('排队任务')).toBeInTheDocument()
     expect(screen.getByText('删除任务')).toBeInTheDocument()
-    // 甘特图图例与统计计数不因视图切换丢失
-    expect(screen.getByText('AITaskExecutionDetails.ganttExecute')).toBeInTheDocument()
+    // 甘特图与统计计数不因视图切换丢失
+    expect(document.querySelector('.ai-task-gantt')).not.toBeNull()
     expect(getStatCount('AITaskExecutionDetails.statusCreated')).toBe('5')
     // 看板列头不再渲染（「待处理」在甘特图状态标签中仍存在，用看板独有的列头断言）
     expect(screen.queryByText('AITaskExecutionDetails.columnSkippedOrDeleted')).not.toBeInTheDocument()
 
     // 切回看板
     fireEvent.click(screen.getByText('AITaskExecutionDetails.board'))
-    expect(screen.queryByText('AITaskExecutionDetails.ganttExecute')).not.toBeInTheDocument()
+    expect(document.querySelector('.ai-task-gantt')).toBeNull()
     expect(screen.getByText('AITaskExecutionDetails.columnSkippedOrDeleted')).toBeInTheDocument()
   })
 

@@ -981,11 +981,6 @@
     "labelCreated": "建立",
     "labelSkipped": "跳過",
     "labelDeleted": "刪除",
-    "ganttWait": "等待",
-    "ganttExecute": "執行過程",
-    "ganttSuccess": "成功",
-    "ganttSkipped": "跳過",
-    "ganttFailed": "失敗",
     "ganttToNow": "現在"
   },
   "AIToDoListDetail": {

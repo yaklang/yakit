@@ -57,20 +57,13 @@ describe('AITaskGantt 渲染', () => {
     expect(screen.getByText('跳过任务')).toBeInTheDocument()
     expect(screen.getByText('删除任务')).toBeInTheDocument()
 
-    // 状态标签
-    expect(screen.getAllByText('AITaskExecutionDetails.columnPending').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('AITaskExecutionDetails.columnDoing').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('AITaskExecutionDetails.columnDone').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('AITaskExecutionDetails.statusSkipped').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('AITaskExecutionDetails.statusDeleted').length).toBeGreaterThan(0)
-
-    // 图例五类齐全
+    // 状态标签与图例均复用顶部统计文案（status*）
     for (const label of [
-      'AITaskExecutionDetails.ganttWait',
-      'AITaskExecutionDetails.ganttExecute',
-      'AITaskExecutionDetails.ganttSuccess',
-      'AITaskExecutionDetails.ganttSkipped',
-      'AITaskExecutionDetails.ganttFailed',
+      'AITaskExecutionDetails.statusPending',
+      'AITaskExecutionDetails.statusDoing',
+      'AITaskExecutionDetails.statusDone',
+      'AITaskExecutionDetails.statusSkipped',
+      'AITaskExecutionDetails.statusDeleted',
     ]) {
       expect(screen.getAllByText(label).length).toBeGreaterThan(0)
     }
@@ -100,7 +93,7 @@ describe('AITaskGantt 渲染', () => {
     const gantt = document.querySelector('.ai-task-gantt') as HTMLElement
     // 空数据：默认 4 格 → 含起止共 5 个 tick
     expect(gantt.querySelectorAll('.timeline-tick')).toHaveLength(5)
-    expect(screen.getByText('AITaskExecutionDetails.ganttWait')).toBeInTheDocument()
+    expect(screen.getByText('AITaskExecutionDetails.statusPending')).toBeInTheDocument()
   })
 
   it('短跨度至少 5 个刻度（默认 4 格）；3 天宽跨度不超过 9 个刻度', () => {
@@ -193,9 +186,9 @@ describe('AITaskGantt 选中交互', () => {
     const gantt = document.querySelector('.ai-task-gantt') as HTMLElement
     const segments = Array.from(gantt.querySelectorAll('.bar-segment')) as HTMLElement[]
     expect(segments.length).toBe(3)
-    expect(segments[0].title).toBe('AITaskExecutionDetails.ganttWait')
-    expect(segments[1].title).toBe('AITaskExecutionDetails.ganttExecute')
-    expect(segments[2].title).toBe('AITaskExecutionDetails.ganttSuccess')
+    expect(segments[0].title).toBe('AITaskExecutionDetails.statusPending')
+    expect(segments[1].title).toBe('AITaskExecutionDetails.statusDoing')
+    expect(segments[2].title).toBe('AITaskExecutionDetails.statusDone')
 
     await user.click(screen.getByText('完成任务'))
     expect(document.querySelector('.timeline-row-selected')).not.toBeNull()

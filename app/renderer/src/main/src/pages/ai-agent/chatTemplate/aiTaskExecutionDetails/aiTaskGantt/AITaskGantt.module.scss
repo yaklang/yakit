@@ -82,7 +82,7 @@
 .timeline-body {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow-y: overlay;
   overflow-x: hidden;
 }
 
@@ -121,7 +121,7 @@
 .timeline-row {
   position: relative;
   z-index: 1;
-  height: 56px;
+  height: 48px;
   box-sizing: border-box;
   cursor: pointer;
   border-left: 2px solid transparent;
@@ -222,6 +222,23 @@
   font-size: 12px;
   font-weight: 400;
   line-height: 16px;
+}
+
+.legend-item-clickable {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  user-select: none;
+
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg);
+  }
+}
+
+.legend-item-hidden {
+  opacity: 0.35;
+  text-decoration: line-through;
 }
 
 .legend-dot {

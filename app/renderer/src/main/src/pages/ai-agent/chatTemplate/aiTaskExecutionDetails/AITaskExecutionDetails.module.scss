@@ -76,19 +76,17 @@
     border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
     display: flex;
     flex-direction: column;
-    gap: 4px;
     width: 100%;
     height: 132px;
     max-height: 132px;
 
     .card-title {
       color: var(--Colors-Use-Neutral-Text-1-Title);
-
       font-size: 14px;
       font-weight: 500;
-      line-height: 20px; /* 142.857% */
+      line-height: 20px;
       letter-spacing: 0.1px;
-      padding: 6px 8px 2px 8px;
+      padding: 2px 8px;
     }
 
     .card-content {
@@ -319,6 +317,23 @@
         align-items: baseline;
         gap: 4px;
         min-width: 0;
+      }
+
+      .stat-item-clickable {
+        cursor: pointer;
+        border-radius: 4px;
+        padding: 2px 4px;
+        margin: -2px -4px;
+        user-select: none;
+
+        &:hover {
+          background: var(--Colors-Use-Neutral-Bg);
+        }
+      }
+
+      .stat-item-hidden {
+        opacity: 0.35;
+        text-decoration: line-through;
       }
 
       .stat-count {
