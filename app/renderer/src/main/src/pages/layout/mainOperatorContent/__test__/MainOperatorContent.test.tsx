@@ -389,6 +389,7 @@ describe('MainOperatorContent initial cache loading', () => {
       // 执行真实切库入口；模拟切库请求先完成，随后页面提交触发卸载的合法顺序。
       const switchProject = execute(`return ${switchProjectDeclaration!.initializer!.getText(layoutSource)}`, {
         useMemoizedFn: (fn: unknown) => fn,
+        saveAIAgentCache: app.bindings.saveAIAgentCache,
         yakitProject: {
           setCurrentProject: vi.fn(async () => {
             cacheAtSwitch = projectCaches.get('original')

@@ -142,6 +142,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import { useEngineConsoleStore } from '@/store/baseConsole'
+import { saveAIAgentCache } from '@/store/pageInfo'
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
   Host: '127.0.0.1',
@@ -1002,7 +1003,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }
   })
 
-  const onOkEnterProjectMag = useMemoizedFn(() => {
+  const onOkEnterProjectMag = useMemoizedFn(async () => {
+    // 卸载时再保存可能已切换项目数据库，先等待原项目的待写缓存落盘。
+    await saveAIAgentCache.flush()
     yakitProject.setCurrentProject({
       Type: getEnvTypeByProjects(),
     })

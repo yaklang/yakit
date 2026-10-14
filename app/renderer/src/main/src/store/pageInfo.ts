@@ -694,7 +694,7 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
 // 与 Web Fuzzer 一样，由路由数据订阅触发防抖保存。
 export const saveAIAgentCache = debounce(
   (page?: PageProps) => {
-    setRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs, JSON.stringify(page?.pageList || [])).catch((error) => {
+    return setRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs, JSON.stringify(page?.pageList || [])).catch((error) => {
       yakitNotify('error', tOriginal('pageInfo.aiAgentCacheFailed', { error: String(error) }))
     })
   },
