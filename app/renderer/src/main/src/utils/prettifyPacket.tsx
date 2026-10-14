@@ -154,7 +154,7 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
             plugins: plugins,
             useTabs: false,
             semi: true,
-            singleQuote: true,
+            singleQuote: false,
             trailingComma: 'all',
             bracketSpacing: true,
             arrowParens: 'avoid',
