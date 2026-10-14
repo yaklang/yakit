@@ -354,7 +354,7 @@ export const AIConfigSettings: React.FC = () => {
           />
         </div>
         <div className={styles['list-panel']}>
-          <SettingRow title={t('AIChatSetting.timelineContentSize')}>
+          <SettingRow title={t('AIChatSetting.timelineContentSize')} desc={t('AIChatSetting.timelineContentSizeDesc')}>
             <YakitInput
               wrapperClassName={classNames(styles['compact-input'], styles['input-suffix'])}
               suffix="KB"
