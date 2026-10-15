@@ -288,7 +288,7 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
 }
 
 const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
-  const { res, rawData } = requestInfo
+  const { res, rawData, store, chatType } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'task_snapshot') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -339,8 +339,10 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
     oldData.perception = perception
   }
 
+  let todoUpdated = false
   if (payload.todo?.items) {
     oldData.todoList = handleTodoListData(payload.todo.items, taskId)
+    todoUpdated = true
   }
 
   if (nested && Array.isArray(nested.capabilities)) {
@@ -349,6 +351,10 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
   }
 
   rawData.taskDetailsMap.set(taskId, oldData)
+  // 与 current_task_todo_list_update 一致：通知聊天待办条从 map 重读
+  if (todoUpdated && chatType === 'reAct') {
+    store.getState().updateStateCount('chatTodoListUpdate')
+  }
 }
 
 /** 单条grpc流数据对应一个独立的UI数据 */

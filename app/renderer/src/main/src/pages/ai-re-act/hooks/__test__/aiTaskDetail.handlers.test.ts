@@ -293,6 +293,7 @@ describe('aiTaskDetail handlers', () => {
   it('task_snapshot writes execution/todo/perception into taskDetailsMap', () => {
     const taskId = 'task-full-snapshot'
     const req = makeHandlerRequest({
+      chatType: 'reAct',
       res: makeGrpcJsonRes(
         'structured',
         {
@@ -326,6 +327,7 @@ describe('aiTaskDetail handlers', () => {
       ),
     })
 
+    const beforeTodoUpdate = req.store.getState().chatTodoListUpdate
     aiTaskDetailDataHandlers.task_snapshot(req)
 
     const detail = req.rawData.taskDetailsMap.get(taskId)
@@ -337,8 +339,31 @@ describe('aiTaskDetail handlers', () => {
     expect(detail?.perception?.trigger).toBe('tool_call')
     expect(detail?.perception?.timestamp).toBe(12345)
     expect(detail?.todoList?.items?.length).toBe(1)
+    expect(req.store.getState().chatTodoListUpdate).toBeGreaterThan(beforeTodoUpdate)
     expect(detail?.todoList?.items?.[0]?.content).toBe('待办一')
     expect(detail?.taskSnapshotRevision).toBe(3)
+  })
+
+  it('task_snapshot with task chatType writes todo but does not bump chatTodoListUpdate', () => {
+    const taskId = 'task-todo-no-bump'
+    const req = makeHandlerRequest({
+      chatType: 'task',
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          revision: 1,
+          todo: {
+            items: [{ id: 'todo-1', status: AIToDoListStatusEnum.Pending, content: '规划待办', scope_task_id: taskId }],
+          },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+    const before = req.store.getState().chatTodoListUpdate
+    aiTaskDetailDataHandlers.task_snapshot(req)
+    expect(req.rawData.taskDetailsMap.get(taskId)?.todoList?.items?.[0]?.content).toBe('规划待办')
+    expect(req.store.getState().chatTodoListUpdate).toBe(before)
   })
 
   it('task_snapshot ignores stale revisions before mutating cached details', () => {
@@ -516,6 +541,7 @@ describe('aiTaskDetail handlers', () => {
   it('task_snapshot capabilities=[] 整表清空，不残留旧 tool/forge/技能', () => {
     const taskId = 'task-capabilities-clear'
     const seeded = makeHandlerRequest({
+      chatType: 'reAct',
       res: makeGrpcJsonRes(
         'structured',
         {
@@ -538,6 +564,7 @@ describe('aiTaskDetail handlers', () => {
     expect(seeded.rawData.taskDetailsMap.get(taskId)?.forges.dynamic).toHaveLength(1)
 
     const clearReq = makeHandlerRequest({
+      chatType: 'reAct',
       rawData: seeded.rawData,
       store: seeded.store,
       res: makeGrpcJsonRes(
@@ -550,7 +577,10 @@ describe('aiTaskDetail handlers', () => {
         { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
       ),
     })
+    // reAct + 无 todo：不得 bump chatTodoListUpdate（守卫 todoUpdated）
+    const beforeTodoUpdate = clearReq.store.getState().chatTodoListUpdate
     aiTaskDetailDataHandlers.task_snapshot(clearReq)
+    expect(clearReq.store.getState().chatTodoListUpdate).toBe(beforeTodoUpdate)
 
     const detail = seeded.rawData.taskDetailsMap.get(taskId)
     expect(detail?.tool.fixed).toEqual([])
