@@ -594,11 +594,20 @@ function registerGlobalIPC() {
   })
 
   // ------------------- 软件退出逻辑 -------------------
+  let exitScheduled = false
   ipcMain.handle('app-exit', async (e, params) => {
+    if (exitScheduled) return
     const { showCloseMessageBox, isIRify, isMemfit } = params
     const parentWindow = getActiveWindow()
 
-    const exitCleanupOperation = async () => {
+    const exitCleanupOperation = () => {
+      if (exitScheduled) return
+      exitScheduled = true
+      // Linux 原生确认框返回时仍可能处在 X11 激活回调中。
+      // 将整个窗口清理移到稍后的任务，避免同步销毁原生窗口宿主。
+      setTimeout(finishExit, process.platform === 'linux' ? 100 : 0)
+    }
+    const finishExit = async () => {
       clearRenderMap(engineLinkWin)
       clearRenderMap(win)
       rendererRecovery.stop()
