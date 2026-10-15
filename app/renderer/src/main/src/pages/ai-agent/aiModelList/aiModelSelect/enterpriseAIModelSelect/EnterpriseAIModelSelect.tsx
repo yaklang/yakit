@@ -1,4 +1,4 @@
-import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import type {
   AIModelEditContentItemProps,
   AIModelEditContentProps,
@@ -347,10 +347,28 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   const [currentItem, setCurrentItem] = useState<AIModelConfig>()
 
   const [editStyle, setEditStyle] = useState<React.CSSProperties>()
+  const editContentRef = useRef<HTMLDivElement>(null)
+  const editAnchorRef = useRef<DOMRect>()
+  const [modelNameListMap, setModelNameListMap] = useState<Map<string, ModelNameListRef>>(() => new Map())
+
+  useLayoutEffect(() => {
+    if (isNil(currentSelectIndex)) return
+    const dropdownRect = dropdownRef.current?.getBoundingClientRect()
+    const contentRect = editContentRef.current?.firstElementChild?.getBoundingClientRect()
+    const anchorRect = editAnchorRef.current
+    if (!dropdownRect || !contentRect || !anchorRect) return
+
+    const width = 200
+    const left = window.innerWidth - dropdownRect.right < width ? dropdownRect.left - width - 6 : dropdownRect.right + 6
+    // 名称异步加载后重新测量，贴近编辑按钮并与窗口底部保持至少 8px 间距。
+    const top = Math.max(0, Math.min(anchorRect.top, window.innerHeight - contentRect.height - 8))
+    setEditStyle({
+      transform: `translate(${Math.max(0, left)}px, ${top}px)`,
+      width,
+    })
+  }, [currentSelectIndex, modelNameListMap])
 
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null)
-
-  const [modelNameListMap, setModelNameListMap] = useState<Map<string, ModelNameListRef>>(() => new Map())
 
   const clearHideTimer = useMemoizedFn(() => {
     if (hideTimerRef.current) {
@@ -446,44 +464,10 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   })
   const onMouseEnterEdit = useMemoizedFn((e: React.MouseEvent, item: AIModelConfig, index: number) => {
     clearHideTimer()
-    const dropdownRect = dropdownRef.current?.getBoundingClientRect()
-    if (!dropdownRect) return
-
-    const { left, right, width } = dropdownRect
     if (isEqual(currentSelectIndex, index)) return
-
-    const rightContextWidth = 200
-    /**
-     * NOTE - 高度需要根据内容调整，目前是固定值
-     * LINK #ai-model-edit-content
-     * 链接所在文件内位置 #ai-model-edit-content 处
-     */
-    const rightContextHeight = 240
-    // 判断右侧屏幕剩余空间是否满足：如果不满足，则在下拉框的左方展示
-    const spaceOnRight = window.innerWidth - right
-    let toLeft = spaceOnRight < rightContextWidth ? left - rightContextWidth - 6 : right + 6
-
-    // 判断下方屏幕剩余高度是否足够居中显示的一半高度
-    const spaceOnBottom = window.innerHeight - e.clientY
-    let toTop = 0
-
-    if (spaceOnBottom >= rightContextHeight) {
-      // 下方空间足够
-      toTop = e.clientY - 24
-    } else {
-      // 下方空间不足，元素完整显示在鼠标位置的上方
-      toTop = e.clientY - rightContextHeight + 24
-    }
-
-    // 屏幕左/上边界安全防御
-    if (toLeft < 0) toLeft = width
-    if (toTop < 0) toTop = 0
+    editAnchorRef.current = e.currentTarget.getBoundingClientRect()
     setCurrentItem(item)
     setCurrentSelectIndex(index)
-    setEditStyle({
-      transform: `translate(${toLeft}px, ${toTop}px)`,
-      width: rightContextWidth,
-    })
     getModelNameList(item)
   })
   const onMouseLeaveList = useMemoizedFn(() => {
@@ -532,6 +516,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
       {createPortal(
         <div
           className={classNames(styles['edit-content'])}
+          ref={editContentRef}
           style={editStyle}
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}

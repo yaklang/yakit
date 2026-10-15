@@ -238,7 +238,7 @@
   position: fixed;
   top: 0px;
   left: 0px;
-  width: 0;
+  width: 200px;
   height: 0;
   transform: translate(-9999px, -9999px);
   z-index: 1050;
@@ -280,7 +280,7 @@
         cursor: pointer;
         border-radius: 4px;
         padding: 0 4px;
-        flex: 1;
+        flex-shrink: 0;
         width: 100%;
         height: 22px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -309,7 +309,7 @@
     justify-content: space-between;
   }
   .model-name-list {
-    height: 194px;
+    max-height: 194px;
     overflow-y: auto;
   }
 }

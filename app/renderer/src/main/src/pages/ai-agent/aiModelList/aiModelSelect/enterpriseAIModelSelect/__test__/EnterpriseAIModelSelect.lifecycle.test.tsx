@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { EnterpriseAIModelSelect } from '../EnterpriseAIModelSelect'
+import styles from '../EnterpriseAIModelSelect.module.scss'
 import { defaultAIGlobalConfig } from '../../../../defaultConstant'
 import type { AIGlobalConfig } from '../../../utils'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
@@ -8,6 +9,13 @@ import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 const mocks = vi.hoisted(() => ({
   names: vi.fn<({ Config }: { Config: string }) => Promise<{ ModelName: string[] }>>(),
   refresh: vi.fn(),
+}))
+vi.mock('../EnterpriseAIModelSelect.module.scss', () => ({
+  default: {
+    'drop-select-wrapper': 'drop-select-wrapper',
+    'edit-content-wrapper': 'edit-content-wrapper',
+    'edit-content': 'edit-content',
+  },
 }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: vi.fn() }))
 vi.mock('../../../utils', () => ({
@@ -96,6 +104,42 @@ const reopenModels = async (trigger: HTMLElement) => {
 }
 
 describe('EnterpriseAIModelSelect real dropdown lifecycle', () => {
+  it.each([
+    { anchorTop: 230, height: 84, expectedTop: 230 },
+    { anchorTop: 300, height: 84, expectedTop: 248 },
+    { anchorTop: 230, height: 240, expectedTop: 92 },
+  ])('名称加载后按实际高度定位 $height px 浮层（按钮 top=$anchorTop）', async ({ anchorTop, height, expectedTop }) => {
+    vi.stubGlobal('innerHeight', 340)
+    vi.stubGlobal('innerWidth', 800)
+    let resolveNames!: (value: { ModelName: string[] }) => void
+    mocks.names.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveNames = resolve
+        }),
+    )
+    const originalRect = HTMLElement.prototype.getBoundingClientRect
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('aria-label') === 'YakitButton.edit') return new DOMRect(320, anchorTop, 20, 20)
+      if (this.classList.contains(styles['drop-select-wrapper'])) return new DOMRect(50, 160, 300, 140)
+      if (this.classList.contains(styles['edit-content-wrapper'])) {
+        return new DOMRect(0, 0, 200, this.textContent?.includes('loaded-name') ? height : 40)
+      }
+      return originalRect.call(this)
+    })
+    render(<EnterpriseAIModelSelect />)
+    await openModels()
+    const button = await screen.findByRole('button', { name: 'YakitButton.edit' })
+    fireEvent.mouseEnter(button)
+    const popup = document.querySelector<HTMLElement>(`.${styles['edit-content']}`)!
+    expect(popup.style.transform).toBe(`translate(356px, ${Math.min(anchorTop, 292)}px)`)
+
+    await act(async () => resolveNames({ ModelName: ['loaded-name'] }))
+    expect(await screen.findByText('loaded-name')).toBeVisible()
+    expect(popup.style.transform).toBe(`translate(356px, ${expectedTop}px)`)
+    expect(window.innerHeight - expectedTop - height).toBeGreaterThanOrEqual(8)
+  })
+
   it.each(['select', 'reorder', 'remove'] as const)('%s 后清空二级浮层和名称缓存，下次悬停重新请求', async (change) => {
     mocks.names.mockResolvedValueOnce({ ModelName: ['old-name'] }).mockResolvedValueOnce({ ModelName: ['new-name'] })
     render(<EnterpriseAIModelSelect />)
