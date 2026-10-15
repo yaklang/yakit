@@ -34,7 +34,7 @@ vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
   default: function useMockAIGlobalConfig() {
     return [
       { aiGlobalConfig: useAIGlobalConfigStore((state) => state.aiGlobalConfig) },
-      { setAIGlobalConfig: mocks.save, getLastAIGlobalConfig: mocks.latest },
+      { setAIGlobalConfig: mocks.save, getLastAIGlobalConfig: mocks.latest, onRefresh: vi.fn() },
     ]
   },
 }))
@@ -84,6 +84,7 @@ let latestConfig: AIGlobalConfig
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.stubEnv('YAKIT_EDITION', 'yakit')
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -129,6 +130,7 @@ afterEach(() => {
   cleanup()
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
   vi.restoreAllMocks()
 })
 
@@ -157,6 +159,37 @@ const expectModelRequest = (Type: string) =>
   })
 
 describe('AIModelSelect', () => {
+  it.each(['yakitEE', 'yakitSE', 'irifyEE'])('%s 使用企业旧版模型列表并保存首选顺序', async (edition) => {
+    vi.stubEnv('YAKIT_EDITION', edition)
+    const dropdown = await openModels()
+    expect(within(dropdown).queryByRole('button', { name: 'AIModelSelect.resetModel' })).not.toBeInTheDocument()
+    expect(within(dropdown).getAllByRole('button', { name: 'YakitButton.edit' })).toHaveLength(2)
+    expect(mocks.names).not.toHaveBeenCalled()
+    fireEvent.click(within(dropdown).getByText('configured-b'))
+    closeModels()
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenCalledWith({
+        ...config,
+        IntelligentModels: [config.IntelligentModels[1], config.IntelligentModels[0]],
+      }),
+    )
+    expect(mocks.load).toHaveBeenCalledTimes(1)
+  })
+
+  it.each(['yakit', 'irify', 'memfit', 'breachtrace'])('%s 保持当前单层名称选择和重置入口', async (edition) => {
+    vi.stubEnv('YAKIT_EDITION', edition)
+    const dropdown = await openModels()
+    expect(within(dropdown).getByRole('button', { name: 'AIModelSelect.resetModel' })).toBeVisible()
+    expect(within(dropdown).queryByRole('button', { name: 'YakitButton.edit' })).not.toBeInTheDocument()
+    fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' }))
+    closeModels()
+    expect(mocks.save).toHaveBeenCalledWith({
+      ...config,
+      IntelligentModels: [{ ...config.IntelligentModels[0], ModelName: 'remote-model-2' }, config.IntelligentModels[1]],
+    })
+    expect(mocks.load).toHaveBeenCalledTimes(1)
+  })
+
   it('将非空连接字段透传给模型列表请求，不发送 Provider 扩展参数', async () => {
     const currentModel = config.IntelligentModels[0]
     config = {
