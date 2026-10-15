@@ -681,6 +681,7 @@
     "started": "(Started)",
     "MITM_hot_patch": "MITM Hot-Reload",
     "default": "Global Default Template",
+    "http_flow_test_tags": "[Global] HTTP Flow Test Tags",
     "guomi_sm4_transparent": "[Global] Internal SM4-CBC Transparent Encrypt/Decrypt + Plaintext DB",
     "challenge_sign_pipeline": "[Global] Dynamic Challenge + HMAC Signature Injection Pipeline",
     "auto_bearer_token": "[Global] Default Authorization Bearer Auto Inject",
