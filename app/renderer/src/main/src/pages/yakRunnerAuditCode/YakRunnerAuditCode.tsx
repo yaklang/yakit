@@ -98,6 +98,8 @@ const YakRunnerAuditCodeWorkbench: React.FC<YakRunnerAuditCodeProps> = (props) =
   const [showAllFiles, setShowAllFilesState, getShowAllFiles] = useGetState<boolean>(false)
   /** ---------- 当前 program 是否为增量编译（仅此时展示"展示全部文件"勾选框） ---------- */
   const [isIncrementalProject, setIsIncrementalProject] = useState<boolean>(false)
+  /** ---------- 当前文件树对应的根路径：切换项目时重置视图状态，并作为世代标记丢弃过期异步回包 ---------- */
+  const currentRootPathRef = useRef<string>('')
   const setShowAllFiles = useMemoizedFn((showAll: boolean) => {
     if (showAll === getShowAllFiles()) return
     setShowAllFilesState(showAll)
@@ -173,21 +175,34 @@ const YakRunnerAuditCodeWorkbench: React.FC<YakRunnerAuditCodeProps> = (props) =
 
   const onInitTreeFun = useMemoizedFn(async (rootPath: string, isFirst: boolean = true) => {
     try {
+      // 切换项目时重置视图模式与增量标记；同项目刷新/视图切换不重置，避免冲掉勾选状态
+      if (currentRootPathRef.current !== rootPath) {
+        currentRootPathRef.current = rootPath
+        setShowAllFilesState(false)
+        setIsIncrementalProject(false)
+      }
       resetMap(isFirst)
       onResetAuditStatusFun()
       // 查询当前 program 是否为增量编译，决定是否展示"展示全部文件"勾选框
       // 链路1：ssadb 资源 Extra 中的 IsIncremental；后端未返回时走链路2（QuerySSAPrograms 的 IsIncrementalCompile）
       grpcFetchAuditTreeInfo(rootPath)
         .then(async (res) => {
+          // 快切项目时丢弃过期回包，避免旧项目的增量结果串到当前项目
+          if (currentRootPathRef.current !== rootPath) return
           if (isIncrementalProgramFromInfo(res)) {
             setIsIncrementalProject(true)
             return
           }
-          setIsIncrementalProject(await isIncrementalProgramByQuery(projectNameFromPath(rootPath)))
+          const isIncremental = await isIncrementalProgramByQuery(projectNameFromPath(rootPath))
+          if (currentRootPathRef.current !== rootPath) return
+          setIsIncrementalProject(isIncremental)
         })
         .catch(async () => {
+          if (currentRootPathRef.current !== rootPath) return
           // grpcFetchAuditTreeInfo 失败时也走 QuerySSAPrograms 兜底
-          setIsIncrementalProject(await isIncrementalProgramByQuery(projectNameFromPath(rootPath)))
+          const isIncremental = await isIncrementalProgramByQuery(projectNameFromPath(rootPath))
+          if (currentRootPathRef.current !== rootPath) return
+          setIsIncrementalProject(isIncremental)
         })
       const lastFolder = await getNameByPath(rootPath)
       if (rootPath.length > 0 && lastFolder.length > 0) {

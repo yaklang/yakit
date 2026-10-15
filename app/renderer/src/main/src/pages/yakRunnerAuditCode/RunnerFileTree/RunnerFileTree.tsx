@@ -218,7 +218,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     } catch (error) {
       // 兜底：退回 ssadb 根目录平铺列表（无增量分组信息）
       try {
-        const { res } = await grpcFetchAuditTree('/')
+        // 根路径「最近编译」列表走全量语义，不带 diffOnly 过滤
+        const { res } = await grpcFetchAuditTree('/', false)
         const arr: AduitListItem[] = res.Resources.map(({ Path, ResourceName }) => ({
           path: Path,
           name: ResourceName,
@@ -274,9 +275,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
           key: `aduit-${item.name}`,
           label: (
             <span className={styles['recent-compile-item']}>
-              <span className='yakit-single-line-ellipsis'>{item.name}</span>
+              <span className="yakit-single-line-ellipsis">{item.name}</span>
               {item.isIncremental && (
-                <YakitTag size='small' color='info' className={styles['incremental-tag']}>
+                <YakitTag size="small" color="info" className={styles['incremental-tag']}>
                   {t('RunnerFileTree.incrementalCompile')}
                 </YakitTag>
               )}

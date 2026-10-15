@@ -89,12 +89,12 @@ const initRiskOrRuleTreeData = (list: RequestYakURLResponse, path) => {
 /**
  * @name 审计完整树获取
  * @param path ssadb 路径
- * @param diffOnly 仅展示增量编译最后一次 diff 的文件树（默认开启）；为 false 时展示聚合全树
+ * @param diffOnly 仅展示增量编译最后一次 diff 的文件树；不传或传 false 时展示聚合全树（根路径「最近编译」等列表必须走全量语义）
  */
 export const grpcFetchAuditTree: (
   path: string,
   diffOnly?: boolean,
-) => Promise<{ res: RequestYakURLResponse; data: FileNodeMapProps[] }> = (path, diffOnly = true) => {
+) => Promise<{ res: RequestYakURLResponse; data: FileNodeMapProps[] }> = (path, diffOnly = false) => {
   return new Promise(async (resolve, reject) => {
     // ssadb path为/时 展示最近编译
     const query: { Key: string; Value: string }[] = [{ Key: 'op', Value: 'list' }]
