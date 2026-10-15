@@ -147,4 +147,49 @@ describe('scrollSubTabIntoView', () => {
       vi.unstubAllGlobals()
     }
   })
+
+  it('容器脱离 DOM（页面被关闭）后不再申请动画帧', () => {
+    const raf = vi.fn()
+    vi.stubGlobal('requestAnimationFrame', raf)
+    try {
+      const { container } = setup(800, 900)
+      document.body.removeChild(container)
+      const hiddenRect = { left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0 } as DOMRect
+      container.getBoundingClientRect = () => hiddenRect
+
+      scrollSubTabIntoView(container, 'b')
+
+      expect(raf).not.toHaveBeenCalled()
+      expect(container.scrollLeft).toBe(0)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('取消后到达的等待帧不再滚动、也不再继续申请帧', () => {
+    const frames: FrameRequestCallback[] = []
+    const raf = vi.fn((cb: FrameRequestCallback) => {
+      frames.push(cb)
+      return frames.length
+    })
+    vi.stubGlobal('requestAnimationFrame', raf)
+    try {
+      const { container } = setup(800, 900)
+      const hiddenRect = { left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0 } as DOMRect
+      container.getBoundingClientRect = () => hiddenRect
+
+      const cancel = scrollSubTabIntoView(container, 'b')
+      // 容器隐藏：已登记一个等待帧
+      expect(raf).toHaveBeenCalledTimes(1)
+
+      // 一级页签切走/卸载时取消，随后帧回调到达
+      cancel()
+      frames[0](0)
+
+      expect(container.scrollLeft).toBe(0)
+      expect(raf).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
 })

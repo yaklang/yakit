@@ -39,6 +39,12 @@ export function unregisterSubTabPageHandlers(pageRouteKey: string, keys?: (keyof
   }
 }
 
+/** 选择与展开处理器均已注册（目标一级页已挂载），概览菜单此时才允许弹出与跳转 */
+export const hasSubTabSelectionHandlers = (routeKey: string) => {
+  const handlers = handlersByRouteKey.get(routeKey)
+  return typeof handlers?.onSelectSubMenuById === 'function' && typeof handlers?.onExpandGroupByPageId === 'function'
+}
+
 function dispatchActive<K extends keyof SubTabPageEventHandlers>(
   method: K,
   ...args: Parameters<NonNullable<SubTabPageEventHandlers[K]>>

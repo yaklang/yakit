@@ -4,6 +4,7 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import emiter from '@/utils/eventBus/eventBus'
 import type { PageCache } from './MainOperatorContentType'
+import { hasSubTabSelectionHandlers } from './subTabEventRegistry'
 import { buildSubTabOverviewMenu, countSubTabs, isSubTabLeaf, isSubTabOverviewRoute } from './subTabOverview'
 import styles from './MainOperatorContent.module.scss'
 
@@ -51,7 +52,12 @@ export const SubTabCountDropdown: React.FC<SubTabCountDropdownProps> = React.mem
       placement="bottomLeft"
       content={menu}
       open={show}
-      onOpenChange={(visible) => setShow(visible)}
+      onOpenChange={(visible) => {
+        // 目标一级页尚未挂载（处理器未注册，如恢复缓存后未激活过）时不弹菜单，
+        // 避免点击后选择/展开事件无接收方而丢失
+        if (visible && !hasSubTabSelectionHandlers(item.routeKey)) return
+        setShow(visible)
+      }}
       trigger="hover"
       mouseEnterDelay={0.1}
       mouseLeaveDelay={0.3}

@@ -56,13 +56,25 @@ export const isSubTabLeaf = (nodes: MultipleNodeInfo[] = [], pageId: string) => 
   return false
 }
 
-/** 概览菜单跳转后，把目标二级标签滚动到二级标签栏可视区（组刚展开时需等宽度动画结束再调用）。 */
-export const scrollSubTabIntoView = (container: HTMLElement | null | undefined, pageId: string, margin = 60) => {
-  if (!container) return
+/**
+ * 概览菜单跳转后，把目标二级标签滚动到二级标签栏可视区（组刚展开时需等宽度动画结束再调用）。
+ * 返回取消函数：新导航、一级页签失活或卸载时调用，停止等待帧；容器脱离 DOM（页面被关闭）时自行停止。
+ */
+export const scrollSubTabIntoView = (
+  container: HTMLElement | null | undefined,
+  pageId: string,
+  margin = 60,
+): (() => void) => {
+  if (!container) return () => {}
+  let frame = 0
+  let cancelled = false
   const scroll = () => {
+    if (cancelled) return
+    // 容器已脱离 DOM（如页面被关闭）后宽度恒为 0，继续等帧只会死循环
+    if (!container.isConnected) return
     // 跨一级页签切换时页体暂为 display:none（rect 宽度为 0），等下一帧布局恢复后再定位
     if (container.getBoundingClientRect().width <= 0) {
-      requestAnimationFrame(scroll)
+      frame = requestAnimationFrame(scroll)
       return
     }
     const target = document.querySelector(`[data-rfd-draggable-id="${pageId}"]`)
@@ -74,4 +86,8 @@ export const scrollSubTabIntoView = (container: HTMLElement | null | undefined, 
     container.scrollLeft += leftInView - margin
   }
   scroll()
+  return () => {
+    cancelled = true
+    if (frame) cancelAnimationFrame(frame)
+  }
 }

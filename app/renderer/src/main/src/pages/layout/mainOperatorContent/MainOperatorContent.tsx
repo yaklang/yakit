@@ -4715,13 +4715,30 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
     const tabMenuSubRef = useRef<any>()
 
+    /** 概览菜单跳转的待执行定位（延迟定时器 + 滚动等待帧）：新跳转、一级页签失活或卸载时取消 */
+    const overviewScrollRef = useRef<{ timer?: ReturnType<typeof setTimeout>; cancelScroll?: () => void }>({})
+    const cancelOverviewScroll = useMemoizedFn(() => {
+      const pending = overviewScrollRef.current
+      if (pending.timer !== undefined) {
+        clearTimeout(pending.timer)
+        pending.timer = undefined
+      }
+      pending.cancelScroll?.()
+      pending.cancelScroll = undefined
+    })
+    /** 概览菜单显式跳转后的选中变化跳过默认尾部滚动，定位统一由跳转自身处理 */
+    const skipTailScrollRef = useRef(false)
+
     useEffect(() => {
       const isActive = isPageRouteActive(pageRouteKey)
       const cancels: Array<() => void> = []
+      // 概览菜单显式跳转已自行定位目标标签，跳过默认尾部滚动（消费一次性标记，避免残留影响下次选中）
+      const skipTailScroll = skipTailScrollRef.current
+      skipTailScrollRef.current = false
 
       if (isActive) {
         onFocusPage()
-        if (subPage.length > 0) {
+        if (!skipTailScroll && subPage.length > 0) {
           cancels.push(
             scheduleIdleTask(() => {
               const groupChildrenList = subPage[subPage.length - 1].groupChildren || []
@@ -6371,18 +6388,22 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
     }, [pageItem.route])
 
     const onExpandGroupByPageId = useMemoizedFn((pageId: string) => {
+      // 取消上一次跳转尚未完成的定位
+      cancelOverviewScroll()
       const group = subPage.find((ele) => (ele.groupChildren || []).some((child) => child.id === pageId))
       if (!group && !subPage.some((ele) => ele.id === pageId)) return
+      skipTailScrollRef.current = true
       const scrollTargetIntoView = () => {
+        overviewScrollRef.current.timer = undefined
         if (!tabMenuSubRef.current) {
           tabMenuSubRef.current = document.getElementById(`tab-menu-sub-${pageItem.route}`)
         }
-        scrollSubTabIntoView(tabMenuSubRef.current, pageId)
+        overviewScrollRef.current.cancelScroll = scrollSubTabIntoView(tabMenuSubRef.current, pageId)
       }
       if (group && !group.expand) {
         onUpdateGroup({ ...group, expand: true })
         // 组展开宽度有 0.2s 过渡动画，等动画结束后再定位
-        setTimeout(scrollTargetIntoView, 220)
+        overviewScrollRef.current.timer = setTimeout(scrollTargetIntoView, 220)
         return
       }
       scrollTargetIntoView()
@@ -6405,6 +6426,13 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
           'onExpandGroupByPageId',
         ])
     }, [pageRouteKey])
+
+    const isPageActive = usePageInfo((s) => s.currentPageTabRouteKey === pageRouteKey)
+    // 一级页签切走后页体 display:none，继续等帧定位只会对宽度为 0 的容器空转；卸载（含页面被关闭）时同样取消
+    useEffect(() => {
+      if (!isPageActive) cancelOverviewScroll()
+    }, [isPageActive])
+    useEffect(() => cancelOverviewScroll, [])
 
     return (
       <DragDropContext
