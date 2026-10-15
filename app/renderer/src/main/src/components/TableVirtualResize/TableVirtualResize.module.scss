@@ -403,8 +403,57 @@
           border-bottom: 1px solid var(--Colors-Use-Main-Border) !important;
         }
 
-        $allColorTypes: map-keys(tools.$allColors);
-        @include tools.generate-permutations-class-name($allColorTypes);
+        // 彩色单元格：颜色经内联 CSS 变量注入（见 parseCellStyleVars），不再静态展开颜色组合选择器。
+        // 多色：--vt-cell-gradient(-20/-30/-40)（按状态预混透明度）；单色：--vt-cell-bg / --vt-cell-bg-hover / --vt-cell-text(-hover)。
+        // 状态优先级 cell < hover+cell < active+cell（源序覆盖，与原组合选择器行为一致）。
+        .virtual-table-colored-cell {
+          background:
+            linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+            linear-gradient(var(--vt-cell-gradient));
+          @supports #{tools.$color-mix-supports} {
+            background: linear-gradient(var(--vt-cell-gradient-20));
+          }
+          color: var(--vt-cell-text, var(--Colors-Use-Neutral-Text-1-Title));
+        }
+
+        .virtual-table-hover-cell.virtual-table-colored-cell {
+          background:
+            linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+            linear-gradient(var(--vt-cell-gradient));
+          @supports #{tools.$color-mix-supports} {
+            background: linear-gradient(var(--vt-cell-gradient-30));
+          }
+          color: var(--vt-cell-text, var(--Colors-Use-Neutral-Text-1-Title));
+        }
+
+        .virtual-table-active-cell.virtual-table-colored-cell {
+          background:
+            linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+            linear-gradient(var(--vt-cell-gradient));
+          @supports #{tools.$color-mix-supports} {
+            background: linear-gradient(var(--vt-cell-gradient-40));
+          }
+          color: var(--vt-cell-text, var(--Colors-Use-Neutral-Text-1-Title));
+        }
+
+        // 单色规则（--vt-cell-bg 存在时覆盖多色渐变）
+        .virtual-table-colored-cell[style*='--vt-cell-bg'] {
+          background: var(--vt-cell-bg);
+          color: var(--vt-cell-text);
+          font-weight: 400;
+        }
+        .virtual-table-hover-cell.virtual-table-colored-cell[style*='--vt-cell-bg'] {
+          background: var(--vt-cell-bg-hover);
+          color: var(--vt-cell-text-hover);
+        }
+        .virtual-table-active-cell.virtual-table-colored-cell[style*='--vt-cell-bg'] {
+          background: var(--vt-cell-bg-hover);
+          color: var(--vt-cell-text-active, var(--vt-cell-text-hover));
+        }
+        // 单色 red：加粗（与原单色-红色规则一致）
+        .virtual-table-colored-cell[style*='--vt-cell-is-red'] {
+          font-weight: bold;
+        }
 
         .virtual-table-active-row + .virtual-table-row-cell {
           border-top: 0 !important;

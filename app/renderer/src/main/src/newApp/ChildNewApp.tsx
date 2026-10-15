@@ -1,11 +1,17 @@
 import type React from 'react'
-import { useEffect, useMemo, useState } from 'react'
-import OpenPacketNewWindow from '@/components/OpenPacketNewWindow/OpenPacketNewWindow'
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
 import styles from './ChildNewApp.module.scss'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import { coordinate } from '@/pages/globalVariable'
 import TitleBar from '@/components/BaseTitleBar'
-import { RightBugAuditResult, YakitRiskDetails } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
+
+const OpenPacketNewWindow = lazy(() => import('@/components/OpenPacketNewWindow/OpenPacketNewWindow'))
+const YakitRiskDetails = lazy(() =>
+  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitRiskDetails })),
+)
+const RightBugAuditResult = lazy(() =>
+  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.RightBugAuditResult })),
+)
 
 const { ipcRenderer } = window.require('electron')
 
@@ -79,7 +85,9 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
   return (
     <div className={styles['child-new-app-wrapper']}>
       <TitleBar />
-      <div className={styles['child-new-app-content']}>{childNewAppEle}</div>
+      <div className={styles['child-new-app-content']}>
+        <Suspense fallback={null}>{childNewAppEle}</Suspense>
+      </div>
     </div>
   )
 }

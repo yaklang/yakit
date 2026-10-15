@@ -405,6 +405,7 @@ export interface ImportExportProgressProps {
   subTitle?: string
   token: string
   apiKey: string
+  onReady?: () => void
 }
 
 export const HTTP_FLOW_FAVORITE_TAG = 'YAKIT_FAVORITE'

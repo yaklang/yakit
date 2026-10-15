@@ -2,6 +2,8 @@ import type React from 'react'
 import { memo, useEffect, useMemo, useRef } from 'react'
 import type { YakitDiffEditorProps } from './YakitDiffEditorType'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
+// 加载时注册 yak / syntaxflow 语言，diff 编辑器自己不会走到那个入口
+import '@/utils/monacoSpec/yakEditor'
 import { yakitNotify } from '@/utils/notification'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'

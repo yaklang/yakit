@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import {
   DragHeaderHeight,
@@ -50,12 +50,10 @@ import {
   isIRify,
   isMemfit,
 } from '@/utils/envfile'
-import { RemoteEngine } from './components/RemoteEngine/RemoteEngine'
 import type { RemoteLinkInfo } from './components/RemoteEngine/RemoteEngineType'
 import { StringToUint8Array } from '@/utils/str'
 import { LocalEngine } from './components/LocalEngine'
 import type { LocalEngineLinkFuncProps, LocalLinkParams } from './components/LocalEngine/LocalEngineType'
-import { EngineLog } from './components/EngineLog'
 import emiter from '@/utils/eventBus/eventBus'
 import { YaklangEngineWatchDog } from './components/YaklangEngineWatchDog'
 import yakitEELogo from '@/assets/yakitEELogo.png'
@@ -75,6 +73,12 @@ import { useYakitStatus } from '@/hooks/useYakitStatus'
 import { type Lange, normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './index.module.scss'
 import i18n from '@/i18n/i18n'
+
+// 工作空间确认前不加载引擎连接阶段的重组件（EngineLog 引 xterm、RemoteEngine 引表单/网络链）
+const RemoteEngine = lazy(() =>
+  import('./components/RemoteEngine/RemoteEngine').then((m) => ({ default: m.RemoteEngine })),
+)
+const EngineLog = lazy(() => import('./components/EngineLog').then((m) => ({ default: m.EngineLog })))
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
   Host: '127.0.0.1',
@@ -1274,7 +1278,9 @@ export const StartupPage: React.FC = () => {
               data-testid="startup-engine-stage"
               style={{ display: isRemoteEngine ? 'none' : 'block' }}
             >
-              <EngineLog />
+              <Suspense fallback={null}>
+                <EngineLog />
+              </Suspense>
             </div>
             {!isRemoteEngine ? (
               <div className={styles['startup-content-wrapper']}>
@@ -1326,12 +1332,14 @@ export const StartupPage: React.FC = () => {
             ) : (
               <>
                 {!engineLink && (
-                  <RemoteEngine
-                    loading={remoteLinkLoading}
-                    setLoading={setRemoteLinkLoading}
-                    onSubmit={handleLinkRemoteEngine}
-                    onSwitchLocalEngine={handleRemoteToLocal}
-                  />
+                  <Suspense fallback={null}>
+                    <RemoteEngine
+                      loading={remoteLinkLoading}
+                      setLoading={setRemoteLinkLoading}
+                      onSubmit={handleLinkRemoteEngine}
+                      onSwitchLocalEngine={handleRemoteToLocal}
+                    />
+                  </Suspense>
                 )}
               </>
             )}

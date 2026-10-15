@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -15,10 +15,12 @@ import { getValueByType, ParamsToGroupByGroupName } from '@/pages/plugins/editDe
 import emiter from '@/utils/eventBus/eventBus'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
-import { ContextMenuActionExecution } from './ContextMenuActionExecution'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { registerContextMenuExecution } from './executionRegistry'
 import { ContextMenuResultMode, type RunContextMenuActionOptions } from './types'
-import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
+const ContextMenuActionExecution = lazy(() =>
+  import('./ContextMenuActionExecution').then((m) => ({ default: m.ContextMenuActionExecution })),
+)
 
 interface ParamsModalValue {
   /** 表单初始值（key = 参数 Field，value = 默认值或缓存值） */
@@ -92,7 +94,7 @@ const isRequiredParamMissing = (params: YakParamProps[], values: YakExecutorPara
 /**
  * 职责：接收 runContextMenuAction 事件 → 决定是否弹参数框 → 注册执行并打开结果页
  */
-export const ContextMenuExecutionHost: React.FC = React.memo(() => {
+export const ContextMenuExecutionHost: React.FC<{ onReady?: () => void }> = React.memo((props) => {
   const { t } = useI18nNamespaces(['manageRightClickPlugins'])
   const pendingRef = useRef<RunContextMenuActionOptions>()
   const loadingRef = useRef<boolean>(false)
@@ -125,7 +127,11 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
     // auto 与 tab 同为开 Tab 展示，归一后传入组件
     const mode =
       options.action.ResultMode === ContextMenuResultMode.Auto ? ContextMenuResultMode.Tab : options.action.ResultMode
-    const content = <ContextMenuActionExecution executionID={executionID} mode={mode} />
+    const content = (
+      <Suspense fallback={null}>
+        <ContextMenuActionExecution executionID={executionID} mode={mode} />
+      </Suspense>
+    )
     const getContainer = getMainOperatorPageBodyContainer()
 
     switch (options.action.ResultMode) {
@@ -228,6 +234,8 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
 
   useEffect(() => {
     emiter.on('runContextMenuAction', onRun)
+    // 监听已经挂上，这时再处理挂载前记下的那一次
+    props.onReady?.()
     return () => emiter.off('runContextMenuAction', onRun)
   }, [])
 
