@@ -1,6 +1,63 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { consumeMcpWebFuzzerExecution, queueMcpWebFuzzerExecution } from '@/utils/eventBus/events/webFuzzer'
+import type React from 'react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { consumeMcpWebFuzzerExecution, queueMcpWebFuzzerExecution } from '../../../utils/eventBus/events/webFuzzer'
 import { createMcpWebFuzzerExecutionSlot } from '../mcpWebFuzzerExecutionSlot'
+import { SecondNodeExtra, type FuzzerResponse } from '../HTTPFuzzerPage'
+
+// 依赖链会拉到 lottie-web / xterm，模块加载期探测 canvas，jsdom 不支持
+vi.mock('lottie-web', () => ({ default: { loadAnimation: vi.fn(), destroy: vi.fn() } }))
+vi.mock('@xterm/xterm', () => ({ Terminal: vi.fn() }))
+
+// HTTPFuzzerPage 模块顶层会 window.require('electron')
+vi.hoisted(() => {
+  const ipcRenderer = {
+    on: () => undefined,
+    off: () => undefined,
+    once: () => undefined,
+    removeListener: () => undefined,
+    removeAllListeners: () => undefined,
+    send: () => undefined,
+    invoke: () => Promise.resolve(undefined),
+  }
+  ;(window as unknown as { require: (id: string) => unknown }).require = (id: string) => {
+    if (id === 'electron') return { ipcRenderer }
+    return {}
+  }
+})
+
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({
+    t: (key: string) => key,
+    i18n: { language: 'zh' },
+  }),
+}))
+
+// 受控替身：关闭请求走组件自己的 onOpenChange，才能断言组合期间被丢弃
+vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
+  YakitPopover: ({
+    open,
+    onOpenChange,
+    content,
+    children,
+  }: {
+    open?: boolean
+    onOpenChange?: (next: boolean) => void
+    content?: React.ReactNode
+    children?: React.ReactNode
+  }) => (
+    <div>
+      <button type="button" data-testid="search-popover-request-open" onClick={() => onOpenChange?.(true)}>
+        open
+      </button>
+      <button type="button" data-testid="search-popover-request-close" onClick={() => onOpenChange?.(false)}>
+        close
+      </button>
+      {children}
+      {open ? <div data-testid="search-popover-panel">{content}</div> : null}
+    </div>
+  ),
+}))
 
 /**
  * HTTPFuzzerPage MCP 生命周期接线（start / end / cancel）防回归。
@@ -9,6 +66,7 @@ import { createMcpWebFuzzerExecutionSlot } from '../mcpWebFuzzerExecutionSlot'
 const pageId = 'http-fuzzer-page-mcp-lifecycle'
 
 afterEach(() => {
+  cleanup()
   while (consumeMcpWebFuzzerExecution(pageId)) {
     // drain module-local queue
   }
@@ -84,5 +142,56 @@ describe('HTTPFuzzerPage MCP execution lifecycle', () => {
     expect(slot.tryStart(pageId, busy)).toBeUndefined()
     expect(slot.isInFlight()).toBe(false)
     expect(consumeMcpWebFuzzerExecution(pageId)?.executionId).toBe('race-mcp')
+  })
+})
+
+const singleResponse = {
+  IsTooLargeResponse: false,
+  ExtractedResults: [],
+  Payloads: [],
+} as unknown as FuzzerResponse
+
+const searchPlaceholder = 'SecondNodeExtra.enterTargetResponse'
+
+/**
+ * 窄宽度把搜索收进 Popover。输入法组合会触发 onOpenChange(false)，
+ * 组合期间必须忽略关闭，组合结束后下一次关闭才生效。
+ */
+describe('SecondNodeExtra search popover', () => {
+  const renderNarrowSearch = () =>
+    render(
+      <SecondNodeExtra
+        rsp={singleResponse}
+        onlyOneResponse
+        cachedTotal={1}
+        failedCount={0}
+        secondNodeSize={{ width: 400, height: 200 }}
+        setQuery={() => {}}
+        sendPayloadsType="config"
+        setShowExtra={() => {}}
+        showResponseInfoSecondEditor={false}
+        setShowResponseInfoSecondEditor={() => {}}
+      />,
+    )
+
+  it('keeps the search popover open while composing and closes after composition ends', () => {
+    renderNarrowSearch()
+    expect(screen.queryByPlaceholderText(searchPlaceholder)).toBeNull()
+
+    fireEvent.click(screen.getByTestId('search-popover-request-open'))
+    const input = screen.getByPlaceholderText(searchPlaceholder)
+    expect(screen.queryByTestId('search-popover-panel')).not.toBeNull()
+
+    fireEvent.compositionStart(input)
+    fireEvent.click(screen.getByTestId('search-popover-request-close'))
+    expect(screen.queryByPlaceholderText(searchPlaceholder)).not.toBeNull()
+    expect(screen.queryByTestId('search-popover-panel')).not.toBeNull()
+
+    fireEvent.compositionEnd(input)
+    expect(screen.queryByPlaceholderText(searchPlaceholder)).not.toBeNull()
+
+    fireEvent.click(screen.getByTestId('search-popover-request-close'))
+    expect(screen.queryByPlaceholderText(searchPlaceholder)).toBeNull()
+    expect(screen.queryByTestId('search-popover-panel')).toBeNull()
   })
 })
