@@ -127,8 +127,16 @@ export interface AIStartParams {
   /** @deprecated 选择 AI 服务模型名称 */
   AIModelName?: string
   ReActMaxIteration?: number
-  /** 运行时上下文大小（300*1024） */
+  /**
+   * @deprecated 前端下发的非零值会覆盖服务端默认阈值。
+   * 请改用 RuntimeContextSizeLimit；请求里不再携带本字段。
+   */
   TimelineContentSizeLimit?: number
+  /**
+   * 运行时上下文（普通历史、Skill 正文、Evidence 等）压缩阈值，单位字节。
+   * >0 覆盖服务端默认；<=0 或不传时使用服务端默认值。
+   */
+  RuntimeContextSizeLimit?: number
   /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
   UserInteractLimit?: number
   /** timeline sessionID  用于多轮对话保持上下文 */
@@ -206,6 +214,23 @@ export interface AIExecutionStrategy {
 export interface AIEnabledCapability {
   Name: string
   Type: string
+}
+
+/**
+ * 丢掉已废弃的 TimelineContentSizeLimit，并规范化运行时上下文阈值：
+ * >0 覆盖服务端默认阈值；<=0 或不传表示不覆盖，由服务端决定。
+ */
+export const withServerRuntimeContextLimit = <
+  T extends { TimelineContentSizeLimit?: number; RuntimeContextSizeLimit?: number },
+>(
+  params: T,
+): T => {
+  const { TimelineContentSizeLimit: _deprecated, ...rest } = params
+  const limit = rest.RuntimeContextSizeLimit
+  return {
+    ...(rest as T),
+    RuntimeContextSizeLimit: typeof limit === 'number' && limit > 0 ? limit : 0,
+  }
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */

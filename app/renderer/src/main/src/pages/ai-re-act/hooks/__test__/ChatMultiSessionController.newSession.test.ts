@@ -116,6 +116,7 @@ describe('frontend allocated session identity', () => {
         Source: 'ai',
         UserQuery: 'first question',
         TimelineSessionID: 'old-session',
+        TimelineContentSizeLimit: 60 * 1024,
         Attach: true,
         PreferSessionCachedConfig: true,
       },
@@ -137,6 +138,7 @@ describe('frontend allocated session identity', () => {
         TimelineSessionID: 'client-session',
         Attach: false,
         PreferSessionCachedConfig: false,
+        RuntimeContextSizeLimit: 0,
       },
     })
     expect(params).toEqual(original)
