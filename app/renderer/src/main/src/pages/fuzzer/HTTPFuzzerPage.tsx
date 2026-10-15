@@ -4053,6 +4053,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     onShowAll,
   } = props
   const { t, i18n } = useI18nNamespaces(['webFuzzer', 'history', 'yakitUi'])
+  const [open, setOpen] = useState(false)
+  const composingRef = useRef(false)
   const [searchValue, setSearchValue] = useState('')
   const [color, setColor] = useState<string[]>()
   const [keyWord, setKeyWord] = useState<string>()
@@ -4176,6 +4178,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
           e.preventDefault()
           onSearch()
         }}
+        onCompositionStart={() => {
+          composingRef.current = true
+        }}
+        onCompositionEnd={() => {
+          composingRef.current = false
+        }}
+        // 防止切输入法的 keydown 冒泡出去触发 Popover 关闭
+        onKeyDown={(e) => e.stopPropagation()}
       />
     )
     return (
@@ -4184,7 +4194,15 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
           <>
             {!showSearchIcon && searchNode}
             {showSearchIcon && (
-              <YakitPopover content={searchNode}>
+              <YakitPopover
+                content={searchNode}
+                open={open}
+                onOpenChange={(next) => {
+                  // 组合期间忽略“关闭”请求
+                  if (!next && composingRef.current) return
+                  setOpen(next)
+                }}
+              >
                 <YakitButton icon={<SearchOutlined size={16} />} size={size} type="outline2" />
               </YakitPopover>
             )}
