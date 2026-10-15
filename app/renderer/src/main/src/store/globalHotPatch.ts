@@ -756,7 +756,7 @@ authRe = re2.Compile(\`authorization:|cookie:|token=|session=|jwt=|x-api-key:\`)
 resourceIDRe = re2.Compile(\`(^|[/?&=_-])(id|uid|user_?id|account_?id|order_?id|tenant_?id|project_?id|role|permission)([/?&=_-]|\\d)\`)~
 resourcePathIDRe = re2.Compile(\`/[0-9]{1,12}(/|$)\`)~
 massAssignmentRe = re2.Compile(\`("|')?(role|isadmin|is_admin|permission|permissions|privilege|owner_?id)("|')?\\s*[:=]\`)~
-sensitiveResponseRe = re2.Compile(\`(password|passwd|secret|access[_-]?token|refresh[_-]?token|api[_-]?key|private[_-]?key|client[_-]?secret|authorization)\\s*[:=]|-----begin (rsa |ec |openssh )?private key-----|aws_access_key_id|akia[0-9a-z]{12,}|eyj[a-z0-9_-]{10,}\\.[a-z0-9_-]{10,}\\.\`)~
+sensitiveResponseRe = re2.Compile(\`(password|passwd|secret|access[_-]?token|refresh[_-]?token|api[_-]?key|private[_-]?key|client[_-]?secret|authorization)["']?\\s*[:=]|-----begin (rsa |ec |openssh )?private key-----|aws_access_key_id|akia[0-9a-z]{12,}|eyj[a-z0-9_-]{10,}\\.[a-z0-9_-]{10,}\\.\`)~
 errorDisclosureRe = re2.Compile(\`stack trace|traceback \\(|exception in thread|sql syntax.*error|未处理异常|debug=true|development mode\`)~
 corsRe = re2.Compile(\`access-control-allow-origin:\\s*\\*\`)~
 originRe = re2.Compile(\`origin:\`)~
@@ -768,7 +768,7 @@ downloadResponseRe = re2.Compile(\`content-disposition:\\s*attachment|content-ty
 traversalRe = re2.Compile(\`\\.\\./|%2e%2e|%252e%252e|/etc/passwd|boot\\.ini|win\\.ini\`)~
 fileSchemeRe = re2.Compile(\`file://|php://|zip://|phar://\`)~
 ssrfRe = re2.Compile(\`(url|uri|link|callback|webhook|redirect|next|dest|target|image|avatar|feed|proxy|src)([=:]|%3d|")([^\\r\\n]{0,80})(https?://|file://|gopher://|dict://|127\\.0\\.0\\.1|localhost|169\\.254\\.169\\.254|0x7f000001)\`)~
-redirectRe = re2.Compile(\`(redirect|next|return|dest|url)([=:]|%3d|")https?://\`)~
+redirectRe = re2.Compile(\`(redirect|next|return|dest|url)([=:]|%3d|["']\\s*:\\s*["'])\\s*https?://\`)~
 xmlRe = re2.Compile(\`content-type:.*(xml|soap)|<!doctype|<!entity\`)~
 deserializationRe = re2.Compile(\`java\\.lang|ac\\s*ed|__viewstate|@type\\s*[:=]|o:\\d+:"|php serialized\`)~
 authenticationRe = re2.Compile(\`authorization:|set-cookie:|cookie:.*(session|token|sid)\`)~
@@ -915,10 +915,21 @@ func runSelfTest() {
         {"path": "/run", "body": "foo; identity", "expected": ["Injection", "SQLi"]},
         {"path": "/?return=https://evil.example", "body": "", "expected": ["OpenRedirect"]},
         {"path": "/?redirect=https://evil.example", "body": "", "expected": ["SSRF", "OpenRedirect"]},
+        {"path": "/next", "body": '{"next":"https://other.example/"}', "expected": ["SSRF", "OpenRedirect"]},
+        {"path": "/next", "body": '{"next" : "https://other.example/"}', "expected": ["SSRF", "OpenRedirect"]},
+        {"path": "/next", "body": '{"return":"https://other.example/"}', "expected": ["OpenRedirect"]},
+        {"path": "/next", "body": '{"next":"/home"}', "expected": []},
+        {"path": "/health", "body": "", "response": '{"password":"secret123","access_token":"abc"}', "expected": ["SensitiveInformation"]},
+        {"path": "/health", "body": "", "response": '{"access_token" : "abc"}', "expected": ["SensitiveInformation"]},
+        {"path": "/health", "body": "", "response": "password=secret123", "expected": ["SensitiveInformation"]},
+        {"path": "/health", "body": "", "response": '{"message":"password reset complete"}', "expected": []},
     ]
     for c in cases {
         request = "POST " + c.path + " HTTP/1.1\\r\\nHost: example.com\\r\\n\\r\\n" + c.body
         response = "HTTP/1.1 200 OK\\r\\n\\r\\nok"
+        if "response" in c {
+            response = "HTTP/1.1 200 OK\\r\\n\\r\\n" + c.response
+        }
         flow = make(map[string]any)
         flow["Url"] = "http://example.com" + c.path
         flow["GetRequest"] = func() { return request }
@@ -937,7 +948,7 @@ func runSelfTest() {
             assert ("TEST:" + name) in flow.tags, sprintf("missing %v for %v", name, c)
         }
     }
-    log.info("HTTP flow test tagging self test passed: 12 cases")
+    log.info("HTTP flow test tagging self test passed: 20 cases")
 }
 
 if YAK_MAIN {
