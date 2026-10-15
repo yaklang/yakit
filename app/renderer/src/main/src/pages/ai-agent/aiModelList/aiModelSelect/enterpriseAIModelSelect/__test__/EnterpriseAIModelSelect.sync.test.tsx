@@ -11,12 +11,13 @@ const mocks = vi.hoisted(() => ({
   load: vi.fn(),
   get: vi.fn<() => Promise<AIGlobalConfig>>(),
   save: vi.fn<(_config: AIGlobalConfig) => Promise<void>>(),
+  names: vi.fn(),
 }))
 vi.mock('../../../utils', () => ({
   isForcedSetAIModal: mocks.load,
   grpcGetAIGlobalConfig: mocks.get,
   grpcSetAIGlobalConfig: mocks.save,
-  grpcListAiModel: vi.fn(() => Promise.resolve({ ModelName: [] })),
+  grpcListAiModel: mocks.names,
   getModelName: (name?: string) => name ?? '',
   isMemfitStart: () => false,
   isFreeEnd: () => false,
@@ -116,6 +117,7 @@ beforeEach(() => {
   vi.useFakeTimers()
   mocks.get.mockReset().mockImplementation(() => Promise.resolve(configA()))
   mocks.save.mockReset().mockResolvedValue(undefined)
+  mocks.names.mockReset().mockResolvedValue({ ModelName: ['model-renamed'] })
   mocks.load.mockReset().mockImplementation(({ haveDataCall }) => {
     haveDataCall?.(availableA())
     return Promise.resolve()
@@ -137,6 +139,106 @@ afterEach(() => {
 })
 
 describe('EnterpriseAIModelSelect real config hook/store synchronization', () => {
+  it.each([false, true])('选择 B 时 A 的探测完成，保留选择和探测结果（同厂商：%s）', async (sameProvider) => {
+    const initial = configA()
+    if (sameProvider)
+      initial.IntelligentModels.forEach((model) => {
+        model.ProviderId = 'shared-provider'
+      })
+    mocks.get.mockResolvedValue(initial)
+    useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
+    await mount()
+    toggle('open')
+    select('model-b')
+
+    const latest = { ...initial, IntelligentModels: [...initial.IntelligentModels] }
+    latest.IntelligentModels[0] = {
+      ...latest.IntelligentModels[0],
+      EffortProbed: true,
+      ProbedExtendedEfforts: ['xhigh'],
+    }
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(latest))
+    toggle('close')
+    await flush()
+
+    expectModel('model-b')
+    expect(mocks.save).toHaveBeenCalledTimes(1)
+    expect(mocks.save.mock.calls[0][0].IntelligentModels).toEqual([
+      latest.IntelligentModels[1],
+      latest.IntelligentModels[0],
+      latest.IntelligentModels[2],
+    ])
+  })
+
+  it.each([false, true])('编辑 B 名称时保留 A 的探测结果，新名称不沿用旧探测（先探测：%s）', async (probeFirst) => {
+    const initial = configA()
+    initial.IntelligentModels[1].EffortProbed = true
+    initial.IntelligentModels[1].ProbedExtendedEfforts = ['max']
+    mocks.get.mockResolvedValue(initial)
+    useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
+    await mount()
+    toggle('open')
+    fireEvent.mouseEnter(
+      within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[1],
+    )
+    await flush()
+
+    const latest = { ...initial, IntelligentModels: [...initial.IntelligentModels] }
+    latest.IntelligentModels[0] = {
+      ...latest.IntelligentModels[0],
+      EffortProbed: true,
+      ProbedExtendedEfforts: ['xhigh'],
+    }
+    const finishProbe = () => act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(latest))
+    if (probeFirst) finishProbe()
+    fireEvent.click(screen.getByText('model-renamed'))
+    if (!probeFirst) finishProbe()
+    toggle('close')
+    await flush()
+
+    const saved = mocks.save.mock.calls[0][0]
+    expect(saved.IntelligentModels[0]).toEqual(latest.IntelligentModels[0])
+    expect(saved.IntelligentModels[1].ModelName).toBe('model-renamed')
+    expect(saved.IntelligentModels[1].EffortProbed).toBeUndefined()
+    expect(saved.IntelligentModels[1].ProbedExtendedEfforts).toBeUndefined()
+  })
+
+  it('保留未保存选择时，同步探测结果的回滚', async () => {
+    await mount()
+    toggle('open')
+    select('model-b')
+    const probed = configA()
+    probed.IntelligentModels[0].EffortProbed = true
+    probed.IntelligentModels[0].ProbedExtendedEfforts = ['xhigh']
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(probed))
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(configA()))
+    toggle('close')
+    await flush()
+
+    expectModel('model-b')
+    const savedA = mocks.save.mock.calls[0][0].IntelligentModels[1]
+    expect(savedA.EffortProbed).toBeUndefined()
+    expect(savedA.ProbedExtendedEfforts).toBeUndefined()
+  })
+
+  it('编辑浮层打开后模型被刷新删除，忽略过期编辑', async () => {
+    await mount()
+    toggle('open')
+    fireEvent.mouseEnter(
+      within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[2],
+    )
+    await flush()
+    const latest = configA()
+    latest.IntelligentModels.pop()
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(latest))
+    fireEvent.click(screen.getByText('model-renamed'))
+    toggle('close')
+    await flush()
+
+    expect(mocks.save).not.toHaveBeenCalled()
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(latest)
+  })
+
   it('刷新失败保留当前模型，后续刷新仍可重试', async () => {
     await mount()
     const readsBeforeRefresh = mocks.get.mock.calls.length

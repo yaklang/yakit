@@ -96,6 +96,42 @@ const reopenModels = async (trigger: HTMLElement) => {
 }
 
 describe('EnterpriseAIModelSelect real dropdown lifecycle', () => {
+  it.each(['trigger', 'outside'] as const)('%s 关闭一级下拉时立即移除编辑浮层，不等待移出定时器', async (closeBy) => {
+    mocks.names.mockResolvedValue({ ModelName: ['closing-name'] })
+    render(<EnterpriseAIModelSelect />)
+    const trigger = await openModels()
+    await hoverEdit()
+    const option = await screen.findByText('closing-name')
+    expect(option).toBeVisible()
+
+    fireEvent.mouseLeave(option)
+    if (closeBy === 'trigger') fireEvent.click(trigger)
+    else fireEvent.mouseDown(document.body)
+
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText('closing-name')).not.toBeInTheDocument()
+  })
+
+  it('关闭后迟到的名称响应不会重新显示编辑浮层', async () => {
+    let resolveNames!: (value: { ModelName: string[] }) => void
+    mocks.names.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveNames = resolve
+        }),
+    )
+    render(<EnterpriseAIModelSelect />)
+    const trigger = await openModels()
+    await hoverEdit()
+    await waitFor(() => expect(mocks.names).toHaveBeenCalledTimes(1))
+
+    fireEvent.click(trigger)
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText('AIModelSelect.emptyModels')).not.toBeInTheDocument()
+    await act(async () => resolveNames({ ModelName: ['late-name'] }))
+    expect(screen.queryByText('late-name')).not.toBeInTheDocument()
+  })
+
   it('关闭并重新打开后重新请求名称，显示服务端最新结果', async () => {
     mocks.names
       .mockResolvedValueOnce({ ModelName: ['first-name'] })

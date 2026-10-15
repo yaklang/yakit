@@ -125,6 +125,8 @@
   }
 }
 .ai-online-model-list {
+  max-height: min(240px, 50vh);
+  overflow-y: auto;
   &-row {
     display: flex;
     align-items: center;

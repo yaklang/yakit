@@ -12,7 +12,12 @@ export interface AIModelItemProps {
   onMouseLeaveEdit: (e: React.MouseEvent) => void
 }
 
+export interface AIModelSelectListRef {
+  closeEditor: () => void
+}
+
 export interface AIModelSelectListProps {
+  listRef: RefObject<AIModelSelectListRef | null>
   type: AIModelTypeEnum
   title: ReactNode
   subTitle: ReactNode

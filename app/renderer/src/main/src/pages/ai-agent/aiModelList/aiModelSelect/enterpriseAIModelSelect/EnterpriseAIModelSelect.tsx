@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type {
   AIModelEditContentItemProps,
   AIModelEditContentProps,
   AIModelItemProps,
   AIModelSelectListProps,
+  AIModelSelectListRef,
   ModelNameListRef,
   ModelNameOptionLabelProps,
 } from './EnterpriseAIModelSelectType'
@@ -59,8 +60,28 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
   useEffect(() => {
     const previousConfig = savedConfigRef.current
     savedConfigRef.current = aiGlobalConfig
-    // 同步刷新及保存失败回滚，但保留用户在此期间继续编辑的草稿。
-    setAIDraftConfig((draft) => (isEqual(draft, previousConfig) ? cloneDeep(aiGlobalConfig) : draft))
+    setAIDraftConfig((draft) => {
+      if (isEqual(draft, previousConfig)) return cloneDeep(aiGlobalConfig)
+      // 保留未保存的选择和名称，同时接收后台探测结果及保存失败后的探测回滚。
+      const next = cloneDeep(draft)
+      for (const key of ['IntelligentModels', 'LightweightModels', 'VisionModels'] as const) {
+        for (const model of next[key]) {
+          const latest = aiGlobalConfig[key].find(
+            (item) =>
+              item.ProviderId === model.ProviderId &&
+              item.ModelName === model.ModelName &&
+              !!item.IsOnline === !!model.IsOnline &&
+              isEqual(item.Provider, model.Provider),
+          )
+          if (!latest) continue
+          if (latest.EffortProbed === undefined) delete model.EffortProbed
+          else model.EffortProbed = latest.EffortProbed
+          if (latest.ProbedExtendedEfforts === undefined) delete model.ProbedExtendedEfforts
+          else model.ProbedExtendedEfforts = [...latest.ProbedExtendedEfforts]
+        }
+      }
+      return next
+    })
   }, [aiGlobalConfig])
   const [onlineLoading, setOnlineLoading] = useState<boolean>(false)
   const [open, setOpen] = useState<boolean>(false)
@@ -68,6 +89,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
 
   const refRef = useRef<HTMLDivElement>(null)
   const dropdownRenderRef = useRef<HTMLDivElement>(null)
+  const modelListRef = useRef<AIModelSelectListRef>(null)
 
   const [inViewport = true] = useInViewport(refRef)
 
@@ -107,6 +129,8 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
   ).run
 
   const onSetOpen = useMemoizedFn((v: boolean) => {
+    // 关闭时子树可能仍被 Select 缓存，直接清理挂在 body 上的编辑浮层。
+    if (!v) modelListRef.current?.closeEditor()
     // Select 会缓存关闭后的下拉内容，每次打开重建列表以清理名称缓存和旧请求。
     if (v && !open) setModelListSession((session) => session + 1)
     setOpen(v)
@@ -215,7 +239,15 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
       const { fileName, index } = options
       setAIDraftConfig((old) => {
         const newList = [...old[fileName]]
-        newList.splice(index, 1, item)
+        // 浮层持有的 item 可能已过时，只应用名称修改；新名称需要重新探测。
+        const currentModel = newList[index]
+        if (!currentModel) return old
+        const model = { ...currentModel, ModelName: item.ModelName }
+        if (model.ModelName !== currentModel.ModelName) {
+          delete model.EffortProbed
+          delete model.ProbedExtendedEfforts
+        }
+        newList.splice(index, 1, model)
         return {
           ...old,
           [fileName]: newList,
@@ -264,6 +296,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
                   {!!intelligentModels.length && (
                     <AIModelSelectList
                       key={modelListSession}
+                      listRef={modelListRef}
                       type={AIModelTypeEnum.TierIntelligent}
                       title={t('AiAgengt.intelligentModels')}
                       subTitle={t('AIModelList.intelligentModelsDesc')}
@@ -309,7 +342,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
 })
 
 const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) => {
-  const { title, subTitle, list, onSelect, type, onEdit, dropdownRef, triggerRef, open, onWidthChange } = props
+  const { title, subTitle, list, onSelect, type, onEdit, dropdownRef, triggerRef, open, onWidthChange, listRef } = props
   const [currentSelectIndex, setCurrentSelectIndex] = useState<number>()
   const [currentItem, setCurrentItem] = useState<AIModelConfig>()
 
@@ -331,6 +364,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
     setCurrentSelectIndex(undefined)
     setEditStyle(undefined)
   })
+  useImperativeHandle(listRef, () => ({ closeEditor: closeEditContent }), [closeEditContent])
 
   // 组件卸载时清理定时器
   useEffect(() => {
