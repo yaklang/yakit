@@ -77,6 +77,15 @@ describe('mergeAIAgentChatSettingCache', () => {
     expect(merged.ReActMaxIteration).toBe(AIAgentSettingDefault.ReActMaxIteration)
   })
 
+  it('读缓存时丢掉已废弃的 TimelineContentSizeLimit', () => {
+    const merged = mergeAIAgentChatSettingCache({
+      TimelineContentSizeLimit: 60,
+      ReviewPolicy: 'ai',
+    })
+    expect(merged.TimelineContentSizeLimit).toBeUndefined()
+    expect(merged.ReviewPolicy).toBe('ai')
+  })
+
   it('保留已保存的记忆处理开关和策略数值，不在读缓存时重置', () => {
     const merged = mergeAIAgentChatSettingCache(settingWithModel)
     expect(merged.DisableMemoryTriage).toBe(true)

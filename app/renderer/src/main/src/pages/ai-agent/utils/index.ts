@@ -1,7 +1,13 @@
 import type { AIAgentSetting } from '../aiAgentType'
 import isNil from 'lodash/isNil'
 import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '../defaultConstant'
-import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
+import {
+  withServerRuntimeContextLimit,
+  type AIAgentGrpcApi,
+  type AIInputEvent,
+  type AIStartParams,
+  type AttachedResourceInfo,
+} from '../../ai-re-act/hooks/grpcApi'
 import type { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
 import type { AIChatSubmitParams } from '../aiAgentChat/type'
 import { omit } from 'lodash'
@@ -76,10 +82,11 @@ export const formatNumberUnits = (num: number) => {
 /** @name 将全局配置信息转换为可以请求的数据结构 */
 export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting => {
   /**
-   * AIService/AIModelName/TimelineItemLimit 已经废弃
+   * AIService/AIModelName/TimelineItemLimit/TimelineContentSizeLimit 已经废弃。
+   * TimelineContentSizeLimit 的非零值会覆盖服务端运行时上下文阈值。
    */
   let data: AIAgentSetting = { ...setting }
-  data = omit(data, ['AIService', 'AIModelName', 'TimelineItemLimit'])
+  data = omit(data, ['AIService', 'AIModelName', 'TimelineItemLimit', 'TimelineContentSizeLimit'])
   try {
     data.EnableSystemFileSystemOperator =
       setting.EnableSystemFileSystemOperator ?? AIAgentSettingDefault.EnableSystemFileSystemOperator
@@ -130,9 +137,8 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     if (!isNil(setting?.ReActMaxIteration)) {
       data.ReActMaxIteration = setting.ReActMaxIteration || AIAgentSettingDefault.ReActMaxIteration
     }
-    // TimelineContentSizeLimit 单位是KB，但传到后端需要转换为字节
-    data.TimelineContentSizeLimit =
-      ((setting.TimelineContentSizeLimit ?? AIAgentSettingDefault.TimelineContentSizeLimit) as number) * 1024
+    // RuntimeContextSizeLimit 单位是KB，但传到后端需要转换为字节；<=0 表示用服务端默认阈值
+    data.RuntimeContextSizeLimit = ((setting.RuntimeContextSizeLimit ?? 0) as number) * 1024
 
     // AICallTokenLimit 单位是KB，但传到后端需要转换为字节
     data.AICallTokenLimit = ((setting.AICallTokenLimit ?? AIAgentSettingDefault.AICallTokenLimit) as number) * 1024
@@ -147,7 +153,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     data.DisableMemoryTriage = setting.DisableMemoryTriage ?? AIAgentSettingDefault.DisableMemoryTriage
     data.SingleModelMode = setting.SingleModelMode ?? AIAgentSettingDefault.SingleModelMode
   } catch (error) {}
-  return { ...data }
+  return withServerRuntimeContextLimit({ ...data })
 }
 
 /** @name 将前端的结构转化为符合定义的结构 */

@@ -147,7 +147,8 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   AllowPlanUserInteract: true,
   PlanUserInteractMaxCount: 3,
   ReActMaxIteration: 100,
-  TimelineContentSizeLimit: 300,
+  // <=0 表示不覆盖服务端默认阈值
+  RuntimeContextSizeLimit: 0,
   UserInteractLimit: 0,
   TimelineSessionID: '',
   AICallTokenLimit: 40,
