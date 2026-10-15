@@ -221,7 +221,7 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
     expect(savedA.ProbedExtendedEfforts).toBeUndefined()
   })
 
-  it('编辑浮层打开后模型被刷新删除，忽略过期编辑', async () => {
+  it('编辑浮层打开后模型被刷新删除，清空过期浮层', async () => {
     await mount()
     toggle('open')
     fireEvent.mouseEnter(
@@ -231,7 +231,7 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
     const latest = configA()
     latest.IntelligentModels.pop()
     act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(latest))
-    fireEvent.click(screen.getByText('model-renamed'))
+    expect(screen.queryByText('model-renamed')).not.toBeInTheDocument()
     toggle('close')
     await flush()
 

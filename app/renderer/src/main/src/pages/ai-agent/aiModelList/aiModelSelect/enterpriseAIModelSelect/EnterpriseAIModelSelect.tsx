@@ -10,7 +10,7 @@ import type {
 } from './EnterpriseAIModelSelectType'
 import type { AIModelSelectProps } from '../AIModelSelectType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import {
   type AIModelConfig,
   type AIModelTypeFileName,
@@ -366,6 +366,25 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   })
   useImperativeHandle(listRef, () => ({ closeEditor: closeEditContent }), [closeEditContent])
 
+  const resetEditContent = useMemoizedFn(() => {
+    closeEditContent()
+    setModelNameListMap(new Map())
+  })
+  // 刷新或回滚后，旧位置不再是当前编辑模型时丢弃浮层和缓存。
+  useUpdateEffect(() => {
+    if (isNil(currentSelectIndex) || !currentItem) return
+    const item = list[currentSelectIndex]
+    if (
+      !item ||
+      item.ProviderId !== currentItem.ProviderId ||
+      item.ModelName !== currentItem.ModelName ||
+      !!item.IsOnline !== !!currentItem.IsOnline ||
+      providerToListAiModelConfig(item.Provider) !== providerToListAiModelConfig(currentItem.Provider)
+    ) {
+      resetEditContent()
+    }
+  }, [list])
+
   // 组件卸载时清理定时器
   useEffect(() => {
     return () => {
@@ -413,8 +432,8 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
       })
   })
   const onSelectItem = useMemoizedFn((e, item: AIModelConfig, index: number) => {
+    resetEditContent()
     onSelect(item, index)
-    setCurrentSelectIndex(undefined)
   })
 
   const onMouseEnterEditContent = useMemoizedFn((e) => {
