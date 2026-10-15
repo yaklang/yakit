@@ -477,24 +477,38 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
 
   const [editStyle, setEditStyle] = useState<React.CSSProperties>()
   const editContentRef = useRef<HTMLDivElement>(null)
-  const editAnchorRef = useRef<DOMRect>()
+  const editAnchorRef = useRef<Element>()
   const [modelNameListMap, setModelNameListMap] = useState<Map<string, ModelNameListRef>>(() => new Map())
 
   useLayoutEffect(() => {
     if (isNil(currentSelectIndex)) return
-    const dropdownRect = dropdownRef.current?.getBoundingClientRect()
-    const contentRect = editContentRef.current?.firstElementChild?.getBoundingClientRect()
-    const anchorRect = editAnchorRef.current
-    if (!dropdownRect || !contentRect || !anchorRect) return
+    const updatePosition = () => {
+      const dropdownRect = dropdownRef.current?.getBoundingClientRect()
+      const contentRect = editContentRef.current?.firstElementChild?.getBoundingClientRect()
+      const anchorRect = editAnchorRef.current?.getBoundingClientRect()
+      if (!dropdownRect || !contentRect || !anchorRect) return
 
-    const width = 200
-    const left = window.innerWidth - dropdownRect.right < width ? dropdownRect.left - width - 6 : dropdownRect.right + 6
-    // 名称异步加载后重新测量，贴近编辑按钮并与窗口底部保持至少 8px 间距。
-    const top = Math.max(0, Math.min(anchorRect.top, window.innerHeight - contentRect.height - 8))
-    setEditStyle({
-      transform: `translate(${Math.max(0, left)}px, ${top}px)`,
-      width,
-    })
+      const width = 200
+      const left =
+        window.innerWidth - dropdownRect.right < width ? dropdownRect.left - width - 6 : dropdownRect.right + 6
+      // 名称异步加载或窗口尺寸变化后重新测量，与窗口底部保持至少 8px 间距。
+      const top = Math.max(0, Math.min(anchorRect.top, window.innerHeight - contentRect.height - 8))
+      setEditStyle({
+        transform: `translate(${Math.max(0, left)}px, ${top}px)`,
+        width,
+      })
+    }
+    updatePosition()
+    let frame: number | undefined
+    const onResize = () => {
+      if (frame !== undefined) cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(updatePosition)
+    }
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      if (frame !== undefined) cancelAnimationFrame(frame)
+    }
   }, [currentSelectIndex, modelNameListMap])
 
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -594,7 +608,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   const onMouseEnterEdit = useMemoizedFn((e: React.MouseEvent, item: AIModelConfig, index: number) => {
     clearHideTimer()
     if (isEqual(currentSelectIndex, index)) return
-    editAnchorRef.current = e.currentTarget.getBoundingClientRect()
+    editAnchorRef.current = e.currentTarget
     setCurrentItem(item)
     setCurrentSelectIndex(index)
     getModelNameList(item)

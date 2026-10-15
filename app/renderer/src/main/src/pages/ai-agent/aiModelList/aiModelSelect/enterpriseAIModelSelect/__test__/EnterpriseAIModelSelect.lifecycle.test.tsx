@@ -140,6 +140,44 @@ describe('EnterpriseAIModelSelect real dropdown lifecycle', () => {
     expect(window.innerHeight - expectedTop - height).toBeGreaterThanOrEqual(8)
   })
 
+  it.each([
+    { anchorTop: 520, expectedTop: 520 },
+    { anchorTop: 620, expectedTop: 558 },
+  ])('打开后仅缩短窗口高度，重新定位到 $expectedTop 且保留浮层和缓存', async ({ anchorTop, expectedTop }) => {
+    vi.stubGlobal('innerHeight', 1000)
+    vi.stubGlobal('innerWidth', 800)
+    let currentAnchorTop = 850
+    mocks.names.mockResolvedValue({ ModelName: ['loaded-name'] })
+    const originalRect = HTMLElement.prototype.getBoundingClientRect
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('aria-label') === 'YakitButton.edit') return new DOMRect(320, currentAnchorTop, 20, 20)
+      if (this.classList.contains(styles['drop-select-wrapper'])) return new DOMRect(50, 500, 300, 140)
+      if (this.classList.contains(styles['edit-content-wrapper'])) return new DOMRect(0, 0, 200, 84)
+      return originalRect.call(this)
+    })
+    render(<EnterpriseAIModelSelect />)
+    const trigger = await openModels()
+    await hoverEdit()
+    expect(await screen.findByText('loaded-name')).toBeVisible()
+    const popup = document.querySelector<HTMLElement>(`.${styles['edit-content']}`)!
+    fireEvent.mouseEnter(popup)
+    expect(popup.style.transform).toBe('translate(356px, 850px)')
+
+    currentAnchorTop = anchorTop
+    vi.stubGlobal('innerHeight', 650)
+    fireEvent.resize(window)
+    await waitFor(() => expect(popup.style.transform).toBe(`translate(356px, ${expectedTop}px)`))
+    expect(window.innerHeight - expectedTop - 84).toBeGreaterThanOrEqual(8)
+    expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText('loaded-name')).toBeVisible()
+    expect(mocks.names).toHaveBeenCalledTimes(1)
+
+    currentAnchorTop = 750
+    vi.stubGlobal('innerHeight', 1000)
+    fireEvent.resize(window)
+    await waitFor(() => expect(popup.style.transform).toBe('translate(356px, 750px)'))
+  })
+
   it.each(['select', 'reorder', 'remove'] as const)('%s 后清空二级浮层和名称缓存，下次悬停重新请求', async (change) => {
     mocks.names.mockResolvedValueOnce({ ModelName: ['old-name'] }).mockResolvedValueOnce({ ModelName: ['new-name'] })
     render(<EnterpriseAIModelSelect />)
