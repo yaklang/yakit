@@ -67,7 +67,7 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
 
   // 清空任务规划的todo-list数据与会话任务索引
   rawData.taskDetailsMap.clear()
-  store.getState().updateState({ sessionTaskList: [] })
+  store.getState().updateState({ sessionTaskList: [], sessionTaskListRevision: 0 })
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution

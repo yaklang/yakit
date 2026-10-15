@@ -53,8 +53,10 @@ export type ForgesAndSkillsDynamicItem = Omit<AIAgentGrpcApi.PlanItemDetailsDyna
 export interface PlanItemDetailsData {
   /** UI定时刷新数据渲染，用于确定数据是否有更新 */
   uuid: string
-  /** 最近一次写入的 session_snapshot revision，用于丢弃乱序的旧快照 */
+  /** 最近一次写入的 session_snapshot revision，用于丢弃该通道乱序旧包 */
   sessionSnapshotRevision: number
+  /** 最近一次写入的 task_snapshot revision，与 session 水位独立，避免同 rev 互补包被整包丢掉 */
+  taskSnapshotRevision: number
   /** 任务id */
   taskId: string
   todoList: TodoListCardData
@@ -592,6 +594,8 @@ export interface ChatStoreState {
   planHistoryList: AIAgentGrpcApi.PlanHistoryList
   /** 会话内任务索引（来自 session_snapshot.tasks，供任务详情下拉切换） */
   sessionTaskList: AIAgentGrpcApi.SessionSnapshotTaskSummary[]
+  /** 会话任务索引水位：与单任务 sessionSnapshotRevision 独立，防止乱序旧包回退列表 */
+  sessionTaskListRevision: number
   /** 问题队列信息 */
   questionQueue: AIQuestionQueues
 

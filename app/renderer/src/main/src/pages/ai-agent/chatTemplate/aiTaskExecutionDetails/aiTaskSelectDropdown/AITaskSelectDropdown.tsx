@@ -89,21 +89,23 @@ export const AITaskSelectDropdown: React.FC<AITaskSelectDropdownProps> = React.m
 
   const currentTaskLabel = useCreation(() => truncateTaskLabel(currentTaskFullLabel), [currentTaskFullLabel])
 
-  const requestTaskSnapshot = useMemoizedFn((id: string) => {
-    if (!id || !sessionId) return
+  const requestTaskSnapshot = useMemoizedFn((id: string): boolean => {
+    if (!id || !sessionId) return false
     const info: AIInputEvent = {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
       SyncID: randomString(8),
       SyncJsonInput: JSON.stringify({ task_id: id }),
     }
-    onSend({ token: sessionId, type: '', params: info })
+    // 历史加载等场景 handleSendMessage 会静默 return false
+    return onSend({ token: sessionId, type: '', params: info }) !== false
   })
 
   const onSelectTask = useMemoizedFn(({ key }: { key: string }) => {
     if (!key || key === value) return
+    // 先发请求：失败则保留原选中，避免切过去却无快照且同 key 无法重试
+    if (!requestTaskSnapshot(key)) return
     onChange(key)
-    requestTaskSnapshot(key)
   })
 
   const taskMenu = useCreation(

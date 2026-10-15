@@ -13,7 +13,7 @@ const taskDetailsMap = new Map<string, PlanItemDetailsData>()
 const todoDetail = vi.fn(({ todoData }: { todoData: TodoListCardData }) => (
   <div data-testid="todo-detail">{todoData.items.map((item) => item.content).join(',')}</div>
 ))
-const onSend = vi.fn()
+const onSend = vi.fn(() => true)
 const sessionStore = createStore(() => ({
   sessionTaskList: [] as AIAgentGrpcApi.SessionSnapshotTaskSummary[],
 }))
@@ -490,11 +490,16 @@ describe('AITaskExecutionDetails 任务下拉切换', () => {
     expect(screen.queryByText('任务甲目标')).not.toBeInTheDocument()
     expect(screen.getByText('AITaskExecutionDetails.noInfo')).toBeInTheDocument()
     expect(onSend).toHaveBeenCalledTimes(1)
-    const payload = onSend.mock.calls[0][0]
-    expect(payload.token).toBe('session-1')
-    expect(payload.params.IsSyncMessage).toBe(true)
-    expect(payload.params.SyncType).toBe(AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT)
-    expect(JSON.parse(payload.params.SyncJsonInput)).toEqual({ task_id: 'task-b' })
+    expect(onSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: 'session-1',
+        params: expect.objectContaining({
+          IsSyncMessage: true,
+          SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
+          SyncJsonInput: JSON.stringify({ task_id: 'task-b' }),
+        }),
+      }),
+    )
   })
 
   it('taskId 切到新任务后，触发器文案跟 sessionTaskList 选中项一致（不沿用旧 taskName）', () => {

@@ -222,6 +222,72 @@ describe('aiTaskDetail handlers', () => {
     aiTaskDetailDataHandlers.session_snapshot(req)
 
     expect(req.store.getState().sessionTaskList).toEqual(tasks)
+    expect(req.store.getState().sessionTaskListRevision).toBe(1)
+  })
+
+  it('session_snapshot 旧 revision 的 tasks 不回退已更新的 sessionTaskList', () => {
+    const newerTasks = [
+      {
+        task_id: 'task-a',
+        task_name: 'A',
+        attempt: 1,
+        status: 'running',
+        is_final: false,
+        updated_at: 10,
+      },
+      {
+        task_id: 'task-b',
+        task_name: 'B',
+        attempt: 1,
+        status: 'done',
+        is_final: true,
+        updated_at: 20,
+      },
+    ]
+    const newerReq = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          revision: 10,
+          execution: { http_flow_count: 10 },
+          background_processes: [],
+          tasks: newerTasks,
+        },
+        { NodeId: 'session_snapshot', TaskId: 'task-a', IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.session_snapshot(newerReq)
+    expect(newerReq.store.getState().sessionTaskList).toEqual(newerTasks)
+    expect(newerReq.store.getState().sessionTaskListRevision).toBe(10)
+
+    const staleReq = makeHandlerRequest({
+      rawData: newerReq.rawData,
+      store: newerReq.store,
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          revision: 9,
+          execution: { http_flow_count: 1 },
+          background_processes: [],
+          tasks: [
+            {
+              task_id: 'task-a',
+              task_name: 'A',
+              attempt: 1,
+              status: 'running',
+              is_final: false,
+              updated_at: 10,
+            },
+          ],
+        },
+        { NodeId: 'session_snapshot', TaskId: 'task-a', IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.session_snapshot(staleReq)
+
+    expect(newerReq.store.getState().sessionTaskList).toEqual(newerTasks)
+    expect(newerReq.store.getState().sessionTaskListRevision).toBe(10)
+    expect(newerReq.rawData.taskDetailsMap.get('task-a')?.execution?.http_flow_count).toBe(10)
   })
 
   it('task_snapshot writes execution/todo/perception into taskDetailsMap', () => {
@@ -272,7 +338,7 @@ describe('aiTaskDetail handlers', () => {
     expect(detail?.perception?.timestamp).toBe(12345)
     expect(detail?.todoList?.items?.length).toBe(1)
     expect(detail?.todoList?.items?.[0]?.content).toBe('待办一')
-    expect(detail?.sessionSnapshotRevision).toBe(3)
+    expect(detail?.taskSnapshotRevision).toBe(3)
   })
 
   it('task_snapshot ignores stale revisions before mutating cached details', () => {
@@ -296,7 +362,7 @@ describe('aiTaskDetail handlers', () => {
     })
     aiTaskDetailDataHandlers.task_snapshot(newerReq)
     expect(newerReq.rawData.taskDetailsMap.get(taskId)?.execution?.http_flow_count).toBe(10)
-    expect(newerReq.rawData.taskDetailsMap.get(taskId)?.sessionSnapshotRevision).toBe(5)
+    expect(newerReq.rawData.taskDetailsMap.get(taskId)?.taskSnapshotRevision).toBe(5)
 
     const staleReq = makeHandlerRequest({
       rawData: newerReq.rawData,
@@ -324,7 +390,54 @@ describe('aiTaskDetail handlers', () => {
     expect(detail?.execution?.http_flow_count).toBe(10)
     expect(detail?.perception?.summary).toBe('新感知')
     expect(detail?.todoList?.items?.[0]?.content).toBe('新待办')
+    expect(detail?.taskSnapshotRevision).toBe(5)
+  })
+
+  it('session_snapshot rev=N 后再 task_snapshot rev=N：互补字段仍写入', () => {
+    const taskId = 'task-cross-channel-rev'
+    const sessionReq = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          revision: 5,
+          execution: { task_name: '会话快照', http_flow_count: 9 },
+          background_processes: [],
+        },
+        { NodeId: 'session_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.session_snapshot(sessionReq)
+    expect(sessionReq.rawData.taskDetailsMap.get(taskId)?.sessionSnapshotRevision).toBe(5)
+    expect(sessionReq.rawData.taskDetailsMap.get(taskId)?.taskSnapshotRevision).toBe(0)
+
+    const taskReq = makeHandlerRequest({
+      rawData: sessionReq.rawData,
+      store: sessionReq.store,
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          revision: 5,
+          snapshot: {
+            execution: { task_name: '任务快照', http_flow_count: 9 },
+            perception: { summary: '同 rev 感知', last_update_at: 10 },
+          },
+          todo: {
+            items: [
+              { id: 'todo-cross', status: AIToDoListStatusEnum.Pending, content: '同 rev 待办', scope_task_id: taskId },
+            ],
+          },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.task_snapshot(taskReq)
+
+    const detail = sessionReq.rawData.taskDetailsMap.get(taskId)
     expect(detail?.sessionSnapshotRevision).toBe(5)
+    expect(detail?.taskSnapshotRevision).toBe(5)
+    expect(detail?.perception?.summary).toBe('同 rev 感知')
+    expect(detail?.todoList?.items?.[0]?.content).toBe('同 rev 待办')
   })
 
   it('task_snapshot capabilities：各 type/position 落入 fixed/dynamic，skill_load_state 按 stage/data 回退', () => {
@@ -398,6 +511,56 @@ describe('aiTaskDetail handlers', () => {
     expect(detail!.plugins.dynamic.map((i) => i.name)).toEqual(['plugin-dynamic'])
     expect(detail!.mcp.fixed.map((i) => i.name)).toEqual(['mcp-fixed'])
     expect(detail!.mcp.dynamic.map((i) => i.name)).toEqual(['mcp-dynamic'])
+  })
+
+  it('task_snapshot capabilities=[] 整表清空，不残留旧 tool/forge/技能', () => {
+    const taskId = 'task-capabilities-clear'
+    const seeded = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          revision: 1,
+          snapshot: {
+            capabilities: [
+              { name: 'old-tool', type: 'tool', stage: '', position: 'Fixed' },
+              { name: 'old-skill', type: 'skill', stage: '', position: 'Fixed' },
+              { name: 'old-forge', type: 'forge', stage: '', position: 'Dynamic' },
+            ],
+          },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.task_snapshot(seeded)
+    expect(seeded.rawData.taskDetailsMap.get(taskId)?.tool.fixed).toHaveLength(1)
+    expect(seeded.rawData.taskDetailsMap.get(taskId)?.skills.fixed).toHaveLength(1)
+    expect(seeded.rawData.taskDetailsMap.get(taskId)?.forges.dynamic).toHaveLength(1)
+
+    const clearReq = makeHandlerRequest({
+      rawData: seeded.rawData,
+      store: seeded.store,
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          revision: 2,
+          snapshot: { capabilities: [] },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.task_snapshot(clearReq)
+
+    const detail = seeded.rawData.taskDetailsMap.get(taskId)
+    expect(detail?.tool.fixed).toEqual([])
+    expect(detail?.tool.dynamic).toEqual([])
+    expect(detail?.skills.fixed).toEqual([])
+    expect(detail?.skills.dynamic).toEqual([])
+    expect(detail?.forges.fixed).toEqual([])
+    expect(detail?.forges.dynamic).toEqual([])
+    expect(detail?.plugins.fixed).toEqual([])
+    expect(detail?.mcp.fixed).toEqual([])
   })
 
   it('session_snapshot merges execution_rounds into step and never regresses', () => {

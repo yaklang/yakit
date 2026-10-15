@@ -243,9 +243,16 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
   const snapshot = (JSON.parse(ipcContent) as AIAgentGrpcApi.SessionSnapshot) || {}
   if (isEmpty(snapshot)) return
 
-  // 任务索引与单任务 revision 无关，始终刷新供详情下拉使用
+  // 任务索引用会话级水位（勿绑单任务 revision）；乱序旧包不得回退下拉列表
   if (Array.isArray(snapshot.tasks)) {
-    store.getState().updateState({ sessionTaskList: snapshot.tasks })
+    const listRev = typeof snapshot.revision === 'number' ? snapshot.revision : 0
+    const cachedListRev = store.getState().sessionTaskListRevision ?? 0
+    if (!(listRev > 0 && listRev <= cachedListRev)) {
+      store.getState().updateState({
+        sessionTaskList: snapshot.tasks,
+        ...(listRev > 0 ? { sessionTaskListRevision: listRev } : {}),
+      })
+    }
   }
 
   if (!res.TaskId) return
@@ -297,10 +304,11 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
   if (!payload.snapshot && !payload.todo) return
 
   const oldData = rawData.taskDetailsMap.get(taskId) || cloneDeep(DefaultPlanItemDetailsData)
+  // 仅与本通道 taskSnapshotRevision 比较；勿复用 session 水位，否则同 rev 的互补包会被整包丢掉
   if (
     typeof payload.revision === 'number' &&
     payload.revision > 0 &&
-    payload.revision <= (oldData.sessionSnapshotRevision ?? 0)
+    payload.revision <= (oldData.taskSnapshotRevision ?? 0)
   ) {
     return
   }
@@ -323,7 +331,7 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
     oldData.backgroundProcesses = nested.background_processes
   }
   if (typeof payload.revision === 'number' && payload.revision > 0) {
-    oldData.sessionSnapshotRevision = payload.revision
+    oldData.taskSnapshotRevision = payload.revision
   }
 
   const perception = mapSessionPerceptionToPerceptionData(nested?.perception)
@@ -335,7 +343,7 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
     oldData.todoList = handleTodoListData(payload.todo.items, taskId)
   }
 
-  if (nested?.capabilities?.length) {
+  if (nested && Array.isArray(nested.capabilities)) {
     const fields = planItemDetailsToCapabilityFields(capabilityInventoryItemsToPlanItemDetails(nested.capabilities))
     applyCapabilityFieldsToTarget(oldData, fields, taskId)
   }

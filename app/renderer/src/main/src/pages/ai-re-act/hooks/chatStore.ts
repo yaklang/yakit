@@ -41,6 +41,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       notifyMessage: null,
       planHistoryList: cloneDeep(DefaultPlanHistoryList),
       sessionTaskList: [],
+      sessionTaskListRevision: 0,
       questionQueue: cloneDeep(DefaultAIQuestionQueues),
 
       httpTabShow: false,

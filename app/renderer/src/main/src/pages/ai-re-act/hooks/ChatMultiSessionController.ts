@@ -1759,7 +1759,7 @@ export class ChatMultiSessionController {
       funcKey = 'perception'
     } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
       funcKey = 'current_task_todo_list_update'
-    } else if (res.NodeId === 'session_snapshot') {
+    } else if (res.NodeId === 'session_snapshot' || res.NodeId === 'task_snapshot') {
       funcKey = res.NodeId
     } else if (res.Type === 'detached_plan_require' && res.NodeId === 'detached-plan') {
       funcKey = res.Type
