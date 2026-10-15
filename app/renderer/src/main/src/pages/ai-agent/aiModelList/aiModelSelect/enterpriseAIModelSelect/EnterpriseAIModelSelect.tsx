@@ -55,33 +55,38 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
 
   const [{ aiGlobalConfig, queryLoading }, event] = useAIGlobalConfig()
   const [aiDraftConfig, setAIDraftConfig] = useState(() => cloneDeep(aiGlobalConfig))
-  const savedConfigRef = useRef(aiGlobalConfig)
+  const pendingEditsRef = useRef<
+    Array<
+      {
+        fileName: AIModelTypeFileName
+        model: Pick<AIModelConfig, 'ProviderId' | 'ModelName' | 'IsOnline'>
+      } & ({ type: 'select' } | { type: 'rename'; modelName: string })
+    >
+  >([])
 
   useEffect(() => {
-    const previousConfig = savedConfigRef.current
-    savedConfigRef.current = aiGlobalConfig
-    setAIDraftConfig((draft) => {
-      if (isEqual(draft, previousConfig)) return cloneDeep(aiGlobalConfig)
-      // 保留未保存的选择和名称，同时接收后台探测结果及保存失败后的探测回滚。
-      const next = cloneDeep(draft)
-      for (const key of ['IntelligentModels', 'LightweightModels', 'VisionModels'] as const) {
-        for (const model of next[key]) {
-          const latest = aiGlobalConfig[key].find(
-            (item) =>
-              item.ProviderId === model.ProviderId &&
-              item.ModelName === model.ModelName &&
-              !!item.IsOnline === !!model.IsOnline &&
-              isEqual(item.Provider, model.Provider),
-          )
-          if (!latest) continue
-          if (latest.EffortProbed === undefined) delete model.EffortProbed
-          else model.EffortProbed = latest.EffortProbed
-          if (latest.ProbedExtendedEfforts === undefined) delete model.ProbedExtendedEfforts
-          else model.ProbedExtendedEfforts = [...latest.ProbedExtendedEfforts]
-        }
+    // 只在最新配置上重放尚未提交的操作，避免旧草稿带回已回滚的字段。
+    const next = cloneDeep(aiGlobalConfig)
+    for (const edit of pendingEditsRef.current) {
+      const list = next[edit.fileName]
+      const index = list.findIndex(
+        (item) =>
+          item.ProviderId === edit.model.ProviderId &&
+          item.ModelName === edit.model.ModelName &&
+          !!item.IsOnline === !!edit.model.IsOnline,
+      )
+      if (index < 0) continue
+      const model = list[index]
+      if (edit.type === 'select') {
+        list.splice(index, 1)
+        list.unshift(model)
+      } else if (model.ModelName !== edit.modelName) {
+        model.ModelName = edit.modelName
+        delete model.EffortProbed
+        delete model.ProbedExtendedEfforts
       }
-      return next
-    })
+    }
+    setAIDraftConfig(next)
   }, [aiGlobalConfig])
   const [onlineLoading, setOnlineLoading] = useState<boolean>(false)
   const [open, setOpen] = useState<boolean>(false)
@@ -135,7 +140,11 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
     if (v && !open) setModelListSession((session) => session + 1)
     setOpen(v)
 
-    if (!v && !isEqual(aiGlobalConfig, aiDraftConfig)) onSetAI()
+    if (!v) {
+      // 本轮操作已提交（或已抵消），后续失败回读只保留重新打开后的新操作。
+      pendingEditsRef.current = []
+      if (!isEqual(aiGlobalConfig, aiDraftConfig)) onSetAI()
+    }
   })
   const closeOnWidthChange = useMemoizedFn(() => onSetOpen(false))
   /**
@@ -217,6 +226,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
       },
     ) => {
       const { fileName, index } = options
+      pendingEditsRef.current.push({ type: 'select', fileName, model: item })
       setAIDraftConfig((old) => {
         const newList = [...old[fileName]]
         newList.splice(index, 1)
@@ -237,6 +247,9 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
       },
     ) => {
       const { fileName, index } = options
+      const originalModel = aiDraftConfig[fileName][index]
+      if (!originalModel) return
+      pendingEditsRef.current.push({ type: 'rename', fileName, model: originalModel, modelName: item.ModelName })
       setAIDraftConfig((old) => {
         const newList = [...old[fileName]]
         // 浮层持有的 item 可能已过时，只应用名称修改；新名称需要重新探测。

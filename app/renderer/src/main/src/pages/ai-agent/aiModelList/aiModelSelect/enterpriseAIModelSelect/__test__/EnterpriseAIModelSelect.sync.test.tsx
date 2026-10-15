@@ -1,11 +1,12 @@
 import type React from 'react'
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, renderHook, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { EnterpriseAIModelSelect } from '../EnterpriseAIModelSelect'
 import { defaultAIGlobalConfig } from '../../../../defaultConstant'
 import type { AIGlobalConfig } from '../../../utils'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import emiter from '@/utils/eventBus/eventBus'
+import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 const mocks = vi.hoisted(() => ({
   load: vi.fn(),
@@ -139,6 +140,93 @@ afterEach(() => {
 })
 
 describe('EnterpriseAIModelSelect real config hook/store synchronization', () => {
+  it.each([false, true])(
+    '思考强度延迟保存失败后，新选择和改名保留且完整配置使用回读值（同厂商：%s）',
+    async (sameProvider) => {
+      const initial = configA()
+      initial.IntelligentModels[0].Provider.ReasoningEffort = 'low'
+      if (sameProvider)
+        initial.IntelligentModels.forEach((model) => {
+          model.ProviderId = 'shared-provider'
+        })
+      mocks.get.mockResolvedValue(initial)
+      useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
+      await mount()
+      const { result } = renderHook(() => useAIGlobalConfig())
+      await flush()
+      const save = deferred<void>()
+      const recovery = deferred<AIGlobalConfig>()
+      mocks.save.mockReturnValueOnce(save.promise)
+      mocks.get.mockReturnValueOnce(recovery.promise)
+      const optimistic = structuredClone(initial)
+      optimistic.IntelligentModels[0].Provider.ReasoningEffort = 'high'
+      act(() => {
+        void result.current[1].setAIGlobalConfig(optimistic).catch(() => undefined)
+      })
+      await flush()
+      toggle('open')
+      select('model-b')
+      fireEvent.mouseEnter(
+        within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[0],
+      )
+      await flush()
+      fireEvent.click(screen.getByText('model-renamed'))
+      await act(async () => save.reject(new Error('save failed')))
+      await flush()
+      await act(async () => recovery.resolve(initial))
+      await flush()
+      toggle('close')
+      await flush()
+
+      expect(mocks.save).toHaveBeenCalledTimes(2)
+      expect(mocks.save.mock.calls[1][0]).toEqual({
+        ...initial,
+        IntelligentModels: [
+          { ...initial.IntelligentModels[1], ModelName: 'model-renamed' },
+          initial.IntelligentModels[0],
+          initial.IntelligentModels[2],
+        ],
+      })
+    },
+  )
+
+  it.each([false, true])('改名延迟保存失败后，保留新选择且不再次提交失败名称（同厂商：%s）', async (sameProvider) => {
+    const initial = configA()
+    if (sameProvider)
+      initial.IntelligentModels.forEach((model) => {
+        model.ProviderId = 'shared-provider'
+      })
+    mocks.get.mockResolvedValue(initial)
+    useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
+    await mount()
+    const save = deferred<void>()
+    const recovery = deferred<AIGlobalConfig>()
+    mocks.save.mockReturnValueOnce(save.promise)
+    mocks.get.mockReturnValueOnce(recovery.promise)
+    toggle('open')
+    fireEvent.mouseEnter(
+      within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[0],
+    )
+    await flush()
+    fireEvent.click(screen.getByText('model-renamed'))
+    toggle('close')
+    await flush()
+    toggle('open')
+    select('model-b')
+    await act(async () => save.reject(new Error('save failed')))
+    await flush()
+    await act(async () => recovery.resolve(initial))
+    await flush()
+    toggle('close')
+    await flush()
+
+    expect(mocks.save).toHaveBeenCalledTimes(2)
+    expect(mocks.save.mock.calls[1][0]).toEqual({
+      ...initial,
+      IntelligentModels: [initial.IntelligentModels[1], initial.IntelligentModels[0], initial.IntelligentModels[2]],
+    })
+  })
+
   it.each([false, true])('选择 B 时 A 的探测完成，保留选择和探测结果（同厂商：%s）', async (sameProvider) => {
     const initial = configA()
     if (sameProvider)
@@ -329,7 +417,11 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
     toggle('close')
     await flush()
     expect(mocks.save).toHaveBeenCalledTimes(2)
-    expect(mocks.save.mock.calls[1][0].IntelligentModels[0].ModelName).toBe('model-c')
+    const latest = configA()
+    expect(mocks.save.mock.calls[1][0]).toEqual({
+      ...latest,
+      IntelligentModels: [latest.IntelligentModels[2], latest.IntelligentModels[0], latest.IntelligentModels[1]],
+    })
     expectModel('model-c')
   })
 })
