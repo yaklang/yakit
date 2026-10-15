@@ -100,9 +100,13 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
     const store = useCurrentStore()
     const execute = useStore(store, (state) => state.execute)
     const [apiKeys, setApiKeys] = useState<API.ApiKeyDetail>()
+    // 已展示过的额度：刷新为空/失败时保留，避免 CeUserTokenQuota 卸载闪烁
+    const apiKeysRef = useRef<API.ApiKeyDetail>()
+    if (apiKeys) apiKeysRef.current = apiKeys
 
     useEffect(() => {
       if (!isLogin || !isCommunityEdition()) {
+        apiKeysRef.current = undefined
         setApiKeys(undefined)
         return
       }
@@ -113,9 +117,8 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
         if (cancelled || id !== requestId) return
         if (res?.data && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
           setApiKeys(res.data)
-        } else {
-          setApiKeys(undefined)
         }
+        // 空列表不 set undefined：保留上次展示
       }
       /** 与 useUserMenu 一致：新 CE 账号可能尚无 key，创建后再回拉，避免配额区一直空白 */
       const ensureApiKeys = async () => {
@@ -131,7 +134,8 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
             setApiKeys(res.data)
             return
           }
-          setApiKeys(undefined)
+          // 已有展示数据时不卸载、不重复建 key；仅首次无 key 才创建
+          if (apiKeysRef.current) return
           const created = await NetWorkApi<null, API.ActionSucceeded>({
             method: 'post',
             url: 'apikey',
@@ -144,8 +148,7 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
           })
           applyApiKeys(id, again)
         } catch {
-          if (cancelled || id !== requestId) return
-          setApiKeys(undefined)
+          // 失败保留上次；首次仍无数据则保持隐藏
         }
       }
       /** 轮询只刷新，不再创建，避免执行中每 10s 重复建 key */
@@ -158,8 +161,7 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
         })
           .then((res) => applyApiKeys(id, res))
           .catch(() => {
-            if (cancelled || id !== requestId) return
-            setApiKeys(undefined)
+            // 刷新失败保留上次展示，避免配额区闪烁
           })
       }
       ensureApiKeys()
