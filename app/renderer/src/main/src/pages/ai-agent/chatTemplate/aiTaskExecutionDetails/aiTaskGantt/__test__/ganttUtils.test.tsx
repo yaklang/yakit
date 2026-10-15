@@ -8,7 +8,10 @@ import {
   computeGanttTimeRange,
   GANTT_MAX_COLUMNS,
   GANTT_MIN_COLUMNS,
+  GANTT_MIN_TICK_SEC,
+  formatGanttTickTime,
   ganttColumnCount,
+  hasNonZeroSeconds,
   isValidUnixSec,
   pickTickInterval,
 } from '../ganttUtils'
@@ -211,15 +214,14 @@ describe('buildSegments 时间戳回退', () => {
 })
 
 describe('pickTickInterval', () => {
-  it('短跨度优先使用 2 分钟间隔', () => {
-    expect(pickTickInterval(2 * 60)).toBe(2 * 60)
-    expect(pickTickInterval(10 * 60)).toBe(2 * 60)
+  it('短跨度优先使用最小 1 分钟间隔', () => {
+    expect(pickTickInterval(1 * 60)).toBe(GANTT_MIN_TICK_SEC)
+    expect(pickTickInterval(5 * 60)).toBe(GANTT_MIN_TICK_SEC)
   })
 
   it('跨度增大时升档，保证不超过 MAX 格', () => {
-    // 8×5min=40min，刚好可由 5min 覆盖
+    // 8×1min=8min 不够；8×2min=16min 仍不够 40min；8×5min=40min
     expect(pickTickInterval(40 * 60)).toBe(5 * 60)
-    // 超过 40min 升到 10min
     expect(pickTickInterval(41 * 60)).toBe(10 * 60)
   })
 
@@ -229,47 +231,60 @@ describe('pickTickInterval', () => {
 })
 
 describe('computeGanttTimeRange / buildGanttTicks', () => {
-  it('空内容：回退为 MIN×15min，刻度数 = MIN+1', () => {
+  it('空内容：回退为默认 4 格，轴终点对齐整格', () => {
     const range = computeGanttTimeRange(null, NOW)
     expect(range.interval).toBe(15 * 60)
     expect(ganttColumnCount(range)).toBe(GANTT_MIN_COLUMNS)
-    expect(range.end).toBe(NOW)
-    expect(range.start).toBe(NOW - GANTT_MIN_COLUMNS * 15 * 60)
+    expect(range.contentEnd).toBe(NOW)
+    expect(range.end % range.interval).toBe(0)
+    expect(range.end).toBeGreaterThanOrEqual(NOW)
+    expect(range.start).toBe(range.end - GANTT_MIN_COLUMNS * 15 * 60)
     expect(buildGanttTicks(range)).toHaveLength(GANTT_MIN_COLUMNS + 1)
   })
 
-  it('窄跨度：格数至少 MIN，刻度数 ≥ MIN+1', () => {
-    // 仅 3 分钟内容，自然格数不足，右侧补到 MIN
-    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs: BASE_TS + 3 * 60 }, NOW)
-    const columns = ganttColumnCount(range)
-    const ticks = buildGanttTicks(range)
-    expect(columns).toBeGreaterThanOrEqual(GANTT_MIN_COLUMNS)
-    expect(columns).toBeLessThanOrEqual(GANTT_MAX_COLUMNS)
-    expect(ticks.length).toBe(columns + 1)
-    expect(ticks.length).toBeGreaterThanOrEqual(GANTT_MIN_COLUMNS + 1)
+  it('短跨度：默认仍 4 格，起点对齐内容起点（不预留左侧空白）', () => {
+    const maxTs = BASE_TS + 90
+    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs }, NOW)
+    expect(range.interval).toBe(GANTT_MIN_TICK_SEC)
+    expect(ganttColumnCount(range)).toBe(GANTT_MIN_COLUMNS)
+    const contentStart = Math.floor(BASE_TS / range.interval) * range.interval
+    expect(range.start).toBe(contentStart)
   })
 
-  it('中等跨度：格数落在 [MIN, MAX]', () => {
-    // 约 50 分钟 → 间隔 10min，对齐后约 5～6 格
-    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs: BASE_TS + 50 * 60 }, NOW)
-    const columns = ganttColumnCount(range)
-    expect(columns).toBeGreaterThanOrEqual(GANTT_MIN_COLUMNS)
-    expect(columns).toBeLessThanOrEqual(GANTT_MAX_COLUMNS)
-    expect(buildGanttTicks(range).length).toBe(columns + 1)
-  })
-
-  it('3 天宽跨度：格数 ≤ MAX，刻度数 ≤ MAX+1', () => {
-    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs: BASE_TS + 3 * 24 * 3600 }, NOW)
-    const columns = ganttColumnCount(range)
-    const ticks = buildGanttTicks(range)
-    expect(columns).toBeLessThanOrEqual(GANTT_MAX_COLUMNS)
-    expect(ticks.length).toBeLessThanOrEqual(GANTT_MAX_COLUMNS + 1)
-    expect(ticks.length).toBe(columns + 1)
-  })
-
-  it('起止相等：扩展到至少 MIN×2min 后再算轴', () => {
-    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs: BASE_TS }, NOW)
+  it('内容已够 4 格：轴终点对齐整格，contentEnd 保留真实终点', () => {
+    const maxTs = BASE_TS + GANTT_MIN_COLUMNS * GANTT_MIN_TICK_SEC + 20
+    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs }, NOW)
+    expect(range.contentEnd).toBe(maxTs)
+    expect(range.end % range.interval).toBe(0)
+    expect(range.end).toBeGreaterThanOrEqual(maxTs)
     expect(ganttColumnCount(range)).toBeGreaterThanOrEqual(GANTT_MIN_COLUMNS)
+    expect(Number.isInteger(ganttColumnCount(range))).toBe(true)
+    const ticks = buildGanttTicks(range)
+    expect(ticks[ticks.length - 1]).toBe(range.end)
+  })
+
+  it('中等跨度：轴终点对齐整格，格数 ∈ [MIN, MAX]', () => {
+    const maxTs = BASE_TS + 50 * 60 + 33
+    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs }, NOW)
+    expect(range.contentEnd).toBe(maxTs)
+    expect(range.end % range.interval).toBe(0)
+    expect(ganttColumnCount(range)).toBeGreaterThanOrEqual(GANTT_MIN_COLUMNS)
+    expect(ganttColumnCount(range)).toBeLessThanOrEqual(GANTT_MAX_COLUMNS)
+  })
+
+  it('3 天宽跨度：格数 ≤ MAX，轴终点对齐整格', () => {
+    const maxTs = BASE_TS + 3 * 24 * 3600 + 12
+    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs }, NOW)
+    expect(range.contentEnd).toBe(maxTs)
+    expect(range.end % range.interval).toBe(0)
+    expect(ganttColumnCount(range)).toBeGreaterThanOrEqual(GANTT_MIN_COLUMNS)
+    expect(ganttColumnCount(range)).toBeLessThanOrEqual(GANTT_MAX_COLUMNS)
+  })
+
+  it('起止相等（短跨度）：默认仍 4 格', () => {
+    const range = computeGanttTimeRange({ minTs: BASE_TS, maxTs: BASE_TS }, NOW)
+    expect(ganttColumnCount(range)).toBe(GANTT_MIN_COLUMNS)
+    expect(range.interval).toBe(GANTT_MIN_TICK_SEC)
   })
 })
 
@@ -284,5 +299,15 @@ describe('collectGanttContentBounds', () => {
         },
       ]),
     ).toEqual({ minTs: BASE_TS, maxTs: BASE_TS + 500 })
+  })
+})
+
+describe('formatGanttTickTime', () => {
+  it('整分用 HH:mm，有秒用 HH:mm:ss', () => {
+    const onMinute = Math.floor(BASE_TS / 60) * 60
+    expect(hasNonZeroSeconds(onMinute)).toBe(false)
+    expect(formatGanttTickTime(onMinute)).toMatch(/^\d{2}:\d{2}$/)
+    expect(hasNonZeroSeconds(onMinute + 45)).toBe(true)
+    expect(formatGanttTickTime(onMinute + 45)).toMatch(/^\d{2}:\d{2}:\d{2}$/)
   })
 })

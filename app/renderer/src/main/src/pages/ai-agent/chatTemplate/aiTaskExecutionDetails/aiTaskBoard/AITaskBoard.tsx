@@ -3,6 +3,7 @@ import classNames from 'classnames'
 import { useCreation } from 'ahooks'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { formatTime, timeDiffWithMoment } from '@/utils/timeUtil'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AITaskBoardProps, AITaskBoardTodoCardProps } from './type'
 import styles from './AITaskBoard.module.scss'
 
@@ -37,6 +38,7 @@ const BoardCardTimeRange: React.FC<{
 
 /** 看板卡片：内容 + 按状态展示耗时/存活与时间段 */
 const AITaskBoardTodoCard: React.FC<AITaskBoardTodoCardProps> = React.memo(({ item }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const createdTs = useCreation(() => (isValidUnixSec(item.created_ts) ? item.created_ts! : 0), [item.created_ts])
   // 执行开始仅认 focus_started_ts，不用 created_ts 冒充（否则会把排队时间算进耗时）
   const startTs = useCreation(
@@ -75,41 +77,62 @@ const AITaskBoardTodoCard: React.FC<AITaskBoardTodoCardProps> = React.memo(({ it
   const renderFooter = () => {
     switch (item.status) {
       case 'PENDING':
-        return <span className={styles['board-card-meta']}>创建时间 {createdText}</span>
+        return (
+          <span className={styles['board-card-meta']}>
+            {t('AITaskExecutionDetails.createdTime', { time: createdText })}
+          </span>
+        )
       case 'DOING':
         return (
           <>
             <YakitTag border={false} fullRadius size="small">
-              耗时 {focusDurationText}
+              {t('AITaskExecutionDetails.duration', { time: focusDurationText })}
             </YakitTag>
-            <span className={styles['board-card-meta']}>开始 {startText} —</span>
+            <span className={styles['board-card-meta']}>
+              {t('AITaskExecutionDetails.startOngoing', { time: startText })}
+            </span>
           </>
         )
       case 'DONE':
         return (
           <>
             <YakitTag border={false} fullRadius size="small">
-              耗时 {focusDurationText}
+              {t('AITaskExecutionDetails.duration', { time: focusDurationText })}
             </YakitTag>
-            <BoardCardTimeRange startLabel="开始" startTime={startText} endLabel="结束" endTime={endText} />
+            <BoardCardTimeRange
+              startLabel={t('AITaskExecutionDetails.labelStart')}
+              startTime={startText}
+              endLabel={t('AITaskExecutionDetails.labelEnd')}
+              endTime={endText}
+            />
           </>
         )
       case 'SKIPPED':
         return (
           <>
             <YakitTag border={false} fullRadius size="small">
-              存活 {survivalDurationText}
+              {t('AITaskExecutionDetails.survival', { time: survivalDurationText })}
             </YakitTag>
-            <BoardCardTimeRange startLabel="创建" startTime={createdText} endLabel="跳过" endTime={endText} />
+            <BoardCardTimeRange
+              startLabel={t('AITaskExecutionDetails.labelCreated')}
+              startTime={createdText}
+              endLabel={t('AITaskExecutionDetails.labelSkipped')}
+              endTime={endText}
+            />
           </>
         )
       case 'DELETED':
         return (
           <>
             <YakitTag border={false} fullRadius size="small">
-              存活 {survivalDurationText}
+              {t('AITaskExecutionDetails.survival', { time: survivalDurationText })}
             </YakitTag>
-            <BoardCardTimeRange startLabel="创建" startTime={createdText} endLabel="删除" endTime={endText} />
+            <BoardCardTimeRange
+              startLabel={t('AITaskExecutionDetails.labelCreated')}
+              startTime={createdText}
+              endLabel={t('AITaskExecutionDetails.labelDeleted')}
+              endTime={endText}
+            />
           </>
         )
       default:

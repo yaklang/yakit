@@ -1,11 +1,13 @@
+import moment from 'moment'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
 import type { AITaskGanttSegment, AITaskGanttSegmentKind, AITaskGanttTodoItem } from './type'
 
 /** 有效 Unix 秒时间戳（排除 created_at/updated_at 这类占位序号） */
 export const isValidUnixSec = (ts?: number) => typeof ts === 'number' && Number.isFinite(ts) && ts > 1e9
 
-/** 时间轴刻度候选间隔（秒），含最小 2 分钟 */
+/** 时间轴刻度候选间隔（秒），最小 1 分钟 */
 export const GANTT_TICK_CANDIDATES_SEC = [
+  1 * 60,
   2 * 60,
   5 * 60,
   10 * 60,
@@ -19,14 +21,20 @@ export const GANTT_TICK_CANDIDATES_SEC = [
   24 * 3600,
 ]
 
+/** 最短刻度（1min）：不足时先铺默认 4 格；达到后右侧必须顶满 */
+export const GANTT_MIN_TICK_SEC = GANTT_TICK_CANDIDATES_SEC[0]
+
 /** 时间轴格数：最少 MIN、最多 MAX */
 export const GANTT_MIN_COLUMNS = 4
 export const GANTT_MAX_COLUMNS = 8
 
 export interface GanttTimeRange {
   start: number
+  /** 轴终点，对齐到 interval 整格，保证每格等宽 */
   end: number
   interval: number
+  /** 内容真实终点（可为 now/带秒），用于 to now 文案 */
+  contentEnd: number
 }
 
 /** 取能覆盖跨度且不超过 MAX 格的最细候选间隔 */
@@ -59,8 +67,12 @@ export const collectGanttContentBounds = (
 
 /**
  * 计算甘特时间轴起止与间隔：
- * - 无内容：now 回退 MIN×15min
- * - 格数夹在 [MIN, MAX]；超限升档间隔，不足则右侧补空
+ * - 无内容：now 回退 MIN×15min（默认 4 格）
+ * - 起点对齐内容起点，不预留左侧空白格
+ * - 不足时右侧补到 MIN 格
+ * - 轴终点 ceil 到整格，最后一格与其它格等宽
+ * - contentEnd 保留真实内容终点，供 to now 文案
+ * - 格数最多 MAX（超限升档间隔）
  */
 export const computeGanttTimeRange = (
   bounds: { minTs: number; maxTs: number } | null,
@@ -68,44 +80,60 @@ export const computeGanttTimeRange = (
 ): GanttTimeRange => {
   if (!bounds) {
     const interval = 15 * 60
-    const end = nowSec
-    return { start: end - GANTT_MIN_COLUMNS * interval, end, interval }
+    const end = Math.ceil(nowSec / interval) * interval
+    const start = end - GANTT_MIN_COLUMNS * interval
+    return { start, end, interval, contentEnd: nowSec }
   }
 
-  let { minTs, maxTs } = bounds
-  if (maxTs <= minTs) maxTs = minTs + GANTT_MIN_COLUMNS * (2 * 60)
+  const { minTs } = bounds
+  let { maxTs } = bounds
+  if (maxTs < minTs) maxTs = minTs
+  const contentSpan = Math.max(maxTs - minTs, 0)
 
-  const span = Math.max(maxTs - minTs, 2 * 60)
-  let interval = pickTickInterval(span)
-  let start = Math.floor(minTs / interval) * interval
-  let end = Math.ceil(maxTs / interval) * interval
-  end = Math.max(end, start + interval)
-  let columns = (end - start) / interval
+  let interval = contentSpan < GANTT_MIN_TICK_SEC ? GANTT_MIN_TICK_SEC : pickTickInterval(Math.max(contentSpan, 1))
+  let contentStart = Math.floor(minTs / interval) * interval
+  let contentEnd = maxTs > contentStart ? maxTs : contentStart + 1
+  let end = contentEnd
+  let columns = (end - contentStart) / interval
 
   while (columns > GANTT_MAX_COLUMNS) {
     const next = GANTT_TICK_CANDIDATES_SEC.find((c) => c > interval)
     if (!next) break
     interval = next
-    start = Math.floor(minTs / interval) * interval
-    end = Math.ceil(maxTs / interval) * interval
-    end = Math.max(end, start + interval)
-    columns = (end - start) / interval
+    contentStart = Math.floor(minTs / interval) * interval
+    contentEnd = maxTs > contentStart ? maxTs : contentStart + 1
+    end = contentEnd
+    columns = (end - contentStart) / interval
   }
 
-  if (columns < GANTT_MIN_COLUMNS) {
-    end = start + GANTT_MIN_COLUMNS * interval
+  // 不足 MIN 格时只向右补
+  const minEnd = contentStart + GANTT_MIN_COLUMNS * interval
+  if (end < minEnd) end = minEnd
+
+  end = Math.ceil(end / interval) * interval
+  let start = contentStart
+
+  while ((end - start) / interval > GANTT_MAX_COLUMNS) {
+    const next = GANTT_TICK_CANDIDATES_SEC.find((c) => c > interval)
+    if (!next) break
+    interval = next
+    contentStart = Math.floor(minTs / interval) * interval
+    contentEnd = maxTs > contentStart ? maxTs : contentStart + 1
+    end = Math.max(contentEnd, contentStart + GANTT_MIN_COLUMNS * interval)
+    end = Math.ceil(end / interval) * interval
+    start = contentStart
   }
 
-  return { start, end, interval }
+  return { start, end, interval, contentEnd }
 }
 
-/** 格数 = (end - start) / interval */
+/** 格数 = (end - start) / interval（轴终点已对齐，一般为整数） */
 export const ganttColumnCount = (range: GanttTimeRange) => {
   if (!range.interval) return 0
   return (range.end - range.start) / range.interval
 }
 
-/** 由时间范围生成含起止的刻度列表 */
+/** 等宽刻度列表（含对齐后的起止） */
 export const buildGanttTicks = (range: GanttTimeRange): number[] => {
   const list: number[] = []
   if (!range.interval || range.end < range.start) return list
@@ -114,6 +142,13 @@ export const buildGanttTicks = (range: GanttTimeRange): number[] => {
   }
   return list
 }
+
+/** 时间戳是否带非零秒（后端返回了秒级精度） */
+export const hasNonZeroSeconds = (ts: number) => Number.isFinite(ts) && Math.floor(ts) % 60 !== 0
+
+/** 刻度时间文案：有秒则 HH:mm:ss，否则 HH:mm */
+export const formatGanttTickTime = (tick: number) =>
+  moment.unix(tick).format(hasNonZeroSeconds(tick) ? 'HH:mm:ss' : 'HH:mm')
 
 const isNonNegSec = (n?: number) => typeof n === 'number' && Number.isFinite(n) && n >= 0
 

@@ -183,6 +183,78 @@ describe('ChatMultiSessionController session api / dispatch', async () => {
     expect(ctrl.ensureSession('s-api').rawData.sessionTitle).toBe('T')
   })
 
+  it('A8: task_snapshot via structured NodeId 进入处理器写入详情', async () => {
+    const taskId = 'task-dispatch-1'
+    await ctrl.handleGrpcOutputEvent(
+      's-api',
+      makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          revision: 1,
+          snapshot: {
+            execution: { task_name: '分发任务', http_flow_count: 2 },
+            perception: { summary: '分发感知', last_update_at: 1 },
+          },
+          todo: {
+            items: [{ id: 'todo-1', status: 'PENDING', content: '分发待办', scope_task_id: taskId }],
+          },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    )
+    const detail = ctrl.ensureSession('s-api').rawData.taskDetailsMap.get(taskId)
+    expect(detail?.execution?.task_name).toBe('分发任务')
+    expect(detail?.perception?.summary).toBe('分发感知')
+    expect(detail?.todoList?.items?.[0]?.content).toBe('分发待办')
+  })
+
+  it('A8: 入口分发后旧 task_snapshot 不覆盖新详情', async () => {
+    const taskId = 'task-stale-dispatch'
+    const sessionId = 's-api'
+    await ctrl.handleGrpcOutputEvent(
+      sessionId,
+      makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          revision: 5,
+          snapshot: {
+            execution: { task_name: '新详情', http_flow_count: 8 },
+            perception: { summary: '新感知', last_update_at: 5 },
+          },
+          todo: {
+            items: [{ id: 'todo-new', status: 'DOING', content: '新待办', scope_task_id: taskId }],
+          },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    )
+    await ctrl.handleGrpcOutputEvent(
+      sessionId,
+      makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          revision: 3,
+          snapshot: {
+            execution: { task_name: '旧详情', http_flow_count: 1 },
+            perception: { summary: '旧感知', last_update_at: 1 },
+          },
+          todo: {
+            items: [{ id: 'todo-old', status: 'PENDING', content: '旧待办', scope_task_id: taskId }],
+          },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    )
+    const detail = ctrl.ensureSession(sessionId).rawData.taskDetailsMap.get(taskId)
+    expect(detail?.execution?.task_name).toBe('新详情')
+    expect(detail?.perception?.summary).toBe('新感知')
+    expect(detail?.todoList?.items?.[0]?.content).toBe('新待办')
+    expect(detail?.taskSnapshotRevision).toBe(5)
+  })
+
   it('A9: pushDataToSession / closeChatReview / updateToolResult', async () => {
     const { store, rawData } = ctrl.ensureSession('s-api')
     const data = {
