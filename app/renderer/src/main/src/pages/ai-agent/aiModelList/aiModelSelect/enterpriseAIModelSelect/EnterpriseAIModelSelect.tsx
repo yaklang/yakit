@@ -12,6 +12,7 @@ import type { AIModelSelectProps } from '../AIModelSelectType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import {
+  type AIGlobalConfig,
   type AIModelConfig,
   type AIModelTypeFileName,
   getModelName,
@@ -36,7 +37,7 @@ import {
   PencilAltOutlined,
   RefreshOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { cloneDeep, isEqual, isNil } from 'lodash'
+import { cloneDeep, isEqual, isNil, omit } from 'lodash'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
@@ -48,6 +49,58 @@ import { createPortal } from 'react-dom'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 
+const modelConfigKeys = ['IntelligentModels', 'LightweightModels', 'VisionModels'] as const
+type ModelDraftTarget = { current: AIModelConfig }
+type ModelDraftTargets = Record<AIModelTypeFileName, ModelDraftTarget[]>
+type ModelDraftSave = {
+  config: AIGlobalConfig
+  targets: ModelDraftTargets
+  previous: Map<ModelDraftTarget, AIModelConfig>
+  failed: boolean
+}
+const isSameModel = (a: AIModelConfig, b: AIModelConfig) =>
+  a.ProviderId === b.ProviderId && a.ModelName === b.ModelName && !!a.IsOnline === !!b.IsOnline
+
+// 只接受双向唯一的对应关系；探测字段和其他配置变更不作为永久身份。
+const matchModelTargets = (
+  models: AIModelConfig[],
+  targets: ModelDraftTarget[],
+  saves: ModelDraftSave[],
+  key: AIModelTypeFileName,
+) => {
+  const matched = new Map<ModelDraftTarget, number>()
+  const snapshots = targets.map((target) => [
+    target.current,
+    ...saves.flatMap((save) => {
+      const previous = save.previous.get(target)
+      const index = save.targets[key].indexOf(target)
+      return previous && index >= 0 ? [previous, save.config[key][index]] : []
+    }),
+  ])
+  for (const compare of [
+    (a: AIModelConfig, b: AIModelConfig) =>
+      isEqual(omit(a, ['EffortProbed', 'ProbedExtendedEfforts']), omit(b, ['EffortProbed', 'ProbedExtendedEfforts'])),
+    isSameModel,
+  ]) {
+    const candidates = targets.map((target, targetIndex) =>
+      matched.has(target)
+        ? []
+        : models.flatMap((model, index) =>
+            ![...matched.values()].includes(index) &&
+            snapshots[targetIndex].some((snapshot) => compare(model, snapshot))
+              ? [index]
+              : [],
+          ),
+    )
+    candidates.forEach((indices, targetIndex) => {
+      if (indices.length === 1 && candidates.filter((other) => other.includes(indices[0])).length === 1) {
+        matched.set(targets[targetIndex], indices[0])
+      }
+    })
+  }
+  return matched
+}
+
 export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { isOpen = true, mountContainer, className } = props
@@ -55,11 +108,14 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
 
   const [{ aiGlobalConfig, queryLoading }, event] = useAIGlobalConfig()
   const [aiDraftConfig, setAIDraftConfig] = useState(() => cloneDeep(aiGlobalConfig))
+  const draftTargetsRef = useRef(new WeakMap<AIModelConfig, ModelDraftTarget>())
+  const sourceTargetsRef = useRef<ModelDraftTargets>({ IntelligentModels: [], LightweightModels: [], VisionModels: [] })
+  const submittedSavesRef = useRef<ModelDraftSave[]>([])
   const pendingEditsRef = useRef<
     Array<
       {
         fileName: AIModelTypeFileName
-        model: Pick<AIModelConfig, 'ProviderId' | 'ModelName' | 'IsOnline'>
+        target: ModelDraftTarget
       } & ({ type: 'select' } | { type: 'rename'; modelName: string })
     >
   >([])
@@ -67,18 +123,35 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
   useEffect(() => {
     // 只在最新配置上重放尚未提交的操作，避免旧草稿带回已回滚的字段。
     const next = cloneDeep(aiGlobalConfig)
+    const resolved = new Map<ModelDraftTarget, AIModelConfig>()
+    const ownSave = submittedSavesRef.current.findLast((save) => isEqual(save.config, aiGlobalConfig))
+    for (const key of modelConfigKeys) {
+      // 自己提交的乐观快照已有明确的条目顺序，无需重新按名称识别。
+      const matched = ownSave
+        ? new Map(
+            ownSave.targets[key].flatMap((target, index) =>
+              sourceTargetsRef.current[key].includes(target) ? [[target, index] as const] : [],
+            ),
+          )
+        : matchModelTargets(aiGlobalConfig[key], sourceTargetsRef.current[key], submittedSavesRef.current, key)
+      const targets = next[key].map((model, index) => {
+        const target = [...matched].find(([, matchedIndex]) => matchedIndex === index)?.[0] || {
+          current: aiGlobalConfig[key][index],
+        }
+        target.current = aiGlobalConfig[key][index]
+        resolved.set(target, model)
+        draftTargetsRef.current.set(model, target)
+        return target
+      })
+      sourceTargetsRef.current[key] = targets
+    }
+    // 删除或无法唯一识别的条目不能把旧操作应用到后来新增的同名模型上。
+    pendingEditsRef.current = pendingEditsRef.current.filter((edit) => resolved.has(edit.target))
     for (const edit of pendingEditsRef.current) {
       const list = next[edit.fileName]
-      const index = list.findIndex(
-        (item) =>
-          item.ProviderId === edit.model.ProviderId &&
-          item.ModelName === edit.model.ModelName &&
-          !!item.IsOnline === !!edit.model.IsOnline,
-      )
-      if (index < 0) continue
-      const model = list[index]
+      const model = resolved.get(edit.target)!
       if (edit.type === 'select') {
-        list.splice(index, 1)
+        list.splice(list.indexOf(model), 1)
         list.unshift(model)
       } else if (model.ModelName !== edit.modelName) {
         model.ModelName = edit.modelName
@@ -86,6 +159,22 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
         delete model.ProbedExtendedEfforts
       }
     }
+    const rolledBackTargets = new Set(
+      submittedSavesRef.current.flatMap((save) =>
+        save.failed
+          ? [...save.previous]
+              .filter(([target, previous]) => isSameModel(target.current, previous))
+              .map(([target]) => target)
+          : [],
+      ),
+    )
+    submittedSavesRef.current = submittedSavesRef.current.filter((save) => {
+      for (const target of save.previous.keys()) {
+        if (!resolved.has(target) || (save.failed && rolledBackTargets.has(target))) save.previous.delete(target)
+      }
+      // 保存拒绝时回读尚未落地，回到任一前态后释放该条目的整条失败改名链。
+      return !save.failed || save.previous.size > 0
+    })
     setAIDraftConfig(next)
   }, [aiGlobalConfig])
   const [onlineLoading, setOnlineLoading] = useState<boolean>(false)
@@ -152,7 +241,29 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
    * */
   const onSetAI = useMemoizedFn(() => {
     if (intelligentModels.length === 0) return
-    event.setAIGlobalConfig(cloneDeep(aiDraftConfig)).catch(() => undefined)
+    const save: ModelDraftSave = {
+      config: cloneDeep(aiDraftConfig),
+      targets: { IntelligentModels: [], LightweightModels: [], VisionModels: [] },
+      previous: new Map(),
+      failed: false,
+    }
+    for (const key of modelConfigKeys) {
+      save.targets[key] = aiDraftConfig[key].map((model) => {
+        const target = draftTargetsRef.current.get(model)!
+        if (target.current.ModelName !== model.ModelName) save.previous.set(target, target.current)
+        return target
+      })
+    }
+    submittedSavesRef.current.push(save)
+    event
+      .setAIGlobalConfig(save.config)
+      .then(() => {
+        const index = submittedSavesRef.current.indexOf(save)
+        if (index >= 0) submittedSavesRef.current.splice(0, index + 1)
+      })
+      .catch(() => {
+        save.failed = true
+      })
   })
 
   const isHaveData = useCreation(() => {
@@ -226,7 +337,9 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
       },
     ) => {
       const { fileName, index } = options
-      pendingEditsRef.current.push({ type: 'select', fileName, model: item })
+      const target = draftTargetsRef.current.get(item)
+      if (!target) return
+      pendingEditsRef.current.push({ type: 'select', fileName, target })
       setAIDraftConfig((old) => {
         const newList = [...old[fileName]]
         newList.splice(index, 1)
@@ -249,13 +362,16 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
       const { fileName, index } = options
       const originalModel = aiDraftConfig[fileName][index]
       if (!originalModel) return
-      pendingEditsRef.current.push({ type: 'rename', fileName, model: originalModel, modelName: item.ModelName })
+      const target = draftTargetsRef.current.get(originalModel)
+      if (!target) return
+      pendingEditsRef.current.push({ type: 'rename', fileName, target, modelName: item.ModelName })
       setAIDraftConfig((old) => {
         const newList = [...old[fileName]]
         // 浮层持有的 item 可能已过时，只应用名称修改；新名称需要重新探测。
         const currentModel = newList[index]
         if (!currentModel) return old
         const model = { ...currentModel, ModelName: item.ModelName }
+        draftTargetsRef.current.set(model, target)
         if (model.ModelName !== currentModel.ModelName) {
           delete model.EffortProbed
           delete model.ProbedExtendedEfforts

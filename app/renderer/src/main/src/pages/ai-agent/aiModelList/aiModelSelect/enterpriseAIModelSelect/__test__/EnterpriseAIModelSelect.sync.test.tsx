@@ -140,6 +140,302 @@ afterEach(() => {
 })
 
 describe('EnterpriseAIModelSelect real config hook/store synchronization', () => {
+  it('连续两次改名保存均失败后释放旧名称关系，新增旧同名条目不会丢失第三次改名', async () => {
+    const initial = configA()
+    await mount()
+    const firstSave = deferred<void>()
+    const secondSave = deferred<void>()
+    const recovery = deferred<AIGlobalConfig>()
+    mocks.save.mockReturnValueOnce(firstSave.promise).mockReturnValueOnce(secondSave.promise)
+    mocks.get.mockReturnValueOnce(recovery.promise)
+    const names = ['model-renamed', 'model-renamed-again', 'model-final']
+    for (const [index, name] of names.entries()) {
+      mocks.names.mockResolvedValue({ ModelName: [name] })
+      toggle('open')
+      fireEvent.mouseEnter(
+        within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[0],
+      )
+      await flush()
+      fireEvent.click(screen.getByText(name))
+      if (index < names.length - 1) {
+        toggle('close')
+        await flush()
+      }
+    }
+    await act(async () => firstSave.reject(new Error('first save failed')))
+    await flush()
+    await act(async () => secondSave.reject(new Error('second save failed')))
+    await flush()
+    await act(async () => recovery.resolve(initial))
+    await flush()
+    const latest = structuredClone(initial)
+    latest.IntelligentModels.push({ ...initial.IntelligentModels[0], ModelName: 'model-renamed' })
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(latest))
+    toggle('close')
+    await flush()
+
+    expect(mocks.save).toHaveBeenCalledTimes(3)
+    expect(mocks.save.mock.calls[2][0]).toEqual({
+      ...latest,
+      IntelligentModels: [
+        { ...latest.IntelligentModels[0], ModelName: 'model-final' },
+        ...latest.IntelligentModels.slice(1),
+      ],
+    })
+  })
+
+  it('同一行连续改名时首次保存成功，第二次保存完整配置保留最终名称', async () => {
+    const initial = configA()
+    await mount()
+    const save = deferred<void>()
+    mocks.save.mockReturnValueOnce(save.promise)
+    toggle('open')
+    fireEvent.mouseEnter(
+      within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[0],
+    )
+    await flush()
+    fireEvent.click(screen.getByText('model-renamed'))
+    toggle('close')
+    await flush()
+    expect(mocks.save.mock.calls[0][0]).toEqual({
+      ...initial,
+      IntelligentModels: [
+        { ...initial.IntelligentModels[0], ModelName: 'model-renamed' },
+        ...initial.IntelligentModels.slice(1),
+      ],
+    })
+
+    mocks.names.mockResolvedValue({ ModelName: ['model-renamed-again'] })
+    toggle('open')
+    fireEvent.mouseEnter(
+      within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[0],
+    )
+    await flush()
+    fireEvent.click(screen.getByText('model-renamed-again'))
+    await act(async () => save.resolve())
+    await flush()
+    toggle('close')
+    await flush()
+
+    expect(mocks.save).toHaveBeenCalledTimes(2)
+    expect(mocks.save.mock.calls[1][0]).toEqual({
+      ...initial,
+      IntelligentModels: [
+        { ...initial.IntelligentModels[0], ModelName: 'model-renamed-again' },
+        ...initial.IntelligentModels.slice(1),
+      ],
+    })
+  })
+
+  it('首次重名保存成功时，重新打开编辑原同名条目仍保留正确的完整配置', async () => {
+    const initial = configA()
+    initial.IntelligentModels.forEach((model, index) => {
+      model.ProviderId = 'shared-provider'
+      model.ExtraParams = [{ Key: 'entry', Value: String(index) }]
+    })
+    initial.IntelligentModels[0].Provider.ReasoningEffort = 'low'
+    initial.IntelligentModels[1].Provider.ReasoningEffort = 'high'
+    mocks.get.mockResolvedValue(initial)
+    mocks.names.mockResolvedValue({ ModelName: ['model-b'] })
+    useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
+    await mount()
+    const save = deferred<void>()
+    mocks.save.mockReturnValueOnce(save.promise)
+    toggle('open')
+    fireEvent.mouseEnter(
+      within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[0],
+    )
+    await flush()
+    fireEvent.click(
+      screen
+        .getAllByText('model-b')
+        .find((element) => !screen.getByRole('region', { name: 'models' }).contains(element))!,
+    )
+    toggle('close')
+    await flush()
+    const firstSave = {
+      ...initial,
+      IntelligentModels: [
+        { ...initial.IntelligentModels[0], ModelName: 'model-b' },
+        ...initial.IntelligentModels.slice(1),
+      ],
+    }
+    expect(mocks.save.mock.calls[0][0]).toEqual(firstSave)
+
+    mocks.names.mockResolvedValue({ ModelName: ['model-renamed-again'] })
+    toggle('open')
+    fireEvent.mouseEnter(
+      within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[1],
+    )
+    await flush()
+    fireEvent.click(screen.getByText('model-renamed-again'))
+    select('model-renamed-again')
+    await act(async () => save.resolve())
+    await flush()
+    const latest = structuredClone(firstSave)
+    latest.IntelligentModels[0].EffortProbed = true
+    latest.IntelligentModels[0].ProbedExtendedEfforts = ['max']
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(latest))
+    toggle('close')
+    await flush()
+
+    expect(mocks.save).toHaveBeenCalledTimes(2)
+    expect(mocks.save.mock.calls[1][0]).toEqual({
+      ...latest,
+      IntelligentModels: [
+        { ...latest.IntelligentModels[1], ModelName: 'model-renamed-again' },
+        latest.IntelligentModels[0],
+        latest.IntelligentModels[2],
+      ],
+    })
+  })
+
+  it('待编辑模型被删除后新增同名模型，不重放已删除条目的改名和选择', async () => {
+    const initial = configA()
+    await mount()
+    toggle('open')
+    fireEvent.mouseEnter(
+      within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[1],
+    )
+    await flush()
+    fireEvent.click(screen.getByText('model-renamed'))
+    select('model-renamed')
+    const removed = { ...initial, IntelligentModels: [initial.IntelligentModels[0], initial.IntelligentModels[2]] }
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(removed))
+    const latest = structuredClone(initial)
+    latest.IntelligentModels[1].Provider.ReasoningEffort = 'high'
+    latest.IntelligentModels[1].ExtraParams = [{ Key: 'entry', Value: 'new-model' }]
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(latest))
+    toggle('close')
+    await flush()
+
+    expect(mocks.save).not.toHaveBeenCalled()
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(latest)
+    expectModel('model-a')
+  })
+
+  it('初始同厂商同名条目按配置区分，选择第二条后探测更新仍保存该条目', async () => {
+    const initial = configA()
+    initial.IntelligentModels.forEach((model, index) => {
+      model.ProviderId = 'shared-provider'
+      model.ExtraParams = [{ Key: 'entry', Value: String(index) }]
+    })
+    initial.IntelligentModels[1].ModelName = 'model-a'
+    initial.IntelligentModels[0].Provider.ReasoningEffort = 'low'
+    initial.IntelligentModels[1].Provider.ReasoningEffort = 'high'
+    mocks.get.mockResolvedValue(initial)
+    useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
+    await mount()
+    toggle('open')
+    fireEvent.click(within(screen.getByRole('region', { name: 'models' })).getAllByText('model-a')[1])
+    const latest = structuredClone(initial)
+    latest.IntelligentModels[1].EffortProbed = true
+    latest.IntelligentModels[1].ProbedExtendedEfforts = ['max']
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(latest))
+    toggle('close')
+    await flush()
+
+    expect(mocks.save).toHaveBeenCalledTimes(1)
+    expect(mocks.save.mock.calls[0][0]).toEqual({
+      ...latest,
+      IntelligentModels: [latest.IntelligentModels[1], latest.IntelligentModels[0], latest.IntelligentModels[2]],
+    })
+  })
+
+  it.each([1, 2])('同厂商改成已有名称后选择原条目，后台更新 %s 次仍保存正确条目和完整字段', async (updates) => {
+    const initial = configA()
+    initial.IntelligentModels.forEach((model, index) => {
+      model.ProviderId = 'shared-provider'
+      model.ExtraParams = [{ Key: 'entry', Value: String(index) }]
+    })
+    initial.IntelligentModels[0].Provider.ReasoningEffort = 'low'
+    initial.IntelligentModels[1].Provider.ReasoningEffort = 'high'
+    mocks.get.mockResolvedValue(initial)
+    mocks.names.mockResolvedValue({ ModelName: ['model-b'] })
+    useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
+    await mount()
+    toggle('open')
+    fireEvent.mouseEnter(
+      within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[0],
+    )
+    await flush()
+    // 名称选项在 portal 中，主列表中的同名项仍是第二行。
+    fireEvent.click(
+      screen
+        .getAllByText('model-b')
+        .find((element) => !screen.getByRole('region', { name: 'models' }).contains(element))!,
+    )
+    fireEvent.click(within(screen.getByRole('region', { name: 'models' })).getAllByText('model-b')[1])
+
+    let latest = structuredClone(initial)
+    for (let index = 0; index < updates; index++) {
+      latest = structuredClone(initial)
+      latest.IntelligentModels[1].EffortProbed = true
+      latest.IntelligentModels[1].ProbedExtendedEfforts = index === 0 ? ['xhigh'] : ['max']
+      act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(latest))
+    }
+    toggle('close')
+    await flush()
+
+    expect(mocks.save).toHaveBeenCalledTimes(1)
+    expect(mocks.save.mock.calls[0][0]).toEqual({
+      ...latest,
+      IntelligentModels: [
+        latest.IntelligentModels[1],
+        { ...latest.IntelligentModels[0], ModelName: 'model-b' },
+        latest.IntelligentModels[2],
+      ],
+    })
+  })
+
+  it.each([false, true])('连续改名跨首次保存失败回读，保留第二次名称及完整字段（同厂商：%s）', async (sameProvider) => {
+    const initial = configA()
+    if (sameProvider)
+      initial.IntelligentModels.forEach((model) => {
+        model.ProviderId = 'shared-provider'
+      })
+    initial.IntelligentModels[0].Provider.ReasoningEffort = 'low'
+    initial.IntelligentModels[0].ExtraParams = [{ Key: 'entry', Value: 'original-a' }]
+    mocks.get.mockResolvedValue(initial)
+    useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
+    await mount()
+    const save = deferred<void>()
+    const recovery = deferred<AIGlobalConfig>()
+    mocks.save.mockReturnValueOnce(save.promise)
+    mocks.get.mockReturnValueOnce(recovery.promise)
+    toggle('open')
+    fireEvent.mouseEnter(
+      within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[0],
+    )
+    await flush()
+    fireEvent.click(screen.getByText('model-renamed'))
+    toggle('close')
+    await flush()
+
+    mocks.names.mockResolvedValue({ ModelName: ['model-renamed-again'] })
+    toggle('open')
+    fireEvent.mouseEnter(
+      within(screen.getByRole('region', { name: 'models' })).getAllByRole('button', { name: 'YakitButton.edit' })[0],
+    )
+    await flush()
+    fireEvent.click(screen.getByText('model-renamed-again'))
+    await act(async () => save.reject(new Error('save failed')))
+    await flush()
+    await act(async () => recovery.resolve(initial))
+    await flush()
+    toggle('close')
+    await flush()
+
+    expect(mocks.save).toHaveBeenCalledTimes(2)
+    expect(mocks.save.mock.calls[1][0]).toEqual({
+      ...initial,
+      IntelligentModels: [
+        { ...initial.IntelligentModels[0], ModelName: 'model-renamed-again' },
+        ...initial.IntelligentModels.slice(1),
+      ],
+    })
+  })
+
   it.each([false, true])(
     '思考强度延迟保存失败后，新选择和改名保留且完整配置使用回读值（同厂商：%s）',
     async (sameProvider) => {
