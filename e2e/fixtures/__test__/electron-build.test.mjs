@@ -271,6 +271,80 @@ describe('Electron bundle contract', () => {
     expect(Array.from(handlers.get('listening-port-query-addrs')())).toEqual(['127.0.0.1:9002'])
   })
 
+  it.each([
+    ['development', 'mitm'],
+    ['production', 'mitm'],
+    ['development', 'mitmV2'],
+    ['production', 'mitmV2'],
+  ])('stops active MITM streams in the strict %s bundle for %s', async (mode, name) => {
+    const result = await build({
+      ...codeOptions(mode),
+      entryPoints: [`app/main/handlers/${name}.js`],
+      outfile: path.join(temporary, `${name}-${mode}.cjs`),
+      tsconfig: path.join(repoRoot, 'tsconfig.electron.json'),
+      external: ['*'],
+      write: false,
+    })
+    const source = result.outputFiles.find((file) => file.path.endsWith('.cjs')).text
+    expect(source).toMatch(/^["']use strict["']/)
+
+    const handlers = new Map()
+    const stream = Object.assign(new EventEmitter(), {
+      write: vi.fn((_message, callback) => callback?.()),
+      // Do not emit end/error here: stop must clear state without waiting for gRPC events.
+      cancel: vi.fn(),
+    })
+    const send = vi.fn()
+    const context = {
+      module: { exports: {} },
+      setTimeout,
+      clearTimeout,
+      require: (id) => {
+        if (id === 'electron') return { ipcMain: { handle: (channel, callback) => handlers.set(channel, callback) } }
+        if (id === 'dns') return {}
+        if (id === '../logFile') return { engineLogOutputFile: vi.fn(), getFormattedDateTime: vi.fn() }
+        if (id === './mitmV2LargeRequestUpload') return { createMITMV2ReplacementUploadController: () => ({}) }
+        if (id === './handleStreamWithContext') return { cancelHandler: () => vi.fn() }
+        throw new Error(`Unexpected module: ${id}`)
+      },
+    }
+    vm.runInNewContext(source, context)
+    const openStream = vi.fn(() => stream)
+    context.module.exports({ webContents: { send } }, () => ({ MITM: openStream, MITMV2: openStream }))
+    const start = handlers.get(`${name}-start-call`)
+    const stop = handlers.get(`${name}-stop-call`)
+    const state = handlers.get(`${name}-have-current-stream`)
+
+    expect(() => stop()).not.toThrow()
+    expect(stream.cancel).not.toHaveBeenCalled()
+    const params =
+      name === 'mitm'
+        ? { host: '127.0.0.1', port: 8080, downstreamProxy: 'http://127.0.0.1:8081', extra: {} }
+        : {
+            Host: '127.0.0.1',
+            Port: 8080,
+            DownstreamProxy: 'http://127.0.0.1:8081',
+            DownstreamProxyRuleId: 'rule',
+            extra: {},
+          }
+    await start({}, params)
+    expect(openStream).toHaveBeenCalledTimes(1)
+    expect(stream.write).toHaveBeenCalledTimes(1)
+    expect(state()).toMatchObject({ haveStream: true, downstreamProxy: 'http://127.0.0.1:8081' })
+    send.mockClear()
+
+    expect(() => stop()).not.toThrow()
+    expect(stream.cancel).toHaveBeenCalledTimes(1)
+    expect(state().haveStream).toBe(false)
+    expect(Object.hasOwn(context, 'mitmClient')).toBe(false)
+    if (name === 'mitmV2') {
+      expect(state()).toMatchObject({ downstreamProxy: '', downstreamProxyRuleId: '' })
+      expect(send).toHaveBeenCalledExactlyOnceWith('client-mitmV2-pipeline-stats', null)
+    }
+    expect(() => stop()).not.toThrow()
+    expect(stream.cancel).toHaveBeenCalledTimes(1)
+  })
+
   it.each(['main', 'engine-link', 'screenshots'])(
     'runs %s preload with only the sandbox Electron bridge',
     async (name) => {
