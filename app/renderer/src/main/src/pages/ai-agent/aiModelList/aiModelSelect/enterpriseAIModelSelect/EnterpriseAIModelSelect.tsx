@@ -436,7 +436,10 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
                         type="text2"
                         icon={<RefreshOutlined color="currentColor" />}
                         loading={onlineLoading || queryLoading}
-                        onClick={() => onRefreshAvailableAIModelList()}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onRefreshAvailableAIModelList()
+                        }}
                       />
                     </Tooltip>
                   </div>
