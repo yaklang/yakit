@@ -53,7 +53,7 @@ const automationReset: Partial<AIAgentSetting> = {
 }
 
 const resourcesReset: Partial<AIAgentSetting> = {
-  TimelineContentSizeLimit: AIAgentSettingDefault.TimelineContentSizeLimit,
+  RuntimeContextSizeLimit: AIAgentSettingDefault.RuntimeContextSizeLimit,
   AICallTokenLimit: AIAgentSettingDefault.AICallTokenLimit,
   UserInteractLimit: AIAgentSettingDefault.UserInteractLimit,
 }
@@ -354,14 +354,14 @@ export const AIConfigSettings: React.FC = () => {
           />
         </div>
         <div className={styles['list-panel']}>
-          <SettingRow title={t('AIChatSetting.timelineContentSize')}>
+          <SettingRow title={t('AIChatSetting.runtimeContextSize')} desc={t('AIChatSetting.runtimeContextSizeDesc')}>
             <YakitInput
               wrapperClassName={classNames(styles['compact-input'], styles['input-suffix'])}
               suffix="KB"
-              value={`${setting.TimelineContentSizeLimit ?? ''}`}
+              value={`${setting.RuntimeContextSizeLimit || ''}`}
               onChange={(e) => {
                 const value = digitsOnly(e.target.value)
-                apply({ TimelineContentSizeLimit: value === '' ? 0 : Number(value) })
+                apply({ RuntimeContextSizeLimit: value === '' ? 0 : Number(value) })
               }}
             />
           </SettingRow>

@@ -9,6 +9,7 @@ import {
   type AIInputEvent,
   type AIOutputEvent,
   type AIStartParams,
+  withServerRuntimeContextLimit,
 } from './grpcApi'
 import { createChatStore } from './chatStore'
 import { createStore } from 'zustand/vanilla'
@@ -1170,8 +1171,10 @@ export class ChatMultiSessionController {
     // 清理本次启动参数，避免修改调用方保留的重试入参。
     const startParams = cloneDeep(params)
     startParams.IsStart = true
-    startParams.Params = { ...startParams.Params }
-    startParams.Params.TimelineSessionID = sessionId
+    startParams.Params = withServerRuntimeContextLimit({
+      ...startParams.Params,
+      TimelineSessionID: sessionId,
+    })
     if (kind === 'new') {
       // 新建使用前端的新 ID，不继承历史缓存配置。
       startParams.Params.Attach = false
