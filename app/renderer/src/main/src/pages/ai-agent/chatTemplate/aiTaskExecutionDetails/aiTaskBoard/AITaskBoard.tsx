@@ -159,7 +159,13 @@ export const AITaskBoard: React.FC<AITaskBoardProps> = React.memo(({ columns, cl
       {columns.map((column) => (
         <div key={column.key} className={styles['todo-list-wrapper']}>
           <div className={styles['todo-list-header']}>
-            <span className={styles['todo-column-icon']}>{column.icon}</span>
+            <span
+              className={classNames(styles['todo-column-icon'], {
+                [styles['todo-column-icon-spin']]: column.key === 'doing' && column.items.length > 0,
+              })}
+            >
+              {column.icon}
+            </span>
             <span className={styles['todo-title']}>{column.title}</span>
             <YakitTag border={false} fullRadius size="small">
               {column.items.length}

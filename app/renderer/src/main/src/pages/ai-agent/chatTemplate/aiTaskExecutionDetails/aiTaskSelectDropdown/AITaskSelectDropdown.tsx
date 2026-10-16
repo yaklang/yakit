@@ -138,7 +138,7 @@ export const AITaskSelectDropdown: React.FC<AITaskSelectDropdownProps> = React.m
         aria-label={t('AITaskExecutionDetails.selectTask')}
       >
         <span className={styles['header-task-select-label']}>{currentTaskLabel}</span>
-        <ChevronDownOutlined className={styles['header-task-select-icon']} color="currentColor" />
+        <ChevronDownOutlined className={styles['header-task-select-icon']} color="currentColor" size={14} />
       </div>
     </YakitDropdownMenu>
   )

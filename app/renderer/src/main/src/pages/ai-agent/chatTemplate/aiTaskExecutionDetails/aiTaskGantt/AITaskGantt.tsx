@@ -154,7 +154,7 @@ export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(
                       />
                     )
                   })}
-                  {ticks.map((tick) => (
+                  {ticks.slice(1, -1).map((tick) => (
                     <div
                       key={`grid-${tick}`}
                       className={styles['timeline-grid-line']}
