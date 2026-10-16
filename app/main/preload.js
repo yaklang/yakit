@@ -169,7 +169,13 @@ process.on('loaded', function () {
     },
     managedBrowser: {
       list: () => invoke('ListManagedBrowserProfiles'),
-      listYTrayHistory: () => invoke('ListYTrayBrowserHistory'),
+      listYTrayHistory: async () => {
+        const result = await invoke('ListYTrayBrowserHistory')
+        if (!result.ok) {
+          throw new Error(`Error invoking remote method 'ListYTrayBrowserHistory': Error: ${result.error}`)
+        }
+        return result.history
+      },
       claimYTrayApproval: (id, requestId) => invoke('ClaimYTrayLaunchApproval', { id, requestId }),
       restoreYTray: (id) => invoke('RestoreYTrayBrowserInstance', { id }),
     },

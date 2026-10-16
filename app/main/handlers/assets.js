@@ -1,3 +1,4 @@
+const { appResourcePath, preloadPath } = require('../runtimePaths')
 const { ipcMain, BrowserWindow } = require('electron')
 const isDev = require('electron-is-dev')
 const { getHtmlTemplateDir } = require('../filePath')
@@ -1048,7 +1049,7 @@ td {
         width: 794,
         height: 1800,
         webPreferences: {
-          preload: path.join(__dirname, '../preload.js'),
+          preload: preloadPath('main'),
           nodeIntegration: true,
           contextIsolation: false,
           sandbox: true,
@@ -1059,7 +1060,7 @@ td {
       if (isDev) {
         await printWin.loadURL(`http://127.0.0.1:3000/?${search}`)
       } else {
-        await printWin.loadFile(path.resolve(__dirname, '../../renderer/pages/main/index.html'), { search })
+        await printWin.loadFile(appResourcePath('renderer', 'pages', 'main', 'index.html'), { search })
       }
 
       await readyPromise

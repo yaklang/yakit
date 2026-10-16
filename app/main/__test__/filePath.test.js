@@ -21,7 +21,8 @@ const loadFilePath = (electronApp, env = {}) => {
     console: { log: vi.fn() },
     require: (id) => {
       if (id === 'electron') return { app: electronApp }
-      if (id === 'electron-is-dev') return false
+      if (id === './runtimePaths')
+        return { appRootPath: (...parts) => path.join(electronApp.resourceRoot || '/application', ...parts) }
       if (id === 'os') return { homedir: () => '/home/yakit-test', platform: () => 'linux' }
       if (id === 'path') return path
       if (id === 'process') return { platform: 'win32', env }
@@ -34,6 +35,30 @@ const loadFilePath = (electronApp, env = {}) => {
 }
 
 describe('getYakitInstallDir', () => {
+  it('resolves unpackaged resources from the application root when running a compiled entry', () => {
+    const paths = loadFilePath({ getName: () => 'yakit', isPackaged: false })
+    expect(paths.loadExtraFilePath('bins/flag.txt')).toBe(path.join('/application', 'bins/flag.txt'))
+  })
+
+  it('resolves extraFiles outside an ASAR launched by stock Electron', () => {
+    const paths = loadFilePath({
+      getName: () => 'yakit',
+      isPackaged: false,
+      resourceRoot: '/install/resources/app.asar',
+      getAppPath: () => '/install/resources/app.asar',
+    })
+    expect(paths.loadExtraFilePath('bins/flag.txt')).toBe(path.join('/install', 'bins/flag.txt'))
+  })
+
+  it('preserves the packaged extraFiles location', () => {
+    const paths = loadFilePath({
+      getName: () => 'yakit',
+      isPackaged: true,
+      getAppPath: () => '/install/resources/app.asar',
+    })
+    expect(paths.loadExtraFilePath('bins/flag.txt')).toBe(path.join('/install', 'bins/flag.txt'))
+  })
+
   it('isolates E2E config from the real ~/.yakit profile', () => {
     const app = { isPackaged: false, getPath: () => '/isolated/user-data', getName: () => 'yakit' }
     const isolated = loadFilePath(app, { YAKIT_E2E: '1' })

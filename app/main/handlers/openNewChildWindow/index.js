@@ -1,6 +1,6 @@
+const { appResourcePath, preloadPath, resourcePath } = require('../../runtimePaths')
 const { ipcMain, BrowserWindow } = require('electron')
 const isDev = require('electron-is-dev')
-const path = require('path')
 const crypto = require('crypto')
 
 module.exports = {
@@ -99,7 +99,7 @@ module.exports = {
         minHeight: 500,
         titleBarStyle: 'hidden', // 确保 macOS 有标题栏按钮
         webPreferences: {
-          preload: path.join(__dirname, '../../preload.js'),
+          preload: preloadPath('main'),
           nodeIntegration: true,
           contextIsolation: false,
           sandbox: true,
@@ -116,7 +116,7 @@ module.exports = {
       childWindow.setMenu(null)
 
       // 先加载loading页面
-      childWindow.loadFile(path.join(__dirname, './index.html'))
+      childWindow.loadFile(resourcePath('child-window', 'index.html'))
 
       ipcMain.once('ready-to-load-child', () => {
         // 通知 loading.html 显示“正在加载主页面...”
@@ -124,7 +124,7 @@ module.exports = {
         if (isDev) {
           childWindow.loadURL('http://127.0.0.1:3000/?window=child')
         } else {
-          childWindow.loadFile(path.resolve(__dirname, '../../../renderer/pages/main/index.html'), {
+          childWindow.loadFile(appResourcePath('renderer', 'pages', 'main', 'index.html'), {
             search: 'window=child',
           })
         }
