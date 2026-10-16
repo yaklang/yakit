@@ -6,9 +6,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import vm from 'node:vm'
 
-const loadIndex = (platform) => {
+const loadIndex = (platform, opts = {}) => {
   const timers = []
   const ipcHandlers = new Map()
+  const focusedWindow = opts.focusedWindow ?? null
   const calls = {
     appExit: vi.fn(),
     recoveryStop: vi.fn(),
@@ -41,7 +42,7 @@ const loadIndex = (platform) => {
       getPath: vi.fn(),
       setPath: vi.fn(),
     },
-    BrowserWindow: { getFocusedWindow: () => null, getAllWindows: () => [] },
+    BrowserWindow: { getFocusedWindow: () => focusedWindow, getAllWindows: () => [] },
     dialog: { showMessageBox: vi.fn(), showErrorBox: vi.fn() },
     nativeImage: { createFromPath: vi.fn() },
     globalShortcut: { register: vi.fn(), unregister: vi.fn() },
@@ -109,8 +110,18 @@ const loadIndex = (platform) => {
   vm.runInNewContext(fs.readFileSync(path.resolve('app/main/index.js'), 'utf8'), sandbox)
   // whenReady 永不 resolve，手动注册全局 IPC 捕获 app-exit handler
   sandbox.registerGlobalIPC()
-  return { appExitHandler: ipcHandlers.get('app-exit'), timers, calls }
+  return { appExitHandler: ipcHandlers.get('app-exit'), timers, calls, dialog: electron.dialog }
 }
+
+// 让确认框返回可控 Promise，返回用于触发用户选择的 resolve 函数
+const deferDialog = (dialog) => {
+  let resolve
+  dialog.showMessageBox.mockReturnValue(new Promise((r) => (resolve = r)))
+  return (res) => resolve(res)
+}
+
+// 确认框 .then 回调是 fire-and-forget 的异步链，用 setImmediate 等微任务队列清空
+const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve))
 
 describe('app-exit scheduling', () => {
   it('defers cleanup to a macrotask with a 100 ms delay on linux', async () => {
@@ -146,5 +157,80 @@ describe('app-exit scheduling', () => {
     expect(calls.asyncKillDynamicControl).toHaveBeenCalledTimes(1)
     expect(calls.recoveryStop).toHaveBeenCalledTimes(1)
     expect(calls.appExit).toHaveBeenCalledTimes(1)
+  })
+
+  it('dialog "直接退出" schedules deferred cleanup exactly once', async () => {
+    const focusedWindow = { id: 1, isDestroyed: () => false, minimize: vi.fn() }
+    const { appExitHandler, timers, calls, dialog } = loadIndex('linux', { focusedWindow })
+    const choose = deferDialog(dialog)
+    const preventDefault = vi.fn()
+    await appExitHandler({ preventDefault }, { showCloseMessageBox: true, isIRify: false, isMemfit: false })
+    // 确认框未决时不应有任何退出调度
+    expect(dialog.showMessageBox).toHaveBeenCalledWith(focusedWindow, expect.objectContaining({ cancelId: 3 }))
+    expect(timers).toHaveLength(0)
+    expect(calls.recoveryStop).not.toHaveBeenCalled()
+
+    choose({ response: 1, checkboxChecked: false })
+    await flushMicrotasks()
+    expect(timers).toHaveLength(1)
+    expect(timers[0].ms).toBe(100)
+    expect(calls.asyncKillDynamicControl).toHaveBeenCalledTimes(1)
+    expect(calls.recoveryStop).not.toHaveBeenCalled()
+
+    await timers[0].fn()
+    expect(calls.recoveryStop).toHaveBeenCalledTimes(1)
+    expect(calls.diagnosticsStop).toHaveBeenCalledTimes(1)
+    expect(calls.closeAllLogHandles).toHaveBeenCalledTimes(1)
+    expect(calls.appExit).toHaveBeenCalledTimes(1)
+    expect(preventDefault).not.toHaveBeenCalled()
+
+    // 调度后再次触发 app-exit 不应重复清理
+    await appExitHandler({}, {})
+    expect(timers).toHaveLength(1)
+    expect(calls.appExit).toHaveBeenCalledTimes(1)
+  })
+
+  it('dialog "最小化" prevents default without scheduling exit, and exit still works later', async () => {
+    const focusedWindow = { id: 1, isDestroyed: () => false, minimize: vi.fn() }
+    const { appExitHandler, timers, calls, dialog } = loadIndex('linux', { focusedWindow })
+    const choose = deferDialog(dialog)
+    const preventDefault = vi.fn()
+    await appExitHandler({ preventDefault }, { showCloseMessageBox: true })
+
+    choose({ response: 0, checkboxChecked: false })
+    await flushMicrotasks()
+    expect(preventDefault).toHaveBeenCalledTimes(1)
+    expect(timers).toHaveLength(0)
+    expect(calls.recoveryStop).not.toHaveBeenCalled()
+    expect(calls.appExit).not.toHaveBeenCalled()
+
+    // 未调度退出，随后仍可正常退出
+    await appExitHandler({}, { showCloseMessageBox: false })
+    expect(timers).toHaveLength(1)
+    await timers[0].fn()
+    expect(calls.appExit).toHaveBeenCalledTimes(1)
+    expect(calls.recoveryStop).toHaveBeenCalledTimes(1)
+  })
+
+  it('dialog "取消" prevents default without scheduling exit, and exit still works later', async () => {
+    const focusedWindow = { id: 1, isDestroyed: () => false, minimize: vi.fn() }
+    const { appExitHandler, timers, calls, dialog } = loadIndex('linux', { focusedWindow })
+    const choose = deferDialog(dialog)
+    const preventDefault = vi.fn()
+    await appExitHandler({ preventDefault }, { showCloseMessageBox: true })
+
+    choose({ response: 3, checkboxChecked: false })
+    await flushMicrotasks()
+    expect(preventDefault).toHaveBeenCalledTimes(1)
+    expect(timers).toHaveLength(0)
+    expect(calls.recoveryStop).not.toHaveBeenCalled()
+    expect(calls.appExit).not.toHaveBeenCalled()
+
+    // 未调度退出，随后仍可正常退出
+    await appExitHandler({}, { showCloseMessageBox: false })
+    expect(timers).toHaveLength(1)
+    await timers[0].fn()
+    expect(calls.appExit).toHaveBeenCalledTimes(1)
+    expect(calls.recoveryStop).toHaveBeenCalledTimes(1)
   })
 })
