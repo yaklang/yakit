@@ -212,6 +212,65 @@ describe('Electron bundle contract', () => {
     }
   })
 
+  it.each(['development', 'production'])('handles port listeners in the strict %s bundle', async (mode) => {
+    const result = await build({
+      ...codeOptions(mode),
+      entryPoints: ['app/main/handlers/listenPort.js'],
+      outfile: path.join(temporary, `listen-port-${mode}.cjs`),
+      tsconfig: path.join(repoRoot, 'tsconfig.electron.json'),
+      external: ['electron'],
+      write: false,
+    })
+    const source = result.outputFiles.find((file) => file.path.endsWith('.cjs')).text
+    expect(source).toMatch(/^["']use strict["']/)
+
+    const handlers = new Map()
+    const streams = Array.from({ length: 2 }, () =>
+      Object.assign(new EventEmitter(), { write: vi.fn(), cancel: vi.fn() }),
+    )
+    const openPort = vi.fn().mockReturnValueOnce(streams[0]).mockReturnValueOnce(streams[1])
+    const send = vi.fn()
+    const context = {
+      module: { exports: {} },
+      Buffer,
+      require: (id) => {
+        if (id === 'electron') return { ipcMain: { handle: (channel, callback) => handlers.set(channel, callback) } }
+        throw new Error(`Unexpected module: ${id}`)
+      },
+    }
+    vm.runInNewContext(source, context)
+    context.module.exports({ webContents: { send } }, () => ({ OpenPort: openPort }))
+
+    const listen = handlers.get('listening-port')
+    await listen({}, '127.0.0.1', 9001)
+    await listen({}, '127.0.0.1', 9002)
+    expect(streams[0].write).toHaveBeenCalledWith({ host: '127.0.0.1', port: 9001 })
+    expect(streams[1].write).toHaveBeenCalledWith({ host: '127.0.0.1', port: 9002 })
+    expect(Array.from(handlers.get('listening-port-query-addrs')())).toEqual(['127.0.0.1:9001', '127.0.0.1:9002'])
+    await expect(listen({}, '127.0.0.1', 9001)).rejects.toThrow('listened port')
+    expect(openPort).toHaveBeenCalledTimes(2)
+    expect(Object.hasOwn(context, 'stream')).toBe(false)
+
+    await handlers.get('listening-port-input')({}, '127.0.0.1:9001', 'hello')
+    expect(streams[0].write).toHaveBeenLastCalledWith({ raw: Buffer.from('hello', 'utf8') })
+    expect(streams[1].write).toHaveBeenCalledTimes(1)
+    const error = new Error('connection closed')
+    const data = { raw: Buffer.from('response') }
+    streams[0].emit('error', error)
+    streams[0].emit('data', data)
+    streams[0].emit('end')
+    expect(send.mock.calls).toEqual([
+      ['client-listening-port-error-127.0.0.1:9001', error],
+      ['client-listening-port-data-127.0.0.1:9001', data],
+      ['client-listening-port-end-127.0.0.1:9001', '127.0.0.1:9001'],
+    ])
+
+    await handlers.get('listening-port-cancel')({}, '127.0.0.1:9001')
+    expect(streams[0].cancel).toHaveBeenCalledTimes(1)
+    expect(streams[1].cancel).not.toHaveBeenCalled()
+    expect(Array.from(handlers.get('listening-port-query-addrs')())).toEqual(['127.0.0.1:9002'])
+  })
+
   it.each(['main', 'engine-link', 'screenshots'])(
     'runs %s preload with only the sandbox Electron bridge',
     async (name) => {
