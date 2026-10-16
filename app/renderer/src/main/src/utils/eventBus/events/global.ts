@@ -6,6 +6,8 @@ export type GlobalEventProps = {
   setYakitHeaderDraggable: boolean
   /**切换二级菜单的选中项目 */
   switchSubMenuItem: string
+  /** 从一级 tab 菜单点进组内二级页时，展开对应组。值为二级页 id */
+  expandSubTabGroupByPageId: string
   /**自动上传项目 */
   autoUploadProject: string
   /**触发性能采样 */

@@ -2673,10 +2673,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         webFuzzerPageId,
                       )
                       if (currentItem) {
-                        emiter.emit(
-                          'switchSubMenuItem',
-                          JSON.stringify({ pageId: webFuzzerPageId, forceRefresh: true }),
-                        )
+                        emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: webFuzzerPageId }))
                         emiter.emit('switchMenuItem', JSON.stringify({ route: YakitRoute.HTTPFuzzer }))
                       } else {
                         yakitNotify('info', '目标页面已不存在')

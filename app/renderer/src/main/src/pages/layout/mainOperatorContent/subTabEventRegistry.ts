@@ -13,6 +13,7 @@ export interface SubTabPageEventHandlers {
   onUpdateSubMenuNameFormPage?: (val: string) => void
   onUpdateSecondaryTabsNum?: (num: number) => void
   onCloseSubPageByInfo?: (res: string) => void
+  onExpandGroupByPageId?: (pageId: string) => void
 }
 
 const handlersByRouteKey = new Map<string, SubTabPageEventHandlers>()
@@ -36,6 +37,12 @@ export function unregisterSubTabPageHandlers(pageRouteKey: string, keys?: (keyof
   } else {
     handlersByRouteKey.set(pageRouteKey, next)
   }
+}
+
+/** 选择与展开处理器均已注册（目标一级页已挂载），概览菜单此时才允许弹出与跳转 */
+export const hasSubTabSelectionHandlers = (routeKey: string) => {
+  const handlers = handlersByRouteKey.get(routeKey)
+  return typeof handlers?.onSelectSubMenuById === 'function' && typeof handlers?.onExpandGroupByPageId === 'function'
 }
 
 function dispatchActive<K extends keyof SubTabPageEventHandlers>(
@@ -71,6 +78,7 @@ export function initSubTabGlobalListeners() {
   const onUpdateSubMenuNameFormPage = (val: string) => dispatchActive('onUpdateSubMenuNameFormPage', val)
   const onUpdateSecondaryTabsNum = (num: number) => dispatchActive('onUpdateSecondaryTabsNum', num)
   const onCloseSubPageByInfo = (res: string) => dispatchActive('onCloseSubPageByInfo', res)
+  const onExpandGroupByPageId = (pageId: string) => dispatchAllHandlers('onExpandGroupByPageId', pageId)
 
   emiter.on('switchSubMenuItem', onSwitchSubMenuItem)
   ipcRenderer.on('fetch-add-group', onAddGroup)
@@ -80,6 +88,7 @@ export function initSubTabGlobalListeners() {
   emiter.on('onUpdateSubMenuNameFormPage', onUpdateSubMenuNameFormPage)
   emiter.on('onUpdateSecondaryTabsNum', onUpdateSecondaryTabsNum)
   emiter.on('onCloseSubPageByInfo', onCloseSubPageByInfo)
+  emiter.on('expandSubTabGroupByPageId', onExpandGroupByPageId)
 
   return () => {
     emiter.off('switchSubMenuItem', onSwitchSubMenuItem)
@@ -90,5 +99,6 @@ export function initSubTabGlobalListeners() {
     emiter.off('onUpdateSubMenuNameFormPage', onUpdateSubMenuNameFormPage)
     emiter.off('onUpdateSecondaryTabsNum', onUpdateSecondaryTabsNum)
     emiter.off('onCloseSubPageByInfo', onCloseSubPageByInfo)
+    emiter.off('expandSubTabGroupByPageId', onExpandGroupByPageId)
   }
 }

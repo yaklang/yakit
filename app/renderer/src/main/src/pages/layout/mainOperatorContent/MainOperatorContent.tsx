@@ -95,11 +95,14 @@ import { type FuzzerCacheDataProps, getFuzzerCacheData } from '@/pages/fuzzer/fu
 import { type ShareValueProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { RenderFuzzerSequence, RenderSubPage } from './renderSubPage/RenderSubPage'
+import { SubTabCountDropdown } from './SubTabCountDropdown'
 import {
   initSubTabGlobalListeners,
   registerSubTabPageHandlers,
   unregisterSubTabPageHandlers,
 } from './subTabEventRegistry'
+import { isSubTabGroupNode } from './subTabOverview'
+import { useSubTabOverviewScroll } from './useSubTabOverviewScroll'
 import { isPageRouteActive } from '@/utils/getMainOperatorPageBodyContainer'
 import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 import { type FuzzerSequenceCacheDataProps, useFuzzerSequence } from '@/store/fuzzerSequence'
@@ -365,7 +368,7 @@ const filterTabByIds = (data: MultipleNodeInfo[], idsToRemove: string[]) => {
       return item
     })
     .filter((item) => {
-      const isGroup = typeof item.id === 'string' && item.id.endsWith('-group')
+      const isGroup = isSubTabGroupNode(item)
       const shouldRemoveById = idsToRemove.includes(item.id)
       const shouldRemoveEmptyGroup = isGroup && item.groupChildren?.length === 0
       return !shouldRemoveById && !shouldRemoveEmptyGroup
@@ -3604,7 +3607,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const switchComparePage = () => {
     const dataCompareSub = getPageCache().find((item) => item.route === YakitRoute.DataCompare)?.multipleNode
     const last = dataCompareSub?.[dataCompareSub.length - 1] || {}
-    emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: last.id, forceRefresh: true }))
+    emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: last.id }))
   }
 
   // 新增数据对比页面
@@ -3783,7 +3786,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // 聚焦选中的子标签，使用 scheduleIdleTask 避免阻塞当前渲染帧
     if (result.selectedPageId) {
       scheduleIdleTask(() => {
-        emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: result.selectedPageId, forceRefresh: true }))
+        emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: result.selectedPageId }))
       })
     }
   })
@@ -3828,7 +3831,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       queueMcpWebFuzzerExecution(execution)
       // 立即切换一级/二级菜单并触发执行：queue 已覆盖挂载竞态；
       // scheduleIdleTask 默认 2s 可能晚于 expiresAt / MCP timeoutSeconds，导致命令被丢且截图停在错误页
-      emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: execution.pageId, forceRefresh: true }))
+      emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: execution.pageId }))
       emiter.emit('switchMenuItem', JSON.stringify({ route: YakitRoute.HTTPFuzzer }))
       emiter.emit('onExecuteWebFuzzerTab', execution.pageId)
     } catch (error) {
@@ -4392,7 +4395,10 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
             onSelect(item, item.routeKey)
           }}
         >
-          <span className="content-ellipsis">{item.verboseKey ? t(item.verboseKey) : item.verbose || ''}</span>
+          <div className={styles['tab-menu-first-label']}>
+            <span className="content-ellipsis">{item.verboseKey ? t(item.verboseKey) : item.verbose || ''}</span>
+            <SubTabCountDropdown item={item} onSelect={onSelect} />
+          </div>
         </div>
       ) : (
         <Draggable key={item.routeKey} draggableId={item.routeKey} index={index}>
@@ -4412,24 +4418,29 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
               }}
               onContextMenu={onContextMenu}
             >
-              <Tooltip
-                title={item.verboseKey ? t(item.verboseKey) : item.verbose || ''}
-                classNames={{ root: styles['toolTip-overlay'] }}
-                destroyOnHidden={true}
-                placement="top"
-              >
-                <div className={styles['tab-menu-item-verbose-wrapper']}>
-                  <span className="content-ellipsis">{item.verboseKey ? t(item.verboseKey) : item.verbose || ''}</span>
-                  <XSolid
-                    size={12}
-                    className={styles['remove-icon']}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onRemove(item)
-                    }}
-                  />
+              <div className={styles['tab-menu-item-verbose-wrapper']}>
+                <div className={styles['tab-menu-first-label']}>
+                  <Tooltip
+                    title={item.verboseKey ? t(item.verboseKey) : item.verbose || ''}
+                    classNames={{ root: styles['toolTip-overlay'] }}
+                    destroyOnHidden={true}
+                    placement="top"
+                  >
+                    <span className="content-ellipsis">
+                      {item.verboseKey ? t(item.verboseKey) : item.verbose || ''}
+                    </span>
+                  </Tooltip>
+                  <SubTabCountDropdown item={item} onSelect={onSelect} />
                 </div>
-              </Tooltip>
+                <XSolid
+                  size={12}
+                  className={styles['remove-icon']}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onRemove(item)
+                  }}
+                />
+              </div>
             </div>
           )}
         </Draggable>
@@ -4786,13 +4797,25 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
     const tabMenuSubRef = useRef<any>()
 
+    const { jumpToSubTab, consumeSkipTailScroll } = useSubTabOverviewScroll({
+      pageRouteKey,
+      getContainer: () => {
+        if (!tabMenuSubRef.current) {
+          tabMenuSubRef.current = document.getElementById(`tab-menu-sub-${pageItem.route}`)
+        }
+        return tabMenuSubRef.current
+      },
+    })
+
     useEffect(() => {
       const isActive = isPageRouteActive(pageRouteKey)
       const cancels: Array<() => void> = []
+      // 概览菜单显式跳转已自行定位目标标签，跳过默认尾部滚动
+      const skipTailScroll = consumeSkipTailScroll()
 
       if (isActive) {
         onFocusPage()
-        if (subPage.length > 0) {
+        if (!skipTailScroll && subPage.length > 0) {
           cancels.push(
             scheduleIdleTask(() => {
               const groupChildrenList = subPage[subPage.length - 1].groupChildren || []
@@ -6441,12 +6464,17 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
       return pageItem.route === YakitRoute.HTTPFuzzer
     }, [pageItem.route])
 
+    const onExpandGroupByPageId = useMemoizedFn((pageId: string) => {
+      jumpToSubTab({ pageId, subPage, onUpdateGroup })
+    })
+
     useEffect(() => {
       registerSubTabPageHandlers(pageRouteKey, {
         onCloseCurrentPage,
         onUpdateSubMenuNameFormPage,
         onUpdateSecondaryTabsNum,
         onCloseSubPageByInfo: onCloseSubPageByInfoFun,
+        onExpandGroupByPageId,
       })
       return () =>
         unregisterSubTabPageHandlers(pageRouteKey, [
@@ -6454,6 +6482,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
           'onUpdateSubMenuNameFormPage',
           'onUpdateSecondaryTabsNum',
           'onCloseSubPageByInfo',
+          'onExpandGroupByPageId',
         ])
     }, [pageRouteKey])
 

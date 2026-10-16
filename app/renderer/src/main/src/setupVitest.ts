@@ -63,3 +63,19 @@ if (typeof window !== 'undefined' && !window.yakitBridge) {
     ai: makeNs(),
   } as unknown as YakitBridge
 }
+
+/**
+ * 测试环境无 Electron preload：部分模块（如 subTabEventRegistry）在模块顶层
+ * window.require('electron') 取 ipcRenderer，这里提供最小 stub 让它们可被导入，
+ * 与上方 yakitBridge stub 同理。
+ */
+if (typeof window !== 'undefined' && !window.require) {
+  window.require = (() => ({
+    ipcRenderer: {
+      on: () => {},
+      removeListener: () => {},
+      removeAllListeners: () => {},
+      send: () => {},
+    },
+  })) as unknown as typeof window.require
+}

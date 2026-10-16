@@ -24,7 +24,7 @@ const toEditNotepad = (params: ToEditNotepadProps) => {
   const current =
     notepadHash && notepadPageList.find((ele) => ele.pageParamsInfo.modifyNotepadPageInfo?.notepadHash === notepadHash)
   if (current) {
-    emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: current.pageId, forceRefresh: true }))
+    emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: current.pageId }))
     emiter.emit('switchMenuItem', JSON.stringify({ route: YakitRoute.Modify_Notepad }))
   } else if (notepadHash) {
     const info = {
