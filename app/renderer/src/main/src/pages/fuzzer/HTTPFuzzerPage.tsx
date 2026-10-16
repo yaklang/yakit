@@ -4184,8 +4184,6 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         onCompositionEnd={() => {
           composingRef.current = false
         }}
-        // 防止切输入法的 keydown 冒泡出去触发 Popover 关闭
-        onKeyDown={(e) => e.stopPropagation()}
       />
     )
     return (

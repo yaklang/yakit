@@ -158,14 +158,14 @@ const searchPlaceholder = 'SecondNodeExtra.enterTargetResponse'
  * 组合期间必须忽略关闭，组合结束后下一次关闭才生效。
  */
 describe('SecondNodeExtra search popover', () => {
-  const renderNarrowSearch = () =>
+  const renderSecondNodeExtra = (width: number) =>
     render(
       <SecondNodeExtra
         rsp={singleResponse}
         onlyOneResponse
         cachedTotal={1}
         failedCount={0}
-        secondNodeSize={{ width: 400, height: 200 }}
+        secondNodeSize={{ width, height: 200 }}
         setQuery={() => {}}
         sendPayloadsType="config"
         setShowExtra={() => {}}
@@ -175,7 +175,7 @@ describe('SecondNodeExtra search popover', () => {
     )
 
   it('keeps the search popover open while composing and closes after composition ends', () => {
-    renderNarrowSearch()
+    renderSecondNodeExtra(400)
     expect(screen.queryByPlaceholderText(searchPlaceholder)).toBeNull()
 
     fireEvent.click(screen.getByTestId('search-popover-request-open'))
@@ -193,5 +193,35 @@ describe('SecondNodeExtra search popover', () => {
     fireEvent.click(screen.getByTestId('search-popover-request-close'))
     expect(screen.queryByPlaceholderText(searchPlaceholder)).toBeNull()
     expect(screen.queryByTestId('search-popover-panel')).toBeNull()
+  })
+
+  /**
+   * 页面级快捷键（Alt+Enter 发包、Ctrl/Cmd+Shift+S 保存历史）监听在 document 上，
+   * 搜索框不得拦截 keydown 冒泡。回归：曾用 onKeyDown stopPropagation 修输入法误关闭，连带挡掉快捷键。
+   */
+  const expectShortcutsBubbleToDocument = (input: HTMLElement) => {
+    const onDocKeyDown = vi.fn()
+    document.addEventListener('keydown', onDocKeyDown)
+    fireEvent.keyDown(input, { key: 'Enter', altKey: true })
+    fireEvent.keyDown(input, { key: 's', ctrlKey: true, shiftKey: true })
+    document.removeEventListener('keydown', onDocKeyDown)
+
+    expect(onDocKeyDown).toHaveBeenCalledTimes(2)
+    expect(onDocKeyDown).toHaveBeenNthCalledWith(1, expect.objectContaining({ key: 'Enter', altKey: true }))
+    expect(onDocKeyDown).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ key: 's', ctrlKey: true, shiftKey: true }),
+    )
+  }
+
+  it('lets page shortcuts bubble to document from the wide-layout search input', () => {
+    renderSecondNodeExtra(800)
+    expectShortcutsBubbleToDocument(screen.getByPlaceholderText(searchPlaceholder))
+  })
+
+  it('lets page shortcuts bubble to document from the narrow-popover search input', () => {
+    renderSecondNodeExtra(400)
+    fireEvent.click(screen.getByTestId('search-popover-request-open'))
+    expectShortcutsBubbleToDocument(screen.getByPlaceholderText(searchPlaceholder))
   })
 })
