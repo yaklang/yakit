@@ -16,6 +16,7 @@ import {
 import { type AIModelConfig, grpcProbeReasoningEffort } from '@/pages/ai-agent/aiModelList/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './AIReasoningEffortSelect.module.scss'
+import emiter from '@/utils/eventBus/eventBus'
 
 export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = React.memo((props) => {
   const { className } = props
@@ -39,7 +40,12 @@ export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = R
     const models = aiGlobalConfig?.IntelligentModels || []
     if (!models.length) return
     const nextModels = [mutate({ ...models[0] }), ...models.slice(1)]
-    event.setAIGlobalConfig({ ...aiGlobalConfig, IntelligentModels: nextModels }).catch(() => {})
+    event
+      .setAIGlobalConfig({ ...aiGlobalConfig, IntelligentModels: nextModels })
+      .then(() => {
+        emiter.emit('onRefreshAvailableAIModelList')
+      })
+      .catch(() => {})
   })
 
   /** 懒探测：当前模型未探测过时探测是否支持 xhigh/max；失败不置已探测，下次触发可重试 */

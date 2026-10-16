@@ -84,8 +84,11 @@ function useAIGlobalConfig(params) {
     const epoch = saveEpoch
     const showLoading = isShowLoading !== false
     showLoading && setQueryLoading(true)
-    grpcGetAIGlobalConfig()
+    // 刷新在保存期间触发时，先等当前写入完成，避免读到旧数据库配置。
+    saveQueue
+      .then(() => grpcGetAIGlobalConfig())
       .then((res) => applyFetchedConfig(res, epoch))
+      .catch(() => undefined)
       .finally(() => {
         showLoading &&
           setTimeout(() => {

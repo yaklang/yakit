@@ -1,0 +1,470 @@
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { EnterpriseAIModelSelect } from '../EnterpriseAIModelSelect'
+import styles from '../EnterpriseAIModelSelect.module.scss'
+import { defaultAIGlobalConfig } from '../../../../defaultConstant'
+import type { AIGlobalConfig } from '../../../utils'
+import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
+
+const mocks = vi.hoisted(() => ({
+  names: vi.fn<({ Config }: { Config: string }) => Promise<{ ModelName: string[] }>>(),
+  refresh: vi.fn(),
+}))
+vi.mock('../EnterpriseAIModelSelect.module.scss', () => ({
+  default: {
+    'drop-select-wrapper': 'drop-select-wrapper',
+    'edit-content-wrapper': 'edit-content-wrapper',
+    'edit-content': 'edit-content',
+    'ai-online-model-list': 'ai-online-model-list',
+  },
+}))
+vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: vi.fn() }))
+vi.mock('../../../utils', () => ({
+  isForcedSetAIModal: () => Promise.resolve(null),
+  grpcListAiModel: mocks.names,
+  getModelName: (name?: string) => name ?? '',
+  isMemfitStart: () => false,
+  isFreeEnd: () => false,
+  sortMemfitNameFirst: (names: string[]) => names,
+}))
+vi.mock('../../../AIModelList', () => ({
+  OutlineAtomIconByStatus: () => null,
+  AIModelFreeTag: () => null,
+  setAIModal: vi.fn(),
+}))
+vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
+  default: function useMockAIGlobalConfig() {
+    return [
+      { aiGlobalConfig: useAIGlobalConfigStore((state) => state.aiGlobalConfig) },
+      {
+        onRefresh: mocks.refresh,
+        setAIGlobalConfig: (config: AIGlobalConfig) => {
+          useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
+          return Promise.resolve()
+        },
+      },
+    ]
+  },
+}))
+vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
+vi.mock('ahooks', async (importOriginal) => ({
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  ...(await importOriginal<typeof import('ahooks')>()),
+  useInViewport: () => [true],
+}))
+
+beforeEach(() => {
+  mocks.names.mockReset()
+  mocks.refresh.mockReset().mockImplementation(() => {
+    useAIGlobalConfigStore.getState().setAIGlobalConfig({
+      ...defaultAIGlobalConfig,
+      IntelligentModels: [
+        {
+          ModelName: 'configured-model',
+          ProviderId: 'provider',
+          ExtraParams: [],
+          Provider: { Type: 'test-provider', ReasoningEffort: 'off' },
+        },
+      ],
+    })
+    return Promise.resolve()
+  })
+  useAIGlobalConfigStore.getState().setAIGlobalConfig({ ...defaultAIGlobalConfig })
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+    },
+  )
+})
+
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
+})
+
+// Keep AIChatSelect → YakitSelect → antd Select intact: rc-trigger caches the closed popup subtree.
+const openModels = async () => {
+  const trigger = await screen.findByRole('combobox')
+  fireEvent.click(trigger)
+  await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'true'))
+  return trigger
+}
+const hoverEdit = async () => {
+  fireEvent.mouseEnter(await screen.findByRole('button', { name: 'YakitButton.edit' }))
+}
+const reopenModels = async (trigger: HTMLElement) => {
+  fireEvent.click(trigger)
+  await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'false'))
+  fireEvent.click(trigger)
+  await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'true'))
+  await hoverEdit()
+}
+
+describe('EnterpriseAIModelSelect real dropdown lifecycle', () => {
+  it.each(['ai-online-model-list', 'drop-select-wrapper'])(
+    '%s 滚动时关闭编辑浮层，重新悬停可复用缓存',
+    async (containerClass) => {
+      mocks.names.mockResolvedValue({ ModelName: ['cached-name'] })
+      render(<EnterpriseAIModelSelect />)
+      const trigger = await openModels()
+      await hoverEdit()
+      expect(await screen.findByText('cached-name')).toBeVisible()
+
+      // 二级浮层自己的滚动不应关闭名称选择。
+      fireEvent.scroll(document.querySelector(`.${styles['edit-content-wrapper']}`)!)
+      expect(screen.getByText('cached-name')).toBeVisible()
+      fireEvent.scroll(document.querySelector(`.${styles[containerClass]}`)!)
+      expect(screen.queryByText('cached-name')).not.toBeInTheDocument()
+      expect(trigger).toHaveAttribute('aria-expanded', 'true')
+
+      await hoverEdit()
+      expect(await screen.findByText('cached-name')).toBeVisible()
+      expect(mocks.names).toHaveBeenCalledTimes(1)
+    },
+  )
+
+  it('列表滚动关闭浮层后，迟到的名称响应不会重新打开浮层', async () => {
+    let resolveNames!: (value: { ModelName: string[] }) => void
+    mocks.names.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveNames = resolve
+        }),
+    )
+    render(<EnterpriseAIModelSelect />)
+    await openModels()
+    await hoverEdit()
+    await waitFor(() => expect(mocks.names).toHaveBeenCalledTimes(1))
+
+    fireEvent.scroll(document.querySelector(`.${styles['ai-online-model-list']}`)!)
+    await act(async () => resolveNames({ ModelName: ['late-name'] }))
+    expect(screen.queryByText('late-name')).not.toBeInTheDocument()
+    await hoverEdit()
+    expect(await screen.findByText('late-name')).toBeVisible()
+    expect(mocks.names).toHaveBeenCalledTimes(1)
+  })
+
+  it.each([
+    { anchorTop: 230, height: 84, expectedTop: 230 },
+    { anchorTop: 300, height: 84, expectedTop: 248 },
+    { anchorTop: 230, height: 240, expectedTop: 92 },
+  ])('名称加载后按实际高度定位 $height px 浮层（按钮 top=$anchorTop）', async ({ anchorTop, height, expectedTop }) => {
+    vi.stubGlobal('innerHeight', 340)
+    vi.stubGlobal('innerWidth', 800)
+    let resolveNames!: (value: { ModelName: string[] }) => void
+    mocks.names.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveNames = resolve
+        }),
+    )
+    const originalRect = HTMLElement.prototype.getBoundingClientRect
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('aria-label') === 'YakitButton.edit') return new DOMRect(320, anchorTop, 20, 20)
+      if (this.classList.contains(styles['drop-select-wrapper'])) return new DOMRect(50, 160, 300, 140)
+      if (this.classList.contains(styles['edit-content-wrapper'])) {
+        return new DOMRect(0, 0, 200, this.textContent?.includes('loaded-name') ? height : 40)
+      }
+      return originalRect.call(this)
+    })
+    render(<EnterpriseAIModelSelect />)
+    await openModels()
+    const button = await screen.findByRole('button', { name: 'YakitButton.edit' })
+    fireEvent.mouseEnter(button)
+    const popup = document.querySelector<HTMLElement>(`.${styles['edit-content']}`)!
+    expect(popup.style.transform).toBe(`translate(356px, ${Math.min(anchorTop, 292)}px)`)
+
+    await act(async () => resolveNames({ ModelName: ['loaded-name'] }))
+    expect(await screen.findByText('loaded-name')).toBeVisible()
+    expect(popup.style.transform).toBe(`translate(356px, ${expectedTop}px)`)
+    expect(window.innerHeight - expectedTop - height).toBeGreaterThanOrEqual(8)
+  })
+
+  it.each([
+    { anchorTop: 520, expectedTop: 520 },
+    { anchorTop: 620, expectedTop: 558 },
+  ])('打开后仅缩短窗口高度，重新定位到 $expectedTop 且保留浮层和缓存', async ({ anchorTop, expectedTop }) => {
+    vi.stubGlobal('innerHeight', 1000)
+    vi.stubGlobal('innerWidth', 800)
+    let currentAnchorTop = 850
+    mocks.names.mockResolvedValue({ ModelName: ['loaded-name'] })
+    const originalRect = HTMLElement.prototype.getBoundingClientRect
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('aria-label') === 'YakitButton.edit') return new DOMRect(320, currentAnchorTop, 20, 20)
+      if (this.classList.contains(styles['drop-select-wrapper'])) return new DOMRect(50, 500, 300, 140)
+      if (this.classList.contains(styles['edit-content-wrapper'])) return new DOMRect(0, 0, 200, 84)
+      return originalRect.call(this)
+    })
+    render(<EnterpriseAIModelSelect />)
+    const trigger = await openModels()
+    await hoverEdit()
+    expect(await screen.findByText('loaded-name')).toBeVisible()
+    const popup = document.querySelector<HTMLElement>(`.${styles['edit-content']}`)!
+    fireEvent.mouseEnter(popup)
+    expect(popup.style.transform).toBe('translate(356px, 850px)')
+
+    currentAnchorTop = anchorTop
+    vi.stubGlobal('innerHeight', 650)
+    fireEvent.resize(window)
+    await waitFor(() => expect(popup.style.transform).toBe(`translate(356px, ${expectedTop}px)`))
+    expect(window.innerHeight - expectedTop - 84).toBeGreaterThanOrEqual(8)
+    expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText('loaded-name')).toBeVisible()
+    expect(mocks.names).toHaveBeenCalledTimes(1)
+
+    currentAnchorTop = 750
+    vi.stubGlobal('innerHeight', 1000)
+    fireEvent.resize(window)
+    await waitFor(() => expect(popup.style.transform).toBe('translate(356px, 750px)'))
+  })
+
+  it.each(['select', 'reorder', 'remove'] as const)('%s 后清空二级浮层和名称缓存，下次悬停重新请求', async (change) => {
+    mocks.names.mockResolvedValueOnce({ ModelName: ['old-name'] }).mockResolvedValueOnce({ ModelName: ['new-name'] })
+    render(<EnterpriseAIModelSelect />)
+    const trigger = await openModels()
+    const initial = useAIGlobalConfigStore.getState().aiGlobalConfig
+    const models = ['model-a', 'model-b', 'model-c'].map((ModelName) => ({
+      ...initial.IntelligentModels[0],
+      ModelName,
+    }))
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig({ ...initial, IntelligentModels: models }))
+    fireEvent.mouseEnter(screen.getAllByRole('button', { name: 'YakitButton.edit' })[1])
+    expect(await screen.findByText('old-name')).toBeVisible()
+
+    if (change === 'select') {
+      fireEvent.click(screen.getByText('model-b'))
+    } else {
+      act(() =>
+        useAIGlobalConfigStore.getState().setAIGlobalConfig({
+          ...initial,
+          IntelligentModels: change === 'reorder' ? [models[1], models[0], models[2]] : [models[0], models[2]],
+        }),
+      )
+    }
+    expect(screen.queryByText('old-name')).not.toBeInTheDocument()
+    expect(trigger).toHaveAttribute('aria-expanded', 'true')
+
+    fireEvent.mouseEnter(screen.getAllByRole('button', { name: 'YakitButton.edit' })[0])
+    expect(await screen.findByText('new-name')).toBeVisible()
+    expect(mocks.names).toHaveBeenCalledTimes(2)
+  })
+
+  it('顺序改变前的请求晚到，不污染再次悬停的新请求', async () => {
+    let resolveOld!: (value: { ModelName: string[] }) => void
+    mocks.names
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveOld = resolve
+          }),
+      )
+      .mockResolvedValueOnce({ ModelName: ['current-name'] })
+    render(<EnterpriseAIModelSelect />)
+    await openModels()
+    const initial = useAIGlobalConfigStore.getState().aiGlobalConfig
+    const models = ['model-a', 'model-b'].map((ModelName) => ({ ...initial.IntelligentModels[0], ModelName }))
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig({ ...initial, IntelligentModels: models }))
+    fireEvent.mouseEnter(screen.getAllByRole('button', { name: 'YakitButton.edit' })[0])
+    await waitFor(() => expect(mocks.names).toHaveBeenCalledTimes(1))
+
+    act(() =>
+      useAIGlobalConfigStore.getState().setAIGlobalConfig({ ...initial, IntelligentModels: [models[1], models[0]] }),
+    )
+    fireEvent.mouseEnter(screen.getAllByRole('button', { name: 'YakitButton.edit' })[0])
+    expect(await screen.findByText('current-name')).toBeVisible()
+    await act(async () => resolveOld({ ModelName: ['stale-name'] }))
+    expect(screen.getByText('current-name')).toBeVisible()
+    expect(screen.queryByText('stale-name')).not.toBeInTheDocument()
+    expect(mocks.names).toHaveBeenCalledTimes(2)
+  })
+
+  it('仅更新探测结果时保留二级浮层和名称缓存', async () => {
+    mocks.names.mockResolvedValue({ ModelName: ['cached-name'] })
+    render(<EnterpriseAIModelSelect />)
+    await openModels()
+    await hoverEdit()
+    expect(await screen.findByText('cached-name')).toBeVisible()
+    const initial = useAIGlobalConfigStore.getState().aiGlobalConfig
+    act(() =>
+      useAIGlobalConfigStore.getState().setAIGlobalConfig({
+        ...initial,
+        IntelligentModels: initial.IntelligentModels.map((model) => ({
+          ...model,
+          EffortProbed: true,
+          ProbedExtendedEfforts: ['xhigh'],
+        })),
+      }),
+    )
+    expect(screen.getByText('cached-name')).toBeVisible()
+    expect(mocks.names).toHaveBeenCalledTimes(1)
+  })
+
+  it('其他模型重排时不清空当前模型的编辑浮层', async () => {
+    mocks.names.mockResolvedValue({ ModelName: ['cached-name'] })
+    render(<EnterpriseAIModelSelect />)
+    await openModels()
+    const initial = useAIGlobalConfigStore.getState().aiGlobalConfig
+    const models = ['model-a', 'model-b', 'model-c'].map((ModelName) => ({
+      ...initial.IntelligentModels[0],
+      ModelName,
+    }))
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig({ ...initial, IntelligentModels: models }))
+    fireEvent.mouseEnter(screen.getAllByRole('button', { name: 'YakitButton.edit' })[0])
+    expect(await screen.findByText('cached-name')).toBeVisible()
+
+    act(() =>
+      useAIGlobalConfigStore.getState().setAIGlobalConfig({
+        ...initial,
+        IntelligentModels: [models[0], models[2], models[1]],
+      }),
+    )
+    expect(screen.getByText('cached-name')).toBeVisible()
+    expect(mocks.names).toHaveBeenCalledTimes(1)
+  })
+
+  it.each(['trigger', 'outside'] as const)('%s 关闭一级下拉时立即移除编辑浮层，不等待移出定时器', async (closeBy) => {
+    mocks.names.mockResolvedValue({ ModelName: ['closing-name'] })
+    render(<EnterpriseAIModelSelect />)
+    const trigger = await openModels()
+    await hoverEdit()
+    const option = await screen.findByText('closing-name')
+    expect(option).toBeVisible()
+
+    fireEvent.mouseLeave(option)
+    if (closeBy === 'trigger') fireEvent.click(trigger)
+    else fireEvent.mouseDown(document.body)
+
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText('closing-name')).not.toBeInTheDocument()
+  })
+
+  it('关闭后迟到的名称响应不会重新显示编辑浮层', async () => {
+    let resolveNames!: (value: { ModelName: string[] }) => void
+    mocks.names.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveNames = resolve
+        }),
+    )
+    render(<EnterpriseAIModelSelect />)
+    const trigger = await openModels()
+    await hoverEdit()
+    await waitFor(() => expect(mocks.names).toHaveBeenCalledTimes(1))
+
+    fireEvent.click(trigger)
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText('AIModelSelect.emptyModels')).not.toBeInTheDocument()
+    await act(async () => resolveNames({ ModelName: ['late-name'] }))
+    expect(screen.queryByText('late-name')).not.toBeInTheDocument()
+  })
+
+  it('关闭并重新打开后重新请求名称，显示服务端最新结果', async () => {
+    mocks.names
+      .mockResolvedValueOnce({ ModelName: ['first-name'] })
+      .mockResolvedValueOnce({ ModelName: ['latest-name'] })
+    render(<EnterpriseAIModelSelect />)
+    const trigger = await openModels()
+    await hoverEdit()
+    expect(await screen.findByText('first-name')).toBeVisible()
+
+    await reopenModels(trigger)
+
+    await waitFor(() => expect(mocks.names).toHaveBeenCalledTimes(2))
+    expect(await screen.findByText('latest-name')).toBeVisible()
+    expect(screen.queryByText('first-name')).not.toBeInTheDocument()
+  })
+
+  it('名称请求失败后关闭并重新打开时自动重试', async () => {
+    mocks.names
+      .mockRejectedValueOnce(new Error('temporary failure'))
+      .mockResolvedValueOnce({ ModelName: ['recovered-name'] })
+    render(<EnterpriseAIModelSelect />)
+    const trigger = await openModels()
+    await hoverEdit()
+    await waitFor(() => expect(mocks.names).toHaveBeenCalledTimes(1))
+    await act(async () => {})
+    expect(screen.getByText('AIModelSelect.emptyModels')).toBeVisible()
+
+    await reopenModels(trigger)
+
+    await waitFor(() => expect(mocks.names).toHaveBeenCalledTimes(2))
+    expect(await screen.findByText('recovered-name')).toBeVisible()
+  })
+
+  it('关闭前的请求晚于重新打开后的请求完成时不覆盖新列表', async () => {
+    let resolveOld!: (value: { ModelName: string[] }) => void
+    mocks.names
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveOld = resolve
+          }),
+      )
+      .mockResolvedValueOnce({ ModelName: ['current-name'] })
+    render(<EnterpriseAIModelSelect />)
+    const trigger = await openModels()
+    await hoverEdit()
+    await waitFor(() => expect(mocks.names).toHaveBeenCalledTimes(1))
+
+    await reopenModels(trigger)
+
+    await waitFor(() => expect(mocks.names).toHaveBeenCalledTimes(2))
+    expect(await screen.findByText('current-name')).toBeVisible()
+    await act(async () => resolveOld({ ModelName: ['stale-name'] }))
+    expect(screen.getByText('current-name')).toBeVisible()
+    expect(screen.queryByText('stale-name')).not.toBeInTheDocument()
+  })
+})
+
+describe('EnterpriseAIModelSelect stable row keys', () => {
+  it('模型重排和改名后保留同一行 DOM', async () => {
+    mocks.names.mockResolvedValue({ ModelName: ['renamed-model'] })
+    render(<EnterpriseAIModelSelect />)
+    await openModels()
+    const initial = useAIGlobalConfigStore.getState().aiGlobalConfig
+    const models = ['model-a', 'model-b'].map((ModelName) => ({
+      ...initial.IntelligentModels[0],
+      ModelName,
+    }))
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig({ ...initial, IntelligentModels: models }))
+    const buttons = screen.getAllByRole('button', { name: 'YakitButton.edit' })
+
+    act(() =>
+      useAIGlobalConfigStore.getState().setAIGlobalConfig({
+        ...initial,
+        IntelligentModels: [structuredClone(models[1]), structuredClone(models[0])],
+      }),
+    )
+    expect(screen.getAllByRole('button', { name: 'YakitButton.edit' })[0]).toBe(buttons[1])
+    expect(screen.getAllByRole('button', { name: 'YakitButton.edit' })[1]).toBe(buttons[0])
+
+    fireEvent.mouseEnter(buttons[1])
+    fireEvent.click(await screen.findByText('renamed-model'))
+    expect(screen.getAllByRole('button', { name: 'YakitButton.edit' })[0]).toBe(buttons[1])
+    expect(screen.getAllByRole('button', { name: 'YakitButton.edit' })[1]).toBe(buttons[0])
+    expect(screen.getAllByText('renamed-model').length).toBeGreaterThan(0)
+  })
+
+  it('重复模型仍有独立行标识，选择重排不会交换 DOM 身份', async () => {
+    render(<EnterpriseAIModelSelect />)
+    await openModels()
+    const initial = useAIGlobalConfigStore.getState().aiGlobalConfig
+    const duplicate = { ...initial.IntelligentModels[0], ModelName: 'duplicate-model' }
+    act(() =>
+      useAIGlobalConfigStore.getState().setAIGlobalConfig({
+        ...initial,
+        IntelligentModels: [duplicate, structuredClone(duplicate)],
+      }),
+    )
+    const list = document.querySelector(`.${styles['ai-online-model-list']}`)!
+    const rows = Array.from(list.children)
+    expect(rows).toHaveLength(2)
+    fireEvent.click(rows[1])
+    expect(list.children[0]).toBe(rows[1])
+    expect(list.children[1]).toBe(rows[0])
+  })
+})
