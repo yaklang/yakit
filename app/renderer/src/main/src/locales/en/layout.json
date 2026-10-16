@@ -341,6 +341,7 @@
   "CeUserMenu": {
     "tokenRemaining": "Remaining Token",
     "balance": "Balance",
+    "redeem": "Redeem",
     "recharge": "Recharge",
     "usageStatistics": "Usage Statistics",
     "aiUsageTitle": "AI Usage",

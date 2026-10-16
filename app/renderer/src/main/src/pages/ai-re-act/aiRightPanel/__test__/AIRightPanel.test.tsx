@@ -2,10 +2,12 @@ import type React from 'react'
 import { createContext, useContext } from 'react'
 import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { WebsiteGV } from '@/enums/website'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useStore as useUserStore } from '@/store'
 import { grpcExportAILogs, grpcQueryHTTPFlows } from '@/pages/ai-agent/grpc'
 import { failed, yakitNotify } from '@/utils/notification'
+import { yakitShell } from '@/services/electronBridge'
 import type { ExportAILogsModal as ExportAILogsModalComponent } from '@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal'
 import { apiRiskFieldGroup } from '@/pages/risks/YakitRiskTable/utils'
 import type * as AIRightPanelModule from '../AIRightPanel'
@@ -169,6 +171,7 @@ vi.mock('i18next-resources-to-backend', () => {
       layout: {
         CeUserMenu: {
           balance: '余额',
+          redeem: '兑换',
           recharge: '充值',
           unlimited: '无限制',
           tokenRemaining: '剩余 Token',
@@ -340,11 +343,171 @@ describe('AIRightPanel', () => {
       expect(screen.getByText(/余额/)).toBeVisible()
       expect(screen.getByText('¥10')).toBeVisible()
       expect(screen.getByText(/剩余 Token/)).toBeVisible()
-      expect(screen.getByText('100/100M')).toBeVisible()
       fireEvent.click(screen.getByRole('button', { name: '充值' }))
       expect(mockEmit).toHaveBeenCalledWith('onOpenRecharge', '')
       fireEvent.click(screen.getByTestId('ce-user-token-quota'))
       expect(mockEmit).toHaveBeenCalledWith('onOpenUsageStatistics', '')
+    })
+
+    it('点击兑换打开活动页且不冒泡触发用量统计', async () => {
+      useUserStore.getState().setStoreUserInfo({
+        ...useUserStore.getState().userInfo,
+        isLogin: true,
+      })
+      mockNetWorkApi.mockResolvedValue({
+        data: {
+          apiKey: ['k'],
+          tokenUsed: 0,
+          tokenLimit: 100_000_000,
+          tokenLimitEnable: true,
+        },
+      })
+      await renderPanel(<AIRightPanel />)
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: '兑换' })).toBeInTheDocument()
+      })
+
+      mockEmit.mockClear()
+      vi.mocked(yakitShell.openExternal).mockClear()
+      fireEvent.click(screen.getByRole('button', { name: '兑换' }))
+
+      expect(yakitShell.openExternal).toHaveBeenCalledWith(WebsiteGV.PromotionsAddress)
+      expect(mockEmit).not.toHaveBeenCalledWith('onOpenUsageStatistics', '')
+    })
+
+    it('刷新为空或失败时保留已展示的余额块，不卸载闪烁', async () => {
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+      try {
+        useUserStore.getState().setStoreUserInfo({
+          ...useUserStore.getState().userInfo,
+          isLogin: true,
+        })
+        mockTaskStore.setState({ execute: true })
+        let call = 0
+        mockNetWorkApi.mockImplementation(async (params?: { url?: string }) => {
+          if (params?.url === 'apikey') return { ok: true }
+          call += 1
+          if (call === 1) {
+            return {
+              data: {
+                apiKey: ['k'],
+                tokenUsed: 0,
+                tokenLimit: 100_000_000,
+                tokenLimitEnable: true,
+              },
+            }
+          }
+          if (call === 2) return { data: { apiKey: [] as string[] } }
+          throw new Error('network')
+        })
+
+        const result = await renderPanel(<AIRightPanel />)
+        try {
+          await waitFor(() => expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument())
+          expect(screen.getByText('¥10')).toBeVisible()
+
+          await act(async () => {
+            await vi.advanceTimersByTimeAsync(10_000)
+          })
+          expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument()
+          expect(screen.getByText('¥10')).toBeVisible()
+
+          await act(async () => {
+            await vi.advanceTimersByTimeAsync(10_000)
+          })
+          expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument()
+          expect(screen.getByText('¥10')).toBeVisible()
+        } finally {
+          result.unmount()
+          resetMockStore()
+        }
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('已有展示数据时 effect 重跑拿到空列表不重复建 key', async () => {
+      useUserStore.getState().setStoreUserInfo({
+        ...useUserStore.getState().userInfo,
+        isLogin: true,
+      })
+      mockTaskStore.setState({ execute: false })
+      let apikeysCalls = 0
+      mockNetWorkApi.mockImplementation(async (params?: { url?: string }) => {
+        if (params?.url === 'apikey') return { ok: true }
+        apikeysCalls += 1
+        if (apikeysCalls === 1) {
+          return {
+            data: {
+              apiKey: ['k'],
+              tokenUsed: 0,
+              tokenLimit: 100_000_000,
+              tokenLimitEnable: true,
+            },
+          }
+        }
+        return { data: { apiKey: [] as string[] } }
+      })
+
+      const result = await renderPanel(<AIRightPanel />)
+      try {
+        await waitFor(() => expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument())
+        expect(screen.getByText('¥10')).toBeVisible()
+        expect(mockNetWorkApi.mock.calls.some((call) => call[0]?.url === 'apikey')).toBe(false)
+
+        // 翻转 execute 触发 effect 重跑 ensureApiKeys；空列表且已有展示 → 不 POST apikey
+        await act(async () => {
+          mockTaskStore.setState({ execute: true })
+        })
+        await waitFor(() => expect(apikeysCalls).toBeGreaterThanOrEqual(2))
+        expect(mockNetWorkApi.mock.calls.some((call) => call[0]?.url === 'apikey')).toBe(false)
+        expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument()
+        expect(screen.getByText('¥10')).toBeVisible()
+      } finally {
+        result.unmount()
+        resetMockStore()
+      }
+    })
+
+    it('已有展示数据时 ensureApiKeys 失败保留余额块且不建 key', async () => {
+      useUserStore.getState().setStoreUserInfo({
+        ...useUserStore.getState().userInfo,
+        isLogin: true,
+      })
+      mockTaskStore.setState({ execute: false })
+      let apikeysCalls = 0
+      mockNetWorkApi.mockImplementation(async (params?: { url?: string }) => {
+        if (params?.url === 'apikey') return { ok: true }
+        apikeysCalls += 1
+        if (apikeysCalls === 1) {
+          return {
+            data: {
+              apiKey: ['k'],
+              tokenUsed: 0,
+              tokenLimit: 100_000_000,
+              tokenLimitEnable: true,
+            },
+          }
+        }
+        throw new Error('network')
+      })
+
+      const result = await renderPanel(<AIRightPanel />)
+      try {
+        await waitFor(() => expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument())
+        expect(screen.getByText('¥10')).toBeVisible()
+
+        await act(async () => {
+          mockTaskStore.setState({ execute: true })
+        })
+        await waitFor(() => expect(apikeysCalls).toBeGreaterThanOrEqual(2))
+        expect(mockNetWorkApi.mock.calls.some((call) => call[0]?.url === 'apikey')).toBe(false)
+        expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument()
+        expect(screen.getByText('¥10')).toBeVisible()
+      } finally {
+        result.unmount()
+        resetMockStore()
+      }
     })
 
     it('polls apikeys every 10s while execute and stops after execute ends', async () => {
@@ -437,7 +600,8 @@ describe('AIRightPanel', () => {
           })
           await waitFor(() => {
             expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument()
-            expect(screen.getByText('50/100M')).toBeVisible()
+            // tokenUsed=50M / limit=100M → 余额 ¥5
+            expect(screen.getByText('¥5')).toBeVisible()
           })
 
           // 更早发出的慢请求带回更高剩余额度，不得覆盖已展示的新数据
@@ -452,14 +616,115 @@ describe('AIRightPanel', () => {
             })
             await Promise.resolve()
           })
-          expect(screen.getByText('50/100M')).toBeVisible()
-          expect(screen.queryByText('100/100M')).not.toBeInTheDocument()
+          expect(screen.getByText('¥5')).toBeVisible()
+          expect(screen.queryByText('¥10')).not.toBeInTheDocument()
         } finally {
           result.unmount()
           resetMockStore()
         }
       } finally {
         vi.useRealTimers()
+      }
+    })
+
+    it('退出后空 key 账号登录会清除旧额度并仍可创建 key，旧请求不能恢复缓存', async () => {
+      useUserStore.getState().setStoreUserInfo({
+        ...useUserStore.getState().userInfo,
+        isLogin: true,
+      })
+      mockTaskStore.setState({ execute: false })
+
+      let resolveStale!: (value: unknown) => void
+      const stalePending = new Promise((resolve) => {
+        resolveStale = resolve
+      })
+      let phase: 'account-a' | 'relogin' = 'account-a'
+      let apikeysCalls = 0
+
+      mockNetWorkApi.mockImplementation(async (params?: { url?: string }) => {
+        if (params?.url === 'apikey') return { ok: true }
+        apikeysCalls += 1
+        if (phase === 'account-a') {
+          if (apikeysCalls === 1) {
+            return {
+              data: {
+                apiKey: ['old-k'],
+                tokenUsed: 0,
+                tokenLimit: 100_000_000,
+                tokenLimitEnable: true,
+              },
+            }
+          }
+          // effect 因 execute 翻转重跑：挂起，模拟退出后才返回的旧请求
+          return stalePending
+        }
+        // 新账号：空列表 → 创建 → 回拉新额度
+        if (apikeysCalls === 1) return { data: { apiKey: [] as string[] } }
+        return {
+          data: {
+            apiKey: ['new-k'],
+            tokenUsed: 50_000_000,
+            tokenLimit: 100_000_000,
+            tokenLimitEnable: true,
+          },
+        }
+      })
+
+      const result = await renderPanel(<AIRightPanel />)
+      try {
+        await waitFor(() => expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument())
+        expect(screen.getByText('¥10')).toBeVisible()
+
+        await act(async () => {
+          mockTaskStore.setState({ execute: true })
+        })
+        await waitFor(() => expect(apikeysCalls).toBeGreaterThanOrEqual(2))
+
+        await act(async () => {
+          useUserStore.getState().setStoreUserInfo({
+            ...useUserStore.getState().userInfo,
+            isLogin: false,
+          })
+        })
+        await waitFor(() => {
+          expect(screen.queryByTestId('ce-user-token-quota')).not.toBeInTheDocument()
+          expect(screen.getByRole('button', { name: '登录查看余额' })).toBeVisible()
+        })
+
+        phase = 'relogin'
+        apikeysCalls = 0
+        mockNetWorkApi.mockClear()
+        await act(async () => {
+          mockTaskStore.setState({ execute: false })
+          useUserStore.getState().setStoreUserInfo({
+            ...useUserStore.getState().userInfo,
+            isLogin: true,
+          })
+        })
+        await waitFor(() => {
+          expect(screen.getByTestId('ce-user-token-quota')).toBeInTheDocument()
+          // tokenUsed=50M → ¥5，证明新账号额度而非旧 ¥10
+          expect(screen.getByText('¥5')).toBeVisible()
+        })
+        expect(mockNetWorkApi.mock.calls.some((call) => call[0]?.url === 'apikey')).toBe(true)
+        expect(screen.queryByText('¥10')).not.toBeInTheDocument()
+
+        await act(async () => {
+          resolveStale({
+            data: {
+              apiKey: ['old-k'],
+              tokenUsed: 0,
+              tokenLimit: 100_000_000,
+              tokenLimitEnable: true,
+            },
+          })
+          await Promise.resolve()
+        })
+        expect(screen.getByText('¥5')).toBeVisible()
+        expect(screen.queryByText('¥10')).not.toBeInTheDocument()
+      } finally {
+        result.unmount()
+        resetMockStore()
       }
     })
   })
