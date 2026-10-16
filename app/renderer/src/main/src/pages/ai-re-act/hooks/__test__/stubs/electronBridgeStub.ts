@@ -2,6 +2,8 @@
  * Vitest stub：避免模块加载时访问真实 window.yakitBridge。
  * vitest.config.mts 将 @/services/electronBridge 指到本文件。
  */
+import { vi } from 'vitest'
+
 const noop = () => undefined
 const asyncNoop = async () => undefined
 
@@ -17,7 +19,18 @@ export const yakitApp = makeNs()
 export const yakitTheme = makeNs()
 export const yakitSystem = makeNs()
 export const yakitNetwork = makeNs()
-export const yakitShell = makeNs()
+/** openExternal 可断言；其余方法仍走 Proxy 兜底 */
+export const yakitShell = new Proxy(
+  { openExternal: vi.fn(asyncNoop) },
+  {
+    get(target, prop, receiver) {
+      if (Object.prototype.hasOwnProperty.call(target, prop)) {
+        return Reflect.get(target, prop, receiver)
+      }
+      return asyncNoop
+    },
+  },
+)
 export const yakitReverse = makeNs()
 export const yakitRisk = makeNs()
 export const yakitAsset = makeNs()

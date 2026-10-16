@@ -5,7 +5,7 @@ import { useMemoizedFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { API } from '@/services/swagger/resposeType'
 import { getBalanceYuanText, getTokenRemainingPercent } from './ceTokenQuota'
-import { openExternalWebsite } from '@/utils/openWebsite'
+import { yakitShell } from '@/services/electronBridge'
 import { WebsiteGV } from '@/enums/website'
 import styles from './CeUserMenu.module.scss'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
@@ -32,7 +32,7 @@ export const CeUserTokenQuota: React.FC<CeUserTokenQuotaProps> = (props) => {
 
   const handleRedeem = useMemoizedFn((e: React.MouseEvent) => {
     e.stopPropagation()
-    openExternalWebsite(WebsiteGV.PromotionsAddress)
+    yakitShell.openExternal(WebsiteGV.PromotionsAddress)
   })
 
   return (
