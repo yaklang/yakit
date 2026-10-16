@@ -24,6 +24,7 @@ interface ExportExcelProps {
   newUIType?: YakitButtonProp['type']
   getContainer?: HTMLElement
   onHarExport?: () => void
+  onClose?: () => void
 }
 
 interface resProps {
@@ -90,6 +91,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     newUIType = 'outline2',
     getContainer,
     onHarExport,
+    onClose,
   } = props
   const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'components'])
   const [loading, setLoading] = useState<boolean>(false)
@@ -134,6 +136,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
 
           if (totalCellNumber < maxCellNumber && response.Total <= pageSize && chunks.length === 1) {
             // 单元格数量小于最大单元格数量 或者导出内容小于90M，直接导出
+            // 写盘由 promise 链完成，不依赖组件存活，可关闭外层弹窗；分批/分割导出的后续弹窗需组件保持挂载，不在此关闭
             runExportExcel({
               header: header,
               data: exportData,
@@ -142,6 +145,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
               bookType: 'xlsx',
               optsSingleCellSetting,
             })
+            onClose?.()
           } else if (!(totalCellNumber < maxCellNumber && response.Total <= pageSize)) {
             // 分批导出
             const frequency = Math.ceil(totalCellNumber / maxCellNumber) // 导出次数
@@ -224,7 +228,19 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     <>
       {showButton ? (
         <>
-          <YakitButton loading={loading} type={newUIType} onClick={() => (onHarExport || toExcel)()} {...btnProps}>
+          <YakitButton
+            loading={loading}
+            type={newUIType}
+            onClick={() => {
+              if (onHarExport) {
+                onHarExport()
+                onClose?.()
+              } else {
+                toExcel()
+              }
+            }}
+            {...btnProps}
+          >
             {text || t('YakitButton.exportExcel')}
           </YakitButton>
         </>
@@ -416,6 +432,7 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
           pageSize={pageSize}
           getContainer={getContainer}
           onHarExport={onHarExport}
+          onClose={onClose}
         />
       </div>
     </div>
