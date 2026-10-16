@@ -58,6 +58,11 @@ const loadIndex = (platform, opts = {}) => {
     if (id === 'url') return { fileURLToPath: vi.fn() }
     if (id === 'process') return fakeProcess
     if (id === './e2eEnvironment') return { configureE2EEnvironment: vi.fn(() => ({ enabled: false })) }
+    if (id === './runtimePaths')
+      return {
+        appResourcePath: vi.fn((...parts) => path.join('app', ...parts)),
+        preloadPath: vi.fn(),
+      }
     if (id === './ipc') return { registerIPC: vi.fn(), registerNewIPC: vi.fn() }
     if (id === './localCache')
       return {
