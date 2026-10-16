@@ -1,6 +1,6 @@
 import React, { createRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Editor, defaultValueCtx, editorViewCtx, parserCtx, rootCtx } from '@milkdown/kit/core'
 import { DOMParser, DOMSerializer } from '@milkdown/kit/prose/model'
 import { commonmark } from '@milkdown/kit/preset/commonmark'
@@ -112,11 +112,22 @@ vi.mock('../../components/aiMilkdownInput/AIMilkdownInput', () => ({
 
 const { AIChatTextarea } = await compileReactModule<typeof TemplateModule>(import.meta.url, '../template.tsx')
 
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'], shouldAdvanceTime: true })
+})
+
 afterEach(async () => {
-  cleanup()
-  await Promise.all(editors.splice(0).map((editor) => editor.destroy()))
-  deferEditor.value = false
-  vi.clearAllMocks()
+  try {
+    cleanup()
+    await Promise.all(editors.splice(0).map((editor) => editor.destroy()))
+    // Milkdown 初始化成功后仍保留超时回调，必须在 jsdom 销毁前执行完毕。
+    await vi.runAllTimersAsync()
+    expect(vi.getTimerCount()).toBe(0)
+  } finally {
+    vi.useRealTimers()
+    deferEditor.value = false
+    vi.clearAllMocks()
+  }
 })
 
 async function setup(defaultValue = '') {
