@@ -82,6 +82,46 @@ const MORE_MENUS: MenuItemDef[] = [
 /** 执行时长、工具调用统计等数据缺失时的占位符 */
 const PLACEHOLDER = '—'
 
+const shownApiKeyDetail = (res?: API.ApiKeysResponse): API.ApiKeyDetail | undefined => {
+  const detail = res?.data
+  if (!detail) return undefined
+  const keys = detail.apiKey
+  if (!Array.isArray(keys) || keys.length === 0) return undefined
+  return detail
+}
+
+/** 网络失败返回 null；成功但无 body 返回 undefined，空列表才会继续建 key */
+const fetchCommunityApiKeys = async (): Promise<API.ApiKeysResponse | null | undefined> => {
+  let failed = false
+  let res: API.ApiKeysResponse | undefined
+  try {
+    res = await NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
+      method: 'post',
+      url: 'apikeys',
+      data: { page: 1, pageSize: 5 },
+    })
+  } catch {
+    failed = true
+  }
+  if (failed) return null
+  return res
+}
+
+const createCommunityApiKey = async (): Promise<API.ActionSucceeded | undefined> => {
+  let failed = false
+  let created: API.ActionSucceeded | undefined
+  try {
+    created = await NetWorkApi<null, API.ActionSucceeded>({
+      method: 'post',
+      url: 'apikey',
+    })
+  } catch {
+    failed = true
+  }
+  if (failed) return undefined
+  return created
+}
+
 const emitToggleAIAgentTab = (active: AIAgentTabListEnum) => {
   emiter.emit(
     'switchAIAgentTab',
@@ -102,7 +142,9 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
     const [apiKeys, setApiKeys] = useState<API.ApiKeyDetail>()
     // 已展示过的额度：刷新为空/失败时保留，避免 CeUserTokenQuota 卸载闪烁
     const apiKeysRef = useRef<API.ApiKeyDetail>()
-    if (apiKeys) apiKeysRef.current = apiKeys
+    useEffect(() => {
+      apiKeysRef.current = apiKeys
+    }, [apiKeys])
 
     useEffect(() => {
       if (!isLogin || !isCommunityEdition()) {
@@ -115,54 +157,37 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
       let requestId = 0
       const applyApiKeys = (id: number, res?: API.ApiKeysResponse) => {
         if (cancelled || id !== requestId) return
-        if (res?.data && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
-          setApiKeys(res.data)
-        }
+        const shown = shownApiKeyDetail(res)
+        if (shown) setApiKeys(shown)
         // 空列表不 set undefined：保留上次展示
       }
       /** 与 useUserMenu 一致：新 CE 账号可能尚无 key，创建后再回拉，避免配额区一直空白 */
       const ensureApiKeys = async () => {
-        const id = ++requestId
-        try {
-          const res = await NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
-            method: 'post',
-            url: 'apikeys',
-            data: { page: 1, pageSize: 5 },
-          })
-          if (cancelled || id !== requestId) return
-          if (res?.data && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
-            setApiKeys(res.data)
-            return
-          }
-          // 已有展示数据时不卸载、不重复建 key；仅首次无 key 才创建
-          if (apiKeysRef.current) return
-          const created = await NetWorkApi<null, API.ActionSucceeded>({
-            method: 'post',
-            url: 'apikey',
-          })
-          if (cancelled || id !== requestId || !created?.ok) return
-          const again = await NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
-            method: 'post',
-            url: 'apikeys',
-            data: { page: 1, pageSize: 5 },
-          })
-          applyApiKeys(id, again)
-        } catch {
-          // 失败保留上次；首次仍无数据则保持隐藏
+        requestId = requestId + 1
+        const id = requestId
+        const res = await fetchCommunityApiKeys()
+        if (cancelled || id !== requestId || res === null) return
+        const shown = shownApiKeyDetail(res)
+        if (shown) {
+          setApiKeys(shown)
+          return
         }
+        // 已有展示数据时不卸载、不重复建 key；仅首次无 key 才创建
+        if (apiKeysRef.current) return
+        const created = await createCommunityApiKey()
+        if (cancelled || id !== requestId || !created?.ok) return
+        const again = await fetchCommunityApiKeys()
+        if (again === null) return
+        applyApiKeys(id, again)
       }
       /** 轮询只刷新，不再创建，避免执行中每 10s 重复建 key */
       const refreshApiKeys = () => {
-        const id = ++requestId
-        NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
-          method: 'post',
-          url: 'apikeys',
-          data: { page: 1, pageSize: 5 },
+        requestId = requestId + 1
+        const id = requestId
+        fetchCommunityApiKeys().then((res) => {
+          if (res === null) return
+          applyApiKeys(id, res)
         })
-          .then((res) => applyApiKeys(id, res))
-          .catch(() => {
-            // 刷新失败保留上次展示，避免配额区闪烁
-          })
       }
       ensureApiKeys()
       // 执行中每 10 秒刷新配额，结束后停止轮询
