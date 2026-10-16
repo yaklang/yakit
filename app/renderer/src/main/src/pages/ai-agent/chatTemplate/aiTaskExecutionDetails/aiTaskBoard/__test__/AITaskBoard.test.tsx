@@ -99,6 +99,48 @@ describe('AITaskBoard 状态分组', () => {
   })
 })
 
+describe('AITaskBoard 运行中列图标旋转', () => {
+  const getColumnIcon = (title: string) =>
+    screen.getByText(title).closest('.todo-list-header')?.querySelector('.todo-column-icon') as HTMLElement
+
+  it('doing 列有任务时图标含 todo-column-icon-spin', () => {
+    render(
+      <AITaskBoard
+        columns={[
+          {
+            key: 'doing',
+            title: '运行中',
+            icon: <span />,
+            items: [createItem({ id: 'd1', content: '执行中', status: 'DOING' })],
+          },
+        ]}
+      />,
+    )
+    expect(getColumnIcon('运行中')).toHaveClass('todo-column-icon-spin')
+  })
+
+  it('doing 空列不含 todo-column-icon-spin', () => {
+    render(<AITaskBoard columns={[{ key: 'doing', title: '运行中', icon: <span />, items: [] }]} />)
+    expect(getColumnIcon('运行中')).not.toHaveClass('todo-column-icon-spin')
+  })
+
+  it('非 doing 列有任务时不含 todo-column-icon-spin', () => {
+    render(
+      <AITaskBoard
+        columns={[
+          {
+            key: 'pending',
+            title: '待处理',
+            icon: <span />,
+            items: [createItem({ id: 'p1', content: '排队中' })],
+          },
+        ]}
+      />,
+    )
+    expect(getColumnIcon('待处理')).not.toHaveClass('todo-column-icon-spin')
+  })
+})
+
 describe('AITaskBoard 卡片按状态展示', () => {
   it('PENDING：仅展示创建时间', () => {
     render(<AITaskBoard columns={createColumns([createItem({ content: '排队任务' })])} />)
