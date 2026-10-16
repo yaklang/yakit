@@ -50,7 +50,10 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 
 const modelConfigKeys = ['IntelligentModels', 'LightweightModels', 'VisionModels'] as const
-type ModelDraftTarget = { current: AIModelConfig }
+type ModelDraftTarget = {
+  id: number
+  current: AIModelConfig
+}
 type ModelDraftTargets = Record<AIModelTypeFileName, ModelDraftTarget[]>
 type ModelDraftSave = {
   config: AIGlobalConfig
@@ -107,9 +110,21 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
   //#region AI model
 
   const [{ aiGlobalConfig, queryLoading }, event] = useAIGlobalConfig()
-  const [aiDraftConfig, setAIDraftConfig] = useState(() => cloneDeep(aiGlobalConfig))
+  const nextTargetIdRef = useRef(0)
   const draftTargetsRef = useRef(new WeakMap<AIModelConfig, ModelDraftTarget>())
   const sourceTargetsRef = useRef<ModelDraftTargets>({ IntelligentModels: [], LightweightModels: [], VisionModels: [] })
+  const [aiDraftConfig, setAIDraftConfig] = useState(() => {
+    const draft = cloneDeep(aiGlobalConfig)
+    for (const key of modelConfigKeys) {
+      sourceTargetsRef.current[key] = draft[key].map((model, index) => {
+        const target = { id: nextTargetIdRef.current++, current: aiGlobalConfig[key][index] }
+        draftTargetsRef.current.set(model, target)
+        return target
+      })
+    }
+    return draft
+  })
+  const getModelKey = useMemoizedFn((model: AIModelConfig) => draftTargetsRef.current.get(model)!.id)
   const submittedSavesRef = useRef<ModelDraftSave[]>([])
   const pendingEditsRef = useRef<
     Array<
@@ -136,6 +151,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
         : matchModelTargets(aiGlobalConfig[key], sourceTargetsRef.current[key], submittedSavesRef.current, key)
       const targets = next[key].map((model, index) => {
         const target = [...matched].find(([, matchedIndex]) => matchedIndex === index)?.[0] || {
+          id: nextTargetIdRef.current++,
           current: aiGlobalConfig[key][index],
         }
         target.current = aiGlobalConfig[key][index]
@@ -178,6 +194,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
     setAIDraftConfig(next)
   }, [aiGlobalConfig])
   const [onlineLoading, setOnlineLoading] = useState<boolean>(false)
+  const pendingModelRequestsRef = useRef(0)
   const [open, setOpen] = useState<boolean>(false)
   const [modelListSession, setModelListSession] = useState(0)
 
@@ -206,6 +223,8 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
 
   const getAIModelListOption = useDebounceFn(
     () => {
+      pendingModelRequestsRef.current += 1
+      setOnlineLoading(true)
       isForcedSetAIModal({
         t,
         pageKey: 'ai-agent',
@@ -215,7 +234,8 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
         .catch(() => undefined)
         .finally(() => {
           setTimeout(() => {
-            setOnlineLoading(false)
+            pendingModelRequestsRef.current -= 1
+            if (pendingModelRequestsRef.current === 0) setOnlineLoading(false)
           }, 200)
         })
     },
@@ -430,6 +450,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
                       title={t('AiAgengt.intelligentModels')}
                       subTitle={t('AIModelList.intelligentModelsDesc')}
                       list={intelligentModels}
+                      getModelKey={getModelKey}
                       onSelect={(item, index) =>
                         onSelect(item, {
                           fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
@@ -471,7 +492,20 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
 })
 
 const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) => {
-  const { title, subTitle, list, onSelect, type, onEdit, dropdownRef, triggerRef, open, onWidthChange, listRef } = props
+  const {
+    title,
+    subTitle,
+    list,
+    getModelKey,
+    onSelect,
+    type,
+    onEdit,
+    dropdownRef,
+    triggerRef,
+    open,
+    onWidthChange,
+    listRef,
+  } = props
   const [currentSelectIndex, setCurrentSelectIndex] = useState<number>()
   const [currentItem, setCurrentItem] = useState<AIModelConfig>()
 
@@ -505,8 +539,12 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
       frame = requestAnimationFrame(updatePosition)
     }
     window.addEventListener('resize', onResize)
+    // scroll 不冒泡，用捕获监听下拉框及内部列表，避免 fixed 浮层脱离锚点。
+    const dropdown = dropdownRef.current
+    dropdown?.addEventListener('scroll', closeEditContent, true)
     return () => {
       window.removeEventListener('resize', onResize)
+      dropdown?.removeEventListener('scroll', closeEditContent, true)
       if (frame !== undefined) cancelAnimationFrame(frame)
     }
   }, [currentSelectIndex, modelNameListMap])
@@ -639,7 +677,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
       <div className={styles['ai-online-model-list']}>
         {list.map((item, index) => (
           <div
-            key={index}
+            key={getModelKey(item)}
             className={classNames(styles['ai-online-model-list-row'])}
             onClick={(e) => onSelectItem(e, item, index)}
           >

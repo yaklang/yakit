@@ -130,6 +130,26 @@ const getDropdownButtons = (dropdown: HTMLElement) => within(dropdown).getAllByR
 const getEditButtons = (dropdown: HTMLElement) => within(dropdown).getAllByRole('button', { name: 'YakitButton.edit' })
 
 describe('EnterpriseAIModelSelect', () => {
+  it.each([false, true])('并发刷新全部结束后才清除 loading（新请求先结束：%s）', async (latestFirst) => {
+    vi.useFakeTimers()
+    const completions: Array<() => void> = []
+    mocks.load.mockImplementation(() => new Promise<void>((resolve) => completions.push(resolve)))
+    render(<EnterpriseAIModelSelect />)
+    fireEvent.click(screen.getByRole('button', { name: '打开选择' }))
+    await act(async () => vi.advanceTimersByTimeAsync(250))
+    act(() => emiter.emit('onRefreshAvailableAIModelList'))
+    expect(mocks.load).toHaveBeenCalledTimes(2)
+    const refresh = getDropdownButtons(screen.getByRole('region', { name: '模型列表' }))[1]
+    expect(refresh).toHaveClass('ant-btn-loading')
+
+    await act(async () => completions[latestFirst ? 1 : 0]())
+    await act(async () => vi.advanceTimersByTimeAsync(500))
+    expect(refresh).toHaveClass('ant-btn-loading')
+    await act(async () => completions[latestFirst ? 0 : 1]())
+    await act(async () => vi.advanceTimersByTimeAsync(500))
+    expect(refresh).not.toHaveClass('ant-btn-loading')
+  })
+
   it('首次空配置新增模型后，收到可用模型刷新事件即可显示选择器', async () => {
     mocks.refresh.mockImplementationOnce(() => {
       applyModels({

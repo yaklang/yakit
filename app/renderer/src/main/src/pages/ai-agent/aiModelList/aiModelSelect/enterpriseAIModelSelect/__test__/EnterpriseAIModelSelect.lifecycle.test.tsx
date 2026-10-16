@@ -15,6 +15,7 @@ vi.mock('../EnterpriseAIModelSelect.module.scss', () => ({
     'drop-select-wrapper': 'drop-select-wrapper',
     'edit-content-wrapper': 'edit-content-wrapper',
     'edit-content': 'edit-content',
+    'ai-online-model-list': 'ai-online-model-list',
   },
 }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: vi.fn() }))
@@ -104,6 +105,49 @@ const reopenModels = async (trigger: HTMLElement) => {
 }
 
 describe('EnterpriseAIModelSelect real dropdown lifecycle', () => {
+  it.each(['ai-online-model-list', 'drop-select-wrapper'])(
+    '%s 滚动时关闭编辑浮层，重新悬停可复用缓存',
+    async (containerClass) => {
+      mocks.names.mockResolvedValue({ ModelName: ['cached-name'] })
+      render(<EnterpriseAIModelSelect />)
+      const trigger = await openModels()
+      await hoverEdit()
+      expect(await screen.findByText('cached-name')).toBeVisible()
+
+      // 二级浮层自己的滚动不应关闭名称选择。
+      fireEvent.scroll(document.querySelector(`.${styles['edit-content-wrapper']}`)!)
+      expect(screen.getByText('cached-name')).toBeVisible()
+      fireEvent.scroll(document.querySelector(`.${styles[containerClass]}`)!)
+      expect(screen.queryByText('cached-name')).not.toBeInTheDocument()
+      expect(trigger).toHaveAttribute('aria-expanded', 'true')
+
+      await hoverEdit()
+      expect(await screen.findByText('cached-name')).toBeVisible()
+      expect(mocks.names).toHaveBeenCalledTimes(1)
+    },
+  )
+
+  it('列表滚动关闭浮层后，迟到的名称响应不会重新打开浮层', async () => {
+    let resolveNames!: (value: { ModelName: string[] }) => void
+    mocks.names.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveNames = resolve
+        }),
+    )
+    render(<EnterpriseAIModelSelect />)
+    await openModels()
+    await hoverEdit()
+    await waitFor(() => expect(mocks.names).toHaveBeenCalledTimes(1))
+
+    fireEvent.scroll(document.querySelector(`.${styles['ai-online-model-list']}`)!)
+    await act(async () => resolveNames({ ModelName: ['late-name'] }))
+    expect(screen.queryByText('late-name')).not.toBeInTheDocument()
+    await hoverEdit()
+    expect(await screen.findByText('late-name')).toBeVisible()
+    expect(mocks.names).toHaveBeenCalledTimes(1)
+  })
+
   it.each([
     { anchorTop: 230, height: 84, expectedTop: 230 },
     { anchorTop: 300, height: 84, expectedTop: 248 },
@@ -373,5 +417,54 @@ describe('EnterpriseAIModelSelect real dropdown lifecycle', () => {
     await act(async () => resolveOld({ ModelName: ['stale-name'] }))
     expect(screen.getByText('current-name')).toBeVisible()
     expect(screen.queryByText('stale-name')).not.toBeInTheDocument()
+  })
+})
+
+describe('EnterpriseAIModelSelect stable row keys', () => {
+  it('模型重排和改名后保留同一行 DOM', async () => {
+    mocks.names.mockResolvedValue({ ModelName: ['renamed-model'] })
+    render(<EnterpriseAIModelSelect />)
+    await openModels()
+    const initial = useAIGlobalConfigStore.getState().aiGlobalConfig
+    const models = ['model-a', 'model-b'].map((ModelName) => ({
+      ...initial.IntelligentModels[0],
+      ModelName,
+    }))
+    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig({ ...initial, IntelligentModels: models }))
+    const buttons = screen.getAllByRole('button', { name: 'YakitButton.edit' })
+
+    act(() =>
+      useAIGlobalConfigStore.getState().setAIGlobalConfig({
+        ...initial,
+        IntelligentModels: [structuredClone(models[1]), structuredClone(models[0])],
+      }),
+    )
+    expect(screen.getAllByRole('button', { name: 'YakitButton.edit' })[0]).toBe(buttons[1])
+    expect(screen.getAllByRole('button', { name: 'YakitButton.edit' })[1]).toBe(buttons[0])
+
+    fireEvent.mouseEnter(buttons[1])
+    fireEvent.click(await screen.findByText('renamed-model'))
+    expect(screen.getAllByRole('button', { name: 'YakitButton.edit' })[0]).toBe(buttons[1])
+    expect(screen.getAllByRole('button', { name: 'YakitButton.edit' })[1]).toBe(buttons[0])
+    expect(screen.getAllByText('renamed-model').length).toBeGreaterThan(0)
+  })
+
+  it('重复模型仍有独立行标识，选择重排不会交换 DOM 身份', async () => {
+    render(<EnterpriseAIModelSelect />)
+    await openModels()
+    const initial = useAIGlobalConfigStore.getState().aiGlobalConfig
+    const duplicate = { ...initial.IntelligentModels[0], ModelName: 'duplicate-model' }
+    act(() =>
+      useAIGlobalConfigStore.getState().setAIGlobalConfig({
+        ...initial,
+        IntelligentModels: [duplicate, structuredClone(duplicate)],
+      }),
+    )
+    const list = document.querySelector(`.${styles['ai-online-model-list']}`)!
+    const rows = Array.from(list.children)
+    expect(rows).toHaveLength(2)
+    fireEvent.click(rows[1])
+    expect(list.children[0]).toBe(rows[1])
+    expect(list.children[1]).toBe(rows[0])
   })
 })

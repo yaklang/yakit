@@ -22,6 +22,7 @@ export interface AIModelSelectListProps {
   title: ReactNode
   subTitle: ReactNode
   list: AIModelConfig[]
+  getModelKey: (model: AIModelConfig) => number
   onSelect: (v: AIModelConfig, i: number) => void
   onEdit: (v: AIModelConfig, i: number) => void
   dropdownRef: RefObject<HTMLDivElement>
