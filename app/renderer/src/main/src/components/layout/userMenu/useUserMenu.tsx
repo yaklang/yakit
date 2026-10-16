@@ -294,7 +294,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
     // 退出菜单
     const signOutMenu: YakitMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
     // EE|SE 版本
-    if (userInfo.platform === 'company') {
+    if (userInfo.platform === 'company' || userInfo.platform === 'ccb') {
       const SetUserInfoModule = () => (
         <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
       )
@@ -307,7 +307,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
       if (userInfo.role === 'admin') {
         // 管理员
         if (isEnpriTraceAgent()) {
-          setUserMenu([
+          let cacheMenus: YakitMenuItemType[] = [
             ...userAvatar,
             UserMenusMap['holeCollect'],
             UserMenusMap['roleAdmin'],
@@ -317,7 +317,12 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
             UserMenusMap['robotControl'],
             UserMenusMap['messageCenter'],
             ...signOutMenu,
-          ])
+          ]
+          // 非原生系统登录时 不显示修改密码
+          if (userInfo.platform !== 'company') {
+            cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'set-password')
+          }
+          setUserMenu(cacheMenus)
         } else {
           let cacheMenus: YakitMenuItemType[] = [
             ...userAvatar,
@@ -349,6 +354,10 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
           // IRify 版本时管理员不显示插件管理
           if (isIRify()) {
             cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
+          }
+          // 非原生系统登录时 不显示修改密码
+          if (userInfo.platform !== 'company') {
+            cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'set-password')
           }
           setUserMenu([...cacheMenus])
         }
@@ -394,7 +403,10 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
           isNew = true
           cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'close-dynamic-control')
         }
-
+        // 非原生系统登录时 不显示修改密码
+        if (userInfo.platform !== 'company') {
+          cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'set-password')
+        }
         if (isNew) {
           setUserMenu([...cacheMenus])
         } else {
