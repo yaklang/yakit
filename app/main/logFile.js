@@ -159,7 +159,7 @@ const engineLogOutputFile = (message) => {
 const engineLogOutputUI = (win, message, isTitle) => {
   const channle = !!isTitle ? 'live-engine-log' : 'live-engine-stdio'
   try {
-    if (win) {
+    if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) {
       win.webContents.send(channle, `${message}\n`)
     }
   } catch (error) {

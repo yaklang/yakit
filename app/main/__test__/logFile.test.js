@@ -59,6 +59,23 @@ describe('log export and shutdown flush', () => {
     expect(fs.readFileSync(files.render, 'utf8').match(/last crash/g)).toHaveLength(1)
   })
 
+  it('sends engine log to alive windows on both channels', () => {
+    const send = vi.fn()
+    const win = { isDestroyed: () => false, webContents: { isDestroyed: () => false, send } }
+    logs.engineLogOutputUI(win, 'engine title', true)
+    expect(send).toHaveBeenCalledWith('live-engine-log', 'engine title\n')
+    logs.engineLogOutputUI(win, 'engine line', false)
+    expect(send).toHaveBeenCalledWith('live-engine-stdio', 'engine line\n')
+  })
+
+  it('skips engine log UI output for missing or destroyed windows', () => {
+    const send = vi.fn()
+    logs.engineLogOutputUI(null, 'gone', true)
+    logs.engineLogOutputUI({ isDestroyed: () => true, webContents: { isDestroyed: () => false, send } }, 'gone', true)
+    logs.engineLogOutputUI({ isDestroyed: () => false, webContents: { isDestroyed: () => true, send } }, 'gone', true)
+    expect(send).not.toHaveBeenCalled()
+  })
+
   it('waits for in-flight writes and keeps buffered entries on immediate shutdown', async () => {
     logs.renderLogOutputFile('first crash')
     const flushing = logs.flushAllLogs()
