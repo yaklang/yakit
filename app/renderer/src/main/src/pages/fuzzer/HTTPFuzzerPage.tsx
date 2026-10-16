@@ -4161,6 +4161,12 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
   //     })
   // })
   const showSearchIcon = useMemo(() => +(secondNodeSize?.width || 0) <= 730, [secondNodeSize])
+  useEffect(() => {
+    if (!showSearchIcon) {
+      setOpen(false)
+      composingRef.current = false
+    }
+  }, [showSearchIcon])
 
   if (onlyOneResponse) {
     const searchNode = (

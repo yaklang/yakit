@@ -158,21 +158,21 @@ const searchPlaceholder = 'SecondNodeExtra.enterTargetResponse'
  * 组合期间必须忽略关闭，组合结束后下一次关闭才生效。
  */
 describe('SecondNodeExtra search popover', () => {
-  const renderSecondNodeExtra = (width: number) =>
-    render(
-      <SecondNodeExtra
-        rsp={singleResponse}
-        onlyOneResponse
-        cachedTotal={1}
-        failedCount={0}
-        secondNodeSize={{ width, height: 200 }}
-        setQuery={() => {}}
-        sendPayloadsType="config"
-        setShowExtra={() => {}}
-        showResponseInfoSecondEditor={false}
-        setShowResponseInfoSecondEditor={() => {}}
-      />,
-    )
+  const buildSecondNodeExtra = (width: number) => (
+    <SecondNodeExtra
+      rsp={singleResponse}
+      onlyOneResponse
+      cachedTotal={1}
+      failedCount={0}
+      secondNodeSize={{ width, height: 200 }}
+      setQuery={() => {}}
+      sendPayloadsType="config"
+      setShowExtra={() => {}}
+      showResponseInfoSecondEditor={false}
+      setShowResponseInfoSecondEditor={() => {}}
+    />
+  )
+  const renderSecondNodeExtra = (width: number) => render(buildSecondNodeExtra(width))
 
   it('keeps the search popover open while composing and closes after composition ends', () => {
     renderSecondNodeExtra(400)
@@ -223,5 +223,41 @@ describe('SecondNodeExtra search popover', () => {
     renderSecondNodeExtra(400)
     fireEvent.click(screen.getByTestId('search-popover-request-open'))
     expectShortcutsBubbleToDocument(screen.getByPlaceholderText(searchPlaceholder))
+  })
+
+  /**
+   * 窄布局打开弹窗后拉宽：Popover 卸载但组件还在，open 不得残留 true，
+   * 否则缩窄重新挂载时弹窗自动重现。
+   */
+  it('keeps the popover closed after widening and re-narrowing', () => {
+    const { rerender } = renderSecondNodeExtra(400)
+    fireEvent.click(screen.getByTestId('search-popover-request-open'))
+    expect(screen.queryByTestId('search-popover-panel')).not.toBeNull()
+
+    // 宽布局直出输入框，Popover 分支卸载
+    rerender(buildSecondNodeExtra(800))
+    expect(screen.getByPlaceholderText(searchPlaceholder)).not.toBeNull()
+
+    // 缩窄后重新挂载，不得沿用残留的 open=true
+    rerender(buildSecondNodeExtra(400))
+    expect(screen.queryByTestId('search-popover-panel')).toBeNull()
+    expect(screen.queryByPlaceholderText(searchPlaceholder)).toBeNull()
+  })
+
+  /** 组合中途拉宽时输入框卸载、不会触发 compositionEnd，组合态必须随布局切换重置，否则之后弹窗关不掉 */
+  it('clears stale composition state after widening so the popover can close again', () => {
+    const { rerender } = renderSecondNodeExtra(400)
+    fireEvent.click(screen.getByTestId('search-popover-request-open'))
+    fireEvent.compositionStart(screen.getByPlaceholderText(searchPlaceholder))
+
+    rerender(buildSecondNodeExtra(800))
+    rerender(buildSecondNodeExtra(400))
+
+    fireEvent.click(screen.getByTestId('search-popover-request-open'))
+    expect(screen.queryByTestId('search-popover-panel')).not.toBeNull()
+
+    // 组合态已重置，关闭请求不再被守卫吞掉
+    fireEvent.click(screen.getByTestId('search-popover-request-close'))
+    expect(screen.queryByTestId('search-popover-panel')).toBeNull()
   })
 })
