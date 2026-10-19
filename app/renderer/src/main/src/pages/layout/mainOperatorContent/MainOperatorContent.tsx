@@ -60,7 +60,6 @@ import classNames from 'classnames'
 import _ from 'lodash'
 import { routeConvertKey } from '../publicMenu/utils'
 import { CheckIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckIcon'
-import { SolidDocumentTextIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidDocumentTextIcon'
 import type { RouteToPageProps } from '../publicMenu/PublicMenu'
 import { type SubscribeCloseType, type YakitSecondaryConfirmProps, useSubscribeClose } from '@/store/tabSubscribe'
 import { YakitModalConfirm, showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -7092,49 +7091,29 @@ const CloseGroupContent: React.FC = React.memo(() => {
 
 const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
   const { subPage, selectSubMenu, draggableId } = props
-  const [groupItem, setGroupItem] = useState<MultipleNodeInfo>({
-    id: '0',
-    verbose: '',
-    sortFieId: 1,
-    groupId: '0',
-  })
-  const [item, setItem] = useState<MultipleNodeInfo>({
-    id: '0',
-    verbose: '',
-    sortFieId: 1,
-    groupId: '0',
-  })
-  useEffect(() => {
-    const { index, subIndex } = getPageItemById(subPage, draggableId)
-    if (subIndex === -1) return
-    const groupChildrenList = subPage[index].groupChildren || []
-    if (groupChildrenList.length === 0) return
-    const item: MultipleNodeInfo = groupChildrenList[subIndex]
-    setItem(item)
-    setGroupItem(subPage[index])
-  }, [draggableId])
-  const isActive = useMemo(() => item.id === selectSubMenu?.id, [item, selectSubMenu])
-  const customColorStyle = useWebFuzzerGroupColorStyle(groupItem.color)
+  const { current, index, subIndex } = getPageItemById(subPage, draggableId)
+  const groupItem = subIndex >= 0 && index >= 0 ? subPage[index] : undefined
+  const isActive = current.id === selectSubMenu?.id
+  const customColorStyle = useWebFuzzerGroupColorStyle(groupItem?.color)
   return (
     <div
       style={customColorStyle}
       className={classNames(styles['tab-menu-sub-item'], {
         [styles['tab-menu-sub-item-active']]: isActive,
         [styles['tab-menu-sub-item-dragging']]: true,
-        [styles['tab-menu-sub-item-combine-custom-color']]: !!groupItem.color,
+        [styles['tab-menu-sub-item-combine-custom-color']]: !!groupItem?.color,
       })}
     >
       {isActive && (
         <div
           className={classNames({
-            [styles['tab-menu-sub-item-active-line']]: isActive || !!groupItem.color,
+            [styles['tab-menu-sub-item-line']]: isActive || !!groupItem?.color,
           })}
         />
       )}
       <div className={styles['tab-menu-item-verbose-wrapper']}>
         <div className={styles['tab-menu-item-verbose']}>
-          <SolidDocumentTextIcon className={styles['document-text-icon']} />
-          <span className="content-ellipsis">{item.verbose || ''}</span>
+          <span className="content-ellipsis">{current.verbose || ''}</span>
         </div>
         <XSolid
           size={12}
