@@ -5152,20 +5152,14 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
       }
       const { index: sourceIndex } = result.source
       const { index: destinationIndex } = result.destination
-      const sourceItem = subPage[sourceIndex]
-      const destinationItem = subPage[destinationIndex]
       const subMenuList: MultipleNodeInfo[] = reorder(subPage, sourceIndex, destinationIndex)
       setSubPage([...subMenuList])
       onUpdatePageCache(subMenuList)
-      const source = {
-        id: sourceItem.id,
-        sortFieId: destinationIndex + 1,
-      }
-      const destination = {
-        id: destinationItem.id,
-        sortFieId: sourceIndex + 1,
-      }
-      onExchangeOrderPages(pageRouteKey, source, destination)
+      // 跨距离移动时中间项位置整体平移，需全量重排 sortFieId，仅交换两端点项会导致恢复顺序错乱
+      onUpdateSorting(subMenuList, pageRouteKey)
+      setTimeout(() => {
+        emiter.emit('secondMenuTabDataChange', '')
+      }, 200)
     })
     /** @description 同一个组内之间移动 */
     const movingWithinSameGroup = useMemoizedFn((result: DropResult) => {
@@ -5178,21 +5172,16 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
       const gIndex = subPage.findIndex((ele) => ele.id === groupId)
       if (gIndex === -1) return
       const groupChildrenList = subPage[gIndex].groupChildren || []
-      const groupChildrenSourceItem = groupChildrenList[sourceIndex]
-      const groupChildrenDestinationItem = groupChildrenList[destinationIndex]
       const newGroupChildrenList: MultipleNodeInfo[] = reorder(groupChildrenList, sourceIndex, destinationIndex)
       subPage[gIndex].groupChildren = newGroupChildrenList
+      // 原地赋值不会改变 subPage/subItem 引用，SubTabList 到 SubTabGroupItem 全链 memo 均跳过重渲染，需更新 state 使新顺序生效
+      setSubPage([...subPage])
       onUpdatePageCache(subPage)
-      // 排序
-      const source = {
-        id: groupChildrenSourceItem.id,
-        sortFieId: destinationIndex + 1,
-      }
-      const destination = {
-        id: groupChildrenDestinationItem.id,
-        sortFieId: sourceIndex + 1,
-      }
-      onExchangeOrderPages(pageRouteKey, source, destination)
+      // 跨距离移动时中间项位置整体平移，需全量重排 sortFieId，仅交换两端点项会导致恢复顺序错乱
+      onUpdateSorting(subPage, pageRouteKey)
+      setTimeout(() => {
+        emiter.emit('secondMenuTabDataChange', '')
+      }, 200)
     })
 
     /** @description 不同一个组间移动 从组A到组B */
@@ -6179,38 +6168,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
       }
       onUpdateSorting(subPage, pageRouteKey)
     })
-    /**更新两个item的排序字段 */
-    const onExchangeOrderPages = useMemoizedFn(
-      (
-        routeKey: YakitRoute | string,
-        source: {
-          id: string
-          sortFieId: number
-        },
-        destination: {
-          id: string
-          sortFieId: number
-        },
-      ) => {
-        const currentSource: PageNodeItemProps | undefined = queryPagesDataById(routeKey, source.id)
-        const currentDestination: PageNodeItemProps | undefined = queryPagesDataById(routeKey, destination.id)
-        if (currentSource) {
-          updatePagesDataCacheById(routeKey, {
-            ...currentSource,
-            sortFieId: source.sortFieId,
-          })
-        }
-        if (currentDestination) {
-          updatePagesDataCacheById(routeKey, {
-            ...currentDestination,
-            sortFieId: destination.sortFieId,
-          })
-        }
-        setTimeout(() => {
-          emiter.emit('secondMenuTabDataChange', '')
-        }, 200)
-      },
-    )
     /**先添加新组，再onUpdateSorting */
     const onAddGroupsAndThenSort = useMemoizedFn(
       (newGroup: MultipleNodeInfo, subPage: MultipleNodeInfo[], currentRouteKey: string) => {

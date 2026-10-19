@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import classNames from 'classnames'
 import ts from 'typescript'
 import debounce from 'lodash/debounce'
 import isEqual from 'lodash/isEqual'
@@ -214,6 +215,192 @@ describe('MainOperatorContent first-level tab actions', () => {
       expect(app.bindings.clearFuzzerSequence).not.toHaveBeenCalled()
     },
   )
+})
+
+// 拖拽克隆预览是渲染函数，无法像回调那样直接执行：按组件源码原位转译，替换 React.createElement 后收集 JSX 结构。
+const setupDragClone = (subPage: any, draggableId: string, selectSubMenu?: { id: string }) => {
+  const nodes: any[] = []
+  const createElement = (type: unknown, props: Record<string, any> | null, ...children: unknown[]) => {
+    const node = {
+      type,
+      props: props || {},
+      children: children.filter((child) => typeof child !== 'boolean'),
+    }
+    nodes.push(node)
+    return node
+  }
+  // CSS Modules key 经 Proxy 原样返回为类名字符串，可直接断言
+  const styles = new Proxy({}, { get: (_target, key: string) => key }) as Record<string, string>
+  const bindings = {
+    classNames,
+    getPageItemById: execute(`return ${declaration('getPageItemById')!.initializer!.getText(source)}`, {}),
+    useWebFuzzerGroupColorStyle: (color?: string) => (color ? { 'group-color': color } : {}),
+    React: { createElement, memo: (fn: unknown) => fn },
+    XSolid: 'XSolid',
+    styles,
+  }
+  const DroppableClone = execute(`return (${declaration('DroppableClone')!.initializer!.getText(source)})`, bindings)
+  DroppableClone({ subPage, selectSubMenu, draggableId })
+  const classesOf = (node: any) => `${node.props.className || ''}`.split(' ').filter(Boolean)
+  const container = () => nodes.find((node) => classesOf(node).includes('tab-menu-sub-item'))
+  const line = () => nodes.find((node) => classesOf(node).includes('tab-menu-sub-item-line'))
+  const verbose = () => nodes.find((node) => node.props.className === 'content-ellipsis')
+  return { nodes, classesOf, container, line, verbose }
+}
+
+describe('MainOperatorContent drag clone preview', () => {
+  const subPage = [
+    {
+      id: 'wf-group',
+      verbose: '分组',
+      groupId: 'wf-group',
+      color: '#F49E4C',
+      groupChildren: [
+        { id: 'wf-1', verbose: '请求一', groupId: 'wf-group', sortFieId: 1 },
+        { id: 'wf-2', verbose: '请求二', groupId: 'wf-group', sortFieId: 2 },
+      ],
+    },
+  ]
+
+  it('renders the dragged tab label with active styling while the tab is selected', () => {
+    const { classesOf, container, line, verbose } = setupDragClone(subPage, 'wf-2', { id: 'wf-2' })
+
+    expect(classesOf(container())).toEqual(
+      expect.arrayContaining([
+        'tab-menu-sub-item',
+        'tab-menu-sub-item-active',
+        'tab-menu-sub-item-dragging',
+        'tab-menu-sub-item-combine-custom-color',
+      ]),
+    )
+    expect(container().props.style).toEqual({ 'group-color': '#F49E4C' })
+    expect(classesOf(line())).toContain('tab-menu-sub-item-line')
+    expect(verbose().children).toEqual(['请求二'])
+    // 预览内容只含标签名文本，回归引入文档图标时此断言与源断言同时失败
+    expect(source.text).not.toContain('SolidDocumentTextIcon')
+  })
+
+  it('renders the dragged tab label without active styling while another tab is selected', () => {
+    const { classesOf, container, line, verbose } = setupDragClone(subPage, 'wf-2', { id: 'wf-1' })
+
+    expect(classesOf(container())).not.toContain('tab-menu-sub-item-active')
+    expect(classesOf(container())).toContain('tab-menu-sub-item-combine-custom-color')
+    expect(line()).toBeUndefined()
+    expect(verbose().children).toEqual(['请求二'])
+  })
+
+  it('falls back to the empty placeholder when the dragged id is missing', () => {
+    const empty = [{ id: 'wf-group', verbose: '分组', groupId: 'wf-group', groupChildren: [] }]
+    const { classesOf, container, verbose } = setupDragClone(empty, 'missing')
+
+    expect(classesOf(container())).not.toContain('tab-menu-sub-item-active')
+    expect(classesOf(container())).not.toContain('tab-menu-sub-item-combine-custom-color')
+    expect(container().props.style).toEqual({})
+    expect(verbose().children).toEqual([''])
+  })
+})
+
+describe('MainOperatorContent within-group tab reorder', () => {
+  it.each([
+    { from: 1, to: 0, order: ['wf-2', 'wf-1', 'wf-3'] },
+    { from: 0, to: 2, order: ['wf-2', 'wf-3', 'wf-1'] },
+  ])('applies the new order and refreshes tab state with store sorting ($from->$to)', ({ from, to, order }) => {
+    const subPage = [
+      {
+        id: 'wf-group',
+        verbose: '分组',
+        groupId: 'wf-group',
+        groupChildren: [
+          { id: 'wf-1', verbose: '请求一', groupId: 'wf-group', sortFieId: 1 },
+          { id: 'wf-2', verbose: '请求二', groupId: 'wf-group', sortFieId: 2 },
+          { id: 'wf-3', verbose: '请求三', groupId: 'wf-group', sortFieId: 3 },
+        ],
+      },
+    ]
+    const setSubPage = vi.fn()
+    const onUpdatePageCache = vi.fn()
+    const onUpdateSorting = vi.fn()
+    const emiter = { emit: vi.fn() }
+    const movingWithinSameGroup = execute(
+      `return (${declaration('movingWithinSameGroup')!.initializer!.getText(source)})`,
+      {
+        useMemoizedFn: (fn: unknown) => fn,
+        reorder: execute(`return ${declaration('reorder')!.initializer!.getText(source)}`, {}),
+        subPage,
+        setSubPage,
+        onUpdatePageCache,
+        onUpdateSorting,
+        emiter,
+        pageRouteKey: 'wf',
+      },
+    )
+
+    // 事件在 200ms 延迟后发出：先启用 fake timers 再触发拖拽，setTimeout 才会注册到 fake timer 上
+    vi.useFakeTimers()
+    movingWithinSameGroup({
+      draggableId: 'wf-1',
+      source: { droppableId: 'wf-group', index: from },
+      destination: { droppableId: 'wf-group', index: to },
+    })
+
+    // 数据层：组内顺序已重排
+    expect(subPage[0].groupChildren.map((item: any) => item.id)).toEqual(order)
+    // 渲染层：原地赋值不改变引用，必须以新数组触发 SubTabList 重渲染，否则拖拽会被弹回原位
+    expect(setSubPage).toHaveBeenCalledOnce()
+    expect((setSubPage.mock.calls[0][0] as any[])[0].groupChildren.map((item: any) => item.id)).toEqual(order)
+    expect(onUpdatePageCache).toHaveBeenCalledOnce()
+    // 持久化：全量重排 sortFieId，而非只交换两个端点项
+    expect(onUpdateSorting).toHaveBeenCalledExactlyOnceWith(subPage, 'wf')
+    // 通知订阅方（记事本/SimpleDetect 等同步 tab 名）
+    vi.advanceTimersByTime(200)
+    vi.useRealTimers()
+    expect(emiter.emit).toHaveBeenCalledExactlyOnceWith('secondMenuTabDataChange', '')
+  })
+})
+
+describe('MainOperatorContent loose-tab reorder', () => {
+  it('renumbers store sorting for a cross-distance move among loose tabs', () => {
+    const subPage = [
+      { id: 'wf-1', verbose: '请求一', groupId: '0', sortFieId: 1 },
+      { id: 'wf-2', verbose: '请求二', groupId: '0', sortFieId: 2 },
+      { id: 'wf-3', verbose: '请求三', groupId: '0', sortFieId: 3 },
+    ]
+    const setSubPage = vi.fn()
+    const onUpdatePageCache = vi.fn()
+    const onUpdateSorting = vi.fn()
+    const emiter = { emit: vi.fn() }
+    const movingBetweenOutsideGroups = execute(
+      `return (${declaration('movingBetweenOutsideGroups')!.initializer!.getText(source)})`,
+      {
+        useMemoizedFn: (fn: unknown) => fn,
+        reorder: execute(`return ${declaration('reorder')!.initializer!.getText(source)}`, {}),
+        subPage,
+        setSubPage,
+        onUpdatePageCache,
+        onUpdateSorting,
+        emiter,
+        pageRouteKey: 'wf',
+      },
+    )
+
+    // 事件在 200ms 延迟后发出：先启用 fake timers 再触发拖拽，setTimeout 才会注册到 fake timer 上
+    vi.useFakeTimers()
+    movingBetweenOutsideGroups({
+      draggableId: 'wf-1',
+      source: { droppableId: 'droppable2', index: 0 },
+      destination: { droppableId: 'droppable2', index: 2 },
+    })
+
+    // 渲染层顺序与持久化全量重排均以重排后的列表为准
+    expect(setSubPage).toHaveBeenCalledOnce()
+    expect((setSubPage.mock.calls[0][0] as any[]).map((item: any) => item.id)).toEqual(['wf-2', 'wf-3', 'wf-1'])
+    expect(onUpdateSorting).toHaveBeenCalledExactlyOnceWith(setSubPage.mock.calls[0][0], 'wf')
+    expect(onUpdatePageCache).toHaveBeenCalledOnce()
+    // 通知订阅方（记事本/SimpleDetect 等同步 tab 名）
+    vi.advanceTimersByTime(200)
+    vi.useRealTimers()
+    expect(emiter.emit).toHaveBeenCalledExactlyOnceWith('secondMenuTabDataChange', '')
+  })
 })
 
 const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = false } = {}) => {
