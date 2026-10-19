@@ -1,4 +1,5 @@
 import type { KnowledgeBaseEntry } from '@/components/playground/knowlegeBase'
+import omit from 'lodash/omit'
 import type { StreamResult, HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { KVPair } from '@/models/kv'
 import type { AITool } from '@/pages/ai-agent/type/aiTool'
@@ -135,6 +136,7 @@ export interface AIStartParams {
   /**
    * 运行时上下文（普通历史、Skill 正文、Evidence 等）压缩阈值，单位字节。
    * >0 覆盖服务端默认；<=0 或不传时使用服务端默认值。
+   * 下发前将 gRPC 数字字符串规范化为安全整数。
    */
   RuntimeContextSizeLimit?: number
   /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
@@ -218,18 +220,19 @@ export interface AIEnabledCapability {
 
 /**
  * 丢掉已废弃的 TimelineContentSizeLimit，并规范化运行时上下文阈值：
- * >0 覆盖服务端默认阈值；<=0 或不传表示不覆盖，由服务端决定。
+ * 合法正整数覆盖服务端默认阈值；其他值表示不覆盖，由服务端决定。
+ * 入参已是字节，兼容 gRPC int64 字符串，输出安全整数，不进行单位换算。
  */
 export const withServerRuntimeContextLimit = <
-  T extends { TimelineContentSizeLimit?: number; RuntimeContextSizeLimit?: number },
+  T extends Omit<AIStartParams, 'RuntimeContextSizeLimit'> & { RuntimeContextSizeLimit?: number | string },
 >(
   params: T,
-): T => {
-  const { TimelineContentSizeLimit: _deprecated, ...rest } = params
-  const limit = rest.RuntimeContextSizeLimit
+): Omit<T, 'TimelineContentSizeLimit' | 'RuntimeContextSizeLimit'> & { RuntimeContextSizeLimit: number } => {
+  const { RuntimeContextSizeLimit: limit } = params
+  const value = Number(limit)
   return {
-    ...(rest as T),
-    RuntimeContextSizeLimit: typeof limit === 'number' && limit > 0 ? limit : 0,
+    ...omit(params, ['TimelineContentSizeLimit', 'RuntimeContextSizeLimit']),
+    RuntimeContextSizeLimit: Number.isSafeInteger(value) && value > 0 ? value : 0,
   }
 }
 

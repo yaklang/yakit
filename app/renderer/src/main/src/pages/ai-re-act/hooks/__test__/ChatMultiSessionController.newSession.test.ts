@@ -141,6 +141,8 @@ describe('frontend allocated session identity', () => {
         RuntimeContextSizeLimit: 0,
       },
     })
+    const [, , startRequest] = ipcRendererMock.invoke.mock.calls.find(([method]) => method === 'start-ai-re-act')!
+    expect(startRequest.Params).not.toHaveProperty('TimelineContentSizeLimit')
     expect(params).toEqual(original)
     controller.cancelPendingConnection(token)
   })

@@ -84,7 +84,7 @@ describe('formatAIAgentSetting', () => {
       TimelineContentSizeLimit: 60,
       RuntimeContextSizeLimit: 300,
     })
-    expect(result.TimelineContentSizeLimit).toBeUndefined()
+    expect(result).not.toHaveProperty('TimelineContentSizeLimit')
     // 设置里单位是KB，下发时换算成字节
     expect(result.RuntimeContextSizeLimit).toBe(300 * 1024)
   })

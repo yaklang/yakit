@@ -358,7 +358,7 @@ export const AIConfigSettings: React.FC = () => {
             <YakitInput
               wrapperClassName={classNames(styles['compact-input'], styles['input-suffix'])}
               suffix="KB"
-              value={`${setting.RuntimeContextSizeLimit || ''}`}
+              value={`${setting.RuntimeContextSizeLimit ?? ''}`}
               onChange={(e) => {
                 const value = digitsOnly(e.target.value)
                 apply({ RuntimeContextSizeLimit: value === '' ? 0 : Number(value) })

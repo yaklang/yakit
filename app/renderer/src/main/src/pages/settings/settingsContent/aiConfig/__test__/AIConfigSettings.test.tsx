@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -32,7 +32,9 @@ vi.mock('@/pages/ai-agent/utils/aiAgentChatSettingCache', async (importOriginal)
   }
 })
 
-const successLoad = (patch: Partial<AIAgentSetting> = {}): LoadAIAgentChatSettingResult => ({
+const successLoad = (
+  patch: Partial<AIAgentSetting> = {},
+): Extract<LoadAIAgentChatSettingResult, { status: 'success' }> => ({
   status: 'success',
   setting: {
     ...AIAgentSettingDefault,
@@ -100,6 +102,78 @@ describe('AIConfigSettings', () => {
     vi.mocked(persistAIAgentChatSetting).mockClear()
     unmount()
     expect(persistAIAgentChatSetting).not.toHaveBeenCalled()
+  })
+
+  it('运行时上下文输入正数后按 KB 持久化', async () => {
+    const user = userEvent.setup()
+    render(<AIConfigSettings />)
+    await waitReady()
+    const row = screen.getByText('AIChatSetting.runtimeContextSize').parentElement!.parentElement!
+    const input = within(row).getByRole('textbox')
+    expect(within(row).getByText('KB')).toBeInTheDocument()
+
+    await user.type(input, '300')
+
+    expect(input).toHaveValue('300')
+    expect(persistAIAgentChatSetting).toHaveBeenLastCalledWith({
+      ...successLoad().setting,
+      RuntimeContextSizeLimit: 300,
+    })
+  })
+
+  it('初始加载阈值为 0（用服务端默认）时显示 0 而不是空串', async () => {
+    render(<AIConfigSettings />)
+    await waitReady()
+    const row = screen.getByText('AIChatSetting.runtimeContextSize').parentElement!.parentElement!
+    expect(within(row).getByRole('textbox')).toHaveValue('0')
+  })
+
+  it.each(['清空', '填写 0'])('运行时上下文%s后持久化为 0', async (operation) => {
+    const user = userEvent.setup()
+    vi.mocked(loadAIAgentChatSetting).mockResolvedValueOnce(successLoad({ RuntimeContextSizeLimit: 300 }))
+    render(<AIConfigSettings />)
+    await waitReady()
+    const row = screen.getByText('AIChatSetting.runtimeContextSize').parentElement!.parentElement!
+    const input = within(row).getByRole('textbox')
+    expect(input).toHaveValue('300')
+
+    await user.clear(input)
+    if (operation === '填写 0') {
+      vi.mocked(persistAIAgentChatSetting).mockClear()
+      await user.type(input, '0')
+    }
+
+    expect(persistAIAgentChatSetting).toHaveBeenLastCalledWith({
+      ...successLoad().setting,
+      RuntimeContextSizeLimit: 0,
+    })
+  })
+
+  it('资源分区重置清零运行时上下文并保留其他分区配置', async () => {
+    const user = userEvent.setup()
+    const loaded = successLoad({
+      RuntimeContextSizeLimit: 300,
+      AICallTokenLimit: 99,
+      UserInteractLimit: 99,
+      EnableSystemFileSystemOperator: !AIAgentSettingDefault.EnableSystemFileSystemOperator,
+      ReviewPolicy: 'yolo',
+      DisableMemoryTriage: !AIAgentSettingDefault.DisableMemoryTriage,
+    })
+    vi.mocked(loadAIAgentChatSetting).mockResolvedValueOnce(loaded)
+    render(<AIConfigSettings />)
+    await waitReady()
+    const header = screen.getByText('AIChatSetting.resourcesLimits').parentElement!
+
+    await user.click(within(header).getByRole('button'))
+
+    expect(persistAIAgentChatSetting).toHaveBeenLastCalledWith({
+      ...loaded.setting,
+      RuntimeContextSizeLimit: 0,
+      AICallTokenLimit: AIAgentSettingDefault.AICallTokenLimit,
+      UserInteractLimit: AIAgentSettingDefault.UserInteractLimit,
+    })
+    const row = screen.getByText('AIChatSetting.runtimeContextSize').parentElement!.parentElement!
+    expect(within(row).getByRole('textbox')).toHaveValue('0')
   })
 
   it('修改后马上保存，离开页面也不会丢', async () => {

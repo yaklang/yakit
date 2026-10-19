@@ -10,7 +10,7 @@ import {
 } from '../../ai-re-act/hooks/grpcApi'
 import type { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
 import type { AIChatSubmitParams } from '../aiAgentChat/type'
-import { omit } from 'lodash'
+import omit from 'lodash/omit'
 import { v4 as uuidv4 } from 'uuid'
 import { isIRify } from '@/utils/envfile'
 import type { UseChatIPCStartParams } from '../useContext/AIAgentContext'
@@ -82,8 +82,7 @@ export const formatNumberUnits = (num: number) => {
 /** @name 将全局配置信息转换为可以请求的数据结构 */
 export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting => {
   /**
-   * AIService/AIModelName/TimelineItemLimit/TimelineContentSizeLimit 已经废弃。
-   * TimelineContentSizeLimit 的非零值会覆盖服务端运行时上下文阈值。
+   * AIService/AIModelName/TimelineItemLimit/TimelineContentSizeLimit 已经废弃，下发前剥离。
    */
   let data: AIAgentSetting = { ...setting }
   data = omit(data, ['AIService', 'AIModelName', 'TimelineItemLimit', 'TimelineContentSizeLimit'])
@@ -138,7 +137,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
       data.ReActMaxIteration = setting.ReActMaxIteration || AIAgentSettingDefault.ReActMaxIteration
     }
     // RuntimeContextSizeLimit 单位是KB，但传到后端需要转换为字节；<=0 表示用服务端默认阈值
-    data.RuntimeContextSizeLimit = ((setting.RuntimeContextSizeLimit ?? 0) as number) * 1024
+    data.RuntimeContextSizeLimit = (setting.RuntimeContextSizeLimit ?? 0) * 1024
 
     // AICallTokenLimit 单位是KB，但传到后端需要转换为字节
     data.AICallTokenLimit = ((setting.AICallTokenLimit ?? AIAgentSettingDefault.AICallTokenLimit) as number) * 1024
