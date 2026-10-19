@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
 import classNames from 'classnames'
@@ -7,11 +7,11 @@ import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useC
 import { AITabs, AITabsEnum } from '../../defaultConstant'
 import type { AITabsEnumType, AIAgentTriggerEventInfo } from '../../aiAgentType'
 import useAIAgentStore from '../../useContext/useStore'
-import type { AIAgentTabPayload } from '../type'
+import type { AIAgentFilePreviewHighlight, AIAgentTabPayload } from '../type'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { FileDefault, FileSuffix } from '@/pages/yakRunner/FileTree/icon'
+import { getFileIconByName } from '@/pages/ai-agent/utils/getFileIconByName'
 import styles from './AIChatWorkspace.module.scss'
 import { AIChatWorkspaceTabs, type AIChatWorkspaceTab } from './AIChatWorkspaceTabs/AIChatWorkspaceTabs'
 import { AIChatWorkspaceTabContent, type HttpFlowSelectionProps } from './AIChatWorkspaceTabs/AIChatWorkspaceTabContent'
@@ -26,11 +26,6 @@ interface AIChatWorkspaceProps extends HttpFlowSelectionProps {
 }
 
 type WorkspaceTab = AIChatWorkspaceTab
-
-const getFileIconByName = (name: string) => {
-  const suffix = name.includes('.') ? name.split('.').pop() || '' : ''
-  return suffix ? FileSuffix[suffix] || FileDefault : FileDefault
-}
 
 export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props) => {
   const { welcome = false, inViewPort = true, filePreviewData, setFilePreviewData, onTabsChange } = props
@@ -58,6 +53,8 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
 
   const [tabs, setTabs] = useState<WorkspaceTab[]>([])
   const [activeTabKey, setActiveTabKey] = useState('')
+  /** switchAIActTab 带来的高亮，经 filePreviewData effect 打开 tab 时消费 */
+  const pendingFileHighlightsRef = useRef<AIAgentFilePreviewHighlight[] | undefined>()
 
   useEffect(() => {
     onTabsChange?.(tabs.length)
@@ -78,18 +75,22 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     setActiveTabKey(tab.key)
   })
 
-  const openFilePreview = useMemoizedFn((file: FileNodeProps) => {
+  const openFilePreview = useMemoizedFn((file: FileNodeProps, highlights?: AIAgentFilePreviewHighlight[]) => {
     if (file.isFolder) return
     openTab({
       key: `file:${file.path}`,
       type: AITabsEnum.File_Preview,
       label: file.name || file.path,
       file,
+      ...(highlights !== undefined ? { fileHighlights: highlights } : {}),
     })
   })
 
   useEffect(() => {
-    if (filePreviewData) openFilePreview(filePreviewData)
+    if (!filePreviewData) return
+    const highlights = pendingFileHighlightsRef.current
+    pendingFileHighlightsRef.current = undefined
+    openFilePreview(filePreviewData, highlights)
   }, [filePreviewData])
 
   useEffect(() => {
@@ -107,7 +108,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
       return
     }
 
-    const { key, value } = payload
+    const { key, value, highlights } = payload
     if (key === AITabsEnum.File_Preview) {
       if (!value) {
         if (filePreviewData) openFilePreview(filePreviewData)
@@ -123,6 +124,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         depth: 0,
         isLeaf: true,
       }
+      pendingFileHighlightsRef.current = highlights
       setFilePreviewData(file)
       return
     }

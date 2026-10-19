@@ -6,6 +6,7 @@ import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitD
 import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { AITabsEnum } from '../../../defaultConstant'
 import type { AITabsEnumType } from '../../../aiAgentType'
+import type { AIAgentFilePreviewHighlight } from '../../type'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
@@ -23,6 +24,8 @@ export interface AIChatWorkspaceTab {
   type: AITabsEnumType
   label: string
   file?: FileNodeProps
+  /** 文件预览：搜索命中高亮 */
+  fileHighlights?: AIAgentFilePreviewHighlight[]
   taskId?: string
   taskGoal?: string
   runtimeId?: string

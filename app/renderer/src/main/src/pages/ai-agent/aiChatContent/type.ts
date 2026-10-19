@@ -15,7 +15,17 @@ export interface AIChatContentProps {
   /** 提供聊天布局容器供外部定位右侧面板；传入后不再渲染内置右侧面板。 */
   rightPanelLayoutRef?: React.RefCallback<HTMLDivElement>
 }
+/** 文件预览高亮区间（Monaco 1-based 行列，endColumn 不含） */
+export interface AIAgentFilePreviewHighlight {
+  startLineNumber: number
+  startColumn: number
+  endLineNumber: number
+  endColumn: number
+}
+
 export interface AIAgentTabPayload {
   key: AITabsEnum
   value?: string
+  /** File_Preview：打开时定位并高亮的命中区间 */
+  highlights?: AIAgentFilePreviewHighlight[]
 }

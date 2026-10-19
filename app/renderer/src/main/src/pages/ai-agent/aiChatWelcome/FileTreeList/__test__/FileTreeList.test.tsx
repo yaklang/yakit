@@ -21,6 +21,9 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 vi.mock('../../AIChatWelcomeSideSetting', () => ({
   SideSettingButton: () => null,
 }))
+vi.mock('../FileTreeSearchView/FileTreeSearchView', () => ({
+  default: () => <div data-testid="file-tree-search-view" />,
+}))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit } }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => ({}) }))
@@ -146,6 +149,50 @@ describe('文件系统侧栏', () => {
     expect(openFileFolder).toHaveBeenLastCalledWith(false)
     fireEvent.click(within(openedHeader).getByRole('button', { name: 'YakitButton.openFolder' }))
     expect(openFileFolder).toHaveBeenLastCalledWith(true)
+  })
+
+  it('标题栏展示搜索 icon', () => {
+    render(<FileTreeList setSelected={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'YakitInput.search' })).toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+
+  it('点击搜索切换到空白搜索界面，关闭后回到文件树且保留分屏', async () => {
+    const { container } = render(<FileTreeList setSelected={vi.fn()} />)
+    await screen.findByRole('button', { name: 'opened-file.txt' })
+    const searchView = screen.getByTestId('file-tree-search-view')
+    const split = container.querySelector<HTMLElement>('[data-split-view-id]')!
+    const sash = split.firstElementChild!.firstElementChild as HTMLElement
+    await waitFor(() => expect(sash.style.top).toBe('160px'))
+
+    expect(searchView.closest('[aria-hidden="true"]')).toBeTruthy()
+    expect(split.closest('[aria-hidden="false"]')).toBeTruthy()
+
+    fireEvent.mouseDown(sash, { clientX: 150, clientY: 160 })
+    fireEvent.mouseMove(split, { clientX: 150, clientY: 220 })
+    await waitFor(() => expect(sash.style.top).toBe('220px'))
+    fireEvent.mouseUp(document)
+
+    const track = screen.getByTestId('file-tree-view-track')
+    expect(track).toHaveAttribute('data-search-view', 'false')
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitInput.search' }))
+    expect(track).toHaveAttribute('data-search-view', 'true')
+    expect(searchView.closest('[aria-hidden="false"]')).toBeTruthy()
+    expect(split.closest('[aria-hidden="true"]')).toBeTruthy()
+    expect(screen.getByText('YakitInput.search')).toBeInTheDocument()
+    expect(screen.queryByText('AITabs.fileSystem')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'YakitInput.search' })).not.toBeInTheDocument()
+    // 左右滑动切换，文件树不卸载
+    expect(screen.getByText('FileTreeSystem.aiArtifacts')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.close' }))
+    expect(track).toHaveAttribute('data-search-view', 'false')
+    expect(searchView.closest('[aria-hidden="true"]')).toBeTruthy()
+    expect(split.closest('[aria-hidden="false"]')).toBeTruthy()
+    expect(screen.getByText('AITabs.fileSystem')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'opened-file.txt' })).toBeInTheDocument()
+    expect(sash.style.top).toBe('220px')
   })
 
   it('拖动真实 SplitView 分隔线调整两块高度，文件选择和拖拽回调仍生效', async () => {
