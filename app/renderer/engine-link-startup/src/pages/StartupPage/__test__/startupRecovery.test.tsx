@@ -49,6 +49,10 @@ vi.mock('@/utils/electronBridge', () => ({
     onStartYaklangEngineError: vi.fn(() => vi.fn()),
     verifyYakEngineVersion: vi.fn().mockResolvedValue(true),
   },
+  yakitLogs: {
+    onLiveEngineStdio: vi.fn(() => vi.fn()),
+    onLiveEngineLog: vi.fn(() => vi.fn()),
+  },
   yakitApp: {
     completeEngineLink: vi.fn(),
     getYakitHomeConfig: vi.fn().mockResolvedValue({ softLange: 'zh' }),

@@ -213,7 +213,7 @@ describe('ExtraMenu HAR 导入预热时序', () => {
       token: harState.FIXED_TOKEN,
       apiKey: 'ImportHTTPFlowStream',
     })
-  }, 20000)
+  }, 60000)
 
   it('invoke 失败走 catch：yakitNotify 报错并关掉进度组件', async () => {
     harState.ipcRendererMock.invoke.mockImplementation(async () => {

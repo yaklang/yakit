@@ -857,31 +857,33 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
     case 'http-packet': {
       const defaultValue = item.DefaultValue || ''
       return (
-        <Form.Item
-          {...formProps}
-          rules={[
-            { required: item.Required },
-            {
-              validator: async (rule, value) => {
-                if (item.Required && value.length === 0) {
-                  onValidateStatus('error')
-                  return Promise.reject()
-                }
-                if (validateStatus === 'error') onValidateStatus('success')
-                return Promise.resolve()
+        <Suspense fallback={null}>
+          <Form.Item
+            {...formProps}
+            rules={[
+              { required: item.Required },
+              {
+                validator: async (rule, value) => {
+                  if (item.Required && value.length === 0) {
+                    onValidateStatus('error')
+                    return Promise.reject()
+                  }
+                  if (validateStatus === 'error') onValidateStatus('success')
+                  return Promise.resolve()
+                },
               },
-            },
-          ]}
-          className={classNames(formProps.className, styles['code-wrapper'], {
-            [styles['code-error-wrapper']]: validateStatus === 'error',
-          })}
-          initialValue={defaultValue}
-          trigger="setValue"
-          validateTrigger="setValue"
-          validateStatus={validateStatus}
-          help={validateStatus === 'error' ? t('YakitForm.field_required_with_label', { label: formProps.label }) : ''}
-        >
-          <Suspense fallback={null}>
+            ]}
+            className={classNames(formProps.className, styles['code-wrapper'], {
+              [styles['code-error-wrapper']]: validateStatus === 'error',
+            })}
+            initialValue={defaultValue}
+            trigger="setValue"
+            validateTrigger="setValue"
+            validateStatus={validateStatus}
+            help={
+              validateStatus === 'error' ? t('YakitForm.field_required_with_label', { label: formProps.label }) : ''
+            }
+          >
             <HTTPPacketYakitEditor
               type="http"
               originValue={defaultValue}
@@ -890,8 +892,8 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
               noLineNumber={true}
               noMiniMap={true}
             />
-          </Suspense>
-        </Form.Item>
+          </Form.Item>
+        </Suspense>
       )
     }
     case 'yak': {
@@ -906,34 +908,36 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
       language = GetPluginLanguage(language || codeType || 'yak')
 
       return (
-        <Form.Item
-          {...formProps}
-          rules={[
-            { required: item.Required },
-            {
-              validator: async (rule, value) => {
-                if (item.Required && value.length === 0) {
-                  onValidateStatus('error')
-                  return Promise.reject()
-                }
-                if (validateStatus === 'error') onValidateStatus('success')
-                return Promise.resolve()
+        <Suspense fallback={null}>
+          <Form.Item
+            {...formProps}
+            rules={[
+              { required: item.Required },
+              {
+                validator: async (rule, value) => {
+                  if (item.Required && value.length === 0) {
+                    onValidateStatus('error')
+                    return Promise.reject()
+                  }
+                  if (validateStatus === 'error') onValidateStatus('success')
+                  return Promise.resolve()
+                },
               },
-            },
-          ]}
-          className={classNames(formProps.className, styles['code-wrapper'], {
-            [styles['code-error-wrapper']]: validateStatus === 'error',
-          })}
-          initialValue={item.DefaultValue || ''}
-          trigger="setValue"
-          validateTrigger="setValue"
-          validateStatus={validateStatus}
-          help={validateStatus === 'error' ? t('YakitForm.field_required_with_label', { label: formProps.label }) : ''}
-        >
-          <Suspense fallback={null}>
+            ]}
+            className={classNames(formProps.className, styles['code-wrapper'], {
+              [styles['code-error-wrapper']]: validateStatus === 'error',
+            })}
+            initialValue={item.DefaultValue || ''}
+            trigger="setValue"
+            validateTrigger="setValue"
+            validateStatus={validateStatus}
+            help={
+              validateStatus === 'error' ? t('YakitForm.field_required_with_label', { label: formProps.label }) : ''
+            }
+          >
             <YakitEditor type={language} readOnly={disabled} noLineNumber={true} noMiniMap={true} />
-          </Suspense>
-        </Form.Item>
+          </Form.Item>
+        </Suspense>
       )
     }
     case 'json': {

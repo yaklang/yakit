@@ -6,6 +6,7 @@ import { QuitIcon } from '@yakit-libs/yakit-ui-icons/oldicon/QuitIcon'
 import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RefreshIcon'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
+import { DNS_LOG_PAGE_UPDATE_TOKEN } from '@/pages/dnslog/dnslogDefaults'
 import type { DNSLogEvent, SendMenuDnslogProps } from '@/pages/dnslog/DNSLogPage'
 import { yakitNotify } from '@/utils/notification'
 import { formatTime } from '@/utils/timeUtil'
@@ -23,9 +24,6 @@ import { JSONParseLog } from '@/utils/tool'
 import { getReleaseEditionName } from '@/utils/envfile'
 
 import { ArrowNarrowRightOutlined, ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-
-// 不从 DNSLogPage 引这个常量，避免菜单把整页打进来
-const DNS_LOG_PAGE_UPDATE_TOKEN = 'DNS_LOG_PAGE_UPDATE_TOKEN'
 
 const { ipcRenderer } = window.require('electron')
 

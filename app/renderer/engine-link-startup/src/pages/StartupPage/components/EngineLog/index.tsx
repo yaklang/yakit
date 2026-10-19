@@ -10,8 +10,8 @@ import { DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { yakitNotify } from '@/utils/notification'
 import { Tooltip } from 'antd'
-import { yakitLogs } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { subscribeEngineLog } from '../../engineLogCapture'
 
 import styles from './EngineLog.module.scss'
 
@@ -30,10 +30,6 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
     xtermRef.current.terminal.write(i)
   }
 
-  const liveEngineLog = useMemoizedFn((stdout) => {
-    writeToConsole(t('EngineLog.verbose_log', { name: getReleaseEditionName(), stdout }))
-  })
-
   useEffect(() => {
     if (!xtermRef) {
       return
@@ -41,15 +37,13 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
 
     writeToConsole(t('EngineLog.welcome', { name: getReleaseEditionName() }) + '\n')
 
-    const offLiveStdio = yakitLogs.onLiveEngineStdio((stdout) => {
-      writeToConsole(stdout)
+    return subscribeEngineLog((chunk) => {
+      if (chunk.kind === 'log') {
+        writeToConsole(t('EngineLog.verbose_log', { name: getReleaseEditionName(), stdout: chunk.text }))
+        return
+      }
+      writeToConsole(chunk.text)
     })
-
-    const offLiveLog = yakitLogs.onLiveEngineLog(liveEngineLog)
-    return () => {
-      offLiveLog()
-      offLiveStdio()
-    }
   }, [xtermRef])
 
   const getFullTerminalText = (terminal: any) => {

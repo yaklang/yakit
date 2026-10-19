@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterColorTag, parseCellStyleVars, resetEmptyVirtualTableViewport } from '../utils'
+import { filterColorTag, parseCellStyleVars, parseColorTag, resetEmptyVirtualTableViewport } from '../utils'
 
 describe('resetEmptyVirtualTableViewport', () => {
   it('removes the stale scroll range when a deeply-scrolled virtual table is cleared', () => {
@@ -80,6 +80,14 @@ describe('parseCellStyleVars 彩色单元格内联变量', () => {
     expect(vars['--vt-cell-gradient']).toBe(
       'var(--Colors-Use-Blue-Primary), var(--Colors-Use-Green-Primary), var(--Colors-Use-Error-Primary)',
     )
+  })
+
+  it('未读等自定义类名不当作颜色标签', () => {
+    const unread = 'YakitRiskTable_yakit-risk-table-cell-unread__hash'
+    expect(parseColorTag(unread)).toBe('')
+    expect(parseCellStyleVars(unread)).toEqual({})
+    expect(parseColorTag('table-cell-bg-notacolor')).toBe('')
+    expect(parseColorTag(`${unread} table-cell-bg-blue`)).toBe('blue')
   })
 
   it('真实链路：filterColorTag 的输出可直接作为输入', () => {

@@ -16,7 +16,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
-import { registerContextMenuExecution } from './executionRegistry'
+import { registerContextMenuExecution, removeContextMenuExecution } from './executionRegistry'
 import { ContextMenuResultMode, type RunContextMenuActionOptions } from './types'
 const ContextMenuActionExecution = lazy(() =>
   import('./ContextMenuActionExecution').then((m) => ({ default: m.ContextMenuActionExecution })),
@@ -119,7 +119,7 @@ export const ContextMenuExecutionHost: React.FC<{ onReady?: () => void }> = Reac
    * - drawer：右侧抽屉展示
    * - dialog：弹窗展示
    * 弹窗/抽屉同一时刻只保留一个，重复触发时销毁旧窗口再开新的
-   * 组件卸载（关 Tab / 关弹窗 / 关抽屉）时自清理：取消执行 + 移除注册表
+   * 弹窗/抽屉在 destroy 时由外层释放注册项；Tab 仍由执行页卸载时清理
    */
   const launch = useMemoizedFn((options: RunContextMenuActionOptions, params: YakExecutorParam[] = []) => {
     const executionID = registerContextMenuExecution({ ...options, params })
@@ -134,41 +134,50 @@ export const ContextMenuExecutionHost: React.FC<{ onReady?: () => void }> = Reac
     )
     const getContainer = getMainOperatorPageBodyContainer()
 
+    const openOverlay = (open: (onCancel: () => void) => { destroy: () => void }) => {
+      closeActiveResult()
+      let raw: { destroy: () => void }
+      let closed = false
+      const handle = {
+        destroy: () => {
+          if (closed) return
+          closed = true
+          if (activeResultRef.current === handle) activeResultRef.current = undefined
+          removeContextMenuExecution(executionID)
+          raw.destroy()
+        },
+      }
+      raw = open(() => handle.destroy())
+      activeResultRef.current = handle
+    }
+
     switch (options.action.ResultMode) {
-      case ContextMenuResultMode.Drawer: {
-        closeActiveResult()
-        const m1 = showYakitDrawer({
-          title,
-          width: '90%',
-          placement: 'right',
-          content,
-          bodyStyle: { padding: 0 },
-          getContainer,
-          onCancel: () => {
-            if (activeResultRef.current === m1) activeResultRef.current = undefined
-            m1.destroy()
-          },
-        })
-        activeResultRef.current = m1
+      case ContextMenuResultMode.Drawer:
+        openOverlay((onCancel) =>
+          showYakitDrawer({
+            title,
+            width: '90%',
+            placement: 'right',
+            content,
+            bodyStyle: { padding: 0 },
+            getContainer,
+            onCancel,
+          }),
+        )
         break
-      }
-      case ContextMenuResultMode.Dialog: {
-        closeActiveResult()
-        const m2 = showYakitModal({
-          title,
-          width: '90%',
-          footer: null,
-          maskClosable: false,
-          content,
-          getContainer,
-          onCancel: () => {
-            if (activeResultRef.current === m2) activeResultRef.current = undefined
-            m2.destroy()
-          },
-        })
-        activeResultRef.current = m2
+      case ContextMenuResultMode.Dialog:
+        openOverlay((onCancel) =>
+          showYakitModal({
+            title,
+            width: '90%',
+            footer: null,
+            maskClosable: false,
+            content,
+            getContainer,
+            onCancel,
+          }),
+        )
         break
-      }
       default:
         emiter.emit(
           'openPage',

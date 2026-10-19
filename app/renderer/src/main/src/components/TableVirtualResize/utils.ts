@@ -40,9 +40,11 @@ export const filterColorTag = (content?: string) => {
   return colors.length === 0 ? '' : colors.join(' ')
 }
 
+const VALID_CELL_BG_COLORS = new Set(['blue', 'cyan', 'green', 'grey', 'orange', 'purple', 'red', 'yellow'])
+
 /**
  * @name 解析数据里传递的颜色内容并生成对应的颜色类名后缀
- * @description 传入的内容中, 对应颜色的内容是由 filterColorTag 生成的
+ * @description 只认 `table-cell-bg-{color}`，且 color 为八种合法色。普通自定义类名返回空。
  */
 export const parseColorTag = (content?: string) => {
   if (!content) return ''
@@ -50,8 +52,13 @@ export const parseColorTag = (content?: string) => {
   let colors: string[] = []
   try {
     colors = content
-      .split(' ')
-      .map((item) => (item.split('-').pop() || '').toLowerCase())
+      .split(/\s+/)
+      .map((item) => {
+        const matched = /^table-cell-bg-([a-z]+)$/i.exec(item)
+        if (!matched) return ''
+        const color = matched[1].toLowerCase()
+        return VALID_CELL_BG_COLORS.has(color) ? color : ''
+      })
       .filter((item) => !!item)
       .sort()
       .slice(0, 3)

@@ -71,6 +71,7 @@ import { SoftwareBasics } from './components/SoftwareBasics'
 import { yakitApp, yakitEngine } from '@/utils/electronBridge'
 import { useYakitStatus } from '@/hooks/useYakitStatus'
 import { type Lange, normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { startEngineLogCapture } from './engineLogCapture'
 import styles from './index.module.scss'
 import i18n from '@/i18n/i18n'
 
@@ -168,6 +169,7 @@ export const StartupPage: React.FC = () => {
 
   // #region 工作空间确认回调
   const handleWorkspaceConfirmed = useMemoizedFn(() => {
+    startEngineLogCapture()
     setWorkspaceConfirmed(true)
   })
   // #endregion
