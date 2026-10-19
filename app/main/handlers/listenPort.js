@@ -32,7 +32,7 @@ module.exports = (win, getClient) => {
     if (getStreamByPort(addr)) {
       throw Error('listened port')
     }
-    stream = getClient().OpenPort()
+    const stream = getClient().OpenPort()
     // 如果有问题，重置
     stream.on('error', (e) => {
       if (win) {

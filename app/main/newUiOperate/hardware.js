@@ -20,7 +20,7 @@ const cpuAverage = () => {
     var cpu = cpus[i]
 
     //Total up the time in the cores tick
-    for (type in cpu.times) {
+    for (const type in cpu.times) {
       totalTick += cpu.times[type]
     }
 

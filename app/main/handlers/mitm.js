@@ -349,7 +349,6 @@ module.exports = (win, getClient) => {
     if (stream) {
       stream.cancel()
       stream = null
-      mitmClient = null
     }
   })
 
