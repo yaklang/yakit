@@ -51,7 +51,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import locale from 'antd/es/date-picker/locale/zh_CN'
 import { YakitDatePicker } from '@/components/yakitUI/YakitDatePicker/YakitDatePicker'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
-import { parseColorTag, resetEmptyVirtualTableViewport } from './utils'
+import { parseCellStyleVars, parseColorTag, resetEmptyVirtualTableViewport } from './utils'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook'
 import { v4 as uuidv4 } from 'uuid'
@@ -2251,9 +2251,9 @@ const CellRender = React.memo((props: CellRenderProps) => {
         [styles['virtual-table-hover-row']]: mouseCellId === item.data[renderKey],
         [styles['virtual-table-active-row']]: isSelect && lineHighlight,
 
-        [styles[`virtual-table-cell-${colorTypes}`]]: !!colorTypes,
-        [styles[`virtual-table-hover-cell-${colorTypes}`]]: !!colorTypes && mouseCellId === item.data[renderKey],
-        [styles[`virtual-table-active-cell-${colorTypes}`]]: !!colorTypes && isSelect,
+        [styles['virtual-table-colored-cell']]: !!colorTypes,
+        [styles['virtual-table-hover-cell']]: !!colorTypes && mouseCellId === item.data[renderKey],
+        [styles['virtual-table-active-cell']]: !!colorTypes && isSelect,
 
         'table-cell-row-hover': !!colorTypes && mouseCellId === item.data[renderKey],
 
@@ -2262,7 +2262,10 @@ const CellRender = React.memo((props: CellRenderProps) => {
         [styles['virtual-table-row-cell-border-left-1']]: (batchActive || isSelect) && colIndex === 0,
         [styles['virtual-table-row-cell-disabled']]: item.data['disabled'] || item.data['Disabled'],
       })}
-      style={columnsItem.customStyle && item.data['cellStyle']}
+      style={{
+        ...parseCellStyleVars(item.data['cellClassName']),
+        ...((columnsItem.customStyle && item.data['cellStyle']) || {}),
+      }}
       onClick={(e) => {
         // @ts-expect-error 类型定义不完整，需要忽略此行
         if (e.target.nodeName === 'INPUT') return
@@ -2433,9 +2436,9 @@ const CellRenderDrop = React.memo((props: CellRenderDropProps) => {
         [styles['virtual-table-hover-row']]: mouseCellId === item.data[renderKey],
         [styles['virtual-table-active-row']]: isSelect && lineHighlight,
 
-        [styles[`virtual-table-cell-${colorTypes}`]]: !!colorTypes,
-        [styles[`virtual-table-hover-cell-${colorTypes}`]]: !!colorTypes && mouseCellId === item.data[renderKey],
-        [styles[`virtual-table-active-cell-${colorTypes}`]]: !!colorTypes && isSelect,
+        [styles['virtual-table-colored-cell']]: !!colorTypes,
+        [styles['virtual-table-hover-cell']]: !!colorTypes && mouseCellId === item.data[renderKey],
+        [styles['virtual-table-active-cell']]: !!colorTypes && isSelect,
 
         'table-cell-row-hover': !!colorTypes && mouseCellId === item.data[renderKey],
 
@@ -2445,7 +2448,10 @@ const CellRenderDrop = React.memo((props: CellRenderDropProps) => {
         [styles['virtual-table-row-cell-disabled']]: item.data['disabled'] || item.data['Disabled'],
         [styles['virtual-table-row-cell-move']]: enableDragSort && colIndex === 0,
       })}
-      style={columnsItem.customStyle && item.data['cellStyle']}
+      style={{
+        ...parseCellStyleVars(item.data['cellClassName']),
+        ...((columnsItem.customStyle && item.data['cellStyle']) || {}),
+      }}
       onClick={(e) => {
         // @ts-expect-error 类型定义不完整，需要忽略此行
         if (e.target.nodeName === 'INPUT') return

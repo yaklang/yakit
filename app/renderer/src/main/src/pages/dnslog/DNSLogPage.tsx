@@ -24,6 +24,7 @@ import { Uint8ArrayToString } from '@/utils/str'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { DNS_LOG_PAGE_UPDATE_TOKEN } from './dnslogDefaults'
 export interface DNSLogPageProp {}
 
 const { ipcRenderer } = window.require('electron')
@@ -64,7 +65,6 @@ export interface SendMenuDnslogProps {
   UseLocal?: boolean
 }
 
-export const DNS_LOG_PAGE_UPDATE_TOKEN = 'DNS_LOG_PAGE_UPDATE_TOKEN'
 export const DNS_LOG_COMMON_CACHE = 'DNS_LOG_COMMON_CACHE'
 
 export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {

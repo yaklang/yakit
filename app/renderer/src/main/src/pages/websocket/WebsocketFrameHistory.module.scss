@@ -75,59 +75,43 @@
     }
   }
 
-  @mixin generate-permutations-class-name($allTypes: (), $prefix: ()) {
-    // 剩余需要遍历的变量数组为空
-    @if length($allTypes) != 0 {
-      @each $type in $allTypes {
-        $pre: append($prefix, $type, $separator: comma);
-        @if length($pre) == 1 {
-          // 单色情况
-          @if $type == red {
-            // 单色-红色单独处理
-            .table-tr.table-row-red {
-              background: var(--Colors-Use-Error-Primary);
-              color: var(--Colors-Use-Neutral-Text-1-Title);
-              font-weight: bold;
-              &:hover {
-                background: var(--Colors-Use-Error-Pressed);
-              }
-            }
-          } @else {
-            // 单色-其他颜色处理
-            .table-tr.table-row-#{$type} {
-              @include tools.background-color-mix(#{tools.fetch-color($type, 'backgroundColor')}, 20%);
-              color: var(--Colors-Use-Neutral-Text-1-Title);
-              &:hover {
-                @include tools.background-color-mix(#{tools.fetch-color($type, 'backgroundColor')}, 30%);
-              }
-            }
-          }
-        } @else {
-          // 多色情况
-          $gbColors: tools.generate-colors($pre);
-          .table-tr.table-row-#{tools.generate-class-name($pre)} {
-            @include tools.background-gradient-mix($gbColors, 20%);
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            &:hover {
-              @include tools.background-gradient-mix($gbColors, 30%);
-            }
-          }
-        }
-
-        $remaining: if(
-          index($allTypes, $type) == length($allTypes),
-          (),
-          tools.get-range($allTypes, index($allTypes, $type) + 1)
-        );
-        @if length($pre) <3 {
-          @include generate-permutations-class-name($remaining, $pre);
-        } @else {
+  // 彩色行：颜色经内联 CSS 变量注入（见 parseCellStyleVars），不再静态展开颜色组合选择器
+  .table-tr.table-colored-row {
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), linear-gradient(var(--vt-cell-gradient));
+    @supports #{tools.$color-mix-supports} {
+      background: linear-gradient(var(--vt-cell-gradient-20));
+    }
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    &:hover {
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), linear-gradient(var(--vt-cell-gradient));
+      @supports #{tools.$color-mix-supports} {
+        background: linear-gradient(var(--vt-cell-gradient-30));
+      }
+    }
+    // 单色（--vt-cell-bg 存在时覆盖渐变）
+    &[style*='--vt-cell-bg'] {
+      background: var(--vt-cell-bg);
+      @supports #{tools.$color-mix-supports} {
+        background: color-mix(in srgb, var(--vt-cell-bg) 20%, transparent);
+      }
+      &:hover {
+        background: var(--vt-cell-bg);
+        @supports #{tools.$color-mix-supports} {
+          background: color-mix(in srgb, var(--vt-cell-bg) 30%, transparent);
         }
       }
     }
+    // 单色 red 特殊态
+    &[style*='--vt-cell-is-red'] {
+      background: var(--Colors-Use-Error-Primary);
+      font-weight: bold;
+      &:hover {
+        background: var(--Colors-Use-Error-Pressed);
+      }
+    }
   }
-  $allColorTypes: map-keys(tools.$allColors);
-  @include generate-permutations-class-name($allColorTypes);
 }
 
 .websocket-detail-modal {

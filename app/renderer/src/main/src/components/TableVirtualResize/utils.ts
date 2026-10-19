@@ -1,3 +1,5 @@
+import type React from 'react'
+
 /**
  * @name 单元格背景色类型
  * @description 该类型必须按照升序排列
@@ -38,9 +40,11 @@ export const filterColorTag = (content?: string) => {
   return colors.length === 0 ? '' : colors.join(' ')
 }
 
+const VALID_CELL_BG_COLORS = new Set(['blue', 'cyan', 'green', 'grey', 'orange', 'purple', 'red', 'yellow'])
+
 /**
  * @name 解析数据里传递的颜色内容并生成对应的颜色类名后缀
- * @description 传入的内容中, 对应颜色的内容是由 filterColorTag 生成的
+ * @description 只认 `table-cell-bg-{color}`，且 color 为八种合法色。普通自定义类名返回空。
  */
 export const parseColorTag = (content?: string) => {
   if (!content) return ''
@@ -48,13 +52,101 @@ export const parseColorTag = (content?: string) => {
   let colors: string[] = []
   try {
     colors = content
-      .split(' ')
-      .map((item) => (item.split('-').pop() || '').toLowerCase())
+      .split(/\s+/)
+      .map((item) => {
+        const matched = /^table-cell-bg-([a-z]+)$/i.exec(item)
+        if (!matched) return ''
+        const color = matched[1].toLowerCase()
+        return VALID_CELL_BG_COLORS.has(color) ? color : ''
+      })
       .filter((item) => !!item)
       .sort()
       .slice(0, 3)
   } catch (error) {}
   return colors.length === 0 ? '' : colors.join('-')
+}
+
+/** 单色（非 red）文字色 token：与 scss 的 $yakit-color-token-names 对应 */
+const cellTextColorVars: Record<string, string> = {
+  blue: 'var(--yakit-colors-Blue-100)',
+  cyan: 'var(--yakit-colors-Cyan-100)',
+  green: 'var(--yakit-colors-Green-100)',
+  grey: 'var(--yakit-colors-Neutral-100)',
+  orange: 'var(--yakit-colors-Orange-100)',
+  purple: 'var(--yakit-colors-Purple-100)',
+  yellow: 'var(--yakit-colors-Yellow-100)',
+}
+
+/** 单元格渐变背景色 token：多色组合用 Primary，与 scss 的 $generateColors 对应 */
+const cellGradientColorVars: Record<string, string> = {
+  blue: 'var(--Colors-Use-Blue-Primary)',
+  cyan: 'var(--Colors-Use-Cyan-Primary)',
+  green: 'var(--Colors-Use-Green-Primary)',
+  grey: 'var(--Colors-Use-Grey-Primary)',
+  orange: 'var(--Colors-Use-Orange-Primary)',
+  purple: 'var(--Colors-Use-Purple-Primary)',
+  red: 'var(--Colors-Use-Error-Primary)',
+  yellow: 'var(--Colors-Use-Yellow-Primary)',
+}
+
+/** 单色单元格背景色 token：与 scss 的 $allColors 对应 */
+const cellSolidColorVars: Record<string, string> = {
+  blue: 'var(--Colors-Use-Blue-Border)',
+  cyan: 'var(--Colors-Use-Cyan-Border)',
+  green: 'var(--Colors-Use-Green-Border)',
+  grey: 'var(--Colors-Use-Grey-Border)',
+  orange: 'var(--Colors-Use-Orange-Border)',
+  purple: 'var(--Colors-Use-Purple-Border)',
+  red: 'var(--Colors-Use-Error-Primary)',
+  yellow: 'var(--Colors-Use-Yellow-Border)',
+}
+
+/** 单色 hover/active 背景色 token：与 scss 的 $allColors-hover 对应 */
+const cellHoverColorVars: Record<string, string> = {
+  blue: 'var(--Colors-Use-Blue-Hover)',
+  cyan: 'var(--yakit-colors-Cyan-50)',
+  green: 'var(--yakit-colors-Green-50)',
+  grey: 'var(--yakit-colors-Neutral-50)',
+  orange: 'var(--yakit-colors-Orange-50)',
+  purple: 'var(--yakit-colors-Purple-50)',
+  red: 'var(--Colors-Use-Error-Pressed)',
+  yellow: 'var(--yakit-colors-Yellow-50)',
+}
+
+/**
+ * @name 解析数据里的颜色内容并生成单元格内联 CSS 变量
+ * @description 替代 scss 递归组合展开（92 组合 × 6 状态 ≈ 552 条静态选择器）：
+ * 颜色列表以 CSS 变量传给元素，样式侧只保留 cell/hover/active 三条状态规则。
+ */
+export const parseCellStyleVars = (content?: string): React.CSSProperties => {
+  const colorTypes = parseColorTag(content)
+  if (!colorTypes) return {}
+  const colors = colorTypes.split('-')
+
+  if (colors.length === 1) {
+    const [type] = colors
+    const isRed = type === 'red'
+    const textColor = isRed ? 'var(--Colors-Use-Error-On-Primary)' : cellTextColorVars[type]
+    return {
+      '--vt-cell-bg': cellSolidColorVars[type],
+      '--vt-cell-bg-hover': cellHoverColorVars[type],
+      // hover 态沿用 cell 文字色（旧 hover+cell 组合行为），active 态红底换浅色文字
+      '--vt-cell-text': textColor,
+      '--vt-cell-text-hover': textColor,
+      '--vt-cell-text-active': isRed ? 'var(--yakit-colors-Error-100)' : cellTextColorVars[type],
+      ...(isRed ? { '--vt-cell-is-red': 'true' } : {}),
+    } as React.CSSProperties
+  }
+  const gradient = colors.map((c) => cellGradientColorVars[c]).join(', ')
+  // 预混透明度后的渐变（cell/hover/active 三态），避免 color-mix 无法展开多变量列表
+  const gradientAlpha = (alpha: number) =>
+    colors.map((c) => `color-mix(in srgb, ${cellGradientColorVars[c]} ${alpha}%, transparent)`).join(', ')
+  return {
+    '--vt-cell-gradient': gradient,
+    '--vt-cell-gradient-20': gradientAlpha(20),
+    '--vt-cell-gradient-30': gradientAlpha(30),
+    '--vt-cell-gradient-40': gradientAlpha(40),
+  } as React.CSSProperties
 }
 
 /**

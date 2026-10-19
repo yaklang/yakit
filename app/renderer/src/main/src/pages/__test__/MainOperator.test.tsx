@@ -100,12 +100,6 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
 vi.mock('@/pages/YakRunnerProjectManager/YakRunnerProjectManager', () => ({
   IRifyUpdateProjectManagerModal: () => null,
 }))
-vi.mock('@/utils/monacoSpec/yakCompletionSchema', () => ({
-  setYaklangBuildInMethodCompletion: vi.fn(),
-  setYaklangCompletions: vi.fn(),
-}))
-vi.mock('@/utils/monacoSpec/yakEditor', () => ({ setUpYaklangMonaco: vi.fn() }))
-vi.mock('@/utils/monacoSpec/syntaxflowEditor', () => ({ setUpSyntaxFlowMonaco: vi.fn() }))
 vi.mock('@/pages/ai-re-act/hooks/persist/aiChatPersistStore', () => ({
   default: {
     open: () => Promise.resolve(),
@@ -171,5 +165,14 @@ describe('MainOperator 远程控制轮询', () => {
       await vi.advanceTimersByTimeAsync(30000)
     })
     expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('alive-dynamic-control-status')
+  })
+
+  it('首屏挂载不请求 GetYakitCompletionRaw（Monaco 延后到编辑器首次导入）', async () => {
+    render(<Main />)
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('GetYakitCompletionRaw')
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('GetYakVMBuildInMethodCompletion', expect.anything())
   })
 })

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -15,10 +15,12 @@ import { getValueByType, ParamsToGroupByGroupName } from '@/pages/plugins/editDe
 import emiter from '@/utils/eventBus/eventBus'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
-import { ContextMenuActionExecution } from './ContextMenuActionExecution'
-import { registerContextMenuExecution } from './executionRegistry'
-import { ContextMenuResultMode, type RunContextMenuActionOptions } from './types'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
+import { registerContextMenuExecution, removeContextMenuExecution } from './executionRegistry'
+import { ContextMenuResultMode, type RunContextMenuActionOptions } from './types'
+const ContextMenuActionExecution = lazy(() =>
+  import('./ContextMenuActionExecution').then((m) => ({ default: m.ContextMenuActionExecution })),
+)
 
 interface ParamsModalValue {
   /** 表单初始值（key = 参数 Field，value = 默认值或缓存值） */
@@ -92,7 +94,7 @@ const isRequiredParamMissing = (params: YakParamProps[], values: YakExecutorPara
 /**
  * 职责：接收 runContextMenuAction 事件 → 决定是否弹参数框 → 注册执行并打开结果页
  */
-export const ContextMenuExecutionHost: React.FC = React.memo(() => {
+export const ContextMenuExecutionHost: React.FC<{ onReady?: () => void }> = React.memo((props) => {
   const { t } = useI18nNamespaces(['manageRightClickPlugins'])
   const pendingRef = useRef<RunContextMenuActionOptions>()
   const loadingRef = useRef<boolean>(false)
@@ -117,7 +119,7 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
    * - drawer：右侧抽屉展示
    * - dialog：弹窗展示
    * 弹窗/抽屉同一时刻只保留一个，重复触发时销毁旧窗口再开新的
-   * 组件卸载（关 Tab / 关弹窗 / 关抽屉）时自清理：取消执行 + 移除注册表
+   * 弹窗/抽屉在 destroy 时由外层释放注册项；Tab 仍由执行页卸载时清理
    */
   const launch = useMemoizedFn((options: RunContextMenuActionOptions, params: YakExecutorParam[] = []) => {
     const executionID = registerContextMenuExecution({ ...options, params })
@@ -125,44 +127,57 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
     // auto 与 tab 同为开 Tab 展示，归一后传入组件
     const mode =
       options.action.ResultMode === ContextMenuResultMode.Auto ? ContextMenuResultMode.Tab : options.action.ResultMode
-    const content = <ContextMenuActionExecution executionID={executionID} mode={mode} />
+    const content = (
+      <Suspense fallback={null}>
+        <ContextMenuActionExecution executionID={executionID} mode={mode} />
+      </Suspense>
+    )
     const getContainer = getMainOperatorPageBodyContainer()
 
+    const openOverlay = (open: (onCancel: () => void) => { destroy: () => void }) => {
+      closeActiveResult()
+      let raw: { destroy: () => void }
+      let closed = false
+      const handle = {
+        destroy: () => {
+          if (closed) return
+          closed = true
+          if (activeResultRef.current === handle) activeResultRef.current = undefined
+          removeContextMenuExecution(executionID)
+          raw.destroy()
+        },
+      }
+      raw = open(() => handle.destroy())
+      activeResultRef.current = handle
+    }
+
     switch (options.action.ResultMode) {
-      case ContextMenuResultMode.Drawer: {
-        closeActiveResult()
-        const m1 = showYakitDrawer({
-          title,
-          width: '90%',
-          placement: 'right',
-          content,
-          bodyStyle: { padding: 0 },
-          getContainer,
-          onCancel: () => {
-            if (activeResultRef.current === m1) activeResultRef.current = undefined
-            m1.destroy()
-          },
-        })
-        activeResultRef.current = m1
+      case ContextMenuResultMode.Drawer:
+        openOverlay((onCancel) =>
+          showYakitDrawer({
+            title,
+            width: '90%',
+            placement: 'right',
+            content,
+            bodyStyle: { padding: 0 },
+            getContainer,
+            onCancel,
+          }),
+        )
         break
-      }
-      case ContextMenuResultMode.Dialog: {
-        closeActiveResult()
-        const m2 = showYakitModal({
-          title,
-          width: '90%',
-          footer: null,
-          maskClosable: false,
-          content,
-          getContainer,
-          onCancel: () => {
-            if (activeResultRef.current === m2) activeResultRef.current = undefined
-            m2.destroy()
-          },
-        })
-        activeResultRef.current = m2
+      case ContextMenuResultMode.Dialog:
+        openOverlay((onCancel) =>
+          showYakitModal({
+            title,
+            width: '90%',
+            footer: null,
+            maskClosable: false,
+            content,
+            getContainer,
+            onCancel,
+          }),
+        )
         break
-      }
       default:
         emiter.emit(
           'openPage',
@@ -228,6 +243,8 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
 
   useEffect(() => {
     emiter.on('runContextMenuAction', onRun)
+    // 监听已经挂上，这时再处理挂载前记下的那一次
+    props.onReady?.()
     return () => emiter.off('runContextMenuAction', onRun)
   }, [])
 
