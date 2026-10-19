@@ -66,7 +66,11 @@ export const AIChatWorkspaceTabContent: React.FC<AIChatWorkspaceTabContentProps>
 
   switch (activeTab.type) {
     case AITabsEnum.File_Preview:
-      return activeTab.file ? <FilePreview data={activeTab.file} /> : <YakitEmpty style={{ paddingTop: 48 }} />
+      return activeTab.file ? (
+        <FilePreview data={activeTab.file} highlights={activeTab.fileHighlights} />
+      ) : (
+        <YakitEmpty style={{ paddingTop: 48 }} />
+      )
     case AITabsEnum.Task_Detail:
       return activeTab.taskId ? (
         <AITaskExecutionDetails taskId={activeTab.taskId} taskName={activeTab.label} taskGoal={activeTab.taskGoal} />

@@ -31,6 +31,7 @@
 .header-actions {
   display: flex;
   align-items: center;
+  gap: 4px;
   line-height: 0;
   > :global(span) {
     display: inline-flex;
@@ -42,31 +43,30 @@
 .body {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
-.file-split {
-  background-color: var(--Colors-Use-Basic-Background);
+.track {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  transform: translateX(0);
+  transition: transform 0.25s ease;
 }
 
-.file-sash {
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 1px 0 auto;
-    height: 1px;
-    background-color: var(--Colors-Use-Neutral-Border);
+.track-search {
+  transform: translateX(-50%);
+}
+
+.panel {
+  width: 50%;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  &[aria-hidden='true'] {
     pointer-events: none;
   }
-}
-
-.opened-files {
-  border: 0;
-  border-radius: 0;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }

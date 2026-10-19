@@ -632,6 +632,20 @@
     "myOpenedFiles": "我打开的文件",
     "aiArtifacts": "AI Artifacts"
   },
+  "FileTreeSearch": {
+    "keyword": "关键字",
+    "regexp": "正则",
+    "all": "全部",
+    "aiFolder": "ai文件夹",
+    "userFolder": "用户文件夹",
+    "matchCount": "{{count}} 处命中",
+    "expandMatches": "展开命中行",
+    "collapseMatches": "收起命中行",
+    "searchFailed": "文件搜索失败",
+    "engineUnsupported": "当前引擎不支持文件内容搜索，请升级 yaklang 引擎后重试",
+    "emptyHint": "请输入关键字搜索文件内容",
+    "emptyNoResult": "未搜索到匹配内容"
+  },
   "ExportAILogsModal": {
     "title": "导出 AI 日志",
     "remoteHint": "远程模式下导出后请打开~memfit\\yakit-projects\\temp路径查看导出文件",
@@ -651,7 +665,8 @@
     "binaryNotice": "此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。",
     "openAnyway": "仍然打开",
     "warningTitle": "文件警告",
-    "tooLarge": "文件过大，无法预览"
+    "tooLarge": "文件过大，无法预览",
+    "loadFailed": "加载文件失败: {{error}}"
   },
   "AIRightPanel": {
     "aiSettings": "AI 设置",

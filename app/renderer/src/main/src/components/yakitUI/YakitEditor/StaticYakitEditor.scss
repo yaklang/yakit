@@ -166,6 +166,12 @@
     background-color: var(--Colors-Use-Yellow-Bg);
     z-index: -1;
   }
+
+  // AI 文件搜索预览命中：加深对比度（不用 z-index:-1，避免被当前行背景盖住）
+  .hight-light-file-search-hit {
+    background-color: var(--yakit-colors-Warning-40);
+    color: var(--Colors-Use-Error-Primary);
+  }
 }
 
 .yakit-editor-wrap-style {

@@ -136,7 +136,17 @@ vi.mock('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult', () =
   ),
 }))
 vi.mock('@/pages/ai-agent/components/aiFileSystemList/FilePreview/FilePreview', () => ({
-  default: ({ data }: { data: { name: string; path: string } }) => <div data-testid="file-preview">{data.path}</div>,
+  default: ({
+    data,
+    highlights,
+  }: {
+    data: { name: string; path: string }
+    highlights?: Array<{ startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }>
+  }) => (
+    <div data-testid="file-preview" data-highlights={String(highlights?.length ?? 0)}>
+      {data.path}
+    </div>
+  ),
 }))
 vi.mock('@/pages/ai-agent/components/aiFileSystemList/OperationLog/OperationLog', () => ({ default: () => null }))
 vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane', () => ({ TaskListPane: () => null }))
@@ -628,6 +638,36 @@ describe('AIChatWorkspace 菜单切换', () => {
     expect(screen.getByText('two.js')).toBeInTheDocument()
     expect(screen.getByTestId('file-preview')).toHaveTextContent('/tmp/two.js')
     expect(onTabsChange).toHaveBeenLastCalledWith(2)
+  })
+
+  it('搜索打开预览带高亮；无 pending 的二次 open 不会清空高亮', () => {
+    let setFilePreviewData: React.Dispatch<
+      React.SetStateAction<{ name: string; path: string; isFolder?: boolean } | undefined>
+    >
+    function Harness() {
+      const [filePreviewData, setState] = React.useState<
+        { name: string; path: string; isFolder?: boolean } | undefined
+      >()
+      setFilePreviewData = setState
+      return <AIChatWorkspace filePreviewData={filePreviewData as never} setFilePreviewData={setState as never} />
+    }
+    render(<Harness />)
+
+    const highlights = [{ startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 3 }]
+    act(() =>
+      emiter.emit(
+        'switchAIActTab',
+        JSON.stringify({ key: AITabsEnum.File_Preview, value: 'C:\\tmp\\222.txt', highlights }),
+      ),
+    )
+    expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '1')
+    expect(screen.getByTestId('file-preview')).toHaveTextContent('C:\\tmp\\222.txt')
+
+    // 模拟 StrictMode / effect 重复：pending 已消费后再 set 同路径，不应覆盖高亮
+    act(() => {
+      setFilePreviewData({ name: '222.txt', path: 'C:\\tmp\\222.txt', isFolder: false })
+    })
+    expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '1')
   })
 
   it.each([

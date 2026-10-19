@@ -632,6 +632,20 @@
     "myOpenedFiles": "我開啟的檔案",
     "aiArtifacts": "AI Artifacts"
   },
+  "FileTreeSearch": {
+    "keyword": "關鍵字",
+    "regexp": "正則",
+    "all": "全部",
+    "aiFolder": "ai資料夾",
+    "userFolder": "使用者資料夾",
+    "matchCount": "{{count}} 處命中",
+    "expandMatches": "展開命中行",
+    "collapseMatches": "收起命中行",
+    "searchFailed": "檔案搜尋失敗",
+    "engineUnsupported": "目前引擎不支援檔案內容搜尋，請升級 yaklang 引擎後重試",
+    "emptyHint": "請輸入關鍵字搜尋檔案內容",
+    "emptyNoResult": "未搜尋到匹配內容"
+  },
   "ExportAILogsModal": {
     "title": "匯出 AI 日誌",
     "remoteHint": "遠端模式下匯出後請開啟~memfit\\yakit-projects\\temp路徑檢視匯出檔案",
@@ -651,7 +665,8 @@
     "binaryNotice": "此檔案是二進位制檔案或使用了不受支援的文字編碼，所以無法在文字編輯器中顯示。",
     "openAnyway": "仍然開啟",
     "warningTitle": "檔案警告",
-    "tooLarge": "檔案過大，無法預覽"
+    "tooLarge": "檔案過大，無法預覽",
+    "loadFailed": "載入檔案失敗: {{error}}"
   },
   "AIRightPanel": {
     "aiSettings": "AI 設定",

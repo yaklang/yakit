@@ -632,6 +632,20 @@
     "myOpenedFiles": "My Opened Files",
     "aiArtifacts": "AI Artifacts"
   },
+  "FileTreeSearch": {
+    "keyword": "Keyword",
+    "regexp": "Regexp",
+    "all": "All",
+    "aiFolder": "AI Folder",
+    "userFolder": "User Folder",
+    "matchCount": "{{count}} matches",
+    "expandMatches": "Expand matches",
+    "collapseMatches": "Collapse matches",
+    "searchFailed": "File search failed",
+    "engineUnsupported": "Current engine does not support file content search. Please upgrade the yaklang engine.",
+    "emptyHint": "Enter a keyword to search file content",
+    "emptyNoResult": "No matched content"
+  },
   "ExportAILogsModal": {
     "title": "Export AI Logs",
     "remoteHint": "After exporting in remote mode, please open the exported file in ~memfit\\yakit-projects\\temp",
@@ -651,7 +665,8 @@
     "binaryNotice": "This file is a binary file or uses an unsupported text encoding, so it cannot be displayed in the text editor.",
     "openAnyway": "Open Anyway",
     "warningTitle": "File Warning",
-    "tooLarge": "The file is too large to preview"
+    "tooLarge": "The file is too large to preview",
+    "loadFailed": "Failed to load file: {{error}}"
   },
   "AIRightPanel": {
     "aiSettings": "AI Settings",
