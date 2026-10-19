@@ -1,10 +1,10 @@
+const { appResourcePath, preloadPath } = require('../runtimePaths')
 const { BrowserView, BrowserWindow, clipboard, desktopCapturer, dialog, ipcMain, nativeImage } = require('electron')
 const Events = require('events')
 const fs = require('fs-extra')
 const Event = require('./event')
 const getDisplay = require('./getDisplay')
 const padStart = require('./padStart')
-const path = require('path')
 const { NodeScreenshots } = require('./nodeScreenshots')
 
 /**
@@ -60,7 +60,7 @@ class Screenshots extends Events {
   /** @type {BrowserWindow} */
   $view = new BrowserView({
     webPreferences: {
-      preload: require.resolve('./preload.js'),
+      preload: preloadPath('screenshots'),
       nodeIntegration: false,
       contextIsolation: true,
     },
@@ -98,7 +98,7 @@ class Screenshots extends Events {
     this.logger = !!opts.isShowLog ? this.logger : () => {}
     this.singleWindow = opts?.singleWindow || false
     this.listenIpc()
-    this.$view.webContents.loadFile(path.resolve(__dirname, '../../renderer/electron/electron.html'))
+    this.$view.webContents.loadFile(appResourcePath('renderer', 'electron', 'electron.html'))
     if (opts?.lang) {
       this.setLang(opts.lang)
     }

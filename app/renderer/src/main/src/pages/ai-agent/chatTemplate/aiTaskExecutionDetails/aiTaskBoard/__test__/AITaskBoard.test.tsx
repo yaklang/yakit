@@ -4,6 +4,34 @@ import moment from 'moment'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AITaskBoard } from '../AITaskBoard'
 
+// i18n：插值模板用中文，保证耗时/存活等断言与产品文案一致
+const i18nTemplates: Record<string, string> = {
+  'AITaskExecutionDetails.createdTime': '创建时间 {{time}}',
+  'AITaskExecutionDetails.duration': '耗时 {{time}}',
+  'AITaskExecutionDetails.survival': '存活 {{time}}',
+  'AITaskExecutionDetails.startOngoing': '开始 {{time}} —',
+  'AITaskExecutionDetails.labelStart': '开始',
+  'AITaskExecutionDetails.labelEnd': '结束',
+  'AITaskExecutionDetails.labelCreated': '创建',
+  'AITaskExecutionDetails.labelSkipped': '跳过',
+  'AITaskExecutionDetails.labelDeleted': '删除',
+}
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({
+    t: (key: string, options?: Record<string, unknown>) => {
+      let text = i18nTemplates[key] ?? key
+      if (!options) return text
+      return Object.entries(options).reduce((acc, [k, v]) => {
+        if (typeof v === 'string' || typeof v === 'number') {
+          return acc.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v))
+        }
+        return acc
+      }, text)
+    },
+    i18nRefresh: 0,
+  }),
+}))
+
 // 类名原样返回，便于按 class 断言跳过/删除卡片的置灰态
 vi.mock('../AITaskBoard.module.scss', () => ({
   default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
@@ -68,6 +96,48 @@ describe('AITaskBoard 状态分组', () => {
     render(<AITaskBoard columns={createColumns([])} />)
     expect(screen.getByText('待处理')).toBeInTheDocument()
     expect(screen.getByText('0')).toBeInTheDocument()
+  })
+})
+
+describe('AITaskBoard 运行中列图标旋转', () => {
+  const getColumnIcon = (title: string) =>
+    screen.getByText(title).closest('.todo-list-header')?.querySelector('.todo-column-icon') as HTMLElement
+
+  it('doing 列有任务时图标含 todo-column-icon-spin', () => {
+    render(
+      <AITaskBoard
+        columns={[
+          {
+            key: 'doing',
+            title: '运行中',
+            icon: <span />,
+            items: [createItem({ id: 'd1', content: '执行中', status: 'DOING' })],
+          },
+        ]}
+      />,
+    )
+    expect(getColumnIcon('运行中')).toHaveClass('todo-column-icon-spin')
+  })
+
+  it('doing 空列不含 todo-column-icon-spin', () => {
+    render(<AITaskBoard columns={[{ key: 'doing', title: '运行中', icon: <span />, items: [] }]} />)
+    expect(getColumnIcon('运行中')).not.toHaveClass('todo-column-icon-spin')
+  })
+
+  it('非 doing 列有任务时不含 todo-column-icon-spin', () => {
+    render(
+      <AITaskBoard
+        columns={[
+          {
+            key: 'pending',
+            title: '待处理',
+            icon: <span />,
+            items: [createItem({ id: 'p1', content: '排队中' })],
+          },
+        ]}
+      />,
+    )
+    expect(getColumnIcon('待处理')).not.toHaveClass('todo-column-icon-spin')
   })
 })
 

@@ -9,39 +9,25 @@ import { v4 as uuidv4 } from 'uuid'
 import { type PlanItemDetailsData } from '../aiRender'
 import { DefaultPlanItemDetailsData } from '../defaultConstant'
 
-const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
-  const { res, rawData } = requestInfo
-  if (res.Type !== 'structured' || res.NodeId !== 'capability_inventory') return
-  if (!res.TaskId) return
+type CapabilityFields = Pick<PlanItemDetailsData, 'tool' | 'forges' | 'skills' | 'plugins' | 'mcp'>
 
-  const ipcContent = Uint8ArrayToString(res.Content) || ''
-  const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanItemDetails
-  if (isEmpty(payload)) return
+const emptyCapabilityFields = (): CapabilityFields => ({
+  tool: { fixed: [], dynamic: [] },
+  forges: { fixed: [], dynamic: [] },
+  skills: { fixed: [], dynamic: [] },
+  plugins: { fixed: [], dynamic: [] },
+  mcp: { fixed: [], dynamic: [] },
+})
 
+/**
+ * 将 legacy PlanItemDetails（fixed/dynamic）写入 CapabilityFields。
+ * 注意：fixed.mcp_servers 有意不读——与 legacy capability_inventory 一致（原「暂时没有这个数据」），
+ * UI 仅有 mcp 工具桶（category=mcp），无 mcp_server 独立展示位；勿误以为漏写映射。
+ */
+const planItemDetailsToCapabilityFields = (payload: AIAgentGrpcApi.PlanItemDetails): CapabilityFields => {
+  const itemData = emptyCapabilityFields()
   const { fixed, dynamic } = payload
-  const itemData: Pick<PlanItemDetailsData, 'uuid' | 'tool' | 'forges' | 'skills' | 'plugins' | 'mcp'> = {
-    uuid: uuidv4(),
-    tool: {
-      fixed: [],
-      dynamic: [],
-    },
-    forges: {
-      fixed: [],
-      dynamic: [],
-    },
-    skills: {
-      fixed: [],
-      dynamic: [],
-    },
-    plugins: {
-      fixed: [],
-      dynamic: [],
-    },
-    mcp: {
-      fixed: [],
-      dynamic: [],
-    },
-  }
+
   if (fixed?.tools) {
     for (const item of fixed.tools) {
       switch (item.category) {
@@ -59,10 +45,6 @@ const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
       }
     }
   }
-  /** 暂时目前没有这个数据 */
-  // if (!!fixed?.mcp_servers) {
-  //   itemData.mcpServices.fixed = fixed.mcp_servers
-  // }
   if (fixed?.forges) {
     itemData.forges.fixed = fixed.forges
   }
@@ -94,19 +76,108 @@ const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
     itemData.forges.dynamic = dynamic.forges
   }
 
-  // 只能通过字段重新赋值的方式修改，不能解构赋值
-  const applyCapabilityFields = (target: PlanItemDetailsData) => {
-    target.uuid = itemData.uuid
-    target.taskId = target.taskId || res.TaskId
-    target.tool = itemData.tool
-    target.forges = itemData.forges
-    target.skills = itemData.skills
-    target.plugins = itemData.plugins
-    target.mcp = itemData.mcp
-  }
+  return itemData
+}
 
+/** 对齐后端 CapabilityInventoryPayloadFromItems：扁平 capabilities → PlanItemDetails */
+const capabilityInventoryItemsToPlanItemDetails = (
+  items: AIAgentGrpcApi.CapabilityInventoryItem[] | undefined,
+): AIAgentGrpcApi.PlanItemDetails => {
+  const payload: AIAgentGrpcApi.PlanItemDetails = {
+    fixed: { tools: [], mcp_servers: [], forges: [], skills: [] },
+    dynamic: { tools: [], skills: [], forges: [] },
+  }
+  if (!items?.length) return payload
+
+  for (const item of items) {
+    const name = (item.name || '').trim()
+    if (!name) continue
+    const isDynamic = item.position === 'Dynamic'
+    const base = {
+      name,
+      verbose_name: item.verbose_name || name,
+      description: item.description || '',
+    }
+
+    switch (item.type) {
+      case 'skill': {
+        if (isDynamic) {
+          const skillLoadState =
+            item.stage === 'loaded'
+              ? 'loaded'
+              : typeof item.data?.skill_load_state === 'string'
+                ? (item.data.skill_load_state as 'metadata' | 'loaded' | '')
+                : 'metadata'
+          payload.dynamic.skills.push({ ...base, category: 'skill', skill_load_state: skillLoadState })
+        } else {
+          payload.fixed.skills.push({ ...base, category: 'skill' })
+        }
+        break
+      }
+      case 'forge': {
+        const named = { ...base, category: 'forge' as const }
+        if (isDynamic) payload.dynamic.forges.push(named)
+        else payload.fixed.forges.push(named)
+        break
+      }
+      case 'mcp_server':
+        // 仅对齐后端 payload 形状；下游 planItemDetailsToCapabilityFields 不消费 mcp_servers（见该函数注释）
+        payload.fixed.mcp_servers.push({ ...base, category: 'mcp_server' })
+        break
+      default: {
+        const category =
+          item.type === 'mcp' ? ('mcp' as const) : item.type === 'plugin' ? ('yak_plugin' as const) : ('tool' as const)
+        const tool = { ...base, category }
+        if (isDynamic) payload.dynamic.tools.push(tool)
+        else payload.fixed.tools.push(tool)
+        break
+      }
+    }
+  }
+  return payload
+}
+
+const applyCapabilityFieldsToTarget = (target: PlanItemDetailsData, fields: CapabilityFields, taskId: string) => {
+  target.uuid = uuidv4()
+  target.taskId = target.taskId || taskId
+  target.tool = fields.tool
+  target.forges = fields.forges
+  target.skills = fields.skills
+  target.plugins = fields.plugins
+  target.mcp = fields.mcp
+}
+
+const mapSessionPerceptionToPerceptionData = (
+  perception: AIAgentGrpcApi.SessionSnapshotPerception | undefined,
+): AIAgentGrpcApi.PerceptionData | undefined => {
+  if (!perception) return undefined
+  const summaryRaw = perception.summary
+  const summary = isArray(summaryRaw) ? summaryRaw.join(',') : summaryRaw || ''
+  return {
+    summary,
+    topics: perception.topics || [],
+    keywords: perception.keywords || [],
+    changed: !!perception.changed,
+    confidence: perception.confidence ?? 0,
+    trigger: perception.last_trigger || '',
+    epoch: perception.epoch ?? 0,
+    intent_shift: perception.intent_shift || 'none',
+    timestamp: perception.last_update_at ?? 0,
+  }
+}
+
+const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
+  const { res, rawData } = requestInfo
+  if (res.Type !== 'structured' || res.NodeId !== 'capability_inventory') return
+  if (!res.TaskId) return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanItemDetails
+  if (isEmpty(payload)) return
+
+  const fields = planItemDetailsToCapabilityFields(payload)
   const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-  applyCapabilityFields(oldData)
+  applyCapabilityFieldsToTarget(oldData, fields, res.TaskId)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
 }
 
@@ -165,13 +236,26 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
 }
 
 const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
-  const { res, rawData } = requestInfo
+  const { res, rawData, store } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'session_snapshot') return
-  if (!res.TaskId) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const snapshot = (JSON.parse(ipcContent) as AIAgentGrpcApi.SessionSnapshot) || {}
   if (isEmpty(snapshot)) return
+
+  // 任务索引用会话级水位（勿绑单任务 revision）；乱序旧包不得回退下拉列表
+  if (Array.isArray(snapshot.tasks)) {
+    const listRev = typeof snapshot.revision === 'number' ? snapshot.revision : 0
+    const cachedListRev = store.getState().sessionTaskListRevision ?? 0
+    if (!(listRev > 0 && listRev <= cachedListRev)) {
+      store.getState().updateState({
+        sessionTaskList: snapshot.tasks,
+        ...(listRev > 0 ? { sessionTaskListRevision: listRev } : {}),
+      })
+    }
+  }
+
+  if (!res.TaskId) return
 
   const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
   if (
@@ -203,10 +287,81 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
   rawData.taskDetailsMap.set(res.TaskId, oldData)
 }
 
+const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
+  const { res, rawData, store, chatType } = requestInfo
+  if (res.Type !== 'structured' || res.NodeId !== 'task_snapshot') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  // 错误回包（如 not found）无完整结构，静默忽略
+  let payload: AIAgentGrpcApi.SessionTaskSnapshot
+  try {
+    payload = JSON.parse(ipcContent) as AIAgentGrpcApi.SessionTaskSnapshot
+  } catch {
+    return
+  }
+  const taskId = (payload.task_id || res.TaskId || '').trim()
+  if (!taskId || isEmpty(payload)) return
+  if (!payload.snapshot && !payload.todo) return
+
+  const oldData = rawData.taskDetailsMap.get(taskId) || cloneDeep(DefaultPlanItemDetailsData)
+  // 仅与本通道 taskSnapshotRevision 比较；勿复用 session 水位，否则同 rev 的互补包会被整包丢掉
+  if (
+    typeof payload.revision === 'number' &&
+    payload.revision > 0 &&
+    payload.revision <= (oldData.taskSnapshotRevision ?? 0)
+  ) {
+    return
+  }
+
+  oldData.uuid = uuidv4()
+  oldData.taskId = taskId
+
+  const nested = payload.snapshot
+  if (nested?.execution) {
+    const recordedExecutionRounds = Math.max(
+      oldData.execution?.execution_rounds ?? 0,
+      nested.execution.execution_rounds ?? 0,
+    )
+    oldData.execution = {
+      ...nested.execution,
+      execution_rounds: recordedExecutionRounds > 0 ? recordedExecutionRounds : undefined,
+    }
+  }
+  if (nested?.background_processes) {
+    oldData.backgroundProcesses = nested.background_processes
+  }
+  if (typeof payload.revision === 'number' && payload.revision > 0) {
+    oldData.taskSnapshotRevision = payload.revision
+  }
+
+  const perception = mapSessionPerceptionToPerceptionData(nested?.perception)
+  if (perception) {
+    oldData.perception = perception
+  }
+
+  let todoUpdated = false
+  if (payload.todo?.items) {
+    oldData.todoList = handleTodoListData(payload.todo.items, taskId)
+    todoUpdated = true
+  }
+
+  if (nested && Array.isArray(nested.capabilities)) {
+    const fields = planItemDetailsToCapabilityFields(capabilityInventoryItemsToPlanItemDetails(nested.capabilities))
+    applyCapabilityFieldsToTarget(oldData, fields, taskId)
+  }
+
+  rawData.taskDetailsMap.set(taskId, oldData)
+  // 与 current_task_todo_list_update 一致：通知聊天待办条从 map 重读
+  if (todoUpdated && chatType === 'reAct') {
+    store.getState().updateStateCount('chatTodoListUpdate')
+  }
+}
+
 /** 单条grpc流数据对应一个独立的UI数据 */
 export const aiTaskDetailDataHandlers = {
   capability_inventory: handleCapabilityInventory,
   perception: handlePerception,
   current_task_todo_list_update: handleCurrentTaskTodoListUpdate,
   session_snapshot: handleSessionSnapshot,
+  task_snapshot: handleTaskSnapshot,
 } as const

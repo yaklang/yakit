@@ -1,134 +1,140 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import classNames from 'classnames'
-import moment from 'moment'
-import { useCreation, useMemoizedFn } from 'ahooks'
+import { Tooltip } from 'antd'
+import { useCreation, useInterval, useMemoizedFn } from 'ahooks'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
-import { buildGanttTicks, buildSegments, collectGanttContentBounds, computeGanttTimeRange } from './ganttUtils'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import {
+  buildGanttTicks,
+  buildSegments,
+  collectGanttContentBounds,
+  computeGanttTimeRange,
+  formatGanttTickTime,
+} from './ganttUtils'
 import type { AITaskGanttProps, AITaskGanttSegment, AITaskGanttSegmentKind, AITaskGanttStatusMap } from './type'
 import styles from './AITaskGantt.module.scss'
 
-const STATUS_META: AITaskGanttStatusMap = {
-  [AIToDoListStatusEnum.Pending]: { label: '待处理' },
-  [AIToDoListStatusEnum.Doing]: { label: '运行中', tagColor: 'warning' },
-  [AIToDoListStatusEnum.Done]: { label: '已完成', tagColor: 'success' },
-  [AIToDoListStatusEnum.Skipped]: { label: '已跳过', tagColor: 'purple' },
-  [AIToDoListStatusEnum.Deleted]: { label: '已删除', tagColor: 'danger' },
+/** 条带上方任务名展示最大字符数，超出省略 */
+const GANTT_LABEL_MAX_CHARS = 20
+
+const formatGanttLabelName = (content?: string) => {
+  const text = content || '—'
+  if (text.length <= GANTT_LABEL_MAX_CHARS) return text
+  return `${text.slice(0, GANTT_LABEL_MAX_CHARS)}...`
 }
 
-const LEGEND_ITEMS: { kind: AITaskGanttSegmentKind; label: string }[] = [
-  { kind: 'wait', label: '等待' },
-  { kind: 'execute', label: '执行过程' },
-  { kind: 'success', label: '成功' },
-  { kind: 'skipped', label: '跳过' },
-  { kind: 'failed', label: '失败' },
-]
+/** 任务统计甘特图：时间轴条带上直接展示任务名与状态 */
+export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(
+  ({ items, className, hiddenLegendKinds = [], onLegendToggle }) => {
+    const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
+    const [selectedId, setSelectedId] = useState<string>('')
+    const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000))
 
-/** 任务统计甘特图：左侧 Todo list + 右侧时间轴条 */
-export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(({ items, className }) => {
-  const [selectedId, setSelectedId] = useState<string>('')
-  const sidebarListRef = useRef<HTMLDivElement>(null)
-  const timelineBodyRef = useRef<HTMLDivElement>(null)
-  const syncingScroll = useRef(false)
+    const hasLiveTasks = useCreation(
+      () =>
+        items.some(
+          (item) => item.status === AIToDoListStatusEnum.Pending || item.status === AIToDoListStatusEnum.Doing,
+        ),
+      [items],
+    )
 
-  const nowSec = useCreation(() => Math.floor(Date.now() / 1000), [items])
+    // items 变更时同步一次 now；有进行中任务时每 5 秒刷新，驱动条带伸长
+    useEffect(() => {
+      setNowSec(Math.floor(Date.now() / 1000))
+    }, [items])
+    useInterval(() => setNowSec(Math.floor(Date.now() / 1000)), hasLiveTasks ? 5_000 : undefined)
 
-  const rowModels = useCreation(() => {
-    return items.map((item, index) => {
-      const meta = STATUS_META[item.status] || STATUS_META[AIToDoListStatusEnum.Pending]
+    const statusMeta = useCreation<AITaskGanttStatusMap>(
+      () => ({
+        [AIToDoListStatusEnum.Pending]: { label: t('AITaskExecutionDetails.statusPending') },
+        [AIToDoListStatusEnum.Doing]: { label: t('AITaskExecutionDetails.statusDoing'), tagColor: 'warning' },
+        [AIToDoListStatusEnum.Done]: { label: t('AITaskExecutionDetails.statusDone'), tagColor: 'success' },
+        [AIToDoListStatusEnum.Skipped]: { label: t('AITaskExecutionDetails.statusSkipped'), tagColor: 'purple' },
+        [AIToDoListStatusEnum.Deleted]: { label: t('AITaskExecutionDetails.statusDeleted'), tagColor: 'danger' },
+      }),
+      [i18nRefresh],
+    )
+
+    // 图例文案与顶部任务统计一致（status*）
+    const legendItems = useCreation<{ kind: AITaskGanttSegmentKind; label: string }[]>(
+      () => [
+        { kind: 'wait', label: t('AITaskExecutionDetails.statusPending') },
+        { kind: 'execute', label: t('AITaskExecutionDetails.statusDoing') },
+        { kind: 'success', label: t('AITaskExecutionDetails.statusDone') },
+        { kind: 'skipped', label: t('AITaskExecutionDetails.statusSkipped') },
+        { kind: 'failed', label: t('AITaskExecutionDetails.statusDeleted') },
+      ],
+      [i18nRefresh],
+    )
+
+    const rowModels = useCreation(() => {
+      return items.map((item, index) => {
+        const meta = statusMeta[item.status] || statusMeta[AIToDoListStatusEnum.Pending]
+        return {
+          key: item.id || `gantt-row-${index}`,
+          item,
+          meta,
+          segments: buildSegments(item, nowSec),
+        }
+      })
+    }, [items, nowSec, statusMeta])
+
+    const timeRange = useCreation(() => {
+      const bounds = collectGanttContentBounds(
+        rowModels.map((row) => ({ segments: row.segments, created_ts: row.item.created_ts })),
+      )
+      return computeGanttTimeRange(bounds, nowSec)
+    }, [rowModels, nowSec])
+
+    const ticks = useCreation(() => buildGanttTicks(timeRange), [timeRange])
+    // 进行中 + contentEnd 贴近 now，且 contentEnd 不小于前一刻度（仍是轴上最大）时才展示 to now
+    const showLiveToNow = useCreation(() => {
+      if (!hasLiveTasks || Math.abs(timeRange.contentEnd - nowSec) > 1) return false
+      if (ticks.length < 2) return true
+      return timeRange.contentEnd >= ticks[ticks.length - 2]
+    }, [hasLiveTasks, timeRange.contentEnd, nowSec, ticks])
+
+    const rangeSpan = timeRange.end - timeRange.start || 1
+    const timelineWidthPx = Math.max(ticks.length * 80, 480)
+
+    const toPercent = useMemoizedFn((ts: number) => {
+      return `${((Math.min(Math.max(ts, timeRange.start), timeRange.end) - timeRange.start) / rangeSpan) * 100}%`
+    })
+
+    const segmentStyle = useMemoizedFn((seg: AITaskGanttSegment, endTs = seg.endTs): React.CSSProperties => {
+      const left = ((seg.startTs - timeRange.start) / rangeSpan) * 100
+      const width = ((Math.max(endTs, seg.startTs + 1) - seg.startTs) / rangeSpan) * 100
       return {
-        key: item.id || `gantt-row-${index}`,
-        item,
-        meta,
-        segments: buildSegments(item, nowSec),
+        left: `${Math.max(left, 0)}%`,
+        width: `${Math.max(width, 0.4)}%`,
       }
     })
-  }, [items, nowSec])
 
-  const timeRange = useCreation(() => {
-    const bounds = collectGanttContentBounds(
-      rowModels.map((row) => ({ segments: row.segments, created_ts: row.item.created_ts })),
-    )
-    return computeGanttTimeRange(bounds, nowSec)
-  }, [rowModels, nowSec])
-
-  const ticks = useCreation(() => buildGanttTicks(timeRange), [timeRange])
-
-  const rangeSpan = timeRange.end - timeRange.start || 1
-  const timelineWidthPx = Math.max(ticks.length * 80, 480)
-
-  const toPercent = useMemoizedFn((ts: number) => {
-    return `${((Math.min(Math.max(ts, timeRange.start), timeRange.end) - timeRange.start) / rangeSpan) * 100}%`
-  })
-
-  const segmentStyle = useMemoizedFn((seg: AITaskGanttSegment): React.CSSProperties => {
-    const left = ((seg.startTs - timeRange.start) / rangeSpan) * 100
-    const width = ((Math.max(seg.endTs, seg.startTs + 1) - seg.startTs) / rangeSpan) * 100
-    return {
-      left: `${Math.max(left, 0)}%`,
-      width: `${Math.max(width, 0.4)}%`,
-    }
-  })
-
-  const onSelect = useMemoizedFn((key: string) => {
-    setSelectedId((prev) => (prev === key ? '' : key))
-  })
-
-  const syncVerticalScroll = useMemoizedFn((source: 'sidebar' | 'timeline') => {
-    if (syncingScroll.current) return
-    const sidebar = sidebarListRef.current
-    const timeline = timelineBodyRef.current
-    if (!sidebar || !timeline) return
-    syncingScroll.current = true
-    if (source === 'sidebar') {
-      timeline.scrollTop = sidebar.scrollTop
-    } else {
-      sidebar.scrollTop = timeline.scrollTop
-    }
-    requestAnimationFrame(() => {
-      syncingScroll.current = false
+    const onSelect = useMemoizedFn((key: string) => {
+      setSelectedId((prev) => (prev === key ? '' : key))
     })
-  })
 
-  return (
-    <div className={classNames(styles['ai-task-gantt'], className)}>
-      <div className={styles['gantt-main']}>
-        <div className={styles['gantt-sidebar']}>
-          <div className={styles['sidebar-header']}>Todo list</div>
-          <div ref={sidebarListRef} className={styles['sidebar-list']} onScroll={() => syncVerticalScroll('sidebar')}>
-            {rowModels.map((row) => (
-              <div
-                key={row.key}
-                className={classNames(styles['sidebar-item'], {
-                  [styles['sidebar-item-selected']]: selectedId === row.key,
-                })}
-                onClick={() => onSelect(row.key)}
-              >
-                <div className={styles['sidebar-item-name']} title={row.item.content}>
-                  {row.item.content || '—'}
-                </div>
-                <YakitTag border={false} fullRadius size="small" color={row.meta.tagColor}>
-                  {row.meta.label}
-                </YakitTag>
-              </div>
-            ))}
-          </div>
-        </div>
-
+    return (
+      <div className={classNames(styles['ai-task-gantt'], className)}>
         <div className={styles['gantt-timeline']}>
           <div className={styles['timeline-scroll']} style={{ width: timelineWidthPx }}>
             <div className={styles['timeline-header']}>
-              {ticks.map((tick) => (
-                <div key={tick} className={styles['timeline-tick']} style={{ left: toPercent(tick) }}>
-                  {moment.unix(tick).format('HH:mm')}
-                </div>
-              ))}
+              {ticks.map((tick, index) => {
+                const isLast = index === ticks.length - 1
+                const showToNow = isLast && showLiveToNow
+                const labelTs = showToNow ? timeRange.contentEnd : tick
+                return (
+                  <div key={`${tick}-${index}`} className={styles['timeline-tick']} style={{ left: toPercent(tick) }}>
+                    <span className={styles['timeline-tick-time']}>{formatGanttTickTime(labelTs)}</span>
+                    {showToNow ? (
+                      <span className={styles['timeline-tick-tonow']}>{t('AITaskExecutionDetails.ganttToNow')}</span>
+                    ) : null}
+                  </div>
+                )
+              })}
             </div>
-            <div
-              ref={timelineBodyRef}
-              className={styles['timeline-body']}
-              onScroll={() => syncVerticalScroll('timeline')}
-            >
+            <div className={styles['timeline-body']}>
               {/* 网格挂在随行高增长的内容层上，避免滚动后下方无背景 */}
               <div className={styles['timeline-content']}>
                 <div className={styles['timeline-grid']}>
@@ -148,7 +154,7 @@ export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(({ items, clas
                       />
                     )
                   })}
-                  {ticks.map((tick) => (
+                  {ticks.slice(1, -1).map((tick) => (
                     <div
                       key={`grid-${tick}`}
                       className={styles['timeline-grid-line']}
@@ -156,40 +162,83 @@ export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(({ items, clas
                     />
                   ))}
                 </div>
-                {rowModels.map((row) => (
-                  <div
-                    key={row.key}
-                    className={classNames(styles['timeline-row'], {
-                      [styles['timeline-row-selected']]: selectedId === row.key,
-                    })}
-                    onClick={() => onSelect(row.key)}
-                  >
-                    <div className={styles['bar-track']}>
-                      {row.segments.map((seg, idx) => (
-                        <div
-                          key={`${row.key}-${seg.kind}-${idx}`}
-                          className={classNames(styles['bar-segment'], styles[`bar-segment-${seg.kind}`])}
-                          style={segmentStyle(seg)}
-                          title={`${LEGEND_ITEMS.find((l) => l.kind === seg.kind)?.label || seg.kind}`}
-                        />
-                      ))}
+                {rowModels.map((row) => {
+                  const labelLeft = row.segments.length > 0 ? toPercent(row.segments[0].startTs) : '0%'
+                  const fullName = row.item.content || '—'
+                  const showNameTip = fullName.length > GANTT_LABEL_MAX_CHARS
+                  return (
+                    <div
+                      key={row.key}
+                      className={classNames(styles['timeline-row'], {
+                        [styles['timeline-row-selected']]: selectedId === row.key,
+                      })}
+                      onClick={() => onSelect(row.key)}
+                    >
+                      <div className={styles['bar-label']} style={{ left: labelLeft }}>
+                        <YakitTag border={false} fullRadius size="small" color={row.meta.tagColor}>
+                          {row.meta.label}
+                        </YakitTag>
+                        <Tooltip title={showNameTip ? fullName : undefined} placement="topLeft">
+                          <span className={styles['bar-label-name']}>{formatGanttLabelName(row.item.content)}</span>
+                        </Tooltip>
+                      </div>
+                      <div className={styles['bar-track']}>
+                        {row.segments.map((seg, idx) => {
+                          const isLiveRow =
+                            row.item.status === AIToDoListStatusEnum.Pending ||
+                            row.item.status === AIToDoListStatusEnum.Doing
+                          // to now 展示时进行中末段拉满到轴终点，避免最后一格空一截
+                          const stretchToAxisEnd = showLiveToNow && isLiveRow && idx === row.segments.length - 1
+                          const endTs = stretchToAxisEnd ? Math.max(seg.endTs, timeRange.end) : seg.endTs
+                          return (
+                            <div
+                              key={`${row.key}-${seg.kind}-${idx}`}
+                              className={classNames(styles['bar-segment'], styles[`bar-segment-${seg.kind}`])}
+                              style={segmentStyle(seg, endTs)}
+                              title={`${legendItems.find((l) => l.kind === seg.kind)?.label || seg.kind}`}
+                            />
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className={styles['gantt-legend']}>
-        {LEGEND_ITEMS.map((item) => (
-          <div key={item.kind} className={styles['legend-item']}>
-            <span className={classNames(styles['legend-dot'], styles[`legend-dot-${item.kind}`])} />
-            <span>{item.label}</span>
-          </div>
-        ))}
+        <div className={styles['gantt-legend']}>
+          {legendItems.map((item) => {
+            const hidden = hiddenLegendKinds.includes(item.kind)
+            return (
+              <div
+                key={item.kind}
+                className={classNames(styles['legend-item'], {
+                  [styles['legend-item-clickable']]: !!onLegendToggle,
+                  [styles['legend-item-hidden']]: hidden,
+                })}
+                onClick={onLegendToggle ? () => onLegendToggle(item.kind) : undefined}
+                role={onLegendToggle ? 'button' : undefined}
+                tabIndex={onLegendToggle ? 0 : undefined}
+                onKeyDown={
+                  onLegendToggle
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          onLegendToggle(item.kind)
+                        }
+                      }
+                    : undefined
+                }
+              >
+                <span className={classNames(styles['legend-dot'], styles[`legend-dot-${item.kind}`])} />
+                <span>{item.label}</span>
+              </div>
+            )
+          })}
+        </div>
       </div>
-    </div>
-  )
-})
+    )
+  },
+)

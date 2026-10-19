@@ -341,6 +341,7 @@
   "CeUserMenu": {
     "tokenRemaining": "剩余 Token",
     "balance": "余额",
+    "redeem": "兑换",
     "recharge": "充值",
     "usageStatistics": "使用统计",
     "aiUsageTitle": "AI 使用情况",

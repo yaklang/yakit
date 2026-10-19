@@ -180,4 +180,22 @@ describe('useAIGlobalConfig', () => {
       DisableFallback: true,
     })
   })
+
+  it('保存期间开始的刷新等待写入完成后再读配置', async () => {
+    let finishSave!: (value: null) => void
+    setMock.mockReturnValueOnce(new Promise<null>((resolve) => (finishSave = resolve)))
+    const savedConfig = { ...defaultAIGlobalConfig, DisableFallback: true }
+    getMock.mockResolvedValue(savedConfig)
+    const { result } = renderHook(() => useAIGlobalConfig())
+
+    await act(async () => {
+      void result.current[1].setAIGlobalConfig(savedConfig)
+    })
+    await act(async () => result.current[1].onRefresh(false))
+    expect(getMock).not.toHaveBeenCalled()
+
+    await act(async () => finishSave(null))
+    await waitFor(() => expect(getMock).toHaveBeenCalledTimes(1))
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(savedConfig)
+  })
 })

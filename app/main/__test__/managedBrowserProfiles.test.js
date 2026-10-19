@@ -103,7 +103,7 @@ describe('managed Chromium profile lifecycle', () => {
     expect(harness.calls[0].executable).toBe(fs.realpathSync(chromePath))
     expect(harness.calls[0].args).toEqual(
       expect.arrayContaining([
-        `--user-data-dir=${launched.userDataDir}`,
+        `--user-data-dir=${fs.realpathSync(launched.userDataDir)}`,
         `--load-extension=${fs.realpathSync(extensionPath)}`,
         expect.stringContaining('ytray-bootstrap.html?manager=yakit'),
         'chrome://extensions/',

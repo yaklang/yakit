@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AIModelSettings } from '../AIModelSettings'
+import emiter from '@/utils/eventBus/eventBus'
 
 const mocks = vi.hoisted(() => ({
   config: {} as Record<string, unknown>,
@@ -81,6 +82,19 @@ describe('AIModelSettings', () => {
     mocks.config = createConfig()
     mocks.setAIGlobalConfig.mockReset().mockResolvedValue(undefined)
     mocks.notify.mockReset()
+  })
+
+  it('配置页刷新不通知 AI 页，选择器依赖回页刷新', () => {
+    const onAvailableRefresh = vi.fn()
+    emiter.on('onRefreshAvailableAIModelList', onAvailableRefresh)
+    try {
+      const { unmount } = render(<AIModelSettings />)
+      act(() => emiter.emit('onRefreshAIModelList'))
+      expect(onAvailableRefresh).not.toHaveBeenCalled()
+      unmount()
+    } finally {
+      emiter.off('onRefreshAvailableAIModelList', onAvailableRefresh)
+    }
   })
 
   it('收起分组时右侧只保留选中模型（列表第一项）', async () => {

@@ -31,6 +31,8 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { providerToListAiModelConfig } from '../aiModelForm/providerConfig'
 import { yakitNotify } from '@/utils/notification'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
+import { EnterpriseAIModelSelect } from './enterpriseAIModelSelect/EnterpriseAIModelSelect'
+import { isEnterpriseOrSimpleEdition } from '@/utils/envfile'
 
 const getModelListConfig = (model?: AIModelConfig) => providerToListAiModelConfig(model?.Provider)
 
@@ -52,6 +54,7 @@ export const onOpenConfigModal = (mountContainer, t: TFunction) => {
         onSuccess: () => {
           setTimeout(() => {
             emiter.emit('onRefreshAIModelList')
+            emiter.emit('onRefreshAvailableAIModelList')
           }, 200)
         },
       })
@@ -61,6 +64,10 @@ export const onOpenConfigModal = (mountContainer, t: TFunction) => {
 }
 
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
+  return isEnterpriseOrSimpleEdition() ? <EnterpriseAIModelSelect {...props} /> : <CurrentAIModelSelect {...props} />
+})
+
+const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { isOpen = true, className } = props
   const [aiDraftConfig, setAIDraftConfig] = useState<AIGlobalConfig>(() => cloneDeep(defaultAIGlobalConfig))

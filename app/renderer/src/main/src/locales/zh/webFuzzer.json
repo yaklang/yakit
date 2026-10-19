@@ -681,6 +681,7 @@
     "started": "(已启动)",
     "MITM_hot_patch": "MITM热加载",
     "default": "全局默认模板",
+    "http_flow_test_tags": "[全局] HTTP流量测试项打标",
     "guomi_sm4_transparent": "[全局] 内网 SM4-CBC 透明加解密 + 入库明文",
     "challenge_sign_pipeline": "[全局] 动态 Challenge + HMAC 签名注入 pipeline",
     "auto_bearer_token": "[全局] 默认 Authorization Bearer 自动注入",

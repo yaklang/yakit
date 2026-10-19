@@ -172,7 +172,15 @@ function registerYTrayControlHandlers({ ipcMain, assertTrustedAppSender }) {
       return callback(...args)
     })
   }
-  handle('ListYTrayBrowserHistory', () => listYTrayBrowserHistory())
+  handle('ListYTrayBrowserHistory', async () => {
+    // Return failures as data so Electron does not log every background refresh.
+    // The preload restores the rejection for the renderer's existing error handling.
+    try {
+      return { ok: true, history: await listYTrayBrowserHistory() }
+    } catch (error) {
+      return { ok: false, error: error.message }
+    }
+  })
   handle('ClaimYTrayLaunchApproval', (input) => claimYTrayLaunchApproval(input?.id, input?.requestId))
   handle('RestoreYTrayBrowserInstance', (input) => restoreYTrayBrowserInstance(input?.id))
 }

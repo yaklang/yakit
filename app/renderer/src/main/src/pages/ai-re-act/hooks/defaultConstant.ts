@@ -187,6 +187,7 @@ export const DefaultTodoListCardData: TodoListCardData = {
 export const DefaultPlanItemDetailsData: PlanItemDetailsData = {
   uuid: '',
   sessionSnapshotRevision: 0,
+  taskSnapshotRevision: 0,
   taskId: '',
   todoList: { ...DefaultTodoListCardData },
   tool: {

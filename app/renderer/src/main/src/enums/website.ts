@@ -17,4 +17,6 @@ export enum WebsiteGV {
   YakitHistoryVersionAddress = 'https://github.com/yaklang/yakit/releases',
   /** @name apikey管理跳转到web地址 */
   ApiKeyManageAddress = 'https://www.yakcool.com/login',
+  /** @name 兑换/活动页地址 */
+  PromotionsAddress = 'https://www.yakcool.com/workspace/promotions',
 }

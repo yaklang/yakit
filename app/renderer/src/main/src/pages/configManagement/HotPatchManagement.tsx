@@ -311,7 +311,10 @@ export const HotPatchManagement: React.FC = () => {
         )
         const newList = toHotPatchTempItems(allNames, (name) =>
           DEFAULT_GLOBAL_TEMPLATES.some((item) => item.name === name),
-        )
+        ).map((item) => ({
+          ...item,
+          nameUi: DEFAULT_GLOBAL_TEMPLATES.find((tpl) => tpl.name === item.name)?.nameUi,
+        }))
         const currentEnabledName = enabledName || (globalHotPatchConfig?.Enabled ? globalEnabledTemplateName : '')
         const nextList = sortGlobalTemplateList(newList, currentEnabledName)
         setGlobalTemplateList(nextList)
@@ -944,8 +947,8 @@ export const HotPatchManagement: React.FC = () => {
           />
         ) : (
           <>
-            <span className={styles['template-name']} title={item.name}>
-              {item.name}
+            <span className={styles['template-name']} title={item.nameUi ? t(item.nameUi) : item.name}>
+              {item.nameUi ? t(item.nameUi) : item.name}
             </span>
             {item.isDefault && (
               <YakitTag className={styles['global-enabled-tag']} color="warning" size="small">

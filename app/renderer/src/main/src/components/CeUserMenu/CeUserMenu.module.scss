@@ -199,20 +199,14 @@
   font-weight: 600;
 }
 
-.ce-user-info-recharge {
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--Colors-Use-Main-Primary);
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 16px;
-  letter-spacing: 0.5px;
-  cursor: pointer;
+.ce-user-info-balance-actions {
+  display: flex;
+  align-items: center;
+}
 
-  &:hover {
-    color: var(--Colors-Use-Main-Hover);
-  }
+.ce-user-info-action-btn {
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .ce-user-info-progress-box {
@@ -255,7 +249,6 @@
 }
 
 .ce-user-info-token-label,
-.ce-user-info-token-value,
 .ce-user-info-token-percent {
   color: var(--Colors-Use-Neutral-Text-4-Help-text);
   font-size: 12px;

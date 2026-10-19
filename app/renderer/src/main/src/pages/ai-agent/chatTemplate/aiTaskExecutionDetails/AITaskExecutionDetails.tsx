@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import classNames from 'classnames'
-import type {
-  AIBrowserProcessesProps,
-  AITaskDetailsAddListItem,
-  AITaskDetailsAddPopoverProps,
-  AITaskDetailsAddPopoverResponse,
-  AITaskDetailsCardListProps,
-  AITaskExecutionDetailsCardProps,
-  AITaskExecutionDetailsProps,
-  AITaskStatisticsStatusProps,
+import {
+  FILTER_KEY_TO_GANTT_LEGEND,
+  GANTT_LEGEND_TO_FILTER_KEY,
+  TODO_STATUS_FILTER_KEYS,
+  TODO_STATUS_TO_FILTER_KEY,
+  type AIBrowserProcessesProps,
+  type AITaskDetailsAddListItem,
+  type AITaskDetailsAddPopoverProps,
+  type AITaskDetailsAddPopoverResponse,
+  type AITaskDetailsCardListProps,
+  type AITaskExecutionDetailsCardProps,
+  type AITaskExecutionDetailsProps,
+  type AITaskStatisticsStatusItem,
+  type AITaskStatisticsStatusProps,
+  type TodoStatusFilterKey,
+  type TodoViewMode,
 } from './type'
 import {
   PresentationChartBarOutlined,
@@ -61,10 +68,7 @@ import {
 import { apiQueryYakScript } from '@/pages/plugins/utils'
 import { grpcGetAllMCPServers } from '../../aiMCP/utils'
 import type { GetAllMCPServersRequest, MCPServerTool } from '../../type/aiMCP'
-import {
-  HorizontalScrollCardItemInfoMultiple,
-  HorizontalScrollCardItemInfoSingle,
-} from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
+import { HorizontalScrollCardItemInfoMultiple } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
@@ -77,22 +81,48 @@ import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import { getSessionRiskTagEntries } from '@/pages/ai-re-act/aiRightPanel/riskLevelCount'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { AITaskSelectDropdown } from './aiTaskSelectDropdown/AITaskSelectDropdown'
 
-type TodoViewMode = 'board' | 'gantt'
+/** 顶部状态统计项配置（title 在渲染时用 t 注入） */
+const TODO_STAT_META: Array<{
+  key: string
+  color: AITaskStatisticsStatusItem['color']
+  titleKey: string
+}> = [
+  { key: 'created', color: 'neutral', titleKey: 'AITaskExecutionDetails.statusCreated' },
+  { key: 'pending', color: 'neutral', titleKey: 'AITaskExecutionDetails.statusPending' },
+  { key: 'doing', color: 'main', titleKey: 'AITaskExecutionDetails.statusDoing' },
+  { key: 'done', color: 'green', titleKey: 'AITaskExecutionDetails.statusDone' },
+  { key: 'skipped', color: 'neutral', titleKey: 'AITaskExecutionDetails.statusSkipped' },
+  { key: 'deleted', color: 'red', titleKey: 'AITaskExecutionDetails.statusDeleted' },
+]
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName, onClose } = props
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [todoViewMode, setTodoViewMode] = useState<TodoViewMode>('board')
-  const taskData = useCurrentTaskData(taskId, 5)
+  const [hiddenStatusKeys, setHiddenStatusKeys] = useState<TodoStatusFilterKey[]>([])
+  const [selectedTaskId, setSelectedTaskId] = useState(taskId)
+
+  useEffect(() => {
+    setSelectedTaskId(taskId)
+  }, [taskId])
+
+  const taskData = useCurrentTaskData(selectedTaskId, 5)
   // taskDetailsMap 中的数据会原地更新，使用 uuid 作为快照变更信号，避免详情组件持有可变引用。
   const planItemDetailsData = useCreation<PlanItemDetailsData | undefined>(
     () => (taskData ? cloneDeep(taskData) : undefined),
-    [taskId, taskData?.uuid],
+    [selectedTaskId, taskData?.uuid],
   )
+
   const perception = useCreation(() => {
     if (!planItemDetailsData) return
     return planItemDetailsData.perception
   }, [planItemDetailsData?.perception])
+
+  // props.taskGoal 仅对应打开详情时的初始任务；切换下拉后快照无 goal，清空避免串任务
+  const selectedTaskGoal = selectedTaskId === taskId ? taskGoal : undefined
 
   const total = useCreation(
     () => planItemDetailsData?.todoList?.items?.length || 0,
@@ -100,74 +130,102 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   )
   const todoListCardData = useCreation(() => planItemDetailsData?.todoList, [planItemDetailsData?.todoList])
 
+  const toggleStatusFilter = useMemoizedFn((key: string) => {
+    // 已创建：在「全显示」与「全隐藏」之间切换
+    if (key === 'created') {
+      setHiddenStatusKeys((prev) =>
+        TODO_STATUS_FILTER_KEYS.every((k) => prev.includes(k)) ? [] : [...TODO_STATUS_FILTER_KEYS],
+      )
+      return
+    }
+    if (!TODO_STATUS_FILTER_KEYS.includes(key as TodoStatusFilterKey)) return
+    const filterKey = key as TodoStatusFilterKey
+    setHiddenStatusKeys((prev) =>
+      prev.includes(filterKey) ? prev.filter((k) => k !== filterKey) : [...prev, filterKey],
+    )
+  })
+
+  const hiddenStatusKeySet = useCreation(() => new Set(hiddenStatusKeys), [hiddenStatusKeys])
+
+  const hiddenLegendKinds = useCreation(
+    () => hiddenStatusKeys.map((key) => FILTER_KEY_TO_GANTT_LEGEND[key]),
+    [hiddenStatusKeys],
+  )
+
   const todoData = useCreation(() => {
-    const items = planItemDetailsData?.todoList?.items || []
+    const allItems = planItemDetailsData?.todoList?.items || []
+    const visibleItems: TodoListCardData['items'] = []
     const pending: TodoListCardData['items'] = []
     const doing: TodoListCardData['items'] = []
     const done: TodoListCardData['items'] = []
     const skippedOrDeleted: TodoListCardData['items'] = []
-    const progressNumber: AITaskStatisticsStatusProps['list'] = [
-      {
-        key: 'created',
-        color: 'neutral-with-border',
-        title: '已创建',
-        footerLeft: items.length,
-        footerRight: null,
-      },
-      {
-        key: 'pending',
-        color: 'neutral-with-border',
-        title: '待处理',
-        footerLeft: 0,
-        footerRight: <AIPendingNodeIcon />,
-      },
-      { key: 'doing', color: 'main', title: '进行中', footerLeft: 0, footerRight: <AIDoingNodeIcon /> },
-      { key: 'done', color: 'green', title: '已完成', footerLeft: 0, footerRight: <AIDoneNodeIcon /> },
-      { key: 'skipped', color: 'neutral', title: '已跳过', footerLeft: 0, footerRight: <AISkippedNodeIcon /> },
-      { key: 'deleted', color: 'red', title: '已删除', footerLeft: 0, footerRight: <AIDeleteNodeIcon /> },
-    ]
+    const progressNumber: AITaskStatisticsStatusProps['list'] = TODO_STAT_META.map((meta) => ({
+      key: meta.key,
+      color: meta.color,
+      title: t(meta.titleKey),
+      footerLeft: meta.key === 'created' ? allItems.length : 0,
+    }))
     const progressByKey = Object.fromEntries(progressNumber.map((item) => [item.key, item])) as Record<
       string,
       AITaskStatisticsStatusProps['list'][number]
     >
 
-    for (const item of items) {
+    // 一次遍历：统计全量、收集可见项（保序）、填充看板列
+    for (const item of allItems) {
+      const filterKey = TODO_STATUS_TO_FILTER_KEY[item.status]
+      const visible = !filterKey || !hiddenStatusKeySet.has(filterKey)
       switch (item.status) {
         case 'PENDING':
           progressByKey.pending.footerLeft += 1
-          pending.push(item)
+          if (visible) {
+            visibleItems.push(item)
+            pending.push(item)
+          }
           break
-
         case 'DOING':
           progressByKey.doing.footerLeft += 1
-          doing.push(item)
+          if (visible) {
+            visibleItems.push(item)
+            doing.push(item)
+          }
           break
-
         case 'DONE':
           progressByKey.done.footerLeft += 1
-          done.push(item)
+          if (visible) {
+            visibleItems.push(item)
+            done.push(item)
+          }
           break
-
         case 'SKIPPED':
           progressByKey.skipped.footerLeft += 1
-          skippedOrDeleted.push(item)
+          if (visible) {
+            visibleItems.push(item)
+            skippedOrDeleted.push(item)
+          }
           break
-
         case 'DELETED':
           progressByKey.deleted.footerLeft += 1
-          skippedOrDeleted.push(item)
+          if (visible) {
+            visibleItems.push(item)
+            skippedOrDeleted.push(item)
+          }
           break
         default:
           break
       }
     }
     const boardColumns = [
-      { key: 'pending', title: '待处理', icon: <AIPendingNodeIcon />, items: pending },
-      { key: 'doing', title: '运行中', icon: <AIDoingNodeIcon />, items: doing },
-      { key: 'done', title: '已完成', icon: <AIDoneNodeIcon />, items: done },
+      {
+        key: 'pending',
+        title: t('AITaskExecutionDetails.columnPending'),
+        icon: <AIPendingNodeIcon />,
+        items: pending,
+      },
+      { key: 'doing', title: t('AITaskExecutionDetails.columnDoing'), icon: <AIDoingNodeIcon />, items: doing },
+      { key: 'done', title: t('AITaskExecutionDetails.columnDone'), icon: <AIDoneNodeIcon />, items: done },
       {
         key: 'skippedOrDeleted',
-        title: '已跳过/已删除',
+        title: t('AITaskExecutionDetails.columnSkippedOrDeleted'),
         icon: (
           <>
             <AISkippedNodeIcon />
@@ -177,8 +235,8 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         items: skippedOrDeleted,
       },
     ]
-    return { boardColumns, progressNumber }
-  }, [planItemDetailsData?.todoList?.items])
+    return { boardColumns, progressNumber, visibleItems }
+  }, [planItemDetailsData?.todoList?.items, hiddenStatusKeySet, i18nRefresh])
 
   const forgeFixedList = useCreation(() => {
     const forgeFixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[] =
@@ -199,22 +257,27 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   }, [planItemDetailsData?.forges, planItemDetailsData?.skills])
 
   const toolCall = useCreation(() => {
+    const noData = t('AITaskExecutionDetails.noData')
     if (!planItemDetailsData?.execution)
-      return ['成功', '失败', '总尝试次数'].map((item) => ({ Id: item, Data: '暂无', Timestamp: 0 }))
+      return [
+        t('AITaskExecutionDetails.success'),
+        t('AITaskExecutionDetails.failed'),
+        t('AITaskExecutionDetails.totalAttempts'),
+      ].map((item) => ({ Id: item, Data: noData, Timestamp: 0 }))
     return [
       {
         Data: `${planItemDetailsData?.execution?.tool_call_success ?? `0`}`,
-        Id: '成功',
+        Id: t('AITaskExecutionDetails.success'),
         Timestamp: 0,
       },
       {
         Data: `${planItemDetailsData?.execution?.tool_call_failed ?? `0`}`,
-        Id: '失败',
+        Id: t('AITaskExecutionDetails.failed'),
         Timestamp: 0,
       },
       {
         Data: `${planItemDetailsData?.execution?.tool_call_total ?? `0`}`,
-        Id: '总尝试次数',
+        Id: t('AITaskExecutionDetails.totalAttempts'),
         Timestamp: 0,
       },
     ]
@@ -222,32 +285,33 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     planItemDetailsData?.execution?.tool_call_success,
     planItemDetailsData?.execution?.tool_call_failed,
     planItemDetailsData?.execution?.tool_call_total,
+    i18nRefresh,
   ])
   const executionMinutes = useCreation(() => {
     const startedAt = planItemDetailsData?.execution?.started_at || 0
     const endedAt = planItemDetailsData?.execution?.ended_at || 0
-    if (!startedAt) return '暂无'
-    if (startedAt && !endedAt) return '执行中'
+    if (!startedAt) return t('AITaskExecutionDetails.noData')
+    if (startedAt && !endedAt) return t('AITaskExecutionDetails.executing')
 
     return timeDiffWithMoment(startedAt, endedAt)
   }, [
     planItemDetailsData?.execution?.status,
     planItemDetailsData?.execution?.started_at,
     planItemDetailsData?.execution?.ended_at,
+    i18nRefresh,
   ])
   const httpFlowCount = useCreation(() => {
-    if (!planItemDetailsData?.execution) return '暂无'
+    if (!planItemDetailsData?.execution) return t('AITaskExecutionDetails.noData')
     return `${planItemDetailsData?.execution.http_flow_count ?? `0`}`
-  }, [planItemDetailsData?.execution?.http_flow_count])
+  }, [planItemDetailsData?.execution?.http_flow_count, i18nRefresh])
   const riskLevelEntries = useCreation(
     () => getSessionRiskTagEntries(planItemDetailsData?.execution?.risk_level_count),
     [planItemDetailsData?.execution?.risk_level_count],
   )
   const riskCountFallback = useCreation(() => {
-    if (!planItemDetailsData?.execution) return '暂无'
+    if (!planItemDetailsData?.execution) return t('AITaskExecutionDetails.noData')
     return `${planItemDetailsData.execution.risk_level_count?.total ?? planItemDetailsData.execution.risk_count ?? 0}`
-  }, [planItemDetailsData?.execution?.risk_count, planItemDetailsData?.execution?.risk_level_count?.total])
-
+  }, [planItemDetailsData?.execution?.risk_count, planItemDetailsData?.execution?.risk_level_count?.total, i18nRefresh])
   const showForge = useCreation(() => {
     if (!planItemDetailsData) return false
     return forgeFixedList.length > 0 || forgeDynamicList.length > 0
@@ -280,8 +344,14 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         <div className={styles['header-row']}>
           <div className={styles['header-title']}>
             <PresentationChartBarOutlined className={styles['header-icon']} color="currentColor" />
-            <span className={styles['title-text']}>任务执行详情</span>
-            <div className={styles['header-subtitle']}>{taskName}</div>
+            <span className={styles['title-text']}>{t('AITaskExecutionDetails.title')}</span>
+            <AITaskSelectDropdown
+              taskId={taskId}
+              taskName={taskName}
+              value={selectedTaskId}
+              onChange={setSelectedTaskId}
+              taskDataUuid={taskData?.uuid}
+            />
           </div>
           {onClose && <YakitButton icon={<XOutlined color="currentColor" />} type="text2" onClick={onClose} />}
         </div>
@@ -291,24 +361,20 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         <div className={styles['summary-section']}>
           <HorizontalScrollCardItemInfoMultiple
             info={toolCall}
-            tag={'工具调用统计'}
+            tag={t('AITaskExecutionDetails.toolCallStats')}
             className={styles['summary-tool-card']}
           />
-          <div className={styles['summary-metric-stack']}>
-            <HorizontalScrollCardItemInfoSingle
-              item={{ Id: '执行时长', Data: executionMinutes, Timestamp: 0 }}
-              tag="执行时长"
-              compact
-              className={styles['summary-metric-lake-blue']}
-            />
-            <HorizontalScrollCardItemInfoSingle
-              item={{ Id: '产生流量数', Data: httpFlowCount, Timestamp: 0 }}
-              tag="产生流量数"
-              compact
-              className={styles['summary-metric-purple']}
-            />
-            <div className={classNames(styles['summary-metric-risk'], styles['summary-metric-magenta'])}>
-              <div className={styles['summary-metric-label']}>漏洞个数</div>
+          <div className={styles['summary-metric-list']}>
+            <div className={styles['summary-metric-row']}>
+              <span className={styles['summary-metric-label']}>{t('AITaskExecutionDetails.executionDuration')}</span>
+              <span className={styles['summary-metric-value']}>{executionMinutes}</span>
+            </div>
+            <div className={styles['summary-metric-row']}>
+              <span className={styles['summary-metric-label']}>{t('AITaskExecutionDetails.httpFlowCount')}</span>
+              <span className={styles['summary-metric-value']}>{httpFlowCount}</span>
+            </div>
+            <div className={styles['summary-metric-row']}>
+              <span className={styles['summary-metric-label']}>{t('AITaskExecutionDetails.riskCount')}</span>
               {riskLevelEntries.length > 0 ? (
                 <span className={styles['risk-tag']}>
                   {riskLevelEntries.map((entry, index) => (
@@ -321,13 +387,17 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                   ))}
                 </span>
               ) : (
-                <div className={styles['summary-metric-data']}>{riskCountFallback}</div>
+                <span className={styles['summary-metric-value']}>{riskCountFallback}</span>
               )}
             </div>
           </div>
-          <AITaskExecutionDetailsCard title="任务目标" content={taskGoal} className={styles['summary-info-card']} />
           <AITaskExecutionDetailsCard
-            title="意图感知"
+            title={t('AITaskExecutionDetails.taskGoal')}
+            content={selectedTaskGoal}
+            className={styles['summary-info-card']}
+          />
+          <AITaskExecutionDetailsCard
+            title={t('AITaskExecutionDetails.intentAwareness')}
             content={perception?.summary}
             className={styles['summary-info-card']}
           />
@@ -335,7 +405,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         <div className={styles['task-statistics']}>
           <div className={styles['stats-header']}>
             <div className={styles['stats-header-left']}>
-              <span className={styles['title']}>任务统计</span>
+              <span className={styles['title']}>{t('AITaskExecutionDetails.taskStatistics')}</span>
               <YakitSegmented
                 size="small"
                 value={todoViewMode}
@@ -345,7 +415,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                     label: (
                       <span className={styles['todo-view-option']}>
                         <ViewBoardsOutlined size={16} color="currentColor" />
-                        看板
+                        {t('AITaskExecutionDetails.board')}
                       </span>
                     ),
                     value: 'board',
@@ -354,7 +424,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                     label: (
                       <span className={styles['todo-view-option']}>
                         <SquareGanttChartOutlined size={16} color="currentColor" />
-                        甘特图
+                        {t('AITaskExecutionDetails.progress')}
                       </span>
                     ),
                     value: 'gantt',
@@ -366,19 +436,30 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           </div>
           {total ? (
             <>
-              <AITaskStatisticsStatus list={todoData.progressNumber} />
+              <AITaskStatisticsStatus
+                list={todoData.progressNumber}
+                hiddenKeys={hiddenStatusKeys}
+                onToggle={toggleStatusFilter}
+              />
               {todoViewMode === 'board' ? (
                 <AITaskBoard columns={todoData.boardColumns} />
               ) : (
-                <AITaskGantt items={planItemDetailsData?.todoList?.items || []} />
+                <AITaskGantt
+                  items={todoData.visibleItems}
+                  hiddenLegendKinds={hiddenLegendKinds}
+                  onLegendToggle={(kind) => {
+                    const key = GANTT_LEGEND_TO_FILTER_KEY[kind]
+                    if (key) toggleStatusFilter(key)
+                  }}
+                />
               )}
             </>
           ) : (
             <div className={styles['empty-body']}>
               <YakitEmpty
                 styles={{ image: { width: 160, height: 140 } }}
-                title="暂无待办任务"
-                description="当前任务暂未生成待办任务，请稍后查看"
+                title={t('AITaskExecutionDetails.emptyTodoTitle')}
+                description={t('AITaskExecutionDetails.emptyTodoDesc')}
               />
             </div>
           )}
@@ -395,8 +476,8 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
               <AITaskDetailsCardList
                 key="forge"
                 type="forge"
-                colTitle="技能"
-                taskId={taskId}
+                colTitle={t('AITaskExecutionDetails.skill')}
+                taskId={selectedTaskId}
                 fixedList={forgeFixedList}
                 dynamicList={forgeDynamicList}
               />
@@ -405,8 +486,8 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
               <AITaskDetailsCardList
                 key="tool"
                 type="tool"
-                colTitle={'工具'}
-                taskId={taskId}
+                colTitle={t('AITaskExecutionDetails.tool')}
+                taskId={selectedTaskId}
                 fixedList={planItemDetailsData?.tool.fixed || []}
                 dynamicList={planItemDetailsData?.tool.dynamic || []}
               />
@@ -415,8 +496,8 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
               <AITaskDetailsCardList
                 key="yak_plugin"
                 type="yak_plugin"
-                colTitle={'插件'}
-                taskId={taskId}
+                colTitle={t('AITaskExecutionDetails.plugin')}
+                taskId={selectedTaskId}
                 fixedList={planItemDetailsData?.plugins.fixed || []}
                 dynamicList={planItemDetailsData?.plugins.dynamic || []}
               />
@@ -425,8 +506,8 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
               <AITaskDetailsCardList
                 key="mcp"
                 type="mcp"
-                colTitle={'MCP'}
-                taskId={taskId}
+                colTitle={t('AITaskExecutionDetails.mcp')}
+                taskId={selectedTaskId}
                 fixedList={planItemDetailsData?.mcp.fixed || []}
                 dynamicList={planItemDetailsData?.mcp.dynamic || []}
               />
@@ -440,6 +521,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
 
 const AIBrowserProcesses: React.FC<AIBrowserProcessesProps> = React.memo((props) => {
   const { list } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
 
   const sessionId = useCurrentSessionId()
   const { onSend } = useAIAgentDispatcher()
@@ -457,7 +539,7 @@ const AIBrowserProcesses: React.FC<AIBrowserProcessesProps> = React.memo((props)
   })
   return (
     <div className={classNames(styles['browser-processes'])}>
-      <div className={styles['browser-processes-title']}>{'浏览器进程管理'}</div>
+      <div className={styles['browser-processes-title']}>{t('AITaskExecutionDetails.browserProcessManage')}</div>
       <AITaskExecutionList<AIBrowserProcessesProps['list'][number]>
         classNameList={styles['browser-processes-list']}
         list={list}
@@ -466,7 +548,7 @@ const AIBrowserProcesses: React.FC<AIBrowserProcessesProps> = React.memo((props)
             key={processes.process_id}
             title={processes.process_name}
             titleExtra={
-              <YakitPopconfirm title={'确定要关闭嘛?'} onConfirm={() => onRemove(processes)}>
+              <YakitPopconfirm title={t('AITaskExecutionDetails.confirmClose')} onConfirm={() => onRemove(processes)}>
                 <YakitButton isHover icon={<TrashOutlined color="currentColor" />} type="secondary2" colors="danger" />
               </YakitPopconfirm>
             }
@@ -479,6 +561,7 @@ const AIBrowserProcesses: React.FC<AIBrowserProcessesProps> = React.memo((props)
 
 const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.memo((props) => {
   const { title, type, onClose, taskId } = props
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const sessionId = useCurrentSessionId()
   const { onSend } = useAIAgentDispatcher()
@@ -727,7 +810,7 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
         <div className={styles['ai-add-popover-title']}>
           {title}
           <YakitInput.Search
-            placeholder="请输入关键词搜索"
+            placeholder={t('YakitInput.searchKeyWordPlaceholder')}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onSearch={onSearch}
@@ -775,16 +858,16 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
         <div className={styles['footer-left']}>
           <div className={styles['select-all']}>
             <YakitCheckbox checked={allSelected} onChange={() => toggleAll()} indeterminate={partiallySelected} />
-            <span>全选</span>
+            <span>{t('YakitCheckbox.selectAll')}</span>
           </div>
           <TableTotalAndSelectNumber total={response.total} selectNum={selected.length} />
         </div>
         <div className={styles['footer-right']}>
           <YakitButton onClick={onClose} type="outline1">
-            取消
+            {t('YakitButton.cancel')}
           </YakitButton>
           <YakitButton type="primary" onClick={onSave}>
-            确定
+            {t('YakitButton.ok')}
           </YakitButton>
         </div>
       </div>
@@ -804,23 +887,22 @@ const getType = (value: string) => {
   }
   return type
 }
-const typeOptions = [
-  {
-    label: '固定加载',
-    value: 'fixed',
-  },
-  {
-    label: '动态加载',
-    value: 'dynamic',
-  },
-]
 const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((props) => {
   const { type, colTitle, fixedList, dynamicList, taskId } = props
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const sessionId = useCurrentSessionId()
   const { onSend } = useAIAgentDispatcher()
 
   const [configType, setConfigType] = useState<'fixed' | 'dynamic'>('fixed')
+
+  const typeOptions = useCreation(
+    () => [
+      { label: t('AITaskExecutionDetails.fixedLoad'), value: 'fixed' },
+      { label: t('AITaskExecutionDetails.dynamicLoad'), value: 'dynamic' },
+    ],
+    [i18nRefresh],
+  )
 
   const [visible, setVisible] = useState<boolean>(false)
   const onRemove = useMemoizedFn((dynamicItem) => {
@@ -867,7 +949,7 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
             content={
               <AITaskDetailsAddPopover
                 type={type}
-                title={`添加${colTitle}`}
+                title={t('AITaskExecutionDetails.addWithTitle', { title: colTitle })}
                 taskId={taskId}
                 onClose={() => setVisible(false)}
               />
@@ -880,7 +962,7 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
             classNames={{ root: styles['add-popover'] }}
           >
             <YakitButton type="text" className={styles['add-btn']}>
-              添加
+              {t('YakitButton.add')}
             </YakitButton>
           </YakitPopover>
         )}
@@ -901,7 +983,10 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
               description={dynamicItem.description}
               category={dynamicItem.category}
               titleExtra={
-                <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
+                <YakitPopconfirm
+                  title={t('AITaskExecutionDetails.confirmDelete')}
+                  onConfirm={() => onRemove(dynamicItem)}
+                >
                   <YakitButton
                     isHover
                     icon={<TrashOutlined color="currentColor" />}
@@ -933,29 +1018,56 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
 
 const AITaskExecutionDetailsCard: React.FC<AITaskExecutionDetailsCardProps> = React.memo((props) => {
   const { title, content, className } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
   return (
     <div className={classNames(styles['card'], className)}>
       <div className={styles['card-title']}>{title}</div>
       <div className={styles['card-content']}>
-        {content ? content : <span className={styles['empty-text']}>暂无信息...</span>}
+        {content ? content : <span className={styles['empty-text']}>{t('AITaskExecutionDetails.noInfo')}</span>}
       </div>
     </div>
   )
 })
 
 const AITaskStatisticsStatus: React.FC<AITaskStatisticsStatusProps> = React.memo((props) => {
-  const { list } = props
+  const { list, hiddenKeys = [], onToggle } = props
+  const hiddenSet = useCreation(() => new Set(hiddenKeys), [hiddenKeys])
+  const allHidden = useCreation(() => TODO_STATUS_FILTER_KEYS.every((key) => hiddenSet.has(key)), [hiddenSet])
   return (
     <div className={styles['stats-overview']}>
-      {list.map((item) => (
-        <div key={item.key} className={classNames(styles['stat-box'], styles[`stat-${item.color}`])}>
-          <div className={styles['stat-footer-left']}>{item.footerLeft}</div>
-          <div className={styles['stat-footer']}>
-            <div className={styles['stat-label']}>{item.title}</div>
-            <div className={styles['stat-footer-right']}> {item.footerRight} </div>
+      {list.map((item) => {
+        const filterable = !!onToggle
+        // 已创建：全隐藏时灰显；单项：自身在 hiddenKeys 中时灰显
+        const hidden = item.key === 'created' ? allHidden : hiddenSet.has(item.key)
+        return (
+          <div
+            key={item.key}
+            className={classNames(styles['stat-item'], {
+              [styles['stat-main']]: item.color === 'main',
+              [styles['stat-green']]: item.color === 'green',
+              [styles['stat-red']]: item.color === 'red',
+              [styles['stat-item-clickable']]: filterable,
+              [styles['stat-item-hidden']]: hidden,
+            })}
+            onClick={filterable ? () => onToggle?.(item.key) : undefined}
+            role={filterable ? 'button' : undefined}
+            tabIndex={filterable ? 0 : undefined}
+            onKeyDown={
+              filterable
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onToggle?.(item.key)
+                    }
+                  }
+                : undefined
+            }
+          >
+            <span className={styles['stat-count']}>{item.footerLeft}</span>
+            <span className={styles['stat-label']}>{item.title}</span>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 })

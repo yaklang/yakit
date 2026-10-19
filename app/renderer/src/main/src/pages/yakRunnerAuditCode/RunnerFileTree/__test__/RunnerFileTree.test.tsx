@@ -19,6 +19,8 @@ const store = {
   projectName: 'demo',
   pageInfo: undefined,
   areaInfo: [] as { elements: { files: unknown[] }[] }[],
+  showAllFiles: false,
+  isIncrementalProject: false,
 }
 
 vi.mock('../../hooks/useStore', () => ({
@@ -116,12 +118,26 @@ describe('RunnerFileTree', () => {
   beforeEach(() => {
     store.pageInfo = undefined
     store.fileTree = [{ path: '/proj' }]
+    store.showAllFiles = false
+    store.isIncrementalProject = false
   })
 
   it('默认 all 页展示定位/搜索/刷新/新增四个工具按钮', () => {
     render(<RunnerFileTree fileTreeLoad={false} boxHeight={400} />)
     expect(screen.getByLabelText('active')).toHaveTextContent('all')
     expect(toolbarButtons()).toHaveLength(4)
+  })
+
+  it('增量 program 展示"展示全部文件"勾选框', () => {
+    store.isIncrementalProject = true
+    render(<RunnerFileTree fileTreeLoad={false} boxHeight={400} />)
+    expect(screen.getByText('RunnerFileTree.showAllFiles')).toBeInTheDocument()
+  })
+
+  it('非增量 program 不展示"展示全部文件"勾选框', () => {
+    store.isIncrementalProject = false
+    render(<RunnerFileTree fileTreeLoad={false} boxHeight={400} />)
+    expect(screen.queryByText('RunnerFileTree.showAllFiles')).not.toBeInTheDocument()
   })
 
   it('切到全局过滤函数页时隐藏文件树工具按钮', async () => {
