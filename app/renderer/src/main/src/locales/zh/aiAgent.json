@@ -158,6 +158,8 @@
     "planPromptPlaceholder": "Plan 提示词将在任务规划阶段生效，用于补充规划说明...",
     "singleModelMode": "单模型模式",
     "singleModelModeTip": "本会话只使用全局配置中的主模型",
+    "allowUserPrompt": "允许 AI 主动提问",
+    "allowUserPromptTip": "允许 AI 追问和展示交互表单，异步追问不暂停任务。修改对后续任务生效。",
     "singleModelModeGlobalTip": "全局配置已启用，当前会话无法关闭",
     "singleModelModeSessionTip": "单模型模式只能在新会话启动前修改"
   },
