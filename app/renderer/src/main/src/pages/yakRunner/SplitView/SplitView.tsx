@@ -163,7 +163,8 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
         setPosition()
       }
     },
-    [elements, isLastHidden],
+    // 仅依赖屏数量，避免父级每次 render 新建 elements 数组时重置已拖动的尺寸
+    [elements.length, isLastHidden],
     {
       wait: 200,
     },

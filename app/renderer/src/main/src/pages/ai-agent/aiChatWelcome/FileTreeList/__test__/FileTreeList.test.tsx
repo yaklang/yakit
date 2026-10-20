@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import type * as ZustandModule from 'zustand'
@@ -197,6 +197,8 @@ describe('文件系统侧栏', () => {
     const track = screen.getByTestId('file-tree-view-track')
     expect(track).toHaveAttribute('data-search-view', 'false')
 
+    // 切换搜索会触发父级重渲；越过 useThrottleEffect(200ms) trailing，
+    // 旧依赖 [elements] 会把 sash 重置为 defaultSizes(160px)，新依赖 [elements.length] 应保持 220px
     fireEvent.click(screen.getByTestId('file-tree-header-search'))
     expect(track).toHaveAttribute('data-search-view', 'true')
     expect(searchView.closest('[aria-hidden="false"]')).toBeTruthy()
@@ -207,8 +209,15 @@ describe('文件系统侧栏', () => {
     expect(screen.queryByTestId('file-tree-header-search')).not.toBeInTheDocument()
     // 左右滑动切换，文件树不卸载
     expect(screen.getByText('FileTreeSystem.aiArtifacts')).toBeInTheDocument()
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 250))
+    })
+    expect(sash.style.top).toBe('220px')
 
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.close' }))
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 250))
+    })
     expect(track).toHaveAttribute('data-search-view', 'false')
     expect(searchView.closest('[aria-hidden="true"]')).toBeTruthy()
     expect(split.closest('[aria-hidden="false"]')).toBeTruthy()
