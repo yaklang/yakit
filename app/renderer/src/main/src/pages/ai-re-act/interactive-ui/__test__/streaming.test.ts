@@ -72,6 +72,45 @@ describe('UI event integration', () => {
       expect(contents.get('ui-component:block').data.submissions.form).toEqual(metadata)
     },
   )
+  it.each([true, false])('restores accepted questions in either replay order (%s)', async (messageFirst) => {
+    const metadata = {
+      id: 'receipt',
+      source: 'questionnaire',
+      requestId: 'question',
+      answers: [{ questionId: 'scope', selected: ['frontend'], text: '只看交互' }],
+    }
+    const message = info({
+      Type: 'user_message',
+      IsSync: true,
+      ID: 2,
+      Content: bytes(JSON.stringify({ id: 'receipt', text: '回答', metadata })),
+    })
+    const question = info({
+      Type: 'ui_question',
+      IsSync: true,
+      ID: 1,
+      Content: bytes(
+        JSON.stringify({ id: 'question', state: 'pending', touched: false, deadline: 9999, questions: [] }),
+      ),
+    })
+    if (messageFirst) {
+      await aiInteractiveUIHandlers.user_message(message)
+      await aiInteractiveUIHandlers.ui_question(question)
+    } else {
+      await aiInteractiveUIHandlers.ui_question(question)
+      await aiInteractiveUIHandlers.user_message(message)
+    }
+    expect(contents.get('ui-question:question').data.request).toMatchObject({
+      state: 'submitted',
+      touched: true,
+      answers: metadata.answers,
+    })
+    expect(contents.get('ui-question:question').data.request.deadline).toBeUndefined()
+    question.res.ID = 3
+    await aiInteractiveUIHandlers.ui_question(question)
+    expect(contents.get('ui-question:question').data.request.state).toBe('submitted')
+    expect(contents.get('ui-question:question').data.request.answers).toEqual(metadata.answers)
+  })
   it.each([true, false])(
     'deduplicates a late answer and dequeue regardless of arrival order (%s)',
     async (messageFirst) => {

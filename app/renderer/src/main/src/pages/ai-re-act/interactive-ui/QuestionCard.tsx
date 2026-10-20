@@ -1,5 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Button, Alert } from 'antd'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIChatQSData } from '../hooks/aiRender'
 import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
@@ -8,6 +13,7 @@ import styles from './interactive.module.scss'
 
 export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_QUESTION }> }) {
   const { request, sessionId } = item.data
+  const { t } = useI18nNamespaces(['aiAgent'])
   const [draft, setDraft] = useState<QuestionDraft>(
     () =>
       (item.uiState as QuestionDraft) || {
@@ -24,6 +30,8 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [now, setNow] = useState(Date.now())
+  const submitted = request.state === 'submitted' || draft.outcome === 'submitted'
+  const outcome = submitted ? 'submitted' : draft.outcome || request.state
   const save = (next: QuestionDraft) => {
     current.current = next
     item.uiState = next
@@ -37,7 +45,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
       SyncJsonInput: JSON.stringify({ requestId: request.id, operation }),
     })
   const touch = () => {
-    if (current.current.touched || request.touched || request.state === 'submitted') return
+    if (current.current.touched || request.touched || submitted) return
     save({ ...current.current, touched: true })
     void control('touch').catch((reason) => setError(String(reason)))
   }
@@ -48,12 +56,12 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
   }, [request.state])
   useEffect(() => {
     // A persisted local touch is retried after reconnect; it never restarts a timer.
-    if (draft.touched && !request.touched && request.state !== 'submitted') {
+    if (draft.touched && !request.touched && !submitted) {
       void control('touch').catch((reason) => setError(String(reason)))
     }
-  }, [request])
+  }, [request, submitted])
   useEffect(() => {
-    if (!request.deadline || draft.touched || request.touched || request.state !== 'pending') return
+    if (!request.deadline || draft.touched || request.touched || outcome !== 'pending') return
     let expired = false
     const tick = () => {
       setNow(Date.now())
@@ -66,12 +74,11 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
     tick()
     const timer = setInterval(tick, 1000)
     return () => clearInterval(timer)
-  }, [request.deadline, request.state, request.touched, draft.touched])
+  }, [request.deadline, outcome, request.touched, draft.touched])
   const page = Math.min(draft.page, request.questions.length - 1)
   const q = request.questions[page]
   if (!q) return null
   const answer = draft.answers[q.id] || emptyAnswer(q.id)
-  const submitted = request.state === 'submitted'
   const updateAnswer = (next: typeof answer) =>
     save({
       ...current.current,
@@ -89,24 +96,30 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
     updateAnswer({ ...answer, selected, skipped: false })
   }
   const submit = async (next = current.current) => {
-    if (submitting.current || submitted) return
+    if (submitting.current || submitted || current.current.outcome === 'submitted') return
     submitting.current = true
     setBusy(true)
     setError('')
     const id = next.submissionId || crypto.randomUUID()
     save({ ...next, submissionId: id })
     const answers = questionAnswers(request, next)
+    const text = questionText(request, answers)
     try {
       await globalSessionEngine.sendUIInteraction(
         sessionId,
         {
           IsFreeInput: true,
-          FreeInput: questionText(request, answers),
+          FreeInput: text,
           UserInteraction: JSON.stringify({ id, source: 'questionnaire', requestId: request.id, answers }),
         },
         id,
       )
-      save({ ...current.current, collapsed: true })
+      save({
+        ...current.current,
+        answers: Object.fromEntries(answers.map((answer) => [answer.questionId, answer])),
+        collapsed: true,
+        outcome: text ? 'submitted' : 'skipped',
+      })
     } catch (reason) {
       setError(String(reason))
     } finally {
@@ -115,6 +128,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
     }
   }
   const skip = () => {
+    if (submitted || submitting.current) return
     const next = {
       ...current.current,
       submissionId: undefined,
@@ -124,6 +138,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
     else void submit(next)
   }
   const nextPage = () => {
+    if (submitted || submitting.current) return
     if (page < request.questions.length - 1) save({ ...current.current, page: page + 1 })
     else void submit()
   }
@@ -140,7 +155,13 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
       return
     }
     if (draft.collapsed || submitted) return
-    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((event.target as HTMLElement).tagName)
+    const target = event.target as HTMLInputElement
+    const typing =
+      target.isContentEditable ||
+      /^(TEXTAREA|SELECT)$/.test(target.tagName) ||
+      (target.tagName === 'INPUT' && !['radio', 'checkbox'].includes(target.type))
+    // Native buttons keep their own keyboard action (collapse, previous, skip).
+    if (event.key === 'Enter' && target.closest('button')) return
     if (event.key === 'Enter' && !event.shiftKey && !busy) {
       event.preventDefault()
       nextPage()
@@ -157,8 +178,10 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
         })
       } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
         event.preventDefault()
-        const options = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[data-option]'))
-        const index = options.indexOf(document.activeElement as HTMLButtonElement)
+        const options = Array.from(
+          event.currentTarget.querySelectorAll<HTMLInputElement>('input[type="radio"], input[type="checkbox"]'),
+        )
+        const index = options.indexOf(document.activeElement as HTMLInputElement)
         options[
           index < 0
             ? event.key === 'ArrowUp'
@@ -169,27 +192,82 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
       }
     }
   }
+  const optionLabel = (option: (typeof q.options)[number], index: number) => (
+    <span className={styles.optionContent}>
+      <span>
+        {(index + 1) % 10}. {option.label}
+        {option.recommended && t('InteractiveUI.recommended')}
+      </span>
+      {option.description && <span className={styles.secondary}>{option.description}</span>}
+    </span>
+  )
+  const status =
+    outcome === 'submitted'
+      ? t('InteractiveUI.answered')
+      : outcome === 'skipped'
+        ? t('InteractiveUI.skipped')
+        : outcome === 'cancelled'
+          ? t('InteractiveUI.cancelled')
+          : outcome === 'expired'
+            ? t('InteractiveUI.expired')
+            : request.mode === 'blocking'
+              ? t('InteractiveUI.waiting')
+              : t('InteractiveUI.continuing')
   return (
     <section
       className={styles.card}
-      aria-label="模型追问"
+      aria-label={t('InteractiveUI.questionRegion')}
       onPointerDownCapture={touch}
       onFocusCapture={touch}
       onKeyDown={onKeyDown}
     >
       <div className={styles.toolbar}>
-        <strong>
-          {submitted ? '已回答' : request.mode === 'blocking' ? '需要你的回答才能继续' : '任务继续进行，你可以随时回答'}
-        </strong>
-        {!draft.touched && !request.touched && request.deadline && request.state === 'pending' ? (
-          <span aria-live="polite">{Math.max(0, Math.ceil((request.deadline - now) / 1000))} 秒后自动跳过</span>
+        <strong>{status}</strong>
+        {!draft.touched && !request.touched && request.deadline && outcome === 'pending' ? (
+          <span className={styles.secondary} aria-live="polite">
+            {t('InteractiveUI.countdown', { seconds: Math.max(0, Math.ceil((request.deadline - now) / 1000)) })}
+          </span>
         ) : null}
-        <Button size="small" onClick={() => save({ ...current.current, collapsed: !draft.collapsed })}>
-          {draft.collapsed ? '展开问题' : '收起'}
-        </Button>
+        <YakitButton
+          type="text2"
+          size="small"
+          onClick={() => save({ ...current.current, collapsed: !draft.collapsed })}
+        >
+          {draft.collapsed
+            ? submitted
+              ? t('InteractiveUI.viewAnswers')
+              : t('InteractiveUI.expand')
+            : t('InteractiveUI.collapse')}
+        </YakitButton>
       </div>
-      {error && <Alert type="error" message={error} />}
-      {!draft.collapsed && (
+      {error && !submitted && <YakitAlert type="error" message={error} />}
+      {!draft.collapsed && submitted && (
+        <dl className={styles.answers}>
+          {request.questions.map((question, index) => {
+            const accepted =
+              request.answers?.find((value) => value.questionId === question.id) || draft.answers[question.id]
+            const parts = accepted?.skipped
+              ? []
+              : [
+                  ...(accepted?.selected || []).map(
+                    (id) => question.options.find((option) => option.id === id)?.label || '',
+                  ),
+                  accepted?.text || '',
+                ].filter(Boolean)
+            return (
+              <div key={question.id}>
+                <dt>
+                  {index + 1}. {question.title}
+                </dt>
+                <dd>
+                  {accepted ? parts.join('；') || t('InteractiveUI.unselected') : t('InteractiveUI.answerInHistory')}
+                </dd>
+              </div>
+            )
+          })}
+        </dl>
+      )}
+      {!draft.collapsed && !submitted && (
         <>
           <div className={styles.toolbar}>
             <strong>{q.title}</strong>
@@ -197,37 +275,40 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
               {page + 1} / {request.questions.length}
             </span>
           </div>
-          <p>{q.prompt}</p>
-          <small>{q.multiple ? '可多选' : '单选'}</small>
-          <div role={q.multiple ? 'group' : 'radiogroup'} aria-label={q.title} className={styles.options}>
-            {q.options.map((option, index) => (
-              <button
-                key={option.id}
-                data-option
-                role={q.multiple ? 'checkbox' : 'radio'}
-                aria-checked={answer.selected.includes(option.id)}
-                disabled={busy || submitted}
-                onClick={() => choose(option.id)}
-                className={styles.option}
-              >
-                <span>
-                  <span
-                    aria-hidden="true"
-                    className={`${styles.selection} ${q.multiple ? styles.checkbox : styles.radio}`}
-                  >
-                    {answer.selected.includes(option.id) ? (q.multiple ? '✓' : '●') : ''}
-                  </span>
-                  {(index + 1) % 10}. {option.label}
-                  {option.recommended && '（推荐）'}
-                </span>
-                {option.description && <small>{option.description}</small>}
-              </button>
-            ))}
-          </div>
+          <p className={styles.prompt}>{q.prompt}</p>
+          <div className={styles.secondary}>{q.multiple ? t('InteractiveUI.multiple') : t('InteractiveUI.single')}</div>
+          {q.multiple ? (
+            <div role="group" aria-label={q.title} className={styles.options}>
+              {q.options.map((option, index) => (
+                <YakitCheckbox
+                  key={option.id}
+                  wrapperClassName={`${styles.option} ${answer.selected.includes(option.id) ? styles.selected : ''}`}
+                  checked={answer.selected.includes(option.id)}
+                  disabled={busy}
+                  onChange={() => choose(option.id)}
+                >
+                  {optionLabel(option, index)}
+                </YakitCheckbox>
+              ))}
+            </div>
+          ) : (
+            <YakitRadioButtons
+              wrapClassName={styles.options}
+              className={styles.radioOptions}
+              aria-label={q.title}
+              value={answer.selected[0]}
+              disabled={busy}
+              options={q.options.map((option, index) => ({ value: option.id, label: optionLabel(option, index) }))}
+              onChange={(event) => choose(event.target.value)}
+            />
+          )}
           {q.allowFreeText && (
-            <textarea
-              aria-label="自己的答案"
-              placeholder="也可以直接描述你的答案"
+            <YakitInput.TextArea
+              wrapperClassName={styles.freeText}
+              aria-label={t('InteractiveUI.ownAnswer')}
+              placeholder={t('InteractiveUI.answerPlaceholder')}
+              autoSize={{ minRows: 2, maxRows: 5 }}
+              isShowResize={false}
               value={answer.text}
               disabled={busy || submitted}
               onCompositionStart={() => {
@@ -244,32 +325,39 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
               }}
             />
           )}
-          <div className={styles.toolbar}>
-            <Button disabled={page === 0 || busy} onClick={() => save({ ...current.current, page: page - 1 })}>
-              上一题
-            </Button>
-            <Button disabled={submitted || busy} onClick={skip}>
-              跳过此题
-            </Button>
+          <div className={styles.actions}>
+            <YakitButton
+              type="outline2"
+              disabled={page === 0 || busy}
+              onClick={() => save({ ...current.current, page: page - 1 })}
+            >
+              {t('InteractiveUI.previous')}
+            </YakitButton>
+            <YakitButton type="text2" disabled={busy} onClick={skip}>
+              {t('InteractiveUI.skipQuestion')}
+            </YakitButton>
             {request.mode === 'blocking' && request.state === 'pending' && (
-              <Button
+              <YakitButton
+                type="text2"
                 disabled={busy}
                 onClick={() => {
                   void control('cancel')
-                    .then(() => save({ ...current.current, collapsed: true }))
+                    .then(() => save({ ...current.current, collapsed: true, outcome: 'cancelled' }))
                     .catch((reason) => setError(String(reason)))
                 }}
               >
-                取消等待
-              </Button>
+                {t('InteractiveUI.cancelWait')}
+              </YakitButton>
             )}
-            <Button type="primary" loading={busy} disabled={submitted} onClick={nextPage}>
-              {page === request.questions.length - 1 ? '提交' : '下一题'}
-            </Button>
+            <YakitButton type="primary" loading={busy} onClick={nextPage}>
+              {page === request.questions.length - 1 ? t('InteractiveUI.submit') : t('InteractiveUI.next')}
+            </YakitButton>
           </div>
         </>
       )}
-      {draft.collapsed && request.state === 'expired' && <small>已自动跳过，展开后仍可补答。</small>}
+      {draft.collapsed && outcome === 'expired' && (
+        <div className={styles.secondary}>{t('InteractiveUI.expiredHint')}</div>
+      )}
     </section>
   )
 }

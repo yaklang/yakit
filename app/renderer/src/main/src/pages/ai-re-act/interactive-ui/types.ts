@@ -22,6 +22,8 @@ export interface QuestionRequest {
   deadline?: number
   touched: boolean
   state: 'pending' | 'submitted' | 'skipped' | 'expired' | 'cancelled'
+  /** Accepted answers recovered from the ordinary user-message receipt. */
+  answers?: QuestionAnswer[]
 }
 export interface QuestionAnswer {
   questionId: string
@@ -43,6 +45,7 @@ export interface QuestionDraft {
   collapsed: boolean
   touched: boolean
   submissionId?: string
+  outcome?: 'submitted' | 'skipped' | 'cancelled'
 }
 
 export const emptyAnswer = (questionId: string): QuestionAnswer => ({ questionId, selected: [], text: '' })
