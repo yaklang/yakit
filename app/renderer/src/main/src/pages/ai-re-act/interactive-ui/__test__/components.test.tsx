@@ -28,6 +28,17 @@ vi.mock('../../hooks/ChatMultiSessionController', () => ({
   globalSessionEngine: { sendUIInteraction: send, persistUIState: vi.fn() },
 }))
 vi.mock('../../hooks/persist/contentPersistHelper', () => ({ upsertSessionContent: vi.fn() }))
+vi.mock('@/i18n/useI18nNamespaces', async () => {
+  const { default: locale } = await import('@/locales/zh/aiAgent.json')
+  return {
+    useI18nNamespaces: () => ({
+      t: (key: string, options?: Record<string, unknown>) => {
+        const label = (locale.InteractiveUI as Record<string, string>)[key.replace('InteractiveUI.', '')] || key
+        return label.replace(/\{\{(\w+)\}\}/g, (_, name) => String(options?.[name] ?? ''))
+      },
+    }),
+  }
+})
 
 const document = () => ({
   id: 'block',
@@ -141,15 +152,16 @@ describe('local component state', () => {
     })
     const request = send.mock.calls.find((call) => call[1].IsFreeInput)![1]
     expect(JSON.parse(request.UserInteraction).values).toEqual({ name: '小明' })
-    expect(screen.getByRole('button', { name: '已提交' })).toBeDisabled()
+    expect(screen.getByRole('status')).toHaveTextContent('已提交')
+    expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull()
     await act(async () => {
-      for (let i = 0; i < 15; i++) fireEvent.click(screen.getByRole('button', { name: '已提交' }))
-      fireEvent.submit(screen.getByLabelText('姓名').closest('form')!)
+      for (let i = 0; i < 15; i++) fireEvent.submit(screen.getByLabelText('姓名').closest('form')!)
     })
     expect(send.mock.calls.filter((call) => call[1].IsFreeInput)).toHaveLength(1)
     view.unmount()
     render(<ComponentCard item={updated} />)
-    expect(screen.getByRole('button', { name: '已提交' })).toBeDisabled()
+    expect(screen.getByRole('status')).toHaveTextContent('已提交')
+    expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull()
     expect(screen.getByLabelText('姓名')).toBeDisabled()
   })
   it('cannot submit a streaming preview before server validation', async () => {
@@ -172,7 +184,8 @@ describe('local component state', () => {
     const attempts = send.mock.calls.filter((call) => call[1].IsFreeInput)
     expect(attempts).toHaveLength(2)
     expect(JSON.parse(attempts[0][1].UserInteraction).id).toBe(JSON.parse(attempts[1][1].UserInteraction).id)
-    expect(screen.getByRole('button', { name: '已提交' })).toBeDisabled()
+    expect(screen.getByRole('status')).toHaveTextContent('已提交')
+    expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull()
   })
   it('uses the server receipt after reconnect even without a local draft', () => {
     const data = item()
@@ -182,7 +195,27 @@ describe('local component state', () => {
     render(<ComponentCard item={data} />)
     expect(screen.getByLabelText('姓名')).toHaveValue('已接受')
     expect(screen.getByLabelText('姓名')).toBeDisabled()
-    expect(screen.getByRole('button', { name: '已提交' })).toBeDisabled()
+    expect(screen.getByRole('status')).toHaveTextContent('已提交')
+    expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull()
+  })
+  it('keeps schema value types when using Yakit number, boolean and enum controls', async () => {
+    const doc = document()
+    Object.assign(doc.nodes[1].props.schema!.properties, {
+      retries: { type: 'integer', title: '重试次数', minimum: 0, maximum: 5 },
+      enabled: { type: 'boolean', title: '启用' },
+      mode: { type: 'number', title: '模式', enum: [1, 2] },
+    })
+    ;(doc.nodes[1].props as any).initial = { name: '小明', retries: 2, enabled: false, mode: 1 }
+    render(<ComponentCard item={item(doc)} />)
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '3' } })
+    fireEvent.click(screen.getByRole('checkbox', { name: '启用' }))
+    fireEvent.mouseDown(screen.getByRole('combobox'))
+    fireEvent.click(screen.getByText('2', { selector: '.ant-select-item-option-content' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '发送姓名' }))
+    })
+    const request = send.mock.calls.find((call) => call[1].IsFreeInput)![1]
+    expect(JSON.parse(request.UserInteraction).values).toEqual({ name: '小明', retries: 3, enabled: true, mode: 2 })
   })
   it('renders ordered enum arrays as checkboxes and enforces nonempty unique values', () => {
     const doc = document()

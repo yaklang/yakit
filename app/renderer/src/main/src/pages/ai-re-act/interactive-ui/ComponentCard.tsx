@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Button } from 'antd'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import JsonForm from '@rjsf/antd'
 import validator from '@rjsf/validator-ajv8'
 import type { RJSFSchema } from '@rjsf/utils'
@@ -8,6 +10,7 @@ import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 import { readDocument, type UINode } from './validate'
 import { catalog } from './catalog.mjs'
 import styles from './interactive.module.scss'
+import { formWidgets } from './formWidgets'
 
 type ComponentItem = Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_COMPONENT }>
 type State = Record<string, { value: Record<string, unknown>; submissionId?: string; submitted?: boolean }>
@@ -22,6 +25,7 @@ interface NodeProps {
 }
 
 function ParameterForm({ node, state, change, submit, ready, instanceId }: NodeProps) {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const submitting = useRef(false)
@@ -40,6 +44,7 @@ function ParameterForm({ node, state, change, submit, ready, instanceId }: NodeP
   )
   return (
     <div
+      className={styles.form}
       onCompositionStart={() => {
         composing.current = true
       }}
@@ -62,6 +67,32 @@ function ParameterForm({ node, state, change, submit, ready, instanceId }: NodeP
       <JsonForm
         schema={node.props.schema as RJSFSchema}
         validator={validator}
+        widgets={formWidgets}
+        showErrorList={false}
+        templates={{
+          ButtonTemplates: {
+            AddButton: ({ onClick, disabled }) => (
+              <YakitButton type="outline2" onClick={onClick} disabled={disabled}>
+                {t('InteractiveUI.addItem')}
+              </YakitButton>
+            ),
+            RemoveButton: ({ onClick, disabled }) => (
+              <YakitButton type="text2" onClick={onClick} disabled={disabled}>
+                {t('InteractiveUI.removeItem')}
+              </YakitButton>
+            ),
+            MoveUpButton: ({ onClick, disabled }) => (
+              <YakitButton type="text2" onClick={onClick} disabled={disabled}>
+                {t('InteractiveUI.moveUp')}
+              </YakitButton>
+            ),
+            MoveDownButton: ({ onClick, disabled }) => (
+              <YakitButton type="text2" onClick={onClick} disabled={disabled}>
+                {t('InteractiveUI.moveDown')}
+              </YakitButton>
+            ),
+          },
+        }}
         formData={value}
         idPrefix={`memfit-${encodeURIComponent(instanceId)}`}
         uiSchema={{
@@ -96,13 +127,18 @@ function ParameterForm({ node, state, change, submit, ready, instanceId }: NodeP
           }
         }}
       >
-        {node.action && (
-          <Button type="primary" htmlType="submit" loading={busy} disabled={!ready || submitted}>
-            {submitted ? '已提交' : node.action.args.label || '提交到对话'}
-          </Button>
+        {node.action && !submitted && (
+          <YakitButton type="primary" htmlType="submit" loading={busy} disabled={!ready}>
+            {node.action.args.label || t('InteractiveUI.submitToChat')}
+          </YakitButton>
+        )}
+        {submitted && (
+          <div role="status" className={styles.secondary}>
+            {t('InteractiveUI.submitted')}
+          </div>
         )}
       </JsonForm>
-      {error && <Alert type="error" message={error} />}
+      {error && !submitted && <YakitAlert type="error" message={error} />}
     </div>
   )
 }

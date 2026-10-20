@@ -1,67 +1,141 @@
 .card {
-  border: 1px solid var(--Colors-Use-Neutral-Border, #ddd);
+  border: 1px solid var(--Colors-Use-Neutral-Border);
   border-radius: 8px;
-  padding: 16px;
-  margin: 12px 0;
-  color: inherit;
+  padding: 12px;
+  margin: 8px 0;
+  background: var(--Colors-Use-Basic-Background);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 20px;
   overflow-wrap: anywhere;
-  textarea {
-    width: 100%;
-    min-height: 68px;
-    margin: 12px 0;
-    color: inherit;
-    background: transparent;
+  strong,
+  h4 {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  h4 {
+    margin: 0 0 8px;
   }
 }
-.toolbar {
+.toolbar,
+.actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
+}
+.toolbar {
+  margin-bottom: 8px;
+}
+.toolbar:first-child {
+  justify-content: space-between;
+  margin-bottom: 0;
+}
+.toolbar + .toolbar {
+  margin-top: 12px;
+}
+.actions {
+  margin-top: 12px;
+}
+.prompt {
   margin: 8px 0;
 }
+.secondary {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  font-weight: 400;
+}
 .options {
+  margin-top: 8px;
   display: grid;
   gap: 8px;
 }
-.selection {
-  display: inline-flex;
-  width: 16px;
-  height: 16px;
-  margin-right: 8px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid currentColor;
-  font-size: 12px;
-  vertical-align: middle;
-}
-.radio {
-  border-radius: 50%;
-}
-.checkbox {
-  border-radius: 3px;
-}
-.option {
+.optionContent {
   display: flex;
   flex-direction: column;
+  gap: 4px;
   text-align: left;
-  padding: 10px;
-  border: 1px solid var(--Colors-Use-Neutral-Border, #ddd);
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  &[aria-checked='true'] {
-    border-color: #4a78e8;
-    background: rgba(74, 120, 232, 0.12);
+  white-space: normal;
+}
+.options .option {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 4px;
+  &:focus-within {
+    box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
   }
-  &:focus-visible {
-    outline: 2px solid #4a78e8;
-    outline-offset: 2px;
+  :global(.ant-checkbox-wrapper) {
+    display: flex;
+    height: auto;
+    align-items: flex-start;
+    width: 100%;
   }
-  small {
-    opacity: 0.75;
-    margin-top: 4px;
+  :global(.ant-checkbox) {
+    margin-top: 2px;
+  }
+  .secondary {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+}
+.options .selected {
+  border-color: var(--Colors-Use-Main-Primary);
+  background: var(--Colors-Use-Main-Bg);
+}
+.options .radioOptions {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  :global(.ant-radio-button-wrapper) {
+    height: auto;
+    padding: 8px 12px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px;
+    line-height: 20px;
+    font-weight: 400;
+    white-space: normal;
+    &::before {
+      display: none;
+    }
+  }
+  :global(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)) {
+    background: var(--Colors-Use-Main-Bg);
+    border-color: var(--Colors-Use-Main-Primary);
+  }
+}
+.freeText {
+  margin-top: 12px;
+}
+.answers {
+  margin: 12px 0 0;
+  display: grid;
+  gap: 12px;
+  dt {
+    font-weight: 500;
+  }
+  dd {
+    margin: 4px 0 0;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    white-space: pre-wrap;
+  }
+}
+.checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.form {
+  :global(.ant-form-item) {
+    margin-bottom: 12px;
+  }
+  :global(.ant-form-item-label > label) {
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+  :global(.ant-form-item-explain-error) {
+    color: var(--Colors-Use-Error-Primary);
   }
 }
 .grid {
@@ -75,7 +149,11 @@
   th,
   td {
     padding: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     text-align: left;
+  }
+  th {
+    background: var(--Colors-Use-Neutral-Bg);
+    font-weight: 500;
   }
 }

@@ -11,6 +11,17 @@ vi.mock('../../hooks/ChatMultiSessionController', () => ({
   globalSessionEngine: { sendUIInteraction: send, persistUIState: vi.fn() },
 }))
 vi.mock('../../hooks/persist/contentPersistHelper', () => ({ upsertSessionContent: vi.fn() }))
+vi.mock('@/i18n/useI18nNamespaces', async () => {
+  const { default: locale } = await import('@/locales/zh/aiAgent.json')
+  return {
+    useI18nNamespaces: () => ({
+      t: (key: string, options?: Record<string, unknown>) => {
+        const label = (locale.InteractiveUI as Record<string, string>)[key.replace('InteractiveUI.', '')] || key
+        return label.replace(/\{\{(\w+)\}\}/g, (_, name) => String(options?.[name] ?? ''))
+      },
+    }),
+  }
+})
 
 const request = (): QuestionRequest => ({
   id: 'q',
@@ -52,17 +63,21 @@ describe('structured questions', () => {
     vi.useRealTimers()
   })
   it('does not submit a recommendation; permits text-only answers and protects IME', async () => {
+    vi.useFakeTimers()
     render(<QuestionCard item={item()} />)
-    expect(screen.getAllByRole('radio').every((node) => node.getAttribute('aria-checked') === 'false')).toBe(true)
+    expect(screen.getAllByRole('radio').every((node) => !(node as HTMLInputElement).checked)).toBe(true)
     const input = screen.getByLabelText('自己的答案')
     fireEvent.compositionStart(input)
     fireEvent.change(input, { target: { value: '都需要' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
     fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 })
     expect(send.mock.calls.every((call) => !call[1].IsFreeInput)).toBe(true)
     fireEvent.compositionEnd(input)
     fireEvent.keyDown(input, { key: 'Enter' })
     expect(send.mock.calls.every((call) => !call[1].IsFreeInput)).toBe(true)
-    await new Promise((resolve) => setTimeout(resolve, 60))
+    await act(async () => {
+      vi.advanceTimersByTime(60)
+    })
     await act(async () => {
       fireEvent.keyDown(input, { key: 'Enter' })
     })
@@ -82,7 +97,7 @@ describe('structured questions', () => {
     expect(send.mock.calls.some((call) => call[1].IsFreeInput)).toBe(false)
     expect(send.mock.calls.some((call) => call[1].SyncJsonInput?.includes('expire'))).toBe(false)
     fireEvent.click(screen.getByText('展开问题'))
-    expect(screen.getAllByRole('radio')[1].getAttribute('aria-checked')).toBe('true')
+    expect(screen.getAllByRole('radio')[1]).toBeChecked()
   })
   it('honors allowFreeText and submits placeholders only when some answer exists', async () => {
     const q = request()
@@ -94,6 +109,82 @@ describe('structured questions', () => {
       fireEvent.click(screen.getByText('跳过此题'))
     })
     expect(send.mock.calls.find((call) => call[1].IsFreeInput)![1].FreeInput).toBe('')
+  })
+  it('shows a read-only answer after acknowledgement, stale snapshots and remounts', async () => {
+    const data = item()
+    const view = render(<QuestionCard item={data} />)
+    fireEvent.click(screen.getByRole('radio', { name: /后端/ }))
+    await act(async () => {
+      for (let i = 0; i < 15; i++) fireEvent.click(screen.getByRole('button', { name: '提交' }))
+    })
+    expect(send.mock.calls.filter((call) => call[1].IsFreeInput)).toHaveLength(1)
+    const stale = { ...data, data: { ...data.data, request: { ...data.data.request, state: 'pending' as const } } }
+    view.rerender(<QuestionCard item={stale} />)
+    expect(screen.getByText('已回答')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '查看回答' }))
+    expect(screen.getByText('后端')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '提交' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '跳过此题' })).toBeNull()
+    expect(screen.queryByRole('radio')).toBeNull()
+    expect(screen.queryByRole('textbox')).toBeNull()
+    view.unmount()
+    render(<QuestionCard item={stale} />)
+    expect(screen.getByText('已回答')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '提交' })).toBeNull()
+  })
+  it('restores accepted answers without a local draft', () => {
+    const q = request()
+    q.state = 'submitted'
+    q.answers = [{ questionId: 'scope', selected: ['a'], text: '优先接口' }]
+    render(<QuestionCard item={item(q)} />)
+    fireEvent.click(screen.getByRole('button', { name: '查看回答' }))
+    expect(screen.getByText('前端；优先接口')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '跳过此题' })).toBeNull()
+  })
+  it('submits earlier answers with a skipped placeholder and removes all editing controls', async () => {
+    const q = request()
+    q.questions.push({ ...q.questions[0], id: 'detail', title: '详细程度' })
+    render(<QuestionCard item={item(q)} />)
+    fireEvent.keyDown(screen.getByRole('region'), { key: '2' })
+    fireEvent.keyDown(screen.getByRole('region'), { key: 'ArrowRight' })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '跳过此题' }))
+    })
+    fireEvent.click(screen.getByRole('button', { name: '查看回答' }))
+    expect(screen.getByText('后端')).toBeInTheDocument()
+    expect(screen.getByText('未选择')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '提交' })).toBeNull()
+  })
+  it('preserves the receipt ID and permits retry after a failed submission', async () => {
+    const q = request()
+    q.touched = true
+    send.mockRejectedValueOnce(new Error('连接中断'))
+    render(<QuestionCard item={item(q)} />)
+    fireEvent.click(screen.getByRole('radio', { name: /后端/ }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '提交' }))
+    })
+    expect(screen.getByText('Error: 连接中断')).toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '提交' }))
+    })
+    const attempts = send.mock.calls.filter((call) => call[1].IsFreeInput)
+    expect(attempts).toHaveLength(2)
+    expect(JSON.parse(attempts[0][1].UserInteraction).id).toBe(JSON.parse(attempts[1][1].UserInteraction).id)
+    expect(screen.getByText('已回答')).toBeInTheDocument()
+  })
+  it('supports multi-select and keyboard focus with project controls', () => {
+    const q = request()
+    q.questions[0].multiple = true
+    render(<QuestionCard item={item(q)} />)
+    const region = screen.getByRole('region')
+    fireEvent.keyDown(region, { key: '1' })
+    fireEvent.keyDown(region, { key: '2' })
+    expect(screen.getAllByRole('checkbox').every((input) => (input as HTMLInputElement).checked)).toBe(true)
+    fireEvent.keyDown(region, { key: 'ArrowDown' })
+    expect(screen.getAllByRole('checkbox')[0]).toHaveFocus()
+    fireEvent.keyDown(screen.getAllByRole('checkbox')[0], { key: 'ArrowDown' })
+    expect(screen.getAllByRole('checkbox')[1]).toHaveFocus()
   })
   it('expires untouched requests and allows reopening', async () => {
     vi.useFakeTimers()
