@@ -276,7 +276,6 @@ export default defineConfig(({ mode, command }) => {
         'react-copy-to-clipboard',
         '@ant-design/icons/es/icons/CheckOutlined',
         '@ant-design/icons/lib/icons/CheckOutlined',
-        'rc-util/es/Dom/getScrollBarSize',
         'uuid',
         'moment',
         'moment/locale/zh-cn',
