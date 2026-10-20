@@ -62,11 +62,12 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
           }
           // 更新
           await grpcUpdateMCPServer(updateValue)
+          onCancel(updateValue)
         } else {
           // 新增
           await grpcAddMCPServer(value)
+          onCancel(value)
         }
-        onCancel()
       } catch (error) {
       } finally {
         setTimeout(() => {
@@ -265,7 +266,7 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
         onSave={onSaveHeaders}
       />
       <div className={styles['button-group']}>
-        <YakitButton type="outline2" size="large" onClick={onCancel}>
+        <YakitButton type="outline2" size="large" onClick={() => onCancel()}>
           {t('YakitButton.cancel')}
         </YakitButton>
         <YakitButton type="primary" size="large" loading={loading} onClick={handleSubmit}>

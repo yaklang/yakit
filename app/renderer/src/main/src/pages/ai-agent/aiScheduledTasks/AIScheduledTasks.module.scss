@@ -8,7 +8,7 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  background: var(--Colors-Use-Neutral-Bg);
+  background: var(--Colors-Use-Basic-Background);
   .ai-schedule-list-header {
     @extend %display-flex-center;
     justify-content: space-between;
