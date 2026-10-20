@@ -8,7 +8,7 @@ import { questionText } from '../types'
 
 const send = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
 vi.mock('../../hooks/ChatMultiSessionController', () => ({
-  globalSessionEngine: { sendUIInteraction: send },
+  globalSessionEngine: { sendUIInteraction: send, persistUIState: vi.fn() },
 }))
 vi.mock('../../hooks/persist/contentPersistHelper', () => ({ upsertSessionContent: vi.fn() }))
 
@@ -60,6 +60,9 @@ describe('structured questions', () => {
     fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 })
     expect(send.mock.calls.every((call) => !call[1].IsFreeInput)).toBe(true)
     fireEvent.compositionEnd(input)
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(send.mock.calls.every((call) => !call[1].IsFreeInput)).toBe(true)
+    await new Promise((resolve) => setTimeout(resolve, 60))
     await act(async () => {
       fireEvent.keyDown(input, { key: 'Enter' })
     })

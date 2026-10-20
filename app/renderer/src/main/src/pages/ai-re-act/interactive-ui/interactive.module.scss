@@ -24,6 +24,23 @@
   display: grid;
   gap: 8px;
 }
+.selection {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentColor;
+  font-size: 12px;
+  vertical-align: middle;
+}
+.radio {
+  border-radius: 50%;
+}
+.checkbox {
+  border-radius: 3px;
+}
 .option {
   display: flex;
   flex-direction: column;

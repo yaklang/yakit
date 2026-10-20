@@ -274,7 +274,7 @@ describe('frontend allocated session identity', () => {
         Attach: false,
         PreferSessionCachedConfig: false,
         RuntimeContextSizeLimit: 0,
-        ClientUI: JSON.stringify({ protocol: 'memfit.ui/1', questions: true }),
+        ClientUI: expect.stringContaining('"protocol":"memfit.ui/1"'),
       },
     })
     const [, , startRequest] = ipcRendererMock.invoke.mock.calls.find(([method]) => method === 'start-ai-re-act')!

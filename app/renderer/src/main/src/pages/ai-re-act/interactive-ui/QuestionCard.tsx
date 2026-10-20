@@ -3,7 +3,6 @@ import { Button, Alert } from 'antd'
 import type { AIChatQSData } from '../hooks/aiRender'
 import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
-import { upsertSessionContent } from '../hooks/persist/contentPersistHelper'
 import { emptyAnswer, questionAnswers, questionText, type QuestionDraft } from './types'
 import styles from './interactive.module.scss'
 
@@ -20,6 +19,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
   )
   const current = useRef(draft)
   const composing = useRef(false)
+  const compositionEndedAt = useRef(0)
   const submitting = useRef(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -28,7 +28,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
     current.current = next
     item.uiState = next
     setDraft(next)
-    void upsertSessionContent(sessionId, item.id, item)
+    globalSessionEngine.persistUIState(sessionId, item, next)
   }
   const control = (operation: string) =>
     globalSessionEngine.sendUIInteraction(sessionId, {
@@ -41,6 +41,11 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
     save({ ...current.current, touched: true })
     void control('touch').catch((reason) => setError(String(reason)))
   }
+  useEffect(() => {
+    if (request.state === 'expired' && !current.current.touched && !request.touched) {
+      save({ ...current.current, collapsed: true })
+    }
+  }, [request.state])
   useEffect(() => {
     // A persisted local touch is retried after reconnect; it never restarts a timer.
     if (draft.touched && !request.touched && request.state !== 'submitted') {
@@ -125,6 +130,10 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
   const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     touch()
     if (composing.current || event.nativeEvent.isComposing || event.keyCode === 229) return
+    if (event.key === 'Enter' && Date.now() - compositionEndedAt.current < 50) {
+      event.preventDefault()
+      return
+    }
     if (event.key === 'Escape') {
       event.preventDefault()
       save({ ...current.current, collapsed: true })
@@ -150,12 +159,24 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
         event.preventDefault()
         const options = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[data-option]'))
         const index = options.indexOf(document.activeElement as HTMLButtonElement)
-        options[(index + (event.key === 'ArrowUp' ? -1 : 1) + options.length) % options.length]?.focus()
+        options[
+          index < 0
+            ? event.key === 'ArrowUp'
+              ? options.length - 1
+              : 0
+            : (index + (event.key === 'ArrowUp' ? -1 : 1) + options.length) % options.length
+        ]?.focus()
       }
     }
   }
   return (
-    <section className={styles.card} aria-label="模型追问" onPointerDownCapture={touch} onKeyDown={onKeyDown}>
+    <section
+      className={styles.card}
+      aria-label="模型追问"
+      onPointerDownCapture={touch}
+      onFocusCapture={touch}
+      onKeyDown={onKeyDown}
+    >
       <div className={styles.toolbar}>
         <strong>
           {submitted ? '已回答' : request.mode === 'blocking' ? '需要你的回答才能继续' : '任务继续进行，你可以随时回答'}
@@ -177,6 +198,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
             </span>
           </div>
           <p>{q.prompt}</p>
+          <small>{q.multiple ? '可多选' : '单选'}</small>
           <div role={q.multiple ? 'group' : 'radiogroup'} aria-label={q.title} className={styles.options}>
             {q.options.map((option, index) => (
               <button
@@ -189,6 +211,12 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
                 className={styles.option}
               >
                 <span>
+                  <span
+                    aria-hidden="true"
+                    className={`${styles.selection} ${q.multiple ? styles.checkbox : styles.radio}`}
+                  >
+                    {answer.selected.includes(option.id) ? (q.multiple ? '✓' : '●') : ''}
+                  </span>
                   {(index + 1) % 10}. {option.label}
                   {option.recommended && '（推荐）'}
                 </span>
@@ -208,6 +236,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
               }}
               onCompositionEnd={() => {
                 composing.current = false
+                compositionEndedAt.current = Date.now()
               }}
               onChange={(event) => {
                 touch()
