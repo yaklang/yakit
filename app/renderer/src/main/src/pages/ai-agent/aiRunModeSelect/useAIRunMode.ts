@@ -67,7 +67,6 @@ export function useAIRunMode() {
             sessionId: activeChat.SessionID,
             updates: {
               StartParams: {
-                ...(activeChat.StartParams || {}),
                 EnablePlan: checked,
               },
             },
@@ -103,8 +102,7 @@ export function useAIRunMode() {
             sessionId: activeChat.SessionID,
             updates: {
               StartParams: {
-                ...(activeChat.StartParams || {}),
-                Strategy: { ...(activeChat.StartParams?.Strategy || {}), ...next },
+                Strategy: next,
               },
             },
           }),

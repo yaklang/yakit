@@ -20,12 +20,14 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { type AIInputEvent, AIInputEventHotPatchTypeEnum } from '../hooks/grpcApi'
 import { Form, Tooltip } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
+import useRuntimeContextSizeLimit from '@/pages/ai-agent/useContext/useRuntimeContextSizeLimit'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import useAIGlobalConfig from '../hooks/useAIGlobalConfig'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import has from 'lodash/has'
@@ -130,13 +132,14 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const { children } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
-  const { onSend, setSetting } = useAIAgentDispatcher()
+  const { onSend, setSetting, setActiveChat } = useAIAgentDispatcher()
 
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
 
   const { setting, activeChat } = useAIAgentStore()
+  const runtimeContextSizeLimit = useRuntimeContextSizeLimit()
   const [aiGlobalConfigData, aiGlobalConfigEvent] = useAIGlobalConfig()
   const aiGlobalConfig = aiGlobalConfigData.aiGlobalConfig
   const globalSingleModelMode = !!aiGlobalConfig.SingleModelMode
@@ -161,34 +164,48 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     AIPlanPrompt: '',
   })
 
-  const onHotSyncPerceptionTrigger = useMemoizedFn((value: boolean) => {
-    if (store.getState().execute) {
+  const onHotConfigChange = useMemoizedFn(
+    (hotpatchType: AIInputEventHotPatchTypeEnum, params: AIInputEvent['Params']) => {
+      if (!store.getState().execute || !sessionId) return
       const info: AIInputEvent = {
         IsConfigHotpatch: true,
-        HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_SyncPerceptionTrigger,
-        Params: {
-          SyncPerceptionTrigger: value,
-        },
+        HotpatchType: hotpatchType,
+        Params: params,
       }
-      onSend({ token: sessionId, type: 'casual', params: info })
-    }
-    if (activeChat?.SessionID) {
-      emiter.emit(
-        'sessionData',
-        JSON.stringify({
-          type: 'updateSession',
-          sessionId: activeChat.SessionID,
-          updates: {
-            StartParams: {
-              ...(activeChat.StartParams || {}),
-              SyncPerceptionTrigger: value,
+      // 发送被拒绝时保留会话原配置，避免恢复时与后端缓存不一致。
+      if (!onSend({ token: sessionId, type: 'casual', params: info })) return
+      if (activeChat?.SessionID) {
+        const currentSessionId = activeChat.SessionID
+        setActiveChat((current) =>
+          current?.SessionID === currentSessionId
+            ? { ...current, StartParams: { ...current.StartParams, ...params } }
+            : current,
+        )
+        emiter.emit(
+          'sessionData',
+          JSON.stringify({
+            type: 'updateSession',
+            sessionId: activeChat.SessionID,
+            updates: {
+              StartParams: params,
             },
-          },
-        }),
-      )
-    }
-  })
+          }),
+        )
+      }
+    },
+  )
+
   const onValuesChange = useMemoizedFn((changedValues: AIInputSettingFormProps) => {
+    const runtimeContextSizeLimit = changedValues.RuntimeContextSizeLimit
+    if (runtimeContextSizeLimit && runtimeContextSizeLimit >= 60 && Number.isInteger(runtimeContextSizeLimit)) {
+      onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_RuntimeContextSizeLimit, {
+        RuntimeContextSizeLimit: runtimeContextSizeLimit * 1024,
+      })
+      setSetting?.((v) => ({
+        ...v,
+        RuntimeContextSizeLimit: runtimeContextSizeLimit,
+      }))
+    }
     if (has(changedValues, 'SingleModelMode') && !singleModelModeLocked) {
       setSetting?.((v) => ({
         ...v,
@@ -196,7 +213,9 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
       }))
     }
     if (has(changedValues, 'SyncPerceptionTrigger')) {
-      onHotSyncPerceptionTrigger(!!changedValues.SyncPerceptionTrigger)
+      onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_SyncPerceptionTrigger, {
+        SyncPerceptionTrigger: !!changedValues.SyncPerceptionTrigger,
+      })
       setSetting?.((v) => ({
         ...v,
         SyncPerceptionTrigger: !!changedValues.SyncPerceptionTrigger,
@@ -213,6 +232,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
       }
       form.setFieldsValue({
         SingleModelMode: effectiveSingleModelMode,
+        RuntimeContextSizeLimit: runtimeContextSizeLimit,
         AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
         AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
       })
@@ -237,12 +257,13 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
       content={
         <Form
           form={form}
-          labelCol={{ span: 8 }}
-          wrapperCol={{ span: 16 }}
+          labelCol={{ span: 10 }}
+          wrapperCol={{ span: 14 }}
           onValuesChange={onValuesChange}
           initialValues={{
             SingleModelMode: effectiveSingleModelMode,
             SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
+            RuntimeContextSizeLimit: runtimeContextSizeLimit,
             EnablePlan: setting.EnablePlan,
             AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
             AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
@@ -279,10 +300,10 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           <Form.Item
             label={
               <>
-                同步意图识别
+                {t('AIReActTaskChatContent.syncPerceptionTrigger')}
                 <Tooltip
                   classNames={{ root: styles['form-info-icon-tooltip'] }}
-                  title={'开启后回答精度更高，但速度会变慢'}
+                  title={t('AIReActTaskChatContent.syncPerceptionTriggerTip')}
                 >
                   <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                 </Tooltip>
@@ -293,6 +314,28 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             className={styles['switch-form-item']}
           >
             <YakitSwitch />
+          </Form.Item>
+          <Form.Item
+            label={
+              <>
+                {t('AIChatSetting.runtimeContextSize')}
+                <Tooltip
+                  classNames={{ root: styles['form-info-icon-tooltip'] }}
+                  title={t('AIChatSetting.runtimeContextSizeDesc')}
+                >
+                  <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
+                </Tooltip>
+              </>
+            }
+            name="RuntimeContextSizeLimit"
+          >
+            <YakitInputNumber
+              min={60}
+              precision={0}
+              suffix="K"
+              className={styles['runtime-context-size-input']}
+              wrapperClassName={styles['runtime-context-size-input']}
+            />
           </Form.Item>
           <Form.Item label={t('AIReActTaskChatContent.globalDirective')} name="AIPresetPrompt">
             <YakitInput.TextArea

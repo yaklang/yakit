@@ -20,6 +20,7 @@ export interface AIInputSettingFormProps {
   SyncPerceptionTrigger: boolean
   EnablePlan: boolean
   SingleModelMode: boolean
+  RuntimeContextSizeLimit: number | null
   /** 全局指令 */
   AIPresetPrompt: string
   /** 规划提示词 */

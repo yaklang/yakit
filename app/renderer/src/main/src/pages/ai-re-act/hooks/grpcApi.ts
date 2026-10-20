@@ -246,6 +246,7 @@ export enum AIInputEventHotPatchTypeEnum {
 
   HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
   HotPatchType_DisabledCapabilities = 'DisabledCapabilities',
+  HotPatchType_RuntimeContextSizeLimit = 'RuntimeContextSizeLimit',
 
   /**@deprecated ai相关配置的热更新不需要前端传了，后端每次都去查询最新的 */
   HotPatchType_AIService = 'AIService',

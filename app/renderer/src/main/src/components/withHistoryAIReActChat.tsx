@@ -234,8 +234,16 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   useUpdateEffect(() => {
     // 只有配置变化了才更新，SessionID不管
-    if (activeChat?.SessionID) globalSessionEngine.updateSessionConfig(activeChat?.SessionID, getSetting())
-  }, [setting])
+    if (activeChat?.SessionID) {
+      const { RuntimeContextSizeLimit: _defaultLimit, ...config } = getSetting()
+      globalSessionEngine.updateSessionConfig(activeChat.SessionID, {
+        ...config,
+        ...(activeChat.StartParams?.RuntimeContextSizeLimit !== undefined
+          ? { RuntimeContextSizeLimit: activeChat.StartParams.RuntimeContextSizeLimit }
+          : {}),
+      })
+    }
+  }, [setting, activeChat?.StartParams?.RuntimeContextSizeLimit])
 
   useEffect(() => {
     if (!showFreeChat) {

@@ -157,6 +157,8 @@
     "planPromptDefault": "Custom plan prompt",
     "planPromptPlaceholder": "Plan prompt applies during task planning as supplementary guidance...",
     "singleModelMode": "Single-model mode",
+    "syncPerceptionTrigger": "Synchronous intent recognition",
+    "syncPerceptionTriggerTip": "Improves response accuracy when enabled, but slows down responses",
     "singleModelModeTip": "Use only the primary model from the global configuration for this session",
     "singleModelModeGlobalTip": "Enabled by the global configuration and cannot be disabled for this session",
     "singleModelModeSessionTip": "Single-model mode can only be changed before starting a new session"
@@ -920,7 +922,7 @@
     "aiTransactionRetry": "AI transaction retry count",
     "aiTransactionRetryDesc": "Increase this to retry when answer quality is low",
     "runtimeContextSize": "Runtime context size",
-    "runtimeContextSizeDesc": "Leave empty or 0 to use the server default threshold",
+    "runtimeContextSizeDesc": "Context size must be a positive integer of at least 60 KB",
     "aiCallTokenLimit": "Pressure token threshold",
     "aiCallTokenLimitDesc": "Warn when AI dialogue tokens exceed this limit",
     "userInteractLimit": "User interaction limit",

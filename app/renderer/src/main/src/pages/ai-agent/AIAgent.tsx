@@ -121,9 +121,17 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // 初始化只恢复当前页面配置，不更新引擎或写回全局缓存。
     if (setting === initializedSettingRef.current) return
     // 只有配置变化了才更新，SessionID不管
-    if (activeChat?.SessionID) globalSessionEngine.updateSessionConfig(activeChat?.SessionID, getSetting())
+    if (activeChat?.SessionID) {
+      const { RuntimeContextSizeLimit: _defaultLimit, ...config } = getSetting()
+      globalSessionEngine.updateSessionConfig(activeChat.SessionID, {
+        ...config,
+        ...(activeChat.StartParams?.RuntimeContextSizeLimit !== undefined
+          ? { RuntimeContextSizeLimit: activeChat.StartParams.RuntimeContextSizeLimit }
+          : {}),
+      })
+    }
     persistAIAgentChatSetting(getSetting())
-  }, [setting])
+  }, [setting, activeChat?.StartParams?.RuntimeContextSizeLimit])
 
   const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat, detachPendingChat } = useChatIPC(
     YakitRoute.AI_Agent,
@@ -132,6 +140,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   )
 
   const setActiveChat = useMemoizedFn<AIAgentContextDispatcher['setActiveChat']>((session) => {
+    if (typeof session === 'function') {
+      updateActiveChat(session)
+      return
+    }
     // 同步绑定，确保随后回放的首个标题事件可以按 SessionID 找到页面。
     const { pages, queryPagesDataById } = usePageInfo.getState()
     const node = queryPagesDataById(YakitRoute.AI_Agent, pageId)
@@ -214,16 +226,19 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         const params = session.StartParams
         initializeSetting({
           ...cloneDeep(AIAgentSettingDefault),
-          ...omit(params, ['CoordinatorId', 'Sequence', 'McpServers', 'UserQuery']),
+          ...omit(params, ['CoordinatorId', 'Sequence', 'McpServers', 'UserQuery', 'TimelineContentSizeLimit']),
           // 启动参数使用字节，页面设置使用 KB。
-          TimelineContentSizeLimit:
-            params?.TimelineContentSizeLimit == null
-              ? AIAgentSettingDefault.TimelineContentSizeLimit
-              : params.TimelineContentSizeLimit / 1024,
+          RuntimeContextSizeLimit:
+            params?.RuntimeContextSizeLimit == null
+              ? AIAgentSettingDefault.RuntimeContextSizeLimit
+              : params.RuntimeContextSizeLimit / 1024,
           AICallTokenLimit:
             params?.AICallTokenLimit == null ? AIAgentSettingDefault.AICallTokenLimit : params.AICallTokenLimit / 1024,
           Strategy: { ...AIAgentSettingDefault.Strategy, ...params?.Strategy },
         })
+        updateActiveChat((current) =>
+          current?.SessionID === sessionId ? { ...current, StartParams: params } : current,
+        )
       }
       const { queryPagesDataById } = usePageInfo.getState()
       const node = queryPagesDataById(YakitRoute.AI_Agent, pageId)

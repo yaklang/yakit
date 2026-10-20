@@ -1,10 +1,16 @@
 import type React from 'react'
 import { render } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import type { AIEchartsDetailsProps } from '../AIEchartsDetails'
 
 const mocks = vi.hoisted(() => ({
   aitokensProps: [] as Array<Record<string, unknown>>,
   config: {} as Record<string, unknown>,
+  settings: { RuntimeContextSizeLimit: 300 as number | undefined },
+}))
+
+vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
+  default: () => ({ setting: mocks.settings }),
 }))
 
 vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
@@ -29,9 +35,11 @@ vi.mock('../AIMainModelTokens', () => ({
   default: () => <div data-testid="main-model-tokens" />,
 }))
 
-vi.mock('../../chatTemplate/AIEcharts', () => ({
+vi.mock('@/pages/ai-agent/chatTemplate/AIEcharts', () => ({
   AICostDetailsEcharts: () => null,
-  AIPressureDetailsEcharts: () => null,
+  AIPressureDetailsEcharts: ({ threshold }: { threshold: number }) => (
+    <div data-testid="pressure-threshold">{threshold}</div>
+  ),
   TokenCountEcharts: () => null,
 }))
 
@@ -135,5 +143,53 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
     mocks.config = {}
     const { getByTestId } = render(<AIEchartsDetails {...baseProps} />)
     expect(getByTestId('main-model-tokens')).toBeInTheDocument()
+  })
+
+  it('上下文大小配置变化时，按最新配置换算字节阈值', () => {
+    mocks.settings = { RuntimeContextSizeLimit: 300 }
+    const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {
+      intelligent: [
+        {
+          current_cost_token_size: 10,
+          model_name: 'main',
+          model_tier: 'intelligent',
+          pressure_token_size: 100,
+          timestamp: 1,
+        },
+      ],
+      lightweight: [],
+      vision: [],
+    }
+    const { getByTestId, rerender } = render(<AIEchartsDetails {...baseProps} pressure={pressure} />)
+    expect(getByTestId('pressure-threshold')).toHaveTextContent(/^307200$/)
+
+    pressure.intelligent[0].pressure_token_size = 200
+    mocks.settings = { RuntimeContextSizeLimit: 600 }
+    rerender(<AIEchartsDetails {...baseProps} pressure={pressure} overallToken={[10, 5, 2]} />)
+
+    expect(getByTestId('pressure-threshold')).toHaveTextContent(/^614400$/)
+  })
+
+  it.each([
+    [undefined, '307200'],
+    [60, '61440'],
+    [0, '0'],
+  ])('详情图配置为 %s 时使用对应的默认值和单位规则', (limit, expected) => {
+    mocks.settings = { RuntimeContextSizeLimit: limit }
+    const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {
+      intelligent: [
+        {
+          current_cost_token_size: 10,
+          model_name: 'main',
+          model_tier: 'intelligent',
+          pressure_token_size: 100,
+          timestamp: 1,
+        },
+      ],
+      lightweight: [],
+      vision: [],
+    }
+    const { getByTestId } = render(<AIEchartsDetails {...baseProps} pressure={pressure} />)
+    expect(getByTestId('pressure-threshold').textContent).toBe(expected)
   })
 })

@@ -157,6 +157,8 @@
     "planPromptDefault": "自訂Plan提示詞",
     "planPromptPlaceholder": "Plan 提示詞將在任務規劃階段生效，用於補充規劃說明...",
     "singleModelMode": "單模型模式",
+    "syncPerceptionTrigger": "同步意圖識別",
+    "syncPerceptionTriggerTip": "開啟後回答精度更高，但速度會變慢",
     "singleModelModeTip": "本會話只使用全局配置中的主模型",
     "singleModelModeGlobalTip": "全局配置已啟用，當前會話無法關閉",
     "singleModelModeSessionTip": "單模型模式只能在新會話啟動前修改"
@@ -920,7 +922,7 @@
     "aiTransactionRetry": "AI 事務重試次數",
     "aiTransactionRetryDesc": "如果回答品質不高時，調大可以有效重試回答",
     "runtimeContextSize": "執行時上下文大小",
-    "runtimeContextSizeDesc": "留空或填 0 時使用服務端預設閾值",
+    "runtimeContextSizeDesc": "上下文大小最小為 60 KB，僅支援正整數",
     "aiCallTokenLimit": "壓力 token 閾值",
     "aiCallTokenLimitDesc": "Token pressure limit，當 AI 對話的 token 數量超過這個限制時，需要警告",
     "userInteractLimit": "使用者互動上限",

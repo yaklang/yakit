@@ -53,7 +53,6 @@ const automationReset: Partial<AIAgentSetting> = {
 }
 
 const resourcesReset: Partial<AIAgentSetting> = {
-  RuntimeContextSizeLimit: AIAgentSettingDefault.RuntimeContextSizeLimit,
   AICallTokenLimit: AIAgentSettingDefault.AICallTokenLimit,
   UserInteractLimit: AIAgentSettingDefault.UserInteractLimit,
 }
@@ -354,17 +353,6 @@ export const AIConfigSettings: React.FC = () => {
           />
         </div>
         <div className={styles['list-panel']}>
-          <SettingRow title={t('AIChatSetting.runtimeContextSize')} desc={t('AIChatSetting.runtimeContextSizeDesc')}>
-            <YakitInput
-              wrapperClassName={classNames(styles['compact-input'], styles['input-suffix'])}
-              suffix="KB"
-              value={`${setting.RuntimeContextSizeLimit ?? ''}`}
-              onChange={(e) => {
-                const value = digitsOnly(e.target.value)
-                apply({ RuntimeContextSizeLimit: value === '' ? 0 : Number(value) })
-              }}
-            />
-          </SettingRow>
           <SettingRow title={t('AIChatSetting.aiCallTokenLimit')} desc={t('AIChatSetting.aiCallTokenLimitDesc')}>
             <YakitInput
               wrapperClassName={classNames(styles['compact-input'], styles['input-suffix'])}
