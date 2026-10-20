@@ -54,6 +54,8 @@ export type GlobalEventProps = {
   onOpenRecharge: string
   /** 打开兑换弹窗 */
   onOpenRedeem: string
+  /** 刷新 CE 额度（用户菜单 / AI 右侧面板等各自本地 state） */
+  onRefreshCommunityApiKeys: string
   /** 打开 CE 用量统计弹窗 */
   onOpenUsageStatistics: string
   /** 菜单栏设置菜单选项 */

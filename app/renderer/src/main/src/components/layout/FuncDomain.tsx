@@ -536,13 +536,23 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       <CeRechargeModal
         visible={rechargeVisible}
         onClose={() => setRechargeVisible(false)}
-        onPaySuccess={() => onUpdateApiKey()}
+        onPaySuccess={() => {
+          onUpdateApiKey()
+          emiter.emit('onRefreshCommunityApiKeys', '')
+        }}
         onNeedLogin={() => {
           setCeUserMenuShow(false)
           setLoginShow(true)
         }}
       />
-      <CeRedeemModal open={redeemVisible} onClose={() => setRedeemVisible(false)} onSuccess={onUpdateApiKey} />
+      <CeRedeemModal
+        open={redeemVisible}
+        onClose={() => setRedeemVisible(false)}
+        onSuccess={() => {
+          onUpdateApiKey()
+          emiter.emit('onRefreshCommunityApiKeys', '')
+        }}
+      />
     </div>
   )
 })

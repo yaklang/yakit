@@ -13,8 +13,27 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 vi.mock('@/utils/notification', () => ({ yakitNotify: mockNotify }))
 vi.mock('@/services/fetch', () => ({ NetWorkApi: mockNetWorkApi }))
 vi.mock('@/components/yakitUI/YakitModal/YakitModal', () => ({
-  YakitModal: ({ open, children }: { open?: boolean; children: React.ReactNode }) =>
-    open ? <div role="dialog">{children}</div> : null,
+  YakitModal: ({
+    open,
+    children,
+    closable = true,
+    onCancel,
+  }: {
+    open?: boolean
+    children: React.ReactNode
+    closable?: boolean
+    onCancel?: () => void
+  }) =>
+    open ? (
+      <div role="dialog">
+        {closable ? (
+          <button type="button" aria-label="close" onClick={onCancel}>
+            close
+          </button>
+        ) : null}
+        {children}
+      </div>
+    ) : null,
 }))
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   YakitButton: ({
@@ -121,5 +140,62 @@ describe('CeRedeemModal', () => {
     })
     expect(onSuccess).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('请求进行中隐藏关闭按钮，关后再开时过期成功响应不误关新弹窗', async () => {
+    let resolveFirst!: (value: unknown) => void
+    let resolveSecond!: (value: unknown) => void
+    mockNetWorkApi
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveFirst = resolve
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveSecond = resolve
+          }),
+      )
+
+    const onClose = vi.fn()
+    const onSuccess = vi.fn()
+    const { rerender } = render(<CeRedeemModal open onClose={onClose} onSuccess={onSuccess} />)
+
+    fireEvent.change(screen.getByLabelText('redeem-code'), { target: { value: 'CODE-A' } })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'CeUserMenu.redeem' }))
+    })
+
+    expect(screen.queryByRole('button', { name: 'close' })).not.toBeInTheDocument()
+    expect(mockNetWorkApi).toHaveBeenCalledTimes(1)
+
+    // 父层强制关闭再打开（模拟关后再开）
+    rerender(<CeRedeemModal open={false} onClose={onClose} onSuccess={onSuccess} />)
+    rerender(<CeRedeemModal open onClose={onClose} onSuccess={onSuccess} />)
+    expect(screen.getByRole('button', { name: 'close' })).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('redeem-code'), { target: { value: 'CODE-B' } })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'CeUserMenu.redeem' }))
+    })
+    expect(mockNetWorkApi).toHaveBeenCalledTimes(2)
+
+    // 第一次（已过期）成功返回，不得关掉当前会话
+    await act(async () => {
+      resolveFirst({ ok: true, from: 'user/redeem' })
+    })
+    expect(onSuccess).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+
+    // 第二次成功才关闭
+    await act(async () => {
+      resolveSecond({ ok: true, from: 'user/redeem' })
+    })
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalledTimes(1)
+      expect(onClose).toHaveBeenCalledTimes(1)
+    })
   })
 })

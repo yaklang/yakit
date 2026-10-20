@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
@@ -21,13 +21,21 @@ const CeRedeemModal: React.FC<CeRedeemModalProps> = (props) => {
   const { t } = useI18nNamespaces(['layout'])
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
+  /** 关闭/重开后作废进行中请求的回调，避免误关新弹窗 */
+  const requestSeqRef = useRef(0)
 
   useEffect(() => {
     if (!open) {
+      requestSeqRef.current += 1
       setCode('')
       setLoading(false)
     }
   }, [open])
+
+  const handleCancel = useMemoizedFn(() => {
+    if (loading) return
+    onClose()
+  })
 
   const handleRedeem = useMemoizedFn(() => {
     const trimmed = code.trim()
@@ -36,6 +44,7 @@ const CeRedeemModal: React.FC<CeRedeemModalProps> = (props) => {
       return
     }
     if (loading) return
+    const seq = ++requestSeqRef.current
     setLoading(true)
     NetWorkApi<API.RedeemCodeRequest, API.ActionSucceeded>({
       method: 'post',
@@ -43,14 +52,17 @@ const CeRedeemModal: React.FC<CeRedeemModalProps> = (props) => {
       data: { code: trimmed },
     })
       .then(() => {
+        if (seq !== requestSeqRef.current) return
         yakitNotify('success', t('CeUserMenu.redeemSuccess'))
         onSuccess?.()
         onClose()
       })
       .catch((err) => {
+        if (seq !== requestSeqRef.current) return
         yakitNotify('error', t('CeUserMenu.redeemFailed', { error: err }))
       })
       .finally(() => {
+        if (seq !== requestSeqRef.current) return
         setLoading(false)
       })
   })
@@ -62,7 +74,8 @@ const CeRedeemModal: React.FC<CeRedeemModalProps> = (props) => {
       width={400}
       maskClosable={false}
       open={open}
-      onCancel={onClose}
+      closable={!loading}
+      onCancel={handleCancel}
       destroyOnHidden
       footer={null}
     >
