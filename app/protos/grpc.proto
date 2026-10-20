@@ -2181,6 +2181,7 @@ message AIInputEvent {
   // 配置热补丁目标任务的逻辑 ID (AIStatefulTask.GetId)。
   // 非空时，仅当前正在执行且 ID 匹配的任务会应用该热补丁（主要用于能力热更新）。
   string TaskId = 17;
+  string UserInteraction = 18;
 }
 
 message AttachedResourceInfo {
@@ -2356,6 +2357,7 @@ message AIStartParams {
   bool DisableMemoryTriage = 49;
   // Session-local opt-in; a globally enabled single-model mode still wins.
   bool SingleModelMode = 50;
+  string ClientUI = 52;
 }
 
 message AIExecutionStrategy {

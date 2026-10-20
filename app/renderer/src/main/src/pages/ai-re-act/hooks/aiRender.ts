@@ -365,6 +365,7 @@ export interface BrowserHandoffCardData {
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 export enum AIChatQSDataTypeEnum {
+  UI_QUESTION = 'ui_question',
   /**用户的自由输入 */
   QUESTION = 'question',
   /**流 */
@@ -421,6 +422,8 @@ export enum AIChatQSDataTypeEnum {
 export type AIChatQSDataType = `${AIChatQSDataTypeEnum}`
 
 export interface AIChatQSDataBase<T extends string, U> {
+  uiState?: unknown
+  interactionMetadata?: import('../interactive-ui/types').UISubmission
   type: T
   data: U
   /** id就是token */
@@ -493,6 +496,10 @@ type ChatStreamGroup = AIChatQSDataBase<
 >
 
 export type AIChatQSData =
+  | AIChatQSDataBase<
+      AIChatQSDataTypeEnum.UI_QUESTION,
+      { sessionId: string; request: import('../interactive-ui/types').QuestionRequest }
+    >
   | ChatQuestion
   | ChatStream
   | ChatThought
