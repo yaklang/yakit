@@ -654,6 +654,14 @@
     "tooLarge": "檔案過大，無法預覽"
   },
   "AIRightPanel": {
+    "copyDump": "複製 Dump",
+    "dumpUnsupported": "目前引擎暫不支援複製 Dump，請升級後重試",
+    "dumpEmpty": "暫無可複製的時間線內容",
+    "dumpCopied": "Dump 已複製",
+    "dumpFetchFailed": "取得時間線 Dump 失敗，請重試",
+    "timelineRefreshFailed": "重新整理時間線失敗，請重試",
+    "dumpCopyFailed": "複製 Dump 失敗，請重試",
+    "dumpRestoreConnection": "請先恢復會話連線",
     "aiSettings": "AI 設定",
     "taskBoard": "任務詳情看板",
     "fileSystem": "檔案系統",

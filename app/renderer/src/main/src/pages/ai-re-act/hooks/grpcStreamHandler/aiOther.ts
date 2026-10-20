@@ -20,6 +20,7 @@ import {
 import { ensureToolResultOnUI } from './aiToolResult'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import i18n from '@/i18n/i18n'
+import { yakitNotify } from '@/utils/notification'
 
 const tAgent = i18n.getFixedT(null, 'aiAgent')
 
@@ -184,6 +185,25 @@ const handleTimelineItem: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const timelineItem = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
   store.getState().updateTimeLineItem(timelineItem)
+}
+
+const handleTimelineDump: AIMessageHandler = ({ res, rawData, store }) => {
+  if (!res.IsSync || !res.IsJson) return
+
+  let payload: AIAgentGrpcApi.TimelineDump = {
+    dump: '',
+    entries: [],
+    limit: 0,
+    total_entries: 0,
+  }
+  try {
+    payload = JSON.parse(Uint8ArrayToString(res.Content)) as AIAgentGrpcApi.TimelineDump
+  } catch {
+    yakitNotify('error', tAgent('AIRightPanel.dumpFetchFailed'))
+    return
+  }
+  rawData.timelineDump = payload?.dump ?? ''
+  store.getState().updateStateCount('timelineDumpUpdate')
 }
 
 const handleReactTaskEnqueue: AIMessageHandler = (request) => {
@@ -577,6 +597,7 @@ export const aiOtherDataHandlers = {
   filesystem_pin_directory: handleFileSystemPin,
   filesystem_pin_filename: handleFileSystemPin,
   timeline_item: handleTimelineItem,
+  timeline: handleTimelineDump,
   react_task_enqueue: handleReactTaskEnqueue,
   react_task_dequeue: handleReactTaskDequeue,
   notify: handleNotify,

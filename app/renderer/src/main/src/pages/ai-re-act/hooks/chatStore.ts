@@ -34,6 +34,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       yaklangCodeChangeUpdate: 0,
       syntaxflowRuleChangeUpdate: 0,
       syncIDUpdate: 0,
+      timelineDumpUpdate: 0,
 
       grpcFolders: [],
       reActTimelines: [],
