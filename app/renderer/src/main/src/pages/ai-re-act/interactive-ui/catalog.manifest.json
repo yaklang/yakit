@@ -1,0 +1,201 @@
+{
+  "version": "1.0",
+  "components": [
+    {
+      "name": "Stack",
+      "description": "按顺序排列少量子节点，用于分组。children 是节点 ID，禁止循环。",
+      "schema": {
+        "type": "object",
+        "properties": { "title": { "type": "string", "maxLength": 256 } },
+        "required": [],
+        "additionalProperties": false
+      },
+      "children": true
+    },
+    {
+      "name": "Text",
+      "description": "简短纯文本说明。不会执行或解析 HTML。",
+      "schema": {
+        "type": "object",
+        "properties": { "text": { "type": "string", "maxLength": 8000, "minLength": 1 } },
+        "required": ["text"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "ComparisonTable",
+      "description": "比较候选方案。columns 的 key 对应每行单元格的键。",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "maxLength": 256 },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": { "type": "string", "maxLength": 256 },
+                "label": { "type": "string", "maxLength": 256 }
+              },
+              "required": ["key", "label"],
+              "additionalProperties": false
+            },
+            "maxItems": 12,
+            "minItems": 1
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "maxProperties": 12,
+              "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] }
+            },
+            "maxItems": 100
+          }
+        },
+        "required": ["columns", "rows"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "ParameterForm",
+      "description": "收集参数，使用平面 JSON Schema。只支持字符串、数值、布尔值和字符串数组；禁止 $ref、uiSchema、文件、代码和表达式。bindings.value 是本节点的本地状态键。只有显式 submit_to_chat 才向对话发送。",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "maxLength": 256 },
+          "schema": {
+            "type": "object",
+            "properties": {
+              "type": { "const": "object" },
+              "properties": {
+                "type": "object",
+                "maxProperties": 30,
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "type": "string", "enum": ["string", "number", "integer", "boolean", "array"] },
+                    "title": { "type": "string", "maxLength": 256 },
+                    "description": { "type": "string", "maxLength": 256 },
+                    "default": {
+                      "anyOf": [
+                        { "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] },
+                        {
+                          "type": "array",
+                          "items": { "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] },
+                          "maxItems": 100
+                        }
+                      ]
+                    },
+                    "enum": {
+                      "type": "array",
+                      "items": { "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] },
+                      "maxItems": 30
+                    },
+                    "minimum": { "type": "number" },
+                    "maximum": { "type": "number" },
+                    "minLength": { "type": "integer", "minimum": 0, "maximum": 8000 },
+                    "maxLength": { "type": "integer", "minimum": 0, "maximum": 8000 },
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "const": "string" },
+                        "enum": { "type": "array", "items": { "type": "string", "maxLength": 256 }, "maxItems": 30 }
+                      },
+                      "required": ["type"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["type"],
+                  "additionalProperties": false
+                }
+              },
+              "required": { "type": "array", "items": { "type": "string", "maxLength": 256 }, "maxItems": 30 },
+              "additionalProperties": { "const": false, "default": false }
+            },
+            "required": ["type", "properties"],
+            "additionalProperties": false
+          },
+          "initial": {
+            "type": "object",
+            "maxProperties": 30,
+            "additionalProperties": {
+              "anyOf": [
+                { "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] },
+                {
+                  "type": "array",
+                  "items": { "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] },
+                  "maxItems": 100
+                }
+              ]
+            }
+          }
+        },
+        "required": ["schema"],
+        "additionalProperties": false
+      },
+      "bindings": ["value"],
+      "actions": {
+        "submit_to_chat": {
+          "type": "object",
+          "properties": { "label": { "type": "string", "maxLength": 256, "default": "提交到对话" } },
+          "required": [],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "name": "Steps",
+      "description": "展示步骤和当前状态。status: pending=未开始，active=进行中，done=完成，error=失败。",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "maxLength": 256 },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string", "maxLength": 256 },
+                "description": { "type": "string", "maxLength": 8000 },
+                "status": { "type": "string", "enum": ["pending", "active", "done", "error"], "default": "pending" }
+              },
+              "required": ["title"],
+              "additionalProperties": false
+            },
+            "maxItems": 30
+          }
+        },
+        "required": ["items"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "Metrics",
+      "description": "展示少量指标，不用于精密图表。value 为显示值，unit 为单位。",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "maxLength": 256 },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string", "maxLength": 256 },
+                "value": { "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] },
+                "unit": { "type": "string", "maxLength": 256 },
+                "description": { "type": "string", "maxLength": 256 }
+              },
+              "required": ["label", "value"],
+              "additionalProperties": false
+            },
+            "maxItems": 12
+          }
+        },
+        "required": ["items"],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

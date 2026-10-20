@@ -9,7 +9,7 @@ const handleInteractiveUI: AIMessageHandler = async (info) => {
   const { res, rawData, store, sessionId } = info
   const payload = JSON.parse(Uint8ArrayToString(res.Content))
   const isQuestion = res.Type === 'ui_question'
-  const id = isQuestion ? `ui-question:${payload.id}` : `ui-message:${payload.id}`
+  const id = isQuestion ? `ui-question:${payload.id}` : payload.taskId || `ui-message:${payload.id}`
   if (!payload.id) return
   const previous = rawData.contents.get(id) || (await persistGetSessionContent(sessionId, id))
   // History is paginated backwards. Do not replace a newer snapshot with an older one.

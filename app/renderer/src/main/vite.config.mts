@@ -96,6 +96,12 @@ export default defineConfig(({ mode, command }) => {
     envPrefix: ['YAKIT_', 'REACT_APP_', 'VITE_'],
     define: yakitProcessEnvDefines(mode),
     plugins: [
+      {
+        name: 'memfit-ui-catalog',
+        buildStart() {
+          execFileSync(process.execPath, [path.resolve(rootDir, '../../../../scripts/export-memfit-ui-catalog.mjs')])
+        },
+      },
       generateThemeCssPlugin(),
       noopAntdComponentStylePlugin(),
       yakitUiIconsPurePlugin(),

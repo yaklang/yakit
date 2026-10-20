@@ -1,5 +1,6 @@
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import { QuestionCard } from '@/pages/ai-re-act/interactive-ui/QuestionCard'
+import { ComponentCard } from '@/pages/ai-re-act/interactive-ui/ComponentCard'
 import { type FC, memo } from 'react'
 import { AIModelErrorPrompt } from '../../aiChatListItem/aiModelErrorPrompt/AIModelErrorPrompt'
 import { AIHttpFlowFuzzStatusCard } from '../../aiHttpFlowFuzzStatusCard/AIHttpFlowFuzzStatusCard'
@@ -22,6 +23,8 @@ import type { AIChildWindowNodeItemWrapperProps } from './type'
 const AIChildWindowNodeItemWrapper: FC<AIChildWindowNodeItemWrapperProps> = memo(
   ({ itemData, groupIndex, renderNum }) => {
     switch (itemData.type) {
+      case AIChatQSDataTypeEnum.UI_COMPONENT:
+        return <ComponentCard key={itemData.id} item={itemData} />
       case AIChatQSDataTypeEnum.UI_QUESTION:
         return <QuestionCard key={itemData.id} item={itemData} />
       case AIChatQSDataTypeEnum.TOOL_RESULT:

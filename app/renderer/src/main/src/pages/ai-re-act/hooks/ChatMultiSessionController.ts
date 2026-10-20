@@ -1,4 +1,5 @@
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
+import catalogManifest from '../interactive-ui/catalog.manifest.json'
 import {
   AIInputEventSyncTypeEnum,
   AISourceEnum,
@@ -244,6 +245,14 @@ type SessionConnection = {
 export class ChatMultiSessionController {
   private uiReceipts = new Map<string, { resolve: () => void; reject: (error: Error) => void }>()
 
+  public persistUIState(sessionId: string, fallback: AIChatQSData, state: unknown) {
+    const current = this.rawDataPool.get(sessionId)?.contents.get(fallback.id) || fallback
+    current.uiState = state
+    // Patch only local state: an async submit callback may still hold an older
+    // question/component snapshot than the one just confirmed by the server.
+    void upsertSessionContent(sessionId, fallback.id, (stored) => ({ ...(stored || current), uiState: state }))
+  }
+
   public async sendUIInteraction(sessionId: string, request: AIInputEvent, submissionId?: string): Promise<void> {
     const lifecycle = this.metaPool.get(sessionId)?.lifecycle
     if (!lifecycle?.current || lifecycle.closing || !lifecycle.started) {
@@ -368,7 +377,10 @@ export class ChatMultiSessionController {
     if (params.Params)
       params = {
         ...params,
-        Params: { ...params.Params, ClientUI: JSON.stringify({ protocol: 'memfit.ui/1', questions: true }) },
+        Params: {
+          ...params.Params,
+          ClientUI: JSON.stringify({ protocol: 'memfit.ui/1', questions: true, catalog: catalogManifest }),
+        },
       }
     const { token, data } = connection
     const { lifecycle } = data.meta
