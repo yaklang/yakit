@@ -15,6 +15,9 @@ const field = object(
     maximum: { type: 'number' },
     minLength: { type: 'integer', minimum: 0, maximum: 8000 },
     maxLength: { type: 'integer', minimum: 0, maximum: 8000 },
+    uniqueItems: { type: 'boolean', default: true },
+    minItems: { type: 'integer', minimum: 0, maximum: 30 },
+    maxItems: { type: 'integer', minimum: 0, maximum: 30 },
     items: object({ type: { const: 'string' }, enum: array(shortText, 30) }, ['type']),
   },
   ['type'],
@@ -59,11 +62,12 @@ export const catalog = {
     {
       name: 'ParameterForm',
       description:
-        '收集参数，使用平面 JSON Schema。只支持字符串、数值、布尔值和字符串数组；禁止 $ref、uiSchema、文件、代码和表达式。bindings.value 是本节点的本地状态键。只有显式 submit_to_chat 才向对话发送。',
+        '收集参数，使用平面 JSON Schema。fieldOrder 指定字段顺序；枚举字符串数组默认 uniqueItems=true，显示为多选，需要至少一项时设 minItems=1。只支持字符串、数值、布尔值和字符串数组；禁止 $ref、uiSchema、文件、代码和表达式。bindings.value 是本节点的本地状态键。submit_to_chat 成功后表单只读，每个节点只提交一次。不能替代专用追问的分页、自述、跳过或超时语义。',
       schema: object(
         {
           title: shortText,
           schema: formSchema,
+          fieldOrder: { ...array(shortText, 30), uniqueItems: true },
           initial: {
             type: 'object',
             maxProperties: 30,

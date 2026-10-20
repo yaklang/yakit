@@ -4,6 +4,7 @@ import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData } from '../utils'
 import { persistGetSessionContent, persistIndependentItem } from '../persist/contentPersistHelper'
 import type { QuestionRequest } from '../../interactive-ui/types'
+import { recordComponentSubmission } from './aiComponentUI'
 
 const handleInteractiveUI: AIMessageHandler = async (info) => {
   const { res, rawData, store, sessionId } = info
@@ -11,6 +12,7 @@ const handleInteractiveUI: AIMessageHandler = async (info) => {
   const isQuestion = res.Type === 'ui_question'
   const id = isQuestion ? `ui-question:${payload.id}` : payload.taskId || `ui-message:${payload.id}`
   if (!payload.id) return
+  if (!isQuestion) await recordComponentSubmission(info, payload.metadata)
   const previous = rawData.contents.get(id) || (await persistGetSessionContent(sessionId, id))
   // History is paginated backwards. Do not replace a newer snapshot with an older one.
   if (previous && (previous as AIChatQSData & { uiEventId?: number }).uiEventId! >= res.ID) return

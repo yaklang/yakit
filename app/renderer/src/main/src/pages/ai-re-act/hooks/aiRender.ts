@@ -506,6 +506,7 @@ export type AIChatQSData =
         streamEnded?: boolean
         revision?: number
         diagnostics?: import('../interactive-ui/validate').UIDiagnostic[]
+        submissions?: Record<string, import('../interactive-ui/types').UISubmission>
       }
     >
   | AIChatQSDataBase<
