@@ -109,6 +109,7 @@ import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayou
 import { parseIntranetYakitVersionFromPath } from './parseIntranetYakitVersion'
 import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
 import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
+import CeRedeemModal from '../CeUserMenu/CeRedeemModal'
 const TaskNotification = React.lazy(() =>
   import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskNotification })),
 )
@@ -231,6 +232,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     setUsageStatisticsShow,
     rechargeVisible,
     setRechargeVisible,
+    redeemVisible,
+    setRedeemVisible,
     apiKeys,
     apiKeysInfo,
     apiKeysInfoLoading,
@@ -539,6 +542,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           setLoginShow(true)
         }}
       />
+      <CeRedeemModal open={redeemVisible} onClose={() => setRedeemVisible(false)} onSuccess={onUpdateApiKey} />
     </div>
   )
 })

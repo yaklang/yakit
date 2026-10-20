@@ -45,6 +45,9 @@ export interface UseUserMenuResult {
   /** 充值弹窗 */
   rechargeVisible: boolean
   setRechargeVisible: React.Dispatch<React.SetStateAction<boolean>>
+  /** 兑换弹窗 */
+  redeemVisible: boolean
+  setRedeemVisible: React.Dispatch<React.SetStateAction<boolean>>
   /** API Key 信息 */
   apiKeysInfo: API.ApiUserUsageResponse | undefined
   apiKeys: API.ApiKeyDetail | undefined
@@ -104,6 +107,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   }, [loginShow])
   const [usageStatisticsShow, setUsageStatisticsShow] = useState<boolean>(false)
   const [rechargeVisible, setRechargeVisible] = useState(false)
+  const [redeemVisible, setRedeemVisible] = useState(false)
   const rechargeAfterLoginRef = useRef(false) // 登录成功后，是否自动打开充值弹窗
 
   const onOpenRecharge = useMemoizedFn(() => {
@@ -114,6 +118,11 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
       return
     }
     setRechargeVisible(true)
+  })
+
+  const onOpenRedeem = useMemoizedFn(() => {
+    setCeUserMenuShow(false)
+    setRedeemVisible(true)
   })
 
   useEffect(() => {
@@ -132,6 +141,11 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   useEffect(() => {
     emiter.on('onOpenRecharge', onOpenRecharge)
     return () => emiter.off('onOpenRecharge', onOpenRecharge)
+  }, [])
+
+  useEffect(() => {
+    emiter.on('onOpenRedeem', onOpenRedeem)
+    return () => emiter.off('onOpenRedeem', onOpenRedeem)
   }, [])
 
   const onOpenUsageStatistics = useMemoizedFn(() => {
@@ -725,6 +739,8 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
     setUsageStatisticsShow,
     rechargeVisible,
     setRechargeVisible,
+    redeemVisible,
+    setRedeemVisible,
     apiKeys,
     apiKeysInfo,
     apiKeysInfoLoading,

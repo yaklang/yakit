@@ -2,12 +2,10 @@ import type React from 'react'
 import { createContext, useContext } from 'react'
 import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { WebsiteGV } from '@/enums/website'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useStore as useUserStore } from '@/store'
 import { grpcExportAILogs, grpcQueryHTTPFlows } from '@/pages/ai-agent/grpc'
 import { failed, yakitNotify } from '@/utils/notification'
-import { yakitShell } from '@/services/electronBridge'
 import type { ExportAILogsModal as ExportAILogsModalComponent } from '@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal'
 import { apiRiskFieldGroup } from '@/pages/risks/YakitRiskTable/utils'
 import type * as AIRightPanelModule from '../AIRightPanel'
@@ -349,7 +347,7 @@ describe('AIRightPanel', () => {
       expect(mockEmit).toHaveBeenCalledWith('onOpenUsageStatistics', '')
     })
 
-    it('点击兑换打开活动页且不冒泡触发用量统计', async () => {
+    it('点击兑换打开兑换弹窗且不冒泡触发用量统计', async () => {
       useUserStore.getState().setStoreUserInfo({
         ...useUserStore.getState().userInfo,
         isLogin: true,
@@ -368,10 +366,9 @@ describe('AIRightPanel', () => {
       })
 
       mockEmit.mockClear()
-      vi.mocked(yakitShell.openExternal).mockClear()
       fireEvent.click(screen.getByRole('button', { name: '兑换' }))
 
-      expect(yakitShell.openExternal).toHaveBeenCalledWith(WebsiteGV.PromotionsAddress)
+      expect(mockEmit).toHaveBeenCalledWith('onOpenRedeem', '')
       expect(mockEmit).not.toHaveBeenCalledWith('onOpenUsageStatistics', '')
     })
 

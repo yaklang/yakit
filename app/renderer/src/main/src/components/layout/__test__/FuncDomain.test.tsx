@@ -238,6 +238,8 @@ vi.mock('../userMenu/useUserMenu', () => ({
     setUsageStatisticsShow: vi.fn(),
     rechargeVisible: false,
     setRechargeVisible: vi.fn(),
+    redeemVisible: false,
+    setRedeemVisible: vi.fn(),
     apiKeys: '',
     apiKeysInfo: {},
     apiKeysInfoLoading: false,
@@ -304,6 +306,10 @@ vi.mock('../../MessageCenter/useMessageUnread', () => ({
 }))
 
 vi.mock('../../CeUserMenu/CeRechargeModal', () => ({
+  default: () => null,
+}))
+
+vi.mock('../../CeUserMenu/CeRedeemModal', () => ({
   default: () => null,
 }))
 
