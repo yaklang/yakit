@@ -56,13 +56,8 @@ const FilePreview: FC<{ data?: FileNodeProps; highlights?: AIAgentFilePreviewHig
   }, [path])
 
   const highLightFind = useMemo(() => highlights || [], [highlights])
-  const editorKey = useMemo(() => {
-    const first = highLightFind[0]
-    const mark = first
-      ? `${first.startLineNumber}:${first.startColumn}-${first.endLineNumber}:${first.endColumn}:${highLightFind.length}`
-      : 'none'
-    return `${fileInfo?.path || 'empty-editor'}|${mark}`
-  }, [fileInfo?.path, highLightFind])
+  // 仅按 path 挂载编辑器：高亮变化走 highLightFind 更新装饰，避免同文件点不同行整实例重挂卡顿
+  const editorKey = fileInfo?.path || 'empty-editor'
 
   return (
     <div className={styles['file-preview']}>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -120,18 +120,21 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({ active = false,
 
   const onOpenFile = useMemoizedFn((path: string, line?: FileSearchLine) => {
     const name = path.split(/[\\/]/).pop() || path
-    setSelected?.({
-      parent: null,
-      name,
-      path,
-      isFolder: false,
-      icon: getFileIconByName(name),
-      depth: 0,
-      isLeaf: true,
-    })
     const hit = results.find((item) => item.path === path)
     const highlights = toEditorHighlights(line ? [line] : hit?.searchResult.results || [])
+    // 先开预览，树选中降到 transition，减少点击瞬间主线程争用
     emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: path, highlights }))
+    startTransition(() => {
+      setSelected?.({
+        parent: null,
+        name,
+        path,
+        isFolder: false,
+        icon: getFileIconByName(name),
+        depth: 0,
+        isLeaf: true,
+      })
+    })
   })
 
   const emptyKind = useMemo(

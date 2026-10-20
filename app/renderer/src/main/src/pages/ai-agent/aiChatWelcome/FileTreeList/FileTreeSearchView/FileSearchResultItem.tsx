@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -14,12 +14,17 @@ interface FileSearchResultItemProps {
   onOpen: (path: string, line?: FileSearchLine) => void
 }
 
-const FileSearchResultItem: React.FC<FileSearchResultItemProps> = ({ item, onOpen }) => {
+const FileSearchResultItem: React.FC<FileSearchResultItemProps> = memo(({ item, onOpen }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const [expanded, setExpanded] = useState(true)
   const iconKey = getFileIconByName(item.name)
   const allLines = item.searchResult.results
   const matchCount = item.searchResult.match_count
+  // 展开时再算裁剪/分段，避免父级重渲时对每行重复 clip
+  const displayLines = useMemo(
+    () => (expanded ? allLines.map((line) => ({ line, display: clipLineAroundMatches(line) })) : []),
+    [expanded, allLines],
+  )
 
   return (
     <div className={styles['result-file']} data-testid="file-tree-search-result-item">
@@ -58,34 +63,32 @@ const FileSearchResultItem: React.FC<FileSearchResultItemProps> = ({ item, onOpe
           </YakitTag>
         </div>
       </div>
-      {expanded &&
-        allLines.map((line) => {
-          const displayLine = clipLineAroundMatches(line)
-          return (
-            <div
-              key={line.line}
-              className={styles['result-line']}
-              data-testid="file-tree-search-result-line"
-              title={line.text}
-              onClick={() => onOpen(item.path, line)}
-            >
-              <span className={styles['result-line-no']}>{line.line}</span>
-              <span className={styles['result-line-text']}>
-                {splitLineByMatches(displayLine).map((segment, index) =>
-                  segment.hit ? (
-                    <span key={index} className={styles['result-line-hit']} data-testid="file-tree-search-result-hit">
-                      {segment.text}
-                    </span>
-                  ) : (
-                    <span key={index}>{segment.text}</span>
-                  ),
-                )}
-              </span>
-            </div>
-          )
-        })}
+      {displayLines.map(({ line, display }) => (
+        <div
+          key={line.line}
+          className={styles['result-line']}
+          data-testid="file-tree-search-result-line"
+          title={line.text}
+          onClick={() => onOpen(item.path, line)}
+        >
+          <span className={styles['result-line-no']}>{line.line}</span>
+          <span className={styles['result-line-text']}>
+            {splitLineByMatches(display).map((segment, index) =>
+              segment.hit ? (
+                <span key={index} className={styles['result-line-hit']} data-testid="file-tree-search-result-hit">
+                  {segment.text}
+                </span>
+              ) : (
+                <span key={index}>{segment.text}</span>
+              ),
+            )}
+          </span>
+        </div>
+      ))}
     </div>
   )
-}
+})
+
+FileSearchResultItem.displayName = 'FileSearchResultItem'
 
 export default FileSearchResultItem

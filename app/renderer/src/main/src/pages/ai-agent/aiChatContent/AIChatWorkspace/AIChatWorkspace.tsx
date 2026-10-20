@@ -124,6 +124,11 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         depth: 0,
         isLeaf: true,
       }
+      // 同路径只更新高亮/激活 tab，避免再走 setState→effect 多一拍
+      if (filePreviewData?.path === value) {
+        openFilePreview(file, highlights)
+        return
+      }
       pendingFileHighlightsRef.current = highlights
       setFilePreviewData(file)
       return

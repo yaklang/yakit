@@ -670,6 +670,46 @@ describe('AIChatWorkspace 菜单切换', () => {
     expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '1')
   })
 
+  it('同路径再次打开只更新高亮，不经 setFilePreviewData', () => {
+    function Harness() {
+      const [filePreviewData, setFilePreviewData] = React.useState<
+        { name: string; path: string; isFolder?: boolean } | undefined
+      >()
+      return (
+        <AIChatWorkspace filePreviewData={filePreviewData as never} setFilePreviewData={setFilePreviewData as never} />
+      )
+    }
+    render(<Harness />)
+
+    act(() =>
+      emiter.emit(
+        'switchAIActTab',
+        JSON.stringify({
+          key: AITabsEnum.File_Preview,
+          value: 'C:\\tmp\\222.txt',
+          highlights: [{ startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 2 }],
+        }),
+      ),
+    )
+    expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '1')
+
+    act(() =>
+      emiter.emit(
+        'switchAIActTab',
+        JSON.stringify({
+          key: AITabsEnum.File_Preview,
+          value: 'C:\\tmp\\222.txt',
+          highlights: [
+            { startLineNumber: 4, startColumn: 1, endLineNumber: 4, endColumn: 3 },
+            { startLineNumber: 4, startColumn: 5, endLineNumber: 4, endColumn: 7 },
+          ],
+        }),
+      ),
+    )
+    expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '2')
+    expect(screen.getByTestId('file-preview')).toHaveTextContent('C:\\tmp\\222.txt')
+  })
+
   it.each([
     { key: AITabsEnum.HTTP, testId: 'http-flows', ids: 'httpRunTimeIDs', update: 'httpTabUpdate', show: 'httpTabShow' },
     { key: AITabsEnum.Risk, testId: 'risks', ids: 'riskRunTimeIDs', update: 'riskTabUpdate', show: 'riskTabShow' },
