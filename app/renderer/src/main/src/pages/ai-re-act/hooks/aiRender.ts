@@ -582,6 +582,8 @@ export interface ChatStoreState {
   syntaxflowRuleChangeUpdate: number
   /** aiChat.d.ts AIAgentChatMetaData syncIDMap */
   syncIDUpdate: number
+  /** aiChat.d.ts AIAgentChatData timelineDump */
+  timelineDumpUpdate: number
 
   /** 接口运行过程中的数据文件夹合集 */
   grpcFolders: AIFileSystemPin[]
@@ -683,6 +685,7 @@ export interface ChatStoreState {
       | 'yaklangCodeChangeUpdate'
       | 'syntaxflowRuleChangeUpdate'
       | 'syncIDUpdate'
+      | 'timelineDumpUpdate'
       | 'currentPlanReviewExtraUpdate'
       | 'chatTodoListUpdate',
   ) => void
@@ -712,6 +715,7 @@ export interface ChatStoreState {
         | 'yaklangCodeChangeUpdate'
         | 'syntaxflowRuleChangeUpdate'
         | 'syncIDUpdate'
+        | 'timelineDumpUpdate'
         | 'grpcFolders'
         | 'reActTimelines'
         | 'httpTabShow'

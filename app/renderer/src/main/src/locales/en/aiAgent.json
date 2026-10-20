@@ -654,6 +654,14 @@
     "tooLarge": "The file is too large to preview"
   },
   "AIRightPanel": {
+    "copyDump": "Copy Dump",
+    "dumpUnsupported": "This engine does not support copying Dump. Please upgrade and try again",
+    "dumpEmpty": "No timeline content to copy",
+    "dumpCopied": "Dump copied",
+    "dumpFetchFailed": "Failed to fetch timeline Dump. Please try again",
+    "timelineRefreshFailed": "Failed to refresh the timeline. Please try again",
+    "dumpCopyFailed": "Failed to copy Dump. Please try again",
+    "dumpRestoreConnection": "Please restore the session connection first",
     "aiSettings": "AI Settings",
     "taskBoard": "Task Board",
     "fileSystem": "File System",

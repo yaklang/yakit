@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { TaskListPane } from '@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane'
 import { AIRightPanelPane } from './AIRightPanelPane'
+import { TimelineDumpButton } from './TimelineDumpButton'
 import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
@@ -41,6 +42,7 @@ import {
   ScrollTextOutlined,
   TimelineOutlined,
   UserCircleOutlined,
+  XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { Flex, Tooltip } from 'antd'
 import styles from './AIRightPanel.module.scss'
@@ -545,9 +547,23 @@ const PaneSlot: React.FC<{
     }
   }
 
+  const renderActions = () => {
+    switch (pane) {
+      case 'timeline':
+        return (
+          <>
+            <TimelineDumpButton />
+            <YakitButton type="text2" aria-label={t('YakitButton.close')} icon={<XOutlined />} onClick={onClose} />
+          </>
+        )
+      default:
+        return undefined
+    }
+  }
+
   return (
     <div className={classNames(styles['pane-slot'], { [styles['pane-slot-small']]: small })}>
-      <AIRightPanelPane title={renderTitle()} onClose={onClose}>
+      <AIRightPanelPane title={renderTitle()} actions={renderActions()} onClose={onClose}>
         {renderContent()}
       </AIRightPanelPane>
     </div>

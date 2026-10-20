@@ -1,6 +1,6 @@
 import type React from 'react'
 import { createContext, useContext } from 'react'
-import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act, cleanup, within } from '@testing-library/react'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useStore as useUserStore } from '@/store'
@@ -61,6 +61,7 @@ const resetMockStore = () => {
 }
 vi.mock('../../hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => mockTaskStore,
+  useCurrentMeta: () => ({ syncIDMap: new Map() }),
   useCurrentRawData: () => ({
     taskDetailsMap: mockTaskDetailsMap,
     httpRunTimeIDs: [] as string[],
@@ -990,7 +991,15 @@ describe('AIRightPanel', () => {
     fireEvent.click(screen.getByLabelText('更多'))
     fireEvent.click(screen.getByLabelText('时间线'))
     expect(screen.getByTestId('timeline-pane')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ }))
+    const closeButton = screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ })
+    const actions = closeButton.parentElement!
+    const header = actions.parentElement!
+    expect(header.firstElementChild).toHaveTextContent('时间线')
+    expect(header.firstElementChild?.querySelector('button')).toBeNull()
+    expect(within(actions).getByRole('button', { name: /copyDump/ })).toBeInTheDocument()
+    expect(within(actions).getByRole('button', { name: /refresh/ })).toBeInTheDocument()
+    expect(within(actions).getAllByRole('button')).toHaveLength(3)
+    fireEvent.click(closeButton)
     expect(screen.queryByTestId('timeline-pane')).not.toBeInTheDocument()
     expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
   })
@@ -1014,6 +1023,8 @@ describe('AIRightPanel', () => {
     await renderPanel(<AIRightPanel />)
     fireEvent.click(screen.getByLabelText('任务列表'))
     expect(screen.getByTestId('task-list-pane')).toBeVisible()
+    const header = screen.getByTestId('task-list-pane').closest('section')!.querySelector('header')!
+    expect(within(header).getAllByRole('button')).toHaveLength(1)
     expect(screen.getByLabelText('文件系统').parentElement?.parentElement?.parentElement?.className).toContain(
       'right-panel-hidden',
     )
