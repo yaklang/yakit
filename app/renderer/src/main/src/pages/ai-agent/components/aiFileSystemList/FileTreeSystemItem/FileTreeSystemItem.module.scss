@@ -28,21 +28,29 @@
 
   span {
     font-size: 12px;
+    line-height: 16px;
     color: var(--Colors-Use-Neutral-Text-1-Title);
     @include mixin.text-ellipsis(1, false, false, true);
   }
 
   img {
+    display: block;
+    flex-shrink: 0;
     width: 16px;
     height: 16px;
   }
 
   .folder-icon {
+    display: inline-flex;
     flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
     width: 16px;
     height: 16px;
+    line-height: 0;
 
     svg {
+      display: block;
       width: 16px;
       height: 16px;
     }

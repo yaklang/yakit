@@ -4,7 +4,7 @@ import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import type { Dispatch, SetStateAction } from 'react'
 
 export interface FileTreeSystemListWrapperProps {
-  /** 侧边栏样式：AI Artifacts 展示文件总数，操作按钮常显 */
+  /** 侧边栏样式：AI Artifacts 展示文件总数；标题操作 hover 显示 */
   variant?: 'sidebar'
   path: HistoryItem[]
   title: string
@@ -13,6 +13,8 @@ export interface FileTreeSystemListWrapperProps {
   fillHeight?: boolean
   /** 标题栏是否展示打开文件/文件夹按钮 */
   showTitleActions?: boolean
+  /** 标题栏搜索：传入则展示搜索按钮 */
+  onTitleSearch?: () => void
   selected?: FileNodeProps
   setSelected: (v?: FileNodeProps) => void
   onTreeDragStart?: () => void

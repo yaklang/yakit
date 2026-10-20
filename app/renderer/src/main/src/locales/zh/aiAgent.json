@@ -646,7 +646,8 @@
     "searchFailed": "文件搜索失败",
     "engineUnsupported": "当前引擎不支持文件内容搜索，请升级 yaklang 引擎后重试",
     "emptyHint": "请输入关键字搜索文件内容",
-    "emptyNoResult": "未搜索到匹配内容"
+    "emptyNoResult": "未搜索到匹配内容",
+    "searchAllFolders": "查询全部文件夹"
   },
   "ExportAILogsModal": {
     "title": "导出 AI 日志",

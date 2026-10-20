@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useRef } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
-import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { getFileIconByName } from '@/pages/ai-agent/utils/getFileIconByName'
+import { TextDropdownTrigger } from '@/pages/ai-agent/components/TextDropdownTrigger/TextDropdownTrigger'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../../../defaultConstant'
 import { useFileSearch } from './useFileSearch'
@@ -14,8 +16,10 @@ import FileSearchResultItem from './FileSearchResultItem'
 import { toEditorHighlights } from './utils'
 import type { FileSearchLine } from './type'
 import {
+  FILE_TREE_SEARCH_SCOPE_OPTIONS,
   FileTreeSearchScope,
   FileTreeSearchType,
+  resolveFileTreeSearchEmptyKind,
   SEARCH_INPUT_FOCUS_DELAY_MS,
   type FileTreeSearchScopeValue,
   type FileTreeSearchTypeValue,
@@ -28,6 +32,8 @@ export type { FileTreeSearchTypeValue, FileTreeSearchScopeValue } from './consta
 interface FileTreeSearchViewProps {
   /** 搜索面板是否处于展示态（用于进入时聚焦输入框） */
   active?: boolean
+  /** 进入搜索时预设的范围（全部 / ai文件夹 / 用户文件夹） */
+  scopePreset?: FileTreeSearchScopeValue
   setSelected?: (selected?: FileNodeProps) => void
 }
 
@@ -40,9 +46,11 @@ const focusSearchInput = (root: HTMLElement | null) => {
   input?.focus()
 }
 
-const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({ active = false, setSelected }) => {
+const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({ active = false, scopePreset, setSelected }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const rootRef = useRef<HTMLDivElement>(null)
+  const prevActiveRef = useRef(active)
+  const [scopeOpen, setScopeOpen] = useState(false)
   const {
     keyword,
     setKeyword,
@@ -56,6 +64,13 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({ active = false,
     results,
     onSearch,
   } = useFileSearch()
+
+  // 仅在进入搜索面板时应用 preset，避免面板内改范围被父级旧值冲掉
+  useEffect(() => {
+    const entered = active && !prevActiveRef.current
+    prevActiveRef.current = active
+    if (entered && scopePreset !== undefined) setScope(scopePreset)
+  }, [active, scopePreset, setScope])
 
   useEffect(() => {
     if (!active) return
@@ -72,20 +87,35 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({ active = false,
   )
 
   const scopeOptions = useMemo(
-    () => [
-      { label: t('FileTreeSearch.all'), value: FileTreeSearchScope.All },
-      { label: t('FileTreeSearch.aiFolder'), value: FileTreeSearchScope.AiFolder },
-      { label: t('FileTreeSearch.userFolder'), value: FileTreeSearchScope.UserFolder },
-    ],
+    () => FILE_TREE_SEARCH_SCOPE_OPTIONS.map((item) => ({ value: item.value, label: t(item.labelKey) })),
     [t],
+  )
+
+  const currentScopeLabel = useMemo(
+    () => scopeOptions.find((item) => item.value === scope)?.label || t('FileTreeSearch.all'),
+    [scope, scopeOptions, t],
   )
 
   const onSelectSearchType = useMemoizedFn((value: string) => {
     setSearchType(value as FileTreeSearchTypeValue)
   })
 
-  const onSelectScope = useMemoizedFn((value: FileTreeSearchScopeValue) => {
-    setScope(value)
+  const onSelectScope = useMemoizedFn(({ key }: { key: string }) => {
+    if (!key || key === scope) return
+    setScope(key as FileTreeSearchScopeValue)
+  })
+
+  const scopeMenu = useCreation(
+    () => ({
+      data: scopeOptions.map((item) => ({ key: item.value, label: item.label })),
+      selectedKeys: [scope],
+      onClick: onSelectScope,
+    }),
+    [scopeOptions, scope, onSelectScope],
+  )
+
+  const onSearchAllFolders = useMemoizedFn(() => {
+    setScope(FileTreeSearchScope.All)
   })
 
   const onOpenFile = useMemoizedFn((path: string, line?: FileSearchLine) => {
@@ -104,10 +134,22 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({ active = false,
     emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: path, highlights }))
   })
 
+  const emptyKind = useMemo(
+    () => resolveFileTreeSearchEmptyKind({ searched, hasSearchPath, scope }),
+    [searched, hasSearchPath, scope],
+  )
+
   const emptyDescription = useMemo(() => {
-    if (!searched || !hasSearchPath) return t('FileTreeSearch.emptyHint')
-    return t('FileTreeSearch.emptyNoResult')
-  }, [searched, hasSearchPath, t])
+    if (emptyKind === 'searchAll') {
+      return (
+        <YakitButton type="outline1" data-testid="file-tree-search-all" onClick={onSearchAllFolders}>
+          {t('FileTreeSearch.searchAllFolders')}
+        </YakitButton>
+      )
+    }
+    if (emptyKind === 'noResult') return t('FileTreeSearch.emptyNoResult')
+    return t('FileTreeSearch.emptyHint')
+  }, [emptyKind, t, onSearchAllFolders])
 
   return (
     <div ref={rootRef} className={styles['file-tree-search-view']} data-testid="file-tree-search-view">
@@ -130,14 +172,22 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({ active = false,
         />
       </div>
       <div className={styles['scope-bar']}>
-        <YakitSelect
-          size="small"
-          value={scope}
-          options={scopeOptions}
-          onChange={onSelectScope}
-          wrapperClassName={styles['scope-select']}
-          getPopupContainer={(node) => node.parentElement || document.body}
-        />
+        <YakitDropdownMenu
+          menu={scopeMenu}
+          dropdown={{
+            trigger: ['click'],
+            placement: 'bottomLeft',
+            open: scopeOpen,
+            onOpenChange: setScopeOpen,
+          }}
+        >
+          <TextDropdownTrigger
+            label={currentScopeLabel}
+            open={scopeOpen}
+            data-testid="file-tree-search-scope"
+            aria-label={currentScopeLabel}
+          />
+        </YakitDropdownMenu>
       </div>
       <div className={styles['results']} data-testid="file-tree-search-results">
         {loading ? (

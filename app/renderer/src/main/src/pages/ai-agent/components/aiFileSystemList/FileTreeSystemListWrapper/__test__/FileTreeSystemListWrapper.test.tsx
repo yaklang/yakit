@@ -163,4 +163,21 @@ describe('FileTreeSystemListWrapper（启用 React Compiler）', () => {
     expect(screen.queryByRole('button', { name: 'YakitButton.openFile' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'YakitButton.openFolder' })).not.toBeInTheDocument()
   })
+
+  it('onTitleSearch 展示标题搜索按钮并可点击', async () => {
+    const onTitleSearch = vi.fn()
+    render(
+      <FileTreeSystemListWrapper
+        variant="sidebar"
+        isOpen
+        title="我打开的文件"
+        path={paths}
+        setSelected={vi.fn()}
+        onTitleSearch={onTitleSearch}
+      />,
+    )
+    await screen.findByTestId('report.txt')
+    fireEvent.click(screen.getByTestId('file-tree-title-search'))
+    expect(onTitleSearch).toHaveBeenCalledTimes(1)
+  })
 })

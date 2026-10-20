@@ -11,14 +11,16 @@ import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
 import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
+import { FileTreeSearchScope, type FileTreeSearchScopeValue } from '../FileTreeSearchView/constants'
 import styles from './FileTreeSplitPanels.module.scss'
 
 interface FileTreeSplitPanelsProps {
   selected?: FileNodeProps
   setSelected: (selected?: FileNodeProps) => void
+  onOpenSearch?: (scope: FileTreeSearchScopeValue) => void
 }
 
-const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected, setSelected }) => {
+const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected, setSelected, onOpenSearch }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const store = useCurrentStore()
   const sessionId = useCurrentSessionId()
@@ -30,6 +32,9 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
       emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: node.path }))
     }
   })
+
+  const onSearchAiFolder = useMemoizedFn(() => onOpenSearch?.(FileTreeSearchScope.AiFolder))
+  const onSearchUserFolder = useMemoizedFn(() => onOpenSearch?.(FileTreeSearchScope.UserFolder))
 
   return (
     <SplitView
@@ -50,6 +55,7 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
               title={t('FileTreeSystem.aiArtifacts')}
               isOpen={false}
               showTitleActions={false}
+              onTitleSearch={onOpenSearch ? onSearchAiFolder : undefined}
             />
           ),
         },
@@ -64,6 +70,7 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
                   selected={selected}
                   path={customFolder}
                   setSelected={onSelect}
+                  onTitleSearch={onOpenSearch ? onSearchUserFolder : undefined}
                   onTreeDragStart={() => setDragSource('AIRreeToChat')}
                   onTreeDragEnd={() => setDragSource(null)}
                 />
