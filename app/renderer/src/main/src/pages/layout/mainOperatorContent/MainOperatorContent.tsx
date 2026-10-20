@@ -6206,8 +6206,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
           pageList.push({ ...current, pageGroupId: '0', sortFieId: index + 1 })
         }
       })
+      // 仅替换 pageList，保留 currentSelectPageId 等现有元数据；用 defPage 重建会清空选中页，导致后台推送刷新后回退到首个标签
       const pages: PageProps = {
-        ...cloneDeep(defPage),
+        ...cloneDeep(usePageInfo.getState().pages.get(currentRouteKey) || defPage),
         pageList: pageList,
         routeKey: currentRouteKey,
       }

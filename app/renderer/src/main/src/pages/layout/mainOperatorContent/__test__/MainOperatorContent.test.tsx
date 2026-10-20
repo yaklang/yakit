@@ -347,6 +347,7 @@ describe('MainOperatorContent within-group tab reorder', () => {
     expect(subPage[0].groupChildren.map((item: any) => item.id)).toEqual(order)
     // 渲染层：原地赋值不改变引用，必须以新数组触发 SubTabList 重渲染，否则拖拽会被弹回原位
     expect(setSubPage).toHaveBeenCalledOnce()
+    expect(setSubPage.mock.calls[0][0]).not.toBe(subPage)
     expect((setSubPage.mock.calls[0][0] as any[])[0].groupChildren.map((item: any) => item.id)).toEqual(order)
     expect(onUpdatePageCache).toHaveBeenCalledOnce()
     // 持久化：全量重排 sortFieId，而非只交换两个端点项
@@ -393,6 +394,7 @@ describe('MainOperatorContent loose-tab reorder', () => {
 
     // 渲染层顺序与持久化全量重排均以重排后的列表为准
     expect(setSubPage).toHaveBeenCalledOnce()
+    expect(setSubPage.mock.calls[0][0]).not.toBe(subPage)
     expect((setSubPage.mock.calls[0][0] as any[]).map((item: any) => item.id)).toEqual(['wf-2', 'wf-3', 'wf-1'])
     expect(onUpdateSorting).toHaveBeenCalledExactlyOnceWith(setSubPage.mock.calls[0][0], 'wf')
     expect(onUpdatePageCache).toHaveBeenCalledOnce()
@@ -400,6 +402,66 @@ describe('MainOperatorContent loose-tab reorder', () => {
     vi.advanceTimersByTime(200)
     vi.useRealTimers()
     expect(emiter.emit).toHaveBeenCalledExactlyOnceWith('secondMenuTabDataChange', '')
+  })
+})
+
+describe('MainOperatorContent onUpdateSorting', () => {
+  it('replaces only pageList and keeps the persisted selected page id', () => {
+    const subPage = [
+      { id: 'wf-1', verbose: '请求一', groupId: '0', sortFieId: 1 },
+      { id: 'wf-2', verbose: '请求二', groupId: '0', sortFieId: 2 },
+    ]
+    const wfPage = {
+      routeKey: 'wf',
+      singleNode: false,
+      currentSelectPageId: 'wf-2',
+      pageList: [
+        {
+          pageId: 'wf-1',
+          pageName: '请求一',
+          pageParamsInfo: {},
+          sortFieId: 1,
+          id: 'wf-1',
+          routeKey: 'wf',
+          pageGroupId: '0',
+        },
+        {
+          pageId: 'wf-2',
+          pageName: '请求二',
+          pageParamsInfo: {},
+          sortFieId: 2,
+          id: 'wf-2',
+          routeKey: 'wf',
+          pageGroupId: '0',
+        },
+      ],
+    }
+    const setPagesData = vi.fn()
+    const store = {
+      pages: new Map([['wf', wfPage]]),
+      queryPagesDataById: (key: string, pageId: string) =>
+        store.pages.get(key)!.pageList.find((ele) => ele.pageId === pageId),
+    }
+    const onUpdateSorting = execute(`return (${declaration('onUpdateSorting')!.initializer!.getText(source)})`, {
+      useMemoizedFn: (fn: unknown) => fn,
+      usePageInfo: { getState: () => store },
+      queryPagesDataById: store.queryPagesDataById,
+      setPagesData,
+      cloneDeep: (value: unknown) => JSON.parse(JSON.stringify(value)),
+      defPage: { pageList: [], routeKey: '', singleNode: false, currentSelectPageId: '' },
+    })
+
+    onUpdateSorting(subPage, 'wf')
+
+    expect(setPagesData).toHaveBeenCalledExactlyOnceWith('wf', {
+      ...wfPage,
+      pageList: [
+        { ...wfPage.pageList[0], sortFieId: 1, pageGroupId: '0' },
+        { ...wfPage.pageList[1], sortFieId: 2, pageGroupId: '0' },
+      ],
+    })
+    // 选中非首个标签时，排序持久化不得丢失选中页，否则后台推送刷新后会回退到首个标签
+    expect(setPagesData.mock.calls[0][1].currentSelectPageId).toBe('wf-2')
   })
 })
 
