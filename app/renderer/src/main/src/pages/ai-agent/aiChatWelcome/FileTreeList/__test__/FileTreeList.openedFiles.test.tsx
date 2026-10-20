@@ -32,6 +32,10 @@ vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('../../AIChatWelcomeSideSetting', () => ({
   SideSettingButton: () => null,
 }))
+/** 避开 YakitCombinationSearch 非法 calc 在 jsdom 下抛错（与 FileTreeList.test / FileTreeSearchView.test 一致） */
+vi.mock('../FileTreeSearchView/FileTreeSearchView', () => ({
+  default: () => <div data-testid="file-tree-search-view" />,
+}))
 vi.mock('@/utils/kv', () => ({ getRemoteValue: vi.fn(), setRemoteValue: vi.fn(async () => undefined) }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: vi.fn(), on: vi.fn(), off: vi.fn() } }))
 vi.mock('@/utils/duplex/duplex', () => ({ sendDuplexConn: vi.fn() }))
