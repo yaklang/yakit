@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { isMemfit } from '@/utils/envfile'
 import type { AIAgentSetting } from './aiAgentType'
 import {
   AIOutlined,
@@ -135,7 +136,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   EnableSystemFileSystemOperator: true,
   UseDefaultAIConfig: true,
   ForgeName: '',
-  DisallowRequireForUserPrompt: true,
+  DisallowRequireForUserPrompt: !isMemfit(),
   ReviewPolicy: 'manual',
   AIReviewRiskControlScore: 0.5,
   DisableToolUse: false,

@@ -137,6 +137,7 @@ describe('frontend allocated session identity', () => {
         TimelineSessionID: 'client-session',
         Attach: false,
         PreferSessionCachedConfig: false,
+        ClientUI: JSON.stringify({ protocol: 'memfit.ui/1', questions: true }),
       },
     })
     expect(params).toEqual(original)

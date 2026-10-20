@@ -242,6 +242,33 @@ type SessionConnection = {
 }
 
 export class ChatMultiSessionController {
+  private uiReceipts = new Map<string, { resolve: () => void; reject: (error: Error) => void }>()
+
+  public async sendUIInteraction(sessionId: string, request: AIInputEvent, submissionId?: string): Promise<void> {
+    const lifecycle = this.metaPool.get(sessionId)?.lifecycle
+    if (!lifecycle?.current || lifecycle.closing || !lifecycle.started) {
+      throw new Error('会话未连接，草稿已保存。连接后可重试。')
+    }
+    const syncId = crypto.randomUUID()
+    const key = `${sessionId}:${submissionId || syncId}`
+    if (this.uiReceipts.has(key)) throw new Error('正在提交，请稍候')
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.uiReceipts.delete(key)
+        reject(new Error('暂未收到确认，草稿已保存。可重试同一次提交。'))
+      }, 15000)
+      const done = (error?: Error) => {
+        clearTimeout(timer)
+        this.uiReceipts.delete(key)
+        if (error) reject(error)
+        else resolve()
+      }
+      this.uiReceipts.set(key, { resolve: () => done(), reject: done })
+      void ipcRenderer
+        .invoke('send-ai-re-act', this.tokenBySessionId.get(sessionId), { ...request, SyncID: syncId })
+        .catch((error) => done(error instanceof Error ? error : new Error(String(error))))
+    })
+  }
   /** 按连接 token 保存运行记录；失败的 pending 也保留到重试或取消。 */
   private connectionsByToken = new Map<string, SessionConnection>()
   /** 业务操作使用 SessionId，通过此表找到当前这轮连接的 token。 */
@@ -338,6 +365,11 @@ export class ChatMultiSessionController {
 
   /** 先注册本轮 token 的监听再启动流，避免遗漏主进程立即回传的事件。 */
   private startConnection(connection: SessionConnection, params: AIInputEvent) {
+    if (params.Params)
+      params = {
+        ...params,
+        Params: { ...params.Params, ClientUI: JSON.stringify({ protocol: 'memfit.ui/1', questions: true }) },
+      }
     const { token, data } = connection
     const { lifecycle } = data.meta
     const current = () => this.connectionsByToken.get(token) === connection && lifecycle.current && !lifecycle.closing
@@ -1668,6 +1700,13 @@ export class ChatMultiSessionController {
 
     const { store, rawData, request } = this.ensureSession(sessionId)
 
+    if (res.Type === 'ui_receipt') {
+      const receipt = JSON.parse(ipcContent)
+      const pending = this.uiReceipts.get(`${sessionId}:${receipt.id || res.SyncID}`)
+      if (receipt.ok) pending?.resolve()
+      else pending?.reject(new Error(receipt.error || '提交失败'))
+      return
+    }
     // 标识同步ID已处理
     if (res.SyncID && meta.syncIDMap.has(res.SyncID)) {
       meta.syncIDMap.delete(res.SyncID)
