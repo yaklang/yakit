@@ -1421,6 +1421,8 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
 interface HTTPFlowBareProps {
   Id: number
   Data: Uint8Array
+  /** 解压后的明文，只给对比弹窗用；Data 仍是原始报文 */
+  Decoded?: Uint8Array
 }
 
 export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAndResponseProps> = React.memo((props) => {
@@ -1521,6 +1523,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
   // 原始数据
   const [beforeResValue, setBeforeResValue] = useState<string>('')
   const [beforeRspValue, setBeforeRspValue] = useState<string>('')
+  // 解压后的明文，只用于对比弹窗
+  const [beforeResDecoded, setBeforeResDecoded] = useState<string>('')
+  const [beforeRspDecoded, setBeforeRspDecoded] = useState<string>('')
   // 编辑器实例
   const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
   const [resEditor, setResEditor] = useState<IMonacoEditor>()
@@ -1586,6 +1591,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         handleGetHTTPFlowBare('request')
       } else {
         setBeforeResValue('')
+        setBeforeResDecoded('')
       }
       handleGetHTTPFlowBare('response')
       return
@@ -1593,6 +1599,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     setShowBeforeData(false)
     setBeforeResValue('')
     setBeforeRspValue('')
+    setBeforeResDecoded('')
+    setBeforeRspDecoded('')
   })
 
   // 记录上次 setOriginRspValue 设入的响应字符串，用于跳过"引用变但内容不变"的重复赋值。
@@ -1659,9 +1667,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
   const onInitBeforeValue = useMemoizedFn((data: 'request' | 'response') => {
     if (data === 'request') {
       setBeforeResValue('')
+      setBeforeResDecoded('')
     }
     if (data === 'response') {
       setBeforeRspValue('')
+      setBeforeRspDecoded('')
     }
   })
   const handleGetHTTPFlowBare = useMemoizedFn((data: 'request' | 'response') => {
@@ -1672,11 +1682,14 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
       })
       .then((res: HTTPFlowBareProps) => {
         if (res.Data && res.Data.length > 0) {
+          const decoded = res.Decoded?.length ? Uint8ArrayToString(res.Decoded) : ''
           if (data === 'request') {
             setBeforeResValue(Uint8ArrayToString(res.Data))
+            setBeforeResDecoded(decoded)
           }
           if (data === 'response') {
             setBeforeRspValue(Uint8ArrayToString(res.Data))
+            setBeforeRspDecoded(decoded)
           }
         } else {
           onInitBeforeValue(data)
@@ -2066,7 +2079,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             defaultSearchKeyword={search}
             editorOperationRecord="HTTP_FLOW_DETAIL_REQUEST_AND_REQUEST"
             dataCompare={{
-              rightCode: beforeResValue,
+              rightCode: beforeResDecoded || beforeResValue,
               leftCode: resType === 'request' ? flow?.RequestString || '' : undefined,
               leftTitle: requestLabel,
               rightTitle: bareRequestLabel,
@@ -2216,7 +2229,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             webFuzzerValue={flow?.RequestString || ''}
             editorOperationRecord="HTTP_FLOW_DETAIL_REQUEST_AND_RESPONSE"
             dataCompare={{
-              rightCode: beforeRspValue,
+              rightCode: beforeRspDecoded || beforeRspValue,
               leftCode: rspType === 'response' ? flow?.ResponseString || '' : undefined,
               leftTitle: responseLabel,
               rightTitle: bareResponseLabel,
