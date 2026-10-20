@@ -10,7 +10,7 @@ vi.mock('../../hooks/persist/contentPersistHelper', () => ({
   persistIndependentItem: vi.fn(),
 }))
 const bytes = (text: string) => new TextEncoder().encode(text)
-const contents = new Map()
+let contents = new Map()
 const dispatch = vi.fn()
 const info = (res: object) =>
   ({
@@ -36,10 +36,42 @@ const doc = {
   nodes: [{ id: 'text', component: 'Text', props: { text: 'hello' } }],
 }
 beforeEach(() => {
-  contents.clear()
+  contents = new Map()
   dispatch.mockClear()
 })
 describe('UI event integration', () => {
+  it.each([true, false])(
+    'locks legacy forms from ordinary message receipts in either replay order (%s)',
+    async (messageFirst) => {
+      const metadata = {
+        id: 'receipt',
+        source: 'component',
+        requestId: 'block',
+        nodeId: 'form',
+        values: { name: '小明' },
+      }
+      const message = info({
+        Type: 'user_message',
+        IsSync: true,
+        Content: bytes(JSON.stringify({ id: 'receipt', text: '回答', metadata })),
+      })
+      const component = info({
+        Type: 'ui_component',
+        IsSync: true,
+        Content: bytes(JSON.stringify({ document: doc, revision: 0 })),
+      })
+      if (messageFirst) {
+        await aiInteractiveUIHandlers.user_message(message)
+        await handleComponentUI(component)
+      } else {
+        await handleComponentUI(component)
+        await aiInteractiveUIHandlers.user_message(message)
+      }
+      expect(contents.get('ui-component:block').data.submissions.form).toEqual(metadata)
+      await handleComponentUI(component)
+      expect(contents.get('ui-component:block').data.submissions.form).toEqual(metadata)
+    },
+  )
   it.each([true, false])(
     'deduplicates a late answer and dequeue regardless of arrival order (%s)',
     async (messageFirst) => {

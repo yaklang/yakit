@@ -133,18 +133,74 @@ describe('local component state', () => {
     expect(send).not.toHaveBeenCalled()
     const revised = document()
     revised.nodes[0].props.title = '补充信息'
-    view.rerender(<ComponentCard item={{ ...initial, data: { ...initial.data, source: JSON.stringify(revised) } }} />)
+    const updated = { ...initial, data: { ...initial.data, source: JSON.stringify(revised) } }
+    view.rerender(<ComponentCard item={updated} />)
     expect((screen.getByLabelText('姓名') as HTMLInputElement).value).toBe('小明')
     await act(async () => {
       fireEvent.click(screen.getByText('发送姓名'))
     })
     const request = send.mock.calls.find((call) => call[1].IsFreeInput)![1]
     expect(JSON.parse(request.UserInteraction).values).toEqual({ name: '小明' })
+    expect(screen.getByRole('button', { name: '已提交' })).toBeDisabled()
+    await act(async () => {
+      for (let i = 0; i < 15; i++) fireEvent.click(screen.getByRole('button', { name: '已提交' }))
+      fireEvent.submit(screen.getByLabelText('姓名').closest('form')!)
+    })
+    expect(send.mock.calls.filter((call) => call[1].IsFreeInput)).toHaveLength(1)
+    view.unmount()
+    render(<ComponentCard item={updated} />)
+    expect(screen.getByRole('button', { name: '已提交' })).toBeDisabled()
+    expect(screen.getByLabelText('姓名')).toBeDisabled()
   })
   it('cannot submit a streaming preview before server validation', async () => {
     const data = item()
     data.data.final = false
     render(<ComponentCard item={data} />)
     expect((screen.getByText('发送姓名').closest('button') as HTMLButtonElement).disabled).toBe(true)
+  })
+  it('keeps the same receipt ID when a failed submission is retried', async () => {
+    send.mockRejectedValueOnce(new Error('连接中断'))
+    render(<ComponentCard item={item()} />)
+    fireEvent.change(screen.getByLabelText('姓名'), { target: { value: '小明' } })
+    await act(async () => {
+      fireEvent.click(screen.getByText('发送姓名'))
+    })
+    expect(screen.getByText('Error: 连接中断')).toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(screen.getByText('发送姓名'))
+    })
+    const attempts = send.mock.calls.filter((call) => call[1].IsFreeInput)
+    expect(attempts).toHaveLength(2)
+    expect(JSON.parse(attempts[0][1].UserInteraction).id).toBe(JSON.parse(attempts[1][1].UserInteraction).id)
+    expect(screen.getByRole('button', { name: '已提交' })).toBeDisabled()
+  })
+  it('uses the server receipt after reconnect even without a local draft', () => {
+    const data = item()
+    data.data.submissions = {
+      form: { id: 'accepted', source: 'component', requestId: 'block', nodeId: 'form', values: { name: '已接受' } },
+    }
+    render(<ComponentCard item={data} />)
+    expect(screen.getByLabelText('姓名')).toHaveValue('已接受')
+    expect(screen.getByLabelText('姓名')).toBeDisabled()
+    expect(screen.getByRole('button', { name: '已提交' })).toBeDisabled()
+  })
+  it('renders ordered enum arrays as checkboxes and enforces nonempty unique values', () => {
+    const doc = document()
+    const form = doc.nodes[1]
+    ;(form.props as any).fieldOrder = ['focus', 'name']
+    ;(form.props.schema!.properties as any).focus = {
+      type: 'array',
+      title: '关注方面',
+      minItems: 1,
+      items: { type: 'string', enum: ['模块职责', '数据流'] },
+    }
+    const result = readDocument(JSON.stringify(doc), true)
+    const schema = result.document!.nodes[1].props.schema
+    expect(schema.properties.focus.uniqueItems).toBe(true)
+    expect(matchesSchema(schema, { name: '小明', focus: [] })).toBe(false)
+    expect(matchesSchema(schema, { name: '小明', focus: ['数据流', '数据流'] })).toBe(false)
+    const { container } = render(<ComponentCard item={item(doc)} />)
+    expect(screen.getByRole('checkbox', { name: '数据流' })).toBeInTheDocument()
+    expect(container.querySelector('input')).toHaveAttribute('type', 'checkbox')
   })
 })
