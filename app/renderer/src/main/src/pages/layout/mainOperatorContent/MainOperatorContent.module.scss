@@ -610,10 +610,6 @@
   color: var(--Colors-Use-Main-Primary);
   flex-shrink: 0;
 
-  .document-text-icon {
-    color: var(--Colors-Use-Main-Primary);
-  }
-
   &::before {
     content: '';
     width: 100%;
