@@ -2,7 +2,7 @@ const { ipcMain, shell } = require('electron')
 const { Uint8ArrayToString } = require('../toolsFunc')
 const fs = require('fs')
 const { handleSaveFileSystem } = require('../utils/fileSystemDialog')
-const { decodeBarePacket } = require('./decodeBarePacket')
+const { withDecodedBare } = require('./decodeBarePacket')
 
 module.exports = (win, getClient) => {
   ipcMain.handle('delete-http-flows-all', async (e, params) => {
@@ -481,9 +481,7 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('GetHTTPFlowBare', async (e, params) => {
-    const data = await asyncGetHTTPFlowBare(params)
-    const decoded = data && data.Data ? decodeBarePacket(data.Data) : null
-    return decoded ? Object.assign({}, data, { Decoded: decoded }) : data
+    return await withDecodedBare(await asyncGetHTTPFlowBare(params))
   })
 
   const asyncExportHTTPFlows = (params) => {
