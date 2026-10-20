@@ -160,6 +160,8 @@
     "syncPerceptionTrigger": "Synchronous intent recognition",
     "syncPerceptionTriggerTip": "Improves response accuracy when enabled, but slows down responses",
     "singleModelModeTip": "Use only the primary model from the global configuration for this session",
+    "allowUserPrompt": "Allow AI questions",
+    "allowUserPromptTip": "Allow AI questions and interactive forms. Async questions do not pause the task. Changes apply to subsequent tasks.",
     "singleModelModeGlobalTip": "Enabled by the global configuration and cannot be disabled for this session",
     "singleModelModeSessionTip": "Single-model mode can only be changed before starting a new session"
   },
