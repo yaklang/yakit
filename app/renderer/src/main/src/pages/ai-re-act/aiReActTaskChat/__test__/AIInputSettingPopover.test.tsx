@@ -312,7 +312,6 @@ describe('AIInputSettingPopover', () => {
   })
 
   it.each([
-    [-1, 60],
     [59.9, 60],
     [60.5, 61],
     [120.9, 121],
@@ -329,16 +328,39 @@ describe('AIInputSettingPopover', () => {
     expect(mocks.onSend.mock.calls[0][0].params.Params).toEqual({ RuntimeContextSizeLimit: expected * 1024 })
   })
 
-  it('历史配置中的 0 在失焦时校正为最小值 60', () => {
-    mocks.setting.RuntimeContextSizeLimit = 0
+  it.each([undefined, 0, -1])('新会话配置为 %s 时显示默认 300KB，查看和失焦不改写配置', (limit) => {
+    mocks.setting.RuntimeContextSizeLimit = limit
+    sessionStore = createStore(() => ({ execute: true }))
     render(<AIInputSettingPopover visible />)
     const input = screen.getByLabelText('AIChatSetting.runtimeContextSize')
 
+    expect(input).toHaveValue('300')
     fireEvent.blur(input)
 
-    expect(input).toHaveValue('60')
-    expect(mocks.setSetting.mock.calls[0][0](mocks.setting)).toMatchObject({ RuntimeContextSizeLimit: 60 })
+    expect(input).toHaveValue('300')
+    expect(mocks.setting.RuntimeContextSizeLimit).toBe(limit)
+    expect(mocks.setSetting).not.toHaveBeenCalled()
     expect(mocks.onSend).not.toHaveBeenCalled()
+  })
+
+  it.each([undefined, 0, -1])('已有会话阈值为 %s 时显示默认 300KB，不热更新或改写原始参数', (limit) => {
+    mocks.setting.RuntimeContextSizeLimit = 900
+    mocks.activeChat = { SessionID: 'session-id', StartParams: { RuntimeContextSizeLimit: limit } }
+    sessionStore = createStore(() => ({ execute: true }))
+    render(<AIInputSettingPopover visible />)
+    const input = screen.getByLabelText('AIChatSetting.runtimeContextSize')
+
+    expect(input).toHaveValue('300')
+    fireEvent.blur(input)
+    fireEvent.click(screen.getByText('关闭设置'))
+    fireEvent.click(screen.getByText('打开设置'))
+
+    expect(input).toHaveValue('300')
+    expect(mocks.activeChat.StartParams?.RuntimeContextSizeLimit).toBe(limit)
+    expect(mocks.setSetting).not.toHaveBeenCalled()
+    expect(mocks.setActiveChat).not.toHaveBeenCalled()
+    expect(mocks.onSend).not.toHaveBeenCalled()
+    expect(emiter.emit).not.toHaveBeenCalled()
   })
 
   it('清空输入后失焦和关闭弹窗不会保存或热更新空值', () => {
@@ -353,7 +375,7 @@ describe('AIInputSettingPopover', () => {
     expect(emiter.emit).not.toHaveBeenCalled()
   })
 
-  it.each(['60', '300', '0'])('运行中将输入 %j 按字节热更新，并同步会话参数', (value) => {
+  it.each(['60', '600', '0'])('运行中将输入 %j 按字节热更新，并同步会话参数', (value) => {
     mocks.setting.RuntimeContextSizeLimit = 600
     mocks.activeChat = { SessionID: 'existing-session', StartParams: { SyncPerceptionTrigger: true } }
     sessionStore = createStore(() => ({ execute: true }))

@@ -1,16 +1,19 @@
 import type React from 'react'
 import { render } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AIEchartsDetailsProps } from '../AIEchartsDetails'
 
 const mocks = vi.hoisted(() => ({
   aitokensProps: [] as Array<Record<string, unknown>>,
   config: {} as Record<string, unknown>,
   settings: { RuntimeContextSizeLimit: 300 as number | undefined },
+  activeChat: undefined as
+    | { SessionID: string; StartParams?: { RuntimeContextSizeLimit?: number | string } }
+    | undefined,
 }))
 
 vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
-  default: () => ({ setting: mocks.settings }),
+  default: () => ({ setting: mocks.settings, activeChat: mocks.activeChat }),
 }))
 
 vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
@@ -68,6 +71,11 @@ const renderAndCollect = (consumption?: Record<string, unknown>) => {
 }
 
 describe('AIEchartsDetails 辅助模型用量展示回退', () => {
+  beforeEach(() => {
+    mocks.settings = { RuntimeContextSizeLimit: 300 }
+    mocks.activeChat = undefined
+  })
+
   it('旧引擎未返回单模型统计时传递类别用量', () => {
     mocks.config = {
       LightweightModels: [createModel('openai', 'lite')],
@@ -173,7 +181,8 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
   it.each([
     [undefined, '307200'],
     [60, '61440'],
-    [0, '0'],
+    [0, '307200'],
+    [-1, '307200'],
   ])('详情图配置为 %s 时使用对应的默认值和单位规则', (limit, expected) => {
     mocks.settings = { RuntimeContextSizeLimit: limit }
     const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {
@@ -191,5 +200,33 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
     }
     const { getByTestId } = render(<AIEchartsDetails {...baseProps} pressure={pressure} />)
     expect(getByTestId('pressure-threshold').textContent).toBe(expected)
+  })
+
+  it.each([
+    [undefined, '307200'],
+    [0, '307200'],
+    [-1, '307200'],
+    [120 * 1024, '122880'],
+    ['614400', '614400'],
+  ])('已有会话阈值为 %s 时显示会话阈值或服务端默认值，不使用全局设置', (limit, expected) => {
+    mocks.settings = { RuntimeContextSizeLimit: 900 }
+    mocks.activeChat = { SessionID: 'session-id', StartParams: { RuntimeContextSizeLimit: limit } }
+    const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {
+      intelligent: [
+        {
+          current_cost_token_size: 10,
+          model_name: 'main',
+          model_tier: 'intelligent',
+          pressure_token_size: 100,
+          timestamp: 1,
+        },
+      ],
+      lightweight: [],
+      vision: [],
+    }
+    const { getByTestId } = render(<AIEchartsDetails {...baseProps} pressure={pressure} />)
+
+    expect(getByTestId('pressure-threshold').textContent).toBe(expected)
+    expect(mocks.activeChat.StartParams?.RuntimeContextSizeLimit).toBe(limit)
   })
 })
