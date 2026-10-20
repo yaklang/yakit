@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import FileTreeSearchView from '../FileTreeSearchView'
 
@@ -84,6 +84,29 @@ vi.mock('../../../../components/aiFileSystemList/store/useCustomFolder', () => (
   useCustomFolder: () => openedPaths,
 }))
 
+vi.mock('@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu', () => ({
+  YakitDropdownMenu: ({
+    menu,
+    children,
+  }: {
+    menu: { data?: { key: string; label: string }[]; onClick?: (info: { key: string }) => void }
+    children?: React.ReactNode
+  }) => (
+    <div data-testid="file-tree-search-scope-dropdown">
+      {children}
+      <ul data-testid="file-tree-search-scope-menu">
+        {(menu.data || []).map((item) => (
+          <li key={item.key}>
+            <button type="button" onClick={() => menu.onClick?.({ key: item.key })}>
+              {item.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ),
+}))
+
 /** 避开 YakitCombinationSearch 非法 calc 在 jsdom 下抛错；只保留搜索栏交互契约 */
 vi.mock('@/components/YakitCombinationSearch/YakitCombinationSearch', () => ({
   YakitCombinationSearch: (props: {
@@ -134,6 +157,10 @@ const searchByEnter = (keyword: string) => {
   fireEvent.keyDown(input, { key: 'Enter' })
 }
 
+const selectScope = (label: string) => {
+  fireEvent.click(within(screen.getByTestId('file-tree-search-scope-menu')).getByText(label))
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   aiPaths.splice(0, aiPaths.length, { path: 'ai-output', isFolder: true })
@@ -160,22 +187,18 @@ describe('FileTreeSearchView', () => {
     expect(typeSelect).toHaveAttribute('title', 'FileTreeSearch.regexp')
   })
 
-  it('搜索栏下方可选择全部 / ai文件夹 / 用户文件夹', async () => {
+  it('搜索栏下方可选择全部 / ai文件夹 / 用户文件夹', () => {
     render(<FileTreeSearchView />)
-    expect(screen.getByTitle('FileTreeSearch.all')).toBeInTheDocument()
+    const trigger = screen.getByTestId('file-tree-search-scope')
+    expect(trigger).toHaveAttribute('title', 'FileTreeSearch.all')
 
-    // [0] 为 mock 的搜索类型 select，[1] 为范围 YakitSelect
-    const [, scopeSelect] = screen.getAllByRole('combobox')
-    fireEvent.mouseDown(scopeSelect)
-    const options = await screen.findAllByText(
-      (content, element) =>
-        !!element?.classList.contains('ant-select-item-option-content') &&
-        ['FileTreeSearch.all', 'FileTreeSearch.aiFolder', 'FileTreeSearch.userFolder'].includes(content),
-    )
-    expect(options).toHaveLength(3)
+    const menu = screen.getByTestId('file-tree-search-scope-menu')
+    expect(within(menu).getByText('FileTreeSearch.all')).toBeInTheDocument()
+    expect(within(menu).getByText('FileTreeSearch.aiFolder')).toBeInTheDocument()
+    expect(within(menu).getByText('FileTreeSearch.userFolder')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('FileTreeSearch.aiFolder'))
-    expect(document.querySelector('.ant-select-selection-item')).toHaveAttribute('title', 'FileTreeSearch.aiFolder')
+    selectScope('FileTreeSearch.aiFolder')
+    expect(trigger).toHaveAttribute('title', 'FileTreeSearch.aiFolder')
   })
 
   it('初始未搜索时展示输入提示空态', () => {
@@ -238,10 +261,7 @@ describe('FileTreeSearchView', () => {
   it('选择用户文件夹范围后仅搜索用户文件夹路径', async () => {
     render(<FileTreeSearchView />)
 
-    const [, scopeSelect] = screen.getAllByRole('combobox')
-    fireEvent.mouseDown(scopeSelect)
-    fireEvent.click(await screen.findByText('FileTreeSearch.userFolder'))
-
+    selectScope('FileTreeSearch.userFolder')
     searchByEnter('foo')
 
     await waitFor(() => {
@@ -273,6 +293,33 @@ describe('FileTreeSearchView', () => {
     await waitFor(() => expect(screen.getByText('FileTreeSearch.emptyNoResult')).toBeInTheDocument())
   })
 
+  it('ai/用户文件夹无结果时展示查询全部，点击后切到全部并重搜', async () => {
+    // ai 范围 1 次 + 切到全部后 2 次，均无命中
+    invoke
+      .mockResolvedValueOnce({ Resources: [] })
+      .mockResolvedValueOnce({ Resources: [] })
+      .mockResolvedValueOnce({ Resources: [] })
+    render(<FileTreeSearchView />)
+
+    selectScope('FileTreeSearch.aiFolder')
+    searchByEnter('nothing')
+
+    await waitFor(() => expect(screen.getByTestId('file-tree-search-all')).toBeInTheDocument())
+    expect(screen.queryByText('FileTreeSearch.emptyNoResult')).not.toBeInTheDocument()
+
+    const callsBefore = invoke.mock.calls.filter(([channel]) => channel === 'RequestYakURL').length
+    fireEvent.click(screen.getByTestId('file-tree-search-all'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('file-tree-search-scope')).toHaveAttribute('title', 'FileTreeSearch.all')
+      const calls = invoke.mock.calls.filter(([channel]) => channel === 'RequestYakURL')
+      expect(calls.length).toBe(callsBefore + 2)
+      expect(calls.slice(-2).map(([, params]) => params.Url.Path)).toEqual(
+        expect.arrayContaining(['ai-output', 'opened-file.txt']),
+      )
+    })
+  })
+
   it('同一文件在多个根路径重复命中时只展示一次', async () => {
     render(<FileTreeSearchView />)
 
@@ -290,6 +337,18 @@ describe('FileTreeSearchView', () => {
     searchByEnter('hello')
 
     expect(invoke).not.toHaveBeenCalled()
+    // 全部范围且无路径：仍提示空态文案
     expect(screen.getByText('FileTreeSearch.emptyHint')).toBeInTheDocument()
+  })
+
+  it('用户文件夹无路径或无结果时也展示查询全部', async () => {
+    openedPaths.splice(0)
+    render(<FileTreeSearchView />)
+
+    selectScope('FileTreeSearch.userFolder')
+    searchByEnter('nothing')
+
+    await waitFor(() => expect(screen.getByTestId('file-tree-search-all')).toBeInTheDocument())
+    expect(invoke).not.toHaveBeenCalled()
   })
 })

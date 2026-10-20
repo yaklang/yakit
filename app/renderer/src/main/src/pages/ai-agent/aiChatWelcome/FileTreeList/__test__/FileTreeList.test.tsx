@@ -22,7 +22,9 @@ vi.mock('../../AIChatWelcomeSideSetting', () => ({
   SideSettingButton: () => null,
 }))
 vi.mock('../FileTreeSearchView/FileTreeSearchView', () => ({
-  default: () => <div data-testid="file-tree-search-view" />,
+  default: ({ scopePreset }: { scopePreset?: string }) => (
+    <div data-testid="file-tree-search-view" data-scope={scopePreset ?? ''} />
+  ),
 }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit } }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
@@ -153,8 +155,27 @@ describe('文件系统侧栏', () => {
 
   it('标题栏展示搜索 icon', () => {
     render(<FileTreeList setSelected={vi.fn()} />)
-    expect(screen.getByRole('button', { name: 'YakitInput.search' })).toBeInTheDocument()
+    expect(screen.getByTestId('file-tree-header-search')).toBeInTheDocument()
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+
+  it('分区标题搜索进入对应范围：AI→ai文件夹，打开的文件→用户文件夹', async () => {
+    render(<FileTreeList setSelected={vi.fn()} />)
+    await screen.findByRole('button', { name: 'opened-file.txt' })
+
+    const aiHeader = screen.getByText('FileTreeSystem.aiArtifacts').parentElement!.parentElement!
+    fireEvent.click(within(aiHeader).getByTestId('file-tree-title-search'))
+    const searchView = screen.getByTestId('file-tree-search-view')
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-search-view', 'true')
+    expect(searchView).toHaveAttribute('data-scope', 'ai')
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.close' }))
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-search-view', 'false')
+
+    const openedHeader = screen.getByText('FileTreeSystem.myOpenedFiles').parentElement!.parentElement!
+    fireEvent.click(within(openedHeader).getByTestId('file-tree-title-search'))
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-search-view', 'true')
+    expect(screen.getByTestId('file-tree-search-view')).toHaveAttribute('data-scope', 'user')
   })
 
   it('点击搜索切换到空白搜索界面，关闭后回到文件树且保留分屏', async () => {
@@ -176,13 +197,14 @@ describe('文件系统侧栏', () => {
     const track = screen.getByTestId('file-tree-view-track')
     expect(track).toHaveAttribute('data-search-view', 'false')
 
-    fireEvent.click(screen.getByRole('button', { name: 'YakitInput.search' }))
+    fireEvent.click(screen.getByTestId('file-tree-header-search'))
     expect(track).toHaveAttribute('data-search-view', 'true')
     expect(searchView.closest('[aria-hidden="false"]')).toBeTruthy()
     expect(split.closest('[aria-hidden="true"]')).toBeTruthy()
+    expect(searchView).toHaveAttribute('data-scope', 'all')
     expect(screen.getByText('YakitInput.search')).toBeInTheDocument()
     expect(screen.queryByText('AITabs.fileSystem')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'YakitInput.search' })).not.toBeInTheDocument()
+    expect(screen.queryByTestId('file-tree-header-search')).not.toBeInTheDocument()
     // 左右滑动切换，文件树不卸载
     expect(screen.getByText('FileTreeSystem.aiArtifacts')).toBeInTheDocument()
 

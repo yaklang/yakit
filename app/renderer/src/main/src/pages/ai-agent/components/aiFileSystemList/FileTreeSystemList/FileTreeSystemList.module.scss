@@ -23,14 +23,29 @@
 
     .ant-tree-node-content-wrapper {
       padding: 0;
+      display: flex;
+      align-items: center;
+      line-height: 22px;
+      min-height: 22px;
+    }
+
+    .ant-tree-title {
+      display: flex;
+      align-items: center;
+      line-height: 22px;
+      width: 100%;
     }
 
     .ant-tree-switcher {
       width: 16px;
+      height: 22px;
+      line-height: 22px;
       display: flex;
       align-items: center;
+      justify-content: center;
 
       svg {
+        display: block;
         width: 16px;
         height: 16px;
         color: var(--Colors-Use-Neutral-Text-3-Secondary);

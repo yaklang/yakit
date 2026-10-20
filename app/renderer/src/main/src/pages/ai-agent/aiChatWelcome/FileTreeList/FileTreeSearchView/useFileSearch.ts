@@ -52,7 +52,10 @@ export const useFileSearch = () => {
     }
     const paths = resolveSearchPaths(scope, grpcFolders, customFolder)
     if (paths.length === 0) {
+      // 仍算已搜索，便于单范围空态展示「查询全部文件夹」
       setResults([])
+      setSearched(true)
+      setLoading(false)
       return
     }
     const requestId = ++requestIdRef.current

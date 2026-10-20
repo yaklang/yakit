@@ -7,6 +7,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { SearchOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import FileTreeSplitPanels from './FileTreeSplitPanels/FileTreeSplitPanels'
 import FileTreeSearchView from './FileTreeSearchView/FileTreeSearchView'
+import { FileTreeSearchScope, type FileTreeSearchScopeValue } from './FileTreeSearchView/constants'
 import styles from './FileTreeList.module.scss'
 
 interface FileTreeListProps {
@@ -17,6 +18,12 @@ interface FileTreeListProps {
 const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [isSearchView, setIsSearchView] = useState(false)
+  const [searchScope, setSearchScope] = useState<FileTreeSearchScopeValue>(FileTreeSearchScope.All)
+
+  const openSearch = (scope: FileTreeSearchScopeValue = FileTreeSearchScope.All) => {
+    setSearchScope(scope)
+    setIsSearchView(true)
+  }
 
   return (
     <div className={styles['file-tree-list']}>
@@ -36,8 +43,9 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) =>
               type="text2"
               title={t('YakitInput.search')}
               aria-label={t('YakitInput.search')}
+              data-testid="file-tree-header-search"
               icon={<SearchOutlined color="currentColor" />}
-              onClick={() => setIsSearchView(true)}
+              onClick={() => openSearch(FileTreeSearchScope.All)}
             />
           )}
           <SideSettingButton type="text2" />
@@ -50,10 +58,10 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) =>
           data-search-view={isSearchView ? 'true' : 'false'}
         >
           <div className={styles['panel']} aria-hidden={isSearchView}>
-            <FileTreeSplitPanels selected={selected} setSelected={setSelected} />
+            <FileTreeSplitPanels selected={selected} setSelected={setSelected} onOpenSearch={openSearch} />
           </div>
           <div className={styles['panel']} aria-hidden={!isSearchView}>
-            <FileTreeSearchView active={isSearchView} setSelected={setSelected} />
+            <FileTreeSearchView active={isSearchView} scopePreset={searchScope} setSelected={setSelected} />
           </div>
         </div>
       </div>

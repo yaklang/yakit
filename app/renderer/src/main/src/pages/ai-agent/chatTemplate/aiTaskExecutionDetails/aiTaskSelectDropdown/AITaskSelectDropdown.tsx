@@ -1,9 +1,8 @@
-import React from 'react'
-import classNames from 'classnames'
+import React, { useState } from 'react'
 import { useStore } from 'zustand'
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
+import { TextDropdownTrigger } from '@/pages/ai-agent/components/TextDropdownTrigger/TextDropdownTrigger'
 import { type AIAgentGrpcApi, type AIInputEvent, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
@@ -44,6 +43,7 @@ export const AITaskSelectDropdown: React.FC<AITaskSelectDropdownProps> = React.m
   const rawData = useCurrentRawData()
   const sessionId = useCurrentSessionId()
   const { onSend } = useAIAgentDispatcher()
+  const [open, setOpen] = useState(false)
 
   const taskOptions = useCreation(() => {
     if (sessionTaskList.length > 0) {
@@ -121,25 +121,27 @@ export const AITaskSelectDropdown: React.FC<AITaskSelectDropdownProps> = React.m
     [taskOptions, value, onSelectTask],
   )
 
+  const disabled = taskOptions.length === 0
+
   return (
     <YakitDropdownMenu
       menu={taskMenu}
       dropdown={{
         trigger: ['click'],
         placement: 'bottomLeft',
-        disabled: taskOptions.length === 0,
+        disabled,
+        open,
+        onOpenChange: setOpen,
       }}
     >
-      <div
-        className={classNames(styles['header-task-select'], {
-          [styles['header-task-select-disabled']]: taskOptions.length === 0,
-        })}
+      <TextDropdownTrigger
+        className={styles['header-task-select']}
+        label={currentTaskLabel}
         title={currentTaskFullLabel}
+        open={open}
+        disabled={disabled}
         aria-label={t('AITaskExecutionDetails.selectTask')}
-      >
-        <span className={styles['header-task-select-label']}>{currentTaskLabel}</span>
-        <ChevronDownOutlined className={styles['header-task-select-icon']} color="currentColor" size={14} />
-      </div>
+      />
     </YakitDropdownMenu>
   )
 })

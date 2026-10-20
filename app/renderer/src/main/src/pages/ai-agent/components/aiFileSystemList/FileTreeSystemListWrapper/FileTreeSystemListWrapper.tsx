@@ -6,7 +6,12 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import styles from './FileTreeSystemListWrapper.module.scss'
 import FileTreeSystemList from '../FileTreeSystemList/FileTreeSystemList'
-import { ChevronDownOutlined, DocumentAddOutlined, FolderAddOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  ChevronDownOutlined,
+  DocumentAddOutlined,
+  FolderAddOutlined,
+  SearchOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { checkPathIncludeRelation, mergePathArray, onOpenFileFolder } from '../utils'
@@ -48,12 +53,14 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
   isOpen,
   fillHeight = true,
   showTitleActions = true,
+  onTitleSearch,
   selected,
   setSelected,
   onTreeDragStart,
   onTreeDragEnd,
 }) => {
   const { t } = useI18nNamespaces(['yakitUi'])
+  const showTitleIconBar = !!onTitleSearch || showTitleActions
   // 展开
   const [expanded, setExpanded] = useState(true)
 
@@ -163,24 +170,38 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
           )}
         </div>
 
-        {showTitleActions && (
+        {showTitleIconBar && (
           <div className={styles['file-tree-system-title-icon']}>
-            <YakitButton
-              hidden={!isOpen}
-              type="text2"
-              title={t('YakitButton.openFile')}
-              aria-label={t('YakitButton.openFile')}
-              onClick={() => menuSelect(FileListTileMenu.OpenFile)}
-              icon={<DocumentAddOutlined color="currentColor" />}
-            />
-            <YakitButton
-              hidden={!isOpen}
-              type="text2"
-              title={t('YakitButton.openFolder')}
-              aria-label={t('YakitButton.openFolder')}
-              onClick={() => menuSelect(FileListTileMenu.OpenFolder)}
-              icon={<FolderAddOutlined color="currentColor" />}
-            />
+            {onTitleSearch && (
+              <YakitButton
+                type="text2"
+                title={t('YakitInput.search')}
+                aria-label={t('YakitInput.search')}
+                data-testid="file-tree-title-search"
+                onClick={onTitleSearch}
+                icon={<SearchOutlined color="currentColor" />}
+              />
+            )}
+            {showTitleActions && (
+              <>
+                <YakitButton
+                  hidden={!isOpen}
+                  type="text2"
+                  title={t('YakitButton.openFile')}
+                  aria-label={t('YakitButton.openFile')}
+                  onClick={() => menuSelect(FileListTileMenu.OpenFile)}
+                  icon={<DocumentAddOutlined color="currentColor" />}
+                />
+                <YakitButton
+                  hidden={!isOpen}
+                  type="text2"
+                  title={t('YakitButton.openFolder')}
+                  aria-label={t('YakitButton.openFolder')}
+                  onClick={() => menuSelect(FileListTileMenu.OpenFolder)}
+                  icon={<FolderAddOutlined color="currentColor" />}
+                />
+              </>
+            )}
           </div>
         )}
       </div>
