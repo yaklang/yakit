@@ -305,12 +305,17 @@ vi.mock('../../MessageCenter/useMessageUnread', () => ({
   useMessageUnread: () => messageState.unread,
 }))
 
+// 暴露成功操作入口，覆盖 FuncDomain 接线：菜单刷新 + 面板事件广播
 vi.mock('../../CeUserMenu/CeRechargeModal', () => ({
-  default: () => null,
+  default: (props: { onPaySuccess?: () => void }) => (
+    <button type="button" data-testid="ce-recharge-pay-success" onClick={props.onPaySuccess} />
+  ),
 }))
 
 vi.mock('../../CeUserMenu/CeRedeemModal', () => ({
-  default: () => null,
+  default: (props: { onSuccess?: () => void }) => (
+    <button type="button" data-testid="ce-redeem-success" onClick={props.onSuccess} />
+  ),
 }))
 
 vi.mock('../userMenu/constants', () => ({
@@ -853,6 +858,37 @@ describe('FuncDomain 头像按钮点击区域', () => {
     render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
     fireEvent.click(screen.getByTestId('user-menu-trigger'))
     expect(menuActions.setLoginShow).toHaveBeenCalledWith(true)
+  })
+})
+
+describe('FuncDomain 兑换/充值成功双端刷新', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+  })
+
+  it('兑换成功时调用 onUpdateApiKey 并广播 onRefreshCommunityApiKeys 各一次', () => {
+    render(<FuncDomain {...baseProps} />)
+    vi.mocked(menuActions.onUpdateApiKey).mockClear()
+    vi.mocked(emiter.emit).mockClear()
+
+    fireEvent.click(screen.getByTestId('ce-redeem-success'))
+
+    expect(menuActions.onUpdateApiKey).toHaveBeenCalledOnce()
+    expect(emiter.emit).toHaveBeenCalledOnce()
+    expect(emiter.emit).toHaveBeenCalledWith('onRefreshCommunityApiKeys', '')
+  })
+
+  it('充值成功时调用 onUpdateApiKey 并广播 onRefreshCommunityApiKeys 各一次', () => {
+    render(<FuncDomain {...baseProps} />)
+    vi.mocked(menuActions.onUpdateApiKey).mockClear()
+    vi.mocked(emiter.emit).mockClear()
+
+    fireEvent.click(screen.getByTestId('ce-recharge-pay-success'))
+
+    expect(menuActions.onUpdateApiKey).toHaveBeenCalledOnce()
+    expect(emiter.emit).toHaveBeenCalledOnce()
+    expect(emiter.emit).toHaveBeenCalledWith('onRefreshCommunityApiKeys', '')
   })
 })
 
