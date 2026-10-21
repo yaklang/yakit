@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -6,7 +7,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIChatQSData } from '../hooks/aiRender'
-import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
+import type { AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 import { emptyAnswer, questionAnswers, questionText, type QuestionDraft } from './types'
 import styles from './interactive.module.scss'
@@ -25,11 +26,11 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
   )
   const current = useRef(draft)
   const composing = useRef(false)
-  const compositionEndedAt = useRef(0)
+  const compositionEndedAt = useRef<number | null>(null)
   const submitting = useRef(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(() => Date.now())
   const submitted = request.state === 'submitted' || draft.outcome === 'submitted'
   const outcome = submitted ? 'submitted' : draft.outcome || request.state
   const save = (next: QuestionDraft) => {
@@ -145,7 +146,11 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
   const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     touch()
     if (composing.current || event.nativeEvent.isComposing || event.keyCode === 229) return
-    if (event.key === 'Enter' && Date.now() - compositionEndedAt.current < 50) {
+    if (
+      event.key === 'Enter' &&
+      compositionEndedAt.current !== null &&
+      event.timeStamp - compositionEndedAt.current < 50
+    ) {
       event.preventDefault()
       return
     }
@@ -315,9 +320,9 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
                 composing.current = true
                 touch()
               }}
-              onCompositionEnd={() => {
+              onCompositionEnd={(event) => {
                 composing.current = false
-                compositionEndedAt.current = Date.now()
+                compositionEndedAt.current = event.timeStamp
               }}
               onChange={(event) => {
                 touch()
