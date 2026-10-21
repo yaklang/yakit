@@ -1043,6 +1043,9 @@
     "pageInfo": "第 {{page}} / {{pages}} 页，共 {{total}} 行",
     "selectedRows": "已选 {{count}} 行（含筛选隐藏行）",
     "clearFilters": "清除筛选",
-    "submitSelected": "提交选中行"
+    "submitSelected": "提交选中行",
+    "tabPending": "内容正在生成…",
+    "tabUnavailable": "此视图暂时无法显示。",
+    "views": "切换视图"
   }
 }

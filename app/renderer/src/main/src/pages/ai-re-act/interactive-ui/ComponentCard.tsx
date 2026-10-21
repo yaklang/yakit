@@ -13,6 +13,7 @@ import styles from './interactive.module.scss'
 import { formWidgets } from './formWidgets'
 import { DataChart } from './DataCharts'
 import { DataTable } from './DataTable'
+import { InformationAlert, InformationHint, ViewTabs } from './InformationComponents'
 
 type ComponentItem = Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_COMPONENT }>
 type State = Record<
@@ -23,6 +24,7 @@ export interface NodeProps {
   instanceId: string
   node: UINode
   children?: React.ReactNode
+  childNodes?: Record<string, React.ReactNode>
   state?: State[string]
   change: (next: State[string]) => void
   submit: (node: UINode, values: Record<string, unknown>, id: string) => Promise<void>
@@ -185,6 +187,10 @@ const registry: Record<string, React.FC<NodeProps>> = {
   BarChart: DataChart,
   LineChart: DataChart,
   DataTable,
+  Alert: InformationAlert,
+  Tabs: ViewTabs,
+  Tooltip: InformationHint,
+  Popover: InformationHint,
   Steps: ({ node }) => (
     <div>
       {node.props.title && <h4>{node.props.title}</h4>}
@@ -280,9 +286,11 @@ export function ComponentCard({ item }: { item: ComponentItem }) {
     visited.add(id)
     const Component = registry[node.component]
     if (!Component) return null
-    const children = node.children?.map((child) => renderNode(child, depth + 1)).filter(Boolean) || []
+    const childNodes = Object.fromEntries((node.children || []).map((child) => [child, renderNode(child, depth + 1)]))
+    const children = Object.values(childNodes).filter(Boolean)
     if (
       catalog.components.find((entry) => entry.name === node.component)?.children &&
+      node.component !== 'Tabs' &&
       !children.length &&
       !node.props.title
     )
@@ -294,6 +302,7 @@ export function ComponentCard({ item }: { item: ComponentItem }) {
         key={`${node.id}:${node.component}`}
         instanceId={`${document?.id}:${node.id}`}
         node={node}
+        childNodes={childNodes}
         state={
           receipt
             ? { ...state[key], value: receipt.values || {}, submissionId: receipt.id, submitted: true }

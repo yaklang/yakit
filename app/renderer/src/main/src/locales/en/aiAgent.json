@@ -1043,6 +1043,9 @@
     "pageInfo": "Page {{page}} / {{pages}}, {{total}} rows",
     "selectedRows": "{{count}} selected (including filtered rows)",
     "clearFilters": "Clear filters",
-    "submitSelected": "Submit selected rows"
+    "submitSelected": "Submit selected rows",
+    "tabPending": "Content is being generated…",
+    "tabUnavailable": "This view is unavailable.",
+    "views": "Switch view"
   }
 }

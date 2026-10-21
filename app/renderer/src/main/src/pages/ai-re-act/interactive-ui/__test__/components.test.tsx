@@ -1,8 +1,9 @@
 import React from 'react'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { parseJSONPrefix } from '../partialJson'
-import { matchesSchema, readDocument } from '../validate'
+import { matchesSchema, readDocument, type UIDocument } from '../validate'
 import { catalog } from '../catalog.mjs'
 import manifest from '../catalog.manifest.json'
 import { ComponentCard, registeredComponents } from '../ComponentCard'
@@ -473,6 +474,169 @@ describe('interactive data table', () => {
     )
     expect(screen.getByText('数据已更新，已移除失效的行选择。')).toBeInTheDocument()
     expect(screen.getByText('已选 0 行（含筛选隐藏行）')).toBeInTheDocument()
+    expect(send).not.toHaveBeenCalled()
+  })
+})
+
+function informationDocument(): UIDocument {
+  const doc = document() as UIDocument
+  doc.nodes[0].children = ['notice', 'hint', 'details', 'views']
+  doc.nodes.push(
+    {
+      id: 'notice',
+      component: 'Alert',
+      props: { title: '存在风险', description: '<img src=x onerror=alert(1)>', severity: 'warning' },
+    },
+    { id: 'hint', component: 'Tooltip', props: { label: '什么是 RTT', content: '往返时延' } },
+    {
+      id: 'details',
+      component: 'Popover',
+      props: { label: '查看原始字段', title: '原始字段', content: 'status: 200\nsource: local' },
+    },
+    {
+      id: 'views',
+      component: 'Tabs',
+      props: {
+        items: [
+          { id: 'input', label: '参数', content: 'form' },
+          { id: 'summary', label: '概览', content: 'summary' },
+        ],
+      },
+    },
+    { id: 'summary', component: 'Text', props: { text: '只读概览内容' } },
+  )
+  return doc
+}
+
+describe('information components and view containers', () => {
+  it('replays compatible older catalog documents after the additive upgrade', () => {
+    for (const version of ['1.0', '1.1']) {
+      const doc = { ...document(), catalogVersion: version }
+      const result = readDocument(JSON.stringify(doc), true)
+      expect(result.document?.nodes).toHaveLength(2)
+      expect(result.diagnostics).toEqual([])
+    }
+  })
+  it('derives tab graph edges, repairs defaults and rejects duplicate identifiers or targets', () => {
+    const doc = informationDocument()
+    const tab = doc.nodes.find((node) => node.id === 'views')!
+    tab.props.defaultTab = 'missing'
+    tab.children = ['hint']
+    let result = readDocument(JSON.stringify(doc), true)
+    const normalized = result.document!.nodes.find((node) => node.id === 'views')!
+    expect(normalized.children).toEqual(['form', 'summary'])
+    expect(normalized.props.defaultTab).toBeUndefined()
+    expect(result.diagnostics.map((entry) => entry.path)).toEqual(['children', 'props.defaultTab'])
+    for (const key of ['id', 'content']) {
+      const duplicate = structuredClone(doc)
+      const props = duplicate.nodes.find((node) => node.id === 'views')!.props
+      props.items[1][key] = props.items[0][key]
+      result = readDocument(JSON.stringify(duplicate), true)
+      expect(result.document!.nodes.some((node) => node.id === 'views')).toBe(false)
+      expect(result.diagnostics.some((entry) => entry.path === 'props.items')).toBe(true)
+    }
+  })
+
+  it('treats future tab contents as pending and reports missing final references', () => {
+    const doc = informationDocument()
+    doc.root = 'views'
+    doc.nodes = [doc.nodes.find((node) => node.id === 'views')!]
+    const source = JSON.stringify(doc)
+    expect(readDocument(source, false).diagnostics).toEqual([])
+    const pending = item(doc as any)
+    pending.data.final = false
+    const view = render(<ComponentCard item={pending} />)
+    expect(screen.getAllByText('内容正在生成…').length).toBeGreaterThan(0)
+    expect(send).not.toHaveBeenCalled()
+    const complete = informationDocument()
+    complete.root = 'views'
+    view.rerender(<ComponentCard item={{ ...pending, data: { ...pending.data, source: JSON.stringify(complete) } }} />)
+    expect(screen.getByLabelText('姓名')).toBeTruthy()
+    expect(readDocument(source, true).diagnostics.filter((entry) => entry.path === 'children')).toHaveLength(2)
+  })
+
+  it('keeps drafts and the selected tab through switching, reparsing and remounting', async () => {
+    const user = userEvent.setup()
+    const doc = informationDocument()
+    const current = item(doc as any)
+    const view = render(<ComponentCard item={current} />)
+    fireEvent.change(screen.getByLabelText('姓名'), { target: { value: '保留草稿' } })
+    await user.click(screen.getByRole('tab', { name: '概览' }))
+    expect(screen.getByRole('tab', { name: '概览' }).getAttribute('aria-selected')).toBe('true')
+    doc.nodes.find((node) => node.id === 'views')!.props.defaultTab = 'input'
+    current.data.source = JSON.stringify(doc)
+    view.rerender(<ComponentCard item={{ ...current }} />)
+    expect(screen.getByRole('tab', { name: '概览' }).getAttribute('aria-selected')).toBe('true')
+    view.unmount()
+    render(<ComponentCard item={current} />)
+    expect(screen.getByRole('tab', { name: '概览' }).getAttribute('aria-selected')).toBe('true')
+    await user.click(screen.getByRole('tab', { name: '参数' }))
+    expect((screen.getByLabelText('姓名') as HTMLInputElement).value).toBe('保留草稿')
+    expect(send).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: '发送姓名' }))
+    await waitFor(() => expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull())
+    await user.click(screen.getByRole('tab', { name: '概览' }))
+    await user.click(screen.getByRole('tab', { name: '参数' }))
+    expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull()
+    expect(send).toHaveBeenCalledTimes(1)
+  })
+
+  it('offers segmented views and recovers when the selected tab is removed', async () => {
+    const user = userEvent.setup()
+    const doc = informationDocument()
+    const tab = doc.nodes.find((node) => node.id === 'views')!
+    tab.props.variant = 'segmented'
+    const current = item(doc as any)
+    const view = render(<ComponentCard item={current} />)
+    await user.click(screen.getByRole('radio', { name: '概览' }).closest('label')!)
+    expect(screen.getByRole('region', { name: '概览' })).toBeTruthy()
+    expect(screen.queryByRole('region', { name: '参数' })).toBeNull()
+    tab.props.items = tab.props.items.slice(0, 1)
+    view.rerender(<ComponentCard item={{ ...current, data: { ...current.data, source: JSON.stringify(doc) } }} />)
+    expect(screen.getByRole('region', { name: '参数' })).toBeTruthy()
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('keeps alerts visible and renders model descriptions as text', () => {
+    vi.useFakeTimers()
+    try {
+      const view = render(<ComponentCard item={item(informationDocument() as any)} />)
+      act(() => vi.advanceTimersByTime(5000))
+      expect(screen.getByRole('alert').textContent).toContain('<img src=x onerror=alert(1)>')
+      expect(view.container.querySelector('img')).toBeNull()
+      expect(screen.getByText('存在风险')).toBeTruthy()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('opens text popovers and closes with Escape, outside click and scroll without messages', async () => {
+    const user = userEvent.setup()
+    render(<ComponentCard item={item(informationDocument() as any)} />)
+    const button = screen.getByRole('button', { name: '查看原始字段' })
+    await user.click(button)
+    expect(button.getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getByRole('region', { name: '原始字段' }).textContent).toContain('status: 200')
+    await user.keyboard('{Escape}')
+    expect(button.getAttribute('aria-expanded')).toBe('false')
+    expect(globalThis.document.activeElement).toBe(button)
+    await user.click(button)
+    await user.click(globalThis.document.body)
+    expect(button.getAttribute('aria-expanded')).toBe('false')
+    await user.click(button)
+    fireEvent.scroll(window)
+    expect(button.getAttribute('aria-expanded')).toBe('false')
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('allows keyboard focus to reveal a tooltip and Escape to dismiss it', async () => {
+    const user = userEvent.setup()
+    render(<ComponentCard item={item(informationDocument() as any)} />)
+    const button = screen.getByRole('button', { name: '什么是 RTT' })
+    act(() => button.focus())
+    await waitFor(() => expect(screen.getByRole('tooltip').textContent).toBe('往返时延'))
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('tooltip')).toBeNull())
     expect(send).not.toHaveBeenCalled()
   })
 })
