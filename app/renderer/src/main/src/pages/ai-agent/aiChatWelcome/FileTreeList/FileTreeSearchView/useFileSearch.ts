@@ -47,12 +47,15 @@ export const useFileSearch = () => {
   const onSearch = useMemoizedFn((value?: string) => {
     const text = (value ?? keyword).trim()
     if (!text) {
+      requestIdRef.current += 1
       setResults([])
+      setLoading(false)
+      setSearched(false)
       return
     }
     const paths = resolveSearchPaths(scope, grpcFolders, customFolder)
     if (paths.length === 0) {
-      // 仍算已搜索，便于单范围空态展示「查询全部文件夹」
+      requestIdRef.current += 1
       setResults([])
       setSearched(true)
       setLoading(false)
@@ -81,7 +84,7 @@ export const useFileSearch = () => {
         }
       })
       setResults(mergeFileSearchItems(items))
-      if (items.length === 0 && firstError) {
+      if (firstError) {
         const message =
           firstError === FILE_SEARCH_UNSUPPORTED_ENGINE
             ? t('FileTreeSearch.engineUnsupported')
@@ -92,9 +95,13 @@ export const useFileSearch = () => {
   })
 
   useEffect(() => {
+    requestIdRef.current += 1
+    setResults([])
+    setLoading(false)
+    setSearched(false)
     if (!keyword.trim()) return
     onSearch()
-  }, [scope, searchType, onSearch])
+  }, [grpcFolders, customFolder, scope, searchType, onSearch])
 
   return {
     keyword,

@@ -1,4 +1,5 @@
 import { memo, useMemo, useState } from 'react'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -29,26 +30,31 @@ const FileSearchResultItem: React.FC<FileSearchResultItemProps> = memo(({ item, 
   return (
     <div className={styles['result-file']} data-testid="file-tree-search-result-item">
       <div className={styles['result-file-header']}>
-        <button
-          type="button"
-          className={styles['result-file-toggle']}
+        <YakitButton
+          type="text"
           data-testid="file-tree-search-result-toggle"
           title={expanded ? t('FileTreeSearch.collapseMatches') : t('FileTreeSearch.expandMatches')}
-          aria-label={expanded ? t('FileTreeSearch.collapseMatches') : t('FileTreeSearch.expandMatches')}
           aria-expanded={expanded}
           onClick={(e) => {
             e.stopPropagation()
             setExpanded((v) => !v)
           }}
+          icon={
+            <ChevronDownOutlined
+              color="currentColor"
+              className={classNames(styles['result-file-chevron'], {
+                [styles['result-file-chevron-collapsed']]: !expanded,
+              })}
+            />
+          }
+        />
+        <YakitButton
+          type="text"
+          className={styles['result-file-main']}
+          title={item.path}
+          aria-label={item.name}
+          onClick={() => onOpen(item.path)}
         >
-          <ChevronDownOutlined
-            color="currentColor"
-            className={classNames(styles['result-file-chevron'], {
-              [styles['result-file-chevron-collapsed']]: !expanded,
-            })}
-          />
-        </button>
-        <div className={styles['result-file-main']} title={item.path} onClick={() => onOpen(item.path)}>
           <img className={styles['result-file-icon']} src={KeyToIcon[iconKey].iconPath} alt="" />
           <span className={styles['result-file-name']}>{item.name}</span>
           <YakitTag
@@ -61,14 +67,16 @@ const FileSearchResultItem: React.FC<FileSearchResultItemProps> = memo(({ item, 
           >
             {matchCount}
           </YakitTag>
-        </div>
+        </YakitButton>
       </div>
       {displayLines.map(({ line, display }) => (
-        <div
+        <YakitButton
           key={line.line}
+          type="text"
           className={styles['result-line']}
           data-testid="file-tree-search-result-line"
           title={line.text}
+          aria-label={`${line.line}: ${line.text}`}
           onClick={() => onOpen(item.path, line)}
         >
           <span className={styles['result-line-no']}>{line.line}</span>
@@ -83,7 +91,7 @@ const FileSearchResultItem: React.FC<FileSearchResultItemProps> = memo(({ item, 
               ),
             )}
           </span>
-        </div>
+        </YakitButton>
       ))}
     </div>
   )
