@@ -1405,7 +1405,13 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 type={editorInfo?.language}
                 value={editorInfo?.code || ''}
                 setValue={setYakitEditorValue}
-                highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
+                highLightText={
+                  editorInfo?.highLightRange
+                    ? Array.isArray(editorInfo.highLightRange)
+                      ? editorInfo.highLightRange
+                      : [editorInfo.highLightRange]
+                    : undefined
+                }
                 highLightClass="hight-light-yak-runner-color"
                 contextMenu={rightContextMenu}
               />

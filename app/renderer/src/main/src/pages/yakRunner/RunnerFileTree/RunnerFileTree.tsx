@@ -1,8 +1,8 @@
 import React, { memo, useEffect, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import type { OpenedFileProps, OpenFolderDraggerProps, RunnerFileTreeProps } from './RunnerFileTreeType'
+import type { OpenedFileProps, RunnerFileTreeProps } from './RunnerFileTreeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { PlusCircleOutlined, RefreshOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PlusCircleOutlined, RefreshOutlined, SearchOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { CollapseList } from '../CollapseList/CollapseList'
 import type { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '../FileTree/FileTreeType'
 import { FileDefault, FileSuffix, KeyToIcon } from '../FileTree/icon'
@@ -10,6 +10,8 @@ import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
 import useYakRunnerStoreRefs from '../hooks/useYakRunnerStoreRefs'
 import { FileTree } from '../FileTree/FileTree'
+import { RunnerFileTreeSearchView } from './RunnerFileTreeSearchView'
+import { openFolder } from './openFolder'
 
 import classNames from 'classnames'
 import styles from './RunnerFileTree.module.scss'
@@ -55,72 +57,10 @@ import cloneDeep from 'lodash/cloneDeep'
 import { failed, success, warn } from '@/utils/notification'
 import type { FileMonitorItemProps, FileMonitorProps } from '@/utils/duplex/duplex'
 import { Tooltip } from 'antd'
-import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
-import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
-import { SystemInfo } from '@/constants/hardware'
 import { WatchFolderID } from '../FileTreeMap/watchFolderID'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import i18n from '@/i18n/i18n'
 
-const tOriginal = i18n.getFixedT(null, 'yakRunner')
-
-export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
-  const { setAbsolutePath } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner'])
-  const [value, setValue] = useState<string>('')
-  return (
-    <div style={{ padding: '20px 24px' }}>
-      <YakitDragger
-        value={value}
-        isShowPathNumber={false}
-        selectType="folder"
-        multiple={false}
-        help=""
-        uploadFolderText={t('RunnerFileTree.selectLocalFolder')}
-        onChange={(value) => {
-          setValue(value)
-          setAbsolutePath(value)
-        }}
-      />
-    </div>
-  )
-}
-
-// 打开文件夹
-export const openFolder = () => {
-  if (SystemInfo.mode === 'remote') {
-    let absolutePath = ''
-    const m = showYakitModal({
-      title: (modalT) => modalT('RunnerFileTree.enterFolderPath'),
-      width: 400,
-      type: 'white',
-      closable: false,
-      centered: true,
-      content: <OpenFolderDragger setAbsolutePath={(v) => (absolutePath = v)} />,
-      onCancel: () => {
-        m.destroy()
-      },
-      onOk: async () => {
-        if (absolutePath.length === 0) {
-          warn(tOriginal('RunnerFileTree.enterFolderPath'))
-          return
-        }
-        emiter.emit('onOpenFileTree', absolutePath)
-        m.destroy()
-      },
-    })
-  } else {
-    handleOpenFileSystemDialog({ title: tOriginal('RunnerFileTree.selectFolder'), properties: ['openDirectory'] }).then(
-      (data) => {
-        if (data.filePaths.length) {
-          const absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
-          emiter.emit('onOpenFileTree', absolutePath)
-        }
-      },
-    )
-  }
-}
+export { openFolder, OpenFolderDragger } from './openFolder'
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   const { addFileTab } = props
@@ -130,8 +70,14 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   const storeRefs = useYakRunnerStoreRefs()
 
   const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
+  const [isSearchView, setIsSearchView] = useState(false)
   // 选中的文件或文件夹
   const [foucsedKey, setFoucsedKey] = React.useState<string>('')
+
+  const searchRoots = useMemo(
+    () => fileTree.map((item) => ({ path: item.path })).filter((item) => !!item.path),
+    [fileTree],
+  )
   // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
   const initFileTree = useMemoizedFn((data: FileTreeListProps[], depth: number) => {
     return data.map((item) => {
@@ -705,46 +651,83 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         <div className={styles['file-tree']}>
           <div className={styles['file-tree-container']}>
             <div className={styles['file-tree-header']}>
-              <div className={styles['title-style']}>{t('RunnerFileTree.fileList')}</div>
+              <div className={styles['title-style']}>
+                {isSearchView ? t('YakitInput.search') : t('RunnerFileTree.fileList')}
+              </div>
               <div className={styles['extra']}>
-                <Tooltip title={t('RunnerFileTree.refreshExplorer')}>
+                {isSearchView ? (
                   <YakitButton
                     type="text2"
-                    disabled={fileTree.length === 0}
-                    icon={<RefreshOutlined color="currentColor" />}
-                    onClick={() => {
-                      emiter.emit('onRefreshTree')
-                    }}
+                    title={t('YakitButton.close')}
+                    aria-label={t('YakitButton.close')}
+                    icon={<XOutlined color="currentColor" />}
+                    onClick={() => setIsSearchView(false)}
                   />
-                </Tooltip>
-                <YakitDropdownMenu
-                  menu={{
-                    data: menuData,
-                    onClick: ({ key, keyPath }) => menuSelect(key, keyPath),
-                  }}
-                  dropdown={{
-                    trigger: ['click'],
-                    placement: 'bottomLeft',
-                  }}
-                >
-                  <YakitButton type="text2" icon={<PlusCircleOutlined color="currentColor" />} />
-                </YakitDropdownMenu>
+                ) : (
+                  <YakitButton
+                    type="text2"
+                    title={t('YakitInput.search')}
+                    aria-label={t('YakitInput.search')}
+                    data-testid="runner-file-tree-header-search"
+                    icon={<SearchOutlined color="currentColor" />}
+                    onClick={() => setIsSearchView(true)}
+                  />
+                )}
+                {!isSearchView && (
+                  <>
+                    <Tooltip title={t('RunnerFileTree.refreshExplorer')}>
+                      <YakitButton
+                        type="text2"
+                        disabled={fileTree.length === 0}
+                        icon={<RefreshOutlined color="currentColor" />}
+                        onClick={() => {
+                          emiter.emit('onRefreshTree')
+                        }}
+                      />
+                    </Tooltip>
+                    <YakitDropdownMenu
+                      menu={{
+                        data: menuData,
+                        onClick: ({ key, keyPath }) => menuSelect(key, keyPath),
+                      }}
+                      dropdown={{
+                        trigger: ['click'],
+                        placement: 'bottomLeft',
+                      }}
+                    >
+                      <YakitButton type="text2" icon={<PlusCircleOutlined color="currentColor" />} />
+                    </YakitDropdownMenu>
+                  </>
+                )}
               </div>
             </div>
 
-            <div className={styles['file-tree-tree']}>
-              <div className={styles['tree-body']}>
-                <FileTree
-                  folderPath={fileTree.length > 0 ? fileTree[0].path : ''}
-                  data={fileDetailTree}
-                  storeRefs={storeRefs}
-                  onLoadData={onLoadData}
-                  onSelect={onSelectFileTree}
-                  foucsedKey={foucsedKey}
-                  setFoucsedKey={setFoucsedKey}
-                  expandedKeys={expandedKeys}
-                  setExpandedKeys={setExpandedKeys}
-                />
+            <div className={styles['file-tree-body']}>
+              <div
+                className={classNames(styles['file-tree-track'], {
+                  [styles['file-tree-track-search']]: isSearchView,
+                })}
+                data-testid="runner-file-tree-view-track"
+                data-search-view={isSearchView ? 'true' : 'false'}
+              >
+                <div className={styles['file-tree-panel']} aria-hidden={isSearchView}>
+                  <div className={styles['tree-body']}>
+                    <FileTree
+                      folderPath={fileTree.length > 0 ? fileTree[0].path : ''}
+                      data={fileDetailTree}
+                      storeRefs={storeRefs}
+                      onLoadData={onLoadData}
+                      onSelect={onSelectFileTree}
+                      foucsedKey={foucsedKey}
+                      setFoucsedKey={setFoucsedKey}
+                      expandedKeys={expandedKeys}
+                      setExpandedKeys={setExpandedKeys}
+                    />
+                  </div>
+                </div>
+                <div className={styles['file-tree-panel']} aria-hidden={!isSearchView}>
+                  <RunnerFileTreeSearchView active={isSearchView} roots={searchRoots} />
+                </div>
               </div>
             </div>
           </div>
