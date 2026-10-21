@@ -43,7 +43,7 @@ export interface OpenFileByPathProps {
     path: string
     name: string
     parent?: string | null
-    highLightRange?: Selection
+    highLightRange?: Selection | Selection[]
   }
   // 是否记录历史
   isHistory?: boolean

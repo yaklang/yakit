@@ -37,8 +37,8 @@ export interface FileDetailInfo {
   position?: CursorPosition
   /** 当前选择区域 */
   selections?: Selection
-  /** 高亮显示区域 */
-  highLightRange?: Selection
+  /** 高亮显示区域（单区间或搜索多命中） */
+  highLightRange?: Selection | Selection[]
   /** 是否未保存（用于临时文件创建） */
   isUnSave?: boolean
   /** AI `op:create` 或临时文件：保存时需「另存为」选择路径 */
