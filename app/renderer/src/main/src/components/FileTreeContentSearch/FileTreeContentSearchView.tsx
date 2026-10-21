@@ -1,11 +1,17 @@
-import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type FC, type ReactNode } from 'react'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import FileSearchResultItem from './FileSearchResultItem'
 import { useFileContentSearch } from './useFileContentSearch'
-import { FileTreeSearchType, SEARCH_INPUT_FOCUS_DELAY_MS, type FileTreeSearchTypeValue } from './constants'
+import {
+  FileTreeSearchType,
+  SEARCH_CANCEL_VISIBLE_MS,
+  SEARCH_INPUT_FOCUS_DELAY_MS,
+  type FileTreeSearchTypeValue,
+} from './constants'
 import type { FileSearchFileItem, FileSearchLine } from './type'
 import styles from './FileTreeContentSearchView.module.scss'
 
@@ -36,7 +42,7 @@ const focusSearchInput = (root: HTMLElement | null) => {
 }
 
 /** 通用文件内容搜索面板：AI / yakRunner 等复用，业务差异通过 roots / onOpen / toolbarExtra 注入 */
-const FileTreeContentSearchView: React.FC<FileTreeContentSearchViewProps> = ({
+const FileTreeContentSearchView: FC<FileTreeContentSearchViewProps> = ({
   active = false,
   roots,
   onOpen,
@@ -48,14 +54,34 @@ const FileTreeContentSearchView: React.FC<FileTreeContentSearchViewProps> = ({
 }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const rootRef = useRef<HTMLDivElement>(null)
-  const { keyword, setKeyword, searchType, setSearchType, loading, searched, hasSearchPath, results, onSearch } =
-    useFileContentSearch({ roots })
+  const {
+    keyword,
+    setKeyword,
+    searchType,
+    setSearchType,
+    loading,
+    searched,
+    hasSearchPath,
+    results,
+    onSearch,
+    onCancelSearch,
+  } = useFileContentSearch({ roots })
+  const [showCancel, setShowCancel] = useState(false)
 
   useEffect(() => {
     if (!active) return
     const timer = window.setTimeout(() => focusSearchInput(rootRef.current), SEARCH_INPUT_FOCUS_DELAY_MS)
     return () => window.clearTimeout(timer)
   }, [active])
+
+  useEffect(() => {
+    if (!loading) {
+      setShowCancel(false)
+      return
+    }
+    const timer = window.setTimeout(() => setShowCancel(true), SEARCH_CANCEL_VISIBLE_MS)
+    return () => window.clearTimeout(timer)
+  }, [loading])
 
   const searchTypeOptions = useMemo(
     () => [
@@ -97,9 +123,14 @@ const FileTreeContentSearchView: React.FC<FileTreeContentSearchViewProps> = ({
       <div className={styles['results']} data-testid={resultsTestId ?? `${dataTestId}-results`}>
         {loading ? (
           <div className={styles['loading']} data-testid={loadingTestId ?? `${dataTestId}-loading`}>
-            <YakitSpin size="small" wrapperClassName={styles['loading-spin']}>
-              <div className={styles['loading-placeholder']} />
-            </YakitSpin>
+            <div className={styles['loading-center']}>
+              <YakitSpin size="small" wrapperClassName={styles['loading-spin']} />
+              {showCancel ? (
+                <YakitButton type="outline2" size="small" data-testid={`${dataTestId}-cancel`} onClick={onCancelSearch}>
+                  {t('FileTreeSearch.cancelSearch')}
+                </YakitButton>
+              ) : null}
+            </div>
           </div>
         ) : results.length > 0 ? (
           results.map((item) => <FileSearchResultItem key={item.path} item={item} onOpen={onOpen} />)

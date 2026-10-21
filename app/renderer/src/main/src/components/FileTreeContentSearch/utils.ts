@@ -66,10 +66,14 @@ export const grpcSearchFileContent = async (params: SearchFileContentParams): Pr
   if (params.regex) query.push({ Key: 'regex', Value: 'true' })
   if (params.ignoreCase) query.push({ Key: 'ignoreCase', Value: 'true' })
 
-  const res: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', {
-    Method: 'GET',
-    Url: { Schema: 'file', Path: params.path, Query: query },
-  })
+  const res: RequestYakURLResponse = await ipcRenderer.invoke(
+    'RequestYakURL',
+    {
+      Method: 'GET',
+      Url: { Schema: 'file', Path: params.path, Query: query },
+    },
+    params.token,
+  )
 
   const resources = res.Resources || []
   if (isUnsupportedSearchResponse(resources)) {
@@ -77,6 +81,16 @@ export const grpcSearchFileContent = async (params: SearchFileContentParams): Pr
   }
 
   return resources.map(resourceToFileItem).filter((item): item is FileSearchFileItem => item !== null)
+}
+
+/** 取消进行中的文件内容搜索（RequestYakURL） */
+export const cancelGrpcSearchFileContent = async (token?: string) => {
+  if (!token) return
+  try {
+    await ipcRenderer.invoke('cancel-RequestYakURL', token)
+  } catch {
+    // ignore
+  }
 }
 
 /** 多个搜索根路径的结果按文件路径去重合并 */

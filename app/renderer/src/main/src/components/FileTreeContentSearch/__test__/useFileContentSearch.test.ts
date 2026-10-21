@@ -2,8 +2,9 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FileSearchFileItem } from '../type'
 
-const { mockSearch, mockNotify } = vi.hoisted(() => ({
+const { mockSearch, mockCancel, mockNotify } = vi.hoisted(() => ({
   mockSearch: vi.fn(),
+  mockCancel: vi.fn(),
   mockNotify: vi.fn(),
 }))
 
@@ -16,6 +17,7 @@ vi.mock('../utils', async (importOriginal) => {
   return {
     ...actual,
     grpcSearchFileContent: (...args: unknown[]) => mockSearch(...args),
+    cancelGrpcSearchFileContent: (...args: unknown[]) => mockCancel(...args),
   }
 })
 
@@ -32,6 +34,7 @@ const sampleItem = (name: string): FileSearchFileItem => ({
 
 beforeEach(() => {
   mockSearch.mockReset()
+  mockCancel.mockReset()
   mockNotify.mockReset()
 })
 
@@ -181,5 +184,32 @@ describe('useFileContentSearch 竞态', () => {
       expect(result.current.results[0].name).toBe('ok.txt')
     })
     expect(mockNotify).toHaveBeenCalledWith('error', 'FileTreeSearch.searchFailed: permission denied')
+  })
+
+  it('取消搜索：作废进行中请求并停止 loading，延迟响应不得写回', async () => {
+    let resolveFirst!: (value: FileSearchFileItem[]) => void
+    mockSearch.mockImplementationOnce(
+      (args: { token?: string }) =>
+        new Promise<FileSearchFileItem[]>((resolve) => {
+          resolveFirst = resolve
+          expect(args.token).toBeTruthy()
+        }),
+    )
+
+    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
+    act(() => result.current.setKeyword('hello'))
+    act(() => result.current.onSearch('hello'))
+    expect(result.current.loading).toBe(true)
+
+    act(() => result.current.onCancelSearch())
+    expect(result.current.loading).toBe(false)
+    expect(mockCancel).toHaveBeenCalled()
+
+    await act(async () => {
+      resolveFirst([sampleItem('stale.txt')])
+    })
+    expect(result.current.results).toEqual([])
+    expect(result.current.loading).toBe(false)
+    expect(mockNotify).not.toHaveBeenCalled()
   })
 })

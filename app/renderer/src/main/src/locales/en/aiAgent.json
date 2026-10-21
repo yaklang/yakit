@@ -647,7 +647,8 @@
     "engineUnsupported": "Current engine does not support file content search. Please upgrade the yaklang engine.",
     "emptyHint": "Enter a keyword to search file content",
     "emptyNoResult": "No matched content",
-    "searchAllFolders": "Search all folders"
+    "searchAllFolders": "Search all folders",
+    "cancelSearch": "Cancel search"
   },
   "ExportAILogsModal": {
     "title": "Export AI Logs",

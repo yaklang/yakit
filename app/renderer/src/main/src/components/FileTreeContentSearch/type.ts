@@ -31,6 +31,8 @@ export interface SearchFileContentParams {
   /** keyword 是否按正则解析，默认按字面量 */
   regex?: boolean
   ignoreCase?: boolean
+  /** 传给 RequestYakURL 的取消 token，配合 cancelGrpcSearchFileContent */
+  token?: string
 }
 
 export interface FileSearchSegment {
