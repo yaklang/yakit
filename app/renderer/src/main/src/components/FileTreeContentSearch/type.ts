@@ -1,5 +1,3 @@
-import type { AIAgentFilePreviewHighlight } from '@/pages/ai-agent/aiChatContent/type'
-
 /** 单处命中区间（UTF-16 1-based 列号，end_column 不含），与后端 fsSearchMatch 对应 */
 export interface FileSearchMatch {
   start_column: number
@@ -40,4 +38,10 @@ export interface FileSearchSegment {
   hit: boolean
 }
 
-export type FileSearchEditorHighlight = AIAgentFilePreviewHighlight
+/** 预览编辑器高亮区间（与各端编辑器 highlight 结构对齐） */
+export interface FileSearchEditorHighlight {
+  startLineNumber: number
+  startColumn: number
+  endLineNumber: number
+  endColumn: number
+}

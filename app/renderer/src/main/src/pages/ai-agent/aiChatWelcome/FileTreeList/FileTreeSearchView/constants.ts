@@ -1,10 +1,3 @@
-export const FileTreeSearchType = {
-  Keyword: 'keyword',
-  Regexp: 'regexp',
-} as const
-
-export type FileTreeSearchTypeValue = (typeof FileTreeSearchType)[keyof typeof FileTreeSearchType]
-
 export const FileTreeSearchScope = {
   All: 'all',
   AiFolder: 'ai',
@@ -12,9 +5,6 @@ export const FileTreeSearchScope = {
 } as const
 
 export type FileTreeSearchScopeValue = (typeof FileTreeSearchScope)[keyof typeof FileTreeSearchScope]
-
-/** 进入搜索面板后聚焦输入框的延迟（对齐左右滑动画） */
-export const SEARCH_INPUT_FOCUS_DELAY_MS = 260
 
 /** 搜索范围选项（i18n key → value），UI 用 t(labelKey) 渲染 */
 export const FILE_TREE_SEARCH_SCOPE_OPTIONS = [
