@@ -305,6 +305,11 @@ const MCPHistory: React.FC = React.memo(() => {
     if (detailLoading || !detail) {
       return (
         <div className={styles['detail-side']}>
+          {expandButton && (
+            <div className={styles['detail-header']}>
+              <div className={styles['detail-header-title']}>{expandButton}</div>
+            </div>
+          )}
           <div className={styles['detail-loading']}>
             <YakitSpin spinning wrapperClassName={styles['detail-spin']} />
           </div>

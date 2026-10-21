@@ -6,7 +6,7 @@ import '../../../ai-re-act/hooks/__test__/setupElectron'
 import AIMCP from '../AIMCP'
 import { getMCPServersById, grpcGetAllMCPServers, grpcUpdateMCPServer } from '../utils'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import type { AddMCPServerRequest, MCPServer, UpdateMCPServerRequest } from '../../type/aiMCP'
+import type { AddMCPServerRequest, GetAllMCPServersRequest, MCPServer, UpdateMCPServerRequest } from '../../type/aiMCP'
 
 vi.mock('../utils', () => ({
   grpcGetAllMCPServers: vi.fn(),
@@ -168,9 +168,11 @@ describe('AIMCP 服务器列表', () => {
       Headers: [],
     }
     const saved = { ...server, ID: 9, Name: 'fresh server' }
-    vi.mocked(grpcGetAllMCPServers)
-      .mockResolvedValueOnce(responseFor([]))
-      .mockResolvedValueOnce(responseFor([saved]))
+    let savedInDb = false
+    vi.mocked(grpcGetAllMCPServers).mockImplementation(async (req: GetAllMCPServersRequest) => {
+      if (req.Keyword === saved.Name) return responseFor(savedInDb ? [saved] : [])
+      return responseFor(savedInDb ? [saved] : [])
+    })
     vi.mocked(getMCPServersById).mockResolvedValue(saved)
     render(<AIMCP />)
     await screen.findByText('YakitEmpty.noData')
@@ -178,15 +180,54 @@ describe('AIMCP 服务器列表', () => {
     expect(showYakitModal).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ width: 600 }))
     const form = modalForm()
     await act(async () => {
+      savedInDb = true
       form.props.onCancel(created)
     })
     await screen.findByText('AIMCP.toolList')
-    expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(2)
-    expect(vi.mocked(grpcGetAllMCPServers).mock.calls[1][0]).toMatchObject({
-      Keyword: '',
-      Pagination: { Page: 1 },
-    })
+    // 定位查询按新服务器名独立发起，可见列表仍按当前关键词刷新
+    expect(vi.mocked(grpcGetAllMCPServers).mock.calls.filter(([req]) => req.Keyword === saved.Name)).toHaveLength(1)
+    expect(vi.mocked(grpcGetAllMCPServers).mock.calls.filter(([req]) => req.Keyword === '')).toHaveLength(2)
     expect(vi.mocked(showYakitModal).mock.results[0].value.destroy).toHaveBeenCalled()
+  })
+
+  it('非匹配搜索下新增启用服务器仍会自动打开工具列表', async () => {
+    const created: AddMCPServerRequest = {
+      Name: 'fresh server',
+      Type: 'sse',
+      URL: '',
+      Command: '',
+      Enable: true,
+      Envs: [],
+      Headers: [],
+    }
+    const saved = { ...server, ID: 9, Name: 'fresh server' }
+    let savedInDb = false
+    vi.mocked(grpcGetAllMCPServers).mockImplementation(async (req: GetAllMCPServersRequest) => {
+      if (req.Keyword === saved.Name) return responseFor(savedInDb ? [saved] : [])
+      if (req.Keyword === 'missing') return responseFor([])
+      return responseFor(savedInDb ? [saved] : [])
+    })
+    vi.mocked(getMCPServersById).mockResolvedValue(saved)
+    render(<AIMCP />)
+    await screen.findByText('YakitEmpty.noData')
+    // 输入与新服务器名不匹配的搜索词并等待防抖生效
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'missing' } })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 350))
+    })
+    await waitFor(() => expect(vi.mocked(grpcGetAllMCPServers).mock.calls.some(([req]) => req.Keyword === 'missing')))
+    fireEvent.click(screen.getByRole('button', { name: 'AIMCP.addMcpServer' }))
+    const form = modalForm()
+    await act(async () => {
+      savedInDb = true
+      form.props.onCancel(created)
+    })
+    await screen.findByText('AIMCP.toolList')
+    // 定位查询按新服务器名独立发起；可见列表仍按 'missing' 过滤，保持空态
+    expect(vi.mocked(grpcGetAllMCPServers).mock.calls.filter(([req]) => req.Keyword === saved.Name)).toHaveLength(1)
+    expect(
+      vi.mocked(grpcGetAllMCPServers).mock.calls.filter(([req]) => req.Keyword === 'missing').length,
+    ).toBeGreaterThanOrEqual(2)
   })
 
   it('新增弹窗直接关闭不刷新列表', async () => {
@@ -273,28 +314,29 @@ describe('AIMCP 服务器列表', () => {
     expect(screen.queryByText(server.Name)).not.toBeInTheDocument()
   })
 
-  it('滚动到底部加载下一页并追加，全部加载后显示到底提示', async () => {
-    vi.mocked(grpcGetAllMCPServers)
-      .mockResolvedValueOnce(responseFor([server], 2, 1))
-      .mockResolvedValueOnce(responseFor([disabledServer], 2, 2))
+  it('单次请求全量拉取，滚动不触发新查询', async () => {
+    const servers = Array.from({ length: 25 }, (_, index) => ({
+      ...server,
+      ID: index + 1,
+      Name: `full server ${index + 1}`,
+    }))
+    vi.mocked(grpcGetAllMCPServers).mockResolvedValueOnce(responseFor(servers, servers.length, 1))
     render(<AIMCP />)
-    await screen.findByText(server.Name)
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 350))
-    })
-    const list = screen.getByText(server.Name).closest('section')!.parentElement!
-    fireEvent.scroll(list)
-    await waitFor(() => expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(2))
-    expect(vi.mocked(grpcGetAllMCPServers).mock.calls[1][0]).toMatchObject({ Pagination: { Page: 2 } })
-    expect(await screen.findByText(disabledServer.Name)).toBeInTheDocument()
+    // 一次查询即返回全部数据，请求携带全量 Limit
+    expect(await screen.findByText('full server 25')).toBeInTheDocument()
+    expect(vi.mocked(grpcGetAllMCPServers)).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(grpcGetAllMCPServers).mock.calls[0][0]).toMatchObject({ Pagination: { Limit: 10000 } })
+    // loading 300ms 定时器结束后才显示到底提示
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 350))
     })
     expect(screen.getByText('YakitEmpty.end_of_list')).toBeInTheDocument()
+    // 滚动列表不再触发分页查询
+    const list = screen.getByText('full server 1').closest('section')!.parentElement!
     fireEvent.scroll(list)
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 350))
     })
-    expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(2)
+    expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(1)
   })
 })

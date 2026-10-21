@@ -61,11 +61,19 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
             ID: defaultValues.ID,
           }
           // 更新
-          await grpcUpdateMCPServer(updateValue)
+          const res = await grpcUpdateMCPServer(updateValue)
+          if (!res.Ok) {
+            yakitNotify('error', res.Reason)
+            return
+          }
           onCancel(updateValue)
         } else {
           // 新增
-          await grpcAddMCPServer(value)
+          const res = await grpcAddMCPServer(value)
+          if (!res.Ok) {
+            yakitNotify('error', res.Reason)
+            return
+          }
           onCancel(value)
         }
       } catch (error) {

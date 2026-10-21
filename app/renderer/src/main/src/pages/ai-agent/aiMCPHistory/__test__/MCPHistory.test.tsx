@@ -188,6 +188,30 @@ describe('MCPHistory 调用历史', () => {
     expect(await screen.findByRole('textbox')).toBeInTheDocument()
   })
 
+  it('详情请求未完成时收起左栏，展开按钮仍可用', async () => {
+    let resolveDetail!: (value: MCPToolCallHistory) => void
+    vi.mocked(grpcGetMCPToolCallHistoryDetail).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveDetail = resolve
+        }),
+    )
+    render(<MCPHistory />)
+    // 触发详情请求但保持 pending
+    fireEvent.click(await screen.findByText('encode-tool'))
+    expect(screen.queryByTitle('YakitButton.expand')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTitle('YakitButton.collapse'))
+    // loading 分支也渲染展开按钮，用户不会被卡住
+    expect(screen.getByTitle('YakitButton.expand')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTitle('YakitButton.expand'))
+    expect(await screen.findByRole('textbox')).toBeInTheDocument()
+    await act(async () => {
+      resolveDetail(detailOf(1))
+    })
+    await waitFor(() => expect(screen.getByText('detail-tool')).toBeInTheDocument())
+  })
+
   it('结果与错误同时存在时展示双 Tab 并可切换', async () => {
     vi.mocked(grpcGetMCPToolCallHistoryDetail).mockResolvedValue(
       detailOf(2, { Result: '{"ok":true}', ErrorMessage: 'boom-error' }),

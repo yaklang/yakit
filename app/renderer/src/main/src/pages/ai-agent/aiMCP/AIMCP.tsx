@@ -17,7 +17,7 @@ import type {
   UpdateMCPServerRequest,
 } from '../type/aiMCP'
 import { genDefaultPagination } from '@/pages/invoker/schema'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useDebounce, useInViewport, useMemoizedFn } from 'ahooks'
 import { getMCPServersById, grpcDeleteMCPServer, grpcGetAllMCPServers, grpcUpdateMCPServer } from './utils'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -265,10 +265,8 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   const { setCurrentMCP } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'setting', 'yakitUi'])
   const [keyWord, setKeyWord] = useState<string>('')
-  const [queryKeyword, setQueryKeyword] = useState<string>('')
+  const queryKeyword = useDebounce(keyWord.trim(), { wait: 300 })
   const [loading, setLoading] = useState<boolean>(false)
-  const [spinning, setSpinning] = useState<boolean>(false)
-  const [hasMore, setHasMore] = useState<boolean>(false)
   const [collapsed, setCollapsed] = useState<string[]>([])
   const [response, setResponse] = useState<GetAllMCPServersResponse>({
     MCPServers: [],
@@ -278,31 +276,27 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   const requestIdRef = useRef(0)
   const mcpListRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(mcpListRef)
-  const { run: scheduleQuery } = useDebounceFn((value: string) => setQueryKeyword(value), { wait: 300 })
-  const getList = useMemoizedFn(async (page?: number) => {
+  const getList = useMemoizedFn(async () => {
     const requestId = ++requestIdRef.current
-    const requestPage = page || 1
     setLoading(true)
-    if (requestPage === 1) setSpinning(true)
     const newQuery: GetAllMCPServersRequest = {
       Keyword: queryKeyword,
       Pagination: {
         ...genDefaultPagination(20),
-        OrderBy: 'created_at',
-        Page: requestPage,
+        OrderBy: 'updated_at',
+        Page: 1,
+        // 一次全量拉取：分组展示依赖完整数据，分页会把启用/停用两组按页边界截断；
+        // MCP 服务器是用户自建配置（量级通常几十条），全量不会带来性能问题
+        Limit: 10000,
       },
       IsShowToolList: false,
     }
-    let servers: MCPServer[] | undefined
     try {
       const res = await grpcGetAllMCPServers(newQuery)
       if (requestId !== requestIdRef.current) return
       if (!res.MCPServers) res.MCPServers = []
-      const newPage = +res.Pagination.Page
-      servers = newPage === 1 ? res.MCPServers : [...response.MCPServers, ...res.MCPServers]
-      setHasMore(servers.length < Number(res.Total))
       setResponse({
-        MCPServers: servers,
+        MCPServers: res.MCPServers,
         Pagination: res.Pagination || {
           ...genDefaultPagination(20),
         },
@@ -312,29 +306,32 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
     setTimeout(() => {
       if (requestId !== requestIdRef.current) return
       setLoading(false)
-      setSpinning(false)
     }, 300)
-    return servers
   })
   useEffect(() => {
     if (inViewPort) getList()
   }, [inViewPort, queryKeyword])
   const onKeywordChange = useMemoizedFn((value: string) => {
     setKeyWord(value)
-    scheduleQuery(value)
   })
-  const onListScroll = useMemoizedFn((event: React.UIEvent<HTMLDivElement>) => {
-    if (loading || !hasMore) return
-    const el = event.currentTarget
-    if (el.scrollHeight - el.scrollTop - el.clientHeight <= 48) {
-      getList(+response.Pagination.Page + 1)
-    }
-  })
-  const openSavedServer = useMemoizedFn(async (saved?: AddMCPServerRequest | UpdateMCPServerRequest) => {
+  const openSavedServer = useMemoizedFn(async (saved?: AddMCPServerRequest) => {
     if (!saved) return
-    const servers = (await getList()) || []
+    // 独立按名定位刚保存的服务器，避免受可见列表的搜索词与分页影响
+    const lookup = grpcGetAllMCPServers({
+      Keyword: saved.Name,
+      Pagination: {
+        ...genDefaultPagination(20),
+        OrderBy: 'updated_at',
+        Page: 1,
+      },
+      IsShowToolList: false,
+    }).catch(() => undefined)
+    // 可见列表仍按当前过滤条件刷新
+    await getList()
     if (!saved.Enable) return
-    const server = servers.filter((item) => item.Name === saved.Name).sort((a, b) => b.ID - a.ID)[0]
+    const server = ((await lookup)?.MCPServers || [])
+      .filter((item) => item.Name === saved.Name)
+      .sort((a, b) => b.ID - a.ID)[0]
     if (server) setCurrentMCP(server)
   })
   const handleNewAIMCP = useMemoizedFn(() => {
@@ -358,12 +355,8 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   const onSetData = useMemoizedFn((item: MCPServer) => {
     setResponse((preV) => ({
       ...preV,
-      MCPServers: preV.MCPServers.map((ele) => {
-        if (ele.ID === item.ID) {
-          return { ...item }
-        }
-        return { ...ele }
-      }),
+      // 与后端 updated_at 倒序一致：刚被操作的卡片立即移到对应分组第一位
+      MCPServers: [{ ...item }, ...preV.MCPServers.filter((ele) => ele.ID !== item.ID)],
     }))
   })
   const groups = useCreation(() => {
@@ -380,7 +373,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
       },
     ].filter((group) => group.items.length > 0)
   }, [response.MCPServers, i18nRefresh])
-  const showEnd = !hasMore && !loading && response.MCPServers.length > 0
+  const showEnd = !loading && response.MCPServers.length > 0
   return (
     <div className={styles['ai-mcp-list-wrapper']} ref={mcpListRef}>
       <div className={styles['ai-mcp-list-header']}>
@@ -419,8 +412,8 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
         />
       </div>
       <div className={styles['ai-mcp-list-body']}>
-        <YakitSpin spinning={spinning} wrapperClassName={styles['ai-mcp-list-spin']}>
-          <div className={styles['ai-mcp-list']} onScroll={onListScroll}>
+        <YakitSpin spinning={loading} wrapperClassName={styles['ai-mcp-list-spin']}>
+          <div className={styles['ai-mcp-list']}>
             {groups.map((group) => {
               const expanded = !collapsed.includes(group.key)
               return (
@@ -467,7 +460,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
               )
             })}
             {showEnd && <div className={styles['list-end']}>{t('YakitEmpty.end_of_list')}</div>}
-            {!spinning && response.MCPServers.length === 0 && <YakitEmpty title={t('YakitEmpty.noData')} />}
+            {!loading && response.MCPServers.length === 0 && <YakitEmpty title={t('YakitEmpty.noData')} />}
           </div>
         </YakitSpin>
       </div>
