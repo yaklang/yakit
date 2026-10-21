@@ -1,35 +1,15 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { FileTreeSearchScope } from '../constants'
 import type { FileSearchFileItem } from '../type'
 
-const { mockSearch, mockNotify, folderState } = vi.hoisted(() => ({
+const { mockSearch, mockNotify } = vi.hoisted(() => ({
   mockSearch: vi.fn(),
   mockNotify: vi.fn(),
-  folderState: {
-    store: { id: 'session-1' } as { id: string },
-    grpcFolders: [{ path: 'ai-output', isFolder: true }] as { path: string; isFolder: boolean }[],
-    customFolders: [{ path: 'opened-file.txt', isFolder: false }] as { path: string; isFolder: boolean }[],
-  },
 }))
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: mockNotify }))
 vi.mock('@/i18n/i18n', () => ({
-  default: { getFixedT: () => (key: string) => key },
-}))
-vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
-  useCurrentStore: () => folderState.store,
-}))
-vi.mock('zustand', async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>()
-  return {
-    ...actual,
-    useStore: (_store: unknown, selector: (state: { grpcFolders: unknown }) => unknown) =>
-      selector({ grpcFolders: folderState.grpcFolders }),
-  }
-})
-vi.mock('../../../../components/aiFileSystemList/store/useCustomFolder', () => ({
-  useCustomFolder: () => folderState.customFolders,
+  default: { getFixedT: () => (key: string) => key, on: vi.fn(), off: vi.fn() },
 }))
 vi.mock('../utils', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
@@ -39,7 +19,7 @@ vi.mock('../utils', async (importOriginal) => {
   }
 })
 
-import { useFileSearch } from '../useFileSearch'
+import { useFileContentSearch } from '../useFileContentSearch'
 
 const sampleItem = (name: string): FileSearchFileItem => ({
   path: `ai-output/${name}`,
@@ -50,19 +30,12 @@ const sampleItem = (name: string): FileSearchFileItem => ({
   },
 })
 
-const resetFolders = () => {
-  folderState.store = { id: 'session-1' }
-  folderState.grpcFolders = [{ path: 'ai-output', isFolder: true }]
-  folderState.customFolders = [{ path: 'opened-file.txt', isFolder: false }]
-}
-
 beforeEach(() => {
   mockSearch.mockReset()
   mockNotify.mockReset()
-  resetFolders()
 })
 
-describe('useFileSearch 竞态', () => {
+describe('useFileContentSearch 竞态', () => {
   it('空搜作废进行中请求：延迟响应不得写回旧结果，且 loading 复位', async () => {
     let resolveFirst!: (value: FileSearchFileItem[]) => void
     mockSearch.mockImplementationOnce(
@@ -72,7 +45,7 @@ describe('useFileSearch 竞态', () => {
         }),
     )
 
-    const { result } = renderHook(() => useFileSearch())
+    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
     act(() => result.current.setKeyword('hello'))
     act(() => result.current.onSearch('hello'))
     expect(result.current.loading).toBe(true)
@@ -89,7 +62,7 @@ describe('useFileSearch 竞态', () => {
     expect(result.current.loading).toBe(false)
   })
 
-  it('切到无根路径范围作废进行中请求：延迟响应不得写回旧结果', async () => {
+  it('切到无根路径作废进行中请求：延迟响应不得写回旧结果', async () => {
     let resolveFirst!: (value: FileSearchFileItem[]) => void
     mockSearch.mockImplementationOnce(
       () =>
@@ -98,14 +71,14 @@ describe('useFileSearch 竞态', () => {
         }),
     )
 
-    const { result } = renderHook(() => useFileSearch())
+    const { result, rerender } = renderHook(({ roots }) => useFileContentSearch({ roots }), {
+      initialProps: { roots: [{ path: 'ai-output' }] },
+    })
     act(() => result.current.setKeyword('hello'))
     act(() => result.current.onSearch('hello'))
     expect(result.current.loading).toBe(true)
 
-    folderState.grpcFolders = []
-    folderState.customFolders = []
-    act(() => result.current.setScope(FileTreeSearchScope.UserFolder))
+    rerender({ roots: [] })
 
     expect(result.current.results).toEqual([])
     expect(result.current.searched).toBe(true)
@@ -126,18 +99,17 @@ describe('useFileSearch 竞态', () => {
           resolveFirst = resolve
         }),
     )
-    // 清空根后 effect 会重搜；无路径则不再请求
     mockSearch.mockResolvedValue([])
 
-    const { result, rerender } = renderHook(() => useFileSearch())
+    const { result, rerender } = renderHook(({ roots }) => useFileContentSearch({ roots }), {
+      initialProps: { roots: [{ path: 'ai-output' }] },
+    })
     act(() => result.current.setKeyword('hello'))
     act(() => result.current.onSearch('hello'))
     expect(result.current.loading).toBe(true)
     expect(mockSearch).toHaveBeenCalled()
 
-    folderState.grpcFolders = []
-    folderState.customFolders = []
-    rerender()
+    rerender({ roots: [] })
 
     expect(result.current.results).toEqual([])
     expect(result.current.loading).toBe(false)
@@ -148,7 +120,7 @@ describe('useFileSearch 竞态', () => {
     expect(result.current.results).toEqual([])
   })
 
-  it('切换会话后清空旧结果，延迟响应不得写回，并按新根重搜', async () => {
+  it('切换根路径后清空旧结果，延迟响应不得写回，并按新根重搜', async () => {
     let resolveFirst!: (value: FileSearchFileItem[]) => void
     mockSearch.mockImplementation((args: { path: string }) => {
       if (args.path === 'new-ai-root') {
@@ -159,15 +131,14 @@ describe('useFileSearch 竞态', () => {
       })
     })
 
-    const { result, rerender } = renderHook(() => useFileSearch())
+    const { result, rerender } = renderHook(({ roots }) => useFileContentSearch({ roots }), {
+      initialProps: { roots: [{ path: 'ai-output' }] },
+    })
     act(() => result.current.setKeyword('hello'))
     act(() => result.current.onSearch('hello'))
     expect(result.current.loading).toBe(true)
 
-    folderState.store = { id: 'session-2' }
-    folderState.grpcFolders = [{ path: 'new-ai-root', isFolder: true }]
-    folderState.customFolders = []
-    rerender()
+    rerender({ roots: [{ path: 'new-ai-root' }] })
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false)
@@ -184,7 +155,7 @@ describe('useFileSearch 竞态', () => {
 
   it('正常搜索成功仍写回最新结果', async () => {
     mockSearch.mockResolvedValue([sampleItem('demo.txt')])
-    const { result } = renderHook(() => useFileSearch())
+    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
     act(() => result.current.setKeyword('hello'))
     act(() => result.current.onSearch('hello'))
     await waitFor(() => {
@@ -197,7 +168,11 @@ describe('useFileSearch 竞态', () => {
 
   it('部分根成功时仍提示失败根错误，并保留成功结果', async () => {
     mockSearch.mockResolvedValueOnce([sampleItem('ok.txt')]).mockRejectedValueOnce(new Error('permission denied'))
-    const { result } = renderHook(() => useFileSearch())
+    const { result } = renderHook(() =>
+      useFileContentSearch({
+        roots: [{ path: 'ai-output' }, { path: 'opened-file.txt' }],
+      }),
+    )
     act(() => result.current.setKeyword('hello'))
     act(() => result.current.onSearch('hello'))
     await waitFor(() => {

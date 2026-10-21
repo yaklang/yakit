@@ -1,48 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { useStore } from 'zustand'
-import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import { useCustomFolder } from '../../../components/aiFileSystemList/store/useCustomFolder'
 import { yakitNotify } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
-import {
-  FileTreeSearchScope,
-  FileTreeSearchType,
-  type FileTreeSearchScopeValue,
-  type FileTreeSearchTypeValue,
-} from './constants'
-import {
-  FILE_SEARCH_UNSUPPORTED_ENGINE,
-  grpcSearchFileContent,
-  mergeFileSearchItems,
-  resolveSearchPaths,
-} from './utils'
+import { FileTreeSearchType, type FileTreeSearchTypeValue } from './constants'
+import { FILE_SEARCH_UNSUPPORTED_ENGINE, grpcSearchFileContent, mergeFileSearchItems } from './utils'
 import type { FileSearchFileItem } from './type'
 
 const t = i18n.getFixedT(null, 'aiAgent')
 
-/**
- * @name 文件树内容搜索
- * @description 按 scope 收集根路径后调用 RequestYakURL op=search 并发搜索，requestId 防竞态；
- * scope / 搜索类型变化时若已有搜索词则自动重搜
- */
-export const useFileSearch = () => {
-  const store = useCurrentStore()
-  const grpcFolders = useStore(store, (state) => state.grpcFolders)
-  const customFolder = useCustomFolder()
+export interface UseFileContentSearchOptions {
+  /** 搜索根路径列表；引用抖动时用 path 拼接键判断变化 */
+  roots: { path: string }[]
+}
 
+/**
+ * @name 文件内容搜索（通用）
+ * @description 按 roots 调用 RequestYakURL op=search 并发搜索，requestId 防竞态；
+ * 根路径 / 搜索类型变化时若已有搜索词则自动重搜
+ */
+export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
+  const { roots } = options
   const [searchType, setSearchType] = useState<FileTreeSearchTypeValue>(FileTreeSearchType.Keyword)
-  const [scope, setScope] = useState<FileTreeSearchScopeValue>(FileTreeSearchScope.All)
   const [keyword, setKeyword] = useState('')
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const [results, setResults] = useState<FileSearchFileItem[]>([])
   const requestIdRef = useRef(0)
 
-  const hasSearchPath = useMemo(
-    () => resolveSearchPaths(scope, grpcFolders, customFolder).length > 0,
-    [scope, grpcFolders, customFolder],
-  )
+  const rootsKey = useMemo(() => roots.map((item) => item.path).join('\0'), [roots])
+  const hasSearchPath = useMemo(() => roots.some((item) => !!item.path?.trim()), [rootsKey])
 
   const onSearch = useMemoizedFn((value?: string) => {
     const text = (value ?? keyword).trim()
@@ -53,7 +39,7 @@ export const useFileSearch = () => {
       setSearched(false)
       return
     }
-    const paths = resolveSearchPaths(scope, grpcFolders, customFolder)
+    const paths = roots.map((item) => item.path?.trim()).filter(Boolean) as string[]
     if (paths.length === 0) {
       requestIdRef.current += 1
       setResults([])
@@ -65,9 +51,9 @@ export const useFileSearch = () => {
     setLoading(true)
     setSearched(true)
     Promise.allSettled(
-      paths.map((item) =>
+      paths.map((path) =>
         grpcSearchFileContent({
-          path: item.path,
+          path,
           keyword: text,
           regex: searchType === FileTreeSearchType.Regexp,
         }),
@@ -95,21 +81,20 @@ export const useFileSearch = () => {
   })
 
   useEffect(() => {
+    // 根路径 / 类型变化时作废旧请求并清空。用 rootsKey 避免数组引用抖动死循环。
     requestIdRef.current += 1
     setResults([])
     setLoading(false)
     setSearched(false)
     if (!keyword.trim()) return
     onSearch()
-  }, [grpcFolders, customFolder, scope, searchType, onSearch])
+  }, [rootsKey, searchType, onSearch])
 
   return {
     keyword,
     setKeyword,
     searchType,
     setSearchType,
-    scope,
-    setScope,
     loading,
     searched,
     hasSearchPath,
