@@ -11,10 +11,15 @@ import { readDocument, type UINode } from './validate'
 import { catalog } from './catalog.mjs'
 import styles from './interactive.module.scss'
 import { formWidgets } from './formWidgets'
+import { DataChart } from './DataCharts'
+import { DataTable } from './DataTable'
 
 type ComponentItem = Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_COMPONENT }>
-type State = Record<string, { value: Record<string, unknown>; submissionId?: string; submitted?: boolean }>
-interface NodeProps {
+type State = Record<
+  string,
+  { value: Record<string, unknown>; submissionId?: string; submitted?: boolean; view?: Record<string, any> }
+>
+export interface NodeProps {
   instanceId: string
   node: UINode
   children?: React.ReactNode
@@ -177,6 +182,9 @@ const registry: Record<string, React.FC<NodeProps>> = {
     </div>
   ),
   ParameterForm,
+  BarChart: DataChart,
+  LineChart: DataChart,
+  DataTable,
   Steps: ({ node }) => (
     <div>
       {node.props.title && <h4>{node.props.title}</h4>}
@@ -250,7 +258,15 @@ export function ComponentCard({ item }: { item: ComponentItem }) {
       item.data.sessionId,
       {
         IsFreeInput: true,
-        FreeInput: `表单回答：${node.props.title || ''}\n${JSON.stringify(values, null, 2)}`,
+        FreeInput:
+          node.component === 'DataTable'
+            ? `数据表选择：${node.props.title || ''}\n${node.props.rows
+                .filter((row) => (values.selectedRowIds as string[]).includes(row.id))
+                .map((row) =>
+                  node.props.columns.map((column) => `${column.label}：${row.values[column.key] ?? '—'}`).join('；'),
+                )
+                .join('\n')}`
+            : `表单回答：${node.props.title || ''}\n${JSON.stringify(values, null, 2)}`,
         UserInteraction: JSON.stringify({ id, source: 'component', requestId: document.id, nodeId: node.id, values }),
       },
       id,
@@ -278,7 +294,11 @@ export function ComponentCard({ item }: { item: ComponentItem }) {
         key={`${node.id}:${node.component}`}
         instanceId={`${document?.id}:${node.id}`}
         node={node}
-        state={receipt ? { value: receipt.values || {}, submissionId: receipt.id, submitted: true } : state[key]}
+        state={
+          receipt
+            ? { ...state[key], value: receipt.values || {}, submissionId: receipt.id, submitted: true }
+            : state[key]
+        }
         change={(value) => save(key, value)}
         submit={submit}
         ready={item.data.final}

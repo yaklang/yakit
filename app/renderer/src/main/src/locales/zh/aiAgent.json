@@ -1023,6 +1023,26 @@
     "addItem": "添加一项",
     "removeItem": "删除",
     "moveUp": "上移",
-    "moveDown": "下移"
+    "moveDown": "下移",
+    "legend": "图例",
+    "chart": "数据图表",
+    "noChartData": "暂无可显示的数据，可检查图例或查看数据明细。",
+    "chartHint": "悬浮或聚焦数据查看读数，方向键切换数据点。",
+    "viewChartData": "查看数据明细",
+    "category": "类别",
+    "removedRows": "数据已更新，已移除失效的行选择。",
+    "dataTable": "数据明细",
+    "selectRow": "选择",
+    "selectRowId": "选择行 {{id}}",
+    "sortColumn": "排序：{{column}}",
+    "filterColumn": "筛选：{{column}}",
+    "filter": "筛选",
+    "noRows": "没有匹配的数据",
+    "previousPage": "上一页",
+    "nextPage": "下一页",
+    "pageInfo": "第 {{page}} / {{pages}} 页，共 {{total}} 行",
+    "selectedRows": "已选 {{count}} 行（含筛选隐藏行）",
+    "clearFilters": "清除筛选",
+    "submitSelected": "提交选中行"
   }
 }

@@ -1023,6 +1023,26 @@
     "addItem": "Add item",
     "removeItem": "Remove",
     "moveUp": "Move up",
-    "moveDown": "Move down"
+    "moveDown": "Move down",
+    "legend": "Legend",
+    "chart": "Data chart",
+    "noChartData": "No visible data. Check the legend or view the underlying data.",
+    "chartHint": "Hover or focus to inspect values. Use arrow keys to move between points.",
+    "viewChartData": "View data",
+    "category": "Category",
+    "removedRows": "The data changed. Selections for removed rows were cleared.",
+    "dataTable": "Data table",
+    "selectRow": "Select",
+    "selectRowId": "Select row {{id}}",
+    "sortColumn": "Sort: {{column}}",
+    "filterColumn": "Filter: {{column}}",
+    "filter": "Filter",
+    "noRows": "No matching rows",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "pageInfo": "Page {{page}} / {{pages}}, {{total}} rows",
+    "selectedRows": "{{count}} selected (including filtered rows)",
+    "clearFilters": "Clear filters",
+    "submitSelected": "Submit selected rows"
   }
 }

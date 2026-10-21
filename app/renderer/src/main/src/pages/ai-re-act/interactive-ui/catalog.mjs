@@ -1,3 +1,5 @@
+import { visualizationComponents } from './visualizationCatalog.mjs'
+
 // This data-only catalog is the source for both the prompt manifest and validation.
 const text = { type: 'string', maxLength: 8000 }
 const shortText = { type: 'string', maxLength: 256 }
@@ -34,8 +36,9 @@ const formSchema = object(
 const submit = object({ label: { ...shortText, default: '提交到对话' } })
 
 export const catalog = {
-  version: '1.0',
+  version: '1.1',
   components: [
+    ...visualizationComponents,
     {
       name: 'Stack',
       description: '按顺序排列少量子节点，用于分组。children 是节点 ID，禁止循环。',

@@ -42,7 +42,7 @@ vi.mock('@/i18n/useI18nNamespaces', async () => {
 
 const document = () => ({
   id: 'block',
-  catalogVersion: '1.0',
+  catalogVersion: catalog.version,
   fallback: '请填写姓名',
   root: 'layout',
   nodes: [
@@ -235,5 +235,244 @@ describe('local component state', () => {
     const { container } = render(<ComponentCard item={item(doc)} />)
     expect(screen.getByRole('checkbox', { name: '数据流' })).toBeInTheDocument()
     expect(container.querySelector('input')).toHaveAttribute('type', 'checkbox')
+  })
+})
+
+const visualizationItem = (component: string, props: Record<string, any>, action = false) =>
+  item({
+    ...document(),
+    root: 'data',
+    nodes: [
+      {
+        id: 'data',
+        component,
+        props,
+        ...(action
+          ? { bindings: { value: 'selection' }, action: { name: 'submit_to_chat', args: { label: '分析选中行' } } }
+          : {}),
+      },
+    ],
+  } as any)
+const bars = () => ({
+  categories: [
+    { id: 'a', label: '模块 A' },
+    { id: 'b', label: '模块 B' },
+  ],
+  series: [
+    { id: 'current', label: '本次', values: [12, -4] },
+    { id: 'previous', label: '上次', values: [8, null] },
+  ],
+})
+const table = (count = 3) => ({
+  columns: [
+    { key: 'name', label: '模块', type: 'string' },
+    { key: 'count', label: '数量', type: 'number' },
+  ],
+  rows: Array.from({ length: count }, (_, index) => ({
+    id: `r${index}`,
+    values: { name: `模块 ${index}`, count: index },
+  })),
+  selection: 'multiple',
+})
+
+describe('visualization validation and rendering', () => {
+  it('validates cross-field constraints and repairs cells locally', () => {
+    const invalid = bars()
+    invalid.series[0].values.pop()
+    let result = readDocument(visualizationItem('BarChart', invalid).data.source, true)
+    expect(result.document?.nodes).toHaveLength(0)
+    expect(result.diagnostics).not.toHaveLength(0)
+    const rows = table()
+    ;(rows.rows[0].values as any).count = 'wrong'
+    ;(rows.rows[0].values as any).unknown = 'drop'
+    result = readDocument(visualizationItem('DataTable', rows).data.source, true)
+    expect(result.document?.nodes[0].props.rows[0].values).toEqual({ name: '模块 0', count: null })
+    expect(result.diagnostics).toHaveLength(2)
+    rows.rows[1].id = 'r0'
+    expect(readDocument(visualizationItem('DataTable', rows).data.source, true).document?.nodes).toHaveLength(0)
+    expect(
+      readDocument(
+        visualizationItem('LineChart', {
+          series: [
+            {
+              id: 's',
+              label: 'S',
+              points: [
+                { x: 2, y: 1 },
+                { x: 1, y: 2 },
+              ],
+            },
+          ],
+        }).data.source,
+        true,
+      ).document?.nodes,
+    ).toHaveLength(0)
+  })
+  it('preserves legend choices through reparsing and remounting without sending messages', () => {
+    const initial = visualizationItem('BarChart', bars())
+    const view = render(<ComponentCard item={initial} />)
+    expect(view.container.querySelectorAll('rect[data-point]')).toHaveLength(3)
+    fireEvent.click(screen.getByRole('button', { name: '本次' }))
+    expect(view.container.querySelectorAll('rect[data-point]')).toHaveLength(1)
+    const revised = bars()
+    revised.series[0].values[0] = 50
+    const next = { ...initial, data: { ...initial.data, source: visualizationItem('BarChart', revised).data.source } }
+    view.rerender(<ComponentCard item={next} />)
+    expect(screen.getByRole('button', { name: '本次' })).toHaveAttribute('aria-pressed', 'false')
+    view.unmount()
+    render(<ComponentCard item={next} />)
+    expect(screen.getByRole('button', { name: '本次' })).toHaveAttribute('aria-pressed', 'false')
+    expect(send).not.toHaveBeenCalled()
+  })
+  it('uses proportional x coordinates, breaks at null, and supports keyboard readouts', () => {
+    const data = visualizationItem('LineChart', {
+      series: [
+        {
+          id: 's',
+          label: '响应',
+          points: [
+            { x: 0, y: 1 },
+            { x: 1, y: null },
+            { x: 10, y: 4 },
+            { x: 30, y: 5 },
+          ],
+        },
+      ],
+    })
+    const view = render(<ComponentCard item={data} />)
+    const points = view.container.querySelectorAll<SVGElement>('circle[data-point]')
+    expect(points).toHaveLength(3)
+    expect((view.container.querySelector('path')!.getAttribute('d')!.match(/M/g) || []).length).toBe(2)
+    const positions = [...points].map((point) => Number(point.getAttribute('cx')))
+    expect(positions[2] - positions[1]).toBeCloseTo(2 * (positions[1] - positions[0]))
+    fireEvent.focus(points[0])
+    expect(screen.getByRole('status')).toHaveTextContent('0 · 响应: 1')
+    fireEvent.keyDown(points[0], { key: 'ArrowRight' })
+    expect(window.document.activeElement).toBe(points[1])
+    expect(screen.getByRole('status')).toHaveTextContent('10 · 响应: 4')
+  })
+  it('does not turn missing values into zeros, and keeps extreme finite coordinates valid', () => {
+    const props = bars()
+    props.series[0].values = [1e308, -1e308]
+    const view = render(<ComponentCard item={visualizationItem('BarChart', props)} />)
+    for (const point of view.container.querySelectorAll('rect[data-point]')) {
+      for (const key of ['x', 'y', 'width', 'height'])
+        expect(Number.isFinite(Number(point.getAttribute(key)))).toBe(true)
+    }
+    expect(view.container.querySelectorAll('rect[data-point]')).toHaveLength(3)
+  })
+})
+
+describe('interactive data table', () => {
+  it('sorts numerically and retains hidden selections across filters, pages and reparsing', async () => {
+    const initial = visualizationItem('DataTable', table(25), true)
+    const view = render(<ComponentCard item={initial} />)
+    fireEvent.click(screen.getByRole('checkbox', { name: '选择行 r0' }))
+    fireEvent.click(screen.getByRole('button', { name: '排序：数量' }))
+    fireEvent.click(screen.getByRole('button', { name: '排序：数量' }))
+    expect(screen.getAllByRole('checkbox')[0]).toHaveAttribute('aria-label', '选择行 r24')
+    fireEvent.click(screen.getByRole('button', { name: '下一页' }))
+    expect(screen.getByRole('checkbox', { name: '选择行 r0' })).toBeChecked()
+    fireEvent.change(screen.getByLabelText('筛选：数量'), { target: { value: '24' } })
+    expect(screen.getAllByRole('checkbox')).toHaveLength(1)
+    expect(screen.getByText('已选 1 行（含筛选隐藏行）')).toBeInTheDocument()
+    const next = { ...initial, data: { ...initial.data } }
+    view.rerender(<ComponentCard item={next} />)
+    expect(screen.getByLabelText('筛选：数量')).toHaveValue('24')
+    expect(send).not.toHaveBeenCalled()
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '分析选中行' }))
+    })
+    const request = send.mock.calls.find((call) => call[1].IsFreeInput)![1]
+    expect(JSON.parse(request.UserInteraction).values).toEqual({ selectedRowIds: ['r0'] })
+    expect(request.FreeInput).toContain('模块 0')
+    expect(request.FreeInput).not.toContain('模块 24')
+    expect(screen.queryByRole('button', { name: '分析选中行' })).toBeNull()
+    view.unmount()
+    render(<ComponentCard item={next} />)
+    expect(screen.queryByRole('button', { name: '分析选中行' })).toBeNull()
+  })
+  it('locks rapid clicks while pending, permits retry, and restores server receipts', async () => {
+    let reject!: (error: Error) => void
+    send.mockImplementationOnce(
+      () =>
+        new Promise((_, rejectPromise) => {
+          reject = rejectPromise
+        }),
+    )
+    const initial = visualizationItem('DataTable', table(), true)
+    const view = render(<ComponentCard item={initial} />)
+    fireEvent.click(screen.getByRole('checkbox', { name: '选择行 r1' }))
+    const button = screen.getByRole('button', { name: '分析选中行' })
+    await act(async () => {
+      for (let i = 0; i < 12; i++) fireEvent.click(button)
+    })
+    expect(send).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      reject(new Error('断开'))
+    })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '分析选中行' }))
+    })
+    expect(send).toHaveBeenCalledTimes(2)
+    expect(JSON.parse(send.mock.calls[0][1].UserInteraction).id).toBe(
+      JSON.parse(send.mock.calls[1][1].UserInteraction).id,
+    )
+    view.unmount()
+    const restored = visualizationItem('DataTable', table(), true)
+    restored.data.submissions = {
+      data: {
+        id: 'accepted',
+        source: 'component',
+        requestId: 'block',
+        nodeId: 'data',
+        values: { selectedRowIds: ['r1'] },
+      },
+    }
+    render(<ComponentCard item={restored} />)
+    expect(screen.getByRole('checkbox', { name: '选择行 r1' })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: '选择行 r1' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: '分析选中行' })).toBeNull()
+  })
+  it('keeps filters changed while a submission is awaiting acknowledgement', async () => {
+    let resolve!: () => void
+    send.mockImplementationOnce(
+      () =>
+        new Promise<void>((complete) => {
+          resolve = complete
+        }),
+    )
+    render(<ComponentCard item={visualizationItem('DataTable', table(), true)} />)
+    fireEvent.click(screen.getByRole('checkbox', { name: '选择行 r0' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '分析选中行' }))
+    })
+    fireEvent.change(screen.getByLabelText('筛选：数量'), { target: { value: '2' } })
+    await act(async () => {
+      resolve()
+    })
+    expect(screen.getByLabelText('筛选：数量')).toHaveValue('2')
+    expect(screen.getAllByRole('checkbox')).toHaveLength(1)
+    expect(screen.getByRole('status')).toHaveTextContent('已提交')
+  })
+  it('removes stale selected rows on data updates, and disables streaming submissions', () => {
+    const initial = visualizationItem('DataTable', table(), true)
+    initial.data.final = false
+    const view = render(<ComponentCard item={initial} />)
+    fireEvent.click(screen.getByRole('checkbox', { name: '选择行 r1' }))
+    expect(screen.getByRole('button', { name: '分析选中行' })).toBeDisabled()
+    const nextProps = table()
+    nextProps.rows = nextProps.rows.filter((row) => row.id !== 'r1')
+    view.rerender(
+      <ComponentCard
+        item={{
+          ...initial,
+          data: { ...initial.data, source: visualizationItem('DataTable', nextProps, true).data.source },
+        }}
+      />,
+    )
+    expect(screen.getByText('数据已更新，已移除失效的行选择。')).toBeInTheDocument()
+    expect(screen.getByText('已选 0 行（含筛选隐藏行）')).toBeInTheDocument()
+    expect(send).not.toHaveBeenCalled()
   })
 })
