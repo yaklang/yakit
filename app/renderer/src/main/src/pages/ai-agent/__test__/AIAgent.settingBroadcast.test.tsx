@@ -23,6 +23,7 @@ const ipc = vi.hoisted(() => ({
   updatePagesDataCacheById: vi.fn(),
   pages: new Map(),
   sessions: new Map(),
+  showHistory: false,
 }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -42,8 +43,28 @@ vi.mock('@/utils/notification', () => ({
   failed: vi.fn(),
 }))
 
-vi.mock('../AIAgentSideList', () => ({
-  AIAgentSideList: () => null,
+vi.mock('../AIAgentSideList', async () => {
+  const { default: HistoryChat } = await import('../historyChat/HistoryChat')
+  return { AIAgentSideList: () => (ipc.showHistory ? <HistoryChat aiSource={['ai']} embedded /> : null) }
+})
+
+vi.mock('../historyChat/HistoryChatList/hook/useSessionList', () => ({
+  default: () => [{ sessions: [] }, { setSessions: vi.fn() }],
+}))
+vi.mock('../historyChat/HistoryChatList/HistoryChatList', () => ({
+  default: () => null,
+  DAY_MS: 86400000,
+  getChatTimestamp: () => 0,
+}))
+vi.mock('../aiChatWelcome/AIChatWelcomeSideSetting', () => ({ SideSettingButton: () => null }))
+vi.mock('../historyChat/utils', async () => ({
+  ...(await import('../historyChat/deleteSource')),
+  AISessionDeleteCancelledError: class extends Error {},
+  handAIHistoryChatRemove: vi.fn(),
+}))
+vi.mock('../../ai-re-act/hooks/useGetChatDataStoreKey', () => ({
+  default: () => 'ai',
+  getImageStoreKeyByAISource: () => 'ai',
 }))
 vi.mock('@/components/yakitUI/YakitResizeBox/YakitResizeBox', () => ({
   YakitResizeBox: ({ firstNode, secondNode }: { firstNode: ReactNode; secondNode: ReactNode }) => (
@@ -105,6 +126,7 @@ vi.mock('../aiAgentChat/AIAgentChat', async () => {
           <span data-testid="goal">{store.setting.Strategy?.GoalMinIterations}</span>
           <span data-testid="enable-plan">{String(!!store.setting.EnablePlan)}</span>
           <span data-testid="setting">{JSON.stringify(store.setting)}</span>
+          <span data-testid="active-chat">{JSON.stringify(store.activeChat)}</span>
           <span data-testid="active-title">{store.activeChat?.Title}</span>
           <span data-testid="active-session">{store.activeChat?.SessionID || 'welcome'}</span>
           <button onClick={() => dispatcher.setActiveChat({ SessionID: 'history' } as AISession)}>
@@ -144,7 +166,9 @@ vi.mock('../../ai-re-act/hooks/useChatIPC', () => ({
   },
 }))
 
-vi.mock('@/store/pageInfo', () => ({ usePageInfo: { getState: () => ipc } }))
+vi.mock('@/store/pageInfo', () => ({
+  usePageInfo: Object.assign(() => YakitRoute.AI_Agent, { getState: () => ipc }),
+}))
 vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', async () => {
   const { createStore } = await import('zustand/vanilla')
   const sessionStores = createStore(() => new Map())
@@ -197,6 +221,7 @@ const deferred = <T,>() => {
 describe('AIAgent 配置广播', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    ipc.showHistory = false
     ipc.pages.clear()
     ipc.sessions.clear()
     globalSessionEngine.sessionStores.setState(new Map(), true)
@@ -335,6 +360,60 @@ describe('AIAgent 配置广播', () => {
     expect(screen.getByTestId('raw-limit')).toHaveTextContent(String(runtimeKB * 1024))
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     expect(setRemoteValueMock).not.toHaveBeenCalled()
+  })
+
+  it.each([false, true])('真实历史事件通过 AIAgent 合并同批参数并保留请求字节值，反向顺序：%s', async (reverse) => {
+    ipc.showHistory = true
+    const session = {
+      SessionID: 'history',
+      Title: 'original',
+      StartParams: {
+        RuntimeContextSizeLimit: 300 * 1024,
+        SyncPerceptionTrigger: true,
+        EnablePlan: true,
+        Strategy: { EnableGoalMode: true, MaxSubAgents: 4 },
+      },
+    } as AISession
+    querySessionMock.mockResolvedValueOnce(sessionResponse([session]))
+    render(<AIAgent pageId="test" initialSession={session} />)
+    await waitFor(() => expect(screen.getByTestId('default-limit')).toHaveTextContent(/^300$/))
+    await act(async () => {})
+    expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
+    // 初始化恢复不写引擎；用户修改设置后进入正常配置同步路径。
+    fireEvent.click(screen.getByText('turn-on-plan'))
+    await waitFor(() => expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalled())
+    vi.mocked(globalSessionEngine.updateSessionConfig).mockClear()
+    ipc.detachPendingChat.mockClear()
+    ipc.updatePagesDataCacheById.mockClear()
+    const updates = [
+      { StartParams: { RuntimeContextSizeLimit: 600 * 1024 } },
+      { StartParams: { SyncPerceptionTrigger: false, Strategy: { MaxSubAgents: 0 } } },
+    ]
+    act(() => {
+      for (const patch of reverse ? updates.reverse() : updates) {
+        emiter.emit('sessionData', JSON.stringify({ type: 'updateSession', sessionId: 'history', updates: patch }))
+      }
+    })
+    expect(JSON.parse(screen.getByTestId('active-chat').textContent!)).toEqual({
+      ...session,
+      StartParams: {
+        ...session.StartParams,
+        RuntimeContextSizeLimit: 600 * 1024,
+        SyncPerceptionTrigger: false,
+        Strategy: { EnableGoalMode: true, MaxSubAgents: 0 },
+      },
+    })
+    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
+    expect(screen.getByTestId('raw-limit')).toHaveTextContent(/^614400$/)
+    expect(screen.getByTestId('default-limit')).toHaveTextContent(/^300$/)
+    expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith(
+      'history',
+      expect.objectContaining({ RuntimeContextSizeLimit: 614400 }),
+    )
+    expect(ipc.detachPendingChat).not.toHaveBeenCalled()
+    expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+    expect(session.StartParams?.RuntimeContextSizeLimit).toBe(307200)
+    expect(session.StartParams?.Strategy?.MaxSubAgents).toBe(4)
   })
 
   it.each(['user', 'broadcast', 'context'])(
