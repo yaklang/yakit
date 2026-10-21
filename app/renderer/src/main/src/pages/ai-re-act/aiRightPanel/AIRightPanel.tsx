@@ -190,16 +190,23 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
         })
       }
       ensureApiKeys()
+      // 兑换/充值成功后立即刷新（含 idle，不依赖轮询）
+      const onRefreshCommunityApiKeys = () => {
+        refreshApiKeys()
+      }
+      emiter.on('onRefreshCommunityApiKeys', onRefreshCommunityApiKeys)
       // 执行中每 10 秒刷新配额，结束后停止轮询
       if (!execute) {
         return () => {
           cancelled = true
+          emiter.off('onRefreshCommunityApiKeys', onRefreshCommunityApiKeys)
         }
       }
       const timer = window.setInterval(refreshApiKeys, 10_000)
       return () => {
         cancelled = true
         window.clearInterval(timer)
+        emiter.off('onRefreshCommunityApiKeys', onRefreshCommunityApiKeys)
       }
     }, [isLogin, execute])
 

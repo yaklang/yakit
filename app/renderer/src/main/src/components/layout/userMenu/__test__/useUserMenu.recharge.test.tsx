@@ -297,6 +297,23 @@ describe('通知充值入口', () => {
   })
 })
 
+describe('通知兑换入口', () => {
+  it('onOpenRedeem 打开兑换弹窗并关闭用户菜单', () => {
+    const { result } = renderMenu()
+    act(() => result.current.setCeUserMenuShow(true))
+    act(() => emiter.emit('onOpenRedeem', ''))
+    expect(result.current.ceUserMenuShow).toBe(false)
+    expect(result.current.redeemVisible).toBe(true)
+  })
+
+  it('卸载时移除兑换事件监听', () => {
+    const { unmount } = renderMenu()
+    expect(emiter.all.get('onOpenRedeem')).toHaveLength(1)
+    unmount()
+    expect(emiter.all.get('onOpenRedeem')).toHaveLength(0)
+  })
+})
+
 describe('企业用户菜单首次展开', () => {
   it('首帧直接展示用户信息，不等待懒加载后再撑高菜单', () => {
     userInfo.isLogin = true

@@ -841,6 +841,12 @@ export declare namespace API {
      */
     testerUids?: string
   }
+  export interface RedeemCodeRequest {
+    /**
+     * 兑换码
+     */
+    code: string
+  }
   export interface RenamePayloadRequest {
     /**
      * 修改文件夹名 folder 修改文件名 group
