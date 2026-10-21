@@ -19,10 +19,10 @@ import {
   XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
-import { getPressuresData, getCostData, getThreshold, getContextStatsData } from './utils'
+import { getPressuresData, getCostData, getContextStatsData } from './utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AIDetailsDashIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AIDetailsDashIcon'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import useRuntimeContextSizeLimit from '../../useContext/useRuntimeContextSizeLimit'
 import ContextTable from './ContextTable/ContextTable'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -57,6 +57,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
   renderNumber,
 }) => {
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
+  const runtimeContextSizeLimit = useRuntimeContextSizeLimit()
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(ref)
   const [aiGlobalConfigData, event] = useAIGlobalConfig()
@@ -86,10 +87,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
     return getCostData(firstCost)
   }, [renderNumber, firstCost?.intelligent, firstCost?.lightweight])
 
-  const threshold = useCreation(
-    () => getThreshold(pressure),
-    [renderNumber, pressure?.intelligent, pressure?.lightweight],
-  )
+  const threshold = useCreation(() => runtimeContextSizeLimit * 1024, [runtimeContextSizeLimit])
 
   const contextStatsData = useCreation(() => {
     return getContextStatsData(contextStats?.data)
@@ -128,11 +126,11 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
         </div>
         <div className={styles['extra']}>
           <div className={styles['intelligent']}>
-            <AIDetailsDashIcon className={styles['intelligent-icon']} />
+            <div className={styles['intelligent-icon']} />
             <span>{t('AiAgengt.intelligentModels')}</span>
           </div>
           <div className={styles['lightweight']}>
-            <AIDetailsDashIcon className={styles['lightweight-icon']} />
+            <div className={styles['lightweight-icon']} />
             <span>{t('AiAgengt.lightweightModels')}</span>
           </div>
         </div>

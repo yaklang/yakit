@@ -155,6 +155,8 @@ export interface AIAgentChatData {
   timelineBeforeId: number
   /** timeline 历史是否已到尽头（Total===0 或 Events.length < LIMIT 时置 true） */
   timelineNoMore: boolean
+  /** 时间线窗口最近一次获取的 Dump */
+  timelineDump?: string
 
   /** 记录数据里所有的httpRunTimeIDs */
   httpRunTimeIDs: string[]

@@ -64,7 +64,7 @@ const {
   return {
     startIdleVisibleInterval: vi.fn(() => vi.fn()),
     queryRisks: vi.fn(),
-    edition: { community: true, yakit: true, enterprise: false, agent: false },
+    edition: { community: true, yakit: true, enterprise: false, agent: false, memfit: false },
     messageState: { unread: 0, menuOpen: false },
     menuActions: {
       setDynamicMenuOpen: vi.fn(),
@@ -189,7 +189,7 @@ vi.mock('@/utils/envfile', async (importOriginal) => {
     isCommunityYakit: () => edition.community,
     isEnpriTrace: () => edition.enterprise,
     isEnpriTraceAgent: () => edition.agent,
-    isMemfit: () => false,
+    isMemfit: () => edition.memfit,
     isYakit: () => edition.yakit,
     showDevTool: () => false,
     getReleaseEditionName: () => 'Yakit',
@@ -238,6 +238,8 @@ vi.mock('../userMenu/useUserMenu', () => ({
     setUsageStatisticsShow: vi.fn(),
     rechargeVisible: false,
     setRechargeVisible: vi.fn(),
+    redeemVisible: false,
+    setRedeemVisible: vi.fn(),
     apiKeys: '',
     apiKeysInfo: {},
     apiKeysInfoLoading: false,
@@ -303,8 +305,17 @@ vi.mock('../../MessageCenter/useMessageUnread', () => ({
   useMessageUnread: () => messageState.unread,
 }))
 
+// 暴露成功操作入口，覆盖 FuncDomain 接线：菜单刷新 + 面板事件广播
 vi.mock('../../CeUserMenu/CeRechargeModal', () => ({
-  default: () => null,
+  default: (props: { onPaySuccess?: () => void }) => (
+    <button type="button" data-testid="ce-recharge-pay-success" onClick={props.onPaySuccess} />
+  ),
+}))
+
+vi.mock('../../CeUserMenu/CeRedeemModal', () => ({
+  default: (props: { onSuccess?: () => void }) => (
+    <button type="button" data-testid="ce-redeem-success" onClick={props.onSuccess} />
+  ),
 }))
 
 vi.mock('../userMenu/constants', () => ({
@@ -453,12 +464,41 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     vi.clearAllMocks()
     queryRisks.mockResolvedValue({ Data: [] })
     screenRecorderState.isRecording = false
+    edition.memfit = false
+  })
+
+  afterEach(() => {
+    edition.memfit = false
   })
 
   /** 设置入口（UIOpSetting 触发按钮）；定位用 testid，勿用 class 选择器（根 vitest 配置会把 scss stub 成空对象） */
   const openSettingMenu = () => {
     fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
   }
+
+  const openExperimentalMenu = async () => {
+    openSettingMenu()
+    const explab = await screen.findByText('FuncDomain.explab')
+    fireEvent.mouseEnter(explab.closest('.ant-menu-submenu-title') ?? explab)
+  }
+
+  const memfitOnlyExperimentalLabels = [
+    'FuncDomain.basChaosmaker',
+    'FuncDomain.debugMonacoEditor',
+    'FuncDomain.debugTrafficAnalize',
+    'AI Agent',
+    'FuncDomain.aiRepository',
+    'FuncDomain.memoryBase',
+  ]
+  const sharedExperimentalLabels = [
+    'FuncDomain.vulinboxManager',
+    'FuncDomain.runNode',
+    'FuncDomain.webshellManager',
+    'GlobalState.mcp',
+    'ssa-result-diff',
+    'FuncDomain.ssaCompileHistory',
+    'FuncDomain.cHeaders',
+  ]
 
   it('设置菜单按顺序展示 i18n 后的菜单项', async () => {
     render(<FuncDomain {...baseProps} />)
@@ -514,6 +554,30 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     const payload = calls[calls.length - 1][1] as string
     // route 枚举序列化形式与转换器有关，只断言锚点参数
     expect(payload).toContain('"anchor":"general"')
+  })
+
+  it('非 Memfit 的试验性功能不展示 AI 相关入口，其余项保留', async () => {
+    render(<FuncDomain {...baseProps} />)
+    await openExperimentalMenu()
+
+    expect(await screen.findByText('FuncDomain.vulinboxManager')).toBeInTheDocument()
+    for (const label of sharedExperimentalLabels) {
+      expect(screen.getByText(label)).toBeInTheDocument()
+    }
+    for (const label of memfitOnlyExperimentalLabels) {
+      expect(screen.queryByText(label)).not.toBeInTheDocument()
+    }
+  })
+
+  it('Memfit 的试验性功能保留 AI 相关入口与其余项', async () => {
+    edition.memfit = true
+    render(<FuncDomain {...baseProps} />)
+    await openExperimentalMenu()
+
+    expect(await screen.findByText('FuncDomain.basChaosmaker')).toBeInTheDocument()
+    for (const label of [...memfitOnlyExperimentalLabels, ...sharedExperimentalLabels]) {
+      expect(screen.getByText(label)).toBeInTheDocument()
+    }
   })
 })
 
@@ -847,6 +911,37 @@ describe('FuncDomain 头像按钮点击区域', () => {
     render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
     fireEvent.click(screen.getByTestId('user-menu-trigger'))
     expect(menuActions.setLoginShow).toHaveBeenCalledWith(true)
+  })
+})
+
+describe('FuncDomain 兑换/充值成功双端刷新', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryRisks.mockResolvedValue({ Data: [] })
+  })
+
+  it('兑换成功时调用 onUpdateApiKey 并广播 onRefreshCommunityApiKeys 各一次', () => {
+    render(<FuncDomain {...baseProps} />)
+    vi.mocked(menuActions.onUpdateApiKey).mockClear()
+    vi.mocked(emiter.emit).mockClear()
+
+    fireEvent.click(screen.getByTestId('ce-redeem-success'))
+
+    expect(menuActions.onUpdateApiKey).toHaveBeenCalledOnce()
+    expect(emiter.emit).toHaveBeenCalledOnce()
+    expect(emiter.emit).toHaveBeenCalledWith('onRefreshCommunityApiKeys', '')
+  })
+
+  it('充值成功时调用 onUpdateApiKey 并广播 onRefreshCommunityApiKeys 各一次', () => {
+    render(<FuncDomain {...baseProps} />)
+    vi.mocked(menuActions.onUpdateApiKey).mockClear()
+    vi.mocked(emiter.emit).mockClear()
+
+    fireEvent.click(screen.getByTestId('ce-recharge-pay-success'))
+
+    expect(menuActions.onUpdateApiKey).toHaveBeenCalledOnce()
+    expect(emiter.emit).toHaveBeenCalledOnce()
+    expect(emiter.emit).toHaveBeenCalledWith('onRefreshCommunityApiKeys', '')
   })
 })
 

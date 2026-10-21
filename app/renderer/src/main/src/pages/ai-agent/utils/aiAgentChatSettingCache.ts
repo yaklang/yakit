@@ -7,7 +7,7 @@ import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import type { AIAgentSetting } from '../aiAgentType'
 import { AIAgentSettingDefault } from '../defaultConstant'
 
-const omitPersistKeys = ['AIService', 'AIModelName'] as const
+const omitPersistKeys = ['AIService', 'AIModelName', 'TimelineContentSizeLimit'] as const
 const omitSessionRuntimeKeys = ['EnablePlan', 'SyncPerceptionTrigger', 'SingleModelMode', 'Source'] as const
 
 export const stripAIAgentChatSettingForPersist = (setting: Partial<AIAgentSetting>): Partial<AIAgentSetting> => {

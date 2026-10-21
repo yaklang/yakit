@@ -77,4 +77,23 @@ describe('formatAIAgentSetting', () => {
     expect(result.Strategy?.GoalDurationSeconds).toBe(3600)
     expect(result.Strategy?.GoalAcceptanceCriteria).toBe('接口 200')
   })
+
+  it('不再下发已废弃的 TimelineContentSizeLimit，运行时上下文走新字段', () => {
+    const result = formatAIAgentSetting({
+      ...AIAgentSettingDefault,
+      TimelineContentSizeLimit: 60,
+      RuntimeContextSizeLimit: 300,
+    })
+    expect(result).not.toHaveProperty('TimelineContentSizeLimit')
+    // 设置里单位是KB，下发时换算成字节
+    expect(result.RuntimeContextSizeLimit).toBe(300 * 1024)
+  })
+
+  it('运行时上下文留空时不覆盖服务端默认阈值', () => {
+    const { RuntimeContextSizeLimit: _omit, ...rest } = AIAgentSettingDefault
+    expect(formatAIAgentSetting(rest).RuntimeContextSizeLimit).toBe(0)
+    expect(formatAIAgentSetting({ ...AIAgentSettingDefault, RuntimeContextSizeLimit: 0 }).RuntimeContextSizeLimit).toBe(
+      0,
+    )
+  })
 })

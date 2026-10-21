@@ -53,7 +53,6 @@ const automationReset: Partial<AIAgentSetting> = {
 }
 
 const resourcesReset: Partial<AIAgentSetting> = {
-  TimelineContentSizeLimit: AIAgentSettingDefault.TimelineContentSizeLimit,
   AICallTokenLimit: AIAgentSettingDefault.AICallTokenLimit,
   UserInteractLimit: AIAgentSettingDefault.UserInteractLimit,
 }
@@ -354,17 +353,6 @@ export const AIConfigSettings: React.FC = () => {
           />
         </div>
         <div className={styles['list-panel']}>
-          <SettingRow title={t('AIChatSetting.timelineContentSize')}>
-            <YakitInput
-              wrapperClassName={classNames(styles['compact-input'], styles['input-suffix'])}
-              suffix="KB"
-              value={`${setting.TimelineContentSizeLimit ?? ''}`}
-              onChange={(e) => {
-                const value = digitsOnly(e.target.value)
-                apply({ TimelineContentSizeLimit: value === '' ? 0 : Number(value) })
-              }}
-            />
-          </SettingRow>
           <SettingRow title={t('AIChatSetting.aiCallTokenLimit')} desc={t('AIChatSetting.aiCallTokenLimitDesc')}>
             <YakitInput
               wrapperClassName={classNames(styles['compact-input'], styles['input-suffix'])}

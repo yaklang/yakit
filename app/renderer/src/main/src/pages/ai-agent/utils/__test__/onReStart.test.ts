@@ -45,6 +45,45 @@ it('does not open another connection for an executing session or an empty select
   expect(onStart).not.toHaveBeenCalled()
 })
 
+it.each([
+  { name: '旧会话缺少上下文上限', runtimeContextSizeLimit: undefined },
+  { name: '服务端默认值标记', runtimeContextSizeLimit: 0 },
+  { name: '已保存的字节上限', runtimeContextSizeLimit: 600 * 1024 },
+])('恢复$name时请求优先读取会话缓存，并保留原始启动参数', ({ runtimeContextSizeLimit }) => {
+  const onStart = vi.fn()
+  const startParams = {
+    TimelineSessionID: 'stale-history',
+    UserQuery: 'old first question',
+    ...(runtimeContextSizeLimit === undefined ? {} : { RuntimeContextSizeLimit: runtimeContextSizeLimit }),
+  }
+  const originalStartParams = { ...startParams }
+  const activeChat = {
+    SessionID: 'selected',
+    Source: 'ai',
+    StartParams: startParams,
+  } as AISession
+
+  onReStart({ activeChat, onStart })
+
+  expect(onStart).toHaveBeenCalledExactlyOnceWith({
+    kind: 'resume',
+    sessionId: 'selected',
+    localSource: undefined,
+    params: {
+      IsStart: true,
+      Params: expect.objectContaining({
+        PreferSessionCachedConfig: true,
+        TimelineSessionID: 'selected',
+        UserQuery: '',
+      }),
+    },
+  })
+  // 这里只验证前端请求契约，缓存配置的实际读取由后端负责。
+  expect(onStart.mock.calls[0][0].params.Params.RuntimeContextSizeLimit).toBe(runtimeContextSizeLimit ?? 300)
+  expect(activeChat.StartParams).toBe(startParams)
+  expect(startParams).toEqual(originalStartParams)
+})
+
 it('waits for the previous Tab to finish closing before reopening its session', async () => {
   let finish!: () => void
   mocks.isSessionClosing.mockReturnValue(true)

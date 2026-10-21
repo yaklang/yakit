@@ -1,15 +1,14 @@
 import type React from 'react'
 import { createContext, useContext } from 'react'
-import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act, cleanup, within } from '@testing-library/react'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { WebsiteGV } from '@/enums/website'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useStore as useUserStore } from '@/store'
 import { grpcExportAILogs, grpcQueryHTTPFlows } from '@/pages/ai-agent/grpc'
 import { failed, yakitNotify } from '@/utils/notification'
-import { yakitShell } from '@/services/electronBridge'
 import type { ExportAILogsModal as ExportAILogsModalComponent } from '@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal'
 import { apiRiskFieldGroup } from '@/pages/risks/YakitRiskTable/utils'
+import emiter from '@/utils/eventBus/eventBus'
 import type * as AIRightPanelModule from '../AIRightPanel'
 
 const viewportState = vi.hoisted(() => ({ visible: true }))
@@ -62,6 +61,7 @@ const resetMockStore = () => {
 }
 vi.mock('../../hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => mockTaskStore,
+  useCurrentMeta: () => ({ syncIDMap: new Map() }),
   useCurrentRawData: () => ({
     taskDetailsMap: mockTaskDetailsMap,
     httpRunTimeIDs: [] as string[],
@@ -115,7 +115,24 @@ const {
   mockNetWorkApi: vi.fn<(params?: { url?: string }) => Promise<unknown>>(() => Promise.resolve(undefined)),
   mockIsCommunityEdition: vi.fn(() => true),
 }))
-vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: mockEmit, on: vi.fn(), off: vi.fn() } }))
+vi.mock('@/utils/eventBus/eventBus', () => {
+  const handlers = new Map<string, Set<(...args: unknown[]) => void>>()
+  mockEmit.mockImplementation((name: string, ...args: unknown[]) => {
+    handlers.get(name)?.forEach((handler) => handler(...args))
+  })
+  return {
+    default: {
+      on: vi.fn((name: string, handler: (...args: unknown[]) => void) => {
+        if (!handlers.has(name)) handlers.set(name, new Set())
+        handlers.get(name)!.add(handler)
+      }),
+      off: vi.fn((name: string, handler: (...args: unknown[]) => void) => {
+        handlers.get(name)?.delete(handler)
+      }),
+      emit: mockEmit,
+    },
+  }
+})
 
 vi.mock('@/services/fetch', () => ({
   NetWorkApi: mockNetWorkApi,
@@ -349,7 +366,7 @@ describe('AIRightPanel', () => {
       expect(mockEmit).toHaveBeenCalledWith('onOpenUsageStatistics', '')
     })
 
-    it('点击兑换打开活动页且不冒泡触发用量统计', async () => {
+    it('点击兑换打开兑换弹窗且不冒泡触发用量统计', async () => {
       useUserStore.getState().setStoreUserInfo({
         ...useUserStore.getState().userInfo,
         isLogin: true,
@@ -368,11 +385,52 @@ describe('AIRightPanel', () => {
       })
 
       mockEmit.mockClear()
-      vi.mocked(yakitShell.openExternal).mockClear()
       fireEvent.click(screen.getByRole('button', { name: '兑换' }))
 
-      expect(yakitShell.openExternal).toHaveBeenCalledWith(WebsiteGV.PromotionsAddress)
+      expect(mockEmit).toHaveBeenCalledWith('onOpenRedeem', '')
       expect(mockEmit).not.toHaveBeenCalledWith('onOpenUsageStatistics', '')
+    })
+
+    it('idle 时收到 onRefreshCommunityApiKeys 会刷新余额', async () => {
+      useUserStore.getState().setStoreUserInfo({
+        ...useUserStore.getState().userInfo,
+        isLogin: true,
+      })
+      mockTaskStore.setState({ execute: false })
+      let call = 0
+      mockNetWorkApi.mockImplementation(async (params?: { url?: string }) => {
+        if (params?.url !== 'apikeys') return undefined
+        call += 1
+        if (call === 1) {
+          return {
+            data: {
+              apiKey: ['k'],
+              tokenUsed: 0,
+              tokenLimit: 100_000_000,
+              tokenLimitEnable: true,
+            },
+          }
+        }
+        return {
+          data: {
+            apiKey: ['k'],
+            tokenUsed: 50_000_000,
+            tokenLimit: 100_000_000,
+            tokenLimitEnable: true,
+          },
+        }
+      })
+      await renderPanel(<AIRightPanel />)
+      await waitFor(() => {
+        expect(screen.getByText('¥10')).toBeVisible()
+      })
+
+      await act(async () => {
+        emiter.emit('onRefreshCommunityApiKeys', '')
+      })
+      await waitFor(() => {
+        expect(screen.getByText('¥5')).toBeVisible()
+      })
     })
 
     it('刷新为空或失败时保留已展示的余额块，不卸载闪烁', async () => {
@@ -933,7 +991,15 @@ describe('AIRightPanel', () => {
     fireEvent.click(screen.getByLabelText('更多'))
     fireEvent.click(screen.getByLabelText('时间线'))
     expect(screen.getByTestId('timeline-pane')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ }))
+    const closeButton = screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ })
+    const actions = closeButton.parentElement!
+    const header = actions.parentElement!
+    expect(header.firstElementChild).toHaveTextContent('时间线')
+    expect(header.firstElementChild?.querySelector('button')).toBeNull()
+    expect(within(actions).getByRole('button', { name: /copyDump/ })).toBeInTheDocument()
+    expect(within(actions).getByRole('button', { name: /refresh/ })).toBeInTheDocument()
+    expect(within(actions).getAllByRole('button')).toHaveLength(3)
+    fireEvent.click(closeButton)
     expect(screen.queryByTestId('timeline-pane')).not.toBeInTheDocument()
     expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
   })
@@ -957,6 +1023,8 @@ describe('AIRightPanel', () => {
     await renderPanel(<AIRightPanel />)
     fireEvent.click(screen.getByLabelText('任务列表'))
     expect(screen.getByTestId('task-list-pane')).toBeVisible()
+    const header = screen.getByTestId('task-list-pane').closest('section')!.querySelector('header')!
+    expect(within(header).getAllByRole('button')).toHaveLength(1)
     expect(screen.getByLabelText('文件系统').parentElement?.parentElement?.parentElement?.className).toContain(
       'right-panel-hidden',
     )

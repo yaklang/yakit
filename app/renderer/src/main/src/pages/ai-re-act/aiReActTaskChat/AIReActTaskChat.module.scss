@@ -58,9 +58,12 @@
 
 // #region AIInputSettingPopover
 .ai-input-setting-form {
-  width: 320px;
+  width: 380px;
   .switch-form-item {
     margin-bottom: 8px;
+  }
+  .runtime-context-size-input {
+    width: 100%;
   }
 }
 .form-info-icon-tooltip {

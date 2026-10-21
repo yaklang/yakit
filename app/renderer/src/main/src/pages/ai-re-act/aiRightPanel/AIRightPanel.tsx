@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { TaskListPane } from '@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane'
 import { AIRightPanelPane } from './AIRightPanelPane'
+import { TimelineDumpButton } from './TimelineDumpButton'
 import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
@@ -41,6 +42,7 @@ import {
   ScrollTextOutlined,
   TimelineOutlined,
   UserCircleOutlined,
+  XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { Flex, Tooltip } from 'antd'
 import styles from './AIRightPanel.module.scss'
@@ -190,16 +192,23 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
         })
       }
       ensureApiKeys()
+      // 兑换/充值成功后立即刷新（含 idle，不依赖轮询）
+      const onRefreshCommunityApiKeys = () => {
+        refreshApiKeys()
+      }
+      emiter.on('onRefreshCommunityApiKeys', onRefreshCommunityApiKeys)
       // 执行中每 10 秒刷新配额，结束后停止轮询
       if (!execute) {
         return () => {
           cancelled = true
+          emiter.off('onRefreshCommunityApiKeys', onRefreshCommunityApiKeys)
         }
       }
       const timer = window.setInterval(refreshApiKeys, 10_000)
       return () => {
         cancelled = true
         window.clearInterval(timer)
+        emiter.off('onRefreshCommunityApiKeys', onRefreshCommunityApiKeys)
       }
     }, [isLogin, execute])
 
@@ -538,9 +547,23 @@ const PaneSlot: React.FC<{
     }
   }
 
+  const renderActions = () => {
+    switch (pane) {
+      case 'timeline':
+        return (
+          <>
+            <TimelineDumpButton />
+            <YakitButton type="text2" aria-label={t('YakitButton.close')} icon={<XOutlined />} onClick={onClose} />
+          </>
+        )
+      default:
+        return undefined
+    }
+  }
+
   return (
     <div className={classNames(styles['pane-slot'], { [styles['pane-slot-small']]: small })}>
-      <AIRightPanelPane title={renderTitle()} onClose={onClose}>
+      <AIRightPanelPane title={renderTitle()} actions={renderActions()} onClose={onClose}>
         {renderContent()}
       </AIRightPanelPane>
     </div>

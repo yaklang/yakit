@@ -66,6 +66,10 @@
   box-sizing: border-box;
 }
 
+.timeline-copy-button:global(.yakit) {
+  padding: 3px 4px;
+}
+
 .panel-top {
   display: flex;
   flex-direction: column;

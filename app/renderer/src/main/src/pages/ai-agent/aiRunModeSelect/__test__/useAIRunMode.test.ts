@@ -37,7 +37,16 @@ const settingRef: {
 vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
   default: () => ({
     setting: settingRef.value,
-    activeChat: sessionIdRef.value ? { SessionID: sessionIdRef.value, StartParams: {} } : undefined,
+    activeChat: sessionIdRef.value
+      ? {
+          SessionID: sessionIdRef.value,
+          StartParams: {
+            RuntimeContextSizeLimit: 300 * 1024,
+            SyncPerceptionTrigger: false,
+            Strategy: { GoalMinIterations: 1 },
+          },
+        }
+      : undefined,
   }),
 }))
 
@@ -198,6 +207,14 @@ describe('useAIRunMode', () => {
       },
     })
     expect(setSetting).toHaveBeenCalled()
+    expect(emiter.emit).toHaveBeenCalledExactlyOnceWith(
+      'sessionData',
+      JSON.stringify({
+        type: 'updateSession',
+        sessionId: 'token-1',
+        updates: { StartParams: { Strategy: { EnableMultiAgent: true, MaxSubAgents: 3 } } },
+      }),
+    )
   })
 
   it('未运行时切换 Strategy 只更新 setting，不发 hotpatch', () => {

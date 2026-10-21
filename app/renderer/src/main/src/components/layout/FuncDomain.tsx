@@ -109,6 +109,7 @@ import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayou
 import { parseIntranetYakitVersionFromPath } from './parseIntranetYakitVersion'
 import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
 import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
+import CeRedeemModal from '../CeUserMenu/CeRedeemModal'
 const TaskNotification = React.lazy(() =>
   import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskNotification })),
 )
@@ -231,6 +232,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     setUsageStatisticsShow,
     rechargeVisible,
     setRechargeVisible,
+    redeemVisible,
+    setRedeemVisible,
     apiKeys,
     apiKeysInfo,
     apiKeysInfoLoading,
@@ -533,10 +536,21 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       <CeRechargeModal
         visible={rechargeVisible}
         onClose={() => setRechargeVisible(false)}
-        onPaySuccess={() => onUpdateApiKey()}
+        onPaySuccess={() => {
+          onUpdateApiKey()
+          emiter.emit('onRefreshCommunityApiKeys', '')
+        }}
         onNeedLogin={() => {
           setCeUserMenuShow(false)
           setLoginShow(true)
+        }}
+      />
+      <CeRedeemModal
+        open={redeemVisible}
+        onClose={() => setRedeemVisible(false)}
+        onSuccess={() => {
+          onUpdateApiKey()
+          emiter.emit('onRefreshCommunityApiKeys', '')
         }}
       />
     </div>
@@ -738,6 +752,16 @@ const GetScreenAndScreenshotMenuItems = (
   return items
 }
 
+/** 试验性功能中仅 Memfit 保留的入口，其它发行版不展示 */
+const MEMFIT_ONLY_EXPERIMENTAL_MENU_KEYS = new Set([
+  'bas-chaosmaker',
+  'debug-monaco-editor',
+  'debug-traffic-analize',
+  'ai-agent',
+  'ai-repository',
+  'memory-base',
+])
+
 const GetUIOpSettingMenu = (
   t: TFunction,
   isRecording: boolean,
@@ -880,7 +904,7 @@ const GetUIOpSettingMenu = (
         { key: 'ssa-compile-history', label: t('FuncDomain.ssaCompileHistory') },
         { key: 'c-headers', label: t('FuncDomain.cHeaders') },
         { key: 'memory-base', label: t('FuncDomain.memoryBase') },
-      ],
+      ].filter((item) => isMemfit() || !MEMFIT_ONLY_EXPERIMENTAL_MENU_KEYS.has(item.key)),
     },
     {
       key: 'link',

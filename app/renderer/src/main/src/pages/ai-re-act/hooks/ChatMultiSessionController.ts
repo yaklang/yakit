@@ -10,6 +10,7 @@ import {
   type AIInputEvent,
   type AIOutputEvent,
   type AIStartParams,
+  withServerRuntimeContextLimit,
 } from './grpcApi'
 import { createChatStore } from './chatStore'
 import { createStore } from 'zustand/vanilla'
@@ -85,6 +86,7 @@ const genAIAgentChatData = (): AIAgentChatData => {
 
     timelineBeforeId: 0,
     timelineNoMore: false,
+    timelineDump: undefined,
 
     httpRunTimeIDs: [],
     riskRunTimeIDs: [],
@@ -1214,8 +1216,10 @@ export class ChatMultiSessionController {
     // 清理本次启动参数，避免修改调用方保留的重试入参。
     const startParams = cloneDeep(params)
     startParams.IsStart = true
-    startParams.Params = { ...startParams.Params }
-    startParams.Params.TimelineSessionID = sessionId
+    startParams.Params = withServerRuntimeContextLimit({
+      ...startParams.Params,
+      TimelineSessionID: sessionId,
+    })
     if (kind === 'new') {
       // 新建使用前端的新 ID，不继承历史缓存配置。
       startParams.Params.Attach = false
@@ -1518,10 +1522,22 @@ export class ChatMultiSessionController {
    * 拉回后 reverse 为时间正序，前插到 store.reActTimelines；更新 timelineBeforeId 游标。
    * @returns 是否还有更旧历史（Events.length === LIMIT）
    */
-  public async loadTimelineHistory(sessionId: string): Promise<boolean> {
+  public async loadTimelineHistory(sessionId: string, refresh = false): Promise<boolean> {
     const { rawData, store, meta } = this.ensureSession(sessionId)
+    const previousTimeline = refresh
+      ? {
+          items: store.getState().reActTimelines,
+          beforeId: rawData.timelineBeforeId,
+          noMore: rawData.timelineNoMore,
+        }
+      : undefined
     // 置 loading（驱动 TimelineCard 的 YakitSpin）；与 finally 一致用 store.getState() 取最新
     store.getState().updateState({ timelinesLoading: true })
+    if (refresh) {
+      rawData.timelineBeforeId = 0
+      rawData.timelineNoMore = false
+      store.setState({ reActTimelines: [] })
+    }
     try {
       const request: AIEventQueryRequest = {
         Filter: { SessionID: sessionId, NodeId: ['timeline_item'] },
@@ -1558,6 +1574,12 @@ export class ChatMultiSessionController {
       if (!hasMore) rawData.timelineNoMore = true
       return hasMore
     } catch {
+      if (previousTimeline && meta.lifecycle.current) {
+        rawData.timelineBeforeId = previousTimeline.beforeId
+        rawData.timelineNoMore = previousTimeline.noMore
+        store.getState().setReActTimelines(previousTimeline.items)
+        yakitNotify('error', tAgent('AIRightPanel.timelineRefreshFailed'))
+      }
       return false
     } finally {
       if (meta.lifecycle.current) store.getState().updateState({ timelinesLoading: false })
@@ -1778,6 +1800,7 @@ export class ChatMultiSessionController {
       [
         'session_title',
         'timeline_item',
+        'timeline',
         'react_task_enqueue',
         'react_task_dequeue',
         'queue_info',

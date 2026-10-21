@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -32,7 +32,9 @@ vi.mock('@/pages/ai-agent/utils/aiAgentChatSettingCache', async (importOriginal)
   }
 })
 
-const successLoad = (patch: Partial<AIAgentSetting> = {}): LoadAIAgentChatSettingResult => ({
+const successLoad = (
+  patch: Partial<AIAgentSetting> = {},
+): Extract<LoadAIAgentChatSettingResult, { status: 'success' }> => ({
   status: 'success',
   setting: {
     ...AIAgentSettingDefault,
@@ -100,6 +102,36 @@ describe('AIConfigSettings', () => {
     vi.mocked(persistAIAgentChatSetting).mockClear()
     unmount()
     expect(persistAIAgentChatSetting).not.toHaveBeenCalled()
+  })
+
+  it('运行时上下文已移至输入设置，AI 配置页不再展示', async () => {
+    render(<AIConfigSettings />)
+    await waitReady()
+    expect(screen.queryByText('AIChatSetting.runtimeContextSize')).not.toBeInTheDocument()
+  })
+
+  it('资源分区重置保留已移出的运行时上下文及其他分区配置', async () => {
+    const user = userEvent.setup()
+    const loaded = successLoad({
+      RuntimeContextSizeLimit: 300,
+      AICallTokenLimit: 99,
+      UserInteractLimit: 99,
+      EnableSystemFileSystemOperator: !AIAgentSettingDefault.EnableSystemFileSystemOperator,
+      ReviewPolicy: 'yolo',
+      DisableMemoryTriage: !AIAgentSettingDefault.DisableMemoryTriage,
+    })
+    vi.mocked(loadAIAgentChatSetting).mockResolvedValueOnce(loaded)
+    render(<AIConfigSettings />)
+    await waitReady()
+    const header = screen.getByText('AIChatSetting.resourcesLimits').parentElement!
+
+    await user.click(within(header).getByRole('button'))
+
+    expect(persistAIAgentChatSetting).toHaveBeenLastCalledWith({
+      ...loaded.setting,
+      AICallTokenLimit: AIAgentSettingDefault.AICallTokenLimit,
+      UserInteractLimit: AIAgentSettingDefault.UserInteractLimit,
+    })
   })
 
   it('修改后马上保存，离开页面也不会丢', async () => {

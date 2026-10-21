@@ -221,11 +221,11 @@
           gap: 8px;
           height: 20px;
           .intelligent-icon {
-            display: flex;
-            svg {
-              width: 12px;
-              color: var(--Colors-Use-Purple-Primary);
-            }
+            width: 8px;
+            height: 8px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background-color: var(--Colors-Use-Purple-Primary);
           }
         }
         .lightweight {
@@ -234,11 +234,11 @@
           gap: 8px;
           height: 20px;
           .lightweight-icon {
-            display: flex;
-            svg {
-              width: 12px;
-              color: var(--Colors-Use-Warning-Primary);
-            }
+            width: 8px;
+            height: 8px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background-color: var(--Colors-Use-Warning-Primary);
           }
         }
       }

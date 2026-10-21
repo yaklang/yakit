@@ -1,4 +1,5 @@
 import type { KnowledgeBaseEntry } from '@/components/playground/knowlegeBase'
+import omit from 'lodash/omit'
 import type { StreamResult, HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { KVPair } from '@/models/kv'
 import type { AITool } from '@/pages/ai-agent/type/aiTool'
@@ -128,8 +129,17 @@ export interface AIStartParams {
   /** @deprecated 选择 AI 服务模型名称 */
   AIModelName?: string
   ReActMaxIteration?: number
-  /** 时间线上下文大小（20*1024） */
+  /**
+   * @deprecated 前端下发的非零值会覆盖服务端默认阈值。
+   * 请改用 RuntimeContextSizeLimit；请求里不再携带本字段。
+   */
   TimelineContentSizeLimit?: number
+  /**
+   * 运行时上下文（普通历史、Skill 正文、Evidence 等）压缩阈值，单位字节。
+   * >0 覆盖服务端默认；<=0 或不传时使用服务端默认值。
+   * 下发前将 gRPC 数字字符串规范化为安全整数。
+   */
+  RuntimeContextSizeLimit?: number
   /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
   UserInteractLimit?: number
   /** timeline sessionID  用于多轮对话保持上下文 */
@@ -209,6 +219,24 @@ export interface AIEnabledCapability {
   Type: string
 }
 
+/**
+ * 丢掉已废弃的 TimelineContentSizeLimit，并规范化运行时上下文阈值：
+ * 合法正整数覆盖服务端默认阈值；其他值表示不覆盖，由服务端决定。
+ * 入参已是字节，兼容 gRPC int64 字符串，输出安全整数，不进行单位换算。
+ */
+export const withServerRuntimeContextLimit = <
+  T extends Omit<AIStartParams, 'RuntimeContextSizeLimit'> & { RuntimeContextSizeLimit?: number | string },
+>(
+  params: T,
+): Omit<T, 'TimelineContentSizeLimit' | 'RuntimeContextSizeLimit'> & { RuntimeContextSizeLimit: number } => {
+  const { RuntimeContextSizeLimit: limit } = params
+  const value = Number(limit)
+  return {
+    ...omit(params, ['TimelineContentSizeLimit', 'RuntimeContextSizeLimit']),
+    RuntimeContextSizeLimit: Number.isSafeInteger(value) && value > 0 ? value : 0,
+  }
+}
+
 /** AIInputEvent-HotpatchType 的可选值 */
 export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AllowRequireForUserInteract = 'AllowRequireForUserInteract',
@@ -219,6 +247,7 @@ export enum AIInputEventHotPatchTypeEnum {
 
   HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
   HotPatchType_DisabledCapabilities = 'DisabledCapabilities',
+  HotPatchType_RuntimeContextSizeLimit = 'RuntimeContextSizeLimit',
 
   /**@deprecated ai相关配置的热更新不需要前端传了，后端每次都去查询最新的 */
   HotPatchType_AIService = 'AIService',
