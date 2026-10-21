@@ -32,7 +32,7 @@ vi.mock('../../../../components/aiFileSystemList/store/useCustomFolder', () => (
   useCustomFolder: () => folderState.customFolders,
 }))
 vi.mock('../utils', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../utils')>()
+  const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
     grpcSearchFileContent: (...args: unknown[]) => mockSearch(...args),
