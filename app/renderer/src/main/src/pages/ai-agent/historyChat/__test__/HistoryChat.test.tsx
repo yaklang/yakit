@@ -60,11 +60,92 @@ vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.dispatcher.setSessions.mockReset()
+  mocks.setActiveChat.mockReset()
   mocks.ctx.activeChat = undefined
   mocks.ctx.sessions = []
   mocks.viewport.visible = true
   mocks.pages.clear()
   mocks.dispatcher.getSessions.mockReturnValue([])
+})
+
+describe('HistoryChat 会话参数增量更新', () => {
+  const original = {
+    SessionID: 'current',
+    Title: 'original',
+    StartParams: {
+      RuntimeContextSizeLimit: 307200,
+      SyncPerceptionTrigger: true,
+      EnablePlan: true,
+      Strategy: { EnableGoalMode: true, MaxSubAgents: 4 },
+    },
+  } as AISession
+
+  const applyEvents = (updates: Partial<AISession>[], current: AISession | undefined = original) => {
+    const other = { SessionID: 'other', StartParams: { EnablePlan: true } } as AISession
+    let sessions = [original, other]
+    let active = current
+    mocks.ctx.activeChat = current
+    mocks.dispatcher.setSessions.mockImplementation((update) => {
+      sessions = typeof update === 'function' ? update(sessions) : update
+    })
+    mocks.setActiveChat.mockImplementation((update) => {
+      active = typeof update === 'function' ? update(active) : update
+    })
+    render(<HistoryChat aiSource={['ai']} />)
+    act(() => {
+      updates.forEach((patch) =>
+        emiter.emit('sessionData', JSON.stringify({ type: 'updateSession', sessionId: 'current', updates: patch })),
+      )
+    })
+    return { sessions, active, other }
+  }
+
+  it.each([false, true])('连续更新上下文和同步开关保留全部参数，反向顺序：%s', (reverse) => {
+    const updates = [
+      { StartParams: { RuntimeContextSizeLimit: 614400 } },
+      { StartParams: { SyncPerceptionTrigger: false } },
+    ]
+    const { sessions, active, other } = applyEvents(reverse ? updates.reverse() : updates)
+    const expected = {
+      ...original,
+      StartParams: { ...original.StartParams, RuntimeContextSizeLimit: 614400, SyncPerceptionTrigger: false },
+    }
+    expect(sessions[0]).toEqual(expected)
+    expect(active).toEqual(expected)
+    expect(sessions[1]).toBe(other)
+    expect(original.StartParams?.RuntimeContextSizeLimit).toBe(307200)
+    expect(original.StartParams?.SyncPerceptionTrigger).toBe(true)
+    expect(sessions[0]).not.toBe(original)
+    expect(sessions[0].StartParams).not.toBe(original.StartParams)
+  })
+
+  it('策略字段逐项合并，false 和 0 生效且保留普通属性更新', () => {
+    const { sessions, active } = applyEvents([
+      { StartParams: { Strategy: { EnableGoalMode: false } } },
+      { StartParams: { Strategy: { MaxSubAgents: 0 }, EnablePlan: false } },
+      { Title: 'renamed' },
+    ])
+    expect(sessions[0]).toEqual({
+      ...original,
+      Title: 'renamed',
+      StartParams: {
+        ...original.StartParams,
+        EnablePlan: false,
+        Strategy: { EnableGoalMode: false, MaxSubAgents: 0 },
+      },
+    })
+    expect(active).toEqual(sessions[0])
+    expect(original.StartParams?.Strategy).toEqual({ EnableGoalMode: true, MaxSubAgents: 4 })
+  })
+
+  it('目标会话更新不改变另一个当前会话', () => {
+    const current = { SessionID: 'another', StartParams: { RuntimeContextSizeLimit: 102400 } } as AISession
+    const { sessions, active } = applyEvents([{ StartParams: { RuntimeContextSizeLimit: 0 } }], current)
+    expect(sessions[0].StartParams).toEqual({ ...original.StartParams, RuntimeContextSizeLimit: 0 })
+    expect(active).toBe(current)
+    expect(mocks.setActiveChat).not.toHaveBeenCalled()
+  })
 })
 
 describe('HistoryChat 头部操作', () => {

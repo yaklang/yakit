@@ -157,6 +157,8 @@
     "planPromptDefault": "自定义Plan提示词",
     "planPromptPlaceholder": "Plan 提示词将在任务规划阶段生效，用于补充规划说明...",
     "singleModelMode": "单模型模式",
+    "syncPerceptionTrigger": "同步意图识别",
+    "syncPerceptionTriggerTip": "开启后回答精度更高，但速度会变慢",
     "singleModelModeTip": "本会话只使用全局配置中的主模型",
     "singleModelModeGlobalTip": "全局配置已启用，当前会话无法关闭",
     "singleModelModeSessionTip": "单模型模式只能在新会话启动前修改"
@@ -927,7 +929,8 @@
     "aiCallAutoRetryDesc": "如果远端 AI 不稳定（网络原因）的时候，某一次对话重试几次",
     "aiTransactionRetry": "AI 事务重试次数",
     "aiTransactionRetryDesc": "如果回答质量不高的时候，调大可以有效重试回答",
-    "timelineContentSize": "时间线上下文大小",
+    "runtimeContextSize": "运行时上下文大小",
+    "runtimeContextSizeDesc": "上下文大小最小为 60 KB，仅支持正整数",
     "aiCallTokenLimit": "压力 token 阈值",
     "aiCallTokenLimitDesc": "Token pressure limit，当 AI 对话的 token 数量超过这个限制时，需要警告",
     "userInteractLimit": "用户交互上限",

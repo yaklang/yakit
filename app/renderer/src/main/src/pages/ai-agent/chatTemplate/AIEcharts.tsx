@@ -27,40 +27,6 @@ const useChartResizeOnMount = (chartRef: { current: EChartsReact | null }) => {
   }, [])
 }
 
-//#region 上下文压力 echarts图表
-export interface ContextPressureEchartsProps {
-  dataEcharts: {
-    data: Record<AIModelTypeEnumType, AIEchartsDataKey[]>
-    xData: Record<AIModelTypeEnumType, number[]>
-    maxValue: Record<AIModelTypeEnumType, number>
-  }
-  threshold: number
-}
-export const ContextPressureEcharts: React.FC<ContextPressureEchartsProps> = React.memo((props) => {
-  const { dataEcharts, threshold } = props
-  const chartRef = useRef<EChartsReact>(null)
-  const colorRef = useGetColorsByTheme()
-  const optionRef = useRef<echarts.EChartsOption>(
-    getContextPressureOption({ dataEcharts, threshold, colors: colorRef }),
-  )
-  const onSetOption = useDebounceFn(
-    () => {
-      const echartsInstance = chartRef.current?.getEchartsInstance()
-      if (!echartsInstance) return
-      const newOption = getContextPressureOption({ dataEcharts, threshold, colors: colorRef })
-      optionRef.current = newOption
-      echartsInstance.setOption(newOption, false, true)
-    },
-    { wait: 500, leading: true },
-  ).run
-
-  useEffect(() => {
-    onSetOption()
-  }, [dataEcharts, onSetOption, threshold])
-
-  return <ReactECharts ref={chartRef} option={optionRef.current} style={{ width: 72, height: 24 }} />
-})
-
 const AIModelTypeMap: Record<
   AIModelTypeEnumType,
   {
@@ -138,7 +104,7 @@ const getXAxis = (data: { xData: number[] }) => {
 }
 interface AIEchartsHelperProps {
   data: AIEchartsDataKey[]
-  threshold?: ContextPressureEchartsProps['threshold']
+  threshold?: number
   colors: Record<string, string>
 }
 const getIntelligent = (options: AIEchartsHelperProps) => {
@@ -205,121 +171,7 @@ const getLightweight = (options: AIEchartsHelperProps) => {
   return value
 }
 const symbolSize = 2
-interface ContextPressureOptionProps extends ContextPressureEchartsProps {
-  colors: Record<string, string>
-}
-/**获取 上下文压力echarts得option*/
-const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOption => {
-  const { dataEcharts, threshold, colors } = value
-  const { data, xData } = dataEcharts
-  const intelligent = getIntelligent({ data: data.intelligent, threshold, colors })
-  const intelligentLength = data.intelligent.length
-
-  const lightweight = getLightweight({ data: data.lightweight, threshold, colors })
-  const lightweightLength = data.lightweight?.length
-  const seriesBase = {
-    animation: false,
-    type: 'line',
-    smooth: true,
-    lineStyle: {
-      width: 1,
-    },
-    emphasis: {
-      focus: 'series',
-    },
-  }
-  const option: EChartsOption = {
-    grid: {
-      top: 4, // 上边距
-      right: 0, // 右边距
-      bottom: 4, // 下边距
-      left: 0, // 左边距
-    },
-    xAxis: [
-      getXAxis({
-        xData: xData.intelligent,
-      }),
-      getXAxis({
-        xData: xData.lightweight,
-      }),
-    ],
-    yAxis: {
-      show: false,
-    },
-    visualMap: [
-      {
-        type: 'piecewise',
-        show: false,
-        dimension: 1,
-        seriesIndex: 0,
-        max: intelligent.maxValueIntelligent,
-        min: intelligent.minValueIntelligent,
-        pieces: [
-          { gt: threshold, lte: intelligent.yMax, color: intelligent.heightColor }, // 大于部分
-          { lte: threshold, color: intelligent.color }, // 小于等于部分
-        ],
-      },
-      {
-        type: 'piecewise',
-        show: false,
-        dimension: 1,
-        seriesIndex: 1,
-        max: lightweight.maxValueLightweight,
-        min: lightweight.minValueLightweight,
-        pieces: [
-          { gt: threshold, lte: lightweight.yMax, color: lightweight.heightColor }, // 大于部分
-          { lte: threshold, color: lightweight.color }, // 小于等于部分
-        ],
-      },
-    ],
-    series: [
-      {
-        ...seriesBase,
-        name: tOriginal('AiAgengt.intelligentModels'),
-        xAxisIndex: 0,
-        data: intelligent.data.map((val, index) => {
-          if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
-            return {
-              value: val,
-              symbolSize,
-            }
-          } else {
-            return {
-              value: val,
-              symbolSize: intelligentLength === 1 ? symbolSize : 0,
-            }
-          }
-        }),
-      },
-      {
-        ...seriesBase,
-        name: tOriginal('AiAgengt.lightweightModels'),
-        xAxisIndex: 1,
-        data: lightweight.data.map((val, index) => {
-          if (lightweight.lightweightIndex - 1 === index && val >= lightweight.maxValueLightweight) {
-            return {
-              value: val,
-              symbolSize,
-            }
-          } else {
-            return {
-              value: val,
-              symbolSize: lightweightLength === 1 ? symbolSize : 0,
-            }
-          }
-        }), // 轻量
-        animation: false,
-        type: 'line',
-        smooth: true,
-        lineStyle: {
-          width: 1,
-        },
-      },
-    ],
-  }
-  return option
-}
-
+//#region 上下文压力详情图
 export interface AIPressureDetailsEchartsProps {
   dataEcharts: {
     data: Record<AIModelTypeEnumType, AIEchartsDataKey[]>
@@ -428,6 +280,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         },
       },
     },
+    // 暂时不区分高于threshold得部分显示为红色
     visualMap: [
       {
         type: 'piecewise',
@@ -437,7 +290,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         max: intelligent.maxValueIntelligent,
         min: intelligent.minValueIntelligent,
         pieces: [
-          { gt: threshold, lte: intelligent.yMax, color: intelligent.heightColor }, // 大于部分
+          { gt: threshold, lte: intelligent.yMax, color: intelligent.color }, // 大于部分
           { lte: threshold, color: intelligent.color }, // 小于等于部分
         ],
       },
@@ -449,7 +302,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         max: lightweight.maxValueLightweight,
         min: lightweight.minValueLightweight,
         pieces: [
-          { gt: threshold, lte: lightweight.yMax, color: lightweight.heightColor }, // 大于部分
+          { gt: threshold, lte: lightweight.yMax, color: lightweight.color }, // 大于部分
           { lte: threshold, color: lightweight.color }, // 小于等于部分
         ],
       },

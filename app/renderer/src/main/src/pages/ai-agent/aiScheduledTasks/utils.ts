@@ -1,6 +1,7 @@
 import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
+import { withServerRuntimeContextLimit } from '../../ai-re-act/hooks/grpcApi'
 import type {
   AIReActSchedule,
   CreateAIReActScheduleRequest,
@@ -17,6 +18,18 @@ import type {
 const { ipcRenderer } = window.require('electron')
 const t = i18n.getFixedT(null, 'aiAgent')
 
+/** 在 IPC 返回处转换 int64 字符串，业务层统一使用数字阈值。 */
+const normalizeSchedule = (schedule: AIReActSchedule): AIReActSchedule => {
+  if (!schedule.Payload?.StartParams) return schedule
+  return {
+    ...schedule,
+    Payload: {
+      ...schedule.Payload,
+      StartParams: withServerRuntimeContextLimit(schedule.Payload.StartParams),
+    },
+  }
+}
+
 /** 创建定时任务 */
 export const grpcCreateAIReActSchedule: APIFunc<CreateAIReActScheduleRequest, AIReActSchedule> = (
   params,
@@ -25,6 +38,7 @@ export const grpcCreateAIReActSchedule: APIFunc<CreateAIReActScheduleRequest, AI
   return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('CreateAIReActSchedule', params)
+      .then(normalizeSchedule)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcCreateAIReActSchedule 失败:' + err)
@@ -41,6 +55,7 @@ export const grpcUpdateAIReActSchedule: APIFunc<UpdateAIReActScheduleRequest, AI
   return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('UpdateAIReActSchedule', params)
+      .then(normalizeSchedule)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcUpdateAIReActSchedule 失败:' + err)
@@ -73,6 +88,10 @@ export const grpcQueryAIReActSchedules: APIFunc<QueryAIReActSchedulesRequest, Qu
   return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('QueryAIReActSchedules', params)
+      .then((response: QueryAIReActSchedulesResponse) => ({
+        ...response,
+        Data: (response.Data || []).map(normalizeSchedule),
+      }))
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcQueryAIReActSchedules 失败:' + err)
@@ -89,6 +108,7 @@ export const grpcSetAIReActScheduleEnabled: APIFunc<SetAIReActScheduleEnabledReq
   return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('SetAIReActScheduleEnabled', params)
+      .then(normalizeSchedule)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcSetAIReActScheduleEnabled 失败:' + err)
@@ -122,6 +142,7 @@ export const grpcGetAIReActSchedule: APIFunc<GetAIReActScheduleRequest, AIReActS
   return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('GetAIReActSchedule', params)
+      .then(normalizeSchedule)
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcGetAIReActSchedule 失败:' + err)

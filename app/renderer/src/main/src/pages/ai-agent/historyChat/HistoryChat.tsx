@@ -382,6 +382,25 @@ const HistoryChat = memo(
       }
     }, [embedded, enableHistorySourceFilter, historySourceFilter, refreshSessions])
 
+    // 合并会话增量参数，保留未修改字段，并同步当前会话
+    const updateSession = useMemoizedFn((sessionId: string, updates: Partial<AISession>) => {
+      const mergeSession = (session: AISession): AISession => {
+        if (session.SessionID !== sessionId) return session
+        const next = { ...session, ...updates }
+        if (updates.StartParams) {
+          next.StartParams = { ...session.StartParams, ...updates.StartParams }
+          if (updates.StartParams.Strategy) {
+            next.StartParams.Strategy = { ...session.StartParams?.Strategy, ...updates.StartParams.Strategy }
+          }
+        }
+        return next
+      }
+      dispatcher.setSessions((prev) => prev.map(mergeSession))
+      if (activeChat?.SessionID === sessionId) {
+        setActiveChat?.((prev) => (prev ? mergeSession(prev) : prev))
+      }
+    })
+
     useEffect(() => {
       const handleSessionData = async (data: string) => {
         const payload = JSONParseLog(data, { throwOnError: false }) as SessionDataPayload | undefined
@@ -438,9 +457,7 @@ const HistoryChat = memo(
             break
           case 'updateSession':
             if (payload.sessionId && payload.updates) {
-              dispatcher.setSessions((prev) =>
-                prev.map((item) => (item.SessionID === payload.sessionId ? { ...item, ...payload.updates } : item)),
-              )
+              updateSession(payload.sessionId, payload.updates)
             }
             break
           default:
@@ -451,7 +468,14 @@ const HistoryChat = memo(
       return () => {
         emiter.off('sessionData', handleSessionData)
       }
-    }, [dispatcher, handleResetSessions, historyQuerySources, isGlobalAIAgentHistory, isSessionVisibleInCurrentSource])
+    }, [
+      dispatcher,
+      handleResetSessions,
+      historyQuerySources,
+      isGlobalAIAgentHistory,
+      isSessionVisibleInCurrentSource,
+      updateSession,
+    ])
 
     return (
       <div ref={historyRef} className={classNames(styles['history-chat'], className)}>

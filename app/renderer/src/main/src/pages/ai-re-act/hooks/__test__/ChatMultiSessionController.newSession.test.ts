@@ -116,6 +116,7 @@ describe('frontend allocated session identity', () => {
         Source: 'ai',
         UserQuery: 'first question',
         TimelineSessionID: 'old-session',
+        TimelineContentSizeLimit: 60 * 1024,
         Attach: true,
         PreferSessionCachedConfig: true,
       },
@@ -137,8 +138,11 @@ describe('frontend allocated session identity', () => {
         TimelineSessionID: 'client-session',
         Attach: false,
         PreferSessionCachedConfig: false,
+        RuntimeContextSizeLimit: 0,
       },
     })
+    const [, , startRequest] = ipcRendererMock.invoke.mock.calls.find(([method]) => method === 'start-ai-re-act')!
+    expect(startRequest.Params).not.toHaveProperty('TimelineContentSizeLimit')
     expect(params).toEqual(original)
     controller.cancelPendingConnection(token)
   })

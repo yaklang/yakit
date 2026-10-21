@@ -1,6 +1,6 @@
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIModelTypeEnum, type AIModelTypeEnumType } from '../../defaultConstant'
-import type { AIEchartsDataKey, ContextPressureEchartsProps } from '../../chatTemplate/AIEcharts'
+import type { AIEchartsDataKey } from '../../chatTemplate/AIEcharts'
 import type { AIAgentChatData, AIContextStatsDetail } from '../../type/aiChat'
 
 const MODEL_TIERS = [
@@ -17,15 +17,6 @@ export const isTierArrayLengthChanged = (
   next: Record<string, any[]> | undefined,
 ) => {
   return MODEL_TIERS.some((tier) => prev?.[tier]?.length !== next?.[tier]?.length)
-}
-
-export const isPressurePerfChanged = (
-  prev: AIAgentChatData['aiPerfData']['pressure'] | null,
-  next: AIAgentChatData['aiPerfData']['pressure'] | null,
-) => {
-  if (!prev && !next) return false
-  if (!prev || !next) return true
-  return isTierArrayLengthChanged(prev, next)
 }
 
 export const isFirstCostPerfChanged = (
@@ -231,7 +222,7 @@ export const getCostData = (
   cost?: Record<AIModelTypeEnumType, AIAgentGrpcApi.AIFirstCostMS[]>,
   sliceLength?: number,
 ) => {
-  const data: ContextPressureEchartsProps['dataEcharts']['data'] = {
+  const data: Record<AIModelTypeEnumType, AIEchartsDataKey[]> = {
     [AIModelTypeEnum.TierIntelligent]: [],
     [AIModelTypeEnum.TierLightweight]: [],
     [AIModelTypeEnum.TierVision]: [],

@@ -127,7 +127,7 @@ service Yak {
   // echo 通常用于测试服务是否通畅
   rpc Echo(EchoRequest) returns(EchoResposne);
 
-  // 握手 用于检查前端是否可以连接当前引擎 
+  // 握手 用于检查前端是否可以连接当前引擎
   rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
 
   rpc VerifySystemCertificate(Empty) returns (VerifySystemCertificateResponse);
@@ -633,13 +633,13 @@ service Yak {
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated
   rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated
   rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
@@ -654,7 +654,7 @@ service Yak {
   rpc QueryMITMExtractedAggregate(QueryMITMExtractedAggregateRequest) returns (QueryMITMExtractedAggregateResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
-  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse); 
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
   /*
     ChaosMakerRule: Bas
   */
@@ -2293,8 +2293,15 @@ message AIStartParams {
   int64 ReActMaxIteration = 27;
 
   // 限制 Timeline 的最大条目和最大内容大小（bytes）
-  int64 TimelineItemLimit = 28; // 已经废弃，功能不可用了，只需要关注 TimelineContentSizeLimit 就好
+  int64 TimelineItemLimit = 28; // 已经废弃，功能不可用了。运行时上下文请看 RuntimeContextSizeLimit
+  // Deprecated: 运行时的 Timeline 现在除了普通历史，还承载 Skill 正文、Evidence 等
+  // 运行时上下文，内容规模已经不同；而且前端会下发一个非零默认值，覆盖服务端默认阈值。
+  // 请改用 RuntimeContextSizeLimit。
   int64 TimelineContentSizeLimit = 29;
+  // 运行时上下文（普通历史、Skill 正文、Evidence 等）的压缩阈值。
+  // >0 时覆盖服务端默认阈值；<=0（含前端不传）时使用服务端默认值，保证携带运行时
+  // 上下文的时间线不会被过早压缩。
+  int64 RuntimeContextSizeLimit = 51;
 
   // 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题
   int64 UserInteractLimit = 30;
@@ -4032,7 +4039,7 @@ message GetProjectsRequest {
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend 
+  // this type effect response.ProjectTotal, this type mark kind of frontend
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -7392,7 +7399,7 @@ message QueryHTTPFlowRequest {
 
   string PayloadKeyword = 47;
   string ExcludeStatusCode = 48; // 排除状态码
-  
+
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
   repeated MITMExtractAggregateFlowFilterRow MitmExtractAggregateFilterRows = 50;
@@ -8091,7 +8098,7 @@ message EchoResposne {
   string result = 1;
 }
 
-// handshake 
+// handshake
 message HandshakeRequest {
   string Name = 1;
 }
@@ -8832,7 +8839,7 @@ message SyntaxFlowScanRequest{
   // 并发，默认5
   uint32  Concurrency = 7;
 
-  // compile data only in memory 
+  // compile data only in memory
   bool Memory = 8;
   // 根据项目扫描
   uint64 SSAProjectId = 9;
@@ -8919,11 +8926,11 @@ message SyntaxFlowScanResponse{
 }
 
 message SyntaxFlowScanActiveTask {
-  // index 
+  // index
   string RuleName = 3;
-  string ProgramName = 4; 
-  // progress 
-  double Progress = 5; 
+  string ProgramName = 4;
+  // progress
+  double Progress = 5;
 
   int64 RunningTime = 6;
   string Info = 7;
@@ -8983,7 +8990,7 @@ message SyntaxFlowResult {
 
   string RuleContent = 12;
   string Kind = 13; // "query" | "debug" | "scan"
-  string SaveKind = 14; // "memory" | "database"  
+  string SaveKind = 14; // "memory" | "database"
 }
 
 message DeleteSyntaxFlowResultRequest{
@@ -9135,9 +9142,9 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data 
+  repeated SSARisk Data = 1; // new ssa-risk unread data
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count 
+  int64 Total = 3; // total ssa-risk count
   int64 Unread = 4;// total unread ssa-risk count
 }
 
