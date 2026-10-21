@@ -157,3 +157,65 @@
     font-weight: 500;
   }
 }
+.visualization {
+  margin: 12px 0;
+}
+.legend {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  [aria-pressed='false'] {
+    opacity: 0.5;
+    text-decoration: line-through;
+  }
+}
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+.chartScroll,
+.tableScroll,
+.chartData {
+  overflow-x: auto;
+}
+.chart {
+  display: block;
+  width: 100%;
+  [data-point]:focus {
+    outline: none;
+    stroke: var(--Colors-Use-Neutral-Text-1-Title);
+    stroke-width: 3px;
+  }
+}
+.chartAxis {
+  line {
+    stroke: var(--Colors-Use-Neutral-Border);
+  }
+  text {
+    fill: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 11px;
+  }
+}
+.chartLabel {
+  fill: var(--Colors-Use-Neutral-Text-2-Primary);
+  font-size: 11px;
+}
+.chartDetail {
+  min-height: 20px;
+  margin: 8px 0;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+.chartData summary {
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.columnFilter {
+  display: block;
+  min-width: 100px;
+  margin-top: 4px;
+}
