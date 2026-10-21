@@ -1,4 +1,36 @@
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import type { KVPair } from '@/models/kv'
+
+export const YAK_SCRIPT_PROVIDER = 'yak-script'
+export const YAK_SCRIPT_FIELDS = ['script', 'script_params', 'script_timeout_seconds'] as const
+
+export const isYakScriptField = (key: string) => YAK_SCRIPT_FIELDS.some((field) => field === key)
+
+export const getYakScriptFormValues = (params: KVPair[] = []) => {
+  const values = Object.fromEntries(params.map(({ Key, Value }) => [Key, Value]))
+  return {
+    script: values.script ?? '',
+    script_params: values.script_params ?? '{}',
+    script_timeout_seconds: Number(values.script_timeout_seconds || 240),
+  }
+}
+
+export const buildProviderExtraParams = (values: {
+  Type?: string
+  ExtraParams?: KVPair[]
+  script?: string
+  script_params?: string
+  script_timeout_seconds?: number
+}): KVPair[] => {
+  const params = (values.ExtraParams ?? []).filter(({ Key }) => !isYakScriptField(Key))
+  if (values.Type === YAK_SCRIPT_PROVIDER) {
+    YAK_SCRIPT_FIELDS.forEach((Key) => {
+      const value = values[Key]
+      if (value !== undefined && value !== null && value !== '') params.push({ Key, Value: String(value) })
+    })
+  }
+  return params
+}
 
 /**
  * 将 Provider 配置转换为 ListAiModel 接口所需的 Config JSON 字符串。
@@ -17,6 +49,11 @@ export const providerToListAiModelConfig = (provider?: ThirdPartyApplicationConf
     endpoint: provider.Endpoint ?? '',
     enable_endpoint: !!provider.EnableEndpoint,
     Headers: provider.Headers ?? [],
-    // ExtraParams: provider.ExtraParams ?? [],// 后端目前没有用这个字段，然后ai输入框中和修改ai的弹窗form中，这两个地方的ExtraParams不一样，暂时注释
+    ...(provider.Type === YAK_SCRIPT_PROVIDER
+      ? {
+          ...getYakScriptFormValues(provider.ExtraParams),
+          model: provider.ExtraParams?.find(({ Key }) => Key === 'model')?.Value ?? '',
+        }
+      : {}),
   })
 }

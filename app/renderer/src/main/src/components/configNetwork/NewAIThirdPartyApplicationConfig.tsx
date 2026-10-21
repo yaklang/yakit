@@ -25,7 +25,12 @@ import {
   AIConfigAPIKeyFormItem,
   buildAIConfigHealthCheckConfig,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
-import { providerToListAiModelConfig } from '@/pages/ai-agent/aiModelList/aiModelForm/providerConfig'
+import {
+  getYakScriptFormValues,
+  providerToListAiModelConfig,
+  YAK_SCRIPT_PROVIDER,
+} from '@/pages/ai-agent/aiModelList/aiModelForm/providerConfig'
+import { YakScriptModelFields } from './YakScriptModelFields'
 import {
   buildReasoningEffortOptions,
   effortProbeResultFromResponse,
@@ -169,11 +174,11 @@ const defaultAIFormItemsOfAI: (t: TFunction) => ThirdPartyAppConfigItemTemplate[
 }
 
 const isShowRequiredApiKey = (typeVal: string) => {
-  const Required = !['aibalance', 'comate'].includes(typeVal)
+  const Required = !['aibalance', 'comate', YAK_SCRIPT_PROVIDER].includes(typeVal)
   return {
     isRequired: Required,
     data: {
-      DefaultValue: 'free-user',
+      DefaultValue: typeVal === YAK_SCRIPT_PROVIDER ? '' : 'free-user',
       Desc: 'APIKey / Token',
       Extra: '',
       Name: 'api_key',
@@ -212,6 +217,20 @@ const headersToDisplayAndCopy = (headers: KVPair[] | undefined) => {
 
 const buildDefaultAIFormItemsForType = (typeVal: string, t: TFunction) => {
   const items = cloneDeep(defaultAIFormItemsOfAI(t))
+  if (typeVal === YAK_SCRIPT_PROVIDER) {
+    return items
+      .filter((item) => item.Name !== 'api_type')
+      .map((item) =>
+        item.Name === 'model_type'
+          ? {
+              ...item,
+              Extra: JSON.stringify({
+                options: aiModelTypeOptions(t).filter(({ value }) => value !== AIModelTypeEnum.TierVision),
+              }),
+            }
+          : item,
+      )
+  }
   const { isRequired, data } = isShowRequiredApiKey(typeVal)
   if (isRequired) {
     const modelIndex = items.findIndex((item) => item.Name === 'model')
@@ -267,6 +286,14 @@ const optionalAIFormItemsOfAI: (t: TFunction) => ThirdPartyAppConfigItemTemplate
 
 const buildOptionalAIFormItemsForType = (typeVal: string, enableEndpoint: boolean, t: TFunction) => {
   const newData = cloneDeep(optionalAIFormItemsOfAI(t))
+  if (typeVal === YAK_SCRIPT_PROVIDER) {
+    newData.forEach((item) => {
+      if (item.Name === 'base_url' || item.Name === 'endpoint') {
+        item.Desc = t('ConfigNetworkPage.scriptAddressHelp')
+        item.Placeholder = item.Name === 'base_url' ? 'http://127.0.0.1:18080' : 'http://127.0.0.1:18080/api/v1/message'
+      }
+    })
+  }
   const { isRequired, data } = isShowRequiredApiKey(typeVal)
   if (!isRequired) {
     newData.unshift(data)
@@ -349,6 +376,26 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
         String(merged.Type ?? ''),
       )}
       {defaultItems.map((item) => renderFieldByTemplate(item))}
+      {typeVal === YAK_SCRIPT_PROVIDER && (
+        <>
+          <div className={styles['model-script-readonly']}>
+            <span>{t('ConfigNetworkPage.modelScript')}</span>
+            <YakitInput.TextArea readOnly value={merged.script ?? ''} autoSize={{ minRows: 6, maxRows: 12 }} />
+          </div>
+          {renderCopyRow(
+            'script_params',
+            t('ConfigNetworkPage.scriptParams'),
+            merged.script_params ?? '{}',
+            merged.script_params ?? '{}',
+          )}
+          {renderCopyRow(
+            'script_timeout_seconds',
+            t('ConfigNetworkPage.scriptTimeout'),
+            String(merged.script_timeout_seconds ?? 240),
+            String(merged.script_timeout_seconds ?? 240),
+          )}
+        </>
+      )}
       <YakitCollapse
         defaultActiveKey={['1']}
         bordered={false}
@@ -385,6 +432,9 @@ export interface AIThirdPartyApplicationConfig {
   proxy?: string
   Headers?: KVPair[]
   ExtraParams?: KVPair[]
+  script?: string
+  script_params?: string
+  script_timeout_seconds?: number
   /** 探测到的扩展思考强度（表单内部字段，由 NewAIThirdPartyApplicationConfigBase 自动写入） */
   _ProbedExtendedEfforts?: string[]
   /** 是否已对 xhigh/max 做过探测（表单内部字段） */
@@ -423,6 +473,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     const { t, i18nRefresh } = useI18nNamespaces(['configNetwork'])
     const [form] = Form.useForm()
     const typeVal = Form.useWatch('Type', form)
+    const isScriptProvider = typeVal === YAK_SCRIPT_PROVIDER
     const [options, setOptions] = useState<SelectOptionsProps[]>([])
     const [modelOptionLoading, setModelOptionLoading] = useState<boolean>(false)
     const [modelNameAllOptions, setModelNameAllOptions] = useState<SelectOptionsProps[]>([])
@@ -460,7 +511,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     /**懒探测：首次打开强度下拉框时探测模型是否支持 xhigh/max，model/Type 变化后再次打开会重新探测；失败不置已探测，下次打开可重试 */
     const ensureEffortProbed = useDebounceFn(
       () => {
-        if (readOnly || IsOnline) return
+        if (readOnly || IsOnline || isScriptProvider) return
         if (probedExtendedEfforts !== undefined && !effortProbeDirty) return
         if (effortProbing) return
         const values = form.getFieldsValue()
@@ -523,20 +574,24 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     }, [])
 
     useUpdateEffect(() => {
-      if (readOnly || IsOnline) return
+      if (readOnly || IsOnline || isScriptProvider) return
       if (apiKeyWatch) {
         execModelNameOption.current = true
         getModelNameOption()
       } else {
         handleDefaultModalNameOption()
       }
-    }, [apiKeyWatch, IsOnline, readOnly])
+    }, [apiKeyWatch, IsOnline, readOnly, isScriptProvider])
 
     const { run: getModelNameOption, cancel: cancelModelNameOption } = useDebounceFn(
       useMemoizedFn(() => {
         if (!execModelNameOption.current) return
         setModelOptionLoading(true)
         const v = form.getFieldsValue()
+        if (v.Type === YAK_SCRIPT_PROVIDER) {
+          setModelOptionLoading(false)
+          return
+        }
         ipcRenderer
           .invoke('ListAiModel', { Config: providerToListAiModelConfig(buildAIConfigHealthCheckConfig(v)) })
           .then((res) => {
@@ -607,7 +662,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
       if (readOnly) return
       execModelNameOption.current = false
       cancelModelNameOption()
-      if (typeVal === 'custom') {
+      if (typeVal === 'custom' || isScriptProvider) {
         setActiveKey('1')
       } else {
         setActiveKey(undefined)
@@ -653,6 +708,13 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
           )
         case 'list': {
           if (item.Name === 'model') {
+            if (isScriptProvider) {
+              return (
+                <Form.Item {...formProps} extra={t('ConfigNetworkPage.scriptModelNameHelp')}>
+                  <YakitInput placeholder="qclaw-mock" disabled={IsOnline} />
+                </Form.Item>
+              )
+            }
             // 模型名称
             return (
               <Form.Item
@@ -700,6 +762,13 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             )
           }
           if (item.Name === 'api_key') {
+            if (isScriptProvider) {
+              return (
+                <Form.Item {...formProps} extra={t('ConfigNetworkPage.scriptTokenHelp')}>
+                  <YakitInput.Password disabled={IsOnline} autoComplete="off" />
+                </Form.Item>
+              )
+            }
             if (IsOnline) {
               return (
                 <Form.Item {...formProps} hidden preserve>
@@ -725,7 +794,10 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     }
 
     const initialValues = useMemo(() => {
-      const copyFormValues = { ...formValues }
+      const copyFormValues = {
+        ...getYakScriptFormValues(formValues.Type === YAK_SCRIPT_PROVIDER ? formValues.ExtraParams : []),
+        ...formValues,
+      }
       const aiFormValues = copyFormValues as typeof copyFormValues & { api_type?: string }
       aiFormValues.api_type = normalizeAIAPIType(aiFormValues.api_type)
 
@@ -772,7 +844,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     if (readOnly) {
       return (
         <div className={styles['config-form-wrapper']}>
-          <AIThirdPartyConfigReadonlyPanel merged={formValues} />
+          <AIThirdPartyConfigReadonlyPanel merged={initialValues} />
           {footer ? <div className={styles['config-footer']}>{footer}</div> : null}
         </div>
       )
@@ -789,13 +861,19 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
           onValuesChange={(changedValues, allValues) => {
             // 当类型改变时，表单项的值采用默认值
             if (changedValues.Type !== undefined) {
-              allAIFormItemsOfAI.forEach((item) => {
+              const nextItems = [
+                ...buildDefaultAIFormItemsForType(changedValues.Type, t),
+                ...buildOptionalAIFormItemsForType(changedValues.Type, false, t),
+              ]
+              nextItems.forEach((item) => {
                 form.setFieldsValue({
                   [item.Name]: ['string', 'list'].includes(item.Type)
                     ? item.DefaultValue
                     : item.DefaultValue === 'true',
                 })
               })
+              resetModelConfigSettings()
+              form.setFieldsValue({ api_key_id: undefined, ExtraParams: [] })
             }
           }}
           onSubmitCapture={(e) => {
@@ -845,6 +923,10 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             )}
           </Form.Item>
           {renderAllFormItems()}
+          <Form.Item name="ExtraParams" noStyle>
+            <HiddenFormField />
+          </Form.Item>
+          {isScriptProvider && <YakScriptModelFields disabled={IsOnline} />}
           <YakitCollapse
             activeKey={activeKey}
             onChange={onChangeCollapse}
@@ -899,54 +981,56 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                 </YakitButton>
               </Form.Item>
             </YakitCollapse.YakitPanel>
-            <YakitCollapse.YakitPanel
-              header={
-                <div className={styles['panel-heard']}>
-                  <span className={styles['title']}>{t('ConfigNetworkPage.modelConfigTitle')}</span>
-                  <span className={styles['tip']}>{t('ConfigNetworkPage.modelConfigTip')}</span>
-                </div>
-              }
-              key="2"
-              forceRender={true}
-            >
-              {/* #region 思考 */}
-              <Form.Item
-                label="Reasoning Effort"
-                name="ReasoningEffort"
-                help={t('ConfigNetworkPage.reasoningEffortHelp')}
+            {!isScriptProvider && (
+              <YakitCollapse.YakitPanel
+                header={
+                  <div className={styles['panel-heard']}>
+                    <span className={styles['title']}>{t('ConfigNetworkPage.modelConfigTitle')}</span>
+                    <span className={styles['tip']}>{t('ConfigNetworkPage.modelConfigTip')}</span>
+                  </div>
+                }
+                key="2"
+                forceRender={true}
               >
-                <ReasoningEffortSelect
-                  options={reasoningEffortOptions}
-                  loading={effortProbing}
-                  onDropdownVisibleChange={(open) => {
-                    if (open) ensureEffortProbed()
-                  }}
-                />
-              </Form.Item>
-              {/* 隐藏字段：注册探测缓存，使 validateFields 能取到这两个值 */}
-              <Form.Item name="_ProbedExtendedEfforts" noStyle>
-                <HiddenFormField />
-              </Form.Item>
-              <Form.Item name="_EffortProbed" noStyle>
-                <HiddenFormField />
-              </Form.Item>
-              {/* #endregion */}
-              <Form.Item label="Max Tokens" name="MaxTokens">
-                <YakitInputNumber min={1} max={163840} />
-              </Form.Item>
-              <Form.Item label="Temperature" name="Temperature">
-                <YakitInputNumber min={0} max={2} step={0.1} />
-              </Form.Item>
-              <Form.Item label="Top-P" name="TopP">
-                <YakitInputNumber min={0} max={1} step={0.1} />
-              </Form.Item>
-              <Form.Item label="Top-K" name="TopK">
-                <YakitInputNumber min={0} max={100} />
-              </Form.Item>
-              <Form.Item label="Frequency Penalty" name="FrequencyPenalty">
-                <YakitInputNumber min={0} max={2} step={0.1} />
-              </Form.Item>
-            </YakitCollapse.YakitPanel>
+                {/* #region 思考 */}
+                <Form.Item
+                  label="Reasoning Effort"
+                  name="ReasoningEffort"
+                  help={t('ConfigNetworkPage.reasoningEffortHelp')}
+                >
+                  <ReasoningEffortSelect
+                    options={reasoningEffortOptions}
+                    loading={effortProbing}
+                    onDropdownVisibleChange={(open) => {
+                      if (open) ensureEffortProbed()
+                    }}
+                  />
+                </Form.Item>
+                {/* 隐藏字段：注册探测缓存，使 validateFields 能取到这两个值 */}
+                <Form.Item name="_ProbedExtendedEfforts" noStyle>
+                  <HiddenFormField />
+                </Form.Item>
+                <Form.Item name="_EffortProbed" noStyle>
+                  <HiddenFormField />
+                </Form.Item>
+                {/* #endregion */}
+                <Form.Item label="Max Tokens" name="MaxTokens">
+                  <YakitInputNumber min={1} max={163840} />
+                </Form.Item>
+                <Form.Item label="Temperature" name="Temperature">
+                  <YakitInputNumber min={0} max={2} step={0.1} />
+                </Form.Item>
+                <Form.Item label="Top-P" name="TopP">
+                  <YakitInputNumber min={0} max={1} step={0.1} />
+                </Form.Item>
+                <Form.Item label="Top-K" name="TopK">
+                  <YakitInputNumber min={0} max={100} />
+                </Form.Item>
+                <Form.Item label="Frequency Penalty" name="FrequencyPenalty">
+                  <YakitInputNumber min={0} max={2} step={0.1} />
+                </Form.Item>
+              </YakitCollapse.YakitPanel>
+            )}
           </YakitCollapse>
         </Form>
         <div className={styles['config-footer']}>{footer}</div>

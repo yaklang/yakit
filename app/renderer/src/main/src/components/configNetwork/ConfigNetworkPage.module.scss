@@ -857,3 +857,23 @@
   margin-left: 5px;
   flex-shrink: 0;
 }
+
+.model-script-editor {
+  height: 300px;
+  overflow: hidden;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 4px;
+}
+
+.model-script-help {
+  margin-top: 6px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+}
+
+.model-script-readonly {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
-import { providerToListAiModelConfig } from '../providerConfig'
+import { buildProviderExtraParams, providerToListAiModelConfig } from '../providerConfig'
 
 describe('providerToListAiModelConfig', () => {
   it('preserves custom connection fields without sending provider extension parameters', () => {
@@ -70,5 +70,36 @@ describe('providerToListAiModelConfig', () => {
 
   it('does not create a request configuration when the provider is missing', () => {
     expect(providerToListAiModelConfig()).toBeUndefined()
+  })
+
+  it('flattens script settings for model metadata requests', () => {
+    const config = JSON.parse(
+      providerToListAiModelConfig({
+        Type: 'yak-script',
+        ExtraParams: [
+          { Key: 'script', Value: 'chat = func(req, emit) { return "ok" }' },
+          { Key: 'script_params', Value: '{"cust_id":"test"}' },
+          { Key: 'script_timeout_seconds', Value: '300' },
+          { Key: 'model', Value: 'qclaw-mock' },
+        ],
+      })!,
+    )
+    expect(config).toMatchObject({
+      script: expect.stringContaining('chat ='),
+      script_params: '{"cust_id":"test"}',
+      script_timeout_seconds: 300,
+      model: 'qclaw-mock',
+    })
+  })
+
+  it('removes stale script fields for other providers without mutating unknown extras', () => {
+    const extras = [
+      { Key: 'script', Value: 'old' },
+      { Key: 'tenant', Value: 'keep' },
+    ]
+    expect(buildProviderExtraParams({ Type: 'openai', script: 'new', ExtraParams: extras })).toEqual([
+      { Key: 'tenant', Value: 'keep' },
+    ])
+    expect(extras).toHaveLength(2)
   })
 })
