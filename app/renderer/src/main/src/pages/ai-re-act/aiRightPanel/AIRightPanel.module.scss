@@ -70,6 +70,17 @@
   padding: 3px 4px;
 }
 
+.skill-pane-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .skill-total {
+    flex-shrink: 0;
+    margin-inline-end: 0;
+  }
+}
+
 .panel-top {
   display: flex;
   flex-direction: column;

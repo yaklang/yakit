@@ -101,17 +101,20 @@ const capabilityInventoryItemsToPlanItemDetails = (
 
     switch (item.type) {
       case 'skill': {
-        if (isDynamic) {
-          const skillLoadState =
-            item.stage === 'loaded'
+        const skillLoadState =
+          typeof item.data?.skill_load_state === 'string'
+            ? (item.data.skill_load_state as 'metadata' | 'loaded' | '')
+            : item.stage === 'loaded'
               ? 'loaded'
-              : typeof item.data?.skill_load_state === 'string'
-                ? (item.data.skill_load_state as 'metadata' | 'loaded' | '')
-                : 'metadata'
-          payload.dynamic.skills.push({ ...base, category: 'skill', skill_load_state: skillLoadState })
-        } else {
-          payload.fixed.skills.push({ ...base, category: 'skill' })
+              : 'metadata'
+        const skill: AIAgentGrpcApi.PlanItemDetailsFixedItem & AIAgentGrpcApi.PlanItemDetailsDynamicSkillsItem = {
+          ...base,
+          category: 'skill',
+          skill_load_state: skillLoadState,
+          token_count: item.data?.token_count as number,
         }
+        if (isDynamic) payload.dynamic.skills.push(skill)
+        else payload.fixed.skills.push(skill)
         break
       }
       case 'forge': {

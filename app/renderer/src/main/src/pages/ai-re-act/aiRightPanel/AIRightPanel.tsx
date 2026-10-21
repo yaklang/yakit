@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { TaskListPane } from '@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane'
 import { AIRightPanelPane } from './AIRightPanelPane'
 import { TimelineDumpButton } from './TimelineDumpButton'
+import { AISkillLoadingPane } from './AISkillLoadingPane/AISkillLoadingPane'
 import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
@@ -40,6 +41,7 @@ import {
   FolderOpenOutlined,
   NewspaperOutlined,
   ScrollTextOutlined,
+  SmViewGridAddOutlined,
   TimelineOutlined,
   UserCircleOutlined,
   XOutlined,
@@ -52,6 +54,7 @@ import { getRiskTagEntries, mapSessionRiskLevelCount } from './riskLevelCount'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import AIMainModelTokens from '@/pages/ai-agent/aiChatContent/AIContextToken/AIMainModelTokens'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 
 /** 菜单项定义：key 为唯一标识（React key 用），labelKey 为 i18n 文案 key，icon 为入口图标 */
 interface MenuItemDef {
@@ -60,10 +63,11 @@ interface MenuItemDef {
   icon: React.ReactNode
 }
 
-/** 主菜单：数据卡片下方常驻展示的六个功能入口（正常态与小屏态共用，小屏态仅渲染图标） */
+/** 主菜单：数据卡片下方常驻展示的功能入口（正常态与小屏态共用，小屏态仅渲染图标） */
 const MAIN_MENUS: MenuItemDef[] = [
   { key: 'task-board', labelKey: 'AIRightPanel.taskBoard', icon: <ScrollTextOutlined /> },
   { key: 'file-system', labelKey: 'AIRightPanel.fileSystem', icon: <FolderOpenOutlined /> },
+  { key: 'load-skills', labelKey: 'AIRightPanel.loadSkills', icon: <SmViewGridAddOutlined /> },
   { key: 'browser', labelKey: 'AIRightPanel.browserInstances', icon: <ChromeOutlined /> },
   { key: 'traffic', labelKey: 'AIRightPanel.traffic', icon: <FlowOutlined /> },
   { key: 'risk', labelKey: 'AIRightPanel.risk', icon: <BugOutlined /> },
@@ -71,7 +75,9 @@ const MAIN_MENUS: MenuItemDef[] = [
   { key: 'task-list', labelKey: 'AIRightPanel.taskList', icon: <FlagOutlined /> },
 ]
 
-const WELCOME_MENUS = MAIN_MENUS.filter((item) => item.key !== 'task-board' && item.key !== 'task-list')
+const WELCOME_MENUS = MAIN_MENUS.filter(
+  (item) => item.key !== 'task-board' && item.key !== 'task-list' && item.key !== 'load-skills',
+)
 
 /** 「更多」分组展开后追加显示的功能入口（收起态仅在底部显示「更多」按钮） */
 const MORE_MENUS: MenuItemDef[] = [
@@ -524,6 +530,8 @@ const PaneSlot: React.FC<{
   onClose: () => void
 }> = React.memo(({ pane, small, onClose }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const [skillLoadState, setSkillLoadState] = useState<'loaded' | 'metadata'>('loaded')
+  const [skillTotal, setSkillTotal] = useState(0)
 
   const renderTitle = () => {
     switch (pane) {
@@ -531,6 +539,24 @@ const PaneSlot: React.FC<{
         return t('AIRightPanel.taskList')
       case 'timeline':
         return t('AIRightPanel.timeline')
+      case 'load-skills':
+        return (
+          <div className={styles['skill-pane-title']}>
+            <span>{t('AIRightPanel.loadSkills')}</span>
+            <YakitSegmented
+              size="small"
+              value={skillLoadState}
+              options={[
+                { label: t('AISkillLoadingPane.loaded'), value: 'loaded' },
+                { label: t('AISkillLoadingPane.available'), value: 'metadata' },
+              ]}
+              onChange={(value) => setSkillLoadState(value as 'loaded' | 'metadata')}
+            />
+            <YakitTag size="small" fullRadius border={false} className={styles['skill-total']}>
+              {skillTotal}
+            </YakitTag>
+          </div>
+        )
       default:
         return ''
     }
@@ -542,6 +568,8 @@ const PaneSlot: React.FC<{
         return <TaskListPane />
       case 'timeline':
         return <TimelineCard />
+      case 'load-skills':
+        return <AISkillLoadingPane loadState={skillLoadState} onTotalChange={setSkillTotal} />
       default:
         return null
     }
@@ -646,7 +674,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const [exportLoading, setExportLoading] = useState(false)
 
   useEffect(() => {
-    // 切换会话时关闭旧会话的任务列表与时间线浮层
+    // 切换会话时关闭旧会话的内容浮层
     panel.closePane()
   }, [activeChat?.Id])
 
@@ -660,13 +688,14 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   }, [currentChatStatusQuestionID])
 
   /**
-   * 菜单点击：任务列表、时间线打开右侧内容面板；
+   * 菜单点击：任务列表、加载技能、时间线打开右侧内容面板；
    * 任务详情、流量、漏洞切换工作区 tab；文件系统、浏览器、会话历史已展开则收起否则打开左侧对应页；
    * AI 设置打开设置页，导出日志打开导出弹窗，查看日志打开日志窗口。
    */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
     switch (key) {
       case 'task-list':
+      case 'load-skills':
       case 'timeline':
         panel.openPane(key)
         break

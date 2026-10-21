@@ -143,6 +143,34 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
+describe('AITaskExecutionDetails 技能列表', () => {
+  it('固定和动态列表只展示 skills，排除 forges', () => {
+    const data = createTask('task-skills', '技能感知')
+    data.skills.fixed = [{ name: 'fixed-skill', verbose_name: 'fixed-skill', description: '', category: 'skill' }]
+    data.skills.dynamic = [{ name: 'dynamic-skill', description: '', category: 'skill', skill_load_state: 'metadata' }]
+    data.forges.fixed = [{ name: 'fixed-forge', verbose_name: 'fixed-forge', description: '', category: 'forge' }]
+    data.forges.dynamic = [{ name: 'dynamic-forge', description: '', category: 'forge' }]
+    render(<AITaskExecutionDetails taskId="task-skills" />)
+
+    expect(screen.getByText('fixed-skill')).toBeInTheDocument()
+    expect(screen.queryByText('fixed-forge')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('radio', { name: 'AITaskExecutionDetails.dynamicLoad' }))
+    expect(screen.getByText('dynamic-skill')).toBeInTheDocument()
+    expect(screen.queryByText('dynamic-forge')).not.toBeInTheDocument()
+  })
+
+  it('只有 forges 时不展示技能区域', () => {
+    const data = createTask('task-forges', 'Forge 感知')
+    data.forges.fixed = [{ name: 'fixed-forge', verbose_name: 'fixed-forge', description: '', category: 'forge' }]
+    data.forges.dynamic = [{ name: 'dynamic-forge', description: '', category: 'forge' }]
+    render(<AITaskExecutionDetails taskId="task-forges" />)
+
+    expect(screen.queryByText('AITaskExecutionDetails.skill')).not.toBeInTheDocument()
+    expect(screen.queryByText('fixed-forge')).not.toBeInTheDocument()
+    expect(screen.queryByText('dynamic-forge')).not.toBeInTheDocument()
+  })
+})
+
 describe('AITaskExecutionDetails 快照刷新', () => {
   it('taskId 切换立即读取新任务，即使两个任务的 uuid 相同', () => {
     createTask('task-a', '任务 A 感知')

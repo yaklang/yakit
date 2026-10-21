@@ -34,11 +34,7 @@ import { AISkippedNodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AISkippedN
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { useCreation, useMemoizedFn, useSelections } from 'ahooks'
-import type {
-  ForgesAndSkillsDynamicItem,
-  PlanItemDetailsData,
-  TodoListCardData,
-} from '@/pages/ai-re-act/hooks/aiRender'
+import type { PlanItemDetailsData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -59,7 +55,6 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
-  type AIAgentGrpcApi,
   type AIInputEvent,
   AIInputEventHotPatchTypeEnum,
   AIInputEventSyncTypeEnum,
@@ -238,23 +233,8 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     return { boardColumns, progressNumber, visibleItems }
   }, [planItemDetailsData?.todoList?.items, hiddenStatusKeySet, i18nRefresh])
 
-  const forgeFixedList = useCreation(() => {
-    const forgeFixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[] =
-      planItemDetailsData?.skills.fixed.concat(planItemDetailsData?.forges.fixed || []) || []
-    return forgeFixed
-  }, [planItemDetailsData?.forges, planItemDetailsData?.skills])
-  const forgeDynamicList = useCreation(() => {
-    const forge: ForgesAndSkillsDynamicItem[] =
-      planItemDetailsData?.forges?.dynamic.map((ele) => ({
-        name: ele.name,
-        description: ele.description,
-        category: ele.category,
-        skill_load_state: '',
-      })) || []
-    const skills: ForgesAndSkillsDynamicItem[] = planItemDetailsData?.skills?.dynamic.map((ele) => ele) || []
-    const forgeDynamic: ForgesAndSkillsDynamicItem[] = skills.concat(forge) || []
-    return forgeDynamic
-  }, [planItemDetailsData?.forges, planItemDetailsData?.skills])
+  const skillFixedList = planItemDetailsData?.skills.fixed || []
+  const skillDynamicList = planItemDetailsData?.skills.dynamic || []
 
   const toolCall = useCreation(() => {
     const noData = t('AITaskExecutionDetails.noData')
@@ -312,10 +292,10 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     if (!planItemDetailsData?.execution) return t('AITaskExecutionDetails.noData')
     return `${planItemDetailsData.execution.risk_level_count?.total ?? planItemDetailsData.execution.risk_count ?? 0}`
   }, [planItemDetailsData?.execution?.risk_count, planItemDetailsData?.execution?.risk_level_count?.total, i18nRefresh])
-  const showForge = useCreation(() => {
+  const showSkill = useCreation(() => {
     if (!planItemDetailsData) return false
-    return forgeFixedList.length > 0 || forgeDynamicList.length > 0
-  }, [forgeFixedList.length, forgeDynamicList.length])
+    return skillFixedList.length > 0 || skillDynamicList.length > 0
+  }, [skillFixedList.length, skillDynamicList.length])
   const showTool = useCreation(() => {
     if (!planItemDetailsData) return false
     return (planItemDetailsData?.tool.fixed.length || planItemDetailsData?.tool.dynamic.length) > 0
@@ -470,16 +450,16 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           </div>
         )}
         {/* 技能、工具、插件三列 */}
-        {showForge || showTool || showPlugin || showMCP ? (
+        {showSkill || showTool || showPlugin || showMCP ? (
           <div className={styles['section']}>
-            {showForge && (
+            {showSkill && (
               <AITaskDetailsCardList
                 key="forge"
                 type="forge"
                 colTitle={t('AITaskExecutionDetails.skill')}
                 taskId={selectedTaskId}
-                fixedList={forgeFixedList}
-                dynamicList={forgeDynamicList}
+                fixedList={skillFixedList}
+                dynamicList={skillDynamicList}
               />
             )}
             {showTool && (

@@ -465,7 +465,7 @@ describe('aiTaskDetail handlers', () => {
     expect(detail?.todoList?.items?.[0]?.content).toBe('同 rev 待办')
   })
 
-  it('task_snapshot capabilities：各 type/position 落入 fixed/dynamic，skill_load_state 按 stage/data 回退', () => {
+  it('task_snapshot capabilities：各 type/position 落入 fixed/dynamic，skill_load_state 优先 data 再回退 stage', () => {
     const taskId = 'task-capabilities'
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes(
@@ -482,17 +482,46 @@ describe('aiTaskDetail handlers', () => {
             capabilities: [
               // 空名跳过
               { name: '  ', type: 'tool', stage: '', position: 'Fixed' },
-              // skill：Fixed / Dynamic(stage=loaded) / Dynamic(data 回退) / Dynamic(默认 metadata)
+              // skill：固定/动态都保留加载状态，data 优先于 stage=loaded
               { name: 'skill-fixed', type: 'skill', stage: '', position: 'Fixed' },
-              { name: 'skill-loaded', type: 'skill', stage: 'loaded', position: 'Dynamic' },
+              {
+                name: 'skill-fixed-data-priority',
+                type: 'skill',
+                stage: 'loaded',
+                position: 'Fixed',
+                data: { skill_load_state: 'metadata', token_count: 123 },
+              },
+              {
+                name: 'skill-fixed-from-data',
+                type: 'skill',
+                stage: 'metadata',
+                position: 'Fixed',
+                data: { skill_load_state: 'loaded' },
+              },
+              {
+                name: 'skill-data-priority',
+                type: 'skill',
+                stage: 'loaded',
+                position: 'Dynamic',
+                data: { skill_load_state: 'metadata', token_count: 0 },
+              },
               {
                 name: 'skill-from-data',
                 type: 'skill',
                 stage: 'metadata',
                 position: 'Dynamic',
-                data: { skill_load_state: 'loaded' },
+                data: { skill_load_state: 'loaded', token_count: 456 },
               },
               { name: 'skill-default', type: 'skill', stage: 'schema', position: 'Dynamic' },
+              { name: 'skill-fixed-stage-fallback', type: 'skill', stage: 'loaded', position: 'Fixed' },
+              { name: 'skill-stage-fallback', type: 'skill', stage: 'loaded', position: 'Dynamic' },
+              {
+                name: 'skill-empty-state',
+                type: 'skill',
+                stage: 'loaded',
+                position: 'Dynamic',
+                data: { skill_load_state: '' },
+              },
               // forge
               { name: 'forge-fixed', type: 'forge', stage: '', position: 'Fixed' },
               { name: 'forge-dynamic', type: 'forge', stage: '', position: 'Dynamic' },
@@ -520,11 +549,23 @@ describe('aiTaskDetail handlers', () => {
     const detail = req.rawData.taskDetailsMap.get(taskId)
     expect(detail).toBeDefined()
 
-    expect(detail!.skills.fixed.map((i) => i.name)).toEqual(['skill-fixed'])
+    expect(detail!.skills.fixed.map((i) => ({ name: i.name, state: i.skill_load_state }))).toEqual([
+      { name: 'skill-fixed', state: 'metadata' },
+      { name: 'skill-fixed-data-priority', state: 'metadata' },
+      { name: 'skill-fixed-from-data', state: 'loaded' },
+      { name: 'skill-fixed-stage-fallback', state: 'loaded' },
+    ])
+    expect(detail!.skills.fixed[1].token_count).toBe(123)
+    expect(detail!.skills.fixed[0].token_count).toBeUndefined()
+    expect(detail!.skills.dynamic[0].token_count).toBe(0)
+    expect(detail!.skills.dynamic[1].token_count).toBe(456)
+    expect(detail!.skills.dynamic[2].token_count).toBeUndefined()
     expect(detail!.skills.dynamic.map((i) => ({ name: i.name, state: i.skill_load_state }))).toEqual([
-      { name: 'skill-loaded', state: 'loaded' },
+      { name: 'skill-data-priority', state: 'metadata' },
       { name: 'skill-from-data', state: 'loaded' },
       { name: 'skill-default', state: 'metadata' },
+      { name: 'skill-stage-fallback', state: 'loaded' },
+      { name: 'skill-empty-state', state: '' },
     ])
 
     expect(detail!.forges.fixed.map((i) => i.name)).toEqual(['forge-fixed'])
@@ -536,6 +577,34 @@ describe('aiTaskDetail handlers', () => {
     expect(detail!.plugins.dynamic.map((i) => i.name)).toEqual(['plugin-dynamic'])
     expect(detail!.mcp.fixed.map((i) => i.name)).toEqual(['mcp-fixed'])
     expect(detail!.mcp.dynamic.map((i) => i.name)).toEqual(['mcp-dynamic'])
+  })
+
+  it.each(['Fixed', 'Dynamic'])('task_snapshot %s skill 原样透传 token_count', (position) => {
+    const taskId = 'task-token-count'
+    const tokenCounts = [undefined, null, -1, '123', true, 0, 456]
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          task_id: taskId,
+          revision: 1,
+          snapshot: {
+            capabilities: tokenCounts.map((tokenCount, index) => ({
+              name: `skill-${index}`,
+              type: 'skill',
+              stage: 'loaded',
+              position,
+              data: { token_count: tokenCount },
+            })),
+          },
+        },
+        { NodeId: 'task_snapshot', TaskId: taskId, IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.task_snapshot(req)
+    const skills = req.rawData.taskDetailsMap.get(taskId)!.skills
+    const items = position === 'Fixed' ? skills.fixed : skills.dynamic
+    expect(items.map((item) => item.token_count)).toEqual(tokenCounts)
   })
 
   it('task_snapshot capabilities=[] 整表清空，不残留旧 tool/forge/技能', () => {

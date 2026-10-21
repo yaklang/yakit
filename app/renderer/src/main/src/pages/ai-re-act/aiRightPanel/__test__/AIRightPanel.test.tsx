@@ -1,5 +1,5 @@
 import type React from 'react'
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useEffect } from 'react'
 import { render, screen, fireEvent, waitFor, act, cleanup, within } from '@testing-library/react'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -195,9 +195,14 @@ vi.mock('i18next-resources-to-backend', () => {
         },
       },
       aiAgent: {
+        AISkillLoadingPane: {
+          loaded: '已加载',
+          available: '可加载',
+        },
         AIRightPanel: {
           taskBoard: '任务详情看板',
           fileSystem: '文件系统',
+          loadSkills: '加载技能',
           browserInstances: '浏览器实例',
           traffic: '流量',
           risk: '漏洞',
@@ -237,6 +242,20 @@ import type { AIRightPanelProps } from '../type'
 
 vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane', () => ({
   TaskListPane: () => <div data-testid="task-list-pane" />,
+}))
+vi.mock('../AISkillLoadingPane/AISkillLoadingPane', () => ({
+  AISkillLoadingPane: ({
+    loadState,
+    onTotalChange,
+  }: {
+    loadState: 'loaded' | 'metadata'
+    onTotalChange: (total: number) => void
+  }) => {
+    useEffect(() => {
+      onTotalChange(loadState === 'loaded' ? 2 : 0)
+    }, [loadState, onTotalChange])
+    return <div data-testid="load-skills-pane" data-load-state={loadState} />
+  },
 }))
 vi.mock('@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard', () => ({
   default: () => <div data-testid="timeline-pane" />,
@@ -822,7 +841,7 @@ describe('AIRightPanel', () => {
         for (const label of ['文件系统', '浏览器实例', '流量', '漏洞', '会话历史']) {
           expect(screen.getByLabelText(label)).toBeInTheDocument()
         }
-        for (const label of ['任务详情看板', '任务列表', '更多', '时间线', '导出日志', '查看日志']) {
+        for (const label of ['任务详情看板', '加载技能', '任务列表', '更多', '时间线', '导出日志', '查看日志']) {
           expect(screen.queryByLabelText(label)).not.toBeInTheDocument()
         }
         expect(screen.queryByText('运行时间')).not.toBeInTheDocument()
@@ -971,12 +990,15 @@ describe('AIRightPanel', () => {
     expect(screen.queryByLabelText('查看日志')).not.toBeInTheDocument()
   })
 
-  it.each(['任务列表', '时间线'])('切换详情会话后关闭旧会话的%s', (label) => {
+  it.each([
+    ['任务列表', 'task-list-pane'],
+    ['时间线', 'timeline-pane'],
+    ['加载技能', 'load-skills-pane'],
+  ])('切换详情会话后关闭旧会话的%s', (label, testId) => {
     mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-1' } })
     render(<AIRightPanel small />)
     fireEvent.click(screen.getByLabelText('更多'))
     fireEvent.click(screen.getByLabelText(label))
-    const testId = label === '任务列表' ? 'task-list-pane' : 'timeline-pane'
     expect(screen.getByTestId(testId)).toBeInTheDocument()
 
     act(() => {
@@ -1019,33 +1041,39 @@ describe('AIRightPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ }))
     expect(screen.queryByTestId('timeline-pane')).not.toBeInTheDocument()
   })
-  it('正常态点击任务列表替换菜单，关闭后恢复菜单', async () => {
+  it.each([
+    ['任务列表', 'task-list-pane'],
+    ['加载技能', 'load-skills-pane'],
+  ])('正常态点击%s替换菜单，关闭后恢复菜单', async (label, testId) => {
     await renderPanel(<AIRightPanel />)
-    fireEvent.click(screen.getByLabelText('任务列表'))
-    expect(screen.getByTestId('task-list-pane')).toBeVisible()
-    const header = screen.getByTestId('task-list-pane').closest('section')!.querySelector('header')!
+    fireEvent.click(screen.getByLabelText(label))
+    expect(screen.getByTestId(testId)).toBeVisible()
+    const header = screen.getByTestId(testId).closest('section')!.querySelector('header')!
     expect(within(header).getAllByRole('button')).toHaveLength(1)
     expect(screen.getByLabelText('文件系统').parentElement?.parentElement?.parentElement?.className).toContain(
       'right-panel-hidden',
     )
     fireEvent.click(screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ }))
-    expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
+    expect(screen.queryByTestId(testId)).not.toBeInTheDocument()
     expect(screen.getByLabelText('文件系统').parentElement?.parentElement?.parentElement?.className).not.toContain(
       'right-panel-hidden',
     )
   })
 
-  it('小屏点击打开浮层，移出不销毁', async () => {
+  it.each([
+    ['任务列表', 'task-list-pane'],
+    ['加载技能', 'load-skills-pane'],
+  ])('小屏点击%s打开浮层，移出不销毁', async (label, testId) => {
     render(<AIRightPanel small />)
-    const item = screen.getByLabelText('任务列表')
+    const item = screen.getByLabelText(label)
     fireEvent.click(item)
-    const pane = screen.getByTestId('task-list-pane').closest('section')!.parentElement!
+    const pane = screen.getByTestId(testId).closest('section')!.parentElement!
     expect(pane.className).toContain('pane-slot-small')
     fireEvent.mouseLeave(item)
     fireEvent.mouseLeave(pane)
-    expect(screen.getByTestId('task-list-pane')).toBeInTheDocument()
+    expect(screen.getByTestId(testId)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ }))
-    expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
+    expect(screen.queryByTestId(testId)).not.toBeInTheDocument()
     expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
   })
 
@@ -1054,6 +1082,40 @@ describe('AIRightPanel', () => {
     fireEvent.click(screen.getByLabelText('任务列表'))
     result.rerender(<AIRightPanel small={false} />)
     expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
+  })
+
+  it.each([false, true])('加载技能菜单位于文件系统和浏览器实例之间（小屏：%s）', (small) => {
+    render(<AIRightPanel small={small} />)
+    const loadSkills = screen.getByLabelText('加载技能')
+    expect(screen.getByLabelText('文件系统').nextElementSibling).toBe(loadSkills)
+    expect(loadSkills.nextElementSibling).toBe(screen.getByLabelText('浏览器实例'))
+  })
+
+  it('小屏加载技能与任务列表互相切换', () => {
+    render(<AIRightPanel small />)
+    const loadSkills = screen.getByLabelText('加载技能')
+    fireEvent.click(loadSkills)
+    expect(screen.getByTestId('load-skills-pane')).toBeVisible()
+    fireEvent.click(screen.getByLabelText('任务列表'))
+    expect(screen.queryByTestId('load-skills-pane')).not.toBeInTheDocument()
+    expect(screen.getByTestId('task-list-pane')).toBeVisible()
+    fireEvent.click(loadSkills)
+    expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
+    expect(screen.getByTestId('load-skills-pane')).toBeVisible()
+  })
+
+  it.each([false, true])('加载技能标题切换已加载和可加载列表（小屏：%s）', (small) => {
+    render(<AIRightPanel small={small} />)
+    fireEvent.click(screen.getByLabelText('加载技能'))
+    expect(screen.getByTestId('load-skills-pane')).toHaveAttribute('data-load-state', 'loaded')
+    const pane = screen.getByTestId('load-skills-pane').closest('section')!
+    expect(within(pane).getByText('2')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('可加载'))
+    expect(screen.getByTestId('load-skills-pane')).toHaveAttribute('data-load-state', 'metadata')
+    expect(within(pane).getByText('0')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('已加载'))
+    expect(screen.getByTestId('load-skills-pane')).toHaveAttribute('data-load-state', 'loaded')
+    expect(within(pane).getByText('2')).toBeInTheDocument()
   })
 
   it('包裹组件支持自定义标题和操作区', () => {

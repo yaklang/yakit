@@ -1,12 +1,13 @@
 import type React from 'react'
 
 /** 右侧可打开的内容面板标识 */
-export type AIRightPanelPaneKey = 'task-list' | 'timeline'
+export type AIRightPanelPaneKey = 'task-list' | 'timeline' | 'load-skills'
 
 /** 右侧面板菜单项标识 */
 export type AIRightPanelMenuKey =
   | 'task-board'
   | 'file-system'
+  | 'load-skills'
   | 'browser'
   | 'traffic'
   | 'risk'

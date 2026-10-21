@@ -292,6 +292,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_RECOVERY_HISTORY = 'recovery_history',
   /** 获取能力相关数据 */
   SYNC_CAPABILITY_INVENTORY = 'capability_inventory_sync',
+  /** 加载指定技能 */
+  SYNC_TYPE_LOAD_SKILL = 'load_skill_sync',
   /** 执行分离PLAN */
   SYNC_EXECUTE_DETACHED_PLAN = 'execute_detached_plan',
   /** 关闭浏览器进程 */
@@ -714,6 +716,9 @@ export declare namespace AIAgentGrpcApi {
     verbose_name: string
     description: string
     category: 'tool' | 'mcp_server' | 'forge' | 'skill' | 'yak_plugin' | 'mcp'
+    skill_load_state?: 'metadata' | 'loaded' | ''
+    /** 技能占用的上下文 Token 数 */
+    token_count?: number
   }
 
   /**
@@ -733,10 +738,12 @@ export declare namespace AIAgentGrpcApi {
     description: string
     category: 'skill'
     /**
-     * metadata:仅注册表
-     * loaded:已注入 SKILLS_CONTEXT
+     * metadata:未加载
+     * loaded: 已加载
      */
     skill_load_state: 'metadata' | 'loaded' | ''
+    /** 技能占用的上下文 Token 数 */
+    token_count?: number
   }
   export interface PlanItemDetailsDynamicForgesItem {
     name: string
@@ -792,13 +799,13 @@ export declare namespace AIAgentGrpcApi {
     verbose_name?: string
     description?: string
     /** mcp | aitool | plugin | skill | forge | mcp_server */
-    type: string
+    type: 'mcp' | 'aitool' | 'plugin' | 'skill' | 'forge' | 'mcp_server'
     /** loaded | metadata | schema | description */
-    stage: string
+    stage: 'loaded' | 'metadata' | 'schema' | 'description'
     /** FrozenBlock | Dynamic | SemiDynamic */
-    position: string
+    position: 'FrozenBlock' | 'Dynamic' | 'SemiDynamic'
     is_fixed?: boolean
-    data?: Record<string, unknown>
+    data?: Record<string, string | number | boolean>
   }
 
   export interface SessionSnapshotPerception {

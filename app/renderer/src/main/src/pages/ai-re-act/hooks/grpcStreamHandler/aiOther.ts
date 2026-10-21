@@ -66,8 +66,7 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
   if (res.Type !== 'start_plan_and_execution') return
   if (res.IsSync) return
 
-  // 清空任务规划的todo-list数据与会话任务索引
-  rawData.taskDetailsMap.clear()
+  // 重置会话任务索引
   store.getState().updateState({ sessionTaskList: [], sessionTaskListRevision: 0 })
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
