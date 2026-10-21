@@ -3,6 +3,7 @@ import type { RJSFSchema } from '@rjsf/utils'
 import { catalog } from './catalog.mjs'
 import { parseJSONPrefix } from './partialJson'
 import { normalizeVisualization } from './visualizationValidation'
+import { normalizeNavigation } from './navigationValidation'
 
 export interface UINode {
   id: string
@@ -26,6 +27,7 @@ export interface UIDiagnostic {
   message: string
 }
 const entries = new Map(catalog.components.map((entry) => [entry.name, entry]))
+const versions = new Set([catalog.version, ...catalog.compatibleVersions])
 const unsafeKey = (key: string) => ['__proto__', 'constructor', 'prototype'].includes(key)
 export const matchesSchema = (schema: RJSFSchema, value: unknown): boolean => {
   try {
@@ -104,7 +106,7 @@ export function readDocument(source: string, final: boolean) {
   const fallback = typeof raw?.fallback === 'string' ? raw.fallback : ''
   if (!raw || typeof raw !== 'object') return { document: undefined, diagnostics, fallback, complete: partial.complete }
   const incompatible =
-    (raw.catalogVersion && raw.catalogVersion !== catalog.version) ||
+    (raw.catalogVersion && !versions.has(raw.catalogVersion)) ||
     (Array.isArray(raw.requiredComponents) && raw.requiredComponents.some((name) => !entries.has(name)))
   if (incompatible)
     return {
@@ -156,7 +158,7 @@ export function readDocument(source: string, final: boolean) {
         next.action = node.action
       else diagnose('action', '未声明或不合法的动作，已禁用')
     }
-    if (normalizeVisualization(next, diagnose)) nodes.push(next)
+    if (normalizeVisualization(next, diagnose) && normalizeNavigation(next, diagnose)) nodes.push(next)
   }
   if (final && !partial.complete) diagnostics.push({ nodeId: '', path: '', message: '组件 JSON 未完成' })
   if (final && partial.complete) {
@@ -169,7 +171,7 @@ export function readDocument(source: string, final: boolean) {
       }
   }
   const document =
-    typeof raw.id === 'string' && raw.id && typeof raw.root === 'string' && raw.catalogVersion === catalog.version
+    typeof raw.id === 'string' && raw.id && typeof raw.root === 'string' && versions.has(raw.catalogVersion || '')
       ? ({ ...raw, nodes } as UIDocument)
       : undefined
   return { document, diagnostics: final ? diagnostics : [], fallback, complete: partial.complete }

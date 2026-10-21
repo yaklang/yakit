@@ -1,0 +1,145 @@
+{
+  "id": "information-demo",
+  "catalogVersion": "1.2",
+  "fallback": "扫描结果：API 网关有 3 个待确认问题。RTT 为往返耗时。验证范围可选 API 网关或用户服务，可补充说明。请求 GET /health，响应 HTTP 200。",
+  "root": "root",
+  "nodes": [
+    {
+      "id": "root",
+      "component": "Stack",
+      "props": {
+        "title": "扫描结果解读"
+      },
+      "children": ["risk", "term", "source", "views", "exchange"]
+    },
+    {
+      "id": "risk",
+      "component": "Alert",
+      "props": {
+        "severity": "warning",
+        "title": "发现高风险入口",
+        "description": "API 网关存在 3 个待确认问题。请完成验证后再安排生产变更。"
+      }
+    },
+    {
+      "id": "term",
+      "component": "Tooltip",
+      "props": {
+        "label": "什么是 RTT？",
+        "content": "RTT 是请求从发出到收到响应的往返耗时。",
+        "placement": "top"
+      }
+    },
+    {
+      "id": "source",
+      "component": "Popover",
+      "props": {
+        "label": "查看原始字段",
+        "title": "采样记录",
+        "content": "module: gateway\nissue_count: 3\nverified: false",
+        "placement": "bottom"
+      }
+    },
+    {
+      "id": "views",
+      "component": "Tabs",
+      "props": {
+        "title": "分析视图",
+        "defaultTab": "summary",
+        "items": [
+          {
+            "id": "summary",
+            "label": "概览",
+            "content": "summary"
+          },
+          {
+            "id": "parameters",
+            "label": "分析参数",
+            "content": "parameters"
+          }
+        ]
+      }
+    },
+    {
+      "id": "summary",
+      "component": "Metrics",
+      "props": {
+        "items": [
+          {
+            "label": "待确认问题",
+            "value": 3,
+            "unit": "个"
+          }
+        ]
+      }
+    },
+    {
+      "id": "parameters",
+      "component": "ParameterForm",
+      "props": {
+        "title": "验证参数",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "scope": {
+              "type": "string",
+              "title": "验证范围",
+              "enum": ["API 网关", "用户服务"]
+            },
+            "note": {
+              "type": "string",
+              "title": "补充说明"
+            }
+          },
+          "required": ["scope"],
+          "additionalProperties": false
+        },
+        "fieldOrder": ["scope", "note"]
+      },
+      "bindings": {
+        "value": "verification"
+      },
+      "action": {
+        "name": "submit_to_chat",
+        "args": {
+          "label": "提交验证参数"
+        }
+      }
+    },
+    {
+      "id": "exchange",
+      "component": "Tabs",
+      "props": {
+        "title": "请求与响应",
+        "variant": "segmented",
+        "items": [
+          {
+            "id": "request",
+            "label": "请求",
+            "content": "request-text"
+          },
+          {
+            "id": "response",
+            "label": "响应",
+            "content": "response-text"
+          }
+        ]
+      }
+    },
+    {
+      "id": "request-text",
+      "component": "Text",
+      "props": {
+        "text": "GET /health\nAccept: application/json"
+      }
+    },
+    {
+      "id": "response-text",
+      "component": "Text",
+      "props": {
+        "text": "HTTP 200\nstatus: ok"
+      }
+    }
+  ],
+  "requiredComponents": ["Alert", "Metrics", "ParameterForm", "Popover", "Stack", "Tabs", "Text", "Tooltip"]
+}
