@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import FileTreeSearchView from '../FileTreeSearchView'
+import { FileTreeSearchScope } from '../constants'
 
 const { invoke, emit, aiPaths, openedPaths, setSearchResponse } = vi.hoisted(() => {
   const pathRelation = (pathA: string, pathB: string) => {
@@ -346,6 +347,48 @@ describe('FileTreeSearchView', () => {
     })
   })
 
+  it('preset 进入时清掉工具栏遗留的 resolveOverride，根搜索打到正确路径', async () => {
+    const { rerender } = render(<FileTreeSearchView active={false} />)
+    selectScope('FileTreeSystem.aiArtifacts')
+    expect(screen.getByTestId('file-tree-search-scope')).toHaveAttribute('title', 'FileTreeSystem.aiArtifacts')
+
+    // 关闭后再以「我打开的文件」单路径 preset 进入；不得消费上一次 AI override
+    rerender(
+      <FileTreeSearchView active scopePreset={FileTreeSearchScope.UserFolder} scopePathPreset="opened-file.txt" />,
+    )
+    await waitFor(() =>
+      expect(screen.getByTestId('file-tree-search-scope')).toHaveAttribute('title', 'opened-file.txt'),
+    )
+
+    searchByEnter('foo')
+    await waitFor(() => {
+      const paramsList = getRequestYakURLParams(invoke.mock.calls)
+      expect(paramsList).toHaveLength(1)
+      expect(paramsList[0]?.Url?.Path).toBe('opened-file.txt')
+    })
+  })
+
+  it('有结果后工具栏切范围不自动重搜，再次 Enter 才按新范围搜', async () => {
+    render(<FileTreeSearchView />)
+    searchByEnter('hello')
+    await waitFor(() => expect(getRequestYakURLParams(invoke.mock.calls)).toHaveLength(2))
+    await waitFor(() => expect(screen.getAllByTestId('file-tree-search-result-item')).toHaveLength(1))
+
+    const callsAfterFirst = getRequestYakURLParams(invoke.mock.calls).length
+    selectScope('FileTreeSystem.aiArtifacts')
+    expect(screen.getByTestId('file-tree-search-scope')).toHaveAttribute('title', 'FileTreeSystem.aiArtifacts')
+    // 仍保留上次结果，不因切范围自动发请求
+    expect(screen.getAllByTestId('file-tree-search-result-item')).toHaveLength(1)
+    expect(getRequestYakURLParams(invoke.mock.calls)).toHaveLength(callsAfterFirst)
+
+    searchByEnter('hello')
+    await waitFor(() => {
+      const paramsList = getRequestYakURLParams(invoke.mock.calls)
+      expect(paramsList.length).toBe(callsAfterFirst + 1)
+      expect(paramsList[paramsList.length - 1]?.Url?.Path).toBe('ai-output')
+    })
+  })
+
   it('正则模式下请求携带 regex=true', async () => {
     render(<FileTreeSearchView />)
 
@@ -367,7 +410,7 @@ describe('FileTreeSearchView', () => {
     await waitFor(() => expect(screen.getByText('FileTreeSearch.emptyNoResult')).toBeInTheDocument())
   })
 
-  it('ai/用户文件夹无结果时展示查询全部，点击后切到全部并重搜', async () => {
+  it('ai/用户文件夹无结果时展示范围下拉，选全部后切范围并重搜', async () => {
     setSearchResponse({ Resources: [] })
     render(<FileTreeSearchView />)
 
@@ -377,11 +420,15 @@ describe('FileTreeSearchView', () => {
     )
     searchByEnter('nothing')
 
-    await waitFor(() => expect(screen.getByTestId('file-tree-search-all')).toBeInTheDocument())
+    const emptyScope = await screen.findByTestId('file-tree-search-empty-scope')
+    expect(screen.getByTestId('file-tree-search-all')).toBeInTheDocument()
     expect(screen.queryByText('FileTreeSearch.emptyNoResult')).not.toBeInTheDocument()
+    expect(within(emptyScope).getByText('FileTreeSearch.all')).toBeInTheDocument()
+    expect(within(emptyScope).getByText('FileTreeSystem.myOpenedFiles')).toBeInTheDocument()
+    expect(within(emptyScope).getByText('FileTreeSystem.aiArtifacts')).toBeInTheDocument()
 
     const callsBefore = getRequestYakURLParams(invoke.mock.calls).length
-    fireEvent.click(screen.getByTestId('file-tree-search-all'))
+    fireEvent.click(within(emptyScope).getByText('FileTreeSearch.all'))
 
     await waitFor(() => {
       expect(screen.getByTestId('file-tree-search-scope')).toHaveAttribute('title', 'FileTreeSearch.all')
@@ -413,14 +460,16 @@ describe('FileTreeSearchView', () => {
     expect(getRequestYakURLParams(invoke.mock.calls)).toHaveLength(0)
   })
 
-  it('用户文件夹无路径或无结果时也展示查询全部', async () => {
+  it('用户文件夹无路径或无结果时也展示范围下拉', async () => {
     openedPaths.splice(0)
     render(<FileTreeSearchView />)
 
     selectScope('FileTreeSystem.myOpenedFiles')
     searchByEnter('nothing')
 
-    await waitFor(() => expect(screen.getByTestId('file-tree-search-all')).toBeInTheDocument())
-    expect(invoke).not.toHaveBeenCalled()
+    const emptyScope = await screen.findByTestId('file-tree-search-empty-scope')
+    expect(screen.getByTestId('file-tree-search-all')).toBeInTheDocument()
+    expect(within(emptyScope).getByText('FileTreeSearch.all')).toBeInTheDocument()
+    expect(getRequestYakURLParams(invoke.mock.calls)).toHaveLength(0)
   })
 })
